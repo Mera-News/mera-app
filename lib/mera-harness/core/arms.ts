@@ -31,6 +31,14 @@ export interface AgentArm {
   topicPrompt?: 'oneshot' | 'skill';
   /** The within-set near-duplicate filter. Absent means 'overlap', i.e. ON. */
   topicDedupe?: 'off' | 'overlap';
+  /** Which decision procedure the router prompt composes. Absent means
+   *  'skill', i.e. router.md, which is what ships. 'inline-legacy' restores
+   *  the four-line constant that shipped before it, escape hatch included. */
+  routerProcedure?: 'skill' | 'inline-legacy';
+  /** Absent means ON. 'off' restores the pre-enforcement loop, where a route
+   *  leg producing no load_skill call ends the turn instead of being re-asked,
+   *  and the route leg carries all four discovery tools. */
+  routeEnforcement?: 'off' | 'on';
 }
 
 const BASELINE: AgentArm = {
@@ -86,8 +94,34 @@ const ONESHOT_PROD: AgentArm = {
   topicPrompt: 'oneshot',
 };
 
+/**
+ * THE BEFORE, as an arm rather than as an older run.
+ *
+ * Everything in phase 2 is a bug fix, so it all landed unconditionally and
+ * `baseline` is now the FIXED configuration. Comparing it against G2d would be
+ * a cross-run comparison, and NEAR latency swings roughly fourfold by time of
+ * day, so a cross-run latency or cost number says as much about the hour as
+ * about the change.
+ *
+ * This arm reproduces the measured configuration exactly, interleaved: the
+ * four-line inline procedure with "If nothing is close, answer briefly and
+ * stop here", no re-ask, and all four discovery tools on the route leg. It is
+ * the only arm allowed to carry the escape hatch, and the generator lint that
+ * bans that sentence from router.md deliberately does not reach here: this is
+ * a control, and a control that has been tidied up measures nothing.
+ */
+const PRE_ENFORCEMENT: AgentArm = {
+  id: 'pre-enforcement',
+  description:
+    'THE BEFORE. The router prompt on its four-line inline procedure with the escape hatch, no '
+    + 'format-error re-ask, and all four discovery tools on the route leg. Reproduces the '
+    + 'configuration that routed 38% and left 99 of 308 route legs with no skill loaded.',
+  routerProcedure: 'inline-legacy',
+  routeEnforcement: 'off',
+};
+
 /** Arms that ship. A runner may add more for a throwaway probe. */
-const SHIPPED_ARMS: AgentArm[] = [ROUTER_V1, ONESHOT_PROD];
+const SHIPPED_ARMS: AgentArm[] = [ROUTER_V1, ONESHOT_PROD, PRE_ENFORCEMENT];
 
 const REGISTRY = new Map<string, AgentArm>([
   [BASELINE_ARM, BASELINE],
@@ -140,4 +174,15 @@ export function topicPromptFor(arm: AgentArm): 'oneshot' | 'skill' {
 
 export function personaPromptFor(arm: AgentArm): 'router' | 'oneshot' {
   return arm.personaPrompt ?? 'router';
+}
+
+/** Absent means the shipped body, so an arm has to opt OUT to measure the
+ *  procedure that preceded it. */
+export function routerProcedureFor(arm: AgentArm): 'skill' | 'inline-legacy' {
+  return arm.routerProcedure ?? 'skill';
+}
+
+/** Absent means ON, so the shipped loop is what gets measured. */
+export function routeEnforcementFor(arm: AgentArm): 'off' | 'on' {
+  return arm.routeEnforcement ?? 'on';
 }

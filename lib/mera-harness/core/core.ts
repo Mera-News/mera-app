@@ -4,6 +4,7 @@
 // the eval runner wires fakes. A harness green is therefore evidence about the
 // app rather than about a parallel implementation.
 
+import { resolveAgentArm, routeEnforcementFor } from './arms';
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
 import { cleanProse } from './prose';
 import { buildStateLine, escapeUntrusted } from './state-line';
@@ -189,6 +190,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const maxLegs = params.maxLegs ?? MAX_AGENT_LEGS;
   const model = params.model ?? 'BIG';
   const loadSkillFn = deps.loadSkill ?? defaultLoadSkill;
+  /** OFF only on the `pre-enforcement` control arm, which reproduces the loop
+   *  as measured: a route leg that produced no route ends the turn, and the
+   *  route leg carries all four discovery tools. */
+  const enforceRoute = routeEnforcementFor(resolveAgentArm(params.promptVariant)) === 'on';
 
   // ---- resolve a pending choice BEFORE anything else -----------------------
   // The tap arrives as an ordinary message. Matching it here is what lets the
@@ -331,7 +336,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // re-load at leg 3 after the other tools had already run. Withholding the
       // tool is stronger than answering it, because a tool the model cannot
       // see is one it cannot spend a leg on.
-      tools: toolsForLeg({ skillLoaded, forcingProposal: forcingProposalNow }) as unknown[],
+      tools: toolsForLeg({
+        skillLoaded,
+        forcingProposal: forcingProposalNow,
+        wideRouteLeg: !enforceRoute,
+      }) as unknown[],
       toolChoice: forcingProposalNow ? 'required' : 'auto',
       // FALSE on every call: measured, thinking on returned empty content on 8
       // of 10 probes at 8-10s against 0.8-1.0s and a valid answer every time.
@@ -547,7 +556,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // FormatError, and it covers every shape of the failure at once, including
     // an unparseable or unknown id, because from the loop's side they are the
     // same thing -- the leg was asked for a route and did not produce one.
-    if (skillLoaded === null && !forcingProposalNow) {
+    if (enforceRoute && skillLoaded === null && !forcingProposalNow) {
       if (formatRetries < MAX_FORMAT_RETRIES) {
         formatRetries++;
         formatErrorNote = routeFormatError(deps.skillIds());

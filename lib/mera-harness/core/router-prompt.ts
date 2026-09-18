@@ -5,7 +5,7 @@
 // anchoring, identity composition and the question bank lives in a skill body,
 // which is the whole point of the split.
 
-import { resolveAgentArm } from './arms';
+import { resolveAgentArm, routerProcedureFor } from './arms';
 import { loadSkill, renderSkillIndex } from './skill-loader';
 
 export type PersonaSurface = 'ONBOARDING' | 'CONFIG';
@@ -67,7 +67,25 @@ const TOOL_GUIDE = `## Your tools
  * registry rather than the wire, so `router-prompt.test.ts` asserts a sentence
  * that exists only in the markdown.
  */
-function routerProcedure(): string {
+/**
+ * The four-line procedure that shipped before router.md was wired up, kept
+ * VERBATIM as the `pre-enforcement` control arm's value.
+ *
+ * Its step 3 is the sentence 90 of 308 G2d route legs obeyed. It is preserved
+ * rather than deleted because a before/after needs a before, and the before has
+ * to be the thing that was actually measured, not a cleaned-up version of it.
+ */
+const LEGACY_PROCEDURE = `## Every turn, in order
+1. Read the state line and the known facts.
+2. Say one short thing first (under 200 characters), THEN call your tool in the same turn. The acknowledgement is what the user reads while the rest of the turn runs, so never open with a silent tool call.
+3. Match the message to ONE row of the skill index and \`load_skill\` it. No row matches: answer briefly and stop.
+4. Follow the loaded instructions. They own what to produce; this prompt does not.
+
+## Asking
+Ask at most one question, and only in your LAST message of the turn. Never ask two turns in a row: if you asked last turn and this message did not answer it, take the best reading and OFFER it rather than asking again. When two readings are both plausible, prefer the one that can be undone: offering both is recoverable, replacing the wrong fact is not.`;
+
+function routerProcedure(arm?: string): string {
+  if (routerProcedureFor(resolveAgentArm(arm)) === 'inline-legacy') return LEGACY_PROCEDURE;
   const body = loadSkill('router');
   if (body === null || body.trim() === '') {
     throw new Error(
@@ -113,7 +131,7 @@ ${TOOL_GUIDE}
 ## Skill index
 ${renderSkillIndex()}
 
-${routerProcedure()}${pendingLine}
+${routerProcedure(input.arm)}${pendingLine}
 
 ${SCOPE}`;
 }

@@ -196,6 +196,9 @@ export const DELETE_FACTS_TOOL: ToolDefinition = {
 export function toolsForLeg(opts: {
   skillLoaded: string | null;
   forcingProposal?: boolean;
+  /** The `pre-enforcement` control arm only: the route leg carries all four
+   *  discovery tools, as it did when the 99 no-route legs were measured. */
+  wideRouteLeg?: boolean;
 }): ToolDefinition[] {
   if (opts.forcingProposal) return [SAVE_FACTS_TOOL, ASK_CHOICE_TOOL];
   // THE ROUTE LEG GETS ONE TOOL.
@@ -210,7 +213,7 @@ export function toolsForLeg(opts: {
   //
   // mini-swe-agent runs its whole loop on ONE action for this reason: the
   // narrower the action space, the less there is to get wrong.
-  if (opts.skillLoaded === null) return [LOAD_SKILL_TOOL];
+  if (opts.skillLoaded === null) return opts.wideRouteLeg ? [...HARNESS_TOOLS] : [LOAD_SKILL_TOOL];
   const discovery = HARNESS_TOOLS.filter((t) => t.function.name !== 'load_skill');
   return opts.skillLoaded.startsWith('facts/')
     ? [...discovery, SAVE_FACTS_TOOL, DELETE_FACTS_TOOL]

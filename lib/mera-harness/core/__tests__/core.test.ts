@@ -152,6 +152,34 @@ describe('the bounded loop', () => {
     expect(out.legBudgetHit).toBe(false);
   });
 
+  // A CONTROL THAT HAS BEEN TIDIED UP MEASURES NOTHING. These assert that
+  // `pre-enforcement` really is the configuration the 38% and the 99 no-route
+  // legs came from, not a partly-fixed version of it wearing the label.
+  it('the pre-enforcement arm reproduces the loop as it was measured', async () => {
+    const { deps, calls } = scriptedDeps([modelResult({ content: 'Hello there.' })]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: 'hi',
+      deps,
+      promptVariant: 'pre-enforcement',
+    });
+
+    // Ends on prose, in one leg, with no route and no re-ask. The bug, intact.
+    expect(out.legs).toHaveLength(1);
+    expect(out.formatRetries).toBe(0);
+    expect(out.skillLoaded).toBeNull();
+    expect(out.terminalReason).toBe('settled');
+    // And the route leg carries all four discovery tools again.
+    const toolNames = (calls[0].tools as { function: { name: string } }[])
+      .map((d) => d.function.name)
+      .sort();
+    expect(toolNames).toEqual([
+      'ask_choice', 'find_similar_facts', 'load_skill', 'lookup_place',
+    ]);
+    // Including the sentence they were obeying.
+    expect(calls[0].systemPrompt).toMatch(/No row matches: answer briefly and stop/);
+  });
+
   it('prose settles normally ONCE a skill is loaded', async () => {
     const { deps } = scriptedDeps([
       modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
