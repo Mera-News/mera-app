@@ -33,6 +33,13 @@ export interface RunAgentCorpusOptions {
    *  deterministic timings; the CLI passes Date.now. */
   now?: () => number;
   maxLegs?: number;
+  /**
+   * The ARM, as the loop sees it. Defaults to `variant`, and that default is
+   * the point: two fields, one the row label and one the behaviour, is how the
+   * CLI came to pass only the label. `--variant pre-enforcement` then produced
+   * 234 rows labelled `pre-enforcement` that ran the baseline prompt, and the
+   * run looked complete. Pass this only to deliberately decouple them.
+   */
   promptVariant?: string;
   skillIds?: readonly string[];
   /** The choice a fixture makes is AUTHORITATIVE. When an arm offers options
@@ -215,7 +222,7 @@ export async function runAgentScript(
     // exactly what happened: `oneshot-prod` ran the router loop for three full
     // corpus runs and was written up as the production control.
     // `personaPromptFor` had no caller at all outside its own unit test.
-    if (personaPromptFor(resolveAgentArm(opts.promptVariant)) === 'oneshot') {
+    if (personaPromptFor(resolveAgentArm(opts.promptVariant ?? opts.variant)) === 'oneshot') {
       throw new Error(
         `mera-harness/eval: arm '${opts.promptVariant}' asks for the one-shot persona prompt, `
           + 'which this runner cannot build (it lives in news-harness and this folder imports '
@@ -228,7 +235,7 @@ export async function runAgentScript(
       userMessage,
       deps,
       maxLegs: opts.maxLegs,
-      promptVariant: opts.promptVariant,
+      promptVariant: opts.promptVariant ?? opts.variant,
       model: opts.model,
     });
 
