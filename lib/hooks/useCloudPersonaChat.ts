@@ -252,6 +252,9 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       let acc = '';
       let queued = false;
       let armed = true;
+      // Cleared as the turn OPENS, so a box never shows the previous turn's
+      // terminal while this one is still running.
+      useCloudChatStore.getState().setAgentTerminal(null);
       const flush = () => {
         queued = false;
         if (!armed) return;
@@ -309,6 +312,10 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           prev.map((m) => (m.id === assistantId ? { ...m, content: out.reply } : m)),
         );
         store.setAgentTurnState({ ...agentStateRef.current.turn });
+        // ON SCREEN, not only in the log. Four distinct terminals used to reach
+        // the user as whatever prose the last leg produced, and an empty one as
+        // an empty bubble.
+        store.setAgentTerminal(out.terminalReason);
         if (out.terminalReason !== 'settled' && out.terminalReason !== 'awaiting-user') {
           logger.warn(`${TAG} agent turn ended abnormally`, {
             reason: out.terminalReason,

@@ -2664,7 +2664,10 @@
       "loadSkill": "Couldn't load its guidance, so Mera used its general approach",
       "writeUp": "Couldn't write that up, so nothing was added",
       "removing": "Couldn't remove that, so it's still there"
-    }
+    },
+    "noRouteSentence": "Mera couldn't tell what that was about. Try saying it another way.",
+    "noProposalSentence": "Mera didn't find anything to add from that.",
+    "unknownToolSentence": "Something went wrong on Mera's side. Ask again to carry on."
   },
   "skillPhrase": {
     "residence": "where you live",

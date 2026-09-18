@@ -153,7 +153,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             collapsed={item.collapsed}
             doneCount={item.doneCount}
             failedCount={item.failedCount}
-            legCapped={item.legCapped}
+            terminal={item.terminal}
             interrupted={item.interrupted}
           />
         );

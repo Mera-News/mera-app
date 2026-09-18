@@ -2,7 +2,7 @@
 // Persists across component mount/unmount cycles so remounts don't lose data.
 
 import { create } from 'zustand';
-import type { AgentTurnState } from '../mera-harness';
+import type { AgentTurnResult, AgentTurnState } from '../mera-harness';
 import type { ConversationMessage } from '../llm/types';
 import type { WireMessage } from '../llm/cloudComplete';
 
@@ -38,6 +38,17 @@ interface CloudChatState {
    */
   agentTurnState: AgentTurnState | null;
 
+  /**
+   * WHY the last agent turn ended, for the one turn the store still holds.
+   *
+   * Every terminal but `settled` and `awaiting-user` used to present as
+   * whatever prose the last leg happened to produce, and an empty one as an
+   * empty bubble: the loop counted four distinct failures and the user was told
+   * about none of them. Scoped to the latest turn on purpose, because that is
+   * the only one whose terminal this store knows.
+   */
+  agentTerminal: AgentTurnResult['terminalReason'] | null;
+
   // Actions
   setMessages: (messages: ConversationMessage[] | ((prev: ConversationMessage[]) => ConversationMessage[])) => void;
   setStatus: (status: 'idle' | 'streaming') => void;
@@ -46,6 +57,7 @@ interface CloudChatState {
   setError: (error: string | null) => void;
   setThinking: (thinking: boolean) => void;
   setAgentTurnState: (state: AgentTurnState | null) => void;
+  setAgentTerminal: (reason: AgentTurnResult['terminalReason'] | null) => void;
   pushWireMessage: (msg: WireMessage) => void;
   getWireMessages: () => WireMessage[];
   reset: () => void;
@@ -60,6 +72,7 @@ const initialState = {
   wireMessages: [] as WireMessage[],
   thinking: false,
   agentTurnState: null as AgentTurnState | null,
+  agentTerminal: null as AgentTurnResult['terminalReason'] | null,
 };
 
 export const useCloudChatStore = create<CloudChatState>((set, get) => ({
@@ -83,6 +96,7 @@ export const useCloudChatStore = create<CloudChatState>((set, get) => ({
   setThinking: (thinking) => set((state) => (state.thinking === thinking ? state : { thinking })),
 
   setAgentTurnState: (agentTurnState) => set({ agentTurnState }),
+  setAgentTerminal: (agentTerminal) => set({ agentTerminal }),
 
   pushWireMessage: (msg) =>
     set((state) => ({ wireMessages: [...state.wireMessages, msg] })),

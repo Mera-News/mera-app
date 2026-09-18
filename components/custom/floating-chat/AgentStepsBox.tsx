@@ -12,7 +12,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
-import type { AgentStep } from './types';
+import type { AgentStep, AgentTerminal } from './types';
 
 /**
  * How long one step may sit pending before the box says so.
@@ -50,7 +50,7 @@ export interface AgentStepsBoxProps {
   collapsed: boolean;
   doneCount: number;
   failedCount: number;
-  legCapped: boolean;
+  terminal: AgentTerminal | null;
   interrupted: boolean;
 }
 
@@ -59,7 +59,7 @@ export const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   collapsed,
   doneCount,
   failedCount,
-  legCapped,
+  terminal,
   interrupted,
 }) => {
   const { t } = useTranslation();
@@ -135,17 +135,31 @@ export const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
     return PLAIN_LABEL[step.labelKey] ?? PLAIN_LABEL['agentSteps.working'];
   };
 
-  const summary = legCapped
-    ? t('agentSteps.legCapSentence')
+  // ONE sentence per terminal, and the terminal outranks the step tally: a turn
+  // whose every step succeeded and which then routed nothing is a failure the
+  // step rows cannot show. `settled` and `awaiting-user` never reach here.
+  // `as const` is load-bearing: the i18n key type is a literal union, and a
+  // widened `string` fails the call rather than resolving at run time.
+  const TERMINAL_KEY = {
+    'leg-cap': 'agentSteps.legCapSentence',
+    'no-route': 'agentSteps.noRouteSentence',
+    'no-proposal': 'agentSteps.noProposalSentence',
+    'unknown-tool': 'agentSteps.unknownToolSentence',
+  } as const satisfies Record<AgentTerminal, string>;
+  const summary = terminal
+    ? t(TERMINAL_KEY[terminal])
     : interrupted
       ? t('agentSteps.interrupted')
       : failedCount > 0
         ? t('agentSteps.summaryFailed')
         : t('agentSteps.summaryDone');
+  // `no-proposal` is the one terminal that is not an error: Mera understood the
+  // turn and had nothing to add, which is a normal answer.
+  const terminalIsError = terminal !== null && terminal !== 'no-proposal';
 
   const body = collapsed ? (
     <StatusIndicator
-      status={failedCount > 0 || interrupted || legCapped ? 'error' : 'done'}
+      status={failedCount > 0 || interrupted || terminalIsError ? 'error' : 'done'}
       label={summary}
       testID="agent-steps-summary"
     />
@@ -173,7 +187,7 @@ export const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
       ))}
       {/* An interrupted or capped turn states it even while expanded: the
           terminal sentence is the part that tells the user what to do next. */}
-      {(interrupted || legCapped) && (
+      {(interrupted || terminal !== null) && (
         <Text size="xs" style={styles.terminal} numberOfLines={3} testID="agent-steps-terminal">
           {summary}
         </Text>

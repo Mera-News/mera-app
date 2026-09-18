@@ -56,7 +56,7 @@ const props = (over: Partial<React.ComponentProps<typeof AgentStepsBox>> = {}) =
   collapsed: false,
   doneCount: 0,
   failedCount: 0,
-  legCapped: false,
+  terminal: null,
   interrupted: false,
   ...over,
 });
@@ -181,7 +181,7 @@ describe('collapsed', () => {
 
   it('renders the leg-cap sentence when the bound was hit', () => {
     const { getByTestId } = render(
-      <AgentStepsBox {...props({ collapsed: true, legCapped: true, doneCount: 4 })} />,
+      <AgentStepsBox {...props({ collapsed: true, terminal: 'leg-cap' as const, doneCount: 4 })} />,
     );
     expect(getByTestId('agent-steps-summary').props.accessibilityLabel).toContain(
       't:agentSteps.legCapSentence',

@@ -25,7 +25,13 @@ import {
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
-import type { AgentStep, ChatThreadItem, FactCardAction, PersistedMessage } from './types';
+import type {
+  AgentStep,
+  AgentTerminal,
+  ChatThreadItem,
+  FactCardAction,
+  PersistedMessage,
+} from './types';
 import {
   changedDataFrom,
   legStartStep,
@@ -723,6 +729,7 @@ function buildTurnBoxes(
   seq: SeqEntry[],
   stale: boolean,
   turnActive: boolean | undefined,
+  agentTerminal: AgentTerminal | null,
 ): Map<string, AgentStepsItem> {
   const turns: TurnAccum[] = [];
   let current: TurnAccum | null = null;
@@ -802,7 +809,9 @@ function buildTurnBoxes(
       collapsed,
       doneCount: full.filter((s) => s.status === 'done').length,
       failedCount: full.filter((s) => s.status === 'error').length,
-      legCapped: false,
+      // Only the LAST turn: the store holds one terminal, and stamping it on an
+      // older box would relabel a turn that ended for a different reason.
+      terminal: isLast ? (agentTerminal ?? null) : null,
       interrupted,
       changedData: changedDataFrom(full),
     });
@@ -1046,6 +1055,8 @@ export function deriveThreadItems(opts: {
    * "everything settled" and marks nothing interrupted unless it is stale.
    */
   turnActive?: boolean;
+  /** Why the latest agent turn stopped, when the user needs telling. */
+  agentTerminal?: AgentTerminal | null;
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
@@ -1076,6 +1087,9 @@ export function deriveThreadItems(opts: {
     sortedHistory.map((m) => ({ message: toConversationMessage(m) })),
     true,
     opts.turnActive,
+    // NEVER on history: the store's one terminal belongs to the live turn, and
+    // stamping it on a box from an earlier conversation would be a lie.
+    null,
   );
   let prevConversationId: string | null = null;
   for (const persisted of sortedHistory) {
@@ -1140,6 +1154,7 @@ export function deriveThreadItems(opts: {
     ],
     false,
     opts.turnActive,
+    opts.agentTerminal ?? null,
   );
   for (const persisted of sortedResume) {
     // Resumed CURRENT-conversation messages are live for this purpose: their

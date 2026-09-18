@@ -2,6 +2,7 @@
 
 import type { ConversationMessage, ToolCallRecord } from '@/lib/llm/types';
 import { deriveThreadItems } from '../deriveThreadItems';
+import { renderableTerminal } from '../types';
 import type { ChatThreadItem, PersistedMessage } from '../types';
 
 const LABEL = 'Earlier conversation';
@@ -755,5 +756,58 @@ describe('deriveThreadItems', () => {
     );
     const card = items.find((i) => i.kind === 'fact-card');
     expect(card).toMatchObject({ key: 'card-m2-0', action: 'saved', statements: ['Hist fact'] });
+  });
+});
+
+// THE SHIPPED PATH, not the component in isolation. `legCapped` was hardcoded
+// false at exactly this spot, so AgentStepsBox's terminal sentence was dead
+// code for the whole wave while its own unit test passed.
+describe('turn terminals reach the steps box', () => {
+  const tc: ToolCallRecord = {
+    id: 't1',
+    name: 'load_skill',
+    input: { id: 'facts/residence' },
+    status: 'done',
+  };
+
+  function boxFor(over: Parameters<typeof deriveThreadItems>[0]) {
+    const items = deriveThreadItems(over);
+    return items.find((i) => i.kind === 'agent-steps') as
+      | Extract<ReturnType<typeof deriveThreadItems>[number], { kind: 'agent-steps' }>
+      | undefined;
+  }
+
+  it('carries the terminal of the latest turn', () => {
+    const box = boxFor(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', 'Hmm.', [tc])],
+        turnActive: true,
+        agentTerminal: 'no-route',
+      }),
+    );
+    expect(box?.terminal).toBe('no-route');
+  });
+
+  it('is null for a turn that settled normally', () => {
+    const box = boxFor(
+      base({ live: [userMsg('u1'), assistantMsg('a1', 'Done.', [tc])], turnActive: true }),
+    );
+    expect(box?.terminal).toBeNull();
+  });
+});
+
+// The narrowing is ONE function so a terminal added to the loop is either
+// rendered deliberately or visibly absent, never silently widening the UI union.
+describe('renderableTerminal', () => {
+  it('passes the four the thread can render', () => {
+    for (const r of ['leg-cap', 'no-route', 'no-proposal', 'unknown-tool']) {
+      expect(renderableTerminal(r)).toBe(r);
+    }
+  });
+
+  it('drops the endings the thread must not label as failures', () => {
+    for (const r of ['settled', 'awaiting-user', 'transport-error', 'malformed-choice', null]) {
+      expect(renderableTerminal(r)).toBeNull();
+    }
   });
 });

@@ -28,6 +28,35 @@ export type FactCardAction = 'saved' | 'deleted' | 'updated';
 export type AgentStepStatus = 'pending' | 'done' | 'error';
 
 /**
+ * The loop terminals that are worth a sentence on screen.
+ *
+ * A subset of the loop's own `terminalReason`: `settled` and `awaiting-user`
+ * are ordinary, and `transport-error` already has the error banner. These four
+ * are the ones where the user is otherwise left looking at a turn that appears
+ * to have finished and did not.
+ */
+export type AgentTerminal = 'leg-cap' | 'no-route' | 'no-proposal' | 'unknown-tool';
+
+const RENDERABLE_TERMINALS: readonly string[] = [
+  'leg-cap',
+  'no-route',
+  'no-proposal',
+  'unknown-tool',
+];
+
+/**
+ * The loop's `terminalReason` narrowed to what the thread renders.
+ *
+ * ONE place, so a terminal added to the loop is either rendered deliberately or
+ * visibly absent here, rather than silently widening a UI union. `settled` and
+ * `awaiting-user` are ordinary endings, `transport-error` has the error banner,
+ * and `malformed-choice` is a model fault the user cannot act on.
+ */
+export function renderableTerminal(reason: string | null | undefined): AgentTerminal | null {
+  return reason && RENDERABLE_TERMINALS.includes(reason) ? (reason as AgentTerminal) : null;
+}
+
+/**
  * One row in the agent-steps box: a leg beginning, or one tool call.
  *
  * Derived from `ToolCallRecord.status`, which is the ONLY item kind here that
@@ -200,8 +229,16 @@ export type ChatThreadItem =
       collapsed: boolean;
       doneCount: number;
       failedCount: number;
-      /** P1's leg bound was hit: render the cap sentence, not a summary. */
-      legCapped: boolean;
+      /**
+       * WHY the loop stopped, when that is something the user must be told.
+       *
+       * Replaces a `legCapped` boolean that was hardcoded false at the one place
+       * that built this item, so the cap sentence was dead code and `no-route`,
+       * `no-proposal` and `unknown-tool` had no rendering at all. Null for a
+       * turn that settled normally, and for every turn but the latest: the
+       * store holds one terminal.
+       */
+      terminal: AgentTerminal | null;
       /** The turn ended without settling (backgrounded, transport failure). */
       interrupted: boolean;
       /** Turn touched persona data, so its settled line is kept in scroll-back. */

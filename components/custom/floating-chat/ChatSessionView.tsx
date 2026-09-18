@@ -34,6 +34,7 @@ import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/to
 import { getAiAccess } from '@/lib/stores/subscription-store';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
+import { renderableTerminal } from './types';
 
 const noop = () => {};
 
@@ -93,6 +94,7 @@ export default function ChatSessionView({
   // state, and the deriver's fallback errs safe: it marks nothing interrupted
   // that is not from an earlier conversation.
   const turnActive = useCloudChatStore((st) => st.agentTurnState?.turnActive);
+  const agentTerminal = useCloudChatStore((st) => renderableTerminal(st.agentTerminal));
   const resume = useMemo(() => resumeMessages ?? [], [resumeMessages]);
 
   // Intro copy depends on the context: the article-feedback surfaces open with a
@@ -182,6 +184,7 @@ export default function ChatSessionView({
         quickFactChecks,
         toolCallResults,
         turnActive,
+        agentTerminal,
       }),
     [
       messages,
@@ -195,6 +198,7 @@ export default function ChatSessionView({
       quickFactChecks,
       toolCallResults,
       turnActive,
+      agentTerminal,
     ],
   );
 
