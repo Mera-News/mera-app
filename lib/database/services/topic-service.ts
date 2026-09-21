@@ -627,6 +627,59 @@ export async function getAllTopicIds(): Promise<Set<string>> {
  * the orphans forever; this sweep is their one path back to a working
  * Dashboard. Location topics (`fact_id` null) are not orphans and are skipped.
  */
+/**
+ * Startup repair: give a retrievable weight to topics that were minted without one.
+ *
+ * `createTopics` used to default `weight` to 0, and `buildRetrievalProfile`
+ * drops every topic whose effective weight is <= 0 before the feed request is
+ * built. A topic minted at 0 was therefore written, rendered on the Profile
+ * with its own row and delete button, and never once included in a query: a
+ * full topic list where every line reads "0 articles", with no error anywhere.
+ *
+ * Three call sites did it. Both "Add topic" buttons had since they were
+ * written, so every hand-typed topic was dead; `completeTopicGeneration`
+ * joined them when the `topics/*` guidelines were wired to the chat route.
+ * The type requires a weight now, so no fourth can appear. This heals the rows
+ * already on the device.
+ *
+ * A SWEEP AND NOT A MIGRATION, deliberately. Healing this needs no schema
+ * change, and bumping the schema version to carry a data-only repair would put
+ * a version marker on the device that an OTA rollback cannot walk back:
+ * `stepsForMigration` yields nothing for a downgrade, and the adapter's own
+ * fallback for a version range it cannot migrate is
+ * "resetting database instead". The rollback lever for an OTA is republishing
+ * the previous update group, and it must not be able to wipe a user's facts.
+ *
+ * TARGETED, not a blanket lift. `weight = 0` exactly, never `<= 0`: negative
+ * weights are the user's own downranks and re-enabling one would undo a
+ * choice they made. Only `active`, fact-owned rows carrying BOTH defaults,
+ * which is the signature of a create that passed neither.
+ */
+export async function repairUnweightedTopics(): Promise<number> {
+  const dead = await topicsCollection
+    .query(
+      Q.where('weight', 0),
+      Q.where('provenance', 'user'),
+      Q.where('status', 'active'),
+      Q.where('fact_id', Q.notEq(null)),
+    )
+    .fetch();
+  if (dead.length === 0) return 0;
+  const now = new Date();
+  await database.write(async () => {
+    await database.batch(
+      dead.map((t) =>
+        t.prepareUpdate((row) => {
+          row.weight = DEFAULT_HARNESS_CONFIG.topicGen.llmTopicWeight;
+          row.provenance = 'llm';
+          row.updatedAt = now;
+        }),
+      ),
+    );
+  });
+  return dead.length;
+}
+
 export async function destroyOrphanedTopics(validFactIds: Set<string>): Promise<number> {
   const owned = await topicsCollection
     .query(Q.where('fact_id', Q.notEq(null)))
