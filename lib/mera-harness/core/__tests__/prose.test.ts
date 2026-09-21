@@ -3,6 +3,7 @@ import {
   cleanProse,
   collapseRepetitionLoop,
   leaksInternals,
+  looksLikeSerialisedPayload,
   replaceClauseDashes,
   trailingQuestion,
 } from '../prose';
@@ -261,5 +262,51 @@ describe('collapseRepetitionLoop', () => {
   it('is a no-op on empty and single-sentence input', () => {
     expect(collapseRepetitionLoop('')).toBe('');
     expect(collapseRepetitionLoop('Got it.')).toBe('Got it.');
+  });
+});
+
+describe('a tool call written out as prose', () => {
+  // VERBATIM from the device. The model emitted its saveExtractedFacts
+  // arguments as TEXT and the bubble rendered them. The tool-name list missed
+  // it completely: the payload names the ARGUMENTS, never the function.
+  const RAW = `{
+"extracted_user_information": [
+{
+"statement": "Interested in music festivals",
+"questionnaire_attribute": "interests"
+}
+]
+}`;
+
+  it('is caught as a leak', () => {
+    expect(leaksInternals(RAW)).toBe(true);
+  });
+
+  it('is caught structurally, not only by its key names', () => {
+    // The names will always lag the model, so the shape has to carry it.
+    expect(looksLikeSerialisedPayload('{"someKeyNobodyListed": 1}')).toBe(true);
+    expect(looksLikeSerialisedPayload('[{"a": 1}]')).toBe(true);
+  });
+
+  it('leaves ordinary replies alone, including ones that mention a brace', () => {
+    for (const ok of [
+      'Got it, Nieuw-West. What do you do for work?',
+      'I found Amsterdam, North Holland, The Netherlands, EU.',
+      'Your code block starts with a { character, which is fine.',
+      'Tap the ones you want to keep and they will be saved.',
+    ]) {
+      expect(looksLikeSerialisedPayload(ok)).toBe(false);
+      expect(leaksInternals(ok)).toBe(false);
+    }
+  });
+
+  it('needs a quoted key, so a bare brace is not a payload', () => {
+    expect(looksLikeSerialisedPayload('{')).toBe(false);
+    expect(looksLikeSerialisedPayload('{ just thinking out loud }')).toBe(false);
+  });
+
+  it('catches the argument keys on their own too', () => {
+    expect(leaksInternals('I will put questionnaire_attribute on it.')).toBe(true);
+    expect(leaksInternals('sending extracted_user_information now')).toBe(true);
   });
 });
