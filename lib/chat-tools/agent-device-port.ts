@@ -105,8 +105,48 @@ export function narrowToExact(places: Place[], form: string): Place[] {
 }
 
 /**
- * Try each form and return the FIRST non-empty ranked result, recording which
- * form matched.
+ * The candidates a FALLBACK form is allowed to stand on, or null if it has not
+ * earned any.
+ *
+ * A fallback form is a fragment the user never typed on its own, so it needs a
+ * higher bar than the query as asked. `placeSearch` is an anchored prefix over
+ * a MULTIKEY `search_keys` array that includes each place's Latin alternate
+ * names, so a short fragment matches on names nobody would recognise.
+ *
+ * THE DEVICE CASE: the agent looked up "nieuw west", the whole form and "west"
+ * both missed, and the chain reached the bare word "nieuw". That prefix hits
+ * Amstelveen (its historic name is Nieuwer-Amstel), Nieuwegein and
+ * Nieuw-Vennep, population-sorted, and the user was asked to choose between
+ * three towns they had not mentioned and do not live in. "nieuw" is just the
+ * Dutch for "new".
+ *
+ * The tell is that NONE of those rows is called "nieuw". So a fallback is
+ * trusted only when its matches actually bear its name:
+ *  - exactly one exact match wins outright, which is the "Amsterdam" case that
+ *    made this ladder work in the first place;
+ *  - all of them exact is real ambiguity between same-named places, and the
+ *    choice chips exist for it (Newcastle upon Tyne / under Lyme);
+ *  - anything else is prefix noise, and NO ANSWER IS BETTER THAN A CONFIDENT
+ *    WRONG ONE. Falling through to `no_match` makes the agent say it could not
+ *    verify the place and ask, which is honest; offering three wrong towns
+ *    invites a tap that writes the wrong home town into the persona.
+ */
+export function fallbackCandidates(places: Place[], form: string): Place[] | null {
+  const wanted = form.trim().toLowerCase();
+  const exact = places.filter((p) => p.locality.trim().toLowerCase() === wanted);
+  if (exact.length === 0) return null;
+  if (exact.length === 1 || exact.length === places.length) return exact;
+  return null;
+}
+
+/**
+ * Try each form and return the first result that has earned it, recording
+ * which form matched.
+ *
+ * The query AS ASKED keeps the old behaviour: the user typed it, so ambiguity
+ * there is real ambiguity and the chips are the right answer. Every NARROWER
+ * form has to clear `fallbackCandidates` instead, and a form that does not is
+ * skipped rather than returned.
  *
  * `unavailable` short-circuits: the lookup FAILED, and retrying a narrower
  * form would turn a transport failure into a confident "no such place".
@@ -114,6 +154,7 @@ export function narrowToExact(places: Place[], form: string): Place[] {
 export async function lookupPlaceWithFallback(
   args: LookupPlaceArgs,
 ): Promise<LookupPlaceResult> {
+  const asked = args.query.trim().toLowerCase();
   const forms = placeQueryForms(args.query);
   let last: LookupPlaceResult = { status: 'no_match', query: args.query };
 
@@ -121,13 +162,23 @@ export async function lookupPlaceWithFallback(
     const out = await lookupPlace(form, args.countryHint);
     if (out.status === 'unavailable') return out;
     if (out.status === 'resolved' && out.places.length > 0) {
-      if (form !== args.query) {
-        logger.debug(`${TAG} place resolved on a fallback form`, {
-          asked: args.query,
-          matched: form,
-        });
+      if (form.toLowerCase() === asked) {
+        return { ...out, places: narrowToExact(out.places, form) };
       }
-      return { ...out, places: narrowToExact(out.places, form) };
+      const trusted = fallbackCandidates(out.places, form);
+      if (trusted === null) {
+        logger.debug(`${TAG} discarded a fallback form its matches do not name`, {
+          asked: args.query,
+          form,
+          candidates: out.places.map((p) => p.locality),
+        });
+        continue;
+      }
+      logger.debug(`${TAG} place resolved on a fallback form`, {
+        asked: args.query,
+        matched: form,
+      });
+      return { ...out, places: trusted };
     }
     if (out.status !== 'too_short') last = out;
   }
