@@ -88,7 +88,14 @@ import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
  * calls for, for free.
  */
 
-const PALETTE = [
+/**
+ * EXPORTED, and importing it starts nothing. `startEngine()` is called only
+ * from inside `useSharedEngine`, so a module that wants the house hues — the
+ * header's working strip does — gets them without mounting a backdrop or
+ * touching the shared colour timer. Keep it that way: this is a colour table,
+ * not an entry point.
+ */
+export const PALETTE = [
   'rgb(231,138,83)', // primary-400   — house warm accent
   'rgb(13,166,242)', // info-400      — house blue
   'rgb(125,152,152)', // secondary-500 — muted teal
