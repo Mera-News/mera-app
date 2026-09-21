@@ -171,6 +171,19 @@ export const GLASS_EDGE = 'border border-white/10';
 export const GLASS_OVER_CONTENT_FILL = 'rgba(18,17,19,0.90)';
 
 /**
+ * ONE SURFACE KIND CAN NEVER TAKE ANY OF THIS: a `react-native` Modal opened
+ * with `presentationStyle="pageSheet"`. iOS draws that container itself, so its
+ * fill, its corner radius and its grabber are the OS's and nothing here reaches
+ * them — only the content INSIDE the sheet is ours.
+ *
+ * Three screens are in that position (`auth/LanguageSelector`,
+ * `auth/LegalFooter`, `config-mera/LanguageSettingsScreen`), which is why they
+ * look different from every other sheet in the app and must not be "fixed".
+ * Converting them to `overFullScreen` to force the look would work and would
+ * throw away the native sheet's drag-to-dismiss, which is a bad trade.
+ */
+
+/**
  * Absolute-fill glass background — real Liquid Glass on iOS 26+, a flat
  * translucent fill at the same tint everywhere else.
  *
