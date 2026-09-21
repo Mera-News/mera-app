@@ -6,6 +6,7 @@
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import MeraStreamAvatar from '@/components/custom/chat/MeraStreamAvatar';
 import ChatPhaseLine from '@/components/custom/chat/ChatPhaseLine';
+import WaitBubble from '@/components/custom/chat/WaitBubble';
 import { Text } from '@/components/ui/text';
 import {
   Conversation,
@@ -238,20 +239,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 turn settles. */}
             <View style={styles.gutterRow}>
               <MeraStreamAvatar />
-              <MessageContent
-                role="assistant"
-                variant="transient"
-                testID="chat-wait-bubble"
-              >
-              {/* A sentence that tracks the real phase, not a rotating word.
-                  The word was decorative and said the same thing whether the
-                  device was queued behind prewarm, fetching an attestation
-                  key or waiting out the model's 3-8s time to first token, so
-                  a long wait read as a frozen screen. The line subscribes to
-                  the phase store itself, so a phase tick re-renders one
-                  <Text> rather than this whole thread. */}
+              {/* Outlined, unfilled and breathing, so a provisional bubble
+                  never reads as something that was said. */}
+              <WaitBubble>
+                {/* A sentence that tracks the real phase, not a rotating word.
+                    The word was decorative and said the same thing whether the
+                    device was queued behind prewarm, fetching an attestation
+                    key or waiting out the model's 3-8s time to first token, so
+                    a long wait read as a frozen screen. The line subscribes to
+                    the phase store itself, so a phase tick re-renders one
+                    Text rather than this whole thread. */}
                 <ChatPhaseLine />
-              </MessageContent>
+              </WaitBubble>
             </View>
           </Message>
         );

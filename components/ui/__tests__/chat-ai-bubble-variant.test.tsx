@@ -4,6 +4,11 @@
 // rather than kept above it, and it has to look like that before the reply
 // arrives. Asserted on the rendered style rather than by snapshot, so a
 // reviewer reading a failure sees which property moved.
+//
+// STATIC ONLY. The breathing outline lives in
+// `components/custom/chat/WaitBubble.tsx` and is tested there, precisely so
+// this package stays free of Reanimated and its consumers' suites do not all
+// need a native-module mock.
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 
@@ -40,13 +45,14 @@ describe('MessageContent variant', () => {
     expect(s.shadowOpacity).toBe(0.4);
   });
 
-  it('renders `transient` as outlined, unfilled and FLAT', () => {
+  it('renders `transient` as outlined and unfilled, with no drop shadow', () => {
     const s = bubbleStyle('transient');
     expect(s.backgroundColor).toBe('transparent');
     expect(s.borderWidth).toBe(1);
-    // The flatness is the load-bearing half. A solid bubble floats off the
-    // panel and reads as something that was said; a provisional one must not.
-    expect(s.shadowOpacity).toBe(0);
+    // A HALO, not elevation. Zero offset blooms evenly outward; `elevation`
+    // stays 0 so Android never draws the grey drop shadow that would make a
+    // provisional bubble look like something that was said.
+    expect(s.shadowOffset).toEqual({ width: 0, height: 0 });
     expect(s.elevation).toBe(0);
   });
 
@@ -54,7 +60,8 @@ describe('MessageContent variant', () => {
     // The panel keeps the only orange outline in the chat, as
     // `bubbleAssistant` records. A second one competes with it.
     const s = bubbleStyle('transient');
-    expect(String(s.borderColor)).not.toMatch(/231|138|83/);
+    expect(String(s.borderColor)).not.toMatch(/231, 138, 83/);
+    expect(String(s.shadowColor)).not.toMatch(/231, 138, 83/);
   });
 
   it('keeps the shared geometry, so the two variants line up', () => {

@@ -25,9 +25,11 @@ import {
   type FlatListProps,
   type ListRenderItem,
   StyleSheet,
+  type StyleProp,
   TextInput,
   useWindowDimensions,
   View,
+  type ViewStyle,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +45,11 @@ const USER_SURFACE = '#2e2e2e';
 // Input field surface (kept distinct from the user bubble tone).
 const INPUT_SURFACE = '#262626';
 const TEXT_COLOR = 'rgb(210, 210, 210)';
+// The transient bubble's outline, at rest and at the top of its pulse. NEUTRAL,
+// not ACCENT: the panel keeps the only orange outline in the chat, and a second
+// one competes with it rather than reading as a different kind of thing.
+export const GLOW_DIM = 'rgba(255, 255, 255, 0.14)';
+export const GLOW_BRIGHT = 'rgba(255, 255, 255, 0.52)';
 // Uniform chat type scale — assistant markdown, user bubble, and the input all
 // share this size/line-height so the conversation reads as one system.
 /** Composer ceiling at 1x — about 6.6 lines of 15/21. Scaled at the call site. */
@@ -165,26 +172,41 @@ export interface MessageContentProps {
    */
   variant?: 'solid' | 'transient';
   testID?: string;
+  /**
+   * Container override, and the reason this file imports no animation library.
+   *
+   * The wait bubble's outline breathes, which needs a Reanimated
+   * `Animated.View`. Importing Reanimated HERE would force every present and
+   * future test that renders any chat primitive to mock a native module:
+   * adding it cost `__tests__/prompt-input-a11y.test.tsx` immediately, with
+   * "Native part of Worklets doesn't seem to be initialized". These are shared
+   * primitives, so the dependency belongs in the one feature that wants it.
+   * See `components/custom/chat/WaitBubble.tsx`.
+   */
+  as?: React.ComponentType<any>;
+  /** Merged last, so a caller's animated style wins over the variant. */
+  style?: StyleProp<ViewStyle>;
   children: React.ReactNode;
 }
 
 const MessageContent = forwardRef<View, MessageContentProps>(function MessageContent(
-  { role, variant = 'solid', testID, children },
+  { role, variant = 'solid', testID, as: Container = View, style, children },
   ref,
 ) {
-  return (
-    <View
-      ref={ref}
-      testID={testID}
-      style={[
-        styles.bubble,
-        role === 'user' ? styles.bubbleUser : styles.bubbleAssistant,
-        variant === 'transient' && styles.bubbleTransient,
-      ]}
-    >
-      {children}
-    </View>
-  );
+  // Spread rather than written inline: `React.ComponentType<any>` erases the
+  // forwardRef-ness of whatever is passed, so JSX refuses `ref` as a literal
+  // attribute even though both View and Animated.View accept one.
+  const containerProps: Record<string, unknown> = {
+    ref,
+    testID,
+    style: [
+      styles.bubble,
+      role === 'user' ? styles.bubbleUser : styles.bubbleAssistant,
+      variant === 'transient' && styles.bubbleTransient,
+      style,
+    ],
+  };
+  return <Container {...containerProps}>{children}</Container>;
 });
 
 // ---------------------------------------------------------------------------
@@ -398,8 +420,16 @@ const styles = StyleSheet.create({
   bubbleTransient: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.16)',
+    // Both are overridden every frame by the glow; these are the resting
+    // values a non-animated render (and every style assertion) sees.
+    borderColor: GLOW_DIM,
     shadowOpacity: 0,
+    // A HALO, not a drop shadow: zero offset, so it blooms evenly outward
+    // instead of implying the bubble is raised off the panel. `elevation`
+    // stays 0 so Android never draws the grey drop shadow that would.
+    shadowColor: '#FFFFFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowRadius: 10,
     elevation: 0,
   },
   inputRow: {
