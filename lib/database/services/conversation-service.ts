@@ -109,6 +109,28 @@ export async function appendMessage(
   msg: { role: MessageRole; content: string; toolCalls?: ToolCallRecord[] },
   explicitId?: string,
 ): Promise<string> {
+  // ALREADY THERE IS NOT AN ERROR. The caller's in-memory "already persisted"
+  // guard is a ref, so it is empty again after any remount (Fast Refresh in
+  // dev, closing and reopening the chat sheet in production) while the row it
+  // was guarding is still in SQLite. The insert then fails the primary key and
+  // the turn logs `sqlite error 1555 (UNIQUE constraint failed: messages.id)`.
+  //
+  // Nothing is lost when that happens, precisely because the row exists, so the
+  // honest outcome is the id rather than a throw. Checked rather than caught:
+  // swallowing the constraint error would also swallow a genuine write failure
+  // that happened to look like one.
+  // `find` rather than a query: a missing row is the documented throw in
+  // WatermelonDB, and the collection's own cache answers it without a round
+  // trip when the row is already loaded.
+  if (explicitId) {
+    try {
+      const existing = await messagesCol.find(explicitId);
+      return existing.id;
+    } catch {
+      // Not there. Fall through and create it.
+    }
+  }
+
   let createdId = '';
   await database.write(async () => {
     const record = await messagesCol.create((m) => {
