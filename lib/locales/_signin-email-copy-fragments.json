@@ -1,0 +1,23 @@
+{
+  "_comment": "Attestation-failure cluster: the email fallback button is NOT an existing-user-only path (a new user on a device that cannot attest mints an account through it), so the label drops the 'Already have an account?' framing. Each translation is harvested from that locale's own auth.deviceSignInDenied/Failed clause, which sits directly above the button, so the sentence and the button read as one instruction. Input to _splice-fragments.mjs with --allow-overwrite auth.alreadyHaveAccount. Never edit the 20 dictionaries by hand.",
+  "en": { "auth": { "alreadyHaveAccount": "Sign in with email" } },
+  "ar": { "auth": { "alreadyHaveAccount": "تسجيل الدخول بالبريد الإلكتروني" } },
+  "de": { "auth": { "alreadyHaveAccount": "Mit E-Mail anmelden" } },
+  "es": { "auth": { "alreadyHaveAccount": "Iniciar sesión con tu correo" } },
+  "fr": { "auth": { "alreadyHaveAccount": "Se connecter par e-mail" } },
+  "hi": { "auth": { "alreadyHaveAccount": "ईमेल से साइन इन करें" } },
+  "id": { "auth": { "alreadyHaveAccount": "Masuk dengan email" } },
+  "it": { "auth": { "alreadyHaveAccount": "Accedi con l'email" } },
+  "ja": { "auth": { "alreadyHaveAccount": "メールでログイン" } },
+  "ko": { "auth": { "alreadyHaveAccount": "이메일로 로그인" } },
+  "nl": { "auth": { "alreadyHaveAccount": "Inloggen met e-mail" } },
+  "pl": { "auth": { "alreadyHaveAccount": "Zaloguj się e-mailem" } },
+  "pt-BR": { "auth": { "alreadyHaveAccount": "Entrar com e-mail" } },
+  "ru": { "auth": { "alreadyHaveAccount": "Войти по электронной почте" } },
+  "th": { "auth": { "alreadyHaveAccount": "ลงชื่อเข้าใช้ด้วยอีเมล" } },
+  "tr": { "auth": { "alreadyHaveAccount": "E-posta ile giriş yap" } },
+  "uk": { "auth": { "alreadyHaveAccount": "Увійти через електронну пошту" } },
+  "vi": { "auth": { "alreadyHaveAccount": "Đăng nhập bằng email" } },
+  "zh-CN": { "auth": { "alreadyHaveAccount": "使用电子邮件登录" } },
+  "zh-TW": { "auth": { "alreadyHaveAccount": "使用電子郵件登入" } }
+}

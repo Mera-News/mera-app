@@ -1,5 +1,5 @@
 {
-  "_comment": "auth-wave S10: welcome-view copy revision (Start reading CTA, Already have an account? Sign in link). Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "_comment": "auth-wave S10: welcome-view copy revision (Start reading CTA, Already have an account? Sign in link). Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand. SUPERSEDED for auth.alreadyHaveAccount by _signin-email-copy-fragments.json: replaying THIS file with --allow-overwrite on that key would silently restore copy that was deliberately removed. startReading is still current.",
   "en": { "auth": { "startReading": "Start reading", "alreadyHaveAccount": "Already have an account? Sign in" } },
   "ar": { "auth": { "startReading": "ابدأ القراءة", "alreadyHaveAccount": "هل لديك حساب بالفعل؟ سجّل الدخول" } },
   "de": { "auth": { "startReading": "Jetzt lesen", "alreadyHaveAccount": "Schon ein Konto? Anmelden" } },
