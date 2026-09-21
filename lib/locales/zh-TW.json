@@ -228,8 +228,7 @@
     "statsPublishedPending_one": "過去24小時內發佈了{{formatted}}篇文章。",
     "statsPublished_one": "過去24小時內發佈了{{formatted}}篇文章,",
     "statsRead_one": "且您已閱讀{{formatted}}篇。",
-    "statsRelevant_one": "{{formatted}}篇與您相關,",
-    "lowerPriorityCta": "想閱讀更多嗎？降低資訊流優先級"
+    "statsRelevant_one": "{{formatted}}篇與您相關,"
   },
   "relevance": {
     "emergency": "緊急",
@@ -238,10 +237,6 @@
     "low": "低",
     "irrelevant": "無關",
     "unprocessed": "未處理"
-  },
-  "importanceFilter": {
-    "a11yLabel": "最低故事優先級",
-    "a11yOption": "顯示{{level}}優先級及以上"
   },
   "aiDisclosure": {
     "caption": "由 AI 產生的說明",
@@ -2239,44 +2234,6 @@
               "after": "一個堅定的（當你手動新增篩選時或使其源沉默時的硬開關）根本沒有到期日，停留直到你自己移除它。"
             },
             "ask": "我篩選掉的東西會回來嗎？"
-          }
-        }
-      },
-      "signal": {
-        "title": "降低音量",
-        "subtitle": "一個撥號盤，以及它永遠看不到的故事。",
-        "slides": {
-          "the-dial": {
-            "headline": "標題中的小芯片",
-            "body": "在動態和儀表板的頂部坐著一個芯片，讀取高、中或低，帶有一個小箭頭。它是一個下限：評分低於它的故事根本不被繪製。",
-            "ask": "我動態頂部的中芯片做什麼？"
-          },
-          "per-screen": {
-            "headline": "每個螢幕保留自己的",
-            "body": "緊縮一個永遠不會使另一個挨餓。點擊每張卡到它描述的螢幕。",
-            "steps": {
-              "0": "動態從中等開始：當天的實質，不是每最後一件事。",
-              "1": "儀表板從低開始：所有東西，用於當你感覺瀏覽時。"
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "動態",
-                "dashboard-tab": "儀表板"
-              },
-              "cards": {
-                "medium-default": "在中等開始",
-                "low-default": "在低開始"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "突發新聞忽視撥號盤",
-            "body": "任何評分為緊急的東西通過每個設定，高包括。撥號盤在那裡修剪常規新聞；它不是使災難沉默的方式。"
-          },
-          "headline-cull": {
-            "headline": "某些故事永遠不會到達撥號盤",
-            "body": "沿著你自己的故事，Mera拉入國家的頂級頭條。為你評分低的頂級頭條被直接刪除，而不是停泊在底部。頭條存在說「這在這裡很重要」，一個低評分的是噪聲。與你自己興趣相符的故事從不以這種方式被刪除。",
-            "ask": "為什麼我看到的一般頭條比我興趣的故事更少？"
           }
         }
       },

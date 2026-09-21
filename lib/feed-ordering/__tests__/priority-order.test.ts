@@ -31,7 +31,7 @@ describe('relevanceBandRank', () => {
 
 // Band-purity contract: the SAME relevance value must resolve to the SAME band
 // everywhere — the card pill (RelevanceChip / getRelevanceColors), feed
-// ordering + the importance filter (this module), and the Dashboard's section
+// ordering + the top-headline cull (this module), and the Dashboard's section
 // viability (`bucketOf`). Both `relevanceBandRank` (via `bandOf`) and
 // `bucketOf` are driven by the same fixed cutoffs (0.4/0.6/0.8/1.0, matching
 // DEFAULT_HARNESS_CONFIG's articlePipeline cutoffs), so probing the same

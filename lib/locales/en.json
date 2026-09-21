@@ -152,7 +152,6 @@
   "feed": {
     "updatedAt": "Updated {{time}}",
     "allCaughtUp": "You're all caught up with what impacts you.",
-    "lowerPriorityCta": "Want to read more? Lower the feed priority",
     "preparingFeed": "Mera is preparing your feed.",
     "preparingFeedExploreHint": "Meanwhile, check out the Explore tab for top stories.",
     "noInterests": "Mera cannot analyze news for you",
@@ -294,10 +293,6 @@
     "low": "Low",
     "irrelevant": "Irrelevant",
     "unprocessed": "Unprocessed"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Minimum story priority",
-    "a11yOption": "Show {{level}} priority and above"
   },
   "aiDisclosure": {
     "caption": "AI-generated note",
@@ -2344,44 +2339,6 @@
               "after": "A firm one (the hard switch when you add a filter by hand, or muting a source) has no expiry at all and stays until you remove it yourself."
             },
             "ask": "Do the things I filter out ever come back?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Turning down the volume",
-        "subtitle": "One dial, and the stories it never gets to see.",
-        "slides": {
-          "the-dial": {
-            "headline": "The small chip in the header",
-            "body": "At the top of the Feed and of the Dashboard sits a chip reading High, Med or Low with a little arrow. It is a floor: stories rated below it are simply not drawn.",
-            "ask": "What does the Med chip at the top of my feed do?"
-          },
-          "per-screen": {
-            "headline": "Each screen keeps its own",
-            "body": "Tightening one never starves the other. Tap each card onto the screen it describes.",
-            "steps": {
-              "0": "The Feed starts at Medium: the day's substance, not every last thing.",
-              "1": "The Dashboard starts at Low: everything, for when you feel like browsing."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Feed",
-                "dashboard-tab": "Dashboard"
-              },
-              "cards": {
-                "medium-default": "Starts at Medium",
-                "low-default": "Starts at Low"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Breaking news ignores the dial",
-            "body": "Anything rated as an emergency passes every setting, High included. The dial is there to trim routine news; it is not a way to mute a disaster."
-          },
-          "headline-cull": {
-            "headline": "Some stories never reach the dial",
-            "body": "Alongside your own stories, Mera pulls in a country's top headlines. A top headline that scores low for you is dropped outright rather than parked at the bottom. A headline exists to say \"this matters here\", and a low-scoring one is just noise. Stories matched to your own interests are never dropped this way.",
-            "ask": "Why do I see fewer general headlines than stories about my interests?"
           }
         }
       },

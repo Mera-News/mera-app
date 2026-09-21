@@ -228,8 +228,7 @@
     "statsPublishedPending_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
     "statsPublished_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,",
     "statsRead_one": "và bạn đã đọc {{formatted}}.",
-    "statsRelevant_one": "{{formatted}} có vẻ phù hợp,",
-    "lowerPriorityCta": "Muốn đọc thêm? Hạ độ ưu tiên bảng nguồn cấp dữ liệu"
+    "statsRelevant_one": "{{formatted}} có vẻ phù hợp,"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -238,10 +237,6 @@
     "low": "Thấp",
     "irrelevant": "Không liên quan",
     "unprocessed": "Chưa xử lý"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Mức ưu tiên câu chuyện tối thiểu",
-    "a11yOption": "Hiển thị mức ưu tiên {{level}} và cao hơn"
   },
   "aiDisclosure": {
     "caption": "Ghi chú do AI tạo",
@@ -2239,44 +2234,6 @@
               "after": "Một cái cứng (công tắc cứng khi bạn thêm một bộ lọc bằng tay, hoặc im lặng một nguồn) không có expiry nào cả và ở lại cho đến khi bạn xóa nó."
             },
             "ask": "Những thứ tôi lọc ra khi nào quay lại?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Giảm âm lượng",
-        "subtitle": "Một chiếc quay số, và những câu chuyện nó không bao giờ nhận được để thấy.",
-        "slides": {
-          "the-dial": {
-            "headline": "Chip nhỏ ở tiêu đề",
-            "body": "Ở đầu Bản tin và của Bảng điều khiển ngồi một chip đọc Cao, Trung bình hoặc Thấp có một mũi tên nhỏ. Nó là một sàn: những câu chuyện được xếp hạng bên dưới nó đơn giản là không được vẽ.",
-            "ask": "Chip Trung bình ở đầu bản tin của tôi làm gì?"
-          },
-          "per-screen": {
-            "headline": "Mỗi màn hình giữ của nó",
-            "body": "Thắt chặt một không bao giờ đói cái kia. Nhấn mỗi thẻ vào màn hình nó mô tả.",
-            "steps": {
-              "0": "Bản tin bắt đầu ở Trung bình: chất của ngày, không phải mỗi điều cuối cùng.",
-              "1": "Bảng điều khiển bắt đầu ở Thấp: mọi thứ, cho khi bạn cảm thấy giống như duyệt."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Bản tin",
-                "dashboard-tab": "Bảng điều khiển"
-              },
-              "cards": {
-                "medium-default": "Bắt đầu ở Trung bình",
-                "low-default": "Bắt đầu ở Thấp"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Tin tức nóng hổi bỏ qua chiếc quay số",
-            "body": "Bất cứ điều gì được xếp hạng như một trường hợp khẩn cấp vượt qua mọi cài đặt, Cao bao gồm. Chiếc quay số ở đó để cắt tin tức thường xuyên, nó không phải là một cách để im lặng thảm họa."
-          },
-          "headline-cull": {
-            "headline": "Một số câu chuyện không bao giờ đến chiếc quay số",
-            "body": "Bên cạnh những câu chuyện riêng của bạn, Mera kéo vào các tiêu đề hàng đầu của quốc gia. Một tiêu đề hàng đầu mà điểm số thấp cho bạn bị loại bỏ hoàn toàn thay vì đỗi ở phía dưới. Một tiêu đề tồn tại để nói 'điều này quan trọng ở đây', và một điểm số thấp chỉ là tiếng ồn. Những câu chuyện phù hợp với sở thích riêng của bạn không bao giờ bị loại bỏ theo cách này.",
-            "ask": "Tại sao tôi thấy ít hơn các tiêu đề chung hơn là những câu chuyện về sở thích của tôi?"
           }
         }
       },

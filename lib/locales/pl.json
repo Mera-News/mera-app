@@ -240,8 +240,7 @@
     "statsRead_one": "i przeczytałeś {{formatted}}.",
     "statsRead_few": "i przeczytałeś {{formatted}}.",
     "statsRead_many": "i przeczytałeś {{formatted}}.",
-    "statsRead_other": "i przeczytałeś {{formatted}}.",
-    "lowerPriorityCta": "Chcesz czytać więcej? Obniż priorytet kanału"
+    "statsRead_other": "i przeczytałeś {{formatted}}."
   },
   "relevance": {
     "emergency": "Pilne",
@@ -250,10 +249,6 @@
     "low": "Niska",
     "irrelevant": "Nieistotne",
     "unprocessed": "Nieprzetworzone"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Minimum priorytetu artykułu",
-    "a11yOption": "Pokaż {{level}} priorytet i wyżej"
   },
   "aiDisclosure": {
     "caption": "Notatka wygenerowana przez AI",
@@ -2270,44 +2265,6 @@
               "after": "Mocna, 'trudna przełącznik gdy dodajesz filtr ręcznie lub wyciszenie źródła', ma bez wygaśnięcia i pozostaje, dopóki nie usuniesz jej siebie."
             },
             "ask": "Czy rzeczy, które filtruję, kiedykolwiek wracają?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Zmniejszanie głośności",
-        "subtitle": "Jeden pokrętło i historii, które nigdy nie widzi.",
-        "slides": {
-          "the-dial": {
-            "headline": "Mały żeton w nagłówku",
-            "body": "Na szczycie kanału i pulpitu siedzi żeton czytający High, Med lub Low ze strzałką. To piętro: historie oceniane poniżej po prostu nie są rysowane.",
-            "ask": "Co robi żeton Med na szczycie mojego kanału?"
-          },
-          "per-screen": {
-            "headline": "Każdy ekran trzyma własne",
-            "body": "Zaostrzenie jednego nigdy nie głodzenia drugiego. Dotknij każdę kartę na ekran, który opisuje.",
-            "steps": {
-              "0": "Kanał zaczyna się w Medium: substancja dnia, nie każda ostatnia rzecz.",
-              "1": "Pulpit zaczyna się na Low: wszystko, na wypadek, gdy masz ochotę przeglądać."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Kanał",
-                "dashboard-tab": "Pulpit"
-              },
-              "cards": {
-                "medium-default": "Zaczyna się w Medium",
-                "low-default": "Zaczyna się na Low"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Przełamujące wiadomości ignorują pokrętło",
-            "body": "Wszystko oceniane jako nadzwyczajne przechodzi każde ustawienie, High włączone. Pokrętło jest tam, aby przycinać rutyny wiadomości; to nie jest sposób, aby wyciszyć katastrofę."
-          },
-          "headline-cull": {
-            "headline": "Niektóre historie nigdy nie osiągają pokrętła",
-            "body": "Obok Twoich własnych historii Mera ciąga góry nagłówki kraju. Górny nagłówek, który zdobywa się nisko dla Ciebie, jest upuszczany wręcz zamiast parkowany u dołu. Nagłówek istnieje, aby powiedzieć 'to liczy się tutaj', a nisko punktowany jest tylko szumem. Historie dopasowane do Twoich własnych zainteresowań nigdy nie są upuszczane w ten sposób.",
-            "ask": "Dlaczego widzę mniej ogólnych nagłówków niż historii o moich zainteresowaniach?"
           }
         }
       },

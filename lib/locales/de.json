@@ -228,8 +228,7 @@
     "statsRelevant_one": "{{formatted}} ist relevant,",
     "statsRelevant_other": "{{formatted}} sind relevant,",
     "statsRead_one": "und Sie haben {{formatted}} gelesen.",
-    "statsRead_other": "und Sie haben {{formatted}} gelesen.",
-    "lowerPriorityCta": "Möchtest du mehr lesen? Senke die Feed-Priorität"
+    "statsRead_other": "und Sie haben {{formatted}} gelesen."
   },
   "relevance": {
     "emergency": "Notfall",
@@ -238,10 +237,6 @@
     "low": "Niedrig",
     "irrelevant": "Nicht relevant",
     "unprocessed": "Nicht verarbeitet"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Minimale Story-Priorität",
-    "a11yOption": "Zeige {{level}}-Priorität und höher"
   },
   "aiDisclosure": {
     "caption": "KI-generierter Hinweis",
@@ -2238,44 +2233,6 @@
               "after": "Ein fester (der harte Schalter wenn du einen Filter von Hand hinzufügst oder eine Quelle stummschaltest) hat überhaupt keine Ablaufzeit und bleibt bis du ihn selbst entfernst."
             },
             "ask": "Kommen die Dinge, die ich filtere, je zurück?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Die Lautstärke runterfahren",
-        "subtitle": "Ein Regler und die Geschichten es nie sieht.",
-        "slides": {
-          "the-dial": {
-            "headline": "Der kleine Chip in der Kopfzeile",
-            "body": "An der Oberseite des Feeds und des Dashboards sitzt ein Chip lesend Hoch, Mittel oder Niedrig mit einem kleinen Pfeil. Es ist ein Boden: Geschichten bewertet unter es sind einfach nicht gezogen.",
-            "ask": "Was macht der Mittel-Chip an der Oberseite meines Feeds?"
-          },
-          "per-screen": {
-            "headline": "Jeder Bildschirm hält sein eigenes",
-            "body": "Eine straffung wird nie den anderen hungern. Tippe auf jede Karte auf den Bildschirm den sie beschreibt.",
-            "steps": {
-              "0": "Der Feed fängt bei Mittel an: der Tag die Substanz, nicht jede letzte Sache.",
-              "1": "Das Dashboard fängt bei Niedrig an: alles, für wenn du dich wie das Durchsuchen fühlst."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Feed",
-                "dashboard-tab": "Dashboard"
-              },
-              "cards": {
-                "medium-default": "Fängt bei Mittel an",
-                "low-default": "Fängt bei Niedrig an"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Eilmeldungen ignorieren die Regler",
-            "body": "Alles bewertet als Notfall übergibt jede Einstellung, Hoch eingeschlossen. Der Regler ist da, um Routine-Nachrichten zu schneiden; es ist nicht ein Weg eine Katastrophe zu stumm."
-          },
-          "headline-cull": {
-            "headline": "Einige Geschichten erreichen nie die Regler",
-            "body": "Neben deinen eigenen Geschichten zieht Mera die Top-Schlagzeilen eines Landes ein. Eine Top-Schlagzeile die für dich niedrig bewertet ist wird geradeaus fallen statt unten geparkt. Eine Schlagzeile existiert zu sagen 'das ändert hier' und eine niedrig bewertete ist bloß Lärm. Geschichten abgestimmt zu deinen eigenen Interessen werden nie auf diese Weise gebrochen.",
-            "ask": "Warum sehe ich weniger allgemeine Schlagzeilen als Geschichten über meine Interessen?"
           }
         }
       },

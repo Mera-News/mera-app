@@ -1067,9 +1067,10 @@ const FeedScreen: React.FC = () => {
           pointerEvents="box-none"
           style={{ paddingTop: insets.top + 16 }}
         >
-          {/* Title, status glyph, priority filter — and nothing else. The
-              notification bell used to sit at the right edge of this row; it
-              lives on the Dashboard only now. This screen is the reading
+          {/* Title and status glyph — and nothing else. The notification bell
+              used to sit at the right edge of this row; it lives on the
+              Dashboard only now, and the High/Med/Low priority chip that sat
+              beside it has been removed outright. This screen is the reading
               surface, and every additional affordance here is something that
               competes with the story you are trying to read. */}
           <HStack className="items-center" pointerEvents="box-none">

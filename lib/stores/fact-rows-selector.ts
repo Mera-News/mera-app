@@ -174,14 +174,11 @@ export const V3_RENDER_GATE = 0.55;
  * everyone deletes all 25 of those instantly, and since nothing re-scores them
  * they never come back.
  *
- * SURFACE SCOPE, measured rather than assumed: those 0.4 rows only reach a
- * surface whose importance filter is set to LOW, because `bandOf` puts [0.4,0.6)
- * in the LOW band. That is the DASHBOARD by default
- * (`DEFAULT_DASHBOARD_IMPORTANCE_THRESHOLD = 'low'`), and the Feed only when the
- * reader lowers its filter from the default 'medium'
- * (`DEFAULT_FEED_IMPORTANCE_THRESHOLD`, which already requires >= 0.6). So this
- * protects the Dashboard's entire low band, not the default Feed — worth stating
- * precisely, since "a fifth of the feed" would be the wrong claim.
+ * SURFACE SCOPE: those 0.4 rows sit in the LOW band, because `bandOf` puts
+ * [0.4,0.6) there. This used to reach the Dashboard only, since the Feed's
+ * importance filter defaulted to 'medium' and already required >= 0.6. That
+ * filter has been removed from both tabs, so the LOW band now renders
+ * everywhere and this gate protects the whole of it on both surfaces.
  *
  * So the vintage travels with the row (`article_suggestions.scored_with_v3`,
  * schema v50) and each row is judged at its own scorer's gate. Absent/false —
@@ -400,11 +397,13 @@ export function isBreaking(s: ForYouSuggestion): boolean {
  * surface in the app; it is reserved for the tier the rest of the app already
  * calls EMERGENCY.
  *
- * The looseness in `isBreaking` is deliberate and stays: that predicate's job is
- * exempting stories from the Med+/High importance dial and giving them a feed
- * recency bonus, i.e. "never BURY this". Never burying a high-relevance disaster
- * story and fronting it in a red alert strip are different decisions, so they
- * get different predicates rather than one predicate serving both badly.
+ * The looseness in `isBreaking` is deliberate and stays: that predicate's job
+ * is giving a story a feed recency bonus, i.e. "never BURY this". (It also
+ * exempted stories from the Med+/High importance dial, which no longer exists;
+ * the recency bonus is what it is for now.) Never burying a high-relevance
+ * disaster story and fronting it in a red alert strip are different decisions,
+ * so they get different predicates rather than one predicate serving both
+ * badly.
  *
  * Reads `rawScore`, not `relevance`, for the same reason `isBreaking` does:
  * soft-suppression penalties can drag the persisted `relevance` below the tier

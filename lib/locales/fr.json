@@ -233,8 +233,7 @@
     "statsRelevant_other": "{{formatted}} semblent pertinents,",
     "statsRead_one": "et vous avez lu {{formatted}}.",
     "statsRead_many": "et vous avez lu {{formatted}}.",
-    "statsRead_other": "et vous avez lu {{formatted}}.",
-    "lowerPriorityCta": "Vous voulez en lire plus ? Diminuez la priorité du flux"
+    "statsRead_other": "et vous avez lu {{formatted}}."
   },
   "relevance": {
     "emergency": "Urgence",
@@ -243,10 +242,6 @@
     "low": "Faible",
     "irrelevant": "Non pertinent",
     "unprocessed": "Non traité"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Priorité minimale de l'histoire",
-    "a11yOption": "Afficher la priorité {{level}} et supérieure"
   },
   "aiDisclosure": {
     "caption": "Note générée par l'IA",
@@ -2245,44 +2240,6 @@
               "after": "Un ferme (le commutateur dur quand vous ajoutez un filtre à la main, ou mettez une source en sourdine) n'a pas d'expiration du tout et reste jusqu'à ce que vous le supprimiez vous-même."
             },
             "ask": "Les choses que je filtre sortent jamais ?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Baisser le volume",
-        "subtitle": "Un cadran, et les histoires qu'il ne voit jamais.",
-        "slides": {
-          "the-dial": {
-            "headline": "Le petit jeton dans l'en-tête",
-            "body": "En haut du fil et du tableau de bord est un jeton lisant High, Med, or Low avec une petite flèche. C'est un plancher : les histoires notées en dessous ne sont simplement pas dessinées.",
-            "ask": "Qu'est-ce que le jeton Med en haut de mon fil fait ?"
-          },
-          "per-screen": {
-            "headline": "Chaque écran garde le sien",
-            "body": "Resserrer l'un ne jamais l'autre affamé. Appuyez sur chaque carte sur l'écran qu'elle décrit.",
-            "steps": {
-              "0": "Le fil commence à Medium : la substance de la journée, pas tout dernier chose.",
-              "1": "Le tableau de bord commence à Low : tout, pour quand vous avez le sentiment de navigation."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Fil",
-                "dashboard-tab": "Tableau de bord"
-              },
-              "cards": {
-                "medium-default": "Commence à Medium",
-                "low-default": "Commence à Low"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Les actualités de dernière minute ignorent le cadran",
-            "body": "Tout ce qui est évalué comme une urgence passe chaque paramètre, High inclus. Le cadran est là pour tailler les actualités de routine ; ce n'est pas une façon de réduire au silence une catastrophe."
-          },
-          "headline-cull": {
-            "headline": "Certaines histoires ne rejoignent jamais le cadran",
-            "body": "En parallèle avec vos propres histoires, Mera tire les titres principaux d'une terre. Un titre principal qui semble bas pour vous est abandonné net plutôt que parqué au bas. Un titre existe pour dire \"cela compte ici\", et un faible score est juste du bruit. Les histoires correspondant à vos intérêts ne sont jamais abandonnées de cette façon.",
-            "ask": "Pourquoi je vois moins de titres généraux que des histoires sur mes intérêts ?"
           }
         }
       },

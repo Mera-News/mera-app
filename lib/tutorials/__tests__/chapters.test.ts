@@ -35,10 +35,10 @@ import { animationIdFor, keysForChapter, lookupKey } from '../keys';
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 
 describe('TUTORIAL_CHAPTERS', () => {
-  it('has twelve chapters split across the two levels', () => {
-    expect(TUTORIAL_CHAPTERS).toHaveLength(12);
+  it('has eleven chapters split across the two levels', () => {
+    expect(TUTORIAL_CHAPTERS).toHaveLength(11);
     expect(chaptersAtLevel('basic')).toHaveLength(7);
-    expect(chaptersAtLevel('advanced')).toHaveLength(5);
+    expect(chaptersAtLevel('advanced')).toHaveLength(4);
   });
 
   it('has unique chapter ids, and unique slide ids within each chapter', () => {
@@ -58,8 +58,9 @@ describe('TUTORIAL_CHAPTERS', () => {
     );
     expect(new Set(ids).size).toBe(ids.length);
     // Around sixty slides; the exact number moves as copy lands, the uniqueness
-    // does not.
-    expect(ids.length).toBeGreaterThanOrEqual(55);
+    // does not. Was 55 before the `signal` chapter (the importance dial) went
+    // with the control it taught, taking four slides with it.
+    expect(ids.length).toBeGreaterThanOrEqual(51);
   });
 
   it('gives every slide a placeholder — it is the shipped visual layer', () => {
@@ -163,8 +164,8 @@ describe('tutorial copy', () => {
     expect(missing).toEqual([]);
   });
 
-  // Deliberately narrow: "just noise" as a plain English word survives (see
-  // `signal/headline-cull`). What is banned is the FEATURE — decoy topics and
+  // Deliberately narrow: "just noise" as a plain English word survives. What
+  // is banned is the FEATURE — decoy topics and
   // the "Inject noise" control, neither of which exists in the app. The
   // separator class matters: the two ids actually removed were
   // `decoys-are-a-switch` and `inject-noise`, and a pattern that only matched a
@@ -178,7 +179,7 @@ describe('tutorial copy', () => {
     expect(BANNED_FEATURE.test('inject-noise')).toBe(true);
     expect(BANNED_FEATURE.test('Inject noise')).toBe(true);
     expect(BANNED_FEATURE.test('noise-injection setting')).toBe(true);
-    // The plain English word, which `signal/headline-cull` legitimately uses.
+    // The plain English word, which chapter copy legitimately uses.
     expect(BANNED_FEATURE.test('a low-scoring one is just noise')).toBe(false);
   });
 

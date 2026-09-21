@@ -228,8 +228,7 @@
     "statsRelevant_one": "{{formatted}} sembra rilevante,",
     "statsRelevant_other": "{{formatted}} sembrano rilevanti,",
     "statsRead_one": "e hai letto {{formatted}}.",
-    "statsRead_other": "e hai letto {{formatted}}.",
-    "lowerPriorityCta": "Vuoi leggere di più? Abbassa la priorità del feed"
+    "statsRead_other": "e hai letto {{formatted}}."
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -238,10 +237,6 @@
     "low": "Basso",
     "irrelevant": "Irrilevante",
     "unprocessed": "Non elaborato"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Priorità minima della storia",
-    "a11yOption": "Mostra priorità {{level}} e superiori"
   },
   "aiDisclosure": {
     "caption": "Nota generata dall'IA",
@@ -2238,44 +2233,6 @@
               "after": "Uno fermo (l'interruttore duro quando aggiungi un filtro a mano, o muti una fonte) non ha scadenza affatto e rimane finché non lo rimuovi tu."
             },
             "ask": "Le cose che filtro escono mai torna?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Abbassare il volume",
-        "subtitle": "Una manopola, e le storie che non vede mai.",
-        "slides": {
-          "the-dial": {
-            "headline": "Il piccolo chip nell'intestazione",
-            "body": "Sopra il Feed e il Dashboard siede un chip che legge Alto, Med o Basso con una piccola freccia. È un pavimento: le storie valutate al di sotto di esso semplicemente non sono disegnate.",
-            "ask": "Cosa fa il chip Med in cima al mio feed?"
-          },
-          "per-screen": {
-            "headline": "Ogni schermo tiene il suo",
-            "body": "Restringere uno non affama mai l'altro. Tocca ogni carta dello schermo che descrive.",
-            "steps": {
-              "0": "Il Feed inizia a Medium: la sostanza della giornata, non l'ultima cosa.",
-              "1": "Il Dashboard inizia a Basso: tutto, per quando ti senti come sfogliare."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Feed",
-                "dashboard-tab": "Dashboard"
-              },
-              "cards": {
-                "medium-default": "Inizia a Medium",
-                "low-default": "Inizia a Basso"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Le notizie di rottura ignorano la manopola",
-            "body": "Qualsiasi cosa valutata come un'emergenza passa ogni impostazione, Alto incluso. La manopola è lì per tagliare le notizie di routine; non è un modo per mutare un disastro."
-          },
-          "headline-cull": {
-            "headline": "Alcune storie non raggiungono mai la manopola",
-            "body": "Insieme alle tue storie, Mera tira in i titoli principali di un paese. Un titolo principale che punteggia basso per te viene abbandonato del tutto piuttosto che parcheggiato in fondo. Un titolo esiste per dire \"questo importa qui\", e uno a basso punteggio è solo rumore. Le storie abbinate ai tuoi stessi interessi non vengono mai abbandonate in questo modo.",
-            "ask": "Perché vedo meno titoli generali di storie sui miei interessi?"
           }
         }
       },

@@ -228,8 +228,7 @@
     "statsPublishedPending_one": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
     "statsPublished_one": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir,",
     "statsRead_one": "dan Anda telah membaca {{formatted}}.",
-    "statsRelevant_one": "{{formatted}} terlihat relevan,",
-    "lowerPriorityCta": "Ingin membaca lebih banyak? Turunkan prioritas feed"
+    "statsRelevant_one": "{{formatted}} terlihat relevan,"
   },
   "relevance": {
     "emergency": "Darurat",
@@ -238,10 +237,6 @@
     "low": "Rendah",
     "irrelevant": "Tidak relevan",
     "unprocessed": "Belum diproses"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Prioritas cerita minimum",
-    "a11yOption": "Tampilkan prioritas {{level}} dan di atasnya"
   },
   "aiDisclosure": {
     "caption": "Catatan yang dibuat oleh AI",
@@ -2238,44 +2233,6 @@
               "after": "Satu yang tegas (sakelar keras saat Anda menambahkan filter dengan tangan, atau membungkam sumber) tidak memiliki kedaluwarsa sama sekali dan tetap sampai Anda menghapusnya sendiri."
             },
             "ask": "Apakah hal-hal yang saya saring keluar pernah kembali?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Menurunkan volume",
-        "subtitle": "Satu panggilan, dan cerita yang tidak pernah dilihatnya.",
-        "slides": {
-          "the-dial": {
-            "headline": "Chip kecil di header",
-            "body": "Di bagian atas Feed dan Dashboard duduk chip yang membaca Tinggi, Sedang atau Rendah dengan panah kecil. Itu adalah lantai: cerita yang dinilai di bawahnya tidak akan ditarik.",
-            "ask": "Apa yang dilakukan chip Med di bagian atas feed saya?"
-          },
-          "per-screen": {
-            "headline": "Setiap layar menyimpan miliknya sendiri",
-            "body": "Mengencangkan satu tidak pernah membuatnya lapar yang lain. Ketuk setiap kartu ke layar yang dijelaskannya.",
-            "steps": {
-              "0": "Feed dimulai pada Sedang: substansi hari, bukan setiap hal terakhir.",
-              "1": "Dashboard dimulai pada Rendah: semuanya, untuk saat Anda merasa seperti browsing."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Feed",
-                "dashboard-tab": "Dashboard"
-              },
-              "cards": {
-                "medium-default": "Dimulai pada Sedang",
-                "low-default": "Dimulai pada Rendah"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Berita pecah mengabaikan panggilan",
-            "body": "Apa pun yang dinilai sebagai keadaan darurat melewati setiap pengaturan, Tinggi disertakan. Panggilan ada untuk memotong berita rutin, itu bukan cara untuk membungkam bencana."
-          },
-          "headline-cull": {
-            "headline": "Beberapa cerita tidak pernah mencapai panggilan",
-            "body": "Bersama cerita Anda sendiri, Mera menarik berita utama negara. Berita utama teratas yang mencetak rendah untuk Anda dijatuhkan begitu saja daripada diletakkan di bagian bawah. Berita utama ada untuk mengatakan 'ini penting di sini', dan satu yang mencetak rendah hanya kebisingan. Cerita yang cocok dengan minat Anda sendiri tidak pernah dijatuhkan dengan cara ini.",
-            "ask": "Mengapa saya melihat lebih sedikit berita utama umum daripada cerita tentang minat saya?"
           }
         }
       },

@@ -9,9 +9,9 @@
 // gone along with the feature, not weakened.
 //
 // What's left: the surface/scale contract (unchanged), and the CTA, which is
-// now CONDITIONAL — "Browse Explore" by default, or "Want to read more? Lower
-// the feed priority" when the caller passes both `feedThreshold` (above its
-// floor) and `onLowerPriority`.
+// unconditionally "Browse Explore". It was briefly conditional, forking to
+// "Want to read more? Lower the feed priority" when the Feed's importance
+// filter was hiding stories; that filter is gone and so is the fork.
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 jest.mock('react-i18next', () => ({

@@ -20,15 +20,15 @@
 // BAND-LADDER UNIFICATION (relevance v3, 2026-08-05): there used to be TWO
 // independent band ladders — `bucketOf` (feed-select/ownership.ts, 0.4/0.6/0.8,
 // Dashboard section viability only) and this module's own `relevanceBandRank`
-// (0.53/0.77, re-hardcoded in lib/relevance-utils.ts + RelevanceChip.tsx for the
-// card pill, feed ordering, and the importance filter). An article at 0.53–0.60
+// (0.53/0.77, re-hardcoded in lib/relevance-utils.ts + RelevanceChip.tsx for
+// the card pill and feed ordering). An article at 0.53–0.60
 // was MEDIUM on the pill but LOW for Dashboard sections — the exact "medium
 // falls in low" misclassification the ladders' drift guaranteed. `bandOf` /
 // `bandRank` (feed-select/ownership.ts) are now the ONE source of truth for
 // both; `relevanceBandRank` below is a thin adapter onto them, not a second
 // ladder. An article's band must be IDENTICAL on every surface — card pill,
-// feed ordering, importance filter, Dashboard sections — that is the entire
-// point of this change.
+// feed ordering, Dashboard sections, and the score-persist-time headline cull
+// in importance-filter.ts — that is the entire point of this change.
 
 // `bandOf`/`bandRank` are the unified band source of truth (see above).
 // `feed-select/ownership` is itself a pure, RN-free module (no DB/expo/
@@ -81,7 +81,7 @@ export interface PriorityFacts {
  * just flips the scale to the LOWER-sorts-first convention every caller here
  * already depends on. `getRelevanceColors` (lib/relevance-utils.ts) and
  * `RelevanceChip`'s icon selection read `bandOf` directly rather than
- * re-deriving cutoffs, so all three — pill, ordering, importance filter — are
+ * re-deriving cutoffs, so all three — pill, ordering, headline cull — are
  * now driven by the exact same cutoffs and can never disagree on a story's
  * band.
  *

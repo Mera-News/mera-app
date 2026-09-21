@@ -240,8 +240,8 @@ export function buildFeedList(
       // property of the STORY, not of whichever member we elected to front it.
       // This became load-bearing when the representative flipped to oldest-first
       // — a story whose originating report was routine but whose later coverage
-      // is breaking would otherwise render non-breaking, and `filterByImportance`
-      // exempts breaking, so the Med+/High dial would silently start hiding it.
+      // is breaking would otherwise render non-breaking, and lose the feed
+      // recency bonus that exists so a breaking story is never buried.
       breaking: g.some((m) => isBreaking(m.s)),
       // D4 — a story is scored on its BEST member, not on whichever member was
       // elected to front it. This used to be `feedScore(rep, nowMs)`, which

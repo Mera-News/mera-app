@@ -1327,9 +1327,9 @@ export default schemaMigrations({
       // 25 rows sit at EXACTLY 0.4 — 21.6% of the 116 rows v1 admits at its
       // own gate. A flag-level move to 0.55 deletes all 25 instantly, and
       // because scored rows are not re-scored, nothing ever brings them back.
-      // Those rows sit in the LOW band [0.4,0.6), so the surface that loses them
-      // is the Dashboard (importance threshold 'low' by default) and the Feed
-      // only when its filter is lowered from the default 'medium'.
+      // Those rows sit in the LOW band [0.4,0.6). That band used to reach the
+      // Dashboard only; with the importance filter removed it renders on both
+      // tabs, so a flag-level move would now cost the Feed too.
       //
       // So the vintage travels WITH the row and the gate is applied per row
       // (`gateForRow`, lib/stores/fact-rows-selector.ts).

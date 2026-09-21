@@ -228,8 +228,7 @@
     "statsRelevant_one": "{{formatted}} parece relevante,",
     "statsRelevant_other": "{{formatted}} parecen relevantes,",
     "statsRead_one": "y has leído {{formatted}}.",
-    "statsRead_other": "y has leído {{formatted}}.",
-    "lowerPriorityCta": "¿Quieres leer más? Baja la prioridad del feed"
+    "statsRead_other": "y has leído {{formatted}}."
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -238,10 +237,6 @@
     "low": "Baja",
     "irrelevant": "Irrelevante",
     "unprocessed": "Sin procesar"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Prioridad mínima de historia",
-    "a11yOption": "Mostrar prioridad {{level}} y superior"
   },
   "aiDisclosure": {
     "caption": "Nota generada por IA",
@@ -2238,44 +2233,6 @@
               "after": "Uno firme (el cambio duro cuando agregas un filtro a mano, o silencias una fuente) no tiene caducidad en absoluto y se queda hasta que lo quites tú mismo."
             },
             "ask": "¿Las cosas que filtro alguna vez vuelven?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Bajando el volumen",
-        "subtitle": "Un dial, y las historias que nunca ve.",
-        "slides": {
-          "the-dial": {
-            "headline": "El pequeño chip en el encabezado",
-            "body": "En la parte superior del Feed y del Panel se sienta un chip que dice Alto, Medio o Bajo con una pequeña flecha. Es un piso: las historias calificadas por debajo simplemente no se dibujan.",
-            "ask": "¿Qué hace el chip Medio en la parte superior de mi feed?"
-          },
-          "per-screen": {
-            "headline": "Cada pantalla guarda la suya",
-            "body": "Apretar uno nunca priva al otro. Toca cada tarjeta en la pantalla que describe.",
-            "steps": {
-              "0": "El Feed comienza en Medio: la sustancia del día, no toda última cosa.",
-              "1": "El Panel comienza en Bajo: todo, para cuando te sientas como navegar."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Feed",
-                "dashboard-tab": "Panel"
-              },
-              "cards": {
-                "medium-default": "Comienza en Medio",
-                "low-default": "Comienza en Bajo"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Las noticias de último minuto ignoran el dial",
-            "body": "Cualquier cosa calificada como emergencia pasa cada configuración, Alto incluido. El dial está allí para recortar noticias de rutina; no es una forma de silenciar un desastre."
-          },
-          "headline-cull": {
-            "headline": "Algunas historias nunca llegan al dial",
-            "body": "Junto a tus propias historias, Mera tira de los titulares principales de un país. Un titular principal que te puntúa bajo se deja fuera directamente en lugar de ser estacionado en la parte inferior. Un titular existe para decir 'esto importa aquí', y uno que puntúa bajo es solo ruido. Las historias combinadas con tus propios intereses nunca se dejan de esta manera.",
-            "ask": "¿Por qué veo menos titulares generales que historias sobre mis intereses?"
           }
         }
       },

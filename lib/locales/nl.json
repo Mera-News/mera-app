@@ -228,8 +228,7 @@
     "statsRelevant_one": "{{formatted}} lijkt relevant,",
     "statsRelevant_other": "{{formatted}} lijken relevant,",
     "statsRead_one": "en je hebt {{formatted}} gelezen.",
-    "statsRead_other": "en je hebt {{formatted}} gelezen.",
-    "lowerPriorityCta": "Wil je meer lezen? Verlaag de feedprioriteit"
+    "statsRead_other": "en je hebt {{formatted}} gelezen."
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -238,10 +237,6 @@
     "low": "Laag",
     "irrelevant": "Niet relevant",
     "unprocessed": "Onverwerkt"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Minimale verhaalprioriteit",
-    "a11yOption": "Toon {{level}}-prioriteit en hoger"
   },
   "aiDisclosure": {
     "caption": "Door AI gegenereerde notitie",
@@ -2238,44 +2233,6 @@
               "after": "Een stevige (de harde schakelaar wanneer je handmatig een filter toevoegt, of het dempen van een bron) heeft helemaal geen verlopen en blijft tot je het zelf verwijdert."
             },
             "ask": "Keren de dingen die ik filter ooit terug?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Het volume omlaag draaien",
-        "subtitle": "Één wijzerplaat en de verhalen die het nooit te zien krijgen.",
-        "slides": {
-          "the-dial": {
-            "headline": "De kleine chip in de kop",
-            "body": "Bovenaan de Feed en het Dashboard zit een chip met Hoog, Med of Laag met een pijltje. Het is een vloer: verhalen onder het tarief worden eenvoudig niet getrokken.",
-            "ask": "Wat doet de Med chip bovenaan mijn feed?"
-          },
-          "per-screen": {
-            "headline": "Elk scherm houdt zijn eigen",
-            "body": "Aanscherpen van de ene verhongers nooit de andere. Tik op elke kaart op het scherm waar het beschrijft.",
-            "steps": {
-              "0": "De Feed begint op Gemiddeld: de substantie van de dag, niet elk laatst ding.",
-              "1": "Het Dashboard begint op Laag: alles, voor wanneer je in bladermodus bent."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Feed",
-                "dashboard-tab": "Dashboard"
-              },
-              "cards": {
-                "medium-default": "Begint op Gemiddeld",
-                "low-default": "Begint op Laag"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Breeknieuws negeert de wijzerplaat",
-            "body": "Alles beoordeeld als noodgeval passeert elk instelling, zelfs Hoog. De wijzerplaat is daar om routieuws te knippen; het is geen manier om een ramp het zwijgen op te leggen."
-          },
-          "headline-cull": {
-            "headline": "Sommige verhalen bereiken de wijzerplaat nooit",
-            "body": "Naast je eigen verhalen haalt Mera's belangrijkste koppen van een land. Een topkop die laag voor je scoort wordt compleet verwijderd in plaats van onderaan geparkeerd. Een kopje bestaat om 'dit telt hier' te zeggen, en een laag scorend is gewoon ruis. Verhalen die bij je eigen interesses passen worden nooit op deze manier verwijderd.",
-            "ask": "Waarom zie ik minder algemene koppen dan verhalen over mijn interesses?"
           }
         }
       },

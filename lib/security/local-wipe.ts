@@ -71,7 +71,7 @@ const ASYNC_STORAGE_KEYS = ['mera.cycle.capabilityToken'];
 
 /**
  * Tables whose presence means "a user's data is on this device". Deliberately
- * excludes `settings`: benign KV rows (feed order, importance thresholds) would
+ * excludes `settings`: benign KV rows (feed order, related-articles sort) would
  * otherwise make a signed-out device look occupied forever.
  */
 const USER_DATA_TABLES = [

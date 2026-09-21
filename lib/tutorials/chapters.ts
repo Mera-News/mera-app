@@ -29,12 +29,22 @@
 //     the three tiers (unseen → seen-not-opened → opened) still decide SORT
 //     ORDER, they just no longer mark a boundary on screen. The single
 //     "All caught up" card (`AllCaughtUpCard`, `feed.allCaughtUp`) survives as
-//     the end-of-list footer / empty state, and its CTA switches to "lower the
-//     feed priority" when the importance threshold is filtering stories out.
-//   • The Feed header is the title, a status glyph and the priority filter, and
-//     NOTHING else — no notification bell (it is Dashboard-only), no counts
-//     sentence, no progress bar, and its cards carry no timestamp and no NEW
-//     badge (`FeedScreen` passes `showRecency={false}`). The Dashboard keeps all
+//     the end-of-list footer / empty state, and its CTA is always "Browse
+//     Explore" — it used to fork to "lower the feed priority" when a minimum
+//     importance band was hiding stories, and that control is gone.
+//   • NOTHING filters stories by importance band any more. The High/Med/Low
+//     chip that sat in both headers is deleted, the per-screen defaults with
+//     it, and every scored story down to the LOW band renders on both tabs.
+//     A chapter must not teach a dial, a band floor, or "tighten one screen
+//     without starving the other". What DOES still cull by band is invisible
+//     to the reader and upstream of all of this: a top headline scoring below
+//     the MEDIUM band is dropped at score-persist time
+//     (`lib/feed-ordering/importance-filter.ts`), and topic-matched stories
+//     are never dropped that way.
+//   • The Feed header is the title and a status glyph, and NOTHING else — no
+//     notification bell (it is Dashboard-only), no counts sentence, no
+//     progress bar, and its cards carry no timestamp and no NEW badge
+//     (`FeedScreen` passes `showRecency={false}`). The Dashboard keeps all
 //     of it. The status mark beside the title is the Mera logo and is ALWAYS on
 //     screen: it sweeps, grows to 1.3x and turns white while syncing, and rests
 //     small and off-white otherwise (red on an error, amber when rate-limited).
@@ -485,45 +495,7 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
     ],
   },
 
-  // ───────────────────────────── 10 · signal (advanced) ────────────────────
-  {
-    id: 'signal',
-    level: 'advanced',
-    icon: 'tune',
-    slides: [
-      {
-        id: 'the-dial',
-        visual: { placeholder: { kind: 'icon', name: 'tune' } },
-        hasAsk: true,
-      },
-      {
-        id: 'per-screen',
-        visual: { placeholder: { kind: 'steps', count: 2 } },
-        interaction: {
-          kind: 'sort',
-          buckets: [
-            { id: 'feed-tab', icon: 'view-agenda' },
-            { id: 'dashboard-tab', icon: 'grid-view' },
-          ],
-          cards: [
-            { id: 'medium-default', bucketId: 'feed-tab' },
-            { id: 'low-default', bucketId: 'dashboard-tab' },
-          ],
-        },
-      },
-      {
-        id: 'breaking-always-passes',
-        visual: { placeholder: { kind: 'icon', name: 'priority-high' } },
-      },
-      {
-        id: 'headline-cull',
-        visual: { placeholder: { kind: 'cards', count: 3 } },
-        hasAsk: true,
-      },
-    ],
-  },
-
-  // ───────────────────────────── 11 · chat (advanced) ──────────────────────
+  // ───────────────────────────── 10 · chat (advanced) ──────────────────────
   {
     id: 'chat',
     level: 'advanced',
@@ -577,7 +549,7 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
     ],
   },
 
-  // ───────────────────────────── 12 · protocol (advanced) ──────────────────
+  // ───────────────────────────── 11 · protocol (advanced) ──────────────────
   {
     id: 'protocol',
     level: 'advanced',

@@ -623,8 +623,8 @@ describe('buildFactRows emergency extraction', () => {
   // EMERGENCY band. It used to use `isBreaking`, whose second clause admits the
   // HIGH band (raw 0.8–1.0) for disaster/weather/conflict — so a story about a
   // region getting LESS rain than usual was fronted above every section under a
-  // red alert chip. `isBreaking` itself is unchanged; it still does its own job
-  // of exempting stories from the importance dial.
+  // red alert chip. `isBreaking` itself is unchanged; it still does its own
+  // job of giving a story the feed recency bonus that keeps it off the bottom.
   it('pulls ONLY raw>1.0 into the emergency strip', () => {
     const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
     const emg = sugg({ _id: 'emg', rawScore: 1.05, relevance: 1.1, matchedTopics: [{ topicId: 't1', text: 'a' }] });

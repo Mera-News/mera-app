@@ -228,8 +228,7 @@
     "statsRelevant_one": "{{formatted}} parece relevante,",
     "statsRelevant_other": "{{formatted}} parecem relevantes,",
     "statsRead_one": "e você leu {{formatted}}.",
-    "statsRead_other": "e você leu {{formatted}}.",
-    "lowerPriorityCta": "Quer ler mais? Reduza a prioridade do feed"
+    "statsRead_other": "e você leu {{formatted}}."
   },
   "relevance": {
     "emergency": "Emergência",
@@ -238,10 +237,6 @@
     "low": "Baixa",
     "irrelevant": "Irrelevante",
     "unprocessed": "Não processado"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Prioridade mínima de história",
-    "a11yOption": "Mostrar prioridade {{level}} e acima"
   },
   "aiDisclosure": {
     "caption": "Nota gerada por IA",
@@ -2238,44 +2233,6 @@
               "after": "Um firme (o switch duro quando você adiciona um filtro à mão, ou silencia uma fonte) não tem validade de todo e fica até você remover."
             },
             "ask": "As coisas que filtro saem alguma vez?"
-          }
-        }
-      },
-      "signal": {
-        "title": "Baixando o volume",
-        "subtitle": "Um dial, e as histórias que nunca chega a ver.",
-        "slides": {
-          "the-dial": {
-            "headline": "O pequeno chip no header",
-            "body": "No topo do Feed e do Painel senta um chip lendo Alto, Médio ou Baixo com uma pequena seta. É um piso: histórias classificadas abaixo dele simplesmente não são desenhadas.",
-            "ask": "O que o chip Médio no topo do meu feed faz?"
-          },
-          "per-screen": {
-            "headline": "Cada tela mantém sua própria",
-            "body": "Apertar uma nunca esfomeia a outra. Toque cada card na tela que descreve.",
-            "steps": {
-              "0": "O Feed começa em Médio: a substância do dia, não cada última coisa.",
-              "1": "O Painel começa em Baixo: tudo, para quando você tem vontade de navegar."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Feed",
-                "dashboard-tab": "Painel"
-              },
-              "cards": {
-                "medium-default": "Começa em Médio",
-                "low-default": "Começa em Baixo"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Últimas notícias ignoram o dial",
-            "body": "Qualquer coisa classificada como emergência passa em cada configuração, Alto incluído. O dial está lá para cortar notícias rotineiras; não é um jeito de silenciar um desastre."
-          },
-          "headline-cull": {
-            "headline": "Algumas histórias nunca alcançam o dial",
-            "body": "Junto com suas próprias histórias, Mera puxa as manchetes principais de um país. Uma manchete principal que marca baixo para você é apagada completamente em vez de estacionada no fundo. Uma manchete existe para dizer 'isso importa aqui', e uma com score baixo é só ruído. Histórias combinadas aos seus próprios interesses nunca são apagadas deste jeito.",
-            "ask": "Por que vejo menos manchetes gerais que histórias sobre meus interesses?"
           }
         }
       },
