@@ -4,6 +4,7 @@
 // util, the ChatThread component, and the (parallel) data/store layer that
 // feeds it. Everything here is presentational — no data fetching, no stores.
 
+import type { AgentTurnResult } from '@/lib/mera-harness';
 import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
@@ -35,25 +36,44 @@ export type AgentStepStatus = 'pending' | 'done' | 'error';
  * are the ones where the user is otherwise left looking at a turn that appears
  * to have finished and did not.
  */
-export type AgentTerminal = 'leg-cap' | 'no-route' | 'no-proposal' | 'unknown-tool';
-
-const RENDERABLE_TERMINALS: readonly string[] = [
-  'leg-cap',
-  'no-route',
-  'no-proposal',
-  'unknown-tool',
-];
+export type AgentTerminal =
+  | 'leg-cap'
+  | 'no-route'
+  | 'no-proposal'
+  | 'unknown-tool'
+  | 'malformed-choice';
 
 /**
- * The loop's `terminalReason` narrowed to what the thread renders.
+ * EVERY terminal the loop can produce, classified exhaustively.
  *
- * ONE place, so a terminal added to the loop is either rendered deliberately or
- * visibly absent here, rather than silently widening a UI union. `settled` and
- * `awaiting-user` are ordinary endings, `transport-error` has the error banner,
- * and `malformed-choice` is a model fault the user cannot act on.
+ * Typed as a Record over the loop's own union, so a terminal added there does
+ * not compile until someone decides whether the user is told about it. That
+ * matters because the failure mode is SILENCE, not a wrong message:
+ * `malformed-choice` was missing from the old hand-written list, and when it
+ * fired the loop set no pendingChoice (no chips), no proposal (no card) and the
+ * box rendered "Done". A user who said "I live in Nieuw-West Amsterdam", the
+ * ambiguous-place case that reaches ask_choice, saw the steps finish and then
+ * nothing at all. Shipped to production in update group 7b3f77d3.
+ *
+ * `null` means the turn ended normally and needs no sentence: `settled` and
+ * `awaiting-user` are ordinary, and `transport-error` already has the error
+ * banner.
  */
+const TERMINAL_CLASS: Record<AgentTurnResult['terminalReason'], AgentTerminal | null> = {
+  settled: null,
+  'awaiting-user': null,
+  'transport-error': null,
+  'leg-cap': 'leg-cap',
+  'no-route': 'no-route',
+  'no-proposal': 'no-proposal',
+  'unknown-tool': 'unknown-tool',
+  'malformed-choice': 'malformed-choice',
+};
+
+/** The loop's `terminalReason` narrowed to what the thread renders. */
 export function renderableTerminal(reason: string | null | undefined): AgentTerminal | null {
-  return reason && RENDERABLE_TERMINALS.includes(reason) ? (reason as AgentTerminal) : null;
+  if (!reason) return null;
+  return TERMINAL_CLASS[reason as AgentTurnResult['terminalReason']] ?? null;
 }
 
 /**

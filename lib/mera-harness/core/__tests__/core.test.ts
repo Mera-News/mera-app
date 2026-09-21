@@ -9,6 +9,7 @@ import {
   runAgentTurn,
   type AgentPersona,
 } from '../core';
+import { toolsForLeg } from '../tool-contracts';
 import type { AgentDeps, AgentModelResult, Place } from '../types';
 
 const AMS: Place = {
@@ -373,6 +374,112 @@ describe('the bounded loop', () => {
     expect(out.reply).toBe('Got it, Porto.');
   });
 
+  // ---- THE TOOL PAYLOAD MATCHES THE GUIDELINE -------------------------
+  // On device, "Delete all facts" was refused in prose with "please open the
+  // app and tap the trash can icon": the router sends deletion to
+  // conversation/correction, whose body says to call deleteUserFacts, and the
+  // prefix test handed writers only to facts/*. A skill told to write must be
+  // given the means.
+  function toolNamesFor(skillId: string): string[] {
+    return toolsForLeg({ skillLoaded: skillId }).map(
+      (t) => (t as { function: { name: string } }).function.name,
+    );
+  }
+
+  it('offers both writers to the skill whose job is deletion', () => {
+    const names = toolNamesFor('conversation/correction');
+    expect(names).toContain('deleteUserFacts');
+    expect(names).toContain('saveExtractedFacts');
+  });
+
+  it('still offers both writers to a facts skill', () => {
+    const names = toolNamesFor('facts/residence');
+    expect(names).toContain('deleteUserFacts');
+    expect(names).toContain('saveExtractedFacts');
+  });
+
+  // The widening is exactly one skill, not "every conversation/* leg".
+  it('withholds the writers from a skill that only answers', () => {
+    const names = toolNamesFor('conversation/question');
+    expect(names).not.toContain('deleteUserFacts');
+    expect(names).not.toContain('saveExtractedFacts');
+  });
+
+  it('never offers load_skill once a skill is loaded', () => {
+    for (const id of ['conversation/correction', 'facts/residence', 'conversation/question']) {
+      expect(toolNamesFor(id)).not.toContain('load_skill');
+    }
+  });
+
+  // THE GATE IS UNCHANGED BY THE WIDENING. Offering the tool makes the
+  // CONFIRMATION reachable, never a silent wipe.
+  it('a correction turn still cannot delete without a confirmed choice', async () => {
+    const deleteUserFacts = jest.fn(async () => ({ deleted: ['f1'] }));
+    const { deps } = scriptedDeps(
+      [
+        modelResult({
+          content: 'Right, removing that.',
+          toolCalls: [tc('load_skill', { id: 'conversation/correction' })],
+        }),
+        modelResult({
+          content: 'Done.',
+          toolCalls: [tc('deleteUserFacts', { fact_ids: ['location: residence'] })],
+        }),
+      ],
+      { deleteUserFacts },
+    );
+    await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'delete all facts', deps,
+    });
+    expect(deleteUserFacts).not.toHaveBeenCalled();
+  });
+
+  // A CORRECT REFUSAL IS NOT A FAILURE. On device, "I'm travelling to Hawaii"
+  // got exactly the right answer (a trip is not a residence change) and was
+  // painted with the cap error box, because the turn proposed nothing.
+  it('a turn that answered well but proposed nothing is settled, not capped', async () => {
+    const answer = modelResult({
+      content: "Since Hawaii is a trip rather than your home, I won't update your residence.",
+    });
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'Hawaii, one moment.',
+        toolCalls: [tc('load_skill', { id: 'conversation/question' })],
+      }),
+      answer, answer, answer, answer,
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: "I'm travelling to Hawaii", deps,
+    });
+
+    expect(out.terminalReason).toBe('settled');
+    expect(out.legCapped).toBe(false);
+    expect(out.proposals).toHaveLength(0);
+  });
+
+  it('a turn that ran out of legs with NOTHING to show is still a cap', async () => {
+    // Silent tool spinning: no proposal and no prose, so there is nothing the
+    // user could read as an answer.
+    const spin = modelResult({
+      content: '',
+      toolCalls: [tc('lookup_place', { query: 'Porto' })],
+    });
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'Porto, one moment.',
+        toolCalls: [tc('load_skill', { id: 'facts/residence' })],
+      }),
+      spin, spin, spin, spin,
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
+    });
+
+    expect(out.terminalReason).toBe('leg-cap');
+    expect(out.legCapped).toBe(true);
+    expect(out.legBudgetHit).toBe(true);
+  });
+
   // A CONTROL THAT HAS BEEN TIDIED UP MEASURES NOTHING. These assert that
   // `pre-enforcement` really is the configuration the 38% and the 99 no-route
   // legs came from, not a partly-fixed version of it wearing the label.
@@ -438,11 +545,19 @@ describe('the bounded loop', () => {
 
   it('CLAMPS at the leg bound on DISTINCT forcing calls, and never throws', async () => {
     // Distinct arguments, because an identical repeat no longer buys a leg.
+    //
+    // SILENT after the route leg, on purpose. The loop cannot tell "spun and
+    // then answered well" from "spun uselessly": both are prose after routing
+    // with no proposal. It resolves that in the user's favour, so a turn that
+    // spun AND produced prose now settles, and only a turn with nothing to show
+    // still reports the cap. The cost is that a genuinely stuck turn which
+    // emitted filler reads as settled; the user still sees that filler and can
+    // ask again, where the old rule painted a correct refusal as an error.
     const { deps } = scriptedDeps([
       modelResult({ content: 'a', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
-      modelResult({ content: 'b', toolCalls: [tc('lookup_place', { query: 'Alkmaar' })] }),
-      modelResult({ content: 'c', toolCalls: [tc('lookup_place', { query: 'Hoorn' })] }),
-      modelResult({ content: 'd', toolCalls: [tc('lookup_place', { query: 'Utrecht' })] }),
+      modelResult({ content: '', toolCalls: [tc('lookup_place', { query: 'Alkmaar' })] }),
+      modelResult({ content: '', toolCalls: [tc('lookup_place', { query: 'Hoorn' })] }),
+      modelResult({ content: '', toolCalls: [tc('lookup_place', { query: 'Utrecht' })] }),
     ]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
     expect(out.legs).toHaveLength(MAX_AGENT_LEGS);
@@ -912,7 +1027,9 @@ describe('per-leg tool payload', () => {
     expect(leg2).not.toContain('load_skill');
   });
 
-  it('a CONVERSATION leg offers no writer: there is nothing to save', async () => {
+  // NAMED FOR THE SKILL, not the group: conversation/correction DOES get both
+  // writers, because deleting is its job.
+  it('a conversation/question leg offers no writer: there is nothing to save', async () => {
     const { deps, calls } = scriptedDeps([
       modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
       modelResult({ content: 'answer' }),

@@ -799,14 +799,20 @@ describe('turn terminals reach the steps box', () => {
 // The narrowing is ONE function so a terminal added to the loop is either
 // rendered deliberately or visibly absent, never silently widening the UI union.
 describe('renderableTerminal', () => {
-  it('passes the four the thread can render', () => {
-    for (const r of ['leg-cap', 'no-route', 'no-proposal', 'unknown-tool']) {
+  it('passes every terminal the thread can render', () => {
+    // `malformed-choice` was MISSING here, and this test asserted it should be
+    // dropped, so the test encoded the bug: when it fired the loop set no
+    // pendingChoice and no proposal, and the box said "Done" over an empty
+    // thread. The classification is now a Record over the loop's own union, so
+    // a new terminal will not compile until someone decides.
+    for (const r of ['leg-cap', 'no-route', 'no-proposal', 'unknown-tool', 'malformed-choice']) {
       expect(renderableTerminal(r)).toBe(r);
     }
   });
 
-  it('drops the endings the thread must not label as failures', () => {
-    for (const r of ['settled', 'awaiting-user', 'transport-error', 'malformed-choice', null]) {
+  it('drops only the endings that are genuinely normal', () => {
+    // settled and awaiting-user are ordinary; transport-error has the banner.
+    for (const r of ['settled', 'awaiting-user', 'transport-error', null]) {
       expect(renderableTerminal(r)).toBeNull();
     }
   });

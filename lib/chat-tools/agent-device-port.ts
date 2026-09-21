@@ -15,6 +15,7 @@ import type {
   FindSimilarFactsResult,
   LookupPlaceArgs,
   LookupPlaceResult,
+  Place,
 } from '@/lib/mera-harness';
 import { loadSkill, skillIds } from '@/lib/mera-harness';
 import { findSimilarFacts } from '../database/services/fact-similarity-service';
@@ -83,6 +84,27 @@ export function placeQueryForms(query: string): string[] {
 }
 
 /**
+ * An EXACT name match is not ambiguous with the prefix matches beside it.
+ *
+ * `placeSearch` is an anchored prefix match, so the fallback form "Amsterdam"
+ * returns Amsterdam, Amsterdam-Zuidoost and Nieuw-Amsterdam. Handing all three
+ * back reads as genuine ambiguity, and the agent asks "which Amsterdam?" with
+ * options the user never said: measured on device from "I live in Nieuw-West
+ * Amsterdam", where Nieuw-West is a NEIGHBOURHOOD of Amsterdam and the right
+ * answer is one place plus a neighbourhood, not a question.
+ *
+ * So when exactly one candidate's locality equals the form, that one wins
+ * outright. Two candidates with the same name stay ambiguous, which is the
+ * case the choice chips exist for (Newcastle upon Tyne / under Lyme).
+ */
+export function narrowToExact(places: Place[], form: string): Place[] {
+  if (places.length < 2) return places;
+  const wanted = form.trim().toLowerCase();
+  const exact = places.filter((p) => p.locality.trim().toLowerCase() === wanted);
+  return exact.length === 1 ? exact : places;
+}
+
+/**
  * Try each form and return the FIRST non-empty ranked result, recording which
  * form matched.
  *
@@ -105,7 +127,7 @@ export async function lookupPlaceWithFallback(
           matched: form,
         });
       }
-      return out;
+      return { ...out, places: narrowToExact(out.places, form) };
     }
     if (out.status !== 'too_short') last = out;
   }

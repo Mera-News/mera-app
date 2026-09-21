@@ -2667,7 +2667,8 @@
     },
     "noRouteSentence": "Mera couldn't tell what that was about. Try saying it another way.",
     "noProposalSentence": "Mera didn't find anything to add from that.",
-    "unknownToolSentence": "Something went wrong on Mera's side. Ask again to carry on."
+    "unknownToolSentence": "Something went wrong on Mera's side. Ask again to carry on.",
+    "malformedChoiceSentence": "Mera couldn't show you the options. Ask again to carry on."
   },
   "skillPhrase": {
     "residence": "where you live",
