@@ -13,6 +13,9 @@ import {
     headerTitleSize,
     HEADER_TITLE_MIN_SCALE,
 } from '@/lib/typography/header-title-size';
+import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
+import HeaderNarrationLine from '@/components/custom/for-you/HeaderNarrationLine';
+import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import {
@@ -54,6 +57,7 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import {
     useForYouAsyncJobPhase,
+    useForYouDeviceProcessing,
     useForYouHasGeneratedTopics,
     useForYouLastProcessingRunFinishedAt,
     useForYouSuggestions,
@@ -278,6 +282,27 @@ const MeraNewsScreen: React.FC = () => {
 
     const statusMode = useFeedStatusMode();
     const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(true);
+
+    // ONE value drives the hidden title, the narration line and the strip, so
+    // the three cannot disagree about whether a run is happening.
+    //
+    // `isFeedProcessing`, NEVER `statusMode === 'processing'`. That is
+    // `schedulerRunning || isFeedProcessing`, and `feed-sync` is registered at
+    // `frequency: 5 * 60 * 1000` plus app-foreground and network-reconnect
+    // triggers, so the scheduler flag goes true roughly twelve times an hour
+    // while someone reads — usually to announce a poll that found nothing.
+    // Handing the header over for that is a strictly worse version of the
+    // billboard `7e96aa4` deleted. `FeedSyncMachine` does not publish
+    // `fetching-topic-ids` or `diffing` at all ("a bare poll that finds no new
+    // articles must be silent"), so `isFeedProcessing` is true exactly when
+    // articles are really being downloaded, grouped and scored.
+    const narrating = isFeedProcessing;
+    // Read for the STAGE only. The snapshot's own `visible` is the wider
+    // scheduler-inclusive question and is deliberately not consulted here.
+    // No parameter is added to the snapshot for this; on-device is its own
+    // store read, the same one the snapshot itself makes.
+    const { stage } = useProcessingSnapshot();
+    const { isDeviceProcessing } = useForYouDeviceProcessing();
 
     // The user is over their daily delivery cap (sticky until a sync delivers
     // again or the reset time passes).
@@ -510,6 +535,55 @@ const MeraNewsScreen: React.FC = () => {
         return <AllCaughtUpCard />;
     }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, statusMode, isFeedProcessing, lastProcessingRunFinishedAt]);
 
+    // ── The three things that share the title row's first two slots ────────
+    //
+    // Built here rather than inline so the render below is a plain keyed array
+    // and the keys are impossible to miss. `statusMark` appears in BOTH
+    // branches with the SAME key, which is what makes its reorder a move.
+    const statusMark = (
+        <FeedStatusIndicator
+            key="mark"
+            mode={statusMode}
+            expanded={statusExpanded}
+            onPress={toggleStatus}
+            testID="dashboard-status-indicator"
+        />
+    );
+    const titleSlot = (
+        <View key="title" pointerEvents="none" className="flex-shrink min-w-0">
+            <Heading
+                size={titleSize}
+                className="text-white"
+                numberOfLines={1}
+                // SHRINK THE TYPE, DO NOT CUT THE WORD. At a fixed 36px
+                // "Dashboard" truncated to "Dasbo…" — a screen title that
+                // cannot say its own name. `titleSize` lowers the ceiling on a
+                // compact phone; this pair handles the case no breakpoint can
+                // know about, which is that "Tableau de bord" needs room
+                // "Dashboard" does not. It was also the original fix for a
+                // separate bug: at a larger Dynamic Type setting this wrapped
+                // MID-WORD ("Dashboar"/"d").
+                adjustsFontSizeToFit
+                minimumFontScale={HEADER_TITLE_MIN_SCALE}
+            >
+                {t('feed.dashboardTitle')}
+            </Heading>
+        </View>
+    );
+    const narrationSlot = (
+        <View
+            key="narration"
+            pointerEvents="none"
+            className="flex-1 min-w-0"
+            testID="dashboard-header-narration"
+        >
+            <HeaderNarrationLine
+                stage={stage}
+                onDevice={isDeviceProcessing}
+                testID="dashboard-narration-line"
+            />
+        </View>
+    );
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.
         <Box className="flex-1" testID="dashboard-screen">
@@ -662,6 +736,13 @@ const MeraNewsScreen: React.FC = () => {
                     full-bleed and clipping would only risk cutting off the
                     bell's badge. */}
                 <GlassPlate tint={GLASS_HEADER_TINT} />
+                {/* ABOVE the plate, not below. A `GlassView` re-samples its
+                    backdrop every frame that backdrop changes, which is the
+                    single most expensive term the backdrop measured; below the
+                    plate this would run that resampling at 100% duty for every
+                    sync. See HeaderWorkingGradient's own header for the other
+                    two reasons. */}
+                <HeaderWorkingGradient active={narrating} />
                 {/* PULL-TO-REFRESH PASSTHROUGH — read this before adding a row.
                     `box-none` makes a view itself untouchable but leaves its
                     CHILDREN touchable. Putting it only on this VStack (and on the
@@ -698,48 +779,19 @@ const MeraNewsScreen: React.FC = () => {
                                 style={{ height: titleRowHeight }}
                                 testID="dashboard-header-title-row"
                             >
-                                {/* `flex-shrink`, NOT `flex-1`. With `flex-1`
-                                    this box ate every spare pixel and pushed the
-                                    status mark to the far right, beside the
-                                    filter chip, where it read as a third button
-                                    rather than as part of the title. Sized to its
-                                    text and shrinkable, it hands the slack to the
-                                    spacer below instead. `min-w-0` stays: it is
-                                    what lets the shrink actually happen. */}
-                                <View pointerEvents="none" className="flex-shrink min-w-0">
-                                    <Heading
-                                        size={titleSize}
-                                        className="text-white"
-                                        numberOfLines={1}
-                                        // SHRINK THE TYPE, DO NOT CUT THE WORD.
-                                        // Sharing this row with the status mark,
-                                        // the filter chip and the bell left "
-                                        // Dashboard" truncating to "Dasbo…" at a
-                                        // fixed 36px — a screen title that cannot
-                                        // say its own name. `titleSize` lowers the
-                                        // ceiling on a compact phone; this pair
-                                        // handles the case no breakpoint can know
-                                        // about, which is that "Tableau de bord"
-                                        // needs room "Dashboard" does not.
-                                        //
-                                        // Also the original fix for a separate
-                                        // bug: at a larger Dynamic Type setting
-                                        // this wrapped MID-WORD ("Dashboar"/"d").
-                                        // One line that scales down is Apple's own
-                                        // behaviour for a title that must share
-                                        // its row.
-                                        adjustsFontSizeToFit
-                                        minimumFontScale={HEADER_TITLE_MIN_SCALE}
-                                    >
-                                        {t('feed.dashboardTitle')}
-                                    </Heading>
-                                </View>
-                                <FeedStatusIndicator
-                                    mode={statusMode}
-                                    expanded={statusExpanded}
-                                    onPress={toggleStatus}
-                                    testID="dashboard-status-indicator"
-                                />
+                                {/* A KEYED ARRAY, not a ternary of fragments,
+                                    and that is the load-bearing part. React
+                                    reconciles an array by key, so the mark
+                                    moving from index 1 to index 0 is a MOVE.
+                                    With a ternary the child at index 0 changes
+                                    type, `FeedStatusIndicator` unmounts and
+                                    remounts twice a run, the MeraLogo sweep
+                                    restarts mid-sync and accessibility focus is
+                                    dropped. The mark leads while narrating,
+                                    which is the whole point of moving it. */}
+                                {narrating
+                                    ? [statusMark, narrationSlot]
+                                    : [titleSlot, statusMark]}
                                 {/* Trailing slack. It used to pin the importance
                                     chip hard right; the chip is gone and the
                                     spacer stays, because it is what keeps the
