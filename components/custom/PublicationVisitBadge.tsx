@@ -83,11 +83,11 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
             )}
         >
             <PopoverBackdrop />
-            <PopoverContent
-                className="bg-black border border-white"
-                style={{ maxWidth: screenWidth - 32 }}
-            >
-                <PopoverArrow className="bg-black border border-white" />
+            {/* No surface classes: the popover primitive owns the material.
+                bg-black + border-white here would paint a frame around the
+                plate rather than replacing it. */}
+            <PopoverContent style={{ maxWidth: screenWidth - 32 }}>
+                <PopoverArrow className="bg-background-0 border border-white/10" />
                 <PopoverBody>
                     <Text size="xs" className="text-white">
                         {t('publicationVisits.tooltipIntro')}{' '}
