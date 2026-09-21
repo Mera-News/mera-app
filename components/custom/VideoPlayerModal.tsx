@@ -84,7 +84,7 @@ const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, on
                             onClose();
                             openInAppBrowser(uri).catch(() => {});
                         }}
-                        className="mt-4 bg-gray-800 rounded-lg px-5 py-3"
+                        className="mt-4 bg-gray-800 rounded-full px-5 py-3"
                     >
                         <Text className="text-violet-400 font-medium">{t('videoPlayer.openInBrowser')}</Text>
                     </Pressable>

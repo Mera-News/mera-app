@@ -1,3 +1,4 @@
+import { TranslucentPlate } from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -244,61 +245,68 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
           <Pressable
             accessibilityLabel={t('common.cancel')}
             onPress={onClose}
-            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.72)', justifyContent: 'flex-end' }}
+            style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.78)', justifyContent: 'flex-end' }}
           >
             <Pressable onPress={() => {}} style={{ width: '100%' }}>
               <Box
-                className="rounded-t-3xl px-2 pb-8 pt-3"
-                style={{ backgroundColor: '#151515', borderTopColor: '#2a2a2a', borderTopWidth: 1 }}
+                className="rounded-t-3xl overflow-hidden border-t border-white/10"
+                style={{ backgroundColor: 'transparent' }}
               >
-                <VStack space="xs" className="pt-1">
-                  <Row
-                    testID="card-action-mera"
-                    icon={<MeraLogo size={22} />}
-                    label="Mera"
-                    onPress={handleChat}
-                  />
-                  <Row
-                    testID="card-action-like"
-                    // Filled glyph ONLY once the like carries a reason — a bare
-                    // tap is provisional and gets the outline glyph (D15).
-                    icon={
-                      <MaterialIcons
-                        name={likeState === 'committed' ? 'thumb-up' : 'thumb-up-off-alt'}
-                        size={22}
-                        color={ACCENT}
-                      />
-                    }
-                    label={t('articleFeedback.likeLabel')}
-                    onPress={handleLike}
-                  />
-                  <Row
-                    testID="card-action-dislike"
-                    icon={<MaterialIcons name="thumb-down" size={22} color={ACCENT} />}
-                    label={t('articleFeedback.dislikeLabel')}
-                    onPress={handleDislike}
-                  />
-                  <Row
-                    testID="card-action-save"
-                    icon={<MaterialIcons name={saved ? 'bookmark' : 'bookmark-border'} size={22} color={ACCENT} />}
-                    label={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
-                    onPress={handleSave}
-                  />
-                  <Row
-                    testID="card-action-track"
-                    icon={<MaterialIcons name="track-changes" size={22} color={tracked ? '#22c55e' : ACCENT} />}
-                    label={t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction')}
-                    onPress={handleTrack}
-                  />
-                  {share?.url ? (
+                {/* Plate first, then a padded box. The plate absolute-fills its
+                    parent, and Yoga resolves those insets against the parent's
+                    CONTENT box — so the parent has to stay unpadded or the panel
+                    gets an unplated frame. */}
+                <TranslucentPlate />
+                <Box className="px-2 pb-8 pt-3">
+                  <VStack space="xs" className="pt-1">
                     <Row
-                      testID="card-action-share"
-                      icon={<MaterialIcons name={Platform.OS === 'ios' ? 'ios-share' : 'share'} size={22} color={ACCENT} />}
-                      label={t('articleDetail.share')}
-                      onPress={handleSharePress}
+                      testID="card-action-mera"
+                      icon={<MeraLogo size={22} />}
+                      label="Mera"
+                      onPress={handleChat}
                     />
-                  ) : null}
-                </VStack>
+                    <Row
+                      testID="card-action-like"
+                      // Filled glyph ONLY once the like carries a reason — a bare
+                      // tap is provisional and gets the outline glyph (D15).
+                      icon={
+                        <MaterialIcons
+                          name={likeState === 'committed' ? 'thumb-up' : 'thumb-up-off-alt'}
+                          size={22}
+                          color={ACCENT}
+                        />
+                      }
+                      label={t('articleFeedback.likeLabel')}
+                      onPress={handleLike}
+                    />
+                    <Row
+                      testID="card-action-dislike"
+                      icon={<MaterialIcons name="thumb-down" size={22} color={ACCENT} />}
+                      label={t('articleFeedback.dislikeLabel')}
+                      onPress={handleDislike}
+                    />
+                    <Row
+                      testID="card-action-save"
+                      icon={<MaterialIcons name={saved ? 'bookmark' : 'bookmark-border'} size={22} color={ACCENT} />}
+                      label={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
+                      onPress={handleSave}
+                    />
+                    <Row
+                      testID="card-action-track"
+                      icon={<MaterialIcons name="track-changes" size={22} color={tracked ? '#22c55e' : ACCENT} />}
+                      label={t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction')}
+                      onPress={handleTrack}
+                    />
+                    {share?.url ? (
+                      <Row
+                        testID="card-action-share"
+                        icon={<MaterialIcons name={Platform.OS === 'ios' ? 'ios-share' : 'share'} size={22} color={ACCENT} />}
+                        label={t('articleDetail.share')}
+                        onPress={handleSharePress}
+                      />
+                    ) : null}
+                  </VStack>
+                </Box>
               </Box>
             </Pressable>
           </Pressable>

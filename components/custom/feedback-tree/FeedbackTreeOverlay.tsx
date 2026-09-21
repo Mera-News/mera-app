@@ -13,6 +13,7 @@
 // Content (branch labels, icons, gating, actions) is 100% owned by the fetched
 // tree (feedback-tree-service, bundled fallback). Only the CHROME here is local.
 
+import { TranslucentPlate } from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -335,141 +336,148 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
       <Pressable
         accessibilityLabel={c('dismiss', 'Dismiss')}
         onPress={onClose}
-        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.72)', justifyContent: 'flex-end' }}
+        style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.78)', justifyContent: 'flex-end' }}
       >
         {/* Panel — stop propagation so taps inside don't dismiss. */}
         <Pressable onPress={() => {}} style={{ width: '100%' }}>
           <Box
-            className="rounded-t-3xl px-4 pb-8 pt-4"
-            style={{ backgroundColor: '#151515', borderTopColor: '#2a2a2a', borderTopWidth: 1 }}
+            className="rounded-t-3xl overflow-hidden border-t border-white/10"
+            style={{ backgroundColor: 'transparent' }}
           >
-            {/* Header: back + context strip. */}
-            <HStack className="items-center pb-3" space="sm">
-              {!atEntry ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={c('back', 'Back')}
-                  onPress={goBack}
-                  hitSlop={12}
-                  className="rounded-full p-1"
-                >
-                  <MaterialIcons name="arrow-back" size={22} color={ACCENT} />
-                </Pressable>
-              ) : null}
-              <VStack className="flex-1">
-                {/* `size="md"` is 16px — identical pixels, but on the scale, so
-                    it now honours Dynamic Type and the in-app text-size control
-                    instead of being pinned by an inline override. */}
-                <Text size="md" className="text-typography-0" style={{ fontWeight: '700' }}>
-                  {c('title', 'Tell us more')}
-                </Text>
-                {contextTitle ? (
-                  <Text size="xs" className="text-typography-400" numberOfLines={1}>
-                    {c('contextFor', 'About: {{title}}', { title: contextTitle })}
-                  </Text>
-                ) : null}
-              </VStack>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={c('dismiss', 'Dismiss')}
-                onPress={onClose}
-                hitSlop={12}
-                className="rounded-full p-1"
-              >
-                <MaterialIcons name="close" size={22} color="#8a8a8a" />
-              </Pressable>
-            </HStack>
-
-            {/* D15 — the same sentence the inline surface shows, on the same
-                key, so the rule reads identically wherever a thumb is tinted.
-                Disappears the moment the user has answered. */}
-            {path.length === 0 && !confirming ? (
-              <Text
-                testID="feedback-caption"
-                size="2xs"
-                className="text-typography-400"
-                style={{ paddingBottom: 8 }}
-              >
-                {t('swipeFeed.feedbackCaption')}
-              </Text>
-            ) : null}
-
-            {confirming ? (
-              // Destructive confirm step.
-              <VStack space="md" className="pt-1">
-                <Text className="text-typography-0" style={{ fontSize: 15, fontWeight: '700' }}>
-                  {c('confirmMuteTitle', 'Never show this publication?')}
-                </Text>
-                <Text className="text-typography-400" style={{ fontSize: 13 }}>
-                  {c(
-                    'confirmMuteBody',
-                    "You won't see articles from {{publication}} again. You can undo this anytime.",
-                    { publication: context.publicationName ?? 'this publication' },
-                  )}
-                </Text>
-                <HStack space="sm" className="pt-1">
+              {/* Plate first, then a padded box. The plate absolute-fills its
+                  parent, and Yoga resolves those insets against the parent's
+                  CONTENT box — so the parent has to stay unpadded or the panel
+                  gets an unplated frame. */}
+              <TranslucentPlate />
+              <Box className="px-4 pb-8 pt-4">
+                {/* Header: back + context strip. */}
+                <HStack className="items-center pb-3" space="sm">
+                  {!atEntry ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={c('back', 'Back')}
+                      onPress={goBack}
+                      hitSlop={12}
+                      className="rounded-full p-1"
+                    >
+                      <MaterialIcons name="arrow-back" size={22} color={ACCENT} />
+                    </Pressable>
+                  ) : null}
+                  <VStack className="flex-1">
+                    {/* `size="md"` is 16px — identical pixels, but on the scale, so
+                        it now honours Dynamic Type and the in-app text-size control
+                        instead of being pinned by an inline override. */}
+                    <Text size="md" className="text-typography-0" style={{ fontWeight: '700' }}>
+                      {c('title', 'Tell us more')}
+                    </Text>
+                    {contextTitle ? (
+                      <Text size="xs" className="text-typography-400" numberOfLines={1}>
+                        {c('contextFor', 'About: {{title}}', { title: contextTitle })}
+                      </Text>
+                    ) : null}
+                  </VStack>
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={c('cancel', 'Cancel')}
-                    onPress={goBack}
-                    className="flex-1 items-center rounded-2xl py-3"
-                    style={{ backgroundColor: CHIP_BG, borderColor: CHIP_BORDER, borderWidth: 1 }}
+                    accessibilityLabel={c('dismiss', 'Dismiss')}
+                    onPress={onClose}
+                    hitSlop={12}
+                    className="rounded-full p-1"
                   >
-                    <Text className="text-typography-0" style={{ fontWeight: '600' }}>
-                      {c('cancel', 'Cancel')}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel={c('confirm', 'Confirm')}
-                    onPress={() => {
-                      const node = confirming;
-                      setConfirming(null);
-                      performLeaf(node);
-                    }}
-                    className="flex-1 items-center rounded-2xl py-3"
-                    style={{ backgroundColor: ACCENT }}
-                  >
-                    <Text style={{ color: '#1a1a1a', fontWeight: '700' }}>
-                      {c('confirm', 'Confirm')}
-                    </Text>
+                    <MaterialIcons name="close" size={22} color="#8a8a8a" />
                   </Pressable>
                 </HStack>
-              </VStack>
-            ) : atEntry ? (
-              // Entry / fast-path: one-tap "not important" + descend.
-              <VStack space="sm" className="pt-1">
-                {fastPathNode ? renderChip(fastPathNode) : null}
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={c('tellMore', 'Tell me more')}
-                  onPress={() => {
-                    hapticMedium();
-                    setBrowsing(true);
-                  }}
-                  className="rounded-2xl"
-                  style={{ borderColor: ACCENT, borderWidth: 1.5 }}
-                >
-                  <HStack className="items-center px-4 py-3" space="md">
-                    <MaterialIcons name="more-horiz" size={20} color={ACCENT} />
-                    <Text className="flex-1" style={{ color: ACCENT, fontSize: 15, fontWeight: '700' }}>
-                      {c('tellMore', 'Tell me more')}
-                    </Text>
-                  </HStack>
-                </Pressable>
-              </VStack>
-            ) : (
-              // Branch level.
-              <VStack space="sm" className="pt-1">
-                {currentChildren.length > 0 ? (
-                  currentChildren.map(renderChip)
-                ) : (
-                  <Text className="text-typography-400 py-4 text-center">
-                    {c('empty', 'No options here')}
+
+                {/* D15 — the same sentence the inline surface shows, on the same
+                    key, so the rule reads identically wherever a thumb is tinted.
+                    Disappears the moment the user has answered. */}
+                {path.length === 0 && !confirming ? (
+                  <Text
+                    testID="feedback-caption"
+                    size="2xs"
+                    className="text-typography-400"
+                    style={{ paddingBottom: 8 }}
+                  >
+                    {t('swipeFeed.feedbackCaption')}
                   </Text>
+                ) : null}
+
+                {confirming ? (
+                  // Destructive confirm step.
+                  <VStack space="md" className="pt-1">
+                    <Text className="text-typography-0" style={{ fontSize: 15, fontWeight: '700' }}>
+                      {c('confirmMuteTitle', 'Never show this publication?')}
+                    </Text>
+                    <Text className="text-typography-400" style={{ fontSize: 13 }}>
+                      {c(
+                        'confirmMuteBody',
+                        "You won't see articles from {{publication}} again. You can undo this anytime.",
+                        { publication: context.publicationName ?? 'this publication' },
+                      )}
+                    </Text>
+                    <HStack space="sm" className="pt-1">
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={c('cancel', 'Cancel')}
+                        onPress={goBack}
+                        className="flex-1 items-center rounded-2xl py-3"
+                        style={{ backgroundColor: CHIP_BG, borderColor: CHIP_BORDER, borderWidth: 1 }}
+                      >
+                        <Text className="text-typography-0" style={{ fontWeight: '600' }}>
+                          {c('cancel', 'Cancel')}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={c('confirm', 'Confirm')}
+                        onPress={() => {
+                          const node = confirming;
+                          setConfirming(null);
+                          performLeaf(node);
+                        }}
+                        className="flex-1 items-center rounded-2xl py-3"
+                        style={{ backgroundColor: ACCENT }}
+                      >
+                        <Text style={{ color: '#1a1a1a', fontWeight: '700' }}>
+                          {c('confirm', 'Confirm')}
+                        </Text>
+                      </Pressable>
+                    </HStack>
+                  </VStack>
+                ) : atEntry ? (
+                  // Entry / fast-path: one-tap "not important" + descend.
+                  <VStack space="sm" className="pt-1">
+                    {fastPathNode ? renderChip(fastPathNode) : null}
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={c('tellMore', 'Tell me more')}
+                      onPress={() => {
+                        hapticMedium();
+                        setBrowsing(true);
+                      }}
+                      className="rounded-2xl"
+                      style={{ borderColor: ACCENT, borderWidth: 1.5 }}
+                    >
+                      <HStack className="items-center px-4 py-3" space="md">
+                        <MaterialIcons name="more-horiz" size={20} color={ACCENT} />
+                        <Text className="flex-1" style={{ color: ACCENT, fontSize: 15, fontWeight: '700' }}>
+                          {c('tellMore', 'Tell me more')}
+                        </Text>
+                      </HStack>
+                    </Pressable>
+                  </VStack>
+                ) : (
+                  // Branch level.
+                  <VStack space="sm" className="pt-1">
+                    {currentChildren.length > 0 ? (
+                      currentChildren.map(renderChip)
+                    ) : (
+                      <Text className="text-typography-400 py-4 text-center">
+                        {c('empty', 'No options here')}
+                      </Text>
+                    )}
+                  </VStack>
                 )}
-              </VStack>
-            )}
+              </Box>
           </Box>
         </Pressable>
       </Pressable>
