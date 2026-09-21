@@ -8,7 +8,11 @@ import {
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
-import { headerTitleSize, HEADER_TITLE_MIN_SCALE } from '@/lib/typography/header-title-size';
+import {
+    headerTitleLineHeight,
+    headerTitleSize,
+    HEADER_TITLE_MIN_SCALE,
+} from '@/lib/typography/header-title-size';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import {
@@ -268,6 +272,9 @@ const MeraNewsScreen: React.FC = () => {
     // is two steps and not a ramp.
     const { width: windowWidth } = useWindowDimensions();
     const titleSize = headerTitleSize(windowWidth);
+    // Pinned, in BOTH states — see `headerTitleLineHeight`. The Dashboard pays
+    // for this twice over: `headerHeight` is handed to all four sub-tab panels.
+    const titleRowHeight = headerTitleLineHeight(windowWidth);
 
     const statusMode = useFeedStatusMode();
     const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(true);
@@ -684,7 +691,13 @@ const MeraNewsScreen: React.FC = () => {
                                 filters the Overview sub-tab's sections —
                                 title-row placement is a deliberate user call
                                 (consistency with Feed over strict scoping). */}
-                            <HStack className="items-center min-w-0" space="sm" pointerEvents="box-none">
+                            <HStack
+                                className="items-center min-w-0"
+                                space="sm"
+                                pointerEvents="box-none"
+                                style={{ height: titleRowHeight }}
+                                testID="dashboard-header-title-row"
+                            >
                                 {/* `flex-shrink`, NOT `flex-1`. With `flex-1`
                                     this box ate every spare pixel and pushed the
                                     status mark to the far right, beside the

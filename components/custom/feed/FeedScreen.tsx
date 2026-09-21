@@ -93,7 +93,11 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
-import { headerTitleSize, HEADER_TITLE_MIN_SCALE } from '@/lib/typography/header-title-size';
+import {
+  headerTitleLineHeight,
+  headerTitleSize,
+  HEADER_TITLE_MIN_SCALE,
+} from '@/lib/typography/header-title-size';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
@@ -323,6 +327,10 @@ const FeedScreen: React.FC = () => {
   // two steps and not a ramp.
   const { width: windowWidth } = useWindowDimensions();
   const titleSize = headerTitleSize(windowWidth);
+  // Pinned, in BOTH states — see `headerTitleLineHeight`. Without it the row
+  // shrinks when the title steps aside for the narration line and the whole
+  // list moves under the reader, twice per sync.
+  const titleRowHeight = headerTitleLineHeight(windowWidth);
 
   const statusMode = useFeedStatusMode();
   const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
@@ -1073,7 +1081,12 @@ const FeedScreen: React.FC = () => {
               beside it has been removed outright. This screen is the reading
               surface, and every additional affordance here is something that
               competes with the story you are trying to read. */}
-          <HStack className="items-center" pointerEvents="box-none">
+          <HStack
+            className="items-center"
+            pointerEvents="box-none"
+            style={{ height: titleRowHeight }}
+            testID="feed-header-title-row"
+          >
             {/* The importance DROPDOWN (one chip, not three pills) is what
                 makes an in-title-row control viable in the longer languages:
                 "Nachrichten" + a single "Mittel ▾" chip fits where the full
