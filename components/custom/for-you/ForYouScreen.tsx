@@ -540,6 +540,16 @@ const MeraNewsScreen: React.FC = () => {
     // Built here rather than inline so the render below is a plain keyed array
     // and the keys are impossible to miss. `statusMark` appears in BOTH
     // branches with the SAME key, which is what makes its reorder a move.
+    //
+    // THE FEED DELIBERATELY DOES THE OPPOSITE — there the title STAYS and the
+    // narration sits beside the mark — and the reason is measured, not
+    // stylistic. "Dashboard" is 184pt and this header also carries the bell at
+    // 45, so a side-by-side line would get 88pt: about twelve characters a
+    // line, against copy that runs to 46 in English and 58 in the longer
+    // locales. It truncated to "Save what you cannot…" on a device. The Feed's
+    // title is 82pt with no bell, so it has 245 and does not have this
+    // problem. Each header does what its own width allows; do not "unify"
+    // these two without re-measuring.
     const statusMark = (
         <FeedStatusIndicator
             key="mark"

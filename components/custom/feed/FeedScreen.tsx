@@ -932,14 +932,24 @@ const FeedScreen: React.FC = () => {
     return <AllCaughtUpCard />;
   };
 
-  // ── The three things that share the title row's first two slots ─────────
+  // ── The title row's three slots ─────────────────────────────────────────
   //
-  // Built here rather than inline so the render is a plain keyed array and the
-  // shared `mark` key, which is what makes the reorder a move, is impossible
-  // to miss.
+  // THE TITLE STAYS while a sync runs, and the narration sits to the right of
+  // the status mark, in the width the importance chip used to occupy. Nothing
+  // reorders, so `FeedStatusIndicator` cannot remount mid-run and restart its
+  // sweep, and the reader never loses the screen's name.
+  //
+  // THE DASHBOARD DELIBERATELY DOES THE OPPOSITE — there the title steps aside
+  // and the mark moves leftmost — and the reason is measured, not stylistic.
+  // On this screen the title is 82pt and there is no bell, which leaves 245pt
+  // for the line. On the Dashboard "Dashboard" is 184pt and the bell takes 45
+  // more, leaving 88pt: about twelve characters a line, against copy that runs
+  // to 46 in English and 58 in the longer locales. Side by side there, the
+  // sentence truncates to "Save what you cannot…". So each header does the
+  // thing its own width allows. Do not "unify" these two without re-measuring;
+  // the numbers, not the symmetry, are what decided it.
   const feedStatusMark = (
     <FeedStatusIndicator
-      key="mark"
       mode={statusMode}
       expanded={statusExpanded}
       onPress={toggleStatus}
@@ -947,7 +957,7 @@ const FeedScreen: React.FC = () => {
     />
   );
   const feedTitleSlot = (
-    <View key="title" pointerEvents="none" className="flex-shrink min-w-0">
+    <View pointerEvents="none" className="flex-shrink min-w-0">
       {/* A bare 1-line clamp truncated the screen's own name at large Dynamic
           Type sizes, so this deliberately had none and wrapped instead — but
           wrapping a single long word breaks it MID-WORD ("Dashboar" / "d" was
@@ -965,11 +975,14 @@ const FeedScreen: React.FC = () => {
       </Heading>
     </View>
   );
+  // Takes the row's remaining width, which on this screen is generous: the
+  // Feed header has no bell and "Feed" is a short title. `flex-1 min-w-0` so
+  // it claims the slack rather than sizing to its text, and so it can actually
+  // shrink if a locale needs the title wider.
   const feedNarrationSlot = (
     <View
-      key="narration"
       pointerEvents="none"
-      className="flex-1 min-w-0"
+      className="flex-1 min-w-0 pl-1"
       testID="feed-header-narration"
     >
       <HeaderNarrationLine
@@ -1163,26 +1176,23 @@ const FeedScreen: React.FC = () => {
               space="sm"
               pointerEvents="box-none"
             >
-              {/* A KEYED ARRAY, not a ternary of fragments. React reconciles
-                  an array by key, so the mark moving from index 1 to index 0
-                  is a MOVE; with a ternary the child at index 0 changes type,
-                  `FeedStatusIndicator` remounts twice a run, the MeraLogo
-                  sweep restarts mid-sync and a11y focus is dropped. The mark
-                  leads while narrating, which is the point of moving it. */}
-              {narrating
-                ? [feedStatusMark, feedNarrationSlot]
-                : [feedTitleSlot, feedStatusMark]}
-              {/* Trailing slack. It used to exist to pin the importance chip
-                  hard right; the chip is gone and the spacer stays, because it
-                  is what stops a short title from being centred by
-                  `justify-between` and keeps the status mark tight against it.
-                  `flex-basis: 0` means this contributes nothing to the row's
-                  natural width, so a long localized title still takes the whole
-                  row and truncates rather than being squeezed by a spacer.
-                  `pointerEvents="none"`: this is a full-height band across the
-                  header and would otherwise swallow a pull-to-refresh pan (see
-                  the rule above). */}
-              <View pointerEvents="none" className="flex-1" />
+              {feedTitleSlot}
+              {feedStatusMark}
+              {/* The narration takes the trailing slack while a run is on, and
+                  the plain spacer takes it otherwise. Only this third slot
+                  changes, so the title and the mark are untouched by the swap
+                  and neither can remount. */}
+              {narrating ? feedNarrationSlot : null}
+              {/* Trailing slack, AT REST ONLY — while a run is on, the
+                  narration slot above is what claims this width. It stops a
+                  short title from being centred and keeps the status mark
+                  tight against it. `flex-basis: 0` means it contributes
+                  nothing to the row's natural width, so a long localized title
+                  still takes the whole row and truncates rather than being
+                  squeezed by a spacer. `pointerEvents="none"`: this is a
+                  full-height band across the header and would otherwise
+                  swallow a pull-to-refresh pan (see the rule above). */}
+              {!narrating ? <View pointerEvents="none" className="flex-1" /> : null}
             </HStack>
           </HStack>
 
