@@ -122,6 +122,81 @@ describe('one box per TURN, not per message', () => {
   });
 });
 
+describe('EXACTLY ONE LIVENESS SIGNAL, in the shape the runtime actually produces', () => {
+  // THIS IS THE REGRESSION THE SIMULATOR FOUND, and the reason it slipped
+  // through: `onLeg` fires only once a leg's whole tool loop has SETTLED, so
+  // the box that reaches the screen has every row already `done`. A test that
+  // hands the deriver a pending row is testing a state the runtime cannot be
+  // in at that moment, and passes while the shipped path is broken. Real
+  // pixels showed the checklist and the wait line stacked, over consecutive
+  // frames, on a "I moved to Lisbon" turn.
+  const typing = (items: ChatThreadItem[]) => items.filter((i) => i.kind === 'typing');
+
+  const settledToolsMidTurn = () =>
+    base({
+      // Content-less bubble, all tool rows DONE, turn still running: the exact
+      // window between one leg settling and the next leg's first token.
+      live: [user('u1'), asst('a1', '', [tool('lookup_place', 'done')])],
+      isStreaming: true,
+      turnActive: true,
+    });
+
+  it('suppresses the typing bubble while a turn is still running', () => {
+    const items = deriveThreadItems(settledToolsMidTurn());
+    expect(boxes(items)).toHaveLength(1);
+    expect(typing(items)).toEqual([]);
+  });
+
+  it('keeps the box itself alive, so the gap is narrated rather than silent', () => {
+    // Suppressing the bubble is only half the fix. Without a pending row the
+    // box sits as a list of ticks through a full model round trip, which reads
+    // as finished-but-stuck.
+    const [box] = boxes(deriveThreadItems(settledToolsMidTurn()));
+    expect(box.steps.some((s) => s.status === 'pending')).toBe(true);
+    expect(box.steps[box.steps.length - 1].id).toMatch(/::continuing$/);
+  });
+
+  it('drops the pending row the moment the turn is no longer active', () => {
+    // Otherwise a settled turn keeps a spinner in scroll-back forever.
+    //
+    // `saveExtractedFacts`, not `lookup_place`: a pure-read turn's box is
+    // deliberately dropped from scroll-back once it settles, so a read-only
+    // fixture here would assert over an empty list and pass for the wrong
+    // reason. A mutating turn keeps its box, which is what makes this check
+    // about the pending row rather than about the box existing.
+    const settled = base({
+      live: [user('u1'), asst('a1', 'Noted.', [tool('saveExtractedFacts', 'done')])],
+      isStreaming: false,
+      turnActive: false,
+    });
+    const [box] = boxes(deriveThreadItems(settled));
+    expect(box).toBeDefined();
+    expect(box.steps.every((s) => s.status !== 'pending')).toBe(true);
+    expect(box.steps.some((s) => s.id.endsWith('::continuing'))).toBe(false);
+  });
+
+  it('DOES add the pending row to that same turn while it is still active', () => {
+    // The control for the row above: same fixture, only `turnActive` differs,
+    // so a fix that simply never adds the row cannot pass both.
+    const running = base({
+      live: [user('u1'), asst('a1', 'Noted.', [tool('saveExtractedFacts', 'done')])],
+      isStreaming: true,
+      turnActive: true,
+    });
+    const [box] = boxes(deriveThreadItems(running));
+    expect(box.steps.some((s) => s.id.endsWith('::continuing'))).toBe(true);
+  });
+
+  it('still shows the typing bubble BEFORE any tool call exists', () => {
+    // The window the wait line owns, and it must not be collateral damage.
+    const items = deriveThreadItems(
+      base({ live: [user('u1')], isStreaming: true, turnActive: true }),
+    );
+    expect(boxes(items)).toHaveLength(0);
+    expect(typing(items)).toHaveLength(1);
+  });
+});
+
 describe('the interrupted predicate keys on turnActive, never on streaming', () => {
   const liveTurn = [user('u1'), asst('a1', '', [tool('lookup_place', 'pending')])];
 

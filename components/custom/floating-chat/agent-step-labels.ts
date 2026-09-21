@@ -159,6 +159,29 @@ export function legStartStep(messageId: string, settled: boolean): AgentStep {
   };
 }
 
+/**
+ * The trailing row on a turn that is STILL RUNNING.
+ *
+ * `onLeg` fires only once a leg's whole tool loop has settled, so every row
+ * the box already holds is `done` and the box has no live indicator of its
+ * own between legs. That is not cosmetic: `deriveThreadItems` suppresses the
+ * typing bubble on "this box has a pending row", so with no pending row the
+ * box AND the wait line were both on screen, which a simulator pass caught on
+ * real pixels across consecutive frames.
+ *
+ * Reuses `agentSteps.working` ("Working on it"), which is already translated
+ * in all twenty dictionaries, rather than minting a key for a row that says
+ * exactly that.
+ */
+export function continuingStep(anchorId: string): AgentStep {
+  return {
+    id: `${anchorId}::continuing`,
+    kind: 'leg-start',
+    labelKey: GENERIC_LABEL_KEY,
+    status: 'pending',
+  };
+}
+
 /** Tools whose turn wrote, or staged, persona data. Drives whether the settled
  *  line survives in scroll-back: a pure-read turn leaves no line behind.
  *  `saveExtractedFacts` counts even though it only STAGES — the turn produced a

@@ -36,6 +36,7 @@ import {
   changedDataFrom,
   legStartStep,
   stepsForMessage,
+  continuingStep,
 } from './agent-step-labels';
 
 // ---------------------------------------------------------------------------
@@ -795,11 +796,18 @@ function buildTurnBoxes(
 
     // The leg-start row is the box's first entry and always settled: the box
     // only exists once a tool call has appeared, which means the thinking phase
-    // it describes is over. The live thinking window keeps its own indicator —
-    // see the typing note in deriveThreadItems.
+    // it describes is over.
+    //
+    // A STILL-RUNNING turn gets a trailing PENDING row. `onLeg` fires only
+    // after a leg's whole tool loop settles, so without it every row is `done`
+    // the instant the box appears, the box has no live indicator between legs,
+    // and — because the typing suppression below keys on "this box has a
+    // pending row" — the box and the wait line were BOTH on screen. A
+    // simulator pass caught that on real pixels across consecutive frames.
     const full: AgentStep[] = [
       legStartStep(turn.firstAssistantId ?? turn.anchorId, true),
       ...steps,
+      ...(active ? [continuingStep(turn.anchorId)] : []),
     ];
 
     out.set(turn.anchorId, {
