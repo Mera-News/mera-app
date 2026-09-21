@@ -145,6 +145,7 @@ export const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
     'no-route': 'agentSteps.noRouteSentence',
     'no-proposal': 'agentSteps.noProposalSentence',
     'unknown-tool': 'agentSteps.unknownToolSentence',
+    'malformed-choice': 'agentSteps.malformedChoiceSentence',
   } as const satisfies Record<AgentTerminal, string>;
   const summary = terminal
     ? t(TERMINAL_KEY[terminal])

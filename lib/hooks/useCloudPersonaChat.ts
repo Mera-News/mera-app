@@ -35,6 +35,18 @@ import {
   MAX_HISTORY_USER_TURNS,
 } from '../news-harness/persona-management/persona-agent-core';
 
+/** Tool arguments arrive as a JSON string. A malformed one must yield an empty
+ *  object rather than throwing: this runs inside the live progress write-back,
+ *  and a throw there would kill the turn over a cosmetic row. */
+function parseToolArgs(raw: string): Record<string, unknown> {
+  try {
+    const parsed: unknown = JSON.parse(raw || '{}');
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
 const TAG = '[CloudChat]';
 
 /** Next-frame scheduler for the streaming bubble. RN provides
@@ -288,10 +300,19 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         // can run ~10s, so the steps box would otherwise sit empty and then
         // fill at once.
         if (leg.toolCalls.length === 0) return;
+        // `input` IS THE TOOL'S ARGUMENTS. It carried the tool RESULT, and
+        // every card the thread derives reads arguments: `ask_choice` looks for
+        // `input.options`, and its result is `{awaiting:'user'}`, so the chips
+        // were dropped for having fewer than two options. Measured on device,
+        // "I live in Nieuw-West Amsterdam" ran a correct three-leg turn ending
+        // `awaiting-user` with ask_choice called, and the user saw only the
+        // acknowledgement and then nothing: the model had asked which Nieuw-West
+        // and the question never reached the screen. Shipped in 7b3f77d3.
         const records: ToolCallRecord[] = leg.toolCalls.map((c, i) => ({
           id: `leg${leg.index}-${i}`,
           name: c.name,
-          input: leg.toolResults[i]?.result ?? null,
+          input: parseToolArgs(c.argumentsRaw),
+          result: leg.toolResults[i]?.result as Record<string, unknown> | undefined,
           status: leg.toolResults[i] ? 'done' : 'pending',
         }));
         useCloudChatStore.getState().setMessages((prev) =>
@@ -335,6 +356,21 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         // the user as whatever prose the last leg produced, and an empty one as
         // an empty bubble.
         store.setAgentTerminal(out.terminalReason);
+        // WHY A TURN PRODUCED WHAT IT DID, in one line. The abnormal-terminal
+        // warn below fires only for a non-settled turn, so a turn that settled
+        // having shown the user nothing logged nothing at all and could only be
+        // guessed at from token counts.
+        logger.debug(`${TAG} agent turn summary`, {
+          terminal: out.terminalReason,
+          legs: out.legs.length,
+          proposals: out.proposals.length,
+          reProposals: out.reProposals,
+          forcedProposal: out.forcedProposal,
+          replyChars: out.reply.length,
+          skill: out.skillLoaded,
+          replyRetries: out.replyRetries,
+          toolCalls: out.legs.flatMap((l) => l.toolCalls.map((t) => t.name)),
+        });
         if (out.terminalReason !== 'settled' && out.terminalReason !== 'awaiting-user') {
           logger.warn(`${TAG} agent turn ended abnormally`, {
             reason: out.terminalReason,

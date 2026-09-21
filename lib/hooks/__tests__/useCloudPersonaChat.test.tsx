@@ -1951,6 +1951,59 @@ describe('the shipped cloud path drives the agent loop', () => {
     expect(text).not.toContain("I've noted that");
   });
 
+  // THE TOOL RECORD'S `input` IS THE ARGUMENTS, NOT THE RESULT.
+  // It carried the result, so every card the thread derives from arguments was
+  // dropped: ask_choice looks for `input.options` and got `{awaiting:'user'}`,
+  // which is fewer than two options, so the chips vanished. On device a correct
+  // three-leg turn ending `awaiting-user` showed the user nothing at all.
+  it('writes the tool ARGUMENTS into input and the result into result', async () => {
+    const model = jest.fn();
+    const res = (over: Record<string, unknown> = {}) => ({
+      content: '', toolCalls: [], finishReason: 'stop', truncated: false,
+      usage: null, modelSent: 'fake', latencyMs: 1, error: null, ...over,
+    });
+    model
+      .mockResolvedValueOnce(res({
+        content: 'Nieuw-West, one moment.',
+        toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/residence' }) }],
+      }))
+      .mockResolvedValue(res({
+        toolCalls: [{
+          name: 'ask_choice',
+          argumentsRaw: JSON.stringify({
+            question: 'Which Nieuw-West did you mean?',
+            options: ['Amsterdam', 'Amsterdam-Zuidoost'],
+          }),
+        }],
+      }));
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: model,
+      tools: {},
+      loadSkill: (id: string) => (id === 'facts/residence' ? 'RESIDENCE BODY' : null),
+      skillIds: () => ['facts/residence'],
+    });
+
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I live in Nieuw-West Amsterdam'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false),
+      { timeout: 3000 },
+    );
+
+    const calls = useCloudChatStore
+      .getState()
+      .messages.flatMap((m) => m.toolCalls ?? []);
+    const ask = calls.find((c) => c.name === 'ask_choice');
+    expect(ask).toBeDefined();
+    // The thread reads exactly this to build the chips.
+    expect((ask?.input as { options?: string[] })?.options).toEqual([
+      'Amsterdam',
+      'Amsterdam-Zuidoost',
+    ]);
+    // ...and the result is kept, in its own field.
+    expect(ask?.result).toEqual({ awaiting: 'user' });
+  });
+
   it('releases the turn when the loop finishes, so the composer unblocks', async () => {
     const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
     await act(async () => { result.current.sendMessage('hi'); });
