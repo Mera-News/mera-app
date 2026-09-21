@@ -41,6 +41,19 @@
  * both stream retries all re-enter the request builder, which would otherwise
  * report `securing` again and walk the reader back to "encrypting" at the exact
  * moment they have been waiting longest.
+ *
+ * IT OUTRANKS `thinking`, AND THAT IS THE DELIBERATE PART. On a hedged turn the
+ * order of events is: build, POST, ...10s of silence..., hedge fires and
+ * rebuilds (`retrying`), a leg finally answers (`thinking`). Because `thinking`
+ * is rank 4 it is refused, so a hedged turn stays on "Still going. Thanks for
+ * waiting." rather than stepping back to "Mera is reading what you said."
+ *
+ * Both sentences are true at that point, so this is a choice rather than a
+ * constraint, and it goes this way because the reader has already been told
+ * the turn is slow. Walking back to the ordinary line would read as the app
+ * forgetting what it just said. Verified rather than assumed: `sendHedged`
+ * builds the hedge leg inside its phase 2, after the timer, so an ordinary
+ * turn never reaches `retrying` at all.
  */
 export const CLOUD_PHASE_ORDER = [
   'preparing',

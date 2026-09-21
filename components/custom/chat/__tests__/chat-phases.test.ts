@@ -86,8 +86,9 @@ describe('the English copy', () => {
   });
 });
 
+const OFF_DEVICE = /encrypt|secur|server|cloud|network|upload|internet|online/i;
+
 describe('on-device honesty', () => {
-  const OFF_DEVICE = /encrypt|secur|server|cloud|network|upload|internet|online/i;
 
   it('never puts encryption, a server or a network in a device line', () => {
     // On-device inference never leaves the phone. A line implying otherwise is
@@ -95,6 +96,16 @@ describe('on-device honesty', () => {
     // pass removing from 7 spots across 20 locales.
     const offenders = DEVICE_LINES.filter((l) => OFF_DEVICE.test(l));
     expect(offenders).toEqual([]);
+  });
+
+  it('keeps the OPENING pool engine-neutral, since `idle` renders it on device too', () => {
+    // `preparing` is a cloud-ordered id, but the `idle` view falls back to it
+    // on BOTH engines. The device check above only covers the three `device*`
+    // pools, so without this a future edit to `chatPhases.preparing` could put
+    // "encrypted" in front of an on-device user and fail nothing.
+    for (const line of pool(chatPhaseDef(OPENING_PHASE_ID).phrasesKey)) {
+      expect(`${OPENING_PHASE_ID}: ${line}`).not.toMatch(OFF_DEVICE);
+    }
   });
 
   it('CONTROL: the same matcher does fire on the cloud lines', () => {

@@ -1858,6 +1858,13 @@ describe('cloudChatStream', () => {
       );
       expect(seen).toContain('securing');
       expect(seen).not.toContain('attesting');
+      // THE NEGATIVE THAT MATTERS. `retrying` keys off a re-entry into the
+      // request builder. If `sendHedged` built both legs up front instead of
+      // building the hedge leg behind its timer, `buildAttempts` would reach 2
+      // at t=0 on every hedgeable call and the FIRST thing every user saw
+      // would be "This is taking longer than usual". It builds in phase 2,
+      // after the timer, and this is the assertion that keeps it that way.
+      expect(seen).not.toContain('retrying');
     });
 
     it('reports `attesting` on a cold cache, which is the phase the first send of a launch pays', async () => {

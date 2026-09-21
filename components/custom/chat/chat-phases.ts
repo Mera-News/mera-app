@@ -34,6 +34,12 @@ export type PhaseDef = (typeof CHAT_PHASES)[number];
  *
  * Not a "loading" placeholder: it is the honest first thing every turn does on
  * both engines, which is why an unpublished turn can safely show it.
+ *
+ * ITS POOL MUST STAY ENGINE-NEUTRAL. It is a cloud-ordered id, but the `idle`
+ * view renders it on the on-device engine too, where a line mentioning
+ * encryption or a server would be a false claim. The device honesty check in
+ * `__tests__/chat-phases.test.ts` covers the three `device*` pools, so this
+ * one needs its own assertion and has one.
  */
 export const OPENING_PHASE_ID: ChatPhaseId = 'preparing';
 
