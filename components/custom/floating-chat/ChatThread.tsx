@@ -128,13 +128,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             </Message>
           ) : (
             <Message role="assistant">
-              {/* Stays beside the bubble for the LIVE message while it
-                  streams, so the mark does not blink out the instant the
-                  first token lands and back in on the next turn. */}
-              {item.streaming === true && <MeraStreamAvatar />}
-              <MessageContent role="assistant">
-                <MessageResponse>{message.content}</MessageResponse>
-              </MessageContent>
+              {/* BESIDE the bubble, not above it. `Message` is a plain column,
+                  so an avatar dropped in as a sibling stacks on top; the row
+                  is what makes the gutter `AVATAR_SIZE` was always documented
+                  to be. Bottom-aligned, Messenger style. It stays for the LIVE
+                  message while it streams, so the mark does not blink out the
+                  instant the first token lands and back in on the next turn. */}
+              <View style={styles.gutterRow}>
+                {item.streaming === true && <MeraStreamAvatar />}
+                <MessageContent role="assistant">
+                  <MessageResponse>{message.content}</MessageResponse>
+                </MessageContent>
+              </View>
             </Message>
           );
         // Only animate in live-session bubbles; history pages load without replay.
@@ -231,8 +236,13 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             {/* Messenger-style gutter. The mark is present for the whole wait
                 and for the streaming bubble that follows, then goes when the
                 turn settles. */}
-            <MeraStreamAvatar />
-            <MessageContent role="assistant">
+            <View style={styles.gutterRow}>
+              <MeraStreamAvatar />
+              <MessageContent
+                role="assistant"
+                variant="transient"
+                testID="chat-wait-bubble"
+              >
               {/* A sentence that tracks the real phase, not a rotating word.
                   The word was decorative and said the same thing whether the
                   device was queued behind prewarm, fetching an attestation
@@ -240,8 +250,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   a long wait read as a frozen screen. The line subscribes to
                   the phase store itself, so a phase tick re-renders one
                   <Text> rather than this whole thread. */}
-              <ChatPhaseLine />
-            </MessageContent>
+                <ChatPhaseLine />
+              </MessageContent>
+            </View>
           </Message>
         );
 
@@ -376,6 +387,17 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 };
 
 const styles = StyleSheet.create({
+  // Avatar gutter. `Message` aligns its children but does not lay them out in
+  // a row, so without this the mark sits ABOVE the bubble rather than beside
+  // it — which is what shipped, despite both call sites saying "beside".
+  // `flex-end` puts the mark at the bubble's bottom edge; `flexShrink` lets
+  // the bubble keep its own maxWidth instead of overflowing the row.
+  gutterRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+    flexShrink: 1,
+  },
   listWrap: {
     flex: 1,
   },

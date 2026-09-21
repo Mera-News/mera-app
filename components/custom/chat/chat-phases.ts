@@ -43,12 +43,25 @@ export type PhaseDef = (typeof CHAT_PHASES)[number];
  */
 export const OPENING_PHASE_ID: ChatPhaseId = 'preparing';
 
-/** How long the newest phase waits before it may replace a just-painted one. */
-export const MIN_PHASE_MS = 600;
-/** How long one sentence stays up before the pool advances. */
-export const PHASE_CYCLE_MS = 2800;
-/** Crossfade half-life, matching the processing area's. */
-export const FADE_MS = 220;
+/**
+ * The rotation rhythm, stated as the two numbers a reader actually cares about
+ * rather than as one period they have to do arithmetic on.
+ *
+ * A sentence is fully legible for `PHASE_LINE_HOLD_MS`, then the swap to the
+ * next one takes `PHASE_TRANSITION_MS` end to end: half fading the old line
+ * out, half fading the new one in. `PHASE_CYCLE_MS` is derived, so changing
+ * either number cannot leave the interval and the fade disagreeing.
+ *
+ * A full second of crossfade is unusually slow for a UI transition and that is
+ * the point: this text is read, not glanced at, and a quick swap under a
+ * reader's eye is what makes cycling copy feel like a flickering spinner.
+ */
+export const PHASE_LINE_HOLD_MS = 2000;
+export const PHASE_TRANSITION_MS = 1000;
+/** Each half of the crossfade. */
+export const FADE_MS = PHASE_TRANSITION_MS / 2;
+/** Interval between swaps: the legible hold plus both halves of the fade. */
+export const PHASE_CYCLE_MS = PHASE_LINE_HOLD_MS + PHASE_TRANSITION_MS;
 
 export function chatPhaseDef(id: ChatPhaseId): PhaseDef {
   const found = CHAT_PHASES.find((p) => p.id === id);

@@ -153,17 +153,34 @@ const Message = forwardRef<View, MessageProps>(function Message({ role, children
 
 export interface MessageContentProps {
   role: 'user' | 'assistant';
+  /**
+   * `transient` marks a bubble that is NOT part of the conversation: the wait
+   * line, which is replaced by the real reply rather than kept above it.
+   *
+   * Outlined and unfilled, with no shadow. The shadow is the load-bearing half:
+   * a solid bubble floats off the panel and reads as something that was said,
+   * and a provisional one must not. The border is NEUTRAL, not the accent —
+   * see `bubbleAssistant` below, the panel keeps the only orange outline in
+   * the chat and a second one competes with it.
+   */
+  variant?: 'solid' | 'transient';
+  testID?: string;
   children: React.ReactNode;
 }
 
 const MessageContent = forwardRef<View, MessageContentProps>(function MessageContent(
-  { role, children },
+  { role, variant = 'solid', testID, children },
   ref,
 ) {
   return (
     <View
       ref={ref}
-      style={[styles.bubble, role === 'user' ? styles.bubbleUser : styles.bubbleAssistant]}
+      testID={testID}
+      style={[
+        styles.bubble,
+        role === 'user' ? styles.bubbleUser : styles.bubbleAssistant,
+        variant === 'transient' && styles.bubbleTransient,
+      ]}
     >
       {children}
     </View>
@@ -373,6 +390,17 @@ const styles = StyleSheet.create({
     // No border — the panel keeps the only orange outline. Role is signaled by
     // surface tone + alignment instead.
     backgroundColor: ASSISTANT_SURFACE,
+  },
+  // Applied AFTER the role style, so it overrides the fill and the shadow.
+  // Deliberately not a dashed border: RN falls back to solid on Android as
+  // soon as borderRadius is set, so a dashed rule here would look like two
+  // different components across the two platforms.
+  bubbleTransient: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.16)',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   inputRow: {
     flexDirection: 'row',

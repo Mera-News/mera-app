@@ -48,7 +48,12 @@ jest.mock('@/components/ui/text', () => {
 import { act, render, screen } from '@testing-library/react-native';
 import React from 'react';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
-import { PHASE_CYCLE_MS } from '../chat-phases';
+import {
+  FADE_MS,
+  PHASE_CYCLE_MS,
+  PHASE_LINE_HOLD_MS,
+  PHASE_TRANSITION_MS,
+} from '../chat-phases';
 import ChatPhaseLine from '../ChatPhaseLine';
 
 // The real dictionary, through the global i18n setup, so the strings asserted
@@ -98,6 +103,30 @@ describe('ChatPhaseLine', () => {
   });
 
   describe('rotation', () => {
+    it('holds a sentence for 2s and takes a full second to swap', () => {
+      // The asked-for rhythm, pinned as numbers rather than left implicit in a
+      // derived period. `PHASE_CYCLE_MS` is computed from these two, so this
+      // also catches the interval and the fade drifting apart.
+      expect(PHASE_LINE_HOLD_MS).toBe(2000);
+      expect(PHASE_TRANSITION_MS).toBe(1000);
+      expect(FADE_MS).toBe(PHASE_TRANSITION_MS / 2);
+      expect(PHASE_CYCLE_MS).toBe(PHASE_LINE_HOLD_MS + PHASE_TRANSITION_MS);
+    });
+
+    it('does not swap early: the line is unchanged through the hold', () => {
+      // Advancing to just before the interval must NOT have swapped yet. The
+      // plain "advances" test below passes for a pool that rotates far too
+      // fast, so this is the half that pins the hold.
+      act(() => useChatPhaseStore.getState().setPhase('preparing'));
+      render(<ChatPhaseLine />);
+      act(() => {
+        jest.advanceTimersByTime(PHASE_CYCLE_MS - 50);
+      });
+      expect(screen.getByTestId('chat-phase-line')).toHaveTextContent(
+        EN.chatPhases.preparing[0],
+      );
+    });
+
     it('advances through the pool', () => {
       act(() => useChatPhaseStore.getState().setPhase('preparing'));
       render(<ChatPhaseLine />);
