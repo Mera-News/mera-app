@@ -27,15 +27,6 @@ jest.mock('@/lib/stores/section-visits-store', () => ({
     useSectionVisitsStore: (selector: any) => selector({ visits: mockVisits }),
 }));
 
-// Controllable Dashboard importance threshold — default 'low' (today's
-// behavior: show everything). Mocked directly (rather than letting the real
-// store import) because the real store pulls in WatermelonDB's
-// setting-service, which this suite has no reason to boot.
-let mockDashboardThreshold: 'high' | 'medium' | 'low' = 'low';
-jest.mock('@/lib/stores/importance-filter-store', () => ({
-    useImportanceFilterStore: (selector: any) => selector({ dashboardThreshold: mockDashboardThreshold }),
-}));
-
 // Reanimated: render Animated.FlatList as header + items (or empty) + footer,
 // and stub the scroll-handler hooks so composition doesn't crash.
 jest.mock('react-native-reanimated', () => {
@@ -215,7 +206,6 @@ function renderFeed(rows: FactRow[], overrides: Record<string, any> = {}) {
 describe('DashboardSectionsFeed', () => {
     beforeEach(() => {
         mockRouterPush.mockClear();
-        mockDashboardThreshold = 'low';
     });
 
     it('renders one section: header + 3 preview cards + closing view-all row', () => {
@@ -330,7 +320,6 @@ function makeHeadlineRow(
 describe('DashboardSectionsFeed — headline sections', () => {
     beforeEach(() => {
         mockRouterPush.mockClear();
-        mockDashboardThreshold = 'low';
     });
 
     it('renders the denominator line with read vs shown', () => {
@@ -384,11 +373,9 @@ describe('DashboardSectionsFeed — headline sections', () => {
         });
     });
 
-    // A headline shell (no groups at all — nothing cleared the render/section
-    // bar upstream) is untouched by the importance filter: there is nothing to
-    // hide, so it still renders its denominator line, even under 'high'.
-    it('keeps the empty-shell denominator line under a raised threshold', () => {
-        mockDashboardThreshold = 'high';
+    // A headline shell carries no groups at all — nothing cleared the
+    // render/section bar upstream — and still renders its denominator line.
+    it('keeps the empty-shell denominator line', () => {
         const { getByText, queryAllByText } = renderFeed([
             makeHeadlineRow('headline-global', 'headline-global', 20, []),
         ]);
@@ -397,58 +384,39 @@ describe('DashboardSectionsFeed — headline sections', () => {
     });
 });
 
-// ── Dashboard importance filter (display-only) ─────────────────────────────
-// Default 'low' reproduces today's output exactly (asserted throughout the
-// suites above, which never touch mockDashboardThreshold). These pin the
-// raised-threshold behavior: hidden cards shrink the preview/total/"view all"
-// counts together, and a section that loses every group disappears outright.
+// ── Every group renders ────────────────────────────────────────────────────
+// A display-only importance dial used to cut `row.groups` before ordering, and
+// a section whose every group it hid was dropped outright. Both are gone. These
+// pin the replacement rule, which is simply that there is no rule: the preview,
+// the total and the "view all" count are all `row.groups`, and a LOW-band story
+// reaches the screen like any other.
 
-describe('DashboardSectionsFeed — importance filter', () => {
+describe('DashboardSectionsFeed — no importance gate', () => {
     beforeEach(() => {
         mockRouterPush.mockClear();
-        mockDashboardThreshold = 'low';
     });
 
-    it("hides below-threshold cards under 'high' and shrinks total/view-all together", () => {
-        mockDashboardThreshold = 'high';
+    it('renders a LOW-band story and counts it in total and view-all', () => {
         const groups = [
             makeGroup('hi', 3000, 3000, 0.9),
             makeGroup('med', 2000, 2000, 0.6),
             makeGroup('lo', 1000, 1000, 0.4),
         ];
         const { getAllByText, getByText } = renderFeed([makeRow('f1', groups)]);
-        expect(getAllByText(/^card:/).map((n: any) => n.props.children)).toEqual(['card:hi']);
-        // Both the header pill and the closing row derive from the FILTERED
-        // count, so neither can advertise the two hidden stories.
-        expect(getByText('total:1')).toBeTruthy();
-        expect(getByText('viewall:1')).toBeTruthy();
+        expect(getAllByText(/^card:/).map((n: any) => n.props.children)).toEqual([
+            'card:hi',
+            'card:med',
+            'card:lo',
+        ]);
+        expect(getByText('total:3')).toBeTruthy();
+        expect(getByText('viewall:3')).toBeTruthy();
     });
 
-    it("drops a section entirely once the filter hides every one of its groups", () => {
-        mockDashboardThreshold = 'high';
-        const { queryByLabelText } = renderFeed([
+    it('keeps a section whose only group is LOW band', () => {
+        const { getByLabelText, getAllByText } = renderFeed([
             makeRow('f1', [makeGroup('lo', 1000, 1000, 0.4)]),
         ]);
-        expect(queryByLabelText('header:Statement f1')).toBeNull();
-    });
-
-    it("lowering the threshold back to 'low' instantly reveals the hidden stories", () => {
-        const groups = [makeGroup('hi', 2000, 2000, 0.9), makeGroup('lo', 1000, 1000, 0.4)];
-        mockDashboardThreshold = 'high';
-        const { rerender, getAllByText } = renderFeed([makeRow('f1', groups)]);
+        expect(getByLabelText('header:Statement f1')).toBeTruthy();
         expect(getAllByText(/^card:/)).toHaveLength(1);
-        mockDashboardThreshold = 'low';
-        rerender(
-            <DashboardSectionsFeed
-                breaking={[]}
-                rows={[makeRow('f1', groups)]}
-                openedIds={new Set()}
-                sortSnapshot={EMPTY_SNAPSHOT}
-                onPressSuggestion={jest.fn()}
-                scrollHandler={noopHandler}
-                headerHeight={100}
-            />,
-        );
-        expect(getAllByText(/^card:/)).toHaveLength(2);
     });
 });

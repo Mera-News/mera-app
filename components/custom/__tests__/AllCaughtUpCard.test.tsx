@@ -202,54 +202,29 @@ describe('AllCaughtUpCard', () => {
     });
   });
 
-  // ── The conditional CTA (r14 #9) ──
+  // ── The CTA ──
   //
-  // "if the user has chosen a priority higher than low in the feed header,
-  // instead of the browse explore button write 'Want to read more? Lower the
-  // feed priority'". `feedThreshold` and `onLowerPriority` are opt-in props —
-  // only FeedScreen passes them; FactFeedScreen and ForYouScreen's empty
-  // states (and the Feed's own loading/error states) pass neither and must
-  // keep today's Explore-only behavior untouched.
-  describe('the lower-priority CTA', () => {
-    it('shows the Explore CTA when no props are passed (the other three call sites)', () => {
+  // There used to be a second CTA here, "Want to read more? Lower the feed
+  // priority", shown when the Feed's importance dial was above its floor. The
+  // dial is gone — every scored story down to the LOW band renders — so the
+  // Explore CTA is unconditional at every call site. These tests exist to keep
+  // it that way: a reappearing fork would mean a control came back with it.
+  describe('the CTA', () => {
+    it('shows the Explore CTA, compact', () => {
       render(<AllCaughtUpCard compact />);
       expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
-      expect(screen.queryByTestId('all-caught-up-lower-priority-cta')).toBeNull();
+      expect(screen.getByText(en.feed.exploreCta)).toBeTruthy();
     });
 
-    it('shows the Explore CTA at threshold "low" even with a handler — nothing to lower', () => {
-      const onLowerPriority = jest.fn();
-      render(<AllCaughtUpCard compact feedThreshold="low" onLowerPriority={onLowerPriority} />);
+    it('shows the Explore CTA, roomy', () => {
+      render(<AllCaughtUpCard />);
       expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
+    });
+
+    it('renders the Explore CTA once and no second CTA beside it', () => {
+      render(<AllCaughtUpCard compact />);
+      expect(screen.getAllByTestId('all-caught-up-explore-cta')).toHaveLength(1);
       expect(screen.queryByTestId('all-caught-up-lower-priority-cta')).toBeNull();
-    });
-
-    it('shows the lower-priority CTA at threshold "medium"', () => {
-      const onLowerPriority = jest.fn();
-      render(<AllCaughtUpCard compact feedThreshold="medium" onLowerPriority={onLowerPriority} />);
-      expect(screen.getByText(en.feed.lowerPriorityCta)).toBeTruthy();
-      expect(screen.getByTestId('all-caught-up-lower-priority-cta')).toBeTruthy();
-      expect(screen.queryByTestId('all-caught-up-explore-cta')).toBeNull();
-    });
-
-    it('shows the lower-priority CTA at threshold "high"', () => {
-      const onLowerPriority = jest.fn();
-      render(<AllCaughtUpCard compact feedThreshold="high" onLowerPriority={onLowerPriority} />);
-      expect(screen.getByText(en.feed.lowerPriorityCta)).toBeTruthy();
-      expect(screen.queryByTestId('all-caught-up-explore-cta')).toBeNull();
-    });
-
-    it('falls back to Explore when feedThreshold is passed without a handler', () => {
-      render(<AllCaughtUpCard compact feedThreshold="high" />);
-      expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
-      expect(screen.queryByTestId('all-caught-up-lower-priority-cta')).toBeNull();
-    });
-
-    it('tapping the lower-priority CTA calls the handler', () => {
-      const onLowerPriority = jest.fn();
-      render(<AllCaughtUpCard compact feedThreshold="medium" onLowerPriority={onLowerPriority} />);
-      fireEvent.press(screen.getByTestId('all-caught-up-lower-priority-cta'));
-      expect(onLowerPriority).toHaveBeenCalledTimes(1);
     });
   });
 
