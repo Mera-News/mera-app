@@ -1570,5 +1570,36 @@ export default schemaMigrations({
         ),
       ],
     },
+    {
+      // v56 — REPAIR ONLY, no schema change.
+      //
+      // `createTopics` defaulted `weight` to 0, and `buildRetrievalProfile`
+      // drops every topic whose effective weight is <= 0 before the feed
+      // request is built. A topic minted without an explicit weight was
+      // therefore written, rendered on the Profile with its own row and delete
+      // button, and never once included in a query: the user saw a full topic
+      // list where every line read "0 articles", with no error anywhere.
+      //
+      // Two call sites did it. The manual "Add topic" button in FactsList and
+      // FactsScreen had done so for as long as they have existed, and
+      // `completeTopicGeneration` joined them the day the `topics/*`
+      // guidelines were wired to the chat route. The type now requires a
+      // weight, so no third can appear; this heals the rows already written.
+      //
+      // TARGETED, not a blanket lift. Only rows that are `active`, owned by a
+      // fact, and carry BOTH the default weight and the default provenance,
+      // which is the exact signature of a create that passed neither. A
+      // deliberate 0 does not exist as a product state (use `retired` or
+      // `suppressed`), and negative rows are the user's own downranks and are
+      // never touched.
+      toVersion: 56,
+      steps: [
+        unsafeExecuteSql(
+          'UPDATE topics SET weight = 0.75, provenance = \'llm\', updated_at = updated_at ' +
+            "WHERE weight = 0 AND provenance = 'user' AND status = 'active' " +
+            'AND fact_id IS NOT NULL;',
+        ),
+      ],
+    },
   ],
 });

@@ -734,3 +734,38 @@ describe('v52 adds claim identity to fact_checks additively', () => {
     expect(byName.get('claim_key')).toMatchObject({ isOptional: true, isIndexed: true });
   });
 });
+
+// ---------------------------------------------------------------------------
+// v56 heals topics that were minted at weight 0 and therefore never queried.
+// The SQL is the whole migration, so its predicate is what the test is for: a
+// blanket lift would resurrect the user's own downranks and their suppressed
+// rows.
+// ---------------------------------------------------------------------------
+
+describe('v56: the dead-topic weight repair', () => {
+  const sqlOf = (v: number) =>
+    JSON.stringify(migList.find((m) => m.toVersion === v)?.steps ?? []);
+
+  it('exists and changes no schema', () => {
+    const m = migList.find((x) => x.toVersion === 56);
+    expect(m).toBeDefined();
+    expect(m!.steps).toHaveLength(1);
+    expect(sqlOf(56)).toContain('UPDATE topics SET weight');
+  });
+
+  it('lifts only rows carrying BOTH defaults, on an active fact-owned topic', () => {
+    const sql = sqlOf(56);
+    expect(sql).toContain('weight = 0');
+    expect(sql).toContain("provenance = 'user'");
+    expect(sql).toContain("status = 'active'");
+    expect(sql).toContain('fact_id IS NOT NULL');
+  });
+
+  it('never touches a negative weight, which is the user\u2019s own downrank', () => {
+    // `weight = 0` is an equality, not `<=`. A downranked topic must survive a
+    // repair pass untouched, or the repair silently re-enables something the
+    // user pushed away.
+    expect(sqlOf(56)).not.toContain('weight <=');
+    expect(sqlOf(56)).not.toContain('weight <');
+  });
+});

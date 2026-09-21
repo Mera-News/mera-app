@@ -56,7 +56,7 @@ describe('createTopics — dedupe floor', () => {
   });
 
   it('creates a row when nothing matches', async () => {
-    const out = await createTopics([{ text: 'Bhopal news' }]);
+    const out = await createTopics([{ text: 'Bhopal news', weight: 0.75 }]);
 
     expect(out).toHaveLength(1);
     expect(out[0].normalizedText).toBe('bhopal news');
@@ -67,7 +67,7 @@ describe('createTopics — dedupe floor', () => {
     const row = existing('t-1', 'bhopal news');
     seed([row]);
 
-    const out = await createTopics([{ text: 'Bhopal News' }]);
+    const out = await createTopics([{ text: 'Bhopal News', weight: 0.75 }]);
 
     // Resolve-or-create: the caller still gets a row (never undefined)...
     expect(out).toHaveLength(1);
@@ -80,7 +80,7 @@ describe('createTopics — dedupe floor', () => {
   it('normalizes case and whitespace when matching', async () => {
     seed([existing('t-1', 'bhopal news')]);
 
-    const out = await createTopics([{ text: '  BHOPAL   news  ' }]);
+    const out = await createTopics([{ text: '  BHOPAL   news  ', weight: 0.75 }]);
 
     expect(out[0].id).toBe('t-1');
     expect(db.batch).not.toHaveBeenCalled();
@@ -89,7 +89,7 @@ describe('createTopics — dedupe floor', () => {
   it('treats a suppressed row as live — it blocks a duplicate create', async () => {
     seed([existing('t-sup', 'bhopal news', null, 'suppressed')]);
 
-    const out = await createTopics([{ text: 'Bhopal news' }]);
+    const out = await createTopics([{ text: 'Bhopal news', weight: 0.75 }]);
 
     expect(out[0].id).toBe('t-sup');
     expect(db.batch).not.toHaveBeenCalled();
@@ -98,7 +98,7 @@ describe('createTopics — dedupe floor', () => {
   it('does NOT let a retired row block a create (retired is exempt)', async () => {
     seed([existing('t-retired', 'bhopal news', null, 'retired')]);
 
-    const out = await createTopics([{ text: 'Bhopal news' }]);
+    const out = await createTopics([{ text: 'Bhopal news', weight: 0.75 }]);
 
     expect(db.batch).toHaveBeenCalledTimes(1);
     expect(out).toHaveLength(1);
@@ -112,7 +112,7 @@ describe('createTopics — dedupe floor', () => {
       // signal.
       seed([existing('t-a', 'ai regulation', 'fact-A')]);
 
-      const out = await createTopics([{ text: 'AI regulation', factId: 'fact-B' }]);
+      const out = await createTopics([{ text: 'AI regulation', factId: 'fact-B', weight: 0.75 }]);
 
       expect(db.batch).toHaveBeenCalledTimes(1);
       expect(out).toHaveLength(1);
@@ -123,7 +123,7 @@ describe('createTopics — dedupe floor', () => {
     it('dedupes the same text under the SAME fact', async () => {
       seed([existing('t-a', 'ai regulation', 'fact-A')]);
 
-      const out = await createTopics([{ text: 'AI regulation', factId: 'fact-A' }]);
+      const out = await createTopics([{ text: 'AI regulation', factId: 'fact-A', weight: 0.75 }]);
 
       expect(out[0].id).toBe('t-a');
       expect(db.batch).not.toHaveBeenCalled();
@@ -132,7 +132,7 @@ describe('createTopics — dedupe floor', () => {
     it('does not match a fact-owned row against an unowned (fact_id null) input', async () => {
       seed([existing('t-a', 'ai regulation', 'fact-A')]);
 
-      const out = await createTopics([{ text: 'AI regulation' }]);
+      const out = await createTopics([{ text: 'AI regulation', weight: 0.75 }]);
 
       expect(db.batch).toHaveBeenCalledTimes(1);
       expect(out[0].factId).toBeNull();
@@ -142,9 +142,9 @@ describe('createTopics — dedupe floor', () => {
   describe('intra-batch duplicates', () => {
     it('collapses repeats within one batch to a single create', async () => {
       const out = await createTopics([
-        { text: 'Bhopal news' },
-        { text: 'bhopal NEWS' },
-        { text: 'Amsterdam news' },
+        { text: 'Bhopal news', weight: 0.75 },
+        { text: 'bhopal NEWS', weight: 0.75 },
+        { text: 'Amsterdam news', weight: 0.75 },
       ]);
 
       // One row per input, in order — the repeat resolves to the same record.
@@ -165,9 +165,9 @@ describe('createTopics — dedupe floor', () => {
       seed([existing('t-mid', 'second')]);
 
       const out = await createTopics([
-        { text: 'first' },
-        { text: 'Second' },
-        { text: 'third' },
+        { text: 'first', weight: 0.75 },
+        { text: 'Second', weight: 0.75 },
+        { text: 'third', weight: 0.75 },
       ]);
 
       expect(out).toHaveLength(3);
@@ -182,9 +182,9 @@ describe('createTopics — dedupe floor', () => {
       seed([existing('t-1', 'alpha'), existing('t-2', 'beta')]);
 
       const out = await createTopics([
-        { text: 'alpha' },
-        { text: 'gamma' },
-        { text: 'beta' },
+        { text: 'alpha', weight: 0.75 },
+        { text: 'gamma', weight: 0.75 },
+        { text: 'beta', weight: 0.75 },
       ]);
 
       expect(out).toHaveLength(3);

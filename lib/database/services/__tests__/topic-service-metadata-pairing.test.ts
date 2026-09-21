@@ -36,7 +36,7 @@ describe('createTopics keeps both topic readers in step', () => {
     const fact = makeRecord({ id: 'f1', metadata: { topics: ['Cycling'] } });
     db._setRows('facts', [fact]);
 
-    await createTopics([{ factId: 'f1', text: 'Dutch Politics' }]);
+    await createTopics([{ factId: 'f1', text: 'Dutch Politics', weight: 0.75 }]);
 
     expect(db._collections['topics'].prepareCreate).toHaveBeenCalledTimes(1);
     expect(fact.metadata.topics).toEqual(['Cycling', 'Dutch Politics']);
@@ -54,7 +54,7 @@ describe('createTopics keeps both topic readers in step', () => {
     const fact = makeRecord({ id: 'f1', metadata: { topics: ['Cycling'] } });
     db._setRows('facts', [fact]);
 
-    await createTopics([{ text: 'Some Disliked Thing', provenance: 'feedback' }]);
+    await createTopics([{ text: 'Some Disliked Thing', provenance: 'feedback', weight: 0.75 }]);
 
     expect(fact.prepareUpdate).not.toHaveBeenCalled();
     expect(fact.metadata.topics).toEqual(['Cycling']);
@@ -71,7 +71,7 @@ describe('createTopics keeps both topic readers in step', () => {
     });
     db._setRows('facts', [fact]);
 
-    await createTopics([{ factId: 'f1', text: 'New Topic' }]);
+    await createTopics([{ factId: 'f1', text: 'New Topic', weight: 0.75 }]);
 
     expect(fact.metadata.topicGenError).toEqual(['boom']);
     expect(fact.metadata.topicsReviewedAt).toEqual(['t']);
@@ -82,7 +82,7 @@ describe('createTopics keeps both topic readers in step', () => {
     const fact = makeRecord({ id: 'f1', metadata: { topics: ['Dutch Politics'] } });
     db._setRows('facts', [fact]);
 
-    await createTopics([{ factId: 'f1', text: 'dutch  politics' }]);
+    await createTopics([{ factId: 'f1', text: 'dutch  politics', weight: 0.75 }]);
 
     expect(fact.metadata.topics).toEqual(['Dutch Politics']);
   });
@@ -92,7 +92,7 @@ describe('createTopics keeps both topic readers in step', () => {
     // as live; handing back a row flushPendingDeletes is about to destroy
     // would bind a tracked story to a doomed topic id. The mock ignores
     // predicates, so assert the QUERY.
-    await createTopics([{ factId: 'f1', text: 'X' }]);
+    await createTopics([{ factId: 'f1', text: 'X', weight: 0.75 }]);
     const args = db._collections['topics'].query.mock.calls[0];
     expect(JSON.stringify(args)).toContain('pending_delete_at');
   });

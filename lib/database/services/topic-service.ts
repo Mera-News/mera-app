@@ -49,7 +49,22 @@ export interface CreateTopicInput {
   factId?: string | null;
   text: string;
   normalizedText?: string;
-  weight?: number;
+  /**
+   * REQUIRED, and the compiler is the guard.
+   *
+   * `buildRetrievalProfile` drops every topic whose effective weight is <= 0
+   * before the feed request is built, so a topic created at 0 is written to
+   * the table, rendered on the Profile with its own row and delete button, and
+   * never once asked about. The user sees a full topic list where every line
+   * reads "0 articles", with nothing anywhere reporting an error.
+   *
+   * This was optional and defaulted to 0, which made the ONE value that
+   * silently disables a row also the value you got by saying nothing. Two
+   * call sites hit it independently: `completeTopicGeneration`, and the manual
+   * "Add topic" button in FactsList, which had been minting dead topics for as
+   * long as it has existed. Making it required is what stops a third.
+   */
+  weight: number;
   status?: TopicStatus;
   provenance?: TopicProvenance;
   highPriority?: boolean;
@@ -191,7 +206,7 @@ export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicMod
           t.factId = input.factId ?? null;
           t.text = input.text;
           t.normalizedText = normalizedText;
-          t.weight = input.weight ?? 0;
+          t.weight = input.weight;
           t.status = input.status ?? 'active';
           t.provenance = input.provenance ?? 'user';
           t.highPriority = input.highPriority ?? false;

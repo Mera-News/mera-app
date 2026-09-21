@@ -1,3 +1,4 @@
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -88,7 +89,12 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
         // nothing else visible, which reads as broken.
         await removeDecline(item.id);
         if (item.sourceFactId) {
-            await createTopics([{ factId: item.sourceFactId, text: item.text }]);
+            // WEIGHT IS LOAD-BEARING: a topic at 0 is dropped by
+            // buildRetrievalProfile and never queried, so a hand-added topic
+            // used to render with its own row and fetch nothing, forever. Same
+            // weight as a generated one, because a topic the user typed is at
+            // least as strong a signal as one Mera inferred.
+await createTopics([{ factId: item.sourceFactId, text: item.text , weight: DEFAULT_HARNESS_CONFIG.topicGen.llmTopicWeight }]);
         }
     }, []);
 
