@@ -18,7 +18,6 @@ import { runBackgroundCycle } from '@/lib/background/run-inference-handler';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
-import { useOnDeviceBannerStore } from '@/lib/stores/on-device-banner-store';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
 const KEEP_AWAKE_TAG = 'mera-scoring-pass';
@@ -73,8 +72,12 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
   }
 
   await activateKeepAwakeAsync(KEEP_AWAKE_TAG);
+  // `startDeviceProcessing` / `finishDeviceProcessing` are the ONLY flag this
+  // pass raises. There used to be a second, `on-device-banner-store`, set and
+  // cleared in this exact try/finally — so it could never hold a value
+  // `isDeviceProcessing` did not already hold — and read by no renderer
+  // anywhere. Its copy now lives in the header narration's `onDevice` pool.
   useForYouStore.getState().startDeviceProcessing(0);
-  useOnDeviceBannerStore.getState().show();
   try {
     if (useMeraProtocolStore.getState().modelState !== 'ready') {
       useMeraProtocolStore.getState().setModelState('loading');
@@ -106,7 +109,6 @@ export async function runScoringPass(batchSize = 20): Promise<number> {
     throw error;
   } finally {
     useForYouStore.getState().finishDeviceProcessing();
-    useOnDeviceBannerStore.getState().hide();
     deactivateKeepAwake(KEEP_AWAKE_TAG);
   }
 }

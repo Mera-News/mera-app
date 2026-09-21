@@ -122,8 +122,10 @@ export interface FeedSyncRefresh {
  *    pipeline-running return — three of which resolve in the SAME tick. The old
  *    `setRefreshing(true); await trigger(); setRefreshing(false)` therefore
  *    flashed and vanished, and the user saw nothing. Hence the scheduler flag.
- *  - The spinner must not appear UNPROMPTED. feed-sync also runs on a 60s tick,
- *    on foreground, and on network reconnect. Binding the RefreshControl to the
+ *  - The spinner must not appear UNPROMPTED. feed-sync also runs on a FIVE
+ *    MINUTE tick (`frequency: 5 * 60 * 1000`, `lib/scheduler/tasks/feed-sync-task.ts`
+ *    — not 60s, which this comment claimed for a long time), on foreground,
+ *    and on network reconnect. Binding the RefreshControl to the
  *    raw scheduler flag would drop the native spinner over the list during
  *    every one of those, mid-read, with no gesture behind it.
  *
