@@ -434,6 +434,52 @@ describe('the bounded loop', () => {
     expect(deleteUserFacts).not.toHaveBeenCalled();
   });
 
+  // A CORRECT REFUSAL IS NOT A FAILURE. On device, "I'm travelling to Hawaii"
+  // got exactly the right answer (a trip is not a residence change) and was
+  // painted with the cap error box, because the turn proposed nothing.
+  it('a turn that answered well but proposed nothing is settled, not capped', async () => {
+    const answer = modelResult({
+      content: "Since Hawaii is a trip rather than your home, I won't update your residence.",
+    });
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'Hawaii, one moment.',
+        toolCalls: [tc('load_skill', { id: 'conversation/question' })],
+      }),
+      answer, answer, answer, answer,
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: "I'm travelling to Hawaii", deps,
+    });
+
+    expect(out.terminalReason).toBe('settled');
+    expect(out.legCapped).toBe(false);
+    expect(out.proposals).toHaveLength(0);
+  });
+
+  it('a turn that ran out of legs with NOTHING to show is still a cap', async () => {
+    // Silent tool spinning: no proposal and no prose, so there is nothing the
+    // user could read as an answer.
+    const spin = modelResult({
+      content: '',
+      toolCalls: [tc('lookup_place', { query: 'Porto' })],
+    });
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'Porto, one moment.',
+        toolCalls: [tc('load_skill', { id: 'facts/residence' })],
+      }),
+      spin, spin, spin, spin,
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
+    });
+
+    expect(out.terminalReason).toBe('leg-cap');
+    expect(out.legCapped).toBe(true);
+    expect(out.legBudgetHit).toBe(true);
+  });
+
   // A CONTROL THAT HAS BEEN TIDIED UP MEASURES NOTHING. These assert that
   // `pre-enforcement` really is the configuration the 38% and the 99 no-route
   // legs came from, not a partly-fixed version of it wearing the label.
@@ -499,11 +545,19 @@ describe('the bounded loop', () => {
 
   it('CLAMPS at the leg bound on DISTINCT forcing calls, and never throws', async () => {
     // Distinct arguments, because an identical repeat no longer buys a leg.
+    //
+    // SILENT after the route leg, on purpose. The loop cannot tell "spun and
+    // then answered well" from "spun uselessly": both are prose after routing
+    // with no proposal. It resolves that in the user's favour, so a turn that
+    // spun AND produced prose now settles, and only a turn with nothing to show
+    // still reports the cap. The cost is that a genuinely stuck turn which
+    // emitted filler reads as settled; the user still sees that filler and can
+    // ask again, where the old rule painted a correct refusal as an error.
     const { deps } = scriptedDeps([
       modelResult({ content: 'a', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
-      modelResult({ content: 'b', toolCalls: [tc('lookup_place', { query: 'Alkmaar' })] }),
-      modelResult({ content: 'c', toolCalls: [tc('lookup_place', { query: 'Hoorn' })] }),
-      modelResult({ content: 'd', toolCalls: [tc('lookup_place', { query: 'Utrecht' })] }),
+      modelResult({ content: '', toolCalls: [tc('lookup_place', { query: 'Alkmaar' })] }),
+      modelResult({ content: '', toolCalls: [tc('lookup_place', { query: 'Hoorn' })] }),
+      modelResult({ content: '', toolCalls: [tc('lookup_place', { query: 'Utrecht' })] }),
     ]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
     expect(out.legs).toHaveLength(MAX_AGENT_LEGS);

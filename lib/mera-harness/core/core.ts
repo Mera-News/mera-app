@@ -287,6 +287,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let legBudgetHit = false;
   /** One closing-sentence leg is allowed after a proposal, never a stream. */
   let silentLegAfterProposal = false;
+  /** Prose written AFTER a skill loaded. The route leg's acknowledgement does
+   *  not count: it says the turn began, not that the user was answered. */
+  let answeredTheUser = false;
   /** Reply-gate budget and residue, reported so the rate stays measurable. */
   let replyRetries = 0;
   let replyClaimUnfixed = false;
@@ -345,7 +348,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // which is a correct residence turn. What that turn is missing is a
       // closing sentence, not its work. Reporting it as a cap failure inflated
       // the rate to 23% and buried the ~2 in 18 that are real.
-      terminalReason = proposedSomething ? 'settled' : 'leg-cap';
+      //
+      // A USABLE REPLY COUNTS TOO, not just a proposal. On device, "I'm
+      // travelling to Hawaii" produced exactly the right answer ("a trip rather
+      // than your permanent home, I won't update your residence fact") and was
+      // painted as a failure, because a turn that correctly proposes NOTHING
+      // still failed the proposal test. Keying only on `proposedSomething`
+      // makes every correct refusal look broken.
+      terminalReason = proposedSomething || answeredTheUser ? 'settled' : 'leg-cap';
       break;
     }
 
@@ -426,7 +436,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
     // Cleaned here too, not only at the end: the acknowledgement is the FIRST
     // thing on screen and is exactly where the measured dashes appeared.
-    if (result.content.trim()) reply = cleanProse(result.content);
+    if (result.content.trim()) {
+      reply = cleanProse(result.content);
+      // AN ANSWER, as distinct from the route leg's acknowledgement. "Porto,
+      // one moment." is about the turn starting; it must never make a turn that
+      // then did nothing look complete. Only prose written once a skill is
+      // loaded is an answer to the user.
+      if (skillLoaded !== null) answeredTheUser = true;
+    }
 
     // A leg that RESOLVED with a transport error is terminal: continuing would
     // let an offline device run four hedged legs for nothing.
@@ -721,8 +738,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     proposals,
     legBudgetHit,
     // WHAT THE UI SHOWS. `legBudgetHit` is the raw budget signal the eval reads;
-    // `legCapped` is the failure, and a turn that proposed is not one.
-    legCapped: legBudgetHit && !proposedSomething,
+    // `legCapped` is the FAILURE, and a turn that proposed something or answered
+    // the user is not one. Both halves matter: a correct refusal proposes
+    // nothing and is still a complete turn.
+    legCapped: legBudgetHit && terminalReason === 'leg-cap',
     rerouteAttempts,
     forcedProposal,
     formatRetries,
