@@ -46,7 +46,30 @@ import { render } from '@testing-library/react-native';
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { GLOW_BRIGHT, GLOW_DIM } from '@/components/ui/chat-ai';
+import ChatPhaseLine from '../ChatPhaseLine';
 import WaitBubble from '../WaitBubble';
+import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
+
+// The real dictionary, so the composition test asserts shipped copy.
+const EN = jest.requireActual('../../../../lib/locales/en.json') as {
+  chatPhases: Record<string, string[]>;
+};
+
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: { returnObjects?: boolean }) => {
+      const en = require('@/lib/locales/en.json');
+      const v = key.split('.').reduce<any>((acc, part) => acc?.[part], en);
+      if (opts?.returnObjects) return v ?? [];
+      return typeof v === 'string' ? v : key;
+    },
+  }),
+}));
+
+jest.mock('@/components/ui/text', () => {
+  const { Text: RNText } = require('react-native');
+  return { Text: (p: any) => <RNText {...p} /> };
+});
 
 function style() {
   // A FRESH element each time. Passing the same element reference back to
@@ -112,6 +135,36 @@ describe('WaitBubble', () => {
     const s = style();
     expect(String(s.borderColor)).not.toMatch(/231, 138, 83/);
     expect(String(s.shadowColor)).not.toMatch(/231, 138, 83/);
+  });
+
+  // THE COMPOSITION THE THREAD ACTUALLY RENDERS. Every other case here asserts
+  // the bubble's style with a `<Text>` child; none of them would notice the
+  // bubble and the line failing to work together, which is the pairing the
+  // user sees and the one P5-P7 rearranged.
+  it('renders the phase sentence inside the bubble, end to end', () => {
+    useChatPhaseStore.getState().reset();
+    useChatPhaseStore.getState().setPhase('attesting');
+    const r = render(
+      <WaitBubble>
+        <ChatPhaseLine />
+      </WaitBubble>,
+    );
+    expect(r.getByTestId('chat-wait-bubble')).toBeTruthy();
+    expect(r.getByTestId('chat-phase-line')).toHaveTextContent(EN.chatPhases.attesting[0]);
+  });
+
+  it('is never an EMPTY outlined box while a phase is live', () => {
+    // An empty bubble is the failure mode worth guarding: it looks like the
+    // feature half-working rather than like an error, so nothing reports it.
+    useChatPhaseStore.getState().reset();
+    useChatPhaseStore.getState().setPhase('thinking');
+    const r = render(
+      <WaitBubble>
+        <ChatPhaseLine />
+      </WaitBubble>,
+    );
+    const text = r.getByTestId('chat-phase-line').props.children;
+    expect(String(text).trim().length).toBeGreaterThan(0);
   });
 
   it('blooms rather than drops: zero shadow offset, zero elevation', () => {
