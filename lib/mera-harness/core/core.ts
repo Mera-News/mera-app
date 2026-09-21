@@ -854,6 +854,22 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   turn.lastSkill = skillLoaded;
   // Held for the turn that answers, which arrives carrying only a chip label.
   turn.lastUserMessage = userMessage;
+  // CONSUMED. `resolvedChoice` was set and never cleared, so it stayed true for
+  // the rest of the conversation and everything gated on it silently widened
+  // from "the user confirmed this turn" to "the user has confirmed something,
+  // once, at some point".
+  //
+  // That is almost certainly the TestFlight replace: the destructive `replaces`
+  // gate reads it, so after any single chip tap every later turn was free to
+  // offer a replacement. It also made the skill resume fire on every subsequent
+  // turn, which is how "I am interested in music festivals" routed to
+  // `facts/profession` on the simulator.
+  //
+  // Cleared HERE, at the end of the turn that consumed it, rather than where it
+  // is read: the read sites are the resume, the state line, the `replaces` gate
+  // and the delete gate, and one of them forgetting would put the bug straight
+  // back.
+  turn.resolvedChoice = null;
 
   return {
     legs,

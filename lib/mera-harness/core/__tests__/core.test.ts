@@ -743,7 +743,8 @@ describe('ask_choice', () => {
     const second = scriptedDeps([modelResult({ content: 'Got it.' })], { lookupPlace });
     await runAgentTurn({ state, userMessage: 'Amsterdam', deps: second.deps });
     expect(lookupPlace).toHaveBeenCalledTimes(1); // still ONE: no re-lookup
-    expect(state.turn.resolvedChoice?.payload).toEqual(AMS);
+    // Consumed by the turn that answered, not left set for the conversation.
+    expect(state.turn.resolvedChoice).toBeNull();
     expect(state.turn.pendingChoice).toBeNull();
   });
 });
@@ -1337,6 +1338,69 @@ describe('TestFlight regressions', () => {
 
     const firstLeg = calls[0].messages.map((m) => m.content).join('\n');
     expect(firstLeg).not.toContain('my parents live in bhopal');
+  });
+
+  it('the choice is CONSUMED, so the turn after it routes normally again', async () => {
+    // `resolvedChoice` was set and never cleared, so it stayed true for the
+    // rest of the conversation. Everything gated on it widened from "the user
+    // confirmed this turn" to "the user has confirmed something, once": the
+    // destructive `replaces` gate, the delete gate, and (once the resume
+    // landed) the routing itself. Measured on the simulator: after one
+    // disambiguation, "I am interested in music festivals" resumed
+    // `facts/profession`.
+    const state = createAgentState(PERSONA);
+    const { deps: t1 } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/profession' })] }),
+      modelResult({
+        content: '',
+        toolCalls: [tc2('ask_choice', { question: 'Which one?', options: ['Engineer', 'Founder'] })],
+      }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'I am an entrepreneur', deps: t1 });
+
+    // Turn 2 answers the chip and RESUMES.
+    const { deps: t2 } = scriptedDeps([
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Entrepreneur' }] })] }),
+      modelResult({ content: 'Here is the reading.' }),
+    ]);
+    const answered = await runAgentTurn({ state, userMessage: 'Founder', deps: t2 });
+    expect(answered.resumedSkill).toBe(true);
+
+    // Turn 3 is a NEW subject and must route for itself.
+    const { deps: t3 } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/interest' })] }),
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Interested in music festivals' }] })] }),
+      modelResult({ content: 'Here is the reading.' }),
+    ]);
+    const third = await runAgentTurn({ state, userMessage: 'I am interested in music festivals', deps: t3 });
+
+    expect(third.resumedSkill).toBe(false);
+    expect(third.skillLoaded).toBe('facts/interest');
+  });
+
+  it('a replace is refused once the confirmation belongs to an EARLIER turn', async () => {
+    // The `replaces` gate reads the same flag, so a single tap anywhere in the
+    // conversation used to leave it open for good.
+    const state = createAgentState(RESIDENT);
+    state.turn.resolvedChoice = { question: 'Which one?', text: 'Berlin', payload: null };
+    state.turn.lastSkill = 'facts/residence';
+
+    const { deps: t1 } = scriptedDeps([
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Berlin, Germany, EU', replaces: 'home' }] })] }),
+      modelResult({ content: 'Here is the reading.' }),
+    ]);
+    const first = await runAgentTurn({ state, userMessage: 'Berlin', deps: t1 });
+    expect(first.proposals[0].replaces).toBe('home');
+
+    // A LATER turn proposing a replace has no confirmation of its own.
+    const { deps: t2 } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Porto, Portugal, EU', replaces: 'home' }] })] }),
+      modelResult({ content: 'Here is the reading.' }),
+    ]);
+    const second = await runAgentTurn({ state, userMessage: 'I might move to Porto', deps: t2 });
+
+    expect(second.proposals[0].replaces).toBeNull();
   });
 
   it('does NOT resume when the message is not the answer to a pending choice', async () => {

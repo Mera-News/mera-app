@@ -202,9 +202,14 @@ describe('conversation 2: an ambiguous place', () => {
     ], [ALKMAAR, AMSTERDAM]);
     await runAgentTurn({ state, userMessage: 'Alkmaar', deps: second.deps });
 
-    expect(second.lookups).toEqual([]);               // NO re-lookup
-    expect(state.turn.resolvedChoice?.payload).toEqual(ALKMAAR);
+    // NO re-lookup, which is also the proof the bound payload was used: the
+    // turn had no other source for the place.
+    expect(second.lookups).toEqual([]);
     expect(state.turn.pendingChoice).toBeNull();
+    // CONSUMED by the turn that answered. It used to stay set for the rest of
+    // the conversation, which left the destructive `replaces` gate open on
+    // every later turn.
+    expect(state.turn.resolvedChoice).toBeNull();
   });
 });
 
