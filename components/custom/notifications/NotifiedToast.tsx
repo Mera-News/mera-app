@@ -1,4 +1,4 @@
-import { Toast, ToastDescription, ToastTitle } from '@/components/ui/toast';
+import { Toast, ToastDescription, ToastTitle, useIsToastFront } from '@/components/ui/toast';
 import type { BellAnchor } from '@/lib/notifications/bell-anchor';
 import React, { useEffect } from 'react';
 import { Dimensions } from 'react-native';
@@ -57,6 +57,12 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     anchor,
 }) => {
     const progress = useSharedValue(0);
+    // The deck can hold this card BEHIND another one. Its lifetime is sized to
+    // this animation exactly (`notifiedToastDurationMs`), and the queue only
+    // starts that clock once the card reaches the front — so the animation has
+    // to wait for the same moment, or the toast holds and flies to the bell
+    // while it is an unreadable sliver and expires having never been seen.
+    const isFront = useIsToastFront();
 
     // Approximate toast start: horizontally centered, near the top where a
     // 'top'-placed toast renders.
@@ -68,6 +74,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
     const deltaY = canFly ? anchor!.y - startY : 0;
 
     useEffect(() => {
+        if (!isFront) return;
         // HOLD fully opaque first so the notification is actually readable, then
         // leave: fly-to-bell (translate + shrink + fade), or a plain slower fade
         // when motion is reduced / there is no bell to fly to.
@@ -77,7 +84,7 @@ const NotifiedToast: React.FC<NotifiedToastProps> = ({
                 duration: canFly ? NOTIFIED_TOAST_FLY_MS : NOTIFIED_TOAST_FADE_MS,
             }),
         );
-    }, [progress, canFly]);
+    }, [progress, canFly, isFront]);
 
     const animatedStyle = useAnimatedStyle(() => {
         const p = progress.value;
