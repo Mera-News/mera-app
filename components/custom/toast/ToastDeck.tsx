@@ -126,7 +126,12 @@ function ToastSlot({
     onFrontSize,
     leaving = false,
 }: SlotProps) {
-    const isFront = depth === 0 && !leaving;
+    // TWO DIFFERENT QUESTIONS, and collapsing them into one flag painted a grey
+    // placeholder over every dismissal: a card on its way out still sits in the
+    // top slot and must still render ITSELF while it fades, but it is no longer
+    // the card being read.
+    const isTop = depth === 0;
+    const isFront = isTop && !leaving;
     // Read here, NOT inside the gesture callback. `onEnd` is a worklet running
     // on the UI thread, where `Dimensions.get` is undefined — calling it there
     // threw "Dimensions.get is not a function" on the first real swipe, which
@@ -152,6 +157,14 @@ function ToastSlot({
         if (!mounted.current) {
             mounted.current = true;
             scale.value = targetScale;
+            if (leaving) {
+                // An exit clone is a fresh mount of a card the user was already
+                // looking at. It starts exactly where that card was and only
+                // fades; playing the entrance first would flash it back in.
+                translateY.value = targetY;
+                opacity.value = targetOpacity;
+                return;
+            }
             if (depth === 0) {
                 // Into an empty deck: the original enter, sliding in from
                 // outside the safe area.
@@ -171,7 +184,7 @@ function ToastSlot({
         translateY.value = withTiming(targetY, { duration: motionMs });
         scale.value = withTiming(targetScale, { duration: motionMs });
         opacity.value = withTiming(targetOpacity, { duration: motionMs });
-    }, [depth, dir, reduceMotion, opacity, scale, translateY]);
+    }, [depth, dir, leaving, reduceMotion, opacity, scale, translateY]);
 
     // The exit: fade back out the way the card came in.
     useEffect(() => {
@@ -263,8 +276,14 @@ function ToastSlot({
                         A plain surface is also what makes the deck cheap, and
                         it means `NotifiedToast` never mounts — and so never
                         flies to the bell — until it is the card being read. */}
-                    {isFront ? (
-                        <ToastFrontProvider value>{entry.render({ id: entry.id })}</ToastFrontProvider>
+                    {isTop ? (
+                        // `value={isFront}` matters on the exit clone: false
+                        // stops `ToastTitle` announcing the message a second
+                        // time and stops `NotifiedToast` restarting its flight,
+                        // while this slot's own opacity carries the fade.
+                        <ToastFrontProvider value={isFront}>
+                            {entry.render({ id: entry.id })}
+                        </ToastFrontProvider>
                     ) : frontSize ? (
                         <View
                             testID="toast-buried-panel"
