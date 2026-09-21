@@ -36,6 +36,7 @@ export interface FactChoiceBulkRowProps {
     groupIndex: number;
     options: string[];
     questionnaireAttribute: string | null;
+    topicSkillId: string | null;
   }[];
 }
 
@@ -66,6 +67,9 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
         questionnaire: g.questionnaireAttribute
           ? { attribute: g.questionnaireAttribute }
           : undefined,
+        // Per GROUP, not per batch: two facts accepted together can have been
+        // routed to different guidelines.
+        ...(g.topicSkillId ? { skillId: g.topicSkillId } : {}),
       }));
       // ONE commitFactChoices call, so conflict detection runs against the same
       // pre-batch bank a single multi-fact turn always used and topic generation

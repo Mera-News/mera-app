@@ -199,6 +199,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             dismissed={item.dismissed}
             stale={item.stale}
             replacesFactId={item.replacesFactId}
+            topicSkillId={item.topicSkillId}
           />
         );
 

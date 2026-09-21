@@ -41,10 +41,19 @@ platforms, the cheating rows, the engines and the AI, and the schools programmes
 results, regulations, transfers, budgets and broadcasting. Name the actual subjects, never the
 category.
 
-**2. The country and city flavour, two or three.** Read the user's residence fact from the other
-facts and localise. The national federation or league, the local clubs and venues, the event their
-country actually hosts. If they have no residence fact, skip this band rather than guessing a
-country.
+**2. The country and city flavour, two or three, and ONLY when the interest has local instances.**
+Ask whether this interest happens in places. A sport has leagues, a music scene has venues and
+festivals, a craft has fairs: localise those, using the user's residence fact. The national
+federation or league, the local clubs and venues, the event their country actually hosts.
+
+A field of research, a technology, a policy area or an ideal does NOT happen in places, and
+localising one invents a beat no newsroom covers. "Privacy safe AI" belongs to labs, regulators
+and papers, so its topics name those; "Netherlands privacy safe AI" retrieves nothing and crowds
+out a real topic. Where a global field does have a genuine regional venue, that is the BLOC, not
+the city: "EU AI Act enforcement" is a real subject, "Amsterdam AI safety" is not.
+
+Skip this band, and spend the budget on band 1, whenever the interest has no local instances or
+the user has no residence fact. Never guess a country.
 
 **3. The community and business side, one or two.** Streamers and creators, the tournament
 calendar, prize money, sponsorship, attendance, rights deals. This is the half that is missed most
@@ -73,7 +82,18 @@ Six global, two local drawn from the residence fact, one business. Nine, inside 
 ["Formula 1 race results", "Formula 1 regulation changes", "Formula 1 driver transfers", "Formula 1 team budget cap", "Formula 1 engine rules 2027", "Dutch Grand Prix Zandvoort", "Max Verstappen contract news", "Formula 1 broadcast rights", "Formula 1 fan attendance"]
 ```
 
+### The same bands, an interest with no places
+Fact: "Interested in privacy safe AI"
+Other facts: "Lives in Amsterdam, North Holland, The Netherlands, EU"
+
+Band 2 is skipped: research and regulation have no Amsterdam edition. The budget goes to band 1,
+and the one regional subject is the bloc, because that is where the rules are actually written.
+
+```json
+["AI safety research", "AI model evaluations", "differential privacy research", "federated learning deployments", "AI incident reporting", "EU AI Act enforcement", "data protection enforcement", "on-device AI processing", "AI lab safety commitments"]
+```
+
 Read the bands, not the sport. A fact about a different interest must produce none of these
-strings, and must still fill all three bands.
+strings, and must still fill every band the interest earns.
 
 Reply with the JSON array and nothing else. No sentence before it, none after.

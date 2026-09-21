@@ -330,6 +330,9 @@ export interface AgentTurnResult {
   /** Proposals dropped because their statement repeated a fact already on
    *  file. The model was shown them by find_similar_facts. */
   reProposals: number;
+  /** `replaces` targets refused because the proposed fact and the target are
+   *  about different people. A destructive replace demoted to a plain add. */
+  refusedReplaces: number;
   /** Surfaced to the UI so a capped turn renders as capped, not as finished. */
   legCapped: boolean;
   state: AgentTurnState;

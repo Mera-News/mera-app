@@ -1038,3 +1038,238 @@ describe('per-leg tool payload', () => {
     expect(names(calls[1].tools)).not.toContain('saveExtractedFacts');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Three defects reported from TestFlight, each tested THROUGH runAgentTurn
+// rather than against the pure helper, because all three were failures of
+// where a correct check was wired rather than of the check itself.
+// ---------------------------------------------------------------------------
+
+describe('TestFlight regressions', () => {
+  const tc2 = (name: string, args: Record<string, unknown>) => ({
+    name,
+    argumentsRaw: JSON.stringify(args),
+  });
+
+  const RESIDENT: AgentPersona = {
+    surface: 'CONFIG',
+    languageName: 'English',
+    facts: [
+      {
+        id: 'home',
+        statement: 'Lives in Amsterdam, North Holland, The Netherlands, EU',
+        attribute: 'location: residence',
+      },
+    ],
+  };
+
+  it('refuses a cross-subject replace and offers the fact as a plain add', async () => {
+    // "My girlfriend's parents live in Porto Santo" resolved to Vila Baleira
+    // and was offered as a replacement for the user's OWN home. The user had
+    // confirmed a choice, so the existing confirmed-choice guard passed it.
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'One moment.',
+        toolCalls: [tc2('load_skill', { id: 'facts/residence' })],
+      }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('saveExtractedFacts', {
+            extracted_user_information: [
+              {
+                statement: "Girlfriend's parents live in Vila Baleira, Madeira, Portugal, EU",
+                replaces: 'home',
+              },
+            ],
+          }),
+        ],
+      }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+    const state = createAgentState(RESIDENT);
+    // The turn HAS a confirmed choice, which is what made the old guard pass.
+    state.turn.resolvedChoice = { question: 'Which one?', text: 'Vila Baleira', payload: null };
+
+    const out = await runAgentTurn({
+      state,
+      userMessage: 'My girlfriends parents live in Porto Santo',
+      deps,
+    });
+
+    expect(out.proposals).toHaveLength(1);
+    expect(out.proposals[0].replaces).toBeNull();
+    expect(out.refusedReplaces).toBe(1);
+  });
+
+  it('still honours a replace when both facts are about the same subject', async () => {
+    // The guard must not cost a real move.
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'One moment.',
+        toolCalls: [tc2('load_skill', { id: 'facts/residence' })],
+      }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('saveExtractedFacts', {
+            extracted_user_information: [
+              { statement: 'Lives in Berlin, Germany, EU', replaces: 'home' },
+            ],
+          }),
+        ],
+      }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+    const state = createAgentState(RESIDENT);
+    state.turn.resolvedChoice = { question: 'Which one?', text: 'Berlin', payload: null };
+
+    const out = await runAgentTurn({ state, userMessage: 'I moved to Berlin', deps });
+
+    expect(out.proposals[0].replaces).toBe('home');
+    expect(out.refusedReplaces).toBe(0);
+  });
+
+  it('offers ONE card when the model proposes the same statement twice', async () => {
+    // Two identical "Which one did you mean?" cards, both blocking the
+    // composer. `existingStatements` only held facts already on file, so it
+    // could not see a repeat within the turn.
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'One moment.',
+        toolCalls: [tc2('load_skill', { id: 'facts/family' })],
+      }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('saveExtractedFacts', {
+            extracted_user_information: [
+              { statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' },
+              { statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' },
+            ],
+          }),
+        ],
+      }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: 'my parents live in bhopal jk road',
+      deps,
+    });
+
+    expect(out.proposals).toHaveLength(1);
+  });
+
+  // THE SHIPPED PATH. `handleSaveExtractedFacts` builds the cards from
+  // `extracted_user_information`, never from `proposals`, so asserting only on
+  // `out.proposals` would pass while the user still sees the wrong card. These
+  // two assert on what the TOOL was handed.
+  it('hands the TOOL a list with the refused replace stripped', async () => {
+    const seen: Record<string, unknown>[] = [];
+    const { deps } = scriptedDeps(
+      [
+        modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/residence' })] }),
+        modelResult({
+          content: '',
+          toolCalls: [
+            tc2('saveExtractedFacts', {
+              extracted_user_information: [
+                {
+                  statement: "Girlfriend's parents live in Vila Baleira, Madeira, Portugal, EU",
+                  questionnaire_attribute: 'location: residence',
+                  replaces: 'home',
+                },
+              ],
+            }),
+          ],
+        }),
+        modelResult({ content: 'Here is the reading to confirm.' }),
+      ],
+      {
+        saveExtractedFacts: async (args: Record<string, unknown>) => {
+          seen.push(...(args.extracted_user_information as Record<string, unknown>[]));
+          return { staged: true };
+        },
+      },
+    );
+    const state = createAgentState(RESIDENT);
+    state.turn.resolvedChoice = { question: 'Which one?', text: 'Vila Baleira', payload: null };
+
+    await runAgentTurn({ state, userMessage: 'My girlfriends parents live in Porto Santo', deps });
+
+    expect(seen).toHaveLength(1);
+    expect(seen[0].replaces).toBeUndefined();
+    // Untouched: the card owns these, not the loop.
+    expect(seen[0].questionnaire_attribute).toBe('location: residence');
+  });
+
+  it('hands the TOOL one entry when the model sent the same statement twice', async () => {
+    const seen: Record<string, unknown>[] = [];
+    const { deps } = scriptedDeps(
+      [
+        modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/family' })] }),
+        modelResult({
+          content: '',
+          toolCalls: [
+            tc2('saveExtractedFacts', {
+              extracted_user_information: [
+                { statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' },
+                { statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' },
+              ],
+            }),
+          ],
+        }),
+        modelResult({ content: 'Here is the reading to confirm.' }),
+      ],
+      {
+        saveExtractedFacts: async (args: Record<string, unknown>) => {
+          seen.push(...(args.extracted_user_information as Record<string, unknown>[]));
+          return { staged: true };
+        },
+      },
+    );
+
+    await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: 'my parents live in bhopal jk road',
+      deps,
+    });
+
+    expect(seen).toHaveLength(1);
+  });
+
+  it('scrubs a leaking reply on a terminal that never reaches the settle gate', async () => {
+    // The reply gate sits just before the settle `break`, so a turn that ends
+    // any other way returned its prose unchecked. Reported: a turn answered
+    // with an invented copy of its own system prompt.
+    const INVENTED_PROMPT =
+      'You are a skilled assistant specializing in personal fact extraction. '
+      + 'Strict Rules: make exactly one saveExtractedFacts call per turn. '
+      + 'If the message contains no offerable facts, call it with an empty array.';
+
+    // A facts skill that proposes nothing ends on `no-proposal`, never on the
+    // settle path.
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'One moment.',
+        toolCalls: [tc2('load_skill', { id: 'facts/interest' })],
+      }),
+      modelResult({ content: INVENTED_PROMPT }),
+      modelResult({ content: INVENTED_PROMPT }),
+      modelResult({ content: INVENTED_PROMPT }),
+      modelResult({ content: INVENTED_PROMPT }),
+    ]);
+
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: "I'm building an ai news app",
+      deps,
+    });
+
+    expect(out.terminalReason).not.toBe('settled');
+    expect(out.reply).toBe(REPLY_LEAK_FALLBACK);
+    expect(out.replyLeakUnfixed).toBe(true);
+  });
+});

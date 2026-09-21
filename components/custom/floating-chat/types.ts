@@ -175,6 +175,9 @@ export type ChatThreadItem =
        * go BEFORE the tap, and its accept stays disabled until it can.
        */
       replacesFactId: string | null;
+      /** The topic guideline this fact's topics generate under, carried from
+       *  the chat turn's route. null falls back to the shipped prompt. */
+      topicSkillId: string | null;
       /** Set once the user skipped this group: renders the "Not saved" line
        *  with Undo, in place, instead of the readings. */
       dismissed: boolean;
@@ -201,6 +204,7 @@ export type ChatThreadItem =
         groupIndex: number;
         options: string[];
         questionnaireAttribute: string | null;
+        topicSkillId: string | null;
       }[];
     }
   /**
