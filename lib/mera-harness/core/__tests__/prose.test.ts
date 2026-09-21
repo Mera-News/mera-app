@@ -1,4 +1,11 @@
-import { claimsSaveHappened, cleanProse, leaksInternals, replaceClauseDashes, trailingQuestion } from '../prose';
+import {
+  claimsSaveHappened,
+  cleanProse,
+  collapseRepetitionLoop,
+  leaksInternals,
+  replaceClauseDashes,
+  trailingQuestion,
+} from '../prose';
 
 describe('clause dashes', () => {
   it('replaces the measured failure shape with a comma', () => {
@@ -167,5 +174,92 @@ describe('leaksInternals', () => {
     }
     expect(leaksInternals('Got it, Porto. What do you do for work?')).toBe(false);
     expect(leaksInternals('')).toBe(false);
+  });
+});
+
+describe('collapseRepetitionLoop', () => {
+  // VERBATIM from the device, 2026-09-21: a conversation/correction turn whose
+  // own reply was 1227 characters against a maximum of 183 on every other turn
+  // of that session. Frozen rather than paraphrased, because the alternating
+  // pair of closers is the shape a hand-written fixture would not have.
+  const DEVICE_LOOP = [
+    'Done. The chess fact is gone.',
+    'I removed the chess hobby you had on file. Let me know if you need anything else.',
+    'I removed the chess hobby you had on file. Let me know if there\u2019s anything else.',
+    'I removed the chess hobby you had on file. Let me know if you need anything else.',
+    'I removed the chess hobby you had on file. Let me know if there\u2019s anything else I can help with.',
+    'I removed the chess hobby you had on file. Let me know if you need anything else.',
+    'I removed the chess hobby you had on file. Let me',
+  ].join('\n');
+
+  it('cuts the measured loop at its first repeat', () => {
+    expect(collapseRepetitionLoop(DEVICE_LOOP)).toBe(
+      'Done. The chess fact is gone.\nI removed the chess hobby you had on file. Let me know if you need anything else.',
+    );
+  });
+
+  it('leaves no truncated fragment behind', () => {
+    // A de-duplication that kept the tail would end the reply mid-word. The
+    // whole point of cutting rather than filtering is that it cannot.
+    expect(collapseRepetitionLoop(DEVICE_LOOP).endsWith('Let me')).toBe(false);
+  });
+
+  it('reaches the loop through cleanProse, which is what the turn calls', () => {
+    expect(cleanProse(DEVICE_LOOP).length).toBeLessThan(200);
+  });
+
+  // ---- the replies that must survive untouched ----
+
+  it('leaves ordinary multi-sentence replies alone', () => {
+    const kept = [
+      'Got it, Nieuw-West. What do you do for work?',
+      'Nieuw-West is a borough of Amsterdam, so it sits between the city and the wider area. I have added both readings. Pick the one that fits.',
+      'You live in Porto. You work in AI. You follow Portuguese football.',
+      'No facts are saved about you at all, there is nothing to delete.',
+      'Tap the ones you want to keep and they will be saved. I can find more if none of these fit. Just say the word.',
+    ];
+    for (const text of kept) expect(collapseRepetitionLoop(text)).toBe(text);
+  });
+
+  it('does NOT fire on two sentences that merely start alike', () => {
+    // Under six shared opening words, so the prefix rule cannot reach them.
+    const text = 'You live in Porto. You live for football.';
+    expect(collapseRepetitionLoop(text)).toBe(text);
+  });
+
+  it('needs a RUN: two sentences are never a loop', () => {
+    const text = 'Got it. Got it.';
+    expect(collapseRepetitionLoop(text)).toBe(text);
+  });
+
+  it('catches an exact repeat of a SHORT sentence once there is a run', () => {
+    expect(collapseRepetitionLoop('Got it. Got it. Got it.')).toBe('Got it.');
+  });
+
+  it('folds punctuation and case, so a changed comma is still a repeat', () => {
+    const text = [
+      'Here is what I found for you today.',
+      'Let me know if there is anything else I can help with.',
+      'Let me know, if there is anything else I can help with!',
+    ].join(' ');
+    expect(collapseRepetitionLoop(text)).toBe(
+      'Here is what I found for you today. Let me know if there is anything else I can help with.',
+    );
+  });
+
+  it('works on a non-Latin script, which a [a-z] fold would silently skip', () => {
+    const text = [
+      '\u0413\u043e\u0442\u043e\u0432\u043e, \u044f \u0437\u0430\u043f\u043e\u043c\u043d\u0438\u043b \u044d\u0442\u043e.',
+      '\u0414\u0430\u0439\u0442\u0435 \u0437\u043d\u0430\u0442\u044c, \u0435\u0441\u043b\u0438 \u043d\u0443\u0436\u043d\u043e \u0447\u0442\u043e-\u0442\u043e \u0435\u0449\u0451.',
+      '\u0414\u0430\u0439\u0442\u0435 \u0437\u043d\u0430\u0442\u044c, \u0435\u0441\u043b\u0438 \u043d\u0443\u0436\u043d\u043e \u0447\u0442\u043e-\u0442\u043e \u0435\u0449\u0451.',
+    ].join(' ');
+    expect(collapseRepetitionLoop(text)).toBe(
+      '\u0413\u043e\u0442\u043e\u0432\u043e, \u044f \u0437\u0430\u043f\u043e\u043c\u043d\u0438\u043b \u044d\u0442\u043e. \u0414\u0430\u0439\u0442\u0435 \u0437\u043d\u0430\u0442\u044c, \u0435\u0441\u043b\u0438 \u043d\u0443\u0436\u043d\u043e \u0447\u0442\u043e-\u0442\u043e \u0435\u0449\u0451.',
+    );
+  });
+
+  it('is a no-op on empty and single-sentence input', () => {
+    expect(collapseRepetitionLoop('')).toBe('');
+    expect(collapseRepetitionLoop('Got it.')).toBe('Got it.');
   });
 });
