@@ -70,7 +70,7 @@
     "tryAgain": "Réessayer",
     "learnAboutMera": "Découvrir Mera",
     "startReading": "Commencer à lire",
-    "alreadyHaveAccount": "Vous avez déjà un compte ? Connectez-vous",
+    "alreadyHaveAccount": "Se connecter par e-mail",
     "chooseLanguageTitle": "Choisissez votre langue",
     "chooseLanguageHint": "Vous pourrez la changer à tout moment dans les réglages.",
     "continue": "Continuer",
@@ -649,7 +649,9 @@
     "gotItPromo": "Super ! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Offre de lancement 🎊",
-    "resetsOn": "Réinitialisation"
+    "resetsOn": "Réinitialisation",
+    "retryTopicGeneration": "Réessayer",
+    "topicGenFailedGeneric": "Impossible de générer les sujets."
   },
   "errors": {
     "somethingWentWrong": "Une erreur est survenue",
@@ -1492,7 +1494,10 @@
     "screenSubtitle": "Ce que Mera sait de vous",
     "influence": "Influence",
     "moreInfluence": "Plus d'influence",
-    "lessInfluence": "Moins d'influence"
+    "lessInfluence": "Moins d'influence",
+    "declinedTopicsTitle": "Sujets que vous avez supprimés",
+    "allowAgain": "Autoriser à nouveau",
+    "topicRemovalConsequence": "Les sujets supprimés ne seront plus suggérés, sauf si vous les autorisez à nouveau dans Sujets que vous avez supprimés."
   },
   "publicationPrefs": {
     "title": "Préférences de sources",
@@ -2533,7 +2538,15 @@
     "addAll": "Tout ajouter ({{count}})",
     "skipAll": "Tout passer",
     "addAllA11y": "Ajouter les {{count}} suggestions",
-    "skipAllA11y": "Passer les {{count}} suggestions"
+    "skipAllA11y": "Passer les {{count}} suggestions",
+    "titleReplace": "Remplacer une information existante ?",
+    "replace": "Remplacer",
+    "replacesLabel": "Remplace",
+    "replacesTopics_one": "et son 1 sujet",
+    "replacesTopics_other": "et ses {{count}} sujets",
+    "replacesNoUndo": "L'ancienne information et ses sujets sont supprimés définitivement. C'est irréversible.",
+    "replacesLoading": "Je vérifie ce que cela remplace",
+    "replacesUnavailable": "Mera ne peut pas afficher ce qui serait supprimé pour l'instant. Réessaie dans un instant."
   },
   "subscriptions": {
     "sectionTitle": "Vos abonnements",
@@ -2618,6 +2631,117 @@
     "loading": "Calcul de vos chiffres"
   },
   "chatTopics": {
-    "none": "Enregistré. Aucun sujet à ajouter pour le moment."
+    "none": "Enregistré. Aucun sujet à ajouter pour le moment.",
+    "removed": "Supprimé",
+    "accordionTitle": "Sujets pour :",
+    "finding": "Recherche de sujets",
+    "findMore": "Trouver plus de sujets",
+    "findingMore": "Recherche en cours",
+    "goneTombstone": "Cette information a été supprimée, ses sujets aussi.",
+    "expandA11y": "Afficher les sujets",
+    "collapseA11y": "Masquer les sujets",
+    "accordionTitlePending": "Nous trouverons des sujets pour :",
+    "pendingA11y": "Des sujets sont en cours de recherche",
+    "readyA11y": "Sujets prêts",
+    "failedA11y": "Les sujets n'ont pas pu être trouvés"
+  },
+  "agentSteps": {
+    "legStart": "Je réfléchis à ce que tu as dit",
+    "loadSkill": "Je vérifie comment traiter {{topic}}",
+    "loadSkillGeneric": "Je vérifie comment traiter ceci",
+    "findSimilarFacts": "Je cherche ce que tu m'as déjà dit",
+    "lookupPlace": "Je vérifie le secteur : {{query}}",
+    "writeUp": "Je le rédige pour que tu vérifies",
+    "removing": "Je supprime ce que tu as demandé",
+    "asking": "Je te pose une question",
+    "working": "Je m'en occupe",
+    "slow": "Toujours en cours, connexion lente",
+    "legCapSentence": "Cela a demandé plus d'étapes que Mera peut faire d'un coup. Repose la question pour continuer.",
+    "interrupted": "Cela a été interrompu. Repose la question pour continuer.",
+    "summaryDone": "Terminé",
+    "summaryFailed": "Quelque chose n'a pas marché",
+    "statePending": "en cours",
+    "stateDone": "terminé",
+    "stateError": "échec",
+    "consequence": {
+      "generic": "Cette étape n'a pas abouti",
+      "interrupted": "Cela n'a pas abouti",
+      "lookupPlace": "Le secteur n'a pas pu être vérifié, donc Mera a utilisé ce qu'elle savait déjà",
+      "findSimilarFacts": "Je n'ai pas pu vérifier ce que tu m'avais déjà dit, il peut y avoir un doublon",
+      "loadSkill": "Les consignes n'ont pas pu être chargées, donc Mera a procédé de façon générale",
+      "writeUp": "Cela n'a pas pu être rédigé, donc rien n'a été ajouté",
+      "removing": "Cela n'a pas pu être supprimé, c'est toujours là"
+    },
+    "noRouteSentence": "Mera n'a pas compris de quoi il s'agissait. Essaie de le dire autrement.",
+    "noProposalSentence": "Mera n'a rien trouvé à ajouter à partir de cela.",
+    "unknownToolSentence": "Quelque chose a échoué du côté de Mera. Repose la question pour continuer."
+  },
+  "skillPhrase": {
+    "residence": "l'endroit où tu vis",
+    "work": "ton travail",
+    "interests": "tes centres d'intérêt",
+    "origin": "d'où tu viens",
+    "family": "ta famille",
+    "newFact": "une nouvelle information",
+    "topics": "tes sujets"
+  },
+  "askChoice": {
+    "answeredA11y": "déjà répondu"
+  },
+  "streamingWords": {
+    "w1": "Réflexion",
+    "w2": "Analyse",
+    "w3": "Contemplation",
+    "w4": "Méditation",
+    "w5": "Rumination",
+    "w6": "Mijotage",
+    "w7": "Macération",
+    "w8": "Raisonnement",
+    "w9": "Pesée",
+    "w10": "Tri",
+    "w11": "Connexion",
+    "w12": "Rédaction",
+    "w13": "Bricolage",
+    "w14": "Peaufinage",
+    "w15": "Infusion"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mera rassemble ce qu'elle sait déjà de vous.",
+      "Votre question est en préparation."
+    ],
+    "queued": [
+      "Votre demande est mise en file.",
+      "Deux ou trois choses tournent en même temps. La vôtre est la suivante."
+    ],
+    "securing": [
+      "Votre message est verrouillé pour que seul le modèle puisse l'ouvrir.",
+      "Vos mots sont chiffrés avant de quitter votre téléphone."
+    ],
+    "attesting": [
+      "Mise en place d'un canal privé vers le modèle.",
+      "Récupération de la clé qui garde ceci entre vous et Mera.",
+      "Une conversation privée met un instant à se mettre en place."
+    ],
+    "thinking": [
+      "Mera lit ce que vous avez écrit.",
+      "Recherche de la meilleure façon de répondre."
+    ],
+    "retrying": [
+      "Cela prend plus de temps que d'habitude. Mera essaie une autre voie.",
+      "Toujours en cours. Merci de patienter."
+    ],
+    "deviceLoading": [
+      "Réveil du modèle sur votre téléphone.",
+      "La première réponse prend un peu plus de temps pendant le chargement."
+    ],
+    "devicePreparing": [
+      "Mera rassemble ce qu'elle sait déjà de vous.",
+      "Votre téléphone se prépare à répondre."
+    ],
+    "deviceThinking": [
+      "Mera y réfléchit sur votre téléphone.",
+      "Tout se passe sur votre appareil, rien n'est envoyé nulle part."
+    ]
   }
 }

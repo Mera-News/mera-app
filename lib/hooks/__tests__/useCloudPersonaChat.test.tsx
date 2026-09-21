@@ -11,6 +11,18 @@ jest.mock('../../llm/constants', () => ({
   CHAT_MAX_OUTPUT_TOKENS: 1024,
 }));
 
+// agent-device-port reaches fact-service -> lib/database/index, which builds a
+// real SQLiteAdapter at module scope and kills the suite at load with
+// `initializeJSI`. Mock the SERVICE MODULE at the boundary, not the adapter.
+const mockRunAgentLoopDeps = jest.fn();
+jest.mock('../../chat-tools/agent-device-port', () => ({
+  isPersonaAgent: (id: string) => id.startsWith('persona-'),
+  buildAgentPersona: jest.fn(async () => ({ facts: [], surface: 'CONFIG' })),
+  makeAgentDeps: (...a: unknown[]) => mockRunAgentLoopDeps(...(a as [])),
+  callModelViaCloud: jest.fn(),
+  makeAgentToolPort: jest.fn(),
+}));
+
 jest.mock('../../logger', () => ({
   __esModule: true,
   default: {
@@ -22,9 +34,11 @@ jest.mock('../../logger', () => ({
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useCloudPersonaChat } from '../../hooks/useCloudPersonaChat';
 import { useCloudChatStore } from '../../stores/cloud-chat-store';
+import { useChatPhaseStore, type ChatPhaseView } from '../../llm/chat-phase-store';
 import type { IAgent, ToolExecutionResult } from '../../llm/types';
 import type { SseEvent } from '../../llm/cloudComplete';
 import { MERA_EXPLAINER_SECTIONS } from '../../chat-tools/mera-explainer-content';
+import { MAX_FORMAT_RETRIES } from '../../mera-harness/core/core';
 
 // ---- Helpers ----
 
@@ -59,10 +73,25 @@ function makeAgent(overrides: Partial<IAgent> = {}): IAgent {
 }
 
 describe('useCloudPersonaChat', () => {
+  // Every view the wait line was actually put through, in order. A test that
+  // reads only the FINAL state cannot tell "went straight to thinking" from
+  // "walked back to securing and then forward again", which is the whole
+  // property the monotonic mark exists to give.
+  let phaseViews: ChatPhaseView[] = [];
+  let unsubscribePhase: (() => void) | null = null;
+
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset the cloud chat store before each test
     useCloudChatStore.getState().reset();
+    useChatPhaseStore.getState().reset();
+    phaseViews = [];
+    unsubscribePhase = useChatPhaseStore.subscribe((st) => phaseViews.push(st.view));
+  });
+
+  afterEach(() => {
+    unsubscribePhase?.();
+    unsubscribePhase = null;
   });
 
   describe('initial state', () => {
@@ -150,17 +179,77 @@ describe('useCloudPersonaChat', () => {
   });
 
   describe('streaming text', () => {
-    it('shows "thinking" from the reasoning signal until the first visible delta, and never after the turn', async () => {
-      const seen: boolean[] = [];
+    it('publishes the opening phase SYNCHRONOUSLY on send, before any async work', async () => {
+      // The gap this line exists to close is the first few hundred ms, which
+      // are spent on buildSystemPrompt, getToolDefinitions and buildContext (a
+      // DB read) before a single byte goes to the gateway. Publishing from
+      // inside the async IIFE would leave exactly that window unnarrated.
+      mockCloudChatStream.mockImplementation(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Hi' },
+          { type: 'finish', reason: 'stop' },
+        ]),
+      );
+      const agent = makeAgent({ getToolDefinitions: jest.fn().mockReturnValue([]) });
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('Hi there');
+      });
+
+      // No await between the send and this read.
+      expect(useChatPhaseStore.getState().view).toEqual({ kind: 'phase', id: 'preparing' });
+
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+    });
+
+    it('forwards a stream phase into the store, and never walks backwards', async () => {
+      // FIRST CALL ONLY. A turn can legitimately make several calls (the
+      // continuation pass, the forced pass, an agent leg) and each one is
+      // SUPPOSED to re-walk its phases from `reset`, so a count taken across
+      // the whole turn would be asserting the opposite of the design. The
+      // monotonic guarantee is per call, so the test is too.
+      let call = 0;
+      mockCloudChatStream.mockImplementation((req: { onPhase?: (s: unknown) => void }) => {
+        if (call++ === 0) {
+          req.onPhase?.('reset');
+          req.onPhase?.('securing');
+          req.onPhase?.('thinking');
+          // A late, lower-ranked signal. The mark must refuse it rather than
+          // walk the reader back to "encrypting".
+          req.onPhase?.('securing');
+        }
+        return makeSseStream([{ type: 'finish', reason: 'stop' }]);
+      });
+      const agent = makeAgent({ getToolDefinitions: jest.fn().mockReturnValue([]) });
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('Hi there');
+      });
+      await waitFor(
+        () => expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' }),
+        { timeout: 3000 },
+      );
+      expect(phaseViews).toContainEqual({ kind: 'phase', id: 'thinking' });
+      // `securing` was published twice and seen once: the second was refused.
+      expect(phaseViews.filter((v) => v.kind === 'phase' && v.id === 'securing')).toHaveLength(1);
+      // and it never reappeared after `thinking`.
+      const lastSecuring = phaseViews.map((v) => (v.kind === 'phase' ? v.id : null)).lastIndexOf('securing');
+      const firstThinking = phaseViews.map((v) => (v.kind === 'phase' ? v.id : null)).indexOf('thinking');
+      expect(lastSecuring).toBeLessThan(firstThinking);
+    });
+
+    it('hands the line over on the first visible delta, and leaves it released', async () => {
       let release!: () => void;
       const gate = new Promise<void>((r) => { release = r; });
+      const seen: string[] = [];
       mockCloudChatStream.mockImplementation(async function* () {
         yield { type: 'reasoning' } as SseEvent;
-        // Let the hook apply the flag before the first visible delta lands.
         await gate;
-        seen.push(useCloudChatStore.getState().thinking);
+        seen.push(useChatPhaseStore.getState().view.kind);
         yield { type: 'text-delta', delta: 'Hello' } as SseEvent;
-        seen.push(useCloudChatStore.getState().thinking);
+        seen.push(useChatPhaseStore.getState().view.kind);
         yield { type: 'finish', reason: 'stop' } as SseEvent;
       });
 
@@ -170,7 +259,10 @@ describe('useCloudPersonaChat', () => {
       act(() => {
         result.current.sendMessage('Hi there');
       });
-      await waitFor(() => expect(useCloudChatStore.getState().thinking).toBe(true), { timeout: 3000 });
+      await waitFor(
+        () => expect(useChatPhaseStore.getState().view).toEqual({ kind: 'phase', id: 'preparing' }),
+        { timeout: 3000 },
+      );
       release();
 
       await waitFor(
@@ -180,14 +272,32 @@ describe('useCloudPersonaChat', () => {
         },
         { timeout: 3000 },
       );
-      // true while the trace ran; false the moment the first delta was applied.
-      // The generator runs a SECOND time for the hidden forced-extraction pass
-      // (text + zero tool calls), which must never flip the flag: every later
-      // sample is false.
-      expect(seen.slice(0, 2)).toEqual([true, false]);
-      expect(seen.slice(2).every((v) => v === false)).toBe(true);
+      // A phase while the wait ran, released the moment the first delta landed.
+      // The generator runs a SECOND time for the hidden forced-extraction pass,
+      // which has no turn of its own and must never re-narrate: every later
+      // sample stays released.
+      expect(seen.slice(0, 2)).toEqual(['phase', 'released']);
+      expect(seen.slice(2).every((v) => v === 'released')).toBe(true);
       await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
-      expect(useCloudChatStore.getState().thinking).toBe(false);
+      expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' });
+    });
+
+    it('releases the line when the turn throws, so nothing reassures under the error banner', async () => {
+      // The 429 shape. `RateLimitedError` is flattened to a string long before
+      // the UI sees it, so the banner is generic and the ONLY thing that can
+      // stop the line is this release running on the throw path.
+      mockCloudChatStream.mockImplementation(() => {
+        throw new Error('E2EE chat failed: 429');
+      });
+      const agent = makeAgent({ getToolDefinitions: jest.fn().mockReturnValue([]) });
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('Hi there');
+      });
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+      expect(useCloudChatStore.getState().error).toContain('429');
+      expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' });
     });
 
     it('accumulates text-delta events into assistant message content', async () => {
@@ -1491,5 +1601,451 @@ describe('useCloudPersonaChat — knowledge tools, hard cases', () => {
     expect(toolIdx).toBeGreaterThan(0);
     expect(roles[toolIdx - 1]).toBe('assistant');
     expect(secondArg.messages[toolIdx - 1].tool_calls).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Per-promise tool-result write-back (pagent P1)
+//
+// Three properties, each of which FAILED on the previous implementation
+// (`await Promise.all(...)` -> in-place mutation -> one setMessages):
+//   (a) a slower sibling does not hide a finished call: the staggered
+//       "1 done, 1 pending" state must be observable;
+//   (b) a settled record is a NEW object, so a row memoized on its own
+//       `toolCall` prop sees its own status change;
+//   (c) the result lands at the CALL's index, never completion order --
+//       card identity is keyed `${messageId}::${toolCallIndex}`.
+// ---------------------------------------------------------------------------
+describe('per-promise tool-result write-back', () => {
+  // This describe is a SIBLING of the main one, so it does NOT inherit its
+  // beforeEach. Without this the wire accumulated across tests and the
+  // per-index assertions below read another test's messages.
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+  });
+
+  const TWO_CALL_STREAM: SseEvent[] = [
+    { type: 'tool-call-delta', index: 0, id: 'tc-a', name: 'toolA', argumentsDelta: '{}' },
+    { type: 'tool-call-delta', index: 1, id: 'tc-b', name: 'toolB', argumentsDelta: '{}' },
+    { type: 'text-delta', delta: 'working on it' },
+  ];
+
+  const TWO_TOOLS = ['toolA', 'toolB'].map((name) => ({
+    type: 'function' as const,
+    function: { name, description: name, parameters: { type: 'object' as const, properties: {} } },
+  }));
+
+  /** Resolvers keyed by tool name, so a test controls the settle ORDER. */
+  function makeDeferredAgent() {
+    const resolvers: Record<string, (r: ToolExecutionResult) => void> = {};
+    const agent = makeAgent({
+      getToolDefinitions: jest.fn().mockReturnValue(TWO_TOOLS),
+      getForcedExtractionTools: jest.fn().mockReturnValue([]),
+      executeTool: jest.fn(
+        (name: string) =>
+          new Promise<ToolExecutionResult>((resolve) => {
+            resolvers[name] = resolve;
+          }),
+      ),
+    });
+    return { agent, resolvers };
+  }
+
+  function currentToolCalls() {
+    const msgs = useCloudChatStore.getState().messages;
+    const withCalls = [...msgs].reverse().find((m) => m.toolCalls && m.toolCalls.length > 0);
+    return withCalls?.toolCalls ?? [];
+  }
+
+  it('(a) shows a staggered done/pending state instead of flipping both at once', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream(TWO_CALL_STREAM));
+    const { agent, resolvers } = makeDeferredAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => { result.current.sendMessage('hello'); });
+    await waitFor(() => expect(Object.keys(resolvers)).toHaveLength(2), { timeout: 3000 });
+
+    // Settle ONLY the first call. The second is still in flight.
+    await act(async () => { resolvers.toolA({ result: { ok: 'a' } }); });
+
+    await waitFor(() => expect(currentToolCalls()[0]?.status).toBe('done'), { timeout: 3000 });
+    const mid = currentToolCalls();
+    expect(mid.map((r) => r.status)).toEqual(['done', 'pending']);
+
+    await act(async () => { resolvers.toolB({ result: { ok: 'b' } }); });
+    await waitFor(
+      () => expect(currentToolCalls().map((r) => r.status)).toEqual(['done', 'done']),
+      { timeout: 3000 },
+    );
+  });
+
+  it('(b) replaces the settled record with a NEW object, leaving siblings identical', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream(TWO_CALL_STREAM));
+    const { agent, resolvers } = makeDeferredAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => { result.current.sendMessage('hello'); });
+    await waitFor(() => expect(Object.keys(resolvers)).toHaveLength(2), { timeout: 3000 });
+
+    const before = currentToolCalls();
+    expect(before).toHaveLength(2);
+
+    await act(async () => { resolvers.toolA({ result: { ok: 'a' } }); });
+    await waitFor(() => expect(currentToolCalls()[0]?.status).toBe('done'), { timeout: 3000 });
+    const after = currentToolCalls();
+
+    // The settled slot is a different object -- this is what an in-place
+    // mutation would break while every status assertion still passed.
+    expect(after[0]).not.toBe(before[0]);
+    // ...and the untouched sibling keeps its identity, so it does not re-render.
+    expect(after[1]).toBe(before[1]);
+
+    await act(async () => { resolvers.toolB({ result: { ok: 'b' } }); });
+  });
+
+  it('(c) writes a result at the CALL index even when the second call settles first', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream(TWO_CALL_STREAM));
+    const { agent, resolvers } = makeDeferredAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => { result.current.sendMessage('hello'); });
+    await waitFor(() => expect(Object.keys(resolvers)).toHaveLength(2), { timeout: 3000 });
+
+    // Reverse order: toolB (index 1) finishes FIRST.
+    await act(async () => { resolvers.toolB({ result: { who: 'b' } }); });
+    await waitFor(() => expect(currentToolCalls()[1]?.status).toBe('done'), { timeout: 3000 });
+
+    // Completion order would have put b's result at index 0.
+    expect(currentToolCalls()[0]?.status).toBe('pending');
+    expect(currentToolCalls()[1]?.result).toEqual({ who: 'b' });
+
+    await act(async () => { resolvers.toolA({ result: { who: 'a' } }); });
+    await waitFor(() => expect(currentToolCalls()[0]?.status).toBe('done'), { timeout: 3000 });
+
+    const final = currentToolCalls();
+    expect(final[0].name).toBe('toolA');
+    expect(final[0].result).toEqual({ who: 'a' });
+    expect(final[1].name).toBe('toolB');
+    expect(final[1].result).toEqual({ who: 'b' });
+  });
+
+  it('pushes each tool result onto the wire at its own index, after all settle', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream(TWO_CALL_STREAM));
+    const { agent, resolvers } = makeDeferredAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => { result.current.sendMessage('hello'); });
+    await waitFor(() => expect(Object.keys(resolvers)).toHaveLength(2), { timeout: 3000 });
+
+    await act(async () => { resolvers.toolB({ result: { who: 'b' } }); });
+    await act(async () => { resolvers.toolA({ result: { who: 'a' } }); });
+
+    await waitFor(() => {
+      const toolMsgs = useCloudChatStore
+        .getState()
+        .wireMessages.filter((m) => m.role === 'tool');
+      expect(toolMsgs).toHaveLength(2);
+    }, { timeout: 3000 });
+
+    const toolMsgs = useCloudChatStore
+      .getState()
+      .wireMessages.filter((m) => m.role === 'tool') as { tool_call_id: string; content: string }[];
+    // Wire order follows CALL order, not settle order, and each id carries its
+    // own result.
+    expect(toolMsgs[0].tool_call_id).toBe('tc-a');
+    expect(JSON.parse(toolMsgs[0].content)).toEqual({ who: 'a' });
+    expect(toolMsgs[1].tool_call_id).toBe('tc-b');
+    expect(JSON.parse(toolMsgs[1].content)).toEqual({ who: 'b' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// turnActive (pagent P1)
+//
+// Must be true across every leg AND every gap between them -- tool execution,
+// and the fire-and-forget forced pass -- and false only at turn end or
+// transport failure. That is turnBusyRef's lifetime, and NOT `status`'s:
+// startForcedExtraction dispatches with `void`, so the forced pass outlives
+// startTurn's finally and `status` reads idle while real work is in flight.
+// The UI keys its interruption state on this, so a flag that goes false early
+// renders a live turn as interrupted.
+// ---------------------------------------------------------------------------
+describe('turnActive', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+  });
+
+  const turnActive = () => useCloudChatStore.getState().agentTurnState?.turnActive ?? false;
+
+  /** Every TRANSITION the flag makes, in order.
+   *
+   *  Seeded with the current value, because `subscribe` fires on every store
+   *  write and the first unrelated one would otherwise record the starting
+   *  `false` as a transition. */
+  function trackTurnActive(): boolean[] {
+    let last = turnActive();
+    const seen: boolean[] = [];
+    useCloudChatStore.subscribe((s) => {
+      const v = s.agentTurnState?.turnActive ?? false;
+      if (v !== last) {
+        last = v;
+        seen.push(v);
+      }
+    });
+    return seen;
+  }
+
+  it('toggles exactly ONCE per plain turn and ends false', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream([{ type: 'text-delta', delta: 'hello' }]));
+    const agent = makeAgent({
+      getToolDefinitions: jest.fn().mockReturnValue([]),
+      getForcedExtractionTools: jest.fn().mockReturnValue([]),
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+    const seen = trackTurnActive();
+
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(() => expect(turnActive()).toBe(false), { timeout: 3000 });
+
+    // ONE rise and ONE fall, no flicker in between.
+    expect(seen).toEqual([true, false]);
+  });
+
+  it('STAYS true across the fire-and-forget forced pass, after status goes idle', async () => {
+    // The turn returns prose and no tool call, so the forced pass fires. This
+    // is the case where `status` is already 'idle' while work continues.
+    let releaseTool: (() => void) | null = null;
+    mockCloudChatStream
+      .mockReturnValueOnce(makeSseStream([{ type: 'text-delta', delta: 'I live in Alkmaar' }]))
+      .mockReturnValueOnce(
+        makeSseStream([
+          { type: 'tool-call-delta', index: 0, id: 'tc-1', name: 'saveExtractedFacts', argumentsDelta: '{}' },
+        ]),
+      );
+    const agent = makeAgent({
+      executeTool: jest.fn(
+        () => new Promise((resolve) => { releaseTool = () => resolve({ result: { ok: true } }); }),
+      ),
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+    const seen = trackTurnActive();
+
+    await act(async () => { result.current.sendMessage('I live in Alkmaar'); });
+    await waitFor(() => expect(releaseTool).not.toBeNull(), { timeout: 3000 });
+
+    // status has settled, the forced pass has NOT.
+    expect(useCloudChatStore.getState().status).toBe('idle');
+    expect(turnActive()).toBe(true);
+
+    await act(async () => { releaseTool!(); });
+    await waitFor(() => expect(turnActive()).toBe(false), { timeout: 3000 });
+
+    // Still exactly one rise and one fall across the whole turn.
+    expect(seen).toEqual([true, false]);
+  });
+
+  it('goes false on a TRANSPORT FAILURE rather than staying armed', async () => {
+    mockCloudChatStream.mockImplementation(() => {
+      throw new Error('E2EE chat failed: 502');
+    });
+    const agent = makeAgent({ getToolDefinitions: jest.fn().mockReturnValue([]) });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(() => expect(useCloudChatStore.getState().error).toBeTruthy(), { timeout: 3000 });
+    expect(turnActive()).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// THE SHIPPED PATH runs the agent loop (pagent P1)
+//
+// This is the test whose absence let the device pass find the OLD single-shot
+// prompt still live: runAgentTurn existed, was fully unit-tested, and had zero
+// callers outside lib/mera-harness. Every other test in this file uses a
+// non-persona agent id, so none of them touch the loop.
+// ---------------------------------------------------------------------------
+describe('the shipped cloud path drives the agent loop', () => {
+  const personaAgent = () => makeAgent({ id: 'persona-u1-CONFIG' });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: jest.fn(),
+      tools: {},
+      loadSkill: () => null,
+      skillIds: () => [],
+    });
+  });
+
+  it('a `persona-*` agent goes through runAgentTurn, NOT runSingleShot', async () => {
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I moved to Alkmaar'); });
+
+    // The loop builds its own deps; the single-shot path never would.
+    await waitFor(() => expect(mockRunAgentLoopDeps).toHaveBeenCalled(), { timeout: 3000 });
+    // ...and the old path's stream is never opened by the loop itself.
+    expect(mockCloudChatStream).not.toHaveBeenCalled();
+  });
+
+  it('passes the USER MESSAGE to the port, which is what keeps it off the wire', async () => {
+    // find_similar_facts takes no statement argument precisely so the user's
+    // words stay out of a cleartext tool argument; the device supplies them.
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I moved to Alkmaar'); });
+    await waitFor(() => expect(mockRunAgentLoopDeps).toHaveBeenCalled(), { timeout: 3000 });
+    expect(mockRunAgentLoopDeps.mock.calls[0][0]).toBe('I moved to Alkmaar');
+  });
+
+  it('a NON-persona agent still takes the single-shot path, unchanged', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream([{ type: 'text-delta', delta: 'hi' }]));
+    const { result } = renderHook(() =>
+      useCloudPersonaChat(makeAgent({ id: 'article-feedback-1', getToolDefinitions: jest.fn().mockReturnValue([]) })),
+    );
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(() => expect(mockCloudChatStream).toHaveBeenCalled(), { timeout: 3000 });
+    expect(mockRunAgentLoopDeps).not.toHaveBeenCalled();
+  });
+
+  // THE REPLY GATE, THROUGH THE SHIPPED PATH. The core's own tests prove the
+  // gate works; they proved nothing about the app reaching it, which is exactly
+  // how the old prompt stayed live and how `legCapped` stayed hardcoded false.
+  it('a final reply claiming a save is corrected before it reaches the store', async () => {
+    const model = jest.fn();
+    const res = (content: string) => ({
+      content, toolCalls: [], finishReason: 'stop', truncated: false,
+      usage: null, modelSent: 'fake', latencyMs: 1, error: null,
+    });
+    // Leg 0 must actually ROUTE, or the route enforcement fires first and this
+    // test measures that instead of the reply gate.
+    model
+      .mockResolvedValueOnce({
+        ...res('Porto, one moment.'),
+        toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/residence' }) }],
+      })
+      .mockResolvedValueOnce(res("Got it, I've noted that."))
+      .mockResolvedValue(res('Got it, Porto. What do you do for work?'));
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: model,
+      tools: {},
+      loadSkill: (id: string) => (id === 'facts/residence' ? 'RESIDENCE BODY' : null),
+      skillIds: () => ['facts/residence'],
+    });
+
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I moved to Porto'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false),
+      { timeout: 3000 },
+    );
+
+    // route leg + claiming reply + the one correction the gate bought.
+    expect(model).toHaveBeenCalledTimes(3);
+    // ...and the claim never reached the bubble.
+    const assistant = useCloudChatStore.getState().messages.filter((m) => m.role === 'assistant');
+    const text = assistant.map((m) => m.content).join(' ');
+    expect(text).toContain('What do you do for work?');
+    expect(text).not.toContain("I've noted that");
+  });
+
+  it('releases the turn when the loop finishes, so the composer unblocks', async () => {
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false),
+      { timeout: 3000 },
+    );
+    expect(useCloudChatStore.getState().status).toBe('idle');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A FAILED agent turn must not wedge the composer (pagent P1)
+// ---------------------------------------------------------------------------
+describe('agent loop failure recovery', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+  });
+
+  it('a throwing callModel leaves turnActive FALSE and the status idle', async () => {
+    // The device symptom: NEAR 503 on the first send, then "Please try again in
+    // a moment" forever -- only New chat recovered.
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: jest.fn(async () => { throw new Error("Provider error: Model 'BIG' not found"); }),
+      tools: {}, loadSkill: () => null, skillIds: () => [],
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(makeAgent({ id: 'persona-u1-CONFIG' })));
+
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(() => expect(useCloudChatStore.getState().error).toBeTruthy(), { timeout: 3000 });
+
+    expect(useCloudChatStore.getState().status).toBe('idle');
+    expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false);
+  });
+
+  it('a SECOND send still works after a failed turn', async () => {
+    let calls = 0;
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: jest.fn(async () => {
+        calls += 1;
+        if (calls === 1) throw new Error('503');
+        return { content: 'ok now', toolCalls: [], finishReason: 'stop', truncated: false,
+          usage: null, modelSent: 'm', latencyMs: 1, error: null };
+      }),
+      tools: {}, loadSkill: () => null, skillIds: () => [],
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(makeAgent({ id: 'persona-u1-CONFIG' })));
+
+    await act(async () => { result.current.sendMessage('first'); });
+    await waitFor(() => expect(useCloudChatStore.getState().error).toBeTruthy(), { timeout: 3000 });
+
+    await act(async () => { result.current.sendMessage('second'); });
+    // 1 failed call, then the second send: its route leg returns prose and this
+    // fixture's loadSkill knows no ids, so the loop re-asks MAX_FORMAT_RETRIES
+    // times before ending on no-route rather than accepting the prose. Exact
+    // rather than "> 1", so a change to the retry budget shows up here.
+    await waitFor(() => expect(calls).toBe(2 + MAX_FORMAT_RETRIES), { timeout: 3000 });
+    expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false);
+  });
+});
+
+describe('a new conversation drops stale turn state', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: jest.fn(async () => ({
+        content: 'ok', toolCalls: [], finishReason: 'stop', truncated: false,
+        usage: null, modelSent: 'm', latencyMs: 1, error: null,
+      })),
+      tools: {}, loadSkill: () => null, skillIds: () => [],
+    });
+  });
+
+  it('a reset between turns means the next turn starts with NO pendingChoice', async () => {
+    // The device failure: a fresh "Yes" in a NEW chat was matched to a stale
+    // choice about a wife's hospital in Alkmaar.
+    const { result } = renderHook(() => useCloudPersonaChat(makeAgent({ id: 'persona-u1-CONFIG' })));
+    await act(async () => { result.current.sendMessage('first'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState).not.toBeNull(),
+      { timeout: 3000 },
+    );
+
+    // What New chat does.
+    act(() => { useCloudChatStore.getState().reset(); });
+    expect(useCloudChatStore.getState().agentTurnState).toBeNull();
+
+    await act(async () => { result.current.sendMessage('Yes'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState).not.toBeNull(),
+      { timeout: 3000 },
+    );
+    expect(useCloudChatStore.getState().agentTurnState?.pendingChoice).toBeNull();
+    expect(useCloudChatStore.getState().agentTurnState?.resolvedChoice).toBeNull();
   });
 });

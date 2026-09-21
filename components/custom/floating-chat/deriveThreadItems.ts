@@ -25,7 +25,19 @@ import {
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
-import type { ChatThreadItem, FactCardAction, PersistedMessage } from './types';
+import type {
+  AgentStep,
+  AgentTerminal,
+  ChatThreadItem,
+  FactCardAction,
+  PersistedMessage,
+} from './types';
+import {
+  changedDataFrom,
+  legStartStep,
+  stepsForMessage,
+  continuingStep,
+} from './agent-step-labels';
 
 // ---------------------------------------------------------------------------
 // Fact-card derivation
@@ -550,11 +562,8 @@ function conflictsFromResult(result: Record<string, unknown>): FactConflict[] {
  * Three per-group states:
  *   unresolved  -> the readings, still tappable
  *   dismissed   -> a one-line "Not saved" with Undo, IN PLACE
- *   saved       -> Saved card, then that group's conflict cards, then (single
- *                  Add only) its own topics card
- *
- * Batch-accepted groups pool into ONE merged topics card after the group, so
- * "Add all" does not stack N topic cards down the thread.
+ *   saved       -> Saved card, then that group's conflict cards, then one
+ *                  topics accordion PER SAVED FACT
  */
 function emitFactChoiceGroups(
   cards: ChatThreadItem[],
@@ -566,8 +575,6 @@ function emitFactChoiceGroups(
 ): void {
   const resultKey = `${messageId}::${idx}`;
   const groups = readPendingGroups(result);
-  const pending: ChatThreadItem[] = [];
-  const batched: { factId: string; factStatement: string }[] = [];
   let lastPendingAt = -1;
 
   for (const group of groups) {
@@ -584,6 +591,7 @@ function emitFactChoiceGroups(
         groupId,
         options: group.options,
         questionnaireAttribute: group.questionnaireAttribute,
+        replacesFactId: group.replaces ?? null,
         dismissed: false,
         // A card derived from an EARLIER conversation can never be committed —
         // its context is gone — so it renders inert and, crucially, is not
@@ -592,7 +600,6 @@ function emitFactChoiceGroups(
         stale,
       });
       lastPendingAt = cards.length - 1;
-      pending.push(cards[cards.length - 1]);
       continue;
     }
 
@@ -606,6 +613,7 @@ function emitFactChoiceGroups(
         groupId,
         options: resolution.options,
         questionnaireAttribute: resolution.questionnaireAttribute,
+        replacesFactId: group.replaces ?? null,
         dismissed: true,
         stale,
       });
@@ -630,19 +638,16 @@ function emitFactChoiceGroups(
       });
     });
 
-    const facts = resolution.savedFacts.map((f) => ({
-      factId: f.id,
-      factStatement: f.statement,
-    }));
-    if (facts.length === 0) continue;
-    if (resolution.batch) {
-      batched.push(...facts);
-    } else {
+    // ONE CARD PER FACT, batch or not. The merged "Add all" card is gone: a
+    // collapsed accordion is one line, so N of them no longer stack the chip
+    // wall that merging existed to avoid, and each fact keeps its own
+    // generation status in its own header.
+    for (const f of resolution.savedFacts) {
       cards.push({
         kind: 'chat-topics-card',
-        key: `chat-topics-${messageId}-${idx}-${groupId}`,
-        facts,
-        merged: false,
+        key: `chat-topics-${messageId}-${idx}-${groupId}-${f.id}`,
+        factId: f.id,
+        factStatement: f.statement,
       });
     }
   }
@@ -650,31 +655,189 @@ function emitFactChoiceGroups(
   // Bulk row: INLINE, immediately after the last pending card of this group, and
   // only while 2+ remain pending. Spliced rather than appended so it cannot end
   // up below an already-resolved group's cards.
-  if (pending.length >= 2 && !stale && lastPendingAt >= 0) {
+  //
+  // A REPLACEMENT GROUP IS EXCLUDED, from the row and from the count that
+  // decides whether the row renders at all. "Add all" performing an
+  // irreversible destroy on facts the user never looked at individually is
+  // consent fabricated in bulk — the same shape as forcing a tool call the
+  // user never asked for. A replacement has to be tapped on its own card,
+  // where what it destroys is named.
+  const bulkable = groups.filter(
+    (g) => resolutions[groupIdOf(g)] === undefined && !g.replaces,
+  );
+  if (bulkable.length >= 2 && !stale && lastPendingAt >= 0) {
     cards.splice(lastPendingAt + 1, 0, {
       kind: 'fact-choice-bulk-row',
       key: `fact-choice-bulk-${messageId}-${idx}`,
       resultKey,
       baseResult: result,
-      groups: groups
-        .filter((g) => resolutions[groupIdOf(g)] === undefined)
-        .map((g) => ({
-          groupId: groupIdOf(g),
-          groupIndex: g.index,
-          options: g.options,
-          questionnaireAttribute: g.questionnaireAttribute,
-        })),
+      groups: bulkable.map((g) => ({
+        groupId: groupIdOf(g),
+        groupIndex: g.index,
+        options: g.options,
+        questionnaireAttribute: g.questionnaireAttribute,
+      })),
     });
   }
 
-  if (batched.length > 0) {
-    cards.push({
-      kind: 'chat-topics-card',
-      key: `chat-topics-merged-${messageId}-${idx}`,
-      facts: batched,
-      merged: true,
+}
+
+// ---------------------------------------------------------------------------
+// Agent-steps boxes (pagent P2)
+// ---------------------------------------------------------------------------
+//
+// ONE BOX PER TURN, not per message. A turn is several legs and therefore
+// several assistant messages; a box per leg would flicker in and out as each
+// leg settled. There is no turn id anywhere in the tree (every leg gets its own
+// `asst-${Date.now()}-${rand}`), so a turn is derived from the sequence itself:
+// the run of assistant messages following a user message. That costs one
+// accumulator and keeps this module pure.
+//
+// The box is anchored AFTER the user message that opened the turn, so it never
+// moves as legs accumulate, and a leg's prose renders below it.
+
+type AgentStepsItem = Extract<ChatThreadItem, { kind: 'agent-steps' }>;
+
+interface TurnAccum {
+  anchorId: string;
+  firstAssistantId: string | null;
+  steps: AgentStep[];
+  toolStepCount: number;
+}
+
+interface SeqEntry {
+  message: ConversationMessage;
+}
+
+/**
+ * Build the per-turn boxes for one ordered message sequence.
+ *
+ * `turnActive` is the TURN-SCOPED flag from P1's agent turn state. It is
+ * deliberately not `status` / `isStreaming` / `isStreamingRef`: all three are
+ * named as though they were stream-scoped, behave turn-scoped nearly
+ * everywhere, and go idle EARLY during a forced-extraction pass
+ * (`useCloudPersonaChat` sets status idle unconditionally but releases
+ * `turnBusyRef` only when no forced pass is running). Keying on one of those
+ * paints a healthy turn as interrupted in that window, and P1's multi-leg loop
+ * widens it to every gap between legs.
+ *
+ * `undefined` means the flag is not wired yet. The fallback is deliberately the
+ * SAFE direction: collapse on "everything settled" (the old behaviour) and mark
+ * nothing interrupted unless it is stale. Under-reporting an interruption looks
+ * like today; over-reporting paints a live turn dead.
+ */
+function buildTurnBoxes(
+  seq: SeqEntry[],
+  stale: boolean,
+  turnActive: boolean | undefined,
+  agentTerminal: AgentTerminal | null,
+): Map<string, AgentStepsItem> {
+  const turns: TurnAccum[] = [];
+  let current: TurnAccum | null = null;
+
+  for (const { message } of seq) {
+    if (message.hidden) continue;
+    if (message.role === 'user') {
+      current = {
+        anchorId: message.id,
+        firstAssistantId: null,
+        steps: [],
+        toolStepCount: 0,
+      };
+      turns.push(current);
+      continue;
+    }
+    if (!current) {
+      // An assistant message with no user turn before it (a resumed thread that
+      // begins mid-turn). Anchor the box on the assistant message itself.
+      current = {
+        anchorId: message.id,
+        firstAssistantId: message.id,
+        steps: [],
+        toolStepCount: 0,
+      };
+      turns.push(current);
+    }
+    if (current.firstAssistantId === null) current.firstAssistantId = message.id;
+    const toolSteps = stepsForMessage(message.id, message.toolCalls, false);
+    current.steps.push(...toolSteps);
+    current.toolStepCount += toolSteps.length;
+  }
+
+  const withTools = turns.filter((t) => t.toolStepCount > 0);
+  const lastWithTools = withTools[withTools.length - 1];
+
+  const out = new Map<string, AgentStepsItem>();
+  for (const turn of withTools) {
+    const isLast = turn === lastWithTools;
+    // Only the LAST turn of the live sequence can still be running.
+    const active = !stale && isLast && turnActive === true;
+
+    const hasPending = turn.steps.some((s) => s.status === 'pending');
+    const allSettled = !hasPending;
+
+    // Without the flag, fall back to the old settled-based collapse.
+    const collapsed = turnActive === undefined ? allSettled : !active;
+    const interrupted =
+      turnActive === undefined ? stale && hasPending : !active && hasPending;
+
+    // Strand pending rows only once the turn really cannot settle them.
+    const steps = interrupted
+      ? turn.steps.map((step) =>
+          step.status === 'pending'
+            ? {
+                ...step,
+                status: 'error' as const,
+                consequenceKey: 'agentSteps.consequence.interrupted',
+              }
+            : step,
+        )
+      : turn.steps;
+
+    // The leg-start row is the box's first entry and always settled: the box
+    // only exists once a tool call has appeared, which means the thinking phase
+    // it describes is over.
+    //
+    // A STILL-RUNNING turn gets a trailing PENDING row. `onLeg` fires only
+    // after a leg's whole tool loop settles, so without it every row is `done`
+    // the instant the box appears, the box has no live indicator between legs,
+    // and — because the typing suppression below keys on "this box has a
+    // pending row" — the box and the wait line were BOTH on screen. A
+    // simulator pass caught that on real pixels across consecutive frames.
+    const full: AgentStep[] = [
+      legStartStep(turn.firstAssistantId ?? turn.anchorId, true),
+      ...steps,
+      ...(active ? [continuingStep(turn.anchorId)] : []),
+    ];
+
+    out.set(turn.anchorId, {
+      kind: 'agent-steps',
+      key: `agent-steps-${turn.anchorId}`,
+      steps: full,
+      collapsed,
+      doneCount: full.filter((s) => s.status === 'done').length,
+      failedCount: full.filter((s) => s.status === 'error').length,
+      // Only the LAST turn: the store holds one terminal, and stamping it on an
+      // older box would relabel a turn that ended for a different reason.
+      terminal: isLast ? (agentTerminal ?? null) : null,
+      interrupted,
+      changedData: changedDataFrom(full),
     });
   }
+  return out;
+}
+
+/**
+ * Should this settled box survive in the thread?
+ *
+ * A turn that CHANGED DATA keeps its line; a pure-read turn does not. Facts are
+ * extracted on nearly every turn, so keeping every settled box would put a line
+ * under most bubbles in the thread. A failure is always kept: a failure the
+ * user never learns about is the case this surface exists to prevent.
+ */
+function keepBox(box: AgentStepsItem): boolean {
+  if (!box.collapsed) return true;
+  return box.changedData || box.failedCount > 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -691,6 +854,9 @@ function emitMessage(
   keyPrefix: 'hist' | 'live',
   toolCallResults: Record<string, Record<string, unknown>> = {},
   stale = false,
+  boxes?: Map<string, AgentStepsItem>,
+  answeredAsk = false,
+  streamingMessageId: string | null = null,
 ): void {
   // A hidden turn is the model's business only — it produces no bubble and no
   // cards. Filtered here rather than at the call sites so every source (live,
@@ -720,6 +886,28 @@ function emitMessage(
         });
         return;
       }
+      // ask_choice: chips under this bubble. Derived from the tool INPUT, and
+      // `answered` is decided by the caller, which is the only place that can
+      // see whether a later user message exists.
+      if (tc.name === 'ask_choice') {
+        const askInput = asRecord(tc.input) ?? {};
+        const options = toStringArray(askInput.options).slice(0, 3);
+        if (options.length >= 2) {
+          const question =
+            typeof askInput.question === 'string' ? askInput.question.trim() : '';
+          cards.push({
+            kind: 'ask-choice-card',
+            key: `ask-choice-${message.id}-${idx}`,
+            // Suppressed when the bubble already carries the question as
+            // prose, which the model commonly does alongside the call.
+            question: message.content.trim().length > 0 || !question ? null : question,
+            options,
+            answered: answeredAsk,
+          });
+        }
+        return;
+      }
+
       const card = deriveCard(tc);
       if (card) {
         cards.push({
@@ -773,14 +961,39 @@ function emitMessage(
   }
 
   const hasContent = message.content.trim().length > 0;
-  // Skip empty assistant placeholders that produced no cards.
-  if (!hasContent && cards.length === 0 && message.role === 'assistant') {
+  const ownedBox = boxes?.get(message.id);
+  // Skip empty assistant placeholders that produced no cards AND own no steps
+  // box. The `ownedBox` clause is the fix: without it a content-less message
+  // whose tool calls are still pending returns here and its box never renders.
+  if (
+    !hasContent &&
+    cards.length === 0 &&
+    message.role === 'assistant' &&
+    !(ownedBox && keepBox(ownedBox))
+  ) {
     return;
   }
 
   if (hasContent || message.role === 'user') {
-    out.push({ kind: 'message', key: `${keyPrefix}-${message.id}`, message });
+    out.push({
+      kind: 'message',
+      key: `${keyPrefix}-${message.id}`,
+      message,
+      // The Mera mark rides the live streaming bubble, so it does not blink
+      // out the moment the first token lands.
+      ...(streamingMessageId === message.id ? { streaming: true } : {}),
+    });
   }
+
+  // The turn's steps box, anchored on the message that opened the turn. Pushed
+  // BEFORE this message's own cards so the narrative reads work-then-result,
+  // and — crucially — pushed outside the early return above, which drops an
+  // assistant message that has no content and produced no cards. A turn whose
+  // tool calls are all still `pending` is exactly that shape, which is why the
+  // thread was silent during tool execution before this existed.
+  const box = boxes?.get(message.id);
+  if (box && keepBox(box)) out.push(box);
+
   // Cards appear immediately after their parent message.
   out.push(...cards);
 }
@@ -838,6 +1051,20 @@ export function deriveThreadItems(opts: {
   quickFactChecks?: QuickFactCheckEntry[];
   /** Tool results rewritten by a card commit, keyed `${messageId}::${toolCallIndex}`. */
   toolCallResults?: Record<string, Record<string, unknown>>;
+  /**
+   * TURN-SCOPED: is a turn running right now? From P1's agent turn state.
+   *
+   * NOT `isStreaming` and not the store's `status`. Both read as stream-scoped,
+   * behave turn-scoped almost everywhere, and go idle early during a forced
+   * pass — which would paint a healthy turn interrupted in that window. See
+   * buildTurnBoxes.
+   *
+   * `undefined` while P1's state is unwired: the fallback collapses on
+   * "everything settled" and marks nothing interrupted unless it is stale.
+   */
+  turnActive?: boolean;
+  /** Why the latest agent turn stopped, when the user needs telling. */
+  agentTerminal?: AgentTerminal | null;
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
@@ -862,6 +1089,16 @@ export function deriveThreadItems(opts: {
 
   // --- History (re-sorted oldest-first) ---
   const sortedHistory = [...history].sort((a, b) => a.createdAt - b.createdAt);
+  // Turn boxes are computed per SEQUENCE so a turn never spans the
+  // "earlier conversation" divider. History is stale by definition.
+  const historyBoxes = buildTurnBoxes(
+    sortedHistory.map((m) => ({ message: toConversationMessage(m) })),
+    true,
+    opts.turnActive,
+    // NEVER on history: the store's one terminal belongs to the live turn, and
+    // stamping it on a box from an earlier conversation would be a lie.
+    null,
+  );
   let prevConversationId: string | null = null;
   for (const persisted of sortedHistory) {
     // Divider at every conversation boundary (not before the first message).
@@ -874,7 +1111,16 @@ export function deriveThreadItems(opts: {
     }
     prevConversationId = persisted.conversationId;
     // stale: true — an earlier conversation's card can never be committed.
-    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults, true);
+    // An earlier conversation's offer can never be taken: always inert.
+    emitMessage(
+      out,
+      toConversationMessage(persisted),
+      'hist',
+      toolCallResults,
+      true,
+      historyBoxes,
+      true,
+    );
   }
 
   // --- Divider between OLDER conversations and the current one ---
@@ -885,10 +1131,51 @@ export function deriveThreadItems(opts: {
   // --- Resumed current-conversation messages (oldest-first, no divider) ---
   const sortedResume = [...resume].sort((a, b) => a.createdAt - b.createdAt);
   const resumeIds = new Set(sortedResume.map((m) => m.id));
+
+  // Resume and live are ONE sequence: a turn's legs can straddle them when
+  // persistence lands mid-turn, and splitting them would cut that turn in two.
+  // They are not stale — a resumed current-conversation turn is still the live
+  // one, which is why the discriminator here is `stale` and never the
+  // 'hist' | 'live' key prefix (resumed messages carry the 'hist' prefix).
+  // Assistant messages that a later USER message follows. An ask_choice offer
+  // on one of these is spent: the user has moved on, by tapping a chip or by
+  // typing past it. Derived purely, so no store field records "answered".
+  const liveSequence = [
+    ...sortedResume.map((m) => toConversationMessage(m)),
+    ...live.filter((m) => !resumeIds.has(m.id)),
+  ];
+  const answeredAskIds = new Set<string>();
+  let sawLaterUser = false;
+  for (let i = liveSequence.length - 1; i >= 0; i--) {
+    const m = liveSequence[i];
+    if (m.role === 'user' && !m.hidden) {
+      sawLaterUser = true;
+      continue;
+    }
+    if (sawLaterUser) answeredAskIds.add(m.id);
+  }
+
+  const liveBoxes = buildTurnBoxes(
+    [
+      ...sortedResume.map((m) => ({ message: toConversationMessage(m) })),
+      ...live.filter((m) => !resumeIds.has(m.id)).map((message) => ({ message })),
+    ],
+    false,
+    opts.turnActive,
+    opts.agentTerminal ?? null,
+  );
   for (const persisted of sortedResume) {
     // Resumed CURRENT-conversation messages are live for this purpose: their
     // cards are still answerable, so they are not stale.
-    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults);
+    emitMessage(
+      out,
+      toConversationMessage(persisted),
+      'hist',
+      toolCallResults,
+      false,
+      liveBoxes,
+      answeredAskIds.has(persisted.id),
+    );
   }
 
   // --- Intro pseudo-message: suppressed once the conversation has resumed
@@ -902,16 +1189,41 @@ export function deriveThreadItems(opts: {
     });
   }
 
+  // The assistant message currently being streamed into: the LAST live one,
+  // and only while the turn is running. Tracked here rather than in the
+  // component because only the deriver sees the whole ordered list.
+  const lastLiveMsg = live[live.length - 1];
+  const streamingMessageId =
+    isStreaming && lastLiveMsg?.role === 'assistant' ? lastLiveMsg.id : null;
+
   // --- Live session (skip anything already rendered via resume) ---
   for (const message of live) {
     if (resumeIds.has(message.id)) continue;
-    emitMessage(out, message, 'live', toolCallResults);
+    emitMessage(
+      out,
+      message,
+      'live',
+      toolCallResults,
+      false,
+      liveBoxes,
+      answeredAskIds.has(message.id),
+      streamingMessageId,
+    );
   }
 
   // --- Typing indicator ---
   const lastLive = live[live.length - 1];
+  // Exactly ONE liveness signal at a time. While a steps box has a pending TOOL
+  // row the box IS the signal, so the dots would be a second one saying the
+  // same thing. The dots keep the window they already owned — after the user
+  // sends and before any tool call exists — which is also where the shipped
+  // "Thinking…" caption lives, so nothing is lost by suppressing them later.
+  const stepsBoxIsLive = Array.from(liveBoxes.values()).some(
+    (box) => !box.collapsed && box.steps.some((s) => s.status === 'pending'),
+  );
   const showTyping =
     isStreaming &&
+    !stepsBoxIsLive &&
     (!lastLive ||
       lastLive.role === 'user' ||
       (lastLive.role === 'assistant' && lastLive.content.trim().length === 0));

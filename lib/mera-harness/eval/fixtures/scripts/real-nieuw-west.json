@@ -1,0 +1,86 @@
+{
+  "id": "real-nieuw-west",
+  "cohort": "production",
+  "note": "Production case, typo preserved. Scripts all four lookup_place outcomes plus an AMBIGUOUS resolved, so ask_choice has something to ask and the tap can be checked for a second lookup. expect.legs is EXACT: a leg-cap hit here is a planted failure, not traffic.",
+  "persona": { "facts": [], "topics": [] },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I live in niew West Amsterdam",
+      "expect": {
+        "routeKind": "residence",
+        "skill": "facts/residence",
+        "tools": ["load_skill", "lookup_place", "ask_choice"],
+        "legs": 3,
+        "endedOn": "awaiting_user"
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "niew West Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                { "neighbourhood": "Nieuw-West", "locality": "Amsterdam", "admin1": "North Holland", "countryCode": "NL", "countryName": "Netherlands", "bloc": "EU" },
+                { "locality": "Nieuw-Westeinde", "admin1": "South Holland", "countryCode": "NL", "countryName": "Netherlands", "bloc": "EU" }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "chooses": "Nieuw-West, Amsterdam, North Holland, Netherlands",
+      "expect": {
+        "routeKind": "residence",
+        "skill": "facts/residence",
+        "tools": ["saveExtractedFacts"],
+        "legs": 2,
+        "proposals": [
+          { "statementMatches": ["nieuw-west", "amsterdam"], "kind": "residence", "placeChain": "required", "replaces": null }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "user": "Actually my parents are in Zzzzqqq",
+      "expect": {
+        "routeKind": "family",
+        "skill": "facts/family",
+        "tools": ["load_skill", "lookup_place"],
+        "legs": 3
+      },
+      "fakeTools": {
+        "lookup_place": [{ "query": "Zzzzqqq", "returns": { "status": "no_match", "query": "Zzzzqqq" } }]
+      }
+    },
+    {
+      "index": 3,
+      "user": "And my sister lives in Porto",
+      "expect": {
+        "routeKind": "family",
+        "skill": "facts/family",
+        "tools": ["load_skill", "lookup_place"],
+        "legs": 3
+      },
+      "fakeTools": {
+        "lookup_place": [{ "query": "Porto", "returns": { "status": "unavailable" } }]
+      }
+    },
+    {
+      "index": 4,
+      "user": "Try P",
+      "expect": {
+        "routeKind": "family",
+        "skill": "facts/family",
+        "tools": ["load_skill", "lookup_place"],
+        "legs": 3
+      },
+      "fakeTools": {
+        "lookup_place": [{ "query": "P", "returns": { "status": "too_short", "minChars": 2 } }]
+      }
+    }
+  ]
+}

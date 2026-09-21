@@ -34,6 +34,13 @@ export function readJsonl(path: string): RunRow[] {
 export function cellKey(row: RunRow): string {
   return [
     row.cohort, row.callType, row.turnIndex, row.arm, row.variant, row.lane, row.modelRequested,
+    // Legs of one turn are NOT repeats of each other. Without this every leg
+    // lands in one cell, leg 1 and leg 3 get compared as repeats, and
+    // promptDeterministic raises a false RUNNER BUG on every multi-leg turn.
+    // Old rows carry no legIndex at all: `undefined ?? '-'` equals
+    // `null ?? '-'`, so the three single-call runners partition exactly as
+    // before and only the key string changes.
+    row.legIndex ?? '-',
   ].join(' | ');
 }
 

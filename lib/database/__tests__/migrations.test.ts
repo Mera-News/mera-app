@@ -247,6 +247,94 @@ describe('specific migration versions', () => {
     expect(destructive).toHaveLength(0);
   });
 
+  it('v55 additively adds exactly the two topic-status columns to facts', () => {
+    const m = byVersion.get(55);
+    expect(m).toBeDefined();
+    // Additive only. `facts` is the one table nothing may ever wipe.
+    const creates = m!.steps.filter(
+      (s: any) => s && s.type === 'create_table' && s.schema?.name === 'facts',
+    );
+    expect(creates).toHaveLength(0);
+    const addStep = m!.steps.find(
+      (s: any) => s && s.type === 'add_columns' && s.table === 'facts',
+    );
+    expect(addStep).toBeDefined();
+    expect(addStep.columns.map((c: any) => c.name)).toEqual([
+      'topics_status',
+      'topics_updated_at',
+    ]);
+    // Both optional: NULL is a real state ("generation was never asked for"),
+    // which is what lets pre-v55 JS on a v55 device degrade safely.
+    expect(addStep.columns.every((c: any) => !!c.isOptional)).toBe(true);
+  });
+
+  it('v55 additively adds exactly pending_delete_at to topics', () => {
+    const m = byVersion.get(55);
+    const creates = m!.steps.filter(
+      (s: any) => s && s.type === 'create_table' && s.schema?.name === 'topics',
+    );
+    expect(creates).toHaveLength(0);
+    const addStep = m!.steps.find(
+      (s: any) => s && s.type === 'add_columns' && s.table === 'topics',
+    );
+    expect(addStep).toBeDefined();
+    expect(addStep.columns.map((c: any) => c.name)).toEqual(['pending_delete_at']);
+    expect(!!addStep.columns[0].isOptional).toBe(true);
+    // Indexed: flushPendingDeletes queries on it at every app start and
+    // foreground.
+    expect(!!addStep.columns[0].isIndexed).toBe(true);
+  });
+
+  it('v55 creates declined_topics with its four columns', () => {
+    const m = byVersion.get(55);
+    const create = m!.steps.find(
+      (s: any) => s && s.type === 'create_table' && s.schema?.name === 'declined_topics',
+    );
+    expect(create).toBeDefined();
+    const cols = Object.keys(create.schema.columns ?? {});
+    expect(cols.sort()).toEqual(
+      ['created_at', 'normalized_text', 'source_fact_id', 'text'].sort(),
+    );
+  });
+
+  it('v55 does not touch article_suggestions at all', () => {
+    // The 48h score-propagation donor pool. A rebuild empties every device's
+    // feed until a full re-sync plus a cloud scoring round trip.
+    const m = byVersion.get(55);
+    const touching = m!.steps.filter(
+      (s: any) =>
+        (s && s.type === 'create_table' && s.schema?.name === 'article_suggestions') ||
+        (s && s.type === 'add_columns' && s.table === 'article_suggestions') ||
+        (s && s.type === 'sql' && /article_suggestions/i.test(String(s.sql ?? s.text ?? ''))),
+    );
+    expect(touching).toHaveLength(0);
+  });
+
+  it('v55 backfills ONLY what is observable and leaves the rest NULL', () => {
+    const m = byVersion.get(55);
+    const sqlSteps = m!.steps.filter((s: any) => s && s.type === 'sql');
+
+    // Exactly two UPDATEs, both against `facts` and nothing else.
+    expect(sqlSteps).toHaveLength(2);
+    for (const step of sqlSteps) {
+      const sql = String(step.sql ?? step.text ?? '');
+      expect(/UPDATE\s+facts\b/i.test(sql)).toBe(true);
+      expect(/(DROP|DELETE\s+FROM)/i.test(sql)).toBe(false);
+    }
+
+    const all = sqlSteps.map((s: any) => String(s.sql ?? s.text ?? '')).join('\n');
+    expect(/topics_status\s*=\s*'error'/i.test(all)).toBe(true);
+    expect(/topics_status\s*=\s*'done'/i.test(all)).toBe(true);
+
+    // THE REGRESSION THIS TEST EXISTS FOR: nothing is backfilled to 'pending'.
+    // A third UPDATE stamping the residue 'pending' would assert that some
+    // loop will drain those facts; the rescue sweep turns a stale 'pending'
+    // with no live job into a VISIBLE error, so a tidy-up here manufactures a
+    // wave of errors on facts that were never failing. The residue stays NULL
+    // and renders as 'done'.
+    expect(/topics_status\s*=\s*'pending'/i.test(all)).toBe(false);
+  });
+
   it('v45 clears the stale persisted async_pipeline_run settings row', () => {
     const m = byVersion.get(45);
     expect(m).toBeDefined();

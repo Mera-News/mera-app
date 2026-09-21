@@ -4,7 +4,9 @@
 // fetching, no stores.
 
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
-import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
+import MeraStreamAvatar from '@/components/custom/chat/MeraStreamAvatar';
+import ChatPhaseLine from '@/components/custom/chat/ChatPhaseLine';
+import WaitBubble from '@/components/custom/chat/WaitBubble';
 import { Text } from '@/components/ui/text';
 import {
   Conversation,
@@ -23,7 +25,9 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
+import AgentStepsBox from './AgentStepsBox';
 import ArticleContextCard from './ArticleContextCard';
+import AskChoiceCard from './AskChoiceCard';
 import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
 import ProposalCard from './ProposalCard';
@@ -53,6 +57,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   starterChips,
   onChipPress,
   blockedMessage,
+  bannerBlocksInput,
   showUnblockControls,
   unblockPending,
   onRequestUnblock,
@@ -62,7 +67,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   isInputDisabled,
 }) => {
   const { t } = useTranslation();
-  const isThinking = useCloudChatStore((s) => s.thinking);
 
   // Autofocus the input once the popover's open morph fully settles. Focusing
   // mid-morph fights the scale transform and janks the keyboard slide-up, so we
@@ -125,9 +129,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             </Message>
           ) : (
             <Message role="assistant">
-              <MessageContent role="assistant">
-                <MessageResponse>{message.content}</MessageResponse>
-              </MessageContent>
+              {/* BESIDE the bubble, not above it. `Message` is a plain column,
+                  so an avatar dropped in as a sibling stacks on top; the row
+                  is what makes the gutter `AVATAR_SIZE` was always documented
+                  to be. Bottom-aligned, Messenger style. It stays for the LIVE
+                  message while it streams, so the mark does not blink out the
+                  instant the first token lands and back in on the next turn. */}
+              <View style={styles.gutterRow}>
+                {item.streaming === true && <MeraStreamAvatar />}
+                <MessageContent role="assistant">
+                  <MessageResponse>{message.content}</MessageResponse>
+                </MessageContent>
+              </View>
             </Message>
           );
         // Only animate in live-session bubbles; history pages load without replay.
@@ -137,6 +150,30 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           inner
         );
       }
+
+      case 'agent-steps':
+        return (
+          <AgentStepsBox
+            steps={item.steps}
+            collapsed={item.collapsed}
+            doneCount={item.doneCount}
+            failedCount={item.failedCount}
+            terminal={item.terminal}
+            interrupted={item.interrupted}
+          />
+        );
+
+      case 'ask-choice-card':
+        return (
+          <AskChoiceCard
+            question={item.question}
+            options={item.options}
+            answered={item.answered}
+            // The thread's existing send, i.e. ChatSessionView.handleSend —
+            // the one funnel every gate already sits on.
+            onSend={onSend}
+          />
+        );
 
       case 'fact-card':
         return <FactCard action={item.action} statements={item.statements} />;
@@ -161,6 +198,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             questionnaireAttribute={item.questionnaireAttribute}
             dismissed={item.dismissed}
             stale={item.stale}
+            replacesFactId={item.replacesFactId}
           />
         );
 
@@ -174,7 +212,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         );
 
       case 'chat-topics-card':
-        return <ChatTopicsCard facts={item.facts} merged={item.merged} />;
+        return <ChatTopicsCard factId={item.factId} factStatement={item.factStatement} />;
 
       case 'conflict-card':
         return <ConflictResolutionCard conflict={item.conflict} />;
@@ -196,13 +234,24 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       case 'typing':
         return (
           <Message role="assistant">
-            <MessageContent role="assistant">
-              {/* "Thinking…" while the model's reasoning trace streams and
-                  nothing visible has arrived (3-12s on the BIG primary); bare
-                  dots once the first token is due. The trace itself is never
-                  rendered — the store carries only the boolean. */}
-              <StreamingIndicator dotsOnly label={isThinking ? t('floatingChat.thinking') : undefined} />
-            </MessageContent>
+            {/* Messenger-style gutter. The mark is present for the whole wait
+                and for the streaming bubble that follows, then goes when the
+                turn settles. */}
+            <View style={styles.gutterRow}>
+              <MeraStreamAvatar />
+              {/* Outlined, unfilled and breathing, so a provisional bubble
+                  never reads as something that was said. */}
+              <WaitBubble>
+                {/* A sentence that tracks the real phase, not a rotating word.
+                    The word was decorative and said the same thing whether the
+                    device was queued behind prewarm, fetching an attestation
+                    key or waiting out the model's 3-8s time to first token, so
+                    a long wait read as a frozen screen. The line subscribes to
+                    the phase store itself, so a phase tick re-renders one
+                    Text rather than this whole thread. */}
+                <ChatPhaseLine />
+              </WaitBubble>
+            </View>
           </Message>
         );
 
@@ -326,13 +375,28 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         ref={promptRef}
         onSubmit={onSend}
         placeholder={t('floatingChat.inputPlaceholder')}
-        disabled={isInputDisabled || blockedMessage !== null}
+        // NOT `blockedMessage !== null`. A transport error sets that banner
+        // too, and the error is only cleared by starting a turn — so gating on
+        // the banner meant a failed turn disabled the composer permanently,
+        // with the banner telling the user to try again.
+        disabled={isInputDisabled || bannerBlocksInput}
       />
     </Conversation>
   );
 };
 
 const styles = StyleSheet.create({
+  // Avatar gutter. `Message` aligns its children but does not lay them out in
+  // a row, so without this the mark sits ABOVE the bubble rather than beside
+  // it — which is what shipped, despite both call sites saying "beside".
+  // `flex-end` puts the mark at the bubble's bottom edge; `flexShrink` lets
+  // the bubble keep its own maxWidth instead of overflowing the row.
+  gutterRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+    flexShrink: 1,
+  },
   listWrap: {
     flex: 1,
   },

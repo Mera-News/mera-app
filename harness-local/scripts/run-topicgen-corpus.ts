@@ -34,8 +34,8 @@
 //
 // Node-only: never imported by the app bundle.
 
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 import { loadHarnessEnv } from '../config/env';
 import {
@@ -50,6 +50,13 @@ import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/co
 import { costOf, fetchModelCatalog, rosterWarnings, TOPICGEN_ARM_MODELS } from '../lib/model-catalog';
 import { hasReasoningLeak, postCompletion, SpendLimitError } from '../lib/near-call';
 import { COHORTS, loadCohort, type CorpusFact } from '../lib/corpus';
+// STEP A. The skill-guided topic prompt against the shipped one-shot prompt,
+// carried as an ARM VALUE so both sit in ONE interleaved run. Two runs would
+// be invalid on this repo's own evidence: a byte-identical control arm moved
+// its kept count by 7 between runs half an hour apart.
+import { resolveAgentArm, topicPromptFor } from '../../lib/mera-harness/core/arms';
+import { ensureNullControlArm } from '../../lib/mera-harness/eval/null-control';
+import { PERSONA_SKILLS } from '../../lib/mera-harness/skills/index.generated';
 import {
   buildCloudBatchCallsForFact,
   parseTopicsFromOutput,
@@ -62,6 +69,7 @@ import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-arc
 // Once per process, before any variant resolves. See the note in
 // run-persona-corpus.ts; the topic-gen arms take no options.
 registerV1ControlArms();
+ensureNullControlArm();
 
 interface Args {
   label: string;
@@ -80,6 +88,9 @@ interface Args {
    *  passes otherFacts EMPTY, which is what makes the combo call not exist
    *  rather than merely be requested at zero. */
   noCombo: boolean;
+  /** STEP A: drive the kind-bearing fact corpus instead of a cohort. Opt-in,
+   *  so the cohort path this runner already had is untouched. */
+  factsFile: string | null;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -95,6 +106,7 @@ function parseArgs(argv: string[]): Args {
     duplicateEvery: 0,
     maxTokens: {},
     noCombo: false,
+    factsFile: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -109,6 +121,7 @@ function parseArgs(argv: string[]): Args {
     }
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--no-combo') args.noCombo = true;
+    else if (a === '--facts') args.factsFile = argv[++i] ?? null;
     else if (a === '--duplicate-every') args.duplicateEvery = Number(argv[++i]);
     else if (a === '--max-tokens') {
       for (const pair of (argv[++i] ?? '').split(',').filter(Boolean)) {
@@ -138,6 +151,12 @@ function parseArgs(argv: string[]): Args {
 
 /** The user's location fact, which the builder takes separately. Matched on the
  *  attribute rather than the text, the same key the app's own resolver uses. */
+interface PlaceChainLite {
+  locality?: string;
+  admin1?: string | null;
+  countryName?: string;
+}
+
 function locationOf(facts: CorpusFact[]): string | null {
   const hit = facts.find((f) => f.questionnaireAttribute.toLowerCase().startsWith('location'));
   return hit ? hit.statement : null;
@@ -172,7 +191,10 @@ async function main(): Promise<number> {
   // id a startup error in both dry and live modes.
   for (const v of args.variants) {
     try {
-      resolvePromptVariant(v);
+      // Step A selects AGENT arms (they carry topicPrompt); the cohort path
+      // keeps the news-harness prompt variants it always used.
+      if (args.factsFile) resolveAgentArm(v);
+      else resolvePromptVariant(v);
     } catch (err) {
       throw new Error(
         `harness-local: --variant '${v}' is not registered. Known: ${promptVariantIds().join(', ')}. ` +
@@ -182,10 +204,62 @@ async function main(): Promise<number> {
   }
 
   const cohort = loadCohort(args.cohort);
-  const facts = cohort.persona.facts.slice(0, args.accept);
+  // STEP A drives the kind-bearing corpus: the cohort personas carry no
+  // `kind`, and without one there is no guideline to select, so the
+  // skill-guided arm would have nothing to be skill-guided BY.
+  const stepAFacts: (CorpusFact & { kind?: string; placeChain?: PlaceChainLite })[] | null = args.factsFile
+    ? (JSON.parse(readFileSync(resolve(args.factsFile), 'utf8')) as {
+        facts: {
+          id: string; statement: string; questionnaireAttribute: string; kind: string;
+          placeChain?: PlaceChainLite;
+        }[];
+      }).facts.map((f) => ({
+        id: f.id,
+        statement: f.statement,
+        questionnaireAttribute: f.questionnaireAttribute,
+        questionnaireLevel: 1,
+        questionnaireLevelCategory: 'Core',
+        weight: 1,
+        createdAtMs: 0,
+        metadata: { topics: [] },
+        kind: f.kind,
+        // CARRIED, and it was not before. locationForFact reads this; without
+        // it every fact silently fell back to the persona residence and the
+        // per-fact-location fix was dead on arrival while looking applied.
+        placeChain: f.placeChain,
+      }))
+    : null;
+  const facts = (stepAFacts ?? cohort.persona.facts).slice(0, args.accept);
   if (facts.length === 0) throw new Error('harness-local: --accept selected no facts.');
-  const userLocation = locationOf(cohort.persona.facts);
-  const existingTopics = cohort.persona.topics.map((t) => t.text);
+  const personaLocation = locationOf(stepAFacts ?? cohort.persona.facts);
+
+  /**
+   * THE LOCATION A FACT IS JUDGED AGAINST, PER FACT.
+   *
+   * A single persona-wide `userLocation` is wrong for this corpus and it
+   * produced a false finding. The Step A facts are fifteen INDEPENDENT cases,
+   * not one person: tf01 lives in Barcelona, tf05 is "living in Dublin", tf06
+   * is "living in Rotterdam". `locationOf` takes the FIRST location fact, so
+   * every call was told the user lives in Barcelona, including the two whose
+   * own statement names a different host.
+   *
+   * The skill guideline trusts the location it is handed; the one-shot prompt
+   * reads the host out of the fact. So the skill arm emitted "Spain
+   * immigration law reform" and "Poland Spain tax treaty" for facts about
+   * Dublin and Rotterdam, missed the `host` rung 6 times out of 6 against the
+   * control's 0, and that read as a skill defect. It was the corpus handing
+   * the two prompts contradictory inputs.
+   *
+   * A fact that carries its own resolved chain IS its own location.
+   */
+  const locationForFact = (f: CorpusFact & { placeChain?: PlaceChainLite }): string | null => {
+    const pc = f.placeChain;
+    if (pc?.locality) {
+      return [pc.locality, pc.admin1, pc.countryName].filter(Boolean).join(', ');
+    }
+    return personaLocation;
+  };
+  const existingTopics = stepAFacts ? [] : cohort.persona.topics.map((t) => t.text);
 
   const run = createRunWriter({ label: args.label });
   const rows = createJsonlWriter({ dir: run.dir });
@@ -213,7 +287,9 @@ async function main(): Promise<number> {
   console.log(
     `run      : ${runId}\nrun dir  : ${run.dir}\ntarget   : ${env.target}` +
       `${overridden.length ? `\noverride : ${overridden.join(', ')}` : ''}` +
-      `\ncohort   : ${args.cohort}, accepting ${facts.length} fact(s) sequentially` +
+      `\n${args.factsFile ? `facts    : ${args.factsFile}` : `cohort   : ${args.cohort}`}` +
+      `, accepting ${facts.length} fact(s) sequentially` +
+      `${args.factsFile ? '\nmode     : STEP A, arms select the topic prompt (skill vs one-shot)' : ''}` +
       `${args.noCombo ? '\nsplit    : --no-combo, factOnly only, otherFacts passed empty' : ''}` +
       `\nexisting : ${existingTopics.length} topics on the persona, all passed as excludeTopics` +
       `\narms     : ${args.arms.join(', ')}\ntotals   : ${args.totals.join(', ')}` +
@@ -262,19 +338,35 @@ async function main(): Promise<number> {
           const armId = `${model}@${variantId}`;
           const excludeTopics = acquired.get(armId) ?? [];
           // The production builder, so gear and prompts cannot drift from it.
+          // STEP A: the arm decides WHICH prompt the topic call runs on. An
+          // arm is a VALUE, never string surgery over the shipped text, so a
+          // result recorded today stays reproducible from the repo alone.
+          const armSpec = args.factsFile ? resolveAgentArm(variantId) : null;
+          const useSkill = armSpec ? topicPromptFor(armSpec) === 'skill' : false;
+          const factKind = (fact as CorpusFact & { kind?: string }).kind ?? 'generic';
+          const skillBody = PERSONA_SKILLS[`topics/${factKind}` as keyof typeof PERSONA_SKILLS];
+          if (useSkill && !skillBody) {
+            throw new Error(
+              `harness-local: fact ${fact.id} has kind '${factKind}', which has no topics/ skill. ` +
+                'A missing guideline would silently fall back to the one-shot prompt and the arm ' +
+                'would measure the control.',
+            );
+          }
           const calls = buildCloudBatchCallsForFact(
             {
               factStatement: fact.statement,
-              userLocation,
+              userLocation: args.factsFile ? locationForFact(fact) : personaLocation,
               otherFacts,
               totalCount: total,
               excludeTopics,
             },
             `fact${fi}`,
-            {
-              factOnly: buildTopicGenSystemPrompt('factOnly', variantId),
-              combo: buildTopicGenSystemPrompt('combo', variantId),
-            },
+            useSkill
+              ? { factOnly: skillBody, combo: skillBody }
+              : {
+                  factOnly: buildTopicGenSystemPrompt('factOnly', args.factsFile ? 'baseline' : variantId),
+                  combo: buildTopicGenSystemPrompt('combo', args.factsFile ? 'baseline' : variantId),
+                },
           );
 
           for (const call of calls) {
@@ -330,7 +422,7 @@ async function main(): Promise<number> {
 
             const info = catalog[model];
             writeRow({
-              rowId: newRowId(), dupOf: null, runId, repeat: rep,
+              rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
               // COHORT STAYS THE COHORT. The count arm lives in `arm` only,
               // never here: rater-export.ts keeps `cohort` visible on purpose
               // (the adversarial hard fails are unjudgeable without it) and

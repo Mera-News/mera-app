@@ -442,7 +442,7 @@ async function main(): Promise<number> {
 
         const info = catalog[model];
         writeRow({
-          rowId: newRowId(), dupOf: null, runId, repeat: rep,
+          rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
           cohort: 'goldset', turnIndex: ci, arm: `${model}@${variantId}`, callType: 'relevance-batch',
           interleaveGroup: `chunk:${ci}`, lane: 'near', surface: 'SCORING',
           variant: variantId, promptHash: hash,
@@ -562,7 +562,7 @@ async function main(): Promise<number> {
       }
     }
     writeRow({
-      rowId: newRowId(), dupOf: null, runId, repeat: rep,
+      rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
       cohort: 'goldset', turnIndex, arm: armId, callType: 'reason',
       interleaveGroup, lane: 'near', surface: 'SCORING',
       variant: variantId,

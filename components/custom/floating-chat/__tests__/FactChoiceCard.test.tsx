@@ -40,6 +40,15 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
   return { __esModule: true, default: ({ text }: any) => <Text>{text}</Text> };
 });
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn(), hapticSuccess: jest.fn() }));
+// Both services build their collections at MODULE SCOPE, so importing the
+// card reaches SQLiteAdapter and dies on `initializeJSI` before any test body
+// runs. The replacement disclosure is the only thing that reads them.
+jest.mock('@/lib/database/services/fact-service', () => ({
+  getFacts: jest.fn(async () => []),
+}));
+jest.mock('@/lib/database/services/topic-service', () => ({
+  getByFact: jest.fn(async () => []),
+}));
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: { error: jest.fn(), warn: jest.fn(), debug: jest.fn() },

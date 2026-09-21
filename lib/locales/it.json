@@ -70,7 +70,7 @@
     "tryAgain": "Riprova",
     "learnAboutMera": "Scopri Mera",
     "startReading": "Inizia a leggere",
-    "alreadyHaveAccount": "Hai già un account? Accedi",
+    "alreadyHaveAccount": "Accedi con l'email",
     "chooseLanguageTitle": "Scegli la tua lingua",
     "chooseLanguageHint": "Puoi cambiarla in qualsiasi momento nelle Impostazioni.",
     "continue": "Continua",
@@ -644,7 +644,9 @@
     "gotItPromo": "Fantastico! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Offerta di lancio 🎊",
-    "resetsOn": "Si azzera"
+    "resetsOn": "Si azzera",
+    "retryTopicGeneration": "Riprova",
+    "topicGenFailedGeneric": "Impossibile generare gli argomenti."
   },
   "errors": {
     "somethingWentWrong": "Qualcosa è andato storto",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Cosa sa Mera di te",
     "influence": "Influenza",
     "moreInfluence": "Più influenza",
-    "lessInfluence": "Meno influenza"
+    "lessInfluence": "Meno influenza",
+    "declinedTopicsTitle": "Argomenti che hai rimosso",
+    "allowAgain": "Consenti di nuovo",
+    "topicRemovalConsequence": "Gli argomenti rimossi non verranno più suggeriti a meno che tu non li consenta di nuovo in Argomenti che hai rimosso."
   },
   "publicationPrefs": {
     "title": "Preferenze delle fonti",
@@ -2526,7 +2531,15 @@
     "addAll": "Aggiungi tutto ({{count}})",
     "skipAll": "Salta tutto",
     "addAllA11y": "Aggiungi tutti i {{count}} suggerimenti",
-    "skipAllA11y": "Salta tutti i {{count}} suggerimenti"
+    "skipAllA11y": "Salta tutti i {{count}} suggerimenti",
+    "titleReplace": "Sostituire un'informazione esistente?",
+    "replace": "Sostituisci",
+    "replacesLabel": "Sostituisce",
+    "replacesTopics_one": "e il suo 1 argomento",
+    "replacesTopics_other": "e i suoi {{count}} argomenti",
+    "replacesNoUndo": "L'informazione precedente e i suoi argomenti vengono rimossi definitivamente. Non è reversibile.",
+    "replacesLoading": "Controllo che cosa sostituisce",
+    "replacesUnavailable": "Mera non può mostrare ora che cosa verrebbe rimosso. Riprova tra poco."
   },
   "subscriptions": {
     "sectionTitle": "I tuoi abbonamenti",
@@ -2611,6 +2624,117 @@
     "loading": "Sto calcolando i tuoi numeri"
   },
   "chatTopics": {
-    "none": "Salvato. Al momento non ci sono argomenti da aggiungere."
+    "none": "Salvato. Al momento non ci sono argomenti da aggiungere.",
+    "removed": "Rimosso",
+    "accordionTitle": "Argomenti per:",
+    "finding": "Ricerca argomenti",
+    "findMore": "Trova altri argomenti",
+    "findingMore": "Ricerca in corso",
+    "goneTombstone": "Questa informazione è stata rimossa, quindi anche i suoi argomenti.",
+    "expandA11y": "Mostra argomenti",
+    "collapseA11y": "Nascondi argomenti",
+    "accordionTitlePending": "Troveremo argomenti per:",
+    "pendingA11y": "Ricerca argomenti in corso",
+    "readyA11y": "Argomenti pronti",
+    "failedA11y": "Non è stato possibile trovare argomenti"
+  },
+  "agentSteps": {
+    "legStart": "Sto pensando a quello che hai detto",
+    "loadSkill": "Controllo come gestire {{topic}}",
+    "loadSkillGeneric": "Controllo come gestire questo",
+    "findSimilarFacts": "Cerco quello che mi hai già detto",
+    "lookupPlace": "Controllo la zona: {{query}}",
+    "writeUp": "Lo sto scrivendo perché tu lo controlli",
+    "removing": "Rimuovo quello che mi hai chiesto",
+    "asking": "Ti faccio una domanda",
+    "working": "Ci sto lavorando",
+    "slow": "Ancora in corso, connessione lenta",
+    "legCapSentence": "Ci sono voluti più passaggi di quanti Mera possa farne in una volta. Chiedi di nuovo per continuare.",
+    "interrupted": "È stato interrotto. Chiedi di nuovo per continuare.",
+    "summaryDone": "Fatto",
+    "summaryFailed": "Qualcosa non ha funzionato",
+    "statePending": "in corso",
+    "stateDone": "fatto",
+    "stateError": "non riuscito",
+    "consequence": {
+      "generic": "Questo passaggio non è stato completato",
+      "interrupted": "Non è stato completato",
+      "lookupPlace": "Non è stato possibile controllare la zona, così Mera ha usato quello che già sapeva",
+      "findSimilarFacts": "Non ho potuto controllare quello che mi avevi già detto, potrebbe esserci un doppione",
+      "loadSkill": "Non è stato possibile caricare le indicazioni, così Mera ha usato l'approccio generale",
+      "writeUp": "Non è stato possibile scriverlo, quindi non è stato aggiunto nulla",
+      "removing": "Non è stato possibile rimuoverlo, quindi è ancora presente"
+    },
+    "noRouteSentence": "Mera non ha capito di cosa si trattava. Prova a dirlo in un altro modo.",
+    "noProposalSentence": "Mera non ha trovato nulla da aggiungere da questo.",
+    "unknownToolSentence": "Qualcosa è andato storto da parte di Mera. Chiedi di nuovo per continuare."
+  },
+  "skillPhrase": {
+    "residence": "dove vivi",
+    "work": "il tuo lavoro",
+    "interests": "i tuoi interessi",
+    "origin": "da dove vieni",
+    "family": "la tua famiglia",
+    "newFact": "una nuova informazione",
+    "topics": "i tuoi argomenti"
+  },
+  "askChoice": {
+    "answeredA11y": "già risposto"
+  },
+  "streamingWords": {
+    "w1": "Pensando",
+    "w2": "Analizzando",
+    "w3": "Contemplando",
+    "w4": "Riflettendo",
+    "w5": "Rimuginando",
+    "w6": "Armeggiando",
+    "w7": "Macerando",
+    "w8": "Ragionando",
+    "w9": "Soppesando",
+    "w10": "Setacciando",
+    "w11": "Collegando",
+    "w12": "Componendo",
+    "w13": "Aggiustando",
+    "w14": "Rifinendo",
+    "w15": "Sobbollendo"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mera sta raccogliendo quello che sa già di te.",
+      "Stiamo preparando la tua domanda."
+    ],
+    "queued": [
+      "La tua richiesta è in coda.",
+      "Ci sono un paio di cose in corso. La tua è la prossima."
+    ],
+    "securing": [
+      "Il tuo messaggio viene chiuso in modo che solo il modello possa aprirlo.",
+      "Le tue parole vengono cifrate prima di lasciare il telefono."
+    ],
+    "attesting": [
+      "Stiamo preparando un canale privato verso il modello.",
+      "Recuperiamo la chiave che tiene tutto questo tra te e Mera.",
+      "Una conversazione privata richiede un momento per essere avviata."
+    ],
+    "thinking": [
+      "Mera sta leggendo quello che hai scritto.",
+      "Stiamo cercando il modo migliore di rispondere."
+    ],
+    "retrying": [
+      "Ci sta mettendo più del solito. Mera sta provando un'altra strada.",
+      "Ci stiamo ancora lavorando. Grazie per l'attesa."
+    ],
+    "deviceLoading": [
+      "Stiamo avviando il modello sul tuo telefono.",
+      "La prima risposta richiede un po' più di tempo mentre si carica."
+    ],
+    "devicePreparing": [
+      "Mera sta raccogliendo quello che sa già di te.",
+      "Stiamo preparando il telefono a rispondere."
+    ],
+    "deviceThinking": [
+      "Mera ci sta pensando sul tuo telefono.",
+      "Tutto avviene sul tuo dispositivo, quindi non viene inviato nulla da nessuna parte."
+    ]
   }
 }

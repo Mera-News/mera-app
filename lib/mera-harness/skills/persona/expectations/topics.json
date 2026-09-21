@@ -1,0 +1,536 @@
+{
+  "version": 1,
+  "note": "Scored by the eval runner. Fact-dependent checks only: the shared rules (word count, banned shapes, punctuation, acronyms, near-duplicates via the similarity module) live in the runner and are not restated per case. Three cases per topic skill, differing in rung depth and country, so ladder and fieldGeneric coverage rests on more than one shape.",
+  "cases": [
+    {
+      "id": "residence-full",
+      "factMatches": [
+        "lives in",
+        "barcelona"
+      ],
+      "countRange": [
+        5,
+        12
+      ],
+      "ladder": {
+        "neighbourhood": [
+          "gracia",
+          "gr\u00e0cia"
+        ],
+        "city": [
+          "barcelona"
+        ],
+        "province": [
+          "catalonia",
+          "catalan"
+        ],
+        "country": [
+          "spain",
+          "spanish"
+        ],
+        "bloc": [
+          "eu ",
+          "european union",
+          "schengen"
+        ]
+      },
+      "fieldGeneric": null,
+      "crossProducts": [
+        {
+          "a": [
+            "barcelona",
+            "catalonia"
+          ],
+          "b": [
+            "nursing",
+            "nurse",
+            "school"
+          ]
+        }
+      ],
+      "mustNotContain": [
+        "portugal",
+        "france",
+        "andorra"
+      ]
+    },
+    {
+      "id": "residence-village",
+      "factMatches": [
+        "lives in",
+        "ballyvaughan"
+      ],
+      "countRange": [
+        3,
+        8
+      ],
+      "ladder": {
+        "village": [
+          "ballyvaughan"
+        ],
+        "county": [
+          "clare",
+          "burren"
+        ],
+        "country": [
+          "ireland",
+          "irish"
+        ],
+        "bloc": [
+          "eu ",
+          "european union"
+        ]
+      },
+      "fieldGeneric": null,
+      "crossProducts": [],
+      "mustNotContain": [
+        "dublin",
+        "united kingdom",
+        "northern ireland"
+      ]
+    },
+    {
+      "id": "residence-capital",
+      "factMatches": [
+        "lives in",
+        "reykjavik"
+      ],
+      "countRange": [
+        3,
+        9
+      ],
+      "ladder": {
+        "city": [
+          "reykjavik",
+          "reykjav\u00edk"
+        ],
+        "country": [
+          "iceland",
+          "icelandic"
+        ],
+        "bloc": [
+          "nordic",
+          "eea",
+          "schengen"
+        ]
+      },
+      "fieldGeneric": null,
+      "crossProducts": [],
+      "mustNotContain": [
+        "denmark",
+        "norway",
+        "eu regulation"
+      ]
+    },
+    {
+      "id": "origin-only",
+      "factMatches": [
+        "originally from",
+        "eritrea"
+      ],
+      "countRange": [
+        3,
+        10
+      ],
+      "ladder": {
+        "origin": [
+          "eritrea",
+          "eritrean"
+        ],
+        "diaspora": [
+          "diaspora",
+          "consular",
+          "passport",
+          "citizenship",
+          "remittance",
+          "visa"
+        ]
+      },
+      "fieldGeneric": null,
+      "crossProducts": [],
+      "mustNotContain": [
+        "eritrea elections",
+        "eritrea economy",
+        "eritrea weather",
+        "eritrea news",
+        "eritrea visa services",
+        "immigration lawyer"
+      ]
+    },
+    {
+      "id": "origin-composed",
+      "factMatches": [
+        "expat from",
+        "philippines",
+        "dublin"
+      ],
+      "countRange": [
+        4,
+        10
+      ],
+      "ladder": {
+        "origin": [
+          "philippines",
+          "filipino"
+        ],
+        "host": [
+          "ireland",
+          "irish",
+          "dublin"
+        ],
+        "diaspora": [
+          "consular",
+          "passport",
+          "citizenship",
+          "remittance",
+          "treaty",
+          "voting",
+          "visa"
+        ]
+      },
+      "fieldGeneric": null,
+      "crossProducts": [
+        {
+          "a": [
+            "philippines",
+            "filipino"
+          ],
+          "b": [
+            "ireland",
+            "irish",
+            "dublin"
+          ]
+        }
+      ],
+      "mustNotContain": [
+        "philippines elections",
+        "philippines economy",
+        "philippines typhoon",
+        "philippines news",
+        "visa services",
+        "notary"
+      ]
+    },
+    {
+      "id": "origin-eu-internal",
+      "factMatches": [
+        "originally from",
+        "poland",
+        "rotterdam"
+      ],
+      "countRange": [
+        2,
+        6
+      ],
+      "ladder": {
+        "origin": [
+          "poland",
+          "polish"
+        ],
+        "host": [
+          "netherlands",
+          "dutch",
+          "rotterdam"
+        ]
+      },
+      "fieldGeneric": null,
+      "crossProducts": [
+        {
+          "a": [
+            "poland",
+            "polish"
+          ],
+          "b": [
+            "netherlands",
+            "dutch"
+          ]
+        }
+      ],
+      "mustNotContain": [
+        "poland visa rules",
+        "poland entry rules",
+        "poland elections",
+        "poland economy",
+        "poland news"
+      ]
+    },
+    {
+      "id": "profession-software",
+      "factMatches": [
+        "engineer",
+        "software"
+      ],
+      "countRange": [
+        4,
+        10
+      ],
+      "ladder": {},
+      "fieldGeneric": [
+        "ai ",
+        "cyber security",
+        "cybersecurity",
+        "developer tooling",
+        "open weights",
+        "data centre",
+        "chip"
+      ],
+      "crossProducts": [],
+      "mustNotContain": [
+        "industry trends",
+        "career development",
+        "software awards",
+        "hackathons"
+      ]
+    },
+    {
+      "id": "profession-nurse",
+      "factMatches": [
+        "nurse"
+      ],
+      "countRange": [
+        4,
+        10
+      ],
+      "ladder": {},
+      "fieldGeneric": [
+        "staffing",
+        "workforce",
+        "licensing",
+        "prescribing",
+        "drug approval",
+        "patient safety",
+        "hospital"
+      ],
+      "crossProducts": [],
+      "mustNotContain": [
+        "nursing industry trends",
+        "nursing awards",
+        "nursing career development",
+        "nursing agencies"
+      ]
+    },
+    {
+      "id": "profession-lawyer",
+      "factMatches": [
+        "solicitor"
+      ],
+      "countRange": [
+        4,
+        10
+      ],
+      "ladder": {},
+      "fieldGeneric": [
+        "ruling",
+        "rulings",
+        "court",
+        "regulation",
+        "legal aid funding",
+        "disclosure",
+        "sanctions"
+      ],
+      "crossProducts": [],
+      "mustNotContain": [
+        "legal career development",
+        "law firm awards",
+        "legal industry trends",
+        "find a solicitor"
+      ]
+    },
+    {
+      "id": "family-relative-city",
+      "factMatches": [
+        "parents live in",
+        "bhopal"
+      ],
+      "countRange": [
+        3,
+        8
+      ],
+      "ladder": {
+        "exact": [
+          "bhopal"
+        ]
+      },
+      "fieldGeneric": null,
+      "crossProducts": [],
+      "mustNotContain": [
+        "madhya pradesh",
+        "india news",
+        "india elections",
+        "india monsoon",
+        "asia",
+        "elder care services",
+        "care agencies"
+      ]
+    },
+    {
+      "id": "family-relative-village",
+      "factMatches": [
+        "parents",
+        "porto santo"
+      ],
+      "countRange": [
+        2,
+        8
+      ],
+      "ladder": {
+        "exact": [
+          "porto santo",
+          "madeira",
+          "funchal"
+        ]
+      },
+      "fieldGeneric": null,
+      "crossProducts": [],
+      "mustNotContain": [
+        "portugal news",
+        "portugal elections",
+        "lisbon",
+        "european union"
+      ]
+    },
+    {
+      "id": "family-life-event",
+      "factMatches": [
+        "first child"
+      ],
+      "countRange": [
+        2,
+        8
+      ],
+      "ladder": {},
+      "fieldGeneric": null,
+      "crossProducts": [],
+      "mustNotContain": [
+        "childcare services",
+        "nanny",
+        "creche near",
+        "baby products",
+        "childcare help",
+        "family lawyer"
+      ]
+    },
+    {
+      "id": "interest-chess",
+      "factMatches": [
+        "chess"
+      ],
+      "countRange": [
+        8,
+        10
+      ],
+      "ladder": {},
+      "fieldGeneric": [
+        "world championship",
+        "candidates",
+        "carlsen",
+        "chess.com",
+        "lichess",
+        "cheating",
+        "engine",
+        "schools"
+      ],
+      "crossProducts": [
+        {
+          "a": [
+            "chess"
+          ],
+          "b": [
+            "netherlands",
+            "dutch",
+            "amsterdam",
+            "wijk aan zee",
+            "tata steel"
+          ]
+        }
+      ],
+      "mustNotContain": [
+        "chess news",
+        "chess updates",
+        "chess community",
+        "chess industry trends",
+        "learn chess"
+      ]
+    },
+    {
+      "id": "interest-genre",
+      "factMatches": [
+        "drum and bass"
+      ],
+      "countRange": [
+        8,
+        10
+      ],
+      "ladder": {},
+      "fieldGeneric": [
+        "label",
+        "festival lineup",
+        "royalt",
+        "streaming",
+        "producer",
+        "club night",
+        "radio"
+      ],
+      "crossProducts": [
+        {
+          "a": [
+            "drum and bass",
+            "bass music"
+          ],
+          "b": [
+            "netherlands",
+            "dutch",
+            "amsterdam",
+            "rotterdam"
+          ]
+        }
+      ],
+      "mustNotContain": [
+        "drum and bass news",
+        "music news",
+        "genre updates",
+        "music festivals"
+      ]
+    },
+    {
+      "id": "interest-team",
+      "factMatches": [
+        "supports",
+        "feyenoord"
+      ],
+      "countRange": [
+        8,
+        10
+      ],
+      "ladder": {},
+      "fieldGeneric": [
+        "transfer",
+        "eredivisie",
+        "manager",
+        "injur",
+        "uefa",
+        "ticket",
+        "stadium",
+        "broadcast"
+      ],
+      "crossProducts": [
+        {
+          "a": [
+            "feyenoord"
+          ],
+          "b": [
+            "rotterdam",
+            "netherlands",
+            "dutch"
+          ]
+        }
+      ],
+      "mustNotContain": [
+        "feyenoord news",
+        "football news",
+        "team updates",
+        "football awards"
+      ]
+    }
+  ]
+}

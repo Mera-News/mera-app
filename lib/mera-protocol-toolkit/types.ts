@@ -13,6 +13,18 @@ export type Fact = {
   questionnaireLevel?: number; // Questionnaire level number (1-10)
   questionnaireLevelCategory?: string; // e.g., "Core", "Professional"
   questionnaireAttribute?: string; // e.g., "location: neighborhood/area, city, and country"
+  /**
+   * Where the most recent topic-generation run for this fact got to.
+   *
+   * Absent or null means generation was never asked for: render it exactly
+   * like 'done', never a spinner and never an error. It reports the RUN — the
+   * `topics` table owns what actually exists — so it must NEVER gate whether
+   * topics render. The named union is `FactTopicsStatus`, exported from
+   * lib/database/models/Fact; it is written inline here so this file keeps
+   * importing nothing from lib/database.
+   */
+  topicsStatus?: 'pending' | 'done' | 'error' | null;
+  topicsUpdatedAt?: string | null; // ISO timestamp
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
 };

@@ -3,6 +3,7 @@
 //   npx tsx --tsconfig harness-local/tsconfig.json \
 //     harness-local/scripts/rater-export.ts <runDir> \
 //       [--merge <runDir2>] [--seed 12345] [--repeat 0] [--call-type reason]
+//       [--agent-sample reply|ack]
 //       [--duplicate 8] [--sample 80] [--label-by variant] [--include <rowId>,<rowId>]
 //
 // --repeat selects ONE repeat, which is what a floor run wants: the repeats are
@@ -128,6 +129,24 @@ function main(): number {
     includeIdx === -1 ? [] : (argv[includeIdx + 1] ?? '').split(',').map((x) => x.trim()).filter(Boolean),
   );
 
+  // AGENT SAMPLES. A multi-leg turn has no call type that means "the reply":
+  // the core never emits a `reply` role and the prose rides the LAST leg, so
+  // selecting by call type here either picks every tool leg or, if a dead
+  // `agent-reply` type were kept, nothing at all. These two pick the rows a
+  // rater should actually see.
+  //
+  //   reply - the LAST leg of each turn that carries prose. That is what the
+  //           user reads as the answer.
+  //   ack   - leg 0's prose, the short acknowledgement written before any tool
+  //           call. Judged SEPARATELY because it is a different job under a
+  //           different rule (under 200 characters, before any tool), and
+  //           pooling it with the reply would average two rubrics.
+  const agentSampleIdx = argv.indexOf('--agent-sample');
+  const agentSample = agentSampleIdx === -1 ? null : argv[agentSampleIdx + 1];
+  if (agentSample !== null && agentSample !== 'reply' && agentSample !== 'ack') {
+    throw new Error(`harness-local: --agent-sample must be 'reply' or 'ack' (got ${String(agentSample)}).`);
+  }
+
   const callTypeIdx = argv.indexOf('--call-type');
   const callType = callTypeIdx === -1 ? null : argv[callTypeIdx + 1];
   const dupIdx = argv.indexOf('--duplicate');
@@ -140,6 +159,31 @@ function main(): number {
     repeat === null
       ? all
       : all.filter((r) => r.repeat === repeat || r.dupOf !== null || forced.has(r.rowId));
+  if (agentSample) {
+    const before = rows.length;
+    const hasProse = (r: RunRow): boolean => r.rawOutput.trim().length > 0;
+    if (agentSample === 'ack') {
+      rows = rows.filter((r) => (r.legIndex === 0 && hasProse(r)) || forced.has(r.rowId));
+    } else {
+      // Last prose-carrying leg per (run, arm, script, repeat, turn).
+      const best = new Map<string, RunRow>();
+      for (const r of rows) {
+        if (!hasProse(r)) continue;
+        const key = [runOf.get(r.rowId), r.arm, r.cohort, r.repeat, r.turnIndex].join('|');
+        const cur = best.get(key);
+        if (!cur || (r.legIndex ?? -1) > (cur.legIndex ?? -1)) best.set(key, r);
+      }
+      const keep = new Set([...best.values()].map((r) => r.rowId));
+      rows = rows.filter((r) => keep.has(r.rowId) || forced.has(r.rowId));
+    }
+    if (rows.length === 0) {
+      throw new Error(
+        `harness-local: --agent-sample ${agentSample} selected no rows from ${before}. ` +
+          'A rater batch that is empty is not a result; check the run carries prose at all.',
+      );
+    }
+  }
+
   if (callType) {
     const before = rows.length;
     rows = rows.filter((r) => r.callType === callType || forced.has(r.rowId));

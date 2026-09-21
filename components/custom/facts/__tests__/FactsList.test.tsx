@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 // css-interop JSX shim (reads Platform.OS at module load) — same as other tests.
@@ -32,11 +32,17 @@ jest.mock('../FactAccordion', () => {
     const { View, Text, Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ fact, onDeletePress, onToggle }: any) => (
+        default: ({ fact, onDeletePress, onToggle, onDeleteTopic, onAddTopic, onGenerateMore }: any) => (
             <View>
                 <Text>{fact.statement}</Text>
                 <Pressable accessibilityLabel={`delete-${fact.id}`} onPress={() => onDeletePress(fact)} />
                 <Pressable accessibilityLabel={`toggle-${fact.id}`} onPress={() => onToggle(fact.id)} />
+                <Pressable
+                    accessibilityLabel={`delete-topic-${fact.id}`}
+                    onPress={() => onDeleteTopic(fact, { id: 'topic-1', text: 'Mountain trail running' })}
+                />
+                <Pressable accessibilityLabel={`add-topic-${fact.id}`} onPress={() => onAddTopic(fact)} />
+                <Pressable accessibilityLabel={`generate-more-${fact.id}`} onPress={() => onGenerateMore(fact)} />
             </View>
         ),
     };
@@ -55,8 +61,35 @@ jest.mock('../DeleteFactModal', () => {
             ) : null,
     };
 });
-jest.mock('../AddTopicModal', () => ({ __esModule: true, default: () => null }));
-jest.mock('../GenerateMoreModal', () => ({ __esModule: true, default: () => null }));
+jest.mock('../AddTopicModal', () => {
+    const { View, Pressable, TextInput } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ isOpen, value, onChangeText, onConfirm }: any) =>
+            isOpen ? (
+                <View>
+                    <TextInput
+                        testID="add-topic-input"
+                        value={value}
+                        onChangeText={onChangeText}
+                    />
+                    <Pressable accessibilityLabel="confirm-add-topic" onPress={onConfirm} />
+                </View>
+            ) : null,
+    };
+});
+jest.mock('../GenerateMoreModal', () => {
+    const { View, Pressable } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ isOpen, onConfirm }: any) =>
+            isOpen ? (
+                <View>
+                    <Pressable accessibilityLabel="confirm-generate-more" onPress={onConfirm} />
+                </View>
+            ) : null,
+    };
+});
 
 // --- services / stores ------------------------------------------------------
 // Settable so a test can reproduce the state this component has to survive:
@@ -66,13 +99,51 @@ jest.mock('@/lib/auth-client', () => ({
     authClient: { useSession: () => ({ data: mockSessionRef.current }) },
 }));
 
-const mockGetFacts = jest.fn();
+// observeFacts replaces the old one-shot getFacts() for the rendered array.
+// Settable per test, with `emitFacts` for a SECOND emission simulating what
+// the live subscription does on its own after a write (e.g. a delete making
+// the fact disappear) — no test manually "reloads" any more.
+type FactFixture = { id: string; statement: string };
+let mockFacts: FactFixture[] = [];
+let mockFactSubscribers: ((facts: FactFixture[]) => void)[] = [];
+function emitFacts(facts: FactFixture[]) {
+    mockFacts = facts;
+    for (const cb of mockFactSubscribers) cb(facts);
+}
+// getFacts() itself survives as a one-shot read for handleGenerateMoreConfirm's
+// on-device branch (building generation context) — unrelated to the list.
+const mockGetFacts = jest.fn().mockResolvedValue([]);
 const mockDeleteFact = jest.fn();
-const mockUpdateFact = jest.fn();
 jest.mock('@/lib/database/services/fact-service', () => ({
     getFacts: (...a: unknown[]) => mockGetFacts(...a),
     deleteFact: (...a: unknown[]) => mockDeleteFact(...a),
-    updateFact: (...a: unknown[]) => mockUpdateFact(...a),
+    observeFacts: () => ({
+        subscribe: (cb: (facts: FactFixture[]) => void) => {
+            mockFactSubscribers.push(cb);
+            cb(mockFacts);
+            return {
+                unsubscribe: () => {
+                    mockFactSubscribers = mockFactSubscribers.filter((s) => s !== cb);
+                },
+            };
+        },
+    }),
+}));
+
+// B3 + the write-side fix: FactsList now calls the real topic-table
+// primitives directly rather than rewriting fact.metadata. Mocked here for
+// the same reason as fact-service — importing the real module constructs
+// WatermelonDB's SQLite adapter, which has no native module under Jest.
+const mockDeleteTopicWithDecline = jest.fn().mockResolvedValue({ undoToken: 't1' });
+jest.mock('@/lib/database/services/topic-decline-service', () => ({
+    deleteTopicWithDecline: (...a: unknown[]) => mockDeleteTopicWithDecline(...a),
+}));
+
+const mockCreateTopics = jest.fn().mockResolvedValue([]);
+const mockSyncLlmTopicsForFact = jest.fn().mockResolvedValue([]);
+jest.mock('@/lib/database/services/topic-service', () => ({
+    createTopics: (...a: unknown[]) => mockCreateTopics(...a),
+    syncLlmTopicsForFact: (...a: unknown[]) => mockSyncLlmTopicsForFact(...a),
 }));
 
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
@@ -128,23 +199,25 @@ beforeEach(() => {
     jest.clearAllMocks();
     mockSessionRef.current = { user: { id: 'u1' } };
     mockLocalUserIdRef.current = 'u1';
+    mockFacts = [];
+    mockFactSubscribers = [];
+    mockGetFacts.mockResolvedValue([]);
 });
 
 describe('FactsList', () => {
     it('renders one row per fact', async () => {
-        mockGetFacts.mockResolvedValue([
+        mockFacts = [
             { id: 'f1', statement: 'Lives in Pune' },
             { id: 'f2', statement: 'Works at Acme' },
-        ]);
+        ];
         const { getByText } = render(<FactsList />);
         await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
         expect(getByText('Works at Acme')).toBeTruthy();
     });
 
-    it('delete flow: trash press opens DeleteFactModal, confirm calls deleteFact and reloads', async () => {
-        mockGetFacts.mockResolvedValueOnce([{ id: 'f1', statement: 'Lives in Pune' }]);
+    it('delete flow: trash press opens DeleteFactModal, confirm calls deleteFact; the row leaving is the live subscription\'s job, not a reload', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
         mockDeleteFact.mockResolvedValue(undefined);
-        mockGetFacts.mockResolvedValueOnce([]);
 
         const { getByText, getByLabelText, queryByText } = render(<FactsList />);
         await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
@@ -156,6 +229,13 @@ describe('FactsList', () => {
 
         await waitFor(() => expect(mockDeleteFact).toHaveBeenCalledWith('f1'));
         await waitFor(() => expect(queryByText('confirm-delete:f1')).toBeNull());
+
+        // The component issues no reload of its own any more — it's the real
+        // observeFacts subscription (mocked here) that would re-emit without
+        // the destroyed row. Simulating that emission is what makes the row
+        // actually disappear in this test.
+        act(() => emitFacts([]));
+        expect(queryByText('Lives in Pune')).toBeNull();
     });
 
     // Offline / keychain-locked wake / 401 blip. Facts are device-local and the
@@ -163,9 +243,8 @@ describe('FactsList', () => {
     // used to return silently because it was gated on `session.user.id`.
     it('deletes a fact while the server session cannot be fetched', async () => {
         mockSessionRef.current = null;
-        mockGetFacts.mockResolvedValueOnce([{ id: 'f1', statement: 'Lives in Pune' }]);
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
         mockDeleteFact.mockResolvedValue(undefined);
-        mockGetFacts.mockResolvedValueOnce([]);
 
         const { getByText, getByLabelText } = render(<FactsList />);
         await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
@@ -183,9 +262,8 @@ describe('FactsList', () => {
     it('deletes locally without a persona refresh when no identity exists at all', async () => {
         mockSessionRef.current = null;
         mockLocalUserIdRef.current = null;
-        mockGetFacts.mockResolvedValueOnce([{ id: 'f1', statement: 'Lives in Pune' }]);
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
         mockDeleteFact.mockResolvedValue(undefined);
-        mockGetFacts.mockResolvedValueOnce([]);
 
         const { getByText, getByLabelText } = render(<FactsList />);
         await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
@@ -198,13 +276,60 @@ describe('FactsList', () => {
     });
 
     it('reports loading/loaded facts back via onFactsChange', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Lives in Pune' }]);
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
         const onFactsChange = jest.fn();
         render(<FactsList onFactsChange={onFactsChange} />);
 
         expect(onFactsChange).toHaveBeenCalledWith(null);
         await waitFor(() =>
             expect(onFactsChange).toHaveBeenCalledWith([{ id: 'f1', statement: 'Lives in Pune' }]),
+        );
+    });
+
+    // B3's write side: these three now route onto the topics TABLE directly
+    // (deleteTopicWithDecline / createTopics / syncLlmTopicsForFact) rather
+    // than rewriting fact.metadata — see FactAccordion.test.tsx for the
+    // matching read-side (observeByFact) coverage.
+    it('deleteTopic routes through deleteTopicWithDecline with the topic ROW id, not a metadata rewrite', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        const { getByText, getByLabelText } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('delete-topic-f1'));
+
+        await waitFor(() => expect(mockDeleteTopicWithDecline).toHaveBeenCalledWith('topic-1'));
+        expect(mockFetchUserPersona).toHaveBeenCalledWith('u1', true);
+    });
+
+    it('addTopic routes through createTopics, not a metadata append', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        const { getByText, getByLabelText, getByTestId } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('add-topic-f1'));
+        fireEvent.changeText(getByTestId('add-topic-input'), 'AI regulation');
+        fireEvent.press(getByLabelText('confirm-add-topic'));
+
+        await waitFor(() =>
+            expect(mockCreateTopics).toHaveBeenCalledWith([{ factId: 'f1', text: 'AI regulation' }]),
+        );
+    });
+
+    it("generate-more's cloud branch routes through syncLlmTopicsForFact, converging with the on-device job handler's own call", async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        const {
+            generateTopicsForFact,
+        } = require('@/lib/mera-protocol/topic-generation-service') as { generateTopicsForFact: jest.Mock };
+        generateTopicsForFact.mockResolvedValue(['New topic']);
+
+        const { getByText, getByLabelText } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('generate-more-f1'));
+        fireEvent.press(getByLabelText('confirm-generate-more'));
+
+        await waitFor(() =>
+            expect(mockSyncLlmTopicsForFact).toHaveBeenCalledWith('f1', ['New topic']),
         );
     });
 });

@@ -70,7 +70,7 @@
     "tryAgain": "Try again",
     "learnAboutMera": "Learn about Mera",
     "startReading": "Start reading",
-    "alreadyHaveAccount": "Already have an account? Sign in",
+    "alreadyHaveAccount": "Sign in with email",
     "chooseLanguageTitle": "Choose your language",
     "chooseLanguageHint": "You can change this anytime in Settings.",
     "continue": "Continue",
@@ -1042,7 +1042,9 @@
     "gotItPromo": "Awesome! 🎉",
     "starterPlan": "Starter Plan",
     "individualPlan": "Individual Plan",
-    "professionalPlan": "Professional Plan"
+    "professionalPlan": "Professional Plan",
+    "retryTopicGeneration": "Retry",
+    "topicGenFailedGeneric": "Couldn't generate topics for this."
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",
@@ -1463,7 +1465,15 @@
     "addAll": "Add all ({{count}})",
     "skipAll": "Skip all",
     "addAllA11y": "Add all {{count}} suggestions",
-    "skipAllA11y": "Skip all {{count}} suggestions"
+    "skipAllA11y": "Skip all {{count}} suggestions",
+    "titleReplace": "Replace a fact you already have?",
+    "replace": "Replace",
+    "replacesLabel": "Replaces",
+    "replacesTopics_one": "and its 1 topic",
+    "replacesTopics_other": "and its {{count}} topics",
+    "replacesNoUndo": "The old fact and its topics are removed for good. You can't undo this.",
+    "replacesLoading": "Checking what this replaces",
+    "replacesUnavailable": "Mera can't show what this would remove right now. Try again in a moment."
   },
   "conflict": {
     "title": "Possible conflict",
@@ -1689,7 +1699,10 @@
     "screenSubtitle": "What Mera knows about you",
     "influence": "Influence",
     "moreInfluence": "More influence",
-    "lessInfluence": "Less influence"
+    "lessInfluence": "Less influence",
+    "declinedTopicsTitle": "Topics you removed",
+    "allowAgain": "Allow this again",
+    "topicRemovalConsequence": "Removed topics won't be suggested again unless you allow them back in Topics you removed."
   },
   "publicationPrefs": {
     "title": "Source preferences",
@@ -2611,6 +2624,117 @@
     "loading": "Working out your numbers"
   },
   "chatTopics": {
-    "none": "Saved. No topics to add right now."
+    "none": "Saved. No topics to add right now.",
+    "removed": "Removed",
+    "accordionTitle": "Topics for:",
+    "finding": "Finding topics",
+    "findMore": "Find more topics",
+    "findingMore": "Finding more",
+    "goneTombstone": "This fact was removed, so its topics are gone too.",
+    "expandA11y": "Show topics",
+    "collapseA11y": "Hide topics",
+    "accordionTitlePending": "We'll find topics for:",
+    "pendingA11y": "Topics are being found",
+    "readyA11y": "Topics ready",
+    "failedA11y": "Topics could not be found"
+  },
+  "agentSteps": {
+    "legStart": "Thinking about what you said",
+    "loadSkill": "Checking how to handle {{topic}}",
+    "loadSkillGeneric": "Checking how to handle this",
+    "findSimilarFacts": "Looking for things you've already told me",
+    "lookupPlace": "Checking the area: {{query}}",
+    "writeUp": "Writing it up for you to check",
+    "removing": "Removing what you asked me to remove",
+    "asking": "Putting a question to you",
+    "working": "Working on it",
+    "slow": "Still working, slow connection",
+    "legCapSentence": "That took more steps than Mera can do at once. Ask again to carry on.",
+    "interrupted": "This was interrupted. Ask again to carry on.",
+    "summaryDone": "Done",
+    "summaryFailed": "Something didn't work",
+    "statePending": "in progress",
+    "stateDone": "done",
+    "stateError": "failed",
+    "consequence": {
+      "generic": "That step didn't finish",
+      "interrupted": "This didn't finish",
+      "lookupPlace": "Couldn't check that area, so Mera used what it already knew",
+      "findSimilarFacts": "Couldn't check what you'd already told me, so there may be a repeat",
+      "loadSkill": "Couldn't load its guidance, so Mera used its general approach",
+      "writeUp": "Couldn't write that up, so nothing was added",
+      "removing": "Couldn't remove that, so it's still there"
+    },
+    "noRouteSentence": "Mera couldn't tell what that was about. Try saying it another way.",
+    "noProposalSentence": "Mera didn't find anything to add from that.",
+    "unknownToolSentence": "Something went wrong on Mera's side. Ask again to carry on."
+  },
+  "skillPhrase": {
+    "residence": "where you live",
+    "work": "your work",
+    "interests": "your interests",
+    "origin": "where you're from",
+    "family": "your family",
+    "newFact": "a new fact",
+    "topics": "your topics"
+  },
+  "askChoice": {
+    "answeredA11y": "already answered"
+  },
+  "streamingWords": {
+    "w1": "Thinking",
+    "w2": "Analyzing",
+    "w3": "Contemplating",
+    "w4": "Pondering",
+    "w5": "Mulling",
+    "w6": "Noodling",
+    "w7": "Percolating",
+    "w8": "Cogitating",
+    "w9": "Weighing",
+    "w10": "Sifting",
+    "w11": "Connecting",
+    "w12": "Composing",
+    "w13": "Finagling",
+    "w14": "Tinkering",
+    "w15": "Brewing"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Gathering what Mera already knows about you.",
+      "Putting your question together."
+    ],
+    "queued": [
+      "Lining up your request.",
+      "A couple of things are running at once. Yours is next."
+    ],
+    "securing": [
+      "Locking your message so only the model can open it.",
+      "Your words are encrypted before they leave your phone."
+    ],
+    "attesting": [
+      "Setting up a private channel to the model.",
+      "Getting the key that keeps this between you and Mera.",
+      "A private conversation takes a moment to set up."
+    ],
+    "thinking": [
+      "Mera is reading what you said.",
+      "Working out the best way to answer."
+    ],
+    "retrying": [
+      "This is taking longer than usual. Mera is trying another route.",
+      "Still going. Thanks for waiting."
+    ],
+    "deviceLoading": [
+      "Waking up the model on your phone.",
+      "The first answer takes a little longer while it loads."
+    ],
+    "devicePreparing": [
+      "Gathering what Mera already knows about you.",
+      "Getting your phone ready to answer."
+    ],
+    "deviceThinking": [
+      "Thinking it through on your phone.",
+      "This runs on your device, so nothing is being sent anywhere."
+    ]
   }
 }

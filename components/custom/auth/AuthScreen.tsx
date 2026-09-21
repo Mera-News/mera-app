@@ -543,6 +543,14 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                                 </Text>
                             </HStack>
                         </Pressable>
+                        {/* The key name is historical: this is NOT an
+                            existing-user-only path. A new user whose device
+                            cannot attest (non-GMS Android, simulator) reaches
+                            email OTP through here and has an account MINTED,
+                            so the label no longer asks whether they have one.
+                            It is worded to echo the failure sentence directly
+                            above it in every locale, which is where each
+                            translation was taken from. */}
                         <Pressable
                             testID="auth-use-email-failure"
                             onPress={onUseEmail}

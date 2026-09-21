@@ -24,6 +24,11 @@ export const BACKUP_TABLES: readonly string[] = [
   'user_personas',
   // `topics.fact_id` points at facts, so facts come first.
   'topics',
+  // Topics the user explicitly declined. A preference, not a cache — no server
+  // row exists to re-derive it from, so losing it on a new phone means the
+  // agent re-proposes every interest the user already rejected. After `facts`,
+  // which `source_fact_id` points at.
+  'declined_topics',
   'locations',
   'persona_suppressions',
   'persona_summary_strings',

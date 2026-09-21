@@ -186,6 +186,10 @@ export async function handleSaveExtractedFacts(
       groupId: factChoiceGroupId(index, g.options),
       options: g.options,
       questionnaireAttribute: g.questionnaire?.attribute ?? null,
+      // On the SPINE, so deriveThreadItems reads one structured field rather
+      // than re-parsing the raw tool arguments. Carried only -- whether it is
+      // HONOURED is decided at commit time against a confirmed choice.
+      ...(g.replaces ? { replaces: g.replaces } : {}),
     })),
   };
 }
@@ -222,8 +226,16 @@ export function isTopicGenerationInFlight(factId: string): boolean {
  * sequential llama.rn access. Fire-and-forget — errors are logged, never
  * thrown. Shared by chat fact-saving and the proposal executor.
  */
+export interface TopicGenEntry {
+  id: string;
+  statement: string;
+  /** The topic guideline the CHAT TURN chose for this fact, e.g.
+   *  `topics/residence`. Absent keeps the shipped prompt. */
+  skillId?: string;
+}
+
 export function triggerTopicGeneration(
-  savedFactEntries: Array<{ id: string; statement: string }>,
+  savedFactEntries: TopicGenEntry[],
 ): void {
   void startTopicGeneration(savedFactEntries);
 }
@@ -234,16 +246,47 @@ export function triggerTopicGeneration(
  * disabled for the real duration instead of guessing. Never rejects.
  */
 export async function startTopicGeneration(
-  savedFactEntries: Array<{ id: string; statement: string }>,
+  savedFactEntries: TopicGenEntry[],
 ): Promise<void> {
   if (savedFactEntries.length === 0) return;
 
   const useCloud =
     useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud;
 
+  // A fact whose kind the chat turn chose runs the SKILL-GUIDED path, and that
+  // path is queued rather than inline.
+  const skillGuided = savedFactEntries.filter((e) => useCloud && e.skillId);
+  const shipped = savedFactEntries.filter((e) => !(useCloud && e.skillId));
+
+  // ONE JOB PER FACT, on the PERSISTED queue. The cloud path used to make a
+  // single in-memory batch call inside the chat turn, so a generation started
+  // on an accept died with the app and left nothing to resume; a queued job
+  // survives, and InferenceQueue.start() already recovers crashed ones.
+  for (const entry of skillGuided) {
+    hasPendingJob('topic_gen', 'factId', entry.id)
+      .then((exists) => {
+        if (exists) return;
+        return enqueueJob('topic_gen', {
+          factId: entry.id,
+          factStatement: entry.statement,
+          useCloud: true,
+          skillId: entry.skillId,
+          // Deliberately NO excludeTopics: the handler reads the live lists at
+          // RUN time. A snapshot here is durable and stale by the time a
+          // sibling job has run.
+        }).then(() => inferenceQueue.notify());
+      })
+      .catch((err: unknown) =>
+        logger.warn('Failed to enqueue skill-guided topic gen', { error: String(err) }),
+      );
+  }
+
+  if (shipped.length === 0) return;
+
   if (useCloud) {
-    // Cloud path: single batch call for all facts, minus any already running.
-    const entries = claimTopicGen(savedFactEntries);
+    // Cloud path, shipped prompt: single batch call for all facts, minus any
+    // already running.
+    const entries = claimTopicGen(shipped);
     if (entries.length === 0) return;
     try {
       await batchGenerateTopics(entries);
@@ -259,7 +302,7 @@ export async function startTopicGeneration(
     }
   } else {
     // Local path: enqueue individual jobs for sequential llama.rn access
-    for (const entry of savedFactEntries) {
+    for (const entry of shipped) {
       hasPendingJob('topic_gen', 'factId', entry.id).then((exists) => {
         if (!exists) {
           enqueueJob('topic_gen', {
@@ -323,6 +366,7 @@ async function clearTopicGenError(factId: string): Promise<void> {
 export async function retryTopicGeneration(
   factId: string,
   factStatement: string,
+  skillId?: string,
 ): Promise<void> {
   if (inFlightCloudTopicGen.has(factId)) return; // fast path: already running
   try {
@@ -333,7 +377,7 @@ export async function retryTopicGeneration(
       error: String(err),
     });
   }
-  await startTopicGeneration([{ id: factId, statement: factStatement }]);
+  await startTopicGeneration([{ id: factId, statement: factStatement, skillId }]);
 }
 
 /**
@@ -432,31 +476,81 @@ export async function handleDeleteUserFacts(
 
   // Resolve all facts to delete (by ID, attribute key, or statement text)
   const allFacts = await getFacts();
-  const factsByAttrMap = new Map(
-    allFacts
-      .filter(f => f.questionnaireAttribute)
-      .map(f => [f.questionnaireAttribute!.toLowerCase().trim(), f]),
-  );
   const factsByIdMap = new Map(allFacts.map(f => [f.id, f]));
-  const factsByTextMap = new Map(allFacts.map(f => [f.statement.toLowerCase().trim(), f]));
+
+  /**
+   * ALL facts sharing a key, not the last one to claim it.
+   *
+   * This used to be `new Map(allFacts.map(...))`, which is LAST-WINS, and the
+   * attribute lookup ran BEFORE the id lookup. A persona holding two
+   * location-ish facts therefore had one of them silently unreachable, and a
+   * delete naming that attribute removed whichever sat last in `getFacts()`
+   * order -- newest-first, so the OLDEST match. That is how "Expat from India
+   * living in Nieuw-West, Amsterdam" vanished while the user was replacing
+   * their residence: the origin fact was the oldest location-ish match and
+   * absorbed a delete aimed at the residence.
+   */
+  const groupBy = (key: (f: (typeof allFacts)[number]) => string | null) => {
+    const m = new Map<string, typeof allFacts>();
+    for (const f of allFacts) {
+      const k = key(f);
+      if (!k) continue;
+      const bucket = m.get(k);
+      if (bucket) bucket.push(f);
+      else m.set(k, [f]);
+    }
+    return m;
+  };
+  const byAttr = groupBy((f) => f.questionnaireAttribute?.toLowerCase().trim() ?? null);
+  const byText = groupBy((f) => f.statement.toLowerCase().trim());
 
   const factsToDelete: typeof allFacts = [];
   const seenIds = new Set<string>();
+  const ambiguous: { input: string; candidates: { id: string; statement: string }[] }[] = [];
+
   for (const rawId of factIds) {
     const trimmed = rawId.trim().replace(/^\[|\]$/g, '');
-    const fact =
-      factsByAttrMap.get(trimmed.toLowerCase())
-      ?? factsByIdMap.get(trimmed)
-      ?? factsByTextMap.get(trimmed.toLowerCase());
 
-    if (!fact) {
+    // ID FIRST. An id names exactly one fact; an attribute or a statement may
+    // name several, and resolving those before the unambiguous handle is what
+    // let a precise request be answered imprecisely.
+    const byId = factsByIdMap.get(trimmed);
+    const matches = byId
+      ? [byId]
+      : byAttr.get(trimmed.toLowerCase()) ?? byText.get(trimmed.toLowerCase()) ?? [];
+
+    if (matches.length === 0) {
       logger.warn('[deleteUserFacts] Fact not found', { input: trimmed });
       continue;
     }
+    if (matches.length > 1) {
+      // REFUSED, not guessed. Deleting a fact is irreversible and cascades to
+      // its topics, so an ambiguous handle is answered with the candidates and
+      // their ids rather than with a coin flip.
+      ambiguous.push({
+        input: trimmed,
+        candidates: matches.map((f) => ({ id: f.id, statement: f.statement })),
+      });
+      logger.warn('[deleteUserFacts] ambiguous handle, refusing', {
+        input: trimmed,
+        count: matches.length,
+      });
+      continue;
+    }
+    const fact = matches[0];
     if (!seenIds.has(fact.id)) {
       seenIds.add(fact.id);
       factsToDelete.push(fact);
     }
+  }
+
+  if (ambiguous.length > 0 && factsToDelete.length === 0) {
+    return {
+      error: 'ambiguous fact reference, pass an exact fact id',
+      ambiguous,
+      deletedCount: 0,
+      deletedStatements: [],
+    };
   }
 
   if (factsToDelete.length === 0) {

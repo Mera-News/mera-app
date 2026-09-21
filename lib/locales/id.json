@@ -70,7 +70,7 @@
     "tryAgain": "Coba lagi",
     "learnAboutMera": "Pelajari Mera",
     "startReading": "Mulai membaca",
-    "alreadyHaveAccount": "Sudah punya akun? Masuk",
+    "alreadyHaveAccount": "Masuk dengan email",
     "chooseLanguageTitle": "Pilih bahasa Anda",
     "chooseLanguageHint": "Anda dapat mengubahnya kapan saja di Pengaturan.",
     "continue": "Lanjutkan",
@@ -644,7 +644,9 @@
     "gotItPromo": "Keren! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Penawaran peluncuran 🎊",
-    "resetsOn": "Direset"
+    "resetsOn": "Direset",
+    "retryTopicGeneration": "Coba Lagi",
+    "topicGenFailedGeneric": "Tidak dapat membuat topik untuk ini."
   },
   "errors": {
     "somethingWentWrong": "Terjadi kesalahan",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Apa yang Mera ketahui tentang Anda",
     "influence": "Pengaruh",
     "moreInfluence": "Pengaruh lebih besar",
-    "lessInfluence": "Pengaruh lebih kecil"
+    "lessInfluence": "Pengaruh lebih kecil",
+    "declinedTopicsTitle": "Topik yang Anda hapus",
+    "allowAgain": "Izinkan lagi",
+    "topicRemovalConsequence": "Topik yang dihapus tidak akan disarankan lagi kecuali Anda mengizinkannya kembali di Topik yang Anda hapus."
   },
   "publicationPrefs": {
     "title": "Preferensi sumber",
@@ -2526,7 +2531,15 @@
     "addAll": "Tambahkan semua ({{count}})",
     "skipAll": "Lewati semua",
     "addAllA11y": "Tambahkan semua {{count}} saran",
-    "skipAllA11y": "Lewati semua {{count}} saran"
+    "skipAllA11y": "Lewati semua {{count}} saran",
+    "titleReplace": "Ganti informasi yang sudah ada?",
+    "replace": "Ganti",
+    "replacesLabel": "Mengganti",
+    "replacesTopics_one": "dan 1 topiknya",
+    "replacesTopics_other": "dan {{count}} topiknya",
+    "replacesNoUndo": "Informasi lama dan topiknya dihapus permanen. Ini tidak bisa dibatalkan.",
+    "replacesLoading": "Memeriksa apa yang akan diganti",
+    "replacesUnavailable": "Mera belum bisa menampilkan apa yang akan dihapus. Coba lagi sebentar."
   },
   "subscriptions": {
     "sectionTitle": "Langganan Anda",
@@ -2610,6 +2623,117 @@
     "loading": "Menghitung angka Anda"
   },
   "chatTopics": {
-    "none": "Tersimpan. Saat ini tidak ada topik untuk ditambahkan."
+    "none": "Tersimpan. Saat ini tidak ada topik untuk ditambahkan.",
+    "removed": "Dihapus",
+    "accordionTitle": "Topik untuk:",
+    "finding": "Mencari topik",
+    "findMore": "Cari topik lain",
+    "findingMore": "Mencari lagi",
+    "goneTombstone": "Informasi ini dihapus, jadi topiknya juga hilang.",
+    "expandA11y": "Tampilkan topik",
+    "collapseA11y": "Sembunyikan topik",
+    "accordionTitlePending": "Kami akan mencari topik untuk:",
+    "pendingA11y": "Topik sedang dicari",
+    "readyA11y": "Topik siap",
+    "failedA11y": "Topik tidak bisa ditemukan"
+  },
+  "agentSteps": {
+    "legStart": "Memikirkan apa yang kamu katakan",
+    "loadSkill": "Memeriksa cara menangani {{topic}}",
+    "loadSkillGeneric": "Memeriksa cara menangani ini",
+    "findSimilarFacts": "Mencari hal yang sudah kamu ceritakan",
+    "lookupPlace": "Memeriksa wilayah: {{query}}",
+    "writeUp": "Menuliskannya untuk kamu periksa",
+    "removing": "Menghapus yang kamu minta",
+    "asking": "Mengajukan pertanyaan untukmu",
+    "working": "Sedang dikerjakan",
+    "slow": "Masih berjalan, koneksi lambat",
+    "legCapSentence": "Itu butuh lebih banyak langkah daripada yang bisa Mera lakukan sekaligus. Tanya lagi untuk melanjutkan.",
+    "interrupted": "Ini terhenti. Tanya lagi untuk melanjutkan.",
+    "summaryDone": "Selesai",
+    "summaryFailed": "Ada yang tidak berhasil",
+    "statePending": "sedang berjalan",
+    "stateDone": "selesai",
+    "stateError": "gagal",
+    "consequence": {
+      "generic": "Langkah itu tidak selesai",
+      "interrupted": "Ini tidak selesai",
+      "lookupPlace": "Wilayah itu tidak bisa diperiksa, jadi Mera memakai yang sudah diketahui",
+      "findSimilarFacts": "Tidak bisa memeriksa yang sudah kamu ceritakan, jadi mungkin ada pengulangan",
+      "loadSkill": "Panduannya tidak bisa dimuat, jadi Mera memakai pendekatan umum",
+      "writeUp": "Ini tidak bisa dituliskan, jadi tidak ada yang ditambahkan",
+      "removing": "Ini tidak bisa dihapus, jadi masih ada"
+    },
+    "noRouteSentence": "Mera tidak bisa menangkap ini tentang apa. Coba katakan dengan cara lain.",
+    "noProposalSentence": "Mera tidak menemukan apa pun untuk ditambahkan dari ini.",
+    "unknownToolSentence": "Ada yang bermasalah di sisi Mera. Tanya lagi untuk melanjutkan."
+  },
+  "skillPhrase": {
+    "residence": "tempat tinggalmu",
+    "work": "pekerjaanmu",
+    "interests": "minatmu",
+    "origin": "asalmu",
+    "family": "keluargamu",
+    "newFact": "informasi baru",
+    "topics": "topikmu"
+  },
+  "askChoice": {
+    "answeredA11y": "sudah dijawab"
+  },
+  "streamingWords": {
+    "w1": "Berpikir",
+    "w2": "Menganalisis",
+    "w3": "Merenung",
+    "w4": "Menimbang",
+    "w5": "Mengunyah ide",
+    "w6": "Mengutak-atik",
+    "w7": "Mendiamkan dulu",
+    "w8": "Menalar",
+    "w9": "Membobot",
+    "w10": "Menyaring",
+    "w11": "Menghubungkan",
+    "w12": "Menyusun",
+    "w13": "Menyetel",
+    "w14": "Memoles",
+    "w15": "Meramu"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mengumpulkan apa yang sudah Mera ketahui tentang kamu.",
+      "Menyiapkan pertanyaanmu."
+    ],
+    "queued": [
+      "Mengantrekan permintaanmu.",
+      "Ada beberapa hal yang sedang berjalan. Punyamu berikutnya."
+    ],
+    "securing": [
+      "Mengunci pesanmu agar hanya model yang bisa membukanya.",
+      "Kata-katamu dienkripsi sebelum meninggalkan ponselmu."
+    ],
+    "attesting": [
+      "Menyiapkan jalur pribadi ke model.",
+      "Mengambil kunci yang menjaga ini tetap antara kamu dan Mera.",
+      "Percakapan pribadi butuh sesaat untuk disiapkan."
+    ],
+    "thinking": [
+      "Mera sedang membaca yang kamu tulis.",
+      "Mencari cara terbaik untuk menjawab."
+    ],
+    "retrying": [
+      "Ini lebih lama dari biasanya. Mera mencoba jalur lain.",
+      "Masih berjalan. Terima kasih sudah menunggu."
+    ],
+    "deviceLoading": [
+      "Membangunkan model di ponselmu.",
+      "Jawaban pertama butuh sedikit lebih lama selagi dimuat."
+    ],
+    "devicePreparing": [
+      "Mengumpulkan apa yang sudah Mera ketahui tentang kamu.",
+      "Menyiapkan ponselmu untuk menjawab."
+    ],
+    "deviceThinking": [
+      "Memikirkannya di ponselmu.",
+      "Ini berjalan di perangkatmu, jadi tidak ada yang dikirim ke mana pun."
+    ]
   }
 }

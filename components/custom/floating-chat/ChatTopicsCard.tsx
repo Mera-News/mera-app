@@ -12,52 +12,52 @@
 // of its life in a state ("finding topics", or a failed generation) where there
 // is nothing to act on at all.
 //
-// Removal routes through the SAME audited seam TopicPlanCard uses —
-// applyPersonaAction({ action_type: 'retire_topic' }) then revertChange for the
-// undo — so bulk and single behaviour cannot drift and the change log stays
-// honest.
+// Removal is a REAL DELETE with a short undo, not a retire. The chip X stages
+// the delete through topic-decline-service, which owns the window, the commit
+// and the decline row; this card owns only what is on screen. Two consequences
+// that are easy to get wrong:
+//
+//   - the row leaves `observeByFact` IMMEDIATELY on stage, so a card rendering
+//     straight off the observable would lose the chip the instant it is tapped
+//     and take the Undo with it. The chip is held in `pendingDelete` and
+//     re-inserted AT ITS OWN INDEX, so nothing reflows under the reader.
+//   - this card never owns the commit timer and never hardcodes the window.
+//     `UNDO_WINDOW_MS` is imported; the local timer only decides how long the
+//     Undo affordance is offered, and if it never fires the service still
+//     commits on its own clock, on app start and on foreground.
 
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
+import StatusIndicator from '@/components/custom/chat/StatusIndicator';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
-import { applyPersonaAction } from '@/lib/database/services/persona-action-executor';
-import { getFacts } from '@/lib/database/services/fact-service';
-import { revertChange } from '@/lib/database/services/persona-change-log-service';
-import { observeByFact, reactivate } from '@/lib/database/services/topic-service';
+import { observeTopicsStatus } from '@/lib/database/services/fact-service';
+import {
+  deleteTopicWithDecline,
+  undoPendingDelete,
+  UNDO_WINDOW_MS,
+} from '@/lib/database/services/topic-decline-service';
+import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
+import { observeByFact } from '@/lib/database/services/topic-service';
 import type TopicModel from '@/lib/database/models/Topic';
 import { hapticLight } from '@/lib/haptics';
-import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)';
 
 /**
- * How many topics the MERGED card shows across all its facts.
+ * How long a still-PENDING generation runs before the card offers a way out.
  *
- * A group ceiling, not a per-fact one: "Add all" over four facts would otherwise
- * stack twenty-odd chips into a chat bubble nobody reads. Filled ROUND-ROBIN so
- * every accepted fact is represented before any fact gets a second chip — taking
- * the first N in fact order would silently give the whole budget to fact one.
- *
- * Display only. Every generated topic is saved and active regardless; this
- * bounds what the card draws, never what the feed uses.
+ * This is NOT the old 60s timeout, which decided the card's state: it flipped a
+ * running generation to a terminal-looking one, which is exactly why "no rows
+ * yet" and "no rows ever" were indistinguishable. This decides nothing. The
+ * status stays `pending`, the spinner keeps spinning, and the only change is
+ * that a Try again appears beside it. Do not fold it back into a state machine.
  */
-export const MERGED_TOPIC_CEILING = 6;
-
-/**
- * How long a card waits for topics before it stops saying "finding" and offers
- * a retry.
- *
- * Generation is a cloud batch inside a live chat turn; the hedge plus the
- * model's own tail can legitimately take tens of seconds. This is well past
- * that, because the cost of being early (a retry button over a request that was
- * about to succeed) is worse than the cost of being late.
- */
-const GENERATING_TIMEOUT_MS = 60_000;
+export const OFFER_RETRY_AFTER_MS = 75_000;
 
 function cardEntering() {
   'worklet';
@@ -78,120 +78,133 @@ interface Chip {
   id: string;
   text: string;
   factId: string;
-  retired: boolean;
 }
 
 export interface ChatTopicsCardProps {
-  facts: { factId: string; factStatement: string }[];
-  merged: boolean;
+  factId: string;
+  factStatement: string;
 }
 
-/** Round-robin across facts, preserving each fact's own ranked order. */
-export function interleaveByFact(rows: Chip[], factOrder: string[], ceiling: number): Chip[] {
-  const byFact = new Map<string, Chip[]>();
-  for (const id of factOrder) byFact.set(id, []);
-  for (const row of rows) byFact.get(row.factId)?.push(row);
-
-  const out: Chip[] = [];
-  let depth = 0;
-  let added = true;
-  while (out.length < ceiling && added) {
-    added = false;
-    for (const id of factOrder) {
-      const bucket = byFact.get(id);
-      const row = bucket?.[depth];
-      if (!row) continue;
-      out.push(row);
-      added = true;
-      if (out.length >= ceiling) break;
-    }
-    depth += 1;
-  }
-  return out;
-}
-
-const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
+const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }) => {
   const { t } = useTranslation();
-  const factIds = useMemo(() => facts.map((f) => f.factId), [facts]);
-  const factIdKey = factIds.join(',');
 
   const [rows, setRows] = useState<Chip[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const [genError, setGenError] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
+  /** Chips staged for deletion, still shown so the Undo is reachable. The
+   *  index is remembered so the chip stays in its own footprint. */
+  const [pendingDelete, setPendingDelete] = useState<
+    { chip: Chip; index: number }[]
+  >([]);
+  const undoTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  const [status, setStatus] = useState<'pending' | 'done' | 'error' | 'gone'>('pending');
+  const [offerRetry, setOfferRetry] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
-  // topicId -> change-log id of its retire, so Undo reverts the exact row.
-  const retireLogIds = useRef<Map<string, string>>(new Map());
+  const [isFindingMore, setIsFindingMore] = useState(false);
 
   // One live subscription per fact; rows are merged into a single list keyed by
   // fact so the round-robin below can see each fact's own order.
   useEffect(() => {
-    const perFact = new Map<string, Chip[]>();
-    const subs = factIds.map((factId) =>
-      observeByFact(factId).subscribe((models: TopicModel[]) => {
-        perFact.set(
-          factId,
-          models
-            .filter((m) => m.status === 'active' || m.status === 'retired')
-            .map((m) => ({
-              id: m.id,
-              text: m.text,
-              factId,
-              retired: m.status === 'retired',
-            })),
-        );
-        setRows(factIds.flatMap((id) => perFact.get(id) ?? []));
-      }),
-    );
-    return () => subs.forEach((s) => s.unsubscribe());
-  }, [factIdKey, factIds]);
+    // ACTIVE only. A staged delete leaves the observable at once and is
+    // re-inserted from `pendingDelete` below; `retired` is no longer a state
+    // this card can produce.
+    const sub = observeByFact(factId).subscribe((models: TopicModel[]) => {
+      setRows(
+        models
+          .filter((m) => m.status === 'active')
+          .map((m) => ({ id: m.id, text: m.text, factId })),
+      );
+    });
+    return () => sub.unsubscribe();
+  }, [factId]);
 
-  // `topicGenError` is the same metadata marker TopicPlanCard and FactAccordion
-  // read. Without it an empty card spins forever on a failed generation, because
-  // "no rows yet" and "no rows ever" look identical.
-  const factMutationVersion = useFloatingChatFactMutationVersion();
+  // Only the DISPLAY timers. Dropping them on unmount cannot lose a delete:
+  // the service holds the staged row on disk and commits it regardless.
   useEffect(() => {
-    let cancelled = false;
-    getFacts()
-      .then((all) => {
-        if (cancelled) return;
-        setGenError(
-          factIds.some(
-            (id) => (all.find((f) => f.id === id)?.metadata?.topicGenError?.length ?? 0) > 0,
-          ),
-        );
-      })
-      .catch(() => {
-        /* keep the last known state */
-      });
+    const timers = undoTimers.current;
     return () => {
-      cancelled = true;
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
     };
-  }, [factIdKey, factIds, factMutationVersion]);
+  }, []);
 
-  // A generation that neither lands nor records an error would otherwise leave
-  // the card spinning for the life of the thread.
+  // Generation status, OBSERVED. This replaces a one-shot getFacts() keyed on
+  // a mutation nonce — a poll, not an observation: a generation that finished
+  // without bumping the counter never reached the card.
   useEffect(() => {
-    if (rows.length > 0) return;
-    const timer = setTimeout(() => setTimedOut(true), GENERATING_TIMEOUT_MS);
-    return () => clearTimeout(timer);
-  }, [rows.length, isRetrying]);
+    const sub = observeTopicsStatus(factId).subscribe((next) => setStatus(next));
+    return () => sub.unsubscribe();
+  }, [factId]);
 
-  const visible = useMemo(
-    () => (merged ? interleaveByFact(rows, factIds, MERGED_TOPIC_CEILING) : rows),
-    [rows, factIds, merged],
+  // An escape hatch, not a state change: see OFFER_RETRY_AFTER_MS.
+  useEffect(() => {
+    if (status !== 'pending') {
+      setOfferRetry(false);
+      return;
+    }
+    const timer = setTimeout(() => setOfferRetry(true), OFFER_RETRY_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, [status, isRetrying]);
+
+  const live = rows;
+
+  /** Live chips plus the staged-for-deletion ones, each back at its own index
+   *  so removing a chip does not reflow the ones around it. */
+  const visible = useMemo(() => {
+    if (pendingDelete.length === 0) return live;
+    const out = [...live];
+    // Ascending, so each insertion lands before the next index is used.
+    for (const { chip, index } of [...pendingDelete].sort((a, b) => a.index - b.index)) {
+      if (out.some((c) => c.id === chip.id)) continue;
+      out.splice(Math.min(index, out.length), 0, chip);
+    }
+    return out;
+  }, [live, pendingDelete]);
+
+  // `handleRemove` needs the index a chip occupied at the moment it was
+  // tapped, and reading it from a ref keeps that handler out of the memo's
+  // dependency list.
+  const visibleRef = useRef<Chip[]>([]);
+  visibleRef.current = visible;
+
+  const isPendingDelete = useCallback(
+    (id: string) => pendingDelete.some((p) => p.chip.id === id),
+    [pendingDelete],
   );
+
+  /** Stop offering Undo for one chip. Display only — the service commits on
+   *  its own clock whether or not this ever runs. */
+  const dropPending = useCallback((topicId: string) => {
+    const timer = undoTimers.current.get(topicId);
+    if (timer) clearTimeout(timer);
+    undoTimers.current.delete(topicId);
+    setPendingDelete((prev) => prev.filter((p) => p.chip.id !== topicId));
+  }, []);
 
   const handleRemove = async (chip: Chip) => {
     if (busyId) return;
     setBusyId(chip.id);
     void hapticLight();
     try {
-      const res = await applyPersonaAction(
-        { action_type: 'retire_topic', topicId: chip.id },
-        'user',
+      // A screen-reader user needs longer than 5s to hear the change, find the
+      // Undo and act on it. The service clamps whatever it is given, and the
+      // SAME value drives the display timer below so the affordance never
+      // outlives the window the service is actually honouring.
+      const screenReader = await AccessibilityInfo.isScreenReaderEnabled().catch(() => false);
+      const undoWindowMs = screenReader ? 15_000 : UNDO_WINDOW_MS;
+
+      const index = Math.max(
+        0,
+        visibleRef.current.findIndex((c) => c.id === chip.id),
       );
-      if (res.changeLogId) retireLogIds.current.set(chip.id, res.changeLogId);
+      await deleteTopicWithDecline(chip.id, { undoWindowMs });
+      setPendingDelete((prev) => [...prev, { chip, index }]);
+      AccessibilityInfo.announceForAccessibility(
+        `${t('chatTopics.removed')}. ${t('topicPlan.undo')}`,
+      );
+
+      const timer = setTimeout(() => dropPending(chip.id), undoWindowMs);
+      undoTimers.current.set(chip.id, timer);
     } finally {
       setBusyId(null);
     }
@@ -200,135 +213,246 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
   const handleUndoRemove = async (chip: Chip) => {
     if (busyId) return;
     setBusyId(chip.id);
+    void hapticLight();
     try {
-      const logId = retireLogIds.current.get(chip.id);
-      if (logId) {
-        await revertChange(logId);
-        retireLogIds.current.delete(chip.id);
-      } else {
-        // No logged retire to invert (a reopened thread) — reactivate directly.
-        await reactivate(chip.id);
-      }
+      // The boolean is informational: false means the window had already
+      // closed. Either way the chip stops showing its undo state and
+      // `observeByFact` is the authority on whether the row came back — so a
+      // lost race can never resurrect a chip whose row is really gone.
+      await undoPendingDelete(chip.id);
     } finally {
+      dropPending(chip.id);
       setBusyId(null);
+    }
+  };
+
+  const handleFindMore = async () => {
+    if (isFindingMore) return;
+    setIsFindingMore(true);
+    void hapticLight();
+    try {
+      await generateMoreTopicsForFact(factId, factStatement);
+    } finally {
+      setIsFindingMore(false);
     }
   };
 
   const handleRetry = async () => {
     if (isRetrying) return;
     setIsRetrying(true);
-    setGenError(false);
-    setTimedOut(false);
+    setOfferRetry(false);
     void hapticLight();
     try {
-      // Sequential: each call writes metadata and bumps the shared mutation
-      // counter, and tool-handlers drops a retry for a fact already in flight.
-      for (const fact of facts) await retryTopicGeneration(fact.factId, fact.factStatement);
+      await retryTopicGeneration(factId, factStatement);
     } finally {
       setIsRetrying(false);
     }
   };
 
   const empty = visible.length === 0;
-  const showEmptyTerminal = empty && (genError || timedOut) && !isRetrying;
-  const showGenerating = empty && !showEmptyTerminal;
+
+  // TWO DIFFERENT "Try again"s, and they must not merge.
+  //  - error: the user has to act, so it stays visible while COLLAPSED.
+  //  - the 75s pending nudge: an escape hatch from a generation that is still
+  //    running, so it lives inside the expanded card only. Surfacing it
+  //    collapsed would turn a quiet "we're on it" into a demand for attention,
+  //    which is the whole thing this layout is trying not to do.
+  const showSlowRetry = status === 'pending' && offerRetry;
+
+  const statusWord =
+    status === 'pending'
+      ? t('chatTopics.pendingA11y')
+      : status === 'error'
+        ? t('chatTopics.failedA11y')
+        : t('chatTopics.readyA11y');
+
+  // A fact that has been deleted takes its topics with it. A one-line
+  // tombstone, never a card that silently disappears mid-scroll: an
+  // unexplained gap is harder to read than a plain sentence.
+  if (status === 'gone') {
+    return (
+      <Animated.View entering={cardEntering} style={styles.tombstone} testID="chat-topics-gone">
+        <Text size="xs" style={styles.statusText}>
+          {t('chatTopics.goneTombstone')}
+        </Text>
+      </Animated.View>
+    );
+  }
 
   return (
     <Animated.View entering={cardEntering} style={styles.card} testID="chat-topics-card">
-      <View style={styles.headerRow}>
-        <MaterialIcons name="account-tree" size={18} color={ACCENT} />
-        <Text size="sm" bold style={styles.title}>
-          {t('topicPlan.title')}
-        </Text>
-      </View>
+      <Pressable
+        onPress={() => {
+          void hapticLight();
+          setExpanded((v) => !v);
+        }}
+        style={styles.header}
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        // The collapsed card is deliberately wordless about progress, so the
+        // state has to reach assistive tech here instead of from a spinner.
+        accessibilityLabel={`${statusWord}. ${
+          expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')
+        }`}
+        testID={`chat-topics-header-${factId}`}
+      >
+        <View style={styles.headerRow}>
+          <MaterialIcons
+            name={expanded ? 'expand-more' : 'chevron-right'}
+            size={18}
+            color={ACCENT}
+          />
 
-      {showGenerating ? (
-        <View style={styles.statusRow}>
-          <ActivityIndicator size="small" color={ACCENT} />
-          <Text size="xs" style={styles.statusText}>
-            {t('topicPlan.generating')}
+          {/* While generating this reads as reassurance, not progress: no
+              spinner, no percentage, nothing to wait on. The point is that
+              the user keeps building their profile instead of watching a
+              loader finish. */}
+          <Text size="sm" bold style={styles.title}>
+            {status === 'pending'
+              ? t('chatTopics.accordionTitlePending')
+              : t('chatTopics.accordionTitle')}
           </Text>
+
+          {/* Small and muted on purpose: a finished background job should be
+              confirmable at a glance, not announce itself. */}
+          {status === 'done' && (
+            <MaterialIcons
+              name="check"
+              size={14}
+              color="rgb(150, 150, 150)"
+              testID={`chat-topics-done-${factId}`}
+            />
+          )}
+
+          {status === 'error' && (
+            <Pressable
+              onPress={handleRetry}
+              disabled={isRetrying}
+              hitSlop={16}
+              style={styles.retryButton}
+              accessibilityRole="button"
+              accessibilityLabel={t('floatingChat.topicGenRetry')}
+              testID="chat-topics-retry"
+            >
+              <Text size="xs" bold style={styles.retryText}>
+                {t('floatingChat.topicGenRetry')}
+              </Text>
+            </Pressable>
+          )}
         </View>
-      ) : showEmptyTerminal ? (
-        <View style={styles.statusRow} testID="chat-topics-empty">
-          <Text size="xs" style={styles.statusText}>
-            {t('chatTopics.none')}
+
+        {/* The fact statement is its own node rather than an interpolation:
+            it goes through TranslatableDynamic, which returns a component. */}
+        <TranslatableDynamic
+          text={factStatement}
+          size="xs"
+          italic
+          style={styles.factLine}
+          numberOfLines={2}
+        />
+
+        {/* A failure is stated while COLLAPSED too, because the user has to do
+            something about it. A problem you must open a drawer to discover is
+            one nobody sees. Pending is the opposite case: nothing to act on,
+            so nothing is said until you look. */}
+        {status === 'error' && (
+          <Text size="xs" style={styles.statusText} numberOfLines={2}>
+            {t('floatingChat.topicGenFailed')}
           </Text>
-          <Pressable
-            onPress={handleRetry}
-            disabled={isRetrying}
-            hitSlop={12}
-            style={styles.retryButton}
-            accessibilityRole="button"
-            accessibilityLabel={t('floatingChat.topicGenRetry')}
-            testID="chat-topics-retry"
-          >
-            <Text size="xs" bold style={styles.retryText}>
-              {t('floatingChat.topicGenRetry')}
-            </Text>
-          </Pressable>
-        </View>
-      ) : (
-        facts.map((fact) => {
-          const chips = visible.filter((c) => c.factId === fact.factId);
-          if (chips.length === 0) return null;
-          return (
-            <View key={fact.factId} style={styles.section}>
-              {/* Only the MERGED card names its facts: a single-fact card sits
-                  directly under that fact's own Saved card, so repeating the
-                  statement would say the same thing twice in a row. */}
-              {merged && (
-                <TranslatableDynamic
-                  text={fact.factStatement}
-                  size="xs"
-                  italic
-                  style={styles.factLine}
-                  numberOfLines={2}
-                />
+        )}
+      </Pressable>
+
+      {expanded && (
+        <View style={styles.body}>
+          {/* The spinner and the words live ONLY here. Opening the card is the
+              user asking about progress; until then the work is quiet. */}
+          {status === 'pending' && (
+            <View style={styles.progressRow} testID="chat-topics-progress">
+              <StatusIndicator
+                status="pending"
+                label={t('chatTopics.finding')}
+                testID={`chat-topics-status-${factId}`}
+              />
+              {showSlowRetry && (
+                <Pressable
+                  onPress={handleRetry}
+                  disabled={isRetrying}
+                  hitSlop={16}
+                  style={styles.retryButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('floatingChat.topicGenRetry')}
+                  testID="chat-topics-retry-slow"
+                >
+                  <Text size="xs" bold style={styles.retryText}>
+                    {t('floatingChat.topicGenRetry')}
+                  </Text>
+                </Pressable>
               )}
-              <View style={styles.chips}>
-                {chips.map((chip) => (
-                  <View
-                    key={chip.id}
-                    style={[styles.chip, chip.retired && styles.chipRetired]}
-                  >
-                    {/* Topic texts are the RETRIEVAL keys — English, sent to the
-                        server as-is. Only the RENDERING is translated; remove and
-                        undo act on `chip.id` and the text is never written back. */}
+            </View>
+          )}
+
+          {empty ? (
+            status !== 'pending' && (
+              <Text size="xs" style={styles.statusText} testID="chat-topics-empty">
+                {t('chatTopics.none')}
+              </Text>
+            )
+          ) : (
+            <View style={styles.chips}>
+              {visible.map((chip) => {
+                const removing = isPendingDelete(chip.id);
+                return (
+                  <View key={chip.id} style={[styles.chip, removing && styles.chipRemoving]}>
+                    {/* The removed chip KEEPS its text, dimmed and struck. A
+                        blank "Removed" slot makes the user guess what they
+                        just deleted, at the one moment they may want it back.
+                        Topic texts are the RETRIEVAL keys: only the rendering
+                        is translated, and the text is never written back. */}
                     <TranslatableDynamic
                       text={chip.text}
                       size="xs"
                       style={{
                         ...styles.chipText,
-                        ...(chip.retired ? styles.chipTextRetired : {}),
+                        ...(removing ? styles.chipTextRemoving : {}),
                       }}
                       numberOfLines={1}
                     />
                     <Pressable
-                      onPress={() =>
-                        chip.retired ? handleUndoRemove(chip) : handleRemove(chip)
-                      }
+                      onPress={() => (removing ? handleUndoRemove(chip) : handleRemove(chip))}
                       disabled={busyId === chip.id}
-                      hitSlop={12}
+                      hitSlop={16}
                       style={styles.chipButton}
                       accessibilityRole="button"
-                      accessibilityLabel={
-                        chip.retired ? t('topicPlan.undo') : t('topicPlan.delete')
-                      }
-                      testID={`chat-topic-chip-${chip.retired ? 'undo' : 'remove'}-${chip.id}`}
+                      accessibilityLabel={removing ? t('topicPlan.undo') : t('topicPlan.delete')}
+                      testID={`chat-topic-chip-${removing ? 'undo' : 'remove'}-${chip.id}`}
                     >
                       <MaterialIcons
-                        name={chip.retired ? 'undo' : 'close'}
+                        name={removing ? 'undo' : 'close'}
                         size={14}
-                        color={chip.retired ? ACCENT : 'rgb(190, 190, 190)'}
+                        color={removing ? ACCENT : 'rgb(190, 190, 190)'}
                       />
                     </Pressable>
                   </View>
-                ))}
-              </View>
+                );
+              })}
             </View>
-          );
-        })
+          )}
+
+          <Pressable
+            onPress={handleFindMore}
+            disabled={isFindingMore}
+            hitSlop={12}
+            style={styles.moreButton}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isFindingMore }}
+            accessibilityLabel={t('chatTopics.findMore')}
+            testID={`chat-topics-more-${factId}`}
+          >
+            <Text size="xs" bold style={styles.retryText}>
+              {isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
+            </Text>
+          </Pressable>
+        </View>
       )}
     </Animated.View>
   );
@@ -344,14 +468,34 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
   },
+  // 48dp target on the header row.
+  header: { minHeight: 48, justifyContent: 'center', gap: 4 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  body: { gap: 10, paddingTop: 2 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  tombstone: {
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  moreButton: {
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: ACCENT,
+    paddingHorizontal: 14,
+  },
   title: { color: ACCENT },
   factLine: { color: 'rgb(190, 190, 190)' },
   section: { gap: 6 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
   statusText: { flex: 1, color: 'rgb(200, 200, 200)' },
   retryButton: {
-    minHeight: 44,
+    minHeight: 48,
     justifyContent: 'center',
     paddingHorizontal: 14,
     borderRadius: 999,
@@ -373,10 +517,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(231, 138, 83, 0.10)',
     maxWidth: '100%',
   },
-  chipRetired: { opacity: 0.6, borderStyle: 'dashed' },
+  chipRemoving: { opacity: 0.6, borderStyle: 'dashed' },
   chipText: { color: 'rgb(220, 220, 220)', flexShrink: 1 },
-  chipTextRetired: { textDecorationLine: 'line-through' },
-  chipButton: { padding: 6 },
+  chipTextRemoving: { textDecorationLine: 'line-through' },
+  // 16pt hitSlop around a 26pt box clears the 48dp target on both platforms.
+  chipButton: { padding: 6, minWidth: 26, minHeight: 26, alignItems: 'center', justifyContent: 'center' },
 });
 
 export default ChatTopicsCard;

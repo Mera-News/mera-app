@@ -1,13 +1,15 @@
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { authClient } from '@/lib/auth-client';
 import { getArticleCountByTopicTexts } from '@/lib/database/services/article-suggestion-service';
-import { deleteFact, getFacts, updateFact } from '@/lib/database/services/fact-service';
+import { deleteFact, getFacts, observeFacts } from '@/lib/database/services/fact-service';
 import { enqueueJob } from '@/lib/database/services/inference-job-service';
+import { deleteTopicWithDecline } from '@/lib/database/services/topic-decline-service';
+import { createTopics, syncLlmTopicsForFact } from '@/lib/database/services/topic-service';
 import { buildTopicGenContext } from '@/lib/inference/handlers/topic-gen-handler';
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { generateTopicsForFact, mergeTopicsAppend } from '@/lib/mera-protocol/topic-generation-service';
+import { generateTopicsForFact } from '@/lib/mera-protocol/topic-generation-service';
 import { useFloatingChatFactMutationVersion, useFloatingChatIsExpanded } from '@/lib/stores/floating-chat-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
@@ -84,64 +86,76 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
     const onFactsChangeRef = useRef(onFactsChange);
     onFactsChangeRef.current = onFactsChange;
 
-    const loadLocalFacts = useCallback(async () => {
-        const [facts, counts] = await Promise.all([
-            getFacts(),
-            getArticleCountByTopicTexts(),
-        ]);
-
-        if (!isInitialLoadRef.current) {
-            const newIds = facts
-                .filter(f => !knownFactIdsRef.current.has(f.id))
-                .map(f => f.id);
-            if (newIds.length > 0) {
-                setExpandedFactIds(new Set([newIds[newIds.length - 1]]));
-            }
-        }
-        isInitialLoadRef.current = false;
-        knownFactIdsRef.current = new Set(facts.map(f => f.id));
-
-        setLocalFacts(facts);
+    // Facts are live (observeFacts) — no reload call exists for them any more.
+    // Article counts are NOT live (no observable for
+    // getArticleCountByTopicTexts exists), so they stay a one-shot refetch:
+    // called on mount, on our own topic mutations below, on factMutationVersion
+    // bumping, and on the chat popover closing. Judgement call, stated rather
+    // than silently accepted: a count can go stale between one of those
+    // triggers and the next — e.g. a topic mutation on ANOTHER device, or a
+    // suggestion arriving mid-session with nothing here to bump the counter.
+    // Bumping on our own mutations (below) covers the common case; leaving the
+    // rest one-shot rather than building a second observable for a per-topic
+    // count map that nothing else in this file needs live.
+    const reloadArticleCounts = useCallback(async () => {
+        const counts = await getArticleCountByTopicTexts();
         setArticleCountByTopic(counts);
-        onFactsChangeRef.current?.(facts);
-        return facts;
     }, []);
 
     useEffect(() => {
         onFactsChangeRef.current?.(null);
-        loadLocalFacts();
-        // Mount-only initial load — matches the original FactsScreen behavior
+        const sub = observeFacts().subscribe((facts) => {
+            if (!isInitialLoadRef.current) {
+                const newIds = facts
+                    .filter(f => !knownFactIdsRef.current.has(f.id))
+                    .map(f => f.id);
+                if (newIds.length > 0) {
+                    setExpandedFactIds(new Set([newIds[newIds.length - 1]]));
+                }
+            }
+            isInitialLoadRef.current = false;
+            knownFactIdsRef.current = new Set(facts.map(f => f.id));
+
+            setLocalFacts(facts);
+            onFactsChangeRef.current?.(facts);
+        });
+        void reloadArticleCounts();
+        return () => sub.unsubscribe();
+        // Mount-only subscription — matches the original FactsScreen behavior
         // where the facts fetch itself never depended on userId.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Real-time refresh when on-device LLM saves/deletes a fact or generates
-    // topics. The local reload is unconditional — the fact was just written to
-    // THIS device, so refusing to show it because we could not reach the
-    // session endpoint is never right. Only the persona refresh needs an id.
+    // topics. The facts array updates itself via observeFacts; this counter
+    // still drives the two things it knows nothing about — the article-count
+    // refetch and the persona/feed refresh.
     useEffect(() => {
         if (factMutationVersion > 0) {
-            loadLocalFacts();
+            void reloadArticleCounts();
             if (userId) fetchUserPersona(userId, true);
             useForYouStore.getState().setFeedNeedsRefresh(true);
         }
-    }, [factMutationVersion, loadLocalFacts, fetchUserPersona, userId]);
+    }, [factMutationVersion, reloadArticleCounts, fetchUserPersona, userId]);
 
-    // When the floating chat popover collapses (true→false transition), reload
-    // facts + persona — the same refresh the old embedded chat's closeChat did.
+    // When the floating chat popover collapses (true→false transition),
+    // refresh counts + persona — the same refresh the old embedded chat's
+    // closeChat did.
     useEffect(() => {
         if (wasChatExpandedRef.current && !isChatExpanded) {
-            loadLocalFacts();
+            void reloadArticleCounts();
             if (userId) fetchUserPersona(userId, true);
         }
         wasChatExpandedRef.current = isChatExpanded;
-    }, [isChatExpanded, loadLocalFacts, fetchUserPersona, userId]);
+    }, [isChatExpanded, reloadArticleCounts, fetchUserPersona, userId]);
 
     useImperativeHandle(ref, () => ({
         refresh: async () => {
-            await loadLocalFacts();
+            // Facts are already live; pull-to-refresh's remaining job is the
+            // one thing that isn't — article counts.
+            await reloadArticleCounts();
         },
-    }), [loadLocalFacts]);
+    }), [reloadArticleCounts]);
 
     const toggleFact = useCallback((factId: string) => {
         setExpandedFactIds(prev => {
@@ -163,7 +177,7 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
             await deleteFact(factToDelete.id);
 
             setFactToDelete(null);
-            loadLocalFacts();
+            void reloadArticleCounts();
             if (userId) fetchUserPersona(userId, true);
             useForYouStore.getState().setFeedNeedsRefresh(true);
             toast.show({
@@ -191,7 +205,7 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
         } finally {
             setIsDeleting(false);
         }
-    }, [factToDelete, userId, loadLocalFacts, fetchUserPersona, toast, t]);
+    }, [factToDelete, userId, reloadArticleCounts, fetchUserPersona, toast, t]);
 
     const handleDeleteCancel = useCallback(() => {
         setFactToDelete(null);
@@ -213,21 +227,24 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
         });
     }, []);
 
-    const handleDeleteTopic = useCallback(async (fact: Fact, topicText: string) => {
-        // Local write — see handleDeleteConfirm.
-        const currentTopics = fact.metadata?.topics ?? [];
-        const updatedTopics = currentTopics.filter(topic => topic !== topicText);
+    const handleDeleteTopic = useCallback(async (fact: Fact, topicRow: { id: string; text: string }) => {
+        // Routed through the same staged-delete-with-decline primitive the
+        // chat chip uses (B3) — this is now a PERMANENT decline (the persona
+        // agent will not re-propose this text), not a quiet local edit. The
+        // row vanishes immediately from FactAccordion's own `observeByFact`
+        // subscription; no reload here is needed for that. `fact.metadata.
+        // topics` is pruned by `flushPendingDeletes` at commit, not here.
         try {
-            await updateFact(fact.id, {
-                metadata: { ...(fact.metadata ?? {}), topics: updatedTopics },
-            });
-            loadLocalFacts();
+            await deleteTopicWithDecline(topicRow.id);
             if (userId) fetchUserPersona(userId, true);
             useForYouStore.getState().setFeedNeedsRefresh(true);
         } catch (error) {
-            logger.error('[FactsList] deleteTopic failed', error, { factId: fact.id, topicText });
+            logger.error('[FactsList] deleteTopic failed', error, {
+                factId: fact.id,
+                topicId: topicRow.id,
+            });
         }
-    }, [loadLocalFacts, fetchUserPersona, userId]);
+    }, [fetchUserPersona, userId]);
 
     const handleAddTopicPress = useCallback((fact: Fact) => {
         setAddTopicFact(fact);
@@ -235,21 +252,20 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
     }, []);
 
     const handleAddTopicConfirm = useCallback(async () => {
-        // Local write — see handleDeleteConfirm.
         if (!addTopicFact || !addTopicText.trim()) return;
         setIsAddingTopic(true);
         try {
-            const currentTopics = addTopicFact.metadata?.topics ?? [];
             const trimmed = addTopicText.trim();
-            if (currentTopics.includes(trimmed)) {
-                setAddTopicFact(null);
-                return;
-            }
-            await updateFact(addTopicFact.id, {
-                metadata: { ...(addTopicFact.metadata ?? {}), topics: [...currentTopics, trimmed] },
-            });
+            // createTopics resolves-or-creates against the fact's existing
+            // rows (case-insensitive, normalized), so no manual duplicate
+            // check is needed here — a re-add of an existing text is a no-op
+            // that returns the existing row rather than erroring.
+            await createTopics([{ factId: addTopicFact.id, text: trimmed }]);
             setAddTopicFact(null);
-            loadLocalFacts();
+            // metadata.topics is appended atomically inside createTopics
+            // (v55 pairing) — this reload is only for the facts array/article
+            // counts this screen still fetches one-shot (pending observeFacts).
+            void reloadArticleCounts();
             if (userId) fetchUserPersona(userId, true);
             useForYouStore.getState().setFeedNeedsRefresh(true);
         } catch (error) {
@@ -257,7 +273,7 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
         } finally {
             setIsAddingTopic(false);
         }
-    }, [addTopicFact, addTopicText, loadLocalFacts, fetchUserPersona, userId]);
+    }, [addTopicFact, addTopicText, reloadArticleCounts, fetchUserPersona, userId]);
 
     const handleAddTopicCancel = useCallback(() => {
         setAddTopicFact(null);
@@ -334,10 +350,12 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
             if (newTopics.length === 0) {
                 showGenerateMoreFailedToast();
             } else {
-                await updateFact(fact.id, {
-                    metadata: { ...(fact.metadata ?? {}), topics: mergeTopicsAppend(existingTopics, newTopics) },
-                });
-                loadLocalFacts();
+                // Converges with the on-device job handler
+                // (lib/inference/handlers/topic-gen-handler.ts), which already
+                // calls this — the cloud branch was the one path that used to
+                // mint into metadata only and never reach the topics table.
+                await syncLlmTopicsForFact(fact.id, newTopics);
+                void reloadArticleCounts();
                 fetchUserPersona(userId, true);
                 useForYouStore.getState().setFeedNeedsRefresh(true);
             }
@@ -347,7 +365,7 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
             showGenerateMoreFailedToast();
             clearGeneratingMore(fact.id);
         }
-    }, [generateMoreFact, generatingMoreFactIds, userId, isOnDeviceProcessing, clearGeneratingMore, showGenerateMoreFailedToast, loadLocalFacts, fetchUserPersona]);
+    }, [generateMoreFact, generatingMoreFactIds, userId, isOnDeviceProcessing, clearGeneratingMore, showGenerateMoreFailedToast, reloadArticleCounts, fetchUserPersona]);
 
     return (
         <>

@@ -35,6 +35,18 @@ export interface PendingFactGroup {
   groupId?: string;
   options: string[];
   questionnaireAttribute: string | null;
+  /** The existing fact this group would replace. Absent means ADD.
+   *
+   *  On the SPINE rather than left in the raw tool arguments, because
+   *  `deriveThreadItems.deriveCard` already falls back to reading the tool
+   *  INPUT when a field is absent -- that fallback is why `factsSaved: 0` has
+   *  to be written explicitly -- so leaving it out would mean a second parser
+   *  in the deriver and two places for the rule to drift.
+   *
+   *  ROLLBACK SHAPE: an older bundle reading a blob that carries this ignores
+   *  it and ADDS, which degrades to a duplicate the user can delete, never to
+   *  a fact destroyed by a build that did not understand the field. */
+  replaces?: string;
 }
 
 /**
@@ -191,6 +203,9 @@ function parseSpine(value: unknown): PendingFactGroup[] {
       options,
       questionnaireAttribute:
         typeof rec.questionnaireAttribute === 'string' ? rec.questionnaireAttribute : null,
+      ...(typeof rec.replaces === 'string' && rec.replaces.trim().length > 0
+        ? { replaces: rec.replaces }
+        : {}),
     });
   });
   return out;

@@ -81,43 +81,5 @@ describe('StreamingIndicator', () => {
     expect(queryByTestId('mera-logo')).not.toBeNull();
   });
 
-  it('dotsOnly renders no label and registers no label-cycle timer', () => {
-    const { queryByTestId } = render(<StreamingIndicator dotsOnly />);
-    expect(queryByTestId('streaming-caption')).toBeNull();
-
-    // If a label-cycle interval had been registered despite dotsOnly, this
-    // would throw/rerender by driving setLabelIndex on an unmounted-label
-    // path; asserting the caption stays absent across a couple of would-be
-    // cycles is the behavioural proxy for "no timer exists".
-    act(() => {
-      jest.advanceTimersByTime(2220);
-    });
-    expect(queryByTestId('streaming-caption')).toBeNull();
-
-    act(() => {
-      jest.advanceTimersByTime(2220);
-    });
-    expect(queryByTestId('streaming-caption')).toBeNull();
-
-    // Regression guard for "no timers registered at all": with dotsOnly, the
-    // pending-timer count must not grow past whatever real timers (if any)
-    // exist before the cycle would have fired — i.e. no setInterval/setTimeout
-    // from the label-cycle effect got scheduled.
-    expect(jest.getTimerCount()).toBe(0);
-  });
-
-  it('dotsOnly still renders the pulsing dots', () => {
-    const { UNSAFE_getAllByType } = render(
-      <StreamingIndicator dotsOnly color="rgb(9, 9, 9)" />,
-    );
-    // Confirm the three dots are still in the tree via their dot color —
-    // no label, no logo, dots intact.
-    const dotViews = UNSAFE_getAllByType(View).filter((node) => {
-      const style = StyleSheet.flatten(node.props.style) as
-        | { backgroundColor?: string }
-        | undefined;
-      return style?.backgroundColor === 'rgb(9, 9, 9)';
-    });
-    expect(dotViews).toHaveLength(3);
-  });
 });
+

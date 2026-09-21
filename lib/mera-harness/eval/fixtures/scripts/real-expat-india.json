@@ -1,0 +1,84 @@
+{
+  "id": "real-expat-india",
+  "cohort": "production",
+  "note": "Production case. Origin plus residence in one statement, which is where the origin guideline must split its output rather than running the domestic ladder of a country the user LEFT.",
+  "persona": {
+    "facts": [
+      {
+        "id": "f1",
+        "statement": "Lives in Amsterdam, North Holland, Netherlands",
+        "questionnaireAttribute": "location: residence",
+        "kind": "residence"
+      }
+    ],
+    "topics": [
+      {
+        "id": "t1",
+        "text": "Netherlands immigration policy"
+      }
+    ]
+  },
+  "declinedTopics": [
+    "Bollywood gossip"
+  ],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I am an expat from India",
+      "expect": {
+        "routeKind": "origin",
+        "skill": "facts/origin",
+        "tools": [
+          "load_skill",
+          "find_similar_facts",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "proposals": [
+          {
+            "statementMatches": [
+              "india"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": null
+          }
+        ]
+      },
+      "fakeTools": {
+        "find_similar_facts": [
+          {
+            "kind": "origin",
+            "returns": {
+              "candidates": []
+            }
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "I moved here in 2019 for work",
+      "expect": {
+        "routeKind": "origin",
+        "skill": "facts/origin",
+        "tools": [
+          "load_skill"
+        ],
+        "legs": 2
+      }
+    },
+    {
+      "index": 2,
+      "user": "Do not show me anything about Bollywood",
+      "expect": {
+        "routeKind": "interest",
+        "skill": "facts/interest",
+        "tools": [
+          "load_skill"
+        ],
+        "legs": 2
+      }
+    }
+  ]
+}

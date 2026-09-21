@@ -12,6 +12,7 @@
 jest.mock('../../database/services/fact-service', () => ({
   addFact: jest.fn(),
   getFacts: jest.fn(() => Promise.resolve([])),
+  replaceFact: jest.fn(),
 }));
 jest.mock('../../database/services/geo-derivation-service', () => ({
   runGeoDerivationSweep: jest.fn(() => Promise.resolve({ ran: true, added: 0, reweighted: 0 })),
@@ -49,7 +50,12 @@ describe('commitFactChoices', () => {
 
     const result = await commitFactChoices([{ statement: 'Lives in Amsterdam' }]);
 
-    expect(mockAddFact).toHaveBeenCalledWith('Lives in Amsterdam', undefined, undefined);
+    // The 4th argument is the point: addFact otherwise leaves topicsStatus
+    // NULL, which renders as done, so a saved fact would flash done while its
+    // generation run is still ahead of it. This path always enqueues.
+    expect(mockAddFact).toHaveBeenCalledWith('Lives in Amsterdam', undefined, undefined, {
+      topicsStatus: 'pending',
+    });
     expect(result.savedFacts).toEqual([{ id: 'f1', statement: 'Lives in Amsterdam' }]);
   });
 
@@ -69,6 +75,7 @@ describe('commitFactChoices', () => {
       'Lives in Amsterdam',
       undefined,
       expect.objectContaining({ attribute: 'location: neighborhood/area, city, and country' }),
+      { topicsStatus: 'pending' },
     );
   });
 
@@ -174,5 +181,61 @@ describe('commitFactChoices', () => {
     );
 
     expect(result.conflicts).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// `replaces` — ONE transaction, and only when a choice was confirmed
+// ---------------------------------------------------------------------------
+describe('commitFactChoices with `replaces`', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const factService = require('../../database/services/fact-service');
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    factService.getFacts.mockResolvedValue([]);
+  });
+
+  it('calls replaceFact ONCE and never addFact, so there is no lost-fact window', async () => {
+    // delete-then-add has a window where the old fact's topics are gone and the
+    // new fact does not exist; a crash there loses the fact outright.
+    factService.replaceFact.mockResolvedValueOnce({ id: 'f2', statement: 'Lives in Berlin' });
+
+    const result = await commitFactChoices([
+      { statement: 'Lives in Berlin', replaces: 'f1' },
+    ]);
+
+    expect(factService.replaceFact).toHaveBeenCalledTimes(1);
+    expect(factService.replaceFact).toHaveBeenCalledWith('f1', {
+      statement: 'Lives in Berlin',
+      questionnaire: undefined,
+      topicsStatus: 'pending',
+    });
+    expect(factService.addFact).not.toHaveBeenCalled();
+    expect(result.savedFacts).toEqual([{ id: 'f2', statement: 'Lives in Berlin' }]);
+  });
+
+  it('does NOT raise a conflict card against the row it just replaced', async () => {
+    factService.getFacts.mockResolvedValue([
+      { id: 'f1', statement: 'Lives in Amsterdam', questionnaireAttribute: 'location: residence' },
+    ]);
+    factService.replaceFact.mockResolvedValueOnce({ id: 'f2', statement: 'Lives in Berlin' });
+
+    const result = await commitFactChoices([
+      {
+        statement: 'Lives in Berlin',
+        replaces: 'f1',
+        questionnaire: { attribute: 'location: residence' },
+      },
+    ]);
+
+    expect(result.conflicts).toEqual([]);
+  });
+
+  it('a plain add still goes through addFact', async () => {
+    factService.addFact.mockResolvedValueOnce({ id: 'f3', statement: 'Likes cycling' });
+    await commitFactChoices([{ statement: 'Likes cycling' }]);
+    expect(factService.addFact).toHaveBeenCalledTimes(1);
+    expect(factService.replaceFact).not.toHaveBeenCalled();
   });
 });

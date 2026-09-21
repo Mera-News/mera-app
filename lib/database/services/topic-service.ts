@@ -7,11 +7,38 @@
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
 import type TopicModel from '../models/Topic';
+import type FactModel from '../models/Fact';
 import type { TopicProvenance, TopicStatus } from '../models/Topic';
 import { planLlmTopicRows } from '../../news-harness/persona-management/topic-generation';
 import { DEFAULT_HARNESS_CONFIG } from '../../news-harness/core/config';
 
 const topicsCollection = database.get<TopicModel>('topics');
+
+/**
+ * STAGED DELETES (v55) — the rule every reader in this file follows.
+ *
+ * `pending_delete_at` non-null means the row is staged for deletion: it still
+ * EXISTS, but the user has been shown it as gone. So the split is not
+ * "live vs dead", it is what the caller is asking:
+ *
+ *   RENDER / RETRIEVE / SCORE / PLAN  → EXCLUDE staged rows.
+ *     observeByFact, getActive (+ActiveTopicSnapshots), getAllTopicSnapshots,
+ *     countAllTopics, observeNegative, getTopupTopicSnapshots.
+ *
+ *   "DOES THIS EXIST?" / DEDUP EXCLUSION → INCLUDE staged rows.
+ *     getAllTopicIds, getAllNormalizedTexts, getAllByNormalizedText,
+ *     getWeightsByIds. Their failure mode is minting or destroying something
+ *     they could not see, so seeing more is the safe direction — the same
+ *     argument `getAllNormalizedTexts` already makes for retired and tracked.
+ *
+ * `createTopics`' own dedup query is the one deliberate exception: it EXCLUDES
+ * staged rows, because it is resolve-or-create and handing a caller a row that
+ * is about to be destroyed would be worse than minting a fresh one.
+ * `getAllTopicIds` in particular must keep returning staged rows or
+ * `purgeSuggestionsForDeadTopics` destroys, inside the undo window,
+ * suggestions an undo cannot bring back.
+ */
+const NOT_STAGED = Q.where('pending_delete_at', null);
 
 /** Lowercase + trim + collapse whitespace — the dedup + article-match key. */
 export function normalizeTopicText(s: string): string {
@@ -86,6 +113,12 @@ export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicMod
     .query(
       Q.where('normalized_text', Q.oneOf(distinctTexts)),
       Q.where('status', Q.notEq('retired')),
+      // Staged rows are excluded HERE specifically (against the file's general
+      // rule) because this query resolves rows that are RETURNED to callers.
+      // Four call sites destructure `const [created] = await createTopics(...)`
+      // and treat the row as live; handing them one that flushPendingDeletes
+      // is about to destroy would bind a tracked story to a doomed topic id.
+      NOT_STAGED,
     )
     .fetch();
 
@@ -118,6 +151,39 @@ export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicMod
   });
 
   if (toCreate.length > 0) {
+    // METADATA PAIRING (v55). `fact.metadata.topics` is a SECOND topic list
+    // with its own reader — the facts screen renders it while the chat card
+    // renders this table, and `fetchTopicIdsLegacy` still retrieves from it.
+    // Keeping the two in step HERE, rather than asking each caller to
+    // remember, is what makes every minting path consistent: "Add topic", the
+    // re-mint after a decline is lifted, and generate-more all land in this
+    // function.
+    //
+    // Inputs with no `factId` write nothing, which is why negative topics
+    // (provenance 'feedback') and tracked-story topics never appear on the
+    // facts screen — none of those call sites passes one.
+    //
+    // Built as prepareUpdate rows in the SAME batch rather than calling
+    // `appendFactMetadataTopics`: that helper goes through `Fact.updateFact`,
+    // a @writer, which cannot nest inside the write below. Same batch is also
+    // stronger — topics and metadata commit atomically, so a crash cannot
+    // leave one screen disagreeing with the other.
+    const newTextsByFact = new Map<string, string[]>();
+    for (const { input } of toCreate) {
+      const factId = input.factId ?? null;
+      if (!factId) continue;
+      const list = newTextsByFact.get(factId) ?? [];
+      list.push(input.text);
+      newTextsByFact.set(factId, list);
+    }
+    const factRows: FactModel[] =
+      newTextsByFact.size > 0
+        ? await database
+            .get<FactModel>('facts')
+            .query(Q.where('id', Q.oneOf([...newTextsByFact.keys()])))
+            .fetch()
+        : [];
+
     const created = await database.write(async () => {
       const now = new Date();
       const prepared = toCreate.map(({ input, normalizedText }) =>
@@ -135,7 +201,37 @@ export async function createTopics(inputs: CreateTopicInput[]): Promise<TopicMod
           t.updatedAt = now;
         }),
       );
-      await database.batch(prepared);
+      const factUpdates = factRows.map((fact) => {
+        const current = fact.metadata ?? {};
+        const existingTexts = Array.isArray(current.topics) ? current.topics : [];
+        // `normalizeTopicText`, NOT the looser `toLowerCase().trim()` that
+        // `appendFactMetadataTopics` uses: both halves of this pairing must
+        // decide with the SAME key, or "dutch  politics" dedups against the
+        // topics table (which collapses whitespace) while landing a second
+        // time in metadata — reintroducing the divergence this pairing
+        // exists to close. It also has to match the prune in
+        // topic-decline-service, which normalises the same way.
+        const seen = new Set(existingTexts.map((t) => normalizeTopicText(t)));
+        const merged = [...existingTexts];
+        for (const t of newTextsByFact.get(fact.id) ?? []) {
+          const key = normalizeTopicText(t);
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          merged.push(t);
+        }
+        if (merged.length === existingTexts.length) return null;
+        return fact.prepareUpdate((f) => {
+          // Spread `current`: assigning `{ topics }` alone would drop
+          // topicGenError and topicsReviewedAt, which `metadata` holds too.
+          f.metadata = { ...current, topics: merged };
+          f.updatedAt = now;
+        });
+      });
+
+      await database.batch([
+        ...prepared,
+        ...factUpdates.filter((u): u is NonNullable<typeof u> => u !== null),
+      ]);
       return prepared;
     });
 
@@ -166,8 +262,8 @@ export async function getByFact(factId: string): Promise<TopicModel[]> {
  *  DB but the row never strikes through). */
 export function observeByFact(factId: string) {
   return topicsCollection
-    .query(Q.where('fact_id', factId))
-    .observeWithColumns(['status']);
+    .query(Q.where('fact_id', factId), NOT_STAGED)
+    .observeWithColumns(['status', 'pending_delete_at']);
 }
 
 /**
@@ -190,6 +286,7 @@ export function observeNegative() {
         Q.and(Q.where('status', 'active'), Q.where('weight', Q.lt(0))),
         Q.where('status', 'suppressed'),
       ),
+      NOT_STAGED,
       Q.sortBy('weight', Q.asc),
     )
     .observe();
@@ -197,7 +294,23 @@ export function observeNegative() {
 
 /** Active topics (any weight). */
 export async function getActive(): Promise<TopicModel[]> {
-  return topicsCollection.query(Q.where('status', 'active')).fetch();
+  return topicsCollection.query(Q.where('status', 'active'), NOT_STAGED).fetch();
+}
+
+/**
+ * Active topics INCLUDING rows staged for deletion.
+ *
+ * Exists for exactly one caller: `feed-sync-steps`' legacy-fallback branch,
+ * which drops into `fetchTopicIdsLegacy` when the active set is EMPTY. That
+ * fallback reads `fact.metadata.topics`, which still holds a staged topic's
+ * text — so if staging someone's last active topic emptied `getActive()`, the
+ * fallback would re-retrieve the very topic they just deleted, and the commit's
+ * suggestion purge could not clean it up (the legacy path leaves no topicId on
+ * the row, and purgeSuggestionsForDeadTopics skips rows with no topic
+ * evidence). Branch on THIS count; filter with `getActive()`.
+ */
+export async function countActiveTopicsIncludingStaged(): Promise<number> {
+  return topicsCollection.query(Q.where('status', 'active')).fetchCount();
 }
 
 /** Persona-v3 active-topic snapshot for the fact-sectioned feed selector:
@@ -236,7 +349,7 @@ export interface TopicHygieneSnapshot {
 
 /** All topic rows (any status) projected to the hygiene snapshot shape. */
 export async function getAllTopicSnapshots(): Promise<TopicHygieneSnapshot[]> {
-  const rows = await topicsCollection.query().fetch();
+  const rows = await topicsCollection.query(NOT_STAGED).fetch();
   return rows.map((t) => ({
     id: t.id,
     factId: t.factId ?? null,
@@ -252,7 +365,7 @@ export async function getAllTopicSnapshots(): Promise<TopicHygieneSnapshot[]> {
  *  an empty topics table means the persona-v3 migration hasn't run yet, so the
  *  screen renders the legacy priority-bucket layout. */
 export async function countAllTopics(): Promise<number> {
-  return topicsCollection.query().fetchCount();
+  return topicsCollection.query(NOT_STAGED).fetchCount();
 }
 
 /** Resolve topic ids to the {id, weight} of the rows that still EXIST (any
@@ -296,7 +409,7 @@ export interface TopupTopicSnapshot {
 /** Fact-owned topic rows (any status) for top-up candidate selection. */
 export async function getTopupTopicSnapshots(): Promise<TopupTopicSnapshot[]> {
   const rows = await topicsCollection
-    .query(Q.where('fact_id', Q.notEq(null)))
+    .query(Q.where('fact_id', Q.notEq(null)), NOT_STAGED)
     .fetch();
   return rows.map((t) => ({
     id: t.id,
@@ -476,7 +589,13 @@ export async function reactivate(topicId: string): Promise<void> {
 /** Every topic id currently on the device — the liveness set the suggestion
  *  purge screens against (see article-suggestion-service). Includes retired and
  *  suppressed rows on purpose: those still EXIST, so a suggestion matching one
- *  is stale, not orphaned, and must not be destroyed. */
+ *  is stale, not orphaned, and must not be destroyed.
+ *
+ *  Rows STAGED for deletion (`pending_delete_at`) are included for the same
+ *  reason, and it matters more here than anywhere else: filtering them out
+ *  would let `purgeSuggestionsForDeadTopics` destroy, during the 5s undo
+ *  window, every suggestion the staged topic retrieved — and an undo cannot
+ *  bring suggestions back. Do not "tidy" a NOT_STAGED clause into this query. */
 export async function getAllTopicIds(): Promise<Set<string>> {
   const rows = await topicsCollection.query().fetch();
   return new Set(rows.map((t) => t.id));

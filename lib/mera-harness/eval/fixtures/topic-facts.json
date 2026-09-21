@@ -1,0 +1,164 @@
+{
+  "_note": "One fact per case in skills/persona/expectations/topics.json. The expectations file selects a case by factMatches (AND over lowercase substrings), so these statements are written to match exactly one case each; the runner reports ambiguousCaseMatch rather than guessing if that ever stops being true. placeChain is present only where lookup_place would really have resolved one: residence-capital carries a NULL admin1 and origin-only carries NO chain at all, so the two fallbacks the similarity module documents are exercised by the corpus rather than only by unit tests. PER-FACT LOCATION: these are fifteen INDEPENDENT cases, not one person - tf01 lives in Barcelona while tf05 and tf06 name Dublin and Rotterdam in their own statements. The runner therefore derives each fact's location from its OWN placeChain and falls back to the persona residence only for facts that carry none. A single persona-wide location told every call the user lives in Barcelona and produced a false host-rung failure.",
+  "persona": {
+    "residence": "Lives in Gràcia, Barcelona, Catalonia, Spain",
+    "_why": "The generic cases assert that a hobby fact does not drag in the residence, so the corpus needs a residence for that assertion to mean anything."
+  },
+  "facts": [
+    {
+      "caseId": "residence-full",
+      "id": "tf01",
+      "statement": "Lives in Gràcia, Barcelona, Catalonia, Spain",
+      "questionnaireAttribute": "location: residence",
+      "kind": "residence",
+      "placeChain": {
+        "neighbourhood": "Gràcia",
+        "locality": "Barcelona",
+        "admin1": "Catalonia",
+        "countryCode": "ES",
+        "countryName": "Spain",
+        "bloc": "EU"
+      }
+    },
+    {
+      "caseId": "residence-village",
+      "id": "tf02",
+      "statement": "Lives in Ballyvaughan, County Clare, Ireland",
+      "questionnaireAttribute": "location: residence",
+      "kind": "residence",
+      "placeChain": {
+        "locality": "Ballyvaughan",
+        "admin1": "County Clare",
+        "countryCode": "IE",
+        "countryName": "Ireland",
+        "bloc": "EU"
+      }
+    },
+    {
+      "caseId": "residence-capital",
+      "id": "tf03",
+      "statement": "Lives in Reykjavik, Iceland",
+      "questionnaireAttribute": "location: residence",
+      "kind": "residence",
+      "placeChain": {
+        "locality": "Reykjavik",
+        "admin1": null,
+        "countryCode": "IS",
+        "countryName": "Iceland",
+        "bloc": "EEA"
+      }
+    },
+    {
+      "caseId": "origin-only",
+      "id": "tf04",
+      "statement": "Originally from Eritrea",
+      "questionnaireAttribute": "location: origin",
+      "kind": "origin"
+    },
+    {
+      "caseId": "origin-composed",
+      "id": "tf05",
+      "statement": "Expat from the Philippines living in Dublin",
+      "questionnaireAttribute": "location: origin",
+      "kind": "origin",
+      "placeChain": {
+        "locality": "Dublin",
+        "admin1": null,
+        "countryCode": "IE",
+        "countryName": "Ireland",
+        "bloc": "EU"
+      }
+    },
+    {
+      "caseId": "origin-eu-internal",
+      "id": "tf06",
+      "statement": "Originally from Poland, now living in Rotterdam",
+      "questionnaireAttribute": "location: origin",
+      "kind": "origin",
+      "placeChain": {
+        "locality": "Rotterdam",
+        "admin1": "South Holland",
+        "countryCode": "NL",
+        "countryName": "Netherlands",
+        "bloc": "EU"
+      }
+    },
+    {
+      "caseId": "profession-software",
+      "id": "tf07",
+      "statement": "Works as a software engineer",
+      "questionnaireAttribute": "profession: job",
+      "kind": "profession"
+    },
+    {
+      "caseId": "profession-nurse",
+      "id": "tf08",
+      "statement": "Works as a nurse",
+      "questionnaireAttribute": "profession: job",
+      "kind": "profession"
+    },
+    {
+      "caseId": "profession-lawyer",
+      "id": "tf09",
+      "statement": "Works as a solicitor",
+      "questionnaireAttribute": "profession: job",
+      "kind": "profession"
+    },
+    {
+      "caseId": "family-relative-city",
+      "id": "tf10",
+      "statement": "Parents live in Bhopal",
+      "questionnaireAttribute": "family: relative",
+      "kind": "family",
+      "placeChain": {
+        "locality": "Bhopal",
+        "admin1": "Madhya Pradesh",
+        "countryCode": "IN",
+        "countryName": "India",
+        "bloc": "Asia"
+      }
+    },
+    {
+      "caseId": "family-relative-village",
+      "id": "tf11",
+      "statement": "Parents live in Porto Santo, Madeira",
+      "questionnaireAttribute": "family: relative",
+      "kind": "family",
+      "placeChain": {
+        "locality": "Porto Santo",
+        "admin1": "Madeira",
+        "countryCode": "PT",
+        "countryName": "Portugal",
+        "bloc": "EU"
+      }
+    },
+    {
+      "caseId": "family-life-event",
+      "id": "tf12",
+      "statement": "Expecting their first child",
+      "questionnaireAttribute": "family: life event",
+      "kind": "family"
+    },
+    {
+      "caseId": "interest-chess",
+      "id": "tf13",
+      "statement": "Plays chess",
+      "questionnaireAttribute": "interest: hobby",
+      "kind": "interest"
+    },
+    {
+      "caseId": "interest-genre",
+      "id": "tf14",
+      "statement": "Listens to drum and bass",
+      "questionnaireAttribute": "interest: music",
+      "kind": "interest"
+    },
+    {
+      "caseId": "interest-team",
+      "id": "tf15",
+      "statement": "Supports Feyenoord",
+      "questionnaireAttribute": "interest: sport",
+      "kind": "interest"
+    }
+  ]
+}

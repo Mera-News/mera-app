@@ -70,7 +70,7 @@
     "tryAgain": "再試一次",
     "learnAboutMera": "認識 Mera",
     "startReading": "開始閱讀",
-    "alreadyHaveAccount": "已有帳戶？登入",
+    "alreadyHaveAccount": "使用電子郵件登入",
     "chooseLanguageTitle": "選擇您的語言",
     "chooseLanguageHint": "您可以隨時在設定中更改。",
     "continue": "繼續",
@@ -644,7 +644,9 @@
     "gotItPromo": "太棒了！🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 上市優惠 🎊",
-    "resetsOn": "重設日"
+    "resetsOn": "重設日",
+    "retryTopicGeneration": "重試",
+    "topicGenFailedGeneric": "無法為此產生主題。"
   },
   "errors": {
     "somethingWentWrong": "發生錯誤",
@@ -1486,7 +1488,10 @@
     "screenSubtitle": "Mera 了解你的哪些資訊",
     "influence": "影響力",
     "moreInfluence": "更多影響",
-    "lessInfluence": "減少影響"
+    "lessInfluence": "減少影響",
+    "declinedTopicsTitle": "您移除的主題",
+    "allowAgain": "再次允許",
+    "topicRemovalConsequence": "移除的主題不會再被推薦，除非您在「您移除的主題」中再次允許。"
   },
   "publicationPrefs": {
     "title": "來源偏好",
@@ -2527,7 +2532,15 @@
     "addAll": "全部新增（{{count}}）",
     "skipAll": "全部略過",
     "addAllA11y": "新增全部 {{count}} 則建議",
-    "skipAllA11y": "略過全部 {{count}} 則建議"
+    "skipAllA11y": "略過全部 {{count}} 則建議",
+    "titleReplace": "替換已有的一則資訊？",
+    "replace": "替換",
+    "replacesLabel": "將替換",
+    "replacesTopics_one": "以及它的 1 個主題",
+    "replacesTopics_other": "以及它的 {{count}} 個主題",
+    "replacesNoUndo": "原有資訊及其主題將被永久刪除，無法復原。",
+    "replacesLoading": "正在確認會替換什麼",
+    "replacesUnavailable": "Mera 暫時無法顯示會刪除哪些內容。請稍後再試。"
   },
   "subscriptions": {
     "sectionTitle": "您的訂閱",
@@ -2611,6 +2624,117 @@
     "loading": "正在計算你的數據"
   },
   "chatTopics": {
-    "none": "已儲存。目前沒有可新增的主題。"
+    "none": "已儲存。目前沒有可新增的主題。",
+    "removed": "已移除",
+    "accordionTitle": "相關主題：",
+    "finding": "正在尋找主題",
+    "findMore": "尋找更多主題",
+    "findingMore": "正在尋找",
+    "goneTombstone": "這則資訊已刪除，相關主題也一併移除。",
+    "expandA11y": "顯示主題",
+    "collapseA11y": "隱藏主題",
+    "accordionTitlePending": "我們會為這則找主題：",
+    "pendingA11y": "正在尋找主題",
+    "readyA11y": "主題已就緒",
+    "failedA11y": "未能找到主題"
+  },
+  "agentSteps": {
+    "legStart": "正在思考你說的內容",
+    "loadSkill": "正在確認如何處理{{topic}}",
+    "loadSkillGeneric": "正在確認如何處理這件事",
+    "findSimilarFacts": "正在尋找你之前告訴我的內容",
+    "lookupPlace": "正在確認地區：{{query}}",
+    "writeUp": "正在整理，供你確認",
+    "removing": "正在刪除你要求刪除的內容",
+    "asking": "正在向你提問",
+    "working": "正在處理",
+    "slow": "仍在處理，網路較慢",
+    "legCapSentence": "這超出了 Mera 一次能完成的步驟數。再問一次即可繼續。",
+    "interrupted": "這次處理中斷了。再問一次即可繼續。",
+    "summaryDone": "已完成",
+    "summaryFailed": "有一項沒有成功",
+    "statePending": "進行中",
+    "stateDone": "已完成",
+    "stateError": "失敗",
+    "consequence": {
+      "generic": "這一步沒有完成",
+      "interrupted": "這項沒有完成",
+      "lookupPlace": "無法確認該地區，Mera 使用了已知的資訊",
+      "findSimilarFacts": "無法核對你之前告訴我的內容，可能會重複",
+      "loadSkill": "無法載入相關指引，Mera 採用了通用做法",
+      "writeUp": "無法整理這項內容，因此沒有新增任何內容",
+      "removing": "無法刪除這項，它仍然在"
+    },
+    "noRouteSentence": "Mera 沒能判斷這是關於什麼的。換個說法再試試。",
+    "noProposalSentence": "Mera 沒有從中找到可以新增的內容。",
+    "unknownToolSentence": "Mera 這邊出了點問題。再問一次即可繼續。"
+  },
+  "skillPhrase": {
+    "residence": "你居住的地方",
+    "work": "你的工作",
+    "interests": "你的興趣",
+    "origin": "你來自哪裡",
+    "family": "你的家人",
+    "newFact": "一項新資訊",
+    "topics": "你的主題"
+  },
+  "askChoice": {
+    "answeredA11y": "已回答"
+  },
+  "streamingWords": {
+    "w1": "思考中",
+    "w2": "分析中",
+    "w3": "琢磨中",
+    "w4": "斟酌中",
+    "w5": "權衡中",
+    "w6": "擺弄中",
+    "w7": "沉澱中",
+    "w8": "推敲中",
+    "w9": "比較中",
+    "w10": "篩選中",
+    "w11": "串聯中",
+    "w12": "組織語句",
+    "w13": "調整中",
+    "w14": "打磨中",
+    "w15": "醞釀中"
+  },
+  "chatPhases": {
+    "preparing": [
+      "正在整理 Mera 已經了解你的內容。",
+      "正在組織你的問題。"
+    ],
+    "queued": [
+      "正在把你的請求排入佇列。",
+      "同時還有幾件事在跑，下一個就是你。"
+    ],
+    "securing": [
+      "正在鎖定你的訊息，只有模型能打開。",
+      "你的文字在離開手機前就已加密。"
+    ],
+    "attesting": [
+      "正在建立通往模型的私密通道。",
+      "正在取得金鑰，讓這段對話只屬於你和 Mera。",
+      "私密對話需要一點時間來建立。"
+    ],
+    "thinking": [
+      "Mera 正在讀你寫的內容。",
+      "正在想最好的回答方式。"
+    ],
+    "retrying": [
+      "這次比平常久一些，Mera 正在換一條路線。",
+      "還在進行中，謝謝你的等待。"
+    ],
+    "deviceLoading": [
+      "正在喚醒手機上的模型。",
+      "載入期間，第一個回答會稍微久一點。"
+    ],
+    "devicePreparing": [
+      "正在整理 Mera 已經了解你的內容。",
+      "正在讓手機準備好作答。"
+    ],
+    "deviceThinking": [
+      "正在你的手機上思考。",
+      "這一切都在你的裝置上執行，不會傳送到任何地方。"
+    ]
   }
 }

@@ -70,7 +70,7 @@
     "tryAgain": "Erneut versuchen",
     "learnAboutMera": "Mera kennenlernen",
     "startReading": "Jetzt lesen",
-    "alreadyHaveAccount": "Schon ein Konto? Anmelden",
+    "alreadyHaveAccount": "Mit E-Mail anmelden",
     "chooseLanguageTitle": "Wähle deine Sprache",
     "chooseLanguageHint": "Du kannst das jederzeit in den Einstellungen ändern.",
     "continue": "Weiter",
@@ -644,7 +644,9 @@
     "gotItPromo": "Super! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Launch-Angebot 🎊",
-    "resetsOn": "Zurücksetzung"
+    "resetsOn": "Zurücksetzung",
+    "retryTopicGeneration": "Erneut versuchen",
+    "topicGenFailedGeneric": "Themen konnten nicht generiert werden."
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Was Mera über Sie weiß",
     "influence": "Einfluss",
     "moreInfluence": "Mehr Einfluss",
-    "lessInfluence": "Weniger Einfluss"
+    "lessInfluence": "Weniger Einfluss",
+    "declinedTopicsTitle": "Entfernte Themen",
+    "allowAgain": "Wieder zulassen",
+    "topicRemovalConsequence": "Entfernte Themen werden nicht mehr vorgeschlagen, außer Sie lassen sie unter „Entfernte Themen“ wieder zu."
   },
   "publicationPrefs": {
     "title": "Quellenpräferenzen",
@@ -2526,7 +2531,15 @@
     "addAll": "Alle hinzufügen ({{count}})",
     "skipAll": "Alle überspringen",
     "addAllA11y": "Alle {{count}} Vorschläge hinzufügen",
-    "skipAllA11y": "Alle {{count}} Vorschläge überspringen"
+    "skipAllA11y": "Alle {{count}} Vorschläge überspringen",
+    "titleReplace": "Eine vorhandene Angabe ersetzen?",
+    "replace": "Ersetzen",
+    "replacesLabel": "Ersetzt",
+    "replacesTopics_one": "und ihr 1 Thema",
+    "replacesTopics_other": "und ihre {{count}} Themen",
+    "replacesNoUndo": "Die alte Angabe und ihre Themen werden endgültig entfernt. Das lässt sich nicht rückgängig machen.",
+    "replacesLoading": "Ich prüfe, was ersetzt wird",
+    "replacesUnavailable": "Mera kann gerade nicht anzeigen, was entfernt würde. Versuch es gleich noch einmal."
   },
   "subscriptions": {
     "sectionTitle": "Deine Abos",
@@ -2611,6 +2624,117 @@
     "loading": "Deine Zahlen werden berechnet"
   },
   "chatTopics": {
-    "none": "Gespeichert. Gerade gibt es keine Themen zum Hinzufügen."
+    "none": "Gespeichert. Gerade gibt es keine Themen zum Hinzufügen.",
+    "removed": "Entfernt",
+    "accordionTitle": "Themen zu:",
+    "finding": "Themen werden gesucht",
+    "findMore": "Mehr Themen finden",
+    "findingMore": "Wird gesucht",
+    "goneTombstone": "Diese Angabe wurde entfernt, damit sind auch ihre Themen weg.",
+    "expandA11y": "Themen anzeigen",
+    "collapseA11y": "Themen ausblenden",
+    "accordionTitlePending": "Wir finden Themen zu:",
+    "pendingA11y": "Themen werden gesucht",
+    "readyA11y": "Themen bereit",
+    "failedA11y": "Themen konnten nicht gefunden werden"
+  },
+  "agentSteps": {
+    "legStart": "Ich denke über deine Nachricht nach",
+    "loadSkill": "Ich prüfe, wie ich mit {{topic}} umgehe",
+    "loadSkillGeneric": "Ich prüfe, wie ich damit umgehe",
+    "findSimilarFacts": "Ich suche nach dem, was du mir schon gesagt hast",
+    "lookupPlace": "Ich prüfe die Gegend: {{query}}",
+    "writeUp": "Ich schreibe es auf, damit du es prüfen kannst",
+    "removing": "Ich entferne, worum du gebeten hast",
+    "asking": "Ich stelle dir eine Frage",
+    "working": "Ich arbeite daran",
+    "slow": "Läuft noch, langsame Verbindung",
+    "legCapSentence": "Das waren mehr Schritte, als Mera auf einmal schafft. Frag noch einmal, um fortzufahren.",
+    "interrupted": "Das wurde unterbrochen. Frag noch einmal, um fortzufahren.",
+    "summaryDone": "Fertig",
+    "summaryFailed": "Etwas hat nicht geklappt",
+    "statePending": "läuft",
+    "stateDone": "fertig",
+    "stateError": "fehlgeschlagen",
+    "consequence": {
+      "generic": "Dieser Schritt wurde nicht beendet",
+      "interrupted": "Das wurde nicht beendet",
+      "lookupPlace": "Die Gegend ließ sich nicht prüfen, also hat Mera das Bekannte genutzt",
+      "findSimilarFacts": "Ich konnte Bekanntes nicht prüfen, es kann also zu einer Wiederholung kommen",
+      "loadSkill": "Die Anleitung ließ sich nicht laden, also hat Mera allgemein gearbeitet",
+      "writeUp": "Das ließ sich nicht aufschreiben, es wurde nichts hinzugefügt",
+      "removing": "Das ließ sich nicht entfernen, es ist noch da"
+    },
+    "noRouteSentence": "Mera konnte nicht erkennen, worum es dabei ging. Sag es gern anders.",
+    "noProposalSentence": "Mera hat daraus nichts zum Hinzufügen gefunden.",
+    "unknownToolSentence": "Auf Meras Seite ist etwas schiefgelaufen. Frag noch einmal, um fortzufahren."
+  },
+  "skillPhrase": {
+    "residence": "deinen Wohnort",
+    "work": "deine Arbeit",
+    "interests": "deine Interessen",
+    "origin": "deine Herkunft",
+    "family": "deine Familie",
+    "newFact": "eine neue Angabe",
+    "topics": "deine Themen"
+  },
+  "askChoice": {
+    "answeredA11y": "bereits beantwortet"
+  },
+  "streamingWords": {
+    "w1": "Denken",
+    "w2": "Analysieren",
+    "w3": "Betrachten",
+    "w4": "Grübeln",
+    "w5": "Abwägen",
+    "w6": "Tüfteln",
+    "w7": "Sacken lassen",
+    "w8": "Durchdenken",
+    "w9": "Gewichten",
+    "w10": "Sichten",
+    "w11": "Verknüpfen",
+    "w12": "Formulieren",
+    "w13": "Basteln",
+    "w14": "Feilen",
+    "w15": "Ausbrüten"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mera trägt zusammen, was sie schon über dich weiß.",
+      "Deine Frage wird vorbereitet."
+    ],
+    "queued": [
+      "Deine Anfrage wird eingereiht.",
+      "Gerade läuft noch etwas anderes. Du bist als Nächstes dran."
+    ],
+    "securing": [
+      "Deine Nachricht wird so verschlossen, dass nur das Modell sie öffnen kann.",
+      "Deine Worte werden verschlüsselt, bevor sie dein Handy verlassen."
+    ],
+    "attesting": [
+      "Ein privater Kanal zum Modell wird aufgebaut.",
+      "Der Schlüssel wird geholt, der das zwischen dir und Mera hält.",
+      "Ein privates Gespräch braucht einen Moment zum Einrichten."
+    ],
+    "thinking": [
+      "Mera liest, was du geschrieben hast.",
+      "Der beste Weg zur Antwort wird gesucht."
+    ],
+    "retrying": [
+      "Das dauert länger als sonst. Mera versucht einen anderen Weg.",
+      "Läuft noch. Danke fürs Warten."
+    ],
+    "deviceLoading": [
+      "Das Modell auf deinem Handy wird gestartet.",
+      "Die erste Antwort dauert etwas länger, solange es lädt."
+    ],
+    "devicePreparing": [
+      "Mera trägt zusammen, was sie schon über dich weiß.",
+      "Dein Handy wird für die Antwort vorbereitet."
+    ],
+    "deviceThinking": [
+      "Mera denkt auf deinem Handy nach.",
+      "Das läuft auf deinem Gerät, es wird nichts irgendwohin geschickt."
+    ]
   }
 }

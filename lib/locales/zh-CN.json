@@ -70,7 +70,7 @@
     "tryAgain": "重试",
     "learnAboutMera": "了解 Mera",
     "startReading": "开始阅读",
-    "alreadyHaveAccount": "已有帐号？登录",
+    "alreadyHaveAccount": "使用电子邮件登录",
     "chooseLanguageTitle": "选择您的语言",
     "chooseLanguageHint": "您可以随时在设置中更改。",
     "continue": "继续",
@@ -644,7 +644,9 @@
     "gotItPromo": "太棒了！🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 上线特惠 🎊",
-    "resetsOn": "重置"
+    "resetsOn": "重置",
+    "retryTopicGeneration": "重试",
+    "topicGenFailedGeneric": "无法为此生成主题。"
   },
   "errors": {
     "somethingWentWrong": "出了点问题",
@@ -1486,7 +1488,10 @@
     "screenSubtitle": "Mera 了解你的哪些信息",
     "influence": "影响力",
     "moreInfluence": "更多影响",
-    "lessInfluence": "减少影响"
+    "lessInfluence": "减少影响",
+    "declinedTopicsTitle": "您移除的话题",
+    "allowAgain": "再次允许",
+    "topicRemovalConsequence": "移除的话题不会再被推荐，除非您在「您移除的话题」中再次允许。"
   },
   "publicationPrefs": {
     "title": "来源偏好",
@@ -2527,7 +2532,15 @@
     "addAll": "全部添加（{{count}}）",
     "skipAll": "全部跳过",
     "addAllA11y": "添加全部 {{count}} 条建议",
-    "skipAllA11y": "跳过全部 {{count}} 条建议"
+    "skipAllA11y": "跳过全部 {{count}} 条建议",
+    "titleReplace": "替换已有的一条信息？",
+    "replace": "替换",
+    "replacesLabel": "将替换",
+    "replacesTopics_one": "以及它的 1 个主题",
+    "replacesTopics_other": "以及它的 {{count}} 个主题",
+    "replacesNoUndo": "原有信息及其主题将被永久删除，无法撤销。",
+    "replacesLoading": "正在确认会替换什么",
+    "replacesUnavailable": "Mera 暂时无法显示会删除哪些内容。请稍后再试。"
   },
   "subscriptions": {
     "sectionTitle": "你的订阅",
@@ -2611,6 +2624,117 @@
     "loading": "正在计算你的数据"
   },
   "chatTopics": {
-    "none": "已保存。目前没有可添加的主题。"
+    "none": "已保存。目前没有可添加的主题。",
+    "removed": "已移除",
+    "accordionTitle": "相关主题：",
+    "finding": "正在寻找主题",
+    "findMore": "查找更多主题",
+    "findingMore": "正在查找",
+    "goneTombstone": "这条信息已删除，相关主题也一并移除。",
+    "expandA11y": "显示主题",
+    "collapseA11y": "隐藏主题",
+    "accordionTitlePending": "我们会为这条找主题：",
+    "pendingA11y": "正在寻找主题",
+    "readyA11y": "主题已就绪",
+    "failedA11y": "未能找到主题"
+  },
+  "agentSteps": {
+    "legStart": "正在思考你说的内容",
+    "loadSkill": "正在确认如何处理{{topic}}",
+    "loadSkillGeneric": "正在确认如何处理这件事",
+    "findSimilarFacts": "正在查找你之前告诉我的内容",
+    "lookupPlace": "正在确认地区：{{query}}",
+    "writeUp": "正在整理，供你确认",
+    "removing": "正在删除你要求删除的内容",
+    "asking": "正在向你提问",
+    "working": "正在处理",
+    "slow": "仍在处理，网络较慢",
+    "legCapSentence": "这超出了 Mera 一次能完成的步骤数。再问一次即可继续。",
+    "interrupted": "这次处理中断了。再问一次即可继续。",
+    "summaryDone": "已完成",
+    "summaryFailed": "有一项没有成功",
+    "statePending": "进行中",
+    "stateDone": "已完成",
+    "stateError": "失败",
+    "consequence": {
+      "generic": "这一步没有完成",
+      "interrupted": "这项没有完成",
+      "lookupPlace": "无法确认该地区，Mera 使用了已知的信息",
+      "findSimilarFacts": "无法核对你之前告诉我的内容，可能会重复",
+      "loadSkill": "无法加载相关指引，Mera 采用了通用做法",
+      "writeUp": "无法整理这项内容，因此没有添加任何内容",
+      "removing": "无法删除这项，它仍然在"
+    },
+    "noRouteSentence": "Mera 没能判断这是关于什么的。换个说法再试试。",
+    "noProposalSentence": "Mera 没有从中找到可以添加的内容。",
+    "unknownToolSentence": "Mera 这边出了点问题。再问一次即可继续。"
+  },
+  "skillPhrase": {
+    "residence": "你居住的地方",
+    "work": "你的工作",
+    "interests": "你的兴趣",
+    "origin": "你来自哪里",
+    "family": "你的家人",
+    "newFact": "一条新信息",
+    "topics": "你的主题"
+  },
+  "askChoice": {
+    "answeredA11y": "已回答"
+  },
+  "streamingWords": {
+    "w1": "思考中",
+    "w2": "分析中",
+    "w3": "琢磨中",
+    "w4": "斟酌中",
+    "w5": "权衡中",
+    "w6": "捣鼓中",
+    "w7": "沉淀中",
+    "w8": "推敲中",
+    "w9": "比较中",
+    "w10": "筛选中",
+    "w11": "串联中",
+    "w12": "组织语言",
+    "w13": "调整中",
+    "w14": "打磨中",
+    "w15": "酝酿中"
+  },
+  "chatPhases": {
+    "preparing": [
+      "正在整理 Mera 已经了解你的内容。",
+      "正在组织你的问题。"
+    ],
+    "queued": [
+      "正在把你的请求排入队列。",
+      "同时还有几件事在跑，下一个就是你。"
+    ],
+    "securing": [
+      "正在锁定你的消息，只有模型能打开。",
+      "你的文字在离开手机前就已加密。"
+    ],
+    "attesting": [
+      "正在建立通往模型的私密通道。",
+      "正在获取密钥，让这段对话只属于你和 Mera。",
+      "私密对话需要一点时间来建立。"
+    ],
+    "thinking": [
+      "Mera 正在读你写的内容。",
+      "正在想最好的回答方式。"
+    ],
+    "retrying": [
+      "这次比平时久一些，Mera 正在换一条路线。",
+      "还在进行中，谢谢你的等待。"
+    ],
+    "deviceLoading": [
+      "正在唤醒手机上的模型。",
+      "加载期间，第一个回答会稍微久一点。"
+    ],
+    "devicePreparing": [
+      "正在整理 Mera 已经了解你的内容。",
+      "正在让手机准备好作答。"
+    ],
+    "deviceThinking": [
+      "正在你的手机上思考。",
+      "这一切都在你的设备上运行，不会发送到任何地方。"
+    ]
   }
 }

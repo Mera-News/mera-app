@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "note": "Resume point for the mera-persona-skill-author Claude Code skill. Written immediately on every state change, never batched: a ledger updated at the end of a run is a ledger that loses the run it was recording.",
+  "sessions": [
+    {
+      "id": 1,
+      "date": "2026-09-17",
+      "note": "Library authored by hand under the pagent wave (P5). Thirteen skills, fifteen expectation cases. The authoring skill and this ledger exist from here on.",
+      "items_completed": 13
+    }
+  ],
+  "items": [
+    { "id": "router", "scenario": "route one turn to one skill", "status": "done", "session": 1 },
+    { "id": "facts/generic", "scenario": "shared fact rules, and an interest fact", "status": "done", "session": 1 },
+    { "id": "facts/residence", "scenario": "where the user lives", "status": "done", "session": 1 },
+    { "id": "facts/origin", "scenario": "where the user is from, composed with residence", "status": "done", "session": 1 },
+    { "id": "facts/profession", "scenario": "role, employer, field", "status": "done", "session": 1 },
+    { "id": "facts/family", "scenario": "relatives, their places, life events", "status": "done", "session": 1 },
+    { "id": "topics/generic", "scenario": "shared topic rules, and an interest fact", "status": "done", "session": 1 },
+    { "id": "topics/residence", "scenario": "the place chain and the daily round", "status": "done", "session": 1 },
+    { "id": "topics/origin", "scenario": "diaspora shapes, no domestic ladder", "status": "done", "session": 1 },
+    { "id": "topics/profession", "scenario": "field generic, then national and bloc", "status": "done", "session": 1 },
+    { "id": "topics/family", "scenario": "stay exactly where the fact put you", "status": "done", "session": 1 },
+    { "id": "conversation/question", "scenario": "answer, or handle small talk", "status": "done", "session": 1 },
+    { "id": "conversation/correction", "scenario": "fix one thing, extract nothing", "status": "done", "session": 1 }
+  ]
+}

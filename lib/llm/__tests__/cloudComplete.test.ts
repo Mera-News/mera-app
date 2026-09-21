@@ -51,9 +51,16 @@ jest.mock('@/lib/e2ee/e2ee-service', () => ({
 }));
 
 const mockInvalidateCachedAttestation = jest.fn();
+const mockGetCachedAttestation = jest.fn((_model: string): unknown => ({ signing_public_key: 'cached' }));
 jest.mock('@/lib/e2ee/e2ee-cache', () => ({
   invalidateCachedAttestation: (...args: unknown[]) =>
     mockInvalidateCachedAttestation(...(args as [string])),
+  // Read by the wait line to tell `securing` (key cached, the send is the
+  // whole cost) from `attesting` (cache miss, so a second interactive grant
+  // 1000ms out plus the attestation round trip). Truthy by default so the
+  // specs that are not about the phase see a warm turn; the ones that are
+  // override it.
+  getCachedAttestation: (...args: unknown[]) => mockGetCachedAttestation(...(args as [string])),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -80,6 +87,7 @@ jest.mock('@/lib/config/endpoints', () => ({
 // calls has to be listed here or it is `undefined` at the call site.
 const mockRateLimiterAcquire = jest.fn().mockResolvedValue(undefined);
 const mockRateLimiterPauseFor = jest.fn();
+const mockInteractiveWaitMs = jest.fn((): number => 0);
 jest.mock('../gateway-rate-limiter', () => ({
   acquire: (...args: unknown[]) => mockRateLimiterAcquire(...args),
   pauseFor: (...args: unknown[]) => mockRateLimiterPauseFor(...args),
@@ -87,6 +95,12 @@ jest.mock('../gateway-rate-limiter', () => ({
   // is `undefined` at the comparison site and every interactive 429 silently
   // takes the throw branch — the factory trap in its quietest form.
   INTERACTIVE_MAX_PAUSE_MS: 2000,
+  // The wait line's queue peek. Omitted, EVERY cloudChatStream spec dies with
+  // "interactiveWaitMs is not a function" — the same factory trap, in its
+  // loudest form for once. Default 0 means "no queue", so the `queued` phase
+  // stays out of the specs that are not about it; the one that is overrides
+  // this per test.
+  interactiveWaitMs: () => mockInteractiveWaitMs(),
 }));
 
 // ─── Imports ──────────────────────────────────────────────────────────────────
@@ -1541,6 +1555,10 @@ describe('cloudChatStream', () => {
     mockEncryptMessages.mockReset();
     mockDecryptContent.mockReset();
     mockInvalidateCachedAttestation.mockReset();
+    mockGetCachedAttestation.mockReset();
+    mockGetCachedAttestation.mockReturnValue({ signing_public_key: 'cached' });
+    mockInteractiveWaitMs.mockReset();
+    mockInteractiveWaitMs.mockReturnValue(0);
     [(logger.captureException as jest.Mock), (logger.captureMessage as jest.Mock), (logger.addBreadcrumb as jest.Mock), (logger.warn as jest.Mock), (logger.error as jest.Mock), (logger.debug as jest.Mock)].forEach((fn) => fn.mockReset());
     jest.useRealTimers();
     resetModelFallback();
@@ -1799,6 +1817,185 @@ describe('cloudChatStream', () => {
     expect((err as Error).message).toBe('E2EE chat failed: 400');
     expect((err as Error).message).not.toContain('Provider failed');
     expect(err as unknown as { responseBody: string }).toMatchObject({ responseBody: body });
+  });
+
+  // ── The wait line's phase signal ────────────────────────────────────────
+  //
+  // These are NOT timer tests. Every assertion below pins a phase to a real
+  // point in the request's lifecycle, because the failure mode this whole
+  // feature has to avoid is a line that narrates a schedule instead of the
+  // work. The ordering spec in particular drives a DEFERRED fetch rather than
+  // a clock: it is the assertion that would have caught an in-band SseEvent
+  // implementation, which can only flush its phases in a burst after the
+  // response resolves, i.e. once they have all stopped being true.
+  describe('onPhase', () => {
+    const okOnce = () =>
+      mockFetch.mockResolvedValueOnce(
+        makeResponse(200, {
+          choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }],
+        }),
+      );
+
+    function recorder() {
+      const seen: (string | null)[] = [];
+      return { seen, onPhase: (p: string | null) => seen.push(p) };
+    }
+
+    it('opens every call with a reset, so each agent leg re-walks its phases', async () => {
+      okOnce();
+      const { seen, onPhase } = recorder();
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], onPhase }),
+      );
+      expect(seen[0]).toBe('reset');
+    });
+
+    it('reports `securing` on a warm attestation cache and never `attesting`', async () => {
+      okOnce();
+      const { seen, onPhase } = recorder();
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], onPhase }),
+      );
+      expect(seen).toContain('securing');
+      expect(seen).not.toContain('attesting');
+      // THE NEGATIVE THAT MATTERS. `retrying` keys off a re-entry into the
+      // request builder. If `sendHedged` built both legs up front instead of
+      // building the hedge leg behind its timer, `buildAttempts` would reach 2
+      // at t=0 on every hedgeable call and the FIRST thing every user saw
+      // would be "This is taking longer than usual". It builds in phase 2,
+      // after the timer, and this is the assertion that keeps it that way.
+      expect(seen).not.toContain('retrying');
+    });
+
+    it('reports `attesting` on a cold cache, which is the phase the first send of a launch pays', async () => {
+      mockGetCachedAttestation.mockReturnValue(null);
+      okOnce();
+      const { seen, onPhase } = recorder();
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], onPhase }),
+      );
+      expect(seen).toContain('attesting');
+      expect(seen).not.toContain('securing');
+    });
+
+    it('stays silent about the queue when the lane is free', async () => {
+      okOnce();
+      const { seen, onPhase } = recorder();
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], onPhase }),
+      );
+      expect(seen).not.toContain('queued');
+    });
+
+    it('reports `queued` only when the interactive lane really has to wait', async () => {
+      mockInteractiveWaitMs.mockReturnValue(1500);
+      okOnce();
+      const { seen, onPhase } = recorder();
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], onPhase }),
+      );
+      expect(seen.indexOf('queued')).toBeGreaterThan(-1);
+      // Before the builder, because the grant is taken before the builder runs.
+      expect(seen.indexOf('queued')).toBeLessThan(seen.indexOf('securing'));
+    });
+
+    it('ignores a queue wait too short to read', async () => {
+      mockInteractiveWaitMs.mockReturnValue(120);
+      okOnce();
+      const { seen, onPhase } = recorder();
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], onPhase }),
+      );
+      expect(seen).not.toContain('queued');
+    });
+
+    it('CANNOT report `thinking` before the response resolves', async () => {
+      // The discriminating test. A deferred fetch, not a fake clock: if the
+      // phases were buffered and flushed at the end, `securing` would be
+      // missing here and `thinking` would be present, and both halves of this
+      // assertion would flip together.
+      let settle: (r: Response) => void = () => {};
+      mockFetch.mockReturnValueOnce(
+        new Promise<Response>((resolve) => {
+          settle = resolve;
+        }),
+      );
+      const { seen, onPhase } = recorder();
+      const done = collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], onPhase }),
+      );
+      // Let the builder run and the POST be issued.
+      await new Promise((r) => setImmediate(r));
+
+      expect(seen).toContain('securing');
+      expect(seen).not.toContain('thinking');
+
+      settle(
+        makeResponse(200, {
+          choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }],
+        }) as Response,
+      );
+      await done;
+      expect(seen).toContain('thinking');
+    });
+
+    it('reports `thinking` even though the stream emits no reasoning at all', async () => {
+      // The persona loop sends enable_thinking:false on every leg, so gating
+      // this phase on the `reasoning` event would leave its 3-8s window, the
+      // longest of the wait, completely unnarrated.
+      okOnce();
+      const { seen, onPhase } = recorder();
+      const events = await collectStream(
+        cloudChatStream({
+          messages: [{ role: 'user', content: 'Q' }],
+          enableThinking: false,
+          onPhase,
+        }),
+      );
+      expect(events.some((e) => e.type === 'reasoning')).toBe(false);
+      expect(seen).toContain('thinking');
+    });
+
+    it('reports `retrying` on a rebuild, never `securing` a second time', async () => {
+      // A re-entered builder means the hedge leg, the model fallback or one of
+      // the two stream retries. Reporting `securing` again walks the reader
+      // back to "encrypting" at the longest point of the wait, which is why
+      // `retrying` outranks every other cloud phase.
+      mockFetch
+        .mockResolvedValueOnce(
+          makeResponse(
+            400,
+            {},
+            {
+              text:
+                '{"error":{"message":"Provider failed for model ' +
+                "'m': Decryption failed\"}}",
+            },
+          ),
+        )
+        .mockResolvedValueOnce(
+          makeResponse(200, {
+            choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }],
+          }),
+        );
+      const { seen, onPhase } = recorder();
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], model: SMALL_MODEL, onPhase }),
+      );
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(seen.filter((p) => p === 'securing')).toHaveLength(1);
+      expect(seen).toContain('retrying');
+    });
+
+    it('publishes nothing at all when no caller asked for it', async () => {
+      // `prewarm` drives this generator from four call sites and must stay
+      // silent. Safe because the callback is per request rather than a
+      // module-level bus, which is the main reason it is one.
+      okOnce();
+      await expect(
+        collectStream(cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] })),
+      ).resolves.toBeDefined();
+    });
   });
 
   // ── The decrypt-failure re-attest (MERA-APP-72) ──────────────────────────

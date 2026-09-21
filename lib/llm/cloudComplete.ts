@@ -13,7 +13,7 @@ import {
   prepareE2EEContext,
   type SigningAlgo,
 } from '../e2ee/e2ee-service';
-import { invalidateCachedAttestation } from '../e2ee/e2ee-cache';
+import { getCachedAttestation, invalidateCachedAttestation } from '../e2ee/e2ee-cache';
 import logger from '../logger';
 import { CHAT_REASONING_HEADROOM_TOKENS, SMALL_MODEL } from './constants';
 import { stripLeakedReasoning } from './reasoning-leak';
@@ -29,6 +29,7 @@ import { sseEvents } from './sse';
 import { estimateTokens } from './tokens';
 import type { BatchCall, ToolDefinition } from './types';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
+import type { PhaseSignal } from '@/lib/services/chat-phase';
 
 const TAG = '[CloudLLM]';
 
@@ -79,6 +80,15 @@ export const UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS = 2;
  *  won, and the session paid for it in every later turn. 10s is past a healthy
  *  first token yet far short of the 130s timeout this exists to pre-empt, so
  *  the hedge stays a stall-rescue rather than a latency tuner. */
+/**
+ * Below this, the interactive lane's wait is not worth a line of its own.
+ *
+ * Under half a second the queue phase would be gone before it could be read
+ * and would only push the phase that matters back by its minimum dwell. The
+ * waits this is for are the 1-3s ones behind prewarm's own interactive calls.
+ */
+const QUEUE_PHASE_FLOOR_MS = 400;
+
 export const HEDGE_DELAY_MS = 10_000;
 
 /** Max gap BETWEEN CHUNKS of an in-flight SSE body — deliberately not the time
@@ -1151,6 +1161,10 @@ export type WireMessage =
 
 export interface CloudChatStreamRequest {
   messages: WireMessage[];
+  /** Defaults to TRUE, which is what every pre-existing caller gets. The agent
+   *  loop passes false: measured, the trace buys nothing on a tool-routing leg
+   *  and costs the whole budget on the topic path. */
+  enableThinking?: boolean;
   tools?: ToolDefinition[];
   system?: string;
   model?: string;
@@ -1162,6 +1176,21 @@ export interface CloudChatStreamRequest {
   n?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
+  /**
+   * Progress for the chat wait line. Optional, so every existing caller is
+   * byte-identical and `prewarm` stays silent by simply not passing it.
+   *
+   * NOT AN `SseEvent`, AND IT CANNOT BE ONE. Every phase worth naming happens
+   * before this generator's first yield, inside `buildChatRequest` ->
+   * `sendWithModelFallback` -> `sendHedged`, none of which can yield here.
+   * In-band events would have to be buffered and flushed in a burst at the
+   * exact moment they stopped being true, which is worse than no line at all.
+   *
+   * PER REQUEST, never a module-level emitter: prewarm, the background lane
+   * and a 429 pause all drive this file, and a bus would let any of them
+   * narrate a turn a person is watching.
+   */
+  onPhase?: (signal: PhaseSignal) => void;
 }
 
 /** One OpenAI streaming chunk. `choices` is optional AND may be empty — the
@@ -1195,6 +1224,14 @@ export async function* cloudChatStream(
 ): AsyncGenerator<SseEvent> {
   logger.debug(`${TAG} cloudChatStream ENTER`, { messageCount: request.messages.length });
 
+  // ONE CALL, ONE MARK. An agent turn is a loop of up to MAX_AGENT_LEGS
+  // sequential calls and each genuinely re-encrypts and re-sends, so the wait
+  // line's high-water mark is bounded here rather than by the turn. This
+  // clears the mark and deliberately does NOT clear the line, or every pair of
+  // legs shows a blank frame between them.
+  const phase = request.onPhase ?? (() => {});
+  phase('reset');
+
   const primary = request.model ?? SMALL_MODEL;
   const model = resolveModel(primary);
 
@@ -1216,7 +1253,25 @@ export async function* cloudChatStream(
 
   // Rebuilt per attempt/leg: the deep copy must be FRESH, or a fallback retry
   // would re-encrypt already-encrypted content (and under the wrong key).
+  // Counts entries into the builder, which is what distinguishes a first
+  // attempt from the 10s hedge leg, the model fallback and both stream
+  // retries. Those all re-encrypt, so without this they would report
+  // `securing` again and walk the reader back to "encrypting" at the moment
+  // they have been waiting longest.
+  let buildAttempts = 0;
+
   const buildChatRequest = async (sendModel: string) => {
+    buildAttempts += 1;
+    if (buildAttempts > 1) {
+      phase('retrying');
+    } else {
+      // A cache hit makes the key fetch free, so `attesting` would be a line
+      // about work that is not happening. A miss means a second interactive
+      // grant 1000ms behind the one just spent, plus the attestation round
+      // trip: on a cold launch this is the phase, and it is why the first
+      // message of a session feels different from the tenth.
+      phase(getCachedAttestation(sendModel) ? 'securing' : 'attesting');
+    }
     const messages = request.messages.map((m) => ({ ...m }));
     // INTERACTIVE all the way down: a cold attestation cache makes this a real
     // gateway request on the critical path of a user's turn.
@@ -1238,7 +1293,7 @@ export async function* cloudChatStream(
       // coexist — see cloudChatStream's doc comment.
       stream: true,
       model: sendModel,
-      chat_template_kwargs: { enable_thinking: true },
+      chat_template_kwargs: { enable_thinking: request.enableThinking ?? true },
     };
     if (request.tools && request.tools.length > 0) {
       body.tools = request.tools;
@@ -1271,6 +1326,11 @@ export async function* cloudChatStream(
   // Dev-only timing: per-request POST→response wall time. Tagged for first-chat
   // latency attribution.
   const postStartMs = Date.now();
+  // The grant is taken inside `sendHedged`, before the builder runs, so this
+  // is the only point at which the queueing can be named. Only when the lane
+  // genuinely has to wait: on a warm, idle device this is 0 and the phase is
+  // skipped entirely rather than shown for its minimum dwell over nothing.
+  if (gatewayRateLimiter.interactiveWaitMs() > QUEUE_PHASE_FLOOR_MS) phase('queued');
   const { response, ctx, model: sentModel } = await sendWithModelFallback(
     CHAT_API,
     primary,
@@ -1394,6 +1454,14 @@ export async function* cloudChatStream(
       responseBody: errorText,
     });
   }
+
+  // Headers are in and nothing visible has arrived: this is model
+  // time-to-first-token, 3-8s median and the single longest phase of the wait.
+  // It MUST fire here and not only on the `reasoning` event, because the
+  // persona loop sends `enable_thinking: false` on every leg and so emits no
+  // reasoning at all. Gating on that event froze the line on "encrypted" for
+  // the whole window, which is the failure this line exists to remove.
+  phase('thinking');
 
   let textYielded = false;
   try {

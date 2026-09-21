@@ -1494,5 +1494,81 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // Persona agent data foundations.
+      //
+      // (1) `facts.topics_status` / `topics_updated_at` — where the most recent
+      // topic-generation run for a fact got to. Read by the chat accordion and
+      // the persona facts list through observable queries. `addColumns`, never a
+      // rebuild: `facts` is the one table nothing may wipe.
+      //
+      // (2) `topics.pending_delete_at` — the staged-delete marker behind the 5s
+      // undo. Non-null means the row still exists but no live read returns it,
+      // so the undo survives the card unmounting and a process kill.
+      //
+      // (3) `declined_topics` — the topics the user said No to. A new TABLE, so
+      // it carries the backup obligation the two column additions do not:
+      // `lib/backup/allowlist.ts` classifies TABLES, and columns are derived
+      // from the live `appSchema` at runtime in both directions. Classified
+      // into BACKUP_TABLES in the same commit as this migration, because the
+      // allowlist test asserts set equality against schema.ts and goes red the
+      // instant the table appears.
+      //
+      // BACKFILL — deliberately partial. Only what is OBSERVABLE is stamped:
+      // 'error' where a topicGenError marker exists, 'done' where the fact owns
+      // topic rows. Everything else is left NULL, which readers render as
+      // 'done'. It is NOT backfilled to 'pending': that would assert that some
+      // loop will drain those facts, and the rescue sweep turns a stale
+      // 'pending' with no live job into a visible 'error' — so a wrong guess
+      // here manufactures a wave of errors on facts that were never failing.
+      // 'pending' keeps one precise meaning, "was enqueued and the job died",
+      // which is the only thing that sweep can detect. Facts left NULL are
+      // offered to topic generation at runtime instead, where the decision
+      // about billing and cadence belongs.
+      //
+      // FORWARD-ONLY. There is no down migration in this chain and WatermelonDB
+      // has no concept of one: a device that reaches v55 cannot open on a v54
+      // binary. The feature therefore ships WITH this migration, never ahead of
+      // it. Every column added here is optional and NULL renders as 'done', so
+      // pre-v55 JS running on a v55 device degrades safely rather than losing
+      // data.
+      toVersion: 55,
+      steps: [
+        addColumns({
+          table: 'facts',
+          columns: [
+            { name: 'topics_status', type: 'string', isOptional: true },
+            { name: 'topics_updated_at', type: 'number', isOptional: true },
+          ],
+        }),
+        addColumns({
+          table: 'topics',
+          columns: [
+            { name: 'pending_delete_at', type: 'number', isOptional: true, isIndexed: true },
+          ],
+        }),
+        createTable({
+          name: 'declined_topics',
+          columns: [
+            { name: 'text', type: 'string' },
+            { name: 'normalized_text', type: 'string', isIndexed: true },
+            { name: 'source_fact_id', type: 'string', isOptional: true, isIndexed: true },
+            { name: 'created_at', type: 'number', isIndexed: true },
+          ],
+        }),
+        // Observable-only backfill, in this order: the error marker wins over
+        // "owns topic rows", because a fact can hold topics from an earlier run
+        // and still have failed its most recent one.
+        unsafeExecuteSql(
+          "UPDATE facts SET topics_status = 'error', topics_updated_at = updated_at " +
+            "WHERE metadata_json LIKE '%\"topicGenError\"%';",
+        ),
+        unsafeExecuteSql(
+          "UPDATE facts SET topics_status = 'done', topics_updated_at = updated_at " +
+            'WHERE topics_status IS NULL ' +
+            'AND id IN (SELECT fact_id FROM topics WHERE fact_id IS NOT NULL);',
+        ),
+      ],
+    },
   ],
 });

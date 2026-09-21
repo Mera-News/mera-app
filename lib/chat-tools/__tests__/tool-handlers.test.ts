@@ -1013,3 +1013,56 @@ describe('handleExplainMera', () => {
     expect(mockUpdateFact).not.toHaveBeenCalled();
   });
 });
+
+// ---------------------------------------------------------------------------
+// deleteUserFacts: an ambiguous handle is REFUSED, never guessed (pagent P1)
+//
+// The device failure this reproduces: a persona held a residence fact and an
+// origin fact that embedded the same place. The attribute lookup ran before
+// the id lookup and was built with `new Map(...)`, which is last-wins, so the
+// attribute resolved to whichever fact sat LAST in getFacts() order --
+// newest-first, therefore the OLDEST. Replacing the residence silently deleted
+// "Expat from India living in Nieuw-West, Amsterdam".
+// ---------------------------------------------------------------------------
+describe('handleDeleteUserFacts resolution', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const factService = require('../../database/services/fact-service');
+
+  const RESIDENCE = {
+    id: 'f-new', statement: 'Lives in Rotterdam', questionnaireAttribute: 'location: residence',
+  };
+  const ORIGIN = {
+    id: 'f-old',
+    statement: 'Expat from India living in Nieuw-West, Amsterdam, Netherlands, Europe',
+    questionnaireAttribute: 'location: residence',
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // getFacts() is created_at DESC: newest first, oldest LAST.
+    factService.getFacts.mockResolvedValue([RESIDENCE, ORIGIN]);
+    factService.deleteFact.mockResolvedValue(undefined);
+  });
+
+  it('REFUSES an attribute that names two facts, and deletes nothing', async () => {
+    const out = await handleDeleteUserFacts({ fact_ids: ['location: residence'] });
+    expect(factService.deleteFact).not.toHaveBeenCalled();
+    expect(out.error).toMatch(/ambiguous/);
+    expect((out.ambiguous as { candidates: unknown[] }[])[0].candidates).toHaveLength(2);
+  });
+
+  it('an exact ID still deletes exactly that fact, even when an attribute collides', async () => {
+    // ID FIRST. Before the fix the attribute map was consulted first, so a
+    // precise request could still be answered imprecisely.
+    const out = await handleDeleteUserFacts({ fact_ids: ['f-new'] });
+    expect(factService.deleteFact).toHaveBeenCalledTimes(1);
+    expect(factService.deleteFact).toHaveBeenCalledWith('f-new');
+    expect(out.deletedStatements).toEqual(['Lives in Rotterdam']);
+  });
+
+  it('an UNAMBIGUOUS attribute still works, so the fix is not a blanket refusal', async () => {
+    factService.getFacts.mockResolvedValue([RESIDENCE]);
+    await handleDeleteUserFacts({ fact_ids: ['location: residence'] });
+    expect(factService.deleteFact).toHaveBeenCalledWith('f-new');
+  });
+});

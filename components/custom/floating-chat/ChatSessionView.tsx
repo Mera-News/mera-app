@@ -27,12 +27,14 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import ChatThread from './ChatThread';
 import RequestUnblockModal from './RequestUnblockModal';
+import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { deriveThreadItems } from './deriveThreadItems';
 import { decideTopicPlanTurn } from './topic-plan-turn';
 import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
 import { getAiAccess } from '@/lib/stores/subscription-store';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
+import { renderableTerminal } from './types';
 
 const noop = () => {};
 
@@ -84,6 +86,15 @@ export default function ChatSessionView({
 }: ChatSessionViewProps) {
   const { t } = useTranslation();
   const isStreaming = status === 'streaming';
+
+  // TURN-scoped, and deliberately not `status`. `status` goes idle EARLY
+  // during a forced-extraction pass (startTurn's finally releases it
+  // unconditionally while turnBusyRef is held), so a turn still running its
+  // tools would render as interrupted. Undefined until P1's loop writes the
+  // state, and the deriver's fallback errs safe: it marks nothing interrupted
+  // that is not from an earlier conversation.
+  const turnActive = useCloudChatStore((st) => st.agentTurnState?.turnActive);
+  const agentTerminal = useCloudChatStore((st) => renderableTerminal(st.agentTerminal));
   const resume = useMemo(() => resumeMessages ?? [], [resumeMessages]);
 
   // Intro copy depends on the context: the article-feedback surfaces open with a
@@ -172,6 +183,8 @@ export default function ChatSessionView({
         optimisationPlan,
         quickFactChecks,
         toolCallResults,
+        turnActive,
+        agentTerminal,
       }),
     [
       messages,
@@ -184,6 +197,8 @@ export default function ChatSessionView({
       optimisationPlan,
       quickFactChecks,
       toolCallResults,
+      turnActive,
+      agentTerminal,
     ],
   );
 
@@ -533,6 +548,11 @@ export default function ChatSessionView({
   // Ordering is deliberate: a server block outranks an inference error, and both
   // outrank the topic-plan gate — the gate is a soft "finish this first", not a
   // failure, so it must never mask a real error the user needs to see.
+  // Which of the banner's three causes may also gate the composer. A
+  // transport error is deliberately absent: it clears when a turn starts, so
+  // blocking the input on it is a deadlock, not a safeguard.
+  const bannerBlocksInput = effectiveBlocked || hasUnresolvedTopicPlans;
+
   const blockedMessage = effectiveBlocked
     ? effectiveBlockedReason ?? t('errors.accountRestricted')
     : error
@@ -579,6 +599,7 @@ export default function ChatSessionView({
         starterChips={starterChips}
         onChipPress={handleChipPress}
         blockedMessage={blockedMessage}
+        bannerBlocksInput={bannerBlocksInput}
         showUnblockControls={effectiveBlocked && !!userId}
         unblockPending={unblockPending}
         onRequestUnblock={() => setUnblockModalOpen(true)}

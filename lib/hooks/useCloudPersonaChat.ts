@@ -10,7 +10,21 @@ import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
+import {
+  createAgentState,
+  createAgentTurnState,
+  runAgentTurn,
+  type AgentLeg,
+  type AgentState,
+} from '../mera-harness';
+import {
+  buildAgentPersona,
+  isPersonaAgent,
+  makeAgentDeps,
+} from '../chat-tools/agent-device-port';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
+import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
+import { applyChatPhase, useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { estimateTokens } from '../llm/tokens';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
@@ -156,6 +170,35 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
   const turnBusyRef = useRef(false);
   /** True while the forced pass owns the busy release. */
   const forcedPassRef = useRef(false);
+
+  /**
+   * Sets `turnBusyRef` AND mirrors it onto the store's `agentTurnState`, so the
+   * two cannot drift. Every write to `turnBusyRef` goes through here.
+   *
+   * `turnActive` must be true across every leg AND every gap between them --
+   * device tool execution and the fire-and-forget forced pass -- and false only
+   * at turn end or transport failure. That is `turnBusyRef`'s lifetime, NOT
+   * `isStreamingRef`'s and NOT `status`'s: `startForcedExtraction` dispatches
+   * with `void`, so the forced pass outlives `startTurn`'s `finally` and both
+   * of those read idle while real work is still in flight. Deriving the flag
+   * from streaming state renders a live turn as interrupted, which is exactly
+   * the failure the interruption state exists to report.
+   */
+  const setTurnBusy = useCallback((next: boolean) => {
+    if (turnBusyRef.current === next) return;
+    turnBusyRef.current = next;
+    const store = useCloudChatStore.getState();
+    const current = store.agentTurnState;
+    if (current) {
+      if (current.turnActive !== next) {
+        store.setAgentTurnState({ ...current, turnActive: next });
+      }
+      return;
+    }
+    // No loop state yet (a turn before the agent loop drives this hook). Mint
+    // the minimum the thread needs rather than leaving the flag unreadable.
+    store.setAgentTurnState({ ...createAgentTurnState(), turnActive: next });
+  }, []);
   /** A hidden turn that arrived mid-turn, waiting for the current one to settle. */
   const pendingHiddenTurnRef = useRef<string | null>(null);
 
@@ -172,6 +215,142 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
 
   const agentRef = useRef(agent);
   agentRef.current = agent;
+
+  /** The loop's state, threaded turn to turn. In a ref rather than rebuilt per
+   *  turn: `pendingChoice` has to survive to the turn that answers it, or a tap
+   *  arrives as a bare display string and the place is looked up twice. */
+  const agentStateRef = useRef<AgentState | null>(null);
+
+  /**
+   * The wait line's sink for the turn in flight, or null when no turn owns it.
+   *
+   * A REF, not a parameter, because `runAgentLoopTurn` and `runSingleShot` are
+   * separate callbacks that `startTurn` chooses between, and the mark has to
+   * be per TURN rather than per path. Null is load-bearing: a forced-extraction
+   * pass calls `runSingleShot` directly, outside any turn, and a hidden pass
+   * must not narrate a wait nobody is watching.
+   */
+  const phaseSinkRef = useRef<PhaseSink | null>(null);
+
+  /**
+   * ONE TURN through the agent loop. This is the shipped cloud path for the
+   * persona agent; `runSingleShot` still serves every other agent.
+   *
+   * The loop lives in lib/mera-harness and is the SAME code the eval drives,
+   * which is the point: a harness green is evidence about the app rather than
+   * about a parallel implementation.
+   */
+  const runAgentLoopTurn = useCallback(
+    async (assistantId: string, userMessage: string): Promise<void> => {
+      const store = useCloudChatStore.getState();
+      const persona = await buildAgentPersona(agentRef.current.id);
+      // NEW CHAT clears the store's agentTurnState, and this ref has to follow
+      // it or the loop keeps a pendingChoice from the previous conversation.
+      // On device a fresh "Yes" was matched to a stale choice about a wife's
+      // hospital in Alkmaar, because the ref outlived the thread that asked.
+      // The store is the authority on "is this the same conversation".
+      if (store.agentTurnState === null) agentStateRef.current = null;
+      if (!agentStateRef.current) agentStateRef.current = createAgentState(persona);
+      // Facts are re-read every turn; only the TURN half persists.
+      agentStateRef.current.persona = persona;
+
+      store.setMessages((prev) => [
+        ...prev,
+        { id: assistantId, role: 'assistant', content: '' } as ConversationMessage,
+      ]);
+
+      // Per-FRAME bubble writes, not per token: every delta is one token, and
+      // cloning the message array per token competes with the per-token
+      // decrypt for the same JS thread on a low-end device.
+      let acc = '';
+      let queued = false;
+      let armed = true;
+      // Cleared as the turn OPENS, so a box never shows the previous turn's
+      // terminal while this one is still running.
+      useCloudChatStore.getState().setAgentTerminal(null);
+      const flush = () => {
+        queued = false;
+        if (!armed) return;
+        useCloudChatStore
+          .getState()
+          .setMessages((prev) =>
+            prev.map((m) => (m.id === assistantId ? { ...m, content: acc } : m)),
+          );
+      };
+      const schedule = () => {
+        if (queued) return;
+        queued = true;
+        scheduleFrame(flush);
+      };
+
+      const onLeg = (leg: AgentLeg) => {
+        // Live progress rows: the result only arrives at the end of a turn that
+        // can run ~10s, so the steps box would otherwise sit empty and then
+        // fill at once.
+        if (leg.toolCalls.length === 0) return;
+        const records: ToolCallRecord[] = leg.toolCalls.map((c, i) => ({
+          id: `leg${leg.index}-${i}`,
+          name: c.name,
+          input: leg.toolResults[i]?.result ?? null,
+          status: leg.toolResults[i] ? 'done' : 'pending',
+        }));
+        useCloudChatStore.getState().setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, toolCalls: [...(m.toolCalls ?? []), ...records] } : m,
+          ),
+        );
+      };
+
+      try {
+        const out = await runAgentTurn({
+          state: agentStateRef.current,
+          userMessage,
+          deps: makeAgentDeps(
+            userMessage,
+            (d) => {
+              // The arrival signal carries no payload, and the line is already
+              // on `thinking` from the post-headers route, so there is nothing
+              // to do here but avoid falling into the content branch.
+              if (d.reasoning !== undefined && acc === '') return;
+              if (d.content) {
+                // Real text. The bubble is the liveness signal from here, so
+                // the line hands over rather than competing with it.
+                phaseSinkRef.current?.(null);
+                acc += d.content;
+                schedule();
+              }
+            },
+            (signal) => phaseSinkRef.current?.(signal),
+          ),
+          onLeg,
+        });
+        if (queued) flush();
+        // The loop's reply is dash-cleaned; the streamed accumulation is not,
+        // so the final write is the authoritative one.
+        useCloudChatStore.getState().setMessages((prev) =>
+          prev.map((m) => (m.id === assistantId ? { ...m, content: out.reply } : m)),
+        );
+        store.setAgentTurnState({ ...agentStateRef.current.turn });
+        // ON SCREEN, not only in the log. Four distinct terminals used to reach
+        // the user as whatever prose the last leg produced, and an empty one as
+        // an empty bubble.
+        store.setAgentTerminal(out.terminalReason);
+        if (out.terminalReason !== 'settled' && out.terminalReason !== 'awaiting-user') {
+          logger.warn(`${TAG} agent turn ended abnormally`, {
+            reason: out.terminalReason,
+            unknownTools: out.unknownTools,
+            legs: out.legs.length,
+          });
+        }
+      } finally {
+        armed = false;
+        // The line is released in `startTurn`'s finally, which is the ONE
+        // owner. This block runs inside that try, and a second release here
+        // would only make the ownership ambiguous for the next reader.
+      }
+    },
+    [],
+  );
 
   const runSingleShot = useCallback(
     async (
@@ -248,6 +427,13 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           toolChoice,
           model: BIG_MODEL,
           maxTokens: CHAT_MAX_OUTPUT_TOKENS,
+          // `suppressText` IS THE GATE, not a null sink ref. The forced
+          // extraction pass is dispatched with `void`, so it starts BEFORE
+          // `startTurn`'s finally has cleared the ref and would otherwise
+          // re-narrate a wait that is already over: measured here, it walked
+          // the line back to "encrypting" after the answer was on screen.
+          // Same reason the content render is gated on this flag.
+          onPhase: suppressText ? undefined : (signal) => phaseSinkRef.current?.(signal),
         });
 
         // ONE store write per frame, not per token. Every SSE delta is a
@@ -276,15 +462,9 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const flushContentRender = () => {
           if (renderQueued) renderContent();
         };
-        // "Thinking…" is shown from the first reasoning delta until the first
-        // visible one. The flag lives on the store (the bubble reads it), and
-        // is cleared on every exit path so a failed stream never leaves it on.
-        let thinkingShown = false;
-        const setThinking = (on: boolean) => {
-          if (thinkingShown === on) return;
-          thinkingShown = on;
-          useCloudChatStore.getState().setThinking(on);
-        };
+        // Hand the wait line over the moment anything visible arrives.
+        // Idempotent in the sink, so calling it per delta costs nothing.
+        const releaseWaitLine = () => phaseSinkRef.current?.(null);
 
         let eventCount = 0;
         try {
@@ -298,15 +478,16 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
             });
           }
           if (event.type === 'reasoning') {
-            // Only while nothing visible has arrived; a hidden forced pass
-            // (suppressText) must not flip a bubble it never owned.
-            if (!suppressText && accContent === '' && toolCallAccumulators.size === 0) setThinking(true);
+            // Tolerated and ignored. The trace is dropped undecrypted upstream,
+            // and the line is already on `thinking` from the post-headers
+            // route, which fires on every call including the many that emit no
+            // reasoning at all.
           } else if (event.type === 'text-delta') {
-            setThinking(false);
+            releaseWaitLine();
             accContent += event.delta;
             if (!suppressText) scheduleContentRender();
           } else if (event.type === 'tool-call-delta') {
-            setThinking(false);
+            releaseWaitLine();
             // The model may send multiple tool calls with the same index (or all index 0).
             // Detect collision: if a NEW name arrives at an existing index, assign a new key.
             const existingAcc = toolCallAccumulators.get(event.index);
@@ -330,7 +511,8 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         flushContentRender();
         } finally {
           renderArmed = false;
-          setThinking(false);
+          // Released in `startTurn`'s finally, the one owner. See the agent
+          // loop's matching note.
         }
         logger.debug(`${TAG} stream ended`, { totalEvents: eventCount, contentLength: accContent.length, toolCalls: toolCallAccumulators.size });
 
@@ -366,36 +548,85 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         );
       };
 
-      // Execute tool calls in parallel, render results into the bubble, and
-      // push tool result messages onto wire (preserving order).
+      // Execute tool calls in parallel, render each result into the bubble AS IT
+      // SETTLES, and push tool result messages onto wire (preserving order).
+      //
+      // TWO RULES, both load-bearing, both previously violated here:
+      //
+      //  1. WRITE BACK PER PROMISE, not once behind the slowest call. This used
+      //     to `await Promise.all(...)` and then write every record in ONE
+      //     setMessages, so the UI could never observe a staggered "2 done, 1
+      //     pending" state -- every row flipped at the same instant. The chat's
+      //     per-tool-call progress rows need the intermediate states.
+      //
+      //  2. Replace the record with a FRESH OBJECT at its ORIGINAL INDEX, never
+      //     mutate in place. The old code did `records[i].status = ...` and then
+      //     re-wrapped the same array, so a row memoized on its own `toolCall`
+      //     prop was blind to its own status changing. And the index must be the
+      //     call's own, never completion order: `fact-commit.ts` and
+      //     `deriveThreadItems.ts` key card identity on
+      //     `${messageId}::${toolCallIndex}`, so a result landing in the wrong
+      //     slot corrupts identity, not merely display order.
+      //
+      // useLocalLLM.ts already satisfies both by construction (sequential loop,
+      // fresh .map() each time); this parallel path is the one that needed them
+      // spelled out.
       const executeToolsAndPushResults = async (
         targetId: string,
         toolCalls: ReturnType<typeof finalizeToolCalls>,
       ) => {
-        const toolCallRecords: ToolCallRecord[] = toolCalls.map((tc) => ({
+        const pendingRecords: ToolCallRecord[] = toolCalls.map((tc) => ({
           id: tc.id,
           name: tc.name,
           input: tc.input,
           status: 'pending' as const,
         }));
         useCloudChatStore.getState().setMessages((prev) =>
-          prev.map((m) => m.id === targetId ? { ...m, toolCalls: toolCallRecords } : m),
+          prev.map((m) => m.id === targetId ? { ...m, toolCalls: pendingRecords } : m),
         );
+
+        // Settled payloads by ORIGINAL index, for the wire push below.
+        const settled = new Array<
+          { result: Record<string, unknown>; status: 'done' | 'error' } | undefined
+        >(toolCalls.length);
+
+        /** Commit ONE call's outcome at its own index, as a new record object.
+         *  Siblings keep their identity so an unsettled row does not re-render. */
+        const writeBack = (
+          index: number,
+          result: Record<string, unknown>,
+          status: 'done' | 'error',
+        ) => {
+          settled[index] = { result, status };
+          useCloudChatStore.getState().setMessages((prev) =>
+            prev.map((m) => {
+              if (m.id !== targetId) return m;
+              const current = m.toolCalls ?? pendingRecords;
+              return {
+                ...m,
+                toolCalls: current.map((rec, i) =>
+                  i === index ? { ...rec, result, status } : rec,
+                ),
+              };
+            }),
+          );
+        };
 
         const knownNames = (agentRef.current.getToolDefinitions?.() ?? []).map(
           (d) => d.function.name,
         );
 
-        const results = await Promise.all(
+        await Promise.all(
           toolCalls.map(async (tc, i) => {
             // Never execute a call whose arguments did not parse — surface it
             // as an error the user can see instead of running it with {}.
             if (tc.malformed) {
-              return {
-                index: i,
-                result: { error: 'malformed tool arguments — call was not executed' },
-                status: 'error' as const,
-              };
+              writeBack(
+                i,
+                { error: 'malformed tool arguments — call was not executed' },
+                'error',
+              );
+              return;
             }
             try {
               const resolved = normalizeToolName(tc.name, knownNames);
@@ -423,33 +654,30 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
                 useFloatingChatStore.getState().resolveProposal(sideEffects.proposalResolved);
               }
 
-              return { index: i, result, status: 'done' as const };
+              // Committed HERE, the moment this call settles — not after the
+              // slowest sibling.
+              writeBack(i, result, 'done');
             } catch (err) {
               logger.error(`${TAG} Tool execution failed`, undefined, { tool: tc.name, error: String(err) });
-              return { index: i, result: { error: String(err) }, status: 'error' as const };
+              writeBack(i, { error: String(err) }, 'error');
             }
           }),
         );
 
-        for (const r of results) {
-          toolCallRecords[r.index].result = r.result;
-          toolCallRecords[r.index].status = r.status;
-        }
-        useCloudChatStore.getState().setMessages((prev) =>
-          prev.map((m) => m.id === targetId ? { ...m, toolCalls: [...toolCallRecords] } : m),
-        );
-
-        // Only calls that made it onto the wire are owed a `tool` reply.
-        for (const tc of toolCalls) {
-          if (tc.malformed) continue;
-          const matched = toolCallRecords.find((r) => r.id === tc.id);
-          const resultPayload = matched?.result ?? { error: 'no result' };
+        // The WIRE push stays here, after every call has settled: the wire is
+        // ordered, and a `role:'tool'` message must follow its
+        // `assistant(tool_calls)` partner intact. Only calls that made it onto
+        // the wire are owed a reply. Indexed by the call's own position, never
+        // by id — local ids are `local-tc-${n}` and collide across messages.
+        toolCalls.forEach((tc, i) => {
+          if (tc.malformed) return;
+          const resultPayload = settled[i]?.result ?? { error: 'no result' };
           useCloudChatStore.getState().pushWireMessage({
             role: 'tool',
             tool_call_id: tc.id,
             content: JSON.stringify(resultPayload),
           });
-        }
+        });
       };
 
       // ---------- Forced extraction safety-net (GATED) ----------
@@ -618,7 +846,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           forcedPassRef.current = true;
           void runForcedExtraction(assistantId, forcedTools).finally(() => {
             forcedPassRef.current = false;
-            turnBusyRef.current = false;
+            setTurnBusy(false);
             flushPendingHiddenTurn();
           });
         } else {
@@ -669,7 +897,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
 
       if (needsForcedExtraction) startForcedExtraction();
     },
-    [flushPendingHiddenTurn],
+    [flushPendingHiddenTurn, setTurnBusy],
   );
 
   /**
@@ -711,9 +939,20 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         store.setMessages((prev) => [...prev, userMsg]);
       }
 
-      turnBusyRef.current = true;
+      setTurnBusy(true);
       isStreamingRef.current = true;
       store.setStatus('streaming');
+
+      // SYNCHRONOUSLY, before the async IIFE. Everything between here and the
+      // first gateway call is real work the user waits through:
+      // `buildSystemPrompt`, `getToolDefinitions`, `buildContext` (a DB read)
+      // and, on the persona path, `buildAgentPersona`. Publishing from inside
+      // the IIFE would leave the opening frames of the wait unnarrated, which
+      // is the gap this line exists to close.
+      useChatPhaseStore.getState().reset();
+      const phase = makePhaseSink(applyChatPhase);
+      phaseSinkRef.current = phase;
+      phase('preparing');
 
       const assistantId = `asst-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -743,26 +982,40 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           useCloudChatStore.getState().pushWireMessage({ role: 'user', content: trimmed });
           logger.debug(`${TAG} starting runSingleShot`, { wireMessages: useCloudChatStore.getState().wireMessages.length });
 
-          await runSingleShot(systemPrompt, tools, assistantId, context);
-          logger.debug(`${TAG} runSingleShot completed`);
+          if (isPersonaAgent(agentRef.current.id)) {
+            // THE SHIPPED PATH for the persona agent. No flag: a loop behind a
+            // flag is a loop nobody runs, which is exactly how the device pass
+            // found the old single-shot prompt still live.
+            await runAgentLoopTurn(assistantId, trimmed);
+            logger.debug(`${TAG} agent loop completed`);
+          } else {
+            await runSingleShot(systemPrompt, tools, assistantId, context);
+            logger.debug(`${TAG} runSingleShot completed`);
+          }
         } catch (err) {
           const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
           logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
           useCloudChatStore.getState().setError(msg);
         } finally {
           logger.debug(`${TAG} startTurn done, setting idle`);
+          // THE ONE RELEASE, and it is in a `finally` on purpose: it has to run
+          // on the throw path too, or a 429 leaves the line reassuring the user
+          // underneath the error banner for the rest of the session.
+          phase(null);
+          if (phaseSinkRef.current === phase) phaseSinkRef.current = null;
           useCloudChatStore.getState().setStatus('idle');
           isStreamingRef.current = false;
           useFloatingChatStore.getState().setTopicPlanTurnInFlight(false);
           // The forced pass, when one is running, owns the release instead.
+          // Runs on a throw too, so a transport failure ends the turn here.
           if (!forcedPassRef.current) {
-            turnBusyRef.current = false;
+            setTurnBusy(false);
             flushPendingHiddenTurn();
           }
         }
       })();
     },
-    [runSingleShot, flushPendingHiddenTurn],
+    [runSingleShot, runAgentLoopTurn, flushPendingHiddenTurn, setTurnBusy],
   );
 
   startTurnRef.current = startTurn;

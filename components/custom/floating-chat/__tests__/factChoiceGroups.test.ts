@@ -60,7 +60,14 @@ function itemsFor(result: Record<string, unknown>): ChatThreadItem[] {
   });
 }
 
-const kinds = (items: ChatThreadItem[]) => items.map((i) => i.kind);
+// `agent-steps` is filtered OUT of this helper on purpose. These suites assert
+// the SEQUENCE of cards a tool call produces; the per-turn steps box is a
+// different concern with its own suite (agentStepsDerivation.test.ts), and
+// leaving it in would make every card-ordering assertion here also an assertion
+// about a box it is not testing. Its presence is pinned separately below, so
+// filtering cannot hide the box disappearing.
+const kinds = (items: ChatThreadItem[]) =>
+  items.filter((i) => i.kind !== 'agent-steps').map((i) => i.kind);
 
 const saved = (statement: string, id: string, batch = false) => ({
   status: 'saved',
@@ -167,7 +174,7 @@ describe('fact-choice group derivation', () => {
     expect(row?.groups.map((g) => g.groupIndex)).toEqual([1, 2]);
   });
 
-  it('batch-accepted groups pool into ONE merged topics card after the group', () => {
+  it('batch-accepted groups get ONE ACCORDION PER FACT, in line', () => {
     const base = stagedResult(THREE);
     const items = itemsFor(
       withResolutions(base, {
@@ -176,34 +183,38 @@ describe('fact-choice group derivation', () => {
         [factChoiceGroupId(2, ['Parents in Malaga'])]: saved('Parents in Malaga', 'f3', true),
       }),
     );
-    // Three Saved cards in line, then ONE merged topics card.
+    // Each Saved card is followed by that fact's own accordion. Collapsed,
+    // each is one line, so three of them are three lines rather than the chip
+    // wall the old merged card existed to prevent — and each fact keeps its
+    // own generation status in its own header, which one merged header could
+    // not show.
     expect(kinds(items)).toEqual([
       'message',
       'fact-card',
+      'chat-topics-card',
       'fact-card',
+      'chat-topics-card',
       'fact-card',
       'chat-topics-card',
     ]);
-    const topics = items.find(
+    const topics = items.filter(
       (i): i is Extract<ChatThreadItem, { kind: 'chat-topics-card' }> =>
         i.kind === 'chat-topics-card',
     );
-    expect(topics?.merged).toBe(true);
-    expect(topics?.facts.map((f) => f.factId)).toEqual(['f1', 'f2', 'f3']);
+    expect(topics.map((c) => c.factId)).toEqual(['f1', 'f2', 'f3']);
+    expect(topics.map((c) => c.key)).toHaveLength(new Set(topics.map((c) => c.key)).size);
   });
 
-  it('single Add keeps its own in-line topics card, not a merged one', () => {
+  it('a single Add gets the same one-fact accordion, no special case', () => {
     const base = stagedResult([['Lives in Hoorn']]);
     const items = itemsFor(
       withResolutions(base, {
         [factChoiceGroupId(0, ['Lives in Hoorn'])]: saved('Lives in Hoorn', 'f1'),
       }),
     );
-    const topics = items.find(
-      (i): i is Extract<ChatThreadItem, { kind: 'chat-topics-card' }> =>
-        i.kind === 'chat-topics-card',
-    );
-    expect(topics?.merged).toBe(false);
+    const topics = items.filter((i) => i.kind === 'chat-topics-card');
+    expect(topics).toHaveLength(1);
+    expect(topics[0]).toMatchObject({ factId: 'f1', factStatement: 'Lives in Hoorn' });
   });
 
   it('never emits a topic-plan-card for a group-shaped result', () => {
@@ -275,5 +286,47 @@ describe('fact-choice group derivation', () => {
     // Revealing history must never re-block the composer, and a bulk row over
     // uncommittable cards would be a button that does nothing.
     expect(kinds(items)).not.toContain('fact-choice-bulk-row');
+  });
+});
+
+describe('replacement groups and the bulk row', () => {
+  // `THREE` above is scoped to its own describe; this block needs its own.
+  const TRIO = [['Lives in Hoorn'], ['Works as a farmer'], ['Parents in Malaga']];
+
+  it('EXCLUDES a replacement from "Add all", and from the count that shows it', () => {
+    // "Add all" performing an irreversible destroy on facts the user never
+    // looked at individually is consent fabricated in bulk. Two plain groups
+    // plus one replacement must offer the row over the two plain ones only.
+    const base = stagedResult(TRIO);
+    const groups = base.pendingFacts as { replaces?: string }[];
+    groups[2].replaces = 'old-1';
+
+    const items = itemsFor(base);
+    const bulk = items.find((i) => i.kind === 'fact-choice-bulk-row') as
+      | Extract<ChatThreadItem, { kind: 'fact-choice-bulk-row' }>
+      | undefined;
+
+    expect(bulk).toBeDefined();
+    expect(bulk?.groups).toHaveLength(2);
+    expect(bulk?.groups.map((g) => g.groupIndex)).toEqual([0, 1]);
+
+    // The replacement still gets its own card, carrying what it would destroy.
+    const cards = items.filter(
+      (i): i is Extract<ChatThreadItem, { kind: 'fact-choice-card' }> =>
+        i.kind === 'fact-choice-card',
+    );
+    expect(cards).toHaveLength(3);
+    expect(cards[2].replacesFactId).toBe('old-1');
+    expect(cards[0].replacesFactId).toBeNull();
+  });
+
+  it('emits NO bulk row when only one plain group is left beside replacements', () => {
+    // Below two bulkable groups the row is not worth its own risk surface.
+    const base = stagedResult(TRIO);
+    const groups = base.pendingFacts as { replaces?: string }[];
+    groups[1].replaces = 'old-1';
+    groups[2].replaces = 'old-2';
+
+    expect(kinds(itemsFor(base))).not.toContain('fact-choice-bulk-row');
   });
 });

@@ -70,7 +70,7 @@
     "tryAgain": "다시 시도",
     "learnAboutMera": "Mera 알아보기",
     "startReading": "읽기 시작",
-    "alreadyHaveAccount": "이미 계정이 있나요? 로그인",
+    "alreadyHaveAccount": "이메일로 로그인",
     "chooseLanguageTitle": "언어를 선택하세요",
     "chooseLanguageHint": "설정에서 언제든지 변경할 수 있습니다.",
     "continue": "계속",
@@ -644,7 +644,9 @@
     "gotItPromo": "좋아요! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 출시 기념 혜택 🎊",
-    "resetsOn": "초기화"
+    "resetsOn": "초기화",
+    "retryTopicGeneration": "재시도",
+    "topicGenFailedGeneric": "이 주제에 대한 토픽을 생성할 수 없습니다."
   },
   "errors": {
     "somethingWentWrong": "문제가 발생했습니다",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Mera가 회원님에 대해 알고 있는 것",
     "influence": "영향도",
     "moreInfluence": "더 큰 영향도",
-    "lessInfluence": "더 작은 영향도"
+    "lessInfluence": "더 작은 영향도",
+    "declinedTopicsTitle": "제거한 주제",
+    "allowAgain": "다시 허용",
+    "topicRemovalConsequence": "제거한 주제는 '제거한 주제'에서 다시 허용하지 않는 한 다시 추천되지 않습니다."
   },
   "publicationPrefs": {
     "title": "소스 선호도",
@@ -2526,7 +2531,15 @@
     "addAll": "모두 추가 ({{count}})",
     "skipAll": "모두 건너뛰기",
     "addAllA11y": "{{count}}개 제안 모두 추가",
-    "skipAllA11y": "{{count}}개 제안 모두 건너뛰기"
+    "skipAllA11y": "{{count}}개 제안 모두 건너뛰기",
+    "titleReplace": "기존 정보를 바꿀까요?",
+    "replace": "바꾸기",
+    "replacesLabel": "대체 대상",
+    "replacesTopics_one": "및 관련 주제 1개",
+    "replacesTopics_other": "및 관련 주제 {{count}}개",
+    "replacesNoUndo": "이전 정보와 관련 주제가 완전히 삭제돼요. 되돌릴 수 없어요.",
+    "replacesLoading": "무엇이 바뀌는지 확인하고 있어요",
+    "replacesUnavailable": "지금은 무엇이 삭제될지 보여드릴 수 없어요. 잠시 후 다시 시도해 주세요."
   },
   "subscriptions": {
     "sectionTitle": "구독 중인 매체",
@@ -2610,6 +2623,117 @@
     "loading": "숫자를 계산하는 중"
   },
   "chatTopics": {
-    "none": "저장했습니다. 지금은 추가할 주제가 없습니다."
+    "none": "저장했습니다. 지금은 추가할 주제가 없습니다.",
+    "removed": "삭제했어요",
+    "accordionTitle": "관련 주제:",
+    "finding": "주제를 찾고 있어요",
+    "findMore": "주제 더 찾기",
+    "findingMore": "찾는 중",
+    "goneTombstone": "이 정보가 삭제되어 관련 주제도 사라졌어요.",
+    "expandA11y": "주제 보기",
+    "collapseA11y": "주제 숨기기",
+    "accordionTitlePending": "관련 주제를 찾아 둘게요:",
+    "pendingA11y": "주제를 찾는 중",
+    "readyA11y": "주제 준비 완료",
+    "failedA11y": "주제를 찾지 못했어요"
+  },
+  "agentSteps": {
+    "legStart": "말씀하신 내용을 생각하고 있어요",
+    "loadSkill": "{{topic}} 처리 방법을 확인하고 있어요",
+    "loadSkillGeneric": "이 내용을 어떻게 처리할지 확인하고 있어요",
+    "findSimilarFacts": "이미 알려주신 내용을 찾고 있어요",
+    "lookupPlace": "지역을 확인하고 있어요: {{query}}",
+    "writeUp": "확인하실 수 있도록 정리하고 있어요",
+    "removing": "요청하신 내용을 삭제하고 있어요",
+    "asking": "질문을 드리고 있어요",
+    "working": "처리하고 있어요",
+    "slow": "아직 진행 중이에요. 연결이 느립니다",
+    "legCapSentence": "한 번에 처리할 수 있는 단계를 넘었어요. 계속하려면 다시 물어봐 주세요.",
+    "interrupted": "중간에 중단됐어요. 계속하려면 다시 물어봐 주세요.",
+    "summaryDone": "완료했어요",
+    "summaryFailed": "일부가 처리되지 않았어요",
+    "statePending": "진행 중",
+    "stateDone": "완료",
+    "stateError": "실패",
+    "consequence": {
+      "generic": "이 단계가 끝나지 않았어요",
+      "interrupted": "끝나지 않았어요",
+      "lookupPlace": "그 지역을 확인하지 못해 이미 알고 있던 정보를 사용했어요",
+      "findSimilarFacts": "이미 알려주신 내용을 확인하지 못해 중복될 수 있어요",
+      "loadSkill": "안내를 불러오지 못해 일반적인 방식으로 처리했어요",
+      "writeUp": "정리하지 못해 아무것도 추가되지 않았어요",
+      "removing": "삭제하지 못해 아직 남아 있어요"
+    },
+    "noRouteSentence": "무엇에 대한 내용인지 파악하지 못했어요. 다르게 말해 봐 주세요.",
+    "noProposalSentence": "여기에서 추가할 만한 내용을 찾지 못했어요.",
+    "unknownToolSentence": "Mera 쪽에서 문제가 생겼어요. 계속하려면 다시 물어봐 주세요."
+  },
+  "skillPhrase": {
+    "residence": "사는 곳",
+    "work": "직업",
+    "interests": "관심사",
+    "origin": "출신지",
+    "family": "가족",
+    "newFact": "새로운 정보",
+    "topics": "관심 주제"
+  },
+  "askChoice": {
+    "answeredA11y": "이미 답변함"
+  },
+  "streamingWords": {
+    "w1": "생각 중",
+    "w2": "분석 중",
+    "w3": "숙고 중",
+    "w4": "궁리 중",
+    "w5": "저울질 중",
+    "w6": "만지작거리는 중",
+    "w7": "묵히는 중",
+    "w8": "추론 중",
+    "w9": "가늠하는 중",
+    "w10": "추리는 중",
+    "w11": "연결하는 중",
+    "w12": "정리하는 중",
+    "w13": "손보는 중",
+    "w14": "다듬는 중",
+    "w15": "우려내는 중"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mera가 이미 알고 있는 내용을 모으고 있어요.",
+      "질문을 정리하고 있어요."
+    ],
+    "queued": [
+      "요청을 순서대로 놓고 있어요.",
+      "몇 가지가 함께 돌아가고 있어요. 다음은 회원님 차례예요."
+    ],
+    "securing": [
+      "모델만 열 수 있도록 메시지를 잠그고 있어요.",
+      "보낸 말은 휴대폰을 떠나기 전에 암호화돼요."
+    ],
+    "attesting": [
+      "모델과의 비공개 통로를 만들고 있어요.",
+      "회원님과 Mera 사이에만 남도록 열쇠를 가져오고 있어요.",
+      "비공개 대화는 준비하는 데 잠시 걸려요."
+    ],
+    "thinking": [
+      "Mera가 보낸 내용을 읽고 있어요.",
+      "가장 좋은 답변 방법을 찾고 있어요."
+    ],
+    "retrying": [
+      "평소보다 오래 걸리고 있어요. Mera가 다른 경로를 시도하고 있어요.",
+      "계속 진행 중이에요. 기다려 주셔서 고마워요."
+    ],
+    "deviceLoading": [
+      "휴대폰에서 모델을 깨우고 있어요.",
+      "불러오는 동안 첫 답변은 조금 더 걸려요."
+    ],
+    "devicePreparing": [
+      "Mera가 이미 알고 있는 내용을 모으고 있어요.",
+      "답변할 수 있도록 휴대폰을 준비하고 있어요."
+    ],
+    "deviceThinking": [
+      "휴대폰 안에서 생각하고 있어요.",
+      "이 작업은 기기에서 실행되므로 아무것도 전송되지 않아요."
+    ]
   }
 }

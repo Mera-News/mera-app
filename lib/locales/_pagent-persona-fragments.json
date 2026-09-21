@@ -1,0 +1,223 @@
+{
+  "_comment": "Round-2/designer-review copy for the persona facts screen: generic (non-interpolated) topic-gen-failed text + retry label (configPanel, wording copied byte-for-byte from floatingChat's existing translations of the same sentence so no re-translation judgement is introduced), plus the declined-topics section (facts, new copy, not a copy of any existing key). Input to _splice-fragments.mjs.",
+  "ar": {
+    "configPanel": {
+      "retryTopicGeneration": "إعادة المحاولة",
+      "topicGenFailedGeneric": "تعذّر إنشاء الموضوعات لهذا."
+    },
+    "facts": {
+      "declinedTopicsTitle": "المواضيع التي أزلتها",
+      "allowAgain": "السماح بها مجددًا",
+      "topicRemovalConsequence": "لن تُقترح المواضيع المُزالة مرة أخرى ما لم تسمح بها ضمن «المواضيع التي أزلتها»."
+    }
+  },
+  "de": {
+    "configPanel": {
+      "retryTopicGeneration": "Erneut versuchen",
+      "topicGenFailedGeneric": "Themen konnten nicht generiert werden."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Entfernte Themen",
+      "allowAgain": "Wieder zulassen",
+      "topicRemovalConsequence": "Entfernte Themen werden nicht mehr vorgeschlagen, außer Sie lassen sie unter „Entfernte Themen“ wieder zu."
+    }
+  },
+  "en": {
+    "configPanel": {
+      "retryTopicGeneration": "Retry",
+      "topicGenFailedGeneric": "Couldn't generate topics for this."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Topics you removed",
+      "allowAgain": "Allow this again",
+      "topicRemovalConsequence": "Removed topics won't be suggested again unless you allow them back in Topics you removed."
+    }
+  },
+  "es": {
+    "configPanel": {
+      "retryTopicGeneration": "Reintentar",
+      "topicGenFailedGeneric": "No se pudo generar temas."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Temas que quitaste",
+      "allowAgain": "Permitir de nuevo",
+      "topicRemovalConsequence": "Los temas que quitaste no se volverán a sugerir a menos que los permitas de nuevo en Temas que quitaste."
+    }
+  },
+  "fr": {
+    "configPanel": {
+      "retryTopicGeneration": "Réessayer",
+      "topicGenFailedGeneric": "Impossible de générer les sujets."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Sujets que vous avez supprimés",
+      "allowAgain": "Autoriser à nouveau",
+      "topicRemovalConsequence": "Les sujets supprimés ne seront plus suggérés, sauf si vous les autorisez à nouveau dans Sujets que vous avez supprimés."
+    }
+  },
+  "hi": {
+    "configPanel": {
+      "retryTopicGeneration": "पुनः प्रयास करें",
+      "topicGenFailedGeneric": "इसके लिए विषय तैयार नहीं हो सके।"
+    },
+    "facts": {
+      "declinedTopicsTitle": "आपके हटाए गए विषय",
+      "allowAgain": "फिर से अनुमति दें",
+      "topicRemovalConsequence": "हटाए गए विषय तब तक फिर से सुझाए नहीं जाएंगे जब तक आप उन्हें 'आपके हटाए गए विषय' में फिर से अनुमति न दें।"
+    }
+  },
+  "id": {
+    "configPanel": {
+      "retryTopicGeneration": "Coba Lagi",
+      "topicGenFailedGeneric": "Tidak dapat membuat topik untuk ini."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Topik yang Anda hapus",
+      "allowAgain": "Izinkan lagi",
+      "topicRemovalConsequence": "Topik yang dihapus tidak akan disarankan lagi kecuali Anda mengizinkannya kembali di Topik yang Anda hapus."
+    }
+  },
+  "it": {
+    "configPanel": {
+      "retryTopicGeneration": "Riprova",
+      "topicGenFailedGeneric": "Impossibile generare gli argomenti."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Argomenti che hai rimosso",
+      "allowAgain": "Consenti di nuovo",
+      "topicRemovalConsequence": "Gli argomenti rimossi non verranno più suggeriti a meno che tu non li consenta di nuovo in Argomenti che hai rimosso."
+    }
+  },
+  "ja": {
+    "configPanel": {
+      "retryTopicGeneration": "再試行",
+      "topicGenFailedGeneric": "このトピックを生成できませんでした。"
+    },
+    "facts": {
+      "declinedTopicsTitle": "削除したトピック",
+      "allowAgain": "もう一度許可する",
+      "topicRemovalConsequence": "削除したトピックは、「削除したトピック」からもう一度許可しない限り、二度と提案されません。"
+    }
+  },
+  "ko": {
+    "configPanel": {
+      "retryTopicGeneration": "재시도",
+      "topicGenFailedGeneric": "이 주제에 대한 토픽을 생성할 수 없습니다."
+    },
+    "facts": {
+      "declinedTopicsTitle": "제거한 주제",
+      "allowAgain": "다시 허용",
+      "topicRemovalConsequence": "제거한 주제는 '제거한 주제'에서 다시 허용하지 않는 한 다시 추천되지 않습니다."
+    }
+  },
+  "nl": {
+    "configPanel": {
+      "retryTopicGeneration": "Opnieuw",
+      "topicGenFailedGeneric": "Kon geen onderwerpen voor dit genereren."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Onderwerpen die je verwijderd hebt",
+      "allowAgain": "Weer toestaan",
+      "topicRemovalConsequence": "Verwijderde onderwerpen worden niet meer voorgesteld, tenzij je ze weer toestaat bij Onderwerpen die je verwijderd hebt."
+    }
+  },
+  "pl": {
+    "configPanel": {
+      "retryTopicGeneration": "Ponów",
+      "topicGenFailedGeneric": "Nie udało się wygenerować tematy dla tego."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Usunięte przez Ciebie tematy",
+      "allowAgain": "Zezwól ponownie",
+      "topicRemovalConsequence": "Usunięte tematy nie będą ponownie sugerowane, chyba że zezwolisz na nie ponownie w sekcji Usunięte przez Ciebie tematy."
+    }
+  },
+  "pt-BR": {
+    "configPanel": {
+      "retryTopicGeneration": "Tentar novamente",
+      "topicGenFailedGeneric": "Não foi possível gerar tópicos para isso."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Tópicos que você removeu",
+      "allowAgain": "Permitir novamente",
+      "topicRemovalConsequence": "Tópicos removidos não serão mais sugeridos, a menos que você os permita novamente em Tópicos que você removeu."
+    }
+  },
+  "ru": {
+    "configPanel": {
+      "retryTopicGeneration": "Повторить",
+      "topicGenFailedGeneric": "Не удалось сгенерировать темы для этого."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Темы, которые вы удалили",
+      "allowAgain": "Разрешить снова",
+      "topicRemovalConsequence": "Удалённые темы больше не будут предлагаться, если вы не разрешите их снова в разделе «Темы, которые вы удалили»."
+    }
+  },
+  "th": {
+    "configPanel": {
+      "retryTopicGeneration": "ลองใหม่",
+      "topicGenFailedGeneric": "ไม่สามารถสร้างหัวข้อได้"
+    },
+    "facts": {
+      "declinedTopicsTitle": "หัวข้อที่คุณลบ",
+      "allowAgain": "อนุญาตอีกครั้ง",
+      "topicRemovalConsequence": "หัวข้อที่ลบจะไม่ถูกแนะนำอีก เว้นแต่คุณจะอนุญาตอีกครั้งในหัวข้อที่คุณลบ"
+    }
+  },
+  "tr": {
+    "configPanel": {
+      "retryTopicGeneration": "Tekrar Dene",
+      "topicGenFailedGeneric": "Bu için konular oluşturulamadı."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Kaldırdığın konular",
+      "allowAgain": "Tekrar izin ver",
+      "topicRemovalConsequence": "Kaldırılan konular, Kaldırdığın konular bölümünden tekrar izin vermediğin sürece bir daha önerilmez."
+    }
+  },
+  "uk": {
+    "configPanel": {
+      "retryTopicGeneration": "Повторити",
+      "topicGenFailedGeneric": "Не вдалося створити теми для цього."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Теми, які ви вилучили",
+      "allowAgain": "Дозволити знову",
+      "topicRemovalConsequence": "Вилучені теми більше не пропонуватимуться, якщо ви знову не дозволите їх у розділі «Теми, які ви вилучили»."
+    }
+  },
+  "vi": {
+    "configPanel": {
+      "retryTopicGeneration": "Thử lại",
+      "topicGenFailedGeneric": "Không thể tạo chủ đề cho điều này."
+    },
+    "facts": {
+      "declinedTopicsTitle": "Chủ đề bạn đã xóa",
+      "allowAgain": "Cho phép lại",
+      "topicRemovalConsequence": "Các chủ đề đã xóa sẽ không được đề xuất lại trừ khi bạn cho phép lại trong mục Chủ đề bạn đã xóa."
+    }
+  },
+  "zh-CN": {
+    "configPanel": {
+      "retryTopicGeneration": "重试",
+      "topicGenFailedGeneric": "无法为此生成主题。"
+    },
+    "facts": {
+      "declinedTopicsTitle": "您移除的话题",
+      "allowAgain": "再次允许",
+      "topicRemovalConsequence": "移除的话题不会再被推荐，除非您在「您移除的话题」中再次允许。"
+    }
+  },
+  "zh-TW": {
+    "configPanel": {
+      "retryTopicGeneration": "重試",
+      "topicGenFailedGeneric": "無法為此產生主題。"
+    },
+    "facts": {
+      "declinedTopicsTitle": "您移除的主題",
+      "allowAgain": "再次允許",
+      "topicRemovalConsequence": "移除的主題不會再被推薦，除非您在「您移除的主題」中再次允許。"
+    }
+  }
+}

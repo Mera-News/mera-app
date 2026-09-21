@@ -70,7 +70,7 @@
     "tryAgain": "Reintentar",
     "learnAboutMera": "Conoce Mera",
     "startReading": "Empezar a leer",
-    "alreadyHaveAccount": "¿Ya tienes una cuenta? Inicia sesión",
+    "alreadyHaveAccount": "Iniciar sesión con tu correo",
     "chooseLanguageTitle": "Elige tu idioma",
     "chooseLanguageHint": "Puedes cambiarlo en cualquier momento en Ajustes.",
     "continue": "Continuar",
@@ -644,7 +644,9 @@
     "gotItPromo": "¡Genial! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Oferta de lanzamiento 🎊",
-    "resetsOn": "Se reinicia"
+    "resetsOn": "Se reinicia",
+    "retryTopicGeneration": "Reintentar",
+    "topicGenFailedGeneric": "No se pudo generar temas."
   },
   "errors": {
     "somethingWentWrong": "Algo salió mal",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Lo que Mera sabe sobre ti",
     "influence": "Influencia",
     "moreInfluence": "Más influencia",
-    "lessInfluence": "Menos influencia"
+    "lessInfluence": "Menos influencia",
+    "declinedTopicsTitle": "Temas que quitaste",
+    "allowAgain": "Permitir de nuevo",
+    "topicRemovalConsequence": "Los temas que quitaste no se volverán a sugerir a menos que los permitas de nuevo en Temas que quitaste."
   },
   "publicationPrefs": {
     "title": "Preferencias de fuentes",
@@ -2526,7 +2531,15 @@
     "addAll": "Añadir todo ({{count}})",
     "skipAll": "Omitir todo",
     "addAllA11y": "Añadir las {{count}} sugerencias",
-    "skipAllA11y": "Omitir las {{count}} sugerencias"
+    "skipAllA11y": "Omitir las {{count}} sugerencias",
+    "titleReplace": "¿Reemplazar un dato que ya tienes?",
+    "replace": "Reemplazar",
+    "replacesLabel": "Reemplaza a",
+    "replacesTopics_one": "y su 1 tema",
+    "replacesTopics_other": "y sus {{count}} temas",
+    "replacesNoUndo": "El dato anterior y sus temas se eliminan definitivamente. Esto no se puede deshacer.",
+    "replacesLoading": "Comprobando qué reemplaza",
+    "replacesUnavailable": "Mera no puede mostrar ahora qué se eliminaría. Inténtalo en un momento."
   },
   "subscriptions": {
     "sectionTitle": "Tus suscripciones",
@@ -2611,6 +2624,117 @@
     "loading": "Calculando tus números"
   },
   "chatTopics": {
-    "none": "Guardado. Ahora mismo no hay temas que añadir."
+    "none": "Guardado. Ahora mismo no hay temas que añadir.",
+    "removed": "Eliminado",
+    "accordionTitle": "Temas de:",
+    "finding": "Buscando temas",
+    "findMore": "Buscar más temas",
+    "findingMore": "Buscando más",
+    "goneTombstone": "Este dato se eliminó, así que sus temas también.",
+    "expandA11y": "Mostrar temas",
+    "collapseA11y": "Ocultar temas",
+    "accordionTitlePending": "Buscaremos temas sobre:",
+    "pendingA11y": "Se están buscando temas",
+    "readyA11y": "Temas listos",
+    "failedA11y": "No se pudieron encontrar temas"
+  },
+  "agentSteps": {
+    "legStart": "Pensando en lo que dijiste",
+    "loadSkill": "Comprobando cómo tratar {{topic}}",
+    "loadSkillGeneric": "Comprobando cómo tratar esto",
+    "findSimilarFacts": "Buscando lo que ya me contaste",
+    "lookupPlace": "Comprobando la zona: {{query}}",
+    "writeUp": "Lo estoy redactando para que lo revises",
+    "removing": "Eliminando lo que me pediste",
+    "asking": "Te voy a hacer una pregunta",
+    "working": "Trabajando en ello",
+    "slow": "Sigue en curso, conexión lenta",
+    "legCapSentence": "Eso llevó más pasos de los que Mera puede hacer de una vez. Pregunta otra vez para continuar.",
+    "interrupted": "Esto se interrumpió. Pregunta otra vez para continuar.",
+    "summaryDone": "Listo",
+    "summaryFailed": "Algo no funcionó",
+    "statePending": "en curso",
+    "stateDone": "listo",
+    "stateError": "falló",
+    "consequence": {
+      "generic": "Ese paso no terminó",
+      "interrupted": "Esto no terminó",
+      "lookupPlace": "No se pudo comprobar la zona, así que Mera usó lo que ya sabía",
+      "findSimilarFacts": "No pude comprobar lo que ya me contaste, así que puede repetirse algo",
+      "loadSkill": "No se pudo cargar su guía, así que Mera usó su enfoque general",
+      "writeUp": "No se pudo redactar, así que no se añadió nada",
+      "removing": "No se pudo eliminar, así que sigue ahí"
+    },
+    "noRouteSentence": "Mera no supo de qué se trataba. Prueba a decirlo de otra manera.",
+    "noProposalSentence": "Mera no encontró nada que añadir de eso.",
+    "unknownToolSentence": "Algo falló por parte de Mera. Pregunta otra vez para continuar."
+  },
+  "skillPhrase": {
+    "residence": "dónde vives",
+    "work": "tu trabajo",
+    "interests": "tus intereses",
+    "origin": "de dónde eres",
+    "family": "tu familia",
+    "newFact": "un dato nuevo",
+    "topics": "tus temas"
+  },
+  "askChoice": {
+    "answeredA11y": "ya respondido"
+  },
+  "streamingWords": {
+    "w1": "Pensando",
+    "w2": "Analizando",
+    "w3": "Contemplando",
+    "w4": "Reflexionando",
+    "w5": "Rumiando",
+    "w6": "Cavilando",
+    "w7": "Macerando",
+    "w8": "Razonando",
+    "w9": "Sopesando",
+    "w10": "Filtrando",
+    "w11": "Conectando",
+    "w12": "Redactando",
+    "w13": "Ajustando",
+    "w14": "Puliendo",
+    "w15": "Cociendo"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Reuniendo lo que Mera ya sabe de ti.",
+      "Preparando tu pregunta."
+    ],
+    "queued": [
+      "Poniendo tu solicitud en cola.",
+      "Hay un par de cosas en marcha. La tuya es la siguiente."
+    ],
+    "securing": [
+      "Cerrando tu mensaje para que solo el modelo pueda abrirlo.",
+      "Tus palabras se cifran antes de salir de tu teléfono."
+    ],
+    "attesting": [
+      "Preparando un canal privado con el modelo.",
+      "Obteniendo la clave que mantiene esto entre Mera y tú.",
+      "Una conversación privada tarda un momento en prepararse."
+    ],
+    "thinking": [
+      "Mera está leyendo lo que has dicho.",
+      "Buscando la mejor forma de responder."
+    ],
+    "retrying": [
+      "Esto está tardando más de lo normal. Mera está probando otra ruta.",
+      "Seguimos en ello. Gracias por esperar."
+    ],
+    "deviceLoading": [
+      "Despertando el modelo en tu teléfono.",
+      "La primera respuesta tarda un poco más mientras se carga."
+    ],
+    "devicePreparing": [
+      "Reuniendo lo que Mera ya sabe de ti.",
+      "Preparando tu teléfono para responder."
+    ],
+    "deviceThinking": [
+      "Pensándolo en tu teléfono.",
+      "Esto se ejecuta en tu dispositivo, así que no se envía nada a ninguna parte."
+    ]
   }
 }

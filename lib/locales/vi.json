@@ -70,7 +70,7 @@
     "tryAgain": "Thử lại",
     "learnAboutMera": "Tìm hiểu về Mera",
     "startReading": "Bắt đầu đọc",
-    "alreadyHaveAccount": "Đã có tài khoản? Đăng nhập",
+    "alreadyHaveAccount": "Đăng nhập bằng email",
     "chooseLanguageTitle": "Chọn ngôn ngữ của bạn",
     "chooseLanguageHint": "Bạn có thể thay đổi bất cứ lúc nào trong Cài đặt.",
     "continue": "Tiếp tục",
@@ -644,7 +644,9 @@
     "gotItPromo": "Tuyệt vời! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Ưu đãi ra mắt 🎊",
-    "resetsOn": "Đặt lại"
+    "resetsOn": "Đặt lại",
+    "retryTopicGeneration": "Thử lại",
+    "topicGenFailedGeneric": "Không thể tạo chủ đề cho điều này."
   },
   "errors": {
     "somethingWentWrong": "Đã xảy ra lỗi",
@@ -1486,7 +1488,10 @@
     "screenSubtitle": "Những gì Mera biết về bạn",
     "influence": "Ảnh hưởng",
     "moreInfluence": "Ảnh hưởng nhiều hơn",
-    "lessInfluence": "Ảnh hưởng ít hơn"
+    "lessInfluence": "Ảnh hưởng ít hơn",
+    "declinedTopicsTitle": "Chủ đề bạn đã xóa",
+    "allowAgain": "Cho phép lại",
+    "topicRemovalConsequence": "Các chủ đề đã xóa sẽ không được đề xuất lại trừ khi bạn cho phép lại trong mục Chủ đề bạn đã xóa."
   },
   "publicationPrefs": {
     "title": "Tùy chọn nguồn",
@@ -2527,7 +2532,15 @@
     "addAll": "Thêm tất cả ({{count}})",
     "skipAll": "Bỏ qua tất cả",
     "addAllA11y": "Thêm tất cả {{count}} gợi ý",
-    "skipAllA11y": "Bỏ qua tất cả {{count}} gợi ý"
+    "skipAllA11y": "Bỏ qua tất cả {{count}} gợi ý",
+    "titleReplace": "Thay thế một thông tin đã có?",
+    "replace": "Thay thế",
+    "replacesLabel": "Thay cho",
+    "replacesTopics_one": "và 1 chủ đề của nó",
+    "replacesTopics_other": "và {{count}} chủ đề của nó",
+    "replacesNoUndo": "Thông tin cũ và các chủ đề của nó bị xóa vĩnh viễn. Bạn không thể hoàn tác.",
+    "replacesLoading": "Đang kiểm tra cái gì sẽ bị thay",
+    "replacesUnavailable": "Mera chưa hiển thị được những gì sẽ bị xóa. Hãy thử lại sau giây lát."
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",
@@ -2611,6 +2624,117 @@
     "loading": "Đang tính các con số của bạn"
   },
   "chatTopics": {
-    "none": "Đã lưu. Hiện chưa có chủ đề nào để thêm."
+    "none": "Đã lưu. Hiện chưa có chủ đề nào để thêm.",
+    "removed": "Đã xóa",
+    "accordionTitle": "Chủ đề cho:",
+    "finding": "Đang tìm chủ đề",
+    "findMore": "Tìm thêm chủ đề",
+    "findingMore": "Đang tìm thêm",
+    "goneTombstone": "Thông tin này đã bị xóa, nên các chủ đề của nó cũng mất.",
+    "expandA11y": "Hiện chủ đề",
+    "collapseA11y": "Ẩn chủ đề",
+    "accordionTitlePending": "Chúng tôi sẽ tìm chủ đề cho:",
+    "pendingA11y": "Đang tìm chủ đề",
+    "readyA11y": "Chủ đề đã sẵn sàng",
+    "failedA11y": "Không tìm được chủ đề"
+  },
+  "agentSteps": {
+    "legStart": "Đang suy nghĩ về điều bạn nói",
+    "loadSkill": "Đang xem cách xử lý {{topic}}",
+    "loadSkillGeneric": "Đang xem cách xử lý việc này",
+    "findSimilarFacts": "Đang tìm những điều bạn đã kể",
+    "lookupPlace": "Đang kiểm tra khu vực: {{query}}",
+    "writeUp": "Đang viết lại để bạn kiểm tra",
+    "removing": "Đang xóa những gì bạn yêu cầu",
+    "asking": "Đang đặt một câu hỏi cho bạn",
+    "working": "Đang xử lý",
+    "slow": "Vẫn đang chạy, kết nối chậm",
+    "legCapSentence": "Việc này cần nhiều bước hơn mức Mera làm được một lần. Hãy hỏi lại để tiếp tục.",
+    "interrupted": "Việc này đã bị gián đoạn. Hãy hỏi lại để tiếp tục.",
+    "summaryDone": "Xong",
+    "summaryFailed": "Có phần chưa thực hiện được",
+    "statePending": "đang chạy",
+    "stateDone": "xong",
+    "stateError": "thất bại",
+    "consequence": {
+      "generic": "Bước này chưa hoàn tất",
+      "interrupted": "Việc này chưa hoàn tất",
+      "lookupPlace": "Không kiểm tra được khu vực đó, nên Mera dùng thông tin đã có",
+      "findSimilarFacts": "Không kiểm tra được những điều bạn đã kể, nên có thể bị trùng",
+      "loadSkill": "Không tải được hướng dẫn, nên Mera dùng cách xử lý chung",
+      "writeUp": "Không ghi lại được, nên chưa thêm gì cả",
+      "removing": "Không xóa được, nên vẫn còn đó"
+    },
+    "noRouteSentence": "Mera chưa hiểu việc này nói về điều gì. Hãy thử diễn đạt cách khác.",
+    "noProposalSentence": "Mera không tìm thấy gì để thêm từ việc này.",
+    "unknownToolSentence": "Có lỗi xảy ra ở phía Mera. Hãy hỏi lại để tiếp tục."
+  },
+  "skillPhrase": {
+    "residence": "nơi bạn sống",
+    "work": "công việc của bạn",
+    "interests": "sở thích của bạn",
+    "origin": "nơi bạn đến từ",
+    "family": "gia đình bạn",
+    "newFact": "một thông tin mới",
+    "topics": "chủ đề của bạn"
+  },
+  "askChoice": {
+    "answeredA11y": "đã trả lời"
+  },
+  "streamingWords": {
+    "w1": "Đang nghĩ",
+    "w2": "Đang phân tích",
+    "w3": "Đang ngẫm",
+    "w4": "Đang suy xét",
+    "w5": "Đang cân nhắc",
+    "w6": "Đang mày mò",
+    "w7": "Đang ủ ý",
+    "w8": "Đang lập luận",
+    "w9": "Đang đong đếm",
+    "w10": "Đang sàng lọc",
+    "w11": "Đang kết nối",
+    "w12": "Đang soạn",
+    "w13": "Đang chỉnh",
+    "w14": "Đang gọt giũa",
+    "w15": "Đang pha trộn"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Đang tập hợp những gì Mera đã biết về bạn.",
+      "Đang sắp xếp câu hỏi của bạn."
+    ],
+    "queued": [
+      "Đang xếp yêu cầu của bạn vào hàng.",
+      "Có vài việc đang chạy cùng lúc. Bạn là người tiếp theo."
+    ],
+    "securing": [
+      "Đang khóa tin nhắn của bạn để chỉ mô hình mới mở được.",
+      "Lời của bạn được mã hóa trước khi rời khỏi điện thoại."
+    ],
+    "attesting": [
+      "Đang thiết lập một kênh riêng tới mô hình.",
+      "Đang lấy khóa giữ cho việc này chỉ nằm giữa bạn và Mera.",
+      "Một cuộc trò chuyện riêng tư cần một chút thời gian để thiết lập."
+    ],
+    "thinking": [
+      "Mera đang đọc những gì bạn viết.",
+      "Đang tìm cách trả lời tốt nhất."
+    ],
+    "retrying": [
+      "Việc này lâu hơn bình thường. Mera đang thử một hướng khác.",
+      "Vẫn đang chạy. Cảm ơn bạn đã chờ."
+    ],
+    "deviceLoading": [
+      "Đang đánh thức mô hình trên điện thoại của bạn.",
+      "Câu trả lời đầu tiên lâu hơn một chút trong lúc tải."
+    ],
+    "devicePreparing": [
+      "Đang tập hợp những gì Mera đã biết về bạn.",
+      "Đang chuẩn bị điện thoại của bạn để trả lời."
+    ],
+    "deviceThinking": [
+      "Đang suy nghĩ ngay trên điện thoại của bạn.",
+      "Việc này chạy trên thiết bị của bạn nên không có gì được gửi đi đâu cả."
+    ]
   }
 }

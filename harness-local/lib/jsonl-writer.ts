@@ -43,6 +43,17 @@ export type CallType =
   | 'topicgen-factOnly'
   | 'topicgen-combo'
   | 'chat-extraction'
+  // The agent loop's leg roles. Broken out rather than folded into
+  // 'chat-extraction' because the report already splits latency and cost PER
+  // CALL TYPE, which is exactly the axis a multi-leg turn needs: a router leg
+  // and a reply leg have different shapes, budgets and failure modes, and an
+  // arm-level average hides that.
+  | 'agent-route'
+  | 'agent-tool'
+  // No 'agent-reply': the agent core never emits that leg role. Reply prose
+  // rides the last 'agent-tool' leg, and a call type nothing produces is a
+  // selectable filter that yields an empty batch.
+  | 'agent-topicgen'
   | 'other';
 
 export interface RunRow {
@@ -56,6 +67,22 @@ export interface RunRow {
   repeat: number;
   cohort: string;
   turnIndex: number;
+  /**
+   * Which model leg inside one user turn produced this row. 0 is the router
+   * leg; a terminal topic-gen call carries the index after the last leg rather
+   * than pretending to be one.
+   *
+   * NULL for every single-call runner, and that is what keeps `cellKey`'s
+   * partition unchanged for the three runners that predate the agent: a row
+   * written before this field existed deserialises with `undefined`, and
+   * `undefined ?? '-'` is the same suffix as `null ?? '-'`, so the key STRING
+   * changes while the grouping does not.
+   *
+   * Without it every leg of a turn lands in one cell and gets compared as a
+   * repeat of every other leg, which raises a false RUNNER BUG on every
+   * multi-leg turn and reports leg-to-leg difference as a noise floor.
+   */
+  legIndex: number | null;
   /** Which experimental arm produced this row (model arm, prompt arm, count
    *  arm). Free-form so a runner can name its own axis. */
   arm: string;

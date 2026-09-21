@@ -14,6 +14,9 @@ export type FactEntry =
   | {
       statement: string;
       questionnaire_attribute?: string;
+      /** Fact id from find_similar_facts. Present only when the model believes
+       *  this reading REPLACES an existing fact rather than adding to it. */
+      replaces?: string;
       /**
        * 0-3 ALTERNATIVE readings of the same thing the user said, offered
        * alongside `statement` so the user picks which one Mera saves.
@@ -45,6 +48,10 @@ export interface NormalizedFactEntry {
   /** Extra readings offered beside `statement`. Never populated for the legacy
    *  string form, which by construction offers exactly one reading. */
   alternatives?: string[];
+  /** The existing fact this one would replace, as the model named it. Carried
+   *  only; whether it is HONOURED is decided at commit time against a
+   *  confirmed user choice. */
+  replaces?: string;
 }
 
 export function normalizeFactEntry(entry: FactEntry): NormalizedFactEntry {
@@ -59,6 +66,12 @@ export function normalizeFactEntry(entry: FactEntry): NormalizedFactEntry {
     alternatives: Array.isArray(entry.alternatives)
       ? entry.alternatives.filter((a): a is string => typeof a === 'string')
       : undefined,
+    // Carried through verbatim. Whether it is HONOURED is decided later, at
+    // commit time, against a confirmed choice -- see fact-commit.
+    replaces:
+      typeof entry.replaces === 'string' && entry.replaces.trim().length > 0
+        ? entry.replaces.trim()
+        : undefined,
   };
 }
 
@@ -157,6 +170,11 @@ export const MAX_FACT_CHOICE_OPTIONS = 4;
 export interface FactChoiceGroup {
   options: string[];
   questionnaire?: NormalizedFactEntry['questionnaire'];
+  /** The id of an existing fact this group would REPLACE, as the model named
+   *  it. Carried on the group so the deriver reads one structured field
+   *  instead of re-parsing the raw tool arguments -- a second parser there is
+   *  a second place for the replace rule to live, and the two would drift. */
+  replaces?: string;
 }
 
 /**
@@ -180,7 +198,7 @@ export function filterFactChoiceGroups(
   const rejected: RejectedFact[] = [];
 
   for (const entry of entries) {
-    const { statement, questionnaire, alternatives } = normalizeFactEntry(entry);
+    const { statement, questionnaire, alternatives, replaces } = normalizeFactEntry(entry);
     // Preferred reading first, then alternatives, deduped against each other so
     // a model that repeats itself does not render the same row twice.
     const candidates = [statement, ...(alternatives ?? [])];
@@ -204,6 +222,7 @@ export function filterFactChoiceGroups(
       // It must reach `addFact`: resolveUserLocationFact keys on it, and a
       // residence fact that loses it stops anchoring every future topic run.
       questionnaire,
+      ...(replaces ? { replaces } : {}),
     });
   }
 

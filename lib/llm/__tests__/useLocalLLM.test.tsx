@@ -39,6 +39,7 @@ jest.mock('../../logger', () => ({
 
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useLocalLLM } from '../useLocalLLM';
+import { useChatPhaseStore, type ChatPhaseView } from '../chat-phase-store';
 import type { IAgent, ToolExecutionResult } from '../types';
 
 // ---- Async generator helpers ----
@@ -73,7 +74,22 @@ describe('useLocalLLM', () => {
     mockInferenceQueuePause.mockResolvedValue(undefined);
     mockInferenceQueueResume.mockReturnValue(undefined);
     mockMeraProtocolGetState.mockReturnValue({ setModelState: mockSetModelState });
+    useChatPhaseStore.getState().reset();
+    phaseViews = [];
+    unsubscribePhase = useChatPhaseStore.subscribe((st) => phaseViews.push(st.view));
   });
+
+  afterEach(() => {
+    unsubscribePhase?.();
+    unsubscribePhase = null;
+  });
+
+  // Every view the wait line was put through, in order. Reading only the final
+  // state cannot tell a cold turn from a warm one, which is the whole point.
+  let phaseViews: ChatPhaseView[] = [];
+  let unsubscribePhase: (() => void) | null = null;
+  const phaseIds = () =>
+    phaseViews.filter((v) => v.kind === 'phase').map((v) => (v as { id: string }).id);
 
   describe('initial state', () => {
     it('starts with idle status and empty messages', () => {
@@ -482,4 +498,84 @@ describe('useLocalLLM', () => {
       expect(result.current.latestAssistantContent).toBe('');
     });
   });
+
+  describe('the wait line', () => {
+    it('opens on `deviceLoading` when the model still has to be brought up', async () => {
+      // Cold: `inferenceQueue.pause()` waits for whatever holds llama.rn's
+      // single context, then `initBaseModel` runs. Both are real seconds, and
+      // they are the reason the first on-device answer of a session is slow.
+      mockGetModelState.mockReturnValue(null);
+      mockInferStream.mockReturnValue(makeTextStream(['Hi']));
+      const { result } = renderHook(() => useLocalLLM(makeAgent()));
+
+      act(() => {
+        result.current.sendMessage('hello');
+      });
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+
+      expect(phaseIds()).toEqual(['deviceLoading', 'devicePreparing', 'deviceThinking']);
+    });
+
+    it('skips `deviceLoading` on a warm turn', async () => {
+      mockGetModelState.mockReturnValue('ready');
+      mockInferStream.mockReturnValue(makeTextStream(['Hi']));
+      const { result } = renderHook(() => useLocalLLM(makeAgent()));
+
+      act(() => {
+        result.current.sendMessage('hello');
+      });
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+
+      expect(phaseIds()).toEqual(['devicePreparing', 'deviceThinking']);
+    });
+
+    it('never publishes a CLOUD phase, so the copy can promise nothing leaves the phone', async () => {
+      // The ids are disjoint by construction and the resolver refuses a
+      // cross-engine signal, but this is the assertion that would catch
+      // someone reaching for `thinking` because it reads better than
+      // `deviceThinking`.
+      mockGetModelState.mockReturnValue(null);
+      mockInferStream.mockReturnValue(makeTextStream(['Hi']));
+      const { result } = renderHook(() => useLocalLLM(makeAgent()));
+
+      act(() => {
+        result.current.sendMessage('hello');
+      });
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+
+      for (const id of phaseIds()) expect(id.startsWith('device')).toBe(true);
+    });
+
+    it('hands over on the first token and stays released', async () => {
+      mockInferStream.mockReturnValue(makeTextStream(['Hel', 'lo']));
+      const { result } = renderHook(() => useLocalLLM(makeAgent()));
+
+      act(() => {
+        result.current.sendMessage('hello');
+      });
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+
+      expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' });
+      // ONE release, not one per token. This loop has no rAF batching, so a
+      // store write per token here would land on the same JS thread as
+      // generation on exactly the devices that can least afford it.
+      expect(phaseViews.filter((v) => v.kind === 'released')).toHaveLength(1);
+    });
+
+    it('releases when generation throws, so nothing reassures under the error banner', async () => {
+      mockInferStream.mockImplementation(() => {
+        throw new Error('llama.rn exploded');
+      });
+      const { result } = renderHook(() => useLocalLLM(makeAgent()));
+
+      act(() => {
+        result.current.sendMessage('hello');
+      });
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+
+      expect(result.current.error).toContain('llama.rn exploded');
+      expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' });
+    });
+  });
+
 });

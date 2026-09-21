@@ -2,6 +2,7 @@
 
 import type { ConversationMessage, ToolCallRecord } from '@/lib/llm/types';
 import { deriveThreadItems } from '../deriveThreadItems';
+import { renderableTerminal } from '../types';
 import type { ChatThreadItem, PersistedMessage } from '../types';
 
 const LABEL = 'Earlier conversation';
@@ -44,6 +45,19 @@ function persisted(
 
 function keys(items: ChatThreadItem[]): string[] {
   return items.map((i) => i.key);
+}
+
+/**
+ * Drop the per-turn steps box.
+ *
+ * These cases assert what a TOOL RESULT derives (fact cards, topic-plan cards)
+ * by position. The steps box derives from tool STATUS, is a separate concern
+ * with its own suite, and would otherwise shift every index here. Its presence
+ * is pinned directly in the cases below that care about it, so filtering it out
+ * cannot hide it going missing.
+ */
+function cards(items: ChatThreadItem[]): ChatThreadItem[] {
+  return items.filter((i) => i.kind !== 'agent-steps');
 }
 
 describe('deriveThreadItems', () => {
@@ -155,23 +169,28 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', 'Saved!', [tc])] }),
     );
 
+    // A saveExtractedFacts turn also emits a steps box: the turn changed data,
+    // so its settled line is kept. Pinned here rather than filtered blindly.
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
+
     // message + fact-card + one topic-plan-card per saved fact (Wave 11).
-    expect(items).toHaveLength(4);
-    expect(items[0]).toMatchObject({ kind: 'message', key: 'live-a1' });
-    expect(items[1]).toMatchObject({
+    const only = cards(items);
+    expect(only).toHaveLength(4);
+    expect(only[0]).toMatchObject({ kind: 'message', key: 'live-a1' });
+    expect(only[1]).toMatchObject({
       kind: 'fact-card',
       key: 'card-a1-0',
       action: 'saved',
       statements: ['Lives in Berlin', 'Likes cycling'],
       factIds: ['f1', 'f2'],
     });
-    expect(items[2]).toMatchObject({
+    expect(only[2]).toMatchObject({
       kind: 'topic-plan-card',
       key: 'topic-plan-a1-0-f1',
       factId: 'f1',
       factStatement: 'Lives in Berlin',
     });
-    expect(items[3]).toMatchObject({
+    expect(only[3]).toMatchObject({
       kind: 'topic-plan-card',
       key: 'topic-plan-a1-0-f2',
       factId: 'f2',
@@ -216,7 +235,10 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', 'Nothing new', [tc])] }),
     );
     expect(items.some((i) => i.kind === 'fact-card')).toBe(false);
-    expect(items).toHaveLength(1); // just the message
+    expect(cards(items)).toHaveLength(1); // just the message
+    // The turn still ran the tool, so the box stands and says so. "Saved
+    // nothing" is a RESULT; the box reports what was attempted.
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
   });
 
   it('derives a deleted card, preferring result.deletedStatements', () => {
@@ -353,7 +375,10 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', '', [tc])] }),
     );
     // Message is skipped (empty content) but the fact-card + topic-plan survive.
-    expect(keys(items)).toEqual(['card-a1-0', 'topic-plan-a1-0-f1']);
+    expect(keys(cards(items))).toEqual(['card-a1-0', 'topic-plan-a1-0-f1']);
+    // …and the box rides with them, which is the whole point of pushing it
+    // past the "empty assistant message" guard.
+    expect(keys(items)).toContain('agent-steps-a1');
   });
 
   it('produces stable, unique keys across history and live', () => {
@@ -731,5 +756,58 @@ describe('deriveThreadItems', () => {
     );
     const card = items.find((i) => i.kind === 'fact-card');
     expect(card).toMatchObject({ key: 'card-m2-0', action: 'saved', statements: ['Hist fact'] });
+  });
+});
+
+// THE SHIPPED PATH, not the component in isolation. `legCapped` was hardcoded
+// false at exactly this spot, so AgentStepsBox's terminal sentence was dead
+// code for the whole wave while its own unit test passed.
+describe('turn terminals reach the steps box', () => {
+  const tc: ToolCallRecord = {
+    id: 't1',
+    name: 'load_skill',
+    input: { id: 'facts/residence' },
+    status: 'done',
+  };
+
+  function boxFor(over: Parameters<typeof deriveThreadItems>[0]) {
+    const items = deriveThreadItems(over);
+    return items.find((i) => i.kind === 'agent-steps') as
+      | Extract<ReturnType<typeof deriveThreadItems>[number], { kind: 'agent-steps' }>
+      | undefined;
+  }
+
+  it('carries the terminal of the latest turn', () => {
+    const box = boxFor(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', 'Hmm.', [tc])],
+        turnActive: true,
+        agentTerminal: 'no-route',
+      }),
+    );
+    expect(box?.terminal).toBe('no-route');
+  });
+
+  it('is null for a turn that settled normally', () => {
+    const box = boxFor(
+      base({ live: [userMsg('u1'), assistantMsg('a1', 'Done.', [tc])], turnActive: true }),
+    );
+    expect(box?.terminal).toBeNull();
+  });
+});
+
+// The narrowing is ONE function so a terminal added to the loop is either
+// rendered deliberately or visibly absent, never silently widening the UI union.
+describe('renderableTerminal', () => {
+  it('passes the four the thread can render', () => {
+    for (const r of ['leg-cap', 'no-route', 'no-proposal', 'unknown-tool']) {
+      expect(renderableTerminal(r)).toBe(r);
+    }
+  });
+
+  it('drops the endings the thread must not label as failures', () => {
+    for (const r of ['settled', 'awaiting-user', 'transport-error', 'malformed-choice', null]) {
+      expect(renderableTerminal(r)).toBeNull();
+    }
   });
 });
