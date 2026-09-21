@@ -20,6 +20,7 @@ import { loadSkill, skillIds } from '@/lib/mera-harness';
 import { findSimilarFacts } from '../database/services/fact-similarity-service';
 import { lookupPlace } from '../place-service';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
+import type { PhaseSignal } from '@/lib/services/chat-phase';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, SMALL_MODEL } from '../llm/constants';
 import { handleDeleteUserFacts, handleSaveExtractedFacts } from './tool-handlers';
 import { getFacts } from '../database/services/fact-service';
@@ -166,7 +167,19 @@ export function resolveTierToModelId(tier: string | undefined): string {
   return BIG_MODEL;
 }
 
-export async function callModelViaCloud(req: AgentModelRequest): Promise<AgentModelResult> {
+/**
+ * `onPhase` is a SECOND PARAMETER, not a field on `AgentModelRequest`.
+ *
+ * That type lives in `lib/mera-harness/core/types.ts`, and the harness may not
+ * import anything outside itself. Threading the wait line's signal through it
+ * would either drag `PhaseSignal` across the boundary `boundary.test.ts`
+ * guards or duplicate the union there. The loop has no interest in the phase
+ * either way: it is transport progress, not agent state.
+ */
+export async function callModelViaCloud(
+  req: AgentModelRequest,
+  onPhase?: (signal: PhaseSignal) => void,
+): Promise<AgentModelResult> {
   const started = Date.now();
   const modelId = resolveTierToModelId(req.model);
   let ttVisibleMs: number | null = null;
@@ -191,6 +204,7 @@ export async function callModelViaCloud(req: AgentModelRequest): Promise<AgentMo
     // Thinking OFF on every agent call. Measured: the trace buys nothing here
     // and costs the whole budget on the topic path.
     enableThinking: req.enableThinking ?? false,
+    onPhase,
   });
 
   let finishReason = 'stop';
@@ -231,9 +245,10 @@ export async function callModelViaCloud(req: AgentModelRequest): Promise<AgentMo
 export function makeAgentDeps(
   userMessage: string,
   onDelta: (d: { content?: string; reasoning?: string }) => void,
+  onPhase?: (signal: PhaseSignal) => void,
 ): AgentDeps {
   return {
-    callModel: (req) => callModelViaCloud({ ...req, onDelta }),
+    callModel: (req) => callModelViaCloud({ ...req, onDelta }, onPhase),
     tools: makeAgentToolPort(userMessage),
     loadSkill,
     skillIds,

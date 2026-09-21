@@ -221,6 +221,27 @@ export function msUntilNextGrant(): number {
 }
 
 /**
+ * How long an interactive caller acquiring RIGHT NOW would wait, in ms.
+ *
+ * A pure peek: it takes no slot, queues no waiter and mutates nothing. It
+ * exists so the chat wait line can say "lining up your request" only when the
+ * lane genuinely has to queue, instead of showing a queue phase on every send.
+ *
+ * Counts the interactive waiters already queued, because the common case this
+ * is for is a send landing behind prewarm's own interactive calls, which is
+ * 1-3s of spacing that no eligibility read alone would see. It is still a
+ * LOWER BOUND: a background grant taken between this call and the real
+ * `acquire` pushes the anchor out again. Erring short is the right direction,
+ * since the phase's duration comes from when the next phase arrives, never
+ * from this number.
+ */
+export function interactiveWaitMs(): number {
+  const ahead = waiters.reduce((n, w) => (w.lane === 'interactive' ? n + 1 : n), 0);
+  const eligible = interactiveEligibleAt() + ahead * MIN_INTERACTIVE_INTERVAL_MS;
+  return Math.max(0, eligible - Date.now());
+}
+
+/**
  * Pushes the next available grant at least `ms` into the future — used on HTTP
  * 429 to back off. Repeated calls don't stack: the pause is the max of the
  * current value and `now + ms`. Background honours it in full; the interactive

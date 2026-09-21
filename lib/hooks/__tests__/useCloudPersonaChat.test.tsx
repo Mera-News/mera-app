@@ -34,6 +34,7 @@ jest.mock('../../logger', () => ({
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useCloudPersonaChat } from '../../hooks/useCloudPersonaChat';
 import { useCloudChatStore } from '../../stores/cloud-chat-store';
+import { useChatPhaseStore, type ChatPhaseView } from '../../llm/chat-phase-store';
 import type { IAgent, ToolExecutionResult } from '../../llm/types';
 import type { SseEvent } from '../../llm/cloudComplete';
 import { MERA_EXPLAINER_SECTIONS } from '../../chat-tools/mera-explainer-content';
@@ -72,10 +73,25 @@ function makeAgent(overrides: Partial<IAgent> = {}): IAgent {
 }
 
 describe('useCloudPersonaChat', () => {
+  // Every view the wait line was actually put through, in order. A test that
+  // reads only the FINAL state cannot tell "went straight to thinking" from
+  // "walked back to securing and then forward again", which is the whole
+  // property the monotonic mark exists to give.
+  let phaseViews: ChatPhaseView[] = [];
+  let unsubscribePhase: (() => void) | null = null;
+
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset the cloud chat store before each test
     useCloudChatStore.getState().reset();
+    useChatPhaseStore.getState().reset();
+    phaseViews = [];
+    unsubscribePhase = useChatPhaseStore.subscribe((st) => phaseViews.push(st.view));
+  });
+
+  afterEach(() => {
+    unsubscribePhase?.();
+    unsubscribePhase = null;
   });
 
   describe('initial state', () => {
@@ -163,17 +179,77 @@ describe('useCloudPersonaChat', () => {
   });
 
   describe('streaming text', () => {
-    it('shows "thinking" from the reasoning signal until the first visible delta, and never after the turn', async () => {
-      const seen: boolean[] = [];
+    it('publishes the opening phase SYNCHRONOUSLY on send, before any async work', async () => {
+      // The gap this line exists to close is the first few hundred ms, which
+      // are spent on buildSystemPrompt, getToolDefinitions and buildContext (a
+      // DB read) before a single byte goes to the gateway. Publishing from
+      // inside the async IIFE would leave exactly that window unnarrated.
+      mockCloudChatStream.mockImplementation(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Hi' },
+          { type: 'finish', reason: 'stop' },
+        ]),
+      );
+      const agent = makeAgent({ getToolDefinitions: jest.fn().mockReturnValue([]) });
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('Hi there');
+      });
+
+      // No await between the send and this read.
+      expect(useChatPhaseStore.getState().view).toEqual({ kind: 'phase', id: 'preparing' });
+
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+    });
+
+    it('forwards a stream phase into the store, and never walks backwards', async () => {
+      // FIRST CALL ONLY. A turn can legitimately make several calls (the
+      // continuation pass, the forced pass, an agent leg) and each one is
+      // SUPPOSED to re-walk its phases from `reset`, so a count taken across
+      // the whole turn would be asserting the opposite of the design. The
+      // monotonic guarantee is per call, so the test is too.
+      let call = 0;
+      mockCloudChatStream.mockImplementation((req: { onPhase?: (s: unknown) => void }) => {
+        if (call++ === 0) {
+          req.onPhase?.('reset');
+          req.onPhase?.('securing');
+          req.onPhase?.('thinking');
+          // A late, lower-ranked signal. The mark must refuse it rather than
+          // walk the reader back to "encrypting".
+          req.onPhase?.('securing');
+        }
+        return makeSseStream([{ type: 'finish', reason: 'stop' }]);
+      });
+      const agent = makeAgent({ getToolDefinitions: jest.fn().mockReturnValue([]) });
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('Hi there');
+      });
+      await waitFor(
+        () => expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' }),
+        { timeout: 3000 },
+      );
+      expect(phaseViews).toContainEqual({ kind: 'phase', id: 'thinking' });
+      // `securing` was published twice and seen once: the second was refused.
+      expect(phaseViews.filter((v) => v.kind === 'phase' && v.id === 'securing')).toHaveLength(1);
+      // and it never reappeared after `thinking`.
+      const lastSecuring = phaseViews.map((v) => (v.kind === 'phase' ? v.id : null)).lastIndexOf('securing');
+      const firstThinking = phaseViews.map((v) => (v.kind === 'phase' ? v.id : null)).indexOf('thinking');
+      expect(lastSecuring).toBeLessThan(firstThinking);
+    });
+
+    it('hands the line over on the first visible delta, and leaves it released', async () => {
       let release!: () => void;
       const gate = new Promise<void>((r) => { release = r; });
+      const seen: string[] = [];
       mockCloudChatStream.mockImplementation(async function* () {
         yield { type: 'reasoning' } as SseEvent;
-        // Let the hook apply the flag before the first visible delta lands.
         await gate;
-        seen.push(useCloudChatStore.getState().thinking);
+        seen.push(useChatPhaseStore.getState().view.kind);
         yield { type: 'text-delta', delta: 'Hello' } as SseEvent;
-        seen.push(useCloudChatStore.getState().thinking);
+        seen.push(useChatPhaseStore.getState().view.kind);
         yield { type: 'finish', reason: 'stop' } as SseEvent;
       });
 
@@ -183,7 +259,10 @@ describe('useCloudPersonaChat', () => {
       act(() => {
         result.current.sendMessage('Hi there');
       });
-      await waitFor(() => expect(useCloudChatStore.getState().thinking).toBe(true), { timeout: 3000 });
+      await waitFor(
+        () => expect(useChatPhaseStore.getState().view).toEqual({ kind: 'phase', id: 'preparing' }),
+        { timeout: 3000 },
+      );
       release();
 
       await waitFor(
@@ -193,14 +272,32 @@ describe('useCloudPersonaChat', () => {
         },
         { timeout: 3000 },
       );
-      // true while the trace ran; false the moment the first delta was applied.
-      // The generator runs a SECOND time for the hidden forced-extraction pass
-      // (text + zero tool calls), which must never flip the flag: every later
-      // sample is false.
-      expect(seen.slice(0, 2)).toEqual([true, false]);
-      expect(seen.slice(2).every((v) => v === false)).toBe(true);
+      // A phase while the wait ran, released the moment the first delta landed.
+      // The generator runs a SECOND time for the hidden forced-extraction pass,
+      // which has no turn of its own and must never re-narrate: every later
+      // sample stays released.
+      expect(seen.slice(0, 2)).toEqual(['phase', 'released']);
+      expect(seen.slice(2).every((v) => v === 'released')).toBe(true);
       await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
-      expect(useCloudChatStore.getState().thinking).toBe(false);
+      expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' });
+    });
+
+    it('releases the line when the turn throws, so nothing reassures under the error banner', async () => {
+      // The 429 shape. `RateLimitedError` is flattened to a string long before
+      // the UI sees it, so the banner is generic and the ONLY thing that can
+      // stop the line is this release running on the throw path.
+      mockCloudChatStream.mockImplementation(() => {
+        throw new Error('E2EE chat failed: 429');
+      });
+      const agent = makeAgent({ getToolDefinitions: jest.fn().mockReturnValue([]) });
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('Hi there');
+      });
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+      expect(useCloudChatStore.getState().error).toContain('429');
+      expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' });
     });
 
     it('accumulates text-delta events into assistant message content', async () => {

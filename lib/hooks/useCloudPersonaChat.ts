@@ -23,6 +23,8 @@ import {
   makeAgentDeps,
 } from '../chat-tools/agent-device-port';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
+import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
+import { applyChatPhase, useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { estimateTokens } from '../llm/tokens';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
@@ -220,6 +222,17 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
   const agentStateRef = useRef<AgentState | null>(null);
 
   /**
+   * The wait line's sink for the turn in flight, or null when no turn owns it.
+   *
+   * A REF, not a parameter, because `runAgentLoopTurn` and `runSingleShot` are
+   * separate callbacks that `startTurn` chooses between, and the mark has to
+   * be per TURN rather than per path. Null is load-bearing: a forced-extraction
+   * pass calls `runSingleShot` directly, outside any turn, and a hidden pass
+   * must not narrate a wait nobody is watching.
+   */
+  const phaseSinkRef = useRef<PhaseSink | null>(null);
+
+  /**
    * ONE TURN through the agent loop. This is the shipped cloud path for the
    * persona agent; `runSingleShot` still serves every other agent.
    *
@@ -292,17 +305,23 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const out = await runAgentTurn({
           state: agentStateRef.current,
           userMessage,
-          deps: makeAgentDeps(userMessage, (d) => {
-            if (d.reasoning !== undefined && acc === '') {
-              useCloudChatStore.getState().setThinking(true);
-              return;
-            }
-            if (d.content) {
-              useCloudChatStore.getState().setThinking(false);
-              acc += d.content;
-              schedule();
-            }
-          }),
+          deps: makeAgentDeps(
+            userMessage,
+            (d) => {
+              // The arrival signal carries no payload, and the line is already
+              // on `thinking` from the post-headers route, so there is nothing
+              // to do here but avoid falling into the content branch.
+              if (d.reasoning !== undefined && acc === '') return;
+              if (d.content) {
+                // Real text. The bubble is the liveness signal from here, so
+                // the line hands over rather than competing with it.
+                phaseSinkRef.current?.(null);
+                acc += d.content;
+                schedule();
+              }
+            },
+            (signal) => phaseSinkRef.current?.(signal),
+          ),
           onLeg,
         });
         if (queued) flush();
@@ -325,7 +344,9 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         }
       } finally {
         armed = false;
-        useCloudChatStore.getState().setThinking(false);
+        // The line is released in `startTurn`'s finally, which is the ONE
+        // owner. This block runs inside that try, and a second release here
+        // would only make the ownership ambiguous for the next reader.
       }
     },
     [],
@@ -406,6 +427,13 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           toolChoice,
           model: BIG_MODEL,
           maxTokens: CHAT_MAX_OUTPUT_TOKENS,
+          // `suppressText` IS THE GATE, not a null sink ref. The forced
+          // extraction pass is dispatched with `void`, so it starts BEFORE
+          // `startTurn`'s finally has cleared the ref and would otherwise
+          // re-narrate a wait that is already over: measured here, it walked
+          // the line back to "encrypting" after the answer was on screen.
+          // Same reason the content render is gated on this flag.
+          onPhase: suppressText ? undefined : (signal) => phaseSinkRef.current?.(signal),
         });
 
         // ONE store write per frame, not per token. Every SSE delta is a
@@ -434,15 +462,9 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const flushContentRender = () => {
           if (renderQueued) renderContent();
         };
-        // "Thinking…" is shown from the first reasoning delta until the first
-        // visible one. The flag lives on the store (the bubble reads it), and
-        // is cleared on every exit path so a failed stream never leaves it on.
-        let thinkingShown = false;
-        const setThinking = (on: boolean) => {
-          if (thinkingShown === on) return;
-          thinkingShown = on;
-          useCloudChatStore.getState().setThinking(on);
-        };
+        // Hand the wait line over the moment anything visible arrives.
+        // Idempotent in the sink, so calling it per delta costs nothing.
+        const releaseWaitLine = () => phaseSinkRef.current?.(null);
 
         let eventCount = 0;
         try {
@@ -456,15 +478,16 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
             });
           }
           if (event.type === 'reasoning') {
-            // Only while nothing visible has arrived; a hidden forced pass
-            // (suppressText) must not flip a bubble it never owned.
-            if (!suppressText && accContent === '' && toolCallAccumulators.size === 0) setThinking(true);
+            // Tolerated and ignored. The trace is dropped undecrypted upstream,
+            // and the line is already on `thinking` from the post-headers
+            // route, which fires on every call including the many that emit no
+            // reasoning at all.
           } else if (event.type === 'text-delta') {
-            setThinking(false);
+            releaseWaitLine();
             accContent += event.delta;
             if (!suppressText) scheduleContentRender();
           } else if (event.type === 'tool-call-delta') {
-            setThinking(false);
+            releaseWaitLine();
             // The model may send multiple tool calls with the same index (or all index 0).
             // Detect collision: if a NEW name arrives at an existing index, assign a new key.
             const existingAcc = toolCallAccumulators.get(event.index);
@@ -488,7 +511,8 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         flushContentRender();
         } finally {
           renderArmed = false;
-          setThinking(false);
+          // Released in `startTurn`'s finally, the one owner. See the agent
+          // loop's matching note.
         }
         logger.debug(`${TAG} stream ended`, { totalEvents: eventCount, contentLength: accContent.length, toolCalls: toolCallAccumulators.size });
 
@@ -919,6 +943,17 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       isStreamingRef.current = true;
       store.setStatus('streaming');
 
+      // SYNCHRONOUSLY, before the async IIFE. Everything between here and the
+      // first gateway call is real work the user waits through:
+      // `buildSystemPrompt`, `getToolDefinitions`, `buildContext` (a DB read)
+      // and, on the persona path, `buildAgentPersona`. Publishing from inside
+      // the IIFE would leave the opening frames of the wait unnarrated, which
+      // is the gap this line exists to close.
+      useChatPhaseStore.getState().reset();
+      const phase = makePhaseSink(applyChatPhase);
+      phaseSinkRef.current = phase;
+      phase('preparing');
+
       const assistantId = `asst-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
       void (async () => {
@@ -963,6 +998,11 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           useCloudChatStore.getState().setError(msg);
         } finally {
           logger.debug(`${TAG} startTurn done, setting idle`);
+          // THE ONE RELEASE, and it is in a `finally` on purpose: it has to run
+          // on the throw path too, or a 429 leaves the line reassuring the user
+          // underneath the error banner for the rest of the session.
+          phase(null);
+          if (phaseSinkRef.current === phase) phaseSinkRef.current = null;
           useCloudChatStore.getState().setStatus('idle');
           isStreamingRef.current = false;
           useFloatingChatStore.getState().setTopicPlanTurnInFlight(false);
