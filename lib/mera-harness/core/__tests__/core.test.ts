@@ -9,6 +9,7 @@ import {
   runAgentTurn,
   type AgentPersona,
 } from '../core';
+import { toolsForLeg } from '../tool-contracts';
 import type { AgentDeps, AgentModelResult, Place } from '../types';
 
 const AMS: Place = {
@@ -371,6 +372,66 @@ describe('the bounded loop', () => {
     expect(out.formatRetries).toBe(MAX_FORMAT_RETRIES);
     expect(out.replyRetries).toBe(1);
     expect(out.reply).toBe('Got it, Porto.');
+  });
+
+  // ---- THE TOOL PAYLOAD MATCHES THE GUIDELINE -------------------------
+  // On device, "Delete all facts" was refused in prose with "please open the
+  // app and tap the trash can icon": the router sends deletion to
+  // conversation/correction, whose body says to call deleteUserFacts, and the
+  // prefix test handed writers only to facts/*. A skill told to write must be
+  // given the means.
+  function toolNamesFor(skillId: string): string[] {
+    return toolsForLeg({ skillLoaded: skillId }).map(
+      (t) => (t as { function: { name: string } }).function.name,
+    );
+  }
+
+  it('offers both writers to the skill whose job is deletion', () => {
+    const names = toolNamesFor('conversation/correction');
+    expect(names).toContain('deleteUserFacts');
+    expect(names).toContain('saveExtractedFacts');
+  });
+
+  it('still offers both writers to a facts skill', () => {
+    const names = toolNamesFor('facts/residence');
+    expect(names).toContain('deleteUserFacts');
+    expect(names).toContain('saveExtractedFacts');
+  });
+
+  // The widening is exactly one skill, not "every conversation/* leg".
+  it('withholds the writers from a skill that only answers', () => {
+    const names = toolNamesFor('conversation/question');
+    expect(names).not.toContain('deleteUserFacts');
+    expect(names).not.toContain('saveExtractedFacts');
+  });
+
+  it('never offers load_skill once a skill is loaded', () => {
+    for (const id of ['conversation/correction', 'facts/residence', 'conversation/question']) {
+      expect(toolNamesFor(id)).not.toContain('load_skill');
+    }
+  });
+
+  // THE GATE IS UNCHANGED BY THE WIDENING. Offering the tool makes the
+  // CONFIRMATION reachable, never a silent wipe.
+  it('a correction turn still cannot delete without a confirmed choice', async () => {
+    const deleteUserFacts = jest.fn(async () => ({ deleted: ['f1'] }));
+    const { deps } = scriptedDeps(
+      [
+        modelResult({
+          content: 'Right, removing that.',
+          toolCalls: [tc('load_skill', { id: 'conversation/correction' })],
+        }),
+        modelResult({
+          content: 'Done.',
+          toolCalls: [tc('deleteUserFacts', { fact_ids: ['location: residence'] })],
+        }),
+      ],
+      { deleteUserFacts },
+    );
+    await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'delete all facts', deps,
+    });
+    expect(deleteUserFacts).not.toHaveBeenCalled();
   });
 
   // A CONTROL THAT HAS BEEN TIDIED UP MEASURES NOTHING. These assert that
@@ -912,7 +973,9 @@ describe('per-leg tool payload', () => {
     expect(leg2).not.toContain('load_skill');
   });
 
-  it('a CONVERSATION leg offers no writer: there is nothing to save', async () => {
+  // NAMED FOR THE SKILL, not the group: conversation/correction DOES get both
+  // writers, because deleting is its job.
+  it('a conversation/question leg offers no writer: there is nothing to save', async () => {
     const { deps, calls } = scriptedDeps([
       modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
       modelResult({ content: 'answer' }),

@@ -215,9 +215,23 @@ export function toolsForLeg(opts: {
   // narrower the action space, the less there is to get wrong.
   if (opts.skillLoaded === null) return opts.wideRouteLeg ? [...HARNESS_TOOLS] : [LOAD_SKILL_TOOL];
   const discovery = HARNESS_TOOLS.filter((t) => t.function.name !== 'load_skill');
-  return opts.skillLoaded.startsWith('facts/')
-    ? [...discovery, SAVE_FACTS_TOOL, DELETE_FACTS_TOOL]
-    : discovery;
+  // A SKILL TOLD TO WRITE MUST BE GIVEN THE MEANS.
+  //
+  // `conversation/correction` does not start with `facts/`, so the prefix test
+  // alone denied it both writers while its own body says "Call deleteUserFacts
+  // with the attribute keys of the facts to remove" and its frontmatter
+  // promises "at most one saveExtractedFacts element and at most one
+  // deleteUserFacts call". On device the model did the only thing left to it:
+  // refused in prose and told the user to go tap a trash can in the app. The
+  // payload contradicted the guideline, which is the same defect class as
+  // HARNESS_TOOLS omitting saveExtractedFacts entirely (1 save in 480 turns).
+  //
+  // Deletion stays gated on `turn.resolvedChoice` in the loop, so offering the
+  // tool here does not make a silent wipe reachable: it makes the confirmation
+  // reachable.
+  const writes = opts.skillLoaded.startsWith('facts/')
+    || opts.skillLoaded === 'conversation/correction';
+  return writes ? [...discovery, SAVE_FACTS_TOOL, DELETE_FACTS_TOOL] : discovery;
 }
 
 export const MIN_CHOICE_OPTIONS = 2;
