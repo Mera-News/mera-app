@@ -16,7 +16,11 @@ import { Pressable, ScrollView, View, ViewStyle } from 'react-native';
 // alternative — copying the rgba into every primitive — is the drift the
 // MENU_PANEL_FILL note in components/ui/toast/index.tsx already warns about.
 // No cycle: GlassSurface imports only components/ui/box.
-import { GLASS_EDGE, TranslucentPlate } from '@/components/custom/GlassSurface';
+import {
+  GLASS_EDGE,
+  GLASS_OVER_CONTENT_FILL,
+  TranslucentPlate,
+} from '@/components/custom/GlassSurface';
 
 type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
@@ -108,13 +112,14 @@ const modalContentStyle = tva({
   },
 });
 
+// Plain constants, NOT `tva`. These two carry no variants, and a `tva` style
+// invoked with no argument throws "Cannot read property 'parentVariants' of
+// undefined" — a render error no test here can see, because nothing renders a
+// ModalContent in jest.
 /** Layer 2: the clipping, radius-owning, UNPADDED host for the plate. */
-const modalSurfaceStyle = tva({
-  base: `rounded-2xl overflow-hidden ${GLASS_EDGE}`,
-});
-
+const MODAL_SURFACE_CLASS = `rounded-2xl overflow-hidden ${GLASS_EDGE}`;
 /** Layer 3: the padding gluestack had on Content. */
-const modalInnerStyle = tva({ base: 'p-6' });
+const MODAL_INNER_CLASS = 'p-6';
 
 const modalBodyStyle = tva({
   base: 'mt-2 mb-6',
@@ -241,9 +246,9 @@ const ModalContent = React.forwardRef<
       pointerEvents="auto"
     >
       {/* Three layers, and the order matters — see modalContentStyle. */}
-      <View className={modalSurfaceStyle()}>
+      <View className={MODAL_SURFACE_CLASS} style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}>
         <TranslucentPlate />
-        <View className={modalInnerStyle()}>{children}</View>
+        <View className={MODAL_INNER_CLASS}>{children}</View>
       </View>
     </UIModal.Content>
   );

@@ -1,4 +1,4 @@
-import { TranslucentPlate } from '@/components/custom/GlassSurface';
+import { GLASS_OVER_CONTENT_FILL, TranslucentPlate } from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -250,7 +250,7 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
             <Pressable onPress={() => {}} style={{ width: '100%' }}>
               <Box
                 className="rounded-t-3xl overflow-hidden border-t border-white/10"
-                style={{ backgroundColor: 'transparent' }}
+                style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}
               >
                 {/* Plate first, then a padded box. The plate absolute-fills its
                     parent, and Yoga resolves those insets against the parent's

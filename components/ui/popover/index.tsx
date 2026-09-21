@@ -3,7 +3,11 @@ import React from 'react';
 import { View, Pressable, ScrollView, ViewStyle } from 'react-native';
 // See the note in components/ui/modal/index.tsx on reaching into
 // components/custom for the app's shared material.
-import { GLASS_EDGE, TranslucentPlate } from '@/components/custom/GlassSurface';
+import {
+  GLASS_EDGE,
+  GLASS_OVER_CONTENT_FILL,
+  TranslucentPlate,
+} from '@/components/custom/GlassSurface';
 import {
   Motion,
   createMotionAnimatedComponent,
@@ -122,9 +126,9 @@ const popoverContentStyle = tva({
   },
 });
 
-const popoverSurfaceStyle = tva({
-  base: `rounded-2xl overflow-hidden ${GLASS_EDGE}`,
-});
+// A plain constant, not `tva` — see the note in modal/index.tsx: a variantless
+// `tva` style called with no argument throws at render.
+const POPOVER_SURFACE_CLASS = `rounded-2xl overflow-hidden ${GLASS_EDGE}`;
 
 const popoverInnerStyle = tva({
   base: '',
@@ -226,7 +230,7 @@ const PopoverContent = React.forwardRef<
       })}
       pointerEvents="auto"
     >
-      <View className={popoverSurfaceStyle()}>
+      <View className={POPOVER_SURFACE_CLASS} style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}>
         <TranslucentPlate />
         <View
           className={popoverInnerStyle({

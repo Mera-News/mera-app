@@ -1,4 +1,4 @@
-import { TranslucentPlate } from '@/components/custom/GlassSurface';
+import { GLASS_OVER_CONTENT_FILL, TranslucentPlate } from '@/components/custom/GlassSurface';
 import { FeedbackWidget } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -212,6 +212,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: GLASS_OVER_CONTENT_FILL,
     },
     header: {
         flexDirection: 'row',
