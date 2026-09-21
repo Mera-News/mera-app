@@ -11,6 +11,16 @@ import {
 import { cssInterop } from 'nativewind';
 import React from 'react';
 import { Pressable, ScrollView, View, ViewStyle } from 'react-native';
+// Reaches UP into components/custom for the app's material. Deliberate: the
+// translucent fill and the hairline edge have exactly one definition, and the
+// alternative — copying the rgba into every primitive — is the drift the
+// MENU_PANEL_FILL note in components/ui/toast/index.tsx already warns about.
+// No cycle: GlassSurface imports only components/ui/box.
+import {
+  GLASS_EDGE,
+  GLASS_OVER_CONTENT_FILL,
+  TranslucentPlate,
+} from '@/components/custom/GlassSurface';
 
 type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
@@ -56,8 +66,41 @@ const modalBackdropStyle = tva({
   base: 'absolute left-0 top-0 right-0 bottom-0 bg-background-dark web:cursor-default',
 });
 
+/**
+ * ## Why the modal is a translucent PLATE, and why the backdrop had to darken
+ *
+ * A translucent panel was tried on the app's other small surfaces and rejected
+ * TWICE, for one reason both times: page text read through the labels even at a
+ * denser scrim. `components/ui/menu/index.tsx` records the menu version;
+ * `components/ui/toast/index.tsx` records the toast version, which the owner
+ * called ugly. A modal is a BIGGER translucent surface over BUSIER content than
+ * either, so it would have failed harder.
+ *
+ * What makes it work here is not the plate, it is WHAT IS BEHIND IT. Cards and
+ * `GlassPanel` read well because they float over the gradient backdrop; a modal
+ * floats over a live screen full of text. So the BACKDROP does the work — it
+ * animates to 0.78, not gluestack's 0.5 — and the plate is then translucent
+ * against an already-darkened field rather than against raw page text.
+ *
+ * If body text ever reads through again, raise the backdrop before thinning the
+ * plate: the plate's tint is the whole reason this surface is the same material
+ * as the cards, and the check to run is a modal over the FEED, not over a
+ * settings screen.
+ *
+ * ## The three-layer split, which is load-bearing
+ *
+ * 1. `UIModal.Content` owns the width and the shadow, and must NOT clip — RN
+ *    drops a view's shadow the moment that view sets `overflow: hidden`. It
+ *    carries the radius anyway, or the shadow is cast as a square.
+ * 2. An inner UNPADDED box owns the radius, the clip and the edge. Unpadded is
+ *    not a style preference: Yoga resolves an absolute child's insets against
+ *    the parent's CONTENT box, so hanging the plate off a padded view leaves an
+ *    unplated frame (see `GlassSurface.tsx`).
+ * 3. The padding that used to live on Content moved inward, onto the box that
+ *    wraps `children`.
+ */
 const modalContentStyle = tva({
-  base: 'bg-background-0 rounded-md overflow-hidden border border-outline-100 shadow-hard-2 p-6',
+  base: 'rounded-2xl shadow-hard-2',
   parentVariants: {
     size: {
       xs: 'w-[60%] max-w-[360px]',
@@ -68,6 +111,15 @@ const modalContentStyle = tva({
     },
   },
 });
+
+// Plain constants, NOT `tva`. These two carry no variants, and a `tva` style
+// invoked with no argument throws "Cannot read property 'parentVariants' of
+// undefined" — a render error no test here can see, because nothing renders a
+// ModalContent in jest.
+/** Layer 2: the clipping, radius-owning, UNPADDED host for the plate. */
+const MODAL_SURFACE_CLASS = `rounded-2xl overflow-hidden ${GLASS_EDGE}`;
+/** Layer 3: the padding gluestack had on Content. */
+const MODAL_INNER_CLASS = 'p-6';
 
 const modalBodyStyle = tva({
   base: 'mt-2 mb-6',
@@ -129,7 +181,10 @@ const ModalBackdrop = React.forwardRef<
         opacity: 0,
       }}
       animate={{
-        opacity: 0.5,
+        // 0.78, not gluestack's 0.5 — see the note on modalContentStyle. The
+        // plate above this is translucent, so this is what keeps the page's
+        // text from reading through the panel.
+        opacity: 0.78,
       }}
       exit={{
         opacity: 0,
@@ -154,7 +209,7 @@ const ModalBackdrop = React.forwardRef<
 const ModalContent = React.forwardRef<
   React.ComponentRef<typeof UIModal.Content>,
   IModalContentProps
->(function ModalContent({ className, size, ...props }, ref) {
+>(function ModalContent({ className, size, children, ...props }, ref) {
   const { size: parentSize } = useStyleContext(SCOPE);
 
   return (
@@ -189,7 +244,13 @@ const ModalContent = React.forwardRef<
         class: className,
       })}
       pointerEvents="auto"
-    />
+    >
+      {/* Three layers, and the order matters — see modalContentStyle. */}
+      <View className={MODAL_SURFACE_CLASS} style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}>
+        <TranslucentPlate />
+        <View className={MODAL_INNER_CLASS}>{children}</View>
+      </View>
+    </UIModal.Content>
   );
 });
 

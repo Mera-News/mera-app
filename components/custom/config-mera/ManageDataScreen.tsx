@@ -496,7 +496,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack, autoOpenRec
                 {/* Delete Account Final Confirmation Modal */}
                 <Modal isOpen={showDeleteConfirm} onClose={() => closeModal('deleteAccount')} size="sm">
                     <ModalBackdrop />
-                    <ModalContent className="bg-gray-900 border border-gray-700">
+                    <ModalContent>
                         <ModalHeader className="border-gray-700 pb-4">
                             <Text className="text-xl font-semibold text-red-400">{t('preferences.finalConfirmation')}</Text>
                         </ModalHeader>

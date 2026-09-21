@@ -263,14 +263,40 @@ const INTERNALS = new RegExp(
     '|the state (?:notes|line|says|tells|block)' +
     '|\\[assistant thinking\\]' +
     '|\\banswerPending\\b|\\brouteKind\\b' +
+    // TOOL ARGUMENT KEYS, not just tool names. A model that writes its tool
+    // call out as prose names the ARGUMENTS, never the function: the reply
+    // that shipped read `{"extracted_user_information": [{"statement": ...,
+    // "questionnaire_attribute": "interests"}]}` and matched nothing here.
+    // snake_case keys, so they cannot collide with English.
+    '|extracted_user_information|questionnaire_attribute|topic_skill_id|fact_ids|placeChain|countryHint' +
     '|\\bthe user\\b' +
     '|\\btheir residence\\b' +
     ')',
   'i',
 );
 
+/**
+ * A reply that is a serialised object rather than a sentence.
+ *
+ * Listing internal key names catches the ones already seen and nothing else,
+ * and the model invents new shapes faster than a word list grows. This is the
+ * structural half: Mera's replies are prose, so a bubble opening with `{` or
+ * `[` is a tool call the model wrote out as text instead of calling.
+ *
+ * Deliberately narrow. It checks the OPENING character rather than searching
+ * for braces anywhere, so an ordinary sentence that happens to quote one is
+ * untouched, and it requires a quoted key so `{` alone is not enough.
+ */
+export function looksLikeSerialisedPayload(text: string): boolean {
+  const t = (text ?? '').trim();
+  if (t.length === 0) return false;
+  if (t[0] !== '{' && t[0] !== '[') return false;
+  return /"[A-Za-z_][A-Za-z0-9_]*"\s*:/.test(t);
+}
+
 /** True when the reply exposes loop internals. Pass CLEANED text. */
 export function leaksInternals(text: string): boolean {
   const t = text ?? '';
-  return t.trim().length > 0 && INTERNALS.test(t);
+  if (t.trim().length === 0) return false;
+  return INTERNALS.test(t) || looksLikeSerialisedPayload(t);
 }

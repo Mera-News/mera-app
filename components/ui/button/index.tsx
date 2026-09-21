@@ -38,8 +38,29 @@ cssInterop(PrimitiveIcon, {
   },
 });
 
+/**
+ * THE RADIUS LIVES ON THE BASE, AND ONLY ON THE BASE.
+ *
+ * Buttons are pills (`rounded-full`, was gluestack's `rounded` = 4px). The size
+ * variants below set padding and height only, and no call site overrides the
+ * radius — a grep of every `<Button` for `rounded-*` returns nothing — so this
+ * one class is the shape of all ~85 buttons in the app. Change it here or not
+ * at all; a per-call-site override is how a design language stops being one.
+ *
+ * The fill is deliberately UNCHANGED. Shape moved, colour did not: a CTA has to
+ * read as the one tappable thing on a screen, and a translucent primary over a
+ * card or a photo is exactly the legibility problem that got a translucent
+ * panel rejected on the menu and the toast. The quiet variants (`outline`,
+ * `link`) were already transparent and still are.
+ *
+ * Two shapes worth looking at before touching this: `variant="link"` sets
+ * `px-0`, so its pill is invisible and harmless, and a FULL-WIDTH button reads
+ * very differently as a pill than as a rectangle. The precedent for the wide
+ * one is good — `components/custom/subscription/EmailCaptureSheet.tsx` shipped
+ * `h-14 rounded-full` by hand and it stayed.
+ */
 const buttonStyle = tva({
-  base: 'group/button rounded bg-primary-500 flex-row items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 data-[disabled=true]:opacity-40 gap-2',
+  base: 'group/button rounded-full bg-primary-500 flex-row items-center justify-center data-[focus-visible=true]:web:outline-none data-[focus-visible=true]:web:ring-2 data-[disabled=true]:opacity-40 gap-2',
   variants: {
     action: {
       primary:

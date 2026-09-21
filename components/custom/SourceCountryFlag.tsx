@@ -83,9 +83,15 @@ export const SourceCountryFlag: React.FC<Props> = ({ countryCode, iconClassName 
                 narrowest supported screen so the positioner's left<->right
                 flip (not a boundary clamp, on this axis) always has room to
                 land the content fully on-screen. */}
-            <PopoverContent className="bg-background-900 max-w-[200px] p-2">
+            {/* No surface classes: the popover primitive owns the material now. This
+                call site used to invert itself into a LIGHT bubble
+                (bg-background-900 + text-typography-50) because the surface
+                underneath was an opaque slab; keeping that override left the
+                caller's light fill showing as a frame around the plate, with
+                dark text on a dark panel inside it. */}
+            <PopoverContent className="max-w-[200px]">
                 <PopoverBody>
-                    <Text size="xs" className="text-typography-50">
+                    <Text size="xs" className="text-typography-900">
                         {label}
                     </Text>
                 </PopoverBody>

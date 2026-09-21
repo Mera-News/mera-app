@@ -1,3 +1,4 @@
+import { GLASS_OVER_CONTENT_FILL, TranslucentPlate } from '@/components/custom/GlassSurface';
 import { FeedbackWidget } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -45,11 +46,6 @@ function attachFeedbackMetadata(userId: string | undefined, supportId: string | 
     }
 }
 
-// Floating-card chrome, matched to the chat popover (components/custom/
-// floating-chat/ChatPopover.tsx): dark rounded panel over a dimmed backdrop, no
-// outline. The Mera-orange accent lives on the widget's submit button (set via
-// the feedbackIntegration theme in lib/sentry-init.ts).
-const PANEL_BG = '#1a1a1a';
 const CLOSE_RED = '#ef4444'; // error-400, same close affordance as ChatPopover
 
 /**
@@ -129,6 +125,7 @@ const FeedbackWidgetModal: React.FC = () => {
                 />
 
                 <View style={[styles.card, { maxHeight: maxCardHeight }]}>
+                    <TranslucentPlate />
                     {/* Mera-branded header: logo left, close X top-right (chat-bubble
                         pattern) — replaces the Sentry logo + bottom Cancel button. */}
                     <View style={styles.header}>
@@ -203,14 +200,19 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: 16,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: 'rgba(0, 0, 0, 0.78)',
     },
+    // Already the right shape for the plate: unpadded (the padding lives on
+    // `header` and `widgetContainer`), clipping, and radius-owning. So it only
+    // had to give up its opaque fill.
     card: {
         width: '100%',
         maxWidth: 480,
         borderRadius: 24,
-        backgroundColor: PANEL_BG,
         overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: GLASS_OVER_CONTENT_FILL,
     },
     header: {
         flexDirection: 'row',

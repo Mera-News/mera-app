@@ -31,12 +31,6 @@ const mockMeraProtocolState = {
   setModelState: jest.fn(),
 };
 
-// OnDeviceBanner store mock
-const mockOnDeviceBannerState = {
-  show: jest.fn(),
-  hide: jest.fn(),
-};
-
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   loadSuggestions: (...args: any[]) => mockLoadSuggestions(...args),
   getUnscoredSuggestionsWithFacts: (...args: any[]) => mockGetUnscoredSuggestionsWithFacts(...args),
@@ -86,12 +80,6 @@ jest.mock('@/lib/stores/mera-protocol-store', () => ({
 
 jest.mock('@/lib/generated/graphql-types', () => ({
   ProcessingMode: { OnDevice: 'ON_DEVICE', Cloud: 'CLOUD' },
-}));
-
-jest.mock('@/lib/stores/on-device-banner-store', () => ({
-  useOnDeviceBannerStore: {
-    getState: jest.fn(() => mockOnDeviceBannerState),
-  },
 }));
 
 jest.mock('expo-keep-awake', () => ({
@@ -198,13 +186,6 @@ describe('runScoringPass', () => {
       expect(mockDeactivateKeepAwake).toHaveBeenCalledWith('mera-scoring-pass');
     });
 
-    it('shows and hides on-device banner', async () => {
-      await runScoringPass();
-
-      expect(mockOnDeviceBannerState.show).toHaveBeenCalled();
-      expect(mockOnDeviceBannerState.hide).toHaveBeenCalled();
-    });
-
     it('calls processAllUnscored with batchSize and returns count', async () => {
       mockProcessAllUnscored.mockResolvedValue(7);
 
@@ -242,7 +223,6 @@ describe('runScoringPass', () => {
       await expect(runScoringPass()).rejects.toThrow('scoring failed');
 
       expect(mockForYouState.finishDeviceProcessing).toHaveBeenCalled();
-      expect(mockOnDeviceBannerState.hide).toHaveBeenCalled();
       expect(mockDeactivateKeepAwake).toHaveBeenCalledWith('mera-scoring-pass');
     });
 

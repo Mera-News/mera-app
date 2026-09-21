@@ -93,7 +93,14 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
-import { headerTitleSize, HEADER_TITLE_MIN_SCALE } from '@/lib/typography/header-title-size';
+import {
+  headerTitleLineHeight,
+  headerTitleSize,
+  HEADER_TITLE_MIN_SCALE,
+} from '@/lib/typography/header-title-size';
+import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
+import HeaderNarrationLine from '@/components/custom/for-you/HeaderNarrationLine';
+import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
@@ -140,6 +147,7 @@ import { useDatabaseReady } from '@/lib/stores/database-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
+  useForYouDeviceProcessing,
   useForYouHasGeneratedTopics,
   useForYouLastProcessingRunFinishedAt,
   useForYouSuggestions,
@@ -323,12 +331,28 @@ const FeedScreen: React.FC = () => {
   // two steps and not a ramp.
   const { width: windowWidth } = useWindowDimensions();
   const titleSize = headerTitleSize(windowWidth);
+  // Pinned, in BOTH states — see `headerTitleLineHeight`. Without it the row
+  // shrinks when the title steps aside for the narration line and the whole
+  // list moves under the reader, twice per sync.
+  const titleRowHeight = headerTitleLineHeight(windowWidth);
 
   const statusMode = useFeedStatusMode();
   const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
     true,
     3000,
   );
+
+  // ONE value drives the hidden title, the narration line and the strip.
+  // `isFeedProcessing`, NEVER `statusMode === 'processing'` — that one is
+  // `schedulerRunning || isFeedProcessing`, and `feed-sync` polls every five
+  // minutes plus foreground and reconnect, so it would hand this header over
+  // roughly twelve times an hour to announce a poll that found nothing. This
+  // is the reading surface; that would be the billboard `7e96aa4` deleted.
+  const narrating = useIsFeedProcessing();
+  // The STAGE only. On-device is its own store read, the same one the
+  // snapshot itself makes, so no parameter is added to the snapshot.
+  const { stage: narrationStage } = useProcessingSnapshot();
+  const { isDeviceProcessing: narrationOnDevice } = useForYouDeviceProcessing();
 
   // Candidates keep opened items in (they back frozen rows + survive hydrate) —
   // no exclusion here; opened-filtering happens only for NEW ids in ingest.
@@ -839,7 +863,10 @@ const FeedScreen: React.FC = () => {
   // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
   // for the empty-state chain and the header auto-reveal. The header indicator
   // OR-s in the scheduler flag on its own.
-  const isFeedProcessing = useIsFeedProcessing();
+  // Same subscription as `narrating` above, named for its other readers
+  // (the empty-state chain and the header auto-reveal). One hook call, so the
+  // two can never disagree about whether a run is in flight.
+  const isFeedProcessing = narrating;
 
   // Auto-reveal the header on an error state or while the list is empty
   // (preparing / no interests yet) so the header chrome is never hidden
@@ -905,6 +932,66 @@ const FeedScreen: React.FC = () => {
     return <AllCaughtUpCard />;
   };
 
+  // ── The title row's three slots ─────────────────────────────────────────
+  //
+  // THE TITLE STAYS while a sync runs, and the narration sits to the right of
+  // the status mark, in the width the importance chip used to occupy. Nothing
+  // reorders, so `FeedStatusIndicator` cannot remount mid-run and restart its
+  // sweep, and the reader never loses the screen's name.
+  //
+  // THE DASHBOARD DELIBERATELY DOES THE OPPOSITE — there the title steps aside
+  // and the mark moves leftmost — and the reason is measured, not stylistic.
+  // On this screen the title is 82pt and there is no bell, which leaves 245pt
+  // for the line. On the Dashboard "Dashboard" is 184pt and the bell takes 45
+  // more, leaving 88pt: about twelve characters a line, against copy that runs
+  // to 46 in English and 58 in the longer locales. Side by side there, the
+  // sentence truncates to "Save what you cannot…". So each header does the
+  // thing its own width allows. Do not "unify" these two without re-measuring;
+  // the numbers, not the symmetry, are what decided it.
+  const feedStatusMark = (
+    <FeedStatusIndicator
+      mode={statusMode}
+      expanded={statusExpanded}
+      onPress={toggleStatus}
+      testID="feed-status-indicator"
+    />
+  );
+  const feedTitleSlot = (
+    <View pointerEvents="none" className="flex-shrink min-w-0">
+      {/* A bare 1-line clamp truncated the screen's own name at large Dynamic
+          Type sizes, so this deliberately had none and wrapped instead — but
+          wrapping a single long word breaks it MID-WORD ("Dashboar" / "d" was
+          the reported case on the sibling header). Clamping AND scaling avoids
+          both: one line, shrunk to fit, which is Apple's own behaviour for a
+          title sharing its row with a control. */}
+      <Heading
+        size={titleSize}
+        className="text-white"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={HEADER_TITLE_MIN_SCALE}
+      >
+        {t('swipeFeed.yourDeck')}
+      </Heading>
+    </View>
+  );
+  // Takes the row's remaining width, which on this screen is generous: the
+  // Feed header has no bell and "Feed" is a short title. `flex-1 min-w-0` so
+  // it claims the slack rather than sizing to its text, and so it can actually
+  // shrink if a locale needs the title wider.
+  const feedNarrationSlot = (
+    <View
+      pointerEvents="none"
+      className="flex-1 min-w-0 pl-1"
+      testID="feed-header-narration"
+    >
+      <HeaderNarrationLine
+        stage={narrationStage}
+        onDevice={narrationOnDevice}
+        testID="feed-narration-line"
+      />
+    </View>
+  );
   return (
     // No `bg-black`: the AbstractGradientBackdrop below is the page background.
     <Box className="flex-1" testID="feed-screen">
@@ -1052,6 +1139,11 @@ const FeedScreen: React.FC = () => {
             `overflow: 'hidden'`: the header is full-bleed and clipping would
             only risk cutting off the bell's badge. */}
         <GlassPlate tint={GLASS_HEADER_TINT} />
+        {/* ABOVE the plate, never below: a `GlassView` re-samples its backdrop
+            every frame that backdrop changes, and below the plate this would
+            run the backdrop's single most expensive term at 100% duty for the
+            length of every sync. See HeaderWorkingGradient's own header. */}
+        <HeaderWorkingGradient active={narrating} />
         {/* PULL-TO-REFRESH PASSTHROUGH — see the matching note in ForYouScreen.
             `box-none` on the header wrapper leaves its CHILDREN touchable, and
             each row here is a full-width plain View, so every row is an opaque
@@ -1073,62 +1165,34 @@ const FeedScreen: React.FC = () => {
               beside it has been removed outright. This screen is the reading
               surface, and every additional affordance here is something that
               competes with the story you are trying to read. */}
-          <HStack className="items-center" pointerEvents="box-none">
-            {/* The importance DROPDOWN (one chip, not three pills) is what
-                makes an in-title-row control viable in the longer languages:
-                "Nachrichten" + a single "Mittel ▾" chip fits where the full
-                pill row did not. The heading still truncates first
-                (flex-shrink min-w-0, numberOfLines={1}) if a locale needs it. */}
+          <HStack
+            className="items-center"
+            pointerEvents="box-none"
+            style={{ height: titleRowHeight }}
+            testID="feed-header-title-row"
+          >
             <HStack
               className="flex-1 min-w-0 items-center"
               space="sm"
               pointerEvents="box-none"
             >
-              {/* `flex-shrink`, NOT `flex-1`. With `flex-1` this box grew into
-                  every spare pixel of the row, which parked the status mark
-                  hard against the filter chip at the far right — the exact
-                  placement the mark is meant not to have. Sized to its text and
-                  shrinkable instead, it hands the slack to the spacer below.
-                  `min-w-0` stays: it is what lets the shrink actually happen. */}
-              <View pointerEvents="none" className="flex-shrink min-w-0">
-                {/* A bare 1-line clamp truncated the screen's own name at large
-                  Dynamic Type sizes, so this deliberately had none and wrapped
-                  instead — but wrapping a single long word breaks it MID-WORD
-                  ("Dashboar" / "d" was the reported case on the sibling header).
-                  Clamping AND scaling avoids both: one line, shrunk to fit, which
-                  is Apple's own behaviour for a title sharing its row with a
-                  control. */}
-                <Heading
-                  size={titleSize}
-                  className="text-white"
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={HEADER_TITLE_MIN_SCALE}
-                >
-                  {t('swipeFeed.yourDeck')}
-                </Heading>
-              </View>
-              {/* Everything the deleted full-width bar used to say, in one
-                  mark. Sits immediately after the title rather than at the
-                  right edge so it reads as a property of this screen's state,
-                  not as another button. */}
-              <FeedStatusIndicator
-                mode={statusMode}
-                expanded={statusExpanded}
-                onPress={toggleStatus}
-                testID="feed-status-indicator"
-              />
-              {/* Trailing slack. It used to exist to pin the importance chip
-                  hard right; the chip is gone and the spacer stays, because it
-                  is what stops a short title from being centred by
-                  `justify-between` and keeps the status mark tight against it.
-                  `flex-basis: 0` means this contributes nothing to the row's
-                  natural width, so a long localized title still takes the whole
-                  row and truncates rather than being squeezed by a spacer.
-                  `pointerEvents="none"`: this is a full-height band across the
-                  header and would otherwise swallow a pull-to-refresh pan (see
-                  the rule above). */}
-              <View pointerEvents="none" className="flex-1" />
+              {feedTitleSlot}
+              {feedStatusMark}
+              {/* The narration takes the trailing slack while a run is on, and
+                  the plain spacer takes it otherwise. Only this third slot
+                  changes, so the title and the mark are untouched by the swap
+                  and neither can remount. */}
+              {narrating ? feedNarrationSlot : null}
+              {/* Trailing slack, AT REST ONLY — while a run is on, the
+                  narration slot above is what claims this width. It stops a
+                  short title from being centred and keeps the status mark
+                  tight against it. `flex-basis: 0` means it contributes
+                  nothing to the row's natural width, so a long localized title
+                  still takes the whole row and truncates rather than being
+                  squeezed by a spacer. `pointerEvents="none"`: this is a
+                  full-height band across the header and would otherwise
+                  swallow a pull-to-refresh pan (see the rule above). */}
+              {!narrating ? <View pointerEvents="none" className="flex-1" /> : null}
             </HStack>
           </HStack>
 

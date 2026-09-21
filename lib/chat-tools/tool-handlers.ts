@@ -195,6 +195,7 @@ export async function handleSaveExtractedFacts(
       // than re-parsing the raw tool arguments. Carried only -- whether it is
       // HONOURED is decided at commit time against a confirmed choice.
       ...(g.replaces ? { replaces: g.replaces } : {}),
+      ...(g.topicSkillId ? { topicSkillId: g.topicSkillId } : {}),
     })),
   };
 }

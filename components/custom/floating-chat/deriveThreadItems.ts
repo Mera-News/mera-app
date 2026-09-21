@@ -592,6 +592,7 @@ function emitFactChoiceGroups(
         options: group.options,
         questionnaireAttribute: group.questionnaireAttribute,
         replacesFactId: group.replaces ?? null,
+        topicSkillId: group.topicSkillId ?? null,
         dismissed: false,
         // A card derived from an EARLIER conversation can never be committed —
         // its context is gone — so it renders inert and, crucially, is not
@@ -614,6 +615,7 @@ function emitFactChoiceGroups(
         options: resolution.options,
         questionnaireAttribute: resolution.questionnaireAttribute,
         replacesFactId: group.replaces ?? null,
+        topicSkillId: group.topicSkillId ?? null,
         dismissed: true,
         stale,
       });
@@ -676,6 +678,7 @@ function emitFactChoiceGroups(
         groupIndex: g.index,
         options: g.options,
         questionnaireAttribute: g.questionnaireAttribute,
+        topicSkillId: g.topicSkillId ?? null,
       })),
     });
   }

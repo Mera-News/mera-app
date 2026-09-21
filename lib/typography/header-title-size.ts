@@ -49,3 +49,44 @@ export function headerTitleSize(windowWidth: number): HeaderTitleSize {
  * ellipsises. 0.75 of `3xl` is ~22px — still unmistakably a screen title.
  */
 export const HEADER_TITLE_MIN_SCALE = 0.75;
+
+/**
+ * The matched lineHeight for each step, from `tailwind.config.js:250-251`.
+ *
+ * Duplicated as numbers here because a `style={{ height }}` needs one and the
+ * class-name pipeline does not hand it back. `__tests__/header-title-size.test.ts`
+ * READS the tailwind config at test time and asserts these two against it, so
+ * the duplication cannot rot silently the way a copied literal usually does.
+ */
+const TITLE_LINE_HEIGHT: Record<HeaderTitleSize, number> = {
+  '3xl': 45,
+  '4xl': 54,
+};
+
+/**
+ * The height to PIN the title row to, from the same breakpoint as the size.
+ *
+ * ── Why the row is pinned at all ────────────────────────────────────────────
+ *
+ * The row's height is `max()` over its children and the Heading is that max:
+ * 54 at `4xl`, 45 at `3xl`, against a 22pt status mark and a 45pt bell. While
+ * a sync runs the title is REPLACED by a two-line 14/21 narration box, which
+ * is 42 — so the row would shrink by 3 to 12 points at the start of every run
+ * and grow back at the end. That fires `onHeaderLayout`, changes
+ * `headerHeight`, and moves the list's `contentContainerStyle.paddingTop` and
+ * `progressViewOffset` UNDER THE READER, twice per sync, on both tabs and on
+ * all four Dashboard sub-tabs.
+ *
+ * Reserving two lines inside the narration box does not fix it: the row
+ * collapses to its tallest REMAINING child, and with the title gone that is
+ * the 22pt mark. The height has to be on the row.
+ *
+ * Applied UNCONDITIONALLY, in both states. A height that only appears while
+ * narrating is the same bug with extra steps.
+ *
+ * It must come from `headerTitleSize`'s own breakpoint and not a second copy
+ * of it, or a future tablet step moves the title and leaves the pin behind.
+ */
+export function headerTitleLineHeight(windowWidth: number): number {
+  return TITLE_LINE_HEIGHT[headerTitleSize(windowWidth)];
+}

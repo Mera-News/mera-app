@@ -102,7 +102,7 @@ export default function RequestUnblockModal({
   return (
     <Modal isOpen={isOpen} onClose={resetAndClose} size="md">
       <ModalBackdrop />
-      <ModalContent className="bg-gray-900 border border-gray-700">
+      <ModalContent>
         <ModalHeader className="border-gray-700 pb-4">
           <Text className="text-xl font-semibold text-red-400">
             {t('floatingChat.requestUnblock.modalTitle')}

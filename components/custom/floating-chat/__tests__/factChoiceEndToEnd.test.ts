@@ -154,3 +154,58 @@ describe('real handler -> real merge -> real deriver', () => {
     expect(card?.dismissed).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// The topic guideline has to survive the WHOLE chain, because nothing set it
+// before: `startTopicGeneration` filters on `skillId`, found none on any fact
+// ever, and so every fact took the shipped one-size topic prompt while all six
+// `topics/*` skills sat authored, unit-tested and unreachable. Asserting it at
+// any single layer would have passed throughout.
+// ---------------------------------------------------------------------------
+
+describe('the topic guideline reaches the card', () => {
+  it('carries topic_skill_id from the tool arguments to both commit sites', async () => {
+    const staged = await handleSaveExtractedFacts({
+      extracted_user_information: [
+        {
+          statement: 'Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands, EU',
+          questionnaire_attribute: 'location: neighborhood/area, city, and country',
+          topic_skill_id: 'topics/residence',
+        },
+        {
+          statement: 'Interested in privacy safe AI',
+          topic_skill_id: 'topics/interest',
+        },
+      ],
+    });
+
+    // On the spine the deriver reads.
+    const spine = staged.pendingFacts as { topicSkillId?: string }[];
+    expect(spine.map((g) => g.topicSkillId)).toEqual(['topics/residence', 'topics/interest']);
+
+    const items = itemsFor(staged);
+    const cards = items.filter((i) => i.kind === 'fact-choice-card') as {
+      topicSkillId: string | null;
+    }[];
+    expect(cards.map((c) => c.topicSkillId)).toEqual(['topics/residence', 'topics/interest']);
+
+    // And on the bulk row, whose commit is a different call site.
+    const bulk = items.find((i) => i.kind === 'fact-choice-bulk-row') as {
+      groups: { topicSkillId: string | null }[];
+    };
+    expect(bulk.groups.map((g) => g.topicSkillId)).toEqual([
+      'topics/residence',
+      'topics/interest',
+    ]);
+  });
+
+  it('degrades to null when the turn routed nowhere, keeping the shipped prompt', async () => {
+    const staged = await handleSaveExtractedFacts({
+      extracted_user_information: ['Works as a farmer in Hoorn, Netherlands, Europe'],
+    });
+    const cards = itemsFor(staged).filter((i) => i.kind === 'fact-choice-card') as {
+      topicSkillId: string | null;
+    }[];
+    expect(cards[0].topicSkillId).toBeNull();
+  });
+});

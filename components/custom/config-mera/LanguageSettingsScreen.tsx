@@ -179,7 +179,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                 testID="language-current-row"
                                 onPress={() => setShowLangPicker(true)}
                                 disabled={busy}
-                                className={`flex-row items-center justify-between py-4 px-4 border border-gray-700 rounded-lg ${busy ? 'opacity-40' : ''}`}
+                                className={`flex-row items-center justify-between py-4 px-4 border border-gray-700 rounded-2xl ${busy ? 'opacity-40' : ''}`}
                             >
                                 <VStack>
                                     <Text className="text-white text-base font-medium">
@@ -255,7 +255,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                         settings, which is what the video shows. */}
                                     <Pressable
                                         onPress={handleWatchGuide}
-                                        className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
+                                        className="flex-row items-center py-3 px-4 bg-gray-800 rounded-2xl border border-gray-700"
                                     >
                                         <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
                                         <Text className="text-violet-400 text-sm font-medium flex-1">
@@ -304,7 +304,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                         ? Linking.openURL('App-Prefs:General')
                                         : Linking.sendIntent('android.settings.LOCALE_SETTINGS')
                                 }
-                                className="flex-row items-center self-start py-2.5 px-3 bg-gray-800 rounded-lg border border-gray-700"
+                                className="flex-row items-center self-start py-2.5 px-3 bg-gray-800 rounded-full border border-gray-700"
                             >
                                 <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
                                 <Text className="text-violet-400 text-sm font-medium">

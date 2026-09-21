@@ -44,6 +44,15 @@ jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
+// The panel's translucent plate. Stubbed for the same reason MeraLogo is:
+// GlassSurface imports components/ui/box, which pulls nativewind's
+// css-interop into a suite that has replaced react-native wholesale, and it
+// dies reading `getColorScheme` off a module that is not there.
+jest.mock('@/components/custom/GlassSurface', () => ({
+    __esModule: true,
+    TranslucentPlate: () => null,
+    GLASS_EDGE: '',
+}));
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
     return { MaterialIcons: (p: any) => <View {...p} /> };

@@ -1,6 +1,13 @@
 'use client';
 import React from 'react';
 import { View, Pressable, ScrollView, ViewStyle } from 'react-native';
+// See the note in components/ui/modal/index.tsx on reaching into
+// components/custom for the app's shared material.
+import {
+  GLASS_EDGE,
+  GLASS_OVER_CONTENT_FILL,
+  TranslucentPlate,
+} from '@/components/custom/GlassSurface';
 import {
   Motion,
   createMotionAnimatedComponent,
@@ -90,22 +97,47 @@ const popoverArrowStyle = tva({
   },
 });
 
+// Gluestack shipped this with NO background colour at all, so the backdrop was
+// invisible and its 0.1 opacity animated nothing. Harmless while the panel was
+// an opaque slab; not harmless now that the panel is translucent and needs
+// something behind it. Same fill as the modal's, lighter because a popover is
+// an anchored aside rather than a takeover.
 const popoverBackdropStyle = tva({
-  base: 'absolute left-0 top-0 right-0 bottom-0 web:cursor-default',
+  base: 'absolute left-0 top-0 right-0 bottom-0 bg-background-dark web:cursor-default',
 });
 
 const popoverCloseButtonStyle = tva({
   base: 'group/popover-close-button z-[1] rounded-sm data-[focus-visible=true]:web:bg-background-100 web:outline-0 web:cursor-pointer',
 });
 
+// Same three-layer split as the modal, for the same reason: the plate needs an
+// UNPADDED, clipping, radius-owning parent. The size variants therefore keep
+// the max-width here and hand their padding to `popoverInnerStyle` below.
 const popoverContentStyle = tva({
-  base: 'bg-background-0 rounded-lg overflow-hidden border border-outline-100 w-full',
+  base: 'rounded-2xl w-full',
   parentVariants: {
     size: {
-      xs: 'max-w-[360px] p-3.5',
-      sm: 'max-w-[420px] p-4',
-      md: 'max-w-[510px] p-[18px]',
-      lg: 'max-w-[640px] p-5',
+      xs: 'max-w-[360px]',
+      sm: 'max-w-[420px]',
+      md: 'max-w-[510px]',
+      lg: 'max-w-[640px]',
+      full: '',
+    },
+  },
+});
+
+// A plain constant, not `tva` — see the note in modal/index.tsx: a variantless
+// `tva` style called with no argument throws at render.
+const POPOVER_SURFACE_CLASS = `rounded-2xl overflow-hidden ${GLASS_EDGE}`;
+
+const popoverInnerStyle = tva({
+  base: '',
+  parentVariants: {
+    size: {
+      xs: 'p-3.5',
+      sm: 'p-4',
+      md: 'p-[18px]',
+      lg: 'p-5',
       full: 'p-6',
     },
   },
@@ -171,7 +203,7 @@ const Popover = React.forwardRef<
 const PopoverContent = React.forwardRef<
   React.ComponentRef<typeof UIPopover.Content>,
   IPopoverContentProps
->(function PopoverContent({ className, size, ...props }, ref) {
+>(function PopoverContent({ className, size, children, ...props }, ref) {
   const { size: parentSize } = useStyleContext(SCOPE);
 
   return (
@@ -197,7 +229,19 @@ const PopoverContent = React.forwardRef<
         class: className,
       })}
       pointerEvents="auto"
-    />
+    >
+      <View className={POPOVER_SURFACE_CLASS} style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}>
+        <TranslucentPlate />
+        <View
+          className={popoverInnerStyle({
+            parentVariants: { size: parentSize },
+            size,
+          })}
+        >
+          {children}
+        </View>
+      </View>
+    </UIPopover.Content>
   );
 });
 
@@ -241,7 +285,7 @@ const PopoverBackdrop = React.forwardRef<
         opacity: 0,
       }}
       animate={{
-        opacity: 0.1,
+        opacity: 0.45,
       }}
       exit={{
         opacity: 0,

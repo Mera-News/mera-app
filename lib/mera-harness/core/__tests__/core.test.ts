@@ -91,6 +91,9 @@ function scriptedDeps(
 const SKILLS: Record<string, string> = {
   'facts/residence': 'RESIDENCE SKILL BODY',
   'facts/interest': 'INTEREST SKILL BODY',
+  'facts/family': 'FAMILY SKILL BODY',
+  'facts/profession': 'PROFESSION SKILL BODY',
+  'facts/origin': 'ORIGIN SKILL BODY',
   'conversation/question': 'QUESTION SKILL BODY',
   'conversation/correction': 'CORRECTION SKILL BODY',
 };
@@ -740,7 +743,8 @@ describe('ask_choice', () => {
     const second = scriptedDeps([modelResult({ content: 'Got it.' })], { lookupPlace });
     await runAgentTurn({ state, userMessage: 'Amsterdam', deps: second.deps });
     expect(lookupPlace).toHaveBeenCalledTimes(1); // still ONE: no re-lookup
-    expect(state.turn.resolvedChoice?.payload).toEqual(AMS);
+    // Consumed by the turn that answered, not left set for the conversation.
+    expect(state.turn.resolvedChoice).toBeNull();
     expect(state.turn.pendingChoice).toBeNull();
   });
 });
@@ -1036,5 +1040,415 @@ describe('per-leg tool payload', () => {
     ]);
     await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'how?', deps });
     expect(names(calls[1].tools)).not.toContain('saveExtractedFacts');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Three defects reported from TestFlight, each tested THROUGH runAgentTurn
+// rather than against the pure helper, because all three were failures of
+// where a correct check was wired rather than of the check itself.
+// ---------------------------------------------------------------------------
+
+describe('TestFlight regressions', () => {
+  const tc2 = (name: string, args: Record<string, unknown>) => ({
+    name,
+    argumentsRaw: JSON.stringify(args),
+  });
+
+  const RESIDENT: AgentPersona = {
+    surface: 'CONFIG',
+    languageName: 'English',
+    facts: [
+      {
+        id: 'home',
+        statement: 'Lives in Amsterdam, North Holland, The Netherlands, EU',
+        attribute: 'location: residence',
+      },
+    ],
+  };
+
+  it('refuses a cross-subject replace and offers the fact as a plain add', async () => {
+    // "My girlfriend's parents live in Porto Santo" resolved to Vila Baleira
+    // and was offered as a replacement for the user's OWN home. The user had
+    // confirmed a choice, so the existing confirmed-choice guard passed it.
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'One moment.',
+        toolCalls: [tc2('load_skill', { id: 'facts/residence' })],
+      }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('saveExtractedFacts', {
+            extracted_user_information: [
+              {
+                statement: "Girlfriend's parents live in Vila Baleira, Madeira, Portugal, EU",
+                replaces: 'home',
+              },
+            ],
+          }),
+        ],
+      }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+    const state = createAgentState(RESIDENT);
+    // The turn HAS a confirmed choice, which is what made the old guard pass.
+    state.turn.resolvedChoice = { question: 'Which one?', text: 'Vila Baleira', payload: null };
+
+    const out = await runAgentTurn({
+      state,
+      userMessage: 'My girlfriends parents live in Porto Santo',
+      deps,
+    });
+
+    expect(out.proposals).toHaveLength(1);
+    expect(out.proposals[0].replaces).toBeNull();
+    expect(out.refusedReplaces).toBe(1);
+  });
+
+  it('still honours a replace when both facts are about the same subject', async () => {
+    // The guard must not cost a real move.
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'One moment.',
+        toolCalls: [tc2('load_skill', { id: 'facts/residence' })],
+      }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('saveExtractedFacts', {
+            extracted_user_information: [
+              { statement: 'Lives in Berlin, Germany, EU', replaces: 'home' },
+            ],
+          }),
+        ],
+      }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+    const state = createAgentState(RESIDENT);
+    state.turn.resolvedChoice = { question: 'Which one?', text: 'Berlin', payload: null };
+
+    const out = await runAgentTurn({ state, userMessage: 'I moved to Berlin', deps });
+
+    expect(out.proposals[0].replaces).toBe('home');
+    expect(out.refusedReplaces).toBe(0);
+  });
+
+  it('offers ONE card when the model proposes the same statement twice', async () => {
+    // Two identical "Which one did you mean?" cards, both blocking the
+    // composer. `existingStatements` only held facts already on file, so it
+    // could not see a repeat within the turn.
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'One moment.',
+        toolCalls: [tc2('load_skill', { id: 'facts/family' })],
+      }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('saveExtractedFacts', {
+            extracted_user_information: [
+              { statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' },
+              { statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' },
+            ],
+          }),
+        ],
+      }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: 'my parents live in bhopal jk road',
+      deps,
+    });
+
+    expect(out.proposals).toHaveLength(1);
+  });
+
+  // THE SHIPPED PATH. `handleSaveExtractedFacts` builds the cards from
+  // `extracted_user_information`, never from `proposals`, so asserting only on
+  // `out.proposals` would pass while the user still sees the wrong card. These
+  // two assert on what the TOOL was handed.
+  it('hands the TOOL a list with the refused replace stripped', async () => {
+    const seen: Record<string, unknown>[] = [];
+    const { deps } = scriptedDeps(
+      [
+        modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/residence' })] }),
+        modelResult({
+          content: '',
+          toolCalls: [
+            tc2('saveExtractedFacts', {
+              extracted_user_information: [
+                {
+                  statement: "Girlfriend's parents live in Vila Baleira, Madeira, Portugal, EU",
+                  questionnaire_attribute: 'location: residence',
+                  replaces: 'home',
+                },
+              ],
+            }),
+          ],
+        }),
+        modelResult({ content: 'Here is the reading to confirm.' }),
+      ],
+      {
+        saveExtractedFacts: async (args: Record<string, unknown>) => {
+          seen.push(...(args.extracted_user_information as Record<string, unknown>[]));
+          return { staged: true };
+        },
+      },
+    );
+    const state = createAgentState(RESIDENT);
+    state.turn.resolvedChoice = { question: 'Which one?', text: 'Vila Baleira', payload: null };
+
+    await runAgentTurn({ state, userMessage: 'My girlfriends parents live in Porto Santo', deps });
+
+    expect(seen).toHaveLength(1);
+    expect(seen[0].replaces).toBeUndefined();
+    // Untouched: the card owns these, not the loop.
+    expect(seen[0].questionnaire_attribute).toBe('location: residence');
+  });
+
+  it('hands the TOOL one entry when the model sent the same statement twice', async () => {
+    const seen: Record<string, unknown>[] = [];
+    const { deps } = scriptedDeps(
+      [
+        modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/family' })] }),
+        modelResult({
+          content: '',
+          toolCalls: [
+            tc2('saveExtractedFacts', {
+              extracted_user_information: [
+                { statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' },
+                { statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' },
+              ],
+            }),
+          ],
+        }),
+        modelResult({ content: 'Here is the reading to confirm.' }),
+      ],
+      {
+        saveExtractedFacts: async (args: Record<string, unknown>) => {
+          seen.push(...(args.extracted_user_information as Record<string, unknown>[]));
+          return { staged: true };
+        },
+      },
+    );
+
+    await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: 'my parents live in bhopal jk road',
+      deps,
+    });
+
+    expect(seen).toHaveLength(1);
+  });
+
+  // THE WORST PATH FOUND SO FAR, and it takes TWO turns to reproduce, which is
+  // why no single-turn test caught it. The subject has to survive the question.
+  it('resumes the asking skill on a chip tap, so the subject survives the question', async () => {
+    const state = createAgentState(RESIDENT);
+
+    // Turn 1: routed correctly to family, asks which Porto Santo.
+    const { deps: t1 } = scriptedDeps([
+      modelResult({ content: 'Porto Santo, one moment.', toolCalls: [tc2('load_skill', { id: 'facts/family' })] }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('ask_choice', {
+            question: 'Which Porto Santo did you mean?',
+            options: ['Porto Santo Stefano', 'Vila Baleira'],
+          }),
+        ],
+      }),
+    ]);
+    const first = await runAgentTurn({
+      state,
+      userMessage: 'my girlfriends parents live in porto santo',
+      deps: t1,
+    });
+    expect(first.terminalReason).toBe('awaiting-user');
+    expect(state.turn.lastSkill).toBe('facts/family');
+
+    // Turn 2: the tap. The router used to see a bare place name beside a
+    // residence fact and send it to facts/residence, which then proposed
+    // "Lives in Vila Baleira" as a REPLACEMENT for the user's own home.
+    const { deps: t2 } = scriptedDeps([
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('saveExtractedFacts', {
+            extracted_user_information: [
+              { statement: "Girlfriend's parents live in Vila Baleira, Madeira, Portugal, EU" },
+            ],
+          }),
+        ],
+      }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+    const second = await runAgentTurn({ state, userMessage: 'Vila Baleira', deps: t2 });
+
+    expect(second.resumedSkill).toBe(true);
+    expect(second.skillLoaded).toBe('facts/family');
+    // No leg was spent re-routing a tap.
+    expect(second.legs[0].toolCalls[0].name).toBe('saveExtractedFacts');
+  });
+
+  it('carries the ORIGINAL message into the resumed turn, not just the chip', async () => {
+    // Resuming the skill without the subject moves the bug rather than fixing
+    // it. Measured on device: facts/family resumed correctly and then proposed
+    // "Lives in Bhopal" for the USER, because the word "parents" existed only
+    // in the previous turn's message and a chip tap replaces the message with
+    // its own label.
+    const state = createAgentState(PERSONA);
+    const { deps: t1 } = scriptedDeps([
+      modelResult({ content: 'Bhopal, one moment.', toolCalls: [tc2('load_skill', { id: 'facts/family' })] }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('ask_choice', {
+            question: 'Which Bhopal did you mean?',
+            options: ['Bhopal, Madhya Pradesh', 'Bhopal Taluka'],
+          }),
+        ],
+      }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'my parents live in bhopal', deps: t1 });
+
+    const { deps: t2, calls } = scriptedDeps([
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' }] })] }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'Bhopal, Madhya Pradesh', deps: t2 });
+
+    const firstLeg = calls[0].messages.map((m) => m.content).join('\n');
+    expect(firstLeg).toContain('my parents live in bhopal');
+  });
+
+  it('does NOT inject the earlier message on an ordinary turn', async () => {
+    const state = createAgentState(PERSONA);
+    state.turn.lastUserMessage = 'my parents live in bhopal';
+    const { deps, calls } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/profession' })] }),
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Works as a software engineer' }] })] }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+
+    await runAgentTurn({ state, userMessage: 'I work as a software engineer', deps });
+
+    const firstLeg = calls[0].messages.map((m) => m.content).join('\n');
+    expect(firstLeg).not.toContain('my parents live in bhopal');
+  });
+
+  it('the choice is CONSUMED, so the turn after it routes normally again', async () => {
+    // `resolvedChoice` was set and never cleared, so it stayed true for the
+    // rest of the conversation. Everything gated on it widened from "the user
+    // confirmed this turn" to "the user has confirmed something, once": the
+    // destructive `replaces` gate, the delete gate, and (once the resume
+    // landed) the routing itself. Measured on the simulator: after one
+    // disambiguation, "I am interested in music festivals" resumed
+    // `facts/profession`.
+    const state = createAgentState(PERSONA);
+    const { deps: t1 } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/profession' })] }),
+      modelResult({
+        content: '',
+        toolCalls: [tc2('ask_choice', { question: 'Which one?', options: ['Engineer', 'Founder'] })],
+      }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'I am an entrepreneur', deps: t1 });
+
+    // Turn 2 answers the chip and RESUMES.
+    const { deps: t2 } = scriptedDeps([
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Entrepreneur' }] })] }),
+      modelResult({ content: 'Here is the reading.' }),
+    ]);
+    const answered = await runAgentTurn({ state, userMessage: 'Founder', deps: t2 });
+    expect(answered.resumedSkill).toBe(true);
+
+    // Turn 3 is a NEW subject and must route for itself.
+    const { deps: t3 } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/interest' })] }),
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Interested in music festivals' }] })] }),
+      modelResult({ content: 'Here is the reading.' }),
+    ]);
+    const third = await runAgentTurn({ state, userMessage: 'I am interested in music festivals', deps: t3 });
+
+    expect(third.resumedSkill).toBe(false);
+    expect(third.skillLoaded).toBe('facts/interest');
+  });
+
+  it('a replace is refused once the confirmation belongs to an EARLIER turn', async () => {
+    // The `replaces` gate reads the same flag, so a single tap anywhere in the
+    // conversation used to leave it open for good.
+    const state = createAgentState(RESIDENT);
+    state.turn.resolvedChoice = { question: 'Which one?', text: 'Berlin', payload: null };
+    state.turn.lastSkill = 'facts/residence';
+
+    const { deps: t1 } = scriptedDeps([
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Berlin, Germany, EU', replaces: 'home' }] })] }),
+      modelResult({ content: 'Here is the reading.' }),
+    ]);
+    const first = await runAgentTurn({ state, userMessage: 'Berlin', deps: t1 });
+    expect(first.proposals[0].replaces).toBe('home');
+
+    // A LATER turn proposing a replace has no confirmation of its own.
+    const { deps: t2 } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Porto, Portugal, EU', replaces: 'home' }] })] }),
+      modelResult({ content: 'Here is the reading.' }),
+    ]);
+    const second = await runAgentTurn({ state, userMessage: 'I might move to Porto', deps: t2 });
+
+    expect(second.proposals[0].replaces).toBeNull();
+  });
+
+  it('does NOT resume when the message is not the answer to a pending choice', async () => {
+    // A fresh statement after an unanswered question must still route.
+    const state = createAgentState(RESIDENT);
+    state.turn.lastSkill = 'facts/family';
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/profession' })] }),
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Works as a software engineer' }] })] }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+
+    const out = await runAgentTurn({ state, userMessage: 'I work as a software engineer', deps });
+
+    expect(out.resumedSkill).toBe(false);
+    expect(out.skillLoaded).toBe('facts/profession');
+  });
+
+  it('scrubs a leaking reply on a terminal that never reaches the settle gate', async () => {
+    // The reply gate sits just before the settle `break`, so a turn that ends
+    // any other way returned its prose unchecked. Reported: a turn answered
+    // with an invented copy of its own system prompt.
+    const INVENTED_PROMPT =
+      'You are a skilled assistant specializing in personal fact extraction. '
+      + 'Strict Rules: make exactly one saveExtractedFacts call per turn. '
+      + 'If the message contains no offerable facts, call it with an empty array.';
+
+    // A facts skill that proposes nothing ends on `no-proposal`, never on the
+    // settle path.
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'One moment.',
+        toolCalls: [tc2('load_skill', { id: 'facts/interest' })],
+      }),
+      modelResult({ content: INVENTED_PROMPT }),
+      modelResult({ content: INVENTED_PROMPT }),
+      modelResult({ content: INVENTED_PROMPT }),
+      modelResult({ content: INVENTED_PROMPT }),
+    ]);
+
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: "I'm building an ai news app",
+      deps,
+    });
+
+    expect(out.terminalReason).not.toBe('settled');
+    expect(out.reply).toBe(REPLY_LEAK_FALLBACK);
+    expect(out.replyLeakUnfixed).toBe(true);
   });
 });

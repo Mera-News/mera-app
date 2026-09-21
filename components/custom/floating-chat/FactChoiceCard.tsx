@@ -75,6 +75,9 @@ export interface FactChoiceCardProps {
   stale?: boolean;
   /** The existing fact this reading REPLACES, or null to add. */
   replacesFactId?: string | null;
+  /** The topic guideline this fact's topics generate under. Without it the
+   *  fact falls to the shipped one-size topic prompt. */
+  topicSkillId?: string | null;
 }
 
 export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
@@ -87,6 +90,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   dismissed = false,
   stale = false,
   replacesFactId = null,
+  topicSkillId = null,
 }) => {
   const { t } = useTranslation();
   // Index 0 is Mera's preferred reading, preselected — so the unambiguous case
@@ -175,6 +179,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           questionnaire: questionnaireAttribute ? { attribute: questionnaireAttribute } : undefined,
           // ONE transaction in fact-commit, never delete-then-add.
           ...(replacesFactId ? { replaces: replacesFactId } : {}),
+          // The route the chat turn already chose, so topic generation runs
+          // this fact's own guideline instead of the shipped one-size prompt.
+          ...(topicSkillId ? { skillId: topicSkillId } : {}),
         },
       ]);
       // Only THIS group's slot changes. Every sibling keeps its own state.

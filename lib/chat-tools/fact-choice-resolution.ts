@@ -35,6 +35,12 @@ export interface PendingFactGroup {
   groupId?: string;
   options: string[];
   questionnaireAttribute: string | null;
+  /** The topic guideline this fact's topics are generated under, carried from
+   *  the chat turn's route (`topics/residence`, `topics/interest`, ...).
+   *  Absent means the shipped one-size prompt, which is what EVERY fact got
+   *  before this field existed: nothing set it, so `startTopicGeneration`
+   *  never found a `skillId` and the six `topics/*` skills never ran. */
+  topicSkillId?: string;
   /** The existing fact this group would replace. Absent means ADD.
    *
    *  On the SPINE rather than left in the raw tool arguments, because
@@ -205,6 +211,9 @@ function parseSpine(value: unknown): PendingFactGroup[] {
         typeof rec.questionnaireAttribute === 'string' ? rec.questionnaireAttribute : null,
       ...(typeof rec.replaces === 'string' && rec.replaces.trim().length > 0
         ? { replaces: rec.replaces }
+        : {}),
+      ...(typeof rec.topicSkillId === 'string' && rec.topicSkillId.trim().length > 0
+        ? { topicSkillId: rec.topicSkillId }
         : {}),
     });
   });

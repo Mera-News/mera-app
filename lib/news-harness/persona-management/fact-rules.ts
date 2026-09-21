@@ -17,6 +17,11 @@ export type FactEntry =
       /** Fact id from find_similar_facts. Present only when the model believes
        *  this reading REPLACES an existing fact rather than adding to it. */
       replaces?: string;
+      /** The topic guideline the CHAT TURN routed to, e.g. `topics/residence`.
+       *  Set by the harness loop from the skill it loaded, never by the model.
+       *  Absent means the shipped one-size prompt generates this fact's
+       *  topics. */
+      topic_skill_id?: string;
       /**
        * 0-3 ALTERNATIVE readings of the same thing the user said, offered
        * alongside `statement` so the user picks which one Mera saves.
@@ -48,6 +53,8 @@ export interface NormalizedFactEntry {
   /** Extra readings offered beside `statement`. Never populated for the legacy
    *  string form, which by construction offers exactly one reading. */
   alternatives?: string[];
+  /** The topic guideline this fact's topics should be generated under. */
+  topicSkillId?: string;
   /** The existing fact this one would replace, as the model named it. Carried
    *  only; whether it is HONOURED is decided at commit time against a
    *  confirmed user choice. */
@@ -71,6 +78,10 @@ export function normalizeFactEntry(entry: FactEntry): NormalizedFactEntry {
     replaces:
       typeof entry.replaces === 'string' && entry.replaces.trim().length > 0
         ? entry.replaces.trim()
+        : undefined,
+    topicSkillId:
+      typeof entry.topic_skill_id === 'string' && entry.topic_skill_id.trim().length > 0
+        ? entry.topic_skill_id.trim()
         : undefined,
   };
 }
@@ -175,6 +186,10 @@ export interface FactChoiceGroup {
    *  instead of re-parsing the raw tool arguments -- a second parser there is
    *  a second place for the replace rule to live, and the two would drift. */
   replaces?: string;
+  /** The topic guideline to generate this fact's topics under, carried from
+   *  the chat turn's route. Without it every fact takes the shipped one-size
+   *  prompt and the per-kind `topics/*` skills never run at all. */
+  topicSkillId?: string;
 }
 
 /**
@@ -198,7 +213,8 @@ export function filterFactChoiceGroups(
   const rejected: RejectedFact[] = [];
 
   for (const entry of entries) {
-    const { statement, questionnaire, alternatives, replaces } = normalizeFactEntry(entry);
+    const { statement, questionnaire, alternatives, replaces, topicSkillId } =
+      normalizeFactEntry(entry);
     // Preferred reading first, then alternatives, deduped against each other so
     // a model that repeats itself does not render the same row twice.
     const candidates = [statement, ...(alternatives ?? [])];
@@ -223,6 +239,7 @@ export function filterFactChoiceGroups(
       // residence fact that loses it stops anchoring every future topic run.
       questionnaire,
       ...(replaces ? { replaces } : {}),
+      ...(topicSkillId ? { topicSkillId } : {}),
     });
   }
 

@@ -319,7 +319,7 @@ const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
       {/* What is actually there. Shown before anything is replaced. */}
       <Modal isOpen={options !== null} onClose={() => setOptions(null)}>
         <ModalBackdrop />
-        <ModalContent className="bg-gray-900 border border-gray-700">
+        <ModalContent>
           <ModalHeader>
             <Text className="text-lg font-semibold text-white">{t('backup.restore')}</Text>
           </ModalHeader>
@@ -351,7 +351,7 @@ const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
       {/* Says REPLACE rather than leaning on "restore" to imply it. */}
       <Modal isOpen={target !== null} onClose={() => setTarget(null)}>
         <ModalBackdrop />
-        <ModalContent className="bg-gray-900 border border-gray-700">
+        <ModalContent>
           <ModalHeader>
             <Text className="text-lg font-semibold text-red-400">
               {t('backup.restoreConfirmTitle')}

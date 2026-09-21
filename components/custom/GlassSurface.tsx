@@ -138,6 +138,52 @@ const TRANSLUCENT_FILL = 'rgba(255,255,255,0.07)';
 export const GLASS_EDGE = 'border border-white/10';
 
 /**
+ * Base fill for a translucent surface that sits over ARBITRARY APP CONTENT
+ * rather than over the gradient backdrop.
+ *
+ * This is the distinction the whole "is glass readable?" question turns on, and
+ * it is why a glass MENU and a glass TOAST were both tried and rejected
+ * (`components/ui/menu/index.tsx`, `components/ui/toast/index.tsx`): page text
+ * read straight through them. Cards and `GlassPanel` do not have that problem
+ * because what is behind them is the backdrop — dark, soft, low-detail. A modal
+ * or a bottom sheet is over headlines, photographs and chips.
+ *
+ * Measured on device, not guessed: with only the 0.78 scrim and
+ * `TRANSLUCENT_FILL`'s white lift, a Feed-status modal over the Dashboard had
+ * article headlines and a face legible straight through the panel, colliding
+ * with the modal's own labels. A scrim alone cannot fix it — it would have to
+ * go near-opaque, and then the whole screen is black rather than the panel
+ * being a surface.
+ *
+ * So a content-covering surface stacks: this dark base, then the white lift on
+ * top of it. The result still reads as glass — a faint ghost of what is behind,
+ * a lifted tone, a hairline edge — while its own text stays crisp. Over the
+ * backdrop, use `TranslucentPlate` alone; do not add this.
+ *
+ * The value was tuned against the worst case on device, a modal over the
+ * Dashboard feed. At 0.86 an article headline was still readable through the
+ * panel and collided with the modal's own title, which is precisely the
+ * complaint the menu rejection recorded. 0.90 drops the ghost below the
+ * threshold where you would try to read it while the card edges and image
+ * blocks behind are still visible, which is what keeps it a surface rather than
+ * a slab. Anything at or above ~0.94 is an opaque panel with extra steps.
+ */
+export const GLASS_OVER_CONTENT_FILL = 'rgba(18,17,19,0.90)';
+
+/**
+ * ONE SURFACE KIND CAN NEVER TAKE ANY OF THIS: a `react-native` Modal opened
+ * with `presentationStyle="pageSheet"`. iOS draws that container itself, so its
+ * fill, its corner radius and its grabber are the OS's and nothing here reaches
+ * them — only the content INSIDE the sheet is ours.
+ *
+ * Three screens are in that position (`auth/LanguageSelector`,
+ * `auth/LegalFooter`, `config-mera/LanguageSettingsScreen`), which is why they
+ * look different from every other sheet in the app and must not be "fixed".
+ * Converting them to `overFullScreen` to force the look would work and would
+ * throw away the native sheet's drag-to-dismiss, which is a bad trade.
+ */
+
+/**
  * Absolute-fill glass background — real Liquid Glass on iOS 26+, a flat
  * translucent fill at the same tint everywhere else.
  *

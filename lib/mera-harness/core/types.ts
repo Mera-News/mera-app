@@ -162,6 +162,12 @@ export interface AgentTurnState {
   lastQuestion: string | null;
   lastRoute: string | null;
   lastSkill: string | null;
+  /** The user's message from the turn that asked the last question. A chip tap
+   *  replaces the message with the chip's own text, so without this the skill
+   *  resumes with the subject missing: "my parents live in bhopal" comes back
+   *  as the bare place name and the family skill, seeing no relative, proposes
+   *  the user's own residence. */
+  lastUserMessage: string | null;
 }
 
 export function createAgentTurnState(): AgentTurnState {
@@ -173,6 +179,7 @@ export function createAgentTurnState(): AgentTurnState {
     lastQuestion: null,
     lastRoute: null,
     lastSkill: null,
+    lastUserMessage: null,
   };
 }
 
@@ -330,6 +337,14 @@ export interface AgentTurnResult {
   /** Proposals dropped because their statement repeated a fact already on
    *  file. The model was shown them by find_similar_facts. */
   reProposals: number;
+  /** `replaces` targets refused because the proposed fact and the target are
+   *  about different people. A destructive replace demoted to a plain add. */
+  refusedReplaces: number;
+  /** The turn RESUMED the skill that asked its question instead of routing
+   *  the chip tap as a fresh intent. Reported so the continuation is
+   *  measurable: an unmeasured one breaks silently, which is how the subject
+   *  of a question got lost between two turns in the first place. */
+  resumedSkill: boolean;
   /** Surfaced to the UI so a capped turn renders as capped, not as finished. */
   legCapped: boolean;
   state: AgentTurnState;

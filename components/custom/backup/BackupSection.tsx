@@ -761,7 +761,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
 
       <Modal isOpen={showCode} onClose={() => setShowCode(false)}>
         <ModalBackdrop />
-        <ModalContent className="bg-gray-900 border border-gray-700">
+        <ModalContent>
           <ModalHeader>
             <Text className="text-lg font-semibold text-white">{t('backup.codeTitle')}</Text>
           </ModalHeader>
@@ -784,7 +784,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
 
       <Modal isOpen={restoreOptions !== null} onClose={() => setRestoreOptions(null)}>
         <ModalBackdrop />
-        <ModalContent className="bg-gray-900 border border-gray-700">
+        <ModalContent>
           <ModalHeader>
             <Text className="text-lg font-semibold text-white">{t('backup.restore')}</Text>
           </ModalHeader>
@@ -817,7 +817,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
           "restore" to imply it. */}
       <Modal isOpen={restoreTarget !== null} onClose={() => setRestoreTarget(null)}>
         <ModalBackdrop />
-        <ModalContent className="bg-gray-900 border border-gray-700">
+        <ModalContent>
           <ModalHeader>
             <Text className="text-lg font-semibold text-red-400">
               {t('backup.restoreConfirmTitle')}
@@ -840,7 +840,7 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
 
       <Modal isOpen={confirmOff} onClose={() => setConfirmOff(false)}>
         <ModalBackdrop />
-        <ModalContent className="bg-gray-900 border border-gray-700">
+        <ModalContent>
           <ModalHeader>
             <Text className="text-lg font-semibold text-red-400">{t('backup.turnOff')}</Text>
           </ModalHeader>

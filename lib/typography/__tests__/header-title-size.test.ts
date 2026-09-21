@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import {
+    headerTitleLineHeight,
     headerTitleSize,
     HEADER_TITLE_MIN_SCALE,
 } from '@/lib/typography/header-title-size';
@@ -43,5 +45,57 @@ describe('headerTitleSize', () => {
         expect(HEADER_TITLE_MIN_SCALE).toBeGreaterThanOrEqual(0.7);
         expect(HEADER_TITLE_MIN_SCALE).toBeLessThan(1);
         expect(30 * HEADER_TITLE_MIN_SCALE).toBeGreaterThanOrEqual(22);
+    });
+});
+
+describe('headerTitleLineHeight', () => {
+    // READ FROM THE TYPE SCALE, not hardcoded in the assertion. A literal 54
+    // here would keep passing after someone retunes the scale, and the header
+    // row would then be pinned to a height the title no longer occupies —
+    // which is a clipped title, silently, on every phone.
+    const scale = require('@/tailwind.config.js').theme.extend.fontSize as Record<
+        string,
+        [string, { lineHeight: string }]
+    >;
+    const lineHeightOf = (token: '3xl' | '4xl') => parseInt(scale[token][1].lineHeight, 10);
+
+    it('the type scale still declares a matched lineHeight for both steps', () => {
+        // The positive control for the two assertions below: if this shape ever
+        // changes, they must fail loudly rather than compare against NaN.
+        expect(Number.isFinite(lineHeightOf('3xl'))).toBe(true);
+        expect(Number.isFinite(lineHeightOf('4xl'))).toBe(true);
+        expect(lineHeightOf('4xl')).toBeGreaterThan(lineHeightOf('3xl'));
+    });
+
+    it('returns the live lineHeight of whichever step the width selects', () => {
+        expect(headerTitleLineHeight(320)).toBe(lineHeightOf('3xl'));
+        expect(headerTitleLineHeight(390)).toBe(lineHeightOf('3xl'));
+        expect(headerTitleLineHeight(430)).toBe(lineHeightOf('4xl'));
+        expect(headerTitleLineHeight(1024)).toBe(lineHeightOf('4xl'));
+    });
+
+    it('breaks at the SAME width as headerTitleSize, from one breakpoint', () => {
+        // Two copies of the breakpoint is how the pin and the title drift apart
+        // on the one device that sits between them.
+        for (const w of [0, 320, 375, 390, 399, 400, 402, 414, 430, 768, 1024]) {
+            expect(headerTitleLineHeight(w)).toBe(lineHeightOf(headerTitleSize(w)));
+        }
+    });
+
+    it('degrades sanely on a nonsense width, like its sibling', () => {
+        expect(headerTitleLineHeight(0)).toBe(lineHeightOf('3xl'));
+        expect(headerTitleLineHeight(Number.NaN)).toBe(lineHeightOf('3xl'));
+    });
+
+    it('leaves room for the two-line narration box at every step', () => {
+        // 2 x 21 = 42. If the pin ever drops below that the narration clips
+        // instead of the row growing, because the row height is fixed.
+        const {
+            HEADER_NARRATION_METRICS,
+        } = require('@/components/custom/for-you/header-narration');
+        const needed =
+            HEADER_NARRATION_METRICS.lineHeight * HEADER_NARRATION_METRICS.maxLines;
+        expect(headerTitleLineHeight(320)).toBeGreaterThanOrEqual(needed);
+        expect(headerTitleLineHeight(430)).toBeGreaterThanOrEqual(needed);
     });
 });

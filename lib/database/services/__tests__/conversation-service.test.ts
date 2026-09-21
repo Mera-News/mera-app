@@ -96,6 +96,32 @@ describe('appendMessage', () => {
     expect(database.write).toHaveBeenCalledTimes(1);
   });
 
+  // The caller's "already persisted" guard is an in-memory ref, so it is empty
+  // again after any remount while the row it guarded is still in SQLite. The
+  // insert then failed the primary key and the turn logged
+  // `sqlite error 1555 (UNIQUE constraint failed: messages.id)`, which on a dev
+  // build raises a LogBox toast that physically covers the chat composer.
+  it('returns the existing id instead of failing the primary key', async () => {
+    const existing = makeMessageRecord({ id: 'asst-1' });
+    db._collections['messages'].find.mockResolvedValueOnce(existing);
+
+    const id = await appendMessage('conv-1', { role: 'assistant', content: 'reply' }, 'asst-1');
+
+    expect(id).toBe('asst-1');
+    // Nothing was written, which is the point: the row was already there.
+    expect(db._collections['messages'].create).not.toHaveBeenCalled();
+  });
+
+  it('still creates the row when the explicit id is NOT already present', async () => {
+    db._collections['messages'].find.mockRejectedValueOnce(new Error('not found'));
+    db._collections['messages'].create.mockResolvedValueOnce(makeRecord({ id: 'asst-2' }));
+
+    const id = await appendMessage('conv-1', { role: 'assistant', content: 'reply' }, 'asst-2');
+
+    expect(id).toBe('asst-2');
+    expect(db._collections['messages'].create).toHaveBeenCalledTimes(1);
+  });
+
   it('sets role, content and conversationId, leaving tool_calls_json null when absent', async () => {
     const created = makeRecord({ id: 'msg-1' });
     db._collections['messages'].create.mockImplementationOnce(

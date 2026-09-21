@@ -7,6 +7,7 @@
 import { resolveAgentArm, routeEnforcementFor } from './arms';
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
 import { claimsSaveHappened, cleanProse, leaksInternals, trailingQuestion } from './prose';
+import { mayReplace } from './fact-subject';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
@@ -283,6 +284,35 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   });
   let routeKind: string | null = null;
   let skillLoaded: string | null = null;
+  /** True when this turn RESUMED the skill that asked the question, instead of
+   *  spending a leg routing a chip tap as if it were a fresh intent. */
+  let resumedSkill = false;
+
+  // ---- a chip tap CONTINUES the turn that asked -----------------------------
+  // A disambiguation answer is not a new intent, and routing it as one loses
+  // the subject the question was about.
+  //
+  // MEASURED ON DEVICE, and the worst data-loss path found so far: "my
+  // girlfriend's parents live in Porto Santo" routed correctly to
+  // `facts/family` and asked which Porto Santo. The tap came back as an
+  // ordinary message, the router saw a bare place name against a persona with
+  // a residence fact, and sent it to `facts/residence`. That skill has no idea
+  // whose home it is, so it proposed "Lives in Vila Baleira" and offered it as
+  // a REPLACEMENT for the user's own Amsterdam home.
+  //
+  // The subject guard on `replaces` cannot save this one: by then both
+  // statements read as the user's own, because the model had already dropped
+  // the girlfriend from the sentence. The subject has to survive the question,
+  // which means resuming the skill rather than re-deciding.
+  if (turn.resolvedChoice !== null && turn.lastSkill !== null) {
+    const body = deps.loadSkill(turn.lastSkill);
+    if (body !== null) {
+      skillLoaded = turn.lastSkill;
+      routeKind = routeKindFromSkill(turn.lastSkill);
+      systemPrompt = body;
+      resumedSkill = true;
+    }
+  }
   let reply = '';
   let legBudgetHit = false;
   /** One closing-sentence leg is allowed after a proposal, never a stream. */
@@ -324,9 +354,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let proposedSomething = false;
   let forcedProposal = false;
   let reProposals = 0;
+  /** Replaces refused because the two facts are about different people. */
+  let refusedReplaces = 0;
   /** Statements find_similar_facts returned, normalised. A proposal equal to
    *  one is a RE-proposal of a fact already on file, not a new fact. */
   const existingStatements = new Set<string>();
+  /** Statements already offered THIS TURN, so one fact cannot become two
+   *  cards. Separate from `existingStatements`, which holds facts on file. */
+  const proposedStatements = new Set<string>();
   let existingFacts: { factId: string; statement: string }[] = [];
 
   /** True for the ONE forced leg. */
@@ -375,6 +410,22 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const messages: { role: 'system' | 'user' | 'assistant' | 'tool'; content: string }[] = [
       { role: 'user', content: `<state>${stateLine}</state>` },
       { role: 'user', content: `<known_facts>\n${formatKnownFacts(state.persona.facts)}\n</known_facts>` },
+      // THE MESSAGE THE QUESTION WAS ABOUT, on a resumed turn only.
+      //
+      // A chip tap arrives as its own label and nothing else, so the resumed
+      // skill sees "Bhopal, Madhya Pradesh, India, Asia" with no idea whose
+      // Bhopal it is. Measured: `facts/family` resumed correctly and then
+      // proposed "Lives in Bhopal" for the USER, because the word "parents"
+      // only ever existed in the previous turn's message. Resuming the skill
+      // without the subject moves the bug rather than fixing it.
+      ...(resumedSkill && turn.lastUserMessage
+        ? [
+            {
+              role: 'user' as const,
+              content: `They were answering this: ${escapeUntrusted(turn.lastUserMessage, 2000)}`,
+            },
+          ]
+        : []),
       { role: 'user', content: escapeUntrusted(userMessage, 2000) },
     ];
     // LAST, so it is the final thing read before the model answers. Not
@@ -565,6 +616,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const list = Array.isArray(args.extracted_user_information)
           ? (args.extracted_user_information as Record<string, unknown>[])
           : [];
+        // THE LIST THE APP ACTUALLY READS. `handleSaveExtractedFacts` builds
+        // the cards from `extracted_user_information`, not from `proposals`,
+        // so a decision made only on the parallel array is a decision the user
+        // never sees. Both the duplicate drop and the refused replace below
+        // have to land HERE or they are cosmetic. Same failure shape as
+        // `runAgentTurn` having no callers and `legCapped` being hardcoded.
+        const sanitised: Record<string, unknown>[] = [];
         for (const entry of list) {
           const statement = typeof entry.statement === 'string' ? entry.statement.trim() : '';
           if (!statement) continue;
@@ -581,16 +639,62 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             placeCandidates,
             userMessage,
           );
+          // THE SAME CARD TWICE. `existingStatements` only holds facts already
+          // ON FILE, so a model that proposes one statement on two legs — or
+          // twice in one call — got two identical cards, both blocking the
+          // composer. Measured from TestFlight: two "Which one did you mean?"
+          // cards offering the same two readings of the same Bhopal fact.
+          if (proposedStatements.has(statement.toLowerCase())) {
+            reProposals++;
+            continue;
+          }
+          proposedStatements.add(statement.toLowerCase());
           // `replaces` requires a CONFIRMED choice, never merely that a question
           // was asked: those are different facts, and treating one as the other
           // destroys a fact on a turn nobody consented to.
           const wantsReplace = typeof entry.replaces === 'string' ? entry.replaces : null;
-          const replaces = wantsReplace && turn.resolvedChoice ? wantsReplace : null;
+          let replaces = wantsReplace && turn.resolvedChoice ? wantsReplace : null;
+          // SUBJECT AGREEMENT. A replace is a destroy, and the confirmed-choice
+          // guard above does not speak to WHOSE fact is being destroyed: the
+          // user confirming which Porto Santo they meant is not consent to
+          // delete their own home. Demoted to a plain new proposal rather than
+          // dropped, so the fact still reaches them.
+          if (replaces !== null) {
+            const target = state.persona.facts.find((f) => f.id === replaces);
+            if (target && !mayReplace(statement, target.statement)) {
+              refusedReplaces++;
+              replaces = null;
+            }
+          }
           proposals.push({ statement, kind: routeKind, place, replaces });
+          // Carry the entry through with the loop's verdict on `replaces`
+          // applied, and nothing else touched: `alternatives` and
+          // `questionnaire_attribute` are the card's own and are not this
+          // loop's to rewrite.
+          // THE ROUTE THE TURN ALREADY CHOSE, handed to topic generation.
+          // Without it `startTopicGeneration` finds no `skillId`, every fact
+          // falls to the shipped one-size prompt, and all six `topics/*`
+          // skills are dead code in the app -- authored, unit-tested, and
+          // never once run on a user's phone.
+          // Checked against the real id list, never assumed from the route.
+          // `conversation/correction` also saves facts, and its route kind is
+          // "correction", for which there is no topics leaf: stamping
+          // `topics/correction` would hand the job a skill that cannot load
+          // and turn every correction into a failed topic run.
+          const candidateSkill = routeKind ? `topics/${routeKind}` : null;
+          const topicSkill =
+            candidateSkill && (deps.skillIds() as readonly string[]).includes(candidateSkill)
+              ? candidateSkill
+              : undefined;
+          sanitised.push({
+            ...entry,
+            replaces: replaces === null ? undefined : replaces,
+            ...(topicSkill ? { topic_skill_id: topicSkill } : {}),
+          });
         }
         if (proposals.length > 0) proposedSomething = true;
         const out = await deps.tools.saveExtractedFacts({
-          extracted_user_information: list,
+          extracted_user_information: sanitised,
           proposals,
         });
         leg.toolResults.push({ name: call.name, result: out });
@@ -716,6 +820,29 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     terminalReason = 'unknown-tool';
   }
 
+  // ---- THE BACKSTOP ---------------------------------------------------
+  // The gate above sits just before the settle `break`, so it sees the reply
+  // on exactly ONE of the loop's exits. Every other terminal — leg-cap,
+  // no-route, no-proposal, unknown-tool, malformed-choice, awaiting-user —
+  // leaves the loop by its own `break` and returned whatever prose the last
+  // leg happened to produce, unchecked.
+  //
+  // That is not theoretical. Reported from TestFlight: a turn answered with an
+  // invented copy of its own system prompt, several hundred words of "You are
+  // a skilled assistant... Strict Rules... call saveExtractedFacts with an
+  // empty array", rendered as a chat bubble. `leaksInternals` matches that
+  // text twice over, on `saveExtractedFacts` and on "the user"; it simply
+  // never ran, because the turn did not settle.
+  //
+  // Deterministic and terminal: the loop is over, so there is no leg left to
+  // re-ask with, and for a leak replacement was already the policy when a
+  // re-ask failed. A save claim is left alone here for the same reason it is
+  // left alone above.
+  if (leaksInternals(cleanProse(reply))) {
+    reply = REPLY_LEAK_FALLBACK;
+    replyLeakUnfixed = true;
+  }
+
   turn.turnActive = false;
   turn.lastTurnAskedQuestion = turn.pendingChoice !== null || /\?\s*$/.test(reply);
   // The chip question wins over the prose one: when both exist the chips are
@@ -725,6 +852,24 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     : trailingQuestion(cleanProse(reply));
   turn.lastRoute = routeKind;
   turn.lastSkill = skillLoaded;
+  // Held for the turn that answers, which arrives carrying only a chip label.
+  turn.lastUserMessage = userMessage;
+  // CONSUMED. `resolvedChoice` was set and never cleared, so it stayed true for
+  // the rest of the conversation and everything gated on it silently widened
+  // from "the user confirmed this turn" to "the user has confirmed something,
+  // once, at some point".
+  //
+  // That is almost certainly the TestFlight replace: the destructive `replaces`
+  // gate reads it, so after any single chip tap every later turn was free to
+  // offer a replacement. It also made the skill resume fire on every subsequent
+  // turn, which is how "I am interested in music festivals" routed to
+  // `facts/profession` on the simulator.
+  //
+  // Cleared HERE, at the end of the turn that consumed it, rather than where it
+  // is read: the read sites are the resume, the state line, the `replaces` gate
+  // and the delete gate, and one of them forgetting would put the bug straight
+  // back.
+  turn.resolvedChoice = null;
 
   return {
     legs,
@@ -749,6 +894,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     replyClaimUnfixed,
     replyLeakUnfixed,
     reProposals,
+    refusedReplaces,
+    resumedSkill,
     state: turn,
   };
 }

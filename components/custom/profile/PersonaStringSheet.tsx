@@ -1,3 +1,4 @@
+import { GLASS_OVER_CONTENT_FILL, TranslucentPlate } from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -188,114 +189,121 @@ export const PersonaStringSheet: React.FC<PersonaStringSheetProps> = ({
             <Pressable
                 accessibilityLabel={t('common.cancel')}
                 onPress={onClose}
-                style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.72)', justifyContent: 'flex-end' }}
+                style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.78)', justifyContent: 'flex-end' }}
             >
                 <Pressable onPress={() => {}} style={{ width: '100%' }}>
                     <Box
-                        className="rounded-t-3xl px-4 pb-8 pt-4"
-                        style={{ backgroundColor: '#151515', borderTopColor: '#2a2a2a', borderTopWidth: 1 }}
+                        className="rounded-t-3xl overflow-hidden border-t border-white/10"
+                        style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}
                     >
-                        {/* The string itself */}
-                        <TranslatableDynamic
-                            text={row.text}
-                            as="heading"
-                            size="xl"
-                            className="text-white"
-                            style={{ marginBottom: 16 }}
-                        />
+                        {/* Plate first, then a padded box. The plate absolute-fills its
+                            parent, and Yoga resolves those insets against the parent's
+                            CONTENT box — so the parent has to stay unpadded or the panel
+                            gets an unplated frame. */}
+                        <TranslucentPlate />
+                        <Box className="px-4 pb-8 pt-4">
+                            {/* The string itself */}
+                            <TranslatableDynamic
+                                text={row.text}
+                                as="heading"
+                                size="xl"
+                                className="text-white"
+                                style={{ marginBottom: 16 }}
+                            />
 
-                        {/* Importance stepper + visual level meter */}
-                        {hasTopics ? (
-                            <>
-                                <HStack className="items-center justify-between mb-2 px-2 py-2 rounded-2xl" style={{ backgroundColor: '#1f1f1f' }}>
-                                    <Text className="text-gray-300" style={{ fontSize: 15 }}>
-                                        {t('profile.sheet.importance', { defaultValue: 'Importance' })}
-                                    </Text>
-                                    <HStack space="md" className="items-center">
-                                        <Pressable
-                                            accessibilityRole="button"
-                                            accessibilityLabel={t('profile.sheet.lessImportant', { defaultValue: 'Less important' })}
-                                            disabled={busy}
-                                            onPress={() => handleImportance(-1)}
-                                            className="rounded-full p-1"
-                                        >
-                                            <MaterialIcons name="remove-circle-outline" size={30} color={busy ? '#555' : ACCENT} />
-                                        </Pressable>
-                                        {/* 5-segment level: filled = avg resolved weight */}
-                                        <HStack
-                                            space="xs"
-                                            className="items-center"
-                                            accessibilityLabel={t('profile.sheet.importanceLevel', {
-                                                level: filledSegments,
-                                                total: IMPORTANCE_SEGMENTS,
-                                                defaultValue: 'Importance level {{level}} of {{total}}',
-                                            })}
-                                        >
-                                            {Array.from({ length: IMPORTANCE_SEGMENTS }).map((_, i) => (
-                                                <Box
-                                                    key={i}
-                                                    style={{
-                                                        width: 8,
-                                                        height: 8,
-                                                        borderRadius: 4,
-                                                        backgroundColor: i < filledSegments ? ACCENT : '#3a3a3a',
-                                                    }}
-                                                />
-                                            ))}
+                            {/* Importance stepper + visual level meter */}
+                            {hasTopics ? (
+                                <>
+                                    <HStack className="items-center justify-between mb-2 px-2 py-2 rounded-2xl" style={{ backgroundColor: '#1f1f1f' }}>
+                                        <Text className="text-gray-300" style={{ fontSize: 15 }}>
+                                            {t('profile.sheet.importance', { defaultValue: 'Importance' })}
+                                        </Text>
+                                        <HStack space="md" className="items-center">
+                                            <Pressable
+                                                accessibilityRole="button"
+                                                accessibilityLabel={t('profile.sheet.lessImportant', { defaultValue: 'Less important' })}
+                                                disabled={busy}
+                                                onPress={() => handleImportance(-1)}
+                                                className="rounded-full p-1"
+                                            >
+                                                <MaterialIcons name="remove-circle-outline" size={30} color={busy ? '#555' : ACCENT} />
+                                            </Pressable>
+                                            {/* 5-segment level: filled = avg resolved weight */}
+                                            <HStack
+                                                space="xs"
+                                                className="items-center"
+                                                accessibilityLabel={t('profile.sheet.importanceLevel', {
+                                                    level: filledSegments,
+                                                    total: IMPORTANCE_SEGMENTS,
+                                                    defaultValue: 'Importance level {{level}} of {{total}}',
+                                                })}
+                                            >
+                                                {Array.from({ length: IMPORTANCE_SEGMENTS }).map((_, i) => (
+                                                    <Box
+                                                        key={i}
+                                                        style={{
+                                                            width: 8,
+                                                            height: 8,
+                                                            borderRadius: 4,
+                                                            backgroundColor: i < filledSegments ? ACCENT : '#3a3a3a',
+                                                        }}
+                                                    />
+                                                ))}
+                                            </HStack>
+                                            <Pressable
+                                                accessibilityRole="button"
+                                                accessibilityLabel={t('profile.sheet.moreImportant', { defaultValue: 'More important' })}
+                                                disabled={busy}
+                                                onPress={() => handleImportance(1)}
+                                                className="rounded-full p-1"
+                                            >
+                                                <MaterialIcons name="add-circle-outline" size={30} color={busy ? '#555' : ACCENT} />
+                                            </Pressable>
                                         </HStack>
-                                        <Pressable
-                                            accessibilityRole="button"
-                                            accessibilityLabel={t('profile.sheet.moreImportant', { defaultValue: 'More important' })}
-                                            disabled={busy}
-                                            onPress={() => handleImportance(1)}
-                                            className="rounded-full p-1"
-                                        >
-                                            <MaterialIcons name="add-circle-outline" size={30} color={busy ? '#555' : ACCENT} />
-                                        </Pressable>
                                     </HStack>
-                                </HStack>
-                                {limitReached ? (
-                                    <Text className="text-gray-500 mb-2 px-2" style={{ fontSize: 12 }}>
-                                        {t('profile.sheet.limitReached', {
-                                            defaultValue: 'Daily adjustment limit reached — changes continue tomorrow.',
-                                        })}
+                                    {limitReached ? (
+                                        <Text className="text-gray-500 mb-2 px-2" style={{ fontSize: 12 }}>
+                                            {t('profile.sheet.limitReached', {
+                                                defaultValue: 'Daily adjustment limit reached — changes continue tomorrow.',
+                                            })}
+                                        </Text>
+                                    ) : null}
+                                </>
+                            ) : null}
+
+                            {/* Refine with Mera */}
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={t('profile.sheet.refine', { defaultValue: 'Refine with Mera' })}
+                                onPress={handleRefine}
+                                className="rounded-2xl"
+                            >
+                                <HStack className="items-center px-2 py-3" space="md">
+                                    <MaterialIcons name="chat-bubble-outline" size={22} color={ACCENT} />
+                                    <Text className="flex-1 text-white" style={{ fontSize: 15, fontWeight: '600' }}>
+                                        {t('profile.sheet.refine', { defaultValue: 'Refine with Mera' })}
                                     </Text>
-                                ) : null}
-                            </>
-                        ) : null}
+                                </HStack>
+                            </Pressable>
 
-                        {/* Refine with Mera */}
-                        <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel={t('profile.sheet.refine', { defaultValue: 'Refine with Mera' })}
-                            onPress={handleRefine}
-                            className="rounded-2xl"
-                        >
-                            <HStack className="items-center px-2 py-3" space="md">
-                                <MaterialIcons name="chat-bubble-outline" size={22} color={ACCENT} />
-                                <Text className="flex-1 text-white" style={{ fontSize: 15, fontWeight: '600' }}>
-                                    {t('profile.sheet.refine', { defaultValue: 'Refine with Mera' })}
-                                </Text>
-                            </HStack>
-                        </Pressable>
-
-                        {/* Remove this (two-tap confirm) */}
-                        <Pressable
-                            accessibilityRole="button"
-                            accessibilityLabel={t('profile.sheet.remove', { defaultValue: 'Remove this' })}
-                            disabled={busy}
-                            onPress={handleRemove}
-                            className="rounded-2xl"
-                        >
-                            <HStack className="items-center px-2 py-3" space="md">
-                                <MaterialIcons name="delete-outline" size={22} color="#f87171" />
-                                <Text className="flex-1" style={{ fontSize: 15, fontWeight: '600', color: '#f87171' }}>
-                                    {confirmRemove
-                                        ? t('profile.sheet.removeConfirm', { defaultValue: 'Tap again to remove' })
-                                        : t('profile.sheet.remove', { defaultValue: 'Remove this' })}
-                                </Text>
-                            </HStack>
-                        </Pressable>
+                            {/* Remove this (two-tap confirm) */}
+                            <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel={t('profile.sheet.remove', { defaultValue: 'Remove this' })}
+                                disabled={busy}
+                                onPress={handleRemove}
+                                className="rounded-2xl"
+                            >
+                                <HStack className="items-center px-2 py-3" space="md">
+                                    <MaterialIcons name="delete-outline" size={22} color="#f87171" />
+                                    <Text className="flex-1" style={{ fontSize: 15, fontWeight: '600', color: '#f87171' }}>
+                                        {confirmRemove
+                                            ? t('profile.sheet.removeConfirm', { defaultValue: 'Tap again to remove' })
+                                            : t('profile.sheet.remove', { defaultValue: 'Remove this' })}
+                                    </Text>
+                                </HStack>
+                            </Pressable>
+                        </Box>
                     </Box>
                 </Pressable>
             </Pressable>
