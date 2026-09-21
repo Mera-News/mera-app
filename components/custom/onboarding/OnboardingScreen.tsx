@@ -1,6 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import OnboardingWizard from "@/components/custom/onboarding/OnboardingWizard";
-import BackupRecoveryFlow from "@/components/custom/backup/BackupRecoveryFlow";
 import { Box } from "@/components/ui/box";
 import { Spinner } from "@/components/ui/spinner";
 import { hasAnyFacts } from "@/lib/database/services/fact-service";
@@ -17,7 +16,6 @@ import { clearPreviousUserData, useUserStore } from "@/lib/stores";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { startEntitlementWarmup } from "@/lib/subscription/onboarding-paywall";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 interface OnboardingScreenProps {
     /**
@@ -68,9 +66,7 @@ interface OnboardingScreenProps {
  * server session can no longer bounce a user through onboarding.
  */
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onFreeTierMode }) => {
-    const { t } = useTranslation();
     const [showOnboarding, setShowOnboarding] = useState(false);
-    const [showRestoreOffer, setShowRestoreOffer] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
     // Fail-closed state, mirroring app/logged-in/index.tsx rather than
     // inventing a second shape. This screen needs its own copy because
@@ -262,34 +258,19 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
             // the entitlement lands on nobody.
             startEntitlementWarmup(userId);
 
-            // ── OFFER A RESTORE BEFORE BUILDING A PERSONA FROM SCRATCH ───
+            // NO RESTORE OFFER HERE. Email sign-ins with zero local facts used
+            // to get `BackupRecoveryFlow` as a pre-wizard step, on the theory
+            // that zero facts is exactly the state a returning user is in on a
+            // new phone. In practice "Enter your recovery code" was the first
+            // thing most people saw and most people did not know what it meant.
             //
-            // EMAIL SIGN-INS ONLY. `cached_user_email` is written by exactly
-            // the email/OTP verify paths (OTPVerificationView,
-            // DeepLinkVerifyScreen) plus checkout email-attach — which happens
-            // after onboarding, so it cannot leak into this gate. A device
-            // sign-in never writes it, and a device-minted account is by
-            // definition brand new: it has no backup to bring back, so the
-            // offer would only be a confusing extra screen between "Get
-            // started" and the wizard. Anonymous reinstallers who DID keep a
-            // recovery code still have the Settings > Manage data path.
-            //
-            // For email users the ask is worth one tap: zero local facts is
-            // exactly the state a returning user is in on a new phone, and
-            // declining costs a tap while accepting saves rebuilding months of
-            // persona by hand.
-            //
-            // It does NOT need to skip the wizard itself: onboarding gates on
-            // local facts, a restore writes facts, and the restore reloads the
-            // app — so the next pass through this very check takes the
-            // `hasFacts` branch above and calls onComplete(). One gate, not two.
-            const emailSignIn = !!(await getSetting('cached_user_email'));
-            if (cancelled) return;
-            if (emailSignIn) {
-                setShowRestoreOffer(true);
-            } else {
-                setShowOnboarding(true);
-            }
+            // Restoring is now something a user goes and asks for: Settings >
+            // "Restore from a backup", which opens the same flow directly
+            // (`manage-data?restore=1`). Doing it after the wizard is safe —
+            // `lib/backup/allowlist.ts` forbids the identity settings from ever
+            // entering a backup, so the post-restore reload lands on the
+            // receiving device's own stamp with facts present.
+            setShowOnboarding(true);
             setIsCheckingOnboarding(false);
         };
 
@@ -327,28 +308,6 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 <AbstractGradientBackdrop />
 
                 <Spinner size="large" />
-            </Box>
-        );
-    }
-
-    if (showRestoreOffer) {
-        return (
-            <Box className="flex-1 justify-center px-6">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
-                <BackupRecoveryFlow
-                    introText={t('backup.onboardingIntro')}
-                    skipLabel={t('backup.onboardingSkip')}
-                    onSkip={() => {
-                        setShowRestoreOffer(false);
-                        setShowOnboarding(true);
-                    }}
-                    // Only if the reload failed. The data IS restored, so
-                    // sending them into the wizard would have them rebuild a
-                    // persona they already have.
-                    onRestoredWithoutReload={() => handlersRef.current.onComplete()}
-                />
             </Box>
         );
     }

@@ -40,6 +40,9 @@ type DataLocation = 'device' | 'server';
 
 interface ManageDataScreenProps {
     onBack?: () => void;
+    /** Open the backup recovery-code flow on arrival — Settings > "Restore from
+     *  a backup" deep-links here with `?restore=1`. */
+    autoOpenRecover?: boolean;
 }
 
 // Local-only tables that make up the ephemeral article feed cache. Rebuilt
@@ -55,7 +58,7 @@ const FEED_CACHE_TABLES = [
 // its topic-gen jobs) to avoid leaving stale or orphaned rows behind.
 const FACTS_AND_TOPICS_TABLES = ['facts', ...FEED_CACHE_TABLES];
 
-const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
+const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack, autoOpenRecover }) => {
     const insets = useSafeAreaInsets();
     const toast = useToast();
     const { t } = useTranslation();
@@ -386,7 +389,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                         every module it reaches had to be mocked in
                         ManageDataScreen.test.tsx, breaking a passing suite for
                         reasons that have nothing to do with backup. */}
-                    <BackupSection />
+                    <BackupSection autoOpenRecover={autoOpenRecover} />
 
                     {/* Observability lives here since 2026-08-19 (user call):
                         a diagnostics surface belongs with the data tools, not

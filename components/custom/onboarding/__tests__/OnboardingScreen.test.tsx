@@ -19,14 +19,15 @@
 // inside a jest.mock factory ("Invalid variable access: _ReactNativeCSSInterop").
 // The `mock` prefix is what lets the factory reference it, and the indirection
 // through a call keeps it out of the temporal dead zone.
+// Still mocked, and deliberately: the assertions below prove this screen NEVER
+// mounts it. A real import would make "no recovery-skip in the tree" pass for
+// the wrong reason (a render that threw) instead of because the branch is gone.
 jest.mock('@/components/custom/backup/BackupRecoveryFlow', () => ({
     __esModule: true,
-    default: (props: { onSkip: () => void }) => mockRecoveryFlow(props),
+    default: () => mockRecoveryFlow(),
 }));
 
-const mockRecoveryFlow = ({ onSkip }: { onSkip: () => void }) => (
-    <Pressable testID="recovery-skip" onPress={onSkip} />
-);
+const mockRecoveryFlow = () => <Pressable testID="recovery-skip" />;
 
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
@@ -174,29 +175,27 @@ function renderScreen(
 }
 
 describe('OnboardingScreen fact gate', () => {
-    it('offers a RESTORE before the wizard when an EMAIL user has 0 local facts', async () => {
-        // Zero local facts is exactly the state a returning user is in on a new
-        // phone, so they are asked before being made to rebuild a persona by
-        // hand. The wizard is still one tap away. This suite's default
-        // getSetting returns a value for every key, so `cached_user_email`
-        // reads as present — the email sign-in case.
+    it('sends an EMAIL user with 0 local facts STRAIGHT to the wizard', async () => {
+        // "Enter your recovery code" used to sit here, for email sign-ins only,
+        // on the theory that zero local facts is the state a returning user is
+        // in on a new phone. It was the first thing most people saw and most
+        // people did not know what it meant. Restoring is now something a user
+        // asks for: Settings > "Restore from a backup".
+        //
+        // This suite's default getSetting returns a value for every key, so
+        // `cached_user_email` reads as present — the email sign-in case.
         mockHasAnyFacts.mockImplementation(async () => { callOrder.push('count'); return false; });
-        const { queryByTestId, getByTestId, onComplete } = renderScreen();
+        const { queryByTestId, onComplete } = renderScreen();
 
-        await waitFor(() => expect(queryByTestId('recovery-skip')).toBeTruthy());
-        expect(queryByTestId('onboarding-wizard')).toBeNull();
-        expect(onComplete).not.toHaveBeenCalled();
-
-        fireEvent.press(getByTestId('recovery-skip'));
         await waitFor(() => expect(queryByTestId('onboarding-wizard')).toBeTruthy());
+        expect(queryByTestId('recovery-skip')).toBeNull();
         expect(onComplete).not.toHaveBeenCalled();
     });
 
-    it('a DEVICE-minted user (no cached_user_email) skips the restore offer straight to the wizard', async () => {
-        // A device sign-in never writes `cached_user_email`, and a
-        // device-minted account is brand new — it has no backup to bring
-        // back, so the offer would only be a confusing extra screen between
-        // "Get started" and the wizard.
+    it('treats a DEVICE-minted user (no cached_user_email) identically', async () => {
+        // The two sign-in kinds used to diverge here. They no longer do, and
+        // this is the test that says so: nothing about the restore path reads
+        // `cached_user_email` any more.
         mockHasAnyFacts.mockImplementation(async () => { callOrder.push('count'); return false; });
         mockGetSetting.mockImplementation(async (k: string) =>
             k === 'cached_user_email' ? null : 'u1',
@@ -308,15 +307,13 @@ describe('OnboardingScreen fact gate', () => {
     });
 
     it('reaches the wizard when the local fact count throws', async () => {
-        // An unreadable DB is treated as "no facts", which lands on the restore
-        // offer and then the wizard. Onboarding is recoverable; a persona-less
-        // feed is not.
+        // An unreadable DB is treated as "no facts", which lands on the wizard.
+        // Onboarding is recoverable; a persona-less feed is not.
         mockHasAnyFacts.mockImplementation(async () => { throw new Error('db unreadable'); });
-        const { queryByTestId, getByTestId, onComplete } = renderScreen();
+        const { queryByTestId, onComplete } = renderScreen();
 
-        await waitFor(() => expect(queryByTestId('recovery-skip')).toBeTruthy());
-        fireEvent.press(getByTestId('recovery-skip'));
         await waitFor(() => expect(queryByTestId('onboarding-wizard')).toBeTruthy());
+        expect(queryByTestId('recovery-skip')).toBeNull();
         expect(onComplete).not.toHaveBeenCalled();
     });
 });
