@@ -70,7 +70,6 @@ export const clearAllStores = async () => {
     const { useCloudChatStore } = require('./cloud-chat-store');
     const { useSubscriptionStore } = require('./subscription-store');
     const { useFeedOrderStore } = require('./feed-order-store');
-    const { useImportanceFilterStore } = require('./importance-filter-store');
     const { useRelatedSortStore } = require('./related-sort-store');
     const { useTutorialsStore } = require('./tutorials-store');
     const { useStartupTabStore } = require('./startup-tab-store');
@@ -95,7 +94,6 @@ export const clearAllStores = async () => {
     useCloudChatStore.getState().reset();
     useSubscriptionStore.getState().reset();
     useFeedOrderStore.getState().reset();
-    useImportanceFilterStore.getState().reset();
     useRelatedSortStore.getState().reset();
     // Tutorial progress is per-DEVICE-USER, not per-account-in-the-abstract: the
     // settings rows go with the database wipe above, so the in-memory ticks must

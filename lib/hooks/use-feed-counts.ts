@@ -20,11 +20,7 @@
 import { useMemo } from 'react';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/feed-grouping/story-grouping';
-import {
-  passesImportanceThreshold,
-  type ImportanceThreshold,
-} from '@/lib/feed-ordering/importance-filter';
-import { relevancePassesGate, isBreaking } from '@/lib/stores/fact-rows-selector';
+import { relevancePassesGate } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useForYouCounts, useForYouSuggestions } from '@/lib/stores/selectors';
@@ -77,16 +73,12 @@ export interface ComputeFeedCountsOptions {
    *  ⇒ `readCount` is 0 rather than an error, so non-UI callers can ask for
    *  just the analysed/relevant pair. */
   openedArticleIds?: ReadonlySet<string>;
-  /** Minimum band the SURFACE reading this sentence renders. Defaults to 'low'
-   *  — the no-op setting, so every existing caller keeps its exact counts. A
-   *  tighter value narrows `relevant`/`read` only, never `analysed`: the number
-   *  of stories we looked at does not change because the reader hid some. */
-  importanceThreshold?: ImportanceThreshold;
 }
 
 /** The minimal row projection the counters read. `rawScore`/`eventType` are here
- *  solely for `isBreaking` (which is exempt from the importance threshold) and
- *  stay optional so callers with a leaner row shape still type-check. */
+ *  optional so callers with a leaner row shape still type-check. They were read
+ *  by an `isBreaking` exemption from the importance pill, which is gone; they
+ *  stay in the projection because the callers already pass them. */
 type FeedCountsRow = {
   status: string;
   firstPubDate: string;
@@ -110,7 +102,6 @@ export function computeFeedCounts(
 ): { analysedCount: number; relevantCount: number; readCount: number } {
   const cutoffMs = (opts?.nowMs ?? Date.now()) - FEED_WINDOW_MS;
   const opened = opts?.openedArticleIds;
-  const threshold = opts?.importanceThreshold ?? 'low';
   let analysed = 0;
   let relevant = 0;
   let read = 0;
@@ -119,17 +110,16 @@ export function computeFeedCounts(
     const pt = Date.parse(s.firstPubDate);
     if (!Number.isFinite(pt) || pt < cutoffMs) continue;
     analysed++;
-    // Same two-part rule the Feed list applies (`filterByImportance`): band, or
-    // breaking regardless of band. `isBreaking` reads only rawScore/eventType,
-    // hence the downcast rather than a second copy of the rule here.
+    // The render gate, and nothing else. This used to be the gate AND a second
+    // term, "clears the reader's importance band, or is breaking regardless of
+    // band". That pill is gone, and its floor setting 'low' was `relevance >=
+    // 0.4` — the render gate itself — so the second term was already implied by
+    // the first at the default and the breaking exemption never fired. Dropping
+    // it changes no count.
     // `>=`, not `>`: RENDER_GATE is inclusive as of relevance v3 (see the
     // comment on `RELEVANT_GATE` above) — a strict comparison here would silently
     // undercount the header relative to what the feed itself renders.
-    if (
-      relevancePassesGate(s as ForYouSuggestion) &&
-      (passesImportanceThreshold(s.relevance, threshold) ||
-        isBreaking(s as ForYouSuggestion))
-    ) {
+    if (relevancePassesGate(s as ForYouSuggestion)) {
       relevant++;
       if (opened?.has(s.articleId)) read++;
     }
@@ -137,7 +127,7 @@ export function computeFeedCounts(
   return { analysedCount: analysed, relevantCount: relevant, readCount: read };
 }
 
-export function useFeedCounts(importanceThreshold?: ImportanceThreshold): FeedCounts {
+export function useFeedCounts(): FeedCounts {
   const suggestions = useForYouSuggestions();
   const { articleCount } = useForYouCounts();
   // Subscribed, not read via getState(): every open replaces the Set (see
@@ -146,8 +136,8 @@ export function useFeedCounts(importanceThreshold?: ImportanceThreshold): FeedCo
   const openedArticleIds = useOpenedStoriesStore((s) => s.articleIds);
 
   const { analysedCount, relevantCount, readCount } = useMemo(
-    () => computeFeedCounts(suggestions, { openedArticleIds, importanceThreshold }),
-    [suggestions, openedArticleIds, importanceThreshold],
+    () => computeFeedCounts(suggestions, { openedArticleIds }),
+    [suggestions, openedArticleIds],
   );
 
   return { articleCount, analysedCount, relevantCount, readCount };
