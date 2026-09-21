@@ -6,6 +6,8 @@ import { useCallback, useRef, useState } from 'react';
 import { CHAT_MAX_OUTPUT_TOKENS } from './constants';
 import { getModelState, inferStream, initBaseModel } from '../mera-protocol-toolkit';
 import { inferenceQueue } from '../inference/InferenceQueue';
+import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
+import { applyChatPhase, useChatPhaseStore } from './chat-phase-store';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import logger from '../logger';
@@ -279,8 +281,26 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
   const isStreamingRef = useRef(false);
   const initializedRef = useRef(false);
 
+  /**
+   * The wait line's sink for the turn in flight.
+   *
+   * On-device has no queue, no attestation and no network, so it gets its own
+   * three disjoint phase ids and its own copy, which may never mention
+   * encryption or a server. Nothing leaves the phone on this path and a line
+   * implying otherwise is a false claim, not a cosmetic slip.
+   */
+  const phaseSinkRef = useRef<PhaseSink | null>(null);
+
   const runInference = useCallback(
     async (conversationMessages: ConversationMessage[]): Promise<void> => {
+      // Chosen SYNCHRONOUSLY, before the first await. `inferenceQueue.pause()`
+      // waits for whatever job holds llama.rn's single context to finish, and
+      // on a cold turn `initBaseModel` follows it: both are real seconds the
+      // user sits through, and publishing after them would miss the part of
+      // the wait that most needs a sentence.
+      const coldModel = !initializedRef.current && getModelState() === null;
+      const phase = phaseSinkRef.current;
+      phase?.(coldModel ? 'deviceLoading' : 'devicePreparing');
       await inferenceQueue.pause();
       try {
         // Initialize model on first use (model may already be loaded by useModelLifecycle)
@@ -292,6 +312,9 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
             setModelState('ready');
           }
           initializedRef.current = true;
+          // The model is up; everything from here to the first token is prompt
+          // assembly and the token-budget pass.
+          phase?.('devicePreparing');
         }
 
         // Build system prompt (needsToolFormatInPrompt=true for local LLM)
@@ -370,6 +393,9 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         let toolCallBuffer = '';
         let fullResponse = '';
 
+        // Generation has started and no token has been flushed yet.
+        phase?.('deviceThinking');
+
         for await (const token of inferStream({
           systemPrompt,
           prompt,
@@ -386,6 +412,12 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
 
           for (const event of flushed.events) {
             if (event.type === 'text-delta') {
+              // Real text. The bubble is the liveness signal from here.
+              // NOT a second store write per token: the sink swallows a repeat,
+              // so this costs one `set` on the first delta and nothing after.
+              // That matters more here than on the cloud path, which has no rAF
+              // batching on this loop at all.
+              phase?.(null);
               accContent += event.delta;
               setMessages((prev) =>
                 prev.map((m) => m.id === assistantId ? { ...m, content: accContent } : m),
@@ -550,6 +582,11 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         setError(msg);
       } finally {
         logger.debug(`${TAG} inference done, setting idle`);
+        // On the throw path too. A local failure leaves the same generic error
+        // banner as a cloud one, and a line still saying "thinking it through
+        // on your phone" underneath it is the worse half of the bug.
+        phase?.(null);
+        if (phaseSinkRef.current === phase) phaseSinkRef.current = null;
         inferenceQueue.resume();
         setStatus('idle');
         isStreamingRef.current = false;
@@ -588,6 +625,11 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
 
       isStreamingRef.current = true;
       setStatus('streaming');
+
+      // Created here rather than in `runInference` so the mark is per TURN and
+      // exists before the first await inside it.
+      useChatPhaseStore.getState().reset();
+      phaseSinkRef.current = makePhaseSink(applyChatPhase);
 
       void runInference(newMessages);
     },
