@@ -21,6 +21,13 @@ jest.mock('@/lib/database/services/inference-job-service', () => ({
   enqueueJob: jest.fn(),
   hasPendingJob: jest.fn().mockResolvedValue(false),
 }));
+// Must be mocked: the real module imports lib/database, which reaches
+// SQLiteAdapter and cannot initialize under Jest.
+jest.mock('@/lib/database/services/topic-generation-status-service', () => ({
+  beginTopicGeneration: jest.fn(async () => {}),
+  markTopicGenerationSettled: jest.fn(async () => {}),
+  failTopicGeneration: jest.fn(async () => {}),
+}));
 jest.mock('@/lib/database/services/topic-service', () => ({
   syncLlmTopicsForFact: jest.fn(),
   getActive: jest.fn().mockResolvedValue([]),

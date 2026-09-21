@@ -17,6 +17,7 @@ import { getDeclinedTopicTexts } from '../../database/services/topic-decline-ser
 import {
   completeTopicGeneration,
   failTopicGeneration,
+  markTopicGenerationSettled,
 } from '../../database/services/topic-generation-status-service';
 import { generateTopicsForFact as generateViaSkill } from '@/lib/mera-harness';
 import { cloudComplete } from '../../llm/cloudComplete';
@@ -215,6 +216,11 @@ export async function handleTopicGenJob(
   });
 
   if (realTopics.length === 0) {
+    // Settle, do not just return. This path is reached in on-device mode and by
+    // any cloud job from a bundle older than the skill-guided payload, and it
+    // used to leave `topics_status` on the 'pending' that fact-commit stamped —
+    // the same perpetual spinner the batch path had.
+    await failTopicGeneration(payload.factId, 'Topic generation returned no usable topics');
     return { topics: [] };
   }
 
@@ -239,6 +245,9 @@ export async function handleTopicGenJob(
       error: String(err),
     }),
   );
+  // Stamp-only: this path has already written its own metadata and minted its
+  // own rows, so `completeTopicGeneration` would mint them a second time.
+  await markTopicGenerationSettled([payload.factId]);
   useFloatingChatStore.getState().notifyFactMutation();
   return { topics: realTopics };
 }

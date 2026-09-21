@@ -47,9 +47,11 @@ jest.mock('../../database/services/topic-decline-service', () => ({
 
 const mockCompleteTopicGeneration = jest.fn(async () => []);
 const mockFailTopicGeneration = jest.fn(async () => undefined);
+const mockMarkTopicGenerationSettled = jest.fn(async () => undefined);
 jest.mock('../../database/services/topic-generation-status-service', () => ({
   completeTopicGeneration: (...a: unknown[]) => mockCompleteTopicGeneration(...(a as [])),
   failTopicGeneration: (...a: unknown[]) => mockFailTopicGeneration(...(a as [])),
+  markTopicGenerationSettled: (...a: unknown[]) => mockMarkTopicGenerationSettled(...(a as [])),
 }));
 
 const mockCloudComplete = jest.fn(async (_req: { systemPrompt: string; prompt: string }) => '[]');
@@ -131,6 +133,37 @@ describe('handleTopicGenJob', () => {
     expect(result.topics).toEqual([]);
     expect(mockUpdateFact).not.toHaveBeenCalled();
     expect(mockNotifyFactMutation).not.toHaveBeenCalled();
+  });
+
+  // The SHIPPED path settles `topics_status` too. fact-commit stamps every
+  // accepted fact 'pending' whichever path generates for it, and this one used
+  // to write its metadata, mint its rows and return without touching the
+  // column, so an on-device generation left the chat card and the profile row
+  // spinning forever in exactly the way the cloud batch did.
+
+  it('stamps done on the shipped path, so an on-device run stops spinning', async () => {
+    mockGetFacts.mockResolvedValue([
+      { id: 'f1', statement: 'the target fact', questionnaireAttribute: null },
+    ]);
+
+    await handleTopicGenJob({ factId: 'f1', factStatement: 'the target fact', useCloud: false });
+
+    // Stamp-only: this path already wrote its own metadata and minted its own
+    // rows, so completeTopicGeneration would mint them a second time.
+    expect(mockMarkTopicGenerationSettled).toHaveBeenCalledWith(['f1']);
+    expect(mockCompleteTopicGeneration).not.toHaveBeenCalled();
+  });
+
+  it('stamps ERROR on the shipped path when nothing usable was generated', async () => {
+    mockGetFacts.mockResolvedValue([
+      { id: 'f1', statement: 'the target fact', questionnaireAttribute: null },
+    ]);
+    mockGenerateTopicsForFact.mockResolvedValue([]);
+
+    await handleTopicGenJob({ factId: 'f1', factStatement: 'the target fact' });
+
+    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f1', expect.any(String));
+    expect(mockMarkTopicGenerationSettled).not.toHaveBeenCalled();
   });
 
   it('excludes the target fact itself from otherFacts', async () => {

@@ -26,6 +26,11 @@ import { factChoiceGroupId } from './fact-choice-resolution';
 import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import { syncLlmTopicsForFact } from '../database/services/topic-service';
+import {
+  beginTopicGeneration,
+  failTopicGeneration,
+  markTopicGenerationSettled,
+} from '../database/services/topic-generation-status-service';
 
 // MAX_FACT_LENGTH's canonical home is the harness fact-rules module; re-exported
 // here so existing importers of it from tool-handlers keep working.
@@ -290,6 +295,7 @@ export async function startTopicGeneration(
     if (entries.length === 0) return;
     try {
       await batchGenerateTopics(entries);
+      await settleBatchTopicGen(entries);
     } catch (err: unknown) {
       logger.warn('[saveExtractedFacts] Batch topic gen failed', { error: String(err) });
       // The harness catches a batch-call throw and writes topicGenError itself,
@@ -323,6 +329,56 @@ async function readFactMetadata(factId: string): Promise<Record<string, string[]
 }
 
 /**
+ * Settle `topics_status` for a finished batch, PER FACT.
+ *
+ * THE BUG THIS EXISTS FOR: `fact-commit` stamps every accepted fact 'pending'
+ * at commit, and the batch generator writes topics without ever touching the
+ * column. Its facts therefore spun forever: chips visible in the chat card
+ * under a live "Finding topics" spinner, and a profile row showing a spinner
+ * and no statement.
+ *
+ * PER FACT, not one blanket stamp over `entries`, because
+ * `generateTopicsForFactsBatch` RESOLVES on a generation failure. It catches
+ * the batch throw, catches a missing or empty per-fact result, writes
+ * `metadata.topicGenError` for that fact and returns normally. So reaching this
+ * line says nothing about whether any given fact succeeded, and a blanket
+ * 'done' would stamp a FAILED fact 'done' beside its own error marker. That is
+ * strictly worse than the spinner: `markOrphanedFactsAsFailed` sweeps
+ * 'pending', so a 'done'-with-error fact is invisible to the rescue sweep and
+ * never repairs.
+ *
+ * The generator writes exactly one of the two markers for every fact, so its
+ * metadata is the authority on the outcome. One `getFacts()` for the whole set
+ * rather than one read per fact.
+ *
+ * Stamp-only on the success side (never `completeTopicGeneration`, which would
+ * mint the same topics a second time); `failTopicGeneration` on the other,
+ * which stamps 'error' and keeps the legacy marker in step.
+ */
+async function settleBatchTopicGen(
+  entries: Array<{ id: string; statement: string }>,
+): Promise<void> {
+  const metaById = new Map(
+    (await getFacts()).map((f) => [f.id, f.metadata ?? {}] as const),
+  );
+  const done: string[] = [];
+  for (const entry of entries) {
+    const meta = metaById.get(entry.id) ?? {};
+    const topics = meta.topics;
+    if (Array.isArray(topics) && topics.length > 0) {
+      done.push(entry.id);
+      continue;
+    }
+    const recorded = meta.topicGenError?.[0];
+    await failTopicGeneration(
+      entry.id,
+      recorded ?? 'Topic generation returned no topics',
+    );
+  }
+  await markTopicGenerationSettled(done);
+}
+
+/**
  * Records a topic-generation failure the harness didn't record itself, so the
  * fact carries the same `topicGenError` marker every reader already understands
  * (TopicPlanCard, FactAccordion, PersonaL1MeraProtocol).
@@ -334,8 +390,11 @@ async function markTopicGenFailed(
   const message = err instanceof Error ? err.message : String(err);
   for (const entry of entries) {
     try {
-      const metadata = await readFactMetadata(entry.id);
-      await updateFact(entry.id, { metadata: { ...metadata, topicGenError: [message] } });
+      // `failTopicGeneration` stamps topics_status 'error' AND writes the
+      // legacy topicGenError marker in one go. Writing only the marker, as this
+      // did, left the column on 'pending', so a FAILED batch span forever in
+      // exactly the same way a successful one did.
+      await failTopicGeneration(entry.id, message);
     } catch (writeErr: unknown) {
       logger.warn('[topicGen] Failed to record topicGenError', {
         factId: entry.id,
@@ -371,6 +430,10 @@ export async function retryTopicGeneration(
   if (inFlightCloudTopicGen.has(factId)) return; // fast path: already running
   try {
     await clearTopicGenError(factId);
+    // Back to 'pending' for the duration of the run. Clearing the marker alone
+    // left the column on 'error', so the card and the profile row kept reading
+    // failed while the retry was actually in flight.
+    await beginTopicGeneration([factId]);
   } catch (err: unknown) {
     logger.warn('[topicGen] Failed to clear topicGenError before retry', {
       factId,

@@ -54,6 +54,11 @@ jest.mock('../../mera-protocol/topic-generation-service', () => ({
   buildCloudBatchCallsForFact: jest.fn(() => []),
   mergeRealOutputsForFact: jest.fn(() => []),
 }));
+jest.mock('../../database/services/topic-generation-status-service', () => ({
+  beginTopicGeneration: jest.fn(async () => {}),
+  markTopicGenerationSettled: jest.fn(async () => {}),
+  failTopicGeneration: jest.fn(async () => {}),
+}));
 jest.mock('../../database/services/topic-service', () => ({
   syncLlmTopicsForFact: jest.fn(() => Promise.resolve([])),
 }));
@@ -93,6 +98,11 @@ import { enqueueJob, hasPendingJob } from '../../database/services/inference-job
 import { inferenceQueue } from '../../inference/InferenceQueue';
 import { cloudBatchComplete } from '../../llm/cloudComplete';
 import { syncLlmTopicsForFact } from '../../database/services/topic-service';
+import {
+  beginTopicGeneration,
+  failTopicGeneration,
+  markTopicGenerationSettled,
+} from '../../database/services/topic-generation-status-service';
 import logger from '../../logger';
 
 const mockSyncLlmTopicsForFact = syncLlmTopicsForFact as jest.MockedFunction<typeof syncLlmTopicsForFact>;
@@ -110,6 +120,9 @@ const mockNotifyFactMutation = jest.fn();
 const mockCloudBatchComplete = cloudBatchComplete as jest.MockedFunction<typeof cloudBatchComplete>;
 const mockEnqueueJob = enqueueJob as jest.MockedFunction<typeof enqueueJob>;
 const mockHasPendingJob = hasPendingJob as jest.MockedFunction<typeof hasPendingJob>;
+const mockMarkSettled = markTopicGenerationSettled as jest.MockedFunction<typeof markTopicGenerationSettled>;
+const mockFailTopicGeneration = failTopicGeneration as jest.MockedFunction<typeof failTopicGeneration>;
+const mockBeginTopicGeneration = beginTopicGeneration as jest.MockedFunction<typeof beginTopicGeneration>;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -688,6 +701,94 @@ describe('batchGenerateTopics (via the fact-commit cloud path)', () => {
     expect(mockSyncLlmTopicsForFact).not.toHaveBeenCalled();
   });
 
+  // ---------------------------------------------------------------------
+  // Settling `topics_status`. fact-commit stamps every accepted fact
+  // 'pending', so a batch that finishes without settling leaves the chat card
+  // and the profile row spinning forever. The generator RESOLVES on failure
+  // and reports the outcome per fact through metadata, so the settle has to
+  // read that rather than assume the whole batch succeeded.
+  //
+  // These three drive a real in-memory fact store rather than a hand-authored
+  // `getFacts` snapshot: the settle must read the metadata the generator
+  // ACTUALLY wrote, and a fixed snapshot would also collide with the commit's
+  // own dedupe read, which goes through the same mock.
+  // ---------------------------------------------------------------------
+
+  /** Wires addFact/getFacts/updateFact to one map. Starts empty, so nothing
+   *  the test commits is deduped away before generation runs. */
+  function factStore(): Map<string, { id: string; statement: string; metadata: Record<string, string[]> }> {
+    const rows = new Map<string, { id: string; statement: string; metadata: Record<string, string[]> }>();
+    mockAddFact.mockImplementation((async (statement: string) => {
+      const row = { id: `f${rows.size + 1}`, statement, metadata: {} };
+      rows.set(row.id, row);
+      return row;
+    }) as never);
+    mockGetFacts.mockImplementation((async () => [...rows.values()]) as never);
+    mockUpdateFact.mockImplementation((async (id: string, patch: { metadata?: Record<string, string[]> }) => {
+      const row = rows.get(id);
+      if (row && patch.metadata) row.metadata = patch.metadata;
+    }) as never);
+    return rows;
+  }
+
+  it('stamps done once the batch has actually written topics', async () => {
+    const rows = factStore();
+    buildCloudBatchCallsForFact.mockReturnValueOnce([
+      { id: 'f1:factOnly', system: 's', prompt: 'p', temperature: 0.3, maxTokens: 400 },
+    ]);
+    mockCloudBatchComplete.mockResolvedValueOnce([
+      { id: 'f1:factOnly', output: '["AI news"]' },
+    ]);
+    mergeRealOutputsForFact.mockReturnValueOnce(['AI news']);
+
+    await saveAndFlush('Works in AI');
+
+    expect(rows.get('f1')?.metadata.topics).toEqual(['AI news']);
+    expect(mockMarkSettled).toHaveBeenCalledWith(['f1']);
+    expect(mockFailTopicGeneration).not.toHaveBeenCalled();
+  });
+
+  it('stamps ERROR, never done, for a fact the batch failed on', async () => {
+    // The generator swallows a batch throw, writes topicGenError per fact and
+    // RESOLVES, so this reaches the settle down the SUCCESS path. A blanket
+    // stamp would mark a failed fact done beside its own error marker, and a
+    // 'done'-with-error fact is invisible to the rescue sweep, which only ever
+    // looks at 'pending'.
+    factStore();
+    buildCloudBatchCallsForFact.mockReturnValueOnce([
+      { id: 'f1:factOnly', system: 's', prompt: 'p', temperature: 0.3, maxTokens: 400 },
+    ]);
+    mockCloudBatchComplete.mockRejectedValueOnce(new Error('network error'));
+
+    await saveAndFlush('Works in AI');
+
+    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f1', 'network error');
+    expect(mockMarkSettled).not.toHaveBeenCalledWith(expect.arrayContaining(['f1']));
+  });
+
+  it('settles each fact of a mixed batch on its OWN outcome', async () => {
+    factStore();
+    buildCloudBatchCallsForFact
+      .mockReturnValueOnce([
+        { id: 'f1:factOnly', system: 's', prompt: 'p', temperature: 0.3, maxTokens: 400 },
+      ])
+      .mockReturnValueOnce([
+        { id: 'f2:factOnly', system: 's', prompt: 'p', temperature: 0.3, maxTokens: 400 },
+      ]);
+    mockCloudBatchComplete.mockResolvedValueOnce([
+      { id: 'f1:factOnly', output: '["AI news"]' },
+      { id: 'f2:factOnly', error: 'half failed' },
+    ] as never);
+    mergeRealOutputsForFact.mockReturnValueOnce(['AI news']).mockReturnValueOnce([]);
+
+    await commitFactChoices([{ statement: 'Works in AI' }, { statement: 'Lives in Porto' }]);
+    await new Promise((r) => setImmediate(r));
+    await new Promise((r) => setImmediate(r));
+
+    expect(mockMarkSettled).toHaveBeenCalledWith(['f1']);
+    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f2', expect.stringContaining('half failed'));
+  });
+
   it('calls updateFact with topicGenError when cloudBatchComplete throws', async () => {
     mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'Works in AI' } as never);
     buildCloudBatchCallsForFact.mockReturnValueOnce([
@@ -900,6 +1001,18 @@ describe('retryTopicGeneration', () => {
     expect(isTopicGenerationInFlight('f1')).toBe(false);
   });
 
+  it('puts the fact back to pending for the duration of the retry', async () => {
+    // Clearing the marker alone left topics_status on 'error', so the card and
+    // the profile row read failed while the retry was actually in flight.
+    mockGetFacts.mockResolvedValue([
+      { id: 'f1', statement: 'Works in AI', metadata: { topicGenError: ['boom'] } } as never,
+    ]);
+
+    await retryTopicGeneration('f1', 'Works in AI');
+
+    expect(mockBeginTopicGeneration).toHaveBeenCalledWith(['f1']);
+  });
+
   it('reports in-flight while running and releases afterwards', async () => {
     mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Works in AI' } as never]);
     let release: (v: unknown) => void = () => { };
@@ -927,9 +1040,10 @@ describe('retryTopicGeneration', () => {
 
     await retryTopicGeneration('f1', 'Works in AI');
 
-    expect(mockUpdateFact).toHaveBeenCalledWith('f1', {
-      metadata: { topicGenError: ['call building blew up'] },
-    });
+    // `failTopicGeneration` writes the legacy `topicGenError` marker AND stamps
+    // topics_status 'error' in one write, so the marker is asserted through it
+    // rather than through a bare `updateFact`.
+    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f1', 'call building blew up');
     expect(mockNotifyFactMutation).toHaveBeenCalled();
     expect(isTopicGenerationInFlight('f1')).toBe(false);
   });
