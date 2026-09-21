@@ -310,9 +310,16 @@ describe('FactsList', () => {
         fireEvent.changeText(getByTestId('add-topic-input'), 'AI regulation');
         fireEvent.press(getByLabelText('confirm-add-topic'));
 
+        // The WEIGHT is asserted, not incidental: a topic created at 0 is
+        // dropped by buildRetrievalProfile and never queried, so a hand-added
+        // topic used to render its own row and fetch nothing, forever.
         await waitFor(() =>
-            expect(mockCreateTopics).toHaveBeenCalledWith([{ factId: 'f1', text: 'AI regulation' }]),
+            expect(mockCreateTopics).toHaveBeenCalledWith([
+                { factId: 'f1', text: 'AI regulation', weight: expect.any(Number) },
+            ]),
         );
+        const [[[input]]] = mockCreateTopics.mock.calls as [[[{ weight: number }]]];
+        expect(input.weight).toBeGreaterThan(0);
     });
 
     it("generate-more's cloud branch routes through syncLlmTopicsForFact, converging with the on-device job handler's own call", async () => {

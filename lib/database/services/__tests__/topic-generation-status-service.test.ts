@@ -101,10 +101,12 @@ describe('completeTopicGeneration', () => {
     await completeTopicGeneration('f1', [' Dutch Politics ', '', '  ']);
 
     // Blanks dropped, texts trimmed, each carrying the factId that drives the
-    // metadata pairing inside createTopics.
+    // metadata pairing inside createTopics -- and the weight/provenance that
+    // keep the row retrievable, asserted in its own suite below.
     expect(mockCreateTopics).toHaveBeenCalledWith([
-      { factId: 'f1', text: 'Dutch Politics' },
+      expect.objectContaining({ factId: 'f1', text: 'Dutch Politics' }),
     ]);
+    expect((mockCreateTopics.mock.calls[0][0] as unknown[])).toHaveLength(1);
   });
 
   it('still stamps done when there were no usable texts', async () => {
@@ -136,5 +138,42 @@ describe('failTopicGeneration', () => {
   it('a missing fact is a logged no-op, not a throw', async () => {
     await expect(failTopicGeneration('ghost', 'x')).resolves.toBeUndefined();
     expect(db.write).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A topic minted at weight 0 is written, rendered, and never queried.
+// `buildRetrievalProfile` drops every topic whose effective weight is <= 0
+// before the feed request is built, so the user sees a full topic list where
+// every row reads "0 articles". Measured on the simulator: 12 topics, all at
+// weight 0, none ever sent.
+// ---------------------------------------------------------------------------
+
+describe('minted topics are retrievable', () => {
+  it('mints with a non-zero weight, so the feed query actually asks for them', async () => {
+    mockCreateTopics.mockClear();
+    db._setRows('facts', [makeRecord({ id: 'f1' })]);
+
+    await completeTopicGeneration('f1', ['Amsterdam housing policy', 'EU migration rules']);
+
+    const inputs = mockCreateTopics.mock.calls[0][0] as { weight?: number }[];
+    expect(inputs).toHaveLength(2);
+    for (const i of inputs) {
+      expect(i.weight).toBeGreaterThan(0);
+    }
+  });
+
+  it('marks them llm-provenance and active, like the sibling minting paths', async () => {
+    mockCreateTopics.mockClear();
+    db._setRows('facts', [makeRecord({ id: 'f1' })]);
+
+    await completeTopicGeneration('f1', ['Amsterdam housing policy']);
+
+    const [input] = mockCreateTopics.mock.calls[0][0] as {
+      status?: string; provenance?: string; highPriority?: boolean;
+    }[];
+    expect(input.status).toBe('active');
+    expect(input.provenance).toBe('llm');
+    expect(input.highPriority).toBe(false);
   });
 });

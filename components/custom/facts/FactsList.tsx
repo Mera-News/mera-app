@@ -1,3 +1,4 @@
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { authClient } from '@/lib/auth-client';
 import { getArticleCountByTopicTexts } from '@/lib/database/services/article-suggestion-service';
@@ -260,7 +261,12 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
             // rows (case-insensitive, normalized), so no manual duplicate
             // check is needed here — a re-add of an existing text is a no-op
             // that returns the existing row rather than erroring.
-            await createTopics([{ factId: addTopicFact.id, text: trimmed }]);
+            // WEIGHT IS LOAD-BEARING: a topic at 0 is dropped by
+            // buildRetrievalProfile and never queried, so a hand-added topic
+            // used to render with its own row and fetch nothing, forever. Same
+            // weight as a generated one, because a topic the user typed is at
+            // least as strong a signal as one Mera inferred.
+await createTopics([{ factId: addTopicFact.id, text: trimmed , weight: DEFAULT_HARNESS_CONFIG.topicGen.llmTopicWeight }]);
             setAddTopicFact(null);
             // metadata.topics is appended atomically inside createTopics
             // (v55 pairing) — this reload is only for the facts array/article

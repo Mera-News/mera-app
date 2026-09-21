@@ -1,6 +1,7 @@
 import { recoverCycle } from '@/lib/services/cycle-state-machine';
 import { rescueStalePendingTopicFacts } from '@/lib/database/services/fact-service';
 import { flushPendingDeletes } from '@/lib/database/services/topic-decline-service';
+import { repairUnweightedTopics } from '@/lib/database/services/topic-service';
 import { AppScheduler } from '../AppScheduler';
 
 AppScheduler.register({
@@ -30,6 +31,15 @@ AppScheduler.register({
     // so a device whose model never loads would never sweep.
     const rescued = await rescueStalePendingTopicFacts();
     if (rescued > 0) ctx.log(`rescued ${rescued} stale pending facts`);
+
+    // Topics minted before `weight` was required on CreateTopicInput. A
+    // weight of 0 is dropped by buildRetrievalProfile before the feed request
+    // is built, so these render on the Profile and are never queried. Here
+    // rather than in a migration: the repair needs no schema change, and a
+    // version bump carrying a data-only fix cannot be walked back by an OTA
+    // rollback without the adapter reaching for "resetting database instead".
+    const reweighted = await repairUnweightedTopics();
+    if (reweighted > 0) ctx.log(`re-weighted ${reweighted} unqueryable topics`);
 
     // Commit any topic delete staged before the app was killed or
     // backgrounded. This is the "app start and every foreground" half of the

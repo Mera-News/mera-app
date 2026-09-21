@@ -15,6 +15,7 @@ import logger from '../../logger';
 import type FactModel from '../models/Fact';
 import type TopicModel from '../models/Topic';
 import { createTopics } from './topic-service';
+import { DEFAULT_HARNESS_CONFIG } from '../../news-harness/core/config';
 
 const factsCollection = database.get<FactModel>('facts');
 
@@ -78,8 +79,30 @@ export async function completeTopicGeneration(
 ): Promise<TopicModel[]> {
   const texts = topicTexts.map((t) => t.trim()).filter(Boolean);
 
+  // WEIGHT AND PROVENANCE ARE NOT OPTIONAL HERE, and omitting them is not a
+  // cosmetic default. `createTopics` falls back to `weight: 0`, and
+  // `buildRetrievalProfile` drops every topic whose effective weight is <= 0
+  // before the feed query is built ("negatives / zero excluded -- never
+  // sent"). A topic minted at 0 is therefore written, rendered on the Profile
+  // with its own row, and never once asked about: the user sees a full topic
+  // list where every line reads "0 articles".
+  //
+  // The two sibling minting paths, `syncLlmTopicsForFact` and
+  // `appendTopupTopicsForFact`, both pass these. This one did not, and it
+  // became reachable the moment the `topics/*` guidelines were wired to the
+  // chat route, so every fact saved through a skill-guided run produced dead
+  // topics.
   const minted = texts.length
-    ? await createTopics(texts.map((text) => ({ factId, text })))
+    ? await createTopics(
+        texts.map((text) => ({
+          factId,
+          text,
+          weight: DEFAULT_HARNESS_CONFIG.topicGen.llmTopicWeight,
+          status: 'active' as const,
+          provenance: 'llm' as const,
+          highPriority: false,
+        })),
+      )
     : [];
 
   try {

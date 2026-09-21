@@ -66,6 +66,7 @@ import {
 
 type DbStats = {
     tableCounts: Record<string, number>;
+    factsByTopicStatus: Record<string, number>;
     schedulerJobsByStatus: Record<string, number>;
     inferenceJobsByStatus: Record<string, number>;
     settings: { key: string; value: string }[];
@@ -78,8 +79,20 @@ const COUNT_TABLES = [
     'article_suggestion_facts',
     'publication_visits',
     'facts',
+    // TOPICS ARE WHAT FETCH ARTICLES, so their absence is the first thing to
+    // check when a feed is thin, and this list did not carry them: a dump
+    // could show nine facts and no way to tell whether any of them had a
+    // single topic behind it. `facts` alone answers "were my facts saved";
+    // only this answers "is anything retrieving for them".
+    'topics',
     'user_personas',
 ] as const;
+
+/** `facts.topics_status`, so a dump distinguishes "generation never ran" from
+ *  "it ran and failed" from "it worked". A fact stuck on `error` contributes
+ *  no topics and therefore no articles, and looks identical on the Profile to
+ *  one that simply has nothing to say. */
+const TOPIC_STATUSES = ['pending', 'done', 'error'] as const;
 
 const SCHEDULER_STATUSES = [
     'pending', 'running', 'completed', 'failed', 'stale', 'cancelled', 'retrying',
@@ -141,10 +154,33 @@ async function loadDbStats(): Promise<DbStats> {
         }),
     );
 
+    const factsByTopicStatus: Record<string, number> = {};
+    await Promise.all(
+        TOPIC_STATUSES.map(async (st) => {
+            factsByTopicStatus[st] = await database
+                .get('facts')
+                .query(Q.where('topics_status', st))
+                .fetchCount();
+        }),
+    );
+    // NULL reads as done everywhere else, so it is counted separately rather
+    // than folded in: a null column means generation was never asked for,
+    // which is a different problem from one that ran.
+    factsByTopicStatus.unset = await database
+        .get('facts')
+        .query(Q.where('topics_status', null))
+        .fetchCount();
+
     const settingRows = await database.get<Setting>('settings').query().fetch();
     const settings = settingRows.map((s) => ({ key: s.key, value: s.value }));
 
-    return { tableCounts, schedulerJobsByStatus, inferenceJobsByStatus, settings };
+    return {
+        tableCounts,
+        schedulerJobsByStatus,
+        inferenceJobsByStatus,
+        factsByTopicStatus,
+        settings,
+    };
 }
 
 // Feed-funnel rows, ordered by the stage an article passes through: stored →
@@ -653,6 +689,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     ...dbStats.tableCounts,
                     scheduler_jobs: dbStats.schedulerJobsByStatus,
                     inference_jobs: dbStats.inferenceJobsByStatus,
+                    facts_by_topic_status: dbStats.factsByTopicStatus,
                 }
                 : null,
             settings: settingsMap,

@@ -14,7 +14,7 @@ jest.mock('@/lib/services/cycle-state-machine', () => ({
   recoverCycle: jest.fn(),
 }));
 
-// The task now imports two DB services, and `lib/database/index` opens SQLite
+// The task now imports three DB services, and `lib/database/index` opens SQLite
 // at IMPORT time — so without these the jest worker dies with
 // "Cannot read properties of undefined (reading 'initializeJSI')", naming none
 // of these files.
@@ -23,6 +23,9 @@ jest.mock('@/lib/database/services/fact-service', () => ({
 }));
 jest.mock('@/lib/database/services/topic-decline-service', () => ({
   flushPendingDeletes: jest.fn(async () => 0),
+}));
+jest.mock('@/lib/database/services/topic-service', () => ({
+  repairUnweightedTopics: jest.fn(async () => 0),
 }));
 
 jest.mock('@/lib/logger', () => ({
