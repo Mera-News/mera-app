@@ -1293,6 +1293,52 @@ describe('TestFlight regressions', () => {
     expect(second.legs[0].toolCalls[0].name).toBe('saveExtractedFacts');
   });
 
+  it('carries the ORIGINAL message into the resumed turn, not just the chip', async () => {
+    // Resuming the skill without the subject moves the bug rather than fixing
+    // it. Measured on device: facts/family resumed correctly and then proposed
+    // "Lives in Bhopal" for the USER, because the word "parents" existed only
+    // in the previous turn's message and a chip tap replaces the message with
+    // its own label.
+    const state = createAgentState(PERSONA);
+    const { deps: t1 } = scriptedDeps([
+      modelResult({ content: 'Bhopal, one moment.', toolCalls: [tc2('load_skill', { id: 'facts/family' })] }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('ask_choice', {
+            question: 'Which Bhopal did you mean?',
+            options: ['Bhopal, Madhya Pradesh', 'Bhopal Taluka'],
+          }),
+        ],
+      }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'my parents live in bhopal', deps: t1 });
+
+    const { deps: t2, calls } = scriptedDeps([
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Parents live in Bhopal, Madhya Pradesh, India, Asia' }] })] }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'Bhopal, Madhya Pradesh', deps: t2 });
+
+    const firstLeg = calls[0].messages.map((m) => m.content).join('\n');
+    expect(firstLeg).toContain('my parents live in bhopal');
+  });
+
+  it('does NOT inject the earlier message on an ordinary turn', async () => {
+    const state = createAgentState(PERSONA);
+    state.turn.lastUserMessage = 'my parents live in bhopal';
+    const { deps, calls } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/profession' })] }),
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Works as a software engineer' }] })] }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+
+    await runAgentTurn({ state, userMessage: 'I work as a software engineer', deps });
+
+    const firstLeg = calls[0].messages.map((m) => m.content).join('\n');
+    expect(firstLeg).not.toContain('my parents live in bhopal');
+  });
+
   it('does NOT resume when the message is not the answer to a pending choice', async () => {
     // A fresh statement after an unanswered question must still route.
     const state = createAgentState(RESIDENT);

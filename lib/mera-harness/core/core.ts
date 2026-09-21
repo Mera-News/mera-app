@@ -410,6 +410,22 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const messages: { role: 'system' | 'user' | 'assistant' | 'tool'; content: string }[] = [
       { role: 'user', content: `<state>${stateLine}</state>` },
       { role: 'user', content: `<known_facts>\n${formatKnownFacts(state.persona.facts)}\n</known_facts>` },
+      // THE MESSAGE THE QUESTION WAS ABOUT, on a resumed turn only.
+      //
+      // A chip tap arrives as its own label and nothing else, so the resumed
+      // skill sees "Bhopal, Madhya Pradesh, India, Asia" with no idea whose
+      // Bhopal it is. Measured: `facts/family` resumed correctly and then
+      // proposed "Lives in Bhopal" for the USER, because the word "parents"
+      // only ever existed in the previous turn's message. Resuming the skill
+      // without the subject moves the bug rather than fixing it.
+      ...(resumedSkill && turn.lastUserMessage
+        ? [
+            {
+              role: 'user' as const,
+              content: `They were answering this: ${escapeUntrusted(turn.lastUserMessage, 2000)}`,
+            },
+          ]
+        : []),
       { role: 'user', content: escapeUntrusted(userMessage, 2000) },
     ];
     // LAST, so it is the final thing read before the model answers. Not
@@ -836,6 +852,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     : trailingQuestion(cleanProse(reply));
   turn.lastRoute = routeKind;
   turn.lastSkill = skillLoaded;
+  // Held for the turn that answers, which arrives carrying only a chip label.
+  turn.lastUserMessage = userMessage;
 
   return {
     legs,

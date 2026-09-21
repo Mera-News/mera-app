@@ -162,6 +162,12 @@ export interface AgentTurnState {
   lastQuestion: string | null;
   lastRoute: string | null;
   lastSkill: string | null;
+  /** The user's message from the turn that asked the last question. A chip tap
+   *  replaces the message with the chip's own text, so without this the skill
+   *  resumes with the subject missing: "my parents live in bhopal" comes back
+   *  as the bare place name and the family skill, seeing no relative, proposes
+   *  the user's own residence. */
+  lastUserMessage: string | null;
 }
 
 export function createAgentTurnState(): AgentTurnState {
@@ -173,6 +179,7 @@ export function createAgentTurnState(): AgentTurnState {
     lastQuestion: null,
     lastRoute: null,
     lastSkill: null,
+    lastUserMessage: null,
   };
 }
 
