@@ -2736,5 +2736,50 @@
       "Đang suy nghĩ ngay trên điện thoại của bạn.",
       "Việc này chạy trên thiết bị của bạn nên không có gì được gửi đi đâu cả."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "Đang lo tin của bạn, ngay trên máy này.",
+        "Bắt đầu làm mới trên thiết bị này."
+      ],
+      "fetching": [
+        "Đang xem hôm nay có gì mới.",
+        "Máy của bạn quyết định sẽ hỏi gì."
+      ],
+      "downloading": [
+        "Đang kéo các bài về máy của bạn.",
+        "Chúng đến với bạn trước, không qua máy chủ."
+      ],
+      "grouping": [
+        "Một tin chạy ở cả chục nơi cùng lúc.",
+        "Chọn một bản cho mỗi tin."
+      ],
+      "analysing": [
+        "Đang đọc từng bài cho bạn.",
+        "Đã mã hóa. Chỉ máy bạn giữ khóa."
+      ],
+      "onDevice": [
+        "Máy của bạn đang đọc các tin này.",
+        "Chạy ngay đây. Không gì rời khỏi máy."
+      ],
+      "summarising": [
+        "Đang viết ghi chú ngắn cho mỗi tin.",
+        "Mã hóa đầu cuối suốt cả chặng."
+      ],
+      "preparing": [
+        "Đang sắp xếp bảng tin của bạn.",
+        "Sắp xong. Các thẻ sẽ tự hiện ra."
+      ]
+    },
+    "nudges": [
+      "Lưu lại thứ bây giờ bạn chưa đọc được.",
+      "Bài bạn đã lưu vẫn đang chờ.",
+      "Đọc kỹ một bài hơn lướt mười bài.",
+      "Tin nổi bật cho bạn thấy hình dáng của ngày.",
+      "Mới hơn không có nghĩa là hay hơn.",
+      "Nhìn mãi cũng không đến nhanh hơn."
+    ],
+    "a11y": "Mera đang cập nhật tin của bạn trên máy này."
   }
 }

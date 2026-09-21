@@ -2774,5 +2774,50 @@
       "Myślimy nad tym na twoim telefonie.",
       "Działa to na twoim urządzeniu, więc nic nigdzie nie jest wysyłane."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "Pracujemy nad twoimi wiadomościami, tutaj.",
+        "Odświeżanie ruszyło na tym urządzeniu."
+      ],
+      "fetching": [
+        "Szukamy tego, co dziś nowe.",
+        "To twój telefon decyduje, o co pyta."
+      ],
+      "downloading": [
+        "Artykuły trafiają na twój telefon.",
+        "Najpierw do ciebie, nie na serwer."
+      ],
+      "grouping": [
+        "Jedna wiadomość biegnie w kilkunastu miejscach.",
+        "Wybieramy jedną wersję każdej wiadomości."
+      ],
+      "analysing": [
+        "Czytamy dla ciebie każdy artykuł.",
+        "Zaszyfrowane. Klucz ma tylko twój telefon."
+      ],
+      "onDevice": [
+        "Twój telefon czyta te wiadomości.",
+        "Dzieje się tutaj. Nic nie opuszcza telefonu."
+      ],
+      "summarising": [
+        "Krótka notatka do każdej wiadomości.",
+        "Szyfrowane end-to-end na całej drodze."
+      ],
+      "preparing": [
+        "Porządkujemy twój feed.",
+        "Już prawie. Karty pojawią się same."
+      ]
+    },
+    "nudges": [
+      "Zapisz to, czego teraz nie przeczytasz.",
+      "Twoje zapisane artykuły wciąż czekają.",
+      "Przeczytaj jedno porządnie, nie dziesięć pobieżnie.",
+      "Nagłówki pokażą ci kształt dnia.",
+      "Nowsze nie znaczy lepsze. Czytaj to, co jest.",
+      "Nic nie przyjdzie szybciej, gdy patrzysz."
+    ],
+    "a11y": "Mera aktualizuje twoje wiadomości na tym telefonie."
   }
 }

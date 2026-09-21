@@ -2736,5 +2736,50 @@
       "Mera denkt erover na op je telefoon.",
       "Dit draait op je apparaat, er wordt dus niets ergens naartoe gestuurd."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "We werken aan je nieuws, hier op je telefoon.",
+        "Verversen gestart op dit toestel."
+      ],
+      "fetching": [
+        "We kijken wat er vandaag nieuw is.",
+        "Je telefoon bepaalt wat er gevraagd wordt."
+      ],
+      "downloading": [
+        "De artikelen komen naar je telefoon.",
+        "Ze komen eerst bij jou, niet bij een server."
+      ],
+      "grouping": [
+        "Eén bericht staat op tientallen plekken.",
+        "We kiezen één versie van elk bericht."
+      ],
+      "analysing": [
+        "Elk artikel wordt voor je gelezen.",
+        "Versleuteld. Alleen jouw telefoon heeft de sleutel."
+      ],
+      "onDevice": [
+        "Je telefoon leest deze berichten.",
+        "Dit gebeurt hier. Er gaat niets weg."
+      ],
+      "summarising": [
+        "Een kort briefje bij elk bericht.",
+        "Van begin tot eind versleuteld."
+      ],
+      "preparing": [
+        "We zetten je feed op volgorde.",
+        "Bijna klaar. De kaarten komen vanzelf."
+      ]
+    },
+    "nudges": [
+      "Bewaar wat je nu niet kunt lezen.",
+      "Je bewaarde artikelen wachten nog.",
+      "Lees één bericht goed, niet tien snel.",
+      "Met de koppen zie je hoe de dag eruitziet.",
+      "Nieuwer is niet beter. Lees wat er is.",
+      "Er komt niets sneller door te kijken."
+    ],
+    "a11y": "Mera werkt je nieuws bij op deze telefoon."
   }
 }

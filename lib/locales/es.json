@@ -2736,5 +2736,50 @@
       "Pensándolo en tu teléfono.",
       "Esto se ejecuta en tu dispositivo, así que no se envía nada a ninguna parte."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "Trabajando en tus noticias, en tu teléfono.",
+        "Iniciando una actualización en este equipo."
+      ],
+      "fetching": [
+        "Buscando lo nuevo de hoy.",
+        "Tu teléfono decide qué pedir."
+      ],
+      "downloading": [
+        "Trayendo los artículos a tu teléfono.",
+        "Llegan antes a ti que a un servidor."
+      ],
+      "grouping": [
+        "Una noticia sale en una docena de sitios.",
+        "Elegimos una versión de cada noticia."
+      ],
+      "analysing": [
+        "Leyendo cada artículo para ti.",
+        "Cifrado. Solo tu teléfono tiene la clave."
+      ],
+      "onDevice": [
+        "Tu teléfono está leyendo estas noticias.",
+        "Ocurre aquí. Nada sale de tu teléfono."
+      ],
+      "summarising": [
+        "Escribiendo una nota por cada noticia.",
+        "Cifrado de extremo a extremo, todo el camino."
+      ],
+      "preparing": [
+        "Ordenando tu feed.",
+        "Casi listo. Las tarjetas llegarán solas."
+      ]
+    },
+    "nudges": [
+      "Guarda lo que no puedas leer ahora.",
+      "Tus artículos guardados siguen esperando.",
+      "Lee una noticia bien, no diez rápido.",
+      "Los titulares te dan la forma del día.",
+      "Lo nuevo no es mejor. Lee lo que hay.",
+      "Nada llega antes por mirar."
+    ],
+    "a11y": "Mera está actualizando tus noticias en este teléfono."
   }
 }

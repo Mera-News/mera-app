@@ -2743,5 +2743,50 @@
       "Mera y réfléchit sur votre téléphone.",
       "Tout se passe sur votre appareil, rien n'est envoyé nulle part."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "On travaille sur vos infos, sur votre téléphone.",
+        "Actualisation en cours sur cet appareil."
+      ],
+      "fetching": [
+        "On cherche les nouveautés du jour.",
+        "Votre téléphone décide quoi demander."
+      ],
+      "downloading": [
+        "Les articles arrivent sur votre téléphone.",
+        "Ils viennent à vous, pas à un serveur."
+      ],
+      "grouping": [
+        "Une info paraît à une dizaine d'endroits.",
+        "On garde une version de chaque info."
+      ],
+      "analysing": [
+        "Chaque article est lu pour vous.",
+        "Chiffré. Seul votre téléphone a la clé."
+      ],
+      "onDevice": [
+        "Votre téléphone lit ces articles.",
+        "Tout se passe ici. Rien ne sort du téléphone."
+      ],
+      "summarising": [
+        "Une courte note pour chaque sujet.",
+        "Chiffré de bout en bout, tout du long."
+      ],
+      "preparing": [
+        "On met votre fil en ordre.",
+        "Presque fini. Les cartes arrivent seules."
+      ]
+    },
+    "nudges": [
+      "Enregistrez ce que vous ne lirez pas maintenant.",
+      "Vos articles enregistrés attendent encore.",
+      "Lisez bien un article, pas dix vite fait.",
+      "Les gros titres donnent la forme du jour.",
+      "Plus récent n'est pas mieux. Lisez l'existant.",
+      "Rien n'arrive plus vite si vous regardez."
+    ],
+    "a11y": "Mera met à jour vos infos sur ce téléphone."
   }
 }

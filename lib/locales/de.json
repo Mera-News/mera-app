@@ -2736,5 +2736,50 @@
       "Mera denkt auf deinem Handy nach.",
       "Das läuft auf deinem Gerät, es wird nichts irgendwohin geschickt."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "Wir arbeiten an deinen News, hier auf dem Handy.",
+        "Aktualisierung startet auf diesem Gerät."
+      ],
+      "fetching": [
+        "Wir schauen, was es heute Neues gibt.",
+        "Dein Handy entscheidet, was es abfragt."
+      ],
+      "downloading": [
+        "Die Artikel kommen auf dein Handy.",
+        "Sie kommen zuerst zu dir, nicht zum Server."
+      ],
+      "grouping": [
+        "Eine Meldung läuft an einem Dutzend Stellen.",
+        "Wir wählen eine Fassung pro Meldung."
+      ],
+      "analysing": [
+        "Jeder Artikel wird für dich gelesen.",
+        "Verschlüsselt. Nur dein Handy hat den Schlüssel."
+      ],
+      "onDevice": [
+        "Dein Handy liest diese Meldungen.",
+        "Das läuft hier. Nichts verlässt dein Handy."
+      ],
+      "summarising": [
+        "Zu jeder Meldung entsteht eine Notiz.",
+        "Durchgehend Ende zu Ende verschlüsselt."
+      ],
+      "preparing": [
+        "Dein Feed wird sortiert.",
+        "Fast fertig. Die Karten kommen von selbst."
+      ]
+    },
+    "nudges": [
+      "Sichere, was du jetzt nicht lesen kannst.",
+      "Deine gespeicherten Artikel warten noch.",
+      "Lies eine Meldung richtig, nicht zehn schnell.",
+      "Top-Schlagzeilen zeigen dir den Tag.",
+      "Neuer ist nicht besser. Lies, was da ist.",
+      "Nichts kommt schneller, wenn du zusiehst."
+    ],
+    "a11y": "Mera aktualisiert deine News auf diesem Handy."
   }
 }

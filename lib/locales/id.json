@@ -2735,5 +2735,50 @@
       "Memikirkannya di ponselmu.",
       "Ini berjalan di perangkatmu, jadi tidak ada yang dikirim ke mana pun."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "Mengerjakan beritamu, di ponselmu.",
+        "Memulai penyegaran di perangkat ini."
+      ],
+      "fetching": [
+        "Mencari apa yang baru hari ini.",
+        "Ponselmu yang menentukan apa yang diminta."
+      ],
+      "downloading": [
+        "Menarik artikel ke ponselmu.",
+        "Sampai ke kamu dulu, bukan ke server."
+      ],
+      "grouping": [
+        "Satu berita muncul di belasan tempat.",
+        "Memilih satu versi tiap berita."
+      ],
+      "analysing": [
+        "Membaca tiap artikel untukmu.",
+        "Terenkripsi. Hanya ponselmu punya kuncinya."
+      ],
+      "onDevice": [
+        "Ponselmu sedang membaca berita ini.",
+        "Berjalan di sini. Tidak ada yang keluar."
+      ],
+      "summarising": [
+        "Menulis catatan singkat tiap berita.",
+        "Terenkripsi ujung ke ujung, sepanjang jalan."
+      ],
+      "preparing": [
+        "Merapikan berandamu.",
+        "Hampir selesai. Kartu muncul sendiri."
+      ]
+    },
+    "nudges": [
+      "Simpan yang belum sempat kamu baca.",
+      "Artikel simpananmu masih menunggu.",
+      "Baca satu berita utuh, bukan sepuluh sekilas.",
+      "Berita utama memberi gambaran hari ini.",
+      "Baru bukan berarti lebih baik.",
+      "Tidak ada yang lebih cepat karena ditunggu."
+    ],
+    "a11y": "Mera memperbarui beritamu di ponsel ini."
   }
 }

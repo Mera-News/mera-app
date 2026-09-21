@@ -2737,5 +2737,50 @@
       "Thinking it through on your phone.",
       "This runs on your device, so nothing is being sent anywhere."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "Working on your news, here on your phone.",
+        "Starting a refresh on this device."
+      ],
+      "fetching": [
+        "Looking for what is new today.",
+        "Your phone decides what to ask for."
+      ],
+      "downloading": [
+        "Pulling the articles onto your phone.",
+        "They come to you first, not to a server."
+      ],
+      "grouping": [
+        "One story runs in a dozen places.",
+        "Picking one version of each story."
+      ],
+      "analysing": [
+        "Reading each article for you.",
+        "Encrypted. Only your phone holds the key."
+      ],
+      "onDevice": [
+        "Your phone is reading these stories.",
+        "This runs here. Nothing leaves your phone."
+      ],
+      "summarising": [
+        "Writing a short note for each story.",
+        "Encrypted end to end, the whole way."
+      ],
+      "preparing": [
+        "Putting your feed in order.",
+        "Almost there. The cards arrive on their own."
+      ]
+    },
+    "nudges": [
+      "Save what you cannot read right now.",
+      "Your saved articles are still waiting.",
+      "Read one story properly, not ten fast.",
+      "Top headlines, if you want the shape of today.",
+      "Newer is not better. Read what is here.",
+      "Nothing arrives faster if you watch."
+    ],
+    "a11y": "Mera is updating your news on this phone."
   }
 }

@@ -2738,5 +2738,50 @@
       "Telefonunda düşünülüyor.",
       "Bu, cihazında çalışıyor, bu yüzden hiçbir şey hiçbir yere gönderilmiyor."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "Haberlerin üzerinde çalışıyoruz, telefonunda.",
+        "Bu cihazda yenileme başladı."
+      ],
+      "fetching": [
+        "Bugün ne var diye bakıyoruz.",
+        "Ne isteneceğine telefonun karar veriyor."
+      ],
+      "downloading": [
+        "Yazılar telefonuna geliyor.",
+        "Önce sana gelir, sunucuya değil."
+      ],
+      "grouping": [
+        "Aynı haber onlarca yerde çıkar.",
+        "Her haberden tek sürüm seçiyoruz."
+      ],
+      "analysing": [
+        "Her yazı senin için okunuyor.",
+        "Şifreli. Anahtar yalnızca telefonunda."
+      ],
+      "onDevice": [
+        "Telefonun bu haberleri okuyor.",
+        "Burada oluyor. Hiçbir şey dışarı çıkmıyor."
+      ],
+      "summarising": [
+        "Her habere kısa bir not yazılıyor.",
+        "Baştan sona uçtan uca şifreli."
+      ],
+      "preparing": [
+        "Akışını sıraya koyuyoruz.",
+        "Az kaldı. Kartlar kendiliğinden gelecek."
+      ]
+    },
+    "nudges": [
+      "Şimdi okuyamayacaklarını kaydet.",
+      "Kaydettiğin yazılar hâlâ bekliyor.",
+      "Bir haberi doğru oku, on tanesini hızlı değil.",
+      "Öne çıkan başlıklar günü özetler.",
+      "Yeni olan daha iyi değil. Elindekini oku.",
+      "Baktığın için daha hızlı gelmez."
+    ],
+    "a11y": "Mera bu telefonda haberlerini güncelliyor."
   }
 }
