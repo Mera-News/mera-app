@@ -98,6 +98,9 @@ import {
   headerTitleSize,
   HEADER_TITLE_MIN_SCALE,
 } from '@/lib/typography/header-title-size';
+import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
+import HeaderNarrationLine from '@/components/custom/for-you/HeaderNarrationLine';
+import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
@@ -144,6 +147,7 @@ import { useDatabaseReady } from '@/lib/stores/database-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
+  useForYouDeviceProcessing,
   useForYouHasGeneratedTopics,
   useForYouLastProcessingRunFinishedAt,
   useForYouSuggestions,
@@ -337,6 +341,18 @@ const FeedScreen: React.FC = () => {
     true,
     3000,
   );
+
+  // ONE value drives the hidden title, the narration line and the strip.
+  // `isFeedProcessing`, NEVER `statusMode === 'processing'` — that one is
+  // `schedulerRunning || isFeedProcessing`, and `feed-sync` polls every five
+  // minutes plus foreground and reconnect, so it would hand this header over
+  // roughly twelve times an hour to announce a poll that found nothing. This
+  // is the reading surface; that would be the billboard `7e96aa4` deleted.
+  const narrating = useIsFeedProcessing();
+  // The STAGE only. On-device is its own store read, the same one the
+  // snapshot itself makes, so no parameter is added to the snapshot.
+  const { stage: narrationStage } = useProcessingSnapshot();
+  const { isDeviceProcessing: narrationOnDevice } = useForYouDeviceProcessing();
 
   // Candidates keep opened items in (they back frozen rows + survive hydrate) —
   // no exclusion here; opened-filtering happens only for NEW ids in ingest.
@@ -847,7 +863,10 @@ const FeedScreen: React.FC = () => {
   // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
   // for the empty-state chain and the header auto-reveal. The header indicator
   // OR-s in the scheduler flag on its own.
-  const isFeedProcessing = useIsFeedProcessing();
+  // Same subscription as `narrating` above, named for its other readers
+  // (the empty-state chain and the header auto-reveal). One hook call, so the
+  // two can never disagree about whether a run is in flight.
+  const isFeedProcessing = narrating;
 
   // Auto-reveal the header on an error state or while the list is empty
   // (preparing / no interests yet) so the header chrome is never hidden
@@ -913,6 +932,53 @@ const FeedScreen: React.FC = () => {
     return <AllCaughtUpCard />;
   };
 
+  // ── The three things that share the title row's first two slots ─────────
+  //
+  // Built here rather than inline so the render is a plain keyed array and the
+  // shared `mark` key, which is what makes the reorder a move, is impossible
+  // to miss.
+  const feedStatusMark = (
+    <FeedStatusIndicator
+      key="mark"
+      mode={statusMode}
+      expanded={statusExpanded}
+      onPress={toggleStatus}
+      testID="feed-status-indicator"
+    />
+  );
+  const feedTitleSlot = (
+    <View key="title" pointerEvents="none" className="flex-shrink min-w-0">
+      {/* A bare 1-line clamp truncated the screen's own name at large Dynamic
+          Type sizes, so this deliberately had none and wrapped instead — but
+          wrapping a single long word breaks it MID-WORD ("Dashboar" / "d" was
+          the reported case on the sibling header). Clamping AND scaling avoids
+          both: one line, shrunk to fit, which is Apple's own behaviour for a
+          title sharing its row with a control. */}
+      <Heading
+        size={titleSize}
+        className="text-white"
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={HEADER_TITLE_MIN_SCALE}
+      >
+        {t('swipeFeed.yourDeck')}
+      </Heading>
+    </View>
+  );
+  const feedNarrationSlot = (
+    <View
+      key="narration"
+      pointerEvents="none"
+      className="flex-1 min-w-0"
+      testID="feed-header-narration"
+    >
+      <HeaderNarrationLine
+        stage={narrationStage}
+        onDevice={narrationOnDevice}
+        testID="feed-narration-line"
+      />
+    </View>
+  );
   return (
     // No `bg-black`: the AbstractGradientBackdrop below is the page background.
     <Box className="flex-1" testID="feed-screen">
@@ -1060,6 +1126,11 @@ const FeedScreen: React.FC = () => {
             `overflow: 'hidden'`: the header is full-bleed and clipping would
             only risk cutting off the bell's badge. */}
         <GlassPlate tint={GLASS_HEADER_TINT} />
+        {/* ABOVE the plate, never below: a `GlassView` re-samples its backdrop
+            every frame that backdrop changes, and below the plate this would
+            run the backdrop's single most expensive term at 100% duty for the
+            length of every sync. See HeaderWorkingGradient's own header. */}
+        <HeaderWorkingGradient active={narrating} />
         {/* PULL-TO-REFRESH PASSTHROUGH — see the matching note in ForYouScreen.
             `box-none` on the header wrapper leaves its CHILDREN touchable, and
             each row here is a full-width plain View, so every row is an opaque
@@ -1087,50 +1158,20 @@ const FeedScreen: React.FC = () => {
             style={{ height: titleRowHeight }}
             testID="feed-header-title-row"
           >
-            {/* The importance DROPDOWN (one chip, not three pills) is what
-                makes an in-title-row control viable in the longer languages:
-                "Nachrichten" + a single "Mittel ▾" chip fits where the full
-                pill row did not. The heading still truncates first
-                (flex-shrink min-w-0, numberOfLines={1}) if a locale needs it. */}
             <HStack
               className="flex-1 min-w-0 items-center"
               space="sm"
               pointerEvents="box-none"
             >
-              {/* `flex-shrink`, NOT `flex-1`. With `flex-1` this box grew into
-                  every spare pixel of the row, which parked the status mark
-                  hard against the filter chip at the far right — the exact
-                  placement the mark is meant not to have. Sized to its text and
-                  shrinkable instead, it hands the slack to the spacer below.
-                  `min-w-0` stays: it is what lets the shrink actually happen. */}
-              <View pointerEvents="none" className="flex-shrink min-w-0">
-                {/* A bare 1-line clamp truncated the screen's own name at large
-                  Dynamic Type sizes, so this deliberately had none and wrapped
-                  instead — but wrapping a single long word breaks it MID-WORD
-                  ("Dashboar" / "d" was the reported case on the sibling header).
-                  Clamping AND scaling avoids both: one line, shrunk to fit, which
-                  is Apple's own behaviour for a title sharing its row with a
-                  control. */}
-                <Heading
-                  size={titleSize}
-                  className="text-white"
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={HEADER_TITLE_MIN_SCALE}
-                >
-                  {t('swipeFeed.yourDeck')}
-                </Heading>
-              </View>
-              {/* Everything the deleted full-width bar used to say, in one
-                  mark. Sits immediately after the title rather than at the
-                  right edge so it reads as a property of this screen's state,
-                  not as another button. */}
-              <FeedStatusIndicator
-                mode={statusMode}
-                expanded={statusExpanded}
-                onPress={toggleStatus}
-                testID="feed-status-indicator"
-              />
+              {/* A KEYED ARRAY, not a ternary of fragments. React reconciles
+                  an array by key, so the mark moving from index 1 to index 0
+                  is a MOVE; with a ternary the child at index 0 changes type,
+                  `FeedStatusIndicator` remounts twice a run, the MeraLogo
+                  sweep restarts mid-sync and a11y focus is dropped. The mark
+                  leads while narrating, which is the point of moving it. */}
+              {narrating
+                ? [feedStatusMark, feedNarrationSlot]
+                : [feedTitleSlot, feedStatusMark]}
               {/* Trailing slack. It used to exist to pin the importance chip
                   hard right; the chip is gone and the spacer stays, because it
                   is what stops a short title from being centred by
