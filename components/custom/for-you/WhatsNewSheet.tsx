@@ -107,7 +107,7 @@ const WhatsNewSheet: React.FC = () => {
   return (
     <Modal isOpen={open} onClose={dismiss} size="md">
       <ModalBackdrop />
-      <ModalContent className="bg-gray-950 border border-gray-800">
+      <ModalContent>
         <ModalHeader>
           <Heading size="xl" className="text-white">
             {t('whatsNew.starterTitle')}

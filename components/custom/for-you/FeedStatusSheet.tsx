@@ -45,7 +45,7 @@ const FeedStatusSheet: React.FC<FeedStatusSheetProps> = ({
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="md">
             <ModalBackdrop />
-            <ModalContent className="bg-gray-950 border border-gray-800">
+            <ModalContent>
                 <ModalHeader>
                     <Heading size="xl" className="text-white">
                         {t('feedStatus.title')}
