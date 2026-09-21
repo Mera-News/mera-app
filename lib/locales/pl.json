@@ -2735,5 +2735,44 @@
     "w13": "Dopasowuję",
     "w14": "Dopieszczam",
     "w15": "Warzę"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mera zbiera to, co już o tobie wie.",
+      "Przygotowujemy twoje pytanie."
+    ],
+    "queued": [
+      "Ustawiamy twoje zapytanie w kolejce.",
+      "Kilka rzeczy dzieje się naraz. Twoja jest następna."
+    ],
+    "securing": [
+      "Zamykamy twoją wiadomość tak, by otworzyć mógł ją tylko model.",
+      "Twoje słowa są szyfrowane, zanim opuszczą telefon."
+    ],
+    "attesting": [
+      "Przygotowujemy prywatny kanał do modelu.",
+      "Pobieramy klucz, dzięki któremu zostaje to między tobą a Merą.",
+      "Prywatna rozmowa potrzebuje chwili na przygotowanie."
+    ],
+    "thinking": [
+      "Mera czyta to, co napisałeś.",
+      "Szukamy najlepszego sposobu na odpowiedź."
+    ],
+    "retrying": [
+      "Trwa to dłużej niż zwykle. Mera próbuje inną drogą.",
+      "Wciąż pracujemy. Dziękujemy za cierpliwość."
+    ],
+    "deviceLoading": [
+      "Uruchamiamy model na twoim telefonie.",
+      "Pierwsza odpowiedź trwa nieco dłużej, dopóki się ładuje."
+    ],
+    "devicePreparing": [
+      "Mera zbiera to, co już o tobie wie.",
+      "Przygotowujemy telefon do odpowiedzi."
+    ],
+    "deviceThinking": [
+      "Myślimy nad tym na twoim telefonie.",
+      "Działa to na twoim urządzeniu, więc nic nigdzie nie jest wysyłane."
+    ]
   }
 }

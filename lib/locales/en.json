@@ -2697,5 +2697,44 @@
     "w13": "Finagling",
     "w14": "Tinkering",
     "w15": "Brewing"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Gathering what Mera already knows about you.",
+      "Putting your question together."
+    ],
+    "queued": [
+      "Lining up your request.",
+      "A couple of things are running at once. Yours is next."
+    ],
+    "securing": [
+      "Locking your message so only the model can open it.",
+      "Your words are encrypted before they leave your phone."
+    ],
+    "attesting": [
+      "Setting up a private channel to the model.",
+      "Getting the key that keeps this between you and Mera.",
+      "A private conversation takes a moment to set up."
+    ],
+    "thinking": [
+      "Mera is reading what you said.",
+      "Working out the best way to answer."
+    ],
+    "retrying": [
+      "This is taking longer than usual. Mera is trying another route.",
+      "Still going. Thanks for waiting."
+    ],
+    "deviceLoading": [
+      "Waking up the model on your phone.",
+      "The first answer takes a little longer while it loads."
+    ],
+    "devicePreparing": [
+      "Gathering what Mera already knows about you.",
+      "Getting your phone ready to answer."
+    ],
+    "deviceThinking": [
+      "Thinking it through on your phone.",
+      "This runs on your device, so nothing is being sent anywhere."
+    ]
   }
 }

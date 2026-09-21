@@ -2697,5 +2697,44 @@
     "w13": "Basteln",
     "w14": "Feilen",
     "w15": "Ausbrüten"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mera trägt zusammen, was sie schon über dich weiß.",
+      "Deine Frage wird vorbereitet."
+    ],
+    "queued": [
+      "Deine Anfrage wird eingereiht.",
+      "Gerade läuft noch etwas anderes. Du bist als Nächstes dran."
+    ],
+    "securing": [
+      "Deine Nachricht wird so verschlossen, dass nur das Modell sie öffnen kann.",
+      "Deine Worte werden verschlüsselt, bevor sie dein Handy verlassen."
+    ],
+    "attesting": [
+      "Ein privater Kanal zum Modell wird aufgebaut.",
+      "Der Schlüssel wird geholt, der das zwischen dir und Mera hält.",
+      "Ein privates Gespräch braucht einen Moment zum Einrichten."
+    ],
+    "thinking": [
+      "Mera liest, was du geschrieben hast.",
+      "Der beste Weg zur Antwort wird gesucht."
+    ],
+    "retrying": [
+      "Das dauert länger als sonst. Mera versucht einen anderen Weg.",
+      "Läuft noch. Danke fürs Warten."
+    ],
+    "deviceLoading": [
+      "Das Modell auf deinem Handy wird gestartet.",
+      "Die erste Antwort dauert etwas länger, solange es lädt."
+    ],
+    "devicePreparing": [
+      "Mera trägt zusammen, was sie schon über dich weiß.",
+      "Dein Handy wird für die Antwort vorbereitet."
+    ],
+    "deviceThinking": [
+      "Mera denkt auf deinem Handy nach.",
+      "Das läuft auf deinem Gerät, es wird nichts irgendwohin geschickt."
+    ]
   }
 }

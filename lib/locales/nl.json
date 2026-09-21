@@ -2697,5 +2697,44 @@
     "w13": "Sleutelen",
     "w14": "Bijschaven",
     "w15": "Broeden"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mera verzamelt wat ze al over je weet.",
+      "Je vraag wordt klaargezet."
+    ],
+    "queued": [
+      "Je verzoek wordt in de rij gezet.",
+      "Er lopen een paar dingen tegelijk. Jij bent zo aan de beurt."
+    ],
+    "securing": [
+      "Je bericht wordt afgesloten zodat alleen het model het kan openen.",
+      "Je woorden worden versleuteld voordat ze je telefoon verlaten."
+    ],
+    "attesting": [
+      "Er wordt een privékanaal naar het model opgezet.",
+      "De sleutel wordt opgehaald die dit tussen jou en Mera houdt.",
+      "Een privégesprek heeft even nodig om opgezet te worden."
+    ],
+    "thinking": [
+      "Mera leest wat je hebt geschreven.",
+      "De beste manier om te antwoorden wordt gezocht."
+    ],
+    "retrying": [
+      "Dit duurt langer dan normaal. Mera probeert een andere route.",
+      "Nog steeds bezig. Bedankt voor het wachten."
+    ],
+    "deviceLoading": [
+      "Het model op je telefoon wordt gestart.",
+      "Het eerste antwoord duurt wat langer terwijl het laadt."
+    ],
+    "devicePreparing": [
+      "Mera verzamelt wat ze al over je weet.",
+      "Je telefoon wordt klaargemaakt om te antwoorden."
+    ],
+    "deviceThinking": [
+      "Mera denkt erover na op je telefoon.",
+      "Dit draait op je apparaat, er wordt dus niets ergens naartoe gestuurd."
+    ]
   }
 }

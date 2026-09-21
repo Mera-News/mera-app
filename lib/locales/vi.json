@@ -2697,5 +2697,44 @@
     "w13": "Đang chỉnh",
     "w14": "Đang gọt giũa",
     "w15": "Đang pha trộn"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Đang tập hợp những gì Mera đã biết về bạn.",
+      "Đang sắp xếp câu hỏi của bạn."
+    ],
+    "queued": [
+      "Đang xếp yêu cầu của bạn vào hàng.",
+      "Có vài việc đang chạy cùng lúc. Bạn là người tiếp theo."
+    ],
+    "securing": [
+      "Đang khóa tin nhắn của bạn để chỉ mô hình mới mở được.",
+      "Lời của bạn được mã hóa trước khi rời khỏi điện thoại."
+    ],
+    "attesting": [
+      "Đang thiết lập một kênh riêng tới mô hình.",
+      "Đang lấy khóa giữ cho việc này chỉ nằm giữa bạn và Mera.",
+      "Một cuộc trò chuyện riêng tư cần một chút thời gian để thiết lập."
+    ],
+    "thinking": [
+      "Mera đang đọc những gì bạn viết.",
+      "Đang tìm cách trả lời tốt nhất."
+    ],
+    "retrying": [
+      "Việc này lâu hơn bình thường. Mera đang thử một hướng khác.",
+      "Vẫn đang chạy. Cảm ơn bạn đã chờ."
+    ],
+    "deviceLoading": [
+      "Đang đánh thức mô hình trên điện thoại của bạn.",
+      "Câu trả lời đầu tiên lâu hơn một chút trong lúc tải."
+    ],
+    "devicePreparing": [
+      "Đang tập hợp những gì Mera đã biết về bạn.",
+      "Đang chuẩn bị điện thoại của bạn để trả lời."
+    ],
+    "deviceThinking": [
+      "Đang suy nghĩ ngay trên điện thoại của bạn.",
+      "Việc này chạy trên thiết bị của bạn nên không có gì được gửi đi đâu cả."
+    ]
   }
 }

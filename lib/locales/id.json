@@ -2696,5 +2696,44 @@
     "w13": "Menyetel",
     "w14": "Memoles",
     "w15": "Meramu"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mengumpulkan apa yang sudah Mera ketahui tentang kamu.",
+      "Menyiapkan pertanyaanmu."
+    ],
+    "queued": [
+      "Mengantrekan permintaanmu.",
+      "Ada beberapa hal yang sedang berjalan. Punyamu berikutnya."
+    ],
+    "securing": [
+      "Mengunci pesanmu agar hanya model yang bisa membukanya.",
+      "Kata-katamu dienkripsi sebelum meninggalkan ponselmu."
+    ],
+    "attesting": [
+      "Menyiapkan jalur pribadi ke model.",
+      "Mengambil kunci yang menjaga ini tetap antara kamu dan Mera.",
+      "Percakapan pribadi butuh sesaat untuk disiapkan."
+    ],
+    "thinking": [
+      "Mera sedang membaca yang kamu tulis.",
+      "Mencari cara terbaik untuk menjawab."
+    ],
+    "retrying": [
+      "Ini lebih lama dari biasanya. Mera mencoba jalur lain.",
+      "Masih berjalan. Terima kasih sudah menunggu."
+    ],
+    "deviceLoading": [
+      "Membangunkan model di ponselmu.",
+      "Jawaban pertama butuh sedikit lebih lama selagi dimuat."
+    ],
+    "devicePreparing": [
+      "Mengumpulkan apa yang sudah Mera ketahui tentang kamu.",
+      "Menyiapkan ponselmu untuk menjawab."
+    ],
+    "deviceThinking": [
+      "Memikirkannya di ponselmu.",
+      "Ini berjalan di perangkatmu, jadi tidak ada yang dikirim ke mana pun."
+    ]
   }
 }

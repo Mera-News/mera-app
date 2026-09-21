@@ -2704,5 +2704,44 @@
     "w13": "Bricolage",
     "w14": "Peaufinage",
     "w15": "Infusion"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Mera rassemble ce qu'elle sait déjà de vous.",
+      "Votre question est en préparation."
+    ],
+    "queued": [
+      "Votre demande est mise en file.",
+      "Deux ou trois choses tournent en même temps. La vôtre est la suivante."
+    ],
+    "securing": [
+      "Votre message est verrouillé pour que seul le modèle puisse l'ouvrir.",
+      "Vos mots sont chiffrés avant de quitter votre téléphone."
+    ],
+    "attesting": [
+      "Mise en place d'un canal privé vers le modèle.",
+      "Récupération de la clé qui garde ceci entre vous et Mera.",
+      "Une conversation privée met un instant à se mettre en place."
+    ],
+    "thinking": [
+      "Mera lit ce que vous avez écrit.",
+      "Recherche de la meilleure façon de répondre."
+    ],
+    "retrying": [
+      "Cela prend plus de temps que d'habitude. Mera essaie une autre voie.",
+      "Toujours en cours. Merci de patienter."
+    ],
+    "deviceLoading": [
+      "Réveil du modèle sur votre téléphone.",
+      "La première réponse prend un peu plus de temps pendant le chargement."
+    ],
+    "devicePreparing": [
+      "Mera rassemble ce qu'elle sait déjà de vous.",
+      "Votre téléphone se prépare à répondre."
+    ],
+    "deviceThinking": [
+      "Mera y réfléchit sur votre téléphone.",
+      "Tout se passe sur votre appareil, rien n'est envoyé nulle part."
+    ]
   }
 }

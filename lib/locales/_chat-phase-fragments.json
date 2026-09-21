@@ -1,0 +1,263 @@
+{
+  "_comment": "chatwait P0: the chat wait-phase line. 9 new keys under a new top-level chatPhases namespace in all 20 dictionaries. Every value is an ARRAY of plain sentences with NO placeholders; the line cycles through the array while that phase is genuinely running. Array lengths must match across locales per key: 2 everywhere except chatPhases.attesting, which is 3. THE DEVICE POOLS (deviceLoading, devicePreparing, deviceThinking) MUST NEVER MENTION ENCRYPTION, A SERVER, THE CLOUD, A NETWORK OR AN UPLOAD: on-device inference never leaves the phone and a line saying otherwise is a false claim, asserted by chat-phases.test.ts. The cloud pools may and do. No line claims the model is verified or attested: the hot inference path never calls verifyAttestation. No em dashes anywhere, house rule for user-facing copy. Never edit the 20 dictionaries by hand.",
+  "ar": {
+    "chatPhases": {
+      "preparing": ["نجمع ما تعرفه ميرا عنك بالفعل.", "نجهّز سؤالك."],
+      "queued": ["ندرج طلبك في الدور.", "هناك أمور تعمل في الوقت نفسه. دورك التالي."],
+      "securing": ["نقفل رسالتك بحيث لا يفتحها سوى النموذج.", "تُشفَّر كلماتك قبل أن تغادر هاتفك."],
+      "attesting": ["نجهّز قناة خاصة مع النموذج.", "نحضر المفتاح الذي يبقي هذا بينك وبين ميرا.", "المحادثة الخاصة تحتاج لحظة لتجهيزها."],
+      "thinking": ["ميرا تقرأ ما قلته.", "نبحث عن أفضل طريقة للإجابة."],
+      "retrying": ["يستغرق هذا وقتا أطول من المعتاد. تجرب ميرا مسارا آخر.", "ما زلنا نعمل. شكرا لانتظارك."],
+      "deviceLoading": ["نوقظ النموذج على هاتفك.", "الإجابة الأولى تستغرق وقتا أطول قليلا أثناء التحميل."],
+      "devicePreparing": ["نجمع ما تعرفه ميرا عنك بالفعل.", "نجهّز هاتفك للإجابة."],
+      "deviceThinking": ["نفكر في الأمر على هاتفك.", "يعمل هذا على جهازك، فلا يُرسل أي شيء إلى أي مكان."]
+    }
+  },
+  "de": {
+    "chatPhases": {
+      "preparing": ["Mera trägt zusammen, was sie schon über dich weiß.", "Deine Frage wird vorbereitet."],
+      "queued": ["Deine Anfrage wird eingereiht.", "Gerade läuft noch etwas anderes. Du bist als Nächstes dran."],
+      "securing": ["Deine Nachricht wird so verschlossen, dass nur das Modell sie öffnen kann.", "Deine Worte werden verschlüsselt, bevor sie dein Handy verlassen."],
+      "attesting": ["Ein privater Kanal zum Modell wird aufgebaut.", "Der Schlüssel wird geholt, der das zwischen dir und Mera hält.", "Ein privates Gespräch braucht einen Moment zum Einrichten."],
+      "thinking": ["Mera liest, was du geschrieben hast.", "Der beste Weg zur Antwort wird gesucht."],
+      "retrying": ["Das dauert länger als sonst. Mera versucht einen anderen Weg.", "Läuft noch. Danke fürs Warten."],
+      "deviceLoading": ["Das Modell auf deinem Handy wird gestartet.", "Die erste Antwort dauert etwas länger, solange es lädt."],
+      "devicePreparing": ["Mera trägt zusammen, was sie schon über dich weiß.", "Dein Handy wird für die Antwort vorbereitet."],
+      "deviceThinking": ["Mera denkt auf deinem Handy nach.", "Das läuft auf deinem Gerät, es wird nichts irgendwohin geschickt."]
+    }
+  },
+  "en": {
+    "chatPhases": {
+      "preparing": ["Gathering what Mera already knows about you.", "Putting your question together."],
+      "queued": ["Lining up your request.", "A couple of things are running at once. Yours is next."],
+      "securing": ["Locking your message so only the model can open it.", "Your words are encrypted before they leave your phone."],
+      "attesting": ["Setting up a private channel to the model.", "Getting the key that keeps this between you and Mera.", "A private conversation takes a moment to set up."],
+      "thinking": ["Mera is reading what you said.", "Working out the best way to answer."],
+      "retrying": ["This is taking longer than usual. Mera is trying another route.", "Still going. Thanks for waiting."],
+      "deviceLoading": ["Waking up the model on your phone.", "The first answer takes a little longer while it loads."],
+      "devicePreparing": ["Gathering what Mera already knows about you.", "Getting your phone ready to answer."],
+      "deviceThinking": ["Thinking it through on your phone.", "This runs on your device, so nothing is being sent anywhere."]
+    }
+  },
+  "es": {
+    "chatPhases": {
+      "preparing": ["Reuniendo lo que Mera ya sabe de ti.", "Preparando tu pregunta."],
+      "queued": ["Poniendo tu solicitud en cola.", "Hay un par de cosas en marcha. La tuya es la siguiente."],
+      "securing": ["Cerrando tu mensaje para que solo el modelo pueda abrirlo.", "Tus palabras se cifran antes de salir de tu teléfono."],
+      "attesting": ["Preparando un canal privado con el modelo.", "Obteniendo la clave que mantiene esto entre Mera y tú.", "Una conversación privada tarda un momento en prepararse."],
+      "thinking": ["Mera está leyendo lo que has dicho.", "Buscando la mejor forma de responder."],
+      "retrying": ["Esto está tardando más de lo normal. Mera está probando otra ruta.", "Seguimos en ello. Gracias por esperar."],
+      "deviceLoading": ["Despertando el modelo en tu teléfono.", "La primera respuesta tarda un poco más mientras se carga."],
+      "devicePreparing": ["Reuniendo lo que Mera ya sabe de ti.", "Preparando tu teléfono para responder."],
+      "deviceThinking": ["Pensándolo en tu teléfono.", "Esto se ejecuta en tu dispositivo, así que no se envía nada a ninguna parte."]
+    }
+  },
+  "fr": {
+    "chatPhases": {
+      "preparing": ["Mera rassemble ce qu'elle sait déjà de vous.", "Votre question est en préparation."],
+      "queued": ["Votre demande est mise en file.", "Deux ou trois choses tournent en même temps. La vôtre est la suivante."],
+      "securing": ["Votre message est verrouillé pour que seul le modèle puisse l'ouvrir.", "Vos mots sont chiffrés avant de quitter votre téléphone."],
+      "attesting": ["Mise en place d'un canal privé vers le modèle.", "Récupération de la clé qui garde ceci entre vous et Mera.", "Une conversation privée met un instant à se mettre en place."],
+      "thinking": ["Mera lit ce que vous avez écrit.", "Recherche de la meilleure façon de répondre."],
+      "retrying": ["Cela prend plus de temps que d'habitude. Mera essaie une autre voie.", "Toujours en cours. Merci de patienter."],
+      "deviceLoading": ["Réveil du modèle sur votre téléphone.", "La première réponse prend un peu plus de temps pendant le chargement."],
+      "devicePreparing": ["Mera rassemble ce qu'elle sait déjà de vous.", "Votre téléphone se prépare à répondre."],
+      "deviceThinking": ["Mera y réfléchit sur votre téléphone.", "Tout se passe sur votre appareil, rien n'est envoyé nulle part."]
+    }
+  },
+  "hi": {
+    "chatPhases": {
+      "preparing": ["मेरा आपके बारे में जो जानती है, वह इकट्ठा कर रही है।", "आपका सवाल तैयार किया जा रहा है।"],
+      "queued": ["आपका अनुरोध कतार में लगाया जा रहा है।", "अभी कुछ और भी चल रहा है। अगला नंबर आपका है।"],
+      "securing": ["आपके संदेश को ऐसे बंद किया जा रहा है कि उसे सिर्फ़ मॉडल खोल सके।", "आपके शब्द आपके फ़ोन से निकलने से पहले एन्क्रिप्ट हो जाते हैं।"],
+      "attesting": ["मॉडल तक एक निजी रास्ता तैयार किया जा रहा है।", "वह चाबी लाई जा रही है जो इसे आपके और मेरा के बीच रखती है।", "निजी बातचीत तैयार होने में थोड़ा समय लेती है।"],
+      "thinking": ["मेरा पढ़ रही है कि आपने क्या कहा।", "जवाब देने का सबसे अच्छा तरीका खोजा जा रहा है।"],
+      "retrying": ["इसमें सामान्य से ज़्यादा समय लग रहा है। मेरा दूसरा रास्ता आज़मा रही है।", "अभी भी चल रहा है। इंतज़ार के लिए शुक्रिया।"],
+      "deviceLoading": ["आपके फ़ोन पर मॉडल जगाया जा रहा है।", "लोड होते समय पहला जवाब थोड़ा ज़्यादा समय लेता है।"],
+      "devicePreparing": ["मेरा आपके बारे में जो जानती है, वह इकट्ठा कर रही है।", "जवाब के लिए आपका फ़ोन तैयार किया जा रहा है।"],
+      "deviceThinking": ["आपके फ़ोन पर ही सोचा जा रहा है।", "यह आपके डिवाइस पर चलता है, इसलिए कुछ भी कहीं नहीं भेजा जाता।"]
+    }
+  },
+  "id": {
+    "chatPhases": {
+      "preparing": ["Mengumpulkan apa yang sudah Mera ketahui tentang kamu.", "Menyiapkan pertanyaanmu."],
+      "queued": ["Mengantrekan permintaanmu.", "Ada beberapa hal yang sedang berjalan. Punyamu berikutnya."],
+      "securing": ["Mengunci pesanmu agar hanya model yang bisa membukanya.", "Kata-katamu dienkripsi sebelum meninggalkan ponselmu."],
+      "attesting": ["Menyiapkan jalur pribadi ke model.", "Mengambil kunci yang menjaga ini tetap antara kamu dan Mera.", "Percakapan pribadi butuh sesaat untuk disiapkan."],
+      "thinking": ["Mera sedang membaca yang kamu tulis.", "Mencari cara terbaik untuk menjawab."],
+      "retrying": ["Ini lebih lama dari biasanya. Mera mencoba jalur lain.", "Masih berjalan. Terima kasih sudah menunggu."],
+      "deviceLoading": ["Membangunkan model di ponselmu.", "Jawaban pertama butuh sedikit lebih lama selagi dimuat."],
+      "devicePreparing": ["Mengumpulkan apa yang sudah Mera ketahui tentang kamu.", "Menyiapkan ponselmu untuk menjawab."],
+      "deviceThinking": ["Memikirkannya di ponselmu.", "Ini berjalan di perangkatmu, jadi tidak ada yang dikirim ke mana pun."]
+    }
+  },
+  "it": {
+    "chatPhases": {
+      "preparing": ["Mera sta raccogliendo quello che sa già di te.", "Stiamo preparando la tua domanda."],
+      "queued": ["La tua richiesta è in coda.", "Ci sono un paio di cose in corso. La tua è la prossima."],
+      "securing": ["Il tuo messaggio viene chiuso in modo che solo il modello possa aprirlo.", "Le tue parole vengono cifrate prima di lasciare il telefono."],
+      "attesting": ["Stiamo preparando un canale privato verso il modello.", "Recuperiamo la chiave che tiene tutto questo tra te e Mera.", "Una conversazione privata richiede un momento per essere avviata."],
+      "thinking": ["Mera sta leggendo quello che hai scritto.", "Stiamo cercando il modo migliore di rispondere."],
+      "retrying": ["Ci sta mettendo più del solito. Mera sta provando un'altra strada.", "Ci stiamo ancora lavorando. Grazie per l'attesa."],
+      "deviceLoading": ["Stiamo avviando il modello sul tuo telefono.", "La prima risposta richiede un po' più di tempo mentre si carica."],
+      "devicePreparing": ["Mera sta raccogliendo quello che sa già di te.", "Stiamo preparando il telefono a rispondere."],
+      "deviceThinking": ["Mera ci sta pensando sul tuo telefono.", "Tutto avviene sul tuo dispositivo, quindi non viene inviato nulla da nessuna parte."]
+    }
+  },
+  "ja": {
+    "chatPhases": {
+      "preparing": ["Meraがあなたについて知っていることをまとめています。", "質問を組み立てています。"],
+      "queued": ["リクエストを順番に並べています。", "ほかの処理が動いています。次はあなたの番です。"],
+      "securing": ["モデルだけが開けるようにメッセージを施錠しています。", "あなたの言葉は端末を出る前に暗号化されます。"],
+      "attesting": ["モデルとのプライベートな経路を用意しています。", "あなたとMeraだけのやり取りにするための鍵を取得しています。", "プライベートな会話は準備に少し時間がかかります。"],
+      "thinking": ["Meraがあなたの言葉を読んでいます。", "いちばん良い答え方を考えています。"],
+      "retrying": ["いつもより時間がかかっています。Meraが別の経路を試しています。", "まだ続いています。お待ちいただきありがとうございます。"],
+      "deviceLoading": ["端末のモデルを起動しています。", "読み込み中のため、最初の回答は少し時間がかかります。"],
+      "devicePreparing": ["Meraがあなたについて知っていることをまとめています。", "回答に向けて端末を準備しています。"],
+      "deviceThinking": ["端末の中で考えています。", "これはあなたの端末で動いているので、どこにも送信されません。"]
+    }
+  },
+  "ko": {
+    "chatPhases": {
+      "preparing": ["Mera가 이미 알고 있는 내용을 모으고 있어요.", "질문을 정리하고 있어요."],
+      "queued": ["요청을 순서대로 놓고 있어요.", "몇 가지가 함께 돌아가고 있어요. 다음은 회원님 차례예요."],
+      "securing": ["모델만 열 수 있도록 메시지를 잠그고 있어요.", "보낸 말은 휴대폰을 떠나기 전에 암호화돼요."],
+      "attesting": ["모델과의 비공개 통로를 만들고 있어요.", "회원님과 Mera 사이에만 남도록 열쇠를 가져오고 있어요.", "비공개 대화는 준비하는 데 잠시 걸려요."],
+      "thinking": ["Mera가 보낸 내용을 읽고 있어요.", "가장 좋은 답변 방법을 찾고 있어요."],
+      "retrying": ["평소보다 오래 걸리고 있어요. Mera가 다른 경로를 시도하고 있어요.", "계속 진행 중이에요. 기다려 주셔서 고마워요."],
+      "deviceLoading": ["휴대폰에서 모델을 깨우고 있어요.", "불러오는 동안 첫 답변은 조금 더 걸려요."],
+      "devicePreparing": ["Mera가 이미 알고 있는 내용을 모으고 있어요.", "답변할 수 있도록 휴대폰을 준비하고 있어요."],
+      "deviceThinking": ["휴대폰 안에서 생각하고 있어요.", "이 작업은 기기에서 실행되므로 아무것도 전송되지 않아요."]
+    }
+  },
+  "nl": {
+    "chatPhases": {
+      "preparing": ["Mera verzamelt wat ze al over je weet.", "Je vraag wordt klaargezet."],
+      "queued": ["Je verzoek wordt in de rij gezet.", "Er lopen een paar dingen tegelijk. Jij bent zo aan de beurt."],
+      "securing": ["Je bericht wordt afgesloten zodat alleen het model het kan openen.", "Je woorden worden versleuteld voordat ze je telefoon verlaten."],
+      "attesting": ["Er wordt een privékanaal naar het model opgezet.", "De sleutel wordt opgehaald die dit tussen jou en Mera houdt.", "Een privégesprek heeft even nodig om opgezet te worden."],
+      "thinking": ["Mera leest wat je hebt geschreven.", "De beste manier om te antwoorden wordt gezocht."],
+      "retrying": ["Dit duurt langer dan normaal. Mera probeert een andere route.", "Nog steeds bezig. Bedankt voor het wachten."],
+      "deviceLoading": ["Het model op je telefoon wordt gestart.", "Het eerste antwoord duurt wat langer terwijl het laadt."],
+      "devicePreparing": ["Mera verzamelt wat ze al over je weet.", "Je telefoon wordt klaargemaakt om te antwoorden."],
+      "deviceThinking": ["Mera denkt erover na op je telefoon.", "Dit draait op je apparaat, er wordt dus niets ergens naartoe gestuurd."]
+    }
+  },
+  "pl": {
+    "chatPhases": {
+      "preparing": ["Mera zbiera to, co już o tobie wie.", "Przygotowujemy twoje pytanie."],
+      "queued": ["Ustawiamy twoje zapytanie w kolejce.", "Kilka rzeczy dzieje się naraz. Twoja jest następna."],
+      "securing": ["Zamykamy twoją wiadomość tak, by otworzyć mógł ją tylko model.", "Twoje słowa są szyfrowane, zanim opuszczą telefon."],
+      "attesting": ["Przygotowujemy prywatny kanał do modelu.", "Pobieramy klucz, dzięki któremu zostaje to między tobą a Merą.", "Prywatna rozmowa potrzebuje chwili na przygotowanie."],
+      "thinking": ["Mera czyta to, co napisałeś.", "Szukamy najlepszego sposobu na odpowiedź."],
+      "retrying": ["Trwa to dłużej niż zwykle. Mera próbuje inną drogą.", "Wciąż pracujemy. Dziękujemy za cierpliwość."],
+      "deviceLoading": ["Uruchamiamy model na twoim telefonie.", "Pierwsza odpowiedź trwa nieco dłużej, dopóki się ładuje."],
+      "devicePreparing": ["Mera zbiera to, co już o tobie wie.", "Przygotowujemy telefon do odpowiedzi."],
+      "deviceThinking": ["Myślimy nad tym na twoim telefonie.", "Działa to na twoim urządzeniu, więc nic nigdzie nie jest wysyłane."]
+    }
+  },
+  "pt-BR": {
+    "chatPhases": {
+      "preparing": ["Reunindo o que a Mera já sabe sobre você.", "Preparando sua pergunta."],
+      "queued": ["Colocando seu pedido na fila.", "Tem umas coisas rodando ao mesmo tempo. A sua é a próxima."],
+      "securing": ["Trancando sua mensagem para que só o modelo consiga abrir.", "Suas palavras são criptografadas antes de sair do seu celular."],
+      "attesting": ["Preparando um canal privado com o modelo.", "Buscando a chave que mantém isso entre você e a Mera.", "Uma conversa privada leva um instante para ser preparada."],
+      "thinking": ["A Mera está lendo o que você escreveu.", "Procurando a melhor forma de responder."],
+      "retrying": ["Está demorando mais que o normal. A Mera está tentando outro caminho.", "Ainda em andamento. Obrigado por esperar."],
+      "deviceLoading": ["Acordando o modelo no seu celular.", "A primeira resposta demora um pouco mais enquanto carrega."],
+      "devicePreparing": ["Reunindo o que a Mera já sabe sobre você.", "Preparando seu celular para responder."],
+      "deviceThinking": ["Pensando nisso no seu celular.", "Isso roda no seu aparelho, então nada é enviado para lugar nenhum."]
+    }
+  },
+  "ru": {
+    "chatPhases": {
+      "preparing": ["Собираем то, что Mera уже знает о вас.", "Готовим ваш вопрос."],
+      "queued": ["Ставим ваш запрос в очередь.", "Сейчас выполняется ещё пара задач. Ваша следующая."],
+      "securing": ["Закрываем ваше сообщение так, чтобы открыть его могла только модель.", "Ваши слова шифруются, прежде чем покинуть телефон."],
+      "attesting": ["Настраиваем приватный канал к модели.", "Получаем ключ, который оставляет это между вами и Mera.", "Приватному разговору нужно мгновение на подготовку."],
+      "thinking": ["Mera читает то, что вы написали.", "Ищем лучший способ ответить."],
+      "retrying": ["Это занимает больше времени, чем обычно. Mera пробует другой путь.", "Всё ещё работаем. Спасибо за ожидание."],
+      "deviceLoading": ["Запускаем модель на вашем телефоне.", "Первый ответ занимает чуть больше времени, пока идёт загрузка."],
+      "devicePreparing": ["Собираем то, что Mera уже знает о вас.", "Готовим телефон к ответу."],
+      "deviceThinking": ["Думаем над этим прямо на вашем телефоне.", "Это выполняется на вашем устройстве, поэтому никуда ничего не отправляется."]
+    }
+  },
+  "th": {
+    "chatPhases": {
+      "preparing": ["กำลังรวบรวมสิ่งที่ Mera รู้เกี่ยวกับคุณอยู่แล้ว", "กำลังเรียบเรียงคำถามของคุณ"],
+      "queued": ["กำลังจัดคิวคำขอของคุณ", "มีงานอื่นกำลังทำงานอยู่ คิวถัดไปเป็นของคุณ"],
+      "securing": ["กำลังล็อกข้อความของคุณให้มีเพียงโมเดลเท่านั้นที่เปิดได้", "คำของคุณถูกเข้ารหัสก่อนออกจากเครื่อง"],
+      "attesting": ["กำลังเตรียมช่องทางส่วนตัวไปยังโมเดล", "กำลังรับกุญแจที่ทำให้เรื่องนี้อยู่ระหว่างคุณกับ Mera เท่านั้น", "การสนทนาแบบส่วนตัวใช้เวลาสักครู่ในการเตรียม"],
+      "thinking": ["Mera กำลังอ่านสิ่งที่คุณเขียน", "กำลังหาวิธีตอบที่ดีที่สุด"],
+      "retrying": ["ตอนนี้ใช้เวลานานกว่าปกติ Mera กำลังลองอีกเส้นทางหนึ่ง", "ยังทำงานอยู่ ขอบคุณที่รอ"],
+      "deviceLoading": ["กำลังปลุกโมเดลบนเครื่องของคุณ", "คำตอบแรกใช้เวลานานขึ้นเล็กน้อยระหว่างโหลด"],
+      "devicePreparing": ["กำลังรวบรวมสิ่งที่ Mera รู้เกี่ยวกับคุณอยู่แล้ว", "กำลังเตรียมเครื่องของคุณให้พร้อมตอบ"],
+      "deviceThinking": ["กำลังคิดอยู่บนเครื่องของคุณ", "ทั้งหมดนี้ทำงานบนอุปกรณ์ของคุณ จึงไม่มีการส่งอะไรออกไป"]
+    }
+  },
+  "tr": {
+    "chatPhases": {
+      "preparing": ["Mera senin hakkında bildiklerini topluyor.", "Sorun hazırlanıyor."],
+      "queued": ["İsteğin sıraya alınıyor.", "Aynı anda birkaç iş çalışıyor. Sıradaki sensin."],
+      "securing": ["Mesajın yalnızca modelin açabileceği şekilde kilitleniyor.", "Sözlerin telefonundan çıkmadan önce şifreleniyor."],
+      "attesting": ["Modele özel bir kanal kuruluyor.", "Bunu seninle Mera arasında tutan anahtar alınıyor.", "Özel bir görüşmenin kurulması bir an sürüyor."],
+      "thinking": ["Mera yazdıklarını okuyor.", "En iyi cevap yolu aranıyor."],
+      "retrying": ["Bu her zamankinden uzun sürüyor. Mera başka bir yol deniyor.", "Hâlâ devam ediyor. Beklediğin için teşekkürler."],
+      "deviceLoading": ["Telefonundaki model uyandırılıyor.", "Yüklenirken ilk cevap biraz daha uzun sürüyor."],
+      "devicePreparing": ["Mera senin hakkında bildiklerini topluyor.", "Telefonun cevap vermeye hazırlanıyor."],
+      "deviceThinking": ["Telefonunda düşünülüyor.", "Bu, cihazında çalışıyor, bu yüzden hiçbir şey hiçbir yere gönderilmiyor."]
+    }
+  },
+  "uk": {
+    "chatPhases": {
+      "preparing": ["Збираємо те, що Mera вже знає про вас.", "Готуємо ваше запитання."],
+      "queued": ["Ставимо ваш запит у чергу.", "Зараз виконується ще кілька задач. Ваша наступна."],
+      "securing": ["Закриваємо ваше повідомлення так, щоб відкрити його могла лише модель.", "Ваші слова шифруються, перш ніж залишити телефон."],
+      "attesting": ["Налаштовуємо приватний канал до моделі.", "Отримуємо ключ, який залишає це між вами та Mera.", "Приватна розмова потребує миті на підготовку."],
+      "thinking": ["Mera читає те, що ви написали.", "Шукаємо найкращий спосіб відповісти."],
+      "retrying": ["Це триває довше, ніж зазвичай. Mera пробує інший шлях.", "Усе ще працюємо. Дякуємо, що чекаєте."],
+      "deviceLoading": ["Запускаємо модель на вашому телефоні.", "Перша відповідь триває трохи довше, поки триває завантаження."],
+      "devicePreparing": ["Збираємо те, що Mera вже знає про вас.", "Готуємо телефон до відповіді."],
+      "deviceThinking": ["Думаємо над цим просто на вашому телефоні.", "Це виконується на вашому пристрої, тож нікуди нічого не надсилається."]
+    }
+  },
+  "vi": {
+    "chatPhases": {
+      "preparing": ["Đang tập hợp những gì Mera đã biết về bạn.", "Đang sắp xếp câu hỏi của bạn."],
+      "queued": ["Đang xếp yêu cầu của bạn vào hàng.", "Có vài việc đang chạy cùng lúc. Bạn là người tiếp theo."],
+      "securing": ["Đang khóa tin nhắn của bạn để chỉ mô hình mới mở được.", "Lời của bạn được mã hóa trước khi rời khỏi điện thoại."],
+      "attesting": ["Đang thiết lập một kênh riêng tới mô hình.", "Đang lấy khóa giữ cho việc này chỉ nằm giữa bạn và Mera.", "Một cuộc trò chuyện riêng tư cần một chút thời gian để thiết lập."],
+      "thinking": ["Mera đang đọc những gì bạn viết.", "Đang tìm cách trả lời tốt nhất."],
+      "retrying": ["Việc này lâu hơn bình thường. Mera đang thử một hướng khác.", "Vẫn đang chạy. Cảm ơn bạn đã chờ."],
+      "deviceLoading": ["Đang đánh thức mô hình trên điện thoại của bạn.", "Câu trả lời đầu tiên lâu hơn một chút trong lúc tải."],
+      "devicePreparing": ["Đang tập hợp những gì Mera đã biết về bạn.", "Đang chuẩn bị điện thoại của bạn để trả lời."],
+      "deviceThinking": ["Đang suy nghĩ ngay trên điện thoại của bạn.", "Việc này chạy trên thiết bị của bạn nên không có gì được gửi đi đâu cả."]
+    }
+  },
+  "zh-CN": {
+    "chatPhases": {
+      "preparing": ["正在整理 Mera 已经了解你的内容。", "正在组织你的问题。"],
+      "queued": ["正在把你的请求排入队列。", "同时还有几件事在跑，下一个就是你。"],
+      "securing": ["正在锁定你的消息，只有模型能打开。", "你的文字在离开手机前就已加密。"],
+      "attesting": ["正在建立通往模型的私密通道。", "正在获取密钥，让这段对话只属于你和 Mera。", "私密对话需要一点时间来建立。"],
+      "thinking": ["Mera 正在读你写的内容。", "正在想最好的回答方式。"],
+      "retrying": ["这次比平时久一些，Mera 正在换一条路线。", "还在进行中，谢谢你的等待。"],
+      "deviceLoading": ["正在唤醒手机上的模型。", "加载期间，第一个回答会稍微久一点。"],
+      "devicePreparing": ["正在整理 Mera 已经了解你的内容。", "正在让手机准备好作答。"],
+      "deviceThinking": ["正在你的手机上思考。", "这一切都在你的设备上运行，不会发送到任何地方。"]
+    }
+  },
+  "zh-TW": {
+    "chatPhases": {
+      "preparing": ["正在整理 Mera 已經了解你的內容。", "正在組織你的問題。"],
+      "queued": ["正在把你的請求排入佇列。", "同時還有幾件事在跑，下一個就是你。"],
+      "securing": ["正在鎖定你的訊息，只有模型能打開。", "你的文字在離開手機前就已加密。"],
+      "attesting": ["正在建立通往模型的私密通道。", "正在取得金鑰，讓這段對話只屬於你和 Mera。", "私密對話需要一點時間來建立。"],
+      "thinking": ["Mera 正在讀你寫的內容。", "正在想最好的回答方式。"],
+      "retrying": ["這次比平常久一些，Mera 正在換一條路線。", "還在進行中，謝謝你的等待。"],
+      "deviceLoading": ["正在喚醒手機上的模型。", "載入期間，第一個回答會稍微久一點。"],
+      "devicePreparing": ["正在整理 Mera 已經了解你的內容。", "正在讓手機準備好作答。"],
+      "deviceThinking": ["正在你的手機上思考。", "這一切都在你的裝置上執行，不會傳送到任何地方。"]
+    }
+  }
+}

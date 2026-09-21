@@ -2697,5 +2697,44 @@
     "w13": "Ajustando",
     "w14": "Puliendo",
     "w15": "Cociendo"
+  },
+  "chatPhases": {
+    "preparing": [
+      "Reuniendo lo que Mera ya sabe de ti.",
+      "Preparando tu pregunta."
+    ],
+    "queued": [
+      "Poniendo tu solicitud en cola.",
+      "Hay un par de cosas en marcha. La tuya es la siguiente."
+    ],
+    "securing": [
+      "Cerrando tu mensaje para que solo el modelo pueda abrirlo.",
+      "Tus palabras se cifran antes de salir de tu teléfono."
+    ],
+    "attesting": [
+      "Preparando un canal privado con el modelo.",
+      "Obteniendo la clave que mantiene esto entre Mera y tú.",
+      "Una conversación privada tarda un momento en prepararse."
+    ],
+    "thinking": [
+      "Mera está leyendo lo que has dicho.",
+      "Buscando la mejor forma de responder."
+    ],
+    "retrying": [
+      "Esto está tardando más de lo normal. Mera está probando otra ruta.",
+      "Seguimos en ello. Gracias por esperar."
+    ],
+    "deviceLoading": [
+      "Despertando el modelo en tu teléfono.",
+      "La primera respuesta tarda un poco más mientras se carga."
+    ],
+    "devicePreparing": [
+      "Reuniendo lo que Mera ya sabe de ti.",
+      "Preparando tu teléfono para responder."
+    ],
+    "deviceThinking": [
+      "Pensándolo en tu teléfono.",
+      "Esto se ejecuta en tu dispositivo, así que no se envía nada a ninguna parte."
+    ]
   }
 }
