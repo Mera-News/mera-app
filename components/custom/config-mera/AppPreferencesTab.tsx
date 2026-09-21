@@ -294,6 +294,19 @@ const AppPreferencesTab: React.FC = () => {
             icon: 'storage',
             onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
         },
+        {
+            // Restoring used to be offered AUTOMATICALLY, as an "Enter your
+            // recovery code" screen before the onboarding wizard, which most
+            // people did not understand. It is something you come and ask for
+            // now. The param opens the code step directly on arrival — there is
+            // no backup route to push (the standalone screen was removed
+            // 2026-08-18); BackupSection is inline in Manage data.
+            id: 'restore-backup',
+            title: t('backup.restore'),
+            icon: 'settings-backup-restore',
+            onPress: () =>
+                routerHook.push('/logged-in/preferences/manage-data?restore=1' as any),
+        },
         ...subscriptionOptions,
     ];
     // Observability moved into the Manage data screen (user call, 2026-08-19):

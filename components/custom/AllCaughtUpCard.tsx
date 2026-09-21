@@ -5,7 +5,6 @@ import {
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import type { ImportanceThreshold } from '@/lib/feed-ordering/importance-filter';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -37,31 +36,9 @@ interface AllCaughtUpCardProps {
      * screen.
      */
     compact?: boolean;
-    /**
-     * The Feed's current minimum-importance threshold. Passed ONLY by
-     * FeedScreen — the other three call sites (FactFeedScreen and
-     * ForYouScreen's empty states, and the Feed's own loading state) pass
-     * neither this nor `onLowerPriority`, and keep the Explore CTA unchanged.
-     * Deliberately not read from the store directly: FactFeedScreen and
-     * ForYouScreen filter by `dashboardThreshold`, have no collapsible header,
-     * and have no `reveal()` to call, so a store-driven CTA here would render
-     * a dead button on screens this card doesn't own.
-     */
-    feedThreshold?: ImportanceThreshold;
-    /**
-     * Present together with `feedThreshold`. Called when the user taps the
-     * "lower the feed priority" CTA — the caller is expected to reveal the
-     * (possibly collapsed) header and draw attention to the priority filter
-     * chip, e.g. with a brief pulse; this component only renders the button.
-     */
-    onLowerPriority?: () => void;
 }
 
-const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
-    compact = false,
-    feedThreshold,
-    onLowerPriority,
-}) => {
+const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ compact = false }) => {
     const { t } = useTranslation();
 
     // Two different questions, both asked, the same pair `use-processing-
@@ -82,12 +59,6 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
 
         return () => clearInterval(interval);
     }, [messages.length]);
-
-    // There's nothing to lower once the threshold is already at its floor —
-    // in that case the CTA falls back to Explore, same as every call site that
-    // passes neither prop at all.
-    const showLowerPriorityCta =
-        !!onLowerPriority && feedThreshold != null && feedThreshold !== 'low';
 
     // `px-4` in compact mirrors ArticleCardBase's own content padding, so the
     // text column starts on the same vertical line as every neighbouring card's.
@@ -134,35 +105,22 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
                 {messages[currentIndex]}
             </Text>
 
-            {/* CTA — Explore by default. When the Feed's importance threshold is
-                above its floor, this becomes a nudge to lower it instead: there is
-                more to read, it's just filtered out, and Explore isn't the answer
-                to that. `onLowerPriority` owns revealing the header and drawing
-                attention to the priority chip; this button only decides WHICH
-                action to offer. */}
-            {showLowerPriorityCta ? (
-                <Button
-                    testID="all-caught-up-lower-priority-cta"
-                    variant="outline"
-                    action="secondary"
-                    size="sm"
-                    className={compact ? 'mt-4' : 'mt-6'}
-                    onPress={onLowerPriority}
-                >
-                    <ButtonText>{t('feed.lowerPriorityCta')}</ButtonText>
-                </Button>
-            ) : (
-                <Button
-                    testID="all-caught-up-explore-cta"
-                    variant="outline"
-                    action="secondary"
-                    size="sm"
-                    className={compact ? 'mt-4' : 'mt-6'}
-                    onPress={() => router.navigate('/logged-in/app_container/around')}
-                >
-                    <ButtonText>{t('feed.exploreCta')}</ButtonText>
-                </Button>
-            )}
+            {/* CTA — always Explore. This used to fork on the Feed's minimum
+                importance threshold, offering "lower the feed priority" when
+                stories were being hidden by that dial. The dial is gone: every
+                scored suggestion down to the LOW band now renders, so an empty
+                list means there is genuinely nothing left rather than something
+                filtered out, and Explore is the only honest onward move. */}
+            <Button
+                testID="all-caught-up-explore-cta"
+                variant="outline"
+                action="secondary"
+                size="sm"
+                className={compact ? 'mt-4' : 'mt-6'}
+                onPress={() => router.navigate('/logged-in/app_container/around')}
+            >
+                <ButtonText>{t('feed.exploreCta')}</ButtonText>
+            </Button>
         </Box>
     );
 

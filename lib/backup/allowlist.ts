@@ -119,8 +119,6 @@ export const BACKUP_SETTING_KEYS: readonly string[] = [
   'static_gradient',
   'startup_tab',
   'related_articles_sort',
-  'feed_importance_filter',
-  'dashboard_importance_filter',
   'for_you_recent_24h_only',
   'explore_browse_countries',
   'explore_suppressed_scopes',

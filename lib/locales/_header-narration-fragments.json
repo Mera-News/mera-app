@@ -1,0 +1,283 @@
+{
+  "_comment": "hdrsync P0: the Feed/Dashboard header narration. A new top-level `headerNarration` namespace in all 20 dictionaries. `stages.*` and `nudges` are ARRAYS and their lengths must match across locales per key (2 per stage, 6 nudges); `a11y` is a single string. The line renders in a TWO-LINE box at 14/21, so every line has a hard character ceiling: 46 in English, 58 in every locale. Do not raise the ceiling to fit a translation, shorten the English instead. NO PLACEHOLDERS, no em dashes, terminal punctuation on every line so a reader who catches exactly one line still gets a whole thought. THE `onDevice`, `starting` AND `nudges` POOLS MUST NEVER MENTION A SERVER, THE CLOUD, A NETWORK OR AN UPLOAD: they render during on-device runs where nothing leaves the phone, and `starting` renders before the engine is known. A test asserts that in English, with a control proving the matcher fires on the cloud pools. NO NUDGE MAY NAME A PIPELINE STEP (analyse/download/encrypt/group/summarise), or it reads as a status claim rather than a suggestion. Never edit the 20 dictionaries by hand.",
+  "ar": { "headerNarration": {
+    "stages": {
+      "starting": ["نعمل على أخبارك، هنا على هاتفك.", "يبدأ التحديث على هذا الجهاز."],
+      "fetching": ["نبحث عن جديد اليوم.", "هاتفك يحدد ما يطلبه."],
+      "downloading": ["نجلب المقالات إلى هاتفك.", "تصل إليك أولا، لا إلى خادم."],
+      "grouping": ["القصة الواحدة تُنشر في عشرات الأماكن.", "نختار نسخة واحدة لكل قصة."],
+      "analysing": ["نقرأ كل مقال من أجلك.", "مشفّر. هاتفك وحده يملك المفتاح."],
+      "onDevice": ["هاتفك يقرأ هذه القصص.", "يجري هنا. لا شيء يغادر هاتفك."],
+      "summarising": ["نكتب ملاحظة قصيرة لكل قصة.", "مشفّر من طرف إلى طرف طوال الطريق."],
+      "preparing": ["نرتب موجزك.", "اقتربنا. ستظهر البطاقات وحدها."]
+    },
+    "nudges": ["احفظ ما لا تستطيع قراءته الآن.", "مقالاتك المحفوظة ما زالت تنتظر.", "اقرأ قصة واحدة جيدا، لا عشرا بسرعة.", "أبرز العناوين تعطيك صورة اليوم.", "الأحدث ليس الأفضل. اقرأ ما لديك.", "لا شيء يصل أسرع إن راقبت."],
+    "a11y": "ميرا تحدّث أخبارك على هذا الهاتف."
+  } },
+  "de": { "headerNarration": {
+    "stages": {
+      "starting": ["Wir arbeiten an deinen News, hier auf dem Handy.", "Aktualisierung startet auf diesem Gerät."],
+      "fetching": ["Wir schauen, was es heute Neues gibt.", "Dein Handy entscheidet, was es abfragt."],
+      "downloading": ["Die Artikel kommen auf dein Handy.", "Sie kommen zuerst zu dir, nicht zum Server."],
+      "grouping": ["Eine Meldung läuft an einem Dutzend Stellen.", "Wir wählen eine Fassung pro Meldung."],
+      "analysing": ["Jeder Artikel wird für dich gelesen.", "Verschlüsselt. Nur dein Handy hat den Schlüssel."],
+      "onDevice": ["Dein Handy liest diese Meldungen.", "Das läuft hier. Nichts verlässt dein Handy."],
+      "summarising": ["Zu jeder Meldung entsteht eine Notiz.", "Durchgehend Ende zu Ende verschlüsselt."],
+      "preparing": ["Dein Feed wird sortiert.", "Fast fertig. Die Karten kommen von selbst."]
+    },
+    "nudges": ["Sichere, was du jetzt nicht lesen kannst.", "Deine gespeicherten Artikel warten noch.", "Lies eine Meldung richtig, nicht zehn schnell.", "Top-Schlagzeilen zeigen dir den Tag.", "Neuer ist nicht besser. Lies, was da ist.", "Nichts kommt schneller, wenn du zusiehst."],
+    "a11y": "Mera aktualisiert deine News auf diesem Handy."
+  } },
+  "en": { "headerNarration": {
+    "stages": {
+      "starting": ["Working on your news, here on your phone.", "Starting a refresh on this device."],
+      "fetching": ["Looking for what is new today.", "Your phone decides what to ask for."],
+      "downloading": ["Pulling the articles onto your phone.", "They come to you first, not to a server."],
+      "grouping": ["One story runs in a dozen places.", "Picking one version of each story."],
+      "analysing": ["Reading each article for you.", "Encrypted. Only your phone holds the key."],
+      "onDevice": ["Your phone is reading these stories.", "This runs here. Nothing leaves your phone."],
+      "summarising": ["Writing a short note for each story.", "Encrypted end to end, the whole way."],
+      "preparing": ["Putting your feed in order.", "Almost there. The cards arrive on their own."]
+    },
+    "nudges": ["Save what you cannot read right now.", "Your saved articles are still waiting.", "Read one story properly, not ten fast.", "Top headlines, if you want the shape of today.", "Newer is not better. Read what is here.", "Nothing arrives faster if you watch."],
+    "a11y": "Mera is updating your news on this phone."
+  } },
+  "es": { "headerNarration": {
+    "stages": {
+      "starting": ["Trabajando en tus noticias, en tu teléfono.", "Iniciando una actualización en este equipo."],
+      "fetching": ["Buscando lo nuevo de hoy.", "Tu teléfono decide qué pedir."],
+      "downloading": ["Trayendo los artículos a tu teléfono.", "Llegan antes a ti que a un servidor."],
+      "grouping": ["Una noticia sale en una docena de sitios.", "Elegimos una versión de cada noticia."],
+      "analysing": ["Leyendo cada artículo para ti.", "Cifrado. Solo tu teléfono tiene la clave."],
+      "onDevice": ["Tu teléfono está leyendo estas noticias.", "Ocurre aquí. Nada sale de tu teléfono."],
+      "summarising": ["Escribiendo una nota por cada noticia.", "Cifrado de extremo a extremo, todo el camino."],
+      "preparing": ["Ordenando tu feed.", "Casi listo. Las tarjetas llegarán solas."]
+    },
+    "nudges": ["Guarda lo que no puedas leer ahora.", "Tus artículos guardados siguen esperando.", "Lee una noticia bien, no diez rápido.", "Los titulares te dan la forma del día.", "Lo nuevo no es mejor. Lee lo que hay.", "Nada llega antes por mirar."],
+    "a11y": "Mera está actualizando tus noticias en este teléfono."
+  } },
+  "fr": { "headerNarration": {
+    "stages": {
+      "starting": ["On travaille sur vos infos, sur votre téléphone.", "Actualisation en cours sur cet appareil."],
+      "fetching": ["On cherche les nouveautés du jour.", "Votre téléphone décide quoi demander."],
+      "downloading": ["Les articles arrivent sur votre téléphone.", "Ils viennent à vous, pas à un serveur."],
+      "grouping": ["Une info paraît à une dizaine d'endroits.", "On garde une version de chaque info."],
+      "analysing": ["Chaque article est lu pour vous.", "Chiffré. Seul votre téléphone a la clé."],
+      "onDevice": ["Votre téléphone lit ces articles.", "Tout se passe ici. Rien ne sort du téléphone."],
+      "summarising": ["Une courte note pour chaque sujet.", "Chiffré de bout en bout, tout du long."],
+      "preparing": ["On met votre fil en ordre.", "Presque fini. Les cartes arrivent seules."]
+    },
+    "nudges": ["Enregistrez ce que vous ne lirez pas maintenant.", "Vos articles enregistrés attendent encore.", "Lisez bien un article, pas dix vite fait.", "Les gros titres donnent la forme du jour.", "Plus récent n'est pas mieux. Lisez l'existant.", "Rien n'arrive plus vite si vous regardez."],
+    "a11y": "Mera met à jour vos infos sur ce téléphone."
+  } },
+  "hi": { "headerNarration": {
+    "stages": {
+      "starting": ["आपकी खबरों पर काम जारी है, आपके फ़ोन पर।", "इस डिवाइस पर रिफ़्रेश शुरू हो रहा है।"],
+      "fetching": ["देख रहे हैं आज नया क्या है।", "आपका फ़ोन तय करता है क्या मांगना है।"],
+      "downloading": ["लेख आपके फ़ोन पर आ रहे हैं।", "वे पहले आप तक आते हैं, सर्वर तक नहीं।"],
+      "grouping": ["एक ही खबर दर्जनों जगह छपती है।", "हर खबर का एक ही संस्करण चुन रहे हैं।"],
+      "analysing": ["हर लेख आपके लिए पढ़ा जा रहा है।", "एन्क्रिप्टेड। चाबी सिर्फ़ आपके फ़ोन पर है।"],
+      "onDevice": ["आपका फ़ोन ये खबरें पढ़ रहा है।", "यह यहीं चलता है। कुछ भी बाहर नहीं जाता।"],
+      "summarising": ["हर खबर के लिए छोटा नोट लिख रहे हैं।", "पूरे रास्ते एंड-टू-एंड एन्क्रिप्टेड।"],
+      "preparing": ["आपकी फ़ीड क्रम में लगा रहे हैं।", "बस थोड़ा और। कार्ड खुद आ जाएंगे।"]
+    },
+    "nudges": ["जो अभी नहीं पढ़ सकते, उसे सेव करें।", "आपके सेव किए लेख अब भी इंतज़ार में हैं।", "एक खबर ठीक से पढ़ें, दस जल्दी नहीं।", "बड़ी सुर्खियां दिन की तस्वीर देती हैं।", "नया बेहतर नहीं। जो है वही पढ़ें।", "देखने से कुछ जल्दी नहीं आता।"],
+    "a11y": "मेरा इस फ़ोन पर आपकी खबरें अपडेट कर रहा है।"
+  } },
+  "id": { "headerNarration": {
+    "stages": {
+      "starting": ["Mengerjakan beritamu, di ponselmu.", "Memulai penyegaran di perangkat ini."],
+      "fetching": ["Mencari apa yang baru hari ini.", "Ponselmu yang menentukan apa yang diminta."],
+      "downloading": ["Menarik artikel ke ponselmu.", "Sampai ke kamu dulu, bukan ke server."],
+      "grouping": ["Satu berita muncul di belasan tempat.", "Memilih satu versi tiap berita."],
+      "analysing": ["Membaca tiap artikel untukmu.", "Terenkripsi. Hanya ponselmu punya kuncinya."],
+      "onDevice": ["Ponselmu sedang membaca berita ini.", "Berjalan di sini. Tidak ada yang keluar."],
+      "summarising": ["Menulis catatan singkat tiap berita.", "Terenkripsi ujung ke ujung, sepanjang jalan."],
+      "preparing": ["Merapikan berandamu.", "Hampir selesai. Kartu muncul sendiri."]
+    },
+    "nudges": ["Simpan yang belum sempat kamu baca.", "Artikel simpananmu masih menunggu.", "Baca satu berita utuh, bukan sepuluh sekilas.", "Berita utama memberi gambaran hari ini.", "Baru bukan berarti lebih baik.", "Tidak ada yang lebih cepat karena ditunggu."],
+    "a11y": "Mera memperbarui beritamu di ponsel ini."
+  } },
+  "it": { "headerNarration": {
+    "stages": {
+      "starting": ["Stiamo lavorando alle tue notizie, qui.", "Aggiornamento avviato su questo telefono."],
+      "fetching": ["Cerchiamo le novità di oggi.", "È il tuo telefono a decidere cosa chiedere."],
+      "downloading": ["Portiamo gli articoli sul tuo telefono.", "Arrivano prima a te che a un server."],
+      "grouping": ["Una notizia esce in una dozzina di posti.", "Teniamo una versione di ogni notizia."],
+      "analysing": ["Leggiamo ogni articolo per te.", "Cifrato. Solo il tuo telefono ha la chiave."],
+      "onDevice": ["Il tuo telefono sta leggendo le notizie.", "Succede qui. Niente esce dal telefono."],
+      "summarising": ["Scriviamo una nota breve per ogni notizia.", "Cifrato end to end, per tutto il tragitto."],
+      "preparing": ["Mettiamo in ordine il tuo feed.", "Ci siamo quasi. Le schede arrivano da sole."]
+    },
+    "nudges": ["Salva quello che ora non riesci a leggere.", "I tuoi articoli salvati aspettano ancora.", "Leggi bene una notizia, non dieci di corsa.", "I titoli principali ti danno la giornata.", "Più nuovo non è meglio. Leggi quello che c'è.", "Nulla arriva prima se resti a guardare."],
+    "a11y": "Mera sta aggiornando le tue notizie su questo telefono."
+  } },
+  "ja": { "headerNarration": {
+    "stages": {
+      "starting": ["この端末でニュースを準備しています。", "この端末で更新を開始しています。"],
+      "fetching": ["今日の新しい話題を探しています。", "何を取得するかは端末が決めます。"],
+      "downloading": ["記事を端末に取り込んでいます。", "サーバーではなく、まずあなたに届きます。"],
+      "grouping": ["同じ話題は何十か所でも流れます。", "各話題から一つだけ選んでいます。"],
+      "analysing": ["一本ずつあなたのために読んでいます。", "暗号化済み。鍵はこの端末だけにあります。"],
+      "onDevice": ["端末がこれらの記事を読んでいます。", "ここで動いています。外には出ません。"],
+      "summarising": ["記事ごとに短いメモを書いています。", "終始エンドツーエンドで暗号化されます。"],
+      "preparing": ["フィードを並べ替えています。", "もう少しです。カードは自動で届きます。"]
+    },
+    "nudges": ["今読めないものは保存しておきましょう。", "保存した記事がまだ待っています。", "十本流し読みより、一本をしっかり。", "主要な見出しで今日の全体をつかめます。", "新しさより、いま手元にあるものを。", "見ていても早くは届きません。"],
+    "a11y": "Meraがこの端末でニュースを更新しています。"
+  } },
+  "ko": { "headerNarration": {
+    "stages": {
+      "starting": ["이 기기에서 뉴스를 준비하고 있어요.", "이 기기에서 새로 고침을 시작해요."],
+      "fetching": ["오늘 새로운 소식을 찾고 있어요.", "무엇을 받을지는 기기가 정해요."],
+      "downloading": ["기사를 기기로 가져오고 있어요.", "서버가 아니라 회원님께 먼저 도착해요."],
+      "grouping": ["같은 소식이 여러 곳에서 나와요.", "소식마다 한 가지만 골라요."],
+      "analysing": ["기사마다 회원님을 위해 읽고 있어요.", "암호화됨. 열쇠는 이 기기에만 있어요."],
+      "onDevice": ["기기가 이 소식들을 읽고 있어요.", "여기서 처리해요. 밖으로 나가지 않아요."],
+      "summarising": ["소식마다 짧은 메모를 쓰고 있어요.", "처음부터 끝까지 종단 간 암호화예요."],
+      "preparing": ["피드를 정리하고 있어요.", "거의 다 됐어요. 카드는 알아서 나와요."]
+    },
+    "nudges": ["지금 못 읽을 것은 저장해 두세요.", "저장한 기사가 아직 기다리고 있어요.", "열 개 훑기보다 하나를 제대로.", "주요 헤드라인으로 오늘을 훑어보세요.", "새것이 더 낫지는 않아요.", "지켜본다고 더 빨리 오지 않아요."],
+    "a11y": "Mera가 이 기기에서 뉴스를 업데이트하고 있어요."
+  } },
+  "nl": { "headerNarration": {
+    "stages": {
+      "starting": ["We werken aan je nieuws, hier op je telefoon.", "Verversen gestart op dit toestel."],
+      "fetching": ["We kijken wat er vandaag nieuw is.", "Je telefoon bepaalt wat er gevraagd wordt."],
+      "downloading": ["De artikelen komen naar je telefoon.", "Ze komen eerst bij jou, niet bij een server."],
+      "grouping": ["Eén bericht staat op tientallen plekken.", "We kiezen één versie van elk bericht."],
+      "analysing": ["Elk artikel wordt voor je gelezen.", "Versleuteld. Alleen jouw telefoon heeft de sleutel."],
+      "onDevice": ["Je telefoon leest deze berichten.", "Dit gebeurt hier. Er gaat niets weg."],
+      "summarising": ["Een kort briefje bij elk bericht.", "Van begin tot eind versleuteld."],
+      "preparing": ["We zetten je feed op volgorde.", "Bijna klaar. De kaarten komen vanzelf."]
+    },
+    "nudges": ["Bewaar wat je nu niet kunt lezen.", "Je bewaarde artikelen wachten nog.", "Lees één bericht goed, niet tien snel.", "Met de koppen zie je hoe de dag eruitziet.", "Nieuwer is niet beter. Lees wat er is.", "Er komt niets sneller door te kijken."],
+    "a11y": "Mera werkt je nieuws bij op deze telefoon."
+  } },
+  "pl": { "headerNarration": {
+    "stages": {
+      "starting": ["Pracujemy nad twoimi wiadomościami, tutaj.", "Odświeżanie ruszyło na tym urządzeniu."],
+      "fetching": ["Szukamy tego, co dziś nowe.", "To twój telefon decyduje, o co pyta."],
+      "downloading": ["Artykuły trafiają na twój telefon.", "Najpierw do ciebie, nie na serwer."],
+      "grouping": ["Jedna wiadomość biegnie w kilkunastu miejscach.", "Wybieramy jedną wersję każdej wiadomości."],
+      "analysing": ["Czytamy dla ciebie każdy artykuł.", "Zaszyfrowane. Klucz ma tylko twój telefon."],
+      "onDevice": ["Twój telefon czyta te wiadomości.", "Dzieje się tutaj. Nic nie opuszcza telefonu."],
+      "summarising": ["Krótka notatka do każdej wiadomości.", "Szyfrowane end-to-end na całej drodze."],
+      "preparing": ["Porządkujemy twój feed.", "Już prawie. Karty pojawią się same."]
+    },
+    "nudges": ["Zapisz to, czego teraz nie przeczytasz.", "Twoje zapisane artykuły wciąż czekają.", "Przeczytaj jedno porządnie, nie dziesięć pobieżnie.", "Nagłówki pokażą ci kształt dnia.", "Nowsze nie znaczy lepsze. Czytaj to, co jest.", "Nic nie przyjdzie szybciej, gdy patrzysz."],
+    "a11y": "Mera aktualizuje twoje wiadomości na tym telefonie."
+  } },
+  "pt-BR": { "headerNarration": {
+    "stages": {
+      "starting": ["Trabalhando nas suas notícias, no seu celular.", "Iniciando uma atualização neste aparelho."],
+      "fetching": ["Procurando o que há de novo hoje.", "Seu celular decide o que pedir."],
+      "downloading": ["Trazendo os artigos para o seu celular.", "Chegam primeiro a você, não a um servidor."],
+      "grouping": ["Uma notícia sai em uma dezena de lugares.", "Escolhendo uma versão de cada notícia."],
+      "analysing": ["Lendo cada artigo para você.", "Criptografado. Só o seu celular tem a chave."],
+      "onDevice": ["Seu celular está lendo estas notícias.", "Acontece aqui. Nada sai do seu celular."],
+      "summarising": ["Escrevendo uma nota curta por notícia.", "Criptografado de ponta a ponta, o tempo todo."],
+      "preparing": ["Organizando o seu feed.", "Quase lá. Os cards aparecem sozinhos."]
+    },
+    "nudges": ["Salve o que você não consegue ler agora.", "Seus artigos salvos ainda estão esperando.", "Leia uma notícia direito, não dez correndo.", "As manchetes mostram o formato do dia.", "Mais novo não é melhor. Leia o que já tem.", "Nada chega mais rápido se você ficar olhando."],
+    "a11y": "A Mera está atualizando suas notícias neste celular."
+  } },
+  "ru": { "headerNarration": {
+    "stages": {
+      "starting": ["Работаем над вашими новостями, здесь.", "Обновление началось на этом устройстве."],
+      "fetching": ["Ищем, что нового сегодня.", "Телефон сам решает, что запросить."],
+      "downloading": ["Переносим статьи на ваш телефон.", "Сначала к вам, а не на сервер."],
+      "grouping": ["Одна новость выходит в десятке мест.", "Оставляем одну версию каждой новости."],
+      "analysing": ["Читаем для вас каждую статью.", "Зашифровано. Ключ только у вашего телефона."],
+      "onDevice": ["Ваш телефон читает эти новости.", "Всё идёт здесь. Ничего не уходит."],
+      "summarising": ["Пишем короткую заметку к каждой новости.", "Сквозное шифрование на всём пути."],
+      "preparing": ["Раскладываем вашу ленту.", "Почти готово. Карточки придут сами."]
+    },
+    "nudges": ["Сохраните то, что сейчас не прочесть.", "Сохранённые статьи всё ещё ждут.", "Прочтите одну как следует, а не десять бегло.", "Главные заголовки покажут день целиком.", "Новее не значит лучше. Читайте то, что есть.", "Быстрее не придёт, если смотреть."],
+    "a11y": "Mera обновляет ваши новости на этом телефоне."
+  } },
+  "th": { "headerNarration": {
+    "stages": {
+      "starting": ["กำลังจัดการข่าวของคุณ บนเครื่องนี้", "เริ่มรีเฟรชบนอุปกรณ์นี้แล้ว"],
+      "fetching": ["กำลังดูว่าวันนี้มีอะไรใหม่", "เครื่องของคุณเป็นคนเลือกสิ่งที่จะขอ"],
+      "downloading": ["กำลังดึงบทความมาที่เครื่องของคุณ", "มาถึงคุณก่อน ไม่ได้ไปที่เซิร์ฟเวอร์"],
+      "grouping": ["ข่าวเดียวลงพร้อมกันได้เป็นสิบที่", "เลือกไว้ข่าวละหนึ่งเวอร์ชัน"],
+      "analysing": ["กำลังอ่านทุกบทความเพื่อคุณ", "เข้ารหัสแล้ว มีแต่เครื่องคุณที่ถือกุญแจ"],
+      "onDevice": ["เครื่องของคุณกำลังอ่านข่าวเหล่านี้", "ทำงานตรงนี้ ไม่มีอะไรออกไปไหน"],
+      "summarising": ["กำลังเขียนโน้ตสั้นให้ทุกข่าว", "เข้ารหัสต้นทางถึงปลายทางตลอดเส้นทาง"],
+      "preparing": ["กำลังจัดเรียงฟีดของคุณ", "ใกล้เสร็จแล้ว การ์ดจะขึ้นเอง"]
+    },
+    "nudges": ["เก็บสิ่งที่ตอนนี้ยังไม่ได้อ่านไว้ก่อน", "บทความที่คุณบันทึกไว้ยังรออยู่", "อ่านหนึ่งข่าวให้จบ ดีกว่าสิบข่าวผ่านๆ", "พาดหัวเด่นช่วยให้เห็นภาพรวมของวัน", "ใหม่กว่าไม่ได้แปลว่าดีกว่า", "จ้องรอก็ไม่ได้มาเร็วขึ้น"],
+    "a11y": "Mera กำลังอัปเดตข่าวของคุณบนเครื่องนี้"
+  } },
+  "tr": { "headerNarration": {
+    "stages": {
+      "starting": ["Haberlerin üzerinde çalışıyoruz, telefonunda.", "Bu cihazda yenileme başladı."],
+      "fetching": ["Bugün ne var diye bakıyoruz.", "Ne isteneceğine telefonun karar veriyor."],
+      "downloading": ["Yazılar telefonuna geliyor.", "Önce sana gelir, sunucuya değil."],
+      "grouping": ["Aynı haber onlarca yerde çıkar.", "Her haberden tek sürüm seçiyoruz."],
+      "analysing": ["Her yazı senin için okunuyor.", "Şifreli. Anahtar yalnızca telefonunda."],
+      "onDevice": ["Telefonun bu haberleri okuyor.", "Burada oluyor. Hiçbir şey dışarı çıkmıyor."],
+      "summarising": ["Her habere kısa bir not yazılıyor.", "Baştan sona uçtan uca şifreli."],
+      "preparing": ["Akışını sıraya koyuyoruz.", "Az kaldı. Kartlar kendiliğinden gelecek."]
+    },
+    "nudges": ["Şimdi okuyamayacaklarını kaydet.", "Kaydettiğin yazılar hâlâ bekliyor.", "Bir haberi doğru oku, on tanesini hızlı değil.", "Öne çıkan başlıklar günü özetler.", "Yeni olan daha iyi değil. Elindekini oku.", "Baktığın için daha hızlı gelmez."],
+    "a11y": "Mera bu telefonda haberlerini güncelliyor."
+  } },
+  "uk": { "headerNarration": {
+    "stages": {
+      "starting": ["Працюємо над вашими новинами, тут.", "Оновлення почалося на цьому пристрої."],
+      "fetching": ["Шукаємо, що нового сьогодні.", "Телефон сам вирішує, що запитати."],
+      "downloading": ["Переносимо статті на ваш телефон.", "Спершу до вас, а не на сервер."],
+      "grouping": ["Одна новина виходить у десятку місць.", "Лишаємо одну версію кожної новини."],
+      "analysing": ["Читаємо для вас кожну статтю.", "Зашифровано. Ключ лише у вашого телефона."],
+      "onDevice": ["Ваш телефон читає ці новини.", "Усе відбувається тут. Нічого не йде геть."],
+      "summarising": ["Пишемо коротку нотатку до кожної новини.", "Наскрізне шифрування на всьому шляху."],
+      "preparing": ["Розкладаємо вашу стрічку.", "Майже готово. Картки прийдуть самі."]
+    },
+    "nudges": ["Збережіть те, чого зараз не прочитати.", "Збережені статті досі чекають.", "Прочитайте одну як слід, а не десять побіжно.", "Головні заголовки покажуть цілий день.", "Новіше не означає краще. Читайте те, що є.", "Швидше не прийде, якщо дивитися."],
+    "a11y": "Mera оновлює ваші новини на цьому телефоні."
+  } },
+  "vi": { "headerNarration": {
+    "stages": {
+      "starting": ["Đang lo tin của bạn, ngay trên máy này.", "Bắt đầu làm mới trên thiết bị này."],
+      "fetching": ["Đang xem hôm nay có gì mới.", "Máy của bạn quyết định sẽ hỏi gì."],
+      "downloading": ["Đang kéo các bài về máy của bạn.", "Chúng đến với bạn trước, không qua máy chủ."],
+      "grouping": ["Một tin chạy ở cả chục nơi cùng lúc.", "Chọn một bản cho mỗi tin."],
+      "analysing": ["Đang đọc từng bài cho bạn.", "Đã mã hóa. Chỉ máy bạn giữ khóa."],
+      "onDevice": ["Máy của bạn đang đọc các tin này.", "Chạy ngay đây. Không gì rời khỏi máy."],
+      "summarising": ["Đang viết ghi chú ngắn cho mỗi tin.", "Mã hóa đầu cuối suốt cả chặng."],
+      "preparing": ["Đang sắp xếp bảng tin của bạn.", "Sắp xong. Các thẻ sẽ tự hiện ra."]
+    },
+    "nudges": ["Lưu lại thứ bây giờ bạn chưa đọc được.", "Bài bạn đã lưu vẫn đang chờ.", "Đọc kỹ một bài hơn lướt mười bài.", "Tin nổi bật cho bạn thấy hình dáng của ngày.", "Mới hơn không có nghĩa là hay hơn.", "Nhìn mãi cũng không đến nhanh hơn."],
+    "a11y": "Mera đang cập nhật tin của bạn trên máy này."
+  } },
+  "zh-CN": { "headerNarration": {
+    "stages": {
+      "starting": ["正在处理你的新闻，就在这台手机上。", "已在这台设备上开始刷新。"],
+      "fetching": ["正在看今天有什么新消息。", "由你的手机决定要请求什么。"],
+      "downloading": ["正在把文章取到你的手机上。", "先到你这里，而不是某台服务器。"],
+      "grouping": ["同一条新闻会在十几处同时出现。", "每条新闻只保留一个版本。"],
+      "analysing": ["正在为你逐篇阅读。", "已加密。钥匙只在你的手机上。"],
+      "onDevice": ["你的手机正在读这些新闻。", "都在本机进行，没有任何内容外传。"],
+      "summarising": ["正在为每条新闻写一段短注。", "全程端到端加密。"],
+      "preparing": ["正在整理你的信息流。", "快好了，卡片会自己出现。"]
+    },
+    "nudges": ["现在读不完的，先存起来。", "你收藏的文章还在等着。", "认真读一篇，胜过草草读十篇。", "看看头条，就知道今天大概的样子。", "更新的不等于更好，先读手上的。", "盯着看也不会来得更快。"],
+    "a11y": "Mera 正在这台手机上更新你的新闻。"
+  } },
+  "zh-TW": { "headerNarration": {
+    "stages": {
+      "starting": ["正在處理你的新聞，就在這支手機上。", "已在這台裝置上開始重新整理。"],
+      "fetching": ["正在看今天有什麼新消息。", "由你的手機決定要請求什麼。"],
+      "downloading": ["正在把文章取到你的手機上。", "先到你這裡，而不是某台伺服器。"],
+      "grouping": ["同一則新聞會在十幾處同時出現。", "每則新聞只保留一個版本。"],
+      "analysing": ["正在為你逐篇閱讀。", "已加密。鑰匙只在你的手機上。"],
+      "onDevice": ["你的手機正在讀這些新聞。", "都在本機進行，沒有任何內容外傳。"],
+      "summarising": ["正在為每則新聞寫一段短註。", "全程端對端加密。"],
+      "preparing": ["正在整理你的資訊流。", "快好了，卡片會自己出現。"]
+    },
+    "nudges": ["現在讀不完的，先存起來。", "你收藏的文章還在等著。", "認真讀一篇，勝過草草讀十篇。", "看看頭條，就知道今天大概的樣子。", "更新的不等於更好，先讀手上的。", "盯著看也不會來得更快。"],
+    "a11y": "Mera 正在這支手機上更新你的新聞。"
+  } }
+}

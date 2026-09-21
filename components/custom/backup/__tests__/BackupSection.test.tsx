@@ -301,9 +301,8 @@ describe('a failed Drive connect must not advance', () => {
 describe('the new-phone path', () => {
     it('hands off to the shared recovery flow rather than keeping a second copy', async () => {
         // The flow itself is covered by BackupRecoveryFlow.test. What matters
-        // HERE is only that this surface delegates: onboarding runs the same
-        // component, and the confirm wording, the connect-and-verify round trip
-        // and the post-restore reload must not drift between the two.
+        // HERE is only that this surface delegates — it is the flow's only
+        // caller now that onboarding no longer runs it as a pre-wizard step.
         const r = render(<BackupSection />);
         await waitFor(() => r.getByTestId('backup-already-have'));
         fireEvent.press(r.getByTestId('backup-already-have'));
@@ -313,6 +312,48 @@ describe('the new-phone path', () => {
     it('is reachable with backup off, because a fresh install has no key', async () => {
         const r = render(<BackupSection />);
         await waitFor(() => r.getByTestId('backup-already-have'));
+    });
+
+    it('is reachable with backup ON, for a code that came from ANOTHER device', async () => {
+        // It used to live only in the OFF state, so once backup was configured
+        // typing a recovery code was unreachable — and the row that IS in the
+        // configured state ("Restore from a backup") uses the key already on
+        // this phone, which is a different thing entirely.
+        mockProviderId = 'icloud';
+        mockIsConfirmed.mockResolvedValue(true);
+        const r = render(<BackupSection />);
+        await waitFor(() => r.getByTestId('backup-already-have-on'));
+        fireEvent.press(r.getByTestId('backup-already-have-on'));
+        await waitFor(() => r.getByTestId('recovery-flow'));
+    });
+
+    it('opens straight into the flow when deep-linked from Settings', async () => {
+        // Settings > "Restore from a backup" pushes `manage-data?restore=1`.
+        const r = render(<BackupSection autoOpenRecover />);
+        await waitFor(() => r.getByTestId('recovery-flow'));
+    });
+
+    it('does not REOPEN the flow after the user cancels out of it', async () => {
+        // The latch. Without it the auto-open effect re-fires the moment the
+        // stage resolves again and the user cannot leave.
+        const r = render(<BackupSection autoOpenRecover />);
+        await waitFor(() => r.getByTestId('recovery-flow'));
+        fireEvent.press(r.getByTestId('recovery-flow'));
+        await waitFor(() => r.getByTestId('backup-set-up'));
+        expect(r.queryByTestId('recovery-flow')).toBeNull();
+    });
+
+    it('cancelling on a CONFIGURED device returns to the on state, not to off', async () => {
+        // The cancel target was hardcoded to 'off', which told a user with
+        // backup working that it had been switched off.
+        mockProviderId = 'icloud';
+        mockIsConfirmed.mockResolvedValue(true);
+        const r = render(<BackupSection autoOpenRecover />);
+        await waitFor(() => r.getByTestId('recovery-flow'));
+
+        fireEvent.press(r.getByTestId('recovery-flow'));
+        await waitFor(() => r.getByTestId('backup-turn-off'));
+        expect(r.queryByTestId('backup-set-up')).toBeNull();
     });
 });
 

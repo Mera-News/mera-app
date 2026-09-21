@@ -43,6 +43,82 @@ export function replaceClauseDashes(text: string): string {
   );
 }
 
+/** Sentence boundary, keeping the separator so the kept prefix can be
+ *  reassembled with its original whitespace. `split` with a capturing group
+ *  yields [sentence, separator, sentence, ...], so the even indices are the
+ *  sentences. Lookbehind keeps the terminator on the sentence it ends, which
+ *  `trailingQuestion` above already relies on. */
+const SENTENCE_BOUNDARY = /((?<=[.!?…])\s+|\n+)/;
+
+/** How many opening words make two sentences "the same sentence again". */
+const REPEAT_PREFIX_WORDS = 6;
+
+/** Words only, case and punctuation folded away, so a repeat is recognised
+ *  across a changed comma or a smart quote. Unicode-aware: a Russian or Arabic
+ *  reply must fold the same way, and `[a-z]` would empty it. */
+function proseWords(sentence: string): string[] {
+  return sentence
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+/**
+ * Cut a reply at the point it starts repeating itself.
+ *
+ * THE DEFECT THIS EXISTS FOR, measured on device: a `conversation/correction`
+ * turn answered "Done. The chess fact is gone." and then wrote "I removed the
+ * chess hobby you had on file. Let me know if you need anything else." about
+ * fifteen times, alternating two closers, until it hit the token cap and
+ * truncated mid-word. That reply was persisted and shown. It was the loop's own
+ * `reply`, not an accumulation across legs: the turn summary logged
+ * `replyChars: 1227` against a maximum of 183 on every other turn of the
+ * session, so the model genuinely generated it.
+ *
+ * A CUT, not a de-duplication. Dropping the repeats and keeping the tail would
+ * leave the mid-word truncation as the last thing the user reads. Everything
+ * from the first repeat on is the loop.
+ *
+ * This is the one reply defect that gets a deterministic rewrite rather than a
+ * re-ask, and the distinction is the point: for a false save claim the wording
+ * IS the content, so a strip would mangle a real sentence and the re-ask is
+ * worth its leg. Repeats two through fifteen carry no information at all, so
+ * removing them loses nothing, and a model that has just looped is the worst
+ * candidate for being asked to try again.
+ *
+ * Precision first, since this runs on every reply:
+ *  - three sentences minimum, because a loop is a RUN and two sentences that
+ *    happen to rhyme are not one;
+ *  - a whole-sentence repeat counts at any length, which is unambiguous;
+ *  - a prefix repeat needs six words on both sides, so "Got it." and "Got it,
+ *    noted." never collide.
+ */
+export function collapseRepetitionLoop(text: string): string {
+  if (!text) return text;
+  const parts = text.split(SENTENCE_BOUNDARY);
+  // Even indices are sentences; fewer than three of them is not a loop.
+  if (parts.length < 5) return text;
+
+  const wholes = new Set<string>();
+  const prefixes = new Set<string>();
+  for (let i = 0; i < parts.length; i += 2) {
+    const words = proseWords(parts[i]);
+    if (words.length === 0) continue;
+    const whole = words.join(' ');
+    const prefix =
+      words.length >= REPEAT_PREFIX_WORDS
+        ? words.slice(0, REPEAT_PREFIX_WORDS).join(' ')
+        : null;
+    if (wholes.has(whole) || (prefix !== null && prefixes.has(prefix))) {
+      return parts.slice(0, i).join('').trim();
+    }
+    wholes.add(whole);
+    if (prefix !== null) prefixes.add(prefix);
+  }
+  return text;
+}
+
 /**
  * Everything applied to a prose string before a user reads it.
  *
@@ -53,10 +129,17 @@ export function replaceClauseDashes(text: string): string {
  * The whitespace collapse runs AFTER the dash pass on purpose: ", " emitted
  * where the model already had spaces around the dash would otherwise leave a
  * double space, and the collapse cleans it up for free.
+ *
+ * The repetition cut runs between the two: it splits on sentence ends, and a
+ * clause dash rewritten to a comma can only join text that would otherwise
+ * have been read as one sentence anyway, while the whitespace collapse must
+ * come last so it also tidies whatever the cut left at the seam.
  */
 export function cleanProse(text: string): string {
   if (!text) return text;
-  return replaceClauseDashes(text).replace(/[ \t]{2,}/g, ' ').trim();
+  return collapseRepetitionLoop(replaceClauseDashes(text))
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
 }
 
 /**

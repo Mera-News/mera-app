@@ -1,10 +1,16 @@
 // The screen-title size for the Feed and Dashboard headers, chosen from the
 // window width.
 //
-// These two titles share a row with the status mark, the importance filter chip
-// and (on the Dashboard) the notification bell. At a fixed `4xl` (36px) that row
-// ran out of width on a standard phone and "Dashboard" truncated to "Dasbo…" —
-// and a screen title that cannot say its own name is worse than a smaller one.
+// These two titles share a row with the status mark and (on the Dashboard) the
+// notification bell. At a fixed `4xl` (36px) that row ran out of width on a
+// standard phone and "Dashboard" truncated to "Dasbo…" — and a screen title
+// that cannot say its own name is worse than a smaller one.
+//
+// The row also carried a High/Med/Low importance chip when these breakpoints
+// were measured; that chip is gone, so there is more slack than the numbers
+// below assume. They are deliberately NOT retuned on that basis: the binding
+// constraint was never the chip but the WORD, and "Bảng điều khiển" at 36px is
+// exactly as wide as it was.
 //
 // Two mechanisms, and they cover different failures:
 //   • This function picks the CEILING from the window width, so a phone starts

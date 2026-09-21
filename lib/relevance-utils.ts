@@ -7,7 +7,7 @@
 // `bandOf`/`bandRank` (feed-select/ownership.ts) are now the ONE source of
 // truth for all three; this file reads cutoffs from `bandOf` instead of
 // re-hardcoding them, so the worded chip can never again disagree with feed
-// ordering, the importance filter, or a Dashboard section about a story's band.
+// ordering, or a Dashboard section about a story's band.
 import { bandOf } from '@/lib/news-harness/feed-select/ownership';
 
 export interface RelevanceColors {

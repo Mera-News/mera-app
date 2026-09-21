@@ -27,6 +27,7 @@ import NativeUpdateGate from '@/components/custom/NativeUpdateGate';
 import OTASilentUpdater from '@/components/custom/OTASilentUpdater';
 import TranslationUnavailablePrompt from '@/components/custom/TranslationUnavailablePrompt';
 import ToastInitializer from '@/components/custom/ToastInitializer';
+import ToastDeck from '@/components/custom/toast/ToastDeck';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { TextScaleProvider } from '@/lib/typography/TextScaleProvider';
 import '@/global.css';
@@ -397,6 +398,11 @@ export default Sentry.wrap(function RootLayout() {
               <OTASilentUpdater />
               <TranslationUnavailablePrompt />
               <AppRoot />
+              {/* LAST on purpose: toasts have to paint above the router stack,
+                  the tab bar and the floating chat bubble, and on native that
+                  is decided by sibling order. Inside TextScaleProvider so they
+                  still scale, and inside SafeAreaProvider for the insets. */}
+              <ToastDeck />
             </NativeUpdateGate>
             </TextScaleProvider>
           </GluestackUIProvider>

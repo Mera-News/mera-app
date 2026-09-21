@@ -834,10 +834,20 @@ function buildTurnBoxes(
  * extracted on nearly every turn, so keeping every settled box would put a line
  * under most bubbles in the thread. A failure is always kept: a failure the
  * user never learns about is the case this surface exists to prevent.
+ *
+ * A TERMINAL is kept for exactly that reason, and it has to be its own clause.
+ * The terminal sentence is carried BY this box, so dropping the box drops the
+ * only thing on screen that says the turn ended badly. Measured on device: a
+ * residence turn spent its legs on place lookups that all missed, ended
+ * `leg-cap` with no proposal and an empty reply, and every tool call had
+ * succeeded on its own terms, so `changedData` was false, `failedCount` was
+ * zero, the box was dropped and the user was left looking at their own message
+ * with no response of any kind. Silence is the one outcome this whole surface
+ * exists to prevent.
  */
 function keepBox(box: AgentStepsItem): boolean {
   if (!box.collapsed) return true;
-  return box.changedData || box.failedCount > 0;
+  return box.changedData || box.failedCount > 0 || box.terminal !== null;
 }
 
 // ---------------------------------------------------------------------------

@@ -27,8 +27,8 @@
 // tab. Reproducing the animation would mean reproducing that gate too.
 //
 // The emphasis is a `transform: scale`, NOT a larger `size`. A bigger size grows
-// the SVG's layout box, which reflows the title row and shoves the importance
-// filter chip sideways every time a sync starts. A transform is composited and
+// the SVG's layout box, which reflows the title row and shoves whatever sits
+// beside it sideways every time a sync starts. A transform is composited and
 // costs the row nothing.
 
 import MeraLogo from '@/components/custom/MeraLogo';

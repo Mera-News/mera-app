@@ -329,8 +329,8 @@ describe('isFactSectionViable', () => {
 // It is load-bearing well beyond this module. Every gate, filter, cull and chip
 // in the app keys on the BAND, not on the score value — `sortByPriority`
 // (feed-ordering/priority-order) orders by `relevanceBandRank(relevance)`, the
-// importance filter and the top-headline cull both go through
-// `relevanceBandRank`, and Dashboard section viability goes through `bucketOf`.
+// top-headline cull goes through `relevanceBandRank`, and Dashboard section
+// viability goes through `bucketOf`.
 // Because bucketing is band-preserving, all of them see an IDENTICAL world
 // whether the legacy path persisted the raw LLM score or its bucketed
 // representative. That equivalence is what makes bucketing safe; if the two

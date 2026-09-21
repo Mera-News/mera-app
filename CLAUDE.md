@@ -38,10 +38,10 @@ invariants and traps.
 | Driving the simulator or emulator, QA, local AI-flow iteration | `mera-app-harness` |
 
 No skill owns `lib/{explore,news-search,tutorials,tracking,notifications,background,diagnostics,
-observability,navigation,hooks,utils,config,layout,typography,user-context}`, most of `lib/services/`,
+observability,navigation,hooks,utils,config,layout,typography,toast,user-context}`, most of `lib/services/`,
 most loose `lib/*.ts` (notably `article-service.ts`, the main article GraphQL client), or
 `components/custom/{for-you,config-panel,explore,profile,profile-hub,locations,notifications,
-publication-preferences,saved-suggestions,not-interested,hygiene,tutorials}`. Read the code.
+publication-preferences,saved-suggestions,not-interested,hygiene,toast,tutorials}`. Read the code.
 
 ## Invariants
 

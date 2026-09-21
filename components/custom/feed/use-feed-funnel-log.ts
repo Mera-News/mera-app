@@ -23,7 +23,6 @@ import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import type { FeedListItem } from '@/lib/stores/feed-list-selector';
 import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
-import type { ImportanceThreshold } from '@/lib/feed-ordering/importance-filter';
 
 const TAG = '[feed-funnel]';
 
@@ -51,24 +50,24 @@ function title(item: FeedListItem): string {
  *                   many rows are above it. Rows at or after it are the seen block.
  * @param userCtx    the same geo/language context the screen feeds `buildFeedList`,
  *                   so the diagnostic groups exactly the way the feed did.
- * @param threshold  the ACTIVE importance filter on the screen.
- * @param hiddenByImportance how many built rows that filter is hiding. Without
- *                   these two the last stage of the funnel ("order says N,
- *                   rendered M") reads as an unexplained loss — i.e. like a bug.
+ *
+ * There is no longer a render-time stage after `order`: the screen renders the
+ * persisted order as it is. The two arguments that used to describe one (the
+ * active importance band, and how many rows it was withholding) went with the
+ * filter, so "order says N, rendered N" is now the expected reading and a gap
+ * between them is a real defect rather than a setting.
  */
 export function useFeedFunnelLog(
   data: FeedListItem[],
   dividerIdx: number,
   userCtx: UserGeoLanguageContext | null,
-  threshold: ImportanceThreshold,
-  hiddenByImportance: number,
 ): void {
   const lastEmittedCountRef = useRef(-1);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The timer must read the LATEST args when it fires, not the ones captured by
   // whichever render happened to schedule it.
-  const latestRef = useRef({ data, dividerIdx, userCtx, threshold, hiddenByImportance });
-  latestRef.current = { data, dividerIdx, userCtx, threshold, hiddenByImportance };
+  const latestRef = useRef({ data, dividerIdx, userCtx });
+  latestRef.current = { data, dividerIdx, userCtx };
 
   useEffect(() => {
     if (!__DEV__) return;
@@ -81,13 +80,12 @@ export function useFeedFunnelLog(
     if (timerRef.current) return;
     timerRef.current = setTimeout(() => {
       timerRef.current = null;
-      const { data: d, dividerIdx: divider, userCtx: ctx, threshold: th, hiddenByImportance: hidden } =
-        latestRef.current;
+      const { data: d, dividerIdx: divider, userCtx: ctx } = latestRef.current;
       if (d.length === lastEmittedCountRef.current) return;
       lastEmittedCountRef.current = d.length;
-      emitFunnelLog(d, divider, ctx, th, hidden);
+      emitFunnelLog(d, divider, ctx);
     }, SETTLE_MS);
-  }, [data, dividerIdx, userCtx, threshold, hiddenByImportance]);
+  }, [data, dividerIdx, userCtx]);
 
   // Unmount-only cleanup — deliberately its own effect with an empty dep array,
   // so it cannot cancel a pending timer on a mere dependency change.
@@ -106,20 +104,17 @@ function emitFunnelLog(
   data: FeedListItem[],
   dividerIdx: number,
   userCtx: UserGeoLanguageContext | null,
-  threshold: ImportanceThreshold,
-  hiddenByImportance: number,
 ): void {
   const now = Date.now();
   try {
     const fo = useFeedOrderStore.getState();
     const os = useOpenedStoriesStore.getState();
     const suggestions = useForYouStore.getState().suggestions;
-    // Threaded the threshold in on purpose: the Feed's stats sentence is
-    // importance-aware, and this line exists to be the EXACT number on screen.
+    // Exactly what the header sentence computes, so this line is the number on
+    // screen rather than a second derivation of it.
     const header = computeFeedCounts(suggestions, {
       nowMs: now,
       openedArticleIds: os.articleIds,
-      importanceThreshold: threshold,
     });
 
     const r = computeFeedFunnel({
@@ -146,7 +141,7 @@ function emitFunnelLog(
     const lines: string[] = [
       '',
       `${TAG} ── RENDERED ${data.length} cards (${dividerIdx} unseen · ${Math.max(0, data.length - dividerIdx)} seen) ──`,
-      `  header says            : ${header.relevantCount} relevant / ${header.analysedCount} analysed / ${header.readCount} read  [48h window, includes reason_pending, min band '${threshold}']`,
+      `  header says            : ${header.relevantCount} relevant / ${header.analysedCount} analysed / ${header.readCount} read  [48h window, includes reason_pending]`,
       `  suggestions in DB      : ${r.totals.rows}  (unscored ${r.totals.status.unscored} · reason_pending ${r.totals.status.reasonPending} · complete ${r.totals.status.complete})`,
       `  ── why rows never reached the feed (${Math.round(r.gates.renderWindowMs / 3_600_000)}h window + relevance > ${r.gates.renderGate}, complete only) ──`,
       `    not complete         : -${r.dropped.notComplete}${pct(r.dropped.notComplete)}`,
@@ -185,13 +180,6 @@ function emitFunnelLog(
     if (!sums.visibilityAttributionSums || !sums.memberSumMatchesVisible || !sums.orderReasonsSum) {
       lines.push('    ⚠ report inconsistent — feed-diagnostics is stale relative to the pipeline');
     }
-
-    // The last stage: rows that were built, persisted and ordered, and are then
-    // withheld at RENDER time only. Nothing is destroyed here — lowering the
-    // pill brings every one of them straight back — but without this line the
-    // drop from `persisted order` to the rendered count looks like a defect.
-    lines.push(`  ── importance filter (display-only, min band '${threshold}') ──`);
-    lines.push(`    hidden by importance : -${hiddenByImportance}`);
 
     // Relevance distribution over EVERY row. `relevance` is what the render
     // gate filters on — it is NOT the composite `score` printed per card below.

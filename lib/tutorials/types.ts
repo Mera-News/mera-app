@@ -35,7 +35,6 @@ export type ChapterId =
   // level: 'advanced'
   | 'sources'
   | 'filters'
-  | 'signal'
   | 'chat'
   | 'protocol';
 

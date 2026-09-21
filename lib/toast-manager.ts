@@ -3,13 +3,12 @@ import { AccessibilityInfo } from 'react-native';
 import type React from 'react';
 import { getBellAnchor } from './notifications/bell-anchor';
 import logger from './logger';
+import { TOAST_MIN_DURATION_MS } from './toast/toast-queue';
 
-/**
- * Floor for how long ANY toast stays on screen. Anything shorter reads as a
- * flicker — the user cannot finish reading it before it goes. Errors and
- * successes deliberately sit longer; nothing sits shorter.
- */
-export const TOAST_MIN_DURATION_MS = 2000;
+// The floor now belongs to the queue that ENFORCES it: it is both the minimum
+// lifetime of any toast and the clamp the deck applies to the front card while
+// others wait behind it. Re-exported so this module stays its public home.
+export { TOAST_MIN_DURATION_MS };
 
 /** Options for a notification-center-backed toast (see showNotifiedToast). */
 export interface NotifiedToastOptions {
@@ -44,8 +43,10 @@ export interface NotifiedToastOptions {
 
 /** The subset of useToast()'s show() options this manager actually passes. */
 export interface ToastShowOptions {
-    placement?: 'top' | 'bottom' | 'top right' | 'top left' | 'bottom right' | 'bottom left';
+    placement?: 'top' | 'bottom';
     duration?: number;
+    /** Exempt from the deck's backlog clamp — see `showNotifiedToast`. */
+    holdFullDuration?: boolean;
     render: (props: { id: string }) => React.ReactNode;
 }
 
@@ -388,6 +389,9 @@ class ToastManager {
             // short and it is torn off mid-flight; too long and an invisible
             // toast stays mounted over the UI after the animation has finished.
             duration: notifiedToastModule.notifiedToastDurationMs(canFly),
+            // Which is also why it opts out of the deck's backlog clamp: cutting
+            // this one to the 2000ms floor would tear it off mid-flight.
+            holdFullDuration: true,
             render: () =>
                 React.createElement(NotifiedToast, {
                     title,

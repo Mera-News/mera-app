@@ -794,6 +794,36 @@ describe('turn terminals reach the steps box', () => {
     );
     expect(box?.terminal).toBeNull();
   });
+
+  // BOTH tests above run with turnActive: true, which leaves the box expanded
+  // and returns from keepBox before it decides anything. The collapsed path is
+  // where the terminal sentence was actually being thrown away.
+  //
+  // Measured on device: a residence turn spent its legs on place lookups that
+  // all missed, ended leg-cap with no proposal and an EMPTY reply. Every tool
+  // call had succeeded on its own terms, so changedData was false and
+  // failedCount was zero, the box was dropped with its terminal inside it, and
+  // the user was left looking at their own message with no response at all.
+  it('KEEPS a settled pure-read box that carries a terminal, so the turn is not silent', () => {
+    const box = boxFor(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', '', [tc])],
+        turnActive: false,
+        agentTerminal: 'leg-cap',
+      }),
+    );
+    expect(box?.terminal).toBe('leg-cap');
+  });
+
+  it('still drops a settled pure-read box with NO terminal, so the thread stays quiet', () => {
+    const box = boxFor(
+      base({
+        live: [userMsg('u1'), assistantMsg('a1', 'Sure.', [tc])],
+        turnActive: false,
+      }),
+    );
+    expect(box).toBeUndefined();
+  });
 });
 
 // The narrowing is ONE function so a terminal added to the loop is either

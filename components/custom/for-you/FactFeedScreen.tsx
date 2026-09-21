@@ -2,10 +2,6 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
 import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
-import { filterGroupsByImportance } from '@/components/custom/for-you/dashboard-importance';
-import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
-import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
-import type { ImportanceThreshold } from '@/lib/feed-ordering/importance-filter';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import {
   GLASS_HEADER_SCRIM,
@@ -112,13 +108,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   // which `buildFactRows` treats as the legacy geo/language-blind pick.
   const userGeoLanguageCtx = useUserGeoLanguageContext();
 
-  // Seeded from the Dashboard's importance filter so tapping into a section
-  // never shows MORE stories than the preview promised — then LOCAL from
-  // there on: this screen's dropdown is deliberately ephemeral (plain state,
-  // no persistence), resetting to the Dashboard's value on every visit.
-  const dashboardThreshold = useImportanceFilterStore((s) => s.dashboardThreshold);
-  const [threshold, setThreshold] = useState<ImportanceThreshold>(dashboardThreshold);
-
   // Hoisted so the "next fact" footer below can reuse it instead of calling
   // `buildFactRows` a second time — this was previously computed inline and
   // thrown away, keeping only this section's own `groups`.
@@ -130,47 +119,27 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
 
   const groups: FactRowGroup[] = useMemo(() => {
     const found = allRows.find((r) => r.factId === factId)?.groups ?? [];
-    const filtered = filterGroupsByImportance(found, threshold);
     // Order this screen by article publication freshness — newest PUBLISHED on
     // top (`pubDateMs`), not suggestion-creation time (the shared `cardCompare`
     // the Dashboard uses). Copy before sorting so the selector's array is left
     // untouched. Tiebreak on `_id` for a stable order.
-    return [...filtered].sort(
+    return [...found].sort(
       (a, b) =>
         b.pubDateMs - a.pubDateMs ||
         (a.data._id < b.data._id ? -1 : a.data._id > b.data._id ? 1 : 0),
     );
-  }, [allRows, factId, threshold]);
+  }, [allRows, factId]);
 
-  // The NEXT fact, in Dashboard-VISIBLE order — so tapping the footer below
-  // always lands on a section the user could also have reached by scrolling
-  // the Dashboard, never a section hidden by their Dashboard filter.
-  //
-  // Deliberately `dashboardThreshold` (the persisted Dashboard pill), NOT this
-  // screen's own ephemeral `threshold` — that local dropdown only reshapes
-  // THIS section's article list and resets to `dashboardThreshold` on every
-  // visit (see its declaration above); the ORDER of sections is a Dashboard
-  // concept and must use the Dashboard's own filter, or "next" could point at
-  // a section this user's Dashboard never actually shows.
-  //
-  // Mirrors DashboardSectionsFeed's own filter-and-drop rule exactly
-  // (DashboardSectionsFeed.tsx ~146-152): a row that HAD groups but the filter
-  // hid all of them is dropped; a row with no groups to begin with (a headline
-  // shell whose denominator line is its content) is kept.
-  const dashboardVisibleRows = useMemo(
-    () =>
-      allRows.filter((row) => {
-        const filteredGroups = filterGroupsByImportance(row.groups, dashboardThreshold);
-        return !(row.groups.length > 0 && filteredGroups.length === 0);
-      }),
-    [allRows, dashboardThreshold],
-  );
-
+  // The NEXT fact, in Dashboard order — so tapping the footer below always
+  // lands on a section the user could also have reached by scrolling the
+  // Dashboard. This used to drop rows whose every group the Dashboard's
+  // importance pill had hidden; with that pill gone the Dashboard shows every
+  // row it builds, so `allRows` IS the Dashboard-visible order.
   const nextFact = useMemo(() => {
-    const idx = dashboardVisibleRows.findIndex((r) => r.factId === factId);
+    const idx = allRows.findIndex((r) => r.factId === factId);
     if (idx === -1) return null;
-    return dashboardVisibleRows[idx + 1] ?? null;
-  }, [dashboardVisibleRows, factId]);
+    return allRows[idx + 1] ?? null;
+  }, [allRows, factId]);
 
   const nextFactTitle = nextFact ? sectionTitle(t, nextFact) : null;
 
@@ -377,11 +346,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
               />
             )}
           </Box>
-          <ImportanceFilterDropdown
-            value={threshold}
-            onChange={setThreshold}
-            testIDPrefix="fact-feed-importance"
-          />
         </HStack>
       </Box>
       <FlatList

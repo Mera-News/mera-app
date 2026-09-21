@@ -23,8 +23,6 @@ import DailyLimitCard from '@/components/custom/DailyLimitCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
-import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
-import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
@@ -189,10 +187,6 @@ const MeraNewsScreen: React.FC = () => {
     // mounted after their first visit (display-toggled) so scroll state
     // survives a switch.
     const [activeSubTab, setActiveSubTab] = useState<ForYouSubTab>('feed');
-    // Display-only importance filter (header pills). Default 'low' shows
-    // everything — see lib/stores/importance-filter-store.
-    const dashboardThreshold = useImportanceFilterStore((s) => s.dashboardThreshold);
-    const setDashboardThreshold = useImportanceFilterStore((s) => s.setDashboardThreshold);
     const [storiesVisited, setStoriesVisited] = useState(false);
     const [savedVisited, setSavedVisited] = useState(false);
     const [historyVisited, setHistoryVisited] = useState(false);
@@ -733,20 +727,19 @@ const MeraNewsScreen: React.FC = () => {
                                     onPress={toggleStatus}
                                     testID="dashboard-status-indicator"
                                 />
-                                {/* The slack the title gave up, so the filter
-                                    chip stays pinned right. `flex-basis: 0` means
-                                    it adds nothing to the row's natural width, so
-                                    a long title still gets the whole row and
-                                    truncates rather than being squeezed by a
-                                    spacer. `pointerEvents="none"` per the header
-                                    rule above: a full-height band that is not a
+                                {/* Trailing slack. It used to pin the importance
+                                    chip hard right; the chip is gone and the
+                                    spacer stays, because it is what keeps the
+                                    status mark tight against the title instead
+                                    of letting the row space itself out.
+                                    `flex-basis: 0` means it adds nothing to the
+                                    row's natural width, so a long title still
+                                    gets the whole row and truncates rather than
+                                    being squeezed by a spacer.
+                                    `pointerEvents="none"` per the header rule
+                                    above: a full-height band that is not a
                                     control must never swallow a refresh pan. */}
                                 <View pointerEvents="none" className="flex-1" />
-                                <ImportanceFilterDropdown
-                                    value={dashboardThreshold}
-                                    onChange={setDashboardThreshold}
-                                    testIDPrefix="dashboard-importance"
-                                />
                             </HStack>
                             {lastProcessedLabel && (
                                 <Pressable

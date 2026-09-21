@@ -228,8 +228,7 @@
     "statsRelevant_one": "{{formatted}} parece relevante,",
     "statsRelevant_other": "{{formatted}} parecem relevantes,",
     "statsRead_one": "e você leu {{formatted}}.",
-    "statsRead_other": "e você leu {{formatted}}.",
-    "lowerPriorityCta": "Quer ler mais? Reduza a prioridade do feed"
+    "statsRead_other": "e você leu {{formatted}}."
   },
   "relevance": {
     "emergency": "Emergência",
@@ -238,10 +237,6 @@
     "low": "Baixa",
     "irrelevant": "Irrelevante",
     "unprocessed": "Não processado"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Prioridade mínima de história",
-    "a11yOption": "Mostrar prioridade {{level}} e acima"
   },
   "aiDisclosure": {
     "caption": "Nota gerada por IA",
@@ -2241,44 +2236,6 @@
           }
         }
       },
-      "signal": {
-        "title": "Baixando o volume",
-        "subtitle": "Um dial, e as histórias que nunca chega a ver.",
-        "slides": {
-          "the-dial": {
-            "headline": "O pequeno chip no header",
-            "body": "No topo do Feed e do Painel senta um chip lendo Alto, Médio ou Baixo com uma pequena seta. É um piso: histórias classificadas abaixo dele simplesmente não são desenhadas.",
-            "ask": "O que o chip Médio no topo do meu feed faz?"
-          },
-          "per-screen": {
-            "headline": "Cada tela mantém sua própria",
-            "body": "Apertar uma nunca esfomeia a outra. Toque cada card na tela que descreve.",
-            "steps": {
-              "0": "O Feed começa em Médio: a substância do dia, não cada última coisa.",
-              "1": "O Painel começa em Baixo: tudo, para quando você tem vontade de navegar."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Feed",
-                "dashboard-tab": "Painel"
-              },
-              "cards": {
-                "medium-default": "Começa em Médio",
-                "low-default": "Começa em Baixo"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Últimas notícias ignoram o dial",
-            "body": "Qualquer coisa classificada como emergência passa em cada configuração, Alto incluído. O dial está lá para cortar notícias rotineiras; não é um jeito de silenciar um desastre."
-          },
-          "headline-cull": {
-            "headline": "Algumas histórias nunca alcançam o dial",
-            "body": "Junto com suas próprias histórias, Mera puxa as manchetes principais de um país. Uma manchete principal que marca baixo para você é apagada completamente em vez de estacionada no fundo. Uma manchete existe para dizer 'isso importa aqui', e uma com score baixo é só ruído. Histórias combinadas aos seus próprios interesses nunca são apagadas deste jeito.",
-            "ask": "Por que vejo menos manchetes gerais que histórias sobre meus interesses?"
-          }
-        }
-      },
       "chat": {
         "title": "Falando com Mera",
         "subtitle": "A forma mais rápida de mudar quase tudo.",
@@ -2736,5 +2693,50 @@
       "Pensando nisso no seu celular.",
       "Isso roda no seu aparelho, então nada é enviado para lugar nenhum."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "Trabalhando nas suas notícias, no seu celular.",
+        "Iniciando uma atualização neste aparelho."
+      ],
+      "fetching": [
+        "Procurando o que há de novo hoje.",
+        "Seu celular decide o que pedir."
+      ],
+      "downloading": [
+        "Trazendo os artigos para o seu celular.",
+        "Chegam primeiro a você, não a um servidor."
+      ],
+      "grouping": [
+        "Uma notícia sai em uma dezena de lugares.",
+        "Escolhendo uma versão de cada notícia."
+      ],
+      "analysing": [
+        "Lendo cada artigo para você.",
+        "Criptografado. Só o seu celular tem a chave."
+      ],
+      "onDevice": [
+        "Seu celular está lendo estas notícias.",
+        "Acontece aqui. Nada sai do seu celular."
+      ],
+      "summarising": [
+        "Escrevendo uma nota curta por notícia.",
+        "Criptografado de ponta a ponta, o tempo todo."
+      ],
+      "preparing": [
+        "Organizando o seu feed.",
+        "Quase lá. Os cards aparecem sozinhos."
+      ]
+    },
+    "nudges": [
+      "Salve o que você não consegue ler agora.",
+      "Seus artigos salvos ainda estão esperando.",
+      "Leia uma notícia direito, não dez correndo.",
+      "As manchetes mostram o formato do dia.",
+      "Mais novo não é melhor. Leia o que já tem.",
+      "Nada chega mais rápido se você ficar olhando."
+    ],
+    "a11y": "A Mera está atualizando suas notícias neste celular."
   }
 }

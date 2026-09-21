@@ -32,13 +32,14 @@ interface RelatedSortDropdownProps {
 /**
  * Sort control for the Related Articles list on both detail routes.
  *
- * Same anchored-menu construction as `ImportanceFilterDropdown` (gluestack
- * `Menu`, selection on each item's own `onPress` because the aria selection
- * layer never fires on native here) — but a separate component rather than a
- * generalisation of it: that one is typed to `ImportanceThreshold`, carries a
+ * Gluestack `Menu`, with selection on each item's own `onPress` because the
+ * aria selection layer never fires on native here. That construction was
+ * shared with the header's importance-filter chip, which was deliberately NOT
+ * generalised with this one: it was typed to a band threshold, carried a
  * `filter-list` glyph and a "+" suffix meaning "this band and above", and none
- * of that is true of a sort. The shared part is ~15 lines of chrome; a common
- * abstraction would cost more than it removes.
+ * of that is true of a sort. That chip has since been deleted outright, so
+ * this is the only anchored menu of its kind left and the question does not
+ * arise again.
  */
 const RelatedSortDropdown: React.FC<RelatedSortDropdownProps> = ({
     value,
@@ -61,9 +62,11 @@ const RelatedSortDropdown: React.FC<RelatedSortDropdownProps> = ({
                     testID={`${testIDPrefix}-trigger`}
                     className="flex-row items-center rounded-full border border-primary-500 min-h-9 px-3"
                 >
-                    {/* The sort glyph is what distinguishes this chip from the
-                        importance FILTER chip elsewhere in the app — the two
-                        look alike otherwise and mean different things. */}
+                    {/* The sort glyph. It used to be what distinguished this
+                        chip from the header's importance FILTER chip, which
+                        looked alike and meant something different; that chip
+                        is gone, and the glyph stays because a bare word in a
+                        pill does not read as a control. */}
                     <MaterialIcons
                         name="swap-vert"
                         size={16}

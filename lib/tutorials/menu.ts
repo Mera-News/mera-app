@@ -8,10 +8,11 @@ import type { ChapterId, ChapterLevel, TutorialChapter } from './types';
  * Completed BASIC chapters required before "Go deeper" appears.
  *
  * Three, not one and not all seven: the advanced chapters describe controls
- * (mute vs downrank, filter expiry, the importance dial) whose vocabulary the
- * basics establish, and someone who has read none of them will read "a downrank
- * is not a block" as a distinction without a difference. Seven would hide the
- * chapter with the highest value — `chat` — behind an hour of reading.
+ * (mute vs downrank, filter expiry, the persona change log) whose vocabulary
+ * the basics establish, and someone who has read none of them will read "a
+ * downrank is not a block" as a distinction without a difference. Seven would
+ * hide the chapter with the highest value — `chat` — behind an hour of
+ * reading.
  */
 export const ADVANCED_UNLOCK_THRESHOLD = 3;
 

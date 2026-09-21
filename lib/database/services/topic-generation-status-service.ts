@@ -92,6 +92,31 @@ export async function completeTopicGeneration(
 }
 
 /**
+ * Stamp 'done' WITHOUT minting anything.
+ *
+ * For a path that already created the topics itself. `completeTopicGeneration`
+ * mints, so calling it after a generator that has already written its rows
+ * would duplicate them.
+ *
+ * THE BUG THIS EXISTS FOR: `fact-commit` stamps every accepted fact 'pending',
+ * and only the queued skill-guided handler ever settled it. The batch cloud
+ * generator minted topics and never touched the column, so its facts span
+ * forever: chips visible in the chat card under a live "Finding topics"
+ * spinner, and a profile row showing a spinner and no statement. Any path that
+ * finishes generation must settle the status.
+ */
+export async function markTopicGenerationSettled(factIds: string[]): Promise<void> {
+  for (const factId of factIds) {
+    try {
+      const record = await factsCollection.find(factId);
+      await record.setTopicsStatus('done');
+    } catch {
+      logger.warn('[topic-gen-status] settle: fact missing at stamp', { factId });
+    }
+  }
+}
+
+/**
  * Stamp 'error' AND write `metadata.topicGenError` in one write.
  *
  * Both, because three live components still read the legacy marker

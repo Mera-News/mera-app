@@ -228,8 +228,7 @@
     "statsRelevant_one": "{{formatted}} uygun görünüyor,",
     "statsRelevant_other": "{{formatted}} uygun görünüyor,",
     "statsRead_one": "ve {{formatted}} okumuşsun.",
-    "statsRead_other": "ve {{formatted}} okumuşsun.",
-    "lowerPriorityCta": "Daha fazla okumak mı istiyorsunuz? Akış önceliğini düşürün"
+    "statsRead_other": "ve {{formatted}} okumuşsun."
   },
   "relevance": {
     "emergency": "Acil",
@@ -238,10 +237,6 @@
     "low": "Düşük",
     "irrelevant": "İlgisiz",
     "unprocessed": "İşlenmemiş"
-  },
-  "importanceFilter": {
-    "a11yLabel": "Minimum hikaye önceliği",
-    "a11yOption": "{{level}} önceliği ve üstünü göster"
   },
   "aiDisclosure": {
     "caption": "AI tarafından oluşturulan not",
@@ -2243,44 +2238,6 @@
           }
         }
       },
-      "signal": {
-        "title": "Ses kapatmak",
-        "subtitle": "Bir aydınlat ve hikayeler asla görmüyor.",
-        "slides": {
-          "the-dial": {
-            "headline": "Başlıkta küçük çip",
-            "body": "Akış ve Panel üstünde yüksek, orta veya düşük okuyan çip oturuyor. Bu bir kat: sıfırın altında puanlanan hikayeler çizilir.",
-            "ask": "Akışımın üstündeki Med çip ne yapıyor?"
-          },
-          "per-screen": {
-            "headline": "Her ekran kendisini tuttuğu",
-            "body": "Biri sıkılaştırıyor asla diğeri aç. Tanımladığı ekrana her kartı vur.",
-            "steps": {
-              "0": "Akış Orta başında: gün madde, son şey değil.",
-              "1": "Panel düşük başında: her şey, göz atarken istersin."
-            },
-            "sort": {
-              "buckets": {
-                "feed-tab": "Akış",
-                "dashboard-tab": "Pano"
-              },
-              "cards": {
-                "medium-default": "Ortada başlar",
-                "low-default": "Düşükte başlar"
-              }
-            }
-          },
-          "breaking-always-passes": {
-            "headline": "Son dakika haberleri yaylı yoksun",
-            "body": "Acil durum olarak derecelendirilen herhangi biri yüksek dahil her ayar geçer. Aydınlat rutinde haberleri kırpılır; afet kapalı bir yolu değil."
-          },
-          "headline-cull": {
-            "headline": "Bazı hikayeler aydınlata ulaşmaz",
-            "body": "Kendi hikayeleriniz yanında, Mera ülkenin üst başlıklarını çeker. Siz düşük puanlayan en kaliteli başlık tamamen bırakılır ve tabanına dikilir değil. Başlık \"bunda önemli\" söyleyin ve düşük puanlayan birgesen haber sadece. Kendi ilgilerinizle eşleştirilen hikayeler bu şekilde bırakılmaz.",
-            "ask": "Neden ilgilerim hakkında hikayelerden çoğu başlıkları daha az görerim?"
-          }
-        }
-      },
       "chat": {
         "title": "Mera ile konuşmak",
         "subtitle": "Neredeyse her şeyi değiştirmenin en hızlı yolu.",
@@ -2738,5 +2695,50 @@
       "Telefonunda düşünülüyor.",
       "Bu, cihazında çalışıyor, bu yüzden hiçbir şey hiçbir yere gönderilmiyor."
     ]
+  },
+  "headerNarration": {
+    "stages": {
+      "starting": [
+        "Haberlerin üzerinde çalışıyoruz, telefonunda.",
+        "Bu cihazda yenileme başladı."
+      ],
+      "fetching": [
+        "Bugün ne var diye bakıyoruz.",
+        "Ne isteneceğine telefonun karar veriyor."
+      ],
+      "downloading": [
+        "Yazılar telefonuna geliyor.",
+        "Önce sana gelir, sunucuya değil."
+      ],
+      "grouping": [
+        "Aynı haber onlarca yerde çıkar.",
+        "Her haberden tek sürüm seçiyoruz."
+      ],
+      "analysing": [
+        "Her yazı senin için okunuyor.",
+        "Şifreli. Anahtar yalnızca telefonunda."
+      ],
+      "onDevice": [
+        "Telefonun bu haberleri okuyor.",
+        "Burada oluyor. Hiçbir şey dışarı çıkmıyor."
+      ],
+      "summarising": [
+        "Her habere kısa bir not yazılıyor.",
+        "Baştan sona uçtan uca şifreli."
+      ],
+      "preparing": [
+        "Akışını sıraya koyuyoruz.",
+        "Az kaldı. Kartlar kendiliğinden gelecek."
+      ]
+    },
+    "nudges": [
+      "Şimdi okuyamayacaklarını kaydet.",
+      "Kaydettiğin yazılar hâlâ bekliyor.",
+      "Bir haberi doğru oku, on tanesini hızlı değil.",
+      "Öne çıkan başlıklar günü özetler.",
+      "Yeni olan daha iyi değil. Elindekini oku.",
+      "Baktığın için daha hızlı gelmez."
+    ],
+    "a11y": "Mera bu telefonda haberlerini güncelliyor."
   }
 }

@@ -55,8 +55,6 @@ export interface BackupRecoveryFlowProps {
   onSkip: () => void;
   /** Label for the decline control, so each surface can word it for itself. */
   skipLabel: string;
-  /** Optional lead-in above the code field. */
-  introText?: string;
   /**
    * Only reached if the post-restore reload FAILED. The data is restored and
    * the app is showing stale state, so a caller that can do something better
@@ -76,7 +74,6 @@ function cloudProviderFor(id: BackupProviderId): BackupProvider | null {
 const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
   onSkip,
   skipLabel,
-  introText,
   onRestoredWithoutReload,
 }) => {
   const toast = useToast();
@@ -266,7 +263,7 @@ const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
         <>
           <Text className="text-white font-semibold">{t('backup.adoptTitle')}</Text>
           <Text size="sm" className="text-gray-400">
-            {introText ?? t('backup.adoptDescription')}
+            {t('backup.adoptDescription')}
           </Text>
           <Input className="border-gray-700">
             <InputField

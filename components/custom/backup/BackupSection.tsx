@@ -113,7 +113,18 @@ function cloudProviderFor(id: BackupProviderId): BackupProvider | null {
   return null;
 }
 
-const BackupSection: React.FC = () => {
+export interface BackupSectionProps {
+  /**
+   * Open the recovery-code flow straight away. Set by Settings > "Restore from
+   * a backup" (`manage-data?restore=1`), which exists because the code path
+   * used to be reachable only as a small link inside the OFF state — and,
+   * before that, as an automatic pre-wizard screen that most people did not
+   * understand.
+   */
+  autoOpenRecover?: boolean;
+}
+
+const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }) => {
   const toast = useToast();
   const { t } = useTranslation();
 
@@ -191,6 +202,16 @@ const BackupSection: React.FC = () => {
       cancelled = true;
     };
   }, [fail, version]);
+
+  // Deep-linked straight into the recovery flow. Waits for the real stage (the
+  // load above is async) and fires ONCE — without the latch, cancelling out of
+  // the flow would immediately reopen it.
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (!autoOpenRecover || autoOpened.current || stage === 'loading') return;
+    autoOpened.current = true;
+    setStage('recover');
+  }, [autoOpenRecover, stage]);
 
   // ---- setup ---------------------------------------------------------------
 
@@ -549,13 +570,16 @@ const BackupSection: React.FC = () => {
     }
 
     if (stage === 'recover') {
-      // Delegated: `OnboardingScreen` runs the identical flow as a pre-wizard
-      // step, and the confirm wording, the connect-and-verify round trip and
-      // the post-restore reload must not drift between the two.
+      // This section is the flow's ONLY caller now — `OnboardingScreen` used to
+      // run it as a pre-wizard step and no longer does.
       return (
         <BackupRecoveryFlow
           skipLabel={t('common.cancel')}
-          onSkip={() => setStage('off')}
+          // `refresh()`, never `setStage('off')`. Cancelling is reachable from a
+          // device with backup CONFIGURED (the settings row below, and the
+          // Settings deep link), and hardcoding 'off' told that user their
+          // backup was switched off. The load effect re-derives the real stage.
+          onSkip={refresh}
           onRestoredWithoutReload={refresh}
         />
       );
@@ -699,6 +723,14 @@ const BackupSection: React.FC = () => {
 
         {row('settings-backup-restore', t('backup.restore'), t('backup.restoreHint'),
           openCloudRestore, { destructive: true, testID: 'backup-restore' })}
+
+        {/* The OTHER-DEVICE path, and deliberately distinct from the row above:
+            that one restores with the provider and key already on this phone,
+            this one takes a code the user carries from somewhere else. It used
+            to exist only in the OFF state, so once backup was configured typing
+            a recovery code was unreachable. */}
+        {row('devices', t('backup.alreadyHave'), t('backup.adoptTitle'),
+          () => setStage('recover'), { testID: 'backup-already-have-on' })}
 
 
         {row('cloud-off', t('backup.turnOff'), t('backup.turnOffHint'), () => setConfirmOff(true), {

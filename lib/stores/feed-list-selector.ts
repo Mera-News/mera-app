@@ -36,10 +36,6 @@ import {
 } from './fact-rows-selector';
 import { type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import { makeRepCompare } from '@/lib/feed-grouping/representative-compare';
-import {
-  passesImportanceThreshold,
-  type ImportanceThreshold,
-} from '@/lib/feed-ordering/importance-filter';
 import type { ForYouSuggestion } from './for-you-store';
 
 /** Exponential-decay half-life (hours) for the recency term of `feedScore`. */
@@ -244,8 +240,8 @@ export function buildFeedList(
       // property of the STORY, not of whichever member we elected to front it.
       // This became load-bearing when the representative flipped to oldest-first
       // — a story whose originating report was routine but whose later coverage
-      // is breaking would otherwise render non-breaking, and `filterByImportance`
-      // exempts breaking, so the Med+/High dial would silently start hiding it.
+      // is breaking would otherwise render non-breaking, and lose the feed
+      // recency bonus that exists so a breaking story is never buried.
       breaking: g.some((m) => isBreaking(m.s)),
       // D4 — a story is scored on its BEST member, not on whichever member was
       // elected to front it. This used to be `feedScore(rep, nowMs)`, which
@@ -262,30 +258,4 @@ export function buildFeedList(
   // 4. Deterministic list order.
   list.sort(feedCompare);
   return list;
-}
-
-/**
- * Hide the stories below a surface's importance threshold. DISPLAY-ONLY: it runs
- * on the already-built list, so nothing is destroyed and lowering the pill
- * reveals rows as instantly as raising it hides them.
- *
- * `'low'` returns the SAME reference rather than a copy — it is the no-op
- * setting (it reproduces the existing render gate exactly) and the result feeds
- * memoised sorts downstream, which would churn on a fresh array every render.
- *
- * Breaking is exempt at every threshold, and deliberately checked separately
- * from the band: soft-suppression penalties can drag a persisted `relevance`
- * below the high cutoff while `rawScore` stays >= 0.8, and this dial must never
- * be what buries breaking news.
- */
-export function filterByImportance(
-  data: readonly FeedListItem[],
-  threshold: ImportanceThreshold,
-): FeedListItem[] {
-  if (threshold === 'low') return data as FeedListItem[];
-  return data.filter(
-    (it) =>
-      isBreaking(it.suggestion) ||
-      passesImportanceThreshold(it.suggestion.relevance ?? 0, threshold),
-  );
 }

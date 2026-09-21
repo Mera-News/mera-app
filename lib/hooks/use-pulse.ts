@@ -5,9 +5,11 @@
 // Extracted from two byte-identical 17-line `Animated.loop` blocks
 // (AdvancedHubScreen's refresh-suggestions glow and PersonaL1MeraProtocol's —
 // both ring an affordance the user should notice) once a third call site
-// needed the exact same loop (the priority-filter chip pulse in
-// ImportanceFilterDropdown, r14). Three copies is the named friction; see
-// CLAUDE.md's Design Pattern Guidelines.
+// needed the exact same loop, the priority-filter chip pulse (r14). Three
+// copies was the named friction; see CLAUDE.md's Design Pattern Guidelines.
+// That third call site is gone with the priority filter, so this is back to
+// two — worth keeping shared rather than re-inlining, but the count in any
+// comment below that says "both original call sites" now means all of them.
 
 import { useEffect, useRef } from 'react';
 import { Animated } from 'react-native';

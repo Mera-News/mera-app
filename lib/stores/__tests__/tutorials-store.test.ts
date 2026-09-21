@@ -49,7 +49,7 @@ describe('tutorial setting keys', () => {
 
     it('rejects rows that are not chapter completions', () => {
         expect(chapterIdFromKey(`${TUTORIAL_SETTING_PREFIX}menu_seen`)).toBeNull();
-        expect(chapterIdFromKey('feed_importance_filter')).toBeNull();
+        expect(chapterIdFromKey('related_articles_sort')).toBeNull();
         expect(chapterIdFromKey('tutorial_chapter__completed')).toBeNull();
     });
 });

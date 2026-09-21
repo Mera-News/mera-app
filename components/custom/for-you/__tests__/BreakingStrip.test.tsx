@@ -49,7 +49,7 @@ describe('BreakingStrip', () => {
 
   it('labels the chip from `relevance.emergency`, the same key the band uses everywhere else', () => {
     // NOT `forYou.breaking`. The strip gates on the EMERGENCY band, so it must
-    // say what that band is called in the importance dial and the section
+    // say what that band is called on the card pill and in the section
     // headers — one concept, one string. The old "Breaking" wording is exactly
     // how the label drifted away from what the strip actually gated on.
     const { getByText } = render(

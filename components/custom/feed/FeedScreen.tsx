@@ -38,13 +38,10 @@
 // feed by exactly one route: `hydrate` dropping a persisted id whose story aged
 // out of the publication window between sessions (FEED_WINDOW_MS).
 //
-// The end card's CTA is conditional: normally "Browse Explore", but when the
-// Feed's importance threshold (`feedThreshold`) is above its floor ('low'), it
-// becomes "Want to read more? Lower the feed priority" — tapping it reveals the
-// header and briefly pulses the priority-filter chip (see `onLowerPriority`,
-// `ImportanceFilterDropdown`'s `pulsing` prop, and `lib/hooks/use-pulse.ts`)
-// rather than trying to open the filter menu itself, which cannot be driven
-// programmatically on native (see that dropdown's own comment).
+// The end card's CTA is always "Browse Explore". It used to fork on a minimum
+// importance threshold the header carried as a High/Med/Low chip; that dial is
+// gone, so every scored story down to the LOW band renders and there is nothing
+// left for a "lower the priority" CTA to reveal.
 //
 // The unviewed/viewed input to that sort is a SNAPSHOT, so a card never sinks
 // under the reader mid-session. Together with the pinned prefix it refreshes at
@@ -96,7 +93,6 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
-import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
 import { headerTitleSize, HEADER_TITLE_MIN_SCALE } from '@/lib/typography/header-title-size';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
@@ -132,10 +128,8 @@ import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refre
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import {
   buildFeedList,
-  filterByImportance,
   type FeedListItem,
 } from '@/lib/stores/feed-list-selector';
-import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import {
   useFeedOrderStore,
   type CardStateRecord,
@@ -315,13 +309,6 @@ const FeedScreen: React.FC = () => {
   // which `buildFeedList` treats as the legacy geo/language-blind pick.
   const userGeoLanguageCtx = useUserGeoLanguageContext();
 
-  // Minimum band this screen renders. DISPLAY-ONLY and deliberately applied as
-  // far downstream as possible (see `visibleData` below): candidates, ingest and
-  // the persisted order all stay threshold-blind, so lowering the pill reveals
-  // rows immediately instead of waiting for the next sync to re-admit them.
-  const feedThreshold = useImportanceFilterStore((s) => s.feedThreshold);
-  const setFeedThreshold = useImportanceFilterStore((s) => s.setFeedThreshold);
-
   // Status mark + its detail panel. 3000ms: this screen is for reading, so the
   // panel answers the question and then leaves. (The Dashboard mounts the same
   // pair with no timeout — there, staying open is the point.)
@@ -342,27 +329,6 @@ const FeedScreen: React.FC = () => {
     true,
     3000,
   );
-
-  // "Want to read more? Lower the feed priority" — the end card's CTA when
-  // `feedThreshold` is above its floor (see AllCaughtUpCard's `onLowerPriority`
-  // prop). Tapping it reveals the header and briefly pulses the priority chip
-  // rather than trying to open its menu programmatically — see
-  // ImportanceFilterDropdown's `pulsing` prop for why that path doesn't work on
-  // native. Transient: cleared by a timer rather than left pulsing forever.
-  const [priorityPulsing, setPriorityPulsing] = useState(false);
-  const priorityPulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (priorityPulseTimerRef.current) clearTimeout(priorityPulseTimerRef.current);
-    },
-    [],
-  );
-  const onLowerPriority = useCallback(() => {
-    reveal();
-    setPriorityPulsing(true);
-    if (priorityPulseTimerRef.current) clearTimeout(priorityPulseTimerRef.current);
-    priorityPulseTimerRef.current = setTimeout(() => setPriorityPulsing(false), 3500);
-  }, [reveal]);
 
   // Candidates keep opened items in (they back frozen rows + survive hydrate) —
   // no exclusion here; opened-filtering happens only for NEW ids in ingest.
@@ -566,16 +532,6 @@ const FeedScreen: React.FC = () => {
     [order, itemsById],
   );
 
-  // The importance filter, applied at the LAST possible point: everything above
-  // (candidates → ingest → persisted order) keeps seeing every render-gated
-  // story, so a row hidden here is only hidden, never dropped. At 'low' this is
-  // the identity function and returns `data` itself, so the sort below memoises
-  // exactly as it did before the filter existed.
-  const visibleData = useMemo(
-    () => filterByImportance(data, feedThreshold),
-    [data, feedThreshold],
-  );
-
   // Display list: the STATIC pinned prefix (what the user has already read past,
   // in reading order), then the DYNAMIC region — unviewed (high → med → low),
   // then viewed (high → med → low). Nothing is ever removed; a viewed card sinks
@@ -589,13 +545,13 @@ const FeedScreen: React.FC = () => {
   const { rows: listData } = useMemo(
     () =>
       sortFeedEntries(
-        visibleData,
+        data,
         partitionSnapshot.cardStates,
         partitionSnapshot.openedArticleIds,
         pinnedIds,
         partitionSnapshot.at,
       ),
-    [visibleData, partitionSnapshot, pinnedIds],
+    [data, partitionSnapshot, pinnedIds],
   );
   listDataRef.current = listData;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
@@ -678,7 +634,7 @@ const FeedScreen: React.FC = () => {
 
   // DEV-only Metro log of the whole funnel + the rendered cards. Compiled out of
   // release builds; throttled and count-gated in dev (see the hook).
-  useFeedFunnelLog(listData, unviewedCount, userGeoLanguageCtx, feedThreshold, data.length - visibleData.length);
+  useFeedFunnelLog(listData, unviewedCount, userGeoLanguageCtx);
 
   // ── Feedback sheet (shared plumbing) ──
   // The verdict store is `feed-order-store`, keyed by the rep-switch-safe
@@ -861,9 +817,7 @@ const FeedScreen: React.FC = () => {
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
 
   // End-of-feed marker — the ONLY caught-up card left (see the header comment):
-  // no in-list dividers any more, just this footer. Its CTA depends on
-  // `feedThreshold`: "Browse Explore" at the floor ('low'), otherwise "Want to
-  // read more? Lower the feed priority" (see AllCaughtUpCard + onLowerPriority).
+  // no in-list dividers any more, just this footer.
   //
   // Gated on a non-empty list because FlatList renders `ListFooterComponent`
   // even when `data` is empty — without this the zero-item case would show the
@@ -873,14 +827,10 @@ const FeedScreen: React.FC = () => {
     () =>
       listData.length > 0 ? (
         <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-          <AllCaughtUpCard
-            compact
-            feedThreshold={feedThreshold}
-            onLowerPriority={onLowerPriority}
-          />
+          <AllCaughtUpCard compact />
         </Box>
       ) : null,
-    [listData.length, feedThreshold, onLowerPriority],
+    [listData.length],
   );
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
@@ -952,10 +902,7 @@ const FeedScreen: React.FC = () => {
     if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
       return <FeedProcessingCard />;
     }
-    // The highest-value spot for the "lower the priority" nudge: when the
-    // importance filter has hidden every story, this is the ONLY surface the
-    // user sees, and lowering the threshold is precisely the fix.
-    return <AllCaughtUpCard feedThreshold={feedThreshold} onLowerPriority={onLowerPriority} />;
+    return <AllCaughtUpCard />;
   };
 
   return (
@@ -1120,9 +1067,10 @@ const FeedScreen: React.FC = () => {
           pointerEvents="box-none"
           style={{ paddingTop: insets.top + 16 }}
         >
-          {/* Title, status glyph, priority filter — and nothing else. The
-              notification bell used to sit at the right edge of this row; it
-              lives on the Dashboard only now. This screen is the reading
+          {/* Title and status glyph — and nothing else. The notification bell
+              used to sit at the right edge of this row; it lives on the
+              Dashboard only now, and the High/Med/Low priority chip that sat
+              beside it has been removed outright. This screen is the reading
               surface, and every additional affordance here is something that
               competes with the story you are trying to read. */}
           <HStack className="items-center" pointerEvents="box-none">
@@ -1170,20 +1118,17 @@ const FeedScreen: React.FC = () => {
                 onPress={toggleStatus}
                 testID="feed-status-indicator"
               />
-              {/* The slack the title gave up, so the filter chip stays pinned
-                  right. `flex-basis: 0` means this contributes nothing to the
-                  row's natural width, so a long localized title still takes the
-                  whole row and truncates rather than being squeezed by a spacer.
+              {/* Trailing slack. It used to exist to pin the importance chip
+                  hard right; the chip is gone and the spacer stays, because it
+                  is what stops a short title from being centred by
+                  `justify-between` and keeps the status mark tight against it.
+                  `flex-basis: 0` means this contributes nothing to the row's
+                  natural width, so a long localized title still takes the whole
+                  row and truncates rather than being squeezed by a spacer.
                   `pointerEvents="none"`: this is a full-height band across the
                   header and would otherwise swallow a pull-to-refresh pan (see
                   the rule above). */}
               <View pointerEvents="none" className="flex-1" />
-              <ImportanceFilterDropdown
-                value={feedThreshold}
-                onChange={setFeedThreshold}
-                testIDPrefix="feed-importance"
-                pulsing={priorityPulsing}
-              />
             </HStack>
           </HStack>
 

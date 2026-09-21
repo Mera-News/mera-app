@@ -1,12 +1,10 @@
 'use client';
 import React from 'react';
-import { createToastHook } from '@gluestack-ui/core/toast/creator';
 import {
   AccessibilityInfo,
   StyleSheet,
   Text,
   View,
-  ViewStyle,
   useWindowDimensions,
 } from 'react-native';
 import {
@@ -15,23 +13,38 @@ import {
   useStyleContext,
   type VariantProps,
 } from '@gluestack-ui/utils/nativewind-utils';
-import { cssInterop } from 'nativewind';
-import {
-  Motion,
-  AnimatePresence,
-  MotionComponentProps,
-} from '@legendapp/motion';
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
+import { toastApi } from '@/lib/toast/toast-queue';
 
-type IMotionViewProps = React.ComponentProps<typeof View> &
-  MotionComponentProps<typeof View, ViewStyle, unknown, unknown, unknown>;
-
-const MotionView = Motion.View as React.ComponentType<IMotionViewProps>;
-
-const useToast = createToastHook(MotionView, AnimatePresence);
 const SCOPE = 'TOAST';
 
-cssInterop(MotionView, { className: 'style' });
+/**
+ * `useToast()` is APP-OWNED now. It was `createToastHook(MotionView,
+ * AnimatePresence)` — gluestack's hook, backed by whichever `ToastProvider` was
+ * nearest in the tree. That was the bug underneath the stacking work:
+ * `GluestackUIProvider` mounts a `ToastProvider` at the root AND inside ~24
+ * nested route files, so a screen's `useToast()` and `toastManager` drove two
+ * different queues, each laying its cards out in a plain flex column.
+ *
+ * The shape returned is byte-identical — `{ show, close, closeAll, isActive }` —
+ * so every one of the ~80 call sites and `lib/toast-manager.ts` were unchanged
+ * by the swap. Ordering, timers and the persistent lane live in
+ * `lib/toast/toast-queue.ts`; painting lives in
+ * `components/custom/toast/ToastDeck.tsx`. Those nested `ToastProvider`s are now
+ * INERT (nothing calls their `setToast`, so their `ToastList` renders null) and
+ * were deliberately left in place — every other gluestack overlay shares that
+ * `OverlayProvider`.
+ */
+const useToast = () => toastApi;
+
+/**
+ * Whether the surrounding card is the FRONT of the deck, i.e. the one the user
+ * can actually read. Provided by `ToastDeck`; `true` by default so a `Toast`
+ * rendered outside the deck (tests, storybook) behaves as it always did.
+ */
+const ToastFrontContext = React.createContext(true);
+export const ToastFrontProvider = ToastFrontContext.Provider;
+export const useIsToastFront = () => React.useContext(ToastFrontContext);
 
 /**
  * ## Why a toast carries no PER-SEVERITY background
@@ -99,7 +112,7 @@ export const MENU_PANEL_FILL = '#45434A';
 
 /** `border-outline-100` in the dark ramp (rgb(65,65,65)) — the same hairline
  *  the menu panel carries. */
-const MENU_PANEL_BORDER = 'rgb(65,65,65)';
+export const MENU_PANEL_BORDER = 'rgb(65,65,65)';
 
 export type ToastAction = 'error' | 'warning' | 'success' | 'info' | 'muted';
 
@@ -439,11 +452,17 @@ const ToastTitle = React.forwardRef<
 >(function ToastTitle({ className, size = 'md', children, ...props }, ref) {
   const { variant: parentVariant, action: parentAction } =
     useStyleContext(SCOPE);
+  const isFront = useIsToastFront();
   React.useEffect(() => {
+    // FRONT CARD ONLY. Under the deck's FIFO order a burst mounts cards that
+    // are deliberately unreadable for seconds; announcing all of them fired
+    // three assertive `role="alert"` messages back to back for two slivers
+    // nobody could see. The announcement follows the card forward instead.
+    if (!isFront) return;
     // Issue from react-native side
     // Hack for now, will fix this later
     AccessibilityInfo.announceForAccessibility(children as string);
-  }, [children]);
+  }, [children, isFront]);
 
   return (
     <Text
