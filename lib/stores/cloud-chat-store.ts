@@ -14,10 +14,6 @@ interface CloudChatState {
   blockedReason: string | null;
   error: string | null;
   wireMessages: WireMessage[];
-  /** True while the model is streaming a reasoning trace and nothing visible
-   *  has arrived yet. The trace itself is never stored or shown; this only
-   *  lets the typing bubble say "Thinking…" instead of pulsing in silence. */
-  thinking: boolean;
   /**
    * The agent loop's turn state. P1's loop is the ONLY writer; the thread
    * reads `turnActive` and the ask_choice card reads nothing at all — a card
@@ -55,7 +51,6 @@ interface CloudChatState {
   setIsBlocked: (blocked: boolean) => void;
   setBlockedReason: (reason: string | null) => void;
   setError: (error: string | null) => void;
-  setThinking: (thinking: boolean) => void;
   setAgentTurnState: (state: AgentTurnState | null) => void;
   setAgentTerminal: (reason: AgentTurnResult['terminalReason'] | null) => void;
   pushWireMessage: (msg: WireMessage) => void;
@@ -70,7 +65,6 @@ const initialState = {
   blockedReason: null as string | null,
   error: null as string | null,
   wireMessages: [] as WireMessage[],
-  thinking: false,
   agentTurnState: null as AgentTurnState | null,
   agentTerminal: null as AgentTurnResult['terminalReason'] | null,
 };
@@ -92,8 +86,6 @@ export const useCloudChatStore = create<CloudChatState>((set, get) => ({
   setBlockedReason: (reason) => set({ blockedReason: reason }),
 
   setError: (error) => set({ error }),
-
-  setThinking: (thinking) => set((state) => (state.thinking === thinking ? state : { thinking })),
 
   setAgentTurnState: (agentTurnState) => set({ agentTurnState }),
   setAgentTerminal: (agentTerminal) => set({ agentTerminal }),

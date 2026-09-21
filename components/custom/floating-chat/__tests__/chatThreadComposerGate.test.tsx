@@ -33,7 +33,7 @@ jest.mock('../ConflictResolutionCard', () => ({ __esModule: true, default: () =>
 jest.mock('../StarterChips', () => ({ __esModule: true, default: () => null }));
 jest.mock('../ChatPopover', () => ({ PopoverPhaseContext: { Provider: null } }));
 jest.mock('@/components/custom/chat/MeraStreamAvatar', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/chat/StreamingWord', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/components/custom/chat/ChatPhaseLine', () => ({ __esModule: true, default: () => null }));
 
 // Reached through StatusIndicator in the agent-steps box; RN's own mock
 // requireActual's an untransformed specs_DEPRECATED file.
@@ -78,7 +78,7 @@ jest.mock('@/components/custom/AiDisclosureCaption', () => {
 });
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('@/lib/stores/cloud-chat-store', () => ({
-  useCloudChatStore: (sel: (s: unknown) => unknown) => sel({ thinking: false, agentTurnState: null }),
+  useCloudChatStore: (sel: (s: unknown) => unknown) => sel({ agentTurnState: null }),
 }));
 
 const mockSubmit = jest.fn();

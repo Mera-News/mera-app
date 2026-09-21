@@ -5,7 +5,7 @@
 
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import MeraStreamAvatar from '@/components/custom/chat/MeraStreamAvatar';
-import StreamingWord from '@/components/custom/chat/StreamingWord';
+import ChatPhaseLine from '@/components/custom/chat/ChatPhaseLine';
 import { Text } from '@/components/ui/text';
 import {
   Conversation,
@@ -66,7 +66,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   isInputDisabled,
 }) => {
   const { t } = useTranslation();
-  const isThinking = useCloudChatStore((s) => s.thinking);
 
   // Autofocus the input once the popover's open morph fully settles. Focusing
   // mid-morph fights the scale transform and janks the keyboard slide-up, so we
@@ -234,15 +233,14 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 turn settles. */}
             <MeraStreamAvatar />
             <MessageContent role="assistant">
-              {/* A rotating word, not dots. While the model streams a
-                  reasoning trace and nothing visible has arrived (3-12s on the
-                  BIG primary) the same bubble holds a FIXED "Thinking…"
-                  instead: the trace itself is never rendered, the store
-                  carries only the boolean, and a wandering word would suggest
-                  variety where there is one known state. */}
-              <StreamingWord
-                fixedLabel={isThinking ? t('floatingChat.thinking') : undefined}
-              />
+              {/* A sentence that tracks the real phase, not a rotating word.
+                  The word was decorative and said the same thing whether the
+                  device was queued behind prewarm, fetching an attestation
+                  key or waiting out the model's 3-8s time to first token, so
+                  a long wait read as a frozen screen. The line subscribes to
+                  the phase store itself, so a phase tick re-renders one
+                  <Text> rather than this whole thread. */}
+              <ChatPhaseLine />
             </MessageContent>
           </Message>
         );
