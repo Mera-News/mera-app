@@ -284,6 +284,35 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   });
   let routeKind: string | null = null;
   let skillLoaded: string | null = null;
+  /** True when this turn RESUMED the skill that asked the question, instead of
+   *  spending a leg routing a chip tap as if it were a fresh intent. */
+  let resumedSkill = false;
+
+  // ---- a chip tap CONTINUES the turn that asked -----------------------------
+  // A disambiguation answer is not a new intent, and routing it as one loses
+  // the subject the question was about.
+  //
+  // MEASURED ON DEVICE, and the worst data-loss path found so far: "my
+  // girlfriend's parents live in Porto Santo" routed correctly to
+  // `facts/family` and asked which Porto Santo. The tap came back as an
+  // ordinary message, the router saw a bare place name against a persona with
+  // a residence fact, and sent it to `facts/residence`. That skill has no idea
+  // whose home it is, so it proposed "Lives in Vila Baleira" and offered it as
+  // a REPLACEMENT for the user's own Amsterdam home.
+  //
+  // The subject guard on `replaces` cannot save this one: by then both
+  // statements read as the user's own, because the model had already dropped
+  // the girlfriend from the sentence. The subject has to survive the question,
+  // which means resuming the skill rather than re-deciding.
+  if (turn.resolvedChoice !== null && turn.lastSkill !== null) {
+    const body = deps.loadSkill(turn.lastSkill);
+    if (body !== null) {
+      skillLoaded = turn.lastSkill;
+      routeKind = routeKindFromSkill(turn.lastSkill);
+      systemPrompt = body;
+      resumedSkill = true;
+    }
+  }
   let reply = '';
   let legBudgetHit = false;
   /** One closing-sentence leg is allowed after a proposal, never a stream. */
@@ -832,6 +861,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     replyLeakUnfixed,
     reProposals,
     refusedReplaces,
+    resumedSkill,
     state: turn,
   };
 }

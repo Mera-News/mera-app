@@ -333,6 +333,11 @@ export interface AgentTurnResult {
   /** `replaces` targets refused because the proposed fact and the target are
    *  about different people. A destructive replace demoted to a plain add. */
   refusedReplaces: number;
+  /** The turn RESUMED the skill that asked its question instead of routing
+   *  the chip tap as a fresh intent. Reported so the continuation is
+   *  measurable: an unmeasured one breaks silently, which is how the subject
+   *  of a question got lost between two turns in the first place. */
+  resumedSkill: boolean;
   /** Surfaced to the UI so a capped turn renders as capped, not as finished. */
   legCapped: boolean;
   state: AgentTurnState;

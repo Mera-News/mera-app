@@ -222,13 +222,15 @@ describe('conversation 3: a correction', () => {
     await runAgentTurn({ state, userMessage: 'that one is wrong', deps: r.deps });
     expect(r.deletes).toEqual([]);                    // nothing destroyed
 
-    // Now a confirmed choice exists.
+    // Now a confirmed choice exists. The turn RESUMES `conversation/correction`
+    // rather than routing the tap, so there is no route leg to script: the
+    // skill is already loaded on leg 0 and `load_skill` is not in its payload.
     state.turn.resolvedChoice = { question: 'Remove it?', text: 'Yes, remove it', payload: 'f1' };
     const r2 = makeDeps([
-      res({ content: 'ok', toolCalls: [call('load_skill', { id: 'conversation/correction' })] }),
       res({ content: 'Removed.', toolCalls: [call('deleteUserFacts', { fact_ids: ['f1'] })] }),
     ]);
-    await runAgentTurn({ state, userMessage: 'Yes, remove it', deps: r2.deps });
+    const out = await runAgentTurn({ state, userMessage: 'Yes, remove it', deps: r2.deps });
+    expect(out.resumedSkill).toBe(true);
     expect(r2.deletes).toEqual([['f1']]);
   });
 });

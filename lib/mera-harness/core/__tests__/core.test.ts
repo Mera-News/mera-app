@@ -91,6 +91,9 @@ function scriptedDeps(
 const SKILLS: Record<string, string> = {
   'facts/residence': 'RESIDENCE SKILL BODY',
   'facts/interest': 'INTEREST SKILL BODY',
+  'facts/family': 'FAMILY SKILL BODY',
+  'facts/profession': 'PROFESSION SKILL BODY',
+  'facts/origin': 'ORIGIN SKILL BODY',
   'conversation/question': 'QUESTION SKILL BODY',
   'conversation/correction': 'CORRECTION SKILL BODY',
 };
@@ -1238,6 +1241,72 @@ describe('TestFlight regressions', () => {
     });
 
     expect(seen).toHaveLength(1);
+  });
+
+  // THE WORST PATH FOUND SO FAR, and it takes TWO turns to reproduce, which is
+  // why no single-turn test caught it. The subject has to survive the question.
+  it('resumes the asking skill on a chip tap, so the subject survives the question', async () => {
+    const state = createAgentState(RESIDENT);
+
+    // Turn 1: routed correctly to family, asks which Porto Santo.
+    const { deps: t1 } = scriptedDeps([
+      modelResult({ content: 'Porto Santo, one moment.', toolCalls: [tc2('load_skill', { id: 'facts/family' })] }),
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('ask_choice', {
+            question: 'Which Porto Santo did you mean?',
+            options: ['Porto Santo Stefano', 'Vila Baleira'],
+          }),
+        ],
+      }),
+    ]);
+    const first = await runAgentTurn({
+      state,
+      userMessage: 'my girlfriends parents live in porto santo',
+      deps: t1,
+    });
+    expect(first.terminalReason).toBe('awaiting-user');
+    expect(state.turn.lastSkill).toBe('facts/family');
+
+    // Turn 2: the tap. The router used to see a bare place name beside a
+    // residence fact and send it to facts/residence, which then proposed
+    // "Lives in Vila Baleira" as a REPLACEMENT for the user's own home.
+    const { deps: t2 } = scriptedDeps([
+      modelResult({
+        content: '',
+        toolCalls: [
+          tc2('saveExtractedFacts', {
+            extracted_user_information: [
+              { statement: "Girlfriend's parents live in Vila Baleira, Madeira, Portugal, EU" },
+            ],
+          }),
+        ],
+      }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+    const second = await runAgentTurn({ state, userMessage: 'Vila Baleira', deps: t2 });
+
+    expect(second.resumedSkill).toBe(true);
+    expect(second.skillLoaded).toBe('facts/family');
+    // No leg was spent re-routing a tap.
+    expect(second.legs[0].toolCalls[0].name).toBe('saveExtractedFacts');
+  });
+
+  it('does NOT resume when the message is not the answer to a pending choice', async () => {
+    // A fresh statement after an unanswered question must still route.
+    const state = createAgentState(RESIDENT);
+    state.turn.lastSkill = 'facts/family';
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/profession' })] }),
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Works as a software engineer' }] })] }),
+      modelResult({ content: 'Here is the reading to confirm.' }),
+    ]);
+
+    const out = await runAgentTurn({ state, userMessage: 'I work as a software engineer', deps });
+
+    expect(out.resumedSkill).toBe(false);
+    expect(out.skillLoaded).toBe('facts/profession');
   });
 
   it('scrubs a leaking reply on a terminal that never reaches the settle gate', async () => {
