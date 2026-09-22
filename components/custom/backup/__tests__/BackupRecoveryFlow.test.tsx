@@ -49,8 +49,16 @@ jest.mock('@/lib/backup/providers/icloud', () => ({
     isICloudSupported: () => mockICloudSupported,
 }));
 
-const mockReload = jest.fn(async () => { calls.push('reload'); });
-jest.mock('expo-updates', () => ({ reloadAsync: () => mockReload() }));
+// The flow no longer reaches expo-updates itself: every reload in the app goes
+// through lib/app-restart.ts, so the restore's contract is now "it asks the
+// restart authority", and the fallback is gated on that module's own answer
+// about whether this build can restart at all.
+const mockRequestRestart = jest.fn(async (_reason: string) => { calls.push('reload'); });
+let mockRestartAvailable = true;
+jest.mock('@/lib/app-restart', () => ({
+    requestRestart: (reason: string) => mockRequestRestart(reason),
+    restartIsAvailable: () => mockRestartAvailable,
+}));
 
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
@@ -125,6 +133,7 @@ beforeEach(() => {
     mockConnectResult = { ok: true };
     mockICloudSupported = true;
     mockAdopt.mockResolvedValue(true);
+    mockRestartAvailable = true;
 });
 
 describe('the code step', () => {
@@ -232,14 +241,21 @@ describe('the restore', () => {
         fireEvent.press(r.getByTestId('recovery-confirm'));
 
         await waitFor(() => expect(calls).toContain('reload'));
+        expect(mockRequestRestart).toHaveBeenCalledWith('restore');
         expect(mockSetProviderId).toHaveBeenCalledWith('icloud');
         // Without the reload the user is told "13 items restored" and shown the
         // same empty persona, because every store hydrated at startup.
         expect(calls.indexOf('runRestore')).toBeLessThan(calls.indexOf('reload'));
     });
 
-    it('falls back to asking for a restart when the reload itself fails', async () => {
-        mockReload.mockRejectedValueOnce(new Error('no updates module'));
+    // A build that cannot restart (a dev client, or any build without
+    // expo-updates) must still tell the user to reopen the app. Deliberately
+    // driven by `restartIsAvailable()` and not by whether requestRestart
+    // returned: `reloadAsync()`'s promise can settle before the JS context is
+    // torn down, so reading the fallback off control flow would paint "reopen
+    // the app" over a restart that IS happening.
+    it('falls back to asking for a restart when the build cannot restart', async () => {
+        mockRestartAvailable = false;
         const onRestored = jest.fn();
         const r = render(
             <BackupRecoveryFlow onSkip={onSkip} skipLabel="skip" onRestoredWithoutReload={onRestored} />,

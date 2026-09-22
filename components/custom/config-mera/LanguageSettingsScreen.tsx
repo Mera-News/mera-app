@@ -6,6 +6,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
+import { requestRestart } from '@/lib/app-restart';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
@@ -17,7 +18,6 @@ import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import * as Updates from 'expo-updates';
 
 interface LanguageSettingsScreenProps {
     onBack?: () => void;
@@ -50,7 +50,13 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                 t('language.restartDescription'),
                 [
                     { text: t('language.later'), style: 'cancel' },
-                    { text: t('language.restart'), onPress: () => Updates.reloadAsync() },
+                    {
+                        text: t('language.restart'),
+                        // Through the one restart authority, not a bare
+                        // reloadAsync(): lib/app-restart.ts holds this off while
+                        // a purchase or a credential write is mid-flight.
+                        onPress: () => { void requestRestart('language'); },
+                    },
                 ],
             );
         },
