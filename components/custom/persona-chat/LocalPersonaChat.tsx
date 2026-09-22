@@ -38,6 +38,7 @@ export default function LocalPersonaChat({
     <ChatSessionView
       messages={chat.messages}
       status={chat.status}
+      localTurnBusy={chat.turnBusy}
       sendMessage={chat.sendMessage}
       sendHiddenTurn={chat.sendHiddenTurn}
       isBlocked={chat.isBlocked}

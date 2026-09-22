@@ -183,3 +183,47 @@ describe('holding a restart while a response is in flight', () => {
     expect(mockReleaseHold).not.toHaveBeenCalled();
   });
 });
+
+describe('the on-device (localTurnBusy) tail', () => {
+  it('does not hold when localTurnBusy is undefined (the cloud-engine render)', () => {
+    render(<ChatSessionView {...baseProps} status="idle" />);
+    expect(mockHoldRestart).not.toHaveBeenCalled();
+  });
+
+  it('holds on localTurnBusy alone, even while status is idle', () => {
+    render(<ChatSessionView {...baseProps} status="idle" localTurnBusy={true} />);
+    expect(mockHoldRestart).toHaveBeenCalledWith('chat-stream');
+  });
+
+  // THE GAP: `useLocalLLM`'s own `status` goes idle at the "release input
+  // before tool execution" point, before the tool call this turn staged has
+  // actually run. This is the exact prop shape ChatSessionView sees from
+  // LocalPersonaChat at that moment — status already idle, localTurnBusy
+  // still true — and it is the scenario a hold keyed on `isStreaming` alone
+  // would silently release under. A suite that only checks "hold on start,
+  // release on idle" passes just as happily with this gap present.
+  it('stays held when status goes idle but localTurnBusy is still true (tool execution in flight)', () => {
+    const { rerender } = render(
+      <ChatSessionView {...baseProps} status="streaming" localTurnBusy={true} />,
+    );
+    expect(mockHoldRestart).toHaveBeenCalledTimes(1);
+
+    rerender(<ChatSessionView {...baseProps} status="idle" localTurnBusy={true} />);
+    expect(mockReleaseHold).not.toHaveBeenCalled();
+
+    // The tool call finishes and the hook's own `finally` clears turnBusy.
+    rerender(<ChatSessionView {...baseProps} status="idle" localTurnBusy={false} />);
+    expect(mockReleaseHold).toHaveBeenCalledTimes(1);
+  });
+
+  it('releases unconditionally on unmount while localTurnBusy is still true', () => {
+    const { unmount } = render(
+      <ChatSessionView {...baseProps} status="idle" localTurnBusy={true} />,
+    );
+    expect(mockHoldRestart).toHaveBeenCalledTimes(1);
+    expect(mockReleaseHold).not.toHaveBeenCalled();
+
+    unmount();
+    expect(mockReleaseHold).toHaveBeenCalledTimes(1);
+  });
+});

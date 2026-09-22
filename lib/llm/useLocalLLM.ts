@@ -76,6 +76,18 @@ type InferenceEvent =
 export interface UseLocalLLMResult {
   messages: ConversationMessage[];
   status: LocalLLMStatus;
+  /**
+   * True from `startTurn` until the WHOLE turn settles, including the
+   * tool-execution loop that runs after `status` has already gone back to
+   * `'idle'` (see the "Release input before tool execution" comment in
+   * `runInference`). `status` is a UI-input concern — it says whether the
+   * composer should re-enable, and re-enabling it before tools finish is
+   * deliberate. `turnBusy` says whether the turn is still doing real work,
+   * which is a different question with a different answer during that same
+   * window. A caller that needs "is anything still in flight" (e.g. holding a
+   * restart off) wants this, not `status`.
+   */
+  turnBusy: boolean;
   sendMessage: (text: string) => void;
   /** Runs a turn the user never sees. See startTurn's `hidden` argument. */
   sendHiddenTurn: (text: string) => void;
@@ -271,6 +283,11 @@ function* extractBareJsonToolCalls(text: string, known: string[]): Iterable<Infe
 export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [status, setStatus] = useState<LocalLLMStatus>('idle');
+  // Deliberately NOT cleared at the same point as `status` — see the
+  // interface doc on `turnBusy`. Cleared only in `runInference`'s outer
+  // `finally`, which is the one place the whole turn (stream AND tools) is
+  // actually done.
+  const [turnBusy, setTurnBusy] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -590,6 +607,9 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         inferenceQueue.resume();
         setStatus('idle');
         isStreamingRef.current = false;
+        // The ONE place `turnBusy` clears. Never at the early release above —
+        // that early release IS the gap this flag exists to cover.
+        setTurnBusy(false);
       }
     },
     [agent],
@@ -625,6 +645,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
 
       isStreamingRef.current = true;
       setStatus('streaming');
+      setTurnBusy(true);
 
       // Created here rather than in `runInference` so the mark is per TURN and
       // exists before the first await inside it.
@@ -647,6 +668,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
   return {
     messages,
     status,
+    turnBusy,
     sendMessage,
     sendHiddenTurn,
     latestAssistantContent,
