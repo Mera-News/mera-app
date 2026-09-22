@@ -76,10 +76,17 @@ async function retentionReasonsLive(
 
 /** A saved row, discriminated by origin so the Saved screen can render the right
  *  card variant (suggestion card vs standalone card). Retention rows never
- *  reach here — see RETENTION_ORIGINS. */
+ *  reach here — see RETENTION_ORIGINS.
+ *
+ *  `savedAt` (epoch ms) rides on the wrapper rather than inside either payload
+ *  because neither payload has anywhere to put it: `ForYouSuggestion` is the
+ *  server's suggestion shape and `NewsArticle` is the server's article shape,
+ *  and when-this-device-saved-it is a fact about the local row, not about
+ *  either. It is the same column the query already sorts on, so surfacing it
+ *  costs no extra read. */
 export type SavedItem =
-  | { origin: 'suggestion'; suggestion: ForYouSuggestion }
-  | { origin: 'article'; savedId: string; article: NewsArticle };
+  | { origin: 'suggestion'; suggestion: ForYouSuggestion; savedAt: number }
+  | { origin: 'article'; savedId: string; article: NewsArticle; savedAt: number };
 
 // --- Write: save (upsert by server id) ---
 
@@ -214,8 +221,17 @@ export async function loadSavedItems(): Promise<SavedItem[]> {
     .filter((row) => !isRetentionOrigin(row.origin))
     .map((row) =>
       row.origin === 'article'
-        ? { origin: 'article' as const, savedId: row.id, article: toNewsArticle(row) }
-        : { origin: 'suggestion' as const, suggestion: toForYouSuggestion(row) },
+        ? {
+            origin: 'article' as const,
+            savedId: row.id,
+            article: toNewsArticle(row),
+            savedAt: row.savedAt.getTime(),
+          }
+        : {
+            origin: 'suggestion' as const,
+            suggestion: toForYouSuggestion(row),
+            savedAt: row.savedAt.getTime(),
+          },
     );
 }
 

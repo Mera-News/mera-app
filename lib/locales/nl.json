@@ -2738,5 +2738,26 @@
       "Er komt niets sneller door te kijken."
     ],
     "a11y": "Mera werkt je nieuws bij op deze telefoon."
+  },
+  "savedExport": {
+    "fabA11y": "Bewaarde artikelen exporteren",
+    "title": "Bewaarde exporteren",
+    "step1Heading": "Kies artikelen",
+    "step2Heading": "Reden van Mera meenemen?",
+    "step3Heading": "Kies een formaat",
+    "selectAll": "Alles selecteren",
+    "selectedCount": "{{count}} geselecteerd",
+    "includeReason": "Reden van Mera meenemen",
+    "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Los bewaarde artikelen hebben die niet.",
+    "formatMarkdown": "Markdown-lijst",
+    "formatMarkdownHint": "Een leesbare lijst, handig voor notities en documenten.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Gestructureerde data, handig voor scripts en spreadsheets.",
+    "shareDialogTitle": "Bewaarde artikelen exporteren",
+    "failedTitle": "Exporteren mislukt",
+    "failedMessage": "Er is niets geëxporteerd. Probeer het opnieuw.",
+    "docTitle": "Bewaarde artikelen",
+    "docExported": "Geëxporteerd op {{date}}",
+    "docReasonLabel": "Waarom Mera dit koos"
   }
 }

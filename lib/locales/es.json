@@ -2738,5 +2738,26 @@
       "Nada llega antes por mirar."
     ],
     "a11y": "Mera está actualizando tus noticias en este teléfono."
+  },
+  "savedExport": {
+    "fabA11y": "Exportar artículos guardados",
+    "title": "Exportar guardados",
+    "step1Heading": "Elige los artículos",
+    "step2Heading": "¿Incluir por qué lo eligió Mera?",
+    "step3Heading": "Elige un formato",
+    "selectAll": "Seleccionar todo",
+    "selectedCount": "{{count}} seleccionados",
+    "includeReason": "Incluir el motivo de Mera",
+    "includeReasonHint": "La nota breve que explica por qué cada artículo llegó a tu feed. Los artículos guardados por separado no la tienen.",
+    "formatMarkdown": "Lista Markdown",
+    "formatMarkdownHint": "Una lista fácil de leer, ideal para notas y documentos.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Datos estructurados, ideales para scripts y hojas de cálculo.",
+    "shareDialogTitle": "Exportar artículos guardados",
+    "failedTitle": "Error al exportar",
+    "failedMessage": "No se exportó nada. Inténtalo de nuevo.",
+    "docTitle": "Artículos guardados",
+    "docExported": "Exportado el {{date}}",
+    "docReasonLabel": "Por qué lo eligió Mera"
   }
 }

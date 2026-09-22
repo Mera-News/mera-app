@@ -2738,5 +2738,26 @@
       "Nhìn mãi cũng không đến nhanh hơn."
     ],
     "a11y": "Mera đang cập nhật tin của bạn trên máy này."
+  },
+  "savedExport": {
+    "fabA11y": "Xuất các bài đã lưu",
+    "title": "Xuất bài đã lưu",
+    "step1Heading": "Chọn bài viết",
+    "step2Heading": "Kèm theo lý do của Mera?",
+    "step3Heading": "Chọn định dạng",
+    "selectAll": "Chọn tất cả",
+    "selectedCount": "Đã chọn {{count}}",
+    "includeReason": "Kèm theo lý do của Mera",
+    "includeReasonHint": "Ghi chú một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Các bài lưu riêng lẻ không có ghi chú này.",
+    "formatMarkdown": "Danh sách Markdown",
+    "formatMarkdownHint": "Danh sách dễ đọc, phù hợp với ghi chú và tài liệu.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Dữ liệu có cấu trúc, phù hợp với tập lệnh và bảng tính.",
+    "shareDialogTitle": "Xuất các bài đã lưu",
+    "failedTitle": "Xuất không thành công",
+    "failedMessage": "Không có gì được xuất. Vui lòng thử lại.",
+    "docTitle": "Bài viết đã lưu",
+    "docExported": "Đã xuất ngày {{date}}",
+    "docReasonLabel": "Vì sao Mera chọn bài này"
   }
 }

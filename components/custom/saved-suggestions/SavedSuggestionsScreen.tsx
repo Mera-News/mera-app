@@ -26,6 +26,9 @@ import logger from '@/lib/logger';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
+import SavedExportFab, { SAVED_EXPORT_FAB_RESERVE } from './SavedExportFab';
+import SavedExportModal from './SavedExportModal';
+import { savedItemId } from './saved-item-id';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListRenderItem } from 'react-native';
@@ -50,10 +53,6 @@ interface SavedSuggestionsScreenProps {
      *  translates away). Defaults to 0 — standalone route is unchanged. */
     headerHeight?: number;
 }
-
-/** The WMDB row id backing a saved item (suggestion `_id` or the article's savedId). */
-const itemId = (item: SavedItem): string =>
-    item.origin === 'suggestion' ? item.suggestion._id : item.savedId;
 
 // ── Delete-button geometry ────────────────────────────────────────────────
 // The button floats over the card's top-right corner, so the card's own
@@ -97,6 +96,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     // The row pending deletion — non-null opens the confirm dialog.
     const [confirmTarget, setConfirmTarget] = useState<SavedItem | null>(null);
+    const [exportOpen, setExportOpen] = useState(false);
 
     // Reload on focus so a save made elsewhere (detail screen) shows up when
     // the user navigates back here.
@@ -138,11 +138,11 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const handleConfirmDelete = useCallback(async () => {
         if (!confirmTarget) return;
         const target = confirmTarget;
-        const targetId = itemId(target);
+        const targetId = savedItemId(target);
         setConfirmTarget(null);
         try {
             await deleteSavedSuggestion(targetId);
-            setSaved((prev) => prev.filter((s) => itemId(s) !== targetId));
+            setSaved((prev) => prev.filter((s) => savedItemId(s) !== targetId));
             toast.show({
                 placement: 'top',
                 duration: 3000,
@@ -162,6 +162,22 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
             });
         }
     }, [confirmTarget, toast, t]);
+
+    // Raised by the wizard when the export could not be handed off at all,
+    // which after the text fallback means the OS refused every route. The
+    // screen owns it because the screen owns `toast`.
+    const handleExportFailed = useCallback(() => {
+        toast.show({
+            placement: 'top',
+            duration: 4000,
+            render: ({ id }: { id: string }) => (
+                <Toast nativeID={id} action="error" variant="solid">
+                    <ToastTitle>{t('savedExport.failedTitle')}</ToastTitle>
+                    <ToastDescription>{t('savedExport.failedMessage')}</ToastDescription>
+                </Toast>
+            ),
+        });
+    }, [toast, t]);
 
     const renderItem: ListRenderItem<SavedItem> = useCallback(
         ({ item }) => (
@@ -223,7 +239,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     );
 
     const keyExtractor = useCallback(
-        (item: SavedItem, index: number) => itemId(item) || `saved-${index}`,
+        (item: SavedItem, index: number) => savedItemId(item) || `saved-${index}`,
         [],
     );
 
@@ -245,6 +261,11 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
             </HStack>
         </Box>
     );
+
+    // No rows, nothing to export. Also keeps the FAB off the empty state,
+    // where it would float over an illustration explaining there is nothing
+    // here yet.
+    const showExportFab = saved.length > 0;
 
     const ListEmpty = isLoading ? (
         <Box className="items-center justify-center py-20">
@@ -320,13 +341,41 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     // tail). The standalone route (app/logged-in/saved-suggestions)
                     // is a Stack screen pushed OUTSIDE the tab navigator, so no
                     // tab bar renders behind it — just the safe-area clearance.
-                    paddingBottom: embedded
-                        ? insets.bottom + TAB_BAR_HEIGHT + 24
-                        : insets.bottom + 40,
+                    // SAVED_EXPORT_FAB_RESERVE is added whenever the FAB is
+                    // showing. Every card carries its delete button at its own
+                    // TOP-right, so the last card's button lands inside the
+                    // FAB's footprint without it and cannot be pressed — the
+                    // same control an overlay has already killed on this screen
+                    // once. The History list needs no equivalent because its
+                    // rows have no corner control.
+                    paddingBottom:
+                        (embedded
+                            ? insets.bottom + TAB_BAR_HEIGHT + 24
+                            : insets.bottom + 40) +
+                        (showExportFab ? SAVED_EXPORT_FAB_RESERVE : 0),
                 }}
                 showsVerticalScrollIndicator={false}
                 onScroll={scrollHandler}
                 scrollEventThrottle={16}
+            />
+
+            {/* Export entry point. Mounted HERE rather than in ForYouScreen,
+                which is where the History tab's share FAB lives: that
+                component suppresses its own DrillDownHeader when embedded on
+                the stated grounds that the host owns the top chrome, so the
+                host is where its affordance belongs. This screen renders no
+                DrillDownHeader in either mode, so there is no such division to
+                honour, and mounting it here gives the standalone route the
+                same button under one testID. */}
+            {showExportFab && (
+                <SavedExportFab embedded={embedded} onPress={() => setExportOpen(true)} />
+            )}
+
+            <SavedExportModal
+                isOpen={exportOpen}
+                onClose={() => setExportOpen(false)}
+                items={saved}
+                onFailed={handleExportFailed}
             />
 
             {/* Delete confirmation (Gluestack Modal) */}

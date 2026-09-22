@@ -2738,5 +2738,26 @@
       "Nulla arriva prima se resti a guardare."
     ],
     "a11y": "Mera sta aggiornando le tue notizie su questo telefono."
+  },
+  "savedExport": {
+    "fabA11y": "Esporta gli articoli salvati",
+    "title": "Esporta i salvati",
+    "step1Heading": "Scegli gli articoli",
+    "step2Heading": "Includere il motivo di Mera?",
+    "step3Heading": "Scegli un formato",
+    "selectAll": "Seleziona tutto",
+    "selectedCount": "{{count}} selezionati",
+    "includeReason": "Includi il motivo di Mera",
+    "includeReasonHint": "La nota di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Gli articoli salvati singolarmente non ce l'hanno.",
+    "formatMarkdown": "Elenco Markdown",
+    "formatMarkdownHint": "Un elenco leggibile, ottimo per note e documenti.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Dati strutturati, ottimi per script e fogli di calcolo.",
+    "shareDialogTitle": "Esporta gli articoli salvati",
+    "failedTitle": "Esportazione non riuscita",
+    "failedMessage": "Non è stato esportato nulla. Riprova.",
+    "docTitle": "Articoli salvati",
+    "docExported": "Esportato il {{date}}",
+    "docReasonLabel": "Perché Mera l'ha scelto"
   }
 }

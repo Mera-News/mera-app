@@ -2737,5 +2737,26 @@
       "Tidak ada yang lebih cepat karena ditunggu."
     ],
     "a11y": "Mera memperbarui beritamu di ponsel ini."
+  },
+  "savedExport": {
+    "fabA11y": "Ekspor artikel tersimpan",
+    "title": "Ekspor tersimpan",
+    "step1Heading": "Pilih artikel",
+    "step2Heading": "Sertakan alasan Mera?",
+    "step3Heading": "Pilih format",
+    "selectAll": "Pilih semua",
+    "selectedCount": "{{count}} dipilih",
+    "includeReason": "Sertakan alasan Mera",
+    "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Artikel yang disimpan sendiri tidak memilikinya.",
+    "formatMarkdown": "Daftar Markdown",
+    "formatMarkdownHint": "Daftar yang mudah dibaca, cocok untuk catatan dan dokumen.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Data terstruktur, cocok untuk skrip dan spreadsheet.",
+    "shareDialogTitle": "Ekspor artikel tersimpan",
+    "failedTitle": "Ekspor gagal",
+    "failedMessage": "Tidak ada yang diekspor. Silakan coba lagi.",
+    "docTitle": "Artikel tersimpan",
+    "docExported": "Diekspor {{date}}",
+    "docReasonLabel": "Mengapa Mera memilihnya"
   }
 }

@@ -2738,5 +2738,26 @@
       "Nada chega mais rápido se você ficar olhando."
     ],
     "a11y": "A Mera está atualizando suas notícias neste celular."
+  },
+  "savedExport": {
+    "fabA11y": "Exportar artigos salvos",
+    "title": "Exportar salvos",
+    "step1Heading": "Escolha os artigos",
+    "step2Heading": "Incluir o motivo de Mera?",
+    "step3Heading": "Escolha um formato",
+    "selectAll": "Selecionar tudo",
+    "selectedCount": "{{count}} selecionados",
+    "includeReason": "Incluir o motivo de Mera",
+    "includeReasonHint": "A nota de uma linha que explica por que cada artigo chegou ao seu feed. Artigos salvos avulsos não têm essa nota.",
+    "formatMarkdown": "Lista Markdown",
+    "formatMarkdownHint": "Uma lista fácil de ler, boa para notas e documentos.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Dados estruturados, bons para scripts e planilhas.",
+    "shareDialogTitle": "Exportar artigos salvos",
+    "failedTitle": "Falha na exportação",
+    "failedMessage": "Nada foi exportado. Tente novamente.",
+    "docTitle": "Artigos salvos",
+    "docExported": "Exportado em {{date}}",
+    "docReasonLabel": "Por que Mera escolheu"
   }
 }
