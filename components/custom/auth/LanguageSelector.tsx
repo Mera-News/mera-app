@@ -1,11 +1,11 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Updates from 'expo-updates';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, FlatList, Keyboard, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { requestRestart } from '@/lib/app-restart';
 import { Box } from '@/components/ui/box';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { HStack } from '@/components/ui/hstack';
@@ -81,7 +81,23 @@ const LanguageSelector: React.FC = () => {
                 t('language.restartDescription'),
                 [
                     { text: t('language.later'), style: 'cancel' },
-                    { text: t('language.restart'), onPress: () => Updates.reloadAsync() },
+                    {
+                        text: t('language.restart'),
+                        // Through the one restart authority, not a bare
+                        // reloadAsync(): lib/app-restart.ts holds this off while
+                        // a purchase or a credential write is mid-flight. The
+                        // last of the four ad-hoc callers to migrate; the
+                        // Settings picker (LanguageSettingsScreen) is the
+                        // already-migrated sibling and this matches it exactly.
+                        //
+                        // Deliberately NOT gated on `restartIsAvailable()`.
+                        // There is no fallback branch to gate — the alert's
+                        // other button is "Later", and nothing here tells the
+                        // reader to reopen the app — and that function returns
+                        // false under __DEV__, so a gate would hide the RTL
+                        // prompt for the whole of development.
+                        onPress: () => { void requestRestart('language'); },
+                    },
                 ],
             );
         },
