@@ -1,5 +1,6 @@
 import { AppState, type AppStateStatus } from 'react-native';
 import { create } from 'zustand';
+import { restartContext, type RestartContext } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 import {
   isAppLockEnabled as readIsAppLockEnabled,
@@ -57,10 +58,35 @@ export const usePinStore = create<PinState>()((set, get) => ({
   // cold start when both are present. Idempotent — safe to call from both the
   // root layout and the launch gate; the AppState listener is wired exactly
   // once (see below).
+  //
+  // A JS RESTART IS NOT A COLD START. Since every background -> foreground
+  // return reloads the app (lib/app-restart.ts), an unconditional cold-start
+  // lock would turn a three-second background into a PIN entry, on every single
+  // return — the most visible regression this change could have. On a restart
+  // boot the ordinary threshold rule is applied instead, against the background
+  // stamp the marker carried across the reload, so the security semantics are
+  // exactly what they were: away longer than BACKGROUND_LOCK_THRESHOLD_MS locks,
+  // shorter does not. A real cold start still locks unconditionally.
+  //
+  // This runs in an earlier effect than the root bootstrap's
+  // `initRestartContext()`, so it awaits the memoised promise itself rather
+  // than reading `wasJsRestartSync()`. Both callers end up on one marker read.
   init: async () => {
     if (get().initialized) return;
     let pinSet = false;
     let lockEnabled = false;
+    // Fails to "cold start", which is the locking side. An unreadable marker
+    // must never be the reason a PIN gate does not engage.
+    let restart: RestartContext = {
+      wasJsRestart: false,
+      backgroundedAt: null,
+      lastForegroundAt: null,
+    };
+    try {
+      restart = await restartContext();
+    } catch (err) {
+      logger.captureException(err, { tags: { store: 'pin-store', method: 'init-restart' } });
+    }
     try {
       // One-shot PIN gate reset (see pin-force-reset.ts). Deliberately BEFORE the
       // reads below: app/index.tsx awaits init() before resolveLaunchRoute, so a
@@ -85,7 +111,13 @@ export const usePinStore = create<PinState>()((set, get) => ({
       pinSet,
       lockEnabled,
       // Cold start with the lock on and a PIN configured ⇒ locked until entry.
-      locked: lockEnabled && pinSet,
+      // A restart boot instead applies the same threshold a warm foreground
+      // would, against the pre-restart background stamp. A null stamp (an OTA
+      // restart fired while the user was looking at the app) means they never
+      // left, so it does not lock.
+      locked: restart.wasJsRestart
+        ? shouldLockAfterBackground(restart.backgroundedAt, Date.now(), pinSet, lockEnabled)
+        : lockEnabled && pinSet,
       initialized: true,
     });
     ensureAppStateListener();

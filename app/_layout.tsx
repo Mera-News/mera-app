@@ -23,6 +23,7 @@ import client from '../lib/apollo-client';
 import { OfflineBannerSlot } from '@/components/custom/OfflineBanner';
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
+import AppRestartOnForeground from '@/components/custom/AppRestartOnForeground';
 import NativeUpdateGate from '@/components/custom/NativeUpdateGate';
 import OTASilentUpdater from '@/components/custom/OTASilentUpdater';
 import TranslationUnavailablePrompt from '@/components/custom/TranslationUnavailablePrompt';
@@ -65,6 +66,7 @@ import {
 import { defineBackupTask, syncBackupTaskRegistration } from '@/lib/background/backup-task';
 import * as Sentry from '@sentry/react-native';
 import { DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
+import { initRestartContext, restartContext } from '@/lib/app-restart';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 // Task registrations — each file calls AppScheduler.register() at module load
 import '@/lib/scheduler/tasks/feed-sync-task';
@@ -230,82 +232,113 @@ function AppRoot() {
     // the feed without waiting for any DB work.
     setAppInitialized(true);
 
-    // Initialise the scheduler after marking the app ready so tasks that
-    // check db-ready will pass their condition on the first tick.
-    void AppScheduler.init();
+    // ONE settings read, ahead of everything that depends on it.
+    //
+    // `initRestartContext()` reads and clears the restart marker
+    // (lib/app-restart.ts), which is what tells this boot apart from a real
+    // cold start. It is awaited BEFORE AppScheduler.init() so that
+    // `onStoresHydrated()` — which must stay synchronous, see its header — can
+    // read the populated cache rather than a promise. pin-store.init() runs in
+    // an earlier effect and awaits the same memoised promise, so the two
+    // callers share a single read and neither has to know about the other.
+    void (async () => {
+      await initRestartContext();
 
-    // Kick off store hydration in the background. The For You suggestion
-    // query inside is fired ahead of everything else and updates the store
-    // the instant it resolves — the screen re-renders with cached rows
-    // without the rest of hydration needing to complete.
-    hydrateAllStores()
-      .then(() => {
-        // Post-hydration tasks that need hydrated store state.
-        applyLanguage(useAppLanguageStore.getState().appLanguage);
+      // Initialise the scheduler after marking the app ready so tasks that
+      // check db-ready will pass their condition on the first tick.
+      void AppScheduler.init();
 
-        // If the user is on cloud processing, the downloaded base-model
-        // GGUF (~3 GB) shouldn't squat on disk. Wipe the `mera-models/`
-        // cache and reset the store's model-state so the UI reflects
-        // reality. Safe to call on cold start — no llama context can be
-        // loaded yet.
-        const meraStore = useMeraProtocolStore.getState();
-        if (meraStore.processingMode !== ProcessingMode.OnDevice) {
-          purgeAllBaseModels()
-            .then(() => {
-              if (meraStore.modelState !== 'not_downloaded') {
-                meraStore.setModelState('not_downloaded');
-                meraStore.setDownloadProgress(0);
-              }
-            })
-            .catch((err) =>
+      // Kick off store hydration in the background. The For You suggestion
+      // query inside is fired ahead of everything else and updates the store
+      // the instant it resolves — the screen re-renders with cached rows
+      // without the rest of hydration needing to complete.
+      hydrateAllStores()
+        .then(() => {
+          // Post-hydration tasks that need hydrated store state.
+          applyLanguage(useAppLanguageStore.getState().appLanguage);
+
+          // If the user is on cloud processing, the downloaded base-model
+          // GGUF (~3 GB) shouldn't squat on disk. Wipe the `mera-models/`
+          // cache and reset the store's model-state so the UI reflects
+          // reality. Safe to call on cold start — no llama context can be
+          // loaded yet.
+          const meraStore = useMeraProtocolStore.getState();
+          if (meraStore.processingMode !== ProcessingMode.OnDevice) {
+            purgeAllBaseModels()
+              .then(() => {
+                if (meraStore.modelState !== 'not_downloaded') {
+                  meraStore.setModelState('not_downloaded');
+                  meraStore.setDownloadProgress(0);
+                }
+              })
+              .catch((err) =>
+                logger.captureException(err, {
+                  tags: { component: 'RootLayout', method: 'purge-disabled-models' },
+                }),
+              );
+          }
+
+          // Re-register the Expo push token on every boot. This is idempotent —
+          // only POSTs to the server when the token has changed vs the cached
+          // persona. Handles reinstalls, iOS→Android migrations, and token
+          // rotation events.
+          //
+          // Deliberately NOT awaited: it is a network POST sitting directly on the
+          // critical path to the first sync, and cold start is exactly when the
+          // user is looking at an empty feed. Tradeoff — `getExpoPushToken()`
+          // reads `userPersona?.expoPushToken`, so on a very first cold start the
+          // scoring run may be minted with a null token and fall back to polling
+          // for its result instead of a push wake-up. Latency now beats a
+          // slightly cheaper first run.
+          const { userId } = useUserStore.getState();
+          if (userId) {
+            void ensurePushTokenRegistered(userId).catch((err) =>
               logger.captureException(err, {
-                tags: { component: 'RootLayout', method: 'purge-disabled-models' },
+                tags: { component: 'RootLayout', method: 'ensurePushTokenRegistered' },
               }),
             );
-        }
+          }
 
-        // Re-register the Expo push token on every boot. This is idempotent —
-        // only POSTs to the server when the token has changed vs the cached
-        // persona. Handles reinstalls, iOS→Android migrations, and token
-        // rotation events.
-        //
-        // Deliberately NOT awaited: it is a network POST sitting directly on the
-        // critical path to the first sync, and cold start is exactly when the
-        // user is looking at an empty feed. Tradeoff — `getExpoPushToken()`
-        // reads `userPersona?.expoPushToken`, so on a very first cold start the
-        // scoring run may be minted with a null token and fall back to polling
-        // for its result instead of a push wake-up. Latency now beats a
-        // slightly cheaper first run.
-        const { userId } = useUserStore.getState();
-        if (userId) {
-          void ensurePushTokenRegistered(userId).catch((err) =>
-            logger.captureException(err, {
-              tags: { component: 'RootLayout', method: 'ensurePushTokenRegistered' },
-            }),
-          );
-        }
-
-        // Treat cold start like an app-foreground event so tasks that
-        // declare 'app-foreground' triggers (feed-sync, inference-recover)
-        // fire immediately without waiting for a background→foreground cycle.
-        // Placed after hydration so the 'authenticated' condition passes.
-        AppScheduler.onStoresHydrated();
-      })
-      .catch((error) =>
-        logger.captureException(error, {
-          tags: { component: 'RootLayout', method: 'bootstrap' },
-        }),
-      );
+          // Treat cold start like an app-foreground event so tasks that
+          // declare 'app-foreground' triggers (feed-sync, inference-recover)
+          // fire immediately without waiting for a background→foreground cycle.
+          // Placed after hydration so the 'authenticated' condition passes.
+          AppScheduler.onStoresHydrated();
+        })
+        .catch((error) =>
+          logger.captureException(error, {
+            tags: { component: 'RootLayout', method: 'bootstrap' },
+          }),
+        );
+    })();
 
     return () => { AppScheduler.dispose(); };
   }, [setAppInitialized]);
 
-  // Handle notifications that launched the app (when app was not running)
-  // Must wait for navigation to be ready before navigating
+  // Handle notifications that launched the app (when app was not running).
+  // Must wait for navigation to be ready before navigating.
+  //
+  // NOT ON A RESTART BOOT. `getLastNotificationResponseAsync()` survives a JS
+  // reload, and every background -> foreground return is now a reload
+  // (lib/app-restart.ts) — so without this gate every return would deep-link
+  // the user back to a notification they tapped hours ago, over and over.
+  //
+  // Awaits the memoised context rather than reading the synchronous cache:
+  // `isNavigationReady` can flip before the marker read resolves, and the cache
+  // reads false until it does. Fails OPEN — an unreadable marker handles the
+  // notification, which is the behaviour this app has always had.
   useEffect(() => {
-    if (isNavigationReady) {
-      handleInitialNotification();
-    }
+    if (!isNavigationReady) return;
+    let cancelled = false;
+    void restartContext()
+      .then((ctx) => {
+        if (cancelled || ctx.wasJsRestart) return;
+        handleInitialNotification();
+      })
+      .catch(() => {
+        if (!cancelled) handleInitialNotification();
+      });
+    return () => { cancelled = true; };
   }, [isNavigationReady]);
 
   return (
@@ -396,6 +429,11 @@ export default Sentry.wrap(function RootLayout() {
             <NativeUpdateGate>
               <ToastInitializer />
               <OTASilentUpdater />
+              {/* Inside the gate's CHILDREN on purpose: a blocked user is
+                  rendered ForceUpdateScreen INSTEAD of these, so nothing here
+                  is mounted and nobody can be restarted out from under the
+                  update screen. */}
+              <AppRestartOnForeground />
               <TranslationUnavailablePrompt />
               <AppRoot />
               {/* LAST on purpose: toasts have to paint above the router stack,

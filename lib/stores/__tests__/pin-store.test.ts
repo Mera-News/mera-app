@@ -26,7 +26,21 @@ jest.mock('../../security/pin-force-reset', () => ({
 
 jest.mock('../../logger', () => ({
   __esModule: true,
-  default: { captureException: jest.fn() },
+  default: { captureException: jest.fn(), debug: jest.fn(), info: jest.fn(), addBreadcrumb: jest.fn() },
+}));
+
+// `lib/app-restart.ts` is left REAL below. That is the point: init() now decides
+// the cold-start lock off the restart marker, and the marker is read with
+// `getSetting` DIRECTLY because it is read before hydrateAllStores() and a store
+// read that early comes back silently empty. Mocking restartContext() would
+// prove nothing about that read, and an empty read is the regression these cases
+// exist to catch — it would fire the PIN prompt on every single return.
+const mockGetSetting = jest.fn();
+const mockDeleteSetting = jest.fn((..._a: any[]) => Promise.resolve());
+jest.mock('@/lib/database/services/setting-service', () => ({
+  getSetting: (...a: any[]) => mockGetSetting(...a),
+  setSetting: jest.fn(),
+  deleteSetting: (...a: any[]) => mockDeleteSetting(...a),
 }));
 
 // AppState listener is a side effect of init(); stub addEventListener so it's a
@@ -35,6 +49,7 @@ jest.mock('react-native', () => ({
   AppState: { addEventListener: jest.fn(() => ({ remove: jest.fn() })) },
 }));
 
+import { RESTART_MARKER_KEY, __resetAppRestartForTests } from '@/lib/app-restart';
 import {
   BACKGROUND_LOCK_THRESHOLD_MS,
   shouldLockAfterBackground,
@@ -55,8 +70,29 @@ beforeEach(() => {
   mockClearPin.mockResolvedValue(undefined);
   mockSetAppLockEnabled.mockResolvedValue(undefined);
   mockRunPinForceResetOnce.mockResolvedValue(undefined);
+  // The restart context memoises its marker read for the life of the module.
+  mockGetSetting.mockResolvedValue(null);
+  mockDeleteSetting.mockResolvedValue(undefined);
+  __resetAppRestartForTests();
   reset();
 });
+
+/** A restart marker as `requestRestart` writes it, `awayMs` before now. */
+const seedRestartMarker = (awayMs: number | null) => {
+  const now = Date.now();
+  mockGetSetting.mockImplementation((key: string) =>
+    Promise.resolve(
+      key === RESTART_MARKER_KEY
+        ? JSON.stringify({
+            reason: 'foreground',
+            at: now,
+            backgroundedAt: awayMs == null ? null : now - awayMs,
+            lastForegroundAt: null,
+          })
+        : null,
+    ),
+  );
+};
 
 describe('shouldLockAfterBackground', () => {
   const now = 1_000_000_000;
@@ -82,6 +118,66 @@ describe('shouldLockAfterBackground', () => {
 
   it('locks past the threshold', () => {
     expect(shouldLockAfterBackground(longAgo, now, true, true)).toBe(true);
+  });
+});
+
+describe('init on a RESTART boot', () => {
+  // Every background -> foreground return reloads the app, so the marker read
+  // below runs on every return of every locked device. If it came back empty
+  // the cold-start branch would engage and the user would be asked for their
+  // PIN each time — the most visible possible regression in this change.
+  it('READS THE MARKER ROW at init() time', async () => {
+    seedRestartMarker(3_000);
+    mockIsPinSet.mockResolvedValue(true);
+    mockIsAppLockEnabled.mockResolvedValue(true);
+
+    await usePinStore.getState().init();
+
+    expect(mockGetSetting).toHaveBeenCalledWith(RESTART_MARKER_KEY);
+    expect(mockDeleteSetting).toHaveBeenCalledWith(RESTART_MARKER_KEY);
+  });
+
+  it('does NOT lock after a 3-second background', async () => {
+    seedRestartMarker(3_000);
+    mockIsPinSet.mockResolvedValue(true);
+    mockIsAppLockEnabled.mockResolvedValue(true);
+
+    await usePinStore.getState().init();
+
+    expect(usePinStore.getState().locked).toBe(false);
+  });
+
+  it('LOCKS after a 10-minute background, so the threshold still bites', async () => {
+    seedRestartMarker(10 * 60_000);
+    mockIsPinSet.mockResolvedValue(true);
+    mockIsAppLockEnabled.mockResolvedValue(true);
+
+    await usePinStore.getState().init();
+
+    expect(usePinStore.getState().locked).toBe(true);
+  });
+
+  it('does not lock when the restart fired with the app foregrounded (OTA)', async () => {
+    // No background stamp means the user never left. Restarting them onto a new
+    // bundle is not a reason to ask for a PIN.
+    seedRestartMarker(null);
+    mockIsPinSet.mockResolvedValue(true);
+    mockIsAppLockEnabled.mockResolvedValue(true);
+
+    await usePinStore.getState().init();
+
+    expect(usePinStore.getState().locked).toBe(false);
+  });
+
+  it('falls back to the cold-start lock on an unreadable marker', async () => {
+    // Fail-closed: an unreadable marker must never be the reason a gate is open.
+    mockGetSetting.mockResolvedValue('{ not json');
+    mockIsPinSet.mockResolvedValue(true);
+    mockIsAppLockEnabled.mockResolvedValue(true);
+
+    await usePinStore.getState().init();
+
+    expect(usePinStore.getState().locked).toBe(true);
   });
 });
 
