@@ -2738,5 +2738,26 @@
       "Nichts kommt schneller, wenn du zusiehst."
     ],
     "a11y": "Mera aktualisiert deine News auf diesem Handy."
+  },
+  "savedExport": {
+    "fabA11y": "Gespeicherte Artikel exportieren",
+    "title": "Gespeicherte exportieren",
+    "step1Heading": "Artikel auswählen",
+    "step2Heading": "Meras Begründung einbeziehen?",
+    "step3Heading": "Format wählen",
+    "selectAll": "Alle auswählen",
+    "selectedCount": "{{count}} ausgewählt",
+    "includeReason": "Meras Begründung einbeziehen",
+    "includeReasonHint": "Der kurze Hinweis, warum jeder Artikel in deinen Feed gelangt ist. Einzeln gespeicherte Artikel haben keinen.",
+    "formatMarkdown": "Markdown-Liste",
+    "formatMarkdownHint": "Eine gut lesbare Liste, ideal für Notizen und Dokumente.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Strukturierte Daten, ideal für Skripte und Tabellen.",
+    "shareDialogTitle": "Gespeicherte Artikel exportieren",
+    "failedTitle": "Export fehlgeschlagen",
+    "failedMessage": "Es wurde nichts exportiert. Bitte versuche es erneut.",
+    "docTitle": "Gespeicherte Artikel",
+    "docExported": "Exportiert am {{date}}",
+    "docReasonLabel": "Warum Mera diesen Artikel ausgewählt hat"
   }
 }

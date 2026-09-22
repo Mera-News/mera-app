@@ -2776,5 +2776,26 @@
       "Nic nie przyjdzie szybciej, gdy patrzysz."
     ],
     "a11y": "Mera aktualizuje twoje wiadomości na tym telefonie."
+  },
+  "savedExport": {
+    "fabA11y": "Eksportuj zapisane artykuły",
+    "title": "Eksportuj zapisane",
+    "step1Heading": "Wybierz artykuły",
+    "step2Heading": "Dołączyć uzasadnienie Mery?",
+    "step3Heading": "Wybierz format",
+    "selectAll": "Zaznacz wszystko",
+    "selectedCount": "Zaznaczono: {{count}}",
+    "includeReason": "Dołącz uzasadnienie Mery",
+    "includeReasonHint": "Jednolinijkowa notatka wyjaśniająca, dlaczego każdy artykuł trafił do Twojego kanału. Artykuły zapisane pojedynczo jej nie mają.",
+    "formatMarkdown": "Lista Markdown",
+    "formatMarkdownHint": "Czytelna lista, dobra do notatek i dokumentów.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Dane strukturalne, dobre do skryptów i arkuszy kalkulacyjnych.",
+    "shareDialogTitle": "Eksportuj zapisane artykuły",
+    "failedTitle": "Eksport nie powiódł się",
+    "failedMessage": "Nic nie zostało wyeksportowane. Spróbuj ponownie.",
+    "docTitle": "Zapisane artykuły",
+    "docExported": "Wyeksportowano {{date}}",
+    "docReasonLabel": "Dlaczego Mera to wybrała"
   }
 }

@@ -2738,5 +2738,26 @@
       "盯着看也不会来得更快。"
     ],
     "a11y": "Mera 正在这台手机上更新你的新闻。"
+  },
+  "savedExport": {
+    "fabA11y": "导出已保存的文章",
+    "title": "导出已保存",
+    "step1Heading": "选择文章",
+    "step2Heading": "是否包含 Mera 的选择理由？",
+    "step3Heading": "选择格式",
+    "selectAll": "全选",
+    "selectedCount": "已选择 {{count}} 篇",
+    "includeReason": "包含 Mera 的理由",
+    "includeReasonHint": "说明每篇文章为何出现在你的信息流中的一句话。单独保存的文章没有这句话。",
+    "formatMarkdown": "Markdown 列表",
+    "formatMarkdownHint": "易于阅读的列表，适合笔记和文档。",
+    "formatJson": "JSON",
+    "formatJsonHint": "结构化数据，适合脚本和表格。",
+    "shareDialogTitle": "导出已保存的文章",
+    "failedTitle": "导出失败",
+    "failedMessage": "没有导出任何内容。请重试。",
+    "docTitle": "已保存的文章",
+    "docExported": "导出于 {{date}}",
+    "docReasonLabel": "Mera 选择它的理由"
   }
 }

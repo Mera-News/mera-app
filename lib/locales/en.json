@@ -2739,5 +2739,26 @@
       "Nothing arrives faster if you watch."
     ],
     "a11y": "Mera is updating your news on this phone."
+  },
+  "savedExport": {
+    "fabA11y": "Export saved articles",
+    "title": "Export saved",
+    "step1Heading": "Choose articles",
+    "step2Heading": "Include why Mera picked it?",
+    "step3Heading": "Choose a format",
+    "selectAll": "Select all",
+    "selectedCount": "{{count}} selected",
+    "includeReason": "Include Mera's reason",
+    "includeReasonHint": "The one-line note explaining why each article reached your feed. Standalone saves do not have one.",
+    "formatMarkdown": "Markdown list",
+    "formatMarkdownHint": "A readable list, good for notes and documents.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Structured data, good for scripts and spreadsheets.",
+    "shareDialogTitle": "Export saved articles",
+    "failedTitle": "Export failed",
+    "failedMessage": "Nothing was exported. Please try again.",
+    "docTitle": "Saved articles",
+    "docExported": "Exported {{date}}",
+    "docReasonLabel": "Why Mera picked it"
   }
 }

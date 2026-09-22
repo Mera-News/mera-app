@@ -2745,5 +2745,26 @@
       "Rien n'arrive plus vite si vous regardez."
     ],
     "a11y": "Mera met à jour vos infos sur ce téléphone."
+  },
+  "savedExport": {
+    "fabA11y": "Exporter les articles enregistrés",
+    "title": "Exporter les enregistrés",
+    "step1Heading": "Choisissez les articles",
+    "step2Heading": "Inclure la raison de Mera ?",
+    "step3Heading": "Choisissez un format",
+    "selectAll": "Tout sélectionner",
+    "selectedCount": "{{count}} sélectionnés",
+    "includeReason": "Inclure la raison de Mera",
+    "includeReasonHint": "La note d'une ligne qui explique pourquoi chaque article est arrivé dans votre fil. Les articles enregistrés seuls n'en ont pas.",
+    "formatMarkdown": "Liste Markdown",
+    "formatMarkdownHint": "Une liste lisible, idéale pour les notes et les documents.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Données structurées, idéales pour les scripts et les tableurs.",
+    "shareDialogTitle": "Exporter les articles enregistrés",
+    "failedTitle": "Échec de l'exportation",
+    "failedMessage": "Rien n'a été exporté. Veuillez réessayer.",
+    "docTitle": "Articles enregistrés",
+    "docExported": "Exporté le {{date}}",
+    "docReasonLabel": "Pourquoi Mera l'a choisi"
   }
 }

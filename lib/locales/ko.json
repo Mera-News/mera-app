@@ -2737,5 +2737,26 @@
       "지켜본다고 더 빨리 오지 않아요."
     ],
     "a11y": "Mera가 이 기기에서 뉴스를 업데이트하고 있어요."
+  },
+  "savedExport": {
+    "fabA11y": "저장한 기사 내보내기",
+    "title": "저장한 기사 내보내기",
+    "step1Heading": "기사 선택",
+    "step2Heading": "Mera가 선택한 이유를 포함할까요?",
+    "step3Heading": "형식 선택",
+    "selectAll": "전체 선택",
+    "selectedCount": "{{count}}개 선택됨",
+    "includeReason": "Mera의 이유 포함",
+    "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 메모입니다. 개별로 저장한 기사에는 없습니다.",
+    "formatMarkdown": "Markdown 목록",
+    "formatMarkdownHint": "읽기 쉬운 목록으로, 메모와 문서에 적합합니다.",
+    "formatJson": "JSON",
+    "formatJsonHint": "구조화된 데이터로, 스크립트와 스프레드시트에 적합합니다.",
+    "shareDialogTitle": "저장한 기사 내보내기",
+    "failedTitle": "내보내기 실패",
+    "failedMessage": "아무것도 내보내지 않았습니다. 다시 시도해 주세요.",
+    "docTitle": "저장한 기사",
+    "docExported": "{{date}}에 내보냄",
+    "docReasonLabel": "Mera가 선택한 이유"
   }
 }

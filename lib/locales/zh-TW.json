@@ -2738,5 +2738,26 @@
       "盯著看也不會來得更快。"
     ],
     "a11y": "Mera 正在這支手機上更新你的新聞。"
+  },
+  "savedExport": {
+    "fabA11y": "匯出已儲存的文章",
+    "title": "匯出已儲存",
+    "step1Heading": "選擇文章",
+    "step2Heading": "是否包含 Mera 的選擇理由？",
+    "step3Heading": "選擇格式",
+    "selectAll": "全選",
+    "selectedCount": "已選擇 {{count}} 篇",
+    "includeReason": "包含 Mera 的理由",
+    "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句話。單獨儲存的文章沒有這句話。",
+    "formatMarkdown": "Markdown 清單",
+    "formatMarkdownHint": "易於閱讀的清單，適合筆記與文件。",
+    "formatJson": "JSON",
+    "formatJsonHint": "結構化資料，適合指令碼與試算表。",
+    "shareDialogTitle": "匯出已儲存的文章",
+    "failedTitle": "匯出失敗",
+    "failedMessage": "沒有匯出任何內容。請再試一次。",
+    "docTitle": "已儲存的文章",
+    "docExported": "匯出於 {{date}}",
+    "docReasonLabel": "Mera 選擇它的理由"
   }
 }

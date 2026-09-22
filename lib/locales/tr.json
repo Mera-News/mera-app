@@ -2740,5 +2740,26 @@
       "Baktığın için daha hızlı gelmez."
     ],
     "a11y": "Mera bu telefonda haberlerini güncelliyor."
+  },
+  "savedExport": {
+    "fabA11y": "Kaydedilen makaleleri dışa aktar",
+    "title": "Kaydedilenleri dışa aktar",
+    "step1Heading": "Makaleleri seçin",
+    "step2Heading": "Mera'nın gerekçesi eklensin mi?",
+    "step3Heading": "Bir biçim seçin",
+    "selectAll": "Tümünü seç",
+    "selectedCount": "{{count}} seçildi",
+    "includeReason": "Mera'nın gerekçesini ekle",
+    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Tek tek kaydedilen makalelerde bu not bulunmaz.",
+    "formatMarkdown": "Markdown listesi",
+    "formatMarkdownHint": "Okunması kolay bir liste, notlar ve belgeler için uygun.",
+    "formatJson": "JSON",
+    "formatJsonHint": "Yapılandırılmış veri, betikler ve hesap tabloları için uygun.",
+    "shareDialogTitle": "Kaydedilen makaleleri dışa aktar",
+    "failedTitle": "Dışa aktarma başarısız",
+    "failedMessage": "Hiçbir şey dışa aktarılmadı. Lütfen tekrar deneyin.",
+    "docTitle": "Kaydedilen makaleler",
+    "docExported": "{{date}} tarihinde dışa aktarıldı",
+    "docReasonLabel": "Mera bunu neden seçti"
   }
 }

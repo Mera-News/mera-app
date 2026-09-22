@@ -2824,5 +2824,26 @@
       "لا شيء يصل أسرع إن راقبت."
     ],
     "a11y": "ميرا تحدّث أخبارك على هذا الهاتف."
+  },
+  "savedExport": {
+    "fabA11y": "تصدير المقالات المحفوظة",
+    "title": "تصدير المحفوظات",
+    "step1Heading": "اختر المقالات",
+    "step2Heading": "هل تريد تضمين سبب اختيار Mera لها؟",
+    "step3Heading": "اختر الصيغة",
+    "selectAll": "تحديد الكل",
+    "selectedCount": "{{count}} محدد",
+    "includeReason": "تضمين سبب Mera",
+    "includeReasonHint": "الملاحظة المختصرة التي تشرح سبب وصول كل مقال إلى موجزك. المقالات المحفوظة بشكل منفرد لا تحتوي عليها.",
+    "formatMarkdown": "قائمة Markdown",
+    "formatMarkdownHint": "قائمة سهلة القراءة، مناسبة للملاحظات والمستندات.",
+    "formatJson": "JSON",
+    "formatJsonHint": "بيانات منظمة، مناسبة للبرامج النصية وجداول البيانات.",
+    "shareDialogTitle": "تصدير المقالات المحفوظة",
+    "failedTitle": "فشل التصدير",
+    "failedMessage": "لم يتم تصدير أي شيء. يرجى المحاولة مرة أخرى.",
+    "docTitle": "المقالات المحفوظة",
+    "docExported": "تم التصدير في {{date}}",
+    "docReasonLabel": "سبب اختيار Mera لها"
   }
 }

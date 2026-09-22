@@ -2737,5 +2737,26 @@
       "見ていても早くは届きません。"
     ],
     "a11y": "Meraがこの端末でニュースを更新しています。"
+  },
+  "savedExport": {
+    "fabA11y": "保存した記事を書き出す",
+    "title": "保存記事の書き出し",
+    "step1Heading": "記事を選択",
+    "step2Heading": "Mera が選んだ理由を含めますか？",
+    "step3Heading": "形式を選択",
+    "selectAll": "すべて選択",
+    "selectedCount": "{{count}} 件選択中",
+    "includeReason": "Mera の理由を含める",
+    "includeReasonHint": "各記事がフィードに届いた理由を説明する 1 行のメモです。単独で保存した記事にはありません。",
+    "formatMarkdown": "Markdown リスト",
+    "formatMarkdownHint": "読みやすいリストです。メモや文書に適しています。",
+    "formatJson": "JSON",
+    "formatJsonHint": "構造化データです。スクリプトや表計算に適しています。",
+    "shareDialogTitle": "保存した記事を書き出す",
+    "failedTitle": "書き出しに失敗しました",
+    "failedMessage": "何も書き出されませんでした。もう一度お試しください。",
+    "docTitle": "保存した記事",
+    "docExported": "{{date}} に書き出し",
+    "docReasonLabel": "Mera が選んだ理由"
   }
 }
