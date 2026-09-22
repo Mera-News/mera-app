@@ -159,6 +159,24 @@ describe('toExportRows', () => {
     expect(row.publishedAt).toBeNull();
   });
 
+  it('nulls an unreadable saved timestamp instead of throwing the whole export', () => {
+    // `new Date(NaN).toISOString()` throws a RangeError, and one bad row must
+    // never cost the other rows their export.
+    const [row] = toExportRows([suggestionItem({ savedAt: Number.NaN })], {
+      includeReason: false,
+    });
+    expect(row.savedAt).toBeNull();
+  });
+
+  it('still renders a Markdown meta line for a row with no saved date', () => {
+    const rows = toExportRows([suggestionItem({ savedAt: Number.NaN })], {
+      includeReason: false,
+    });
+    const md = buildSavedMarkdown(rows, LABELS);
+    expect(md).toContain('The Guardian · 2026-09-20');
+    expect(md).not.toContain('null');
+  });
+
   it('returns an empty array for an empty selection', () => {
     expect(toExportRows([], { includeReason: true })).toEqual([]);
   });

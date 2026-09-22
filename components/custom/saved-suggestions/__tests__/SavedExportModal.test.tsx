@@ -85,9 +85,18 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
     return { jsxDEV: R.jsxDEV, Fragment: R.Fragment };
 });
 
+// The `t` stub INTERPOLATES rather than returning the bare key. The document's
+// date reaches the file only through `t('savedExport.docExported', { date })`,
+// so a stub that drops options leaves that seam — the one place `exportDay()`
+// is joined to the label — untested on both sides: the pure module's own suite
+// passes an already-resolved string.
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({
-        t: (k: string, o?: any) => (o?.count !== undefined ? `${k}:${o.count}` : k),
+        t: (k: string, o?: any) => {
+            if (!o) return k;
+            const parts = Object.entries(o).map(([n, v]) => `${n}=${v}`);
+            return parts.length ? `${k}:${parts.join(',')}` : k;
+        },
     }),
 }));
 
@@ -223,7 +232,7 @@ describe('step 1 — choosing articles', () => {
         expect(getByTestId('saved-export-select-all').props.accessibilityState.checked).toBe(false);
         expect(getByTestId('saved-export-row-sv-1').props.accessibilityState.checked).toBe(false);
         expect(getByTestId('saved-export-count').props.children).toBe(
-            'savedExport.selectedCount:0',
+            'savedExport.selectedCount:count=0',
         );
     });
 
@@ -234,13 +243,13 @@ describe('step 1 — choosing articles', () => {
         expect(getByTestId('saved-export-row-sv-1').props.accessibilityState.checked).toBe(true);
         expect(getByTestId('saved-export-row-sv-3').props.accessibilityState.checked).toBe(true);
         expect(getByTestId('saved-export-count').props.children).toBe(
-            'savedExport.selectedCount:3',
+            'savedExport.selectedCount:count=3',
         );
 
         fireEvent.press(getByTestId('saved-export-select-all'));
         expect(getByTestId('saved-export-row-sv-1').props.accessibilityState.checked).toBe(false);
         expect(getByTestId('saved-export-count').props.children).toBe(
-            'savedExport.selectedCount:0',
+            'savedExport.selectedCount:count=0',
         );
     });
 
@@ -306,7 +315,7 @@ describe('step 2 — the reason toggle', () => {
         fireEvent.press(getByTestId('saved-export-back'));
         expect(getByTestId('saved-export-row-sv-1').props.accessibilityState.checked).toBe(true);
         expect(getByTestId('saved-export-count').props.children).toBe(
-            'savedExport.selectedCount:3',
+            'savedExport.selectedCount:count=3',
         );
     });
 });
@@ -385,6 +394,30 @@ describe('step 3 — format and hand-off', () => {
         expect(onClose).toHaveBeenCalled();
     });
 
+    it('reports and closes when the hand-off THREW rather than returned', async () => {
+        // The modal's try had no catch once, so a throw here cleared the
+        // spinner and then did nothing at all: no toast, no close, a wizard
+        // sitting open over a tap that appeared to be ignored.
+        mockExportAndShare.mockRejectedValue(new Error('boom'));
+        const { getByTestId, onFailed, onClose } = advanceToStep3();
+
+        fireEvent.press(getByTestId('saved-export-format-markdown'));
+
+        await waitFor(() => expect(onFailed).toHaveBeenCalled());
+        expect(onClose).toHaveBeenCalled();
+    });
+
+    it('writes the export date into the document, not a bare i18n key', async () => {
+        const { getByTestId } = advanceToStep3();
+
+        fireEvent.press(getByTestId('saved-export-format-markdown'));
+
+        await waitFor(() => expect(mockExportAndShare).toHaveBeenCalled());
+        const { content } = mockExportAndShare.mock.calls[0][0];
+        // exportDay() is UTC YYYY-MM-DD, the same convention the rows use.
+        expect(content).toMatch(/savedExport\.docExported:date=\d{4}-\d{2}-\d{2}/);
+    });
+
     it('does not raise the failure callback for the degraded text share', async () => {
         mockExportAndShare.mockResolvedValue({ status: 'shared', via: 'text' });
         const { getByTestId, onFailed, onClose } = advanceToStep3();
@@ -416,7 +449,7 @@ describe('reopening', () => {
         rerender(<SavedExportModal isOpen {...props} />);
         expect(getByTestId('saved-export-row-sv-1').props.accessibilityState.checked).toBe(false);
         expect(getByTestId('saved-export-count').props.children).toBe(
-            'savedExport.selectedCount:0',
+            'savedExport.selectedCount:count=0',
         );
     });
 });

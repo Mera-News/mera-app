@@ -46,8 +46,13 @@ export interface SavedExportRow {
   url: string | null;
   /** ISO 8601, or null when the row carries no usable publish date. */
   publishedAt: string | null;
-  /** ISO 8601. Always present: it is the column the Saved list sorts on. */
-  savedAt: string;
+  /** ISO 8601, or null when the row's saved timestamp is unreadable.
+   *
+   *  Nullable even though `saved_at` is non-optional in the schema and is the
+   *  column the Saved list sorts on, because the value reaches here as a
+   *  number and `new Date(NaN).toISOString()` THROWS. An unreadable timestamp
+   *  on one row must cost that row its date, not the whole export. */
+  savedAt: string | null;
   /** Null on a standalone article save, and null whenever the reader turned
    *  the reason off in step 2. */
   reason: string | null;
@@ -123,7 +128,7 @@ export function toExportRows(
         publication: oneLine(a.publicationSource?.publication_name) || null,
         url: a.article_url || a.source_uri || null,
         publishedAt: toIso(a.pubDate),
-        savedAt: new Date(item.savedAt).toISOString(),
+        savedAt: toIso(item.savedAt),
         // A standalone save was never scored, so there is no reason to include
         // even when the reader asked for reasons.
         reason: null,
@@ -136,7 +141,7 @@ export function toExportRows(
       publication: oneLine(s.publication_name) || null,
       url: s.article_url || null,
       publishedAt: toIso(s.firstPubDate ?? s.createdAt),
-      savedAt: new Date(item.savedAt).toISOString(),
+      savedAt: toIso(item.savedAt),
       reason: opts.includeReason && reason ? reason : null,
     };
   });
@@ -167,7 +172,7 @@ export function buildSavedMarkdown(
     const meta = [
       row.publication,
       row.publishedAt ? isoDay(row.publishedAt) : null,
-      isoDay(row.savedAt),
+      row.savedAt ? isoDay(row.savedAt) : null,
     ].filter((part): part is string => !!part);
     if (meta.length > 0) out.push(meta.join(' · '));
 

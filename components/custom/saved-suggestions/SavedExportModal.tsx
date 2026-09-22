@@ -146,6 +146,19 @@ const SavedExportModal: React.FC<SavedExportModalProps> = ({
                     onFailed();
                 }
                 onClose();
+            } catch (error) {
+                // Serialising or handing off THREW rather than returning a
+                // result. Without this the modal would sit there having done
+                // nothing: the spinner clears in `finally`, but neither
+                // `onFailed` nor `onClose` would ever run, and the house rule
+                // is that a feature says why it could not run and never
+                // silently does nothing.
+                logger.captureException(error, {
+                    tags: { screen: 'SavedExportModal', method: 'share' },
+                    extra: { format },
+                });
+                onFailed();
+                onClose();
             } finally {
                 setSharingFormat(null);
             }
@@ -276,107 +289,124 @@ const SavedExportModal: React.FC<SavedExportModalProps> = ({
                     </HStack>
                 </ModalHeader>
 
-                <ModalBody className="py-2">
-                    <Box testID="saved-export-modal">
-                        {step === 1 ? (
-                            <>
-                                {/* PINNED above the list, never a
-                                    ListHeaderComponent. Two reasons and both
-                                    matter: select-all must not scroll away, and
-                                    a hand-rolled FlatList mock silently drops
-                                    the props it did not destructure, which
-                                    makes every absence assertion over a header
-                                    in that slot pass for the wrong reason. */}
+                {/* Step 1 does NOT render inside ModalBody; steps 2 and 3 do.
+                    `ModalBody` IS a ScrollView (`Body: ScrollView`,
+                    components/ui/modal/index.tsx:42), and a FlatList inside a
+                    ScrollView of the same orientation is React Native's
+                    "VirtualizedLists should never be nested" warning: windowing
+                    breaks, so the list renders every row it has rather than a
+                    window, and its scrolling fights the parent's. The row list
+                    bounds and scrolls ITSELF through `maxHeight`, so it needs no
+                    ScrollView around it at all. Steps 2 and 3 are short, hold no
+                    virtualised list, and keep ModalBody so their content can
+                    still scroll on a small screen. `mt-2 mb-6` is ModalBody's own
+                    base spacing, reproduced here so the two look identical.
+
+                    Note what did NOT catch this: every component test here mocks
+                    ModalBody to a plain View, so the nesting the warning is about
+                    does not exist in the test tree. Same family as a class-name
+                    assertion that cannot see colour. */}
+                {step === 1 ? (
+                    <Box testID="saved-export-modal" className="mt-2 mb-6">
+                        {/* PINNED above the list, never a
+                            ListHeaderComponent. Two reasons and both
+                            matter: select-all must not scroll away, and
+                            a hand-rolled FlatList mock silently drops
+                            the props it did not destructure, which
+                            makes every absence assertion over a header
+                            in that slot pass for the wrong reason. */}
+                        <Pressable
+                            testID="saved-export-select-all"
+                            onPress={toggleAll}
+                            accessibilityRole="checkbox"
+                            accessibilityState={{ checked: allSelected }}
+                            className="flex-row items-center justify-between py-3 px-1 border-b border-gray-700"
+                        >
+                            <VStack className="flex-1 pr-3">
+                                <Text size="sm" className="text-white font-semibold">
+                                    {t('savedExport.selectAll')}
+                                </Text>
+                                <Text testID="saved-export-count" size="xs" className="text-gray-500">
+                                    {t('savedExport.selectedCount', {
+                                        count: selected.size,
+                                    })}
+                                </Text>
+                            </VStack>
+                            <CheckGlyph checked={allSelected} />
+                        </Pressable>
+
+                        <FlatList
+                            testID="saved-export-list"
+                            data={items}
+                            renderItem={renderRow}
+                            keyExtractor={savedItemId}
+                            style={{ maxHeight: listMaxHeight }}
+                            showsVerticalScrollIndicator={false}
+                        />
+                    </Box>
+                ) : (
+                    <ModalBody className="py-2">
+                        <Box testID="saved-export-modal">
+                            {step === 2 ? (
                                 <Pressable
-                                    testID="saved-export-select-all"
-                                    onPress={toggleAll}
+                                    testID="saved-export-include-reason"
+                                    onPress={() => setIncludeReason((v) => !v)}
                                     accessibilityRole="checkbox"
-                                    accessibilityState={{ checked: allSelected }}
-                                    className="flex-row items-center justify-between py-3 px-1 border-b border-gray-700"
+                                    accessibilityState={{ checked: includeReason }}
+                                    className="flex-row items-center py-3 px-1"
                                 >
                                     <VStack className="flex-1 pr-3">
-                                        <Text size="sm" className="text-white font-semibold">
-                                            {t('savedExport.selectAll')}
+                                        <Text size="sm" className="text-white">
+                                            {t('savedExport.includeReason')}
                                         </Text>
-                                        <Text testID="saved-export-count" size="xs" className="text-gray-500">
-                                            {t('savedExport.selectedCount', {
-                                                count: selected.size,
-                                            })}
+                                        <Text size="xs" className="text-gray-500 mt-0.5">
+                                            {t('savedExport.includeReasonHint')}
                                         </Text>
                                     </VStack>
-                                    <CheckGlyph checked={allSelected} />
+                                    <CheckGlyph checked={includeReason} />
                                 </Pressable>
+                            ) : null}
 
-                                <FlatList
-                                    testID="saved-export-list"
-                                    data={items}
-                                    renderItem={renderRow}
-                                    keyExtractor={savedItemId}
-                                    style={{ maxHeight: listMaxHeight }}
-                                    showsVerticalScrollIndicator={false}
-                                />
-                            </>
-                        ) : null}
-
-                        {step === 2 ? (
-                            <Pressable
-                                testID="saved-export-include-reason"
-                                onPress={() => setIncludeReason((v) => !v)}
-                                accessibilityRole="checkbox"
-                                accessibilityState={{ checked: includeReason }}
-                                className="flex-row items-center py-3 px-1"
-                            >
-                                <VStack className="flex-1 pr-3">
-                                    <Text size="sm" className="text-white">
-                                        {t('savedExport.includeReason')}
-                                    </Text>
-                                    <Text size="xs" className="text-gray-500 mt-0.5">
-                                        {t('savedExport.includeReasonHint')}
-                                    </Text>
+                            {step === 3 ? (
+                                <VStack space="sm" className="py-1">
+                                    {(
+                                        [
+                                            ['markdown', 'formatMarkdown', 'formatMarkdownHint'],
+                                            ['json', 'formatJson', 'formatJsonHint'],
+                                        ] as const
+                                    ).map(([format, labelKey, hintKey]) => (
+                                        <Pressable
+                                            key={format}
+                                            testID={`saved-export-format-${format}`}
+                                            onPress={() => handleShare(format)}
+                                            disabled={sharingFormat !== null}
+                                            accessibilityRole="button"
+                                            className="flex-row items-center border border-gray-700 rounded-lg px-3 py-3"
+                                        >
+                                            <VStack className="flex-1 pr-3">
+                                                <Text size="sm" className="text-white font-semibold">
+                                                    {t(`savedExport.${labelKey}`)}
+                                                </Text>
+                                                <Text size="xs" className="text-gray-500 mt-0.5">
+                                                    {t(`savedExport.${hintKey}`)}
+                                                </Text>
+                                            </VStack>
+                                            {sharingFormat === format ? (
+                                                <Spinner size="small" />
+                                            ) : (
+                                                <MaterialIcons
+                                                    name="ios-share"
+                                                    size={20}
+                                                    color={ACCENT}
+                                                />
+                                            )}
+                                        </Pressable>
+                                    ))}
                                 </VStack>
-                                <CheckGlyph checked={includeReason} />
-                            </Pressable>
-                        ) : null}
-
-                        {step === 3 ? (
-                            <VStack space="sm" className="py-1">
-                                {(
-                                    [
-                                        ['markdown', 'formatMarkdown', 'formatMarkdownHint'],
-                                        ['json', 'formatJson', 'formatJsonHint'],
-                                    ] as const
-                                ).map(([format, labelKey, hintKey]) => (
-                                    <Pressable
-                                        key={format}
-                                        testID={`saved-export-format-${format}`}
-                                        onPress={() => handleShare(format)}
-                                        disabled={sharingFormat !== null}
-                                        accessibilityRole="button"
-                                        className="flex-row items-center border border-gray-700 rounded-lg px-3 py-3"
-                                    >
-                                        <VStack className="flex-1 pr-3">
-                                            <Text size="sm" className="text-white font-semibold">
-                                                {t(`savedExport.${labelKey}`)}
-                                            </Text>
-                                            <Text size="xs" className="text-gray-500 mt-0.5">
-                                                {t(`savedExport.${hintKey}`)}
-                                            </Text>
-                                        </VStack>
-                                        {sharingFormat === format ? (
-                                            <Spinner size="small" />
-                                        ) : (
-                                            <MaterialIcons
-                                                name="ios-share"
-                                                size={20}
-                                                color={ACCENT}
-                                            />
-                                        )}
-                                    </Pressable>
-                                ))}
-                            </VStack>
-                        ) : null}
-                    </Box>
-                </ModalBody>
+                            ) : null}
+                        </Box>
+                    </ModalBody>
+                )}
 
                 <ModalFooter className="border-t border-gray-700 pt-4">
                     <Button
