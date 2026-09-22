@@ -1,6 +1,6 @@
 import { AppState, type AppStateStatus } from 'react-native';
 import { create } from 'zustand';
-import { restartContext, type RestartContext } from '@/lib/app-restart';
+import { holdRestart, restartContext, type RestartContext } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 import {
   isAppLockEnabled as readIsAppLockEnabled,
@@ -120,6 +120,8 @@ export const usePinStore = create<PinState>()((set, get) => ({
         : lockEnabled && pinSet,
       initialized: true,
     });
+    syncRestartHold(get().locked);
+    ensureRestartHoldSync();
     ensureAppStateListener();
   },
 
@@ -164,6 +166,49 @@ export const usePinStore = create<PinState>()((set, get) => ({
     set({ lastBackgroundedAt: null });
   },
 }));
+
+/**
+ * NOTHING RESTARTS THE APP WHILE THE PIN GATE IS ENGAGED.
+ *
+ * `locked` is in-memory only: no persist helper, not in `hydrateAllStores`. A
+ * JS reload destroys it and `init()` recomputes it from the threshold alone —
+ * so without this hold a locked user could step out to their password manager
+ * for three seconds, and the restart on their return would come back with
+ * `locked: false` and let them straight in. A PIN gate a three-second
+ * background defeats is not a PIN gate.
+ *
+ * A HOLD rather than a route block, because it does not depend on listener
+ * order or on which screen is showing: it covers an OTA restart landing while
+ * the lock screen is up just as it covers the return that raised the lock. The
+ * route block in `AppRestartOnForeground` stays as well, for the window before
+ * this subscription is wired.
+ *
+ * The cost is that a restart requested while locked is DROPPED, not queued —
+ * that is the deferral rule in lib/app-restart.ts and it is deliberate. The
+ * next unblocked return picks it up.
+ */
+let releaseRestartHold: (() => void) | null = null;
+
+function syncRestartHold(locked: boolean): void {
+  if (locked) {
+    if (releaseRestartHold == null) releaseRestartHold = holdRestart('pin-lock');
+    return;
+  }
+  if (releaseRestartHold != null) {
+    releaseRestartHold();
+    releaseRestartHold = null;
+  }
+}
+
+let restartHoldSubscribed = false;
+
+function ensureRestartHoldSync(): void {
+  if (restartHoldSubscribed) return;
+  restartHoldSubscribed = true;
+  usePinStore.subscribe((state, prev) => {
+    if (state.locked !== prev.locked) syncRestartHold(state.locked);
+  });
+}
 
 let appStateSubscribed = false;
 

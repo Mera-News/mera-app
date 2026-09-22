@@ -49,7 +49,7 @@ jest.mock('react-native', () => ({
   AppState: { addEventListener: jest.fn(() => ({ remove: jest.fn() })) },
 }));
 
-import { RESTART_MARKER_KEY, __resetAppRestartForTests } from '@/lib/app-restart';
+import { RESTART_MARKER_KEY, __resetAppRestartForTests, activeHolds } from '@/lib/app-restart';
 import {
   BACKGROUND_LOCK_THRESHOLD_MS,
   shouldLockAfterBackground,
@@ -118,6 +118,46 @@ describe('shouldLockAfterBackground', () => {
 
   it('locks past the threshold', () => {
     expect(shouldLockAfterBackground(longAgo, now, true, true)).toBe(true);
+  });
+});
+
+describe('the restart hold', () => {
+  // `locked` is in-memory only, so a reload recomputes it from the threshold.
+  // Without this hold a locked user could step out to a password manager for
+  // three seconds and the restart on their return would come back UNLOCKED.
+  // The hold is what makes that order-independent and covers an OTA restart
+  // landing while the lock screen is up.
+  it('is taken while the gate is engaged and released on unlock', async () => {
+    mockIsPinSet.mockResolvedValue(true);
+    mockIsAppLockEnabled.mockResolvedValue(true);
+
+    await usePinStore.getState().init();
+    expect(usePinStore.getState().locked).toBe(true);
+    expect(activeHolds()).toContain('pin-lock');
+
+    usePinStore.getState().unlock();
+    expect(activeHolds()).not.toContain('pin-lock');
+  });
+
+  it('is not taken when the gate is off', async () => {
+    mockIsPinSet.mockResolvedValue(false);
+    mockIsAppLockEnabled.mockResolvedValue(false);
+
+    await usePinStore.getState().init();
+
+    expect(activeHolds()).not.toContain('pin-lock');
+  });
+
+  it('is taken when the lock engages at runtime', async () => {
+    mockIsPinSet.mockResolvedValue(true);
+    mockIsAppLockEnabled.mockResolvedValue(true);
+    await usePinStore.getState().init();
+    usePinStore.getState().unlock();
+    expect(activeHolds()).not.toContain('pin-lock');
+
+    usePinStore.getState().lock();
+
+    expect(activeHolds()).toContain('pin-lock');
   });
 });
 

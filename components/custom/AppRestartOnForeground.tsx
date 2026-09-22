@@ -21,13 +21,22 @@ import { getCurrentPathname } from '@/lib/nav-state';
  * line for the same reason and is the precedent. Deliberately NOT built on
  * `lib/hooks/useRefetchOnForeground.ts`, which fires on inactive -> active too.
  *
- * ROUTE BLOCKING. Four routes hold an in-progress step the return itself
+ * ROUTE BLOCKING. These routes hold an in-progress step the return itself
  * delivered: a login, an OTP the user just fetched from their mail app, a PIN
- * being set, onboarding answers. Wiping a code on the return that carried it is
- * the worst version of this feature, so those routes never restart. The route
- * is read from `lib/nav-state.ts`'s module mirror rather than `usePathname()`,
- * which is what that mirror exists for — non-React code needing the live route
- * — and it keeps this component free of a re-render on every navigation.
+ * being set or entered, onboarding answers. Wiping a code on the return that
+ * carried it is the worst version of this feature, so those routes never
+ * restart. The route is read from `lib/nav-state.ts`'s module mirror rather
+ * than `usePathname()`, which is what that mirror exists for — non-React code
+ * needing the live route — and it keeps this component free of a re-render on
+ * every navigation.
+ *
+ * `/pin-lock` is on the list for a SECURITY reason, not a convenience one:
+ * `locked` lives only in memory, so a restart recomputes it from the threshold
+ * and a three-second trip to a password manager would come back unlocked.
+ * `lib/stores/pin-store.ts` also takes a `holdRestart('pin-lock')` for the
+ * whole time the gate is engaged, which is the order-independent half of that
+ * fix and covers an OTA restart landing on the lock screen. This list is the
+ * cheap half. Do not remove either one on the grounds that the other exists.
  *
  * MOUNTED INSIDE `NativeUpdateGate`'s CHILDREN, deliberately. The gate renders
  * its checking splash or `ForceUpdateScreen` INSTEAD of its children and calls
@@ -42,6 +51,7 @@ export const RESTART_BLOCKED_ROUTES = [
   '/login',
   '/verify-otp',
   '/pin-setup',
+  '/pin-lock',
   '/logged-in/onboarding',
 ] as const;
 

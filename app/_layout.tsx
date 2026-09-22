@@ -241,8 +241,15 @@ function AppRoot() {
     // read the populated cache rather than a promise. pin-store.init() runs in
     // an earlier effect and awaits the same memoised promise, so the two
     // callers share a single read and neither has to know about the other.
+    // `cancelled` because `AppScheduler.init()` now sits behind an await. If the
+    // update gate flips to blocked in that window, AppRoot unmounts and
+    // dispose() runs FIRST — and init() registers its AppState and network
+    // listeners above its own `suspended` guard, so it would re-arm them behind
+    // the force-update screen.
+    let cancelled = false;
     void (async () => {
       await initRestartContext();
+      if (cancelled) return;
 
       // Initialise the scheduler after marking the app ready so tasks that
       // check db-ready will pass their condition on the first tick.
@@ -312,7 +319,7 @@ function AppRoot() {
         );
     })();
 
-    return () => { AppScheduler.dispose(); };
+    return () => { cancelled = true; AppScheduler.dispose(); };
   }, [setAppInitialized]);
 
   // Handle notifications that launched the app (when app was not running).

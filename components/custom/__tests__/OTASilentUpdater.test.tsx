@@ -40,6 +40,13 @@ jest.mock('expo-updates', () => ({
     fetchUpdateAsync: (...a: unknown[]) => mockFetch(...a),
 }));
 
+// Stubbed, and NOT optional: the real module lazy-requires setting-service,
+// which imports the SQLite singleton at module scope.
+const mockRequestRestart = jest.fn(async (_reason: string) => {});
+jest.mock('@/lib/app-restart', () => ({
+    requestRestart: (reason: string) => mockRequestRestart(reason),
+}));
+
 import OTASilentUpdater from '../OTASilentUpdater';
 
 // The effect awaits checkForUpdateAsync and THEN fetchUpdateAsync, so a couple
@@ -66,7 +73,11 @@ describe('OTASilentUpdater', () => {
         jest.clearAllMocks();
         updatesState.isEnabled = true;
         mockCheck.mockResolvedValue({ isAvailable: false });
-        mockFetch.mockResolvedValue(undefined);
+        // The REAL union shape. `undefined` here used to make every fetching
+        // case throw on `fetched.isNew` inside the component's own try, and the
+        // assertions below only checked that fetch was CALLED — so the suite
+        // stayed green over a component that threw on every check.
+        mockFetch.mockResolvedValue({ isNew: false, manifest: undefined, isRollBackToEmbedded: false });
     });
 
     // THE REGRESSION. Without an explicit call at mount, a device that simply
@@ -89,6 +100,36 @@ describe('OTASilentUpdater', () => {
         render(<OTASilentUpdater />);
         await flush();
         expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    // THE POINT OF THE RESTART WORK: a downloaded bundle must not wait for a
+    // cold start the user may never perform.
+    it('restarts immediately when the fetch produced a NEW bundle', async () => {
+        mockCheck.mockResolvedValue({ isAvailable: true });
+        mockFetch.mockResolvedValue({ isNew: true, manifest: {}, isRollBackToEmbedded: false });
+        render(<OTASilentUpdater />);
+        await flush();
+        expect(mockRequestRestart).toHaveBeenCalledWith('ota');
+    });
+
+    // GATE ON THE RESULT, NOT ON THE CALL RESOLVING. `UpdateFetchResult` is a
+    // union: the failure arm and the roll-back-to-embedded arm both resolve
+    // with `isNew: false`, so a restart keyed on "fetchUpdateAsync resolved"
+    // would restart on a check that produced nothing.
+    it('does NOT restart when the fetch produced nothing new', async () => {
+        mockCheck.mockResolvedValue({ isAvailable: true });
+        render(<OTASilentUpdater />);
+        await flush();
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(mockRequestRestart).not.toHaveBeenCalled();
+    });
+
+    it('does NOT restart on a roll back to the embedded bundle', async () => {
+        mockCheck.mockResolvedValue({ isAvailable: true });
+        mockFetch.mockResolvedValue({ isNew: false, manifest: undefined, isRollBackToEmbedded: true });
+        render(<OTASilentUpdater />);
+        await flush();
+        expect(mockRequestRestart).not.toHaveBeenCalled();
     });
 
     // `Updates.isEnabled` is false in a dev client and in any build without
