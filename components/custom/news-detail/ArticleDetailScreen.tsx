@@ -12,6 +12,7 @@ import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDrop
 import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
+import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
@@ -576,6 +577,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 <AbstractGradientBackdrop />
 
                 <Spinner size="large" />
+                {/* S8: a way back while loading (the by-id query can take up
+                    to 30s on a slow network before it aborts). */}
+                <DetailTopBar onBack={onBack} backIcon={backIcon} />
             </Box>
         );
     }
@@ -701,20 +705,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 status bar without ever covering the tappable back button. */}
             <StatusBarScrim />
 
-            <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
-                <Pressable
-                    onPress={onBack}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(backIcon === 'home' ? 'common.home' : 'common.back')}
-                    className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                >
-                    <MaterialIcons
-                        name={backIcon === 'home' ? 'home' : 'arrow-back'}
-                        size={24}
-                        color="#ffffff"
-                    />
-                </Pressable>
-            </Box>
+            <DetailTopBar onBack={onBack} backIcon={backIcon} />
 
             <ArticleSuggestionContainer
                 article={article}

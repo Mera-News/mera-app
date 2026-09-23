@@ -150,4 +150,10 @@ describe('ArticleSuggestionScreen local load', () => {
         expect(mockDeleteSuggestion).toHaveBeenCalledWith('s1');
         expect(mockRemoveSuggestion).toHaveBeenCalledTimes(1);
     });
+
+    it('shows a way back while the local read is still loading (S8)', async () => {
+        mockGetSuggestion.mockReturnValue(new Promise(() => {}));
+        const screen = render(<ArticleSuggestionScreen articleSuggestionId="s1" onBack={() => {}} />);
+        expect(screen.getByTestId('detail-back')).toBeTruthy();
+    });
 });
