@@ -64,6 +64,7 @@ const mockRunFeedVerifierPass = jest.fn().mockResolvedValue(0);
 const mockRefresh = jest.fn();
 const mockFetchResults = jest.fn();
 const mockDiscardLowRelevance = jest.fn();
+const mockFinalizeStranded = jest.fn(async (..._a: any[]) => 0);
 const mockToBatchResult = jest.fn((...args: any[]) => ({ id: args[0].id, output: 'out' }));
 const mockReconstructLookups = jest.fn((..._args: any[]) => ({ chunkIdToCandidates: new Map() }));
 // Story-grouping gate + post-results sibling propagation. Mocked wholesale:
@@ -250,6 +251,7 @@ jest.mock('@/lib/stores/for-you-store', () => ({
 
 jest.mock('@/lib/services/inference-results', () => ({
   discardLowRelevance: (...args: any[]) => mockDiscardLowRelevance(...args),
+  finalizeStrandedBelowReasonThreshold: (...args: any[]) => mockFinalizeStranded(...args),
   fetchResults: (...args: any[]) => mockFetchResults(...args),
   hexToBytes: () => new Uint8Array([1, 2, 3, 4]),
   isRecordNotFoundError: (err: unknown) =>
@@ -810,6 +812,23 @@ describe('enqueueCandidates: MIN_DISPATCH floor / MAX_BATCH_ARTICLES ceiling', (
       MAX_BATCH_ARTICLES,
     );
     expect(res.deferred).toHaveLength(MIN_DISPATCH - 1);
+  });
+
+  it('enqueueOrphanedReasons finalizes stranded sub-threshold rows before queueing reasons', async () => {
+    const rows = [
+      { ...candidate('s1'), relevance: 0.35 },
+      { ...candidate('ok'), relevance: 0.8 },
+    ];
+    mockGetScoredWithoutReasons.mockResolvedValue(rows);
+
+    await enqueueOrphanedReasons();
+
+    expect(mockFinalizeStranded).toHaveBeenCalledTimes(1);
+    expect(mockFinalizeStranded.mock.calls[0][0]).toEqual(rows);
+    const run = currentRun();
+    // Only the 0.8 row is queued for a reason; the 0.35 one never is.
+    const queued = run.batches.flatMap((b: any) => b.candidateIds);
+    expect(queued).toEqual(['ok']);
   });
 
   it('enqueueOrphanedReasons is ungated by the dispatch floor', async () => {

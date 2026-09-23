@@ -280,10 +280,22 @@ export function isRecordNotFoundError(err: unknown): boolean {
   return /Record\s+\S+\s+not\s+found/i.test(msg);
 }
 
-const KEEP_RELEVANCE_THRESHOLD = 0.3;
+/**
+ * Rows scoring BELOW this are finalized without a reason. It MUST equal
+ * {@link REASON_RELEVANCE_THRESHOLD}: every scored row is then either sent for
+ * a reason (at or above) or finalized (below), with no band in between.
+ *
+ * It used to be a separate 0.3 while the reason gate moved to 0.4 with
+ * relevance v3, and rows between the two were neither: saved as
+ * `reason_pending` with an empty reason, never sent for one, never finalized,
+ * and skipped by the orphan sweep too (it also requires 0.4). A device
+ * snapshot held 330 such rows. {@link finalizeStrandedBelowReasonThreshold}
+ * clears the ones already stranded.
+ */
+export const KEEP_RELEVANCE_THRESHOLD = REASON_RELEVANCE_THRESHOLD;
 
 /**
- * Finalize freshly-scored rows whose relevance ≤ KEEP_RELEVANCE_THRESHOLD as
+ * Finalize freshly-scored rows whose relevance is below KEEP_RELEVANCE_THRESHOLD as
  * scored-low tombstones — `batchMarkReasonSkipped` sets `status=Complete` in
  * one batched write, keeping the same ids/local pk rather than deleting the
  * rows. This is the *only* path that mutates article_suggestions during a
@@ -311,11 +323,35 @@ export async function discardLowRelevance(
 ): Promise<number> {
   const toDiscard = candidateIds.filter((id) => {
     const r = relevanceMap[id];
-    return r !== undefined && r <= KEEP_RELEVANCE_THRESHOLD;
+    return r !== undefined && r < KEEP_RELEVANCE_THRESHOLD;
   });
   if (toDiscard.length === 0) return 0;
   await batchMarkReasonSkipped(toDiscard);
   return toDiscard.length;
+}
+
+/**
+ * Finalize rows already stranded in `reason_pending` below the reason
+ * threshold (see {@link KEEP_RELEVANCE_THRESHOLD} for how they got there).
+ * `rows` is what the orphan sweep already read; ids a live batch still covers
+ * are skipped. Idempotent: a finalized row is no longer pending, so a second
+ * call finds nothing. Returns how many rows it finalized.
+ */
+export async function finalizeStrandedBelowReasonThreshold(
+  rows: readonly { id: string; relevance?: number | null }[],
+  covered: ReadonlySet<string>,
+): Promise<number> {
+  const stranded = rows
+    .filter(
+      (r) =>
+        typeof r.relevance === 'number' &&
+        r.relevance < KEEP_RELEVANCE_THRESHOLD &&
+        !covered.has(r.id),
+    )
+    .map((r) => r.id);
+  if (stranded.length === 0) return 0;
+  await batchMarkReasonSkipped(stranded);
+  return stranded.length;
 }
 
 export function hexToBytes(hex: string): Uint8Array {

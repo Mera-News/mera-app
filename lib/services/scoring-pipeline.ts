@@ -73,6 +73,7 @@ import { ProcessingMode } from '@/lib/generated/graphql-types';
 import {
   discardLowRelevance,
   fetchResults,
+  finalizeStrandedBelowReasonThreshold,
   hexToBytes,
   isRecordNotFoundError,
   reconstructLookups,
@@ -947,6 +948,20 @@ export async function enqueueOrphanedReasons(): Promise<void> {
   const covered = snap
     ? nonTerminalCandidateIds(snap.run)
     : new Set<string>();
+  // Rows stranded below the reason threshold by the old 0.3/0.4 gap (see
+  // KEEP_RELEVANCE_THRESHOLD): they will never get a reason, so finalize them
+  // instead of leaving them pending. Uses the rows this sweep already read.
+  try {
+    const finalized = await finalizeStrandedBelowReasonThreshold(scored, covered);
+    if (finalized > 0) {
+      logger.debug(`${TAG} enqueueOrphanedReasons: finalized ${finalized} stranded sub-threshold rows`);
+      await refreshUi();
+    }
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'finalize-stranded' },
+    });
+  }
   const qualified = scored.filter(
     (c) =>
       typeof c.relevance === 'number' &&
