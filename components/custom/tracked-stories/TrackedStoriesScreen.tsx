@@ -24,7 +24,7 @@ import {
 } from '@/lib/database/services/tracked-story-service';
 import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import { toastManager } from '@/lib/toast-manager';
-import { cardPressStyle } from '@/components/custom/cards/press-style';
+import PressableCard from '@/components/custom/cards/PressableCard';
 import { startFollowStoryChat } from '@/lib/tracking/follow-story-chat';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
@@ -155,8 +155,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     : t('trackedStories.articleCount', { count: total });
             const relative = formatTimeAgo(t, item.lastUpdateAt ?? item.createdAt);
             return (
-                <Pressable
-                    style={cardPressStyle()}
+                <PressableCard
                     onPress={() => openTimeline(item)}
                     onLongPress={() => {
                         hapticLight();
@@ -256,7 +255,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             <MaterialIcons name="delete-outline" size={20} color="#9CA3AF" />
                         </Pressable>
                     </HStack>
-                </Pressable>
+                </PressableCard>
             );
         },
         [t, openTimeline],

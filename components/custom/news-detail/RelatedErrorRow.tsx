@@ -27,12 +27,9 @@ const RelatedErrorRow: React.FC<RelatedErrorRowProps> = ({ onRetry }) => {
                 accessibilityLabel={t('common.retry')}
                 hitSlop={8}
                 testID="related-error-retry"
-                style={({ pressed }) => ({
-                    minHeight: 44,
-                    justifyContent: 'center',
-                    paddingHorizontal: 12,
-                    opacity: pressed ? 0.6 : 1,
-                })}
+                // STATIC style: a function `style` on a Pressable is dropped on
+                // device in this app (css-interop), taking the 44pt target with it.
+                style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }}
             >
                 <Text size="sm" className="text-primary-400 font-semibold">
                     {t('common.retry')}

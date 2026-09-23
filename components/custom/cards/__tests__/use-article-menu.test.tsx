@@ -189,9 +189,12 @@ describe('ArticleOverflowMenu sheet', () => {
         const r = openMenu(<Host />);
         const { StyleSheet } = require('react-native');
         expect(StyleSheet.flatten(r.getByTestId('article-menu').props.style).paddingBottom).toBe(34 + 12);
-        const cancel = r.getByTestId('article-menu-cancel');
-        const style = StyleSheet.flatten(typeof cancel.props.style === 'function' ? cancel.props.style({ pressed: false }) : cancel.props.style);
-        expect(style.backgroundColor).toBe('rgba(255,255,255,0.10)');
+        // The plate is a STATIC style on an inner View: a function style on the
+        // Pressable itself was dropped on device (740).
+        const plate = StyleSheet.flatten(r.getByTestId('article-menu-cancel-plate').props.style);
+        expect(plate).toEqual(
+            expect.objectContaining({ minHeight: 48, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.10)' }),
+        );
     });
 });
 

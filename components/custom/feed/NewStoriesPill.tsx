@@ -34,7 +34,9 @@ const NewStoriesPill: React.FC<NewStoriesPillProps> = ({ visible, onPress, botto
                 accessibilityRole="button"
                 accessibilityLabel={t('feed.newStoriesPill')}
                 hitSlop={8}
-                style={({ pressed }) => [styles.pill, { opacity: pressed ? 0.7 : 1 }]}
+                // STATIC style: a function `style` on a Pressable is dropped on
+                // device in this app (css-interop), taking the pill's shape with it.
+                style={styles.pill}
             >
                 <MaterialIcons name="arrow-downward" size={16} color={ACCENT} />
                 <Text size="sm" className="font-semibold" style={styles.label}>

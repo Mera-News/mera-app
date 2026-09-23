@@ -6,10 +6,20 @@ import { VStack } from '@/components/ui/vstack';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable } from 'react-native';
+import { Modal, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ACCENT = '#EDA77E';
+const ROW_STYLE = { minHeight: 48, justifyContent: 'center' } as const;
+const CANCEL_STYLE = {
+    minHeight: 48,
+    marginTop: 8,
+    marginHorizontal: 8,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.10)',
+} as const;
 
 export interface ArticleMenuItem {
     /** Stable key; also the VoiceOver custom action name. */
@@ -95,13 +105,12 @@ const ArticleOverflowSheet: React.FC<ArticleOverflowMenuProps> = ({ title, onClo
                                         accessibilityRole="button"
                                         accessibilityLabel={item.label}
                                         onPress={() => onPick(item)}
-                                        style={({ pressed }) => ({
-                                            minHeight: 48,
-                                            borderRadius: 16,
-                                            justifyContent: 'center',
-                                            opacity: pressed ? 0.7 : 1,
-                                        })}
                                     >
+                                        {/* Layout on an inner View with a STATIC style: a
+                                            function `style` on this Pressable is dropped on
+                                            device (the css-interop wrapper), which is how
+                                            Cancel lost its plate once. */}
+                                        <View style={ROW_STYLE}>
                                         <HStack className="items-center px-4" space="md">
                                             {typeof item.icon === 'string' ? (
                                                 <MaterialIcons
@@ -116,6 +125,7 @@ const ArticleOverflowSheet: React.FC<ArticleOverflowMenuProps> = ({ title, onClo
                                                 {item.label}
                                             </Text>
                                         </HStack>
+                                        </View>
                                     </Pressable>
                                 ))}
                                 <Pressable
@@ -123,23 +133,15 @@ const ArticleOverflowSheet: React.FC<ArticleOverflowMenuProps> = ({ title, onClo
                                     accessibilityRole="button"
                                     accessibilityLabel={t('common.cancel')}
                                     onPress={onClose}
-                                    // Full width inside the sheet's inset, on its own
-                                    // plate, in readable ink (it was grey text over
-                                    // the tab bar, outside the inset).
-                                    style={({ pressed }) => ({
-                                        minHeight: 48,
-                                        marginTop: 8,
-                                        marginHorizontal: 8,
-                                        borderRadius: 16,
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        backgroundColor: 'rgba(255,255,255,0.10)',
-                                        opacity: pressed ? 0.7 : 1,
-                                    })}
                                 >
-                                    <Text className="text-white" style={{ fontSize: 15, fontWeight: '600' }}>
-                                        {t('common.cancel')}
-                                    </Text>
+                                    {/* A visible full-width button inside the sheet's
+                                        inset, label centred (it was plain text at the
+                                        sheet's left edge, 24pt tall). */}
+                                    <View testID="article-menu-cancel-plate" style={CANCEL_STYLE}>
+                                        <Text className="text-white" style={{ fontSize: 15, fontWeight: '600', textAlign: 'center' }}>
+                                            {t('common.cancel')}
+                                        </Text>
+                                    </View>
                                 </Pressable>
                             </VStack>
                         </Box>

@@ -224,6 +224,8 @@ jest.mock('@/lib/logger', () => ({
 // eslint-disable-next-line import/first
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 // eslint-disable-next-line import/first
+import { StyleSheet } from 'react-native';
+// eslint-disable-next-line import/first
 import React from 'react';
 // eslint-disable-next-line import/first
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -305,18 +307,6 @@ function opacityOf(node: any): number | undefined {
     n = n.parent;
   }
   return undefined;
-}
-
-/** The nearest ancestor whose `style` is a Pressable state function: the
- *  card's own press target. Resolving it under {pressed} asserts the STYLE,
- *  which a class-name assertion cannot see. */
-function pressStyleOwner(node: any): any {
-  let n: any = node;
-  while (n) {
-    if (typeof n.props?.style === 'function') return n;
-    n = n.parent;
-  }
-  return null;
 }
 
 beforeEach(() => {
@@ -483,23 +473,35 @@ describe('ArticleSuggestionCard', () => {
 
   // Pressed feedback is OPT-IN on card bases (not a Pressable default) and
   // multiplies with the dimmed treatment rather than replacing it.
+  // The pressed state is React state applied as a STATIC style (PressableCard):
+  // a function `style` on a Pressable is dropped on device here.
   it('reacts to a press: 0.7 while held, full opacity at rest', () => {
-    const { getByText } = render(
+    const { getByTestId } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
     );
-    const card = pressStyleOwner(getByText('A headline'));
-    expect(card).toBeTruthy();
-    expect(card!.props.style({ pressed: false })).toBeUndefined();
-    expect(card!.props.style({ pressed: true }).opacity).toBeCloseTo(0.7);
+    const card = () => getByTestId('card-sugg-1');
+    expect(typeof card().props.style).not.toBe('function');
+    expect(StyleSheet.flatten(card().props.style)?.opacity ?? 1).toBe(1);
+    act(() => {
+      fireEvent(card(), 'pressIn');
+    });
+    expect(StyleSheet.flatten(card().props.style).opacity).toBeCloseTo(0.7);
+    act(() => {
+      fireEvent(card(), 'pressOut');
+    });
+    expect(StyleSheet.flatten(card().props.style)?.opacity ?? 1).toBe(1);
   });
 
   it('a dimmed card still reacts to a press (0.75 x 0.7)', () => {
-    const { getByText } = render(
+    const { getByTestId } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} dimmed />,
     );
-    const card = pressStyleOwner(getByText('A headline'));
-    expect(card!.props.style({ pressed: false }).opacity).toBeCloseTo(0.75);
-    expect(card!.props.style({ pressed: true }).opacity).toBeCloseTo(0.525);
+    const card = () => getByTestId('card-sugg-1');
+    expect(StyleSheet.flatten(card().props.style).opacity).toBeCloseTo(0.75);
+    act(() => {
+      fireEvent(card(), 'pressIn');
+    });
+    expect(StyleSheet.flatten(card().props.style).opacity).toBeCloseTo(0.525);
   });
 
   it('does not render the read eye icon by default', () => {

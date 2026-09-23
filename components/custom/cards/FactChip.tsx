@@ -1,10 +1,23 @@
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { reasonBoxColors } from '@/lib/relevance-utils';
 import { router } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
+
+/** The app accent (the menu glyphs, the Save fill). */
+const CHIP_ACCENT = '#EDA77E';
+const TARGET_STYLE = { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', marginTop: 4 } as const;
+const PILL_STYLE = {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: CHIP_ACCENT,
+    backgroundColor: 'rgba(237,167,126,0.14)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    maxWidth: '100%',
+} as const;
 
 export interface FactChipProps {
     /** The profile fact the story matched. Absent: nothing renders (a fact
@@ -35,22 +48,16 @@ const FactChip: React.FC<FactChipProps> = ({ fact, testID = 'fact-chip' }) => {
                     params: { factId: fact.id, statement: fact.statement },
                 })
             }
-            // The chip is ~28pt tall; the slop makes the target 44pt.
-            hitSlop={{ top: 8, bottom: 8 }}
-            className="self-start mt-2 rounded-full px-3 py-1.5"
-            style={({ pressed }) => ({
-                borderWidth: 1,
-                borderColor: reasonBoxColors.textColor,
-                opacity: pressed ? 0.7 : 1,
-            })}
+            // A 44pt target around a ~30pt pill. STATIC styles only: a function
+            // `style` on a Pressable is dropped on device here, which is how the
+            // first version of this chip rendered as plain text (K-3).
+            style={TARGET_STYLE}
         >
-            <Text
-                size="xs"
-                numberOfLines={1}
-                style={{ color: reasonBoxColors.textColor, fontWeight: '600' }}
-            >
-                {t('factChip.label', { label })} ›
-            </Text>
+            <View style={PILL_STYLE}>
+                <Text size="xs" numberOfLines={1} style={{ color: CHIP_ACCENT, fontWeight: '600' }}>
+                    {t('factChip.label', { label })} ›
+                </Text>
+            </View>
         </Pressable>
     );
 };

@@ -10,8 +10,7 @@ import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
-import { Pressable } from '@/components/ui/pressable';
-import { cardPressStyle } from '@/components/custom/cards/press-style';
+import PressableCard from '@/components/custom/cards/PressableCard';
 import { VStack } from '@/components/ui/vstack';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import type { AccessibilityActionEvent } from 'react-native';
@@ -258,10 +257,10 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   );
 
   return (
-    <Pressable
+    <PressableCard
       testID={testID}
       onPress={onPress}
-      style={cardPressStyle(!!dimmed)}
+      dimmed={!!dimmed}
       accessibilityActions={accessibilityActions}
       onAccessibilityAction={onAccessibilityAction}
     >
@@ -301,7 +300,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
           {innerContent}
         </Card>
       )}
-    </Pressable>
+    </PressableCard>
   );
 };
 
