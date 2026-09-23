@@ -2,8 +2,8 @@
 // following" dialog, in one place.
 //
 // Friction this removes (the repo rule: name it or don't add the pattern):
-// three surfaces render a track button — ArticleFeedbackPrompt,
-// ArticleActionsRow, CompactActionsSheet. Each now needs identical dialog state,
+// several surfaces offer Follow: ArticleFeedbackPrompt, ArticleActionsRow
+// (through useArticleActions) and the shared ••• menu. Each now needs identical dialog state,
 // identical copy, and identical navigation into the story timeline. Without this
 // the modal boilerplate is triplicated, which is the same argument that
 // justified `useTrackedSubject` itself.

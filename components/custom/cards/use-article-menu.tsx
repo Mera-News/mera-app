@@ -6,6 +6,7 @@ import {
     type VisitInput,
 } from '@/components/custom/cards/article-actions';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
+import type { InlineAccessibilityAction } from '@/components/custom/cards/use-article-actions';
 import { askMeraAbout } from '@/components/custom/floating-chat/ask-mera';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
@@ -41,6 +42,11 @@ export interface UseArticleMenuInput {
     /** Surface-specific items (e.g. "Not part of this story"), listed before
      *  "Report a bug". */
     extraItems?: readonly ArticleMenuItem[];
+    /** The surface's own inline buttons (see `inlineAccessibilityActions`),
+     *  listed FIRST in the card's VoiceOver custom actions. The card root is one
+     *  accessibility element, so the buttons drawn inside it are otherwise
+     *  unreachable with VoiceOver. */
+    inlineActions?: readonly InlineAccessibilityAction[];
 }
 
 export interface UseArticleMenu {
@@ -78,7 +84,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     // nobody has looked at, is waste. It stays live after that, because items
     // run after the sheet has closed.
     const [engaged, setEngaged] = useState(false);
-    const { subject, surface, articleUrl, languageCode, visit, onCheckFacts, extraItems } = input;
+    const { subject, surface, articleUrl, languageCode, visit, onCheckFacts, extraItems, inlineActions } = input;
     const { tracked, onPress: onTrackPress, dialog: trackDialog } = useTrackButton(subject, engaged);
 
     const showFailure = useCallback(
@@ -258,16 +264,25 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     );
 
     const accessibilityActions = useMemo(
-        () => items.map((i) => ({ name: i.key, label: i.label })),
-        [items],
+        () => [
+            ...(inlineActions ?? []).map((i) => ({ name: `inline-${i.key}`, label: i.label })),
+            ...items.map((i) => ({ name: i.key, label: i.label })),
+        ],
+        [items, inlineActions],
     );
     const onAccessibilityAction = useCallback(
         (e: AccessibilityActionEvent) => {
+            const name = e.nativeEvent.actionName;
+            const inline = inlineActions?.find((i) => `inline-${i.key}` === name);
+            if (inline) {
+                inline.run();
+                return;
+            }
             setEngaged(true);
-            const item = items.find((i) => i.key === e.nativeEvent.actionName);
+            const item = items.find((i) => i.key === name);
             if (item) runItem(item);
         },
-        [items, runItem],
+        [items, runItem, inlineActions],
     );
 
     const element = (

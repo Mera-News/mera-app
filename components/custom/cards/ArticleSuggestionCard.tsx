@@ -6,6 +6,7 @@ import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import ReasonNote from '@/components/custom/cards/ReasonNote';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
+import { inlineAccessibilityActions } from '@/components/custom/cards/use-article-actions';
 import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
 import { feedbackSubjectFromSuggestion } from '@/components/custom/cards/feedback-subject';
 import { Box } from '@/components/ui/box';
@@ -163,6 +164,23 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   // the sheet render only where the card has an action row at all.
   const menuSubject = useMemo(() => feedbackSubjectFromSuggestion(suggestion, 'for_you'), [suggestion]);
   const menuVisit = useMemo(() => visitFromSuggestion(suggestion), [suggestion]);
+  const handleShare = useShareArticle({
+    url: suggestion.article_url,
+    titleEnglish: suggestion.title_en,
+    titleOriginal: suggestion.title_original,
+    sourceLanguage: suggestion.language_code,
+  });
+  // The action row's own buttons, as VoiceOver custom actions on the card: the
+  // card root is one accessibility element, which hides the row inside it.
+  const inlineActions = onVerdict
+    ? inlineAccessibilityActions(t, {
+        saved,
+        onLike: () => onVerdict(suggestion, 'like'),
+        onDislike: () => onVerdict(suggestion, 'dislike'),
+        onToggleSave: handleToggleSave,
+        onShare: suggestion.article_url ? () => void handleShare() : undefined,
+      })
+    : undefined;
   const menu = useArticleMenu({
     surface: 'card',
     subject: menuSubject,
@@ -184,14 +202,9 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       if (asked) onPress(suggestion);
       return asked;
     },
+    inlineActions,
   });
 
-  const handleShare = useShareArticle({
-    url: suggestion.article_url,
-    titleEnglish: suggestion.title_en,
-    titleOriginal: suggestion.title_original,
-    sourceLanguage: suggestion.language_code,
-  });
 
   const status = suggestion.status;
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;

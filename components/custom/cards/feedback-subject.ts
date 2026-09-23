@@ -1,7 +1,7 @@
 // FeedbackSubject — the origin-aware descriptor every card action row is given.
 //
-// A single value type that tells the universal actions row (ArticleActionsRow /
-// CompactActionsSheet) WHAT it is acting on and WHERE the action was taken, so
+// A single value type that tells the universal actions (useArticleActions,
+// useArticleMenu) WHAT it is acting on and WHERE the action was taken, so
 // like/dislike/save/share can be persisted with provenance (origin + surface +
 // a context snapshot) regardless of whether the underlying content is a
 // personalized ForYouSuggestion or a standalone NewsArticle.
@@ -68,7 +68,7 @@ export interface FeedbackSubject {
 /**
  * Snapshot the subject's contextual extras for the persisted feedback row's
  * `context_json`. Shared by every actions surface (ArticleActionsRow /
- * CompactActionsSheet / the swipe feed) so the stored provenance shape is
+ * the compact rows / the swipe feed) so the stored provenance shape is
  * identical everywhere.
  */
 export function buildContextJson(subject: FeedbackSubject): string | null {

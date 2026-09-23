@@ -16,6 +16,7 @@ import { Text } from '@/components/ui/text';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import { useAdaptiveLineClamp } from '@/lib/typography/useAdaptiveLineClamp';
 import React from 'react';
+import type { AccessibilityActionEvent } from 'react-native';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { COMPACT_TARGET_PX } from '@/lib/images/upgrade-image-url';
 
@@ -33,6 +34,8 @@ import { COMPACT_TARGET_PX } from '@/lib/images/upgrade-image-url';
  *                                 footer (country flag + publisher), which
  *                                 stops where the image starts
  *                    image        COMPACT_IMAGE_SIZE, only when there is one
+ *   3. `footer`  — optional, the full card width under the body row: the
+ *                  compact action row (like, not for me, save, share, •••).
  *
  * The image used to be a ¼-width column bleeding down the LEFT edge, holding
  * the Mera watermark when an article had none. The watermark is gone from this
@@ -102,20 +105,26 @@ export interface ArticleCompactCardBaseProps {
   read?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
-  // NOTE: there is deliberately NO `onOpenArticle` escape hatch here any more.
-  // A compact row used to carry a small external-link button that opened the
-  // publisher URL directly — which skipped the detail screen, and with it the
-  // ONLY place the translate affordance lives (ReadTranslateActions). A reader
-  // whose language differs from the article's was then stuck with an untranslated
-  // page and no way back to the translate options. Compact rows navigate to a
-  // detail screen via `onPress`; that screen owns opening the URL. Do not
-  // re-add a direct-open path here.
+  // NOTE: there is deliberately NO `onOpenArticle` button here. A compact row
+  // once carried an external-link button that opened the publisher URL
+  // directly, with no translate route beside it, stranding a reader whose
+  // language differs from the article's. Opening the publisher from a row now
+  // goes through the ••• menu, which offers "Open in Google Translate" next to
+  // "Open on <source>" for a foreign-language article. Do not re-add a bare
+  // direct-open button.
   metaAccessory?: React.ReactNode;
   priorityAccessory?: React.ReactNode;
   /** Optional testID passthrough for the card's root Pressable — used by
    *  concrete card components to expose a stable, driver-targetable id
    *  (e.g. `card-${articleId}`). No visual/behavioral effect. */
   testID?: string;
+  /** A row pinned under the body, inside the card (the compact action row). */
+  footer?: React.ReactNode;
+  /** VoiceOver custom actions on the row root (see `useArticleMenu`). The root
+   *  Pressable is ONE accessibility element, so the footer's buttons are only
+   *  reachable with VoiceOver through these. */
+  accessibilityActions?: { name: string; label: string }[];
+  onAccessibilityAction?: (e: AccessibilityActionEvent) => void;
 }
 
 const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
@@ -136,6 +145,9 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   metaAccessory,
   priorityAccessory,
   testID,
+  footer,
+  accessibilityActions,
+  onAccessibilityAction,
 }) => {
   const displayTitle = titleEnglish || titleOriginal || '';
   const blurImages = useBlurImagesStore((s) => s.blurImages);
@@ -289,6 +301,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
               </Box>
             ) : null}
           </Box>
+          {footer ? <Box className="mt-2">{footer}</Box> : null}
         </Box>
       </Card>
   );
@@ -299,6 +312,8 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
       onPress={onPress}
       onLongPress={onLongPress}
       style={cardPressStyle(!!dimmed)}
+      accessibilityActions={accessibilityActions}
+      onAccessibilityAction={onAccessibilityAction}
     >
       {CARDS_USE_GLASS ? (
         // The plate is an absolute fill, so it has to hang off this UNPADDED

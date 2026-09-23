@@ -2,8 +2,8 @@
 // tree (FeedbackTreeOverlay) gates and resolves against, built from a
 // FeedbackSubject.
 //
-// Shared by ArticleActionsRow and CompactActionsSheet, which had two verbatim
-// copies of the publication-visit lookup and both stopped there — so the gated
+// Used by useArticleActions. It replaced two verbatim copies (the actions row
+// and the old compact sheet) of the publication-visit lookup that both stopped there — so the gated
 // nodes (`cluster_size_gte`, `from_context_geo`, `from_context_category`,
 // `from_context_eventType`) were dead on those surfaces even though every field
 // they need was already sitting on the local suggestion row. This is the same

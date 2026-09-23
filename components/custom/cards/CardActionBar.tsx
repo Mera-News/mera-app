@@ -7,6 +7,8 @@
 //     (FactFeedScreen).
 //   - ArticleFeedbackPrompt — the article + suggestion DETAIL screens.
 //   - ArticleActionsRow — the standalone card (Saved list).
+//   - The compact rows (ArticleSuggestionCompactCard, ArticleStandaloneCompactCard),
+//     in the `compact` size with •••.
 // The latter two used to hand-roll their own row of 48pt round,
 // primary-orange-outlined buttons. They were converted to this component
 // because the circle was load-bearing for state, not just decoration: it was
@@ -51,6 +53,8 @@ const SAVE_ACCENT = 'rgb(231,138,83)';
 /** Disabled ink for a control that has already done its job. */
 const MUTED = '#6B7280';
 const ICON_SIZE = 27;
+/** Compact rows: smaller glyphs, same 44pt target through a wider hitSlop. */
+const COMPACT_ICON_SIZE = 20;
 const STROKE = 1.8;
 
 interface CardActionBarProps {
@@ -109,6 +113,9 @@ interface CardActionBarProps {
    *  Check for fact checks live in the menu instead of inline. Absent: the row
    *  renders exactly as before, for any host not yet on the menu. */
   onOverflow?: () => void;
+  /** Compact rows: 20pt glyphs and a thinner row, with `hitSlop` widened so
+   *  every target stays 44pt. */
+  compact?: boolean;
 }
 
 const CardActionBar: React.FC<CardActionBarProps> = ({
@@ -126,8 +133,12 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   horizontalPadding = 16,
   provisional = false,
   onOverflow,
+  compact = false,
 }) => {
   const { t } = useTranslation();
+  const iconSize = compact ? COMPACT_ICON_SIZE : ICON_SIZE;
+  // (44 - glyph) / 2 either way: 10 around 27 has always given ~47pt.
+  const hitSlop = compact ? 12 : 10;
   const liked = verdict === 'like';
   const disliked = verdict === 'dislike';
   // Colour tracks the verdict (so a tap is always visibly registered); FILL
@@ -140,7 +151,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       className="items-center"
       style={{
         paddingHorizontal: horizontalPadding,
-        paddingVertical: 12,
+        paddingVertical: compact ? 4 : 12,
         justifyContent: 'space-evenly',
       }}
     >
@@ -148,24 +159,24 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         <Pressable
           testID="card-action-mera"
           onPress={onAskMera}
-          hitSlop={10}
+          hitSlop={hitSlop}
           accessibilityRole="button"
           accessibilityLabel={t('swipeFeed.askMera')}
         >
-          <MeraLogo size={ICON_SIZE} animated={false} />
+          <MeraLogo size={iconSize} animated={false} />
         </Pressable>
       )}
 
       <Pressable
         testID="card-action-like"
         onPress={onLike}
-        hitSlop={10}
+        hitSlop={hitSlop}
         accessibilityRole="button"
         accessibilityState={{ selected: liked }}
         accessibilityLabel={t('articleFeedback.likeLabel')}
       >
         <ThumbsUp
-          size={ICON_SIZE}
+          size={iconSize}
           strokeWidth={STROKE}
           color={liked ? LIKE : WHITE}
           fill={likeFill}
@@ -175,13 +186,13 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       <Pressable
         testID="card-action-dislike"
         onPress={onDislike}
-        hitSlop={10}
+        hitSlop={hitSlop}
         accessibilityRole="button"
         accessibilityState={{ selected: disliked }}
         accessibilityLabel={t('articleFeedback.dislikeLabel')}
       >
         <ThumbsDown
-          size={ICON_SIZE}
+          size={iconSize}
           strokeWidth={STROKE}
           color={disliked ? DISLIKE : WHITE}
           fill={dislikeFill}
@@ -192,13 +203,13 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         <Pressable
           testID="card-action-save"
           onPress={onToggleSave}
-          hitSlop={10}
+          hitSlop={hitSlop}
           accessibilityRole="button"
           accessibilityState={{ selected: saved }}
           accessibilityLabel={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
         >
           <Bookmark
-            size={ICON_SIZE}
+            size={iconSize}
             strokeWidth={STROKE}
             color={saved ? SAVE_ACCENT : WHITE}
             fill={saved ? SAVE_ACCENT : 'none'}
@@ -210,7 +221,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         <Pressable
           testID="card-action-track"
           onPress={onTrack}
-          hitSlop={10}
+          hitSlop={hitSlop}
           accessibilityRole="button"
           accessibilityState={{ selected: tracked }}
           accessibilityLabel={t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction')}
@@ -219,7 +230,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
               carried by COLOUR plus `accessibilityState` plus a changed label —
               never by colour alone. */}
           <Crosshair
-            size={ICON_SIZE}
+            size={iconSize}
             strokeWidth={STROKE}
             color={tracked ? SAVE_ACCENT : WHITE}
             fill="none"
@@ -241,7 +252,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           // their request landed.
           onPress={factCheckState === 'done' ? undefined : onFactCheck}
           disabled={factCheckState === 'done'}
-          hitSlop={10}
+          hitSlop={hitSlop}
           accessibilityRole="button"
           accessibilityState={{
             selected: factCheckState !== 'none',
@@ -262,7 +273,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
               that is not a different action. Muted grey is the disabled state,
               and it is the same glyph as the fact-check block it opens. */}
           <SearchCheck
-            size={ICON_SIZE}
+            size={iconSize}
             strokeWidth={STROKE}
             color={
               factCheckState === 'done'
@@ -280,7 +291,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         <Pressable
           testID="card-action-share"
           onPress={onShare}
-          hitSlop={10}
+          hitSlop={hitSlop}
           accessibilityRole="button"
           accessibilityLabel={t('articleDetail.share')}
         >
@@ -288,9 +299,9 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
               sheet itself uses: the box-and-arrow on iOS, three nodes on
               Android. */}
           {Platform.OS === 'ios' ? (
-            <Share size={ICON_SIZE} strokeWidth={STROKE} color={WHITE} fill="none" />
+            <Share size={iconSize} strokeWidth={STROKE} color={WHITE} fill="none" />
           ) : (
-            <Share2 size={ICON_SIZE} strokeWidth={STROKE} color={WHITE} fill="none" />
+            <Share2 size={iconSize} strokeWidth={STROKE} color={WHITE} fill="none" />
           )}
         </Pressable>
       ) : null}
@@ -299,11 +310,11 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         <Pressable
           testID="card-action-more"
           onPress={onOverflow}
-          hitSlop={10}
+          hitSlop={hitSlop}
           accessibilityRole="button"
           accessibilityLabel={t('articleMenu.openA11y')}
         >
-          <Ellipsis size={ICON_SIZE} strokeWidth={STROKE} color={WHITE} />
+          <Ellipsis size={iconSize} strokeWidth={STROKE} color={WHITE} />
         </Pressable>
       ) : null}
     </HStack>

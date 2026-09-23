@@ -55,7 +55,9 @@ const ArticleOverflowMenu: React.FC<ArticleOverflowMenuProps> = ({ visible, onCl
                         className="rounded-t-3xl overflow-hidden border-t border-white/10"
                         style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}
                     >
-                        {/* Plate first on an UNPADDED box; see CompactActionsSheet. */}
+                        {/* Plate first on an UNPADDED box: the plate absolute-fills its
+                            parent's CONTENT box, so padding there leaves an
+                            unplated frame. */}
                         <TranslucentPlate />
                         <Box className="px-2 pb-8 pt-3" testID="article-menu">
                             <Text
