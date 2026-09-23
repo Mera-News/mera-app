@@ -168,6 +168,7 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
   backup_wifi_only: 'Device schedule state, same reason.',
   backup_last_run_at:
     'Records when THIS device last uploaded. Restored, it would make a new device believe it is already up to date and skip its first backup.',
+  backup_last_failed_at: 'Records when THIS device last failed to upload; says nothing about another device.',
   backup_recovery_code_confirmed:
     'Records that THIS device showed the user their code. Restoring it onto a new device would assert a confirmation that never happened and let a backup upload under a key nobody has written down.',
   [RESTORE_IN_PROGRESS_KEY]:

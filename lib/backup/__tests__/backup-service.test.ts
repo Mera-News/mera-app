@@ -196,6 +196,14 @@ describe('cleanup', () => {
 });
 
 describe('remote naming and retention', () => {
+  it('reads the creation time back out of a blob name, and ignores names that are not ours', () => {
+    const { createdAtFromRemoteFilename } = jest.requireActual('../remote-names');
+    const t = Date.UTC(2026, 8, 23, 21, 14, 5, 123);
+    expect(createdAtFromRemoteFilename(`/mera-backup/${remoteFilenameFor(t)}`)).toBe(t);
+    expect(createdAtFromRemoteFilename('notes.txt')).toBeNull();
+    expect(createdAtFromRemoteFilename('mera-backup-garbage.bin')).toBeNull();
+  });
+
   it('names a blob by timestamp and nothing else', async () => {
     const name = remoteFilenameFor(Date.UTC(2026, 7, 17, 12, 34, 56));
     expect(name).toBe(`${REMOTE_FILENAME_PREFIX}2026-08-17T12-34-56-000Z.bin`);
