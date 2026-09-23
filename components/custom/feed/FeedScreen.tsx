@@ -137,7 +137,7 @@ import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import {
   buildFeedList,
   type FeedListItem,
@@ -301,6 +301,7 @@ const FeedRow = React.memo(function FeedRow({
 const FeedScreen: React.FC = () => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const tabClearance = useTabBarClearance();
   const isFocused = useIsFocused();
 
   const { isLoading, errorMessage } = useFeedBootstrap();
@@ -1159,7 +1160,7 @@ const FeedScreen: React.FC = () => {
           // identical at the top.
           paddingTop: headerHeight + CONTENT_TOP_GAP,
           paddingHorizontal: 12,
-          paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24,
+          paddingBottom: tabClearance + 24,
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmpty()}
@@ -1297,13 +1298,13 @@ const FeedScreen: React.FC = () => {
       <NewStoriesPill
         visible={awayArrivals.size > 0}
         onPress={showNewStories}
-        bottom={insets.bottom + TAB_BAR_HEIGHT + 20}
+        bottom={tabClearance + 20}
       />
 
       <ScrollToTopFab
         visible={showScrollToTop}
         onPress={scrollToTop}
-        extraBottomOffset={TAB_BAR_HEIGHT}
+        bottomInset={tabClearance}
       />
 
       {/* One-time "What's new" sheet (carried over from the old feed screen). */}

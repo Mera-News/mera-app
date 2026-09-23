@@ -9,7 +9,7 @@ import type { NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
 import logger from '@/lib/logger';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useIsConnected, useIsOnline } from '@/lib/stores/network-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -22,7 +22,6 @@ import Animated, {
     useComposedEventHandler,
     useSharedValue,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PAGE_SIZE = 10;
 
@@ -126,7 +125,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     // `isConnected` too so the copy can say WHICH is broken instead of always
     // blaming the user's connection when it might be Mera.
     const isConnected = useIsConnected();
-    const insets = useSafeAreaInsets();
+    const tabClearance = useTabBarClearance();
     const [headlines, setHeadlines] = useState<TopHeadline[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -410,7 +409,8 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 // Clear the pinned header overlay (measured by ExploreScreen) —
                 // the list scrolls underneath it.
                 paddingTop: headerHeight + 8,
-                paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20,
+                // The tab bar once, then a tail (see useTabBarClearance).
+                paddingBottom: tabClearance + 24,
                 flexGrow: 1,
             }}
             refreshControl={

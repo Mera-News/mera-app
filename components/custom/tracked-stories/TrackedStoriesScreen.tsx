@@ -27,7 +27,7 @@ import { cardPressStyle } from '@/components/custom/cards/press-style';
 import { startFollowStoryChat } from '@/lib/tracking/follow-story-chat';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -74,6 +74,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
 }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const tabClearance = useTabBarClearance();
     const [stories, setStories] = useState<TrackedStoryModel[]>([]);
     const [confirmTarget, setConfirmTarget] = useState<TrackedStoryModel | null>(null);
     // 'unknown' (cold start, no server/RC answer yet) must NOT read as locked —
@@ -419,7 +420,9 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
                     paddingTop: headerHeight,
-                    paddingBottom: insets.bottom + 40,
+                    // Embedded in a tab: the bar once plus a tail (see
+                    // useTabBarClearance). Standalone: the home indicator.
+                    paddingBottom: embedded ? tabClearance + 24 : insets.bottom + 40,
                     // Retained: this is what lets ListEmpty's `flex-1` fill and
                     // centre. Do not drop it when touching the padding above.
                     flexGrow: 1,
@@ -449,7 +452,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     accessibilityRole="button"
                     accessibilityLabel={t('trackedStories.followFabLabel')}
                     className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-primary-500 shadow-hard-3"
-                    style={{ bottom: 20 + insets.bottom + (embedded ? TAB_BAR_HEIGHT : 0) }}
+                    style={{ bottom: 20 + (embedded ? tabClearance : insets.bottom) }}
                 >
                     <Crosshair size={26} strokeWidth={2} color="#000000" fill="none" />
                 </Pressable>
