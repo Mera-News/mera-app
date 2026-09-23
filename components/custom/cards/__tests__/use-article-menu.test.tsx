@@ -18,6 +18,9 @@ jest.mock('react-native', () => {
         },
     });
 });
+jest.mock('react-native-safe-area-context', () => ({
+    useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
+}));
 jest.mock('react-native-css-interop/jsx-runtime', () => {
     const R = require('react/jsx-runtime');
     return { jsx: R.jsx, jsxs: R.jsxs, Fragment: R.Fragment };
@@ -172,6 +175,23 @@ describe('useArticleMenu items', () => {
     it('omits Check for fact checks when the surface cannot start one', () => {
         const r = openMenu(<Host />);
         expect(r.queryByTestId('card-action-fact-check')).toBeNull();
+    });
+});
+
+describe('ArticleOverflowMenu sheet', () => {
+    it('titles the sheet with the headline, not a generic label', () => {
+        const r = openMenu(<Host />);
+        expect(r.getByTestId('article-menu-title').props.children).toBe('A headline');
+        expect(r.getByTestId('article-menu-title').props.numberOfLines).toBe(1);
+    });
+
+    it('clears the home indicator and gives Cancel its own readable plate', () => {
+        const r = openMenu(<Host />);
+        const { StyleSheet } = require('react-native');
+        expect(StyleSheet.flatten(r.getByTestId('article-menu').props.style).paddingBottom).toBe(34 + 12);
+        const cancel = r.getByTestId('article-menu-cancel');
+        const style = StyleSheet.flatten(typeof cancel.props.style === 'function' ? cancel.props.style({ pressed: false }) : cancel.props.style);
+        expect(style.backgroundColor).toBe('rgba(255,255,255,0.10)');
     });
 });
 

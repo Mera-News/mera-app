@@ -20,6 +20,9 @@ jest.mock('react-native', () => {
 });
 
 // ── UI primitives → plain RN views ──
+jest.mock('react-native-safe-area-context', () => ({
+    useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
+}));
 jest.mock('react-native-css-interop/jsx-runtime', () => {
   const R = require('react/jsx-runtime');
   return { jsx: R.jsx, jsxs: R.jsxs, Fragment: R.Fragment };

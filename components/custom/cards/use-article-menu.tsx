@@ -288,7 +288,13 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const element = (
         <>
             {trackDialog}
-            <ArticleOverflowMenu visible={visible} onClose={close} items={items} onPick={pick} />
+            <ArticleOverflowMenu
+                visible={visible}
+                title={subject.title}
+                onClose={close}
+                items={items}
+                onPick={pick}
+            />
         </>
     );
 

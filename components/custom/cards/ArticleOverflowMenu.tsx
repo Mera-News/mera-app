@@ -7,6 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ACCENT = '#EDA77E';
 
@@ -24,6 +25,8 @@ export interface ArticleMenuItem {
 
 interface ArticleOverflowMenuProps {
     visible: boolean;
+    /** The article's headline, as the sheet's title (one line). */
+    title?: string;
     onClose: () => void;
     items: readonly ArticleMenuItem[];
     /** Called with the picked item; the host runs it once the sheet is gone. */
@@ -39,9 +42,14 @@ interface ArticleOverflowMenuProps {
  * bare translucent plate over headlines is unreadable), and it has an explicit
  * Cancel (F38: the old long-press sheet had neither title nor Cancel).
  */
-const ArticleOverflowMenu: React.FC<ArticleOverflowMenuProps> = ({ visible, onClose, items, onPick }) => {
+const ArticleOverflowMenu: React.FC<ArticleOverflowMenuProps> = (props) =>
+    // The sheet (and its safe-area read) mounts only while open: this sits
+    // under every card, and a closed menu must cost nothing.
+    props.visible ? <ArticleOverflowSheet {...props} /> : null;
+
+const ArticleOverflowSheet: React.FC<ArticleOverflowMenuProps> = ({ title, onClose, items, onPick }) => {
     const { t } = useTranslation();
-    if (!visible) return null;
+    const insets = useSafeAreaInsets();
     return (
         <Modal visible transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
             <Pressable
@@ -59,13 +67,25 @@ const ArticleOverflowMenu: React.FC<ArticleOverflowMenuProps> = ({ visible, onCl
                             parent's CONTENT box, so padding there leaves an
                             unplated frame. */}
                         <TranslucentPlate />
-                        <Box className="px-2 pb-8 pt-3" testID="article-menu">
+                        <Box
+                            className="px-2 pt-3"
+                            // Clear the home indicator: the sheet sits over the tab bar.
+                            style={{ paddingBottom: insets.bottom + 12 }}
+                            testID="article-menu"
+                        >
+                            {/* The headline, so the reader knows which story the
+                                actions are for; the generic label only when
+                                there is none. */}
                             <Text
+                                testID="article-menu-title"
                                 size="sm"
-                                className="text-typography-400 px-4 pb-2"
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                                className="px-4 pb-2"
+                                style={{ color: 'rgb(212,212,212)', fontWeight: '600' }}
                                 accessibilityRole="header"
                             >
-                                {t('articleMenu.title')}
+                                {title?.trim() ? title.trim() : t('articleMenu.title')}
                             </Text>
                             <VStack space="xs">
                                 {items.map((item) => (
@@ -103,15 +123,21 @@ const ArticleOverflowMenu: React.FC<ArticleOverflowMenuProps> = ({ visible, onCl
                                     accessibilityRole="button"
                                     accessibilityLabel={t('common.cancel')}
                                     onPress={onClose}
+                                    // Full width inside the sheet's inset, on its own
+                                    // plate, in readable ink (it was grey text over
+                                    // the tab bar, outside the inset).
                                     style={({ pressed }) => ({
                                         minHeight: 48,
+                                        marginTop: 8,
+                                        marginHorizontal: 8,
+                                        borderRadius: 16,
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        marginTop: 4,
+                                        backgroundColor: 'rgba(255,255,255,0.10)',
                                         opacity: pressed ? 0.7 : 1,
                                     })}
                                 >
-                                    <Text className="text-typography-300" style={{ fontSize: 15 }}>
+                                    <Text className="text-white" style={{ fontSize: 15, fontWeight: '600' }}>
                                         {t('common.cancel')}
                                     </Text>
                                 </Pressable>
