@@ -521,6 +521,8 @@ type Place {
   city: String!
   countryCode: String!
   displayName: String!
+  latitude: Float
+  longitude: Float
   normalized: String!
   population: Int
   region: String
@@ -687,6 +689,11 @@ type Query {
   ): NewsPublishersResponse!
 
   """
+  Exact lookup of the one best place for a city name plus an ISO alpha-2 country code, highest population first. Matching is case-insensitive and diacritic-insensitive, so both "Munchen" and its accented spelling resolve; pass the city exactly as it was displayed. Returns null when nothing matches or either argument is blank, and null means ask the user to confirm the place, never guess a coordinate.
+  """
+  placeCoordinates(city: String!, countryCode: String!): Place
+
+  """
   Typeahead place search (anchored prefix on the lowercase key, population desc). Returns [] for queries under 2 chars; limit capped at 15.
   """
   placeSearch(limit: Int! = 8, query: String!): [Place!]!
@@ -701,9 +708,27 @@ type Query {
     languageCode: String
   ): PublicationSourcesResponse! @deprecated(reason: "Use newsPublishers and publicationSourcesForNewsPublisher queries instead")
   publicationSourcesForNewsPublisher(publisherId: ID!): PublicationSourcesForPublisherResponse!
-  recentArticleCount: Int!
+  recentArticleCount(since: DateTime): Int!
   relatedArticles(articleId: ID!, stableClusterId: String): [ArticleSummary!]! @deprecated(reason: "Unbounded. Use relatedArticlesPage.")
-  relatedArticlesPage(after: String, articleId: ID!, context: RelatedArticlesContextInput, excludeIds: [ID!], first: Int = 10, sortMode: RelatedSortMode = RELEVANCE, stableClusterId: String): RelatedArticlesPage!
+  relatedArticlesPage(
+    after: String
+    articleId: ID!
+    context: RelatedArticlesContextInput
+
+    """
+    Only coverage from these countries, ISO alpha-3 (GLOBAL for international sources). Absent or empty means all.
+    """
+    countries: [String!]
+    excludeIds: [ID!]
+    first: Int = 10
+
+    """
+    Only coverage in these languages, base tags such as `de`. Absent or empty means all.
+    """
+    languages: [String!]
+    sortMode: RelatedSortMode = RELEVANCE
+    stableClusterId: String
+  ): RelatedArticlesPage!
 
   """Vector search using cosine similarity (scores 0–1)."""
   searchArticlesVector(
@@ -756,6 +781,15 @@ type Query {
   unblockRequestStatus(userId: ID!): UnblockRequest
   userBilling: UserBillingInfo!
   userPersonaByUserId(userId: ID!): UserPersona
+  weatherAuthToken: WeatherAuthToken!
+}
+
+"""
+Country and language counts over the related set. Each dimension is counted with the filter of the other dimension applied.
+"""
+type RelatedArticleFacets {
+  countries: [RelatedFacetCount!]!
+  languages: [RelatedFacetCount!]!
 }
 
 """
@@ -783,12 +817,26 @@ One page of sibling coverage for an article, already ordered server-side.
 """
 type RelatedArticlesPage {
   articles: [ArticleSummary!]!
+
+  """
+  Country and language chip counts over the whole related set, not just this page.
+  """
+  facets: RelatedArticleFacets!
   pageInfo: CursorPageInfo!
 
   """
   The `after` cursor did not resolve and this page restarts at index 0. Clients must REPLACE their list, not append.
   """
   restarted: Boolean!
+}
+
+"""One chip for the related-coverage filters, with its row count."""
+type RelatedFacetCount {
+  """
+  Country as ISO alpha-3 (or GLOBAL for international sources), or a base language tag.
+  """
+  code: String!
+  count: Int!
 }
 
 """
@@ -959,4 +1007,16 @@ type UserPersona {
   processingMode: ProcessingMode!
   updatedAt: DateTime!
   userId: String!
+}
+
+type WeatherAuthToken {
+  """
+  ISO timestamp when the token expires (one hour after it was minted). Use it to decide whether to re-mint before a refresh, not to schedule a background refresh of the token on its own.
+  """
+  expiresAt: String!
+
+  """
+  ES256 JWT for the WeatherKit REST API. Send it as `Authorization: Bearer <token>` on the call to weatherkit.apple.com. Mint one per refresh rather than caching it across sessions; minting is a signature with no I/O and no storage on either side.
+  """
+  token: String!
 }
