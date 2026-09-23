@@ -259,8 +259,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
             // thing most people saw and most people did not know what it meant.
             //
             // Restoring is now something a user goes and asks for: Settings >
-            // "Restore from a backup", which opens the same flow directly
-            // (`manage-data?restore=1`). Doing it after the wizard is safe —
+            // "Backup and restore" opens Manage data, whose backup section
+            // holds the restore action (`manage-data?restore=1` deep-links
+            // straight to the code step). Doing it after the wizard is safe:
             // `lib/backup/allowlist.ts` forbids the identity settings from ever
             // entering a backup, so the post-restore reload lands on the
             // receiving device's own stamp with facts present.
