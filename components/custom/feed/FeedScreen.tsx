@@ -105,6 +105,8 @@ import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
+import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
+import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
 import { useVisibleIndex } from './use-visible-index';
@@ -401,6 +403,8 @@ const FeedScreen: React.FC = () => {
   const listRef = useRef<Animated.FlatList<FeedEntry>>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const showFabShared = useSharedValue(false);
+  // Set by the first real drag. See the FAB toggle in `tickHandler`.
+  const userDraggedShared = useSharedValue(false);
   // Raw offset mirror, updated on every scroll frame (see tickHandler below) —
   // UI-thread only, no bridge crossing, no re-render. This exists solely so
   // `scrollToTop` can tell "the call landed" from "it didn't" (see below);
@@ -541,6 +545,10 @@ const FeedScreen: React.FC = () => {
   // `setPinnedIds` fires on ingest, never on scroll — this file must not do
   // state updates mid-scroll (see use-visible-index's header, the scroll-lag
   // fix).
+  // True once ingest has run with local candidates in hand: part of the
+  // warm-up signal (see use-feed-warmup), so an order that ingests to zero rows
+  // resolves to the empty-state chain instead of a skeleton forever.
+  const [ingestedCandidates, setIngestedCandidates] = useState(false);
   useEffect(() => {
     if (!isFocused || !orderHydrated || !openedHydrated) return;
     setPinnedIds((prev) =>
@@ -549,6 +557,7 @@ const FeedScreen: React.FC = () => {
     useFeedOrderStore
       .getState()
       .ingest(candidates, useOpenedStoriesStore.getState().articleIds);
+    if (candidates.length > 0) setIngestedCandidates(true);
   }, [candidates, isFocused, orderHydrated, openedHydrated, deepestSeenIdRef]);
 
   const data = useMemo(
@@ -810,7 +819,10 @@ const FeedScreen: React.FC = () => {
       lastOffsetShared.value = e.contentOffset.y;
       // Toggle the scroll-to-top FAB — cross the JS bridge only when the
       // threshold boolean actually flips, not on every scroll frame.
-      const next = e.contentOffset.y > SCROLL_THRESHOLD;
+      // Only after the reader has dragged the list themselves: on a cold launch
+      // the list can sit past the threshold for one frame while it lays out,
+      // which flashed the FAB with nothing having been scrolled (F3).
+      const next = userDraggedShared.value && e.contentOffset.y > SCROLL_THRESHOLD;
       if (next !== showFabShared.value) {
         showFabShared.value = next;
         runOnJS(setShowScrollToTop)(next);
@@ -881,7 +893,21 @@ const FeedScreen: React.FC = () => {
     }
   }, [errorMessage, data.length, hasGeneratedInterests, isFeedProcessing, lastProcessingRunFinishedAt, reveal]);
 
+  // F2: while the local cache is still loading on launch, the list is empty for
+  // a reason that is NOT "nothing to show". Draw nothing for 200ms, then a
+  // static skeleton, and never the "preparing your feed" or "caught up" cards.
+  const warmup = useFeedWarmup({
+    orderHydrated,
+    openedHydrated,
+    candidateCount: candidates.length,
+    renderedCount: listData.length,
+    ingested: ingestedCandidates,
+    announcement: t('feed.loadingA11y'),
+  });
+
   const renderEmpty = () => {
+    if (warmup === 'blank') return null;
+    if (warmup === 'skeleton') return <FeedSkeleton />;
     if (isLoading) {
       return (
         <Box className="items-center justify-center py-20" testID="feed-loading">
@@ -1018,12 +1044,16 @@ const FeedScreen: React.FC = () => {
         // the cause is NOT what it looks like. It is not the store's prepend —
         // measured on the resident device, the drop was still exactly 561px with
         // the pinned prefix already active and provably suppressing insertion.
-        // It is the INITIAL LAYOUT: the first cell mounts at ~0 height (its image
-        // has not decoded), so the first *visible* row is really row 1; when row
-        // 0 then grows to its true height, plain anchoring faithfully holds row 1
-        // in place and the content slides down by exactly one card. Hence the
-        // signature: drop == one card height + the header padding, present in the
-        // very first frame, identical on every launch.
+        // It is the INITIAL LAYOUT: cell 0 changes height after it first mounts,
+        // so the first *visible* row is really row 1; when row 0 then grows to
+        // its true height, plain anchoring faithfully holds row 1 in place and
+        // the content slides down by exactly one card. Hence the signature:
+        // drop == one card height + the header padding, present in the very
+        // first frame, identical on every launch. (The measurement blamed the
+        // hero image decoding; the hero is a fixed `h-48` box now, so the
+        // growth left is text: the title's translation swap and the reason
+        // landing. The launch skeleton in use-feed-warmup also removes the
+        // empty-to-populated swap that used to happen under this anchor.)
         //
         // This threshold says "if the adjustment happens while within 100px of
         // the top, go to the top instead of holding". The Feed omitted it before
@@ -1039,6 +1069,9 @@ const FeedScreen: React.FC = () => {
         // `onScroll` worklet above, which only owns the scroll event itself.
         // Landing buffered dwell marks here keeps the debounce from being the
         // only thing standing between a skip and app termination.
+        onScrollBeginDrag={() => {
+          userDraggedShared.value = true;
+        }}
         onMomentumScrollEnd={flushSkips}
         onScrollEndDrag={flushSkips}
         // Initial visibility tick. TranslatableDynamic only resolves its
