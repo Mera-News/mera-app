@@ -106,6 +106,8 @@ import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
+import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
+import { HEADER_NARRATION_METRICS } from '@/components/custom/for-you/header-narration';
 import NewStoriesPill from '@/components/custom/feed/NewStoriesPill';
 import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
@@ -198,6 +200,11 @@ const ARRIVAL_STAGGER_CAP = 5;
  *  staggered start, and short enough that scrolling back to a row minutes later
  *  never re-animates it. */
 const ARRIVAL_ELIGIBLE_MS = 600;
+
+/** Above this Dynamic Type scale the narration row may wrap to three lines
+ *  (the header grows once) instead of truncating to one. Same value as the
+ *  Dashboard's. */
+const LARGE_TEXT_SCALE = 1.2;
 
 /** Show the scroll-to-top FAB once the feed is scrolled past this many px. */
 const SCROLL_THRESHOLD = 300;
@@ -309,7 +316,7 @@ const FeedScreen: React.FC = () => {
 
   // Collapsing header (hides on scroll-down, reveals on scroll-up) — shared
   // with the Dashboard tab.
-  const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal } =
+  const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal, hidden: headerHidden } =
     useCollapsibleHeader();
 
   // ── Live inputs ──
@@ -332,7 +339,7 @@ const FeedScreen: React.FC = () => {
   // sitting right there.
   // Title ceiling from the window width; see header-title-size for why this is
   // two steps and not a ramp.
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, fontScale } = useWindowDimensions();
   const titleSize = headerTitleSize(windowWidth);
   // Pinned, in BOTH states — see `headerTitleLineHeight`. Without it the row
   // shrinks when the title steps aside for the narration line and the whole
@@ -1000,22 +1007,12 @@ const FeedScreen: React.FC = () => {
     return <AllCaughtUpCard />;
   };
 
-  // ── The title row's three slots ─────────────────────────────────────────
+  // ── The title row: title, status mark, explainer ─────────────────────────
   //
-  // THE TITLE STAYS while a sync runs, and the narration sits to the right of
-  // the status mark, in the width the importance chip used to occupy. Nothing
-  // reorders, so `FeedStatusIndicator` cannot remount mid-run and restart its
-  // sweep, and the reader never loses the screen's name.
-  //
-  // THE DASHBOARD DELIBERATELY DOES THE OPPOSITE — there the title steps aside
-  // and the mark moves leftmost — and the reason is measured, not stylistic.
-  // On this screen the title is 82pt and there is no bell, which leaves 245pt
-  // for the line. On the Dashboard "Dashboard" is 184pt and the bell takes 45
-  // more, leaving 88pt: about twelve characters a line, against copy that runs
-  // to 46 in English and 58 in the longer locales. Side by side there, the
-  // sentence truncates to "Save what you cannot…". So each header does the
-  // thing its own width allows. Do not "unify" these two without re-measuring;
-  // the numbers, not the symmetry, are what decided it.
+  // The title and the mark never reorder or swap out, so `FeedStatusIndicator`
+  // cannot remount mid-run and restart its sweep. The sync narration is NOT in
+  // this row any more: it has its own pinned row below (`feedStatusRow`), the
+  // same layout as the Dashboard, so the two headers now read alike.
   const feedStatusMark = (
     <FeedStatusIndicator
       mode={statusMode}
@@ -1043,21 +1040,30 @@ const FeedScreen: React.FC = () => {
       </Heading>
     </View>
   );
-  // Takes the row's remaining width, which on this screen is generous: the
-  // Feed header has no bell and "Feed" is a short title. `flex-1 min-w-0` so
-  // it claims the slack rather than sizing to its text, and so it can actually
-  // shrink if a locale needs the title wider.
-  const feedNarrationSlot = (
-    <View
-      pointerEvents="none"
-      className="flex-1 min-w-0 pl-1"
-      testID="feed-header-narration"
-    >
-      <HeaderNarrationLine
-        stage={narrationStage}
-        onDevice={narrationOnDevice}
-        testID="feed-narration-line"
-      />
+  // THE TITLE STANDS ALONE; the sync narration has its OWN full-width row
+  // under it (D6 / N11, same rule as the Dashboard). The row is height-PINNED
+  // in every state, empty included, so a sync starting or ending never moves
+  // the header, the list padding or the refresh spinner offset. One line at
+  // every text size up to large; at a large size it may wrap to three and the
+  // header grows once.
+  const statusRowLines = fontScale > LARGE_TEXT_SCALE ? 3 : 1;
+  const statusRowStyle =
+    statusRowLines === 1
+      ? { height: HEADER_NARRATION_METRICS.lineHeight }
+      : { minHeight: HEADER_NARRATION_METRICS.lineHeight };
+  const feedStatusRow = (
+    <View pointerEvents="none" style={statusRowStyle} testID="feed-status-row">
+      {narrating ? (
+        <View testID="feed-header-narration">
+          <HeaderNarrationLine
+            stage={narrationStage}
+            onDevice={narrationOnDevice}
+            layout="row"
+            maxLines={statusRowLines}
+            testID="feed-narration-line"
+          />
+        </View>
+      ) : null}
     </View>
   );
   return (
@@ -1180,7 +1186,7 @@ const FeedScreen: React.FC = () => {
           content is never visible behind it once the collapsing header below
           translates away on scroll-down. Sits above the list, below the
           header (zIndex 10). */}
-      <StatusBarScrim />
+      <StatusBarScrim coverProgress={headerHidden} />
 
       {/* Collapsing header — "For you" heading (top-left) + notification bell
           (top-right), with the 24h stats sentence beneath. Absolute overlay,
@@ -1261,23 +1267,21 @@ const FeedScreen: React.FC = () => {
             >
               {feedTitleSlot}
               {feedStatusMark}
-              {/* The narration takes the trailing slack while a run is on, and
-                  the plain spacer takes it otherwise. Only this third slot
-                  changes, so the title and the mark are untouched by the swap
-                  and neither can remount. */}
-              {narrating ? feedNarrationSlot : null}
-              {/* Trailing slack, AT REST ONLY — while a run is on, the
-                  narration slot above is what claims this width. It stops a
-                  short title from being centred and keeps the status mark
-                  tight against it. `flex-basis: 0` means it contributes
-                  nothing to the row's natural width, so a long localized title
-                  still takes the whole row and truncates rather than being
-                  squeezed by a spacer. `pointerEvents="none"`: this is a
-                  full-height band across the header and would otherwise
+              {/* Trailing slack. It stops a short title from being centred and
+                  keeps the status mark tight against it. `flex-basis: 0` means
+                  it contributes nothing to the row's natural width, so a long
+                  localized title still takes the whole row and truncates rather
+                  than being squeezed by a spacer. `pointerEvents="none"`: this
+                  is a full-height band across the header and would otherwise
                   swallow a pull-to-refresh pan (see the rule above). */}
-              {!narrating ? <View pointerEvents="none" className="flex-1" /> : null}
+              <View pointerEvents="none" className="flex-1" />
             </HStack>
+            {/* N4: what this tab is and how it orders stories. */}
+            <TabExplainerButton tab="feed" testID="feed-explainer-open" />
           </HStack>
+
+          {/* The sync narration's own pinned row (see `feedStatusRow`). */}
+          {feedStatusRow}
 
           {/* The 24h counts sentence that used to sit here is gone — it lives
               on the Dashboard, which is the screen for looking at numbers. It
