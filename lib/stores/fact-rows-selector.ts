@@ -323,15 +323,15 @@ export interface FactRow {
    *   - `no-match-yet`: a run has finished since; nothing matched well enough. */
   emptyReason?: EmptySectionReason;
   /** EMPTY SECTIONS ONLY. The fact was added in the last
-   *  {@link NEW_INTEREST_WINDOW_MS}; the row sorts FIRST so the reader sees
-   *  the interest they just added was heard. Older empty sections sort last. */
+   *  {@link NEW_INTEREST_WINDOW_MS}. A LABEL only (the section says it is a new
+   *  interest): it does not change the order, every empty section sorts last. */
   newInterest?: boolean;
 }
 
 /** Why a fact section has no stories. See {@link FactRow.emptyReason}. */
 export type EmptySectionReason = 'awaiting-first-run' | 'no-match-yet';
 
-/** How long an empty section counts as a "new interest" (sorted first). */
+/** How long an empty section counts as a "new interest" (its label). */
 export const NEW_INTEREST_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export interface FactRowsResult {
@@ -877,22 +877,23 @@ function emptyFactRows(
   return out;
 }
 
-/** 0 = new empty interest (first), 1 = has stories, 2 = older empty (last). */
+/** 1 = has stories (fact and headline sections), 2 = empty (last). */
 function sortTier(row: FactRow): number {
   if (row.groups.length > 0 || row.emptyReason === undefined) return 1;
-  return row.newInterest ? 0 : 2;
+  return 2;
 }
 
 /**
  * Section order. An EXPLICIT tier comes first, because the weight axis below
  * would otherwise put an empty fact section (weight 1.0) above every populated
- * headline section (0.55 and lower): new empty interests first, then every
- * section with stories, then older empty sections. Within the populated tier:
+ * headline section (0.55 and lower): every section with stories first, then
+ * every empty section, new interests included (owner decision: a section
+ * with nothing to read never sits above one with stories). Within the populated tier:
  * section WEIGHT desc (the one axis on which headline sections compare with
  * fact sections: a default-weight fact is 1.0, a full-weight home country
  * 0.55, GLOBAL 0.35; see `headlineSectionWeight`), then unread count desc (a
  * fully-read section sinks below any with at least one unread story), then
- * group count desc, then factId asc for determinism. Within an empty tier:
+ * group count desc, then factId asc for determinism. Within the empty tier:
  * newest fact first, then factId.
  */
 function sortRows(rows: FactRow[], snapshots?: FactRowsSnapshots): FactRow[] {

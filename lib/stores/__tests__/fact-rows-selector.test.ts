@@ -962,7 +962,9 @@ describe('buildFactRows empty sections (D4)', () => {
     expect(never.rows.every((r) => r.emptyReason === 'awaiting-first-run')).toBe(true);
   });
 
-  it('puts a NEW empty interest first, sections with stories next, older empty ones last', () => {
+  // Owner decision: every empty section goes to the BOTTOM, new interests
+  // included; within the empty tier the newest fact comes first.
+  it('puts sections with stories first, then every empty section, newest first', () => {
     const snap = snapshots(
       [
         ['t-story', { factId: 'f-story' }],
@@ -977,10 +979,25 @@ describe('buildFactRows empty sections (D4)', () => {
     );
     const s = sugg({ _id: 'a', relevance: 0.8, matchedTopics: [{ topicId: 't-story', text: 'x' }] });
     const { rows } = buildFactRows([s], snap, new Set(), NOW);
-    expect(rows.map((r) => r.factId)).toEqual(['f-new', 'f-story', 'f-old']);
-    expect(rows[0].newInterest).toBe(true);
+    expect(rows.map((r) => r.factId)).toEqual(['f-story', 'f-new', 'f-old']);
+    expect(rows[0].emptyReason).toBeUndefined();
+    // The flag survives as the section's label.
+    expect(rows[1].newInterest).toBe(true);
     expect(rows[2].newInterest).toBe(false);
-    expect(rows[1].emptyReason).toBeUndefined();
+  });
+
+  it('a NEW empty interest also sorts below a populated HEADLINE section', () => {
+    const snap = snapshots([['t-new', { factId: 'f-new' }]], [['f-new', { createdAtMs: NOW - 2 * H }]]);
+    const h = sugg({
+      _id: 'h',
+      relevance: 0.8,
+      headlineScope: 'GLOBAL',
+      matchedTopics: [{ topicId: null, text: 'headlines' }],
+    });
+    const { rows } = buildFactRows([h], snap, new Set(), NOW);
+    expect(rows[rows.length - 1].factId).toBe('f-new');
+    expect(rows[rows.length - 1].newInterest).toBe(true);
+    expect(rows[0].groups.length).toBeGreaterThan(0);
   });
 
   it('an old empty section sorts below a populated HEADLINE section despite its higher weight', () => {
