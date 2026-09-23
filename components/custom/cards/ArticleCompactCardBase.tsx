@@ -81,6 +81,9 @@ const HEADLINE_LINE_BOX = 24;
 const FOOTER_LINE_BOX = 21;
 const FOOTER_GAP = 12;
 
+/** The loading tile behind a compact image (F39). */
+export const COMPACT_IMAGE_TILE = 'rgba(255,255,255,0.06)';
+
 export const COMPACT_IMAGE_SIZE =
   COMPACT_HEADLINE_LINES * HEADLINE_LINE_BOX + FOOTER_GAP + FOOTER_LINE_BOX;
 
@@ -283,6 +286,9 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   height: COMPACT_IMAGE_SIZE,
                   borderRadius: 16,
                   marginLeft: 14,
+                  // F39: a quiet tile holds the square while the image
+                  // decodes, instead of the picture popping into a blank hole.
+                  backgroundColor: COMPACT_IMAGE_TILE,
                 }}
               >
                 <Image

@@ -242,7 +242,7 @@ import ArticleSuggestionCompactCard from '../ArticleSuggestionCompactCard';
 // eslint-disable-next-line import/first
 import { ArticleImagePlaceholder } from '../ArticleImagePlaceholder';
 // eslint-disable-next-line import/first
-import { COMPACT_HEADLINE_LINES, COMPACT_IMAGE_SIZE } from '../ArticleCompactCardBase';
+import { COMPACT_HEADLINE_LINES, COMPACT_IMAGE_SIZE, COMPACT_IMAGE_TILE } from '../ArticleCompactCardBase';
 // eslint-disable-next-line import/first
 import ArticleActionsRow from '../ArticleActionsRow';
 // eslint-disable-next-line import/first
@@ -681,6 +681,18 @@ describe('no image ⇒ no image region (either card base)', () => {
     expect(queryByTestId('article-image')).toBeNull();
     expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
     expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
+  });
+});
+
+describe('compact card image loading tile (F39)', () => {
+  it('puts a tile behind the square so the image never pops into a blank hole', () => {
+    const { UNSAFE_root } = render(
+      <ArticleStandaloneCompactCard article={makeArticle({ image_url: 'https://x/i.jpg' } as any)} onPress={jest.fn()} />,
+    );
+    const square = UNSAFE_root.findAll(
+      (n: any) => typeof n.type === 'string' && n.props?.style?.width === COMPACT_IMAGE_SIZE,
+    )[0];
+    expect(square.props.style.backgroundColor).toBe(COMPACT_IMAGE_TILE);
   });
 });
 
