@@ -22,6 +22,7 @@ import {
     observeActive,
 } from '@/lib/database/services/tracked-story-service';
 import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
+import { toastManager } from '@/lib/toast-manager';
 import { startFollowStoryChat } from '@/lib/tracking/follow-story-chat';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
@@ -101,9 +102,13 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
         // deleteTrackedStoryById, not untrackStory: the latter drops the row but
         // leaves the linked TOPIC active, so the story's coverage kept being
         // fetched after the user deleted it.
-        await deleteTrackedStoryById(id);
-        // The observeActive subscription drops the row automatically.
-    }, [confirmTarget]);
+        const deleted = await deleteTrackedStoryById(id);
+        // The observeActive subscription drops the row automatically on
+        // success. On failure the row is still there, so say why it stayed.
+        if (!deleted) {
+            toastManager.showError(t('errors.somethingWentWrong'), t('trackedStories.deleteFailed'));
+        }
+    }, [confirmTarget, t]);
 
     const renderItem: ListRenderItem<TrackedStoryModel> = useCallback(
         ({ item }) => {

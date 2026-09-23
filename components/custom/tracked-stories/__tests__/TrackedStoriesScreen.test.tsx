@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
 // The animated gradient backdrop is pure decoration and asserts nothing here,
@@ -141,7 +141,12 @@ jest.mock('@/lib/database', () => ({
 }));
 
 let mockRows: any[] = [];
-const mockUntrack = jest.fn();
+// The service reports success as a boolean and never throws.
+const mockUntrack = jest.fn(async (..._a: any[]): Promise<boolean> => true);
+const mockShowError = jest.fn();
+jest.mock('@/lib/toast-manager', () => ({
+    toastManager: { showError: (...a: any[]) => mockShowError(...a) },
+}));
 jest.mock('@/lib/database/services/tracked-story-service', () => ({
     MAX_MEMBER_IDS: 30,
     observeActive: () => ({
@@ -427,5 +432,18 @@ describe('TrackedStoriesScreen', () => {
         // its own string AND a stable testID.
         fireEvent.press(getByTestId('untrack-confirm'));
         expect(mockUntrack).toHaveBeenCalledWith('s4');
+    });
+});
+
+describe('TrackedStoriesScreen: a failed delete says so', () => {
+    it('toasts when deleting the story fails', async () => {
+        mockUntrack.mockImplementationOnce(async () => false);
+        mockRows = [story({ id: 's5', llmHeadline: 'Keep me', unseenCount: 0 })];
+        const { getByTestId, getByLabelText } = render(<TrackedStoriesScreen embedded />);
+        fireEvent(getByLabelText(/^Keep me,/), 'longPress');
+        await act(async () => {
+            fireEvent.press(getByTestId('untrack-confirm'));
+        });
+        expect(mockShowError).toHaveBeenCalledWith('errors.somethingWentWrong', 'trackedStories.deleteFailed');
     });
 });

@@ -101,11 +101,17 @@ jest.mock('@/lib/database', () => ({
 }));
 
 let mockStory: any = null;
-const mockRemoveMemberSnapshot = jest.fn(async () => {});
+const mockRemoveMemberSnapshot = jest.fn(async (): Promise<boolean> => true);
+const mockDeleteTracked = jest.fn(async (): Promise<boolean> => true);
+const mockGetTracked = jest.fn(async (): Promise<any> => mockStory);
+const mockShowError = jest.fn();
+jest.mock('@/lib/toast-manager', () => ({
+    toastManager: { showError: (...a: any[]) => mockShowError(...a) },
+}));
 const mockAdvanceSeenWatermark = jest.fn(async () => {});
 const mockMarkSeen = jest.fn(async () => {});
 jest.mock('@/lib/database/services/tracked-story-service', () => ({
-    getTrackedStoryById: jest.fn(async () => mockStory),
+    getTrackedStoryById: (...a: any[]) => mockGetTracked(...(a as [])),
     markSeen: (...a: any[]) => mockMarkSeen(...(a as [])),
     advanceSeenWatermark: (...a: any[]) => mockAdvanceSeenWatermark(...(a as [])),
     backfillSnapshotSource: jest.fn(async () => {}),
@@ -117,7 +123,8 @@ jest.mock('@/lib/article-service', () => ({
     ArticleService: { getArticleById: jest.fn(async () => null) },
 }));
 jest.mock('@/lib/tracking/track-actions', () => ({
-    deleteTrackedStoryById: jest.fn(async () => {}),
+    // The services report success as a boolean and never throw.
+    deleteTrackedStoryById: (...a: any[]) => mockDeleteTracked(...(a as [])),
     // Disowning a member now drops the snapshot AND releases the article's
     // on-device retention, so the screen calls this instead of reaching into
     // tracked-story-service directly.
@@ -179,6 +186,9 @@ const snapshot = (articleId: string, title: string, pubDateMs: number) => ({
 
 beforeEach(() => {
     jest.clearAllMocks();
+    mockRemoveMemberSnapshot.mockImplementation(async () => true);
+    mockDeleteTracked.mockImplementation(async () => true);
+    mockGetTracked.mockImplementation(async () => mockStory);
     mockStory = {
         id: 's1',
         llmHeadline: 'Bhopal flooding',
@@ -267,5 +277,58 @@ describe('StoryTimelineScreen — removing one member', () => {
         });
 
         expect(mockAdvanceSeenWatermark.mock.calls.length).toBe(stampsAfterLoad);
+    });
+});
+
+describe('StoryTimelineScreen: failures say so', () => {
+    it('shows a load error, not the quiet note, when loading throws', async () => {
+        mockGetTracked.mockImplementation(async () => {
+            throw new Error('SQLITE_BUSY');
+        });
+        const { getByTestId, getByText, queryByText } = render(
+            <StoryTimelineScreen trackedStoryId="s1" onBack={jest.fn()} />,
+        );
+        await waitFor(() => expect(getByTestId('story-timeline-load-failed')).toBeTruthy());
+        expect(getByText('trackedStories.timelineLoadFailed')).toBeTruthy();
+        expect(queryByText('trackedStories.timelineQuietNote')).toBeNull();
+    });
+
+    it('says the story is gone when it was deleted elsewhere', async () => {
+        mockStory = null;
+        const { getByTestId } = render(<StoryTimelineScreen trackedStoryId="s1" onBack={jest.fn()} />);
+        await waitFor(() => expect(getByTestId('story-timeline-gone')).toBeTruthy());
+    });
+
+    it('stays and says so when deleting the story fails', async () => {
+        mockDeleteTracked.mockImplementation(async () => false);
+        const onBack = jest.fn();
+        const utils = render(<StoryTimelineScreen trackedStoryId="s1" onBack={onBack} />);
+        await waitFor(() => utils.getByText('Water enters low-lying colonies'));
+
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-timeline-delete'));
+        });
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-timeline-delete-confirm'));
+        });
+
+        expect(mockDeleteTracked).toHaveBeenCalledWith('s1');
+        expect(onBack).not.toHaveBeenCalled();
+        expect(mockShowError).toHaveBeenCalledWith('errors.somethingWentWrong', 'trackedStories.deleteFailed');
+    });
+
+    it('puts a removed card back and says so when removal fails', async () => {
+        mockRemoveMemberSnapshot.mockImplementation(async () => false);
+        const { getByTestId, queryByText } = await renderScreen();
+
+        await act(async () => {
+            fireEvent(getByTestId('story-timeline-card-a2'), 'longPress');
+        });
+        await act(async () => {
+            fireEvent.press(getByTestId('story-timeline-card-remove'));
+        });
+
+        await waitFor(() => expect(queryByText('Unrelated Meghalaya landslide')).toBeTruthy());
+        expect(mockShowError).toHaveBeenCalledWith('errors.somethingWentWrong', 'trackedStories.removeFailed');
     });
 });
