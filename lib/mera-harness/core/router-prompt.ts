@@ -97,6 +97,11 @@ function routerProcedure(arm?: string): string {
   return body.trim();
 }
 
+function routerAddendum(arm?: string): string {
+  const text = resolveAgentArm(arm).routerAddendum;
+  return text ? `\n\n${text}` : '';
+}
+
 const SCOPE = `## Scope
 Stay on the user's profile and their news. Redirect anything else politely, briefly.`;
 
@@ -131,7 +136,7 @@ ${TOOL_GUIDE}
 ## Skill index
 ${renderSkillIndex()}
 
-${routerProcedure(input.arm)}${pendingLine}
+${routerProcedure(input.arm)}${routerAddendum(input.arm)}${pendingLine}
 
 ${SCOPE}`;
 }

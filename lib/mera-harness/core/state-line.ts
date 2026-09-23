@@ -40,6 +40,8 @@ export interface StateLineInput {
    *  so the subject survives; the model is told to do what the question
    *  offered and say in one sentence what it offered. */
   answeredYesTo?: string | null;
+  /** Several subjects in one message: this leg handles one of them. */
+  segmentScope?: { mine: string; others: string[]; questionPending: boolean } | null;
 }
 
 export function buildStateLine(input: StateLineInput): string {
@@ -100,6 +102,20 @@ export function buildStateLine(input: StateLineInput): string {
 
   if (input.resolvedChoiceText) {
     parts.push(`They chose: ${escapeUntrusted(input.resolvedChoiceText, 80)}.`);
+  }
+
+  if (input.segmentScope) {
+    const others = input.segmentScope.others.map((k) => escapeUntrusted(k, 30)).join(', ');
+    parts.push(
+      `This message has several subjects. You handle only the ${escapeUntrusted(input.segmentScope.mine, 30)} part`
+      + (others ? `; other guidelines handle ${others}. Offer nothing about those.` : '.'),
+    );
+    if (input.segmentScope.questionPending) {
+      parts.push(
+        'A question about another part is already waiting for the user. Ask nothing: if a reading '
+        + 'is uncertain, put the other readings in alternatives.',
+      );
+    }
   }
 
   if (input.answeredYesTo) {

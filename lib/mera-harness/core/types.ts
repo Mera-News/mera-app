@@ -340,6 +340,9 @@ export interface AgentTurnResult {
    *  defaulted route scores as a correct route and inflates accuracy. */
   routeKind: string | null;
   skillLoaded: string | null;
+  /** Every skill the turn ran, in order. Longer than one only under the
+   *  multi-subject arm. */
+  skillsLoaded: string[];
   proposals: AgentProposal[];
   /** True when the leg bound CLAMPED the loop. It clamps; it never throws. */
   legBudgetHit: boolean;

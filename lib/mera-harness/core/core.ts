@@ -4,7 +4,7 @@
 // the eval runner wires fakes. A harness green is therefore evidence about the
 // app rather than about a parallel implementation.
 
-import { resolveAgentArm, routeEnforcementFor } from './arms';
+import { multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
 import {
   claimsSaveHappened,
@@ -48,6 +48,15 @@ export const MAX_AGENT_LEGS = 4;
  * it would punish the turn for the model's mistake.
  */
 export const MAX_FORMAT_RETRIES = 2;
+
+/**
+ * Several subjects in one turn (the `multi-subject` arm, audit B1): at most
+ * this many skills, and each segment after the first gets this many legs.
+ * Three legs is lookups, the offer, and a closing sentence; the last of them
+ * is the forced offer when nothing was offered yet.
+ */
+export const MAX_SEGMENTS = 3;
+export const SEGMENT_LEGS = 3;
 
 /**
  * Sent back when a route leg produced no usable `load_skill` call.
@@ -281,6 +290,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    *  as measured: a route leg that produced no route ends the turn, and the
    *  route leg carries all four discovery tools. */
   const enforceRoute = routeEnforcementFor(resolveAgentArm(params.promptVariant)) === 'on';
+  const multiSubject = multiSubjectFor(resolveAgentArm(params.promptVariant)) === 'on';
 
   // ---- resolve a pending choice BEFORE anything else -----------------------
   // The tap arrives as an ordinary message. Matching it here is what lets the
@@ -336,6 +346,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   });
   let routeKind: string | null = null;
   let skillLoaded: string | null = null;
+  /** Every skill this turn ran, in order. One entry unless the multi-subject
+   *  arm queued more. */
+  const skillsLoaded: string[] = [];
+  /** Skills the route leg asked for beyond the first, waiting their turn. */
+  const queuedSkills: string[] = [];
+  /** Per-segment outcome, collected only when more than one segment ran. */
+  const segmentReplies: { text: string; asked: boolean }[] = [];
+  const segmentTerminals: AgentTurnResult['terminalReason'][] = [];
+  /** The segment whose ask_choice is waiting. A tap resumes THAT skill. */
+  let askingSkill: string | null = null;
+  let proposedAny = false;
   /** True when this turn RESUMED the skill that asked the question, instead of
    *  spending a leg routing a chip tap as if it were a fresh intent. */
   let resumedSkill = false;
@@ -363,6 +384,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       routeKind = routeKindFromSkill(turn.lastSkill);
       systemPrompt = body;
       resumedSkill = true;
+      skillsLoaded.push(turn.lastSkill);
     }
   }
   // A place the chip resolved, carried for as long as the asking skill keeps
@@ -440,7 +462,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** The violation named back to the model, consumed by the next leg. */
   let formatErrorNote: string | null = null;
 
-  for (let index = 0; ; index++) {
+  let nextLegIndex = 0;
+  segments: while (true) {
+  for (let index = nextLegIndex; ; index++) {
+    nextLegIndex = index + 1;
     // THE LAST LEG OF A FACTS TURN IS AN OFFER. Measured on device: "I also
     // follow the Champions League" spent route + three find_similar_facts
     // (each a different `kind`, so each bought a leg), hit the cap, and ended
@@ -491,6 +516,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       forcedProposal: forcingProposalNow,
       lastQuestion,
       answeredYesTo: typedYesResume ? lastQuestion : null,
+      segmentScope:
+        skillsLoaded.length + queuedSkills.length > 1 && routeKind
+          ? {
+              mine: routeKind,
+              others: [...skillsLoaded, ...queuedSkills]
+                .filter((id) => id !== skillLoaded)
+                .map((id) => routeKindFromSkill(id) ?? id),
+              questionPending: askingSkill !== null,
+            }
+          : null,
     });
 
     // SLIM CONTEXT: system prompt, the user's message, the known facts, this
@@ -552,6 +587,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         skillLoaded,
         forcingProposal: forcingProposalNow,
         wideRouteLeg: !enforceRoute,
+        // One question per turn: a later segment never gets ask_choice once an
+        // earlier one is waiting on the user.
+        allowChoice: askingSkill === null,
       }) as unknown[],
       toolChoice: forcingProposalNow ? 'required' : 'auto',
       // FALSE on every call: measured, thinking on returned empty content on 8
@@ -625,6 +663,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // the loop is already running is a no-op, and treating it as progress
         // is what let the loop spin to the cap.
         if (skillLoaded !== null) {
+          // SEVERAL SUBJECTS (multi-subject arm only): a further load_skill on
+          // the ROUTE leg queues its skill as the next segment. Anywhere else,
+          // or on any other arm, it is a reroute, answered and not followed.
+          if (
+            multiSubject
+            && index === 0
+            && id !== skillLoaded
+            && !queuedSkills.includes(id)
+            && skillsLoaded.length + queuedSkills.length < MAX_SEGMENTS
+            && loadSkillFn(id) !== null
+            && !(id.startsWith('conversation/') && skillLoaded.startsWith('facts/'))
+          ) {
+            queuedSkills.push(id);
+            const out = { id, queued: true };
+            leg.toolResults.push({ name: call.name, result: out });
+            continue;
+          }
           // Belt to the payload's braces: a model can still emit a call for a
           // tool that is no longer declared.
           rerouteAttempts++;
@@ -640,6 +695,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           toolResultsThisTurn.push({ name: call.name, result: out });
         } else {
           skillLoaded = id;
+          skillsLoaded.push(id);
           routeKind = routeKindFromSkill(id);
           // The loaded body becomes the NEXT leg's system prompt. It is not a
           // tool result the model reads back: each leg is assembled from
@@ -823,7 +879,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             ...(topicSkill ? { topic_skill_id: topicSkill } : {}),
           });
         }
-        if (proposals.length > 0) proposedSomething = true;
+        if (sanitised.length > 0) proposedSomething = true;
         const out = await deps.tools.saveExtractedFacts({
           extracted_user_information: sanitised,
           proposals,
@@ -963,6 +1019,70 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     break;
   }
 
+    // ---- NEXT SEGMENT (multi-subject arm) ------------------------------
+    // The segment that just ended keeps its proposals, its question and its
+    // reply; the next one starts from its own guideline with a clean slate
+    // of lookups, so it never reads the previous subject's tool results.
+    proposedAny = proposedAny || proposedSomething;
+    if (
+      queuedSkills.length > 0
+      && terminalReason !== 'transport-error'
+      && terminalReason !== 'no-route'
+    ) {
+      segmentReplies.push({ text: reply, asked: terminalReason === 'awaiting-user' });
+      segmentTerminals.push(terminalReason);
+      if (terminalReason === 'awaiting-user') askingSkill = skillLoaded;
+      const next = queuedSkills.shift() as string;
+      const body = loadSkillFn(next);
+      if (body !== null) {
+        skillLoaded = next;
+        skillsLoaded.push(next);
+        routeKind = routeKindFromSkill(next);
+        systemPrompt = body;
+        placeCandidates = [];
+        similarFactCount = null;
+        existingFacts = [];
+        toolResultsThisTurn.length = 0;
+        continuationsSeen.clear();
+        forcingProposalNow = false;
+        silentLegAfterProposal = false;
+        answeredTheUser = false;
+        proposedSomething = false;
+        reply = '';
+        formatErrorNote = null;
+        terminalReason = 'settled';
+        maxLegsThisTurn = nextLegIndex + SEGMENT_LEGS - formatRetries;
+        continue segments;
+      }
+    }
+    break;
+  }
+
+  // ---- ONE ANSWER FOR SEVERAL SEGMENTS ---------------------------------
+  // Each segment's reply in order, the one whose question is waiting LAST,
+  // so the bubble ends on the question its chips answer.
+  if (segmentReplies.length > 0) {
+    segmentReplies.push({ text: reply, asked: terminalReason === 'awaiting-user' });
+    segmentTerminals.push(terminalReason);
+    if (terminalReason === 'awaiting-user') askingSkill = skillLoaded;
+    reply = [
+      ...segmentReplies.filter((r) => !r.asked),
+      ...segmentReplies.filter((r) => r.asked),
+    ]
+      .map((r) => r.text.trim())
+      .filter((t) => t.length > 0)
+      .join(' ');
+    terminalReason = segmentTerminals.includes('awaiting-user')
+      ? 'awaiting-user'
+      : segmentTerminals.find((t) => t !== 'settled') ?? 'settled';
+    proposedSomething = proposedAny;
+    // The skill a chip tap must resume is the one that asked.
+    if (askingSkill !== null) {
+      skillLoaded = askingSkill;
+      routeKind = routeKindFromSkill(askingSkill);
+    }
+  }
+
   /**
    * Origin and residence are no longer combined into one fact (owner ruling,
    * ux1 Q2). A persona that still holds a combined fact is offered its split
@@ -973,7 +1093,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    */
   async function offerCombinedFactSplit(): Promise<string | null> {
     if (terminalReason === 'transport-error') return null;
-    if (routeKind !== 'origin' && routeKind !== 'residence') return null;
+    const kinds = skillsLoaded.map((id) => routeKindFromSkill(id));
+    if (!kinds.includes('origin') && !kinds.includes('residence')) return null;
     const combined = state.persona.facts.find((f) => isCombinedOriginFact(f.attribute));
     if (!combined) return null;
     if (proposals.some((p) => p.replaces === combined.id)) return null;
@@ -1125,8 +1246,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     combinedRewriteOffered,
     terminalReason,
     unknownTools,
-    routeKind,
-    skillLoaded,
+    // The PRIMARY route, so routing accuracy scores what the route leg chose
+    // first; `skillsLoaded` carries the rest.
+    routeKind: skillsLoaded.length > 0 ? routeKindFromSkill(skillsLoaded[0]) : routeKind,
+    skillLoaded: skillsLoaded[0] ?? skillLoaded,
+    skillsLoaded: [...skillsLoaded],
     proposals,
     legBudgetHit,
     // WHAT THE UI SHOWS. `legBudgetHit` is the raw budget signal the eval reads;
