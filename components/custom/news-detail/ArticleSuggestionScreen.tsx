@@ -9,6 +9,7 @@ import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import { fetchCachedFactCheck } from '@/lib/fact-check/fact-check-graphql-client';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
+import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
@@ -51,6 +52,7 @@ import {
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
 import { useRelatedPagination } from './use-related-pagination';
+import { mergeRelatedEntries } from './merge-related-entries';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
@@ -312,6 +314,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         isLoadingInitial: isLoadingRelated,
         isLoadingMore: isLoadingMoreRelated,
         loadMore: loadMoreRelated,
+        error: relatedError,
+        retry: retryRelated,
     } = useRelatedPagination({
         articleId: suggestion?.articleId ?? null,
         sortMode: relatedSortMode,
@@ -334,8 +338,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     );
 
     const relatedEntries = useMemo<RelatedEntry[]>(
-        () => [...localEntries, ...serverEntries],
-        [localEntries, serverEntries],
+        () => mergeRelatedEntries(localEntries, serverEntries, suggestion?.articleId),
+        [localEntries, serverEntries, suggestion?.articleId],
     );
 
     const handleScrollPositionChange = useCallback((y: number) => {
@@ -766,7 +770,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             Renders unvirtualized (`.map`), which is why the page
                             size is the render budget as much as the network
                             one. */}
-                        {(relatedEntries.length > 0 || isLoadingRelated) && (
+                        {(relatedEntries.length > 0 || isLoadingRelated || relatedError) && (
                             <VStack space="md">
                                 <HStack className="items-center justify-between" space="sm">
                                     <Heading size="lg" className="text-gray-300 flex-1">
@@ -778,9 +782,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         testIDPrefix="related-sort"
                                     />
                                 </HStack>
-                                {relatedEntries.map((entry, index) => (
+                                {relatedEntries.map((entry) => (
                                     <ArticleStandaloneCompactCard
-                                        key={entry.id || `related-${index}`}
+                                        key={entry.id}
                                         article={entry.article}
                                         // `push`, not `replace`: chaining into a
                                         // related story adds a stack entry so
@@ -803,6 +807,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     <Box className="items-center justify-center py-4">
                                         <Spinner size="small" />
                                     </Box>
+                                )}
+                                {relatedError && !isLoadingRelated && !isLoadingMoreRelated && (
+                                    <RelatedErrorRow onRetry={retryRelated} />
                                 )}
                             </VStack>
                         )}

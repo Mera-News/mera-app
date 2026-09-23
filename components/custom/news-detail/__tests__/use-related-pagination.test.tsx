@@ -219,3 +219,68 @@ describe('useRelatedPagination', () => {
         );
     });
 });
+
+describe('useRelatedPagination: duplicates, the settling exclusion set, errors', () => {
+    it('never renders a row twice when a later page re-serves it', async () => {
+        getPage.mockResolvedValueOnce(page(['a', 'b']));
+        const { result } = renderHook(() => useRelatedPagination(BASE));
+        await waitFor(() => expect(result.current.entries).toHaveLength(2));
+
+        getPage.mockResolvedValueOnce(page(['b', 'c']));
+        act(() => result.current.loadMore());
+
+        await waitFor(() => expect(result.current.entries.map((e) => e._id)).toEqual(['a', 'b', 'c']));
+    });
+
+    it('fetches page 1 again once when the exclusion set goes from empty to non-empty', async () => {
+        getPage.mockResolvedValue(page(['a', 'local-1']));
+        const { result, rerender } = renderHook(
+            (props: { excludeIds: string[] }) => useRelatedPagination({ ...BASE, ...props }),
+            { initialProps: { excludeIds: [] as string[] } },
+        );
+        await waitFor(() => expect(result.current.entries).toHaveLength(2));
+        expect(getPage).toHaveBeenCalledTimes(1);
+
+        getPage.mockResolvedValue(page(['a']));
+        rerender({ excludeIds: ['local-1'] });
+        await waitFor(() => expect(result.current.entries.map((e) => e._id)).toEqual(['a']));
+        expect(getPage).toHaveBeenCalledTimes(2);
+        expect(getPage).toHaveBeenLastCalledWith(
+            expect.objectContaining({ after: null, excludeIds: ['local-1'] }),
+        );
+
+        // Same ids in a new array, and a reorder, are not a change.
+        rerender({ excludeIds: ['local-1'] });
+        await act(async () => {});
+        expect(getPage).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not refetch page 1 once the reader has loaded a second page', async () => {
+        getPage.mockResolvedValueOnce(page(['a', 'b']));
+        const { result, rerender } = renderHook(
+            (props: { excludeIds: string[] }) => useRelatedPagination({ ...BASE, ...props }),
+            { initialProps: { excludeIds: [] as string[] } },
+        );
+        await waitFor(() => expect(result.current.entries).toHaveLength(2));
+        getPage.mockResolvedValueOnce(page(['c', 'd']));
+        act(() => result.current.loadMore());
+        await waitFor(() => expect(result.current.entries).toHaveLength(4));
+
+        rerender({ excludeIds: ['local-1'] });
+        await act(async () => {});
+        expect(getPage).toHaveBeenCalledTimes(2);
+        expect(result.current.entries).toHaveLength(4);
+    });
+
+    it('reports a failure and recovers on retry', async () => {
+        getPage.mockRejectedValueOnce(new Error('network down'));
+        const { result } = renderHook(() => useRelatedPagination(BASE));
+        await waitFor(() => expect(result.current.error).toBe(true));
+        expect(result.current.entries).toHaveLength(0);
+
+        getPage.mockResolvedValueOnce(page(['a']));
+        act(() => result.current.retry());
+        await waitFor(() => expect(result.current.entries).toHaveLength(1));
+        expect(result.current.error).toBe(false);
+    });
+});

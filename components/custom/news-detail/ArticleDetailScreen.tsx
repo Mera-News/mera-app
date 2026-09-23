@@ -9,6 +9,7 @@ import { mirrorArticleFactCheck } from '@/lib/fact-check/fact-check-graphql-clie
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
+import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
@@ -249,6 +250,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         isLoadingInitial: isLoadingRelated,
         isLoadingMore: isLoadingMoreRelated,
         loadMore: loadMoreRelated,
+        error: relatedError,
+        retry: retryRelated,
     } = useRelatedPagination({
         articleId: article?._id ?? null,
         stableClusterId,
@@ -846,7 +849,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
                         <SubscribedCoverageBlock articleId={article._id ?? articleId} />
 
-                        {(isLoadingRelated || related.length > 0) && (
+                        {(isLoadingRelated || related.length > 0 || relatedError) && (
                             <VStack space="md">
                                 <HStack className="items-center justify-between" space="sm">
                                     <Heading size="lg" className="text-gray-300 flex-1">
@@ -866,9 +869,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     <>
                                         {/* Server order is final — no client
                                             re-sort. See useRelatedPagination. */}
-                                        {related.map((entry, index) => (
+                                        {/* The hook dedupes by `_id` on every
+                                            page, so the id alone is a unique key. */}
+                                        {related.map((entry) => (
                                             <ArticleStandaloneCompactCard
-                                                key={entry._id || `related-${index}`}
+                                                key={entry._id}
                                                 article={summaryToNewsArticle(entry)}
                                                 onPress={() => handleRelatedPress(entry._id)}
                                                 subjectExtras={{ surface: 'detail' }}
@@ -878,6 +883,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                             <Box className="items-center justify-center py-4">
                                                 <Spinner size="small" />
                                             </Box>
+                                        ) : null}
+                                        {relatedError && !isLoadingMoreRelated ? (
+                                            <RelatedErrorRow onRetry={retryRelated} />
                                         ) : null}
                                     </>
                                 )}
