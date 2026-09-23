@@ -37,7 +37,31 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 
 const mockReplace = jest.fn();
 const mockDismissAll = jest.fn();
-jest.mock('expo-router', () => ({ router: { replace: (...a: any[]) => mockReplace(...a), dismissAll: () => mockDismissAll() } }));
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({
+    router: {
+        replace: (...a: any[]) => mockReplace(...a),
+        push: (...a: any[]) => mockPush(...a),
+        dismissAll: () => mockDismissAll(),
+    },
+}));
+
+jest.mock('@/components/custom/ErrorBoundary', () => ({ __esModule: true, default: ({ children }: any) => children }));
+jest.mock('@/components/custom/ErrorFallback', () => ({ FullScreenErrorFallback: () => null }));
+// Reanimated import trap: the real backdrop breaks this suite at import.
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="startup-backdrop" /> };
+});
+
+// A15: the notification tap that booted this process waits here until the gate
+// has sent the user to their startup tab. Explicit factory, see the trap above.
+const mockMarkStartupGatePassed = jest.fn();
+const mockConsumePendingRoute = jest.fn(async (_userId: string | null | undefined): Promise<unknown> => null);
+jest.mock('@/lib/stores/pending-notification-route', () => ({
+    markStartupGatePassed: () => mockMarkStartupGatePassed(),
+    consumePendingNotificationRoute: (id: string | null | undefined) => mockConsumePendingRoute(id),
+}));
 
 let mockSession: any = { user: { id: 'u1' } };
 jest.mock('@/lib/auth-client', () => ({ authClient: { useSession: () => ({ data: mockSession }) } }));
@@ -149,6 +173,7 @@ beforeEach(() => {
     mockAssertPersonaOwner.mockResolvedValue(false);
     mockClearPreviousUserData.mockResolvedValue(undefined);
     mockHasAnyFacts.mockResolvedValue(true);
+    mockConsumePendingRoute.mockResolvedValue(null);
 });
 
 describe('cold-start identity gate', () => {
@@ -493,5 +518,50 @@ describe('cold-start entitlement warmup', () => {
 
         await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
         expect(mockStartWarmup).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('a pending notification tap (A15)', () => {
+    it('opens it on top of the startup tab, after marking the gate passed', async () => {
+        const href = { pathname: '/logged-in/suggestion-detail', params: { articleSuggestionId: 's1' } };
+        mockConsumePendingRoute.mockResolvedValue(href);
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockPush).toHaveBeenCalledWith(href));
+        expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed');
+        expect(mockConsumePendingRoute).toHaveBeenCalledWith('u1');
+        expect(mockMarkStartupGatePassed).toHaveBeenCalledTimes(1);
+        // Replace first, then the stash, so back returns to the startup tab.
+        expect(mockReplace.mock.invocationCallOrder[0]).toBeLessThan(mockPush.mock.invocationCallOrder[0]);
+    });
+
+    it('pushes nothing when there is no stash', async () => {
+        render(<LoggedInIndex />);
+        await waitFor(() => expect(mockMarkStartupGatePassed).toHaveBeenCalled());
+        await act(async () => {});
+        expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it('never consumes the stash on the way to onboarding', async () => {
+        mockHasAnyFacts.mockResolvedValue(false);
+        render(<LoggedInIndex />);
+        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
+        expect(mockConsumePendingRoute).not.toHaveBeenCalled();
+    });
+});
+
+describe('F1: startup gate paint', () => {
+    it('shows the gradient backdrop while routing', () => {
+        mockHasAnyFacts.mockImplementation(() => new Promise(() => {}));
+        const r = render(<LoggedInIndex />);
+        expect(r.getByTestId('startup-backdrop')).toBeTruthy();
+    });
+
+    it('keeps the backdrop OFF the fail-closed screen', async () => {
+        mockResolveIdentity.mockReturnValue('wipeAndProceed');
+        mockClearPreviousUserData.mockRejectedValue(new Error('db locked'));
+        const r = render(<LoggedInIndex />);
+        await waitFor(() => r.getByTestId('identity-switch-failed'));
+        expect(r.queryByTestId('startup-backdrop')).toBeNull();
     });
 });
