@@ -53,6 +53,7 @@ import {
   persistFeedMetadata,
   loadFeedMetadata,
   getArticleCountByTopicTexts,
+  getRenderableArticleCountByTopicTexts,
   getArticleSuggestionsByTopicTexts,
   getTotalArticleSuggestionCount,
   persistAndLinkV2Suggestions,
@@ -189,6 +190,57 @@ describe('parseTopicIds (via loadSuggestions / getArticleCountByTopicTexts)', ()
     const counts = await getArticleCountByTopicTexts();
     expect(counts.has('valid')).toBe(true);
     expect(counts.size).toBe(1);
+  });
+});
+
+// Q13: the Profile/Facts counts must show only stories that can actually
+// appear. The raw count also counted sub-gate and unfinished rows, which is how
+// a fact read "40 articles" while For You had no section for it.
+describe('getRenderableArticleCountByTopicTexts', () => {
+  it('counts only complete rows at or above their render gate', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 'ok', status: 'complete', relevance: 0.6, matchedTopicTextsJson: '["berlin"]' }),
+      makeSuggestion({ id: 'at-gate', status: 'complete', relevance: 0.4, matchedTopicTextsJson: '["berlin"]' }),
+      makeSuggestion({ id: 'sub-gate', status: 'complete', relevance: 0.32, matchedTopicTextsJson: '["berlin"]' }),
+      makeSuggestion({ id: 'pending', status: 'reason_pending', relevance: 0.9, matchedTopicTextsJson: '["berlin"]' }),
+      makeSuggestion({ id: 'unscored', status: 'unscored', relevance: 0, matchedTopicTextsJson: '["berlin"]' }),
+      makeSuggestion({ id: 'excluded', status: 'excluded', relevance: 0.9, matchedTopicTextsJson: '["berlin"]' }),
+      makeSuggestion({ id: 'read', status: 'already_read', relevance: 0.9, matchedTopicTextsJson: '["berlin"]' }),
+      makeSuggestion({ id: 'skipped', status: 'reason_skipped', relevance: 0.9, matchedTopicTextsJson: '["berlin"]' }),
+    ]);
+
+    const counts = await getRenderableArticleCountByTopicTexts();
+
+    expect(counts.get('berlin')).toBe(2);
+  });
+
+  // A v3-vintage row is judged at its OWN gate (0.55), never the current one.
+  it('applies the per-row scorer-vintage gate', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 'v3-low', status: 'complete', relevance: 0.5, scoredWithV3: true, matchedTopicTextsJson: '["leverkusen"]' }),
+      makeSuggestion({ id: 'v3-ok', status: 'complete', relevance: 0.56, scoredWithV3: true, matchedTopicTextsJson: '["leverkusen"]' }),
+    ]);
+
+    const counts = await getRenderableArticleCountByTopicTexts();
+
+    expect(counts.get('leverkusen')).toBe(1);
+  });
+
+  it('omits a topic with no renderable rows (the caller shows zero)', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 'x', status: 'complete', relevance: 0.1, matchedTopicTextsJson: '["cooking"]' }),
+    ]);
+
+    const counts = await getRenderableArticleCountByTopicTexts();
+
+    expect(counts.has('cooking')).toBe(false);
+  });
+
+  it('leaves the raw count unchanged', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 'x', status: 'complete', relevance: 0.1, matchedTopicTextsJson: '["cooking"]' }),
+    ]);
+    expect((await getArticleCountByTopicTexts()).get('cooking')).toBe(1);
   });
 });
 

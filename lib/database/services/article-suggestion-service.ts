@@ -1795,13 +1795,53 @@ function parseTopicIds(json: string | null | undefined): string[] {
   }
 }
 
-/** Returns a count of cached article_suggestions per topic text. */
+/** Returns a count of cached article_suggestions per topic text: EVERY local
+ *  row, whatever its status or relevance. Diagnostic, not what a reader can
+ *  see; a count shown to the reader is
+ *  {@link getRenderableArticleCountByTopicTexts}. */
 export async function getArticleCountByTopicTexts(): Promise<Map<string, number>> {
   const rows = await articleSuggestionsCol.query().fetch();
   const counts = new Map<string, number>();
   for (const row of rows) {
     const topics = parseTopicIds(row.matchedTopicTextsJson);
     for (const topic of topics) {
+      counts.set(topic, (counts.get(topic) ?? 0) + 1);
+    }
+  }
+  return counts;
+}
+
+/**
+ * Per topic text, the rows that can actually render: status `complete` and
+ * relevance at or above the row's own render gate (`relevancePassesGate`, which
+ * judges each row at its scorer vintage's gate). This is the count the
+ * Profile and Facts screens show. The raw {@link getArticleCountByTopicTexts}
+ * also counted sub-gate and unfinished rows, which is how a fact read
+ * "40 articles" while For You had no section for it: every one of those rows
+ * sat below the gate.
+ *
+ * A topic with no renderable rows is ABSENT from the map; callers read that as
+ * zero. The status is re-checked in JS after the query on purpose (the query
+ * narrows, the JS decides), so the rule holds however precisely the adapter
+ * applies the predicate.
+ *
+ * `relevancePassesGate` is lazy-required: it lives in the feed selector
+ * module, whose import graph (feed-select, feed-grouping) this service should
+ * not load for every one of its callers.
+ */
+export async function getRenderableArticleCountByTopicTexts(): Promise<Map<string, number>> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { relevancePassesGate } = require('@/lib/stores/fact-rows-selector') as typeof import('@/lib/stores/fact-rows-selector');
+  const rows = await articleSuggestionsCol
+    .query(Q.where('status', ArticleSuggestionStatus.Complete))
+    .fetch();
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    if (row.status !== ArticleSuggestionStatus.Complete) continue;
+    if (!relevancePassesGate({ relevance: row.relevance, scoredWithV3: row.scoredWithV3 ?? undefined })) {
+      continue;
+    }
+    for (const topic of parseTopicIds(row.matchedTopicTextsJson)) {
       counts.set(topic, (counts.get(topic) ?? 0) + 1);
     }
   }
