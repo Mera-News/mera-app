@@ -33,6 +33,22 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+/**
+ * overHero at rest: a soft darkening at the very top so the status bar's own
+ * glyphs (wifi, battery) stay visible over a LIGHT photo, fading to nothing by
+ * the bottom of the status bar. Stepped Views rather than a CSS gradient (the
+ * gradient background is only relied on for Android here); at 16 steps across
+ * ~62pt each step is under 4pt and 0.022 alpha, which reads as a gradient, not
+ * a band.
+ */
+export const HERO_TOP_FADE_MAX_ALPHA = 0.35;
+export const HERO_TOP_FADE_STEPS = 16;
+
+/** Alpha of step `i` (0 = top): linear from the max to zero. */
+export function heroTopFadeAlpha(i: number): number {
+  return HERO_TOP_FADE_MAX_ALPHA * (1 - i / HERO_TOP_FADE_STEPS);
+}
+
 /** The stepped fade below the strip, darkest first. Three 4pt bands. */
 export const STATUS_BAR_SCRIM_FADE = [0.6, 0.35, 0.15] as const;
 const FADE_BAND_PT = 4;
@@ -43,10 +59,11 @@ export interface StatusBarScrimProps {
   readonly coverProgress?: SharedValue<number>;
   /**
    * For a screen whose top is a hero IMAGE (the article detail screens): no
-   * scrim, no glass and no tint at rest, so there is no grey band across the
-   * photo, and only the dark base, rising with `coverProgress` as content
-   * scrolls under the status bar. Without `coverProgress` it stays fully
-   * transparent. Default off: every other host is unchanged.
+   * scrim, no glass and no flat tint at rest, so there is no grey band across
+   * the photo; just a soft top-down fade (`HERO_TOP_FADE_*`) that keeps the
+   * status-bar glyphs readable over a light image. The solid dark base rises
+   * over it with `coverProgress` as content scrolls under the status bar.
+   * Default off: every other host is unchanged.
    */
   readonly overHero?: boolean;
 }
@@ -83,6 +100,20 @@ const StatusBarScrim: React.FC<StatusBarScrimProps> = ({ coverProgress, overHero
         pointerEvents="none"
         style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top, zIndex: 5 }}
       >
+        {Array.from({ length: HERO_TOP_FADE_STEPS }, (_, i) => (
+          <View
+            key={i}
+            testID={`status-bar-hero-fade-${i}`}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: (insets.top * i) / HERO_TOP_FADE_STEPS,
+              height: insets.top / HERO_TOP_FADE_STEPS,
+              backgroundColor: `rgba(0,0,0,${heroTopFadeAlpha(i).toFixed(4)})`,
+            }}
+          />
+        ))}
         {coverProgress ? <CoverBase progress={coverProgress} top={insets.top} /> : null}
       </View>
     );

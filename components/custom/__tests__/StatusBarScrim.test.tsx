@@ -57,7 +57,7 @@ describe('StatusBarScrim', () => {
   });
 
   describe('overHero (detail screens)', () => {
-    it('is fully transparent at rest: no scrim colour, no glass', () => {
+    it('has no flat scrim, no glass and no cover at rest', () => {
       render(<StatusBarScrim overHero coverProgress={{ value: 0 } as any} />);
       const style = StyleSheet.flatten(screen.getByTestId('status-bar-scrim').props.style);
       expect(style.backgroundColor).toBeUndefined();
@@ -65,15 +65,38 @@ describe('StatusBarScrim', () => {
       expect(opacityOf('status-bar-scrim-cover')).toBe(0);
     });
 
+    it('draws a soft top fade at rest, ~35% black at the top to nothing at the bottom', () => {
+      // Captured: fully clear, the wifi and battery glyphs nearly vanished over
+      // a light photo.
+      render(<StatusBarScrim overHero coverProgress={{ value: 0 } as any} />);
+      const alpha = (i: number) =>
+        Number(
+          /rgba\(0,0,0,([\d.]+)\)/.exec(
+            StyleSheet.flatten(
+              screen.getByTestId(`status-bar-hero-fade-${i}`, { includeHiddenElements: true }).props.style,
+            ).backgroundColor,
+          )![1],
+        );
+      expect(alpha(0)).toBeCloseTo(0.35, 3);
+      expect(alpha(15)).toBeLessThan(0.03);
+      // No flat band: every step is lighter than the one above it.
+      for (let i = 1; i < 16; i++) expect(alpha(i)).toBeLessThan(alpha(i - 1));
+      const last = StyleSheet.flatten(
+        screen.getByTestId('status-bar-hero-fade-15', { includeHiddenElements: true }).props.style,
+      );
+      expect(last.top + last.height).toBeCloseTo(62, 5);
+    });
+
     it('rises to the solid dark base as content covers the hero', () => {
       render(<StatusBarScrim overHero coverProgress={{ value: 1 } as any} />);
       expect(opacityOf('status-bar-scrim-cover')).toBe(1);
     });
 
-    it('stays transparent without a progress value', () => {
+    it('without a progress value draws only the fade, no cover', () => {
       render(<StatusBarScrim overHero />);
       expect(screen.queryByTestId('status-bar-scrim-cover', { includeHiddenElements: true })).toBeNull();
       expect(screen.queryByTestId('glass-plate')).toBeNull();
+      expect(screen.getByTestId('status-bar-hero-fade-0', { includeHiddenElements: true })).toBeTruthy();
     });
   });
 });
