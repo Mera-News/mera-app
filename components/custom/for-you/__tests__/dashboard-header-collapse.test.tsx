@@ -164,9 +164,9 @@ describe('Stories panel', () => {
         expect(list().props.onScroll).toBeUndefined();
     });
 
-    it('renders its title INSIDE the list so it scrolls with the content', () => {
+    it('renders no title of its own when embedded: the host header and sub-tab name it', () => {
         render(<TrackedStoriesScreen embedded scrollHandler={handler} headerHeight={HEADER_H} />);
-        expect(screen.getByText('trackedStories.title')).toBeTruthy();
+        expect(screen.queryByText('trackedStories.title')).toBeNull();
     });
 });
 
