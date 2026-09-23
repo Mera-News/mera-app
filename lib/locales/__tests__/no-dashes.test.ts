@@ -44,6 +44,16 @@ const EN_PENDING = new Set<string>([
   'floatingChat.aiInteractionNotice',
 ]);
 
+/**
+ * Fragment keys still carrying the OLD dashed translations in non-exempt
+ * locales, waiting for their owner's corrected fragment. Keyed by fragment
+ * file. Same contract as EN_PENDING: it may only shrink, and an entry whose
+ * dashes are gone fails the next test until it is deleted here.
+ */
+const FRAGMENT_PENDING: Record<string, Set<string>> = {
+  '_ux1-chat-fragments.json': new Set(EN_PENDING),
+};
+
 function leaves(obj: unknown, prefix = '', out: [string, string][] = []): [string, string][] {
   if (typeof obj === 'string') {
     out.push([prefix, obj]);
@@ -99,13 +109,33 @@ describe('locale dash rule', () => {
     const offenders: string[] = [];
     for (const file of fragments) {
       const frag = read(file) as Record<string, unknown>;
+      const pending = FRAGMENT_PENDING[file] ?? new Set<string>();
       for (const [locale, body] of Object.entries(frag)) {
         if (locale === '_comment' || EXEMPT.has(locale)) continue;
         for (const [k, v] of leaves(body)) {
-          if (HAS_DASH.test(v)) offenders.push(`${file} ${locale} ${k}`);
+          if (HAS_DASH.test(v) && !pending.has(k)) offenders.push(`${file} ${locale} ${k}`);
         }
       }
     }
     expect(offenders).toEqual([]);
+  });
+
+  it('every pending fragment key still needs its rewrite', () => {
+    const stale: string[] = [];
+    for (const [file, keys] of Object.entries(FRAGMENT_PENDING)) {
+      if (!fs.existsSync(path.join(LOCALES_DIR, file))) {
+        stale.push(`${file} (file gone)`);
+        continue;
+      }
+      const frag = read(file) as Record<string, unknown>;
+      const dashed = new Set<string>();
+      for (const [locale, body] of Object.entries(frag)) {
+        if (locale === '_comment' || EXEMPT.has(locale)) continue;
+        for (const [k, v] of leaves(body)) if (HAS_DASH.test(v)) dashed.add(k);
+      }
+      for (const k of keys) if (!dashed.has(k)) stale.push(`${file} ${k}`);
+    }
+    // A key listed here that no longer carries a dash must be removed.
+    expect(stale).toEqual([]);
   });
 });
