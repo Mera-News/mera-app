@@ -207,10 +207,17 @@ export async function getPendingProposals(): Promise<HygieneProposal[]> {
   return readPending();
 }
 
-/** Cheap count for the Profile indicator row (polled on focus + on change).
- *  Counts pending PLUS backlog: the sheet shows at most
- *  HYGIENE_PENDING_PRESENTATION_CAP at a time, but the user is told the real
- *  number of outstanding cleanups rather than the paging window. */
+/**
+ * Every proposal still waiting for a decision: the visible window plus the
+ * parked backlog. The sheet shows at most HYGIENE_PENDING_PRESENTATION_CAP at a
+ * time, but the user is told the real number of outstanding cleanups rather
+ * than the paging window. Cheap (two settings reads), so the Profile row polls
+ * it on focus and on change. THE count for anything that tells the user how many cleanups
+ * wait (the notification at all three notify sites, the Profile row), so they
+ * can never disagree with each other or with the review queue. Never the
+ * number a single call just added: that was the "bell says 1, review lists 2"
+ * bug.
+ */
 export async function getPendingCount(): Promise<number> {
   const [pending, backlog] = await Promise.all([readPending(), readBacklog()]);
   return pending.length + backlog.length;
@@ -312,7 +319,7 @@ export async function runHygieneSweep(opts?: {
       title: 'hygiene.notificationTitle',
       body: 'hygiene.notificationBody',
       icon: 'cleaning-services',
-      context: { count: proposals.length },
+      context: { count: await getPendingCount() },
       actions: [{ id: 'review-hygiene', labelKey: 'hygiene.reviewChip' }],
     });
   }
@@ -393,7 +400,7 @@ async function publishSanityOnly(
     title: 'hygiene.notificationTitle',
     body: 'hygiene.notificationBody',
     icon: 'cleaning-services',
-    context: { count: proposals.length },
+    context: { count: await getPendingCount() },
     actions: [{ id: 'review-hygiene', labelKey: 'hygiene.reviewChip' }],
   });
   return {
@@ -459,7 +466,7 @@ export async function addSanityProposals(
       title: 'hygiene.notificationTitle',
       body: 'hygiene.notificationBody',
       icon: 'cleaning-services',
-      context: { count: added.length },
+      context: { count: await getPendingCount() },
       actions: [{ id: 'review-hygiene', labelKey: 'hygiene.reviewChip' }],
     });
   }
