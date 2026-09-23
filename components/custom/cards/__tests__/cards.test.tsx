@@ -302,6 +302,18 @@ function opacityOf(node: any): number | undefined {
   return undefined;
 }
 
+/** The nearest ancestor whose `style` is a Pressable state function: the
+ *  card's own press target. Resolving it under {pressed} asserts the STYLE,
+ *  which a class-name assertion cannot see. */
+function pressStyleOwner(node: any): any {
+  let n: any = node;
+  while (n) {
+    if (typeof n.props?.style === 'function') return n;
+    n = n.parent;
+  }
+  return null;
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockBlurImages = false;
@@ -436,6 +448,27 @@ describe('ArticleSuggestionCard', () => {
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} dimmed />,
     );
     expect(opacityOf(getByText('A headline'))).toBe(0.75);
+  });
+
+  // Pressed feedback is OPT-IN on card bases (not a Pressable default) and
+  // multiplies with the dimmed treatment rather than replacing it.
+  it('reacts to a press: 0.7 while held, full opacity at rest', () => {
+    const { getByText } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
+    );
+    const card = pressStyleOwner(getByText('A headline'));
+    expect(card).toBeTruthy();
+    expect(card!.props.style({ pressed: false })).toBeUndefined();
+    expect(card!.props.style({ pressed: true }).opacity).toBeCloseTo(0.7);
+  });
+
+  it('a dimmed card still reacts to a press (0.75 x 0.7)', () => {
+    const { getByText } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} dimmed />,
+    );
+    const card = pressStyleOwner(getByText('A headline'));
+    expect(card!.props.style({ pressed: false }).opacity).toBeCloseTo(0.75);
+    expect(card!.props.style({ pressed: true }).opacity).toBeCloseTo(0.525);
   });
 
   it('does not render the read eye icon by default', () => {

@@ -407,7 +407,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                     <Pressable
                         onPress={onBack}
                         accessibilityRole="button"
-                        accessibilityLabel={t('common.cancel')}
+                        accessibilityLabel={t('common.back')}
                         hitSlop={8}
                         className="p-2"
                     >

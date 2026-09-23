@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import { Pressable } from '@/components/ui/pressable';
+import { cardPressStyle } from '@/components/custom/cards/press-style';
 import { VStack } from '@/components/ui/vstack';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import React from 'react';
@@ -249,7 +250,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   );
 
   return (
-    <Pressable testID={testID} onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
+    <Pressable testID={testID} onPress={onPress} style={cardPressStyle(!!dimmed)}>
       {flat ? (
         // Shadow lives on this outer, non-clipping Box — RN drops a view's
         // shadow the moment that same view also sets `overflow: hidden`, so
