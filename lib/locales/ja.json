@@ -1096,7 +1096,6 @@
     "untrackConfirmTitle": "フォローを解除しますか？",
     "untrackConfirmBody": "このストーリーの新しい進展が表示されなくなります。",
     "untrackConfirmCta": "フォローを停止",
-    "emptyHint": "フィードから記事を開いてフルビューにして、記事下のボタン行の フォロー アイコンをタップしてください。",
     "emptyCta": "フィードに移動",
     "trackChatSeed": "このストーリーをフォローしたいです。",
     "trackProposalTitle": "このストーリーをフォローしますか？",

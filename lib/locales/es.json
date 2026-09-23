@@ -1106,7 +1106,6 @@
     "deleteStoryAction": "Eliminar historia",
     "deleteStoryConfirmTitle": "¿Eliminar esta historia?",
     "deleteStoryConfirmBody": "Eliminarla quita todo lo que fue guardado para esta historia.",
-    "emptyHint": "Abre un artículo de Noticias para verlo en detalle, luego toca el icono de seguimiento en la fila de botones bajo el artículo.",
     "emptyCta": "Ir a Noticias",
     "untrackConfirmCta": "Sí, dejar de seguir",
     "followFabLabel": "Seguir una nueva historia",

@@ -1112,7 +1112,6 @@
     "deleteStoryAction": "Supprimer l'actualité",
     "deleteStoryConfirmTitle": "Supprimer cette actualité ?",
     "deleteStoryConfirmBody": "La suppression supprime tout ce qui a été enregistré pour cette actualité.",
-    "emptyHint": "Ouvrez un article du Fil d'actu pour le voir en entier, puis appuyez sur l'icône de suivi dans la rangée de boutons sous l'article.",
     "emptyCta": "Aller au Fil d'actu",
     "untrackConfirmCta": "Arrêter de suivre",
     "followFabLabel": "Suivre une nouvelle histoire",
