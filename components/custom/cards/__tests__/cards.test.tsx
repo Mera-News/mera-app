@@ -328,6 +328,32 @@ describe('ArticleSuggestionCard', () => {
     expect(getByTestId('relevance-chip')).toBeTruthy();
   });
 
+  // F24: the note gets the width. It sits on its own row under the chip,
+  // left-aligned, never in a ragged right-aligned column beside it.
+  it('puts the note on its own full-width row under the chip, left-aligned', () => {
+    const { getByText, getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
+    );
+    const noteRow = getByTestId('card-reason-text');
+    const chip = getByTestId('relevance-chip');
+    // The chip is not inside the note's row, and the note is not inside the
+    // chip's row.
+    let n: any = chip;
+    while (n) {
+      expect(n).not.toBe(noteRow);
+      n = n.parent;
+    }
+    let m: any = getByText('Because you follow Berlin');
+    let inNoteRow = false;
+    while (m) {
+      if (m === noteRow) inNoteRow = true;
+      expect(m).not.toBe(chip.parent);
+      m = m.parent;
+    }
+    expect(inNoteRow).toBe(true);
+    expect(String(getByText('Because you follow Berlin').props.className ?? '')).not.toContain('text-right');
+  });
+
   it('shows no reason box while unscored', () => {
     const { queryByTestId } = render(
       <ArticleSuggestionCard

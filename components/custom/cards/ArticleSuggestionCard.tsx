@@ -1,13 +1,10 @@
-import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
 import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
-import RelevanceChip from '@/components/custom/RelevanceChip';
-import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
-import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import ReasonNote from '@/components/custom/cards/ReasonNote';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -21,7 +18,7 @@ import {
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle } from '@/lib/hooks/useShareArticle';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
+import { reasonBoxColors } from '@/lib/relevance-utils';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useHardFilterLabel } from '@/lib/stores/hard-filter-label-store';
@@ -254,62 +251,12 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   ) : null;
 
   const reasonBoxEl = relevanceReady && (reason || reasonLoading) ? (
-    <Box
-      className="rounded-lg p-3"
-      style={{ backgroundColor: reasonBoxColors.backgroundColor }}
-    >
-      {/* Chip + reason are one row; the Art. 50 disclosure sits BELOW that row,
-          owning the box's bottom-left corner. It used to live in the left column
-          directly under the chip, which read as a caption on the chip rather
-          than on the reason text it actually discloses.
-
-          Why not `justify-between` on the old left column: that is a visual
-          no-op whenever the left column is the taller one (chip + caption ≈ 42px
-          vs a 1–2 line reason), which is the common case — the label would only
-          reach the bottom edge on long reasons. This structure holds at every
-          reason length.
-
-          The Mera glyph that briefly lived here moved back to the action row
-          (CardActionBar owns `card-action-mera`), which is now the sole Ask-Mera
-          affordance. Reason text stays right-aligned and non-italic.
-
-          `items-center` keeps the chip vertically centred against a multi-line
-          reason, as before. The old `maxWidth: 150` on the left column is gone
-          with the caption that needed it — the chip hugs its own content, so the
-          reason column is now ~90px wider and wraps later. */}
-      <HStack className="items-center">
-        <RelevanceChip relevance={relevance} />
-        {reason ? (
-          <Box className="ml-3 flex-1 items-end">
-            <TranslatableDynamic
-              text={reason}
-              size="sm"
-              bold
-              className="text-right"
-              style={{ color: reasonBoxColors.textColor }}
-            />
-          </Box>
-        ) : (
-          <Box className="ml-3 flex-1 items-end">
-            <StreamingIndicator
-                        compact
-                        color={reasonBoxColors.textColor}
-                        // Gives up after REASON_PENDING_CAP_MS: a dead scoring
-                        // bundle leaves the row pending for good.
-                        pendingSinceMs={pendingSinceMs(suggestion)}
-                        terminalText={t('feed.reasonUnavailable')}
-                    />
-          </Box>
-        )}
-      </HStack>
-      {/* Still gated on `reason`: the disclosure's whole contract is that it
-          renders when there IS AI-generated text to disclose (see the
-          component's docblock), so it must not appear next to the streaming
-          placeholder. */}
-      {reason ? (
-        <AiDisclosureCaption color={aiDisclosureColor} align="left" className="mt-2" />
-      ) : null}
-    </Box>
+    <ReasonNote
+      relevance={relevance}
+      reason={reason}
+      pendingSinceMs={pendingSinceMs(suggestion)}
+      testID="card-reason"
+    />
   ) : null;
 
   const metaAccessory = __DEV__ && relevanceReady ? (

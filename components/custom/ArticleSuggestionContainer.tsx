@@ -8,12 +8,10 @@
 // text right-aligned and non-italic. A Mera glyph briefly lived in this block as
 // the Ask-Mera affordance; it was removed again — the action row's Mera button
 // (ArticleFeedbackPrompt / CardActionBar) is the single entry point.
-import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import ExtractedMetadataPanel from '@/components/custom/news-detail/ExtractedMetadataPanel';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
-import RelevanceChip from '@/components/custom/RelevanceChip';
 import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
@@ -26,8 +24,8 @@ import { VStack } from '@/components/ui/vstack';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
-import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
+import { reasonBoxColors } from '@/lib/relevance-utils';
+import ReasonNote from '@/components/custom/cards/ReasonNote';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -287,55 +285,12 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     ) : null;
 
     const reasonBoxEl = isSuggestion && relevanceReady && (reason || reasonLoading) ? (
-        <Box
-            className="rounded-lg p-3 flex-row items-center"
-            style={{ backgroundColor: reasonBoxColors.backgroundColor }}
-        >
-            {/* Left column: the priority chip with the Art. 50 disclosure
-                directly beneath it. The Mera glyph briefly lived here; it moved
-                back to the action row, which is the sole Ask-Mera affordance.
-                Reason text stays right-aligned and non-italic.
-
-                `items-start` so the chip keeps hugging its own content instead
-                of stretching to the caption's width (RN's default cross-axis
-                stretch), and a maxWidth so a long localized caption wraps
-                rather than squeezing the reason text. */}
-            <VStack className="items-start" style={{ maxWidth: 150 }}>
-                <RelevanceChip relevance={relevance} />
-                {/* Still gated on `reason` — the disclosure renders only when
-                    there IS AI-generated text to disclose, never beside the
-                    streaming placeholder. */}
-                {reason ? (
-                    <AiDisclosureCaption
-                        color={aiDisclosureColor}
-                        align="left"
-                        className="mt-1"
-                    />
-                ) : null}
-            </VStack>
-            {reason ? (
-                <Box className="ml-3 flex-1 items-end">
-                    <TranslatableDynamic
-                        text={reason}
-                        size="sm"
-                        bold
-                        className="text-right"
-                        style={{ color: reasonBoxColors.textColor }}
-                    />
-                </Box>
-            ) : (
-                <Box className="ml-3 flex-1 items-end">
-                    <StreamingIndicator
-                        compact
-                        color={reasonBoxColors.textColor}
-                        // Gives up after REASON_PENDING_CAP_MS: a dead scoring
-                        // bundle leaves the row pending for good.
-                        pendingSinceMs={pendingSinceMs(suggestion)}
-                        terminalText={t('feed.reasonUnavailable')}
-                    />
-                </Box>
-            )}
-        </Box>
+        <ReasonNote
+            relevance={relevance}
+            reason={reason}
+            pendingSinceMs={pendingSinceMs(suggestion)}
+            testID="detail-reason"
+        />
     ) : null;
 
     if (isCard) {
