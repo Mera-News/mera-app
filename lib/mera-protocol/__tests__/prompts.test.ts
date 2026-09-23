@@ -527,7 +527,7 @@ describe('CLOUD_REASON_SYSTEM_PROMPT', () => {
       'Netherlands economy report covers your country.',
       "South Africa's draft AI policy matches your AI-industry interest.",
       "Sweden's tech-sector headwinds are adjacent to your industry.",
-      "Bulgaria's digital-ID policy is foreign-domestic; no tie to your country.",
+      "Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country.",
       "Manchester building fire is a UK-local emergency; you're in Amsterdam.",
     ]) {
       expect(CLOUD_REASON_SYSTEM_PROMPT).toContain(exemplar);
@@ -562,7 +562,7 @@ describe('LOCAL_REASON_SYSTEM_PROMPT', () => {
     // The ≤0.25 exemplar was pronoun-free ("no Dutch tie") — the band the leak
     // came from now anchors the voice too.
     expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
-      'Bulgaria digital-ID is foreign-domestic; no tie to your country.',
+      'Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country.',
     );
   });
 });
