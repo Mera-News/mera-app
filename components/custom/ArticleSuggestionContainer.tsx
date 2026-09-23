@@ -28,6 +28,7 @@ import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
+import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import React, { useEffect, useState } from 'react';
@@ -324,7 +325,14 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 </Box>
             ) : (
                 <Box className="ml-3 flex-1 items-end">
-                    <StreamingIndicator compact color={reasonBoxColors.textColor} />
+                    <StreamingIndicator
+                        compact
+                        color={reasonBoxColors.textColor}
+                        // Gives up after REASON_PENDING_CAP_MS: a dead scoring
+                        // bundle leaves the row pending for good.
+                        pendingSinceMs={pendingSinceMs(suggestion)}
+                        terminalText={t('feed.reasonUnavailable')}
+                    />
                 </Box>
             )}
         </Box>

@@ -6,6 +6,7 @@ import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
+import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -290,7 +291,14 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
           </Box>
         ) : (
           <Box className="ml-3 flex-1 items-end">
-            <StreamingIndicator compact color={reasonBoxColors.textColor} />
+            <StreamingIndicator
+                        compact
+                        color={reasonBoxColors.textColor}
+                        // Gives up after REASON_PENDING_CAP_MS: a dead scoring
+                        // bundle leaves the row pending for good.
+                        pendingSinceMs={pendingSinceMs(suggestion)}
+                        terminalText={t('feed.reasonUnavailable')}
+                    />
           </Box>
         )}
       </HStack>
