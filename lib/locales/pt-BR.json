@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "Ler no Google Translate",
     "linkUnavailable": "Este link não pode ser aberto com segurança, então não está disponível aqui.",
     "relatedFromSubscriptions": "Das suas assinaturas",
-    "relatedLoadFailed": "Não foi possível carregar os artigos relacionados."
+    "relatedLoadFailed": "Não foi possível carregar os artigos relacionados.",
+    "translateBlockedNote": "Alguns sites bloqueiam o Google Tradutor. Se a página não carregar, abra no site."
   },
   "newsCluster": {
     "failedToLoad": "Falha ao carregar detalhes do grupo",
@@ -1345,7 +1346,8 @@
     "applyFailedBody": "Tente novamente mais tarde.",
     "profileRow_one": "Limpeza do perfil · {{count}} sugestão",
     "profileRow_other": "Limpeza do perfil · {{count}} sugestões",
-    "effectIncoherentTopics": "Substitui estes tópicos por melhores para este interesse."
+    "effectIncoherentTopics": "Substitui estes tópicos por melhores para este interesse.",
+    "effectLocationConflict": "Mantém o lugar mais recente e remove o anterior."
   },
   "locations": {
     "title": "Seus lugares",
@@ -2844,5 +2846,28 @@
       "how1": "Cada fato vira buscas que o Mera faz para você. Mude ou apague um fato e as notícias que vieram dele também mudam.",
       "privacy": "As buscas feitas a partir deles nunca são ligadas à sua conta. O servidor guarda só o texto da busca, compartilhado de forma anônima entre todos os usuários, e o apaga depois de 14 dias sem uso."
     }
+  },
+  "articleMenu": {
+    "openA11y": "Mais ações",
+    "title": "Ações do artigo",
+    "askMera": "Perguntar à Mera sobre isto",
+    "following": "Seguindo esta história",
+    "checkFacts": "Procurar checagens",
+    "openOn": "Abrir em {{source}}",
+    "openInTranslate": "Abrir no Google Tradutor",
+    "fewerFrom": "Menos de {{source}}",
+    "fewerFromDone": "Você verá menos de {{source}}.",
+    "undo": "Desfazer",
+    "reportBug": "Relatar um bug",
+    "actionFailed": "Não funcionou. Tente de novo."
+  },
+  "factChip": {
+    "label": "Do seu perfil: {{label}}",
+    "openA11y": "Notícias sobre {{label}}"
+  },
+  "related": {
+    "allCountries": "Todos os países",
+    "allLanguages": "Todos os idiomas",
+    "noMatches": "Nenhum artigo relacionado corresponde a esses filtros."
   }
 }

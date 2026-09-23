@@ -276,7 +276,8 @@
     "readOnGoogleTranslate": "Czytaj w Google Translate",
     "linkUnavailable": "Tego linku nie można otworzyć bezpiecznie, dlatego nie jest tu dostępny.",
     "relatedFromSubscriptions": "Z Twoich subskrypcji",
-    "relatedLoadFailed": "Nie udało się wczytać powiązanych artykułów."
+    "relatedLoadFailed": "Nie udało się wczytać powiązanych artykułów.",
+    "translateBlockedNote": "Niektóre strony blokują Tłumacza Google. Jeśli strona się nie wczyta, otwórz ją w serwisie."
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",
@@ -1369,7 +1370,8 @@
     "profileRow_few": "Porządki w profilu · {{count}} sugestie",
     "profileRow_many": "Porządki w profilu · {{count}} sugestii",
     "profileRow_other": "Porządki w profilu · {{count}} sugestii",
-    "effectIncoherentTopics": "Zastępuje te tematy lepszymi dla tego zainteresowania."
+    "effectIncoherentTopics": "Zastępuje te tematy lepszymi dla tego zainteresowania.",
+    "effectLocationConflict": "Zachowuje nowsze miejsce i usuwa starsze."
   },
   "locations": {
     "title": "Twoje miejsca",
@@ -2882,5 +2884,28 @@
       "how1": "Każdy fakt zamienia się w wyszukiwania, które Mera wykonuje dla ciebie. Zmień lub usuń fakt, a tematy, które z niego pochodziły, też się zmienią.",
       "privacy": "Wyszukiwania powstałe z nich nigdy nie są łączone z twoim kontem. Serwer przechowuje tylko tekst wyszukiwania, anonimowo wspólny dla wszystkich użytkowników, i usuwa go po 14 dniach nieużywania."
     }
+  },
+  "articleMenu": {
+    "openA11y": "Więcej działań",
+    "title": "Działania dla artykułu",
+    "askMera": "Zapytaj Merę o to",
+    "following": "Śledzisz tę historię",
+    "checkFacts": "Sprawdź weryfikacje faktów",
+    "openOn": "Otwórz w {{source}}",
+    "openInTranslate": "Otwórz w Tłumaczu Google",
+    "fewerFrom": "Mniej z {{source}}",
+    "fewerFromDone": "Zobaczysz mniej z {{source}}.",
+    "undo": "Cofnij",
+    "reportBug": "Zgłoś błąd",
+    "actionFailed": "Nie udało się. Spróbuj ponownie."
+  },
+  "factChip": {
+    "label": "Z Twojego profilu: {{label}}",
+    "openA11y": "Wiadomości o {{label}}"
+  },
+  "related": {
+    "allCountries": "Wszystkie kraje",
+    "allLanguages": "Wszystkie języki",
+    "noMatches": "Żaden powiązany artykuł nie pasuje do tych filtrów."
   }
 }

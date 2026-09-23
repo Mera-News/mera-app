@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "Google 翻訳で読む",
     "linkUnavailable": "このリンクを安全に開くことができないため、ここでは利用できません。",
     "relatedFromSubscriptions": "購読中のメディアから",
-    "relatedLoadFailed": "関連記事を読み込めませんでした。"
+    "relatedLoadFailed": "関連記事を読み込めませんでした。",
+    "translateBlockedNote": "Google 翻訳をブロックするサイトがあります。ページが開かない場合はサイトで開いてください。"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",
@@ -1345,7 +1346,8 @@
     "applyFailedBody": "後でもう一度お試しください。",
     "profileRow_one": "プロフィールの整理 · {{count}}件の提案",
     "profileRow_other": "プロフィールの整理 · {{count}}件の提案",
-    "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。"
+    "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。",
+    "effectLocationConflict": "新しい場所を残し、古い場所を削除します。"
   },
   "locations": {
     "title": "あなたの場所",
@@ -2843,5 +2845,28 @@
       "how1": "情報はそれぞれ、Meraがあなたのために行う検索になります。情報を変えたり消したりすると、そこから来た記事も変わります。",
       "privacy": "そこから作られた検索があなたのアカウントに結びつくことはありません。サーバーには検索の文字列だけが全ユーザー共通で匿名のまま残り、14日間使われなければ削除されます。"
     }
+  },
+  "articleMenu": {
+    "openA11y": "その他の操作",
+    "title": "記事の操作",
+    "askMera": "Mera に聞く",
+    "following": "このストーリーをフォロー中",
+    "checkFacts": "ファクトチェックを探す",
+    "openOn": "{{source}} で開く",
+    "openInTranslate": "Google 翻訳で開く",
+    "fewerFrom": "{{source}} を減らす",
+    "fewerFromDone": "{{source}} の表示が減ります。",
+    "undo": "元に戻す",
+    "reportBug": "不具合を報告",
+    "actionFailed": "うまくいきませんでした。もう一度お試しください。"
+  },
+  "factChip": {
+    "label": "プロフィールから：{{label}}",
+    "openA11y": "{{label}} に関する記事"
+  },
+  "related": {
+    "allCountries": "すべての国",
+    "allLanguages": "すべての言語",
+    "noMatches": "このフィルターに合う関連記事はありません。"
   }
 }

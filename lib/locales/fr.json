@@ -269,7 +269,8 @@
     "readOnGoogleTranslate": "Lire sur Google Translate",
     "linkUnavailable": "Ce lien ne peut pas être ouvert de manière sécurisée, il n'est donc pas disponible ici.",
     "relatedFromSubscriptions": "De vos abonnements",
-    "relatedLoadFailed": "Impossible de charger les articles associés."
+    "relatedLoadFailed": "Impossible de charger les articles associés.",
+    "translateBlockedNote": "Certains sites bloquent Google Traduction. Si la page ne se charge pas, ouvrez-la sur le site."
   },
   "newsCluster": {
     "failedToLoad": "Impossible de charger les détails du groupe",
@@ -1352,7 +1353,8 @@
     "applyFailedBody": "Veuillez réessayer plus tard.",
     "profileRow_one": "Nettoyage du profil · {{count}} suggestion",
     "profileRow_other": "Nettoyage du profil · {{count}} suggestions",
-    "effectIncoherentTopics": "Remplace ces sujets par de meilleurs pour cet intérêt."
+    "effectIncoherentTopics": "Remplace ces sujets par de meilleurs pour cet intérêt.",
+    "effectLocationConflict": "Garde le lieu le plus récent et supprime l'ancien."
   },
   "locations": {
     "title": "Vos lieux",
@@ -2851,5 +2853,28 @@
       "how1": "Chaque information devient des recherches que Mera fait pour toi. Modifie ou supprime une information et les sujets qui en venaient changent aussi.",
       "privacy": "Les recherches qui en découlent ne sont jamais liées à ton compte. Le serveur ne garde que le texte de recherche, partagé anonymement entre tous les utilisateurs, et le supprime après 14 jours sans utilisation."
     }
+  },
+  "articleMenu": {
+    "openA11y": "Plus d'actions",
+    "title": "Actions sur l'article",
+    "askMera": "Demander à Mera",
+    "following": "Vous suivez ce sujet",
+    "checkFacts": "Chercher des vérifications",
+    "openOn": "Ouvrir sur {{source}}",
+    "openInTranslate": "Ouvrir dans Google Traduction",
+    "fewerFrom": "Moins de {{source}}",
+    "fewerFromDone": "Vous verrez moins de {{source}}.",
+    "undo": "Annuler",
+    "reportBug": "Signaler un bug",
+    "actionFailed": "Cela n'a pas fonctionné. Réessayez."
+  },
+  "factChip": {
+    "label": "De votre profil : {{label}}",
+    "openA11y": "Articles sur {{label}}"
+  },
+  "related": {
+    "allCountries": "Tous les pays",
+    "allLanguages": "Toutes les langues",
+    "noMatches": "Aucun article associé ne correspond à ces filtres."
   }
 }

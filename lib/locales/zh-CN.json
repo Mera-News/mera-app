@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "在谷歌翻译中阅读",
     "linkUnavailable": "此链接无法安全打开，所以在这里不可用。",
     "relatedFromSubscriptions": "来自你的订阅",
-    "relatedLoadFailed": "无法加载相关文章。"
+    "relatedLoadFailed": "无法加载相关文章。",
+    "translateBlockedNote": "有些网站会屏蔽 Google 翻译。如果页面无法加载，请在原网站打开。"
   },
   "newsCluster": {
     "failedToLoad": "聚合详情加载失败",
@@ -1346,7 +1347,8 @@
     "applyFailedBody": "请稍后再试。",
     "profileRow_one": "整理个人资料 · {{count}} 项建议",
     "profileRow_other": "整理个人资料 · {{count}} 项建议",
-    "effectIncoherentTopics": "将此兴趣的这些主题替换为更好的。"
+    "effectIncoherentTopics": "将此兴趣的这些主题替换为更好的。",
+    "effectLocationConflict": "保留较新的地点，移除较旧的地点。"
   },
   "locations": {
     "title": "你的地点",
@@ -2844,5 +2846,28 @@
       "how1": "每条信息都会变成 Mera 为你运行的搜索。修改或删除一条信息，来自它的新闻也会随之变化。",
       "privacy": "由它们生成的搜索从不与你的账户关联。服务器只保存搜索文字，在所有用户之间匿名共享，14 天未使用即删除。"
     }
+  },
+  "articleMenu": {
+    "openA11y": "更多操作",
+    "title": "文章操作",
+    "askMera": "就此询问 Mera",
+    "following": "已关注此报道",
+    "checkFacts": "查找事实核查",
+    "openOn": "在 {{source}} 打开",
+    "openInTranslate": "在 Google 翻译中打开",
+    "fewerFrom": "减少 {{source}} 的内容",
+    "fewerFromDone": "你将看到更少来自 {{source}} 的内容。",
+    "undo": "撤销",
+    "reportBug": "报告问题",
+    "actionFailed": "操作未成功。请重试。"
+  },
+  "factChip": {
+    "label": "来自你的资料：{{label}}",
+    "openA11y": "关于 {{label}} 的报道"
+  },
+  "related": {
+    "allCountries": "所有国家",
+    "allLanguages": "所有语言",
+    "noMatches": "没有符合这些筛选条件的相关文章。"
   }
 }

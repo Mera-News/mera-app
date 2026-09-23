@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "구글 번역으로 읽기",
     "linkUnavailable": "이 링크는 안전하게 열 수 없으므로 여기서 사용할 수 없습니다.",
     "relatedFromSubscriptions": "구독 중인 매체에서",
-    "relatedLoadFailed": "관련 기사를 불러오지 못했어요."
+    "relatedLoadFailed": "관련 기사를 불러오지 못했어요.",
+    "translateBlockedNote": "일부 사이트는 Google 번역을 차단해요. 페이지가 열리지 않으면 사이트에서 여세요."
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",
@@ -1345,7 +1346,8 @@
     "applyFailedBody": "나중에 다시 시도해 주세요.",
     "profileRow_one": "프로필 정리 · 제안 {{count}}개",
     "profileRow_other": "프로필 정리 · 제안 {{count}}개",
-    "effectIncoherentTopics": "이 관심사에 대해 더 나은 주제로 바꿉니다."
+    "effectIncoherentTopics": "이 관심사에 대해 더 나은 주제로 바꿉니다.",
+    "effectLocationConflict": "최신 장소를 유지하고 이전 장소를 삭제해요."
   },
   "locations": {
     "title": "내 장소",
@@ -2843,5 +2845,28 @@
       "how1": "각 정보는 Mera가 당신을 위해 실행하는 검색이 됩니다. 정보를 바꾸거나 지우면 거기서 나온 기사도 바뀝니다.",
       "privacy": "여기서 만들어진 검색은 절대 당신의 계정과 연결되지 않습니다. 서버는 모든 사용자가 익명으로 공유하는 검색 문구만 보관하며, 14일 동안 쓰이지 않으면 삭제합니다."
     }
+  },
+  "articleMenu": {
+    "openA11y": "작업 더보기",
+    "title": "기사 작업",
+    "askMera": "Mera에게 물어보기",
+    "following": "이 스토리를 팔로우 중",
+    "checkFacts": "팩트체크 찾기",
+    "openOn": "{{source}}에서 열기",
+    "openInTranslate": "Google 번역에서 열기",
+    "fewerFrom": "{{source}} 줄이기",
+    "fewerFromDone": "{{source}}의 기사가 줄어들어요.",
+    "undo": "실행 취소",
+    "reportBug": "버그 신고",
+    "actionFailed": "실패했어요. 다시 시도하세요."
+  },
+  "factChip": {
+    "label": "내 프로필: {{label}}",
+    "openA11y": "{{label}} 관련 소식"
+  },
+  "related": {
+    "allCountries": "모든 국가",
+    "allLanguages": "모든 언어",
+    "noMatches": "이 필터에 맞는 관련 기사가 없어요."
   }
 }

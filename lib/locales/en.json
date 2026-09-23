@@ -320,7 +320,8 @@
     "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name.",
     "linkUnavailable": "This link can't be opened securely, so it isn't available here.",
     "relatedFromSubscriptions": "From your subscriptions",
-    "relatedLoadFailed": "Couldn't load related articles."
+    "relatedLoadFailed": "Couldn't load related articles.",
+    "translateBlockedNote": "Some sites block Google Translate. If the page doesn't load, open it on the site."
   },
   "relatedSort": {
     "a11yLabel": "Sort related articles",
@@ -548,8 +549,8 @@
     "emptyTitle": "No stories followed yet",
     "emptyBody": "Follow a story to see every new development gathered here as it unfolds.",
     "title": "Followed stories",
-    "trackAction": "Track story",
-    "untrackAction": "Untrack story",
+    "trackAction": "Follow story",
+    "untrackAction": "Stop following",
     "trackedToast": "Now following this story",
     "updatesBadge": "{{count}} new",
     "endedLabel": "Ended",
@@ -1560,7 +1561,8 @@
     "applyFailedTitle": "Couldn't apply cleanup",
     "applyFailedBody": "Please try again later.",
     "profileRow_one": "Profile cleanup · {{count}} suggestion",
-    "profileRow_other": "Profile cleanup · {{count}} suggestions"
+    "profileRow_other": "Profile cleanup · {{count}} suggestions",
+    "effectLocationConflict": "Keeps the newer place and removes the older one."
   },
   "locations": {
     "title": "Your places",
@@ -2845,5 +2847,28 @@
       "how1": "Each fact becomes searches Mera runs for you. Change or delete a fact and the stories that came from it change too.",
       "privacy": "The searches made from them are never linked to your account. The server keeps only the search text, shared anonymously across all users, and deletes it after 14 days without use."
     }
+  },
+  "articleMenu": {
+    "openA11y": "More actions",
+    "title": "Article actions",
+    "askMera": "Ask Mera about this",
+    "following": "Following this story",
+    "checkFacts": "Check for fact checks",
+    "openOn": "Open on {{source}}",
+    "openInTranslate": "Open in Google Translate",
+    "fewerFrom": "Fewer from {{source}}",
+    "fewerFromDone": "You'll see less from {{source}}.",
+    "undo": "Undo",
+    "reportBug": "Report a bug",
+    "actionFailed": "That didn't work. Try again."
+  },
+  "factChip": {
+    "label": "From your profile: {{label}}",
+    "openA11y": "Stories about {{label}}"
+  },
+  "related": {
+    "allCountries": "All countries",
+    "allLanguages": "All languages",
+    "noMatches": "No related articles match these filters."
   }
 }

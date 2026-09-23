@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "在 Google 翻譯中閱讀",
     "linkUnavailable": "此連結無法安全開啟，因此在此無法使用。",
     "relatedFromSubscriptions": "來自您的訂閱",
-    "relatedLoadFailed": "無法載入相關文章。"
+    "relatedLoadFailed": "無法載入相關文章。",
+    "translateBlockedNote": "有些網站會封鎖 Google 翻譯。如果頁面無法載入，請在原網站開啟。"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",
@@ -1346,7 +1347,8 @@
     "applyFailedBody": "請稍後再試。",
     "profileRow_one": "整理個人檔案 · {{count}} 項建議",
     "profileRow_other": "整理個人檔案 · {{count}} 項建議",
-    "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。"
+    "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。",
+    "effectLocationConflict": "保留較新的地點，移除較舊的地點。"
   },
   "locations": {
     "title": "你的地點",
@@ -2844,5 +2846,28 @@
       "how1": "每則資訊都會變成 Mera 為你執行的搜尋。修改或刪除一則資訊，來自它的新聞也會跟著變化。",
       "privacy": "由它們產生的搜尋從不與你的帳號連結。伺服器只保存搜尋文字，在所有使用者之間匿名共享，14 天未使用即刪除。"
     }
+  },
+  "articleMenu": {
+    "openA11y": "更多操作",
+    "title": "文章操作",
+    "askMera": "就此詢問 Mera",
+    "following": "已追蹤此報導",
+    "checkFacts": "查找事實查核",
+    "openOn": "在 {{source}} 開啟",
+    "openInTranslate": "在 Google 翻譯中開啟",
+    "fewerFrom": "減少 {{source}} 的內容",
+    "fewerFromDone": "你會看到更少來自 {{source}} 的內容。",
+    "undo": "復原",
+    "reportBug": "回報問題",
+    "actionFailed": "操作未成功。請再試一次。"
+  },
+  "factChip": {
+    "label": "來自你的個人檔案：{{label}}",
+    "openA11y": "關於 {{label}} 的報導"
+  },
+  "related": {
+    "allCountries": "所有國家",
+    "allLanguages": "所有語言",
+    "noMatches": "沒有符合這些篩選條件的相關文章。"
   }
 }

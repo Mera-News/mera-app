@@ -288,7 +288,8 @@
     "readOnGoogleTranslate": "اقرأ على Google Translate",
     "linkUnavailable": "لا يمكن فتح هذا الرابط بشكل آمن، لذا غير متاح هنا.",
     "relatedFromSubscriptions": "من اشتراكاتك",
-    "relatedLoadFailed": "تعذر تحميل المقالات ذات الصلة."
+    "relatedLoadFailed": "تعذر تحميل المقالات ذات الصلة.",
+    "translateBlockedNote": "بعض المواقع تحظر ترجمة Google. إذا لم تُفتح الصفحة، افتحها على الموقع."
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",
@@ -1403,7 +1404,8 @@
     "profileRow_few": "تنظيف الملف الشخصي · {{count}} اقتراحات",
     "profileRow_many": "تنظيف الملف الشخصي · {{count}} اقتراحًا",
     "profileRow_other": "تنظيف الملف الشخصي · {{count}} اقتراح",
-    "effectIncoherentTopics": "يستبدل هذه الموضوعات بموضوعات أفضل لهذا الاهتمام."
+    "effectIncoherentTopics": "يستبدل هذه الموضوعات بموضوعات أفضل لهذا الاهتمام.",
+    "effectLocationConflict": "يحتفظ بالمكان الأحدث ويزيل الأقدم."
   },
   "locations": {
     "title": "أماكنك",
@@ -2930,5 +2932,28 @@
       "how1": "تتحول كل حقيقة إلى عمليات بحث يجريها Mera لك. إذا غيّرت حقيقة أو حذفتها تتغير القصص التي جاءت منها أيضًا.",
       "privacy": "عمليات البحث الناتجة عنها لا تُربط بحسابك أبدًا. يحتفظ الخادم بنص البحث فقط، مشتركًا بشكل مجهول بين جميع المستخدمين، ويحذفه بعد 14 يومًا دون استخدام."
     }
+  },
+  "articleMenu": {
+    "openA11y": "المزيد من الإجراءات",
+    "title": "إجراءات المقال",
+    "askMera": "اسأل ميرا عن هذا",
+    "following": "تتابع هذه القصة",
+    "checkFacts": "البحث عن تدقيقات الحقائق",
+    "openOn": "فتح في {{source}}",
+    "openInTranslate": "فتح في ترجمة Google",
+    "fewerFrom": "أقل من {{source}}",
+    "fewerFromDone": "ستشاهد محتوى أقل من {{source}}.",
+    "undo": "تراجع",
+    "reportBug": "الإبلاغ عن خطأ",
+    "actionFailed": "لم ينجح ذلك. حاول مرة أخرى."
+  },
+  "factChip": {
+    "label": "من ملفك: {{label}}",
+    "openA11y": "قصص عن {{label}}"
+  },
+  "related": {
+    "allCountries": "كل البلدان",
+    "allLanguages": "كل اللغات",
+    "noMatches": "لا توجد مقالات ذات صلة تطابق هذه الفلاتر."
   }
 }

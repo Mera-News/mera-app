@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "Google Translate पर पढ़ें",
     "linkUnavailable": "यह लिंक सुरक्षित रूप से नहीं खोला जा सकता, इसलिए यह यहाँ उपलब्ध नहीं है।",
     "relatedFromSubscriptions": "आपकी सदस्यताओं से",
-    "relatedLoadFailed": "संबंधित लेख लोड नहीं हो सके।"
+    "relatedLoadFailed": "संबंधित लेख लोड नहीं हो सके।",
+    "translateBlockedNote": "कुछ साइटें Google Translate को ब्लॉक करती हैं। अगर पेज न खुले, तो उसे साइट पर खोलें।"
   },
   "newsCluster": {
     "failedToLoad": "क्लस्टर विवरण लोड करने में विफल",
@@ -1347,7 +1348,8 @@
     "applyFailedBody": "कृपया बाद में फिर कोशिश करें।",
     "profileRow_one": "प्रोफ़ाइल की सफ़ाई · {{count}} सुझाव",
     "profileRow_other": "प्रोफ़ाइल की सफ़ाई · {{count}} सुझाव",
-    "effectIncoherentTopics": "इन विषयों को इस रुचि के लिए बेहतरों से बदल देता है।"
+    "effectIncoherentTopics": "इन विषयों को इस रुचि के लिए बेहतरों से बदल देता है।",
+    "effectLocationConflict": "नई जगह रखता है और पुरानी हटाता है।"
   },
   "locations": {
     "title": "आपकी जगहें",
@@ -2846,5 +2848,28 @@
       "how1": "हर तथ्य उन खोजों में बदलता है जो Mera आपके लिए चलाता है। कोई तथ्य बदलें या हटाएँ तो उससे आई ख़बरें भी बदल जाती हैं।",
       "privacy": "इनसे बनी खोजें कभी आपके खाते से नहीं जोड़ी जातीं। सर्वर सिर्फ़ खोज का टेक्स्ट रखता है, जो सभी उपयोगकर्ताओं में गुमनाम रूप से साझा होता है, और 14 दिन तक इस्तेमाल न होने पर उसे हटा देता है।"
     }
+  },
+  "articleMenu": {
+    "openA11y": "और कार्रवाइयां",
+    "title": "लेख कार्रवाइयां",
+    "askMera": "इसके बारे में Mera से पूछें",
+    "following": "यह खबर फ़ॉलो कर रहे हैं",
+    "checkFacts": "फ़ैक्ट चेक खोजें",
+    "openOn": "{{source}} पर खोलें",
+    "openInTranslate": "Google Translate में खोलें",
+    "fewerFrom": "{{source}} से कम",
+    "fewerFromDone": "आपको {{source}} से कम दिखेगा।",
+    "undo": "पहले जैसा करें",
+    "reportBug": "बग की रिपोर्ट करें",
+    "actionFailed": "यह नहीं हो पाया। फिर से कोशिश करें।"
+  },
+  "factChip": {
+    "label": "आपकी प्रोफ़ाइल से: {{label}}",
+    "openA11y": "{{label}} से जुड़ी खबरें"
+  },
+  "related": {
+    "allCountries": "सभी देश",
+    "allLanguages": "सभी भाषाएं",
+    "noMatches": "इन फ़िल्टर से कोई संबंधित लेख मेल नहीं खाता।"
   }
 }

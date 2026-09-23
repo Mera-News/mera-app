@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "Google Translate'de Oku",
     "linkUnavailable": "Bu bağlantı güvenli bir şekilde açılamıyor, bu yüzden burada mevcut değil.",
     "relatedFromSubscriptions": "Aboneliklerinizden",
-    "relatedLoadFailed": "İlgili makaleler yüklenemedi."
+    "relatedLoadFailed": "İlgili makaleler yüklenemedi.",
+    "translateBlockedNote": "Bazı siteler Google Çeviri'yi engeller. Sayfa açılmazsa siteden aç."
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",
@@ -1347,7 +1348,8 @@
     "applyFailedBody": "Lütfen daha sonra tekrar dene.",
     "profileRow_one": "Profil temizliği · {{count}} öneri",
     "profileRow_other": "Profil temizliği · {{count}} öneri",
-    "effectIncoherentTopics": "Bu ilgi alanı için bu konuları daha iyi olanlarla değiştirir."
+    "effectIncoherentTopics": "Bu ilgi alanı için bu konuları daha iyi olanlarla değiştirir.",
+    "effectLocationConflict": "Yeni yeri tutar, eskisini kaldırır."
   },
   "locations": {
     "title": "Yerlerin",
@@ -2846,5 +2848,28 @@
       "how1": "Her bilgi, Mera'nın senin için yaptığı aramalara dönüşür. Bir bilgiyi değiştirir ya da silersen ondan gelen haberler de değişir.",
       "privacy": "Bunlardan oluşturulan aramalar hiçbir zaman hesabınla ilişkilendirilmez. Sunucu yalnızca arama metnini tutar, tüm kullanıcılar arasında anonim olarak paylaşılır ve 14 gün kullanılmazsa silinir."
     }
+  },
+  "articleMenu": {
+    "openA11y": "Diğer işlemler",
+    "title": "Makale işlemleri",
+    "askMera": "Mera'ya sor",
+    "following": "Bu haberi takip ediyorsun",
+    "checkFacts": "Doğrulama ara",
+    "openOn": "{{source}} sitesinde aç",
+    "openInTranslate": "Google Çeviri'de aç",
+    "fewerFrom": "{{source}} kaynağından daha az",
+    "fewerFromDone": "{{source}} kaynağından daha az göreceksin.",
+    "undo": "Geri al",
+    "reportBug": "Hata bildir",
+    "actionFailed": "Olmadı. Tekrar dene."
+  },
+  "factChip": {
+    "label": "Profilinden: {{label}}",
+    "openA11y": "{{label}} hakkında haberler"
+  },
+  "related": {
+    "allCountries": "Tüm ülkeler",
+    "allLanguages": "Tüm diller",
+    "noMatches": "Bu filtrelere uyan ilgili makale yok."
   }
 }

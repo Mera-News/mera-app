@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "Đọc trên Google Dịch",
     "linkUnavailable": "Liên kết này không thể được mở an toàn, vì vậy nó không khả dụng ở đây.",
     "relatedFromSubscriptions": "Từ gói đăng ký của bạn",
-    "relatedLoadFailed": "Không tải được các bài liên quan."
+    "relatedLoadFailed": "Không tải được các bài liên quan.",
+    "translateBlockedNote": "Một số trang chặn Google Dịch. Nếu trang không tải, hãy mở trên trang gốc."
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",
@@ -1346,7 +1347,8 @@
     "applyFailedBody": "Vui lòng thử lại sau.",
     "profileRow_one": "Dọn dẹp hồ sơ · {{count}} đề xuất",
     "profileRow_other": "Dọn dẹp hồ sơ · {{count}} đề xuất",
-    "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này."
+    "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này.",
+    "effectLocationConflict": "Giữ nơi mới hơn và xóa nơi cũ."
   },
   "locations": {
     "title": "Địa điểm của bạn",
@@ -2844,5 +2846,28 @@
       "how1": "Mỗi thông tin trở thành các lượt tìm kiếm Mera chạy cho bạn. Sửa hoặc xóa một thông tin thì các tin đến từ nó cũng thay đổi.",
       "privacy": "Các lượt tìm kiếm tạo từ chúng không bao giờ gắn với tài khoản của bạn. Máy chủ chỉ giữ văn bản tìm kiếm, dùng chung ẩn danh cho mọi người dùng, và xóa sau 14 ngày không dùng."
     }
+  },
+  "articleMenu": {
+    "openA11y": "Thao tác khác",
+    "title": "Thao tác với bài viết",
+    "askMera": "Hỏi Mera về bài này",
+    "following": "Đang theo dõi câu chuyện này",
+    "checkFacts": "Tìm kiểm chứng",
+    "openOn": "Mở trên {{source}}",
+    "openInTranslate": "Mở trong Google Dịch",
+    "fewerFrom": "Ít hơn từ {{source}}",
+    "fewerFromDone": "Bạn sẽ thấy ít tin từ {{source}} hơn.",
+    "undo": "Hoàn tác",
+    "reportBug": "Báo lỗi",
+    "actionFailed": "Không thực hiện được. Hãy thử lại."
+  },
+  "factChip": {
+    "label": "Từ hồ sơ của bạn: {{label}}",
+    "openA11y": "Tin về {{label}}"
+  },
+  "related": {
+    "allCountries": "Tất cả quốc gia",
+    "allLanguages": "Tất cả ngôn ngữ",
+    "noMatches": "Không có bài liên quan nào khớp với bộ lọc này."
   }
 }

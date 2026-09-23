@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "Baca di Google Translate",
     "linkUnavailable": "Tautan ini tidak dapat dibuka dengan aman, jadi tidak tersedia di sini.",
     "relatedFromSubscriptions": "Dari langganan Anda",
-    "relatedLoadFailed": "Tidak dapat memuat artikel terkait."
+    "relatedLoadFailed": "Tidak dapat memuat artikel terkait.",
+    "translateBlockedNote": "Beberapa situs memblokir Google Terjemahan. Jika halaman tidak termuat, buka di situsnya."
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -1345,7 +1346,8 @@
     "applyFailedBody": "Silakan coba lagi nanti.",
     "profileRow_one": "Rapikan profil · {{count}} saran",
     "profileRow_other": "Rapikan profil · {{count}} saran",
-    "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih baik untuk minat ini."
+    "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih baik untuk minat ini.",
+    "effectLocationConflict": "Menyimpan tempat yang lebih baru dan menghapus yang lama."
   },
   "locations": {
     "title": "Tempat Anda",
@@ -2843,5 +2845,28 @@
       "how1": "Setiap fakta menjadi pencarian yang dijalankan Mera untukmu. Ubah atau hapus fakta, dan berita yang berasal darinya ikut berubah.",
       "privacy": "Pencarian yang dibuat darinya tidak pernah dikaitkan dengan akunmu. Server hanya menyimpan teks pencarian, dibagikan secara anonim ke semua pengguna, dan menghapusnya setelah 14 hari tidak dipakai."
     }
+  },
+  "articleMenu": {
+    "openA11y": "Tindakan lain",
+    "title": "Tindakan artikel",
+    "askMera": "Tanya Mera soal ini",
+    "following": "Mengikuti berita ini",
+    "checkFacts": "Cari cek fakta",
+    "openOn": "Buka di {{source}}",
+    "openInTranslate": "Buka di Google Terjemahan",
+    "fewerFrom": "Lebih sedikit dari {{source}}",
+    "fewerFromDone": "Kamu akan melihat lebih sedikit dari {{source}}.",
+    "undo": "Urungkan",
+    "reportBug": "Laporkan bug",
+    "actionFailed": "Itu tidak berhasil. Coba lagi."
+  },
+  "factChip": {
+    "label": "Dari profilmu: {{label}}",
+    "openA11y": "Berita tentang {{label}}"
+  },
+  "related": {
+    "allCountries": "Semua negara",
+    "allLanguages": "Semua bahasa",
+    "noMatches": "Tidak ada artikel terkait yang cocok dengan filter ini."
   }
 }

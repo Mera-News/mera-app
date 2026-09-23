@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "Lezen op Google Translate",
     "linkUnavailable": "Deze link kan niet veilig worden geopend, dus is deze hier niet beschikbaar.",
     "relatedFromSubscriptions": "Uit je abonnementen",
-    "relatedLoadFailed": "Gerelateerde artikelen konden niet worden geladen."
+    "relatedLoadFailed": "Gerelateerde artikelen konden niet worden geladen.",
+    "translateBlockedNote": "Sommige sites blokkeren Google Translate. Laadt de pagina niet, open hem dan op de site."
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",
@@ -1345,7 +1346,8 @@
     "applyFailedBody": "Probeer het later opnieuw.",
     "profileRow_one": "Profiel opschonen · {{count}} suggestie",
     "profileRow_other": "Profiel opschonen · {{count}} suggesties",
-    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse."
+    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse.",
+    "effectLocationConflict": "Houdt de nieuwere plaats en verwijdert de oudere."
   },
   "locations": {
     "title": "Jouw plaatsen",
@@ -2844,5 +2846,28 @@
       "how1": "Elk feit wordt zoekopdrachten die Mera voor je uitvoert. Wijzig of verwijder een feit en de verhalen die eruit kwamen veranderen mee.",
       "privacy": "De zoekopdrachten die eruit voortkomen worden nooit aan je account gekoppeld. De server bewaart alleen de zoektekst, anoniem gedeeld met alle gebruikers, en verwijdert die na 14 dagen zonder gebruik."
     }
+  },
+  "articleMenu": {
+    "openA11y": "Meer acties",
+    "title": "Artikelacties",
+    "askMera": "Vraag Mera hiernaar",
+    "following": "Je volgt dit verhaal",
+    "checkFacts": "Zoek naar factchecks",
+    "openOn": "Openen op {{source}}",
+    "openInTranslate": "Openen in Google Translate",
+    "fewerFrom": "Minder van {{source}}",
+    "fewerFromDone": "Je ziet minder van {{source}}.",
+    "undo": "Ongedaan maken",
+    "reportBug": "Bug melden",
+    "actionFailed": "Dat lukte niet. Probeer het opnieuw."
+  },
+  "factChip": {
+    "label": "Uit je profiel: {{label}}",
+    "openA11y": "Berichten over {{label}}"
+  },
+  "related": {
+    "allCountries": "Alle landen",
+    "allLanguages": "Alle talen",
+    "noMatches": "Geen gerelateerde artikelen passen bij deze filters."
   }
 }

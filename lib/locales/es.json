@@ -264,7 +264,8 @@
     "readOnGoogleTranslate": "Leer en Google Translate",
     "linkUnavailable": "Este enlace no se puede abrir de forma segura, así que no está disponible aquí.",
     "relatedFromSubscriptions": "De tus suscripciones",
-    "relatedLoadFailed": "No se pudieron cargar los artículos relacionados."
+    "relatedLoadFailed": "No se pudieron cargar los artículos relacionados.",
+    "translateBlockedNote": "Algunos sitios bloquean Google Translate. Si la página no carga, ábrela en el sitio."
   },
   "newsCluster": {
     "failedToLoad": "Error al cargar los detalles del grupo",
@@ -1345,7 +1346,8 @@
     "applyFailedBody": "Por favor, inténtalo de nuevo más tarde.",
     "profileRow_one": "Limpieza del perfil · {{count}} sugerencia",
     "profileRow_other": "Limpieza del perfil · {{count}} sugerencias",
-    "effectIncoherentTopics": "Reemplaza estos temas con otros mejores para este interés."
+    "effectIncoherentTopics": "Reemplaza estos temas con otros mejores para este interés.",
+    "effectLocationConflict": "Conserva el lugar más reciente y elimina el anterior."
   },
   "locations": {
     "title": "Tus lugares",
@@ -2844,5 +2846,28 @@
       "how1": "Cada dato se convierte en búsquedas que Mera hace por ti. Si cambias o borras un dato, también cambian las noticias que venían de él.",
       "privacy": "Las búsquedas que salen de ellos nunca se vinculan a tu cuenta. El servidor guarda solo el texto de búsqueda, compartido de forma anónima entre todos los usuarios, y lo borra tras 14 días sin uso."
     }
+  },
+  "articleMenu": {
+    "openA11y": "Más acciones",
+    "title": "Acciones del artículo",
+    "askMera": "Preguntar a Mera sobre esto",
+    "following": "Siguiendo esta historia",
+    "checkFacts": "Buscar verificaciones",
+    "openOn": "Abrir en {{source}}",
+    "openInTranslate": "Abrir en Google Translate",
+    "fewerFrom": "Menos de {{source}}",
+    "fewerFromDone": "Verás menos de {{source}}.",
+    "undo": "Deshacer",
+    "reportBug": "Informar de un error",
+    "actionFailed": "No funcionó. Inténtalo de nuevo."
+  },
+  "factChip": {
+    "label": "De tu perfil: {{label}}",
+    "openA11y": "Noticias sobre {{label}}"
+  },
+  "related": {
+    "allCountries": "Todos los países",
+    "allLanguages": "Todos los idiomas",
+    "noMatches": "Ningún artículo relacionado coincide con estos filtros."
   }
 }
