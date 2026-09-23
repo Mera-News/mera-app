@@ -105,7 +105,9 @@ surrounding `Box`/`View` instead. Text entry into gluestack inputs: tap the fiel
   and `fill` still works (types via hardware). Toggle with **⌘K** in the Simulator, or set
   `defaults write com.apple.iphonesimulator DevicePreferences -dict-add <UDID>
   '{ConnectHardwareKeyboard = 0;}'` and reboot the device. Sending ⌘K from a script needs
-  macOS Accessibility permission for the terminal.
+  macOS Accessibility permission for the terminal. The resident sim runs in this mode, and
+  `agent-device keyboard` is unavailable on it, so keyboard-dismiss flows (e.g. "dismiss the
+  keyboard with no text") cannot be driven: a focused field stays focused. Report them as untested.
 - **LogBox warning toasts** (dev-only, e.g. the POP_TO_TOP nav warning) sit in front of the app and
   can make a snapshot look like a black screen. `agent-device react-native dismiss-overlay`, or tap
   the toast's ✕. The app is usually fine underneath — check `agent-device logs` before assuming a
@@ -146,11 +148,10 @@ These don't fail loudly — they hand you a confident wrong answer. Each cost re
 - **`press 'id=gearshape.fill'` hits the dev-menu FAB, not the Settings tab** — the SF Symbol id
   collides. Drive the tab bar by coordinates (`y=822`).
 - **Relative `--output` paths silently produce no file.** Always pass absolute paths.
-- **Gluestack `Switch` does not respond to XCTest synthetic taps at all** — `press @ref`,
-  `press 'role=Switch'`, `press 'text=…'`, `tap x y` and `click x y` all report success and leave
-  the value unchanged (verify against the DB, not the a11y tree). Route: terminate the app →
-  `sqlite3` the `settings` row (`settings(id, _changed, _status, key, value)`, only `value` needs
-  changing) → cold launch so `hydrate()` reads it. Distinct from the `InputField` testID note above.
+- **Settings switches toggle with `press 'id=<switch testID>'`** (verified on `static-gradient-switch`
+  and `lock-switch`, value confirmed in the `settings` table). Always confirm a toggle against the DB
+  (`settings(key, value)`), not only the a11y tree; if a switch without a testID ignores the press,
+  terminate the app, edit the `settings` row, and cold launch so `hydrate()` reads it.
 - **Deep list elements exist in the tree only within ~2.5 screens of the viewport** at
   `windowSize={5}`. A fling carries ~1000px against a ~460px window, so an element can appear and
   disappear *between* probes — you cannot binary-search for it. Probe during the fling, or drive
