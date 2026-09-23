@@ -1,0 +1,123 @@
+{
+  "_comment": "ux1 chat scout (P3), batch 4: the neutral block on a Keep both card. New keys only.",
+  "en": {
+    "factChoice": {
+      "overlapsLabel": "Overlaps with",
+      "overlapsReplaceNote": "Replace would remove it and its topics."
+    }
+  },
+  "ar": {
+    "factChoice": {
+      "overlapsLabel": "يتداخل مع",
+      "overlapsReplaceNote": "سيؤدي الاستبدال إلى حذفها مع مواضيعها."
+    }
+  },
+  "de": {
+    "factChoice": {
+      "overlapsLabel": "Überschneidet sich mit",
+      "overlapsReplaceNote": "Ersetzen würde die Angabe und ihre Themen entfernen."
+    }
+  },
+  "es": {
+    "factChoice": {
+      "overlapsLabel": "Se solapa con",
+      "overlapsReplaceNote": "Reemplazar lo eliminaría junto con sus temas."
+    }
+  },
+  "fr": {
+    "factChoice": {
+      "overlapsLabel": "Recoupe",
+      "overlapsReplaceNote": "Remplacer la supprimerait avec ses sujets."
+    }
+  },
+  "hi": {
+    "factChoice": {
+      "overlapsLabel": "इससे मेल खाता है",
+      "overlapsReplaceNote": "बदलने से यह और इसके विषय हट जाएँगे।"
+    }
+  },
+  "id": {
+    "factChoice": {
+      "overlapsLabel": "Tumpang tindih dengan",
+      "overlapsReplaceNote": "Mengganti akan menghapusnya beserta topiknya."
+    }
+  },
+  "it": {
+    "factChoice": {
+      "overlapsLabel": "Si sovrappone a",
+      "overlapsReplaceNote": "Sostituire la rimuoverebbe insieme ai suoi argomenti."
+    }
+  },
+  "ja": {
+    "factChoice": {
+      "overlapsLabel": "重なる情報",
+      "overlapsReplaceNote": "置き換えると、この情報と関連トピックが削除されます。"
+    }
+  },
+  "ko": {
+    "factChoice": {
+      "overlapsLabel": "겹치는 정보",
+      "overlapsReplaceNote": "바꾸면 이 정보와 관련 주제가 삭제돼요."
+    }
+  },
+  "nl": {
+    "factChoice": {
+      "overlapsLabel": "Overlapt met",
+      "overlapsReplaceNote": "Vervangen verwijdert het en de onderwerpen ervan."
+    }
+  },
+  "pl": {
+    "factChoice": {
+      "overlapsLabel": "Pokrywa się z",
+      "overlapsReplaceNote": "Zastąpienie usunie ją razem z jej tematami."
+    }
+  },
+  "pt-BR": {
+    "factChoice": {
+      "overlapsLabel": "Sobrepõe-se a",
+      "overlapsReplaceNote": "Substituir removeria a informação e os temas dela."
+    }
+  },
+  "ru": {
+    "factChoice": {
+      "overlapsLabel": "Пересекается с",
+      "overlapsReplaceNote": "Замена удалит этот факт и его темы."
+    }
+  },
+  "th": {
+    "factChoice": {
+      "overlapsLabel": "ซ้ำซ้อนกับ",
+      "overlapsReplaceNote": "การแทนที่จะลบข้อมูลนี้และหัวข้อของมัน"
+    }
+  },
+  "tr": {
+    "factChoice": {
+      "overlapsLabel": "Şununla örtüşüyor",
+      "overlapsReplaceNote": "Değiştirmek onu ve konularını siler."
+    }
+  },
+  "uk": {
+    "factChoice": {
+      "overlapsLabel": "Перетинається з",
+      "overlapsReplaceNote": "Заміна видалить цей факт і його теми."
+    }
+  },
+  "vi": {
+    "factChoice": {
+      "overlapsLabel": "Trùng với",
+      "overlapsReplaceNote": "Thay thế sẽ xóa thông tin này và các chủ đề của nó."
+    }
+  },
+  "zh-CN": {
+    "factChoice": {
+      "overlapsLabel": "与此重叠",
+      "overlapsReplaceNote": "替换会删除它及其相关主题。"
+    }
+  },
+  "zh-TW": {
+    "factChoice": {
+      "overlapsLabel": "與此重疊",
+      "overlapsReplaceNote": "替換會刪除它及其相關主題。"
+    }
+  }
+}
