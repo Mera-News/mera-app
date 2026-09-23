@@ -395,3 +395,18 @@ describe('FactAccordion — B3: topic list reads observeByFact, not fact.metadat
         expect(queryByText('facts.topicRemovalConsequence')).toBeTruthy();
     });
 });
+
+describe('F14: fact and topic text keep their own casing', () => {
+    // iOS `capitalize` is NSString capitalizedString, which lowercases the rest
+    // of every word: "AI" became "Ai", "(DMA)" became "(Dma)".
+    it('sentence-cases the statement and topics without a capitalize transform', () => {
+        mockTopicRows = [{ id: 't1', text: 'EU digital markets act (DMA)', status: 'active' }];
+        const r = render(
+            <FactAccordion {...baseProps} fact={baseFact({ statement: 'interested in privacy-preserving AI' })} />,
+        );
+        const statement = r.getByText('Interested in privacy-preserving AI');
+        expect(String(statement.props.className ?? '')).not.toMatch(/capitalize/);
+        const topic = r.getByText('EU digital markets act (DMA)');
+        expect(String(topic.props.className ?? '')).not.toMatch(/capitalize/);
+    });
+});

@@ -18,6 +18,7 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { sentenceCase } from './sentence-case';
 
 /** Per-tap influence nudge and the clamped UI range (a fact's weight dampens
  *  its topics — 100% default; this control never drives it to 0/negative). */
@@ -169,9 +170,9 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                         expanded, since the row's whole identity is the fact
                         phrase. */}
                     <TranslatableDynamic
-                        text={fact.statement}
+                        text={sentenceCase(fact.statement)}
                         size="md"
-                        className="text-white capitalize"
+                        className="text-white"
                         numberOfLines={2}
                     />
                     {status === 'pending' && (
@@ -296,9 +297,9 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                                         <Pressable className="flex-1" onPress={() => onTopicPress(topicRow.text)}>
                                             <HStack className="items-center justify-between flex-1 mr-3">
                                                 <TranslatableDynamic
-                                                    text={topicRow.text}
+                                                    text={sentenceCase(topicRow.text)}
                                                     size="sm"
-                                                    className="text-gray-200 flex-1 mr-2 capitalize"
+                                                    className="text-gray-200 flex-1 mr-2"
                                                     numberOfLines={2}
                                                 />
                                                 <Text size="xs" className="text-gray-500">

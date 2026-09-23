@@ -5,6 +5,7 @@ import { VStack } from '@/components/ui/vstack';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { sentenceCase } from './sentence-case';
 
 interface DeleteFactModalProps {
     readonly fact: Fact | null;
@@ -28,8 +29,8 @@ const DeleteFactModal: React.FC<DeleteFactModalProps> = ({ fact, isDeleting, onC
                         {t('configPanel.deleteFactConfirm')}
                     </Text>
                     {fact && (
-                        <Text className="text-white text-base font-medium mb-4 capitalize">
-                            &ldquo;{fact.statement}&rdquo;
+                        <Text className="text-white text-base font-medium mb-4">
+                            &ldquo;{sentenceCase(fact.statement)}&rdquo;
                         </Text>
                     )}
                     <Text className="text-red-400 text-sm font-medium">

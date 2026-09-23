@@ -34,9 +34,12 @@ import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, View } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
 import SourcePrefControl from './SourcePrefControl';
+import { sentenceCase } from '@/components/custom/facts/sentence-case';
 
+// Sentence case, never the `capitalize` class: on iOS that lowercases every
+// letter after the first, so a slug holding an acronym came out mangled.
 const formatCategory = (category: string): string =>
-    category === 'general_news' ? 'All' : category;
+    category === 'general_news' ? 'All' : sentenceCase(category);
 
 // Humanizes the structured taxonomy slugs (`categories`) for display.
 // Deliberately not translated: like `category` above, these are raw
@@ -341,7 +344,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                                     >
                                         <HStack className="items-center justify-between">
                                             <VStack className="flex-1 mr-3" space="xs">
-                                                <Text className="text-white text-sm capitalize">
+                                                <Text className="text-white text-sm">
                                                     {formatCategory(feed.category)}
                                                 </Text>
                                                 {feedBadgeKind && <SourceKindBadge kind={feedBadgeKind} />}

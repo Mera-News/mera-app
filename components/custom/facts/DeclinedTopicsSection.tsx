@@ -6,6 +6,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { sentenceCase } from './sentence-case';
 
 /**
  * One row of `lib/database/services/topic-decline-service.ts`'s
@@ -62,9 +63,9 @@ const DeclinedTopicsSection: React.FC<DeclinedTopicsSectionProps> = ({ items, on
                 {items.map((item) => (
                     <HStack key={item.id} className="items-center justify-between">
                         <TranslatableDynamic
-                            text={item.text}
+                            text={sentenceCase(item.text)}
                             size="sm"
-                            className="text-gray-200 flex-1 mr-3 capitalize"
+                            className="text-gray-200 flex-1 mr-3"
                             numberOfLines={2}
                         />
                         <Button
