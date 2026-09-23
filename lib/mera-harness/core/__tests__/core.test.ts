@@ -766,7 +766,9 @@ describe('destructive and place guards', () => {
     expect(out.legs[0].toolResults[0].result).toEqual({ error: 'confirm with ask_choice first' });
   });
 
-  it('`replaces` is dropped unless a choice was actually confirmed', async () => {
+  // Owner ruling ux1 Q1: a SAME-KEY replace needs no chip (the card is the
+  // consent). A keyless or cross-key one still does, which is what this pins.
+  it('a keyless `replaces` is dropped unless a choice was actually confirmed', async () => {
     const { deps } = scriptedDeps([
       modelResult({
         content: 'ok',
@@ -1383,9 +1385,11 @@ describe('TestFlight regressions', () => {
     expect(third.skillLoaded).toBe('facts/interest');
   });
 
-  it('a replace is refused once the confirmation belongs to an EARLIER turn', async () => {
+  it('a KEYLESS replace is refused once the confirmation belongs to an EARLIER turn', async () => {
     // The `replaces` gate reads the same flag, so a single tap anywhere in the
-    // conversation used to leave it open for good.
+    // conversation used to leave it open for good. Keyless on purpose: a
+    // same-key replace passes on the card's own consent (ux1 Q1), so only a
+    // replace without a matching key still depends on this turn's tap.
     const state = createAgentState(RESIDENT);
     state.turn.resolvedChoice = { question: 'Which one?', text: 'Berlin', payload: null };
     state.turn.lastSkill = 'facts/residence';

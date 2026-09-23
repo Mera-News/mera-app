@@ -285,7 +285,11 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   }
 
   return (
-    <Animated.View entering={cardEntering} style={[styles.card, stale && styles.cardSettled]}>
+    // NO `entering` on the pending card. The cards used to fade in inside the
+    // inverted list while the bulk row below them was already drawn, so
+    // "Skip all / Add all (2)" sat over an empty band (audit F7). A pending
+    // card now lands in the same frame as its bulk row.
+    <Animated.View style={[styles.card, stale && styles.cardSettled]}>
       <View style={styles.headerRow}>
         <MaterialIcons
           name={isReplace ? 'swap-horiz' : 'help-outline'}

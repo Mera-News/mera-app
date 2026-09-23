@@ -452,6 +452,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** What THIS turn offered, carried to the next turn for the same reason. */
   const offeredThisTurn: string[] = [];
   let existingFacts: { factId: string; statement: string }[] = [];
+  /** A retired combined origin-and-home fact still on file, if any. */
+  const combinedFactOnFile = state.persona.facts.find((f) => isCombinedOriginFact(f.attribute)) ?? null;
 
   /** True for the ONE forced leg. */
   let forcingProposalNow = false;
@@ -835,6 +837,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // the user has to make before the card, not on it.
           const sameKey = !!replaceTarget && sameAttributeKey(entryAttribute, replaceTarget.attribute);
           let replaces = wantsReplace && (turn.resolvedChoice || sameKey) ? wantsReplace : null;
+          // THE OLD COMBINED FACT GOES WITH ITS OWN ORIGIN HALF. An origin element
+          // offered while a combined origin-and-home fact is on file replaces it
+          // (ux1 Q2): the split and the skill's own offer are then ONE card, not
+          // two cards saying "Expat from India".
+          if (replaces === null && entryAttribute === ORIGIN_KEY && combinedFactOnFile) {
+            replaces = combinedFactOnFile.id;
+          }
           // A HOME FACT IS ONLY REPLACED BY A HOME FACT. Demoted, never dropped.
           if (replaces !== null && replaceTarget && !mayReplaceKey(entryAttribute, replaceTarget.attribute)) {
             refusedReplaces++;
@@ -1095,12 +1104,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     if (terminalReason === 'transport-error') return null;
     const kinds = skillsLoaded.map((id) => routeKindFromSkill(id));
     if (!kinds.includes('origin') && !kinds.includes('residence')) return null;
-    const combined = state.persona.facts.find((f) => isCombinedOriginFact(f.attribute));
+    const combined = combinedFactOnFile;
     if (!combined) return null;
-    if (proposals.some((p) => p.replaces === combined.id)) return null;
     const halves = splitCombinedFact(combined.statement);
     if (!halves) return null;
-    if (deps.combinedFactRewrite && (await deps.combinedFactRewrite.wasOffered(combined.id))) {
+    // The skill's own origin card already replaces it (see the save handler).
+    const originDone = proposals.some((p) => p.replaces === combined.id);
+    if (!originDone && deps.combinedFactRewrite && (await deps.combinedFactRewrite.wasOffered(combined.id))) {
       return null;
     }
     const topicSkill = (kind: string) =>
@@ -1108,20 +1118,31 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const hasHome =
       state.persona.facts.some((f) => f.id !== combined.id && isLocationKey(f.attribute))
       || proposals.some((p) => p.kind === 'residence');
-    const entries: Record<string, unknown>[] = [
-      {
+    const candidates: Record<string, unknown>[] = [];
+    if (!originDone) {
+      candidates.push({
         statement: halves.origin,
         questionnaire_attribute: ORIGIN_KEY,
         replaces: combined.id,
         ...(topicSkill('origin') ? { topic_skill_id: topicSkill('origin') } : {}),
-      },
-    ];
+      });
+    }
     if (!hasHome) {
-      entries.push({
+      candidates.push({
         statement: halves.residence,
         questionnaire_attribute: CANONICAL_LOCATION_KEY,
         ...(topicSkill('residence') ? { topic_skill_id: topicSkill('residence') } : {}),
       });
+    }
+    // Same duplicate rules as any other offer: never a statement already on
+    // file or already offered this turn.
+    const entries = candidates.filter((e) => {
+      const key = String(e.statement).trim().toLowerCase();
+      return !existingStatements.has(key) && !proposedStatements.has(key);
+    });
+    if (entries.length === 0) {
+      if (originDone) await deps.combinedFactRewrite?.markOffered(combined.id);
+      return originDone ? combined.id : null;
     }
     const splitProposals: AgentProposal[] = entries.map((e) => ({
       statement: String(e.statement),
@@ -1157,6 +1178,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     };
     legs.push(leg);
     proposals.push(...splitProposals);
+    for (const p of splitProposals) {
+      proposedStatements.add(p.statement.toLowerCase());
+      offeredThisTurn.push(p.statement.toLowerCase());
+    }
     proposedSomething = true;
     await deps.combinedFactRewrite?.markOffered(combined.id);
     params.onLeg?.(leg);

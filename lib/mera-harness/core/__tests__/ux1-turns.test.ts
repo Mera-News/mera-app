@@ -337,6 +337,24 @@ describe('Q2: a combined origin-and-home fact is offered its split once', () => 
     expect(second.combinedRewriteOffered).toBeNull();
   });
 
+  it('merges with the skill\'s own origin card instead of offering a second one', async () => {
+    const onLeg = jest.fn();
+    const h = harness([
+      res({ content: 'India.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Expat from India', questionnaire_attribute: ORIGIN_KEY }] })] }),
+      res({ content: 'Got it.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(COMBINED), userMessage: 'I am from India', deps: h.deps, onLeg });
+    const all = h.saves.flat();
+    // ONE origin card, and it is the one that retires the combined fact.
+    expect(all.filter((e) => e.statement === 'Expat from India')).toEqual([
+      expect.objectContaining({ replaces: 'c1' }),
+    ]);
+    // The home half is still offered, since no home fact is on file.
+    expect(all.map((e) => e.statement)).toContain('Lives in Amsterdam, Netherlands, EU');
+    expect(out.combinedRewriteOffered).toBe('c1');
+  });
+
   it('is not offered on a turn about something else', async () => {
     const h = harness([res({ content: 'Chess.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }), res({ content: 'ok' })]);
     const out = await runAgentTurn({ state: createAgentState(COMBINED), userMessage: 'I play chess', deps: h.deps });
