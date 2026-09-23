@@ -581,7 +581,7 @@
     "signingOut": "Déconnexion...",
     "signOut": "Se déconnecter",
     "deleteAccountConfirm": "Êtes-vous sûr de vouloir supprimer définitivement votre compte ?",
-    "deleteAccountWarning": "⚠️ Cette action est irréversible et supprimera toutes vos données.",
+    "deleteAccountWarning": "⚠️ Toutes vos données seront supprimées. Cette action est irréversible.",
     "continue": "Continuer",
     "finalConfirmation": "Confirmation finale",
     "finalConfirmationBody": "Cela supprimera définitivement toutes vos données.",
@@ -603,7 +603,7 @@
     "faq": "FAQ",
     "reportBug": "Signaler un bug",
     "deleteAccountConfirmGrace": "Votre compte sera programmé pour la suppression, avec une période de grâce de 30 jours. Connectez-vous à nouveau dans ces 30 jours et la suppression est automatiquement annulée.",
-    "deleteAccountWarningGrace": "Après 30 jours, cela ne peut pas être annulé et toutes vos données sont définitivement supprimées.",
+    "deleteAccountWarningGrace": "⚠️ Après 30 jours, toutes vos données sont définitivement supprimées. Cette action est irréversible.",
     "finalConfirmationBodyGrace": "Cela programme la suppression permanente de votre compte dans 30 jours.",
     "accountDeletionScheduledTitle": "Suppression programmée",
     "accountDeletionScheduledDescription": "Votre compte sera définitivement supprimé dans 30 jours. Connectez-vous à nouveau avant cela pour annuler la suppression."

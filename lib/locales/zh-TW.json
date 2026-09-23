@@ -51,7 +51,7 @@
       "retryLogin": "以電子郵件重新登入",
       "useDifferentUser": "使用其他帳號登入",
       "retryFailed": "無法連線至伺服器。請檢查網路後再試。",
-      "switchBody": "切換使用者將永久刪除此裝置上該使用者的所有資料，此操作無法復原。",
+      "switchBody": "切換使用者將永久刪除此裝置上該使用者的所有資料。此操作無法復原。",
       "switchConfirm": "是的，清除資料並切換使用者",
       "switchCancel": "取消"
     },
@@ -576,7 +576,7 @@
     "signingOut": "登出中...",
     "signOut": "登出",
     "deleteAccountConfirm": "您確定要永久刪除帳號嗎？",
-    "deleteAccountWarning": "⚠️ 此操作無法復原，將移除您的所有資料。",
+    "deleteAccountWarning": "⚠️ 您的所有資料都將被刪除。此操作無法復原。",
     "continue": "繼續",
     "finalConfirmation": "最終確認",
     "finalConfirmationBody": "這將永久刪除您的所有資料。",
@@ -598,7 +598,7 @@
     "faq": "常見問題",
     "reportBug": "回報問題",
     "deleteAccountConfirmGrace": "你的帳號將排定刪除，有30天的寬限期。在這30天內重新登入，刪除將自動取消。",
-    "deleteAccountWarningGrace": "⚠️ 30天後，此操作無法復原，所有資料將被永久刪除。",
+    "deleteAccountWarningGrace": "⚠️ 30 天後，您的所有資料將被永久刪除。此操作無法復原。",
     "finalConfirmationBodyGrace": "這將在30天後排定永久刪除你的帳號。",
     "accountDeletionScheduledTitle": "刪除已排定",
     "accountDeletionScheduledDescription": "你的帳號將在30天內被永久刪除。在此之前重新登入以取消刪除。"

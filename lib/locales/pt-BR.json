@@ -51,7 +51,7 @@
       "retryLogin": "Tentar novamente por e-mail",
       "useDifferentUser": "Entrar com outro usuário",
       "retryFailed": "Não foi possível alcançar o servidor. Verifique sua conexão e tente novamente.",
-      "switchBody": "Trocar de usuário irá excluir permanentemente todos os dados deste usuário neste dispositivo. Essa ação não pode ser desfeita.",
+      "switchBody": "Trocar de usuário irá excluir permanentemente todos os dados deste usuário neste dispositivo. Isso não pode ser desfeito.",
       "switchConfirm": "Sim, limpar dados e trocar de usuário",
       "switchCancel": "Cancelar"
     },
@@ -576,7 +576,7 @@
     "signingOut": "Saindo...",
     "signOut": "Sair",
     "deleteAccountConfirm": "Tem certeza de que deseja excluir permanentemente sua conta?",
-    "deleteAccountWarning": "⚠️ Esta ação não pode ser desfeita e removerá todos os seus dados.",
+    "deleteAccountWarning": "⚠️ Isso remove todos os seus dados. Isso não pode ser desfeito.",
     "continue": "Continuar",
     "finalConfirmation": "Confirmação Final",
     "finalConfirmationBody": "Isso excluirá permanentemente todos os seus dados.",
@@ -598,7 +598,7 @@
     "faq": "Perguntas frequentes",
     "reportBug": "Relatar um bug",
     "deleteAccountConfirmGrace": "Sua conta será agendada para exclusão, com um período de graça de 30 dias. Entre novamente nos próximos 30 dias e a exclusão é automaticamente cancelada.",
-    "deleteAccountWarningGrace": "Após 30 dias, isto não pode ser desfeito e todos os seus dados são removidos permanentemente.",
+    "deleteAccountWarningGrace": "⚠️ Após 30 dias, todos os seus dados são removidos permanentemente. Isso não pode ser desfeito.",
     "finalConfirmationBodyGrace": "Isto agenda sua conta para exclusão permanente em 30 dias.",
     "accountDeletionScheduledTitle": "Exclusão Agendada",
     "accountDeletionScheduledDescription": "Sua conta será permanentemente excluída em 30 dias. Entre novamente antes disso para cancelar a exclusão."

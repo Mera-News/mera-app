@@ -576,7 +576,7 @@
     "signingOut": "サインアウト中...",
     "signOut": "サインアウト",
     "deleteAccountConfirm": "アカウントを完全に削除してもよろしいですか？",
-    "deleteAccountWarning": "⚠️ この操作は元に戻せず、すべてのデータが削除されます。",
+    "deleteAccountWarning": "⚠️ すべてのデータが削除されます。この操作は元に戻せません。",
     "continue": "続ける",
     "finalConfirmation": "最終確認",
     "finalConfirmationBody": "これによりすべてのデータが完全に削除されます。",
@@ -598,7 +598,7 @@
     "faq": "よくある質問",
     "reportBug": "バグを報告",
     "deleteAccountConfirmGrace": "アカウントは削除予定になり、30日間の猶予期間があります。その30日以内に再度サインインしてください。削除は自動的にキャンセルされます。",
-    "deleteAccountWarningGrace": "⚠️ 30日後、これは元に戻せず、すべてのデータは永久に削除されます。",
+    "deleteAccountWarningGrace": "⚠️ 30日後、すべてのデータは完全に削除されます。この操作は元に戻せません。",
     "finalConfirmationBodyGrace": "これは30日後のアカウントの永久削除をスケジュールします。",
     "accountDeletionScheduledTitle": "削除がスケジュールされました",
     "accountDeletionScheduledDescription": "アカウントは30日後に永久削除されます。その前に再度サインインして削除をキャンセルしてください。"

@@ -576,7 +576,7 @@
     "signingOut": "Uitloggen...",
     "signOut": "Uitloggen",
     "deleteAccountConfirm": "Weet je zeker dat je je account permanent wilt verwijderen?",
-    "deleteAccountWarning": "⚠️ Deze actie kan niet ongedaan worden gemaakt en verwijdert al je gegevens.",
+    "deleteAccountWarning": "⚠️ Hiermee worden al je gegevens verwijderd. Dit kan niet ongedaan worden gemaakt.",
     "continue": "Doorgaan",
     "finalConfirmation": "Laatste bevestiging",
     "finalConfirmationBody": "Dit verwijdert al je gegevens permanent.",
@@ -598,7 +598,7 @@
     "faq": "FAQ",
     "reportBug": "Een bug melden",
     "deleteAccountConfirmGrace": "Je account wordt voor verwijdering ingepland met een karenstermijn van 30 dagen. Meld je binnen deze 30 dagen opnieuw aan en de verwijdering wordt automatisch geannuleerd.",
-    "deleteAccountWarningGrace": "Waarschuwing: na 30 dagen kan dit niet meer ongedaan worden gemaakt en worden al je gegevens permanent verwijderd.",
+    "deleteAccountWarningGrace": "⚠️ Na 30 dagen worden al je gegevens permanent verwijderd. Dit kan niet ongedaan worden gemaakt.",
     "finalConfirmationBodyGrace": "Dit plant je account voor permanente verwijdering over 30 dagen in.",
     "accountDeletionScheduledTitle": "Verwijdering gepland",
     "accountDeletionScheduledDescription": "Je account wordt permanent verwijderd over 30 dagen. Meld je aan voordat dat gebeurt om de verwijdering te annuleren."

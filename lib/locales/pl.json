@@ -51,7 +51,7 @@
       "retryLogin": "Ponów logowanie przez e-mail",
       "useDifferentUser": "Zaloguj się jako inny użytkownik",
       "retryFailed": "Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.",
-      "switchBody": "Zmiana użytkownika spowoduje trwałe usunięcie wszystkich danych tego użytkownika z tego urządzenia. Tej operacji nie można cofnąć.",
+      "switchBody": "Zmiana użytkownika spowoduje trwałe usunięcie wszystkich danych tego użytkownika z tego urządzenia. Nie można tego cofnąć.",
       "switchConfirm": "Tak, wyczyść dane i zmień użytkownika",
       "switchCancel": "Anuluj"
     },
@@ -588,7 +588,7 @@
     "signingOut": "Wylogowywanie...",
     "signOut": "Wyloguj się",
     "deleteAccountConfirm": "Czy na pewno chcesz trwale usunąć swoje konto?",
-    "deleteAccountWarning": "⚠️ Tej operacji nie można cofnąć i spowoduje ona usunięcie wszystkich Twoich danych.",
+    "deleteAccountWarning": "⚠️ Spowoduje to usunięcie wszystkich Twoich danych. Nie można tego cofnąć.",
     "continue": "Kontynuuj",
     "finalConfirmation": "Ostateczne potwierdzenie",
     "finalConfirmationBody": "Spowoduje to trwałe usunięcie wszystkich Twoich danych.",
@@ -610,7 +610,7 @@
     "faq": "FAQ",
     "reportBug": "Zgłoś błąd",
     "deleteAccountConfirmGrace": "Twoje konto będzie zaplanowane do usunięcia z 30-dniowym okresem karencji. Zaloguj się ponownie w ciągu tych 30 dni i usunięcie zostanie automatycznie anulowane.",
-    "deleteAccountWarningGrace": "⚠️ Po upływie 30 dni nie można tego cofnąć i wszystkie Twoje dane zostaną trwale usunięte.",
+    "deleteAccountWarningGrace": "⚠️ Po upływie 30 dni wszystkie Twoje dane zostaną trwale usunięte. Nie można tego cofnąć.",
     "finalConfirmationBodyGrace": "To zaplanuje trwałe usunięcie Twojego konta za 30 dni.",
     "accountDeletionScheduledTitle": "Usuwanie zaplanowane",
     "accountDeletionScheduledDescription": "Twoje konto będzie trwale usunięte za 30 dni. Zaloguj się ponownie przed tym terminem, aby anulować usuwanie."

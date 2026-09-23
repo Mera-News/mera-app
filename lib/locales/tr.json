@@ -51,7 +51,7 @@
       "retryLogin": "E-posta ile girişi tekrar dene",
       "useDifferentUser": "Farklı bir kullanıcıyla giriş yap",
       "retryFailed": "Sunucuya ulaşılamıyor. Bağlantını kontrol edip tekrar dene.",
-      "switchBody": "Kullanıcı değiştirmek, bu kullanıcının bu cihazdaki tüm verilerini kalıcı olarak siler. Bu işlem geri alınamaz.",
+      "switchBody": "Kullanıcı değiştirmek, bu kullanıcının bu cihazdaki tüm verilerini kalıcı olarak siler. Bu geri alınamaz.",
       "switchConfirm": "Evet, verileri sil ve kullanıcı değiştir",
       "switchCancel": "İptal"
     },
@@ -576,7 +576,7 @@
     "signingOut": "Çıkış Yapılıyor...",
     "signOut": "Çıkış Yap",
     "deleteAccountConfirm": "Hesabını kalıcı olarak silmek istediğinden emin misin?",
-    "deleteAccountWarning": "⚠️ Bu işlem geri alınamaz ve tüm verilerini kaldıracaktır.",
+    "deleteAccountWarning": "⚠️ Bu, tüm verilerini kaldırır. Bu geri alınamaz.",
     "continue": "Devam Et",
     "finalConfirmation": "Son Onay",
     "finalConfirmationBody": "Bu, tüm verilerini kalıcı olarak silecektir.",
@@ -598,7 +598,7 @@
     "faq": "SSS",
     "reportBug": "Hata bildir",
     "deleteAccountConfirmGrace": "Hesabınız silme için planlanacak ve 30 günlük ödemeli dönem vardır. Bu 30 gün içinde tekrar giriş yapın ve silme otomatik olarak iptal edilir.",
-    "deleteAccountWarningGrace": "⚠️ 30 günden sonra bu geri alınamaz ve tüm verileriniz kalıcı olarak kaldırılır.",
+    "deleteAccountWarningGrace": "⚠️ 30 gün sonra tüm verilerin kalıcı olarak kaldırılır. Bu geri alınamaz.",
     "finalConfirmationBodyGrace": "Bu, hesabınızı 30 gün içinde kalıcı silme için planlar.",
     "accountDeletionScheduledTitle": "Silme Planlandı",
     "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek. Silmeyi iptal etmek için o zamandan önce tekrar giriş yapın."

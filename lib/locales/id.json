@@ -576,7 +576,7 @@
     "signingOut": "Sedang Keluar...",
     "signOut": "Keluar",
     "deleteAccountConfirm": "Apakah Anda yakin ingin menghapus akun Anda secara permanen?",
-    "deleteAccountWarning": "⚠️ Tindakan ini tidak dapat dibatalkan dan akan menghapus semua data Anda.",
+    "deleteAccountWarning": "⚠️ Ini akan menghapus semua data Anda. Tindakan ini tidak dapat dibatalkan.",
     "continue": "Lanjutkan",
     "finalConfirmation": "Konfirmasi Terakhir",
     "finalConfirmationBody": "Ini akan menghapus semua data Anda secara permanen.",
@@ -598,7 +598,7 @@
     "faq": "FAQ",
     "reportBug": "Laporkan Bug",
     "deleteAccountConfirmGrace": "Akun Anda akan dijadwalkan untuk penghapusan, dengan masa tenggang 30 hari. Masuk kembali dalam 30 hari tersebut dan penghapusan akan otomatis dibatalkan.",
-    "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, ini tidak dapat dibatalkan dan semua data Anda akan dihapus secara permanen.",
+    "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, semua data Anda dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.",
     "finalConfirmationBodyGrace": "Ini menjadwalkan akun Anda untuk penghapusan permanen dalam 30 hari.",
     "accountDeletionScheduledTitle": "Penghapusan Dijadwalkan",
     "accountDeletionScheduledDescription": "Akun Anda akan dihapus secara permanen dalam 30 hari. Masuk kembali sebelum saat itu untuk membatalkan penghapusan."

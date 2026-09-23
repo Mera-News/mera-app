@@ -51,7 +51,7 @@
       "retryLogin": "Erneut per E-Mail anmelden",
       "useDifferentUser": "Mit einem anderen Benutzer anmelden",
       "retryFailed": "Der Server war nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-      "switchBody": "Beim Wechsel des Benutzers werden alle Daten dieses Benutzers auf diesem Gerät dauerhaft gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden.",
+      "switchBody": "Beim Wechsel des Benutzers werden alle Daten dieses Benutzers auf diesem Gerät dauerhaft gelöscht. Das lässt sich nicht rückgängig machen.",
       "switchConfirm": "Ja, Daten löschen und Benutzer wechseln",
       "switchCancel": "Abbrechen"
     },
@@ -576,7 +576,7 @@
     "signingOut": "Wird abgemeldet...",
     "signOut": "Abmelden",
     "deleteAccountConfirm": "Möchten Sie Ihr Konto wirklich dauerhaft löschen?",
-    "deleteAccountWarning": "⚠️ Diese Aktion kann nicht rückgängig gemacht werden und entfernt alle Ihre Daten.",
+    "deleteAccountWarning": "⚠️ Dadurch werden alle deine Daten entfernt. Das lässt sich nicht rückgängig machen.",
     "continue": "Weiter",
     "finalConfirmation": "Letzte Bestätigung",
     "finalConfirmationBody": "Dadurch werden alle Ihre Daten dauerhaft gelöscht.",
@@ -598,7 +598,7 @@
     "faq": "FAQ",
     "reportBug": "Fehler melden",
     "deleteAccountConfirmGrace": "Dein Konto wird zum Löschen eingeplant, mit einer 30-Tage-Kulanzfrist. Melde dich innerhalb dieser 30 Tage erneut an und das Löschen wird automatisch abgebrochen.",
-    "deleteAccountWarningGrace": "Warnung: Nach 30 Tagen kann dies nicht mehr rückgängig gemacht werden und alle deine Daten werden permanent entfernt.",
+    "deleteAccountWarningGrace": "⚠️ Nach 30 Tagen werden alle deine Daten endgültig entfernt. Das lässt sich nicht rückgängig machen.",
     "finalConfirmationBodyGrace": "Dies plant dein Konto zur permanenten Löschung in 30 Tagen.",
     "accountDeletionScheduledTitle": "Löschung geplant",
     "accountDeletionScheduledDescription": "Dein Konto wird in 30 Tagen permanent gelöscht. Melde dich vorher erneut an, um die Löschung abzubrechen."
