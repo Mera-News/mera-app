@@ -368,6 +368,8 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   // "Proposed changes".
   const isTrackProposal =
     proposal.actions.length > 0 && proposal.actions.every((a) => a.type === 'track_story');
+  /** Every row is the same kind, so the title already names it. */
+  const allSameKind = isTrackProposal;
 
   // A "fact-check a claim" proposal (every action is fact_check_claim, single
   // typed claim or 3–4 extracted ones) gets its own header wording and icon, for
@@ -441,7 +443,9 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
 
       {chooseOne && (
         <Text size="xs" style={styles.hint}>
-          {t('articleFeedback.chooseOneHint', { defaultValue: 'Pick one option' })}
+          {isTrackProposal
+            ? t('floatingChat.trackChooseHint')
+            : t('articleFeedback.chooseOneHint', { defaultValue: 'Pick one option' })}
         </Text>
       )}
 
@@ -467,6 +471,11 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
       >
         {proposal.actions.map((action, idx) => {
           const row = actionToRow(action);
+          // The category line says what an option IS. When every option is the
+          // same kind (three "Follow story" rows), the title already says it,
+          // and repeating it on each row buried the part the reader picks
+          // between (audit F34).
+          const showLabel = !allSameKind;
           const selected = chooseOne && idx === selectedIndex;
           const rowIcon: keyof typeof MaterialIcons.glyphMap = chooseOne
             ? selected
@@ -477,11 +486,13 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
             <>
               <MaterialIcons name={rowIcon} size={16} color={ACCENT} style={styles.actionIcon} />
               <View style={styles.actionBody}>
-                <Text size="xs" bold style={styles.actionLabel}>
-                  {row.labelDefault
-                    ? t(row.labelKey as TKey, { defaultValue: row.labelDefault })
-                    : t(row.labelKey as TKey)}
-                </Text>
+                {showLabel && (
+                  <Text size="xs" bold style={styles.actionLabel}>
+                    {row.labelDefault
+                      ? t(row.labelKey as TKey, { defaultValue: row.labelDefault })
+                      : t(row.labelKey as TKey)}
+                  </Text>
+                )}
                 {row.heading &&
                   (row.translateHeading ? (
                     <TranslatableDynamic

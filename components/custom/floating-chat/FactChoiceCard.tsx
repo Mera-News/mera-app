@@ -27,6 +27,7 @@ import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getByFact } from '@/lib/database/services/topic-service';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
+import { attributeKey, isCombinedOriginFact, sameAttributeKey } from '@/lib/mera-harness';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
@@ -107,9 +108,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
    * it can name the target: a fast tapper would otherwise wipe a fact and its
    * topics without ever seeing which.
    */
-  const [replaces, setReplaces] = useState<{ statement: string; topicCount: number } | null>(
-    null,
-  );
+  const [replaces, setReplaces] = useState<
+    { statement: string; topicCount: number; attribute: string | null } | null
+  >(null);
   const [replacesFailed, setReplacesFailed] = useState(false);
 
   useEffect(() => {
@@ -133,6 +134,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
         setReplaces({
           statement: target.statement,
           topicCount: topics.filter((t) => t.status === 'active').length,
+          attribute: target.questionnaireAttribute ?? null,
         });
       } catch {
         if (!cancelled) setReplacesFailed(true);
@@ -150,6 +152,25 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   const isReplace = replacesFactId !== null;
   const acceptBlocked = isReplace && replaces === null;
 
+  /**
+   * KEEP BOTH (owner ask N17): offered only when both facts can be true at
+   * once, i.e. they sit under DIFFERENT attribute keys (where someone is from
+   * next to where they live). Two facts under the same key contradict each
+   * other (two current homes), and a combined origin-and-home fact being split
+   * is the thing being fixed, so neither gets the option. Decided from the
+   * target the card has already read, so it is never offered before the card
+   * can name what it would keep.
+   */
+  const canKeepBoth =
+    isReplace
+    && replaces !== null
+    // Both keys KNOWN and different. An unknown key says nothing about
+    // whether the two facts can both be true.
+    && attributeKey(replaces.attribute) !== ''
+    && attributeKey(questionnaireAttribute) !== ''
+    && !sameAttributeKey(replaces.attribute, questionnaireAttribute)
+    && !isCombinedOriginFact(replaces.attribute);
+
   // `dismissed` and the derived pending/saved split come from the DERIVER, which
   // reads this group's own slot. This component deliberately no longer decides
   // "am I answered" from the presence of a value at `resultKey`: that check was
@@ -164,8 +185,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     if (node !== null) AccessibilityInfo.setAccessibilityFocus(node);
   };
 
-  const handleAdd = async () => {
+  const handleAdd = (mode: 'replace-or-add' | 'keep-both' = 'replace-or-add') => async () => {
     if (busy || stale || dismissed || acceptBlocked) return;
+    if (mode === 'keep-both' && !canKeepBoth) return;
     setBusy(true);
     void hapticLight();
     try {
@@ -177,8 +199,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           // residence fact. Dropping it here would silently strip `userLocation`
           // from every future topic run.
           questionnaire: questionnaireAttribute ? { attribute: questionnaireAttribute } : undefined,
-          // ONE transaction in fact-commit, never delete-then-add.
-          ...(replacesFactId ? { replaces: replacesFactId } : {}),
+          // ONE transaction in fact-commit, never delete-then-add. Keep both
+          // is a plain add: the old fact and its topics stay.
+          ...(replacesFactId && mode === 'replace-or-add' ? { replaces: replacesFactId } : {}),
           // The route the chat turn already chose, so topic generation runs
           // this fact's own guideline instead of the shipped one-size prompt.
           ...(topicSkillId ? { skillId: topicSkillId } : {}),
@@ -270,7 +293,13 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           color={ACCENT}
         />
         <Text size="sm" bold style={styles.title}>
-          {single ? t('factChoice.titleSingle') : t('factChoice.titleChoose')}
+          {isReplace
+            ? canKeepBoth
+              ? t('factChoice.titleAlsoAdd')
+              : t('factChoice.titleReplace')
+            : single
+              ? t('factChoice.titleSingle')
+              : t('factChoice.titleChoose')}
         </Text>
       </View>
 
@@ -347,6 +376,47 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
         <Text size="xs" style={styles.settledSub}>
           {t('factChoice.expired')}
         </Text>
+      ) : isReplace ? (
+        // STACKED, so German-length labels never squeeze. The one filled
+        // (accent) button is the safe choice when it exists: Keep both.
+        // Replace is outlined in the destructive tint; Skip is plain text.
+        <View style={styles.buttonStack}>
+          {canKeepBoth && (
+            <Button
+              testID={`fact-choice-keep-both-${groupIndex}`}
+              onPress={handleAdd('keep-both')}
+              isDisabled={busy}
+              className="rounded-full bg-primary-400"
+              size="sm"
+            >
+              <ButtonText className="text-white text-sm">{t('factChoice.keepBoth')}</ButtonText>
+            </Button>
+          )}
+          <Button
+            testID={`fact-choice-add-${groupIndex}`}
+            onPress={handleAdd('replace-or-add')}
+            isDisabled={busy || acceptBlocked}
+            className="rounded-full bg-transparent border border-error-400"
+            size="sm"
+          >
+            <ButtonText className="text-sm" style={styles.replaceButtonText}>
+              {t('factChoice.replace')}
+            </ButtonText>
+          </Button>
+          <Pressable
+            testID={`fact-choice-dismiss-${groupIndex}`}
+            onPress={handleDismiss}
+            disabled={busy}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: busy }}
+            style={styles.skipText}
+          >
+            <Text size="sm" style={styles.skipLabel}>
+              {t('factChoice.dismiss')}
+            </Text>
+          </Pressable>
+        </View>
       ) : (
         <View style={styles.buttonRow}>
           <Button
@@ -360,14 +430,12 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           </Button>
           <Button
             testID={`fact-choice-add-${groupIndex}`}
-            onPress={handleAdd}
+            onPress={handleAdd('replace-or-add')}
             isDisabled={busy || acceptBlocked}
             className="flex-1 rounded-full bg-primary-400"
             size="sm"
           >
-            <ButtonText className="text-white text-sm">
-              {isReplace ? t('factChoice.replace') : t('factChoice.add')}
-            </ButtonText>
+            <ButtonText className="text-white text-sm">{t('factChoice.add')}</ButtonText>
           </Button>
         </View>
       )}
@@ -430,6 +498,10 @@ const styles = StyleSheet.create({
   },
   optionText: { flex: 1, color: 'rgb(210, 210, 210)' },
   buttonRow: { flexDirection: 'row', gap: 10, marginTop: 2 },
+  buttonStack: { gap: 8, marginTop: 2 },
+  replaceButtonText: { color: DESTRUCTIVE },
+  skipText: { alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 16, minHeight: 44, justifyContent: 'center' },
+  skipLabel: { color: 'rgb(200, 200, 200)' },
 });
 
 export default FactChoiceCard;

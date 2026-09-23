@@ -181,3 +181,14 @@ describe('ProposalCard filter rows', () => {
     expect(queryByText('football')).not.toBeNull();
   });
 });
+
+// F34: the track card says what to do in plain words, and does not repeat
+// "Follow story" over every option the title already names.
+describe('ProposalCard track copy', () => {
+  it('asks the reader to choose what to follow, once', () => {
+    const { queryByText, queryAllByText } = render(<ProposalCard proposal={trackProposal} isLast />);
+    expect(queryByText('floatingChat.trackChooseHint')).not.toBeNull();
+    expect(queryByText('articleFeedback.chooseOneHint')).toBeNull();
+    expect(queryAllByText('trackedStories.trackAction')).toHaveLength(0);
+  });
+});

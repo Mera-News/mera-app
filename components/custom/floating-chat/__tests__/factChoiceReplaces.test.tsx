@@ -57,7 +57,7 @@ jest.mock('@/lib/chat-tools/fact-commit', () => ({
 }));
 jest.mock('../fact-choice-actions', () => ({ resolveGroup: jest.fn() }));
 
-let mockFacts: { id: string; statement: string }[] = [];
+let mockFacts: { id: string; statement: string; questionnaireAttribute?: string }[] = [];
 let mockTopics: { id: string; status: string }[] = [];
 let mockFactsThrows = false;
 jest.mock('@/lib/database/services/fact-service', () => ({
@@ -180,5 +180,55 @@ describe('an ordinary ADD group is untouched', () => {
     expect(queryByTestId('fact-choice-replaces-0')).toBeNull();
     expect(queryByText('factChoice.replacesNoUndo')).toBeNull();
     expect(getByTestId('fact-choice-add-0').props.accessibilityState.disabled).toBe(false);
+  });
+});
+
+// ===========================================================================
+// N17: "Keep both", offered only when both facts can be true at once.
+// ===========================================================================
+describe('Keep both', () => {
+  const HOME = 'location: neighborhood/area, city, and country (preserve specifics)';
+  const ORIGIN = 'background: country of origin';
+
+  it('is offered, and leads, when the two facts sit under different keys', async () => {
+    mockFacts = [{ id: 'old-1', statement: 'Lives in Nieuw-West, Amsterdam', questionnaireAttribute: HOME }];
+    const { getByTestId, findByText } = render(
+      <FactChoiceCard {...props} options={['Expat from India']} questionnaireAttribute={ORIGIN} replacesFactId="old-1" />,
+    );
+    expect(await findByText('factChoice.titleAlsoAdd')).toBeTruthy();
+    expect(getByTestId('fact-choice-keep-both-0')).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(getByTestId('fact-choice-keep-both-0'));
+    });
+    // A plain add: the old fact and its topics stay.
+    expect(mockCommit).toHaveBeenCalledWith([
+      expect.not.objectContaining({ replaces: expect.anything() }),
+    ]);
+  });
+
+  it('is not offered for a true contradiction under the same key', async () => {
+    mockFacts = [{ id: 'old-1', statement: 'Lives in Amsterdam', questionnaireAttribute: HOME }];
+    const { queryByTestId, findByText } = render(
+      <FactChoiceCard {...props} options={['Lives in Berlin']} questionnaireAttribute={HOME} replacesFactId="old-1" />,
+    );
+    expect(await findByText('factChoice.titleReplace')).toBeTruthy();
+    expect(queryByTestId('fact-choice-keep-both-0')).toBeNull();
+  });
+
+  it('is not offered when the old fact is a combined one being split', async () => {
+    mockFacts = [{ id: 'old-1', statement: 'Expat from India living in Amsterdam', questionnaireAttribute: 'background: origin and current residence' }];
+    const { queryByTestId, findByText } = render(
+      <FactChoiceCard {...props} options={['Expat from India']} questionnaireAttribute={ORIGIN} replacesFactId="old-1" />,
+    );
+    expect(await findByText('Expat from India living in Amsterdam')).toBeTruthy();
+    expect(queryByTestId('fact-choice-keep-both-0')).toBeNull();
+  });
+
+  it('is not offered before the card can name the fact it would keep', () => {
+    mockFacts = [{ id: 'old-1', statement: 'Lives in Amsterdam', questionnaireAttribute: HOME }];
+    const { queryByTestId } = render(
+      <FactChoiceCard {...props} options={['Expat from India']} questionnaireAttribute={ORIGIN} replacesFactId="old-1" />,
+    );
+    expect(queryByTestId('fact-choice-keep-both-0')).toBeNull();
   });
 });

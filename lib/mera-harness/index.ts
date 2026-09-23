@@ -32,6 +32,11 @@ export { createAgentTurnState } from './core/types';
 // single-shot agents). Same rule the loop applies to its own replies.
 export { replaceClauseDashes } from './core/prose';
 
+// The replacement card decides whether "Keep both" makes sense from the two
+// facts' attribute keys, with the same helpers the loop uses to gate a replace.
+export { attributeKey, sameAttributeKey } from './core/fact-subject';
+export { isCombinedOriginFact } from './core/combined-fact';
+
 export {
   MAX_AGENT_LEGS,
   MAX_FACTS_IN_CONTEXT,
