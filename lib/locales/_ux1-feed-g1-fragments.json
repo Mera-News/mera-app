@@ -1,0 +1,323 @@
+{
+  "_comment": "ux1 P1 (feed scout, release group G1: stability and waiting states). feed.reasonUnavailable replaces the endless reason placeholder after 90s; feed.loadingA11y is announced once while the Feed skeleton shows; feed.newStoriesPill sits above the list when stories arrive while the reader is scrolled down; feed.translatingCaption sits under a title that is still being translated; trackedStories.* are the story timeline load error and the delete/remove failure toasts; articleDetail.relatedLoadFailed is the related-list error row (retry uses common.retry). No em dashes.",
+  "ar": {
+    "feed": {
+      "reasonUnavailable": "لم تتمكن ميرا من كتابة ملاحظة لهذا المقال.",
+      "loadingA11y": "جارٍ تحميل موجزك",
+      "newStoriesPill": "أخبار جديدة",
+      "translatingCaption": "جارٍ الترجمة…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "تعذر تحميل هذه القصة. اسحب للأسفل للمحاولة مرة أخرى.",
+      "deleteFailed": "تعذر إيقاف متابعة هذه القصة. حاول مرة أخرى.",
+      "removeFailed": "تعذرت إزالة هذا المقال من القصة. حاول مرة أخرى."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "تعذر تحميل المقالات ذات الصلة."
+    }
+  },
+  "de": {
+    "feed": {
+      "reasonUnavailable": "Mera konnte hierzu keine Notiz schreiben.",
+      "loadingA11y": "Dein Feed wird geladen",
+      "newStoriesPill": "Neue Meldungen",
+      "translatingCaption": "Wird übersetzt…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Diese Geschichte konnte nicht geladen werden. Zum erneuten Versuch nach unten ziehen.",
+      "deleteFailed": "Das Entfolgen hat nicht geklappt. Versuch es noch einmal.",
+      "removeFailed": "Der Artikel konnte nicht aus der Geschichte entfernt werden. Versuch es noch einmal."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Ähnliche Artikel konnten nicht geladen werden."
+    }
+  },
+  "en": {
+    "feed": {
+      "reasonUnavailable": "Mera couldn't write a note for this one.",
+      "loadingA11y": "Loading your feed",
+      "newStoriesPill": "New stories",
+      "translatingCaption": "Translating…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Couldn't load this story. Pull down to try again.",
+      "deleteFailed": "Couldn't stop following this story. Try again.",
+      "removeFailed": "Couldn't remove this article from the story. Try again."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Couldn't load related articles."
+    }
+  },
+  "es": {
+    "feed": {
+      "reasonUnavailable": "Mera no pudo escribir una nota para este artículo.",
+      "loadingA11y": "Cargando tu feed",
+      "newStoriesPill": "Noticias nuevas",
+      "translatingCaption": "Traduciendo…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "No se pudo cargar esta historia. Desliza hacia abajo para volver a intentarlo.",
+      "deleteFailed": "No se pudo dejar de seguir esta historia. Inténtalo de nuevo.",
+      "removeFailed": "No se pudo quitar este artículo de la historia. Inténtalo de nuevo."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "No se pudieron cargar los artículos relacionados."
+    }
+  },
+  "fr": {
+    "feed": {
+      "reasonUnavailable": "Mera n'a pas pu rédiger de note pour cet article.",
+      "loadingA11y": "Chargement de votre fil",
+      "newStoriesPill": "Nouveaux articles",
+      "translatingCaption": "Traduction…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Impossible de charger ce sujet. Tirez vers le bas pour réessayer.",
+      "deleteFailed": "Impossible d'arrêter de suivre ce sujet. Réessayez.",
+      "removeFailed": "Impossible de retirer cet article du sujet. Réessayez."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Impossible de charger les articles associés."
+    }
+  },
+  "hi": {
+    "feed": {
+      "reasonUnavailable": "Mera इसके लिए नोट नहीं लिख सका।",
+      "loadingA11y": "आपकी फ़ीड लोड हो रही है",
+      "newStoriesPill": "नई खबरें",
+      "translatingCaption": "अनुवाद हो रहा है…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "यह खबर लोड नहीं हो सकी। फिर से कोशिश करने के लिए नीचे खींचें।",
+      "deleteFailed": "इस खबर को फ़ॉलो करना बंद नहीं हो सका। फिर से कोशिश करें।",
+      "removeFailed": "यह लेख खबर से हटाया नहीं जा सका। फिर से कोशिश करें।"
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "संबंधित लेख लोड नहीं हो सके।"
+    }
+  },
+  "id": {
+    "feed": {
+      "reasonUnavailable": "Mera tidak bisa menulis catatan untuk artikel ini.",
+      "loadingA11y": "Memuat feed kamu",
+      "newStoriesPill": "Berita baru",
+      "translatingCaption": "Menerjemahkan…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Tidak dapat memuat berita ini. Tarik ke bawah untuk mencoba lagi.",
+      "deleteFailed": "Tidak dapat berhenti mengikuti berita ini. Coba lagi.",
+      "removeFailed": "Tidak dapat menghapus artikel ini dari berita. Coba lagi."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Tidak dapat memuat artikel terkait."
+    }
+  },
+  "it": {
+    "feed": {
+      "reasonUnavailable": "Mera non è riuscita a scrivere una nota per questo articolo.",
+      "loadingA11y": "Caricamento del tuo feed",
+      "newStoriesPill": "Nuove notizie",
+      "translatingCaption": "Traduzione in corso…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Impossibile caricare questa storia. Trascina verso il basso per riprovare.",
+      "deleteFailed": "Impossibile smettere di seguire questa storia. Riprova.",
+      "removeFailed": "Impossibile rimuovere questo articolo dalla storia. Riprova."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Impossibile caricare gli articoli correlati."
+    }
+  },
+  "ja": {
+    "feed": {
+      "reasonUnavailable": "この記事のメモを作成できませんでした。",
+      "loadingA11y": "フィードを読み込んでいます",
+      "newStoriesPill": "新着記事",
+      "translatingCaption": "翻訳中…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "このストーリーを読み込めませんでした。下に引いてもう一度お試しください。",
+      "deleteFailed": "このストーリーのフォローを解除できませんでした。もう一度お試しください。",
+      "removeFailed": "この記事をストーリーから削除できませんでした。もう一度お試しください。"
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "関連記事を読み込めませんでした。"
+    }
+  },
+  "ko": {
+    "feed": {
+      "reasonUnavailable": "Mera가 이 기사에 대한 메모를 작성하지 못했어요.",
+      "loadingA11y": "피드를 불러오는 중",
+      "newStoriesPill": "새 소식",
+      "translatingCaption": "번역 중…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "이 스토리를 불러오지 못했어요. 아래로 당겨 다시 시도하세요.",
+      "deleteFailed": "이 스토리의 팔로우를 해제하지 못했어요. 다시 시도하세요.",
+      "removeFailed": "이 기사를 스토리에서 제거하지 못했어요. 다시 시도하세요."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "관련 기사를 불러오지 못했어요."
+    }
+  },
+  "nl": {
+    "feed": {
+      "reasonUnavailable": "Mera kon hier geen notitie bij schrijven.",
+      "loadingA11y": "Je feed wordt geladen",
+      "newStoriesPill": "Nieuwe berichten",
+      "translatingCaption": "Vertalen…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Dit verhaal kon niet worden geladen. Trek omlaag om het opnieuw te proberen.",
+      "deleteFailed": "Ontvolgen is niet gelukt. Probeer het opnieuw.",
+      "removeFailed": "Dit artikel kon niet uit het verhaal worden verwijderd. Probeer het opnieuw."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Gerelateerde artikelen konden niet worden geladen."
+    }
+  },
+  "pl": {
+    "feed": {
+      "reasonUnavailable": "Mera nie mogła napisać notatki do tego artykułu.",
+      "loadingA11y": "Wczytywanie Twojego kanału",
+      "newStoriesPill": "Nowe wiadomości",
+      "translatingCaption": "Tłumaczenie…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Nie udało się wczytać tej historii. Pociągnij w dół, aby spróbować ponownie.",
+      "deleteFailed": "Nie udało się przestać obserwować tej historii. Spróbuj ponownie.",
+      "removeFailed": "Nie udało się usunąć tego artykułu z historii. Spróbuj ponownie."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Nie udało się wczytać powiązanych artykułów."
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "reasonUnavailable": "A Mera não conseguiu escrever uma nota para este artigo.",
+      "loadingA11y": "Carregando seu feed",
+      "newStoriesPill": "Novas notícias",
+      "translatingCaption": "Traduzindo…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Não foi possível carregar esta história. Puxe para baixo para tentar de novo.",
+      "deleteFailed": "Não foi possível deixar de seguir esta história. Tente de novo.",
+      "removeFailed": "Não foi possível remover este artigo da história. Tente de novo."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Não foi possível carregar os artigos relacionados."
+    }
+  },
+  "ru": {
+    "feed": {
+      "reasonUnavailable": "Mera не смогла написать заметку к этой статье.",
+      "loadingA11y": "Загружаем вашу ленту",
+      "newStoriesPill": "Новые статьи",
+      "translatingCaption": "Перевод…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Не удалось загрузить эту историю. Потяните вниз, чтобы повторить.",
+      "deleteFailed": "Не удалось отписаться от этой истории. Попробуйте ещё раз.",
+      "removeFailed": "Не удалось убрать эту статью из истории. Попробуйте ещё раз."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Не удалось загрузить похожие статьи."
+    }
+  },
+  "th": {
+    "feed": {
+      "reasonUnavailable": "Mera เขียนบันทึกสำหรับบทความนี้ไม่ได้",
+      "loadingA11y": "กำลังโหลดฟีดของคุณ",
+      "newStoriesPill": "ข่าวใหม่",
+      "translatingCaption": "กำลังแปล…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "โหลดเรื่องนี้ไม่ได้ ดึงลงเพื่อลองอีกครั้ง",
+      "deleteFailed": "เลิกติดตามเรื่องนี้ไม่ได้ ลองอีกครั้ง",
+      "removeFailed": "นำบทความนี้ออกจากเรื่องไม่ได้ ลองอีกครั้ง"
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "โหลดบทความที่เกี่ยวข้องไม่ได้"
+    }
+  },
+  "tr": {
+    "feed": {
+      "reasonUnavailable": "Mera bu haber için not yazamadı.",
+      "loadingA11y": "Akışın yükleniyor",
+      "newStoriesPill": "Yeni haberler",
+      "translatingCaption": "Çevriliyor…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Bu haber yüklenemedi. Tekrar denemek için aşağı çekin.",
+      "deleteFailed": "Bu haberin takibi bırakılamadı. Tekrar dene.",
+      "removeFailed": "Bu makale haberden kaldırılamadı. Tekrar dene."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "İlgili makaleler yüklenemedi."
+    }
+  },
+  "uk": {
+    "feed": {
+      "reasonUnavailable": "Mera не змогла написати нотатку до цієї статті.",
+      "loadingA11y": "Завантажуємо вашу стрічку",
+      "newStoriesPill": "Нові статті",
+      "translatingCaption": "Переклад…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Не вдалося завантажити цю історію. Потягніть униз, щоб повторити.",
+      "deleteFailed": "Не вдалося припинити стежити за цією історією. Спробуйте ще раз.",
+      "removeFailed": "Не вдалося прибрати цю статтю з історії. Спробуйте ще раз."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Не вдалося завантажити схожі статті."
+    }
+  },
+  "vi": {
+    "feed": {
+      "reasonUnavailable": "Mera không thể viết ghi chú cho bài này.",
+      "loadingA11y": "Đang tải bảng tin của bạn",
+      "newStoriesPill": "Tin mới",
+      "translatingCaption": "Đang dịch…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "Không tải được câu chuyện này. Kéo xuống để thử lại.",
+      "deleteFailed": "Không thể bỏ theo dõi câu chuyện này. Hãy thử lại.",
+      "removeFailed": "Không thể xóa bài này khỏi câu chuyện. Hãy thử lại."
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "Không tải được các bài liên quan."
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "reasonUnavailable": "Mera 未能为这篇文章写说明。",
+      "loadingA11y": "正在加载你的动态",
+      "newStoriesPill": "新文章",
+      "translatingCaption": "正在翻译…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "无法加载此报道。下拉即可重试。",
+      "deleteFailed": "无法取消关注此报道。请重试。",
+      "removeFailed": "无法将此文章从报道中移除。请重试。"
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "无法加载相关文章。"
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "reasonUnavailable": "Mera 無法為這篇文章撰寫說明。",
+      "loadingA11y": "正在載入你的動態",
+      "newStoriesPill": "新文章",
+      "translatingCaption": "正在翻譯…"
+    },
+    "trackedStories": {
+      "timelineLoadFailed": "無法載入此報導。下拉即可重試。",
+      "deleteFailed": "無法取消追蹤此報導。請再試一次。",
+      "removeFailed": "無法將此文章從報導中移除。請再試一次。"
+    },
+    "articleDetail": {
+      "relatedLoadFailed": "無法載入相關文章。"
+    }
+  }
+}
