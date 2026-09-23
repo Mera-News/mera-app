@@ -1,0 +1,703 @@
+{
+  "_comment": "ux1 P1 G2 (feed scout: shared article menu, detail CTA note, fact chip, related filters behind a flag, hygiene location conflict). trackedStories.trackAction and untrackAction are OVERWRITES: English moves to Follow naming (M12), every other locale keeps its current value, which already says follow. Splice with --allow-overwrite trackedStories.trackAction,trackedStories.untrackAction. No em dashes.",
+  "ar": {
+    "articleMenu": {
+      "openA11y": "المزيد من الإجراءات",
+      "title": "إجراءات المقال",
+      "askMera": "اسأل ميرا عن هذا",
+      "following": "تتابع هذه القصة",
+      "checkFacts": "البحث عن تدقيقات الحقائق",
+      "openOn": "فتح في {{source}}",
+      "openInTranslate": "فتح في ترجمة Google",
+      "fewerFrom": "أقل من {{source}}",
+      "fewerFromDone": "ستشاهد محتوى أقل من {{source}}.",
+      "undo": "تراجع",
+      "reportBug": "الإبلاغ عن خطأ",
+      "actionFailed": "لم ينجح ذلك. حاول مرة أخرى."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "بعض المواقع تحظر ترجمة Google. إذا لم تُفتح الصفحة، افتحها على الموقع."
+    },
+    "factChip": {
+      "label": "من ملفك: {{label}}",
+      "openA11y": "قصص عن {{label}}"
+    },
+    "related": {
+      "allCountries": "كل البلدان",
+      "allLanguages": "كل اللغات",
+      "noMatches": "لا توجد مقالات ذات صلة تطابق هذه الفلاتر."
+    },
+    "hygiene": {
+      "effectLocationConflict": "يحتفظ بالمكان الأحدث ويزيل الأقدم."
+    },
+    "trackedStories": {
+      "trackAction": "متابعة القصة",
+      "untrackAction": "إلغاء متابعة القصة"
+    }
+  },
+  "de": {
+    "articleMenu": {
+      "openA11y": "Weitere Aktionen",
+      "title": "Artikelaktionen",
+      "askMera": "Mera dazu fragen",
+      "following": "Du folgst dieser Geschichte",
+      "checkFacts": "Nach Faktenchecks suchen",
+      "openOn": "Auf {{source}} öffnen",
+      "openInTranslate": "In Google Übersetzer öffnen",
+      "fewerFrom": "Weniger von {{source}}",
+      "fewerFromDone": "Du siehst weniger von {{source}}.",
+      "undo": "Rückgängig",
+      "reportBug": "Fehler melden",
+      "actionFailed": "Das hat nicht geklappt. Versuch es noch einmal."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Manche Seiten sperren Google Übersetzer. Wenn die Seite nicht lädt, öffne sie direkt auf der Website."
+    },
+    "factChip": {
+      "label": "Aus deinem Profil: {{label}}",
+      "openA11y": "Meldungen zu {{label}}"
+    },
+    "related": {
+      "allCountries": "Alle Länder",
+      "allLanguages": "Alle Sprachen",
+      "noMatches": "Keine ähnlichen Artikel passen zu diesen Filtern."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Behält den neueren Ort und entfernt den älteren."
+    },
+    "trackedStories": {
+      "trackAction": "Geschichte folgen",
+      "untrackAction": "Nicht mehr folgen"
+    }
+  },
+  "en": {
+    "articleMenu": {
+      "openA11y": "More actions",
+      "title": "Article actions",
+      "askMera": "Ask Mera about this",
+      "following": "Following this story",
+      "checkFacts": "Check for fact checks",
+      "openOn": "Open on {{source}}",
+      "openInTranslate": "Open in Google Translate",
+      "fewerFrom": "Fewer from {{source}}",
+      "fewerFromDone": "You'll see less from {{source}}.",
+      "undo": "Undo",
+      "reportBug": "Report a bug",
+      "actionFailed": "That didn't work. Try again."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Some sites block Google Translate. If the page doesn't load, open it on the site."
+    },
+    "factChip": {
+      "label": "From your profile: {{label}}",
+      "openA11y": "Stories about {{label}}"
+    },
+    "related": {
+      "allCountries": "All countries",
+      "allLanguages": "All languages",
+      "noMatches": "No related articles match these filters."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Keeps the newer place and removes the older one."
+    },
+    "trackedStories": {
+      "trackAction": "Follow story",
+      "untrackAction": "Stop following"
+    }
+  },
+  "es": {
+    "articleMenu": {
+      "openA11y": "Más acciones",
+      "title": "Acciones del artículo",
+      "askMera": "Preguntar a Mera sobre esto",
+      "following": "Siguiendo esta historia",
+      "checkFacts": "Buscar verificaciones",
+      "openOn": "Abrir en {{source}}",
+      "openInTranslate": "Abrir en Google Translate",
+      "fewerFrom": "Menos de {{source}}",
+      "fewerFromDone": "Verás menos de {{source}}.",
+      "undo": "Deshacer",
+      "reportBug": "Informar de un error",
+      "actionFailed": "No funcionó. Inténtalo de nuevo."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Algunos sitios bloquean Google Translate. Si la página no carga, ábrela en el sitio."
+    },
+    "factChip": {
+      "label": "De tu perfil: {{label}}",
+      "openA11y": "Noticias sobre {{label}}"
+    },
+    "related": {
+      "allCountries": "Todos los países",
+      "allLanguages": "Todos los idiomas",
+      "noMatches": "Ningún artículo relacionado coincide con estos filtros."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Conserva el lugar más reciente y elimina el anterior."
+    },
+    "trackedStories": {
+      "trackAction": "Seguir historia",
+      "untrackAction": "Dejar de seguir"
+    }
+  },
+  "fr": {
+    "articleMenu": {
+      "openA11y": "Plus d'actions",
+      "title": "Actions sur l'article",
+      "askMera": "Demander à Mera",
+      "following": "Vous suivez ce sujet",
+      "checkFacts": "Chercher des vérifications",
+      "openOn": "Ouvrir sur {{source}}",
+      "openInTranslate": "Ouvrir dans Google Traduction",
+      "fewerFrom": "Moins de {{source}}",
+      "fewerFromDone": "Vous verrez moins de {{source}}.",
+      "undo": "Annuler",
+      "reportBug": "Signaler un bug",
+      "actionFailed": "Cela n'a pas fonctionné. Réessayez."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Certains sites bloquent Google Traduction. Si la page ne se charge pas, ouvrez-la sur le site."
+    },
+    "factChip": {
+      "label": "De votre profil : {{label}}",
+      "openA11y": "Articles sur {{label}}"
+    },
+    "related": {
+      "allCountries": "Tous les pays",
+      "allLanguages": "Toutes les langues",
+      "noMatches": "Aucun article associé ne correspond à ces filtres."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Garde le lieu le plus récent et supprime l'ancien."
+    },
+    "trackedStories": {
+      "trackAction": "Suivre l'actualité",
+      "untrackAction": "Ne plus suivre"
+    }
+  },
+  "hi": {
+    "articleMenu": {
+      "openA11y": "और कार्रवाइयां",
+      "title": "लेख कार्रवाइयां",
+      "askMera": "इसके बारे में Mera से पूछें",
+      "following": "यह खबर फ़ॉलो कर रहे हैं",
+      "checkFacts": "फ़ैक्ट चेक खोजें",
+      "openOn": "{{source}} पर खोलें",
+      "openInTranslate": "Google Translate में खोलें",
+      "fewerFrom": "{{source}} से कम",
+      "fewerFromDone": "आपको {{source}} से कम दिखेगा।",
+      "undo": "पहले जैसा करें",
+      "reportBug": "बग की रिपोर्ट करें",
+      "actionFailed": "यह नहीं हो पाया। फिर से कोशिश करें।"
+    },
+    "articleDetail": {
+      "translateBlockedNote": "कुछ साइटें Google Translate को ब्लॉक करती हैं। अगर पेज न खुले, तो उसे साइट पर खोलें।"
+    },
+    "factChip": {
+      "label": "आपकी प्रोफ़ाइल से: {{label}}",
+      "openA11y": "{{label}} से जुड़ी खबरें"
+    },
+    "related": {
+      "allCountries": "सभी देश",
+      "allLanguages": "सभी भाषाएं",
+      "noMatches": "इन फ़िल्टर से कोई संबंधित लेख मेल नहीं खाता।"
+    },
+    "hygiene": {
+      "effectLocationConflict": "नई जगह रखता है और पुरानी हटाता है।"
+    },
+    "trackedStories": {
+      "trackAction": "स्टोरी फ़ॉलो करें",
+      "untrackAction": "स्टोरी अनफ़ॉलो करें"
+    }
+  },
+  "id": {
+    "articleMenu": {
+      "openA11y": "Tindakan lain",
+      "title": "Tindakan artikel",
+      "askMera": "Tanya Mera soal ini",
+      "following": "Mengikuti berita ini",
+      "checkFacts": "Cari cek fakta",
+      "openOn": "Buka di {{source}}",
+      "openInTranslate": "Buka di Google Terjemahan",
+      "fewerFrom": "Lebih sedikit dari {{source}}",
+      "fewerFromDone": "Kamu akan melihat lebih sedikit dari {{source}}.",
+      "undo": "Urungkan",
+      "reportBug": "Laporkan bug",
+      "actionFailed": "Itu tidak berhasil. Coba lagi."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Beberapa situs memblokir Google Terjemahan. Jika halaman tidak termuat, buka di situsnya."
+    },
+    "factChip": {
+      "label": "Dari profilmu: {{label}}",
+      "openA11y": "Berita tentang {{label}}"
+    },
+    "related": {
+      "allCountries": "Semua negara",
+      "allLanguages": "Semua bahasa",
+      "noMatches": "Tidak ada artikel terkait yang cocok dengan filter ini."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Menyimpan tempat yang lebih baru dan menghapus yang lama."
+    },
+    "trackedStories": {
+      "trackAction": "Ikuti cerita",
+      "untrackAction": "Berhenti mengikuti cerita"
+    }
+  },
+  "it": {
+    "articleMenu": {
+      "openA11y": "Altre azioni",
+      "title": "Azioni sull'articolo",
+      "askMera": "Chiedi a Mera",
+      "following": "Stai seguendo questa storia",
+      "checkFacts": "Cerca verifiche dei fatti",
+      "openOn": "Apri su {{source}}",
+      "openInTranslate": "Apri in Google Traduttore",
+      "fewerFrom": "Meno da {{source}}",
+      "fewerFromDone": "Vedrai meno contenuti da {{source}}.",
+      "undo": "Annulla",
+      "reportBug": "Segnala un bug",
+      "actionFailed": "Non ha funzionato. Riprova."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Alcuni siti bloccano Google Traduttore. Se la pagina non si carica, aprila sul sito."
+    },
+    "factChip": {
+      "label": "Dal tuo profilo: {{label}}",
+      "openA11y": "Notizie su {{label}}"
+    },
+    "related": {
+      "allCountries": "Tutti i paesi",
+      "allLanguages": "Tutte le lingue",
+      "noMatches": "Nessun articolo correlato corrisponde a questi filtri."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Mantiene il luogo più recente e rimuove quello vecchio."
+    },
+    "trackedStories": {
+      "trackAction": "Segui storia",
+      "untrackAction": "Smetti di seguire"
+    }
+  },
+  "ja": {
+    "articleMenu": {
+      "openA11y": "その他の操作",
+      "title": "記事の操作",
+      "askMera": "Mera に聞く",
+      "following": "このストーリーをフォロー中",
+      "checkFacts": "ファクトチェックを探す",
+      "openOn": "{{source}} で開く",
+      "openInTranslate": "Google 翻訳で開く",
+      "fewerFrom": "{{source}} を減らす",
+      "fewerFromDone": "{{source}} の表示が減ります。",
+      "undo": "元に戻す",
+      "reportBug": "不具合を報告",
+      "actionFailed": "うまくいきませんでした。もう一度お試しください。"
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Google 翻訳をブロックするサイトがあります。ページが開かない場合はサイトで開いてください。"
+    },
+    "factChip": {
+      "label": "プロフィールから：{{label}}",
+      "openA11y": "{{label}} に関する記事"
+    },
+    "related": {
+      "allCountries": "すべての国",
+      "allLanguages": "すべての言語",
+      "noMatches": "このフィルターに合う関連記事はありません。"
+    },
+    "hygiene": {
+      "effectLocationConflict": "新しい場所を残し、古い場所を削除します。"
+    },
+    "trackedStories": {
+      "trackAction": "ストーリーをフォロー",
+      "untrackAction": "フォロー解除"
+    }
+  },
+  "ko": {
+    "articleMenu": {
+      "openA11y": "작업 더보기",
+      "title": "기사 작업",
+      "askMera": "Mera에게 물어보기",
+      "following": "이 스토리를 팔로우 중",
+      "checkFacts": "팩트체크 찾기",
+      "openOn": "{{source}}에서 열기",
+      "openInTranslate": "Google 번역에서 열기",
+      "fewerFrom": "{{source}} 줄이기",
+      "fewerFromDone": "{{source}}의 기사가 줄어들어요.",
+      "undo": "실행 취소",
+      "reportBug": "버그 신고",
+      "actionFailed": "실패했어요. 다시 시도하세요."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "일부 사이트는 Google 번역을 차단해요. 페이지가 열리지 않으면 사이트에서 여세요."
+    },
+    "factChip": {
+      "label": "내 프로필: {{label}}",
+      "openA11y": "{{label}} 관련 소식"
+    },
+    "related": {
+      "allCountries": "모든 국가",
+      "allLanguages": "모든 언어",
+      "noMatches": "이 필터에 맞는 관련 기사가 없어요."
+    },
+    "hygiene": {
+      "effectLocationConflict": "최신 장소를 유지하고 이전 장소를 삭제해요."
+    },
+    "trackedStories": {
+      "trackAction": "스토리 팔로우",
+      "untrackAction": "팔로우 취소"
+    }
+  },
+  "nl": {
+    "articleMenu": {
+      "openA11y": "Meer acties",
+      "title": "Artikelacties",
+      "askMera": "Vraag Mera hiernaar",
+      "following": "Je volgt dit verhaal",
+      "checkFacts": "Zoek naar factchecks",
+      "openOn": "Openen op {{source}}",
+      "openInTranslate": "Openen in Google Translate",
+      "fewerFrom": "Minder van {{source}}",
+      "fewerFromDone": "Je ziet minder van {{source}}.",
+      "undo": "Ongedaan maken",
+      "reportBug": "Bug melden",
+      "actionFailed": "Dat lukte niet. Probeer het opnieuw."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Sommige sites blokkeren Google Translate. Laadt de pagina niet, open hem dan op de site."
+    },
+    "factChip": {
+      "label": "Uit je profiel: {{label}}",
+      "openA11y": "Berichten over {{label}}"
+    },
+    "related": {
+      "allCountries": "Alle landen",
+      "allLanguages": "Alle talen",
+      "noMatches": "Geen gerelateerde artikelen passen bij deze filters."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Houdt de nieuwere plaats en verwijdert de oudere."
+    },
+    "trackedStories": {
+      "trackAction": "Verhaal volgen",
+      "untrackAction": "Verhaal niet meer volgen"
+    }
+  },
+  "pl": {
+    "articleMenu": {
+      "openA11y": "Więcej działań",
+      "title": "Działania dla artykułu",
+      "askMera": "Zapytaj Merę o to",
+      "following": "Śledzisz tę historię",
+      "checkFacts": "Sprawdź weryfikacje faktów",
+      "openOn": "Otwórz w {{source}}",
+      "openInTranslate": "Otwórz w Tłumaczu Google",
+      "fewerFrom": "Mniej z {{source}}",
+      "fewerFromDone": "Zobaczysz mniej z {{source}}.",
+      "undo": "Cofnij",
+      "reportBug": "Zgłoś błąd",
+      "actionFailed": "Nie udało się. Spróbuj ponownie."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Niektóre strony blokują Tłumacza Google. Jeśli strona się nie wczyta, otwórz ją w serwisie."
+    },
+    "factChip": {
+      "label": "Z Twojego profilu: {{label}}",
+      "openA11y": "Wiadomości o {{label}}"
+    },
+    "related": {
+      "allCountries": "Wszystkie kraje",
+      "allLanguages": "Wszystkie języki",
+      "noMatches": "Żaden powiązany artykuł nie pasuje do tych filtrów."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Zachowuje nowsze miejsce i usuwa starsze."
+    },
+    "trackedStories": {
+      "trackAction": "Śledź historię",
+      "untrackAction": "Przestań śledzić"
+    }
+  },
+  "pt-BR": {
+    "articleMenu": {
+      "openA11y": "Mais ações",
+      "title": "Ações do artigo",
+      "askMera": "Perguntar à Mera sobre isto",
+      "following": "Seguindo esta história",
+      "checkFacts": "Procurar checagens",
+      "openOn": "Abrir em {{source}}",
+      "openInTranslate": "Abrir no Google Tradutor",
+      "fewerFrom": "Menos de {{source}}",
+      "fewerFromDone": "Você verá menos de {{source}}.",
+      "undo": "Desfazer",
+      "reportBug": "Relatar um bug",
+      "actionFailed": "Não funcionou. Tente de novo."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Alguns sites bloqueiam o Google Tradutor. Se a página não carregar, abra no site."
+    },
+    "factChip": {
+      "label": "Do seu perfil: {{label}}",
+      "openA11y": "Notícias sobre {{label}}"
+    },
+    "related": {
+      "allCountries": "Todos os países",
+      "allLanguages": "Todos os idiomas",
+      "noMatches": "Nenhum artigo relacionado corresponde a esses filtros."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Mantém o lugar mais recente e remove o anterior."
+    },
+    "trackedStories": {
+      "trackAction": "Seguir história",
+      "untrackAction": "Deixar de seguir"
+    }
+  },
+  "ru": {
+    "articleMenu": {
+      "openA11y": "Другие действия",
+      "title": "Действия со статьёй",
+      "askMera": "Спросить Mera об этом",
+      "following": "Вы следите за этой историей",
+      "checkFacts": "Найти проверки фактов",
+      "openOn": "Открыть на {{source}}",
+      "openInTranslate": "Открыть в Google Переводчике",
+      "fewerFrom": "Меньше от {{source}}",
+      "fewerFromDone": "Материалов от {{source}} станет меньше.",
+      "undo": "Отменить",
+      "reportBug": "Сообщить об ошибке",
+      "actionFailed": "Не получилось. Попробуйте ещё раз."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Некоторые сайты блокируют Google Переводчик. Если страница не открывается, откройте её на сайте."
+    },
+    "factChip": {
+      "label": "Из вашего профиля: {{label}}",
+      "openA11y": "Статьи о {{label}}"
+    },
+    "related": {
+      "allCountries": "Все страны",
+      "allLanguages": "Все языки",
+      "noMatches": "Нет похожих статей по этим фильтрам."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Оставляет более новое место и удаляет старое."
+    },
+    "trackedStories": {
+      "trackAction": "Отслеживать историю",
+      "untrackAction": "Перестать отслеживать"
+    }
+  },
+  "th": {
+    "articleMenu": {
+      "openA11y": "การทำงานเพิ่มเติม",
+      "title": "การทำงานกับบทความ",
+      "askMera": "ถาม Mera เกี่ยวกับเรื่องนี้",
+      "following": "กำลังติดตามเรื่องนี้",
+      "checkFacts": "ค้นหาการตรวจสอบข้อเท็จจริง",
+      "openOn": "เปิดบน {{source}}",
+      "openInTranslate": "เปิดใน Google แปลภาษา",
+      "fewerFrom": "ลด {{source}}",
+      "fewerFromDone": "คุณจะเห็น {{source}} น้อยลง",
+      "undo": "เลิกทำ",
+      "reportBug": "รายงานข้อบกพร่อง",
+      "actionFailed": "ทำไม่สำเร็จ ลองอีกครั้ง"
+    },
+    "articleDetail": {
+      "translateBlockedNote": "บางเว็บไซต์บล็อก Google แปลภาษา หากหน้าไม่โหลด ให้เปิดบนเว็บไซต์"
+    },
+    "factChip": {
+      "label": "จากโปรไฟล์ของคุณ: {{label}}",
+      "openA11y": "ข่าวเกี่ยวกับ {{label}}"
+    },
+    "related": {
+      "allCountries": "ทุกประเทศ",
+      "allLanguages": "ทุกภาษา",
+      "noMatches": "ไม่มีบทความที่เกี่ยวข้องตรงกับตัวกรองนี้"
+    },
+    "hygiene": {
+      "effectLocationConflict": "เก็บสถานที่ที่ใหม่กว่าและลบที่เก่ากว่า"
+    },
+    "trackedStories": {
+      "trackAction": "ติดตามเรื่องราว",
+      "untrackAction": "เลิกติดตามเรื่องราว"
+    }
+  },
+  "tr": {
+    "articleMenu": {
+      "openA11y": "Diğer işlemler",
+      "title": "Makale işlemleri",
+      "askMera": "Mera'ya sor",
+      "following": "Bu haberi takip ediyorsun",
+      "checkFacts": "Doğrulama ara",
+      "openOn": "{{source}} sitesinde aç",
+      "openInTranslate": "Google Çeviri'de aç",
+      "fewerFrom": "{{source}} kaynağından daha az",
+      "fewerFromDone": "{{source}} kaynağından daha az göreceksin.",
+      "undo": "Geri al",
+      "reportBug": "Hata bildir",
+      "actionFailed": "Olmadı. Tekrar dene."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Bazı siteler Google Çeviri'yi engeller. Sayfa açılmazsa siteden aç."
+    },
+    "factChip": {
+      "label": "Profilinden: {{label}}",
+      "openA11y": "{{label}} hakkında haberler"
+    },
+    "related": {
+      "allCountries": "Tüm ülkeler",
+      "allLanguages": "Tüm diller",
+      "noMatches": "Bu filtrelere uyan ilgili makale yok."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Yeni yeri tutar, eskisini kaldırır."
+    },
+    "trackedStories": {
+      "trackAction": "Haberi takip et",
+      "untrackAction": "Haberi takipten çık"
+    }
+  },
+  "uk": {
+    "articleMenu": {
+      "openA11y": "Інші дії",
+      "title": "Дії зі статтею",
+      "askMera": "Запитати Mera про це",
+      "following": "Ви стежите за цією історією",
+      "checkFacts": "Знайти перевірки фактів",
+      "openOn": "Відкрити на {{source}}",
+      "openInTranslate": "Відкрити в Google Перекладачі",
+      "fewerFrom": "Менше від {{source}}",
+      "fewerFromDone": "Матеріалів від {{source}} стане менше.",
+      "undo": "Скасувати",
+      "reportBug": "Повідомити про помилку",
+      "actionFailed": "Не вдалося. Спробуйте ще раз."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Деякі сайти блокують Google Перекладач. Якщо сторінка не відкривається, відкрийте її на сайті."
+    },
+    "factChip": {
+      "label": "З вашого профілю: {{label}}",
+      "openA11y": "Статті про {{label}}"
+    },
+    "related": {
+      "allCountries": "Усі країни",
+      "allLanguages": "Усі мови",
+      "noMatches": "Немає схожих статей за цими фільтрами."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Залишає новіше місце й видаляє старіше."
+    },
+    "trackedStories": {
+      "trackAction": "Відстежувати історію",
+      "untrackAction": "Не відстежувати історію"
+    }
+  },
+  "vi": {
+    "articleMenu": {
+      "openA11y": "Thao tác khác",
+      "title": "Thao tác với bài viết",
+      "askMera": "Hỏi Mera về bài này",
+      "following": "Đang theo dõi câu chuyện này",
+      "checkFacts": "Tìm kiểm chứng",
+      "openOn": "Mở trên {{source}}",
+      "openInTranslate": "Mở trong Google Dịch",
+      "fewerFrom": "Ít hơn từ {{source}}",
+      "fewerFromDone": "Bạn sẽ thấy ít tin từ {{source}} hơn.",
+      "undo": "Hoàn tác",
+      "reportBug": "Báo lỗi",
+      "actionFailed": "Không thực hiện được. Hãy thử lại."
+    },
+    "articleDetail": {
+      "translateBlockedNote": "Một số trang chặn Google Dịch. Nếu trang không tải, hãy mở trên trang gốc."
+    },
+    "factChip": {
+      "label": "Từ hồ sơ của bạn: {{label}}",
+      "openA11y": "Tin về {{label}}"
+    },
+    "related": {
+      "allCountries": "Tất cả quốc gia",
+      "allLanguages": "Tất cả ngôn ngữ",
+      "noMatches": "Không có bài liên quan nào khớp với bộ lọc này."
+    },
+    "hygiene": {
+      "effectLocationConflict": "Giữ nơi mới hơn và xóa nơi cũ."
+    },
+    "trackedStories": {
+      "trackAction": "Theo dõi câu chuyện",
+      "untrackAction": "Bỏ theo dõi câu chuyện"
+    }
+  },
+  "zh-CN": {
+    "articleMenu": {
+      "openA11y": "更多操作",
+      "title": "文章操作",
+      "askMera": "就此询问 Mera",
+      "following": "已关注此报道",
+      "checkFacts": "查找事实核查",
+      "openOn": "在 {{source}} 打开",
+      "openInTranslate": "在 Google 翻译中打开",
+      "fewerFrom": "减少 {{source}} 的内容",
+      "fewerFromDone": "你将看到更少来自 {{source}} 的内容。",
+      "undo": "撤销",
+      "reportBug": "报告问题",
+      "actionFailed": "操作未成功。请重试。"
+    },
+    "articleDetail": {
+      "translateBlockedNote": "有些网站会屏蔽 Google 翻译。如果页面无法加载，请在原网站打开。"
+    },
+    "factChip": {
+      "label": "来自你的资料：{{label}}",
+      "openA11y": "关于 {{label}} 的报道"
+    },
+    "related": {
+      "allCountries": "所有国家",
+      "allLanguages": "所有语言",
+      "noMatches": "没有符合这些筛选条件的相关文章。"
+    },
+    "hygiene": {
+      "effectLocationConflict": "保留较新的地点，移除较旧的地点。"
+    },
+    "trackedStories": {
+      "trackAction": "关注报道",
+      "untrackAction": "取消关注"
+    }
+  },
+  "zh-TW": {
+    "articleMenu": {
+      "openA11y": "更多操作",
+      "title": "文章操作",
+      "askMera": "就此詢問 Mera",
+      "following": "已追蹤此報導",
+      "checkFacts": "查找事實查核",
+      "openOn": "在 {{source}} 開啟",
+      "openInTranslate": "在 Google 翻譯中開啟",
+      "fewerFrom": "減少 {{source}} 的內容",
+      "fewerFromDone": "你會看到更少來自 {{source}} 的內容。",
+      "undo": "復原",
+      "reportBug": "回報問題",
+      "actionFailed": "操作未成功。請再試一次。"
+    },
+    "articleDetail": {
+      "translateBlockedNote": "有些網站會封鎖 Google 翻譯。如果頁面無法載入，請在原網站開啟。"
+    },
+    "factChip": {
+      "label": "來自你的個人檔案：{{label}}",
+      "openA11y": "關於 {{label}} 的報導"
+    },
+    "related": {
+      "allCountries": "所有國家",
+      "allLanguages": "所有語言",
+      "noMatches": "沒有符合這些篩選條件的相關文章。"
+    },
+    "hygiene": {
+      "effectLocationConflict": "保留較新的地點，移除較舊的地點。"
+    },
+    "trackedStories": {
+      "trackAction": "追蹤報導",
+      "untrackAction": "取消追蹤"
+    }
+  }
+}
