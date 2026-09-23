@@ -50,3 +50,45 @@ export function isRelationalStatement(statement: string): boolean {
 export function mayReplace(candidate: string, target: string): boolean {
   return isRelationalStatement(candidate) === isRelationalStatement(target);
 }
+
+/** The attribute KEY: the text before the first ': ', lowercased. The router
+ *  and every fact skill already match facts on it. */
+export function attributeKey(attribute: string | null | undefined): string {
+  if (typeof attribute !== 'string') return '';
+  return attribute.split(':')[0].trim().toLowerCase();
+}
+
+/** Both facts carry the same non-empty attribute key. */
+export function sameAttributeKey(a: string | null | undefined, b: string | null | undefined): boolean {
+  const ka = attributeKey(a);
+  return ka !== '' && ka === attributeKey(b);
+}
+
+/** The keys that mark where the user currently lives. Mirrors
+ *  `isLocationAttribute` in news-harness, which this folder may not import. */
+const LOCATION_KEYS = new Set(['location', 'neighborhood', 'residence', 'home']);
+
+export function isLocationKey(attribute: string | null | undefined): boolean {
+  return LOCATION_KEYS.has(attributeKey(attribute));
+}
+
+/**
+ * May a fact under `candidateAttribute` REPLACE one under `targetAttribute`?
+ *
+ * A home fact may only be replaced by another home fact. The location key is
+ * what anchors every future topic run to where the user lives, and a fact
+ * under any other key replacing it drops that anchor: an origin fact written
+ * as "Expat from India living in Amsterdam" once replaced "Lives in
+ * Nieuw-West, Amsterdam" and took the neighbourhood and the canonical key with
+ * it. Refused replaces are demoted to plain adds, as for subject agreement.
+ */
+export function mayReplaceKey(
+  candidateAttribute: string | null | undefined,
+  targetAttribute: string | null | undefined,
+): boolean {
+  if (!isLocationKey(targetAttribute)) return true;
+  // No key at all says nothing about what the fact is, so it is not refused
+  // on key grounds; subject agreement still applies.
+  if (attributeKey(candidateAttribute) === '') return true;
+  return isLocationKey(candidateAttribute);
+}

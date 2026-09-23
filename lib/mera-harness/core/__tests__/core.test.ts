@@ -260,8 +260,10 @@ describe('the bounded loop', () => {
       deps,
     });
 
-    expect(out.terminalReason).toBe('leg-cap');
-    expect(out.legCapped).toBe(true);
+    // The LAST leg of a facts turn is the forced offer, so a turn that spun to
+    // the cap has had its forced leg and ends `no-proposal`, not `leg-cap`.
+    expect(out.forcedProposal).toBe(true);
+    expect(out.terminalReason).toBe('no-proposal');
     expect(out.legBudgetHit).toBe(true);
   });
 
@@ -478,8 +480,10 @@ describe('the bounded loop', () => {
       state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
     });
 
-    expect(out.terminalReason).toBe('leg-cap');
-    expect(out.legCapped).toBe(true);
+    // Its last leg was the forced offer (see B13 below), which produced
+    // nothing: counted as `no-proposal`, and still rendered as a terminal.
+    expect(out.forcedProposal).toBe(true);
+    expect(out.terminalReason).toBe('no-proposal');
     expect(out.legBudgetHit).toBe(true);
   });
 
@@ -565,8 +569,9 @@ describe('the bounded loop', () => {
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
     expect(out.legs).toHaveLength(MAX_AGENT_LEGS);
     expect(out.legBudgetHit).toBe(true);
-    expect(out.legCapped).toBe(true);
-    expect(out.terminalReason).toBe('leg-cap');
+    // A facts turn's last leg is the forced offer; with nothing offered the
+    // turn is `no-proposal`, a terminal the UI still renders.
+    expect(out.terminalReason).toBe('no-proposal');
   });
 
   it('a REPEATED load_skill of the ALREADY-LOADED skill settles instead of spinning', async () => {

@@ -300,3 +300,59 @@ export function leaksInternals(text: string): boolean {
   if (t.trim().length === 0) return false;
   return INTERNALS.test(t) || looksLikeSerialisedPayload(t);
 }
+
+/**
+ * The loop narrating its own process, or promising a step it has not taken.
+ *
+ * Two device replies this exists for, both shipped as the WHOLE reply:
+ * "I'll start by loading the appropriate skill for this turn." (the route
+ * leg's acknowledgement, left standing when every later leg was silent) and
+ * "Let me check what you already follow, then I can offer this." (a turn that
+ * spent its legs looking things up and ended with no offer). Neither answers
+ * the user; both describe work instead of doing it.
+ *
+ * PRECISION FIRST, like the two detectors above. The verbs are ones the loop
+ * actually narrates (check, look, load, search, find, verify), gated on a
+ * first-person future. "Let me know what else you follow" and "I'll be here"
+ * are ordinary sentences and do not match. A miss leaves today's behaviour; a
+ * false positive re-asks a correct reply, so the list stays narrow.
+ */
+const PROCESS_NARRATION = new RegExp(
+  '(' +
+    "\\b(?:let me|i(?:'ll|’ll| will)|i(?:'m|’m| am) going to)\\s+(?:first\\s+|quickly\\s+|just\\s+)?" +
+    '(?:check|look (?:up|at|for|into|through)|load|search|find|verify|pull up|fetch|figure out|go through|review)\\b' +
+    "|\\bthen i(?:'ll|’ll| will| can)\\s+(?:offer|add|propose|suggest|save)\\b" +
+    '|\\b(?:the|an?) (?:appropriate|right|relevant) (?:skill|guideline|tool)\\b' +
+    '|\\bloading (?:the|a|an) (?:skill|guideline|instructions)\\b' +
+    '|\\bone moment while i\\b' +
+    ')',
+  'i',
+);
+
+/** True when the reply narrates the loop's process or promises an unmade
+ *  offer. Pass CLEANED text. */
+export function narratesProcess(text: string): boolean {
+  const t = text ?? '';
+  if (!t.trim()) return false;
+  // A CONDITIONAL offer is an ordinary sentence, not narration: "If you tell
+  // me where you live, I'll look up the place" is a correct answer from the
+  // G4 corpus. The whole conditional sentence is set aside before matching.
+  const unconditional = t.replace(/\b(?:if|once|when) you\b[^.?!]*[.?!]?/gi, ' ');
+  return PROCESS_NARRATION.test(unconditional);
+}
+
+/**
+ * A plain yes typed in answer to Mera's last question.
+ *
+ * Short and closed on purpose: a yes that carries anything else ("yes, and I
+ * also follow F1") is a new message and routes normally. Never a
+ * confirmation of anything destructive; the loop only uses it to resume the
+ * subject the question was about.
+ */
+const PLAIN_YES = /^(?:yes|yeah|yep|yup|sure|ok(?:ay)?|please|please do|go ahead|do it|sounds good|that'?s right|correct)(?:[ ,]+(?:please|thanks|thank you|add it|add that|do it|go ahead))*[.!]*$/i;
+
+export function isPlainYes(text: string): boolean {
+  const t = (text ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!t || t.split(' ').length > 6) return false;
+  return PLAIN_YES.test(t);
+}

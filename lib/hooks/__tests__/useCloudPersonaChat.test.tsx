@@ -719,7 +719,9 @@ describe('useCloudPersonaChat', () => {
 
       const assistant = result.current.messages.filter((m) => m.role === 'assistant');
       expect(assistant.every((m) => !m.content.includes('THIS MUST NEVER BE SHOWN'))).toBe(true);
-      expect(result.current.latestAssistantContent).toBe('Got it — anything else?');
+      // Dash-cleaned once the stream is whole: the single-shot path shipped
+      // model em dashes to users before ux1.
+      expect(result.current.latestAssistantContent).toBe('Got it, anything else?');
     });
 
     it('pushes nothing from the forced pass onto the wire', async () => {
@@ -1949,6 +1951,47 @@ describe('the shipped cloud path drives the agent loop', () => {
     const text = assistant.map((m) => m.content).join(' ');
     expect(text).toContain('What do you do for work?');
     expect(text).not.toContain("I've noted that");
+  });
+
+  // TWO BUBBLES: the acknowledgement stays put and the answer lands below it.
+  // One bubble used to take each leg's text in turn and then swap to the final
+  // reply, so the words being read changed and the bubble jumped (audit F4).
+  it('keeps the acknowledgement as its own bubble and puts the answer in a second', async () => {
+    const model = jest.fn();
+    const res = (content: string, over: Record<string, unknown> = {}) => ({
+      content, toolCalls: [], finishReason: 'stop', truncated: false,
+      usage: null, modelSent: 'fake', latencyMs: 1, error: null, ...over,
+    });
+    model
+      .mockImplementationOnce(async (req: { onDelta?: (d: { content?: string }) => void }) => {
+        req.onDelta?.({ content: 'Porto, one moment.' });
+        return res('Porto, one moment.', {
+          toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/residence' }) }],
+        });
+      })
+      .mockImplementation(async (req: { onDelta?: (d: { content?: string }) => void }) => {
+        req.onDelta?.({ content: 'LEG TEXT MUST NOT STREAM' });
+        return res('Got it, Porto. What do you do for work?');
+      });
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: model,
+      tools: {},
+      loadSkill: (id: string) => (id === 'facts/residence' ? 'RESIDENCE BODY' : null),
+      skillIds: () => ['facts/residence'],
+    });
+
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I moved to Porto'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false),
+      { timeout: 3000 },
+    );
+
+    const assistant = useCloudChatStore.getState().messages.filter((m) => m.role === 'assistant');
+    expect(assistant.map((m) => m.content)).toEqual([
+      'Porto, one moment.',
+      'Got it, Porto. What do you do for work?',
+    ]);
   });
 
   // THE TOOL RECORD'S `input` IS THE ARGUMENTS, NOT THE RESULT.

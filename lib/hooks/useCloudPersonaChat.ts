@@ -13,7 +13,9 @@ import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from
 import {
   createAgentState,
   createAgentTurnState,
+  replaceClauseDashes,
   runAgentTurn,
+  type AgentDeps,
   type AgentLeg,
   type AgentState,
 } from '../mera-harness';
@@ -34,6 +36,50 @@ import {
   KNOWLEDGE_TOOL_NAMES,
   MAX_HISTORY_USER_TURNS,
 } from '../news-harness/persona-management/persona-agent-core';
+
+/**
+ * The one-time split offer for a combined "origin plus residence" fact is
+ * remembered on the device, so a skipped offer is not repeated on every later
+ * residence or origin turn. Stored as a JSON list of fact ids.
+ */
+const COMBINED_SPLIT_OFFERED_KEY = 'mera_combined_fact_split_offered_v1';
+
+/**
+ * Required LAZILY, on purpose. `setting-service` builds its collection at
+ * module scope, so a top-level import here constructs a real SQLiteAdapter the
+ * moment anything imports this hook, and every suite that renders it dies at
+ * load with `initializeJSI`.
+ */
+function settings(): typeof import('../database/services/setting-service') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('../database/services/setting-service');
+}
+
+async function readSplitOffered(): Promise<string[]> {
+  try {
+    const raw = await settings().getSetting(COMBINED_SPLIT_OFFERED_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function withCombinedFactMemory(deps: AgentDeps): AgentDeps {
+  return {
+    ...deps,
+    combinedFactRewrite: {
+      wasOffered: async (factId) => (await readSplitOffered()).includes(factId),
+      markOffered: async (factId) => {
+        const ids = await readSplitOffered();
+        if (ids.includes(factId)) return;
+        await settings()
+          .setSetting(COMBINED_SPLIT_OFFERED_KEY, JSON.stringify([...ids, factId]))
+          .catch(() => {});
+      },
+    },
+  };
+}
 
 /** Tool arguments arrive as a JSON string. A malformed one must yield an empty
  *  object rather than throwing: this runs inside the live progress write-back,
@@ -266,8 +312,17 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       // Facts are re-read every turn; only the TURN half persists.
       agentStateRef.current.persona = persona;
 
+      // TWO BUBBLES PER TURN. The acknowledgement streams into its own bubble
+      // and is never replaced; the answer lands in the second one, which also
+      // carries every tool call (and so every card) of the turn. One bubble
+      // used to take every leg's text in turn and then swap to the final
+      // reply, so the words being read changed under the reader and the
+      // bubble jumped. An empty bubble with no cards is not rendered, so a turn
+      // with no acknowledgement shows one bubble, exactly as before.
+      const ackId = `${assistantId}-ack`;
       store.setMessages((prev) => [
         ...prev,
+        { id: ackId, role: 'assistant', content: '' } as ConversationMessage,
         { id: assistantId, role: 'assistant', content: '' } as ConversationMessage,
       ]);
 
@@ -286,7 +341,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         useCloudChatStore
           .getState()
           .setMessages((prev) =>
-            prev.map((m) => (m.id === assistantId ? { ...m, content: acc } : m)),
+            prev.map((m) => (m.id === ackId ? { ...m, content: acc } : m)),
           );
       };
       const schedule = () => {
@@ -326,7 +381,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const out = await runAgentTurn({
           state: agentStateRef.current,
           userMessage,
-          deps: makeAgentDeps(
+          deps: withCombinedFactMemory(makeAgentDeps(
             userMessage,
             (d) => {
               // The arrival signal carries no payload, and the line is already
@@ -342,14 +397,22 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
               }
             },
             (signal) => phaseSinkRef.current?.(signal),
-          ),
+          )),
           onLeg,
         });
         if (queued) flush();
-        // The loop's reply is dash-cleaned; the streamed accumulation is not,
-        // so the final write is the authoritative one.
+        // The loop's text is dash-cleaned and gated; the streamed accumulation
+        // is not, so these final writes are the authoritative ones. An
+        // acknowledgement the loop dropped (it narrated or leaked) empties its
+        // bubble, which then stops rendering.
         useCloudChatStore.getState().setMessages((prev) =>
-          prev.map((m) => (m.id === assistantId ? { ...m, content: out.reply } : m)),
+          prev.map((m) =>
+            m.id === ackId
+              ? { ...m, content: out.acknowledgement }
+              : m.id === assistantId
+                ? { ...m, content: out.reply }
+                : m,
+          ),
         );
         store.setAgentTurnState({ ...agentStateRef.current.turn });
         // ON SCREEN, not only in the log. Four distinct terminals used to reach
@@ -545,6 +608,15 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           }
         }
         flushContentRender();
+        // THE DASH RULE, for the agents that do not run through the loop. The
+        // loop cleans its own replies; the single-shot "why was this shown"
+        // answer reached users with an em dash in it. Applied once the stream
+        // is whole, so a clause dash split across two deltas is still seen.
+        const cleaned = replaceClauseDashes(accContent);
+        if (cleaned !== accContent) {
+          accContent = cleaned;
+          if (!suppressText) renderContent();
+        }
         } finally {
           renderArmed = false;
           // Released in `startTurn`'s finally, the one owner. See the agent

@@ -28,6 +28,10 @@ export type {
 } from './core/types';
 export { createAgentTurnState } from './core/types';
 
+// Dash cleanup for model prose that does NOT go through the loop (the
+// single-shot agents). Same rule the loop applies to its own replies.
+export { replaceClauseDashes } from './core/prose';
+
 export {
   MAX_AGENT_LEGS,
   MAX_FACTS_IN_CONTEXT,

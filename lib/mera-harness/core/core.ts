@@ -6,8 +6,21 @@
 
 import { resolveAgentArm, routeEnforcementFor } from './arms';
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
-import { claimsSaveHappened, cleanProse, leaksInternals, trailingQuestion } from './prose';
-import { mayReplace } from './fact-subject';
+import {
+  claimsSaveHappened,
+  cleanProse,
+  isPlainYes,
+  leaksInternals,
+  narratesProcess,
+  trailingQuestion,
+} from './prose';
+import { isLocationKey, mayReplace, mayReplaceKey, sameAttributeKey } from './fact-subject';
+import {
+  CANONICAL_LOCATION_KEY,
+  ORIGIN_KEY,
+  isCombinedOriginFact,
+  splitCombinedFact,
+} from './combined-fact';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
@@ -75,7 +88,15 @@ export const MAX_REPLY_RETRIES = 1;
  * has forbidden the save wording since the skill was written, and 10% of G4
  * turns used it anyway.
  */
-export function replyFormatError(kind: 'save-claim' | 'leak'): string {
+export function replyFormatError(kind: 'save-claim' | 'leak' | 'process'): string {
+  if (kind === 'process') {
+    return (
+      'Your reply describes what you are about to do instead of answering. The user sees it as '
+      + 'your whole answer. Do not say you will check, look up or load anything, and do not '
+      + 'promise an offer: answer their message now in one or two plain sentences, or ask one '
+      + 'short question.'
+    );
+  }
   if (kind === 'save-claim') {
     return (
       'Your reply says you saved, noted or recorded something. Nothing is saved until the user '
@@ -102,6 +123,17 @@ export function replyFormatError(kind: 'save-claim' | 'leak'): string {
  * counted instead.
  */
 export const REPLY_LEAK_FALLBACK = 'Got it. Anything else you would like to add?';
+
+/**
+ * Re-asks allowed when the final reply narrates the loop's process. Its own
+ * budget, like the other two, for the same reason: the failures are unrelated.
+ */
+export const MAX_PROCESS_RETRIES = 1;
+
+/** Shown when a narrating reply survives its re-ask on a turn that has no card
+ *  to speak for it. A card on screen needs no words, so there the reply is
+ *  simply dropped. */
+export const REPLY_PROCESS_FALLBACK = "Sorry, I didn't get to that. Could you say it again?";
 
 /** Mirrors lib/llm/tokens.ts::estimateTokens; inlined so this folder imports
  *  nothing from the app. */
@@ -204,6 +236,14 @@ export function bindChoicePayloads(
   });
 }
 
+/** A chip payload that is a Place (the only structured payload a chip
+ *  carries today), or null. */
+function placeFromPayload(payload: unknown): Place | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const p = payload as Partial<Place>;
+  return typeof p.locality === 'string' && typeof p.countryCode === 'string' ? (p as Place) : null;
+}
+
 /** Only a facts/* turn owes a proposal. A conversation/* turn legitimately
  *  answers in prose and proposes nothing. */
 function isFactSkill(skillId: string | null): boolean {
@@ -263,7 +303,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       turn.pendingChoice = null;
     }
   }
-  const answerPending = turn.lastTurnAskedQuestion && turn.resolvedChoice === null;
+  // A PLAIN YES to the last question continues that question's subject, the
+  // same way a chip tap does, but it is NEVER a confirmation: resolvedChoice
+  // stays null, so it cannot authorise a delete or a tap-gated replace. Measured
+  // on device: "Yes please add it." after an offer routed fresh, landed on
+  // conversation/question, and asked the same thing again as chips.
+  const typedYesResume =
+    turn.resolvedChoice === null
+    && turn.lastQuestion !== null
+    && turn.lastSkill !== null
+    && turn.lastSkill.startsWith('facts/')
+    && isPlainYes(userMessage);
+  const answerPending =
+    turn.lastTurnAskedQuestion && turn.resolvedChoice === null && !typedYesResume;
   // Read BEFORE the turn overwrites it at the end, and held for every leg: the
   // question belongs to the turn being answered, not to the one being written.
   const lastQuestion = turn.lastQuestion;
@@ -304,7 +356,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // statements read as the user's own, because the model had already dropped
   // the girlfriend from the sentence. The subject has to survive the question,
   // which means resuming the skill rather than re-deciding.
-  if (turn.resolvedChoice !== null && turn.lastSkill !== null) {
+  if ((turn.resolvedChoice !== null || typedYesResume) && turn.lastSkill !== null) {
     const body = deps.loadSkill(turn.lastSkill);
     if (body !== null) {
       skillLoaded = turn.lastSkill;
@@ -313,6 +365,15 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       resumedSkill = true;
     }
   }
+  // A place the chip resolved, carried for as long as the asking skill keeps
+  // resuming. Any other turn starts clean.
+  const tappedPlace = placeFromPayload(turn.resolvedChoice?.payload);
+  if (tappedPlace) turn.confirmedPlace = tappedPlace;
+  else if (!resumedSkill) turn.confirmedPlace = null;
+
+  /** The route leg's acknowledgement. Kept apart from `reply` so it can never
+   *  become the answer by default. */
+  let acknowledgement = '';
   let reply = '';
   let legBudgetHit = false;
   /** One closing-sentence leg is allowed after a proposal, never a stream. */
@@ -324,6 +385,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let replyRetries = 0;
   let replyClaimUnfixed = false;
   let replyLeakUnfixed = false;
+  let processRetries = 0;
+  let replyProcessUnfixed = false;
   /** WHY the turn stopped. Counted, so a failure shows up in the rows rather
    *  than as an ordinary settled turn that happened to do nothing. */
   let terminalReason: AgentTurnResult['terminalReason'] = 'settled';
@@ -331,7 +394,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    *  they are not in the payload and executing nothing silently made them look
    *  like a normal turn. */
   const unknownTools: string[] = [];
-  let placeCandidates: Place[] = [];
+  let placeCandidates: Place[] = resumedSkill && turn.confirmedPlace ? [turn.confirmedPlace] : [];
   let similarFactCount: number | null = null;
   const toolResultsThisTurn: { name: string; result: unknown }[] = [];
   /**
@@ -361,7 +424,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const existingStatements = new Set<string>();
   /** Statements already offered THIS TURN, so one fact cannot become two
    *  cards. Separate from `existingStatements`, which holds facts on file. */
-  const proposedStatements = new Set<string>();
+  // Seeded on a resume: the cards the previous turn offered are still on
+  // screen, so the resumed skill must not offer them a second time.
+  const proposedStatements = new Set<string>(resumedSkill ? turn.offeredStatements : []);
+  /** What THIS turn offered, carried to the next turn for the same reason. */
+  const offeredThisTurn: string[] = [];
   let existingFacts: { factId: string; statement: string }[] = [];
 
   /** True for the ONE forced leg. */
@@ -374,6 +441,21 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let formatErrorNote: string | null = null;
 
   for (let index = 0; ; index++) {
+    // THE LAST LEG OF A FACTS TURN IS AN OFFER. Measured on device: "I also
+    // follow the Champions League" spent route + three find_similar_facts
+    // (each a different `kind`, so each bought a leg), hit the cap, and ended
+    // `settled` on "Let me check what you already follow, then I can offer
+    // this." with nothing offered. The forced leg used to run only when a leg
+    // settled on prose, which a turn walking to the cap never does.
+    if (
+      index === maxLegsThisTurn + formatRetries - 1
+      && isFactSkill(skillLoaded)
+      && !proposedSomething
+      && !forcingProposalNow
+    ) {
+      forcingProposalNow = true;
+      forcedProposal = true;
+    }
     if (index >= maxLegsThisTurn + formatRetries) {
       legBudgetHit = true;
       // RUNNING OUT OF LEGS IS NOT THE SAME AS FAILING. Measured on G3: 16 of
@@ -390,7 +472,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // painted as a failure, because a turn that correctly proposes NOTHING
       // still failed the proposal test. Keying only on `proposedSomething`
       // makes every correct refusal look broken.
-      terminalReason = proposedSomething || answeredTheUser ? 'settled' : 'leg-cap';
+      terminalReason =
+        proposedSomething || answeredTheUser
+          ? 'settled'
+          : forcedProposal
+            ? 'no-proposal'
+            : 'leg-cap';
       break;
     }
 
@@ -403,6 +490,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       existingFacts,
       forcedProposal: forcingProposalNow,
       lastQuestion,
+      answeredYesTo: typedYesResume ? lastQuestion : null,
     });
 
     // SLIM CONTEXT: system prompt, the user's message, the known facts, this
@@ -469,7 +557,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // FALSE on every call: measured, thinking on returned empty content on 8
       // of 10 probes at 8-10s against 0.8-1.0s and a valid answer every time.
       enableThinking: false,
-      onDelta: params.onDelta,
+      // ONLY THE ROUTE LEG STREAMS. It is the acknowledgement and is never
+      // replaced; every later leg's text used to stream into the same bubble
+      // and was then swapped for the final reply, so the text the user was
+      // reading changed under them and the bubble jumped. The answer arrives
+      // whole at the end of the turn, as its own bubble.
+      onDelta: index === 0 && !resumedSkill ? params.onDelta : undefined,
     });
 
     const leg: AgentLeg = {
@@ -488,12 +581,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // Cleaned here too, not only at the end: the acknowledgement is the FIRST
     // thing on screen and is exactly where the measured dashes appeared.
     if (result.content.trim()) {
-      reply = cleanProse(result.content);
-      // AN ANSWER, as distinct from the route leg's acknowledgement. "Porto,
-      // one moment." is about the turn starting; it must never make a turn that
-      // then did nothing look complete. Only prose written once a skill is
-      // loaded is an answer to the user.
-      if (skillLoaded !== null) answeredTheUser = true;
+      const cleaned = cleanProse(result.content);
+      if (index === 0 && !resumedSkill) {
+        // The ACKNOWLEDGEMENT. Kept apart from the answer: it said the turn
+        // began, and when every later leg was silent it used to ship as the
+        // whole reply.
+        acknowledgement = cleaned;
+      } else {
+        reply = cleaned;
+        // AN ANSWER, as distinct from the acknowledgement. Narration of the
+        // loop's own process is not one: "Let me check what you already
+        // follow" made a turn that offered nothing look complete.
+        if (skillLoaded !== null && !narratesProcess(cleaned)) answeredTheUser = true;
+      }
     }
 
     // A leg that RESOLVED with a transport error is terminal: continuing would
@@ -600,7 +700,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           leg.toolResults.push({ name: call.name, result: out });
           terminatedByChoice = true;
           terminalReason = 'malformed-choice';
-          break;
+          // NOT `break`: see below.
+          continue;
+        }
+        if (terminatedByChoice) {
+          // One question per turn. A second ask_choice in the same leg is
+          // answered with an error rather than overwriting the first.
+          leg.toolResults.push({ name: call.name, result: { error: 'one question per turn' } });
+          continue;
         }
         proposedSomething = true;
         turn.pendingChoice = {
@@ -609,7 +716,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         };
         leg.toolResults.push({ name: call.name, result: { awaiting: 'user' } });
         terminatedByChoice = true;
-        break;
+        // ENDS THE TURN, BUT NOT THE LEG. This used to `break` out of the
+        // tool-call loop, so any saveExtractedFacts the model placed after the
+        // question in the same leg was never executed: "I'm 34, a product
+        // manager in Berlin, from Bangalore" asked which Berlin and dropped
+        // the job and the age. The rest of the leg still runs; the turn ends
+        // after it.
+        continue;
       }
 
       if (call.name === 'saveExtractedFacts') {
@@ -653,7 +766,24 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // was asked: those are different facts, and treating one as the other
           // destroys a fact on a turn nobody consented to.
           const wantsReplace = typeof entry.replaces === 'string' ? entry.replaces : null;
-          let replaces = wantsReplace && turn.resolvedChoice ? wantsReplace : null;
+          const replaceTarget = wantsReplace
+            ? state.persona.facts.find((f) => f.id === wantsReplace)
+            : undefined;
+          const entryAttribute =
+            typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : null;
+          // THE CARD IS THE CONSENT for a same-key replace (owner ruling, ux1
+          // Q1). A replacement card names the fact and the topics it removes
+          // and needs its own tap, so asking first through ask_choice made a
+          // move take two confirmations for one decision. The chip is still
+          // required for anything ELSE: a replace across keys is a judgement
+          // the user has to make before the card, not on it.
+          const sameKey = !!replaceTarget && sameAttributeKey(entryAttribute, replaceTarget.attribute);
+          let replaces = wantsReplace && (turn.resolvedChoice || sameKey) ? wantsReplace : null;
+          // A HOME FACT IS ONLY REPLACED BY A HOME FACT. Demoted, never dropped.
+          if (replaces !== null && replaceTarget && !mayReplaceKey(entryAttribute, replaceTarget.attribute)) {
+            refusedReplaces++;
+            replaces = null;
+          }
           // SUBJECT AGREEMENT. A replace is a destroy, and the confirmed-choice
           // guard above does not speak to WHOSE fact is being destroyed: the
           // user confirming which Porto Santo they meant is not consent to
@@ -667,6 +797,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             }
           }
           proposals.push({ statement, kind: routeKind, place, replaces });
+          offeredThisTurn.push(statement.toLowerCase());
           // Carry the entry through with the loop's verdict on `replaces`
           // applied, and nothing else touched: `alternatives` and
           // `questionnaire_attribute` are the card's own and are not this
@@ -787,6 +918,22 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     //
     // On CLEANED text, because that is what reaches the bubble.
     const finalReply = cleanProse(reply);
+    // PROCESS NARRATION, checked after the leak test and before the save
+    // claim. On a facts turn that has offered nothing, the fix is the offer
+    // itself, not better wording: the forced leg runs instead of a re-ask.
+    if (!leaksInternals(finalReply) && narratesProcess(finalReply)) {
+      if (isFactSkill(skillLoaded) && !proposedSomething && !forcingProposalNow) {
+        forcingProposalNow = true;
+        forcedProposal = true;
+        continue;
+      }
+      if (processRetries < MAX_PROCESS_RETRIES) {
+        processRetries++;
+        formatErrorNote = replyFormatError('process');
+        maxLegsThisTurn++;
+        continue;
+      }
+    }
     const gateKind = leaksInternals(finalReply)
       ? ('leak' as const)
       : claimsSaveHappened(finalReply)
@@ -816,6 +963,85 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     break;
   }
 
+  /**
+   * Origin and residence are no longer combined into one fact (owner ruling,
+   * ux1 Q2). A persona that still holds a combined fact is offered its split
+   * ONCE, on the first origin or residence turn, as an ordinary card: the
+   * origin half replaces the combined fact, and the home half is added when
+   * no home fact exists yet. Written by the loop, not asked of the model: the
+   * combined shape is the loop's own old output, so splitting it is mechanical.
+   */
+  async function offerCombinedFactSplit(): Promise<string | null> {
+    if (terminalReason === 'transport-error') return null;
+    if (routeKind !== 'origin' && routeKind !== 'residence') return null;
+    const combined = state.persona.facts.find((f) => isCombinedOriginFact(f.attribute));
+    if (!combined) return null;
+    if (proposals.some((p) => p.replaces === combined.id)) return null;
+    const halves = splitCombinedFact(combined.statement);
+    if (!halves) return null;
+    if (deps.combinedFactRewrite && (await deps.combinedFactRewrite.wasOffered(combined.id))) {
+      return null;
+    }
+    const topicSkill = (kind: string) =>
+      (deps.skillIds() as readonly string[]).includes(`topics/${kind}`) ? `topics/${kind}` : undefined;
+    const hasHome =
+      state.persona.facts.some((f) => f.id !== combined.id && isLocationKey(f.attribute))
+      || proposals.some((p) => p.kind === 'residence');
+    const entries: Record<string, unknown>[] = [
+      {
+        statement: halves.origin,
+        questionnaire_attribute: ORIGIN_KEY,
+        replaces: combined.id,
+        ...(topicSkill('origin') ? { topic_skill_id: topicSkill('origin') } : {}),
+      },
+    ];
+    if (!hasHome) {
+      entries.push({
+        statement: halves.residence,
+        questionnaire_attribute: CANONICAL_LOCATION_KEY,
+        ...(topicSkill('residence') ? { topic_skill_id: topicSkill('residence') } : {}),
+      });
+    }
+    const splitProposals: AgentProposal[] = entries.map((e) => ({
+      statement: String(e.statement),
+      kind: e.questionnaire_attribute === ORIGIN_KEY ? 'origin' : 'residence',
+      place: null,
+      replaces: typeof e.replaces === 'string' ? e.replaces : null,
+    }));
+    const out = await deps.tools.saveExtractedFacts({
+      extracted_user_information: entries,
+      proposals: splitProposals,
+    });
+    const callRaw = JSON.stringify({ extracted_user_information: entries });
+    const leg: AgentLeg = {
+      index: legs.length,
+      role: 'tool',
+      systemPrompt: '',
+      messages: [],
+      toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+      toolResults: [{ name: 'saveExtractedFacts', result: out }],
+      rawOutput: '',
+      result: {
+        content: '',
+        toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+        finishReason: 'synthetic',
+        truncated: false,
+        usage: null,
+        modelSent: null,
+        latencyMs: 0,
+        error: null,
+      },
+      inputTokens: 0,
+      synthetic: true,
+    };
+    legs.push(leg);
+    proposals.push(...splitProposals);
+    proposedSomething = true;
+    await deps.combinedFactRewrite?.markOffered(combined.id);
+    params.onLeg?.(leg);
+    return combined.id;
+  }
+
   if (unknownTools.length > 0 && terminalReason === 'settled') {
     terminalReason = 'unknown-tool';
   }
@@ -841,9 +1067,25 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   if (leaksInternals(cleanProse(reply))) {
     reply = REPLY_LEAK_FALLBACK;
     replyLeakUnfixed = true;
+  } else if (narratesProcess(cleanProse(reply))) {
+    // Same placement rule as the leak check: every exit, not just the settle
+    // break. A card on screen needs no words; otherwise one plain line.
+    reply = proposedSomething ? '' : REPLY_PROCESS_FALLBACK;
+    replyProcessUnfixed = true;
+  }
+  // The acknowledgement is rendered too, so it gets the same two checks. It is
+  // dropped rather than replaced: the reply below it carries the turn.
+  if (leaksInternals(acknowledgement) || narratesProcess(acknowledgement)) {
+    acknowledgement = '';
   }
 
+  // ---- THE ONE-TIME SPLIT OF A COMBINED FACT -------------------------------
+  const combinedRewriteOffered = await offerCombinedFactSplit();
+
   turn.turnActive = false;
+  turn.offeredStatements = resumedSkill
+    ? [...new Set([...turn.offeredStatements, ...offeredThisTurn])]
+    : offeredThisTurn;
   turn.lastTurnAskedQuestion = turn.pendingChoice !== null || /\?\s*$/.test(reply);
   // The chip question wins over the prose one: when both exist the chips are
   // what is on screen, so they are what the next message answers.
@@ -876,6 +1118,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // Deterministic dash removal. Invariant 7 is unenforceable on model output
     // by prompt alone: 25% of measured prose rows carried one despite the ban.
     reply: cleanProse(reply),
+    acknowledgement,
+    processRetries,
+    replyProcessUnfixed,
+    typedYesResume,
+    combinedRewriteOffered,
     terminalReason,
     unknownTools,
     routeKind,

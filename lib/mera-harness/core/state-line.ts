@@ -36,6 +36,10 @@ export interface StateLineInput {
   existingFacts?: { factId: string; statement: string }[];
   /** The forced-proposal leg. Says plainly that nothing has been proposed. */
   forcedProposal?: boolean;
+  /** The user typed a plain yes to this question. The turn resumed its skill
+   *  so the subject survives; the model is told to do what the question
+   *  offered and say in one sentence what it offered. */
+  answeredYesTo?: string | null;
 }
 
 export function buildStateLine(input: StateLineInput): string {
@@ -98,6 +102,14 @@ export function buildStateLine(input: StateLineInput): string {
     parts.push(`They chose: ${escapeUntrusted(input.resolvedChoiceText, 80)}.`);
   }
 
+  if (input.answeredYesTo) {
+    parts.push(
+      `They answered yes to your question: "${escapeUntrusted(input.answeredYesTo, 160)}". `
+      + 'Do what that question offered now, and say in one short sentence what you are offering. '
+      + 'A yes is never permission to delete anything.',
+    );
+  }
+
   if (input.forcedProposal) {
     parts.push(
       'You have not proposed anything yet. Propose the fact now or ask one choice question.',
@@ -112,7 +124,7 @@ export function buildStateLine(input: StateLineInput): string {
   // question itself was never sent at all. Stating the question and leaving the
   // reading to the model is both true and the thing that was missing; the
   // do-not-repeat half of the guard is kept verbatim, because that half works.
-  if (input.lastQuestion) {
+  if (input.lastQuestion && !input.answeredYesTo) {
     parts.push(
       `Your last turn asked: "${escapeUntrusted(input.lastQuestion, 160)}". `
       + 'This message is most likely its answer, so read it that way if it can be. '

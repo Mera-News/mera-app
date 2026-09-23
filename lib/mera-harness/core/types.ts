@@ -168,6 +168,20 @@ export interface AgentTurnState {
    *  as the bare place name and the family skill, seeing no relative, proposes
    *  the user's own residence. */
   lastUserMessage: string | null;
+  /**
+   * The place a chip tap resolved, carried across the turns that RESUME the
+   * skill which asked. Without it a resumed residence turn looked the city up
+   * again, found the same ambiguity and asked the same question a second time
+   * (the audit's B2 took four confirmations for one move). Cleared on any turn
+   * that is not a resume.
+   */
+  confirmedPlace: Place | null;
+  /**
+   * Statements offered on the previous turn, normalised. A resumed turn seeds
+   * its duplicate filter with them, so a chip tap cannot re-offer a card that is
+   * still sitting on screen unanswered.
+   */
+  offeredStatements: string[];
 }
 
 export function createAgentTurnState(): AgentTurnState {
@@ -180,6 +194,8 @@ export function createAgentTurnState(): AgentTurnState {
     lastRoute: null,
     lastSkill: null,
     lastUserMessage: null,
+    confirmedPlace: null,
+    offeredStatements: [],
   };
 }
 
@@ -252,6 +268,16 @@ export interface AgentDeps {
    *  eval fixture loader validates every expected id at load. */
   skillIds(): readonly string[];
   now?: () => number;
+  /**
+   * Remembers which combined "origin plus residence" facts were already
+   * offered their one-time split, so a skipped offer is not repeated on every
+   * later residence or origin turn. Optional: the eval omits it, and without it
+   * the offer is made whenever it applies.
+   */
+  combinedFactRewrite?: {
+    wasOffered(factId: string): boolean | Promise<boolean>;
+    markOffered(factId: string): void | Promise<void>;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -271,6 +297,9 @@ export interface AgentLeg {
   result: AgentModelResult;
   /** Per-leg input count, so the budget table is measured rather than trusted. */
   inputTokens: number;
+  /** A leg the LOOP wrote without a model call (the one-time split offer for
+   *  a combined fact). Metrics that count model legs skip it. */
+  synthetic?: boolean;
 }
 
 export interface AgentProposal {
@@ -285,7 +314,28 @@ export interface AgentTurnResult {
    *  dies on leg 2 must still hand back legs 0 and 1, or the failure is
    *  invisible in the rows. */
   legs: AgentLeg[];
+  /**
+   * The ANSWER: prose written once a skill was loaded. Never the route leg's
+   * acknowledgement, which used to become the reply whenever the later legs
+   * were silent ("I'll start by loading the appropriate skill for this turn."
+   * shipped as a whole reply that way). May be empty: a turn whose only output
+   * is a card or chips has nothing to add in words.
+   */
   reply: string;
+  /** The route leg's one-sentence acknowledgement, cleaned, or '' when it
+   *  narrated the loop's own process or leaked internals. The app renders it as
+   *  its own bubble above the reply. */
+  acknowledgement: string;
+  /** Final replies re-asked because they narrated the loop's process or
+   *  promised a step the turn never took. Its own budget. */
+  processRetries: number;
+  /** A process narration that survived its re-ask and was dropped. */
+  replyProcessUnfixed: boolean;
+  /** The turn resumed the last skill because the user typed a plain yes to
+   *  its question. Never a confirmation: `resolvedChoice` stays null. */
+  typedYesResume: boolean;
+  /** The combined fact id the loop offered to split this turn, if any. */
+  combinedRewriteOffered: string | null;
   /** null when the decision did not parse. NEVER defaulted to a kind: a
    *  defaulted route scores as a correct route and inflates accuracy. */
   routeKind: string | null;
