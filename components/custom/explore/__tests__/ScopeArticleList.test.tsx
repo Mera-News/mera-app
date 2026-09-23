@@ -341,3 +341,34 @@ describe('ScopeArticleList pull-to-refresh', () => {
         expect(mockGetTopHeadlines).not.toHaveBeenCalled();
     });
 });
+
+// S5: a load that FAILED is not a load that found nothing. The empty state used
+// to say "no articles" whenever the device still read as online, which blamed
+// the world for a request that never landed.
+describe('ScopeArticleList: failure is not emptiness', () => {
+    it('says Mera cannot be reached, not "no articles", when the first load fails online', async () => {
+        mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+        const { getByText, queryByText, queryByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+        await waitFor(() => expect(queryByTestId('explore-loading')).toBeNull());
+
+        expect(getByText('explore.serverUnavailable')).toBeTruthy();
+        expect(queryByText('explore.noArticles')).toBeNull();
+    });
+
+    it('goes back to the honest empty copy once a refresh succeeds with nothing', async () => {
+        mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+        const { getByText, queryByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+        await waitFor(() => expect(queryByTestId('explore-loading')).toBeNull());
+
+        mockGetTopHeadlines.mockResolvedValueOnce(page([], null, false));
+        await act(async () => {
+            await hookOptions.onRefresh();
+        });
+
+        expect(getByText('explore.noArticles')).toBeTruthy();
+    });
+});

@@ -131,6 +131,11 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    // A load that FAILED, as opposed to one that returned nothing. Without it the
+    // empty state fell through to `explore.noArticles` ("no articles") whenever
+    // `isOnline` still read true, blaming the world for a request that never
+    // landed. Cleared by any successful load or refresh.
+    const [loadFailed, setLoadFailed] = useState(false);
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
@@ -178,7 +183,9 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 setHeadlines(appendUniqueHeadlines([], rows));
                 setEndCursor(cursor);
                 setHasNextPage(more);
+                setLoadFailed(false);
             } catch {
+                setLoadFailed(true);
                 // THE LINK OWNS THE CAPTURE. Every fetch on this screen goes
                 // through ArticleService.getTopHeadlinesForCountry ->
                 // client.query, so the Apollo error link has already seen,
@@ -223,7 +230,9 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             setHeadlines(appendUniqueHeadlines([], rows));
             setEndCursor(cursor);
             setHasNextPage(more);
+            setLoadFailed(false);
         } catch {
+            setLoadFailed(true);
             // Breadcrumb only — see the mount load above.
             logger.addBreadcrumb(
                 `[ScopeArticleList] refresh failed`,
@@ -351,15 +360,15 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                         the Explore header, which stacked with the global
                         connectivity band — it belongs here, on the emptiness it
                         explains. */}
-                    {isOnline
-                        ? t('explore.noArticles')
-                        : isConnected
+                    {!isConnected
+                        ? t('explore.offlineUnavailable')
+                        : loadFailed || !isOnline
                             ? t('explore.serverUnavailable')
-                            : t('explore.offlineUnavailable')}
+                            : t('explore.noArticles')}
                 </Text>
             </VStack>
         );
-    }, [isLoading, enabled, isOnline, isConnected, t]);
+    }, [isLoading, enabled, isOnline, isConnected, loadFailed, t]);
 
     // Compose the collapsible-header handler (from ExploreScreen) with a
     // scroll-tick notifier (drives deferred TranslatableDynamic translation as
