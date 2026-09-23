@@ -1327,7 +1327,7 @@
     "reversibleNote": "可從變更紀錄中復原",
     "effectDuplicate": "移除重複項目，保留較強的那一個。",
     "effectTooBroad": "降低此興趣的權重，使其帶來的偏題內容更少。",
-    "effectStaleTopic": "停用這個不活躍的主題。你可以從變更紀錄中復原它。",
+    "effectStaleTopic": "停用這個不活躍的主題。",
     "effectStaleFact": "移除此事實——它的所有主題都已不再活躍。",
     "appliedTitle": "整理已套用",
     "appliedBody": "你的資料已完成整理。查看變更紀錄以了解詳情。",

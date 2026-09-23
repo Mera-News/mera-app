@@ -1326,7 +1326,7 @@
     "reversibleNote": "Reversible desde el registro de cambios",
     "effectDuplicate": "Elimina el duplicado y conserva el más fuerte.",
     "effectTooBroad": "Reduce el peso de este interés para que atraiga menos noticias fuera de tema.",
-    "effectStaleTopic": "Retira este tema inactivo. Puedes restaurarlo desde el registro de cambios.",
+    "effectStaleTopic": "Retira este tema inactivo.",
     "effectStaleFact": "Elimina este hecho: ninguno de sus temas está ya activo.",
     "appliedTitle": "Limpieza aplicada",
     "appliedBody": "Tu perfil fue ordenado. Consulta el registro de cambios para revisarlo.",

@@ -1326,7 +1326,7 @@
     "reversibleNote": "Terug te draaien vanuit het wijzigingslog",
     "effectDuplicate": "Verwijdert het duplicaat en behoudt de sterkste.",
     "effectTooBroad": "Verlaagt het gewicht van deze interesse zodat er minder off-topic verhalen binnenkomen.",
-    "effectStaleTopic": "Zet dit stille onderwerp op inactief. Je kunt het herstellen vanuit het wijzigingslog.",
+    "effectStaleTopic": "Zet dit stille onderwerp op inactief.",
     "effectStaleFact": "Verwijdert dit feit: geen van de onderwerpen ervan is nog actief.",
     "appliedTitle": "Opschoning toegepast",
     "appliedBody": "Je profiel is opgeschoond. Bekijk het wijzigingslog om te controleren.",

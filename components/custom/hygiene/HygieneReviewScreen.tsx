@@ -65,16 +65,15 @@ function effectPreview(kind: HygieneProposalKind, t: TFunction): string {
             });
         case 'stale_topic':
             return t('hygiene.effectStaleTopic', {
-                defaultValue: 'Retires this quiet topic. You can restore it from the change log.',
+                defaultValue: 'Retires this quiet topic.',
             });
         case 'stale_fact':
             return t('hygiene.effectStaleFact', {
-                defaultValue: 'Removes this fact — none of its topics are active anymore.',
+                defaultValue: 'Removes this fact. None of its topics are active anymore.',
             });
         case 'incoherent_topics':
             return t('hygiene.effectIncoherentTopics', {
-                defaultValue:
-                    'Replaces these topics with better ones for this interest. The old ones are reversible from the change log.',
+                defaultValue: 'Replaces these topics with better ones for this interest.',
             });
         default:
             return '';
@@ -188,7 +187,7 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
                                     <MaterialIcons name="undo" size={13} color="#6b7280" />
                                     <Text className="text-xs text-gray-500">
                                         {t('hygiene.reversibleNote', {
-                                            defaultValue: 'Reversible from the change log',
+                                            defaultValue: 'You can undo this in the change log.',
                                         })}
                                     </Text>
                                 </HStack>
@@ -235,7 +234,7 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
         // its SafeAreaView, so the page background spans the safe areas.
         <Box className="flex-1">
             <DrillDownHeader
-                title={t('hygiene.title', { defaultValue: 'Persona health' })}
+                title={t('hygiene.title', { defaultValue: 'Profile cleanup' })}
                 subtitle={t('hygiene.subtitle', { defaultValue: 'Suggested cleanups' })}
                 onBack={onBack}
             />

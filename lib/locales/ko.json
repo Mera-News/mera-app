@@ -1326,7 +1326,7 @@
     "reversibleNote": "변경 기록에서 되돌릴 수 있습니다",
     "effectDuplicate": "중복 항목을 제거하고 더 강력한 항목을 유지합니다.",
     "effectTooBroad": "이 관심사의 가중치를 낮춰 관련 없는 기사가 덜 유입되도록 합니다.",
-    "effectStaleTopic": "활동이 뜸한 이 토픽을 제거합니다. 변경 기록에서 복원할 수 있습니다.",
+    "effectStaleTopic": "활동이 뜸한 이 토픽을 제거합니다.",
     "effectStaleFact": "이 정보를 제거합니다: 관련 토픽이 더 이상 활성화되어 있지 않습니다.",
     "appliedTitle": "정리가 적용되었습니다",
     "appliedBody": "프로필이 정리되었습니다. 변경 기록에서 확인해 보세요.",

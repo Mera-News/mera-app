@@ -1326,7 +1326,7 @@
     "reversibleNote": "Reversibile dal registro delle modifiche",
     "effectDuplicate": "Rimuove il duplicato e mantiene quello più forte.",
     "effectTooBroad": "Riduce il peso di questo interesse così da attirare meno storie fuori tema.",
-    "effectStaleTopic": "Ritira questo argomento inattivo. Puoi ripristinarlo dal registro delle modifiche.",
+    "effectStaleTopic": "Ritira questo argomento inattivo.",
     "effectStaleFact": "Rimuove questo fatto: nessuno dei suoi argomenti è più attivo.",
     "appliedTitle": "Pulizia applicata",
     "appliedBody": "Il tuo profilo è stato riordinato. Consulta il registro delle modifiche per la revisione.",

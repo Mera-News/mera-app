@@ -1326,7 +1326,7 @@
     "reversibleNote": "変更ログから元に戻せます",
     "effectDuplicate": "重複を削除し、より強い方を残します。",
     "effectTooBroad": "この興味の重みを下げ、関係の薄いストーリーを減らします。",
-    "effectStaleTopic": "この動きのないトピックを停止します。変更ログから復元できます。",
+    "effectStaleTopic": "この動きのないトピックを停止します。",
     "effectStaleFact": "このファクトを削除します — トピックがすべて非アクティブになっています。",
     "appliedTitle": "整理を適用しました",
     "appliedBody": "プロフィールが整理されました。詳細は変更ログをご確認ください。",

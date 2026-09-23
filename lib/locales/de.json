@@ -1326,7 +1326,7 @@
     "reversibleNote": "Über das Änderungsprotokoll rückgängig machbar",
     "effectDuplicate": "Entfernt das Duplikat und behält das stärkere.",
     "effectTooBroad": "Senkt die Gewichtung dieses Interesses, damit weniger themenfremde Geschichten einfließen.",
-    "effectStaleTopic": "Stellt dieses ruhige Thema zurück. Sie können es über das Änderungsprotokoll wiederherstellen.",
+    "effectStaleTopic": "Stellt dieses ruhige Thema zurück.",
     "effectStaleFact": "Entfernt diesen Fakt: keines seiner Themen ist noch aktiv.",
     "appliedTitle": "Bereinigung angewendet",
     "appliedBody": "Ihr Profil wurde aufgeräumt. Sehen Sie sich das Änderungsprotokoll an, um es zu überprüfen.",

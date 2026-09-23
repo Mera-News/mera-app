@@ -1327,7 +1327,7 @@
     "reversibleNote": "可从变更记录中撤销",
     "effectDuplicate": "移除重复项，保留更强的那一个。",
     "effectTooBroad": "降低此兴趣的权重，使其带来的偏题内容更少。",
-    "effectStaleTopic": "停用这个不活跃的话题。你可以从变更记录中恢复它。",
+    "effectStaleTopic": "停用这个不活跃的话题。",
     "effectStaleFact": "移除此事实——它的所有话题都已不再活跃。",
     "appliedTitle": "整理已应用",
     "appliedBody": "你的资料已完成整理。查看变更记录了解详情。",

@@ -1333,7 +1333,7 @@
     "reversibleNote": "Réversible depuis le journal des modifications",
     "effectDuplicate": "Supprime le doublon et conserve le plus pertinent.",
     "effectTooBroad": "Réduit la pondération de cet intérêt afin qu'il attire moins d'articles hors sujet.",
-    "effectStaleTopic": "Retire ce sujet silencieux. Vous pouvez le restaurer depuis le journal des modifications.",
+    "effectStaleTopic": "Retire ce sujet silencieux.",
     "effectStaleFact": "Supprime ce fait : aucun de ses sujets n'est plus actif.",
     "appliedTitle": "Nettoyage appliqué",
     "appliedBody": "Votre profil a été nettoyé. Consultez le journal des modifications pour vérifier.",

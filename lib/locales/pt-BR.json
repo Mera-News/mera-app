@@ -1326,7 +1326,7 @@
     "reversibleNote": "Reversível pelo histórico de alterações",
     "effectDuplicate": "Remove a duplicata e mantém a mais forte.",
     "effectTooBroad": "Reduz o peso deste interesse para que traga menos notícias fora do tema.",
-    "effectStaleTopic": "Desativa este tópico pouco usado. Você pode restaurá-lo pelo histórico de alterações.",
+    "effectStaleTopic": "Desativa este tópico pouco usado.",
     "effectStaleFact": "Remove este fato: nenhum de seus tópicos está mais ativo.",
     "appliedTitle": "Limpeza aplicada",
     "appliedBody": "Seu perfil foi organizado. Veja o histórico de alterações para revisar.",

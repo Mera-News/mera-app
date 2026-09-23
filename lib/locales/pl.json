@@ -1348,7 +1348,7 @@
     "reversibleNote": "Można cofnąć z dziennika zmian",
     "effectDuplicate": "Usuwa duplikat i zachowuje silniejszy.",
     "effectTooBroad": "Obniża wagę tego zainteresowania, aby przyciągało mniej niezwiązanych z tematem wiadomości.",
-    "effectStaleTopic": "Wygasza ten nieaktywny temat. Możesz go przywrócić z dziennika zmian.",
+    "effectStaleTopic": "Wygasza ten nieaktywny temat.",
     "effectStaleFact": "Usuwa ten fakt: żaden z jego tematów nie jest już aktywny.",
     "appliedTitle": "Zastosowano porządki",
     "appliedBody": "Twój profil został uporządkowany. Sprawdź dziennik zmian, aby to przejrzeć.",

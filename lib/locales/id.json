@@ -1326,7 +1326,7 @@
     "reversibleNote": "Dapat dibatalkan dari log perubahan",
     "effectDuplicate": "Menghapus duplikat dan menyimpan yang lebih kuat.",
     "effectTooBroad": "Menurunkan bobot minat ini agar menarik lebih sedikit cerita yang tidak relevan.",
-    "effectStaleTopic": "Menghentikan topik yang sepi ini. Anda dapat memulihkannya dari log perubahan.",
+    "effectStaleTopic": "Menghentikan topik yang sepi ini.",
     "effectStaleFact": "Menghapus fakta ini: tidak ada lagi topiknya yang aktif.",
     "appliedTitle": "Perapian diterapkan",
     "appliedBody": "Profil Anda telah dirapikan. Lihat log perubahan untuk meninjau.",

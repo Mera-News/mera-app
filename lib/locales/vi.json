@@ -1327,7 +1327,7 @@
     "reversibleNote": "Có thể hoàn tác từ nhật ký thay đổi",
     "effectDuplicate": "Xóa mục trùng lặp và giữ lại mục mạnh hơn.",
     "effectTooBroad": "Giảm trọng số của sở thích này để nó kéo về ít bài viết lạc chủ đề hơn.",
-    "effectStaleTopic": "Ngừng theo dõi chủ đề ít hoạt động này. Bạn có thể khôi phục từ nhật ký thay đổi.",
+    "effectStaleTopic": "Ngừng theo dõi chủ đề ít hoạt động này.",
     "effectStaleFact": "Xóa thông tin này: không còn chủ đề nào của nó đang hoạt động.",
     "appliedTitle": "Đã dọn dẹp",
     "appliedBody": "Hồ sơ của bạn đã được dọn dẹp. Xem nhật ký thay đổi để kiểm tra lại.",

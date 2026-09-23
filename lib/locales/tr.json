@@ -1328,7 +1328,7 @@
     "reversibleNote": "Değişiklik günlüğünden geri alınabilir",
     "effectDuplicate": "Kopyayı kaldırır ve daha güçlü olanı tutar.",
     "effectTooBroad": "Bu ilgi alanının ağırlığını azaltarak daha az alakasız haber çekmesini sağlar.",
-    "effectStaleTopic": "Bu sessiz konuyu emekliye ayırır. Değişiklik günlüğünden geri yükleyebilirsin.",
+    "effectStaleTopic": "Bu sessiz konuyu emekliye ayırır.",
     "effectStaleFact": "Bu bilgiyi kaldırır: konularından hiçbiri artık aktif değil.",
     "appliedTitle": "Temizlik uygulandı",
     "appliedBody": "Profilin düzenlendi. İncelemek için değişiklik günlüğüne bak.",
