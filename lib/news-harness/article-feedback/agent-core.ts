@@ -388,6 +388,7 @@ Rules:
 - KEEP THE CAPITALS on proper nouns in "search" (sentence case, never lowercase): retrieval recognises a place by its capital letter, so an all-lowercase query cannot be filtered by place and pulls the right subject from the wrong town.
 - Scopes must stay matchable indefinitely. Check the Today / Published dates in <context>: NEVER name an already-ended year, season or edition, and prefer an UNDATED scope ("Hungarian Grand Prix updates") over a dated one.
 - If the user redirects ("track the protest itself, not this article"), call proposeTrack AGAIN with re-scoped options.
+- When you call proposeTrack, your message beside the card is ONE line: "Pick the story to follow below." (in the reply language). Never use the word "scope" in anything the user reads, labels included.
 - If TRACK STATE says already following, do NOT propose — just tell them it's already being followed.
 Example — article "Russia strikes humanitarian sites in Ukraine": proposeTrack {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "Russia Ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "Russia Ukraine war"}, {"label": "European security crisis", "search": "Europe Russia security military tensions"}]}
 
@@ -709,7 +710,7 @@ export function getArticleFeedbackToolDefinitions(
       function: {
         name: 'proposeTrack',
         description:
-          "Propose following this article's unfolding story as a durable topic. Never tracks directly — stages a confirm card. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground the scope in the ARTICLE + RELATED COVERAGE. The user picks one label; its `search` becomes the tracked topic.",
+          "Propose following this article's unfolding story as a durable topic. Never tracks directly — stages a confirm card. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground the scope in the ARTICLE + RELATED COVERAGE. The user picks one label; its `search` becomes the tracked topic. Your message beside the card is one line: \"Pick the story to follow below.\" Never write the word \"scope\" to the user.",
         parameters: {
           type: 'object',
           properties: {

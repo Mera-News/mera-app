@@ -25,6 +25,23 @@ const trackProposal = (labels: string[]): StagedProposal => ({
   })),
 });
 
+// F34: the model wrote "tracking scope" at the user. The line it writes
+// beside the card is fixed, and the word is banned, in the prompt and in the
+// cloud tool description alike.
+describe('follow-story card copy (F34)', () => {
+  it('asks for the fixed line and bans "scope" in the local prompt', () => {
+    const prompt = buildFollowStorySystemPrompt({ needsToolFormat: true });
+    expect(prompt).toContain('"Pick the story to follow below."');
+    expect(prompt).toContain('Never use the word "scope" in anything the user reads');
+  });
+
+  it('says the same in the cloud proposeTrack description', () => {
+    const track = getFollowStoryToolDefinitions('CLOUD', false).find((t) => t.function.name === 'proposeTrack')!;
+    expect(track.function.description).toContain('"Pick the story to follow below."');
+    expect(track.function.description).toContain('Never write the word "scope" to the user');
+  });
+});
+
 describe('buildFollowStorySystemPrompt', () => {
   it('states the article-less framing and the 3–4 widening scopes rule', () => {
     const prompt = buildFollowStorySystemPrompt({ needsToolFormat: false });

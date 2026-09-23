@@ -46,7 +46,7 @@ export const STORY_SCOPE_SYSTEM_PROMPT =
 You are given a numbered list of titles that all cover the same developing story. Pick the GENERIC continuing story they share (not any single article) so future developments keep matching.
 
 Output TWO fields:
-- "label": a short display name for the story, ${MAX_SCOPE_LABEL_WORDS} words or fewer, Title Case, no trailing punctuation. Generic and recognisable (e.g. "Russia–Ukraine war").
+- "label": a short display name for the story, ${MAX_SCOPE_LABEL_WORDS} words or fewer, Title Case, no trailing punctuation. Generic and recognisable (e.g. "Russia–Ukraine war"). The user reads it: never use the word "scope" in it.
 - "search": a short search query, ${MAX_SCOPE_SEARCH_WORDS} words or fewer, with the concrete who / what / where entity anchors that make future articles match (e.g. "Russia Ukraine civilian infrastructure attacks").
 
 The topic must stay matchable indefinitely. Given the Today date: NEVER name an already-ended year, season or edition; prefer an UNDATED scope.
