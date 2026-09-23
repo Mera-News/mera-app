@@ -186,14 +186,14 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                             }}
                             hitSlop={8}
                             accessibilityRole="button"
-                            accessibilityLabel={t('subscription.manageBadge')}
+                            accessibilityLabel={t('subscription.managePlan')}
                             testID="feed-status-manage-subscription"
                             className="bg-primary-500 rounded-full px-2.5 py-1"
                         >
                             <HStack className="items-center" space="xs">
                                 <MaterialIcons name="credit-card" size={12} color="#ffffff" />
                                 <Text size="xs" className="text-white font-semibold">
-                                    {t('subscription.manageBadge')}
+                                    {t('subscription.managePlan')}
                                 </Text>
                             </HStack>
                         </Pressable>
