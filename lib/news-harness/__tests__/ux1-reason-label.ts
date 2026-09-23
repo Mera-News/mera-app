@@ -7,13 +7,21 @@
 // takes both back out; applied to the shipped prompt it must yield the text the
 // archived arms were built from.
 
+import { RULE_NAME_BAN } from '../prompts/prompts';
+
 export const UX1_NEW_EXAMPLE =
     "\"Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country.\"";
 export const UX1_OLD_EXAMPLE =
     "\"Bulgaria's digital-ID policy is foreign-domestic; no tie to your country.\"";
-export const UX1_LABEL_RULE =
-    '\n\nSay what the rules found, never their names: the sentence must not contain "foreign-domestic", "tangential", "exclude", "stake", a tag such as "home" or "interest" used as a label, or any other word from these instructions. The reader has never seen them.';
+export const UX1_LABEL_RULE = `\n\n${RULE_NAME_BAN}`;
 
 export function undoUx1ReasonLabelRule(prompt: string): string {
     return prompt.replace(UX1_LABEL_RULE, '').replace(UX1_NEW_EXAMPLE, UX1_OLD_EXAMPLE);
+}
+
+/** The headline reason prompt got the same ban as its own block (ux1, K-3),
+ *  between its task and its rules. This takes it back out, so the archive
+ *  arms still compare against the text they were built from. */
+export function undoUx1HeadlineRuleBan(prompt: string): string {
+    return prompt.replace(`\n\n${RULE_NAME_BAN}`, '');
 }

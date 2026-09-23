@@ -149,11 +149,11 @@ describe('measured sizes after the promotion', () => {
   // Restated on purpose: the reason pass sends one call per article that clears
   // the gate, so these ride on every scored article.
   it('pins the promoted prompts', () => {
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5468);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5511);
     // Smaller than its pre-promotion twin, not larger: the headline reason
     // prompt gained the 130-token rule and then dropped the 1428-token anchor
     // table to fit the gateway wire cap. golden-prompts.test.ts owns that guard.
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(6958);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7066);
   });
 
   it('pins the pre-promotion prompts, which are now the control arms', () => {
@@ -186,10 +186,11 @@ describe('measured sizes after the promotion', () => {
     // The headline reason prompt is NOT comparable this way: it also lost the
     // anchor table to the wire cap, so its delta is the sum of two changes.
     // Asserting 130 here would silently pin that second change as if it were
-    // part of the promotion.
+    // part of the promotion. It also gained RULE_NAME_BAN (ux1, +108), so the
+    // delta is the sum of three changes.
     expect(
       estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)
         - estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT),
-    ).toBe(1168);
+    ).toBe(1060);
   });
 });

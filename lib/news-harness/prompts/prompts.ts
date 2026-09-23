@@ -275,6 +275,15 @@ ${CLOUD_SCORING_GEO_SCOPE_RULE}`;
  * (config.test.ts "pins the second-person voice rule"), and QA 2026-07-28
  * showed what its absence costs: third-person reasons leaked to users.
  */
+/**
+ * Every reason prompt's ban on naming the scoring rules in the sentence a
+ * reader sees. A rule name leaked twice: "foreign-domestic" copied from an
+ * example, then "foreign domestic policy" once the hyphenated form alone was
+ * banned. So the ban names the category in any spelling and says what to
+ * write instead. Guarded by golden-prompts.test.ts.
+ */
+export const RULE_NAME_BAN = `Say what the rules found, never their names: the sentence must not contain a rule name in ANY spelling ("foreign-domestic", "foreign domestic", with or without the hyphen, in any order), nor "tangential", "exclude", "stake", a tag such as "home" or "interest" used as a label, or any other word from these instructions. The reader has never seen them. Say whose story it is in plain words instead ("a Bulgarian domestic matter").`;
+
 const CLOUD_REASON_VOICE_RULE = `Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, low scores included. Wrong: "User follows Formula 1; the race matches this interest, no personal stake." Right: "The race matches your Formula 1 interest, but carries no personal stake."`;
 
 /**
@@ -350,7 +359,7 @@ Score → tone. Match your confidence to the score — a confident reason on a l
 - **0.25–0.4** — state the topic-only link plainly. "South Africa's draft AI policy matches your AI-industry interest." / "Sweden's tech-sector headwinds are adjacent to your industry."
 - **≤0.25** — minimal, honest. State the surface topic match and the disconnect in one short clause each. Do NOT use "may influence", "could shape", "via EU-wide trends", "through broader industry trends", or any phrasing that bridges a foreign/unrelated story to the user. Examples: "Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country." "Manchester building fire is a UK-local emergency; you're in Amsterdam."
 
-Say what the rules found, never their names: the sentence must not contain "foreign-domestic", "tangential", "exclude", "stake", a tag such as "home" or "interest" used as a label, or any other word from these instructions. The reader has never seen them.
+${RULE_NAME_BAN}
 
 ${CLOUD_REASON_VOICE_RULE}
 
@@ -731,6 +740,8 @@ export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT_
 ${CLOUD_HEADLINE_IMPACT_BLOCK}
 
 ${CLOUD_HEADLINE_REASON_TASK_V1}
+
+${RULE_NAME_BAN}
 ${REASON_V2_RULES}`;
 
 // ---------------------------------------------------------------------------
@@ -958,7 +969,7 @@ Tone by score:
 - **0.25–0.4** — topic-only link. "South Africa AI policy matches your industry interest."
 - **≤0.25** — minimal, honest. Surface topic match + disconnect, one short clause each. NEVER use "may influence", "could shape", "EU-wide trends", "broader industry trends". "Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country."
 
-Say what the rules found, never their names: no "foreign-domestic", "tangential", "exclude", "stake" or other words from these instructions.
+${RULE_NAME_BAN}
 
 Voice: write TO the user — "you"/"your", never "the user", "User …", or third person, in every band. Wrong: "User follows F1; the race matches this interest." Right: "The race matches your F1 interest."
 
