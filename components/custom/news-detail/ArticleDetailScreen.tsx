@@ -261,6 +261,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         isConnected,
     });
 
+    // M8/F31: the top bar turns solid once the meta row scrolls under it.
+    const [topBarSolid, setTopBarSolid] = useState(false);
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
     }, []);
@@ -703,7 +705,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 status bar without ever covering the tappable back button. */}
             <StatusBarScrim />
 
-            <DetailTopBar onBack={onBack} backIcon={backIcon} />
+            <DetailTopBar onBack={onBack} backIcon={backIcon} solid={topBarSolid} />
 
             <ArticleSuggestionContainer
                 article={article}
@@ -712,6 +714,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
+                onTopBarSolidChange={setTopBarSolid}
                 onEndReached={loadMoreRelated}
                 contentTopInset={insets.top}
                 contentBottomInset={insets.bottom + 20}

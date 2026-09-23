@@ -10,6 +10,11 @@
 // (ArticleFeedbackPrompt / CardActionBar) is the single entry point.
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import ExtractedMetadataPanel from '@/components/custom/news-detail/ExtractedMetadataPanel';
+import {
+    DETAIL_BACK_SIZE,
+    DETAIL_BACK_TOP_OFFSET,
+    DETAIL_TOP_BAR_HEIGHT,
+} from '@/components/custom/news-detail/DetailTopBar';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
 import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
@@ -30,7 +35,7 @@ import ReasonNote from '@/components/custom/cards/ReasonNote';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export type ArticleSuggestionContainerVariant = 'card' | 'screen';
@@ -49,6 +54,10 @@ interface BaseProps {
      *  lazily-rendered footer content (e.g. the related-articles list). */
     onEndReached?: () => void;
     contentTopInset?: number;
+    /** M8/F31: fires when the meta row starts or stops scrolling under the
+     *  detail top bar, so the host can solidify `DetailTopBar`. Only on
+     *  crossings, never per frame. */
+    onTopBarSolidChange?: (solid: boolean) => void;
     contentBottomInset?: number;
     footer?: React.ReactNode;
     // Screen-variant only — slot rendered between the title and the
@@ -71,7 +80,9 @@ type ArticleProps = BaseProps & { article: NewsArticle; suggestion?: never };
 
 type ArticleSuggestionContainerProps = SuggestionProps | ArticleProps;
 
-const SCREEN_HEADER_HEIGHT = 240;
+export const SCREEN_HEADER_HEIGHT = 240;
+/** The content VStack's `p-5`. */
+const CONTENT_PADDING = 20;
 
 // Geometry of the detail screens' floating back button. Both ArticleDetailScreen
 // and ArticleSuggestionScreen render it at `top: insets.top + 8` with `p-3`
@@ -80,8 +91,8 @@ const SCREEN_HEADER_HEIGHT = 240;
 // image the meta row would otherwise start right under the button and collide
 // with it. Push the content down by the button's own footprint + a comfortable
 // gap, derived from these values rather than a magic number.
-const BACK_BUTTON_TOP_OFFSET = 8;
-const BACK_BUTTON_SIZE = 48;
+const BACK_BUTTON_TOP_OFFSET = DETAIL_BACK_TOP_OFFSET;
+const BACK_BUTTON_SIZE = DETAIL_BACK_SIZE;
 const NO_IMAGE_BREATHING_ROOM = 16;
 /** Tint for the meta band's glass plate — dark so the band recedes into the
  *  page instead of reading as a lighter slab. See its call site. */
@@ -126,6 +137,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         onScrollPositionChange,
         onEndReached,
         contentTopInset = 0,
+        onTopBarSolidChange,
         contentBottomInset = 0,
         footer,
         aboveReason,
@@ -295,6 +307,27 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         />
     ) : null;
 
+    // Where the meta row starts in scroll content, and so how far the reader
+    // scrolls before it passes under the top bar. With a hero the content has
+    // no top inset (the hero bleeds under the status-bar scrim, M7); without
+    // one it starts below the inset and clears the back button.
+    const metaTop = showImage
+        ? SCREEN_HEADER_HEIGHT + CONTENT_PADDING
+        : contentTopInset + CONTENT_PADDING + NO_IMAGE_META_CLEARANCE;
+    const solidAfter = Math.max(0, metaTop - (contentTopInset + DETAIL_TOP_BAR_HEIGHT));
+    const topBarSolid = useRef(false);
+    const handleScrollPosition = useCallback(
+        (y: number) => {
+            onScrollPositionChange?.(y);
+            const solid = y > solidAfter;
+            if (solid !== topBarSolid.current) {
+                topBarSolid.current = solid;
+                onTopBarSolidChange?.(solid);
+            }
+        },
+        [onScrollPositionChange, onTopBarSolidChange, solidAfter],
+    );
+
     if (isCard) {
         return (
             <Pressable onPress={onPress}>
@@ -327,9 +360,11 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         <SmoothScrollView
             ref={scrollViewRef}
             style={{ flex: 1 }}
-            contentContainerStyle={{ paddingTop: contentTopInset }}
+            // M7: a hero starts at the very top, under the status-bar scrim;
+            // the inset only pads a screen with no hero.
+            contentContainerStyle={{ paddingTop: showImage ? 0 : contentTopInset }}
             headerHeight={SCREEN_HEADER_HEIGHT}
-            onScrollPositionChange={onScrollPositionChange}
+            onScrollPositionChange={handleScrollPosition}
             onEndReached={onEndReached}
             parallaxHeader={
                 showImage ? (
@@ -350,8 +385,9 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             }
         >
             <VStack className="p-5" space="lg">
-                {/* With an image, `mt-10` spaces the meta row below the hero;
-                    with no image, clear the floating back button instead.
+                {/* With an image the meta row follows the hero at the VStack's
+                    own padding (M7: an extra `mt-10` left ~60pt of dead space);
+                    with no image, it clears the floating back button instead.
 
                     NO BACKGROUND, deliberately. This row used to carry its own
                     `bg-background-50` fill, then a glass plate, to occlude the
@@ -368,7 +404,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                     becomes a problem — SmoothScrollView is shared, so that is
                     not a change to make casually. */}
                 {showImage ? (
-                    <Box className="mt-10 py-1.5">{metaRow}</Box>
+                    <Box testID="detail-meta">{metaRow}</Box>
                 ) : (
                     <Box style={{ marginTop: NO_IMAGE_META_CLEARANCE }}>{metaRow}</Box>
                 )}
