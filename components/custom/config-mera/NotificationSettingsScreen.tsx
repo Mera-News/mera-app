@@ -14,12 +14,17 @@ import { authClient } from '@/lib/auth-client';
 import { hasUserDeniedPermissions, setVisibleNotificationsEnabled } from '@/lib/notification-service';
 import { convertLocalHoursToUTC, convertUTCHoursToLocal } from '@/lib/notificationSlotUtils';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Linking, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import NotificationHourWheel from '@/components/custom/NotificationHourWheel';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+
+/** Quiet period after the last wheel change before the hours are saved. */
+const AUTO_SAVE_DELAY_MS = 800;
+
+type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'empty';
 
 interface NotificationSettingsScreenProps {
     onBack?: () => void;
@@ -39,7 +44,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
 }) => {
     const { t } = useTranslation();
     const [isLoading, setIsLoading] = useState(!isOnboarding);
-    const [isSaving, setIsSaving] = useState(false);
+    const [saveState, setSaveState] = useState<SaveState>('idle');
     const [isEnabling, setIsEnabling] = useState(false);
     const [isDisabling, setIsDisabling] = useState(false);
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -213,46 +218,26 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         }
     };
 
-    // Hours change handler - sync with parent in onboarding mode
-    const handleHoursChange = (hours: number[]) => {
-        setSelectedHours(hours);
-        onHoursChange?.(hours);
-    };
+    // ── Auto-save (preferences mode) ────────────────────────────────────
+    //
+    // The hours save on their own, AUTO_SAVE_DELAY_MS after the last change.
+    // There used to be a "Save Preferences" button far below the toggle, and
+    // leaving without pressing it silently dropped the change. A change still
+    // pending when the screen closes is saved on the way out.
+    const pendingHoursRef = useRef<number[] | null>(null);
+    const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const mountedRef = useRef(true);
 
-    // Save preferences (preferences mode only - saves hours)
-    const handleSave = async () => {
-        if (notificationsEnabled && selectedHours.length === 0) {
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('notifications.selectionRequiredTitle')}</ToastTitle>
-                        <ToastDescription>{t('notifications.selectionRequiredDescription')}</ToastDescription>
-                    </Toast>
-                ),
-            });
-            return;
-        }
-
-        setIsSaving(true);
+    const saveHours = useCallback(async (hours: number[]) => {
+        pendingHoursRef.current = null;
+        if (mountedRef.current) setSaveState('saving');
         try {
             const userId = await getCurrentUserId();
-
-            if (notificationsEnabled) {
-                const utcHours = convertLocalHoursToUTC(selectedHours);
-                await AccountService.updateNotificationPreferences(userId, utcHours);
-            }
-
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>{t('notifications.savedTitle')}</ToastTitle>
-                        <ToastDescription>{t('notifications.savedDescription')}</ToastDescription>
-                    </Toast>
-                ),
-            });
+            await AccountService.updateNotificationPreferences(userId, convertLocalHoursToUTC(hours));
+            if (mountedRef.current) setSaveState('saved');
         } catch {
+            if (!mountedRef.current) return;
+            setSaveState('error');
             toast.show({
                 placement: 'top',
                 render: () => (
@@ -262,9 +247,58 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     </Toast>
                 ),
             });
-        } finally {
-            setIsSaving(false);
         }
+        // getCurrentUserId is a plain helper re-created per render; the save
+        // must not be re-created (and the timer orphaned) on every render.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+            const pending = pendingHoursRef.current;
+            if (pending && pending.length > 0) void saveHours(pending);
+        };
+    }, [saveHours]);
+
+    const handleHoursChange = (hours: number[]) => {
+        setSelectedHours(hours);
+        onHoursChange?.(hours);
+        if (isOnboarding || !notificationsEnabled) return;
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        if (hours.length === 0) {
+            // Nothing to save: an enabled notification needs at least one hour.
+            pendingHoursRef.current = null;
+            setSaveState('empty');
+            return;
+        }
+        pendingHoursRef.current = hours;
+        setSaveState('idle');
+        saveTimerRef.current = setTimeout(() => {
+            void saveHours(hours);
+        }, AUTO_SAVE_DELAY_MS);
+    };
+
+    const saveStatusLine = () => {
+        if (saveState === 'idle' || saveState === 'error') return null;
+        const text =
+            saveState === 'empty'
+                ? t('notifications.pickAtLeastOneHour')
+                : saveState === 'saving'
+                    ? t('common.saving')
+                    : t('notifications.savedInline');
+        return (
+            <Text
+                testID="notifications-save-status"
+                size="sm"
+                className={saveState === 'empty' ? 'text-amber-400 text-center' : 'text-gray-400 text-center'}
+                accessibilityLiveRegion="polite"
+            >
+                {text}
+            </Text>
+        );
     };
 
     // Header: onboarding hero (onboarding mode only) + push toggle row +
@@ -370,7 +404,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         <HStack className="flex-1 items-center px-5">
             <VStack className="flex-1 items-center">
                 <Text size="sm" className="text-typography-500">
-                    Selected
+                    {t('notifications.selectedLabel')}
                 </Text>
                 <Text size="md" className="text-white font-semibold">
                     {selectedHours.length}
@@ -480,18 +514,9 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     </ScrollView>
                 )}
 
-                {/* Save Button */}
-                <VStack className="px-5" style={{ paddingBottom: insets.bottom + 32 }}>
-                    <Button
-                        action="primary"
-                        variant="solid"
-                        size="lg"
-                        onPress={handleSave}
-                        disabled={isSaving}
-                        className="w-full"
-                    >
-                        <ButtonText>{isSaving ? t('common.saving') : t('notifications.savePreferences')}</ButtonText>
-                    </Button>
+                {/* Auto-save status, where the Save button used to be. */}
+                <VStack className="px-5 pt-2" style={{ paddingBottom: insets.bottom + 24, minHeight: 44 }}>
+                    {saveStatusLine()}
                 </VStack>
             </Box>
         </GluestackUIProvider>
