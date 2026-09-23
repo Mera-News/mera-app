@@ -2837,8 +2837,8 @@
       "what": "Notizie mostra ogni notizia che Mera ha trovato per te negli ultimi due giorni. Ogni notizia ha una sola scheda, anche se l'hanno coperta molte testate.",
       "how1": "Mera trasforma quello che le hai detto di te in ricerche, recupera gli articoli corrispondenti e un'IA li legge uno per uno per valutare quanto contano per te.",
       "how2": "Le notizie che non hai visto vengono prima, le più importanti in testa. Una notizia non vista scende di un livello dopo 12 ore e di un altro dopo un giorno.",
-      "how3": "Le notizie che hai scorso scendono, quelle che hai aperto vanno in fondo. Le schede sopra il punto in cui leggi restano ferme. Trascina verso il basso per riordinare.",
-      "privacy": "L'ordine viene calcolato su questo telefono. Le notizie che apri restano solo su questo telefono."
+      "how3": "Al prossimo riordino, le notizie che hai già visto scendono e quelle che hai aperto vanno in fondo. Le schede sopra il punto in cui leggi restano ferme. Trascina verso il basso per riordinare.",
+      "privacy": "L'ordine viene calcolato su questo telefono. L'elenco delle notizie che apri resta su questo telefono."
     },
     "forYou": {
       "title": "Come funziona la Dashboard",

@@ -2837,8 +2837,8 @@
       "what": "Feed shows every story Mera found for you in the last two days. Each story gets one card, even when many outlets covered it.",
       "how1": "Mera turns what you told it about yourself into searches, fetches matching articles, and an AI reads each one to judge how much it matters to you.",
       "how2": "Stories you haven't seen come first, most important first. An unseen story drops one level after 12 hours and another after a day.",
-      "how3": "Stories you scrolled past move lower, and ones you opened go last. Cards above where you are reading stay put. Pull down to re-sort.",
-      "privacy": "The order is worked out on this phone. Which stories you open is kept only on this phone."
+      "how3": "At the next re-sort, stories you already looked at move lower and ones you opened go last. Cards above where you are reading stay put. Pull down to re-sort.",
+      "privacy": "The order is worked out on this phone. The record of which stories you open stays on this phone."
     },
     "forYou": {
       "title": "How the Dashboard works",

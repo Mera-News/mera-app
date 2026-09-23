@@ -2837,8 +2837,8 @@
       "what": "Bảng tin hiện mọi tin Mera tìm cho bạn trong hai ngày qua. Mỗi tin có một thẻ, kể cả khi nhiều báo cùng đưa tin.",
       "how1": "Mera biến những gì bạn kể về bản thân thành các lượt tìm kiếm, lấy bài viết phù hợp, rồi AI đọc từng bài để đánh giá mức quan trọng với bạn.",
       "how2": "Tin bạn chưa xem đứng trước, quan trọng nhất ở đầu. Tin chưa xem bị hạ một bậc sau 12 giờ và thêm một bậc sau một ngày.",
-      "how3": "Tin bạn đã cuộn qua xuống dưới, tin đã mở xuống cuối. Các thẻ phía trên chỗ bạn đang đọc giữ nguyên. Kéo xuống để sắp xếp lại.",
-      "privacy": "Thứ tự được tính trên điện thoại này. Những tin bạn mở chỉ được lưu trên điện thoại này."
+      "how3": "Ở lần sắp xếp lại tiếp theo, tin bạn đã xem xuống dưới, tin đã mở xuống cuối. Các thẻ phía trên chỗ bạn đang đọc giữ nguyên. Kéo xuống để sắp xếp lại.",
+      "privacy": "Thứ tự được tính trên điện thoại này. Bản ghi những tin bạn mở vẫn nằm trên điện thoại này."
     },
     "forYou": {
       "title": "Bảng điều khiển hoạt động thế nào",

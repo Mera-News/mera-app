@@ -2837,8 +2837,8 @@
       "what": "Der Feed zeigt jede Meldung, die Mera in den letzten zwei Tagen für dich gefunden hat. Jede Meldung bekommt eine Karte, auch wenn viele Medien darüber berichtet haben.",
       "how1": "Mera macht aus dem, was du über dich erzählt hast, Suchanfragen, holt passende Artikel, und eine KI liest jeden, um zu beurteilen, wie wichtig er für dich ist.",
       "how2": "Meldungen, die du noch nicht gesehen hast, kommen zuerst, die wichtigsten vorne. Eine ungesehene Meldung rutscht nach 12 Stunden eine Stufe tiefer und nach einem Tag noch eine.",
-      "how3": "Meldungen, an denen du vorbeigescrollt hast, rücken nach unten, geöffnete ganz ans Ende. Karten oberhalb deiner Leseposition bleiben stehen. Zum Neusortieren nach unten ziehen.",
-      "privacy": "Die Reihenfolge wird auf diesem Telefon berechnet. Welche Meldungen du öffnest, bleibt nur auf diesem Telefon."
+      "how3": "Beim nächsten Neusortieren rücken Meldungen, die du schon angesehen hast, nach unten, geöffnete ganz ans Ende. Karten oberhalb deiner Leseposition bleiben stehen. Zum Neusortieren nach unten ziehen.",
+      "privacy": "Die Reihenfolge wird auf diesem Telefon berechnet. Welche Meldungen du öffnest, wird nur auf diesem Telefon festgehalten."
     },
     "forYou": {
       "title": "So funktioniert das Dashboard",

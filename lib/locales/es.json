@@ -2837,8 +2837,8 @@
       "what": "Noticias muestra cada noticia que Mera encontró para ti en los últimos dos días. Cada noticia tiene una sola tarjeta, aunque la hayan cubierto muchos medios.",
       "how1": "Mera convierte lo que le contaste sobre ti en búsquedas, trae los artículos que coinciden y una IA lee cada uno para valorar cuánto te importa.",
       "how2": "Primero van las noticias que no has visto, las más importantes delante. Una noticia no vista baja un nivel tras 12 horas y otro tras un día.",
-      "how3": "Las noticias que pasaste de largo bajan, y las que abriste van al final. Las tarjetas por encima de donde lees no se mueven. Desliza hacia abajo para reordenar.",
-      "privacy": "El orden se calcula en este teléfono. Las noticias que abres se guardan solo en este teléfono."
+      "how3": "En la siguiente reordenación, las noticias que ya viste bajan y las que abriste van al final. Las tarjetas por encima de donde lees no se mueven. Desliza hacia abajo para reordenar.",
+      "privacy": "El orden se calcula en este teléfono. El registro de las noticias que abres se queda en este teléfono."
     },
     "forYou": {
       "title": "Cómo funciona el Panel",

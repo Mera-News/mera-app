@@ -2844,8 +2844,8 @@
       "what": "Le Fil d'actu montre chaque sujet que Mera a trouvé pour toi ces deux derniers jours. Chaque sujet a une seule carte, même si de nombreux médias l'ont couvert.",
       "how1": "Mera transforme ce que tu lui as dit de toi en recherches, récupère les articles correspondants, et une IA lit chacun pour juger à quel point il compte pour toi.",
       "how2": "Les sujets que tu n'as pas vus passent en premier, les plus importants devant. Un sujet non vu descend d'un niveau après 12 heures, puis d'un autre après un jour.",
-      "how3": "Les sujets que tu as fait défiler descendent, et ceux que tu as ouverts vont à la fin. Les cartes au-dessus de ta lecture ne bougent pas. Tire vers le bas pour retrier.",
-      "privacy": "L'ordre est calculé sur ce téléphone. Les sujets que tu ouvres restent uniquement sur ce téléphone."
+      "how3": "Au prochain tri, les sujets que tu as déjà vus descendent et ceux que tu as ouverts vont à la fin. Les cartes au-dessus de ta lecture ne bougent pas. Tire vers le bas pour retrier.",
+      "privacy": "L'ordre est calculé sur ce téléphone. La liste des sujets que tu ouvres reste sur ce téléphone."
     },
     "forYou": {
       "title": "Comment fonctionne le Tableau de bord",

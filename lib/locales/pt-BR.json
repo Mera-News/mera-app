@@ -2837,8 +2837,8 @@
       "what": "O Feed mostra cada notícia que o Mera encontrou para você nos últimos dois dias. Cada notícia tem um único cartão, mesmo quando vários veículos a cobriram.",
       "how1": "O Mera transforma o que você contou sobre si em buscas, traz os artigos que combinam e uma IA lê cada um para avaliar o quanto ele importa para você.",
       "how2": "As notícias que você não viu vêm primeiro, as mais importantes na frente. Uma notícia não vista desce um nível depois de 12 horas e outro depois de um dia.",
-      "how3": "As notícias pelas quais você rolou descem, e as que você abriu vão para o fim. Os cartões acima de onde você está lendo não se mexem. Puxe para baixo para reordenar.",
-      "privacy": "A ordem é calculada neste celular. As notícias que você abre ficam guardadas só neste celular."
+      "how3": "Na próxima reorganização, as notícias que você já viu descem e as que você abriu vão para o fim. Os cartões acima de onde você está lendo não se mexem. Puxe para baixo para reordenar.",
+      "privacy": "A ordem é calculada neste celular. O registro das notícias que você abre fica neste celular."
     },
     "forYou": {
       "title": "Como o Painel funciona",

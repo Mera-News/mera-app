@@ -2839,8 +2839,8 @@
       "what": "Akış, Mera'nın son iki günde senin için bulduğu her haberi gösterir. Birçok yayın aynı haberi yazsa bile her haberin tek kartı vardır.",
       "how1": "Mera, kendin hakkında anlattıklarını aramalara dönüştürür, eşleşen makaleleri getirir ve bir yapay zeka her birini okuyup senin için ne kadar önemli olduğunu değerlendirir.",
       "how2": "Görmediğin haberler önce gelir, en önemliler başta. Görülmemiş bir haber 12 saat sonra bir seviye, bir gün sonra bir seviye daha düşer.",
-      "how3": "Kaydırıp geçtiğin haberler aşağı iner, açtıkların en sona gider. Okuduğun yerin üstündeki kartlar yerinde kalır. Yeniden sıralamak için aşağı çek.",
-      "privacy": "Sıralama bu telefonda hesaplanır. Hangi haberleri açtığın yalnızca bu telefonda tutulur."
+      "how3": "Bir sonraki yeniden sıralamada, baktığın haberler aşağı iner, açtıkların en sona gider. Okuduğun yerin üstündeki kartlar yerinde kalır. Yeniden sıralamak için aşağı çek.",
+      "privacy": "Sıralama bu telefonda hesaplanır. Hangi haberleri açtığının kaydı bu telefonda kalır."
     },
     "forYou": {
       "title": "Panel nasıl çalışır",

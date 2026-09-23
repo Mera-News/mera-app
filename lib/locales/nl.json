@@ -2837,8 +2837,8 @@
       "what": "De Feed toont elk verhaal dat Mera de afgelopen twee dagen voor je vond. Elk verhaal krijgt één kaart, ook als veel media erover schreven.",
       "how1": "Mera maakt van wat je over jezelf vertelde zoekopdrachten, haalt passende artikelen op, en een AI leest ze een voor een om te beoordelen hoe belangrijk ze voor je zijn.",
       "how2": "Verhalen die je nog niet zag komen eerst, de belangrijkste bovenaan. Een ongezien verhaal zakt na 12 uur één niveau en na een dag nog een.",
-      "how3": "Verhalen waar je langs scrolde zakken, en verhalen die je opende komen onderaan. Kaarten boven je leespositie blijven staan. Trek omlaag om opnieuw te sorteren.",
-      "privacy": "De volgorde wordt op deze telefoon bepaald. Welke verhalen je opent, blijft alleen op deze telefoon."
+      "how3": "Bij de volgende herschikking zakken verhalen die je al zag, en verhalen die je opende komen onderaan. Kaarten boven je leespositie blijven staan. Trek omlaag om opnieuw te sorteren.",
+      "privacy": "De volgorde wordt op deze telefoon bepaald. Welke verhalen je opent, wordt alleen op deze telefoon bijgehouden."
     },
     "forYou": {
       "title": "Hoe het Dashboard werkt",

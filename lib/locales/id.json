@@ -2836,8 +2836,8 @@
       "what": "Umpan menampilkan setiap berita yang ditemukan Mera untukmu dalam dua hari terakhir. Setiap berita punya satu kartu, meski diliput banyak media.",
       "how1": "Mera mengubah apa yang kamu ceritakan tentang dirimu menjadi pencarian, mengambil artikel yang cocok, lalu AI membaca tiap artikel untuk menilai seberapa penting artikel itu bagimu.",
       "how2": "Berita yang belum kamu lihat tampil lebih dulu, yang paling penting di depan. Berita yang belum dilihat turun satu tingkat setelah 12 jam dan satu lagi setelah sehari.",
-      "how3": "Berita yang sudah kamu gulir lewat turun ke bawah, dan yang sudah kamu buka paling akhir. Kartu di atas posisi bacamu tidak bergeser. Tarik ke bawah untuk mengurutkan ulang.",
-      "privacy": "Urutan dihitung di ponsel ini. Berita yang kamu buka hanya disimpan di ponsel ini."
+      "how3": "Saat pengurutan ulang berikutnya, berita yang sudah kamu lihat turun, dan yang sudah kamu buka paling akhir. Kartu di atas posisi bacamu tidak bergeser. Tarik ke bawah untuk mengurutkan ulang.",
+      "privacy": "Urutan dihitung di ponsel ini. Catatan berita yang kamu buka tetap ada di ponsel ini."
     },
     "forYou": {
       "title": "Cara kerja Dasbor",

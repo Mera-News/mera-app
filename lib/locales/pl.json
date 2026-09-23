@@ -2875,8 +2875,8 @@
       "what": "Strumień pokazuje każdy temat, który Mera znalazła dla ciebie w ciągu ostatnich dwóch dni. Każdy temat ma jedną kartę, nawet jeśli pisało o nim wiele mediów.",
       "how1": "Mera zamienia to, co o sobie powiedziałeś, w wyszukiwania, pobiera pasujące artykuły, a AI czyta każdy z nich, by ocenić, jak bardzo jest dla ciebie ważny.",
       "how2": "Najpierw są tematy, których nie widziałeś, od najważniejszych. Niewidziany temat spada o poziom po 12 godzinach i o kolejny po dniu.",
-      "how3": "Tematy, które przewinąłeś, przesuwają się niżej, a otwarte trafiają na koniec. Karty powyżej miejsca, w którym czytasz, stoją w miejscu. Pociągnij w dół, by posortować.",
-      "privacy": "Kolejność jest ustalana na tym telefonie. To, które tematy otwierasz, zostaje tylko na tym telefonie."
+      "how3": "Przy następnym sortowaniu tematy, które już widziałeś, przesuwają się niżej, a otwarte trafiają na koniec. Karty powyżej miejsca, w którym czytasz, stoją w miejscu. Pociągnij w dół, by posortować.",
+      "privacy": "Kolejność jest ustalana na tym telefonie. Zapis tego, które tematy otwierasz, zostaje na tym telefonie."
     },
     "forYou": {
       "title": "Jak działa Pulpit",
