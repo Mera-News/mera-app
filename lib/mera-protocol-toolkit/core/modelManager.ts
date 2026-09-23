@@ -1,8 +1,9 @@
 // Model Manager — Base model download, load, dispose, and state management
-// Uses expo-file-system for storage metadata, RNFS for download, llama.rn for inference
+// Uses expo-file-system for storage metadata and the download, llama.rn for inference
 
 import { Directory, File, Paths } from 'expo-file-system';
 import * as RNFS from '@dr.pogodin/react-native-fs';
+import * as LegacyFileSystem from 'expo-file-system/legacy';
 import {
   addNativeLogListener,
   initLlama,
@@ -40,7 +41,7 @@ export type DownloadProgressInfo = {
 let llamaContext: LlamaContext | null = null;
 let currentModelState: ModelState | null = null;
 let activeAdapterId: string | null = null;
-let activeDownloadJobId: number | null = null;
+let activeDownload: LegacyFileSystem.DownloadResumable | null = null;
 
 const MODELS_DIR_NAME = 'mera-models';
 const MANIFEST_FILE_NAME = 'manifest.json';
@@ -85,10 +86,8 @@ async function writeManifest(manifest: BaseModelManifest): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Downloads and stores the shared base model for on-device inference.
- * Uses @dr.pogodin/react-native-fs (same approach as pocketpal-ai).
- * RNFS.downloadFile gives us real native progress callbacks and
- * background-capable downloads on iOS.
+ * Downloads and stores the shared base model for on-device inference, in an
+ * iOS background URLSession (expo-file-system) so it survives backgrounding.
  */
 export async function downloadBaseModel(
   config: BaseModelDownloadConfig,
@@ -99,58 +98,55 @@ export async function downloadBaseModel(
     await modelDir.create({ intermediates: true });
   }
 
-  // RNFS needs a plain filesystem path, not a file:// URI.
-  // Paths.cache resolves to the iOS Caches directory.
-  const destinationPath = `${RNFS.CachesDirectoryPath}/${MODELS_DIR_NAME}/${config.modelId}/model.gguf`;
+  // The download runs in an iOS background URLSession through expo-file-system,
+  // NOT RNFS. RNFS emits progress from the URLSession delegate queue straight
+  // into its generated TurboModule event emitter, whose event map is a
+  // std::unordered_map mutated with operator[] from that background thread
+  // while the JS thread subscribes to it: a data race that corrupted the table
+  // and crashed the app natively mid-download (MERA-APP-7M `__next_prime
+  // overflow`, MERA-APP-7N EXC_BAD_ACCESS in emitOnDownloadProgress). Expo's
+  // module events are scheduled onto the JS thread. Both modules are in the
+  // 1.3.1 binary, so this ships over the air.
+  const modelFile = getModelFile(config.modelId);
+  logger.info('[ModelManager] Starting download', { modelUrl: config.modelUrl });
 
-  // Ensure directory exists via RNFS (belt-and-suspenders with expo mkdir above)
-  const dirPath = destinationPath.substring(0, destinationPath.lastIndexOf('/'));
-  await RNFS.mkdir(dirPath);
-
-  logger.info('[ModelManager] Starting RNFS download', { modelUrl: config.modelUrl });
-  logger.info('[ModelManager] Destination', { destinationPath });
-
-  const downloadResult = RNFS.downloadFile({
-    fromUrl: config.modelUrl,
-    toFile: destinationPath,
-    background: true,       // iOS background URLSession — survives app backgrounding
-    discretionary: false,   // Don't let iOS defer the download
-    progressInterval: 800,  // Native progress callback every 800ms (pocketpal default)
-    begin: (res) => {
-      logger.info('[ModelManager] Download started', {
-        statusCode: res.statusCode,
-        contentLength: res.contentLength,
-        jobId: downloadResult.jobId,
-      });
-      activeDownloadJobId = downloadResult.jobId;
-    },
-    progress: (res) => {
-      const pct = res.contentLength > 0
-        ? (res.bytesWritten / res.contentLength) * 100
-        : 0;
+  // Native sends an event per write; only whole-percent changes reach JS state.
+  let lastWholePercent = -1;
+  const resumable = LegacyFileSystem.createDownloadResumable(
+    config.modelUrl,
+    modelFile.uri,
+    { sessionType: LegacyFileSystem.FileSystemSessionType.BACKGROUND },
+    (p) => {
+      if (p.totalBytesExpectedToWrite <= 0) return;
+      const pct = (p.totalBytesWritten / p.totalBytesExpectedToWrite) * 100;
+      const whole = Math.floor(pct);
+      if (whole === lastWholePercent) return;
+      lastWholePercent = whole;
       onProgress?.({
-        bytesWritten: res.bytesWritten,
-        contentLength: res.contentLength,
+        bytesWritten: p.totalBytesWritten,
+        contentLength: p.totalBytesExpectedToWrite,
         progress: pct,
       });
     },
-  });
-
-  activeDownloadJobId = downloadResult.jobId;
+  );
+  activeDownload = resumable;
 
   try {
-    const result = await downloadResult.promise;
-    logger.info('[ModelManager] Download finished', { statusCode: result.statusCode, bytesWritten: result.bytesWritten });
-
-    if (result.statusCode !== 200) {
-      throw new Error(`Download failed with HTTP status ${result.statusCode}`);
+    const result = await resumable.downloadAsync();
+    if (!result) {
+      // downloadAsync resolves undefined when the task was cancelled.
+      throw new Error('Download has been aborted');
+    }
+    logger.info('[ModelManager] Download finished', { status: result.status });
+    if (result.status !== 200) {
+      if (modelFile.exists) modelFile.delete();
+      throw new Error(`Download failed with HTTP status ${result.status}`);
     }
   } finally {
-    activeDownloadJobId = null;
+    if (activeDownload === resumable) activeDownload = null;
   }
 
   // Verify SHA-256 checksum (skip if no checksum provided)
-  const modelFile = getModelFile(config.modelId);
   if (config.expectedChecksum) {
     const fileBytes = await modelFile.bytes();
     const digest = await Crypto.digest(
@@ -162,7 +158,7 @@ export async function downloadBaseModel(
       .join('');
 
     if (hexDigest !== config.expectedChecksum) {
-      await RNFS.unlink(destinationPath).catch(() => {});
+      if (modelFile.exists) modelFile.delete();
       throw new Error(
         `Checksum mismatch: expected ${config.expectedChecksum}, got ${hexDigest}`,
       );
@@ -420,12 +416,11 @@ export async function purgeAllBaseModels(): Promise<void> {
   }
 }
 
-/** Cancels the active download if one is in progress (uses RNFS.stopDownload). */
+/** Cancels the active download if one is in progress. */
 export function cancelActiveDownload(): void {
-  if (activeDownloadJobId !== null) {
-    RNFS.stopDownload(activeDownloadJobId);
-    activeDownloadJobId = null;
-  }
+  const download = activeDownload;
+  activeDownload = null;
+  download?.cancelAsync().catch(() => {});
 }
 
 /** Checks if a model is downloaded and ready. */
