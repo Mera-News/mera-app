@@ -22,6 +22,20 @@ jest.mock('expo-notifications', () => ({
   scheduleNotificationAsync: (...a: unknown[]) => mockSchedule(...a),
 }));
 jest.mock('i18next', () => ({ t: (k: string) => k }));
+// Real hold bookkeeping (pure module state), so the test sees what a restart would.
+jest.mock('react-native', () => ({ AppState: { currentState: 'active' } }));
+jest.mock('../../../app-restart', () => {
+  const holds = new Map<number, string>();
+  let next = 1;
+  return {
+    holdRestart: (label: string) => {
+      const id = next++;
+      holds.set(id, label);
+      return () => { holds.delete(id); };
+    },
+    activeHolds: () => Array.from(holds.values()),
+  };
+});
 const mockCapture = jest.fn();
 jest.mock('../../../logger', () => ({
   __esModule: true,
@@ -38,6 +52,7 @@ jest.mock('../../../stores/mera-protocol-store', () => ({
 }));
 
 import { cancelModelDownload, isDownloadInProgress, startModelDownload } from '../downloadService';
+import { activeHolds } from '../../../app-restart';
 
 const flush = () => new Promise((r) => setImmediate(r));
 const cfg = { modelId: 'm', modelUrl: 'u', expectedChecksum: '' };
@@ -45,6 +60,41 @@ const cfg = { modelId: 'm', modelUrl: 'u', expectedChecksum: '' };
 beforeEach(() => {
   jest.clearAllMocks();
   mockState.modelState = 'not_downloaded';
+});
+
+describe('downloadService restart hold (MERA-APP-7M)', () => {
+  it('holds the app restart for the whole download and releases it on success', async () => {
+    startModelDownload(cfg);
+    await flush();
+    expect(activeHolds()).toEqual(['model-download']);
+    resolveDownload();
+    await flush();
+    expect(activeHolds()).toEqual([]);
+  });
+
+  it('releases the hold on failure', async () => {
+    startModelDownload(cfg);
+    await flush();
+    rejectDownload(new Error('network down'));
+    await flush();
+    expect(activeHolds()).toEqual([]);
+  });
+
+  it('releases the hold on cancel, and a restarted download holds exactly once', async () => {
+    startModelDownload(cfg);
+    await flush();
+    const rejectFirst = rejectDownload;
+    await cancelModelDownload();
+    expect(activeHolds()).toEqual([]);
+    startModelDownload(cfg);
+    await flush();
+    rejectFirst(new Error('Download has been aborted'));
+    await flush();
+    expect(activeHolds()).toEqual(['model-download']);
+    resolveDownload();
+    await flush();
+    expect(activeHolds()).toEqual([]);
+  });
 });
 
 describe('downloadService cancel', () => {

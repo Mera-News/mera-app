@@ -2,6 +2,7 @@
 // Wraps llama.rn completion API with toolkit's InferParams/InferResult types
 
 import type { InferParams, InferResult } from '../types';
+import { holdRestart } from '../../app-restart';
 import { recordCompletion } from './inference-stats';
 import { _getContext, _updateInferenceSpeed } from './modelManager';
 
@@ -49,7 +50,18 @@ function acquireLlamaLock(): Promise<() => void> {
 
 /** General-purpose on-device LLM inference. */
 export function infer(params: InferParams): Promise<InferResult> {
-  return withLlamaLock(() => inferExclusive(params));
+  return withLlamaLock(async () => {
+    // A JS reload under a running native completion hands its callbacks a
+    // torn-down runtime. Every return from background reloads the app, so a
+    // completion holds the restart for its own duration (chat streaming holds
+    // it separately, in ChatSessionView).
+    const release = holdRestart('local-inference');
+    try {
+      return await inferExclusive(params);
+    } finally {
+      release();
+    }
+  });
 }
 
 // The context lookup and the timing both belong INSIDE the lock: the context can

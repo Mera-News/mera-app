@@ -4,6 +4,7 @@
 
 import * as Notifications from 'expo-notifications';
 import i18next from 'i18next';
+import { holdRestart } from '../../app-restart';
 import logger from '../../logger';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import type { BaseModelDownloadConfig } from '../types';
@@ -26,6 +27,20 @@ let downloadPromise: Promise<void> | null = null;
 // notification, and its `finally` could clear the handle of a download started
 // right after the cancel.
 let downloadGeneration = 0;
+
+// The download runs in a native background URLSession, so a JS reload does not
+// stop it: the reloaded app forgets it (state reads `not_downloaded` while the
+// file is still being written) and RNFS keeps firing progress events into the
+// torn-down runtime, which crashed the app natively (MERA-APP-7M, a C++
+// `__next_prime overflow`). Every return from background reloads the app, so
+// the restart is held for the whole download, the same way a purchase or a
+// streaming chat holds it. A blocked restart is deferred, never lost.
+let releaseRestartHold: (() => void) | null = null;
+
+function releaseDownloadHold(): void {
+  releaseRestartHold?.();
+  releaseRestartHold = null;
+}
 
 // ---------------------------------------------------------------------------
 // Notification helpers (completion / error only)
@@ -96,6 +111,8 @@ export function startModelDownload(config: BaseModelDownloadConfig): void {
 
   const generation = ++downloadGeneration;
   const isCurrent = () => generation === downloadGeneration;
+  releaseDownloadHold();
+  releaseRestartHold = holdRestart('model-download');
 
   downloadPromise = (async () => {
     const canNotify = await hasNotificationPermission();
@@ -122,7 +139,10 @@ export function startModelDownload(config: BaseModelDownloadConfig): void {
       useMeraProtocolStore.getState().setModelError(message);
       if (canNotify) await showErrorNotification(message);
     } finally {
-      if (isCurrent()) downloadPromise = null;
+      if (isCurrent()) {
+        downloadPromise = null;
+        releaseDownloadHold();
+      }
     }
   })();
 }
@@ -130,6 +150,7 @@ export function startModelDownload(config: BaseModelDownloadConfig): void {
 /** Cancels the active download. */
 export async function cancelModelDownload(): Promise<void> {
   downloadGeneration++;
+  releaseDownloadHold();
   cancelActiveDownload();
   downloadPromise = null;
   useMeraProtocolStore.getState().setModelState('not_downloaded');
