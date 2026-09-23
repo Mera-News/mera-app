@@ -106,6 +106,7 @@ import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
+import NewStoriesPill from '@/components/custom/feed/NewStoriesPill';
 import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
@@ -629,6 +630,36 @@ const FeedScreen: React.FC = () => {
     return () => clearTimeout(timer);
   }, [listData]);
 
+  // ── "New stories" pill (N1) ──
+  // Arrivals that landed while the reader was scrolled down. They land below
+  // the pinned prefix, i.e. below what the reader has read, so the pill points
+  // down and scrolls to the first of them.
+  const [awayArrivals, setAwayArrivals] = useState<ReadonlySet<string>>(() => new Set());
+  const hasAwayArrivalsShared = useSharedValue(false);
+  useEffect(() => {
+    const arriving = arrivingIdsRef.current;
+    if (arriving.size === 0) return;
+    if (!userDraggedShared.value || lastOffsetShared.value <= SCROLL_THRESHOLD) return;
+    setAwayArrivals((prev) => {
+      const next = new Set(prev);
+      arriving.forEach((id) => next.add(id));
+      return next;
+    });
+    hasAwayArrivalsShared.value = true;
+    // Reads refs and shared values on purpose: this reacts to a NEW list only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listData]);
+  const clearAwayArrivals = useCallback(() => {
+    hasAwayArrivalsShared.value = false;
+    setAwayArrivals((prev) => (prev.size === 0 ? prev : new Set()));
+  }, [hasAwayArrivalsShared]);
+  const showNewStories = useCallback(() => {
+    const index = listData.findIndex((it) => awayArrivals.has(it.id));
+    clearAwayArrivals();
+    if (index < 0) return;
+    listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
+  }, [listData, awayArrivals, clearAwayArrivals]);
+
   // Seed the pin the first time the list is non-empty. This is NOT redundant
   // with the extend inside the ingest effect: on a cold launch the first ingest
   // fires while `listData` is still empty (order empty, candidates just landed),
@@ -805,6 +836,12 @@ const FeedScreen: React.FC = () => {
     // callback a no-op, which is the only case cancelling would have bought.
     requestAnimationFrame(() => {
       listRef.current?.scrollToOffset({ offset: 0, animated: false });
+      // F27: re-seed the pin in the same frame. `resetSession` cleared it, so
+      // until the next ingest nothing stopped a sync's arrivals from sorting
+      // in above the cards the reader is now looking at, which read as a
+      // second jump right after the refresh. Floor-sized (the reader is at the
+      // top), and still monotonic from here.
+      setPinnedIds((prev) => extendPinnedIds(prev, listDataRef.current, null));
     });
   }, [partitionSnapshot, listData]);
 
@@ -823,6 +860,11 @@ const FeedScreen: React.FC = () => {
       // the list can sit past the threshold for one frame while it lays out,
       // which flashed the FAB with nothing having been scrolled (F3).
       const next = userDraggedShared.value && e.contentOffset.y > SCROLL_THRESHOLD;
+      // Back at the top: the pill has nothing left to point at.
+      if (hasAwayArrivalsShared.value && e.contentOffset.y < 50) {
+        hasAwayArrivalsShared.value = false;
+        runOnJS(clearAwayArrivals)();
+      }
       if (next !== showFabShared.value) {
         showFabShared.value = next;
         runOnJS(setShowScrollToTop)(next);
@@ -1069,6 +1111,14 @@ const FeedScreen: React.FC = () => {
         // `onScroll` worklet above, which only owns the scroll event itself.
         // Landing buffered dwell marks here keeps the debounce from being the
         // only thing standing between a skip and app termination.
+        // scrollToIndex (the new-stories pill) can target a row that is not
+        // measured yet; land on the estimate, the list settles from there.
+        onScrollToIndexFailed={(info) => {
+          listRef.current?.scrollToOffset({
+            offset: info.averageItemLength * info.index,
+            animated: true,
+          });
+        }}
         onScrollBeginDrag={() => {
           userDraggedShared.value = true;
         }}
@@ -1239,6 +1289,12 @@ const FeedScreen: React.FC = () => {
           </View>
         </VStack>
       </Animated.View>
+
+      <NewStoriesPill
+        visible={awayArrivals.size > 0}
+        onPress={showNewStories}
+        bottom={insets.bottom + TAB_BAR_HEIGHT + 20}
+      />
 
       <ScrollToTopFab
         visible={showScrollToTop}
