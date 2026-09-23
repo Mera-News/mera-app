@@ -15,16 +15,17 @@
 //
 // WHAT A RESTART COSTS, AND WHO PAYS IT
 // A reload looks exactly like a cold start to every boot path in the app, which
-// is wrong for three of them. Each reads the marker this module writes and
+// is wrong for two of them. Each reads the marker this module writes and
 // treats a restart boot as warm:
 //   - `lib/stores/pin-store.ts`      — otherwise a 3-second background becomes
 //                                      a PIN entry on every return
-//   - `app/_layout.tsx`              — otherwise `handleInitialNotification()`
-//                                      re-deep-links a notification tapped
-//                                      hours ago, on every restart
 //   - `lib/scheduler/AppScheduler.ts`— otherwise the 5s cold-start floor
 //                                      replaces the 60s warm one, so feed-sync
 //                                      fires on every single return
+// Notification taps do NOT read the marker and must not skip restart boots: a
+// tap made from the background returns through a restart. They dedupe on the
+// tap's persisted identifier instead (`handleInitialNotification` in
+// lib/notification-service.ts).
 // Money and credential paths hold the restart off instead, via `holdRestart()`.
 //
 // IMPORT DISCIPLINE. `lib/database/index.ts` opens SQLite at import time and the

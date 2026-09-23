@@ -67,7 +67,7 @@ import {
 import { defineBackupTask, syncBackupTaskRegistration } from '@/lib/background/backup-task';
 import * as Sentry from '@sentry/react-native';
 import { DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
-import { initRestartContext, restartContext } from '@/lib/app-restart';
+import { initRestartContext } from '@/lib/app-restart';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 // Task registrations — each file calls AppScheduler.register() at module load
 import '@/lib/scheduler/tasks/feed-sync-task';
