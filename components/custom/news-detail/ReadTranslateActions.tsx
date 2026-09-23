@@ -1,5 +1,6 @@
 import TranslationNotice from '@/components/custom/news-detail/TranslationNotice';
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
@@ -66,9 +67,11 @@ interface ReadTranslateActionsProps {
  * notice line and the two buttons' colours, never their order:
  *
  * 1. The Google Translate button — THREE-QUARTER width, centred, deliberately
- *    smaller than the publisher button. Always rendered: prod data has
- *    mislabeled-language articles, so Google Translate must stay reachable
- *    even when on-device translation is (believed to be) moot.
+ *    smaller than the publisher button, with a one-line note under it that
+ *    some sites block Google Translate. NOT rendered for an article already in
+ *    the reader's language (N8): there it offered nothing but a detour. A
+ *    mislabeled article still has the ••• menu's copy of the route, which
+ *    shows whenever the article's language is unknown.
  * 2. `TranslationNotice` (hidden when the article is already in the reader's
  *    language; it is what names the source language, so the buttons don't).
  *    It sits BETWEEN the buttons so it reads as context for the choice.
@@ -79,7 +82,7 @@ interface ReadTranslateActionsProps {
  *
  * | article language          | Google Translate | Read on {publication} |
  * |---------------------------|------------------|-----------------------|
- * | same as the reader's      | white outline    | GREEN FILL            |
+ * | same as the reader's      | not shown (N8)   | GREEN FILL            |
  * | other, device CAN translate | GREEN FILL     | green outline         |
  * | other, device CANNOT      | GREEN FILL       | white outline         |
  *
@@ -151,47 +154,61 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
         // screens uses the SAME token for exactly that reason; if you change
         // one, change all three or the rhythm breaks at the seam.
         <VStack space="md">
-            <Button
-                testID="detail-read-google-translate"
-                variant="outline"
-                action="secondary"
-                size="sm"
-                className={`rounded-full ${googleFillClass}`}
-                style={{
-                    // 3/4, not 1/2. At 375pt a half-width button left ~120pt of
-                    // label room for a string needing ~170, so "Read on Google
-                    // Translate" truncated to "Read on Google Tr…". Still
-                    // visibly subordinate to the full-width publisher button,
-                    // which is the point of sizing it down at all.
-                    width: '75%',
-                    alignSelf: 'center',
-                    borderWidth: 1,
-                    backgroundColor: googleFilled ? GREEN_TINT_FILL : 'transparent',
-                    borderColor: googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR,
-                }}
-                onPress={() => openInAppBrowser(googleTranslateUrl)}
-            >
-                <ButtonIcon
-                    as={() => (
-                        <MaterialIcons
-                            name="g-translate"
-                            size={16}
-                            color={googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR}
+            {sameLanguage ? null : (
+                <VStack space="xs">
+                    <Button
+                        testID="detail-read-google-translate"
+                        variant="outline"
+                        action="secondary"
+                        size="sm"
+                        className={`rounded-full ${googleFillClass}`}
+                        style={{
+                            // 3/4, not 1/2. At 375pt a half-width button left ~120pt of
+                            // label room for a string needing ~170, so "Read on Google
+                            // Translate" truncated to "Read on Google Tr…". Still
+                            // visibly subordinate to the full-width publisher button,
+                            // which is the point of sizing it down at all.
+                            width: '75%',
+                            alignSelf: 'center',
+                            borderWidth: 1,
+                            backgroundColor: googleFilled ? GREEN_TINT_FILL : 'transparent',
+                            borderColor: googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR,
+                        }}
+                        onPress={() => openInAppBrowser(googleTranslateUrl)}
+                    >
+                        <ButtonIcon
+                            as={() => (
+                                <MaterialIcons
+                                    name="g-translate"
+                                    size={16}
+                                    color={googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR}
+                                />
+                            )}
                         />
-                    )}
-                />
-                <ButtonText
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    className={`ml-2 ${googleLabelClass}`}
-                    style={{
-                        flexShrink: 1,
-                        color: googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR,
-                    }}
-                >
-                    {t('articleDetail.readOnGoogleTranslate')}
-                </ButtonText>
-            </Button>
+                        <ButtonText
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            className={`ml-2 ${googleLabelClass}`}
+                            style={{
+                                flexShrink: 1,
+                                color: googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR,
+                            }}
+                        >
+                            {t('articleDetail.readOnGoogleTranslate')}
+                        </ButtonText>
+                    </Button>
+                    {/* Not a failure we can detect: a publisher that refuses to be
+                        framed gives Google Translate a blank page, so the reader is
+                        told the way out up front. */}
+                    <Text
+                        testID="detail-translate-blocked-note"
+                        size="xs"
+                        className="text-typography-400 text-center"
+                    >
+                        {t('articleDetail.translateBlockedNote')}
+                    </Text>
+                </VStack>
+            )}
 
             {/* BETWEEN the two buttons, deliberately: it explains what language the
                 article is in and which route will read it, so it sits with the
