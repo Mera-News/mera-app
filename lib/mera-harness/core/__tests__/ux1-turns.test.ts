@@ -361,3 +361,30 @@ describe('Q2: a combined origin-and-home fact is offered its split once', () => 
     expect(out.combinedRewriteOffered).toBeNull();
   });
 });
+
+describe('F7 ruling: a typed reply while a card waits', () => {
+  it('a plain no resumes the question and is read as a no', async () => {
+    const state = createAgentState(RESIDENT);
+    state.turn.lastQuestion = 'Want me to add the Champions League?';
+    state.turn.lastSkill = 'facts/interest';
+    const h = harness([res({ content: 'Fine, leaving it out.' })]);
+    const out = await runAgentTurn({ state, userMessage: 'No thanks', deps: h.deps });
+    expect(out.typedYesResume).toBe(true);
+    expect(h.calls[0].systemPrompt).toBe('INTEREST SKILL BODY');
+    expect(h.calls[0].stateLine).toContain('They answered no to your question');
+  });
+
+  it('anything else is a new turn that never re-offers a card still waiting', async () => {
+    const state = createAgentState(RESIDENT);
+    state.pendingCardStatements = ['Lives in Berlin, Germany, EU'];
+    const h = harness([
+      res({ content: 'Berlin.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Berlin, Germany, EU' }, { statement: 'Works in Mitte' }] })] }),
+      res({ content: 'Here it is.' }),
+    ]);
+    const out = await runAgentTurn({ state, userMessage: 'the one in Germany, I work in Mitte', deps: h.deps });
+    expect(out.typedYesResume).toBe(false);
+    expect(h.saves[0].map((e) => e.statement)).toEqual(['Works in Mitte']);
+    expect(h.calls[1].stateLine).toContain('Cards already waiting for the user: "Lives in Berlin, Germany, EU"');
+  });
+});

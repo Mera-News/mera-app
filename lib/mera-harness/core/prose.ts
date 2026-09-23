@@ -356,3 +356,13 @@ export function isPlainYes(text: string): boolean {
   if (!t || t.split(' ').length > 6) return false;
   return PLAIN_YES.test(t);
 }
+
+const PLAIN_NO = /^(?:no|nope|nah|no thanks|no thank you|not really|not now|skip it|don'?t|do not)(?:[ ,]+(?:thanks|thank you))*[.!]*$/i;
+
+/** A plain no to Mera's last question, from the same closed register as
+ *  `isPlainYes`. */
+export function isPlainNo(text: string): boolean {
+  const t = (text ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!t || t.split(' ').length > 6) return false;
+  return PLAIN_NO.test(t);
+}

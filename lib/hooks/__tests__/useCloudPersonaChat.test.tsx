@@ -2145,3 +2145,35 @@ describe('a new conversation drops stale turn state', () => {
     expect(useCloudChatStore.getState().agentTurnState?.resolvedChoice).toBeNull();
   });
 });
+
+// Owner ruling ux1, F7: the loop must know which readings are still waiting on
+// a card, so a typed reply cannot produce a second card for the same thing.
+describe('pendingCardStatements', () => {
+  const { pendingCardStatements } = require('../../hooks/useCloudPersonaChat');
+  const { useFloatingChatStore } = require('../../stores/floating-chat-store');
+  const staged = {
+    staged: true,
+    groupResolutions: {},
+    pendingFacts: [
+      { index: 0, options: ['Lives in Berlin, Germany, EU'] },
+      { index: 1, options: ['Product manager'] },
+    ],
+  };
+  const msg = { id: 'm1', role: 'assistant', content: '', toolCalls: [{ id: 't', name: 'saveExtractedFacts', input: {}, status: 'done', result: staged }] };
+
+  afterEach(() => useFloatingChatStore.setState({ toolCallResults: {} }));
+
+  it('lists every reading on a card nobody has answered', () => {
+    expect(pendingCardStatements([msg])).toEqual(['Lives in Berlin, Germany, EU', 'Product manager']);
+  });
+
+  it('drops a card the user answered, reading the override a tap wrote', () => {
+    const { factChoiceGroupId } = require('../../chat-tools/fact-choice-resolution');
+    const answered = {
+      ...staged,
+      groupResolutions: { [factChoiceGroupId(1, ['Product manager'])]: { status: 'dismissed', options: ['Product manager'], questionnaireAttribute: null } },
+    };
+    useFloatingChatStore.setState({ toolCallResults: { 'm1::0': answered } });
+    expect(pendingCardStatements([msg])).toEqual(['Lives in Berlin, Germany, EU']);
+  });
+});

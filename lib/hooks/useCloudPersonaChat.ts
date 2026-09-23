@@ -28,6 +28,7 @@ import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
 import { applyChatPhase, useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
+import { unresolvedGroups } from '../chat-tools/fact-choice-resolution';
 import { estimateTokens } from '../llm/tokens';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
@@ -79,6 +80,26 @@ function withCombinedFactMemory(deps: AgentDeps): AgentDeps {
       },
     },
   };
+}
+
+/**
+ * Every reading on a fact-choice card in this thread that the user has not
+ * answered. The store holds the tool call's staged result; a tap writes an
+ * OVERRIDE under `${messageId}::${index}` in the floating-chat store, which
+ * wins when present.
+ */
+export function pendingCardStatements(messages: ConversationMessage[]): string[] {
+  const overrides = useFloatingChatStore.getState().toolCallResults;
+  const out: string[] = [];
+  for (const m of messages) {
+    if (m.role !== 'assistant' || !m.toolCalls) continue;
+    m.toolCalls.forEach((tc, idx) => {
+      if (tc.name !== 'saveExtractedFacts') return;
+      const result = overrides[`${m.id}::${idx}`] ?? (tc.result as Record<string, unknown> | undefined);
+      for (const g of unresolvedGroups(result)) out.push(...g.options);
+    });
+  }
+  return out;
 }
 
 /** Tool arguments arrive as a JSON string. A malformed one must yield an empty
@@ -309,6 +330,9 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       // The store is the authority on "is this the same conversation".
       if (store.agentTurnState === null) agentStateRef.current = null;
       if (!agentStateRef.current) agentStateRef.current = createAgentState(persona);
+      // Readings still waiting on a card, so a typed reply cannot produce a
+      // second card for the same thing (owner ruling ux1, F7).
+      agentStateRef.current.pendingCardStatements = pendingCardStatements(store.messages);
       // Facts are re-read every turn; only the TURN half persists.
       agentStateRef.current.persona = persona;
 

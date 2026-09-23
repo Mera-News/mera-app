@@ -82,19 +82,22 @@ jest.mock('@/lib/stores/cloud-chat-store', () => ({
 }));
 
 const mockSubmit = jest.fn();
+const mockScrollToIndex = jest.fn();
 jest.mock('@/components/ui/chat-ai', () => {
   const R = require('react');
   const RN = require('react-native');
   return {
     Conversation: (p: any) => R.createElement(RN.View, null, p.children),
     // Renders the ITEMS, in order, so position in the list is observable.
-    ConversationContent: (p: any) =>
-      R.createElement(
+    ConversationContent: (p: any) => {
+      if (p.listRef && typeof p.listRef === 'object') p.listRef.current = { scrollToIndex: mockScrollToIndex };
+      return R.createElement(
         RN.View,
         { testID: 'conversation-content' },
         ...p.items.map((it: any) => R.createElement(RN.View, { key: it.key, testID: `item-${it.key}` }, p.renderItem(it))),
         p.header ?? null,
-      ),
+      );
+    },
     Message: (p: any) => R.createElement(RN.View, null, p.children),
     MessageContent: (p: any) => R.createElement(RN.View, null, p.children),
     MessageResponse: (p: any) => R.createElement(RN.Text, null, p.children),
@@ -184,5 +187,42 @@ describe('F7: a neutral hint while a card waits', () => {
       <ChatThread {...props({ composerHint: 'factChoice.pendingHint', blockedMessage: 'chat.inferenceError' })} />,
     );
     expect(queryByTestId('chat-composer-hint')).toBeNull();
+  });
+});
+
+describe('F7 ruling: a waiting card is brought back into view after a typed reply', () => {
+  const card: ChatThreadItem = {
+    kind: 'fact-choice-card',
+    key: 'fc',
+    resultKey: 'm1::0',
+    baseResult: {},
+    groupIndex: 0,
+    groupId: 'g0',
+    options: ['Lives in Berlin'],
+    questionnaireAttribute: null,
+    replacesFactId: null,
+    topicSkillId: null,
+    dismissed: false,
+    stale: false,
+  };
+  const user: ChatThreadItem = { kind: 'message', key: 'live-u2', message: { id: 'u2', role: 'user', content: 'x' } };
+
+  it('scrolls to the pending card once the sent message lands', () => {
+    mockScrollToIndex.mockClear();
+    const onSend = jest.fn();
+    const view = render(<ChatThread {...props({ items: [card, reply('a1')], onSend })} />);
+    fireEvent.press(view.getByTestId('prompt-input'));
+    expect(onSend).toHaveBeenCalled();
+    view.rerender(<ChatThread {...props({ items: [card, reply('a1'), user], onSend })} />);
+    // Reversed data: the card is the oldest of three, index 2.
+    expect(mockScrollToIndex).toHaveBeenCalledWith({ index: 2, viewPosition: 0.5, animated: true });
+  });
+
+  it('does not scroll when no card is waiting', () => {
+    mockScrollToIndex.mockClear();
+    const view = render(<ChatThread {...props({ items: [reply('a1')] })} />);
+    fireEvent.press(view.getByTestId('prompt-input'));
+    view.rerender(<ChatThread {...props({ items: [reply('a1'), user] })} />);
+    expect(mockScrollToIndex).not.toHaveBeenCalled();
   });
 });

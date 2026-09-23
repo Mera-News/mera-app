@@ -91,10 +91,13 @@ export interface ConversationContentProps<T extends { key: string }>
   isLoadingOlder: boolean;
   /** Rendered above the list body (visually at the bottom of the inverted view). */
   header?: React.ReactElement | null;
+  /** The underlying FlatList, for a caller that must bring an item into view.
+   *  Indices are into the REVERSED data: the newest item is index 0. */
+  listRef?: React.Ref<FlatList<T>>;
 }
 
 function ConversationContentInner<T extends { key: string }>(
-  { items, renderItem, onLoadOlder, hasOlder, isLoadingOlder, header, ListEmptyComponent }: ConversationContentProps<T>,
+  { items, renderItem, onLoadOlder, hasOlder, isLoadingOlder, header, ListEmptyComponent, listRef }: ConversationContentProps<T>,
 ) {
   // Inverted FlatList renders data[0] at the bottom. Reverse so the newest item
   // (last in `items`) sits at index 0 and therefore at the bottom of the view.
@@ -104,8 +107,19 @@ function ConversationContentInner<T extends { key: string }>(
 
   return (
     <FlatList
+      ref={listRef}
       data={data}
       inverted
+      // Variable-height rows: a scrollToIndex beyond the rendered window
+      // fails, so fall back to the nearest rendered row.
+      onScrollToIndexFailed={(info) => {
+        const ref = listRef as React.RefObject<FlatList<T>> | undefined;
+        ref?.current?.scrollToIndex({
+          index: Math.min(info.index, Math.max(0, info.highestMeasuredFrameIndex)),
+          viewPosition: 0.5,
+          animated: true,
+        });
+      }}
       renderItem={listRenderItem}
       keyExtractor={(item) => item.key}
       keyboardShouldPersistTaps="handled"

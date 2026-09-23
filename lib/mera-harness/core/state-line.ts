@@ -40,6 +40,11 @@ export interface StateLineInput {
    *  so the subject survives; the model is told to do what the question
    *  offered and say in one sentence what it offered. */
   answeredYesTo?: string | null;
+  /** Same, for a plain no: the model is told not to offer what it asked about. */
+  answeredNoTo?: string | null;
+  /** Readings still waiting on a card from an earlier turn. Named so the model
+   *  does not offer them again; the loop also drops exact repeats. */
+  pendingCards?: string[];
   /** Several subjects in one message: this leg handles one of them. */
   segmentScope?: { mine: string; others: string[]; questionPending: boolean } | null;
 }
@@ -118,6 +123,21 @@ export function buildStateLine(input: StateLineInput): string {
     }
   }
 
+  if (input.pendingCards && input.pendingCards.length > 0) {
+    const rows = input.pendingCards.slice(0, 6).map((s) => `"${escapeUntrusted(s, 120)}"`).join('; ');
+    parts.push(
+      `Cards already waiting for the user: ${rows}. Never offer these again, in any wording; `
+      + 'the user can still answer them.',
+    );
+  }
+
+  if (input.answeredNoTo) {
+    parts.push(
+      `They answered no to your question: "${escapeUntrusted(input.answeredNoTo, 160)}". `
+      + 'Do not offer what it asked about. Acknowledge it in one short sentence.',
+    );
+  }
+
   if (input.answeredYesTo) {
     parts.push(
       `They answered yes to your question: "${escapeUntrusted(input.answeredYesTo, 160)}". `
@@ -140,7 +160,7 @@ export function buildStateLine(input: StateLineInput): string {
   // question itself was never sent at all. Stating the question and leaving the
   // reading to the model is both true and the thing that was missing; the
   // do-not-repeat half of the guard is kept verbatim, because that half works.
-  if (input.lastQuestion && !input.answeredYesTo) {
+  if (input.lastQuestion && !input.answeredYesTo && !input.answeredNoTo) {
     parts.push(
       `Your last turn asked: "${escapeUntrusted(input.lastQuestion, 160)}". `
       + 'This message is most likely its answer, so read it that way if it can be. '

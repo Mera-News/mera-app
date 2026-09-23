@@ -9,6 +9,7 @@ import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
 import {
   claimsSaveHappened,
   cleanProse,
+  isPlainNo,
   isPlainYes,
   leaksInternals,
   narratesProcess,
@@ -167,6 +168,14 @@ export interface AgentPersona {
 export interface AgentState {
   persona: AgentPersona;
   turn: AgentTurnState;
+  /**
+   * Readings on fact cards from earlier turns that the user has not answered
+   * yet, set by the driver before each turn (it is the one that can see which
+   * cards are resolved). A typed message while a card waits is a NEW turn, so
+   * without this the loop could offer the same reading again beside the card
+   * still on screen. Exact repeats are dropped; the model is told the rest.
+   */
+  pendingCardStatements?: string[];
 }
 
 export function createAgentState(persona: AgentPersona): AgentState {
@@ -318,12 +327,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // stays null, so it cannot authorise a delete or a tap-gated replace. Measured
   // on device: "Yes please add it." after an offer routed fresh, landed on
   // conversation/question, and asked the same thing again as chips.
+  // A PLAIN NO continues the same way (owner ruling ux1, F7): a short answer
+  // to the pending question resumes it, anything else is a new turn.
+  const plainAnswer: 'yes' | 'no' | null = isPlainYes(userMessage)
+    ? 'yes'
+    : isPlainNo(userMessage)
+      ? 'no'
+      : null;
   const typedYesResume =
     turn.resolvedChoice === null
     && turn.lastQuestion !== null
     && turn.lastSkill !== null
     && turn.lastSkill.startsWith('facts/')
-    && isPlainYes(userMessage);
+    && plainAnswer !== null;
   const answerPending =
     turn.lastTurnAskedQuestion && turn.resolvedChoice === null && !typedYesResume;
   // Read BEFORE the turn overwrites it at the end, and held for every leg: the
@@ -448,7 +464,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    *  cards. Separate from `existingStatements`, which holds facts on file. */
   // Seeded on a resume: the cards the previous turn offered are still on
   // screen, so the resumed skill must not offer them a second time.
-  const proposedStatements = new Set<string>(resumedSkill ? turn.offeredStatements : []);
+  const pendingCardList = (state.pendingCardStatements ?? []).filter((s) => s.trim().length > 0);
+  const proposedStatements = new Set<string>([
+    ...(resumedSkill ? turn.offeredStatements : []),
+    ...pendingCardList.map((s) => s.trim().toLowerCase()),
+  ]);
   /** What THIS turn offered, carried to the next turn for the same reason. */
   const offeredThisTurn: string[] = [];
   let existingFacts: { factId: string; statement: string }[] = [];
@@ -517,7 +537,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       existingFacts,
       forcedProposal: forcingProposalNow,
       lastQuestion,
-      answeredYesTo: typedYesResume ? lastQuestion : null,
+      answeredYesTo: typedYesResume && plainAnswer === 'yes' ? lastQuestion : null,
+      answeredNoTo: typedYesResume && plainAnswer === 'no' ? lastQuestion : null,
+      pendingCards: pendingCardList,
       segmentScope:
         skillsLoaded.length + queuedSkills.length > 1 && routeKind
           ? {

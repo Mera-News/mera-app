@@ -20,8 +20,8 @@ import {
 import { hapticLight } from '@/lib/haptics';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useContext, useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useContext, useEffect, useRef } from 'react';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
@@ -47,6 +47,11 @@ import type { ChatThreadItem, ChatThreadProps } from './types';
 const MESSAGE_ENTERING = FadeInDown.springify().damping(20).stiffness(220).mass(0.5);
 
 const HISTORY_ITEM: ChatThreadItem = { kind: 'history-button', key: 'history-button' };
+
+/** A fact card still waiting for the user's answer. */
+function isPendingCard(item: ChatThreadItem): boolean {
+  return item.kind === 'fact-choice-card' && !item.dismissed && !item.stale;
+}
 
 const ChatThread: React.FC<ChatThreadProps> = ({
   items,
@@ -90,6 +95,36 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     (item) => item.kind === 'message' && item.message.id !== 'intro',
   );
   const showChips = !hasRealMessage && starterChips.length > 0;
+
+  // A TYPED REPLY WHILE A CARD WAITS leaves the card pending, and the card is
+  // brought back into view so the reader sees it is still open (owner ruling
+  // ux1, F7). Scrolled after the send lands, when the new bubble has pushed
+  // the card up the list.
+  const listRef = useRef<FlatList<ChatThreadItem>>(null);
+  const displayItems = showHistoryButton ? [HISTORY_ITEM, ...items] : items;
+  const revealPendingRef = useRef(false);
+  const send = useCallback(
+    (text: string) => {
+      revealPendingRef.current = displayItems.some(isPendingCard);
+      onSend(text);
+    },
+    [displayItems, onSend],
+  );
+  useEffect(() => {
+    if (!revealPendingRef.current) return;
+    let at = -1;
+    for (let i = displayItems.length - 1; i >= 0; i--) {
+      if (isPendingCard(displayItems[i])) { at = i; break; }
+    }
+    if (at === -1) return;
+    revealPendingRef.current = false;
+    // Reversed data: the newest item is index 0.
+    listRef.current?.scrollToIndex({
+      index: displayItems.length - 1 - at,
+      viewPosition: 0.5,
+      animated: true,
+    });
+  }, [displayItems]);
 
   // Every topic-plan card in the thread — TopicPlanSaveAllRow filters these
   // against the settled map itself, keeping this component store-free.
@@ -310,7 +345,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       </View>
       <View style={styles.listWrap}>
         <ConversationContent
-          items={showHistoryButton ? [HISTORY_ITEM, ...items] : items}
+          items={displayItems}
+          listRef={listRef}
           renderItem={renderItem}
           onLoadOlder={onLoadOlder}
           hasOlder={hasOlder}
@@ -397,7 +433,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       <PromptInput
         ref={promptRef}
-        onSubmit={onSend}
+        onSubmit={send}
         placeholder={t('floatingChat.inputPlaceholder')}
         // NOT `blockedMessage !== null`. A transport error sets that banner
         // too, and the error is only cleared by starting a turn — so gating on
