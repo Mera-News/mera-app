@@ -173,3 +173,14 @@ describe('SecuritySettingsSection — require-PIN toggle', () => {
     });
 });
 
+describe('SecuritySettingsSection — every flow can be left', () => {
+    it('Change PIN verification has its own Cancel (no swipe back inside a Modal)', () => {
+        mockLockEnabled = true;
+        const { getByText, getByTestId, queryByTestId } = render(<SecuritySettingsSection />);
+        fireEvent.press(getByText('security.changePin'));
+        expect(queryByTestId('pin-lock-screen')).toBeTruthy();
+        fireEvent.press(getByTestId('pin-verify-cancel'));
+        expect(queryByTestId('pin-lock-screen')).toBeNull();
+        expect(mockSetLockEnabled).not.toHaveBeenCalled();
+    });
+});

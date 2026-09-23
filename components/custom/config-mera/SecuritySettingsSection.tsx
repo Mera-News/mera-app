@@ -15,6 +15,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * Settings > Security: the PIN lock, directly in the Settings list.
@@ -35,6 +36,7 @@ type Flow = 'none' | 'enable' | 'verify' | 'set';
 const SecuritySettingsSection: React.FC = () => {
     const { t } = useTranslation();
     const toast = useToast();
+    const insets = useSafeAreaInsets();
     const lockEnabled = usePinStore((s) => s.lockEnabled);
     const setLockEnabled = usePinStore((s) => s.setLockEnabled);
     const [flow, setFlow] = useState<Flow>('none');
@@ -112,13 +114,27 @@ const SecuritySettingsSection: React.FC = () => {
             );
         }
         if (flow === 'verify') {
+            // PinLockScreen has no cancel of its own (it is the launch lock),
+            // and inside a Modal there is no swipe back on iOS, so without this
+            // a user who cannot recall the current PIN is stuck here.
             return (
-                <PinLockScreen
-                    onUnlock={() => setFlow('set')}
-                    showForgot={false}
-                    title={t('security.verifyCurrentTitle')}
-                    subtitle={t('security.verifyCurrentSubtitle')}
-                />
+                <View style={styles.page}>
+                    <PinLockScreen
+                        onUnlock={() => setFlow('set')}
+                        showForgot={false}
+                        title={t('security.verifyCurrentTitle')}
+                        subtitle={t('security.verifyCurrentSubtitle')}
+                    />
+                    <Pressable
+                        testID="pin-verify-cancel"
+                        onPress={() => setFlow('none')}
+                        accessibilityRole="button"
+                        hitSlop={12}
+                        style={[styles.cancel, { top: insets.top + 12 }]}
+                    >
+                        <Text className="text-base text-white">{t('common.cancel')}</Text>
+                    </Pressable>
+                </View>
             );
         }
         if (flow === 'set') {
@@ -203,6 +219,7 @@ const SecuritySettingsSection: React.FC = () => {
 
 const styles = StyleSheet.create({
     page: { flex: 1, backgroundColor: '#000000' },
+    cancel: { position: 'absolute', left: 20, paddingVertical: 8, paddingHorizontal: 4 },
 });
 
 export default SecuritySettingsSection;
