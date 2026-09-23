@@ -777,7 +777,9 @@
       "error": "요청을 제출하지 못했습니다. 다시 시도해 주세요."
     },
     "topicGenFailed": "이 주제에 대한 토픽을 생성할 수 없습니다.",
-    "topicGenRetry": "재시도"
+    "topicGenRetry": "재시도",
+    "aiUsageNoticeGeneral": "Mera도 실수할 수 있으니 중요한 내용은 확인하세요.",
+    "trackChooseHint": "팔로우할 항목을 고르세요"
   },
   "articleFeedback": {
     "thumbsUp": "좋아요",
@@ -1673,7 +1675,7 @@
     "blocked": "이 기사를 검색할 수 없습니다.",
     "claimsHeading": "확인된 주장",
     "citationsHeading": "검토한 출처",
-    "noCitations": "이 확인에서 특정 페이지를 인용하지 않았습니다. 검색 실패가 아닙니다 — 출처가 없으므로 요약을 좀 더 주의 깊게 다루세요.",
+    "noCitations": "이 확인에서 특정 페이지를 인용하지 않았습니다. 검색 실패가 아닙니다, 출처가 없으므로 요약을 좀 더 주의 깊게 다루세요.",
     "sourceFallback": "출처 {{index}}",
     "disclaimer": "메라가 웹 검색에서 얻은 자체 해석이며, AI가 작성했습니다. 틀리거나 불완전할 수 있으므로 신뢰하기 전에 출처를 읽으세요.",
     "verdict": {
@@ -1712,7 +1714,7 @@
     "checkedByHeading": "검색에서 발견된 팩트 체크",
     "dashboard": {
       "deleteA11y": "이 팩트 체크 삭제",
-      "empty": "아직 확인한 주장이 없습니다. 기사 아래의 체크 아이콘을 탭하여 Mera에 물어보세요 — 결과가 준비되면 여기에 표시됩니다.",
+      "empty": "아직 확인한 주장이 없습니다. 기사 아래의 체크 아이콘을 탭하여 Mera에 물어보세요, 결과가 준비되면 여기에 표시됩니다.",
       "listSubtitle": "메라에 팩트 체크를 찾아달라고 요청한 기사입니다. 이 기기에만 보관됩니다.",
       "listTitle": "팩트 체크",
       "pending": "검색 중",
@@ -1730,13 +1732,13 @@
     "explainer": "메라는 뉴스를 직접 팩트 체크하지 않습니다. 확인된 팩트 체킹 기관이 이 기사에 대해 발표한 내용을 검색합니다.",
     "noCheckedBy": "이 기사에 대해 발표한 팩트 체킹 기관을 찾을 수 없습니다. 이것이 기사가 틀렸다는 뜻은 아닙니다. 대부분의 기사는 팩트 체크되지 않습니다.",
     "organisationA11y": "인앱 브라우저에서 {{organisation}}의 팩트 체크(평가: {{rating}})를 열기",
-    "queued": "이 확인은 백그라운드에서 계속 실행됩니다. 여기서 기다릴 필요가 없습니다 — 기사를 떠나도 괜찮습니다.",
+    "queued": "이 확인은 백그라운드에서 계속 실행됩니다. 여기서 기다릴 필요가 없습니다, 기사를 떠나도 괜찮습니다.",
     "queuedHint": "결과가 준비되면 대시보드의 팩트 체크 섹션에 나타납니다.",
     "citationA11y": "출처 {{source}}를 인앱 브라우저에서 열기",
     "noLink": "사용 가능한 링크 없음",
-    "actionA11yPending": "팩트 체크 요청됨 — 결과를 확인하세요",
-    "actionA11yDone": "팩트 체크 완료 — 결과가 아래에 표시됩니다",
-    "checkedByUnavailable": "팩트 체킹 조직이 이 이야기에 대해 발표했는지 확인할 수 없었습니다 — 조회가 완료되지 않았습니다. 이는 아무도 발표하지 않은 것과는 다릅니다. 아래는 더 광범위한 검색이 찾은 결과입니다.",
+    "actionA11yPending": "팩트 체크 요청됨, 결과를 확인하세요",
+    "actionA11yDone": "팩트 체크 완료, 결과가 아래에 표시됩니다",
+    "checkedByUnavailable": "팩트 체킹 조직이 이 이야기에 대해 발표했는지 확인할 수 없었습니다, 조회가 완료되지 않았습니다. 이는 아무도 발표하지 않은 것과는 다릅니다. 아래는 더 광범위한 검색이 찾은 결과입니다.",
     "claimProposalTitle": "이 주장을 팩트 체크하시겠어요?",
     "actionCheckClaim": "주장 확인하기",
     "chatSeed": "이 기사에서 팩트 체크할 수 있는 것은 무엇인가요?",
@@ -1745,22 +1747,29 @@
     "optionWholeArticle": "전체 기사",
     "quickAnswered": "웹 검색으로 찾은 결과입니다:",
     "quickArticleFailed": "Mera에서 요청 전송을 확인할 수 없습니다. 잠시 후 다시 시도해주세요.",
-    "quickArticleRequested": "요청을 보냈습니다. Mera에서 전체 기사를 확인할 것입니다 — 결과가 준비되면 대시보드의 팩트 체크에서 확인할 수 있습니다.",
+    "quickArticleRequested": "요청을 보냈습니다. Mera에서 전체 기사를 확인할 것입니다, 결과가 준비되면 대시보드의 팩트 체크에서 확인할 수 있습니다.",
     "quickArticleSending": "요청을 보내는 중…",
-    "quickCouldNotSearch": "방금 웹을 검색할 수 없었습니다. 따라서 이것은 답변이 아닙니다 — 잠시 후 다시 시도해주세요.",
+    "quickCouldNotSearch": "방금 웹을 검색할 수 없었습니다. 따라서 이것은 답변이 아닙니다, 잠시 후 다시 시도해주세요.",
     "quickDisclaimer": "이것은 팩트체킹 기관의 확인이 아닌 빠른 웹 검색이며, 저장되지 않습니다. 출처가 명시된 철저한 확인을 원하면 \"전체 기사\"를 선택하세요.",
     "quickFailed": "Mera에서 정보를 찾았지만 이번에는 답변을 구성할 수 없습니다. 잠시 후 다시 시도해주세요.",
-    "quickNothingFound": "검색 결과 이에 대한 정보가 없습니다. 이것이 거짓이라는 의미는 아닙니다 — 새로운 내용이거나 틈새 주제이거나 온라인에서 광범위하게 다루어지지 않은 내용일 수 있습니다.",
+    "quickNothingFound": "검색 결과 이에 대한 정보가 없습니다. 이것이 거짓이라는 의미는 아닙니다, 새로운 내용이거나 틈새 주제이거나 온라인에서 광범위하게 다루어지지 않은 내용일 수 있습니다.",
     "quickRunning": "웹을 검색 중…",
-    "stillChecking": "평소보다 시간이 더 걸리고 있습니다. 백그라운드에서 확인 중입니다 — 나중에 다시 확인하거나 대시보드의 팩트 체크에서 확인하세요.",
+    "stillChecking": "평소보다 시간이 더 걸리고 있습니다. 백그라운드에서 확인 중입니다, 나중에 다시 확인하거나 대시보드의 팩트 체크에서 확인하세요.",
     "checkedByMultipleNote": "이는 각 기관이 독자적인 기준으로 독립적으로 평가한 결과이며, 서로 항상 일치하지는 않습니다.",
-    "ownReadingHeading": "메라의 자체 해석 — 위 판정에 대해 부차적인 견해",
+    "ownReadingHeading": "메라의 자체 해석, 위 판정에 대해 부차적인 견해",
     "collapseA11y": "이 팩트 체크 숨기기",
     "expandA11y": "이 팩트 체크 보기",
     "checkedByRelatedNote": "이들은 키워드 검색에서 나온 것이며 다른 기사에 관한 것일 수 있습니다. 확인하려면 하나를 열어보세요.",
     "searchFoundHeading": "검색에서 발견된 내용",
     "searchFoundEmpty": "검색에서 메라가 요약할 수 있는 충분한 내용이 없었습니다.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "팩트 체크 완료",
+      "bodyFound": "팩트체커가 \"{{title}}\"에 대해 발표했어요.",
+      "bodyNone": "\"{{title}}\"에 대해 아직 발표된 팩트 체크가 없어요.",
+      "bodyUnavailable": "Mera가 \"{{title}}\" 확인을 마치지 못했어요.",
+      "open": "기사 열기"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "이 출처 우선순위 지정",
@@ -2544,14 +2553,17 @@
     "skipAll": "모두 건너뛰기",
     "addAllA11y": "{{count}}개 제안 모두 추가",
     "skipAllA11y": "{{count}}개 제안 모두 건너뛰기",
-    "titleReplace": "기존 정보를 바꿀까요?",
+    "titleReplace": "이 정보를 바꿀까요?",
     "replace": "바꾸기",
     "replacesLabel": "대체 대상",
     "replacesTopics_one": "및 관련 주제 1개",
     "replacesTopics_other": "및 관련 주제 {{count}}개",
     "replacesNoUndo": "이전 정보와 관련 주제가 완전히 삭제돼요. 되돌릴 수 없어요.",
     "replacesLoading": "무엇이 바뀌는지 확인하고 있어요",
-    "replacesUnavailable": "지금은 무엇이 삭제될지 보여드릴 수 없어요. 잠시 후 다시 시도해 주세요."
+    "replacesUnavailable": "지금은 무엇이 삭제될지 보여드릴 수 없어요. 잠시 후 다시 시도해 주세요.",
+    "keepBoth": "둘 다 유지",
+    "titleAlsoAdd": "이것도 추가할까요?",
+    "pendingHint": "위에서 옵션을 고르거나 답을 입력하세요."
   },
   "subscriptions": {
     "sectionTitle": "구독 중인 매체",
@@ -2645,7 +2657,7 @@
     "goneTombstone": "이 정보가 삭제되어 관련 주제도 사라졌어요.",
     "expandA11y": "주제 보기",
     "collapseA11y": "주제 숨기기",
-    "accordionTitlePending": "관련 주제를 찾아 둘게요:",
+    "accordionTitlePending": "관련 주제를 찾는 중:",
     "pendingA11y": "주제를 찾는 중",
     "readyA11y": "주제 준비 완료",
     "failedA11y": "주제를 찾지 못했어요"
@@ -2679,7 +2691,8 @@
     },
     "noRouteSentence": "무엇에 대한 내용인지 파악하지 못했어요. 다르게 말해 봐 주세요.",
     "noProposalSentence": "여기에서 추가할 만한 내용을 찾지 못했어요.",
-    "unknownToolSentence": "Mera 쪽에서 문제가 생겼어요. 계속하려면 다시 물어봐 주세요."
+    "unknownToolSentence": "Mera 쪽에서 문제가 생겼어요. 계속하려면 다시 물어봐 주세요.",
+    "malformedChoiceSentence": "Mera가 선택지를 보여 주지 못했어요. 계속하려면 다시 물어봐 주세요."
   },
   "skillPhrase": {
     "residence": "사는 곳",

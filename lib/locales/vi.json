@@ -761,7 +761,7 @@
     "newChat": "Trò chuyện mới",
     "inputPlaceholder": "Nhập tin nhắn...",
     "viewPreviousMessages": "Xem tin nhắn trước đó",
-    "aiInteractionNotice": "Bạn đang trò chuyện với Mera, một trợ lý AI — không phải một người.",
+    "aiInteractionNotice": "Bạn đang trò chuyện với Mera, một trợ lý AI, không phải một người.",
     "aiUsageNotice": "Trợ lý này giúp bạn thiết lập tùy chọn tin tức. Cố tình thao túng hoặc lạm dụng có thể khiến tài khoản của bạn bị khóa chờ xem xét.",
     "requestUnblock": {
       "button": "Yêu cầu mở khóa",
@@ -777,7 +777,9 @@
       "error": "Không thể gửi yêu cầu của bạn. Vui lòng thử lại."
     },
     "topicGenFailed": "Không thể tạo chủ đề cho điều này.",
-    "topicGenRetry": "Thử lại"
+    "topicGenRetry": "Thử lại",
+    "aiUsageNoticeGeneral": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra những điều quan trọng.",
+    "trackChooseHint": "Chọn nội dung để theo dõi"
   },
   "articleFeedback": {
     "thumbsUp": "Tôi thích",
@@ -1674,13 +1676,13 @@
     "blocked": "Không thể tìm kiếm câu chuyện này.",
     "claimsHeading": "Các khẳng định được kiểm chứng",
     "citationsHeading": "Các nguồn được tham khảo",
-    "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại — hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
+    "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại, hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
     "sourceFallback": "Nguồn {{index}}",
     "disclaimer": "Đây là cách đọc của Mera từ tìm kiếm web, được viết bởi AI. Nó có thể sai hoặc không hoàn chỉnh, vì vậy vui lòng đọc các nguồn trước khi dựa vào nó.",
     "verdict": {
       "supported": {
         "label": "Phù hợp với các nguồn",
-        "detail": "Các nguồn tìm kiếm tìm thấy nói chung điều tương tự. Điều đó không phải là bằng chứng nó đúng — chỉ là không tìm thấy gì mâu thuẫn."
+        "detail": "Các nguồn tìm kiếm tìm thấy nói chung điều tương tự. Điều đó không phải là bằng chứng nó đúng, chỉ là không tìm thấy gì mâu thuẫn."
       },
       "disputed": {
         "label": "Các nguồn không đồng ý",
@@ -1688,7 +1690,7 @@
       },
       "unsupported": {
         "label": "Không tìm thấy hỗ trợ",
-        "detail": "Tìm kiếm không tìm thấy gì hỗ trợ điều này. Điều đó chỉ có thể có nghĩa là câu chuyện mới hoặc chuyên biệt — nó không làm cho nó sai."
+        "detail": "Tìm kiếm không tìm thấy gì hỗ trợ điều này. Điều đó chỉ có thể có nghĩa là câu chuyện mới hoặc chuyên biệt, nó không làm cho nó sai."
       },
       "mixed": {
         "label": "Một phần phù hợp",
@@ -1713,7 +1715,7 @@
     "checkedByHeading": "Các kiểm chứng được tìm thấy",
     "dashboard": {
       "deleteA11y": "Xóa kiểm chứng sự kiện này",
-      "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera — kết quả sẽ xuất hiện ở đây khi sẵn sàng.",
+      "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera, kết quả sẽ xuất hiện ở đây khi sẵn sàng.",
       "listSubtitle": "Những câu chuyện bạn đã yêu cầu Mera tìm kiếm kiểm chứng sự kiện. Chỉ được lưu trên thiết bị này.",
       "listTitle": "Kiểm chứng sự kiện",
       "pending": "Đang tìm kiếm",
@@ -1731,13 +1733,13 @@
     "explainer": "Mera không kiểm chứng tin tức trực tiếp. Nó tìm kiếm những gì các tổ chức kiểm chứng đã công bố về câu chuyện này.",
     "noCheckedBy": "Chúng tôi không tìm thấy bất kỳ kiểm chứng nào được công bố về câu chuyện này. Điều đó không có nghĩa là câu chuyện sai. Phần lớn các câu chuyện không bao giờ được kiểm chứng.",
     "organisationA11y": "Mở kiểm chứng của {{organisation}}, được đánh giá {{rating}}, trong trình duyệt trong ứng dụng",
-    "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây — có thể rời khỏi bài viết.",
+    "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây, có thể rời khỏi bài viết.",
     "queuedHint": "Kết quả sẽ xuất hiện dưới mục Kiểm tra sự thật trên Dashboard khi sẵn sàng.",
     "citationA11y": "Mở nguồn {{source}} trong trình duyệt trong ứng dụng",
     "noLink": "Không có liên kết",
-    "actionA11yPending": "Kiểm tra sự thật được yêu cầu — kiểm tra kết quả",
-    "actionA11yDone": "Kiểm tra sự thật sẵn sàng — kết quả được hiển thị bên dưới",
-    "checkedByUnavailable": "Chúng tôi không thể kiểm tra xem một tổ chức kiểm tra sự thật có công bố về bài viết này hay không — tìm kiếm không thành công. Điều này khác với trường hợp không ai công bố; dưới đây là những gì tìm kiếm rộng hơn đã tìm thấy.",
+    "actionA11yPending": "Kiểm tra sự thật được yêu cầu, kiểm tra kết quả",
+    "actionA11yDone": "Kiểm tra sự thật sẵn sàng, kết quả được hiển thị bên dưới",
+    "checkedByUnavailable": "Chúng tôi không thể kiểm tra xem một tổ chức kiểm tra sự thật có công bố về bài viết này hay không, tìm kiếm không thành công. Điều này khác với trường hợp không ai công bố; dưới đây là những gì tìm kiếm rộng hơn đã tìm thấy.",
     "claimProposalTitle": "Kiểm tra khẳng định này?",
     "actionCheckClaim": "Kiểm tra khẳng định này",
     "chatSeed": "Có gì có thể kiểm tra trong bài viết này?",
@@ -1746,22 +1748,29 @@
     "optionWholeArticle": "Toàn bộ bài viết",
     "quickAnswered": "Đây là những gì tìm kiếm web nhanh tìm thấy:",
     "quickArticleFailed": "Mera không thể xác nhận yêu cầu đã gửi. Thử lại sau lát.",
-    "quickArticleRequested": "Yêu cầu đã gửi. Mera sẽ kiểm tra toàn bộ bài viết — kết quả sẽ hiện dưới Fact checks trên Dashboard khi sẵn sàng.",
+    "quickArticleRequested": "Yêu cầu đã gửi. Mera sẽ kiểm tra toàn bộ bài viết, kết quả sẽ hiện dưới Fact checks trên Dashboard khi sẵn sàng.",
     "quickArticleSending": "Đang gửi yêu cầu…",
-    "quickCouldNotSearch": "Mera không thể tìm kiếm web lúc này, vì vậy đây không phải là câu trả lời — thử lại sau lát.",
+    "quickCouldNotSearch": "Mera không thể tìm kiếm web lúc này, vì vậy đây không phải là câu trả lời, thử lại sau lát.",
     "quickDisclaimer": "Đây là tìm kiếm web nhanh, không phải kiểm tra bởi một tổ chức kiểm tra sự thật, và nó không được lưu lại. Để kiểm tra kỹ lưỡng với các nguồn có tên, chọn \"Toàn bộ bài viết\".",
     "quickFailed": "Mera tìm thấy một số thông tin nhưng không thể soạn thành câu trả lời lần này. Thử lại sau lát.",
-    "quickNothingFound": "Tìm kiếm không tìm thấy bất cứ điều gì về vấn đề này. Điều đó không có nghĩa là sai — nó có thể là mới, niche, hoặc không được đề cập rộng rãi trực tuyến.",
+    "quickNothingFound": "Tìm kiếm không tìm thấy bất cứ điều gì về vấn đề này. Điều đó không có nghĩa là sai, nó có thể là mới, niche, hoặc không được đề cập rộng rãi trực tuyến.",
     "quickRunning": "Đang tìm kiếm web…",
-    "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra — quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
-    "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó — chúng không phải lúc nào cũng thống nhất với nhau.",
-    "ownReadingHeading": "Nhận định riêng của Mera — thứ yếu so với kết luận ở trên",
+    "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra, quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
+    "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó, chúng không phải lúc nào cũng thống nhất với nhau.",
+    "ownReadingHeading": "Nhận định riêng của Mera, thứ yếu so với kết luận ở trên",
     "collapseA11y": "Ẩn phần kiểm chứng này",
     "expandA11y": "Hiện phần kiểm chứng này",
     "checkedByRelatedNote": "Những điều này xuất phát từ tìm kiếm từ khóa và có thể về một câu chuyện khác. Mở một trong những điều đó để kiểm tra.",
     "searchFoundHeading": "Những gì tìm kiếm của chúng tôi tìm thấy",
     "searchFoundEmpty": "Tìm kiếm không cung cấp đủ thông tin để Mera tóm tắt tại đây.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Đã có kết quả kiểm chứng",
+      "bodyFound": "Các tổ chức kiểm chứng đã đăng bài về \"{{title}}\".",
+      "bodyNone": "Chưa có bài kiểm chứng nào được đăng về \"{{title}}\".",
+      "bodyUnavailable": "Mera không thể hoàn tất kiểm tra \"{{title}}\".",
+      "open": "Mở bài viết"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",
@@ -2545,14 +2554,17 @@
     "skipAll": "Bỏ qua tất cả",
     "addAllA11y": "Thêm tất cả {{count}} gợi ý",
     "skipAllA11y": "Bỏ qua tất cả {{count}} gợi ý",
-    "titleReplace": "Thay thế một thông tin đã có?",
+    "titleReplace": "Thay thế thông tin này?",
     "replace": "Thay thế",
     "replacesLabel": "Thay cho",
     "replacesTopics_one": "và 1 chủ đề của nó",
     "replacesTopics_other": "và {{count}} chủ đề của nó",
     "replacesNoUndo": "Thông tin cũ và các chủ đề của nó bị xóa vĩnh viễn. Bạn không thể hoàn tác.",
     "replacesLoading": "Đang kiểm tra cái gì sẽ bị thay",
-    "replacesUnavailable": "Mera chưa hiển thị được những gì sẽ bị xóa. Hãy thử lại sau giây lát."
+    "replacesUnavailable": "Mera chưa hiển thị được những gì sẽ bị xóa. Hãy thử lại sau giây lát.",
+    "keepBoth": "Giữ cả hai",
+    "titleAlsoAdd": "Thêm cả điều này?",
+    "pendingHint": "Chọn một tùy chọn ở trên hoặc nhập câu trả lời của bạn."
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",
@@ -2646,7 +2658,7 @@
     "goneTombstone": "Thông tin này đã bị xóa, nên các chủ đề của nó cũng mất.",
     "expandA11y": "Hiện chủ đề",
     "collapseA11y": "Ẩn chủ đề",
-    "accordionTitlePending": "Chúng tôi sẽ tìm chủ đề cho:",
+    "accordionTitlePending": "Đang tìm chủ đề cho:",
     "pendingA11y": "Đang tìm chủ đề",
     "readyA11y": "Chủ đề đã sẵn sàng",
     "failedA11y": "Không tìm được chủ đề"
@@ -2680,7 +2692,8 @@
     },
     "noRouteSentence": "Mera chưa hiểu việc này nói về điều gì. Hãy thử diễn đạt cách khác.",
     "noProposalSentence": "Mera không tìm thấy gì để thêm từ việc này.",
-    "unknownToolSentence": "Có lỗi xảy ra ở phía Mera. Hãy hỏi lại để tiếp tục."
+    "unknownToolSentence": "Có lỗi xảy ra ở phía Mera. Hãy hỏi lại để tiếp tục.",
+    "malformedChoiceSentence": "Mera không thể hiển thị các lựa chọn. Hãy hỏi lại để tiếp tục."
   },
   "skillPhrase": {
     "residence": "nơi bạn sống",

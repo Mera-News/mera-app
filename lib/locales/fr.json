@@ -766,7 +766,7 @@
     "newChat": "Nouvelle discussion",
     "inputPlaceholder": "Tapez un message...",
     "viewPreviousMessages": "Voir les messages précédents",
-    "aiInteractionNotice": "Vous parlez avec Mera, un assistant IA — pas avec une personne.",
+    "aiInteractionNotice": "Vous parlez avec Mera, un assistant IA, pas avec une personne.",
     "aiUsageNotice": "Cet assistant vous aide à configurer vos préférences d'actualités. Toute tentative de le manipuler ou d'en abuser peut entraîner le blocage de votre compte en attendant une révision.",
     "requestUnblock": {
       "button": "Demander le déblocage",
@@ -782,7 +782,9 @@
       "error": "Impossible d'envoyer votre demande. Veuillez réessayer."
     },
     "topicGenFailed": "Impossible de générer les sujets.",
-    "topicGenRetry": "Réessayer"
+    "topicGenRetry": "Réessayer",
+    "aiUsageNoticeGeneral": "Mera peut se tromper, alors vérifie tout ce qui est important.",
+    "trackChooseHint": "Choisis ce que tu veux suivre"
   },
   "articleFeedback": {
     "thumbsUp": "J'aime",
@@ -1680,13 +1682,13 @@
     "blocked": "Cette histoire n'a pas pu être recherchée.",
     "claimsHeading": "Affirmations vérifiées",
     "citationsHeading": "Sources consultées",
-    "noCitations": "Cette vérification n'a cité aucune page spécifique. Ce n'est pas un échec — traitez le résumé avec un peu plus de prudence sans sources à consulter.",
+    "noCitations": "Cette vérification n'a cité aucune page spécifique. Ce n'est pas un échec, traitez le résumé avec un peu plus de prudence sans sources à consulter.",
     "sourceFallback": "Source {{index}}",
     "disclaimer": "Ceci est la propre lecture de Mera d'une recherche web, écrite par l'IA. Cela peut être inexact ou incomplet, veuillez donc lire les sources avant de vous y fier.",
     "verdict": {
       "supported": {
         "label": "Cohérent avec les sources",
-        "detail": "Les sources trouvées par la recherche disent essentiellement la même chose. Ce n'est pas une preuve que c'est vrai — seulement qu'aucune source la contredisant n'a été trouvée."
+        "detail": "Les sources trouvées par la recherche disent essentiellement la même chose. Ce n'est pas une preuve que c'est vrai, seulement qu'aucune source la contredisant n'a été trouvée."
       },
       "disputed": {
         "label": "Les sources sont en désaccord",
@@ -1694,7 +1696,7 @@
       },
       "unsupported": {
         "label": "Pas de soutien trouvé",
-        "detail": "La recherche n'a rien trouvé qui soutient cela. Cela peut simplement signifier que l'histoire est nouvelle ou de niche — cela ne la rend pas fausse."
+        "detail": "La recherche n'a rien trouvé qui soutient cela. Cela peut simplement signifier que l'histoire est nouvelle ou de niche, cela ne la rend pas fausse."
       },
       "mixed": {
         "label": "Partiellement cohérent",
@@ -1719,7 +1721,7 @@
     "checkedByHeading": "Vérifications de faits trouvées par la recherche",
     "dashboard": {
       "deleteA11y": "Supprimer cette vérification de fait",
-      "empty": "Vous n'avez pas encore vérifié d'affirmations. Appuyez sur la coche sous une histoire pour demander à Mera — le résultat s'affiche ici une fois prêt.",
+      "empty": "Vous n'avez pas encore vérifié d'affirmations. Appuyez sur la coche sous une histoire pour demander à Mera, le résultat s'affiche ici une fois prêt.",
       "listSubtitle": "Les histoires pour lesquelles vous avez demandé à Mera de rechercher des vérifications de faits. Conservées uniquement sur cet appareil.",
       "listTitle": "Vérifications de faits",
       "pending": "Recherche en cours",
@@ -1737,13 +1739,13 @@
     "explainer": "Mera ne vérifie pas les faits de l'actualité elle-même. Elle recherche ce que les organismes de vérification de faits établis ont déjà publié sur cette histoire.",
     "noCheckedBy": "Nous n'avons pas trouvé de vérification de faits publiée sur cette histoire. Cela ne rend pas l'histoire fausse. La plupart des histoires ne sont jamais vérifiées.",
     "organisationA11y": "Ouvrir la vérification de faits de {{organisation}}, notée {{rating}}, dans le navigateur intégré",
-    "queued": "Cette vérification s'exécute en arrière-plan. Vous n'avez pas besoin d'attendre ici — c'est parfait de quitter l'article.",
+    "queued": "Cette vérification s'exécute en arrière-plan. Vous n'avez pas besoin d'attendre ici, c'est parfait de quitter l'article.",
     "queuedHint": "Le résultat s'affiche sous Vérifications de faits sur votre Tableau de bord une fois prêt.",
     "citationA11y": "Ouvrir la source {{source}} dans le navigateur intégré",
     "noLink": "Aucun lien disponible",
-    "actionA11yPending": "Vérification de faits demandée — vérifier le résultat",
-    "actionA11yDone": "Vérification de faits prête — le résultat s'affiche ci-dessous",
-    "checkedByUnavailable": "Nous n'avons pas pu vérifier si une organisation de vérification de faits a publié sur cette histoire — la recherche n'a pas abouti. C'est différent du cas où personne n'aurait publié ; ci-dessous ce que la recherche plus large a trouvé.",
+    "actionA11yPending": "Vérification de faits demandée, vérifier le résultat",
+    "actionA11yDone": "Vérification de faits prête, le résultat s'affiche ci-dessous",
+    "checkedByUnavailable": "Nous n'avons pas pu vérifier si une organisation de vérification de faits a publié sur cette histoire, la recherche n'a pas abouti. C'est différent du cas où personne n'aurait publié ; ci-dessous ce que la recherche plus large a trouvé.",
     "claimProposalTitle": "Vérifier cette affirmation ?",
     "actionCheckClaim": "Vérifier cette affirmation",
     "chatSeed": "Qu'y a-t-il à vérifier dans cette histoire ?",
@@ -1752,22 +1754,29 @@
     "optionWholeArticle": "L'article complet",
     "quickAnswered": "Voici ce qu'une recherche web rapide a trouvé :",
     "quickArticleFailed": "Mera n'a pas pu confirmer que la demande a été envoyée. Réessayez dans un instant.",
-    "quickArticleRequested": "Demande envoyée. Mera vérifiera l'article complet — le résultat apparaîtra sous Vérifications des faits dans votre Tableau de bord une fois qu'il sera prêt.",
+    "quickArticleRequested": "Demande envoyée. Mera vérifiera l'article complet, le résultat apparaîtra sous Vérifications des faits dans votre Tableau de bord une fois qu'il sera prêt.",
     "quickArticleSending": "Envoi de la demande…",
-    "quickCouldNotSearch": "Mera n'a pas pu effectuer la recherche web en ce moment, ce n'est donc pas une réponse — réessayez dans un instant.",
+    "quickCouldNotSearch": "Mera n'a pas pu effectuer la recherche web en ce moment, ce n'est donc pas une réponse, réessayez dans un instant.",
     "quickDisclaimer": "Ceci est une recherche web rapide, pas une vérification par une organisation de vérification des faits, et elle n'est pas enregistrée. Pour une vérification approfondie avec des sources nommées, choisissez « L'article complet ».",
     "quickFailed": "Mera a trouvé certaines informations mais n'a pas pu formuler une réponse cette fois. Réessayez dans un instant.",
-    "quickNothingFound": "La recherche n'a rien trouvé à ce sujet. Cela ne signifie pas que c'est faux — c'est peut-être nouveau, spécialisé ou pas quelque chose de largement couvert en ligne.",
+    "quickNothingFound": "La recherche n'a rien trouvé à ce sujet. Cela ne signifie pas que c'est faux, c'est peut-être nouveau, spécialisé ou pas quelque chose de largement couvert en ligne.",
     "quickRunning": "Recherche sur le web…",
-    "stillChecking": "Cela prend plus de temps que d'habitude. C'est toujours en cours de vérification en arrière-plan — revenez plus tard ou consultez Vérifications des faits dans votre Tableau de bord.",
-    "checkedByMultipleNote": "Il s'agit d'évaluations indépendantes, chacune selon l'échelle propre à cette organisation — elles ne concordent pas toujours entre elles.",
-    "ownReadingHeading": "Lecture propre à Mera — secondaire par rapport au verdict ci-dessus",
+    "stillChecking": "Cela prend plus de temps que d'habitude. C'est toujours en cours de vérification en arrière-plan, revenez plus tard ou consultez Vérifications des faits dans votre Tableau de bord.",
+    "checkedByMultipleNote": "Il s'agit d'évaluations indépendantes, chacune selon l'échelle propre à cette organisation, elles ne concordent pas toujours entre elles.",
+    "ownReadingHeading": "Lecture propre à Mera, secondaire par rapport au verdict ci-dessus",
     "collapseA11y": "Masquer cette vérification",
     "expandA11y": "Afficher cette vérification",
     "checkedByRelatedNote": "Celles-ci proviennent d'une recherche par mots-clés et peuvent concerner une histoire différente. Ouvrez-en une pour vérifier.",
     "searchFoundHeading": "Ce que notre recherche a trouvé",
     "searchFoundEmpty": "Il n'y avait pas assez dans la recherche pour que Mera le résume ici.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Vérification terminée",
+      "bodyFound": "Des vérificateurs ont publié sur « {{title}} ».",
+      "bodyNone": "Aucune vérification publiée pour l'instant sur « {{title}} ».",
+      "bodyUnavailable": "Mera n'a pas pu terminer la vérification de « {{title}} ».",
+      "open": "Ouvrir l'article"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioriser cette source",
@@ -2551,14 +2560,17 @@
     "skipAll": "Tout passer",
     "addAllA11y": "Ajouter les {{count}} suggestions",
     "skipAllA11y": "Passer les {{count}} suggestions",
-    "titleReplace": "Remplacer une information existante ?",
+    "titleReplace": "Remplacer cette information ?",
     "replace": "Remplacer",
     "replacesLabel": "Remplace",
     "replacesTopics_one": "et son 1 sujet",
     "replacesTopics_other": "et ses {{count}} sujets",
     "replacesNoUndo": "L'ancienne information et ses sujets sont supprimés définitivement. C'est irréversible.",
     "replacesLoading": "Je vérifie ce que cela remplace",
-    "replacesUnavailable": "Mera ne peut pas afficher ce qui serait supprimé pour l'instant. Réessaie dans un instant."
+    "replacesUnavailable": "Mera ne peut pas afficher ce qui serait supprimé pour l'instant. Réessaie dans un instant.",
+    "keepBoth": "Garder les deux",
+    "titleAlsoAdd": "Ajouter aussi ceci ?",
+    "pendingHint": "Choisis une option ci-dessus ou écris ta réponse."
   },
   "subscriptions": {
     "sectionTitle": "Vos abonnements",
@@ -2653,7 +2665,7 @@
     "goneTombstone": "Cette information a été supprimée, ses sujets aussi.",
     "expandA11y": "Afficher les sujets",
     "collapseA11y": "Masquer les sujets",
-    "accordionTitlePending": "Nous trouverons des sujets pour :",
+    "accordionTitlePending": "Recherche de sujets pour :",
     "pendingA11y": "Des sujets sont en cours de recherche",
     "readyA11y": "Sujets prêts",
     "failedA11y": "Les sujets n'ont pas pu être trouvés"
@@ -2687,7 +2699,8 @@
     },
     "noRouteSentence": "Mera n'a pas compris de quoi il s'agissait. Essaie de le dire autrement.",
     "noProposalSentence": "Mera n'a rien trouvé à ajouter à partir de cela.",
-    "unknownToolSentence": "Quelque chose a échoué du côté de Mera. Repose la question pour continuer."
+    "unknownToolSentence": "Quelque chose a échoué du côté de Mera. Repose la question pour continuer.",
+    "malformedChoiceSentence": "Mera n'a pas pu t'afficher les options. Repose la question pour continuer."
   },
   "skillPhrase": {
     "residence": "l'endroit où tu vis",

@@ -761,7 +761,7 @@
     "newChat": "Obrolan baru",
     "inputPlaceholder": "Ketik pesan...",
     "viewPreviousMessages": "Lihat pesan sebelumnya",
-    "aiInteractionNotice": "Anda berbicara dengan Mera, asisten AI — bukan dengan seseorang.",
+    "aiInteractionNotice": "Anda berbicara dengan Mera, asisten AI, bukan dengan seseorang.",
     "aiUsageNotice": "Asisten ini membantu menyiapkan preferensi berita Anda. Upaya memanipulasi atau menyalahgunakannya dapat menyebabkan akun Anda diblokir menunggu peninjauan.",
     "requestUnblock": {
       "button": "Ajukan permintaan buka blokir",
@@ -777,7 +777,9 @@
       "error": "Tidak dapat mengirim permintaan Anda. Silakan coba lagi."
     },
     "topicGenFailed": "Tidak dapat membuat topik untuk ini.",
-    "topicGenRetry": "Coba Lagi"
+    "topicGenRetry": "Coba Lagi",
+    "aiUsageNoticeGeneral": "Mera bisa keliru, jadi periksa hal yang penting.",
+    "trackChooseHint": "Pilih yang ingin diikuti"
   },
   "articleFeedback": {
     "thumbsUp": "Saya suka",
@@ -1673,13 +1675,13 @@
     "blocked": "Cerita ini tidak dapat dicari.",
     "claimsHeading": "Klaim yang diperiksa",
     "citationsHeading": "Sumber yang dikonsultasi",
-    "noCitations": "Pemeriksaan ini tidak mengutip halaman tertentu. Itu bukan pencarian yang gagal — perlakukan ringkasan dengan sedikit lebih hati-hati tanpa sumber untuk ditunjuk.",
+    "noCitations": "Pemeriksaan ini tidak mengutip halaman tertentu. Itu bukan pencarian yang gagal, perlakukan ringkasan dengan sedikit lebih hati-hati tanpa sumber untuk ditunjuk.",
     "sourceFallback": "Sumber {{index}}",
     "disclaimer": "Ini adalah bacaan Mera sendiri dari pencarian web, ditulis oleh AI. Dapat salah atau tidak lengkap, jadi baca sumbernya sebelum mengandalkannya.",
     "verdict": {
       "supported": {
         "label": "Konsisten dengan sumber",
-        "detail": "Sumber yang ditemukan pencarian mengatakan hal yang kurang lebih sama. Itu bukan bukti bahwa itu benar — hanya bahwa tidak ada yang bertentangan dengannya yang ditemukan."
+        "detail": "Sumber yang ditemukan pencarian mengatakan hal yang kurang lebih sama. Itu bukan bukti bahwa itu benar, hanya bahwa tidak ada yang bertentangan dengannya yang ditemukan."
       },
       "disputed": {
         "label": "Sumber tidak setuju",
@@ -1687,7 +1689,7 @@
       },
       "unsupported": {
         "label": "Tidak ada dukungan yang ditemukan",
-        "detail": "Pencarian tidak menemukan apa pun yang mendukung ini. Itu bisa berarti cerita itu baru atau khusus — itu tidak membuatnya salah."
+        "detail": "Pencarian tidak menemukan apa pun yang mendukung ini. Itu bisa berarti cerita itu baru atau khusus, itu tidak membuatnya salah."
       },
       "mixed": {
         "label": "Sebagian konsisten",
@@ -1712,7 +1714,7 @@
     "checkedByHeading": "Pemeriksaan fakta yang ditemukan pencarian",
     "dashboard": {
       "deleteA11y": "Hapus pemeriksaan fakta ini",
-      "empty": "Anda belum memeriksa klaim apa pun. Ketuk centang di bawah cerita untuk bertanya kepada Mera tentangnya — hasil muncul di sini setelah siap.",
+      "empty": "Anda belum memeriksa klaim apa pun. Ketuk centang di bawah cerita untuk bertanya kepada Mera tentangnya, hasil muncul di sini setelah siap.",
       "listSubtitle": "Cerita yang Anda minta Mera untuk memeriksa faktanya. Disimpan hanya di perangkat ini.",
       "listTitle": "Pemeriksaan fakta",
       "pending": "Masih mencari",
@@ -1730,13 +1732,13 @@
     "explainer": "Mera tidak memeriksa fakta berita itu sendiri. Mera mencari apa yang telah dipublikasikan organisasi pemeriksa fakta yang sudah mapan tentang cerita ini.",
     "noCheckedBy": "Kami tidak menemukan pemeriksaan fakta yang dipublikasikan tentang cerita ini. Ini tidak berarti cerita tersebut salah. Sebagian besar cerita tidak pernah diperiksa.",
     "organisationA11y": "Buka pemeriksaan fakta {{organisation}}, dinilai {{rating}}, di browser dalam aplikasi",
-    "queued": "Pemeriksaan ini tetap berjalan di latar belakang. Anda tidak perlu menunggu di sini — tidak masalah meninggalkan artikel.",
+    "queued": "Pemeriksaan ini tetap berjalan di latar belakang. Anda tidak perlu menunggu di sini, tidak masalah meninggalkan artikel.",
     "queuedHint": "Hasil muncul di bawah Pemeriksaan fakta di Dashboard Anda setelah siap.",
     "citationA11y": "Buka sumber {{source}} di browser dalam aplikasi",
     "noLink": "Tidak ada tautan yang tersedia",
-    "actionA11yPending": "Pemeriksaan fakta diminta — periksa hasilnya",
-    "actionA11yDone": "Pemeriksaan fakta siap — hasilnya ditampilkan di bawah",
-    "checkedByUnavailable": "Kami tidak dapat memeriksa apakah organisasi penyelia fakta telah menerbitkan tentang cerita ini — pencarian tidak berhasil. Itu berbeda dari tidak ada yang menerbitkan; di bawah ini adalah apa yang ditemukan pencarian yang lebih luas.",
+    "actionA11yPending": "Pemeriksaan fakta diminta, periksa hasilnya",
+    "actionA11yDone": "Pemeriksaan fakta siap, hasilnya ditampilkan di bawah",
+    "checkedByUnavailable": "Kami tidak dapat memeriksa apakah organisasi penyelia fakta telah menerbitkan tentang cerita ini, pencarian tidak berhasil. Itu berbeda dari tidak ada yang menerbitkan; di bawah ini adalah apa yang ditemukan pencarian yang lebih luas.",
     "claimProposalTitle": "Periksa klaim ini?",
     "actionCheckClaim": "Periksa klaim ini",
     "chatSeed": "Apa yang dapat diperiksa fakta dalam cerita ini?",
@@ -1745,22 +1747,29 @@
     "optionWholeArticle": "Seluruh artikel",
     "quickAnswered": "Inilah yang ditemukan pencarian web cepat:",
     "quickArticleFailed": "Mera tidak dapat memastikan permintaan terkirim. Coba lagi sebentar.",
-    "quickArticleRequested": "Permintaan terkirim. Mera akan memeriksa seluruh artikel — hasilnya akan muncul di bawah Pemeriksaan fakta di Dashboard Anda setelah siap.",
+    "quickArticleRequested": "Permintaan terkirim. Mera akan memeriksa seluruh artikel, hasilnya akan muncul di bawah Pemeriksaan fakta di Dashboard Anda setelah siap.",
     "quickArticleSending": "Mengirim permintaan…",
-    "quickCouldNotSearch": "Mera tidak dapat mencari web sekarang, jadi ini bukan jawaban — coba lagi sebentar.",
+    "quickCouldNotSearch": "Mera tidak dapat mencari web sekarang, jadi ini bukan jawaban, coba lagi sebentar.",
     "quickDisclaimer": "Ini adalah pencarian web cepat, bukan pemeriksaan oleh organisasi pemeriksa fakta, dan tidak disimpan. Untuk pemeriksaan menyeluruh dengan sumber tertentu, pilih \"Seluruh artikel\".",
     "quickFailed": "Mera menemukan beberapa informasi tetapi tidak dapat menyusun jawaban kali ini. Coba lagi sebentar.",
-    "quickNothingFound": "Pencarian tidak menemukan apa pun tentang ini. Itu tidak berarti salah — mungkin saja baru, niche, atau bukan sesuatu yang banyak dibahas secara online.",
+    "quickNothingFound": "Pencarian tidak menemukan apa pun tentang ini. Itu tidak berarti salah, mungkin saja baru, niche, atau bukan sesuatu yang banyak dibahas secara online.",
     "quickRunning": "Mencari di web…",
-    "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang — periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda.",
-    "checkedByMultipleNote": "Ini adalah penilaian independen, masing-masing berdasarkan skala organisasi itu sendiri — sehingga tidak selalu sejalan satu sama lain.",
-    "ownReadingHeading": "Pembacaan Mera sendiri — bersifat sekunder terhadap putusan di atas",
+    "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang, periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda.",
+    "checkedByMultipleNote": "Ini adalah penilaian independen, masing-masing berdasarkan skala organisasi itu sendiri, sehingga tidak selalu sejalan satu sama lain.",
+    "ownReadingHeading": "Pembacaan Mera sendiri, bersifat sekunder terhadap putusan di atas",
     "collapseA11y": "Sembunyikan cek fakta ini",
     "expandA11y": "Tampilkan cek fakta ini",
     "checkedByRelatedNote": "Ini berasal dari pencarian kata kunci dan mungkin tentang cerita yang berbeda. Buka salah satu untuk memeriksa.",
     "searchFoundHeading": "Apa yang ditemukan pencarian kami",
     "searchFoundEmpty": "Pencarian tidak memberikan cukup informasi bagi Mera untuk dirangkum di sini.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Pemeriksaan fakta siap",
+      "bodyFound": "Pemeriksa fakta sudah memublikasikan tentang \"{{title}}\".",
+      "bodyNone": "Belum ada pemeriksaan fakta yang dipublikasikan untuk \"{{title}}\".",
+      "bodyUnavailable": "Mera tidak bisa menyelesaikan pemeriksaan \"{{title}}\".",
+      "open": "Buka artikel"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioritaskan sumber ini",
@@ -2544,14 +2553,17 @@
     "skipAll": "Lewati semua",
     "addAllA11y": "Tambahkan semua {{count}} saran",
     "skipAllA11y": "Lewati semua {{count}} saran",
-    "titleReplace": "Ganti informasi yang sudah ada?",
+    "titleReplace": "Ganti informasi ini?",
     "replace": "Ganti",
     "replacesLabel": "Mengganti",
     "replacesTopics_one": "dan 1 topiknya",
     "replacesTopics_other": "dan {{count}} topiknya",
     "replacesNoUndo": "Informasi lama dan topiknya dihapus permanen. Ini tidak bisa dibatalkan.",
     "replacesLoading": "Memeriksa apa yang akan diganti",
-    "replacesUnavailable": "Mera belum bisa menampilkan apa yang akan dihapus. Coba lagi sebentar."
+    "replacesUnavailable": "Mera belum bisa menampilkan apa yang akan dihapus. Coba lagi sebentar.",
+    "keepBoth": "Simpan keduanya",
+    "titleAlsoAdd": "Tambahkan ini juga?",
+    "pendingHint": "Pilih salah satu opsi di atas, atau ketik jawabanmu."
   },
   "subscriptions": {
     "sectionTitle": "Langganan Anda",
@@ -2645,7 +2657,7 @@
     "goneTombstone": "Informasi ini dihapus, jadi topiknya juga hilang.",
     "expandA11y": "Tampilkan topik",
     "collapseA11y": "Sembunyikan topik",
-    "accordionTitlePending": "Kami akan mencari topik untuk:",
+    "accordionTitlePending": "Mencari topik untuk:",
     "pendingA11y": "Topik sedang dicari",
     "readyA11y": "Topik siap",
     "failedA11y": "Topik tidak bisa ditemukan"
@@ -2679,7 +2691,8 @@
     },
     "noRouteSentence": "Mera tidak bisa menangkap ini tentang apa. Coba katakan dengan cara lain.",
     "noProposalSentence": "Mera tidak menemukan apa pun untuk ditambahkan dari ini.",
-    "unknownToolSentence": "Ada yang bermasalah di sisi Mera. Tanya lagi untuk melanjutkan."
+    "unknownToolSentence": "Ada yang bermasalah di sisi Mera. Tanya lagi untuk melanjutkan.",
+    "malformedChoiceSentence": "Mera tidak bisa menampilkan pilihannya. Tanya lagi untuk melanjutkan."
   },
   "skillPhrase": {
     "residence": "tempat tinggalmu",

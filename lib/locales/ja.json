@@ -777,7 +777,9 @@
       "error": "リクエストを送信できませんでした。もう一度お試しください。"
     },
     "topicGenFailed": "このトピックを生成できませんでした。",
-    "topicGenRetry": "再試行"
+    "topicGenRetry": "再試行",
+    "aiUsageNoticeGeneral": "Mera は間違えることがあります。重要なことは確認してください。",
+    "trackChooseHint": "フォローする対象を選んでください"
   },
   "articleFeedback": {
     "thumbsUp": "いいね",
@@ -1760,7 +1762,14 @@
     "checkedByRelatedNote": "これらはキーワード検索から取得したものであり、別のストーリーについても該当する可能性があります。確認するために1つを開いてください。",
     "searchFoundHeading": "検索で見つかった内容",
     "searchFoundEmpty": "検索から要約するのに十分な情報がありませんでした。",
-    "headerA11y": "{{title}}。{{status}}。{{action}}"
+    "headerA11y": "{{title}}。{{status}}。{{action}}",
+    "notify": {
+      "title": "ファクトチェックが完了しました",
+      "bodyFound": "ファクトチェッカーが「{{title}}」について公開しています。",
+      "bodyNone": "「{{title}}」について公開されたファクトチェックはまだありません。",
+      "bodyUnavailable": "Mera は「{{title}}」のチェックを完了できませんでした。",
+      "open": "記事を開く"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "このソースを優先順位付けする",
@@ -2544,14 +2553,17 @@
     "skipAll": "すべてスキップ",
     "addAllA11y": "{{count}} 件の候補をすべて追加",
     "skipAllA11y": "{{count}} 件の候補をすべてスキップ",
-    "titleReplace": "既存の情報を置き換えますか？",
+    "titleReplace": "この情報を置き換えますか？",
     "replace": "置き換える",
     "replacesLabel": "置き換える対象",
     "replacesTopics_one": "と、その 1 件のトピック",
     "replacesTopics_other": "と、その {{count}} 件のトピック",
     "replacesNoUndo": "以前の情報と関連トピックは完全に削除されます。元には戻せません。",
     "replacesLoading": "何が置き換わるか確認しています",
-    "replacesUnavailable": "削除される内容を今は表示できません。少し後にもう一度お試しください。"
+    "replacesUnavailable": "削除される内容を今は表示できません。少し後にもう一度お試しください。",
+    "keepBoth": "両方残す",
+    "titleAlsoAdd": "これも追加しますか？",
+    "pendingHint": "上の選択肢から選ぶか、答えを入力してください。"
   },
   "subscriptions": {
     "sectionTitle": "購読中のメディア",
@@ -2645,7 +2657,7 @@
     "goneTombstone": "この情報は削除されたため、関連トピックもなくなりました。",
     "expandA11y": "トピックを表示",
     "collapseA11y": "トピックを隠す",
-    "accordionTitlePending": "こちらのトピックを探します:",
+    "accordionTitlePending": "トピックを探しています:",
     "pendingA11y": "トピックを検索中",
     "readyA11y": "トピックの準備ができました",
     "failedA11y": "トピックが見つかりませんでした"
@@ -2679,7 +2691,8 @@
     },
     "noRouteSentence": "内容を読み取れませんでした。別の言い方でお試しください。",
     "noProposalSentence": "ここから追加できるものは見つかりませんでした。",
-    "unknownToolSentence": "Mera 側で問題が発生しました。続けるにはもう一度お尋ねください。"
+    "unknownToolSentence": "Mera 側で問題が発生しました。続けるにはもう一度お尋ねください。",
+    "malformedChoiceSentence": "Mera は選択肢を表示できませんでした。続けるにはもう一度お尋ねください。"
   },
   "skillPhrase": {
     "residence": "お住まいの場所",

@@ -339,37 +339,37 @@
     "chipQuickFactCheck": "Quick fact check",
     "quickRunning": "Searching the web…",
     "quickAnswered": "Here's what a quick web search found:",
-    "quickNothingFound": "The search didn't turn up anything about this. That doesn't mean it's false — it may just be new, niche, or not something widely covered online.",
-    "quickCouldNotSearch": "Mera couldn't search the web just now, so this isn't an answer — try again in a moment.",
+    "quickNothingFound": "The search didn't turn up anything about this. That doesn't mean it's false. It may just be new, niche, or not widely covered online.",
+    "quickCouldNotSearch": "Mera couldn't search the web just now, so this isn't an answer. Try again in a moment.",
     "quickFailed": "Mera found some information but couldn't put together an answer this time. Try again in a moment.",
     "quickDisclaimer": "This is a quick web search, not a check by a fact-checking organisation, and it isn't saved. For a thorough check with named sources, pick \"The whole article\".",
     "quickArticleSending": "Sending the request…",
-    "quickArticleRequested": "Request sent. Mera will check the whole article — the result appears under Fact checks on your Dashboard once it's ready.",
+    "quickArticleRequested": "Request sent. Mera will check the whole article, and the result appears under Fact checks on your Dashboard.",
     "quickArticleFailed": "Mera couldn't confirm the request went through. Try again in a moment.",
     "title": "Fact checks",
     "explainer": "Mera doesn't fact-check the news itself. It searches for what established fact-checking organisations have already published about this story.",
     "checking": "Searching for published fact checks…",
-    "queued": "This check keeps running in the background. You don't have to wait here — it's fine to leave the article.",
+    "queued": "This check keeps running in the background. You can leave the article.",
     "queuedHint": "The result appears under Fact checks on your Dashboard once it's ready.",
-    "stillChecking": "This is taking longer than usual. It's still being checked in the background — check back later, or look under Fact checks on your Dashboard.",
+    "stillChecking": "This is taking longer than usual. It's still running in the background, so check back later under Fact checks on your Dashboard.",
     "blocked": "This story couldn't be searched.",
     "checkedByHeading": "Fact checks the search found",
     "checkedByRelatedNote": "These come from a keyword search and may be about a different story. Open one to check.",
     "noCheckedBy": "We didn't find a published fact check about this story. That doesn't make the story wrong. Most stories are never fact-checked.",
-    "checkedByUnavailable": "We couldn't check whether a fact-checking organisation has published on this story — the lookup didn't go through. That's different from nobody having published; below is what the wider search did find.",
-    "checkedByMultipleNote": "These are independent ratings, each on that organisation's own scale — they don't always agree with each other.",
+    "checkedByUnavailable": "We couldn't check whether a fact-checking organisation has published on this story. That's different from nobody having published. Below is what the wider search found.",
+    "checkedByMultipleNote": "These are independent ratings, each on that organisation's own scale, and they don't always agree.",
     "searchFoundHeading": "What our search found",
     "searchFoundEmpty": "There wasn't enough from the search for Mera to summarise here.",
-    "ownReadingHeading": "Mera's own reading — secondary to the ruling above",
+    "ownReadingHeading": "Mera's own reading, secondary to the ruling above",
     "organisationA11y": "Open {{organisation}}'s fact check, rated {{rating}}, in the in-app browser",
     "citationA11y": "Open the source {{source}} in the in-app browser",
     "noLink": "No link available",
     "headerA11y": "{{title}}. {{status}}. {{action}}",
-    "actionA11yPending": "Fact check requested — check for the result",
-    "actionA11yDone": "Fact check ready — the result is shown below",
+    "actionA11yPending": "Fact check requested. Check for the result",
+    "actionA11yDone": "Fact check ready. The result is shown below",
     "claimsHeading": "Claims checked",
     "citationsHeading": "Sources consulted",
-    "noCitations": "This check didn't cite any specific pages. That's not a failed search — treat the summary with a little more caution without sources to point to.",
+    "noCitations": "This check didn't cite any specific pages. That's not a failed search, but treat the summary with more caution.",
     "sourceFallback": "Source {{index}}",
     "disclaimer": "This is Mera's own reading of a web search, written by AI. It can be wrong or incomplete, so read the sources before relying on it.",
     "dashboard": {
@@ -377,7 +377,7 @@
       "pending": "Still searching",
       "listTitle": "Fact checks",
       "listSubtitle": "Stories you asked Mera to look up fact checks for. Kept on this device only.",
-      "empty": "You haven't checked any claims yet. Tap the tick under a story to ask Mera about it — the result lands here once it's ready.",
+      "empty": "You haven't checked any stories yet. Tap the fact check button under a story, and the result lands here once it's ready.",
       "untitled": "Untitled story",
       "deleteA11y": "Delete this fact check",
       "openA11y": "Open this article",
@@ -392,7 +392,7 @@
     "verdict": {
       "supported": {
         "label": "Consistent with sources",
-        "detail": "The sources the search turned up say broadly the same thing. That isn't proof it's true — only that nothing contradicting it was found."
+        "detail": "The sources the search found say broadly the same thing. That isn't proof it's true, only that nothing contradicting it was found."
       },
       "disputed": {
         "label": "Sources disagree",
@@ -400,7 +400,7 @@
       },
       "unsupported": {
         "label": "No support found",
-        "detail": "The search found nothing backing this up. That can simply mean the story is new or niche — it doesn't make it false."
+        "detail": "The search found nothing backing this up. That can simply mean the story is new or niche, and it doesn't make it false."
       },
       "mixed": {
         "label": "Partly consistent",
@@ -423,7 +423,14 @@
       "unknown": "Unclear"
     },
     "collapseA11y": "Hide this fact check",
-    "expandA11y": "Show this fact check"
+    "expandA11y": "Show this fact check",
+    "notify": {
+      "title": "Fact check ready",
+      "bodyFound": "Fact checkers have published on \"{{title}}\".",
+      "bodyNone": "No published fact checks yet for \"{{title}}\".",
+      "bodyUnavailable": "Mera couldn't finish checking \"{{title}}\".",
+      "open": "Open article"
+    }
   },
   "newsCluster": {
     "failedToLoad": "Failed to load cluster details",
@@ -1180,7 +1187,7 @@
     "newChat": "New chat",
     "inputPlaceholder": "Type a message...",
     "viewPreviousMessages": "View previous messages",
-    "aiInteractionNotice": "You're talking with Mera, an AI assistant — not a person.",
+    "aiInteractionNotice": "You're talking with Mera, an AI assistant, not a person.",
     "aiUsageNotice": "This assistant helps set up your news preferences. Attempting to manipulate or misuse it may get your account blocked pending review.",
     "requestUnblock": {
       "button": "Request unblock",
@@ -1196,7 +1203,9 @@
       "error": "Couldn't submit your request. Please try again."
     },
     "topicGenFailed": "Couldn't generate topics for this.",
-    "topicGenRetry": "Retry"
+    "topicGenRetry": "Retry",
+    "aiUsageNoticeGeneral": "Mera can make mistakes, so check anything important.",
+    "trackChooseHint": "Choose what to follow"
   },
   "articleFeedback": {
     "thumbsUp": "I like it",
@@ -1483,11 +1492,11 @@
     "save": "Save",
     "discard": "Discard",
     "discardConfirm": "Yes, discard",
-    "discardWarning": "This removes the fact and all its topics. It can't be undone.",
+    "discardWarning": "This removes the fact and all its topics. You can't undo this.",
     "saveAll": "Save all ({{count}})",
     "discardAll": "Discard all",
-    "discardAllWarning_one": "This removes {{count}} fact and all its topics. It can't be undone.",
-    "discardAllWarning_other": "This removes {{count}} facts and all their topics. It can't be undone.",
+    "discardAllWarning_one": "This removes {{count}} fact and all its topics. You can't undo this.",
+    "discardAllWarning_other": "This removes {{count}} facts and all their topics. You can't undo this.",
     "delete": "Remove topic",
     "undo": "Undo",
     "settledTitle": "Topics saved",
@@ -1509,14 +1518,17 @@
     "skipAll": "Skip all",
     "addAllA11y": "Add all {{count}} suggestions",
     "skipAllA11y": "Skip all {{count}} suggestions",
-    "titleReplace": "Replace a fact you already have?",
+    "titleReplace": "Replace this fact?",
     "replace": "Replace",
     "replacesLabel": "Replaces",
     "replacesTopics_one": "and its 1 topic",
     "replacesTopics_other": "and its {{count}} topics",
-    "replacesNoUndo": "The old fact and its topics are removed for good. You can't undo this.",
+    "replacesNoUndo": "Replace removes the old fact and its topics. You can't undo this.",
     "replacesLoading": "Checking what this replaces",
-    "replacesUnavailable": "Mera can't show what this would remove right now. Try again in a moment."
+    "replacesUnavailable": "Mera can't show what this would remove right now. Try again in a moment.",
+    "keepBoth": "Keep both",
+    "titleAlsoAdd": "Also add this?",
+    "pendingHint": "Choose an option above, or type your answer."
   },
   "conflict": {
     "title": "Possible conflict",
@@ -2646,7 +2658,7 @@
     "goneTombstone": "This fact was removed, so its topics are gone too.",
     "expandA11y": "Show topics",
     "collapseA11y": "Hide topics",
-    "accordionTitlePending": "We'll find topics for:",
+    "accordionTitlePending": "Finding topics for:",
     "pendingA11y": "Topics are being found",
     "readyA11y": "Topics ready",
     "failedA11y": "Topics could not be found"

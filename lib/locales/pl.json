@@ -773,7 +773,7 @@
     "newChat": "Nowy czat",
     "inputPlaceholder": "Wpisz wiadomość...",
     "viewPreviousMessages": "Zobacz poprzednie wiadomości",
-    "aiInteractionNotice": "Rozmawiasz z Mera, asystentem AI — nie z osobą.",
+    "aiInteractionNotice": "Rozmawiasz z Mera, asystentem AI, nie z osobą.",
     "aiUsageNotice": "Ten asystent pomaga skonfigurować Twoje preferencje dotyczące wiadomości. Próba manipulowania nim lub nadużywania go może spowodować zablokowanie konta do czasu przeglądu.",
     "requestUnblock": {
       "button": "Poproś o odblokowanie",
@@ -789,7 +789,9 @@
       "error": "Nie udało się wysłać prośby. Spróbuj ponownie."
     },
     "topicGenFailed": "Nie udało się wygenerować tematy dla tego.",
-    "topicGenRetry": "Ponów"
+    "topicGenRetry": "Ponów",
+    "aiUsageNoticeGeneral": "Mera może się mylić, więc sprawdzaj ważne rzeczy.",
+    "trackChooseHint": "Wybierz, co obserwować"
   },
   "articleFeedback": {
     "thumbsUp": "Podoba mi się",
@@ -1703,13 +1705,13 @@
     "blocked": "Nie można było wyszukać tego artykułu.",
     "claimsHeading": "Sprawdzone twierdzenia",
     "citationsHeading": "Konsultowane źródła",
-    "noCitations": "To sprawdzenie nie powołało się na żadne konkretne strony. To nie oznacza niepowodzenia — potraktuj streszczenie z większą ostrożnością bez źródeł do poparcia.",
+    "noCitations": "To sprawdzenie nie powołało się na żadne konkretne strony. To nie oznacza niepowodzenia, potraktuj streszczenie z większą ostrożnością bez źródeł do poparcia.",
     "sourceFallback": "Źródło {{index}}",
     "disclaimer": "To jest własne rozumienie Mery wyników wyszukiwania internetowego, napisane przez AI. Może to być błędne lub niekompletne, więc przeczytaj źródła przed poleganiem na tym.",
     "verdict": {
       "supported": {
         "label": "Zgodne ze źródłami",
-        "detail": "Źródła znalezione przez wyszukiwanie mówią mniej więcej to samo. To nie jest dowód, że to prawda — tylko to, że nic mu nie zaprzeczało."
+        "detail": "Źródła znalezione przez wyszukiwanie mówią mniej więcej to samo. To nie jest dowód, że to prawda, tylko to, że nic mu nie zaprzeczało."
       },
       "disputed": {
         "label": "Źródła się nie zgadzają",
@@ -1717,7 +1719,7 @@
       },
       "unsupported": {
         "label": "Nie znaleziono poparcia",
-        "detail": "Wyszukiwanie nie znalazło nic popierającego to. To może po prostu oznaczać, że historia jest nowa lub niszowa — nie czyni tego fałszywym."
+        "detail": "Wyszukiwanie nie znalazło nic popierającego to. To może po prostu oznaczać, że historia jest nowa lub niszowa, nie czyni tego fałszywym."
       },
       "mixed": {
         "label": "Częściowo zgodne",
@@ -1742,7 +1744,7 @@
     "checkedByHeading": "Weryfikacje faktów znalezione przez wyszukiwanie",
     "dashboard": {
       "deleteA11y": "Usuń tę weryfikację faktów",
-      "empty": "Nie sprawdziłeś jeszcze żadnych twierdzeń. Dotknij haczyka pod artykułem, aby zapytać Merę — wynik pojawi się tu, gdy będzie gotowy.",
+      "empty": "Nie sprawdziłeś jeszcze żadnych twierdzeń. Dotknij haczyka pod artykułem, aby zapytać Merę, wynik pojawi się tu, gdy będzie gotowy.",
       "listSubtitle": "Artykuły, dla których poprosiłeś Merę o wyszukanie weryfikacji faktów. Przechowywane tylko na tym urządzeniu.",
       "listTitle": "Weryfikacje faktów",
       "pending": "Wciąż wyszukiwanie",
@@ -1762,13 +1764,13 @@
     "explainer": "Mera nie weryfikuje wiadomości sama. Wyszukuje to, co ustalone organizacje weryfikujące fakty już opublikowały na temat tej historii.",
     "noCheckedBy": "Nie znaleźliśmy opublikowanej weryfikacji faktów na temat tego artykułu. To nie oznacza, że artykuł jest błędny. Większość artykułów nigdy nie jest weryfikowana.",
     "organisationA11y": "Otwórz weryfikację faktów {{organisation}}, ocenioną jako {{rating}}, w przeglądarce aplikacji",
-    "queued": "To sprawdzenie trwa w tle. Nie musisz tu czekać — możesz opuścić artykuł.",
+    "queued": "To sprawdzenie trwa w tle. Nie musisz tu czekać, możesz opuścić artykuł.",
     "queuedHint": "Wynik pojawi się w sekcji Sprawdzenia faktów na Desce, gdy będzie gotowy.",
     "citationA11y": "Otwórz źródło {{source}} w przeglądarce aplikacji",
     "noLink": "Brak dostępnego linku",
-    "actionA11yPending": "Żądanie sprawdzenia faktów — sprawdź wynik",
-    "actionA11yDone": "Sprawdzenie faktów gotowe — wynik jest poniżej",
-    "checkedByUnavailable": "Nie mogliśmy sprawdzić, czy organizacja zajmująca się weryfikacją faktów opublikowała coś na temat tej historii — sprawdzenie się nie powiodło. To coś innego niż brak publikacji; poniżej znajduje się to, co znaleźliśmy w szerszym wyszukiwaniu.",
+    "actionA11yPending": "Żądanie sprawdzenia faktów, sprawdź wynik",
+    "actionA11yDone": "Sprawdzenie faktów gotowe, wynik jest poniżej",
+    "checkedByUnavailable": "Nie mogliśmy sprawdzić, czy organizacja zajmująca się weryfikacją faktów opublikowała coś na temat tej historii, sprawdzenie się nie powiodło. To coś innego niż brak publikacji; poniżej znajduje się to, co znaleźliśmy w szerszym wyszukiwaniu.",
     "claimProposalTitle": "Sprawdzić to twierdzenie?",
     "actionCheckClaim": "Sprawdź to twierdzenie",
     "chatSeed": "Co w tej historii można sprawdzić?",
@@ -1777,22 +1779,29 @@
     "optionWholeArticle": "Cały artykuł",
     "quickAnswered": "Oto, co znaleziono w szybkim wyszukiwaniu internetowym:",
     "quickArticleFailed": "Mera nie mogła potwierdzić, że żądanie przeszło. Spróbuj ponownie za chwilę.",
-    "quickArticleRequested": "Żądanie wysłane. Mera sprawdzi cały artykuł — wynik pojawi się w sekcji Weryfikacje faktów na Pulpicie, gdy będzie gotowy.",
+    "quickArticleRequested": "Żądanie wysłane. Mera sprawdzi cały artykuł, wynik pojawi się w sekcji Weryfikacje faktów na Pulpicie, gdy będzie gotowy.",
     "quickArticleSending": "Wysyłanie żądania…",
-    "quickCouldNotSearch": "Mera nie mogła wyszukać w sieci w tym momencie, więc to nie jest odpowiedź — spróbuj ponownie za chwilę.",
+    "quickCouldNotSearch": "Mera nie mogła wyszukać w sieci w tym momencie, więc to nie jest odpowiedź, spróbuj ponownie za chwilę.",
     "quickDisclaimer": "To jest szybkie wyszukiwanie internetowe, a nie sprawdzenie przez organizację zajmującą się weryfikacją faktów, i nie jest zapisywane. Aby uzyskać dokładne sprawdzenie z podanymi źródłami, wybierz \"Cały artykuł\".",
     "quickFailed": "Mera znalazła pewne informacje, ale tym razem nie mogła ułożyć odpowiedzi. Spróbuj ponownie za chwilę.",
-    "quickNothingFound": "Wyszukiwanie nie znalazło nic na ten temat. To nie oznacza, że to fałsz — może to być po prostu nowe, niszowe, lub coś, co nie jest szeroko znane online.",
+    "quickNothingFound": "Wyszukiwanie nie znalazło nic na ten temat. To nie oznacza, że to fałsz, może to być po prostu nowe, niszowe, lub coś, co nie jest szeroko znane online.",
     "quickRunning": "Przeszukiwanie sieci…",
-    "stillChecking": "To trwa dłużej niż zwykle. Sprawdzanie ciągle trwa w tle — wróć później lub sprawdź sekcję Weryfikacje faktów na Pulpicie.",
-    "checkedByMultipleNote": "To niezależne oceny, każda w skali danej organizacji — nie zawsze są ze sobą zgodne.",
-    "ownReadingHeading": "Ocena własna Mera — drugorzędna wobec werdyktu powyżej",
+    "stillChecking": "To trwa dłużej niż zwykle. Sprawdzanie ciągle trwa w tle, wróć później lub sprawdź sekcję Weryfikacje faktów na Pulpicie.",
+    "checkedByMultipleNote": "To niezależne oceny, każda w skali danej organizacji, nie zawsze są ze sobą zgodne.",
+    "ownReadingHeading": "Ocena własna Mera, drugorzędna wobec werdyktu powyżej",
     "collapseA11y": "Ukryj to sprawdzenie faktów",
     "expandA11y": "Pokaż to sprawdzenie faktów",
     "checkedByRelatedNote": "Pochodzą z wyszukiwania słów kluczowych i mogą dotyczyć innego artykułu. Otwórz jeden, aby sprawdzić.",
     "searchFoundHeading": "Co znalazło nasze wyszukiwanie",
     "searchFoundEmpty": "Wyników wyszukiwania było za mało, aby Mera mogła je tutaj streścić.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Weryfikacja gotowa",
+      "bodyFound": "Weryfikatorzy faktów opublikowali ocenę „{{title}}”.",
+      "bodyNone": "Nie ma jeszcze opublikowanych weryfikacji dla „{{title}}”.",
+      "bodyUnavailable": "Mera nie mogła dokończyć sprawdzania „{{title}}”.",
+      "open": "Otwórz artykuł"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Uprioritetnij to źródło",
@@ -2580,14 +2589,17 @@
     "skipAll": "Pomiń wszystko",
     "addAllA11y": "Dodaj wszystkie {{count}} propozycje",
     "skipAllA11y": "Pomiń wszystkie {{count}} propozycje",
-    "titleReplace": "Zastąpić istniejącą informację?",
+    "titleReplace": "Zastąpić tę informację?",
     "replace": "Zastąp",
     "replacesLabel": "Zastępuje",
     "replacesTopics_one": "i jej 1 temat",
     "replacesTopics_other": "i jej {{count}} tematów",
     "replacesNoUndo": "Stara informacja i jej tematy zostaną usunięte na stałe. Tego nie można cofnąć.",
     "replacesLoading": "Sprawdzam, co to zastąpi",
-    "replacesUnavailable": "Mera nie może teraz pokazać, co zostałoby usunięte. Spróbuj za chwilę."
+    "replacesUnavailable": "Mera nie może teraz pokazać, co zostałoby usunięte. Spróbuj za chwilę.",
+    "keepBoth": "Zachowaj oba",
+    "titleAlsoAdd": "Dodać też to?",
+    "pendingHint": "Wybierz opcję powyżej albo wpisz odpowiedź."
   },
   "subscriptions": {
     "sectionTitle": "Twoje subskrypcje",
@@ -2684,7 +2696,7 @@
     "goneTombstone": "Ta informacja została usunięta, więc jej tematy też.",
     "expandA11y": "Pokaż tematy",
     "collapseA11y": "Ukryj tematy",
-    "accordionTitlePending": "Znajdziemy tematy do:",
+    "accordionTitlePending": "Szukam tematów do:",
     "pendingA11y": "Trwa szukanie tematów",
     "readyA11y": "Tematy gotowe",
     "failedA11y": "Nie udało się znaleźć tematów"
@@ -2718,7 +2730,8 @@
     },
     "noRouteSentence": "Mera nie rozpoznała, czego to dotyczyło. Spróbuj powiedzieć to inaczej.",
     "noProposalSentence": "Mera nie znalazła w tym nic do dodania.",
-    "unknownToolSentence": "Coś poszło nie tak po stronie Mery. Zapytaj ponownie, aby kontynuować."
+    "unknownToolSentence": "Coś poszło nie tak po stronie Mery. Zapytaj ponownie, aby kontynuować.",
+    "malformedChoiceSentence": "Mera nie mogła pokazać opcji. Zapytaj ponownie, aby kontynuować."
   },
   "skillPhrase": {
     "residence": "miejsce, w którym mieszkasz",

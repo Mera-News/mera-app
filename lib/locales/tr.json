@@ -761,7 +761,7 @@
     "newChat": "Yeni sohbet",
     "inputPlaceholder": "Bir mesaj yaz...",
     "viewPreviousMessages": "Önceki mesajları görüntüle",
-    "aiInteractionNotice": "Mera adında bir yapay zeka asistanı ile konuşuyorsunuz — bir insan değil.",
+    "aiInteractionNotice": "Mera adında bir yapay zeka asistanı ile konuşuyorsunuz, bir insan değil.",
     "aiUsageNotice": "Bu asistan haber tercihlerini ayarlamana yardımcı olur. Onu manipüle etmeye veya kötüye kullanmaya çalışmak hesabının inceleme bekleyene kadar engellenmesine yol açabilir.",
     "requestUnblock": {
       "button": "Engelin kaldırılmasını iste",
@@ -777,7 +777,9 @@
       "error": "İsteğin gönderilemedi. Lütfen tekrar dene."
     },
     "topicGenFailed": "Bu için konular oluşturulamadı.",
-    "topicGenRetry": "Tekrar Dene"
+    "topicGenRetry": "Tekrar Dene",
+    "aiUsageNoticeGeneral": "Mera hata yapabilir, önemli şeyleri kontrol et.",
+    "trackChooseHint": "Neyi takip edeceğini seç"
   },
   "articleFeedback": {
     "thumbsUp": "Beğendim",
@@ -1675,13 +1677,13 @@
     "blocked": "Bu haber aranamadı.",
     "claimsHeading": "Denetlenen iddialar",
     "citationsHeading": "Danışılan kaynaklar",
-    "noCitations": "Bu kontrol herhangi bir belirli sayfaya atıf yapmadı. Bu başarısız bir arama değil — kaynaklar olmadan özeti biraz daha dikkatle ele alın.",
+    "noCitations": "Bu kontrol herhangi bir belirli sayfaya atıf yapmadı. Bu başarısız bir arama değil, kaynaklar olmadan özeti biraz daha dikkatle ele alın.",
     "sourceFallback": "Kaynak {{index}}",
     "disclaimer": "Bu, yapay zeka tarafından yazılan bir web aramasının Mera'nın kendi okumasıdır. Hatalı veya eksik olabilir, bu nedenle ona güvenmeden önce kaynakları okuyun.",
     "verdict": {
       "supported": {
         "label": "Kaynaklarla tutarlı",
-        "detail": "Aramanın bulduğu kaynaklar temelde aynı şeyi söylüyor. Bu, doğru olduğu anlamına gelmez — sadece onu çürüten bir şey bulunmadığı anlamına gelir."
+        "detail": "Aramanın bulduğu kaynaklar temelde aynı şeyi söylüyor. Bu, doğru olduğu anlamına gelmez, sadece onu çürüten bir şey bulunmadığı anlamına gelir."
       },
       "disputed": {
         "label": "Kaynaklar anlaşmazlık içinde",
@@ -1689,7 +1691,7 @@
       },
       "unsupported": {
         "label": "Destek bulunamadı",
-        "detail": "Araması bu bulguyu destekleyen bir şey bulamadı. Bu, sadece haberin yeni veya niş olduğu anlamına gelebilir — onu yanlış yapmaz."
+        "detail": "Araması bu bulguyu destekleyen bir şey bulamadı. Bu, sadece haberin yeni veya niş olduğu anlamına gelebilir, onu yanlış yapmaz."
       },
       "mixed": {
         "label": "Kısmen tutarlı",
@@ -1714,7 +1716,7 @@
     "checkedByHeading": "Aramanın bulduğu gerçek kontrolleri",
     "dashboard": {
       "deleteA11y": "Bu doğruluk kontrolünü sil",
-      "empty": "Henüz herhangi bir iddia kontrol etmediniz. Bir hikayenin altındaki işareti dokunarak Mera'ya sorular sorun — sonuç hazır olduğunda buraya gelir.",
+      "empty": "Henüz herhangi bir iddia kontrol etmediniz. Bir hikayenin altındaki işareti dokunarak Mera'ya sorular sorun, sonuç hazır olduğunda buraya gelir.",
       "listSubtitle": "Mera'ya doğruluk kontrol araması yapmasını istediğiniz haberler. Sadece bu cihazda saklanır.",
       "listTitle": "Doğruluk kontroller",
       "pending": "Hala aranıyor",
@@ -1732,13 +1734,13 @@
     "explainer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Resmi doğruluk kontrol kuruluşlarının bu haber hakkında yayımladıklarını arar.",
     "noCheckedBy": "Bu hikaye hakkında yayınlanmış bir gerçek kontrolü bulamadık. Bu hikayelenin yanlış olduğu anlamına gelmez. Çoğu hikaye hiçbir zaman kontrol edilmez.",
     "organisationA11y": "{{organisation}} tarafından yapılan gerçek kontrolünü açın, {{rating}} ile değerlendirilmiş, uygulama içi tarayıcıda",
-    "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Burada beklemenize gerek yok — makaleyi terk etseniz bile sorun değil.",
+    "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Burada beklemenize gerek yok, makaleyi terk etseniz bile sorun değil.",
     "queuedHint": "Sonuç hazır olduğunda Panoda Gerçek Kontroller altında görüntülenir.",
     "citationA11y": "{{source}} kaynağını uygulama içinde aç",
     "noLink": "Bağlantı mevcut değil",
-    "actionA11yPending": "Gerçek kontrol talep edildi — sonuç için kontrol edin",
-    "actionA11yDone": "Gerçek kontrol hazır — sonuç aşağıda gösterilir",
-    "checkedByUnavailable": "Bir gerçek kontrol kuruluşunun bu hikayede yayın yapıp yapmadığını kontrol edemedik — sorgu başarısız oldu. Bu kimsenin yayın yapmamış olmasından farklıdır; aşağıda geniş aramanın bulduğu sonuçlar yer almaktadır.",
+    "actionA11yPending": "Gerçek kontrol talep edildi, sonuç için kontrol edin",
+    "actionA11yDone": "Gerçek kontrol hazır, sonuç aşağıda gösterilir",
+    "checkedByUnavailable": "Bir gerçek kontrol kuruluşunun bu hikayede yayın yapıp yapmadığını kontrol edemedik, sorgu başarısız oldu. Bu kimsenin yayın yapmamış olmasından farklıdır; aşağıda geniş aramanın bulduğu sonuçlar yer almaktadır.",
     "claimProposalTitle": "Bu iddiayı kontrol et?",
     "actionCheckClaim": "Iddiayı kontrol et",
     "chatSeed": "Bu hikaye hakkında ne kontrol edilebilir?",
@@ -1747,22 +1749,29 @@
     "optionWholeArticle": "Tüm makale",
     "quickAnswered": "Hızlı web araması şunları buldu:",
     "quickArticleFailed": "Mera isteğin gönderildiğini doğrulayamadı. Birazdan tekrar dene.",
-    "quickArticleRequested": "İstek gönderildi. Mera tüm makaleyi kontrol edecek — sonuç Dashboard'unuzdaki Gerçek Kontroller bölümünde hazır olduğunda görünecek.",
+    "quickArticleRequested": "İstek gönderildi. Mera tüm makaleyi kontrol edecek, sonuç Dashboard'unuzdaki Gerçek Kontroller bölümünde hazır olduğunda görünecek.",
     "quickArticleSending": "İstek gönderiliyor…",
-    "quickCouldNotSearch": "Mera şu anda web'de arama yapamadı, bu nedenle bu bir cevap değil — birazdan tekrar dene.",
+    "quickCouldNotSearch": "Mera şu anda web'de arama yapamadı, bu nedenle bu bir cevap değil, birazdan tekrar dene.",
     "quickDisclaimer": "Bu, hızlı bir web araması olup, bir gerçek doğrulama kuruluşu tarafından yapılan bir kontrol değildir ve kaydedilmez. Kaynaklarla birlikte kapsamlı bir kontrol için \"Tüm makale\" seçeneğini seç.",
     "quickFailed": "Mera bazı bilgiler buldu ancak bu kez bir cevap oluşturamadı. Birazdan tekrar dene.",
-    "quickNothingFound": "Arama, bununla ilgili hiçbir şey bulamamıştır. Bu, bunun yanlış olduğu anlamına gelmez — sadece yeni, niş veya çevrimiçi olarak yaygın olarak kapsanan bir konu olmayabilir.",
+    "quickNothingFound": "Arama, bununla ilgili hiçbir şey bulamamıştır. Bu, bunun yanlış olduğu anlamına gelmez, sadece yeni, niş veya çevrimiçi olarak yaygın olarak kapsanan bir konu olmayabilir.",
     "quickRunning": "Web aranıyor…",
-    "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor — daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak.",
-    "checkedByMultipleNote": "Bunlar birbirinden bağımsız değerlendirmelerdir, her biri ilgili kuruluşun kendi ölçeğine göredir — her zaman birbiriyle uyuşmayabilir.",
-    "ownReadingHeading": "Mera'nın kendi değerlendirmesi — yukarıdaki karara ikincil",
+    "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor, daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak.",
+    "checkedByMultipleNote": "Bunlar birbirinden bağımsız değerlendirmelerdir, her biri ilgili kuruluşun kendi ölçeğine göredir, her zaman birbiriyle uyuşmayabilir.",
+    "ownReadingHeading": "Mera'nın kendi değerlendirmesi, yukarıdaki karara ikincil",
     "collapseA11y": "Bu doğrulamayı gizle",
     "expandA11y": "Bu doğrulamayı göster",
     "checkedByRelatedNote": "Bunlar anahtar sözcük aramasından gelir ve farklı bir hikaye hakkında olabilir. Kontrol etmek için birini açın.",
     "searchFoundHeading": "Aramamızın bulduğu",
     "searchFoundEmpty": "Arama, Mera'nın burada özet yapabileceği kadar bilgi sağlamadı.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Doğruluk kontrolü hazır",
+      "bodyFound": "Doğruluk kontrolcüleri \"{{title}}\" hakkında yayın yaptı.",
+      "bodyNone": "\"{{title}}\" için henüz yayımlanmış bir doğruluk kontrolü yok.",
+      "bodyUnavailable": "Mera \"{{title}}\" kontrolünü tamamlayamadı.",
+      "open": "Makaleyi aç"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Bu kaynağı önceliklendır",
@@ -2546,14 +2555,17 @@
     "skipAll": "Tümünü atla",
     "addAllA11y": "{{count}} önerinin tümünü ekle",
     "skipAllA11y": "{{count}} önerinin tümünü atla",
-    "titleReplace": "Mevcut bir bilgiyi değiştirelim mi?",
+    "titleReplace": "Bu bilgi değiştirilsin mi?",
     "replace": "Değiştir",
     "replacesLabel": "Şunu değiştirir",
     "replacesTopics_one": "ve 1 konusunu",
     "replacesTopics_other": "ve {{count}} konusunu",
     "replacesNoUndo": "Eski bilgi ve konuları kalıcı olarak silinir. Bu geri alınamaz.",
     "replacesLoading": "Neyin değişeceğini kontrol ediyorum",
-    "replacesUnavailable": "Mera şu anda neyin kaldırılacağını gösteremiyor. Birazdan tekrar dene."
+    "replacesUnavailable": "Mera şu anda neyin kaldırılacağını gösteremiyor. Birazdan tekrar dene.",
+    "keepBoth": "İkisini de tut",
+    "titleAlsoAdd": "Bu da eklensin mi?",
+    "pendingHint": "Yukarıdan bir seçenek belirle ya da cevabını yaz."
   },
   "subscriptions": {
     "sectionTitle": "Abonelikleriniz",
@@ -2648,7 +2660,7 @@
     "goneTombstone": "Bu bilgi kaldırıldı, konuları da gitti.",
     "expandA11y": "Konuları göster",
     "collapseA11y": "Konuları gizle",
-    "accordionTitlePending": "Şunun için konular bulacağız:",
+    "accordionTitlePending": "Şunun konuları bulunuyor:",
     "pendingA11y": "Konular bulunuyor",
     "readyA11y": "Konular hazır",
     "failedA11y": "Konular bulunamadı"
@@ -2682,7 +2694,8 @@
     },
     "noRouteSentence": "Mera bunun neyle ilgili olduğunu anlayamadı. Başka türlü söylemeyi dene.",
     "noProposalSentence": "Mera bundan ekleyecek bir şey bulamadı.",
-    "unknownToolSentence": "Mera tarafında bir şeyler ters gitti. Devam etmek için tekrar sor."
+    "unknownToolSentence": "Mera tarafında bir şeyler ters gitti. Devam etmek için tekrar sor.",
+    "malformedChoiceSentence": "Mera seçenekleri gösteremedi. Devam etmek için tekrar sor."
   },
   "skillPhrase": {
     "residence": "yaşadığın yeri",

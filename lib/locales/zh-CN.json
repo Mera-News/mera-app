@@ -777,7 +777,9 @@
       "error": "无法提交你的申请，请重试。"
     },
     "topicGenFailed": "无法为此生成主题。",
-    "topicGenRetry": "重试"
+    "topicGenRetry": "重试",
+    "aiUsageNoticeGeneral": "Mera 可能会出错，重要内容请自行核实。",
+    "trackChooseHint": "选择要关注的内容"
   },
   "articleFeedback": {
     "thumbsUp": "喜欢",
@@ -1761,7 +1763,14 @@
     "checkedByRelatedNote": "这些来自关键词搜索，可能与不同的故事有关。打开其中一个进行检查。",
     "searchFoundHeading": "搜索发现的内容",
     "searchFoundEmpty": "搜索中没有足够的内容供 Mera 在此总结。",
-    "headerA11y": "{{title}}。{{status}}。{{action}}"
+    "headerA11y": "{{title}}。{{status}}。{{action}}",
+    "notify": {
+      "title": "事实核查已完成",
+      "bodyFound": "事实核查机构已就“{{title}}”发布了核查。",
+      "bodyNone": "目前还没有关于“{{title}}”的已发布事实核查。",
+      "bodyUnavailable": "Mera 未能完成对“{{title}}”的核查。",
+      "open": "打开文章"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "优先考虑此来源",
@@ -2545,14 +2554,17 @@
     "skipAll": "全部跳过",
     "addAllA11y": "添加全部 {{count}} 条建议",
     "skipAllA11y": "跳过全部 {{count}} 条建议",
-    "titleReplace": "替换已有的一条信息？",
+    "titleReplace": "替换这条信息？",
     "replace": "替换",
     "replacesLabel": "将替换",
     "replacesTopics_one": "以及它的 1 个主题",
     "replacesTopics_other": "以及它的 {{count}} 个主题",
     "replacesNoUndo": "原有信息及其主题将被永久删除，无法撤销。",
     "replacesLoading": "正在确认会替换什么",
-    "replacesUnavailable": "Mera 暂时无法显示会删除哪些内容。请稍后再试。"
+    "replacesUnavailable": "Mera 暂时无法显示会删除哪些内容。请稍后再试。",
+    "keepBoth": "两个都保留",
+    "titleAlsoAdd": "也加入这条吗？",
+    "pendingHint": "请选择上方的一个选项，或直接输入你的回答。"
   },
   "subscriptions": {
     "sectionTitle": "你的订阅",
@@ -2646,7 +2658,7 @@
     "goneTombstone": "这条信息已删除，相关主题也一并移除。",
     "expandA11y": "显示主题",
     "collapseA11y": "隐藏主题",
-    "accordionTitlePending": "我们会为这条找主题：",
+    "accordionTitlePending": "正在寻找相关主题：",
     "pendingA11y": "正在寻找主题",
     "readyA11y": "主题已就绪",
     "failedA11y": "未能找到主题"
@@ -2680,7 +2692,8 @@
     },
     "noRouteSentence": "Mera 没能判断这是关于什么的。换个说法再试试。",
     "noProposalSentence": "Mera 没有从中找到可以添加的内容。",
-    "unknownToolSentence": "Mera 这边出了点问题。再问一次即可继续。"
+    "unknownToolSentence": "Mera 这边出了点问题。再问一次即可继续。",
+    "malformedChoiceSentence": "Mera 没能显示选项。再问一次即可继续。"
   },
   "skillPhrase": {
     "residence": "你居住的地方",

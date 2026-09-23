@@ -26,23 +26,7 @@ const BASELINE: Record<string, number> = {
  * factCheck.* and floatingChat.* string). Delete entries as they land; the
  * list must only shrink.
  */
-const EN_PENDING = new Set<string>([
-  'factCheck.quickNothingFound',
-  'factCheck.quickCouldNotSearch',
-  'factCheck.quickArticleRequested',
-  'factCheck.queued',
-  'factCheck.stillChecking',
-  'factCheck.checkedByUnavailable',
-  'factCheck.checkedByMultipleNote',
-  'factCheck.ownReadingHeading',
-  'factCheck.actionA11yPending',
-  'factCheck.actionA11yDone',
-  'factCheck.noCitations',
-  'factCheck.dashboard.empty',
-  'factCheck.verdict.supported.detail',
-  'factCheck.verdict.unsupported.detail',
-  'floatingChat.aiInteractionNotice',
-]);
+const EN_PENDING = new Set<string>([]);
 
 /**
  * Fragment keys still carrying the OLD dashed translations in non-exempt
@@ -50,9 +34,7 @@ const EN_PENDING = new Set<string>([
  * file. Same contract as EN_PENDING: it may only shrink, and an entry whose
  * dashes are gone fails the next test until it is deleted here.
  */
-const FRAGMENT_PENDING: Record<string, Set<string>> = {
-  '_ux1-chat-fragments.json': new Set(EN_PENDING),
-};
+const FRAGMENT_PENDING: Record<string, Set<string>> = {};
 
 function leaves(obj: unknown, prefix = '', out: [string, string][] = []): [string, string][] {
   if (typeof obj === 'string') {

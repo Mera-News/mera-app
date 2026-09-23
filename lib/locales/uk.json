@@ -791,7 +791,9 @@
       "error": "Не вдалося надіслати запит. Будь ласка, спробуйте ще раз."
     },
     "topicGenFailed": "Не вдалося створити теми для цього.",
-    "topicGenRetry": "Повторити"
+    "topicGenRetry": "Повторити",
+    "aiUsageNoticeGeneral": "Mera може помилятися, тож перевіряй усе важливе.",
+    "trackChooseHint": "Обери, за чим стежити"
   },
   "articleFeedback": {
     "thumbsUp": "Подобається",
@@ -1798,7 +1800,14 @@
     "checkedByRelatedNote": "Вони отримані з пошуку за ключовими словами і можуть стосуватися іншої новини. Відкрийте один, щоб перевірити.",
     "searchFoundHeading": "Що знайшов наш пошук",
     "searchFoundEmpty": "Результатів пошуку недостатньо для резюме.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Перевірку фактів завершено",
+      "bodyFound": "Фактчекери опублікували матеріал про «{{title}}».",
+      "bodyNone": "Опублікованих перевірок про «{{title}}» поки немає.",
+      "bodyUnavailable": "Mera не вдалося завершити перевірку «{{title}}».",
+      "open": "Відкрити статтю"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Привілейувати це джерело",
@@ -2586,14 +2595,17 @@
     "skipAll": "Пропустити всі",
     "addAllA11y": "Додати всі {{count}} пропозиції",
     "skipAllA11y": "Пропустити всі {{count}} пропозиції",
-    "titleReplace": "Замінити наявний факт?",
+    "titleReplace": "Замінити цей факт?",
     "replace": "Замінити",
     "replacesLabel": "Замінює",
     "replacesTopics_one": "і її 1 тему",
     "replacesTopics_other": "і її {{count}} тем",
     "replacesNoUndo": "Попередній факт і його теми видаляються назавжди. Скасувати це не можна.",
     "replacesLoading": "Перевіряю, що буде замінено",
-    "replacesUnavailable": "Mera зараз не може показати, що буде видалено. Спробуйте за хвилину."
+    "replacesUnavailable": "Mera зараз не може показати, що буде видалено. Спробуйте за хвилину.",
+    "keepBoth": "Залишити обидва",
+    "titleAlsoAdd": "Додати й це?",
+    "pendingHint": "Обери варіант вище або напиши відповідь."
   },
   "subscriptions": {
     "sectionTitle": "Ваші передплати",
@@ -2690,7 +2702,7 @@
     "goneTombstone": "Цей факт видалено, тому його теми теж.",
     "expandA11y": "Показати теми",
     "collapseA11y": "Сховати теми",
-    "accordionTitlePending": "Ми підберемо теми за:",
+    "accordionTitlePending": "Добираємо теми за:",
     "pendingA11y": "Триває добір тем",
     "readyA11y": "Теми готові",
     "failedA11y": "Не вдалося дібрати теми"
@@ -2724,7 +2736,8 @@
     },
     "noRouteSentence": "Mera не зрозуміла, про що це. Спробуйте сказати інакше.",
     "noProposalSentence": "Mera не знайшла, що з цього додати.",
-    "unknownToolSentence": "Щось пішло не так на боці Mera. Запитайте знову, щоб продовжити."
+    "unknownToolSentence": "Щось пішло не так на боці Mera. Запитайте знову, щоб продовжити.",
+    "malformedChoiceSentence": "Mera не вдалося показати варіанти. Запитайте знову, щоб продовжити."
   },
   "skillPhrase": {
     "residence": "місце, де ви живете",

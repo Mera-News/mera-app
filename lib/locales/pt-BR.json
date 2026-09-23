@@ -761,7 +761,7 @@
     "newChat": "Nova conversa",
     "inputPlaceholder": "Digite uma mensagem...",
     "viewPreviousMessages": "Ver mensagens anteriores",
-    "aiInteractionNotice": "Você está falando com Mera, um assistente de IA — não com uma pessoa.",
+    "aiInteractionNotice": "Você está falando com Mera, um assistente de IA, não com uma pessoa.",
     "aiUsageNotice": "Este assistente ajuda a configurar suas preferências de notícias. Tentar manipulá-lo ou usá-lo indevidamente pode bloquear sua conta até revisão.",
     "requestUnblock": {
       "button": "Solicitar desbloqueio",
@@ -777,7 +777,9 @@
       "error": "Não foi possível enviar sua solicitação. Tente novamente."
     },
     "topicGenFailed": "Não foi possível gerar tópicos para isso.",
-    "topicGenRetry": "Tentar novamente"
+    "topicGenRetry": "Tentar novamente",
+    "aiUsageNoticeGeneral": "O Mera pode cometer erros, então confira o que for importante.",
+    "trackChooseHint": "Escolha o que seguir"
   },
   "articleFeedback": {
     "thumbsUp": "Gostei",
@@ -1673,13 +1675,13 @@
     "blocked": "Essa história não pôde ser pesquisada.",
     "claimsHeading": "Afirmações verificadas",
     "citationsHeading": "Fontes consultadas",
-    "noCitations": "Esta verificação não citou nenhuma página específica. Isso não é uma busca mal-sucedida — trate o resumo com um pouco mais de cautela sem fontes para apontar.",
+    "noCitations": "Esta verificação não citou nenhuma página específica. Isso não é uma busca mal-sucedida, trate o resumo com um pouco mais de cautela sem fontes para apontar.",
     "sourceFallback": "Fonte {{index}}",
     "disclaimer": "Esta é a leitura própria do Mera de uma busca na web, escrita por IA. Pode estar incorreta ou incompleta, portanto leia as fontes antes de confiar nela.",
     "verdict": {
       "supported": {
         "label": "Consistente com fontes",
-        "detail": "As fontes que a pesquisa encontrou dizem essencialmente a mesma coisa. Isso não é prova de que é verdade — apenas que nada contradizendo foi encontrado."
+        "detail": "As fontes que a pesquisa encontrou dizem essencialmente a mesma coisa. Isso não é prova de que é verdade, apenas que nada contradizendo foi encontrado."
       },
       "disputed": {
         "label": "Fontes divergem",
@@ -1687,7 +1689,7 @@
       },
       "unsupported": {
         "label": "Sem apoio encontrado",
-        "detail": "A pesquisa não encontrou nada apoiando isso. Isso pode simplesmente significar que a história é nova ou de nicho — não a torna falsa."
+        "detail": "A pesquisa não encontrou nada apoiando isso. Isso pode simplesmente significar que a história é nova ou de nicho, não a torna falsa."
       },
       "mixed": {
         "label": "Parcialmente consistente",
@@ -1712,7 +1714,7 @@
     "checkedByHeading": "Verificações de fatos encontradas na busca",
     "dashboard": {
       "deleteA11y": "Excluir essa verificação de fatos",
-      "empty": "Você ainda não verificou nenhuma alegação. Toque na marca de seleção sob uma história para perguntar ao Mera sobre isso — o resultado aparece aqui assim que estiver pronto.",
+      "empty": "Você ainda não verificou nenhuma alegação. Toque na marca de seleção sob uma história para perguntar ao Mera sobre isso, o resultado aparece aqui assim que estiver pronto.",
       "listSubtitle": "Histórias para as quais você pediu ao Mera para pesquisar verificações de fatos. Mantidas apenas neste dispositivo.",
       "listTitle": "Verificações de fatos",
       "pending": "Ainda pesquisando",
@@ -1730,13 +1732,13 @@
     "explainer": "Mera não verifica os fatos das notícias em si. Ela pesquisa o que organizações de verificação de fatos estabelecidas já publicaram sobre essa história.",
     "noCheckedBy": "Não encontramos uma verificação de fatos publicada sobre esta história. Isso não significa que a história esteja errada. A maioria das histórias nunca é verificada.",
     "organisationA11y": "Abra a verificação de fatos de {{organisation}}, classificada como {{rating}}, no navegador do app",
-    "queued": "Esta verificação continua em execução em segundo plano. Você não precisa esperar aqui — é seguro sair do artigo.",
+    "queued": "Esta verificação continua em execução em segundo plano. Você não precisa esperar aqui, é seguro sair do artigo.",
     "queuedHint": "O resultado aparece em Verificações de fatos no seu Painel assim que estiver pronto.",
     "citationA11y": "Abrir a fonte {{source}} no navegador do aplicativo",
     "noLink": "Nenhum link disponível",
-    "actionA11yPending": "Verificação de fatos solicitada — verifique o resultado",
-    "actionA11yDone": "Verificação de fatos pronta — o resultado é mostrado abaixo",
-    "checkedByUnavailable": "Não foi possível verificar se uma organização de verificação de fatos publicou algo sobre esta história — a busca não funcionou. Isso é diferente de ninguém ter publicado; abaixo está o que a busca mais ampla encontrou.",
+    "actionA11yPending": "Verificação de fatos solicitada, verifique o resultado",
+    "actionA11yDone": "Verificação de fatos pronta, o resultado é mostrado abaixo",
+    "checkedByUnavailable": "Não foi possível verificar se uma organização de verificação de fatos publicou algo sobre esta história, a busca não funcionou. Isso é diferente de ninguém ter publicado; abaixo está o que a busca mais ampla encontrou.",
     "claimProposalTitle": "Verificar esta alegação?",
     "actionCheckClaim": "Verificar esta alegação",
     "chatSeed": "O que pode ser verificado nesta história?",
@@ -1745,22 +1747,29 @@
     "optionWholeArticle": "O artigo completo",
     "quickAnswered": "Veja o que uma busca rápida na web encontrou:",
     "quickArticleFailed": "Mera não conseguiu confirmar que a solicitação foi enviada. Tente novamente em um momento.",
-    "quickArticleRequested": "Solicitação enviada. Mera verificará o artigo completo — o resultado aparecerá em Verificações de fatos no seu Painel assim que estiver pronto.",
+    "quickArticleRequested": "Solicitação enviada. Mera verificará o artigo completo, o resultado aparecerá em Verificações de fatos no seu Painel assim que estiver pronto.",
     "quickArticleSending": "Enviando a solicitação…",
-    "quickCouldNotSearch": "Mera não conseguiu fazer a busca na web agora, então isso não é uma resposta — tente novamente em um momento.",
+    "quickCouldNotSearch": "Mera não conseguiu fazer a busca na web agora, então isso não é uma resposta, tente novamente em um momento.",
     "quickDisclaimer": "Esta é uma busca rápida na web, não uma verificação de uma organização de verificação de fatos, e não é salva. Para uma verificação completa com fontes nomeadas, escolha \"O artigo completo\".",
     "quickFailed": "Mera encontrou algumas informações, mas não conseguiu montar uma resposta desta vez. Tente novamente em um momento.",
-    "quickNothingFound": "A busca não encontrou nada sobre isto. Isso não significa que seja falso — pode ser algo novo, nicho ou simplesmente não estar amplamente coberto na internet.",
+    "quickNothingFound": "A busca não encontrou nada sobre isto. Isso não significa que seja falso, pode ser algo novo, nicho ou simplesmente não estar amplamente coberto na internet.",
     "quickRunning": "Buscando na web…",
-    "stillChecking": "Está levando mais tempo que o normal. Ainda está sendo verificado em segundo plano — verifique depois ou procure em Verificações de fatos no seu Painel.",
-    "checkedByMultipleNote": "Estas são avaliações independentes, cada uma na escala própria da organização — nem sempre concordam entre si.",
-    "ownReadingHeading": "Leitura própria da Mera — secundária ao parecer acima",
+    "stillChecking": "Está levando mais tempo que o normal. Ainda está sendo verificado em segundo plano, verifique depois ou procure em Verificações de fatos no seu Painel.",
+    "checkedByMultipleNote": "Estas são avaliações independentes, cada uma na escala própria da organização, nem sempre concordam entre si.",
+    "ownReadingHeading": "Leitura própria da Mera, secundária ao parecer acima",
     "collapseA11y": "Ocultar esta checagem",
     "expandA11y": "Mostrar esta checagem",
     "checkedByRelatedNote": "Vêm de uma busca por palavras-chave e podem ser sobre uma história diferente. Abra uma para verificar.",
     "searchFoundHeading": "O que nossa busca encontrou",
     "searchFoundEmpty": "A busca não forneceu informação suficiente para Mera resumir aqui.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Verificação pronta",
+      "bodyFound": "Checadores publicaram sobre \"{{title}}\".",
+      "bodyNone": "Ainda não há verificações publicadas sobre \"{{title}}\".",
+      "bodyUnavailable": "Não foi possível terminar a verificação de \"{{title}}\".",
+      "open": "Abrir artigo"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Priorizar esta fonte",
@@ -2544,14 +2553,17 @@
     "skipAll": "Pular tudo",
     "addAllA11y": "Adicionar as {{count}} sugestões",
     "skipAllA11y": "Pular as {{count}} sugestões",
-    "titleReplace": "Substituir uma informação que você já tem?",
+    "titleReplace": "Substituir esta informação?",
     "replace": "Substituir",
     "replacesLabel": "Substitui",
     "replacesTopics_one": "e seu 1 tema",
     "replacesTopics_other": "e seus {{count}} temas",
     "replacesNoUndo": "A informação antiga e os temas dela são removidos de vez. Isso não dá para desfazer.",
     "replacesLoading": "Verificando o que isso substitui",
-    "replacesUnavailable": "A Mera não consegue mostrar agora o que seria removido. Tente de novo em instantes."
+    "replacesUnavailable": "A Mera não consegue mostrar agora o que seria removido. Tente de novo em instantes.",
+    "keepBoth": "Manter os dois",
+    "titleAlsoAdd": "Adicionar isto também?",
+    "pendingHint": "Escolha uma opção acima ou digite sua resposta."
   },
   "subscriptions": {
     "sectionTitle": "Suas assinaturas",
@@ -2646,7 +2658,7 @@
     "goneTombstone": "Essa informação foi removida, então os temas dela também.",
     "expandA11y": "Mostrar temas",
     "collapseA11y": "Ocultar temas",
-    "accordionTitlePending": "Vamos achar temas sobre:",
+    "accordionTitlePending": "Procurando temas de:",
     "pendingA11y": "Temas sendo procurados",
     "readyA11y": "Temas prontos",
     "failedA11y": "Não foi possível achar temas"
@@ -2680,7 +2692,8 @@
     },
     "noRouteSentence": "A Mera não entendeu do que se tratava. Tente dizer de outro jeito.",
     "noProposalSentence": "A Mera não encontrou nada para adicionar a partir disso.",
-    "unknownToolSentence": "Algo deu errado do lado da Mera. Pergunte de novo para continuar."
+    "unknownToolSentence": "Algo deu errado do lado da Mera. Pergunte de novo para continuar.",
+    "malformedChoiceSentence": "Não foi possível mostrar as opções. Pergunte de novo para continuar."
   },
   "skillPhrase": {
     "residence": "onde você mora",

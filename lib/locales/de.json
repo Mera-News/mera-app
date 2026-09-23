@@ -761,7 +761,7 @@
     "newChat": "Neuer Chat",
     "inputPlaceholder": "Nachricht eingeben...",
     "viewPreviousMessages": "Vorherige Nachrichten anzeigen",
-    "aiInteractionNotice": "Sie sprechen mit Mera, einem KI-Assistenten – nicht mit einer Person.",
+    "aiInteractionNotice": "Sie sprechen mit Mera, einem KI-Assistenten, nicht mit einer Person.",
     "aiUsageNotice": "Dieser Assistent hilft Ihnen, Ihre Nachrichteneinstellungen einzurichten. Der Versuch, ihn zu manipulieren oder zu missbrauchen, kann dazu führen, dass Ihr Konto bis zur Überprüfung gesperrt wird.",
     "requestUnblock": {
       "button": "Entsperrung beantragen",
@@ -777,7 +777,9 @@
       "error": "Ihr Antrag konnte nicht gesendet werden. Bitte versuchen Sie es erneut."
     },
     "topicGenFailed": "Themen konnten nicht generiert werden.",
-    "topicGenRetry": "Erneut versuchen"
+    "topicGenRetry": "Erneut versuchen",
+    "aiUsageNoticeGeneral": "Mera kann Fehler machen. Prüf also alles Wichtige nach.",
+    "trackChooseHint": "Wähle, was du verfolgen willst"
   },
   "articleFeedback": {
     "thumbsUp": "Gefällt mir",
@@ -1673,13 +1675,13 @@
     "blocked": "Diese Story konnte nicht durchsucht werden.",
     "claimsHeading": "Überprüfte Behauptungen",
     "citationsHeading": "Konsultierte Quellen",
-    "noCitations": "Diese Überprüfung hat keine spezifischen Quellenangaben. Das ist keine fehlgeschlagene Suche – behandle die Zusammenfassung einfach mit etwas mehr Vorsicht, wenn es keine Quellen gibt.",
+    "noCitations": "Diese Überprüfung hat keine spezifischen Quellenangaben. Das ist keine fehlgeschlagene Suche, behandle die Zusammenfassung einfach mit etwas mehr Vorsicht, wenn es keine Quellen gibt.",
     "sourceFallback": "Quelle {{index}}",
     "disclaimer": "Dies ist Meras eigene Auswertung einer Websuche, geschrieben von KI. Es kann falsch oder unvollständig sein, daher lies die Quellen, bevor du dich darauf verlässt.",
     "verdict": {
       "supported": {
         "label": "Mit Quellen übereingestimmt",
-        "detail": "Die von der Suche gefundenen Quellen sagen grob dasselbe. Das ist kein Beweis, dass es wahr ist – nur, dass nichts, das es widerlegt, gefunden wurde."
+        "detail": "Die von der Suche gefundenen Quellen sagen grob dasselbe. Das ist kein Beweis, dass es wahr ist, nur, dass nichts, das es widerlegt, gefunden wurde."
       },
       "disputed": {
         "label": "Quellen sind nicht einig",
@@ -1687,7 +1689,7 @@
       },
       "unsupported": {
         "label": "Keine Unterstützung gefunden",
-        "detail": "Die Suche hat nichts gefunden, das dies stützt. Das kann einfach bedeuten, dass die Story neu oder spezialisiert ist – es macht sie nicht falsch."
+        "detail": "Die Suche hat nichts gefunden, das dies stützt. Das kann einfach bedeuten, dass die Story neu oder spezialisiert ist, es macht sie nicht falsch."
       },
       "mixed": {
         "label": "Teilweise übereingestimmt",
@@ -1712,7 +1714,7 @@
     "checkedByHeading": "Faktenchecks aus der Suche",
     "dashboard": {
       "deleteA11y": "Diesen Factencheck löschen",
-      "empty": "Du hast noch keine Aussagen überprüft. Tippe auf das Häkchen unter einem Artikel, um Mera danach zu fragen – das Ergebnis wird hier angezeigt, sobald es verfügbar ist.",
+      "empty": "Du hast noch keine Aussagen überprüft. Tippe auf das Häkchen unter einem Artikel, um Mera danach zu fragen, das Ergebnis wird hier angezeigt, sobald es verfügbar ist.",
       "listSubtitle": "Geschichten, für die du Mera nach Faktenchecks gefragt hast. Nur auf diesem Gerät gespeichert.",
       "listTitle": "Faktenchecks",
       "pending": "Wird noch gesucht",
@@ -1730,13 +1732,13 @@
     "explainer": "Mera überprüft keine Nachrichten selbst. Es sucht nach dem, was etablierte Fact-Check-Organisationen bereits über diese Story veröffentlicht haben.",
     "noCheckedBy": "Wir haben keinen veröffentlichten Faktencheck über diese Geschichte gefunden. Das macht die Geschichte nicht falsch. Die meisten Geschichten werden niemals überprüft.",
     "organisationA11y": "Öffne Faktenchecks von {{organisation}}, bewertet {{rating}}, im In-App-Browser",
-    "queued": "Diese Überprüfung läuft im Hintergrund weiter. Du brauchst hier nicht zu warten – es ist völlig in Ordnung, den Artikel zu verlassen.",
+    "queued": "Diese Überprüfung läuft im Hintergrund weiter. Du brauchst hier nicht zu warten, es ist völlig in Ordnung, den Artikel zu verlassen.",
     "queuedHint": "Das Ergebnis findest du auf deinem Dashboard unter \"Faktenchecks\", sobald es verfügbar ist.",
     "citationA11y": "Quelle {{source}} im integrierten Browser öffnen",
     "noLink": "Kein Link verfügbar",
-    "actionA11yPending": "Faktencheck angefordert – überprüfe das Ergebnis",
-    "actionA11yDone": "Faktencheck abgeschlossen – das Ergebnis wird unten angezeigt",
-    "checkedByUnavailable": "Wir konnten nicht überprüfen, ob eine Faktencheck-Organisation zu diesem Artikel veröffentlicht hat – die Suche ist fehlgeschlagen. Das ist unterschiedlich von der Situation, dass niemand dazu veröffentlicht hat; unten siehst du, was die weitere Suche gefunden hat.",
+    "actionA11yPending": "Faktencheck angefordert, überprüfe das Ergebnis",
+    "actionA11yDone": "Faktencheck abgeschlossen, das Ergebnis wird unten angezeigt",
+    "checkedByUnavailable": "Wir konnten nicht überprüfen, ob eine Faktencheck-Organisation zu diesem Artikel veröffentlicht hat, die Suche ist fehlgeschlagen. Das ist unterschiedlich von der Situation, dass niemand dazu veröffentlicht hat; unten siehst du, was die weitere Suche gefunden hat.",
     "claimProposalTitle": "Diese Aussage überprüfen?",
     "actionCheckClaim": "Aussage überprüfen",
     "chatSeed": "Was in diesem Artikel überprüft werden kann?",
@@ -1745,22 +1747,29 @@
     "optionWholeArticle": "Den ganzen Artikel",
     "quickAnswered": "Das hat eine schnelle Websuche ergeben:",
     "quickArticleFailed": "Mera konnte nicht bestätigen, dass die Anfrage gesendet wurde. Versuche es in einem Moment erneut.",
-    "quickArticleRequested": "Anfrage gesendet. Mera wird den ganzen Artikel überprüfen – das Ergebnis wird unter Faktenchecks in deinem Dashboard angezeigt, sobald es fertig ist.",
+    "quickArticleRequested": "Anfrage gesendet. Mera wird den ganzen Artikel überprüfen, das Ergebnis wird unter Faktenchecks in deinem Dashboard angezeigt, sobald es fertig ist.",
     "quickArticleSending": "Anfrage wird gesendet…",
-    "quickCouldNotSearch": "Mera konnte die Websuche gerade nicht durchführen, das ist also keine Antwort – versuche es in einem Moment erneut.",
+    "quickCouldNotSearch": "Mera konnte die Websuche gerade nicht durchführen, das ist also keine Antwort, versuche es in einem Moment erneut.",
     "quickDisclaimer": "Das ist eine schnelle Websuche, kein Faktencheck durch eine Faktenchecking-Organisation, und es wird nicht gespeichert. Für einen gründlichen Check mit benannten Quellen wähle \"Den ganzen Artikel\".",
     "quickFailed": "Mera hat Informationen gefunden, konnte aber diesmal keine Antwort zusammenstellen. Versuche es in einem Moment erneut.",
-    "quickNothingFound": "Die Suche hat nichts dazu ergeben. Das bedeutet nicht, dass es falsch ist – es könnte einfach neu, spezialisiert oder online nicht weit verbreitet sein.",
+    "quickNothingFound": "Die Suche hat nichts dazu ergeben. Das bedeutet nicht, dass es falsch ist, es könnte einfach neu, spezialisiert oder online nicht weit verbreitet sein.",
     "quickRunning": "Suche im Web läuft…",
-    "stillChecking": "Das dauert länger als normal. Es wird immer noch im Hintergrund überprüft – schau später nach, oder sieh unter Faktenchecks in deinem Dashboard nach.",
-    "checkedByMultipleNote": "Dies sind unabhängige Bewertungen, jede nach der eigenen Skala der jeweiligen Organisation — sie stimmen nicht immer miteinander überein.",
-    "ownReadingHeading": "Meras eigene Einschätzung — nachrangig zur oben genannten Bewertung",
+    "stillChecking": "Das dauert länger als normal. Es wird immer noch im Hintergrund überprüft, schau später nach, oder sieh unter Faktenchecks in deinem Dashboard nach.",
+    "checkedByMultipleNote": "Dies sind unabhängige Bewertungen, jede nach der eigenen Skala der jeweiligen Organisation, sie stimmen nicht immer miteinander überein.",
+    "ownReadingHeading": "Meras eigene Einschätzung, nachrangig zur oben genannten Bewertung",
     "collapseA11y": "Diesen Faktencheck ausblenden",
     "expandA11y": "Diesen Faktencheck anzeigen",
     "checkedByRelatedNote": "Diese stammen aus einer Schlüsselwortsuche und können sich auf eine andere Geschichte beziehen. Öffne einen, um zu überprüfen.",
     "searchFoundHeading": "Was unsere Suche gefunden hat",
     "searchFoundEmpty": "Die Suche hat nicht genug für Mera gefunden, um dies zusammenzufassen.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Faktencheck fertig",
+      "bodyFound": "Faktenchecker haben zu „{{title}}“ veröffentlicht.",
+      "bodyNone": "Zu „{{title}}“ gibt es noch keine veröffentlichten Faktenchecks.",
+      "bodyUnavailable": "Mera konnte die Prüfung von „{{title}}“ nicht abschließen.",
+      "open": "Artikel öffnen"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Diese Quelle priorisieren",
@@ -2544,14 +2553,17 @@
     "skipAll": "Alle überspringen",
     "addAllA11y": "Alle {{count}} Vorschläge hinzufügen",
     "skipAllA11y": "Alle {{count}} Vorschläge überspringen",
-    "titleReplace": "Eine vorhandene Angabe ersetzen?",
+    "titleReplace": "Diese Angabe ersetzen?",
     "replace": "Ersetzen",
     "replacesLabel": "Ersetzt",
     "replacesTopics_one": "und ihr 1 Thema",
     "replacesTopics_other": "und ihre {{count}} Themen",
     "replacesNoUndo": "Die alte Angabe und ihre Themen werden endgültig entfernt. Das lässt sich nicht rückgängig machen.",
     "replacesLoading": "Ich prüfe, was ersetzt wird",
-    "replacesUnavailable": "Mera kann gerade nicht anzeigen, was entfernt würde. Versuch es gleich noch einmal."
+    "replacesUnavailable": "Mera kann gerade nicht anzeigen, was entfernt würde. Versuch es gleich noch einmal.",
+    "keepBoth": "Beide behalten",
+    "titleAlsoAdd": "Das auch hinzufügen?",
+    "pendingHint": "Wähle oben eine Option oder schreib deine Antwort."
   },
   "subscriptions": {
     "sectionTitle": "Deine Abos",
@@ -2646,7 +2658,7 @@
     "goneTombstone": "Diese Angabe wurde entfernt, damit sind auch ihre Themen weg.",
     "expandA11y": "Themen anzeigen",
     "collapseA11y": "Themen ausblenden",
-    "accordionTitlePending": "Wir finden Themen zu:",
+    "accordionTitlePending": "Themen werden gesucht zu:",
     "pendingA11y": "Themen werden gesucht",
     "readyA11y": "Themen bereit",
     "failedA11y": "Themen konnten nicht gefunden werden"
@@ -2680,7 +2692,8 @@
     },
     "noRouteSentence": "Mera konnte nicht erkennen, worum es dabei ging. Sag es gern anders.",
     "noProposalSentence": "Mera hat daraus nichts zum Hinzufügen gefunden.",
-    "unknownToolSentence": "Auf Meras Seite ist etwas schiefgelaufen. Frag noch einmal, um fortzufahren."
+    "unknownToolSentence": "Auf Meras Seite ist etwas schiefgelaufen. Frag noch einmal, um fortzufahren.",
+    "malformedChoiceSentence": "Mera konnte dir die Optionen nicht zeigen. Frag noch einmal, um fortzufahren."
   },
   "skillPhrase": {
     "residence": "deinen Wohnort",

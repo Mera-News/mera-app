@@ -761,7 +761,7 @@
     "newChat": "Nieuwe chat",
     "inputPlaceholder": "Typ een bericht...",
     "viewPreviousMessages": "Eerdere berichten bekijken",
-    "aiInteractionNotice": "Je spreekt met Mera, een AI-assistent — niet met een persoon.",
+    "aiInteractionNotice": "Je spreekt met Mera, een AI-assistent, niet met een persoon.",
     "aiUsageNotice": "Deze assistent helpt bij het instellen van je nieuwsvoorkeuren. Als je probeert deze te manipuleren of te misbruiken, kan je account worden geblokkeerd in afwachting van beoordeling.",
     "requestUnblock": {
       "button": "Deblokkering aanvragen",
@@ -777,7 +777,9 @@
       "error": "Kon je aanvraag niet indienen. Probeer het opnieuw."
     },
     "topicGenFailed": "Kon geen onderwerpen voor dit genereren.",
-    "topicGenRetry": "Opnieuw"
+    "topicGenRetry": "Opnieuw",
+    "aiUsageNoticeGeneral": "Mera kan fouten maken, dus controleer alles wat belangrijk is.",
+    "trackChooseHint": "Kies wat je wilt volgen"
   },
   "articleFeedback": {
     "thumbsUp": "Ik vind het leuk",
@@ -1673,13 +1675,13 @@
     "blocked": "Dit artikel kon niet worden doorzocht.",
     "claimsHeading": "Gecontroleerde beweringen",
     "citationsHeading": "Geraadpleegde bronnen",
-    "noCitations": "Deze controle heeft geen specifieke bronnen aangehaald. Dat betekent niet dat de zoeking is mislukt — wees voorzichtig met de samenvatting zonder bronnen om naar te verwijzen.",
+    "noCitations": "Deze controle heeft geen specifieke bronnen aangehaald. Dat betekent niet dat de zoeking is mislukt, wees voorzichtig met de samenvatting zonder bronnen om naar te verwijzen.",
     "sourceFallback": "Bron {{index}}",
     "disclaimer": "Dit is Mera's eigen kijk op een websearch, geschreven door AI. Het kan onjuist of onvolledig zijn, dus lees de bronnen voordat je het vertrouwt.",
     "verdict": {
       "supported": {
         "label": "Consistent met bronnen",
-        "detail": "De bronnen die de zoekopdracht heeft gevonden, zeggen grotendeels hetzelfde. Dat is niet het bewijs dat het waar is — alleen dat er niets tegenstrijdigs is gevonden."
+        "detail": "De bronnen die de zoekopdracht heeft gevonden, zeggen grotendeels hetzelfde. Dat is niet het bewijs dat het waar is, alleen dat er niets tegenstrijdigs is gevonden."
       },
       "disputed": {
         "label": "Bronnen zijn het oneens",
@@ -1687,7 +1689,7 @@
       },
       "unsupported": {
         "label": "Geen steun gevonden",
-        "detail": "De zoekopdracht heeft niets gevonden dat dit ondersteunt. Dat kan eenvoudig betekenen dat het artikel nieuw of niche is — het maakt het niet onwaar."
+        "detail": "De zoekopdracht heeft niets gevonden dat dit ondersteunt. Dat kan eenvoudig betekenen dat het artikel nieuw of niche is, het maakt het niet onwaar."
       },
       "mixed": {
         "label": "Deels consistent",
@@ -1712,7 +1714,7 @@
     "checkedByHeading": "Feitchecks gevonden in de zoeking",
     "dashboard": {
       "deleteA11y": "Deze feitcheck verwijderen",
-      "empty": "Je hebt nog geen claims gecontroleerd. Tik het vinkje onder een artikel om Mera erover te vragen — het resultaat verschijnt hier zodra het klaar is.",
+      "empty": "Je hebt nog geen claims gecontroleerd. Tik het vinkje onder een artikel om Mera erover te vragen, het resultaat verschijnt hier zodra het klaar is.",
       "listSubtitle": "Artikelen waarvoor je Mera hebt gevraagd feitchecks op te zoeken. Alleen opgeslagen op dit apparaat.",
       "listTitle": "Feitchecks",
       "pending": "Nog steeds zoeken",
@@ -1730,13 +1732,13 @@
     "explainer": "Mera controleert het nieuws niet zelf. Het zoekt naar wat gevestigde feitcheckorganisaties al over dit artikel hebben gepubliceerd.",
     "noCheckedBy": "We hebben geen gepubliceerde feitencheck over dit artikel gevonden. Dat maakt het artikel niet onwaar. De meeste artikelen worden nooit feitgecheckt.",
     "organisationA11y": "Open de feitencheck van {{organisation}}, beoordeeld {{rating}}, in de in-app browser",
-    "queued": "Deze controle wordt op de achtergrond uitgevoerd. Je hoeft hier niet op te wachten — je kunt het artikel gerust verlaten.",
+    "queued": "Deze controle wordt op de achtergrond uitgevoerd. Je hoeft hier niet op te wachten, je kunt het artikel gerust verlaten.",
     "queuedHint": "Het resultaat verschijnt onder Feitenchecks op je Dashboard zodra het klaar is.",
     "citationA11y": "Open bron {{source}} in de in-app browser",
     "noLink": "Geen link beschikbaar",
-    "actionA11yPending": "Feitencheck aangevraagd — controleer op het resultaat",
-    "actionA11yDone": "Feitencheck gereed — het resultaat wordt hieronder weergegeven",
-    "checkedByUnavailable": "We konden niet controleren of een feitenorganisatie over dit artikel heeft gepubliceerd — de opzoeking is niet voltooid. Dat verschilt van het geval dat niemand heeft gepubliceerd; hieronder zie je wat de bredere zoeking wel heeft gevonden.",
+    "actionA11yPending": "Feitencheck aangevraagd, controleer op het resultaat",
+    "actionA11yDone": "Feitencheck gereed, het resultaat wordt hieronder weergegeven",
+    "checkedByUnavailable": "We konden niet controleren of een feitenorganisatie over dit artikel heeft gepubliceerd, de opzoeking is niet voltooid. Dat verschilt van het geval dat niemand heeft gepubliceerd; hieronder zie je wat de bredere zoeking wel heeft gevonden.",
     "claimProposalTitle": "Deze claim feitenchecken?",
     "actionCheckClaim": "Deze claim controleren",
     "chatSeed": "Wat kan je in dit artikel controleren?",
@@ -1745,22 +1747,29 @@
     "optionWholeArticle": "Het hele artikel",
     "quickAnswered": "Dit is wat een snelle webzoeking heeft gevonden:",
     "quickArticleFailed": "Mera kon niet bevestigen dat het verzoek is verzonden. Probeer het over een moment opnieuw.",
-    "quickArticleRequested": "Verzoek verzonden. Mera zal het hele artikel controleren — het resultaat verschijnt onder Feitencontroles op uw Dashboard zodra het klaar is.",
+    "quickArticleRequested": "Verzoek verzonden. Mera zal het hele artikel controleren, het resultaat verschijnt onder Feitencontroles op uw Dashboard zodra het klaar is.",
     "quickArticleSending": "Verzoek wordt verzonden…",
-    "quickCouldNotSearch": "Mera kon het web zojuist niet zoeken, dus dit is geen antwoord — probeer het over een moment opnieuw.",
+    "quickCouldNotSearch": "Mera kon het web zojuist niet zoeken, dus dit is geen antwoord, probeer het over een moment opnieuw.",
     "quickDisclaimer": "Dit is een snelle webzoeking, geen controle door een feitencontrolestichting, en deze wordt niet opgeslagen. Voor een grondige controle met genoemde bronnen, kies \"Het hele artikel\".",
     "quickFailed": "Mera vond wat informatie, maar kon deze keer geen antwoord samenstellen. Probeer het over een moment opnieuw.",
-    "quickNothingFound": "De zoeking heeft niets over dit onderwerp opgeleverd. Dat betekent niet dat het onwaar is — het kan gewoon nieuw, niche of niet veel online te vinden zijn.",
+    "quickNothingFound": "De zoeking heeft niets over dit onderwerp opgeleverd. Dat betekent niet dat het onwaar is, het kan gewoon nieuw, niche of niet veel online te vinden zijn.",
     "quickRunning": "Het web wordt doorzocht…",
-    "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd — kijk later terug of zoek onder Feitencontroles op uw Dashboard.",
-    "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie — ze zijn het niet altijd met elkaar eens.",
-    "ownReadingHeading": "Mera's eigen kijk — ondergeschikt aan het oordeel hierboven",
+    "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd, kijk later terug of zoek onder Feitencontroles op uw Dashboard.",
+    "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie, ze zijn het niet altijd met elkaar eens.",
+    "ownReadingHeading": "Mera's eigen kijk, ondergeschikt aan het oordeel hierboven",
     "collapseA11y": "Deze factcheck verbergen",
     "expandA11y": "Deze factcheck tonen",
     "checkedByRelatedNote": "Deze zijn afkomstig van een trefwoord zoeking en kunnen over een ander artikel gaan. Open er een om te controleren.",
     "searchFoundHeading": "Wat onze zoeking gevonden heeft",
     "searchFoundEmpty": "Er was niet genoeg uit de zoeking voor Mera om dit samen te vatten.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Feitcheck klaar",
+      "bodyFound": "Feitcheckers hebben over \"{{title}}\" gepubliceerd.",
+      "bodyNone": "Nog geen gepubliceerde feitchecks over \"{{title}}\".",
+      "bodyUnavailable": "Mera kon de controle van \"{{title}}\" niet afronden.",
+      "open": "Artikel openen"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Deze bron prioriteren",
@@ -2544,14 +2553,17 @@
     "skipAll": "Alles overslaan",
     "addAllA11y": "Alle {{count}} suggesties toevoegen",
     "skipAllA11y": "Alle {{count}} suggesties overslaan",
-    "titleReplace": "Een bestaand gegeven vervangen?",
+    "titleReplace": "Dit gegeven vervangen?",
     "replace": "Vervangen",
     "replacesLabel": "Vervangt",
     "replacesTopics_one": "en het 1 onderwerp",
     "replacesTopics_other": "en de {{count}} onderwerpen ervan",
     "replacesNoUndo": "Het oude gegeven en de onderwerpen ervan worden definitief verwijderd. Dit kun je niet ongedaan maken.",
     "replacesLoading": "Ik kijk wat dit vervangt",
-    "replacesUnavailable": "Mera kan nu niet tonen wat er verwijderd zou worden. Probeer het zo nog eens."
+    "replacesUnavailable": "Mera kan nu niet tonen wat er verwijderd zou worden. Probeer het zo nog eens.",
+    "keepBoth": "Beide houden",
+    "titleAlsoAdd": "Dit ook toevoegen?",
+    "pendingHint": "Kies hierboven een optie of typ je antwoord."
   },
   "subscriptions": {
     "sectionTitle": "Je abonnementen",
@@ -2646,7 +2658,7 @@
     "goneTombstone": "Dit gegeven is verwijderd, dus de onderwerpen ervan ook.",
     "expandA11y": "Onderwerpen tonen",
     "collapseA11y": "Onderwerpen verbergen",
-    "accordionTitlePending": "We zoeken onderwerpen voor:",
+    "accordionTitlePending": "Onderwerpen zoeken voor:",
     "pendingA11y": "Onderwerpen worden gezocht",
     "readyA11y": "Onderwerpen klaar",
     "failedA11y": "Onderwerpen konden niet worden gevonden"
@@ -2680,7 +2692,8 @@
     },
     "noRouteSentence": "Mera kon niet opmaken waar dit over ging. Zeg het gerust anders.",
     "noProposalSentence": "Mera heeft hier niets uit gevonden om toe te voegen.",
-    "unknownToolSentence": "Er ging iets mis aan Mera's kant. Vraag het opnieuw om verder te gaan."
+    "unknownToolSentence": "Er ging iets mis aan Mera's kant. Vraag het opnieuw om verder te gaan.",
+    "malformedChoiceSentence": "Mera kon de opties niet tonen. Vraag het opnieuw om verder te gaan."
   },
   "skillPhrase": {
     "residence": "waar je woont",
