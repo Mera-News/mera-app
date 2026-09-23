@@ -533,7 +533,7 @@
   },
   "manageData": {
     "deleting": "Excluindo...",
-    "title": "Gerenciar Dados",
+    "title": "Gerenciar dados",
     "description": "Exclua partes específicas dos seus dados. Cada ação mostra exatamente o que será limpo antes de você confirmar.",
     "feedCacheTitle": "Limpar cache do feed de artigos",
     "feedCacheDescription": "Sugestões em cache, links e tarefas de inferência",
@@ -568,7 +568,7 @@
     "privacyPolicy": "Política de Privacidade",
     "termsOfService": "Termos de Serviço",
     "support": "Falar com o suporte",
-    "manageData": "Gerenciar Dados",
+    "manageData": "Gerenciar dados",
     "deleteAccount": "Excluir Conta",
     "logout": "Sair",
     "signOutModalTitle": "Sair da Conta",

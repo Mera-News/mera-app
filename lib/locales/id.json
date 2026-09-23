@@ -533,7 +533,7 @@
   },
   "manageData": {
     "deleting": "Menghapus...",
-    "title": "Kelola Data",
+    "title": "Kelola data",
     "description": "Hapus bagian tertentu dari data Anda. Setiap tindakan menampilkan apa yang akan dihapus sebelum Anda mengonfirmasi.",
     "feedCacheTitle": "Hapus cache feed artikel",
     "feedCacheDescription": "Saran, tautan & tugas inferensi yang tersimpan",
@@ -568,7 +568,7 @@
     "privacyPolicy": "Kebijakan Privasi",
     "termsOfService": "Ketentuan Layanan",
     "support": "Hubungi dukungan",
-    "manageData": "Kelola Data",
+    "manageData": "Kelola data",
     "deleteAccount": "Hapus Akun",
     "logout": "Keluar",
     "signOutModalTitle": "Keluar",

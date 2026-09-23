@@ -533,7 +533,7 @@
   },
   "manageData": {
     "deleting": "Siliniyor...",
-    "title": "Verileri Yönet",
+    "title": "Verileri yönet",
     "description": "Verilerinin belirli parçalarını sil. Her işlem, onaylamadan önce neyi temizleyeceğini tam olarak gösterir.",
     "feedCacheTitle": "Makale akışı önbelleğini temizle",
     "feedCacheDescription": "Önbelleğe alınmış öneriler, bağlantılar ve çıkarım işleri",
@@ -568,7 +568,7 @@
     "privacyPolicy": "Gizlilik Politikası",
     "termsOfService": "Hizmet Şartları",
     "support": "Destek ekibiyle görüşün",
-    "manageData": "Verileri Yönet",
+    "manageData": "Verileri yönet",
     "deleteAccount": "Hesabı Sil",
     "logout": "Çıkış Yap",
     "signOutModalTitle": "Çıkış Yap",
