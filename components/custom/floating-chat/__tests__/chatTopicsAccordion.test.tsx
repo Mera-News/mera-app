@@ -51,9 +51,11 @@ jest.mock('@/lib/database/services/topic-decline-service', () => ({
 }));
 
 let mockStatus = 'pending';
+let mockEmitStatus: ((v: string) => void) | null = null;
 jest.mock('@/lib/database/services/fact-service', () => ({
   observeTopicsStatus: () => ({
     subscribe: (fn: (v: string) => void) => {
+      mockEmitStatus = fn;
       fn(mockStatus);
       return { unsubscribe: jest.fn() };
     },
@@ -102,15 +104,31 @@ describe('collapsed by default', () => {
   });
 });
 
-describe('the COLLAPSED card is quiet while generating', () => {
-  it('shows no spinner and no progress words, only the reassurance line', () => {
-    // The point of the whole layout: a user who has just added a fact should
-    // keep building their profile, not watch a loader finish.
-    const { getByText, queryByTestId } = draw();
+describe('the COLLAPSED card while generating', () => {
+  it('shows a small spinner, and no progress words', () => {
+    // Without it the rows ran one at a time with nothing moving and the card
+    // read as finished (audit F13).
+    const { getByText, getByTestId, queryByTestId } = draw();
     expect(getByText('chatTopics.accordionTitlePending')).toBeTruthy();
-    expect(queryByTestId('chat-topics-status-f1-spinner')).toBeNull();
+    expect(getByTestId('chat-topics-spinner-f1')).toBeTruthy();
     expect(queryByTestId('chat-topics-progress')).toBeNull();
     expect(queryByTestId('chat-topics-retry-slow')).toBeNull();
+  });
+
+  it('opens itself when the topics it was waiting for arrive', () => {
+    const { getByTestId, queryByTestId } = draw();
+    expect(queryByTestId('chat-topic-chip-remove-t1')).toBeNull();
+    act(() => { mockEmitStatus?.('done'); });
+    expect(getByTestId('chat-topics-header-f1').props.accessibilityState.expanded).toBe(true);
+    expect(queryByTestId('chat-topics-spinner-f1')).toBeNull();
+  });
+
+  it('stays closed when the user closed it themselves', () => {
+    const { getByTestId } = draw();
+    act(() => { fireEvent.press(getByTestId('chat-topics-header-f1')); });
+    act(() => { fireEvent.press(getByTestId('chat-topics-header-f1')); });
+    act(() => { mockEmitStatus?.('done'); });
+    expect(getByTestId('chat-topics-header-f1').props.accessibilityState.expanded).toBe(false);
   });
 
   it('still tells assistive tech the state, since nothing on screen does', () => {

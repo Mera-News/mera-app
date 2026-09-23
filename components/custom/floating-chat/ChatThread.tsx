@@ -4,7 +4,7 @@
 // fetching, no stores.
 
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
-import MeraStreamAvatar from '@/components/custom/chat/MeraStreamAvatar';
+import MeraStreamAvatar, { AVATAR_GUTTER_WIDTH } from '@/components/custom/chat/MeraStreamAvatar';
 import ChatPhaseLine from '@/components/custom/chat/ChatPhaseLine';
 import WaitBubble from '@/components/custom/chat/WaitBubble';
 import { Text } from '@/components/ui/text';
@@ -45,6 +45,8 @@ import type { ChatThreadItem, ChatThreadProps } from './types';
 // live-session items (keys prefixed `live-`); prepended history pages (`hist-`)
 // must not replay this animation when they load in behind the current session.
 const MESSAGE_ENTERING = FadeInDown.springify().damping(20).stiffness(220).mass(0.5);
+
+const HISTORY_ITEM: ChatThreadItem = { kind: 'history-button', key: 'history-button' };
 
 const ChatThread: React.FC<ChatThreadProps> = ({
   items,
@@ -136,7 +138,14 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   message while it streams, so the mark does not blink out the
                   instant the first token lands and back in on the next turn. */}
               <View style={styles.gutterRow}>
-                {item.streaming === true && <MeraStreamAvatar />}
+                {/* A SPACER when the mark is not showing, so the bubble keeps
+                    one left edge from the first token to the settled reply.
+                    It used to shift left the moment streaming ended. */}
+                {item.streaming === true ? (
+                  <MeraStreamAvatar />
+                ) : (
+                  <View style={styles.avatarSpacer} testID="mera-avatar-spacer" />
+                )}
                 <MessageContent role="assistant">
                   <MessageResponse>{message.content}</MessageResponse>
                 </MessageContent>
@@ -221,6 +230,26 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       case 'quick-fact-check-card':
         return <QuickFactCheckCard entry={item.entry} />;
 
+      case 'history-button':
+        return (
+          <View style={styles.historyButtonRow}>
+            <Pressable
+              style={styles.historyButton}
+              onPress={() => {
+                hapticLight();
+                onRevealHistory();
+              }}
+              accessibilityRole="button"
+              testID="chat-view-previous-messages"
+            >
+              <MaterialIcons name="history" size={16} color="rgb(160, 160, 160)" />
+              <Text size="xs" style={styles.historyButtonText}>
+                {t('floatingChat.viewPreviousMessages')}
+              </Text>
+            </Pressable>
+          </View>
+        );
+
       case 'divider':
         return (
           <View style={styles.dividerRow}>
@@ -279,30 +308,14 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       </View>
       <View style={styles.listWrap}>
         <ConversationContent
-          items={items}
+          items={showHistoryButton ? [HISTORY_ITEM, ...items] : items}
           renderItem={renderItem}
           onLoadOlder={onLoadOlder}
           hasOlder={hasOlder}
           isLoadingOlder={isLoadingOlder}
           header={
-            showHistoryButton || showChips || !hasRealMessage ? (
+            showChips || !hasRealMessage ? (
               <View style={styles.header}>
-                {showHistoryButton && (
-                  <View style={styles.historyButtonRow}>
-                    <Pressable
-                      style={styles.historyButton}
-                      onPress={() => {
-                        hapticLight();
-                        onRevealHistory();
-                      }}
-                    >
-                      <MaterialIcons name="history" size={16} color="rgb(160, 160, 160)" />
-                      <Text size="xs" style={styles.historyButtonText}>
-                        {t('floatingChat.viewPreviousMessages')}
-                      </Text>
-                    </Pressable>
-                  </View>
-                )}
                 {!hasRealMessage && (
                   <View style={styles.noticeRow}>
                     <MaterialIcons name="info-outline" size={14} color="rgb(140, 140, 140)" />
@@ -404,9 +417,15 @@ const styles = StyleSheet.create({
   header: {
     gap: 4,
   },
+  // 16pt sides like the rest of the panel; at 4 the notice ran into the
+  // panel's rounded edge (audit F9).
   aiInteractionRow: {
-    paddingHorizontal: 4,
-    paddingVertical: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    alignItems: 'center',
+  },
+  avatarSpacer: {
+    width: AVATAR_GUTTER_WIDTH,
   },
   historyButtonRow: {
     alignItems: 'center',

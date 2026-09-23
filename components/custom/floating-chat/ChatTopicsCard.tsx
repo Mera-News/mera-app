@@ -99,6 +99,11 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
   const [status, setStatus] = useState<'pending' | 'done' | 'error' | 'gone'>('pending');
   const [offerRetry, setOfferRetry] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  /** Saw this fact generating while mounted, so its finish is live news. A
+   *  card mounted already done (history, a reopened chat) stays collapsed. */
+  const sawPendingRef = useRef(false);
+  /** The user opened or closed it themselves; never override that. */
+  const userToggledRef = useRef(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isFindingMore, setIsFindingMore] = useState(false);
 
@@ -132,7 +137,16 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
   // a mutation nonce — a poll, not an observation: a generation that finished
   // without bumping the counter never reached the card.
   useEffect(() => {
-    const sub = observeTopicsStatus(factId).subscribe((next) => setStatus(next));
+    const sub = observeTopicsStatus(factId).subscribe((next) => {
+      setStatus(next);
+      // OPENS ITSELF when the topics it was waiting for arrive. The topics are
+      // the outcome of the whole turn, and a collapsed card hid them behind a
+      // tap nobody knew to make (audit F13).
+      if (next === 'pending') sawPendingRef.current = true;
+      else if (next === 'done' && sawPendingRef.current && !userToggledRef.current) {
+        setExpanded(true);
+      }
+    });
     return () => sub.unsubscribe();
   }, [factId]);
 
@@ -284,13 +298,14 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
       <Pressable
         onPress={() => {
           void hapticLight();
+          userToggledRef.current = true;
           setExpanded((v) => !v);
         }}
         style={styles.header}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
-        // The collapsed card is deliberately wordless about progress, so the
-        // state has to reach assistive tech here instead of from a spinner.
+        // The spinner is decorative, so the state reaches assistive tech
+        // here, in the header's own label.
         accessibilityLabel={`${statusWord}. ${
           expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')
         }`}
@@ -303,10 +318,6 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
             color={ACCENT}
           />
 
-          {/* While generating this reads as reassurance, not progress: no
-              spinner, no percentage, nothing to wait on. The point is that
-              the user keeps building their profile instead of watching a
-              loader finish. */}
           <Text size="sm" bold style={styles.title}>
             {status === 'pending'
               ? t('chatTopics.accordionTitlePending')
@@ -315,6 +326,17 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
 
           {/* Small and muted on purpose: a finished background job should be
               confirmable at a glance, not announce itself. */}
+          {/* A small spinner while generating. Without one the rows ran one
+              at a time with nothing moving, and the card read as finished
+              (audit F13). The card still opens itself when topics land. */}
+          {status === 'pending' && (
+            <ActivityIndicator
+              size="small"
+              color={ACCENT}
+              testID={`chat-topics-spinner-${factId}`}
+            />
+          )}
+
           {status === 'done' && (
             <MaterialIcons
               name="check"

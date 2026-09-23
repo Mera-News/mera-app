@@ -288,7 +288,11 @@ export type ChatThreadItem =
       answered: boolean;
     }
   | { kind: 'divider'; key: string; label: string }
-  | { kind: 'typing'; key: string };
+  | { kind: 'typing'; key: string }
+  // "View previous messages". An ITEM, the oldest one, so it draws at the TOP
+  // of the inverted list. It used to be the list header, which an inverted
+  // list draws at the bottom, between the newest reply and the composer.
+  | { kind: 'history-button'; key: string };
 
 // ---------------------------------------------------------------------------
 // Starter chips
