@@ -13,6 +13,7 @@ import {
     markRead,
     observeAll,
 } from '@/lib/database/services/notification-service';
+import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -25,6 +26,9 @@ import { FlatList, View } from 'react-native';
 const ACCENT = '#EDA77E';
 
 type NotificationAction = { id: string; labelKey?: string; label?: string };
+
+/** Written by lib/fact-check/fact-check-settled for a check this device asked for. */
+const FACT_CHECK_DONE = 'fact_check_done';
 
 /** Default leading icon per notification type when the row has no explicit icon. */
 function iconForType(type: string): keyof typeof MaterialIcons.glyphMap {
@@ -41,6 +45,8 @@ function iconForType(type: string): keyof typeof MaterialIcons.glyphMap {
             return 'sync-problem';
         case 'feed_info':
             return 'info';
+        case FACT_CHECK_DONE:
+            return 'fact-check';
         default:
             return 'notifications';
     }
@@ -82,6 +88,27 @@ interface NotificationsScreenProps {
 const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const [items, setItems] = useState<NotificationModel[]>([]);
+    /**
+     * The cleanups waiting RIGHT NOW. A hygiene row stamps its count when it is
+     * written, and later sweeps add to the same review list, so the row said
+     * "1 cleanup" over a list of 2 (audit F47). The live count wins whenever
+     * there is anything left to review.
+     */
+    const [hygienePending, setHygienePending] = useState<number | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        const refresh = () => {
+            getPendingCount()
+                .then((n) => { if (!cancelled) setHygienePending(n); })
+                .catch(() => {});
+        };
+        refresh();
+        const unsubscribe = subscribeHygieneChange(refresh);
+        return () => {
+            cancelled = true;
+            unsubscribe();
+        };
+    }, []);
 
     // i18n-key-or-raw resolver: tries t(key, params) and falls back to the raw
     // string when the key is unknown (i18next returns the key itself on a miss,
@@ -121,6 +148,20 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
             .openArticleFeedback({ kind: 'persona' }, message);
     }, []);
 
+    /**
+     * A finished fact check opens its article, never the chat. The destination
+     * is the data layer's `resolveNotificationRoute`, the same one an OS tap
+     * uses, so the two can never disagree. Lazy: notification-service pulls in
+     * expo-notifications at module scope.
+     */
+    const openFactCheck = useCallback(async (n: NotificationModel) => {
+        const context = parseJson<Record<string, unknown>>(n.contextJson) ?? {};
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { resolveNotificationRoute } = require('@/lib/notification-service') as typeof import('@/lib/notification-service');
+        const href = await resolveNotificationRoute({ ...context, type: FACT_CHECK_DONE });
+        router.push(href);
+    }, []);
+
     const onRowPress = useCallback(async (n: NotificationModel) => {
         void hapticLight();
         try {
@@ -130,12 +171,16 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                 tags: { component: 'NotificationsScreen', method: 'markRead' },
             });
         }
+        if (n.type === FACT_CHECK_DONE) {
+            await openFactCheck(n);
+            return;
+        }
         const hasFollowUp = Boolean(n.contextJson) || Boolean(n.actionsJson);
         if (!hasFollowUp) return; // informational → mark read only
         const params =
             parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
         openChatWith(resolveText(n.body, params));
-    }, [openChatWith, resolveText]);
+    }, [openChatWith, openFactCheck, resolveText]);
 
     // wave 9 wires real deterministic executors keyed on action.id; here we
     // mark the notification actioned and pre-stage the chat with the right
@@ -151,6 +196,10 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
             logger.captureException(err, {
                 tags: { component: 'NotificationsScreen', method: 'markActioned' },
             });
+        }
+        if (action.id === 'open-fact-check') {
+            await openFactCheck(n);
+            return;
         }
         if (action.id === 'recalibrate') {
             // Stage the calibration context (not the raw chip label) into chat.
@@ -173,10 +222,14 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
             ? resolveText(action.labelKey)
             : action.label ?? action.id;
         openChatWith(chipLabel);
-    }, [openChatWith, resolveText]);
+    }, [openChatWith, openFactCheck, resolveText]);
 
     const renderItem = useCallback(({ item: n }: { item: NotificationModel }) => {
-        const params = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
+        const stored = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
+        const params =
+            n.type === 'hygiene' && hygienePending !== null && hygienePending > 0
+                ? { ...stored, count: hygienePending }
+                : stored;
         const title = resolveText(n.title, params);
         const body = resolveText(n.body, params);
         const icon = (n.icon as keyof typeof MaterialIcons.glyphMap) || iconForType(n.type);
@@ -235,7 +288,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                 </VStack>
             </Pressable>
         );
-    }, [onRowPress, onChipPress, resolveText]);
+    }, [onRowPress, onChipPress, resolveText, hygienePending]);
 
     const keyExtractor = useCallback((item: NotificationModel) => item.id, []);
 
