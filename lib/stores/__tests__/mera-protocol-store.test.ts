@@ -672,13 +672,13 @@ describe('useMeraProtocolStore', () => {
         mockGetSetting
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce('mera-lfm2.5-2.6b')
+            .mockResolvedValueOnce('mera-lfm2-2.6b')
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null);
 
         await useMeraProtocolStore.getState().hydrateFromDb();
 
-        expect(useMeraProtocolStore.getState().selectedModelId).toBe('mera-lfm2.5-2.6b');
+        expect(useMeraProtocolStore.getState().selectedModelId).toBe('mera-lfm2-2.6b');
         expect(mockSetSetting).not.toHaveBeenCalledWith('mera_selected_model_id', expect.anything());
     });
 

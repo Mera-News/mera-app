@@ -28,6 +28,8 @@ import * as modelManager from '../modelManager';
 // Grab typed mock refs from the hoisted mock — safe to do after imports.
 const mockGetContext = modelManager._getContext as jest.MockedFunction<typeof modelManager._getContext>;
 const mockUpdateInferenceSpeed = modelManager._updateInferenceSpeed as jest.MockedFunction<typeof modelManager._updateInferenceSpeed>;
+const mockGetModelState = modelManager.getModelState as jest.MockedFunction<typeof modelManager.getModelState>;
+const loadedModel = (modelId: string) => ({ modelId }) as ReturnType<typeof modelManager.getModelState>;
 
 // Completion mock lives on the context object returned by _getContext.
 const mockCompletion = jest.fn();
@@ -166,7 +168,8 @@ describe('infer', () => {
     );
   });
 
-  it('adds response_format json_object when responseFormat="json"', async () => {
+  it('adds response_format json_object when responseFormat="json" on a model whose grammar works (Qwen)', async () => {
+    mockGetModelState.mockReturnValue(loadedModel('mera-qwen3.5-2b'));
     mockCompletion.mockResolvedValueOnce({
       text: '{}',
       tokens_predicted: 2,
@@ -181,6 +184,21 @@ describe('infer', () => {
         response_format: { type: 'json_object' },
       }),
     );
+  });
+
+  it('sends NO grammar for responseFormat="json" on an LFM model (its grammar breaks the call)', async () => {
+    mockGetModelState.mockReturnValue(loadedModel('mera-lfm2-2.6b'));
+    mockCompletion.mockResolvedValueOnce({
+      text: '{"a":1}',
+      tokens_predicted: 2,
+      tokens_evaluated: 5,
+      truncated: false,
+      timings: null,
+    });
+
+    await infer({ ...BASE_PARAMS, responseFormat: 'json' });
+    const [opts] = mockCompletion.mock.calls[0];
+    expect(opts.response_format).toBeUndefined();
   });
 
   it('does NOT add response_format for text mode', async () => {
@@ -341,6 +359,7 @@ describe('inferStream', () => {
   });
 
   it('adds json response_format in streaming mode when responseFormat="json"', async () => {
+    mockGetModelState.mockReturnValue(loadedModel('mera-qwen3.5-2b'));
     mockCompletion.mockImplementation(async (_opts: any, _cb: any) => ({
       text: '{}',
       tokens_predicted: 2,

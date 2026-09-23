@@ -206,7 +206,9 @@ async function generateReasonForCandidate(
         prompt: userMessage,
         maxTokens: ARTICLE_CFG.reasonMaxTokens,
         temperature: ARTICLE_CFG.reasonTemperature,
-        responseFormat: 'json',
+        // LOCAL_REASON_SYSTEM_PROMPT asks for "a single plain string". A
+        // JSON-object grammar contradicted it (and breaks the LFM family).
+        responseFormat: 'text',
         label: 'reason',
       })
     : await cloudComplete({

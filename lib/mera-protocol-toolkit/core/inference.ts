@@ -4,7 +4,8 @@
 import type { InferParams, InferResult } from '../types';
 import { holdRestart } from '../../app-restart';
 import { recordCompletion } from './inference-stats';
-import { _getContext, _updateInferenceSpeed } from './modelManager';
+import { supportsJsonGrammar } from './model-catalog';
+import { _getContext, _updateInferenceSpeed, getModelState } from './modelManager';
 
 // llama.rn holds ONE context for the whole app and a completion mutates its KV
 // cache in place, so two overlapping calls interleave: the second one's prefill
@@ -48,6 +49,15 @@ function acquireLlamaLock(): Promise<() => void> {
   return acquired;
 }
 
+/**
+ * The JSON grammar is applied only for a model whose tokenizer supports it
+ * (see `jsonGrammar` in model-catalog.ts). For the LFM family the grammar
+ * breaks the call outright, so the prompt's own instruction carries the format.
+ */
+function wantsJsonGrammar(params: InferParams): boolean {
+  return params.responseFormat === 'json' && supportsJsonGrammar(getModelState()?.modelId);
+}
+
 /** General-purpose on-device LLM inference. */
 export function infer(params: InferParams): Promise<InferResult> {
   return withLlamaLock(async () => {
@@ -89,7 +99,7 @@ async function inferExclusive(params: InferParams): Promise<InferResult> {
     top_k: 40,
     stop: params.stopSequences,
     enable_thinking: params.enableThinking ?? false,
-    ...(params.responseFormat === 'json' && {
+    ...(wantsJsonGrammar(params) && {
       response_format: { type: 'json_object' as const },
     }),
   });
@@ -160,7 +170,7 @@ async function* inferStreamExclusive(
         top_k: 40,
         stop: params.stopSequences,
         enable_thinking: false,
-        ...(params.responseFormat === 'json' && {
+        ...(wantsJsonGrammar(params) && {
           response_format: { type: 'json_object' as const },
         }),
       },
