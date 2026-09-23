@@ -34,6 +34,7 @@ jest.mock('react-i18next', () => ({
 
 // jest-expo mis-transforms RN's ScrollView; FlatList's VirtualizedList tree is
 // brittle under the test renderer. Same proxy the sibling suite uses.
+let mockTimelineContentStyle: any = null;
 jest.mock('react-native', () => {
     const actual = jest.requireActual('react-native');
     const ReactLib = require('react');
@@ -44,7 +45,8 @@ jest.mock('react-native', () => {
                     ReactLib.createElement(actual.View, rest, children);
             }
             if (prop === 'FlatList') {
-                return ({ data, renderItem, keyExtractor, ListEmptyComponent }: any) => {
+                return ({ data, renderItem, keyExtractor, ListEmptyComponent, contentContainerStyle }: any) => {
+                    mockTimelineContentStyle = contentContainerStyle;
                     const resolve = (C: any) =>
                         ReactLib.isValidElement(C)
                             ? C
@@ -213,6 +215,13 @@ const renderScreen = async () => {
     await waitFor(() => utils.getByText('Water enters low-lying colonies'));
     return utils;
 };
+
+describe('StoryTimelineScreen layout', () => {
+    it('keeps the cards off the screen edges (F35)', async () => {
+        await renderScreen();
+        expect(mockTimelineContentStyle.paddingHorizontal).toBe(16);
+    });
+});
 
 describe('StoryTimelineScreen — removing one member', () => {
     it('long-pressing a card asks before removing anything', async () => {

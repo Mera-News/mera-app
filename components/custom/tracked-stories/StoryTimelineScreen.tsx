@@ -549,6 +549,9 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 }
                 contentContainerStyle={{
                     paddingTop: 8,
+                    // F35: the same 16pt side margins as Explore's list; the
+                    // cards ran edge to edge.
+                    paddingHorizontal: 16,
                     paddingBottom: insets.bottom + 40,
                     flexGrow: 1,
                 }}

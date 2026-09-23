@@ -27,6 +27,16 @@ jest.mock('@/components/custom/news-detail/RelatedSortDropdown', () => ({ __esMo
 jest.mock('@/components/custom/PublicationVisitBadge', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/ScrollToTopFab', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/StatusBarScrim', () => ({ __esModule: true, default: () => null }));
+// DetailTopBar's plate is a Reanimated view; the load path only needs the back
+// button, so the bar is a stub with the same testID and a static cover.
+jest.mock('@/components/custom/news-detail/DetailTopBar', () => {
+    const { Pressable } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ onBack }: any) => <Pressable testID="detail-back" onPress={onBack} />,
+        useDetailTopBarCover: () => ({ cover: { value: 0 }, onTopBarSolidChange: () => {} }),
+    };
+});
 jest.mock('@/components/custom/ArticleFeedbackPrompt', () => ({ ArticleFeedbackPrompt: () => null }));
 jest.mock('@/components/custom/ArticleSuggestionContainer', () => ({
     ArticleSuggestionContainer: () => null,

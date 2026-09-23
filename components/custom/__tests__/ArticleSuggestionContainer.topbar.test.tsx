@@ -50,12 +50,27 @@ jest.mock('@/components/ui/image', () => {
     const { View } = require('react-native');
     return { Image: (p: any) => <View {...p} /> };
 });
+jest.mock('react-native-reanimated', () => {
+    const { View } = require('react-native');
+    const ReactLib = require('react');
+    return {
+        __esModule: true,
+        default: { View: (p: any) => <View {...p} /> },
+        useAnimatedStyle: (fn: () => object) => fn(),
+        useSharedValue: (v: number) => ReactLib.useRef({ value: v }).current,
+        withTiming: (to: number, o: { duration: number }) => ({ to, duration: o.duration }),
+    };
+});
 jest.mock('@/lib/stores/blur-images-store', () => ({
     useBlurImagesStore: (sel: (s: { blurImages: boolean }) => unknown) => sel({ blurImages: false }),
 }));
 
 import { ArticleSuggestionContainer, SCREEN_HEADER_HEIGHT } from '../ArticleSuggestionContainer';
-import DetailTopBar, { DETAIL_TOP_BAR_FADE_MS, DETAIL_TOP_BAR_HEIGHT } from '../news-detail/DetailTopBar';
+import DetailTopBar, {
+    DETAIL_TOP_BAR_FADE_MS,
+    DETAIL_TOP_BAR_FILL,
+    DETAIL_TOP_BAR_HEIGHT,
+} from '../news-detail/DetailTopBar';
 
 const withImage = { _id: 'a1', title: 'T', image_url: 'https://x/img.jpg' } as any;
 const noImage = { _id: 'a2', title: 'T' } as any;
@@ -119,27 +134,36 @@ describe('detail top bar turns solid on scroll (M8/F31)', () => {
 
 describe('DetailTopBar plate', () => {
     const { StyleSheet } = require('react-native');
-    const opacityOf = (node: any) => StyleSheet.flatten(node.props.style).opacity;
+    const plate = (r: any) => r.getByTestId('detail-top-plate', { includeHiddenElements: true });
 
-    it('is invisible until solid, then fades in', () => {
-        const { Animated } = require('react-native');
-        const timing = jest.spyOn(Animated, 'timing');
-        const { getByTestId, rerender } = render(<DetailTopBar onBack={jest.fn()} />);
-        expect(opacityOf(getByTestId('detail-top-plate', { includeHiddenElements: true }))).toBe(0);
-        rerender(<DetailTopBar onBack={jest.fn()} solid />);
-        // The native-driven fade never reaches JS props under jest; what is
-        // pinned is the target and the duration it was asked for.
-        expect(timing).toHaveBeenLastCalledWith(
-            expect.anything(),
-            expect.objectContaining({ toValue: 1, duration: DETAIL_TOP_BAR_FADE_MS }),
-        );
-        timing.mockRestore();
+    it('follows the shared cover value: invisible at rest, opaque when covered', () => {
+        const rest = render(<DetailTopBar onBack={jest.fn()} cover={{ value: 0 } as any} />);
+        expect(StyleSheet.flatten(plate(rest).props.style).opacity).toBe(0);
+        rest.unmount();
+        const covered = render(<DetailTopBar onBack={jest.fn()} cover={{ value: 1 } as any} />);
+        const style = StyleSheet.flatten(plate(covered).props.style);
+        expect(style.opacity).toBe(1);
+        // OPAQUE: a translucent bar let the headline show through it (725).
+        expect(style.backgroundColor).toBe(DETAIL_TOP_BAR_FILL);
     });
 
     it('covers the status bar and the button, never catching taps', () => {
-        const { getByTestId } = render(<DetailTopBar onBack={jest.fn()} solid />);
-        const plate = getByTestId('detail-top-plate', { includeHiddenElements: true });
-        expect(StyleSheet.flatten(plate.props.style).height).toBe(INSET + DETAIL_TOP_BAR_HEIGHT);
-        expect(plate.props.pointerEvents).toBe('none');
+        const r = render(<DetailTopBar onBack={jest.fn()} cover={{ value: 1 } as any} />);
+        expect(StyleSheet.flatten(plate(r).props.style).height).toBe(INSET + DETAIL_TOP_BAR_HEIGHT);
+        expect(plate(r).props.pointerEvents).toBe('none');
+    });
+
+    it('animates the cover on each crossing, for the status area and the bar alike', () => {
+        const { useDetailTopBarCover } = require('../news-detail/DetailTopBar');
+        let api: any;
+        const Probe = () => {
+            api = useDetailTopBarCover();
+            return null;
+        };
+        render(<Probe />);
+        act(() => api.onTopBarSolidChange(true));
+        expect(api.cover.value).toEqual({ to: 1, duration: DETAIL_TOP_BAR_FADE_MS });
+        act(() => api.onTopBarSolidChange(false));
+        expect(api.cover.value).toEqual({ to: 0, duration: DETAIL_TOP_BAR_FADE_MS });
     });
 });

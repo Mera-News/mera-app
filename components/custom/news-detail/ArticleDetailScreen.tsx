@@ -12,7 +12,7 @@ import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDrop
 import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
-import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
+import DetailTopBar, { useDetailTopBarCover } from '@/components/custom/news-detail/DetailTopBar';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
@@ -261,8 +261,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         isConnected,
     });
 
-    // M8/F31: the top bar turns solid once the meta row scrolls under it.
-    const [topBarSolid, setTopBarSolid] = useState(false);
+    // M8/F31 + T-1/T-3: one cover value turns the status area and the bar
+    // behind the back button solid together, once the meta row scrolls under.
+    const { cover: topBarCover, onTopBarSolidChange } = useDetailTopBarCover();
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
     }, []);
@@ -696,16 +697,16 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 everything else on the page. */}
             <AbstractGradientBackdrop />
 
-            {/* Status bar scrim — this screen's hero image is a full-bleed
-                parallax header (ArticleSuggestionContainer's SmoothScrollView),
-                so without this a light photo makes the system clock/battery
-                glyphs illegible. StatusBarScrim's own zIndex (5) sits above the
-                container's default (0) but below the floating back button
-                below (zIndex 20), so the scrim darkens the image behind the
-                status bar without ever covering the tappable back button. */}
-            <StatusBarScrim />
+            {/* Status bar scrim in `overHero` mode (T-1): at rest nothing
+                sits over the hero, so the photo runs under the status bar
+                with no grey band; as `topBarCover` rises (the meta row has
+                scrolled under the top bar) only its dark base fades in, in
+                step with DetailTopBar's opaque bar. Its zIndex (5) stays
+                below the back button (20). */}
+            {/* Transparent over the hero at rest, dark as the cover rises. */}
+            <StatusBarScrim overHero coverProgress={topBarCover} />
 
-            <DetailTopBar onBack={onBack} backIcon={backIcon} solid={topBarSolid} />
+            <DetailTopBar onBack={onBack} backIcon={backIcon} cover={topBarCover} />
 
             <ArticleSuggestionContainer
                 article={article}
@@ -714,7 +715,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
-                onTopBarSolidChange={setTopBarSolid}
+                onTopBarSolidChange={onTopBarSolidChange}
                 onEndReached={loadMoreRelated}
                 contentTopInset={insets.top}
                 contentBottomInset={insets.bottom + 20}

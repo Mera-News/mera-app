@@ -14,7 +14,7 @@ import {
     DETAIL_BACK_SIZE,
     DETAIL_BACK_TOP_OFFSET,
     DETAIL_TOP_BAR_HEIGHT,
-} from '@/components/custom/news-detail/DetailTopBar';
+} from '@/components/custom/news-detail/detail-top-bar-metrics';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
 import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
