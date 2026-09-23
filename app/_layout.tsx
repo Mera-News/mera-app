@@ -331,30 +331,19 @@ function AppRoot() {
     return () => { cancelled = true; AppScheduler.dispose(); };
   }, [setAppInitialized]);
 
-  // Handle notifications that launched the app (when app was not running).
-  // Must wait for navigation to be ready before navigating.
+  // Handle the notification tap that launched or foregrounded the app. Must
+  // wait for navigation to be ready before navigating.
   //
-  // NOT ON A RESTART BOOT. `getLastNotificationResponseAsync()` survives a JS
-  // reload, and every background -> foreground return is now a reload
-  // (lib/app-restart.ts) — so without this gate every return would deep-link
-  // the user back to a notification they tapped hours ago, over and over.
-  //
-  // Awaits the memoised context rather than reading the synchronous cache:
-  // `isNavigationReady` can flip before the marker read resolves, and the cache
-  // reads false until it does. Fails OPEN — an unreadable marker handles the
-  // notification, which is the behaviour this app has always had.
+  // ON EVERY BOOT, restart boots included. `getLastNotificationResponseAsync()`
+  // survives a JS reload and every background -> foreground return is one
+  // (lib/app-restart.ts), so `handleInitialNotification` deduplicates on the
+  // tap's persisted request identifier instead. Skipping restart boots (the old
+  // rule) dropped every tap made while the app was in the background, because
+  // that tap's own return is a restart. The tap never navigates past the
+  // startup/PIN gate: it stashes its route for app/logged-in/index to consume.
   useEffect(() => {
     if (!isNavigationReady) return;
-    let cancelled = false;
-    void restartContext()
-      .then((ctx) => {
-        if (cancelled || ctx.wasJsRestart) return;
-        handleInitialNotification();
-      })
-      .catch(() => {
-        if (!cancelled) handleInitialNotification();
-      });
-    return () => { cancelled = true; };
+    void handleInitialNotification();
   }, [isNavigationReady]);
 
   return (

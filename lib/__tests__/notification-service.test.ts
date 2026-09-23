@@ -109,16 +109,34 @@ jest.mock('../stores/for-you-store', () => ({
   useForYouStore: { setState: jest.fn() },
 }));
 
+const mockLiveSuggestionIds = new Set<string>();
 jest.mock('../database/services/article-suggestion-service', () => ({
   loadSuggestions: jest.fn(() => Promise.resolve([])),
+  getSuggestionByServerId: jest.fn(async (id: string) =>
+    mockLiveSuggestionIds.has(id) ? { _id: id } : null,
+  ),
 }));
 
-// setting-service backs the push-token failure streak. Mock it so the test
-// never touches the native WatermelonDB singleton.
+// setting-service backs the push-token failure streak, the handled-notification
+// id and the pending-route stash. A Map so a write is readable back (the
+// reload tests depend on that); `mockResolvedValueOnce` still overrides a read.
+// Never touches the native WatermelonDB singleton.
+const mockSettingRows = new Map<string, string>();
 jest.mock('../database/services/setting-service', () => ({
-  getSetting: jest.fn(async () => null),
-  setSetting: jest.fn(async () => {}),
-  deleteSetting: jest.fn(async () => {}),
+  getSetting: jest.fn(async (k: string) => mockSettingRows.get(k) ?? null),
+  setSetting: jest.fn(async (k: string, v: string) => {
+    mockSettingRows.set(k, v);
+  }),
+  deleteSetting: jest.fn(async (k: string) => {
+    mockSettingRows.delete(k);
+  }),
+}));
+
+// The PIN gate. Lazy-required by notification-service; `mock`-prefixed for
+// hoisting.
+let mockPinLocked = false;
+jest.mock('../stores/pin-store', () => ({
+  usePinStore: { getState: () => ({ locked: mockPinLocked }) },
 }));
 
 import {
@@ -130,7 +148,15 @@ import {
   setVisibleNotificationsEnabled,
   checkPushTokenRevocation,
   hasUserDeniedPermissions,
+  resolveNotificationRoute,
+  HANDLED_NOTIFICATION_ID_KEY,
 } from '../notification-service';
+import {
+  markStartupGatePassed,
+  consumePendingNotificationRoute,
+  __resetPendingNotificationRouteForTests,
+  PENDING_NOTIFICATION_ROUTE_KEY,
+} from '../stores/pending-notification-route';
 
 // Grab mock fn references via require() — same module cache that notification-service
 // uses internally, guaranteeing we reference the EXACT same jest.fn() instances.
@@ -425,9 +451,31 @@ describe('cleanupNotificationListeners', () => {
   });
 });
 
+/** A notification response as expo-notifications hands it over. */
+function responseFor(data: Record<string, unknown>, identifier = 'n-1') {
+  return { notification: { request: { identifier, content: { data } } } };
+}
+
+/** The app past the startup gate, PIN unlocked, signed in: a tap may navigate. */
+function openGate() {
+  markStartupGatePassed();
+  mockPinLocked = false;
+  mockUserStoreState.userId = 'user-123';
+}
+
+function resetRouting() {
+  mockSettingRows.clear();
+  mockLiveSuggestionIds.clear();
+  __resetPendingNotificationRouteForTests();
+  mockPinLocked = false;
+  mockUserStoreState.userId = 'user-123';
+}
+
 describe('handleInitialNotification', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    resetRouting();
+    openGate();
   });
 
   it('does nothing when no last notification response exists', async () => {
@@ -437,13 +485,9 @@ describe('handleInitialNotification', () => {
   });
 
   it('navigates to for_you when a notification response exists', async () => {
-    mockGetLastNotificationResponseAsync.mockResolvedValueOnce({
-      notification: {
-        request: {
-          content: { data: { type: 'news-ready', userId: 'u1' } },
-        },
-      },
-    });
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(
+      responseFor({ type: 'news-ready', userId: 'u1' }),
+    );
     await handleInitialNotification();
     expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/for_you');
   });
@@ -455,29 +499,31 @@ describe('handleInitialNotification', () => {
   });
 });
 
-// ── NO data.type switch ──────────────────────────────────────────────────────
+// ── Server `fact-check` pushes NEVER deep-link ───────────────────────────────
 // A `type === 'fact-check'` branch lived here briefly and deep-linked to the
 // Dashboard's Fact checks chip. It was removed with the push itself: sending it
 // required the server to store which user asked about which article, a durable
 // article-level behavioural record the privacy policy promises we do not keep.
 //
-// So the handler is back to ONE destination for every notification. This pins
-// that: no payload — including the old fact-check shape, which may still exist
-// in a queued push or a stale test fixture — may divert navigation.
-describe('handleNotificationNavigation has no type switch (via handleInitialNotification)', () => {
+// The only typed destination today is the ON-DEVICE `fact_check_done` type
+// (a different name on purpose). Every server payload, including the old
+// fact-check shape that may still exist in a queued push or a stale fixture,
+// still lands on the Dashboard.
+describe('server payloads (including the retired fact-check shape) go to the Dashboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    resetRouting();
+    openGate();
   });
 
   it.each([
-    { type: 'fact-check', factCheckId: 'fc1', articleId: 'a1' },
+    { type: 'fact-check', factCheckId: 'fc1', articleId: 'a1', suggestionId: 's1' },
     { type: 'news-ready' },
     { type: 'calibration' },
     {},
   ])('routes %p to For You, with no chip preselect param', async (data) => {
-    mockGetLastNotificationResponseAsync.mockResolvedValueOnce({
-      notification: { request: { content: { data } } },
-    });
+    mockLiveSuggestionIds.add('s1');
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor(data));
 
     await handleInitialNotification();
 
@@ -486,13 +532,9 @@ describe('handleNotificationNavigation has no type switch (via handleInitialNoti
   });
 
   it('never navigates to the retired fact-check destinations', async () => {
-    mockGetLastNotificationResponseAsync.mockResolvedValueOnce({
-      notification: {
-        request: {
-          content: { data: { type: 'fact-check', articleId: 'a1' } },
-        },
-      },
-    });
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(
+      responseFor({ type: 'fact-check', articleId: 'a1' }),
+    );
 
     await handleInitialNotification();
 
@@ -502,6 +544,166 @@ describe('handleNotificationNavigation has no type switch (via handleInitialNoti
     );
   });
 });
+
+describe('resolveNotificationRoute', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    resetRouting();
+  });
+
+  it('opens a fact_check_done on its suggestion while the row exists', async () => {
+    mockLiveSuggestionIds.add('s1');
+    await expect(
+      resolveNotificationRoute({ type: 'fact_check_done', suggestionId: 's1', articleId: 'a1' }),
+    ).resolves.toEqual({
+      pathname: '/logged-in/suggestion-detail',
+      params: { articleSuggestionId: 's1' },
+    });
+  });
+
+  // Suggestions prune at 48h and notification rows live 90 days. Retention is
+  // keyed by ARTICLE id, so only article-detail can still reach the snapshot.
+  it('falls back to the standalone article once the suggestion is pruned', async () => {
+    await expect(
+      resolveNotificationRoute({ type: 'fact_check_done', suggestionId: 's1', articleId: 'a1' }),
+    ).resolves.toEqual({ pathname: '/logged-in/article-detail', params: { articleId: 'a1' } });
+  });
+
+  it('opens a fact_check_done with no suggestion on the article', async () => {
+    await expect(
+      resolveNotificationRoute({ type: 'fact_check_done', articleId: 'a1' }),
+    ).resolves.toEqual({ pathname: '/logged-in/article-detail', params: { articleId: 'a1' } });
+  });
+
+  it('falls back to the Dashboard when a fact_check_done carries no usable id', async () => {
+    await expect(resolveNotificationRoute({ type: 'fact_check_done', articleId: '  ' })).resolves.toBe(
+      '/logged-in/app_container/for_you',
+    );
+  });
+
+  it('sends unknown and model-download types to the Dashboard', async () => {
+    for (const type of ['model-download-complete', 'model-download-error', 'whatever']) {
+      await expect(resolveNotificationRoute({ type })).resolves.toBe(
+        '/logged-in/app_container/for_you',
+      );
+    }
+  });
+});
+
+describe('notification taps go through the startup/PIN gate', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    resetRouting();
+  });
+
+  const FACT_CHECK = { type: 'fact_check_done', articleId: 'a1' };
+  const ARTICLE = { pathname: '/logged-in/article-detail', params: { articleId: 'a1' } };
+
+  it('before the startup gate has run: stashes, does not navigate', async () => {
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor(FACT_CHECK));
+    await handleInitialNotification();
+    expect(mockRouterPush).not.toHaveBeenCalled();
+    await expect(consumePendingNotificationRoute('user-123')).resolves.toEqual(ARTICLE);
+  });
+
+  it('while the PIN lock is up: stashes, never navigates over the lock', async () => {
+    openGate();
+    mockPinLocked = true;
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor(FACT_CHECK));
+    await handleInitialNotification();
+    expect(mockRouterPush).not.toHaveBeenCalled();
+    await expect(consumePendingNotificationRoute('user-123')).resolves.toEqual(ARTICLE);
+  });
+
+  it('with no signed-in user: neither stashes nor navigates', async () => {
+    openGate();
+    mockUserStoreState.userId = null as unknown as string;
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor(FACT_CHECK));
+    await handleInitialNotification();
+    expect(mockRouterPush).not.toHaveBeenCalled();
+    expect(mockSettingRows.has(PENDING_NOTIFICATION_ROUTE_KEY)).toBe(false);
+  });
+
+  it('gate passed and unlocked: navigates at once and leaves nothing stashed', async () => {
+    openGate();
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor(FACT_CHECK));
+    await handleInitialNotification();
+    expect(mockRouterPush).toHaveBeenCalledWith(ARTICLE);
+    await expect(consumePendingNotificationRoute('user-123')).resolves.toBeNull();
+  });
+
+  // Every background -> active return reloads JS, so a warm tap's navigation
+  // is wiped. The listener must put the route on DISK before anything else.
+  it('the warm tap listener persists the stash, which survives a reload', async () => {
+    mockGetPermissionsAsync.mockResolvedValueOnce({ status: 'granted' });
+    await setupNotifications();
+    const onTap = mockAddNotificationResponseReceivedListener.mock.calls[0][0];
+
+    onTap(responseFor(FACT_CHECK, 'warm-1'));
+    await waitForSettingWrite(PENDING_NOTIFICATION_ROUTE_KEY);
+
+    __resetPendingNotificationRouteForTests(); // the reload
+    await expect(consumePendingNotificationRoute('user-123')).resolves.toEqual(ARTICLE);
+  });
+});
+
+// The restart-boot dedupe. `getLastNotificationResponseAsync()` survives a JS
+// reload and every return is a reload, so the boot path must tell a NEW tap
+// from one it already handled. The persisted identifier is the key (not the
+// delivery date, which says nothing about when the tap happened).
+describe('handleInitialNotification dedupes on the persisted request identifier', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    resetRouting();
+    openGate();
+  });
+
+  it('handles a tap once, then never again for the same identifier', async () => {
+    mockGetLastNotificationResponseAsync.mockResolvedValue(responseFor({ type: 'news-ready' }, 'n-7'));
+
+    await handleInitialNotification();
+    expect(mockRouterPush).toHaveBeenCalledTimes(1);
+    expect(mockSettingRows.get(HANDLED_NOTIFICATION_ID_KEY)).toBe('n-7');
+
+    __resetPendingNotificationRouteForTests(); // a restart boot
+    openGate();
+    await handleInitialNotification();
+    expect(mockRouterPush).toHaveBeenCalledTimes(1);
+    mockGetLastNotificationResponseAsync.mockReset();
+  });
+
+  // The warm listener in the pre-reload context already recorded the tap; the
+  // restart boot must not open it a second time.
+  it('a tap the warm listener handled is not re-handled on the restart boot', async () => {
+    mockGetPermissionsAsync.mockResolvedValueOnce({ status: 'granted' });
+    await setupNotifications();
+    const onTap = mockAddNotificationResponseReceivedListener.mock.calls[0][0];
+    onTap(responseFor({ type: 'news-ready' }, 'n-8'));
+    await waitForSettingWrite(HANDLED_NOTIFICATION_ID_KEY);
+    mockRouterPush.mockClear();
+
+    __resetPendingNotificationRouteForTests();
+    openGate();
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor({ type: 'news-ready' }, 'n-8'));
+    await handleInitialNotification();
+    expect(mockRouterPush).not.toHaveBeenCalled();
+  });
+
+  it('a new identifier is handled', async () => {
+    mockSettingRows.set(HANDLED_NOTIFICATION_ID_KEY, 'n-old');
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor({ type: 'news-ready' }, 'n-new'));
+    await handleInitialNotification();
+    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/for_you');
+  });
+});
+
+async function waitForSettingWrite(key: string) {
+  for (let i = 0; i < 50 && !mockSettingRows.has(key); i++) {
+    await new Promise((r) => setImmediate(r));
+  }
+  // Let the rest of the handler settle too.
+  for (let i = 0; i < 20; i++) await new Promise((r) => setImmediate(r));
+}
 
 describe('ensurePushTokenRegistered', () => {
   beforeEach(() => {
