@@ -573,8 +573,12 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const renderContent = () => {
           renderQueued = false;
           if (!renderArmed) return; // the stream failed; the error bubble owns the slot now
+          // Dash-cleaned on EVERY render, not only at the end: a cleanup that
+          // landed after the stream re-wrapped a finished bubble by a line
+          // (ux1 C2, a 21pt shift after the reply had settled).
+          const shown = replaceClauseDashes(accContent);
           useCloudChatStore.getState().setMessages((prev) =>
-            prev.map((m) => m.id === targetId ? { ...m, content: accContent } : m),
+            prev.map((m) => m.id === targetId ? { ...m, content: shown } : m),
           );
         };
         const scheduleContentRender = () => {

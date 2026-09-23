@@ -388,3 +388,75 @@ describe('F7 ruling: a typed reply while a card waits', () => {
     expect(h.calls[1].stateLine).toContain('Cards already waiting for the user: "Lives in Berlin, Germany, EU"');
   });
 });
+
+// Batch 3 device captures (ux1 C1, C3, C4).
+describe('batch 3 captures', () => {
+  it('C1: marks only the route leg for streaming to the user', async () => {
+    const flags: (boolean | undefined)[] = [];
+    const h = harness([
+      res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ content: 'Which Porto did you mean?', toolCalls: [tc('ask_choice', { question: 'Which Porto?', options: ['Porto, Portugal', 'Porto Alegre'] })] }),
+    ]);
+    const inner = h.deps.callModel;
+    h.deps.callModel = async (req) => { flags.push(req.streamToUser); return inner(req); };
+    await runAgentTurn({ state: createAgentState(RESIDENT), userMessage: 'I moved to Porto', deps: h.deps });
+    expect(flags).toEqual([true, false]);
+  });
+
+  it('C1: the combined-fact split waits until the question is answered', async () => {
+    const COMBINED: AgentPersona = {
+      surface: 'CONFIG', languageName: 'English',
+      facts: [{ id: 'c1', statement: 'Expat from India living in Nieuw West, Amsterdam', attribute: COMBINED_ORIGIN_KEY }],
+    };
+    const h = harness([
+      res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ toolCalls: [tc('ask_choice', { question: 'Which Porto?', options: ['Porto, Portugal', 'Porto Alegre'] })] }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(COMBINED), userMessage: 'I moved to Porto', deps: h.deps });
+    expect(out.terminalReason).toBe('awaiting-user');
+    expect(out.combinedRewriteOffered).toBeNull();
+    expect(h.saves).toEqual([]);
+  });
+
+  it('C3: a reply saying it is already on file gets no forced offer', async () => {
+    const onFile: AgentPersona = {
+      surface: 'CONFIG', languageName: 'English',
+      facts: [{ id: 'e1', statement: 'Follows EU regulation', attribute: 'topics: general interests' }],
+    };
+    const h = harness([
+      res({ content: 'EU regulation.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ content: "That's already on file, and no new specifics were added. I'll leave your profile as it is." }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Follows EU regulation' }] })] }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(onFile), userMessage: 'I follow EU regulation', deps: h.deps });
+    expect(out.forcedProposal).toBe(false);
+    expect(h.saves.flat()).toEqual([]);
+    expect(out.terminalReason).toBe('settled');
+    expect(out.replyRetries).toBe(0);
+  });
+
+  it('C3: a fact already on file is never offered again, even in other words', async () => {
+    const onFile: AgentPersona = {
+      surface: 'CONFIG', languageName: 'English',
+      facts: [{ id: 'e1', statement: 'Follows the EU regulation.', attribute: 'topics: general interests' }],
+    };
+    const h = harness([
+      res({ content: 'EU regulation.', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Follows EU regulation' }, { statement: 'Follows the DMA' }] })] }),
+      res({ content: 'Here it is.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(onFile), userMessage: 'I follow EU regulation and the DMA', deps: h.deps });
+    expect(h.saves[0].map((e) => e.statement)).toEqual(['Follows the DMA']);
+    expect(out.reProposals).toBe(1);
+  });
+
+  it('C4: an acknowledgement narrating how it read the message is dropped', async () => {
+    const h = harness([
+      res({ content: 'I read that as answering the Porto question, but the word does not fit.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+      res({ content: 'Got it, from India.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(RESIDENT), userMessage: 'I am originally from India', deps: h.deps });
+    expect(out.acknowledgement).toBe('');
+    expect(h.calls[0].stateLine).not.toContain('Your last turn asked');
+  });
+});

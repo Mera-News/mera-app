@@ -9,6 +9,8 @@ import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
 import {
   claimsSaveHappened,
   cleanProse,
+  comparableStatement,
+  declaresNothingToAdd,
   isPlainNo,
   isPlainYes,
   leaksInternals,
@@ -459,7 +461,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let refusedReplaces = 0;
   /** Statements find_similar_facts returned, normalised. A proposal equal to
    *  one is a RE-proposal of a fact already on file, not a new fact. */
-  const existingStatements = new Set<string>();
+  // EVERY fact on file, not just what find_similar_facts returned: a forced
+  // leg re-offered "Follows EU regulation" beside a reply saying it was
+  // already on file (ux1 C3), and that turn had never called the lookup.
+  const existingStatements = new Set<string>(
+    state.persona.facts.map((f) => comparableStatement(f.statement)).filter(Boolean),
+  );
   /** Statements already offered THIS TURN, so one fact cannot become two
    *  cards. Separate from `existingStatements`, which holds facts on file. */
   // Seeded on a resume: the cards the previous turn offered are still on
@@ -625,6 +632,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // reading changed under them and the bubble jumped. The answer arrives
       // whole at the end of the turn, as its own bubble.
       onDelta: index === 0 && !resumedSkill ? params.onDelta : undefined,
+      streamToUser: index === 0 && !resumedSkill,
     });
 
     const leg: AgentLeg = {
@@ -745,7 +753,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           statement: c.statement,
         }));
         for (const c of out.candidates) {
-          existingStatements.add(c.statement.trim().toLowerCase());
+          existingStatements.add(comparableStatement(c.statement));
         }
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
@@ -823,7 +831,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // statement as something already on file; offering it back is a
           // duplicate card, and on device it read as a "confirmation" of a
           // fact the user had already replaced.
-          if (existingStatements.has(statement.toLowerCase())) {
+          if (existingStatements.has(comparableStatement(statement))) {
             reProposals++;
             continue;
           }
@@ -987,7 +995,15 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // facts/interest and then produced two legs of prose and no card, and the
     // residence turn asked four prose questions and "confirmed" a stale fact.
     // Prose is not a proposal, so one forced leg runs before settling.
-    if (isFactSkill(skillLoaded) && !proposedSomething && !forcingProposalNow) {
+    // A reply that says there is nothing to add is an answer, not a missing
+    // offer: forcing an offer after it put a card under "that's already on
+    // file" (ux1 C3).
+    if (
+      isFactSkill(skillLoaded)
+      && !proposedSomething
+      && !forcingProposalNow
+      && !declaresNothingToAdd(cleanProse(reply))
+    ) {
       forcingProposalNow = true;
       forcedProposal = true;
       continue;
@@ -1124,6 +1140,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    */
   async function offerCombinedFactSplit(): Promise<string | null> {
     if (terminalReason === 'transport-error') return null;
+    // Never while a question is waiting: the split card used to land under
+    // "Which Porto did you mean?" before the move itself was settled (ux1 C1).
+    // The resumed turn that answers the question offers it instead.
+    if (terminalReason === 'awaiting-user' || turn.pendingChoice !== null) return null;
     const kinds = skillsLoaded.map((id) => routeKindFromSkill(id));
     if (!kinds.includes('origin') && !kinds.includes('residence')) return null;
     const combined = combinedFactOnFile;
@@ -1159,8 +1179,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // Same duplicate rules as any other offer: never a statement already on
     // file or already offered this turn.
     const entries = candidates.filter((e) => {
-      const key = String(e.statement).trim().toLowerCase();
-      return !existingStatements.has(key) && !proposedStatements.has(key);
+      const statement = String(e.statement);
+      return (
+        !existingStatements.has(comparableStatement(statement))
+        && !proposedStatements.has(statement.trim().toLowerCase())
+      );
     });
     if (entries.length === 0) {
       if (originDone) await deps.combinedFactRewrite?.markOffered(combined.id);

@@ -226,6 +226,14 @@ export interface AgentModelRequest {
    *  Two fields, not one: `reasoning` carries NO payload upstream, it marks that
    *  a trace STARTED, which is the only signal the caption has. */
   onDelta?: (d: { content?: string; reasoning?: string }) => void;
+  /**
+   * True only for the leg whose text the user should watch arrive: the route
+   * leg of a non-resumed turn (the acknowledgement). A driver that streams
+   * through its OWN callback must honour this, not just `onDelta`: the app's
+   * adapter used to stream every leg into the acknowledgement bubble, so the
+   * question from a later leg was appended to it and then split off.
+   */
+  streamToUser?: boolean;
 }
 
 export interface AgentModelResult {

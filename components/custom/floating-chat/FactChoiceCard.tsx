@@ -27,7 +27,7 @@ import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getByFact } from '@/lib/database/services/topic-service';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
-import { attributeKey, isCombinedOriginFact, mayReplaceKey, sameAttributeKey } from '@/lib/mera-harness';
+import { attributeKey, isLocationKey, mayReplaceKey } from '@/lib/mera-harness';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
@@ -43,6 +43,19 @@ import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)';
+
+/**
+ * Would keeping both facts leave the persona contradicting itself? Two home
+ * facts do (two current homes); two facts under the very same attribute do.
+ * The key PREFIX alone is too coarse here: "background: country of origin"
+ * and "background: origin and current residence" share it and can both be
+ * true, which is exactly the owner's Keep both case.
+ */
+function contradicts(a: string | null, b: string | null): boolean {
+  if (isLocationKey(a) && isLocationKey(b)) return true;
+  const norm = (x: string | null) => (x ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return norm(a) === norm(b);
+}
 // The red already used by the blocked banner in ChatThread. Paired with the
 // word "Replace" and the no-undo sentence: never colour alone.
 const DESTRUCTIVE = '#F87171';
@@ -164,8 +177,10 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
    * KEEP BOTH (owner ask N17): offered only when both facts can be true at
    * once, i.e. they sit under DIFFERENT attribute keys (where someone is from
    * next to where they live). Two facts under the same key contradict each
-   * other (two current homes), and a combined origin-and-home fact being split
-   * is the thing being fixed, so neither gets the option. Decided from the
+   * other (two current homes), so they do not get the option. A retired
+   * combined origin-and-home fact DOES: it still carries the home, and on
+   * device the reply said "I can keep both" above a card that could not
+   * (ux1 C4). Decided from the
    * target the card has already read, so it is never offered before the card
    * can name what it would keep.
    */
@@ -176,8 +191,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     // whether the two facts can both be true.
     && attributeKey(replaces.attribute) !== ''
     && attributeKey(questionnaireAttribute) !== ''
-    && !sameAttributeKey(replaces.attribute, questionnaireAttribute)
-    && !isCombinedOriginFact(replaces.attribute);
+    && !contradicts(replaces.attribute, questionnaireAttribute);
 
   // `dismissed` and the derived pending/saved split come from the DERIVER, which
   // reads this group's own slot. This component deliberately no longer decides

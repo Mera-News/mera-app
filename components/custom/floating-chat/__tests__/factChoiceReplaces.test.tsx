@@ -217,13 +217,14 @@ describe('Keep both', () => {
     expect(queryByTestId('fact-choice-keep-both-0')).toBeNull();
   });
 
-  it('is not offered when the old fact is a combined one being split', async () => {
+  // ux1 C4: the reply said "I can keep both" above a card that could not.
+  it('IS offered when the old fact is a combined origin-and-home one', async () => {
     mockFacts = [{ id: 'old-1', statement: 'Expat from India living in Amsterdam', questionnaireAttribute: 'background: origin and current residence' }];
-    const { queryByTestId, findByText } = render(
-      <FactChoiceCard {...props} options={['Expat from India']} questionnaireAttribute={ORIGIN} replacesFactId="old-1" />,
+    const { getByTestId, findByText } = render(
+      <FactChoiceCard {...props} options={['Originally from India']} questionnaireAttribute={ORIGIN} replacesFactId="old-1" />,
     );
-    expect(await findByText('Expat from India living in Amsterdam')).toBeTruthy();
-    expect(queryByTestId('fact-choice-keep-both-0')).toBeNull();
+    expect(await findByText('factChoice.titleAlsoAdd')).toBeTruthy();
+    expect(getByTestId('fact-choice-keep-both-0')).toBeTruthy();
   });
 
   it('is not offered before the card can name the fact it would keep', () => {

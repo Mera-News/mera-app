@@ -204,6 +204,9 @@ const SAVE_SAFE = new RegExp(
     '|offered to save' +
     "|(?:check|confirm)[^.]{0,30}before saving" +
     "|already recorded" +
+    // A NEGATIVE: "no new specifics were added" says the opposite of a save
+    // claim (device capture, ux1 C3).
+    "|\\bno (?:new )?(?:\\w+ ){0,2}(?:were|was|has been|have been) (?:added|saved|recorded|noted|stored)" +
     ')',
   'i',
 );
@@ -325,6 +328,10 @@ const PROCESS_NARRATION = new RegExp(
     '|\\b(?:the|an?) (?:appropriate|right|relevant) (?:skill|guideline|tool)\\b' +
     '|\\bloading (?:the|a|an) (?:skill|guideline|instructions)\\b' +
     '|\\bone moment while i\\b' +
+    // Narrating how it READ the message: "I read that as answering the Porto
+    // question, but the word does not fit." (device capture, ux1 C4)
+    "|\\bi(?:'m|’m| am)? ?(?:read|took|reading|interpreted|understood) (?:that|this|it|your (?:message|reply|answer)) as\\b" +
+    '|\\bas (?:an? )?(?:answer|reply) to (?:the|your|my) .{0,40}question\\b' +
     ')',
   'i',
 );
@@ -350,6 +357,42 @@ export function narratesProcess(text: string): boolean {
  * subject the question was about.
  */
 const PLAIN_YES = /^(?:yes|yeah|yep|yup|sure|ok(?:ay)?|please|please do|go ahead|do it|sounds good|that'?s right|correct)(?:[ ,]+(?:please|thanks|thank you|add it|add that|do it|go ahead))*[.!]*$/i;
+
+/**
+ * The reply says there is nothing to add: the fact is already on file, or the
+ * profile stays as it is. A forced offer after this sentence contradicts it on
+ * screen (ux1 C3: "That's already on file... I'll leave your profile as it is"
+ * above a card offering the same fact).
+ */
+const NOTHING_TO_ADD = new RegExp(
+  '(' +
+    "\\b(?:that['’]?s|that is|this is|it['’]?s|it is|those are|they['’]?re) already (?:on file|in your profile|saved|there)\\b" +
+    "|\\balready (?:have|had|hold) (?:that|this|it|those)\\b" +
+    "|\\bleave your profile as it is\\b" +
+    "|\\bnothing (?:new )?to add\\b" +
+    ')',
+  'i',
+);
+
+export function declaresNothingToAdd(text: string): boolean {
+  return NOTHING_TO_ADD.test(text ?? '');
+}
+
+/**
+ * A statement in comparable form: lowercased, articles and a leading "user"
+ * dropped, punctuation and spacing collapsed. Used ONLY to recognise a fact
+ * already on file, so a near-identical re-offer is caught the way an exact one
+ * is. Never written back.
+ */
+export function comparableStatement(text: string): string {
+  return (text ?? '')
+    .toLowerCase()
+    .replace(/^(?:the )?user\s+/, '')
+    .replace(/[^a-z0-9\u00c0-\uffff\s]/g, ' ')
+    .replace(/\b(?:the|a|an)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 export function isPlainYes(text: string): boolean {
   const t = (text ?? '').trim().toLowerCase().replace(/\s+/g, ' ');

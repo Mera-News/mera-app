@@ -2177,3 +2177,28 @@ describe('pendingCardStatements', () => {
     expect(pendingCardStatements([msg])).toEqual(['Lives in Berlin, Germany, EU']);
   });
 });
+
+// ux1 C2: the dash cleanup used to land after the stream and re-wrap a
+// finished bubble. The bubble is now clean on every render.
+describe('single-shot dash cleanup while streaming', () => {
+  it('never shows a clause dash, even before the stream ends', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => { release = r; });
+    mockCloudChatStream.mockImplementation(async function* () {
+      yield { type: 'text-delta', delta: 'It covers oversight — safety news' };
+      await gate;
+      yield { type: 'text-delta', delta: ' is in that lane.' };
+      yield { type: 'finish', reason: 'stop' };
+    });
+    const agent = makeAgent({ id: 'article-feedback-1', getToolDefinitions: jest.fn().mockReturnValue([]) });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+    act(() => { result.current.sendMessage('why?'); });
+    await waitFor(
+      () => expect(result.current.messages.some((m) => m.role === 'assistant' && m.content.includes('oversight'))).toBe(true),
+      { timeout: 3000 },
+    );
+    const mid = result.current.messages.filter((m) => m.role === 'assistant').map((m) => m.content).join(' ');
+    expect(mid).not.toMatch(/[—–]/);
+    await act(async () => { release(); });
+  });
+});

@@ -164,7 +164,7 @@ export function buildStateLine(input: StateLineInput): string {
     parts.push(
       `Your last turn asked: "${escapeUntrusted(input.lastQuestion, 160)}". `
       + 'This message is most likely its answer, so read it that way if it can be. '
-      + 'Never ask that question again.',
+      + 'Never ask that question again, and never say how you read the message.',
     );
   } else if (input.answerPending) {
     parts.push('They did not answer your last question. Offer, do not ask again.');
