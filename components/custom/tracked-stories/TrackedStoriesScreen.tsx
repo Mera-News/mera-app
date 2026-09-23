@@ -15,6 +15,7 @@ import {
     ModalHeader,
 } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import {
@@ -161,6 +162,12 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                         hapticLight();
                         setConfirmTarget(item);
                     }}
+                    // The row is ONE accessibility element, which hides the
+                    // delete button inside it from VoiceOver; this is its way in.
+                    accessibilityActions={[{ name: 'untrack', label: t('trackedStories.untrackAction') }]}
+                    onAccessibilityAction={(e) => {
+                        if (e.nativeEvent.actionName === 'untrack') setConfirmTarget(item);
+                    }}
                     accessibilityRole="button"
                     // The card renders four things; a label of just the headline
                     // dropped the rest for a screen-reader user. Order mirrors
@@ -292,51 +299,30 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
         startFollowStoryChat(t('trackedStories.followChatSeed'));
     }, [t]);
 
+    // M3/F22: the shared empty-state component, so this tab's zero state
+    // reads like the other For You tabs. The follow CTA is the ONE entry point
+    // on an empty list; the FAB below hides there, since two buttons that do
+    // the same thing on an empty screen is one too many.
+    //
+    // Locked: starting a new follow needs a plan, so there is no CTA (it would
+    // be a broken instruction) and the free-tier body explains why. Stories
+    // already followed are unaffected; this is only the zero state.
     const ListEmpty = (
-        <Box className="flex-1 items-center justify-center px-8 py-20">
-            <MaterialIcons name="auto-awesome" size={48} color="#6B7280" />
-            <Text size="lg" className="text-white text-center font-semibold mt-4">
-                {t('trackedStories.emptyTitle')}
-            </Text>
-            <Text size="sm" className="text-typography-400 text-center mt-2">
-                {/* Monetization wave: the default body sends the user to go
-                    track a story, which fails while locked — starting a NEW
-                    story needs an active plan. The free-tier copy explains that
-                    instead. Stories already tracked are unaffected; this is
-                    purely the zero-state message. */}
-                {locked ? t('freeTier.trackedStoriesEmptyBody') : t('trackedStories.emptyBody')}
-            </Text>
-            {/* The hint + CTA used to walk the user to the article DETAIL
-                screen's crosshair, because that was the only place a track could
-                START. It isn't any more: the FAB below starts one from here, so
-                sending them to the Feed to find an article would be the long way
-                round to a thing this screen now does itself. Same handler as the
-                FAB — one entry point, two affordances.
-
-                Locked: both exist only to walk the user through STARTING a new
-                track, which the free-tier body above just said needs a plan —
-                showing them would repeat a broken instruction. Suppressed rather
-                than relabeled; `FreeTierCard`/`FreeTierInlineNotice` already own
-                "See plans" messaging elsewhere and this empty state isn't the
-                place to duplicate it. (The FAB self-gates the same way.) */}
-            {!locked && (
-                <>
-                    <Text size="xs" className="text-typography-500 text-center mt-4">
-                        {t('trackedStories.emptyHintFollow')}
-                    </Text>
-                    <Button
-                        variant="outline"
-                        className="rounded-full border-primary-500 mt-4"
-                        onPress={startFollowStory}
-                        testID="tracked-stories-empty-cta"
-                    >
-                        <ButtonText className="text-primary-400">
-                            {t('trackedStories.emptyCtaFollow')}
-                        </ButtonText>
-                    </Button>
-                </>
-            )}
-        </Box>
+        <ForYouEmptyState
+            icon="auto-awesome"
+            title={t('trackedStories.emptyTitle')}
+            body={locked ? t('freeTier.trackedStoriesEmptyBody') : t('trackedStories.emptyBody')}
+            action={
+                locked
+                    ? undefined
+                    : {
+                          label: t('trackedStories.emptyCtaFollow'),
+                          onPress: startFollowStory,
+                          testID: 'tracked-stories-empty-cta',
+                      }
+            }
+            testID="tracked-stories-empty"
+        />
     );
 
     return (
@@ -380,12 +366,14 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             className="px-5 pb-2 mb-3"
                             style={{ paddingTop: embedded ? 8 : insets.top + 16 }}
                         >
-                            <Heading
-                                size="4xl"
-                                className={embedded ? 'text-white' : 'text-white ml-14'}
-                            >
-                                {t('trackedStories.title')}
-                            </Heading>
+                            {/* Standalone only: embedded, the host's header
+                                and sub-tab already name this list, and a 4xl
+                                title under them repeated it. */}
+                            {!embedded && (
+                                <Heading size="4xl" className="text-white ml-14">
+                                    {t('trackedStories.title')}
+                                </Heading>
+                            )}
                         {/* `mb-3` on the block above rather than a spacer
                             element: a <Box style={{height:12}}/> is an
                             invisible node in the tree that no spacing token
@@ -439,13 +427,14 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 Hidden while locked, deliberately and on the same axis as the
                 empty-state CTA above: `openArticleFeedback` silently no-ops for
                 a free-tier user, so a visible FAB here would be a button that
-                does nothing at all.
+                does nothing at all. Hidden on an empty list too, where the
+                empty state's CTA is the one entry point.
 
                 Bottom offset clears the native tab bar when this screen is
                 EMBEDDED in the Dashboard's Stories sub-tab; standalone (its own
                 route, no tab shell) it only clears the home indicator. Same
                 convention as ScrollToTopFab's `extraBottomOffset`. */}
-            {!locked && (
+            {!locked && stories.length > 0 && (
                 <Pressable
                     testID="tracked-stories-track-fab"
                     onPress={startFollowStory}
