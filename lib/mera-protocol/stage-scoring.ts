@@ -17,6 +17,10 @@
 import { cloudBatchComplete, cloudComplete } from '@/lib/llm/cloudComplete';
 import { completeLocal } from '@/lib/llm/completeLocal';
 import { SMALL_MODEL } from '@/lib/llm/constants';
+import { estimateTokens } from '@/lib/llm/tokens';
+import logger from '@/lib/logger';
+import { LOCAL_CONTEXT_TOKENS } from '@/lib/mera-protocol-toolkit/core/context-size';
+import { LOCAL_RELEVANCE_SYSTEM_PROMPT } from '@/lib/news-harness/prompts/prompts';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import type { LlmPort } from '@/lib/news-harness/core/ports';
@@ -95,6 +99,19 @@ const localLlmPort: LlmPort = {
   batchComplete: (calls) =>
     Promise.all(
       calls.map(async (c) => {
+        // Refuse a prompt that cannot fit rather than let llama.rn return empty
+        // text for it. The error channel makes run-stage fail open to the math
+        // score, and the warning key makes the overflow visible.
+        const promptTokens = estimateTokens(c.system) + estimateTokens(c.prompt);
+        if (promptTokens + (c.maxTokens ?? 0) > LOCAL_CONTEXT_TOKENS) {
+          logger.warn('local_relevance_prompt_overflow', {
+            id: c.id,
+            promptTokens,
+            maxTokens: c.maxTokens,
+            contextTokens: LOCAL_CONTEXT_TOKENS,
+          });
+          return { id: c.id, output: '', error: 'local prompt exceeds the model context' };
+        }
         try {
           const output = await completeLocal({
             systemPrompt: c.system,
@@ -102,7 +119,11 @@ const localLlmPort: LlmPort = {
             maxTokens: c.maxTokens,
             temperature: c.temperature,
             responseFormat: 'json',
+            label: 'relevance',
           });
+          if (output.length === 0) {
+            logger.warn('local_relevance_empty_output', { id: c.id, promptTokens });
+          }
           return { id: c.id, output };
         } catch (e) {
           return { id: c.id, output: '', error: e instanceof Error ? e.message : String(e) };
@@ -445,6 +466,31 @@ export async function computeMathStage(
   };
 }
 
+/** One article per call: the local prompt is written for exactly one. */
+export const LOCAL_ARTICLES_PER_SCORE_PROMPT = 1;
+/** A bare `[0.62]` answer. Headroom for a model that pads with whitespace. */
+export const LOCAL_SCORE_MAX_TOKENS = 24;
+
+/**
+ * The on-device relevance pass must not use the CLOUD prompt. That prompt is
+ * ~4.6k tokens and asks for five articles per call; sent into the local model's
+ * 4,096-token context it came back empty on every call, so every article fell to
+ * `fallbackRelevance` and no reason was ever written. Local mode uses the prompt
+ * written for it, one article per call. `DEFAULT_HARNESS_CONFIG` is untouched
+ * (changing a literal there is a product change for the cloud path too).
+ */
+export function withLocalScoringOverrides(config: HarnessConfig): HarnessConfig {
+  return {
+    ...config,
+    articlePipeline: {
+      ...config.articlePipeline,
+      relevanceSystemPrompt: LOCAL_RELEVANCE_SYSTEM_PROMPT,
+      articlesPerScorePrompt: LOCAL_ARTICLES_PER_SCORE_PROMPT,
+      scoreBatchMaxTokens: LOCAL_SCORE_MAX_TOKENS,
+    },
+  };
+}
+
 /**
  * Sync inline path: hard-screen, compute the math for every candidate, then
  * score them all through the legacy tiered LLM call. The LLM round-trip happens
@@ -461,10 +507,17 @@ export async function computeAndScoreForCandidates(
     effectiveHarnessConfig(),
   ]);
   const stage = buildStageCandidates(candidates, topicWeights);
-  return computeAndScore(stage, persona, getScoringLlmPort(), config, {
-    nowMs: opts?.nowMs,
-    factStatements,
-    logger: appHarnessLogger,
-    skipLlm: opts?.skipLlm,
-  });
+  const onDevice = isOnDeviceMode();
+  return computeAndScore(
+    stage,
+    persona,
+    onDevice ? localLlmPort : cloudLlmPort,
+    onDevice ? withLocalScoringOverrides(config) : config,
+    {
+      nowMs: opts?.nowMs,
+      factStatements,
+      logger: appHarnessLogger,
+      skipLlm: opts?.skipLlm,
+    },
+  );
 }

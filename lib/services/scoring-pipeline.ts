@@ -68,6 +68,8 @@ import {
 import { computeMathStage, effectiveHarnessConfig } from '@/lib/mera-protocol/stage-scoring';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { useUserStore } from '@/lib/stores/user-store';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+import { ProcessingMode } from '@/lib/generated/graphql-types';
 import {
   discardLowRelevance,
   fetchResults,
@@ -807,12 +809,21 @@ function makeRunId(): string {
  * what is dispatched. Omit it and every id simply covers itself — correct for
  * the callers that bypass the gate.
  */
+function isOnDeviceProcessing(): boolean {
+  return useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
+}
+
 export async function enqueueCandidates(
   ids: string[],
   flushPartial = false,
   coveredIdsByRep?: Readonly<Record<string, string[]>>,
 ): Promise<{ deferred: string[] }> {
   if (ids.length === 0) return { deferred: [] };
+  // On-device mode scores on the device (stepScore -> runScoringPass), so NEW
+  // work never enters this cloud pipeline. Every enqueue path funnels through
+  // here, including this module's own post-finalize kick, so this one guard
+  // closes the race. Batches already in flight still drain via recover/poll.
+  if (isOnDeviceProcessing()) return { deferred: [] };
   const snap = await getPipeline();
 
   const existing = snap ? nonTerminalCandidateIds(snap.run) : new Set<string>();
@@ -928,6 +939,8 @@ export async function enqueueCandidates(
  * as independent 25-row reasons-only batches.
  */
 export async function enqueueOrphanedReasons(): Promise<void> {
+  // Same rule as enqueueCandidates: on-device mode sends no new work to the cloud.
+  if (isOnDeviceProcessing()) return;
   const scored = await getScoredSuggestionsWithoutReasons();
   const snap = await getPipeline();
 

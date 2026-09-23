@@ -43,6 +43,8 @@ import {
 } from '@/lib/feed-grouping/read-story-filter';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import logger from '@/lib/logger';
+import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { createCancellationError, withRetry } from '@/lib/utils/retry';
 
@@ -787,6 +789,15 @@ export async function stepHydratePersistEnqueue(
   // null (legacy, geo/language-blind election).
   const userCtx = await loadUserGeoLanguageContext();
 
+  // On-device mode scores on the device: stepScore -> runScoringPass runs the
+  // local model over every unscored row. Enqueueing the same rows into the E2EE
+  // cloud pipeline here made the two lanes race on them, and the cloud lane won,
+  // which both broke the mode's premise and hid local failures. Read once per
+  // run, like the other run-scoped inputs above.
+  const onDeviceScoring =
+    useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice;
+  const cloudEnqueue = !opts.suppressEnqueue && !onDeviceScoring;
+
   // Already-read index: ONE read of `story_impressions` for the whole run,
   // shared by the pre-persist screen (per chunk) and the unscored-backfill
   // screen inside `markIneligibleAndCollectEligible`. A sync is short relative
@@ -832,7 +843,7 @@ export async function stepHydratePersistEnqueue(
     // The propagation half above always runs — it is what turns a duplicate of
     // an already-scored story into a `Complete` row without any inference. Only
     // the dispatch is suppressed.
-    if (!opts.suppressEnqueue && gate.enqueueIds.length > 0) {
+    if (cloudEnqueue && gate.enqueueIds.length > 0) {
       const res = await enqueueCandidates(
         gate.enqueueIds,
         false,
@@ -841,11 +852,13 @@ export async function stepHydratePersistEnqueue(
       pendingDeferred = res?.deferred ?? [];
       pendingCoveredIdsByRep = gate.coveredIdsByRep ?? {};
     }
-    if (!opts.suppressEnqueue) enqueuedCount += gate.enqueueIds.length;
+    if (cloudEnqueue) enqueuedCount += gate.enqueueIds.length;
     readSkippedTotal += gate.readCount;
-    const enqueuedLabel = opts.suppressEnqueue
-      ? `${gate.enqueueIds.length} left unscored (enqueue suppressed)`
-      : `enqueued ${gate.enqueueIds.length}`;
+    const enqueuedLabel = onDeviceScoring
+      ? `${gate.enqueueIds.length} left for on-device scoring`
+      : opts.suppressEnqueue
+        ? `${gate.enqueueIds.length} left unscored (enqueue suppressed)`
+        : `enqueued ${gate.enqueueIds.length}`;
     const gateLine = `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, ${enqueuedLabel}, read ${gate.readCount}`;
     ctx.log(gateLine);
     logger.debug(`[feed-sync-steps] ${gateLine}`);
@@ -993,7 +1006,9 @@ export async function stepHydratePersistEnqueue(
   // let a flush failure fail the (already-hydrated) step.
   if (!ctx.signal.aborted) {
     try {
-      if (!opts.suppressEnqueue && pendingDeferred.length > 0) {
+      if (onDeviceScoring) {
+        // Nothing to flush: stepScore scores these rows on the device.
+      } else if (cloudEnqueue && pendingDeferred.length > 0) {
         await enqueueCandidates(pendingDeferred, true, pendingCoveredIdsByRep);
       } else if (
         opts.suppressEnqueue &&
