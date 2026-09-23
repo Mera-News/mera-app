@@ -29,7 +29,8 @@ element is ONE fact:
 - `alternatives` holds 0 to 3 OTHER readings of the same thing, and only when the readings would
   retrieve different news. One sensible reading means no `alternatives` key at all, which is one tap
   instead of two.
-- `replaces` holds the id of a fact this one supersedes, and only after the user chose.
+- `replaces` holds the id of a fact this one supersedes under the same key. The card shows what it
+  removes and the user may keep both, so never set it on a fact that is still true.
 
 Your conversational text stays under 200 characters and carries at most one question.
 
