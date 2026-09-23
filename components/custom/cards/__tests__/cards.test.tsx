@@ -20,6 +20,8 @@ jest.mock('react-native', () => {
 });
 
 // ── UI primitives → plain RN views ──
+const mockRouterPush = jest.fn();
+jest.mock('expo-router', () => ({ router: { push: (...a: any[]) => mockRouterPush(...a) } }));
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
 }));
@@ -838,6 +840,29 @@ describe('ArticleActionsRow', () => {
     fireEvent.press(getByLabelText('savedSuggestions.saveAction'));
     await waitFor(() => expect(mockSaveSuggestion).toHaveBeenCalledWith(s));
     expect(mockSaveStandaloneArticle).not.toHaveBeenCalled();
+  });
+});
+
+describe('ArticleSuggestionCard fact chip (A2)', () => {
+  it('names the matched fact under the note on a Feed card, and opens its story list', async () => {
+    const { getFactsForTopicTexts } = require('@/lib/database/services/fact-service');
+    getFactsForTopicTexts.mockResolvedValueOnce([{ id: 'f9', statement: 'I work in fintech' }]);
+    const onPress = jest.fn();
+    const { findByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion({ _id: 'sugg-chip', userTopicIds: ['fintech-a2'] } as any)}
+        onPress={onPress}
+        onVerdict={jest.fn()}
+      />,
+    );
+    const chip = await findByTestId('card-fact-chip');
+    fireEvent.press(chip);
+    expect(mockRouterPush).toHaveBeenCalledWith({
+      pathname: '/logged-in/fact-feed',
+      params: { factId: 'f9', statement: 'I work in fintech' },
+    });
+    // The chip is its own button: the tap never opens the card.
+    expect(onPress).not.toHaveBeenCalled();
   });
 });
 

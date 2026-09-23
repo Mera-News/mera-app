@@ -5,6 +5,7 @@ import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import ReasonNote from '@/components/custom/cards/ReasonNote';
+import FactChip from '@/components/custom/cards/FactChip';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { inlineAccessibilityActions } from '@/components/custom/cards/use-article-actions';
 import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
@@ -213,10 +214,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const reason = relevanceReady ? suggestion.reason ?? '' : '';
   const reasonLoading = status === ArticleSuggestionStatus.ReasonPending && !reason;
 
-  // Fact chips only render on a complete, reason-less suggestion — mirror that
-  // exact gate here so facts are only queried when the chips can appear. The
-  // module-level LRU cache lets cards sharing a topic set skip the query (A5).
-  const canRenderFactChips = reasonReady && !reason;
+  // Facts are queried only where a chip can appear: the reason-less chip list,
+  // and the ONE fact chip under a complete note (A2). The module-level LRU
+  // cache lets cards sharing a topic set skip the query (A5).
+  const canRenderFactChips = reasonReady;
   const topicIdsKey = (suggestion.userTopicIds ?? []).join(' ');
   useEffect(() => {
     const topicIds = suggestion.userTopicIds ?? [];
@@ -299,6 +300,9 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       reason={reason}
       pendingSinceMs={pendingSinceMs(suggestion)}
       testID="card-reason"
+      // Only on the Feed's cards (the same `onVerdict` discriminator as the
+      // action row), not in the Saved list.
+      below={reason && onVerdict ? <FactChip fact={facts[0]} testID="card-fact-chip" /> : undefined}
     />
   ) : null;
 
