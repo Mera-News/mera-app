@@ -1,3 +1,4 @@
+/* eslint-disable react/display-name, @typescript-eslint/no-require-imports */
 // D2: every tab bar item carries a real accessibility label. VoiceOver read the
 // SF Symbol names ("grid 2x2", "safari") because a hidden <Label> is not used
 // as the item's label.
