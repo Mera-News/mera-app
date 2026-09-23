@@ -25,6 +25,7 @@ import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { reasonBoxColors } from '@/lib/relevance-utils';
+import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import ReasonNote from '@/components/custom/cards/ReasonNote';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -176,6 +177,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const metaGeoTags = article?.geo_tags ?? null;
 
     const [imageFailed, setImageFailed] = useState(false);
+    const blurImages = useBlurImagesStore((s) => s.blurImages);
     const showImage = !!imageUrl && !imageFailed;
 
     // Relevance/reason only apply to the suggestion path. Driven by the
@@ -305,6 +307,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                                 className="w-full h-full"
                                 resizeMode="cover"
                                 recyclingKey={suggestion?._id ?? article?._id}
+                                blurRadius={blurImages ? 24 : undefined}
                                 onError={() => setImageFailed(true)}
                             />
                         </Box>
@@ -336,6 +339,10 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                             alt={displayTitle}
                             className="w-full h-full"
                             resizeMode="cover"
+                            // N14: "Blur images" covers the detail hero too, not
+                            // only the cards that led here.
+                            blurRadius={blurImages ? 24 : undefined}
+                            testID="detail-hero-image"
                             onError={() => setImageFailed(true)}
                         />
                     </Box>
