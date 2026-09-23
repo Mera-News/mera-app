@@ -7,6 +7,12 @@
       "date": "2026-09-17",
       "note": "Library authored by hand under the pagent wave (P5). Thirteen skills, fifteen expectation cases. The authoring skill and this ledger exist from here on.",
       "items_completed": 13
+    },
+    {
+      "id": 2,
+      "date": "2026-09-23",
+      "note": "ux1: origin and home split into two facts, the replacement card made the consent for a same-key move. Staged run 20260923-215626-ux1-origin passed 2/3. Open: the model abbreviates attribute keys.",
+      "items_completed": 2
     }
   ],
   "items": [
