@@ -15,7 +15,6 @@ import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import logger from '@/lib/logger';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import {
   buildFactRows,
@@ -25,7 +24,7 @@ import {
   type FactRowGroup,
 } from '@/lib/stores/fact-rows-selector';
 import { sectionTitle } from '@/components/custom/for-you/section-title';
-import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
+import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
@@ -66,7 +65,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   const suggestions = useForYouSuggestions();
   const openedIds = useOpenedStoriesStore((s) => s.ids);
   const handlePress = useOpenSuggestion('sectioned');
-  const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
   const isHeadline = isHeadlineSectionId(factId);
 
   // Last-visit timestamp captured on entry (before we mark this visit) — drives
@@ -76,16 +74,12 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
 
   useEffect(() => {
     void useOpenedStoriesStore.getState().hydrate();
-    let cancelled = false;
-    loadSectionSnapshots()
-      .then((s) => { if (!cancelled) setSnapshots(s); })
-      .catch((err: unknown) => {
-        logger.captureException(err, {
-          tags: { screen: 'FactFeedScreen', method: 'loadSectionSnapshots' },
-        });
-      });
-    return () => { cancelled = true; };
   }, []);
+
+  // Kept fresh (facts/locations changes and focus), not loaded once on mount:
+  // a fact added while this screen was open, or a "Next" hop into a section
+  // for a fact created since, used to read a stale snapshot.
+  const snapshots = useSectionSnapshots('FactFeedScreen');
 
   // Visit tracking: read the prior visit time, then mark this section visited
   // (both on entry and again on unmount, so a long dwell still advances the

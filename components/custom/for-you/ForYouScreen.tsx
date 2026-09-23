@@ -40,7 +40,7 @@ import VisitedPublicationsList from '@/components/custom/config-panel/VisitedPub
 import ShareStatsFab from '@/components/custom/ShareStatsFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
-import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
+import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { Box } from '@/components/ui/box';
@@ -311,10 +311,6 @@ const MeraNewsScreen: React.FC = () => {
     const isConnected = useIsConnected();
     const insets = useSafeAreaInsets();
 
-    // ── Fact-rows feed (Round-3 C1/C2) ──
-    // Persona snapshots (topics/facts/locations). Null while loading.
-    const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
-
     // Hydrate the persisted section-visit map once on mount so the Dashboard's
     // "+N new" section badges are correct on first paint.
     useEffect(() => {
@@ -322,19 +318,9 @@ const MeraNewsScreen: React.FC = () => {
     }, []);
 
 
-    // Load the persona snapshots when interests exist or the feed size changes
-    // (tiny tables; a new sync's insert/remove is the coarse trigger).
-    useEffect(() => {
-        let cancelled = false;
-        loadSectionSnapshots()
-            .then((s) => { if (!cancelled) setSnapshots(s); })
-            .catch((err: unknown) => {
-                logger.captureException(err, {
-                    tags: { screen: 'ForYouScreen', method: 'loadSectionSnapshots' },
-                });
-            });
-        return () => { cancelled = true; };
-    }, [hasGeneratedInterests, suggestions.length]);
+    // Persona snapshots, reloaded on a facts or locations change, on focus, and
+    // on the two coarse triggers this screen always had (see the hook).
+    const snapshots = useSectionSnapshots('ForYouScreen', [hasGeneratedInterests, suggestions.length]);
 
     // The user's geo/language context (home/other countries + app language) —
     // makes representative election tier-aware. Null while loading/on failure,
