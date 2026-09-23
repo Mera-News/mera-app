@@ -27,7 +27,10 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
     return { jsxDEV: R.jsxDEV, Fragment: R.Fragment };
 });
 jest.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (k: string, o?: Record<string, string>) => (o?.source ? `${k}:${o.source}` : k) }),
+    useTranslation: () => ({
+        t: (k: string, o?: Record<string, string>) => (o?.source ? `${k}:${o.source}` : k),
+        i18n: { language: 'en' },
+    }),
 }));
 jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
@@ -65,11 +68,11 @@ const mockTrackPress = jest.fn();
 jest.mock('@/components/custom/tracked-stories/use-track-button', () => ({
     useTrackButton: () => ({ tracked: false, onPress: mockTrackPress, dialog: null }),
 }));
-const mockAsk = jest.fn(() => true);
+const mockAsk = jest.fn((..._a: any[]) => true);
 jest.mock('@/components/custom/floating-chat/ask-mera', () => ({
     askMeraAbout: (...a: any[]) => mockAsk(...a),
 }));
-const mockSetPref = jest.fn(async () => ({ applied: true }));
+const mockSetPref = jest.fn(async (..._a: any[]) => ({ applied: true }));
 jest.mock('@/lib/database/services/publication-pref-ui-actions', () => ({
     setSourcePrefFromUi: (...a: any[]) => mockSetPref(...a),
 }));
@@ -81,8 +84,7 @@ jest.mock('@/lib/sentry-init', () => ({
         return mockSentry;
     },
 }));
-jest.mock('@/lib/stores/app-language-store', () => ({ useAppLanguage: () => 'en' }));
-const mockOpenOnSource = jest.fn(async () => true);
+const mockOpenOnSource = jest.fn(async (..._a: any[]) => true);
 jest.mock('@/components/custom/cards/article-actions', () => ({
     openOnSource: (...a: any[]) => mockOpenOnSource(...a),
     openInGoogleTranslate: jest.fn(async () => true),
@@ -188,7 +190,7 @@ describe('useArticleMenu running items', () => {
     });
 
     it('opens on source through the shared helper that records the visit', async () => {
-        const visit = { publicationName: 'NOS', articleId: 'art-1' };
+        const visit = { publicationName: 'NOS', countryCode: 'NL', articleId: 'art-1' };
         const r = openMenu(<Host visit={visit} />);
         fireEvent.press(r.getByTestId('menu-open-source'));
         await act(async () => {
@@ -212,6 +214,9 @@ describe('useArticleMenu running items', () => {
         fireEvent.press(r.getByTestId('menu-fewer-from-source'));
         await act(async () => {
             jest.advanceTimersByTime(MENU_CLOSE_MS);
+        });
+        await act(async () => {
+            await Promise.resolve();
         });
         expect(mockSetPref).toHaveBeenCalledWith({ kind: 'publication', publicationName: 'NOS' }, 'deprioritised');
         expect(mockToastShow).toHaveBeenCalledTimes(1);

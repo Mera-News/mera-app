@@ -15,7 +15,6 @@ import {
 } from '@/lib/database/services/publication-visit-service';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import { buildGoogleTranslateUrl } from '@/lib/translation-service';
 import { openArticleInAppBrowser, openInAppBrowser, appendReferrer } from '@/lib/web-browser-utils';
 
 /** What a publication visit records, minus the URL (resolved at open time). */
@@ -53,6 +52,12 @@ export async function openInGoogleTranslate(
     const url = secureUrlOrNull(rawUrl);
     if (!url) return false;
     try {
+        // Resolved at call time, not at module scope: translation-service loads
+        // the native translator module on import, and this file sits under
+        // every card, so a module-scope import would put that module on the
+        // path of every card render (and every card test).
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { buildGoogleTranslateUrl } = require('@/lib/translation-service') as typeof import('@/lib/translation-service');
         await openInAppBrowser(buildGoogleTranslateUrl(appendReferrer(url), appLanguage));
         return true;
     } catch (err) {

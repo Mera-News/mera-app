@@ -5,6 +5,9 @@ import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import ReasonNote from '@/components/custom/cards/ReasonNote';
+import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
+import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
+import { feedbackSubjectFromSuggestion } from '@/components/custom/cards/feedback-subject';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -22,7 +25,7 @@ import { reasonBoxColors } from '@/lib/relevance-utils';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useHardFilterLabel } from '@/lib/stores/hard-filter-label-store';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSavedOverride } from '@/lib/saved-state';
 
@@ -155,6 +158,33 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     }
     onSaveToggled?.(suggestion, !saved);
   };
+
+  // D3: the shared ••• menu. Its hooks run unconditionally; the button and
+  // the sheet render only where the card has an action row at all.
+  const menuSubject = useMemo(() => feedbackSubjectFromSuggestion(suggestion, 'for_you'), [suggestion]);
+  const menuVisit = useMemo(() => visitFromSuggestion(suggestion), [suggestion]);
+  const menu = useArticleMenu({
+    surface: 'card',
+    subject: menuSubject,
+    articleUrl: suggestion.article_url,
+    languageCode: suggestion.language_code,
+    visit: menuVisit,
+    // A check started from a card is answered on the detail screen, directly
+    // under the action row there, so the card opens it after asking.
+    onCheckFacts: () => {
+      // Required at call time: the fact-check client pulls in Apollo and the
+      // database, and this card is the Feed's row component.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { requestArticleFactCheck } = require('@/lib/fact-check/request-article-fact-check') as typeof import('@/lib/fact-check/request-article-fact-check');
+      const asked = requestArticleFactCheck({
+        articleId: suggestion.articleId,
+        title: suggestion.title_en ?? suggestion.title_original ?? '',
+        suggestion,
+      });
+      if (asked) onPress(suggestion);
+      return asked;
+    },
+  });
 
   const handleShare = useShareArticle({
     url: suggestion.article_url,
@@ -291,6 +321,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       onAskMera={() => onAskMera?.(suggestion)}
       onToggleSave={handleToggleSave}
       onShare={suggestion.article_url ? () => void handleShare() : undefined}
+      onOverflow={menu.open}
       horizontalPadding={0}
     />
   ) : undefined;
@@ -311,8 +342,11 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     ) : undefined;
 
   return (
+    <>
     <ArticleCardBase
       testID={`card-${suggestion._id}`}
+      accessibilityActions={onVerdict ? menu.accessibilityActions : undefined}
+      onAccessibilityAction={onVerdict ? menu.onAccessibilityAction : undefined}
       imageUrl={suggestion.image_url}
       titleEnglish={suggestion.title_en}
       titleOriginal={suggestion.title_original ?? undefined}
@@ -337,6 +371,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       {factChipsEl}
       {reasonBoxEl}
     </ArticleCardBase>
+    {onVerdict ? menu.element : null}
+    </>
   );
 };
 

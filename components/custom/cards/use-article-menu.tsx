@@ -12,10 +12,8 @@ import { useTrackButton } from '@/components/custom/tracked-stories/use-track-bu
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastTitle, useToast } from '@/components/ui/toast';
-import { setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import { showFeedback } from '@/lib/feedback';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
-import { useAppLanguage } from '@/lib/stores/app-language-store';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AccessibilityActionEvent } from 'react-native';
@@ -68,9 +66,12 @@ export interface UseArticleMenu {
  * of which article this user read, which invariant 9 rules out.
  */
 export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
-    const { t } = useTranslation();
+    // The app language from i18n, which the language store keeps in step. Read
+    // here rather than through the store hook: that store pulls the settings
+    // service (and the database) into every card's import graph.
+    const { t, i18n } = useTranslation();
     const toast = useToast();
-    const appLanguage = useAppLanguage();
+    const appLanguage = i18n?.language ?? 'en';
     const [visible, setVisible] = useState(false);
     // The follow state is read only once the menu has been opened (or a
     // VoiceOver action used): a DB read per mounted card, just to label an item
@@ -125,6 +126,10 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
 
     const fewerFromSource = useCallback(
         async (publicationName: string): Promise<boolean> => {
+            // Resolved at call time: the preference writer pulls in the persona
+            // executor and the database, and this hook sits under every card.
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { setSourcePrefFromUi } = require('@/lib/database/services/publication-pref-ui-actions') as typeof import('@/lib/database/services/publication-pref-ui-actions');
             const res = await setSourcePrefFromUi({ kind: 'publication', publicationName }, 'deprioritised');
             if (!res.applied) return false;
             toast.show({
