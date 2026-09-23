@@ -118,7 +118,9 @@ const localLlmPort: LlmPort = {
             prompt: c.prompt,
             maxTokens: c.maxTokens,
             temperature: c.temperature,
-            responseFormat: 'json',
+            // The local relevance answer is a bare `[0.62]`. A JSON-object
+            // grammar contradicts that contract and breaks the LFM family.
+            responseFormat: 'text',
             label: 'relevance',
           });
           if (output.length === 0) {
