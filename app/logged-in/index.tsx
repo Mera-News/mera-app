@@ -23,6 +23,7 @@ import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { readStartupTab } from "@/lib/navigation/startup-tab";
+import { releaseSplash } from "@/lib/splash-hold";
 import {
     consumePendingNotificationRoute,
     markStartupGatePassed,
@@ -380,6 +381,9 @@ function LoggedInGate() {
     // store and no persona — see its header for why that is a correctness rule
     // rather than a preference.
     if (wipeFailed) {
+        // Rendered in place on the gate's own pathname, so no route releases
+        // the held splash (lib/splash-hold.ts). Release it here.
+        releaseSplash('identity-switch-failed');
         return <IdentitySwitchFailedScreen onRetry={handleRetry} />;
     }
 

@@ -8,6 +8,7 @@ import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import { getAppVersion, isVersionOlder } from '@/lib/version';
+import { releaseSplash } from '@/lib/splash-hold';
 
 type GateStatus = 'checking' | 'allowed' | 'blocked';
 
@@ -100,6 +101,9 @@ export default function NativeUpdateGate({ children }: { children: ReactNode }) 
     }, [skip, checkVersion]);
 
     if (status === 'blocked') {
+        // The update screen replaces the app, so no route will ever release
+        // the held splash (lib/splash-hold.ts). Release it here instead.
+        releaseSplash('force-update');
         return <ForceUpdateScreen storeUrl={storeUrl} />;
     }
 

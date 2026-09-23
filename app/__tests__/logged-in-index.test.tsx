@@ -48,6 +48,8 @@ jest.mock('expo-router', () => ({
 
 jest.mock('@/components/custom/ErrorBoundary', () => ({ __esModule: true, default: ({ children }: any) => children }));
 jest.mock('@/components/custom/ErrorFallback', () => ({ FullScreenErrorFallback: () => null }));
+const mockReleaseSplash = jest.fn();
+jest.mock('@/lib/splash-hold', () => ({ releaseSplash: (r: string) => mockReleaseSplash(r) }));
 // Reanimated import trap: the real backdrop breaks this suite at import.
 jest.mock('@/components/custom/AbstractGradientBackdrop', () => {
     const { View } = require('react-native');
@@ -557,11 +559,12 @@ describe('F1: startup gate paint', () => {
         expect(r.getByTestId('startup-backdrop')).toBeTruthy();
     });
 
-    it('keeps the backdrop OFF the fail-closed screen', async () => {
+    it('keeps the backdrop OFF the fail-closed screen, and releases the splash for it', async () => {
         mockResolveIdentity.mockReturnValue('wipeAndProceed');
         mockClearPreviousUserData.mockRejectedValue(new Error('db locked'));
         const r = render(<LoggedInIndex />);
         await waitFor(() => r.getByTestId('identity-switch-failed'));
         expect(r.queryByTestId('startup-backdrop')).toBeNull();
+        expect(mockReleaseSplash).toHaveBeenCalledWith('identity-switch-failed');
     });
 });

@@ -47,6 +47,7 @@ import { Directory, Paths } from 'expo-file-system';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
 import { setCurrentPathname } from '@/lib/nav-state';
+import { holdSplash, SplashReleaser } from '@/lib/splash-hold';
 import { getNavigationTheme } from '@/lib/navigation/navigation-theme';
 import { initNetworkListener } from '@/lib/stores/network-store';
 import {
@@ -410,6 +411,9 @@ function AppRoot() {
                 renders nothing in the common case; insets are read inside the
                 component so this layout gains no new subscription. */}
             <OfflineBannerSlot />
+            {/* F1: releases the held splash on the first route past the
+                startup gates (lib/splash-hold.ts). Renders nothing. */}
+            <SplashReleaser />
             </View>
           </ThemeProvider>
         </ApolloProvider>
@@ -417,6 +421,12 @@ function AppRoot() {
     </ErrorBoundary>
   );
 }
+
+// F1: keep the native splash over the version check and the startup gates
+// until the first real screen commits (capped, so it can never hang). Module
+// scope on purpose: the public preventAutoHideAsync must run before
+// expo-router's own first-render auto-hide.
+holdSplash();
 
 // Root layout: providers + the mandatory-update gate ONLY. Deliberately holds no
 // store subscriptions or boot logic of its own, so background activity can never
