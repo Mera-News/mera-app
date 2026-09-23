@@ -2607,7 +2607,6 @@
       "countriesLabel": "Landen waaruit je leest",
       "latencyLabel": "Gemiddelde tijd tussen publicatie en lezen",
       "latencyCoverage": "Gebaseerd op {{sampled}} van {{total}} artikelen met een bekende publicatietijd",
-      "latencyUnknown": "Nog te weinig bekende publicatietijden om dit te berekenen",
       "openedLabel": "Geopende artikelen",
       "openedPartial": "Gedeeltelijke telling. Mera telt alleen tikken op je suggestiekaarten.",
       "topPublicationsTitle": "Meestgelezen bronnen",
@@ -2616,7 +2615,6 @@
       "latencyValue_other": "{{count}} uur",
       "reachTitle": "Waar mijn nieuws vandaan kwam",
       "keepTitle": "Wat ik heb bewaard",
-      "paceTitle": "Hoe het nieuws mij bereikte",
       "windowNow": "Nu",
       "savedLabel": "Artikelen die je opsloeg",
       "followedLabel": "Verhalen die je volgt",
@@ -2627,12 +2625,9 @@
       "paceScaleTitle": "Van publicatie tot lezen",
       "hoursShort": "{{n}} u",
       "languagesLabel": "Talen waarin je las",
-      "topLanguagesTitle": "Meest gelezen in",
-      "rhythmTitle": "De dagen dat ik las",
       "daysReadLabel": "Dagen dat je iets las",
       "heatLegendLess": "minder",
       "heatLegendMore": "meer",
-      "heatNote": "De kleur laat zien hoeveel artikelen je die dag las.",
       "rhythmWeekdays": "M,D,W,D,V,Z,Z",
       "habitsTitle": "Hoe ik lees"
     }

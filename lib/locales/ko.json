@@ -2607,7 +2607,6 @@
       "countriesLabel": "읽은 나라",
       "latencyLabel": "게시부터 읽기까지 걸린 평균 시간",
       "latencyCoverage": "게시 시각을 아는 {{total}}건 중 {{sampled}}건 기준",
-      "latencyUnknown": "아직 게시 시각을 아는 기사가 충분하지 않아요",
       "openedLabel": "열어 본 기사",
       "openedPartial": "일부만 센 값입니다. Mera는 추천 카드를 누른 횟수만 셉니다.",
       "topPublicationsTitle": "자주 읽는 매체",
@@ -2615,7 +2614,6 @@
       "latencyValue_other": "{{count}}시간",
       "reachTitle": "내 뉴스가 온 곳",
       "keepTitle": "내가 간직한 것",
-      "paceTitle": "뉴스가 나에게 닿기까지",
       "windowNow": "지금",
       "savedLabel": "저장한 기사",
       "followedLabel": "팔로우 중인 스토리",
@@ -2626,12 +2624,9 @@
       "paceScaleTitle": "발행부터 읽기까지",
       "hoursShort": "{{n}}시간",
       "languagesLabel": "읽은 언어",
-      "topLanguagesTitle": "주로 읽은 언어",
-      "rhythmTitle": "내가 읽은 날",
       "daysReadLabel": "무언가를 읽은 날",
       "heatLegendLess": "적음",
       "heatLegendMore": "많음",
-      "heatNote": "색의 진하기는 그날 읽은 기사 수예요.",
       "rhythmWeekdays": "월,화,수,목,금,토,일",
       "habitsTitle": "나의 읽는 방식"
     }

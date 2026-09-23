@@ -2607,7 +2607,6 @@
       "countriesLabel": "Paesi da cui hai letto",
       "latencyLabel": "Tempo medio tra pubblicazione e lettura",
       "latencyCoverage": "Calcolato su {{sampled}} articoli su {{total}} con orario di pubblicazione noto",
-      "latencyUnknown": "Non ci sono ancora abbastanza orari di pubblicazione noti per calcolarlo",
       "openedLabel": "Articoli aperti",
       "openedPartial": "Conteggio parziale. Mera conta solo i tocchi sulle tue schede di suggerimento.",
       "topPublicationsTitle": "Testate principali",
@@ -2616,7 +2615,6 @@
       "latencyValue_other": "{{count}} ore",
       "reachTitle": "Da dove sono arrivate le mie notizie",
       "keepTitle": "Quello che ho tenuto",
-      "paceTitle": "Come mi sono arrivate le notizie",
       "windowNow": "Adesso",
       "savedLabel": "Articoli che hai salvato",
       "followedLabel": "Storie che segui",
@@ -2627,12 +2625,9 @@
       "paceScaleTitle": "Dalla pubblicazione alla lettura",
       "hoursShort": "{{n}} h",
       "languagesLabel": "Lingue in cui hai letto",
-      "topLanguagesTitle": "Letto soprattutto in",
-      "rhythmTitle": "I giorni in cui ho letto",
       "daysReadLabel": "Giorni in cui hai letto qualcosa",
       "heatLegendLess": "meno",
       "heatLegendMore": "più",
-      "heatNote": "La tonalità indica quanti articoli hai letto quel giorno.",
       "rhythmWeekdays": "L,M,M,G,V,S,D",
       "habitsTitle": "Come leggo"
     }

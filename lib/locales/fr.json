@@ -2614,7 +2614,6 @@
       "countriesLabel": "Pays dont vous avez lu la presse",
       "latencyLabel": "Temps moyen entre la publication et la lecture",
       "latencyCoverage": "Calculé sur {{sampled}} des {{total}} articles dont l'heure de publication est connue",
-      "latencyUnknown": "Pas encore assez d'heures de publication connues pour le calculer",
       "openedLabel": "Articles ouverts",
       "openedPartial": "Décompte partiel. Mera ne compte que les appuis sur vos cartes de suggestions.",
       "topPublicationsTitle": "Principales sources",
@@ -2623,7 +2622,6 @@
       "latencyValue_other": "{{count}} heures",
       "reachTitle": "D'où venaient mes actualités",
       "keepTitle": "Ce que j'ai gardé",
-      "paceTitle": "Comment les actualités me sont parvenues",
       "windowNow": "En ce moment",
       "savedLabel": "Articles que vous avez enregistrés",
       "followedLabel": "Actualités que vous suivez",
@@ -2634,12 +2632,9 @@
       "paceScaleTitle": "De la publication à la lecture",
       "hoursShort": "{{n}} h",
       "languagesLabel": "Langues que vous avez lues",
-      "topLanguagesTitle": "Surtout lu en",
-      "rhythmTitle": "Les jours où j'ai lu",
       "daysReadLabel": "Jours où vous avez lu quelque chose",
       "heatLegendLess": "moins",
       "heatLegendMore": "plus",
-      "heatNote": "La teinte indique combien d'articles vous avez lus ce jour-là.",
       "rhythmWeekdays": "L,M,M,J,V,S,D",
       "habitsTitle": "Comment je lis"
     }

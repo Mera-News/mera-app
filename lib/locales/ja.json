@@ -2607,7 +2607,6 @@
       "countriesLabel": "読んだ国",
       "latencyLabel": "公開から読むまでの平均時間",
       "latencyCoverage": "公開時刻がわかっている {{total}} 件中 {{sampled}} 件に基づく",
-      "latencyUnknown": "公開時刻がわかっている記事がまだ足りません",
       "openedLabel": "開いた記事",
       "openedPartial": "部分的な数です。Mera はおすすめカードのタップだけを数えます。",
       "topPublicationsTitle": "よく読む媒体",
@@ -2615,7 +2614,6 @@
       "latencyValue_other": "{{count}} 時間",
       "reachTitle": "どこからニュースが届いたか",
       "keepTitle": "とっておいたもの",
-      "paceTitle": "ニュースが届くまで",
       "windowNow": "現在",
       "savedLabel": "保存した記事",
       "followedLabel": "フォロー中のストーリー",
@@ -2626,12 +2624,9 @@
       "paceScaleTitle": "公開から読むまで",
       "hoursShort": "{{n}} 時間",
       "languagesLabel": "読んだ言語",
-      "topLanguagesTitle": "よく読んだ言語",
-      "rhythmTitle": "読んだ日",
       "daysReadLabel": "何かを読んだ日数",
       "heatLegendLess": "少ない",
       "heatLegendMore": "多い",
-      "heatNote": "濃さはその日に読んだ記事の数です。",
       "rhythmWeekdays": "月,火,水,木,金,土,日",
       "habitsTitle": "わたしの読み方"
     }

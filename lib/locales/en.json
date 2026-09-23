@@ -2607,7 +2607,6 @@
       "countriesLabel": "Countries you read from",
       "latencyLabel": "Average time from publish to read",
       "latencyCoverage": "Based on {{sampled}} of {{total}} articles with a known publish time",
-      "latencyUnknown": "Not enough known publish times to work this out yet",
       "openedLabel": "Articles opened",
       "openedPartial": "Partial count. Mera only counts taps on your suggestion cards.",
       "topPublicationsTitle": "Top publications",
@@ -2616,7 +2615,6 @@
       "latencyValue_other": "{{count}} hours",
       "reachTitle": "Where my news came from",
       "keepTitle": "What I held onto",
-      "paceTitle": "How the news reached me",
       "windowNow": "Right now",
       "savedLabel": "Articles you saved",
       "followedLabel": "Stories you're following",
@@ -2627,12 +2625,9 @@
       "paceScaleTitle": "From published to read",
       "hoursShort": "{{n}}h",
       "languagesLabel": "Languages you read in",
-      "topLanguagesTitle": "Mostly read in",
-      "rhythmTitle": "The days I read",
       "daysReadLabel": "Days you read something",
       "heatLegendLess": "less",
       "heatLegendMore": "more",
-      "heatNote": "Shading is how many articles you read that day.",
       "rhythmWeekdays": "M,T,W,T,F,S,S",
       "habitsTitle": "How I read"
     }

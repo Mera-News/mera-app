@@ -2607,7 +2607,6 @@
       "countriesLabel": "Negara asal bacaan Anda",
       "latencyLabel": "Rata-rata waktu dari terbit sampai dibaca",
       "latencyCoverage": "Berdasarkan {{sampled}} dari {{total}} artikel yang waktu terbitnya diketahui",
-      "latencyUnknown": "Belum cukup waktu terbit yang diketahui untuk menghitung ini",
       "openedLabel": "Artikel yang dibuka",
       "openedPartial": "Hitungan sebagian. Mera hanya menghitung ketukan pada kartu saran Anda.",
       "topPublicationsTitle": "Penerbit teratas",
@@ -2615,7 +2614,6 @@
       "latencyValue_other": "{{count}} jam",
       "reachTitle": "Dari mana berita saya datang",
       "keepTitle": "Yang saya simpan",
-      "paceTitle": "Bagaimana berita sampai ke saya",
       "windowNow": "Saat ini",
       "savedLabel": "Artikel yang Anda simpan",
       "followedLabel": "Cerita yang Anda ikuti",
@@ -2626,12 +2624,9 @@
       "paceScaleTitle": "Dari terbit sampai dibaca",
       "hoursShort": "{{n}} jam",
       "languagesLabel": "Bahasa yang Anda baca",
-      "topLanguagesTitle": "Paling banyak dibaca dalam",
-      "rhythmTitle": "Hari-hari saya membaca",
       "daysReadLabel": "Hari Anda membaca sesuatu",
       "heatLegendLess": "sedikit",
       "heatLegendMore": "banyak",
-      "heatNote": "Warna menunjukkan berapa artikel yang Anda baca hari itu.",
       "rhythmWeekdays": "S,S,R,K,J,S,M",
       "habitsTitle": "Cara saya membaca"
     }

@@ -2645,7 +2645,6 @@
       "countriesLabel": "Страны, откуда вы читали",
       "latencyLabel": "Среднее время от публикации до прочтения",
       "latencyCoverage": "По {{sampled}} из {{total}} статей с известным временем публикации",
-      "latencyUnknown": "Пока слишком мало известных времён публикации, чтобы это посчитать",
       "openedLabel": "Открытые статьи",
       "openedPartial": "Неполный подсчёт. Mera считает только нажатия на карточки предложений.",
       "topPublicationsTitle": "Основные издания",
@@ -2656,7 +2655,6 @@
       "latencyValue_other": "{{count}} часа",
       "reachTitle": "Откуда приходили мои новости",
       "keepTitle": "Что я сохранил",
-      "paceTitle": "Как новости доходили до меня",
       "windowNow": "Сейчас",
       "savedLabel": "Статьи, которые вы сохранили",
       "followedLabel": "Истории, за которыми вы следите",
@@ -2667,12 +2665,9 @@
       "paceScaleTitle": "От публикации до прочтения",
       "hoursShort": "{{n}} ч",
       "languagesLabel": "Языки, на которых вы читали",
-      "topLanguagesTitle": "Чаще всего читали на",
-      "rhythmTitle": "Дни, когда я читал",
       "daysReadLabel": "Дни, когда вы что-то прочитали",
       "heatLegendLess": "меньше",
       "heatLegendMore": "больше",
-      "heatNote": "Насыщенность показывает, сколько статей вы прочитали в тот день.",
       "rhythmWeekdays": "П,В,С,Ч,П,С,В",
       "habitsTitle": "Как я читаю"
     }

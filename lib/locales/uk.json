@@ -2649,7 +2649,6 @@
       "countriesLabel": "Країни, звідки ви читали",
       "latencyLabel": "Середній час від публікації до прочитання",
       "latencyCoverage": "За {{sampled}} із {{total}} статей із відомим часом публікації",
-      "latencyUnknown": "Поки замало відомих часів публікації, щоб це порахувати",
       "openedLabel": "Відкриті статті",
       "openedPartial": "Неповний підрахунок. Mera рахує лише натискання на картки пропозицій.",
       "topPublicationsTitle": "Основні видання",
@@ -2660,7 +2659,6 @@
       "latencyValue_other": "{{count}} години",
       "reachTitle": "Звідки приходили мої новини",
       "keepTitle": "Що я зберіг",
-      "paceTitle": "Як новини доходили до мене",
       "windowNow": "Зараз",
       "savedLabel": "Статті, які ви зберегли",
       "followedLabel": "Історії, за якими ви стежите",
@@ -2671,12 +2669,9 @@
       "paceScaleTitle": "Від публікації до прочитання",
       "hoursShort": "{{n}} год",
       "languagesLabel": "Мови, якими ви читали",
-      "topLanguagesTitle": "Найчастіше читали",
-      "rhythmTitle": "Дні, коли я читав",
       "daysReadLabel": "Дні, коли ви щось прочитали",
       "heatLegendLess": "менше",
       "heatLegendMore": "більше",
-      "heatNote": "Насиченість показує, скільки статей ви прочитали того дня.",
       "rhythmWeekdays": "П,В,С,Ч,П,С,Н",
       "habitsTitle": "Як я читаю"
     }

@@ -2689,7 +2689,6 @@
       "countriesLabel": "البلدان التي قرأت منها",
       "latencyLabel": "متوسط الوقت بين النشر والقراءة",
       "latencyCoverage": "بناء على {{sampled}} من {{total}} مقالا لها وقت نشر معروف",
-      "latencyUnknown": "لا توجد أوقات نشر معروفة كافية لحساب هذا بعد",
       "openedLabel": "المقالات التي فُتحت",
       "openedPartial": "عدد جزئي. يحسب Mera النقرات على بطاقات الاقتراحات فقط.",
       "topPublicationsTitle": "أبرز المصادر",
@@ -2702,7 +2701,6 @@
       "latencyValue_other": "{{count}} ساعة",
       "reachTitle": "من أين جاءت أخباري",
       "keepTitle": "ما احتفظت به",
-      "paceTitle": "كيف وصلتني الأخبار",
       "windowNow": "الآن",
       "savedLabel": "المقالات التي حفظتها",
       "followedLabel": "القصص التي تتابعها",
@@ -2713,12 +2711,9 @@
       "paceScaleTitle": "من النشر إلى القراءة",
       "hoursShort": "{{n}} ساعة",
       "languagesLabel": "اللغات التي قرأت بها",
-      "topLanguagesTitle": "قرأت غالبا بـ",
-      "rhythmTitle": "الأيام التي قرأت فيها",
       "daysReadLabel": "أيام قرأت فيها شيئا",
       "heatLegendLess": "أقل",
       "heatLegendMore": "أكثر",
-      "heatNote": "درجة اللون تبين كم مقالا قرأت في ذلك اليوم.",
       "rhythmWeekdays": "ن,ث,ر,خ,ج,س,ح",
       "habitsTitle": "كيف أقرأ"
     }

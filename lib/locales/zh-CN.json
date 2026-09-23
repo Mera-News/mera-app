@@ -2608,7 +2608,6 @@
       "countriesLabel": "你阅读的国家",
       "latencyLabel": "从发布到阅读的平均时间",
       "latencyCoverage": "基于 {{total}} 篇中已知发布时间的 {{sampled}} 篇",
-      "latencyUnknown": "已知发布时间的文章还不够，暂时算不出来",
       "openedLabel": "打开过的文章",
       "openedPartial": "这是部分统计。Mera 只统计你在推荐卡片上的点按。",
       "topPublicationsTitle": "常读媒体",
@@ -2616,7 +2615,6 @@
       "latencyValue_other": "{{count}} 小时",
       "reachTitle": "我的新闻来自哪里",
       "keepTitle": "我留下的内容",
-      "paceTitle": "新闻多久传到我这里",
       "windowNow": "此刻",
       "savedLabel": "你保存的文章",
       "followedLabel": "你在关注的报道",
@@ -2627,12 +2625,9 @@
       "paceScaleTitle": "从发布到阅读",
       "hoursShort": "{{n}} 小时",
       "languagesLabel": "你阅读的语言",
-      "topLanguagesTitle": "主要阅读语言",
-      "rhythmTitle": "我阅读的日子",
       "daysReadLabel": "你读过内容的天数",
       "heatLegendLess": "少",
       "heatLegendMore": "多",
-      "heatNote": "颜色深浅表示你那天读了多少篇文章。",
       "rhythmWeekdays": "一,二,三,四,五,六,日",
       "habitsTitle": "我怎么读"
     }

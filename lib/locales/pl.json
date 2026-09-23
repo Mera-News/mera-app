@@ -2643,7 +2643,6 @@
       "countriesLabel": "Kraje, z których czytasz",
       "latencyLabel": "Średni czas od publikacji do przeczytania",
       "latencyCoverage": "Na podstawie {{sampled}} z {{total}} artykułów ze znaną godziną publikacji",
-      "latencyUnknown": "Za mało znanych godzin publikacji, aby to obliczyć",
       "openedLabel": "Otwarte artykuły",
       "openedPartial": "Liczba częściowa. Mera liczy tylko dotknięcia kart z propozycjami.",
       "topPublicationsTitle": "Najczęściej czytane źródła",
@@ -2654,7 +2653,6 @@
       "latencyValue_other": "{{count}} godziny",
       "reachTitle": "Skąd pochodziły moje wiadomości",
       "keepTitle": "Co zachowałem",
-      "paceTitle": "Jak wiadomości do mnie docierały",
       "windowNow": "Teraz",
       "savedLabel": "Zapisane artykuły",
       "followedLabel": "Historie, które śledzisz",
@@ -2665,12 +2663,9 @@
       "paceScaleTitle": "Od publikacji do przeczytania",
       "hoursShort": "{{n}} godz.",
       "languagesLabel": "Języki, w których czytasz",
-      "topLanguagesTitle": "Najczęściej czytane po",
-      "rhythmTitle": "Dni, w których czytałem",
       "daysReadLabel": "Dni, w których coś przeczytałeś",
       "heatLegendLess": "mniej",
       "heatLegendMore": "więcej",
-      "heatNote": "Odcień pokazuje, ile artykułów przeczytałeś tego dnia.",
       "rhythmWeekdays": "P,W,Ś,C,P,S,N",
       "habitsTitle": "Jak czytam"
     }

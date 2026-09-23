@@ -2609,7 +2609,6 @@
       "countriesLabel": "Haber okuduğun ülkeler",
       "latencyLabel": "Yayından okumaya geçen ortalama süre",
       "latencyCoverage": "Yayın saati bilinen {{total}} haberden {{sampled}} tanesine göre",
-      "latencyUnknown": "Bunu hesaplamak için bilinen yayın saati henüz yeterli değil",
       "openedLabel": "Açılan haberler",
       "openedPartial": "Kısmi sayım. Mera yalnızca öneri kartlarına dokunuşları sayar.",
       "topPublicationsTitle": "En çok okunan yayınlar",
@@ -2618,7 +2617,6 @@
       "latencyValue_other": "{{count}} saat",
       "reachTitle": "Haberlerim nereden geldi",
       "keepTitle": "Sakladıklarım",
-      "paceTitle": "Haberler bana nasıl ulaştı",
       "windowNow": "Şu anda",
       "savedLabel": "Kaydettiğin haberler",
       "followedLabel": "Takip ettiğin gelişmeler",
@@ -2629,12 +2627,9 @@
       "paceScaleTitle": "Yayından okumaya",
       "hoursShort": "{{n}} sa.",
       "languagesLabel": "Okuduğun diller",
-      "topLanguagesTitle": "En çok okuduğun dil",
-      "rhythmTitle": "Okuduğum günler",
       "daysReadLabel": "Bir şeyler okuduğun günler",
       "heatLegendLess": "az",
       "heatLegendMore": "çok",
-      "heatNote": "Koyuluk o gün kaç haber okuduğunu gösterir.",
       "rhythmWeekdays": "P,S,Ç,P,C,C,P",
       "habitsTitle": "Nasıl okuyorum"
     }

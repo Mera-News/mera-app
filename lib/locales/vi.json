@@ -2608,7 +2608,6 @@
       "countriesLabel": "Các quốc gia bạn đã đọc",
       "latencyLabel": "Thời gian trung bình từ khi đăng đến khi đọc",
       "latencyCoverage": "Dựa trên {{sampled}} trong {{total}} bài có thời gian đăng đã biết",
-      "latencyUnknown": "Chưa đủ thời gian đăng đã biết để tính con số này",
       "openedLabel": "Bài viết đã mở",
       "openedPartial": "Số đếm một phần. Mera chỉ đếm lượt chạm vào thẻ gợi ý của bạn.",
       "topPublicationsTitle": "Các báo đọc nhiều nhất",
@@ -2616,7 +2615,6 @@
       "latencyValue_other": "{{count}} giờ",
       "reachTitle": "Tin của tôi đến từ đâu",
       "keepTitle": "Những gì tôi giữ lại",
-      "paceTitle": "Tin đến với tôi thế nào",
       "windowNow": "Ngay bây giờ",
       "savedLabel": "Bài viết bạn đã lưu",
       "followedLabel": "Câu chuyện bạn đang theo dõi",
@@ -2627,12 +2625,9 @@
       "paceScaleTitle": "Từ lúc đăng đến lúc đọc",
       "hoursShort": "{{n}} giờ",
       "languagesLabel": "Ngôn ngữ bạn đã đọc",
-      "topLanguagesTitle": "Chủ yếu đọc bằng",
-      "rhythmTitle": "Những ngày tôi đọc",
       "daysReadLabel": "Số ngày bạn đã đọc gì đó",
       "heatLegendLess": "ít",
       "heatLegendMore": "nhiều",
-      "heatNote": "Độ đậm cho biết bạn đã đọc bao nhiêu bài hôm đó.",
       "rhythmWeekdays": "H,B,T,N,S,B,C",
       "habitsTitle": "Cách tôi đọc"
     }

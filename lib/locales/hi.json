@@ -2609,7 +2609,6 @@
       "countriesLabel": "जिन देशों से आपने पढ़ा",
       "latencyLabel": "प्रकाशन से पढ़ने तक का औसत समय",
       "latencyCoverage": "{{total}} में से {{sampled}} लेखों पर आधारित जिनका प्रकाशन समय ज्ञात है",
-      "latencyUnknown": "इसे निकालने के लिए अभी पर्याप्त ज्ञात प्रकाशन समय नहीं हैं",
       "openedLabel": "खोले गए लेख",
       "openedPartial": "आंशिक गिनती. Mera सिर्फ़ आपके सुझाव कार्ड पर टैप गिनता है.",
       "topPublicationsTitle": "प्रमुख प्रकाशन",
@@ -2618,7 +2617,6 @@
       "latencyValue_other": "{{count}} घंटे",
       "reachTitle": "मेरी ख़बरें कहाँ से आईं",
       "keepTitle": "मैंने क्या सहेजा",
-      "paceTitle": "ख़बरें मुझ तक कैसे पहुँचीं",
       "windowNow": "अभी",
       "savedLabel": "आपने जो लेख सहेजे",
       "followedLabel": "जिन स्टोरीज़ को आप फ़ॉलो करते हैं",
@@ -2629,12 +2627,9 @@
       "paceScaleTitle": "छपने से पढ़ने तक",
       "hoursShort": "{{n}} घं.",
       "languagesLabel": "जिन भाषाओं में आपने पढ़ा",
-      "topLanguagesTitle": "ज़्यादातर पढ़ा",
-      "rhythmTitle": "जिन दिनों मैंने पढ़ा",
       "daysReadLabel": "जिन दिनों आपने कुछ पढ़ा",
       "heatLegendLess": "कम",
       "heatLegendMore": "ज़्यादा",
-      "heatNote": "रंग बताता है कि उस दिन आपने कितने लेख पढ़े.",
       "rhythmWeekdays": "सो,मं,बु,गु,शु,श,र",
       "habitsTitle": "मैं कैसे पढ़ता हूँ"
     }

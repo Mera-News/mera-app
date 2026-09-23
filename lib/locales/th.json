@@ -2607,7 +2607,6 @@
       "countriesLabel": "ประเทศที่คุณอ่านข่าวจาก",
       "latencyLabel": "เวลาเฉลี่ยจากเผยแพร่ถึงอ่าน",
       "latencyCoverage": "คำนวณจาก {{sampled}} จาก {{total}} บทความที่ทราบเวลาเผยแพร่",
-      "latencyUnknown": "ยังมีเวลาเผยแพร่ที่ทราบไม่พอจะคำนวณ",
       "openedLabel": "บทความที่เปิดอ่าน",
       "openedPartial": "เป็นตัวเลขบางส่วน Mera นับเฉพาะการแตะการ์ดแนะนำของคุณ",
       "topPublicationsTitle": "สำนักข่าวที่อ่านบ่อย",
@@ -2615,7 +2614,6 @@
       "latencyValue_other": "{{count}} ชั่วโมง",
       "reachTitle": "ข่าวของฉันมาจากไหน",
       "keepTitle": "สิ่งที่ฉันเก็บไว้",
-      "paceTitle": "ข่าวมาถึงฉันอย่างไร",
       "windowNow": "ตอนนี้",
       "savedLabel": "บทความที่คุณบันทึกไว้",
       "followedLabel": "เรื่องราวที่คุณติดตาม",
@@ -2626,12 +2624,9 @@
       "paceScaleTitle": "จากตีพิมพ์ถึงอ่าน",
       "hoursShort": "{{n}} ชม.",
       "languagesLabel": "ภาษาที่คุณอ่าน",
-      "topLanguagesTitle": "ส่วนใหญ่อ่านเป็น",
-      "rhythmTitle": "วันที่ฉันอ่าน",
       "daysReadLabel": "วันที่คุณได้อ่านอะไรบางอย่าง",
       "heatLegendLess": "น้อย",
       "heatLegendMore": "มาก",
-      "heatNote": "ความเข้มบอกว่าคุณอ่านกี่บทความในวันนั้น",
       "rhythmWeekdays": "จ,อ,พ,พฤ,ศ,ส,อา",
       "habitsTitle": "ฉันอ่านอย่างไร"
     }
