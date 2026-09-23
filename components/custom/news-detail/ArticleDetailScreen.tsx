@@ -786,6 +786,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     // publication / category / event / place to
                                     // act on — the gap this wave closed.
                                     article={article}
+                                    publicationName={article.publicationSource?.publication_name ?? null}
                                     onBrowseRelated={scrollToRelated}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{

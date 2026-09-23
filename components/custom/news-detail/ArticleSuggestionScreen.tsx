@@ -688,6 +688,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     // than this screen could hand it — category,
                                     // event type, cluster size and place.
                                     onBrowseRelated={scrollToRelated}
+                                    publicationName={suggestion.publication_name ?? null}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'suggestion',

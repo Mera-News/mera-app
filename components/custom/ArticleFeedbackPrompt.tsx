@@ -6,6 +6,7 @@
 import { Box } from '@/components/ui/box';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
+import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 
 import {
@@ -67,6 +68,8 @@ interface ArticleFeedbackPromptProps {
         onStart: () => void;
         state: 'none' | 'pending' | 'done';
     };
+    /** The publisher's name, for the ••• menu's "Fewer from <source>". */
+    publicationName?: string | null;
 }
 
 /**
@@ -107,6 +110,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     share,
     onBrowseRelated,
     factCheck,
+    publicationName,
 }) => {
     const [verdict, setVerdict] = useState<Verdict | null>(null);
     const [initialPath, setInitialPath] = useState<string[]>([]);
@@ -126,6 +130,29 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         dialog: trackDialog,
     } = useTrackButton(trackSubject, !!track);
     const handleShare = useShareArticle(share);
+
+    // D3: the shared ••• menu, detail flavour (no "Open on source": the
+    // screen's primary button already does that). Ask Mera, Follow and the
+    // fact-check tick move into it; a check already answered is not offered
+    // again, since asking twice cannot produce a different answer.
+    const menuSubject = React.useMemo<FeedbackSubject>(
+        () => ({ ...trackSubject, publicationName: publicationName ?? trackSubject.publicationName ?? null }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [articleId, suggestionId, title, publicationName, track?.stableClusterId],
+    );
+    const menu = useArticleMenu({
+        surface: 'detail',
+        subject: menuSubject,
+        articleUrl: share?.url,
+        languageCode: share?.sourceLanguage,
+        onCheckFacts:
+            factCheck && factCheck.state !== 'done'
+                ? () => {
+                      factCheck.onStart();
+                      return true;
+                  }
+                : undefined,
+    });
 
     // Restore the stored verdict + tree path across remounts (leaving/reopening).
     useEffect(() => {
@@ -288,8 +315,12 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     const provisional = !committed;
 
     return (
+        // No custom actions here, unlike the cards: this box is not a
+        // Pressable, so every button in the row (••• included) is its own
+        // VoiceOver element already.
         <Box className="relative">
             {trackDialog}
+            {menu.element}
             {/* Floating feedback surface — anchored just above the action row
                 (bottom: 100%), so it floats over the content above it. */}
             {surfaceVisible && verdict && surfaceSuggestion ? (
@@ -328,6 +359,7 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 onShare={share?.url ? handleSharePress : undefined}
                 onFactCheck={factCheck?.onStart}
                 factCheckState={factCheck?.state}
+                onOverflow={menu.open}
                 horizontalPadding={0}
             />
         </Box>

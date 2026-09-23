@@ -63,6 +63,17 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
   useFloatingChatStore: { getState: () => ({ expand: jest.fn() }) },
 }));
 jest.mock('@/lib/services/swipe-feedback', () => ({ openFeedbackChatWithPath: jest.fn() }));
+// The ••• menu is its own suite (cards/__tests__/use-article-menu.test.tsx);
+// here it is a stub, which also keeps the database out of this import graph.
+const mockUseArticleMenu = jest.fn((..._a: any[]) => ({
+  open: jest.fn(),
+  element: null,
+  accessibilityActions: [],
+  onAccessibilityAction: jest.fn(),
+}));
+jest.mock('@/components/custom/cards/use-article-menu', () => ({
+  useArticleMenu: (...a: any[]) => mockUseArticleMenu(...a),
+}));
 
 const mockRecordVerdictFeedback = jest.fn(async () => {});
 jest.mock('@/lib/database/services/article-feedback-service', () => ({
@@ -156,6 +167,30 @@ function persistedContext(): Record<string, unknown> {
 }
 
 beforeEach(() => jest.clearAllMocks());
+
+describe('detail ••• menu', () => {
+  const lastInput = () => mockUseArticleMenu.mock.calls[mockUseArticleMenu.mock.calls.length - 1][0] as any;
+
+  it('opens from the row and names the publisher for Fewer from', () => {
+    const { getByTestId } = render(
+      <ArticleFeedbackPrompt articleId="art-1" title="A story" publicationName="NOS" />,
+    );
+    expect(getByTestId('card-action-more')).toBeTruthy();
+    expect(lastInput().surface).toBe('detail');
+    expect(lastInput().subject.publicationName).toBe('NOS');
+  });
+
+  it('offers Check for fact checks until the check is answered', () => {
+    const onStart = jest.fn();
+    const { rerender } = render(
+      <ArticleFeedbackPrompt articleId="art-1" title="A story" factCheck={{ onStart, state: 'none' }} />,
+    );
+    expect(lastInput().onCheckFacts()).toBe(true);
+    expect(onStart).toHaveBeenCalledTimes(1);
+    rerender(<ArticleFeedbackPrompt articleId="art-1" title="A story" factCheck={{ onStart, state: 'done' }} />);
+    expect(lastInput().onCheckFacts).toBeUndefined();
+  });
+});
 
 describe('article-detail verdicts persist a real context', () => {
   it('sources the LOCAL suggestion row by articleId, including the category only the row has', async () => {
