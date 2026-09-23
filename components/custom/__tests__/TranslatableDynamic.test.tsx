@@ -11,6 +11,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 let mockAppLanguage = 'en';
+let mockPending = new Set<string>();
 
 // Controllable stand-in for the host node's `measureInWindow`. Plain `let`s, not
 // jest mocks: `jest.clearAllMocks()` in beforeEach would silently reset a
@@ -32,7 +33,7 @@ jest.mock('@/lib/stores/app-language-store', () => {
     const makeState = () => ({
         appLanguage: mockAppLanguage,
         cache: new Map<string, string>(),
-        pending: new Set<string>(),
+        pending: mockPending,
         addPending: jest.fn(),
         removePending: mockRemovePending,
         cacheTranslation: mockCacheTranslation,
@@ -379,5 +380,41 @@ describe('TranslatableDynamic late answer after a language switch', () => {
             'Breaking news headline',
             'Eilmeldung',
         );
+    });
+});
+
+// N9: a translation in flight is visible where it will land.
+describe('TranslatableDynamic translating state', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockMeasureCalls = 0;
+        mockMeasureImpl = () => {};
+        mockPending = new Set<string>();
+    });
+
+    it('dims the text and says it is translating while its request is in flight', () => {
+        mockAppLanguage = 'de';
+        mockPending = new Set(['Cabinet bows to tech lobby']);
+        const { getByTestId, getByText } = render(
+            <TranslatableDynamic text="Cabinet bows to tech lobby" />,
+        );
+        expect(getByTestId('translatable-pending')).toBeTruthy();
+        expect(getByText('feed.translatingCaption', { exact: false })).toBeTruthy();
+        const outer = getByText('Cabinet bows to tech lobby', { exact: false });
+        const flat = [outer.props.style].flat(Infinity).reduce((acc: any, st: any) => ({ ...acc, ...(st ?? {}) }), {});
+        expect(flat.opacity).toBe(0.6);
+    });
+
+    it('shows no caption when nothing is in flight', () => {
+        mockAppLanguage = 'de';
+        const { queryByTestId } = render(<TranslatableDynamic text="Cabinet bows to tech lobby" />);
+        expect(queryByTestId('translatable-pending')).toBeNull();
+    });
+
+    it('shows no caption for an English reader, who needs no translation', () => {
+        mockAppLanguage = 'en';
+        mockPending = new Set(['Cabinet bows to tech lobby']);
+        const { queryByTestId } = render(<TranslatableDynamic text="Cabinet bows to tech lobby" />);
+        expect(queryByTestId('translatable-pending')).toBeNull();
     });
 });
