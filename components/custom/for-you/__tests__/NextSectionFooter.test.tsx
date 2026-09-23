@@ -109,4 +109,10 @@ describe('FactFeedScreen hop', () => {
     expect(src).not.toMatch(/router\.setParams/);
     expect(src).toMatch(/<NextSectionFooter/);
   });
+
+  it('crossfades the replaced screen in, and only for a Next hop', () => {
+    const layout = fs.readFileSync(path.resolve(__dirname, '../../../../app/logged-in/_layout.tsx'), 'utf8');
+    const block = layout.slice(layout.indexOf('name="fact-feed"'), layout.indexOf('name="facts"'));
+    expect(block).toMatch(/via === 'next'\s*\?\s*'fade'\s*:\s*'slide_from_right'/);
+  });
 });
