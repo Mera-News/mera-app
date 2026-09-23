@@ -1,6 +1,8 @@
 import FactCheckCard from '@/components/custom/fact-checks/FactCheckCard';
 import { Box } from '@/components/ui/box';
-import { Heading } from '@/components/ui/heading';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
+import { HStack } from '@/components/ui/hstack';
+import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
@@ -21,6 +23,9 @@ import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const REFRESH_TINT = '#EDA77E';
+
+/** The stored statuses a check never leaves (fact-check-record-service). */
+const TERMINAL_STATUSES: ReadonlySet<string> = new Set(['complete', 'blocked']);
 
 interface FactChecksPanelProps {
     /** True while this is the selected Dashboard chip. Drives the re-read on
@@ -100,6 +105,13 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
         void reconcileAndRefresh();
     }, [active, reconcileAndRefresh]);
 
+    // Checks still in flight. Each pending row already says "Still searching"
+    // on its own card, but nothing at the top of the list said work was under
+    // way, so a reader who had just asked saw a static list.
+    const checkingCount = items.filter(
+        (i) => !TERMINAL_STATUSES.has(String(i.status ?? '').trim().toLowerCase()),
+    ).length;
+
     const handleDelete = useCallback((id: string) => {
         void hapticLight();
         void remove(id);
@@ -139,13 +151,22 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 renderItem={renderItem as any}
                 testID="fact-checks-list"
                 ListHeaderComponent={
-                    <VStack className="pb-2 mb-1" style={{ paddingTop: 8 }}>
-                        <Heading size="4xl" className="text-white">
-                            {t('factCheck.dashboard.listTitle')}
-                        </Heading>
-                        <Text size="sm" className="text-typography-400 mt-1">
-                            {t('factCheck.dashboard.listSubtitle')}
-                        </Text>
+                    // No second large title: the Dashboard header and the
+                    // selected pill already name this list (M3).
+                    <VStack className="pb-2 mb-1" style={{ paddingTop: 8 }} space="sm">
+                        {items.length > 0 ? (
+                            <Text size="sm" style={{ color: 'rgb(212, 212, 212)' }}>
+                                {t('factCheck.dashboard.listSubtitle')}
+                            </Text>
+                        ) : null}
+                        {checkingCount > 0 ? (
+                            <HStack className="items-center" space="sm" testID="fact-checks-checking-row">
+                                <Spinner size="small" color={REFRESH_TINT} />
+                                <Text size="sm" className="font-semibold" style={{ color: '#FFFFFF' }}>
+                                    {t('factCheck.dashboard.pending')}
+                                </Text>
+                            </HStack>
+                        ) : null}
                     </VStack>
                 }
                 // The manual path — a user who suspects the list is stale can
@@ -180,13 +201,11 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                     // Only once a read has completed — otherwise the empty state
                     // flashes for a frame on every open before the rows land.
                     hydrated ? (
-                        <Text
-                            size="sm"
-                            className="text-typography-400 text-center mt-10"
+                        <ForYouEmptyState
+                            icon="fact-check"
+                            body={t('factCheck.dashboard.empty')}
                             testID="fact-checks-empty"
-                        >
-                            {t('factCheck.dashboard.empty')}
-                        </Text>
+                        />
                     ) : null
                 }
             />

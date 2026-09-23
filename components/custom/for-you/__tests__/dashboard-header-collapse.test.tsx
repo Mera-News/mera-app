@@ -186,13 +186,17 @@ describe('Saved panel', () => {
         expect(list().props.onScroll).toBeUndefined();
     });
 
-    // The title used to be a SIBLING above the list. Left there it would sit
-    // pinned behind the absolute collapsing header — jammed under the status bar
-    // once the header hid, and eating the space the collapse reclaims. It now
-    // lives in ListHeaderComponent so it scrolls away with the rows. This panel
-    // had no test suite of its own, so without this the relocation is uncovered.
-    it('renders its title INSIDE the list so it scrolls with the content', () => {
+    // M3: embedded, the Dashboard header and the selected pill already name
+    // the list, and a second 34pt title under the 34pt "Dashboard" was the
+    // double heading. The standalone route keeps its title, INSIDE the list so
+    // it scrolls away with the rows.
+    it('draws no second title when embedded', () => {
         render(<SavedSuggestionsScreen embedded onBack={jest.fn()} scrollHandler={handler} headerHeight={HEADER_H} />);
+        expect(screen.queryByText('savedSuggestions.title')).toBeNull();
+    });
+
+    it('keeps its title standalone', () => {
+        render(<SavedSuggestionsScreen onBack={jest.fn()} />);
         expect(screen.getByText('savedSuggestions.title')).toBeTruthy();
     });
 });

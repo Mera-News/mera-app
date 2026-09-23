@@ -196,6 +196,10 @@ const MeraNewsScreen: React.FC = () => {
     const [savedVisited, setSavedVisited] = useState(false);
     const [historyVisited, setHistoryVisited] = useState(false);
     const [factChecksVisited, setFactChecksVisited] = useState(false);
+    // Rows on the Visited list, reported by the list after each load. The share
+    // FAB means nothing over an empty list (the share screen would show its own
+    // empty state), so it is hidden until there is something to share.
+    const [visitedCount, setVisitedCount] = useState(0);
     const selectSubTab = useCallback((tab: ForYouSubTab) => {
         setActiveSubTab(tab);
         if (tab === 'stories') setStoriesVisited(true);
@@ -605,7 +609,7 @@ const MeraNewsScreen: React.FC = () => {
                             entry label — but under its own testID, because a
                             shared id returns the FIRST match and would let an
                             assertion pass against the wrong instance. */}
-                        <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} />
+                        <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} onCountChange={setVisitedCount} />
                         {/* A FAB, floating over the list, NOT a row above it.
                             The row version wrapped itself in `paddingTop:
                             headerHeight` so it would clear the collapsing
@@ -620,7 +624,9 @@ const MeraNewsScreen: React.FC = () => {
                             and land in the same place. They never co-occur:
                             that one is mounted by FactFeedScreen, which is the
                             Fact checks sub-tab, not this one. */}
-                        <ShareStatsFab onPress={() => router.push('/logged-in/share-stats')} />
+                        {visitedCount > 0 && (
+                            <ShareStatsFab onPress={() => router.push('/logged-in/share-stats')} />
+                        )}
                     </View>
                 )}
 

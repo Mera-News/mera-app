@@ -34,8 +34,9 @@ const mockRefresh = jest.fn((..._args: unknown[]) => {
     return Promise.resolve();
 });
 const mockRemove = jest.fn((..._args: unknown[]) => Promise.resolve());
+let mockItems: Array<{ id: string; status: string }> = [];
 jest.mock('@/lib/stores/fact-checks-store', () => ({
-    useFactCheckItems: () => [],
+    useFactCheckItems: () => mockItems,
     useFactChecksHydrated: () => true,
     useFactChecksRefreshing: () => false,
     useFactChecksStore: (selector: (s: any) => unknown) =>
@@ -52,6 +53,15 @@ jest.mock('@/lib/haptics', () => ({
 
 jest.mock('@/lib/navigation/tab-bar', () => ({ TAB_BAR_HEIGHT: 0 }));
 
+jest.mock('@/components/custom/for-you/ForYouEmptyState', () => {
+    const { Text } = require('react-native');
+    return { __esModule: true, default: (p: any) => <Text testID={p.testID}>{p.body}</Text> };
+});
+jest.mock('@/components/ui/spinner', () => ({ Spinner: () => null }));
+jest.mock('@/components/ui/hstack', () => {
+    const { View } = require('react-native');
+    return { HStack: (p: any) => <View {...p} /> };
+});
 jest.mock('@/components/custom/fact-checks/FactCheckCard', () => ({
     __esModule: true,
     default: () => null,
@@ -65,16 +75,29 @@ jest.mock('react-native-safe-area-context', () => ({
 // rendering it — `refreshControl` is a plain React element at that point, so
 // its `onRefresh` handler is reachable off `.props` with no render needed.
 let capturedListProps: any = null;
-jest.mock('react-native-reanimated', () => ({
-    __esModule: true,
-    default: {
-        FlatList: (props: any) => {
-            capturedListProps = props;
-            return null;
+// It also RENDERS the header and the empty slot: an absence assertion over a
+// list mock that drops a slot passes whether the thing is there or not.
+jest.mock('react-native-reanimated', () => {
+    const ReactLib = require('react');
+    const { View } = jest.requireActual('react-native');
+    const resolve = (C: any) =>
+        ReactLib.isValidElement(C) ? C : typeof C === 'function' ? ReactLib.createElement(C) : null;
+    return {
+        __esModule: true,
+        default: {
+            FlatList: (props: any) => {
+                capturedListProps = props;
+                return ReactLib.createElement(
+                    View,
+                    null,
+                    resolve(props.ListHeaderComponent),
+                    props.data?.length ? null : resolve(props.ListEmptyComponent),
+                );
+            },
         },
-    },
-    useAnimatedScrollHandler: () => jest.fn(),
-}));
+        useAnimatedScrollHandler: () => jest.fn(),
+    };
+});
 
 jest.mock('@/components/ui/box', () => {
     const { View } = require('react-native');
@@ -154,5 +177,39 @@ describe('FactChecksPanel', () => {
         rerender(<FactChecksPanel active />);
         await flush();
         expect(mockReconcile).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe('FactChecksPanel: header and states', () => {
+    const { render: r } = require('@testing-library/react-native');
+    const Panel = require('../FactChecksPanel').default;
+    afterEach(() => {
+        mockItems = [];
+    });
+
+    it('draws no second large title under the Dashboard (M3)', () => {
+        mockItems = [{ id: 'a', status: 'complete' }];
+        const sc = r(<Panel active={false} />);
+        // Presence first, so the absence below cannot pass on an empty render.
+        expect(sc.getByText('factCheck.dashboard.listSubtitle')).toBeTruthy();
+        expect(sc.queryByText('factCheck.dashboard.listTitle')).toBeNull();
+    });
+
+    it('uses the shared empty state', () => {
+        mockItems = [];
+        const sc = r(<Panel active={false} />);
+        expect(sc.getByTestId('fact-checks-empty')).toBeTruthy();
+    });
+
+    it('shows a checking row while any check is still in flight', () => {
+        mockItems = [{ id: 'a', status: 'pending' }, { id: 'b', status: 'complete' }];
+        const sc = r(<Panel active={false} />);
+        expect(sc.getByTestId('fact-checks-checking-row')).toBeTruthy();
+    });
+
+    it('shows no checking row once every check has settled', () => {
+        mockItems = [{ id: 'a', status: 'COMPLETE' }, { id: 'b', status: 'blocked' }];
+        const sc = r(<Panel active={false} />);
+        expect(sc.queryByTestId('fact-checks-checking-row')).toBeNull();
     });
 });
