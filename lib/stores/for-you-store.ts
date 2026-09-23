@@ -6,6 +6,7 @@ import {
     loadFeedMetadata,
     clearSuggestions,
     pruneOrphanedSuggestions,
+    type FeedMetadata,
 } from '@/lib/database/services/article-suggestion-service';
 import type { SyncStatusMessage } from '@/lib/scheduler/feed-sync/feed-sync-types';
 import {
@@ -255,7 +256,19 @@ interface ForYouState {
     // Timestamp (epoch ms) of the last successful end-to-end processing run
     // (cloud reconcile finished OR on-device scoring pass finished).
     // Survives reload via FeedMetadata persistence.
+    //
+    // Stamped on EVERY finished run, including one that found nothing: this is
+    // what flips both feed surfaces off "Mera is preparing your feed", so a
+    // no-op run that did not stamp it would leave that card up forever. That is
+    // exactly why it cannot also drive "Updated just now" (see
+    // lastNewArticlesAt).
     lastProcessingRunFinishedAt: number | null;
+
+    // Epoch ms of the last sync that actually delivered new articles, or null.
+    // Drives the "Updated <time>" label, which must not reset on a poll that
+    // found nothing. Written only through markNewArticlesArrived() (the feed
+    // sync calls it when a run inserted rows). Persisted with FeedMetadata.
+    lastNewArticlesAt: number | null;
 
     // Actions
     setSuggestions: (data: ForYouSuggestion[]) => void;
@@ -265,6 +278,8 @@ interface ForYouState {
     setHasGeneratedTopics: (value: boolean) => void;
     setUnscoredCount: (count: number) => void;
     removeSuggestion: (serverId: string) => void;
+    /** Stamp lastNewArticlesAt (default now) and persist it. */
+    markNewArticlesArrived: (nowMs?: number) => void;
     startDeviceProcessing: (total: number) => void;
     updateDeviceProgress: (processed: number, total?: number) => void;
     finishDeviceProcessing: () => void;
@@ -317,8 +332,27 @@ const initialState = {
     hydrationCompleted: 0,
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
+    lastNewArticlesAt: null as number | null,
     feedNeedsRefresh: false,
 };
+
+/**
+ * The persisted FeedMetadata, read off the CURRENT state. Every writer calls
+ * this after its `set()` instead of building the object by hand: there were
+ * eight hand-built copies, and any field one of them forgot was erased from
+ * disk by that writer's next call. Adding a persisted field means adding it
+ * here and nowhere else.
+ */
+function metaFromState(state: ForYouState): FeedMetadata {
+    return {
+        articleCount: state.articleCount,
+        relevantArticleCount: state.relevantArticleCount,
+        hasGeneratedTopics: state.hasGeneratedTopics,
+        lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
+        lastNewArticlesAt: state.lastNewArticlesAt,
+        dailyLimitNoticeDay: state.dailyLimitNoticeDay,
+    };
+}
 
 export const useForYouStore = create<ForYouState>()((set, get) => ({
     ...initialState,
@@ -346,28 +380,14 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             articleCount: total,
             relevantArticleCount: relevant,
         });
-        const state = get();
-        persistFeedMetadata({
-            articleCount: total,
-            relevantArticleCount: relevant,
-            hasGeneratedTopics: state.hasGeneratedTopics,
-            lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-            dailyLimitNoticeDay: state.dailyLimitNoticeDay,
-        }).catch((err) => logger.captureException(err, {
+        persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {
             tags: { store: 'for-you-store', method: 'setCounts' },
         }));
     },
 
     setHasGeneratedTopics: (value) => {
         set({ hasGeneratedTopics: value });
-        const state = get();
-        persistFeedMetadata({
-            articleCount: state.articleCount,
-            relevantArticleCount: state.relevantArticleCount,
-            hasGeneratedTopics: value,
-            lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-            dailyLimitNoticeDay: state.dailyLimitNoticeDay,
-        }).catch((err) => logger.captureException(err, {
+        persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {
             tags: { store: 'for-you-store', method: 'setHasGeneratedTopics' },
         }));
     },
@@ -391,13 +411,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             relevantArticleCount: nextRelevantCount,
         });
 
-        persistFeedMetadata({
-            articleCount: state.articleCount,
-            relevantArticleCount: nextRelevantCount,
-            hasGeneratedTopics: state.hasGeneratedTopics,
-            lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-            dailyLimitNoticeDay: state.dailyLimitNoticeDay,
-        }).catch((err) => logger.captureException(err, {
+        persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {
             // Sentry MERA-APP-4W was titled "removeSuggestion", but
             // `removeSuggestion` itself is pure state math and can't throw —
             // the actual failure is always this trailing persistFeedMetadata
@@ -462,14 +476,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 
     setDailyLimitNoticeDay: (day) => {
         set({ dailyLimitNoticeDay: day });
-        const state = get();
-        persistFeedMetadata({
-            articleCount: state.articleCount,
-            relevantArticleCount: state.relevantArticleCount,
-            hasGeneratedTopics: state.hasGeneratedTopics,
-            lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-            dailyLimitNoticeDay: day,
-        }).catch((err) => logger.captureException(err, {
+        persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {
             tags: { store: 'for-you-store', method: 'setDailyLimitNoticeDay' },
         }));
     },
@@ -483,15 +490,15 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
     markProcessingRunFinished: () => {
         const ts = Date.now();
         set({ lastProcessingRunFinishedAt: ts });
-        const state = get();
-        persistFeedMetadata({
-            articleCount: state.articleCount,
-            relevantArticleCount: state.relevantArticleCount,
-            hasGeneratedTopics: state.hasGeneratedTopics,
-            lastProcessingRunFinishedAt: ts,
-            dailyLimitNoticeDay: state.dailyLimitNoticeDay,
-        }).catch((err) => logger.captureException(err, {
+        persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {
             tags: { store: 'for-you-store', method: 'markProcessingRunFinished' },
+        }));
+    },
+
+    markNewArticlesArrived: (nowMs = Date.now()) => {
+        set({ lastNewArticlesAt: nowMs });
+        persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {
+            tags: { store: 'for-you-store', method: 'markNewArticlesArrived' },
         }));
     },
 
@@ -510,13 +517,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
         set({ ...initialState, hasGeneratedTopics, dailyLimitNoticeDay });
         try {
             await clearSuggestions();
-            await persistFeedMetadata({
-                articleCount: 0,
-                relevantArticleCount: 0,
-                hasGeneratedTopics,
-                lastProcessingRunFinishedAt: null,
-                dailyLimitNoticeDay,
-            });
+            await persistFeedMetadata(metaFromState(get()));
         } catch (err) {
             logger.captureException(err, {
                 tags: { store: 'for-you-store', method: 'clearData' },
@@ -534,13 +535,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             const hasGeneratedTopics = get().hasGeneratedTopics;
             const dailyLimitNoticeDay = get().dailyLimitNoticeDay;
             set({ ...initialState, hasGeneratedTopics, dailyLimitNoticeDay });
-            await persistFeedMetadata({
-                articleCount: 0,
-                relevantArticleCount: 0,
-                hasGeneratedTopics,
-                lastProcessingRunFinishedAt: null,
-                dailyLimitNoticeDay,
-            }).catch((err) => logger.captureException(err, {
+            await persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {
                 tags: { store: 'for-you-store', method: 'pruneOrphanedData:fullClear' },
             }));
             return;
@@ -552,19 +547,12 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             const relevantCount = rows.filter(
                 (s) => s.status !== ArticleSuggestionStatus.Unscored && relevancePassesGate(s),
             ).length;
-            const state = get();
             set({
                 suggestions: rows,
                 articleCount: rows.length,
                 relevantArticleCount: relevantCount,
             });
-            await persistFeedMetadata({
-                articleCount: rows.length,
-                relevantArticleCount: relevantCount,
-                hasGeneratedTopics: state.hasGeneratedTopics,
-                lastProcessingRunFinishedAt: state.lastProcessingRunFinishedAt,
-                dailyLimitNoticeDay: state.dailyLimitNoticeDay,
-            }).catch((err) => logger.captureException(err, {
+            await persistFeedMetadata(metaFromState(get())).catch((err) => logger.captureException(err, {
                 tags: { store: 'for-you-store', method: 'pruneOrphanedData:reload' },
             }));
         }
@@ -614,6 +602,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                 relevantArticleCount: meta?.relevantArticleCount ?? impactfulCount,
                 hasGeneratedTopics: meta?.hasGeneratedTopics ?? true,
                 lastProcessingRunFinishedAt: meta?.lastProcessingRunFinishedAt ?? null,
+                lastNewArticlesAt: meta?.lastNewArticlesAt ?? null,
                 dailyLimitNoticeDay: meta?.dailyLimitNoticeDay ?? null,
                 asyncJobPhase: pipelineUi.phase,
                 asyncJobProcessedCount:

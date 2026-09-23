@@ -98,6 +98,11 @@ export const useForYouChunkStates = () =>
  *  null when no run has ever finished on this device. */
 export const useForYouLastProcessingRunFinishedAt = () =>
     useForYouStore((state) => state.lastProcessingRunFinishedAt);
+/** When a sync last delivered new articles: the source for "Updated <time>".
+ *  Not lastProcessingRunFinishedAt, which also moves on a run that found
+ *  nothing. */
+export const useForYouLastNewArticlesAt = () =>
+    useForYouStore((state) => state.lastNewArticlesAt);
 
 /** Hydration progress for syncFeed's id-by-id chunked fetch
  *  (article-suggestion records pulled from the server). Drives the

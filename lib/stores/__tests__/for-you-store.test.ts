@@ -110,6 +110,7 @@ const initialState = {
     hydrationCompleted: 0,
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
+    lastNewArticlesAt: null as number | null,
     feedNeedsRefresh: false,
 };
 
@@ -525,6 +526,46 @@ describe('useForYouStore', () => {
         useForYouStore.getState().markProcessingRunFinished();
         await new Promise((r) => setImmediate(r));
         expect(logger.captureException).toHaveBeenCalled();
+    });
+
+    // ── lastNewArticlesAt (F16) ──────────────────────────────────────────────
+    //
+    // "Updated just now" must move only when something arrived. It cannot ride
+    // on lastProcessingRunFinishedAt: that one MUST stamp on a no-op run or the
+    // feed shows "preparing" forever (FeedSyncMachine's no-work branch).
+
+    it('markNewArticlesArrived sets lastNewArticlesAt and persists it', async () => {
+        useForYouStore.getState().markNewArticlesArrived(1234);
+        expect(useForYouStore.getState().lastNewArticlesAt).toBe(1234);
+        await new Promise((r) => setImmediate(r));
+        expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
+            expect.objectContaining({ lastNewArticlesAt: 1234 }),
+        );
+    });
+
+    it('markProcessingRunFinished does not touch lastNewArticlesAt', () => {
+        useForYouStore.setState({ lastNewArticlesAt: 99 });
+        useForYouStore.getState().markProcessingRunFinished();
+        expect(useForYouStore.getState().lastNewArticlesAt).toBe(99);
+    });
+
+    // Eight writers each used to hand-build the persisted object, so a field
+    // any one of them forgot was erased from disk by that writer's next call.
+    it.each([
+        ['setCounts', () => useForYouStore.getState().setCounts(3, 1)],
+        ['setHasGeneratedTopics', () => useForYouStore.getState().setHasGeneratedTopics(false)],
+        ['setDailyLimitNoticeDay', () => useForYouStore.getState().setDailyLimitNoticeDay('2026-09-23')],
+        ['markProcessingRunFinished', () => useForYouStore.getState().markProcessingRunFinished()],
+        ['removeSuggestion', () => useForYouStore.getState().removeSuggestion('s-1')],
+    ])('%s keeps lastNewArticlesAt in the persisted metadata', async (_name, write) => {
+        useForYouStore.setState({
+            suggestions: [makeSuggestion({ _id: 's-1' })],
+            lastNewArticlesAt: 4321,
+        });
+        write();
+        await new Promise((r) => setImmediate(r));
+        const last = mockPersistFeedMetadata.mock.calls.at(-1)?.[0];
+        expect(last).toEqual(expect.objectContaining({ lastNewArticlesAt: 4321 }));
     });
 
     // ── setFeedNeedsRefresh ──────────────────────────────────────────────────
