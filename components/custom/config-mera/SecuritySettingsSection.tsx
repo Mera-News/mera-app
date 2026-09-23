@@ -219,7 +219,14 @@ const SecuritySettingsSection: React.FC = () => {
 
 const styles = StyleSheet.create({
     page: { flex: 1, backgroundColor: '#000000' },
-    cancel: { position: 'absolute', left: 20, paddingVertical: 8, paddingHorizontal: 4 },
+    cancel: {
+        position: 'absolute',
+        left: 20,
+        minWidth: 44,
+        minHeight: 44,
+        justifyContent: 'center',
+        paddingHorizontal: 4,
+    },
 });
 
 export default SecuritySettingsSection;

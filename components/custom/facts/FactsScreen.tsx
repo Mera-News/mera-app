@@ -130,8 +130,9 @@ await createTopics([{ factId: item.sourceFactId, text: item.text , weight: DEFAU
                             testID="facts-edit"
                             onPress={() => setEditing((e) => !e)}
                             accessibilityRole="button"
-                            hitSlop={12}
-                            className="px-2 py-1"
+                            hitSlop={8}
+                            style={{ minWidth: 44, minHeight: 44 }}
+                            className="px-2 items-center justify-center"
                         >
                             <Text className="text-primary-400 font-semibold" size="sm">
                                 {editing ? t('common.done') : t('profile.editFacts')}

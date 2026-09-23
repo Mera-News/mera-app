@@ -376,6 +376,8 @@ describe('ProfileScreen', () => {
         const { getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('profile-edit-facts')).toBeTruthy());
         expect(getByTestId('facts-list-mode').props.children).toBe('facts-list');
+        const editStyle = getByTestId('profile-edit-facts').props.style;
+        expect(editStyle.minHeight).toBeGreaterThanOrEqual(44);
         fireEvent.press(getByTestId('profile-edit-facts'));
         expect(getByTestId('facts-list-mode').props.children).toBe('facts-list:editing');
         fireEvent.press(getByTestId('profile-edit-facts'));

@@ -465,3 +465,11 @@ describe('M24 / F45: the count pill always says something true', () => {
         expect(r.queryByTestId('fact-count-none-f1')).toBeNull();
     });
 });
+
+it('the edit-mode delete control is at least 44pt', () => {
+    const r = render(<FactAccordion {...baseProps} isExpanded={false} editing fact={baseFact()} />);
+    const del = r.getByTestId('fact-delete-f1');
+    const style = Array.isArray(del.props.style) ? Object.assign({}, ...del.props.style) : del.props.style;
+    expect(style.minWidth).toBeGreaterThanOrEqual(44);
+    expect(style.minHeight).toBeGreaterThanOrEqual(44);
+});

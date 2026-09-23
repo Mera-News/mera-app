@@ -188,7 +188,11 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                         onPress={() => onDeletePress(fact)}
                         accessibilityRole="button"
                         accessibilityLabel={t('facts.deleteFactA11y', { fact: displayStatement })}
-                        className="w-11 h-11 -ml-2 mr-1 items-center justify-center"
+                        // 44pt measured, not nominal: the frame alone came out
+                        // 39pt on device, so the slop carries the rest.
+                        hitSlop={6}
+                        style={{ minWidth: 44, minHeight: 44 }}
+                        className="-ml-2 mr-1 items-center justify-center"
                     >
                         <MaterialIcons name="remove-circle" size={22} color="#ef4444" />
                     </Pressable>

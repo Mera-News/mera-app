@@ -222,8 +222,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                                 testID="profile-edit-facts"
                                 onPress={() => setEditingFacts((e) => !e)}
                                 accessibilityRole="button"
-                                hitSlop={12}
-                                className="px-2 py-1"
+                                hitSlop={8}
+                                style={{ minWidth: 44, minHeight: 44 }}
+                                className="px-2 items-center justify-center"
                             >
                                 <Text className="text-primary-400 font-semibold" size="sm">
                                     {editingFacts ? t('common.done') : t('profile.editFacts')}
