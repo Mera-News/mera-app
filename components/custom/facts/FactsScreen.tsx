@@ -58,6 +58,8 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
     const [refreshing, setRefreshing] = useState(false);
     const [screenFacts, setScreenFacts] = useState<Fact[] | null>(null);
     const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
+    // F46: delete lives behind Edit, as on the Profile tab.
+    const [editing, setEditing] = useState(false);
     const [declinedTopics, setDeclinedTopics] = useState<DeclinedTopicItem[]>([]);
 
     const factsListRef = useRef<FactsListHandle>(null);
@@ -122,6 +124,21 @@ await createTopics([{ factId: item.sourceFactId, text: item.text , weight: DEFAU
                 title={t('facts.screenTitle', { defaultValue: 'Your facts' })}
                 subtitle={t('facts.screenSubtitle', { defaultValue: 'What Mera knows about you' })}
                 onBack={onBack}
+                rightAction={
+                    isEmpty || isLoading ? undefined : (
+                        <Pressable
+                            testID="facts-edit"
+                            onPress={() => setEditing((e) => !e)}
+                            accessibilityRole="button"
+                            hitSlop={12}
+                            className="px-2 py-1"
+                        >
+                            <Text className="text-primary-400 font-semibold" size="sm">
+                                {editing ? t('common.done') : t('profile.editFacts')}
+                            </Text>
+                        </Pressable>
+                    )
+                }
             />
 
             <Box className="flex-1">
@@ -168,11 +185,11 @@ await createTopics([{ factId: item.sourceFactId, text: item.text , weight: DEFAU
                             accessibilityLabel={t('configPanel.privacyNoticeTitle')}
                             className="w-8 h-8 rounded-full items-center justify-center"
                         >
-                            <MaterialIcons name="help-outline" size={18} color="#60a5fa" />
+                            <MaterialIcons name="help-outline" size={18} color="rgb(231, 138, 83)" />
                         </Pressable>
                     </HStack>
 
-                    <FactsList ref={factsListRef} onFactsChange={setScreenFacts} />
+                    <FactsList ref={factsListRef} onFactsChange={setScreenFacts} editing={editing} />
                     <DeclinedTopicsSection items={declinedTopics} onAllowAgain={handleAllowAgain} />
                 </ScrollView>
             </Box>

@@ -1,7 +1,7 @@
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { authClient } from '@/lib/auth-client';
-import { getArticleCountByTopicTexts } from '@/lib/database/services/article-suggestion-service';
+import { getRenderableArticleCountByTopicTexts } from '@/lib/database/services/article-suggestion-service';
 import { deleteFact, getFacts, observeFacts } from '@/lib/database/services/fact-service';
 import { enqueueJob } from '@/lib/database/services/inference-job-service';
 import { deleteTopicWithDecline } from '@/lib/database/services/topic-decline-service';
@@ -15,15 +15,19 @@ import { useFloatingChatFactMutationVersion, useFloatingChatIsExpanded } from '@
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AddTopicModal from './AddTopicModal';
 import DeleteFactModal from './DeleteFactModal';
-import FactAccordion from './FactAccordion';
+import FactAccordion, { type ArticleCountState } from './FactAccordion';
 import GenerateMoreModal from './GenerateMoreModal';
 
 const GENERATE_MORE_TOPIC_COUNT = 10;
+
+/** "Counting" never stays up longer than this: a slow or failed read hides the
+ *  counts instead of showing a spinner-in-words forever, or a false 0. */
+export const COUNTS_TIME_LIMIT_MS = 8000;
 
 /** Imperative handle so a parent screen's own pull-to-refresh (RefreshControl)
  *  can force-reload the facts data this component owns internally. */
@@ -39,6 +43,8 @@ interface FactsListProps {
      *  doesn't need it since it already gates visibility via its own
      *  fact-count check. */
     readonly onFactsChange?: (facts: Fact[] | null) => void;
+    /** Edit mode: delete controls on, expansion off (F46). */
+    readonly editing?: boolean;
 }
 
 /**
@@ -51,7 +57,7 @@ interface FactsListProps {
  * mount it (optionally wiring `onFactsChange`/a ref for its own loading/empty
  * chrome and pull-to-refresh).
  */
-const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }, ref) => {
+const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, editing = false }, ref) => {
     // Identity is a LOCAL fact (lib/security/launch-route.ts). Every mutation
     // below writes to the on-device DB; the id is wanted only for the persona
     // refresh that follows. Read off the server session it went undefined
@@ -69,6 +75,7 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
 
     const [localFacts, setLocalFacts] = useState<Fact[]>([]);
     const [articleCountByTopic, setArticleCountByTopic] = useState<Map<string, number>>(new Map());
+    const [countState, setCountState] = useState<ArticleCountState>('counting');
     const [expandedFactIds, setExpandedFactIds] = useState<Set<string>>(new Set());
     const [factToDelete, setFactToDelete] = useState<Fact | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -87,21 +94,46 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }
     const onFactsChangeRef = useRef(onFactsChange);
     onFactsChangeRef.current = onFactsChange;
 
-    // Facts are live (observeFacts) — no reload call exists for them any more.
-    // Article counts are NOT live (no observable for
-    // getArticleCountByTopicTexts exists), so they stay a one-shot refetch:
-    // called on mount, on our own topic mutations below, on factMutationVersion
-    // bumping, and on the chat popover closing. Judgement call, stated rather
-    // than silently accepted: a count can go stale between one of those
-    // triggers and the next — e.g. a topic mutation on ANOTHER device, or a
-    // suggestion arriving mid-session with nothing here to bump the counter.
-    // Bumping on our own mutations (below) covers the common case; leaving the
-    // rest one-shot rather than building a second observable for a per-topic
-    // count map that nothing else in this file needs live.
+    // Facts are live (observeFacts). Article counts are not (no observable
+    // exists for them), so they are re-read: on mount, on focus (the Profile
+    // tab stays mounted, so a mount-only read went stale for good), when a
+    // feed-processing run finishes, on our own topic mutations, on
+    // factMutationVersion and when the chat closes.
+    //
+    // Only rows that can actually APPEAR count (Q13): status complete and at
+    // or above the render gate. The raw per-topic count included sub-gate and
+    // unfinished rows, which is how a fact read "40 articles" while For You
+    // had no section for it.
+    const countsLoadedRef = useRef(false);
     const reloadArticleCounts = useCallback(async () => {
-        const counts = await getArticleCountByTopicTexts();
-        setArticleCountByTopic(counts);
+        try {
+            const counts = await getRenderableArticleCountByTopicTexts();
+            countsLoadedRef.current = true;
+            setArticleCountByTopic(counts);
+            setCountState('ready');
+        } catch (error) {
+            logger.warn('[FactsList] article counts unavailable', { error: String(error) });
+            if (!countsLoadedRef.current) setCountState('unavailable');
+        }
     }, []);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (!countsLoadedRef.current) setCountState('unavailable');
+        }, COUNTS_TIME_LIMIT_MS);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            void reloadArticleCounts();
+        }, [reloadArticleCounts]),
+    );
+
+    const lastRunFinishedAt = useForYouStore((s) => s.lastProcessingRunFinishedAt);
+    useEffect(() => {
+        if (lastRunFinishedAt) void reloadArticleCounts();
+    }, [lastRunFinishedAt, reloadArticleCounts]);
 
     useEffect(() => {
         onFactsChangeRef.current?.(null);
@@ -381,6 +413,8 @@ await createTopics([{ factId: addTopicFact.id, text: trimmed , weight: DEFAULT_H
                     fact={fact}
                     isExpanded={expandedFactIds.has(fact.id)}
                     articleCountByTopic={articleCountByTopic}
+                    countState={countState}
+                    editing={editing}
                     isGeneratingMore={generatingMoreFactIds.has(fact.id)}
                     onToggle={toggleFact}
                     onDeletePress={handleDeletePress}

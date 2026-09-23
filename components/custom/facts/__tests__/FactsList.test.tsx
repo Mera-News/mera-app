@@ -16,8 +16,17 @@ jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (_k: string, o?: any) => o?.defaultValue ?? _k }),
 }));
 
+const mockFocusCallbacks: (() => void)[] = [];
 jest.mock('expo-router', () => ({
     router: { push: jest.fn() },
+    // Records the callback so a test can fire a "tab regained focus" later.
+    useFocusEffect: (cb: () => void) => {
+        const React2 = require('react');
+        React2.useEffect(() => {
+            mockFocusCallbacks.push(cb);
+            cb();
+        }, [cb]);
+    },
 }));
 
 jest.mock('@/components/ui/toast', () => ({
@@ -32,9 +41,10 @@ jest.mock('../FactAccordion', () => {
     const { View, Text, Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ fact, onDeletePress, onToggle, onDeleteTopic, onAddTopic, onGenerateMore }: any) => (
+        default: ({ fact, onDeletePress, onToggle, onDeleteTopic, onAddTopic, onGenerateMore, countState, editing, articleCountByTopic }: any) => (
             <View>
                 <Text>{fact.statement}</Text>
+                <Text testID={`count-state-${fact.id}`}>{`${countState}:${editing ? 'editing' : 'rest'}:${articleCountByTopic?.get?.('hiking') ?? 0}`}</Text>
                 <Pressable accessibilityLabel={`delete-${fact.id}`} onPress={() => onDeletePress(fact)} />
                 <Pressable accessibilityLabel={`toggle-${fact.id}`} onPress={() => onToggle(fact.id)} />
                 <Pressable
@@ -146,8 +156,9 @@ jest.mock('@/lib/database/services/topic-service', () => ({
     syncLlmTopicsForFact: (...a: unknown[]) => mockSyncLlmTopicsForFact(...a),
 }));
 
+const mockRenderableCounts = jest.fn((): Promise<Map<string, number>> => Promise.resolve(new Map()));
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
-    getArticleCountByTopicTexts: () => Promise.resolve(new Map()),
+    getRenderableArticleCountByTopicTexts: () => mockRenderableCounts(),
 }));
 
 jest.mock('@/lib/database/services/inference-job-service', () => ({
@@ -172,9 +183,13 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
     useFloatingChatIsExpanded: () => false,
 }));
 
-jest.mock('@/lib/stores/for-you-store', () => ({
-    useForYouStore: { getState: () => ({ setFeedNeedsRefresh: jest.fn() }) },
-}));
+let mockLastRunFinishedAt: number | null = null;
+jest.mock('@/lib/stores/for-you-store', () => {
+    const useForYouStore = (sel: (s: unknown) => unknown) =>
+        sel({ lastProcessingRunFinishedAt: mockLastRunFinishedAt });
+    useForYouStore.getState = () => ({ setFeedNeedsRefresh: jest.fn() });
+    return { useForYouStore };
+});
 
 jest.mock('@/lib/stores/mera-protocol-store', () => ({
     useIsOnDeviceProcessing: () => false,
@@ -202,6 +217,9 @@ beforeEach(() => {
     mockFacts = [];
     mockFactSubscribers = [];
     mockGetFacts.mockResolvedValue([]);
+    mockFocusCallbacks.length = 0;
+    mockLastRunFinishedAt = null;
+    mockRenderableCounts.mockImplementation(() => Promise.resolve(new Map()));
 });
 
 describe('FactsList', () => {
@@ -338,5 +356,39 @@ describe('FactsList', () => {
         await waitFor(() =>
             expect(mockSyncLlmTopicsForFact).toHaveBeenCalledWith('f1', ['New topic']),
         );
+    });
+});
+
+describe('FactsList article counts (F45, Q13)', () => {
+    it('reads only renderable counts, and re-reads when the tab regains focus', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        mockRenderableCounts.mockImplementation(() => Promise.resolve(new Map([['hiking', 3]])));
+        const r = render(<FactsList />);
+        await waitFor(() => expect(r.getByTestId('count-state-f1').props.children).toBe('ready:rest:3'));
+        const before = mockRenderableCounts.mock.calls.length;
+        mockRenderableCounts.mockImplementation(() => Promise.resolve(new Map([['hiking', 7]])));
+        await act(async () => { mockFocusCallbacks[mockFocusCallbacks.length - 1](); });
+        expect(mockRenderableCounts.mock.calls.length).toBeGreaterThan(before);
+        await waitFor(() => expect(r.getByTestId('count-state-f1').props.children).toBe('ready:rest:7'));
+    });
+
+    it('says counting until the first read lands, then gives up after the time limit', async () => {
+        jest.useFakeTimers();
+        try {
+            mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+            mockRenderableCounts.mockImplementation(() => new Promise(() => {}));
+            const r = render(<FactsList />);
+            expect(r.getByTestId('count-state-f1').props.children).toBe('counting:rest:0');
+            act(() => { jest.advanceTimersByTime(8000); });
+            expect(r.getByTestId('count-state-f1').props.children).toBe('unavailable:rest:0');
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('passes edit mode through to every row', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        const r = render(<FactsList editing />);
+        await waitFor(() => expect(r.getByTestId('count-state-f1').props.children).toMatch(/:editing:/));
     });
 });

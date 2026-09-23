@@ -73,6 +73,16 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
     const { t, i18n } = useTranslation();
 
     const hasLimit = typeof limit === 'number' && limit > 0;
+    // Grouped in the app language: "10,000", not "10000" (M9). A malformed
+    // language tag throws in some Hermes builds, so the bare number is the
+    // fallback rather than a crash on the usage card.
+    const formatCount = (n: number): string => {
+        try {
+            return n.toLocaleString(i18n.language);
+        } catch {
+            return String(n);
+        }
+    };
     const pct = hasLimit ? Math.min(100, Math.round((used / (limit as number)) * 100)) : 0;
 
     const resetText = (() => {
@@ -102,9 +112,9 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                         moment a localized string lands in this slot.
                         `text-3xl` now carries a script-safe 45px line box. */}
                     <Text className="text-white font-bold text-3xl">
-                        {used}
+                        {formatCount(used)}
                         {hasLimit ? (
-                            <Text className="text-gray-400 font-semibold text-xl"> / {limit}</Text>
+                            <Text className="text-gray-400 font-semibold text-xl"> / {formatCount(limit as number)}</Text>
                         ) : null}
                     </Text>
                     <HStack className="items-center mt-0.5" space="xs">
