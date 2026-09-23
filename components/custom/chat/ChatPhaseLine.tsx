@@ -118,6 +118,10 @@ export const ChatPhaseLine: React.FC<ChatPhaseLineProps> = ({ testID = 'chat-pha
         accessibilityRole="text"
         accessibilityLabel={line}
         testID={testID}
+        // FIXED HEIGHT: two lines, always. Phrases of one and two lines
+        // alternate while a turn waits, and a row that followed its text
+        // moved the whole thread by a line on every swap (ux1 C2).
+        numberOfLines={2}
       >
         {line}
       </Text>
@@ -125,8 +129,10 @@ export const ChatPhaseLine: React.FC<ChatPhaseLineProps> = ({ testID = 'chat-pha
   );
 };
 
+const LINE_HEIGHT = 21;
+
 const styles = StyleSheet.create({
-  line: { color: 'rgb(190, 190, 190)', fontSize: 15, lineHeight: 21 },
+  line: { color: 'rgb(190, 190, 190)', fontSize: 15, lineHeight: LINE_HEIGHT, minHeight: LINE_HEIGHT * 2 },
 });
 
 export default ChatPhaseLine;

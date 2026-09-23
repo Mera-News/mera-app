@@ -460,3 +460,49 @@ describe('batch 3 captures', () => {
     expect(h.calls[0].stateLine).not.toContain('Your last turn asked');
   });
 });
+
+// Batch 4 device captures (ux1 C1, C4).
+describe('batch 4 captures', () => {
+  it('C1: two readings of the same new home are ONE card', async () => {
+    const h = harness([
+      res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({
+        toolCalls: [tc('saveExtractedFacts', {
+          extracted_user_information: [
+            { statement: 'Lives in Porto, Portugal, EU', questionnaire_attribute: CANONICAL_LOCATION_KEY, replaces: 'home' },
+            { statement: 'Lives in Porto, Porto, Portugal, EU', questionnaire_attribute: CANONICAL_LOCATION_KEY, replaces: 'home' },
+          ],
+        })],
+      }),
+      res({ content: 'Here it is.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(RESIDENT), userMessage: 'Porto, Portugal', deps: h.deps });
+    // The richer chain wins; a turn never offers two current homes.
+    expect(h.saves.flat().map((e) => e.statement)).toEqual(['Lives in Porto, Porto, Portugal, EU']);
+    expect(out.reProposals).toBe(1);
+  });
+
+  it('C1: a second home offered on a later leg is dropped', async () => {
+    const h = harness([
+      res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Porto, Portugal, EU', questionnaire_attribute: CANONICAL_LOCATION_KEY }] })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Porto, Porto, Portugal, EU', questionnaire_attribute: CANONICAL_LOCATION_KEY }] })] }),
+      res({ content: 'Here it is.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(RESIDENT), userMessage: 'Porto, Portugal', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual(['Lives in Porto, Portugal, EU']);
+  });
+
+  it('C4: a replaced leak beside a card does not ask for more', async () => {
+    const leak = "I'll extract the fact about their residence from your message.";
+    const h = harness([
+      res({ content: 'India.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Expat from India', questionnaire_attribute: ORIGIN_KEY }] })] }),
+      res({ content: leak }),
+      res({ content: leak }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(RESIDENT), userMessage: 'I am from India', deps: h.deps });
+    expect(out.replyLeakUnfixed).toBe(true);
+    expect(out.reply).toBe('');
+  });
+});

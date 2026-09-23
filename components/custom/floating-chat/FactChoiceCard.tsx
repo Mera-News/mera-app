@@ -59,6 +59,9 @@ function contradicts(a: string | null, b: string | null): boolean {
 // The red already used by the blocked banner in ChatThread. Paired with the
 // word "Replace" and the no-undo sentence: never colour alone.
 const DESTRUCTIVE = '#F87171';
+// The overlap label on a Keep both card: readable (~9:1 on the card) and
+// deliberately not the destructive tint.
+const NEUTRAL_LABEL = 'rgb(200, 200, 200)';
 
 function cardEntering() {
   'worklet';
@@ -364,7 +367,31 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           old fact and every topic it owns in one transaction with no inverse.
           The statement is its own node rather than an interpolation because it
           goes through TranslatableDynamic, which returns a component. */}
-      {isReplace && !stale && (
+      {/* KEEP BOTH: the old fact is not going anywhere unless Replace is
+          tapped, so it is shown as an overlap in neutral text, with one plain
+          line on what Replace would do. The red, no-undo block is only for a
+          card whose only accept IS the destroy (ux1 C4). */}
+      {canKeepBoth && !stale && replaces && (
+        <View style={styles.replaceBox} testID={`fact-choice-overlaps-${groupIndex}`}>
+          <View style={styles.replaceHeader}>
+            <MaterialIcons name="compare-arrows" size={16} color={NEUTRAL_LABEL} />
+            <Text size="xs" bold style={styles.overlapLabel}>
+              {t('factChoice.overlapsLabel')}
+            </Text>
+          </View>
+          <TranslatableDynamic
+            text={replaces.statement}
+            size="xs"
+            style={styles.replaceStatement}
+            numberOfLines={2}
+          />
+          <Text size="xs" style={styles.replaceDetail} numberOfLines={2}>
+            {t('factChoice.overlapsReplaceNote')}
+          </Text>
+        </View>
+      )}
+
+      {isReplace && !canKeepBoth && !stale && (
         <View style={styles.replaceBox} testID={`fact-choice-replaces-${groupIndex}`}>
           <View style={styles.replaceHeader}>
             <MaterialIcons name="warning-amber" size={16} color={DESTRUCTIVE} />
@@ -504,6 +531,7 @@ const styles = StyleSheet.create({
   },
   replaceHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   replaceLabel: { color: DESTRUCTIVE },
+  overlapLabel: { color: NEUTRAL_LABEL },
   replaceStatement: { color: 'rgb(210, 210, 210)', marginLeft: 22 },
   replaceDetail: { color: 'rgb(190, 190, 190)', marginLeft: 22 },
   replaceWarning: { color: DESTRUCTIVE, marginLeft: 22, marginTop: 2 },

@@ -264,6 +264,21 @@ function placeFromPayload(payload: unknown): Place | null {
   return typeof p.locality === 'string' && typeof p.countryCode === 'string' ? (p as Place) : null;
 }
 
+/** An entry that states where the USER lives: the home key, or a residence-
+ *  shaped statement with no key at all. */
+function isHomeEntry(entry: Record<string, unknown>): boolean {
+  const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : null;
+  if (attribute) return isLocationKey(attribute);
+  return /^lives in\b/i.test(String(entry.statement ?? '').trim());
+}
+
+/** Distinct place rungs in a statement ("Porto, Porto, Portugal" is two). */
+function placeRungs(statement: string): number {
+  return new Set(
+    statement.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean),
+  ).size;
+}
+
 /** Only a facts/* turn owes a proposal. A conversation/* turn legitimately
  *  answers in prose and proposes nothing. */
 function isFactSkill(skillId: string | null): boolean {
@@ -478,6 +493,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   ]);
   /** What THIS turn offered, carried to the next turn for the same reason. */
   const offeredThisTurn: string[] = [];
+  /** A home fact was already offered this turn (see the save handler). */
+  let homeOfferedThisTurn = false;
   let existingFacts: { factId: string; statement: string }[] = [];
   /** A retired combined origin-and-home fact still on file, if any. */
   const combinedFactOnFile = state.persona.facts.find((f) => isCombinedOriginFact(f.attribute)) ?? null;
@@ -824,7 +841,21 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // have to land HERE or they are cosmetic. Same failure shape as
         // `runAgentTurn` having no callers and `legCapped` being hardcoded.
         const sanitised: Record<string, unknown>[] = [];
+        // ONE CURRENT HOME PER TURN. The model offered "Lives in Porto,
+        // Portugal, EU" and "Lives in Porto, Porto, Portugal, EU" as two
+        // Replace cards on device (ux1 C1). Within a call the richest chain
+        // is kept; a home offered on a later leg is dropped.
+        const homes = list.filter((e) => isHomeEntry(e));
+        const bestHome = homes.length > 1
+          ? homes.reduce((a, b) => (placeRungs(String(b.statement)) > placeRungs(String(a.statement)) ? b : a))
+          : null;
         for (const entry of list) {
+          if (isHomeEntry(entry)) {
+            if (homeOfferedThisTurn || (bestHome !== null && entry !== bestHome)) {
+              reProposals++;
+              continue;
+            }
+          }
           const statement = typeof entry.statement === 'string' ? entry.statement.trim() : '';
           if (!statement) continue;
           // A RE-PROPOSAL. find_similar_facts showed the model this exact
@@ -891,6 +922,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
               replaces = null;
             }
           }
+          if (isHomeEntry(entry)) homeOfferedThisTurn = true;
           proposals.push({ statement, kind: routeKind, place, replaces });
           offeredThisTurn.push(statement.toLowerCase());
           // Carry the entry through with the loop's verdict on `replaces`
@@ -1057,7 +1089,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // claim is KEPT and counted: a slightly wrong word beside a visible card
       // beats a mangled sentence, and the residue stays measurable.
       if (gateKind === 'leak') {
-        reply = REPLY_LEAK_FALLBACK;
+        // A card on screen speaks for itself: the fallback's "anything else?"
+        // beside a choice still waiting asked for more at the wrong moment
+        // (ux1 C4).
+        reply = proposedSomething ? '' : REPLY_LEAK_FALLBACK;
         replyLeakUnfixed = true;
       } else {
         replyClaimUnfixed = true;
@@ -1256,7 +1291,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // re-ask failed. A save claim is left alone here for the same reason it is
   // left alone above.
   if (leaksInternals(cleanProse(reply))) {
-    reply = REPLY_LEAK_FALLBACK;
+    reply = proposedSomething ? '' : REPLY_LEAK_FALLBACK;
     replyLeakUnfixed = true;
   } else if (narratesProcess(cleanProse(reply))) {
     // Same placement rule as the leak check: every exit, not just the settle

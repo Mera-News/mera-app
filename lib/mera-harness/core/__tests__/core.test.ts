@@ -327,7 +327,9 @@ describe('the bounded loop', () => {
     });
 
     expect(out.replyLeakUnfixed).toBe(true);
-    expect(out.reply).toBe(REPLY_LEAK_FALLBACK);
+    // A card is on screen (this turn staged one), so the leak is dropped
+    // rather than replaced with a question (ux1 C4).
+    expect(out.reply).toBe('');
     expect(out.reply).not.toContain('their residence');
   });
 

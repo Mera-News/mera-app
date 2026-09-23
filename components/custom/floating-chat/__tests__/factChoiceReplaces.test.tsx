@@ -262,3 +262,25 @@ describe('the home-key guard on the card', () => {
     ]);
   });
 });
+
+// ux1 C4: a Keep both card showed the red "Replaces... You can't undo this"
+// block as if the destroy were the only outcome.
+describe('the disclosure matches the choice', () => {
+  const ORIGIN_KEY = 'background: country of origin';
+  it('a Keep both card shows a neutral Overlaps block, no red warning', async () => {
+    mockFacts = [{ id: 'old-1', statement: 'Expat from India living in Amsterdam', questionnaireAttribute: 'background: origin and current residence' }];
+    const { getByTestId, findByText, queryByText, queryByTestId } = render(
+      <FactChoiceCard {...props} options={['Expat from India']} questionnaireAttribute={ORIGIN_KEY} replacesFactId="old-1" />,
+    );
+    expect(await findByText('factChoice.overlapsLabel')).toBeTruthy();
+    expect(getByTestId('fact-choice-overlaps-0')).toBeTruthy();
+    expect(queryByText('factChoice.overlapsReplaceNote')).not.toBeNull();
+    expect(queryByText('factChoice.replacesNoUndo')).toBeNull();
+    expect(queryByTestId('fact-choice-replaces-0')).toBeNull();
+  });
+
+  it('a true Replace keeps the red block', async () => {
+    const { findByText } = drawReplace();
+    expect(await findByText('factChoice.replacesNoUndo')).toBeTruthy();
+  });
+});
