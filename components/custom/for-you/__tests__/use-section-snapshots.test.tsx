@@ -2,10 +2,11 @@
 // F20 (in-session half): a fact added in chat changed neither of the Dashboard's
 // old reload triggers, so its new topics were unknown to the section selector
 // until a restart.
-import { Subject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
-const mockFacts$ = new Subject<unknown[]>();
-const mockLocations$ = new Subject<unknown[]>();
+// BehaviorSubjects, like a WatermelonDB query: they emit on subscribe.
+const mockFacts$ = new BehaviorSubject<unknown[]>([]);
+const mockLocations$ = new BehaviorSubject<unknown[]>([]);
 let mockFocused = true;
 const mockLoad = jest.fn();
 
@@ -33,8 +34,12 @@ async function flush() {
 }
 
 describe('useSectionSnapshots', () => {
-  it('loads once on mount', async () => {
+  it('loads once on mount, not again for the streams\' emit-on-subscribe', async () => {
     renderHook(() => useSectionSnapshots('test'));
+    await flush();
+    act(() => {
+      jest.advanceTimersByTime(SNAPSHOT_RELOAD_DEBOUNCE_MS * 2);
+    });
     await flush();
     expect(mockLoad).toHaveBeenCalledTimes(1);
   });

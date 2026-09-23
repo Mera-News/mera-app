@@ -26,6 +26,7 @@ import logger from '@/lib/logger';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
 import { useIsFocused } from '@react-navigation/native';
 import { useEffect, useRef, useState } from 'react';
+import { skip } from 'rxjs/operators';
 
 export const SNAPSHOT_RELOAD_DEBOUNCE_MS = 300;
 
@@ -49,8 +50,11 @@ export function useSectionSnapshots(
     };
     const onError = (err: unknown) =>
       logger.captureException(err, { tags: { screen, method: 'observeSectionInputs' } });
-    const facts = observeFacts().subscribe({ next: bump, error: onError });
-    const locations = observeLocations().subscribe({ next: bump, error: onError });
+    // skip(1): a WatermelonDB query emits its CURRENT rows on subscribe, which
+    // is not a change. Without the skip every mount (every "Next" hop too)
+    // loaded the snapshots a second time 300ms after the first.
+    const facts = observeFacts().pipe(skip(1)).subscribe({ next: bump, error: onError });
+    const locations = observeLocations().pipe(skip(1)).subscribe({ next: bump, error: onError });
     return () => {
       facts.unsubscribe();
       locations.unsubscribe();

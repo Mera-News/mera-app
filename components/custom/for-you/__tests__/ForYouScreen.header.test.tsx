@@ -115,7 +115,10 @@ jest.mock('@/components/custom/for-you/FeedStatsSentence', () => mockStub('stats
 jest.mock('@/components/custom/saved-suggestions/SavedSuggestionsScreen', () => mockStub('saved'));
 jest.mock('@/components/custom/config-panel/VisitedPublicationsList', () => mockStub('visited'));
 jest.mock('@/components/custom/ShareStatsFab', () => mockStub('share-fab'));
-jest.mock('@/components/custom/StatusBarScrim', () => mockStub('scrim'));
+jest.mock('@/components/custom/StatusBarScrim', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View testID="scrim" coverProgress={p.coverProgress} /> };
+});
 jest.mock('@/lib/stores/fact-rows-selector', () => ({ buildFactRows: () => ({ breaking: [], rows: [] }) }));
 jest.mock('@/components/custom/for-you/use-section-snapshots', () => ({ useSectionSnapshots: () => null }));
 jest.mock('@/lib/user-context/user-geo-language-context', () => ({ useUserGeoLanguageContext: () => null }));
@@ -153,6 +156,7 @@ jest.mock('@/lib/hooks/use-collapsible-header', () => ({
     headerHeight: 200,
     reveal: jest.fn(),
     resetScrollOrigin: jest.fn(),
+    hidden: { value: 0, __hidden: true },
   }),
 }));
 jest.mock('@/lib/stores/opened-stories-store', () => {
@@ -220,6 +224,21 @@ describe('Dashboard header', () => {
     expect(rowHeight().height).toBeUndefined();
     expect(rowHeight().minHeight).toBe(21);
     expect(screen.getByTestId('dashboard-narration-line').props.numberOfLines).toBe(3);
+  });
+
+  it('lets the row wrap already at the next text size up, not only past 1.2', () => {
+    // The widest line fills 329 of 335pt at 14pt; at xLarge (~1.12) it would
+    // overflow a pinned one-line row.
+    mockFontScale = 1.12;
+    mockProcessing = true;
+    render(<ForYouScreen />);
+    expect(rowHeight().height).toBeUndefined();
+    expect(screen.getByTestId('dashboard-narration-line').props.numberOfLines).toBe(3);
+  });
+
+  it('hands the status-bar scrim the header\'s hidden value (F21)', () => {
+    render(<ForYouScreen />);
+    expect(screen.getByTestId('scrim').props.coverProgress).toEqual({ value: 0, __hidden: true });
   });
 
   it('says "Updated just now" in sentence case under a minute (F16)', () => {

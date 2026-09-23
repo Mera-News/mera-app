@@ -91,8 +91,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // the gesture: the strip was its only caller.
 
 
-/** Above this OS text scale the status row may wrap and the header grow. */
-const LARGE_TEXT_SCALE = 1.2;
+/** Above this OS text scale the status row may wrap and the header grow. 1.0,
+ *  not higher: the one-line budget is measured at 14pt, the widest line fills
+ *  329 of 335pt, and the narration scales with Dynamic Type, so the very next
+ *  size up (xLarge, ~1.12) would overflow a pinned one-line row. */
+const LARGE_TEXT_SCALE = 1.0;
 
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -103,7 +106,7 @@ const MeraNewsScreen: React.FC = () => {
     const { isLoading, errorMessage } = useFeedBootstrap();
     const handleSuggestionPress = useOpenSuggestion('sectioned');
     // Collapsing Dashboard header (hides on scroll-down, reveals on scroll-up).
-    const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal, resetScrollOrigin } =
+    const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal, resetScrollOrigin, hidden } =
         useCollapsibleHeader();
     // Live opened set — subscribed so the per-card read treatment updates as
     // stories are opened. (There is no green tick; `read` only suppresses the
@@ -648,7 +651,9 @@ const MeraNewsScreen: React.FC = () => {
                 sub-tab content, below the header (zIndex 10). Shared across
                 all three sub-tabs (Feed/Stories/Saved) since the header above
                 it is too. */}
-            <StatusBarScrim />
+            {/* The dark base under the clock follows the header's own hidden
+                value: there only while the header is out of the way (F21). */}
+            <StatusBarScrim coverProgress={hidden} />
 
             {/* Collapsing Dashboard header — absolute overlay, translates up on
                 scroll-down and back on scroll-up / reveal(). */}
