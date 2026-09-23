@@ -1,6 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
-import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import {
     useFeedSyncRefresh,
     useIsFeedProcessing,
@@ -25,10 +24,7 @@ import {
     GlassPlate,
 } from '@/components/custom/GlassSurface';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
-import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import DailyLimitCard from '@/components/custom/DailyLimitCard';
-import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
-import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
+import DashboardEmptyState from '@/components/custom/for-you/DashboardEmptyState';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
@@ -46,9 +42,7 @@ import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Pressable } from '@/components/ui/pressable';
-import { Spinner } from '@/components/ui/spinner';
 import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
 import { getFacts } from '@/lib/database/services/fact-service';
@@ -80,8 +74,6 @@ import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useIsConnected } from '@/lib/stores/network-store';
-import { Icon, AlertCircleIcon } from '@/components/ui/icon';
-import { Text } from '@/components/ui/text';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -223,7 +215,7 @@ const MeraNewsScreen: React.FC = () => {
     // Pull-to-refresh — the SAME handler the Feed tab uses. `refreshing` tracks
     // the scheduler's feed-sync flag (not local state), so it rises on the same
     // frame as the pull and stays up for the real duration of the sync. This is
-    // also what finally makes the "pull down to retry" copy in renderEmpty true;
+    // also what finally makes the "pull down to retry" copy in the empty state true;
     // the Dashboard list had no refresh control at all before.
     const { refreshing, onRefresh } = useFeedSyncRefresh(reveal);
 
@@ -459,65 +451,19 @@ const MeraNewsScreen: React.FC = () => {
         }
     }, [isConnected, scoringError, isDailyLimited, reveal]);
 
-    const renderEmpty = useCallback(() => {
-        if (showOnboardingWait) {
-            return <OnboardingWaitingCard />;
-        }
-        if (isLoading && !stuckOnEmpty) {
-            return (
-                <Box className="items-center justify-center py-20" testID="dashboard-loading">
-                    <Spinner size="large" />
-                </Box>
-            );
-        }
-        if (stuckOnEmpty) {
-            return (
-                <Box className="items-center justify-center py-20 px-6" testID="dashboard-stuck-empty">
-                    <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
-                    <Text size="md" className="text-error-400 text-center font-semibold mb-1">
-                        {t('feed.stuckTitle')}
-                    </Text>
-                    <Text size="sm" className="text-typography-400 text-center">
-                        {t('feed.stuckDescription')}
-                    </Text>
-                    <Text size="xs" className="text-typography-500 text-center mt-3">
-                        {t('feed.stuckHint')}
-                    </Text>
-                </Box>
-            );
-        }
-        if (errorMessage) {
-            return (
-                <Box className="items-center justify-center py-20 px-6" testID="dashboard-error">
-                    <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
-                    <Text size="md" className="text-error-400 text-center font-semibold mb-1">
-                        {t('errors.failedToLoad')}
-                    </Text>
-                    <Text size="sm" className="text-typography-400 text-center">
-                        {errorMessage}
-                    </Text>
-                    <Text size="xs" className="text-typography-500 text-center mt-3">
-                        {t('feed.pullDownToRetry')}
-                    </Text>
-                </Box>
-            );
-        }
-        if (!hasGeneratedInterests) {
-            return <NoGeneratedInterestsCard />;
-        }
-        // Capped, with nothing in flight. Must come BEFORE the processing
-        // branch: `useFeedStatusMode` ranks processing above limited, so a real
-        // run still reports 'processing' and still reaches the card below. This
-        // catches the case that used to fall through and claim the feed was
-        // being prepared while the header indicator said the limit was reached.
-        if (statusMode === 'limited') {
-            return <DailyLimitCard />;
-        }
-        if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
-            return <FeedProcessingCard />;
-        }
-        return <AllCaughtUpCard />;
-    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, statusMode, isFeedProcessing, lastProcessingRunFinishedAt]);
+    // An ELEMENT, not a component type: see DashboardEmptyState (S11).
+    const emptyState = (
+        <DashboardEmptyState
+            showOnboardingWait={showOnboardingWait}
+            isLoading={isLoading}
+            stuckOnEmpty={stuckOnEmpty}
+            errorMessage={errorMessage}
+            hasGeneratedInterests={hasGeneratedInterests}
+            statusMode={statusMode}
+            isFeedProcessing={isFeedProcessing}
+            lastProcessingRunFinishedAt={lastProcessingRunFinishedAt}
+        />
+    );
 
     // ── The three things that share the title row's first two slots ────────
     //
@@ -599,7 +545,7 @@ const MeraNewsScreen: React.FC = () => {
                         onPressSuggestion={handleSuggestionPress}
                         scrollHandler={scrollHandler}
                         headerHeight={headerHeight}
-                        ListEmptyComponent={renderEmpty}
+                        ListEmptyComponent={emptyState}
                         refreshing={refreshing}
                         onRefresh={onRefresh}
                     />
