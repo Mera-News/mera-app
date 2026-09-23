@@ -138,9 +138,14 @@ jest.mock('@/lib/hooks/use-open-article', () => ({ useOpenArticle: () => jest.fn
 jest.mock('@/components/custom/cards/ArticleStandaloneCompactCard', () => {
     const { Pressable, Text } = require('react-native');
     return {
-        ArticleStandaloneCompactCard: ({ article, onPress, onLongPress, testID }: any) => (
+        ArticleStandaloneCompactCard: ({ article, onPress, onLongPress, menuExtraItems, testID }: any) => (
             <Pressable testID={testID} onPress={onPress} onLongPress={onLongPress}>
                 <Text>{article.title}</Text>
+                {(menuExtraItems ?? []).map((i: any) => (
+                    <Pressable key={i.key} testID={`${testID}-${i.testID}`} onPress={i.run}>
+                        <Text>{i.label}</Text>
+                    </Pressable>
+                ))}
             </Pressable>
         ),
     };
@@ -222,6 +227,17 @@ describe('StoryTimelineScreen — removing one member', () => {
         expect(getByTestId('story-timeline-card-remove')).toBeTruthy();
         expect(queryByText('trackedStories.removeMemberConfirmTitle')).toBeTruthy();
         // Asking is not doing.
+        expect(mockRemoveMemberSnapshot).not.toHaveBeenCalled();
+    });
+
+    it('the ••• menu offers the same removal, through the same confirm', async () => {
+        const { getByTestId, queryByText } = await renderScreen();
+
+        await act(async () => {
+            fireEvent.press(getByTestId('story-timeline-card-a2-menu-remove-from-story'));
+        });
+
+        expect(queryByText('trackedStories.removeMemberConfirmTitle')).toBeTruthy();
         expect(mockRemoveMemberSnapshot).not.toHaveBeenCalled();
     });
 

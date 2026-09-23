@@ -343,21 +343,28 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const renderItem: ListRenderItem<TimelineCard> = useCallback(
         ({ item }) => {
             const article = cardToNewsArticle(item);
+            const askRemove = () => {
+                hapticLight();
+                setConfirmRemove(item);
+            };
             return (
                 <ArticleStandaloneCompactCard
                     testID={`story-timeline-card-${item.articleId}`}
                     article={article}
                     onPress={() => handleArticlePress(item.articleId, stableClusterId)}
-                    // Long-press to disown a card, matching the Followed-stories
-                    // list one screen up (and Explore's scope chips). The row
-                    // draws no affordance: a visible button on every card would
-                    // re-add the "…" the compact-card cleanup removed. RN
-                    // resolves a gesture as press OR long-press, never both, so
-                    // this cannot fight the tap-to-open.
-                    onLongPress={() => {
-                        hapticLight();
-                        setConfirmRemove(item);
-                    }}
+                    // Disowning a card: long-press (kept, matching the
+                    // Followed-stories list one screen up) and the ••• menu's
+                    // "Not part of this story", both through the same confirm.
+                    onLongPress={askRemove}
+                    menuExtraItems={[
+                        {
+                            key: 'remove-from-story',
+                            label: t('trackedStories.removeMemberAction'),
+                            icon: 'remove-circle-outline',
+                            testID: 'menu-remove-from-story',
+                            run: askRemove,
+                        },
+                    ]}
                     subjectExtras={{
                         surface: 'tracked',
                         stableClusterId: stableClusterId ?? undefined,
@@ -365,7 +372,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 />
             );
         },
-        [handleArticlePress, stableClusterId],
+        [handleArticlePress, stableClusterId, t],
     );
 
     const keyExtractor = useCallback(
