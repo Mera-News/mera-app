@@ -1,4 +1,5 @@
 import { Box } from "@/components/ui/box";
+import AbstractGradientBackdrop from "@/components/custom/AbstractGradientBackdrop";
 import MeraLogo from "@/components/custom/MeraLogo";
 import { authClient } from "@/lib/auth-client";
 import { enforceInstallBoundary, wasInstallBoundaryReset } from "@/lib/security/install-boundary";
@@ -78,8 +79,12 @@ export default function Index() {
     return <Redirect href={route as any} />;
   }
 
+  // F1: the gradient from the first JS frame, so the handoff to the tabs (which
+  // all mount the same unseeded backdrop, sharing one colour sequence) is not
+  // a flat-black splash followed by a jump to colour.
   return (
     <Box className="flex-1 justify-center items-center bg-black">
+      <AbstractGradientBackdrop />
       <MeraLogo size={96} animated />
     </Box>
   );
