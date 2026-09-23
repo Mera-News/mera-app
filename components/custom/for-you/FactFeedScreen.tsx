@@ -280,7 +280,10 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
 
   // An interest with no stories yet says which of the two it is, like its
   // Dashboard section (D4); any other empty list is simply caught up.
-  const listEmpty = thisRow?.emptyReason ? (
+  // Nothing until this section's snapshot has loaded: during a "Next" hop the
+  // new screen mounts with no snapshot, and "all caught up" flashed for a
+  // fifth of a second before the section's real content or empty state.
+  const listEmpty = snapshots === null ? null : thisRow?.emptyReason ? (
     <ForYouEmptyState
       icon={thisRow.emptyReason === 'awaiting-first-run' ? 'hourglass-empty' : 'search'}
       body={

@@ -782,7 +782,15 @@ const MeraNewsScreen: React.FC = () => {
                         testID="dashboard-status-row"
                     >
                         {narrating ? (
-                            <View pointerEvents="none" testID="dashboard-header-narration">
+                            // Still the way into the status sheet while a sync
+                            // runs; the status mark should not be the only one.
+                            <Pressable
+                                onPress={openStatusSheet}
+                                hitSlop={8}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('feedStatus.openA11y')}
+                                testID="dashboard-header-narration"
+                            >
                                 <HeaderNarrationLine
                                     stage={stage}
                                     onDevice={isDeviceProcessing}
@@ -790,7 +798,7 @@ const MeraNewsScreen: React.FC = () => {
                                     maxLines={statusRowLines}
                                     testID="dashboard-narration-line"
                                 />
-                            </View>
+                            </Pressable>
                         ) : updatedLabel ? (
                             <Pressable
                                 onPress={openStatusSheet}

@@ -115,4 +115,10 @@ describe('FactFeedScreen hop', () => {
     const block = layout.slice(layout.indexOf('name="fact-feed"'), layout.indexOf('name="facts"'));
     expect(block).toMatch(/via === 'next'\s*\?\s*'fade'\s*:\s*'slide_from_right'/);
   });
+
+  it('shows no empty state until the new section has loaded (no "caught up" flash on a hop)', () => {
+    const src = fs.readFileSync(path.resolve(__dirname, '../FactFeedScreen.tsx'), 'utf8');
+    expect(src).toMatch(/const listEmpty = snapshots === null \? null/);
+  });
 });
+

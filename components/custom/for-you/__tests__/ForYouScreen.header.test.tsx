@@ -108,7 +108,10 @@ jest.mock('@/components/custom/for-you/ForYouSubTabs', () => {
   };
 });
 jest.mock('@/components/custom/for-you/StoriesSlotPlaceholder', () => mockStub('stories'));
-jest.mock('@/components/custom/for-you/FeedStatusSheet', () => mockStub('status-sheet'));
+jest.mock('@/components/custom/for-you/FeedStatusSheet', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View testID="status-sheet" isOpen={p.isOpen} /> };
+});
 jest.mock('@/components/custom/for-you/DashboardSectionsFeed', () => mockStub('sections'));
 jest.mock('@/components/custom/fact-checks/FactChecksPanel', () => mockStub('fact-checks'));
 jest.mock('@/components/custom/for-you/FeedStatsSentence', () => mockStub('stats-sentence'));
@@ -250,6 +253,16 @@ describe('Dashboard header', () => {
   it('dates "Updated" from new articles, and shows nothing before any arrived', () => {
     render(<ForYouScreen />);
     expect(screen.queryByTestId('dashboard-updated-label')).toBeNull();
+  });
+
+  it('keeps the status row a way into the status sheet while narrating', () => {
+    mockProcessing = true;
+    render(<ForYouScreen />);
+    expect(screen.getByTestId('status-sheet').props.isOpen).toBe(false);
+    const row = screen.getByTestId('dashboard-header-narration');
+    expect(row.props.accessibilityRole).toBe('button');
+    fireEvent.press(row);
+    expect(screen.getByTestId('status-sheet').props.isOpen).toBe(true);
   });
 
   it('never says "Updated" while a run is going', () => {

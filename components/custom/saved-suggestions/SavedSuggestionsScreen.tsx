@@ -30,7 +30,7 @@ import SavedExportFab, { SAVED_EXPORT_FAB_RESERVE } from './SavedExportFab';
 import SavedExportModal from './SavedExportModal';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { savedItemId } from './saved-item-id';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListRenderItem, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -271,6 +271,20 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     // here yet.
     const showExportFab = saved.length > 0;
 
+    // After a delete leaves the list SHORTER than the screen, iOS keeps the old
+    // scroll offset: the rows sat part-way up under the Dashboard header (a
+    // delete button at y=198pt under a 211pt header, captured), and with
+    // nothing left to scroll, swipes and scroll-to-top could not bring them
+    // back. When the content fits, settle it back to the top, which also
+    // reveals the collapsing header.
+    const listRef = useRef<any>(null);
+    const viewportH = useRef(0);
+    const settleIfShort = useCallback((_w: number, contentH: number) => {
+        if (viewportH.current > 0 && contentH <= viewportH.current) {
+            listRef.current?.scrollToOffset?.({ offset: 0, animated: true });
+        }
+    }, []);
+
     const ListEmpty = isLoading ? (
         <Box className="items-center justify-center py-20">
             <Spinner size="large" />
@@ -307,8 +321,13 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 (headerHeight 0) keeps its exact sequence: title, 12px, banner,
                 rows. */}
             <Animated.FlatList
+                ref={listRef}
                 testID="saved-suggestions-list"
                 data={saved}
+                onLayout={(e) => {
+                    viewportH.current = e.nativeEvent.layout.height;
+                }}
+                onContentSizeChange={settleIfShort}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 ListHeaderComponent={
