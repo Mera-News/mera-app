@@ -15,13 +15,6 @@ import FeedStatusDetails from './FeedStatusDetails';
 interface FeedStatusSheetProps {
     readonly isOpen: boolean;
     readonly onClose: () => void;
-    /** Articles published across the app's sources this cycle (store `articleCount`) —
-     *  NOT a device download count. */
-    readonly processedCount: number;
-    /** Scored + in-window rows. */
-    readonly analysedCount: number;
-    /** Analysed rows above the render gate. */
-    readonly relevantCount: number;
     /** Human relative label for the last finished processing run, or null. */
     readonly lastProcessedLabel: string | null;
 }
@@ -35,9 +28,6 @@ interface FeedStatusSheetProps {
 const FeedStatusSheet: React.FC<FeedStatusSheetProps> = ({
     isOpen,
     onClose,
-    processedCount,
-    analysedCount,
-    relevantCount,
     lastProcessedLabel,
 }) => {
     const { t } = useTranslation();
@@ -53,9 +43,6 @@ const FeedStatusSheet: React.FC<FeedStatusSheetProps> = ({
                 </ModalHeader>
                 <ModalBody>
                     <FeedStatusDetails
-                        processedCount={processedCount}
-                        analysedCount={analysedCount}
-                        relevantCount={relevantCount}
                         lastProcessedLabel={lastProcessedLabel}
                         // The body's daily-limit "Manage" pill navigates; this
                         // modal must come down first or the pushed screen lands
@@ -64,8 +51,16 @@ const FeedStatusSheet: React.FC<FeedStatusSheetProps> = ({
                     />
                 </ModalBody>
                 <ModalFooter>
-                    <Button className="flex-1 bg-primary-400" onPress={onClose}>
-                        <ButtonText>{t('feedStatus.close')}</ButtonText>
+                    {/* Neutral, not the primary accent: closing is not the
+                        action this sheet exists for, and a full-width orange
+                        slab read as one. */}
+                    <Button
+                        variant="outline"
+                        className="flex-1 border-white/30"
+                        onPress={onClose}
+                        testID="feed-status-sheet-close"
+                    >
+                        <ButtonText className="text-white">{t('feedStatus.close')}</ButtonText>
                     </Button>
                 </ModalFooter>
             </ModalContent>

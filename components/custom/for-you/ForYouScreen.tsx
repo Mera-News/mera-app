@@ -75,7 +75,6 @@ import {
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
-import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
@@ -232,7 +231,6 @@ const MeraNewsScreen: React.FC = () => {
     const suggestions = useForYouSuggestions();
 
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
-    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const asyncJobPhase = useForYouAsyncJobPhase();
     const unscoredCount = useForYouUnscoredCount();
     const syncStatusMessage = useForYouSyncStatusMessage();
@@ -872,9 +870,6 @@ const MeraNewsScreen: React.FC = () => {
             <FeedStatusSheet
                 isOpen={statusSheetOpen}
                 onClose={() => setStatusSheetOpen(false)}
-                processedCount={articleCount}
-                analysedCount={analysedCount}
-                relevantCount={relevantCount}
                 lastProcessedLabel={lastProcessedLabel}
             />
         </Box>

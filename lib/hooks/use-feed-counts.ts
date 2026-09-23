@@ -17,7 +17,7 @@
 // qualifies that number alone. Do not "fix" that string to 48h to match the
 // constant below — analysed/relevant carry no stated window.
 
-import { useMemo } from 'react';
+import { useSyncExternalStore } from 'react';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/feed-grouping/story-grouping';
 import { relevancePassesGate } from '@/lib/stores/fact-rows-selector';
@@ -127,6 +127,84 @@ export function computeFeedCounts(
   return { analysedCount: analysed, relevantCount: relevant, readCount: read };
 }
 
+// ── One shared clock and one shared result ────────────────────────────────
+//
+// The header sentence, the status panel and the status sheet each call this
+// hook. Each used to memoise `computeFeedCounts` against its OWN `Date.now()`,
+// taken whenever that instance happened to mount, so two surfaces on screen
+// together could draw the 48h window's edge a minute apart and disagree on
+// the same suggestions. Now every instance reads ONE minute-floored clock and
+// the result is memoised at module level on (suggestions, opened set, minute),
+// so any two instances rendered in the same minute return the same object.
+//
+// A minute is fine-grained enough: the only thing the clock moves is the 48h
+// window's edge, and the counts may fall by design as rows age out.
+const MINUTE_MS = 60_000;
+
+export function floorToMinute(ms: number): number {
+  return Math.floor(ms / MINUTE_MS) * MINUTE_MS;
+}
+
+const minuteListeners = new Set<() => void>();
+let minuteTimer: ReturnType<typeof setInterval> | null = null;
+let lastMinute = floorToMinute(Date.now());
+
+function subscribeMinute(listener: () => void): () => void {
+  minuteListeners.add(listener);
+  if (minuteTimer === null) {
+    // Polls a few times a minute and notifies only when the minute changes,
+    // so a suspended-then-resumed app catches up on its next tick.
+    minuteTimer = setInterval(() => {
+      const m = floorToMinute(Date.now());
+      if (m === lastMinute) return;
+      lastMinute = m;
+      minuteListeners.forEach((l) => l());
+    }, 10_000);
+  }
+  return () => {
+    minuteListeners.delete(listener);
+    if (minuteListeners.size === 0 && minuteTimer !== null) {
+      clearInterval(minuteTimer);
+      minuteTimer = null;
+    }
+  };
+}
+
+function minuteSnapshot(): number {
+  lastMinute = floorToMinute(Date.now());
+  return lastMinute;
+}
+
+let memo: {
+  suggestions: unknown;
+  opened: unknown;
+  minute: number;
+  result: { analysedCount: number; relevantCount: number; readCount: number };
+} | null = null;
+
+/** Exported for tests only: forget the shared result between cases. */
+export function resetFeedCountsMemoForTest(): void {
+  memo = null;
+}
+
+function sharedCounts(
+  suggestions: FeedCountsRow[],
+  openedArticleIds: ReadonlySet<string>,
+  minute: number,
+) {
+  if (
+    memo &&
+    memo.suggestions === suggestions &&
+    memo.opened === openedArticleIds &&
+    memo.minute === minute
+  ) {
+    return memo.result;
+  }
+  const result = computeFeedCounts(suggestions, { nowMs: minute, openedArticleIds });
+  memo = { suggestions, opened: openedArticleIds, minute, result };
+  return result;
+}
+
 export function useFeedCounts(): FeedCounts {
   const suggestions = useForYouSuggestions();
   const { articleCount } = useForYouCounts();
@@ -134,10 +212,12 @@ export function useFeedCounts(): FeedCounts {
   // `markOpened`), so this identity change is what re-renders the sentence's
   // read count the moment the reader opens a story.
   const openedArticleIds = useOpenedStoriesStore((s) => s.articleIds);
+  const minute = useSyncExternalStore(subscribeMinute, minuteSnapshot, minuteSnapshot);
 
-  const { analysedCount, relevantCount, readCount } = useMemo(
-    () => computeFeedCounts(suggestions, { openedArticleIds }),
-    [suggestions, openedArticleIds],
+  const { analysedCount, relevantCount, readCount } = sharedCounts(
+    suggestions,
+    openedArticleIds,
+    minute,
   );
 
   return { articleCount, analysedCount, relevantCount, readCount };

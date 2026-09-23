@@ -2,12 +2,14 @@ import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
     useForYouAsyncJobPhase,
     useForYouAsyncJobProcessedCount,
     useForYouAsyncJobTotalCount,
+    useForYouBatchProgress,
     useForYouDailyLimitResetAt,
     useForYouDeviceProcessing,
     useForYouScoringError,
@@ -19,17 +21,11 @@ import { useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from '@/components/ui/pressable';
+import { pickScoringProgress, STATUS_INK } from './status-ink';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 export interface FeedStatusDetailsProps {
-    /** Articles published across the app's sources this cycle (store `articleCount`) —
-     *  NOT a device download count. Rendered against `feedStatus.published`. */
-    readonly processedCount: number;
-    /** Scored + in-window rows. */
-    readonly analysedCount: number;
-    /** Analysed rows above the render gate. */
-    readonly relevantCount: number;
     /** Human relative label for the last finished processing run, or null. */
     readonly lastProcessedLabel: string | null;
     /**
@@ -45,10 +41,10 @@ export interface FeedStatusDetailsProps {
 function StatRow({ label, value }: { label: string; value: string | number }) {
     return (
         <HStack className="items-center justify-between py-1">
-            <Text size="sm" className="text-typography-400">
+            <Text size="sm" style={{ color: STATUS_INK.secondary }}>
                 {label}
             </Text>
-            <Text size="sm" className="text-white font-semibold">
+            <Text size="sm" className="font-semibold" style={{ color: STATUS_INK.primary }}>
                 {value}
             </Text>
         </HStack>
@@ -64,9 +60,6 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
  * the FeedStatusShimmer expand accordion — so the copy is never duplicated.
  */
 const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
-    processedCount,
-    analysedCount,
-    relevantCount,
     lastProcessedLabel,
     onBeforeNavigate,
 }) => {
@@ -74,6 +67,10 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
     const tAny = t as any;
     const appLanguage = useAppLanguage();
     const router = useRouter();
+    // Read here rather than passed in, from the shared minute-clock hook, so the
+    // panel, the sheet and the header sentence cannot show different numbers.
+    const { articleCount: processedCount, analysedCount, relevantCount } = useFeedCounts();
+    const batchProgress = useForYouBatchProgress();
 
     const syncStatusMessage = useForYouSyncStatusMessage();
     const asyncJobPhase = useForYouAsyncJobPhase();
@@ -117,7 +114,11 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
         ? new Date(dailyLimitResetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
         : '';
 
-    const showCloudProgress = asyncJobTotalCount > 0;
+    // ONE figure for scoring progress, shared with the panel's "Analysing X of
+    // Y" line; the cloud sweep's synced-id counter used to sit beside it with a
+    // different total.
+    const cloudProgress = pickScoringProgress(batchProgress, asyncJobProcessedCount, asyncJobTotalCount);
+    const showCloudProgress = cloudProgress !== null;
     const showDeviceProgress = deviceTotalCount > 0;
 
     const errorKeys = scoringError ? SCORING_ERROR_I18N_KEYS[scoringError] : null;
@@ -127,17 +128,17 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
             {/* Current stage */}
             <HStack className="items-center" space="sm">
                 <MaterialIcons name="sync" size={18} color={ACCENT} />
-                <Text size="sm" className="text-white font-semibold flex-1">
+                <Text size="sm" className="font-semibold flex-1" style={{ color: STATUS_INK.primary }}>
                     {stageMessage}
                 </Text>
             </HStack>
 
             {(showCloudProgress || showDeviceProgress) && (
                 <VStack space="xs">
-                    {showCloudProgress && (
+                    {cloudProgress && (
                         <StatRow
                             label={t('feedStatus.cloudProgress')}
-                            value={`${formatCount(asyncJobProcessedCount, appLanguage)} / ${formatCount(asyncJobTotalCount, appLanguage)}`}
+                            value={`${formatCount(cloudProgress.done, appLanguage)} / ${formatCount(cloudProgress.total, appLanguage)}`}
                         />
                     )}
                     {showDeviceProgress && (
@@ -149,7 +150,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                 </VStack>
             )}
 
-            <Box style={{ height: 1, backgroundColor: '#1f2937' }} />
+            <Box style={{ height: 1, backgroundColor: STATUS_INK.divider }} />
 
             {/* Counts */}
             <VStack>
@@ -171,7 +172,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                     <Text size="sm" className="text-warning-400 font-semibold">
                         {t('feed.dailyLimit.title')}
                     </Text>
-                    <Text size="xs" className="text-typography-300 mt-1">
+                    <Text size="xs" className="mt-1" style={{ color: STATUS_INK.secondary }}>
                         {t('feed.dailyLimit.bodyWithTime', { time: dailyResetTime })}
                     </Text>
                     {/* Same pill as the Profile usage card, and the same
@@ -206,7 +207,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                     <Text size="sm" className="text-red-400 font-semibold">
                         {t('feedStatus.errorTitle')}
                     </Text>
-                    <Text size="xs" className="text-typography-300 mt-1">
+                    <Text size="xs" className="mt-1" style={{ color: STATUS_INK.secondary }}>
                         {t(errorKeys.message)}
                     </Text>
                 </Box>

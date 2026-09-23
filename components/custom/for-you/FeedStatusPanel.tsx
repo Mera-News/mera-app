@@ -12,12 +12,12 @@
 // while the panel is actually open, instead of for the whole duration of every
 // sync on both tabs.
 
-import { GlassPanel } from '@/components/custom/GlassSurface';
+import { GLASS_OVER_CONTENT_FILL, GlassPanel } from '@/components/custom/GlassSurface';
 import { Text } from '@/components/ui/text';
-import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import {
-    useForYouAsyncJobPhase,
+    useForYouAsyncJobProcessedCount,
+    useForYouAsyncJobTotalCount,
     useForYouBatchProgress,
     useForYouDeviceProcessing,
 } from '@/lib/stores/selectors';
@@ -30,6 +30,7 @@ import { ON_DEVICE_HEADLINES_KEY, stageDef } from '@/components/custom/processin
 import { PROCESSING_STRIP_HEIGHT } from '@/components/custom/processing/types';
 import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import FeedStatusDetails from './FeedStatusDetails';
+import { pickScoringProgress, STATUS_INK } from './status-ink';
 
 /** The stage headline rotates through its text pool at this cadence. */
 const HEADLINE_CYCLE_MS = 5000;
@@ -85,7 +86,7 @@ function ProcessingHeadline() {
 
     return (
         <Animated.View key={index} entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
-            <Text size="xs" className="text-typography-400 mt-1">
+            <Text size="xs" className="mt-1" style={{ color: STATUS_INK.secondary }}>
                 {line}
             </Text>
         </Animated.View>
@@ -126,12 +127,17 @@ function ChunkStripRow() {
 function AnalysingProgress() {
     const { t } = useTranslation();
     const batchProgress = useForYouBatchProgress();
-    if (!batchProgress || batchProgress.total <= 0) return null;
+    const asyncDone = useForYouAsyncJobProcessedCount();
+    const asyncTotal = useForYouAsyncJobTotalCount();
+    // The same figure FeedStatusDetails' scoring row shows, from the same
+    // helper, so the two lines can never name two different totals.
+    const progress = pickScoringProgress(batchProgress, asyncDone, asyncTotal);
+    if (!batchProgress || batchProgress.total <= 0 || !progress) return null;
     return (
-        <Text size="xs" className="text-typography-500 mt-1">
+        <Text size="xs" className="mt-1" style={{ color: STATUS_INK.secondary }}>
             {t('feed.analysingProgress', {
-                done: batchProgress.done,
-                total: batchProgress.total,
+                done: progress.done,
+                total: progress.total,
             })}
         </Text>
     );
@@ -149,9 +155,10 @@ export interface FeedStatusPanelProps {
 }
 
 /**
- * Self-subscribes to the counts so mounting it is a one-liner on either screen
- * and the two can't drift. `expanded` and `mode` come from the screen, which is
- * what keeps this and the indicator describing the same state.
+ * The counts are read by FeedStatusDetails itself, from the shared minute-clock
+ * `useFeedCounts`, so this panel, the sheet and the header sentence show the
+ * same numbers. `expanded` and `mode` come from the screen, which is what keeps
+ * this and the indicator describing the same state.
  */
 export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
     expanded,
@@ -159,8 +166,6 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
     lastProcessedLabel = null,
     onBeforeNavigate,
 }) => {
-    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
-
     if (!expanded) return null;
 
     return (
@@ -170,21 +175,19 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
             exiting={FadeOut.duration(120)}
             style={{ marginTop: 8 }}
         >
-            {/* Glass rather than a flat `bg-gray-950` slab, which read as a black
-                block over the page's gradient backdrop. Padding moves to
-                `contentClassName` because GlassPanel's outer box must stay
-                unpadded for the plate to fill it; off iOS 26 the original border
-                + fill are kept verbatim via `fallbackClassName`. */}
+            {/* A surface over CONTENT: the header is absolute and cards scroll
+                under it, so the panel takes GLASS_OVER_CONTENT_FILL as its base
+                and the translucent lift sits on top. Passed as a STYLE because
+                GlassPanel ignores `fallbackClassName`; the old
+                `bg-gray-950` never applied, which left a 7% white tint with
+                page text reading straight through it. */}
             <GlassPanel
                 radius={8}
                 contentClassName="px-3 py-2"
-                fallbackClassName="border border-gray-800 bg-gray-950"
+                style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}
                 testID="dashboard-status-details-panel"
             >
                 <FeedStatusDetails
-                    processedCount={articleCount}
-                    analysedCount={analysedCount}
-                    relevantCount={relevantCount}
                     lastProcessedLabel={lastProcessedLabel}
                     onBeforeNavigate={onBeforeNavigate}
                 />

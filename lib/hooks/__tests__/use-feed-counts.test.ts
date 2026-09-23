@@ -140,3 +140,42 @@ describe('computeFeedCounts — every scored band counts', () => {
         expect(counts).toEqual({ analysedCount: 1, relevantCount: 0, readCount: 0 });
     });
 });
+
+describe('useFeedCounts — every instance agrees', () => {
+    // The header sentence and the status panel are two instances of this hook
+    // mounted at different moments. Each used to take its own Date.now() for
+    // the 48h edge, so a row crossing that edge between the two mounts was
+    // counted by one surface and not the other.
+    const { renderHook } = require('@testing-library/react-native');
+    const selectors = require('@/lib/stores/selectors');
+    const opened = require('@/lib/stores/opened-stories-store');
+    const { useFeedCounts, resetFeedCountsMemoForTest } = require('@/lib/hooks/use-feed-counts');
+
+    const T0 = Date.parse('2026-08-03T12:00:10.000Z');
+    const WINDOW = 48 * HOUR;
+    // Published so that it is inside the window at 12:00:10 and outside it
+    // at 12:00:50: its 48h edge falls between the two mounts.
+    const edgeRow = row('edge', {
+        firstPubDate: new Date(T0 + 30_000 - WINDOW).toISOString(),
+    });
+    const suggestions = [row('a', { firstPubDate: new Date(T0 - HOUR).toISOString() }), edgeRow];
+    const openedIds = new Set<string>();
+
+    beforeEach(() => {
+        jest.useFakeTimers();
+        resetFeedCountsMemoForTest?.();
+        selectors.useForYouSuggestions.mockReturnValue(suggestions);
+        selectors.useForYouCounts.mockReturnValue({ articleCount: 900 });
+        opened.useOpenedStoriesStore.mockImplementation((sel: any) => sel({ articleIds: openedIds }));
+    });
+    afterEach(() => jest.useRealTimers());
+
+    it('returns the same counts to two instances mounted 40 seconds apart in one minute', () => {
+        jest.setSystemTime(T0);
+        const header = renderHook(() => useFeedCounts());
+        jest.setSystemTime(T0 + 40_000);
+        const panel = renderHook(() => useFeedCounts());
+        expect(panel.result.current.analysedCount).toBe(header.result.current.analysedCount);
+        expect(panel.result.current.relevantCount).toBe(header.result.current.relevantCount);
+    });
+});
