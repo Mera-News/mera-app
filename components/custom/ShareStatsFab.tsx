@@ -1,10 +1,9 @@
-import { GlassPlate } from '@/components/custom/GlassSurface';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { GLASS_OVER_CONTENT_FILL, GlassPlate } from '@/components/custom/GlassSurface';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ShareStatsFabProps {
     readonly onPress: () => void;
@@ -26,11 +25,18 @@ const FAB_RADIUS = 25;
  *
  * ## Geometry copied from ScrollToTopFab on purpose
  *
- * Right 20, bottom 20 plus the safe-area inset plus `TAB_BAR_HEIGHT`, 50 square,
- * the same glass plate and the same shadow. Two floating buttons in one app that
- * sit at different heights read as a mistake, and `TAB_BAR_HEIGHT` is a
- * conservative ESTIMATE of the native bar rather than its measured height, so it
- * is clearance to respect and not a number to sit flush against.
+ * Right 20, bottom 20 above `useTabBarClearance()`, 50 square, the same glass
+ * plate and the same shadow. Two floating buttons in one app that sit at
+ * different heights read as a mistake. The clearance comes from the helper and
+ * never from `insets.bottom + TAB_BAR_HEIGHT`: inside a tab on iOS the inset
+ * already includes the bar, and adding it again floated this button 70pt above
+ * the bar.
+ *
+ * ## A solid base under the glass
+ *
+ * The glass plate alone could paint nothing on a settled screen, which left a
+ * bare arrow floating over the list. The dark base under it is the button's
+ * real surface; the glass on top only tints it.
  *
  * The two never appear together: ScrollToTopFab is mounted by `FactFeedScreen`,
  * which is the Fact checks sub-tab. If a future screen wants both, they have to
@@ -43,7 +49,7 @@ const FAB_RADIUS = 25;
  * Same reason ScrollToTopFab does it that way.
  */
 const ShareStatsFab: React.FC<ShareStatsFabProps> = ({ onPress }) => {
-    const insets = useSafeAreaInsets();
+    const clearance = useTabBarClearance();
     const { t } = useTranslation();
 
     return (
@@ -52,8 +58,13 @@ const ShareStatsFab: React.FC<ShareStatsFabProps> = ({ onPress }) => {
             onPress={onPress}
             accessibilityRole="button"
             accessibilityLabel={t('shareStats.entryA11y')}
-            style={[styles.fab, { bottom: 20 + insets.bottom + TAB_BAR_HEIGHT }]}
+            style={[styles.fab, { bottom: 20 + clearance }]}
         >
+            <View
+                testID="dashboard-history-share-base"
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, styles.base]}
+            />
             <GlassPlate style={{ borderRadius: FAB_RADIUS }} />
             <MaterialIcons name="ios-share" size={24} color="#e5e7eb" />
         </Pressable>
@@ -74,6 +85,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 8,
+    },
+    base: {
+        borderRadius: FAB_RADIUS,
+        backgroundColor: GLASS_OVER_CONTENT_FILL,
     },
 });
 

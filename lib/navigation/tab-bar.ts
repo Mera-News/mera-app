@@ -1,24 +1,49 @@
 import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
- * Height of the bottom tab bar's own content area — excludes the bottom
- * safe-area inset, which the navigator (and any overlay computing its own
- * clearance) adds on top of this via `useSafeAreaInsets().bottom`.
+ * Height of the bottom tab bar's own content area, excluding the device's
+ * bottom safe-area inset.
  *
- * Pinned as an explicit constant — rather than reading it off the navigator at
- * runtime — because the default height varies with label visibility (this
- * tab bar renders icon-only, `tabBarShowLabel: false`) and because
- * screen-level overlays that render OUTSIDE the Tabs navigator (the floating
- * chat bubble, the scroll-to-top FAB) need to compute an accurate bottom
- * clearance without a ref into the navigator.
- *
- * NOTE: since the tab bar switched to `NativeTabs` (expo-router
- * unstable-native-tabs / liquid-glass) in `app_container/_layout.tsx`, the
- * native bar owns its own height and no longer reads this constant — the real
- * native height isn't exposed to JS. This value is now purely a conservative
- * bottom-clearance estimate for the OUTSIDE-the-navigator overlays above, so
- * it may not exactly match the rendered native bar. Kept because those
- * overlays (ForYouScreen, ExploreScreen, the FABs and chat bubbles) still rely
- * on it for padding/clearance.
+ * The bar is `NativeTabs` (expo-router unstable-native-tabs), which owns its
+ * own height and never exposes it to JS, so this is a conservative ESTIMATE,
+ * not the rendered height. Do not add it to `useSafeAreaInsets().bottom` inside
+ * a tab screen yourself: use `useTabBarClearance()` below, which knows when the
+ * inset already includes the bar.
  */
 export const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;
+
+/**
+ * Bottom clearance for an overlay or list end drawn INSIDE a tab screen, so it
+ * sits above the tab bar and the home indicator. Pure, so both platforms are
+ * testable from one jest run.
+ *
+ * ## Why iOS returns the inset alone
+ *
+ * On iOS, NativeTabs wraps every tab screen in its OWN `SafeAreaProvider`
+ * (`expo-router/build/native-tabs/NativeTabsView.js`), which measures the tab's
+ * native safe area. UIKit's tab bar controller puts the bar inside that area,
+ * so `insets.bottom` in a tab screen is about 83-85pt on a Face ID iPhone, not
+ * the 34pt home indicator. Adding `TAB_BAR_HEIGHT` on top counted the bar
+ * twice: measured on device, the Dashboard's share FAB sat 154pt from the
+ * bottom (20 + 85 + 49) and 70pt above the bar instead of 20.
+ *
+ * ## Android is unchanged until measured
+ *
+ * NativeTabs on Android wraps the tab in a bottom-edge `SafeAreaView` instead,
+ * so the answer there differs and is not inferred from iOS. It keeps the
+ * previous arithmetic until an emulator capture measures it.
+ *
+ * Only for components rendered INSIDE the tab navigator. A standalone Stack
+ * route has no bar behind it and takes `insets.bottom` alone.
+ */
+export function tabBarClearance(os: string, insetsBottom: number): number {
+  if (os === 'ios') return insetsBottom;
+  return insetsBottom + TAB_BAR_HEIGHT;
+}
+
+/** `tabBarClearance` for the current platform and the current tab's insets. */
+export function useTabBarClearance(): number {
+  const insets = useSafeAreaInsets();
+  return tabBarClearance(Platform.OS, insets.bottom);
+}
