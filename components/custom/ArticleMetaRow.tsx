@@ -84,7 +84,6 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const isCard = variant === 'card';
     const ageColor = isCard ? 'text-typography-600' : 'text-gray-400';
     const secondaryColor = isCard ? 'text-typography-500' : 'text-gray-400';
-    const iconColor = isCard ? '#6B7280' : '#9CA3AF';
 
     const age = formatTimeAgo(t, pubDate, { now, emptyLabel: t('feed.justNow'), absoluteAfterDays: 7 });
     // Named in the reader's own language, not its endonym — "简体中文" tells a
@@ -115,30 +114,65 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const translateColor = translationFailed
         ? '#F87171'
         : translateStatus === 'not-translatable' ? '#FDE68A' : '#86EFAC';
-    const showLanguageSlot = !!languageCode;
+    // M6: the language label only when it tells the reader something. An
+    // article already in the reader's language needs no "English" and no
+    // translate glyph next to it.
+    const sameLanguage = !!languageCode && !!appLanguage &&
+        languageCode.split('-')[0].toLowerCase() === appLanguage.split('-')[0].toLowerCase();
+    const showLanguageSlot = !!languageCode && (!sameLanguage || translationFailed);
     const showPublicationSlot = !!publication;
 
+    const dot = (
+        <Text size="xs" className={secondaryColor} accessibilityElementsHidden importantForAccessibility="no">
+            ·
+        </Text>
+    );
+
     return (
-        // `justify-between` spreads the slots evenly: time anchors at the start,
-        // the flag at the end, and the language (+ optional publication) slots
-        // distribute across the free space between them. Time and flag are
-        // fixed-width (`flex-shrink-0`); the language and publication slots may
-        // shrink (single-line, truncating) so a long publication name truncates
-        // instead of bleeding across / pushing the flag off-row.
-        <HStack className="items-center justify-between" space="sm">
-            {/* 1. Age (+ optional NEW badge) — omitted wholesale when
-                `showRecency` is false; see the prop's doc. */}
+        // M5: GROUPED LEFT, one reading line: flag, publication, age, then the
+        // language. It used to be `justify-between`, which spread four slots
+        // edge to edge and read as four unrelated labels.
+        //
+        // TRUNCATION ORDER, enforced by flex rather than measurement: the time
+        // never shrinks (`flexShrink: 0`); the language shrinks a thousand times
+        // faster than the publication, so under pressure it collapses to nothing
+        // first (its slot clips, dot and glyph included), and only then does
+        // the publication truncate with an ellipsis.
+        <HStack className="items-center" space="xs" style={{ minWidth: 0 }}>
+            {/* 1. Country flag. Tappable on the detail screen to name the country.
+                Hidden when `showFlag` is false (compact card shows it in its footer). */}
+            {showFlag ? (
+                <Box className="flex-shrink-0">
+                    {isCard ? (
+                        <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
+                    ) : (
+                        <SourceCountryFlag countryCode={countryCode} iconClassName="text-gray-400" />
+                    )}
+                </Box>
+            ) : null}
+
+            {/* 2. Publication: truncates second, after the language is gone. */}
+            {showPublicationSlot ? (
+                <Text
+                    size="xs"
+                    bold
+                    className={secondaryColor}
+                    numberOfLines={1}
+                    style={{ flexShrink: 1, minWidth: 0 }}
+                >
+                    {publication}
+                </Text>
+            ) : null}
+
+            {/* 3. Age (+ optional NEW badge). Never shrinks. Omitted wholesale
+                when `showRecency` is false; see the prop's doc. */}
             {showRecency ? (
                 <HStack className="items-center flex-shrink-0" space="xs">
-                    <MaterialIcons name="schedule" size={14} color={iconColor} />
-                    <Text size="sm" className={ageColor}>
+                    {showPublicationSlot || showFlag ? dot : null}
+                    <Text size="xs" className={ageColor}>
                         {age}
                     </Text>
-                    {/* No read indicator is drawn. `read` still SUPPRESSES the NEW
-                        badge below — the seen mechanism is intact end to end (card
-                        state, the "All caught up" partition, scoring); it is only
-                        the eye glyph that is deliberately not shown. */}
-                    {/* A read card never shows NEW — read wins. */}
+                    {/* A read card never shows NEW: read wins. */}
                     {isCard && isNew && !read ? (
                         <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
                             <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
@@ -149,18 +183,23 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                 </HStack>
             ) : null}
 
-            {/* 2. Caller-supplied middle slot (the compact card's priority chip). */}
+            {/* 4. Caller-supplied accessory (the compact card's priority chip). */}
             {centerAccessory ? (
                 <Box className="flex-shrink-0">{centerAccessory}</Box>
             ) : null}
 
-            {/* 3. Translate icon + language name */}
+            {/* 5. Language: shrinks FIRST (flexShrink 1000) and clips to nothing. */}
             {showLanguageSlot ? (
-                <HStack className="items-center flex-shrink" space="xs" style={{ minWidth: 0 }}>
-                    {/* SAME glyph in every state — only the colour changes, so
-                        the row never gains or loses an element. The failed
-                        state additionally makes it tappable, because it is the
-                        only state that has anything to say. */}
+                <HStack
+                    className="items-center"
+                    space="xs"
+                    style={{ flexShrink: 1000, minWidth: 0, overflow: 'hidden' }}
+                    testID="meta-language-slot"
+                >
+                    {dot}
+                    {/* SAME glyph in every state: only the colour changes. The
+                        failed state additionally makes it tappable, because it
+                        is the only state that has anything to say. */}
                     {translationFailed ? (
                         <Tooltip
                             placement="top"
@@ -185,43 +224,11 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                         <MaterialIcons name="translate" size={12} color={translateColor} />
                     )}
                     {language ? (
-                        <Text
-                            size="xs"
-                            className={`${secondaryColor} flex-shrink`}
-                            numberOfLines={1}
-                        >
+                        <Text size="xs" className={secondaryColor} numberOfLines={1}>
                             {language}
                         </Text>
                     ) : null}
                 </HStack>
-            ) : null}
-
-            {/* 4. Newspaper icon + publication name — natural width, truncating a
-                long name instead of bleeding when the row runs tight. */}
-            {showPublicationSlot ? (
-                <HStack className="items-center flex-shrink" space="xs" style={{ minWidth: 0 }}>
-                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
-                    <Text
-                        size="xs"
-                        bold
-                        className={`${secondaryColor} flex-shrink`}
-                        numberOfLines={1}
-                    >
-                        {publication}
-                    </Text>
-                </HStack>
-            ) : null}
-
-            {/* 5. Country flag — tappable on the detail screen to name the country.
-                Hidden when `showFlag` is false (compact card shows it in its footer). */}
-            {showFlag ? (
-                <Box className="flex-shrink-0">
-                    {isCard ? (
-                        <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
-                    ) : (
-                        <SourceCountryFlag countryCode={countryCode} iconClassName="text-gray-400" />
-                    )}
-                </Box>
             ) : null}
         </HStack>
     );
