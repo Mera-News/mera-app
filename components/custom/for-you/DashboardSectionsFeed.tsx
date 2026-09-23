@@ -66,8 +66,8 @@ interface SectionItem {
   /** D4: set on an interest with no stories yet. The section still shows, with
    *  an empty state saying which of the two it is. */
   emptyReason?: EmptySectionReason;
-  /** D4: the interest was added in the last 24h; the selector sorts it first
-   *  and the header says so. */
+  /** D4: the interest was added in the last 24h, and the header says so. Empty
+   *  sections, new or not, sort after every section with stories. */
   newInterest: boolean;
 }
 
