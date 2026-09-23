@@ -59,7 +59,7 @@
 // change, and update the App Store privacy answers. See INTERCOM_PLAN.md.
 
 import { useCallback, useRef, useState } from 'react';
-import { Linking, Platform } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 import Intercom from '@intercom/intercom-react-native';
 import { gql } from '@apollo/client';
 import {
@@ -359,6 +359,32 @@ export async function sendIntercomPushToken(token: string): Promise<void> {
 }
 
 /**
+ * What a support tap does when even the mail app cannot open (no mail account,
+ * the simulator, a managed device). Used when the caller passes no
+ * `onMailFailed`, which is every caller today; before this the tap simply did
+ * nothing.
+ *
+ * The address is COPIED, never shown: support surfaces never render an email
+ * address. i18n and the clipboard are required lazily, because this module is
+ * reached from auth-client's import graph (see the support-id note above).
+ */
+function showMailFallback(): void {
+  const i18n = (require('@/lib/i18n') as typeof import('@/lib/i18n')).default;
+  Alert.alert(i18n.t('support.mailFailedTitle'), i18n.t('support.mailFailedBody'), [
+    {
+      text: i18n.t('support.copyAddress'),
+      onPress: () => {
+        const { SUPPORT_EMAIL } = require('@/lib/config/branding');
+        void (require('expo-clipboard') as typeof import('expo-clipboard'))
+          .setStringAsync(SUPPORT_EMAIL)
+          .catch(() => {});
+      },
+    },
+    { text: i18n.t('common.ok'), style: 'cancel' },
+  ]);
+}
+
+/**
  * The one place the "tap Support" behaviour is defined, shared by all three
  * entry points so they cannot drift.
  *
@@ -376,8 +402,8 @@ export async function sendIntercomPushToken(token: string): Promise<void> {
  *  - Otherwise: show a spinner, try the Messenger, and on ANY failure or after
  *    ~6s open mail instead, silently. The mailto fallback is today's behaviour,
  *    not an incident, so it gets no alert and no toast.
- *  - Only if opening mail ITSELF fails is there anything to tell the user, and
- *    that is left to the caller via `onMailFailed`.
+ *  - Only if opening mail ITSELF fails is there anything to tell the user:
+ *    the caller's `onMailFailed` when given, else `showMailFallback`.
  */
 export function useSupportAction(onMailFailed?: () => void) {
   const [busy, setBusy] = useState(false);
@@ -411,7 +437,8 @@ export function useSupportAction(onMailFailed?: () => void) {
             require('@/lib/support-id') as typeof import('@/lib/support-id');
           await Linking.openURL(buildSupportMailtoUrl(SUPPORT_EMAIL, supportId));
         } catch {
-          onMailFailed?.();
+          if (onMailFailed) onMailFailed();
+          else showMailFallback();
         }
       };
       if (!isIntercomEnabled() || !useNetworkStore.getState().isConnected) {
