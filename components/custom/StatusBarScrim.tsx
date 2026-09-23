@@ -9,17 +9,64 @@
 // Layering: sits ABOVE the scrollable list (which paints at the default
 // zIndex) but BELOW the collapsing header (zIndex 10 on both FeedScreen and
 // ForYouScreen), so the header still reads normally above it when revealed.
+//
+// ## The dark base appears only while the header is collapsed (F21)
+//
+// With the header hidden, a section title scrolled up behind the clock read
+// straight through this strip's 0.42 scrim. The strip is then over CONTENT, so
+// it wants the over-content base (GLASS_OVER_CONTENT_FILL). But the strip is
+// mounted at ALL times and the translucent header samples it at rest, so a
+// permanent dark base would darken the top of every header. A host with a
+// collapsing header therefore passes its `hidden` value as `coverProgress`,
+// and the base (plus a short fade below the strip) follows it: invisible at
+// rest, full when the header is out of the way. Without the prop the strip is
+// exactly what it always was.
 import {
   GLASS_HEADER_SCRIM,
   GLASS_HEADER_TINT,
+  GLASS_OVER_CONTENT_FILL,
   GlassHeaderAndroidBackdrop,
   GlassPlate,
 } from '@/components/custom/GlassSurface';
 import React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const StatusBarScrim: React.FC = () => {
+/** The stepped fade below the strip, darkest first. Three 4pt bands. */
+export const STATUS_BAR_SCRIM_FADE = [0.6, 0.35, 0.15] as const;
+const FADE_BAND_PT = 4;
+
+export interface StatusBarScrimProps {
+  /** The collapsing header's `hidden` (0 revealed, 1 hidden). Omit for a
+   *  screen with no collapsing header: the strip keeps its original look. */
+  readonly coverProgress?: SharedValue<number>;
+}
+
+const CoverBase: React.FC<{ progress: SharedValue<number>; top: number }> = ({ progress, top }) => {
+  const style = useAnimatedStyle(() => ({ opacity: progress.value }));
+  return (
+    <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, style]} testID="status-bar-scrim-cover">
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: GLASS_OVER_CONTENT_FILL }]} />
+      {STATUS_BAR_SCRIM_FADE.map((alpha, i) => (
+        <View
+          key={alpha}
+          testID={`status-bar-scrim-fade-${i}`}
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: top + i * FADE_BAND_PT,
+            height: FADE_BAND_PT,
+            backgroundColor: `rgba(18,17,19,${alpha})`,
+          }}
+        />
+      ))}
+    </Animated.View>
+  );
+};
+
+const StatusBarScrim: React.FC<StatusBarScrimProps> = ({ coverProgress }) => {
   const insets = useSafeAreaInsets();
   return (
     <View
@@ -48,6 +95,7 @@ const StatusBarScrim: React.FC = () => {
           the tint below still lifts it to a readable surface tone. See
           GlassSurface.tsx's GlassHeaderAndroidBackdrop doc comment. No-op on
           iOS. */}
+      {coverProgress ? <CoverBase progress={coverProgress} top={insets.top} /> : null}
       <GlassHeaderAndroidBackdrop />
       <GlassPlate tint={GLASS_HEADER_TINT} />
     </View>

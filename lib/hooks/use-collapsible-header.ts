@@ -12,6 +12,7 @@
 
 import { useCallback, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
+import type { SharedValue } from 'react-native-reanimated';
 import {
   useAnimatedScrollHandler,
   useAnimatedStyle,
@@ -59,6 +60,10 @@ export interface CollapsibleHeader {
    * a single list, never call this, and are byte-identical to before it existed.
    */
   resetScrollOrigin: () => void;
+  /** 0 revealed, 1 fully hidden, animated between. Read-only for callers: a
+   *  surface that must appear only while the header is out of the way (the
+   *  status-bar scrim's dark base) binds its opacity to this. */
+  hidden: SharedValue<number>;
 }
 
 export function useCollapsibleHeader(): CollapsibleHeader {
@@ -155,5 +160,6 @@ export function useCollapsibleHeader(): CollapsibleHeader {
     headerHeight,
     reveal,
     resetScrollOrigin,
+    hidden,
   };
 }
