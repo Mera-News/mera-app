@@ -6,6 +6,9 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
+import { requestRestart } from '@/lib/app-restart';
+import logger from '@/lib/logger';
+import { holdRestartAcrossPurchase } from '@/lib/subscriptions/subscribe-flow';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import { TRANSLATION_GUIDE_URL } from '@/lib/config/branding';
@@ -17,7 +20,6 @@ import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import * as Updates from 'expo-updates';
 
 interface LanguageSettingsScreenProps {
     onBack?: () => void;
@@ -38,6 +40,51 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
 
     const handleWatchGuide = () => setShowGuideVideo(true);
 
+    /**
+     * Sends the reader to the OS language settings to download a pack, and
+     * holds the app restart off across the trip.
+     *
+     * WHY A HOLD. This leaves the app, and every true background -> foreground
+     * return reloads it. The return would land on a fresh process with
+     * `useLanguageSwitch`'s `pendingCode`, its busy flag and its timeout all
+     * gone, so a user who went to fetch the pack the switch is waiting for
+     * comes back having to pick the language over again — with no error and
+     * nothing to tell them why.
+     *
+     * Same helper as the checkout hold, with its own label. Its NAME says
+     * purchase and this is not one; the mechanism is not purchase-specific
+     * (the label is a parameter and the timers key on a plain departure and
+     * return), and a second copy of a two-timer hold that silently disables
+     * restarts for the session if it leaks is a worse outcome than an import
+     * that reads oddly. Flagged for a rename, not forked.
+     *
+     * Taken unconditionally rather than only while a switch is in flight: the
+     * reader who walks to OS settings from this screen expects to come back to
+     * this screen either way, and the hold is bounded by its own timers.
+     *
+     * NOT released on the happy path — the release is timer-owned. The catch is
+     * the one place the immediate release is valid, and it is valid for exactly
+     * the reason `openSubscribePage`'s catch is: nothing opened, so there is no
+     * trip to protect and no reason to make the next return wait out the
+     * ceiling. `App-Prefs:General` is not a guaranteed-openable scheme, so this
+     * rejects in practice and previously did so unhandled.
+     */
+    const handleOpenOsSettings = useCallback(async () => {
+        const release = holdRestartAcrossPurchase('language-pack');
+        try {
+            if (Platform.OS === 'ios') {
+                await Linking.openURL('App-Prefs:General');
+            } else {
+                await Linking.sendIntent('android.settings.LOCALE_SETTINGS');
+            }
+        } catch (err) {
+            release();
+            logger.captureException(err, {
+                tags: { screen: 'language-settings', action: 'open-os-settings' },
+            });
+        }
+    }, []);
+
     const selectedLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage);
 
     // Only fires on a language that was actually applied, so a failed attempt
@@ -50,7 +97,13 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                 t('language.restartDescription'),
                 [
                     { text: t('language.later'), style: 'cancel' },
-                    { text: t('language.restart'), onPress: () => Updates.reloadAsync() },
+                    {
+                        text: t('language.restart'),
+                        // Through the one restart authority, not a bare
+                        // reloadAsync(): lib/app-restart.ts holds this off while
+                        // a purchase or a credential write is mid-flight.
+                        onPress: () => { void requestRestart('language'); },
+                    },
                 ],
             );
         },
@@ -299,11 +352,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                 only followable via the video. */}
                             <Pressable
                                 testID="language-open-os-settings"
-                                onPress={() =>
-                                    Platform.OS === 'ios'
-                                        ? Linking.openURL('App-Prefs:General')
-                                        : Linking.sendIntent('android.settings.LOCALE_SETTINGS')
-                                }
+                                onPress={handleOpenOsSettings}
                                 className="flex-row items-center self-start py-2.5 px-3 bg-gray-800 rounded-full border border-gray-700"
                             >
                                 <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />

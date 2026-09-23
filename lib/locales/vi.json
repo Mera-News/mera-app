@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "Chỉ tra cứu khi bạn yêu cầu",
     "autoCommunityFactCheckDescription": "Các kiểm chứng được dùng chung. Khi một người yêu cầu kiểm chứng một tin, kết quả được lưu cùng tin đó và ai cũng xem được. Bật lên, Mera sẽ tìm kiểm chứng sẵn có mỗi lần bạn mở một bài. Để tắt, Mera chỉ tìm khi bạn chạm nút kiểm chứng, nên việc yêu cầu vẫn là điều bạn chủ động làm với từng tin.",
     "loadFailedDescription": "Không thể tải cài đặt Mera Protocol.",
-    "loadFailedTitle": "Tải thất bại"
+    "loadFailedTitle": "Tải thất bại",
+    "chooseModel": "Chọn một mô hình để tải xuống. Bạn có thể đổi sau.",
+    "downloadModelNamed": "Tải {{model}} ({{size}})",
+    "deleteModelDescription": "Thao tác này sẽ xóa {{model}} ({{size}}) khỏi thiết bị này. Bạn có thể tải lại sau. Nếu bạn đang sử dụng xử lý trên thiết bị, bạn sẽ được chuyển sang đám mây.",
+    "switchModelTitle": "Đổi mô hình?",
+    "switchModelDescription": "{{current}} sẽ bị xóa khỏi thiết bị này. Tải {{new}} để sử dụng lại xử lý trên thiết bị.",
+    "switchModelConfirm": "Đổi",
+    "modelLicense": "Giấy phép: {{license}}",
+    "speedTitle": "Tốc độ trên thiết bị này",
+    "speedLoad": "Thời gian tải: {{seconds}} giây",
+    "speedGeneration": "Tốc độ viết: {{tokPerSec}} token/giây",
+    "speedRelevance": "Mức liên quan: {{ms}} ms mỗi bài",
+    "speedReason": "Lý do: {{ms}} ms mỗi bài",
+    "speedResetNote": "Đo trong lần đồng bộ gần nhất. Sẽ bị xóa khi khởi động lại ứng dụng."
   },
   "manageData": {
     "deleting": "Đang xóa...",

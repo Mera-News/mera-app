@@ -3,6 +3,7 @@ import { resetSlowRequests, useNetworkStore } from '@/lib/stores/network-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { getJwtToken } from '@/lib/auth-client';
+import { wasJsRestartSync } from '@/lib/app-restart';
 import type { Job, TaskCondition, TaskDefinition, TriggerOutcome } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
@@ -287,6 +288,20 @@ class _AppScheduler {
    *  immediately on cold start without waiting for the user to background
    *  and re-foreground the app. */
   onStoresHydrated(): void {
+    // A RESTART BOOT IS WARM, not cold. Every background -> foreground return
+    // reloads the app (lib/app-restart.ts), so treating this as a cold start
+    // would hand every single return the 5s floor instead of the 60s one and
+    // put feed-sync on the wire on every return.
+    //
+    // SYNCHRONOUS ON PURPOSE — this method must not become async. It fakes a
+    // foreground event, and the foreground loop dispatches with `void` in
+    // registration order; that ordering is what makes feed-sync's read of
+    // entitlement deterministically stale, and an await here would reorder it
+    // in a way nothing would catch before device testing. The root bootstrap
+    // awaits `initRestartContext()` before `AppScheduler.init()` precisely so
+    // this read can be a synchronous cache hit.
+    const coldStart = !wasJsRestartSync();
+
     // A6: let hydration + first paint win the JS thread on cold start. Defer the
     // initial foreground task kick past pending interactions AND a short settle
     // so the first render is smooth before feed-sync/inference-recover fire.
@@ -297,7 +312,7 @@ class _AppScheduler {
         // coldStart: use the 5s floor, not the 60s warm one. See
         // COLD_START_MIN_GAP_MS — the user is looking at restored rows, so the
         // first sync of a session is never "rapid app-switching".
-        this._onForeground({ coldStart: true });
+        this._onForeground({ coldStart });
       }, COLD_START_SETTLE_MS);
     });
   }

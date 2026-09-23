@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "Se busca solo cuando lo pides",
     "autoCommunityFactCheckDescription": "Las verificaciones se comparten. Cuando alguien pide que se verifique una noticia, el resultado se guarda junto a esa noticia y cualquiera puede verlo. Con esta opción activada, Mera busca una verificación existente cada vez que abres un artículo. Desactivada, Mera solo busca cuando tocas el botón de verificación, de modo que pedirla sigue siendo algo que eliges hacer noticia a noticia.",
     "loadFailedDescription": "No se pudieron cargar los ajustes de Mera Protocol.",
-    "loadFailedTitle": "Error al cargar"
+    "loadFailedTitle": "Error al cargar",
+    "chooseModel": "Elige un modelo para descargar. Puedes cambiarlo más tarde.",
+    "downloadModelNamed": "Descargar {{model}} ({{size}})",
+    "deleteModelDescription": "Esto eliminará {{model}} ({{size}}) de este dispositivo. Puedes volver a descargarlo más tarde. Si estás usando el procesamiento en el dispositivo, se cambiará a la nube.",
+    "switchModelTitle": "¿Cambiar de modelo?",
+    "switchModelDescription": "{{current}} se eliminará de este dispositivo. Descarga {{new}} para volver a usar el procesamiento en el dispositivo.",
+    "switchModelConfirm": "Cambiar",
+    "modelLicense": "Licencia: {{license}}",
+    "speedTitle": "Velocidad en este dispositivo",
+    "speedLoad": "Tiempo de carga: {{seconds}} s",
+    "speedGeneration": "Velocidad de escritura: {{tokPerSec}} tokens/s",
+    "speedRelevance": "Relevancia: {{ms}} ms por artículo",
+    "speedReason": "Motivos: {{ms}} ms por artículo",
+    "speedResetNote": "Medido en tu última sincronización. Se borra al reiniciar la app."
   },
   "manageData": {
     "deleting": "Eliminando...",

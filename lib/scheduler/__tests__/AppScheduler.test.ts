@@ -87,6 +87,14 @@ jest.mock('@/lib/auth-client', () => ({
   getJwtToken: (...args: any[]) => mockGetJwtToken(...args),
 }));
 
+// Whether THIS boot is a JS reload. onStoresHydrated() reads it synchronously
+// (it must not become async — see its header) and uses it to decide whether the
+// kick is a cold start or a warm one.
+let mockWasJsRestart = false;
+jest.mock('@/lib/app-restart', () => ({
+  wasJsRestartSync: () => mockWasJsRestart,
+}));
+
 jest.mock('@/lib/scheduler/scheduler-store', () => ({
   useSchedulerStore: {
     getState: () => mockSchedulerStore,
@@ -591,6 +599,53 @@ describe('AppScheduler — authenticated condition (real credential pre-flight)'
     expect(mockRunnerRun).not.toHaveBeenCalled();
     const loggerMock = jest.requireMock('@/lib/logger').default;
     expect(loggerMock.captureException).not.toHaveBeenCalled();
+  });
+});
+
+describe('AppScheduler — onStoresHydrated cold vs restart boot', () => {
+  // Frequency deliberately above BOTH floors, because the gap is
+  // `Math.min(frequency, floor)`: at 5 minutes, a cold boot uses the 5s floor
+  // and a restart boot the 60s one, so a 30-second-old lastRun separates them.
+  const makeFiveMinuteTask = () =>
+    makeTask({ name: 'floor-task', frequency: 5 * 60_000, triggers: ['app-foreground'] });
+
+  beforeEach(() => {
+    mockWasJsRestart = false;
+  });
+
+  afterEach(() => {
+    mockWasJsRestart = false;
+  });
+
+  it('a real cold start uses the 5s floor, so a 30s-old run is due', async () => {
+    AppScheduler.register(makeFiveMinuteTask());
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 30_000);
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'floor-task' }));
+
+    AppScheduler.onStoresHydrated();
+    await jest.advanceTimersByTimeAsync(1_100);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  // THE REGRESSION. Every background -> foreground return is a JS reload, so a
+  // restart boot taking the cold-start floor would put feed-sync on the wire on
+  // every single return. Asserted POSITIVELY: the cold case above passes whether
+  // or not this branch exists, so it cannot catch the revert on its own.
+  it('a RESTART boot is warm: the 60s floor holds and a 30s-old run is not due', async () => {
+    mockWasJsRestart = true;
+    AppScheduler.register(makeFiveMinuteTask());
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 30_000);
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'floor-task' }));
+
+    AppScheduler.onStoresHydrated();
+    await jest.advanceTimersByTimeAsync(1_100);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
   });
 });
 

@@ -76,8 +76,16 @@ jest.mock('@/lib/background/backup-task', () => ({
     backgroundBackupIsAvailable: jest.fn(async () => mockBgAvailable),
 }));
 
-const mockReload = jest.fn(async () => { calls.push('reloadApp'); });
-jest.mock('expo-updates', () => ({ reloadAsync: () => mockReload() }));
+// The section no longer reaches expo-updates: every reload goes through
+// lib/app-restart.ts. Stubbed so the real module (and the SQLite singleton it
+// would drag in behind the settings service) stays out of this suite. The
+// restore path itself is exercised in BackupRecoveryFlow.test.tsx, which is the
+// one implementation both entry points share.
+const mockRequestRestart = jest.fn(async (_reason: string) => { calls.push('reloadApp'); });
+jest.mock('@/lib/app-restart', () => ({
+    requestRestart: (reason: string) => mockRequestRestart(reason),
+    restartIsAvailable: () => true,
+}));
 
 const mockListBackups = jest.fn(async () => {
     calls.push('listBackups');

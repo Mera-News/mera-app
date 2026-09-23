@@ -11,6 +11,7 @@ import { resolvePlanDisplay } from '@/lib/subscription/plan-display';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { ensureEmailBeforeCheckout } from '@/lib/subscription/email-capture';
+import { holdRestartAcrossPurchase } from '@/lib/subscriptions/subscribe-flow';
 import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe, logRevenueCatDiagnostics } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
@@ -168,6 +169,28 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     }, [load]);
 
     const handleViewPlans = async () => {
+        // THE MONEY PATH'S RESTART HOLD, and this is the app's primary purchase
+        // route (Profile -> Manage subscription -> View Plans).
+        //
+        // Every true background -> foreground return reloads the app. Without
+        // this, the return that carries the user back from a purchase is the
+        // return that throws away the entitlement refresh below, mid-flight:
+        // they paid and the app does not know.
+        //
+        // TAKEN AHEAD OF `ensureEmailBeforeCheckout()`, not just ahead of the
+        // paywall. That gate sends the user to their mail app for a code, which
+        // is a true departure on both platforms — and the one that arrives back
+        // with a half-finished checkout behind it.
+        //
+        // NOT RELEASED HERE, and deliberately not in a `finally`. The release is
+        // timer-owned (see holdRestartAcrossPurchase): this function returns
+        // while `load()` -> `refreshUserBillingAfterPurchase` is still retrying,
+        // which is exactly the window the hold exists to cover. Releasing on the
+        // way out would release before the thing it protects. The returned
+        // immediate release is only valid where nothing was opened and the user
+        // provably cannot be away; there is no such path here, so it goes
+        // uncalled and the two timers own it.
+        holdRestartAcrossPurchase('purchase');
         try {
             // S10: verified email is required before checkout for anonymous
             // accounts; a dismissed sheet aborts quietly.

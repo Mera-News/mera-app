@@ -19,6 +19,14 @@ import {
 
 let downloadPromise: Promise<void> | null = null;
 
+// Bumped by every start AND every cancel. A download settles only if it is
+// still the current generation: cancelling makes RNFS reject the in-flight
+// download a moment later, and without this that rejection overwrote the
+// cancel's clean `not_downloaded` with an error state plus a "Download Failed"
+// notification, and its `finally` could clear the handle of a download started
+// right after the cancel.
+let downloadGeneration = 0;
+
 // ---------------------------------------------------------------------------
 // Notification helpers (completion / error only)
 // ---------------------------------------------------------------------------
@@ -86,6 +94,9 @@ export function startModelDownload(config: BaseModelDownloadConfig): void {
   store.setModelState('downloading');
   store.setDownloadProgress(0);
 
+  const generation = ++downloadGeneration;
+  const isCurrent = () => generation === downloadGeneration;
+
   downloadPromise = (async () => {
     const canNotify = await hasNotificationPermission();
 
@@ -95,26 +106,30 @@ export function startModelDownload(config: BaseModelDownloadConfig): void {
         const mbDown = (info.bytesWritten / (1024 * 1024)).toFixed(1);
         const mbTotal = (info.contentLength / (1024 * 1024)).toFixed(0);
         logger.info(`[DownloadService] ${mbDown} MB / ${mbTotal} MB (${pct}%)`);
-        useMeraProtocolStore.getState().setDownloadProgress(pct);
+        if (isCurrent()) useMeraProtocolStore.getState().setDownloadProgress(pct);
       });
 
+      if (!isCurrent()) return;
       useMeraProtocolStore.getState().setModelState('downloaded');
       useMeraProtocolStore.getState().setDownloadProgress(100);
       if (canNotify) await showCompletionNotification();
     } catch (error) {
+      // Cancelled (or superseded): the cancel already set the state. Not a failure.
+      if (!isCurrent()) return;
       const message =
         error instanceof Error ? error.message : 'Download failed';
       logger.captureException(error, { tags: { source: 'DownloadService', method: 'startModelDownload' } });
       useMeraProtocolStore.getState().setModelError(message);
       if (canNotify) await showErrorNotification(message);
     } finally {
-      downloadPromise = null;
+      if (isCurrent()) downloadPromise = null;
     }
   })();
 }
 
 /** Cancels the active download. */
 export async function cancelModelDownload(): Promise<void> {
+  downloadGeneration++;
   cancelActiveDownload();
   downloadPromise = null;
   useMeraProtocolStore.getState().setModelState('not_downloaded');

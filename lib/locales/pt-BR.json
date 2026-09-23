@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "Buscada só quando você pede",
     "autoCommunityFactCheckDescription": "As checagens são compartilhadas. Quando alguém pede a checagem de uma notícia, o resultado fica guardado junto dela e qualquer pessoa pode ver. Com isto ligado, o Mera procura uma checagem existente sempre que você abre um artigo. Desligado, o Mera procura apenas quando você toca no botão de checagem, de modo que pedir continua sendo algo que você escolhe fazer, notícia a notícia.",
     "loadFailedDescription": "Não foi possível carregar as configurações do Mera Protocol.",
-    "loadFailedTitle": "Falha ao carregar"
+    "loadFailedTitle": "Falha ao carregar",
+    "chooseModel": "Escolha um modelo para baixar. Você pode trocar depois.",
+    "downloadModelNamed": "Baixar {{model}} ({{size}})",
+    "deleteModelDescription": "Isso removerá {{model}} ({{size}}) deste dispositivo. Você pode baixá-lo novamente depois. Se você estiver usando o processamento no dispositivo, será alternado para a nuvem.",
+    "switchModelTitle": "Trocar de modelo?",
+    "switchModelDescription": "{{current}} será removido deste dispositivo. Baixe {{new}} para usar o processamento no dispositivo novamente.",
+    "switchModelConfirm": "Trocar",
+    "modelLicense": "Licença: {{license}}",
+    "speedTitle": "Velocidade neste dispositivo",
+    "speedLoad": "Tempo de carregamento: {{seconds}} s",
+    "speedGeneration": "Velocidade de escrita: {{tokPerSec}} tokens/s",
+    "speedRelevance": "Relevância: {{ms}} ms por artigo",
+    "speedReason": "Motivos: {{ms}} ms por artigo",
+    "speedResetNote": "Medido na sua última sincronização. É apagado quando o app reinicia."
   },
   "manageData": {
     "deleting": "Excluindo...",

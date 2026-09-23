@@ -106,6 +106,13 @@ jest.mock('@/lib/services/SuggestionSyncService', () => ({
   runScoringPass: (...args: any[]) => mockRunScoringPass(...args),
 }));
 
+// Feed-sync reads the processing mode (on-device rows are scored locally, never enqueued).
+// The real store imports the WatermelonDB-backed setting service at load time.
+let mockProcessingMode = 'CLOUD';
+jest.mock('@/lib/stores/mera-protocol-store', () => ({
+  useMeraProtocolStore: { getState: () => ({ processingMode: mockProcessingMode }) },
+}));
+
 jest.mock('@/lib/services/scoring-pipeline', () => ({
   enqueueCandidates: (...args: any[]) => mockEnqueueCandidates(...args),
   getNonTerminalCandidateIds: (...args: any[]) => mockGetNonTerminalCandidateIds(...args),
@@ -1151,6 +1158,43 @@ describe('stepHydratePersistEnqueue', () => {
     await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts({ suppressEnqueue: true }));
 
     expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+  });
+
+  it('on-device mode: hydrates and propagates, but enqueues nothing to the cloud pipeline', async () => {
+    // stepScore -> runScoringPass scores these rows on the device. Enqueueing
+    // them here made the cloud lane race the local one on the same rows.
+    mockProcessingMode = 'ON_DEVICE';
+    try {
+      mockGetArticlesForTopicsByIds.mockResolvedValue({
+        articles: [{ _id: 'art-1' }],
+        dailyLimitReached: false,
+      });
+      mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+      mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+        { id: 'art-1', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+      ]);
+      mockGateUnscoredForScoring.mockResolvedValue({
+        enqueueIds: ['art-1'],
+        propagatedCount: 0,
+        heldBackCount: 0,
+        coveredIdsByRep: { 'art-1': ['art-1'] },
+      });
+      mockEnqueueCandidates.mockResolvedValue({ deferred: ['art-1'] });
+      const diffResult: DiffResult = {
+        serverArticleIds: ['art-1'],
+        articleToTopicTexts: new Map([['art-1', ['topic-a']]]),
+        missingIds: ['art-1'],
+      };
+
+      const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+      expect(mockPersistAndLinkV2Suggestions).toHaveBeenCalled();
+      expect(mockGateUnscoredForScoring).toHaveBeenCalled();
+      expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+      expect(result.enqueuedCount).toBe(0);
+    } finally {
+      mockProcessingMode = 'CLOUD';
+    }
   });
 
   it('does NOT flush a tail when the pipeline deferred nothing', async () => {

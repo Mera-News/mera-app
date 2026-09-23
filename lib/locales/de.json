@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "Wird nur auf Tippen abgefragt",
     "autoCommunityFactCheckDescription": "Faktenchecks werden geteilt. Wenn eine Person einen Check für eine Meldung anfordert, wird das Ergebnis bei dieser Meldung gespeichert und alle können es sehen. Ist dies aktiviert, sucht Mera bei jedem geöffneten Artikel nach einem vorhandenen Check. Bleibt es aus, sucht Mera nur, wenn du auf die Faktencheck-Schaltfläche tippst, sodass das Nachfragen eine bewusste Entscheidung für eine einzelne Meldung bleibt.",
     "loadFailedDescription": "Die Mera Protocol-Einstellungen konnten nicht geladen werden.",
-    "loadFailedTitle": "Laden fehlgeschlagen"
+    "loadFailedTitle": "Laden fehlgeschlagen",
+    "chooseModel": "Wählen Sie ein Modell zum Herunterladen. Sie können später wechseln.",
+    "downloadModelNamed": "{{model}} herunterladen ({{size}})",
+    "deleteModelDescription": "{{model}} ({{size}}) wird von diesem Gerät entfernt. Sie können es später erneut herunterladen. Falls Sie die Verarbeitung auf dem Gerät nutzen, werden Sie zur Cloud gewechselt.",
+    "switchModelTitle": "Modell wechseln?",
+    "switchModelDescription": "{{current}} wird von diesem Gerät entfernt. Laden Sie {{new}} herunter, um die Verarbeitung auf dem Gerät wieder zu nutzen.",
+    "switchModelConfirm": "Wechseln",
+    "modelLicense": "Lizenz: {{license}}",
+    "speedTitle": "Geschwindigkeit auf diesem Gerät",
+    "speedLoad": "Ladezeit: {{seconds}} s",
+    "speedGeneration": "Schreibgeschwindigkeit: {{tokPerSec}} Tokens/s",
+    "speedRelevance": "Relevanz: {{ms}} ms pro Artikel",
+    "speedReason": "Begründungen: {{ms}} ms pro Artikel",
+    "speedResetNote": "Bei der letzten Synchronisierung gemessen. Wird beim Neustart der App gelöscht."
   },
   "manageData": {
     "deleting": "Wird gelöscht...",

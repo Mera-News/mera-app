@@ -578,4 +578,85 @@ describe('useLocalLLM', () => {
     });
   });
 
+  describe('turnBusy', () => {
+    it('starts false and turns true the moment a turn starts', async () => {
+      mockInferStream.mockImplementation(() => makeTextStream([]));
+      const agent = makeAgent();
+      const { result } = renderHook(() => useLocalLLM(agent));
+
+      expect(result.current.turnBusy).toBe(false);
+
+      act(() => {
+        result.current.sendMessage('hello');
+      });
+
+      expect(result.current.turnBusy).toBe(true);
+    });
+
+    it('clears together with status on a turn with no tool calls', async () => {
+      mockInferStream.mockImplementation(() => makeTextStream(['hello']));
+      const agent = makeAgent();
+      const { result } = renderHook(() => useLocalLLM(agent));
+
+      act(() => {
+        result.current.sendMessage('hi');
+      });
+
+      await waitFor(() => expect(result.current.status).toBe('idle'));
+      expect(result.current.turnBusy).toBe(false);
+    });
+
+    // THE GAP ITSELF. `status` goes idle at the "release input before tool
+    // execution" point in runInference, before the tool call this turn staged
+    // has actually run. A restart hold keyed on `status` alone would release
+    // right here, mid-write. `turnBusy` must not.
+    it('stays true after status goes idle while a tool call is still executing', async () => {
+      const toolCallXml =
+        '<tool_call>{"name":"saveExtractedFacts","arguments":{"extracted_user_information":[]}}</tool_call>';
+      mockInferStream.mockImplementation(() => makeToolCallStream(toolCallXml));
+
+      let resolveExecuteTool: (value: ToolExecutionResult) => void = () => {};
+      const executeTool = jest.fn(
+        () => new Promise<ToolExecutionResult>((resolve) => { resolveExecuteTool = resolve; }),
+      );
+      const agent = makeAgent({ executeTool });
+      const { result } = renderHook(() => useLocalLLM(agent));
+
+      act(() => {
+        result.current.sendMessage('save my facts');
+      });
+
+      // The early release: status is idle, but nothing has executed yet.
+      await waitFor(() => expect(result.current.status).toBe('idle'));
+      expect(executeTool).toHaveBeenCalled();
+      // The assertion that fails if `turnBusy` is cleared at the same point
+      // as `status` instead of in the outer `finally`.
+      expect(result.current.turnBusy).toBe(true);
+
+      // Let the tool call resolve and the turn actually finish.
+      await act(async () => {
+        resolveExecuteTool({ result: { saved: 1 } });
+        await Promise.resolve();
+      });
+
+      await waitFor(() => expect(result.current.turnBusy).toBe(false));
+    });
+
+    it('clears on a thrown tool execution too, not only the success path', async () => {
+      const toolCallXml =
+        '<tool_call>{"name":"updateUserConfig","arguments":{}}</tool_call>';
+      mockInferStream.mockImplementation(() => makeToolCallStream(toolCallXml));
+
+      const executeTool = jest.fn().mockRejectedValue(new Error('tool crashed'));
+      const agent = makeAgent({ executeTool });
+      const { result } = renderHook(() => useLocalLLM(agent));
+
+      act(() => {
+        result.current.sendMessage('update');
+      });
+
+      await waitFor(() => expect(result.current.turnBusy).toBe(false), { timeout: 3000 });
+    });
+  });
+
 });

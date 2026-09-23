@@ -518,7 +518,20 @@
     "autoCommunityFactCheckOff": "Sprawdzane tylko na żądanie",
     "autoCommunityFactCheckDescription": "Sprawdzenia faktów są wspólne. Gdy ktoś poprosi o sprawdzenie materiału, wynik zostaje zapisany przy nim i każdy może go zobaczyć. Po włączeniu Mera szuka istniejącego sprawdzenia przy każdym otwartym artykule. Po wyłączeniu Mera szuka tylko wtedy, gdy dotkniesz przycisku sprawdzenia, więc pytanie pozostaje świadomym wyborem przy pojedynczym materiale.",
     "loadFailedDescription": "Nie udało się wczytać ustawień Mera Protocol.",
-    "loadFailedTitle": "Nie udało się wczytać"
+    "loadFailedTitle": "Nie udało się wczytać",
+    "chooseModel": "Wybierz jeden model do pobrania. Możesz go później zmienić.",
+    "downloadModelNamed": "Pobierz {{model}} ({{size}})",
+    "deleteModelDescription": "Spowoduje to usunięcie {{model}} ({{size}}) z tego urządzenia. Możesz go ponownie pobrać później. Jeśli korzystasz z przetwarzania na urządzeniu, zostaniesz przełączony na chmurę.",
+    "switchModelTitle": "Zmienić model?",
+    "switchModelDescription": "{{current}} zostanie usunięty z tego urządzenia. Pobierz {{new}}, aby ponownie korzystać z przetwarzania na urządzeniu.",
+    "switchModelConfirm": "Zmień",
+    "modelLicense": "Licencja: {{license}}",
+    "speedTitle": "Szybkość na tym urządzeniu",
+    "speedLoad": "Czas ładowania: {{seconds}} s",
+    "speedGeneration": "Szybkość pisania: {{tokPerSec}} tokenów/s",
+    "speedRelevance": "Trafność: {{ms}} ms na artykuł",
+    "speedReason": "Uzasadnienia: {{ms}} ms na artykuł",
+    "speedResetNote": "Zmierzono podczas ostatniej synchronizacji. Czyszczone po ponownym uruchomieniu aplikacji."
   },
   "manageData": {
     "deleting": "Usuwanie...",

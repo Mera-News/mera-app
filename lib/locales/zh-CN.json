@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "仅在你点按时才查询",
     "autoCommunityFactCheckDescription": "事实查核是共享的。当有人请求查核某条报道，结果会随该报道保存，任何人都能看到。开启后，Mera 会在你每次打开文章时寻找已有的查核。保持关闭，Mera 只在你点按事实查核按钮时才去寻找，这样请求查核仍是你针对单条报道做出的选择。",
     "loadFailedDescription": "无法加载 Mera Protocol 设置。",
-    "loadFailedTitle": "加载失败"
+    "loadFailedTitle": "加载失败",
+    "chooseModel": "选择一个要下载的模型。之后可以切换。",
+    "downloadModelNamed": "下载 {{model}}（{{size}}）",
+    "deleteModelDescription": "这将从此设备删除 {{model}}（{{size}}）。您可以稍后重新下载。如果您正在使用设备端处理，将会切换到云端。",
+    "switchModelTitle": "切换模型？",
+    "switchModelDescription": "{{current}} 将从此设备删除。下载 {{new}} 即可再次使用设备端处理。",
+    "switchModelConfirm": "切换",
+    "modelLicense": "许可证：{{license}}",
+    "speedTitle": "此设备上的速度",
+    "speedLoad": "加载时间：{{seconds}} 秒",
+    "speedGeneration": "生成速度：{{tokPerSec}} 个 token/秒",
+    "speedRelevance": "相关性：每篇文章 {{ms}} 毫秒",
+    "speedReason": "理由：每篇文章 {{ms}} 毫秒",
+    "speedResetNote": "在您上次同步时测得。应用重启后清除。"
   },
   "manageData": {
     "deleting": "删除中...",

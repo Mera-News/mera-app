@@ -3,6 +3,7 @@
 // Calls infer() from mera-protocol-toolkit directly.
 
 import { getModelState, infer as localInfer, initBaseModel } from '../mera-protocol-toolkit';
+import type { InferenceLabel } from '../mera-protocol-toolkit/core/inference-stats';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import logger from '../logger';
 
@@ -23,6 +24,8 @@ export interface LocalCompleteRequest {
   temperature?: number;
   responseFormat?: 'text' | 'json';
   enableThinking?: boolean;
+  /** Tags the call for the in-memory speed readout in Mera Protocol settings. */
+  label?: InferenceLabel;
 }
 
 export async function completeLocal(request: LocalCompleteRequest): Promise<string> {
@@ -40,6 +43,7 @@ export async function completeLocal(request: LocalCompleteRequest): Promise<stri
     temperature: request.temperature ?? 0.3,
     responseFormat: request.responseFormat === 'json' ? 'json' : undefined,
     enableThinking: request.enableThinking,
+    label: request.label,
   });
 
   // Reasoning-trace handling. `enableThinking` makes the model emit a <think>

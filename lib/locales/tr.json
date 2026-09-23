@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "Yalnızca siz istediğinizde aranır",
     "autoCommunityFactCheckDescription": "Doğrulamalar ortaktır. Biri bir haberin doğrulanmasını istediğinde sonuç o haberle birlikte saklanır ve herkes görebilir. Bunu açarsanız Mera, açtığınız her haberde mevcut bir doğrulama arar. Kapalı bırakırsanız Mera yalnızca doğrulama düğmesine dokunduğunuzda arar; böylece istemek, tek bir haber için bilerek yaptığınız bir şey olarak kalır.",
     "loadFailedDescription": "Mera Protocol ayarları yüklenemedi.",
-    "loadFailedTitle": "Yükleme başarısız"
+    "loadFailedTitle": "Yükleme başarısız",
+    "chooseModel": "İndirmek için bir model seç. Daha sonra değiştirebilirsin.",
+    "downloadModelNamed": "{{model}} indir ({{size}})",
+    "deleteModelDescription": "Bu, {{model}} ({{size}}) modelini bu cihazdan kaldıracak. Daha sonra yeniden indirebilirsin. Cihaz üzerinde işleme kullanıyorsan, buluta geçirileceksin.",
+    "switchModelTitle": "Model değiştirilsin mi?",
+    "switchModelDescription": "{{current}} bu cihazdan kaldırılacak. Cihaz üzerinde işlemeyi yeniden kullanmak için {{new}} indir.",
+    "switchModelConfirm": "Değiştir",
+    "modelLicense": "Lisans: {{license}}",
+    "speedTitle": "Bu cihazdaki hız",
+    "speedLoad": "Yükleme süresi: {{seconds}} sn",
+    "speedGeneration": "Yazma hızı: {{tokPerSec}} token/sn",
+    "speedRelevance": "Alaka düzeyi: makale başına {{ms}} ms",
+    "speedReason": "Gerekçeler: makale başına {{ms}} ms",
+    "speedResetNote": "Son eşitlemen sırasında ölçüldü. Uygulama yeniden başladığında silinir."
   },
   "manageData": {
     "deleting": "Siliniyor...",

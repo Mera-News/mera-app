@@ -530,7 +530,20 @@
     "autoCommunityFactCheckOff": "يُبحث عنه عند طلبك فقط",
     "autoCommunityFactCheckDescription": "التدقيقات مشتركة. حين يطلب أحدهم تدقيق خبر، تُحفظ النتيجة مع ذلك الخبر ويستطيع الجميع رؤيتها. عند تفعيل هذا الخيار يبحث Mera عن تدقيق موجود في كل مرة تفتح فيها مقالًا. وإن تركته معطلًا فلن يبحث Mera إلا عند ضغطك زر التدقيق، فيبقى الطلب أمرًا تختاره أنت لخبر واحد في كل مرة.",
     "loadFailedDescription": "فشل تحميل إعدادات Mera Protocol.",
-    "loadFailedTitle": "فشل التحميل"
+    "loadFailedTitle": "فشل التحميل",
+    "chooseModel": "اختر نموذجًا واحدًا لتنزيله. يمكنك التبديل لاحقًا.",
+    "downloadModelNamed": "تنزيل {{model}} ({{size}})",
+    "deleteModelDescription": "سيؤدي هذا إلى إزالة {{model}} ({{size}}) من هذا الجهاز. يمكنك تنزيله مرة أخرى لاحقًا. إذا كنت تستخدم المعالجة على الجهاز، فسيتم تحويلك إلى السحابة.",
+    "switchModelTitle": "تبديل النموذج؟",
+    "switchModelDescription": "ستتم إزالة {{current}} من هذا الجهاز. نزّل {{new}} لاستخدام المعالجة على الجهاز مرة أخرى.",
+    "switchModelConfirm": "تبديل",
+    "modelLicense": "الترخيص: {{license}}",
+    "speedTitle": "السرعة على هذا الجهاز",
+    "speedLoad": "وقت التحميل: {{seconds}} ث",
+    "speedGeneration": "سرعة الكتابة: {{tokPerSec}} رمز/ث",
+    "speedRelevance": "الصلة: {{ms}} مللي ثانية لكل مقال",
+    "speedReason": "الأسباب: {{ms}} مللي ثانية لكل مقال",
+    "speedResetNote": "تم القياس خلال آخر مزامنة. يُمسح عند إعادة تشغيل التطبيق."
   },
   "manageData": {
     "deleting": "جارٍ الحذف...",

@@ -91,6 +91,7 @@ import { icloudProvider, isICloudSupported } from '@/lib/backup/providers/icloud
 import BackupRecoveryFlow from '@/components/custom/backup/BackupRecoveryFlow';
 import { backgroundBackupIsAvailable } from '@/lib/background/backup-task';
 import type { BackupCadence, BackupProvider } from '@/lib/backup/types';
+import { requestRestart, restartIsAvailable } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 
 /** Past this, the "save a new copy" nudge turns amber. */
@@ -382,26 +383,30 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
 
   /**
    * Restart the JS runtime so every store re-hydrates from the restored
-   * database. Same `Updates.reloadAsync()` mechanism the language-change
-   * restart uses (`LanguageSettingsScreen`, `LanguageSelector`).
+   * database. Through `lib/app-restart.ts`, the one restart authority, rather
+   * than a bare `Updates.reloadAsync()` — so a restore cannot reload the app
+   * out from under a purchase or a credential write that is mid-flight.
    *
-   * If it fails there is nothing clever to do — the data IS restored, the app
-   * is just showing stale state — so the user is told to reopen the app rather
-   * than left with a success message and an unchanged screen.
+   * If the build cannot restart at all (a dev client, or any build without
+   * expo-updates) there is nothing clever to do — the data IS restored, the app
+   * is just showing stale state — so the user is told to reopen it rather than
+   * left with a success message and an unchanged screen.
+   *
+   * `restartIsAvailable()` and not "did requestRestart return": `reloadAsync()`
+   * resolves a promise that can settle before the JS context is torn down, so
+   * reading the fallback off control flow would paint "reopen the app" over a
+   * restart that IS happening, on every successful restore.
    */
   const reloadApp = useCallback(async () => {
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const Updates = require('expo-updates');
-      await Updates.reloadAsync();
-    } catch (err) {
-      logger.captureException(err, { tags: { screen: 'backup', action: 'reload' } });
+    if (!restartIsAvailable()) {
       notify(
         'success',
         tRef.current('backup.restoredTitle'),
         tRef.current('backup.restartNeeded'),
       );
+      return;
     }
+    await requestRestart('restore');
   }, [notify]);
 
   const doCloudRestore = useCallback(async () => {

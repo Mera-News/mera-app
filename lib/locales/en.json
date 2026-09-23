@@ -817,7 +817,20 @@
     "autoCommunityFactCheckOff": "Looked up only when you tap the button",
     "autoCommunityFactCheckDescription": "Fact checks are shared. When one reader asks for a story to be checked, the result is kept against that story and anyone can see it. Turn this on and Mera looks for an existing check every time you open an article. Leave it off and Mera looks only when you tap the fact check button, so asking stays something you choose to do on one story at a time.",
     "loadFailedDescription": "Failed to load Mera Protocol settings.",
-    "loadFailedTitle": "Load Failed"
+    "loadFailedTitle": "Load Failed",
+    "chooseModel": "Choose one model to download. You can switch later.",
+    "downloadModelNamed": "Download {{model}} ({{size}})",
+    "deleteModelDescription": "This will remove {{model}} ({{size}}) from this device. You can download it again later. If you're using on-device processing, you'll be switched to cloud.",
+    "switchModelTitle": "Switch model?",
+    "switchModelDescription": "{{current}} will be removed from this device. Download {{new}} to use on-device processing again.",
+    "switchModelConfirm": "Switch",
+    "modelLicense": "License: {{license}}",
+    "speedTitle": "Speed on this device",
+    "speedLoad": "Load time: {{seconds}} s",
+    "speedGeneration": "Writing speed: {{tokPerSec}} tokens/s",
+    "speedRelevance": "Relevance: {{ms}} ms per article",
+    "speedReason": "Reasons: {{ms}} ms per article",
+    "speedResetNote": "Measured during your last sync. Clears when the app restarts."
   },
   "manageData": {
     "exportHistoryTitle": "Export reading history",

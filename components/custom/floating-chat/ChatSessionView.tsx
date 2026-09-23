@@ -22,6 +22,7 @@ import {
 } from '@/lib/stores/floating-chat-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import { holdRestart } from '@/lib/app-restart';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -48,6 +49,19 @@ export interface ChatSessionViewProps {
   // Inference hook result (shared shape of useLocalLLM / useCloudPersonaChat)
   messages: ConversationMessage[];
   status: 'idle' | 'streaming';
+  /**
+   * The ON-DEVICE engine's turn-busy signal (`useLocalLLM`'s `turnBusy`).
+   * Optional and local-engine-only: `CloudPersonaChat` renders this same
+   * component with no on-device turn to report, and the cloud path's
+   * equivalent (`agentTurnState.turnActive`) is read directly off its own
+   * store instead of threaded as a prop, so `undefined` here must read as
+   * "no local engine, therefore not busy" rather than as anything else.
+   * `useLocalLLM`'s own `status` goes idle BEFORE its tool-execution loop
+   * runs ("Release input before tool execution" in that file) so the
+   * composer can re-enable while facts are still being saved; this is the
+   * signal that stays true through that window.
+   */
+  localTurnBusy?: boolean;
   sendMessage: (text: string) => void;
   /** Starts a turn the user never sees. Used by the topic-plan discard reply. */
   sendHiddenTurn: (text: string) => void;
@@ -72,6 +86,7 @@ export interface ChatSessionViewProps {
 export default function ChatSessionView({
   messages,
   status,
+  localTurnBusy,
   sendMessage,
   sendHiddenTurn,
   isBlocked,
@@ -96,6 +111,39 @@ export default function ChatSessionView({
   const turnActive = useCloudChatStore((st) => st.agentTurnState?.turnActive);
   const agentTerminal = useCloudChatStore((st) => renderableTerminal(st.agentTerminal));
   const resume = useMemo(() => resumeMessages ?? [], [resumeMessages]);
+
+  // Hold a restart while a response is actually arriving. `isStreaming` alone
+  // is a proxy, not the authoritative signal, on EITHER engine: on the cloud
+  // path `status` goes idle EARLY, while a forced-extraction or continuation
+  // pass is still writing facts (see the `turnActive` comment above and
+  // useCloudPersonaChat's `setTurnBusy` — "turnBusyRef, not isStreamingRef"),
+  // so `turnActive` covers that tail. On-device chat has the identical shape
+  // of gap for the identical reason: `useLocalLLM`'s own `status` goes idle
+  // before its tool-execution loop runs ("Release input before tool
+  // execution" in that file), so `localTurnBusy` is on-device's twin of
+  // `turnActive` — a flag that stays true through that loop and is cleared
+  // only once the whole turn settles. `localTurnBusy` is `undefined` on the
+  // cloud path (no on-device engine to report) and `turnActive` is
+  // `undefined` on the local path (no cloud loop state); neither engine's
+  // "authoritative" signal exists on the other, so `isStreaming` stays in the
+  // union to cover a turn's initial streaming phase on whichever engine is
+  // live. Any one of the three being true means a turn is still in flight.
+  const responseInFlight = isStreaming || turnActive === true || localTurnBusy === true;
+
+  // The floating chat is an overlay, not a route, so the route-based restart
+  // gate (`AppRestartOnForeground`) cannot see it — this hold is the only
+  // thing that can. The effect's cleanup is the ONE release path and it is
+  // unconditional: it fires the moment `responseInFlight` flips back to false
+  // (normal completion, a user cancel, or an error — all three resolve every
+  // one of `isStreaming` / `turnActive` / `localTurnBusy` to false) and it
+  // fires on unmount regardless of `responseInFlight`, so a popover close
+  // mid-stream can never leave the hold engaged. `holdRestart`'s release is
+  // idempotent, so this never double-releases.
+  useEffect(() => {
+    if (!responseInFlight) return;
+    const release = holdRestart('chat-stream');
+    return () => release();
+  }, [responseInFlight]);
 
   // Intro copy depends on the context: the article-feedback surfaces open with a
   // "what can I do for you" line (article vs. suggestion variant); everything

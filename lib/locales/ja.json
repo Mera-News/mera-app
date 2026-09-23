@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "求めたときだけ照会します",
     "autoCommunityFactCheckDescription": "ファクトチェックは共有されます。誰かが記事の確認を依頼すると、その結果は記事に紐づいて保存され、誰でも見られます。オンにすると、記事を開くたびに Mera が既存のチェックを探します。オフのままなら、ファクトチェックのボタンを押したときだけ探すので、依頼はあくまで記事ごとにご自身で選ぶ行為のままです。",
     "loadFailedDescription": "Mera Protocol の設定を読み込めませんでした。",
-    "loadFailedTitle": "読み込みに失敗しました"
+    "loadFailedTitle": "読み込みに失敗しました",
+    "chooseModel": "ダウンロードするモデルを1つ選んでください。後で切り替えられます。",
+    "downloadModelNamed": "{{model}}をダウンロード（{{size}}）",
+    "deleteModelDescription": "このデバイスから{{model}}（{{size}}）が削除されます。後で再ダウンロードできます。デバイス上処理を使用している場合は、クラウドに切り替わります。",
+    "switchModelTitle": "モデルを切り替えますか？",
+    "switchModelDescription": "このデバイスから{{current}}が削除されます。デバイス上処理を再び使うには{{new}}をダウンロードしてください。",
+    "switchModelConfirm": "切り替える",
+    "modelLicense": "ライセンス：{{license}}",
+    "speedTitle": "このデバイスでの速度",
+    "speedLoad": "読み込み時間：{{seconds}}秒",
+    "speedGeneration": "生成速度：{{tokPerSec}}トークン/秒",
+    "speedRelevance": "関連性：記事あたり{{ms}}ミリ秒",
+    "speedReason": "理由：記事あたり{{ms}}ミリ秒",
+    "speedResetNote": "前回の同期中に測定。アプリを再起動するとリセットされます。"
   },
   "manageData": {
     "deleting": "削除中...",

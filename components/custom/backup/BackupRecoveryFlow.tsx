@@ -48,6 +48,7 @@ import {
 } from '@/lib/backup/providers/google-drive';
 import { icloudProvider, isICloudSupported } from '@/lib/backup/providers/icloud';
 import type { BackupProvider } from '@/lib/backup/types';
+import { requestRestart, restartIsAvailable } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 
 export interface BackupRecoveryFlowProps {
@@ -212,12 +213,20 @@ const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
       // every Zustand store, and those hydrate once at startup — without this
       // the user is told "restored" and shown the same empty persona. Doing it
       // per-store would mean listing them here and forgetting the next one.
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const Updates = require('expo-updates');
-        await Updates.reloadAsync();
-      } catch (err) {
-        logger.captureException(err, { tags: { screen: 'backup-recovery', action: 'reload' } });
+      //
+      // Through `lib/app-restart.ts` rather than a bare `reloadAsync()`, so a
+      // restore cannot reload the app out from under something mid-flight. The
+      // fallback below is gated on `restartIsAvailable()` and not on control
+      // flow: `reloadAsync()`'s promise can settle before the JS context is torn
+      // down, so "we got here, so it did not happen" would tell a user to reopen
+      // an app that is already restarting.
+      if (restartIsAvailable()) {
+        await requestRestart('restore');
+      } else {
+        logger.addBreadcrumb(
+          'Restore finished on a build that cannot restart',
+          'backup-recovery',
+        );
         notify(
           'success',
           tRef.current('backup.restoredTitle'),

@@ -1,0 +1,343 @@
+{
+  "_comment": "Input to _splice-fragments.mjs for the on-device model picker (LFM2.5 2.6B / Qwen3.5 2B) and its speed readout. Model names, sizes and licence names are passed as parameters and never translated. Each locale reuses the terms its dictionary already uses for on-device processing, cloud and model.",
+  "en": {
+    "meraProtocol": {
+      "chooseModel": "Choose one model to download. You can switch later.",
+      "downloadModelNamed": "Download {{model}} ({{size}})",
+      "deleteModelDescription": "This will remove {{model}} ({{size}}) from this device. You can download it again later. If you're using on-device processing, you'll be switched to cloud.",
+      "switchModelTitle": "Switch model?",
+      "switchModelDescription": "{{current}} will be removed from this device. Download {{new}} to use on-device processing again.",
+      "switchModelConfirm": "Switch",
+      "modelLicense": "License: {{license}}",
+      "speedTitle": "Speed on this device",
+      "speedLoad": "Load time: {{seconds}} s",
+      "speedGeneration": "Writing speed: {{tokPerSec}} tokens/s",
+      "speedRelevance": "Relevance: {{ms}} ms per article",
+      "speedReason": "Reasons: {{ms}} ms per article",
+      "speedResetNote": "Measured during your last sync. Clears when the app restarts."
+    }
+  },
+  "ar": {
+    "meraProtocol": {
+      "chooseModel": "اختر نموذجًا واحدًا لتنزيله. يمكنك التبديل لاحقًا.",
+      "downloadModelNamed": "تنزيل {{model}} ({{size}})",
+      "deleteModelDescription": "سيؤدي هذا إلى إزالة {{model}} ({{size}}) من هذا الجهاز. يمكنك تنزيله مرة أخرى لاحقًا. إذا كنت تستخدم المعالجة على الجهاز، فسيتم تحويلك إلى السحابة.",
+      "switchModelTitle": "تبديل النموذج؟",
+      "switchModelDescription": "ستتم إزالة {{current}} من هذا الجهاز. نزّل {{new}} لاستخدام المعالجة على الجهاز مرة أخرى.",
+      "switchModelConfirm": "تبديل",
+      "modelLicense": "الترخيص: {{license}}",
+      "speedTitle": "السرعة على هذا الجهاز",
+      "speedLoad": "وقت التحميل: {{seconds}} ث",
+      "speedGeneration": "سرعة الكتابة: {{tokPerSec}} رمز/ث",
+      "speedRelevance": "الصلة: {{ms}} مللي ثانية لكل مقال",
+      "speedReason": "الأسباب: {{ms}} مللي ثانية لكل مقال",
+      "speedResetNote": "تم القياس خلال آخر مزامنة. يُمسح عند إعادة تشغيل التطبيق."
+    }
+  },
+  "de": {
+    "meraProtocol": {
+      "chooseModel": "Wählen Sie ein Modell zum Herunterladen. Sie können später wechseln.",
+      "downloadModelNamed": "{{model}} herunterladen ({{size}})",
+      "deleteModelDescription": "{{model}} ({{size}}) wird von diesem Gerät entfernt. Sie können es später erneut herunterladen. Falls Sie die Verarbeitung auf dem Gerät nutzen, werden Sie zur Cloud gewechselt.",
+      "switchModelTitle": "Modell wechseln?",
+      "switchModelDescription": "{{current}} wird von diesem Gerät entfernt. Laden Sie {{new}} herunter, um die Verarbeitung auf dem Gerät wieder zu nutzen.",
+      "switchModelConfirm": "Wechseln",
+      "modelLicense": "Lizenz: {{license}}",
+      "speedTitle": "Geschwindigkeit auf diesem Gerät",
+      "speedLoad": "Ladezeit: {{seconds}} s",
+      "speedGeneration": "Schreibgeschwindigkeit: {{tokPerSec}} Tokens/s",
+      "speedRelevance": "Relevanz: {{ms}} ms pro Artikel",
+      "speedReason": "Begründungen: {{ms}} ms pro Artikel",
+      "speedResetNote": "Bei der letzten Synchronisierung gemessen. Wird beim Neustart der App gelöscht."
+    }
+  },
+  "es": {
+    "meraProtocol": {
+      "chooseModel": "Elige un modelo para descargar. Puedes cambiarlo más tarde.",
+      "downloadModelNamed": "Descargar {{model}} ({{size}})",
+      "deleteModelDescription": "Esto eliminará {{model}} ({{size}}) de este dispositivo. Puedes volver a descargarlo más tarde. Si estás usando el procesamiento en el dispositivo, se cambiará a la nube.",
+      "switchModelTitle": "¿Cambiar de modelo?",
+      "switchModelDescription": "{{current}} se eliminará de este dispositivo. Descarga {{new}} para volver a usar el procesamiento en el dispositivo.",
+      "switchModelConfirm": "Cambiar",
+      "modelLicense": "Licencia: {{license}}",
+      "speedTitle": "Velocidad en este dispositivo",
+      "speedLoad": "Tiempo de carga: {{seconds}} s",
+      "speedGeneration": "Velocidad de escritura: {{tokPerSec}} tokens/s",
+      "speedRelevance": "Relevancia: {{ms}} ms por artículo",
+      "speedReason": "Motivos: {{ms}} ms por artículo",
+      "speedResetNote": "Medido en tu última sincronización. Se borra al reiniciar la app."
+    }
+  },
+  "fr": {
+    "meraProtocol": {
+      "chooseModel": "Choisissez un modèle à télécharger. Vous pourrez en changer plus tard.",
+      "downloadModelNamed": "Télécharger {{model}} ({{size}})",
+      "deleteModelDescription": "Cela supprimera {{model}} ({{size}}) de cet appareil. Vous pourrez le retélécharger plus tard. Si vous utilisez le traitement sur l'appareil, vous serez basculé vers le cloud.",
+      "switchModelTitle": "Changer de modèle ?",
+      "switchModelDescription": "{{current}} sera supprimé de cet appareil. Téléchargez {{new}} pour utiliser à nouveau le traitement sur l'appareil.",
+      "switchModelConfirm": "Changer",
+      "modelLicense": "Licence : {{license}}",
+      "speedTitle": "Vitesse sur cet appareil",
+      "speedLoad": "Temps de chargement : {{seconds}} s",
+      "speedGeneration": "Vitesse d'écriture : {{tokPerSec}} jetons/s",
+      "speedRelevance": "Pertinence : {{ms}} ms par article",
+      "speedReason": "Raisons : {{ms}} ms par article",
+      "speedResetNote": "Mesuré lors de votre dernière synchronisation. Effacé au redémarrage de l'app."
+    }
+  },
+  "hi": {
+    "meraProtocol": {
+      "chooseModel": "डाउनलोड करने के लिए एक मॉडल चुनें। आप बाद में बदल सकते हैं।",
+      "downloadModelNamed": "{{model}} डाउनलोड करें ({{size}})",
+      "deleteModelDescription": "यह इस डिवाइस से {{model}} ({{size}}) हटा देगा। आप इसे बाद में फिर से डाउनलोड कर सकते हैं। यदि आप डिवाइस-पर प्रोसेसिंग का उपयोग कर रहे हैं, तो आपको क्लाउड पर स्विच कर दिया जाएगा।",
+      "switchModelTitle": "मॉडल बदलें?",
+      "switchModelDescription": "{{current}} इस डिवाइस से हटा दिया जाएगा। डिवाइस-पर प्रोसेसिंग फिर से उपयोग करने के लिए {{new}} डाउनलोड करें।",
+      "switchModelConfirm": "बदलें",
+      "modelLicense": "लाइसेंस: {{license}}",
+      "speedTitle": "इस डिवाइस पर गति",
+      "speedLoad": "लोड समय: {{seconds}} से.",
+      "speedGeneration": "लिखने की गति: {{tokPerSec}} टोकन/से.",
+      "speedRelevance": "प्रासंगिकता: प्रति लेख {{ms}} मि.से.",
+      "speedReason": "कारण: प्रति लेख {{ms}} मि.से.",
+      "speedResetNote": "आपके पिछले सिंक के दौरान मापा गया। ऐप दोबारा शुरू होने पर मिट जाता है।"
+    }
+  },
+  "id": {
+    "meraProtocol": {
+      "chooseModel": "Pilih satu model untuk diunduh. Anda dapat menggantinya nanti.",
+      "downloadModelNamed": "Unduh {{model}} ({{size}})",
+      "deleteModelDescription": "Ini akan menghapus {{model}} ({{size}}) dari perangkat ini. Anda dapat mengunduhnya kembali nanti. Jika Anda menggunakan pemrosesan di perangkat, Anda akan dialihkan ke cloud.",
+      "switchModelTitle": "Ganti model?",
+      "switchModelDescription": "{{current}} akan dihapus dari perangkat ini. Unduh {{new}} untuk menggunakan pemrosesan di perangkat lagi.",
+      "switchModelConfirm": "Ganti",
+      "modelLicense": "Lisensi: {{license}}",
+      "speedTitle": "Kecepatan di perangkat ini",
+      "speedLoad": "Waktu muat: {{seconds}} dtk",
+      "speedGeneration": "Kecepatan menulis: {{tokPerSec}} token/dtk",
+      "speedRelevance": "Relevansi: {{ms}} md per artikel",
+      "speedReason": "Alasan: {{ms}} md per artikel",
+      "speedResetNote": "Diukur saat sinkronisasi terakhir Anda. Dihapus saat aplikasi dimulai ulang."
+    }
+  },
+  "it": {
+    "meraProtocol": {
+      "chooseModel": "Scegli un modello da scaricare. Potrai cambiarlo in seguito.",
+      "downloadModelNamed": "Scarica {{model}} ({{size}})",
+      "deleteModelDescription": "Questo rimuoverà {{model}} ({{size}}) da questo dispositivo. Potrai scaricarlo di nuovo in seguito. Se stai usando l'elaborazione sul dispositivo, verrai passato al cloud.",
+      "switchModelTitle": "Cambiare modello?",
+      "switchModelDescription": "{{current}} verrà rimosso da questo dispositivo. Scarica {{new}} per usare di nuovo l'elaborazione sul dispositivo.",
+      "switchModelConfirm": "Cambia",
+      "modelLicense": "Licenza: {{license}}",
+      "speedTitle": "Velocità su questo dispositivo",
+      "speedLoad": "Tempo di caricamento: {{seconds}} s",
+      "speedGeneration": "Velocità di scrittura: {{tokPerSec}} token/s",
+      "speedRelevance": "Pertinenza: {{ms}} ms per articolo",
+      "speedReason": "Motivazioni: {{ms}} ms per articolo",
+      "speedResetNote": "Misurato durante l'ultima sincronizzazione. Si azzera al riavvio dell'app."
+    }
+  },
+  "ja": {
+    "meraProtocol": {
+      "chooseModel": "ダウンロードするモデルを1つ選んでください。後で切り替えられます。",
+      "downloadModelNamed": "{{model}}をダウンロード（{{size}}）",
+      "deleteModelDescription": "このデバイスから{{model}}（{{size}}）が削除されます。後で再ダウンロードできます。デバイス上処理を使用している場合は、クラウドに切り替わります。",
+      "switchModelTitle": "モデルを切り替えますか？",
+      "switchModelDescription": "このデバイスから{{current}}が削除されます。デバイス上処理を再び使うには{{new}}をダウンロードしてください。",
+      "switchModelConfirm": "切り替える",
+      "modelLicense": "ライセンス：{{license}}",
+      "speedTitle": "このデバイスでの速度",
+      "speedLoad": "読み込み時間：{{seconds}}秒",
+      "speedGeneration": "生成速度：{{tokPerSec}}トークン/秒",
+      "speedRelevance": "関連性：記事あたり{{ms}}ミリ秒",
+      "speedReason": "理由：記事あたり{{ms}}ミリ秒",
+      "speedResetNote": "前回の同期中に測定。アプリを再起動するとリセットされます。"
+    }
+  },
+  "ko": {
+    "meraProtocol": {
+      "chooseModel": "다운로드할 모델을 하나 선택하세요. 나중에 변경할 수 있습니다.",
+      "downloadModelNamed": "{{model}} 다운로드 ({{size}})",
+      "deleteModelDescription": "이 기기에서 {{model}}({{size}})이(가) 제거됩니다. 나중에 다시 다운로드할 수 있습니다. 기기 내 처리를 사용 중이라면 클라우드로 전환됩니다.",
+      "switchModelTitle": "모델을 변경할까요?",
+      "switchModelDescription": "이 기기에서 {{current}}이(가) 제거됩니다. 기기 내 처리를 다시 사용하려면 {{new}}을(를) 다운로드하세요.",
+      "switchModelConfirm": "변경",
+      "modelLicense": "라이선스: {{license}}",
+      "speedTitle": "이 기기에서의 속도",
+      "speedLoad": "로드 시간: {{seconds}}초",
+      "speedGeneration": "생성 속도: {{tokPerSec}}토큰/초",
+      "speedRelevance": "관련성: 기사당 {{ms}}ms",
+      "speedReason": "이유: 기사당 {{ms}}ms",
+      "speedResetNote": "마지막 동기화 중에 측정되었습니다. 앱을 다시 시작하면 초기화됩니다."
+    }
+  },
+  "nl": {
+    "meraProtocol": {
+      "chooseModel": "Kies één model om te downloaden. Je kunt later wisselen.",
+      "downloadModelNamed": "{{model}} downloaden ({{size}})",
+      "deleteModelDescription": "Dit verwijdert {{model}} ({{size}}) van dit apparaat. Je kunt het later opnieuw downloaden. Als je verwerking op het apparaat gebruikt, word je overgeschakeld naar cloud.",
+      "switchModelTitle": "Van model wisselen?",
+      "switchModelDescription": "{{current}} wordt van dit apparaat verwijderd. Download {{new}} om verwerking op het apparaat weer te gebruiken.",
+      "switchModelConfirm": "Wisselen",
+      "modelLicense": "Licentie: {{license}}",
+      "speedTitle": "Snelheid op dit apparaat",
+      "speedLoad": "Laadtijd: {{seconds}} s",
+      "speedGeneration": "Schrijfsnelheid: {{tokPerSec}} tokens/s",
+      "speedRelevance": "Relevantie: {{ms}} ms per artikel",
+      "speedReason": "Redenen: {{ms}} ms per artikel",
+      "speedResetNote": "Gemeten tijdens je laatste synchronisatie. Wordt gewist wanneer de app opnieuw start."
+    }
+  },
+  "pl": {
+    "meraProtocol": {
+      "chooseModel": "Wybierz jeden model do pobrania. Możesz go później zmienić.",
+      "downloadModelNamed": "Pobierz {{model}} ({{size}})",
+      "deleteModelDescription": "Spowoduje to usunięcie {{model}} ({{size}}) z tego urządzenia. Możesz go ponownie pobrać później. Jeśli korzystasz z przetwarzania na urządzeniu, zostaniesz przełączony na chmurę.",
+      "switchModelTitle": "Zmienić model?",
+      "switchModelDescription": "{{current}} zostanie usunięty z tego urządzenia. Pobierz {{new}}, aby ponownie korzystać z przetwarzania na urządzeniu.",
+      "switchModelConfirm": "Zmień",
+      "modelLicense": "Licencja: {{license}}",
+      "speedTitle": "Szybkość na tym urządzeniu",
+      "speedLoad": "Czas ładowania: {{seconds}} s",
+      "speedGeneration": "Szybkość pisania: {{tokPerSec}} tokenów/s",
+      "speedRelevance": "Trafność: {{ms}} ms na artykuł",
+      "speedReason": "Uzasadnienia: {{ms}} ms na artykuł",
+      "speedResetNote": "Zmierzono podczas ostatniej synchronizacji. Czyszczone po ponownym uruchomieniu aplikacji."
+    }
+  },
+  "pt-BR": {
+    "meraProtocol": {
+      "chooseModel": "Escolha um modelo para baixar. Você pode trocar depois.",
+      "downloadModelNamed": "Baixar {{model}} ({{size}})",
+      "deleteModelDescription": "Isso removerá {{model}} ({{size}}) deste dispositivo. Você pode baixá-lo novamente depois. Se você estiver usando o processamento no dispositivo, será alternado para a nuvem.",
+      "switchModelTitle": "Trocar de modelo?",
+      "switchModelDescription": "{{current}} será removido deste dispositivo. Baixe {{new}} para usar o processamento no dispositivo novamente.",
+      "switchModelConfirm": "Trocar",
+      "modelLicense": "Licença: {{license}}",
+      "speedTitle": "Velocidade neste dispositivo",
+      "speedLoad": "Tempo de carregamento: {{seconds}} s",
+      "speedGeneration": "Velocidade de escrita: {{tokPerSec}} tokens/s",
+      "speedRelevance": "Relevância: {{ms}} ms por artigo",
+      "speedReason": "Motivos: {{ms}} ms por artigo",
+      "speedResetNote": "Medido na sua última sincronização. É apagado quando o app reinicia."
+    }
+  },
+  "ru": {
+    "meraProtocol": {
+      "chooseModel": "Выберите одну модель для загрузки. Позже её можно сменить.",
+      "downloadModelNamed": "Загрузить {{model}} ({{size}})",
+      "deleteModelDescription": "Это удалит {{model}} ({{size}}) с этого устройства. Вы сможете загрузить её снова позже. Если вы используете режим «на устройстве», будет выполнено переключение на облачный режим.",
+      "switchModelTitle": "Сменить модель?",
+      "switchModelDescription": "{{current}} будет удалена с этого устройства. Загрузите {{new}}, чтобы снова использовать режим «на устройстве».",
+      "switchModelConfirm": "Сменить",
+      "modelLicense": "Лицензия: {{license}}",
+      "speedTitle": "Скорость на этом устройстве",
+      "speedLoad": "Время загрузки: {{seconds}} с",
+      "speedGeneration": "Скорость генерации: {{tokPerSec}} токенов/с",
+      "speedRelevance": "Релевантность: {{ms}} мс на статью",
+      "speedReason": "Пояснения: {{ms}} мс на статью",
+      "speedResetNote": "Измерено во время последней синхронизации. Сбрасывается при перезапуске приложения."
+    }
+  },
+  "th": {
+    "meraProtocol": {
+      "chooseModel": "เลือกโมเดลหนึ่งรายการเพื่อดาวน์โหลด คุณสามารถเปลี่ยนภายหลังได้",
+      "downloadModelNamed": "ดาวน์โหลด {{model}} ({{size}})",
+      "deleteModelDescription": "การดำเนินการนี้จะลบ {{model}} ({{size}}) ออกจากอุปกรณ์นี้ คุณสามารถดาวน์โหลดใหม่ได้ภายหลัง หากคุณกำลังใช้การประมวลผลบนอุปกรณ์ ระบบจะสลับไปเป็นคลาวด์",
+      "switchModelTitle": "เปลี่ยนโมเดลหรือไม่",
+      "switchModelDescription": "{{current}} จะถูกลบออกจากอุปกรณ์นี้ ดาวน์โหลด {{new}} เพื่อใช้การประมวลผลบนอุปกรณ์อีกครั้ง",
+      "switchModelConfirm": "เปลี่ยน",
+      "modelLicense": "สัญญาอนุญาต: {{license}}",
+      "speedTitle": "ความเร็วบนอุปกรณ์นี้",
+      "speedLoad": "เวลาโหลด: {{seconds}} วินาที",
+      "speedGeneration": "ความเร็วในการเขียน: {{tokPerSec}} โทเค็น/วินาที",
+      "speedRelevance": "ความเกี่ยวข้อง: {{ms}} มิลลิวินาทีต่อบทความ",
+      "speedReason": "เหตุผล: {{ms}} มิลลิวินาทีต่อบทความ",
+      "speedResetNote": "วัดระหว่างการซิงค์ครั้งล่าสุดของคุณ จะถูกล้างเมื่อรีสตาร์ทแอป"
+    }
+  },
+  "tr": {
+    "meraProtocol": {
+      "chooseModel": "İndirmek için bir model seç. Daha sonra değiştirebilirsin.",
+      "downloadModelNamed": "{{model}} indir ({{size}})",
+      "deleteModelDescription": "Bu, {{model}} ({{size}}) modelini bu cihazdan kaldıracak. Daha sonra yeniden indirebilirsin. Cihaz üzerinde işleme kullanıyorsan, buluta geçirileceksin.",
+      "switchModelTitle": "Model değiştirilsin mi?",
+      "switchModelDescription": "{{current}} bu cihazdan kaldırılacak. Cihaz üzerinde işlemeyi yeniden kullanmak için {{new}} indir.",
+      "switchModelConfirm": "Değiştir",
+      "modelLicense": "Lisans: {{license}}",
+      "speedTitle": "Bu cihazdaki hız",
+      "speedLoad": "Yükleme süresi: {{seconds}} sn",
+      "speedGeneration": "Yazma hızı: {{tokPerSec}} token/sn",
+      "speedRelevance": "Alaka düzeyi: makale başına {{ms}} ms",
+      "speedReason": "Gerekçeler: makale başına {{ms}} ms",
+      "speedResetNote": "Son eşitlemen sırasında ölçüldü. Uygulama yeniden başladığında silinir."
+    }
+  },
+  "uk": {
+    "meraProtocol": {
+      "chooseModel": "Виберіть одну модель для завантаження. Пізніше її можна змінити.",
+      "downloadModelNamed": "Завантажити {{model}} ({{size}})",
+      "deleteModelDescription": "Це видалить {{model}} ({{size}}) з цього пристрою. Ви зможете завантажити її пізніше. Якщо ви використовуєте обробку на пристрої, вас буде переключено на хмару.",
+      "switchModelTitle": "Змінити модель?",
+      "switchModelDescription": "{{current}} буде видалено з цього пристрою. Завантажте {{new}}, щоб знову використовувати обробку на пристрої.",
+      "switchModelConfirm": "Змінити",
+      "modelLicense": "Ліцензія: {{license}}",
+      "speedTitle": "Швидкість на цьому пристрої",
+      "speedLoad": "Час завантаження: {{seconds}} с",
+      "speedGeneration": "Швидкість генерації: {{tokPerSec}} токенів/с",
+      "speedRelevance": "Релевантність: {{ms}} мс на статтю",
+      "speedReason": "Пояснення: {{ms}} мс на статтю",
+      "speedResetNote": "Виміряно під час останньої синхронізації. Скидається після перезапуску застосунку."
+    }
+  },
+  "vi": {
+    "meraProtocol": {
+      "chooseModel": "Chọn một mô hình để tải xuống. Bạn có thể đổi sau.",
+      "downloadModelNamed": "Tải {{model}} ({{size}})",
+      "deleteModelDescription": "Thao tác này sẽ xóa {{model}} ({{size}}) khỏi thiết bị này. Bạn có thể tải lại sau. Nếu bạn đang sử dụng xử lý trên thiết bị, bạn sẽ được chuyển sang đám mây.",
+      "switchModelTitle": "Đổi mô hình?",
+      "switchModelDescription": "{{current}} sẽ bị xóa khỏi thiết bị này. Tải {{new}} để sử dụng lại xử lý trên thiết bị.",
+      "switchModelConfirm": "Đổi",
+      "modelLicense": "Giấy phép: {{license}}",
+      "speedTitle": "Tốc độ trên thiết bị này",
+      "speedLoad": "Thời gian tải: {{seconds}} giây",
+      "speedGeneration": "Tốc độ viết: {{tokPerSec}} token/giây",
+      "speedRelevance": "Mức liên quan: {{ms}} ms mỗi bài",
+      "speedReason": "Lý do: {{ms}} ms mỗi bài",
+      "speedResetNote": "Đo trong lần đồng bộ gần nhất. Sẽ bị xóa khi khởi động lại ứng dụng."
+    }
+  },
+  "zh-CN": {
+    "meraProtocol": {
+      "chooseModel": "选择一个要下载的模型。之后可以切换。",
+      "downloadModelNamed": "下载 {{model}}（{{size}}）",
+      "deleteModelDescription": "这将从此设备删除 {{model}}（{{size}}）。您可以稍后重新下载。如果您正在使用设备端处理，将会切换到云端。",
+      "switchModelTitle": "切换模型？",
+      "switchModelDescription": "{{current}} 将从此设备删除。下载 {{new}} 即可再次使用设备端处理。",
+      "switchModelConfirm": "切换",
+      "modelLicense": "许可证：{{license}}",
+      "speedTitle": "此设备上的速度",
+      "speedLoad": "加载时间：{{seconds}} 秒",
+      "speedGeneration": "生成速度：{{tokPerSec}} 个 token/秒",
+      "speedRelevance": "相关性：每篇文章 {{ms}} 毫秒",
+      "speedReason": "理由：每篇文章 {{ms}} 毫秒",
+      "speedResetNote": "在您上次同步时测得。应用重启后清除。"
+    }
+  },
+  "zh-TW": {
+    "meraProtocol": {
+      "chooseModel": "選擇一個要下載的模型。之後可以切換。",
+      "downloadModelNamed": "下載 {{model}}（{{size}}）",
+      "deleteModelDescription": "這將從此裝置移除 {{model}}（{{size}}）。您可以稍後重新下載。如果您正在使用裝置端處理，將會切換至雲端。",
+      "switchModelTitle": "切換模型？",
+      "switchModelDescription": "{{current}} 將從此裝置移除。下載 {{new}} 即可再次使用裝置端處理。",
+      "switchModelConfirm": "切換",
+      "modelLicense": "授權：{{license}}",
+      "speedTitle": "此裝置上的速度",
+      "speedLoad": "載入時間：{{seconds}} 秒",
+      "speedGeneration": "生成速度：{{tokPerSec}} 個 token/秒",
+      "speedRelevance": "相關性：每篇文章 {{ms}} 毫秒",
+      "speedReason": "理由：每篇文章 {{ms}} 毫秒",
+      "speedResetNote": "於您上次同步時測得。應用程式重新啟動後清除。"
+    }
+  }
+}

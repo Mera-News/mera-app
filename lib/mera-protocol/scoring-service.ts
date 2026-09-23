@@ -207,6 +207,7 @@ async function generateReasonForCandidate(
         maxTokens: ARTICLE_CFG.reasonMaxTokens,
         temperature: ARTICLE_CFG.reasonTemperature,
         responseFormat: 'json',
+        label: 'reason',
       })
     : await cloudComplete({
         systemPrompt: CLOUD_REASON_SYSTEM_PROMPT,

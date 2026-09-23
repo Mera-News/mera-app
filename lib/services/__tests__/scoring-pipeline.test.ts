@@ -217,6 +217,13 @@ jest.mock('@/lib/user-context/user-geo-language-context', () => ({
   loadUserGeoLanguageContext: (...args: any[]) => mockLoadUserGeoLanguageContext(...args),
 }));
 
+// The pipeline reads the processing mode (on-device sends no new cloud work).
+// The real store imports the WatermelonDB-backed setting service at load time.
+let mockProcessingMode = 'CLOUD';
+jest.mock('@/lib/stores/mera-protocol-store', () => ({
+  useMeraProtocolStore: { getState: () => ({ processingMode: mockProcessingMode }) },
+}));
+
 jest.mock('@/lib/stores/user-store', () => ({
   useUserStore: {
     getState: jest.fn(() => ({
@@ -660,6 +667,35 @@ describe('enqueueCandidates', () => {
 // siblings back to inherit its score, so `candidateIds` is a fraction of the
 // articles a run analyses. Each batch records the articles it covers, which is
 // what the "Analysing X of Y articles" header counts.
+describe('on-device mode sends no new work to the cloud', () => {
+  afterEach(() => {
+    mockProcessingMode = 'CLOUD';
+  });
+
+  it('enqueueCandidates is a no-op in on-device mode', async () => {
+    mockProcessingMode = 'ON_DEVICE';
+    const res = await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES));
+    expect(res).toEqual({ deferred: [] });
+    expect(currentRun()).toBeNull();
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+    expect(mockPrepareE2EEContext).not.toHaveBeenCalled();
+  });
+
+  it('enqueueOrphanedReasons is a no-op in on-device mode', async () => {
+    mockProcessingMode = 'ON_DEVICE';
+    mockGetScoredWithoutReasons.mockResolvedValue([{ ...candidate('o0'), relevance: 0.8 }]);
+    await enqueueOrphanedReasons();
+    expect(currentRun()).toBeNull();
+    expect(mockGetScoredWithoutReasons).not.toHaveBeenCalled();
+  });
+
+  it('the same enqueue still dispatches in cloud mode (the guard is mode-specific)', async () => {
+    await enqueueCandidates(ids(MAX_BATCH_ARTICLES));
+    expect(currentRun()).not.toBeNull();
+    expect(mockSendInferenceRequest).toHaveBeenCalled();
+  });
+});
+
 describe('enqueueCandidates — covered-id bookkeeping', () => {
   it('records the gate coverage on the batch and leaves dispatch untouched', async () => {
     await enqueueCandidates(['rep', 'solo', 'x1', 'x2', 'x3'], false, {
