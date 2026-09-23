@@ -39,7 +39,8 @@ import { Pressable } from '@/components/ui/pressable';
 import { HStack } from '@/components/ui/hstack';
 import MeraLogo from '@/components/custom/MeraLogo';
 import type { Verdict } from '@/lib/stores/feed-order-store';
-import { ThumbsUp, ThumbsDown, Bookmark, Crosshair, Share2, SearchCheck } from 'lucide-react-native';
+import { ThumbsUp, ThumbsDown, Bookmark, Crosshair, Share, Share2, SearchCheck, Ellipsis } from 'lucide-react-native';
+import { Platform } from 'react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -103,6 +104,11 @@ interface CardActionBarProps {
    *  Defaults to false so this stays a dumb presentational row: `verdict` alone
    *  still means "filled" for any host that has no notion of commitment. */
   provisional?: boolean;
+  /** D3: opens the shared ••• menu. When set, the row is the four inline
+   *  actions (like, not for me, save, share) plus •••, and Ask Mera, Follow and
+   *  Check for fact checks live in the menu instead of inline. Absent: the row
+   *  renders exactly as before, for any host not yet on the menu. */
+  onOverflow?: () => void;
 }
 
 const CardActionBar: React.FC<CardActionBarProps> = ({
@@ -119,6 +125,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   factCheckState = 'none',
   horizontalPadding = 16,
   provisional = false,
+  onOverflow,
 }) => {
   const { t } = useTranslation();
   const liked = verdict === 'like';
@@ -137,15 +144,17 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         justifyContent: 'space-evenly',
       }}
     >
-      <Pressable
-        testID="card-action-mera"
-        onPress={onAskMera}
-        hitSlop={10}
-        accessibilityRole="button"
-        accessibilityLabel={t('swipeFeed.askMera')}
-      >
-        <MeraLogo size={ICON_SIZE} animated={false} />
-      </Pressable>
+      {onOverflow ? null : (
+        <Pressable
+          testID="card-action-mera"
+          onPress={onAskMera}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={t('swipeFeed.askMera')}
+        >
+          <MeraLogo size={ICON_SIZE} animated={false} />
+        </Pressable>
+      )}
 
       <Pressable
         testID="card-action-like"
@@ -197,7 +206,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         </Pressable>
       ) : null}
 
-      {onTrack ? (
+      {onTrack && !onOverflow ? (
         <Pressable
           testID="card-action-track"
           onPress={onTrack}
@@ -218,7 +227,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         </Pressable>
       ) : null}
 
-      {onFactCheck ? (
+      {onFactCheck && !onOverflow ? (
         <Pressable
           testID="card-action-fact-check"
           // DISABLED ONCE A CHECK EXISTS. A check is cached against the article
@@ -275,7 +284,26 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           accessibilityRole="button"
           accessibilityLabel={t('articleDetail.share')}
         >
-          <Share2 size={ICON_SIZE} strokeWidth={STROKE} color={WHITE} fill="none" />
+          {/* M13: one share glyph per platform, the one the system share
+              sheet itself uses: the box-and-arrow on iOS, three nodes on
+              Android. */}
+          {Platform.OS === 'ios' ? (
+            <Share size={ICON_SIZE} strokeWidth={STROKE} color={WHITE} fill="none" />
+          ) : (
+            <Share2 size={ICON_SIZE} strokeWidth={STROKE} color={WHITE} fill="none" />
+          )}
+        </Pressable>
+      ) : null}
+
+      {onOverflow ? (
+        <Pressable
+          testID="card-action-more"
+          onPress={onOverflow}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={t('articleMenu.openA11y')}
+        >
+          <Ellipsis size={ICON_SIZE} strokeWidth={STROKE} color={WHITE} />
         </Pressable>
       ) : null}
     </HStack>

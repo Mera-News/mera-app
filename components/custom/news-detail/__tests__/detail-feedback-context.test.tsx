@@ -37,6 +37,8 @@ jest.mock('lucide-react-native', () => {
     Bookmark: (p: any) => <View testID="icon-bookmark" fill={p.fill} color={p.color} />,
     Crosshair: (p: any) => <View testID="icon-crosshair" fill={p.fill} color={p.color} />,
     Share2: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+    Share: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+    Ellipsis: (p: any) => <View testID="icon-more" color={p.color} />,
   };
 });
 jest.mock('@/components/custom/MeraLogo', () => {

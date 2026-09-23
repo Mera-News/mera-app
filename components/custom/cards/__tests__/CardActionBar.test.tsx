@@ -31,6 +31,8 @@ jest.mock('lucide-react-native', () => {
     Bookmark: (p: any) => <View testID="icon-bookmark" fill={p.fill} color={p.color} />,
     Crosshair: (p: any) => <View testID="icon-crosshair" fill={p.fill} color={p.color} />,
     Share2: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+    Share: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+    Ellipsis: (p: any) => <View testID="icon-more" color={p.color} />,
   };
 });
 
@@ -199,5 +201,35 @@ describe('CardActionBar', () => {
     const { queryByTestId, queryByLabelText } = setup({ onToggleSave: undefined });
     expect(queryByTestId('icon-bookmark')).toBeNull();
     expect(queryByLabelText('savedSuggestions.saveAction')).toBeNull();
+  });
+});
+
+// D3: with the shared menu, the row is like, not for me, save, share, •••.
+describe('CardActionBar with the ••• menu', () => {
+  it('shows the four inline actions plus •••, and moves Mera, Follow and fact check into the menu', () => {
+    const onOverflow = jest.fn();
+    const { getByTestId, queryByTestId } = render(
+      <CardActionBar
+        verdict={null}
+        saved={false}
+        onLike={jest.fn()}
+        onDislike={jest.fn()}
+        onAskMera={jest.fn()}
+        onToggleSave={jest.fn()}
+        onTrack={jest.fn()}
+        onFactCheck={jest.fn()}
+        onShare={jest.fn()}
+        onOverflow={onOverflow}
+      />,
+    );
+    for (const id of ['card-action-like', 'card-action-dislike', 'card-action-save', 'card-action-share', 'card-action-more']) {
+      expect(getByTestId(id)).toBeTruthy();
+    }
+    for (const id of ['card-action-mera', 'card-action-track', 'card-action-fact-check']) {
+      expect(queryByTestId(id)).toBeNull();
+    }
+    fireEvent.press(getByTestId('card-action-more'));
+    expect(onOverflow).toHaveBeenCalledTimes(1);
+    expect(getByTestId('card-action-more').props.accessibilityLabel).toBe('articleMenu.openA11y');
   });
 });
