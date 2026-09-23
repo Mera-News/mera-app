@@ -19,8 +19,8 @@ import { useUserStore } from '@/lib/stores/user-store';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import { router, useRouter } from 'expo-router';
-import React from 'react';
+import { router, useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback } from 'react';
 import { Linking } from 'react-native';
 import { isRevenueCatConfigured } from '@/lib/revenuecat';
 import { useSupportAction } from '@/lib/intercom';
@@ -29,17 +29,27 @@ import { readSupportIdFromUser } from '@/lib/support-id';
 import * as Clipboard from 'expo-clipboard';
 import { hapticLight } from '@/lib/haptics';
 import { useTranslation } from 'react-i18next';
-import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
-import LanguageWordTicker from './LanguageWordTicker';
+import { getNativeLanguageName } from '@/lib/translation-service';
+import { backupCadence, backupLastRunAt, backupProviderId } from '@/lib/backup/backup-settings';
 import PolicyPill from '@/components/custom/PolicyPill';
+import SecuritySettingsSection from './SecuritySettingsSection';
 
 interface PreferenceOption {
     id: string;
     title: string;
     icon: keyof typeof MaterialIcons.glyphMap;
     onPress: () => void;
+    /** Current value, shown right-aligned before the chevron. */
+    value?: string | null;
+    /** Replaces the chevron with a spinner while an action is starting. */
+    busy?: boolean;
 }
+
+/** How long the FAQ row shows its spinner. The in-app browser gives no
+ *  "presented" event (openBrowserAsync resolves on DISMISS), so this covers the
+ *  tap-to-sheet interval and blocks a double tap, and no more. */
+const FAQ_OPENING_MS = 1000;
 
 const AppPreferencesTab: React.FC = () => {
     const routerHook = useRouter();
@@ -230,9 +240,109 @@ const AppPreferencesTab: React.FC = () => {
         }
     };
 
-    // Single subscription row (details + plans + customer center live in the
-    // Manage Subscription screen) — only shown when RevenueCat is configured.
-    const subscriptionOptions: PreferenceOption[] = isRevenueCatConfigured()
+    // The backup row reads the synchronous mirror (hydrated at startup), so it
+    // re-renders on focus to pick up a backup or a setting changed on the
+    // Manage data screen a moment ago.
+    const [, setFocusTick] = React.useState(0);
+    useFocusEffect(useCallback(() => setFocusTick((n) => n + 1), []));
+    const backupValue = (() => {
+        if (backupCadence() === 'off' || backupProviderId() === null) return t('backup.cadence.off');
+        const last = backupLastRunAt();
+        if (last === null) return t('settings.backupRowNever');
+        try {
+            return new Date(last).toLocaleDateString(appLanguage, { month: 'short', day: 'numeric' });
+        } catch {
+            return new Date(last).toLocaleDateString();
+        }
+    })();
+
+    const [faqOpening, setFaqOpening] = React.useState(false);
+    const faqTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    React.useEffect(() => () => {
+        if (faqTimer.current) clearTimeout(faqTimer.current);
+    }, []);
+    const openFaq = () => {
+        if (faqOpening) return;
+        setFaqOpening(true);
+        faqTimer.current = setTimeout(() => setFaqOpening(false), FAQ_OPENING_MS);
+        void openInAppBrowser(withAppLanguage(FAQ_URL));
+    };
+
+    // Five groups (ux1): General, Privacy and data, Security, Help, Account.
+    // Route paths are unchanged; the harness drives these rows by testID.
+    const general: PreferenceOption[] = [
+        {
+            id: 'language',
+            title: t('settings.languageRow'),
+            icon: 'translate',
+            // The CURRENT language, in its own script. The row used to cycle
+            // the word "Language" through 19 scripts and never said which one
+            // was on; a frame of that ticker is how "언어" showed up on an
+            // English phone.
+            value: getNativeLanguageName(appLanguage),
+            onPress: () => routerHook.push('/logged-in/preferences/language' as any),
+        },
+        {
+            id: 'display',
+            title: t('display.screenTitle'),
+            icon: 'palette',
+            onPress: () => routerHook.push('/logged-in/preferences/display' as any),
+        },
+        {
+            id: 'notifications',
+            title: t('preferences.notifications'),
+            icon: 'notifications',
+            onPress: () => routerHook.push('/logged-in/preferences/notifications' as any),
+        },
+    ];
+
+    const privacy: PreferenceOption[] = [
+        {
+            id: 'mera-protocol',
+            title: t('preferences.meraProtocol'),
+            icon: 'security',
+            onPress: () => routerHook.push('/logged-in/preferences/mera-protocol' as any),
+        },
+        {
+            // Backup and restore share one row. Manage data opens with the
+            // backup section first, so there is nothing to scroll past; the
+            // restore deep link (`manage-data?restore=1`) still works for the
+            // harness and old links.
+            id: 'backup',
+            title: t('settings.backupRow'),
+            icon: 'settings-backup-restore',
+            value: backupValue,
+            onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
+        },
+        {
+            id: 'manage-data',
+            title: t('preferences.manageData'),
+            icon: 'storage',
+            onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
+        },
+    ];
+
+    const help: PreferenceOption[] = [
+        {
+            // The one home for "How Mera works". Top-level route, deliberately
+            // outside `/logged-in`: the same guides are reachable signed out.
+            id: 'tutorials',
+            title: t('tutorials.entryRow'),
+            icon: 'school',
+            onPress: () => routerHook.push('/tutorials' as any),
+        },
+        {
+            id: 'faq',
+            title: t('preferences.faq'),
+            icon: 'help-outline',
+            busy: faqOpening,
+            onPress: openFaq,
+        },
+    ];
+
+    // One label, "Manage plan", everywhere a plan is managed. Only when
+    // RevenueCat is configured.
+    const account: PreferenceOption[] = isRevenueCatConfigured()
         ? [
             {
                 id: 'manage-subscription',
@@ -243,86 +353,21 @@ const AppPreferencesTab: React.FC = () => {
         ]
         : [];
 
-    // Define preference options
-    const preferenceOptions: PreferenceOption[] = [
-        {
-            // FIRST on purpose — it is the "start here" row, and there is no
-            // other in-app explanation of how mera works (the FAQ leaves the app).
-            id: 'tutorials',
-            title: t('tutorials.entryRow'),
-            icon: 'school',
-            // Top-level route, deliberately outside `/logged-in`: the same
-            // guides are reachable signed out (from the paywall).
-            onPress: () => routerHook.push('/tutorials' as any),
-        },
-        {
-            id: 'notifications',
-            title: t('preferences.notifications'),
-            icon: 'notifications',
-            onPress: () => routerHook.push('/logged-in/preferences/notifications' as any),
-        },
-        {
-            id: 'language',
-            title: t('preferences.language'),
-            icon: 'translate',
-            onPress: () => routerHook.push('/logged-in/preferences/language' as any),
-        },
-        {
-            id: 'mera-protocol',
-            title: t('preferences.meraProtocol'),
-            icon: 'security',
-            onPress: () => routerHook.push('/logged-in/preferences/mera-protocol' as any),
-        },
-        {
-            // Security's PIN + blur-images controls now live on this screen
-            // too (the standalone Security screen/row was deleted) — see
-            // DisplaySettingsScreen.tsx's header doc.
-            id: 'display',
-            title: t('display.screenTitle'),
-            icon: 'palette',
-            onPress: () => routerHook.push('/logged-in/preferences/display' as any),
-        },
-        {
-            id: 'faq',
-            title: t('preferences.faq'),
-            icon: 'help-outline',
-            onPress: () => openInAppBrowser(withAppLanguage(FAQ_URL)),
-        },
-        {
-            id: 'manage-data',
-            title: t('preferences.manageData'),
-            icon: 'storage',
-            onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
-        },
-        {
-            // Restoring used to be offered AUTOMATICALLY, as an "Enter your
-            // recovery code" screen before the onboarding wizard, which most
-            // people did not understand. It is something you come and ask for
-            // now. The param opens the code step directly on arrival — there is
-            // no backup route to push (the standalone screen was removed
-            // 2026-08-18); BackupSection is inline in Manage data.
-            id: 'restore-backup',
-            title: t('backup.restore'),
-            icon: 'settings-backup-restore',
-            onPress: () =>
-                routerHook.push('/logged-in/preferences/manage-data?restore=1' as any),
-        },
-        ...subscriptionOptions,
-    ];
-    // Observability moved into the Manage data screen (user call, 2026-08-19):
-    // it is a diagnostics surface, and the settings list stays for everyday
-    // preferences.
-    // Support, Report a Bug and Logout left this array (2026-08-19, user
-    // call): they render as a dedicated bottom block after the row list —
-    // support + bug half-and-half on one row, Logout centered beneath.
+    const sectionLabel = (id: string, text: string) => (
+        <Text
+            testID={`settings-group-${id}`}
+            size="xs"
+            className="text-gray-400 font-semibold uppercase mt-4 mb-2"
+            accessibilityRole="header"
+        >
+            {text}
+        </Text>
+    );
 
-    // Render option item as outline button
     const renderOption = (option: PreferenceOption) => {
         // Liquid Glass row: GlassPanel owns the rounded/clipped outer surface
-        // (glass fill on iOS 26+, nothing otherwise) — the Pressable inside
-        // keeps its original padding/layout untouched, and the fallback
-        // reproduces the pre-glass bordered/transparent look exactly so
-        // Android/iOS<26 render identically to before.
+        // (glass fill on iOS 26+, nothing otherwise); the Pressable inside
+        // keeps its padding and layout.
         return (
             <GlassPanel
                 key={option.id}
@@ -331,31 +376,33 @@ const AppPreferencesTab: React.FC = () => {
                 fallbackClassName="border border-gray-700 bg-transparent"
             >
                 <Pressable
-                    // One line, every row. This list had NO testIDs at all, so
-                    // the simulator harness could not tap a single settings row.
+                    // One line, every row: the harness taps rows by testID.
                     testID={`settings-row-${option.id}`}
                     className="flex-row items-center justify-between py-3 px-4"
                     onPress={option.onPress}
                     accessibilityRole="button"
+                    accessibilityLabel={option.value ? `${option.title}, ${option.value}` : option.title}
+                    accessibilityState={option.busy ? { busy: true } : undefined}
                 >
-                    {option.id === 'language' ? (
-                        <HStack className="items-center flex-1" space="md">
-                            <Text className="text-base text-white">
-                                {LANGUAGE_WORD_BY_CODE[appLanguage] ?? 'Language'}
-                            </Text>
-                            <LanguageWordTicker />
-                        </HStack>
-                    ) : (
-                        <Text className="text-base text-white">
-                            {option.title}
+                    <Text className="text-base text-white flex-1 mr-3" numberOfLines={2}>
+                        {option.title}
+                    </Text>
+                    {option.value ? (
+                        <Text
+                            testID={`settings-row-${option.id}-value`}
+                            size="sm"
+                            className="text-gray-400 mr-2"
+                            numberOfLines={1}
+                        >
+                            {option.value}
                         </Text>
-                    )}
+                    ) : null}
                     <Box className="w-5 h-5 items-center justify-center">
-                        <MaterialIcons
-                            name="chevron-right"
-                            size={20}
-                            color="#999999"
-                        />
+                        {option.busy ? (
+                            <Spinner size="small" />
+                        ) : (
+                            <MaterialIcons name="chevron-right" size={20} color="#999999" />
+                        )}
                     </Box>
                 </Pressable>
             </GlassPanel>
@@ -371,7 +418,7 @@ const AppPreferencesTab: React.FC = () => {
         // No `flex-1` here (or on the Box below): this screen is mounted
         // inside SettingsTabScreen's ScrollView, which already stretches via
         // `contentContainerStyle={{ flexGrow: 1 }}` and reserves
-        // `insets.bottom + TAB_BAR_HEIGHT + 24` of bottom padding. A `flex-1`
+        // `useTabBarClearance() + 24` of bottom padding. A `flex-1`
         // wrapper here fights that flexGrow chain and can consume the
         // reserved padding, leaving the user/version/copyright footer behind
         // the floating tab bar — let content size to its natural height so
@@ -384,20 +431,21 @@ const AppPreferencesTab: React.FC = () => {
             </VStack>
 
             <Box className="px-5">
-                <VStack>
-                    {preferenceOptions.map(renderOption)}
-                </VStack>
+                {sectionLabel('general', t('settings.groupGeneral'))}
+                <VStack>{general.map(renderOption)}</VStack>
 
-                {/* Bottom action block (user call, 2026-08-19): Talk to
-                    support and Report a Bug share the second-to-last row half
-                    and half, and Logout sits centered on its own row beneath
-                    them. Report a Bug renders UNCONDITIONALLY (user call) so
-                    dev layouts match release — but in dev builds Sentry is off
-                    and showFeedback() no-ops, so the button is inert there;
-                    per CLAUDE.md, never use it while in dev. Rows are
-                    deliberately NOT disabled while support opens: re-entry is
-                    guarded by a ref inside useSupportAction, so a second tap
-                    is a no-op without the row greying out and looking broken. */}
+                {sectionLabel('privacy', t('settings.groupPrivacy'))}
+                <VStack>{privacy.map(renderOption)}</VStack>
+
+                {sectionLabel('security', t('security.title'))}
+                <SecuritySettingsSection />
+
+                {sectionLabel('help', t('settings.groupHelp'))}
+                <VStack>{help.map(renderOption)}</VStack>
+                {/* Talk to support and Report a bug share one row. Report a
+                    bug renders in every build but is inert in dev (Sentry is
+                    off). Rows are never disabled while support opens: re-entry
+                    is guarded inside useSupportAction. */}
                 <HStack space="sm" className="mb-3">
                     <GlassPanel
                         radius={8}
@@ -446,6 +494,12 @@ const AppPreferencesTab: React.FC = () => {
                         </Pressable>
                     </GlassPanel>
                 </HStack>
+
+                {sectionLabel('account', t('settings.groupAccount'))}
+                <VStack>{account.map(renderOption)}</VStack>
+                {/* Log out is LAST, an ordinary row inside Account and behind
+                    its confirmation, no longer a full-width red button right
+                    above the tab bar. */}
                 <GlassPanel
                     radius={8}
                     className="mb-3"
@@ -453,11 +507,12 @@ const AppPreferencesTab: React.FC = () => {
                 >
                     <Pressable
                         testID="settings-row-logout"
-                        className="items-center justify-center py-3 px-4"
+                        className="flex-row items-center py-3 px-4"
                         onPress={() => openModal('logout')}
                         accessibilityRole="button"
                     >
-                        <Text className="text-base text-red-400">
+                        <MaterialIcons name="logout" size={18} color="#fca5a5" />
+                        <Text className="text-base text-red-300 ml-3">
                             {t('preferences.logout')}
                         </Text>
                     </Pressable>

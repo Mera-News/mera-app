@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Tests for Settings → Display.
 //
-// This screen now owns what used to be three screens' worth of controls:
-// text size + static-background (always here), and — folded in from the
-// deleted SecuritySettingsScreen — the require-PIN toggle, Change PIN, and
-// blur-images. Plus a new startup-tab picker.
+// Text size, static background, blur images and the startup-tab picker. The
+// PIN lock moved to Settings > Security (SecuritySettingsSection.test.tsx).
 //
 // Copy is asserted by KEY, never by English text — `t` is mocked to echo the
 // key, and the new strings are spliced into the locale files separately.
@@ -226,57 +224,14 @@ describe('DisplaySettingsScreen', () => {
     });
 });
 
-// ── Security, folded in from the deleted SecuritySettingsScreen ───────────
-describe('DisplaySettingsScreen — require-PIN toggle', () => {
-    it('with the lock off, hides Change PIN (there is no PIN to change)', () => {
-        const { queryByText } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        expect(queryByText('security.requirePinTitle')).toBeTruthy();
+// ── PIN lock moved OUT to Settings > Security ─────────────────────────────
+describe('DisplaySettingsScreen — no PIN controls', () => {
+    it('no longer carries the lock switch or Change PIN (they live in Settings > Security)', () => {
+        mockLockEnabled = true;
+        const { queryByTestId, queryByText } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(queryByTestId('lock-switch')).toBeNull();
         expect(queryByText('security.changePin')).toBeNull();
-    });
-
-    it('turning the lock on opens PIN setup without persisting anything yet', () => {
-        const { getByTestId, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        fireEvent.press(getByTestId('lock-switch'));
-        expect(queryByTestId('pin-setup-screen')).toBeTruthy();
-        // The preference must not be written before a PIN actually exists.
-        expect(mockSetLockEnabled).not.toHaveBeenCalled();
-    });
-
-    it('cancelling PIN setup returns to the menu with the lock still off', () => {
-        const { getByTestId, queryByTestId, queryByText } = render(
-            <DisplaySettingsScreen onBack={jest.fn()} />,
-        );
-        fireEvent.press(getByTestId('lock-switch'));
-        fireEvent.press(getByTestId('pin-setup-cancel'));
-        expect(queryByTestId('pin-setup-screen')).toBeNull();
-        expect(queryByText('security.requirePinTitle')).toBeTruthy();
-        expect(mockSetLockEnabled).not.toHaveBeenCalled();
-    });
-
-    it('completing PIN setup records the opt-in and returns to the menu', async () => {
-        const { getByTestId, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        fireEvent.press(getByTestId('lock-switch'));
-        fireEvent.press(getByTestId('pin-setup-complete'));
-        await waitFor(() => expect(mockSetLockEnabled).toHaveBeenCalledWith(true));
-        await waitFor(() => expect(queryByTestId('pin-setup-screen')).toBeNull());
-    });
-
-    it('turning the lock off disables it directly (no PIN prompt) and shows Change PIN while on', async () => {
-        mockLockEnabled = true;
-        const { getByTestId, queryByText, queryByTestId } = render(
-            <DisplaySettingsScreen onBack={jest.fn()} />,
-        );
-        expect(queryByText('security.changePin')).toBeTruthy();
-        fireEvent.press(getByTestId('lock-switch'));
-        await waitFor(() => expect(mockSetLockEnabled).toHaveBeenCalledWith(false));
-        expect(queryByTestId('pin-setup-screen')).toBeNull();
-    });
-
-    it('Change PIN goes through verification of the current PIN first', () => {
-        mockLockEnabled = true;
-        const { getByText, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        fireEvent.press(getByText('security.changePin'));
-        expect(queryByTestId('pin-lock-screen')).toBeTruthy();
+        expect(queryByText('security.requirePinTitle')).toBeNull();
     });
 });
 
