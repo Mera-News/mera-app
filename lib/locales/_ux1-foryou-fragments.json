@@ -1,5 +1,5 @@
 {
-  "_comment": "ux1 P2 (For You scout). New keys: feed.updatedJustNow, feedStatus.syncDoneA11y, forYou.{emptySection.awaiting, emptySection.none, newInterest, nextSection, backToDashboard, subTabA11y}, publicationVisits.emptyTitle, savedSuggestions.emptyTitle, shareStats.card.habitsTitle, the whole tabExplainer namespace. OVERWRITES (run with --allow-overwrite forYou.subTabHistory,publicationVisits.noArticlesYet,publicationVisits.screenIntro): History is relabelled to what it records, publishers the reader opened from Mera (D5), and the old copy claimed reading was tracked. forYou.nextSection is followed in code by the existing trackedStories.articleCount plural, joined with a middle dot, and is used alone when the next section is empty, so it never says 0. tabExplainer.feed.privacy is pending the feed scout's confirmation; explore.* and profile.privacy are server-verified wording. No em or en dashes anywhere. Never edit the 20 dictionaries by hand.",
+  "_comment": "ux1 P2 (For You scout). New keys: feed.updatedJustNow, feedStatus.syncDoneA11y, forYou.{emptySection.awaiting, emptySection.none, newInterest, nextSection, backToDashboard}, publicationVisits.emptyTitle, savedSuggestions.emptyTitle, shareStats.card.habitsTitle, the whole tabExplainer namespace. OVERWRITES (run with --allow-overwrite forYou.subTabHistory,publicationVisits.noArticlesYet,publicationVisits.screenIntro): History is relabelled to what it records, publishers the reader opened from Mera (D5), and the old copy claimed reading was tracked. forYou.nextSection is followed in code by the existing trackedStories.articleCount plural, joined with a middle dot, and is used alone when the next section is empty, so it never says 0. tabExplainer.feed.privacy is pending the feed scout's confirmation; explore.* and profile.privacy are server-verified wording. No em or en dashes anywhere. Never edit the 20 dictionaries by hand.",
   "en": {
     "feed": {
       "updatedJustNow": "Updated just now"
@@ -15,7 +15,6 @@
       "newInterest": "New interest",
       "nextSection": "Next: {{title}}",
       "backToDashboard": "Back to Dashboard",
-      "subTabA11y": "{{label}}, {{position}} of {{total}}",
       "subTabHistory": "Visited"
     },
     "publicationVisits": {
@@ -78,7 +77,6 @@
       "newInterest": "Neues Interesse",
       "nextSection": "Weiter: {{title}}",
       "backToDashboard": "Zurück zum Dashboard",
-      "subTabA11y": "{{label}}, {{position}} von {{total}}",
       "subTabHistory": "Besucht"
     },
     "publicationVisits": {
@@ -141,7 +139,6 @@
       "newInterest": "اهتمام جديد",
       "nextSection": "التالي: {{title}}",
       "backToDashboard": "العودة إلى لوحة التحكم",
-      "subTabA11y": "{{label}}، {{position}} من {{total}}",
       "subTabHistory": "المُزارة"
     },
     "publicationVisits": {
@@ -204,7 +201,6 @@
       "newInterest": "Interés nuevo",
       "nextSection": "Siguiente: {{title}}",
       "backToDashboard": "Volver al Panel",
-      "subTabA11y": "{{label}}, {{position}} de {{total}}",
       "subTabHistory": "Visitados"
     },
     "publicationVisits": {
@@ -267,7 +263,6 @@
       "newInterest": "Nouvel intérêt",
       "nextSection": "Suivant : {{title}}",
       "backToDashboard": "Retour au Tableau de bord",
-      "subTabA11y": "{{label}}, {{position}} sur {{total}}",
       "subTabHistory": "Visités"
     },
     "publicationVisits": {
@@ -330,7 +325,6 @@
       "newInterest": "नई रुचि",
       "nextSection": "अगला: {{title}}",
       "backToDashboard": "डैशबोर्ड पर वापस जाएँ",
-      "subTabA11y": "{{label}}, {{total}} में से {{position}}",
       "subTabHistory": "देखे गए"
     },
     "publicationVisits": {
@@ -393,7 +387,6 @@
       "newInterest": "Minat baru",
       "nextSection": "Berikutnya: {{title}}",
       "backToDashboard": "Kembali ke Dasbor",
-      "subTabA11y": "{{label}}, {{position}} dari {{total}}",
       "subTabHistory": "Dikunjungi"
     },
     "publicationVisits": {
@@ -456,7 +449,6 @@
       "newInterest": "Nuovo interesse",
       "nextSection": "Avanti: {{title}}",
       "backToDashboard": "Torna alla Dashboard",
-      "subTabA11y": "{{label}}, {{position}} di {{total}}",
       "subTabHistory": "Visitati"
     },
     "publicationVisits": {
@@ -519,7 +511,6 @@
       "newInterest": "新しい関心",
       "nextSection": "次へ：{{title}}",
       "backToDashboard": "ダッシュボードに戻る",
-      "subTabA11y": "{{label}}、{{total}}件中{{position}}件目",
       "subTabHistory": "訪問済み"
     },
     "publicationVisits": {
@@ -582,7 +573,6 @@
       "newInterest": "새 관심사",
       "nextSection": "다음: {{title}}",
       "backToDashboard": "대시보드로 돌아가기",
-      "subTabA11y": "{{label}}, {{total}}개 중 {{position}}번째",
       "subTabHistory": "방문함"
     },
     "publicationVisits": {
@@ -645,7 +635,6 @@
       "newInterest": "Nieuwe interesse",
       "nextSection": "Volgende: {{title}}",
       "backToDashboard": "Terug naar Dashboard",
-      "subTabA11y": "{{label}}, {{position}} van {{total}}",
       "subTabHistory": "Bezocht"
     },
     "publicationVisits": {
@@ -708,7 +697,6 @@
       "newInterest": "Nowe zainteresowanie",
       "nextSection": "Dalej: {{title}}",
       "backToDashboard": "Wróć do Pulpitu",
-      "subTabA11y": "{{label}}, {{position}} z {{total}}",
       "subTabHistory": "Odwiedzone"
     },
     "publicationVisits": {
@@ -771,7 +759,6 @@
       "newInterest": "Novo interesse",
       "nextSection": "Próximo: {{title}}",
       "backToDashboard": "Voltar ao Painel",
-      "subTabA11y": "{{label}}, {{position}} de {{total}}",
       "subTabHistory": "Visitados"
     },
     "publicationVisits": {
@@ -834,7 +821,6 @@
       "newInterest": "Новый интерес",
       "nextSection": "Далее: {{title}}",
       "backToDashboard": "Назад на Панель",
-      "subTabA11y": "{{label}}, {{position}} из {{total}}",
       "subTabHistory": "Посещённые"
     },
     "publicationVisits": {
@@ -897,7 +883,6 @@
       "newInterest": "ความสนใจใหม่",
       "nextSection": "ถัดไป: {{title}}",
       "backToDashboard": "กลับไปที่แดชบอร์ด",
-      "subTabA11y": "{{label}}, {{position}} จาก {{total}}",
       "subTabHistory": "ที่เคยเปิด"
     },
     "publicationVisits": {
@@ -960,7 +945,6 @@
       "newInterest": "Yeni ilgi alanı",
       "nextSection": "Sonraki: {{title}}",
       "backToDashboard": "Panele dön",
-      "subTabA11y": "{{label}}, {{total}} içinden {{position}}",
       "subTabHistory": "Ziyaret edilenler"
     },
     "publicationVisits": {
@@ -1023,7 +1007,6 @@
       "newInterest": "Новий інтерес",
       "nextSection": "Далі: {{title}}",
       "backToDashboard": "Назад на Панель",
-      "subTabA11y": "{{label}}, {{position}} з {{total}}",
       "subTabHistory": "Відвідані"
     },
     "publicationVisits": {
@@ -1086,7 +1069,6 @@
       "newInterest": "Mối quan tâm mới",
       "nextSection": "Tiếp theo: {{title}}",
       "backToDashboard": "Quay lại Bảng điều khiển",
-      "subTabA11y": "{{label}}, {{position}} trên {{total}}",
       "subTabHistory": "Đã ghé"
     },
     "publicationVisits": {
@@ -1149,7 +1131,6 @@
       "newInterest": "新兴趣",
       "nextSection": "下一个：{{title}}",
       "backToDashboard": "返回概览",
-      "subTabA11y": "{{label}}，第{{position}}个，共{{total}}个",
       "subTabHistory": "访问过"
     },
     "publicationVisits": {
@@ -1212,7 +1193,6 @@
       "newInterest": "新興趣",
       "nextSection": "下一個：{{title}}",
       "backToDashboard": "返回概覽",
-      "subTabA11y": "{{label}}，第{{position}}個，共{{total}}個",
       "subTabHistory": "造訪過"
     },
     "publicationVisits": {
