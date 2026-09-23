@@ -29,12 +29,12 @@ let downloadPromise: Promise<void> | null = null;
 let downloadGeneration = 0;
 
 // The download runs in a native background URLSession, so a JS reload does not
-// stop it: the reloaded app forgets it (state reads `not_downloaded` while the
-// file is still being written) and RNFS keeps firing progress events into the
-// torn-down runtime, which crashed the app natively (MERA-APP-7M, a C++
-// `__next_prime overflow`). Every return from background reloads the app, so
-// the restart is held for the whole download, the same way a purchase or a
+// stop it: a reloaded app would forget it (state reads `not_downloaded` while the
+// file is still being written). Every return from background reloads the app,
+// so the restart is held for the whole download, the same way a purchase or a
 // streaming chat holds it. A blocked restart is deferred, never lost.
+// (This hold did NOT fix MERA-APP-7M; that crash was RNFS's progress-event data
+// race, removed by moving the download to expo-file-system in modelManager.ts.)
 let releaseRestartHold: (() => void) | null = null;
 
 function releaseDownloadHold(): void {
