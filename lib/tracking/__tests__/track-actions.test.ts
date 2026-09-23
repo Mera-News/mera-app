@@ -3,7 +3,9 @@
 // ONLY the orchestration:
 //   - trackStoryWithProposal mints a topic from the accepted scope's search
 //     text and creates the local row with the display label as headline,
-//   - untrackStoryFromSubject retires the linked topic then untracks,
+//   - deleteTrackedStoryById retires the linked topic, untracks, and reports
+//     whether the row is gone; disownStoryMember releases retention only after
+//     a successful snapshot removal,
 //   - isSubjectTracked delegates to the service,
 //   - migrateLegacyTrackedStories routes each legacy row through the migrate
 //     handler inline (cloud) or a deduped enqueued job (on-device).
@@ -57,7 +59,13 @@ jest.mock('../../stores/mera-protocol-store', () => ({
 
 jest.mock('../../logger', () => ({
   __esModule: true,
-  default: { warn: jest.fn(), error: jest.fn(), debug: jest.fn(), info: jest.fn() },
+  default: {
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    captureException: jest.fn(),
+  },
 }));
 
 import {
@@ -67,7 +75,9 @@ import {
   findActiveTrackedId,
   getTrackedStoryById,
   getLegacyTrackedForMigration,
+  removeMemberSnapshot,
 } from '../../database/services/tracked-story-service';
+import { releaseTrackedStoryRetention } from '../../database/services/saved-article-suggestion-service';
 import { createTopics, retire } from '../../database/services/topic-service';
 import { enqueueJob, hasPendingJob } from '../../database/services/inference-job-service';
 import { handleTrackedStoryMigrateJob } from '../../inference/handlers/tracked-story-migrate-handler';
@@ -76,7 +86,8 @@ import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { ProcessingMode } from '../../generated/graphql-types';
 import {
   trackStoryWithProposal,
-  untrackStoryFromSubject,
+  deleteTrackedStoryById,
+  disownStoryMember,
   isSubjectTracked,
   migrateLegacyTrackedStories,
   type AcceptedTrackScope,
@@ -268,28 +279,70 @@ describe('trackStoryWithProposal', () => {
   });
 });
 
-describe('untrackStoryFromSubject / isSubjectTracked', () => {
-  it('untracks the matched active row', async () => {
-    asMock(findActiveTrackedId).mockResolvedValue('row-7');
-    await untrackStoryFromSubject(SUBJECT);
-    expect(untrackStory).toHaveBeenCalledWith('row-7');
-  });
-
-  it('retires the minted topic before untracking a topic-linked story', async () => {
-    asMock(findActiveTrackedId).mockResolvedValue('row-7');
+describe('deleteTrackedStoryById', () => {
+  it('retires the minted topic, untracks, and reports success', async () => {
     asMock(getTrackedStoryById).mockResolvedValue({ id: 'row-7', topicId: 'top-9' });
-    await untrackStoryFromSubject(SUBJECT);
+    asMock(untrackStory).mockResolvedValue(true);
+    await expect(deleteTrackedStoryById('row-7')).resolves.toBe(true);
     expect(retire).toHaveBeenCalledWith('top-9');
     expect(untrackStory).toHaveBeenCalledWith('row-7');
   });
 
-  it('no-ops when nothing matches', async () => {
-    asMock(findActiveTrackedId).mockResolvedValue(null);
-    await untrackStoryFromSubject(SUBJECT);
-    expect(untrackStory).not.toHaveBeenCalled();
-    expect(retire).not.toHaveBeenCalled();
+  // S4: the timeline called onBack() after a failed delete because this
+  // returned nothing the screen could act on.
+  it('reports failure when the row delete fails', async () => {
+    asMock(getTrackedStoryById).mockResolvedValue({ id: 'row-7', topicId: null });
+    asMock(untrackStory).mockResolvedValue(false);
+    await expect(deleteTrackedStoryById('row-7')).resolves.toBe(false);
   });
 
+  // Owner ruling (ux1 E6): a failed retire must not block the row delete.
+  it('still deletes the row when the topic retire throws', async () => {
+    asMock(getTrackedStoryById).mockResolvedValue({ id: 'row-7', topicId: 'top-9' });
+    asMock(retire).mockRejectedValueOnce(new Error('retire failed'));
+    asMock(untrackStory).mockResolvedValue(true);
+    await expect(deleteTrackedStoryById('row-7')).resolves.toBe(true);
+    expect(untrackStory).toHaveBeenCalledWith('row-7');
+  });
+
+  it('releases member retention only after a successful delete', async () => {
+    asMock(getTrackedStoryById).mockResolvedValue({
+      id: 'row-7',
+      topicId: null,
+      memberSnapshots: [{ articleId: 'a1' }],
+    });
+    asMock(untrackStory).mockResolvedValue(false);
+    await deleteTrackedStoryById('row-7');
+    expect(releaseTrackedStoryRetention).not.toHaveBeenCalled();
+
+    asMock(untrackStory).mockResolvedValue(true);
+    await deleteTrackedStoryById('row-7');
+    expect(releaseTrackedStoryRetention).toHaveBeenCalledWith('a1');
+  });
+
+  it('treats a blank id as nothing to delete', async () => {
+    await expect(deleteTrackedStoryById('')).resolves.toBe(true);
+    expect(untrackStory).not.toHaveBeenCalled();
+  });
+});
+
+describe('disownStoryMember', () => {
+  it('removes the snapshot, releases retention, and reports success', async () => {
+    asMock(removeMemberSnapshot).mockResolvedValue(true);
+    await expect(disownStoryMember('row-7', 'a1')).resolves.toBe(true);
+    expect(releaseTrackedStoryRetention).toHaveBeenCalledWith('a1');
+  });
+
+  // The release reads the snapshots, so releasing after a failed removal would
+  // ask a question whose answer still includes the article.
+  it('reports failure and skips the release when the removal fails', async () => {
+    asMock(removeMemberSnapshot).mockResolvedValue(false);
+    await expect(disownStoryMember('row-7', 'a1')).resolves.toBe(false);
+    expect(releaseTrackedStoryRetention).not.toHaveBeenCalled();
+  });
+});
+
+describe('isSubjectTracked', () => {
   it('delegates isSubjectTracked to the service', async () => {
     asMock(isTracked).mockResolvedValue(true);
     await expect(isSubjectTracked(SUBJECT)).resolves.toBe(true);

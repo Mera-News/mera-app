@@ -140,8 +140,28 @@ describe('untrackStory', () => {
     expect(row.destroyPermanently).toHaveBeenCalled();
   });
 
-  it('never throws on a missing row', async () => {
-    await expect(untrackStory('nope')).resolves.toBeUndefined();
+  it('returns true once the row is gone', async () => {
+    const row = makeStory({ id: 's1' });
+    db._setRows('tracked_stories', [row]);
+    await expect(untrackStory('s1')).resolves.toBe(true);
+  });
+
+  // Already gone (deleted from another surface) is the state the caller asked
+  // for, so it is a success, not a failure the screen would toast about.
+  it('returns true (and never throws) on a missing row', async () => {
+    db._setRows('tracked_stories', [makeStory({ id: 'other' })]);
+    await expect(untrackStory('nope')).resolves.toBe(true);
+  });
+
+  // S4: the screens left on a failed delete because this swallowed the error
+  // and returned nothing they could act on.
+  it('returns false when the delete write fails', async () => {
+    const row = makeStory({ id: 's1' });
+    row.destroyPermanently = jest.fn(async () => {
+      throw new Error('disk full');
+    });
+    db._setRows('tracked_stories', [row]);
+    await expect(untrackStory('s1')).resolves.toBe(false);
   });
 });
 
@@ -598,10 +618,19 @@ describe('getLegacyTrackedForMigration', () => {
   });
 
   it('never throws — returns [] when the query errors', async () => {
-    db._collections['tracked_stories'].query = jest.fn(() => {
+    // Restore afterwards: the collection is shared by every later test in this
+    // file, and a permanently throwing query breaks every service that reads
+    // through it.
+    const col = db._collections['tracked_stories'];
+    const original = col.query;
+    col.query = jest.fn(() => {
       throw new Error('boom');
     });
-    await expect(getLegacyTrackedForMigration()).resolves.toEqual([]);
+    try {
+      await expect(getLegacyTrackedForMigration()).resolves.toEqual([]);
+    } finally {
+      col.query = original;
+    }
   });
 });
 
@@ -734,14 +763,39 @@ describe('removeMemberSnapshot', () => {
     expect(row.memberSnapshots).toEqual([]);
   });
 
-  it('never throws on a missing row', async () => {
-    await expect(removeMemberSnapshot('nope', 'a1')).resolves.toBeUndefined();
+  // The story is gone, so the member is too: the state the caller asked for.
+  it('never throws on a missing row, and reports success', async () => {
+    db._setRows('tracked_stories', [makeStory({ id: 'other' })]);
+    await expect(removeMemberSnapshot('nope', 'a1')).resolves.toBe(true);
   });
 
-  it('tolerates a story with no snapshots at all', async () => {
+  it('tolerates a story with no snapshots at all (a no-op is a success)', async () => {
     const row = makeStory({ id: 's1', memberSnapshots: undefined });
     db._setRows('tracked_stories', [row]);
-    await expect(removeMemberSnapshot('s1', 'a1')).resolves.toBeUndefined();
+    await expect(removeMemberSnapshot('s1', 'a1')).resolves.toBe(true);
     expect(row.update).not.toHaveBeenCalled();
+  });
+
+  it('returns true after removing a member', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberSnapshots: [{ articleId: 'a1', title: 'First', pubDateMs: 1000 }],
+    });
+    db._setRows('tracked_stories', [row]);
+    await expect(removeMemberSnapshot('s1', 'a1')).resolves.toBe(true);
+  });
+
+  // S4: the timeline removes the card optimistically; without a result it
+  // could never put the card back when the write failed.
+  it('returns false when the write fails', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberSnapshots: [{ articleId: 'a1', title: 'First', pubDateMs: 1000 }],
+    });
+    row.update = jest.fn(async () => {
+      throw new Error('disk full');
+    });
+    db._setRows('tracked_stories', [row]);
+    await expect(removeMemberSnapshot('s1', 'a1')).resolves.toBe(false);
   });
 });
