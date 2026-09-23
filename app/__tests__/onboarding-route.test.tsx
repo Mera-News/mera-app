@@ -44,15 +44,14 @@ jest.mock('@/lib/database/services/setting-service', () => ({
 
 // Stand-in for the gate: immediately pulls whichever escape hatch the test asks
 // for, so the route's handlers are exercised without the real gate's DB reads.
-let mockInvoke: 'login' | 'complete' | 'free-tier' | null = null;
+let mockInvoke: 'login' | 'complete' | null = null;
 jest.mock('@/components/custom/onboarding/OnboardingScreen', () => {
     const React2 = require('react');
-    const GateStub = ({ onLoginRedirect, onComplete, onFreeTierMode }: any) => {
+    const GateStub = ({ onLoginRedirect, onComplete }: any) => {
         React2.useEffect(() => {
             if (mockInvoke === 'login') onLoginRedirect();
             if (mockInvoke === 'complete') onComplete();
-            if (mockInvoke === 'free-tier') onFreeTierMode();
-        }, [onLoginRedirect, onComplete, onFreeTierMode]);
+        }, [onLoginRedirect, onComplete]);
         return null;
     };
     return { __esModule: true, default: GateStub };
@@ -98,14 +97,11 @@ describe('onboarding route', () => {
         });
     });
 
-    it('onFreeTierMode lands on the FEED, not the fromOnboarding dashboard', async () => {
-        mockInvoke = 'free-tier';
+    it('has ONE landing: onboarding never routes to the feed (A15)', async () => {
+        mockInvoke = 'complete';
         render(<Onboarding />);
-
-        // fromOnboarding:'1' would be a claim about a wizard that never ran.
-        await waitFor(() =>
-            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
-        );
+        await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+        expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/app_container/feed');
     });
 
     // ── local-first identity ─────────────────────────────────────────────

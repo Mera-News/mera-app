@@ -106,16 +106,6 @@ export default function Onboarding() {
         });
     }, []);
 
-    // No active plan → Mera News Free, onboarding skipped (the standalone
-    // paywall screen was removed 2026-08-19; the feed's FreeTierCard carries
-    // its pitch and actions).
-    // The feed, not `handleComplete`'s Dashboard-with-fromOnboarding: the
-    // wizard never ran, and this is where "Continue without a plan" already
-    // lands.
-    const handleFreeTierMode = useCallback(() => {
-        router.replace("/logged-in/app_container/feed");
-    }, []);
-
     if (!resolved) {
         return (
             <Box className="flex-1 justify-center items-center">
@@ -141,7 +131,6 @@ export default function Onboarding() {
                 sessionUserId={session?.user?.id}
                 onLoginRedirect={handleLoginRedirect}
                 onComplete={handleComplete}
-                onFreeTierMode={handleFreeTierMode}
             />
         </ErrorBoundary>
     );
