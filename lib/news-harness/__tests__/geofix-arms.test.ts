@@ -32,6 +32,7 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   buildReasonUserMessage,
 } from '../prompts/prompts';
+import { undoUx1ReasonLabelRule } from './ux1-reason-label';
 
 const SHIPPED: Record<string, string> = {
   relevance: CLOUD_RELEVANCE_SYSTEM_PROMPT,
@@ -79,7 +80,9 @@ describe('pre-geo-control', () => {
       // Cut the promoted section out of the shipped prompt and the control must
       // return byte for byte. This is what stops an unrelated prompt edit
       // landing on one side only and being attributed to the geography rule.
-      const shippedWithoutRule = SHIPPED[slot].replace(/\n\n## Article scope\n[^\n]*/, '');
+      const shippedWithoutRule = undoUx1ReasonLabelRule(
+        SHIPPED[slot].replace(/\n\n## Article scope\n[^\n]*/, ''),
+      );
       expect(arm).toBe(shippedWithoutRule);
     }
   });

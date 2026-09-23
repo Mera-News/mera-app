@@ -212,7 +212,7 @@ describe('golden — measured prompt sizes', () => {
     // prompt takes. See the wire-cap block below for why.
     expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4584);
     expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7234);
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5401);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5468);
     expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(6958);
   });
 
@@ -233,7 +233,7 @@ describe('golden — measured prompt sizes', () => {
     expect(estimateTokens(CLOUD_V3_NOTE_SYSTEM_PROMPT)).toBe(1903);
     expect(estimateTokens(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT)).toBe(1539);
     expect(estimateTokens(LOCAL_RELEVANCE_SYSTEM_PROMPT)).toBe(1104);
-    expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBe(1445);
+    expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBe(1486);
   });
 
   // THE GATEWAY WIRE CAP. A PROD 400 lives behind these numbers.
@@ -303,12 +303,12 @@ describe('golden — measured prompt sizes', () => {
     expect(SHIPPED_SYSTEM_PROMPTS.map(([n, p]) => `${n} ${wire(p)}`)).toEqual([
       'CLOUD_RELEVANCE_SYSTEM_PROMPT 37322',
       'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58816',
-      'CLOUD_REASON_SYSTEM_PROMPT 43884',
+      'CLOUD_REASON_SYSTEM_PROMPT 44420',
       'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 56398',
       'CLOUD_FEED_VERIFIER_SYSTEM_PROMPT 12528',
       'CLOUD_V3_NOTE_SYSTEM_PROMPT 15460',
       'LOCAL_RELEVANCE_SYSTEM_PROMPT 9106',
-      'LOCAL_REASON_SYSTEM_PROMPT 11886',
+      'LOCAL_REASON_SYSTEM_PROMPT 12210',
     ]);
   });
 
@@ -528,5 +528,29 @@ describe('golden — publisher and alpha-3 country parity', () => {
       stripNonces(shim.calls.map((c) => c.prompt)),
     );
     expect(shim.calls[0].prompt).toMatch(/Publication: Diário de Notícias \(Portuguese\)/);
+  });
+});
+
+// ux1: a device note read "...though it is a foreign-domestic case", the
+// rubric's own label copied from a reason-prompt example into user copy.
+describe('golden — reason prompts never teach the rubric labels as prose', () => {
+  const REASON_PROMPTS: [string, string][] = [
+    ['CLOUD_REASON_SYSTEM_PROMPT', CLOUD_REASON_SYSTEM_PROMPT],
+    ['LOCAL_REASON_SYSTEM_PROMPT', LOCAL_REASON_SYSTEM_PROMPT],
+  ];
+
+  it.each(REASON_PROMPTS)('%s has no example sentence using "foreign-domestic"', (_n, p) => {
+    // Every quoted example is a sentence the model may imitate verbatim.
+    const quoted = p.match(/"[^"\n]{12,}"/g) ?? [];
+    for (const q of quoted) {
+      if (q.includes('foreign-domestic')) {
+        // Allowed ONLY inside the ban list itself.
+        expect(q.length).toBeLessThan(20);
+      }
+    }
+  });
+
+  it.each(REASON_PROMPTS)('%s tells the model not to name the rules', (_n, p) => {
+    expect(p).toContain('Say what the rules found, never their names');
   });
 });
