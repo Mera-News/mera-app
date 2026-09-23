@@ -1,3 +1,5 @@
+import type { InferenceLabel } from './core/inference-stats';
+
 // ============================================================
 // Mera Protocol Toolkit — Type Definitions
 // Source of truth: mera_protocol.md (Protocol v2.0.0)
@@ -40,6 +42,7 @@ export type InferParams = {
   stopSequences?: string[]; // Early termination strings
   responseFormat?: 'text' | 'json'; // Hint for structured output
   enableThinking?: boolean; // Enable Qwen3 thinking mode (default: false)
+  label?: InferenceLabel; // Which caller this is, for the in-memory speed readout
 };
 
 export type InferResult = {

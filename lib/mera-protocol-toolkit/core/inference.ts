@@ -2,6 +2,7 @@
 // Wraps llama.rn completion API with toolkit's InferParams/InferResult types
 
 import type { InferParams, InferResult } from '../types';
+import { recordCompletion } from './inference-stats';
 import { _getContext, _updateInferenceSpeed } from './modelManager';
 
 // llama.rn holds ONE context for the whole app and a completion mutates its KV
@@ -89,6 +90,12 @@ async function inferExclusive(params: InferParams): Promise<InferResult> {
       Math.round(result.timings.predicted_per_second),
     );
   }
+  recordCompletion({
+    label: params.label,
+    latencyMs,
+    promptTokPerSec: result.timings?.prompt_per_second,
+    genTokPerSec: result.timings?.predicted_per_second,
+  });
 
   return {
     output: result.text,

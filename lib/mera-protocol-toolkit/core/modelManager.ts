@@ -14,6 +14,8 @@ import * as Crypto from 'expo-crypto';
 
 import logger from '../../logger';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
+import { LOCAL_CONTEXT_TOKENS } from './context-size';
+import { recordModelLoad } from './inference-stats';
 import type {
   BaseModelDownloadConfig,
   BaseModelManifest,
@@ -282,19 +284,28 @@ export async function initBaseModel(
   // Load via llama.rn
   const initParams = {
     model: modelFile.uri,
-    n_ctx: 4096,
+    n_ctx: LOCAL_CONTEXT_TOKENS,
     n_gpu_layers: 999,  // Offload ALL layers to Metal GPU
     n_threads: 4,       // A18 Pro: 2P + 4E cores — 4 threads avoids stalling on slow E-cores
     use_mlock: true,
     use_mmap: true,     // Memory-map file — lets iOS page model weights without killing the app
     n_batch: 512,       // Batch size sweet spot for Metal on A-series chips
-    flash_attn: true,
-    cache_type_k: 'q8_0' as const,  // 2x smaller than f16, keys need precision for attention scores
-    cache_type_v: 'q4_0' as const,  // 4x smaller than f16, values tolerate more quantization
+    flash_attn_type: 'on' as const, // `flash_attn: true` is deprecated in llama.rn 0.12
+    // f16 KV. Both catalogue models (LFM2.5, Qwen3.5) are hybrids with only a few
+    // full-attention layers, so their KV cache is small (well under 100 MB at
+    // this n_ctx even in f16). Quantising it (was q8_0 K / q4_0 V) saved little
+    // memory, cost accuracy on a 2B model and added a dequant on every attention
+    // step. Prefix reuse needs no flag: llama.rn's prompt-state cache for
+    // recurrent/hybrid models is on by default (160 MiB, 8 checkpoints), so a
+    // run of relevance calls sharing system prompt + facts re-prefills only each
+    // article's own block from the third call on.
+    cache_type_k: 'f16' as const,
+    cache_type_v: 'f16' as const,
   };
   logger.info('[ModelManager] Calling initLlama with params', initParams);
 
   let context;
+  const loadStartedAt = Date.now();
   try {
     context = await initLlama(
       initParams,
@@ -323,12 +334,13 @@ export async function initBaseModel(
 
   llamaContext = context;
   activeAdapterId = null;
+  recordModelLoad(resolvedModelId, Date.now() - loadStartedAt);
 
   currentModelState = {
     modelId: resolvedModelId,
     loaded: true,
     activeAdapterId: null,
-    contextWindow: 4096,
+    contextWindow: LOCAL_CONTEXT_TOKENS,
     memoryUsageMB: Math.round((context.model?.size ?? 0) / (1024 * 1024)),
     backend: context.gpu ? 'metal' : 'cpu',
     inferenceSpeed: 0, // Will be populated after first inference
