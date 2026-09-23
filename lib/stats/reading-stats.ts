@@ -426,13 +426,32 @@ export function roundedAverageHours(stats: PublishToReadStats): number | null {
 // --- per-card availability -------------------------------------------------
 
 /**
- * The three share cards, by theme. Breadth, intent, reading.
+ * The three share cards, one window each.
  *
- * The ids are stable and reach the deep link as a param, so renaming one is a
- * URL change, not a refactor.
+ *   reach  (last 30 days) where the reading came from: countries, publications,
+ *          languages, top publications
+ *   habits (last 30 days) how the reading went: days read, articles opened,
+ *          publish-to-read time
+ *   keep   (right now)    what is still held: saved articles, followed stories
+ *
+ * There were five, one idea each, and most of each card was empty space. They
+ * were merged along the WINDOW line, never across it: saved and followed are
+ * present tense and cannot sit under a 30-day heading, so keep stays its own
+ * card rather than joining habits.
+ *
+ * The ids reach the deep link as a param, so renaming one is a URL change.
+ * The retired ids resolve through `LEGACY_STATS_CARD_IDS` so an old link still
+ * lands on the card that now carries what it named.
  */
-export const STATS_CARD_IDS = ['reach', 'languages', 'keep', 'pace', 'rhythm'] as const;
+export const STATS_CARD_IDS = ['reach', 'habits', 'keep'] as const;
 export type StatsCardId = (typeof STATS_CARD_IDS)[number];
+
+/** Retired card ids, mapped to the card that now holds their figures. */
+export const LEGACY_STATS_CARD_IDS: Readonly<Record<string, StatsCardId>> = {
+  languages: 'reach',
+  pace: 'habits',
+  rhythm: 'habits',
+};
 
 /** The card the share route falls back to when it is opened with no param, as
  *  the existing `com.mera.news://logged-in/share-stats` link always is. */
@@ -441,29 +460,34 @@ export const DEFAULT_STATS_CARD: StatsCardId = 'reach';
 /**
  * Does this card have anything on it?
  *
- * Per card rather than per screen, because the three draw on different tables
+ * Per card rather than per screen, because the cards draw on different tables
  * and `hasAnyData` cannot answer for all of them. A reader who has saved
  * articles but cleared their viewing history has a real `keep` card and an
  * empty `reach` one, and offering a card of zeroes is worse than not offering
  * it. `hasAnyData` stays what it was, the SCREEN-level gate keyed on visits
  * alone, so Settings then Manage Data then Clear viewing history still visibly
  * empties the surface it promised to empty.
+ *
+ * Inside a card, each figure with nothing to show is hidden rather than drawn
+ * as a zero; the card itself is offered when ANY of its figures has data.
  */
 export function cardHasData(stats: ReadingStats, card: StatsCardId): boolean {
   switch (card) {
     case 'reach':
-      return stats.countries.length > 0 || stats.publicationCount > 0;
-    case 'languages':
-      return stats.languages.length > 0;
-    case 'rhythm':
-      // Keyed on a day actually READ, not on the calendar existing: the grid is
-      // always 30 cells long, so `days.length` is never zero for a device with
-      // a clock and would offer a card of empty squares to everyone.
-      return stats.daysReadCount > 0;
+      return (
+        stats.countries.length > 0 || stats.publicationCount > 0 || stats.languages.length > 0
+      );
+    case 'habits':
+      // Days are keyed on a day actually READ, not on the calendar existing:
+      // the grid is always 30 cells long, so `days.length` is never zero for a
+      // device with a clock and would offer a card of empty squares to everyone.
+      return (
+        stats.daysReadCount > 0
+        || stats.articlesOpened > 0
+        || stats.publishToRead.averageHours !== null
+      );
     case 'keep':
       return stats.keptNow.savedArticles > 0 || stats.keptNow.followedStories > 0;
-    case 'pace':
-      return stats.articlesOpened > 0 || stats.publishToRead.averageHours !== null;
   }
 }
 
@@ -528,7 +552,11 @@ export function resolveStatsCardParam(
   if (available.length === 0) return null;
 
   const asked = typeof raw === 'string' ? raw : undefined;
-  const named = STATS_CARD_IDS.find((id) => id === asked);
+  const named =
+    STATS_CARD_IDS.find((id) => id === asked)
+    ?? (asked !== undefined && Object.prototype.hasOwnProperty.call(LEGACY_STATS_CARD_IDS, asked)
+      ? LEGACY_STATS_CARD_IDS[asked]
+      : undefined);
   if (named && available.includes(named)) return named;
 
   // The default first, so the shipped no-param link lands where it always did

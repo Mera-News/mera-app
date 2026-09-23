@@ -64,10 +64,13 @@ export const CHART_METRICS = {
   flagsPerRow: 8,
   /** The chip counts as one cell, so a full grid is always this many cells. */
   flagMaxCells: 24,
+  /** The reach card draws ONE row (a merged card has no room for three); the
+   *  overflow chip carries the rest. */
+  flagOneRowCells: 8,
 
   barHeight: 9,
   barRadius: 4.5,
-  barLegendSize: 9,
+  barLegendSize: 9.5,
   barLegendGap: 6,
   barLegendTop: 7,
 
@@ -77,7 +80,12 @@ export const CHART_METRICS = {
   dotsPerRow: 20,
   dotMax: 60,
 
-  /** HeatGrid. 7 columns is fixed (one per weekday); the CELL is 28, not the
+  /** HeatGrid. 16pt cells since the habits card merged days, opened and pace
+   *  onto one card; the history below explains the six-row worst case, which
+   *  still holds. Every TEXT size here is at least 9.5pt, which is 28.5px at
+   *  the 1080px export (the floor is ~28px).
+   *
+   *  Earlier sizing note: 7 columns is fixed (one per weekday); the CELL was 28, not the
    *  34 the mockup was sized at, because the mockup assumed five rows and the
    *  worst case is SIX: the first row is padded so day one lands in its own
    *  weekday column, so a 30-day window starting late in the week needs an
@@ -85,19 +93,19 @@ export const CHART_METRICS = {
    *  28 with a 5pt gap is 226pt wide and 193pt tall at six rows, which fits
    *  with the margin intact, and is still far above the legibility floor at
    *  capture scale and on a floor device. */
-  heatCell: 28,
-  heatGap: 5,
+  heatCell: 16,
+  heatGap: 3,
   heatColumns: 7,
-  heatLabelSize: 8.5,
+  heatLabelSize: 9.5,
   heatLabelGap: 5,
-  heatLegendSize: 8.5,
+  heatLegendSize: 9.5,
   heatLegendTop: 8,
   heatLegendSwatch: 9,
 
   scaleRule: 2,
   scaleTickHeight: 8,
   scaleMarker: 11,
-  scaleLabelSize: 9,
+  scaleLabelSize: 9.5,
   scaleLabelTop: 6,
 } as const;
 

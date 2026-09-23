@@ -15,11 +15,9 @@
 // from a palette class here.
 
 import {
+  HabitsCard,
   KeepCard,
-  LanguagesCard,
-  PaceCard,
   ReachCard,
-  RhythmCard,
   type StatsCardProps,
 } from '@/components/custom/share-stats/stats-cards';
 import { DEFAULT_STATS_CARD, type StatsCardId } from '@/lib/stats/reading-stats';
@@ -48,10 +46,8 @@ export interface ShareStatsCardProps extends StatsCardProps {
 
 const BY_ID = {
   reach: ReachCard,
-  languages: LanguagesCard,
+  habits: HabitsCard,
   keep: KeepCard,
-  pace: PaceCard,
-  rhythm: RhythmCard,
 } as const satisfies Record<StatsCardId, React.ComponentType<StatsCardProps & { ref?: React.Ref<View> }>>;
 
 const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function ShareStatsCard(

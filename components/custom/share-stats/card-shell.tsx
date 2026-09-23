@@ -92,7 +92,8 @@ export const INK_BOX_HEIGHT_PX = EXPORT_HEIGHT - 2 * SAFE_RESERVE_PX;
  */
 export const LOGO_TOP_MARGIN_PX = 30;
 
-/** Sizes shared by all three cards. Per-card sizes live with their card. */
+/** Sizes shared by all three cards. Per-card sizes live with their card. No
+ *  text size anywhere on a card may fall below 9.5 (see `qualifier`). */
 export const SHELL_METRICS = {
   outerPadding: 26,
   /** Leading for label and qualifier text. Sized for Devanagari and Thai
@@ -110,7 +111,9 @@ export const SHELL_METRICS = {
    *  line, because it does the same job: it makes the card's claim checkable
    *  by whoever sees it later instead of leaving it floating. */
   stampDate: 9.5,
-  qualifier: 8.5,
+  /** 9.5 is the text floor: 28.5px at the 1080px export, where ~28px is the
+   *  smallest a shared story image stays readable. */
+  qualifier: 9.5,
   qualifierGap: 2,
   footerGap: 4,
   footerDomain: 10,

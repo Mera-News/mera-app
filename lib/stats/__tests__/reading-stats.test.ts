@@ -540,11 +540,11 @@ describe('cardHasData', () => {
     expect(stats.hasAnyData).toBe(false);
   });
 
-  it('offers pace from a latency average even when nothing was opened', () => {
+  it('offers habits from a latency average even when nothing was opened', () => {
     const stats = withStats({
       publishToRead: { averageHours: 9, sampledArticles: 4, totalArticles: 9 },
     });
-    expect(availableCards(stats)).toEqual(['pace']);
+    expect(availableCards(stats)).toEqual(['habits']);
   });
 
   it('keeps theme order rather than data order', () => {
@@ -557,10 +557,10 @@ describe('cardHasData', () => {
       days: [{ dateKey: '2026-09-15', count: 2, weekday: 1 }],
       daysReadCount: 1,
     });
-    expect(availableCards(stats)).toEqual(['reach', 'languages', 'keep', 'pace', 'rhythm']);
+    expect(availableCards(stats)).toEqual(['reach', 'habits', 'keep']);
   });
 
-  it('offers rhythm only when a day was actually READ', () => {
+  it('offers habits for reading days only when a day was actually READ', () => {
     // The calendar is always 30 cells long for any device with a clock, so
     // keying on days.length would offer a card of empty squares to everyone.
     const calendarButNoReading = withStats({
@@ -574,9 +574,9 @@ describe('cardHasData', () => {
     expect(availableCards(calendarButNoReading)).toEqual([]);
   });
 
-  it('offers languages independently of countries', () => {
+  it('offers reach from languages alone, independently of countries', () => {
     expect(availableCards(withStats({ languages: [{ languageCode: 'ta', visitCount: 1 }] })))
-      .toEqual(['languages']);
+      .toEqual(['reach']);
   });
 
   it('covers every id in the union, so a new card cannot be forgotten here', () => {
@@ -585,7 +585,7 @@ describe('cardHasData', () => {
     for (const id of STATS_CARD_IDS) {
       expect(typeof cardHasData(emptyReadingStats(), id)).toBe('boolean');
     }
-    expect(STATS_CARD_IDS).toHaveLength(5);
+    expect(STATS_CARD_IDS).toHaveLength(3);
     expect(STATS_CARD_IDS).toContain(DEFAULT_STATS_CARD);
   });
 });
@@ -637,8 +637,19 @@ describe('resolveStatsCardParam', () => {
   };
 
   it('honours a named card', () => {
-    expect(resolveStatsCardParam('pace', full)).toBe('pace');
+    expect(resolveStatsCardParam('habits', full)).toBe('habits');
     expect(resolveStatsCardParam('keep', full)).toBe('keep');
+  });
+
+  it('lands a retired card id on the card that now carries its figures', () => {
+    // Old links named five cards; three remain.
+    expect(resolveStatsCardParam('pace', full)).toBe('habits');
+    expect(resolveStatsCardParam('rhythm', full)).toBe('habits');
+    expect(resolveStatsCardParam('languages', full)).toBe('reach');
+  });
+
+  it('does not treat an inherited property name as a legacy id', () => {
+    expect(resolveStatsCardParam('toString', full)).toBe(DEFAULT_STATS_CARD);
   });
 
   it('lands the shipped no-param deep link on the default', () => {
@@ -662,6 +673,7 @@ describe('resolveStatsCardParam', () => {
       keptNow: { savedArticles: 2, followedStories: 0 },
     };
     expect(resolveStatsCardParam('reach', keepOnly)).toBe('keep');
+    expect(resolveStatsCardParam('habits', keepOnly)).toBe('keep');
     expect(resolveStatsCardParam('pace', keepOnly)).toBe('keep');
   });
 
