@@ -41,6 +41,14 @@ export interface StatusBarScrimProps {
   /** The collapsing header's `hidden` (0 revealed, 1 hidden). Omit for a
    *  screen with no collapsing header: the strip keeps its original look. */
   readonly coverProgress?: SharedValue<number>;
+  /**
+   * For a screen whose top is a hero IMAGE (the article detail screens): no
+   * scrim, no glass and no tint at rest, so there is no grey band across the
+   * photo, and only the dark base, rising with `coverProgress` as content
+   * scrolls under the status bar. Without `coverProgress` it stays fully
+   * transparent. Default off: every other host is unchanged.
+   */
+  readonly overHero?: boolean;
 }
 
 const CoverBase: React.FC<{ progress: SharedValue<number>; top: number }> = ({ progress, top }) => {
@@ -66,8 +74,19 @@ const CoverBase: React.FC<{ progress: SharedValue<number>; top: number }> = ({ p
   );
 };
 
-const StatusBarScrim: React.FC<StatusBarScrimProps> = ({ coverProgress }) => {
+const StatusBarScrim: React.FC<StatusBarScrimProps> = ({ coverProgress, overHero = false }) => {
   const insets = useSafeAreaInsets();
+  if (overHero) {
+    return (
+      <View
+        testID="status-bar-scrim"
+        pointerEvents="none"
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: insets.top, zIndex: 5 }}
+      >
+        {coverProgress ? <CoverBase progress={coverProgress} top={insets.top} /> : null}
+      </View>
+    );
+  }
   return (
     <View
       testID="status-bar-scrim"

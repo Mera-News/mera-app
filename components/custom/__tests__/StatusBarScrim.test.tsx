@@ -55,4 +55,25 @@ describe('StatusBarScrim', () => {
     );
     expect(band.top).toBe(62);
   });
+
+  describe('overHero (detail screens)', () => {
+    it('is fully transparent at rest: no scrim colour, no glass', () => {
+      render(<StatusBarScrim overHero coverProgress={{ value: 0 } as any} />);
+      const style = StyleSheet.flatten(screen.getByTestId('status-bar-scrim').props.style);
+      expect(style.backgroundColor).toBeUndefined();
+      expect(screen.queryByTestId('glass-plate')).toBeNull();
+      expect(opacityOf('status-bar-scrim-cover')).toBe(0);
+    });
+
+    it('rises to the solid dark base as content covers the hero', () => {
+      render(<StatusBarScrim overHero coverProgress={{ value: 1 } as any} />);
+      expect(opacityOf('status-bar-scrim-cover')).toBe(1);
+    });
+
+    it('stays transparent without a progress value', () => {
+      render(<StatusBarScrim overHero />);
+      expect(screen.queryByTestId('status-bar-scrim-cover', { includeHiddenElements: true })).toBeNull();
+      expect(screen.queryByTestId('glass-plate')).toBeNull();
+    });
+  });
 });
