@@ -2838,7 +2838,7 @@
       "title": "How the Dashboard works",
       "what": "The Dashboard groups your news by interest. Each thing you told Mera gets a section, plus headlines from your countries and the world.",
       "how1": "Each story goes to the one interest it fits best, so it appears once. If two fit equally, the interest you added first keeps it.",
-      "how2": "Interests you gave more weight come first. A new interest appears at the top, even before its first stories arrive.",
+      "how2": "Interests you gave more weight come first. A new interest gets its section even before its first stories arrive.",
       "how3": "Inside a section, unread stories come first, most important first. Sections reorder when you leave the tab, or every 10 minutes."
     },
     "explore": {

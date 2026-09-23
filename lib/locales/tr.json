@@ -2840,7 +2840,7 @@
       "title": "Panel nasıl çalışır",
       "what": "Panel haberlerini ilgi alanlarına göre gruplar. Mera'ya anlattığın her şeyin bir bölümü olur, ayrıca ülkelerinden ve dünyadan manşetler de yer alır.",
       "how1": "Her haber en iyi uyduğu tek ilgi alanına gider, böylece yalnızca bir kez görünür. İkisi eşit uyarsa önce eklediğin alan haberi alır.",
-      "how2": "Daha fazla ağırlık verdiğin ilgi alanları önce gelir. Yeni bir ilgi alanı, ilk haberleri gelmeden bile en üstte görünür.",
+      "how2": "Daha fazla ağırlık verdiğin ilgi alanları önce gelir. Yeni bir ilgi alanı, ilk haberleri gelmeden bile kendi bölümünü alır.",
       "how3": "Bir bölümde okunmamış haberler önce gelir, en önemliler başta. Bölümler sekmeden ayrıldığında ya da her 10 dakikada bir yeniden sıralanır."
     },
     "explore": {

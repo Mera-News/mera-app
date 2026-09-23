@@ -2838,7 +2838,7 @@
       "title": "Bảng điều khiển hoạt động thế nào",
       "what": "Bảng điều khiển nhóm tin của bạn theo mối quan tâm. Mỗi điều bạn kể với Mera có một mục riêng, kèm tiêu đề từ các quốc gia của bạn và thế giới.",
       "how1": "Mỗi tin đi vào mối quan tâm hợp nhất, nên chỉ xuất hiện một lần. Nếu hai mối quan tâm hợp như nhau, mối quan tâm thêm trước sẽ giữ tin đó.",
-      "how2": "Những mối quan tâm bạn cho trọng số cao hơn đứng trước. Mối quan tâm mới hiện ở trên cùng, ngay cả trước khi có tin đầu tiên.",
+      "how2": "Những mối quan tâm bạn cho trọng số cao hơn đứng trước. Mối quan tâm mới có mục riêng ngay cả trước khi có tin đầu tiên.",
       "how3": "Trong mỗi mục, tin chưa đọc đứng trước, quan trọng nhất ở đầu. Các mục được sắp xếp lại khi bạn rời thẻ, hoặc mỗi 10 phút."
     },
     "explore": {

@@ -2876,7 +2876,7 @@
       "title": "Jak działa Pulpit",
       "what": "Pulpit grupuje twoje wiadomości według zainteresowań. Każda rzecz, którą powiedziałeś Mera, ma swoją sekcję, do tego nagłówki z twoich krajów i ze świata.",
       "how1": "Każdy temat trafia do jednego zainteresowania, do którego pasuje najlepiej, więc pojawia się raz. Jeśli dwa pasują tak samo, zatrzymuje go to dodane wcześniej.",
-      "how2": "Zainteresowania, którym nadałeś większą wagę, są pierwsze. Nowe zainteresowanie pojawia się na górze, jeszcze zanim przyjdą jego pierwsze tematy.",
+      "how2": "Zainteresowania, którym nadałeś większą wagę, są pierwsze. Nowe zainteresowanie dostaje swoją sekcję, jeszcze zanim przyjdą jego pierwsze tematy.",
       "how3": "W sekcji najpierw są nieprzeczytane tematy, od najważniejszych. Sekcje układają się na nowo, gdy opuszczasz kartę, lub co 10 minut."
     },
     "explore": {

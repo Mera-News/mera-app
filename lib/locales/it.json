@@ -2838,7 +2838,7 @@
       "title": "Come funziona la Dashboard",
       "what": "La Dashboard raggruppa le tue notizie per interesse. Ogni cosa che hai detto a Mera ha una sezione, più i titoli dai tuoi paesi e dal mondo.",
       "how1": "Ogni notizia va all'interesse a cui si adatta meglio, quindi compare una sola volta. Se due si adattano allo stesso modo, la tiene quello aggiunto per primo.",
-      "how2": "Gli interessi a cui hai dato più peso vengono prima. Un nuovo interesse compare in cima, anche prima che arrivino le sue prime notizie.",
+      "how2": "Gli interessi a cui hai dato più peso vengono prima. Un nuovo interesse ha la sua sezione anche prima che arrivino le sue prime notizie.",
       "how3": "In ogni sezione le notizie non lette vengono prima, le più importanti in testa. Le sezioni si riordinano quando esci dalla scheda, o ogni 10 minuti."
     },
     "explore": {

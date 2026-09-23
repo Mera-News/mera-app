@@ -2838,7 +2838,7 @@
       "title": "So funktioniert das Dashboard",
       "what": "Das Dashboard ordnet deine Nachrichten nach Interessen. Alles, was du Mera erzählt hast, bekommt einen Abschnitt, dazu Schlagzeilen aus deinen Ländern und der Welt.",
       "how1": "Jede Meldung landet bei dem einen Interesse, zu dem sie am besten passt, und erscheint so nur einmal. Passen zwei gleich gut, behält sie das zuerst hinzugefügte.",
-      "how2": "Interessen mit mehr Gewicht kommen zuerst. Ein neues Interesse steht oben, schon bevor seine ersten Meldungen da sind.",
+      "how2": "Interessen mit mehr Gewicht kommen zuerst. Ein neues Interesse bekommt seinen Abschnitt, schon bevor seine ersten Meldungen da sind.",
       "how3": "Innerhalb eines Abschnitts kommen ungelesene Meldungen zuerst, die wichtigsten vorne. Die Abschnitte ordnen sich neu, wenn du den Tab verlässt, oder alle 10 Minuten."
     },
     "explore": {

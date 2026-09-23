@@ -2837,7 +2837,7 @@
       "title": "Cara kerja Dasbor",
       "what": "Dasbor mengelompokkan beritamu berdasarkan minat. Setiap hal yang kamu ceritakan ke Mera punya bagian sendiri, ditambah berita utama dari negaramu dan dunia.",
       "how1": "Setiap berita masuk ke satu minat yang paling cocok, jadi hanya muncul sekali. Jika dua minat sama cocoknya, minat yang kamu tambahkan lebih dulu yang menyimpannya.",
-      "how2": "Minat yang kamu beri bobot lebih tampil lebih dulu. Minat baru muncul di paling atas, bahkan sebelum berita pertamanya tiba.",
+      "how2": "Minat yang kamu beri bobot lebih tampil lebih dulu. Minat baru langsung mendapat bagiannya, bahkan sebelum berita pertamanya tiba.",
       "how3": "Di dalam tiap bagian, berita yang belum dibaca tampil lebih dulu, yang paling penting di depan. Bagian diurutkan ulang saat kamu meninggalkan tab, atau setiap 10 menit."
     },
     "explore": {

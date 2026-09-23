@@ -2845,7 +2845,7 @@
       "title": "Comment fonctionne le Tableau de bord",
       "what": "Le Tableau de bord regroupe tes actualités par intérêt. Chaque chose que tu as dite à Mera a sa section, plus les titres de tes pays et du monde.",
       "how1": "Chaque sujet va à l'intérêt qui lui correspond le mieux, il n'apparaît donc qu'une fois. Si deux correspondent autant, celui ajouté en premier le garde.",
-      "how2": "Les intérêts auxquels tu as donné plus de poids passent en premier. Un nouvel intérêt apparaît en haut, avant même l'arrivée de ses premiers sujets.",
+      "how2": "Les intérêts auxquels tu as donné plus de poids passent en premier. Un nouvel intérêt a sa section avant même l'arrivée de ses premiers sujets.",
       "how3": "Dans une section, les sujets non lus passent en premier, les plus importants devant. Les sections se réordonnent quand tu quittes l'onglet, ou toutes les 10 minutes."
     },
     "explore": {
