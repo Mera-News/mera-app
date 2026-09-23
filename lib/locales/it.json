@@ -232,7 +232,8 @@
     "reasonUnavailable": "Mera non è riuscita a scrivere una nota per questo articolo.",
     "loadingA11y": "Caricamento del tuo feed",
     "newStoriesPill": "Nuove notizie",
-    "translatingCaption": "Traduzione in corso…"
+    "translatingCaption": "Traduzione in corso…",
+    "updatedJustNow": "Aggiornato ora"
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -834,13 +835,14 @@
     "tooltipA11y": "Informazioni sulla cronologia di lettura",
     "tooltipIntro": "Mera tiene traccia dei tuoi schemi di lettura, e i dati restano solo sul tuo dispositivo.",
     "tooltipLink": "Vedi tutta la tua cronologia di lettura qui.",
-    "screenIntro": "Mera tiene traccia dei tuoi schemi di lettura, solo sul tuo dispositivo per 30 giorni. Questo ti dà un quadro più chiaro di quali pubblicazioni contano di più per te, così puoi valutare di supportare quelle che ti beneficiano direttamente.",
+    "screenIntro": "Testate di cui hai aperto il sito da Mera negli ultimi 30 giorni. Questo elenco resta su questo dispositivo.",
     "visitedListTitle": "Pubblicazioni visitate",
     "last30Days": "Ultimi 30 giorni",
     "lastRead": "Ultima lettura {{time}}",
-    "noArticlesYet": "Non hai ancora letto nessun articolo.",
+    "noArticlesYet": "Le testate che apri da Mera compaiono qui. Quello che leggi dentro Mera non è elencato.",
     "articlesRead": "Articoli letti",
-    "noArticlesLast30Days": "Nessun articolo di questa pubblicazione negli ultimi 30 giorni."
+    "noArticlesLast30Days": "Nessun articolo di questa pubblicazione negli ultimi 30 giorni.",
+    "emptyTitle": "Ancora nessuna testata"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Aggiornamento necessario",
@@ -934,7 +936,8 @@
     "removeAction": "Rimuovi dai salvati",
     "savedToastMessage": "Articolo salvato per dopo",
     "savedToastTitle": "Salvato",
-    "title": "Salvati"
+    "title": "Salvati",
+    "emptyTitle": "Ancora niente di salvato"
   },
   "subscription": {
     "activating": "Attivazione dell'abbonamento in corso…",
@@ -1047,9 +1050,16 @@
     "subTabFeed": "Panoramica",
     "subTabStories": "Storie",
     "subTabSaved": "Salvati",
-    "subTabHistory": "Cronologia",
+    "subTabHistory": "Visitati",
     "nextFactPrefix": "Prossimo",
-    "subTabAnalytics": "Statistiche"
+    "subTabAnalytics": "Statistiche",
+    "emptySection": {
+      "awaiting": "Cerchiamo notizie su questo. Arriveranno dopo il prossimo aggiornamento.",
+      "none": "Nessuna notizia per ora è abbastanza vicina a questo da essere mostrata."
+    },
+    "newInterest": "Nuovo interesse",
+    "nextSection": "Avanti: {{title}}",
+    "backToDashboard": "Torna alla Dashboard"
   },
   "feedStatus": {
     "title": "Stato del feed",
@@ -1068,7 +1078,8 @@
     "collapseA11y": "Nascondi dettagli stato del feed",
     "modeProcessing": "Aggiornamento del feed",
     "modeError": "Problema con il feed",
-    "modeLimited": "Limite giornaliero di articoli raggiunto"
+    "modeLimited": "Limite giornaliero di articoli raggiunto",
+    "syncDoneA11y": "Il tuo feed è aggiornato."
   },
   "trackedStories": {
     "emptyTitle": "Ancora nessuna storia seguita",
@@ -2609,7 +2620,8 @@
       "heatLegendLess": "meno",
       "heatLegendMore": "più",
       "heatNote": "La tonalità indica quanti articoli hai letto quel giorno.",
-      "rhythmWeekdays": "L,M,M,G,V,S,D"
+      "rhythmWeekdays": "L,M,M,G,V,S,D",
+      "habitsTitle": "Come leggo"
     }
   },
   "analytics": {
@@ -2801,5 +2813,36 @@
     "docTitle": "Articoli salvati",
     "docExported": "Esportato il {{date}}",
     "docReasonLabel": "Perché Mera l'ha scelto"
+  },
+  "tabExplainer": {
+    "openA11y": "Come funziona questa scheda",
+    "close": "Capito",
+    "feed": {
+      "title": "Come funziona Notizie",
+      "what": "Notizie mostra ogni notizia che Mera ha trovato per te negli ultimi due giorni. Ogni notizia ha una sola scheda, anche se l'hanno coperta molte testate.",
+      "how1": "Mera trasforma quello che le hai detto di te in ricerche, recupera gli articoli corrispondenti e un'IA li legge uno per uno per valutare quanto contano per te.",
+      "how2": "Le notizie che non hai visto vengono prima, le più importanti in testa. Una notizia non vista scende di un livello dopo 12 ore e di un altro dopo un giorno.",
+      "how3": "Le notizie che hai scorso scendono, quelle che hai aperto vanno in fondo. Le schede sopra il punto in cui leggi restano ferme. Trascina verso il basso per riordinare.",
+      "privacy": "L'ordine viene calcolato su questo telefono. Le notizie che apri restano solo su questo telefono."
+    },
+    "forYou": {
+      "title": "Come funziona la Dashboard",
+      "what": "La Dashboard raggruppa le tue notizie per interesse. Ogni cosa che hai detto a Mera ha una sezione, più i titoli dai tuoi paesi e dal mondo.",
+      "how1": "Ogni notizia va all'interesse a cui si adatta meglio, quindi compare una sola volta. Se due si adattano allo stesso modo, la tiene quello aggiunto per primo.",
+      "how2": "Gli interessi a cui hai dato più peso vengono prima. Un nuovo interesse compare in cima, anche prima che arrivino le sue prime notizie.",
+      "how3": "In ogni sezione le notizie non lette vengono prima, le più importanti in testa. Le sezioni si riordinano quando esci dalla scheda, o ogni 10 minuti."
+    },
+    "explore": {
+      "title": "Come funziona Esplora",
+      "what": "Esplora mostra i titoli delle ultime 24 ore per il mondo e per ogni paese che scegli. Sono gli stessi per tutti, non scelti per te.",
+      "how1": "I titoli dal mondo sono ordinati in base a quanto ampiamente una notizia è coperta nei diversi paesi, non al numero di articoli.",
+      "how2": "I titoli di un paese provengono da fonti di notizie con sede in quel paese."
+    },
+    "profile": {
+      "title": "Come funziona il Profilo",
+      "what": "Il Profilo contiene quello che hai detto a Mera di te. Notizie e la Dashboard nascono da questi dati.",
+      "how1": "Ogni dato diventa ricerche che Mera fa per te. Se modifichi o elimini un dato, cambiano anche le notizie che ne derivavano.",
+      "privacy": "Le ricerche che ne derivano non sono mai collegate al tuo account. Il server conserva solo il testo della ricerca, condiviso in forma anonima tra tutti gli utenti, e lo elimina dopo 14 giorni di inutilizzo."
+    }
   }
 }

@@ -232,7 +232,8 @@
     "reasonUnavailable": "Mera kon hier geen notitie bij schrijven.",
     "loadingA11y": "Je feed wordt geladen",
     "newStoriesPill": "Nieuwe berichten",
-    "translatingCaption": "Vertalen…"
+    "translatingCaption": "Vertalen…",
+    "updatedJustNow": "Zojuist bijgewerkt"
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -834,13 +835,14 @@
     "tooltipA11y": "Over leesgeschiedenis",
     "tooltipIntro": "Mera houdt je leesgedrag bij, en dit blijft alleen op je apparaat.",
     "tooltipLink": "Bekijk hier al je leesgeschiedenis.",
-    "screenIntro": "Mera volgt je leesgedrag, alleen op je apparaat gedurende 30 dagen. Dit geeft je een duidelijker beeld van welke publicaties het meest voor je betekenen, zodat je kunt overwegen de publicaties te steunen die je het meest direct ten goede komen.",
+    "screenIntro": "Media waarvan je de site de afgelopen 30 dagen vanuit Mera hebt geopend. Deze lijst blijft op dit apparaat.",
     "visitedListTitle": "Publicaties die je hebt bezocht",
     "last30Days": "Afgelopen 30 dagen",
     "lastRead": "Laatst gelezen {{time}}",
-    "noArticlesYet": "Je hebt nog geen artikelen gelezen.",
+    "noArticlesYet": "Media die je vanuit Mera opent, verschijnen hier. Lezen binnen Mera staat hier niet bij.",
     "articlesRead": "Artikelen die je hebt gelezen",
-    "noArticlesLast30Days": "Geen artikelen van deze publicatie in de afgelopen 30 dagen."
+    "noArticlesLast30Days": "Geen artikelen van deze publicatie in de afgelopen 30 dagen.",
+    "emptyTitle": "Nog geen media"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Update vereist",
@@ -934,7 +936,8 @@
     "removeAction": "Verwijderen uit opgeslagen",
     "savedToastMessage": "Artikel opgeslagen voor later",
     "savedToastTitle": "Opgeslagen",
-    "title": "Opgeslagen"
+    "title": "Opgeslagen",
+    "emptyTitle": "Nog niets opgeslagen"
   },
   "subscription": {
     "activating": "Je abonnement wordt geactiveerd…",
@@ -1047,9 +1050,16 @@
     "subTabFeed": "Overzicht",
     "subTabStories": "Verhalen",
     "subTabSaved": "Opgeslagen",
-    "subTabHistory": "Geschiedenis",
+    "subTabHistory": "Bezocht",
     "nextFactPrefix": "Volgende",
-    "subTabAnalytics": "Analyse"
+    "subTabAnalytics": "Analyse",
+    "emptySection": {
+      "awaiting": "Mera zoekt verhalen hierover. Ze verschijnen na de volgende verversing.",
+      "none": "Nog geen verhaal past hier goed genoeg bij om te tonen."
+    },
+    "newInterest": "Nieuwe interesse",
+    "nextSection": "Volgende: {{title}}",
+    "backToDashboard": "Terug naar Dashboard"
   },
   "feedStatus": {
     "title": "Feedstatus",
@@ -1068,7 +1078,8 @@
     "collapseA11y": "Feedstatus-details verbergen",
     "modeProcessing": "Je feed wordt bijgewerkt",
     "modeError": "Probleem met de feed",
-    "modeLimited": "Daglimiet voor artikelen bereikt"
+    "modeLimited": "Daglimiet voor artikelen bereikt",
+    "syncDoneA11y": "Je feed is bijgewerkt."
   },
   "trackedStories": {
     "emptyTitle": "Nog geen verhalen gevolgd",
@@ -2609,7 +2620,8 @@
       "heatLegendLess": "minder",
       "heatLegendMore": "meer",
       "heatNote": "De kleur laat zien hoeveel artikelen je die dag las.",
-      "rhythmWeekdays": "M,D,W,D,V,Z,Z"
+      "rhythmWeekdays": "M,D,W,D,V,Z,Z",
+      "habitsTitle": "Hoe ik lees"
     }
   },
   "analytics": {
@@ -2801,5 +2813,36 @@
     "docTitle": "Bewaarde artikelen",
     "docExported": "Geëxporteerd op {{date}}",
     "docReasonLabel": "Waarom Mera dit koos"
+  },
+  "tabExplainer": {
+    "openA11y": "Hoe dit tabblad werkt",
+    "close": "Begrepen",
+    "feed": {
+      "title": "Hoe de Feed werkt",
+      "what": "De Feed toont elk verhaal dat Mera de afgelopen twee dagen voor je vond. Elk verhaal krijgt één kaart, ook als veel media erover schreven.",
+      "how1": "Mera maakt van wat je over jezelf vertelde zoekopdrachten, haalt passende artikelen op, en een AI leest ze een voor een om te beoordelen hoe belangrijk ze voor je zijn.",
+      "how2": "Verhalen die je nog niet zag komen eerst, de belangrijkste bovenaan. Een ongezien verhaal zakt na 12 uur één niveau en na een dag nog een.",
+      "how3": "Verhalen waar je langs scrolde zakken, en verhalen die je opende komen onderaan. Kaarten boven je leespositie blijven staan. Trek omlaag om opnieuw te sorteren.",
+      "privacy": "De volgorde wordt op deze telefoon bepaald. Welke verhalen je opent, blijft alleen op deze telefoon."
+    },
+    "forYou": {
+      "title": "Hoe het Dashboard werkt",
+      "what": "Het Dashboard groepeert je nieuws per interesse. Alles wat je Mera vertelde krijgt een sectie, plus koppen uit jouw landen en de wereld.",
+      "how1": "Elk verhaal gaat naar de ene interesse waar het het best bij past, dus het verschijnt maar één keer. Passen er twee even goed, dan houdt de eerst toegevoegde het.",
+      "how2": "Interesses waaraan je meer gewicht gaf komen eerst. Een nieuwe interesse staat bovenaan, al voordat de eerste verhalen binnenkomen.",
+      "how3": "Binnen een sectie komen ongelezen verhalen eerst, de belangrijkste bovenaan. De secties worden opnieuw gesorteerd als je het tabblad verlaat, of elke 10 minuten."
+    },
+    "explore": {
+      "title": "Hoe Verkennen werkt",
+      "what": "Verkennen toont de koppen van de afgelopen 24 uur voor de wereld en voor elk land dat je kiest. Ze zijn voor iedereen hetzelfde en niet voor jou gekozen.",
+      "how1": "Wereldkoppen worden gerangschikt naar hoe breed een verhaal in verschillende landen wordt gebracht, niet naar het aantal artikelen.",
+      "how2": "Landkoppen komen van nieuwsbronnen die in dat land gevestigd zijn."
+    },
+    "profile": {
+      "title": "Hoe het Profiel werkt",
+      "what": "Je Profiel bevat wat je Mera over jezelf vertelde. Je Feed en Dashboard worden uit deze feiten opgebouwd.",
+      "how1": "Elk feit wordt zoekopdrachten die Mera voor je uitvoert. Wijzig of verwijder een feit en de verhalen die eruit kwamen veranderen mee.",
+      "privacy": "De zoekopdrachten die eruit voortkomen worden nooit aan je account gekoppeld. De server bewaart alleen de zoektekst, anoniem gedeeld met alle gebruikers, en verwijdert die na 14 dagen zonder gebruik."
+    }
   }
 }

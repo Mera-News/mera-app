@@ -232,7 +232,8 @@
     "reasonUnavailable": "A Mera não conseguiu escrever uma nota para este artigo.",
     "loadingA11y": "Carregando seu feed",
     "newStoriesPill": "Novas notícias",
-    "translatingCaption": "Traduzindo…"
+    "translatingCaption": "Traduzindo…",
+    "updatedJustNow": "Atualizado agora mesmo"
   },
   "relevance": {
     "emergency": "Emergência",
@@ -834,13 +835,14 @@
     "tooltipA11y": "Sobre o histórico de leitura",
     "tooltipIntro": "O Mera acompanha seus padrões de leitura para você, e fica apenas no seu dispositivo.",
     "tooltipLink": "Veja todo o seu histórico de leitura aqui.",
-    "screenIntro": "O Mera rastreia seus padrões de leitura, apenas no seu dispositivo por 30 dias. Isso dá uma visão mais clara de quais publicações importam mais para você, para que você possa considerar apoiar as que diretamente te beneficiam.",
+    "screenIntro": "Veículos cujos sites você abriu pelo Mera nos últimos 30 dias. Esta lista fica neste aparelho.",
     "visitedListTitle": "Publicações que você visitou",
     "last30Days": "Últimos 30 dias",
     "lastRead": "Lido pela última vez {{time}}",
-    "noArticlesYet": "Você ainda não leu nenhum artigo.",
+    "noArticlesYet": "Os veículos que você abre pelo Mera aparecem aqui. O que você lê dentro do Mera não aparece na lista.",
     "articlesRead": "Artigos que você leu",
-    "noArticlesLast30Days": "Nenhum artigo desta publicação nos últimos 30 dias."
+    "noArticlesLast30Days": "Nenhum artigo desta publicação nos últimos 30 dias.",
+    "emptyTitle": "Nenhum veículo ainda"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Atualização necessária",
@@ -934,7 +936,8 @@
     "removeAction": "Remover dos salvos",
     "savedToastMessage": "Artigo salvo para depois",
     "savedToastTitle": "Salvo",
-    "title": "Salvos"
+    "title": "Salvos",
+    "emptyTitle": "Nada salvo ainda"
   },
   "subscription": {
     "activating": "Ativando sua assinatura…",
@@ -1047,9 +1050,16 @@
     "subTabFeed": "Visão",
     "subTabStories": "Histórias",
     "subTabSaved": "Salvos",
-    "subTabHistory": "Histórico",
+    "subTabHistory": "Visitados",
     "nextFactPrefix": "Próximo",
-    "subTabAnalytics": "Análises"
+    "subTabAnalytics": "Análises",
+    "emptySection": {
+      "awaiting": "Procurando notícias sobre isso. Elas aparecem depois da próxima atualização.",
+      "none": "Ainda nenhuma notícia combina o bastante com isso para aparecer."
+    },
+    "newInterest": "Novo interesse",
+    "nextSection": "Próximo: {{title}}",
+    "backToDashboard": "Voltar ao Painel"
   },
   "feedStatus": {
     "title": "Status do feed",
@@ -1068,7 +1078,8 @@
     "collapseA11y": "Ocultar detalhes do status do feed",
     "modeProcessing": "Atualizando seu feed",
     "modeError": "Problema no feed",
-    "modeLimited": "Limite diário de artigos atingido"
+    "modeLimited": "Limite diário de artigos atingido",
+    "syncDoneA11y": "Seu feed está atualizado."
   },
   "trackedStories": {
     "emptyTitle": "Nenhuma história seguida ainda",
@@ -2609,7 +2620,8 @@
       "heatLegendLess": "menos",
       "heatLegendMore": "mais",
       "heatNote": "O tom mostra quantos artigos você leu naquele dia.",
-      "rhythmWeekdays": "S,T,Q,Q,S,S,D"
+      "rhythmWeekdays": "S,T,Q,Q,S,S,D",
+      "habitsTitle": "Como eu leio"
     }
   },
   "analytics": {
@@ -2801,5 +2813,36 @@
     "docTitle": "Artigos salvos",
     "docExported": "Exportado em {{date}}",
     "docReasonLabel": "Por que Mera escolheu"
+  },
+  "tabExplainer": {
+    "openA11y": "Como esta aba funciona",
+    "close": "Entendi",
+    "feed": {
+      "title": "Como o Feed funciona",
+      "what": "O Feed mostra cada notícia que o Mera encontrou para você nos últimos dois dias. Cada notícia tem um único cartão, mesmo quando vários veículos a cobriram.",
+      "how1": "O Mera transforma o que você contou sobre si em buscas, traz os artigos que combinam e uma IA lê cada um para avaliar o quanto ele importa para você.",
+      "how2": "As notícias que você não viu vêm primeiro, as mais importantes na frente. Uma notícia não vista desce um nível depois de 12 horas e outro depois de um dia.",
+      "how3": "As notícias pelas quais você rolou descem, e as que você abriu vão para o fim. Os cartões acima de onde você está lendo não se mexem. Puxe para baixo para reordenar.",
+      "privacy": "A ordem é calculada neste celular. As notícias que você abre ficam guardadas só neste celular."
+    },
+    "forYou": {
+      "title": "Como o Painel funciona",
+      "what": "O Painel agrupa suas notícias por interesse. Cada coisa que você contou ao Mera ganha uma seção, além de manchetes dos seus países e do mundo.",
+      "how1": "Cada notícia vai para o interesse com que mais combina, então aparece só uma vez. Se dois combinam igual, fica com o que você adicionou primeiro.",
+      "how2": "Os interesses a que você deu mais peso vêm primeiro. Um interesse novo aparece no topo, mesmo antes de chegarem as primeiras notícias.",
+      "how3": "Dentro de cada seção, as notícias não lidas vêm primeiro, as mais importantes na frente. As seções se reorganizam quando você sai da aba, ou a cada 10 minutos."
+    },
+    "explore": {
+      "title": "Como o Explorar funciona",
+      "what": "O Explorar mostra as manchetes das últimas 24 horas do mundo e de cada país que você escolher. São as mesmas para todos, não escolhidas para você.",
+      "how1": "As manchetes do mundo são ordenadas pela amplitude com que uma notícia é coberta em diferentes países, não pelo número de artigos.",
+      "how2": "As manchetes de um país vêm de fontes de notícias sediadas nesse país."
+    },
+    "profile": {
+      "title": "Como o Perfil funciona",
+      "what": "O Perfil guarda o que você contou ao Mera sobre si. Seu Feed e seu Painel são montados a partir desses fatos.",
+      "how1": "Cada fato vira buscas que o Mera faz para você. Mude ou apague um fato e as notícias que vieram dele também mudam.",
+      "privacy": "As buscas feitas a partir deles nunca são ligadas à sua conta. O servidor guarda só o texto da busca, compartilhado de forma anônima entre todos os usuários, e o apaga depois de 14 dias sem uso."
+    }
   }
 }

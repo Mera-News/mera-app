@@ -232,7 +232,8 @@
     "reasonUnavailable": "Mera no pudo escribir una nota para este artículo.",
     "loadingA11y": "Cargando tu feed",
     "newStoriesPill": "Noticias nuevas",
-    "translatingCaption": "Traduciendo…"
+    "translatingCaption": "Traduciendo…",
+    "updatedJustNow": "Actualizado ahora mismo"
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -834,13 +835,14 @@
     "tooltipA11y": "Acerca del historial de lectura",
     "tooltipIntro": "Mera lleva un seguimiento de tus patrones de lectura, y solo existe en tu dispositivo.",
     "tooltipLink": "Ver todo tu historial de lectura aquí.",
-    "screenIntro": "Mera rastrea tus patrones de lectura (solo en tu dispositivo durante 30 días). Esto te da una imagen más clara de qué publicaciones te importan más, para que puedas considerar apoyar las que te benefician directamente.",
+    "screenIntro": "Medios cuyas webs abriste desde Mera en los últimos 30 días. Esta lista se queda en este dispositivo.",
     "visitedListTitle": "Publicaciones que has visitado",
     "last30Days": "Últimos 30 días",
     "lastRead": "Última lectura {{time}}",
-    "noArticlesYet": "Todavía no has leído ningún artículo.",
+    "noArticlesYet": "Los medios que abres desde Mera aparecen aquí. Lo que lees dentro de Mera no se incluye.",
     "articlesRead": "Artículos que has leído",
-    "noArticlesLast30Days": "No hay artículos de esta publicación en los últimos 30 días."
+    "noArticlesLast30Days": "No hay artículos de esta publicación en los últimos 30 días.",
+    "emptyTitle": "Aún no hay medios"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Actualización necesaria",
@@ -934,7 +936,8 @@
     "removeAction": "Quitar de guardados",
     "savedToastMessage": "Artículo guardado para más tarde",
     "savedToastTitle": "Guardado",
-    "title": "Guardados"
+    "title": "Guardados",
+    "emptyTitle": "Nada guardado todavía"
   },
   "subscription": {
     "activating": "Activando tu suscripción…",
@@ -1047,9 +1050,16 @@
     "subTabFeed": "Panorama",
     "subTabStories": "Historias",
     "subTabSaved": "Guardados",
-    "subTabHistory": "Historial",
+    "subTabHistory": "Visitados",
     "nextFactPrefix": "Siguiente",
-    "subTabAnalytics": "Analíticas"
+    "subTabAnalytics": "Analíticas",
+    "emptySection": {
+      "awaiting": "Buscando noticias sobre esto. Aparecerán tras la próxima actualización.",
+      "none": "Todavía no hay ninguna noticia que encaje lo bastante con esto."
+    },
+    "newInterest": "Interés nuevo",
+    "nextSection": "Siguiente: {{title}}",
+    "backToDashboard": "Volver al Panel"
   },
   "feedStatus": {
     "title": "Estado del feed",
@@ -1068,7 +1078,8 @@
     "collapseA11y": "Ocultar detalles del estado del feed",
     "modeProcessing": "Actualizando tu feed",
     "modeError": "Problema con el feed",
-    "modeLimited": "Límite diario de artículos alcanzado"
+    "modeLimited": "Límite diario de artículos alcanzado",
+    "syncDoneA11y": "Tu feed está al día."
   },
   "trackedStories": {
     "emptyTitle": "Aún no sigues ninguna historia",
@@ -2609,7 +2620,8 @@
       "heatLegendLess": "menos",
       "heatLegendMore": "más",
       "heatNote": "El sombreado indica cuántos artículos leíste ese día.",
-      "rhythmWeekdays": "L,M,X,J,V,S,D"
+      "rhythmWeekdays": "L,M,X,J,V,S,D",
+      "habitsTitle": "Cómo leo"
     }
   },
   "analytics": {
@@ -2801,5 +2813,36 @@
     "docTitle": "Artículos guardados",
     "docExported": "Exportado el {{date}}",
     "docReasonLabel": "Por qué lo eligió Mera"
+  },
+  "tabExplainer": {
+    "openA11y": "Cómo funciona esta pestaña",
+    "close": "Entendido",
+    "feed": {
+      "title": "Cómo funciona Noticias",
+      "what": "Noticias muestra cada noticia que Mera encontró para ti en los últimos dos días. Cada noticia tiene una sola tarjeta, aunque la hayan cubierto muchos medios.",
+      "how1": "Mera convierte lo que le contaste sobre ti en búsquedas, trae los artículos que coinciden y una IA lee cada uno para valorar cuánto te importa.",
+      "how2": "Primero van las noticias que no has visto, las más importantes delante. Una noticia no vista baja un nivel tras 12 horas y otro tras un día.",
+      "how3": "Las noticias que pasaste de largo bajan, y las que abriste van al final. Las tarjetas por encima de donde lees no se mueven. Desliza hacia abajo para reordenar.",
+      "privacy": "El orden se calcula en este teléfono. Las noticias que abres se guardan solo en este teléfono."
+    },
+    "forYou": {
+      "title": "Cómo funciona el Panel",
+      "what": "El Panel agrupa tus noticias por interés. Cada cosa que le contaste a Mera tiene su sección, además de titulares de tus países y del mundo.",
+      "how1": "Cada noticia va al interés con el que mejor encaja, así que aparece una sola vez. Si dos encajan igual, se la queda el que añadiste primero.",
+      "how2": "Los intereses a los que diste más peso van primero. Un interés nuevo aparece arriba, incluso antes de que lleguen sus primeras noticias.",
+      "how3": "Dentro de cada sección, las noticias sin leer van primero, las más importantes delante. Las secciones se reordenan al salir de la pestaña o cada 10 minutos."
+    },
+    "explore": {
+      "title": "Cómo funciona Explorar",
+      "what": "Explorar muestra los titulares de las últimas 24 horas del mundo y de cada país que elijas. Son los mismos para todos, no están elegidos para ti.",
+      "how1": "Los titulares del mundo se ordenan según lo ampliamente que se cubre una noticia en distintos países, no por el número de artículos.",
+      "how2": "Los titulares de un país vienen de fuentes de noticias con sede en ese país."
+    },
+    "profile": {
+      "title": "Cómo funciona el Perfil",
+      "what": "El Perfil guarda lo que le contaste a Mera sobre ti. Noticias y el Panel se crean a partir de estos datos.",
+      "how1": "Cada dato se convierte en búsquedas que Mera hace por ti. Si cambias o borras un dato, también cambian las noticias que venían de él.",
+      "privacy": "Las búsquedas que salen de ellos nunca se vinculan a tu cuenta. El servidor guarda solo el texto de búsqueda, compartido de forma anónima entre todos los usuarios, y lo borra tras 14 días sin uso."
+    }
   }
 }

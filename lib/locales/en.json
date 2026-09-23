@@ -288,7 +288,8 @@
     "reasonUnavailable": "Mera couldn't write a note for this one.",
     "loadingA11y": "Loading your feed",
     "newStoriesPill": "New stories",
-    "translatingCaption": "Translating…"
+    "translatingCaption": "Translating…",
+    "updatedJustNow": "Updated just now"
   },
   "relevance": {
     "emergency": "Emergency",
@@ -507,9 +508,16 @@
     "subTabFeed": "Overview",
     "subTabStories": "Stories",
     "subTabSaved": "Saved",
-    "subTabHistory": "History",
+    "subTabHistory": "Visited",
     "nextFactPrefix": "Next",
-    "subTabAnalytics": "Analytics"
+    "subTabAnalytics": "Analytics",
+    "emptySection": {
+      "awaiting": "Looking for stories about this. They show up after the next refresh.",
+      "none": "No story here yet fits this closely enough to show."
+    },
+    "newInterest": "New interest",
+    "nextSection": "Next: {{title}}",
+    "backToDashboard": "Back to Dashboard"
   },
   "feedStatus": {
     "title": "Feed status",
@@ -528,7 +536,8 @@
     "close": "Close",
     "modeProcessing": "Updating your feed",
     "modeError": "Feed problem",
-    "modeLimited": "Daily article limit reached"
+    "modeLimited": "Daily article limit reached",
+    "syncDoneA11y": "Your feed is up to date."
   },
   "trackedStories": {
     "followFabLabel": "Follow a new story",
@@ -1245,13 +1254,14 @@
     "tooltipA11y": "About reading history",
     "tooltipIntro": "Mera keeps track of your reading patterns for you; it lives only on your device.",
     "tooltipLink": "See all your reading history here.",
-    "screenIntro": "Mera tracks your reading patterns - only on your device for 30 days. This gives you a clearer picture of which publications matter most to you, so you can consider supporting the ones that directly benefit you.",
+    "screenIntro": "Publishers whose sites you opened from Mera in the last 30 days. This list stays on this device.",
     "visitedListTitle": "Publications you've visited",
     "last30Days": "Last 30 days",
     "lastRead": "Last read {{time}}",
-    "noArticlesYet": "You haven't read any articles yet.",
+    "noArticlesYet": "Publishers you open from Mera show up here. Reading inside Mera isn't listed.",
     "articlesRead": "Articles you've read",
-    "noArticlesLast30Days": "No articles from this publication in the last 30 days."
+    "noArticlesLast30Days": "No articles from this publication in the last 30 days.",
+    "emptyTitle": "No publishers yet"
   },
   "savedSuggestions": {
     "title": "Saved",
@@ -1265,7 +1275,8 @@
     "deleteConfirmTitle": "Remove saved article?",
     "deleteConfirmMessage": "This will remove the article from your saved list on this device.",
     "deleteConfirmCta": "Delete",
-    "empty": "You haven't saved any articles yet. Tap the bookmark on an article to save it for later."
+    "empty": "You haven't saved any articles yet. Tap the bookmark on an article to save it for later.",
+    "emptyTitle": "Nothing saved yet"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Update required",
@@ -2609,7 +2620,8 @@
       "heatLegendLess": "less",
       "heatLegendMore": "more",
       "heatNote": "Shading is how many articles you read that day.",
-      "rhythmWeekdays": "M,T,W,T,F,S,S"
+      "rhythmWeekdays": "M,T,W,T,F,S,S",
+      "habitsTitle": "How I read"
     }
   },
   "analytics": {
@@ -2802,5 +2814,36 @@
     "docTitle": "Saved articles",
     "docExported": "Exported {{date}}",
     "docReasonLabel": "Why Mera picked it"
+  },
+  "tabExplainer": {
+    "openA11y": "How this tab works",
+    "close": "Got it",
+    "feed": {
+      "title": "How Feed works",
+      "what": "Feed shows every story Mera found for you in the last two days. Each story gets one card, even when many outlets covered it.",
+      "how1": "Mera turns what you told it about yourself into searches, fetches matching articles, and an AI reads each one to judge how much it matters to you.",
+      "how2": "Stories you haven't seen come first, most important first. An unseen story drops one level after 12 hours and another after a day.",
+      "how3": "Stories you scrolled past move lower, and ones you opened go last. Cards above where you are reading stay put. Pull down to re-sort.",
+      "privacy": "The order is worked out on this phone. Which stories you open is kept only on this phone."
+    },
+    "forYou": {
+      "title": "How the Dashboard works",
+      "what": "The Dashboard groups your news by interest. Each thing you told Mera gets a section, plus headlines from your countries and the world.",
+      "how1": "Each story goes to the one interest it fits best, so it appears once. If two fit equally, the interest you added first keeps it.",
+      "how2": "Interests you gave more weight come first. A new interest appears at the top, even before its first stories arrive.",
+      "how3": "Inside a section, unread stories come first, most important first. Sections reorder when you leave the tab, or every 10 minutes."
+    },
+    "explore": {
+      "title": "How Explore works",
+      "what": "Explore shows the headlines from the last 24 hours for the world and for each country you pick. They are the same for everyone, not picked for you.",
+      "how1": "World headlines are ranked by how widely a story is covered across countries, not by how many articles there are.",
+      "how2": "Country headlines come from news sources based in that country."
+    },
+    "profile": {
+      "title": "How Profile works",
+      "what": "Profile holds what you told Mera about yourself. Your Feed and Dashboard are built from these facts.",
+      "how1": "Each fact becomes searches Mera runs for you. Change or delete a fact and the stories that came from it change too.",
+      "privacy": "The searches made from them are never linked to your account. The server keeps only the search text, shared anonymously across all users, and deletes it after 14 days without use."
+    }
   }
 }

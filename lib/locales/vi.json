@@ -232,7 +232,8 @@
     "reasonUnavailable": "Mera không thể viết ghi chú cho bài này.",
     "loadingA11y": "Đang tải bảng tin của bạn",
     "newStoriesPill": "Tin mới",
-    "translatingCaption": "Đang dịch…"
+    "translatingCaption": "Đang dịch…",
+    "updatedJustNow": "Vừa cập nhật"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -834,13 +835,14 @@
     "tooltipA11y": "Về lịch sử đọc",
     "tooltipIntro": "Mera theo dõi thói quen đọc của bạn và dữ liệu này chỉ lưu trên thiết bị của bạn.",
     "tooltipLink": "Xem toàn bộ lịch sử đọc của bạn tại đây.",
-    "screenIntro": "Mera theo dõi thói quen đọc của bạn: chỉ trên thiết bị trong 30 ngày. Điều này giúp bạn thấy rõ ấn phẩm nào quan trọng nhất với mình, để bạn có thể cân nhắc ủng hộ những ấn phẩm mang lại lợi ích trực tiếp cho bạn.",
+    "screenIntro": "Các nhà xuất bản có trang bạn đã mở từ Mera trong 30 ngày qua. Danh sách này ở lại trên thiết bị này.",
     "visitedListTitle": "Ấn phẩm bạn đã ghé thăm",
     "last30Days": "30 ngày qua",
     "lastRead": "Đọc lần cuối lúc {{time}}",
-    "noArticlesYet": "Bạn chưa đọc bài viết nào.",
+    "noArticlesYet": "Những nhà xuất bản bạn mở từ Mera sẽ xuất hiện ở đây. Những gì bạn đọc trong Mera không được liệt kê.",
     "articlesRead": "Bài viết bạn đã đọc",
-    "noArticlesLast30Days": "Không có bài viết nào từ ấn phẩm này trong 30 ngày qua."
+    "noArticlesLast30Days": "Không có bài viết nào từ ấn phẩm này trong 30 ngày qua.",
+    "emptyTitle": "Chưa có nhà xuất bản nào"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Cần cập nhật",
@@ -934,7 +936,8 @@
     "removeAction": "Xóa khỏi mục đã lưu",
     "savedToastMessage": "Đã lưu bài viết để xem sau",
     "savedToastTitle": "Đã lưu",
-    "title": "Đã lưu"
+    "title": "Đã lưu",
+    "emptyTitle": "Chưa lưu gì"
   },
   "subscription": {
     "activating": "Đang kích hoạt gói đăng ký của bạn…",
@@ -1047,9 +1050,16 @@
     "subTabFeed": "Tổng quan",
     "subTabStories": "Câu chuyện",
     "subTabSaved": "Đã lưu",
-    "subTabHistory": "Lịch sử",
+    "subTabHistory": "Đã ghé",
     "nextFactPrefix": "Tiếp theo",
-    "subTabAnalytics": "Phân tích"
+    "subTabAnalytics": "Phân tích",
+    "emptySection": {
+      "awaiting": "Đang tìm tin về chủ đề này. Tin sẽ xuất hiện sau lần làm mới tiếp theo.",
+      "none": "Chưa có tin nào đủ khớp với chủ đề này để hiển thị."
+    },
+    "newInterest": "Mối quan tâm mới",
+    "nextSection": "Tiếp theo: {{title}}",
+    "backToDashboard": "Quay lại Bảng điều khiển"
   },
   "feedStatus": {
     "title": "Trạng thái bản tin",
@@ -1068,7 +1078,8 @@
     "collapseA11y": "Ẩn chi tiết trạng thái bản tin",
     "modeProcessing": "Đang cập nhật bảng tin của bạn",
     "modeError": "Sự cố bảng tin",
-    "modeLimited": "Đã đạt giới hạn bài viết hằng ngày"
+    "modeLimited": "Đã đạt giới hạn bài viết hằng ngày",
+    "syncDoneA11y": "Bảng tin của bạn đã được cập nhật."
   },
   "trackedStories": {
     "emptyTitle": "Chưa theo dõi câu chuyện nào",
@@ -2609,7 +2620,8 @@
       "heatLegendLess": "ít",
       "heatLegendMore": "nhiều",
       "heatNote": "Độ đậm cho biết bạn đã đọc bao nhiêu bài hôm đó.",
-      "rhythmWeekdays": "H,B,T,N,S,B,C"
+      "rhythmWeekdays": "H,B,T,N,S,B,C",
+      "habitsTitle": "Cách tôi đọc"
     }
   },
   "analytics": {
@@ -2801,5 +2813,36 @@
     "docTitle": "Bài viết đã lưu",
     "docExported": "Đã xuất ngày {{date}}",
     "docReasonLabel": "Vì sao Mera chọn bài này"
+  },
+  "tabExplainer": {
+    "openA11y": "Cách thẻ này hoạt động",
+    "close": "Đã hiểu",
+    "feed": {
+      "title": "Bảng tin hoạt động thế nào",
+      "what": "Bảng tin hiện mọi tin Mera tìm cho bạn trong hai ngày qua. Mỗi tin có một thẻ, kể cả khi nhiều báo cùng đưa tin.",
+      "how1": "Mera biến những gì bạn kể về bản thân thành các lượt tìm kiếm, lấy bài viết phù hợp, rồi AI đọc từng bài để đánh giá mức quan trọng với bạn.",
+      "how2": "Tin bạn chưa xem đứng trước, quan trọng nhất ở đầu. Tin chưa xem bị hạ một bậc sau 12 giờ và thêm một bậc sau một ngày.",
+      "how3": "Tin bạn đã cuộn qua xuống dưới, tin đã mở xuống cuối. Các thẻ phía trên chỗ bạn đang đọc giữ nguyên. Kéo xuống để sắp xếp lại.",
+      "privacy": "Thứ tự được tính trên điện thoại này. Những tin bạn mở chỉ được lưu trên điện thoại này."
+    },
+    "forYou": {
+      "title": "Bảng điều khiển hoạt động thế nào",
+      "what": "Bảng điều khiển nhóm tin của bạn theo mối quan tâm. Mỗi điều bạn kể với Mera có một mục riêng, kèm tiêu đề từ các quốc gia của bạn và thế giới.",
+      "how1": "Mỗi tin đi vào mối quan tâm hợp nhất, nên chỉ xuất hiện một lần. Nếu hai mối quan tâm hợp như nhau, mối quan tâm thêm trước sẽ giữ tin đó.",
+      "how2": "Những mối quan tâm bạn cho trọng số cao hơn đứng trước. Mối quan tâm mới hiện ở trên cùng, ngay cả trước khi có tin đầu tiên.",
+      "how3": "Trong mỗi mục, tin chưa đọc đứng trước, quan trọng nhất ở đầu. Các mục được sắp xếp lại khi bạn rời thẻ, hoặc mỗi 10 phút."
+    },
+    "explore": {
+      "title": "Khám phá hoạt động thế nào",
+      "what": "Khám phá hiện các tiêu đề trong 24 giờ qua của thế giới và của từng quốc gia bạn chọn. Mọi người đều thấy giống nhau, không chọn riêng cho bạn.",
+      "how1": "Tiêu đề thế giới được xếp theo mức độ một tin được đưa rộng rãi ở nhiều quốc gia, không theo số lượng bài viết.",
+      "how2": "Tiêu đề của một quốc gia đến từ các nguồn tin đặt tại quốc gia đó."
+    },
+    "profile": {
+      "title": "Hồ sơ hoạt động thế nào",
+      "what": "Hồ sơ lưu những gì bạn kể với Mera về bản thân. Bảng tin và Bảng điều khiển được tạo từ các thông tin này.",
+      "how1": "Mỗi thông tin trở thành các lượt tìm kiếm Mera chạy cho bạn. Sửa hoặc xóa một thông tin thì các tin đến từ nó cũng thay đổi.",
+      "privacy": "Các lượt tìm kiếm tạo từ chúng không bao giờ gắn với tài khoản của bạn. Máy chủ chỉ giữ văn bản tìm kiếm, dùng chung ẩn danh cho mọi người dùng, và xóa sau 14 ngày không dùng."
+    }
   }
 }

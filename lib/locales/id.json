@@ -232,7 +232,8 @@
     "reasonUnavailable": "Mera tidak bisa menulis catatan untuk artikel ini.",
     "loadingA11y": "Memuat feed kamu",
     "newStoriesPill": "Berita baru",
-    "translatingCaption": "Menerjemahkan…"
+    "translatingCaption": "Menerjemahkan…",
+    "updatedJustNow": "Baru saja diperbarui"
   },
   "relevance": {
     "emergency": "Darurat",
@@ -834,13 +835,14 @@
     "tooltipA11y": "Tentang riwayat bacaan",
     "tooltipIntro": "Mera melacak pola bacaan Anda, dan data ini hanya ada di perangkat Anda.",
     "tooltipLink": "Lihat semua riwayat bacaan Anda di sini.",
-    "screenIntro": "Mera melacak pola bacaan Anda, hanya di perangkat Anda selama 30 hari. Ini memberi Anda gambaran lebih jelas tentang publikasi mana yang paling berarti bagi Anda, sehingga Anda bisa mempertimbangkan untuk mendukung yang langsung memberi manfaat bagi Anda.",
+    "screenIntro": "Penerbit yang situsnya kamu buka dari Mera dalam 30 hari terakhir. Daftar ini tetap di perangkat ini.",
     "visitedListTitle": "Publikasi yang Anda kunjungi",
     "last30Days": "30 hari terakhir",
     "lastRead": "Terakhir dibaca {{time}}",
-    "noArticlesYet": "Anda belum membaca artikel apa pun.",
+    "noArticlesYet": "Penerbit yang kamu buka dari Mera muncul di sini. Bacaan di dalam Mera tidak dicantumkan.",
     "articlesRead": "Artikel yang Anda baca",
-    "noArticlesLast30Days": "Tidak ada artikel dari publikasi ini dalam 30 hari terakhir."
+    "noArticlesLast30Days": "Tidak ada artikel dari publikasi ini dalam 30 hari terakhir.",
+    "emptyTitle": "Belum ada penerbit"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Pembaruan diperlukan",
@@ -934,7 +936,8 @@
     "removeAction": "Hapus dari tersimpan",
     "savedToastMessage": "Artikel disimpan untuk nanti",
     "savedToastTitle": "Tersimpan",
-    "title": "Tersimpan"
+    "title": "Tersimpan",
+    "emptyTitle": "Belum ada yang disimpan"
   },
   "subscription": {
     "activating": "Mengaktifkan langganan Anda…",
@@ -1047,9 +1050,16 @@
     "subTabFeed": "Tinjauan",
     "subTabStories": "Cerita",
     "subTabSaved": "Tersimpan",
-    "subTabHistory": "Riwayat",
+    "subTabHistory": "Dikunjungi",
     "nextFactPrefix": "Berikutnya",
-    "subTabAnalytics": "Analitik"
+    "subTabAnalytics": "Analitik",
+    "emptySection": {
+      "awaiting": "Mencari berita tentang ini. Berita akan muncul setelah penyegaran berikutnya.",
+      "none": "Belum ada berita yang cukup cocok untuk ditampilkan di sini."
+    },
+    "newInterest": "Minat baru",
+    "nextSection": "Berikutnya: {{title}}",
+    "backToDashboard": "Kembali ke Dasbor"
   },
   "feedStatus": {
     "title": "Status feed",
@@ -1068,7 +1078,8 @@
     "collapseA11y": "Sembunyikan detail status feed",
     "modeProcessing": "Memperbarui feed Anda",
     "modeError": "Masalah pada feed",
-    "modeLimited": "Batas artikel harian tercapai"
+    "modeLimited": "Batas artikel harian tercapai",
+    "syncDoneA11y": "Feed kamu sudah terkini."
   },
   "trackedStories": {
     "emptyTitle": "Belum ada cerita yang diikuti",
@@ -2608,7 +2619,8 @@
       "heatLegendLess": "sedikit",
       "heatLegendMore": "banyak",
       "heatNote": "Warna menunjukkan berapa artikel yang Anda baca hari itu.",
-      "rhythmWeekdays": "S,S,R,K,J,S,M"
+      "rhythmWeekdays": "S,S,R,K,J,S,M",
+      "habitsTitle": "Cara saya membaca"
     }
   },
   "analytics": {
@@ -2800,5 +2812,36 @@
     "docTitle": "Artikel tersimpan",
     "docExported": "Diekspor {{date}}",
     "docReasonLabel": "Mengapa Mera memilihnya"
+  },
+  "tabExplainer": {
+    "openA11y": "Cara kerja tab ini",
+    "close": "Mengerti",
+    "feed": {
+      "title": "Cara kerja Umpan",
+      "what": "Umpan menampilkan setiap berita yang ditemukan Mera untukmu dalam dua hari terakhir. Setiap berita punya satu kartu, meski diliput banyak media.",
+      "how1": "Mera mengubah apa yang kamu ceritakan tentang dirimu menjadi pencarian, mengambil artikel yang cocok, lalu AI membaca tiap artikel untuk menilai seberapa penting artikel itu bagimu.",
+      "how2": "Berita yang belum kamu lihat tampil lebih dulu, yang paling penting di depan. Berita yang belum dilihat turun satu tingkat setelah 12 jam dan satu lagi setelah sehari.",
+      "how3": "Berita yang sudah kamu gulir lewat turun ke bawah, dan yang sudah kamu buka paling akhir. Kartu di atas posisi bacamu tidak bergeser. Tarik ke bawah untuk mengurutkan ulang.",
+      "privacy": "Urutan dihitung di ponsel ini. Berita yang kamu buka hanya disimpan di ponsel ini."
+    },
+    "forYou": {
+      "title": "Cara kerja Dasbor",
+      "what": "Dasbor mengelompokkan beritamu berdasarkan minat. Setiap hal yang kamu ceritakan ke Mera punya bagian sendiri, ditambah berita utama dari negaramu dan dunia.",
+      "how1": "Setiap berita masuk ke satu minat yang paling cocok, jadi hanya muncul sekali. Jika dua minat sama cocoknya, minat yang kamu tambahkan lebih dulu yang menyimpannya.",
+      "how2": "Minat yang kamu beri bobot lebih tampil lebih dulu. Minat baru muncul di paling atas, bahkan sebelum berita pertamanya tiba.",
+      "how3": "Di dalam tiap bagian, berita yang belum dibaca tampil lebih dulu, yang paling penting di depan. Bagian diurutkan ulang saat kamu meninggalkan tab, atau setiap 10 menit."
+    },
+    "explore": {
+      "title": "Cara kerja Eksplor",
+      "what": "Eksplor menampilkan berita utama 24 jam terakhir untuk dunia dan setiap negara yang kamu pilih. Isinya sama untuk semua orang, bukan dipilih untukmu.",
+      "how1": "Berita utama dunia diurutkan menurut seberapa luas sebuah berita diliput di berbagai negara, bukan menurut jumlah artikelnya.",
+      "how2": "Berita utama suatu negara berasal dari sumber berita yang berbasis di negara tersebut."
+    },
+    "profile": {
+      "title": "Cara kerja Profil",
+      "what": "Profil berisi apa yang kamu ceritakan ke Mera tentang dirimu. Umpan dan Dasbor kamu dibangun dari fakta-fakta ini.",
+      "how1": "Setiap fakta menjadi pencarian yang dijalankan Mera untukmu. Ubah atau hapus fakta, dan berita yang berasal darinya ikut berubah.",
+      "privacy": "Pencarian yang dibuat darinya tidak pernah dikaitkan dengan akunmu. Server hanya menyimpan teks pencarian, dibagikan secara anonim ke semua pengguna, dan menghapusnya setelah 14 hari tidak dipakai."
+    }
   }
 }

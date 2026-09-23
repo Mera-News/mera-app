@@ -244,7 +244,8 @@
     "reasonUnavailable": "Mera nie mogła napisać notatki do tego artykułu.",
     "loadingA11y": "Wczytywanie Twojego kanału",
     "newStoriesPill": "Nowe wiadomości",
-    "translatingCaption": "Tłumaczenie…"
+    "translatingCaption": "Tłumaczenie…",
+    "updatedJustNow": "Zaktualizowano przed chwilą"
   },
   "relevance": {
     "emergency": "Pilne",
@@ -846,13 +847,14 @@
     "tooltipA11y": "Informacje o historii czytania",
     "tooltipIntro": "Mera śledzi Twoje nawyki czytelnicze, i przechowuje je tylko na Twoim urządzeniu.",
     "tooltipLink": "Zobacz całą historię czytania tutaj.",
-    "screenIntro": "Mera śledzi Twoje nawyki czytelnicze, tylko na Twoim urządzeniu przez 30 dni. Daje Ci to wyraźniejszy obraz tego, które publikacje są dla Ciebie najważniejsze, abyś mógł rozważyć wspieranie tych, które bezpośrednio Ci służą.",
+    "screenIntro": "Wydawcy, których strony otworzyłeś z Mera w ciągu ostatnich 30 dni. Ta lista zostaje na tym urządzeniu.",
     "visitedListTitle": "Odwiedzone publikacje",
     "last30Days": "Ostatnie 30 dni",
     "lastRead": "Ostatnio czytane {{time}}",
-    "noArticlesYet": "Nie przeczytałeś jeszcze żadnych artykułów.",
+    "noArticlesYet": "Tu pojawiają się wydawcy, których strony otwierasz z Mera. Czytanie w Mera nie jest tu wymieniane.",
     "articlesRead": "Przeczytane artykuły",
-    "noArticlesLast30Days": "Brak artykułów z tej publikacji w ciągu ostatnich 30 dni."
+    "noArticlesLast30Days": "Brak artykułów z tej publikacji w ciągu ostatnich 30 dni.",
+    "emptyTitle": "Brak wydawców"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Wymagana aktualizacja",
@@ -946,7 +948,8 @@
     "removeAction": "Usuń z zapisanych",
     "savedToastMessage": "Artykuł zapisany na później",
     "savedToastTitle": "Zapisano",
-    "title": "Zapisane"
+    "title": "Zapisane",
+    "emptyTitle": "Nic jeszcze nie zapisano"
   },
   "subscription": {
     "activating": "Aktywowanie subskrypcji…",
@@ -1063,9 +1066,16 @@
     "subTabFeed": "Przegląd",
     "subTabStories": "historie",
     "subTabSaved": "Zapisane",
-    "subTabHistory": "Historia",
+    "subTabHistory": "Odwiedzone",
     "nextFactPrefix": "Dalej",
-    "subTabAnalytics": "Analiza"
+    "subTabAnalytics": "Analiza",
+    "emptySection": {
+      "awaiting": "Szukamy artykułów na ten temat. Pojawią się po następnym odświeżeniu.",
+      "none": "Żaden artykuł nie pasuje jeszcze na tyle dobrze, by go tu pokazać."
+    },
+    "newInterest": "Nowe zainteresowanie",
+    "nextSection": "Dalej: {{title}}",
+    "backToDashboard": "Wróć do Pulpitu"
   },
   "feedStatus": {
     "title": "Stan kanału",
@@ -1084,7 +1094,8 @@
     "collapseA11y": "Ukryj szczegóły stanu kanału",
     "modeProcessing": "Aktualizowanie kanału",
     "modeError": "Problem z kanałem",
-    "modeLimited": "Osiągnięto dzienny limit artykułów"
+    "modeLimited": "Osiągnięto dzienny limit artykułów",
+    "syncDoneA11y": "Twój kanał jest aktualny."
   },
   "trackedStories": {
     "emptyTitle": "Nie śledzisz jeszcze żadnych historii",
@@ -2647,7 +2658,8 @@
       "heatLegendLess": "mniej",
       "heatLegendMore": "więcej",
       "heatNote": "Odcień pokazuje, ile artykułów przeczytałeś tego dnia.",
-      "rhythmWeekdays": "P,W,Ś,C,P,S,N"
+      "rhythmWeekdays": "P,W,Ś,C,P,S,N",
+      "habitsTitle": "Jak czytam"
     }
   },
   "analytics": {
@@ -2839,5 +2851,36 @@
     "docTitle": "Zapisane artykuły",
     "docExported": "Wyeksportowano {{date}}",
     "docReasonLabel": "Dlaczego Mera to wybrała"
+  },
+  "tabExplainer": {
+    "openA11y": "Jak działa ta karta",
+    "close": "Rozumiem",
+    "feed": {
+      "title": "Jak działa Strumień",
+      "what": "Strumień pokazuje każdy temat, który Mera znalazła dla ciebie w ciągu ostatnich dwóch dni. Każdy temat ma jedną kartę, nawet jeśli pisało o nim wiele mediów.",
+      "how1": "Mera zamienia to, co o sobie powiedziałeś, w wyszukiwania, pobiera pasujące artykuły, a AI czyta każdy z nich, by ocenić, jak bardzo jest dla ciebie ważny.",
+      "how2": "Najpierw są tematy, których nie widziałeś, od najważniejszych. Niewidziany temat spada o poziom po 12 godzinach i o kolejny po dniu.",
+      "how3": "Tematy, które przewinąłeś, przesuwają się niżej, a otwarte trafiają na koniec. Karty powyżej miejsca, w którym czytasz, stoją w miejscu. Pociągnij w dół, by posortować.",
+      "privacy": "Kolejność jest ustalana na tym telefonie. To, które tematy otwierasz, zostaje tylko na tym telefonie."
+    },
+    "forYou": {
+      "title": "Jak działa Pulpit",
+      "what": "Pulpit grupuje twoje wiadomości według zainteresowań. Każda rzecz, którą powiedziałeś Mera, ma swoją sekcję, do tego nagłówki z twoich krajów i ze świata.",
+      "how1": "Każdy temat trafia do jednego zainteresowania, do którego pasuje najlepiej, więc pojawia się raz. Jeśli dwa pasują tak samo, zatrzymuje go to dodane wcześniej.",
+      "how2": "Zainteresowania, którym nadałeś większą wagę, są pierwsze. Nowe zainteresowanie pojawia się na górze, jeszcze zanim przyjdą jego pierwsze tematy.",
+      "how3": "W sekcji najpierw są nieprzeczytane tematy, od najważniejszych. Sekcje układają się na nowo, gdy opuszczasz kartę, lub co 10 minut."
+    },
+    "explore": {
+      "title": "Jak działa Odkrywaj",
+      "what": "Odkrywaj pokazuje nagłówki z ostatnich 24 godzin ze świata i z każdego wybranego kraju. Są takie same dla wszystkich, nie dobrane pod ciebie.",
+      "how1": "Nagłówki ze świata są uszeregowane według tego, jak szeroko temat jest opisywany w różnych krajach, a nie według liczby artykułów.",
+      "how2": "Nagłówki z kraju pochodzą ze źródeł wiadomości z siedzibą w tym kraju."
+    },
+    "profile": {
+      "title": "Jak działa Profil",
+      "what": "Profil zawiera to, co powiedziałeś Mera o sobie. Twój Strumień i Pulpit powstają z tych faktów.",
+      "how1": "Każdy fakt zamienia się w wyszukiwania, które Mera wykonuje dla ciebie. Zmień lub usuń fakt, a tematy, które z niego pochodziły, też się zmienią.",
+      "privacy": "Wyszukiwania powstałe z nich nigdy nie są łączone z twoim kontem. Serwer przechowuje tylko tekst wyszukiwania, anonimowo wspólny dla wszystkich użytkowników, i usuwa go po 14 dniach nieużywania."
+    }
   }
 }

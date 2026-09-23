@@ -232,7 +232,8 @@
     "reasonUnavailable": "Mera 未能为这篇文章写说明。",
     "loadingA11y": "正在加载你的动态",
     "newStoriesPill": "新文章",
-    "translatingCaption": "正在翻译…"
+    "translatingCaption": "正在翻译…",
+    "updatedJustNow": "刚刚更新"
   },
   "relevance": {
     "emergency": "紧急",
@@ -834,13 +835,14 @@
     "tooltipA11y": "关于阅读历史",
     "tooltipIntro": "Mera 为您追踪阅读习惯——且数据仅保存在您的设备上。",
     "tooltipLink": "在这里查看您的完整阅读历史。",
-    "screenIntro": "Mera 追踪您的阅读习惯——仅在您的设备上保留30天。这让您更清楚地了解哪些媒体对您最重要，从而考虑支持那些直接为您带来价值的媒体。",
+    "screenIntro": "过去 30 天里你从 Mera 打开过网站的媒体。此列表只保存在这台设备上。",
     "visitedListTitle": "您访问过的媒体",
     "last30Days": "近30天",
     "lastRead": "上次阅读 {{time}}",
-    "noArticlesYet": "您还没有阅读任何文章。",
+    "noArticlesYet": "你从 Mera 打开过的媒体会显示在这里。在 Mera 内阅读的内容不会列出。",
     "articlesRead": "您阅读过的文章",
-    "noArticlesLast30Days": "过去30天内该媒体没有文章。"
+    "noArticlesLast30Days": "过去30天内该媒体没有文章。",
+    "emptyTitle": "还没有媒体"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "需要更新",
@@ -934,7 +936,8 @@
     "title": "已保存",
     "removedToastTitle": "已移除",
     "saveAction": "保存",
-    "removeAction": "从已保存中移除"
+    "removeAction": "从已保存中移除",
+    "emptyTitle": "还没有保存任何内容"
   },
   "subscription": {
     "activating": "正在激活你的订阅…",
@@ -1047,9 +1050,16 @@
     "headlineDenominator_other": "Mera 阅读了 {{count}} 条头条 · {{shown}} 值得您关注。",
     "headlineDenominatorNone_one": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
     "headlineDenominatorNone_other": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
-    "subTabHistory": "历史",
+    "subTabHistory": "访问过",
     "nextFactPrefix": "下一个",
-    "subTabAnalytics": "分析"
+    "subTabAnalytics": "分析",
+    "emptySection": {
+      "awaiting": "正在寻找相关新闻，下次刷新后会显示。",
+      "none": "暂时还没有与此足够贴近、可以显示的新闻。"
+    },
+    "newInterest": "新兴趣",
+    "nextSection": "下一个：{{title}}",
+    "backToDashboard": "返回概览"
   },
   "feedStatus": {
     "title": "资讯状态",
@@ -1068,7 +1078,8 @@
     "published": "已发布",
     "modeProcessing": "正在更新你的信息流",
     "modeError": "信息流出现问题",
-    "modeLimited": "已达到每日文章上限"
+    "modeLimited": "已达到每日文章上限",
+    "syncDoneA11y": "你的动态已是最新。"
   },
   "trackedStories": {
     "emptyTitle": "还没有关注任何报道",
@@ -2609,7 +2620,8 @@
       "heatLegendLess": "少",
       "heatLegendMore": "多",
       "heatNote": "颜色深浅表示你那天读了多少篇文章。",
-      "rhythmWeekdays": "一,二,三,四,五,六,日"
+      "rhythmWeekdays": "一,二,三,四,五,六,日",
+      "habitsTitle": "我怎么读"
     }
   },
   "analytics": {
@@ -2801,5 +2813,36 @@
     "docTitle": "已保存的文章",
     "docExported": "导出于 {{date}}",
     "docReasonLabel": "Mera 选择它的理由"
+  },
+  "tabExplainer": {
+    "openA11y": "此标签页如何运作",
+    "close": "知道了",
+    "feed": {
+      "title": "信息流如何运作",
+      "what": "信息流显示 Mera 在过去两天为你找到的每条新闻。即使很多媒体都报道了，每条新闻也只有一张卡片。",
+      "how1": "Mera 把你介绍自己的内容变成搜索，获取匹配的文章，再由 AI 逐篇阅读，判断它对你有多重要。",
+      "how2": "你还没看过的新闻排在前面，越重要越靠前。没看过的新闻 12 小时后下降一级，一天后再降一级。",
+      "how3": "你滑过的新闻会下移，打开过的排到最后。你正在阅读位置上方的卡片不会移动。下拉即可重新排序。",
+      "privacy": "排序在这部手机上完成。你打开了哪些新闻，只保存在这部手机上。"
+    },
+    "forYou": {
+      "title": "概览如何运作",
+      "what": "概览按兴趣整理你的新闻。你告诉 Mera 的每件事都有一个栏目，另外还有你所在国家和全球的头条。",
+      "how1": "每条新闻只归入最匹配的一个兴趣，所以只出现一次。如果两个兴趣同样匹配，就归先添加的那个。",
+      "how2": "你给了更高权重的兴趣排在前面。新兴趣会显示在最上方，即使它的第一批新闻还没到。",
+      "how3": "栏目内未读新闻排在前面，越重要越靠前。离开此标签页时或每 10 分钟，栏目会重新排序。"
+    },
+    "explore": {
+      "title": "探索如何运作",
+      "what": "探索显示全球和你所选每个国家过去 24 小时的头条。所有人看到的都一样，不是为你挑选的。",
+      "how1": "全球头条按一条新闻在多少国家被广泛报道来排序，而不是按文章数量。",
+      "how2": "国家头条来自总部位于该国的新闻来源。"
+    },
+    "profile": {
+      "title": "“我的”如何运作",
+      "what": "“我的”页面保存你告诉 Mera 的关于自己的信息。你的信息流和概览都由这些信息生成。",
+      "how1": "每条信息都会变成 Mera 为你运行的搜索。修改或删除一条信息，来自它的新闻也会随之变化。",
+      "privacy": "由它们生成的搜索从不与你的账户关联。服务器只保存搜索文字，在所有用户之间匿名共享，14 天未使用即删除。"
+    }
   }
 }

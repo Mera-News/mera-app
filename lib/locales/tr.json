@@ -232,7 +232,8 @@
     "reasonUnavailable": "Mera bu haber için not yazamadı.",
     "loadingA11y": "Akışın yükleniyor",
     "newStoriesPill": "Yeni haberler",
-    "translatingCaption": "Çevriliyor…"
+    "translatingCaption": "Çevriliyor…",
+    "updatedJustNow": "Az önce güncellendi"
   },
   "relevance": {
     "emergency": "Acil",
@@ -834,13 +835,14 @@
     "tooltipA11y": "Okuma geçmişi hakkında",
     "tooltipIntro": "Mera okuma alışkanlıklarını senin için takip eder ve bu bilgi yalnızca cihazında saklanır.",
     "tooltipLink": "Tüm okuma geçmişini buradan gör.",
-    "screenIntro": "Mera okuma alışkanlıklarını takip eder: yalnızca cihazında, 30 gün boyunca. Bu sayede hangi yayınların sana en çok katkı sağladığını net görebilir ve sana doğrudan fayda sağlayanları desteklemeyi düşünebilirsin.",
+    "screenIntro": "Son 30 günde Mera'dan sitelerini açtığın yayınlar. Bu liste bu cihazda kalır.",
     "visitedListTitle": "Ziyaret ettiğin yayınlar",
     "last30Days": "Son 30 gün",
     "lastRead": "Son okunma {{time}}",
-    "noArticlesYet": "Henüz hiç makale okumadın.",
+    "noArticlesYet": "Mera'dan açtığın yayınlar burada görünür. Mera içinde okudukların listelenmez.",
     "articlesRead": "Okuduğun makaleler",
-    "noArticlesLast30Days": "Son 30 günde bu yayından makale yok."
+    "noArticlesLast30Days": "Son 30 günde bu yayından makale yok.",
+    "emptyTitle": "Henüz yayın yok"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Güncelleme gerekli",
@@ -934,7 +936,8 @@
     "removeAction": "Kaydedilenlerden kaldır",
     "savedToastMessage": "Makale daha sonrası için kaydedildi",
     "savedToastTitle": "Kaydedildi",
-    "title": "Kaydedilenler"
+    "title": "Kaydedilenler",
+    "emptyTitle": "Henüz kaydedilen bir şey yok"
   },
   "subscription": {
     "activating": "Aboneliğiniz etkinleştiriliyor…",
@@ -1047,9 +1050,16 @@
     "subTabFeed": "Bakış",
     "subTabStories": "Haberler",
     "subTabSaved": "Kaydedilenler",
-    "subTabHistory": "Geçmiş",
+    "subTabHistory": "Ziyaret edilenler",
     "nextFactPrefix": "Sonraki",
-    "subTabAnalytics": "Analiz"
+    "subTabAnalytics": "Analiz",
+    "emptySection": {
+      "awaiting": "Bununla ilgili haberler aranıyor. Bir sonraki yenilemeden sonra görünecekler.",
+      "none": "Henüz buraya yeterince uyan bir haber yok."
+    },
+    "newInterest": "Yeni ilgi alanı",
+    "nextSection": "Sonraki: {{title}}",
+    "backToDashboard": "Panele dön"
   },
   "feedStatus": {
     "title": "Akış durumu",
@@ -1068,7 +1078,8 @@
     "collapseA11y": "Akış durumu ayrıntılarını gizle",
     "modeProcessing": "Akışınız güncelleniyor",
     "modeError": "Akış sorunu",
-    "modeLimited": "Günlük makale sınırına ulaşıldı"
+    "modeLimited": "Günlük makale sınırına ulaşıldı",
+    "syncDoneA11y": "Akışın güncel."
   },
   "trackedStories": {
     "emptyTitle": "Henüz takip edilen haber yok",
@@ -2611,7 +2622,8 @@
       "heatLegendLess": "az",
       "heatLegendMore": "çok",
       "heatNote": "Koyuluk o gün kaç haber okuduğunu gösterir.",
-      "rhythmWeekdays": "P,S,Ç,P,C,C,P"
+      "rhythmWeekdays": "P,S,Ç,P,C,C,P",
+      "habitsTitle": "Nasıl okuyorum"
     }
   },
   "analytics": {
@@ -2803,5 +2815,36 @@
     "docTitle": "Kaydedilen makaleler",
     "docExported": "{{date}} tarihinde dışa aktarıldı",
     "docReasonLabel": "Mera bunu neden seçti"
+  },
+  "tabExplainer": {
+    "openA11y": "Bu sekme nasıl çalışır",
+    "close": "Anladım",
+    "feed": {
+      "title": "Akış nasıl çalışır",
+      "what": "Akış, Mera'nın son iki günde senin için bulduğu her haberi gösterir. Birçok yayın aynı haberi yazsa bile her haberin tek kartı vardır.",
+      "how1": "Mera, kendin hakkında anlattıklarını aramalara dönüştürür, eşleşen makaleleri getirir ve bir yapay zeka her birini okuyup senin için ne kadar önemli olduğunu değerlendirir.",
+      "how2": "Görmediğin haberler önce gelir, en önemliler başta. Görülmemiş bir haber 12 saat sonra bir seviye, bir gün sonra bir seviye daha düşer.",
+      "how3": "Kaydırıp geçtiğin haberler aşağı iner, açtıkların en sona gider. Okuduğun yerin üstündeki kartlar yerinde kalır. Yeniden sıralamak için aşağı çek.",
+      "privacy": "Sıralama bu telefonda hesaplanır. Hangi haberleri açtığın yalnızca bu telefonda tutulur."
+    },
+    "forYou": {
+      "title": "Panel nasıl çalışır",
+      "what": "Panel haberlerini ilgi alanlarına göre gruplar. Mera'ya anlattığın her şeyin bir bölümü olur, ayrıca ülkelerinden ve dünyadan manşetler de yer alır.",
+      "how1": "Her haber en iyi uyduğu tek ilgi alanına gider, böylece yalnızca bir kez görünür. İkisi eşit uyarsa önce eklediğin alan haberi alır.",
+      "how2": "Daha fazla ağırlık verdiğin ilgi alanları önce gelir. Yeni bir ilgi alanı, ilk haberleri gelmeden bile en üstte görünür.",
+      "how3": "Bir bölümde okunmamış haberler önce gelir, en önemliler başta. Bölümler sekmeden ayrıldığında ya da her 10 dakikada bir yeniden sıralanır."
+    },
+    "explore": {
+      "title": "Keşfet nasıl çalışır",
+      "what": "Keşfet, dünya ve seçtiğin her ülke için son 24 saatin manşetlerini gösterir. Herkes için aynıdır, senin için seçilmez.",
+      "how1": "Dünya manşetleri, makale sayısına göre değil, bir haberin farklı ülkelerde ne kadar geniş yer bulduğuna göre sıralanır.",
+      "how2": "Ülke manşetleri o ülkede bulunan haber kaynaklarından gelir."
+    },
+    "profile": {
+      "title": "Profil nasıl çalışır",
+      "what": "Profil, Mera'ya kendin hakkında anlattıklarını tutar. Akışın ve Panelin bu bilgilerden oluşturulur.",
+      "how1": "Her bilgi, Mera'nın senin için yaptığı aramalara dönüşür. Bir bilgiyi değiştirir ya da silersen ondan gelen haberler de değişir.",
+      "privacy": "Bunlardan oluşturulan aramalar hiçbir zaman hesabınla ilişkilendirilmez. Sunucu yalnızca arama metnini tutar, tüm kullanıcılar arasında anonim olarak paylaşılır ve 14 gün kullanılmazsa silinir."
+    }
   }
 }

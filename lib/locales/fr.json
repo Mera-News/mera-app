@@ -237,7 +237,8 @@
     "reasonUnavailable": "Mera n'a pas pu rédiger de note pour cet article.",
     "loadingA11y": "Chargement de votre fil",
     "newStoriesPill": "Nouveaux articles",
-    "translatingCaption": "Traduction…"
+    "translatingCaption": "Traduction…",
+    "updatedJustNow": "Mis à jour à l'instant"
   },
   "relevance": {
     "emergency": "Urgence",
@@ -839,13 +840,14 @@
     "tooltipA11y": "À propos de l'historique de lecture",
     "tooltipIntro": "Mera suit vos habitudes de lecture pour vous, et ces données restent uniquement sur votre appareil.",
     "tooltipLink": "Consultez tout votre historique de lecture ici.",
-    "screenIntro": "Mera suit vos habitudes de lecture (uniquement sur votre appareil pendant 30 jours). Cela vous donne une image plus claire des publications qui comptent le plus pour vous, afin que vous puissiez envisager de soutenir celles qui vous apportent directement de la valeur.",
+    "screenIntro": "Les médias dont tu as ouvert le site depuis Mera ces 30 derniers jours. Cette liste reste sur cet appareil.",
     "visitedListTitle": "Publications que vous avez visitées",
     "last30Days": "30 derniers jours",
     "lastRead": "Dernière lecture {{time}}",
-    "noArticlesYet": "Vous n'avez pas encore lu d'articles.",
+    "noArticlesYet": "Les médias que tu ouvres depuis Mera apparaissent ici. La lecture dans Mera n'est pas listée.",
     "articlesRead": "Articles lus",
-    "noArticlesLast30Days": "Aucun article de cette publication ces 30 derniers jours."
+    "noArticlesLast30Days": "Aucun article de cette publication ces 30 derniers jours.",
+    "emptyTitle": "Aucun média pour l'instant"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Mise à jour requise",
@@ -939,7 +941,8 @@
     "removeAction": "Retirer des enregistrés",
     "savedToastMessage": "Article enregistré pour plus tard",
     "savedToastTitle": "Enregistré",
-    "title": "Enregistrés"
+    "title": "Enregistrés",
+    "emptyTitle": "Rien d'enregistré pour l'instant"
   },
   "subscription": {
     "activating": "Activation de votre abonnement…",
@@ -1053,9 +1056,16 @@
     "subTabFeed": "Aperçu",
     "subTabStories": "Actualités",
     "subTabSaved": "Enregistrés",
-    "subTabHistory": "Historique",
+    "subTabHistory": "Visités",
     "nextFactPrefix": "Suivant",
-    "subTabAnalytics": "Analyses"
+    "subTabAnalytics": "Analyses",
+    "emptySection": {
+      "awaiting": "Recherche d'articles sur ce sujet. Ils apparaîtront après la prochaine actualisation.",
+      "none": "Aucun article ne correspond encore assez à ce sujet pour être affiché."
+    },
+    "newInterest": "Nouvel intérêt",
+    "nextSection": "Suivant : {{title}}",
+    "backToDashboard": "Retour au Tableau de bord"
   },
   "feedStatus": {
     "title": "État du fil",
@@ -1074,7 +1084,8 @@
     "collapseA11y": "Masquer les détails de l'état du fil",
     "modeProcessing": "Mise à jour de votre fil",
     "modeError": "Problème de fil",
-    "modeLimited": "Limite quotidienne d'articles atteinte"
+    "modeLimited": "Limite quotidienne d'articles atteinte",
+    "syncDoneA11y": "Ton fil est à jour."
   },
   "trackedStories": {
     "emptyTitle": "Aucune actualité suivie pour l'instant",
@@ -2616,7 +2627,8 @@
       "heatLegendLess": "moins",
       "heatLegendMore": "plus",
       "heatNote": "La teinte indique combien d'articles vous avez lus ce jour-là.",
-      "rhythmWeekdays": "L,M,M,J,V,S,D"
+      "rhythmWeekdays": "L,M,M,J,V,S,D",
+      "habitsTitle": "Comment je lis"
     }
   },
   "analytics": {
@@ -2808,5 +2820,36 @@
     "docTitle": "Articles enregistrés",
     "docExported": "Exporté le {{date}}",
     "docReasonLabel": "Pourquoi Mera l'a choisi"
+  },
+  "tabExplainer": {
+    "openA11y": "Comment fonctionne cet onglet",
+    "close": "Compris",
+    "feed": {
+      "title": "Comment fonctionne le Fil d'actu",
+      "what": "Le Fil d'actu montre chaque sujet que Mera a trouvé pour toi ces deux derniers jours. Chaque sujet a une seule carte, même si de nombreux médias l'ont couvert.",
+      "how1": "Mera transforme ce que tu lui as dit de toi en recherches, récupère les articles correspondants, et une IA lit chacun pour juger à quel point il compte pour toi.",
+      "how2": "Les sujets que tu n'as pas vus passent en premier, les plus importants devant. Un sujet non vu descend d'un niveau après 12 heures, puis d'un autre après un jour.",
+      "how3": "Les sujets que tu as fait défiler descendent, et ceux que tu as ouverts vont à la fin. Les cartes au-dessus de ta lecture ne bougent pas. Tire vers le bas pour retrier.",
+      "privacy": "L'ordre est calculé sur ce téléphone. Les sujets que tu ouvres restent uniquement sur ce téléphone."
+    },
+    "forYou": {
+      "title": "Comment fonctionne le Tableau de bord",
+      "what": "Le Tableau de bord regroupe tes actualités par intérêt. Chaque chose que tu as dite à Mera a sa section, plus les titres de tes pays et du monde.",
+      "how1": "Chaque sujet va à l'intérêt qui lui correspond le mieux, il n'apparaît donc qu'une fois. Si deux correspondent autant, celui ajouté en premier le garde.",
+      "how2": "Les intérêts auxquels tu as donné plus de poids passent en premier. Un nouvel intérêt apparaît en haut, avant même l'arrivée de ses premiers sujets.",
+      "how3": "Dans une section, les sujets non lus passent en premier, les plus importants devant. Les sections se réordonnent quand tu quittes l'onglet, ou toutes les 10 minutes."
+    },
+    "explore": {
+      "title": "Comment fonctionne Explorer",
+      "what": "Explorer montre les titres des dernières 24 heures pour le monde et pour chaque pays que tu choisis. Ils sont les mêmes pour tout le monde, pas choisis pour toi.",
+      "how1": "Les titres du monde sont classés selon l'ampleur de la couverture d'un sujet dans différents pays, pas selon le nombre d'articles.",
+      "how2": "Les titres d'un pays viennent de sources d'information basées dans ce pays."
+    },
+    "profile": {
+      "title": "Comment fonctionne le Profil",
+      "what": "Le Profil contient ce que tu as dit à Mera sur toi. Ton Fil d'actu et ton Tableau de bord sont construits à partir de ces informations.",
+      "how1": "Chaque information devient des recherches que Mera fait pour toi. Modifie ou supprime une information et les sujets qui en venaient changent aussi.",
+      "privacy": "Les recherches qui en découlent ne sont jamais liées à ton compte. Le serveur ne garde que le texte de recherche, partagé anonymement entre tous les utilisateurs, et le supprime après 14 jours sans utilisation."
+    }
   }
 }

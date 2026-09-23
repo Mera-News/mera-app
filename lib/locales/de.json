@@ -232,7 +232,8 @@
     "reasonUnavailable": "Mera konnte hierzu keine Notiz schreiben.",
     "loadingA11y": "Dein Feed wird geladen",
     "newStoriesPill": "Neue Meldungen",
-    "translatingCaption": "Wird übersetzt…"
+    "translatingCaption": "Wird übersetzt…",
+    "updatedJustNow": "Gerade aktualisiert"
   },
   "relevance": {
     "emergency": "Notfall",
@@ -834,13 +835,14 @@
     "tooltipA11y": "Über den Leseverlauf",
     "tooltipIntro": "Mera verfolgt Ihre Lesemuster für Sie, und das nur auf Ihrem Gerät.",
     "tooltipLink": "Sehen Sie hier Ihren gesamten Leseverlauf.",
-    "screenIntro": "Mera verfolgt Ihre Lesemuster (nur auf Ihrem Gerät für 30 Tage). So erhalten Sie ein klareres Bild davon, welche Publikationen für Sie am wichtigsten sind, damit Sie die unterstützen können, die Ihnen direkt nützen.",
+    "screenIntro": "Medien, deren Websites du in den letzten 30 Tagen aus Mera heraus geöffnet hast. Diese Liste bleibt auf diesem Gerät.",
     "visitedListTitle": "Besuchte Publikationen",
     "last30Days": "Letzte 30 Tage",
     "lastRead": "Zuletzt gelesen {{time}}",
-    "noArticlesYet": "Sie haben noch keine Artikel gelesen.",
+    "noArticlesYet": "Medien, die du aus Mera heraus öffnest, erscheinen hier. Lesen innerhalb von Mera wird nicht aufgeführt.",
     "articlesRead": "Gelesene Artikel",
-    "noArticlesLast30Days": "Keine Artikel dieser Publikation in den letzten 30 Tagen."
+    "noArticlesLast30Days": "Keine Artikel dieser Publikation in den letzten 30 Tagen.",
+    "emptyTitle": "Noch keine Medien"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Update erforderlich",
@@ -934,7 +936,8 @@
     "removeAction": "Aus Gespeichertem entfernen",
     "savedToastMessage": "Artikel für später gespeichert",
     "savedToastTitle": "Gespeichert",
-    "title": "Gespeichert"
+    "title": "Gespeichert",
+    "emptyTitle": "Noch nichts gespeichert"
   },
   "subscription": {
     "activating": "Dein Abo wird aktiviert …",
@@ -1047,9 +1050,16 @@
     "subTabFeed": "Übersicht",
     "subTabStories": "Geschichten",
     "subTabSaved": "Gespeichert",
-    "subTabHistory": "Verlauf",
+    "subTabHistory": "Besucht",
     "nextFactPrefix": "Nächste",
-    "subTabAnalytics": "Analyse"
+    "subTabAnalytics": "Analyse",
+    "emptySection": {
+      "awaiting": "Mera sucht Artikel zu diesem Thema. Sie erscheinen nach der nächsten Aktualisierung.",
+      "none": "Noch passt keine Meldung eng genug, um hier zu erscheinen."
+    },
+    "newInterest": "Neues Interesse",
+    "nextSection": "Weiter: {{title}}",
+    "backToDashboard": "Zurück zum Dashboard"
   },
   "feedStatus": {
     "title": "Feed-Status",
@@ -1068,7 +1078,8 @@
     "collapseA11y": "Feed-Status-Details verbergen",
     "modeProcessing": "Dein Feed wird aktualisiert",
     "modeError": "Problem mit dem Feed",
-    "modeLimited": "Tageslimit für Artikel erreicht"
+    "modeLimited": "Tageslimit für Artikel erreicht",
+    "syncDoneA11y": "Dein Feed ist aktuell."
   },
   "trackedStories": {
     "emptyTitle": "Noch keine gefolgten Geschichten",
@@ -2609,7 +2620,8 @@
       "heatLegendLess": "weniger",
       "heatLegendMore": "mehr",
       "heatNote": "Die Färbung zeigt, wie viele Artikel du an dem Tag gelesen hast.",
-      "rhythmWeekdays": "M,D,M,D,F,S,S"
+      "rhythmWeekdays": "M,D,M,D,F,S,S",
+      "habitsTitle": "Wie ich lese"
     }
   },
   "analytics": {
@@ -2801,5 +2813,36 @@
     "docTitle": "Gespeicherte Artikel",
     "docExported": "Exportiert am {{date}}",
     "docReasonLabel": "Warum Mera diesen Artikel ausgewählt hat"
+  },
+  "tabExplainer": {
+    "openA11y": "So funktioniert dieser Tab",
+    "close": "Verstanden",
+    "feed": {
+      "title": "So funktioniert der Feed",
+      "what": "Der Feed zeigt jede Meldung, die Mera in den letzten zwei Tagen für dich gefunden hat. Jede Meldung bekommt eine Karte, auch wenn viele Medien darüber berichtet haben.",
+      "how1": "Mera macht aus dem, was du über dich erzählt hast, Suchanfragen, holt passende Artikel, und eine KI liest jeden, um zu beurteilen, wie wichtig er für dich ist.",
+      "how2": "Meldungen, die du noch nicht gesehen hast, kommen zuerst, die wichtigsten vorne. Eine ungesehene Meldung rutscht nach 12 Stunden eine Stufe tiefer und nach einem Tag noch eine.",
+      "how3": "Meldungen, an denen du vorbeigescrollt hast, rücken nach unten, geöffnete ganz ans Ende. Karten oberhalb deiner Leseposition bleiben stehen. Zum Neusortieren nach unten ziehen.",
+      "privacy": "Die Reihenfolge wird auf diesem Telefon berechnet. Welche Meldungen du öffnest, bleibt nur auf diesem Telefon."
+    },
+    "forYou": {
+      "title": "So funktioniert das Dashboard",
+      "what": "Das Dashboard ordnet deine Nachrichten nach Interessen. Alles, was du Mera erzählt hast, bekommt einen Abschnitt, dazu Schlagzeilen aus deinen Ländern und der Welt.",
+      "how1": "Jede Meldung landet bei dem einen Interesse, zu dem sie am besten passt, und erscheint so nur einmal. Passen zwei gleich gut, behält sie das zuerst hinzugefügte.",
+      "how2": "Interessen mit mehr Gewicht kommen zuerst. Ein neues Interesse steht oben, schon bevor seine ersten Meldungen da sind.",
+      "how3": "Innerhalb eines Abschnitts kommen ungelesene Meldungen zuerst, die wichtigsten vorne. Die Abschnitte ordnen sich neu, wenn du den Tab verlässt, oder alle 10 Minuten."
+    },
+    "explore": {
+      "title": "So funktioniert Entdecken",
+      "what": "Entdecken zeigt die Schlagzeilen der letzten 24 Stunden für die Welt und für jedes Land, das du auswählst. Sie sind für alle gleich und nicht für dich ausgewählt.",
+      "how1": "Welt-Schlagzeilen werden danach geordnet, wie breit eine Meldung über Ländergrenzen hinweg berichtet wird, nicht nach der Zahl der Artikel.",
+      "how2": "Länder-Schlagzeilen stammen von Nachrichtenquellen mit Sitz in diesem Land."
+    },
+    "profile": {
+      "title": "So funktioniert das Profil",
+      "what": "Im Profil steht, was du Mera über dich erzählt hast. Dein Feed und dein Dashboard entstehen aus diesen Fakten.",
+      "how1": "Aus jedem Fakt werden Suchanfragen, die Mera für dich ausführt. Änderst oder löschst du einen Fakt, ändern sich auch die Meldungen, die daraus kamen.",
+      "privacy": "Die daraus entstandenen Suchanfragen werden nie mit deinem Konto verknüpft. Der Server speichert nur den Suchtext, anonym geteilt über alle Nutzer, und löscht ihn nach 14 Tagen ohne Nutzung."
+    }
   }
 }
