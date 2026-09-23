@@ -67,7 +67,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "قد يخطئ Mera، لذا تحقّق من أي شيء مهم.",
       "trackChooseHint": "اختر ما تريد متابعته",
-      "aiInteractionNotice": "أنت تتحدث مع Mera، وهو مساعد ذكي اصطناعي — وليس شخصًا."
+      "aiInteractionNotice": "أنت تتحدث مع Mera، وهو مساعد ذكي اصطناعي، وليس شخصًا."
     },
     "chatTopics": {
       "accordionTitlePending": "جارٍ البحث عن مواضيع عن:"
@@ -80,26 +80,26 @@
         "bodyUnavailable": "لم يتمكن Mera من إكمال التحقق من \"{{title}}\".",
         "open": "فتح المقال"
       },
-      "quickNothingFound": "لم يُسفر البحث عن شيء حول هذا. هذا لا يعني أنه كاذب — قد يكون مجرد شيء جديد أو متخصص أو غير معروف على نطاق واسع على الإنترنت.",
-      "quickCouldNotSearch": "لم تتمكن Mera من البحث على الويب الآن، لذا هذا ليس إجابة — حاول مرة أخرى بعد قليل.",
-      "quickArticleRequested": "تم إرسال الطلب. ستتحقق Mera من المقالة كاملة — تظهر النتيجة ضمن التحقق من الحقائق في لوحة التحكم الخاصة بك عند الانتهاء.",
-      "queued": "سيظل هذا الفحص يعمل في الخلفية. لا تحتاج إلى الانتظار هنا — لا بأس بترك المقالة.",
-      "stillChecking": "هذا يستغرق وقتاً أطول من المعتاد. لا يزال التحقق جارياً في الخلفية — تحقق لاحقاً، أو انظر تحت التحقق من الحقائق في لوحة التحكم الخاصة بك.",
-      "checkedByUnavailable": "لم نتمكن من التحقق مما إذا كانت منظمة فحص الحقائق قد نشرت معلومات عن هذه القصة — فشل الاستعلام. هذا يختلف عن عدم نشر أحد؛ فيما يلي ما عثرت عليه البحوث الأوسع.",
-      "checkedByMultipleNote": "هذه تقييمات مستقلة، كل منظمة تعتمد مقياسها الخاص بها — وقد لا تتفق هذه التقييمات فيما بينها دائمًا.",
-      "ownReadingHeading": "قراءة ميرا الخاصة — تأتي في مرتبة ثانوية بعد الحكم الوارد أعلاه",
-      "actionA11yPending": "تم طلب فحص الحقائق — تحقق من النتيجة",
-      "actionA11yDone": "فحص الحقائق جاهز — تظهر النتيجة أدناه",
-      "noCitations": "لم يستشهد هذا الفحص بأي صفحات محددة. هذا ليس بحثاً فاشلاً — تعامل مع الملخص بحذر أكبر قليلاً عندما لا توجد مصادر للإشارة إليها.",
+      "quickNothingFound": "لم يُسفر البحث عن شيء حول هذا. هذا لا يعني أنه كاذب، قد يكون مجرد شيء جديد أو متخصص أو غير معروف على نطاق واسع على الإنترنت.",
+      "quickCouldNotSearch": "لم تتمكن Mera من البحث على الويب الآن، لذا هذا ليس إجابة، حاول مرة أخرى بعد قليل.",
+      "quickArticleRequested": "تم إرسال الطلب. ستتحقق Mera من المقالة كاملة، تظهر النتيجة ضمن التحقق من الحقائق في لوحة التحكم الخاصة بك عند الانتهاء.",
+      "queued": "سيظل هذا الفحص يعمل في الخلفية. لا تحتاج إلى الانتظار هنا، لا بأس بترك المقالة.",
+      "stillChecking": "هذا يستغرق وقتاً أطول من المعتاد. لا يزال التحقق جارياً في الخلفية، تحقق لاحقاً، أو انظر تحت التحقق من الحقائق في لوحة التحكم الخاصة بك.",
+      "checkedByUnavailable": "لم نتمكن من التحقق مما إذا كانت منظمة فحص الحقائق قد نشرت معلومات عن هذه القصة، فشل الاستعلام. هذا يختلف عن عدم نشر أحد؛ فيما يلي ما عثرت عليه البحوث الأوسع.",
+      "checkedByMultipleNote": "هذه تقييمات مستقلة، كل منظمة تعتمد مقياسها الخاص بها، وقد لا تتفق هذه التقييمات فيما بينها دائمًا.",
+      "ownReadingHeading": "قراءة ميرا الخاصة، تأتي في مرتبة ثانوية بعد الحكم الوارد أعلاه",
+      "actionA11yPending": "تم طلب فحص الحقائق، تحقق من النتيجة",
+      "actionA11yDone": "فحص الحقائق جاهز، تظهر النتيجة أدناه",
+      "noCitations": "لم يستشهد هذا الفحص بأي صفحات محددة. هذا ليس بحثاً فاشلاً، تعامل مع الملخص بحذر أكبر قليلاً عندما لا توجد مصادر للإشارة إليها.",
       "dashboard": {
-        "empty": "لم تتحقق من أي ادعاءات بعد. اضغط على العلامة أسفل القصة لسؤال Mera عنها — ستصل النتيجة هنا بمجرد أن تصبح جاهزة."
+        "empty": "لم تتحقق من أي ادعاءات بعد. اضغط على العلامة أسفل القصة لسؤال Mera عنها، ستصل النتيجة هنا بمجرد أن تصبح جاهزة."
       },
       "verdict": {
         "supported": {
-          "detail": "تقول المصادر التي وجدها البحث نفس الشيء تقريبًا. هذا ليس إثباتًا على صحتها — فقط أنه لم يُعثر على ما يناقضها."
+          "detail": "تقول المصادر التي وجدها البحث نفس الشيء تقريبًا. هذا ليس إثباتًا على صحتها، فقط أنه لم يُعثر على ما يناقضها."
         },
         "unsupported": {
-          "detail": "لم يجد البحث شيئًا يدعم هذا. هذا قد يعني ببساطة أن القصة جديدة أو متخصصة — فهذا لا يجعلها خاطئة."
+          "detail": "لم يجد البحث شيئًا يدعم هذا. هذا قد يعني ببساطة أن القصة جديدة أو متخصصة، فهذا لا يجعلها خاطئة."
         }
       }
     },
@@ -123,7 +123,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera kann Fehler machen. Prüf also alles Wichtige nach.",
       "trackChooseHint": "Wähle, was du verfolgen willst",
-      "aiInteractionNotice": "Sie sprechen mit Mera, einem KI-Assistenten – nicht mit einer Person."
+      "aiInteractionNotice": "Sie sprechen mit Mera, einem KI-Assistenten, nicht mit einer Person."
     },
     "chatTopics": {
       "accordionTitlePending": "Themen werden gesucht zu:"
@@ -136,26 +136,26 @@
         "bodyUnavailable": "Mera konnte die Prüfung von „{{title}}“ nicht abschließen.",
         "open": "Artikel öffnen"
       },
-      "quickNothingFound": "Die Suche hat nichts dazu ergeben. Das bedeutet nicht, dass es falsch ist – es könnte einfach neu, spezialisiert oder online nicht weit verbreitet sein.",
-      "quickCouldNotSearch": "Mera konnte die Websuche gerade nicht durchführen, das ist also keine Antwort – versuche es in einem Moment erneut.",
-      "quickArticleRequested": "Anfrage gesendet. Mera wird den ganzen Artikel überprüfen – das Ergebnis wird unter Faktenchecks in deinem Dashboard angezeigt, sobald es fertig ist.",
-      "queued": "Diese Überprüfung läuft im Hintergrund weiter. Du brauchst hier nicht zu warten – es ist völlig in Ordnung, den Artikel zu verlassen.",
-      "stillChecking": "Das dauert länger als normal. Es wird immer noch im Hintergrund überprüft – schau später nach, oder sieh unter Faktenchecks in deinem Dashboard nach.",
-      "checkedByUnavailable": "Wir konnten nicht überprüfen, ob eine Faktencheck-Organisation zu diesem Artikel veröffentlicht hat – die Suche ist fehlgeschlagen. Das ist unterschiedlich von der Situation, dass niemand dazu veröffentlicht hat; unten siehst du, was die weitere Suche gefunden hat.",
-      "checkedByMultipleNote": "Dies sind unabhängige Bewertungen, jede nach der eigenen Skala der jeweiligen Organisation — sie stimmen nicht immer miteinander überein.",
-      "ownReadingHeading": "Meras eigene Einschätzung — nachrangig zur oben genannten Bewertung",
-      "actionA11yPending": "Faktencheck angefordert – überprüfe das Ergebnis",
-      "actionA11yDone": "Faktencheck abgeschlossen – das Ergebnis wird unten angezeigt",
-      "noCitations": "Diese Überprüfung hat keine spezifischen Quellenangaben. Das ist keine fehlgeschlagene Suche – behandle die Zusammenfassung einfach mit etwas mehr Vorsicht, wenn es keine Quellen gibt.",
+      "quickNothingFound": "Die Suche hat nichts dazu ergeben. Das bedeutet nicht, dass es falsch ist, es könnte einfach neu, spezialisiert oder online nicht weit verbreitet sein.",
+      "quickCouldNotSearch": "Mera konnte die Websuche gerade nicht durchführen, das ist also keine Antwort, versuche es in einem Moment erneut.",
+      "quickArticleRequested": "Anfrage gesendet. Mera wird den ganzen Artikel überprüfen, das Ergebnis wird unter Faktenchecks in deinem Dashboard angezeigt, sobald es fertig ist.",
+      "queued": "Diese Überprüfung läuft im Hintergrund weiter. Du brauchst hier nicht zu warten, es ist völlig in Ordnung, den Artikel zu verlassen.",
+      "stillChecking": "Das dauert länger als normal. Es wird immer noch im Hintergrund überprüft, schau später nach, oder sieh unter Faktenchecks in deinem Dashboard nach.",
+      "checkedByUnavailable": "Wir konnten nicht überprüfen, ob eine Faktencheck-Organisation zu diesem Artikel veröffentlicht hat, die Suche ist fehlgeschlagen. Das ist unterschiedlich von der Situation, dass niemand dazu veröffentlicht hat; unten siehst du, was die weitere Suche gefunden hat.",
+      "checkedByMultipleNote": "Dies sind unabhängige Bewertungen, jede nach der eigenen Skala der jeweiligen Organisation, sie stimmen nicht immer miteinander überein.",
+      "ownReadingHeading": "Meras eigene Einschätzung, nachrangig zur oben genannten Bewertung",
+      "actionA11yPending": "Faktencheck angefordert, überprüfe das Ergebnis",
+      "actionA11yDone": "Faktencheck abgeschlossen, das Ergebnis wird unten angezeigt",
+      "noCitations": "Diese Überprüfung hat keine spezifischen Quellenangaben. Das ist keine fehlgeschlagene Suche, behandle die Zusammenfassung einfach mit etwas mehr Vorsicht, wenn es keine Quellen gibt.",
       "dashboard": {
-        "empty": "Du hast noch keine Aussagen überprüft. Tippe auf das Häkchen unter einem Artikel, um Mera danach zu fragen – das Ergebnis wird hier angezeigt, sobald es verfügbar ist."
+        "empty": "Du hast noch keine Aussagen überprüft. Tippe auf das Häkchen unter einem Artikel, um Mera danach zu fragen, das Ergebnis wird hier angezeigt, sobald es verfügbar ist."
       },
       "verdict": {
         "supported": {
-          "detail": "Die von der Suche gefundenen Quellen sagen grob dasselbe. Das ist kein Beweis, dass es wahr ist – nur, dass nichts, das es widerlegt, gefunden wurde."
+          "detail": "Die von der Suche gefundenen Quellen sagen grob dasselbe. Das ist kein Beweis, dass es wahr ist, nur, dass nichts, das es widerlegt, gefunden wurde."
         },
         "unsupported": {
-          "detail": "Die Suche hat nichts gefunden, das dies stützt. Das kann einfach bedeuten, dass die Story neu oder spezialisiert ist – es macht sie nicht falsch."
+          "detail": "Die Suche hat nichts gefunden, das dies stützt. Das kann einfach bedeuten, dass die Story neu oder spezialisiert ist, es macht sie nicht falsch."
         }
       }
     },
@@ -179,7 +179,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera puede equivocarse, así que comprueba lo importante.",
       "trackChooseHint": "Elige qué seguir",
-      "aiInteractionNotice": "Estás hablando con Mera, un asistente de IA — no con una persona."
+      "aiInteractionNotice": "Estás hablando con Mera, un asistente de IA, no con una persona."
     },
     "chatTopics": {
       "accordionTitlePending": "Buscando temas de:"
@@ -192,26 +192,26 @@
         "bodyUnavailable": "Mera no pudo terminar de verificar \"{{title}}\".",
         "open": "Abrir artículo"
       },
-      "quickNothingFound": "La búsqueda no encontró nada al respecto. Eso no significa que sea falso — puede ser nuevo, nicho, o algo que no está ampliamente cubierto en línea.",
-      "quickCouldNotSearch": "Mera no pudo buscar en la web en este momento, así que esto no es una respuesta — intenta de nuevo en un momento.",
-      "quickArticleRequested": "Solicitud enviada. Mera verificará el artículo completo — el resultado aparecerá en Verificaciones de hechos en tu Dashboard cuando esté listo.",
-      "queued": "Esta verificación continúa ejecutándose en segundo plano. No tienes que esperar aquí — está bien que abandones el artículo.",
-      "stillChecking": "Esto está tomando más tiempo de lo habitual. Todavía se está verificando en segundo plano — revisa más tarde, o mira en Verificaciones de hechos en tu Dashboard.",
-      "checkedByUnavailable": "No pudimos verificar si una organización de verificación de hechos ha publicado sobre esta noticia — la búsqueda no se completó. Eso es diferente a que nadie haya publicado; a continuación se muestra lo que la búsqueda más amplia encontró.",
-      "checkedByMultipleNote": "Estas son valoraciones independientes, cada una según la escala propia de esa organización — no siempre coinciden entre sí.",
-      "ownReadingHeading": "Interpretación propia de Mera — secundaria respecto al veredicto anterior",
+      "quickNothingFound": "La búsqueda no encontró nada al respecto. Eso no significa que sea falso, puede ser nuevo, nicho, o algo que no está ampliamente cubierto en línea.",
+      "quickCouldNotSearch": "Mera no pudo buscar en la web en este momento, así que esto no es una respuesta, intenta de nuevo en un momento.",
+      "quickArticleRequested": "Solicitud enviada. Mera verificará el artículo completo, el resultado aparecerá en Verificaciones de hechos en tu Dashboard cuando esté listo.",
+      "queued": "Esta verificación continúa ejecutándose en segundo plano. No tienes que esperar aquí, está bien que abandones el artículo.",
+      "stillChecking": "Esto está tomando más tiempo de lo habitual. Todavía se está verificando en segundo plano, revisa más tarde, o mira en Verificaciones de hechos en tu Dashboard.",
+      "checkedByUnavailable": "No pudimos verificar si una organización de verificación de hechos ha publicado sobre esta noticia, la búsqueda no se completó. Eso es diferente a que nadie haya publicado; a continuación se muestra lo que la búsqueda más amplia encontró.",
+      "checkedByMultipleNote": "Estas son valoraciones independientes, cada una según la escala propia de esa organización, no siempre coinciden entre sí.",
+      "ownReadingHeading": "Interpretación propia de Mera, secundaria respecto al veredicto anterior",
       "actionA11yPending": "Verificación de hechos solicitada; espera el resultado",
       "actionA11yDone": "Verificación de hechos lista; el resultado se muestra a continuación",
-      "noCitations": "Esta verificación no incluyó páginas específicas. No es un error de búsqueda — trata el resumen con un poco más de precaución sin fuentes que respalden.",
+      "noCitations": "Esta verificación no incluyó páginas específicas. No es un error de búsqueda, trata el resumen con un poco más de precaución sin fuentes que respalden.",
       "dashboard": {
-        "empty": "Aún no has verificado ninguna afirmación. Toca la marca bajo una noticia para preguntarle a Mera — el resultado aparece aquí una vez que esté listo."
+        "empty": "Aún no has verificado ninguna afirmación. Toca la marca bajo una noticia para preguntarle a Mera, el resultado aparece aquí una vez que esté listo."
       },
       "verdict": {
         "supported": {
-          "detail": "Las fuentes que encontró la búsqueda dicen básicamente lo mismo. Eso no es prueba de que sea cierto — solo que no se encontró nada que lo contradiga."
+          "detail": "Las fuentes que encontró la búsqueda dicen básicamente lo mismo. Eso no es prueba de que sea cierto, solo que no se encontró nada que lo contradiga."
         },
         "unsupported": {
-          "detail": "La búsqueda no encontró nada que respalde esto. Simplemente puede significar que la historia es nueva o de nicho — no la hace falsa."
+          "detail": "La búsqueda no encontró nada que respalde esto. Simplemente puede significar que la historia es nueva o de nicho, no la hace falsa."
         }
       }
     },
@@ -235,7 +235,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera peut se tromper, alors vérifie tout ce qui est important.",
       "trackChooseHint": "Choisis ce que tu veux suivre",
-      "aiInteractionNotice": "Vous parlez avec Mera, un assistant IA — pas avec une personne."
+      "aiInteractionNotice": "Vous parlez avec Mera, un assistant IA, pas avec une personne."
     },
     "chatTopics": {
       "accordionTitlePending": "Recherche de sujets pour :"
@@ -248,26 +248,26 @@
         "bodyUnavailable": "Mera n'a pas pu terminer la vérification de « {{title}} ».",
         "open": "Ouvrir l'article"
       },
-      "quickNothingFound": "La recherche n'a rien trouvé à ce sujet. Cela ne signifie pas que c'est faux — c'est peut-être nouveau, spécialisé ou pas quelque chose de largement couvert en ligne.",
-      "quickCouldNotSearch": "Mera n'a pas pu effectuer la recherche web en ce moment, ce n'est donc pas une réponse — réessayez dans un instant.",
-      "quickArticleRequested": "Demande envoyée. Mera vérifiera l'article complet — le résultat apparaîtra sous Vérifications des faits dans votre Tableau de bord une fois qu'il sera prêt.",
-      "queued": "Cette vérification s'exécute en arrière-plan. Vous n'avez pas besoin d'attendre ici — c'est parfait de quitter l'article.",
-      "stillChecking": "Cela prend plus de temps que d'habitude. C'est toujours en cours de vérification en arrière-plan — revenez plus tard ou consultez Vérifications des faits dans votre Tableau de bord.",
-      "checkedByUnavailable": "Nous n'avons pas pu vérifier si une organisation de vérification de faits a publié sur cette histoire — la recherche n'a pas abouti. C'est différent du cas où personne n'aurait publié ; ci-dessous ce que la recherche plus large a trouvé.",
-      "checkedByMultipleNote": "Il s'agit d'évaluations indépendantes, chacune selon l'échelle propre à cette organisation — elles ne concordent pas toujours entre elles.",
-      "ownReadingHeading": "Lecture propre à Mera — secondaire par rapport au verdict ci-dessus",
-      "actionA11yPending": "Vérification de faits demandée — vérifier le résultat",
-      "actionA11yDone": "Vérification de faits prête — le résultat s'affiche ci-dessous",
-      "noCitations": "Cette vérification n'a cité aucune page spécifique. Ce n'est pas un échec — traitez le résumé avec un peu plus de prudence sans sources à consulter.",
+      "quickNothingFound": "La recherche n'a rien trouvé à ce sujet. Cela ne signifie pas que c'est faux, c'est peut-être nouveau, spécialisé ou pas quelque chose de largement couvert en ligne.",
+      "quickCouldNotSearch": "Mera n'a pas pu effectuer la recherche web en ce moment, ce n'est donc pas une réponse, réessayez dans un instant.",
+      "quickArticleRequested": "Demande envoyée. Mera vérifiera l'article complet, le résultat apparaîtra sous Vérifications des faits dans votre Tableau de bord une fois qu'il sera prêt.",
+      "queued": "Cette vérification s'exécute en arrière-plan. Vous n'avez pas besoin d'attendre ici, c'est parfait de quitter l'article.",
+      "stillChecking": "Cela prend plus de temps que d'habitude. C'est toujours en cours de vérification en arrière-plan, revenez plus tard ou consultez Vérifications des faits dans votre Tableau de bord.",
+      "checkedByUnavailable": "Nous n'avons pas pu vérifier si une organisation de vérification de faits a publié sur cette histoire, la recherche n'a pas abouti. C'est différent du cas où personne n'aurait publié ; ci-dessous ce que la recherche plus large a trouvé.",
+      "checkedByMultipleNote": "Il s'agit d'évaluations indépendantes, chacune selon l'échelle propre à cette organisation, elles ne concordent pas toujours entre elles.",
+      "ownReadingHeading": "Lecture propre à Mera, secondaire par rapport au verdict ci-dessus",
+      "actionA11yPending": "Vérification de faits demandée, vérifier le résultat",
+      "actionA11yDone": "Vérification de faits prête, le résultat s'affiche ci-dessous",
+      "noCitations": "Cette vérification n'a cité aucune page spécifique. Ce n'est pas un échec, traitez le résumé avec un peu plus de prudence sans sources à consulter.",
       "dashboard": {
-        "empty": "Vous n'avez pas encore vérifié d'affirmations. Appuyez sur la coche sous une histoire pour demander à Mera — le résultat s'affiche ici une fois prêt."
+        "empty": "Vous n'avez pas encore vérifié d'affirmations. Appuyez sur la coche sous une histoire pour demander à Mera, le résultat s'affiche ici une fois prêt."
       },
       "verdict": {
         "supported": {
-          "detail": "Les sources trouvées par la recherche disent essentiellement la même chose. Ce n'est pas une preuve que c'est vrai — seulement qu'aucune source la contredisant n'a été trouvée."
+          "detail": "Les sources trouvées par la recherche disent essentiellement la même chose. Ce n'est pas une preuve que c'est vrai, seulement qu'aucune source la contredisant n'a été trouvée."
         },
         "unsupported": {
-          "detail": "La recherche n'a rien trouvé qui soutient cela. Cela peut simplement signifier que l'histoire est nouvelle ou de niche — cela ne la rend pas fausse."
+          "detail": "La recherche n'a rien trouvé qui soutient cela. Cela peut simplement signifier que l'histoire est nouvelle ou de niche, cela ne la rend pas fausse."
         }
       }
     },
@@ -291,7 +291,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera से गलती हो सकती है, इसलिए ज़रूरी बातें जाँच लें।",
       "trackChooseHint": "चुनें कि क्या फ़ॉलो करना है",
-      "aiInteractionNotice": "आप Mera के साथ बात कर रहे हैं, एक AI सहायक — किसी व्यक्ति के साथ नहीं।"
+      "aiInteractionNotice": "आप Mera के साथ बात कर रहे हैं, एक AI सहायक, किसी व्यक्ति के साथ नहीं।"
     },
     "chatTopics": {
       "accordionTitlePending": "इसके विषय खोजे जा रहे हैं:"
@@ -304,26 +304,26 @@
         "bodyUnavailable": "Mera \"{{title}}\" की जाँच पूरी नहीं कर सका।",
         "open": "लेख खोलें"
       },
-      "quickNothingFound": "खोज में इसके बारे में कुछ नहीं मिला। इसका मतलब यह नहीं है कि यह गलत है — यह नया हो सकता है, विशेषज्ञ विषय हो सकता है, या ऑनलाइन व्यापक रूप से कवर न हो।",
-      "quickCouldNotSearch": "मेरा अभी वेब खोज नहीं कर सकी, तो यह उत्तर नहीं है — कुछ समय में फिर कोशिश करें।",
-      "quickArticleRequested": "अनुरोध भेज दिया गया। मेरा पूरा लेख जांचेगा — परिणाम डैशबोर्ड पर तथ्य जांच में दिखेगा।",
+      "quickNothingFound": "खोज में इसके बारे में कुछ नहीं मिला। इसका मतलब यह नहीं है कि यह गलत है, यह नया हो सकता है, विशेषज्ञ विषय हो सकता है, या ऑनलाइन व्यापक रूप से कवर न हो।",
+      "quickCouldNotSearch": "मेरा अभी वेब खोज नहीं कर सकी, तो यह उत्तर नहीं है, कुछ समय में फिर कोशिश करें।",
+      "quickArticleRequested": "अनुरोध भेज दिया गया। मेरा पूरा लेख जांचेगा, परिणाम डैशबोर्ड पर तथ्य जांच में दिखेगा।",
       "queued": "यह जांच पृष्ठभूमि में चल रही है। आप लेख छोड़ सकते हैं।",
-      "stillChecking": "यह सामान्य से अधिक समय ले रहा है। यह अभी भी पृष्ठभूमि में जांच की जा रही है — बाद में दोबारा देखें, या अपने डैशबोर्ड पर तथ्य जांच के अंतर्गत देखें।",
-      "checkedByUnavailable": "हम यह नहीं जांच सके कि किसी तथ्य-जांच संगठन ने यह कहानी प्रकाशित की है — खोज पूरी नहीं हुई। यह अलग है कि किसी ने प्रकाशित न किया हो; नीचे व्यापक खोज के परिणाम हैं।",
-      "checkedByMultipleNote": "ये स्वतंत्र रेटिंग हैं, हर संगठन अपने ही पैमाने पर आधारित है — इसलिए ज़रूरी नहीं कि ये आपस में सहमत हों।",
-      "ownReadingHeading": "मेरा की अपनी राय — ऊपर दिए गए फैसले के मुक़ाबले गौण स्थान रखती है",
-      "actionA11yPending": "तथ्य जांच का अनुरोध किया गया — परिणाम के लिए जांचें",
-      "actionA11yDone": "तथ्य जांच तैयार है — परिणाम नीचे दिखाए गए हैं",
-      "noCitations": "इस जांच में कोई विशिष्ट स्रोत नहीं हैं। यह विफल नहीं है — बिना स्रोतों के परिणाम को सावधानी से लें।",
+      "stillChecking": "यह सामान्य से अधिक समय ले रहा है। यह अभी भी पृष्ठभूमि में जांच की जा रही है, बाद में दोबारा देखें, या अपने डैशबोर्ड पर तथ्य जांच के अंतर्गत देखें।",
+      "checkedByUnavailable": "हम यह नहीं जांच सके कि किसी तथ्य-जांच संगठन ने यह कहानी प्रकाशित की है, खोज पूरी नहीं हुई। यह अलग है कि किसी ने प्रकाशित न किया हो; नीचे व्यापक खोज के परिणाम हैं।",
+      "checkedByMultipleNote": "ये स्वतंत्र रेटिंग हैं, हर संगठन अपने ही पैमाने पर आधारित है, इसलिए ज़रूरी नहीं कि ये आपस में सहमत हों।",
+      "ownReadingHeading": "मेरा की अपनी राय, ऊपर दिए गए फैसले के मुक़ाबले गौण स्थान रखती है",
+      "actionA11yPending": "तथ्य जांच का अनुरोध किया गया, परिणाम के लिए जांचें",
+      "actionA11yDone": "तथ्य जांच तैयार है, परिणाम नीचे दिखाए गए हैं",
+      "noCitations": "इस जांच में कोई विशिष्ट स्रोत नहीं हैं। यह विफल नहीं है, बिना स्रोतों के परिणाम को सावधानी से लें।",
       "dashboard": {
-        "empty": "अभी कोई दावा जांचा नहीं गया। किसी कहानी के नीचे टिक टैप करें — परिणाम यहां दिखेगा।"
+        "empty": "अभी कोई दावा जांचा नहीं गया। किसी कहानी के नीचे टिक टैप करें, परिणाम यहां दिखेगा।"
       },
       "verdict": {
         "supported": {
-          "detail": "सर्च में मिले स्रोत मोटे तौर पर वही कहते हैं। यह सबूत नहीं है कि यह सच है — केवल यह कि कोई विरोधी चीज़ नहीं मिली।"
+          "detail": "सर्च में मिले स्रोत मोटे तौर पर वही कहते हैं। यह सबूत नहीं है कि यह सच है, केवल यह कि कोई विरोधी चीज़ नहीं मिली।"
         },
         "unsupported": {
-          "detail": "सर्च को इसके पक्ष में कुछ नहीं मिला। यह बस यह मतलब हो सकता है कि स्टोरी नई या विशेष है — इससे यह झूठी नहीं है।"
+          "detail": "सर्च को इसके पक्ष में कुछ नहीं मिला। यह बस यह मतलब हो सकता है कि स्टोरी नई या विशेष है, इससे यह झूठी नहीं है।"
         }
       }
     },
@@ -347,7 +347,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera bisa keliru, jadi periksa hal yang penting.",
       "trackChooseHint": "Pilih yang ingin diikuti",
-      "aiInteractionNotice": "Anda berbicara dengan Mera, asisten AI — bukan dengan seseorang."
+      "aiInteractionNotice": "Anda berbicara dengan Mera, asisten AI, bukan dengan seseorang."
     },
     "chatTopics": {
       "accordionTitlePending": "Mencari topik untuk:"
@@ -360,26 +360,26 @@
         "bodyUnavailable": "Mera tidak bisa menyelesaikan pemeriksaan \"{{title}}\".",
         "open": "Buka artikel"
       },
-      "quickNothingFound": "Pencarian tidak menemukan apa pun tentang ini. Itu tidak berarti salah — mungkin saja baru, niche, atau bukan sesuatu yang banyak dibahas secara online.",
-      "quickCouldNotSearch": "Mera tidak dapat mencari web sekarang, jadi ini bukan jawaban — coba lagi sebentar.",
-      "quickArticleRequested": "Permintaan terkirim. Mera akan memeriksa seluruh artikel — hasilnya akan muncul di bawah Pemeriksaan fakta di Dashboard Anda setelah siap.",
-      "queued": "Pemeriksaan ini tetap berjalan di latar belakang. Anda tidak perlu menunggu di sini — tidak masalah meninggalkan artikel.",
-      "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang — periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda.",
-      "checkedByUnavailable": "Kami tidak dapat memeriksa apakah organisasi penyelia fakta telah menerbitkan tentang cerita ini — pencarian tidak berhasil. Itu berbeda dari tidak ada yang menerbitkan; di bawah ini adalah apa yang ditemukan pencarian yang lebih luas.",
-      "checkedByMultipleNote": "Ini adalah penilaian independen, masing-masing berdasarkan skala organisasi itu sendiri — sehingga tidak selalu sejalan satu sama lain.",
-      "ownReadingHeading": "Pembacaan Mera sendiri — bersifat sekunder terhadap putusan di atas",
-      "actionA11yPending": "Pemeriksaan fakta diminta — periksa hasilnya",
-      "actionA11yDone": "Pemeriksaan fakta siap — hasilnya ditampilkan di bawah",
-      "noCitations": "Pemeriksaan ini tidak mengutip halaman tertentu. Itu bukan pencarian yang gagal — perlakukan ringkasan dengan sedikit lebih hati-hati tanpa sumber untuk ditunjuk.",
+      "quickNothingFound": "Pencarian tidak menemukan apa pun tentang ini. Itu tidak berarti salah, mungkin saja baru, niche, atau bukan sesuatu yang banyak dibahas secara online.",
+      "quickCouldNotSearch": "Mera tidak dapat mencari web sekarang, jadi ini bukan jawaban, coba lagi sebentar.",
+      "quickArticleRequested": "Permintaan terkirim. Mera akan memeriksa seluruh artikel, hasilnya akan muncul di bawah Pemeriksaan fakta di Dashboard Anda setelah siap.",
+      "queued": "Pemeriksaan ini tetap berjalan di latar belakang. Anda tidak perlu menunggu di sini, tidak masalah meninggalkan artikel.",
+      "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang, periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda.",
+      "checkedByUnavailable": "Kami tidak dapat memeriksa apakah organisasi penyelia fakta telah menerbitkan tentang cerita ini, pencarian tidak berhasil. Itu berbeda dari tidak ada yang menerbitkan; di bawah ini adalah apa yang ditemukan pencarian yang lebih luas.",
+      "checkedByMultipleNote": "Ini adalah penilaian independen, masing-masing berdasarkan skala organisasi itu sendiri, sehingga tidak selalu sejalan satu sama lain.",
+      "ownReadingHeading": "Pembacaan Mera sendiri, bersifat sekunder terhadap putusan di atas",
+      "actionA11yPending": "Pemeriksaan fakta diminta, periksa hasilnya",
+      "actionA11yDone": "Pemeriksaan fakta siap, hasilnya ditampilkan di bawah",
+      "noCitations": "Pemeriksaan ini tidak mengutip halaman tertentu. Itu bukan pencarian yang gagal, perlakukan ringkasan dengan sedikit lebih hati-hati tanpa sumber untuk ditunjuk.",
       "dashboard": {
-        "empty": "Anda belum memeriksa klaim apa pun. Ketuk centang di bawah cerita untuk bertanya kepada Mera tentangnya — hasil muncul di sini setelah siap."
+        "empty": "Anda belum memeriksa klaim apa pun. Ketuk centang di bawah cerita untuk bertanya kepada Mera tentangnya, hasil muncul di sini setelah siap."
       },
       "verdict": {
         "supported": {
-          "detail": "Sumber yang ditemukan pencarian mengatakan hal yang kurang lebih sama. Itu bukan bukti bahwa itu benar — hanya bahwa tidak ada yang bertentangan dengannya yang ditemukan."
+          "detail": "Sumber yang ditemukan pencarian mengatakan hal yang kurang lebih sama. Itu bukan bukti bahwa itu benar, hanya bahwa tidak ada yang bertentangan dengannya yang ditemukan."
         },
         "unsupported": {
-          "detail": "Pencarian tidak menemukan apa pun yang mendukung ini. Itu bisa berarti cerita itu baru atau khusus — itu tidak membuatnya salah."
+          "detail": "Pencarian tidak menemukan apa pun yang mendukung ini. Itu bisa berarti cerita itu baru atau khusus, itu tidak membuatnya salah."
         }
       }
     },
@@ -403,7 +403,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera può sbagliare, quindi verifica le cose importanti.",
       "trackChooseHint": "Scegli cosa seguire",
-      "aiInteractionNotice": "Stai parlando con Mera, un assistente IA — non con una persona."
+      "aiInteractionNotice": "Stai parlando con Mera, un assistente IA, non con una persona."
     },
     "chatTopics": {
       "accordionTitlePending": "Ricerca argomenti per:"
@@ -416,26 +416,26 @@
         "bodyUnavailable": "Mera non è riuscita a completare la verifica di \"{{title}}\".",
         "open": "Apri articolo"
       },
-      "quickNothingFound": "La ricerca non ha trovato nulla su questo argomento. Questo non significa che sia falso — potrebbe semplicemente essere nuovo, di nicchia, o non ampiamente coperto online.",
-      "quickCouldNotSearch": "Mera non ha potuto cercare sul web in questo momento, quindi questo non è una risposta — riprova tra poco.",
-      "quickArticleRequested": "Richiesta inviata. Mera verificherà l'articolo completo — il risultato apparirà sotto Verifiche di fatto sul tuo Dashboard quando sarà pronto.",
-      "queued": "Questo controllo continua in background. Non devi aspettare qui — puoi tranquillamente lasciare l'articolo.",
-      "stillChecking": "Sta richiedendo più tempo del solito. È ancora in fase di verifica in background — controlla più tardi, o guarda sotto Verifiche di fatto sul tuo Dashboard.",
-      "checkedByUnavailable": "Non abbiamo potuto controllare se un'organizzazione di fact-checking ha pubblicato su questa storia — la ricerca non è andata a buon fine. È diverso dal fatto che nessuno abbia pubblicato; qui sotto è quello che la ricerca più ampia ha trovato.",
-      "checkedByMultipleNote": "Si tratta di valutazioni indipendenti, ciascuna secondo la scala propria di quell'organizzazione — non sempre concordano tra loro.",
-      "ownReadingHeading": "Lettura di Mera — secondaria rispetto al verdetto qui sopra",
-      "actionA11yPending": "Controllo di fatto richiesto — verifica il risultato",
-      "actionA11yDone": "Controllo di fatto pronto — il risultato è mostrato sotto",
-      "noCitations": "Questo controllo non ha citato pagine specifiche. Non è una ricerca fallita — tratta il riepilogo con un po' più di cautela senza fonti a cui riferirsi.",
+      "quickNothingFound": "La ricerca non ha trovato nulla su questo argomento. Questo non significa che sia falso, potrebbe semplicemente essere nuovo, di nicchia, o non ampiamente coperto online.",
+      "quickCouldNotSearch": "Mera non ha potuto cercare sul web in questo momento, quindi questo non è una risposta, riprova tra poco.",
+      "quickArticleRequested": "Richiesta inviata. Mera verificherà l'articolo completo, il risultato apparirà sotto Verifiche di fatto sul tuo Dashboard quando sarà pronto.",
+      "queued": "Questo controllo continua in background. Non devi aspettare qui, puoi tranquillamente lasciare l'articolo.",
+      "stillChecking": "Sta richiedendo più tempo del solito. È ancora in fase di verifica in background, controlla più tardi, o guarda sotto Verifiche di fatto sul tuo Dashboard.",
+      "checkedByUnavailable": "Non abbiamo potuto controllare se un'organizzazione di fact-checking ha pubblicato su questa storia, la ricerca non è andata a buon fine. È diverso dal fatto che nessuno abbia pubblicato; qui sotto è quello che la ricerca più ampia ha trovato.",
+      "checkedByMultipleNote": "Si tratta di valutazioni indipendenti, ciascuna secondo la scala propria di quell'organizzazione, non sempre concordano tra loro.",
+      "ownReadingHeading": "Lettura di Mera, secondaria rispetto al verdetto qui sopra",
+      "actionA11yPending": "Controllo di fatto richiesto, verifica il risultato",
+      "actionA11yDone": "Controllo di fatto pronto, il risultato è mostrato sotto",
+      "noCitations": "Questo controllo non ha citato pagine specifiche. Non è una ricerca fallita, tratta il riepilogo con un po' più di cautela senza fonti a cui riferirsi.",
       "dashboard": {
-        "empty": "Non hai ancora controllato nessuna affermazione. Tocca il segno di spunta sotto una storia per chiedere a Mera riguardo — il risultato apparirà qui quando è pronto."
+        "empty": "Non hai ancora controllato nessuna affermazione. Tocca il segno di spunta sotto una storia per chiedere a Mera riguardo, il risultato apparirà qui quando è pronto."
       },
       "verdict": {
         "supported": {
-          "detail": "Le fonti che la ricerca ha trovato dicono fondamentalmente la stessa cosa. Questo non è una prova che sia vero — solo che non è stato trovato nulla che la contraddica."
+          "detail": "Le fonti che la ricerca ha trovato dicono fondamentalmente la stessa cosa. Questo non è una prova che sia vero, solo che non è stato trovato nulla che la contraddica."
         },
         "unsupported": {
-          "detail": "La ricerca non ha trovato nulla che lo supporti. Ciò potrebbe semplicemente significare che la storia è nuova o di nicchia — non la rende falsa."
+          "detail": "La ricerca non ha trovato nulla che lo supporti. Ciò potrebbe semplicemente significare che la storia è nuova o di nicchia, non la rende falsa."
         }
       }
     },
@@ -528,19 +528,19 @@
         "bodyUnavailable": "Mera가 \"{{title}}\" 확인을 마치지 못했어요.",
         "open": "기사 열기"
       },
-      "quickNothingFound": "검색 결과 이에 대한 정보가 없습니다. 이것이 거짓이라는 의미는 아닙니다 — 새로운 내용이거나 틈새 주제이거나 온라인에서 광범위하게 다루어지지 않은 내용일 수 있습니다.",
-      "quickCouldNotSearch": "방금 웹을 검색할 수 없었습니다. 따라서 이것은 답변이 아닙니다 — 잠시 후 다시 시도해주세요.",
-      "quickArticleRequested": "요청을 보냈습니다. Mera에서 전체 기사를 확인할 것입니다 — 결과가 준비되면 대시보드의 팩트 체크에서 확인할 수 있습니다.",
-      "queued": "이 확인은 백그라운드에서 계속 실행됩니다. 여기서 기다릴 필요가 없습니다 — 기사를 떠나도 괜찮습니다.",
-      "stillChecking": "평소보다 시간이 더 걸리고 있습니다. 백그라운드에서 확인 중입니다 — 나중에 다시 확인하거나 대시보드의 팩트 체크에서 확인하세요.",
-      "checkedByUnavailable": "팩트 체킹 조직이 이 이야기에 대해 발표했는지 확인할 수 없었습니다 — 조회가 완료되지 않았습니다. 이는 아무도 발표하지 않은 것과는 다릅니다. 아래는 더 광범위한 검색이 찾은 결과입니다.",
+      "quickNothingFound": "검색 결과 이에 대한 정보가 없습니다. 이것이 거짓이라는 의미는 아닙니다, 새로운 내용이거나 틈새 주제이거나 온라인에서 광범위하게 다루어지지 않은 내용일 수 있습니다.",
+      "quickCouldNotSearch": "방금 웹을 검색할 수 없었습니다. 따라서 이것은 답변이 아닙니다, 잠시 후 다시 시도해주세요.",
+      "quickArticleRequested": "요청을 보냈습니다. Mera에서 전체 기사를 확인할 것입니다, 결과가 준비되면 대시보드의 팩트 체크에서 확인할 수 있습니다.",
+      "queued": "이 확인은 백그라운드에서 계속 실행됩니다. 여기서 기다릴 필요가 없습니다, 기사를 떠나도 괜찮습니다.",
+      "stillChecking": "평소보다 시간이 더 걸리고 있습니다. 백그라운드에서 확인 중입니다, 나중에 다시 확인하거나 대시보드의 팩트 체크에서 확인하세요.",
+      "checkedByUnavailable": "팩트 체킹 조직이 이 이야기에 대해 발표했는지 확인할 수 없었습니다, 조회가 완료되지 않았습니다. 이는 아무도 발표하지 않은 것과는 다릅니다. 아래는 더 광범위한 검색이 찾은 결과입니다.",
       "checkedByMultipleNote": "이는 각 기관이 독자적인 기준으로 독립적으로 평가한 결과이며, 서로 항상 일치하지는 않습니다.",
-      "ownReadingHeading": "메라의 자체 해석 — 위 판정에 대해 부차적인 견해",
-      "actionA11yPending": "팩트 체크 요청됨 — 결과를 확인하세요",
-      "actionA11yDone": "팩트 체크 완료 — 결과가 아래에 표시됩니다",
-      "noCitations": "이 확인에서 특정 페이지를 인용하지 않았습니다. 검색 실패가 아닙니다 — 출처가 없으므로 요약을 좀 더 주의 깊게 다루세요.",
+      "ownReadingHeading": "메라의 자체 해석, 위 판정에 대해 부차적인 견해",
+      "actionA11yPending": "팩트 체크 요청됨, 결과를 확인하세요",
+      "actionA11yDone": "팩트 체크 완료, 결과가 아래에 표시됩니다",
+      "noCitations": "이 확인에서 특정 페이지를 인용하지 않았습니다. 검색 실패가 아닙니다, 출처가 없으므로 요약을 좀 더 주의 깊게 다루세요.",
       "dashboard": {
-        "empty": "아직 확인한 주장이 없습니다. 기사 아래의 체크 아이콘을 탭하여 Mera에 물어보세요 — 결과가 준비되면 여기에 표시됩니다."
+        "empty": "아직 확인한 주장이 없습니다. 기사 아래의 체크 아이콘을 탭하여 Mera에 물어보세요, 결과가 준비되면 여기에 표시됩니다."
       },
       "verdict": {
         "supported": {
@@ -571,7 +571,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera kan fouten maken, dus controleer alles wat belangrijk is.",
       "trackChooseHint": "Kies wat je wilt volgen",
-      "aiInteractionNotice": "Je spreekt met Mera, een AI-assistent — niet met een persoon."
+      "aiInteractionNotice": "Je spreekt met Mera, een AI-assistent, niet met een persoon."
     },
     "chatTopics": {
       "accordionTitlePending": "Onderwerpen zoeken voor:"
@@ -584,26 +584,26 @@
         "bodyUnavailable": "Mera kon de controle van \"{{title}}\" niet afronden.",
         "open": "Artikel openen"
       },
-      "quickNothingFound": "De zoeking heeft niets over dit onderwerp opgeleverd. Dat betekent niet dat het onwaar is — het kan gewoon nieuw, niche of niet veel online te vinden zijn.",
-      "quickCouldNotSearch": "Mera kon het web zojuist niet zoeken, dus dit is geen antwoord — probeer het over een moment opnieuw.",
-      "quickArticleRequested": "Verzoek verzonden. Mera zal het hele artikel controleren — het resultaat verschijnt onder Feitencontroles op uw Dashboard zodra het klaar is.",
-      "queued": "Deze controle wordt op de achtergrond uitgevoerd. Je hoeft hier niet op te wachten — je kunt het artikel gerust verlaten.",
-      "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd — kijk later terug of zoek onder Feitencontroles op uw Dashboard.",
-      "checkedByUnavailable": "We konden niet controleren of een feitenorganisatie over dit artikel heeft gepubliceerd — de opzoeking is niet voltooid. Dat verschilt van het geval dat niemand heeft gepubliceerd; hieronder zie je wat de bredere zoeking wel heeft gevonden.",
-      "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie — ze zijn het niet altijd met elkaar eens.",
-      "ownReadingHeading": "Mera's eigen kijk — ondergeschikt aan het oordeel hierboven",
-      "actionA11yPending": "Feitencheck aangevraagd — controleer op het resultaat",
-      "actionA11yDone": "Feitencheck gereed — het resultaat wordt hieronder weergegeven",
-      "noCitations": "Deze controle heeft geen specifieke bronnen aangehaald. Dat betekent niet dat de zoeking is mislukt — wees voorzichtig met de samenvatting zonder bronnen om naar te verwijzen.",
+      "quickNothingFound": "De zoeking heeft niets over dit onderwerp opgeleverd. Dat betekent niet dat het onwaar is, het kan gewoon nieuw, niche of niet veel online te vinden zijn.",
+      "quickCouldNotSearch": "Mera kon het web zojuist niet zoeken, dus dit is geen antwoord, probeer het over een moment opnieuw.",
+      "quickArticleRequested": "Verzoek verzonden. Mera zal het hele artikel controleren, het resultaat verschijnt onder Feitencontroles op uw Dashboard zodra het klaar is.",
+      "queued": "Deze controle wordt op de achtergrond uitgevoerd. Je hoeft hier niet op te wachten, je kunt het artikel gerust verlaten.",
+      "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd, kijk later terug of zoek onder Feitencontroles op uw Dashboard.",
+      "checkedByUnavailable": "We konden niet controleren of een feitenorganisatie over dit artikel heeft gepubliceerd, de opzoeking is niet voltooid. Dat verschilt van het geval dat niemand heeft gepubliceerd; hieronder zie je wat de bredere zoeking wel heeft gevonden.",
+      "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie, ze zijn het niet altijd met elkaar eens.",
+      "ownReadingHeading": "Mera's eigen kijk, ondergeschikt aan het oordeel hierboven",
+      "actionA11yPending": "Feitencheck aangevraagd, controleer op het resultaat",
+      "actionA11yDone": "Feitencheck gereed, het resultaat wordt hieronder weergegeven",
+      "noCitations": "Deze controle heeft geen specifieke bronnen aangehaald. Dat betekent niet dat de zoeking is mislukt, wees voorzichtig met de samenvatting zonder bronnen om naar te verwijzen.",
       "dashboard": {
-        "empty": "Je hebt nog geen claims gecontroleerd. Tik het vinkje onder een artikel om Mera erover te vragen — het resultaat verschijnt hier zodra het klaar is."
+        "empty": "Je hebt nog geen claims gecontroleerd. Tik het vinkje onder een artikel om Mera erover te vragen, het resultaat verschijnt hier zodra het klaar is."
       },
       "verdict": {
         "supported": {
-          "detail": "De bronnen die de zoekopdracht heeft gevonden, zeggen grotendeels hetzelfde. Dat is niet het bewijs dat het waar is — alleen dat er niets tegenstrijdigs is gevonden."
+          "detail": "De bronnen die de zoekopdracht heeft gevonden, zeggen grotendeels hetzelfde. Dat is niet het bewijs dat het waar is, alleen dat er niets tegenstrijdigs is gevonden."
         },
         "unsupported": {
-          "detail": "De zoekopdracht heeft niets gevonden dat dit ondersteunt. Dat kan eenvoudig betekenen dat het artikel nieuw of niche is — het maakt het niet onwaar."
+          "detail": "De zoekopdracht heeft niets gevonden dat dit ondersteunt. Dat kan eenvoudig betekenen dat het artikel nieuw of niche is, het maakt het niet onwaar."
         }
       }
     },
@@ -627,7 +627,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera może się mylić, więc sprawdzaj ważne rzeczy.",
       "trackChooseHint": "Wybierz, co obserwować",
-      "aiInteractionNotice": "Rozmawiasz z Mera, asystentem AI — nie z osobą."
+      "aiInteractionNotice": "Rozmawiasz z Mera, asystentem AI, nie z osobą."
     },
     "chatTopics": {
       "accordionTitlePending": "Szukam tematów do:"
@@ -640,26 +640,26 @@
         "bodyUnavailable": "Mera nie mogła dokończyć sprawdzania „{{title}}”.",
         "open": "Otwórz artykuł"
       },
-      "quickNothingFound": "Wyszukiwanie nie znalazło nic na ten temat. To nie oznacza, że to fałsz — może to być po prostu nowe, niszowe, lub coś, co nie jest szeroko znane online.",
-      "quickCouldNotSearch": "Mera nie mogła wyszukać w sieci w tym momencie, więc to nie jest odpowiedź — spróbuj ponownie za chwilę.",
-      "quickArticleRequested": "Żądanie wysłane. Mera sprawdzi cały artykuł — wynik pojawi się w sekcji Weryfikacje faktów na Pulpicie, gdy będzie gotowy.",
-      "queued": "To sprawdzenie trwa w tle. Nie musisz tu czekać — możesz opuścić artykuł.",
-      "stillChecking": "To trwa dłużej niż zwykle. Sprawdzanie ciągle trwa w tle — wróć później lub sprawdź sekcję Weryfikacje faktów na Pulpicie.",
-      "checkedByUnavailable": "Nie mogliśmy sprawdzić, czy organizacja zajmująca się weryfikacją faktów opublikowała coś na temat tej historii — sprawdzenie się nie powiodło. To coś innego niż brak publikacji; poniżej znajduje się to, co znaleźliśmy w szerszym wyszukiwaniu.",
-      "checkedByMultipleNote": "To niezależne oceny, każda w skali danej organizacji — nie zawsze są ze sobą zgodne.",
-      "ownReadingHeading": "Ocena własna Mera — drugorzędna wobec werdyktu powyżej",
-      "actionA11yPending": "Żądanie sprawdzenia faktów — sprawdź wynik",
-      "actionA11yDone": "Sprawdzenie faktów gotowe — wynik jest poniżej",
-      "noCitations": "To sprawdzenie nie powołało się na żadne konkretne strony. To nie oznacza niepowodzenia — potraktuj streszczenie z większą ostrożnością bez źródeł do poparcia.",
+      "quickNothingFound": "Wyszukiwanie nie znalazło nic na ten temat. To nie oznacza, że to fałsz, może to być po prostu nowe, niszowe, lub coś, co nie jest szeroko znane online.",
+      "quickCouldNotSearch": "Mera nie mogła wyszukać w sieci w tym momencie, więc to nie jest odpowiedź, spróbuj ponownie za chwilę.",
+      "quickArticleRequested": "Żądanie wysłane. Mera sprawdzi cały artykuł, wynik pojawi się w sekcji Weryfikacje faktów na Pulpicie, gdy będzie gotowy.",
+      "queued": "To sprawdzenie trwa w tle. Nie musisz tu czekać, możesz opuścić artykuł.",
+      "stillChecking": "To trwa dłużej niż zwykle. Sprawdzanie ciągle trwa w tle, wróć później lub sprawdź sekcję Weryfikacje faktów na Pulpicie.",
+      "checkedByUnavailable": "Nie mogliśmy sprawdzić, czy organizacja zajmująca się weryfikacją faktów opublikowała coś na temat tej historii, sprawdzenie się nie powiodło. To coś innego niż brak publikacji; poniżej znajduje się to, co znaleźliśmy w szerszym wyszukiwaniu.",
+      "checkedByMultipleNote": "To niezależne oceny, każda w skali danej organizacji, nie zawsze są ze sobą zgodne.",
+      "ownReadingHeading": "Ocena własna Mera, drugorzędna wobec werdyktu powyżej",
+      "actionA11yPending": "Żądanie sprawdzenia faktów, sprawdź wynik",
+      "actionA11yDone": "Sprawdzenie faktów gotowe, wynik jest poniżej",
+      "noCitations": "To sprawdzenie nie powołało się na żadne konkretne strony. To nie oznacza niepowodzenia, potraktuj streszczenie z większą ostrożnością bez źródeł do poparcia.",
       "dashboard": {
-        "empty": "Nie sprawdziłeś jeszcze żadnych twierdzeń. Dotknij haczyka pod artykułem, aby zapytać Merę — wynik pojawi się tu, gdy będzie gotowy."
+        "empty": "Nie sprawdziłeś jeszcze żadnych twierdzeń. Dotknij haczyka pod artykułem, aby zapytać Merę, wynik pojawi się tu, gdy będzie gotowy."
       },
       "verdict": {
         "supported": {
-          "detail": "Źródła znalezione przez wyszukiwanie mówią mniej więcej to samo. To nie jest dowód, że to prawda — tylko to, że nic mu nie zaprzeczało."
+          "detail": "Źródła znalezione przez wyszukiwanie mówią mniej więcej to samo. To nie jest dowód, że to prawda, tylko to, że nic mu nie zaprzeczało."
         },
         "unsupported": {
-          "detail": "Wyszukiwanie nie znalazło nic popierającego to. To może po prostu oznaczać, że historia jest nowa lub niszowa — nie czyni tego fałszywym."
+          "detail": "Wyszukiwanie nie znalazło nic popierającego to. To może po prostu oznaczać, że historia jest nowa lub niszowa, nie czyni tego fałszywym."
         }
       }
     },
@@ -683,7 +683,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "O Mera pode cometer erros, então confira o que for importante.",
       "trackChooseHint": "Escolha o que seguir",
-      "aiInteractionNotice": "Você está falando com Mera, um assistente de IA — não com uma pessoa."
+      "aiInteractionNotice": "Você está falando com Mera, um assistente de IA, não com uma pessoa."
     },
     "chatTopics": {
       "accordionTitlePending": "Procurando temas de:"
@@ -696,26 +696,26 @@
         "bodyUnavailable": "Não foi possível terminar a verificação de \"{{title}}\".",
         "open": "Abrir artigo"
       },
-      "quickNothingFound": "A busca não encontrou nada sobre isto. Isso não significa que seja falso — pode ser algo novo, nicho ou simplesmente não estar amplamente coberto na internet.",
-      "quickCouldNotSearch": "Mera não conseguiu fazer a busca na web agora, então isso não é uma resposta — tente novamente em um momento.",
-      "quickArticleRequested": "Solicitação enviada. Mera verificará o artigo completo — o resultado aparecerá em Verificações de fatos no seu Painel assim que estiver pronto.",
-      "queued": "Esta verificação continua em execução em segundo plano. Você não precisa esperar aqui — é seguro sair do artigo.",
-      "stillChecking": "Está levando mais tempo que o normal. Ainda está sendo verificado em segundo plano — verifique depois ou procure em Verificações de fatos no seu Painel.",
-      "checkedByUnavailable": "Não foi possível verificar se uma organização de verificação de fatos publicou algo sobre esta história — a busca não funcionou. Isso é diferente de ninguém ter publicado; abaixo está o que a busca mais ampla encontrou.",
-      "checkedByMultipleNote": "Estas são avaliações independentes, cada uma na escala própria da organização — nem sempre concordam entre si.",
-      "ownReadingHeading": "Leitura própria da Mera — secundária ao parecer acima",
-      "actionA11yPending": "Verificação de fatos solicitada — verifique o resultado",
-      "actionA11yDone": "Verificação de fatos pronta — o resultado é mostrado abaixo",
-      "noCitations": "Esta verificação não citou nenhuma página específica. Isso não é uma busca mal-sucedida — trate o resumo com um pouco mais de cautela sem fontes para apontar.",
+      "quickNothingFound": "A busca não encontrou nada sobre isto. Isso não significa que seja falso, pode ser algo novo, nicho ou simplesmente não estar amplamente coberto na internet.",
+      "quickCouldNotSearch": "Mera não conseguiu fazer a busca na web agora, então isso não é uma resposta, tente novamente em um momento.",
+      "quickArticleRequested": "Solicitação enviada. Mera verificará o artigo completo, o resultado aparecerá em Verificações de fatos no seu Painel assim que estiver pronto.",
+      "queued": "Esta verificação continua em execução em segundo plano. Você não precisa esperar aqui, é seguro sair do artigo.",
+      "stillChecking": "Está levando mais tempo que o normal. Ainda está sendo verificado em segundo plano, verifique depois ou procure em Verificações de fatos no seu Painel.",
+      "checkedByUnavailable": "Não foi possível verificar se uma organização de verificação de fatos publicou algo sobre esta história, a busca não funcionou. Isso é diferente de ninguém ter publicado; abaixo está o que a busca mais ampla encontrou.",
+      "checkedByMultipleNote": "Estas são avaliações independentes, cada uma na escala própria da organização, nem sempre concordam entre si.",
+      "ownReadingHeading": "Leitura própria da Mera, secundária ao parecer acima",
+      "actionA11yPending": "Verificação de fatos solicitada, verifique o resultado",
+      "actionA11yDone": "Verificação de fatos pronta, o resultado é mostrado abaixo",
+      "noCitations": "Esta verificação não citou nenhuma página específica. Isso não é uma busca mal-sucedida, trate o resumo com um pouco mais de cautela sem fontes para apontar.",
       "dashboard": {
-        "empty": "Você ainda não verificou nenhuma alegação. Toque na marca de seleção sob uma história para perguntar ao Mera sobre isso — o resultado aparece aqui assim que estiver pronto."
+        "empty": "Você ainda não verificou nenhuma alegação. Toque na marca de seleção sob uma história para perguntar ao Mera sobre isso, o resultado aparece aqui assim que estiver pronto."
       },
       "verdict": {
         "supported": {
-          "detail": "As fontes que a pesquisa encontrou dizem essencialmente a mesma coisa. Isso não é prova de que é verdade — apenas que nada contradizendo foi encontrado."
+          "detail": "As fontes que a pesquisa encontrou dizem essencialmente a mesma coisa. Isso não é prova de que é verdade, apenas que nada contradizendo foi encontrado."
         },
         "unsupported": {
-          "detail": "A pesquisa não encontrou nada apoiando isso. Isso pode simplesmente significar que a história é nova ou de nicho — não a torna falsa."
+          "detail": "A pesquisa não encontrou nada apoiando isso. Isso pode simplesmente significar que a história é nova ou de nicho, não a torna falsa."
         }
       }
     },
@@ -795,7 +795,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera อาจผิดพลาดได้ จึงควรตรวจสอบเรื่องสำคัญ",
       "trackChooseHint": "เลือกสิ่งที่จะติดตาม",
-      "aiInteractionNotice": "คุณกำลังสนทนากับ Mera ซึ่งเป็นผู้ช่วยด้าน AI — ไม่ใช่คน"
+      "aiInteractionNotice": "คุณกำลังสนทนากับ Mera ซึ่งเป็นผู้ช่วยด้าน AI ไม่ใช่คน"
     },
     "chatTopics": {
       "accordionTitlePending": "กำลังค้นหาหัวข้อสำหรับ:"
@@ -808,19 +808,19 @@
         "bodyUnavailable": "Mera ตรวจสอบ \"{{title}}\" ไม่เสร็จ",
         "open": "เปิดบทความ"
       },
-      "quickNothingFound": "การค้นหาไม่พบอะไรเกี่ยวกับเรื่องนี้ นั่นไม่ได้หมายความว่าเป็นเท็จ — อาจเป็นข้อมูลใหม่ เฉพาะกลุ่ม หรือไม่ได้รับความสนใจออนไลน์อย่างแพร่หลาย",
-      "quickCouldNotSearch": "Mera ไม่สามารถค้นหาเว็บได้ขณะนี้ ดังนั้นนี่จึงไม่ใช่คำตอบ — ลองอีกครั้งในเดี๋ยวนี้",
-      "quickArticleRequested": "ส่งคำขอแล้ว Mera จะตรวจสอบบทความทั้งหมด — ผลลัพธ์จะปรากฏใต้ Fact checks บนแดชบอร์ดของคุณเมื่อพร้อม",
-      "queued": "การตรวจสอบนี้กำลังทำงานอยู่เบื้องหลัง คุณไม่จำเป็นต้องรอที่นี่ — ลองออกจากบทความได้เลย",
-      "stillChecking": "นี่ใช้เวลานานกว่าปกติ ยังคงกำลังตรวจสอบในเบื้องหลัง — ตรวจสอบอีกครั้งในภายหลัง หรือดูใต้ Fact checks บนแดชบอร์ดของคุณ",
-      "checkedByUnavailable": "เราไม่สามารถตรวจสอบว่ามีองค์กรตรวจสอบข้อมูลเผยแพร่เกี่ยวกับเรื่องราวนี้หรือไม่ — การค้นหาไม่สำเร็จ นั่นแตกต่างจากการที่ไม่มีใครเผยแพร่ ด้านล่างนี้คือสิ่งที่การค้นหาที่กว้างขึ้นพบเจอ",
-      "checkedByMultipleNote": "นี่คือการให้คะแนนที่เป็นอิสระต่อกัน แต่ละรายการอิงตามมาตรฐานของหน่วยงานนั้น ๆ เอง — ผลลัพธ์จึงไม่จำเป็นต้องตรงกันเสมอไป",
-      "ownReadingHeading": "มุมมองของ Mera เอง — เป็นข้อมูลรองจากคำตัดสินด้านบน",
-      "actionA11yPending": "ขอการตรวจสอบข้อมูล — ตรวจสอบผลลัพธ์",
-      "actionA11yDone": "การตรวจสอบข้อมูลพร้อมแล้ว — ผลลัพธ์แสดงด้านล่าง",
-      "noCitations": "การตรวจสอบนี้ไม่ได้อ้างอิงหน้าใดโดยเฉพาะ นั่นไม่ใช่การค้นหาที่ล้มเหลว — ให้ระมัดระวังเพิ่มเติมกับสรุปผลโดยไม่มีแหล่งที่มา",
+      "quickNothingFound": "การค้นหาไม่พบอะไรเกี่ยวกับเรื่องนี้ นั่นไม่ได้หมายความว่าเป็นเท็จ อาจเป็นข้อมูลใหม่ เฉพาะกลุ่ม หรือไม่ได้รับความสนใจออนไลน์อย่างแพร่หลาย",
+      "quickCouldNotSearch": "Mera ไม่สามารถค้นหาเว็บได้ขณะนี้ ดังนั้นนี่จึงไม่ใช่คำตอบ ลองอีกครั้งในเดี๋ยวนี้",
+      "quickArticleRequested": "ส่งคำขอแล้ว Mera จะตรวจสอบบทความทั้งหมด ผลลัพธ์จะปรากฏใต้ Fact checks บนแดชบอร์ดของคุณเมื่อพร้อม",
+      "queued": "การตรวจสอบนี้กำลังทำงานอยู่เบื้องหลัง คุณไม่จำเป็นต้องรอที่นี่ ลองออกจากบทความได้เลย",
+      "stillChecking": "นี่ใช้เวลานานกว่าปกติ ยังคงกำลังตรวจสอบในเบื้องหลัง ตรวจสอบอีกครั้งในภายหลัง หรือดูใต้ Fact checks บนแดชบอร์ดของคุณ",
+      "checkedByUnavailable": "เราไม่สามารถตรวจสอบว่ามีองค์กรตรวจสอบข้อมูลเผยแพร่เกี่ยวกับเรื่องราวนี้หรือไม่ การค้นหาไม่สำเร็จ นั่นแตกต่างจากการที่ไม่มีใครเผยแพร่ ด้านล่างนี้คือสิ่งที่การค้นหาที่กว้างขึ้นพบเจอ",
+      "checkedByMultipleNote": "นี่คือการให้คะแนนที่เป็นอิสระต่อกัน แต่ละรายการอิงตามมาตรฐานของหน่วยงานนั้น ๆ เอง ผลลัพธ์จึงไม่จำเป็นต้องตรงกันเสมอไป",
+      "ownReadingHeading": "มุมมองของ Mera เอง เป็นข้อมูลรองจากคำตัดสินด้านบน",
+      "actionA11yPending": "ขอการตรวจสอบข้อมูล ตรวจสอบผลลัพธ์",
+      "actionA11yDone": "การตรวจสอบข้อมูลพร้อมแล้ว ผลลัพธ์แสดงด้านล่าง",
+      "noCitations": "การตรวจสอบนี้ไม่ได้อ้างอิงหน้าใดโดยเฉพาะ นั่นไม่ใช่การค้นหาที่ล้มเหลว ให้ระมัดระวังเพิ่มเติมกับสรุปผลโดยไม่มีแหล่งที่มา",
       "dashboard": {
-        "empty": "คุณยังไม่ได้ตรวจสอบข้อเรียกร้องใด ๆ แตะเครื่องหมายถูกใต้เรื่องราวเพื่อถามเมรา — ผลลัพธ์จะปรากฏที่นี่เมื่อพร้อม"
+        "empty": "คุณยังไม่ได้ตรวจสอบข้อเรียกร้องใด ๆ แตะเครื่องหมายถูกใต้เรื่องราวเพื่อถามเมรา ผลลัพธ์จะปรากฏที่นี่เมื่อพร้อม"
       },
       "verdict": {
         "supported": {
@@ -851,7 +851,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera hata yapabilir, önemli şeyleri kontrol et.",
       "trackChooseHint": "Neyi takip edeceğini seç",
-      "aiInteractionNotice": "Mera adında bir yapay zeka asistanı ile konuşuyorsunuz — bir insan değil."
+      "aiInteractionNotice": "Mera adında bir yapay zeka asistanı ile konuşuyorsunuz, bir insan değil."
     },
     "chatTopics": {
       "accordionTitlePending": "Şunun konuları bulunuyor:"
@@ -864,26 +864,26 @@
         "bodyUnavailable": "Mera \"{{title}}\" kontrolünü tamamlayamadı.",
         "open": "Makaleyi aç"
       },
-      "quickNothingFound": "Arama, bununla ilgili hiçbir şey bulamamıştır. Bu, bunun yanlış olduğu anlamına gelmez — sadece yeni, niş veya çevrimiçi olarak yaygın olarak kapsanan bir konu olmayabilir.",
-      "quickCouldNotSearch": "Mera şu anda web'de arama yapamadı, bu nedenle bu bir cevap değil — birazdan tekrar dene.",
-      "quickArticleRequested": "İstek gönderildi. Mera tüm makaleyi kontrol edecek — sonuç Dashboard'unuzdaki Gerçek Kontroller bölümünde hazır olduğunda görünecek.",
-      "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Burada beklemenize gerek yok — makaleyi terk etseniz bile sorun değil.",
-      "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor — daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak.",
-      "checkedByUnavailable": "Bir gerçek kontrol kuruluşunun bu hikayede yayın yapıp yapmadığını kontrol edemedik — sorgu başarısız oldu. Bu kimsenin yayın yapmamış olmasından farklıdır; aşağıda geniş aramanın bulduğu sonuçlar yer almaktadır.",
-      "checkedByMultipleNote": "Bunlar birbirinden bağımsız değerlendirmelerdir, her biri ilgili kuruluşun kendi ölçeğine göredir — her zaman birbiriyle uyuşmayabilir.",
-      "ownReadingHeading": "Mera'nın kendi değerlendirmesi — yukarıdaki karara ikincil",
-      "actionA11yPending": "Gerçek kontrol talep edildi — sonuç için kontrol edin",
-      "actionA11yDone": "Gerçek kontrol hazır — sonuç aşağıda gösterilir",
-      "noCitations": "Bu kontrol herhangi bir belirli sayfaya atıf yapmadı. Bu başarısız bir arama değil — kaynaklar olmadan özeti biraz daha dikkatle ele alın.",
+      "quickNothingFound": "Arama, bununla ilgili hiçbir şey bulamamıştır. Bu, bunun yanlış olduğu anlamına gelmez, sadece yeni, niş veya çevrimiçi olarak yaygın olarak kapsanan bir konu olmayabilir.",
+      "quickCouldNotSearch": "Mera şu anda web'de arama yapamadı, bu nedenle bu bir cevap değil, birazdan tekrar dene.",
+      "quickArticleRequested": "İstek gönderildi. Mera tüm makaleyi kontrol edecek, sonuç Dashboard'unuzdaki Gerçek Kontroller bölümünde hazır olduğunda görünecek.",
+      "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Burada beklemenize gerek yok, makaleyi terk etseniz bile sorun değil.",
+      "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor, daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak.",
+      "checkedByUnavailable": "Bir gerçek kontrol kuruluşunun bu hikayede yayın yapıp yapmadığını kontrol edemedik, sorgu başarısız oldu. Bu kimsenin yayın yapmamış olmasından farklıdır; aşağıda geniş aramanın bulduğu sonuçlar yer almaktadır.",
+      "checkedByMultipleNote": "Bunlar birbirinden bağımsız değerlendirmelerdir, her biri ilgili kuruluşun kendi ölçeğine göredir, her zaman birbiriyle uyuşmayabilir.",
+      "ownReadingHeading": "Mera'nın kendi değerlendirmesi, yukarıdaki karara ikincil",
+      "actionA11yPending": "Gerçek kontrol talep edildi, sonuç için kontrol edin",
+      "actionA11yDone": "Gerçek kontrol hazır, sonuç aşağıda gösterilir",
+      "noCitations": "Bu kontrol herhangi bir belirli sayfaya atıf yapmadı. Bu başarısız bir arama değil, kaynaklar olmadan özeti biraz daha dikkatle ele alın.",
       "dashboard": {
-        "empty": "Henüz herhangi bir iddia kontrol etmediniz. Bir hikayenin altındaki işareti dokunarak Mera'ya sorular sorun — sonuç hazır olduğunda buraya gelir."
+        "empty": "Henüz herhangi bir iddia kontrol etmediniz. Bir hikayenin altındaki işareti dokunarak Mera'ya sorular sorun, sonuç hazır olduğunda buraya gelir."
       },
       "verdict": {
         "supported": {
-          "detail": "Aramanın bulduğu kaynaklar temelde aynı şeyi söylüyor. Bu, doğru olduğu anlamına gelmez — sadece onu çürüten bir şey bulunmadığı anlamına gelir."
+          "detail": "Aramanın bulduğu kaynaklar temelde aynı şeyi söylüyor. Bu, doğru olduğu anlamına gelmez, sadece onu çürüten bir şey bulunmadığı anlamına gelir."
         },
         "unsupported": {
-          "detail": "Araması bu bulguyu destekleyen bir şey bulamadı. Bu, sadece haberin yeni veya niş olduğu anlamına gelebilir — onu yanlış yapmaz."
+          "detail": "Araması bu bulguyu destekleyen bir şey bulamadı. Bu, sadece haberin yeni veya niş olduğu anlamına gelebilir, onu yanlış yapmaz."
         }
       }
     },
@@ -963,7 +963,7 @@
     "floatingChat": {
       "aiUsageNoticeGeneral": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra những điều quan trọng.",
       "trackChooseHint": "Chọn nội dung để theo dõi",
-      "aiInteractionNotice": "Bạn đang trò chuyện với Mera, một trợ lý AI — không phải một người."
+      "aiInteractionNotice": "Bạn đang trò chuyện với Mera, một trợ lý AI, không phải một người."
     },
     "chatTopics": {
       "accordionTitlePending": "Đang tìm chủ đề cho:"
@@ -976,26 +976,26 @@
         "bodyUnavailable": "Mera không thể hoàn tất kiểm tra \"{{title}}\".",
         "open": "Mở bài viết"
       },
-      "quickNothingFound": "Tìm kiếm không tìm thấy bất cứ điều gì về vấn đề này. Điều đó không có nghĩa là sai — nó có thể là mới, niche, hoặc không được đề cập rộng rãi trực tuyến.",
-      "quickCouldNotSearch": "Mera không thể tìm kiếm web lúc này, vì vậy đây không phải là câu trả lời — thử lại sau lát.",
-      "quickArticleRequested": "Yêu cầu đã gửi. Mera sẽ kiểm tra toàn bộ bài viết — kết quả sẽ hiện dưới Fact checks trên Dashboard khi sẵn sàng.",
-      "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây — có thể rời khỏi bài viết.",
-      "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra — quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
-      "checkedByUnavailable": "Chúng tôi không thể kiểm tra xem một tổ chức kiểm tra sự thật có công bố về bài viết này hay không — tìm kiếm không thành công. Điều này khác với trường hợp không ai công bố; dưới đây là những gì tìm kiếm rộng hơn đã tìm thấy.",
-      "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó — chúng không phải lúc nào cũng thống nhất với nhau.",
-      "ownReadingHeading": "Nhận định riêng của Mera — thứ yếu so với kết luận ở trên",
-      "actionA11yPending": "Kiểm tra sự thật được yêu cầu — kiểm tra kết quả",
-      "actionA11yDone": "Kiểm tra sự thật sẵn sàng — kết quả được hiển thị bên dưới",
-      "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại — hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
+      "quickNothingFound": "Tìm kiếm không tìm thấy bất cứ điều gì về vấn đề này. Điều đó không có nghĩa là sai, nó có thể là mới, niche, hoặc không được đề cập rộng rãi trực tuyến.",
+      "quickCouldNotSearch": "Mera không thể tìm kiếm web lúc này, vì vậy đây không phải là câu trả lời, thử lại sau lát.",
+      "quickArticleRequested": "Yêu cầu đã gửi. Mera sẽ kiểm tra toàn bộ bài viết, kết quả sẽ hiện dưới Fact checks trên Dashboard khi sẵn sàng.",
+      "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây, có thể rời khỏi bài viết.",
+      "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra, quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
+      "checkedByUnavailable": "Chúng tôi không thể kiểm tra xem một tổ chức kiểm tra sự thật có công bố về bài viết này hay không, tìm kiếm không thành công. Điều này khác với trường hợp không ai công bố; dưới đây là những gì tìm kiếm rộng hơn đã tìm thấy.",
+      "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó, chúng không phải lúc nào cũng thống nhất với nhau.",
+      "ownReadingHeading": "Nhận định riêng của Mera, thứ yếu so với kết luận ở trên",
+      "actionA11yPending": "Kiểm tra sự thật được yêu cầu, kiểm tra kết quả",
+      "actionA11yDone": "Kiểm tra sự thật sẵn sàng, kết quả được hiển thị bên dưới",
+      "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại, hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
       "dashboard": {
-        "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera — kết quả sẽ xuất hiện ở đây khi sẵn sàng."
+        "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera, kết quả sẽ xuất hiện ở đây khi sẵn sàng."
       },
       "verdict": {
         "supported": {
-          "detail": "Các nguồn tìm kiếm tìm thấy nói chung điều tương tự. Điều đó không phải là bằng chứng nó đúng — chỉ là không tìm thấy gì mâu thuẫn."
+          "detail": "Các nguồn tìm kiếm tìm thấy nói chung điều tương tự. Điều đó không phải là bằng chứng nó đúng, chỉ là không tìm thấy gì mâu thuẫn."
         },
         "unsupported": {
-          "detail": "Tìm kiếm không tìm thấy gì hỗ trợ điều này. Điều đó chỉ có thể có nghĩa là câu chuyện mới hoặc chuyên biệt — nó không làm cho nó sai."
+          "detail": "Tìm kiếm không tìm thấy gì hỗ trợ điều này. Điều đó chỉ có thể có nghĩa là câu chuyện mới hoặc chuyên biệt, nó không làm cho nó sai."
         }
       }
     },
