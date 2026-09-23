@@ -62,6 +62,7 @@ import {
   HEADER_NARRATION_A11Y_KEY,
   HEADER_NARRATION_KEYS,
   HEADER_NARRATION_METRICS,
+  NARRATION_COLOR,
   NARRATION_CYCLE_MS,
   NARRATION_FADE_MS,
   NARRATION_HOLD_MS,
@@ -84,12 +85,22 @@ export interface HeaderNarrationLineProps {
   readonly stage: ProcessingStageId | null;
   /** Scoring is running locally rather than in the cloud. */
   readonly onDevice: boolean;
+  /**
+   * `inline` (default): beside a title, up to two lines (the Feed).
+   * `row`: the Dashboard's own full-width status row, ONE line. At a large
+   * text size the row is allowed to wrap and the header to grow, so a caller
+   * can pass `maxLines` to lift the clamp there.
+   */
+  readonly layout?: 'inline' | 'row';
+  readonly maxLines?: number;
   readonly testID?: string;
 }
 
 export const HeaderNarrationLine: React.FC<HeaderNarrationLineProps> = ({
   stage,
   onDevice,
+  layout = 'inline',
+  maxLines,
   testID = 'header-narration-line',
 }) => {
   const { t } = useTranslation();
@@ -183,7 +194,7 @@ export const HeaderNarrationLine: React.FC<HeaderNarrationLineProps> = ({
     <Animated.View style={lineStyle} pointerEvents="none">
       <Text
         style={styles.line}
-        numberOfLines={HEADER_NARRATION_METRICS.maxLines}
+        numberOfLines={maxLines ?? (layout === 'row' ? 1 : HEADER_NARRATION_METRICS.maxLines)}
         // ONE stable label for the line as a whole. Deliberately NOT the
         // sentence on screen and deliberately not a live region: see the
         // header comment.
@@ -199,7 +210,7 @@ export const HeaderNarrationLine: React.FC<HeaderNarrationLineProps> = ({
 
 const styles = StyleSheet.create({
   line: {
-    color: 'rgb(190, 190, 190)',
+    color: NARRATION_COLOR,
     fontSize: HEADER_NARRATION_METRICS.fontSize,
     lineHeight: HEADER_NARRATION_METRICS.lineHeight,
   },

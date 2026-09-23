@@ -53,16 +53,38 @@ export const HEADER_NARRATION_A11Y_KEY = 'headerNarration.a11y' as const;
  * reader is actively scrolling, so it has to survive being glanced at rather
  * than watched.
  */
-export const NARRATION_HOLD_MS = 3000;
-export const NARRATION_TRANSITION_MS = 1000;
+export const NARRATION_HOLD_MS = 3700;
+/**
+ * 300ms end to end, 150ms each way. It was 1000: the line sits at opacity near
+ * zero for the middle of every fade, which measured 1.1:1 against the header
+ * mid-fade, so a long fade was a second of unreadable text out of every four.
+ * The cycle stays 4000ms.
+ */
+export const NARRATION_TRANSITION_MS = 300;
 /** Each half of the crossfade. */
 export const NARRATION_FADE_MS = NARRATION_TRANSITION_MS / 2;
 /** Interval between swaps: the legible hold plus both halves of the fade. */
 export const NARRATION_CYCLE_MS = NARRATION_HOLD_MS + NARRATION_TRANSITION_MS;
 
 /**
+ * The ONE line colour, as a literal. White: the previous rgb 190 measured
+ * 3.6:1 on the header over a warm backdrop, white 6.7:1. In `style`, never a
+ * class, so a theme token cannot invert it.
+ */
+export const NARRATION_COLOR = '#FFFFFF';
+
+/**
+ * The widest the Dashboard's full-width status row can be: a 375pt phone less
+ * the header's 20pt side padding. The Dashboard gives the line this whole row,
+ * ONE line; `narration-widths.json` is every line in every locale measured with
+ * CoreText at 14pt against it.
+ */
+export const NARRATION_ROW_WIDTH_PT = 375 - 2 * 20;
+
+/**
  * The line's typography and its wrap budget, in ONE place because the row
- * height is pinned from the same numbers.
+ * height is pinned from the same numbers. `maxLines` is the Feed's INLINE
+ * placement beside its title; the Dashboard's full-width row is one line.
  *
  * `2 x 21 = 42`, against a `3xl` title's 45pt line box, is where the copy's
  * 46-character English ceiling comes from. A third line does not fit and is

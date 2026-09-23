@@ -6,7 +6,6 @@ import {
 } from '@/components/custom/FeedSyncIndicator';
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
-import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
 import {
     headerTitleLineHeight,
     headerTitleSize,
@@ -14,6 +13,9 @@ import {
 } from '@/lib/typography/header-title-size';
 import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
 import HeaderNarrationLine from '@/components/custom/for-you/HeaderNarrationLine';
+import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
+import { HEADER_NARRATION_METRICS, NARRATION_COLOR } from '@/components/custom/for-you/header-narration';
+import { Text } from '@/components/ui/text';
 import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
@@ -53,6 +55,7 @@ import {
     useForYouAsyncJobPhase,
     useForYouDeviceProcessing,
     useForYouHasGeneratedTopics,
+    useForYouLastNewArticlesAt,
     useForYouLastProcessingRunFinishedAt,
     useForYouSuggestions,
     useForYouSyncStatusMessage,
@@ -77,7 +80,7 @@ import { useIsConnected } from '@/lib/stores/network-store';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { AccessibilityInfo, AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -87,6 +90,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // be drawn over the top of every sub-tab's content. `openConfigPanel` went with
 // the gesture: the strip was its only caller.
 
+
+/** Above this OS text scale the status row may wrap and the header grow. */
+const LARGE_TEXT_SCALE = 1.2;
 
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -229,21 +235,36 @@ const MeraNewsScreen: React.FC = () => {
     const scoringError = useForYouScoringError();
     const dailyLimitResetAt = useForYouDailyLimitResetAt();
     const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
+    const lastNewArticlesAt = useForYouLastNewArticlesAt();
     const [nowTick, setNowTick] = useState(() => Date.now());
 
     useEffect(() => {
         // Pause the ticking clock while blurred; re-arm + snap forward on focus.
         if (!isFocused) return;
-        if (!lastProcessingRunFinishedAt && !dailyLimitResetAt) return;
+        if (!lastProcessingRunFinishedAt && !dailyLimitResetAt && !lastNewArticlesAt) return;
         setNowTick(Date.now());
         const id = setInterval(() => setNowTick(Date.now()), 30_000);
         return () => clearInterval(id);
-    }, [isFocused, lastProcessingRunFinishedAt, dailyLimitResetAt]);
+    }, [isFocused, lastProcessingRunFinishedAt, dailyLimitResetAt, lastNewArticlesAt]);
 
+    // "Last processed" in the status panel and sheet: when a run last finished,
+    // including one that found nothing. That is what the words say.
     const lastProcessedLabel = useMemo(() => {
         if (!lastProcessingRunFinishedAt) return null;
         return formatTimeAgo(t, lastProcessingRunFinishedAt, { now: nowTick });
     }, [lastProcessingRunFinishedAt, nowTick, t]);
+
+    // "Updated <time>" in the header: when new articles last ARRIVED
+    // (`lastNewArticlesAt`), never when a poll that found nothing finished,
+    // which reset it to "just now" while the reader was reading (F16). Null
+    // until a sync has delivered something, and then the row simply shows
+    // nothing. Under a minute it is its own sentence-case string: splicing
+    // "Just now" into "Updated {{time}}" read "Updated Just now".
+    const updatedLabel = useMemo(() => {
+        if (!lastNewArticlesAt) return null;
+        if (nowTick - lastNewArticlesAt < 60_000) return t('feed.updatedJustNow');
+        return t('feed.updatedAt', { time: formatTimeAgo(t, lastNewArticlesAt, { now: nowTick }) });
+    }, [lastNewArticlesAt, nowTick, t]);
 
     // Any client-visible fetch/scoring work still in flight — the shared
     // derivation (see components/custom/FeedSyncIndicator). Used here only for
@@ -287,6 +308,17 @@ const MeraNewsScreen: React.FC = () => {
     // articles must be silent"), so `isFeedProcessing` is true exactly when
     // articles are really being downloaded, grouped and scored.
     const narrating = isFeedProcessing;
+
+    // The narration stops cycling when the sync ends (the line unmounts) and
+    // the end is announced ONCE to a screen reader, rather than the line being
+    // a live region that talks over the list every four seconds.
+    const wasNarrating = useRef(narrating);
+    useEffect(() => {
+        if (wasNarrating.current && !narrating && isFocused) {
+            AccessibilityInfo.announceForAccessibility(t('feedStatus.syncDoneA11y'));
+        }
+        wasNarrating.current = narrating;
+    }, [narrating, isFocused, t]);
     // Read for the STAGE only. The snapshot's own `visible` is the wider
     // scheduler-inclusive question and is deliberately not consulted here.
     // No parameter is added to the snapshot for this; on-device is its own
@@ -465,65 +497,26 @@ const MeraNewsScreen: React.FC = () => {
         />
     );
 
-    // ── The three things that share the title row's first two slots ────────
+    // ── Header rows ─────────────────────────────────────────────────────────
     //
-    // Built here rather than inline so the render below is a plain keyed array
-    // and the keys are impossible to miss. `statusMark` appears in BOTH
-    // branches with the SAME key, which is what makes its reorder a move.
+    // The TITLE IS ALWAYS SHOWN (D6). It used to step aside while a sync ran
+    // and hand its slot to the narration, which then had 88pt beside the mark
+    // and the bell: "Dashboard" is 184pt wide. The narration truncated
+    // mid-sentence and the screen lost its name. The status sentence now has
+    // its OWN full-width row under the title (N11), one line at every text
+    // size up to large, and the row is height-PINNED in every state, empty
+    // included, so a sync starting or ending never moves the header, and so
+    // never moves the four panels padded by its height. At a large text size
+    // the row may wrap to three lines and the header grows once.
     //
-    // THE FEED DELIBERATELY DOES THE OPPOSITE — there the title STAYS and the
-    // narration sits beside the mark — and the reason is measured, not
-    // stylistic. "Dashboard" is 184pt and this header also carries the bell at
-    // 45, so a side-by-side line would get 88pt: about twelve characters a
-    // line, against copy that runs to 46 in English and 58 in the longer
-    // locales. It truncated to "Save what you cannot…" on a device. The Feed's
-    // title is 82pt with no bell, so it has 245 and does not have this
-    // problem. Each header does what its own width allows; do not "unify"
-    // these two without re-measuring.
-    const statusMark = (
-        <FeedStatusIndicator
-            key="mark"
-            mode={statusMode}
-            expanded={statusExpanded}
-            onPress={toggleStatus}
-            testID="dashboard-status-indicator"
-        />
-    );
-    const titleSlot = (
-        <View key="title" pointerEvents="none" className="flex-shrink min-w-0">
-            <Heading
-                size={titleSize}
-                className="text-white"
-                numberOfLines={1}
-                // SHRINK THE TYPE, DO NOT CUT THE WORD. At a fixed 36px
-                // "Dashboard" truncated to "Dasbo…" — a screen title that
-                // cannot say its own name. `titleSize` lowers the ceiling on a
-                // compact phone; this pair handles the case no breakpoint can
-                // know about, which is that "Tableau de bord" needs room
-                // "Dashboard" does not. It was also the original fix for a
-                // separate bug: at a larger Dynamic Type setting this wrapped
-                // MID-WORD ("Dashboar"/"d").
-                adjustsFontSizeToFit
-                minimumFontScale={HEADER_TITLE_MIN_SCALE}
-            >
-                {t('feed.dashboardTitle')}
-            </Heading>
-        </View>
-    );
-    const narrationSlot = (
-        <View
-            key="narration"
-            pointerEvents="none"
-            className="flex-1 min-w-0"
-            testID="dashboard-header-narration"
-        >
-            <HeaderNarrationLine
-                stage={stage}
-                onDevice={isDeviceProcessing}
-                testID="dashboard-narration-line"
-            />
-        </View>
-    );
+    // The Feed still puts its line beside its title: its title is 82pt and it
+    // has no bell, so it has 245pt there. Do not unify without re-measuring.
+    const { fontScale } = useWindowDimensions();
+    const statusRowLines = fontScale > LARGE_TEXT_SCALE ? 3 : 1;
+    const statusRowStyle =
+        statusRowLines === 1
+            ? { height: HEADER_NARRATION_METRICS.lineHeight }
+            : { minHeight: HEADER_NARRATION_METRICS.lineHeight };
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.
         <Box className="flex-1" testID="dashboard-screen">
@@ -719,59 +712,96 @@ const MeraNewsScreen: React.FC = () => {
                                 style={{ height: titleRowHeight }}
                                 testID="dashboard-header-title-row"
                             >
-                                {/* A KEYED ARRAY, not a ternary of fragments,
-                                    and that is the load-bearing part. React
-                                    reconciles an array by key, so the mark
-                                    moving from index 1 to index 0 is a MOVE.
-                                    With a ternary the child at index 0 changes
-                                    type, `FeedStatusIndicator` unmounts and
-                                    remounts twice a run, the MeraLogo sweep
-                                    restarts mid-sync and accessibility focus is
-                                    dropped. The mark leads while narrating,
-                                    which is the whole point of moving it. */}
-                                {narrating
-                                    ? [statusMark, narrationSlot]
-                                    : [titleSlot, statusMark]}
-                                {/* Trailing slack. It used to pin the importance
-                                    chip hard right; the chip is gone and the
-                                    spacer stays, because it is what keeps the
-                                    status mark tight against the title instead
-                                    of letting the row space itself out.
-                                    `flex-basis: 0` means it adds nothing to the
-                                    row's natural width, so a long title still
-                                    gets the whole row and truncates rather than
-                                    being squeezed by a spacer.
-                                    `pointerEvents="none"` per the header rule
-                                    above: a full-height band that is not a
-                                    control must never swallow a refresh pan. */}
+                                <View pointerEvents="none" className="flex-shrink min-w-0">
+                                    <Heading
+                                        size={titleSize}
+                                        className="text-white"
+                                        numberOfLines={1}
+                                        // SHRINK THE TYPE, DO NOT CUT THE WORD. At a
+                                        // fixed 36px "Dashboard" truncated to "Dasbo…".
+                                        // `titleSize` lowers the ceiling on a compact
+                                        // phone; this pair handles "Tableau de bord"
+                                        // needing room "Dashboard" does not, and a
+                                        // larger Dynamic Type wrapping MID-WORD.
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={HEADER_TITLE_MIN_SCALE}
+                                        testID="dashboard-title"
+                                    >
+                                        {t('feed.dashboardTitle')}
+                                    </Heading>
+                                </View>
+                                <FeedStatusIndicator
+                                    mode={statusMode}
+                                    expanded={statusExpanded}
+                                    onPress={toggleStatus}
+                                    testID="dashboard-status-indicator"
+                                />
                                 <View pointerEvents="none" className="flex-1" />
                             </HStack>
-                            {lastProcessedLabel && (
-                                <Pressable
-                                    onPress={openStatusSheet}
-                                    hitSlop={8}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={t('feedStatus.openA11y')}
-                                    testID="dashboard-open-status-sheet"
-                                >
-                                    <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
-                                </Pressable>
-                            )}
                         </VStack>
-                        <HStack className="items-center flex-shrink-0" space="sm" pointerEvents="box-none">
+                        <HStack className="items-center flex-shrink-0" space="md" pointerEvents="box-none">
+                            <TabExplainerButton tab="forYou" testID="dashboard-explainer-open" />
                             <NotificationBellButton />
                         </HStack>
                     </HStack>
 
+                    {/* The status row: full width, its own line, pinned. While a
+                        sync runs it narrates; otherwise it says when new
+                        articles last arrived, and a tap opens the status sheet.
+                        Never "Updated" while a run is going. */}
+                    <View
+                        pointerEvents="box-none"
+                        className="mb-2"
+                        style={statusRowStyle}
+                        testID="dashboard-status-row"
+                    >
+                        {narrating ? (
+                            <View pointerEvents="none" testID="dashboard-header-narration">
+                                <HeaderNarrationLine
+                                    stage={stage}
+                                    onDevice={isDeviceProcessing}
+                                    layout="row"
+                                    maxLines={statusRowLines}
+                                    testID="dashboard-narration-line"
+                                />
+                            </View>
+                        ) : updatedLabel ? (
+                            <Pressable
+                                onPress={openStatusSheet}
+                                hitSlop={8}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('feedStatus.openA11y')}
+                                testID="dashboard-open-status-sheet"
+                            >
+                                <Text
+                                    numberOfLines={statusRowLines}
+                                    style={{
+                                        color: NARRATION_COLOR,
+                                        fontSize: HEADER_NARRATION_METRICS.fontSize,
+                                        lineHeight: HEADER_NARRATION_METRICS.lineHeight,
+                                    }}
+                                    testID="dashboard-updated-label"
+                                >
+                                    {updatedLabel}
+                                </Text>
+                            </Pressable>
+                        ) : null}
+                    </View>
+
                     {/* Stats sentence — decorative text, never tapped: fully
                         transparent to touches so a pull can start on it. */}
-                    <View pointerEvents="none">
-                        {/* Brighter + a little heavier than the muted body step:
+                    {activeSubTab === 'feed' && (
+                    <View pointerEvents="none" testID="dashboard-stats-sentence">
+                        {/* Overview only: on Saved, Visited, Stories and Fact
+                            checks these numbers describe a different list and
+                            cost three lines of header (M3).
+                            Brighter + a little heavier than the muted body step:
                             this line sits on glass with content moving under it,
                             where typography-400 was barely legible. Only colour
                             and weight change — `leading-6 mb-2` is preserved. */}
                         <FeedStatsSentence className="text-typography-700 font-medium mb-2" />
                     </View>
+                    )}
 
                     {/* Sub-tab pills. box-none: the ROW is a full-width band and
                         must not swallow a pull — only the pills themselves take
