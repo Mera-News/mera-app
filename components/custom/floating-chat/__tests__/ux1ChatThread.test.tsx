@@ -226,3 +226,17 @@ describe('F7 ruling: a waiting card is brought back into view after a typed repl
     expect(mockScrollToIndex).not.toHaveBeenCalled();
   });
 });
+
+// ux1 C2 (batch 5): the reply takes the wait row's slot without moving the
+// thread, so a streaming reply holds the wait row's two-line height.
+describe('the reply takes over the wait row in place', () => {
+  it('a streaming reply holds at least the wait row height', () => {
+    const { getByTestId } = render(<ChatThread {...props({ items: [reply('a1', true)] })} />);
+    expect(getByTestId('mera-reply-slot').props.style).toEqual({ minHeight: 42 });
+  });
+
+  it('a finished reply keeps its own height', () => {
+    const { getByTestId } = render(<ChatThread {...props({ items: [reply('a1')] })} />);
+    expect(getByTestId('mera-reply-slot').props.style).toBeUndefined();
+  });
+});

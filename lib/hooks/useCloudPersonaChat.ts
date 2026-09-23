@@ -413,9 +413,10 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
               // to do here but avoid falling into the content branch.
               if (d.reasoning !== undefined && acc === '') return;
               if (d.content) {
-                // Real text. The bubble is the liveness signal from here, so
-                // the line hands over rather than competing with it.
-                phaseSinkRef.current?.(null);
+                // The ACKNOWLEDGEMENT. It is not the answer, so the wait line
+                // below it keeps running until the answer lands; releasing it
+                // here emptied the wait bubble under the acknowledgement
+                // (ux1 C2). The turn's own finally releases it.
                 acc += d.content;
                 schedule();
               }
@@ -570,6 +571,8 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         // a bubble that lags the accumulated text.
         let renderQueued = false;
         let renderArmed = true;
+        // Hands the wait line over. Idempotent in the sink.
+        const releaseWaitLine = () => phaseSinkRef.current?.(null);
         const renderContent = () => {
           renderQueued = false;
           if (!renderArmed) return; // the stream failed; the error bubble owns the slot now
@@ -577,6 +580,12 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           // landed after the stream re-wrapped a finished bubble by a line
           // (ux1 C2, a 21pt shift after the reply had settled).
           const shown = replaceClauseDashes(accContent);
+          // THE HANDOVER, in the same tick as the first visible text. It used
+          // to happen on the delta, a frame before this render, so the wait
+          // bubble emptied and the thread dropped 42pt, then rose again when
+          // the reply mounted (ux1 C2). Now the reply takes the wait row's
+          // slot in one commit.
+          if (shown.length > 0) releaseWaitLine();
           useCloudChatStore.getState().setMessages((prev) =>
             prev.map((m) => m.id === targetId ? { ...m, content: shown } : m),
           );
@@ -589,9 +598,6 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const flushContentRender = () => {
           if (renderQueued) renderContent();
         };
-        // Hand the wait line over the moment anything visible arrives.
-        // Idempotent in the sink, so calling it per delta costs nothing.
-        const releaseWaitLine = () => phaseSinkRef.current?.(null);
 
         let eventCount = 0;
         try {
@@ -610,11 +616,11 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
             // route, which fires on every call including the many that emit no
             // reasoning at all.
           } else if (event.type === 'text-delta') {
-            releaseWaitLine();
             accContent += event.delta;
             if (!suppressText) scheduleContentRender();
           } else if (event.type === 'tool-call-delta') {
-            releaseWaitLine();
+            // No handover here: the wait row stays until text lands or the
+            // steps box takes over, never an empty bubble in between.
             // The model may send multiple tool calls with the same index (or all index 0).
             // Detect collision: if a NEW name arrives at an existing index, assign a new key.
             const existingAcc = toolCallAccumulators.get(event.index);

@@ -44,7 +44,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
-import { chatPhaseDef, FADE_MS, OPENING_PHASE_ID, PHASE_CYCLE_MS } from './chat-phases';
+import {
+  chatPhaseDef,
+  FADE_MS,
+  OPENING_PHASE_ID,
+  PHASE_CYCLE_MS,
+  WAIT_LINE_HEIGHT,
+  WAIT_ROW_TEXT_HEIGHT,
+} from './chat-phases';
 
 export interface ChatPhaseLineProps {
   testID?: string;
@@ -129,10 +136,8 @@ export const ChatPhaseLine: React.FC<ChatPhaseLineProps> = ({ testID = 'chat-pha
   );
 };
 
-const LINE_HEIGHT = 21;
-
 const styles = StyleSheet.create({
-  line: { color: 'rgb(190, 190, 190)', fontSize: 15, lineHeight: LINE_HEIGHT, minHeight: LINE_HEIGHT * 2 },
+  line: { color: 'rgb(190, 190, 190)', fontSize: 15, lineHeight: WAIT_LINE_HEIGHT, minHeight: WAIT_ROW_TEXT_HEIGHT },
 });
 
 export default ChatPhaseLine;

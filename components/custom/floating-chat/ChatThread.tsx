@@ -6,6 +6,7 @@
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import MeraStreamAvatar, { AVATAR_GUTTER_WIDTH } from '@/components/custom/chat/MeraStreamAvatar';
 import ChatPhaseLine from '@/components/custom/chat/ChatPhaseLine';
+import { WAIT_ROW_TEXT_HEIGHT } from '@/components/custom/chat/chat-phases';
 import WaitBubble from '@/components/custom/chat/WaitBubble';
 import { Text } from '@/components/ui/text';
 import {
@@ -184,7 +185,15 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   <View style={styles.avatarSpacer} testID="mera-avatar-spacer" />
                 )}
                 <MessageContent role="assistant">
-                  <MessageResponse>{message.content}</MessageResponse>
+                  {/* THE SLOT. While streaming the reply holds at least the
+                      wait row's height, so it takes the row's place at the
+                      first token without moving the thread (ux1 C2). */}
+                  <View
+                    testID="mera-reply-slot"
+                    style={item.streaming === true ? styles.replySlotStreaming : undefined}
+                  >
+                    <MessageResponse>{message.content}</MessageResponse>
+                  </View>
                 </MessageContent>
               </View>
             </Message>
@@ -469,6 +478,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 6,
     alignItems: 'center',
+  },
+  replySlotStreaming: {
+    minHeight: WAIT_ROW_TEXT_HEIGHT,
   },
   avatarSpacer: {
     width: AVATAR_GUTTER_WIDTH,

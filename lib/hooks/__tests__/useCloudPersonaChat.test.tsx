@@ -240,7 +240,7 @@ describe('useCloudPersonaChat', () => {
       expect(lastSecuring).toBeLessThan(firstThinking);
     });
 
-    it('hands the line over on the first visible delta, and leaves it released', async () => {
+    it('hands the line over when the first text is RENDERED, and leaves it released', async () => {
       let release!: () => void;
       const gate = new Promise<void>((r) => { release = r; });
       const seen: string[] = [];
@@ -272,11 +272,13 @@ describe('useCloudPersonaChat', () => {
         },
         { timeout: 3000 },
       );
-      // A phase while the wait ran, released the moment the first delta landed.
-      // The generator runs a SECOND time for the hidden forced-extraction pass,
-      // which has no turn of its own and must never re-narrate: every later
-      // sample stays released.
-      expect(seen.slice(0, 2)).toEqual(['phase', 'released']);
+      // A phase while the wait ran, and STILL a phase right after the delta
+      // arrives: the handover waits for the render that shows the text, so the
+      // wait row never empties a frame before the reply takes its slot
+      // (ux1 C2). The generator runs a SECOND time for the hidden
+      // forced-extraction pass, which must never re-narrate: every later
+      // sample is released.
+      expect(seen.slice(0, 2)).toEqual(['phase', 'phase']);
       expect(seen.slice(2).every((v) => v === 'released')).toBe(true);
       await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
       expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' });
