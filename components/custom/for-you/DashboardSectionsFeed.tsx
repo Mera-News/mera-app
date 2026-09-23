@@ -197,6 +197,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
       // the bar; its denominator line is the content, so it gets no header
       // affordance and no "View all" row pointing at an empty list.
       const canOpen = total > 0;
+      const showViewAll = total > SECTION_PREVIEW_COUNT;
       return (
         // ONE gradient panel per section, wrapping header + cards + closing
         // pill, so the pastel ink groups the whole section and the next section
@@ -217,7 +218,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
           {headline && (
             <SectionDenominatorLine read={row.headlineReadCount ?? 0} shown={total} />
           )}
-          <Box className="px-2">
+          <Box className={showViewAll ? 'px-2' : 'px-2 pb-2'}>
             {preview.map((group) => (
               <ArticleSuggestionCompactCard
                 key={group.data._id}
@@ -228,9 +229,13 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
               />
             ))}
           </Box>
-          {/* Closing row: plain "View all N articles" + chevron in the section
-              title's type style — NOT a second pill. */}
-          {canOpen && <SectionViewAllText total={total} onPress={open} />}
+          {/* Closing row, only when the section holds MORE than the preview
+              shows. "View all 1 article" under the one article it named was a
+              larger, bolder line than the headline itself and duplicated the
+              header's open button (M4). The header button still opens every
+              section; the small bottom padding above keeps a short section
+              from looking cut off. */}
+          {showViewAll && <SectionViewAllText total={total} onPress={open} />}
         </SectionGradientPanel>
       );
     },
