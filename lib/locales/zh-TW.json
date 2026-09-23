@@ -995,8 +995,7 @@
     "trialEndsOn": "您的免費試用期於 {{date}} 結束",
     "trialNoPaymentDetails": "檔案中沒有任何付款詳細資訊，所以沒有任何項目可取消。試用結束時，除非您選擇訂閱，否則您將轉換為免費方案。",
     "starterFreeTitle": "您正在使用 Starter，免費",
-    "starterFreeBody": "我們希望您看到 Mera 是做什麼的，所以每個帳號都免費包含完整的 Starter 方案。也就是每天 250 篇文章、您的所有興趣、聊天、事實查核和已追蹤的報導。",
-    "manageBadge": "管理"
+    "starterFreeBody": "我們希望您看到 Mera 是做什麼的，所以每個帳號都免費包含完整的 Starter 方案。也就是每天 250 篇文章、您的所有興趣、聊天、事實查核和已追蹤的報導。"
   },
   "tabs": {
     "deck": "資訊流",

@@ -995,8 +995,7 @@
     "trialEndsOn": "Deine kostenlose Testversion endet {{date}}",
     "trialNoPaymentDetails": "Es sind keine Zahlungsdaten hinterlegt, daher gibt es nichts zu kündigen. Wenn die Testversion endet, wechselst du zum kostenlosen Plan, es sei denn, du entschließt dich zu abonnieren.",
     "starterFreeTitle": "Du bist auf Starter, kostenlos",
-    "starterFreeBody": "Wir möchten, dass du siehst, wofür Mera da ist. Deshalb enthält jedes Konto den vollen Starter-Plan kostenlos: 250 Artikel pro Tag, alle deine Interessen, Chat, Faktenchecks und verfolgte Geschichten.",
-    "manageBadge": "Verwalten"
+    "starterFreeBody": "Wir möchten, dass du siehst, wofür Mera da ist. Deshalb enthält jedes Konto den vollen Starter-Plan kostenlos: 250 Artikel pro Tag, alle deine Interessen, Chat, Faktenchecks und verfolgte Geschichten."
   },
   "tabs": {
     "deck": "Nachrichten",

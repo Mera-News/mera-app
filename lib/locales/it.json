@@ -995,8 +995,7 @@
     "trialEndsOn": "La tua prova gratuita termina {{date}}",
     "trialNoPaymentDetails": "Non ci sono dettagli di pagamento registrati, quindi non c'è nulla da annullare. Quando la prova termina, passerai al piano gratuito a meno che tu non scelga di sottoscrivere.",
     "starterFreeTitle": "Sei su Starter, gratis",
-    "starterFreeBody": "Vogliamo che tu veda a cosa serve Mera, quindi ogni account include il piano Starter completo senza costi. Sono 250 articoli al giorno, tutti i tuoi interessi, chat, fact check e storie seguite.",
-    "manageBadge": "Gestisci"
+    "starterFreeBody": "Vogliamo che tu veda a cosa serve Mera, quindi ogni account include il piano Starter completo senza costi. Sono 250 articoli al giorno, tutti i tuoi interessi, chat, fact check e storie seguite."
   },
   "tabs": {
     "deck": "Notizie",

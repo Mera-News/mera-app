@@ -995,8 +995,7 @@
     "trialEndsOn": "Tu prueba gratuita termina {{date}}",
     "trialNoPaymentDetails": "No hay detalles de pago en el archivo, así que no hay nada que cancelar. Cuando termine la prueba, pasarás al plan gratuito a menos que elijas suscribirte.",
     "starterFreeTitle": "Estás en Starter, gratis",
-    "starterFreeBody": "Queremos que veas para qué sirve Mera, así que todas las cuentas incluyen el plan Starter completo sin coste. Son 250 artículos al día, todos tus intereses, chat, verificaciones e historias seguidas.",
-    "manageBadge": "Gestionar"
+    "starterFreeBody": "Queremos que veas para qué sirve Mera, así que todas las cuentas incluyen el plan Starter completo sin coste. Son 250 artículos al día, todos tus intereses, chat, verificaciones e historias seguidas."
   },
   "tabs": {
     "deck": "Noticias",

@@ -995,8 +995,7 @@
     "trialEndsOn": "Dùng thử miễn phí của bạn kết thúc {{date}}",
     "trialNoPaymentDetails": "Không có chi tiết thanh toán nào trong tệp, vì vậy không có gì để hủy. Khi dùng thử kết thúc, bạn sẽ chuyển sang gói miễn phí trừ khi bạn chọn đăng ký.",
     "starterFreeTitle": "Bạn đang dùng Starter, miễn phí",
-    "starterFreeBody": "Chúng tôi muốn bạn thấy Mera dùng để làm gì, nên mọi tài khoản đều có trọn gói Starter miễn phí. Đó là 250 bài mỗi ngày, tất cả mối quan tâm của bạn, trò chuyện, kiểm chứng và câu chuyện đang theo dõi.",
-    "manageBadge": "Quản lý"
+    "starterFreeBody": "Chúng tôi muốn bạn thấy Mera dùng để làm gì, nên mọi tài khoản đều có trọn gói Starter miễn phí. Đó là 250 bài mỗi ngày, tất cả mối quan tâm của bạn, trò chuyện, kiểm chứng và câu chuyện đang theo dõi."
   },
   "tabs": {
     "deck": "Bảng tin",

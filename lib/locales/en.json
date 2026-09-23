@@ -146,8 +146,7 @@
     "trialEndsOn": "Your free trial ends {{date}}",
     "trialNoPaymentDetails": "No payment details are on file, so there's nothing to cancel. When the trial ends, you'll move to the free plan unless you choose to subscribe.",
     "starterFreeTitle": "You're on Starter, free",
-    "starterFreeBody": "We want you to see what Mera is for, so every account includes the full Starter plan at no cost. That is 250 articles a day, all your interests, chat, fact checks and followed stories.",
-    "manageBadge": "Manage"
+    "starterFreeBody": "We want you to see what Mera is for, so every account includes the full Starter plan at no cost. That is 250 articles a day, all your interests, chat, fact checks and followed stories."
   },
   "feed": {
     "updatedAt": "Updated {{time}}",

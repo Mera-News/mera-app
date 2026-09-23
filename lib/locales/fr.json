@@ -1001,8 +1001,7 @@
     "trialEndsOn": "Votre essai gratuit se termine {{date}}",
     "trialNoPaymentDetails": "Aucun détail de paiement n'est enregistré, donc il n'y a rien à annuler. Lorsque l'essai se termine, vous passerez au plan gratuit sauf si vous choisissez de vous abonner.",
     "starterFreeTitle": "Vous êtes sur Starter, gratuitement",
-    "starterFreeBody": "Nous voulons que vous voyiez à quoi sert Mera, alors chaque compte inclut le forfait Starter complet sans frais. Cela fait 250 articles par jour, tous vos centres d'intérêt, le chat, les vérifications et les histoires suivies.",
-    "manageBadge": "Gérer"
+    "starterFreeBody": "Nous voulons que vous voyiez à quoi sert Mera, alors chaque compte inclut le forfait Starter complet sans frais. Cela fait 250 articles par jour, tous vos centres d'intérêt, le chat, les vérifications et les histoires suivies."
   },
   "tabs": {
     "deck": "Fil d'actu",

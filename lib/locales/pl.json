@@ -1009,8 +1009,7 @@
     "trialEndsOn": "Twoja bezpłatna próba kończy się {{date}}",
     "trialNoPaymentDetails": "Brak danych karty płatniczej w systemie, więc nie ma nic do anulowania. Po zakończeniu próby przejdziesz do planu bezpłatnego, chyba że zdecydujesz się zasubskrybować.",
     "starterFreeTitle": "Masz plan Starter, za darmo",
-    "starterFreeBody": "Chcemy, żebyś zobaczył, do czego służy Mera, dlatego każde konto zawiera pełny plan Starter bez opłat. To 250 artykułów dziennie, wszystkie twoje zainteresowania, czat, sprawdzanie faktów i śledzone historie.",
-    "manageBadge": "Zarządzaj"
+    "starterFreeBody": "Chcemy, żebyś zobaczył, do czego służy Mera, dlatego każde konto zawiera pełny plan Starter bez opłat. To 250 artykułów dziennie, wszystkie twoje zainteresowania, czat, sprawdzanie faktów i śledzone historie."
   },
   "tabs": {
     "deck": "Strumień",

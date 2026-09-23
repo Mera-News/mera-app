@@ -995,8 +995,7 @@
     "trialEndsOn": "무료 체험이 {{date}}에 종료됩니다",
     "trialNoPaymentDetails": "등록된 결제 수단이 없으므로 취소할 것이 없습니다. 체험이 끝나면 구독하지 않는 한 무료 플랜으로 전환됩니다.",
     "starterFreeTitle": "Starter를 무료로 이용 중입니다",
-    "starterFreeBody": "Mera가 무엇을 위한 것인지 직접 보시길 바라기에, 모든 계정에 Starter 플랜 전체가 무료로 포함됩니다. 하루 250개 기사, 모든 관심사, 채팅, 팩트체크, 팔로우 중인 스토리를 사용할 수 있습니다.",
-    "manageBadge": "관리"
+    "starterFreeBody": "Mera가 무엇을 위한 것인지 직접 보시길 바라기에, 모든 계정에 Starter 플랜 전체가 무료로 포함됩니다. 하루 250개 기사, 모든 관심사, 채팅, 팩트체크, 팔로우 중인 스토리를 사용할 수 있습니다."
   },
   "tabs": {
     "deck": "피드",

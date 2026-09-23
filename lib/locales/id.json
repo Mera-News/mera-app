@@ -995,8 +995,7 @@
     "trialEndsOn": "Uji coba gratis Anda berakhir {{date}}",
     "trialNoPaymentDetails": "Tidak ada detail pembayaran dalam file, jadi tidak ada yang perlu dibatalkan. Saat uji coba berakhir, Anda akan beralih ke paket gratis kecuali Anda memilih untuk berlangganan.",
     "starterFreeTitle": "Anda memakai Starter, gratis",
-    "starterFreeBody": "Kami ingin Anda melihat untuk apa Mera ada, jadi setiap akun mendapat paket Starter lengkap tanpa biaya. Itu berarti 250 artikel sehari, semua minat Anda, chat, cek fakta, dan cerita yang diikuti.",
-    "manageBadge": "Kelola"
+    "starterFreeBody": "Kami ingin Anda melihat untuk apa Mera ada, jadi setiap akun mendapat paket Starter lengkap tanpa biaya. Itu berarti 250 artikel sehari, semua minat Anda, chat, cek fakta, dan cerita yang diikuti."
   },
   "tabs": {
     "deck": "Umpan",

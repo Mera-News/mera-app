@@ -995,8 +995,7 @@
     "trialEndsOn": "Je gratis proefperiode eindigt op {{date}}",
     "trialNoPaymentDetails": "Er zijn geen betalingsgegevens opgeslagen, dus er is niets om te annuleren. Als de proefperiode afloopt, ga je naar het gratis plan tenzij je je abonneert.",
     "starterFreeTitle": "Je zit op Starter, gratis",
-    "starterFreeBody": "We willen dat je ziet waar Mera voor is, dus elk account bevat het volledige Starter-plan zonder kosten. Dat is 250 artikelen per dag, al je interesses, chat, factchecks en gevolgde verhalen.",
-    "manageBadge": "Beheren"
+    "starterFreeBody": "We willen dat je ziet waar Mera voor is, dus elk account bevat het volledige Starter-plan zonder kosten. Dat is 250 artikelen per dag, al je interesses, chat, factchecks en gevolgde verhalen."
   },
   "tabs": {
     "deck": "Feed",
