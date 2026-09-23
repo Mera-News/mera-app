@@ -21,7 +21,6 @@ import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { Linking } from 'react-native';
 import { isRevenueCatConfigured } from '@/lib/revenuecat';
 import { useSupportAction } from '@/lib/intercom';
 import { resolveAccountEmailView } from '@/lib/subscription/email-capture';

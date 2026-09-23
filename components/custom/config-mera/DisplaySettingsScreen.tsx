@@ -22,6 +22,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 
 /**
  * The "Static background" switch is HIDDEN on Android.
@@ -113,20 +114,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
 
       {/* No opaque fill: the backdrop above is the page background. */}
       <Box className="flex-1" style={{ paddingTop: insets.top }}>
-        <HStack className="items-center px-5 py-3" space="sm">
-          <Pressable
-            testID="display-back"
-            onPress={onBack}
-            accessibilityRole="button"
-            hitSlop={12}
-            className="p-1"
-          >
-            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-          </Pressable>
-          <Text size="lg" className="text-white font-semibold">
-            {t('display.screenTitle')}
-          </Text>
-        </HStack>
+        <DrillDownHeader title={t('display.screenTitle')} onBack={onBack} backTestID="display-back" />
 
         <ScrollView
           className="flex-1"

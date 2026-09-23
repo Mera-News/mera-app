@@ -20,6 +20,7 @@ import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, Linking, Modal, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 
 interface LanguageSettingsScreenProps {
     onBack?: () => void;
@@ -178,38 +179,16 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                {/* Floating Back Button */}
-                {onBack && (
-                    <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                        <Pressable
-                            testID="language-back"
-                            onPress={handleBack}
-                            disabled={busy}
-                            // Announced as disabled, not merely dimmed. The a11y
-                            // tree reported `enabled: true, hittable: false`
-                            // while probing, so VoiceOver offered a button that
-                            // silently did nothing — the sighted user sees the
-                            // 40% opacity, a screen-reader user got no signal at
-                            // all. `accessibilityState` is what carries it;
-                            // `disabled` alone does not on a Pressable.
-                            accessibilityState={{ disabled: busy }}
-                            className={`bg-gray-900 rounded-full p-3 shadow-hard-2 ${busy ? 'opacity-40' : ''}`}
-                        >
-                            <MaterialIcons
-                                name="arrow-back"
-                                size={24}
-                                color={busy ? '#6b7280' : '#ffffff'}
-                            />
-                        </Pressable>
-                    </Box>
-                )}
-
-                {/* Header */}
-                <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                    <Text className="text-xl font-semibold text-white text-center">
-                        {t('language.title')}
-                    </Text>
-                </VStack>
+                <Box style={{ paddingTop: insets.top }}>
+                    <DrillDownHeader
+                        title={t('language.title')}
+                        onBack={onBack ? handleBack : undefined}
+                        backTestID="language-back"
+                        // Locked while a switch runs: Apple's system sheet
+                        // must not be left half-done.
+                        backDisabled={busy}
+                    />
+                </Box>
 
                 <ScrollView className="flex-1 pt-1">
                     <VStack className="px-5" space="xl">

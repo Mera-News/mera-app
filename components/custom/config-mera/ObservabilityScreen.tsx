@@ -61,6 +61,7 @@ import {
     tableLabel,
     IMAGE_RESOLUTION_LABELS,
 } from './observability-labels';
+import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -779,11 +780,10 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
             {/* No opaque fill: the backdrop above is the page background. */}
             <Box className="flex-1" style={{ paddingTop: insets.top }}>
 
-            <HStack className="px-4 py-3 items-center justify-between">
-                <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
-                    <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
-                </Pressable>
-                <Text className="text-white font-semibold text-base">{t('observability.title')}</Text>
+            <DrillDownHeader
+                title={t('observability.title')}
+                onBack={onBack}
+                rightAction={
                 <HStack space="sm" className="items-center">
                     <Pressable
                         onPress={() => void refresh()}
@@ -809,7 +809,8 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                         />
                     </Pressable>
                 </HStack>
-            </HStack>
+                }
+            />
 
             <ScrollView
                 className="flex-1"
