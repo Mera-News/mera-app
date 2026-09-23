@@ -356,6 +356,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         scrollViewRef.current?.scrollToEnd(true);
     }, []);
 
+    // The id this screen already purged, so a re-run of the load effect (it
+    // also depends on `storeSuggestion` and `t`) cannot delete twice.
+    const purgedIdRef = useRef<string | null>(null);
+
     // Hydrate the suggestion from local DB if it wasn't already in the store
     // (e.g. deep-link from notification before store hydration completes).
     useEffect(() => {
@@ -373,6 +377,19 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 if (cancelled) return;
                 if (!row) {
                     setError(t('articleDetail.storyUnavailable'));
+                    // CONFIRMED gone: neither the feed table nor the saved
+                    // table holds it, so drop the stale card from the feed.
+                    // This is the ONLY place that deletes. A read that THREW
+                    // (the `.catch` below) proves nothing about the row, and
+                    // deleting there turned one transient DB error into a card
+                    // lost for good. It used to run in the render branch, on
+                    // every re-render while the error showed; here it runs once
+                    // per load. Idempotent either way.
+                    if (purgedIdRef.current !== articleSuggestionId) {
+                        purgedIdRef.current = articleSuggestionId;
+                        deleteSuggestionByServerId(articleSuggestionId).catch(() => {});
+                        useForYouStore.getState().removeSuggestion(articleSuggestionId);
+                    }
                 } else {
                     setSuggestion(row);
                 }
@@ -561,11 +578,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     }
 
     if (error || !suggestion) {
-        // If the local row vanished, drop the stale card from the feed.
-        if (!suggestion) {
-            deleteSuggestionByServerId(articleSuggestionId).catch(() => {});
-            useForYouStore.getState().removeSuggestion(articleSuggestionId);
-        }
+        // No deletion here: render must stay pure, and only the load effect's
+        // confirmed not-found branch may delete (see there).
         return (
             <Box className="flex-1 items-center justify-center p-5">
                 {/* Page background. Must be the FIRST child so it paints behind
