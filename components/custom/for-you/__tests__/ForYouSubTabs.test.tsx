@@ -62,7 +62,7 @@ jest.mock('@expo/vector-icons', () => {
     return { MaterialIcons: (props: any) => <View {...props} /> };
 });
 
-import ForYouSubTabs from '../ForYouSubTabs';
+import ForYouSubTabs, { pillEdgeFades } from '../ForYouSubTabs';
 
 describe('ForYouSubTabs', () => {
     beforeEach(() => {
@@ -167,3 +167,40 @@ describe('ForYouSubTabs', () => {
     });
 });
 
+
+describe('ForYouSubTabs: every pill is reachable and announced (F19)', () => {
+    it('shows a right fade while pills sit past the right edge', () => {
+        // 402pt phone: ~362pt viewport, ~570pt of pills.
+        expect(pillEdgeFades(0, 362, 570)).toEqual({ left: false, right: true });
+    });
+
+    it('shows both fades mid-scroll and only the left one at the end', () => {
+        expect(pillEdgeFades(100, 362, 570)).toEqual({ left: true, right: true });
+        expect(pillEdgeFades(208, 362, 570)).toEqual({ left: true, right: false });
+    });
+
+    it('shows no fade when every pill fits', () => {
+        expect(pillEdgeFades(0, 400, 380)).toEqual({ left: false, right: false });
+    });
+
+    it('draws the right fade once the row has measured an overflow', () => {
+        const { getByTestId, queryByTestId } = render(
+            <ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />,
+        );
+        expect(queryByTestId('dashboard-subtabs-fade-right')).toBeNull();
+        const scroll = getByTestId('dashboard-subtabs-scroll');
+        fireEvent(scroll, 'layout', { nativeEvent: { layout: { width: 362, height: 40, x: 0, y: 0 } } });
+        fireEvent(scroll, 'contentSizeChange', 570, 40);
+        expect(getByTestId('dashboard-subtabs-fade-right')).toBeTruthy();
+        expect(queryByTestId('dashboard-subtabs-fade-left')).toBeNull();
+    });
+
+    it('exposes the pills as tabs inside a tab bar, with the selected one marked', () => {
+        const { getByTestId } = render(<ForYouSubTabs activeSubTab="saved" onSelect={jest.fn()} />);
+        expect(getByTestId('dashboard-subtabs-list').props.accessibilityRole).toBe('tabbar');
+        const saved = getByTestId('dashboard-tab-saved');
+        expect(saved.props.accessibilityRole).toBe('tab');
+        expect(saved.props.accessibilityState).toEqual({ selected: true });
+        expect(getByTestId('dashboard-tab-feed').props.accessibilityState).toEqual({ selected: false });
+    });
+});
