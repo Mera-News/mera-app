@@ -8,6 +8,9 @@
 //     statement is a single generic word → downweight it
 //   • stale_topic     — a low-weight active topic idle past the stale window
 //   • stale_fact      — a fact whose owned topics are ALL retired/suppressed
+//   • location_conflict — two or more of the user's OWN place facts name
+//     places that share nothing (moved from Amsterdam to Berlin, and an older
+//     "Expat from India living in Amsterdam" survived) → keep the newest
 //
 // No imports of lib/database, lib/stores, expo, react-native, or watermelondb —
 // the RN adapter (lib/database/services/hygiene-service.ts) maps live rows into
@@ -20,6 +23,8 @@
 // only code that reads them. If they ever need runtime tuning, promote them.
 
 import { ACTION_NAMES, type ActionName } from './action-names';
+import { RELATIONAL_SUBJECT_RE } from './topic-generation';
+import { isLocationAttribute } from '../prompts/questionnaire-data';
 import { findTopicOverlapAcrossFacts } from '../feed-select/fact-stats';
 
 // ── Thresholds (conservative by design) ─────────────────────────────────────
@@ -57,6 +62,9 @@ export interface HygieneFactInput {
   weight: number | null;
   /** Earliest-known creation time (epoch ms) — persona-age gating uses the min. */
   createdAtMs: number;
+  /** The fact's questionnaire key. Decides which facts state where the user
+   *  lives (location_conflict). Optional: absent keys simply never conflict. */
+  questionnaireAttribute?: string;
 }
 
 export interface HygieneTopicInput {
@@ -100,6 +108,7 @@ export type HygieneProposalKind =
   | 'too_broad_fact'
   | 'stale_topic'
   | 'stale_fact'
+  | 'location_conflict'
   // Topics that do not match the fact that owns them — the combo-prompt
   // contamination ("Amsterdam cricket festival music tech"). Grouped PER FACT,
   // not per topic: the fact statement is the only context that makes the
@@ -214,6 +223,23 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     factsBeingDeleted.add(loser);
   }
 
+  // 1b. location_conflict ---------------------------------------------------
+  for (const p of detectLocationConflicts(input.facts)) {
+    if (factsBeingDeleted.has(p.olderFactId) || factsBeingDeleted.has(p.newerFactId)) continue;
+    const id = `location_conflict:${pairKey(p.olderFactId, p.newerFactId)}`;
+    if (rejected.has(id)) continue;
+    proposals.push({
+      id,
+      kind: 'location_conflict',
+      summary: `"${shorten(p.olderStatement)}" and "${shorten(p.newerStatement)}" name different places. Keep the newer one?`,
+      targetFactIds: [p.olderFactId, p.newerFactId].sort(),
+      targetTopicIds: [],
+      ops: [{ type: 'delete_fact', factId: p.olderFactId }],
+      invertible: false,
+    });
+    factsBeingDeleted.add(p.olderFactId);
+  }
+
   // 2. stale_fact (all owned topics retired/suppressed) ---------------------
   for (const f of input.facts) {
     const owned = ownedTopicCount.get(f.id) ?? 0;
@@ -226,7 +252,7 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     proposals.push({
       id,
       kind: 'stale_fact',
-      summary: `"${shorten(f.statement)}" has no active topics left — remove it?`,
+      summary: `"${shorten(f.statement)}" has no active topics left. Remove it?`,
       targetFactIds: [f.id],
       targetTopicIds: [],
       ops: [{ type: 'delete_fact', factId: f.id }],
@@ -252,7 +278,7 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     proposals.push({
       id,
       kind: 'too_broad_fact',
-      summary: `"${shorten(f.statement)}" ${reason} — lower its weight so it pulls fewer off-topic stories?`,
+      summary: `"${shorten(f.statement)}" ${reason}. Lower its weight so it pulls fewer off-topic stories?`,
       targetFactIds: [f.id],
       targetTopicIds: [],
       ops: [
@@ -281,7 +307,7 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     proposals.push({
       id,
       kind: 'stale_topic',
-      summary: `Topic "${shorten(t.text)}" has been quiet for weeks — retire it?`,
+      summary: `Topic "${shorten(t.text)}" has been quiet for weeks. Retire it?`,
       targetFactIds: t.factId ? [t.factId] : [],
       targetTopicIds: [t.id],
       ops: [
@@ -308,9 +334,12 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
     const id = `incoherent_topics:${inc.factId}`;
     if (rejected.has(id)) continue;
 
-    // Only topics that still exist AND still belong to this fact.
+    // Only topics that still exist AND still belong to this fact, and never
+    // a topic at weight 0 or below: that is the user's own downrank (Profile
+    // "show less", see topic-service), and replacing it would silently undo
+    // what they asked for.
     const owned = new Set(
-      (activeTopicsByFact.get(inc.factId) ?? []).map((t) => t.id),
+      (activeTopicsByFact.get(inc.factId) ?? []).filter((t) => t.weight > 0).map((t) => t.id),
     );
     const topicIds = inc.topicIds.filter((tid) => owned.has(tid));
     if (topicIds.length === 0) continue;
@@ -331,7 +360,7 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
         (topicIds.length === 1
           ? `1 topic under "${shorten(fact.statement)}" doesn't match it`
           : `${topicIds.length} topics under "${shorten(fact.statement)}" don't match it`) +
-        ` (${preview}${more}) — replace ${topicIds.length === 1 ? 'it' : 'them'} with better ones?`,
+        ` (${preview}${more}). Replace ${topicIds.length === 1 ? 'it' : 'them'} with better ones?`,
       targetFactIds: [inc.factId],
       targetTopicIds: [...topicIds].sort(),
       // generate_replacements FIRST, then the retires. The executor holds both
@@ -352,10 +381,11 @@ export function analyzeHygiene(input: HygieneAnalyzeInput): HygieneProposal[] {
   // Deterministic order: by kind, then fingerprint.
   const kindOrder: Record<HygieneProposalKind, number> = {
     duplicate_facts: 0,
-    stale_fact: 1,
-    incoherent_topics: 2,
-    too_broad_fact: 3,
-    stale_topic: 4,
+    location_conflict: 1,
+    stale_fact: 2,
+    incoherent_topics: 3,
+    too_broad_fact: 4,
+    stale_topic: 5,
   };
   proposals.sort((a, b) => {
     const k = kindOrder[a.kind] - kindOrder[b.kind];
@@ -440,10 +470,94 @@ function detectDuplicateFacts(
     out.push({
       keepFactId: keep.id,
       deleteFactId: del.id,
-      summary: `"${shorten(del.statement)}" duplicates "${shorten(keep.statement)}" (${reason}) — remove the duplicate?`,
+      summary: `"${shorten(del.statement)}" duplicates "${shorten(keep.statement)}" (${reason}). Remove the duplicate?`,
     });
   }
   // Deterministic order by delete-target id.
   out.sort((x, y) => (x.deleteFactId < y.deleteFactId ? -1 : x.deleteFactId > y.deleteFactId ? 1 : 0));
+  return out;
+}
+
+// ── location conflict detector ──────────────────────────────────────────────
+
+/** The combined origin-plus-residence key some personas still carry. */
+const COMBINED_ORIGIN_RESIDENCE_KEY = 'background: origin and current residence';
+
+/** Place words introducing where the user lives, inside a fact statement. */
+const LIVES_IN_RE = /\b(?:lives?|living|residing|resides?|based)\s+in\s+/gi;
+
+/** Bloc and continent components shared by places that are still different. */
+const PLACE_STOP_COMPONENTS = new Set([
+  'europe', 'eu', 'european union', 'asia', 'africa', 'oceania',
+  'north america', 'south america', 'latin america', 'middle east',
+]);
+
+function isOwnPlaceFact(f: HygieneFactInput): boolean {
+  const attr = (f.questionnaireAttribute ?? '').trim();
+  if (!attr) return false;
+  const isPlaceKey =
+    isLocationAttribute(attr) || attr.toLowerCase().startsWith(COMBINED_ORIGIN_RESIDENCE_KEY);
+  // A relative's or partner's address is not where the USER lives.
+  return isPlaceKey && !RELATIONAL_SUBJECT_RE.test(f.statement);
+}
+
+/** The place a statement names: the text after the LAST "lives in" / "living
+ *  in", else the whole statement, split into normalized components. */
+export function placeComponents(statement: string): Set<string> {
+  let place = statement;
+  let m: RegExpExecArray | null;
+  LIVES_IN_RE.lastIndex = 0;
+  while ((m = LIVES_IN_RE.exec(statement)) !== null) {
+    place = statement.slice(m.index + m[0].length);
+  }
+  const parts = place
+    .split(',')
+    .map((p) => p.trim().toLowerCase().replace(/[.!?]+$/, ''))
+    .filter((p) => p.length > 0 && !PLACE_STOP_COMPONENTS.has(p));
+  return new Set(parts);
+}
+
+interface LocationConflict {
+  olderFactId: string;
+  newerFactId: string;
+  olderStatement: string;
+  newerStatement: string;
+}
+
+/**
+ * Pairs of the user's own place facts whose places share no component. The
+ * NEWEST place fact is taken as current (a move is recorded as a new fact);
+ * every other place fact that shares nothing with it is proposed for removal.
+ * Places that overlap ("Lives in Berlin" and "Expat from India living in
+ * Berlin, Germany") are the same place said twice and do not conflict.
+ */
+function detectLocationConflicts(facts: readonly HygieneFactInput[]): LocationConflict[] {
+  const places = facts.filter(isOwnPlaceFact);
+  if (places.length < 2) return [];
+  const newest = places.reduce((a, b) =>
+    b.createdAtMs > a.createdAtMs || (b.createdAtMs === a.createdAtMs && b.id > a.id) ? b : a,
+  );
+  const newestParts = placeComponents(newest.statement);
+  if (newestParts.size === 0) return [];
+  const out: LocationConflict[] = [];
+  for (const f of places) {
+    if (f.id === newest.id) continue;
+    const parts = placeComponents(f.statement);
+    if (parts.size === 0) continue;
+    let shared = false;
+    for (const p of parts) {
+      if (newestParts.has(p)) {
+        shared = true;
+        break;
+      }
+    }
+    if (shared) continue;
+    out.push({
+      olderFactId: f.id,
+      newerFactId: newest.id,
+      olderStatement: f.statement,
+      newerStatement: newest.statement,
+    });
+  }
   return out;
 }

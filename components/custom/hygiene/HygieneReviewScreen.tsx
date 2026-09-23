@@ -47,6 +47,8 @@ function iconForKind(kind: HygieneProposalKind): GlyphName {
             return 'delete-sweep';
         case 'incoherent_topics':
             return 'wrong-location';
+        case 'location_conflict':
+            return 'edit-location-alt';
         default:
             return 'cleaning-services';
     }
@@ -75,6 +77,8 @@ function effectPreview(kind: HygieneProposalKind, t: TFunction): string {
             return t('hygiene.effectIncoherentTopics', {
                 defaultValue: 'Replaces these topics with better ones for this interest.',
             });
+        case 'location_conflict':
+            return t('hygiene.effectLocationConflict');
         default:
             return '';
     }

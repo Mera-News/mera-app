@@ -291,6 +291,8 @@ export async function runHygieneSweep(opts?: {
     statement: f.statement,
     weight: weightById.get(f.id) ?? null,
     createdAtMs: createdById.get(f.id) ?? 0,
+    // Tells location_conflict which facts state where the user lives.
+    questionnaireAttribute: f.questionnaireAttribute,
   }));
 
   const rejected = await readRejected();

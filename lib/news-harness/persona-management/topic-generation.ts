@@ -287,7 +287,7 @@ const RESIDENCE_STATEMENT_RE =
  * every unanchored personal fact in the persona to, say, the user's parents'
  * town. Tier 3 is a text heuristic, so it needs this explicit veto.
  */
-const RELATIONAL_SUBJECT_RE =
+export const RELATIONAL_SUBJECT_RE =
   /\b(parents?|mother|father|mom|mum|dad|family|in-?laws?|sibling|brother|sister|partner|spouse|wife|husband|girlfriend|boyfriend|friends?|colleagues?|son|daughter|children|kids|grandparents?|grandmother|grandfather|relatives?|cousins?)\b/i;
 
 /** The minimum shape this resolver needs — deliberately not the full Fact. */
