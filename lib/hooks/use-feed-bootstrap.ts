@@ -19,7 +19,7 @@
 // stable across session flaps — the session id used to drop to undefined and
 // back, re-keying the guard mid-flight.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useIsFocused } from '@react-navigation/native';
 import { authClient } from '@/lib/auth-client';
@@ -61,6 +61,25 @@ export function useFeedBootstrap(): FeedBootstrapState {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // BLUR IS NOT UNMOUNT. The bootstrap effect below re-runs on focus, so its
+  // cleanup fires on every blur too. Gating the settle on that cleanup dropped
+  // setIsLoading(false) whenever the user switched tabs mid-fetch, and the
+  // refocus early return never cleared it: a spinner for the rest of the
+  // session. Local state is gated on MOUNT only; the store write is gated on
+  // the identity the run started with (a user switch, not a blur, is the
+  // reason to discard it). The ref holds the SAME resolved id the effect uses
+  // (local id, session as fallback): comparing against the local id alone
+  // would drop the write for a session-only user.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+  const resolvedUserIdRef = useRef<string | null>(null);
+  resolvedUserIdRef.current = localUserId ?? session?.user?.id ?? null;
+
   // Hydrate the opened-story set once on mount; refresh on every refocus so
   // opens recorded on other surfaces reflect here too.
   useEffect(() => {
@@ -85,7 +104,6 @@ export function useFeedBootstrap(): FeedBootstrapState {
     if (inFlightUserId === userId) return; // another mount is already bootstrapping this user
 
     inFlightUserId = userId;
-    let cancelled = false;
     setIsLoading(true);
     setErrorMessage(null);
 
@@ -101,7 +119,7 @@ export function useFeedBootstrap(): FeedBootstrapState {
         // persona, not a failure, and may set false.
         const localTopics = await getActive();
         const hasInterests = localTopics.length > 0;
-        if (!cancelled) {
+        if (resolvedUserIdRef.current === userId) {
           getForYouActions().setHasGeneratedTopics(hasInterests);
         }
       } catch (error: any) {
@@ -109,7 +127,7 @@ export function useFeedBootstrap(): FeedBootstrapState {
           tags: { hook: 'use-feed-bootstrap', method: 'bootstrap' },
           extra: { userId },
         });
-        if (!cancelled) {
+        if (mountedRef.current) {
           // Do NOT touch hasGeneratedTopics here — a transient network/auth
           // failure must not overwrite a healthy persisted flag.
           const isNetworkError =
@@ -121,13 +139,9 @@ export function useFeedBootstrap(): FeedBootstrapState {
         }
       } finally {
         inFlightUserId = null;
-        if (!cancelled) setIsLoading(false);
+        if (mountedRef.current) setIsLoading(false);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localUserId, session?.user?.id, isFocused, hasGeneratedTopics]);
 
