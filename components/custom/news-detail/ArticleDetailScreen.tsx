@@ -481,6 +481,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
      * returns false for a gated no-op, and a toast about work nobody started
      * would be a lie.
      */
+    const [factCheckAsked, setFactCheckAsked] = useState(false);
     const handleStartFactCheck = useCallback(() => {
         if (!article) return;
         const asked = requestArticleFactCheck({
@@ -489,17 +490,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             article,
         });
         if (!asked) return;
-        toast.show({
-            placement: 'top',
-            duration: 3000,
-            render: ({ id }: { id: string }) => (
-                <Toast nativeID={id} action="info" variant="solid">
-                    <ToastTitle>{t('factCheck.title')}</ToastTitle>
-                    <ToastDescription>{t('factCheck.checking')}</ToastDescription>
-                </Toast>
-            ),
-        });
-    }, [article, articleId, toast, t]);
+        setFactCheckAsked(true);
+    }, [article, articleId]);
 
     const handleToggleSave = useCallback(async () => {
         if (!article) return;
@@ -689,6 +681,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const articleUrl = secureUrlOrNull(rawArticleUrl);
     const insecureLink = !!rawArticleUrl && !articleUrl;
     const read = isOpenedId(article._id, stableClusterId, openedIds);
+    // Keyed on the ARTICLE id. `startedByReader` shows the working state at
+    // once for a check the reader just asked for (no progress delay, and no
+    // toast: the panel is right under the tick).
+    const factCheckPanel = (
+        <FactCheckPanel articleId={article._id ?? articleId} startedByReader={factCheckAsked} />
+    );
 
     return (
         <Box className="flex-1">
@@ -813,6 +811,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         displayedLanguage: titleDisplay?.language ?? null,
                                     }}
                                 />
+                                {/* F33: the fact check sits DIRECTLY under the action
+                                    row whose tick starts it, so its "Searching" line
+                                    and its result land where the reader asked, not
+                                    at the very end of the footer below the fold. */}
+                                {factCheckPanel}
                                 <ReadTranslateActions
                                     articleUrl={articleUrl}
                                     sourceLanguage={sourceLanguage}
@@ -829,14 +832,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                             </HStack>
                         ) : null}
 
-                        {/* Fact check sits OUTSIDE the URL branch: it is keyed
-                            on the article id, not the (possibly refused) local
-                            link, so it still renders for a row whose URL we
-                            won't open. Always mounted — a pure observer of the
-                            stored rows, it renders nothing itself when nobody
-                            has asked about this article, which is the common
-                            case. */}
-                        <FactCheckPanel articleId={article._id ?? articleId} />
+                        {/* No link to open: the panel still renders (it is keyed
+                            on the article id), just without the actions above it. */}
+                        {!articleUrl && factCheckPanel}
 
                         <SubscribedCoverageBlock articleId={article._id ?? articleId} />
 

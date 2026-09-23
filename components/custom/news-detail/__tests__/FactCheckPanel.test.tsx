@@ -199,6 +199,20 @@ describe('FactCheckPanel', () => {
         expect(queryByTestId('spinner')).toBeNull();
     });
 
+    // F33: the reader tapped the tick right above this panel. Show the working
+    // state at once (no delay, no toast), even before the local row lands.
+    it('shows the working state at once for a check the reader just started', () => {
+        hookState({ phase: 'processing', showProgress: false, rows: [storedRow({ status: 'processing', payload: null })] });
+        const { getByTestId } = render(<FactCheckPanel articleId="art-1" startedByReader />);
+        expect(getByTestId('fact-check-working')).toBeTruthy();
+    });
+
+    it('shows the working state even before the local row exists, when the reader started it', () => {
+        hookState({ phase: 'absent', rows: [] });
+        const { getByTestId } = render(<FactCheckPanel articleId="art-1" startedByReader />);
+        expect(getByTestId('fact-check-working')).toBeTruthy();
+    });
+
     it('shows the working state once the wait is perceptible', () => {
         hookState({ phase: 'processing', showProgress: true, rows: [storedRow({ status: 'processing', payload: null })] });
         const { getByTestId, getByText } = renderPanel();

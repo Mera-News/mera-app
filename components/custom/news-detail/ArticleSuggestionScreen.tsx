@@ -500,6 +500,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
      * fact-check from this alone"; the panel below then goes to `processing`
      * and to a result in place.
      */
+    const [factCheckAsked, setFactCheckAsked] = useState(false);
     const handleStartFactCheck = useCallback(() => {
         if (!suggestion) return;
         const asked = requestArticleFactCheck({
@@ -508,17 +509,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             suggestion,
         });
         if (!asked) return;
-        toast.show({
-            placement: 'top',
-            duration: 3000,
-            render: ({ id }: { id: string }) => (
-                <Toast nativeID={id} action="info" variant="solid">
-                    <ToastTitle>{t('factCheck.title')}</ToastTitle>
-                    <ToastDescription>{t('factCheck.checking')}</ToastDescription>
-                </Toast>
-            ),
-        });
-    }, [suggestion, toast, t]);
+        setFactCheckAsked(true);
+    }, [suggestion]);
 
     const handleToggleSave = useCallback(async () => {
         if (!suggestion) return;
@@ -619,6 +611,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const articleUrl = secureUrlOrNull(suggestion.article_url);
     const insecureLink = !!suggestion.article_url && !articleUrl;
     const read = isSuggestionOpened(suggestion, openedIds);
+    // Keyed on the ARTICLE id. `startedByReader` shows the working state at
+    // once for a check the reader just asked for (no progress delay, and no
+    // toast: the panel is right under the tick).
+    const factCheckPanel = (
+        <FactCheckPanel articleId={suggestion.articleId} startedByReader={factCheckAsked} />
+    );
 
     return (
         <Box className="flex-1">
@@ -721,6 +719,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         displayedLanguage: titleDisplay?.language ?? null,
                                     }}
                                 />
+                                {/* F33: the fact check sits DIRECTLY under the action
+                                    row whose tick starts it, so its "Searching" line
+                                    and its result land where the reader asked, not
+                                    at the very end of the footer below the fold. */}
+                                {factCheckPanel}
                                 <ReadTranslateActions
                                     articleUrl={articleUrl}
                                     sourceLanguage={sourceLanguage}
@@ -737,16 +740,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             </HStack>
                         ) : null}
 
-                        {/* Fact check sits OUTSIDE the URL branch: it is keyed
-                            on the ARTICLE id (not the suggestion id), not the
-                            (possibly refused) local link, so it still renders
-                            for a row whose URL we won't open. Mounted whenever
-                            the feature is on — a pure observer, it renders
-                            nothing itself when nobody has asked about this
-                            article. */}
-                        {(
-                            <FactCheckPanel articleId={suggestion.articleId} />
-                        )}
+                        {/* No link to open: the panel still renders (it is keyed
+                            on the article id), just without the actions above it. */}
+                        {!articleUrl && factCheckPanel}
 
                         {/* Related Articles — ONE flat, sorted list merging the
                             local cluster siblings (the user's own personalized
