@@ -34,7 +34,7 @@ export { replaceClauseDashes } from './core/prose';
 
 // The replacement card decides whether "Keep both" makes sense from the two
 // facts' attribute keys, with the same helpers the loop uses to gate a replace.
-export { attributeKey, sameAttributeKey } from './core/fact-subject';
+export { attributeKey, mayReplaceKey, sameAttributeKey } from './core/fact-subject';
 export { isCombinedOriginFact } from './core/combined-fact';
 
 export {

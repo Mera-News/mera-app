@@ -191,9 +191,11 @@ describe('Keep both', () => {
   const ORIGIN = 'background: country of origin';
 
   it('is offered, and leads, when the two facts sit under different keys', async () => {
-    mockFacts = [{ id: 'old-1', statement: 'Lives in Nieuw-West, Amsterdam', questionnaireAttribute: HOME }];
+    // Not a home fact: a home fact is never replaced by another key at all
+    // (see the home-key guard below), so it never reaches this choice.
+    mockFacts = [{ id: 'old-1', statement: 'Product manager', questionnaireAttribute: 'profession: job role and industry' }];
     const { getByTestId, findByText } = render(
-      <FactChoiceCard {...props} options={['Expat from India']} questionnaireAttribute={ORIGIN} replacesFactId="old-1" />,
+      <FactChoiceCard {...props} options={['Works at Zalando']} questionnaireAttribute="company: employer name" replacesFactId="old-1" />,
     );
     expect(await findByText('factChoice.titleAlsoAdd')).toBeTruthy();
     expect(getByTestId('fact-choice-keep-both-0')).toBeTruthy();
@@ -225,10 +227,37 @@ describe('Keep both', () => {
   });
 
   it('is not offered before the card can name the fact it would keep', () => {
-    mockFacts = [{ id: 'old-1', statement: 'Lives in Amsterdam', questionnaireAttribute: HOME }];
+    mockFacts = [{ id: 'old-1', statement: 'Product manager', questionnaireAttribute: 'profession: job role and industry' }];
     const { queryByTestId } = render(
-      <FactChoiceCard {...props} options={['Expat from India']} questionnaireAttribute={ORIGIN} replacesFactId="old-1" />,
+      <FactChoiceCard {...props} options={['Works at Zalando']} questionnaireAttribute="company: employer name" replacesFactId="old-1" />,
     );
     expect(queryByTestId('fact-choice-keep-both-0')).toBeNull();
+  });
+});
+
+// A home fact is only ever replaced by a home fact, on EVERY engine. The loop
+// enforces it for the cloud path; the card enforces it for whatever staged the
+// group, including the on-device path, which has no loop.
+describe('the home-key guard on the card', () => {
+  const HOME = 'location: neighborhood/area, city, and country (preserve specifics)';
+
+  it('turns a non-home fact targeting a home fact into a plain add', async () => {
+    mockFacts = [{ id: 'old-1', statement: 'Lives in Nieuw-West, Amsterdam', questionnaireAttribute: HOME }];
+    const { getByTestId, findByText, queryByTestId } = render(
+      <FactChoiceCard
+        {...props}
+        options={['Expat from India living in Amsterdam']}
+        questionnaireAttribute="background: origin and current residence"
+        replacesFactId="old-1"
+      />,
+    );
+    expect(await findByText('factChoice.titleSingle')).toBeTruthy();
+    expect(queryByTestId('fact-choice-replaces-0')).toBeNull();
+    await act(async () => {
+      fireEvent.press(getByTestId('fact-choice-add-0'));
+    });
+    expect(mockCommit).toHaveBeenCalledWith([
+      expect.not.objectContaining({ replaces: expect.anything() }),
+    ]);
   });
 });

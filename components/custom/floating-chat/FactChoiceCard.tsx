@@ -27,7 +27,7 @@ import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getByFact } from '@/lib/database/services/topic-service';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
-import { attributeKey, isCombinedOriginFact, sameAttributeKey } from '@/lib/mera-harness';
+import { attributeKey, isCombinedOriginFact, mayReplaceKey, sameAttributeKey } from '@/lib/mera-harness';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
@@ -149,7 +149,15 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   // what disappears. A failed read keeps it disabled rather than falling back
   // to a plain Add, which would write a duplicate AND leave the old fact
   // standing — a silent wrong outcome instead of a visible blocked one.
-  const isReplace = replacesFactId !== null;
+  /**
+   * A HOME FACT IS ONLY REPLACED BY A HOME FACT, on every engine. The cloud
+   * loop already demotes such a replace; the on-device path has no loop, so
+   * the card is the one place both paths pass through. Once the target is
+   * read and the rule refuses, the card is an ordinary add.
+   */
+  const replaceRefused =
+    replaces !== null && !mayReplaceKey(questionnaireAttribute, replaces.attribute);
+  const isReplace = replacesFactId !== null && !replaceRefused;
   const acceptBlocked = isReplace && replaces === null;
 
   /**
@@ -201,7 +209,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           questionnaire: questionnaireAttribute ? { attribute: questionnaireAttribute } : undefined,
           // ONE transaction in fact-commit, never delete-then-add. Keep both
           // is a plain add: the old fact and its topics stay.
-          ...(replacesFactId && mode === 'replace-or-add' ? { replaces: replacesFactId } : {}),
+          ...(replacesFactId && isReplace && mode === 'replace-or-add' ? { replaces: replacesFactId } : {}),
           // The route the chat turn already chose, so topic generation runs
           // this fact's own guideline instead of the shipped one-size prompt.
           ...(topicSkillId ? { skillId: topicSkillId } : {}),
