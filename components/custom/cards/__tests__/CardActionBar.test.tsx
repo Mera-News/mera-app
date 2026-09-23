@@ -62,12 +62,25 @@ function setup(overrides: Partial<React.ComponentProps<typeof CardActionBar>> = 
       tracked={overrides.tracked}
       onShare={'onShare' in overrides ? overrides.onShare : onShare}
       horizontalPadding={overrides.horizontalPadding}
+      onOverflow={overrides.onOverflow}
+      compact={overrides.compact}
     />,
   );
   return { ...utils, onLike, onDislike, onAskMera, onToggleSave, onShare, onTrack };
 }
 
 describe('CardActionBar', () => {
+  // 601/607: the accessibility tree measures the FRAME. Slop around a 20pt
+  // glyph read as a 20x20 target there, so compact buttons carry a 44pt frame.
+  it('gives every compact button a real 44pt frame, with no slop', () => {
+    const { getByTestId } = setup({ compact: true, onOverflow: jest.fn() });
+    for (const id of ['card-action-like', 'card-action-dislike', 'card-action-save', 'card-action-share', 'card-action-more']) {
+      const node = getByTestId(id);
+      expect(node.props.style).toEqual(expect.objectContaining({ minWidth: 44, minHeight: 44 }));
+      expect(node.props.hitSlop ?? 0).toBe(0);
+    }
+  });
+
   it('fires each handler on tap', () => {
     const { getByLabelText, onLike, onDislike, onAskMera, onToggleSave } = setup();
     fireEvent.press(getByLabelText('articleFeedback.likeLabel'));
