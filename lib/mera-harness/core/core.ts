@@ -272,6 +272,36 @@ function isHomeEntry(entry: Record<string, unknown>): boolean {
   return /^lives in\b/i.test(String(entry.statement ?? '').trim());
 }
 
+/** "Lives in Porto, Porto, Portugal" gives "Lives in Porto, Portugal": a rung
+ *  equal to the one before it (ignoring "Lives in" and case) is dropped. */
+export function collapseRepeatedRungs(statement: string): string {
+  const parts = statement.split(',').map((p) => p.trim()).filter(Boolean);
+  const bare = (p: string) => p.replace(/^(?:lives|living|based|resides?)\s+in\s+/i, '').toLowerCase();
+  const out: string[] = [];
+  for (const p of parts) {
+    if (out.length > 0 && bare(out[out.length - 1]) === bare(p)) continue;
+    out.push(p);
+  }
+  return out.join(', ');
+}
+
+/** The user's own current home among the facts on file, or null. */
+function currentHomeFact(
+  facts: AgentPersonaFact[],
+  statement: string,
+): AgentPersonaFact | null {
+  const isResidenceStatement = (s: string) => /^(?:lives|living|based|resides?)\s+in\b/i.test(s.trim());
+  return (
+    facts.find(
+      (f) =>
+        !isCombinedOriginFact(f.attribute)
+        && (isLocationKey(f.attribute) || isResidenceStatement(f.statement))
+        && mayReplace(statement, f.statement)
+        && comparableStatement(f.statement) !== comparableStatement(statement),
+    ) ?? null
+  );
+}
+
 /** Distinct place rungs in a statement ("Porto, Porto, Portugal" is two). */
 function placeRungs(statement: string): number {
   return new Set(
@@ -856,7 +886,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
               continue;
             }
           }
-          const statement = typeof entry.statement === 'string' ? entry.statement.trim() : '';
+          const rawStatement = typeof entry.statement === 'string' ? entry.statement.trim() : '';
+          // "Lives in Porto, Porto, Portugal, EU" (city and region share a
+          // name) reads as a stutter on the card (ux1 C1).
+          const statement = isHomeEntry(entry) ? collapseRepeatedRungs(rawStatement) : rawStatement;
           if (!statement) continue;
           // A RE-PROPOSAL. find_similar_facts showed the model this exact
           // statement as something already on file; offering it back is a
@@ -922,6 +955,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
               replaces = null;
             }
           }
+          // A MOVE REPLACES THE CURRENT HOME, found by the loop rather than
+          // left to the model. On device "I moved to Porto" beside "Lives in
+          // Berlin..." came back as a plain Add ("I did not find any existing
+          // residence fact"), which would leave two current homes. A new home
+          // with no target takes the one home on file: under any home key,
+          // short or canonical, or a residence statement with no key at all,
+          // and never a relative's.
+          if (replaces === null && isHomeEntry(entry)) {
+            const home = currentHomeFact(state.persona.facts, statement);
+            if (home) replaces = home.id;
+          }
           if (isHomeEntry(entry)) homeOfferedThisTurn = true;
           proposals.push({ statement, kind: routeKind, place, replaces });
           offeredThisTurn.push(statement.toLowerCase());
@@ -946,6 +990,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
               : undefined;
           sanitised.push({
             ...entry,
+            statement,
             replaces: replaces === null ? undefined : replaces,
             ...(topicSkill ? { topic_skill_id: topicSkill } : {}),
           });

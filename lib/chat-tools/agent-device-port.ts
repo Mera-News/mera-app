@@ -17,7 +17,7 @@ import type {
   LookupPlaceResult,
   Place,
 } from '@/lib/mera-harness';
-import { loadSkill, skillIds } from '@/lib/mera-harness';
+import { isCombinedOriginFact, isLocationKey, isRelationalStatement, loadSkill, skillIds } from '@/lib/mera-harness';
 import { findSimilarFacts } from '../database/services/fact-similarity-service';
 import { PLACE_CANDIDATE_LIMIT, lookupPlace, searchPlaces } from '../place-service';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
@@ -228,10 +228,40 @@ export async function lookupPlaceWithFallback(
   return last;
 }
 
+/** Lookup kinds that ask about where the user lives. */
+const HOME_KINDS = new Set(['residence', 'location', 'home']);
+
+/** The user's own home: any home key (short or canonical) or a residence
+ *  statement, never a relative's and never the retired combined fact. */
+function isOwnHomeFact(f: { statement: string; questionnaireAttribute?: string | null }): boolean {
+  if (isCombinedOriginFact(f.questionnaireAttribute)) return false;
+  if (isRelationalStatement(f.statement)) return false;
+  return (
+    isLocationKey(f.questionnaireAttribute)
+    || /^(?:lives|living|based|resides?)\s+in\b/i.test(f.statement.trim())
+  );
+}
+
 export function makeAgentToolPort(userMessage: string): AgentToolPort {
   return {
     async findSimilarFacts(args: FindSimilarFactsArgs): Promise<FindSimilarFactsResult> {
-      const rows = await findSimilarFacts(args.kind ?? null, userMessage, args.limit ?? 5);
+      const similar = await findSimilarFacts(args.kind ?? null, userMessage, args.limit ?? 5);
+      // THE CURRENT HOME, always, on a residence lookup. Similarity is word
+      // overlap with the user's message, and "I moved to Porto" shares no
+      // word with "Lives in Berlin...", so the model was told there was no
+      // home to replace and offered a plain Add (ux1 batch 5).
+      const homes = HOME_KINDS.has((args.kind ?? '').toLowerCase())
+        ? (await getFacts()).filter(isOwnHomeFact)
+        : [];
+      const rows = [
+        ...homes.map((f) => ({
+          id: f.id,
+          statement: f.statement,
+          questionnaireAttribute: f.questionnaireAttribute ?? null,
+          score: 1,
+        })),
+        ...similar.filter((r) => !homes.some((h) => h.id === r.id)),
+      ];
       return {
         candidates: rows.map((r) => ({
           factId: r.id,

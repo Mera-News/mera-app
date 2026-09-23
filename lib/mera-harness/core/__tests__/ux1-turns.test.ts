@@ -478,7 +478,8 @@ describe('batch 4 captures', () => {
     ]);
     const out = await runAgentTurn({ state: createAgentState(RESIDENT), userMessage: 'Porto, Portugal', deps: h.deps });
     // The richer chain wins; a turn never offers two current homes.
-    expect(h.saves.flat().map((e) => e.statement)).toEqual(['Lives in Porto, Porto, Portugal, EU']);
+    // The richer chain wins, and its repeated rung is collapsed (batch 5).
+    expect(h.saves.flat().map((e) => e.statement)).toEqual(['Lives in Porto, Portugal, EU']);
     expect(out.reProposals).toBe(1);
   });
 
@@ -504,5 +505,56 @@ describe('batch 4 captures', () => {
     const out = await runAgentTurn({ state: createAgentState(RESIDENT), userMessage: 'I am from India', deps: h.deps });
     expect(out.replyLeakUnfixed).toBe(true);
     expect(out.reply).toBe('');
+  });
+});
+
+// Batch 5 device capture (ux1 C1): "I moved to Porto" beside "Lives in
+// Berlin..." produced a plain Add card, which would leave two homes.
+describe('batch 5: a move replaces the current home', () => {
+  const BERLIN_HOME: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [
+      { id: 'job', statement: 'Product manager', attribute: 'profession: job role and industry' },
+      // The model had written the SHORT key form: it must still count.
+      { id: 'berlin', statement: 'Lives in Berlin, State of Berlin, Germany, EU', attribute: 'location: residence' },
+    ],
+  };
+  const move = (statement: string, extra: Record<string, unknown> = {}) => [
+    res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+    res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement, questionnaire_attribute: CANONICAL_LOCATION_KEY, ...extra }] })] }),
+    res({ content: 'Here it is.' }),
+  ];
+
+  it('a new home with no replaces targets the existing home', async () => {
+    const h = harness(move('Lives in Porto, Portugal, EU'));
+    const out = await runAgentTurn({ state: createAgentState(BERLIN_HOME), userMessage: 'I moved to Porto', deps: h.deps });
+    expect(h.saves[0][0].replaces).toBe('berlin');
+    expect(out.proposals[0].replaces).toBe('berlin');
+  });
+
+  it('finds a home written as a residence statement with no home key', async () => {
+    const keyless: AgentPersona = {
+      ...BERLIN_HOME,
+      facts: [{ id: 'berlin', statement: 'Lives in Berlin, Germany', attribute: 'topics: general interests' }],
+    };
+    const h = harness(move('Lives in Porto, Portugal, EU'));
+    await runAgentTurn({ state: createAgentState(keyless), userMessage: 'I moved to Porto', deps: h.deps });
+    expect(h.saves[0][0].replaces).toBe('berlin');
+  });
+
+  it('never targets a relative\'s home', async () => {
+    const family: AgentPersona = {
+      ...BERLIN_HOME,
+      facts: [{ id: 'parents', statement: 'Parents live in Bhopal, India', attribute: 'location: parents city' }],
+    };
+    const h = harness(move('Lives in Porto, Portugal, EU'));
+    await runAgentTurn({ state: createAgentState(family), userMessage: 'I moved to Porto', deps: h.deps });
+    expect(h.saves[0][0].replaces).toBeUndefined();
+  });
+
+  it('collapses a repeated place rung in the label', async () => {
+    const h = harness(move('Lives in Porto, Porto, Portugal, EU'));
+    await runAgentTurn({ state: createAgentState(BERLIN_HOME), userMessage: 'I moved to Porto', deps: h.deps });
+    expect(h.saves[0][0].statement).toBe('Lives in Porto, Portugal, EU');
   });
 });

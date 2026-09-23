@@ -775,11 +775,13 @@ describe('destructive and place guards', () => {
       modelResult({
         content: 'ok',
         toolCalls: [tc('saveExtractedFacts', {
-          extracted_user_information: [{ statement: 'Lives in Berlin', replaces: 'f1' }],
+          // NOT a home: a new home always targets the home on file (ux1
+          // batch 5), so a home statement would not test this guard.
+          extracted_user_information: [{ statement: 'Works at Zalando', replaces: 'f1' }],
         })],
       }),
     ]);
-    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'I moved to Berlin', deps });
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'I work at Zalando', deps });
     expect(out.proposals[0].replaces).toBeNull();
   });
 
@@ -1406,10 +1408,12 @@ describe('TestFlight regressions', () => {
     // A LATER turn proposing a replace has no confirmation of its own.
     const { deps: t2 } = scriptedDeps([
       modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/residence' })] }),
-      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Porto, Portugal, EU', replaces: 'home' }] })] }),
+      // Not a home statement: a new HOME always targets the home on file
+      // (ux1 batch 5); this pins the keyless cross-key case.
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Works in Porto, Portugal, EU', replaces: 'home' }] })] }),
       modelResult({ content: 'Here is the reading.' }),
     ]);
-    const second = await runAgentTurn({ state, userMessage: 'I might move to Porto', deps: t2 });
+    const second = await runAgentTurn({ state, userMessage: 'I might work in Porto', deps: t2 });
 
     expect(second.proposals[0].replaces).toBeNull();
   });

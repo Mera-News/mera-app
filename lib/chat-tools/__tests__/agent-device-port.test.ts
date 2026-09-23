@@ -237,3 +237,33 @@ describe('makeAgentDeps streams only the leg the loop marks', () => {
     expect(callModelViaCloud).toBeDefined();
   });
 });
+
+// ux1 batch 5: the model was told "no existing residence fact" while "Lives in
+// Berlin..." was on file, because similarity to "I moved to Porto" is zero.
+describe('find_similar_facts always shows the current home on a residence lookup', () => {
+  const { findSimilarFacts } = require('../../database/services/fact-similarity-service');
+  const { getFacts } = require('../../database/services/fact-service');
+
+  it('puts the home first even when it shares no word with the message', async () => {
+    (findSimilarFacts as jest.Mock).mockResolvedValue([
+      { id: 'job', statement: 'Product manager', questionnaireAttribute: 'profession: x', score: 0.2 },
+    ]);
+    (getFacts as jest.Mock).mockResolvedValue([
+      { id: 'job', statement: 'Product manager', questionnaireAttribute: 'profession: x' },
+      { id: 'berlin', statement: 'Lives in Berlin, Germany, EU', questionnaireAttribute: 'location: residence' },
+    ]);
+    const { makeAgentToolPort } = require('../agent-device-port');
+    const out = await makeAgentToolPort('I moved to Porto').findSimilarFacts({ kind: 'residence' });
+    expect(out.candidates.map((c: { factId: string }) => c.factId)).toEqual(['berlin', 'job']);
+  });
+
+  it('leaves other kinds alone', async () => {
+    (findSimilarFacts as jest.Mock).mockResolvedValue([]);
+    (getFacts as jest.Mock).mockResolvedValue([
+      { id: 'berlin', statement: 'Lives in Berlin, Germany, EU', questionnaireAttribute: 'location: residence' },
+    ]);
+    const { makeAgentToolPort } = require('../agent-device-port');
+    const out = await makeAgentToolPort('I play chess').findSimilarFacts({ kind: 'interest' });
+    expect(out.candidates).toEqual([]);
+  });
+});
