@@ -147,7 +147,7 @@ import {
   type CardStateRecord,
   type Verdict,
 } from '@/lib/stores/feed-order-store';
-import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { useForYouSuggestionsHydrated, type ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useDatabaseReady } from '@/lib/stores/database-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -322,6 +322,7 @@ const FeedScreen: React.FC = () => {
 
   // ── Live inputs ──
   const suggestions = useForYouSuggestions();
+  const suggestionsHydrated = useForYouSuggestionsHydrated();
 
   // The user's geo/language context (home/other countries + app language) —
   // makes representative election tier-aware. Null while loading/on failure,
@@ -952,6 +953,7 @@ const FeedScreen: React.FC = () => {
     candidateCount: candidates.length,
     renderedCount: listData.length,
     ingested: ingestedCandidates,
+    suggestionsHydrated,
     announcement: t('feed.loadingA11y'),
   });
 

@@ -294,6 +294,11 @@ interface ForYouState {
     clearData: () => Promise<void>;
     pruneOrphanedData: () => Promise<void>;
     hydrateSuggestionsFromDb: () => Promise<void>;
+    /** True once the first local read of suggestions has FINISHED, success or
+     *  failure. The Feed's warm-up waits on it: an empty list before this is
+     *  "not loaded yet", never "nothing to show". Kept out of `initialState`,
+     *  so clearing the data does not send the Feed back to warming up. */
+    suggestionsHydrated: boolean;
     hydrateMetadataFromDb: () => Promise<void>;
     setSyncStatusMessage: (msg: SyncStatusMessage | null) => void;
     setLastSyncAt: (ts: number) => void;
@@ -356,6 +361,7 @@ function metaFromState(state: ForYouState): FeedMetadata {
 
 export const useForYouStore = create<ForYouState>()((set, get) => ({
     ...initialState,
+    suggestionsHydrated: false,
 
     setSuggestions: (data) => {
         set({
@@ -574,6 +580,8 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             logger.captureException(err, {
                 tags: { store: 'for-you-store', method: 'hydrateSuggestionsFromDb' },
             });
+        } finally {
+            if (!get().suggestionsHydrated) set({ suggestionsHydrated: true });
         }
     },
 
@@ -620,6 +628,9 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
         }
     },
 }));
+
+/** Whether the first local read of suggestions has finished (reactive). */
+export const useForYouSuggestionsHydrated = () => useForYouStore((s) => s.suggestionsHydrated);
 
 function byRelevanceDesc(
     a: { relevance: number; status: ArticleSuggestionStatusType },

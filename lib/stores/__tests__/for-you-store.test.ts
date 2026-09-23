@@ -725,6 +725,27 @@ describe('useForYouStore', () => {
         expect(useForYouStore.getState().unscoredCount).toBe(0);
     });
 
+    // The Feed's warm-up waits on this flag: set once the read FINISHES, on
+    // failure too, and never reset by a data clear.
+    it('marks suggestions hydrated once the first read finishes, even when it fails', async () => {
+        useForYouStore.setState({ suggestionsHydrated: false });
+        let settle!: (rows: ForYouSuggestion[]) => void;
+        mockLoadSuggestions.mockReturnValueOnce(new Promise((r) => { settle = r; }));
+        const pending = useForYouStore.getState().hydrateSuggestionsFromDb();
+        expect(useForYouStore.getState().suggestionsHydrated).toBe(false);
+        settle([]);
+        await pending;
+        expect(useForYouStore.getState().suggestionsHydrated).toBe(true);
+
+        useForYouStore.setState({ suggestionsHydrated: false });
+        mockLoadSuggestions.mockRejectedValueOnce(new Error('db error'));
+        await useForYouStore.getState().hydrateSuggestionsFromDb();
+        expect(useForYouStore.getState().suggestionsHydrated).toBe(true);
+
+        await useForYouStore.getState().clearData();
+        expect(useForYouStore.getState().suggestionsHydrated).toBe(true);
+    });
+
     it('hydrateSuggestionsFromDb logs on DB failure and leaves suggestions empty', async () => {
         mockLoadSuggestions.mockRejectedValueOnce(new Error('db error'));
         await useForYouStore.getState().hydrateSuggestionsFromDb();

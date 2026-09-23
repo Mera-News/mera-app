@@ -13,6 +13,7 @@ const COLD: FeedWarmupInput = {
     candidateCount: 0,
     renderedCount: 0,
     ingested: false,
+    suggestionsHydrated: false,
     announcement: 'Loading your feed',
 };
 
@@ -59,12 +60,32 @@ describe('useFeedWarmup (F2: no false empty state on launch)', () => {
                 openedHydrated: true,
                 candidateCount: 12,
                 ingested: true,
+                suggestionsHydrated: true,
             }),
         );
         expect(result.current).toBe('ready');
     });
 
-    it('does not wait forever on a genuinely empty database', () => {
+    it('resolves a genuinely empty database the moment its read returns', () => {
+        const { result } = renderHook(() =>
+            useFeedWarmup({ ...COLD, orderHydrated: true, openedHydrated: true, suggestionsHydrated: true }),
+        );
+        expect(result.current).toBe('ready');
+    });
+
+    // 600-f4-cold-38: the local read took ~13s on a cold launch. A 3s guess
+    // gave up, the empty-state chain said "all caught up", then cards arrived.
+    it('keeps waiting on a slow local read well past the old 3s guess', () => {
+        const { result } = renderHook(() =>
+            useFeedWarmup({ ...COLD, orderHydrated: true, openedHydrated: true }),
+        );
+        act(() => {
+            jest.advanceTimersByTime(13_000);
+        });
+        expect(result.current).toBe('skeleton');
+    });
+
+    it('stops waiting at the safety cap, so a read that hangs cannot keep the skeleton up', () => {
         const { result } = renderHook(() =>
             useFeedWarmup({ ...COLD, orderHydrated: true, openedHydrated: true }),
         );

@@ -4,9 +4,11 @@ import { AccessibilityInfo } from 'react-native';
 /** Show nothing for this long first: a cache that loads fast never flashes a
  *  skeleton. */
 export const SKELETON_DELAY_MS = 200;
-/** Give up waiting for local candidates after this long. A genuinely empty
- *  database has none to wait for, and the empty-state chain must take over. */
-export const CANDIDATES_WAIT_MS = 3000;
+/** Safety cap only: stop waiting for the local read after this long, so a read
+ *  that hangs can never leave the skeleton up for good. The real signal is
+ *  `suggestionsHydrated`. It was a 3s guess, and a cold launch whose local read
+ *  took ~13s showed "all caught up" for the gap before the cards arrived. */
+export const CANDIDATES_WAIT_MS = 20_000;
 
 export interface FeedWarmupInput {
     /** The persisted order store has hydrated (true even when hydrate failed). */
@@ -19,6 +21,8 @@ export interface FeedWarmupInput {
     renderedCount: number;
     /** The ingest effect has run at least once with candidates in hand. */
     ingested: boolean;
+    /** The first local read of suggestions has finished (for-you-store). */
+    suggestionsHydrated: boolean;
     /** Text announced once to a screen reader when the skeleton appears. */
     announcement: string;
 }
@@ -35,12 +39,14 @@ export type FeedWarmupPhase = 'blank' | 'skeleton' | 'ready';
  * It resolves on real signals, never on order length alone (persisted ids
  * whose items aged out would keep it forever):
  *  - both stores hydrated (they report hydrated even when hydrate fails), and
- *  - candidates loaded: at least one candidate AND ingest has run, or
- *    CANDIDATES_WAIT_MS passed with none (a genuinely empty database).
+ *  - candidates loaded: the local read has FINISHED and, if it found any,
+ *    ingest has run. A genuinely empty database resolves the moment its read
+ *    returns; CANDIDATES_WAIT_MS is only the cap for a read that never does.
  * Once any row renders, it is ready for good.
  */
 export function useFeedWarmup(input: FeedWarmupInput): FeedWarmupPhase {
-    const { orderHydrated, openedHydrated, candidateCount, renderedCount, ingested, announcement } = input;
+    const { orderHydrated, openedHydrated, candidateCount, renderedCount, ingested, suggestionsHydrated, announcement } =
+        input;
 
     const [waitedOut, setWaitedOut] = useState(false);
     useEffect(() => {
@@ -55,7 +61,7 @@ export function useFeedWarmup(input: FeedWarmupInput): FeedWarmupPhase {
     }, []);
 
     const everReady = useRef(false);
-    const candidatesLoaded = (candidateCount > 0 && ingested) || waitedOut;
+    const candidatesLoaded = (suggestionsHydrated && (candidateCount === 0 || ingested)) || waitedOut;
     const warming =
         !everReady.current &&
         renderedCount === 0 &&
