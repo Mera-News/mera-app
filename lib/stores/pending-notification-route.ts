@@ -18,6 +18,14 @@
 // the pre-reload JS context writes the row, and the startup gate in the new
 // context reads it. Memory is the fast path; the row is the one that survives.
 //
+// NAVIGATED-NOW ROWS SURVIVE TOO. With the gate open (no PIN, startup gate
+// passed) the listener navigates at once, in the very context the tap's own
+// foreground reload is about to replace, and the tap is already marked handled
+// so the new boot skips it. So the immediate path KEEPS the row, stamped
+// `navigatedAt`: the same context never reopens it, a new context reopens it
+// once if the navigation was under NAVIGATED_ROUTE_REOPEN_MS ago (the reload
+// lands within a second or two of the tap), and after that it is dropped.
+//
 // IMPORT DISCIPLINE. The startup gate and the notification service both import
 // this, so it must not drag the SQLite singleton into their suites:
 // setting-service is lazy-required at the call site (same rule as
@@ -37,6 +45,9 @@ interface PendingRoute {
   userId: string;
   /** Epoch ms of the tap (stash time). */
   at: number;
+  /** Epoch ms the immediate path navigated to it, or null while it waits for
+   *  the startup gate. */
+  navigatedAt: number | null;
 }
 
 export const PENDING_NOTIFICATION_ROUTE_KEY = 'pending_notification_route';
@@ -46,8 +57,17 @@ export const PENDING_NOTIFICATION_ROUTE_KEY = 'pending_notification_route';
  *  screen out of nowhere on some later launch. */
 export const PENDING_ROUTE_MAX_AGE_MS = 10 * 60 * 1000;
 
+/** How long after an immediate navigation a NEW JS context may reopen the
+ *  route. Covers the foreground reload that follows a tap (a second or two);
+ *  short so an unrelated later return never reopens an old screen. */
+export const NAVIGATED_ROUTE_REOPEN_MS = 30 * 1000;
+
 let memory: PendingRoute | null = null;
 let startupGatePassed = false;
+/** `navigatedAt` of the row THIS context navigated to. A module variable on
+ *  purpose: it dies with the reload, which is exactly what lets the next
+ *  context tell "wiped by a reload" from "already shown here". */
+let navigatedHereAt: number | null = null;
 
 function settings(): typeof import('@/lib/database/services/setting-service') {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -72,7 +92,8 @@ function parse(raw: string | null): PendingRoute | null {
   try {
     const p = JSON.parse(raw);
     if (p && typeof p.userId === 'string' && typeof p.at === 'number' && isHref(p.href)) {
-      return { href: p.href, userId: p.userId, at: p.at };
+      const navigatedAt = typeof p.navigatedAt === 'number' ? p.navigatedAt : null;
+      return { href: p.href, userId: p.userId, at: p.at, navigatedAt };
     }
   } catch {
     // fall through: a corrupt row is the same as no row
@@ -90,7 +111,8 @@ export async function stashPendingNotificationRoute(
   userId: string,
   now: number = Date.now(),
 ): Promise<void> {
-  memory = { href, userId, at: now };
+  memory = { href, userId, at: now, navigatedAt: null };
+  navigatedHereAt = null;
   try {
     await settings().setSetting(PENDING_NOTIFICATION_ROUTE_KEY, JSON.stringify(memory));
   } catch (err) {
@@ -100,28 +122,86 @@ export async function stashPendingNotificationRoute(
   }
 }
 
+/** The pending route: memory first, then the row (after a reload). Never
+ *  throws; an unreadable row is no row. */
+async function readPending(): Promise<PendingRoute | null> {
+  if (memory) return memory;
+  try {
+    return parse(await settings().getSetting(PENDING_NOTIFICATION_ROUTE_KEY));
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { module: 'pending-notification-route', method: 'read' },
+    });
+    return null;
+  }
+}
+
+async function deleteRow(): Promise<void> {
+  try {
+    await settings().deleteSetting(PENDING_NOTIFICATION_ROUTE_KEY);
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { module: 'pending-notification-route', method: 'delete' },
+    });
+  }
+}
+
 /**
- * Take the pending route, if any, and clear it (memory and row) so it opens
- * exactly once. Returns null when there is none, when it belongs to another
- * user, or when it is older than {@link PENDING_ROUTE_MAX_AGE_MS}. Never throws.
+ * THE STARTUP GATE'S CALL. Take the pending route, if any, and clear it
+ * (memory and row) so it opens exactly once. Returns null when there is none,
+ * when it belongs to another user, when it is older than
+ * {@link PENDING_ROUTE_MAX_AGE_MS}, or when it was already navigated to: in
+ * this context always, in a new context once the reopen window has passed.
+ * Never throws.
  */
 export async function consumePendingNotificationRoute(
   userId: string | null | undefined,
   now: number = Date.now(),
 ): Promise<NotificationHref | null> {
-  let pending = memory;
+  const pending = await readPending();
   memory = null;
+  await deleteRow();
+  if (!pending || !userId || pending.userId !== userId) return null;
+  if (pending.navigatedAt !== null) {
+    if (pending.navigatedAt === navigatedHereAt) return null; // shown in this context
+    return now - pending.navigatedAt <= NAVIGATED_ROUTE_REOPEN_MS ? pending.href : null;
+  }
+  if (now - pending.at > PENDING_ROUTE_MAX_AGE_MS) return null;
+  return pending.href;
+}
+
+/**
+ * THE NOTIFICATION SERVICE'S CALL, when the gate is open and it is about to
+ * navigate. Returns the route (null under the same rules as
+ * {@link consumePendingNotificationRoute}) and, instead of deleting the row,
+ * re-stamps it `navigatedAt` (awaited) so a reload that wipes this navigation
+ * still reaches the route. Never throws.
+ */
+export async function takePendingNotificationRouteForNavigation(
+  userId: string | null | undefined,
+  now: number = Date.now(),
+): Promise<NotificationHref | null> {
+  const pending = await readPending();
+  memory = null;
+  if (
+    !pending ||
+    !userId ||
+    pending.userId !== userId ||
+    pending.navigatedAt !== null ||
+    now - pending.at > PENDING_ROUTE_MAX_AGE_MS
+  ) {
+    await deleteRow();
+    return null;
+  }
+  const navigated: PendingRoute = { ...pending, navigatedAt: now };
+  navigatedHereAt = now;
   try {
-    const svc = settings();
-    if (!pending) pending = parse(await svc.getSetting(PENDING_NOTIFICATION_ROUTE_KEY));
-    await svc.deleteSetting(PENDING_NOTIFICATION_ROUTE_KEY);
+    await settings().setSetting(PENDING_NOTIFICATION_ROUTE_KEY, JSON.stringify(navigated));
   } catch (err) {
     logger.captureException(err, {
-      tags: { module: 'pending-notification-route', method: 'consume' },
+      tags: { module: 'pending-notification-route', method: 'take' },
     });
   }
-  if (!pending || !userId || pending.userId !== userId) return null;
-  if (now - pending.at > PENDING_ROUTE_MAX_AGE_MS) return null;
   return pending.href;
 }
 
@@ -143,4 +223,5 @@ export function isStartupGatePassed(): boolean {
 export function __resetPendingNotificationRouteForTests(): void {
   memory = null;
   startupGatePassed = false;
+  navigatedHereAt = null;
 }

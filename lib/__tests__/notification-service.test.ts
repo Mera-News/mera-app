@@ -624,12 +624,33 @@ describe('notification taps go through the startup/PIN gate', () => {
     expect(mockSettingRows.has(PENDING_NOTIFICATION_ROUTE_KEY)).toBe(false);
   });
 
-  it('gate passed and unlocked: navigates at once and leaves nothing stashed', async () => {
+  it('gate passed and unlocked: navigates at once, and the same context never reopens it', async () => {
     openGate();
     mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor(FACT_CHECK));
     await handleInitialNotification();
     expect(mockRouterPush).toHaveBeenCalledWith(ARTICLE);
     await expect(consumePendingNotificationRoute('user-123')).resolves.toBeNull();
+  });
+
+  // The common background tap for a reader with no PIN: the gate is OPEN in
+  // the pre-reload context, so the listener navigates at once, and the
+  // foreground reload then wipes that navigation. The tap is already marked
+  // handled, so the new boot skips it: the route must still be on disk for the
+  // new context's startup gate.
+  it('gate open, warm tap, then the reload: the new context still opens the route', async () => {
+    openGate();
+    mockGetPermissionsAsync.mockResolvedValueOnce({ status: 'granted' });
+    await setupNotifications();
+    const onTap = mockAddNotificationResponseReceivedListener.mock.calls[0][0];
+
+    onTap(responseFor(FACT_CHECK, 'warm-open-1'));
+    await waitForSettingWrite(HANDLED_NOTIFICATION_ID_KEY);
+    expect(mockRouterPush).toHaveBeenCalledWith(ARTICLE);
+
+    __resetPendingNotificationRouteForTests(); // the reload
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor(FACT_CHECK, 'warm-open-1'));
+    await handleInitialNotification(); // skipped: already handled
+    await expect(consumePendingNotificationRoute('user-123')).resolves.toEqual(ARTICLE);
   });
 
   // Every background -> active return reloads JS, so a warm tap's navigation

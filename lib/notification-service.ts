@@ -10,9 +10,9 @@ import { useNetworkStore } from './stores/network-store';
 import { getSetting, setSetting } from './database/services/setting-service';
 import { ArticleSuggestionStatus } from './database/article-suggestion-status';
 import {
-    consumePendingNotificationRoute,
     isStartupGatePassed,
     stashPendingNotificationRoute,
+    takePendingNotificationRouteForNavigation,
     type NotificationHref,
 } from './stores/pending-notification-route';
 
@@ -335,7 +335,10 @@ function gateIsOpen(): boolean {
  *   3. navigate now only when the gate is open: startup gate passed in this
  *      context and the PIN unlocked. Never over the lock screen, never ahead of
  *      the startup gate; either of those consumes the stash itself (a PIN
- *      unlock goes back through /logged-in).
+ *      unlock goes back through /logged-in). Navigating now KEEPS the row,
+ *      stamped, because the reload that follows the tap wipes this
+ *      navigation and the new boot skips the handled tap: the next context's
+ *      startup gate reopens it once (see pending-notification-route).
  * No signed-in user: nothing to open, nothing stashed.
  */
 async function handleNotificationTap(
@@ -354,7 +357,9 @@ async function handleNotificationTap(
         if (!userId) return;
 
         if (!gateIsOpen()) return;
-        const route = await consumePendingNotificationRoute(userId);
+        // Not a plain consume: the row must outlive this navigation, which the
+        // tap's own foreground reload usually wipes a moment later.
+        const route = await takePendingNotificationRouteForNavigation(userId);
         if (!route) return;
         // The Dashboard renders from the in-memory cache; refresh it from the DB
         // first so it never paints against a half-cleared cache.

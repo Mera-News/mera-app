@@ -21,6 +21,8 @@ jest.mock('@/lib/logger', () => ({
 import {
   stashPendingNotificationRoute,
   consumePendingNotificationRoute,
+  takePendingNotificationRouteForNavigation,
+  NAVIGATED_ROUTE_REOPEN_MS,
   markStartupGatePassed,
   isStartupGatePassed,
   __resetPendingNotificationRouteForTests,
@@ -78,6 +80,38 @@ describe('pending-notification-route', () => {
     await expect(consumePendingNotificationRoute('u1', 2)).resolves.toBeNull();
     mockRows.set(PENDING_NOTIFICATION_ROUTE_KEY, 'not json');
     await expect(consumePendingNotificationRoute('u1', 2)).resolves.toBeNull();
+  });
+
+  // The immediate path (gate open) navigates in a context a reload may be
+  // about to replace, so it keeps the row, stamped, for the NEXT context.
+  describe('navigated now, possibly wiped by a reload', () => {
+    it('returns the route and the same context never reopens it', async () => {
+      await stashPendingNotificationRoute(DETAIL, 'u1', 1000);
+      await expect(takePendingNotificationRouteForNavigation('u1', 1000)).resolves.toEqual(DETAIL);
+      await expect(consumePendingNotificationRoute('u1', 1500)).resolves.toBeNull();
+    });
+
+    it('a new context (after the reload) reopens it once, within the window', async () => {
+      await stashPendingNotificationRoute(DETAIL, 'u1', 1000);
+      await takePendingNotificationRouteForNavigation('u1', 1000);
+      __resetPendingNotificationRouteForTests();
+      await expect(consumePendingNotificationRoute('u1', 3000)).resolves.toEqual(DETAIL);
+      await expect(consumePendingNotificationRoute('u1', 3000)).resolves.toBeNull();
+    });
+
+    it('a new context long after the navigation does not reopen it', async () => {
+      await stashPendingNotificationRoute(DETAIL, 'u1', 1000);
+      await takePendingNotificationRouteForNavigation('u1', 1000);
+      __resetPendingNotificationRouteForTests();
+      await expect(
+        consumePendingNotificationRoute('u1', 1000 + NAVIGATED_ROUTE_REOPEN_MS + 1),
+      ).resolves.toBeNull();
+    });
+
+    it('returns nothing for another user', async () => {
+      await stashPendingNotificationRoute(DETAIL, 'u1', 1000);
+      await expect(takePendingNotificationRouteForNavigation('u2', 1000)).resolves.toBeNull();
+    });
   });
 
   it('startup gate flag is per JS context', () => {
