@@ -228,7 +228,11 @@
     "statsPublishedPending_one": "过去24小时内发布了{{formatted}}篇文章。",
     "statsPublished_one": "过去24小时内发布了{{formatted}}篇文章,",
     "statsRead_one": "且您已阅读{{formatted}}篇。",
-    "statsRelevant_one": "{{formatted}}篇与您相关,"
+    "statsRelevant_one": "{{formatted}}篇与您相关,",
+    "reasonUnavailable": "Mera 未能为这篇文章写说明。",
+    "loadingA11y": "正在加载你的动态",
+    "newStoriesPill": "新文章",
+    "translatingCaption": "正在翻译…"
   },
   "relevance": {
     "emergency": "紧急",
@@ -258,7 +262,8 @@
     "readOn": "在{{publication}}阅读",
     "readOnGoogleTranslate": "在谷歌翻译中阅读",
     "linkUnavailable": "此链接无法安全打开，所以在这里不可用。",
-    "relatedFromSubscriptions": "来自你的订阅"
+    "relatedFromSubscriptions": "来自你的订阅",
+    "relatedLoadFailed": "无法加载相关文章。"
   },
   "newsCluster": {
     "failedToLoad": "聚合详情加载失败",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "关注报道",
     "removeMemberAction": "不属于此报道",
     "removeMemberConfirmTitle": "移除这篇文章？",
-    "removeMemberConfirmBody": "这篇文章将从报道的时间线中移除。Mera 会继续关注报道本身。"
+    "removeMemberConfirmBody": "这篇文章将从报道的时间线中移除。Mera 会继续关注报道本身。",
+    "timelineLoadFailed": "无法加载此报道。下拉即可重试。",
+    "deleteFailed": "无法取消关注此报道。请重试。",
+    "removeFailed": "无法将此文章从报道中移除。请重试。"
   },
   "whatsNew": {
     "title": "更新内容",

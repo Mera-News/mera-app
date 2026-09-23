@@ -228,7 +228,11 @@
     "statsRelevant_one": "{{formatted}} lijkt relevant,",
     "statsRelevant_other": "{{formatted}} lijken relevant,",
     "statsRead_one": "en je hebt {{formatted}} gelezen.",
-    "statsRead_other": "en je hebt {{formatted}} gelezen."
+    "statsRead_other": "en je hebt {{formatted}} gelezen.",
+    "reasonUnavailable": "Mera kon hier geen notitie bij schrijven.",
+    "loadingA11y": "Je feed wordt geladen",
+    "newStoriesPill": "Nieuwe berichten",
+    "translatingCaption": "Vertalen…"
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -258,7 +262,8 @@
     "readOn": "Lezen op {{publication}}",
     "readOnGoogleTranslate": "Lezen op Google Translate",
     "linkUnavailable": "Deze link kan niet veilig worden geopend, dus is deze hier niet beschikbaar.",
-    "relatedFromSubscriptions": "Uit je abonnementen"
+    "relatedFromSubscriptions": "Uit je abonnementen",
+    "relatedLoadFailed": "Gerelateerde artikelen konden niet worden geladen."
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "Een verhaal volgen",
     "removeMemberAction": "Hoort niet bij dit verhaal",
     "removeMemberConfirmTitle": "Dit artikel verwijderen?",
-    "removeMemberConfirmBody": "Dit artikel wordt uit de tijdlijn van het verhaal verwijderd. Mera blijft het verhaal zelf volgen."
+    "removeMemberConfirmBody": "Dit artikel wordt uit de tijdlijn van het verhaal verwijderd. Mera blijft het verhaal zelf volgen.",
+    "timelineLoadFailed": "Dit verhaal kon niet worden geladen. Trek omlaag om het opnieuw te proberen.",
+    "deleteFailed": "Ontvolgen is niet gelukt. Probeer het opnieuw.",
+    "removeFailed": "Dit artikel kon niet uit het verhaal worden verwijderd. Probeer het opnieuw."
   },
   "whatsNew": {
     "title": "Wat is er nieuw",

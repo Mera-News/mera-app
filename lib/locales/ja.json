@@ -228,7 +228,11 @@
     "statsPublishedPending_one": "{{formatted}}件の記事が過去24時間に公開されました。",
     "statsPublished_one": "{{formatted}}件の記事が過去24時間に公開されました、",
     "statsRead_one": "そしてあなたは{{formatted}}件を読みました。",
-    "statsRelevant_one": "{{formatted}}件があなたに関連性があります、"
+    "statsRelevant_one": "{{formatted}}件があなたに関連性があります、",
+    "reasonUnavailable": "この記事のメモを作成できませんでした。",
+    "loadingA11y": "フィードを読み込んでいます",
+    "newStoriesPill": "新着記事",
+    "translatingCaption": "翻訳中…"
   },
   "relevance": {
     "emergency": "緊急",
@@ -258,7 +262,8 @@
     "readOn": "{{publication}}で読む",
     "readOnGoogleTranslate": "Google 翻訳で読む",
     "linkUnavailable": "このリンクを安全に開くことができないため、ここでは利用できません。",
-    "relatedFromSubscriptions": "購読中のメディアから"
+    "relatedFromSubscriptions": "購読中のメディアから",
+    "relatedLoadFailed": "関連記事を読み込めませんでした。"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "ストーリーをフォロー",
     "removeMemberAction": "このストーリーの一部ではない",
     "removeMemberConfirmTitle": "この記事を削除しますか？",
-    "removeMemberConfirmBody": "この記事はストーリーのタイムラインから削除されます。Mera はストーリー自体を引き続きフォローします。"
+    "removeMemberConfirmBody": "この記事はストーリーのタイムラインから削除されます。Mera はストーリー自体を引き続きフォローします。",
+    "timelineLoadFailed": "このストーリーを読み込めませんでした。下に引いてもう一度お試しください。",
+    "deleteFailed": "このストーリーのフォローを解除できませんでした。もう一度お試しください。",
+    "removeFailed": "この記事をストーリーから削除できませんでした。もう一度お試しください。"
   },
   "whatsNew": {
     "title": "新機能",

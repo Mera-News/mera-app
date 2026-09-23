@@ -228,7 +228,11 @@
     "statsPublishedPending_one": "過去24小時內發佈了{{formatted}}篇文章。",
     "statsPublished_one": "過去24小時內發佈了{{formatted}}篇文章,",
     "statsRead_one": "且您已閱讀{{formatted}}篇。",
-    "statsRelevant_one": "{{formatted}}篇與您相關,"
+    "statsRelevant_one": "{{formatted}}篇與您相關,",
+    "reasonUnavailable": "Mera 無法為這篇文章撰寫說明。",
+    "loadingA11y": "正在載入你的動態",
+    "newStoriesPill": "新文章",
+    "translatingCaption": "正在翻譯…"
   },
   "relevance": {
     "emergency": "緊急",
@@ -258,7 +262,8 @@
     "readOn": "在{{publication}}閱讀",
     "readOnGoogleTranslate": "在 Google 翻譯中閱讀",
     "linkUnavailable": "此連結無法安全開啟，因此在此無法使用。",
-    "relatedFromSubscriptions": "來自您的訂閱"
+    "relatedFromSubscriptions": "來自您的訂閱",
+    "relatedLoadFailed": "無法載入相關文章。"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "追蹤報導",
     "removeMemberAction": "不屬於此報導",
     "removeMemberConfirmTitle": "移除這篇文章？",
-    "removeMemberConfirmBody": "這篇文章將從報導的時間軸中移除。Mera 會繼續追蹤報導本身。"
+    "removeMemberConfirmBody": "這篇文章將從報導的時間軸中移除。Mera 會繼續追蹤報導本身。",
+    "timelineLoadFailed": "無法載入此報導。下拉即可重試。",
+    "deleteFailed": "無法取消追蹤此報導。請再試一次。",
+    "removeFailed": "無法將此文章從報導中移除。請再試一次。"
   },
   "whatsNew": {
     "title": "更新內容",

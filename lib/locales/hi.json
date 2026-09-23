@@ -228,7 +228,11 @@
     "statsRelevant_one": "{{formatted}} प्रासंगिक लग रहा है,",
     "statsRelevant_other": "{{formatted}} प्रासंगिक लग रहे हैं,",
     "statsRead_one": "और आपने {{formatted}} पढ़ा है।",
-    "statsRead_other": "और आपने {{formatted}} पढ़े हैं।"
+    "statsRead_other": "और आपने {{formatted}} पढ़े हैं।",
+    "reasonUnavailable": "Mera इसके लिए नोट नहीं लिख सका।",
+    "loadingA11y": "आपकी फ़ीड लोड हो रही है",
+    "newStoriesPill": "नई खबरें",
+    "translatingCaption": "अनुवाद हो रहा है…"
   },
   "relevance": {
     "emergency": "आपातकालीन",
@@ -258,7 +262,8 @@
     "readOn": "{{publication}} पर पढ़ें",
     "readOnGoogleTranslate": "Google Translate पर पढ़ें",
     "linkUnavailable": "यह लिंक सुरक्षित रूप से नहीं खोला जा सकता, इसलिए यह यहाँ उपलब्ध नहीं है।",
-    "relatedFromSubscriptions": "आपकी सदस्यताओं से"
+    "relatedFromSubscriptions": "आपकी सदस्यताओं से",
+    "relatedLoadFailed": "संबंधित लेख लोड नहीं हो सके।"
   },
   "newsCluster": {
     "failedToLoad": "क्लस्टर विवरण लोड करने में विफल",
@@ -1095,7 +1100,10 @@
     "emptyCtaFollow": "एक कहानी फ़ॉलो करें",
     "removeMemberAction": "यह इस स्टोरी का हिस्सा नहीं है",
     "removeMemberConfirmTitle": "यह लेख हटाएं?",
-    "removeMemberConfirmBody": "यह लेख स्टोरी की टाइमलाइन से हटा दिया जाता है. Mera स्टोरी को फ़ॉलो करता रहेगा."
+    "removeMemberConfirmBody": "यह लेख स्टोरी की टाइमलाइन से हटा दिया जाता है. Mera स्टोरी को फ़ॉलो करता रहेगा.",
+    "timelineLoadFailed": "यह खबर लोड नहीं हो सकी। फिर से कोशिश करने के लिए नीचे खींचें।",
+    "deleteFailed": "इस खबर को फ़ॉलो करना बंद नहीं हो सका। फिर से कोशिश करें।",
+    "removeFailed": "यह लेख खबर से हटाया नहीं जा सका। फिर से कोशिश करें।"
   },
   "whatsNew": {
     "title": "नया क्या है",

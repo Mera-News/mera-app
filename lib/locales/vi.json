@@ -228,7 +228,11 @@
     "statsPublishedPending_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
     "statsPublished_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,",
     "statsRead_one": "và bạn đã đọc {{formatted}}.",
-    "statsRelevant_one": "{{formatted}} có vẻ phù hợp,"
+    "statsRelevant_one": "{{formatted}} có vẻ phù hợp,",
+    "reasonUnavailable": "Mera không thể viết ghi chú cho bài này.",
+    "loadingA11y": "Đang tải bảng tin của bạn",
+    "newStoriesPill": "Tin mới",
+    "translatingCaption": "Đang dịch…"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -258,7 +262,8 @@
     "readOn": "Đọc trên {{publication}}",
     "readOnGoogleTranslate": "Đọc trên Google Dịch",
     "linkUnavailable": "Liên kết này không thể được mở an toàn, vì vậy nó không khả dụng ở đây.",
-    "relatedFromSubscriptions": "Từ gói đăng ký của bạn"
+    "relatedFromSubscriptions": "Từ gói đăng ký của bạn",
+    "relatedLoadFailed": "Không tải được các bài liên quan."
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "Theo dõi một câu chuyện",
     "removeMemberAction": "Không thuộc câu chuyện này",
     "removeMemberConfirmTitle": "Xóa bài viết này?",
-    "removeMemberConfirmBody": "Bài viết này bị xóa khỏi dòng thời gian của câu chuyện. Mera vẫn tiếp tục theo dõi câu chuyện."
+    "removeMemberConfirmBody": "Bài viết này bị xóa khỏi dòng thời gian của câu chuyện. Mera vẫn tiếp tục theo dõi câu chuyện.",
+    "timelineLoadFailed": "Không tải được câu chuyện này. Kéo xuống để thử lại.",
+    "deleteFailed": "Không thể bỏ theo dõi câu chuyện này. Hãy thử lại.",
+    "removeFailed": "Không thể xóa bài này khỏi câu chuyện. Hãy thử lại."
   },
   "whatsNew": {
     "title": "Có gì mới",

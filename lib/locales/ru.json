@@ -240,7 +240,11 @@
     "statsRead_one": "и вы прочитали {{formatted}}.",
     "statsRead_few": "и вы прочитали {{formatted}}.",
     "statsRead_many": "и вы прочитали {{formatted}}.",
-    "statsRead_other": "и вы прочитали {{formatted}}."
+    "statsRead_other": "и вы прочитали {{formatted}}.",
+    "reasonUnavailable": "Mera не смогла написать заметку к этой статье.",
+    "loadingA11y": "Загружаем вашу ленту",
+    "newStoriesPill": "Новые статьи",
+    "translatingCaption": "Перевод…"
   },
   "relevance": {
     "emergency": "Экстренное",
@@ -270,7 +274,8 @@
     "readOn": "Читать в {{publication}}",
     "readOnGoogleTranslate": "Читать в Google Translate",
     "linkUnavailable": "Эта ссылка не может быть открыта безопасно, поэтому она недоступна здесь.",
-    "relatedFromSubscriptions": "Из ваших подписок"
+    "relatedFromSubscriptions": "Из ваших подписок",
+    "relatedLoadFailed": "Не удалось загрузить похожие статьи."
   },
   "newsCluster": {
     "failedToLoad": "Не удалось загрузить детали кластера",
@@ -1113,7 +1118,10 @@
     "emptyCtaFollow": "Отследить историю",
     "removeMemberAction": "Не относится к этому сюжету",
     "removeMemberConfirmTitle": "Убрать эту статью?",
-    "removeMemberConfirmBody": "Эта статья убирается из хронологии сюжета. Mera продолжит следить за самим сюжетом."
+    "removeMemberConfirmBody": "Эта статья убирается из хронологии сюжета. Mera продолжит следить за самим сюжетом.",
+    "timelineLoadFailed": "Не удалось загрузить эту историю. Потяните вниз, чтобы повторить.",
+    "deleteFailed": "Не удалось отписаться от этой истории. Попробуйте ещё раз.",
+    "removeFailed": "Не удалось убрать эту статью из истории. Попробуйте ещё раз."
   },
   "whatsNew": {
     "title": "Что нового",

@@ -240,7 +240,11 @@
     "statsRead_one": "i przeczytałeś {{formatted}}.",
     "statsRead_few": "i przeczytałeś {{formatted}}.",
     "statsRead_many": "i przeczytałeś {{formatted}}.",
-    "statsRead_other": "i przeczytałeś {{formatted}}."
+    "statsRead_other": "i przeczytałeś {{formatted}}.",
+    "reasonUnavailable": "Mera nie mogła napisać notatki do tego artykułu.",
+    "loadingA11y": "Wczytywanie Twojego kanału",
+    "newStoriesPill": "Nowe wiadomości",
+    "translatingCaption": "Tłumaczenie…"
   },
   "relevance": {
     "emergency": "Pilne",
@@ -270,7 +274,8 @@
     "readOn": "Czytaj w {{publication}}",
     "readOnGoogleTranslate": "Czytaj w Google Translate",
     "linkUnavailable": "Tego linku nie można otworzyć bezpiecznie, dlatego nie jest tu dostępny.",
-    "relatedFromSubscriptions": "Z Twoich subskrypcji"
+    "relatedFromSubscriptions": "Z Twoich subskrypcji",
+    "relatedLoadFailed": "Nie udało się wczytać powiązanych artykułów."
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",
@@ -1111,7 +1116,10 @@
     "emptyCtaFollow": "Śledź historię",
     "removeMemberAction": "Nie należy do tej historii",
     "removeMemberConfirmTitle": "Usunąć ten artykuł?",
-    "removeMemberConfirmBody": "Ten artykuł zostanie usunięty z osi czasu historii. Mera nadal śledzi samą historię."
+    "removeMemberConfirmBody": "Ten artykuł zostanie usunięty z osi czasu historii. Mera nadal śledzi samą historię.",
+    "timelineLoadFailed": "Nie udało się wczytać tej historii. Pociągnij w dół, aby spróbować ponownie.",
+    "deleteFailed": "Nie udało się przestać obserwować tej historii. Spróbuj ponownie.",
+    "removeFailed": "Nie udało się usunąć tego artykułu z historii. Spróbuj ponownie."
   },
   "whatsNew": {
     "title": "Co nowego",

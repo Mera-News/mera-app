@@ -228,7 +228,11 @@
     "statsPublishedPending_one": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
     "statsPublished_one": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir,",
     "statsRead_one": "dan Anda telah membaca {{formatted}}.",
-    "statsRelevant_one": "{{formatted}} terlihat relevan,"
+    "statsRelevant_one": "{{formatted}} terlihat relevan,",
+    "reasonUnavailable": "Mera tidak bisa menulis catatan untuk artikel ini.",
+    "loadingA11y": "Memuat feed kamu",
+    "newStoriesPill": "Berita baru",
+    "translatingCaption": "Menerjemahkan…"
   },
   "relevance": {
     "emergency": "Darurat",
@@ -258,7 +262,8 @@
     "readOn": "Baca di {{publication}}",
     "readOnGoogleTranslate": "Baca di Google Translate",
     "linkUnavailable": "Tautan ini tidak dapat dibuka dengan aman, jadi tidak tersedia di sini.",
-    "relatedFromSubscriptions": "Dari langganan Anda"
+    "relatedFromSubscriptions": "Dari langganan Anda",
+    "relatedLoadFailed": "Tidak dapat memuat artikel terkait."
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "Ikuti cerita",
     "removeMemberAction": "Bukan bagian dari cerita ini",
     "removeMemberConfirmTitle": "Hapus artikel ini?",
-    "removeMemberConfirmBody": "Artikel ini dihapus dari linimasa cerita. Mera tetap mengikuti ceritanya."
+    "removeMemberConfirmBody": "Artikel ini dihapus dari linimasa cerita. Mera tetap mengikuti ceritanya.",
+    "timelineLoadFailed": "Tidak dapat memuat berita ini. Tarik ke bawah untuk mencoba lagi.",
+    "deleteFailed": "Tidak dapat berhenti mengikuti berita ini. Coba lagi.",
+    "removeFailed": "Tidak dapat menghapus artikel ini dari berita. Coba lagi."
   },
   "whatsNew": {
     "title": "Yang baru",

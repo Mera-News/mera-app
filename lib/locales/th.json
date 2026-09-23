@@ -228,7 +228,11 @@
     "statsPublishedPending_one": "{{formatted}} บทความได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา",
     "statsPublished_one": "{{formatted}} บทความได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา,",
     "statsRead_one": "และคุณได้อ่าน {{formatted}}.",
-    "statsRelevant_one": "{{formatted}} ดูเกี่ยวข้องกับคุณ,"
+    "statsRelevant_one": "{{formatted}} ดูเกี่ยวข้องกับคุณ,",
+    "reasonUnavailable": "Mera เขียนบันทึกสำหรับบทความนี้ไม่ได้",
+    "loadingA11y": "กำลังโหลดฟีดของคุณ",
+    "newStoriesPill": "ข่าวใหม่",
+    "translatingCaption": "กำลังแปล…"
   },
   "relevance": {
     "emergency": "เหตุฉุกเฉิน",
@@ -258,7 +262,8 @@
     "readOn": "อ่านบน {{publication}}",
     "readOnGoogleTranslate": "อ่านบน Google Translate",
     "linkUnavailable": "ลิงก์นี้ไม่สามารถเปิดได้อย่างปลอดภัย จึงไม่พร้อมใช้งานที่นี่",
-    "relatedFromSubscriptions": "จากการสมัครสมาชิกของคุณ"
+    "relatedFromSubscriptions": "จากการสมัครสมาชิกของคุณ",
+    "relatedLoadFailed": "โหลดบทความที่เกี่ยวข้องไม่ได้"
   },
   "newsCluster": {
     "failedToLoad": "โหลดรายละเอียดกลุ่มข่าวไม่สำเร็จ",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "ติดตามเรื่อง",
     "removeMemberAction": "ไม่ใช่ส่วนหนึ่งของเรื่องนี้",
     "removeMemberConfirmTitle": "นำบทความนี้ออกไหม",
-    "removeMemberConfirmBody": "บทความนี้จะถูกนำออกจากไทม์ไลน์ของเรื่อง Mera ยังคงติดตามตัวเรื่องต่อไป"
+    "removeMemberConfirmBody": "บทความนี้จะถูกนำออกจากไทม์ไลน์ของเรื่อง Mera ยังคงติดตามตัวเรื่องต่อไป",
+    "timelineLoadFailed": "โหลดเรื่องนี้ไม่ได้ ดึงลงเพื่อลองอีกครั้ง",
+    "deleteFailed": "เลิกติดตามเรื่องนี้ไม่ได้ ลองอีกครั้ง",
+    "removeFailed": "นำบทความนี้ออกจากเรื่องไม่ได้ ลองอีกครั้ง"
   },
   "whatsNew": {
     "title": "มีอะไรใหม่",

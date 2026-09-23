@@ -228,7 +228,11 @@
     "statsRelevant_one": "{{formatted}} ist relevant,",
     "statsRelevant_other": "{{formatted}} sind relevant,",
     "statsRead_one": "und Sie haben {{formatted}} gelesen.",
-    "statsRead_other": "und Sie haben {{formatted}} gelesen."
+    "statsRead_other": "und Sie haben {{formatted}} gelesen.",
+    "reasonUnavailable": "Mera konnte hierzu keine Notiz schreiben.",
+    "loadingA11y": "Dein Feed wird geladen",
+    "newStoriesPill": "Neue Meldungen",
+    "translatingCaption": "Wird übersetzt…"
   },
   "relevance": {
     "emergency": "Notfall",
@@ -258,7 +262,8 @@
     "readOn": "Bei {{publication}} lesen",
     "readOnGoogleTranslate": "Bei Google Translate lesen",
     "linkUnavailable": "Dieser Link kann nicht sicher geöffnet werden, daher ist er hier nicht verfügbar.",
-    "relatedFromSubscriptions": "Aus deinen Abos"
+    "relatedFromSubscriptions": "Aus deinen Abos",
+    "relatedLoadFailed": "Ähnliche Artikel konnten nicht geladen werden."
   },
   "newsCluster": {
     "failedToLoad": "Cluster-Details konnten nicht geladen werden",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "Folge einer Geschichte",
     "removeMemberAction": "Gehört nicht zu dieser Story",
     "removeMemberConfirmTitle": "Diesen Artikel entfernen?",
-    "removeMemberConfirmBody": "Dieser Artikel wird aus dem Verlauf der Story entfernt. Mera verfolgt die Story selbst weiter."
+    "removeMemberConfirmBody": "Dieser Artikel wird aus dem Verlauf der Story entfernt. Mera verfolgt die Story selbst weiter.",
+    "timelineLoadFailed": "Diese Geschichte konnte nicht geladen werden. Zum erneuten Versuch nach unten ziehen.",
+    "deleteFailed": "Das Entfolgen hat nicht geklappt. Versuch es noch einmal.",
+    "removeFailed": "Der Artikel konnte nicht aus der Geschichte entfernt werden. Versuch es noch einmal."
   },
   "whatsNew": {
     "title": "Neuigkeiten",

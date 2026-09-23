@@ -240,7 +240,11 @@
     "statsRead_one": "і ви прочитали {{formatted}}.",
     "statsRead_few": "і ви прочитали {{formatted}}.",
     "statsRead_many": "і ви прочитали {{formatted}}.",
-    "statsRead_other": "і ви прочитали {{formatted}}."
+    "statsRead_other": "і ви прочитали {{formatted}}.",
+    "reasonUnavailable": "Mera не змогла написати нотатку до цієї статті.",
+    "loadingA11y": "Завантажуємо вашу стрічку",
+    "newStoriesPill": "Нові статті",
+    "translatingCaption": "Переклад…"
   },
   "relevance": {
     "emergency": "Надзвичайна подія",
@@ -270,7 +274,8 @@
     "readOn": "Читати в {{publication}}",
     "readOnGoogleTranslate": "Читати в Google Translate",
     "linkUnavailable": "Це посилання не можна безпечно відкрити, тому воно недоступне тут.",
-    "relatedFromSubscriptions": "З ваших передплат"
+    "relatedFromSubscriptions": "З ваших передплат",
+    "relatedLoadFailed": "Не вдалося завантажити схожі статті."
   },
   "newsCluster": {
     "failedToLoad": "Не вдалося завантажити деталі кластера",
@@ -1117,7 +1122,10 @@
     "emptyCtaFollow": "Слідкувати за історією",
     "removeMemberAction": "Не стосується цього сюжету",
     "removeMemberConfirmTitle": "Прибрати цю статтю?",
-    "removeMemberConfirmBody": "Цю статтю буде прибрано з хронології сюжету. Mera продовжить стежити за самим сюжетом."
+    "removeMemberConfirmBody": "Цю статтю буде прибрано з хронології сюжету. Mera продовжить стежити за самим сюжетом.",
+    "timelineLoadFailed": "Не вдалося завантажити цю історію. Потягніть униз, щоб повторити.",
+    "deleteFailed": "Не вдалося припинити стежити за цією історією. Спробуйте ще раз.",
+    "removeFailed": "Не вдалося прибрати цю статтю з історії. Спробуйте ще раз."
   },
   "whatsNew": {
     "title": "Що нового",

@@ -228,7 +228,11 @@
     "statsRelevant_one": "{{formatted}} parece relevante,",
     "statsRelevant_other": "{{formatted}} parecem relevantes,",
     "statsRead_one": "e você leu {{formatted}}.",
-    "statsRead_other": "e você leu {{formatted}}."
+    "statsRead_other": "e você leu {{formatted}}.",
+    "reasonUnavailable": "A Mera não conseguiu escrever uma nota para este artigo.",
+    "loadingA11y": "Carregando seu feed",
+    "newStoriesPill": "Novas notícias",
+    "translatingCaption": "Traduzindo…"
   },
   "relevance": {
     "emergency": "Emergência",
@@ -258,7 +262,8 @@
     "readOn": "Ler em {{publication}}",
     "readOnGoogleTranslate": "Ler no Google Translate",
     "linkUnavailable": "Este link não pode ser aberto com segurança, então não está disponível aqui.",
-    "relatedFromSubscriptions": "Das suas assinaturas"
+    "relatedFromSubscriptions": "Das suas assinaturas",
+    "relatedLoadFailed": "Não foi possível carregar os artigos relacionados."
   },
   "newsCluster": {
     "failedToLoad": "Falha ao carregar detalhes do grupo",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "Acompanhar uma história",
     "removeMemberAction": "Não faz parte desta história",
     "removeMemberConfirmTitle": "Remover este artigo?",
-    "removeMemberConfirmBody": "Este artigo é removido da linha do tempo da história. O Mera continua acompanhando a história."
+    "removeMemberConfirmBody": "Este artigo é removido da linha do tempo da história. O Mera continua acompanhando a história.",
+    "timelineLoadFailed": "Não foi possível carregar esta história. Puxe para baixo para tentar de novo.",
+    "deleteFailed": "Não foi possível deixar de seguir esta história. Tente de novo.",
+    "removeFailed": "Não foi possível remover este artigo da história. Tente de novo."
   },
   "whatsNew": {
     "title": "Novidades",

@@ -252,7 +252,11 @@
     "statsRead_two": "وقرأت {{formatted}}.",
     "statsRead_few": "وقرأت {{formatted}}.",
     "statsRead_many": "وقرأت {{formatted}}.",
-    "statsRead_other": "وقرأت {{formatted}}."
+    "statsRead_other": "وقرأت {{formatted}}.",
+    "reasonUnavailable": "لم تتمكن ميرا من كتابة ملاحظة لهذا المقال.",
+    "loadingA11y": "جارٍ تحميل موجزك",
+    "newStoriesPill": "أخبار جديدة",
+    "translatingCaption": "جارٍ الترجمة…"
   },
   "relevance": {
     "emergency": "طارئ",
@@ -282,7 +286,8 @@
     "readOn": "اقرأ على {{publication}}",
     "readOnGoogleTranslate": "اقرأ على Google Translate",
     "linkUnavailable": "لا يمكن فتح هذا الرابط بشكل آمن، لذا غير متاح هنا.",
-    "relatedFromSubscriptions": "من اشتراكاتك"
+    "relatedFromSubscriptions": "من اشتراكاتك",
+    "relatedLoadFailed": "تعذر تحميل المقالات ذات الصلة."
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",
@@ -1139,7 +1144,10 @@
     "emptyCtaFollow": "متابعة قصة",
     "removeMemberAction": "ليست جزءًا من هذه القصة",
     "removeMemberConfirmTitle": "هل تريد إزالة هذه المقالة؟",
-    "removeMemberConfirmBody": "تُزال هذه المقالة من الخط الزمني للقصة. يواصل Mera متابعة القصة نفسها."
+    "removeMemberConfirmBody": "تُزال هذه المقالة من الخط الزمني للقصة. يواصل Mera متابعة القصة نفسها.",
+    "timelineLoadFailed": "تعذر تحميل هذه القصة. اسحب للأسفل للمحاولة مرة أخرى.",
+    "deleteFailed": "تعذر إيقاف متابعة هذه القصة. حاول مرة أخرى.",
+    "removeFailed": "تعذرت إزالة هذا المقال من القصة. حاول مرة أخرى."
   },
   "whatsNew": {
     "title": "ما الجديد",

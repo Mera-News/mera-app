@@ -284,7 +284,11 @@
     "statsRelevant_one": "{{formatted}} looks relevant,",
     "statsRelevant_other": "{{formatted}} look relevant,",
     "statsRead_one": "and you've read {{formatted}}.",
-    "statsRead_other": "and you've read {{formatted}}."
+    "statsRead_other": "and you've read {{formatted}}.",
+    "reasonUnavailable": "Mera couldn't write a note for this one.",
+    "loadingA11y": "Loading your feed",
+    "newStoriesPill": "New stories",
+    "translatingCaption": "Translating…"
   },
   "relevance": {
     "emergency": "Emergency",
@@ -314,7 +318,8 @@
     "sourceCountryGlobal": "Worldwide",
     "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name.",
     "linkUnavailable": "This link can't be opened securely, so it isn't available here.",
-    "relatedFromSubscriptions": "From your subscriptions"
+    "relatedFromSubscriptions": "From your subscriptions",
+    "relatedLoadFailed": "Couldn't load related articles."
   },
   "relatedSort": {
     "a11yLabel": "Sort related articles",
@@ -558,7 +563,10 @@
     "deleteStoryConfirmBody": "Deleting removes everything saved for this story.",
     "removeMemberAction": "Not part of this story",
     "removeMemberConfirmTitle": "Remove this article?",
-    "removeMemberConfirmBody": "This article is removed from the story's timeline. Mera keeps following the story itself."
+    "removeMemberConfirmBody": "This article is removed from the story's timeline. Mera keeps following the story itself.",
+    "timelineLoadFailed": "Couldn't load this story. Pull down to try again.",
+    "deleteFailed": "Couldn't stop following this story. Try again.",
+    "removeFailed": "Couldn't remove this article from the story. Try again."
   },
   "whatsNew": {
     "title": "What's new",

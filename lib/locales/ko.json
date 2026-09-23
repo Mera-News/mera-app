@@ -228,7 +228,11 @@
     "statsPublishedPending_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
     "statsPublished_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다,",
     "statsRead_one": "당신은 {{formatted}}개를 읽었습니다.",
-    "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,"
+    "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,",
+    "reasonUnavailable": "Mera가 이 기사에 대한 메모를 작성하지 못했어요.",
+    "loadingA11y": "피드를 불러오는 중",
+    "newStoriesPill": "새 소식",
+    "translatingCaption": "번역 중…"
   },
   "relevance": {
     "emergency": "긴급",
@@ -258,7 +262,8 @@
     "readOn": "{{publication}}에서 읽기",
     "readOnGoogleTranslate": "구글 번역으로 읽기",
     "linkUnavailable": "이 링크는 안전하게 열 수 없으므로 여기서 사용할 수 없습니다.",
-    "relatedFromSubscriptions": "구독 중인 매체에서"
+    "relatedFromSubscriptions": "구독 중인 매체에서",
+    "relatedLoadFailed": "관련 기사를 불러오지 못했어요."
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",
@@ -1093,7 +1098,10 @@
     "emptyCtaFollow": "스토리 팔로우",
     "removeMemberAction": "이 스토리에 속하지 않음",
     "removeMemberConfirmTitle": "이 기사를 삭제할까요?",
-    "removeMemberConfirmBody": "이 기사는 스토리 타임라인에서 삭제됩니다. Mera는 스토리 자체를 계속 팔로우합니다."
+    "removeMemberConfirmBody": "이 기사는 스토리 타임라인에서 삭제됩니다. Mera는 스토리 자체를 계속 팔로우합니다.",
+    "timelineLoadFailed": "이 스토리를 불러오지 못했어요. 아래로 당겨 다시 시도하세요.",
+    "deleteFailed": "이 스토리의 팔로우를 해제하지 못했어요. 다시 시도하세요.",
+    "removeFailed": "이 기사를 스토리에서 제거하지 못했어요. 다시 시도하세요."
   },
   "whatsNew": {
     "title": "새로운 기능",

@@ -233,7 +233,11 @@
     "statsRelevant_other": "{{formatted}} semblent pertinents,",
     "statsRead_one": "et vous avez lu {{formatted}}.",
     "statsRead_many": "et vous avez lu {{formatted}}.",
-    "statsRead_other": "et vous avez lu {{formatted}}."
+    "statsRead_other": "et vous avez lu {{formatted}}.",
+    "reasonUnavailable": "Mera n'a pas pu rédiger de note pour cet article.",
+    "loadingA11y": "Chargement de votre fil",
+    "newStoriesPill": "Nouveaux articles",
+    "translatingCaption": "Traduction…"
   },
   "relevance": {
     "emergency": "Urgence",
@@ -263,7 +267,8 @@
     "readOn": "Lire sur {{publication}}",
     "readOnGoogleTranslate": "Lire sur Google Translate",
     "linkUnavailable": "Ce lien ne peut pas être ouvert de manière sécurisée, il n'est donc pas disponible ici.",
-    "relatedFromSubscriptions": "De vos abonnements"
+    "relatedFromSubscriptions": "De vos abonnements",
+    "relatedLoadFailed": "Impossible de charger les articles associés."
   },
   "newsCluster": {
     "failedToLoad": "Impossible de charger les détails du groupe",
@@ -1099,7 +1104,10 @@
     "emptyCtaFollow": "Suivre une histoire",
     "removeMemberAction": "Ne fait pas partie de cette actualité",
     "removeMemberConfirmTitle": "Retirer cet article ?",
-    "removeMemberConfirmBody": "Cet article est retiré de la chronologie de l'actualité. Mera continue de suivre l'actualité elle-même."
+    "removeMemberConfirmBody": "Cet article est retiré de la chronologie de l'actualité. Mera continue de suivre l'actualité elle-même.",
+    "timelineLoadFailed": "Impossible de charger ce sujet. Tirez vers le bas pour réessayer.",
+    "deleteFailed": "Impossible d'arrêter de suivre ce sujet. Réessayez.",
+    "removeFailed": "Impossible de retirer cet article du sujet. Réessayez."
   },
   "whatsNew": {
     "title": "Nouveautés",

@@ -228,7 +228,11 @@
     "statsRelevant_one": "{{formatted}} uygun görünüyor,",
     "statsRelevant_other": "{{formatted}} uygun görünüyor,",
     "statsRead_one": "ve {{formatted}} okumuşsun.",
-    "statsRead_other": "ve {{formatted}} okumuşsun."
+    "statsRead_other": "ve {{formatted}} okumuşsun.",
+    "reasonUnavailable": "Mera bu haber için not yazamadı.",
+    "loadingA11y": "Akışın yükleniyor",
+    "newStoriesPill": "Yeni haberler",
+    "translatingCaption": "Çevriliyor…"
   },
   "relevance": {
     "emergency": "Acil",
@@ -258,7 +262,8 @@
     "readOn": "{{publication}}'da Oku",
     "readOnGoogleTranslate": "Google Translate'de Oku",
     "linkUnavailable": "Bu bağlantı güvenli bir şekilde açılamıyor, bu yüzden burada mevcut değil.",
-    "relatedFromSubscriptions": "Aboneliklerinizden"
+    "relatedFromSubscriptions": "Aboneliklerinizden",
+    "relatedLoadFailed": "İlgili makaleler yüklenemedi."
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",
@@ -1095,7 +1100,10 @@
     "emptyCtaFollow": "Bir hikayeyi takip et",
     "removeMemberAction": "Bu haberin parçası değil",
     "removeMemberConfirmTitle": "Bu makale kaldırılsın mı?",
-    "removeMemberConfirmBody": "Bu makale haberin zaman çizelgesinden kaldırılır. Mera haberi takip etmeye devam eder."
+    "removeMemberConfirmBody": "Bu makale haberin zaman çizelgesinden kaldırılır. Mera haberi takip etmeye devam eder.",
+    "timelineLoadFailed": "Bu haber yüklenemedi. Tekrar denemek için aşağı çekin.",
+    "deleteFailed": "Bu haberin takibi bırakılamadı. Tekrar dene.",
+    "removeFailed": "Bu makale haberden kaldırılamadı. Tekrar dene."
   },
   "whatsNew": {
     "title": "Yenilikler",
