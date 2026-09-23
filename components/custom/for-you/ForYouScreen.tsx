@@ -365,10 +365,24 @@ const MeraNewsScreen: React.FC = () => {
     // arrival, or a snapshot input change — never on a live open.
     const feed = useMemo(() => {
         if (!snapshots) return { breaking: [], rows: [] };
-        return buildFactRows(suggestions, snapshots, sortSnapshot.openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
-    }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx]);
+        return buildFactRows(
+            suggestions,
+            snapshots,
+            sortSnapshot.openedIds,
+            Date.now(),
+            DEFAULT_HARNESS_CONFIG,
+            userGeoLanguageCtx,
+            // Decides an empty section's reason: not looked yet, or looked and
+            // found nothing close enough (D4).
+            lastProcessingRunFinishedAt,
+        );
+    }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx, lastProcessingRunFinishedAt]);
 
-    const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
+    // "Something to show" means a STORY. Empty interest sections (D4) are rows
+    // too, and counting them would retire the processing card and the empty-
+    // feed watchdog the moment a reader has any interest at all.
+    const hasRenderableContent =
+        feed.breaking.length > 0 || feed.rows.some((r) => r.groups.length > 0);
 
     // DEV-only twin of FeedScreen's paint mark. `hasRenderableContent` is the
     // Dashboard's OWN "there is something to show" predicate (it already gates
@@ -539,6 +553,7 @@ const MeraNewsScreen: React.FC = () => {
                         scrollHandler={scrollHandler}
                         headerHeight={headerHeight}
                         ListEmptyComponent={emptyState}
+                        noStoriesLead={emptyState}
                         refreshing={refreshing}
                         onRefresh={onRefresh}
                     />

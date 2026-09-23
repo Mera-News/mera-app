@@ -118,6 +118,17 @@ jest.mock('@/components/custom/for-you/SectionDenominatorLine', () => {
         default: ({ read, shown }: any) => <Text>{`denom:${read}/${shown}`}</Text>,
     };
 });
+jest.mock('@/components/custom/for-you/ForYouEmptyState', () => {
+    const { Text } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ body, testID }: any) => <Text testID={testID}>{`empty:${body}`}</Text>,
+    };
+});
+jest.mock('@/components/ui/text', () => {
+    const { Text } = require('react-native');
+    return { Text: (p: any) => <Text {...p} /> };
+});
 jest.mock('@/components/custom/for-you/SectionViewAllText', () => {
     const { Text, Pressable } = require('react-native');
     return {
@@ -446,5 +457,52 @@ describe('DashboardSectionsFeed — no importance gate', () => {
         ]);
         expect(getByLabelText('header:Statement f1')).toBeTruthy();
         expect(getAllByText(/^card:/)).toHaveLength(1);
+    });
+});
+
+describe('DashboardSectionsFeed: empty interest sections (D4)', () => {
+    function emptyRow(factId: string, emptyReason: 'awaiting-first-run' | 'no-match-yet', newInterest = false): FactRow {
+        return { ...makeRow(factId, []), emptyReason, newInterest } as FactRow;
+    }
+
+    it('renders an empty section with the reason copy and no open button or count', () => {
+        const { getByTestId, getByText, queryByLabelText } = renderFeed([
+            emptyRow('f-new', 'awaiting-first-run'),
+        ]);
+        expect(getByTestId('dashboard-section-empty-f-new')).toBeTruthy();
+        expect(getByText('empty:forYou.emptySection.awaiting')).toBeTruthy();
+        expect(queryByLabelText('viewall')).toBeNull();
+        expect(getByText('total:0')).toBeTruthy();
+    });
+
+    it('says the other reason once a run has looked and found nothing', () => {
+        const { getByText } = renderFeed([emptyRow('f-old', 'no-match-yet')]);
+        expect(getByText('empty:forYou.emptySection.none')).toBeTruthy();
+    });
+
+    it('labels a new interest as new', () => {
+        const { getByTestId, queryByTestId } = renderFeed([
+            emptyRow('f-new', 'awaiting-first-run', true),
+            emptyRow('f-old', 'no-match-yet', false),
+        ]);
+        expect(getByTestId('dashboard-section-new-f-new')).toBeTruthy();
+        expect(queryByTestId('dashboard-section-new-f-old')).toBeNull();
+    });
+
+    it('leads with the no-stories element when only empty sections exist', () => {
+        const { Text } = require('react-native');
+        const { getByText } = renderFeed([emptyRow('f-new', 'awaiting-first-run')], {
+            noStoriesLead: <Text>lead</Text>,
+        });
+        expect(getByText('lead')).toBeTruthy();
+    });
+
+    it('does not show the lead once any section has a story', () => {
+        const { Text } = require('react-native');
+        const { queryByText } = renderFeed(
+            [makeRow('f1', [makeGroup('g1', 1, 1)]), emptyRow('f-new', 'awaiting-first-run')],
+            { noStoriesLead: <Text>lead</Text> },
+        );
+        expect(queryByText('lead')).toBeNull();
     });
 });
