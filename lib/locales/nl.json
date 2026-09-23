@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "Alleen opgezocht als je erom vraagt",
     "autoCommunityFactCheckDescription": "Factchecks worden gedeeld. Als iemand een verhaal laat checken, wordt het resultaat bij dat verhaal bewaard en kan iedereen het zien. Staat dit aan, dan zoekt Mera bij elk artikel dat je opent naar een bestaande check. Staat het uit, dan zoekt Mera alleen als je op de factcheck-knop tikt, zodat het vragen iets blijft wat je per verhaal zelf kiest.",
     "loadFailedDescription": "Kan de Mera Protocol-instellingen niet laden.",
-    "loadFailedTitle": "Laden mislukt"
+    "loadFailedTitle": "Laden mislukt",
+    "chooseModel": "Kies één model om te downloaden. Je kunt later wisselen.",
+    "downloadModelNamed": "{{model}} downloaden ({{size}})",
+    "deleteModelDescription": "Dit verwijdert {{model}} ({{size}}) van dit apparaat. Je kunt het later opnieuw downloaden. Als je verwerking op het apparaat gebruikt, word je overgeschakeld naar cloud.",
+    "switchModelTitle": "Van model wisselen?",
+    "switchModelDescription": "{{current}} wordt van dit apparaat verwijderd. Download {{new}} om verwerking op het apparaat weer te gebruiken.",
+    "switchModelConfirm": "Wisselen",
+    "modelLicense": "Licentie: {{license}}",
+    "speedTitle": "Snelheid op dit apparaat",
+    "speedLoad": "Laadtijd: {{seconds}} s",
+    "speedGeneration": "Schrijfsnelheid: {{tokPerSec}} tokens/s",
+    "speedRelevance": "Relevantie: {{ms}} ms per artikel",
+    "speedReason": "Redenen: {{ms}} ms per artikel",
+    "speedResetNote": "Gemeten tijdens je laatste synchronisatie. Wordt gewist wanneer de app opnieuw start."
   },
   "manageData": {
     "deleting": "Verwijderen...",

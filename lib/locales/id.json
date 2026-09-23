@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "Dicari hanya saat Anda meminta",
     "autoCommunityFactCheckDescription": "Cek fakta bersifat bersama. Saat seseorang meminta sebuah berita diperiksa, hasilnya disimpan bersama berita itu dan siapa pun bisa melihatnya. Jika dinyalakan, Mera mencari cek yang sudah ada setiap kali Anda membuka artikel. Jika dibiarkan mati, Mera hanya mencari ketika Anda mengetuk tombol cek fakta, sehingga meminta tetap menjadi pilihan Anda pada satu berita.",
     "loadFailedDescription": "Gagal memuat pengaturan Mera Protocol.",
-    "loadFailedTitle": "Gagal Memuat"
+    "loadFailedTitle": "Gagal Memuat",
+    "chooseModel": "Pilih satu model untuk diunduh. Anda dapat menggantinya nanti.",
+    "downloadModelNamed": "Unduh {{model}} ({{size}})",
+    "deleteModelDescription": "Ini akan menghapus {{model}} ({{size}}) dari perangkat ini. Anda dapat mengunduhnya kembali nanti. Jika Anda menggunakan pemrosesan di perangkat, Anda akan dialihkan ke cloud.",
+    "switchModelTitle": "Ganti model?",
+    "switchModelDescription": "{{current}} akan dihapus dari perangkat ini. Unduh {{new}} untuk menggunakan pemrosesan di perangkat lagi.",
+    "switchModelConfirm": "Ganti",
+    "modelLicense": "Lisensi: {{license}}",
+    "speedTitle": "Kecepatan di perangkat ini",
+    "speedLoad": "Waktu muat: {{seconds}} dtk",
+    "speedGeneration": "Kecepatan menulis: {{tokPerSec}} token/dtk",
+    "speedRelevance": "Relevansi: {{ms}} md per artikel",
+    "speedReason": "Alasan: {{ms}} md per artikel",
+    "speedResetNote": "Diukur saat sinkronisasi terakhir Anda. Dihapus saat aplikasi dimulai ulang."
   },
   "manageData": {
     "deleting": "Menghapus...",

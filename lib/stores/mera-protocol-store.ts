@@ -1,6 +1,10 @@
 import { deleteSetting, getSetting, setSetting } from '@/lib/database/services/setting-service';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
+import {
+  DEFAULT_MODEL_ID,
+  isRetiredModelId,
+} from '@/lib/mera-protocol-toolkit/core/model-catalog';
 import { create } from 'zustand';
 
 type ModelStateLabel =
@@ -113,7 +117,7 @@ interface MeraProtocolState {
   hydrateFromDb: () => Promise<void>;
 }
 
-const DEFAULT_SELECTED_MODEL_ID = 'mera-qwen3.5-4b';
+const DEFAULT_SELECTED_MODEL_ID = DEFAULT_MODEL_ID;
 
 const DEFAULT_PROCESSING_MODE: ProcessingMode = ProcessingMode.Cloud;
 
@@ -339,7 +343,15 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         deleteSetting(LEGACY_SETTING_PROTOCOL_ENABLED).catch(() => { });
       }
       if (modelIdValue !== null) {
-        updates.selectedModelId = modelIdValue;
+        if (isRetiredModelId(modelIdValue)) {
+          // A retired model is no longer offered. Remap it to the default and
+          // rewrite the row, so a restored old backup cannot bring it back.
+          // Its files are deleted at boot by retireLegacyModels().
+          updates.selectedModelId = DEFAULT_SELECTED_MODEL_ID;
+          setSetting('mera_selected_model_id', DEFAULT_SELECTED_MODEL_ID).catch(() => { });
+        } else {
+          updates.selectedModelId = modelIdValue;
+        }
       }
       if (injectNoiseValue === 'true') {
         updates.injectNoise = true;

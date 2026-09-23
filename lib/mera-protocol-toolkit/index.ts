@@ -18,6 +18,16 @@ export {
   purgeAllBaseModels,
 } from './core/modelManager';
 
+// === Model Catalogue ===
+export {
+  MODEL_CATALOG,
+  DEFAULT_MODEL_ID,
+  RETIRED_MODEL_IDS,
+  catalogEntry,
+  isRetiredModelId,
+} from './core/model-catalog';
+export type { ModelCatalogEntry } from './core/model-catalog';
+
 // === Adapter Lifecycle ===
 export {
   downloadAdapter,

@@ -55,7 +55,7 @@ const initialState = {
     webSearchInChat: true,
     deepInterview: false,
     showExtractedMetadata: false,
-    selectedModelId: 'mera-qwen3.5-4b',
+    selectedModelId: 'mera-qwen3.5-2b',
     modelState: 'not_downloaded' as const,
     downloadProgress: 0,
     modelError: null as string | null,
@@ -79,7 +79,7 @@ describe('useMeraProtocolStore', () => {
         expect(state.processingMode).toBe(ProcessingMode.Cloud);
         expect(state.injectNoise).toBe(false);
         expect(state.relevanceV4).toBe(false);
-        expect(state.selectedModelId).toBe('mera-qwen3.5-4b');
+        expect(state.selectedModelId).toBe('mera-qwen3.5-2b');
         expect(state.modelState).toBe('not_downloaded');
         expect(state.isProcessing).toBe(false);
     });
@@ -344,7 +344,7 @@ describe('useMeraProtocolStore', () => {
         expect(state.processingMode).toBe(ProcessingMode.Cloud);
         expect(state.injectNoise).toBe(false);
         expect(state.relevanceV4).toBe(false);
-        expect(state.selectedModelId).toBe('mera-qwen3.5-4b');
+        expect(state.selectedModelId).toBe('mera-qwen3.5-2b');
         expect(state.isProcessing).toBe(false);
 
         await new Promise((r) => setImmediate(r));
@@ -652,6 +652,34 @@ describe('useMeraProtocolStore', () => {
         await useMeraProtocolStore.getState().hydrateFromDb();
 
         expect(useMeraProtocolStore.getState().selectedModelId).toBe('llama-custom-3b');
+    });
+
+    it('hydrateFromDb remaps a retired model id to the default and rewrites the row', async () => {
+        mockGetSetting
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce('mera-qwen3.5-4b') // retired
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce(null);
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().selectedModelId).toBe('mera-qwen3.5-2b');
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_selected_model_id', 'mera-qwen3.5-2b');
+    });
+
+    it('hydrateFromDb keeps a catalogue model id as-is', async () => {
+        mockGetSetting
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce('mera-lfm2.5-2.6b')
+            .mockResolvedValueOnce(null)
+            .mockResolvedValueOnce(null);
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().selectedModelId).toBe('mera-lfm2.5-2.6b');
+        expect(mockSetSetting).not.toHaveBeenCalledWith('mera_selected_model_id', expect.anything());
     });
 
     it('hydrateFromDb sets injectNoise=true from DB', async () => {

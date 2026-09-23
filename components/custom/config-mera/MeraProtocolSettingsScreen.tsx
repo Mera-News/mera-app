@@ -24,6 +24,16 @@ import {
     isModelDownloaded,
 } from '@/lib/mera-protocol-toolkit/core/modelManager';
 import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
+import {
+    MODEL_CATALOG,
+    catalogEntry,
+    type ModelCatalogEntry,
+} from '@/lib/mera-protocol-toolkit/core/model-catalog';
+import {
+    averageMs,
+    resetInferenceStats,
+    useInferenceStats,
+} from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import type { SystemRequirementsResult } from '@/lib/mera-protocol-toolkit/types';
 import {
     useDeepInterview,
@@ -42,39 +52,9 @@ import { AttestationVerificationRow } from '@/components/custom/config-mera/Atte
 import BetaBadge from '@/components/custom/BetaBadge';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, ScrollView } from 'react-native';
+import { Linking, Platform, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-
-type ModelConfig = {
-    modelId: string;
-    label: string;
-    modelUrl: string;
-    expectedChecksum: string;
-    sizeLabel: string;
-};
-
-// The latest model — new installs get this automatically.
-// When this changes, users on an older model will see an "Update Model" button.
-const LATEST_MODEL: ModelConfig = {
-    modelId: 'mera-qwen3.5-4b',
-    label: 'Qwen 3.5 4B',
-    modelUrl: 'https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf',
-    expectedChecksum: '',
-    sizeLabel: '~2.8GB',
-};
-
-// Previous models — only used to display the label for users who haven't updated yet.
-const KNOWN_MODELS: Record<string, ModelConfig> = {
-    'mera-qwen3.5-4b': LATEST_MODEL,
-    'mera-qwen3-4b': {
-        modelId: 'mera-qwen3-4b',
-        label: 'Qwen 3 4B',
-        modelUrl: 'https://huggingface.co/MaziyarPanahi/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507.Q4_K_M.gguf',
-        expectedChecksum: '',
-        sizeLabel: '~2GB',
-    },
-};
 
 interface MeraProtocolSettingsScreenProps {
     onBack?: () => void;
@@ -97,8 +77,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const [showRequirements, setShowRequirements] = useState(false);
     const [showDeleteModelConfirm, setShowDeleteModelConfirm] = useState(false);
     const [isDeletingModel, setIsDeletingModel] = useState(false);
-    const [isUpdatingModel, setIsUpdatingModel] = useState(false);
-    const [showUpdateModelConfirm, setShowUpdateModelConfirm] = useState(false);
+    const [isSwitchingModel, setIsSwitchingModel] = useState(false);
+    // The catalogue entry the user tapped while another model is on disk.
+    const [pendingSwitchTo, setPendingSwitchTo] = useState<ModelCatalogEntry | null>(null);
 
     const processingMode = useProcessingMode();
     const isOnDevice = processingMode === ProcessingMode.OnDevice;
@@ -112,8 +93,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const showExtractedMetadata = useShowExtractedMetadata();
     const autoCommunityFactCheck = useAutoCommunityFactCheck();
 
-    const currentModel = KNOWN_MODELS[selectedModelId] ?? LATEST_MODEL;
-    const hasModelUpdate = selectedModelId !== LATEST_MODEL.modelId;
+    const currentModel = catalogEntry(selectedModelId);
+    const inferenceStats = useInferenceStats();
     const modelDownloaded = modelState === 'downloaded' || modelState === 'ready';
 
     const toast = useToast();
@@ -200,8 +181,14 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             const userId = await getCurrentUserId();
             const userPersona = await AccountService.getUserPersona(userId);
             if (userPersona?.processingMode) {
-                store.setProcessingMode(userPersona.processingMode);
-                setOnDeviceIntent(userPersona.processingMode === ProcessingMode.OnDevice);
+                const wantsOnDevice = userPersona.processingMode === ProcessingMode.OnDevice;
+                setOnDeviceIntent(wantsOnDevice);
+                // Never promote OnDevice without a model on disk (a retired model,
+                // or one the OS evicted from Caches). Keep the intent so the picker
+                // shows; the auto-promote effect flips the mode once a download
+                // finishes.
+                const runnable = !wantsOnDevice || (await isModelDownloaded(selectedModelId));
+                store.setProcessingMode(runnable ? userPersona.processingMode : ProcessingMode.Cloud);
             }
             await checkModelStatus();
         } catch {
@@ -400,42 +387,73 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         }
     }, [store, toast, selectedModelId, t, processingMode, isOnboarding, onModeChange]);
 
-    const handleUpdateModel = useCallback(async () => {
-        setIsUpdatingModel(true);
-        setShowUpdateModelConfirm(false);
+    // Mirrors confirmDeleteModel: the model the user relied on is leaving the
+    // device, so on-device processing falls back to cloud until a new one lands.
+    const fallBackToCloud = useCallback(async () => {
+        if (processingMode !== ProcessingMode.OnDevice) return;
+        if (isOnboarding) {
+            store.setProcessingMode(ProcessingMode.Cloud);
+            onModeChange?.(ProcessingMode.Cloud);
+            return;
+        }
         try {
-            if (modelState === 'ready' || modelState === 'downloaded') {
-                await disposeModel();
-                await deleteBaseModel(selectedModelId);
-            }
+            const userId = await getCurrentUserId();
+            await AccountService.updateProcessingMode(userId, ProcessingMode.Cloud);
+        } catch {
+            // Server mutation failed. Still update locally so the UI reflects
+            // reality; the next settings load will not re-promote OnDevice
+            // without a model on disk.
+        }
+        store.setProcessingMode(ProcessingMode.Cloud);
+        // Reacts only to the inputs listed; `store` and the async helpers are
+        // stable module/singleton refs.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [processingMode, isOnboarding, onModeChange]);
 
-            store.setSelectedModelId(LATEST_MODEL.modelId);
+    const selectModel = useCallback((entry: ModelCatalogEntry) => {
+        if (entry.modelId === selectedModelId) return;
+        if (modelState === 'downloading' || isSwitchingModel) return;
+        // Only one model is ever on disk, so switching away from a downloaded
+        // one deletes it. That is worth a confirm; picking before any download
+        // is not.
+        if (modelState === 'downloaded' || modelState === 'ready' || modelState === 'loading') {
+            setPendingSwitchTo(entry);
+            return;
+        }
+        store.setSelectedModelId(entry.modelId);
+        store.setModelState('not_downloaded');
+        store.setDownloadProgress(0);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedModelId, modelState, isSwitchingModel]);
+
+    const confirmSwitchModel = useCallback(async () => {
+        const target = pendingSwitchTo;
+        setPendingSwitchTo(null);
+        if (!target) return;
+        setIsSwitchingModel(true);
+        try {
+            await disposeModel();
+            await deleteBaseModel(selectedModelId);
+            store.setSelectedModelId(target.modelId);
             store.setModelState('not_downloaded');
             store.setDownloadProgress(0);
-
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>{t('meraProtocol.modelUpdatedTitle')}</ToastTitle>
-                        <ToastDescription>{t('meraProtocol.modelUpdatedDescription', { model: LATEST_MODEL.label })}</ToastDescription>
-                    </Toast>
-                ),
-            });
+            resetInferenceStats();
+            await fallBackToCloud();
         } catch {
             toast.show({
                 placement: 'top',
                 render: () => (
                     <Toast action="error" variant="solid">
-                        <ToastTitle>{t('meraProtocol.modelUpdateFailedTitle')}</ToastTitle>
-                        <ToastDescription>{t('meraProtocol.modelUpdateFailedDescription')}</ToastDescription>
+                        <ToastTitle>{t('meraProtocol.deleteFailedTitle')}</ToastTitle>
+                        <ToastDescription>{t('meraProtocol.deleteFailedDescription')}</ToastDescription>
                     </Toast>
                 ),
             });
         } finally {
-            setIsUpdatingModel(false);
+            setIsSwitchingModel(false);
         }
-    }, [selectedModelId, modelState, store, toast, t]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pendingSwitchTo, selectedModelId, fallBackToCloud, toast, t]);
 
     const getModelStatusText = (): string => {
         switch (modelState) {
@@ -559,6 +577,63 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             {t('meraProtocol.modelRequiredForOnDevice')}
                         </Text>
 
+                        {/* Model picker: one model on disk at a time. */}
+                        <Text size="xs" className="text-typography-400 mb-2">
+                            {t('meraProtocol.chooseModel')}
+                        </Text>
+                        <VStack space="sm" className="mb-4">
+                            {MODEL_CATALOG.map((entry) => {
+                                const selected = entry.modelId === selectedModelId;
+                                const locked = modelState === 'downloading' || isSwitchingModel;
+                                return (
+                                    <VStack key={entry.modelId} space="xs">
+                                        <Pressable
+                                            testID={`mera-protocol-model-option-${entry.modelId.replace(/^mera-/, '')}`}
+                                            onPress={() => selectModel(entry)}
+                                            disabled={locked}
+                                            accessibilityRole="radio"
+                                            accessibilityLabel={`${entry.label}, ${entry.sizeLabel}`}
+                                            accessibilityState={{ selected, disabled: locked }}
+                                            className={
+                                                'rounded-lg px-4 py-3 border ' +
+                                                (selected
+                                                    ? 'border-emerald-500 bg-emerald-950'
+                                                    : 'border-gray-700 bg-background-50') +
+                                                (locked && !selected ? ' opacity-50' : '')
+                                            }
+                                        >
+                                            <HStack space="md" className="items-center">
+                                                <MaterialIcons
+                                                    name={selected ? 'radio-button-checked' : 'radio-button-unchecked'}
+                                                    size={20}
+                                                    color={selected ? '#34d399' : '#9ca3af'}
+                                                />
+                                                <Text className={'flex-1 font-medium ' + (selected ? 'text-emerald-400' : 'text-white')}>
+                                                    {entry.label}
+                                                </Text>
+                                                <Text size="xs" className="text-typography-400">
+                                                    {entry.sizeLabel}
+                                                </Text>
+                                            </HStack>
+                                        </Pressable>
+                                        {/* A sibling of the row, never inside it: a link nested in a
+                                            selectable row steals the row's accessibility activation. */}
+                                        <Pressable
+                                            testID={`mera-protocol-model-license-${entry.modelId.replace(/^mera-/, '')}`}
+                                            onPress={() => { void Linking.openURL(entry.licenseUrl); }}
+                                            accessibilityRole="link"
+                                            hitSlop={6}
+                                            className="self-start ml-4"
+                                        >
+                                            <Text size="xs" className="text-typography-500 underline">
+                                                {t('meraProtocol.modelLicense', { license: entry.licenseName })}
+                                            </Text>
+                                        </Pressable>
+                                    </VStack>
+                                );
+                            })}
+                        </VStack>
+
                         {/* Model Status */}
                         <HStack space="md" className="items-center mb-4">
                             <Box
@@ -587,7 +662,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     onPress={handleDownloadModel}
                                 >
                                     <MaterialIcons name="cloud-download" size={18} color="#ffffff" style={{ marginRight: 8 }} />
-                                    <ButtonText>{t('meraProtocol.downloadModel')}</ButtonText>
+                                    <ButtonText>
+                                        {t('meraProtocol.downloadModelNamed', { model: currentModel.label, size: currentModel.sizeLabel })}
+                                    </ButtonText>
                                 </Button>
                             )}
 
@@ -617,23 +694,39 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     <ButtonText>{t('meraProtocol.retryDownload')}</ButtonText>
                                 </Button>
                             )}
-
-                            {/* Update Model — only shown when a newer model is available */}
-                            {hasModelUpdate && modelState !== 'downloading' && (
-                                <Button
-                                    action="primary"
-                                    variant="outline"
-                                    size="md"
-                                    onPress={() => setShowUpdateModelConfirm(true)}
-                                    isDisabled={isUpdatingModel}
-                                >
-                                    <MaterialIcons name="system-update" size={18} color="#a78bfa" style={{ marginRight: 8 }} />
-                                    <ButtonText className="text-purple-400">
-                                        {isUpdatingModel ? t('common.updating') : t('meraProtocol.updateTo', { modelName: LATEST_MODEL.label })}
-                                    </ButtonText>
-                                </Button>
-                            )}
                         </VStack>
+
+                        {/* Speed on this device: in memory only, never stored or sent. */}
+                        {inferenceStats.modelId === selectedModelId && (
+                            <VStack space="xs" className="mt-4" testID="mera-protocol-speed">
+                                <Text className="text-white text-sm font-semibold">
+                                    {t('meraProtocol.speedTitle')}
+                                </Text>
+                                {inferenceStats.loadMs != null && (
+                                    <Text size="xs" className="text-typography-400">
+                                        {t('meraProtocol.speedLoad', { seconds: (inferenceStats.loadMs / 1000).toFixed(1) })}
+                                    </Text>
+                                )}
+                                {inferenceStats.genTokPerSec != null && (
+                                    <Text size="xs" className="text-typography-400">
+                                        {t('meraProtocol.speedGeneration', { tokPerSec: inferenceStats.genTokPerSec })}
+                                    </Text>
+                                )}
+                                {averageMs(inferenceStats.relevance) != null && (
+                                    <Text size="xs" className="text-typography-400">
+                                        {t('meraProtocol.speedRelevance', { ms: averageMs(inferenceStats.relevance) })}
+                                    </Text>
+                                )}
+                                {averageMs(inferenceStats.reason) != null && (
+                                    <Text size="xs" className="text-typography-400">
+                                        {t('meraProtocol.speedReason', { ms: averageMs(inferenceStats.reason) })}
+                                    </Text>
+                                )}
+                                <Text size="xs" className="text-typography-500">
+                                    {t('meraProtocol.speedResetNote')}
+                                </Text>
+                            </VStack>
+                        )}
                     </Box>
                 </>
             )}
@@ -946,7 +1039,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     </ModalHeader>
                     <ModalBody className="py-6">
                         <Text className="text-gray-300 text-base leading-relaxed">
-                            {t('meraProtocol.deleteDescription')}
+                            {t('meraProtocol.deleteModelDescription', { model: currentModel.label, size: currentModel.sizeLabel })}
                         </Text>
                     </ModalBody>
                     <ModalFooter className="border-t border-gray-700 pt-4">
@@ -974,34 +1067,36 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </ModalContent>
             </Modal>
 
-            {/* Update AI Model Confirmation Modal */}
-            <Modal isOpen={showUpdateModelConfirm} onClose={() => setShowUpdateModelConfirm(false)} size="sm">
+            {/* Switch Model Confirmation Modal */}
+            <Modal isOpen={pendingSwitchTo !== null} onClose={() => setPendingSwitchTo(null)} size="sm">
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-purple-400">{t('meraProtocol.updateTitle')}</Text>
+                        <Text className="text-xl font-semibold text-white">{t('meraProtocol.switchModelTitle')}</Text>
                     </ModalHeader>
                     <ModalBody className="py-6">
                         <Text className="text-gray-300 text-base leading-relaxed">
-                            {t('meraProtocol.updateDescription', { current: currentModel.label, new: LATEST_MODEL.label })}
+                            {t('meraProtocol.switchModelDescription', {
+                                current: currentModel.label,
+                                new: pendingSwitchTo?.label ?? '',
+                            })}
                         </Text>
                     </ModalBody>
                     <ModalFooter className="border-t border-gray-700 pt-4">
                         <VStack className="w-full" space="md">
                             <Button
                                 action="primary"
-                                onPress={handleUpdateModel}
-                                isDisabled={isUpdatingModel}
+                                onPress={confirmSwitchModel}
+                                isDisabled={isSwitchingModel}
                                 className="w-full"
+                                testID="mera-protocol-switch-model-confirm"
                             >
-                                <ButtonText>
-                                    {isUpdatingModel ? t('common.updating') : t('meraProtocol.updateButton')}
-                                </ButtonText>
+                                <ButtonText>{t('meraProtocol.switchModelConfirm')}</ButtonText>
                             </Button>
                             <Button
                                 variant="outline"
                                 action="secondary"
-                                onPress={() => setShowUpdateModelConfirm(false)}
+                                onPress={() => setPendingSwitchTo(null)}
                                 className="w-full"
                             >
                                 <ButtonText>{t('common.cancel')}</ButtonText>

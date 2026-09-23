@@ -42,6 +42,7 @@ import { ensurePushTokenRegistered, handleInitialNotification, setupNotification
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { ProcessingMode } from '@/lib/generated/graphql-types';
 import { purgeAllBaseModels } from '@/lib/mera-protocol-toolkit';
+import { retireLegacyModels } from '@/lib/mera-protocol-toolkit/core/retire-models';
 import { Directory, Paths } from 'expo-file-system';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
@@ -283,6 +284,14 @@ function AppRoot() {
                   tags: { component: 'RootLayout', method: 'purge-disabled-models' },
                 }),
               );
+          } else {
+            // On-device users: delete retired catalogue models and fall back to
+            // Cloud when the selected model is not on disk. Never blocks boot.
+            retireLegacyModels().catch((err) =>
+              logger.captureException(err, {
+                tags: { component: 'RootLayout', method: 'retire-legacy-models' },
+              }),
+            );
           }
 
           // Re-register the Expo push token on every boot. This is idempotent —

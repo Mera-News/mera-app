@@ -511,7 +511,20 @@
     "autoCommunityFactCheckOff": "Recherchée uniquement si vous la demandez",
     "autoCommunityFactCheckDescription": "Les vérifications sont partagées. Quand une personne demande à faire vérifier un article, le résultat est conservé avec cet article et tout le monde peut le consulter. Activez cette option et Mera cherche une vérification existante à chaque article que vous ouvrez. Laissez-la désactivée et Mera ne cherche que lorsque vous touchez le bouton de vérification, de sorte que demander reste un geste choisi, article par article.",
     "loadFailedDescription": "Impossible de charger les paramètres de Mera Protocol.",
-    "loadFailedTitle": "Échec du chargement"
+    "loadFailedTitle": "Échec du chargement",
+    "chooseModel": "Choisissez un modèle à télécharger. Vous pourrez en changer plus tard.",
+    "downloadModelNamed": "Télécharger {{model}} ({{size}})",
+    "deleteModelDescription": "Cela supprimera {{model}} ({{size}}) de cet appareil. Vous pourrez le retélécharger plus tard. Si vous utilisez le traitement sur l'appareil, vous serez basculé vers le cloud.",
+    "switchModelTitle": "Changer de modèle ?",
+    "switchModelDescription": "{{current}} sera supprimé de cet appareil. Téléchargez {{new}} pour utiliser à nouveau le traitement sur l'appareil.",
+    "switchModelConfirm": "Changer",
+    "modelLicense": "Licence : {{license}}",
+    "speedTitle": "Vitesse sur cet appareil",
+    "speedLoad": "Temps de chargement : {{seconds}} s",
+    "speedGeneration": "Vitesse d'écriture : {{tokPerSec}} jetons/s",
+    "speedRelevance": "Pertinence : {{ms}} ms par article",
+    "speedReason": "Raisons : {{ms}} ms par article",
+    "speedResetNote": "Mesuré lors de votre dernière synchronisation. Effacé au redémarrage de l'app."
   },
   "manageData": {
     "deleting": "Suppression...",

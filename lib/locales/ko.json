@@ -506,7 +506,20 @@
     "autoCommunityFactCheckOff": "요청할 때만 조회합니다",
     "autoCommunityFactCheckDescription": "팩트 체크는 공유됩니다. 누군가 어떤 기사에 대한 확인을 요청하면 결과가 그 기사에 저장되어 누구나 볼 수 있습니다. 켜 두면 Mera가 기사를 열 때마다 기존 체크를 찾습니다. 꺼 두면 팩트 체크 버튼을 눌렀을 때만 찾으므로, 요청은 기사마다 직접 선택하는 행동으로 남습니다.",
     "loadFailedDescription": "Mera Protocol 설정을 불러오지 못했습니다.",
-    "loadFailedTitle": "불러오기 실패"
+    "loadFailedTitle": "불러오기 실패",
+    "chooseModel": "다운로드할 모델을 하나 선택하세요. 나중에 변경할 수 있습니다.",
+    "downloadModelNamed": "{{model}} 다운로드 ({{size}})",
+    "deleteModelDescription": "이 기기에서 {{model}}({{size}})이(가) 제거됩니다. 나중에 다시 다운로드할 수 있습니다. 기기 내 처리를 사용 중이라면 클라우드로 전환됩니다.",
+    "switchModelTitle": "모델을 변경할까요?",
+    "switchModelDescription": "이 기기에서 {{current}}이(가) 제거됩니다. 기기 내 처리를 다시 사용하려면 {{new}}을(를) 다운로드하세요.",
+    "switchModelConfirm": "변경",
+    "modelLicense": "라이선스: {{license}}",
+    "speedTitle": "이 기기에서의 속도",
+    "speedLoad": "로드 시간: {{seconds}}초",
+    "speedGeneration": "생성 속도: {{tokPerSec}}토큰/초",
+    "speedRelevance": "관련성: 기사당 {{ms}}ms",
+    "speedReason": "이유: 기사당 {{ms}}ms",
+    "speedResetNote": "마지막 동기화 중에 측정되었습니다. 앱을 다시 시작하면 초기화됩니다."
   },
   "manageData": {
     "deleting": "삭제 중...",
