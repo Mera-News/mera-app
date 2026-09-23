@@ -67,6 +67,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   isRefreshingBlockStatus,
   onSend,
   isInputDisabled,
+  usageNotice,
+  composerHint = null,
 }) => {
   const { t } = useTranslation();
 
@@ -320,7 +322,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   <View style={styles.noticeRow}>
                     <MaterialIcons name="info-outline" size={14} color="rgb(140, 140, 140)" />
                     <Text size="xs" style={styles.noticeText}>
-                      {t('floatingChat.aiUsageNotice')}
+                      {usageNotice ?? t('floatingChat.aiUsageNotice')}
                     </Text>
                   </View>
                 )}
@@ -384,6 +386,14 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       )}
 
       <TopicPlanSaveAllRow factIds={topicPlanFactIds} />
+
+      {composerHint && !blockedMessage ? (
+        <View style={styles.hintRow} testID="chat-composer-hint">
+          <Text size="xs" style={styles.hintText} accessibilityLiveRegion="polite">
+            {composerHint}
+          </Text>
+        </View>
+      ) : null}
 
       <PromptInput
         ref={promptRef}
@@ -466,6 +476,15 @@ const styles = StyleSheet.create({
     color: 'rgb(120, 120, 120)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  // Neutral, not the red banner: nothing has gone wrong, a card is simply
+  // waiting. rgb(185,185,185) on the panel measures ~9:1.
+  hintRow: {
+    marginHorizontal: 16,
+    marginBottom: 6,
+  },
+  hintText: {
+    color: 'rgb(185, 185, 185)',
   },
   blockedBanner: {
     flexDirection: 'row',

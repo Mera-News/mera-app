@@ -171,3 +171,18 @@ describe('F11: "View previous messages" sits above the oldest message', () => {
     expect(onRevealHistory).toHaveBeenCalled();
   });
 });
+
+describe('F7: a neutral hint while a card waits', () => {
+  it('shows the hint and keeps the composer usable', () => {
+    const { getByTestId, getByText } = render(<ChatThread {...props({ composerHint: 'factChoice.pendingHint' })} />);
+    expect(getByText('factChoice.pendingHint')).toBeTruthy();
+    expect(getByTestId('prompt-input').props.accessibilityState.disabled).toBe(false);
+  });
+
+  it('gives way to a real banner', () => {
+    const { queryByTestId } = render(
+      <ChatThread {...props({ composerHint: 'factChoice.pendingHint', blockedMessage: 'chat.inferenceError' })} />,
+    );
+    expect(queryByTestId('chat-composer-hint')).toBeNull();
+  });
+});
