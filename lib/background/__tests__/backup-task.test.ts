@@ -64,7 +64,9 @@ jest.mock('@/lib/backup/backup-settings', () => ({
   backupProviderId: () => mockProvider,
   backupCadence: () => mockCadence,
   recordBackupRun: (at: number) => mockRecordRun(at),
+  recordBackupFailure: (at: number) => mockRecordFailure(at),
 }));
+const mockRecordFailure = jest.fn(async (_at: number) => { calls.push('recordBackupFailure'); });
 
 const mockRunBackup = jest.fn(async () => {
   calls.push('runBackup');
@@ -137,6 +139,9 @@ describe('when it goes wrong', () => {
     // Not stamping is what makes this self-healing: the staleness line keeps
     // counting up and the next window tries again.
     expect(mockRecordRun).not.toHaveBeenCalled();
+    // But the failure IS stamped, so Settings can say "Last backup failed on
+    // <date>" instead of going quiet about a schedule that is not working.
+    expect(mockRecordFailure).toHaveBeenCalledTimes(1);
   });
 
   it('does NOT stamp a run the system interrupted', async () => {
@@ -148,6 +153,8 @@ describe('when it goes wrong', () => {
     });
     expect(await mockTaskBody?.()).toBe(FAILED);
     expect(mockRecordRun).not.toHaveBeenCalled();
+    // Nor as a failure: the upload may well have completed.
+    expect(mockRecordFailure).not.toHaveBeenCalled();
   });
 
   it('removes the expiration listener afterwards', async () => {
