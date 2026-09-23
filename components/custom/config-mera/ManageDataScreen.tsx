@@ -41,8 +41,9 @@ type DataLocation = 'device' | 'server';
 
 interface ManageDataScreenProps {
     onBack?: () => void;
-    /** Open the backup recovery-code flow on arrival — Settings > "Restore from
-     *  a backup" deep-links here with `?restore=1`. */
+    /** Open the backup recovery-code flow on arrival. The `?restore=1` deep
+     *  link sets it; Settings itself opens this screen plainly from its
+     *  "Backup and restore" row, with the backup section first. */
     autoOpenRecover?: boolean;
 }
 

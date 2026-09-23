@@ -2,6 +2,7 @@ import BlockedBanner from '@/components/custom/BlockedBanner';
 import UsageWidget from '@/components/custom/UsageWidget';
 import FactsList from '@/components/custom/facts/FactsList';
 import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
+import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -192,9 +193,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                 >
                     {t('tabs.profile')}
                 </Heading>
-                {/* No "Learn how Mera works" button here any more (M10): it
-                    competed with the title, and "How Mera works" has one home,
-                    Settings > Help. */}
+                {/* N4: what this tab is and how it works, in plain words. The
+                    old "Learn how Mera works" button competed with the title
+                    (M10); the guides have one home, Settings > Help. */}
+                <TabExplainerButton tab="profile" testID="profile-explainer-open" />
             </HStack>
 
             <ScrollView

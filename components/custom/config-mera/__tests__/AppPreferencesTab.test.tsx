@@ -464,4 +464,10 @@ describe('Settings groups (ux1)', () => {
         const r = render(<AppPreferencesTab />);
         expect(r.queryByTestId('settings-row-restore-backup')).toBeNull();
     });
+
+    it('offers no standalone restore entry anywhere in Settings (restore lives in Manage data)', () => {
+        const r = render(<AppPreferencesTab />);
+        expect(r.queryByText('backup.restore')).toBeNull();
+        expect(r.getByTestId('settings-row-backup')).toBeTruthy();
+    });
 });

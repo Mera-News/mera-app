@@ -108,6 +108,10 @@ jest.mock('@/components/custom/profile-hub/HubRow', () => {
     const { Pressable, Text } = require('react-native');
     return { __esModule: true, default: ({ label, onPress }: any) => <Pressable accessibilityLabel={label} onPress={onPress}><Text>{label}</Text></Pressable> };
 });
+jest.mock('@/components/custom/for-you/TabExplainerButton', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: ({ tab, testID }: any) => <View testID={testID} accessibilityLabel={`explainer:${tab}`} /> };
+});
 jest.mock('@/components/custom/facts/FactsList', () => {
     const { Text } = require('react-native');
     return {
@@ -393,5 +397,12 @@ describe('ProfileScreen', () => {
             .map((n: any) => n.props.testID)
             .filter((id: string, i: number, all: string[]) => all.indexOf(id) === i);
         expect(ids).toEqual(['facts-list-mode', 'usage-widget']);
+    });
+
+    it('N4: the header carries the Profile explainer button', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-explainer-open')).toBeTruthy());
+        expect(getByTestId('profile-explainer-open').props.accessibilityLabel).toBe('explainer:profile');
     });
 });
