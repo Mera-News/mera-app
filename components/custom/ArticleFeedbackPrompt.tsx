@@ -19,7 +19,6 @@ import { resolveDetailFeedbackSubject, type DetailFeedbackContext } from '@/comp
 import { openFeedbackChatWithPath } from '@/lib/services/swipe-feedback';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
-import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
 import type { FeedbackNudge } from '@/lib/news-harness/feedback-tree';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Verdict } from '@/lib/stores/feed-order-store';
@@ -41,7 +40,7 @@ interface ArticleFeedbackPromptProps {
         saved: boolean;
         onToggle: () => void;
     };
-    /** When present, renders a self-managing "Track story" button. The subject
+    /** The subject for the ••• menu's Follow item. The subject
      *  carries the stable cluster id when the caller already knows it (suggestion
      *  clusters); otherwise `trackStoryFromSubject` resolves it lazily at track
      *  time via `getNewsClusterForArticle`. */
@@ -82,8 +81,6 @@ interface ArticleFeedbackPromptProps {
  * liked article therefore reads green here now instead of orange.
  *
  * This component owns the STATE; CardActionBar is purely presentational:
- *   - Chat with Mera → opens the floating Mera chat for this article (plain
- *     open, no auto-sent message).
  *   - Like / Dislike → records the verdict (latest-wins, mutually exclusive) and
  *     FLOATS the inline feedback surface over the content above the row so the
  *     user can pick a reason. Re-tapping the same thumb removes the verdict +
@@ -97,7 +94,8 @@ interface ArticleFeedbackPromptProps {
  * shim only one of the two detail screens ever filled in, and the cast that
  * carried it hid the omission.
  *   - Save (optional) → toggles the saved-for-later state (caller-owned).
- *   - Track (optional) → toggles story tracking.
+ *   - ••• → the shared article menu (Ask Mera, Follow, Check for fact checks,
+ *     Google Translate, Fewer from, Report a bug).
  *   - Share (optional, only when the `share` prop has a URL).
  */
 export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
@@ -120,15 +118,11 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     // as a committed one, pixel-identical, across a process restart.
     const [committed, setCommitted] = useState(false);
     const [surfaceClosed, setSurfaceClosed] = useState(false);
-    // Self-managing track state. `track` carries the stable id when known; the
-    // fallback subject keeps the hook happy when the button is absent.
+    // Follow lives in the ••• menu, which owns its state and dialogs. `track`
+    // carries the stable cluster id when known; the fallback keeps the menu's
+    // subject whole when a caller passes none.
     const trackSubject: FeedbackSubject =
         track ?? { origin: 'article', surface: 'detail', articleId, title };
-    const {
-        tracked: storyTracked,
-        onPress: onTrackPress,
-        dialog: trackDialog,
-    } = useTrackButton(trackSubject, !!track);
     const handleShare = useShareArticle(share);
 
     // D3: the shared ••• menu, detail flavour (no "Open on source": the
@@ -319,7 +313,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         // Pressable, so every button in the row (••• included) is its own
         // VoiceOver element already.
         <Box className="relative">
-            {trackDialog}
             {menu.element}
             {/* Floating feedback surface — anchored just above the action row
                 (bottom: 100%), so it floats over the content above it. */}
@@ -354,8 +347,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 onDislike={handleDislike}
                 onAskMera={handleChatPress}
                 onToggleSave={save?.onToggle}
-                onTrack={track ? onTrackPress : undefined}
-                tracked={storyTracked}
                 onShare={share?.url ? handleSharePress : undefined}
                 onFactCheck={factCheck?.onStart}
                 factCheckState={factCheck?.state}
