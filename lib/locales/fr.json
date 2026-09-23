@@ -2567,7 +2567,9 @@
     "replacesUnavailable": "Mera ne peut pas afficher ce qui serait supprimé pour l'instant. Réessaie dans un instant.",
     "keepBoth": "Garder les deux",
     "titleAlsoAdd": "Ajouter aussi ceci ?",
-    "pendingHint": "Choisis une option ci-dessus ou écris ta réponse."
+    "pendingHint": "Choisis une option ci-dessus ou écris ta réponse.",
+    "overlapsLabel": "Recoupe",
+    "overlapsReplaceNote": "Remplacer la supprimerait avec ses sujets."
   },
   "subscriptions": {
     "sectionTitle": "Vos abonnements",

@@ -2602,7 +2602,9 @@
     "replacesUnavailable": "Mera зараз не може показати, що буде видалено. Спробуйте за хвилину.",
     "keepBoth": "Залишити обидва",
     "titleAlsoAdd": "Додати й це?",
-    "pendingHint": "Обери варіант вище або напиши відповідь."
+    "pendingHint": "Обери варіант вище або напиши відповідь.",
+    "overlapsLabel": "Перетинається з",
+    "overlapsReplaceNote": "Заміна видалить цей факт і його теми."
   },
   "subscriptions": {
     "sectionTitle": "Ваші передплати",

@@ -1525,7 +1525,9 @@
     "replacesUnavailable": "Mera can't show what this would remove right now. Try again in a moment.",
     "keepBoth": "Keep both",
     "titleAlsoAdd": "Also add this?",
-    "pendingHint": "Choose an option above, or type your answer."
+    "pendingHint": "Choose an option above, or type your answer.",
+    "overlapsLabel": "Overlaps with",
+    "overlapsReplaceNote": "Replace would remove it and its topics."
   },
   "conflict": {
     "title": "Possible conflict",

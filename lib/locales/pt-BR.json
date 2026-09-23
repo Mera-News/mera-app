@@ -2560,7 +2560,9 @@
     "replacesUnavailable": "A Mera não consegue mostrar agora o que seria removido. Tente de novo em instantes.",
     "keepBoth": "Manter os dois",
     "titleAlsoAdd": "Adicionar isto também?",
-    "pendingHint": "Escolha uma opção acima ou digite sua resposta."
+    "pendingHint": "Escolha uma opção acima ou digite sua resposta.",
+    "overlapsLabel": "Sobrepõe-se a",
+    "overlapsReplaceNote": "Substituir removeria a informação e os temas dela."
   },
   "subscriptions": {
     "sectionTitle": "Suas assinaturas",

@@ -2561,7 +2561,9 @@
     "replacesUnavailable": "Mera chưa hiển thị được những gì sẽ bị xóa. Hãy thử lại sau giây lát.",
     "keepBoth": "Giữ cả hai",
     "titleAlsoAdd": "Thêm cả điều này?",
-    "pendingHint": "Chọn một tùy chọn ở trên hoặc nhập câu trả lời của bạn."
+    "pendingHint": "Chọn một tùy chọn ở trên hoặc nhập câu trả lời của bạn.",
+    "overlapsLabel": "Trùng với",
+    "overlapsReplaceNote": "Thay thế sẽ xóa thông tin này và các chủ đề của nó."
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",

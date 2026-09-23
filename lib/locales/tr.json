@@ -2562,7 +2562,9 @@
     "replacesUnavailable": "Mera şu anda neyin kaldırılacağını gösteremiyor. Birazdan tekrar dene.",
     "keepBoth": "İkisini de tut",
     "titleAlsoAdd": "Bu da eklensin mi?",
-    "pendingHint": "Yukarıdan bir seçenek belirle ya da cevabını yaz."
+    "pendingHint": "Yukarıdan bir seçenek belirle ya da cevabını yaz.",
+    "overlapsLabel": "Şununla örtüşüyor",
+    "overlapsReplaceNote": "Değiştirmek onu ve konularını siler."
   },
   "subscriptions": {
     "sectionTitle": "Abonelikleriniz",

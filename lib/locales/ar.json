@@ -2642,7 +2642,9 @@
     "replacesUnavailable": "لا تستطيع Mera عرض ما سيُحذف الآن. حاول بعد قليل.",
     "keepBoth": "الإبقاء على الاثنين",
     "titleAlsoAdd": "هل تضيف هذا أيضًا؟",
-    "pendingHint": "اختر أحد الخيارات أعلاه، أو اكتب إجابتك."
+    "pendingHint": "اختر أحد الخيارات أعلاه، أو اكتب إجابتك.",
+    "overlapsLabel": "يتداخل مع",
+    "overlapsReplaceNote": "سيؤدي الاستبدال إلى حذفها مع مواضيعها."
   },
   "subscriptions": {
     "sectionTitle": "اشتراكاتك",

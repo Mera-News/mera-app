@@ -2560,7 +2560,9 @@
     "replacesUnavailable": "Mera kann gerade nicht anzeigen, was entfernt würde. Versuch es gleich noch einmal.",
     "keepBoth": "Beide behalten",
     "titleAlsoAdd": "Das auch hinzufügen?",
-    "pendingHint": "Wähle oben eine Option oder schreib deine Antwort."
+    "pendingHint": "Wähle oben eine Option oder schreib deine Antwort.",
+    "overlapsLabel": "Überschneidet sich mit",
+    "overlapsReplaceNote": "Ersetzen würde die Angabe und ihre Themen entfernen."
   },
   "subscriptions": {
     "sectionTitle": "Deine Abos",

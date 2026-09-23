@@ -2598,7 +2598,9 @@
     "replacesUnavailable": "Mera сейчас не может показать, что будет удалено. Попробуйте через минуту.",
     "keepBoth": "Оставить оба",
     "titleAlsoAdd": "Добавить и это?",
-    "pendingHint": "Выбери вариант выше или напиши ответ."
+    "pendingHint": "Выбери вариант выше или напиши ответ.",
+    "overlapsLabel": "Пересекается с",
+    "overlapsReplaceNote": "Замена удалит этот факт и его темы."
   },
   "subscriptions": {
     "sectionTitle": "Ваши подписки",

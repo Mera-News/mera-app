@@ -2560,7 +2560,9 @@
     "replacesUnavailable": "지금은 무엇이 삭제될지 보여드릴 수 없어요. 잠시 후 다시 시도해 주세요.",
     "keepBoth": "둘 다 유지",
     "titleAlsoAdd": "이것도 추가할까요?",
-    "pendingHint": "위에서 옵션을 고르거나 답을 입력하세요."
+    "pendingHint": "위에서 옵션을 고르거나 답을 입력하세요.",
+    "overlapsLabel": "겹치는 정보",
+    "overlapsReplaceNote": "바꾸면 이 정보와 관련 주제가 삭제돼요."
   },
   "subscriptions": {
     "sectionTitle": "구독 중인 매체",

@@ -2560,7 +2560,9 @@
     "replacesUnavailable": "Mera kan nu niet tonen wat er verwijderd zou worden. Probeer het zo nog eens.",
     "keepBoth": "Beide houden",
     "titleAlsoAdd": "Dit ook toevoegen?",
-    "pendingHint": "Kies hierboven een optie of typ je antwoord."
+    "pendingHint": "Kies hierboven een optie of typ je antwoord.",
+    "overlapsLabel": "Overlapt met",
+    "overlapsReplaceNote": "Vervangen verwijdert het en de onderwerpen ervan."
   },
   "subscriptions": {
     "sectionTitle": "Je abonnementen",

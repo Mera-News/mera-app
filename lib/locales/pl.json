@@ -2596,7 +2596,9 @@
     "replacesUnavailable": "Mera nie może teraz pokazać, co zostałoby usunięte. Spróbuj za chwilę.",
     "keepBoth": "Zachowaj oba",
     "titleAlsoAdd": "Dodać też to?",
-    "pendingHint": "Wybierz opcję powyżej albo wpisz odpowiedź."
+    "pendingHint": "Wybierz opcję powyżej albo wpisz odpowiedź.",
+    "overlapsLabel": "Pokrywa się z",
+    "overlapsReplaceNote": "Zastąpienie usunie ją razem z jej tematami."
   },
   "subscriptions": {
     "sectionTitle": "Twoje subskrypcje",

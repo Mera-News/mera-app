@@ -2560,7 +2560,9 @@
     "replacesUnavailable": "Mera non può mostrare ora che cosa verrebbe rimosso. Riprova tra poco.",
     "keepBoth": "Tieni entrambi",
     "titleAlsoAdd": "Aggiungere anche questo?",
-    "pendingHint": "Scegli un'opzione qui sopra o scrivi la tua risposta."
+    "pendingHint": "Scegli un'opzione qui sopra o scrivi la tua risposta.",
+    "overlapsLabel": "Si sovrappone a",
+    "overlapsReplaceNote": "Sostituire la rimuoverebbe insieme ai suoi argomenti."
   },
   "subscriptions": {
     "sectionTitle": "I tuoi abbonamenti",

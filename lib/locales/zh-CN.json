@@ -2561,7 +2561,9 @@
     "replacesUnavailable": "Mera 暂时无法显示会删除哪些内容。请稍后再试。",
     "keepBoth": "两个都保留",
     "titleAlsoAdd": "也加入这条吗？",
-    "pendingHint": "请选择上方的一个选项，或直接输入你的回答。"
+    "pendingHint": "请选择上方的一个选项，或直接输入你的回答。",
+    "overlapsLabel": "与此重叠",
+    "overlapsReplaceNote": "替换会删除它及其相关主题。"
   },
   "subscriptions": {
     "sectionTitle": "你的订阅",

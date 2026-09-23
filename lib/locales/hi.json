@@ -2562,7 +2562,9 @@
     "replacesUnavailable": "Mera अभी नहीं दिखा सकता कि क्या हटेगा। थोड़ी देर में फिर कोशिश करें।",
     "keepBoth": "दोनों रखें",
     "titleAlsoAdd": "इसे भी जोड़ें?",
-    "pendingHint": "ऊपर से कोई विकल्प चुनें, या अपना जवाब लिखें।"
+    "pendingHint": "ऊपर से कोई विकल्प चुनें, या अपना जवाब लिखें।",
+    "overlapsLabel": "इससे मेल खाता है",
+    "overlapsReplaceNote": "बदलने से यह और इसके विषय हट जाएँगे।"
   },
   "subscriptions": {
     "sectionTitle": "आपकी सदस्यताएँ",
