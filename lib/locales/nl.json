@@ -352,7 +352,10 @@
     "timeNudge": "Kies een moment waarop je kunt lezen, nadenken en plannen — eenmaal of tweemaal per dag is voldoende.",
     "maxHoursReachedDescription": "Je kunt maximaal {{count}} uur selecteren",
     "maxHoursReachedTitle": "Maximum bereikt",
-    "selectedCount": "Geselecteerd: {{selected}}/{{max}}"
+    "selectedCount": "Geselecteerd: {{selected}}/{{max}}",
+    "savedInline": "Opgeslagen",
+    "pickAtLeastOneHour": "Kies minstens één uur",
+    "selectedLabel": "Gekozen"
   },
   "language": {
     "title": "Taal",
@@ -620,7 +623,7 @@
     "topicGenQueuedDescription": "De onderwerpen verschijnen binnenkort.",
     "deleteFactTitle": "Feit verwijderen",
     "deleteFactConfirm": "Weet je zeker dat je dit feit wilt verwijderen?",
-    "deleteFactWarning": "Dit verwijdert ook alle gevolgde onderwerpen die uit dit feit zijn gegenereerd.",
+    "deleteFactWarning": "De onderwerpen en de gevonden artikelen verdwijnen ook, en Mera zoekt er geen nieuws meer over.",
     "deletingFact": "Verwijderen...",
     "yesDelete": "Ja, verwijderen",
     "refreshSuggestions": "Suggesties vernieuwen",
@@ -659,7 +662,9 @@
     "promoInfoTitleEmoji": "🎉 Lanceeraanbieding 🎊",
     "resetsOn": "Reset",
     "retryTopicGeneration": "Opnieuw",
-    "topicGenFailedGeneric": "Kon geen onderwerpen voor dit genereren."
+    "topicGenFailedGeneric": "Kon geen onderwerpen voor dit genereren.",
+    "articleCountPending": "Tellen",
+    "articleCountNone": "Nog geen artikelen"
   },
   "errors": {
     "somethingWentWrong": "Er is iets misgegaan",
@@ -969,7 +974,6 @@
     "activatedBody": "Je persoonlijke feed, dashboard, gevolgde verhalen en chat staan klaar.",
     "activatedTitle": "{{plan}} is actief",
     "lapsedFreeNote": "Mera News Free is voor jou zolang je het wilt. Een plan brengt Mera aan de slag met je nieuws opnieuw.",
-    "manageBadge": "Beheren",
     "turnMeraBackOn": "Mera opnieuw inschakelen",
     "para1": "Mera News zou gratis kunnen zijn. Dat zou alleen betekenen dat iemand anders betaalde: een adverteerder die je aandacht, je gegevens, of een gunstig artikel koopt. Veel van wat als nieuws uitziet, is precies dat.",
     "para2": "Met advertenties gefinancieerde media hebben geen grenzen. Niet in hoeveel het van je neemt, en niet in waarvoor dat later wordt gebruikt. We willen dat bedrijf niet zijn, dus de afspraak hier is simpel. Jij houdt je gegevens. De software doet het werk. Je betaalt ervoor.",
@@ -985,7 +989,8 @@
     "trialEndsOn": "Je gratis proefperiode eindigt op {{date}}",
     "trialNoPaymentDetails": "Er zijn geen betalingsgegevens opgeslagen, dus er is niets om te annuleren. Als de proefperiode afloopt, ga je naar het gratis plan tenzij je je abonneert.",
     "starterFreeTitle": "Je zit op Starter, gratis",
-    "starterFreeBody": "We willen dat je ziet waar Mera voor is, dus elk account bevat het volledige Starter-plan zonder kosten. Dat is 250 artikelen per dag, al je interesses, chat, factchecks en gevolgde verhalen."
+    "starterFreeBody": "We willen dat je ziet waar Mera voor is, dus elk account bevat het volledige Starter-plan zonder kosten. Dat is 250 artikelen per dag, al je interesses, chat, factchecks en gevolgde verhalen.",
+    "manageBadge": "Beheren"
   },
   "tabs": {
     "deck": "Feed",
@@ -1140,7 +1145,14 @@
     "dailyLimitBody": "Je hebt de daglimiet voor artikelen bereikt. Deze wordt binnenkort gereset."
   },
   "settings": {
-    "sources": "Bronnen"
+    "sources": "Bronnen",
+    "groupGeneral": "Algemeen",
+    "groupPrivacy": "Privacy en gegevens",
+    "groupHelp": "Hulp",
+    "groupAccount": "Account",
+    "languageRow": "Taal",
+    "backupRow": "Back-up en herstel",
+    "backupRowNever": "Nog geen back-up"
   },
   "personaAudit": {
     "entryRow": "Persona-wijzigingslog",
@@ -1305,7 +1317,7 @@
     "notificationBody_one": "Mera heeft {{count}} opschoning gevonden voor je profiel.",
     "notificationBody_other": "Mera heeft {{count}} opschoningen gevonden voor je profiel.",
     "reviewChip": "Bekijken",
-    "title": "Persona-gezondheid",
+    "title": "Profiel opschonen",
     "subtitle": "Voorgestelde opschoningen",
     "intro": "Mera heeft een paar dingen gevonden die het opschonen waard zijn. Accepteer de suggesties waarmee je het eens bent.",
     "empty": "Je persona ziet er gezond uit",
@@ -1320,9 +1332,9 @@
     "appliedBody": "Je profiel is opgeschoond. Bekijk het wijzigingslog om te controleren.",
     "applyFailedTitle": "Kon opschoning niet toepassen",
     "applyFailedBody": "Probeer het later opnieuw.",
-    "profileRow_one": "Persona-gezondheid · {{count}} suggestie",
-    "profileRow_other": "Persona-gezondheid · {{count}} suggesties",
-    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse. De oude onderwerpen kunnen worden teruggedraaid via het wijzigingslogboek."
+    "profileRow_one": "Profiel opschonen · {{count}} suggestie",
+    "profileRow_other": "Profiel opschonen · {{count}} suggesties",
+    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse."
   },
   "locations": {
     "title": "Jouw plaatsen",
@@ -1459,7 +1471,7 @@
     "visitedSubtitle": "Publicaties die je onlangs hebt geopend",
     "activity": "Activiteit",
     "activitySubtitle": "Je persona-wijzigingsgeschiedenis",
-    "personaHealth": "Persona-gezondheid",
+    "personaHealth": "Profiel opschonen",
     "healthPending_one": "{{count}} opschoningssuggestie",
     "healthPending_other": "{{count}} opschoningssuggesties",
     "healthAllHealthy": "Alles gezond",
@@ -1496,7 +1508,10 @@
       "remove": "Verwijderen",
       "removeConfirm": "Tik nogmaals om te verwijderen",
       "limitReached": "Dagelijkse aanpassingslimiet bereikt: wijzigingen gaan morgen door."
-    }
+    },
+    "meraInviteReturning": "Vertel me iets nieuws, dan voeg ik het toe aan je feed.",
+    "editFacts": "Bewerken",
+    "planUsage": "{{used}} van {{limit}} vandaag geanalyseerd"
   },
   "facts": {
     "screenTitle": "Jouw feiten",
@@ -1506,7 +1521,8 @@
     "lessInfluence": "Minder invloed",
     "declinedTopicsTitle": "Onderwerpen die je verwijderd hebt",
     "allowAgain": "Weer toestaan",
-    "topicRemovalConsequence": "Verwijderde onderwerpen worden niet meer voorgesteld, tenzij je ze weer toestaat bij Onderwerpen die je verwijderd hebt."
+    "topicRemovalConsequence": "Verwijderde onderwerpen worden niet meer voorgesteld, tenzij je ze weer toestaat bij Onderwerpen die je verwijderd hebt.",
+    "deleteFactA11y": "{{fact}} verwijderen"
   },
   "publicationPrefs": {
     "title": "Bronvoorkeuren",
@@ -1578,7 +1594,7 @@
     "staticGradientTitle": "Statische achtergrond",
     "staticGradientDescription": "Gebruik een vaste kleurverloping in plaats van de geanimeerde achtergrond — beter voor de batterij en oudere apparaten",
     "screenTitle": "Weergave",
-    "screenSubtitle": "Tekst, afbeeldingen, veiligheid en hoe Mera op dit apparaat opent",
+    "screenSubtitle": "Tekst, afbeeldingen en hoe Mera op dit apparaat opent",
     "sectionText": "Tekst",
     "sectionVisuals": "Visuele elementen",
     "textSizeTitle": "Tekstgrootte",
@@ -1751,7 +1767,7 @@
     "welcomeBody": "Tik op \"Akkoord en doorgaan\" om onze Servicevoorwaarden en ons Privacybeleid te accepteren."
   },
   "tutorials": {
-    "entryRow": "Meer over Mera",
+    "entryRow": "Hoe Mera werkt",
     "menuTitle": "Meer over Mera",
     "menuSubtitle": "Korte gidsen over hoe deze app werkt. Begin overal.",
     "sectionBasic": "Start hier",
@@ -1774,7 +1790,6 @@
     "askMera": "Vraag Mera",
     "chatIntro": "Vraag me alles over hoe Mera werkt. Ik kan het uitleggen, maar kan niets van hier uit veranderen.",
     "launchButton": "Maak de rondleiding",
-    "learnAboutMera": "Zo werkt Mera",
     "hintReveal": "Tik op elk.",
     "hintRevealSome": "Tik op minstens {{count}}.",
     "hintChoose": "Kies er een.",
@@ -2380,14 +2395,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "Zo werkt Mera"
   },
   "support": {
     "opening": "Ondersteuning wordt geopend",
     "supportId": "Support-ID: {{id}}",
     "copySupportId": "Support-ID kopiëren",
     "copied": "Gekopieerd",
-    "saveHint": "Bewaar deze ID. Support kan je account ermee vinden."
+    "saveHint": "Bewaar deze ID. Support kan je account ermee vinden.",
+    "mailFailedTitle": "Je mail-app kon niet worden geopend",
+    "mailFailedBody": "Kopieer ons supportadres en stuur ons een e-mail vanuit een willekeurige mail-app.",
+    "copyAddress": "Adres kopiëren"
   },
   "emailCapture": {
     "title": "Voeg je e-mailadres toe",
@@ -2495,7 +2514,10 @@
     "wifiOnly": "Alleen Wi-Fi",
     "wifiOnlyOff": "Uit. Geplande back-ups kunnen mobiele data gebruiken.",
     "wifiOnlyOn": "Aan. Geplande back-ups wachten op Wi-Fi.",
-    "working": "Bezig…"
+    "working": "Bezig…",
+    "statusFromCloud": "Laatste back-up {{when}}, gevonden in {{provider}}",
+    "restoreOption": "Back-up van {{when}}",
+    "statusFailed": "Laatste back-up mislukt op {{when}}"
   },
   "factChoice": {
     "titleSingle": "Dit aan je persona toevoegen?",

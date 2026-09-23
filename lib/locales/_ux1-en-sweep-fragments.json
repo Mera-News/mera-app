@@ -1,0 +1,102 @@
+{
+  "_comment": "ux1 English-only overwrites: F8 dash sweep (factCheck.* and floatingChat.* belong to the chat scout), M17 analysed, Log out. Other locales unchanged.",
+  "ar": {},
+  "de": {},
+  "en": {
+    "swipeFeed": {
+      "feedbackCaption": "On its own, a thumb doesn't tell Mera enough, so it's discarded to keep your feed healthy. Pick a reason and your feed changes right away."
+    },
+    "clusterDetail": {
+      "notTranslatable": "This article is in {{language}}. Your device can't translate it. Use Google Translate to read it in your language."
+    },
+    "notifications": {
+      "timeNudge": "Pick a time when you can read, think and plan. Once or twice a day is plenty."
+    },
+    "language": {
+      "googleTranslateAlways": "You can read any article in any language with \"Read on Google Translate\" on the article page. That always works, with nothing to download.",
+      "advancedDescription": "On-device translation. Optional: everything above works without it.",
+      "translationUnsupportedOnThisIos": "Your version of iOS can't translate into {{language}}, so English is shown instead. Updating iOS will enable it.",
+      "downloadHintBeforeSuffix": "next to each language in that sheet. Nothing downloads until you do.",
+      "switchingNudge": "Your device is preparing the {{language}} translation pack. Keep this screen open until it finishes. If you leave now, news articles will stay in English."
+    },
+    "meraProtocol": {
+      "relevanceV4Description": "Beta. Keeps the classic two-pass scoring and adds each article's places, people and event type to what the scorer sees, then skips the write-up for story types that rarely matter to you. Slightly better picks and about a fifth fewer AI calls. Turn it off at any time to go back.",
+      "webSearchOn": "On. Mera can search the web to answer a question",
+      "deepInterviewOn": "On. Mera asks about attention, worries and decisions",
+      "deepInterviewDescription": "Mera asks fewer, deeper questions: what you are trying to protect your attention from, which topics are necessary but anxious, which feel useful but waste your time, what you are deciding this month, and why each place matters to you. Your answers are stored on this device and never leave it, which is exactly why Mera can ask them. They make relevance scores and the reasons shown on each story sharper. Off by default."
+    },
+    "preferences": {
+      "signOutConfirm": "Signing out erases everything stored on this device: your saved articles, reading history, tracked stories and personalization. You'll need to sign in again to use Mera.",
+      "logout": "Log out"
+    },
+    "observability": {
+      "noteBody": "This screen reads Mera's on-device database directly. It is the data that builds your feed, shown here for visibility and for debugging. Mera's servers don't store your facts, your reading history, or the suggestions built from them."
+    },
+    "feedbackTree": {
+      "paywallRelatedDesc": "A similar story from another publication may not be paywalled. Check the related articles.",
+      "paywallSubscribeDesc": "You've visited {{publication}} {{visits}} times this month. Consider subscribing for full access.",
+      "managePublicationsDesc": "Boost, downrank or mute any publication, including this one."
+    },
+    "notInterested": {
+      "chatHint": "You don't have to come here. Just tell Mera what you'd rather not see, like \"less about celebrity gossip\", and it'll take care of the rest.",
+      "cardExemptLabel": "You filtered \"{{filter}}\". Showing it because it's major news",
+      "addPhraseBody": "Type a word or a short phrase. Mera will look for it in the headline and story, and keep those out of your way. For anything more specific, like a whole category, a source or a person, just say so in chat, or use the thumbs on a story: Mera picks it up from the story itself, so it always matches."
+    },
+    "display": {
+      "staticGradientDescription": "Use a fixed gradient instead of the animated background. Easier on battery and older devices."
+    },
+    "tutorials": {
+      "chapters": {
+        "feed": {
+          "slides": {
+            "nothing-removed": {
+              "body": "Read a card and it does not vanish; it sinks. It is one continuous list, not sections cut off by dividers. Cards quietly drift down past the newer ones as you go.",
+              "steps": {
+                "2": "Lowest: already read. No divider, just a lower spot in the same list."
+              }
+            }
+          }
+        }
+      }
+    },
+    "subscription": {
+      "planRecommendation": "You open about {{count}} articles a day. {{plan}} analyses up to {{limit}} a day so there is always more than you'll get through.",
+      "usedToday": "Analysed today"
+    },
+    "feed": {
+      "noInterests": "Mera cannot analyse news for you"
+    },
+    "whatsNew": {
+      "starterArticlesBody": "Mera analyses up to 250 articles for you every day."
+    },
+    "configPanel": {
+      "articleAnalysisDescription": "Every article Mera reads and ranks for you counts toward your daily plan. Fewer, sharper interests use less of it.",
+      "articlesAnalyzedLast24h": "Articles analysed in the last 24h"
+    },
+    "chat": {
+      "streamingLabels": {
+        "analyzing": "Analysing"
+      }
+    },
+    "streamingWords": {
+      "w2": "Analysing"
+    }
+  },
+  "es": {},
+  "fr": {},
+  "hi": {},
+  "id": {},
+  "it": {},
+  "ja": {},
+  "ko": {},
+  "nl": {},
+  "pl": {},
+  "pt-BR": {},
+  "ru": {},
+  "th": {},
+  "tr": {},
+  "uk": {},
+  "vi": {},
+  "zh-CN": {},
+  "zh-TW": {}
+}

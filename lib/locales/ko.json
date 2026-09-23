@@ -352,7 +352,10 @@
     "timeNudge": "읽고, 생각하고, 계획할 수 있는 시간을 선택하세요. 하루에 한두 번이면 충분합니다.",
     "maxHoursReachedDescription": "시간은 최대 {{count}}개까지 선택할 수 있습니다",
     "maxHoursReachedTitle": "최대 개수 도달",
-    "selectedCount": "선택됨: {{selected}}/{{max}}"
+    "selectedCount": "선택됨: {{selected}}/{{max}}",
+    "savedInline": "저장됨",
+    "pickAtLeastOneHour": "한 시간 이상 선택하세요",
+    "selectedLabel": "선택됨"
   },
   "language": {
     "title": "언어",
@@ -620,7 +623,7 @@
     "topicGenQueuedDescription": "잠시 후 토픽이 표시됩니다.",
     "deleteFactTitle": "사실 삭제",
     "deleteFactConfirm": "이 사실을 삭제하시겠습니까?",
-    "deleteFactWarning": "이 사실에서 생성된 모든 추적 토픽도 함께 제거됩니다.",
+    "deleteFactWarning": "관련 주제와 찾은 기사도 함께 삭제되고, Mera는 이에 대한 뉴스를 더 이상 찾지 않습니다.",
     "deletingFact": "삭제 중...",
     "yesDelete": "예, 삭제합니다",
     "refreshSuggestions": "추천 새로고침",
@@ -659,7 +662,9 @@
     "promoInfoTitleEmoji": "🎉 출시 기념 혜택 🎊",
     "resetsOn": "초기화",
     "retryTopicGeneration": "재시도",
-    "topicGenFailedGeneric": "이 주제에 대한 토픽을 생성할 수 없습니다."
+    "topicGenFailedGeneric": "이 주제에 대한 토픽을 생성할 수 없습니다.",
+    "articleCountPending": "집계 중",
+    "articleCountNone": "아직 기사 없음"
   },
   "errors": {
     "somethingWentWrong": "문제가 발생했습니다",
@@ -940,7 +945,7 @@
     "detailsSection": "구독 상세 정보",
     "expiresOn": "만료일",
     "lifetime": "평생",
-    "managePlan": "구독 관리",
+    "managePlan": "요금제 관리",
     "periodLabel": "기간",
     "periodNormal": "표준",
     "periodPromotional": "프로모션",
@@ -969,7 +974,6 @@
     "activatedBody": "맞춤 피드, 대시보드, 팔로우한 스토리, 채팅이 준비되었습니다.",
     "activatedTitle": "{{plan}}이(가) 활성화되었습니다",
     "lapsedFreeNote": "Mera News 무료는 원하는 기간 동안 사용할 수 있습니다. 플랜을 시작하면 Mera가 다시 뉴스를 처리하기 시작합니다.",
-    "manageBadge": "관리",
     "turnMeraBackOn": "Mera 다시 켜기",
     "para1": "Mera News는 무료일 수 있습니다. 단지 누군가 다른 사람이 대가를 지불한다는 뜻입니다. 광고주가 당신의 관심, 데이터 또는 호의적인 기사를 구매하는 방식이죠. 뉴스처럼 보이는 많은 콘텐츠가 정확히 그런 것입니다.",
     "para2": "광고 기반 미디어는 한계가 없습니다. 당신에게서 얼마나 많이 가져가는지, 그것이 나중에 어떻게 사용되는지도 마찬가지입니다. 우리는 그런 회사가 되고 싶지 않으므로, 여기서의 거래는 간단합니다. 당신은 데이터를 지킵니다. 소프트웨어가 일을 합니다. 당신이 비용을 지불합니다.",
@@ -985,7 +989,8 @@
     "trialEndsOn": "무료 체험이 {{date}}에 종료됩니다",
     "trialNoPaymentDetails": "등록된 결제 수단이 없으므로 취소할 것이 없습니다. 체험이 끝나면 구독하지 않는 한 무료 플랜으로 전환됩니다.",
     "starterFreeTitle": "Starter를 무료로 이용 중입니다",
-    "starterFreeBody": "Mera가 무엇을 위한 것인지 직접 보시길 바라기에, 모든 계정에 Starter 플랜 전체가 무료로 포함됩니다. 하루 250개 기사, 모든 관심사, 채팅, 팩트체크, 팔로우 중인 스토리를 사용할 수 있습니다."
+    "starterFreeBody": "Mera가 무엇을 위한 것인지 직접 보시길 바라기에, 모든 계정에 Starter 플랜 전체가 무료로 포함됩니다. 하루 250개 기사, 모든 관심사, 채팅, 팩트체크, 팔로우 중인 스토리를 사용할 수 있습니다.",
+    "manageBadge": "관리"
   },
   "tabs": {
     "deck": "피드",
@@ -1140,7 +1145,14 @@
     "dailyLimitBody": "오늘의 기사 한도에 도달했습니다. 곧 초기화됩니다."
   },
   "settings": {
-    "sources": "소스"
+    "sources": "소스",
+    "groupGeneral": "일반",
+    "groupPrivacy": "개인정보 및 데이터",
+    "groupHelp": "도움말",
+    "groupAccount": "계정",
+    "languageRow": "언어",
+    "backupRow": "백업 및 복원",
+    "backupRowNever": "아직 백업 안 됨"
   },
   "personaAudit": {
     "entryRow": "페르소나 변경 기록",
@@ -1305,7 +1317,7 @@
     "notificationBody_one": "Mera가 프로필을 위한 {{count}}개의 정리를 찾았습니다.",
     "notificationBody_other": "Mera가 회원님의 프로필에서 {{count}}개의 정리 항목을 찾았습니다.",
     "reviewChip": "검토",
-    "title": "페르소나 상태",
+    "title": "프로필 정리",
     "subtitle": "정리 제안",
     "intro": "Mera가 정리할 만한 몇 가지 항목을 찾았습니다. 동의하는 항목을 수락해 주세요.",
     "empty": "회원님의 페르소나는 양호한 상태입니다",
@@ -1320,9 +1332,9 @@
     "appliedBody": "프로필이 정리되었습니다. 변경 기록에서 확인해 보세요.",
     "applyFailedTitle": "정리를 적용하지 못했습니다",
     "applyFailedBody": "나중에 다시 시도해 주세요.",
-    "profileRow_one": "페르소나 상태 · {{count}}개 제안",
-    "profileRow_other": "페르소나 상태 · 제안 {{count}}개",
-    "effectIncoherentTopics": "이 관심사에 대해 더 나은 주제로 바꿉니다. 이전 것들은 변경 로그에서 복원할 수 있습니다."
+    "profileRow_one": "프로필 정리 · 제안 {{count}}개",
+    "profileRow_other": "프로필 정리 · 제안 {{count}}개",
+    "effectIncoherentTopics": "이 관심사에 대해 더 나은 주제로 바꿉니다."
   },
   "locations": {
     "title": "내 장소",
@@ -1459,7 +1471,7 @@
     "visitedSubtitle": "최근에 열어본 출판사",
     "activity": "활동",
     "activitySubtitle": "페르소나 변경 기록",
-    "personaHealth": "페르소나 상태",
+    "personaHealth": "프로필 정리",
     "healthPending_one": "{{count}}개 정리 제안",
     "healthPending_other": "정리 제안 {{count}}개",
     "healthAllHealthy": "모두 양호",
@@ -1496,7 +1508,10 @@
       "remove": "삭제",
       "removeConfirm": "다시 탭하면 삭제됩니다",
       "limitReached": "일일 조정 한도에 도달했습니다. 변경 사항은 내일 계속됩니다."
-    }
+    },
+    "meraInviteReturning": "새로운 관심사를 알려 주시면 피드에 추가할게요.",
+    "editFacts": "편집",
+    "planUsage": "오늘 {{limit}}개 중 {{used}}개 분석"
   },
   "facts": {
     "screenTitle": "내 정보",
@@ -1506,7 +1521,8 @@
     "lessInfluence": "더 작은 영향도",
     "declinedTopicsTitle": "제거한 주제",
     "allowAgain": "다시 허용",
-    "topicRemovalConsequence": "제거한 주제는 '제거한 주제'에서 다시 허용하지 않는 한 다시 추천되지 않습니다."
+    "topicRemovalConsequence": "제거한 주제는 '제거한 주제'에서 다시 허용하지 않는 한 다시 추천되지 않습니다.",
+    "deleteFactA11y": "{{fact}} 삭제"
   },
   "publicationPrefs": {
     "title": "소스 선호도",
@@ -1578,7 +1594,7 @@
     "staticGradientTitle": "정적 배경",
     "staticGradientDescription": "애니메이션 배경 대신 고정 그래디언트를 사용합니다 — 배터리와 오래된 장치에 더 친절합니다",
     "screenTitle": "디스플레이",
-    "screenSubtitle": "텍스트, 시각 효과, 보안 및 메라가 이 기기에서 열리는 방식",
+    "screenSubtitle": "텍스트, 시각 효과 및 메라가 이 기기에서 열리는 방식",
     "sectionText": "텍스트",
     "sectionVisuals": "시각 자료",
     "textSizeTitle": "텍스트 크기",
@@ -1751,7 +1767,7 @@
     "welcomeBody": "\"동의하고 계속\"을 탭하면 서비스 약관과 개인정보 처리방침에 동의하게 됩니다."
   },
   "tutorials": {
-    "entryRow": "메라에 대해 알아보기",
+    "entryRow": "Mera 작동 방식",
     "menuTitle": "메라에 대해 알아보기",
     "menuSubtitle": "이 앱이 어떻게 생각하는지에 대한 짧은 가이드입니다. 어디서나 시작할 수 있습니다.",
     "sectionBasic": "여기서 시작",
@@ -1774,7 +1790,6 @@
     "askMera": "Mera에 물어보기",
     "chatIntro": "Mera 작동 방식에 대해 무엇이든 물어봐도 됩니다. 설명할 수는 있지만 여기에서는 아무것도 변경할 수 없습니다.",
     "launchButton": "투어 시작",
-    "learnAboutMera": "Mera 작동 방식",
     "hintReveal": "각 항목을 탭하세요.",
     "hintRevealSome": "최소 {{count}}개를 탭하세요.",
     "hintChoose": "하나를 선택하세요.",
@@ -2380,14 +2395,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "Mera 작동 방식"
   },
   "support": {
     "opening": "고객 지원을 여는 중",
     "supportId": "지원 ID: {{id}}",
     "copySupportId": "지원 ID 복사",
     "copied": "복사됨",
-    "saveHint": "이 ID를 저장해 두세요. 지원팀이 이 ID로 계정을 찾을 수 있습니다."
+    "saveHint": "이 ID를 저장해 두세요. 지원팀이 이 ID로 계정을 찾을 수 있습니다.",
+    "mailFailedTitle": "메일 앱을 열 수 없습니다",
+    "mailFailedBody": "지원 주소를 복사해 아무 메일 앱에서나 이메일을 보내 주세요.",
+    "copyAddress": "주소 복사"
   },
   "emailCapture": {
     "title": "이메일 추가",
@@ -2495,7 +2514,10 @@
     "wifiOnly": "Wi-Fi에서만",
     "wifiOnlyOff": "사용 안 함. 예약된 백업이 모바일 데이터를 사용할 수 있습니다.",
     "wifiOnlyOn": "사용 중. 예약된 백업은 Wi-Fi 연결을 기다립니다.",
-    "working": "작업 중…"
+    "working": "작업 중…",
+    "statusFromCloud": "마지막 백업 {{when}}, {{provider}}에서 찾음",
+    "restoreOption": "{{when}} 백업",
+    "statusFailed": "마지막 백업이 {{when}}에 실패했습니다"
   },
   "factChoice": {
     "titleSingle": "이걸 페르소나에 추가할까요",

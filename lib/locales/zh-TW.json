@@ -352,7 +352,10 @@
     "timeNudge": "選擇您可以閱讀、思考和計畫的時間——一天一次或兩次就足夠了。",
     "maxHoursReachedDescription": "最多可選擇 {{count}} 個時間",
     "maxHoursReachedTitle": "已達上限",
-    "selectedCount": "已選擇：{{selected}}/{{max}}"
+    "selectedCount": "已選擇：{{selected}}/{{max}}",
+    "savedInline": "已儲存",
+    "pickAtLeastOneHour": "至少選擇一個時間",
+    "selectedLabel": "已選"
   },
   "language": {
     "title": "語言",
@@ -620,7 +623,7 @@
     "topicGenQueuedDescription": "主題將很快顯示。",
     "deleteFactTitle": "刪除事實",
     "deleteFactConfirm": "您確定要刪除此事實嗎？",
-    "deleteFactWarning": "這也將移除從此事實產生的所有追蹤主題。",
+    "deleteFactWarning": "它的主題和找到的新聞也會一併刪除，Mera 將不再為此尋找新聞。",
     "deletingFact": "正在刪除...",
     "yesDelete": "是的，刪除",
     "refreshSuggestions": "重新整理建議",
@@ -659,7 +662,9 @@
     "promoInfoTitleEmoji": "🎉 上市優惠 🎊",
     "resetsOn": "重設日",
     "retryTopicGeneration": "重試",
-    "topicGenFailedGeneric": "無法為此產生主題。"
+    "topicGenFailedGeneric": "無法為此產生主題。",
+    "articleCountPending": "統計中",
+    "articleCountNone": "尚無文章"
   },
   "errors": {
     "somethingWentWrong": "發生錯誤",
@@ -940,7 +945,7 @@
     "detailsSection": "訂閱詳情",
     "expiresOn": "到期日",
     "lifetime": "終身",
-    "managePlan": "管理訂閱",
+    "managePlan": "管理方案",
     "periodLabel": "期間",
     "periodNormal": "標準",
     "periodPromotional": "促銷",
@@ -969,7 +974,6 @@
     "activatedBody": "您的個人化動態、儀表板、已追蹤的報導和聊天已準備就緒。",
     "activatedTitle": "{{plan}} 已啟用",
     "lapsedFreeNote": "Mera News 免費版只要您想使用就能一直使用。訂閱方案是讓 Mera 重新為您處理新聞的方式。",
-    "manageBadge": "管理",
     "turnMeraBackOn": "重新開啟 Mera",
     "para1": "Mera News可以免費使用。但那樣的話，就會有人代你付費，可能是購買你的注意力的廣告商、你的資料，或是一份友善的文章。很多看起來像新聞的東西正是這樣。",
     "para2": "廣告資助的媒體沒有上限。不限制它從你身上汲取多少，也不限制稍後用途。我們不想成為那樣的公司，所以這裡的協議很簡單。你保留你的資料。軟體完成工作。你付款。",
@@ -985,7 +989,8 @@
     "trialEndsOn": "您的免費試用期於 {{date}} 結束",
     "trialNoPaymentDetails": "檔案中沒有任何付款詳細資訊，所以沒有任何項目可取消。試用結束時，除非您選擇訂閱，否則您將轉換為免費方案。",
     "starterFreeTitle": "您正在使用 Starter，免費",
-    "starterFreeBody": "我們希望您看到 Mera 是做什麼的，所以每個帳號都免費包含完整的 Starter 方案。也就是每天 250 篇文章、您的所有興趣、聊天、事實查核和已追蹤的報導。"
+    "starterFreeBody": "我們希望您看到 Mera 是做什麼的，所以每個帳號都免費包含完整的 Starter 方案。也就是每天 250 篇文章、您的所有興趣、聊天、事實查核和已追蹤的報導。",
+    "manageBadge": "管理"
   },
   "tabs": {
     "deck": "資訊流",
@@ -1140,7 +1145,14 @@
     "dailyLimitBody": "你已達到今日文章上限，即將重設。"
   },
   "settings": {
-    "sources": "來源"
+    "sources": "來源",
+    "groupGeneral": "一般",
+    "groupPrivacy": "隱私與資料",
+    "groupHelp": "說明",
+    "groupAccount": "帳號",
+    "languageRow": "語言",
+    "backupRow": "備份與還原",
+    "backupRowNever": "尚未備份"
   },
   "personaAudit": {
     "entryRow": "人物誌變更紀錄",
@@ -1306,7 +1318,7 @@
     "notificationBody_one": "Mera 為您的檔案發現了 {{count}} 項整理項目。",
     "notificationBody_other": "Mera 為你的資料發現了 {{count}} 項可整理內容。",
     "reviewChip": "查看",
-    "title": "人物誌健康度",
+    "title": "整理個人檔案",
     "subtitle": "建議的整理項目",
     "intro": "Mera 發現了一些值得整理的內容。接受你認同的建議即可。",
     "empty": "你的人物誌看起來很健康",
@@ -1321,9 +1333,9 @@
     "appliedBody": "你的資料已完成整理。查看變更紀錄以了解詳情。",
     "applyFailedTitle": "無法套用整理",
     "applyFailedBody": "請稍後再試。",
-    "profileRow_one": "檔案健康度 · {{count}} 項建議",
-    "profileRow_other": "人物誌健康度 · {{count}} 項建議",
-    "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。舊的可以從更改日誌中復原。"
+    "profileRow_one": "整理個人檔案 · {{count}} 項建議",
+    "profileRow_other": "整理個人檔案 · {{count}} 項建議",
+    "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。"
   },
   "locations": {
     "title": "你的地點",
@@ -1460,7 +1472,7 @@
     "visitedSubtitle": "您最近打開的媒體",
     "activity": "活動",
     "activitySubtitle": "你的人物誌變更歷史",
-    "personaHealth": "人物誌健康度",
+    "personaHealth": "整理個人檔案",
     "healthPending_one": "{{count}} 項整理建議",
     "healthPending_other": "{{count}} 項整理建議",
     "healthAllHealthy": "一切正常",
@@ -1497,7 +1509,10 @@
       "remove": "移除",
       "removeConfirm": "再次點按即可移除",
       "limitReached": "每日調整上限已達 — 變更將於明天繼續。"
-    }
+    },
+    "meraInviteReturning": "告訴我一些新的興趣，我會把它加進你的動態。",
+    "editFacts": "編輯",
+    "planUsage": "今日已分析 {{used}}/{{limit}}"
   },
   "facts": {
     "screenTitle": "你的事實",
@@ -1507,7 +1522,8 @@
     "lessInfluence": "減少影響",
     "declinedTopicsTitle": "您移除的主題",
     "allowAgain": "再次允許",
-    "topicRemovalConsequence": "移除的主題不會再被推薦，除非您在「您移除的主題」中再次允許。"
+    "topicRemovalConsequence": "移除的主題不會再被推薦，除非您在「您移除的主題」中再次允許。",
+    "deleteFactA11y": "刪除 {{fact}}"
   },
   "publicationPrefs": {
     "title": "來源偏好",
@@ -1579,7 +1595,7 @@
     "staticGradientTitle": "靜態背景",
     "staticGradientDescription": "使用固定漸變代替動畫背景 — 對電池和舊設備更友善",
     "screenTitle": "顯示",
-    "screenSubtitle": "文字、視覺效果、安全性以及 Mera 在此裝置上的開啟方式",
+    "screenSubtitle": "文字、視覺效果以及 Mera 在此裝置上的開啟方式",
     "sectionText": "文字",
     "sectionVisuals": "視覺",
     "textSizeTitle": "文字大小",
@@ -1752,7 +1768,7 @@
     "welcomeBody": "點按「同意並繼續」即表示您接受我們的服務條款與隱私權政策。"
   },
   "tutorials": {
-    "entryRow": "了解 Mera",
+    "entryRow": "Mera 的運作方式",
     "menuTitle": "了解 Mera",
     "menuSubtitle": "此應用程式如何思考的簡短指南。從任何地方開始。",
     "sectionBasic": "從這裡開始",
@@ -1775,7 +1791,6 @@
     "askMera": "詢問Mera",
     "chatIntro": "詢問我任何有關Mera如何運作的事。我可以解釋，但無法從這裡改變任何內容。",
     "launchButton": "開始導覽",
-    "learnAboutMera": "了解 Mera 如何運作",
     "hintReveal": "點擊每一個。",
     "hintRevealSome": "至少點擊{{count}}個。",
     "hintChoose": "選擇一個。",
@@ -2381,14 +2396,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "了解 Mera 如何運作"
   },
   "support": {
     "opening": "正在開啟支援",
     "supportId": "支援 ID：{{id}}",
     "copySupportId": "複製支援 ID",
     "copied": "已複製",
-    "saveHint": "請保存此 ID。支援團隊可以透過它找到你的帳戶。"
+    "saveHint": "請保存此 ID。支援團隊可以透過它找到你的帳戶。",
+    "mailFailedTitle": "無法開啟郵件 App",
+    "mailFailedBody": "複製我們的支援信箱地址，再用任何郵件 App 寄信給我們。",
+    "copyAddress": "複製地址"
   },
   "emailCapture": {
     "title": "新增電子郵件",
@@ -2496,7 +2515,10 @@
     "wifiOnly": "僅限 Wi-Fi",
     "wifiOnlyOff": "已關閉。排程備份可能會使用行動數據。",
     "wifiOnlyOn": "已開啟。排程備份會等待 Wi-Fi 連線。",
-    "working": "處理中…"
+    "working": "處理中…",
+    "statusFromCloud": "上次備份 {{when}}，位於 {{provider}}",
+    "restoreOption": "{{when}} 的備份",
+    "statusFailed": "上次備份於 {{when}} 失敗"
   },
   "factChoice": {
     "titleSingle": "把這條加入你的人物設定嗎",

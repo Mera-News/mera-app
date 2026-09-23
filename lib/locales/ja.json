@@ -352,7 +352,10 @@
     "timeNudge": "読んだり、考えたり、計画したりできるときを選んでください。1日1～2回で十分です。",
     "maxHoursReachedDescription": "時間は最大{{count}}個まで選択できます",
     "maxHoursReachedTitle": "上限に達しました",
-    "selectedCount": "選択中: {{selected}}/{{max}}"
+    "selectedCount": "選択中: {{selected}}/{{max}}",
+    "savedInline": "保存しました",
+    "pickAtLeastOneHour": "1つ以上の時間を選んでください",
+    "selectedLabel": "選択中"
   },
   "language": {
     "title": "言語",
@@ -620,7 +623,7 @@
     "topicGenQueuedDescription": "トピックはまもなく表示されます。",
     "deleteFactTitle": "ファクトを削除",
     "deleteFactConfirm": "このファクトを削除してもよろしいですか？",
-    "deleteFactWarning": "これにより、このファクトから生成されたすべてのトラッキングトピックも削除されます。",
+    "deleteFactWarning": "このファクトのトピックと見つかった記事も削除され、Meraはこの件のニュースを探さなくなります。",
     "deletingFact": "削除中...",
     "yesDelete": "はい、削除します",
     "refreshSuggestions": "候補を更新",
@@ -659,7 +662,9 @@
     "promoInfoTitleEmoji": "🎉 ローンチ特典 🎊",
     "resetsOn": "リセット",
     "retryTopicGeneration": "再試行",
-    "topicGenFailedGeneric": "このトピックを生成できませんでした。"
+    "topicGenFailedGeneric": "このトピックを生成できませんでした。",
+    "articleCountPending": "集計中",
+    "articleCountNone": "まだ記事はありません"
   },
   "errors": {
     "somethingWentWrong": "問題が発生しました",
@@ -940,7 +945,7 @@
     "detailsSection": "サブスクリプションの詳細",
     "expiresOn": "有効期限",
     "lifetime": "買い切り",
-    "managePlan": "サブスクリプションを管理",
+    "managePlan": "プランを管理",
     "periodLabel": "期間",
     "periodNormal": "通常",
     "periodPromotional": "プロモーション",
@@ -969,7 +974,6 @@
     "activatedBody": "パーソナライズされたフィード、ダッシュボード、フォロー中のストーリー、チャットの準備ができました。",
     "activatedTitle": "{{plan}}がアクティブです",
     "lapsedFreeNote": "Mera News Freeはいつまでもご利用いただけます。プランを開始することでMeraがあなたのニュースを再度分析し始めます。",
-    "manageBadge": "管理",
     "turnMeraBackOn": "Meraをもう一度オンにする",
     "para1": "Mera Newsは無料にすることもできました。ただし、誰か他の誰かが代わりに支払うことになります。広告主があなたの注意、データ、または好意的な報道を買っています。多くのニュースに見えるものはまさにそれです。",
     "para2": "広告でサポートされるメディアには上限がありません。あなたから何をどのくらい取るかについても、その後何に使用されるかについてもです。私たちはそのような会社になりたくないので、ここでの取引は簡単です。あなたはデータを保持します。ソフトウェアが仕事をします。あなたがそれに支払います。",
@@ -985,7 +989,8 @@
     "trialEndsOn": "無料トライアルは{{date}}に終了します",
     "trialNoPaymentDetails": "支払い詳細がファイルに保存されていないため、キャンセルするものはありません。トライアルが終わると、購読を選択しない限り、無料プランに移行します。",
     "starterFreeTitle": "Starter をご利用中です。無料です",
-    "starterFreeBody": "Mera が何のためにあるかを知っていただきたいので、すべてのアカウントに Starter プランのすべてを無料で含めています。1日250件の記事、あなたのすべての興味、チャット、ファクトチェック、フォロー中のストーリーが使えます。"
+    "starterFreeBody": "Mera が何のためにあるかを知っていただきたいので、すべてのアカウントに Starter プランのすべてを無料で含めています。1日250件の記事、あなたのすべての興味、チャット、ファクトチェック、フォロー中のストーリーが使えます。",
+    "manageBadge": "管理"
   },
   "tabs": {
     "deck": "フィード",
@@ -1140,7 +1145,14 @@
     "dailyLimitBody": "本日の記事上限に達しました。まもなくリセットされます。"
   },
   "settings": {
-    "sources": "ソース"
+    "sources": "ソース",
+    "groupGeneral": "一般",
+    "groupPrivacy": "プライバシーとデータ",
+    "groupHelp": "ヘルプ",
+    "groupAccount": "アカウント",
+    "languageRow": "言語",
+    "backupRow": "バックアップと復元",
+    "backupRowNever": "まだバックアップなし"
   },
   "personaAudit": {
     "entryRow": "プロフィール変更ログ",
@@ -1305,7 +1317,7 @@
     "notificationBody_one": "Meraがプロフィールの{{count}}件のクリーンアップを見つけました。",
     "notificationBody_other": "Meraはあなたのプロフィールで{{count}}件の整理項目を見つけました。",
     "reviewChip": "確認",
-    "title": "プロフィールの健全性",
+    "title": "プロフィールの整理",
     "subtitle": "整理の提案",
     "intro": "Meraは整理する価値のあるいくつかの項目を見つけました。同意するものを承認してください。",
     "empty": "あなたのプロフィールは健全です",
@@ -1320,9 +1332,9 @@
     "appliedBody": "プロフィールが整理されました。詳細は変更ログをご確認ください。",
     "applyFailedTitle": "整理を適用できませんでした",
     "applyFailedBody": "後でもう一度お試しください。",
-    "profileRow_one": "ペルソナの健康度・{{count}}件の提案",
-    "profileRow_other": "プロフィールの健全性 · {{count}}件の提案",
-    "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。古いものは変更ログから復元可能です。"
+    "profileRow_one": "プロフィールの整理 · {{count}}件の提案",
+    "profileRow_other": "プロフィールの整理 · {{count}}件の提案",
+    "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。"
   },
   "locations": {
     "title": "あなたの場所",
@@ -1459,7 +1471,7 @@
     "visitedSubtitle": "最近開いた出版社",
     "activity": "アクティビティ",
     "activitySubtitle": "プロフィールの変更履歴",
-    "personaHealth": "プロフィールの健全性",
+    "personaHealth": "プロフィールの整理",
     "healthPending_one": "{{count}}件のクリーンアップ提案",
     "healthPending_other": "{{count}}件の整理提案",
     "healthAllHealthy": "すべて健全です",
@@ -1496,7 +1508,10 @@
       "remove": "これを削除",
       "removeConfirm": "もう一度タップして削除",
       "limitReached": "日次調整上限に達しました — 変更は明日も続きます。"
-    }
+    },
+    "meraInviteReturning": "新しいことを教えてください。フィードに追加します。",
+    "editFacts": "編集",
+    "planUsage": "今日の分析 {{used}} / {{limit}}"
   },
   "facts": {
     "screenTitle": "あなたのファクト",
@@ -1506,7 +1521,8 @@
     "lessInfluence": "より小さな影響",
     "declinedTopicsTitle": "削除したトピック",
     "allowAgain": "もう一度許可する",
-    "topicRemovalConsequence": "削除したトピックは、「削除したトピック」からもう一度許可しない限り、二度と提案されません。"
+    "topicRemovalConsequence": "削除したトピックは、「削除したトピック」からもう一度許可しない限り、二度と提案されません。",
+    "deleteFactA11y": "{{fact}} を削除"
   },
   "publicationPrefs": {
     "title": "ソースの設定",
@@ -1578,7 +1594,7 @@
     "staticGradientTitle": "静的背景",
     "staticGradientDescription": "アニメーション背景の代わりに固定グラデーションを使用します — バッテリーと古いデバイスに優しい",
     "screenTitle": "表示",
-    "screenSubtitle": "テキスト、ビジュアル、セキュリティ、およびこのデバイスでMeraを開く方法",
+    "screenSubtitle": "テキスト、ビジュアル、およびこのデバイスでMeraを開く方法",
     "sectionText": "テキスト",
     "sectionVisuals": "ビジュアル",
     "textSizeTitle": "テキストサイズ",
@@ -1751,7 +1767,7 @@
     "welcomeBody": "「同意して続行」をタップすると、利用規約とプライバシーポリシーに同意したことになります。"
   },
   "tutorials": {
-    "entryRow": "Meraについて学ぶ",
+    "entryRow": "Meraのしくみ",
     "menuTitle": "Meraについて学ぶ",
     "menuSubtitle": "このアプリがどのように機能するかについての短いガイド。どこからでも始めてください。",
     "sectionBasic": "ここから始めてください",
@@ -1774,7 +1790,6 @@
     "askMera": "Meraに聞く",
     "chatIntro": "Meraの仕組みについて何でも聞いてください。説明できますが、ここから何も変更することはできません。",
     "launchButton": "ツアーをする",
-    "learnAboutMera": "Meraの仕組み",
     "hintReveal": "それぞれをタップします。",
     "hintRevealSome": "少なくとも{{count}}をタップしてください。",
     "hintChoose": "1つを選びます。",
@@ -2380,14 +2395,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "Meraの仕組み"
   },
   "support": {
     "opening": "サポートを開いています",
     "supportId": "サポートID: {{id}}",
     "copySupportId": "サポートIDをコピー",
     "copied": "コピーしました",
-    "saveHint": "この ID を保存してください。サポートがアカウントを見つける際に使用します。"
+    "saveHint": "この ID を保存してください。サポートがアカウントを見つける際に使用します。",
+    "mailFailedTitle": "メールアプリを開けませんでした",
+    "mailFailedBody": "サポートのアドレスをコピーして、お好きなメールアプリから送信してください。",
+    "copyAddress": "アドレスをコピー"
   },
   "emailCapture": {
     "title": "メールアドレスを追加",
@@ -2495,7 +2514,10 @@
     "wifiOnly": "Wi-Fi のみ",
     "wifiOnlyOff": "オフ。スケジュールされたバックアップはモバイルデータ通信を使うことがあります。",
     "wifiOnlyOn": "オン。スケジュールされたバックアップは Wi-Fi 接続を待ちます。",
-    "working": "処理中…"
+    "working": "処理中…",
+    "statusFromCloud": "前回のバックアップ {{when}}（{{provider}} で検出）",
+    "restoreOption": "{{when}} のバックアップ",
+    "statusFailed": "前回のバックアップは {{when}} に失敗しました"
   },
   "factChoice": {
     "titleSingle": "これをあなたのペルソナに追加しますか",

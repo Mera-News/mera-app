@@ -352,7 +352,10 @@
     "timeNudge": "Chọn một thời gian khi bạn có thể đọc, suy nghĩ và lên kế hoạch — một hoặc hai lần một ngày là đủ.",
     "maxHoursReachedDescription": "Bạn có thể chọn tối đa {{count}} giờ",
     "maxHoursReachedTitle": "Đã đạt mức tối đa",
-    "selectedCount": "Đã chọn: {{selected}}/{{max}}"
+    "selectedCount": "Đã chọn: {{selected}}/{{max}}",
+    "savedInline": "Đã lưu",
+    "pickAtLeastOneHour": "Chọn ít nhất một giờ",
+    "selectedLabel": "Đã chọn"
   },
   "language": {
     "title": "Ngôn ngữ",
@@ -620,7 +623,7 @@
     "topicGenQueuedDescription": "Các chủ đề sẽ xuất hiện trong giây lát.",
     "deleteFactTitle": "Xóa thông tin",
     "deleteFactConfirm": "Bạn có chắc chắn muốn xóa thông tin này không?",
-    "deleteFactWarning": "Thao tác này cũng sẽ xóa tất cả các chủ đề theo dõi được tạo từ thông tin này.",
+    "deleteFactWarning": "Các chủ đề và tin bài đã tìm được cũng bị xóa, và Mera sẽ ngừng tìm tin về điều này.",
     "deletingFact": "Đang xóa...",
     "yesDelete": "Có, xóa",
     "refreshSuggestions": "Làm mới gợi ý",
@@ -659,7 +662,9 @@
     "promoInfoTitleEmoji": "🎉 Ưu đãi ra mắt 🎊",
     "resetsOn": "Đặt lại",
     "retryTopicGeneration": "Thử lại",
-    "topicGenFailedGeneric": "Không thể tạo chủ đề cho điều này."
+    "topicGenFailedGeneric": "Không thể tạo chủ đề cho điều này.",
+    "articleCountPending": "Đang đếm",
+    "articleCountNone": "Chưa có bài viết"
   },
   "errors": {
     "somethingWentWrong": "Đã xảy ra lỗi",
@@ -940,7 +945,7 @@
     "detailsSection": "Chi tiết gói đăng ký",
     "expiresOn": "Hết hạn vào",
     "lifetime": "Trọn đời",
-    "managePlan": "Quản lý gói đăng ký",
+    "managePlan": "Quản lý gói",
     "periodLabel": "Chu kỳ",
     "periodNormal": "Tiêu chuẩn",
     "periodPromotional": "Khuyến mãi",
@@ -969,7 +974,6 @@
     "activatedBody": "Bảng tin cá nhân, bảng điều khiển, những câu chuyện theo dõi và trò chuyện đã sẵn sàng.",
     "activatedTitle": "{{plan}} đã hoạt động",
     "lapsedFreeNote": "Mera News Free là của bạn miễn là bạn muốn. Một gói là điều bắt đầu Mera hoạt động lại trên tin tức của bạn.",
-    "manageBadge": "Quản lý",
     "turnMeraBackOn": "Bật Mera lại",
     "para1": "Mera News có thể miễn phí. Đó chỉ có nghĩa là ai đó khác trả tiền: một nhà quảng cáo mua sự chú ý của bạn, dữ liệu của bạn, hoặc một bài viết tích cực. Rất nhiều thứ trông giống tin tức chính là như thế.",
     "para2": "Phương tiện tài trợ bởi quảng cáo không có giới hạn. Không có giới hạn về những gì nó lấy từ bạn, và không có giới hạn về cách sử dụng sau đó. Chúng tôi không muốn là công ty đó, vì vậy thỏa thuận ở đây rất đơn giản. Bạn giữ dữ liệu của bạn. Phần mềm làm công việc. Bạn trả tiền cho nó.",
@@ -985,7 +989,8 @@
     "trialEndsOn": "Dùng thử miễn phí của bạn kết thúc {{date}}",
     "trialNoPaymentDetails": "Không có chi tiết thanh toán nào trong tệp, vì vậy không có gì để hủy. Khi dùng thử kết thúc, bạn sẽ chuyển sang gói miễn phí trừ khi bạn chọn đăng ký.",
     "starterFreeTitle": "Bạn đang dùng Starter, miễn phí",
-    "starterFreeBody": "Chúng tôi muốn bạn thấy Mera dùng để làm gì, nên mọi tài khoản đều có trọn gói Starter miễn phí. Đó là 250 bài mỗi ngày, tất cả mối quan tâm của bạn, trò chuyện, kiểm chứng và câu chuyện đang theo dõi."
+    "starterFreeBody": "Chúng tôi muốn bạn thấy Mera dùng để làm gì, nên mọi tài khoản đều có trọn gói Starter miễn phí. Đó là 250 bài mỗi ngày, tất cả mối quan tâm của bạn, trò chuyện, kiểm chứng và câu chuyện đang theo dõi.",
+    "manageBadge": "Quản lý"
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -1140,7 +1145,14 @@
     "dailyLimitBody": "Bạn đã đạt giới hạn bài viết hôm nay. Giới hạn này sẽ sớm được đặt lại."
   },
   "settings": {
-    "sources": "Nguồn"
+    "sources": "Nguồn",
+    "groupGeneral": "Chung",
+    "groupPrivacy": "Quyền riêng tư và dữ liệu",
+    "groupHelp": "Trợ giúp",
+    "groupAccount": "Tài khoản",
+    "languageRow": "Ngôn ngữ",
+    "backupRow": "Sao lưu và khôi phục",
+    "backupRowNever": "Chưa sao lưu"
   },
   "personaAudit": {
     "entryRow": "Nhật ký thay đổi hồ sơ",
@@ -1306,7 +1318,7 @@
     "notificationBody_one": "Mera tìm thấy {{count}} dọn dẹp cho hồ sơ của bạn.",
     "notificationBody_other": "Mera đã tìm thấy {{count}} mục cần dọn dẹp trong hồ sơ của bạn.",
     "reviewChip": "Xem xét",
-    "title": "Tình trạng hồ sơ",
+    "title": "Dọn dẹp hồ sơ",
     "subtitle": "Đề xuất dọn dẹp",
     "intro": "Mera đã tìm thấy một vài điều đáng dọn dẹp. Hãy chấp nhận những đề xuất bạn đồng ý.",
     "empty": "Hồ sơ của bạn trông ổn",
@@ -1321,9 +1333,9 @@
     "appliedBody": "Hồ sơ của bạn đã được dọn dẹp. Xem nhật ký thay đổi để kiểm tra lại.",
     "applyFailedTitle": "Không thể áp dụng dọn dẹp",
     "applyFailedBody": "Vui lòng thử lại sau.",
-    "profileRow_one": "Sức khỏe nhân cách · {{count}} gợi ý",
-    "profileRow_other": "Tình trạng hồ sơ · {{count}} đề xuất",
-    "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này. Những cái cũ có thể đảo ngược từ nhật ký thay đổi."
+    "profileRow_one": "Dọn dẹp hồ sơ · {{count}} đề xuất",
+    "profileRow_other": "Dọn dẹp hồ sơ · {{count}} đề xuất",
+    "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này."
   },
   "locations": {
     "title": "Địa điểm của bạn",
@@ -1460,7 +1472,7 @@
     "visitedSubtitle": "Các ấn phẩm bạn mở gần đây",
     "activity": "Hoạt động",
     "activitySubtitle": "Lịch sử thay đổi hồ sơ của bạn",
-    "personaHealth": "Tình trạng hồ sơ",
+    "personaHealth": "Dọn dẹp hồ sơ",
     "healthPending_one": "{{count}} gợi ý dọn dẹp",
     "healthPending_other": "{{count}} đề xuất dọn dẹp",
     "healthAllHealthy": "Tất cả đều ổn",
@@ -1497,7 +1509,10 @@
       "remove": "Xóa mục này",
       "removeConfirm": "Chạm lại để xóa",
       "limitReached": "Đã đạt giới hạn điều chỉnh hàng ngày, các thay đổi sẽ tiếp tục vào ngày mai."
-    }
+    },
+    "meraInviteReturning": "Hãy kể cho tôi điều gì mới, tôi sẽ thêm vào bảng tin của bạn.",
+    "editFacts": "Sửa",
+    "planUsage": "Đã phân tích {{used}}/{{limit}} hôm nay"
   },
   "facts": {
     "screenTitle": "Thông tin của bạn",
@@ -1507,7 +1522,8 @@
     "lessInfluence": "Ảnh hưởng ít hơn",
     "declinedTopicsTitle": "Chủ đề bạn đã xóa",
     "allowAgain": "Cho phép lại",
-    "topicRemovalConsequence": "Các chủ đề đã xóa sẽ không được đề xuất lại trừ khi bạn cho phép lại trong mục Chủ đề bạn đã xóa."
+    "topicRemovalConsequence": "Các chủ đề đã xóa sẽ không được đề xuất lại trừ khi bạn cho phép lại trong mục Chủ đề bạn đã xóa.",
+    "deleteFactA11y": "Xóa {{fact}}"
   },
   "publicationPrefs": {
     "title": "Tùy chọn nguồn",
@@ -1579,7 +1595,7 @@
     "staticGradientTitle": "Nền tĩnh",
     "staticGradientDescription": "Sử dụng gradient cố định thay vì nền động — tiết kiệm pin và dễ hơn trên các thiết bị cũ",
     "screenTitle": "Hiển thị",
-    "screenSubtitle": "Văn bản, hình ảnh, bảo mật và cách Mera mở trên thiết bị này",
+    "screenSubtitle": "Văn bản, hình ảnh và cách Mera mở trên thiết bị này",
     "sectionText": "Văn bản",
     "sectionVisuals": "Hình ảnh",
     "textSizeTitle": "Kích thước văn bản",
@@ -1752,7 +1768,7 @@
     "welcomeBody": "Nhấn \"Đồng ý và tiếp tục\" để chấp nhận Điều khoản dịch vụ và Chính sách quyền riêng tư của chúng tôi."
   },
   "tutorials": {
-    "entryRow": "Tìm hiểu về Mera",
+    "entryRow": "Cách Mera hoạt động",
     "menuTitle": "Tìm hiểu về Mera",
     "menuSubtitle": "Hướng dẫn ngắn về cách ứng dụng này hoạt động. Bắt đầu ở bất cứ đâu.",
     "sectionBasic": "Bắt đầu từ đây",
@@ -1775,7 +1791,6 @@
     "askMera": "Hỏi Mera",
     "chatIntro": "Hỏi tôi bất cứ điều gì về cách Mera hoạt động. Tôi có thể giải thích, nhưng tôi không thể thay đổi bất cứ điều gì từ đây.",
     "launchButton": "Tham quan",
-    "learnAboutMera": "Mera hoạt động thế nào",
     "hintReveal": "Nhấn từng cái một.",
     "hintRevealSome": "Nhấn ít nhất {{count}}.",
     "hintChoose": "Chọn một cái.",
@@ -2381,14 +2396,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "Mera hoạt động thế nào"
   },
   "support": {
     "opening": "Đang mở hỗ trợ",
     "supportId": "ID hỗ trợ: {{id}}",
     "copySupportId": "Sao chép ID hỗ trợ",
     "copied": "Đã sao chép",
-    "saveHint": "Hãy lưu ID này. Bộ phận hỗ trợ có thể tìm tài khoản của bạn bằng ID này."
+    "saveHint": "Hãy lưu ID này. Bộ phận hỗ trợ có thể tìm tài khoản của bạn bằng ID này.",
+    "mailFailedTitle": "Không mở được ứng dụng email",
+    "mailFailedBody": "Sao chép địa chỉ hỗ trợ và gửi email cho chúng tôi từ bất kỳ ứng dụng email nào.",
+    "copyAddress": "Sao chép địa chỉ"
   },
   "emailCapture": {
     "title": "Thêm email của bạn",
@@ -2496,7 +2515,10 @@
     "wifiOnly": "Chỉ dùng Wi-Fi",
     "wifiOnlyOff": "Tắt. Các bản sao lưu theo lịch có thể dùng dữ liệu di động.",
     "wifiOnlyOn": "Bật. Các bản sao lưu theo lịch sẽ chờ Wi-Fi.",
-    "working": "Đang xử lý…"
+    "working": "Đang xử lý…",
+    "statusFromCloud": "Sao lưu gần nhất {{when}}, tìm thấy trong {{provider}}",
+    "restoreOption": "Bản sao lưu từ {{when}}",
+    "statusFailed": "Lần sao lưu gần nhất thất bại vào {{when}}"
   },
   "factChoice": {
     "titleSingle": "Thêm điều này vào persona của bạn?",

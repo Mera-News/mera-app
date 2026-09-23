@@ -352,7 +352,10 @@
     "timeNudge": "Pilih waktu ketika Anda dapat membaca, berpikir, dan merencanakan — sekali atau dua kali sehari sudah cukup.",
     "maxHoursReachedDescription": "Anda dapat memilih hingga {{count}} jam",
     "maxHoursReachedTitle": "Maksimum Tercapai",
-    "selectedCount": "Dipilih: {{selected}}/{{max}}"
+    "selectedCount": "Dipilih: {{selected}}/{{max}}",
+    "savedInline": "Tersimpan",
+    "pickAtLeastOneHour": "Pilih setidaknya satu jam",
+    "selectedLabel": "Dipilih"
   },
   "language": {
     "title": "Bahasa",
@@ -620,7 +623,7 @@
     "topicGenQueuedDescription": "Topik akan segera muncul.",
     "deleteFactTitle": "Hapus Fakta",
     "deleteFactConfirm": "Apakah Anda yakin ingin menghapus fakta ini?",
-    "deleteFactWarning": "Ini juga akan menghapus semua topik yang dilacak yang dihasilkan dari fakta ini.",
+    "deleteFactWarning": "Topik dan berita yang ditemukannya ikut terhapus, dan Mera berhenti mencari berita tentang hal ini.",
     "deletingFact": "Menghapus...",
     "yesDelete": "Ya, Hapus",
     "refreshSuggestions": "Segarkan Saran",
@@ -659,7 +662,9 @@
     "promoInfoTitleEmoji": "🎉 Penawaran peluncuran 🎊",
     "resetsOn": "Direset",
     "retryTopicGeneration": "Coba Lagi",
-    "topicGenFailedGeneric": "Tidak dapat membuat topik untuk ini."
+    "topicGenFailedGeneric": "Tidak dapat membuat topik untuk ini.",
+    "articleCountPending": "Menghitung",
+    "articleCountNone": "Belum ada artikel"
   },
   "errors": {
     "somethingWentWrong": "Terjadi kesalahan",
@@ -940,7 +945,7 @@
     "detailsSection": "Detail langganan",
     "expiresOn": "Berakhir pada",
     "lifetime": "Seumur hidup",
-    "managePlan": "Kelola langganan",
+    "managePlan": "Kelola paket",
     "periodLabel": "Periode",
     "periodNormal": "Standar",
     "periodPromotional": "Promosi",
@@ -969,7 +974,6 @@
     "activatedBody": "Feed personal Anda, dasbor, cerita yang diikuti, dan obrolan siap digunakan.",
     "activatedTitle": "{{plan}} aktif",
     "lapsedFreeNote": "Mera News Free adalah milik Anda selama yang Anda inginkan. Paket adalah apa yang membuat Mera kembali bekerja untuk Anda.",
-    "manageBadge": "Kelola",
     "turnMeraBackOn": "Aktifkan Mera kembali",
     "para1": "Mera News bisa saja gratis. Tetapi itu hanya berarti ada orang lain yang membayar: seorang pengiklan yang membeli perhatian Anda, data Anda, atau liputan yang bersahabat. Banyak dari yang terlihat seperti berita adalah persis itu.",
     "para2": "Media yang didanai iklan tidak memiliki batas. Bukan untuk berapa banyak yang diambilnya dari Anda, dan juga tidak untuk apa yang digunakan untuk itu nanti. Kami tidak ingin menjadi perusahaan itu, jadi kesepakatan di sini sederhana. Anda menjaga data Anda. Perangkat lunak melakukan pekerjaan. Anda membayarnya.",
@@ -985,7 +989,8 @@
     "trialEndsOn": "Uji coba gratis Anda berakhir {{date}}",
     "trialNoPaymentDetails": "Tidak ada detail pembayaran dalam file, jadi tidak ada yang perlu dibatalkan. Saat uji coba berakhir, Anda akan beralih ke paket gratis kecuali Anda memilih untuk berlangganan.",
     "starterFreeTitle": "Anda memakai Starter, gratis",
-    "starterFreeBody": "Kami ingin Anda melihat untuk apa Mera ada, jadi setiap akun mendapat paket Starter lengkap tanpa biaya. Itu berarti 250 artikel sehari, semua minat Anda, chat, cek fakta, dan cerita yang diikuti."
+    "starterFreeBody": "Kami ingin Anda melihat untuk apa Mera ada, jadi setiap akun mendapat paket Starter lengkap tanpa biaya. Itu berarti 250 artikel sehari, semua minat Anda, chat, cek fakta, dan cerita yang diikuti.",
+    "manageBadge": "Kelola"
   },
   "tabs": {
     "deck": "Umpan",
@@ -1140,7 +1145,14 @@
     "dailyLimitBody": "Anda telah mencapai batas artikel hari ini. Akan direset sebentar lagi."
   },
   "settings": {
-    "sources": "Sumber"
+    "sources": "Sumber",
+    "groupGeneral": "Umum",
+    "groupPrivacy": "Privasi dan data",
+    "groupHelp": "Bantuan",
+    "groupAccount": "Akun",
+    "languageRow": "Bahasa",
+    "backupRow": "Cadangkan dan pulihkan",
+    "backupRowNever": "Belum dicadangkan"
   },
   "personaAudit": {
     "entryRow": "Log perubahan profil",
@@ -1305,7 +1317,7 @@
     "notificationBody_one": "Mera menemukan {{count}} pembersihan untuk profil Anda.",
     "notificationBody_other": "Mera menemukan {{count}} hal untuk dirapikan di profil Anda.",
     "reviewChip": "Tinjau",
-    "title": "Kesehatan profil",
+    "title": "Rapikan profil",
     "subtitle": "Saran perapian",
     "intro": "Mera menemukan beberapa hal yang layak dirapikan. Terima yang Anda setujui.",
     "empty": "Profil Anda terlihat sehat",
@@ -1320,9 +1332,9 @@
     "appliedBody": "Profil Anda telah dirapikan. Lihat log perubahan untuk meninjau.",
     "applyFailedTitle": "Tidak dapat menerapkan perapian",
     "applyFailedBody": "Silakan coba lagi nanti.",
-    "profileRow_one": "Kesehatan persona · {{count}} saran",
-    "profileRow_other": "Kesehatan profil · {{count}} saran",
-    "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih baik untuk minat ini. Topik lama dapat dikembalikan dari catatan perubahan."
+    "profileRow_one": "Rapikan profil · {{count}} saran",
+    "profileRow_other": "Rapikan profil · {{count}} saran",
+    "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih baik untuk minat ini."
   },
   "locations": {
     "title": "Tempat Anda",
@@ -1459,7 +1471,7 @@
     "visitedSubtitle": "Publikasi yang baru-baru ini Anda buka",
     "activity": "Aktivitas",
     "activitySubtitle": "Riwayat perubahan profil Anda",
-    "personaHealth": "Kesehatan profil",
+    "personaHealth": "Rapikan profil",
     "healthPending_one": "{{count}} saran pembersihan",
     "healthPending_other": "{{count}} saran perapian",
     "healthAllHealthy": "Semua sehat",
@@ -1496,7 +1508,10 @@
       "remove": "Hapus ini",
       "removeConfirm": "Ketuk lagi untuk menghapus",
       "limitReached": "Batas penyesuaian harian tercapai: perubahan akan berlanjut besok."
-    }
+    },
+    "meraInviteReturning": "Ceritakan hal baru, nanti saya tambahkan ke feed Anda.",
+    "editFacts": "Edit",
+    "planUsage": "{{used}} dari {{limit}} dianalisis hari ini"
   },
   "facts": {
     "screenTitle": "Fakta Anda",
@@ -1506,7 +1521,8 @@
     "lessInfluence": "Pengaruh lebih kecil",
     "declinedTopicsTitle": "Topik yang Anda hapus",
     "allowAgain": "Izinkan lagi",
-    "topicRemovalConsequence": "Topik yang dihapus tidak akan disarankan lagi kecuali Anda mengizinkannya kembali di Topik yang Anda hapus."
+    "topicRemovalConsequence": "Topik yang dihapus tidak akan disarankan lagi kecuali Anda mengizinkannya kembali di Topik yang Anda hapus.",
+    "deleteFactA11y": "Hapus {{fact}}"
   },
   "publicationPrefs": {
     "title": "Preferensi sumber",
@@ -1578,7 +1594,7 @@
     "staticGradientTitle": "Latar belakang statis",
     "staticGradientDescription": "Gunakan gradien tetap alih-alih latar belakang animasi — lebih mudah di baterai dan perangkat lama",
     "screenTitle": "Tampilan",
-    "screenSubtitle": "Teks, visual, keamanan, dan cara Mera membuka di perangkat ini",
+    "screenSubtitle": "Teks, visual, dan cara Mera membuka di perangkat ini",
     "sectionText": "Teks",
     "sectionVisuals": "Visual",
     "textSizeTitle": "Ukuran teks",
@@ -1751,7 +1767,7 @@
     "welcomeBody": "Ketuk \"Setuju dan lanjutkan\" untuk menerima Ketentuan Layanan dan Kebijakan Privasi kami."
   },
   "tutorials": {
-    "entryRow": "Pelajari tentang Mera",
+    "entryRow": "Cara kerja Mera",
     "menuTitle": "Pelajari tentang Mera",
     "menuSubtitle": "Panduan singkat tentang cara aplikasi ini berpikir. Mulai di mana saja.",
     "sectionBasic": "Mulai di sini",
@@ -1774,7 +1790,6 @@
     "askMera": "Tanya Mera",
     "chatIntro": "Tanyakan apa pun tentang cara kerja Mera. Saya dapat menjelaskan, tetapi saya tidak dapat mengubah apa pun dari sini.",
     "launchButton": "Ikuti tur",
-    "learnAboutMera": "Cara kerja Mera",
     "hintReveal": "Ketuk masing-masing.",
     "hintRevealSome": "Ketuk setidaknya {{count}}.",
     "hintChoose": "Pilih satu.",
@@ -2380,14 +2395,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "Cara kerja Mera"
   },
   "support": {
     "opening": "Membuka dukungan",
     "supportId": "ID dukungan: {{id}}",
     "copySupportId": "Salin ID dukungan",
     "copied": "Disalin",
-    "saveHint": "Simpan ID ini. Dukungan dapat menemukan akun Anda dengan ID ini."
+    "saveHint": "Simpan ID ini. Dukungan dapat menemukan akun Anda dengan ID ini.",
+    "mailFailedTitle": "Tidak dapat membuka aplikasi email",
+    "mailFailedBody": "Salin alamat dukungan kami lalu kirim email dari aplikasi email apa pun.",
+    "copyAddress": "Salin alamat"
   },
   "emailCapture": {
     "title": "Tambahkan email Anda",
@@ -2495,7 +2514,10 @@
     "wifiOnly": "Hanya Wi-Fi",
     "wifiOnlyOff": "Nonaktif. Pencadangan terjadwal dapat menggunakan data seluler.",
     "wifiOnlyOn": "Aktif. Pencadangan terjadwal menunggu Wi-Fi.",
-    "working": "Memproses…"
+    "working": "Memproses…",
+    "statusFromCloud": "Cadangan terakhir {{when}}, ditemukan di {{provider}}",
+    "restoreOption": "Cadangan dari {{when}}",
+    "statusFailed": "Pencadangan terakhir gagal pada {{when}}"
   },
   "factChoice": {
     "titleSingle": "Tambahkan ini ke persona kamu?",

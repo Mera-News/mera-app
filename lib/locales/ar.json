@@ -376,7 +376,10 @@
     "timeNudge": "اختر وقتًا تتمكن فيه من القراءة والتفكير والتخطيط — مرة أو مرتين في اليوم كافٍ.",
     "maxHoursReachedDescription": "يمكنك اختيار {{count}} ساعات كحد أقصى",
     "maxHoursReachedTitle": "تم بلوغ الحد الأقصى",
-    "selectedCount": "تم الاختيار: {{selected}}/{{max}}"
+    "selectedCount": "تم الاختيار: {{selected}}/{{max}}",
+    "savedInline": "تم الحفظ",
+    "pickAtLeastOneHour": "اختر ساعة واحدة على الأقل",
+    "selectedLabel": "المحدد"
   },
   "language": {
     "title": "اللغة",
@@ -644,7 +647,7 @@
     "topicGenQueuedDescription": "ستظهر الموضوعات قريبًا.",
     "deleteFactTitle": "حذف الحقيقة",
     "deleteFactConfirm": "هل أنت متأكد أنك تريد حذف هذه الحقيقة؟",
-    "deleteFactWarning": "سيؤدي هذا أيضًا إلى إزالة جميع الموضوعات المتتبعة المُنشأة من هذه الحقيقة.",
+    "deleteFactWarning": "ستُحذف معه موضوعاته والقصص التي وجدتها، ويتوقف Mera عن البحث عن أخبار عنه.",
     "deletingFact": "جارٍ الحذف...",
     "yesDelete": "نعم، احذف",
     "refreshSuggestions": "تحديث الاقتراحات",
@@ -687,7 +690,9 @@
     "promoInfoTitleEmoji": "🎉 عرض الإطلاق 🎊",
     "resetsOn": "يُعاد الضبط في",
     "retryTopicGeneration": "إعادة المحاولة",
-    "topicGenFailedGeneric": "تعذّر إنشاء الموضوعات لهذا."
+    "topicGenFailedGeneric": "تعذّر إنشاء الموضوعات لهذا.",
+    "articleCountPending": "جارٍ العدّ",
+    "articleCountNone": "لا مقالات بعد"
   },
   "errors": {
     "somethingWentWrong": "حدث خطأ ما",
@@ -968,7 +973,7 @@
     "detailsSection": "تفاصيل الاشتراك",
     "expiresOn": "ينتهي في",
     "lifetime": "مدى الحياة",
-    "managePlan": "إدارة الاشتراك",
+    "managePlan": "إدارة الخطة",
     "periodLabel": "الفترة",
     "periodNormal": "قياسي",
     "periodPromotional": "ترويجي",
@@ -997,7 +1002,6 @@
     "activatedBody": "موجزك المخصص ولوحة التحكم والقصص المتتبعة والمحادثة جاهزة.",
     "activatedTitle": "{{plan}} نشطة",
     "lapsedFreeNote": "Mera News Free لك طالما تريدها. الخطة هي ما يبدأ Mera في العمل على أخبارك مرة أخرى.",
-    "manageBadge": "إدارة",
     "turnMeraBackOn": "شغّل Mera مرة أخرى",
     "para1": "Mera News يمكن أن تكون مجانية. لكن ذلك يعني أن شخصًا آخر يدفع: معلن يشتري انتباهك أو بياناتك، أو حديث إيجابي. الكثير مما يبدو أخبارًا هو بالضبط ذلك.",
     "para2": "وسائل الإعلام الممولة من الإعلانات لا تملك حدًا أقصى. لا على كم تأخذ منك، ولا على ما يُستخدم لاحقًا. لا نريد أن نكون تلك الشركة، لذا الصفقة هنا بسيطة. تحافظ على بياناتك. البرنامج يقوم بالعمل. تدفع مقابل ذلك.",
@@ -1017,7 +1021,8 @@
     "trialEndsOn": "تنتهي فترة التجربة المجانية {{date}}",
     "trialNoPaymentDetails": "لا توجد تفاصيل دفع في الملف، لذا لا يوجد شيء لإلغاؤه. عند انتهاء فترة التجربة، ستنتقل إلى الخطة المجانية ما لم تختر الاشتراك.",
     "starterFreeTitle": "أنت على Starter، مجانًا",
-    "starterFreeBody": "نريدك أن ترى ما الغرض من Mera، لذلك يتضمن كل حساب خطة Starter كاملة دون تكلفة. أي 250 مقالًا يوميًا، وكل اهتماماتك، والدردشة، وتدقيق الحقائق، والقصص المتابَعة."
+    "starterFreeBody": "نريدك أن ترى ما الغرض من Mera، لذلك يتضمن كل حساب خطة Starter كاملة دون تكلفة. أي 250 مقالًا يوميًا، وكل اهتماماتك، والدردشة، وتدقيق الحقائق، والقصص المتابَعة.",
+    "manageBadge": "إدارة"
   },
   "tabs": {
     "deck": "الخلاصة",
@@ -1186,7 +1191,14 @@
     "dailyLimitBody": "بلغت حد المقالات لهذا اليوم. سيُعاد ضبطه قريبًا."
   },
   "settings": {
-    "sources": "المصادر"
+    "sources": "المصادر",
+    "groupGeneral": "عام",
+    "groupPrivacy": "الخصوصية والبيانات",
+    "groupHelp": "المساعدة",
+    "groupAccount": "الحساب",
+    "languageRow": "اللغة",
+    "backupRow": "النسخ الاحتياطي والاستعادة",
+    "backupRowNever": "لم يُحفظ بعد"
   },
   "personaAudit": {
     "entryRow": "سجل تغييرات الشخصية",
@@ -1359,7 +1371,7 @@
     "notificationBody_many": "وجد Mera {{count}} تنظيفًا لملفك الشخصي.",
     "notificationBody_other": "وجد Mera {{count}} تنظيف لملفك الشخصي.",
     "reviewChip": "مراجعة",
-    "title": "صحة الشخصية",
+    "title": "تنظيف الملف الشخصي",
     "subtitle": "عمليات تنظيف مقترحة",
     "intro": "وجد Mera بعض الأمور التي تستحق الترتيب. اقبل ما توافق عليه.",
     "empty": "شخصيتك تبدو بحالة جيدة",
@@ -1374,13 +1386,13 @@
     "appliedBody": "تم ترتيب ملفك الشخصي. راجع سجل التغييرات للاطلاع.",
     "applyFailedTitle": "تعذّر تطبيق التنظيف",
     "applyFailedBody": "يرجى المحاولة مرة أخرى لاحقًا.",
-    "profileRow_zero": "صحة الشخصية · {{count}} اقتراح",
-    "profileRow_one": "صحة الشخصية · {{count}} اقتراح",
-    "profileRow_two": "صحة الشخصية · {{count}} اقتراحان",
-    "profileRow_few": "صحة الشخصية · {{count}} اقتراحات",
-    "profileRow_many": "صحة الشخصية · {{count}} اقتراحًا",
-    "profileRow_other": "صحة الشخصية · {{count}} اقتراح",
-    "effectIncoherentTopics": "يستبدل هذه الموضوعات بموضوعات أفضل لهذا الاهتمام. الموضوعات القديمة يمكن التراجع عنها من سجل التغييرات."
+    "profileRow_zero": "تنظيف الملف الشخصي · {{count}} اقتراح",
+    "profileRow_one": "تنظيف الملف الشخصي · {{count}} اقتراح",
+    "profileRow_two": "تنظيف الملف الشخصي · {{count}} اقتراحان",
+    "profileRow_few": "تنظيف الملف الشخصي · {{count}} اقتراحات",
+    "profileRow_many": "تنظيف الملف الشخصي · {{count}} اقتراحًا",
+    "profileRow_other": "تنظيف الملف الشخصي · {{count}} اقتراح",
+    "effectIncoherentTopics": "يستبدل هذه الموضوعات بموضوعات أفضل لهذا الاهتمام."
   },
   "locations": {
     "title": "أماكنك",
@@ -1525,7 +1537,7 @@
     "visitedSubtitle": "المنشورات التي فتحتها مؤخرًا",
     "activity": "النشاط",
     "activitySubtitle": "سجل تغييرات شخصيتك",
-    "personaHealth": "صحة الشخصية",
+    "personaHealth": "تنظيف الملف الشخصي",
     "healthPending_zero": "{{count}} اقتراح تنظيف",
     "healthPending_one": "{{count}} اقتراح تنظيف",
     "healthPending_two": "{{count}} اقتراحا تنظيف",
@@ -1566,7 +1578,10 @@
       "remove": "إزالة هذا",
       "removeConfirm": "اضغط مرة أخرى للإزالة",
       "limitReached": "تم بلوغ حد التعديل اليومي: التغييرات تستمر غدًا"
-    }
+    },
+    "meraInviteReturning": "أخبرني بشيء جديد وسأضيفه إلى موجزك.",
+    "editFacts": "تعديل",
+    "planUsage": "{{used}} من {{limit}} تم تحليلها اليوم"
   },
   "facts": {
     "screenTitle": "حقائقك",
@@ -1576,7 +1591,8 @@
     "lessInfluence": "تأثير أقل",
     "declinedTopicsTitle": "المواضيع التي أزلتها",
     "allowAgain": "السماح بها مجددًا",
-    "topicRemovalConsequence": "لن تُقترح المواضيع المُزالة مرة أخرى ما لم تسمح بها ضمن «المواضيع التي أزلتها»."
+    "topicRemovalConsequence": "لن تُقترح المواضيع المُزالة مرة أخرى ما لم تسمح بها ضمن «المواضيع التي أزلتها».",
+    "deleteFactA11y": "حذف {{fact}}"
   },
   "publicationPrefs": {
     "title": "تفضيلات المصادر",
@@ -1648,7 +1664,7 @@
     "staticGradientTitle": "خلفية ثابتة",
     "staticGradientDescription": "استخدم تدرجًا ثابتًا بدلاً من الخلفية المتحركة — أخف وطأة على البطارية والأجهزة القديمة",
     "screenTitle": "العرض",
-    "screenSubtitle": "النصوص والمرئيات والأمان وكيفية فتح Mera على هذا الجهاز",
+    "screenSubtitle": "النصوص والمرئيات وكيفية فتح Mera على هذا الجهاز",
     "sectionText": "النص",
     "sectionVisuals": "الصور",
     "textSizeTitle": "حجم النص",
@@ -1825,7 +1841,7 @@
     "welcomeBody": "انقر على \"الموافقة والمتابعة\" لقبول شروط الخدمة وسياسة الخصوصية."
   },
   "tutorials": {
-    "entryRow": "تعرف على Mera",
+    "entryRow": "كيف يعمل Mera",
     "menuTitle": "تعرف على Mera",
     "menuSubtitle": "أدلة قصيرة حول كيفية تفكير هذا التطبيق. ابدأ في أي مكان.",
     "sectionBasic": "ابدأ هنا",
@@ -1848,7 +1864,6 @@
     "askMera": "اسأل Mera",
     "chatIntro": "اسأل Mera عن أي شيء حول كيفية عمل Mera. يمكنني أن أشرح، لكن لا يمكنني تغيير أي شيء من هنا.",
     "launchButton": "اذهب في الجولة",
-    "learnAboutMera": "تعرّف على طريقة عمل Mera",
     "hintReveal": "اضغط على كل واحد.",
     "hintRevealSome": "اضغط على {{count}} على الأقل.",
     "hintChoose": "اختر واحدًا.",
@@ -2454,14 +2469,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "تعرّف على طريقة عمل Mera"
   },
   "support": {
     "opening": "جارٍ فتح الدعم",
     "supportId": "معرّف الدعم: {{id}}",
     "copySupportId": "نسخ معرّف الدعم",
     "copied": "تم النسخ",
-    "saveHint": "احفظ هذا المعرّف. يمكن للدعم العثور على حسابك من خلاله."
+    "saveHint": "احفظ هذا المعرّف. يمكن للدعم العثور على حسابك من خلاله.",
+    "mailFailedTitle": "تعذّر فتح تطبيق البريد",
+    "mailFailedBody": "انسخ عنوان الدعم وأرسل إلينا رسالة من أي تطبيق بريد.",
+    "copyAddress": "نسخ العنوان"
   },
   "emailCapture": {
     "title": "أضف بريدك الإلكتروني",
@@ -2577,7 +2596,10 @@
     "wifiOnly": "Wi-Fi فقط",
     "wifiOnlyOff": "متوقف. قد تستخدم النسخ المجدولة بيانات الجوال.",
     "wifiOnlyOn": "مفعّل. تنتظر النسخ المجدولة الاتصال بشبكة Wi-Fi.",
-    "working": "جارٍ العمل…"
+    "working": "جارٍ العمل…",
+    "statusFromCloud": "آخر نسخة احتياطية {{when}}، موجودة في {{provider}}",
+    "restoreOption": "نسخة احتياطية من {{when}}",
+    "statusFailed": "فشلت آخر نسخة احتياطية في {{when}}"
   },
   "factChoice": {
     "titleSingle": "هل نضيف هذا إلى شخصيتك؟",

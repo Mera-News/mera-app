@@ -352,7 +352,10 @@
     "timeNudge": "Okuyabileceğiniz, düşünebileceğiniz ve planlayabileceğiniz bir zamanı seçin — günde bir veya iki kez yeterlidir.",
     "maxHoursReachedDescription": "En fazla {{count}} saat seçebilirsin",
     "maxHoursReachedTitle": "Üst sınıra ulaşıldı",
-    "selectedCount": "Seçilen: {{selected}}/{{max}}"
+    "selectedCount": "Seçilen: {{selected}}/{{max}}",
+    "savedInline": "Kaydedildi",
+    "pickAtLeastOneHour": "En az bir saat seç",
+    "selectedLabel": "Seçili"
   },
   "language": {
     "title": "Dil",
@@ -620,7 +623,7 @@
     "topicGenQueuedDescription": "Konular kısa süre içinde görünecek.",
     "deleteFactTitle": "Gerçeği sil",
     "deleteFactConfirm": "Bu gerçeği silmek istediğinden emin misin?",
-    "deleteFactWarning": "Bu, bu gerçekten oluşturulan tüm takip edilen konuları da kaldıracak.",
+    "deleteFactWarning": "Konuları ve bulunan haberler de silinir, Mera bununla ilgili haber aramayı bırakır.",
     "deletingFact": "Siliniyor...",
     "yesDelete": "Evet, sil",
     "refreshSuggestions": "Önerileri yenile",
@@ -659,7 +662,9 @@
     "promoInfoTitleEmoji": "🎉 Lansman teklifi 🎊",
     "resetsOn": "Sıfırlanma",
     "retryTopicGeneration": "Tekrar Dene",
-    "topicGenFailedGeneric": "Bu için konular oluşturulamadı."
+    "topicGenFailedGeneric": "Bu için konular oluşturulamadı.",
+    "articleCountPending": "Sayılıyor",
+    "articleCountNone": "Henüz makale yok"
   },
   "errors": {
     "somethingWentWrong": "Bir şeyler yanlış gitti",
@@ -940,7 +945,7 @@
     "detailsSection": "Abonelik ayrıntıları",
     "expiresOn": "Bitiş tarihi",
     "lifetime": "Ömür boyu",
-    "managePlan": "Aboneliği yönet",
+    "managePlan": "Planı yönet",
     "periodLabel": "Dönem",
     "periodNormal": "Standart",
     "periodPromotional": "Promosyon",
@@ -969,7 +974,6 @@
     "activatedBody": "Kişiselleştirilmiş akışınız, paneliniz, takip ettiğiniz haberler ve sohbet hazır.",
     "activatedTitle": "{{plan}} aktif",
     "lapsedFreeNote": "Mera News Free istediğiniz sürece sizindir. Bir plan, Mera'nın haberlerde yeniden çalışmaya başlamasını sağlayan şey.",
-    "manageBadge": "Yönet",
     "turnMeraBackOn": "Mera'yı tekrar açın",
     "para1": "Mera News ücretsiz olabilirdi. Ama bu birisinin ödediği anlamına gelirdi: reklam veren seni satın alıyor, verilerin alınıyor veya dostça bir yazı. Haberin çoğu tam olarak budur.",
     "para2": "Reklam destekli medyanın sınırı yok. Ne kadarını senden aldığının ve sonradan ne için kullanıldığının. Biz o şirket olmak istemiyoruz, bu yüzden buradaki anlaşma basit. Verileriniz sizde kalır. Yazılım işi yapır. Siz için ödersiniz.",
@@ -985,7 +989,8 @@
     "trialEndsOn": "Ücretsiz denemeniz {{date}} tarihinde sona eriyor",
     "trialNoPaymentDetails": "Dosyada ödeme bilgisi olmadığı için iptal edilecek bir şey yok. Deneme süresi sona erdiğinde, abonelik yapmamayı seçmediğiniz sürece ücretsiz plana geçersiniz.",
     "starterFreeTitle": "Starter kullanıyorsunuz, ücretsiz",
-    "starterFreeBody": "Mera'nın ne işe yaradığını görmenizi istiyoruz, bu yüzden her hesap tam Starter planını ücretsiz içeriyor. Bu, günde 250 haber, tüm ilgi alanlarınız, sohbet, doğruluk kontrolleri ve takip edilen haberler demek."
+    "starterFreeBody": "Mera'nın ne işe yaradığını görmenizi istiyoruz, bu yüzden her hesap tam Starter planını ücretsiz içeriyor. Bu, günde 250 haber, tüm ilgi alanlarınız, sohbet, doğruluk kontrolleri ve takip edilen haberler demek.",
+    "manageBadge": "Yönet"
   },
   "tabs": {
     "deck": "Akış",
@@ -1142,7 +1147,14 @@
     "dailyLimitBody": "Bugünkü makale sınırına ulaştın. Yakında sıfırlanacak."
   },
   "settings": {
-    "sources": "Kaynaklar"
+    "sources": "Kaynaklar",
+    "groupGeneral": "Genel",
+    "groupPrivacy": "Gizlilik ve veriler",
+    "groupHelp": "Yardım",
+    "groupAccount": "Hesap",
+    "languageRow": "Dil",
+    "backupRow": "Yedekleme ve geri yükleme",
+    "backupRowNever": "Henüz yedek yok"
   },
   "personaAudit": {
     "entryRow": "Profil değişiklik günlüğü",
@@ -1307,7 +1319,7 @@
     "notificationBody_one": "Mera profilin için {{count}} temizlik önerisi buldu.",
     "notificationBody_other": "Mera profilin için {{count}} temizlik önerisi buldu.",
     "reviewChip": "İncele",
-    "title": "Profil sağlığı",
+    "title": "Profil temizliği",
     "subtitle": "Önerilen düzenlemeler",
     "intro": "Mera düzenlenmeye değer birkaç şey buldu. Katıldıklarını kabul et.",
     "empty": "Profilin sağlıklı görünüyor",
@@ -1322,9 +1334,9 @@
     "appliedBody": "Profilin düzenlendi. İncelemek için değişiklik günlüğüne bak.",
     "applyFailedTitle": "Temizlik uygulanamadı",
     "applyFailedBody": "Lütfen daha sonra tekrar dene.",
-    "profileRow_one": "Profil sağlığı · {{count}} öneri",
-    "profileRow_other": "Profil sağlığı · {{count}} öneri",
-    "effectIncoherentTopics": "Bu ilgi alanı için bu konuları daha iyi olanlarla değiştirir. Eski olanlar değişiklik günlüğünden geri alınabilir."
+    "profileRow_one": "Profil temizliği · {{count}} öneri",
+    "profileRow_other": "Profil temizliği · {{count}} öneri",
+    "effectIncoherentTopics": "Bu ilgi alanı için bu konuları daha iyi olanlarla değiştirir."
   },
   "locations": {
     "title": "Yerlerin",
@@ -1461,7 +1473,7 @@
     "visitedSubtitle": "Yakın zamanda açtığın yayınlar",
     "activity": "Etkinlik",
     "activitySubtitle": "Profil değişiklik geçmişin",
-    "personaHealth": "Profil sağlığı",
+    "personaHealth": "Profil temizliği",
     "healthPending_one": "{{count}} temizlik önerisi",
     "healthPending_other": "{{count}} temizlik önerisi",
     "healthAllHealthy": "Her şey sağlıklı",
@@ -1498,7 +1510,10 @@
       "remove": "Bunu kaldır",
       "removeConfirm": "Kaldırmak için tekrar dokun",
       "limitReached": "Günlük ayarlama sınırına ulaşıldı, değişiklikler yarın devam edecek."
-    }
+    },
+    "meraInviteReturning": "Bana yeni bir şeyden bahset, akışına ekleyeyim.",
+    "editFacts": "Düzenle",
+    "planUsage": "Bugün {{limit}} içinden {{used}} analiz edildi"
   },
   "facts": {
     "screenTitle": "Bilgilerin",
@@ -1508,7 +1523,8 @@
     "lessInfluence": "Daha az etki",
     "declinedTopicsTitle": "Kaldırdığın konular",
     "allowAgain": "Tekrar izin ver",
-    "topicRemovalConsequence": "Kaldırılan konular, Kaldırdığın konular bölümünden tekrar izin vermediğin sürece bir daha önerilmez."
+    "topicRemovalConsequence": "Kaldırılan konular, Kaldırdığın konular bölümünden tekrar izin vermediğin sürece bir daha önerilmez.",
+    "deleteFactA11y": "{{fact}} sil"
   },
   "publicationPrefs": {
     "title": "Kaynak tercihleri",
@@ -1580,7 +1596,7 @@
     "staticGradientTitle": "Sabit arka plan",
     "staticGradientDescription": "Hareketli arka plan yerine sabit bir gradyan kullanın — pil ve eski cihazlar için daha kolay",
     "screenTitle": "Görünüm",
-    "screenSubtitle": "Metin, görseller, güvenlik ve Mera'nın bu cihazda nasıl açıldığı",
+    "screenSubtitle": "Metin, görseller ve Mera'nın bu cihazda nasıl açıldığı",
     "sectionText": "Metin",
     "sectionVisuals": "Görseller",
     "textSizeTitle": "Metin boyutu",
@@ -1753,7 +1769,7 @@
     "welcomeBody": "Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmek için \"Kabul et ve devam et\"e dokunun."
   },
   "tutorials": {
-    "entryRow": "Mera hakkında bilgi edin",
+    "entryRow": "Mera nasıl çalışır",
     "menuTitle": "Mera hakkında bilgi edin",
     "menuSubtitle": "Bu uygulamanın nasıl düşündüğü hakkında kısa rehberler. Herhangi bir yerden başla.",
     "sectionBasic": "Buradan başla",
@@ -1776,7 +1792,6 @@
     "askMera": "Mera'ya sor",
     "chatIntro": "Mera'nın nasıl çalıştığı hakkında bana ne istersen sor. Açıklayabilirim ama buradan hiçbir şeyi değiştiremem.",
     "launchButton": "Turu al",
-    "learnAboutMera": "Mera nasıl çalışır",
     "hintReveal": "Her birine dokun.",
     "hintRevealSome": "En az {{count}}'a dokun.",
     "hintChoose": "Birini seç.",
@@ -2382,14 +2397,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "Mera nasıl çalışır"
   },
   "support": {
     "opening": "Destek açılıyor",
     "supportId": "Destek kimliği: {{id}}",
     "copySupportId": "Destek kimliğini kopyala",
     "copied": "Kopyalandı",
-    "saveHint": "Bu kimliği kaydet. Destek ekibi hesabını bununla bulabilir."
+    "saveHint": "Bu kimliği kaydet. Destek ekibi hesabını bununla bulabilir.",
+    "mailFailedTitle": "E-posta uygulaman açılamadı",
+    "mailFailedBody": "Destek adresimizi kopyala ve herhangi bir e-posta uygulamasından bize yaz.",
+    "copyAddress": "Adresi kopyala"
   },
   "emailCapture": {
     "title": "E-postanı ekle",
@@ -2497,7 +2516,10 @@
     "wifiOnly": "Yalnızca Wi-Fi",
     "wifiOnlyOff": "Kapalı. Zamanlanmış yedeklemeler mobil veri kullanabilir.",
     "wifiOnlyOn": "Açık. Zamanlanmış yedeklemeler Wi-Fi bekler.",
-    "working": "Çalışıyor…"
+    "working": "Çalışıyor…",
+    "statusFromCloud": "Son yedek {{when}}, {{provider}} içinde bulundu",
+    "restoreOption": "{{when}} tarihli yedek",
+    "statusFailed": "Son yedekleme {{when}} tarihinde başarısız oldu"
   },
   "factChoice": {
     "titleSingle": "Bunu kişiliğine eklensin mi?",

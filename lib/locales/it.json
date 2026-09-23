@@ -352,7 +352,10 @@
     "timeNudge": "Scegli un momento in cui puoi leggere, pensare e pianificare — una o due volte al giorno è sufficiente.",
     "maxHoursReachedDescription": "Puoi selezionare fino a {{count}} ore",
     "maxHoursReachedTitle": "Massimo raggiunto",
-    "selectedCount": "Selezionate: {{selected}}/{{max}}"
+    "selectedCount": "Selezionate: {{selected}}/{{max}}",
+    "savedInline": "Salvato",
+    "pickAtLeastOneHour": "Scegli almeno un orario",
+    "selectedLabel": "Selezionati"
   },
   "language": {
     "title": "Lingua",
@@ -620,7 +623,7 @@
     "topicGenQueuedDescription": "Gli argomenti appariranno a breve.",
     "deleteFactTitle": "Elimina fatto",
     "deleteFactConfirm": "Sei sicuro di voler eliminare questo fatto?",
-    "deleteFactWarning": "Questo rimuoverà anche tutti gli argomenti tracciati generati da questo fatto.",
+    "deleteFactWarning": "Vengono rimossi anche i suoi argomenti e gli articoli trovati, e Mera smette di cercare notizie su questo.",
     "deletingFact": "Eliminazione...",
     "yesDelete": "Sì, elimina",
     "refreshSuggestions": "Aggiorna suggerimenti",
@@ -659,7 +662,9 @@
     "promoInfoTitleEmoji": "🎉 Offerta di lancio 🎊",
     "resetsOn": "Si azzera",
     "retryTopicGeneration": "Riprova",
-    "topicGenFailedGeneric": "Impossibile generare gli argomenti."
+    "topicGenFailedGeneric": "Impossibile generare gli argomenti.",
+    "articleCountPending": "Conteggio",
+    "articleCountNone": "Nessun articolo per ora"
   },
   "errors": {
     "somethingWentWrong": "Qualcosa è andato storto",
@@ -940,7 +945,7 @@
     "detailsSection": "Dettagli abbonamento",
     "expiresOn": "Scade il",
     "lifetime": "A vita",
-    "managePlan": "Gestisci abbonamento",
+    "managePlan": "Gestisci piano",
     "periodLabel": "Periodo",
     "periodNormal": "Standard",
     "periodPromotional": "Promozionale",
@@ -969,7 +974,6 @@
     "activatedBody": "Il tuo feed personalizzato, dashboard, storie seguite e chat sono pronti.",
     "activatedTitle": "{{plan}} è attivo",
     "lapsedFreeNote": "Mera News Free è tuo da tenere. Un piano è ciò che riavvia Mera sulle tue notizie.",
-    "manageBadge": "Gestisci",
     "turnMeraBackOn": "Riattiva Mera",
     "para1": "Mera News potrebbe essere gratuito. Significherebbe solo che qualcun altro stava pagando: un inserzionista comprando la tua attenzione, i tuoi dati, o una ricerca favorevole. Molto di quello che sembra una notizia è esattamente quello.",
     "para2": "I media finanziati da pubblicità non hanno limiti. Non su quanto ti prendono, e non su quello che viene usato dopo. Non vogliamo essere quella società, così l'accordo qui è semplice. Tu mantieni i tuoi dati. Il software fa il lavoro. Tu lo paghi.",
@@ -985,7 +989,8 @@
     "trialEndsOn": "La tua prova gratuita termina {{date}}",
     "trialNoPaymentDetails": "Non ci sono dettagli di pagamento registrati, quindi non c'è nulla da annullare. Quando la prova termina, passerai al piano gratuito a meno che tu non scelga di sottoscrivere.",
     "starterFreeTitle": "Sei su Starter, gratis",
-    "starterFreeBody": "Vogliamo che tu veda a cosa serve Mera, quindi ogni account include il piano Starter completo senza costi. Sono 250 articoli al giorno, tutti i tuoi interessi, chat, fact check e storie seguite."
+    "starterFreeBody": "Vogliamo che tu veda a cosa serve Mera, quindi ogni account include il piano Starter completo senza costi. Sono 250 articoli al giorno, tutti i tuoi interessi, chat, fact check e storie seguite.",
+    "manageBadge": "Gestisci"
   },
   "tabs": {
     "deck": "Notizie",
@@ -1140,7 +1145,14 @@
     "dailyLimitBody": "Hai raggiunto il limite di articoli di oggi. Si azzera a breve."
   },
   "settings": {
-    "sources": "Fonti"
+    "sources": "Fonti",
+    "groupGeneral": "Generali",
+    "groupPrivacy": "Privacy e dati",
+    "groupHelp": "Aiuto",
+    "groupAccount": "Account",
+    "languageRow": "Lingua",
+    "backupRow": "Backup e ripristino",
+    "backupRowNever": "Nessun backup ancora"
   },
   "personaAudit": {
     "entryRow": "Registro modifiche al profilo",
@@ -1305,7 +1317,7 @@
     "notificationBody_one": "Mera ha trovato {{count}} elemento da riordinare nel tuo profilo.",
     "notificationBody_other": "Mera ha trovato {{count}} elementi da riordinare nel tuo profilo.",
     "reviewChip": "Rivedi",
-    "title": "Salute del profilo",
+    "title": "Pulizia del profilo",
     "subtitle": "Pulizie suggerite",
     "intro": "Mera ha trovato alcune cose che vale la pena riordinare. Accetta quelle con cui sei d'accordo.",
     "empty": "Il tuo profilo sembra in buona salute",
@@ -1320,9 +1332,9 @@
     "appliedBody": "Il tuo profilo è stato riordinato. Consulta il registro delle modifiche per la revisione.",
     "applyFailedTitle": "Impossibile applicare la pulizia",
     "applyFailedBody": "Per favore riprova più tardi.",
-    "profileRow_one": "Salute del profilo · {{count}} suggerimento",
-    "profileRow_other": "Salute del profilo · {{count}} suggerimenti",
-    "effectIncoherentTopics": "Sostituisce questi argomenti con argomenti migliori per questo interesse. I vecchi sono reversibili dal registro delle modifiche."
+    "profileRow_one": "Pulizia del profilo · {{count}} suggerimento",
+    "profileRow_other": "Pulizia del profilo · {{count}} suggerimenti",
+    "effectIncoherentTopics": "Sostituisce questi argomenti con argomenti migliori per questo interesse."
   },
   "locations": {
     "title": "I tuoi luoghi",
@@ -1459,7 +1471,7 @@
     "visitedSubtitle": "Pubblicazioni che hai aperto di recente",
     "activity": "Attività",
     "activitySubtitle": "La cronologia delle modifiche al tuo profilo",
-    "personaHealth": "Salute del profilo",
+    "personaHealth": "Pulizia del profilo",
     "healthPending_one": "{{count}} suggerimento di pulizia",
     "healthPending_other": "{{count}} suggerimenti di pulizia",
     "healthAllHealthy": "Tutto in ordine",
@@ -1496,7 +1508,10 @@
       "remove": "Rimuovi questo",
       "removeConfirm": "Tocca di nuovo per rimuovere",
       "limitReached": "Limite di regolazione giornaliero raggiunto: le modifiche continueranno domani."
-    }
+    },
+    "meraInviteReturning": "Raccontami qualcosa di nuovo e lo aggiungerò al tuo feed.",
+    "editFacts": "Modifica",
+    "planUsage": "{{used}} di {{limit}} analizzati oggi"
   },
   "facts": {
     "screenTitle": "I tuoi fatti",
@@ -1506,7 +1521,8 @@
     "lessInfluence": "Meno influenza",
     "declinedTopicsTitle": "Argomenti che hai rimosso",
     "allowAgain": "Consenti di nuovo",
-    "topicRemovalConsequence": "Gli argomenti rimossi non verranno più suggeriti a meno che tu non li consenta di nuovo in Argomenti che hai rimosso."
+    "topicRemovalConsequence": "Gli argomenti rimossi non verranno più suggeriti a meno che tu non li consenta di nuovo in Argomenti che hai rimosso.",
+    "deleteFactA11y": "Elimina {{fact}}"
   },
   "publicationPrefs": {
     "title": "Preferenze delle fonti",
@@ -1578,7 +1594,7 @@
     "staticGradientTitle": "Sfondo statico",
     "staticGradientDescription": "Usa una sfumatura fissa invece dello sfondo animato — più facile per la batteria e i dispositivi meno recenti",
     "screenTitle": "Visualizzazione",
-    "screenSubtitle": "Testo, immagini, sicurezza e come Mera si apre su questo dispositivo",
+    "screenSubtitle": "Testo, immagini e come Mera si apre su questo dispositivo",
     "sectionText": "Testo",
     "sectionVisuals": "Immagini",
     "textSizeTitle": "Dimensione del testo",
@@ -1751,7 +1767,7 @@
     "welcomeBody": "Tocca \"Accetta e continua\" per accettare i nostri Termini di servizio e l'Informativa sulla privacy."
   },
   "tutorials": {
-    "entryRow": "Scopri di più su Mera",
+    "entryRow": "Come funziona Mera",
     "menuTitle": "Scopri di più su Mera",
     "menuSubtitle": "Brevi guide su come pensa questa app. Inizia da qualsiasi punto.",
     "sectionBasic": "Inizia qui",
@@ -1774,7 +1790,6 @@
     "askMera": "Chiedi a Mera",
     "chatIntro": "Chiedimi qualsiasi cosa su come funziona Mera. Posso spiegare, ma non posso cambiare niente da qui.",
     "launchButton": "Fai il tour",
-    "learnAboutMera": "Come funziona Mera",
     "hintReveal": "Tocca ognuno.",
     "hintRevealSome": "Tocca almeno {{count}}.",
     "hintChoose": "Scegline uno.",
@@ -2380,14 +2395,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "Come funziona Mera"
   },
   "support": {
     "opening": "Apertura del supporto",
     "supportId": "ID assistenza: {{id}}",
     "copySupportId": "Copia ID assistenza",
     "copied": "Copiato",
-    "saveHint": "Salva questo ID. L'assistenza può trovare il tuo account con questo ID."
+    "saveHint": "Salva questo ID. L'assistenza può trovare il tuo account con questo ID.",
+    "mailFailedTitle": "Impossibile aprire l'app di posta",
+    "mailFailedBody": "Copia il nostro indirizzo di supporto e scrivici da qualsiasi app di posta.",
+    "copyAddress": "Copia indirizzo"
   },
   "emailCapture": {
     "title": "Aggiungi la tua email",
@@ -2495,7 +2514,10 @@
     "wifiOnly": "Solo Wi-Fi",
     "wifiOnlyOff": "Disattivato. I backup programmati possono usare i dati mobili.",
     "wifiOnlyOn": "Attivo. I backup programmati aspettano il Wi-Fi.",
-    "working": "In corso…"
+    "working": "In corso…",
+    "statusFromCloud": "Ultimo backup {{when}}, trovato in {{provider}}",
+    "restoreOption": "Backup del {{when}}",
+    "statusFailed": "Ultimo backup non riuscito il {{when}}"
   },
   "factChoice": {
     "titleSingle": "Aggiungere questo al tuo persona?",

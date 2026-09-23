@@ -1,0 +1,1153 @@
+{
+  "_comment": "ux1 persona copy: Settings groups, support mail fallback, notifications auto-save, Profile edit mode and counts, backup status, How Mera works / Manage plan / Profile cleanup labels, fact delete consequence. Spliced by _splice-fragments.mjs; never hand-edit the dictionaries.",
+  "ar": {
+    "settings": {
+      "groupGeneral": "عام",
+      "groupPrivacy": "الخصوصية والبيانات",
+      "groupHelp": "المساعدة",
+      "groupAccount": "الحساب",
+      "languageRow": "اللغة",
+      "backupRow": "النسخ الاحتياطي والاستعادة",
+      "backupRowNever": "لم يُحفظ بعد"
+    },
+    "support": {
+      "mailFailedTitle": "تعذّر فتح تطبيق البريد",
+      "mailFailedBody": "انسخ عنوان الدعم وأرسل إلينا رسالة من أي تطبيق بريد.",
+      "copyAddress": "نسخ العنوان"
+    },
+    "notifications": {
+      "savedInline": "تم الحفظ",
+      "pickAtLeastOneHour": "اختر ساعة واحدة على الأقل",
+      "selectedLabel": "المحدد"
+    },
+    "profile": {
+      "meraInviteReturning": "أخبرني بشيء جديد وسأضيفه إلى موجزك.",
+      "editFacts": "تعديل",
+      "planUsage": "{{used}} من {{limit}} تم تحليلها اليوم"
+    },
+    "facts": {
+      "deleteFactA11y": "حذف {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "جارٍ العدّ",
+      "articleCountNone": "لا مقالات بعد",
+      "deleteFactWarning": "ستُحذف معه موضوعاته والقصص التي وجدتها، ويتوقف Mera عن البحث عن أخبار عنه."
+    },
+    "backup": {
+      "statusFromCloud": "آخر نسخة احتياطية {{when}}، موجودة في {{provider}}",
+      "restoreOption": "نسخة احتياطية من {{when}}",
+      "statusFailed": "فشلت آخر نسخة احتياطية في {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "كيف يعمل Mera"
+    },
+    "subscription": {
+      "managePlan": "إدارة الخطة"
+    },
+    "hygiene": {
+      "title": "تنظيف الملف الشخصي",
+      "profileRow_zero": "تنظيف الملف الشخصي · {{count}} اقتراح",
+      "profileRow_one": "تنظيف الملف الشخصي · {{count}} اقتراح",
+      "profileRow_two": "تنظيف الملف الشخصي · {{count}} اقتراحان",
+      "profileRow_few": "تنظيف الملف الشخصي · {{count}} اقتراحات",
+      "profileRow_many": "تنظيف الملف الشخصي · {{count}} اقتراحًا",
+      "profileRow_other": "تنظيف الملف الشخصي · {{count}} اقتراح",
+      "effectIncoherentTopics": "يستبدل هذه الموضوعات بموضوعات أفضل لهذا الاهتمام."
+    },
+    "profileHub": {
+      "personaHealth": "تنظيف الملف الشخصي"
+    },
+    "display": {
+      "screenSubtitle": "النصوص والمرئيات وكيفية فتح Mera على هذا الجهاز"
+    }
+  },
+  "de": {
+    "settings": {
+      "groupGeneral": "Allgemein",
+      "groupPrivacy": "Datenschutz und Daten",
+      "groupHelp": "Hilfe",
+      "groupAccount": "Konto",
+      "languageRow": "Sprache",
+      "backupRow": "Backup und Wiederherstellung",
+      "backupRowNever": "Noch nicht gesichert"
+    },
+    "support": {
+      "mailFailedTitle": "Mail-App konnte nicht geöffnet werden",
+      "mailFailedBody": "Kopiere unsere Support-Adresse und schreib uns aus einer beliebigen Mail-App.",
+      "copyAddress": "Adresse kopieren"
+    },
+    "notifications": {
+      "savedInline": "Gespeichert",
+      "pickAtLeastOneHour": "Wähle mindestens eine Uhrzeit",
+      "selectedLabel": "Ausgewählt"
+    },
+    "profile": {
+      "meraInviteReturning": "Erzähl mir von etwas Neuem, dann nehme ich es in deinen Feed auf.",
+      "editFacts": "Bearbeiten",
+      "planUsage": "{{used}} von {{limit}} heute analysiert"
+    },
+    "facts": {
+      "deleteFactA11y": "{{fact}} löschen"
+    },
+    "configPanel": {
+      "articleCountPending": "Wird gezählt",
+      "articleCountNone": "Noch keine Artikel",
+      "deleteFactWarning": "Seine Themen und die dazu gefundenen Artikel werden ebenfalls entfernt, und Mera sucht dazu keine Nachrichten mehr."
+    },
+    "backup": {
+      "statusFromCloud": "Letztes Backup {{when}}, gefunden in {{provider}}",
+      "restoreOption": "Backup vom {{when}}",
+      "statusFailed": "Letztes Backup am {{when}} fehlgeschlagen"
+    },
+    "tutorials": {
+      "entryRow": "So funktioniert Mera"
+    },
+    "subscription": {
+      "managePlan": "Tarif verwalten"
+    },
+    "hygiene": {
+      "title": "Profil aufräumen",
+      "profileRow_one": "Profil aufräumen · {{count}} Vorschlag",
+      "profileRow_other": "Profil aufräumen · {{count}} Vorschläge",
+      "effectIncoherentTopics": "Ersetzt diese Themen durch bessere für dieses Interesse."
+    },
+    "profileHub": {
+      "personaHealth": "Profil aufräumen"
+    },
+    "display": {
+      "screenSubtitle": "Text, Optik und wie Mera auf diesem Gerät öffnet"
+    }
+  },
+  "en": {
+    "settings": {
+      "groupGeneral": "General",
+      "groupPrivacy": "Privacy and data",
+      "groupHelp": "Help",
+      "groupAccount": "Account",
+      "languageRow": "Language",
+      "backupRow": "Backup and restore",
+      "backupRowNever": "Not backed up yet"
+    },
+    "support": {
+      "mailFailedTitle": "Couldn't open your mail app",
+      "mailFailedBody": "Copy our support address and send us an email from any mail app.",
+      "copyAddress": "Copy address"
+    },
+    "notifications": {
+      "savedInline": "Saved",
+      "pickAtLeastOneHour": "Pick at least one hour",
+      "selectedLabel": "Selected"
+    },
+    "profile": {
+      "meraInviteReturning": "Tell me about something new and I'll add it to your feed.",
+      "editFacts": "Edit",
+      "planUsage": "{{used}} of {{limit}} analysed today"
+    },
+    "facts": {
+      "deleteFactA11y": "Delete {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Counting",
+      "articleCountNone": "No articles yet",
+      "deleteFactWarning": "Its topics and the stories they found go too, and Mera stops looking for news about it."
+    },
+    "backup": {
+      "statusFromCloud": "Last backup {{when}}, found in {{provider}}",
+      "restoreOption": "Backup from {{when}}",
+      "statusFailed": "Last backup failed on {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "How Mera works"
+    },
+    "subscription": {
+      "managePlan": "Manage plan"
+    },
+    "hygiene": {
+      "title": "Profile cleanup",
+      "profileRow_one": "Profile cleanup · {{count}} suggestion",
+      "profileRow_other": "Profile cleanup · {{count}} suggestions",
+      "effectIncoherentTopics": "Replaces these topics with better ones for this interest."
+    },
+    "profileHub": {
+      "personaHealth": "Profile cleanup"
+    },
+    "display": {
+      "screenSubtitle": "Text, visuals and how Mera opens on this device"
+    }
+  },
+  "es": {
+    "settings": {
+      "groupGeneral": "General",
+      "groupPrivacy": "Privacidad y datos",
+      "groupHelp": "Ayuda",
+      "groupAccount": "Cuenta",
+      "languageRow": "Idioma",
+      "backupRow": "Copia de seguridad y restauración",
+      "backupRowNever": "Sin copia todavía"
+    },
+    "support": {
+      "mailFailedTitle": "No se pudo abrir tu app de correo",
+      "mailFailedBody": "Copia nuestra dirección de soporte y escríbenos desde cualquier app de correo.",
+      "copyAddress": "Copiar dirección"
+    },
+    "notifications": {
+      "savedInline": "Guardado",
+      "pickAtLeastOneHour": "Elige al menos una hora",
+      "selectedLabel": "Seleccionadas"
+    },
+    "profile": {
+      "meraInviteReturning": "Cuéntame algo nuevo y lo añadiré a tu feed.",
+      "editFacts": "Editar",
+      "planUsage": "{{used}} de {{limit}} analizados hoy"
+    },
+    "facts": {
+      "deleteFactA11y": "Eliminar {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Contando",
+      "articleCountNone": "Aún no hay artículos",
+      "deleteFactWarning": "También se eliminan sus temas y las noticias que encontraron, y Mera deja de buscar noticias sobre ello."
+    },
+    "backup": {
+      "statusFromCloud": "Última copia {{when}}, encontrada en {{provider}}",
+      "restoreOption": "Copia del {{when}}",
+      "statusFailed": "La última copia falló el {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Cómo funciona Mera"
+    },
+    "subscription": {
+      "managePlan": "Gestionar plan"
+    },
+    "hygiene": {
+      "title": "Limpieza del perfil",
+      "profileRow_one": "Limpieza del perfil · {{count}} sugerencia",
+      "profileRow_other": "Limpieza del perfil · {{count}} sugerencias",
+      "effectIncoherentTopics": "Reemplaza estos temas con otros mejores para este interés."
+    },
+    "profileHub": {
+      "personaHealth": "Limpieza del perfil"
+    },
+    "display": {
+      "screenSubtitle": "Texto, visuales y cómo abre Mera en este dispositivo"
+    }
+  },
+  "fr": {
+    "settings": {
+      "groupGeneral": "Général",
+      "groupPrivacy": "Confidentialité et données",
+      "groupHelp": "Aide",
+      "groupAccount": "Compte",
+      "languageRow": "Langue",
+      "backupRow": "Sauvegarde et restauration",
+      "backupRowNever": "Pas encore sauvegardé"
+    },
+    "support": {
+      "mailFailedTitle": "Impossible d'ouvrir votre app de messagerie",
+      "mailFailedBody": "Copiez notre adresse d'assistance et écrivez-nous depuis n'importe quelle app de messagerie.",
+      "copyAddress": "Copier l'adresse"
+    },
+    "notifications": {
+      "savedInline": "Enregistré",
+      "pickAtLeastOneHour": "Choisissez au moins une heure",
+      "selectedLabel": "Sélectionnées"
+    },
+    "profile": {
+      "meraInviteReturning": "Parlez-moi de quelque chose de nouveau et je l'ajouterai à votre fil.",
+      "editFacts": "Modifier",
+      "planUsage": "{{used}} sur {{limit}} analysés aujourd'hui"
+    },
+    "facts": {
+      "deleteFactA11y": "Supprimer {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Comptage",
+      "articleCountNone": "Aucun article pour l'instant",
+      "deleteFactWarning": "Ses sujets et les articles trouvés partent aussi, et Mera arrête de chercher des actualités à ce sujet."
+    },
+    "backup": {
+      "statusFromCloud": "Dernière sauvegarde {{when}}, trouvée dans {{provider}}",
+      "restoreOption": "Sauvegarde du {{when}}",
+      "statusFailed": "La dernière sauvegarde a échoué le {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Comment fonctionne Mera"
+    },
+    "subscription": {
+      "managePlan": "Gérer l'offre"
+    },
+    "hygiene": {
+      "title": "Nettoyage du profil",
+      "profileRow_one": "Nettoyage du profil · {{count}} suggestion",
+      "profileRow_other": "Nettoyage du profil · {{count}} suggestions",
+      "effectIncoherentTopics": "Remplace ces sujets par de meilleurs pour cet intérêt."
+    },
+    "profileHub": {
+      "personaHealth": "Nettoyage du profil"
+    },
+    "display": {
+      "screenSubtitle": "Texte, éléments visuels et comment Mera s'ouvre sur cet appareil"
+    }
+  },
+  "hi": {
+    "settings": {
+      "groupGeneral": "सामान्य",
+      "groupPrivacy": "निजता और डेटा",
+      "groupHelp": "सहायता",
+      "groupAccount": "खाता",
+      "languageRow": "भाषा",
+      "backupRow": "बैकअप और रीस्टोर",
+      "backupRowNever": "अभी बैकअप नहीं हुआ"
+    },
+    "support": {
+      "mailFailedTitle": "आपका मेल ऐप नहीं खुल सका",
+      "mailFailedBody": "हमारा सपोर्ट पता कॉपी करें और किसी भी मेल ऐप से हमें ईमेल भेजें।",
+      "copyAddress": "पता कॉपी करें"
+    },
+    "notifications": {
+      "savedInline": "सहेजा गया",
+      "pickAtLeastOneHour": "कम से कम एक घंटा चुनें",
+      "selectedLabel": "चयनित"
+    },
+    "profile": {
+      "meraInviteReturning": "मुझे कुछ नया बताइए, मैं उसे आपकी फ़ीड में जोड़ दूँगी।",
+      "editFacts": "संपादित करें",
+      "planUsage": "आज {{limit}} में से {{used}} का विश्लेषण हुआ"
+    },
+    "facts": {
+      "deleteFactA11y": "{{fact}} हटाएँ"
+    },
+    "configPanel": {
+      "articleCountPending": "गिनती हो रही है",
+      "articleCountNone": "अभी कोई लेख नहीं",
+      "deleteFactWarning": "इसके विषय और उनसे मिली खबरें भी हट जाएँगी, और Mera इसके बारे में खबरें खोजना बंद कर देगा।"
+    },
+    "backup": {
+      "statusFromCloud": "पिछला बैकअप {{when}}, {{provider}} में मिला",
+      "restoreOption": "{{when}} का बैकअप",
+      "statusFailed": "पिछला बैकअप {{when}} को विफल रहा"
+    },
+    "tutorials": {
+      "entryRow": "Mera कैसे काम करता है"
+    },
+    "subscription": {
+      "managePlan": "प्लान प्रबंधित करें"
+    },
+    "hygiene": {
+      "title": "प्रोफ़ाइल की सफ़ाई",
+      "profileRow_one": "प्रोफ़ाइल की सफ़ाई · {{count}} सुझाव",
+      "profileRow_other": "प्रोफ़ाइल की सफ़ाई · {{count}} सुझाव",
+      "effectIncoherentTopics": "इन विषयों को इस रुचि के लिए बेहतरों से बदल देता है।"
+    },
+    "profileHub": {
+      "personaHealth": "प्रोफ़ाइल की सफ़ाई"
+    },
+    "display": {
+      "screenSubtitle": "पाठ, दृश्य और यह कि Mera इस डिवाइस पर कैसे खोलता है"
+    }
+  },
+  "id": {
+    "settings": {
+      "groupGeneral": "Umum",
+      "groupPrivacy": "Privasi dan data",
+      "groupHelp": "Bantuan",
+      "groupAccount": "Akun",
+      "languageRow": "Bahasa",
+      "backupRow": "Cadangkan dan pulihkan",
+      "backupRowNever": "Belum dicadangkan"
+    },
+    "support": {
+      "mailFailedTitle": "Tidak dapat membuka aplikasi email",
+      "mailFailedBody": "Salin alamat dukungan kami lalu kirim email dari aplikasi email apa pun.",
+      "copyAddress": "Salin alamat"
+    },
+    "notifications": {
+      "savedInline": "Tersimpan",
+      "pickAtLeastOneHour": "Pilih setidaknya satu jam",
+      "selectedLabel": "Dipilih"
+    },
+    "profile": {
+      "meraInviteReturning": "Ceritakan hal baru, nanti saya tambahkan ke feed Anda.",
+      "editFacts": "Edit",
+      "planUsage": "{{used}} dari {{limit}} dianalisis hari ini"
+    },
+    "facts": {
+      "deleteFactA11y": "Hapus {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Menghitung",
+      "articleCountNone": "Belum ada artikel",
+      "deleteFactWarning": "Topik dan berita yang ditemukannya ikut terhapus, dan Mera berhenti mencari berita tentang hal ini."
+    },
+    "backup": {
+      "statusFromCloud": "Cadangan terakhir {{when}}, ditemukan di {{provider}}",
+      "restoreOption": "Cadangan dari {{when}}",
+      "statusFailed": "Pencadangan terakhir gagal pada {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Cara kerja Mera"
+    },
+    "subscription": {
+      "managePlan": "Kelola paket"
+    },
+    "hygiene": {
+      "title": "Rapikan profil",
+      "profileRow_one": "Rapikan profil · {{count}} saran",
+      "profileRow_other": "Rapikan profil · {{count}} saran",
+      "effectIncoherentTopics": "Mengganti topik ini dengan yang lebih baik untuk minat ini."
+    },
+    "profileHub": {
+      "personaHealth": "Rapikan profil"
+    },
+    "display": {
+      "screenSubtitle": "Teks, visual, dan cara Mera membuka di perangkat ini"
+    }
+  },
+  "it": {
+    "settings": {
+      "groupGeneral": "Generali",
+      "groupPrivacy": "Privacy e dati",
+      "groupHelp": "Aiuto",
+      "groupAccount": "Account",
+      "languageRow": "Lingua",
+      "backupRow": "Backup e ripristino",
+      "backupRowNever": "Nessun backup ancora"
+    },
+    "support": {
+      "mailFailedTitle": "Impossibile aprire l'app di posta",
+      "mailFailedBody": "Copia il nostro indirizzo di supporto e scrivici da qualsiasi app di posta.",
+      "copyAddress": "Copia indirizzo"
+    },
+    "notifications": {
+      "savedInline": "Salvato",
+      "pickAtLeastOneHour": "Scegli almeno un orario",
+      "selectedLabel": "Selezionati"
+    },
+    "profile": {
+      "meraInviteReturning": "Raccontami qualcosa di nuovo e lo aggiungerò al tuo feed.",
+      "editFacts": "Modifica",
+      "planUsage": "{{used}} di {{limit}} analizzati oggi"
+    },
+    "facts": {
+      "deleteFactA11y": "Elimina {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Conteggio",
+      "articleCountNone": "Nessun articolo per ora",
+      "deleteFactWarning": "Vengono rimossi anche i suoi argomenti e gli articoli trovati, e Mera smette di cercare notizie su questo."
+    },
+    "backup": {
+      "statusFromCloud": "Ultimo backup {{when}}, trovato in {{provider}}",
+      "restoreOption": "Backup del {{when}}",
+      "statusFailed": "Ultimo backup non riuscito il {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Come funziona Mera"
+    },
+    "subscription": {
+      "managePlan": "Gestisci piano"
+    },
+    "hygiene": {
+      "title": "Pulizia del profilo",
+      "profileRow_one": "Pulizia del profilo · {{count}} suggerimento",
+      "profileRow_other": "Pulizia del profilo · {{count}} suggerimenti",
+      "effectIncoherentTopics": "Sostituisce questi argomenti con argomenti migliori per questo interesse."
+    },
+    "profileHub": {
+      "personaHealth": "Pulizia del profilo"
+    },
+    "display": {
+      "screenSubtitle": "Testo, immagini e come Mera si apre su questo dispositivo"
+    }
+  },
+  "ja": {
+    "settings": {
+      "groupGeneral": "一般",
+      "groupPrivacy": "プライバシーとデータ",
+      "groupHelp": "ヘルプ",
+      "groupAccount": "アカウント",
+      "languageRow": "言語",
+      "backupRow": "バックアップと復元",
+      "backupRowNever": "まだバックアップなし"
+    },
+    "support": {
+      "mailFailedTitle": "メールアプリを開けませんでした",
+      "mailFailedBody": "サポートのアドレスをコピーして、お好きなメールアプリから送信してください。",
+      "copyAddress": "アドレスをコピー"
+    },
+    "notifications": {
+      "savedInline": "保存しました",
+      "pickAtLeastOneHour": "1つ以上の時間を選んでください",
+      "selectedLabel": "選択中"
+    },
+    "profile": {
+      "meraInviteReturning": "新しいことを教えてください。フィードに追加します。",
+      "editFacts": "編集",
+      "planUsage": "今日の分析 {{used}} / {{limit}}"
+    },
+    "facts": {
+      "deleteFactA11y": "{{fact}} を削除"
+    },
+    "configPanel": {
+      "articleCountPending": "集計中",
+      "articleCountNone": "まだ記事はありません",
+      "deleteFactWarning": "このファクトのトピックと見つかった記事も削除され、Meraはこの件のニュースを探さなくなります。"
+    },
+    "backup": {
+      "statusFromCloud": "前回のバックアップ {{when}}（{{provider}} で検出）",
+      "restoreOption": "{{when}} のバックアップ",
+      "statusFailed": "前回のバックアップは {{when}} に失敗しました"
+    },
+    "tutorials": {
+      "entryRow": "Meraのしくみ"
+    },
+    "subscription": {
+      "managePlan": "プランを管理"
+    },
+    "hygiene": {
+      "title": "プロフィールの整理",
+      "profileRow_one": "プロフィールの整理 · {{count}}件の提案",
+      "profileRow_other": "プロフィールの整理 · {{count}}件の提案",
+      "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。"
+    },
+    "profileHub": {
+      "personaHealth": "プロフィールの整理"
+    },
+    "display": {
+      "screenSubtitle": "テキスト、ビジュアル、およびこのデバイスでMeraを開く方法"
+    }
+  },
+  "ko": {
+    "settings": {
+      "groupGeneral": "일반",
+      "groupPrivacy": "개인정보 및 데이터",
+      "groupHelp": "도움말",
+      "groupAccount": "계정",
+      "languageRow": "언어",
+      "backupRow": "백업 및 복원",
+      "backupRowNever": "아직 백업 안 됨"
+    },
+    "support": {
+      "mailFailedTitle": "메일 앱을 열 수 없습니다",
+      "mailFailedBody": "지원 주소를 복사해 아무 메일 앱에서나 이메일을 보내 주세요.",
+      "copyAddress": "주소 복사"
+    },
+    "notifications": {
+      "savedInline": "저장됨",
+      "pickAtLeastOneHour": "한 시간 이상 선택하세요",
+      "selectedLabel": "선택됨"
+    },
+    "profile": {
+      "meraInviteReturning": "새로운 관심사를 알려 주시면 피드에 추가할게요.",
+      "editFacts": "편집",
+      "planUsage": "오늘 {{limit}}개 중 {{used}}개 분석"
+    },
+    "facts": {
+      "deleteFactA11y": "{{fact}} 삭제"
+    },
+    "configPanel": {
+      "articleCountPending": "집계 중",
+      "articleCountNone": "아직 기사 없음",
+      "deleteFactWarning": "관련 주제와 찾은 기사도 함께 삭제되고, Mera는 이에 대한 뉴스를 더 이상 찾지 않습니다."
+    },
+    "backup": {
+      "statusFromCloud": "마지막 백업 {{when}}, {{provider}}에서 찾음",
+      "restoreOption": "{{when}} 백업",
+      "statusFailed": "마지막 백업이 {{when}}에 실패했습니다"
+    },
+    "tutorials": {
+      "entryRow": "Mera 작동 방식"
+    },
+    "subscription": {
+      "managePlan": "요금제 관리"
+    },
+    "hygiene": {
+      "title": "프로필 정리",
+      "profileRow_one": "프로필 정리 · 제안 {{count}}개",
+      "profileRow_other": "프로필 정리 · 제안 {{count}}개",
+      "effectIncoherentTopics": "이 관심사에 대해 더 나은 주제로 바꿉니다."
+    },
+    "profileHub": {
+      "personaHealth": "프로필 정리"
+    },
+    "display": {
+      "screenSubtitle": "텍스트, 시각 효과 및 메라가 이 기기에서 열리는 방식"
+    }
+  },
+  "nl": {
+    "settings": {
+      "groupGeneral": "Algemeen",
+      "groupPrivacy": "Privacy en gegevens",
+      "groupHelp": "Hulp",
+      "groupAccount": "Account",
+      "languageRow": "Taal",
+      "backupRow": "Back-up en herstel",
+      "backupRowNever": "Nog geen back-up"
+    },
+    "support": {
+      "mailFailedTitle": "Je mail-app kon niet worden geopend",
+      "mailFailedBody": "Kopieer ons supportadres en stuur ons een e-mail vanuit een willekeurige mail-app.",
+      "copyAddress": "Adres kopiëren"
+    },
+    "notifications": {
+      "savedInline": "Opgeslagen",
+      "pickAtLeastOneHour": "Kies minstens één uur",
+      "selectedLabel": "Gekozen"
+    },
+    "profile": {
+      "meraInviteReturning": "Vertel me iets nieuws, dan voeg ik het toe aan je feed.",
+      "editFacts": "Bewerken",
+      "planUsage": "{{used}} van {{limit}} vandaag geanalyseerd"
+    },
+    "facts": {
+      "deleteFactA11y": "{{fact}} verwijderen"
+    },
+    "configPanel": {
+      "articleCountPending": "Tellen",
+      "articleCountNone": "Nog geen artikelen",
+      "deleteFactWarning": "De onderwerpen en de gevonden artikelen verdwijnen ook, en Mera zoekt er geen nieuws meer over."
+    },
+    "backup": {
+      "statusFromCloud": "Laatste back-up {{when}}, gevonden in {{provider}}",
+      "restoreOption": "Back-up van {{when}}",
+      "statusFailed": "Laatste back-up mislukt op {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Hoe Mera werkt"
+    },
+    "subscription": {
+      "managePlan": "Abonnement beheren"
+    },
+    "hygiene": {
+      "title": "Profiel opschonen",
+      "profileRow_one": "Profiel opschonen · {{count}} suggestie",
+      "profileRow_other": "Profiel opschonen · {{count}} suggesties",
+      "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse."
+    },
+    "profileHub": {
+      "personaHealth": "Profiel opschonen"
+    },
+    "display": {
+      "screenSubtitle": "Tekst, afbeeldingen en hoe Mera op dit apparaat opent"
+    }
+  },
+  "pl": {
+    "settings": {
+      "groupGeneral": "Ogólne",
+      "groupPrivacy": "Prywatność i dane",
+      "groupHelp": "Pomoc",
+      "groupAccount": "Konto",
+      "languageRow": "Język",
+      "backupRow": "Kopia zapasowa i przywracanie",
+      "backupRowNever": "Brak kopii"
+    },
+    "support": {
+      "mailFailedTitle": "Nie udało się otworzyć aplikacji poczty",
+      "mailFailedBody": "Skopiuj nasz adres pomocy i napisz do nas z dowolnej aplikacji poczty.",
+      "copyAddress": "Kopiuj adres"
+    },
+    "notifications": {
+      "savedInline": "Zapisano",
+      "pickAtLeastOneHour": "Wybierz co najmniej jedną godzinę",
+      "selectedLabel": "Wybrane"
+    },
+    "profile": {
+      "meraInviteReturning": "Opowiedz mi o czymś nowym, a dodam to do Twojego kanału.",
+      "editFacts": "Edytuj",
+      "planUsage": "{{used}} z {{limit}} przeanalizowanych dziś"
+    },
+    "facts": {
+      "deleteFactA11y": "Usuń {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Liczenie",
+      "articleCountNone": "Brak artykułów",
+      "deleteFactWarning": "Usunięte zostaną też jego tematy i znalezione artykuły, a Mera przestanie szukać o tym wiadomości."
+    },
+    "backup": {
+      "statusFromCloud": "Ostatnia kopia {{when}}, znaleziona w {{provider}}",
+      "restoreOption": "Kopia z {{when}}",
+      "statusFailed": "Ostatnia kopia nie powiodła się {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Jak działa Mera"
+    },
+    "subscription": {
+      "managePlan": "Zarządzaj planem"
+    },
+    "hygiene": {
+      "title": "Porządki w profilu",
+      "profileRow_one": "Porządki w profilu · {{count}} sugestia",
+      "profileRow_few": "Porządki w profilu · {{count}} sugestie",
+      "profileRow_many": "Porządki w profilu · {{count}} sugestii",
+      "profileRow_other": "Porządki w profilu · {{count}} sugestii",
+      "effectIncoherentTopics": "Zastępuje te tematy lepszymi dla tego zainteresowania."
+    },
+    "profileHub": {
+      "personaHealth": "Porządki w profilu"
+    },
+    "display": {
+      "screenSubtitle": "Tekst, wizualizacje i sposób, w jaki Mera otwiera się na tym urządzeniu"
+    }
+  },
+  "pt-BR": {
+    "settings": {
+      "groupGeneral": "Geral",
+      "groupPrivacy": "Privacidade e dados",
+      "groupHelp": "Ajuda",
+      "groupAccount": "Conta",
+      "languageRow": "Idioma",
+      "backupRow": "Backup e restauração",
+      "backupRowNever": "Ainda sem backup"
+    },
+    "support": {
+      "mailFailedTitle": "Não foi possível abrir seu app de e-mail",
+      "mailFailedBody": "Copie nosso endereço de suporte e envie um e-mail de qualquer app.",
+      "copyAddress": "Copiar endereço"
+    },
+    "notifications": {
+      "savedInline": "Salvo",
+      "pickAtLeastOneHour": "Escolha pelo menos um horário",
+      "selectedLabel": "Selecionados"
+    },
+    "profile": {
+      "meraInviteReturning": "Me conte algo novo e eu adiciono ao seu feed.",
+      "editFacts": "Editar",
+      "planUsage": "{{used}} de {{limit}} analisados hoje"
+    },
+    "facts": {
+      "deleteFactA11y": "Excluir {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Contando",
+      "articleCountNone": "Nenhum artigo ainda",
+      "deleteFactWarning": "Os tópicos e as notícias encontradas também são removidos, e o Mera para de buscar notícias sobre isso."
+    },
+    "backup": {
+      "statusFromCloud": "Último backup {{when}}, encontrado no {{provider}}",
+      "restoreOption": "Backup de {{when}}",
+      "statusFailed": "O último backup falhou em {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Como o Mera funciona"
+    },
+    "subscription": {
+      "managePlan": "Gerenciar plano"
+    },
+    "hygiene": {
+      "title": "Limpeza do perfil",
+      "profileRow_one": "Limpeza do perfil · {{count}} sugestão",
+      "profileRow_other": "Limpeza do perfil · {{count}} sugestões",
+      "effectIncoherentTopics": "Substitui estes tópicos por melhores para este interesse."
+    },
+    "profileHub": {
+      "personaHealth": "Limpeza do perfil"
+    },
+    "display": {
+      "screenSubtitle": "Texto, visuais e como Mera abre neste dispositivo"
+    }
+  },
+  "ru": {
+    "settings": {
+      "groupGeneral": "Общие",
+      "groupPrivacy": "Конфиденциальность и данные",
+      "groupHelp": "Помощь",
+      "groupAccount": "Аккаунт",
+      "languageRow": "Язык",
+      "backupRow": "Резервная копия и восстановление",
+      "backupRowNever": "Копий ещё нет"
+    },
+    "support": {
+      "mailFailedTitle": "Не удалось открыть почтовое приложение",
+      "mailFailedBody": "Скопируйте адрес поддержки и напишите нам из любого почтового приложения.",
+      "copyAddress": "Скопировать адрес"
+    },
+    "notifications": {
+      "savedInline": "Сохранено",
+      "pickAtLeastOneHour": "Выберите хотя бы один час",
+      "selectedLabel": "Выбрано"
+    },
+    "profile": {
+      "meraInviteReturning": "Расскажите о чём-то новом, и я добавлю это в вашу ленту.",
+      "editFacts": "Изменить",
+      "planUsage": "Сегодня проанализировано {{used}} из {{limit}}"
+    },
+    "facts": {
+      "deleteFactA11y": "Удалить {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Подсчёт",
+      "articleCountNone": "Статей пока нет",
+      "deleteFactWarning": "Его темы и найденные по ним статьи тоже удалятся, и Mera перестанет искать об этом новости."
+    },
+    "backup": {
+      "statusFromCloud": "Последняя копия {{when}}, найдена в {{provider}}",
+      "restoreOption": "Копия от {{when}}",
+      "statusFailed": "Последняя копия не удалась {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Как работает Mera"
+    },
+    "subscription": {
+      "managePlan": "Управление тарифом"
+    },
+    "hygiene": {
+      "title": "Очистка профиля",
+      "profileRow_one": "Очистка профиля · {{count}} предложение",
+      "profileRow_other": "Очистка профиля · {{count}} предложения",
+      "profileRow_few": "Очистка профиля · {{count}} предложения",
+      "profileRow_many": "Очистка профиля · {{count}} предложений",
+      "effectIncoherentTopics": "Заменяет эти темы на более подходящие для этого интереса."
+    },
+    "profileHub": {
+      "personaHealth": "Очистка профиля"
+    },
+    "display": {
+      "screenSubtitle": "Текст, визуальные элементы и способ открытия Mera на этом устройстве"
+    }
+  },
+  "th": {
+    "settings": {
+      "groupGeneral": "ทั่วไป",
+      "groupPrivacy": "ความเป็นส่วนตัวและข้อมูล",
+      "groupHelp": "ความช่วยเหลือ",
+      "groupAccount": "บัญชี",
+      "languageRow": "ภาษา",
+      "backupRow": "สำรองและกู้คืนข้อมูล",
+      "backupRowNever": "ยังไม่ได้สำรอง"
+    },
+    "support": {
+      "mailFailedTitle": "เปิดแอปอีเมลไม่ได้",
+      "mailFailedBody": "คัดลอกที่อยู่ฝ่ายช่วยเหลือแล้วส่งอีเมลถึงเราจากแอปอีเมลใดก็ได้",
+      "copyAddress": "คัดลอกที่อยู่"
+    },
+    "notifications": {
+      "savedInline": "บันทึกแล้ว",
+      "pickAtLeastOneHour": "เลือกอย่างน้อยหนึ่งช่วงเวลา",
+      "selectedLabel": "ที่เลือก"
+    },
+    "profile": {
+      "meraInviteReturning": "เล่าเรื่องใหม่ให้ฟัง แล้วฉันจะเพิ่มลงในฟีดของคุณ",
+      "editFacts": "แก้ไข",
+      "planUsage": "วิเคราะห์วันนี้ {{used}} จาก {{limit}}"
+    },
+    "facts": {
+      "deleteFactA11y": "ลบ {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "กำลังนับ",
+      "articleCountNone": "ยังไม่มีบทความ",
+      "deleteFactWarning": "หัวข้อและข่าวที่พบจะถูกลบไปด้วย และ Mera จะหยุดค้นหาข่าวเกี่ยวกับเรื่องนี้"
+    },
+    "backup": {
+      "statusFromCloud": "สำรองล่าสุด {{when}} พบใน {{provider}}",
+      "restoreOption": "ข้อมูลสำรองจาก {{when}}",
+      "statusFailed": "การสำรองล่าสุดล้มเหลวเมื่อ {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Mera ทำงานอย่างไร"
+    },
+    "subscription": {
+      "managePlan": "จัดการแพ็กเกจ"
+    },
+    "hygiene": {
+      "title": "จัดระเบียบโปรไฟล์",
+      "profileRow_one": "จัดระเบียบโปรไฟล์ · {{count}} รายการแนะนำ",
+      "profileRow_other": "จัดระเบียบโปรไฟล์ · {{count}} รายการแนะนำ",
+      "effectIncoherentTopics": "แทนที่หัวข้อเหล่านี้ด้วยหัวข้อที่ดีกว่าสำหรับความสนใจนี้"
+    },
+    "profileHub": {
+      "personaHealth": "จัดระเบียบโปรไฟล์"
+    },
+    "display": {
+      "screenSubtitle": "ข้อความ วิชวล และวิธีที่ Mera เปิดบนอุปกรณ์นี้"
+    }
+  },
+  "tr": {
+    "settings": {
+      "groupGeneral": "Genel",
+      "groupPrivacy": "Gizlilik ve veriler",
+      "groupHelp": "Yardım",
+      "groupAccount": "Hesap",
+      "languageRow": "Dil",
+      "backupRow": "Yedekleme ve geri yükleme",
+      "backupRowNever": "Henüz yedek yok"
+    },
+    "support": {
+      "mailFailedTitle": "E-posta uygulaman açılamadı",
+      "mailFailedBody": "Destek adresimizi kopyala ve herhangi bir e-posta uygulamasından bize yaz.",
+      "copyAddress": "Adresi kopyala"
+    },
+    "notifications": {
+      "savedInline": "Kaydedildi",
+      "pickAtLeastOneHour": "En az bir saat seç",
+      "selectedLabel": "Seçili"
+    },
+    "profile": {
+      "meraInviteReturning": "Bana yeni bir şeyden bahset, akışına ekleyeyim.",
+      "editFacts": "Düzenle",
+      "planUsage": "Bugün {{limit}} içinden {{used}} analiz edildi"
+    },
+    "facts": {
+      "deleteFactA11y": "{{fact}} sil"
+    },
+    "configPanel": {
+      "articleCountPending": "Sayılıyor",
+      "articleCountNone": "Henüz makale yok",
+      "deleteFactWarning": "Konuları ve bulunan haberler de silinir, Mera bununla ilgili haber aramayı bırakır."
+    },
+    "backup": {
+      "statusFromCloud": "Son yedek {{when}}, {{provider}} içinde bulundu",
+      "restoreOption": "{{when}} tarihli yedek",
+      "statusFailed": "Son yedekleme {{when}} tarihinde başarısız oldu"
+    },
+    "tutorials": {
+      "entryRow": "Mera nasıl çalışır"
+    },
+    "subscription": {
+      "managePlan": "Planı yönet"
+    },
+    "hygiene": {
+      "title": "Profil temizliği",
+      "profileRow_one": "Profil temizliği · {{count}} öneri",
+      "profileRow_other": "Profil temizliği · {{count}} öneri",
+      "effectIncoherentTopics": "Bu ilgi alanı için bu konuları daha iyi olanlarla değiştirir."
+    },
+    "profileHub": {
+      "personaHealth": "Profil temizliği"
+    },
+    "display": {
+      "screenSubtitle": "Metin, görseller ve Mera'nın bu cihazda nasıl açıldığı"
+    }
+  },
+  "uk": {
+    "settings": {
+      "groupGeneral": "Загальні",
+      "groupPrivacy": "Конфіденційність і дані",
+      "groupHelp": "Довідка",
+      "groupAccount": "Обліковий запис",
+      "languageRow": "Мова",
+      "backupRow": "Резервна копія та відновлення",
+      "backupRowNever": "Копій ще немає"
+    },
+    "support": {
+      "mailFailedTitle": "Не вдалося відкрити поштовий застосунок",
+      "mailFailedBody": "Скопіюйте адресу підтримки й напишіть нам із будь-якого поштового застосунку.",
+      "copyAddress": "Скопіювати адресу"
+    },
+    "notifications": {
+      "savedInline": "Збережено",
+      "pickAtLeastOneHour": "Виберіть принаймні одну годину",
+      "selectedLabel": "Вибрано"
+    },
+    "profile": {
+      "meraInviteReturning": "Розкажіть про щось нове, і я додам це до вашої стрічки.",
+      "editFacts": "Редагувати",
+      "planUsage": "Сьогодні проаналізовано {{used}} з {{limit}}"
+    },
+    "facts": {
+      "deleteFactA11y": "Видалити {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Підрахунок",
+      "articleCountNone": "Статей поки немає",
+      "deleteFactWarning": "Його теми та знайдені за ними статті теж зникнуть, і Mera більше не шукатиме про це новин."
+    },
+    "backup": {
+      "statusFromCloud": "Остання копія {{when}}, знайдена в {{provider}}",
+      "restoreOption": "Копія від {{when}}",
+      "statusFailed": "Остання копія не вдалася {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Як працює Mera"
+    },
+    "subscription": {
+      "managePlan": "Керувати тарифом"
+    },
+    "hygiene": {
+      "title": "Очищення профілю",
+      "profileRow_one": "Очищення профілю · {{count}} пропозиція",
+      "profileRow_few": "Очищення профілю · {{count}} пропозиції",
+      "profileRow_many": "Очищення профілю · {{count}} пропозицій",
+      "profileRow_other": "Очищення профілю · {{count}} пропозиції",
+      "effectIncoherentTopics": "Замінює ці теми кращими для цього інтересу."
+    },
+    "profileHub": {
+      "personaHealth": "Очищення профілю"
+    },
+    "display": {
+      "screenSubtitle": "Текст, візуальні елементи та як Mera відкривається на цьому пристрої"
+    }
+  },
+  "vi": {
+    "settings": {
+      "groupGeneral": "Chung",
+      "groupPrivacy": "Quyền riêng tư và dữ liệu",
+      "groupHelp": "Trợ giúp",
+      "groupAccount": "Tài khoản",
+      "languageRow": "Ngôn ngữ",
+      "backupRow": "Sao lưu và khôi phục",
+      "backupRowNever": "Chưa sao lưu"
+    },
+    "support": {
+      "mailFailedTitle": "Không mở được ứng dụng email",
+      "mailFailedBody": "Sao chép địa chỉ hỗ trợ và gửi email cho chúng tôi từ bất kỳ ứng dụng email nào.",
+      "copyAddress": "Sao chép địa chỉ"
+    },
+    "notifications": {
+      "savedInline": "Đã lưu",
+      "pickAtLeastOneHour": "Chọn ít nhất một giờ",
+      "selectedLabel": "Đã chọn"
+    },
+    "profile": {
+      "meraInviteReturning": "Hãy kể cho tôi điều gì mới, tôi sẽ thêm vào bảng tin của bạn.",
+      "editFacts": "Sửa",
+      "planUsage": "Đã phân tích {{used}}/{{limit}} hôm nay"
+    },
+    "facts": {
+      "deleteFactA11y": "Xóa {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "Đang đếm",
+      "articleCountNone": "Chưa có bài viết",
+      "deleteFactWarning": "Các chủ đề và tin bài đã tìm được cũng bị xóa, và Mera sẽ ngừng tìm tin về điều này."
+    },
+    "backup": {
+      "statusFromCloud": "Sao lưu gần nhất {{when}}, tìm thấy trong {{provider}}",
+      "restoreOption": "Bản sao lưu từ {{when}}",
+      "statusFailed": "Lần sao lưu gần nhất thất bại vào {{when}}"
+    },
+    "tutorials": {
+      "entryRow": "Cách Mera hoạt động"
+    },
+    "subscription": {
+      "managePlan": "Quản lý gói"
+    },
+    "hygiene": {
+      "title": "Dọn dẹp hồ sơ",
+      "profileRow_one": "Dọn dẹp hồ sơ · {{count}} đề xuất",
+      "profileRow_other": "Dọn dẹp hồ sơ · {{count}} đề xuất",
+      "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này."
+    },
+    "profileHub": {
+      "personaHealth": "Dọn dẹp hồ sơ"
+    },
+    "display": {
+      "screenSubtitle": "Văn bản, hình ảnh và cách Mera mở trên thiết bị này"
+    }
+  },
+  "zh-CN": {
+    "settings": {
+      "groupGeneral": "通用",
+      "groupPrivacy": "隐私和数据",
+      "groupHelp": "帮助",
+      "groupAccount": "账户",
+      "languageRow": "语言",
+      "backupRow": "备份与恢复",
+      "backupRowNever": "尚未备份"
+    },
+    "support": {
+      "mailFailedTitle": "无法打开邮件应用",
+      "mailFailedBody": "复制我们的支持邮箱地址，然后用任意邮件应用给我们发邮件。",
+      "copyAddress": "复制地址"
+    },
+    "notifications": {
+      "savedInline": "已保存",
+      "pickAtLeastOneHour": "至少选择一个时间",
+      "selectedLabel": "已选"
+    },
+    "profile": {
+      "meraInviteReturning": "告诉我一些新的兴趣，我会把它加入你的信息流。",
+      "editFacts": "编辑",
+      "planUsage": "今日已分析 {{used}}/{{limit}}"
+    },
+    "facts": {
+      "deleteFactA11y": "删除 {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "统计中",
+      "articleCountNone": "暂无文章",
+      "deleteFactWarning": "它的主题和找到的新闻也会一并删除，Mera 将不再为此寻找新闻。"
+    },
+    "backup": {
+      "statusFromCloud": "上次备份 {{when}}，位于 {{provider}}",
+      "restoreOption": "{{when}} 的备份",
+      "statusFailed": "上次备份于 {{when}} 失败"
+    },
+    "tutorials": {
+      "entryRow": "Mera 的工作方式"
+    },
+    "subscription": {
+      "managePlan": "管理方案"
+    },
+    "hygiene": {
+      "title": "整理个人资料",
+      "profileRow_one": "整理个人资料 · {{count}} 项建议",
+      "profileRow_other": "整理个人资料 · {{count}} 项建议",
+      "effectIncoherentTopics": "将此兴趣的这些主题替换为更好的。"
+    },
+    "profileHub": {
+      "personaHealth": "整理个人资料"
+    },
+    "display": {
+      "screenSubtitle": "文本、视觉效果和 Mera 在此设备上的打开方式"
+    }
+  },
+  "zh-TW": {
+    "settings": {
+      "groupGeneral": "一般",
+      "groupPrivacy": "隱私與資料",
+      "groupHelp": "說明",
+      "groupAccount": "帳號",
+      "languageRow": "語言",
+      "backupRow": "備份與還原",
+      "backupRowNever": "尚未備份"
+    },
+    "support": {
+      "mailFailedTitle": "無法開啟郵件 App",
+      "mailFailedBody": "複製我們的支援信箱地址，再用任何郵件 App 寄信給我們。",
+      "copyAddress": "複製地址"
+    },
+    "notifications": {
+      "savedInline": "已儲存",
+      "pickAtLeastOneHour": "至少選擇一個時間",
+      "selectedLabel": "已選"
+    },
+    "profile": {
+      "meraInviteReturning": "告訴我一些新的興趣，我會把它加進你的動態。",
+      "editFacts": "編輯",
+      "planUsage": "今日已分析 {{used}}/{{limit}}"
+    },
+    "facts": {
+      "deleteFactA11y": "刪除 {{fact}}"
+    },
+    "configPanel": {
+      "articleCountPending": "統計中",
+      "articleCountNone": "尚無文章",
+      "deleteFactWarning": "它的主題和找到的新聞也會一併刪除，Mera 將不再為此尋找新聞。"
+    },
+    "backup": {
+      "statusFromCloud": "上次備份 {{when}}，位於 {{provider}}",
+      "restoreOption": "{{when}} 的備份",
+      "statusFailed": "上次備份於 {{when}} 失敗"
+    },
+    "tutorials": {
+      "entryRow": "Mera 的運作方式"
+    },
+    "subscription": {
+      "managePlan": "管理方案"
+    },
+    "hygiene": {
+      "title": "整理個人檔案",
+      "profileRow_one": "整理個人檔案 · {{count}} 項建議",
+      "profileRow_other": "整理個人檔案 · {{count}} 項建議",
+      "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。"
+    },
+    "profileHub": {
+      "personaHealth": "整理個人檔案"
+    },
+    "display": {
+      "screenSubtitle": "文字、視覺效果以及 Mera 在此裝置上的開啟方式"
+    }
+  }
+}

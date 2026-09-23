@@ -352,7 +352,10 @@
     "timeNudge": "选择一个您可以阅读、思考和规划的时间——每天一两次就足够了。",
     "maxHoursReachedDescription": "最多可选择 {{count}} 个时间",
     "maxHoursReachedTitle": "已达上限",
-    "selectedCount": "已选择：{{selected}}/{{max}}"
+    "selectedCount": "已选择：{{selected}}/{{max}}",
+    "savedInline": "已保存",
+    "pickAtLeastOneHour": "至少选择一个时间",
+    "selectedLabel": "已选"
   },
   "language": {
     "title": "语言",
@@ -620,7 +623,7 @@
     "topicGenQueuedDescription": "话题将很快显示。",
     "deleteFactTitle": "删除事实",
     "deleteFactConfirm": "您确定要删除此事实吗？",
-    "deleteFactWarning": "这也将移除从此事实生成的所有跟踪话题。",
+    "deleteFactWarning": "它的主题和找到的新闻也会一并删除，Mera 将不再为此寻找新闻。",
     "deletingFact": "正在删除...",
     "yesDelete": "是的，删除",
     "refreshSuggestions": "刷新推荐",
@@ -659,7 +662,9 @@
     "promoInfoTitleEmoji": "🎉 上线特惠 🎊",
     "resetsOn": "重置",
     "retryTopicGeneration": "重试",
-    "topicGenFailedGeneric": "无法为此生成主题。"
+    "topicGenFailedGeneric": "无法为此生成主题。",
+    "articleCountPending": "统计中",
+    "articleCountNone": "暂无文章"
   },
   "errors": {
     "somethingWentWrong": "出了点问题",
@@ -940,7 +945,7 @@
     "detailsSection": "订阅详情",
     "expiresOn": "到期日",
     "lifetime": "永久",
-    "managePlan": "管理订阅",
+    "managePlan": "管理方案",
     "periodLabel": "周期",
     "periodNormal": "标准",
     "periodPromotional": "促销",
@@ -969,7 +974,6 @@
     "activatedBody": "你的个性化资讯、仪表盘、已关注的报道和聊天已准备好。",
     "activatedTitle": "{{plan}} 已激活",
     "lapsedFreeNote": "Mera News 免费版永远属于你。选择一个计划，Mera 就会重新开始处理你的新闻。",
-    "manageBadge": "管理",
     "turnMeraBackOn": "重新启用 Mera",
     "para1": "Mera News本可以免费。只需有人付费即可：广告商购买您的关注，您的数据，或一篇好评。许多看起来像新闻的内容正是这样。",
     "para2": "广告驱动的媒体没有上限。既没有从您那里索取多少的上限，也没有之后如何使用的上限。我们不想成为那样的公司，所以这里的协议很简单。您保留您的数据。软件完成工作。您支付费用。",
@@ -985,7 +989,8 @@
     "trialEndsOn": "您的免费试用在 {{date}} 结束",
     "trialNoPaymentDetails": "没有支付方式在档案中，所以没有什么可以取消的。试用期结束后，除非您选择订阅，否则您将转入免费计划。",
     "starterFreeTitle": "你正在使用 Starter，免费",
-    "starterFreeBody": "我们希望你看到 Mera 是做什么的，所以每个账号都免费包含完整的 Starter 计划。也就是每天 250 篇文章、你的所有兴趣、聊天、事实核查和已关注的报道。"
+    "starterFreeBody": "我们希望你看到 Mera 是做什么的，所以每个账号都免费包含完整的 Starter 计划。也就是每天 250 篇文章、你的所有兴趣、聊天、事实核查和已关注的报道。",
+    "manageBadge": "管理"
   },
   "tabs": {
     "deck": "信息流",
@@ -1140,7 +1145,14 @@
     "dailyLimitBody": "你已达到今日文章上限，即将重置。"
   },
   "settings": {
-    "sources": "来源"
+    "sources": "来源",
+    "groupGeneral": "通用",
+    "groupPrivacy": "隐私和数据",
+    "groupHelp": "帮助",
+    "groupAccount": "账户",
+    "languageRow": "语言",
+    "backupRow": "备份与恢复",
+    "backupRowNever": "尚未备份"
   },
   "personaAudit": {
     "entryRow": "人物画像变更记录",
@@ -1306,7 +1318,7 @@
     "notificationBody_one": "Mera 为您的资料发现了 {{count}} 项整理内容。",
     "notificationBody_other": "Mera 为你的资料发现了 {{count}} 项可整理内容。",
     "reviewChip": "查看",
-    "title": "画像健康度",
+    "title": "整理个人资料",
     "subtitle": "建议的整理项",
     "intro": "Mera 发现了一些值得整理的内容。接受你认同的建议即可。",
     "empty": "你的画像看起来很健康",
@@ -1321,9 +1333,9 @@
     "appliedBody": "你的资料已完成整理。查看变更记录了解详情。",
     "applyFailedTitle": "无法应用整理",
     "applyFailedBody": "请稍后再试。",
-    "profileRow_one": "资料健康度 · {{count}} 项建议",
-    "profileRow_other": "画像健康度 · {{count}} 项建议",
-    "effectIncoherentTopics": "将此兴趣的这些主题替换为更好的。旧的可以从更改日志中恢复。"
+    "profileRow_one": "整理个人资料 · {{count}} 项建议",
+    "profileRow_other": "整理个人资料 · {{count}} 项建议",
+    "effectIncoherentTopics": "将此兴趣的这些主题替换为更好的。"
   },
   "locations": {
     "title": "你的地点",
@@ -1460,7 +1472,7 @@
     "visitedSubtitle": "您最近打开过的媒体",
     "activity": "活动",
     "activitySubtitle": "你的画像变更历史",
-    "personaHealth": "画像健康度",
+    "personaHealth": "整理个人资料",
     "healthPending_one": "{{count}} 项整理建议",
     "healthPending_other": "{{count}} 项整理建议",
     "healthAllHealthy": "一切正常",
@@ -1497,7 +1509,10 @@
       "remove": "移除",
       "removeConfirm": "再次点按即可移除",
       "limitReached": "每日调整上限已达 — 更改将在明天继续。"
-    }
+    },
+    "meraInviteReturning": "告诉我一些新的兴趣，我会把它加入你的信息流。",
+    "editFacts": "编辑",
+    "planUsage": "今日已分析 {{used}}/{{limit}}"
   },
   "facts": {
     "screenTitle": "你的事实",
@@ -1507,7 +1522,8 @@
     "lessInfluence": "减少影响",
     "declinedTopicsTitle": "您移除的话题",
     "allowAgain": "再次允许",
-    "topicRemovalConsequence": "移除的话题不会再被推荐，除非您在「您移除的话题」中再次允许。"
+    "topicRemovalConsequence": "移除的话题不会再被推荐，除非您在「您移除的话题」中再次允许。",
+    "deleteFactA11y": "删除 {{fact}}"
   },
   "publicationPrefs": {
     "title": "来源偏好",
@@ -1579,7 +1595,7 @@
     "staticGradientTitle": "静态背景",
     "staticGradientDescription": "使用固定渐变代替动画背景 — 对电池和旧设备更友好",
     "screenTitle": "显示",
-    "screenSubtitle": "文本、视觉效果、安全性和 Mera 在此设备上的打开方式",
+    "screenSubtitle": "文本、视觉效果和 Mera 在此设备上的打开方式",
     "sectionText": "文本",
     "sectionVisuals": "视觉",
     "textSizeTitle": "文本大小",
@@ -1752,7 +1768,7 @@
     "welcomeBody": "点按\"同意并继续\"即表示您接受我们的服务条款和隐私政策。"
   },
   "tutorials": {
-    "entryRow": "了解 Mera",
+    "entryRow": "Mera 的工作方式",
     "menuTitle": "了解 Mera",
     "menuSubtitle": "关于此应用的思考方式的简短指南。从任何地方开始。",
     "sectionBasic": "从这里开始",
@@ -1775,7 +1791,6 @@
     "askMera": "问Mera",
     "chatIntro": "问我任何关于Mera如何工作的问题。我可以解释，但不能从这里改变任何东西。",
     "launchButton": "开始浏览",
-    "learnAboutMera": "了解 Mera 如何运作",
     "hintReveal": "点击每个。",
     "hintRevealSome": "至少点击{{count}}个。",
     "hintChoose": "选择一个。",
@@ -2381,14 +2396,18 @@
           }
         }
       }
-    }
+    },
+    "learnAboutMera": "了解 Mera 如何运作"
   },
   "support": {
     "opening": "正在打开支持",
     "supportId": "支持 ID：{{id}}",
     "copySupportId": "复制支持 ID",
     "copied": "已复制",
-    "saveHint": "请保存此 ID。支持团队可以通过它找到你的帐号。"
+    "saveHint": "请保存此 ID。支持团队可以通过它找到你的帐号。",
+    "mailFailedTitle": "无法打开邮件应用",
+    "mailFailedBody": "复制我们的支持邮箱地址，然后用任意邮件应用给我们发邮件。",
+    "copyAddress": "复制地址"
   },
   "emailCapture": {
     "title": "添加电子邮件",
@@ -2496,7 +2515,10 @@
     "wifiOnly": "仅限 Wi-Fi",
     "wifiOnlyOff": "已关闭。计划备份可能会使用移动数据。",
     "wifiOnlyOn": "已开启。计划备份会等待连接 Wi-Fi。",
-    "working": "处理中…"
+    "working": "处理中…",
+    "statusFromCloud": "上次备份 {{when}}，位于 {{provider}}",
+    "restoreOption": "{{when}} 的备份",
+    "statusFailed": "上次备份于 {{when}} 失败"
   },
   "factChoice": {
     "titleSingle": "把这条加入你的画像吗",
