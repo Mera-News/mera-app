@@ -5,7 +5,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { hapticLight } from '@/lib/haptics';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import {
@@ -20,7 +20,6 @@ import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const REFRESH_TINT = '#EDA77E';
 
@@ -79,7 +78,9 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     headerHeight = 0,
 }) => {
     const { t } = useTranslation();
-    const insets = useSafeAreaInsets();
+    // Inside a tab on iOS the inset already includes the tab bar; measured on
+    // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
+    const tabClearance = useTabBarClearance();
     const items = useFactCheckItems();
     const hydrated = useFactChecksHydrated();
     const refreshing = useFactChecksRefreshing();
@@ -192,7 +193,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                     paddingHorizontal: 16,
                     // Rendered INSIDE the floating tab navigator, so it needs the
                     // same tab-bar clearance as the other Dashboard panels.
-                    paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24,
+                    paddingBottom: tabClearance + 24,
                 }}
                 showsVerticalScrollIndicator={false}
                 onScroll={scrollHandler}

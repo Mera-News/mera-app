@@ -23,7 +23,7 @@ import {
     type SavedItem,
 } from '@/lib/database/services/saved-article-suggestion-service';
 import logger from '@/lib/logger';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import SavedExportFab, { SAVED_EXPORT_FAB_RESERVE } from './SavedExportFab';
@@ -93,6 +93,9 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const { t } = useTranslation();
     const toast = useToast();
     const insets = useSafeAreaInsets();
+    // Inside a tab on iOS the inset already includes the tab bar; measured on
+    // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
+    const tabClearance = useTabBarClearance();
     const [saved, setSaved] = useState<SavedItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     // The row pending deletion — non-null opens the confirm dialog.
@@ -352,7 +355,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     // rows have no corner control.
                     paddingBottom:
                         (embedded
-                            ? insets.bottom + TAB_BAR_HEIGHT + 24
+                            ? tabClearance + 24
                             : insets.bottom + 40) +
                         (showExportFab ? SAVED_EXPORT_FAB_RESERVE : 0),
                 }}

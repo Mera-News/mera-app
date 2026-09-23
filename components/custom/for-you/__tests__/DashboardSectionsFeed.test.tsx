@@ -40,7 +40,10 @@ jest.mock('react-native-reanimated', () => {
         ListHeaderComponent,
         ListFooterComponent,
         ListEmptyComponent,
+        testID,
+        contentContainerStyle,
     }: any) => {
+        const { View } = jest.requireActual('react-native');
         const items = data ?? [];
         const kids: any[] = [];
         const header = asNode(ListHeaderComponent);
@@ -66,7 +69,9 @@ jest.mock('react-native-reanimated', () => {
         // reason to model it, not the presence of a particular footer.
         const footer = asNode(ListFooterComponent);
         if (footer) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'lf' }, footer));
-        return ReactLib.createElement(ReactLib.Fragment, null, kids);
+        // A View carrying the list's own testID and content style, so a test
+        // can read the padding the component handed the list.
+        return ReactLib.createElement(View, { testID, contentContainerStyle }, kids);
     };
     return {
         __esModule: true,
@@ -504,5 +509,13 @@ describe('DashboardSectionsFeed: empty interest sections (D4)', () => {
             { noStoriesLead: <Text>lead</Text> },
         );
         expect(queryByText('lead')).toBeNull();
+    });
+});
+
+describe('DashboardSectionsFeed: list end padding', () => {
+    it('counts the tab bar once (the in-tab inset already includes it on iOS)', () => {
+        const { getByTestId } = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)])]);
+        const style = getByTestId('dashboard-feed-list').props.contentContainerStyle;
+        expect(style.paddingBottom).toBe(24);
     });
 });

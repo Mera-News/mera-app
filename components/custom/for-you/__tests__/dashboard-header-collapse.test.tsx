@@ -228,3 +228,21 @@ describe('History panel', () => {
         expect(list().props.onScroll).toBeUndefined();
     });
 });
+
+describe('in-tab list end padding counts the tab bar once', () => {
+    // iOS: the tab's own inset already includes the bar (0 here, mocked), so an
+    // embedded list pads by the helper's clearance plus 24, never plus
+    // TAB_BAR_HEIGHT. Measured on device, the old sum left ~2x the bar of dead
+    // space after the last Saved row.
+    it('Saved, embedded and empty (no export FAB reserve)', () => {
+        render(<SavedSuggestionsScreen embedded onBack={jest.fn()} scrollHandler={handler} headerHeight={HEADER_H} />);
+        expect(flat(screen.getByTestId('saved-suggestions-list').props.contentContainerStyle).paddingBottom).toBe(24);
+    });
+
+    it('Visited, embedded', async () => {
+        render(<VisitedPublicationsList embedded onBack={jest.fn()} scrollHandler={handler} headerHeight={HEADER_H} />);
+        await waitFor(() => expect(screen.getByTestId('visited-publications-list')).toBeTruthy());
+        expect(flat(screen.getByTestId('visited-publications-list').props.contentContainerStyle).paddingBottom).toBe(24);
+    });
+});
+

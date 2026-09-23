@@ -11,7 +11,7 @@ import {
     type VisitedPublication,
 } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
@@ -20,7 +20,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListRenderItem, RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DrillDownHeader from './DrillDownHeader';
 
 interface Props {
@@ -65,7 +64,9 @@ const VisitedPublicationsList: React.FC<Props> = ({
     headerHeight = 0,
     onCountChange,
 }) => {
-    const insets = useSafeAreaInsets();
+    // Inside a tab on iOS the inset already includes the tab bar; measured on
+    // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
+    const tabClearance = useTabBarClearance();
     const { t } = useTranslation();
     const [items, setItems] = useState<VisitedPublication[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -226,7 +227,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                 contentContainerStyle={{
                     paddingTop: headerHeight,
                     paddingBottom: embedded
-                        ? insets.bottom + TAB_BAR_HEIGHT + 24
+                        ? tabClearance + 24
                         : 20,
                 }}
                 showsVerticalScrollIndicator={false}

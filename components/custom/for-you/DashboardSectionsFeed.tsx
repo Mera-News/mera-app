@@ -7,7 +7,7 @@ import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { sectionTitle } from '@/components/custom/for-you/section-title';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
@@ -32,7 +32,6 @@ import Animated, {
   useComposedEventHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Pull-to-refresh spinner tint — same value the Feed tab uses. */
 const REFRESH_TINT = '#EDA77E';
@@ -122,7 +121,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   refreshing,
   onRefresh,
 }) => {
-  const insets = useSafeAreaInsets();
+  // Inside a tab on iOS the inset already includes the tab bar; measured on
+  // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
+  const tabClearance = useTabBarClearance();
   const { t } = useTranslation();
 
   // Re-tap the Dashboard tab icon → scroll to top; tap again at the top →
@@ -336,11 +337,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         contentContainerStyle={{
           paddingTop: headerHeight + 12,
           paddingHorizontal: 12,
-          // Bottom clearance for the floating tab bar — same expression as
-          // FeedScreen's list (safe-area bottom + tab-bar height + a fixed
-          // breathing-room tail), converged here from a previous ad-hoc
-          // `TAB_BAR_HEIGHT + 120` that omitted the safe-area inset entirely.
-          paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24,
+          // Bottom clearance for the tab bar plus a breathing-room tail. The
+          // helper, never insets.bottom + TAB_BAR_HEIGHT (see tab-bar.ts).
+          paddingBottom: tabClearance + 24,
         }}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}

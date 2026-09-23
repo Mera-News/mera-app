@@ -51,7 +51,7 @@ jest.mock('@/lib/haptics', () => ({
     hapticLight: jest.fn(() => Promise.resolve()),
 }));
 
-jest.mock('@/lib/navigation/tab-bar', () => ({ TAB_BAR_HEIGHT: 0 }));
+jest.mock('@/lib/navigation/tab-bar', () => ({ TAB_BAR_HEIGHT: 0, useTabBarClearance: () => 0 }));
 
 jest.mock('@/components/custom/for-you/ForYouEmptyState', () => {
     const { Text } = require('react-native');
