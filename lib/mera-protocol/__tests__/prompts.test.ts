@@ -562,7 +562,7 @@ describe('LOCAL_REASON_SYSTEM_PROMPT', () => {
     // The ≤0.25 exemplar was pronoun-free ("no Dutch tie") — the band the leak
     // came from now anchors the voice too.
     expect(LOCAL_REASON_SYSTEM_PROMPT).toContain(
-      'Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country.',
+      "Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country.",
     );
   });
 });
