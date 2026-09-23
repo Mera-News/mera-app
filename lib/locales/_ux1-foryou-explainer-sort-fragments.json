@@ -1,0 +1,143 @@
+{
+  "_comment": "ux1 P2 (For You scout): one OVERWRITE, run with --allow-overwrite tabExplainer.forYou.how2. Empty interest sections now sort after every section with stories (feed 3ba3a726), so 'a new interest appears at the top' is false; it still gets its section before its first stories arrive. No em or en dashes.",
+  "ar": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "الاهتمامات التي منحتها وزنًا أكبر تأتي أولًا. يحصل الاهتمام الجديد على قسمه حتى قبل وصول قصصه الأولى."
+      }
+    }
+  },
+  "de": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Interessen mit mehr Gewicht kommen zuerst. Ein neues Interesse bekommt seinen Abschnitt, schon bevor seine ersten Meldungen da sind."
+      }
+    }
+  },
+  "en": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Interests you gave more weight come first. A new interest gets its section even before its first stories arrive."
+      }
+    }
+  },
+  "es": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Los intereses a los que diste más peso van primero. Un interés nuevo tiene su sección incluso antes de que lleguen sus primeras noticias."
+      }
+    }
+  },
+  "fr": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Les intérêts auxquels tu as donné plus de poids passent en premier. Un nouvel intérêt a sa section avant même l'arrivée de ses premiers sujets."
+      }
+    }
+  },
+  "hi": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "जिन रुचियों को आपने ज़्यादा महत्व दिया वे पहले आती हैं। नई रुचि को उसका सेक्शन उसकी पहली ख़बरें आने से पहले ही मिल जाता है।"
+      }
+    }
+  },
+  "id": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Minat yang kamu beri bobot lebih tampil lebih dulu. Minat baru langsung mendapat bagiannya, bahkan sebelum berita pertamanya tiba."
+      }
+    }
+  },
+  "it": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Gli interessi a cui hai dato più peso vengono prima. Un nuovo interesse ha la sua sezione anche prima che arrivino le sue prime notizie."
+      }
+    }
+  },
+  "ja": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "重みを高くした関心が先に並びます。新しい関心には、最初の記事が届く前からセクションができます。"
+      }
+    }
+  },
+  "ko": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "가중치를 높인 관심사가 먼저 나옵니다. 새 관심사는 첫 기사가 오기 전에도 섹션이 생깁니다."
+      }
+    }
+  },
+  "nl": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Interesses waaraan je meer gewicht gaf komen eerst. Een nieuwe interesse krijgt al een sectie voordat de eerste verhalen binnenkomen."
+      }
+    }
+  },
+  "pl": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Zainteresowania, którym nadałeś większą wagę, są pierwsze. Nowe zainteresowanie dostaje swoją sekcję, jeszcze zanim przyjdą jego pierwsze tematy."
+      }
+    }
+  },
+  "pt-BR": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Os interesses a que você deu mais peso vêm primeiro. Um interesse novo ganha sua seção mesmo antes de chegarem as primeiras notícias."
+      }
+    }
+  },
+  "ru": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Интересы, которым вы дали больший вес, идут первыми. Новый интерес получает свой раздел ещё до того, как придут его первые сюжеты."
+      }
+    }
+  },
+  "th": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "ความสนใจที่คุณให้น้ำหนักมากกว่าจะอยู่ก่อน ความสนใจใหม่จะได้ส่วนของตัวเอง แม้ข่าวแรกยังไม่มา"
+      }
+    }
+  },
+  "tr": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Daha fazla ağırlık verdiğin ilgi alanları önce gelir. Yeni bir ilgi alanı, ilk haberleri gelmeden bile kendi bölümünü alır."
+      }
+    }
+  },
+  "uk": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Інтереси, яким ви дали більшу вагу, йдуть першими. Новий інтерес отримує свій розділ ще до того, як прийдуть його перші сюжети."
+      }
+    }
+  },
+  "vi": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "Những mối quan tâm bạn cho trọng số cao hơn đứng trước. Mối quan tâm mới có mục riêng ngay cả trước khi có tin đầu tiên."
+      }
+    }
+  },
+  "zh-CN": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "你给了更高权重的兴趣排在前面。新兴趣在第一批新闻到来之前就会有自己的栏目。"
+      }
+    }
+  },
+  "zh-TW": {
+    "tabExplainer": {
+      "forYou": {
+        "how2": "你給了更高權重的興趣排在前面。新興趣在第一批新聞到來之前就會有自己的欄目。"
+      }
+    }
+  }
+}
