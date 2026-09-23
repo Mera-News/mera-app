@@ -34,19 +34,26 @@ import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reani
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
- * overHero at rest: a soft darkening at the very top so the status bar's own
- * glyphs (wifi, battery) stay visible over a LIGHT photo, fading to nothing by
- * the bottom of the status bar. Stepped Views rather than a CSS gradient (the
- * gradient background is only relied on for Android here); at 16 steps across
- * ~62pt each step is under 4pt and 0.022 alpha, which reads as a gradient, not
- * a band.
+ * overHero at rest: a darkening at the top so the status bar's own WHITE glyphs
+ * (wifi, battery) stay readable over a LIGHT photo, gone by the bottom of the
+ * status bar. The glyph band is the upper ~55% of the status bar, so the fade
+ * HOLDS its full strength there and only then eases out (smoothstep), which is
+ * what gets white glyphs past 3:1 over a white image; a linear ramp from 0.35
+ * measured 2.1:1 on device. Stepped Views rather than a CSS gradient (only
+ * relied on for Android here); 32 steps across ~62pt are under 2pt each and
+ * change by at most ~0.05 alpha, which reads as a gradient, not a band.
  */
-export const HERO_TOP_FADE_MAX_ALPHA = 0.35;
-export const HERO_TOP_FADE_STEPS = 16;
+export const HERO_TOP_FADE_MAX_ALPHA = 0.55;
+export const HERO_TOP_FADE_STEPS = 32;
+/** Fraction of the status bar held at full strength (the glyph band). */
+export const HERO_TOP_FADE_HOLD = 0.55;
 
-/** Alpha of step `i` (0 = top): linear from the max to zero. */
+/** Alpha of step `i` (0 = top): held, then a smoothstep ease to zero. */
 export function heroTopFadeAlpha(i: number): number {
-  return HERO_TOP_FADE_MAX_ALPHA * (1 - i / HERO_TOP_FADE_STEPS);
+  const t = (i + 0.5) / HERO_TOP_FADE_STEPS;
+  if (t <= HERO_TOP_FADE_HOLD) return HERO_TOP_FADE_MAX_ALPHA;
+  const u = Math.min(1, (t - HERO_TOP_FADE_HOLD) / (1 - HERO_TOP_FADE_HOLD));
+  return HERO_TOP_FADE_MAX_ALPHA * (1 - u * u * (3 - 2 * u));
 }
 
 /** The stepped fade below the strip, darkest first. Three 4pt bands. */

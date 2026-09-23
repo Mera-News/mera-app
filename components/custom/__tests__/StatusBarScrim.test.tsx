@@ -65,31 +65,34 @@ describe('StatusBarScrim', () => {
       expect(opacityOf('status-bar-scrim-cover')).toBe(0);
     });
 
-    it('draws a soft top fade at rest, ~35% black at the top to nothing at the bottom', () => {
-      // Captured: fully clear, the wifi and battery glyphs nearly vanished over
-      // a light photo.
+    it('keeps white status glyphs at 3:1 or better over a white photo, and fades out smoothly', () => {
+      // Captured: clear, the glyphs vanished; a linear 0.35 fade measured 2.1:1.
+      const { HERO_TOP_FADE_STEPS: N, HERO_TOP_FADE_HOLD } = require('../StatusBarScrim');
       render(<StatusBarScrim overHero coverProgress={{ value: 0 } as any} />);
-      const alpha = (i: number) =>
-        Number(
-          /rgba\(0,0,0,([\d.]+)\)/.exec(
-            StyleSheet.flatten(
-              screen.getByTestId(`status-bar-hero-fade-${i}`, { includeHiddenElements: true }).props.style,
-            ).backgroundColor,
-          )![1],
+      const band = (i: number) =>
+        StyleSheet.flatten(
+          screen.getByTestId(`status-bar-hero-fade-${i}`, { includeHiddenElements: true }).props.style,
         );
-      expect(alpha(0)).toBeCloseTo(0.35, 3);
-      expect(alpha(15)).toBeLessThan(0.03);
-      // No flat band: every step is lighter than the one above it.
-      for (let i = 1; i < 16; i++) expect(alpha(i)).toBeLessThan(alpha(i - 1));
-      const last = StyleSheet.flatten(
-        screen.getByTestId('status-bar-hero-fade-15', { includeHiddenElements: true }).props.style,
-      );
-      expect(last.top + last.height).toBeCloseTo(62, 5);
-    });
+      const alpha = (i: number) => Number(/rgba\(0,0,0,([\d.]+)\)/.exec(band(i).backgroundColor)![1]);
+      const lum = (v: number) => {
+        const c = v / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      };
+      const contrastOverWhite = (a: number) => 1.05 / (lum(255 * (1 - a)) + 0.05);
 
-    it('rises to the solid dark base as content covers the hero', () => {
-      render(<StatusBarScrim overHero coverProgress={{ value: 1 } as any} />);
-      expect(opacityOf('status-bar-scrim-cover')).toBe(1);
+      expect(alpha(0)).toBeCloseTo(0.55, 3);
+      // The glyph band: every step in the held top fraction clears 3:1.
+      for (let i = 0; (i + 0.5) / N <= HERO_TOP_FADE_HOLD; i++) {
+        expect(contrastOverWhite(alpha(i))).toBeGreaterThanOrEqual(3);
+      }
+      // Smooth: never darker going down, and no step jumps by more than 0.06.
+      for (let i = 1; i < N; i++) {
+        expect(alpha(i)).toBeLessThanOrEqual(alpha(i - 1));
+        expect(alpha(i - 1) - alpha(i)).toBeLessThanOrEqual(0.06);
+      }
+      // Gone by the bottom of the status bar.
+      expect(alpha(N - 1)).toBeLessThan(0.01);
+      expect(band(N - 1).top + band(N - 1).height).toBeCloseTo(62, 5);
     });
 
     it('without a progress value draws only the fade, no cover', () => {
