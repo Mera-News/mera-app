@@ -15,6 +15,7 @@ import * as Crypto from 'expo-crypto';
 import logger from '../../logger';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { LOCAL_CONTEXT_TOKENS } from './context-size';
+import { holdRestart } from '../../app-restart';
 import { recordModelLoad } from './inference-stats';
 import type {
   BaseModelDownloadConfig,
@@ -306,6 +307,9 @@ export async function initBaseModel(
 
   let context;
   const loadStartedAt = Date.now();
+  // Loading runs for seconds in native code; a JS reload under it is the same
+  // hazard as one under a download (see downloadService.ts).
+  const releaseRestartHold = holdRestart('model-load');
   try {
     context = await initLlama(
       initParams,
@@ -328,6 +332,7 @@ export async function initBaseModel(
     });
     throw initErr;
   } finally {
+    releaseRestartHold();
     nativeLogSub.remove();
     toggleNativeLog(false).catch(() => {});
   }
