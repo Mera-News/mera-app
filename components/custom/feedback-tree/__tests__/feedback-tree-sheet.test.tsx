@@ -225,6 +225,23 @@ describe('performFeedbackLeaf: the committed flag', () => {
         });
     });
 
+    // Batch 16: the persona write used to start only after the sheet had
+    // fully dismissed, so "Got it" arrived seconds late. It starts at the tap.
+    it('starts the persona write at the tap, not after the sheet has gone', () => {
+        const picked = jest.fn();
+        const pending: Array<() => void> = [];
+        performFeedbackLeaf(
+            {
+                id: 'ni',
+                labelKey: 'k',
+                leaf: { actions: [{ type: 'set_topic_weight', topics: 'matched', delta: -0.15 }] },
+            } as any,
+            ['ni'],
+            { ...deps(picked), closeThen: (after?: () => void) => after && pending.push(after) },
+        );
+        expect(mockApplyLeafActions).toHaveBeenCalledTimes(1);
+    });
+
     it('a nudge applies nothing but STILL commits', () => {
         const picked = jest.fn();
         performFeedbackLeaf({ id: 'nb', labelKey: 'k', leaf: { nudge: 'browse_related' } } as any, ['nb'], deps(picked));

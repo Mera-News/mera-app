@@ -162,12 +162,17 @@ async function suppressionWasHard(suppressionId: string): Promise<boolean> {
  *                        an audited, undoable mutation, not a silent delete)
  *   suppress_topic     → reactivate the topic (forward-compat)
  *   set_publication_pref → restore the prior pref kind (or clear if it was none)
+ *   set_source_scope_pref → the same, for a country scope
+ * Returns whether the inverse was applied: false when the row was already
+ * reverted, or (source preferences only, compare-and-set) when a newer action
+ * owns the value. Weights and suppressions still revert unconditionally.
+ *
  * Anything else throws — later waves extend this switch as new action types
  * gain rails.
  */
-export async function revertChange(changeLogId: string): Promise<void> {
+export async function revertChange(changeLogId: string): Promise<boolean> {
   const row = await changeLogCollection.find(changeLogId);
-  if (row.reverted) return;
+  if (row.reverted) return false;
   const action = parseAction(row);
 
   // D12 + D18. A revert is a persona mutation like any other, so it owes the
@@ -271,6 +276,14 @@ export async function revertChange(changeLogId: string): Promise<void> {
       // Crossing the mute boundary is a hard-filter change in either
       // direction; sweepForRevert mirrors it (restoring 'mute' purges,
       // leaving 'mute' releases).
+      // COMPARE-AND-SET: restore only while the value is still the one this
+      // action set. If a newer action changed it (a later boost over a
+      // "Fewer from"), that action owns the value and this undo is a no-op:
+      // nothing written, the row stays un-reverted.
+      if (typeof action.after === 'string') {
+        const current = await publicationPreferenceService.getPreferenceKind(targetId);
+        if (current !== action.after) return false;
+      }
       sweepInput.prefBefore = before;
       sweepInput.prefAfter = typeof action.after === 'string' ? action.after : undefined;
       await publicationPreferenceService.setPreferenceKind(
@@ -307,6 +320,11 @@ export async function revertChange(changeLogId: string): Promise<void> {
       // Same mute-boundary wiring as set_publication_pref — inert for scopes
       // today (both gates reject a scope mute) but kept symmetric so the two
       // paths cannot drift. See persona-mutation-sweeps.
+      // COMPARE-AND-SET, as for set_publication_pref.
+      if (typeof action.after === 'string') {
+        const current = await publicationPreferenceService.getScopePreferenceKind({ scopeKind, scopeValue });
+        if (current !== action.after) return false;
+      }
       sweepInput.prefBefore = before;
       sweepInput.prefAfter = typeof action.after === 'string' ? action.after : undefined;
       // `label` is only consulted when `before` is a concrete kind (restoring
@@ -359,4 +377,5 @@ export async function revertChange(changeLogId: string): Promise<void> {
   // completed undo as failed. A failed purge falls through to the dirty flag.
   const purged = await runSweepFor(sweepForRevert(sweepInput), row.actionType);
   if (!purged) markFeedNeedsRefresh();
+  return true;
 }

@@ -98,9 +98,11 @@ export function performFeedbackLeaf(node: FeedbackTreeNode, pathIds: string[], d
         d.closeThen(() => d.showInfo(d.chrome('thanks', 'Thanks for the feedback')));
         return;
     }
-    d.closeThen(() => {
-        void applyLeafActions(actions, d.label, d.spend).then((applied) => d.onLeafPicked(pathIds, applied, true));
-    });
+    // The write starts NOW, at the tap: it needs no native UI, and waiting
+    // for the sheet's dismissal made "Got it" arrive seconds late. The toast
+    // (an in-app view) becomes visible as the sheet leaves.
+    d.closeThen();
+    void applyLeafActions(actions, d.label, d.spend).then((applied) => d.onLeafPicked(pathIds, applied, true));
 }
 
 /** A destructive leaf asks first (a pushed confirm level). */

@@ -320,8 +320,15 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 title: t('articleMenu.fewerFromDone', { source: publicationName }),
                 undoLabel: t('articleMenu.undo'),
                 undoTestID: 'article-menu-undo',
+                // Reverts THIS change (compare-and-set): if a newer change owns
+                // the publication's value, nothing is written and the toast
+                // claims nothing. A fresh 'none' write clobbered a later boost
+                // and logged as a new action (batch 16).
                 onUndo: async () => {
-                    await setSourcePrefFromUi({ kind: 'publication', publicationName }, 'none');
+                    if (!res.changeLogId) return false;
+                    // eslint-disable-next-line @typescript-eslint/no-require-imports
+                    const { revertChange } = require('@/lib/database/services/persona-change-log-service') as typeof import('@/lib/database/services/persona-change-log-service');
+                    return revertChange(res.changeLogId);
                 },
             });
             return true;

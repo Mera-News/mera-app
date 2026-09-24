@@ -111,7 +111,11 @@ const mockAsk = jest.fn((..._a: any[]) => true);
 jest.mock('@/components/custom/floating-chat/ask-mera', () => ({
     askMeraAbout: (...a: any[]) => mockAsk(...a),
 }));
-const mockSetPref = jest.fn(async (..._a: any[]) => ({ applied: true }));
+const mockSetPref = jest.fn(async (..._a: any[]) => ({ applied: true, changeLogId: 'cl-fewer' }));
+const mockRevertChange = jest.fn(async (..._a: any[]) => true);
+jest.mock('@/lib/database/services/persona-change-log-service', () => ({
+    revertChange: (...a: any[]) => mockRevertChange(...a),
+}));
 jest.mock('@/lib/database/services/publication-pref-ui-actions', () => ({
     setSourcePrefFromUi: (...a: any[]) => mockSetPref(...a),
 }));
@@ -693,8 +697,13 @@ describe('useArticleMenu running items', () => {
                 undoTestID: 'article-menu-undo',
             }),
         );
-        await opts.onUndo();
-        expect(mockSetPref).toHaveBeenLastCalledWith({ kind: 'publication', publicationName: 'NOS' }, 'none');
+        // Undo REVERTS this exact change (compare-and-set in revertChange), never
+        // a fresh 'none' write, which clobbered a newer change (batch 16).
+        mockRevertChange.mockResolvedValueOnce(false);
+        await expect(opts.onUndo()).resolves.toBe(false); // refused: a newer change owns it
+        expect(mockRevertChange).toHaveBeenCalledWith('cl-fewer');
+        await expect(opts.onUndo()).resolves.toBe(true);
+        expect(mockSetPref).toHaveBeenCalledTimes(1);
     });
 });
 
