@@ -104,16 +104,14 @@ describe('ArticleMetaRow', () => {
     expect(getByText('Der Spiegel')).toBeTruthy();
   });
 
-  it('title-cases the publication name without mangling initialisms', () => {
-    const { getByText: getShouty } = render(
-      <ArticleMetaRow variant="card" {...base} publicationName="globoesporte.com" />,
-    );
-    expect(getShouty('Globoesporte.com')).toBeTruthy();
-
-    const { getByText: getAcronym } = render(
-      <ArticleMetaRow variant="card" {...base} publicationName="NDTV" />,
-    );
-    expect(getAcronym('NDTV')).toBeTruthy();
+  // Owner decision: publication names are shown EXACTLY as stored on cards
+  // too (no title-casing), the same rule as detail.
+  it.each(['card', 'screen'] as const)('%s: shows the publication exactly as stored', (variant) => {
+    for (const name of ['globoesporte.com', 'NDTV', 'Instituto Nacional de Ciberseguridad (INCIBE)']) {
+      const { getByText, unmount } = render(<ArticleMetaRow variant={variant} {...base} publicationName={name} />);
+      expect(getByText(name)).toBeTruthy();
+      unmount();
+    }
   });
 
   // Batch 9: detail showed "Instituto Nacional De Ciberseguridad (Incibe)".

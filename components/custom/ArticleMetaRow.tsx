@@ -8,7 +8,6 @@ import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useTimeTick } from '@/lib/time-tick';
 import { getArticleTranslatableStatus, useTranslationBlocked } from '@/lib/translation-service';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
-import { toTitleCase } from '@/lib/utils/title-case';
 import { Pressable } from '@/components/ui/pressable';
 import { Tooltip, TooltipContent, TooltipText } from '@/components/ui/tooltip';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -97,10 +96,10 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     // Named in the reader's own language, not its endonym — "简体中文" tells a
     // reader who doesn't know the script nothing about what they're looking at.
     const language = getLocalizedLanguageName(languageCode, appLanguage) ?? '';
-    // The detail screen shows the name exactly as stored ("Instituto Nacional
-    // de Ciberseguridad (INCIBE)"): title-casing turned it into "... De ...
-    // (Incibe)". Cards still normalise shouting feed names (see toTitleCase).
-    const publication = isCard ? toTitleCase(publicationName) : (publicationName ?? '').trim();
+    // Shown EXACTLY as stored, card and detail (owner decision): title-casing
+    // turned "Instituto Nacional de Ciberseguridad (INCIBE)" into
+    // "... De ... (Incibe)".
+    const publication = (publicationName ?? '').trim();
 
     const translateStatus = getArticleTranslatableStatus(languageCode, appLanguage);
 
