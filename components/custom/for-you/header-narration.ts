@@ -74,12 +74,13 @@ export const NARRATION_CYCLE_MS = NARRATION_HOLD_MS + NARRATION_TRANSITION_MS;
 export const NARRATION_COLOR = '#FFFFFF';
 
 /**
- * The widest the Dashboard's full-width status row can be: a 375pt phone less
- * the header's 20pt side padding. The Dashboard gives the line this whole row,
- * ONE line; `narration-widths.json` is every line in every locale measured with
- * CoreText at 14pt against it.
+ * The widest the narration can be where it is shown: INLINE on the Feed,
+ * between the Mera mark and the "?", about 170pt on a 375pt phone. The copy is
+ * written to fit it on one line; `narration-widths.json` is every line in every
+ * locale measured with CoreText at 14pt, and the test holds each one to this
+ * less a small margin.
  */
-export const NARRATION_ROW_WIDTH_PT = 375 - 2 * 20;
+export const NARRATION_INLINE_WIDTH_PT = 170;
 
 /**
  * The line's typography and its wrap budget, in ONE place because the row

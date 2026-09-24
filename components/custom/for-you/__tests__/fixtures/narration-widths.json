@@ -4,2680 +4,2680 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "احفظ ما لا تستطيع قراءته الآن.",
-      "width" : 165.69999999999999
+      "text" : "احفظه لوقت لاحق",
+      "width" : 99.5
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "مقالاتك المحفوظة ما زالت تنتظر.",
-      "width" : 179.69999999999999
+      "text" : "محفوظاتك بانتظارك",
+      "width" : 108.5
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "اقرأ قصة واحدة جيدا، لا عشرا بسرعة.",
-      "width" : 201.09999999999999
+      "text" : "اقرأ قصة واحدة جيدًا",
+      "width" : 113.40000000000001
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "أبرز العناوين تعطيك صورة اليوم.",
-      "width" : 172.59999999999999
+      "text" : "جرّب أهم العناوين",
+      "width" : 99.700000000000003
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "الأحدث ليس الأفضل. اقرأ ما لديك.",
-      "width" : 187.30000000000001
+      "text" : "الأحدث ليس الأفضل",
+      "width" : 111
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "لا شيء يصل أسرع إن راقبت.",
-      "width" : 151.90000000000001
+      "text" : "لا داعي للانتظار",
+      "width" : 81.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "نقرأ كل مقال من أجلك.",
-      "width" : 125.8
+      "text" : "فحص الصلة",
+      "width" : 67.700000000000003
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "مشفّر. هاتفك وحده يملك المفتاح.",
-      "width" : 186.59999999999999
+      "text" : "قراءة كل مقال",
+      "width" : 76
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "نجلب المقالات إلى هاتفك.",
-      "width" : 144.69999999999999
+      "text" : "تنزيل المقالات",
+      "width" : 78.200000000000003
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "تصل إليك أولا، لا إلى خادم.",
-      "width" : 144.69999999999999
+      "text" : "جلبها من الخادم",
+      "width" : 88.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "نبحث عن جديد اليوم.",
-      "width" : 118.3
+      "text" : "البحث عن الجديد",
+      "width" : 96.299999999999997
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "هاتفك يحدد ما يطلبه.",
-      "width" : 119.5
+      "text" : "ما الجديد اليوم؟",
+      "width" : 88.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "القصة الواحدة تُنشر في عشرات الأماكن.",
-      "width" : 213.09999999999999
+      "text" : "تجميع القصص",
+      "width" : 82.400000000000006
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "نختار نسخة واحدة لكل قصة.",
-      "width" : 156.40000000000001
+      "text" : "دمج المكرر",
+      "width" : 60.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "هاتفك يقرأ هذه القصص.",
-      "width" : 134.80000000000001
+      "text" : "القراءة على هاتفك",
+      "width" : 97.099999999999994
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "يجري هنا. لا شيء يغادر هاتفك.",
-      "width" : 166.90000000000001
+      "text" : "تبقى على هاتفك",
+      "width" : 87.099999999999994
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "نرتب موجزك.",
-      "width" : 74
+      "text" : "ترتيبها لك",
+      "width" : 52.799999999999997
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "اقتربنا. ستظهر البطاقات وحدها.",
-      "width" : 172.90000000000001
+      "text" : "أوشكنا",
+      "width" : 35.399999999999999
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "نعمل على أخبارك، هنا على هاتفك.",
-      "width" : 184
+      "text" : "بدء التحديث",
+      "width" : 68.299999999999997
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "يبدأ التحديث على هذا الجهاز.",
-      "width" : 158.30000000000001
+      "text" : "يعمل على هذا الهاتف",
+      "width" : 114.90000000000001
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "نكتب ملاحظة قصيرة لكل قصة.",
-      "width" : 169.19999999999999
+      "text" : "كتابة الملاحظات",
+      "width" : 89.099999999999994
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "مشفّر من طرف إلى طرف طوال الطريق.",
-      "width" : 211.19999999999999
+      "text" : "ملاحظة قصيرة لكل قصة",
+      "width" : 132.69999999999999
     }
   ],
   "de" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Sichere, was du jetzt nicht lesen kannst.",
-      "width" : 258.60000000000002
+      "text" : "Für später speichern",
+      "width" : 133.30000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Deine gespeicherten Artikel warten noch.",
-      "width" : 266
+      "text" : "Gespeichertes wartet",
+      "width" : 138.5
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Lies eine Meldung richtig, nicht zehn schnell.",
-      "width" : 289.69999999999999
+      "text" : "Lies eine Meldung ganz",
+      "width" : 152.09999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Top-Schlagzeilen zeigen dir den Tag.",
-      "width" : 238.09999999999999
+      "text" : "Schlagzeilen ansehen",
+      "width" : 139.80000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Neuer ist nicht besser. Lies, was da ist.",
-      "width" : 250.5
+      "text" : "Neuer ist nicht besser",
+      "width" : 141.40000000000001
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Nichts kommt schneller, wenn du zusiehst.",
-      "width" : 274.89999999999998
+      "text" : "Zuschauen hilft nicht",
+      "width" : 135.80000000000001
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Jeder Artikel wird für dich gelesen.",
-      "width" : 224.40000000000001
+      "text" : "Relevanz wird geprüft",
+      "width" : 140.80000000000001
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Verschlüsselt. Nur dein Handy hat den Schlüssel.",
-      "width" : 316.10000000000002
+      "text" : "Artikel werden gelesen",
+      "width" : 146.80000000000001
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Die Artikel kommen auf dein Handy.",
-      "width" : 229.5
+      "text" : "Artikel werden geladen",
+      "width" : 147.80000000000001
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Sie kommen zuerst zu dir, nicht zum Server.",
-      "width" : 282.10000000000002
+      "text" : "Vom Server geholt",
+      "width" : 119.2
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Wir schauen, was es heute Neues gibt.",
-      "width" : 250.09999999999999
+      "text" : "Suche nach Neuem",
+      "width" : 125.3
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Dein Handy entscheidet, was es abfragt.",
-      "width" : 261.19999999999999
+      "text" : "Was ist neu?",
+      "width" : 81.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Eine Meldung läuft an einem Dutzend Stellen.",
-      "width" : 292.60000000000002
+      "text" : "Meldungen bündeln",
+      "width" : 128
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Wir wählen eine Fassung pro Meldung.",
-      "width" : 248.5
+      "text" : "Dubletten bündeln",
+      "width" : 119.3
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Dein Handy liest diese Meldungen.",
-      "width" : 223.40000000000001
+      "text" : "Liest auf deinem Handy",
+      "width" : 152.30000000000001
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Das läuft hier. Nichts verlässt dein Handy.",
-      "width" : 268
+      "text" : "Bleibt auf deinem Handy",
+      "width" : 158.30000000000001
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Dein Feed wird sortiert.",
-      "width" : 151
+      "text" : "Wird sortiert",
+      "width" : 80.900000000000006
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Fast fertig. Die Karten kommen von selbst.",
-      "width" : 273.19999999999999
+      "text" : "Fast fertig",
+      "width" : 65.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Wir arbeiten an deinen News, hier auf dem Handy.",
-      "width" : 322.30000000000001
+      "text" : "Aktualisierung startet",
+      "width" : 138.19999999999999
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Aktualisierung startet auf diesem Gerät.",
-      "width" : 256.80000000000001
+      "text" : "Läuft auf diesem Handy",
+      "width" : 153.90000000000001
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Zu jeder Meldung entsteht eine Notiz.",
-      "width" : 243.40000000000001
+      "text" : "Notizen schreiben",
+      "width" : 116.8
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Durchgehend Ende zu Ende verschlüsselt.",
-      "width" : 271.80000000000001
+      "text" : "Kurze Notiz pro Meldung",
+      "width" : 159.90000000000001
     }
   ],
   "en" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Save what you cannot read right now.",
-      "width" : 241
+      "text" : "Save it for later",
+      "width" : 97.400000000000006
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Your saved articles are still waiting.",
-      "width" : 225.80000000000001
+      "text" : "Your saved list is waiting",
+      "width" : 157.5
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Read one story properly, not ten fast.",
-      "width" : 239
+      "text" : "Read one story properly",
+      "width" : 154.5
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Top headlines, if you want the shape of today.",
-      "width" : 294.60000000000002
+      "text" : "See the top headlines",
+      "width" : 139.69999999999999
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Newer is not better. Read what is here.",
-      "width" : 249
+      "text" : "Newer is not better",
+      "width" : 123.59999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Nothing arrives faster if you watch.",
-      "width" : 225.09999999999999
+      "text" : "No need to watch",
+      "width" : 113.5
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Reading each article for you.",
-      "width" : 184
+      "text" : "Checking relevance",
+      "width" : 126.59999999999999
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Encrypted. Only your phone holds the key.",
-      "width" : 272.69999999999999
+      "text" : "Reading each article",
+      "width" : 131.19999999999999
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Pulling the articles onto your phone.",
-      "width" : 232.40000000000001
+      "text" : "Downloading articles",
+      "width" : 134.80000000000001
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "They come to you first, not to a server.",
-      "width" : 248.69999999999999
+      "text" : "Fetching from the server",
+      "width" : 158.80000000000001
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Looking for what is new today.",
-      "width" : 195.19999999999999
+      "text" : "Looking for new stories",
+      "width" : 150.30000000000001
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Your phone decides what to ask for.",
-      "width" : 230.59999999999999
+      "text" : "Checking what is new",
+      "width" : 140.30000000000001
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "One story runs in a dozen places.",
-      "width" : 214.80000000000001
+      "text" : "Grouping stories",
+      "width" : 106.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Picking one version of each story.",
-      "width" : 216.5
+      "text" : "Merging duplicates",
+      "width" : 123.5
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Your phone is reading these stories.",
-      "width" : 231.09999999999999
+      "text" : "Reading on your phone",
+      "width" : 148.80000000000001
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "This runs here. Nothing leaves your phone.",
-      "width" : 276
+      "text" : "It stays on your phone",
+      "width" : 142.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Putting your feed in order.",
-      "width" : 167.80000000000001
+      "text" : "Putting them in order",
+      "width" : 136.5
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Almost there. The cards arrive on their own.",
-      "width" : 282.10000000000002
+      "text" : "Almost there",
+      "width" : 82.400000000000006
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Working on your news, here on your phone.",
-      "width" : 279.69999999999999
+      "text" : "Starting a refresh",
+      "width" : 112.2
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Starting a refresh on this device.",
-      "width" : 209.69999999999999
+      "text" : "Working on this phone",
+      "width" : 144.69999999999999
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Writing a short note for each story.",
-      "width" : 223.69999999999999
+      "text" : "Writing notes",
+      "width" : 85.900000000000006
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Encrypted end to end, the whole way.",
-      "width" : 241.69999999999999
+      "text" : "A short note per story",
+      "width" : 141.09999999999999
     }
   ],
   "es" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Guarda lo que no puedas leer ahora.",
-      "width" : 233.80000000000001
+      "text" : "Guárdalo para luego",
+      "width" : 130.5
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Tus artículos guardados siguen esperando.",
-      "width" : 277.5
+      "text" : "Tus guardados esperan",
+      "width" : 151.19999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Lee una noticia bien, no diez rápido.",
-      "width" : 232.09999999999999
+      "text" : "Lee bien una noticia",
+      "width" : 128.69999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Los titulares te dan la forma del día.",
-      "width" : 229.80000000000001
+      "text" : "Mira los titulares",
+      "width" : 106.59999999999999
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Lo nuevo no es mejor. Lee lo que hay.",
-      "width" : 240.40000000000001
+      "text" : "Lo nuevo no es mejor",
+      "width" : 137.40000000000001
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Nada llega antes por mirar.",
-      "width" : 173.09999999999999
+      "text" : "No hace falta mirar",
+      "width" : 122.40000000000001
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Leyendo cada artículo para ti.",
-      "width" : 190.5
+      "text" : "Midiendo relevancia",
+      "width" : 128.59999999999999
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Cifrado. Solo tu teléfono tiene la clave.",
-      "width" : 248.5
+      "text" : "Leyendo cada artículo",
+      "width" : 142
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Trayendo los artículos a tu teléfono.",
-      "width" : 230.09999999999999
+      "text" : "Descargando artículos",
+      "width" : 145.09999999999999
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Llegan antes a ti que a un servidor.",
-      "width" : 224.5
+      "text" : "Desde el servidor",
+      "width" : 112.90000000000001
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Buscando lo nuevo de hoy.",
-      "width" : 172.5
+      "text" : "Buscando novedades",
+      "width" : 138.30000000000001
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Tu teléfono decide qué pedir.",
-      "width" : 187.80000000000001
+      "text" : "¿Qué hay de nuevo?",
+      "width" : 130.09999999999999
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Una noticia sale en una docena de sitios.",
-      "width" : 262.69999999999999
+      "text" : "Agrupando noticias",
+      "width" : 124.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Elegimos una versión de cada noticia.",
-      "width" : 242.19999999999999
+      "text" : "Uniendo duplicados",
+      "width" : 128.30000000000001
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Tu teléfono está leyendo estas noticias.",
-      "width" : 254.40000000000001
+      "text" : "Leyendo en tu teléfono",
+      "width" : 147.80000000000001
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Ocurre aquí. Nada sale de tu teléfono.",
-      "width" : 244.19999999999999
+      "text" : "Se queda en tu teléfono",
+      "width" : 153.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Ordenando tu feed.",
-      "width" : 125.40000000000001
+      "text" : "Ordenándolas",
+      "width" : 90.200000000000003
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Casi listo. Las tarjetas llegarán solas.",
-      "width" : 237.40000000000001
+      "text" : "Casi listo",
+      "width" : 58.5
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Trabajando en tus noticias, en tu teléfono.",
-      "width" : 270.30000000000001
+      "text" : "Empezando a actualizar",
+      "width" : 153.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Iniciando una actualización en este equipo.",
-      "width" : 276.80000000000001
+      "text" : "En este teléfono",
+      "width" : 104.2
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Escribiendo una nota por cada noticia.",
-      "width" : 246.90000000000001
+      "text" : "Escribiendo notas",
+      "width" : 115.3
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Cifrado de extremo a extremo, todo el camino.",
-      "width" : 298.39999999999998
+      "text" : "Una nota por noticia",
+      "width" : 130.40000000000001
     }
   ],
   "fr" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Enregistrez ce que vous ne lirez pas maintenant.",
-      "width" : 311.89999999999998
+      "text" : "Garde-le pour plus tard",
+      "width" : 150.80000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Vos articles enregistrés attendent encore.",
-      "width" : 269.69999999999999
+      "text" : "Tes favoris t'attendent",
+      "width" : 144.30000000000001
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Lisez bien un article, pas dix vite fait.",
-      "width" : 237.80000000000001
+      "text" : "Lis un sujet à fond",
+      "width" : 117.5
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Les gros titres donnent la forme du jour.",
-      "width" : 257.30000000000001
+      "text" : "Vois les gros titres",
+      "width" : 118.8
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Plus récent n'est pas mieux. Lisez l'existant.",
-      "width" : 284.39999999999998
+      "text" : "Plus récent, pas mieux",
+      "width" : 145.59999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Rien n'arrive plus vite si vous regardez.",
-      "width" : 252.09999999999999
+      "text" : "Inutile de regarder",
+      "width" : 118.2
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Chaque article est lu pour vous.",
-      "width" : 204.30000000000001
+      "text" : "Tri par pertinence",
+      "width" : 114.09999999999999
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Chiffré. Seul votre téléphone a la clé.",
-      "width" : 237.59999999999999
+      "text" : "Lecture des articles",
+      "width" : 127.2
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Les articles arrivent sur votre téléphone.",
-      "width" : 259.80000000000001
+      "text" : "Téléchargement",
+      "width" : 103.8
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Ils viennent à vous, pas à un serveur.",
-      "width" : 236.5
+      "text" : "Depuis le serveur",
+      "width" : 112.09999999999999
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "On cherche les nouveautés du jour.",
-      "width" : 227.09999999999999
+      "text" : "Recherche du neuf",
+      "width" : 121.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Votre téléphone décide quoi demander.",
-      "width" : 253.90000000000001
+      "text" : "Quoi de neuf ?",
+      "width" : 93.799999999999997
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Une info paraît à une dizaine d'endroits.",
-      "width" : 256.30000000000001
+      "text" : "Regroupement",
+      "width" : 95.200000000000003
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "On garde une version de chaque info.",
-      "width" : 241
+      "text" : "Fusion des doublons",
+      "width" : 133.30000000000001
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Votre téléphone lit ces articles.",
-      "width" : 199.59999999999999
+      "text" : "Lecture sur ton tél.",
+      "width" : 121.7
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Tout se passe ici. Rien ne sort du téléphone.",
-      "width" : 284.5
+      "text" : "Rien ne quitte ton tél.",
+      "width" : 137.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "On met votre fil en ordre.",
-      "width" : 161.30000000000001
+      "text" : "Mise en ordre",
+      "width" : 88.200000000000003
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Presque fini. Les cartes arrivent seules.",
-      "width" : 253.19999999999999
+      "text" : "Presque fini",
+      "width" : 76.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "On travaille sur vos infos, sur votre téléphone.",
-      "width" : 295.19999999999999
+      "text" : "Actualisation lancée",
+      "width" : 129.19999999999999
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Actualisation en cours sur cet appareil.",
-      "width" : 250.19999999999999
+      "text" : "Sur ce téléphone",
+      "width" : 109.5
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Une courte note pour chaque sujet.",
-      "width" : 228.19999999999999
+      "text" : "Rédaction des notes",
+      "width" : 131.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Chiffré de bout en bout, tout du long.",
-      "width" : 239.90000000000001
+      "text" : "Une note par sujet",
+      "width" : 118.7
     }
   ],
   "hi" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "जो अभी नहीं पढ़ सकते, उसे सेव करें।",
-      "width" : 190.30000000000001
+      "text" : "बाद के लिए सहेजें",
+      "width" : 91.5
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "आपके सेव किए लेख अब भी इंतज़ार में हैं।",
-      "width" : 214.59999999999999
+      "text" : "सहेजा हुआ इंतज़ार में",
+      "width" : 107.3
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "एक खबर ठीक से पढ़ें, दस जल्दी नहीं।",
-      "width" : 195.30000000000001
+      "text" : "एक ख़बर ठीक से पढ़ें",
+      "width" : 109.09999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "बड़ी सुर्खियां दिन की तस्वीर देती हैं।",
-      "width" : 178.5
+      "text" : "मुख्य सुर्ख़ियाँ देखें",
+      "width" : 88.099999999999994
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "नया बेहतर नहीं। जो है वही पढ़ें।",
-      "width" : 162.90000000000001
+      "text" : "नया हमेशा बेहतर नहीं",
+      "width" : 110.7
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "देखने से कुछ जल्दी नहीं आता।",
-      "width" : 155.69999999999999
+      "text" : "देखते रहना ज़रूरी नहीं",
+      "width" : 111.90000000000001
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "हर लेख आपके लिए पढ़ा जा रहा है।",
-      "width" : 181.80000000000001
+      "text" : "प्रासंगिकता जाँच",
+      "width" : 83
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "एन्क्रिप्टेड। चाबी सिर्फ़ आपके फ़ोन पर है।",
-      "width" : 211.59999999999999
+      "text" : "हर लेख पढ़ रहे हैं",
+      "width" : 87.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "लेख आपके फ़ोन पर आ रहे हैं।",
-      "width" : 156.19999999999999
+      "text" : "लेख डाउनलोड हो रहे हैं",
+      "width" : 116.8
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "वे पहले आप तक आते हैं, सर्वर तक नहीं।",
-      "width" : 208.19999999999999
+      "text" : "सर्वर से ला रहे हैं",
+      "width" : 82.900000000000006
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "देख रहे हैं आज नया क्या है।",
-      "width" : 141.69999999999999
+      "text" : "नई ख़बरें ढूँढ रहे हैं",
+      "width" : 93.299999999999997
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "आपका फ़ोन तय करता है क्या मांगना है।",
-      "width" : 207.30000000000001
+      "text" : "क्या नया है?",
+      "width" : 63.399999999999999
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "एक ही खबर दर्जनों जगह छपती है।",
-      "width" : 177.90000000000001
+      "text" : "ख़बरें समूह में",
+      "width" : 66.900000000000006
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "हर खबर का एक ही संस्करण चुन रहे हैं।",
-      "width" : 202.69999999999999
+      "text" : "दोहराव हटा रहे हैं",
+      "width" : 88.400000000000006
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "आपका फ़ोन ये खबरें पढ़ रहा है।",
-      "width" : 165.40000000000001
+      "text" : "आपके फ़ोन पर पढ़ रहे",
+      "width" : 116.2
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "यह यहीं चलता है। कुछ भी बाहर नहीं जाता।",
-      "width" : 222.59999999999999
+      "text" : "आपके फ़ोन पर ही रहता है",
+      "width" : 134.30000000000001
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "आपकी फ़ीड क्रम में लगा रहे हैं।",
-      "width" : 161.09999999999999
+      "text" : "क्रम में लगा रहे हैं",
+      "width" : 86.5
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "बस थोड़ा और। कार्ड खुद आ जाएंगे।",
-      "width" : 183.09999999999999
+      "text" : "बस हो गया",
+      "width" : 57.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "आपकी खबरों पर काम जारी है, आपके फ़ोन पर।",
-      "width" : 247.09999999999999
+      "text" : "रीफ़्रेश शुरू",
+      "width" : 54.399999999999999
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "इस डिवाइस पर रिफ़्रेश शुरू हो रहा है।",
-      "width" : 192
+      "text" : "इसी फ़ोन पर काम",
+      "width" : 93.5
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "हर खबर के लिए छोटा नोट लिख रहे हैं।",
-      "width" : 198.90000000000001
+      "text" : "नोट लिख रहे हैं",
+      "width" : 76.400000000000006
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "पूरे रास्ते एंड-टू-एंड एन्क्रिप्टेड।",
-      "width" : 154.09999999999999
+      "text" : "हर ख़बर पर छोटा नोट",
+      "width" : 112.09999999999999
     }
   ],
   "id" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Simpan yang belum sempat kamu baca.",
-      "width" : 256
+      "text" : "Simpan untuk nanti",
+      "width" : 124
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Artikel simpananmu masih menunggu.",
-      "width" : 245.59999999999999
+      "text" : "Simpananmu menunggu",
+      "width" : 156.19999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Baca satu berita utuh, bukan sepuluh sekilas.",
-      "width" : 290.80000000000001
+      "text" : "Baca satu berita utuh",
+      "width" : 137.30000000000001
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Berita utama memberi gambaran hari ini.",
-      "width" : 261.19999999999999
+      "text" : "Lihat berita utama",
+      "width" : 116.7
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Baru bukan berarti lebih baik.",
-      "width" : 188.80000000000001
+      "text" : "Terbaru bukan terbaik",
+      "width" : 141.09999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Tidak ada yang lebih cepat karena ditunggu.",
-      "width" : 285.10000000000002
+      "text" : "Tak perlu ditunggu",
+      "width" : 120.2
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Membaca tiap artikel untukmu.",
-      "width" : 198.80000000000001
+      "text" : "Menilai relevansi",
+      "width" : 106.5
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Terenkripsi. Hanya ponselmu punya kuncinya.",
-      "width" : 293.19999999999999
+      "text" : "Membaca tiap artikel",
+      "width" : 134.5
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Menarik artikel ke ponselmu.",
-      "width" : 184.30000000000001
+      "text" : "Mengunduh artikel",
+      "width" : 120.2
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Sampai ke kamu dulu, bukan ke server.",
-      "width" : 249.90000000000001
+      "text" : "Dari server",
+      "width" : 70.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Mencari apa yang baru hari ini.",
-      "width" : 197.30000000000001
+      "text" : "Mencari yang baru",
+      "width" : 119.59999999999999
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Ponselmu yang menentukan apa yang diminta.",
-      "width" : 299.10000000000002
+      "text" : "Apa yang baru?",
+      "width" : 100.2
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Satu berita muncul di belasan tempat.",
-      "width" : 244.09999999999999
+      "text" : "Mengelompokkan berita",
+      "width" : 155.59999999999999
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Memilih satu versi tiap berita.",
-      "width" : 189
+      "text" : "Gabung duplikat",
+      "width" : 105.8
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Ponselmu sedang membaca berita ini.",
-      "width" : 244.90000000000001
+      "text" : "Membaca di ponselmu",
+      "width" : 145.59999999999999
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Berjalan di sini. Tidak ada yang keluar.",
-      "width" : 244.59999999999999
+      "text" : "Tetap di ponselmu",
+      "width" : 118.40000000000001
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Merapikan berandamu.",
-      "width" : 148.19999999999999
+      "text" : "Mengurutkan",
+      "width" : 85.299999999999997
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Hampir selesai. Kartu muncul sendiri.",
-      "width" : 239.40000000000001
+      "text" : "Hampir selesai",
+      "width" : 94.799999999999997
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Mengerjakan beritamu, di ponselmu.",
-      "width" : 234.59999999999999
+      "text" : "Mulai menyegarkan",
+      "width" : 124.8
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Memulai penyegaran di perangkat ini.",
-      "width" : 240.69999999999999
+      "text" : "Di ponsel ini",
+      "width" : 78.5
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Menulis catatan singkat tiap berita.",
-      "width" : 225.40000000000001
+      "text" : "Menulis catatan",
+      "width" : 101.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Terenkripsi ujung ke ujung, sepanjang jalan.",
-      "width" : 280.39999999999998
+      "text" : "Catatan per berita",
+      "width" : 116.8
     }
   ],
   "it" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Salva quello che ora non riesci a leggere.",
-      "width" : 263.5
+      "text" : "Salvalo per dopo",
+      "width" : 108.09999999999999
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "I tuoi articoli salvati aspettano ancora.",
-      "width" : 244.40000000000001
+      "text" : "I salvati ti aspettano",
+      "width" : 128.90000000000001
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Leggi bene una notizia, non dieci di corsa.",
-      "width" : 270.5
+      "text" : "Leggi bene una notizia",
+      "width" : 145.19999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "I titoli principali ti danno la giornata.",
-      "width" : 229.40000000000001
+      "text" : "Guarda i titoli",
+      "width" : 85.700000000000003
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Più nuovo non è meglio. Leggi quello che c'è.",
-      "width" : 290.19999999999999
+      "text" : "Nuovo non è meglio",
+      "width" : 127.8
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Nulla arriva prima se resti a guardare.",
-      "width" : 240.5
+      "text" : "Non serve guardare",
+      "width" : 127
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Leggiamo ogni articolo per te.",
-      "width" : 192.59999999999999
+      "text" : "Valuto la pertinenza",
+      "width" : 127.7
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Cifrato. Solo il tuo telefono ha la chiave.",
-      "width" : 255.19999999999999
+      "text" : "Leggo ogni articolo",
+      "width" : 124
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Portiamo gli articoli sul tuo telefono.",
-      "width" : 231.90000000000001
+      "text" : "Scarico gli articoli",
+      "width" : 114.59999999999999
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Arrivano prima a te che a un server.",
-      "width" : 228
+      "text" : "Dal server",
+      "width" : 65.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Cerchiamo le novità di oggi.",
-      "width" : 179
+      "text" : "Cerco novità",
+      "width" : 81.400000000000006
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "È il tuo telefono a decidere cosa chiedere.",
-      "width" : 269.89999999999998
+      "text" : "Cosa c'è di nuovo",
+      "width" : 114.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Una notizia esce in una dozzina di posti.",
-      "width" : 258.10000000000002
+      "text" : "Raggruppo le notizie",
+      "width" : 133.19999999999999
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Teniamo una versione di ogni notizia.",
-      "width" : 237.59999999999999
+      "text" : "Unisco i doppioni",
+      "width" : 111.5
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Il tuo telefono sta leggendo le notizie.",
-      "width" : 241.80000000000001
+      "text" : "Leggo sul tuo telefono",
+      "width" : 144
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Succede qui. Niente esce dal telefono.",
-      "width" : 247.69999999999999
+      "text" : "Resta sul tuo telefono",
+      "width" : 140.09999999999999
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Mettiamo in ordine il tuo feed.",
-      "width" : 192.40000000000001
+      "text" : "Metto in ordine",
+      "width" : 97.400000000000006
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Ci siamo quasi. Le schede arrivano da sole.",
-      "width" : 277.60000000000002
+      "text" : "Quasi fatto",
+      "width" : 70.700000000000003
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Stiamo lavorando alle tue notizie, qui.",
-      "width" : 240.69999999999999
+      "text" : "Aggiornamento avviato",
+      "width" : 148.59999999999999
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Aggiornamento avviato su questo telefono.",
-      "width" : 276.19999999999999
+      "text" : "Su questo telefono",
+      "width" : 121.5
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Scriviamo una nota breve per ogni notizia.",
-      "width" : 270.5
+      "text" : "Scrivo le note",
+      "width" : 87.900000000000006
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Cifrato end to end, per tutto il tragitto.",
-      "width" : 246
+      "text" : "Una nota per notizia",
+      "width" : 129.90000000000001
     }
   ],
   "ja" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "今読めないものは保存しておきましょう。",
-      "width" : 255.5
+      "text" : "あとで読むに保存",
+      "width" : 108.09999999999999
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "保存した記事がまだ待っています。",
-      "width" : 216.19999999999999
+      "text" : "保存した記事があります",
+      "width" : 148.59999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "十本流し読みより、一本をしっかり。",
-      "width" : 230.69999999999999
+      "text" : "1本をじっくり読む",
+      "width" : 113.8
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "主要な見出しで今日の全体をつかめます。",
-      "width" : 257.89999999999998
+      "text" : "主要ニュースを見る",
+      "width" : 121.40000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "新しさより、いま手元にあるものを。",
-      "width" : 228.90000000000001
+      "text" : "新しい＝良いではない",
+      "width" : 134.69999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "見ていても早くは届きません。",
-      "width" : 188.40000000000001
+      "text" : "見ていなくて大丈夫",
+      "width" : 122
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "一本ずつあなたのために読んでいます。",
-      "width" : 241.59999999999999
+      "text" : "関連度を確認中",
+      "width" : 96.599999999999994
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "暗号化済み。鍵はこの端末だけにあります。",
-      "width" : 271.19999999999999
+      "text" : "記事を読んでいます",
+      "width" : 121.40000000000001
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "記事を端末に取り込んでいます。",
-      "width" : 203.5
+      "text" : "記事をダウンロード",
+      "width" : 120.8
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "サーバーではなく、まずあなたに届きます。",
-      "width" : 267.5
+      "text" : "サーバーから取得",
+      "width" : 107.5
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "今日の新しい話題を探しています。",
-      "width" : 216.80000000000001
+      "text" : "新着を探しています",
+      "width" : 121.40000000000001
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "何を取得するかは端末が決めます。",
-      "width" : 216.80000000000001
+      "text" : "新しいものは？",
+      "width" : 94.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "同じ話題は何十か所でも流れます。",
-      "width" : 217.40000000000001
+      "text" : "記事をまとめています",
+      "width" : 134.09999999999999
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "各話題から一つだけ選んでいます。",
-      "width" : 216.19999999999999
+      "text" : "重複をまとめています",
+      "width" : 134.09999999999999
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "端末がこれらの記事を読んでいます。",
-      "width" : 229.5
+      "text" : "端末で読んでいます",
+      "width" : 121.40000000000001
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "ここで動いています。外には出ません。",
-      "width" : 242.19999999999999
+      "text" : "端末の外に出ません",
+      "width" : 122
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "フィードを並べ替えています。",
-      "width" : 187.80000000000001
+      "text" : "並べ替えています",
+      "width" : 107.5
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "もう少しです。カードは自動で届きます。",
-      "width" : 256.10000000000002
+      "text" : "もう少しです",
+      "width" : 80.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "この端末でニュースを準備しています。",
-      "width" : 242.19999999999999
+      "text" : "更新を開始",
+      "width" : 68.900000000000006
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "この端末で更新を開始しています。",
-      "width" : 216.80000000000001
+      "text" : "この端末で処理中",
+      "width" : 109.3
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "記事ごとに短いメモを書いています。",
-      "width" : 228.90000000000001
+      "text" : "メモを作成中",
+      "width" : 81.5
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "終始エンドツーエンドで暗号化されます。",
-      "width" : 256.10000000000002
+      "text" : "記事ごとに短いメモ",
+      "width" : 121.40000000000001
     }
   ],
   "ko" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "지금 못 읽을 것은 저장해 두세요.",
-      "width" : 180.40000000000001
+      "text" : "나중에 읽게 저장",
+      "width" : 92.299999999999997
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "저장한 기사가 아직 기다리고 있어요.",
-      "width" : 200.80000000000001
+      "text" : "저장한 기사가 있어요",
+      "width" : 116.59999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "열 개 훑기보다 하나를 제대로.",
-      "width" : 164.5
+      "text" : "한 기사를 제대로",
+      "width" : 92.299999999999997
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "주요 헤드라인으로 오늘을 훑어보세요.",
-      "width" : 209.09999999999999
+      "text" : "주요 헤드라인 보기",
+      "width" : 104.5
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "새것이 더 낫지는 않아요.",
-      "width" : 136.5
+      "text" : "최신이 최선은 아니에요",
+      "width" : 128.69999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "지켜본다고 더 빨리 오지 않아요.",
-      "width" : 176.59999999999999
+      "text" : "지켜볼 필요 없어요",
+      "width" : 104.5
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "기사마다 회원님을 위해 읽고 있어요.",
-      "width" : 200.80000000000001
+      "text" : "관련성 확인 중",
+      "width" : 80.200000000000003
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "암호화됨. 열쇠는 이 기기에만 있어요.",
-      "width" : 204.80000000000001
+      "text" : "기사 읽는 중",
+      "width" : 68.099999999999994
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "기사를 기기로 가져오고 있어요.",
-      "width" : 172.80000000000001
+      "text" : "기사 내려받는 중",
+      "width" : 92.299999999999997
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "서버가 아니라 회원님께 먼저 도착해요.",
-      "width" : 212.90000000000001
+      "text" : "서버에서 가져오는 중",
+      "width" : 116.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "오늘 새로운 소식을 찾고 있어요.",
-      "width" : 176.59999999999999
+      "text" : "새 소식 찾는 중",
+      "width" : 84
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "무엇을 받을지는 기기가 정해요.",
-      "width" : 172.80000000000001
+      "text" : "무엇이 새로울까요",
+      "width" : 100.7
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "같은 소식이 여러 곳에서 나와요.",
-      "width" : 176.59999999999999
+      "text" : "기사 묶는 중",
+      "width" : 68.099999999999994
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "소식마다 한 가지만 골라요.",
-      "width" : 148.59999999999999
+      "text" : "중복 합치는 중",
+      "width" : 80.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "기기가 이 소식들을 읽고 있어요.",
-      "width" : 176.59999999999999
+      "text" : "휴대폰에서 읽는 중",
+      "width" : 104.5
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "여기서 처리해요. 밖으로 나가지 않아요.",
-      "width" : 216.90000000000001
+      "text" : "휴대폰 밖으로 안 나가요",
+      "width" : 132.5
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "피드를 정리하고 있어요.",
-      "width" : 132.69999999999999
+      "text" : "순서 정리 중",
+      "width" : 68.099999999999994
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "거의 다 됐어요. 카드는 알아서 나와요.",
-      "width" : 208.59999999999999
+      "text" : "거의 다 됐어요",
+      "width" : 80.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "이 기기에서 뉴스를 준비하고 있어요.",
-      "width" : 200.80000000000001
+      "text" : "새로고침 시작",
+      "width" : 76.400000000000006
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "이 기기에서 새로 고침을 시작해요.",
-      "width" : 188.69999999999999
+      "text" : "이 휴대폰에서 처리 중",
+      "width" : 120.40000000000001
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "소식마다 짧은 메모를 쓰고 있어요.",
-      "width" : 188.69999999999999
+      "text" : "메모 쓰는 중",
+      "width" : 68.099999999999994
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "처음부터 끝까지 종단 간 암호화예요.",
-      "width" : 200.80000000000001
+      "text" : "기사마다 짧은 메모",
+      "width" : 104.5
     }
   ],
   "nl" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Bewaar wat je nu niet kunt lezen.",
-      "width" : 211.5
+      "text" : "Bewaar voor later",
+      "width" : 112.7
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Je bewaarde artikelen wachten nog.",
-      "width" : 232
+      "text" : "Je opgeslagen items",
+      "width" : 133.09999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Lees één bericht goed, niet tien snel.",
-      "width" : 237.69999999999999
+      "text" : "Lees één verhaal goed",
+      "width" : 145
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Met de koppen zie je hoe de dag eruitziet.",
-      "width" : 270.60000000000002
+      "text" : "Bekijk de topkoppen",
+      "width" : 131.5
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Nieuwer is niet beter. Lees wat er is.",
-      "width" : 232.09999999999999
+      "text" : "Nieuwer is niet beter",
+      "width" : 133
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Er komt niets sneller door te kijken.",
-      "width" : 225.90000000000001
+      "text" : "Kijken helpt niet",
+      "width" : 103
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Elk artikel wordt voor je gelezen.",
-      "width" : 208.59999999999999
+      "text" : "Relevantie bepalen",
+      "width" : 121.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Versleuteld. Alleen jouw telefoon heeft de sleutel.",
-      "width" : 318.30000000000001
+      "text" : "Elk artikel lezen",
+      "width" : 100.40000000000001
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "De artikelen komen naar je telefoon.",
-      "width" : 231.59999999999999
+      "text" : "Artikelen downloaden",
+      "width" : 139.30000000000001
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Ze komen eerst bij jou, niet bij een server.",
-      "width" : 267.89999999999998
+      "text" : "Van de server",
+      "width" : 88.5
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "We kijken wat er vandaag nieuw is.",
-      "width" : 223.5
+      "text" : "Zoeken naar nieuws",
+      "width" : 128.59999999999999
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Je telefoon bepaalt wat er gevraagd wordt.",
-      "width" : 276.5
+      "text" : "Wat is er nieuw?",
+      "width" : 105
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Eén bericht staat op tientallen plekken.",
-      "width" : 250.5
+      "text" : "Verhalen bundelen",
+      "width" : 120.40000000000001
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "We kiezen één versie van elk bericht.",
-      "width" : 238
+      "text" : "Dubbelen samenvoegen",
+      "width" : 155.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Je telefoon leest deze berichten.",
-      "width" : 210.90000000000001
+      "text" : "Lezen op je telefoon",
+      "width" : 130.19999999999999
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Dit gebeurt hier. Er gaat niets weg.",
-      "width" : 223
+      "text" : "Blijft op je telefoon",
+      "width" : 120.7
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "We zetten je feed op volgorde.",
-      "width" : 197
+      "text" : "Op volgorde zetten",
+      "width" : 123.7
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Bijna klaar. De kaarten komen vanzelf.",
-      "width" : 243.19999999999999
+      "text" : "Bijna klaar",
+      "width" : 66.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "We werken aan je nieuws, hier op je telefoon.",
-      "width" : 289.30000000000001
+      "text" : "Verversen gestart",
+      "width" : 114.7
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Verversen gestart op dit toestel.",
-      "width" : 207.19999999999999
+      "text" : "Op deze telefoon",
+      "width" : 110.7
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Een kort briefje bij elk bericht.",
-      "width" : 192.59999999999999
+      "text" : "Notities schrijven",
+      "width" : 111.40000000000001
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Van begin tot eind versleuteld.",
-      "width" : 195.90000000000001
+      "text" : "Een notitie per verhaal",
+      "width" : 144.09999999999999
     }
   ],
   "pl" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Zapisz to, czego teraz nie przeczytasz.",
-      "width" : 252.19999999999999
+      "text" : "Zapisz na później",
+      "width" : 112.3
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Twoje zapisane artykuły wciąż czekają.",
-      "width" : 251.30000000000001
+      "text" : "Zapisane czekają",
+      "width" : 111.2
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Przeczytaj jedno porządnie, nie dziesięć pobieżnie.",
-      "width" : 329.19999999999999
+      "text" : "Przeczytaj jeden temat",
+      "width" : 147.59999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Nagłówki pokażą ci kształt dnia.",
-      "width" : 207.09999999999999
+      "text" : "Zobacz nagłówki",
+      "width" : 109.5
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Nowsze nie znaczy lepsze. Czytaj to, co jest.",
-      "width" : 288.19999999999999
+      "text" : "Nowsze to nie lepsze",
+      "width" : 136.09999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Nic nie przyjdzie szybciej, gdy patrzysz.",
-      "width" : 258.30000000000001
+      "text" : "Nie trzeba patrzeć",
+      "width" : 119
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Czytamy dla ciebie każdy artykuł.",
-      "width" : 216.40000000000001
+      "text" : "Sprawdzam trafność",
+      "width" : 132.80000000000001
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Zaszyfrowane. Klucz ma tylko twój telefon.",
-      "width" : 274.89999999999998
+      "text" : "Czytam artykuły",
+      "width" : 105.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Artykuły trafiają na twój telefon.",
-      "width" : 204.80000000000001
+      "text" : "Pobieram artykuły",
+      "width" : 117.40000000000001
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Najpierw do ciebie, nie na serwer.",
-      "width" : 216
+      "text" : "Z serwera",
+      "width" : 64.099999999999994
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Szukamy tego, co dziś nowe.",
-      "width" : 186.69999999999999
+      "text" : "Szukam nowości",
+      "width" : 107.40000000000001
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "To twój telefon decyduje, o co pyta.",
-      "width" : 228.40000000000001
+      "text" : "Co nowego?",
+      "width" : 79.400000000000006
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Jedna wiadomość biegnie w kilkunastu miejscach.",
-      "width" : 323.19999999999999
+      "text" : "Grupuję tematy",
+      "width" : 99.5
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Wybieramy jedną wersję każdej wiadomości.",
-      "width" : 286.30000000000001
+      "text" : "Łączę duplikaty",
+      "width" : 100.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Twój telefon czyta te wiadomości.",
-      "width" : 217.69999999999999
+      "text" : "Czytam na telefonie",
+      "width" : 128.19999999999999
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Dzieje się tutaj. Nic nie opuszcza telefonu.",
-      "width" : 272.19999999999999
+      "text" : "Zostaje na telefonie",
+      "width" : 126.8
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Porządkujemy twój feed.",
-      "width" : 158.19999999999999
+      "text" : "Układam kolejność",
+      "width" : 122.09999999999999
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Już prawie. Karty pojawią się same.",
-      "width" : 228.19999999999999
+      "text" : "Prawie gotowe",
+      "width" : 94.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Pracujemy nad twoimi wiadomościami, tutaj.",
-      "width" : 285
+      "text" : "Odświeżanie",
+      "width" : 82.099999999999994
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Odświeżanie ruszyło na tym urządzeniu.",
-      "width" : 259.89999999999998
+      "text" : "Na tym telefonie",
+      "width" : 105.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Krótka notatka do każdej wiadomości.",
-      "width" : 244.09999999999999
+      "text" : "Piszę notatki",
+      "width" : 82.400000000000006
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Szyfrowane end-to-end na całej drodze.",
-      "width" : 260
+      "text" : "Notka do tematu",
+      "width" : 107.5
     }
   ],
   "pt-BR" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Salve o que você não consegue ler agora.",
-      "width" : 268.5
+      "text" : "Salve para depois",
+      "width" : 114.3
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Seus artigos salvos ainda estão esperando.",
-      "width" : 279.19999999999999
+      "text" : "Seus salvos esperam",
+      "width" : 136
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Leia uma notícia direito, não dez correndo.",
-      "width" : 274
+      "text" : "Leia uma notícia a fundo",
+      "width" : 157
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "As manchetes mostram o formato do dia.",
-      "width" : 265.80000000000001
+      "text" : "Veja as manchetes",
+      "width" : 120.8
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Mais novo não é melhor. Leia o que já tem.",
-      "width" : 272.89999999999998
+      "text" : "Novo não é melhor",
+      "width" : 121
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Nada chega mais rápido se você ficar olhando.",
-      "width" : 301.19999999999999
+      "text" : "Não precisa olhar",
+      "width" : 112.8
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Lendo cada artigo para você.",
-      "width" : 187.5
+      "text" : "Medindo relevância",
+      "width" : 125.3
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Criptografado. Só o seu celular tem a chave.",
-      "width" : 285.60000000000002
+      "text" : "Lendo cada artigo",
+      "width" : 116.40000000000001
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Trazendo os artigos para o seu celular.",
-      "width" : 249
+      "text" : "Baixando artigos",
+      "width" : 107.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Chegam primeiro a você, não a um servidor.",
-      "width" : 283.10000000000002
+      "text" : "Do servidor",
+      "width" : 74.700000000000003
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Procurando o que há de novo hoje.",
-      "width" : 224.5
+      "text" : "Buscando novidades",
+      "width" : 134
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Seu celular decide o que pedir.",
-      "width" : 198.90000000000001
+      "text" : "O que há de novo?",
+      "width" : 120.2
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Uma notícia sai em uma dezena de lugares.",
-      "width" : 279.39999999999998
+      "text" : "Agrupando notícias",
+      "width" : 124.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Escolhendo uma versão de cada notícia.",
-      "width" : 259.10000000000002
+      "text" : "Unindo duplicadas",
+      "width" : 119.90000000000001
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Seu celular está lendo estas notícias.",
-      "width" : 238.69999999999999
+      "text" : "Lendo no seu celular",
+      "width" : 133.5
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Acontece aqui. Nada sai do seu celular.",
-      "width" : 252.59999999999999
+      "text" : "Fica no seu celular",
+      "width" : 120.09999999999999
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Organizando o seu feed.",
-      "width" : 157.80000000000001
+      "text" : "Colocando em ordem",
+      "width" : 138.19999999999999
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Quase lá. Os cards aparecem sozinhos.",
-      "width" : 254
+      "text" : "Quase pronto",
+      "width" : 87.5
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Trabalhando nas suas notícias, no seu celular.",
-      "width" : 295.10000000000002
+      "text" : "Atualizando",
+      "width" : 75.700000000000003
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Iniciando uma atualização neste aparelho.",
-      "width" : 269.5
+      "text" : "Neste celular",
+      "width" : 84.799999999999997
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Escrevendo uma nota curta por notícia.",
-      "width" : 252.69999999999999
+      "text" : "Escrevendo notas",
+      "width" : 115
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Criptografado de ponta a ponta, o tempo todo.",
-      "width" : 300.89999999999998
+      "text" : "Uma nota por notícia",
+      "width" : 134.40000000000001
     }
   ],
   "ru" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Сохраните то, что сейчас не прочесть.",
-      "width" : 262.69999999999999
+      "text" : "Сохраните на потом",
+      "width" : 137.40000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Сохранённые статьи всё ещё ждут.",
-      "width" : 239.30000000000001
+      "text" : "Сохранённое ждёт",
+      "width" : 127.8
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Прочтите одну как следует, а не десять бегло.",
-      "width" : 314.30000000000001
+      "text" : "Прочтите один сюжет",
+      "width" : 148.69999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Главные заголовки покажут день целиком.",
-      "width" : 290
+      "text" : "Главные заголовки",
+      "width" : 128.40000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Новее не значит лучше. Читайте то, что есть.",
-      "width" : 307.5
+      "text" : "Новее не значит лучше",
+      "width" : 158.30000000000001
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Быстрее не придёт, если смотреть.",
-      "width" : 239.09999999999999
+      "text" : "Смотреть не нужно",
+      "width" : 131.80000000000001
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Читаем для вас каждую статью.",
-      "width" : 216
+      "text" : "Оценка важности",
+      "width" : 119.5
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Зашифровано. Ключ только у вашего телефона.",
-      "width" : 323.10000000000002
+      "text" : "Читаем статьи",
+      "width" : 98.799999999999997
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Переносим статьи на ваш телефон.",
-      "width" : 240.69999999999999
+      "text" : "Загрузка статей",
+      "width" : 109
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Сначала к вам, а не на сервер.",
-      "width" : 208.80000000000001
+      "text" : "С сервера",
+      "width" : 69.799999999999997
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Ищем, что нового сегодня.",
-      "width" : 183.19999999999999
+      "text" : "Ищем новое",
+      "width" : 84.400000000000006
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Телефон сам решает, что запросить.",
-      "width" : 249.19999999999999
+      "text" : "Что нового?",
+      "width" : 81.799999999999997
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Одна новость выходит в десятке мест.",
-      "width" : 261.10000000000002
+      "text" : "Группируем сюжеты",
+      "width" : 138.69999999999999
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Оставляем одну версию каждой новости.",
-      "width" : 282.10000000000002
+      "text" : "Убираем дубли",
+      "width" : 104.09999999999999
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Ваш телефон читает эти новости.",
-      "width" : 226.80000000000001
+      "text" : "Читаем на телефоне",
+      "width" : 139.30000000000001
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Всё идёт здесь. Ничего не уходит.",
-      "width" : 232.5
+      "text" : "Остаётся на телефоне",
+      "width" : 150.30000000000001
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Раскладываем вашу ленту.",
-      "width" : 183.09999999999999
+      "text" : "Наводим порядок",
+      "width" : 121
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Почти готово. Карточки придут сами.",
-      "width" : 253.5
+      "text" : "Почти готово",
+      "width" : 89.700000000000003
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Работаем над вашими новостями, здесь.",
-      "width" : 277.60000000000002
+      "text" : "Обновление",
+      "width" : 83.5
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Обновление началось на этом устройстве.",
-      "width" : 290.39999999999998
+      "text" : "На этом телефоне",
+      "width" : 123.3
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Пишем короткую заметку к каждой новости.",
-      "width" : 303
+      "text" : "Пишем заметки",
+      "width" : 107.40000000000001
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Сквозное шифрование на всём пути.",
-      "width" : 250.59999999999999
+      "text" : "Заметка к сюжету",
+      "width" : 121.90000000000001
     }
   ],
   "th" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "เก็บสิ่งที่ตอนนี้ยังไม่ได้อ่านไว้ก่อน",
-      "width" : 189.09999999999999
+      "text" : "บันทึกไว้อ่านทีหลัง",
+      "width" : 105.7
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "บทความที่คุณบันทึกไว้ยังรออยู่",
-      "width" : 175.59999999999999
+      "text" : "ข่าวที่บันทึกรออยู่",
+      "width" : 98.200000000000003
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "อ่านหนึ่งข่าวให้จบ ดีกว่าสิบข่าวผ่านๆ",
-      "width" : 210.40000000000001
+      "text" : "อ่านข่าวเดียวให้จบ",
+      "width" : 107.3
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "พาดหัวเด่นช่วยให้เห็นภาพรวมของวัน",
-      "width" : 213.19999999999999
+      "text" : "ดูพาดหัวข่าวเด่น",
+      "width" : 95.299999999999997
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "ใหม่กว่าไม่ได้แปลว่าดีกว่า",
-      "width" : 149.5
+      "text" : "ใหม่ไม่ได้ดีกว่า",
+      "width" : 87.099999999999994
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "จ้องรอก็ไม่ได้มาเร็วขึ้น",
-      "width" : 127.7
+      "text" : "ไม่ต้องรอดู",
+      "width" : 63.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "กำลังอ่านทุกบทความเพื่อคุณ",
-      "width" : 164.80000000000001
+      "text" : "ตรวจความเกี่ยวข้อง",
+      "width" : 113.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "เข้ารหัสแล้ว มีแต่เครื่องคุณที่ถือกุญแจ",
-      "width" : 214.19999999999999
+      "text" : "อ่านทีละบทความ",
+      "width" : 97.5
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "กำลังดึงบทความมาที่เครื่องของคุณ",
-      "width" : 200.09999999999999
+      "text" : "ดาวน์โหลดบทความ",
+      "width" : 114.7
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "มาถึงคุณก่อน ไม่ได้ไปที่เซิร์ฟเวอร์",
-      "width" : 192.30000000000001
+      "text" : "ดึงจากเซิร์ฟเวอร์",
+      "width" : 94.5
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "กำลังดูว่าวันนี้มีอะไรใหม่",
-      "width" : 139.30000000000001
+      "text" : "กำลังหาข่าวใหม่",
+      "width" : 93.400000000000006
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "เครื่องของคุณเป็นคนเลือกสิ่งที่จะขอ",
-      "width" : 201.69999999999999
+      "text" : "มีอะไรใหม่บ้าง",
+      "width" : 83.900000000000006
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "ข่าวเดียวลงพร้อมกันได้เป็นสิบที่",
-      "width" : 181
+      "text" : "จัดกลุ่มข่าว",
+      "width" : 64.099999999999994
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "เลือกไว้ข่าวละหนึ่งเวอร์ชัน",
-      "width" : 147.59999999999999
+      "text" : "รวมข่าวซ้ำ",
+      "width" : 60.799999999999997
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "เครื่องของคุณกำลังอ่านข่าวเหล่านี้",
-      "width" : 192.90000000000001
+      "text" : "อ่านบนเครื่องคุณ",
+      "width" : 97.700000000000003
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "ทำงานตรงนี้ ไม่มีอะไรออกไปไหน",
-      "width" : 189.90000000000001
+      "text" : "อยู่บนเครื่องคุณ",
+      "width" : 90.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "กำลังจัดเรียงฟีดของคุณ",
-      "width" : 135.30000000000001
+      "text" : "เรียงลำดับ",
+      "width" : 59.899999999999999
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "ใกล้เสร็จแล้ว การ์ดจะขึ้นเอง",
-      "width" : 158.69999999999999
+      "text" : "ใกล้เสร็จแล้ว",
+      "width" : 74.099999999999994
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "กำลังจัดการข่าวของคุณ บนเครื่องนี้",
-      "width" : 200.69999999999999
+      "text" : "เริ่มรีเฟรช",
+      "width" : 56.5
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "เริ่มรีเฟรชบนอุปกรณ์นี้แล้ว",
-      "width" : 150.80000000000001
+      "text" : "ทำงานบนเครื่องนี้",
+      "width" : 100.2
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "กำลังเขียนโน้ตสั้นให้ทุกข่าว",
-      "width" : 156.59999999999999
+      "text" : "เขียนโน้ต",
+      "width" : 53.5
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "เข้ารหัสต้นทางถึงปลายทางตลอดเส้นทาง",
-      "width" : 233.5
+      "text" : "โน้ตสั้นต่อข่าว",
+      "width" : 80.400000000000006
     }
   ],
   "tr" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Şimdi okuyamayacaklarını kaydet.",
-      "width" : 216.30000000000001
+      "text" : "Sonra oku",
+      "width" : 65
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Kaydettiğin yazılar hâlâ bekliyor.",
-      "width" : 206.19999999999999
+      "text" : "Kaydettiklerin bekliyor",
+      "width" : 142.80000000000001
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Bir haberi doğru oku, on tanesini hızlı değil.",
-      "width" : 277.5
+      "text" : "Bir haberi iyi oku",
+      "width" : 107
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Öne çıkan başlıklar günü özetler.",
-      "width" : 208.90000000000001
+      "text" : "Manşetlere bak",
+      "width" : 99
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Yeni olan daha iyi değil. Elindekini oku.",
-      "width" : 246.90000000000001
+      "text" : "Yeni her zaman iyi değil",
+      "width" : 151.30000000000001
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Baktığın için daha hızlı gelmez.",
-      "width" : 197.59999999999999
+      "text" : "İzlemene gerek yok",
+      "width" : 124.8
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Her yazı senin için okunuyor.",
-      "width" : 183.80000000000001
+      "text" : "Uygunluk ölçülüyor",
+      "width" : 123.5
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Şifreli. Anahtar yalnızca telefonunda.",
-      "width" : 235.19999999999999
+      "text" : "Makaleler okunuyor",
+      "width" : 126
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Yazılar telefonuna geliyor.",
-      "width" : 164.69999999999999
+      "text" : "Makaleler iniyor",
+      "width" : 101
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Önce sana gelir, sunucuya değil.",
-      "width" : 208
+      "text" : "Sunucudan alınıyor",
+      "width" : 122.40000000000001
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Bugün ne var diye bakıyoruz.",
-      "width" : 185.90000000000001
+      "text" : "Yeni haberler aranıyor",
+      "width" : 140.30000000000001
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Ne isteneceğine telefonun karar veriyor.",
-      "width" : 255.80000000000001
+      "text" : "Neler yeni?",
+      "width" : 71.700000000000003
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Aynı haber onlarca yerde çıkar.",
-      "width" : 197.09999999999999
+      "text" : "Haberler gruplanıyor",
+      "width" : 132.19999999999999
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Her haberden tek sürüm seçiyoruz.",
-      "width" : 226.09999999999999
+      "text" : "Tekrarlar birleşiyor",
+      "width" : 119.7
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Telefonun bu haberleri okuyor.",
-      "width" : 195.09999999999999
+      "text" : "Telefonunda okunuyor",
+      "width" : 143.09999999999999
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Burada oluyor. Hiçbir şey dışarı çıkmıyor.",
-      "width" : 260.80000000000001
+      "text" : "Telefonunda kalır",
+      "width" : 109.7
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Akışını sıraya koyuyoruz.",
-      "width" : 157.5
+      "text" : "Sıraya konuyor",
+      "width" : 94.799999999999997
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Az kaldı. Kartlar kendiliğinden gelecek.",
-      "width" : 248.5
+      "text" : "Az kaldı",
+      "width" : 50.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Haberlerin üzerinde çalışıyoruz, telefonunda.",
-      "width" : 287.30000000000001
+      "text" : "Yenileme başladı",
+      "width" : 107.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Bu cihazda yenileme başladı.",
-      "width" : 185.69999999999999
+      "text" : "Bu telefonda",
+      "width" : 81.5
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Her habere kısa bir not yazılıyor.",
-      "width" : 206.30000000000001
+      "text" : "Notlar yazılıyor",
+      "width" : 95.900000000000006
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Baştan sona uçtan uca şifreli.",
-      "width" : 188.90000000000001
+      "text" : "Habere kısa not",
+      "width" : 101.09999999999999
     }
   ],
   "uk" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Збережіть те, чого зараз не прочитати.",
-      "width" : 266.5
+      "text" : "Збережіть на потім",
+      "width" : 129.30000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Збережені статті досі чекають.",
-      "width" : 208.90000000000001
+      "text" : "Збережене чекає",
+      "width" : 118.09999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Прочитайте одну як слід, а не десять побіжно.",
-      "width" : 314.60000000000002
+      "text" : "Один сюжет целиком",
+      "width" : 145
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Головні заголовки покажуть цілий день.",
-      "width" : 269.69999999999999
+      "text" : "Головні заголовки",
+      "width" : 122.7
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Новіше не означає краще. Читайте те, що є.",
-      "width" : 299.39999999999998
+      "text" : "Новіше не краще",
+      "width" : 116
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Швидше не прийде, якщо дивитися.",
-      "width" : 243.5
+      "text" : "Дивитися не треба",
+      "width" : 127.8
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Читаємо для вас кожну статтю.",
-      "width" : 212.80000000000001
+      "text" : "Оцінка важливості",
+      "width" : 125.5
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Зашифровано. Ключ лише у вашого телефона.",
-      "width" : 313.69999999999999
+      "text" : "Читаємо статті",
+      "width" : 101.7
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Переносимо статті на ваш телефон.",
-      "width" : 243.69999999999999
+      "text" : "Завантаження статей",
+      "width" : 145.19999999999999
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Спершу до вас, а не на сервер.",
-      "width" : 211.90000000000001
+      "text" : "З сервера",
+      "width" : 68.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Шукаємо, що нового сьогодні.",
-      "width" : 205.59999999999999
+      "text" : "Шукаємо нове",
+      "width" : 98
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Телефон сам вирішує, що запитати.",
-      "width" : 242.69999999999999
+      "text" : "Що нового?",
+      "width" : 79.400000000000006
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Одна новина виходить у десятку місць.",
-      "width" : 265.89999999999998
+      "text" : "Групуємо сюжети",
+      "width" : 120.3
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Лишаємо одну версію кожної новини.",
-      "width" : 256
+      "text" : "Прибираємо дублі",
+      "width" : 125.8
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Ваш телефон читає ці новини.",
-      "width" : 203.59999999999999
+      "text" : "Читаємо на телефоні",
+      "width" : 142.80000000000001
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Усе відбувається тут. Нічого не йде геть.",
-      "width" : 274.69999999999999
+      "text" : "Лишається на телефоні",
+      "width" : 157.5
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Розкладаємо вашу стрічку.",
-      "width" : 183.69999999999999
+      "text" : "Наводимо лад",
+      "width" : 97
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Майже готово. Картки прийдуть самі.",
-      "width" : 253.90000000000001
+      "text" : "Майже готово",
+      "width" : 95.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Працюємо над вашими новинами, тут.",
-      "width" : 260.89999999999998
+      "text" : "Оновлення",
+      "width" : 74.400000000000006
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Оновлення почалося на цьому пристрої.",
-      "width" : 273.89999999999998
+      "text" : "На цьому телефоні",
+      "width" : 128
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Пишемо коротку нотатку до кожної новини.",
-      "width" : 296.30000000000001
+      "text" : "Пишемо нотатки",
+      "width" : 113.5
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Наскрізне шифрування на всьому шляху.",
-      "width" : 277.80000000000001
+      "text" : "Нотатка до сюжету",
+      "width" : 129.80000000000001
     }
   ],
   "vi" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Lưu lại thứ bây giờ bạn chưa đọc được.",
-      "width" : 250.09999999999999
+      "text" : "Lưu để đọc sau",
+      "width" : 99.700000000000003
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Bài bạn đã lưu vẫn đang chờ.",
-      "width" : 185.80000000000001
+      "text" : "Tin đã lưu đang chờ",
+      "width" : 128
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Đọc kỹ một bài hơn lướt mười bài.",
-      "width" : 216.30000000000001
+      "text" : "Đọc kỹ một tin",
+      "width" : 93.900000000000006
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Tin nổi bật cho bạn thấy hình dáng của ngày.",
-      "width" : 287.39999999999998
+      "text" : "Xem tin nổi bật",
+      "width" : 96.799999999999997
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Mới hơn không có nghĩa là hay hơn.",
-      "width" : 227.5
+      "text" : "Mới hơn chưa chắc tốt",
+      "width" : 143.30000000000001
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Nhìn mãi cũng không đến nhanh hơn.",
-      "width" : 240.19999999999999
+      "text" : "Không cần ngồi chờ",
+      "width" : 128
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "Đang đọc từng bài cho bạn.",
-      "width" : 179.09999999999999
+      "text" : "Đang xét độ liên quan",
+      "width" : 140.69999999999999
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "Đã mã hóa. Chỉ máy bạn giữ khóa.",
-      "width" : 219.30000000000001
+      "text" : "Đang đọc từng bài",
+      "width" : 119.59999999999999
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "Đang kéo các bài về máy của bạn.",
-      "width" : 219.40000000000001
+      "text" : "Đang tải bài",
+      "width" : 77.099999999999994
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "Chúng đến với bạn trước, không qua máy chủ.",
-      "width" : 296.5
+      "text" : "Từ máy chủ",
+      "width" : 74.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "Đang xem hôm nay có gì mới.",
-      "width" : 189.80000000000001
+      "text" : "Đang tìm tin mới",
+      "width" : 105.8
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "Máy của bạn quyết định sẽ hỏi gì.",
-      "width" : 215.5
+      "text" : "Có gì mới?",
+      "width" : 67.700000000000003
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "Một tin chạy ở cả chục nơi cùng lúc.",
-      "width" : 231.69999999999999
+      "text" : "Đang gộp tin",
+      "width" : 83.099999999999994
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "Chọn một bản cho mỗi tin.",
-      "width" : 169.80000000000001
+      "text" : "Gộp tin trùng",
+      "width" : 85.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "Máy của bạn đang đọc các tin này.",
-      "width" : 223.09999999999999
+      "text" : "Đọc trên máy bạn",
+      "width" : 114.2
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "Chạy ngay đây. Không gì rời khỏi máy.",
-      "width" : 243.40000000000001
+      "text" : "Ở lại trên máy bạn",
+      "width" : 116.7
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "Đang sắp xếp bảng tin của bạn.",
-      "width" : 203.40000000000001
+      "text" : "Đang sắp xếp",
+      "width" : 88.200000000000003
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "Sắp xong. Các thẻ sẽ tự hiện ra.",
-      "width" : 205
+      "text" : "Sắp xong",
+      "width" : 59.899999999999999
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "Đang lo tin của bạn, ngay trên máy này.",
-      "width" : 253.30000000000001
+      "text" : "Bắt đầu làm mới",
+      "width" : 103.8
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "Bắt đầu làm mới trên thiết bị này.",
-      "width" : 211.40000000000001
+      "text" : "Trên máy này",
+      "width" : 85.700000000000003
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "Đang viết ghi chú ngắn cho mỗi tin.",
-      "width" : 227.59999999999999
+      "text" : "Đang viết ghi chú",
+      "width" : 112.90000000000001
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "Mã hóa đầu cuối suốt cả chặng.",
-      "width" : 205
+      "text" : "Ghi chú cho mỗi tin",
+      "width" : 124.3
     }
   ],
   "zh-CN" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "现在读不完的，先存起来。",
-      "width" : 166.69999999999999
+      "text" : "留着稍后读",
+      "width" : 69.5
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "你收藏的文章还在等着。",
-      "width" : 152.80000000000001
+      "text" : "收藏在等你",
+      "width" : 69.5
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "认真读一篇，胜过草草读十篇。",
-      "width" : 194.5
+      "text" : "认真读一条",
+      "width" : 69.5
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "看看头条，就知道今天大概的样子。",
-      "width" : 222.30000000000001
+      "text" : "看看头条",
+      "width" : 55.600000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "更新的不等于更好，先读手上的。",
-      "width" : 208.40000000000001
+      "text" : "新的不一定好",
+      "width" : 83.299999999999997
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "盯着看也不会来得更快。",
-      "width" : 152.80000000000001
+      "text" : "不必盯着看",
+      "width" : 69.5
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "正在为你逐篇阅读。",
-      "width" : 125
+      "text" : "判断相关度",
+      "width" : 69.5
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "已加密。钥匙只在你的手机上。",
-      "width" : 194.5
+      "text" : "逐篇阅读",
+      "width" : 55.600000000000001
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "正在把文章取到你的手机上。",
-      "width" : 180.59999999999999
+      "text" : "下载文章",
+      "width" : 55.600000000000001
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "先到你这里，而不是某台服务器。",
-      "width" : 208.40000000000001
+      "text" : "从服务器获取",
+      "width" : 83.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "正在看今天有什么新消息。",
-      "width" : 166.69999999999999
+      "text" : "寻找新内容",
+      "width" : 69.5
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "由你的手机决定要请求什么。",
-      "width" : 180.59999999999999
+      "text" : "有什么新的",
+      "width" : 69.5
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "同一条新闻会在十几处同时出现。",
-      "width" : 208.40000000000001
+      "text" : "归类新闻",
+      "width" : 55.600000000000001
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "每条新闻只保留一个版本。",
-      "width" : 166.69999999999999
+      "text" : "合并重复",
+      "width" : 55.600000000000001
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "你的手机正在读这些新闻。",
-      "width" : 166.69999999999999
+      "text" : "在手机上阅读",
+      "width" : 83.299999999999997
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "都在本机进行，没有任何内容外传。",
-      "width" : 222.30000000000001
+      "text" : "不离开你的手机",
+      "width" : 97.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "正在整理你的信息流。",
-      "width" : 138.90000000000001
+      "text" : "排序中",
+      "width" : 41.700000000000003
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "快好了，卡片会自己出现。",
-      "width" : 166.69999999999999
+      "text" : "快好了",
+      "width" : 41.700000000000003
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "正在处理你的新闻，就在这台手机上。",
-      "width" : 236.09999999999999
+      "text" : "开始刷新",
+      "width" : 55.600000000000001
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "已在这台设备上开始刷新。",
-      "width" : 166.69999999999999
+      "text" : "在本机处理",
+      "width" : 69.5
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "正在为每条新闻写一段短注。",
-      "width" : 180.59999999999999
+      "text" : "撰写短评",
+      "width" : 55.600000000000001
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "全程端到端加密。",
-      "width" : 111.09999999999999
+      "text" : "每条一句短评",
+      "width" : 83.299999999999997
     }
   ],
   "zh-TW" : [
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "現在讀不完的，先存起來。",
-      "width" : 166.69999999999999
+      "text" : "留著稍後讀",
+      "width" : 69.5
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "你收藏的文章還在等著。",
-      "width" : 152.80000000000001
+      "text" : "收藏在等你",
+      "width" : 69.5
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "認真讀一篇，勝過草草讀十篇。",
-      "width" : 194.5
+      "text" : "認真讀一則",
+      "width" : 69.5
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "看看頭條，就知道今天大概的樣子。",
-      "width" : 222.30000000000001
+      "text" : "看看頭條",
+      "width" : 55.600000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "更新的不等於更好，先讀手上的。",
-      "width" : 208.40000000000001
+      "text" : "新的不一定好",
+      "width" : 83.299999999999997
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "盯著看也不會來得更快。",
-      "width" : 152.80000000000001
+      "text" : "不必盯著看",
+      "width" : 69.5
     },
     {
       "index" : 0,
       "key" : "stages.analysing",
-      "text" : "正在為你逐篇閱讀。",
-      "width" : 125
+      "text" : "判斷相關度",
+      "width" : 69.5
     },
     {
       "index" : 1,
       "key" : "stages.analysing",
-      "text" : "已加密。鑰匙只在你的手機上。",
-      "width" : 194.5
+      "text" : "逐篇閱讀",
+      "width" : 55.600000000000001
     },
     {
       "index" : 0,
       "key" : "stages.downloading",
-      "text" : "正在把文章取到你的手機上。",
-      "width" : 180.59999999999999
+      "text" : "下載文章",
+      "width" : 55.600000000000001
     },
     {
       "index" : 1,
       "key" : "stages.downloading",
-      "text" : "先到你這裡，而不是某台伺服器。",
-      "width" : 208.40000000000001
+      "text" : "從伺服器取得",
+      "width" : 83.299999999999997
     },
     {
       "index" : 0,
       "key" : "stages.fetching",
-      "text" : "正在看今天有什麼新消息。",
-      "width" : 166.69999999999999
+      "text" : "尋找新內容",
+      "width" : 69.5
     },
     {
       "index" : 1,
       "key" : "stages.fetching",
-      "text" : "由你的手機決定要請求什麼。",
-      "width" : 180.59999999999999
+      "text" : "有什麼新的",
+      "width" : 69.5
     },
     {
       "index" : 0,
       "key" : "stages.grouping",
-      "text" : "同一則新聞會在十幾處同時出現。",
-      "width" : 208.40000000000001
+      "text" : "歸類新聞",
+      "width" : 55.600000000000001
     },
     {
       "index" : 1,
       "key" : "stages.grouping",
-      "text" : "每則新聞只保留一個版本。",
-      "width" : 166.69999999999999
+      "text" : "合併重複",
+      "width" : 55.600000000000001
     },
     {
       "index" : 0,
       "key" : "stages.onDevice",
-      "text" : "你的手機正在讀這些新聞。",
-      "width" : 166.69999999999999
+      "text" : "在手機上閱讀",
+      "width" : 83.299999999999997
     },
     {
       "index" : 1,
       "key" : "stages.onDevice",
-      "text" : "都在本機進行，沒有任何內容外傳。",
-      "width" : 222.30000000000001
+      "text" : "不離開你的手機",
+      "width" : 97.200000000000003
     },
     {
       "index" : 0,
       "key" : "stages.preparing",
-      "text" : "正在整理你的資訊流。",
-      "width" : 138.90000000000001
+      "text" : "排序中",
+      "width" : 41.700000000000003
     },
     {
       "index" : 1,
       "key" : "stages.preparing",
-      "text" : "快好了，卡片會自己出現。",
-      "width" : 166.69999999999999
+      "text" : "快好了",
+      "width" : 41.700000000000003
     },
     {
       "index" : 0,
       "key" : "stages.starting",
-      "text" : "正在處理你的新聞，就在這支手機上。",
-      "width" : 236.09999999999999
+      "text" : "開始重新整理",
+      "width" : 83.299999999999997
     },
     {
       "index" : 1,
       "key" : "stages.starting",
-      "text" : "已在這台裝置上開始重新整理。",
-      "width" : 194.5
+      "text" : "在本機處理",
+      "width" : 69.5
     },
     {
       "index" : 0,
       "key" : "stages.summarising",
-      "text" : "正在為每則新聞寫一段短註。",
-      "width" : 180.59999999999999
+      "text" : "撰寫短評",
+      "width" : 55.600000000000001
     },
     {
       "index" : 1,
       "key" : "stages.summarising",
-      "text" : "全程端對端加密。",
-      "width" : 111.09999999999999
+      "text" : "每則一句短評",
+      "width" : 83.299999999999997
     }
   ]
 }
