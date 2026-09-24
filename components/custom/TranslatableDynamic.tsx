@@ -65,9 +65,6 @@ interface TranslatableProps {
      * screen (detail) variant where there is space for it.
      */
     readonly showToggle?: boolean;
-    /** Draw the small translate glyph before translated text. Default true;
-     *  compact rows pass false (owner: no 文A on compact rows in any state). */
-    readonly showTranslatedIndicator?: boolean;
     /**
      * Fired (in an effect, never during render) whenever the effective
      * displayed text changes — covers the Show original/Show translation toggle
@@ -127,7 +124,6 @@ function stripUnkTokens(value: string): string {
  *
  * Layout behavior: this component renders a single Text/Heading element (no
  * wrapping View), so it drops into any parent layout exactly as a Text would.
- * The translated-indicator icon is rendered inline inside the Text content.
  *
  * Translation behavior:
  * 1. If the per-card "Show original" toggle is on → render `originalText ?? text`, no translation.
@@ -147,7 +143,6 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     bold,
     italic,
     showToggle = false,
-    showTranslatedIndicator = true,
     onDisplayChange,
 }) => {
     const { t } = useTranslation();
@@ -438,17 +433,9 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         onDisplayChangeRef.current?.({ showingOriginal, displayedText: displayText, displayedLanguage });
     }, [showingOriginal, displayText, displayedLanguage]);
 
-    // Show the translate icon whenever the displayed text differs from the
-    // original-language text. This covers both machine translations (iOS
-    // translator) and server-side English translations (e.g. a Portuguese
-    // article rendered in English via `title_en_internal_only`).
-    const isTranslated =
-        !effectiveShowOriginal && !!originalText && displayText !== originalText;
-
     // Show the toggle button when: showToggle is on and there is an original to switch to.
     const showToggleButton = showToggle && !!originalText && !originalIsTargetLang;
 
-    // Inline icon — shown only in non-toggle mode.
     // N9: the text on screen is about to be replaced by its translation. Dim it
     // and say so inline, so the swap (and the re-wrap it can cause) reads as a
     // translation arriving rather than as the card changing under the reader.
@@ -457,16 +444,12 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const translating =
         needsTranslation && cachedTranslation == null && translationPending && !showToggleButton;
 
-    const translatedIndicator = isTranslated && !showToggleButton && showTranslatedIndicator ? (
-        <>
-            <MaterialIcons name="translate" size={11} color="#9ca3af" />
-            {' '}
-        </>
-    ) : null;
+    // No glyph before translated text (owner: the 文A mark is gone
+    // everywhere); the detail screen's "Show original" toggle remains the one
+    // place that says a text is translated.
 
     const content = (
         <>
-            {translatedIndicator}
             {displayText}
             {translating ? (
                 <Text

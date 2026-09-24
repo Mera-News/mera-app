@@ -418,3 +418,16 @@ describe('TranslatableDynamic translating state', () => {
         expect(queryByTestId('translatable-pending')).toBeNull();
     });
 });
+
+// Owner: the 文A glyph is gone EVERYWHERE, including before a translated
+// headline on a Feed card. Translated text renders as plain text.
+describe('TranslatableDynamic translated indicator', () => {
+    it('draws no translate glyph before text shown in translation', () => {
+        mockAppLanguage = 'en';
+        const { UNSAFE_root, getByText } = render(
+            <TranslatableDynamic text="Cabinet bows to tech lobby" originalText="Kabinet buigt voor techlobby" />,
+        );
+        expect(getByText('Cabinet bows to tech lobby', { exact: false })).toBeTruthy();
+        expect(UNSAFE_root.findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
+    });
+});
