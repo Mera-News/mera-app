@@ -1,5 +1,6 @@
 import ActionSheet, { ActionSheetRow, type ArticleMenuItem } from '@/components/custom/cards/ArticleOverflowMenu';
 import FeedbackTreeLevel from '@/components/custom/feedback-tree/FeedbackTreeLevel';
+import { feedbackNodeLabel } from '@/components/custom/feedback-tree/label-vars';
 import { leafNeedsConfirm, performFeedbackLeaf } from '@/components/custom/feedback-tree/perform-feedback-leaf';
 import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import type { VerdictSentiment } from '@/lib/database/services/article-feedback-service';
@@ -226,9 +227,13 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             // Resolved at call time: both reach storage or the database, and
             // this hook sits under every card.
             /* eslint-disable @typescript-eslint/no-require-imports */
-            const { getFeedbackTree } = require('@/lib/services/feedback-tree-service') as typeof import('@/lib/services/feedback-tree-service');
+            const { getFeedbackTree, refreshFeedbackTree } = require('@/lib/services/feedback-tree-service') as typeof import('@/lib/services/feedback-tree-service');
             const { buildOverlayContext } = require('@/components/custom/cards/overlay-context') as typeof import('@/components/custom/cards/overlay-context');
             /* eslint-enable @typescript-eslint/no-require-imports */
+            // This sheet is the only surface that shows the tree, so it is also
+            // what keeps the cached server tree fresh. Throttled (~24h) in the
+            // service; errors and offline are swallowed there.
+            void refreshFeedbackTree();
             const resolveHost = resolveTreeContextRef.current;
             const [tr, ctx] = await Promise.all([
                 getFeedbackTree(),
@@ -609,9 +614,10 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         },
         [toast],
     );
+    // The Undo toast names the leaf exactly as its row did (vars filled).
     const treeLabel = useCallback(
-        (node: FeedbackTreeNode) => t(node.labelKey, { defaultValue: node.labelDefault }) as string,
-        [t],
+        (node: FeedbackTreeNode) => feedbackNodeLabel(t, node, treeContext),
+        [t, treeContext],
     );
     const performLeaf = useCallback(
         (root: VerdictSentiment, node: FeedbackTreeNode, pathIds: string[]) =>

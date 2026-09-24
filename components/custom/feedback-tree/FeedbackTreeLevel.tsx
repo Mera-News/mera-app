@@ -6,7 +6,7 @@
 // taps; what a leaf DOES is `performFeedbackLeaf`.
 
 import { ActionSheetRow } from '@/components/custom/cards/ArticleOverflowMenu';
-import { feedbackLabelVars } from '@/components/custom/feedback-tree/label-vars';
+import { feedbackLabelVars, feedbackNodeLabel } from '@/components/custom/feedback-tree/label-vars';
 import { resolveTreeLevel, type FeedbackTreeRoot } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 import { Text } from '@/components/ui/text';
 import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
@@ -60,11 +60,7 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
     // Synchronous: the level's rows are final on its first render.
     const { nodes: currentChildren, findNode, hasVisibleChildren } = resolveTreeLevel(tree, root, pathIds, context);
 
-    const label = useCallback(
-        (node: FeedbackTreeNode) =>
-            t(node.labelKey, { defaultValue: node.labelDefault, ...feedbackLabelVars(context) }) as string,
-        [t, context],
-    );
+    const label = useCallback((node: FeedbackTreeNode) => feedbackNodeLabel(t, node, context), [t, context]);
     const desc = useCallback(
         (node: FeedbackTreeNode) =>
             node.descKey || node.descDefault

@@ -2,9 +2,9 @@
 // message, on every surface.
 //
 // The friction it removes is concrete and already measured in this codebase:
-// two components render this tree (the Feed's `InlineFeedbackTree` and the
-// ••• sheet's `FeedbackTreeLevel`) and each built its own `t()` variable bag
-// inline. The tree is SERVER-OWNED content, so a node authored with a
+// the tree's labels are rendered in more than one place (the sheet's rows in
+// `FeedbackTreeLevel`, the Undo toast's summary in useArticleMenu) and each
+// once built its own `t()` variable bag inline. The tree is SERVER-OWNED content, so a node authored with a
 // placeholder only one bag supplies renders its braces verbatim — "Show less of
 // {{entity}}" — and only on the surface that was missed, which is invisible to
 // whoever tested the other one. ("Block {{publication}} instead" is on record as
@@ -18,7 +18,17 @@
 // resolved to "Middle East". The `place` FILTER that the same leaf mints reads
 // `placeValue` (the tag's verbatim field) instead; see resolve-leaf-actions.
 
-import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { TFunction } from 'i18next';
+import {
+  resolveTopicLabel,
+  type FeedbackTreeNode,
+  type LocalFeedbackContext,
+} from '@/lib/news-harness/feedback-tree';
+
+/** The one node whose label names the article's matched topic ("More about:
+ *  Formula 1") instead of the unnamed "More about this topic": its "A lot
+ *  more" / "A bit more" leaves really move that topic's weight (D16). */
+const TOPIC_NAMED_NODE_ID = 'more_about_topic';
 
 export interface FeedbackLabelVars {
   publication: string;
@@ -41,3 +51,32 @@ export function feedbackLabelVars(context: LocalFeedbackContext): FeedbackLabelV
     place: context.geoText ?? '',
   };
 }
+
+/**
+ * A tree node's display label, the SAME string wherever it is shown (the
+ * sheet's row, the Undo toast's summary): the full variable bag, plus the
+ * matched-topic naming for `more_about_topic`. Falls back to the generic label
+ * when there is no real topic to name, never an empty "More about: ".
+ */
+export function feedbackNodeLabel(t: TFunction, node: FeedbackTreeNode, context: LocalFeedbackContext): string {
+  if (node.id === TOPIC_NAMED_NODE_ID) {
+    const choice = resolveTopicLabel(context);
+    if (choice) {
+      return (
+        choice.extraCount > 0
+          ? t('feedbackTree.moreAboutTopicNamedWithCount', {
+              defaultValue: 'More about: {{topic}} and {{extra}} more',
+              topic: choice.text,
+              // NOT `count`: see FeedbackLabelVars.visits.
+              extra: choice.extraCount,
+            })
+          : t('feedbackTree.moreAboutTopicNamed', {
+              defaultValue: 'More about: {{topic}}',
+              topic: choice.text,
+            })
+      ) as string;
+    }
+  }
+  return t(node.labelKey, { defaultValue: node.labelDefault, ...feedbackLabelVars(context) }) as string;
+}
+

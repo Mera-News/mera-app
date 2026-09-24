@@ -131,11 +131,6 @@ jest.mock('@/components/custom/RelevanceChip', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: () => <View testID="relevance-chip" /> };
 });
-// Mocked to avoid the InlineFeedbackTree → feedback-tree-service → DB import chain.
-jest.mock('@/components/custom/cards/CardFeedbackSurface', () => {
-  const { View } = require('react-native');
-  return { __esModule: true, default: () => <View testID="card-feedback-surface" /> };
-});
 // Mocked to avoid pulling in the (un-transformable) gluestack icon ESM via
 // @/components/ui/icon — ArticleCompactCardBase imports SourceFlag directly.
 jest.mock('@/components/custom/SourceFlag', () => {
@@ -161,6 +156,7 @@ jest.mock('@/components/custom/feedback-tree/FeedbackTreeLevel', () => {
 });
 jest.mock('@/lib/services/feedback-tree-service', () => ({
   getFeedbackTree: jest.fn(async () => ({ version: 1, root: [], likeRoot: [] })),
+  refreshFeedbackTree: jest.fn(async () => {}),
 }));
 jest.mock('@/components/custom/cards/overlay-context', () => ({
   buildOverlayContext: jest.fn(async (s: any) => ({ articleTitle: s.title })),
@@ -948,17 +944,20 @@ describe('ArticleSuggestionCard thumbs open the shared sheet', () => {
     );
     fireEvent.press(getByLabelText(label));
     expect(onVerdict).toHaveBeenCalledWith(s, v);
-    expect(await waitFor(() => getByTestId(`tree-level-${v}`))).toBeTruthy();
+    const tree = await waitFor(() => getByTestId(`tree-level-${v}`));
+    // Inside the sheet, not an inline panel on the card.
+    let inSheet = false;
+    for (let p: any = tree; p; p = p.parent) if (p.props?.testID === 'article-menu') inSheet = true;
+    expect(inSheet).toBe(true);
     expect(queryByTestId('sheet-back')).toBeNull();
     expect(getByTestId('article-menu-cancel')).toBeTruthy();
-    expect(queryByTestId('card-feedback-surface')).toBeNull();
   });
 
   it('never mounts the inline panel, even with a stored verdict', () => {
     const { queryByTestId } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} verdict="dislike" feedbackHandlers={handlers()} />,
     );
-    expect(queryByTestId('card-feedback-surface')).toBeNull();
+    expect(queryByTestId('tree-level-dislike')).toBeNull();
     expect(queryByTestId('article-menu')).toBeNull();
   });
 

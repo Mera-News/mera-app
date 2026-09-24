@@ -60,13 +60,30 @@ import type { FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/
 import { ActionSheetRow, SHEET_ROW_LABEL_CLASS } from '@/components/custom/cards/ArticleOverflowMenu';
 import FeedbackTreeLevel from '../FeedbackTreeLevel';
 import { leafNeedsConfirm, performFeedbackLeaf } from '../perform-feedback-leaf';
+import { feedbackNodeLabel } from '../label-vars';
+import type { TFunction } from 'i18next';
+
+/** The same interpolating `t` the react-i18next mock hands the level. Cast:
+ *  i18next's `TFunction` is typed against the app's own key union. */
+const tStub = ((key: string, opts?: Record<string, unknown>) => {
+    const base = (opts && (opts.defaultValue as string)) || key;
+    if (!opts) return base;
+    return base.replace(/\{\{(\w+)\}\}/g, (_m: string, name: string) => String(opts[name] ?? ''));
+}) as unknown as TFunction;
 
 type Level = { pathIds: string[]; browsing: boolean };
 
 /** The host's stack, reduced to the tree: a push per branch, the leaf run
  *  through performFeedbackLeaf with a synchronous close. */
-function Harness(props: { context: LocalFeedbackContext; onLeafPicked: jest.Mock; onClose: jest.Mock }) {
-    const [stack, setStack] = useState<Level[]>([{ pathIds: [], browsing: false }]);
+function Harness(props: {
+    context: LocalFeedbackContext;
+    onLeafPicked: jest.Mock;
+    onClose: jest.Mock;
+    root?: 'like' | 'dislike';
+}) {
+    const root = props.root ?? 'dislike';
+    // The like tree opens browsing; the dislike tree opens on its entry level.
+    const [stack, setStack] = useState<Level[]>([{ pathIds: [], browsing: root === 'like' }]);
     const [confirm, setConfirm] = useState<{ node: FeedbackTreeNode; pathIds: string[] } | null>(null);
     const top = stack[stack.length - 1];
     const context = { articleTitle: 'A story', ...props.context };
@@ -75,8 +92,8 @@ function Harness(props: { context: LocalFeedbackContext; onLeafPicked: jest.Mock
             context,
             chatContext: { kind: 'article-suggestion', articleId: 'a1', articleTitle: 'A story' } as any,
             chatMessage: 'hi',
-            label: node.labelDefault ?? '',
-            spend: { articleId: 'a1', sentiment: 'dislike' },
+            label: feedbackNodeLabel(tStub, node, context),
+            spend: { articleId: 'a1', sentiment: root },
             closeThen: (after) => {
                 props.onClose();
                 after?.();
@@ -92,7 +109,7 @@ function Harness(props: { context: LocalFeedbackContext; onLeafPicked: jest.Mock
     return (
         <FeedbackTreeLevel
             tree={require('@/lib/services/feedback-tree-snapshot').BUNDLED_FEEDBACK_TREE}
-            root="dislike"
+            root={root}
             pathIds={top.pathIds}
             browsing={top.browsing}
             context={context}
@@ -103,10 +120,10 @@ function Harness(props: { context: LocalFeedbackContext; onLeafPicked: jest.Mock
     );
 }
 
-function setup(context: LocalFeedbackContext) {
+function setup(context: LocalFeedbackContext, root: 'like' | 'dislike' = 'dislike') {
     const onLeafPicked = jest.fn();
     const onClose = jest.fn();
-    const utils = render(<Harness context={context} onLeafPicked={onLeafPicked} onClose={onClose} />);
+    const utils = render(<Harness context={context} onLeafPicked={onLeafPicked} onClose={onClose} root={root} />);
     return { ...utils, onLeafPicked, onClose };
 }
 
@@ -241,3 +258,140 @@ describe('tree rows use the ••• menu row style', () => {
         expect(String(treeLabel.props.className)).not.toContain('typography-0');
     });
 });
+
+// Ported from the retired inline panel's suites (InlineFeedbackTree.*): the
+// same shipped tree, now driven through the sheet's level + leaf path.
+describe('the shipped tree through the sheet (ported from the inline panel)', () => {
+    const applied = () =>
+        mockApplyLeafActions.mock.calls[0] as unknown as [Record<string, unknown>[], string, { articleId: string; sentiment: string }];
+
+    it('runs the LIKE tree: "More from this publication" boosts it and spends the like', async () => {
+        const u = setup(TAGGED, 'like');
+        fireEvent.press(await waitFor(() => u.getByText('More from this publication')));
+        await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
+        const [actions, , spend] = applied();
+        expect(actions).toEqual([expect.objectContaining({ publicationId: 'The Hindu', publicationPref: 'boost' })]);
+        expect(spend).toEqual({ articleId: 'a1', sentiment: 'like' });
+    });
+
+    // A complaint about VOLUME, not relevance: lower the topic's weight, never
+    // mint a suppression that would filter out a subject the user still wants.
+    it('the frequency leaf lowers the matched topic weight, mints no filter, and needs no confirm', async () => {
+        const u = setup(TAGGED);
+        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
+        fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
+        fireEvent.press(await waitFor(() => u.getByText("I'm seeing too much of this")));
+        await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
+        const [actions, summary] = applied();
+        expect(actions).toEqual([{ action_type: 'set_topic_weight', topicId: 't1', delta: -0.3 }]);
+        expect(actions.some((a) => a.action_type === 'add_suppression')).toBe(false);
+        expect(summary).toBe("I'm seeing too much of this");
+    });
+
+    it('"I\'ve seen this already" applies nothing and commits nothing', async () => {
+        const u = setup(TAGGED);
+        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
+        fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
+        fireEvent.press(await waitFor(() => u.getByText("I've seen this already")));
+        await act(async () => {
+            await Promise.resolve();
+        });
+        expect(mockApplyLeafActions).not.toHaveBeenCalled();
+        expect(u.onLeafPicked).toHaveBeenCalledWith(expect.any(Array), 0, false);
+    });
+
+    it('the entity leaf mints the structured filter its label promised', async () => {
+        const u = setup(TAGGED);
+        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
+        fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
+        fireEvent.press(await waitFor(() => u.getByText('Show less of Reserve Bank of India')));
+        await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
+        const [actions, label] = applied();
+        expect(actions).toEqual([
+            {
+                action_type: 'add_suppression',
+                suppressionPattern: 'Reserve Bank of India',
+                suppressionStrength: 0.5,
+                suppressionKind: 'entity',
+                suppressionValue: 'Reserve Bank of India',
+            },
+        ]);
+        expect(label).toBe('Show less of Reserve Bank of India');
+    });
+
+    it('the place filter carries the verbatim tag, not the display prose', async () => {
+        const u = setup({ ...TAGGED, geoText: 'Middle East', placeValue: 'MIDDLE_EAST' });
+        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
+        fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
+        fireEvent.press(await waitFor(() => u.getByText('Show less of Middle East')));
+        await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
+        expect(applied()[0][0]).toMatchObject({ suppressionKind: 'place', suppressionValue: 'MIDDLE_EAST' });
+    });
+
+    describe('the paywall branch', () => {
+        const PAYWALL_CTX: LocalFeedbackContext = { ...TAGGED, publicationVisits: 7 };
+        const openPaywall = async (u: ReturnType<typeof setup>) => {
+            fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
+            fireEvent.press(await waitFor(() => u.getByText('Issue with this publication')));
+            fireEvent.press(await waitFor(() => u.getByText("It's paywalled")));
+        };
+
+        it('is reachable, and each option shows its own message with publication and visits filled in', async () => {
+            const u = setup(PAYWALL_CTX);
+            await openPaywall(u);
+            expect(await waitFor(() => u.getByText('Show related coverage'))).toBeTruthy();
+            expect(u.getByText('Block The Hindu instead')).toBeTruthy();
+            expect(u.getByText(/visited The Hindu 7 times/)).toBeTruthy();
+            expect(u.queryByText(/\{\{/)).toBeNull();
+        });
+
+        it('"Show related coverage" commits the path and mutates nothing', async () => {
+            const u = setup(PAYWALL_CTX);
+            await openPaywall(u);
+            fireEvent.press(await waitFor(() => u.getByText('Show related coverage')));
+            expect(u.onLeafPicked).toHaveBeenCalledWith(['publication_issue', 'paywall', 'paywall_related'], 0, true);
+            expect(mockApplyLeafActions).not.toHaveBeenCalled();
+        });
+
+        it('blocking the publication asks first, and mutes only once confirmed', async () => {
+            const u = setup(PAYWALL_CTX);
+            await openPaywall(u);
+            fireEvent.press(await waitFor(() => u.getByText('Block The Hindu instead')));
+            expect(mockApplyLeafActions).not.toHaveBeenCalled();
+            fireEvent.press(u.getByTestId('confirm-go'));
+            await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
+            expect(applied()[0]).toEqual([expect.objectContaining({ publicationId: 'The Hindu', publicationPref: 'mute' })]);
+        });
+    });
+
+    describe('"More about this topic" names the matched topic', () => {
+        it('names a single real topic', async () => {
+            const u = setup({ matchedTopics: [{ topicId: 't1', text: 'Formula 1' }] }, 'like');
+            expect(await waitFor(() => u.getByText('More about: Formula 1'))).toBeTruthy();
+            expect(u.queryByText('More about this topic')).toBeNull();
+        });
+
+        it('picks the first real topic and counts the rest', async () => {
+            const u = setup(
+                {
+                    matchedTopics: [
+                        { topicId: null, text: 'Synthetic headline' },
+                        { topicId: 't1', text: 'Formula 1' },
+                        { topicId: 't2', text: 'Motorsport' },
+                    ],
+                },
+                'like',
+            );
+            expect(await waitFor(() => u.getByText('More about: Formula 1 and 1 more'))).toBeTruthy();
+        });
+
+        // The shipped node is gated on real matched topics, so this is the
+        // defensive path for a server tree without that gate.
+        it('falls back to the generic label with no real topic, never an empty "More about: "', () => {
+            const node = { id: 'more_about_topic', labelKey: 'k', labelDefault: 'More about this topic' } as FeedbackTreeNode;
+            const ctx = { matchedTopics: [{ topicId: null, text: 'Synthetic headline' }] } as LocalFeedbackContext;
+            expect(feedbackNodeLabel(tStub, node, ctx)).toBe('More about this topic');
+        });
+    });
+});
+

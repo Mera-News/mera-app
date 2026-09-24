@@ -10,7 +10,7 @@
 //
 // This is presentation-only — it does not resolve or apply any persona
 // mutation. The caller decides WHICH node ids get this treatment (see
-// InlineFeedbackTree's `label()`), since that's UI chrome policy, not tree
+// feedback-tree/label-vars `feedbackNodeLabel`), since that's UI chrome policy, not tree
 // content.
 
 import type { LocalFeedbackContext } from './types';

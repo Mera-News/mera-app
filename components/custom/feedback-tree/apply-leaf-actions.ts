@@ -1,12 +1,10 @@
 // applyLeafActions — the ONE path from a terminal feedback-tree leaf to applied
 // persona mutations plus an Undo toast.
 //
-// Shared by the ••• sheet's tree levels and the inline Feed surface
-// (InlineFeedbackTree) applies leaves through exactly the same machinery: the
-// two presentations differ (modal sheet vs inline panel), their SEMANTICS must
-// not. Previously only the overlay executed leaf actions, which is why the
-// entire like-side tree — authored with real `set_topic_weight` /
-// `set_publication_pref` actions — had never once run.
+// Called by perform-feedback-leaf for every tree leaf in the ••• sheet, the one
+// place the tree is shown. Before leaves were applied on the spot, the entire
+// like-side tree (authored with real `set_topic_weight` /
+// `set_publication_pref` actions) had never once run.
 //
 // Deliberately a PLAIN async function, not a hook, and with a module graph of
 // exactly one runtime import (the logger):

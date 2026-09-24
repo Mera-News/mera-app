@@ -155,14 +155,37 @@ jest.mock('@/components/custom/feedback-tree/FeedbackTreeLevel', () => {
                         p.onLeaf({ id: 'rel', labelKey: 'k', leaf: { nudge: 'browse_related' } }, [...p.pathIds, 'rel'])
                     }
                 />
+                <Pressable
+                    testID="tree-apply"
+                    onPress={() =>
+                        p.onLeaf(
+                            {
+                                id: 'less_entity',
+                                labelKey: 'k',
+                                labelDefault: 'Show less of {{entity}}',
+                                leaf: { actions: [{ type: 'add_suppression', pattern: 'from_context_entity', kind: 'entity', strength: 0.5 }] },
+                            },
+                            [...p.pathIds, 'less_entity'],
+                        )
+                    }
+                />
                 <Text testID="tree-context">{JSON.stringify(p.context)}</Text>
             </>
         ),
     };
 });
 let mockTreePromise: Promise<any> = Promise.resolve({ version: 1, root: [], likeRoot: [] });
+const mockRefreshTree = jest.fn(async () => {});
 jest.mock('@/lib/services/feedback-tree-service', () => ({
     getFeedbackTree: jest.fn(() => mockTreePromise),
+    refreshFeedbackTree: (...a: any[]) => mockRefreshTree(...(a as [])),
+}));
+const mockApplyLeaf = jest.fn(async (..._a: any[]) => 1);
+jest.mock('@/components/custom/feedback-tree/apply-leaf-actions', () => ({
+    applyLeafActions: (...a: any[]) => mockApplyLeaf(...a),
+}));
+jest.mock('@/components/custom/feedback-tree/label-vars', () => ({
+    feedbackNodeLabel: (_t: any, node: any, ctx: any) => `label:${node.id}:${ctx.entity ?? ''}`,
 }));
 const mockOpenArticleFeedback = jest.fn();
 jest.mock('@/lib/stores/floating-chat-store', () => ({
@@ -434,6 +457,15 @@ describe('the ••• sheet as a navigation stack', () => {
         expect(mockShowFeedback).not.toHaveBeenCalled();
     });
 
+    // The sheet is the only place the tree is shown, so it is also the only
+    // place that keeps the cached server tree fresh (throttled in the service).
+    it('kicks the throttled server-tree refresh when it prepares the tree', async () => {
+        const r = render(<Host />);
+        fireEvent.press(r.getByTestId('open-like-tree'));
+        await settle();
+        expect(mockRefreshTree).toHaveBeenCalledTimes(1);
+    });
+
     it('a tree opened directly (inline thumb, outside •••) has no Back row', async () => {
         const r = render(<Host rowActions={row(false)} />);
         fireEvent.press(r.getByTestId('open-like-tree'));
@@ -680,6 +712,22 @@ describe('host overrides for the Feed and detail thumbs', () => {
         fireEvent.press(r.getByTestId('open-like-tree'));
         await settle();
         expect(JSON.parse(r.getByTestId('tree-context').props.children)).toMatchObject({ entity: 'NATO' });
+    });
+});
+
+// The Undo toast names the leaf exactly as its row did: the shared labeller,
+// with this article's context (its variables filled), not the raw default.
+it('the applied leaf is summarised by the shared labeller, with the article context', async () => {
+    const resolveTreeContext = jest.fn(async () => ({ articleTitle: 'x', entity: 'NATO' }));
+    const r = render(<Host resolveTreeContext={resolveTreeContext} />);
+    fireEvent.press(r.getByTestId('open-like-tree'));
+    await settle();
+    fireEvent.press(r.getByTestId('tree-apply'));
+    dismiss();
+    await settle();
+    expect(mockApplyLeaf).toHaveBeenCalledWith(expect.any(Array), 'label:less_entity:NATO', {
+        articleId: 'art-1',
+        sentiment: 'like',
     });
 });
 

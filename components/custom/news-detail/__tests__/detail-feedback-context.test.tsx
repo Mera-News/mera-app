@@ -45,10 +45,6 @@ jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: (p: any) => <View {...p} /> };
 });
-jest.mock('@/components/custom/cards/CardFeedbackSurface', () => ({
-  __esModule: true,
-  default: () => null,
-}));
 jest.mock('@/lib/haptics', () => ({
   hapticLight: jest.fn(),
   hapticMedium: jest.fn(),

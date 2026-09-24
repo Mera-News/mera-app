@@ -2,7 +2,8 @@
 // tree levels (FeedbackTreeLevel) gate and resolves against, built from a
 // FeedbackSubject.
 //
-// Used by useArticleActions. It replaced two verbatim copies (the actions row
+// Used by useArticleMenu (the Feed card, the detail screen through its own
+// resolved subject, the compact rows, the Saved row). It replaced two verbatim copies (the actions row
 // and the old compact sheet) of the publication-visit lookup that both stopped there — so the gated
 // nodes (`cluster_size_gte`, `from_context_geo`, `from_context_category`,
 // `from_context_eventType`) were dead on those surfaces even though every field
