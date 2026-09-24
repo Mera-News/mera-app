@@ -187,12 +187,22 @@ describe('ArticleMetaRow centred publication (owner spec)', () => {
     mockBlocked = null;
   });
 
-  it('keeps an empty LEFT side on the Feed (no time), so the name stays centred', () => {
-    const { getByTestId, queryByTestId } = render(
+  // Owner: with no time on the left (Feed cards), the publication sits at the
+  // LEFT edge instead of centred, takes the remaining width and trims right.
+  it('Feed (no time): publication left-aligned, flag and language right', () => {
+    const { getByTestId, queryByTestId, getByText } = render(
       <ArticleMetaRow variant="card" {...base} showRecency={false} />,
     );
-    expect(flat(getByTestId('meta-left').props.style).flex).toBe(1);
+    expect(queryByTestId('meta-left')).toBeNull();
     expect(queryByTestId('meta-age-slot')).toBeNull();
+    const slot = flat(getByTestId('meta-publication-slot').props.style);
+    expect(slot.flex).toBe(1);
+    expect(slot.minWidth).toBe(0);
+    expect(flat(getByText('Der Spiegel').props.style).textAlign).toBe('left');
+    const ids = (getByTestId('meta-row') as any)
+      .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+      .map((n: any) => n.props.testID);
+    expect(ids.indexOf('meta-publication-slot')).toBeLessThan(ids.indexOf('meta-language-slot'));
   });
 
   it('shows the language on every card, the reader\'s own language included', () => {

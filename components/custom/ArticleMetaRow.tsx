@@ -9,6 +9,7 @@ import { useTimeTick } from '@/lib/time-tick';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 export type ArticleMetaRowVariant = 'card' | 'screen';
@@ -180,19 +181,68 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     // CARD and DETAIL rows with a publication (owner spec, ONE order for both):
     //
     //   |🕒 22h      📰 National Cyber Security Cen…      🇳🇱 Dutch|
-    //   |            📰 NOS                               🇳🇱 Dutch|   (Feed: no time)
     //
-    // Left: clock + age (+ NEW), or nothing on the Feed, which hides it.
+    // (Without a time, the Feed, the row returns above: publication left.)
+    // Left: clock + age (+ NEW).
     // Centre: the publication. Right: flag, then the language name, with NO
     // translate glyph in any state (owner decision: a failed translation is
     // explained by the detail screen's translation notice, not by this row).
     //
     // The two sides are equal `flex: 1` columns (start- and end-aligned), so
-    // the middle stays truly centred however different the sides are (an empty
-    // side included), and grows symmetrically as the name gets longer. Its
+    // the middle stays truly centred however different the sides are, and grows symmetrically as the name gets longer. Its
     // width is capped at min(58% of the row, row − 2 × the wider side),
     // measured with onLayout, so it never overlaps a side; past the cap it is
     // trimmed on the right. The sides never shrink.
+    const flagAndLanguage = (
+        <HStack className="items-center" space="xs" style={{ flexShrink: 0 }}>
+            {flagEl}
+            {showLanguageSlot && language ? (
+                <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-language-slot">
+                    <Text
+                        size="xs"
+                        className={secondaryColor}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        style={{ maxWidth: LANGUAGE_MAX_WIDTH }}
+                    >
+                        {language}
+                    </Text>
+                </HStack>
+            ) : null}
+        </HStack>
+    );
+
+    // No time on the left (Feed cards, owner Q5): nothing to balance, so the
+    // publication sits at the LEFT edge instead of centred, takes the
+    // remaining width and trims on the right; flag and language stay right.
+    //
+    //   |📰 De Telegraaf                               🇳🇱 Dutch|
+    if (!showRecency) {
+        return (
+            <HStack className="items-center" space="sm" testID="meta-row">
+                <HStack
+                    className="items-center"
+                    space="xs"
+                    style={{ flex: 1, minWidth: 0 }}
+                    testID="meta-publication-slot"
+                >
+                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
+                    <Text
+                        size="xs"
+                        bold
+                        className={secondaryColor}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        style={{ flexShrink: 1, textAlign: 'left' }}
+                    >
+                        {publication}
+                    </Text>
+                </HStack>
+                {flagAndLanguage}
+            </HStack>
+        );
+    }
+
     const sideWidth = Math.max(leftWidth, rightWidth);
     const publicationCap =
         rowWidth > 0
@@ -248,27 +298,9 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
             </HStack>
 
             <HStack className="items-center" style={{ flex: 1, justifyContent: 'flex-end' }} testID="meta-right">
-                <HStack
-                    className="items-center"
-                    space="xs"
-                    style={{ flexShrink: 0 }}
-                    onLayout={(e) => setRightWidth(Math.round(e.nativeEvent.layout.width))}
-                >
-                    {flagEl}
-                    {showLanguageSlot && language ? (
-                        <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-language-slot">
-                            <Text
-                                size="xs"
-                                className={secondaryColor}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                                style={{ maxWidth: LANGUAGE_MAX_WIDTH }}
-                            >
-                                {language}
-                            </Text>
-                        </HStack>
-                    ) : null}
-                </HStack>
+                <View onLayout={(e) => setRightWidth(Math.round(e.nativeEvent.layout.width))}>
+                    {flagAndLanguage}
+                </View>
             </HStack>
         </HStack>
     );
