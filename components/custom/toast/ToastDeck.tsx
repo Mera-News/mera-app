@@ -27,8 +27,8 @@ import { FullWindowOverlay } from 'react-native-screens';
  * piled up and then cleared together.
  *
  * Here the cards are a DECK: the front card is fully readable, the waiting ones
- * peek out behind it, scaled down and dimmed. The footprint is one card height
- * plus ~20pt of peek no matter how many are queued.
+ * peek out below it as narrower, dimmed strips. The footprint is one card height
+ * plus at most two 14pt strips, no matter how many are queued.
  *
  * Order is FIFO (owner call): the OLDEST card holds the front slot, later
  * arrivals wait behind it in arrival order and promote forward as each leaves.
@@ -41,17 +41,27 @@ import { FullWindowOverlay } from 'react-native-screens';
 const VISIBLE_DEPTH = 3;
 
 /**
- * Per-depth offset toward the middle of the screen, in points: the deck peeks
- * DOWNWARD.
+ * How much of each card behind the front one shows, in points. A buried card is
+ * drawn as ONLY this strip, hanging below the card in front of it; nothing of it
+ * lies over the front card's box.
  *
- * Bigger than the visible peek, because the scale below eats half of it: a
- * card scaled about its own centre pulls its bottom edge UP by
- * `height * (1 - scale) / 2`, which on a 140pt card is ~4pt at depth 1. At an
- * offset of 10 the sliver measured ~6pt on device and read as a rendering
- * artefact rather than a card. These land it at ~14pt per step.
+ * That is load-bearing, not tidiness. A buried card used to be a full-size,
+ * 55%-opaque panel sitting mostly UNDER the front card, and on device it
+ * painted OVER it despite rendering first and carrying a lower zIndex: the
+ * front's text measured 244 -> 160 brightness the moment a second toast queued.
+ * Geometry that cannot overlap does not depend on paint order at all.
  */
-const DEPTH_Y = [0, 18, 34];
-const DEPTH_SCALE = [1, 0.94, 0.88];
+const PEEK_PT = 14;
+
+/** Slot offset per depth. A strip's own top sits `PEEK_PT` above its slot's
+ *  offset, so depth d's strip spans [bottom + PEEK*(d-1), bottom + PEEK*d]. The
+ *  front (depth 0) also uses it as the travel a promoted card slides up. */
+const DEPTH_Y = [0, PEEK_PT, PEEK_PT * 2];
+/** Strip width relative to the front card: each step back is a little narrower,
+ *  which is what reads as a deck. Applied as WIDTH, never as a transform scale,
+ *  so a strip's edges stay exactly where the geometry puts them. */
+const DEPTH_WIDTH = [1, 0.94, 0.88];
+/** Only the strips are dimmed. The front card is always fully opaque. */
 const DEPTH_OPACITY = [1, 0.55, 0.3];
 
 /** The pre-existing enter feel, kept deliberately: fade in over 150ms from 24pt
@@ -135,7 +145,6 @@ function ToastSlot({
     // no test could see. A plain number closes over fine.
     const { height: screenHeight } = useWindowDimensions();
     const translateY = useSharedValue(0);
-    const scale = useSharedValue(1);
     const opacity = useSharedValue(0);
     const dragY = useSharedValue(0);
     const mounted = useRef(false);
@@ -143,13 +152,11 @@ function ToastSlot({
     useEffect(() => {
         const clamped = Math.min(depth, DEPTH_Y.length - 1);
         const targetY = DEPTH_Y[clamped];
-        const targetScale = DEPTH_SCALE[clamped];
         const targetOpacity = DEPTH_OPACITY[clamped];
         const motionMs = reduceMotion ? 0 : PROMOTE_MS;
 
         if (!mounted.current) {
             mounted.current = true;
-            scale.value = targetScale;
             if (leaving) {
                 // An exit clone is a fresh mount of a card the user was already
                 // looking at. It starts exactly where that card was and only
@@ -175,9 +182,8 @@ function ToastSlot({
         }
 
         translateY.value = withTiming(targetY, { duration: motionMs });
-        scale.value = withTiming(targetScale, { duration: motionMs });
         opacity.value = withTiming(targetOpacity, { duration: motionMs });
-    }, [depth, leaving, reduceMotion, opacity, scale, translateY]);
+    }, [depth, leaving, reduceMotion, opacity, translateY]);
 
     // The exit: fade back out the way the card came in.
     useEffect(() => {
@@ -221,7 +227,7 @@ function ToastSlot({
 
     const animatedStyle = useAnimatedStyle(() => ({
         opacity: opacity.value,
-        transform: [{ translateY: translateY.value + dragY.value }, { scale: scale.value }],
+        transform: [{ translateY: translateY.value + dragY.value }],
     }));
 
     return (
@@ -289,14 +295,20 @@ function ToastSlot({
                         <View
                             testID="toast-buried-panel"
                             style={{
-                                // The 4pt is `Toast`'s own `m-1`, which the
-                                // measured box includes.
-                                margin: 4,
-                                width: Math.max(0, frontSize.width - 8),
-                                height: Math.max(0, frontSize.height - 8),
-                                borderRadius: TOAST_RADIUS,
+                                // Starts at the front card's bottom edge (the
+                                // 4pt is `Toast`'s own `m-1`, which the measured
+                                // box includes), less this slot's own offset.
+                                marginTop: Math.max(0, frontSize.height - 4 - PEEK_PT),
+                                width: Math.max(
+                                    0,
+                                    (frontSize.width - 8) * DEPTH_WIDTH[Math.min(depth, DEPTH_WIDTH.length - 1)],
+                                ),
+                                height: PEEK_PT,
+                                borderBottomLeftRadius: TOAST_RADIUS,
+                                borderBottomRightRadius: TOAST_RADIUS,
                                 backgroundColor: MENU_PANEL_FILL,
                                 borderWidth: 1,
+                                borderTopWidth: 0,
                                 borderColor: MENU_PANEL_BORDER,
                             }}
                         />

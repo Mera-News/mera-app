@@ -152,6 +152,51 @@ describe('ToastDeck on iOS', () => {
         expect(ty(b)).toBeGreaterThan(ty(f));
     });
 
+    it('never overlaps the front card: its whole ancestor chain is opaque and the buried card is only the strip below it', () => {
+        const r = render(<ToastDeck />);
+        act(() => {
+            show({ duration: 5000, render: card('First') });
+            show({ duration: 5000, render: card('Second') });
+            show({ duration: 5000, render: card('Third') });
+        });
+        const FRONT_H = 80;
+        act(() => {
+            r.UNSAFE_root.findAll((n: any) => typeof n.props.onLayout === 'function')[0].props.onLayout({
+                nativeEvent: { layout: { width: 240, height: FRONT_H } },
+            });
+        });
+        // Effective opacity of the front text: the product along the chain.
+        let node: any = r.getByText('First');
+        let effective = 1;
+        while (node) {
+            const st = node.props?.style ? StyleSheet.flatten(node.props.style) : undefined;
+            if (st && typeof st.opacity === 'number') effective *= st.opacity;
+            node = node.parent;
+        }
+        expect(effective).toBe(1);
+
+        const ty = (st: any) => (st.transform ?? []).find((t: any) => 'translateY' in t)?.translateY ?? 0;
+        const strips = r.getAllByTestId('toast-buried-panel');
+        expect(strips).toHaveLength(2);
+        const frontBottom = FRONT_H - 4; // Toast's own m-1 margin
+        const edges: number[] = [];
+        for (const strip of strips) {
+            let slot: any = strip;
+            while (slot && !String(slot.props?.testID ?? '').startsWith('toast-slot-')) slot = slot.parent;
+            const slotStyle = StyleSheet.flatten(slot.props.style);
+            const own = StyleSheet.flatten(strip.props.style);
+            // No transform scale on a slot: it would move the strip's edges.
+            expect(slotStyle.transform.some((t: any) => 'scale' in t && t.scale !== 1)).toBe(false);
+            const top = ty(slotStyle) + (own.marginTop ?? 0);
+            // Starts at or below the front's bottom edge: nothing drawn over it.
+            expect(top).toBeGreaterThanOrEqual(frontBottom);
+            expect(own.height).toBeGreaterThanOrEqual(12);
+            edges.push(top);
+        }
+        // Two strips, stacked one under the other, not on top of each other.
+        expect(new Set(edges).size).toBe(2);
+    });
+
     it('detaches the overlay once the last card has faded out', () => {
         const { queryByTestId } = render(<ToastDeck />);
         act(() => {
