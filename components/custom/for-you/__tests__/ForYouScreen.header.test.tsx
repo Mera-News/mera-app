@@ -108,10 +108,6 @@ jest.mock('@/components/custom/for-you/ForYouSubTabs', () => {
   };
 });
 jest.mock('@/components/custom/for-you/StoriesSlotPlaceholder', () => mockStub('stories'));
-jest.mock('@/components/custom/for-you/FeedStatusSheet', () => {
-  const { View } = require('react-native');
-  return { __esModule: true, default: (p: any) => <View testID="status-sheet" isOpen={p.isOpen} /> };
-});
 jest.mock('@/components/custom/for-you/DashboardSectionsFeed', () => mockStub('sections'));
 jest.mock('@/components/custom/fact-checks/FactChecksPanel', () => mockStub('fact-checks'));
 jest.mock('@/components/custom/for-you/FeedStatsSentence', () => mockStub('stats-sentence'));
@@ -188,88 +184,36 @@ afterEach(() => jest.restoreAllMocks());
 const rowHeight = () => StyleSheet.flatten(screen.getByTestId('dashboard-status-row').props.style);
 
 describe('Dashboard header', () => {
-  it('keeps the title while a sync narrates (D6)', () => {
+  it('keeps the title while syncing (D6)', () => {
     mockProcessing = true;
     render(<ForYouScreen />);
     expect(screen.getByText('feed.dashboardTitle')).toBeTruthy();
-    expect(screen.getByTestId('dashboard-narration-line')).toBeTruthy();
+    expect(screen.getByTestId('dashboard-status-indicator')).toBeTruthy();
   });
 
-  it('puts the narration on its own one-line row, not beside the title (N11)', () => {
+  it('has no status sentence row at all: no narration while syncing (owner decision)', () => {
     mockProcessing = true;
     render(<ForYouScreen />);
-    const titleRow = screen.getByTestId('dashboard-header-title-row');
-    expect(titleRow.findAll((n: any) => n.props.testID === 'dashboard-narration-line')).toHaveLength(0);
-    expect(screen.getByTestId('dashboard-narration-line').props.numberOfLines).toBe(1);
+    expect(screen.queryByTestId('dashboard-status-row')).toBeNull();
+    expect(screen.queryByTestId('dashboard-narration-line')).toBeNull();
   });
 
-  it('pins the status row to one height whether narrating, updated or empty', () => {
-    const heights: unknown[] = [];
-    mockLastNewArticlesAt = null;
-    const a = render(<ForYouScreen />);
-    heights.push(rowHeight().height);
-    a.unmount();
-    mockLastNewArticlesAt = Date.now() - 5 * 60_000;
-    const b = render(<ForYouScreen />);
-    heights.push(rowHeight().height);
-    b.unmount();
-    mockProcessing = true;
+  it('has no "Updated" line at rest either', () => {
+    mockLastNewArticlesAt = Date.now() - 10_000;
     render(<ForYouScreen />);
-    heights.push(rowHeight().height);
-    expect(new Set(heights).size).toBe(1);
-    expect(heights[0]).toBe(21);
+    expect(screen.queryByTestId('dashboard-status-row')).toBeNull();
+    expect(screen.queryByTestId('dashboard-updated-label')).toBeNull();
   });
 
-  it('lets the row grow at a large text size', () => {
-    mockFontScale = 1.5;
-    mockProcessing = true;
+  it('mounts no modal status sheet: the mark toggles the inline panel', () => {
     render(<ForYouScreen />);
-    expect(rowHeight().height).toBeUndefined();
-    expect(rowHeight().minHeight).toBe(21);
-    expect(screen.getByTestId('dashboard-narration-line').props.numberOfLines).toBe(3);
-  });
-
-  it('lets the row wrap already at the next text size up, not only past 1.2', () => {
-    // The widest line fills 329 of 335pt at 14pt; at xLarge (~1.12) it would
-    // overflow a pinned one-line row.
-    mockFontScale = 1.12;
-    mockProcessing = true;
-    render(<ForYouScreen />);
-    expect(rowHeight().height).toBeUndefined();
-    expect(screen.getByTestId('dashboard-narration-line').props.numberOfLines).toBe(3);
+    expect(screen.queryByTestId('status-sheet')).toBeNull();
+    expect(screen.getByTestId('status-panel')).toBeTruthy();
   });
 
   it('hands the status-bar scrim the header\'s hidden value (F21)', () => {
     render(<ForYouScreen />);
     expect(screen.getByTestId('scrim').props.coverProgress).toEqual({ value: 0, __hidden: true });
-  });
-
-  it('says "Updated just now" in sentence case under a minute (F16)', () => {
-    mockLastNewArticlesAt = Date.now() - 10_000;
-    render(<ForYouScreen />);
-    expect(screen.getByTestId('dashboard-updated-label').props.children).toBe('feed.updatedJustNow');
-  });
-
-  it('dates "Updated" from new articles, and shows nothing before any arrived', () => {
-    render(<ForYouScreen />);
-    expect(screen.queryByTestId('dashboard-updated-label')).toBeNull();
-  });
-
-  it('keeps the status row a way into the status sheet while narrating', () => {
-    mockProcessing = true;
-    render(<ForYouScreen />);
-    expect(screen.getByTestId('status-sheet').props.isOpen).toBe(false);
-    const row = screen.getByTestId('dashboard-header-narration');
-    expect(row.props.accessibilityRole).toBe('button');
-    fireEvent.press(row);
-    expect(screen.getByTestId('status-sheet').props.isOpen).toBe(true);
-  });
-
-  it('never says "Updated" while a run is going', () => {
-    mockLastNewArticlesAt = Date.now() - 10_000;
-    mockProcessing = true;
-    render(<ForYouScreen />);
-    expect(screen.queryByTestId('dashboard-updated-label')).toBeNull();
   });
 
   it('shows the stats sentence on Overview only (M3)', () => {

@@ -29,11 +29,11 @@ export interface FeedStatusDetailsProps {
     /** Human relative label for the last finished processing run, or null. */
     readonly lastProcessedLabel: string | null;
     /**
-     * Called right before the daily-limit "Manage" pill navigates. The sheet
-     * passes its `onClose` here: the body renders inside an RN Modal, and a
+     * Called right before the daily-limit "Manage" pill navigates. A host that
+     * renders this body inside an RN Modal passes its close here: a
      * `router.push` out of an open modal leaves the pushed screen stranded
-     * behind the backdrop. The inline shimmer accordion is not a modal, so it
-     * passes nothing.
+     * behind the backdrop. The inline status panel is not a modal and passes
+     * nothing.
      */
     readonly onBeforeNavigate?: () => void;
 }
@@ -56,8 +56,8 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
  * copy + selectors the four legacy header banners used to show — current pipeline
  * stage, cloud/device progress, the processed/analysed/relevant counts,
  * last-processed time, the daily-limit notice, and any scoring error. It is
- * rendered in TWO places: inside the FeedStatusSheet modal body, and inline in
- * the FeedStatusShimmer expand accordion — so the copy is never duplicated.
+ * rendered in ONE place, the inline status panel both tabs open from their
+ * status mark (FeedStatusPanel).
  */
 const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
     lastProcessedLabel,

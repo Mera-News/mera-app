@@ -12,11 +12,7 @@ import {
     HEADER_TITLE_MIN_SCALE,
 } from '@/lib/typography/header-title-size';
 import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
-import HeaderNarrationLine from '@/components/custom/for-you/HeaderNarrationLine';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
-import { HEADER_NARRATION_METRICS, NARRATION_COLOR } from '@/components/custom/for-you/header-narration';
-import { Text } from '@/components/ui/text';
-import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import {
@@ -29,7 +25,6 @@ import NotificationBellButton from '@/components/custom/notifications/Notificati
 import DashboardEmptyState from '@/components/custom/for-you/DashboardEmptyState';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
-import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FactChecksPanel from '@/components/custom/fact-checks/FactChecksPanel';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
@@ -44,7 +39,6 @@ import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
 import { getFacts } from '@/lib/database/services/fact-service';
@@ -53,9 +47,7 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import {
     useForYouAsyncJobPhase,
-    useForYouDeviceProcessing,
     useForYouHasGeneratedTopics,
-    useForYouLastNewArticlesAt,
     useForYouLastProcessingRunFinishedAt,
     useForYouSuggestions,
     useForYouSyncStatusMessage,
@@ -91,11 +83,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // the gesture: the strip was its only caller.
 
 
-/** Above this OS text scale the status row may wrap and the header grow. 1.0,
- *  not higher: the one-line budget is measured at 14pt, the widest line fills
- *  329 of 335pt, and the narration scales with Dynamic Type, so the very next
- *  size up (xLarge, ~1.12) would overflow a pinned one-line row. */
-const LARGE_TEXT_SCALE = 1.0;
 
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -221,9 +208,6 @@ const MeraNewsScreen: React.FC = () => {
         resetScrollOrigin();
     }, [reveal, resetScrollOrigin]);
 
-    // Feed-status detail sheet (opened from the header status line + shimmer).
-    const [statusSheetOpen, setStatusSheetOpen] = useState(false);
-    const openStatusSheet = useCallback(() => setStatusSheetOpen(true), []);
 
     // Pull-to-refresh — the SAME handler the Feed tab uses. `refreshing` tracks
     // the scheduler's feed-sync flag (not local state), so it rises on the same
@@ -242,17 +226,16 @@ const MeraNewsScreen: React.FC = () => {
     const scoringError = useForYouScoringError();
     const dailyLimitResetAt = useForYouDailyLimitResetAt();
     const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
-    const lastNewArticlesAt = useForYouLastNewArticlesAt();
     const [nowTick, setNowTick] = useState(() => Date.now());
 
     useEffect(() => {
         // Pause the ticking clock while blurred; re-arm + snap forward on focus.
         if (!isFocused) return;
-        if (!lastProcessingRunFinishedAt && !dailyLimitResetAt && !lastNewArticlesAt) return;
+        if (!lastProcessingRunFinishedAt && !dailyLimitResetAt) return;
         setNowTick(Date.now());
         const id = setInterval(() => setNowTick(Date.now()), 30_000);
         return () => clearInterval(id);
-    }, [isFocused, lastProcessingRunFinishedAt, dailyLimitResetAt, lastNewArticlesAt]);
+    }, [isFocused, lastProcessingRunFinishedAt, dailyLimitResetAt]);
 
     // "Last processed" in the status panel and sheet: when a run last finished,
     // including one that found nothing. That is what the words say.
@@ -261,17 +244,6 @@ const MeraNewsScreen: React.FC = () => {
         return formatTimeAgo(t, lastProcessingRunFinishedAt, { now: nowTick });
     }, [lastProcessingRunFinishedAt, nowTick, t]);
 
-    // "Updated <time>" in the header: when new articles last ARRIVED
-    // (`lastNewArticlesAt`), never when a poll that found nothing finished,
-    // which reset it to "just now" while the reader was reading (F16). Null
-    // until a sync has delivered something, and then the row simply shows
-    // nothing. Under a minute it is its own sentence-case string: splicing
-    // "Just now" into "Updated {{time}}" read "Updated Just now".
-    const updatedLabel = useMemo(() => {
-        if (!lastNewArticlesAt) return null;
-        if (nowTick - lastNewArticlesAt < 60_000) return t('feed.updatedJustNow');
-        return t('feed.updatedAt', { time: formatTimeAgo(t, lastNewArticlesAt, { now: nowTick }) });
-    }, [lastNewArticlesAt, nowTick, t]);
 
     // Any client-visible fetch/scoring work still in flight — the shared
     // derivation (see components/custom/FeedSyncIndicator). Used here only for
@@ -317,8 +289,9 @@ const MeraNewsScreen: React.FC = () => {
     const narrating = isFeedProcessing;
 
     // The narration stops cycling when the sync ends (the line unmounts) and
-    // the end is announced ONCE to a screen reader, rather than the line being
-    // a live region that talks over the list every four seconds.
+    // the end is announced ONCE to a screen reader. With no status line, the
+    // mark is the only visual signal, so this announcement is what tells a
+    // VoiceOver reader the sync has finished.
     const wasNarrating = useRef(narrating);
     useEffect(() => {
         if (wasNarrating.current && !narrating && isFocused) {
@@ -326,12 +299,6 @@ const MeraNewsScreen: React.FC = () => {
         }
         wasNarrating.current = narrating;
     }, [narrating, isFocused, t]);
-    // Read for the STAGE only. The snapshot's own `visible` is the wider
-    // scheduler-inclusive question and is deliberately not consulted here.
-    // No parameter is added to the snapshot for this; on-device is its own
-    // store read, the same one the snapshot itself makes.
-    const { stage } = useProcessingSnapshot();
-    const { isDeviceProcessing } = useForYouDeviceProcessing();
 
     // The user is over their daily delivery cap (sticky until a sync delivers
     // again or the reset time passes).
@@ -520,24 +487,13 @@ const MeraNewsScreen: React.FC = () => {
 
     // ── Header rows ─────────────────────────────────────────────────────────
     //
-    // The TITLE IS ALWAYS SHOWN (D6). It used to step aside while a sync ran
-    // and hand its slot to the narration, which then had 88pt beside the mark
-    // and the bell: "Dashboard" is 184pt wide. The narration truncated
-    // mid-sentence and the screen lost its name. The status sentence now has
-    // its OWN full-width row under the title (N11), one line at every text
-    // size up to large, and the row is height-PINNED in every state, empty
-    // included, so a sync starting or ending never moves the header, and so
-    // never moves the four panels padded by its height. At a large text size
-    // the row may wrap to three lines and the header grows once.
-    //
-    // The Feed still puts its line beside its title: its title is 82pt and it
-    // has no bell, so it has 245pt there. Do not unify without re-measuring.
-    const { fontScale } = useWindowDimensions();
-    const statusRowLines = fontScale > LARGE_TEXT_SCALE ? 3 : 1;
-    const statusRowStyle =
-        statusRowLines === 1
-            ? { height: HEADER_NARRATION_METRICS.lineHeight }
-            : { minHeight: HEADER_NARRATION_METRICS.lineHeight };
+    // The TITLE IS ALWAYS SHOWN (D6), and there is NO status sentence row
+    // (owner decision): while a sync runs, the Mera mark beside the title
+    // scales up and animates, and that is the whole signal. The mark's scale
+    // is a transform inside the pinned title row, so the header is the same
+    // height at rest and syncing. Tapping the mark toggles the inline status
+    // panel, which also carries "Last processed". The Feed keeps its own
+    // inline narration.
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.
         <Box className="flex-1" testID="dashboard-screen">
@@ -771,56 +727,6 @@ const MeraNewsScreen: React.FC = () => {
                         </HStack>
                     </HStack>
 
-                    {/* The status row: full width, its own line, pinned. While a
-                        sync runs it narrates; otherwise it says when new
-                        articles last arrived, and a tap opens the status sheet.
-                        Never "Updated" while a run is going. */}
-                    <View
-                        pointerEvents="box-none"
-                        className="mb-2"
-                        style={statusRowStyle}
-                        testID="dashboard-status-row"
-                    >
-                        {narrating ? (
-                            // Still the way into the status sheet while a sync
-                            // runs; the status mark should not be the only one.
-                            <Pressable
-                                onPress={openStatusSheet}
-                                hitSlop={8}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('feedStatus.openA11y')}
-                                testID="dashboard-header-narration"
-                            >
-                                <HeaderNarrationLine
-                                    stage={stage}
-                                    onDevice={isDeviceProcessing}
-                                    layout="row"
-                                    maxLines={statusRowLines}
-                                    testID="dashboard-narration-line"
-                                />
-                            </Pressable>
-                        ) : updatedLabel ? (
-                            <Pressable
-                                onPress={openStatusSheet}
-                                hitSlop={8}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('feedStatus.openA11y')}
-                                testID="dashboard-open-status-sheet"
-                            >
-                                <Text
-                                    numberOfLines={statusRowLines}
-                                    style={{
-                                        color: NARRATION_COLOR,
-                                        fontSize: HEADER_NARRATION_METRICS.fontSize,
-                                        lineHeight: HEADER_NARRATION_METRICS.lineHeight,
-                                    }}
-                                    testID="dashboard-updated-label"
-                                >
-                                    {updatedLabel}
-                                </Text>
-                            </Pressable>
-                        ) : null}
-                    </View>
 
                     {/* Stats sentence — decorative text, never tapped: fully
                         transparent to touches so a pull can start on it. */}
@@ -862,12 +768,6 @@ const MeraNewsScreen: React.FC = () => {
 
             {/* Right edge swipe hitbox */}
 
-            {/* Feed-status detail sheet. */}
-            <FeedStatusSheet
-                isOpen={statusSheetOpen}
-                onClose={() => setStatusSheetOpen(false)}
-                lastProcessedLabel={lastProcessedLabel}
-            />
         </Box>
     );
 };
