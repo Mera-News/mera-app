@@ -1,0 +1,103 @@
+{
+  "_comment": "ux1 P3: sentence case for preferences.reportBug (owner: Settings copy is sentence case, like 'Talk to support' beside it). Changed: en 'Report a Bug' -> 'Report a bug', id 'Laporkan Bug' -> 'Laporkan bug'. The other 18 locales are carried unchanged only because the splice script requires every locale in a fragment. Splice with: --allow-overwrite preferences.reportBug",
+  "en": {
+    "preferences": {
+      "reportBug": "Report a bug"
+    }
+  },
+  "de": {
+    "preferences": {
+      "reportBug": "Fehler melden"
+    }
+  },
+  "es": {
+    "preferences": {
+      "reportBug": "Informar de un error"
+    }
+  },
+  "fr": {
+    "preferences": {
+      "reportBug": "Signaler un bug"
+    }
+  },
+  "hi": {
+    "preferences": {
+      "reportBug": "बग रिपोर्ट करें"
+    }
+  },
+  "id": {
+    "preferences": {
+      "reportBug": "Laporkan bug"
+    }
+  },
+  "it": {
+    "preferences": {
+      "reportBug": "Segnala un bug"
+    }
+  },
+  "ja": {
+    "preferences": {
+      "reportBug": "バグを報告"
+    }
+  },
+  "ko": {
+    "preferences": {
+      "reportBug": "버그 신고"
+    }
+  },
+  "nl": {
+    "preferences": {
+      "reportBug": "Een bug melden"
+    }
+  },
+  "pl": {
+    "preferences": {
+      "reportBug": "Zgłoś błąd"
+    }
+  },
+  "pt-BR": {
+    "preferences": {
+      "reportBug": "Relatar um bug"
+    }
+  },
+  "ru": {
+    "preferences": {
+      "reportBug": "Сообщить об ошибке"
+    }
+  },
+  "th": {
+    "preferences": {
+      "reportBug": "รายงานข้อบกพร่อง"
+    }
+  },
+  "tr": {
+    "preferences": {
+      "reportBug": "Hata bildir"
+    }
+  },
+  "uk": {
+    "preferences": {
+      "reportBug": "Повідомити про помилку"
+    }
+  },
+  "vi": {
+    "preferences": {
+      "reportBug": "Báo lỗi"
+    }
+  },
+  "zh-CN": {
+    "preferences": {
+      "reportBug": "报告问题"
+    }
+  },
+  "zh-TW": {
+    "preferences": {
+      "reportBug": "回報問題"
+    }
+  },
+  "ar": {
+    "preferences": {
+      "reportBug": "الإبلاغ عن خطأ"
+    }
+  }
+}
