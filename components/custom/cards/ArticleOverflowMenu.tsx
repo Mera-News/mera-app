@@ -287,7 +287,10 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                             >
                                 {title?.trim() ? title.trim() : t('articleMenu.title')}
                             </Text>
-                            <View>
+                            {/* The level viewport CLIPS: on a push to a shorter level the
+                                sheet shrinks to the new height while the outgoing rows are
+                                still sliding, and unclipped they spill over Cancel. */}
+                            <View testID="article-menu-viewport" style={{ overflow: 'hidden' }}>
                                 <Animated.View
                                     key={levelKey}
                                     testID="article-menu-level"

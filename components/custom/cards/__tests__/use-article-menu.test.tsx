@@ -768,6 +768,21 @@ describe('the level transition', () => {
         expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
     });
 
+    // Batch 13: on a push to a SHORTER level the sheet shrinks to the new
+    // height while the outgoing rows are still sliding, and they spilled below
+    // the sheet over Cancel for a frame. The viewport holding both levels clips.
+    it('clips the sliding levels to their viewport, so outgoing rows never spill over Cancel', async () => {
+        const r = openMenu(<Host rowActions={row()} />);
+        await settle();
+        fireEvent.press(r.getByTestId('menu-like'));
+        const out = r.getByTestId('article-menu-level-out', HIDDEN);
+        const viewport = r.getByTestId('article-menu-viewport');
+        let inside = false;
+        for (let p: any = out; p; p = p.parent) if (p === viewport) inside = true;
+        expect(inside).toBe(true);
+        expect(StyleSheet.flatten(viewport.props.style)).toEqual(expect.objectContaining({ overflow: 'hidden' }));
+    });
+
     it('Back does the same in reverse, and the level it returns to is never blank', async () => {
         const r = openMenu(<Host rowActions={row()} />);
         await settle();
