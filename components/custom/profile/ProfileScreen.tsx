@@ -243,7 +243,30 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
 
                 {/* 3 — Refresh Suggestions, moved here from AdvancedHubScreen,
                     in the bottom slot the "Advanced" row used to occupy. */}
-                <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
+                <View
+                    testID="advanced-hub-refresh-frame"
+                    style={{
+                        marginHorizontal: 16,
+                        marginTop: 12,
+                        marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12,
+                        position: 'relative',
+                        // Batch 17: the Button's own painted box correctly
+                        // grew to 44pt (Batch 16's fix), but this View's
+                        // OWN reserved slot for margin/sibling purposes did
+                        // not — it stayed at the button's PRE-fix ~31.3pt,
+                        // so the margin below (6pt) was computed from the
+                        // wrong edge, overlapping the hint by ~6.7pt, and
+                        // the glow ring (absolutely positioned against THIS
+                        // View, not the Button) fell short of the button's
+                        // real bottom by the same amount. Pinning the
+                        // View's own minHeight fixes both from one place,
+                        // regardless of why the Button's height didn't
+                        // propagate here — the margin value itself is
+                        // unchanged, so the gap is the same one it had
+                        // before, now measured from the correct edge.
+                        minHeight: 44,
+                    }}
+                >
                     {feedNeedsRefresh && !isRefreshingSuggestions && (
                         <Animated.View
                             pointerEvents="none"

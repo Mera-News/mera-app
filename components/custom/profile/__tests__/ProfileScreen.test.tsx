@@ -465,4 +465,21 @@ describe('ProfileScreen', () => {
         const flat = Array.isArray(style) ? Object.assign({}, ...style) : style;
         expect(flat?.minHeight).toBeGreaterThanOrEqual(44);
     });
+
+    // Batch 17: STRUCTURAL guard only — jest runs no layout engine, so it
+    // cannot reproduce or catch the actual overlap (the button's painted box
+    // grew to 44pt in Batch 16 while this wrapper's OWN reserved slot stayed
+    // at the button's pre-fix height, which is exactly what a jest test
+    // asserting only `style.minHeight` on the BUTTON already passed without
+    // catching). This asserts the fix is present in the style tree, nothing
+    // about real pixels. See the capture request in the P2 report for the
+    // assertion that actually verifies the geometry.
+    it('the Refresh Suggestions frame reserves at least 44pt (structural, not a layout proof)', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-frame')).toBeTruthy());
+        const style = getByTestId('advanced-hub-refresh-frame').props.style;
+        const flat = Array.isArray(style) ? Object.assign({}, ...style) : style;
+        expect(flat?.minHeight).toBeGreaterThanOrEqual(44);
+    });
 });
