@@ -78,8 +78,8 @@ residence.
 | interest | hobbies, sport played or followed, teams, artists, genres, games, shows, opinions, possessions, and anything the other four miss |
 
 Subject tie-breaks:
-- **Both** origin and current residence in one turn goes to **origin**: it is one fact, and origin
-  owns it.
+- **Both** origin and current home in one turn go to **origin**, which offers them as separate
+  facts.
 - A relative's location is **family**, never residence. The user is not there.
 - A workplace city is **profession** when the turn is about the work, **residence** when it is about
   the move.

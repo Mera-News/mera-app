@@ -1,12 +1,24 @@
 {
-  "id": "ux1-origin-and-move",
+  "id": "ux1-move-country",
   "cohort": "production",
-  "note": "ux1 Q1+Q2. Origin and a new current city in one message are TWO facts: the origin under its own key, and the move as a residence element that replaces the old home directly (the card is the consent, no replacement chip).",
+  "note": "ux1 owner decision: a move to another country replaces the residence AND offers to update the expat status.",
   "persona": {
     "facts": [
       {
-        "id": "f1",
-        "statement": "Lives in Amsterdam, North Holland, Netherlands, EU",
+        "id": "o",
+        "statement": "From India",
+        "questionnaireAttribute": "background: country of origin",
+        "kind": "origin"
+      },
+      {
+        "id": "x",
+        "statement": "Expat in The Netherlands",
+        "questionnaireAttribute": "background: expat in country of residence",
+        "kind": "origin"
+      },
+      {
+        "id": "h",
+        "statement": "Lives in Amsterdam, North Holland, The Netherlands, EU",
         "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
         "kind": "residence"
       }
@@ -17,10 +29,10 @@
   "turns": [
     {
       "index": 0,
-      "user": "I'm originally from India and I live in Berlin now",
+      "user": "I moved to Berlin last month",
       "expect": {
-        "routeKind": "origin",
-        "skill": "facts/origin",
+        "routeKind": "residence",
+        "skill": "facts/residence",
         "tools": [
           "load_skill",
           "lookup_place",
@@ -31,11 +43,11 @@
         "proposals": [
           {
             "statementMatches": [
-              "india"
+              "berlin"
             ],
-            "kind": "origin",
-            "placeChain": null,
-            "replaces": null
+            "kind": "residence",
+            "placeChain": "required",
+            "replaces": "h"
           },
           {
             "statementMatches": [
@@ -44,15 +56,7 @@
             ],
             "kind": "origin",
             "placeChain": null,
-            "replaces": null
-          },
-          {
-            "statementMatches": [
-              "berlin"
-            ],
-            "kind": "origin",
-            "placeChain": "required",
-            "replaces": "f1"
+            "replaces": "x"
           }
         ]
       },
@@ -80,10 +84,10 @@
             "returns": {
               "candidates": [
                 {
-                  "factId": "f1",
-                  "statement": "Lives in Amsterdam, North Holland, Netherlands, EU",
+                  "factId": "h",
+                  "statement": "Lives in Amsterdam, North Holland, The Netherlands, EU",
                   "attribute": "location: neighborhood/area, city, and country (preserve specifics)",
-                  "overlap": 0.4
+                  "overlap": 1
                 }
               ]
             }

@@ -16,5 +16,7 @@ describe.each(MODES)('the %s persona prompt', (mode) => {
     expect(p).not.toMatch(/Compose the two/);
     expect(p).not.toMatch(/IDENTITY COMPOSITION/);
     expect(p).toContain('background: country of origin');
+    // Owner decision: an expat is THREE facts, the middle one its own key.
+    expect(p).toContain('background: expat in country of residence');
   });
 });

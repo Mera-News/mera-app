@@ -530,7 +530,7 @@ ${conversationGuide}
 - **AMBIGUOUS FACT? EXTRACT IT ALONE.** If one thing the user said has more than one reading, propose only that fact this turn and resolve it before extracting anything else — a card per fact is how the user answers one question at a time.
 - **NEVER REPAIR GRAMMAR ACROSS A POSSIBLE NAME.** Do not insert, remove or change an article ("a", "the") or a preposition inside a span that could be a proper noun — a club, company, place, product or team. Keep the user's own wording and capitalisation for that span, even when the result reads awkwardly. Smoothing the phrase silently PICKS one reading and destroys the other. "interested in sporting football club" names **Sporting** the club; ✗ "Interested in sporting a football club" (that inserted "a" decides "sporting" is a verb and the club is gone). If two readings are genuinely possible, keep the user's span verbatim and ASK which they meant — never guess in the statement.
 - ATOMIC — one concept per fact. "interested in AI and blockchain" → two facts. "software engineer & expat from India" → two facts (profession and identity are different concepts).
-- **ORIGIN IS ITS OWN FACT.** Where the user is FROM and where they LIVE NOW are two facts: they change on different days, and a move must never rewrite an origin. "expat from India" → "Expat from India", attribute "background: country of origin". If the turn also names the current city, that city is a SEPARATE residence fact under the location key. ✗ NEVER one statement like "Expat from India living in Amsterdam". ✗ NEVER "Expatriate / lives outside country of origin": it names no country, a placeholder, never a fact.
+- **AN EXPAT IS THREE FACTS.** Where the user is FROM, that they are an EXPAT in their current country, and where they LIVE NOW are separate facts, each saved on its own: "From India" (attribute "background: country of origin"), "Expat in The Netherlands" (attribute "background: expat in country of residence", only when the two countries differ), and the residence under the location key. ✗ NEVER one statement like "Expat from India living in Amsterdam". ✗ NEVER "Expatriate / lives outside country of origin": it names no country, a placeholder, never a fact.
 - <200 chars. No "User" prefix. Never save placeholder/negative/meta facts ("No stocks held", "Speaks English", "User greeted assistant"). Never save language prefs as facts (use updateUserConfig).
 - Greeting/navigation only ("Hi", "Help me set up", "Let's start") → empty extract.
 - CROSS-REFERENCE Known Facts only for the SAME subject. "got promoted to senior engineer" + Known: "Works at Google" → "Senior engineer at Google". Never combine different subjects (workplace ≠ parents' location, origin ≠ current home).
@@ -543,8 +543,8 @@ ${isOnboarding ? '' : '- ADDITIVE by default — only replace on explicit same-s
 
 ## Off-script extraction example (ORIGIN in practice)
 Asked: "What do you do for work?" — User: "I'm an expat from India".
-- Known Facts ALREADY give a current city (e.g. "Lives in Amsterdam, Netherlands") → save exactly ONE fact: "Expat from India", attribute "background: country of origin". Leave the residence fact as it is; never replace it with the origin.
-- Current city NOT known → save the same ONE fact and ASK for the city: reply "Got it. Which city are you living in now, and what do you do for work?". The city, when it comes, is its own residence fact.
+- Known Facts ALREADY give a current city (e.g. "Lives in Amsterdam, Netherlands") → save TWO facts: "From India" (attribute "background: country of origin") and "Expat in the Netherlands" (attribute "background: expat in country of residence"). Leave the residence fact as it is; never replace it.
+- Current city NOT known → save "From India" and ASK for the city: reply "Got it. Which city are you living in now, and what do you do for work?". The city, when it comes, is its own residence fact, plus the expat status for its country.
 Either way return to the unanswered question — do NOT just repeat "What do you do for work?".
 
 ## Config & Deletion
@@ -583,7 +583,7 @@ function buildPersonaUpdateLocalPrompt(params: {
 - ${languageRule}
 - **Save first, then ask.** Save anything the user volunteers before asking. Acknowledge briefly, then ask one follow-up or the next question.
 - **Read Known Facts before asking** — if the city is known, never ask for the city again.
-- **Off-script example.** "I'm an expat from India" + known "Lives in Amsterdam" → ONE fact \`{"statement": "Expat from India", "questionnaire_attribute": "background: country of origin"}\`. Origin and current city are always two facts, never one.${isOnboarding ? '\n- A welcome message was already shown — ask the first unanswered question below.' : ''}
+- **Off-script example.** "I'm an expat from India", known "Lives in Amsterdam" → \`{"statement": "From India", "questionnaire_attribute": "background: country of origin"}\` and \`{"statement": "Expat in the Netherlands", "questionnaire_attribute": "background: expat in country of residence"}\`, never one fact.${isOnboarding ? '\n- A welcome message was already shown — ask the first unanswered question below.' : ''}
 - Stay on profile/news topics; redirect off-topic politely.
 
 ## Questions to explore

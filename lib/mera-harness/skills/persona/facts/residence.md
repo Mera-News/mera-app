@@ -26,10 +26,11 @@ to its full chain. Fill every rung the lookup gives you and invent none.
 Residence is one fact. A turn that also carries a job or a partner carries other facts too: offer
 each as its own element.
 
-**Where they are from is its own fact.** If the turn also says the user is an expat, a migrant or
-originally from somewhere else, offer that as a second element under `background: country of
-origin` ("Expat from India"). Never fold it into the residence statement, and never offer
-"Expatriate", which names no country at all.
+**Where they are from is its own fact**, and so is being an expat. If the turn says the user is
+an expat or from somewhere else, offer "From India" (`background: country of origin`) and
+"Expat in The Netherlands" (`background: expat in country of residence`) as their own elements.
+Never fold either into the residence statement. A move to another country is also an expat-status
+change: Mera adds that update to the move itself.
 
 A move is still one fact. Offer the new residence and let the replacement rule below retire the old
 one. Offer a second reading only when the two would retrieve different news.

@@ -1,23 +1,16 @@
 {
-  "id": "ux1-origin-and-move",
+  "id": "ux1-expat-three-facts",
   "cohort": "production",
-  "note": "ux1 Q1+Q2. Origin and a new current city in one message are TWO facts: the origin under its own key, and the move as a residence element that replaces the old home directly (the card is the consent, no replacement chip).",
+  "note": "ux1 owner decision: an expat statement yields THREE separate facts (origin, expat status, residence), each under its own key, never the combined key.",
   "persona": {
-    "facts": [
-      {
-        "id": "f1",
-        "statement": "Lives in Amsterdam, North Holland, Netherlands, EU",
-        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
-        "kind": "residence"
-      }
-    ],
+    "facts": [],
     "topics": []
   },
   "declinedTopics": [],
   "turns": [
     {
       "index": 0,
-      "user": "I'm originally from India and I live in Berlin now",
+      "user": "I'm an expat from India living in Nieuw-West, Amsterdam",
       "expect": {
         "routeKind": "origin",
         "skill": "facts/origin",
@@ -40,7 +33,7 @@
           {
             "statementMatches": [
               "expat",
-              "germany"
+              "netherlands"
             ],
             "kind": "origin",
             "placeChain": null,
@@ -48,26 +41,27 @@
           },
           {
             "statementMatches": [
-              "berlin"
+              "amsterdam"
             ],
             "kind": "origin",
             "placeChain": "required",
-            "replaces": "f1"
+            "replaces": null
           }
         ]
       },
       "fakeTools": {
         "lookup_place": [
           {
-            "query": "Berlin",
+            "query": "Nieuw-West, Amsterdam",
             "returns": {
               "status": "resolved",
               "places": [
                 {
-                  "locality": "Berlin",
-                  "admin1": "Berlin",
-                  "countryCode": "DE",
-                  "countryName": "Germany",
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
                   "bloc": "EU"
                 }
               ]
@@ -76,16 +70,9 @@
         ],
         "find_similar_facts": [
           {
-            "kind": "residence",
+            "kind": null,
             "returns": {
-              "candidates": [
-                {
-                  "factId": "f1",
-                  "statement": "Lives in Amsterdam, North Holland, Netherlands, EU",
-                  "attribute": "location: neighborhood/area, city, and country (preserve specifics)",
-                  "overlap": 0.4
-                }
-              ]
+              "candidates": []
             }
           }
         ]
