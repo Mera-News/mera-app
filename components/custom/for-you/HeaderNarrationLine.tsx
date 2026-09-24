@@ -93,6 +93,8 @@ export interface HeaderNarrationLineProps {
    */
   readonly layout?: 'inline' | 'row';
   readonly maxLines?: number;
+  /** `center` for the Feed's slot between the "?" and the mark (owner). */
+  readonly align?: 'auto' | 'center';
   readonly testID?: string;
 }
 
@@ -101,6 +103,7 @@ export const HeaderNarrationLine: React.FC<HeaderNarrationLineProps> = ({
   onDevice,
   layout = 'inline',
   maxLines,
+  align = 'auto',
   testID = 'header-narration-line',
 }) => {
   const { t } = useTranslation();
@@ -193,7 +196,7 @@ export const HeaderNarrationLine: React.FC<HeaderNarrationLineProps> = ({
   return (
     <Animated.View style={lineStyle} pointerEvents="none">
       <Text
-        style={styles.line}
+        style={align === 'center' ? [styles.line, styles.centred] : styles.line}
         numberOfLines={maxLines ?? (layout === 'row' ? 1 : HEADER_NARRATION_METRICS.maxLines)}
         // ONE stable label for the line as a whole. Deliberately NOT the
         // sentence on screen and deliberately not a live region: see the
@@ -214,6 +217,7 @@ const styles = StyleSheet.create({
     fontSize: HEADER_NARRATION_METRICS.fontSize,
     lineHeight: HEADER_NARRATION_METRICS.lineHeight,
   },
+  centred: { textAlign: 'center' },
 });
 
 export default HeaderNarrationLine;

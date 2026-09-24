@@ -98,6 +98,15 @@ describe('HeaderNarrationLine', () => {
     jest.restoreAllMocks();
   });
 
+  it('centres its text when asked (the Feed slot), and does not by default', () => {
+    const { StyleSheet } = require('react-native');
+    const view = render(<HeaderNarrationLine stage="fetching" onDevice={false} align="center" />);
+    expect(StyleSheet.flatten(screen.getByTestId('header-narration-line').props.style).textAlign).toBe('center');
+    view.unmount();
+    renderLine('fetching');
+    expect(StyleSheet.flatten(screen.getByTestId('header-narration-line').props.style).textAlign).toBeUndefined();
+  });
+
   it('opens on a STAGE line, so the first thing in the title slot says why', () => {
     renderLine('fetching');
     expect(textOf()).toBe(EN.headerNarration.stages.fetching[0]);

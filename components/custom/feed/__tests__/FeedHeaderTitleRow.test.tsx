@@ -21,7 +21,7 @@ jest.mock('@/components/custom/for-you/HeaderNarrationLine', () => {
     return {
         __esModule: true,
         default: (p: any) => (
-            <Text testID={p.testID} numberOfLines={p.maxLines}>
+            <Text testID={p.testID} numberOfLines={p.maxLines} align={p.align}>
                 narration
             </Text>
         ),
@@ -66,10 +66,21 @@ describe('FeedHeaderTitleRow', () => {
         expect(inRow(r.getByTestId('feed-narration-line'))).toBe(true);
     });
 
-    it('pushes the narration against the mark', () => {
+    it('centres the narration in the slot between the "?" and the mark (owner)', () => {
         const { StyleSheet } = require('react-native');
         const r = row(true);
-        expect(StyleSheet.flatten(r.getByTestId('feed-header-narration').props.style).alignItems).toBe('flex-end');
+        const slot = StyleSheet.flatten(r.getByTestId('feed-header-narration').props.style);
+        // The slot is the whole gap: it grows to fill it and may shrink to 0.
+        expect(slot.flex).toBe(1);
+        expect(slot.minWidth).toBe(0);
+        expect(slot.alignItems).toBe('center');
+        const ids = order(r);
+        expect(ids.indexOf('explainer')).toBeLessThan(ids.indexOf('feed-header-narration'));
+        expect(ids.indexOf('feed-header-narration')).toBeLessThan(ids.indexOf('mark'));
+        // The line itself centres, one line, same ellipsis clamp.
+        const line = r.getByTestId('feed-narration-line');
+        expect(line.props.numberOfLines).toBe(1);
+        expect(line.props.align).toBe('center');
     });
 
     it('draws no mark when the screen passes none, and keeps the "?"', () => {

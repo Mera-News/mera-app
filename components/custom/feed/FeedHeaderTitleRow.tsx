@@ -41,8 +41,7 @@ export interface FeedHeaderTitleRowProps {
  *
  * Owner layout: the "?" sits next to the title and the Mera mark takes the
  * right-most spot. The "what Mera is doing" narration lives ONLY here, inline,
- * one line in the space between the "?" and the mark, pushed against the mark
- * so it reads as the mark's caption. The row holds the same four things it
+ * one line, CENTRED in the space between the "?" and the mark (owner). The row holds the same four things it
  * always did, so the narration keeps its measured ~170pt budget
  * (`NARRATION_INLINE_WIDTH_PT`); a longer line is trimmed with "…". The row's
  * height is pinned in every state, so a sync starting or ending, or the mark
@@ -71,7 +70,7 @@ const FeedHeaderTitleRow: React.FC<FeedHeaderTitleRowProps> = ({
         {explainer}
         <View
             pointerEvents="none"
-            style={{ flex: 1, minWidth: 0, alignItems: 'flex-end' }}
+            style={{ flex: 1, minWidth: 0, alignItems: 'center' }}
             testID="feed-header-narration"
         >
             {narrating ? (
@@ -80,6 +79,7 @@ const FeedHeaderTitleRow: React.FC<FeedHeaderTitleRowProps> = ({
                     onDevice={onDevice}
                     layout="row"
                     maxLines={1}
+                    align="center"
                     testID="feed-narration-line"
                 />
             ) : null}
