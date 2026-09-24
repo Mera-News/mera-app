@@ -55,6 +55,17 @@ describe('noteFactCheckStored', () => {
     });
   });
 
+  // A body with {{title}} and no title to put in it would read 'for ""'.
+  // It takes the body key written without the placeholder instead.
+  it.each([
+    ['none', {}, 'factCheck.notify.bodyNoneUntitled'],
+    ['unavailable', { checkedByStatus: 'unavailable' }, 'factCheck.notify.bodyUnavailableUntitled'],
+  ] as const)('with no title at all, the %s outcome uses the untitled body', async (_o, over, key) => {
+    await recordFactCheckAsked({ articleId: 'a9', suggestionId: null, title: null });
+    expect(await noteFactCheckStored('a9', 'pending', row({ articleTitle: null as any, ...over }))).toBe(true);
+    expect(mockNotified.mock.calls[0][0].body).toBe(key);
+  });
+
   it('never notifies for a check this device did not ask for', async () => {
     // fact_checks also holds checks mirrored from other readers' articles.
     expect(await noteFactCheckStored('a2', 'pending', row())).toBe(false);
