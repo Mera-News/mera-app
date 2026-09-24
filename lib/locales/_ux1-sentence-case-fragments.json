@@ -1,0 +1,18 @@
+{
+  "_comment": "ux1 P1 (feed scout): the 'Suggestions refreshed' toast title in sentence case (house style). Only locales that used Title Case: en, id, pt-BR. No dashes.",
+  "en": {
+    "configPanel": {
+      "refreshSuggestionsSuccessTitle": "Suggestions refreshed"
+    }
+  },
+  "id": {
+    "configPanel": {
+      "refreshSuggestionsSuccessTitle": "Saran disegarkan"
+    }
+  },
+  "pt-BR": {
+    "configPanel": {
+      "refreshSuggestionsSuccessTitle": "Sugestões atualizadas"
+    }
+  }
+}
