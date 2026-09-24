@@ -14,17 +14,20 @@
 
 // State is carried by size, ink and motion rather than by presence, so the slot
 // never moves and never empties:
-//   processing    → strokes draw on in a loop, at 1.55x, in pure white
+//   processing    → torch sweeps over scrolling cards, at 1.55x, in pure white
 //   error         → still, 0.82x, red
 //   limited       → still, 0.82x, amber
 //   idle/deferred → still, 0.82x, the theme's off-white
 // At 22pt that is 18pt tall at rest and 34pt while processing, inside a row
 // pinned at 45 / 54pt.
 //
-// The draw-on is MeraLogo's own `drawStrokes` prop rather than an animation
-// written here, and it self-gates on focus + foreground (RNSVG rasterises on
+// While processing, "Mera reading all the news" (owner): the torch sweeps back
+// and forth (MeraLogo's `animated`, ±15deg over 4s) while the background cards
+// scroll right to left behind it (`scrollCards`, one card every 3.2s). Both
+// are MeraLogo's own and self-gate on focus + foreground (RNSVG rasterises on
 // the CPU). Under Reduce Motion the size still changes, instantly, and nothing
-// draws.
+// moves. The fully drawn mark is on screen throughout, so the grow never
+// blanks it.
 
 // The emphasis is a `transform: scale`, NOT a larger `size`. A bigger size grows
 // the SVG's layout box, which reflows the title row and shoves whatever sits
@@ -101,6 +104,7 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
     // to branch around. Seeded from `mode` rather than from 1 so a header that
     // mounts mid-sync starts at the right size instead of growing into it.
     const reduceMotion = useReducedMotion();
+    const moving = processing && !reduceMotion;
     const target = processing ? ACTIVE_SCALE : RESTING_SCALE;
     const scale = useSharedValue(target);
     useEffect(() => {
@@ -136,10 +140,8 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
             <Animated.View testID={`${testID}-mark`} style={scaleStyle}>
                 <MeraLogo
                     size={LOGO_SIZE}
-                    drawStrokes={processing && !reduceMotion}
-                    // The finished mark grows first, then draws: starting the
-                    // draw at once blanked the outline in one frame (captured).
-                    drawDelayMs={SCALE_MS}
+                    animated={moving}
+                    scrollCards={moving}
                     color={inkFor(mode)}
                 />
             </Animated.View>

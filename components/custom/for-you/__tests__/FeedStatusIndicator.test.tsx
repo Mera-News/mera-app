@@ -108,21 +108,22 @@ describe('FeedStatusIndicator', () => {
         mockReduceMotion = false;
     });
 
-    // Owner: small and still at idle, bigger than before while processing, and
-    // the strokes draw on instead of the old spotlight sweep.
-    it('draws its strokes on, enlarged past the old 1.3 and pure white, while processing', () => {
+    // Owner: small and still at idle; bigger than before while processing,
+    // with the torch sweeping over cards scrolling right to left.
+    it('sweeps the torch over scrolling cards, enlarged past the old 1.3 and pure white, while processing', () => {
         const { getByTestId } = renderIndicator({ mode: 'processing' });
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(true);
-        expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
+        expect(getByTestId('mera-logo').props.animated).toBe(true);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(true);
         expect(getByTestId('mera-logo').props.color).toBe(ACTIVE);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(PROCESSING_SCALE);
         expect(PROCESSING_SCALE).toBeGreaterThan(1.3);
     });
 
-    it('under Reduce Motion: the processing size, but no stroke animation', () => {
+    it('under Reduce Motion: the processing size, but no torch and no cards', () => {
         mockReduceMotion = true;
         const { getByTestId } = renderIndicator({ mode: 'processing' });
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.animated).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(PROCESSING_SCALE);
     });
 
@@ -130,7 +131,7 @@ describe('FeedStatusIndicator', () => {
         const { getByTestId } = renderIndicator({ mode: 'error' });
         expect(getByTestId('mera-logo').props.color).toBe('#F87171');
         expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
     });
 
@@ -138,7 +139,7 @@ describe('FeedStatusIndicator', () => {
         const { getByTestId } = renderIndicator({ mode: 'limited' });
         expect(getByTestId('mera-logo').props.color).toBe('#FBBF24');
         expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
     });
 
@@ -150,7 +151,7 @@ describe('FeedStatusIndicator', () => {
         const { getByTestId } = renderIndicator({ mode: 'idle', onPress });
         expect(getByTestId('mera-logo').props.color).toBe(RESTING);
         expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
 
         fireEvent.press(getByTestId(TEST_ID));
@@ -166,25 +167,21 @@ describe('FeedStatusIndicator', () => {
         const { getByTestId } = renderIndicator({ mode: 'deferred', onPress });
         expect(getByTestId('mera-logo').props.color).toBe(RESTING);
         expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
 
         fireEvent.press(getByTestId(TEST_ID));
         expect(onPress).toHaveBeenCalledTimes(1);
     });
 
-    it('animates in processing and in no other state, and never sweeps', () => {
+    it('animates in processing and in no other state', () => {
         // One assertion over the whole enum, so a new mode cannot quietly start
         // re-rasterising an SVG on the CPU behind a header that is at rest.
         const modes = ['processing', 'error', 'limited', 'deferred', 'idle'] as const;
-        const drawingIn = modes.filter(
-            (mode) => renderIndicator({ mode }).getByTestId('mera-logo').props.drawStrokes === true,
-        );
-        expect(drawingIn).toEqual(['processing']);
-        const sweepingIn = modes.filter(
-            (mode) => renderIndicator({ mode }).getByTestId('mera-logo').props.animated === true,
-        );
-        expect(sweepingIn).toEqual([]);
+        const on = (prop: string) =>
+            modes.filter((mode) => renderIndicator({ mode }).getByTestId('mera-logo').props[prop] === true);
+        expect(on('scrollCards')).toEqual(['processing']);
+        expect(on('animated')).toEqual(['processing']);
     });
 
     it('calls onPress when tapped', () => {
@@ -253,11 +250,10 @@ describe('FeedStatusIndicator: grows, never swaps', () => {
         expect(mockLogoMounts).toBe(1);
     });
 
-    it('animates the scale to 1.55 over 250ms, and starts drawing only after the grow', () => {
+    it('animates the scale to 1.55 over 250ms', () => {
         mockWithTiming.mockClear();
-        const { rerender, getByTestId } = renderIndicator({ mode: 'idle' });
+        const { rerender } = renderIndicator({ mode: 'idle' });
         rerender(<FeedStatusIndicator mode="processing" expanded={false} onPress={jest.fn()} testID={TEST_ID} />);
         expect(mockWithTiming).toHaveBeenCalledWith(1.55, { duration: 250 });
-        expect(getByTestId('mera-logo').props.drawDelayMs).toBe(250);
     });
 });

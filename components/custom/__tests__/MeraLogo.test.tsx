@@ -29,7 +29,6 @@ jest.mock('react-native-svg', () => {
 });
 
 const mockCancelAnimation = jest.fn();
-const mockWithDelay = jest.fn((_ms: unknown, v: unknown) => v);
 
 jest.mock('react-native-reanimated', () => ({
   __esModule: true,
@@ -41,7 +40,6 @@ jest.mock('react-native-reanimated', () => ({
   withRepeat: jest.fn((v: unknown) => v),
   withTiming: jest.fn(),
   withSequence: jest.fn((...v: unknown[]) => v),
-  withDelay: (ms: unknown, v: unknown) => mockWithDelay(ms, v),
   cancelAnimation: (...args: unknown[]) => mockCancelAnimation(...args),
   Easing: { inOut: () => () => 0, ease: () => 0 },
 }));
@@ -149,7 +147,7 @@ describe('MeraLogo color', () => {
   });
 });
 
-// Every existing caller renders byte-identically after `drawStrokes` was added.
+// Every existing caller renders byte-identically after `scrollCards` was added.
 // The snapshot was recorded from the component BEFORE that prop existed; a
 // diff here means a default render changed, which no caller asked for.
 describe('MeraLogo default renders are unchanged', () => {
@@ -166,46 +164,56 @@ describe('MeraLogo default renders are unchanged', () => {
   });
 });
 
-// Owner: while the Feed processes, the mark's strokes draw on in a loop.
-describe('MeraLogo drawStrokes', () => {
+// Owner: while the Feed processes, the torch sweeps (the `animated` sweep) and
+// the background cards scroll right to left behind it, "Mera reading all the
+// news". The cards are the 150x110 grid Rects inside the hexagon clip.
+describe('MeraLogo scrollCards', () => {
   beforeEach(() => {
     mockUseSharedValue.mockClear();
     mockAnimationsActive = true;
   });
-  const dashed = (r: ReturnType<typeof render>) =>
-    r.UNSAFE_root.findAll((n: any) => n.props?.strokeDasharray !== undefined && typeof n.type === 'string');
+  const scroller = (r: ReturnType<typeof render>) =>
+    r.UNSAFE_root.findAll((n: any) => n.props?.testID === 'mera-logo-cards' && typeof n.type === 'string');
 
-  it('dashes the hexagon outline and the highlighted card, driven by animated props', () => {
-    const r = render(<MeraLogo size={22} drawStrokes />);
-    const nodes = dashed(r);
-    expect(nodes).toHaveLength(2);
-    for (const n of nodes) expect(n.props.animatedProps).toBeDefined();
+  it('scrolls a five-column grid under an animated group, inside the hexagon clip', () => {
+    const r = render(<MeraLogo size={22} scrollCards />);
+    const groups = scroller(r);
+    expect(groups).toHaveLength(1);
+    expect(groups[0].props.animatedProps).toBeDefined();
+    // 5 columns x 3 rows, so the wrap at one pitch is seamless.
+    expect(groups[0].findAll((n: any) => n.props?.testID === 'svg-Rect' && typeof n.type === 'string')).toHaveLength(15);
+    let clipped = false;
+    for (let p: any = groups[0].parent; p; p = p.parent) if (p.props?.clipPath === 'url(#hexB)') clipped = true;
+    expect(clipped).toBe(true);
     expect(mockUseSharedValue).toHaveBeenCalled();
   });
 
-  it('does not sweep the spotlight while drawing: the cone holds its frozen frame', () => {
-    const r = render(<MeraLogo size={22} drawStrokes />);
-    const sweeping = r.UNSAFE_root.findAll(
-      (n: any) => n.props?.testID === 'svg-G' && n.props?.animatedProps !== undefined && n.props?.strokeDasharray === undefined,
+  it('keeps the highlighted card and the focus dot fixed, outside the scrolling group', () => {
+    const r = render(<MeraLogo size={22} scrollCards />);
+    const group = scroller(r)[0];
+    const inGroup = (n: any) => {
+      for (let p = n.parent; p; p = p.parent) if (p === group) return true;
+      return false;
+    };
+    const highlighted = r.UNSAFE_root.findAll(
+      (n: any) => n.props?.testID === 'svg-Rect' && n.props?.strokeWidth === '16' && typeof n.type === 'string',
     );
-    expect(sweeping).toHaveLength(0);
-    expect(r.UNSAFE_root.findAll((n: any) => n.props?.transform === 'rotate(-15 512 760)').length).toBeGreaterThan(0);
+    expect(highlighted).toHaveLength(1);
+    expect(inGroup(highlighted[0])).toBe(false);
   });
 
-  it('draws full, still strokes when nobody is looking (blurred or backgrounded)', () => {
+  it('falls back to the still three-column grid when nobody is looking', () => {
     mockAnimationsActive = false;
-    const r = render(<MeraLogo size={22} drawStrokes />);
-    expect(dashed(r)).toHaveLength(0);
+    const r = render(<MeraLogo size={22} scrollCards />);
+    expect(scroller(r)).toHaveLength(0);
   });
 
-  // Captured: when a run started, the 18pt mark vanished in one frame and the
-  // big one began drawing from EMPTY. The draw must start from the finished
-  // mark and wait for the grow before it begins.
-  it('starts from the finished mark, and waits the given delay before drawing', () => {
-    mockWithDelay.mockClear();
-    render(<MeraLogo size={22} drawStrokes drawDelayMs={250} />);
-    // The progress value is seeded full (1), not empty (0).
-    expect(mockUseSharedValue).toHaveBeenCalledWith(1);
-    expect(mockWithDelay).toHaveBeenCalledWith(250, expect.anything());
+  it('combines with the torch sweep', () => {
+    const r = render(<MeraLogo size={22} animated scrollCards />);
+    expect(scroller(r)).toHaveLength(1);
+    const sweeping = r.UNSAFE_root.findAll(
+      (n: any) => n.props?.testID === 'svg-G' && n.props?.animatedProps !== undefined && typeof n.type === 'string',
+    );
+    expect(sweeping).toHaveLength(1);
   });
 });
