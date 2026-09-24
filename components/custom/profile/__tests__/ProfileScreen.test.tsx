@@ -438,4 +438,31 @@ describe('ProfileScreen', () => {
         rerender(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(queryByTestId('advanced-hub-refresh-hint')).toBeNull());
     });
+
+    // Batch 16 found two issues with this button once it moved here.
+    it('the Refresh Suggestions button has an explicit a11y label (no icon-glyph leak)', async () => {
+        // Without an explicit accessibilityLabel, RN concatenates every
+        // accessible descendant's text into one label — including the
+        // MaterialIcons glyph, an icon-font character with no meaning to
+        // VoiceOver — which is what produced ", Refresh Suggestions".
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+        // This file's `t` mock returns the raw key when no `defaultValue` is
+        // passed (same convention as `getByText('tabs.profile')` elsewhere in
+        // this suite) — the point of this assertion is that the label is
+        // driven by the SAME source as the visible ButtonText, not that it
+        // resolves to real English under this mock.
+        expect(getByTestId('advanced-hub-refresh-suggestions').props.accessibilityLabel)
+            .toBe('configPanel.refreshSuggestions');
+    });
+
+    it('the Refresh Suggestions button frame is at least 44pt tall', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+        const style = getByTestId('advanced-hub-refresh-suggestions').props.style;
+        const flat = Array.isArray(style) ? Object.assign({}, ...style) : style;
+        expect(flat?.minHeight).toBeGreaterThanOrEqual(44);
+    });
 });

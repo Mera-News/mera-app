@@ -138,6 +138,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         }
     }, [userPersona, isRefreshingSuggestions, toast, t]);
 
+    // Single source for the Refresh Suggestions button's text AND its
+    // accessibilityLabel (Batch 16) — one computation, so the two can never
+    // read differently to a sighted user vs. VoiceOver.
+    const refreshSuggestionsLabel = isRefreshingSuggestions
+        ? t('configPanel.refreshingSuggestions')
+        : t('configPanel.refreshSuggestions');
+
     const isBlocked = userPersona?.blockedByLlm ?? false;
     const isEmptyPersona = factCount === 0;
 
@@ -260,16 +267,29 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                         size="sm"
                         onPress={handleRefreshSuggestions}
                         disabled={isRefreshingSuggestions}
+                        // Batch 16: without this, RN concatenates every
+                        // accessible descendant into one label, including the
+                        // MaterialIcons glyph (an icon-font character with no
+                        // meaning to VoiceOver) — that produced
+                        // ", Refresh Suggestions". One shared label, reused
+                        // below for ButtonText too, so the spoken and the
+                        // visible text can never drift apart.
+                        accessibilityLabel={refreshSuggestionsLabel}
+                        // Batch 16: `size="sm"` alone measured 31.3pt. A
+                        // minHeight floor brings the real target to 44pt
+                        // without touching padding, icon size or copy — the
+                        // button just isn't quite as short as before.
+                        style={{ minHeight: 44 }}
                     >
                         {isRefreshingSuggestions ? (
                             <HStack space="sm" className="items-center">
                                 <Spinner size="small" />
-                                <ButtonText>{t('configPanel.refreshingSuggestions')}</ButtonText>
+                                <ButtonText>{refreshSuggestionsLabel}</ButtonText>
                             </HStack>
                         ) : (
                             <HStack space="sm" className="items-center">
                                 <MaterialIcons name="refresh" size={16} color="#60a5fa" />
-                                <ButtonText>{t('configPanel.refreshSuggestions')}</ButtonText>
+                                <ButtonText>{refreshSuggestionsLabel}</ButtonText>
                             </HStack>
                         )}
                     </Button>
