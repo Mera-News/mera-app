@@ -21,7 +21,6 @@ import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
-import { isRevenueCatConfigured } from '@/lib/revenuecat';
 import { useSupportAction } from '@/lib/intercom';
 import { resolveAccountEmailView } from '@/lib/subscription/email-capture';
 import { readSupportIdFromUser } from '@/lib/support-id';
@@ -33,6 +32,7 @@ import { getNativeLanguageName } from '@/lib/translation-service';
 import { backupCadence, backupLastRunAt, backupProviderId } from '@/lib/backup/backup-settings';
 import PolicyPill from '@/components/custom/PolicyPill';
 import SecuritySettingsSection from './SecuritySettingsSection';
+import SettingsUsageCard from './SettingsUsageCard';
 
 interface PreferenceOption {
     id: string;
@@ -339,18 +339,8 @@ const AppPreferencesTab: React.FC = () => {
         },
     ];
 
-    // One label, "Manage plan", everywhere a plan is managed. Only when
-    // RevenueCat is configured.
-    const account: PreferenceOption[] = isRevenueCatConfigured()
-        ? [
-            {
-                id: 'manage-subscription',
-                title: t('subscription.managePlan'),
-                icon: 'card-membership',
-                onPress: () => routerHook.push('/logged-in/preferences/manage-subscription' as any),
-            },
-        ]
-        : [];
+    // Account holds only Log out: plan management is the usage card's
+    // "Manage plan" button at the top of this list (SettingsUsageCard).
 
     const sectionLabel = (id: string, text: string) => (
         <Text
@@ -430,6 +420,12 @@ const AppPreferencesTab: React.FC = () => {
             </VStack>
 
             <Box className="px-5">
+                {/* The plan and today's usage, first (owner call). Its Manage
+                    plan button is the only plan entry in Settings. */}
+                <Box className="mt-2">
+                    <SettingsUsageCard />
+                </Box>
+
                 {sectionLabel('general', t('settings.groupGeneral'))}
                 <VStack>{general.map(renderOption)}</VStack>
 
@@ -495,7 +491,6 @@ const AppPreferencesTab: React.FC = () => {
                 </HStack>
 
                 {sectionLabel('account', t('settings.groupAccount'))}
-                <VStack>{account.map(renderOption)}</VStack>
                 {/* Log out is LAST, an ordinary row inside Account and behind
                     its confirmation, no longer a full-width red button right
                     above the tab bar. */}

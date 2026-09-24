@@ -16,8 +16,9 @@ jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (_k: string, o?: any) => o?.defaultValue ?? _k }),
 }));
 
+const mockRouterPush = jest.fn();
 jest.mock('expo-router', () => ({
-    router: { push: jest.fn() },
+    router: { push: (...a: unknown[]) => mockRouterPush(...a) },
     useFocusEffect: (cb: () => void) => { const React2 = require('react'); React2.useEffect(cb, []); },
 }));
 
@@ -188,138 +189,88 @@ jest.mock('@/lib/visibility-tick', () => ({
     subscribeScrollTick: jest.fn(() => () => {}),
 }));
 
-import ProfileScreen from '../ProfileScreen';
+import SettingsUsageCard from '../SettingsUsageCard';
 
 beforeEach(() => {
     jest.clearAllMocks();
     mockFetchUserBilling.mockResolvedValue(null);
-    mockAiAccess = 'unknown';
-    mockSubscriptionState = {
-        serverTier: null,
-        customerInfo: null,
-        grantExpiresAt: null,
-        isPremium: false,
-    };
+    mockSubscriptionState = { serverTier: null, customerInfo: null, grantExpiresAt: null, isPremium: false };
 });
 
-describe('ProfileScreen', () => {
-    it('renders the Advanced row and NO usage card (it lives at the top of Settings)', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { queryByTestId, getByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('Advanced')).toBeTruthy());
-        expect(queryByTestId('usage-widget')).toBeNull();
+// The usage card moved from Profile to the top of Settings; these are the
+// Profile card's own tests, carried over unchanged in substance.
+describe('SettingsUsageCard', () => {
+    it('usage-card info icon opens the article-count explainer modal', async () => {
+        const { getByLabelText, getByText } = render(<SettingsUsageCard />);
+        await waitFor(() => expect(getByLabelText('usage-info')).toBeTruthy());
+        fireEvent.press(getByLabelText('usage-info'));
+        expect(getByText('configPanel.articleAnalysisTitle')).toBeTruthy();
     });
 
-    it('renders the "Profile" screen heading (reusing tabs.profile)', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('tabs.profile')).toBeTruthy());
+    // ── The plan label for a granted vs a paying account ────────────────────
+    // `subscriptionTier: 'starter'` is what BOTH report. Both cases hold it
+    // fixed and flip only the store fields.
+    //
+    // REGRESSION GUARD. This first case used to assert "Free Trial" and a
+    // countdown. The server still sends `grantExpiresAt` for an unpaid account
+    // inside the promo window, so the app rendered a trial that no longer
+    // exists — shipped to production before it was caught. The app now reads
+    // that field nowhere, and an unpaid account reads as Starter.
+    it('an unpaid account inside the grant window reads as Starter, never a trial', async () => {
+        mockSubscriptionState = {
+            serverTier: 'starter',
+            customerInfo: null,
+            grantExpiresAt: '2026-08-20T00:00:00.000Z',
+            isPremium: false,
+        };
+        mockFetchUserBilling.mockResolvedValue({
+            subscriptionTier: 'starter',
+            articlesUsedToday: 1,
+            dailyArticleLimit: 5,
+            resetAt: '2026-08-11T00:00:00.000Z',
+            entitlementExpiresAt: null,
+            grantExpiresAt: '2026-08-20T00:00:00.000Z',
+            hasEverSubscribed: true,
+            showLapseInterstitial: false,
+        });
+        const { getByTestId, queryByTestId } = render(<SettingsUsageCard />);
+        await waitFor(() =>
+            expect(getByTestId('usage-widget-plan-label').props.children).toBe('configPanel.starterPlan'),
+        );
+        expect(queryByTestId('usage-widget-trial-ends-at')).toBeNull();
     });
 
-    it('empty persona → shows the Mera chat invite and no About-you section', async () => {
-        mockGetFacts.mockResolvedValue([]);
-        const { getByText, queryByText, getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
-        expect(queryByText('ABOUT YOU')).toBeNull();
-        expect(queryByTestId('facts-list-mode')).toBeNull();
-        expect(getByText('Advanced')).toBeTruthy();
+    it('a paying subscriber shows the plain plan name', async () => {
+        mockSubscriptionState = {
+            serverTier: 'starter',
+            customerInfo: null,
+            // Server invariant: null once a paying subscription (not the grant)
+            // is what's providing access. See subscription-store.ts's own doc.
+            grantExpiresAt: null,
+            isPremium: true,
+        };
+        mockFetchUserBilling.mockResolvedValue({
+            subscriptionTier: 'starter',
+            articlesUsedToday: 1,
+            dailyArticleLimit: 5,
+            resetAt: '2026-08-11T00:00:00.000Z',
+            entitlementExpiresAt: '2026-09-11T00:00:00.000Z',
+            grantExpiresAt: null,
+            hasEverSubscribed: true,
+            showLapseInterstitial: false,
+        });
+        const { getByTestId, queryByTestId } = render(<SettingsUsageCard />);
+        await waitFor(() =>
+            expect(getByTestId('usage-widget-plan-label').props.children).toBe('configPanel.starterPlan'),
+        );
+        expect(queryByTestId('usage-widget-trial-ends-at')).toBeNull();
     });
 
-    it('with facts → renders the About-you heading and the real facts list (FactsList)', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Lives in Pune' }]);
-        const { getByText, getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('ABOUT YOU')).toBeTruthy());
-        expect(getByTestId('facts-list-mode')).toBeTruthy();
-    });
-
-    it('Mera chat invite opens the persona chat', async () => {
-        mockGetFacts.mockResolvedValue([]);
-        const { getByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
-        fireEvent.press(getByText('profile.meraInvite'));
-        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
-    });
-
-    // ── Mera News Free ────────────────────────────────────────────────────
-    // The row must stay the SAME row an entitled user sees — same speech
-    // bubble, same logo — with Mera speaking the free-tier script instead of
-    // the invite, and nothing to tap.
-    it('speaks the ordinary invite copy, with no free-tier variant', async () => {
-        // Was "locked -> Mera speaks the free-tier paragraph". There is no
-        // free-tier paragraph any more: `freeTier.chatBubble` claimed chat
-        // needed a plan, which is false now that Starter is free, so the
-        // branch was deleted rather than given a third value.
-        mockAiAccess = 'locked';
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('mera-chat-invite')).toBeTruthy());
-
-        // Facts exist, so Mera invites something NEW rather than greeting a
-        // first-time user.
-        await waitFor(() => expect(queryByText('profile.meraInviteReturning')).toBeTruthy());
-        expect(queryByText('freeTier.chatBubble')).toBeNull();
-        // Same presentation as before: the logo is still there.
-        expect(getByTestId('mera-logo')).toBeTruthy();
-    });
-
-    it('tapping the Mera row opens the chat, with no tier variant at all', async () => {
-        // THIRD state for this assertion, and the simplest. It asserted the
-        // paywall, then the chat-when-locked. Starter is now free for everyone,
-        // so there is no locked row, no `mera-chat-invite-locked` testID and no
-        // second copy string: one row, one destination, whatever the tier.
-        mockAiAccess = 'locked';
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('mera-chat-invite')).toBeTruthy());
-        expect(queryByTestId('mera-chat-invite-locked')).toBeNull();
-
-        fireEvent.press(getByTestId('mera-chat-invite'));
-        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
-        expect(mockPresentFreeTierPaywall).not.toHaveBeenCalled();
-    });
-
-    it('locked → the About-you facts heading and list still render', async () => {
-        mockAiAccess = 'locked';
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Lives in Pune' }]);
-        const { getByText, getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('ABOUT YOU')).toBeTruthy());
-        expect(getByTestId('facts-list-mode')).toBeTruthy();
-    });
-
-    it('entitled → the invite copy and its press target come back', async () => {
-        mockAiAccess = 'entitled';
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByText, getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('profile.meraInviteReturning')).toBeTruthy());
-        expect(queryByTestId('mera-chat-invite-locked')).toBeNull();
-        fireEvent.press(getByTestId('mera-chat-invite'));
-        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
-    });
-
-    it('M10: no "Learn how Mera works" button competes with the title', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { queryByTestId, getByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('tabs.profile')).toBeTruthy());
-        expect(queryByTestId('profile-learn-about-mera')).toBeNull();
-    });
-
-    it('F46: Edit turns the facts list into edit mode and Done turns it back', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('profile-edit-facts')).toBeTruthy());
-        expect(getByTestId('facts-list-mode').props.children).toBe('facts-list');
-        const editStyle = getByTestId('profile-edit-facts').props.style;
-        expect(editStyle.minHeight).toBeGreaterThanOrEqual(44);
-        fireEvent.press(getByTestId('profile-edit-facts'));
-        expect(getByTestId('facts-list-mode').props.children).toBe('facts-list:editing');
-        fireEvent.press(getByTestId('profile-edit-facts'));
-        expect(getByTestId('facts-list-mode').props.children).toBe('facts-list');
-    });
-
-    it('N4: the header carries the Profile explainer button', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('profile-explainer-open')).toBeTruthy());
-        expect(getByTestId('profile-explainer-open').props.accessibilityLabel).toBe('explainer:profile');
+    // ── ux1 Profile ─────────────────────────────────────────────────────────
+    it('its Manage plan button opens manage-subscription', async () => {
+        const { getByLabelText } = render(<SettingsUsageCard />);
+        await waitFor(() => expect(getByLabelText('upgrade')).toBeTruthy());
+        fireEvent.press(getByLabelText('upgrade'));
+        expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/preferences/manage-subscription');
     });
 });
