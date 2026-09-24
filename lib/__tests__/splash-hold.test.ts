@@ -36,14 +36,31 @@ describe('splash hold', () => {
     expect(mockPrevent).toHaveBeenCalledTimes(1);
   });
 
-  it('hides once, after a frame, however many releases arrive', () => {
+  it('hides once, however many releases arrive', () => {
     holdSplash();
     releaseSplash('a');
-    expect(mockHide).not.toHaveBeenCalled();
-    flushFrame();
     releaseSplash('b');
     flushFrame();
     expect(mockHide).toHaveBeenCalledTimes(1);
+  });
+
+  // Android deadlock: the held splash cancels every draw, so a frame never
+  // comes. Release (and the cap) must hide WITHOUT waiting for one.
+  it('hides without waiting for a frame, and so does the cap', () => {
+    const raf = jest.spyOn(global, 'requestAnimationFrame').mockImplementation(() => 0);
+    try {
+      holdSplash();
+      releaseSplash('route');
+      expect(mockHide).toHaveBeenCalledTimes(1);
+
+      __resetSplashHoldForTests();
+      mockHide.mockClear();
+      holdSplash();
+      act(() => { jest.advanceTimersByTime(SPLASH_MAX_HOLD_MS + 50); });
+      expect(mockHide).toHaveBeenCalledTimes(1);
+    } finally {
+      raf.mockRestore();
+    }
   });
 
   it('hides on its own at the cap when nothing releases', () => {

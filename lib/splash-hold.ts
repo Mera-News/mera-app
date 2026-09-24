@@ -51,8 +51,17 @@ export function holdSplash(): void {
 }
 
 /**
- * Hide the splash after the frame that is committing now has been drawn.
- * Idempotent: only the first call does anything.
+ * Hide the splash now. Callers run after the commit that mounted the screen,
+ * so the content is already in the tree. Idempotent: only the first call does
+ * anything.
+ *
+ * NEVER wait for a frame here (`requestAnimationFrame`). On Android,
+ * expo-splash-screen holds the splash with an OnPreDrawListener that cancels
+ * every draw of the content view until `hide()` runs; a hide scheduled on a
+ * frame therefore waits for a frame that the held splash never lets happen.
+ * That deadlock left Android on a black, untouchable screen with JS running
+ * underneath, and the 4s cap went through the same path so it never fired
+ * either.
  */
 export function releaseSplash(_reason: string): void {
   if (released) return;
@@ -61,7 +70,7 @@ export function releaseSplash(_reason: string): void {
     clearTimeout(capTimer);
     capTimer = null;
   }
-  requestAnimationFrame(() => hideNow());
+  hideNow();
 }
 
 /** True for a pathname the user actually came for (not a startup gate). */
