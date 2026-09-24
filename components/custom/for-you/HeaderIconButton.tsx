@@ -9,6 +9,7 @@
 // wrapper drops function styles on device).
 
 import { Pressable } from '@/components/ui/pressable';
+import { Spinner } from '@/components/ui/spinner';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import type { LayoutChangeEvent, View } from 'react-native';
@@ -38,12 +39,16 @@ export interface HeaderIconButtonProps {
     readonly accessibilityLabel: string;
     readonly testID: string;
     readonly onLayout?: (e: LayoutChangeEvent) => void;
+    /** Read after the label (the Profile refresh icon's tooltip text). */
+    readonly accessibilityHint?: string;
+    /** Work in flight: a spinner replaces the glyph and the button disables. */
+    readonly busy?: boolean;
     /** Overlays drawn over the glyph (the bell's unread badge). */
     readonly children?: React.ReactNode;
 }
 
 const HeaderIconButton = React.forwardRef<View, HeaderIconButtonProps>(function HeaderIconButton(
-    { icon, onPress, accessibilityLabel, testID, onLayout, children },
+    { icon, onPress, accessibilityLabel, testID, onLayout, accessibilityHint, busy = false, children },
     ref,
 ) {
     return (
@@ -51,12 +56,19 @@ const HeaderIconButton = React.forwardRef<View, HeaderIconButtonProps>(function 
             ref={ref as never}
             onPress={onPress}
             onLayout={onLayout}
+            disabled={busy}
             style={FRAME_STYLE}
             accessibilityRole="button"
             accessibilityLabel={accessibilityLabel}
+            accessibilityHint={accessibilityHint}
+            accessibilityState={busy ? { disabled: true, busy: true } : undefined}
             testID={testID}
         >
-            <MaterialIcons name={icon} size={HEADER_ICON_GLYPH} color={HEADER_ICON_COLOR} />
+            {busy ? (
+                <Spinner size="small" color={HEADER_ICON_COLOR} testID={`${testID}-spinner`} />
+            ) : (
+                <MaterialIcons name={icon} size={HEADER_ICON_GLYPH} color={HEADER_ICON_COLOR} />
+            )}
             {children}
         </Pressable>
     );

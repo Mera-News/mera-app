@@ -2,14 +2,16 @@ import BlockedBanner from '@/components/custom/BlockedBanner';
 import FactsList from '@/components/custom/facts/FactsList';
 import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
-import { HEADER_ACTIONS_GAP } from '@/components/custom/for-you/HeaderIconButton';
+import HeaderIconButton, {
+    HEADER_ACTIONS_GAP,
+    HEADER_ICON_GLYPH as ACTION_GLYPH,
+} from '@/components/custom/for-you/HeaderIconButton';
+import { HEADER_TITLE_MIN_SCALE } from '@/lib/typography/header-title-size';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
 import { Pressable } from '@/components/ui/pressable';
-import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { getFacts } from '@/lib/database/services/fact-service';
@@ -36,6 +38,26 @@ const HEADER_ICON_GLYPH = 24;
 const HEADER_ICON_TOUCH_TARGET = 44;
 const HEADER_ICON_TOUCH_MARGIN = -(HEADER_ICON_TOUCH_TARGET - HEADER_ICON_GLYPH) / 2;
 
+/** The refresh icon's pulse ring and the tooltip's glow (the old hint's blue). */
+const REFRESH_GLOW = '#60a5fa';
+/** Tooltip surface: opaque (it floats over content), the old hint box's blues. */
+const TOOLTIP_FILL = 'rgb(23, 37, 84)';
+const TOOLTIP_BORDER = '#1e40af';
+const TOOLTIP_INK = '#93c5fd';
+/** Wraps to 2-3 lines at 375 instead of one long bar. */
+const TOOLTIP_MAX_WIDTH = 240;
+/** Kept inside the screen's right edge. */
+const TOOLTIP_EDGE = 16;
+const TOOLTIP_CARET = 7;
+/**
+ * The caret sits under the refresh glyph's centre. The header's right cluster
+ * is `[refresh] [Advanced] [bell]` inside px-5 (20), so that centre is a fixed
+ * distance from the screen's right edge: 20 + 24 + gap + 24 + gap + 12.
+ * Measured from the bubble's right edge (TOOLTIP_EDGE), less half the caret.
+ */
+const REFRESH_CENTRE_FROM_RIGHT = 20 + ACTION_GLYPH + HEADER_ACTIONS_GAP + ACTION_GLYPH + HEADER_ACTIONS_GAP + ACTION_GLYPH / 2;
+const TOOLTIP_CARET_RIGHT = REFRESH_CENTRE_FROM_RIGHT - TOOLTIP_EDGE - TOOLTIP_CARET;
+
 interface ProfileScreenProps {
     readonly userId: string;
 }
@@ -45,12 +67,11 @@ interface ProfileScreenProps {
  *   1. The Mera chat invite (the add-an-interest entry).
  *   2. "About you": the real facts list (`FactsList`, shared with Advanced >
  *      Facts), with delete behind Edit.
- *   3. Refresh Suggestions — moved here from AdvancedHubScreen, in the same
- *      bottom slot the "Advanced" row used to occupy. No copy is left on
- *      AdvancedHubScreen.
- * The power-user hub ("Advanced") opens from an icon-only button at the
- * top-right of the header, beside the tab explainer — there is no bottom
- * Advanced row any more.
+ * The header is `Profile (?) ... [refresh] [Advanced] [bell]`: Refresh
+ * Suggestions is an icon-only header button (owner), which glows with a
+ * tooltip below it while the persona changed and the feed has not caught up;
+ * the power-user hub ("Advanced") opens from the sliders icon. Nothing sits at
+ * the bottom of the page any more.
  * The daily-usage card lives at the top of Settings (SettingsUsageCard), not
  * here: this tab is about the person, not the plan.
  */
@@ -106,6 +127,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     // parks at 0.3 (not 0) while pending so the affordance stays visible on a
     // blurred screen.
     const glowAnim = usePulse(feedNeedsRefresh);
+    // The tooltip is dismissed for THIS visit only: it returns on the next
+    // focus while the flag still holds.
+    const [tooltipDismissed, setTooltipDismissed] = useState(false);
+    useFocusEffect(
+        useCallback(() => {
+            setTooltipDismissed(false);
+        }, []),
+    );
+    const [headerBottom, setHeaderBottom] = useState<number | null>(null);
+    const showRefreshGlow = feedNeedsRefresh && !isRefreshingSuggestions;
+    const showRefreshTooltip = showRefreshGlow && !tooltipDismissed;
 
     const handleRefreshSuggestions = useCallback(async () => {
         if (isRefreshingSuggestions) return;
@@ -140,9 +172,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         }
     }, [userPersona, isRefreshingSuggestions, toast, t]);
 
-    // Single source for the Refresh Suggestions button's text AND its
-    // accessibilityLabel (Batch 16) — one computation, so the two can never
-    // read differently to a sighted user vs. VoiceOver.
+    // The Refresh Suggestions icon's spoken label, explicit so the icon-font
+    // glyph never leaks into it.
     const refreshSuggestionsLabel = isRefreshingSuggestions
         ? t('configPanel.refreshingSuggestions')
         : t('configPanel.refreshSuggestions');
@@ -156,7 +187,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         // leaving the fact rows/accordions below with nothing to show through.
         <Box className="flex-1">
             {/* Screen heading — mirrors the ForYou/Explore top-left title idiom. */}
-            <HStack className="items-center justify-between px-5 pt-4 mb-2">
+            <HStack
+                className="items-center justify-between px-5 pt-4 mb-2"
+                onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
+                testID="profile-header"
+            >
                 {/* "Profile (?)", the "?" right after the title as on Feed,
                     Dashboard and Explore (owner). The group takes the row's
                     remaining width and the title shrinks inside it only when it
@@ -171,6 +206,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                         size="4xl"
                         className="text-white flex-shrink min-w-0"
                         numberOfLines={1}
+                        // Shrink the type, never cut the word (ja "プロフィール"
+                        // is 203pt at 36px, 33pt over at 375 beside three icons),
+                        // as Feed and Dashboard do. The line box is unchanged.
+                        adjustsFontSizeToFit
+                        minimumFontScale={HEADER_TITLE_MIN_SCALE}
                         testID="profile-title"
                     >
                         {t('tabs.profile')}
@@ -180,13 +220,48 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                         (M10); the guides have one home, Settings > Help. */}
                     <TabExplainerButton tab="profile" testID="profile-explainer-open" />
                 </HStack>
-                {/* `[Advanced] [bell]` (owner), spaced like every tab's right
-                    cluster so the 44pt frames do not overlap. */}
+                {/* `[refresh] [Advanced] [bell]` (owner), spaced like every tab's
+                    right cluster so the 44pt frames do not overlap. */}
                 <HStack
                     className="items-center"
                     style={{ gap: HEADER_ACTIONS_GAP }}
                     testID="profile-header-actions"
                 >
+                    {/* Refresh Suggestions, icon-only (owner: moved up from the
+                        bottom of the page). Same handler as ever. While the
+                        persona changed and the feed has not caught up, it
+                        glows and its tooltip hangs below (see the layer at the
+                        end); the tooltip's text is this button's hint, read
+                        once, so the bubble itself is hidden from VoiceOver. */}
+                    <View>
+                        {showRefreshGlow && (
+                            <Animated.View
+                                pointerEvents="none"
+                                testID="profile-refresh-glow"
+                                style={{
+                                    position: 'absolute',
+                                    top: -6,
+                                    left: -6,
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: 18,
+                                    borderWidth: 2,
+                                    borderColor: REFRESH_GLOW,
+                                    opacity: glowAnim,
+                                }}
+                            />
+                        )}
+                        <HeaderIconButton
+                            icon="refresh"
+                            onPress={handleRefreshSuggestions}
+                            busy={isRefreshingSuggestions}
+                            accessibilityLabel={refreshSuggestionsLabel}
+                            accessibilityHint={
+                                showRefreshTooltip ? t('configPanel.personaUpdatedRefreshHint') : undefined
+                            }
+                            testID="advanced-hub-refresh-suggestions"
+                        />
+                    </View>
                     {/* Advanced — icon-only, opens the power-user hub. Was a
                         full-width row at the bottom of the page; moved here so it
                         doesn't compete for scroll space with facts. */}
@@ -248,93 +323,72 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     </Box>
                 )}
 
-                {/* 3 — Refresh Suggestions, moved here from AdvancedHubScreen,
-                    in the bottom slot the "Advanced" row used to occupy. */}
+            </ScrollView>
+
+            {/* The refresh tooltip (owner: "the glowing text ... under the
+                refresh icon like a tooltip"). It floats over the content in
+                this screen (not a Modal: the tab bar stays live) from the
+                header's bottom, so the header never changes height. A tap on
+                the bubble refreshes; a tap anywhere else dismisses it for this
+                visit. */}
+            {showRefreshTooltip && headerBottom !== null && (
                 <View
-                    testID="advanced-hub-refresh-frame"
-                    style={{
-                        marginHorizontal: 16,
-                        marginTop: 12,
-                        marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12,
-                        position: 'relative',
-                        // Batch 17: the Button's own painted box correctly
-                        // grew to 44pt (Batch 16's fix), but this View's
-                        // OWN reserved slot for margin/sibling purposes did
-                        // not — it stayed at the button's PRE-fix ~31.3pt,
-                        // so the margin below (6pt) was computed from the
-                        // wrong edge, overlapping the hint by ~6.7pt, and
-                        // the glow ring (absolutely positioned against THIS
-                        // View, not the Button) fell short of the button's
-                        // real bottom by the same amount. Pinning the
-                        // View's own minHeight fixes both from one place,
-                        // regardless of why the Button's height didn't
-                        // propagate here — the margin value itself is
-                        // unchanged, so the gap is the same one it had
-                        // before, now measured from the correct edge.
-                        minHeight: 44,
-                    }}
+                    style={{ position: 'absolute', top: headerBottom, left: 0, right: 0, bottom: 0 }}
+                    testID="profile-refresh-tooltip-layer"
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
                 >
-                    {feedNeedsRefresh && !isRefreshingSuggestions && (
-                        <Animated.View
+                    <Pressable
+                        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                        onPress={() => setTooltipDismissed(true)}
+                        testID="profile-refresh-tooltip-backdrop"
+                    />
+                    <Pressable
+                        onPress={handleRefreshSuggestions}
+                        testID="profile-refresh-tooltip"
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                        style={{
+                            position: 'absolute',
+                            top: TOOLTIP_CARET,
+                            right: TOOLTIP_EDGE,
+                            maxWidth: TOOLTIP_MAX_WIDTH,
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            borderRadius: 10,
+                            borderWidth: 1,
+                            borderColor: TOOLTIP_BORDER,
+                            backgroundColor: TOOLTIP_FILL,
+                            shadowColor: REFRESH_GLOW,
+                            shadowOpacity: 0.6,
+                            shadowRadius: 10,
+                            shadowOffset: { width: 0, height: 0 },
+                            elevation: 6,
+                        }}
+                    >
+                        {/* The caret, pointing up at the refresh glyph. */}
+                        <View
                             pointerEvents="none"
                             style={{
                                 position: 'absolute',
-                                top: -3,
-                                left: -3,
-                                right: -3,
-                                bottom: -3,
-                                borderRadius: 12,
-                                borderWidth: 2,
-                                borderColor: '#60a5fa',
-                                opacity: glowAnim,
+                                top: -TOOLTIP_CARET,
+                                right: TOOLTIP_CARET_RIGHT,
+                                width: 0,
+                                height: 0,
+                                borderLeftWidth: TOOLTIP_CARET,
+                                borderRightWidth: TOOLTIP_CARET,
+                                borderBottomWidth: TOOLTIP_CARET,
+                                borderLeftColor: 'transparent',
+                                borderRightColor: 'transparent',
+                                borderBottomColor: TOOLTIP_BORDER,
                             }}
                         />
-                    )}
-                    <Button
-                        testID="advanced-hub-refresh-suggestions"
-                        variant="outline"
-                        action="primary"
-                        size="sm"
-                        onPress={handleRefreshSuggestions}
-                        disabled={isRefreshingSuggestions}
-                        // Batch 16: without this, RN concatenates every
-                        // accessible descendant into one label, including the
-                        // MaterialIcons glyph (an icon-font character with no
-                        // meaning to VoiceOver) — that produced
-                        // ", Refresh Suggestions". One shared label, reused
-                        // below for ButtonText too, so the spoken and the
-                        // visible text can never drift apart.
-                        accessibilityLabel={refreshSuggestionsLabel}
-                        // Batch 16: `size="sm"` alone measured 31.3pt. A
-                        // minHeight floor brings the real target to 44pt
-                        // without touching padding, icon size or copy — the
-                        // button just isn't quite as short as before.
-                        style={{ minHeight: 44 }}
-                    >
-                        {isRefreshingSuggestions ? (
-                            <HStack space="sm" className="items-center">
-                                <Spinner size="small" />
-                                <ButtonText>{refreshSuggestionsLabel}</ButtonText>
-                            </HStack>
-                        ) : (
-                            <HStack space="sm" className="items-center">
-                                <MaterialIcons name="refresh" size={16} color="#60a5fa" />
-                                <ButtonText>{refreshSuggestionsLabel}</ButtonText>
-                            </HStack>
-                        )}
-                    </Button>
+                        <Text size="xs" style={{ color: TOOLTIP_INK }}>
+                            {t('configPanel.personaUpdatedRefreshHint')}
+                        </Text>
+                    </Pressable>
                 </View>
-                {feedNeedsRefresh && !isRefreshingSuggestions && (
-                    <Box testID="advanced-hub-refresh-hint" className="mx-4 mb-3 px-3 py-2 bg-blue-950/60 border border-blue-800 rounded-lg">
-                        <HStack space="xs" className="items-start">
-                            <MaterialIcons name="auto-awesome" size={14} color="#93c5fd" style={{ marginTop: 1 }} />
-                            <Text size="xs" className="text-blue-300 flex-1">
-                                {t('configPanel.personaUpdatedRefreshHint')}
-                            </Text>
-                        </HStack>
-                    </Box>
-                )}
-            </ScrollView>
+            )}
         </Box>
     );
 };
