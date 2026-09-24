@@ -162,9 +162,13 @@ export interface ActionSheetProps {
  * it' should feel like it's opening a submenu ... back should take the user to
  * the main menu").
  *
- * A pushed level slides in from the right in SHEET_SLIDE_MS and a pop slides
- * in from the left; the sheet's height eases to the new level (iOS). Reduce
- * Motion swaps levels with no slide.
+ * Levels move together in SHEET_SLIDE_MS: on a push the old level slides out
+ * to the left while the new one slides in from the right; Back is the
+ * reverse. The outgoing level is a frozen copy of its last render, placed
+ * absolutely (the sheet sizes to the incoming level only, and its height eases
+ * there on iOS) and untouchable; it unmounts once the slide lands. Without it
+ * the sheet showed an empty frame while the new level travelled in. Reduce
+ * Motion swaps levels in place.
  *
  * A titled sheet over CONTENT, so it carries the dark over-content base (a bare
  * translucent plate over headlines is unreadable), and it has an explicit
@@ -191,27 +195,53 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     const insets = useSafeAreaInsets();
     const { width } = useWindowDimensions();
     const reduceMotion = useReduceMotion();
-    const slide = useRef(new Animated.Value(0)).current;
+    // 0 → 1 over one transition. Incoming: from the side it came from to 0.
+    // Outgoing: from 0 to the opposite side.
+    const progress = useRef(new Animated.Value(1)).current;
     const lastKey = useRef(levelKey);
+    const sign = useRef(1);
+    // The level on screen, as last rendered: what slides OUT on the next change.
+    const shown = useRef<{ key: string; content: React.ReactNode } | null>(null);
+    const [outgoing, setOutgoing] = useState<{ key: string; content: React.ReactNode } | null>(null);
+
+    const content = (
+        <VStack space="xs">
+            {onBack ? (
+                <ActionSheetRow testID="sheet-back" label={t('common.back')} icon="arrow-back" onPress={onBack} />
+            ) : null}
+            {children}
+        </VStack>
+    );
 
     // A new level: ease the height (iOS; Android's LayoutAnimation is off in
-    // this app) and slide the new content in from the side it came from.
+    // this app) and move both levels. Detected during render so the first
+    // frame of the new level is already offset (no flash at rest).
     if (lastKey.current !== levelKey) {
         lastKey.current = levelKey;
-        if (!reduceMotion && direction !== 'none') {
+        const animate = !reduceMotion && direction !== 'none';
+        if (animate) {
             if (Platform.OS === 'ios') {
-                LayoutAnimation.configureNext(
-                    LayoutAnimation.create(SHEET_SLIDE_MS, 'easeInEaseOut', 'opacity'),
-                );
+                LayoutAnimation.configureNext(LayoutAnimation.create(SHEET_SLIDE_MS, 'easeInEaseOut', 'opacity'));
             }
-            slide.setValue(direction === 'push' ? width : -width);
+            sign.current = direction === 'push' ? 1 : -1;
+            progress.setValue(0);
+            setOutgoing(shown.current);
         } else {
-            slide.setValue(0);
+            progress.setValue(1);
+            setOutgoing(null);
         }
     }
+    shown.current = { key: levelKey, content };
     useEffect(() => {
-        Animated.timing(slide, { toValue: 0, duration: SHEET_SLIDE_MS, useNativeDriver: true }).start();
-    }, [levelKey, slide]);
+        if (!outgoing) return;
+        const anim = Animated.timing(progress, { toValue: 1, duration: SHEET_SLIDE_MS, useNativeDriver: true });
+        anim.start(({ finished }) => {
+            if (finished) setOutgoing(null);
+        });
+        return () => anim.stop();
+    }, [outgoing, progress]);
+    const inX = progress.interpolate({ inputRange: [0, 1], outputRange: [sign.current * width, 0] });
+    const outX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, -sign.current * width] });
 
     return (
         <Modal
@@ -257,23 +287,27 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                             >
                                 {title?.trim() ? title.trim() : t('articleMenu.title')}
                             </Text>
-                            <Animated.View
-                                key={levelKey}
-                                testID="article-menu-level"
-                                style={{ transform: [{ translateX: slide }] }}
-                            >
-                                <VStack space="xs">
-                                    {onBack ? (
-                                        <ActionSheetRow
-                                            testID="sheet-back"
-                                            label={t('common.back')}
-                                            icon="arrow-back"
-                                            onPress={onBack}
-                                        />
-                                    ) : null}
-                                    {children}
-                                </VStack>
-                            </Animated.View>
+                            <View>
+                                <Animated.View
+                                    key={levelKey}
+                                    testID="article-menu-level"
+                                    style={{ transform: [{ translateX: outgoing ? inX : 0 }] }}
+                                >
+                                    {content}
+                                </Animated.View>
+                                {outgoing ? (
+                                    <Animated.View
+                                        key={`out:${outgoing.key}`}
+                                        testID="article-menu-level-out"
+                                        pointerEvents="none"
+                                        accessibilityElementsHidden
+                                        importantForAccessibility="no-hide-descendants"
+                                        style={{ position: 'absolute', top: 0, left: 0, right: 0, transform: [{ translateX: outX }] }}
+                                    >
+                                        {outgoing.content}
+                                    </Animated.View>
+                                ) : null}
+                            </View>
                             <Pressable
                                 testID="article-menu-cancel"
                                 accessibilityRole="button"

@@ -731,3 +731,66 @@ it('the applied leaf is summarised by the shared labeller, with the article cont
     });
 });
 
+
+// Batch 12 fix 2: the outgoing level slides OUT while the new one slides in
+// (push: old exits left, new enters from the right; Back: the reverse), so
+// the sheet never shows an empty frame between levels. Reduce Motion swaps.
+describe('the level transition', () => {
+    const { SHEET_SLIDE_MS } = require('../ArticleOverflowMenu');
+    const { AccessibilityInfo, StyleSheet } = jest.requireActual('react-native');
+    const row = () => ({
+        liked: false,
+        saved: false,
+        onLike: jest.fn(),
+        onDislike: jest.fn(),
+        onToggleSave: jest.fn(),
+        onShare: jest.fn(),
+    });
+    // The outgoing copy is hidden from VoiceOver (it is leaving), and RNTL
+    // skips hidden elements unless asked.
+    const HIDDEN = { includeHiddenElements: true };
+    afterEach(() => jest.restoreAllMocks());
+
+    it('keeps the outgoing level on screen, sliding out, until the new one has landed', async () => {
+        const r = openMenu(<Host rowActions={row()} />);
+        await settle();
+        fireEvent.press(r.getByTestId('menu-like'));
+        // Both mounted mid-slide: the old rows ride out, the tree rides in.
+        const out = r.getByTestId('article-menu-level-out', HIDDEN);
+        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(out.props.pointerEvents).toBe('none');
+        // Absolutely placed, so the sheet sizes to the incoming level only.
+        expect(StyleSheet.flatten(out.props.style)).toEqual(expect.objectContaining({ position: 'absolute' }));
+        act(() => {
+            jest.advanceTimersByTime(SHEET_SLIDE_MS + 100);
+        });
+        expect(r.queryByTestId('article-menu-level-out', HIDDEN)).toBeNull();
+        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+    });
+
+    it('Back does the same in reverse, and the level it returns to is never blank', async () => {
+        const r = openMenu(<Host rowActions={row()} />);
+        await settle();
+        fireEvent.press(r.getByTestId('menu-like'));
+        act(() => {
+            jest.advanceTimersByTime(SHEET_SLIDE_MS + 100);
+        });
+        fireEvent.press(r.getByTestId('sheet-back'));
+        expect(r.getByTestId('article-menu-level-out', HIDDEN)).toBeTruthy();
+        expect(r.getByTestId('menu-save')).toBeTruthy();
+        act(() => {
+            jest.advanceTimersByTime(SHEET_SLIDE_MS + 100);
+        });
+        expect(r.queryByTestId('article-menu-level-out', HIDDEN)).toBeNull();
+        expect(r.getByTestId('menu-save')).toBeTruthy();
+    });
+
+    it('Reduce Motion swaps levels in place, with no outgoing copy', async () => {
+        jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
+        const r = openMenu(<Host rowActions={row()} />);
+        await settle();
+        fireEvent.press(r.getByTestId('menu-like'));
+        expect(r.queryByTestId('article-menu-level-out', HIDDEN)).toBeNull();
+        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+    });
+});
