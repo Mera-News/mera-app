@@ -75,12 +75,18 @@ export const NARRATION_COLOR = '#FFFFFF';
 
 /**
  * The widest the narration can be where it is shown: INLINE on the Feed,
- * between the "?" and the Mera mark, about 170pt on a 375pt phone. The copy is
- * written to fit it on one line; `narration-widths.json` is every line in every
- * locale measured with CoreText at 14pt, and the test holds each one to this
- * less a small margin.
+ * between the "?" and the `[mark] [bell]` cluster, per width step (the
+ * `headerTitleSize` breakpoint). Derived for English: row (window - 40) less
+ * the title, the "?" footprint (24), the mark's layout box, the bell (24),
+ * three ~7pt row gaps and HEADER_ACTIONS_GAP (25).
+ *   400pt+ (402): 362 - 82.1 - 24 - 18.1 - 24 - 21 - 25 = ~168
+ *   compact (375): 335 - 68.7 - 24 - 15.1 - 24 - 21 - 25 = ~157
+ * `narration-widths.json` is every line in every locale measured with CoreText
+ * at 14pt. At 400pt+ every line must fit (the test is strict); on compact
+ * phones a bounded few lines take a "…" (owner decision), never a second line.
  */
-export const NARRATION_INLINE_WIDTH_PT = 170;
+export const NARRATION_INLINE_WIDTH_PT_WIDE = 168;
+export const NARRATION_INLINE_WIDTH_PT_COMPACT = 157;
 
 /**
  * The line's typography and its wrap budget, in ONE place because the row

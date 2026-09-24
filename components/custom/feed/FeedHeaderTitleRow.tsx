@@ -1,4 +1,5 @@
 import HeaderNarrationLine from '@/components/custom/for-you/HeaderNarrationLine';
+import { HEADER_ACTIONS_GAP } from '@/components/custom/for-you/HeaderIconButton';
 import { HStack } from '@/components/ui/hstack';
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
 import type { ProcessingStageId } from '@/lib/services/processing-stage';
@@ -26,8 +27,10 @@ export interface FeedHeaderTitleRowProps {
     title: React.ReactNode;
     /** The "?" explainer, right after the title. */
     explainer: React.ReactNode;
-    /** The Mera status mark at the row's right end, in every state. */
+    /** The Mera status mark, left of the bell, in every state. */
     mark: React.ReactNode;
+    /** The shared notification bell, the row's right end (owner). */
+    bell: React.ReactNode;
     /** A sync is really running (`useIsFeedProcessing`). */
     narrating: boolean;
     stage: ProcessingStageId | null;
@@ -37,13 +40,14 @@ export interface FeedHeaderTitleRowProps {
 }
 
 /**
- * The Feed's title row: `|Feed (?)      Reading your stories  ◈|`.
+ * The Feed's title row: `|Feed (?)   Reading your stories   ◈  🔔|`.
  *
- * Owner layout: the "?" sits next to the title and the Mera mark takes the
- * right-most spot. The "what Mera is doing" narration lives ONLY here, inline,
- * one line, CENTRED in the space between the "?" and the mark (owner). The row holds the same four things it
- * always did, so the narration keeps its measured ~170pt budget
- * (`NARRATION_INLINE_WIDTH_PT`); a longer line is trimmed with "…". The row's
+ * Owner layout: the "?" sits next to the title, then the narration, then the
+ * `[mark] [bell]` cluster (the same as the Dashboard's). The "what Mera is
+ * doing" narration lives ONLY here, one line, CENTRED in the space between the
+ * "?" and the mark. Its budget is `NARRATION_INLINE_WIDTH_PT_WIDE` /
+ * `_COMPACT` (header-narration.ts): every line fits at 400pt+, and on a compact
+ * phone a bounded few lines are trimmed with "…" by decision. The row's
  * height is pinned in every state, and the mark grows by a transform, so a sync
  * starting or ending never moves the header, the list padding or the refresh
  * spinner.
@@ -56,6 +60,7 @@ const FeedHeaderTitleRow: React.FC<FeedHeaderTitleRowProps> = ({
     title,
     explainer,
     mark,
+    bell,
     narrating,
     stage,
     onDevice,
@@ -90,7 +95,16 @@ const FeedHeaderTitleRow: React.FC<FeedHeaderTitleRowProps> = ({
                 />
             ) : null}
         </View>
-        {mark}
+        {/* `[mark] [bell]`, the same right cluster as the Dashboard. The mark
+            grows by transform, so neither the bell nor the narration reflows. */}
+        <View
+            pointerEvents="box-none"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: HEADER_ACTIONS_GAP }}
+            testID="feed-header-actions"
+        >
+            {mark}
+            {bell}
+        </View>
     </HStack>
 );
 

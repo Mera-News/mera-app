@@ -91,6 +91,7 @@ import {
 } from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedStatusMark from '@/components/custom/feed/FeedStatusMark';
+import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { StatusDropdownLayer, StatusDropdownProvider } from '@/components/custom/for-you/status-dropdown';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
@@ -1222,6 +1223,8 @@ const FeedScreen: React.FC = () => {
             height={titleRowHeight}
             title={feedTitleSlot}
             mark={feedStatusMark}
+            // The same bell as every other tab header (owner).
+            bell={<NotificationBellButton />}
             narrating={narrating}
             stage={narrationStage}
             onDevice={narrationOnDevice}

@@ -141,6 +141,11 @@ describe('FeedScreen header structure', () => {
         expect(src).toMatch(/const narrating = useIsFeedProcessing\(\);/);
     });
 
+    it('hands the row the shared notification bell (owner: right of the mark)', () => {
+        expect(src).toContain('bell={<NotificationBellButton />}');
+        expect(src).toContain("from '@/components/custom/notifications/NotificationBellButton'");
+    });
+
     it('wraps the screen in the dropdown provider and mounts the layer', () => {
         expect(src).toContain('<StatusDropdownProvider>');
         expect(src).toContain('<StatusDropdownLayer testIDPrefix="feed-status" />');
