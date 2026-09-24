@@ -857,26 +857,24 @@ describe('ArticleActionsRow', () => {
   });
 });
 
-describe('ArticleSuggestionCard fact chip (A2)', () => {
-  it('names the matched fact under the note on a Feed card, and opens its story list', async () => {
-    const { getFactsForTopicTexts } = require('@/lib/database/services/fact-service');
-    getFactsForTopicTexts.mockResolvedValueOnce([{ id: 'f9', statement: 'I work in fintech' }]);
-    const onPress = jest.fn();
-    const { findByTestId } = render(
-      <ArticleSuggestionCard
-        suggestion={makeSuggestion({ _id: 'sugg-chip', userTopicIds: ['fintech-a2'] } as any)}
-        onPress={onPress}
-        onVerdict={jest.fn()}
-      />,
+// Owner review: the importance badge and the AI disclosure share ONE row
+// (badge left, disclosure right), the note runs full width below, and there is
+// no fact chip and no second disclosure line under the note.
+describe('ArticleSuggestionCard note block', () => {
+  it('puts the AI disclosure at the right end of the badge row, once', () => {
+    const { getByTestId, queryAllByText, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion({ _id: 'sugg-note' })} onPress={jest.fn()} onVerdict={jest.fn()} />,
     );
-    const chip = await findByTestId('card-fact-chip');
-    fireEvent.press(chip);
-    expect(mockRouterPush).toHaveBeenCalledWith({
-      pathname: '/logged-in/fact-feed',
-      params: { factId: 'f9', statement: 'I work in fintech' },
-    });
-    // The chip is its own button: the tap never opens the card.
-    expect(onPress).not.toHaveBeenCalled();
+    const row = getByTestId('card-reason-badge-row');
+    expect(String(row.props.className)).toContain('justify-between');
+    const inRow = (n: any): boolean => {
+      for (let p = n; p; p = p.parent) if (p === row) return true;
+      return false;
+    };
+    const disclosures = queryAllByText('aiDisclosure.caption');
+    expect(disclosures).toHaveLength(1);
+    expect(inRow(disclosures[0])).toBe(true);
+    expect(queryByTestId('card-fact-chip')).toBeNull();
   });
 });
 

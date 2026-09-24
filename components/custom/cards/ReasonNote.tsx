@@ -15,34 +15,43 @@ export interface ReasonNoteProps {
     reason: string;
     /** When the note started waiting (see `pendingSinceMs`), for the cap. */
     pendingSinceMs: number | null;
-    /** Rendered under the note: the fact chip (A2). */
-    below?: React.ReactNode;
     testID?: string;
 }
 
+/** Space above and below the badge row. */
+const BADGE_ROW_PADDING = 6;
+
 /**
- * The AI note block, ONE layout for the Feed card and the detail screen (F24).
+ * The AI note block, ONE layout for the Feed card and the detail screen.
  *
- * The chip sits on its own row and the note runs LEFT-ALIGNED at full width
- * beneath it. It used to be a chip plus a right-aligned, ragged column beside
- * it, and the detail screen had its own copy of the block with a different
- * layout again (chip and disclosure in a 150pt column). The note is the
- * product's value; it gets the width.
+ * A badge row, then the note at full width, left-aligned:
  *
- * While the note is pending, the placeholder sits beside the chip, where the
- * note will not be, so the box does not jump when the note lands.
+ *   [importance badge] ................ [✦ AI-generated note]
+ *   Mera's note, full width.
+ *
+ * The disclosure sits at the right end of the badge row (owner review), not on
+ * a line of its own under the note, and it renders only when there IS a note
+ * to disclose. While the note is pending, the placeholder takes the disclosure's
+ * place beside the badge, so the box does not jump when the note lands.
  */
-const ReasonNote: React.FC<ReasonNoteProps> = ({ relevance, reason, pendingSinceMs, below, testID }) => {
+const ReasonNote: React.FC<ReasonNoteProps> = ({ relevance, reason, pendingSinceMs, testID }) => {
     const { t } = useTranslation();
     return (
         <Box
             testID={testID}
-            className="rounded-lg p-3"
-            style={{ backgroundColor: reasonBoxColors.backgroundColor }}
+            className="rounded-lg px-3 pb-3"
+            style={{ backgroundColor: reasonBoxColors.backgroundColor, paddingTop: 12 - BADGE_ROW_PADDING }}
         >
-            <HStack className="items-center" space="md">
+            <HStack
+                className="items-center justify-between"
+                space="md"
+                style={{ paddingVertical: BADGE_ROW_PADDING }}
+                testID={testID ? `${testID}-badge-row` : undefined}
+            >
                 <RelevanceChip relevance={relevance} />
-                {reason ? null : (
+                {reason ? (
+                    <AiDisclosureCaption color={aiDisclosureColor} align="right" />
+                ) : (
                     <Box className="flex-1 items-start">
                         <StreamingIndicator
                             compact
@@ -56,7 +65,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({ relevance, reason, pendingSince
                 )}
             </HStack>
             {reason ? (
-                <Box className="mt-2" testID={testID ? `${testID}-text` : undefined}>
+                <Box className="mt-1" testID={testID ? `${testID}-text` : undefined}>
                     <TranslatableDynamic
                         text={reason}
                         size="sm"
@@ -65,13 +74,6 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({ relevance, reason, pendingSince
                         style={{ color: reasonBoxColors.textColor }}
                     />
                 </Box>
-            ) : null}
-            {below}
-            {/* Gated on `reason`: the disclosure's whole contract is that it
-                renders when there IS AI-generated text to disclose, never beside
-                the pending placeholder. */}
-            {reason ? (
-                <AiDisclosureCaption color={aiDisclosureColor} align="left" className="mt-2" />
             ) : null}
         </Box>
     );
