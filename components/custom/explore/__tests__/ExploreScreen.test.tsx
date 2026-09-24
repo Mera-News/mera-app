@@ -148,6 +148,10 @@ jest.mock('../ExploreSearchBar', () => {
     };
 });
 
+jest.mock('@/components/custom/notifications/NotificationBellButton', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="bell" /> };
+});
 jest.mock('@/components/custom/for-you/TabExplainerButton', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: (p: any) => <View testID={p.testID} tab={p.tab} /> };
@@ -442,6 +446,19 @@ describe('ExploreScreen — search collapsed into the title row (Item 12a)', () 
         };
         expect(inGroup('explore-explainer-open')).toBe(true);
         expect(inGroup('explore-search-open')).toBe(false);
+    });
+
+    it('puts the shared bell right of explore-search-open, in one actions cluster with the shared gap', async () => {
+        const { StyleSheet } = require('react-native');
+        const { HEADER_ACTIONS_GAP } = require('@/components/custom/for-you/HeaderIconButton');
+        const r = render(<ExploreScreen />);
+        
+        const ids = r.UNSAFE_root
+            .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+            .map((n: any) => n.props.testID as string);
+        expect(ids.indexOf('bell')).toBe(ids.indexOf('explore-search-open') + 1);
+        const cluster = StyleSheet.flatten(r.getByTestId('explore-header-actions').props.style);
+        expect(cluster.gap).toBe(HEADER_ACTIONS_GAP);
     });
 
     it('gives the magnifier a real 44pt frame with a 24pt footprint, not hitSlop', () => {

@@ -32,7 +32,8 @@ import { StyleSheet, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ExploreSearchBar from './ExploreSearchBar';
-import HeaderIconButton from '@/components/custom/for-you/HeaderIconButton';
+import HeaderIconButton, { HEADER_ACTIONS_GAP } from '@/components/custom/for-you/HeaderIconButton';
+import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import ExploreSearchResults from './ExploreSearchResults';
 import ScopeArticleList from './ScopeArticleList';
@@ -483,14 +484,23 @@ const ExploreScreen: React.FC = () => {
                                     {/* N4: what this tab is and where its stories come from. */}
                                     <TabExplainerButton tab="explore" testID="explore-explainer-open" />
                                 </HStack>
-                                {/* The shared header icon button: the Dashboard's
-                                    bell is the same component (owner). */}
-                                <HeaderIconButton
-                                    icon="search"
-                                    onPress={handleOpenSearch}
-                                    accessibilityLabel={t('explore.openSearch')}
-                                    testID="explore-search-open"
-                                />
+                                {/* `[search] [bell]` (owner), the shared header
+                                    icon button and the shared bell, spaced like
+                                    every tab's right cluster. */}
+                                <HStack
+                                    className="items-center"
+                                    pointerEvents="box-none"
+                                    style={{ gap: HEADER_ACTIONS_GAP }}
+                                    testID="explore-header-actions"
+                                >
+                                    <HeaderIconButton
+                                        icon="search"
+                                        onPress={handleOpenSearch}
+                                        accessibilityLabel={t('explore.openSearch')}
+                                        testID="explore-search-open"
+                                    />
+                                    <NotificationBellButton />
+                                </HStack>
                             </>
                         )}
                     </HStack>
