@@ -98,6 +98,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
     subject,
     articleUrl: article.article_url ?? article.source_uri,
     languageCode: article.original_language_code,
+    titleOriginal: article.title,
     visit,
     // Answered on the detail screen, so the row opens it after asking.
     onCheckFacts: () => {

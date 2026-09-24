@@ -3,6 +3,7 @@ import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -156,6 +157,11 @@ export interface ActionSheetProps {
     onExited?: () => void;
     /** The article's headline, as the sheet's title (one line), every level. */
     title?: string;
+    /** The publisher's own headline and its language: with `title` (the
+     *  English title) these are exactly what the card's title chooses from,
+     *  so the sheet shows the headline the card shows. */
+    titleOriginal?: string | null;
+    titleLanguage?: string | null;
     /** Cancel / backdrop / hardware back at the root: close the whole sheet. */
     onClose: () => void;
     /** Identifies the level on top; a change slides the new level in. */
@@ -200,6 +206,8 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     onDismiss,
     onExited,
     title,
+    titleOriginal,
+    titleLanguage,
     onClose,
     levelKey,
     direction,
@@ -396,17 +404,30 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                             {/* The headline, so the reader knows which story the
                                 actions are for; the generic label only when
                                 there is none. Same on every level. */}
-                            <Text
-                                testID="article-menu-title"
-                                size="sm"
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                                className="px-4 pb-2"
-                                style={{ color: 'rgb(212,212,212)', fontWeight: '600' }}
-                                accessibilityRole="header"
-                            >
-                                {title?.trim() ? title.trim() : t('articleMenu.title')}
-                            </Text>
+                            <View testID="article-menu-title" accessibilityRole="header" className="px-4 pb-2">
+                                {title?.trim() ? (
+                                    // The card's own title component and fields, so the
+                                    // sheet never shows a different headline (the card
+                                    // shows the publisher's headline when the article is
+                                    // in the reader's language, a translation otherwise).
+                                    <TranslatableDynamic
+                                        text={title.trim()}
+                                        originalText={titleOriginal ?? undefined}
+                                        originalLanguage={titleLanguage}
+                                        size="sm"
+                                        numberOfLines={1}
+                                        style={{ color: 'rgb(212,212,212)', fontWeight: '600' }}
+                                    />
+                                ) : (
+                                    <Text
+                                        size="sm"
+                                        numberOfLines={1}
+                                        style={{ color: 'rgb(212,212,212)', fontWeight: '600' }}
+                                    >
+                                        {t('articleMenu.title')}
+                                    </Text>
+                                )}
+                            </View>
                             {/* The level viewport CLIPS: on a push to a shorter level the
                                 sheet shrinks to the new height while the outgoing rows are
                                 still sliding, and unclipped they spill over Cancel. */}

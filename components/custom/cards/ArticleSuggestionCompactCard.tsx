@@ -89,6 +89,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
     subject,
     articleUrl: suggestion.article_url,
     languageCode: suggestion.language_code,
+    titleOriginal: suggestion.title_original,
     visit,
     // Answered on the detail screen, so the row opens it after asking.
     onCheckFacts: () => {

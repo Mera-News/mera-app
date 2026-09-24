@@ -1122,3 +1122,32 @@ describe('a recorded verdict is immediate and identical on every path', () => {
     expect(menu.getByTestId('menu-like').props.accessibilityLabel).toBe('articleMenu.removeLike');
   });
 });
+
+// Batch 16: the ••• sheet's title must be what the card shows (same component,
+// same text / original / language), not the pipeline's English title.
+describe('the ••• sheet title matches the card title', () => {
+  const titleProps = (r: any) =>
+    r.UNSAFE_root.findAll((n: any) => n.type === require('@/components/custom/TranslatableDynamic').default)
+      .map((n: any) => ({ text: n.props.text, originalText: n.props.originalText, originalLanguage: n.props.originalLanguage }));
+
+  it('on a compact suggestion row', () => {
+    const s = makeSuggestion({ title_en: 'Cybersecurity experts warn that the FBI breach could', title_original: 'Cyber experts warn FBI breach could', language_code: 'en' });
+    const r = render(<ArticleSuggestionCompactCard suggestion={s} onPress={jest.fn()} surface="for_you" />);
+    const [card] = titleProps(r);
+    fireEvent.press(r.getByTestId('compact-card-more'));
+    const all = titleProps(r);
+    expect(all.length).toBeGreaterThan(1);
+    expect(all[all.length - 1]).toEqual(card);
+  });
+
+  it('on a Feed card', () => {
+    const s = makeSuggestion({ title_en: 'Cybersecurity experts warn that the FBI breach could', title_original: 'Cyber experts warn FBI breach could', language_code: 'en' });
+    const r = render(<ArticleSuggestionCard suggestion={s} onPress={jest.fn()} onVerdict={jest.fn()} />);
+    const [card] = titleProps(r);
+    fireEvent.press(r.getByTestId('card-action-more'));
+    const all = titleProps(r);
+    expect(all.length).toBeGreaterThan(1);
+    expect(all[all.length - 1]).toEqual(card);
+  });
+});
+

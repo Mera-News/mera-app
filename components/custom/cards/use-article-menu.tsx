@@ -39,8 +39,12 @@ export interface UseArticleMenuInput {
     subject: FeedbackSubject;
     /** Raw publisher URL (the https guard is applied at open time). */
     articleUrl?: string | null;
-    /** The article's own language, for the Google Translate item. */
+    /** The article's own language, for the Google Translate item and the
+     *  sheet title's language (see `titleOriginal`). */
     languageCode?: string | null;
+    /** The publisher's own headline. The sheet title chooses between it and
+     *  `subject.title` exactly as the card title does. */
+    titleOriginal?: string | null;
     /** What a publisher visit records ("Open on source" backs History). */
     visit?: VisitInput;
     /** Starts a fact check. Omitted: the item is not offered. */
@@ -727,6 +731,8 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             // finishes and the Modal is hidden.
             onExited={Platform.OS === 'ios' ? undefined : onDismissed}
             title={subject.title}
+            titleOriginal={input.titleOriginal}
+            titleLanguage={languageCode}
             onClose={close}
             levelKey={top ? levelKey(stack.length, top) : 'none'}
             direction={direction}

@@ -187,6 +187,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     subject: menuSubject,
     articleUrl: suggestion.article_url,
     languageCode: suggestion.language_code,
+    titleOriginal: suggestion.title_original,
     visit: menuVisit,
     // A check started from a card is answered on the detail screen, directly
     // under the action row there, so the card opens it after asking.

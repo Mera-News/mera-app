@@ -38,6 +38,9 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
   const sheet = useArticleMenu({
     surface: 'card',
     subject,
+    // The sheet title shows the headline the card shows.
+    titleOriginal: share?.titleOriginal,
+    languageCode: share?.sourceLanguage,
     onLeafPicked: actions.onLeafPicked,
     // The inline crosshair shows the follow state all the time.
     followLive: true,

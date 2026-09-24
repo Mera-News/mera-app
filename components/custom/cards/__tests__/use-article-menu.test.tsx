@@ -60,6 +60,19 @@ jest.mock('react-i18next', () => ({
     }),
 }));
 jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
+// The sheet title renders through the card's own title component, so it shows
+// what the card shows. Stubbed to surface the three fields it chooses from.
+jest.mock('@/components/custom/TranslatableDynamic', () => {
+    const { Text } = require('react-native');
+    return {
+        __esModule: true,
+        default: (p: any) => (
+            <Text testID="title-text" numberOfLines={p.numberOfLines}>
+                {[p.text, p.originalText ?? '', p.originalLanguage ?? ''].join('|')}
+            </Text>
+        ),
+    };
+});
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/GlassSurface', () => ({
     GLASS_OVER_CONTENT_FILL: '#111',
@@ -299,8 +312,15 @@ describe('useArticleMenu items', () => {
 describe('ArticleOverflowMenu sheet', () => {
     it('titles the sheet with the headline, not a generic label', () => {
         const r = openMenu(<Host />);
-        expect(r.getByTestId('article-menu-title').props.children).toBe('A headline');
-        expect(r.getByTestId('article-menu-title').props.numberOfLines).toBe(1);
+        expect(r.getByTestId('title-text').props.children).toBe('A headline|' + '|nl');
+        expect(r.getByTestId('title-text').props.numberOfLines).toBe(1);
+    });
+
+    // Batch 16: the sheet showed the pipeline's English title while the card
+    // showed the publisher's own headline. Same component, same three fields.
+    it('chooses its title from the same fields the card does', () => {
+        const r = openMenu(<Host titleOriginal="Cyber experts warn FBI breach could…" />);
+        expect(r.getByTestId('title-text').props.children).toBe('A headline|Cyber experts warn FBI breach could…|nl');
     });
 
     it('clears the home indicator and gives Cancel its own readable plate', () => {
