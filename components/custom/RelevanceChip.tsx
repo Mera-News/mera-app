@@ -22,6 +22,15 @@ function tierIcon(relevance: number): keyof typeof MaterialIcons.glyphMap | null
     return bandOf(relevance) === 'EMERGENCY' ? 'warning' : null;
 }
 
+/** What VoiceOver says for each band (the word alone is too terse once the
+ *  glyphs are gone). A sub-gate score reads as low. */
+const SPOKEN_LABEL: Partial<Record<ReturnType<typeof bandOf>, 'relevance.a11yEmergency' | 'relevance.a11yHigh' | 'relevance.a11yMedium' | 'relevance.a11yLow'>> = {
+    EMERGENCY: 'relevance.a11yEmergency',
+    HIGH: 'relevance.a11yHigh',
+    MEDIUM: 'relevance.a11yMedium',
+    LOW: 'relevance.a11yLow',
+};
+
 const RelevanceChip: React.FC<RelevanceChipProps> = ({ relevance }) => {
     const { t } = useTranslation();
     const colors = getRelevanceColors(relevance);
@@ -31,6 +40,9 @@ const RelevanceChip: React.FC<RelevanceChipProps> = ({ relevance }) => {
         <Box
             className="px-2 py-1 rounded-full"
             style={{ backgroundColor: colors.backgroundColor }}
+            // One spoken label for the whole chip: "High priority", not "High".
+            accessible
+            accessibilityLabel={t(SPOKEN_LABEL[bandOf(relevance)] ?? 'relevance.a11yLow')}
         >
             <HStack className="items-center" space="xs">
                 {icon ? <MaterialIcons name={icon} size={11} color={colors.textColor} /> : null}

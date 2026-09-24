@@ -25,7 +25,7 @@ import RelevanceChip from '../RelevanceChip';
 // One representative score per band, found from the band source itself so the
 // test never hardcodes the cutoffs.
 function scoreFor(band: string): number {
-    for (let r = 1; r >= 0; r -= 0.01) if (bandOf(r) === band) return r;
+    for (let r = 1.2; r >= 0; r -= 0.01) if (bandOf(r) === band) return r;
     throw new Error(`no score for ${band}`);
 }
 
@@ -37,6 +37,18 @@ describe('RelevanceChip', () => {
             expect(queryByTestId(`icon-${g}`)).toBeNull();
         }
         expect(getByText(getRelevanceColors(r).label)).toBeTruthy();
+    });
+
+    // The glyphs carried no meaning to VoiceOver; the chip's spoken label says
+    // what the word alone does not ("High priority").
+    it.each([
+        ['EMERGENCY', 'relevance.a11yEmergency'],
+        ['HIGH', 'relevance.a11yHigh'],
+        ['MEDIUM', 'relevance.a11yMedium'],
+        ['LOW', 'relevance.a11yLow'],
+    ])('%s: speaks as %s', (band, key) => {
+        const { getByLabelText } = render(<RelevanceChip relevance={scoreFor(band)} />);
+        expect(getByLabelText(key)).toBeTruthy();
     });
 
     it('keeps the band colours', () => {
