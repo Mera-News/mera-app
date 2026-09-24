@@ -56,6 +56,7 @@ import { Linking, Platform, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
+import ProcessingModePill from './ProcessingModePill';
 
 interface MeraProtocolSettingsScreenProps {
     onBack?: () => void;
@@ -494,39 +495,14 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
     const renderModePill = (mode: ProcessingMode) => {
         const onDevicePill = mode === ProcessingMode.OnDevice;
-        const selected = onDevicePill ? onDeviceIntent : !onDeviceIntent;
-
-        const iconName = onDevicePill ? 'smartphone' : 'cloud';
-        const titleKey = onDevicePill ? 'meraProtocol.onDeviceMode' : 'meraProtocol.cloudMode';
-        const subtitleKey = onDevicePill
-            ? 'meraProtocol.onDeviceModeSubtitle'
-            : 'meraProtocol.cloudModeSubtitle';
-
-        const baseClass = 'flex-1 rounded-lg px-4 py-3 border ';
-        const stateClass = selected
-            ? 'border-emerald-500 bg-emerald-950'
-            : 'border-gray-700 bg-background-50';
-
-        const iconColor = selected ? '#34d399' : '#9ca3af';
-        const titleClass = selected ? 'text-emerald-400' : 'text-white';
-
         return (
-            <Pressable
+            <ProcessingModePill
                 key={mode}
-                onPress={() => selectMode(mode)}
+                mode={mode}
+                selected={onDevicePill ? onDeviceIntent : !onDeviceIntent}
                 disabled={isUpdatingMode}
-                className={baseClass + stateClass}
-            >
-                <VStack space="xs" className="items-center">
-                    <MaterialIcons name={iconName} size={22} color={iconColor} />
-                    <Text className={'text-center font-medium ' + titleClass}>
-                        {t(titleKey)}
-                    </Text>
-                    <Text size="xs" className="text-center text-typography-400">
-                        {t(subtitleKey)}
-                    </Text>
-                </VStack>
-            </Pressable>
+                onPress={() => selectMode(mode)}
+            />
         );
     };
 
