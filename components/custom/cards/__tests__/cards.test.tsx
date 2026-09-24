@@ -172,7 +172,9 @@ const mockRecordArticleFeedback = jest.fn((..._a: any[]) => Promise.resolve());
 const mockRemoveArticleFeedback = jest.fn((..._a: any[]) => Promise.resolve());
 const mockHasLiked = jest.fn((..._a: any[]) => Promise.resolve(false));
 jest.mock('@/lib/database/services/article-feedback-service', () => ({
-  recordArticleFeedback: (...a: any[]) => mockRecordArticleFeedback(...a),
+  // Latest wins: every row records through the exclusive writer.
+  recordVerdictFeedback: (...a: any[]) => mockRecordArticleFeedback(...a),
+  getArticleVerdict: jest.fn(async () => ({ verdict: null, path: [] })),
   removeArticleFeedback: (...a: any[]) => mockRemoveArticleFeedback(...a),
   hasLiked: (...a: any[]) => mockHasLiked(...a),
 }));

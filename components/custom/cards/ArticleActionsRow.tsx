@@ -47,17 +47,22 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     actions.onLike();
     if (!wasLiked) sheet.openFeedback('like');
   };
+  // A second tap on a filled thumb removes the verdict; only a new verdict
+  // opens its tree.
   const onDislike = () => {
+    const wasDisliked = actions.dislikeState !== 'none';
     actions.onDislike();
-    sheet.openFeedback('dislike');
+    if (!wasDisliked) sheet.openFeedback('dislike');
   };
+  const verdict = actions.likeState !== 'none' ? 'like' : actions.dislikeState !== 'none' ? 'dislike' : null;
+  const verdictState = verdict === 'like' ? actions.likeState : actions.dislikeState;
   return (
     <>
       {/* `horizontalPadding={0}`: this row renders as ArticleCardBase's
           CHILDREN, which already sit inside that card's `p-4`. */}
       <CardActionBar
-        verdict={actions.likeState !== 'none' ? 'like' : null}
-        provisional={actions.likeState === 'provisional'}
+        verdict={verdict}
+        provisional={verdictState === 'provisional'}
         saved={actions.saved}
         onLike={onLike}
         onDislike={onDislike}

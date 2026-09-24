@@ -2,7 +2,7 @@ import { buildContextJson, type FeedbackSubject } from '@/components/custom/card
 import {
   getArticleVerdict,
   markFeedbackProcessedFor,
-  recordArticleFeedback,
+  recordVerdictFeedback,
   removeArticleFeedback,
   updateFeedbackContextPath,
   type VerdictSentiment,
@@ -39,11 +39,15 @@ export interface UseArticleActionsInput {
 
 export interface ArticleActions {
   likeState: VerdictState;
+  /** "Not for me", in the same three states. Never set while `likeState` is:
+   *  the two are mutually exclusive (latest wins). */
+  dislikeState: VerdictState;
   saved: boolean;
   /** Records the like (or removes it when already liked). The feedback tree
    *  is NOT opened here: the caller pushes it into the ••• sheet. */
   onLike: () => void;
-  /** Records the dislike. The caller pushes the dislike tree. */
+  /** Records the dislike (or removes it when already disliked). The caller
+   *  pushes the dislike tree. */
   onDislike: () => void;
   onAskMera: () => void;
   onToggleSave: () => void;
@@ -60,7 +64,8 @@ export interface ArticleActions {
  * get its verdict from a host: the standalone card, the compact rows. Every
  * action is driven by a {@link FeedbackSubject}, so it works for suggestions
  * and standalone articles alike:
- *   - Like/Dislike → `recordArticleFeedback` carrying origin + surface + a JSON
+ *   - Like/Dislike → `recordVerdictFeedback` (latest wins: recording one
+ *     removes the other, reverting what it applied) carrying origin + surface + a JSON
  *     context snapshot. The feedback tree for THAT verdict (D17) is pushed
  *     into the ••• sheet by the caller (useArticleMenu), never a second
  *     Modal. The thumb stays tinted-not-filled until a leaf is picked: filled
@@ -77,7 +82,9 @@ export function useArticleActions({
   share,
 }: UseArticleActionsInput): ArticleActions {
   const [likeState, setLikeState] = useState<VerdictState>('none');
+  const [dislikeState, setDislikeState] = useState<VerdictState>('none');
   const liked = likeState !== 'none';
+  const disliked = dislikeState !== 'none';
   const [savedFromDb, setSavedFromDb] = useState(false);
   const handleShare = useShareArticle(share);
 
@@ -88,7 +95,7 @@ export function useArticleActions({
   const savedOverride = useSavedOverride(savedId);
   const saved = savedOverride ?? savedFromDb;
 
-  // Restore "liked" AND whether that like ever got a reason attached, so the
+  // Restore the verdict AND whether that like ever got a reason attached, so the
   // fill state survives a remount instead of silently downgrading.
   useEffect(() => {
     let cancelled = false;
@@ -97,10 +104,12 @@ export function useArticleActions({
     // actions row down.
     void (async () => {
       const { verdict, committed } = await getArticleVerdict(subject.articleId);
-      if (cancelled || verdict !== 'like') return;
+      if (cancelled || !verdict) return;
       // F2/F3 — the stored PATH is not a commit signal (a branch descent writes
       // one). Only the persisted `committed` flag is.
-      setLikeState(committed ? 'committed' : 'provisional');
+      const state: VerdictState = committed ? 'committed' : 'provisional';
+      if (verdict === 'like') setLikeState(state);
+      else setDislikeState(state);
     })().catch(() => {
       /* non-fatal */
     });
@@ -125,9 +134,13 @@ export function useArticleActions({
   }, [savedId]);
 
   // Records the verdict row. Shared by both thumbs; the tree is the caller's.
+  // Latest wins: the writer removes the opposite row first. The non-exclusive
+  // writer used here before let a like and a dislike coexist, and returned
+  // early on an existing row, so "Not for me" on an already-disliked article
+  // wrote nothing and said nothing.
   const recordVerdict = useCallback(
     (sentiment: VerdictSentiment) => {
-      void recordArticleFeedback({
+      void recordVerdictFeedback({
         articleId: subject.articleId,
         suggestionId: subject.suggestionId,
         sentiment,
@@ -149,23 +162,35 @@ export function useArticleActions({
     }
     hapticSuccess();
     setLikeState('provisional');
+    setDislikeState('none');
     recordVerdict('like');
   }, [liked, subject.articleId, recordVerdict]);
 
   const onDislike = useCallback(() => {
+    if (disliked) {
+      hapticLight();
+      setDislikeState('none');
+      void removeArticleFeedback(subject.articleId, 'dislike');
+      return;
+    }
     hapticMedium();
+    setDislikeState('provisional');
+    setLikeState('none');
     recordVerdict('dislike');
-  }, [recordVerdict]);
+  }, [disliked, subject.articleId, recordVerdict]);
 
   // A terminal leaf settled. `committed` comes from the leaf rather than
   // being inferred from `appliedCount`: a seenOnly leaf changes nothing by
   // design and must leave the thumb unfilled, while a leaf whose placeholders
-  // couldn't be resolved still counts as a reason the user gave. Stamps the row
-  // processed when something actually applied, so the 3-hourly digest can't
-  // apply a second helping of the same signal.
+  // couldn't be resolved still counts as a reason the user gave.
+  //
+  // ORDER MATTERS: a committed path write re-opens the row for the digest
+  // (processed_at = null), and it lands AFTER applyLeafActions stamped the row
+  // spent. So when something applied, stamp it again after the write, or the
+  // 3-hourly digest applies a second helping of the same signal.
   const onLeafPicked = useCallback(
     (sentiment: VerdictSentiment, pathIds: string[], appliedCount: number, committed: boolean) => {
-      if (sentiment === 'like' && committed) setLikeState('committed');
+      if (committed) (sentiment === 'like' ? setLikeState : setDislikeState)('committed');
       void (async () => {
         await updateFeedbackContextPath(subject.articleId, sentiment, pathIds, committed);
         if (appliedCount > 0) await markFeedbackProcessedFor(subject.articleId, sentiment);
@@ -205,6 +230,7 @@ export function useArticleActions({
 
   return {
     likeState,
+    dislikeState,
     saved,
     onLike,
     onDislike,

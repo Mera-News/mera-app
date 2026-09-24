@@ -76,6 +76,7 @@ function Harness(props: { context: LocalFeedbackContext; onLeafPicked: jest.Mock
             chatContext: { kind: 'article-suggestion', articleId: 'a1', articleTitle: 'A story' } as any,
             chatMessage: 'hi',
             label: node.labelDefault ?? '',
+            spend: { articleId: 'a1', sentiment: 'dislike' },
             closeThen: (after) => {
                 props.onClose();
                 after?.();
@@ -182,6 +183,7 @@ describe('performFeedbackLeaf: the committed flag', () => {
         chatContext: { kind: 'article-suggestion', articleId: 'a1', articleTitle: 'A story' } as any,
         chatMessage: 'hi',
         label: 'x',
+        spend: { articleId: 'a1', sentiment: 'dislike' as const },
         closeThen: (after?: () => void) => after?.(),
         onLeafPicked,
         showInfo: jest.fn(),
@@ -210,6 +212,12 @@ describe('performFeedbackLeaf: the committed flag', () => {
             await Promise.resolve();
         });
         expect(picked).toHaveBeenCalledWith(['ni'], 2, true);
+        // The verdict row is spent: stamped processed and its change-log ids
+        // kept, so un-voting or flipping reverts exactly this change.
+        expect(mockApplyLeafActions).toHaveBeenCalledWith(expect.any(Array), expect.any(String), {
+            articleId: 'a1',
+            sentiment: 'dislike',
+        });
     });
 
     it('a nudge applies nothing but STILL commits', () => {

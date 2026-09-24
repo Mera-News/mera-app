@@ -59,6 +59,9 @@ export interface UseArticleMenuInput {
         /** A like is recorded: the item shows the filled glyph and reads
          *  "Remove like"; a tap removes it. */
         liked: boolean;
+        /** A dislike is recorded: "Remove not for me", filled glyph. Never
+         *  true together with `liked` (latest wins). */
+        disliked?: boolean;
         saved: boolean;
         onLike: () => void;
         onDislike: () => void;
@@ -337,14 +340,17 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 },
                 {
                     key: 'dislike',
-                    label: t('articleFeedback.dislikeLabel'),
-                    icon: 'thumb-down-off-alt',
+                    // Mirrors Like: once disliked it says a tap removes it.
+                    label: rowActions.disliked ? t('articleMenu.removeDislike') : t('articleFeedback.dislikeLabel'),
+                    icon: rowActions.disliked ? 'thumb-down' : 'thumb-down-off-alt',
                     testID: 'menu-dislike',
                     staysOpen: true,
-                    opensLevel: true,
+                    opensLevel: !rowActions.disliked,
                     run: () => {
+                        const wasDisliked = !!rowActions.disliked;
                         rowActions.onDislike();
-                        enterTree('dislike');
+                        if (!wasDisliked) enterTree('dislike');
+                        else if (visibleRef.current) closeRef.current();
                     },
                 },
                 {
@@ -604,6 +610,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                     { title: subject.title },
                 ),
                 label: treeLabel(node),
+                spend: { articleId: subject.articleId, sentiment: root },
                 closeThen,
                 onLeafPicked: (p, applied, committed) => onLeafPicked?.(root, p, applied, committed),
                 showInfo,

@@ -22,6 +22,10 @@ export interface FeedbackLeafDeps {
     chatMessage: string;
     /** The node's display label (the undo toast names it). */
     label: string;
+    /** The verdict row this leaf spends. applyLeafActions stamps it processed
+     *  and records the change-log ids, so removing or flipping the verdict
+     *  reverts exactly what the leaf applied. */
+    spend: { articleId: string; sentiment: 'like' | 'dislike' };
     /** Close the sheet, then run `after` once it has gone. */
     closeThen: (after?: () => void) => void;
     /** A terminal leaf settled: persist the path. `committed` is explicit:
@@ -86,7 +90,7 @@ export function performFeedbackLeaf(node: FeedbackTreeNode, pathIds: string[], d
         return;
     }
     d.closeThen(() => {
-        void applyLeafActions(actions, d.label).then((applied) => d.onLeafPicked(pathIds, applied, true));
+        void applyLeafActions(actions, d.label, d.spend).then((applied) => d.onLeafPicked(pathIds, applied, true));
     });
 }
 

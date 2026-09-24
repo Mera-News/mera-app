@@ -437,6 +437,19 @@ describe('the ••• sheet as a navigation stack', () => {
         expect(mockModal.visible).toBe(false);
     });
 
+    // Batch 12 fix 3: "Not for me" mirrors Like. Once disliked it reads
+    // "Remove not for me" with the filled glyph, and a tap removes and closes.
+    it('reads "Remove not for me" once disliked; a tap removes it and closes, with no tree', async () => {
+        const r0 = { ...row(false), disliked: true };
+        const r = openMenu(<Host rowActions={r0} />);
+        await settle();
+        expect(r.getByTestId('menu-dislike').props.accessibilityLabel).toBe('articleMenu.removeDislike');
+        fireEvent.press(r.getByTestId('menu-dislike'));
+        expect(r0.onDislike).toHaveBeenCalledTimes(1);
+        expect(r.queryByTestId('tree-dislike-e-root')).toBeNull();
+        expect(mockModal.visible).toBe(false);
+    });
+
     it('"Remove like" removes it and closes, with no tree', async () => {
         const r0 = row(true);
         const r = openMenu(<Host rowActions={r0} />);

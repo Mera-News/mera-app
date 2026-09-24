@@ -84,6 +84,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
   const rowActions = useMemo(
     () => ({
       liked: actions.likeState !== 'none',
+      disliked: actions.dislikeState !== 'none',
       saved: actions.saved,
       onLike: actions.onLike,
       onDislike: actions.onDislike,
