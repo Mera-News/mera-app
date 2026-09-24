@@ -146,3 +146,53 @@ describe('MeraLogo color', () => {
     expect(fills).toContain('#2A2622');
   });
 });
+
+// Every existing caller renders byte-identically after `drawStrokes` was added.
+// The snapshot was recorded from the component BEFORE that prop existed; a
+// diff here means a default render changed, which no caller asked for.
+describe('MeraLogo default renders are unchanged', () => {
+  beforeEach(() => {
+    mockAnimationsActive = true;
+  });
+  it.each([
+    ['static default', {}],
+    ['static, sized and coloured', { size: 22, color: '#F87171' }],
+    ['animated sweep', { size: 56, animated: true }],
+  ] as const)('%s', (_name, props) => {
+    const { toJSON } = render(<MeraLogo {...(props as any)} />);
+    expect(toJSON()).toMatchSnapshot();
+  });
+});
+
+// Owner: while the Feed processes, the mark's strokes draw on in a loop.
+describe('MeraLogo drawStrokes', () => {
+  beforeEach(() => {
+    mockUseSharedValue.mockClear();
+    mockAnimationsActive = true;
+  });
+  const dashed = (r: ReturnType<typeof render>) =>
+    r.UNSAFE_root.findAll((n: any) => n.props?.strokeDasharray !== undefined && typeof n.type === 'string');
+
+  it('dashes the hexagon outline and the highlighted card, driven by animated props', () => {
+    const r = render(<MeraLogo size={22} drawStrokes />);
+    const nodes = dashed(r);
+    expect(nodes).toHaveLength(2);
+    for (const n of nodes) expect(n.props.animatedProps).toBeDefined();
+    expect(mockUseSharedValue).toHaveBeenCalled();
+  });
+
+  it('does not sweep the spotlight while drawing: the cone holds its frozen frame', () => {
+    const r = render(<MeraLogo size={22} drawStrokes />);
+    const sweeping = r.UNSAFE_root.findAll(
+      (n: any) => n.props?.testID === 'svg-G' && n.props?.animatedProps !== undefined && n.props?.strokeDasharray === undefined,
+    );
+    expect(sweeping).toHaveLength(0);
+    expect(r.UNSAFE_root.findAll((n: any) => n.props?.transform === 'rotate(-15 512 760)').length).toBeGreaterThan(0);
+  });
+
+  it('draws full, still strokes when nobody is looking (blurred or backgrounded)', () => {
+    mockAnimationsActive = false;
+    const r = render(<MeraLogo size={22} drawStrokes />);
+    expect(dashed(r)).toHaveLength(0);
+  });
+});
