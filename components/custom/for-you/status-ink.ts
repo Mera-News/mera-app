@@ -26,6 +26,13 @@ export const STATUS_INK = {
  * content under the 0.90 dark base, then the 7% white lift of
  * `TranslucentPlate`. Brighter content behind cannot make it lighter than this.
  */
+/**
+ * `GLASS_OVER_CONTENT_FILL` (rgba 18,17,19 at 0.90) at full opacity, for a
+ * panel floating over list content with no header scrim or plate beneath it.
+ * At 0.90 the section text behind the Dashboard dropdown read through.
+ */
+export const STATUS_PANEL_OPAQUE_BASE = 'rgb(18, 17, 19)';
+
 export const STATUS_PANEL_WORST_BG: readonly [number, number, number] = [57, 56, 57];
 
 function channel(v: number): number {

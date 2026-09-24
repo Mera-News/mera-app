@@ -30,7 +30,7 @@ import { ON_DEVICE_HEADLINES_KEY, stageDef } from '@/components/custom/processin
 import { PROCESSING_STRIP_HEIGHT } from '@/components/custom/processing/types';
 import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import FeedStatusDetails from './FeedStatusDetails';
-import { pickScoringProgress, STATUS_INK } from './status-ink';
+import { pickScoringProgress, STATUS_INK, STATUS_PANEL_OPAQUE_BASE } from './status-ink';
 
 /** The stage headline rotates through its text pool at this cadence. */
 const HEADLINE_CYCLE_MS = 5000;
@@ -177,6 +177,13 @@ export interface FeedStatusPanelProps {
     readonly mode: FeedStatusMode;
     /** Passed straight through to FeedStatusDetails — see its own doc. */
     readonly onBeforeNavigate?: () => void;
+    /**
+     * An opaque base instead of the 0.90 one. For the Dashboard's dropdown,
+     * which floats over list content with nothing else behind it: section
+     * text read straight through the 0.90 base there. The Feed's panel sits
+     * on the header's own scrim and glass plate, so it keeps the 0.90.
+     */
+    readonly opaque?: boolean;
 }
 
 /**
@@ -190,6 +197,7 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
     expanded,
     mode,
     onBeforeNavigate,
+    opaque = false,
 }) => {
     if (!expanded) return null;
 
@@ -209,7 +217,7 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
             <GlassPanel
                 radius={8}
                 contentClassName="px-3 py-2"
-                style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}
+                style={{ backgroundColor: opaque ? STATUS_PANEL_OPAQUE_BASE : GLASS_OVER_CONTENT_FILL }}
                 testID="dashboard-status-details-panel"
             >
                 <FeedStatusBody mode={mode} onBeforeNavigate={onBeforeNavigate} />

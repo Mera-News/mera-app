@@ -139,6 +139,16 @@ describe('FeedStatusPanel', () => {
         expect(style.backgroundColor).toBe('rgba(18,17,19,0.90)');
     });
 
+    it('draws an OPAQUE base when floated over bare content (the Dashboard dropdown)', () => {
+        const { getByTestId } = render(<FeedStatusPanel expanded mode="idle" opaque />);
+        const { StyleSheet } = require('react-native');
+        const { STATUS_PANEL_OPAQUE_BASE } = require('../status-ink');
+        const style = StyleSheet.flatten(getByTestId('dashboard-status-details-panel').props.style);
+        expect(style.backgroundColor).toBe(STATUS_PANEL_OPAQUE_BASE);
+        // Opaque means alpha 1: section text showed through the 0.90 base.
+        expect(STATUS_PANEL_OPAQUE_BASE).toMatch(/^rgb\(/);
+    });
+
     it('closes itself after the one shared delay, the Feed\'s 3000ms', () => {
         expect(STATUS_PANEL_AUTO_COLLAPSE_MS).toBe(3000);
     });
