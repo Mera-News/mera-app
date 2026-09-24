@@ -1,0 +1,103 @@
+{
+  "_comment": "ux1 P1 follow-up (feed scout): the compact ••• menu's Like item once liked. New key only. No dashes.",
+  "en": {
+    "articleMenu": {
+      "removeLike": "Remove like"
+    }
+  },
+  "ar": {
+    "articleMenu": {
+      "removeLike": "إزالة الإعجاب"
+    }
+  },
+  "de": {
+    "articleMenu": {
+      "removeLike": "Gefällt mir entfernen"
+    }
+  },
+  "es": {
+    "articleMenu": {
+      "removeLike": "Quitar me gusta"
+    }
+  },
+  "fr": {
+    "articleMenu": {
+      "removeLike": "Retirer le j’aime"
+    }
+  },
+  "hi": {
+    "articleMenu": {
+      "removeLike": "पसंद हटाएँ"
+    }
+  },
+  "id": {
+    "articleMenu": {
+      "removeLike": "Hapus suka"
+    }
+  },
+  "it": {
+    "articleMenu": {
+      "removeLike": "Rimuovi mi piace"
+    }
+  },
+  "ja": {
+    "articleMenu": {
+      "removeLike": "「いいね」を取り消す"
+    }
+  },
+  "ko": {
+    "articleMenu": {
+      "removeLike": "좋아요 취소"
+    }
+  },
+  "nl": {
+    "articleMenu": {
+      "removeLike": "Like verwijderen"
+    }
+  },
+  "pl": {
+    "articleMenu": {
+      "removeLike": "Usuń polubienie"
+    }
+  },
+  "pt-BR": {
+    "articleMenu": {
+      "removeLike": "Remover curtida"
+    }
+  },
+  "ru": {
+    "articleMenu": {
+      "removeLike": "Убрать отметку «нравится»"
+    }
+  },
+  "th": {
+    "articleMenu": {
+      "removeLike": "เลิกถูกใจ"
+    }
+  },
+  "tr": {
+    "articleMenu": {
+      "removeLike": "Beğeniyi kaldır"
+    }
+  },
+  "uk": {
+    "articleMenu": {
+      "removeLike": "Прибрати вподобання"
+    }
+  },
+  "vi": {
+    "articleMenu": {
+      "removeLike": "Bỏ thích"
+    }
+  },
+  "zh-CN": {
+    "articleMenu": {
+      "removeLike": "取消喜欢"
+    }
+  },
+  "zh-TW": {
+    "articleMenu": {
+      "removeLike": "取消喜歡"
+    }
+  }
+}
