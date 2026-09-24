@@ -135,6 +135,10 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
             // pill inside it (see TOUCH_TARGET).
             <Button
                 testID={testID}
+                // Exactly the visible text. Without it VoiceOver read the icon's
+                // font glyph first ("<glyph>, Read on Google Translate").
+                accessibilityRole="button"
+                accessibilityLabel={label}
                 // `outline` as before, not `link` (whose label underlines while
                 // pressed); its border is zeroed here, the pill draws it.
                 variant="outline"

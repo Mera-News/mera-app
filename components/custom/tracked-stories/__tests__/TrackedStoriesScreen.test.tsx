@@ -204,13 +204,16 @@ jest.mock('@/components/custom/cards/CardGlassPlate', () => {
     const { View } = require('react-native');
     return { CARDS_USE_GLASS: true, GLASS_CARD_EDGE: '', CardGlassPlate: () => <View testID="glass-plate" /> };
 });
-jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
+// Icons render their real icon-font glyph (a private-use character), as on
+// device, so a label that would leak it is caught (see icon-glyph-a11y).
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('@/components/custom/TranslatableDynamic', () => {
     const { Text } = require('react-native');
     return { __esModule: true, default: ({ text }: any) => <Text>{text}</Text> };
 });
 
 import { router } from 'expo-router';
+import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 import TrackedStoriesScreen from '../TrackedStoriesScreen';
 
 const story = (o: Record<string, any>) => ({
@@ -502,4 +505,10 @@ describe('TrackedStoriesScreen: a failed delete says so', () => {
         );
         expect(solid).toHaveLength(0);
     });
+});
+
+it('no followed-story row or button reads out an icon glyph', () => {
+    mockRows = [story({ id: 's1', llmHeadline: 'Glyph check', unseenCount: 2 })];
+    const r = render(<TrackedStoriesScreen embedded />);
+    expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
 });

@@ -71,10 +71,9 @@ jest.mock('@/components/ui/icon', () => {
     ExternalLinkIcon: 'ExternalLinkIcon',
   };
 });
-jest.mock('@expo/vector-icons', () => {
-  const { View } = require('react-native');
-  return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+// Icons render their real icon-font glyph (a private-use character), as on
+// device, so a label that would leak it is caught (see icon-glyph-a11y).
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 // lucide icons (the CardActionBar row on ArticleSuggestionCard) → plain views.
 jest.mock('lucide-react-native', () => {
   const { View } = require('react-native');
@@ -257,6 +256,7 @@ import { ArticleImagePlaceholder } from '../ArticleImagePlaceholder';
 // eslint-disable-next-line import/first
 import { COMPACT_HEADLINE_LINES, COMPACT_IMAGE_SIZE, COMPACT_IMAGE_TILE } from '../ArticleCompactCardBase';
 // eslint-disable-next-line import/first
+import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 import ArticleActionsRow from '../ArticleActionsRow';
 // eslint-disable-next-line import/first
 import type { FeedbackSubject } from '../feedback-subject';
@@ -1159,4 +1159,22 @@ describe('flat card surface is shared', () => {
     const { getByTestId } = render(<ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} flat />);
     expect(getByTestId('card-surface').props.className).toEqual(expect.stringContaining('border-white/10'));
   });
+});
+
+// No card, row or button reads out an icon-font glyph to VoiceOver.
+describe('no icon glyph in any card label', () => {
+  it.each([
+    ['compact suggestion row', () => <ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={jest.fn()} surface="for_you" />],
+    ['compact article row', () => <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />],
+    ['standalone card', () => <ArticleStandaloneCard article={makeArticle()} onPress={jest.fn()} />],
+  ] as const)('%s', (_n, make) => {
+    const r = render(make());
+    expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+  });
+  // KNOWN LEAK, pending a decision: a full-size (Feed / Dashboard) card root has
+  // no explicit label, so VoiceOver reads all its text run together, including
+  // the AI disclosure's `auto-awesome` glyph. Fixing it means designing the
+  // card's spoken label (or hiding the decorative icon, which needs a device
+  // check on Fabric), so it is escalated rather than guessed.
+  it.todo('Feed and Dashboard card roots read no icon glyph');
 });

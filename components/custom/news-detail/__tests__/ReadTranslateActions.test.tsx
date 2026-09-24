@@ -65,11 +65,11 @@ jest.mock('@/components/ui/text', () => {
     const { Text } = require('react-native');
     return { Text };
 });
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+// Icons render their real icon-font glyph (a private-use character), as on
+// device, so a label that would leak it is caught (see icon-glyph-a11y).
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
+import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import ReadTranslateActions, { titleCasePublication } from '../ReadTranslateActions';
@@ -359,5 +359,24 @@ describe('ReadTranslateActions', () => {
             fireEvent.press(getByTestId(GT_BUTTON));
             expect(mockOpenInAppBrowser).toHaveBeenCalledWith(GT_URL);
         });
+    });
+});
+
+// VoiceOver read the icon's font glyph: "<glyph>, Read on Google Translate".
+// Each button carries its visible text as an explicit label.
+describe('accessibility labels', () => {
+    it.each(['translatable', 'not-translatable', 'same-language'] as const)('%s: no label carries an icon glyph', (status) => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status, reason: 'unsupported-language' });
+        const r = renderActions(status === 'same-language' ? { sourceLanguage: 'en' } : {});
+        expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+    });
+
+    it('each button is labelled with exactly its visible text', () => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
+        const r = renderActions();
+        expect(r.getByTestId(GT_BUTTON).props.accessibilityLabel).toBe('articleDetail.readOnGoogleTranslate');
+        expect(r.getByTestId(PUBLISHER_BUTTON).props.accessibilityLabel).toBe(
+            'articleDetail.readOn::{"publication":"The Hindu"}',
+        );
     });
 });

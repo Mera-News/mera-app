@@ -59,7 +59,9 @@ jest.mock('react-i18next', () => ({
         i18n: { language: 'en' },
     }),
 }));
-jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
+// Icons render their real icon-font glyph (a private-use character), as on
+// device, so a label that would leak it is caught (see icon-glyph-a11y).
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 // The sheet title renders through the card's own title component, so it shows
 // what the card shows. Stubbed to surface the three fields it chooses from.
 jest.mock('@/components/custom/TranslatableDynamic', () => {
@@ -217,6 +219,7 @@ jest.mock('@/components/custom/cards/overlay-context', () => ({
     buildOverlayContext: jest.fn(async (s: any) => ({ articleTitle: s.title })),
 }));
 
+import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 import { MENU_DISMISS_FALLBACK_MS, useArticleMenu, type UseArticleMenuInput } from '../use-article-menu';
 
 const subject = {
@@ -1031,3 +1034,10 @@ it('a close before the sheet has risen hides it at once: nothing is on screen to
     expect(r.queryByTestId('article-menu-sheet')).toBeNull();
 });
 
+it('no ••• sheet row, Back or Cancel reads out an icon glyph', async () => {
+    const r = openMenu(<Host rowActions={{ liked: false, saved: false, onLike: jest.fn(), onDislike: jest.fn(), onToggleSave: jest.fn(), onShare: jest.fn() }} />);
+    expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+    await settle();
+    fireEvent.press(r.getByTestId('menu-like'));
+    expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+});
