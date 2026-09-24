@@ -1,6 +1,6 @@
 import TranslationNotice, { TRANSLATABLE_COLOR } from '@/components/custom/news-detail/TranslationNotice';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
+import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
@@ -11,6 +11,7 @@ import {
 import { appendReferrer, openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 /** A route that will NOT get the reader something they can read as-is. */
@@ -20,8 +21,22 @@ const ROUTE_COLOR = '#FFFFFF';
  *  as an OUTLINE and label only, never a fill (owner: equal-looking buttons,
  *  the colour is the only signal). */
 const READABLE_COLOR = TRANSLATABLE_COLOR;
+// Owner: "reduce these button sizes by 20%". Each value is the old one x0.8
+// (old: the gluestack `md` Button, h-10 / px-5 = 35 / 17.5pt at NativeWind's
+// rem 14, a text-base 16/24 label, an 18pt icon, `ml-2` = 7pt, a 12pt gap).
 /** Space between the two buttons, across and down. */
-const ROUTE_GAP = 12;
+const ROUTE_GAP = 10;
+/** The visible pill. */
+const PILL_HEIGHT = 28;
+const PILL_PADDING_X = 14;
+const LABEL_FONT = 13;
+const LABEL_LINE = 20;
+const ICON_SIZE = 14;
+const ICON_GAP = 6;
+/** The touch target stays 44pt: a transparent frame, pulled back to the
+ *  pill's height by negative margins so the layout sees 28pt (never hitSlop). */
+const TOUCH_TARGET = 44;
+const FRAME_BLEED = (TOUCH_TARGET - PILL_HEIGHT) / 2;
 
 /**
  * Title-case a publisher name WITHOUT destroying acronyms: only words that are
@@ -116,31 +131,56 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     ) => {
         const color = readable ? READABLE_COLOR : ROUTE_COLOR;
         return (
+            // The pressable is the transparent 44pt FRAME; the outline is the
+            // pill inside it (see TOUCH_TARGET).
             <Button
                 testID={testID}
+                // `outline` as before, not `link` (whose label underlines while
+                // pressed); its border is zeroed here, the pill draws it.
                 variant="outline"
                 action="secondary"
-                // Class AND style, see the header: gluestack's tva sets its own
-                // colours, and which one wins differs between root and label.
-                className={`rounded-full ${readable ? 'border-green-300' : 'border-white'}`}
+                className="bg-transparent border-0"
                 style={{
                     flexGrow: 1,
                     flexShrink: 1,
-                    borderWidth: 1,
-                    borderColor: color,
+                    height: TOUCH_TARGET,
+                    marginVertical: -FRAME_BLEED,
+                    paddingHorizontal: 0,
+                    borderWidth: 0,
                     backgroundColor: 'transparent',
+                    justifyContent: 'center',
                 }}
                 onPress={onPress}
             >
-                <ButtonIcon as={() => <MaterialIcons name={icon} size={18} color={color} />} />
-                <ButtonText
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    className={`ml-2 ${readable ? 'text-green-300' : 'text-white'}`}
-                    style={{ flexShrink: 1, color }}
+                <View
+                    testID={`${testID}-pill`}
+                    // Class AND style, see the header: gluestack's tva sets its
+                    // own colours, and which one wins differs between root and label.
+                    className={`rounded-full ${readable ? 'border-green-300' : 'border-white'}`}
+                    style={{
+                        flexGrow: 1,
+                        flexShrink: 1,
+                        height: PILL_HEIGHT,
+                        paddingHorizontal: PILL_PADDING_X,
+                        borderWidth: 1,
+                        borderColor: color,
+                        borderRadius: PILL_HEIGHT / 2,
+                        backgroundColor: 'transparent',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
                 >
-                    {label}
-                </ButtonText>
+                    <MaterialIcons name={icon} size={ICON_SIZE} color={color} />
+                    <ButtonText
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        className={readable ? 'text-green-300' : 'text-white'}
+                        style={{ flexShrink: 1, color, fontSize: LABEL_FONT, lineHeight: LABEL_LINE, marginLeft: ICON_GAP }}
+                    >
+                        {label}
+                    </ButtonText>
+                </View>
             </Button>
         );
     };

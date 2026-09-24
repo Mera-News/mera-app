@@ -1,9 +1,9 @@
 // ReadTranslateActions — shared read/translate CTA block used by both detail
-// screens. ONE layout in every state: the translation notice, then a HALF-width
-// centred Google Translate button, then the full-width "Read on {publication}"
-// button. Only the colours change with getArticleTranslationSupport, and those
-// three states x two buttons are the regression net below — green (#4ADE80)
-// always marks the route that gets the reader something readable.
+// screens: the translation notice, then "Read on Google Translate" above
+// "Read on {publication}" in one wrapping row, then the blocked-site note.
+// Only the colours change with getArticleTranslationSupport, and those three
+// states x two buttons are the regression net below — green always marks the
+// route that gets the reader something readable.
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 jest.mock('react-i18next', () => ({
@@ -252,10 +252,11 @@ describe('ReadTranslateActions', () => {
     // readable; the old fill stays gone. All three states pinned.
     describe('green outline signal', () => {
         const GREEN = '#86EFAC';
-        const outline = (b: any) => ({
-            border: styleOf(b).borderColor,
-            fill: styleOf(b).backgroundColor,
-        });
+        // The outline is drawn by the visible pill inside the 44pt frame.
+        const outline = (b: any) => {
+            const pill = b.findAll((n: any) => n.props?.testID === `${b.props.testID}-pill`)[0];
+            return { border: styleOf(pill).borderColor, fill: styleOf(pill).backgroundColor };
+        };
 
         it('same language: only Read on source, GREEN outline', () => {
             mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
@@ -290,6 +291,43 @@ describe('ReadTranslateActions', () => {
                 }
                 unmount();
             }
+        });
+    });
+
+    // Owner: "let's reduce these button sizes by 20%". Height, side padding,
+    // label and icon at about 0.8x; the gap between them too. Width stays full.
+    // The visible pill is below 44pt, so the pressable is a transparent 44pt
+    // frame pulled back to the pill's height by negative margins (not hitSlop).
+    describe('size (20% smaller)', () => {
+        beforeEach(() => mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' }));
+
+        it.each([GT_BUTTON, PUBLISHER_BUTTON])('%s: a 28pt pill with 14pt side padding', (id) => {
+            const { getByTestId } = renderActions();
+            expect(styleOf(getByTestId(`${id}-pill`))).toEqual(
+                expect.objectContaining({ height: 28, paddingHorizontal: 14, borderWidth: 1 }),
+            );
+        });
+
+        it.each([GT_BUTTON, PUBLISHER_BUTTON])('%s: keeps a 44pt touch target that lays out at the pill height', (id) => {
+            const { getByTestId } = renderActions();
+            const frame = styleOf(getByTestId(id));
+            expect(frame).toEqual(expect.objectContaining({ height: 44, marginVertical: -8, flexGrow: 1 }));
+            expect((frame.height as number) + 2 * (frame.marginVertical as number)).toBe(28);
+            expect(getByTestId(id).props.hitSlop).toBeUndefined();
+        });
+
+        it('a 13/20 label and a 14pt icon', () => {
+            const { getByText, getByTestId } = renderActions();
+            expect(styleOf(getByText('articleDetail.readOnGoogleTranslate'))).toEqual(
+                expect.objectContaining({ fontSize: 13, lineHeight: 20 }),
+            );
+            const icons = getByTestId(`${GT_BUTTON}-pill`).findAll((n: any) => n.props?.name === 'g-translate');
+            expect(icons[0].props.size).toBe(14);
+        });
+
+        it('a 10pt gap between the routes', () => {
+            const { getByTestId } = renderActions();
+            expect(styleOf(getByTestId('detail-read-routes')).gap).toBe(10);
         });
     });
 
