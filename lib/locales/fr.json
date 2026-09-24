@@ -246,7 +246,11 @@
     "medium": "Moyen",
     "low": "Faible",
     "irrelevant": "Non pertinent",
-    "unprocessed": "Non traité"
+    "unprocessed": "Non traité",
+    "a11yEmergency": "Urgence",
+    "a11yHigh": "Priorité haute",
+    "a11yMedium": "Priorité moyenne",
+    "a11yLow": "Priorité basse"
   },
   "aiDisclosure": {
     "caption": "Note générée par l'IA",

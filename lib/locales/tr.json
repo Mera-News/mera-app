@@ -241,7 +241,11 @@
     "medium": "Orta",
     "low": "Düşük",
     "irrelevant": "İlgisiz",
-    "unprocessed": "İşlenmemiş"
+    "unprocessed": "İşlenmemiş",
+    "a11yEmergency": "Acil",
+    "a11yHigh": "Yüksek öncelik",
+    "a11yMedium": "Orta öncelik",
+    "a11yLow": "Düşük öncelik"
   },
   "aiDisclosure": {
     "caption": "AI tarafından oluşturulan not",

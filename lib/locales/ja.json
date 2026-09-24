@@ -241,7 +241,11 @@
     "medium": "中",
     "low": "低",
     "irrelevant": "無関係",
-    "unprocessed": "未処理"
+    "unprocessed": "未処理",
+    "a11yEmergency": "緊急",
+    "a11yHigh": "優先度が高い",
+    "a11yMedium": "優先度は中程度",
+    "a11yLow": "優先度が低い"
   },
   "aiDisclosure": {
     "caption": "AIが生成したメモ",

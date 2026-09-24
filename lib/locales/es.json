@@ -241,7 +241,11 @@
     "medium": "Med",
     "low": "Baja",
     "irrelevant": "Irrelevante",
-    "unprocessed": "Sin procesar"
+    "unprocessed": "Sin procesar",
+    "a11yEmergency": "Emergencia",
+    "a11yHigh": "Prioridad alta",
+    "a11yMedium": "Prioridad media",
+    "a11yLow": "Prioridad baja"
   },
   "aiDisclosure": {
     "caption": "Nota generada por IA",

@@ -241,7 +241,11 @@
     "medium": "Trung bình",
     "low": "Thấp",
     "irrelevant": "Không liên quan",
-    "unprocessed": "Chưa xử lý"
+    "unprocessed": "Chưa xử lý",
+    "a11yEmergency": "Khẩn cấp",
+    "a11yHigh": "Ưu tiên cao",
+    "a11yMedium": "Ưu tiên trung bình",
+    "a11yLow": "Ưu tiên thấp"
   },
   "aiDisclosure": {
     "caption": "Ghi chú do AI tạo",

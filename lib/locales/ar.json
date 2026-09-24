@@ -265,7 +265,11 @@
     "medium": "متوسط",
     "low": "منخفض",
     "irrelevant": "غير ذي صلة",
-    "unprocessed": "لم تتم معالجته"
+    "unprocessed": "لم تتم معالجته",
+    "a11yEmergency": "طارئ",
+    "a11yHigh": "أولوية عالية",
+    "a11yMedium": "أولوية متوسطة",
+    "a11yLow": "أولوية منخفضة"
   },
   "aiDisclosure": {
     "caption": "ملاحظة مولّدة بالذكاء الاصطناعي",

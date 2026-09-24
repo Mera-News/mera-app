@@ -296,7 +296,11 @@
     "medium": "Med",
     "low": "Low",
     "irrelevant": "Irrelevant",
-    "unprocessed": "Unprocessed"
+    "unprocessed": "Unprocessed",
+    "a11yEmergency": "Emergency",
+    "a11yHigh": "High priority",
+    "a11yMedium": "Medium priority",
+    "a11yLow": "Low priority"
   },
   "aiDisclosure": {
     "caption": "AI-generated note",

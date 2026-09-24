@@ -241,7 +241,11 @@
     "medium": "중간",
     "low": "낮음",
     "irrelevant": "무관",
-    "unprocessed": "미처리"
+    "unprocessed": "미처리",
+    "a11yEmergency": "긴급",
+    "a11yHigh": "높은 우선순위",
+    "a11yMedium": "중간 우선순위",
+    "a11yLow": "낮은 우선순위"
   },
   "aiDisclosure": {
     "caption": "AI 생성 메모",

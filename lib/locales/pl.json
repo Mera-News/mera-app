@@ -253,7 +253,11 @@
     "medium": "Śred.",
     "low": "Niska",
     "irrelevant": "Nieistotne",
-    "unprocessed": "Nieprzetworzone"
+    "unprocessed": "Nieprzetworzone",
+    "a11yEmergency": "Pilne",
+    "a11yHigh": "Wysoki priorytet",
+    "a11yMedium": "Średni priorytet",
+    "a11yLow": "Niski priorytet"
   },
   "aiDisclosure": {
     "caption": "Notatka wygenerowana przez AI",

@@ -241,7 +241,11 @@
     "medium": "Mid",
     "low": "Laag",
     "irrelevant": "Niet relevant",
-    "unprocessed": "Onverwerkt"
+    "unprocessed": "Onverwerkt",
+    "a11yEmergency": "Noodgeval",
+    "a11yHigh": "Hoge prioriteit",
+    "a11yMedium": "Gemiddelde prioriteit",
+    "a11yLow": "Lage prioriteit"
   },
   "aiDisclosure": {
     "caption": "Door AI gegenereerde notitie",

@@ -241,7 +241,11 @@
     "medium": "Sedang",
     "low": "Rendah",
     "irrelevant": "Tidak relevan",
-    "unprocessed": "Belum diproses"
+    "unprocessed": "Belum diproses",
+    "a11yEmergency": "Darurat",
+    "a11yHigh": "Prioritas tinggi",
+    "a11yMedium": "Prioritas sedang",
+    "a11yLow": "Prioritas rendah"
   },
   "aiDisclosure": {
     "caption": "Catatan yang dibuat oleh AI",

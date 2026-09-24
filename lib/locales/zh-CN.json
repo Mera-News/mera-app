@@ -241,7 +241,11 @@
     "medium": "中",
     "low": "低",
     "irrelevant": "无关",
-    "unprocessed": "未处理"
+    "unprocessed": "未处理",
+    "a11yEmergency": "紧急",
+    "a11yHigh": "高优先级",
+    "a11yMedium": "中优先级",
+    "a11yLow": "低优先级"
   },
   "aiDisclosure": {
     "caption": "AI 生成的说明",

@@ -241,7 +241,11 @@
     "medium": "Mittel",
     "low": "Niedrig",
     "irrelevant": "Nicht relevant",
-    "unprocessed": "Nicht verarbeitet"
+    "unprocessed": "Nicht verarbeitet",
+    "a11yEmergency": "Notfall",
+    "a11yHigh": "Hohe Priorität",
+    "a11yMedium": "Mittlere Priorität",
+    "a11yLow": "Niedrige Priorität"
   },
   "aiDisclosure": {
     "caption": "KI-generierter Hinweis",

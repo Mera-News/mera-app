@@ -241,7 +241,11 @@
     "medium": "กลาง",
     "low": "ต่ำ",
     "irrelevant": "ไม่เกี่ยวข้อง",
-    "unprocessed": "ยังไม่ประมวลผล"
+    "unprocessed": "ยังไม่ประมวลผล",
+    "a11yEmergency": "ฉุกเฉิน",
+    "a11yHigh": "ความสำคัญสูง",
+    "a11yMedium": "ความสำคัญปานกลาง",
+    "a11yLow": "ความสำคัญต่ำ"
   },
   "aiDisclosure": {
     "caption": "หมายเหตุที่สร้างโดย AI",

@@ -241,7 +241,11 @@
     "medium": "मध्यम",
     "low": "कम",
     "irrelevant": "अप्रासंगिक",
-    "unprocessed": "अप्रोसेस्ड"
+    "unprocessed": "अप्रोसेस्ड",
+    "a11yEmergency": "आपातकालीन",
+    "a11yHigh": "उच्च प्राथमिकता",
+    "a11yMedium": "मध्यम प्राथमिकता",
+    "a11yLow": "कम प्राथमिकता"
   },
   "aiDisclosure": {
     "caption": "AI द्वारा तैयार किया गया नोट",
