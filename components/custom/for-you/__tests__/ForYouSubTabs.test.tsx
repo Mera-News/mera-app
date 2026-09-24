@@ -62,7 +62,7 @@ jest.mock('@expo/vector-icons', () => {
     return { MaterialIcons: (props: any) => <View {...props} /> };
 });
 
-import ForYouSubTabs, { pillEdgeFades } from '../ForYouSubTabs';
+import ForYouSubTabs from '../ForYouSubTabs';
 
 describe('ForYouSubTabs', () => {
     beforeEach(() => {
@@ -169,29 +169,18 @@ describe('ForYouSubTabs', () => {
 
 
 describe('ForYouSubTabs: every pill is reachable and announced (F19)', () => {
-    it('shows a right fade while pills sit past the right edge', () => {
-        // 402pt phone: ~362pt viewport, ~570pt of pills.
-        expect(pillEdgeFades(0, 362, 570)).toEqual({ left: false, right: true });
-    });
-
-    it('shows both fades mid-scroll and only the left one at the end', () => {
-        expect(pillEdgeFades(100, 362, 570)).toEqual({ left: true, right: true });
-        expect(pillEdgeFades(208, 362, 570)).toEqual({ left: true, right: false });
-    });
-
-    it('shows no fade when every pill fits', () => {
-        expect(pillEdgeFades(0, 400, 380)).toEqual({ left: false, right: false });
-    });
-
-    it('draws the right fade once the row has measured an overflow', () => {
+    it('draws no fade overlay on either edge: a painted fade over the translucent header read as dark blocks', () => {
+        // No mask is available without a native dependency, and a gradient to a
+        // single colour cannot match a header that moves over the backdrop. The
+        // half-visible last pill is the cue that the row continues.
         const { getByTestId, queryByTestId } = render(
             <ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />,
         );
-        expect(queryByTestId('dashboard-subtabs-fade-right')).toBeNull();
         const scroll = getByTestId('dashboard-subtabs-scroll');
         fireEvent(scroll, 'layout', { nativeEvent: { layout: { width: 362, height: 40, x: 0, y: 0 } } });
         fireEvent(scroll, 'contentSizeChange', 570, 40);
-        expect(getByTestId('dashboard-subtabs-fade-right')).toBeTruthy();
+        fireEvent(scroll, 'scroll', { nativeEvent: { contentOffset: { x: 100, y: 0 } } });
+        expect(queryByTestId('dashboard-subtabs-fade-right')).toBeNull();
         expect(queryByTestId('dashboard-subtabs-fade-left')).toBeNull();
     });
 

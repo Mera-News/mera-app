@@ -3,7 +3,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { observeUnseenTotal } from '@/lib/database/services/tracked-story-service';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, ScrollView, View } from 'react-native';
 
@@ -41,55 +41,6 @@ const TABS: readonly TabDef[] = [
     { key: 'factChecks', icon: 'fact-check', labelKey: 'factCheck.dashboard.title' },
     { key: 'history', icon: 'history', labelKey: 'forYou.subTabHistory' },
 ];
-
-/** Slack before a fade shows, so a sub-pixel offset does not flicker one in. */
-const FADE_SLOP = 4;
-/** Each fade is stepped bands (no CSS gradient on iOS here). Darkest at the edge. */
-export const PILL_FADE_BANDS = [0.55, 0.4, 0.25, 0.12] as const;
-const PILL_FADE_BAND_WIDTH = 6;
-
-/**
- * Which edges hide pills. A fade at an edge is the ONLY sign more pills exist
- * past it: at 402pt the five pills total ~570pt, so Fact checks and Visited sit
- * off-screen at rest, and a row that simply stops reads as all there is.
- */
-export function pillEdgeFades(
-  scrollX: number,
-  viewportWidth: number,
-  contentWidth: number,
-): { left: boolean; right: boolean } {
-  if (viewportWidth <= 0 || contentWidth <= viewportWidth + FADE_SLOP) {
-    return { left: false, right: false };
-  }
-  return {
-    left: scrollX > FADE_SLOP,
-    right: scrollX + viewportWidth < contentWidth - FADE_SLOP,
-  };
-}
-
-function EdgeFade({ side }: { side: 'left' | 'right' }) {
-  return (
-    <View
-      testID={`dashboard-subtabs-fade-${side}`}
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        [side]: 0,
-        width: PILL_FADE_BANDS.length * PILL_FADE_BAND_WIDTH,
-        flexDirection: side === 'left' ? 'row' : 'row-reverse',
-      }}
-    >
-      {PILL_FADE_BANDS.map((alpha) => (
-        <View
-          key={alpha}
-          style={{ width: PILL_FADE_BAND_WIDTH, backgroundColor: `rgba(12,12,14,${alpha})` }}
-        />
-      ))}
-    </View>
-  );
-}
 
 /**
  * The For-You sub-tab pill row — `[Feed] [Stories ●n] [Saved] [History] [Fact checks]`.
@@ -129,15 +80,6 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
         scrollRef.current?.scrollTo({ x: Math.max(0, layout.x - 12), animated: true });
     }, [activeSubTab]);
 
-    // Edge fades: tracked from the ScrollView's own layout, content size and
-    // offset, all JS-side and throttled by the scroll event rate below.
-    const [geom, setGeom] = useState({ x: 0, viewport: 0, content: 0 });
-    const fades = pillEdgeFades(geom.x, geom.viewport, geom.content);
-    const onScroll = useCallback((e: any) => {
-        const x = e?.nativeEvent?.contentOffset?.x ?? 0;
-        setGeom((g) => (g.x === x ? g : { ...g, x }));
-    }, []);
-
     useEffect(() => {
         const sub = observeUnseenTotal().subscribe({
             next: (total) => setUnseenTotal(total),
@@ -167,16 +109,12 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={{ paddingRight: 20 }}
-                onScroll={onScroll}
-                scrollEventThrottle={32}
-                onLayout={(e) => {
-                    const w = e.nativeEvent.layout.width;
-                    setGeom((g) => (g.viewport === w ? g : { ...g, viewport: w }));
-                }}
-                onContentSizeChange={(w) => {
-                    setGeom((g) => (g.content === w ? g : { ...g, content: w }));
-                }}
             >
+                {/* No edge fade. A painted one (stepped Views, and any single-
+                    colour gradient) read as dark blocks over the translucent
+                    header, which moves over the backdrop, and no mask is
+                    available without a native dependency. The last pill simply
+                    clips at the edge; seen half-cut, it says the row goes on. */}
                 {/* The iOS tab-bar trait makes VoiceOver read each pill as
                     "tab, N of 5" with no extra copy (RN maps 'tabbar', not
                     'tablist', to UIAccessibilityTraitTabBar). Android reads
@@ -255,8 +193,6 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                     })}
                 </HStack>
             </ScrollView>
-            {fades.left && <EdgeFade side="left" />}
-            {fades.right && <EdgeFade side="right" />}
         </View>
     );
 };
