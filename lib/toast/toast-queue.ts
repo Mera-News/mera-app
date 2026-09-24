@@ -27,9 +27,10 @@ import logger from '@/lib/logger';
  *  flicker — the user cannot finish reading it before it goes. Errors and
  *  successes deliberately sit longer; nothing sits shorter.
  *
- *  It is also the BACKLOG CLAMP: while cards are waiting behind the front one,
- *  the front card is cut down to this floor so a burst drains instead of
- *  holding the screen for the sum of its durations. */
+ *  It is deliberately NOT a backlog clamp. The front card keeps its OWN full
+ *  duration however many wait behind it (owner rule): a clamp measured from the
+ *  card's start closes a 6s toast the instant a second arrives 4.3s into it,
+ *  which reads as the new toast replacing the old one. */
 export const TOAST_MIN_DURATION_MS = 2000;
 
 /** Cards held in the stack. The deck only paints three; the rest wait. A cap
@@ -70,19 +71,12 @@ export interface ToastShowOptions {
     placement?: 'top' | 'bottom';
     /** `null` means "until something closes it" — see the persistent lane below. */
     duration?: number | null;
-    /**
-     * Opt out of the backlog clamp. Set by `showNotifiedToast`, whose duration
-     * is sized to its own animation EXACTLY (`notifiedToastDurationMs`): cutting
-     * it to the 2000ms floor would tear the toast off mid-flight.
-     */
-    holdFullDuration?: boolean;
     render: (props: ToastRenderProps) => ReactNode;
 }
 
 export interface ToastEntry {
     id: string;
     duration: number | null;
-    holdFullDuration: boolean;
     render: (props: ToastRenderProps) => ReactNode;
     /** Arrival order. The sort is stable on this, never on array position. */
     seq: number;
@@ -100,18 +94,10 @@ export const useToastQueue = create<ToastQueueState>(() => ({
 let nextId = 1;
 let nextSeq = 1;
 
-/**
- * The single armed timer, plus enough bookkeeping to RE-ARM it
- * correctly. `startedAt` is when the front card began showing and `armedFor` is
- * the total lifetime currently promised, so when a new arrival shortens that
- * promise we can fire after `armedFor - elapsed` rather than restarting the
- * clock and accidentally extending the card.
- */
+/** The single armed timer: the front card's, and only ever the front card's. */
 interface ActiveTimer {
     id: string;
     handle: ReturnType<typeof setTimeout>;
-    startedAt: number;
-    armedFor: number;
 }
 
 let timer: ActiveTimer | null = null;
@@ -157,35 +143,12 @@ function syncTimer(): void {
         return;
     }
 
-    const backlog = entries.length > 1;
-    const desired =
-        backlog && !front.holdFullDuration
-            ? Math.min(front.duration, TOAST_MIN_DURATION_MS)
-            : front.duration;
-
-    if (timer && timer.id === front.id) {
-        // Already counting down for this card. Only ever SHORTEN it: a backlog
-        // that drains must not hand the front card extra time it was already
-        // most of the way through.
-        if (timer.armedFor <= desired) return;
-        clearTimeout(timer.handle);
-        const remaining = Math.max(0, desired - (Date.now() - timer.startedAt));
-        timer = {
-            id: front.id,
-            handle: setTimeout(() => close(front.id), remaining),
-            startedAt: timer.startedAt,
-            armedFor: desired,
-        };
-        return;
-    }
+    // Already counting down for this card: a new arrival behind it changes
+    // nothing. The front keeps its own full duration (owner rule).
+    if (timer && timer.id === front.id) return;
 
     clearTimer();
-    timer = {
-        id: front.id,
-        handle: setTimeout(() => close(front.id), desired),
-        startedAt: Date.now(),
-        armedFor: desired,
-    };
+    timer = { id: front.id, handle: setTimeout(() => close(front.id), front.duration) };
 }
 
 /**
@@ -215,7 +178,6 @@ export function show(options: ToastShowOptions): string {
         // `undefined` means "not specified" and takes gluestack's old 5000ms
         // default; `null` means persistent and must survive the check.
         duration: options.duration === undefined ? 5000 : options.duration,
-        holdFullDuration: options.holdFullDuration === true,
         render: options.render,
         seq: nextSeq++,
     };

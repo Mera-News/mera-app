@@ -85,32 +85,26 @@ describe('timers', () => {
         expect(ids()).toHaveLength(0);
     });
 
-    it('clamps the front card to the floor once something is waiting', () => {
-        show({ duration: 5000, render });
-        const waiting = show({ duration: 5000, render });
+    it('keeps the front card for its OWN full duration while others wait (owner rule)', () => {
+        // The device repro: a 6s toast, then a second one 4.3s into it. The
+        // front used to be clamped to a 2s floor measured from its start, so
+        // it left the instant the second arrived.
+        const front = show({ duration: 6000, render });
+        jest.advanceTimersByTime(4300);
+        const waiting = show({ duration: 6000, render });
+        expect(ids()).toEqual([front, waiting]);
 
-        jest.advanceTimersByTime(TOAST_MIN_DURATION_MS);
-        expect(ids()).toEqual([waiting]);
-    });
-
-    it('clamps from when the card STARTED, never restarting its clock', () => {
-        show({ duration: 5000, render });
-        // 1500ms in, a second card arrives and cuts the promise to 2000ms
-        // total. 500ms of that is left, not a fresh 2000.
-        jest.advanceTimersByTime(1500);
-        const waiting = show({ duration: 5000, render });
-        jest.advanceTimersByTime(500);
-        expect(ids()).toEqual([waiting]);
-    });
-
-    it('exempts holdFullDuration from the clamp', () => {
-        const held = show({ duration: 5000, holdFullDuration: true, render });
-        show({ duration: 5000, render });
-
-        jest.advanceTimersByTime(4999);
-        expect(ids()[0]).toBe(held);
+        jest.advanceTimersByTime(1699);
+        expect(ids()).toEqual([front, waiting]);
         jest.advanceTimersByTime(1);
-        expect(ids()[0]).not.toBe(held);
+        expect(ids()).toEqual([waiting]);
+    });
+
+    it('never shortens the front card however many arrive behind it', () => {
+        const front = show({ duration: 5000, render });
+        for (let i = 0; i < 4; i += 1) show({ duration: 5000, render });
+        jest.advanceTimersByTime(4999);
+        expect(ids()[0]).toBe(front);
     });
 
     it('never times a persistent card, even alone at the front', () => {

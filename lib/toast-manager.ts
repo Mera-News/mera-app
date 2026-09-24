@@ -4,10 +4,10 @@ import type React from 'react';
 import { getBellAnchor } from './notifications/bell-anchor';
 import logger from './logger';
 import { TOAST_MIN_DURATION_MS } from './toast/toast-queue';
+import { TOAST_BODY_COLOR, TOAST_TITLE_COLOR } from '@/components/custom/toast/toast-text';
 
-// The floor now belongs to the queue that ENFORCES it: it is both the minimum
-// lifetime of any toast and the clamp the deck applies to the front card while
-// others wait behind it. Re-exported so this module stays its public home.
+// The readable floor for any toast's lifetime lives with the queue.
+// Re-exported so this module stays its public home.
 export { TOAST_MIN_DURATION_MS };
 
 /** Options for a notification-center-backed toast (see showNotifiedToast). */
@@ -48,8 +48,6 @@ export interface NotifiedToastOptions {
  */
 export interface ToastShowOptions {
     duration?: number;
-    /** Exempt from the deck's backlog clamp — see `showNotifiedToast`. */
-    holdFullDuration?: boolean;
     render: (props: { id: string }) => React.ReactNode;
 }
 
@@ -60,20 +58,7 @@ type ToastFunction = {
     isActive: (id: string) => boolean;
 };
 
-/**
- * Explicit colours for toast text built via `React.createElement`. The
- * gluestack `ToastTitle` / `ToastDescription` primitives are NativeWind
- * className-styled, and className resolves through the JSX transform — a
- * hand-written `React.createElement` tree bypasses it, so their text renders
- * invisibly (the toast collapses to an icon-only panel). Every method in this
- * manager builds its tree with `createElement`, so they all use plain RN
- * `Text` with these explicit styles instead. Values mirror the dark ramp's
- * typography-900 / typography-600 — what ToastTitle and ToastDescription
- * resolve to under JSX. Device-verified for showUndoToast; the other methods
- * shipped the broken primitives until 2026-08-05 (icon-only error toasts).
- */
-const TOAST_TITLE_COLOR = '#F5F5F5';
-const TOAST_BODY_COLOR = '#D4D4D4';
+// Toast text colours: see components/custom/toast/toast-text.ts.
 
 class ToastManager {
     private toastInstance: ToastFunction | null = null;
@@ -229,21 +214,23 @@ class ToastManager {
     }
 
     /**
-     * Success toast carrying an UNDO affordance — the acknowledgment shown when
-     * a feedback-tree leaf applies persona mutations on the spot (see
-     * components/custom/feedback-tree/use-apply-leaf-actions). Lives here rather
-     * than behind `useToast()` so the caller does not have to be a React
-     * component and, more importantly, so the gluestack toast module is
-     * `require`d only when a toast is actually shown (the same lazy-require
-     * shape every other method here uses).
+     * THE undo toast: every "done, with Undo" confirmation goes through here so
+     * they all look the same (`components/custom/toast/UndoToast.tsx`, the
+     * green check card). The feedback leaf uses it after applying persona
+     * mutations; the ••• menu's "Fewer from <source>" should too. Lives here so
+     * the caller need not be a React component, and so the toast modules are
+     * `require`d only when a toast is actually shown.
      *
-     * Not debounced — each applied change is a distinct, user-initiated event.
+     * Undo closes this card; `undoneTitle`, when given, follows with a short
+     * info toast. Not debounced: each applied change is a distinct event.
      */
     showUndoToast(opts: {
         title: string;
         body?: string;
         undoLabel: string;
-        undoneTitle: string;
+        undoneTitle?: string;
+        /** Defaults to `feedback-undo`, the id the harness runbooks address. */
+        undoTestID?: string;
         onUndo: () => void | Promise<void>;
     }) {
         if (!this.toastInstance) {
@@ -252,74 +239,31 @@ class ToastManager {
         }
 
         const React = require('react');
-        const { Toast, TOAST_ACCENT } = require('@/components/ui/toast');
-        const { Text, Pressable } = require('react-native');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const UndoToast = require('@/components/custom/toast/UndoToast').default;
 
-        // Text colours come from the module-level TOAST_TITLE_COLOR /
-        // TOAST_BODY_COLOR (see the note there). The Undo takes the toast's own
-        // success accent so it reads as the control it is rather than a third
-        // line of prose.
-        const UNDO_COLOR = TOAST_ACCENT.success;
-
-        // VERIFIED ON DEVICE, and the shape matters more than it looks:
-        //   • FLAT children of Toast. Wrapping them in an HStack/VStack row (to
-        //     right-align the Undo) rendered as an EMPTY green pill — gluestack
-        //     styling and NativeWind `className` both resolve through the JSX
-        //     transform, which a hand-written `React.createElement` tree
-        //     bypasses, so the wrapper collapsed and clipped its own text.
-        //   • Plain RN `Text` with explicit styles, NOT ToastTitle /
-        //     ToastDescription. Those are className-styled too, and via
-        //     createElement they render invisibly — the Undo (plain Text) was
-        //     the only line that showed up.
-        // Do not "tidy" this back to the gluestack primitives without checking
-        // it on a device; jest cannot see any of this.
         this.toastInstance.show({
             duration: 6000,
             render: ({ id }: { id: string }) =>
-                React.createElement(
-                    Toast,
-                    { action: 'success', variant: 'solid' },
-                    React.createElement(
-                        Text,
-                        { style: { color: TOAST_TITLE_COLOR, fontWeight: '700', fontSize: 15 } },
-                        opts.title,
-                    ),
-                    opts.body
-                        ? React.createElement(
-                              Text,
-                              { style: { color: TOAST_BODY_COLOR, fontSize: 13, paddingTop: 2 } },
-                              opts.body,
-                          )
-                        : null,
-                    React.createElement(
-                        Pressable,
-                        {
-                            testID: 'feedback-undo',
-                            accessibilityRole: 'button',
-                            accessibilityLabel: opts.undoLabel,
-                            hitSlop: 10,
-                            style: { paddingTop: 6 },
-                            onPress: () => {
-                                void (async () => {
-                                    try {
-                                        await opts.onUndo();
-                                    } catch (err) {
-                                        logger.captureException(err, {
-                                            tags: { component: 'ToastManager', method: 'showUndoToast.undo' },
-                                        });
-                                    }
-                                    this.toastInstance?.close(id);
-                                    this.showInfo(opts.undoneTitle);
-                                })();
-                            },
-                        },
-                        React.createElement(
-                            Text,
-                            { style: { color: UNDO_COLOR, fontWeight: '800', textDecorationLine: 'underline' } },
-                            opts.undoLabel,
-                        ),
-                    ),
-                ),
+                React.createElement(UndoToast, {
+                    title: opts.title,
+                    body: opts.body,
+                    undoLabel: opts.undoLabel,
+                    undoTestID: opts.undoTestID ?? 'feedback-undo',
+                    onUndo: () => {
+                        this.toastInstance?.close(id);
+                        void (async () => {
+                            try {
+                                await opts.onUndo();
+                            } catch (err) {
+                                logger.captureException(err, {
+                                    tags: { component: 'ToastManager', method: 'showUndoToast.undo' },
+                                });
+                            }
+                            if (opts.undoneTitle) this.showInfo(opts.undoneTitle);
+                        })();
+                    },
+                }),
         });
     }
 
@@ -388,9 +332,6 @@ class ToastManager {
             // short and it is torn off mid-flight; too long and an invisible
             // toast stays mounted over the UI after the animation has finished.
             duration: notifiedToastModule.notifiedToastDurationMs(canFly),
-            // Which is also why it opts out of the deck's backlog clamp: cutting
-            // this one to the 2000ms floor would tear it off mid-flight.
-            holdFullDuration: true,
             render: () =>
                 React.createElement(NotifiedToast, {
                     title,

@@ -17,6 +17,7 @@ jest.mock('@/lib/logger', () => ({
     default: { info: jest.fn(), warn: jest.fn(), captureException: jest.fn() },
 }));
 
+import UndoToast from '@/components/custom/toast/UndoToast';
 import { toastManager } from '@/lib/toast-manager';
 import { closeAll, resetToastQueue, show, toastApi, useToastQueue } from '../toast-queue';
 
@@ -49,6 +50,23 @@ describe('one top stack', () => {
         expect(ids()[0]).toBe(showing);
     });
 
+    it('lets the front toast run its own timeout when the undo toast arrives mid-read', () => {
+        const fewer = show({ duration: 6000, render: () => null });
+        jest.advanceTimersByTime(4300);
+        toastManager.showUndoToast({
+            title: 'Got it: feed updated',
+            undoLabel: 'Undo',
+            undoneTitle: 'Change undone',
+            onUndo: () => undefined,
+        });
+        jest.advanceTimersByTime(1600);
+        expect(ids()[0]).toBe(fewer);
+        expect(ids()).toHaveLength(2);
+        jest.advanceTimersByTime(100);
+        expect(ids()).toHaveLength(1);
+        expect(ids()[0]).not.toBe(fewer);
+    });
+
     it('queues an info toast BEHIND a toast that is already showing', () => {
         const showing = show({ duration: 5000, render: () => null });
         toastManager.showInfo('Thanks for the feedback');
@@ -70,5 +88,45 @@ describe('one top stack', () => {
         // The first arrival still holds the front slot (FIFO, owner decision).
         const seqs = useToastQueue.getState().entries.map((entry) => entry.seq);
         expect(seqs).toEqual([...seqs].sort((a, b) => a - b));
+    });
+});
+
+describe('one undo-toast style', () => {
+    const rendered = () => {
+        const entry = useToastQueue.getState().entries[0];
+        return entry.render({ id: entry.id }) as { type: unknown; props: Record<string, unknown> };
+    };
+
+    it('renders every undo toast through UndoToast, the leaf style', () => {
+        toastManager.showUndoToast({
+            title: 'Got it: feed updated',
+            undoLabel: 'Undo',
+            undoneTitle: 'Change undone',
+            onUndo: () => undefined,
+        });
+        const el = rendered();
+        expect(el.type).toBe(UndoToast);
+        expect(el.props.undoTestID).toBe('feedback-undo');
+    });
+
+    it("keeps a caller's own Undo testID", () => {
+        toastManager.showUndoToast({
+            title: "You'll see less from AD.nl.",
+            undoLabel: 'Undo',
+            undoTestID: 'article-menu-undo',
+            onUndo: () => undefined,
+        });
+        expect(rendered().props.undoTestID).toBe('article-menu-undo');
+    });
+
+    it('closes itself on Undo, and follows up only when given an undone title', async () => {
+        const onUndo = jest.fn();
+        toastManager.showUndoToast({ title: 'Less from AD.nl', undoLabel: 'Undo', onUndo });
+        const el = rendered();
+        (el.props.onUndo as () => void)();
+        await Promise.resolve();
+        await Promise.resolve();
+        expect(onUndo).toHaveBeenCalledTimes(1);
+        expect(ids()).toEqual([]);
     });
 });
