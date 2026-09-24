@@ -1,0 +1,104 @@
+{
+  "_comment": "ux1 P2 (locale owner): remove em/en dashes from three feedbackTree description keys, non-exempt locales only (ja, zh-CN, zh-TW, ru, uk keep native punctuation per the no-dashes test's exemption rule). OVERWRITE fragment for feedbackTree.paywallRelatedDesc, feedbackTree.paywallSubscribeDesc, feedbackTree.managePublicationsDesc only.",
+  "en": {},
+  "ja": {},
+  "ru": {},
+  "uk": {},
+  "zh-CN": {},
+  "zh-TW": {},
+  "ar": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "قد لا تكون هناك حاجز دفع في قصة مشابهة من منشور آخر. تحقق من المقالات ذات الصلة.",
+      "paywallSubscribeDesc": "زرت {{publication}} {{visits}} مرات هذا الشهر. فكّر في الاشتراك للحصول على وصول كامل.",
+      "managePublicationsDesc": "عزز أو قلل ترتيب أو أخفِ أي منشور، بما فيها هذا."
+    }
+  },
+  "de": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Eine ähnliche Geschichte von einem anderen Verlag könnte nicht hinter einer Bezahlschranke stecken. Schauen Sie sich die verwandten Artikel an.",
+      "paywallSubscribeDesc": "Sie haben {{publication}} diesen Monat {{visits}} Mal besucht. Erwägen Sie ein Abonnement für vollständigen Zugriff.",
+      "managePublicationsDesc": "Erhöhe oder senke die Priorität einer beliebigen Publikation oder stumme sie, auch diese eine."
+    }
+  },
+  "es": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Una historia similar de otra publicación podría no estar tras un muro de pago. Consulta los artículos relacionados.",
+      "paywallSubscribeDesc": "Has visitado {{publication}} {{visits}} veces este mes. Considera suscribirte para acceso completo.",
+      "managePublicationsDesc": "Potencia, reduce o silencia cualquier publicación, incluyendo esta."
+    }
+  },
+  "fr": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Une histoire similaire d'un autre éditeur pourrait ne pas être protégée par un mur payant. Vérifiez les articles connexes.",
+      "paywallSubscribeDesc": "Vous avez visité {{publication}} {{visits}} fois ce mois-ci. Envisagez de vous abonner pour un accès complet.",
+      "managePublicationsDesc": "Augmentez, réduisez ou désactivez toute publication, y compris celle-ci."
+    }
+  },
+  "hi": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "किसी अन्य प्रकाशन से एक समान कहानी पेवॉल के पीछे नहीं हो सकती। संबंधित लेखों को देखें।",
+      "paywallSubscribeDesc": "आपने इस महीने {{publication}} को {{visits}} बार देखा है। पूर्ण पहुंच के लिए सदस्यता लेने पर विचार करें।",
+      "managePublicationsDesc": "किसी भी प्रकाशन को बूस्ट, डाउनरैंक या म्यूट करें, इसी सहित।"
+    }
+  },
+  "id": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Cerita serupa dari publikasi lain mungkin tidak dibayar. Periksa artikel terkait.",
+      "paywallSubscribeDesc": "Anda telah mengunjungi {{publication}} {{visits}} kali bulan ini. Pertimbangkan untuk berlangganan akses penuh.",
+      "managePublicationsDesc": "Tingkatkan, turunkan peringkat, atau matikan suara publikasi apa pun, termasuk yang ini."
+    }
+  },
+  "it": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Una storia simile da un'altra pubblicazione potrebbe non essere protetta da paywall. Controlla gli articoli correlati.",
+      "paywallSubscribeDesc": "Hai visitato {{publication}} {{visits}} volte questo mese. Considera l'abbonamento per accesso completo.",
+      "managePublicationsDesc": "Aumenta, riduci il rango o muta qualsiasi pubblicazione, compresa questa."
+    }
+  },
+  "ko": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "다른 출판사의 유사 기사가 있을 수 있으며 유료화가 아닐 수 있습니다. 관련 기사를 확인해 보세요.",
+      "paywallSubscribeDesc": "이번 달에 {{publication}}을(를) {{visits}}회 방문했습니다. 전체 액세스를 위해 구독을 고려해 보세요."
+    }
+  },
+  "nl": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Een vergelijkbaar verhaal van een ander medium is mogelijk niet achter een betaalmuur. Controleer de gerelateerde artikelen.",
+      "paywallSubscribeDesc": "Je hebt {{publication}} {{visits}} keer bezocht deze maand. Overweeg een abonnement voor volledige toegang.",
+      "managePublicationsDesc": "Verhoog, verlaag of dempen elke publicatie, inclusief deze."
+    }
+  },
+  "pl": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Podobna historia z innego wydawcy może nie być za paywallem. Sprawdź powiązane artykuły.",
+      "paywallSubscribeDesc": "Odwiedziłeś {{publication}} {{visits}} razy w tym miesiącu. Rozważ subskrypcję, aby uzyskać pełny dostęp.",
+      "managePublicationsDesc": "Promuj, obniżaj rangę lub wyciszaj dowolne wydawnictwo, łącznie z tym."
+    }
+  },
+  "pt-BR": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Uma história semelhante de outra publicação pode não ter paywall. Confira os artigos relacionados.",
+      "paywallSubscribeDesc": "Você visitou {{publication}} {{visits}} vezes neste mês. Considere se inscrever para ter acesso completo.",
+      "managePublicationsDesc": "Aumente, diminua o ranking ou silencie qualquer publicação, incluindo esta."
+    }
+  },
+  "th": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "เรื่องราวที่คล้ายกันจากสำนักพิมพ์อื่นอาจไม่มีเพย์วอลล์ ลองดูบทความที่เกี่ยวข้อง",
+      "paywallSubscribeDesc": "คุณไปที่ {{publication}} {{visits}} ครั้งในเดือนนี้ ลองพิจารณาสมัครสมาชิกเพื่อเข้าถึงเต็มที่"
+    }
+  },
+  "tr": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Başka bir yayından benzer bir haber ödeme duvarı arkasında olmayabilir. İlgili makaleleri kontrol et.",
+      "paywallSubscribeDesc": "{{publication}}'i bu ay {{visits}} kez ziyaret ettin. Tam erişim için abone olmayı düşün."
+    }
+  },
+  "vi": {
+    "feedbackTree": {
+      "paywallRelatedDesc": "Một câu chuyện tương tự từ một ấn phẩm khác có thể không có tường lửa thanh toán. Hãy kiểm tra các bài viết liên quan.",
+      "paywallSubscribeDesc": "Bạn đã truy cập {{publication}} {{visits}} lần tháng này. Hãy cân nhắc đăng ký để có quyền truy cập đầy đủ.",
+      "managePublicationsDesc": "Tăng, hạ xếp hạng hoặc tắt tiếng bất kỳ ấn phẩm nào, bao gồm cái này."
+    }
+  }
+}
