@@ -422,6 +422,14 @@ describe('ExploreScreen — browse countries + suppressed scopes (Items 7/18)', 
 });
 
 describe('ExploreScreen — search collapsed into the title row (Item 12a)', () => {
+    it('spaces "?" and the magnifier so their 44pt frames do not overlap', () => {
+        const { getByTestId } = render(<ExploreScreen />);
+        const { StyleSheet } = require('react-native');
+        const margin = StyleSheet.flatten(getByTestId('explore-search-open').props.style).margin;
+        const row = StyleSheet.flatten(getByTestId('explore-header-actions').props.style) ?? {};
+        expect(row.gap).toBeGreaterThanOrEqual(-2 * margin);
+    });
+
     it('gives the magnifier a real 44pt frame with a 24pt footprint, not hitSlop', () => {
         const { getByTestId } = render(<ExploreScreen />);
         const { StyleSheet } = require('react-native');
