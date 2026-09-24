@@ -71,6 +71,17 @@ export interface UseArticleMenuInput {
     };
     /** A feedback-tree leaf settled (see useArticleActions.onLeafPicked). */
     onLeafPicked?: (sentiment: VerdictSentiment, pathIds: string[], appliedCount: number, committed: boolean) => void;
+    /** Replaces the generic chat hand-off for an `openChat` tree leaf. The Feed
+     *  card and the detail screen pass theirs, which carries the verdict and
+     *  the tapped breadcrumb. Runs after the sheet has gone. */
+    onFeedbackChat?: (sentiment: VerdictSentiment, pathIds: string[]) => void;
+    /** Where the `browse_related` nudge goes (the Feed opens the detail
+     *  screen, the detail screen scrolls to its related coverage). Runs after
+     *  the sheet has gone. Omitted: a toast. */
+    onBrowseRelated?: (sentiment: VerdictSentiment) => void;
+    /** Replaces the card-level tree context (`buildOverlayContext(subject)`)
+     *  for a host that resolves a richer subject itself (the detail screen). */
+    resolveTreeContext?: () => Promise<LocalFeedbackContext>;
     /** Keep the follow state live even while the sheet is closed (a surface
      *  that draws its own Follow state inline). */
     followLive?: boolean;
@@ -162,8 +173,12 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         inlineActions,
         rowActions,
         onLeafPicked,
+        onFeedbackChat,
+        onBrowseRelated,
         followLive,
     } = input;
+    const resolveTreeContextRef = useRef(input.resolveTreeContext);
+    resolveTreeContextRef.current = input.resolveTreeContext;
     const follow = useTrackButton(subject, engaged || !!followLive);
     const { tracked } = follow;
 
@@ -214,9 +229,12 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             const { getFeedbackTree } = require('@/lib/services/feedback-tree-service') as typeof import('@/lib/services/feedback-tree-service');
             const { buildOverlayContext } = require('@/components/custom/cards/overlay-context') as typeof import('@/components/custom/cards/overlay-context');
             /* eslint-enable @typescript-eslint/no-require-imports */
+            const resolveHost = resolveTreeContextRef.current;
             const [tr, ctx] = await Promise.all([
                 getFeedbackTree(),
-                buildOverlayContext(subject).catch(() => ({ articleTitle: subject.title }) as LocalFeedbackContext),
+                (resolveHost ? resolveHost() : buildOverlayContext(subject)).catch(
+                    () => ({ articleTitle: subject.title }) as LocalFeedbackContext,
+                ),
             ]);
             setTree(tr);
             setTreeContext(ctx);
@@ -611,12 +629,14 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 ),
                 label: treeLabel(node),
                 spend: { articleId: subject.articleId, sentiment: root },
+                openChat: onFeedbackChat ? () => onFeedbackChat(root, pathIds) : undefined,
+                browseRelated: onBrowseRelated ? () => onBrowseRelated(root) : undefined,
                 closeThen,
                 onLeafPicked: (p, applied, committed) => onLeafPicked?.(root, p, applied, committed),
                 showInfo,
                 chrome,
             }),
-        [treeContext, subject, t, treeLabel, closeThen, onLeafPicked, showInfo, chrome],
+        [treeContext, subject, t, treeLabel, closeThen, onLeafPicked, onFeedbackChat, onBrowseRelated, showInfo, chrome],
     );
 
     const top = stack[stack.length - 1];

@@ -26,6 +26,12 @@ export interface FeedbackLeafDeps {
      *  and records the change-log ids, so removing or flipping the verdict
      *  reverts exactly what the leaf applied. */
     spend: { articleId: string; sentiment: 'like' | 'dislike' };
+    /** Host chat hand-off for an `openChat` leaf (the Feed and detail thumbs
+     *  carry the verdict and breadcrumb). Omitted: the generic hand-off. */
+    openChat?: () => void;
+    /** Host destination for the `browse_related` nudge (the detail screen's
+     *  related coverage). Omitted: a toast. */
+    browseRelated?: () => void;
     /** Close the sheet, then run `after` once it has gone. */
     closeThen: (after?: () => void) => void;
     /** A terminal leaf settled: persist the path. `committed` is explicit:
@@ -52,7 +58,8 @@ export function performFeedbackLeaf(node: FeedbackTreeNode, pathIds: string[], d
             d.closeThen();
             return;
         }
-        d.closeThen(() => useFloatingChatStore.getState().openArticleFeedback(d.chatContext, d.chatMessage));
+        const open = d.openChat;
+        d.closeThen(open ?? (() => useFloatingChatStore.getState().openArticleFeedback(d.chatContext, d.chatMessage)));
         return;
     }
 
@@ -69,6 +76,8 @@ export function performFeedbackLeaf(node: FeedbackTreeNode, pathIds: string[], d
                     }),
                 ),
             );
+        } else if (d.browseRelated) {
+            d.closeThen(d.browseRelated);
         } else {
             d.closeThen(() => d.showInfo(d.chrome('nudgeBrowse', 'Look for related coverage from other sources')));
         }

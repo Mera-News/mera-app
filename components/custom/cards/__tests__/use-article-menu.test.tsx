@@ -145,6 +145,17 @@ jest.mock('@/components/custom/feedback-tree/FeedbackTreeLevel', () => {
                     testID="tree-leaf"
                     onPress={() => p.onLeaf({ id: 'seen', labelKey: 'k', leaf: { seenOnly: true } }, [...p.pathIds, 'seen'])}
                 />
+                <Pressable
+                    testID="tree-chat"
+                    onPress={() => p.onLeaf({ id: 'why', labelKey: 'k', leaf: { openChat: true } }, [...p.pathIds, 'why'])}
+                />
+                <Pressable
+                    testID="tree-browse"
+                    onPress={() =>
+                        p.onLeaf({ id: 'rel', labelKey: 'k', leaf: { nudge: 'browse_related' } }, [...p.pathIds, 'rel'])
+                    }
+                />
+                <Text testID="tree-context">{JSON.stringify(p.context)}</Text>
             </>
         ),
     };
@@ -153,6 +164,11 @@ let mockTreePromise: Promise<any> = Promise.resolve({ version: 1, root: [], like
 jest.mock('@/lib/services/feedback-tree-service', () => ({
     getFeedbackTree: jest.fn(() => mockTreePromise),
 }));
+const mockOpenArticleFeedback = jest.fn();
+jest.mock('@/lib/stores/floating-chat-store', () => ({
+    useFloatingChatStore: { getState: () => ({ openArticleFeedback: mockOpenArticleFeedback }) },
+}));
+jest.mock('@/lib/stores/subscription-store', () => ({ getAiAccess: () => 'full' }));
 jest.mock('@/components/custom/cards/overlay-context', () => ({
     buildOverlayContext: jest.fn(async (s: any) => ({ articleTitle: s.title })),
 }));
@@ -617,3 +633,53 @@ describe('useArticleMenu running items', () => {
         expect(mockToastShow).toHaveBeenCalledTimes(1);
     });
 });
+
+// The Feed card and the detail screen hand their own hosts the leaves only
+// they know how to finish: the chat hand-off carries the verdict and the
+// tapped breadcrumb, and "related coverage" opens (or scrolls to) the detail
+// footer. Both run after the sheet has gone.
+describe('host overrides for the Feed and detail thumbs', () => {
+    it('an openChat leaf goes to the host chat hand-off, after the sheet closes', async () => {
+        const onFeedbackChat = jest.fn();
+        const r = render(<Host onFeedbackChat={onFeedbackChat} />);
+        fireEvent.press(r.getByTestId('open-like-tree'));
+        await settle();
+        fireEvent.press(r.getByTestId('tree-chat'));
+        expect(mockModal.visible).toBe(false);
+        expect(onFeedbackChat).not.toHaveBeenCalled();
+        dismiss();
+        expect(onFeedbackChat).toHaveBeenCalledWith('like', ['why']);
+        expect(mockOpenArticleFeedback).not.toHaveBeenCalled();
+    });
+
+    it('without a host override the chat opens with the generic hand-off', async () => {
+        const r = render(<Host />);
+        fireEvent.press(r.getByTestId('open-like-tree'));
+        await settle();
+        fireEvent.press(r.getByTestId('tree-chat'));
+        dismiss();
+        expect(mockOpenArticleFeedback).toHaveBeenCalledTimes(1);
+    });
+
+    it('a browse_related nudge commits the path and goes to the host, after the sheet closes', async () => {
+        const onBrowseRelated = jest.fn();
+        const picked = jest.fn();
+        const r = render(<Host onBrowseRelated={onBrowseRelated} onLeafPicked={picked} />);
+        fireEvent.press(r.getByTestId('open-like-tree'));
+        await settle();
+        fireEvent.press(r.getByTestId('tree-browse'));
+        expect(picked).toHaveBeenCalledWith('like', ['rel'], 0, true);
+        dismiss();
+        expect(onBrowseRelated).toHaveBeenCalledWith('like');
+        expect(mockToastShow).not.toHaveBeenCalled();
+    });
+
+    it('a host context resolver replaces the card-level context', async () => {
+        const resolveTreeContext = jest.fn(async () => ({ articleTitle: 'from host', entity: 'NATO' }));
+        const r = render(<Host resolveTreeContext={resolveTreeContext} />);
+        fireEvent.press(r.getByTestId('open-like-tree'));
+        await settle();
+        expect(JSON.parse(r.getByTestId('tree-context').props.children)).toMatchObject({ entity: 'NATO' });
+    });
+});
+
