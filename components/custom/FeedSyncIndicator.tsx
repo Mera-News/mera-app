@@ -77,6 +77,23 @@ export const FEED_SYNC_TASK = 'feed-sync';
  */
 export function useIsFeedProcessing(): boolean {
     const asyncJobPhase = useForYouAsyncJobPhase();
+    const local = useIsFeedWorkingLocally();
+    return local || asyncJobPhase !== 'idle';
+}
+
+/**
+ * The PHONE itself is working on the feed: the sync machine is fetching,
+ * downloading or grouping (any state but idle / done / failed /
+ * paused-offline), or on-device scoring is running.
+ *
+ * Narrower than `useIsFeedProcessing`, which also counts a cloud scoring
+ * batch that is only WAITING on the server (`asyncJobPhase` relevance /
+ * reasons). Such a wait can last up to BATCH_STALE_MS (15 min) per attempt
+ * and survives a relaunch, since the phase is restored from the persisted
+ * run. The Feed's Mera mark reads THIS flag (owner: "still during wait"),
+ * while the header narration keeps reading `useIsFeedProcessing`.
+ */
+export function useIsFeedWorkingLocally(): boolean {
     const { isDeviceProcessing } = useForYouDeviceProcessing();
     const syncStatusMessage = useForYouSyncStatusMessage();
 
@@ -87,7 +104,7 @@ export function useIsFeedProcessing(): boolean {
         syncStatusMessage.state !== 'failed' &&
         syncStatusMessage.state !== 'paused-offline';
 
-    return isAnySyncActive || asyncJobPhase !== 'idle' || isDeviceProcessing;
+    return isAnySyncActive || isDeviceProcessing;
 }
 
 /**

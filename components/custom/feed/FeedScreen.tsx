@@ -87,6 +87,7 @@ import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCar
 import {
   useFeedSyncRefresh,
   useIsFeedProcessing,
+  useIsFeedWorkingLocally,
 } from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedStatusMark from '@/components/custom/feed/FeedStatusMark';
@@ -347,7 +348,10 @@ const FeedScreen: React.FC = () => {
   // is the reading surface; that would be the billboard `7e96aa4` deleted.
   const narrating = useIsFeedProcessing();
   const statusMode = useFeedStatusMode();
-  const markMode = feedMarkMode(narrating, statusMode);
+  // The mark moves only while the PHONE works (owner: "still during wait"):
+  // a cloud batch waiting on the server keeps the narration above but leaves
+  // the mark small and still.
+  const markMode = feedMarkMode(useIsFeedWorkingLocally(), statusMode);
   // The screen announces entering the capped or error state (see the hook).
   useFeedModeAnnouncement(statusMode);
   const titleRowRef = useRef<View>(null);

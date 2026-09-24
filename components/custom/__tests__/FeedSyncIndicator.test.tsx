@@ -56,7 +56,7 @@ jest.mock('@/lib/database', () => ({
 }));
 
 /* eslint-disable import/first */
-import { useFeedSyncRefresh } from '@/components/custom/FeedSyncIndicator';
+import { useFeedSyncRefresh, useIsFeedProcessing, useIsFeedWorkingLocally } from '@/components/custom/FeedSyncIndicator';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
@@ -187,6 +187,53 @@ describe('useFeedStatusMode — loader visibility', () => {
         expect(isVisible(getByTestId)).toBe(false);
     });
 
+});
+
+// Owner ("still during wait"): the Feed mark moves only while the PHONE is
+// working. A batch waiting on the server keeps the narration (processing) but
+// not the local flag the mark reads.
+describe('useIsFeedWorkingLocally vs useIsFeedProcessing', () => {
+    let seen: { processing: boolean; local: boolean };
+    function FlagsProbe() {
+        seen = { processing: useIsFeedProcessing(), local: useIsFeedWorkingLocally() };
+        return null;
+    }
+    beforeEach(() => {
+        useForYouStore.setState({
+            syncStatusMessage: null,
+            asyncJobPhase: 'idle',
+            isDeviceProcessing: false,
+        } as never);
+    });
+
+    it('a batch only waiting on the server: processing, but NOT working locally', () => {
+        useForYouStore.setState({ asyncJobPhase: 'reasons' } as never);
+        render(<FlagsProbe />);
+        expect(seen).toEqual({ processing: true, local: false });
+        useForYouStore.setState({ asyncJobPhase: 'relevance' } as never);
+        render(<FlagsProbe />);
+        expect(seen).toEqual({ processing: true, local: false });
+    });
+
+    it('the sync machine downloading: both', () => {
+        useForYouStore.setState({ syncStatusMessage: { state: 'hydrating', headlineKey: 'x' } } as never);
+        render(<FlagsProbe />);
+        expect(seen).toEqual({ processing: true, local: true });
+    });
+
+    it('on-device scoring: both', () => {
+        useForYouStore.setState({ isDeviceProcessing: true } as never);
+        render(<FlagsProbe />);
+        expect(seen).toEqual({ processing: true, local: true });
+    });
+
+    it('a finished or failed sync: neither', () => {
+        for (const state of ['done', 'failed', 'paused-offline', 'idle']) {
+            useForYouStore.setState({ syncStatusMessage: { state, headlineKey: 'x' } } as never);
+            render(<FlagsProbe />);
+            expect(seen).toEqual({ processing: false, local: false });
+        }
+    });
 });
 
 describe('useFeedSyncRefresh', () => {

@@ -112,3 +112,17 @@ describe('feedMarkMode', () => {
         expect(feedMarkMode(false, 'deferred')).toBe('deferred');
     });
 });
+
+// Owner ("still during wait"): while a cloud batch only waits on the server,
+// the narration keeps showing but the mark stays small and still. The Feed
+// passes `useIsFeedProcessing` to the row and `useIsFeedWorkingLocally` to
+// `feedMarkMode`, so the two can disagree in exactly this state.
+describe('server-wait: narration on, mark still', () => {
+    it('narrates while the mark rests', () => {
+        const r = row(true);
+        expect(r.getByTestId('feed-narration-line')).toBeTruthy();
+        // workingLocally false, statusMode 'processing' (the wait is still
+        // `isFeedProcessing`): the mark draws its resting mode.
+        expect(feedMarkMode(false, 'processing')).toBe('idle');
+    });
+});

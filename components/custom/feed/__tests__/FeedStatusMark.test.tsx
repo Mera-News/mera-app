@@ -134,6 +134,13 @@ describe('FeedScreen header structure', () => {
         expect(spacer).toBeLessThan(vstackEnd);
     });
 
+    it('drives the mark from the LOCAL work flag and the narration from the processing flag', () => {
+        // Owner: "still during wait". A server-only wait narrates but must not
+        // grow or animate the mark.
+        expect(src).toMatch(/feedMarkMode\(\s*useIsFeedWorkingLocally\(\)/);
+        expect(src).toMatch(/const narrating = useIsFeedProcessing\(\);/);
+    });
+
     it('wraps the screen in the dropdown provider and mounts the layer', () => {
         expect(src).toContain('<StatusDropdownProvider>');
         expect(src).toContain('<StatusDropdownLayer testIDPrefix="feed-status" />');

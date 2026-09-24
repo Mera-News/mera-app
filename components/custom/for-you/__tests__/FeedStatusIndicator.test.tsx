@@ -257,3 +257,41 @@ describe('FeedStatusIndicator: grows, never swaps', () => {
         expect(mockWithTiming).toHaveBeenCalledWith(1.55, { duration: 250 });
     });
 });
+
+// Owner: "the animation should run only when feed is updating, otherwise it
+// stays static", and "still during wait". The Feed feeds the mark
+// `feedMarkMode(workingLocally, statusMode)`; this walks the chain end to end
+// for every state in which the phone itself is not working.
+describe('FeedStatusIndicator: static unless the Feed is really updating', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { feedMarkMode } = require('@/components/custom/feed/FeedHeaderTitleRow');
+    const still = (workingLocally: boolean, statusMode: string) => {
+        const { getByTestId } = renderIndicator({ mode: feedMarkMode(workingLocally, statusMode) });
+        const logo = getByTestId('mera-logo');
+        return logo.props.animated === false && logo.props.scrollCards === false;
+    };
+
+    it('is still at rest', () => {
+        expect(still(false, 'idle')).toBe(true);
+        expect(still(false, 'deferred')).toBe(true);
+    });
+
+    it('is still in the error and limited states', () => {
+        expect(still(false, 'error')).toBe(true);
+        expect(still(false, 'limited')).toBe(true);
+    });
+
+    it('is still on a bare scheduler poll, while a batch only waits on the server, and after a sync fails partway', () => {
+        // A poll, or a cloud batch waiting on the server: statusMode is
+        // 'processing' but the phone is not working. A failed sync publishes state 'failed', which
+        // neither flag counts, so the phone is not working; the mode is
+        // then 'error' (scoring failure) or 'processing' (scheduler still
+        // winding down), and neither may move the mark.
+        expect(still(false, 'processing')).toBe(true);
+        expect(still(false, 'error')).toBe(true);
+    });
+
+    it('moves only while the phone itself works', () => {
+        expect(still(true, 'processing')).toBe(false);
+    });
+});
