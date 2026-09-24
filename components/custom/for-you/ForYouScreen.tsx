@@ -700,7 +700,15 @@ const MeraNewsScreen: React.FC = () => {
                                 <View pointerEvents="none" className="flex-1" />
                             </HStack>
                         </VStack>
-                        <HStack className="items-center flex-shrink-0" space="md" pointerEvents="box-none">
+                        {/* Pinned to the title row's height so the bell (the
+                            shared 24pt-footprint HeaderIconButton) centres on the
+                            title, not on the row's top edge. */}
+                        <HStack
+                            className="items-center flex-shrink-0"
+                            space="md"
+                            pointerEvents="box-none"
+                            style={{ height: titleRowHeight }}
+                        >
                             <NotificationBellButton />
                         </HStack>
                     </HStack>

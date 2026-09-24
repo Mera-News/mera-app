@@ -1,9 +1,8 @@
-import { Pressable } from '@/components/ui/pressable';
+import HeaderIconButton from '@/components/custom/for-you/HeaderIconButton';
 import { Text } from '@/components/ui/text';
 import { observeUnreadCount } from '@/lib/database/services/notification-service';
 import { hapticLight } from '@/lib/haptics';
 import { setBellAnchor } from '@/lib/notifications/bell-anchor';
-import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,8 +20,11 @@ type MeasurableNode = {
  * Inline header bell — the notifications entry point for the For You and
  * Explore tabs (app-rethink wave). Replaces the absolutely-positioned
  * NotificationBellOverlay: this is a normal in-flow header element that
- * pushes `/logged-in/notifications` on tap, styled to match the other header
- * icon buttons on each screen (p-3 rounded-full border border-primary-500).
+ * pushes `/logged-in/notifications` on tap. It IS the shared HeaderIconButton
+ * (owner: "the same size and style as the search icon in Explore"): 44pt
+ * frame, white 24pt glyph, no chip. The unread count is a badge on the glyph
+ * and is read in the button's own label, so the badge is hidden from
+ * accessibility.
  *
  * Still registers the bell's on-screen center via bell-anchor.ts so the
  * "notified" toast (NotifiedToast, hosted globally in app_container/_layout)
@@ -57,39 +59,44 @@ const NotificationBellButton: React.FC = () => {
         router.push('/logged-in/notifications');
     };
 
+    const label = t('notificationCenter.bellA11y');
     return (
-        <Pressable
-            testID="feed-notification-bell"
+        <HeaderIconButton
             ref={btnRef as never}
-            onLayout={measureBell}
+            icon="notifications-none"
             onPress={onPress}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel={t('notificationCenter.bellA11y')}
-            className="p-3 rounded-full border border-primary-500 bg-transparent"
+            onLayout={measureBell}
+            accessibilityLabel={
+                count > 0 ? `${label}, ${t('trackedStories.updatesBadge', { count })}` : label
+            }
+            testID="feed-notification-bell"
         >
-            <MaterialIcons name="notifications-none" size={22} color={ACCENT} />
             {count > 0 ? (
                 <View
-                    className="absolute bg-primary-500 items-center justify-center"
-                    // minHeight, not height: the count scales and a hard 16pt
-                    // box clipped it. borderRadius stays 8 so it reads as a
-                    // pill once it outgrows a circle.
+                    className="absolute items-center justify-center"
+                    testID="feed-notification-bell-badge"
+                    // Read in the button's label instead: one element.
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
+                    // Anchored to the 24pt glyph's top-right corner inside the
+                    // 44pt frame (the glyph spans 10..34). minHeight, not
+                    // height: the count scales and a hard 16pt box clipped it.
                     style={{
-                        top: -2,
-                        right: -2,
+                        top: 4,
+                        right: 4,
                         minWidth: 16,
                         minHeight: 16,
                         borderRadius: 8,
                         paddingHorizontal: 3,
+                        backgroundColor: ACCENT,
                     }}
                 >
-                    <Text className="text-white font-bold" size="2xs" scaleTier="chrome">
+                    <Text className="text-black font-bold" size="2xs" scaleTier="chrome">
                         {count > 99 ? '99+' : count}
                     </Text>
                 </View>
             ) : null}
-        </Pressable>
+        </HeaderIconButton>
     );
 };
 

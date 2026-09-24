@@ -8,7 +8,6 @@ import {
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { observeAll as observeAllLocations } from '@/lib/database/services/location-service';
 import { getBrowseCountries, removeBrowseCountry } from '@/lib/explore/browse-countries';
@@ -26,7 +25,6 @@ import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
 import type { NewsSearchHit } from '@/lib/generated/graphql-types';
 import { useNewsSearch } from '@/lib/news-search/use-news-search';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -34,6 +32,7 @@ import { StyleSheet, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ExploreSearchBar from './ExploreSearchBar';
+import HeaderIconButton from '@/components/custom/for-you/HeaderIconButton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import ExploreSearchResults from './ExploreSearchResults';
 import ScopeArticleList from './ScopeArticleList';
@@ -484,24 +483,14 @@ const ExploreScreen: React.FC = () => {
                                     {/* N4: what this tab is and where its stories come from. */}
                                     <TabExplainerButton tab="explore" testID="explore-explainer-open" />
                                 </HStack>
-                                <Pressable
-                                    testID="explore-search-open"
+                                {/* The shared header icon button: the Dashboard's
+                                    bell is the same component (owner). */}
+                                <HeaderIconButton
+                                    icon="search"
                                     onPress={handleOpenSearch}
-                                    // A real 44pt frame pulled back to the 24pt
-                                    // glyph's footprint, same recipe as the "?":
-                                    // hitSlop alone measured 24x24.
-                                    style={{
-                                        width: 44,
-                                        height: 44,
-                                        margin: -10,
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                    }}
-                                    accessibilityRole="button"
                                     accessibilityLabel={t('explore.openSearch')}
-                                >
-                                    <MaterialIcons name="search" size={24} color="#ffffff" />
-                                </Pressable>
+                                    testID="explore-search-open"
+                                />
                             </>
                         )}
                     </HStack>
