@@ -82,7 +82,13 @@ describe('TabExplainerButton', () => {
     render(<TabExplainerButton tab="feed" testID="feed-explainer-open" />);
     const button = screen.getByTestId('feed-explainer-open');
     expect(button.props.accessibilityLabel).toBe('tabExplainer.openA11y');
-    expect(button.props.hitSlop).toBe(10);
+    // A real 44pt frame, not hitSlop: a slop-only button measured 24x24 on
+    // device. The -10 margin keeps its layout footprint at the 24pt glyph, so
+    // no header row reflows and the glyph does not move.
+    const { StyleSheet } = require('react-native');
+    const style = StyleSheet.flatten(button.props.style);
+    expect(style).toMatchObject({ width: 44, height: 44, margin: -10, alignItems: 'center', justifyContent: 'center' });
+    expect(button.props.hitSlop).toBeUndefined();
   });
 });
 
