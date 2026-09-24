@@ -85,8 +85,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 /** The header's horizontal padding, which the pill row bleeds past. One
- *  constant for both so they cannot drift apart. */
-const HEADER_SIDE_PADDING = 20;
+ *  constant for both so they cannot drift apart. It equals the `px-5` every
+ *  other tab header uses: NativeWind inlines rem at 14pt (tailwind.config.js),
+ *  so px-5 is 1.25 x 14 = 17.5pt. This was 20, which put the Dashboard's bell
+ *  and title ~2.5pt inside the other tabs' (captured: bell x 348 vs 350.7). */
+const HEADER_SIDE_PADDING = 1.25 * 14;
 
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();

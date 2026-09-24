@@ -225,6 +225,18 @@ describe('Dashboard header', () => {
     expect(ids.indexOf('bell')).toBe(mark + 1);
   });
 
+  // Captured: the Dashboard bell sat 2.7pt left of the other four tabs'. They
+  // pad with `px-5`, which NativeWind inlines at 14pt per rem (see
+  // tailwind.config.js), i.e. 17.5pt; this header padded 20 in points.
+  it('pads its sides exactly like the other tab headers (px-5 = 1.25 x 14 = 17.5pt)', () => {
+    const { StyleSheet } = require('react-native');
+    render(<ForYouScreen />);
+    const vstack = screen.getByTestId('dashboard-header').findAll(
+      (n: any) => typeof n.type === 'string' && StyleSheet.flatten(n.props.style)?.paddingHorizontal !== undefined,
+    )[0];
+    expect(StyleSheet.flatten(vstack.props.style).paddingHorizontal).toBe(1.25 * 14);
+  });
+
   it('spaces mark and bell by the shared actions gap', () => {
     const { StyleSheet } = require('react-native');
     const { HEADER_ACTIONS_GAP } = require('@/components/custom/for-you/HeaderIconButton');
@@ -303,7 +315,7 @@ describe('Dashboard header', () => {
 
   it('lets the pill row bleed by exactly the header side padding', () => {
     render(<ForYouScreen />);
-    expect(screen.getByTestId('subtabs').props.bleed).toBe(20);
+    expect(screen.getByTestId('subtabs').props.bleed).toBe(17.5);
   });
 
   it('carries the "?" explainer (N4)', () => {
