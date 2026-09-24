@@ -7,17 +7,18 @@
 
 import { ActionSheetRow } from '@/components/custom/cards/ArticleOverflowMenu';
 import { feedbackLabelVars } from '@/components/custom/feedback-tree/label-vars';
-import {
-    useFeedbackTreeEngine,
-    type FeedbackTreeRoot,
-} from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
+import { resolveTreeLevel, type FeedbackTreeRoot } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 import { Text } from '@/components/ui/text';
-import type { FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import type { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export interface FeedbackTreeLevelProps {
+    /** The loaded tree. The host resolves it (and the context) BEFORE pushing
+     *  a level, so the level draws its final rows on its first render: rows
+     *  arriving later made the sheet grow after it landed (batch 12). */
+    tree: FeedbackTree;
     root: FeedbackTreeRoot;
     /** The branch ids opened so far (empty = the tree's root level). */
     pathIds: readonly string[];
@@ -45,6 +46,7 @@ function useChrome() {
 }
 
 const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
+    tree,
     root,
     pathIds,
     browsing,
@@ -55,16 +57,8 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
 }) => {
     const { t } = useTranslation();
     const c = useChrome();
-    const engine = useFeedbackTreeEngine({ active: true, root, context });
-    const { tree, currentChildren, findNode, hasVisibleChildren, restorePath } = engine;
-    const pathKey = pathIds.join('/');
-
-    // The stack owns the path; the engine follows it (a level mounts fresh on
-    // every push, so it restores its own depth once the tree has loaded).
-    useEffect(() => {
-        if (tree) restorePath([...pathIds]);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tree, pathKey]);
+    // Synchronous: the level's rows are final on its first render.
+    const { nodes: currentChildren, findNode, hasVisibleChildren } = resolveTreeLevel(tree, root, pathIds, context);
 
     const label = useCallback(
         (node: FeedbackTreeNode) =>
@@ -122,19 +116,15 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
         );
     }
 
-    // Until the engine has restored this level's depth it still shows the
-    // root; draw nothing rather than flash the wrong rows during the slide.
-    if (tree && engine.pathIds.join('/') !== pathKey) return caption;
-
     return (
         <>
             {currentChildren.length > 0 ? (
                 currentChildren.map(rowFor)
-            ) : tree ? (
+            ) : (
                 <Text className="text-center py-4" style={{ color: 'rgb(163,163,163)' }}>
                     {c('empty', 'No options here')}
                 </Text>
-            ) : null}
+            )}
             {caption}
         </>
     );

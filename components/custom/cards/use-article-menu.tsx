@@ -1,7 +1,7 @@
 import ActionSheet, { ActionSheetRow, type ArticleMenuItem } from '@/components/custom/cards/ArticleOverflowMenu';
 import FeedbackTreeLevel from '@/components/custom/feedback-tree/FeedbackTreeLevel';
 import { leafNeedsConfirm, performFeedbackLeaf } from '@/components/custom/feedback-tree/perform-feedback-leaf';
-import type { FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import type { VerdictSentiment } from '@/lib/database/services/article-feedback-service';
 import {
     isForeignLanguage,
@@ -194,19 +194,46 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         setStack((s) => (s.length > 1 ? s.slice(0, -1) : s));
     }, []);
 
+    // The tree AND its gating context are resolved BEFORE a tree level is
+    // pushed, so the level lands with its final rows. Pushing first and
+    // resolving after drew one row, then grew the sheet ~1.2s later when the
+    // context let the gated branches through (batch 12). Prefetched the moment
+    // the sheet opens, so a Like tap normally pushes at once.
+    const [tree, setTree] = useState<FeedbackTree | null>(null);
+    const prepRef = useRef<{ articleId: string; promise: Promise<void>; done: boolean } | null>(null);
+    const prepareTree = useCallback((): { promise: Promise<void>; done: boolean } => {
+        if (prepRef.current && prepRef.current.articleId === subject.articleId) return prepRef.current;
+        const entry = { articleId: subject.articleId, done: false, promise: Promise.resolve() };
+        entry.promise = (async () => {
+            // Resolved at call time: both reach storage or the database, and
+            // this hook sits under every card.
+            /* eslint-disable @typescript-eslint/no-require-imports */
+            const { getFeedbackTree } = require('@/lib/services/feedback-tree-service') as typeof import('@/lib/services/feedback-tree-service');
+            const { buildOverlayContext } = require('@/components/custom/cards/overlay-context') as typeof import('@/components/custom/cards/overlay-context');
+            /* eslint-enable @typescript-eslint/no-require-imports */
+            const [tr, ctx] = await Promise.all([
+                getFeedbackTree(),
+                buildOverlayContext(subject).catch(() => ({ articleTitle: subject.title }) as LocalFeedbackContext),
+            ]);
+            setTree(tr);
+            setTreeContext(ctx);
+            entry.done = true;
+        })().catch(() => {
+            entry.done = false;
+            prepRef.current = null;
+        });
+        prepRef.current = entry;
+        return entry;
+    }, [subject]);
+
     const enterTree = useCallback(
         (root: VerdictSentiment) => {
-            setTreeContext({ articleTitle: subject.title });
-            // Resolved at call time: the context builder reaches the database,
-            // and this hook sits under every card.
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const { buildOverlayContext } = require('@/components/custom/cards/overlay-context') as typeof import('@/components/custom/cards/overlay-context');
-            void buildOverlayContext(subject)
-                .then(setTreeContext)
-                .catch(() => {});
-            showLevel({ kind: 'tree', root, pathIds: [], browsing: root === 'like' });
+            const level: SheetLevel = { kind: 'tree', root, pathIds: [], browsing: root === 'like' };
+            const prep = prepareTree();
+            if (prep.done) showLevel(level);
+            else void prep.promise.then(() => showLevel(level));
         },
-        [subject, showLevel],
+        [prepareTree, showLevel],
     );
 
     const showFailure = useCallback(
@@ -600,8 +627,9 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                     />
                 ));
             case 'tree':
-                return (
+                return tree ? (
                     <FeedbackTreeLevel
+                        tree={tree}
                         root={level.root}
                         pathIds={level.pathIds}
                         browsing={level.browsing}
@@ -616,7 +644,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                                 : performLeaf(level.root, node, pathIds)
                         }
                     />
-                );
+                ) : null;
             case 'tree-confirm':
                 return (
                     <>
@@ -685,11 +713,12 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     return {
         open: useCallback(() => {
             setEngaged(true);
+            prepareTree();
             setDirection('none');
             setStack([{ kind: 'main' }]);
             setMounted(true);
             setVisible(true);
-        }, []),
+        }, [prepareTree]),
         openFeedback: enterTree,
         openFollow,
         tracked,

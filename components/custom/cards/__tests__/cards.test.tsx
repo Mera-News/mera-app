@@ -159,6 +159,9 @@ jest.mock('@/components/custom/feedback-tree/FeedbackTreeLevel', () => {
   const { Text } = require('react-native');
   return { __esModule: true, default: (p: any) => <Text testID={`tree-level-${p.root}`}>tree</Text> };
 });
+jest.mock('@/lib/services/feedback-tree-service', () => ({
+  getFeedbackTree: jest.fn(async () => ({ version: 1, root: [], likeRoot: [] })),
+}));
 jest.mock('@/components/custom/cards/overlay-context', () => ({
   buildOverlayContext: jest.fn(async (s: any) => ({ articleTitle: s.title })),
 }));

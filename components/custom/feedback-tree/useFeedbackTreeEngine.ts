@@ -77,6 +77,48 @@ function isVisibleNode(node: FeedbackTreeNode, context: LocalFeedbackContext): b
   return !isDeadBranch(node, context);
 }
 
+/**
+ * One level of the tree, resolved SYNCHRONOUSLY from a loaded tree, a root, a
+ * branch path and the context: the visible nodes at that depth, plus the two
+ * helpers a level renderer needs. Pure, so a sheet level can draw its final
+ * rows on its very first render (no async restore, no height change after the
+ * level lands). Uses the ONE visibility predicate, like the engine.
+ */
+export function resolveTreeLevel(
+  tree: FeedbackTree,
+  root: FeedbackTreeRoot,
+  pathIds: readonly string[],
+  context: LocalFeedbackContext,
+): {
+  nodes: FeedbackTreeNode[];
+  findNode: (id: string) => FeedbackTreeNode | null;
+  hasVisibleChildren: (node: FeedbackTreeNode) => boolean;
+} {
+  const rootNodes = root === 'like' ? tree.likeRoot ?? [] : tree.root;
+  let level = rootNodes;
+  for (const id of pathIds) {
+    const node = level.find((n) => n.id === id);
+    if (!node || !node.children || node.children.length === 0) break;
+    level = node.children;
+  }
+  const findNode = (id: string): FeedbackTreeNode | null => {
+    const walk = (nodes: FeedbackTreeNode[]): FeedbackTreeNode | null => {
+      for (const n of nodes) {
+        if (n.id === id) return n;
+        const hit = n.children ? walk(n.children) : null;
+        if (hit) return hit;
+      }
+      return null;
+    };
+    return walk(rootNodes);
+  };
+  return {
+    nodes: level.filter((n) => isVisibleNode(n, context)),
+    findNode,
+    hasVisibleChildren: (node) => (node.children ?? []).some((n) => isVisibleNode(n, context)),
+  };
+}
+
 export interface FeedbackTreeEngine {
   /** The loaded tree (null until the first load resolves). */
   tree: FeedbackTree | null;

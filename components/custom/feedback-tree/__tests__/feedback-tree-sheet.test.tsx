@@ -90,6 +90,7 @@ function Harness(props: { context: LocalFeedbackContext; onLeafPicked: jest.Mock
     }
     return (
         <FeedbackTreeLevel
+            tree={require('@/lib/services/feedback-tree-snapshot').BUNDLED_FEEDBACK_TREE}
             root="dislike"
             pathIds={top.pathIds}
             browsing={top.browsing}
@@ -120,6 +121,16 @@ const TAGGED: LocalFeedbackContext = {
 beforeEach(() => jest.clearAllMocks());
 
 describe('the feedback tree as sheet levels (shipped v5 tree)', () => {
+    // Batch 12: a level drew one row, then grew ~1.2s later as more rows
+    // arrived. A level's rows are final on its FIRST render: no waiting.
+    it('draws a level\'s final rows synchronously, on its first render', () => {
+        const u = setup(TAGGED);
+        expect(u.getByText('Not that important')).toBeTruthy();
+        fireEvent.press(u.getByText('Tell me more'));
+        expect(u.getByText('Not a good suggestion')).toBeTruthy();
+        expect(u.getByText('Issue with this publication')).toBeTruthy();
+    });
+
     it('opens on the `not_important` fast path and "Tell me more"', async () => {
         const { getByText } = setup(TAGGED);
         expect(await waitFor(() => getByText('Not that important'))).toBeTruthy();

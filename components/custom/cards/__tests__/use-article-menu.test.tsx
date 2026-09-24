@@ -149,6 +149,10 @@ jest.mock('@/components/custom/feedback-tree/FeedbackTreeLevel', () => {
         ),
     };
 });
+let mockTreePromise: Promise<any> = Promise.resolve({ version: 1, root: [], likeRoot: [] });
+jest.mock('@/lib/services/feedback-tree-service', () => ({
+    getFeedbackTree: jest.fn(() => mockTreePromise),
+}));
 jest.mock('@/components/custom/cards/overlay-context', () => ({
     buildOverlayContext: jest.fn(async (s: any) => ({ articleTitle: s.title })),
 }));
@@ -195,6 +199,7 @@ beforeEach(() => {
     mockFollow.tracked = false;
     mockFollow.outcome = 'start';
     mockModalMounts = 0;
+    mockTreePromise = Promise.resolve({ version: 1, root: [], likeRoot: [] });
 });
 afterEach(() => jest.useRealTimers());
 
@@ -320,7 +325,34 @@ describe('compact row actions in the menu', () => {
 // Owner: "clicking on 'I like it' should feel like it's opening a submenu ...
 // then clicking on back should take user to the main menu". A sub-menu is a
 // LEVEL pushed inside the one sheet, never a second Modal.
+const settle = () =>
+    act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+    });
+
 describe('the ••• sheet as a navigation stack', () => {
+    // Batch 12: pushing first and resolving after drew one row, then grew
+    // the sheet. The tree and its context are ready BEFORE the level lands.
+    it('pushes the tree only once the tree and its context have resolved', async () => {
+        let resolveTree!: (t: any) => void;
+        mockTreePromise = new Promise((r) => {
+            resolveTree = r;
+        });
+        const r0 = {
+            liked: false, disliked: false, saved: false,
+            onLike: jest.fn(), onDislike: jest.fn(), onToggleSave: jest.fn(), onShare: jest.fn(),
+        };
+        const r = openMenu(<Host rowActions={r0} />);
+        fireEvent.press(r.getByTestId('menu-like'));
+        expect(r.queryByTestId('tree-like-b-root')).toBeNull();
+        expect(r.getByTestId('menu-save')).toBeTruthy();
+        resolveTree({ version: 1, root: [], likeRoot: [] });
+        await settle();
+        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+    });
+
     const row = (liked: boolean) => ({
         liked,
         saved: false,
@@ -330,9 +362,10 @@ describe('the ••• sheet as a navigation stack', () => {
         onShare: jest.fn(),
     });
 
-    it('"I like it" records the like and pushes the like tree into the SAME sheet', () => {
+    it('"I like it" records the like and pushes the like tree into the SAME sheet', async () => {
         const r0 = row(false);
         const r = openMenu(<Host rowActions={r0} />);
+        await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         expect(r0.onLike).toHaveBeenCalledTimes(1);
         expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
@@ -343,8 +376,9 @@ describe('the ••• sheet as a navigation stack', () => {
         expect(r.getByTestId('sheet-back')).toBeTruthy();
     });
 
-    it('Back from the tree root returns to the main menu rows', () => {
+    it('Back from the tree root returns to the main menu rows', async () => {
         const r = openMenu(<Host rowActions={row(false)} />);
+        await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         fireEvent.press(r.getByTestId('sheet-back'));
         expect(r.getByTestId('menu-like')).toBeTruthy();
@@ -352,8 +386,9 @@ describe('the ••• sheet as a navigation stack', () => {
         expect(r.queryByTestId('sheet-back')).toBeNull();
     });
 
-    it('a deeper level pops back to the tree root, then to the main menu', () => {
+    it('a deeper level pops back to the tree root, then to the main menu', async () => {
         const r = openMenu(<Host rowActions={row(false)} />);
+        await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         fireEvent.press(r.getByTestId('tree-descend'));
         expect(r.getByTestId('tree-like-b-n1')).toBeTruthy();
@@ -363,16 +398,18 @@ describe('the ••• sheet as a navigation stack', () => {
         expect(r.getByTestId('menu-like')).toBeTruthy();
     });
 
-    it('"Not for me" pushes the dislike tree at its entry level', () => {
+    it('"Not for me" pushes the dislike tree at its entry level', async () => {
         const r0 = row(false);
         const r = openMenu(<Host rowActions={r0} />);
+        await settle();
         fireEvent.press(r.getByTestId('menu-dislike'));
         expect(r0.onDislike).toHaveBeenCalledTimes(1);
         expect(r.getByTestId('tree-dislike-e-root')).toBeTruthy();
     });
 
-    it('Cancel closes the whole sheet from any depth and runs nothing', () => {
+    it('Cancel closes the whole sheet from any depth and runs nothing', async () => {
         const r = openMenu(<Host rowActions={row(false)} />);
+        await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         fireEvent.press(r.getByTestId('tree-descend'));
         fireEvent.press(r.getByTestId('article-menu-cancel'));
@@ -381,33 +418,36 @@ describe('the ••• sheet as a navigation stack', () => {
         expect(mockShowFeedback).not.toHaveBeenCalled();
     });
 
-    it('a tree opened directly (inline thumb, outside •••) has no Back row', () => {
+    it('a tree opened directly (inline thumb, outside •••) has no Back row', async () => {
         const r = render(<Host rowActions={row(false)} />);
         fireEvent.press(r.getByTestId('open-like-tree'));
+        await settle();
         expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
         expect(r.queryByTestId('sheet-back')).toBeNull();
         expect(r.getByTestId('article-menu-cancel')).toBeTruthy();
     });
 
-    it('a leaf closes the sheet and reports the path', () => {
+    it('a leaf closes the sheet and reports the path', async () => {
         const picked = jest.fn();
         const r = openMenu(<Host rowActions={row(false)} onLeafPicked={picked} />);
+        await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         fireEvent.press(r.getByTestId('tree-leaf'));
         expect(picked).toHaveBeenCalledWith('like', ['seen'], 0, false);
         expect(mockModal.visible).toBe(false);
     });
 
-    it('"Remove like" removes it and closes, with no tree', () => {
+    it('"Remove like" removes it and closes, with no tree', async () => {
         const r0 = row(true);
         const r = openMenu(<Host rowActions={r0} />);
+        await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         expect(r0.onLike).toHaveBeenCalledTimes(1);
         expect(r.queryByTestId('tree-like-b-root')).toBeNull();
         expect(mockModal.visible).toBe(false);
     });
 
-    it('Follow on an already-followed story pushes the follow level; Go to story closes then navigates', () => {
+    it('Follow on an already-followed story pushes the follow level; Go to story closes then navigates', async () => {
         mockFollow.tracked = true;
         mockFollow.outcome = 'tracked';
         const r = openMenu(<Host />);
@@ -420,7 +460,7 @@ describe('the ••• sheet as a navigation stack', () => {
         expect(mockFollow.goToStory).toHaveBeenCalledTimes(1);
     });
 
-    it('Follow on a new story closes the sheet, then starts the proposal', () => {
+    it('Follow on a new story closes the sheet, then starts the proposal', async () => {
         const r = openMenu(<Host />);
         fireEvent.press(r.getByTestId('card-action-track'));
         expect(mockFollow.startTracking).not.toHaveBeenCalled();
