@@ -92,6 +92,23 @@ describe('TabExplainerButton', () => {
   });
 });
 
+describe('the Settings explainer (owner: "Settings (?)")', () => {
+  it('has its own sheet: a title and three paragraphs, in reading order', () => {
+    expect((TAB_EXPLAINER_TITLES as any).settings).toBe('tabExplainer.settings.title');
+    expect((TAB_EXPLAINER_PARAGRAPHS as any).settings).toEqual([
+      'tabExplainer.settings.what',
+      'tabExplainer.settings.how1',
+      'tabExplainer.settings.how2',
+    ]);
+  });
+
+  it('opens from the button like every other tab', () => {
+    render(<TabExplainerButton tab={'settings' as any} testID="settings-explainer-open" />);
+    fireEvent.press(screen.getByTestId('settings-explainer-open'));
+    expect(screen.getByTestId('tab-explainer-settings')).toBeTruthy();
+  });
+});
+
 describe('the explainer copy', () => {
   const keys = [
     'tabExplainer.openA11y',

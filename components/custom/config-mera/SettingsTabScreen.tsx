@@ -7,6 +7,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import AppPreferencesTab from './AppPreferencesTab';
 
 /**
@@ -43,13 +44,19 @@ const SettingsTabScreen: React.FC = () => {
             {/* No opaque fill: the backdrop above is the page background. */}
             <Box className="flex-1" style={{ paddingTop: insets.top }}>
 
-            <HStack className="items-start justify-between px-5 pt-4 mb-2">
-                {/* No `numberOfLines`: a 1-line clamp on a 36px title truncated the
-                    screen's own name at large Dynamic Type sizes. Nothing below
-                    depends on this row's height, so it wraps instead. */}
-                <Heading size="4xl" className="text-white">
+            <HStack className="items-center px-5 pt-4 mb-2" space="sm">
+                {/* "Settings (?)", the "?" right after the title as on every
+                    other tab (owner). One line: a shrinking title must truncate,
+                    never wrap mid-word. */}
+                <Heading
+                    size="4xl"
+                    className="text-white flex-shrink min-w-0"
+                    numberOfLines={1}
+                    testID="settings-title"
+                >
                     {t('tabs.settings')}
                 </Heading>
+                <TabExplainerButton tab="settings" testID="settings-explainer-open" />
             </HStack>
 
             <ScrollView

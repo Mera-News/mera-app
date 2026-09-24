@@ -35,8 +35,9 @@ import { VStack } from '@/components/ui/vstack';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-/** Settings has no ranking to explain, so it has no sheet. */
-export type ExplainedTab = 'feed' | 'forYou' | 'explore' | 'profile';
+/** Every tab has a sheet. Settings' explains where things live rather than
+ *  a ranking (owner: "Settings (?)"). */
+export type ExplainedTab = 'feed' | 'forYou' | 'explore' | 'profile' | 'settings';
 
 /** The paragraph keys per tab, in reading order. Literal keys so `t()` stays
  *  typed. */
@@ -64,6 +65,11 @@ export const TAB_EXPLAINER_PARAGRAPHS = {
     'tabExplainer.profile.how1',
     'tabExplainer.profile.privacy',
   ],
+  settings: [
+    'tabExplainer.settings.what',
+    'tabExplainer.settings.how1',
+    'tabExplainer.settings.how2',
+  ],
 } as const satisfies Record<ExplainedTab, readonly string[]>;
 
 export const TAB_EXPLAINER_TITLES = {
@@ -71,6 +77,7 @@ export const TAB_EXPLAINER_TITLES = {
   forYou: 'tabExplainer.forYou.title',
   explore: 'tabExplainer.explore.title',
   profile: 'tabExplainer.profile.title',
+  settings: 'tabExplainer.settings.title',
 } as const satisfies Record<ExplainedTab, string>;
 
 export interface TabExplainerSheetProps {
