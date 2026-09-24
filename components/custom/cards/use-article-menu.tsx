@@ -51,8 +51,8 @@ export interface UseArticleMenuInput {
      *  like, not for me, save and share lead the menu instead. Surfaces with an
      *  inline row (Feed card, detail) leave this out. */
     rowActions?: {
-        /** A like is recorded: the item shows the filled glyph (and, once the
-         *  copy lands, reads "Remove like"); a tap removes it. */
+        /** A like is recorded: the item shows the filled glyph and reads
+         *  "Remove like"; a tap removes it. */
         liked: boolean;
         saved: boolean;
         onLike: () => void;
@@ -190,7 +190,9 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             list.push(
                 {
                     key: 'like',
-                    label: t('articleFeedback.likeLabel'),
+                    // Once liked the item says what a tap does now (it removes
+                    // the like), instead of repeating "I like it".
+                    label: rowActions.liked ? t('articleMenu.removeLike') : t('articleFeedback.likeLabel'),
                     icon: rowActions.liked ? 'thumb-up' : 'thumb-up-off-alt',
                     testID: 'menu-like',
                     run: () => rowActions.onLike(),

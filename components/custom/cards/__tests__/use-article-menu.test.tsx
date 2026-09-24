@@ -258,6 +258,17 @@ describe('compact row actions in the menu', () => {
         const plain = openMenu(<Host />);
         expect(plain.queryByTestId('menu-like')).toBeNull();
     });
+
+    // Batch 10: after a like the item still read "I like it" and a second tap
+    // silently removed it. Once liked it says so.
+    it('reads "Remove like" once liked, and "Remove from saved" once saved', () => {
+        const r = openMenu(<Host rowActions={{ ...row(true), saved: true }} />);
+        expect(r.getByTestId('menu-like').props.accessibilityLabel).toBe('articleMenu.removeLike');
+        expect(r.getByTestId('menu-save').props.accessibilityLabel).toBe('savedSuggestions.removeAction');
+        r.unmount();
+        const fresh = openMenu(<Host rowActions={row(false)} />);
+        expect(fresh.getByTestId('menu-like').props.accessibilityLabel).toBe('articleFeedback.likeLabel');
+    });
 });
 
 describe('useArticleMenu running items', () => {
