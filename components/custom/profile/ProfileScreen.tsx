@@ -2,7 +2,6 @@ import BlockedBanner from '@/components/custom/BlockedBanner';
 import FactsList from '@/components/custom/facts/FactsList';
 import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
-import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
@@ -12,10 +11,16 @@ import { getFacts } from '@/lib/database/services/fact-service';
 import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
+import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
+
+// Matches TabExplainerButton's header-right glyph: 24pt icon, hitSlop padded
+// out to a 44pt target, same muted chrome colour.
+const HEADER_ICON_GLYPH = 24;
+const HEADER_ICON_HIT_SLOP = (44 - HEADER_ICON_GLYPH) / 2;
 
 interface ProfileScreenProps {
     readonly userId: string;
@@ -26,7 +31,9 @@ interface ProfileScreenProps {
  *   1. The Mera chat invite (the add-an-interest entry).
  *   2. "About you": the real facts list (`FactsList`, shared with Advanced >
  *      Facts), with delete behind Edit.
- *   3. One "Advanced" row to the power-user hub.
+ * The power-user hub ("Advanced") opens from an icon-only button at the
+ * top-right of the header, beside the tab explainer — there is no bottom
+ * Advanced row any more.
  * The daily-usage card lives at the top of Settings (SettingsUsageCard), not
  * here: this tab is about the person, not the plan.
  */
@@ -94,10 +101,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                 >
                     {t('tabs.profile')}
                 </Heading>
-                {/* N4: what this tab is and how it works, in plain words. The
-                    old "Learn how Mera works" button competed with the title
-                    (M10); the guides have one home, Settings > Help. */}
-                <TabExplainerButton tab="profile" testID="profile-explainer-open" />
+                <HStack className="items-center" space="md">
+                    {/* Advanced — icon-only, opens the power-user hub. Was a
+                        full-width row at the bottom of the page; moved here
+                        so it doesn't compete for scroll space with facts. */}
+                    <Pressable
+                        testID="profile-advanced-open"
+                        onPress={() => router.push('/logged-in/profile-advanced')}
+                        hitSlop={HEADER_ICON_HIT_SLOP}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('profile.advanced', { defaultValue: 'Advanced' })}
+                    >
+                        <MaterialIcons name="tune" size={HEADER_ICON_GLYPH} color="rgb(212, 212, 212)" />
+                    </Pressable>
+                    {/* N4: what this tab is and how it works, in plain words. The
+                        old "Learn how Mera works" button competed with the title
+                        (M10); the guides have one home, Settings > Help. */}
+                    <TabExplainerButton tab="profile" testID="profile-explainer-open" />
+                </HStack>
             </HStack>
 
             <ScrollView
@@ -138,17 +159,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                         <FactsList editing={editingFacts} />
                     </Box>
                 )}
-
-                {/* 3 — Advanced */}
-                <Box className="px-4">
-                    <HubRow
-                        testID="profile-row-advanced"
-                        icon="tune"
-                        label={t('profile.advanced', { defaultValue: 'Advanced' })}
-                        subtitle={t('profile.advancedSubtitle', { defaultValue: 'Facts, sources, saved, activity and more' })}
-                        onPress={() => router.push('/logged-in/profile-advanced')}
-                    />
-                </Box>
             </ScrollView>
         </Box>
     );

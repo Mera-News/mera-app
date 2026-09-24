@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { router } from 'expo-router';
 import React from 'react';
 
 // css-interop JSX shim (reads Platform.OS at module load) — same as other tests.
@@ -104,10 +105,6 @@ jest.mock('@/components/custom/UsageWidget', () => {
         ),
     };
 });
-jest.mock('@/components/custom/profile-hub/HubRow', () => {
-    const { Pressable, Text } = require('react-native');
-    return { __esModule: true, default: ({ label, onPress }: any) => <Pressable accessibilityLabel={label} onPress={onPress}><Text>{label}</Text></Pressable> };
-});
 jest.mock('@/components/custom/for-you/TabExplainerButton', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: ({ tab, testID }: any) => <View testID={testID} accessibilityLabel={`explainer:${tab}`} /> };
@@ -203,10 +200,10 @@ beforeEach(() => {
 });
 
 describe('ProfileScreen', () => {
-    it('renders the Advanced row and NO usage card (it lives at the top of Settings)', async () => {
+    it('renders the header Advanced button and NO usage card (it lives at the top of Settings)', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { queryByTestId, getByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('Advanced')).toBeTruthy());
+        const { queryByTestId, getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
         expect(queryByTestId('usage-widget')).toBeNull();
     });
 
@@ -222,7 +219,7 @@ describe('ProfileScreen', () => {
         await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
         expect(queryByText('ABOUT YOU')).toBeNull();
         expect(queryByTestId('facts-list-mode')).toBeNull();
-        expect(getByText('Advanced')).toBeTruthy();
+        expect(getByTestId('profile-advanced-open')).toBeTruthy();
     });
 
     it('with facts → renders the About-you heading and the real facts list (FactsList)', async () => {
@@ -321,5 +318,29 @@ describe('ProfileScreen', () => {
         const { getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('profile-explainer-open')).toBeTruthy());
         expect(getByTestId('profile-explainer-open').props.accessibilityLabel).toBe('explainer:profile');
+    });
+
+    // ── ux1 P2: Advanced moved into the header, icon-only ───────────────────
+    it('the header carries an icon-only Advanced button with the Advanced a11y label', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        expect(getByTestId('profile-advanced-open').props.accessibilityLabel).toBe('Advanced');
+        expect(getByTestId('profile-advanced-open').props.accessibilityRole).toBe('button');
+    });
+
+    it('pressing the header Advanced button navigates to the Advanced route', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        fireEvent.press(getByTestId('profile-advanced-open'));
+        expect(router.push).toHaveBeenCalledWith('/logged-in/profile-advanced');
+    });
+
+    it('no bottom Advanced button remains on the page', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { queryByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(queryByTestId('profile-advanced-open')).toBeTruthy());
+        expect(queryByTestId('profile-row-advanced')).toBeNull();
     });
 });
