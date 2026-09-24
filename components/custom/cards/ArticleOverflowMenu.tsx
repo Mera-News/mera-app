@@ -4,7 +4,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     AccessibilityInfo,
@@ -221,7 +221,14 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
         const animate = !reduceMotion && direction !== 'none';
         if (animate) {
             if (Platform.OS === 'ios') {
-                LayoutAnimation.configureNext(LayoutAnimation.create(SHEET_SLIDE_MS, 'easeInEaseOut', 'opacity'));
+                // Height only (`update`), same duration, so it moves IN STEP with
+                // the slide. No `create`: that faded the new level up from
+                // transparent, which on Back read as an empty tall sheet for
+                // ~100ms before the menu appeared.
+                LayoutAnimation.configureNext({
+                    duration: SHEET_SLIDE_MS,
+                    update: { type: LayoutAnimation.Types.easeInEaseOut },
+                });
             }
             sign.current = direction === 'push' ? 1 : -1;
             progress.setValue(0);
@@ -232,7 +239,9 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
         }
     }
     shown.current = { key: levelKey, content };
-    useEffect(() => {
+    // Started before paint (layout effect), so the slide begins in the same
+    // frame as the height change rather than one passive-effect frame later.
+    useLayoutEffect(() => {
         if (!outgoing) return;
         const anim = Animated.timing(progress, { toValue: 1, duration: SHEET_SLIDE_MS, useNativeDriver: true });
         anim.start(({ finished }) => {

@@ -800,6 +800,28 @@ describe('the level transition', () => {
         expect(r.getByTestId('menu-save')).toBeTruthy();
     });
 
+    // Batch 14: on Back the sheet grew, and for ~100ms the short level sat at
+    // the top of an empty tall sheet before the menu slid in. The height eases
+    // IN STEP with the slide (same duration, an update only), and the incoming
+    // level is never faded up from transparent (no LayoutAnimation `create`).
+    it.each(['push', 'Back'])('on %s the height eases with the slide and the incoming level is not faded in', async (which) => {
+        const { LayoutAnimation } = jest.requireActual('react-native');
+        const r = openMenu(<Host rowActions={row()} />);
+        await settle();
+        fireEvent.press(r.getByTestId('menu-like'));
+        act(() => {
+            jest.advanceTimersByTime(SHEET_SLIDE_MS + 100);
+        });
+        const spy = jest.spyOn(LayoutAnimation, 'configureNext');
+        if (which === 'Back') fireEvent.press(r.getByTestId('sheet-back'));
+        else fireEvent.press(r.getByTestId('tree-descend'));
+        expect(spy).toHaveBeenCalledTimes(1);
+        const config = spy.mock.calls[0][0] as any;
+        expect(config.duration).toBe(SHEET_SLIDE_MS);
+        expect(config.update).toBeTruthy();
+        expect(config.create).toBeUndefined();
+    });
+
     it('Reduce Motion swaps levels in place, with no outgoing copy', async () => {
         jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
         const r = openMenu(<Host rowActions={row()} />);
