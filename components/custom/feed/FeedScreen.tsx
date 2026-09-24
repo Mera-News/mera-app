@@ -1223,6 +1223,14 @@ const FeedScreen: React.FC = () => {
           {/* The 24h counts sentence that used to sit here is gone — it lives
               on the Dashboard, which is the screen for looking at numbers. It
               is still one tap away: the mark's dropdown carries the same counts. */}
+
+          {/* Holds the header at the height every capture was measured
+              against (143pt at 402pt wide): the inline status panel's
+              always-mounted wrapper used to be this VStack's last child, and
+              the `space="xs"` gap before it was part of the header. Removing
+              the wrapper shrank the header to 139.3pt and moved every card up.
+              Empty and `none`: it draws nothing and takes no touch. */}
+          <View pointerEvents="none" testID="feed-header-bottom-spacer" />
         </VStack>
       </Animated.View>
 

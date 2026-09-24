@@ -121,8 +121,35 @@ describe('FeedScreen header structure', () => {
         expect(src).not.toContain('<FeedStatusPanel');
     });
 
+    // The panel's old always-mounted wrapper was the VStack's last child, so
+    // the header carried one `space="xs"` gap below the title row; removing it
+    // shrank the header 143 -> 139.3pt and moved every card up. The spacer
+    // keeps the header measured across the wave.
+    it('keeps the header bottom gap below the title row', () => {
+        const row = src.indexOf('<FeedHeaderTitleRow');
+        const spacer = src.indexOf('testID="feed-header-bottom-spacer"');
+        const vstackEnd = src.indexOf('</VStack>', row);
+        expect(row).toBeGreaterThan(-1);
+        expect(spacer).toBeGreaterThan(row);
+        expect(spacer).toBeLessThan(vstackEnd);
+    });
+
     it('wraps the screen in the dropdown provider and mounts the layer', () => {
         expect(src).toContain('<StatusDropdownProvider>');
         expect(src).toContain('<StatusDropdownLayer testIDPrefix="feed-status" />');
+    });
+});
+
+describe('the closed dropdown layer is out of the accessibility tree', () => {
+    it('hides the full-screen layer and passes touches while closed, and exposes it once open', () => {
+        const r = render(<Harness />);
+        const layer = () => r.getByTestId('feed-status-dropdown-layer', HIDDEN);
+        expect(layer().props.accessibilityElementsHidden).toBe(true);
+        expect(layer().props.importantForAccessibility).toBe('no-hide-descendants');
+        expect(layer().props.pointerEvents).toBe('none');
+        fireEvent.press(r.getByTestId('feed-status-indicator'));
+        expect(layer().props.accessibilityElementsHidden).toBe(false);
+        expect(layer().props.importantForAccessibility).toBe('auto');
+        expect(layer().props.pointerEvents).toBe('auto');
     });
 });
