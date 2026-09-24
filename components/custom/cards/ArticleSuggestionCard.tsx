@@ -54,9 +54,6 @@ interface ArticleCardProps {
    *  chat. Absent ⇒ no Ask-Mera affordance renders (e.g. the Saved list). */
   onAskMera?: (suggestion: ForYouSuggestion) => void;
   // ── Feedback tree (in the shared ••• sheet) ─────────────────────────────
-  /** True once a TERMINAL leaf settled (or the user escalated to Mera) for this
-   *  card. The only thing the filled-thumb treatment may be derived from. */
-  feedbackCommitted?: boolean;
   /** Stable per-card tree-leaf handlers from `useFeedbackSheet`. Without them
    *  a thumb only records the verdict (no tree to give a reason in). */
   feedbackHandlers?: CardFeedbackHandlers;
@@ -102,7 +99,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   verdict = null,
   onVerdict,
   onAskMera,
-  feedbackCommitted = false,
   feedbackHandlers,
   dimmed = false,
   read = false,
@@ -325,19 +321,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   // `horizontalPadding = 0` because the footer wrapper already insets it.
   const actionBar = onVerdict ? (
     <CardActionBar
+      // A recorded verdict is filled at once (see CardActionBar's header).
       verdict={verdict}
-      // D15 — a verdict with no reason attached is provisional: shown hollow,
-      // and discarded rather than speculated on.
-      //
-      // F2 — the discriminator is `feedbackCommitted`, NOT the stored path. A
-      // path exists the moment the user opens a branch, which commits nothing;
-      // deriving fill from it promised "this changed your persona" one tap after
-      // the caption promised the opposite.
-      //
-      // Gated on `feedbackHandlers`: a host that doesn't wire the tree leaves
-      // can never SHOW the tree, so its user has no way to commit —
-      // a permanently hollow thumb there would be a dead end, not a prompt.
-      provisional={!!feedbackHandlers && !feedbackCommitted}
       saved={saved}
       onLike={() => tapThumb('like')}
       onDislike={() => tapThumb('dislike')}

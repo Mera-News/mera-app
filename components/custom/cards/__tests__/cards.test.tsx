@@ -1063,3 +1063,61 @@ describe('Blur-images preference — compact card thumbnail', () => {
     expect(getByTestId('article-image').props.blurRadius).toBe(24);
   });
 });
+
+// Owner: ONE behaviour for every entry point. A tap on a thumb (inline) or on
+// "I like it" / "Not for me" (•••) records the verdict AT ONCE and the thumb
+// fills at once; the sheet that opens is optional refinement, and Cancel keeps
+// the verdict. D15 still holds: a bare verdict is stored and shown but stamped
+// processed at write, so it never reaches the digest.
+describe('a recorded verdict is immediate and identical on every path', () => {
+  const subject: FeedbackSubject = {
+    origin: 'article',
+    surface: 'explore',
+    articleId: 'art-9',
+    title: 'Standalone headline',
+    publicationName: 'Die Zeit',
+    countryCode: 'DE',
+  };
+
+  it('the Feed card fills a recorded verdict before any leaf is picked', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion()}
+        onPress={jest.fn()}
+        onVerdict={jest.fn()}
+        verdict="dislike"
+        feedbackHandlers={{ onLeafPicked: jest.fn(), onInvokeMera: jest.fn(), onBrowseRelated: jest.fn() }}
+      />,
+    );
+    expect(getByTestId('icon-thumbsdown').props.fill).toBe('#EF4444');
+  });
+
+  it('inline thumb then Cancel, and ••• "I like it" then Cancel, store the same verdict and both read as liked', async () => {
+    // Inline path: the Saved standalone card's row.
+    const inline = render(<ArticleActionsRow subject={subject} article={makeArticle()} />);
+    fireEvent.press(inline.getByLabelText('articleFeedback.likeLabel'));
+    await waitFor(() => inline.getByTestId('article-menu-cancel'));
+    fireEvent.press(inline.getByTestId('article-menu-cancel'));
+    await waitFor(() => expect(mockRecordArticleFeedback).toHaveBeenCalledTimes(1));
+    const inlineCall = mockRecordArticleFeedback.mock.calls[0][0];
+    expect(inline.getByTestId('icon-thumbsup').props.fill).toBe('#22C55E');
+    inline.unmount();
+
+    // ••• path: a compact row's menu.
+    const menu = render(<ArticleStandaloneCompactCard article={makeArticle({ _id: 'art-9' })} onPress={jest.fn()} />);
+    fireEvent.press(menu.getByTestId('compact-card-more'));
+    fireEvent.press(menu.getByTestId('menu-like'));
+    await waitFor(() => menu.getByTestId('tree-level-like'));
+    fireEvent.press(menu.getByTestId('article-menu-cancel'));
+    await waitFor(() => expect(mockRecordArticleFeedback).toHaveBeenCalledTimes(2));
+    const menuCall = mockRecordArticleFeedback.mock.calls[1][0];
+
+    // Same stored state: one like row for the article, nothing removed.
+    for (const key of ['articleId', 'sentiment', 'origin']) {
+      expect(menuCall[key]).toEqual(inlineCall[key]);
+    }
+    expect(mockRemoveArticleFeedback).not.toHaveBeenCalled();
+    fireEvent.press(menu.getByTestId('compact-card-more'));
+    expect(menu.getByTestId('menu-like').props.accessibilityLabel).toBe('articleMenu.removeLike');
+  });
+});

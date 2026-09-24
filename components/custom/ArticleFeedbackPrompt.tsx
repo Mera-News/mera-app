@@ -75,19 +75,18 @@ interface ArticleFeedbackPromptProps {
  * article detail screens. The row is `CardActionBar` — the SAME borderless,
  * backgroundless row the feed cards use. It was a bespoke row of 48pt round,
  * primary-orange-outlined buttons until the user asked for card parity; see
- * CardActionBar's header for why that conversion had to take the row wholesale
- * (the circle was the only carrier of the D15 provisional state) and why a
- * liked article therefore reads green here now instead of orange.
+ * CardActionBar's header for why a liked article reads green here instead of
+ * orange.
  *
  * This component owns the STATE; CardActionBar is purely presentational:
  *   - Like / Dislike → records the verdict (latest-wins, mutually exclusive),
- *     then opens the shared ••• sheet at that verdict's tree root, with no
- *     Back row: the same sheet and tree as the Feed card and every other
- *     surface (owner: one behaviour throughout the app). Re-tapping the same
- *     thumb removes the verdict + its feedback and opens nothing. The thumb
- *     stays coloured-but-HOLLOW until a reason is given: a bare verdict is
- *     provisional and gets discarded (D15), and a terminal tree leaf applies
- *     its persona actions on the spot (D16).
+ *     fills the thumb at once, then opens the shared ••• sheet at that
+ *     verdict's tree root, with no Back row, as optional refinement: the same
+ *     sheet and tree as every other surface (owner: one behaviour). Cancel
+ *     keeps the verdict. Re-tapping the same thumb removes it and opens
+ *     nothing. A bare verdict is stored and shown but never reaches the digest
+ *     (D15); a terminal tree leaf applies its persona actions on the spot
+ *     (D16).
  *
  * The feedback CONTEXT is resolved here, not passed in. See
  * news-detail/detail-feedback-context: the old `feedbackContext` prop was a
@@ -111,11 +110,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     publicationName,
 }) => {
     const [verdict, setVerdict] = useState<Verdict | null>(null);
-    // F3 — the fill discriminator, restored from the row rather than inferred
-    // from the stored path: a path is written by a mere branch descent, so this
-    // surface used to show an ABANDONED verdict (even one abandoned on the feed)
-    // as a committed one, pixel-identical, across a process restart.
-    const [committed, setCommitted] = useState(false);
     // Follow lives in the ••• menu, which owns its state and dialogs. `track`
     // carries the stable cluster id when known; the fallback keeps the menu's
     // subject whole when a caller passes none.
@@ -137,10 +131,9 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     useEffect(() => {
         let cancelled = false;
         getArticleVerdict(articleId)
-            .then(({ verdict: v, committed: c }) => {
+            .then(({ verdict: v }) => {
                 if (cancelled) return;
                 setVerdict(v);
-                setCommitted(!!c);
             })
             .catch(() => {
                 /* non-fatal — default to no verdict */
@@ -181,13 +174,11 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
             if (verdict === next) {
                 hapticLight();
                 setVerdict(null);
-                setCommitted(false);
                 void removeArticleFeedback(articleId, next);
                 return;
             }
             hapticSuccess();
             setVerdict(next);
-            setCommitted(false);
             void (async () => {
                 const ctx = await ensureResolved();
                 await recordVerdictFeedback({
@@ -210,7 +201,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     // something, or the 3-hourly digest applies it twice.
     const handleLeafPicked = useCallback(
         (v: Verdict, pathIds: string[], appliedCount: number, leafCommitted: boolean) => {
-            if (leafCommitted) setCommitted(true);
             void (async () => {
                 await updateFeedbackContextPath(articleId, v, pathIds, leafCommitted);
                 if (appliedCount > 0) await markFeedbackProcessedFor(articleId, v);
@@ -223,7 +213,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     // confirmed. The hand-off carries the verdict and the tapped breadcrumb.
     const handleFeedbackChat = useCallback(
         (v: Verdict, pathIds: string[]) => {
-            setCommitted(true);
             void updateFeedbackContextPath(articleId, v, pathIds, true);
             void ensureResolved().then((ctx) => openFeedbackChatWithPath(ctx.suggestion, v, pathIds));
         },
@@ -288,11 +277,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
         void handleShare();
     }, [handleShare]);
 
-    // D15 — a verdict with no reason attached carries no promise: coloured but
-    // HOLLOW, never filled. F3 — keyed off the COMMITTED flag, not the stored
-    // path, which a branch descent also fills. See CardActionBar.
-    const provisional = !committed;
-
     return (
         // No custom actions here, unlike the cards: this box is not a
         // Pressable, so every button in the row (••• included) is its own
@@ -306,7 +290,6 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
                 passes for ArticleCardBase's own padding. */}
             <CardActionBar
                 verdict={verdict}
-                provisional={provisional}
                 saved={!!save?.saved}
                 onLike={handleLike}
                 onDislike={handleDislike}

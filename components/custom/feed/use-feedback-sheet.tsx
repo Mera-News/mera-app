@@ -6,11 +6,10 @@
 // straight at that verdict's tree root (useArticleMenu.openFeedback), the same
 // sheet and tree every other surface uses. This hook owns only the (stable)
 // card-action handlers:
-//   • a thumb tap records the verdict (fresh / flipped). That verdict is
-//     PROVISIONAL until the user gives it a reason: the thumb stays hollow and
-//     the row is discarded rather than speculated on (D15). The commit
-//     discriminator is a COMMITTED flag set only when a terminal leaf settles
-//     (or the user escalates to Mera), never the stored tree path (F2);
+//   • a thumb tap records the verdict (fresh / flipped) and the thumb fills at
+//     once; the tree is optional refinement. A bare verdict never reaches the
+//     digest (D15). The row's COMMITTED flag is set only when a terminal leaf
+//     settles (or the user escalates to Mera), never by the tree path (F2);
 //   • re-tapping the SAME thumb REMOVES the verdict and all its feedback;
 //   • a picked leaf persists its path, and commits when the leaf says so.
 //

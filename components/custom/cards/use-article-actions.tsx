@@ -22,7 +22,9 @@ import type { TFunction } from 'i18next';
 import { useCallback, useEffect, useState } from 'react';
 import { useSavedOverride } from '@/lib/saved-state';
 
-/** A thumb's three states: untouched → tapped-but-context-less → committed. */
+/** A verdict's stored states: none → recorded without a reason → a leaf
+ *  committed. Both recorded states DISPLAY the same (filled, see
+ *  CardActionBar); the split only mirrors the stored `committed` flag. */
 export type VerdictState = 'none' | 'provisional' | 'committed';
 
 export interface UseArticleActionsInput {
@@ -68,8 +70,8 @@ export interface ArticleActions {
  *     removes the other, reverting what it applied) carrying origin + surface + a JSON
  *     context snapshot. The feedback tree for THAT verdict (D17) is pushed
  *     into the ••• sheet by the caller (useArticleMenu), never a second
- *     Modal. The thumb stays tinted-not-filled until a leaf is picked: filled
- *     means "this changed your persona" (D15).
+ *     Modal. The thumb fills at once; Cancel keeps the verdict. A bare verdict
+ *     never reaches the digest (D15).
  *   - Save → suggestions persist via `saveSuggestion`; standalone articles via
  *     `saveStandaloneArticle`. State restored on mount via `isSuggestionSaved`.
  *

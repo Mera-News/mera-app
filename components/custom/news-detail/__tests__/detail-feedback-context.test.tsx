@@ -347,3 +347,14 @@ describe('detail thumbs open the shared sheet', () => {
     expect(onBrowseRelated).toHaveBeenCalledTimes(1);
   });
 });
+
+// Owner: one behaviour. The detail thumb fills at once, before any leaf, and
+// stays filled (Cancel in the sheet keeps the verdict: nothing is removed).
+it('the detail thumb fills at once and nothing removes it without a second tap', async () => {
+  mockGetSuggestionFeedbackContext.mockResolvedValue(SUGGESTION_ROW);
+  const { getByTestId } = render(<ArticleFeedbackPrompt articleId="art-1" title="A story" />);
+  fireEvent.press(getByTestId('card-action-like'));
+  expect(getByTestId('icon-thumbsup').props.fill).toBe('#22C55E');
+  await waitFor(() => expect(mockRecordVerdictFeedback).toHaveBeenCalledTimes(1));
+  expect(require('@/lib/database/services/article-feedback-service').removeArticleFeedback).not.toHaveBeenCalled();
+});

@@ -9,17 +9,15 @@
 //   - ArticleActionsRow — the standalone card (Saved list).
 // The latter two used to hand-roll their own row of 48pt round,
 // primary-orange-outlined buttons. They were converted to this component
-// because the circle was load-bearing for state, not just decoration: it was
-// the ONLY carrier of the D15 provisional treatment (orange fill = committed,
-// 18% tint = recorded-without-a-reason, transparent = none). Dropping the
-// circle there — the user's ask — would have collapsed provisional and
-// committed into the same pixels, i.e. reintroduced F3. This row already
-// encodes the same three states without a background (colour = the verdict is
-// registered, FILL = it has been backed by a reason), so converging was the
-// only way to honour the visual ask without losing the state. That is also why
-// a liked article now reads GREEN on the detail screens rather than orange:
-// deliberate card parity, chosen over the literal "make them white", because
-// all-white cannot distinguish recorded from not-recorded.
+// for card parity. A liked article reads GREEN on the detail screens rather
+// than orange for the same reason: all-white cannot distinguish recorded from
+// not-recorded.
+//
+// A recorded verdict is FILLED at once, on every surface (owner: one
+// behaviour). There is no hollow "no reason yet" state: the feedback tree the
+// tap opens is optional refinement. D15 is a LEARNING rule, not a display
+// one: a bare verdict is stored and shown, but stamped processed at write so
+// it never reaches the digest (article-feedback-service).
 //
 // The Mera glyph is DELIBERATELY here as well as on the rationale block
 // ("Mera's voice" — see ArticleSuggestionCard). It was briefly removed from this
@@ -96,14 +94,6 @@ interface CardActionBarProps {
    *  that already inset the row (e.g. ArticleCardBase's `p-4`) pass 0 to avoid
    *  doubling the horizontal padding. */
   horizontalPadding?: number;
-  /** D15 — the verdict is recorded but carries NO reason yet, so the thumb is
-   *  coloured but left HOLLOW. A filled thumb is a promise ("this changed your
-   *  persona") and a bare tap has not earned it; it fills once the user picks
-   *  something in the feedback tree or escalates to Mera.
-   *
-   *  Defaults to false so this stays a dumb presentational row: `verdict` alone
-   *  still means "filled" for any host that has no notion of commitment. */
-  provisional?: boolean;
   /** D3: opens the shared ••• menu. When set, the row is the four inline
    *  actions (like, not for me, save, share) plus •••, and Ask Mera, Follow and
    *  Check for fact checks live in the menu instead of inline. Absent: the row
@@ -124,7 +114,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   onFactCheck,
   factCheckState = 'none',
   horizontalPadding = 16,
-  provisional = false,
   onOverflow,
 }) => {
   const { t } = useTranslation();
@@ -133,10 +122,9 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   const hitSlop = 10;
   const liked = verdict === 'like';
   const disliked = verdict === 'dislike';
-  // Colour tracks the verdict (so a tap is always visibly registered); FILL
-  // tracks whether it has been backed by a reason.
-  const likeFill = liked && !provisional ? LIKE : 'none';
-  const dislikeFill = disliked && !provisional ? DISLIKE : 'none';
+  // A recorded verdict is coloured AND filled, at once (see the header).
+  const likeFill = liked ? LIKE : 'none';
+  const dislikeFill = disliked ? DISLIKE : 'none';
 
   return (
     <HStack

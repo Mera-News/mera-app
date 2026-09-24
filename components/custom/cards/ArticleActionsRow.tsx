@@ -55,14 +55,12 @@ export const ArticleActionsRow: React.FC<ArticleActionsRowProps> = ({
     if (!wasDisliked) sheet.openFeedback('dislike');
   };
   const verdict = actions.likeState !== 'none' ? 'like' : actions.dislikeState !== 'none' ? 'dislike' : null;
-  const verdictState = verdict === 'like' ? actions.likeState : actions.dislikeState;
   return (
     <>
       {/* `horizontalPadding={0}`: this row renders as ArticleCardBase's
           CHILDREN, which already sit inside that card's `p-4`. */}
       <CardActionBar
         verdict={verdict}
-        provisional={verdictState === 'provisional'}
         saved={actions.saved}
         onLike={onLike}
         onDislike={onDislike}

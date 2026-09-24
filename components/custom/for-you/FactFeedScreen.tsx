@@ -244,7 +244,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
           verdict={verdict}
           onVerdict={onVerdict}
           onAskMera={onAskMera}
-          feedbackCommitted={!!rec?.committed}
           feedbackHandlers={feedbackHandlers}
           read={isSuggestionOpened(item.data, openedIds)}
           // NEW pill only for stories that became visible since the last visit —

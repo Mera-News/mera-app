@@ -26,7 +26,7 @@
 //     clears `processed_at`, so a part-way tree path IS digestible (that is
 //     what feeds the digest's contextful `pathCandidates`);
 //   • context COMMITS  → a terminal leaf applies its persona actions on the
-//     spot (D16, InlineFeedbackTree / FeedbackTreeOverlay) and then calls
+//     spot (D16, feedback-tree/perform-feedback-leaf → applyLeafActions) and then calls
 //     `markFeedbackProcessedFor`, so the digest can never double-apply it.
 //
 // ── F2/F3: what the UI may call "committed" ─────────────────────────────────
