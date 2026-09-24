@@ -2856,6 +2856,12 @@
       "what": "Profile holds what you told Mera about yourself. Your Feed and Dashboard are built from these facts.",
       "how1": "Each fact becomes searches Mera runs for you. Change or delete a fact and the stories that came from it change too.",
       "privacy": "The searches made from them are never linked to your account. The server keeps only the search text, shared anonymously across all users, and deletes it after 14 days without use."
+    },
+    "settings": {
+      "title": "How Settings works",
+      "what": "Choose how Mera runs on this phone and manage your account. Your plan and today's usage are at the top.",
+      "how1": "Mera Protocol sets where the AI reads your news: in the cloud or on this phone. Privacy and data holds your encrypted backup and lets you delete data.",
+      "how2": "Security adds a PIN. Help has guides and the FAQ. Account is where you sign out."
     }
   },
   "articleMenu": {

@@ -2894,6 +2894,12 @@
       "what": "Profil zawiera to, co powiedziałeś Mera o sobie. Twój Strumień i Pulpit powstają z tych faktów.",
       "how1": "Każdy fakt zamienia się w wyszukiwania, które Mera wykonuje dla ciebie. Zmień lub usuń fakt, a tematy, które z niego pochodziły, też się zmienią.",
       "privacy": "Wyszukiwania powstałe z nich nigdy nie są łączone z twoim kontem. Serwer przechowuje tylko tekst wyszukiwania, anonimowo wspólny dla wszystkich użytkowników, i usuwa go po 14 dniach nieużywania."
+    },
+    "settings": {
+      "title": "Jak działają Ustawienia",
+      "what": "Wybierz, jak Mera działa na tym telefonie, i zarządzaj kontem. Twój plan i dzisiejsze wykorzystanie są na górze.",
+      "how1": "Mera Protocol określa, gdzie AI czyta Twoje wiadomości: w chmurze czy na tym telefonie. W sekcji Prywatność i dane jest Twoja zaszyfrowana kopia zapasowa i możesz tam usuwać dane.",
+      "how2": "Bezpieczeństwo dodaje PIN. Pomoc zawiera poradniki i FAQ. W sekcji Konto możesz się wylogować."
     }
   },
   "articleMenu": {

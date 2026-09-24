@@ -2855,6 +2855,12 @@
       "what": "Profil berisi apa yang kamu ceritakan ke Mera tentang dirimu. Umpan dan Dasbor kamu dibangun dari fakta-fakta ini.",
       "how1": "Setiap fakta menjadi pencarian yang dijalankan Mera untukmu. Ubah atau hapus fakta, dan berita yang berasal darinya ikut berubah.",
       "privacy": "Pencarian yang dibuat darinya tidak pernah dikaitkan dengan akunmu. Server hanya menyimpan teks pencarian, dibagikan secara anonim ke semua pengguna, dan menghapusnya setelah 14 hari tidak dipakai."
+    },
+    "settings": {
+      "title": "Cara kerja Pengaturan",
+      "what": "Pilih cara Mera berjalan di ponsel ini dan kelola akun Anda. Paket dan penggunaan hari ini ada di bagian atas.",
+      "how1": "Mera Protocol menentukan di mana AI membaca berita Anda: di cloud atau di ponsel ini. Privasi dan data menyimpan cadangan terenkripsi Anda dan memungkinkan Anda menghapus data.",
+      "how2": "Keamanan menambahkan PIN. Bantuan berisi panduan dan FAQ. Di Akun Anda bisa keluar."
     }
   },
   "articleMenu": {

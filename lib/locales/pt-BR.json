@@ -2856,6 +2856,12 @@
       "what": "O Perfil guarda o que você contou ao Mera sobre si. Seu Feed e seu Painel são montados a partir desses fatos.",
       "how1": "Cada fato vira buscas que o Mera faz para você. Mude ou apague um fato e as notícias que vieram dele também mudam.",
       "privacy": "As buscas feitas a partir deles nunca são ligadas à sua conta. O servidor guarda só o texto da busca, compartilhado de forma anônima entre todos os usuários, e o apaga depois de 14 dias sem uso."
+    },
+    "settings": {
+      "title": "Como as Configurações funcionam",
+      "what": "Escolha como o Mera funciona neste celular e gerencie sua conta. Seu plano e o uso de hoje ficam no topo.",
+      "how1": "Mera Protocol define onde a IA lê suas notícias: na nuvem ou neste celular. Privacidade e dados guarda seu backup criptografado e permite apagar dados.",
+      "how2": "Segurança adiciona um PIN. Ajuda tem guias e as perguntas frequentes. Em Conta você sai da sua conta."
     }
   },
   "articleMenu": {

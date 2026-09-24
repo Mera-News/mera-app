@@ -2856,6 +2856,12 @@
       "what": "El Perfil guarda lo que le contaste a Mera sobre ti. Noticias y el Panel se crean a partir de estos datos.",
       "how1": "Cada dato se convierte en búsquedas que Mera hace por ti. Si cambias o borras un dato, también cambian las noticias que venían de él.",
       "privacy": "Las búsquedas que salen de ellos nunca se vinculan a tu cuenta. El servidor guarda solo el texto de búsqueda, compartido de forma anónima entre todos los usuarios, y lo borra tras 14 días sin uso."
+    },
+    "settings": {
+      "title": "Cómo funcionan los Ajustes",
+      "what": "Elige cómo funciona Mera en este teléfono y gestiona tu cuenta. Tu plan y el uso de hoy están arriba.",
+      "how1": "Mera Protocol define dónde lee la IA tus noticias: en la nube o en este teléfono. Privacidad y datos guarda tu copia de seguridad cifrada y te permite borrar datos.",
+      "how2": "Seguridad añade un PIN. Ayuda tiene guías y las preguntas frecuentes. En Cuenta cierras sesión."
     }
   },
   "articleMenu": {
