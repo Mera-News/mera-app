@@ -2872,7 +2872,8 @@
     "undo": "Ongedaan maken",
     "reportBug": "Bug melden",
     "actionFailed": "Dat lukte niet. Probeer het opnieuw.",
-    "removeLike": "Like verwijderen"
+    "removeLike": "Like verwijderen",
+    "removeDislike": "\"Niets voor mij\" verwijderen"
   },
   "related": {
     "allCountries": "Alle landen",

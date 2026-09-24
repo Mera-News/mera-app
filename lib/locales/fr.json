@@ -2879,7 +2879,8 @@
     "undo": "Annuler",
     "reportBug": "Signaler un bug",
     "actionFailed": "Cela n'a pas fonctionné. Réessayez.",
-    "removeLike": "Retirer le j’aime"
+    "removeLike": "Retirer le j’aime",
+    "removeDislike": "Retirer « Pas pour moi »"
   },
   "related": {
     "allCountries": "Tous les pays",

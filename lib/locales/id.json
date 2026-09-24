@@ -2871,7 +2871,8 @@
     "undo": "Urungkan",
     "reportBug": "Laporkan bug",
     "actionFailed": "Itu tidak berhasil. Coba lagi.",
-    "removeLike": "Hapus suka"
+    "removeLike": "Hapus suka",
+    "removeDislike": "Hapus \"Bukan untuk saya\""
   },
   "related": {
     "allCountries": "Semua negara",

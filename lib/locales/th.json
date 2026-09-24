@@ -2871,7 +2871,8 @@
     "undo": "เลิกทำ",
     "reportBug": "รายงานข้อบกพร่อง",
     "actionFailed": "ทำไม่สำเร็จ ลองอีกครั้ง",
-    "removeLike": "เลิกถูกใจ"
+    "removeLike": "เลิกถูกใจ",
+    "removeDislike": "เลิก \"ไม่ใช่สำหรับฉัน\""
   },
   "related": {
     "allCountries": "ทุกประเทศ",

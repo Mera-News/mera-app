@@ -2872,7 +2872,8 @@
     "undo": "復原",
     "reportBug": "回報問題",
     "actionFailed": "操作未成功。請再試一次。",
-    "removeLike": "取消喜歡"
+    "removeLike": "取消喜歡",
+    "removeDislike": "取消「不適合我」"
   },
   "related": {
     "allCountries": "所有國家",

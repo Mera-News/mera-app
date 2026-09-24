@@ -2872,7 +2872,8 @@
     "undo": "Hoàn tác",
     "reportBug": "Báo lỗi",
     "actionFailed": "Không thực hiện được. Hãy thử lại.",
-    "removeLike": "Bỏ thích"
+    "removeLike": "Bỏ thích",
+    "removeDislike": "Bỏ \"Không dành cho tôi\""
   },
   "related": {
     "allCountries": "Tất cả quốc gia",

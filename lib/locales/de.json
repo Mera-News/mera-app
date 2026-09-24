@@ -2872,7 +2872,8 @@
     "undo": "Rückgängig",
     "reportBug": "Fehler melden",
     "actionFailed": "Das hat nicht geklappt. Versuch es noch einmal.",
-    "removeLike": "Gefällt mir entfernen"
+    "removeLike": "Gefällt mir entfernen",
+    "removeDislike": "„Nichts für mich“ entfernen"
   },
   "related": {
     "allCountries": "Alle Länder",

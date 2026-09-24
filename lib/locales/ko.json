@@ -2871,7 +2871,8 @@
     "undo": "실행 취소",
     "reportBug": "버그 신고",
     "actionFailed": "실패했어요. 다시 시도하세요.",
-    "removeLike": "좋아요 취소"
+    "removeLike": "좋아요 취소",
+    "removeDislike": "\"관심 없어요\" 취소"
   },
   "related": {
     "allCountries": "모든 국가",

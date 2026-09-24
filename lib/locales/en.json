@@ -2872,7 +2872,8 @@
     "undo": "Undo",
     "reportBug": "Report a bug",
     "actionFailed": "That didn't work. Try again.",
-    "removeLike": "Remove like"
+    "removeLike": "Remove like",
+    "removeDislike": "Remove not for me"
   },
   "related": {
     "allCountries": "All countries",

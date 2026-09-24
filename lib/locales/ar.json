@@ -2958,7 +2958,8 @@
     "undo": "تراجع",
     "reportBug": "الإبلاغ عن خطأ",
     "actionFailed": "لم ينجح ذلك. حاول مرة أخرى.",
-    "removeLike": "إزالة الإعجاب"
+    "removeLike": "إزالة الإعجاب",
+    "removeDislike": "إزالة «ليس لي»"
   },
   "related": {
     "allCountries": "كل البلدان",

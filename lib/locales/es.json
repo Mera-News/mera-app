@@ -2872,7 +2872,8 @@
     "undo": "Deshacer",
     "reportBug": "Informar de un error",
     "actionFailed": "No funcionó. Inténtalo de nuevo.",
-    "removeLike": "Quitar me gusta"
+    "removeLike": "Quitar me gusta",
+    "removeDislike": "Quitar «No es para mí»"
   },
   "related": {
     "allCountries": "Todos los países",

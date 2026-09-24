@@ -2910,7 +2910,8 @@
     "undo": "Cofnij",
     "reportBug": "Zgłoś błąd",
     "actionFailed": "Nie udało się. Spróbuj ponownie.",
-    "removeLike": "Usuń polubienie"
+    "removeLike": "Usuń polubienie",
+    "removeDislike": "Usuń „To nie dla mnie”"
   },
   "related": {
     "allCountries": "Wszystkie kraje",

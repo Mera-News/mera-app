@@ -2874,7 +2874,8 @@
     "undo": "Geri al",
     "reportBug": "Hata bildir",
     "actionFailed": "Olmadı. Tekrar dene.",
-    "removeLike": "Beğeniyi kaldır"
+    "removeLike": "Beğeniyi kaldır",
+    "removeDislike": "\"Bana göre değil\" işaretini kaldır"
   },
   "related": {
     "allCountries": "Tüm ülkeler",

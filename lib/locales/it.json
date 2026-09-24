@@ -2872,7 +2872,8 @@
     "undo": "Annulla",
     "reportBug": "Segnala un bug",
     "actionFailed": "Non ha funzionato. Riprova.",
-    "removeLike": "Rimuovi mi piace"
+    "removeLike": "Rimuovi mi piace",
+    "removeDislike": "Rimuovi \"Non fa per me\""
   },
   "related": {
     "allCountries": "Tutti i paesi",

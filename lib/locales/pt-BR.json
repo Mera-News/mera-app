@@ -2872,7 +2872,8 @@
     "undo": "Desfazer",
     "reportBug": "Relatar um bug",
     "actionFailed": "Não funcionou. Tente de novo.",
-    "removeLike": "Remover curtida"
+    "removeLike": "Remover curtida",
+    "removeDislike": "Remover \"Não é para mim\""
   },
   "related": {
     "allCountries": "Todos os países",
