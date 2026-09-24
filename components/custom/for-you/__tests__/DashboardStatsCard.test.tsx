@@ -15,6 +15,25 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
     const R = require('react/jsx-dev-runtime');
     return { jsxDEV: R.jsxDEV, Fragment: R.Fragment };
 });
+// jest-expo mis-transforms RN's ScrollView and Modal native-component files
+// ("Unexpected token 'export'"); same proxy ForYouSubTabs.test.tsx uses. The
+// Modal stub renders its children only while visible, as the real one does.
+jest.mock('react-native', () => {
+    const actual = jest.requireActual('react-native');
+    const ReactLib = require('react');
+    const StubScrollView = ({ children, ...rest }: any) => ReactLib.createElement(actual.View, rest, children);
+    StubScrollView.Context = ReactLib.createContext(null);
+    function Modal({ visible, children }: any) {
+        return visible ? ReactLib.createElement(actual.View, { testID: 'rn-modal' }, children) : null;
+    }
+    return new Proxy(actual, {
+        get(target, prop) {
+            if (prop === 'ScrollView') return StubScrollView;
+            if (prop === 'Modal') return Modal;
+            return (target as any)[prop];
+        },
+    });
+});
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -48,14 +67,21 @@ jest.mock('../FeedStatsSentence', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: () => <View testID="stats-sentence" /> };
 });
-// The body has its own suite; here it only has to be identifiable. The delay
-// constant is the REAL one, so this suite fails if the two tabs drift apart.
+// The panel has its own suite; here it only has to be identifiable, and to
+// expose the navigate hook its "Manage plan" pill calls. The delay constant is
+// the REAL one, so this suite fails if the two tabs drift apart.
 jest.mock('../FeedStatusPanel', () => {
-    const { View } = require('react-native');
+    const { View, Pressable } = require('react-native');
     const actual = jest.requireActual('../FeedStatusPanel');
     return {
         STATUS_PANEL_AUTO_COLLAPSE_MS: actual.STATUS_PANEL_AUTO_COLLAPSE_MS,
-        FeedStatusBody: (p: any) => <View testID={`status-body-${p.mode}`} />,
+        __esModule: true,
+        default: (p: any) =>
+            p.expanded ? (
+                <View testID={`status-panel-${p.mode}`}>
+                    <Pressable testID="panel-manage-plan" onPress={() => p.onBeforeNavigate?.()} />
+                </View>
+            ) : null,
     };
 });
 // FeedStatusPanel's real module pulls reanimated and the processing snapshot;
@@ -69,27 +95,49 @@ jest.mock('@/components/custom/processing/use-processing-snapshot', () => ({ use
 jest.mock('@/components/custom/processing/ChunkStrip', () => () => null);
 jest.mock('@/lib/stores/selectors', () => ({}));
 jest.mock('../FeedStatusDetails', () => () => null);
+// jest's host views mock measureInWindow as a no-op that never calls back.
+const ANCHOR = { x: 12, y: 195, width: 351, height: 64 };
+jest.mock('../stats-card-dropdown', () => {
+    const actual = jest.requireActual('../stats-card-dropdown');
+    return { ...actual, measureAnchor: (_n: any, done: any) => done(ANCHOR) };
+});
+jest.mock('react-native-safe-area-context', () => ({
+    useSafeAreaInsets: () => ({ top: 20, bottom: 49, left: 0, right: 0 }),
+}));
+let mockFocused = true;
+jest.mock('@/lib/hooks/use-is-focused-safe', () => ({ useIsFocusedSafe: () => mockFocused }));
 
 import DashboardStatsCard from '../DashboardStatsCard';
 
 beforeEach(() => {
     mockArticleCount = 12;
     mockMode = 'idle';
+    mockFocused = true;
     jest.useFakeTimers();
 });
 afterEach(() => jest.useRealTimers());
+
+const HIDDEN = { includeHiddenElements: true } as const;
+/** Every host testID inside the card itself (the dropdown lives outside it). */
+const cardIds = (r: ReturnType<typeof render>) =>
+    r
+        .getByTestId('dashboard-stats-card', HIDDEN)
+        .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+        .map((n: any) => n.props.testID as string)
+        // The chevron flips; that is a glyph, not a height change.
+        .filter((id: string) => !id.startsWith('icon-'));
 
 describe('DashboardStatsCard', () => {
     it('shows the article-count sentence, collapsed', () => {
         const r = render(<DashboardStatsCard />);
         expect(r.getByTestId('stats-sentence')).toBeTruthy();
-        expect(r.queryByTestId('status-body-idle')).toBeNull();
+        expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
 
     it('opens the shared status body on tap', () => {
         const r = render(<DashboardStatsCard />);
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
-        expect(r.getByTestId('status-body-idle')).toBeTruthy();
+        expect(r.getByTestId('status-panel-idle', HIDDEN)).toBeTruthy();
     });
 
     it('auto-hides after the same delay as the Feed\'s panel (3000ms)', () => {
@@ -98,19 +146,19 @@ describe('DashboardStatsCard', () => {
         act(() => {
             jest.advanceTimersByTime(2999);
         });
-        expect(r.getByTestId('status-body-idle')).toBeTruthy();
+        expect(r.getByTestId('status-panel-idle', HIDDEN)).toBeTruthy();
         act(() => {
             jest.advanceTimersByTime(1);
         });
-        expect(r.queryByTestId('status-body-idle')).toBeNull();
+        expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
 
     it('closes early on a second tap', () => {
         const r = render(<DashboardStatsCard />);
-        const toggle = r.getByTestId('dashboard-stats-card-toggle');
-        fireEvent.press(toggle);
-        fireEvent.press(toggle);
-        expect(r.queryByTestId('status-body-idle')).toBeNull();
+        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
+        // The second tap lands on the backdrop, which covers the card.
+        fireEvent.press(r.getByTestId('dashboard-stats-dropdown-backdrop', HIDDEN));
+        expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
 
     it('is still rendered at zero articles, showing the status line instead', () => {
@@ -120,7 +168,7 @@ describe('DashboardStatsCard', () => {
         expect(r.queryByTestId('stats-sentence')).toBeNull();
         expect(r.getByTestId('dashboard-stats-card-state').props.children).toBe('feedStatus.modeLimited');
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
-        expect(r.getByTestId('status-body-limited')).toBeTruthy();
+        expect(r.getByTestId('status-panel-limited', HIDDEN)).toBeTruthy();
     });
 
     it('labels the toggle with the state first, then the action', () => {
@@ -140,5 +188,55 @@ describe('DashboardStatsCard', () => {
         } finally {
             announce.mockRestore();
         }
+    });
+
+    it('drops the panel in a Modal, outside the card, so the list never changes height', () => {
+        const r = render(<DashboardStatsCard />);
+        const before = cardIds(r);
+        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
+        const panel = r.getByTestId('status-panel-idle', HIDDEN);
+        let inModal = false;
+        let inCard = false;
+        for (let p: any = panel.parent; p; p = p.parent) {
+            if (p.type === 'Modal' || p.type?.displayName === 'Modal' || p.type?.name === 'Modal') inModal = true;
+            if (p.props?.testID === 'dashboard-stats-card') inCard = true;
+        }
+        expect(inModal).toBe(true);
+        expect(inCard).toBe(false);
+        expect(cardIds(r)).toEqual(before);
+    });
+
+    it('anchors the dropdown directly under the card, within the tab bar', () => {
+        const { StyleSheet } = require('react-native');
+        const r = render(<DashboardStatsCard />);
+        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
+        const frame = StyleSheet.flatten(r.getByTestId('dashboard-stats-dropdown', HIDDEN).props.style);
+        expect(frame).toMatchObject({ position: 'absolute', top: 259, left: 12, width: 351 });
+        const scroll = StyleSheet.flatten(r.getByTestId('dashboard-stats-dropdown-scroll', HIDDEN).props.style);
+        expect(scroll.maxHeight).toBeGreaterThan(0);
+    });
+
+    it('has an invisible backdrop: a popover, no dimming', () => {
+        const { StyleSheet } = require('react-native');
+        const r = render(<DashboardStatsCard />);
+        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
+        const style = StyleSheet.flatten(r.getByTestId('dashboard-stats-dropdown-backdrop', HIDDEN).props.style) ?? {};
+        expect(style.backgroundColor ?? 'transparent').toBe('transparent');
+    });
+
+    it('closes before "Manage plan" navigates, so no backdrop is stranded', () => {
+        const r = render(<DashboardStatsCard />);
+        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
+        fireEvent.press(r.getByTestId('panel-manage-plan', HIDDEN));
+        expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
+    });
+
+    it('closes when the tab loses focus: a Modal outlives a tab switch', () => {
+        const r = render(<DashboardStatsCard />);
+        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
+        expect(r.getByTestId('status-panel-idle', HIDDEN)).toBeTruthy();
+        mockFocused = false;
+        r.rerender(<DashboardStatsCard />);
+        expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
 });
