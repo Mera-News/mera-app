@@ -100,8 +100,8 @@ jest.mock('@/components/custom/for-you/ForYouSubTabs', () => {
   const { Pressable, Text } = require('react-native');
   return {
     __esModule: true,
-    default: ({ onSelect }: any) => (
-      <Pressable testID="subtab-saved" onPress={() => onSelect('saved')}>
+    default: ({ onSelect, bleed }: any) => (
+      <Pressable testID="subtab-saved" bleed={bleed} onPress={() => onSelect('saved')}>
         <Text>saved</Text>
       </Pressable>
     ),
@@ -221,6 +221,11 @@ describe('Dashboard header', () => {
     expect(screen.getByTestId('dashboard-stats-sentence')).toBeTruthy();
     fireEvent.press(screen.getByTestId('subtab-saved'));
     expect(screen.queryByTestId('dashboard-stats-sentence')).toBeNull();
+  });
+
+  it('lets the pill row bleed by exactly the header side padding', () => {
+    render(<ForYouScreen />);
+    expect(screen.getByTestId('subtab-saved').props.bleed).toBe(20);
   });
 
   it('carries the "?" explainer (N4)', () => {

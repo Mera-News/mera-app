@@ -14,6 +14,14 @@ export type ForYouSubTab = 'feed' | 'stories' | 'saved' | 'history' | 'factCheck
 interface ForYouSubTabsProps {
     readonly activeSubTab: ForYouSubTab;
     readonly onSelect: (tab: ForYouSubTab) => void;
+    /**
+     * The host's horizontal padding. The row pulls itself out by this much and
+     * puts it back as content padding, so at rest the first pill lines up with
+     * the title while scrolled pills run to the SCREEN edges instead of being
+     * clipped at the header's inner padding. Works with or without a header
+     * plate behind it. Default 0: no bleed.
+     */
+    readonly bleed?: number;
 }
 
 interface TabDef {
@@ -53,7 +61,7 @@ const TABS: readonly TabDef[] = [
  * edge), so the fifth scrolls into reach on a narrow device rather than clipping
  * or squeezing its neighbours — no pill was shrunk to make room.
  */
-const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect }) => {
+const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, bleed = 0 }) => {
     const { t } = useTranslation();
     const [unseenTotal, setUnseenTotal] = useState(0);
 
@@ -77,8 +85,10 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
         if (!layout) return;
         // Left-align the pill with a little breathing room, clamped at 0 so the
         // first pills never scroll to a negative offset.
-        scrollRef.current?.scrollTo({ x: Math.max(0, layout.x - 12), animated: true });
-    }, [activeSubTab]);
+        // With a bleed the pill lands where the first one rests, in line with
+        // the title; without one, 12pt in from the row's edge as before.
+        scrollRef.current?.scrollTo({ x: Math.max(0, layout.x - (bleed ? 0 : 12)), animated: true });
+    }, [activeSubTab, bleed]);
 
     useEffect(() => {
         const sub = observeUnseenTotal().subscribe({
@@ -102,13 +112,17 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
     // so it never grows into the blank space below the row that pull-to-refresh
     // needs to pass through.
     return (
-        <View testID="dashboard-subtabs-row" pointerEvents="box-none">
+        <View
+            testID="dashboard-subtabs-row"
+            pointerEvents="box-none"
+            style={bleed ? { marginHorizontal: -bleed } : undefined}
+        >
             <ScrollView
                 ref={scrollRef}
                 testID="dashboard-subtabs-scroll"
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingRight: 20 }}
+                contentContainerStyle={bleed ? { paddingHorizontal: bleed } : { paddingRight: 20 }}
             >
                 {/* No edge fade. A painted one (stepped Views, and any single-
                     colour gradient) read as dark blocks over the translucent

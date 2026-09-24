@@ -84,6 +84,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 
+/** The header's horizontal padding, which the pill row bleeds past. One
+ *  constant for both so they cannot drift apart. */
+const HEADER_SIDE_PADDING = 20;
+
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
     // Local UI state only
@@ -677,9 +681,9 @@ const MeraNewsScreen: React.FC = () => {
                     interactive child must be `box-none`. Only genuine controls
                     (bell, status line, sub-tab pills) may be `auto`. */}
                 <VStack
-                    className="px-5 pb-2"
+                    className="pb-2"
                     pointerEvents="box-none"
-                    style={{ paddingTop: insets.top + 16 }}
+                    style={{ paddingTop: insets.top + 16, paddingHorizontal: HEADER_SIDE_PADDING }}
                 >
                     <HStack className="items-start justify-between mb-2" pointerEvents="box-none">
                         <VStack className="flex-1 min-w-0 mr-3" pointerEvents="box-none">
@@ -747,7 +751,13 @@ const MeraNewsScreen: React.FC = () => {
                         must not swallow a pull — only the pills themselves take
                         touches (ForYouSubTabs' own HStack is box-none too). */}
                     <View pointerEvents="box-none">
-                        <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
+                        <ForYouSubTabs
+                            activeSubTab={activeSubTab}
+                            onSelect={selectSubTab}
+                            // The header's own side padding: the row runs edge
+                            // to edge and clips at the screen, not the padding.
+                            bleed={HEADER_SIDE_PADDING}
+                        />
                     </View>
 
                     {/* The detail panel the status glyph in the title row opens.

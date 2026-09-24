@@ -193,3 +193,22 @@ describe('ForYouSubTabs: every pill is reachable and announced (F19)', () => {
         expect(getByTestId('dashboard-tab-feed').props.accessibilityState).toEqual({ selected: false });
     });
 });
+
+describe('ForYouSubTabs: full-bleed row', () => {
+    const flat = (st: any) => (Array.isArray(st) ? Object.assign({}, ...st.filter(Boolean)) : st ?? {});
+
+    it('bleeds past the header padding so pills clip at the SCREEN edge, not inside the header', () => {
+        const { getByTestId } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} bleed={20} />);
+        expect(flat(getByTestId('dashboard-subtabs-row').props.style).marginHorizontal).toBe(-20);
+        const content = flat(getByTestId('dashboard-subtabs-scroll').props.contentContainerStyle);
+        // The same padding back inside the content, so at rest the first pill
+        // still lines up with the title.
+        expect(content.paddingHorizontal).toBe(20);
+    });
+
+    it('stays inset with no bleed (standalone use)', () => {
+        const { getByTestId } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
+        expect(flat(getByTestId('dashboard-subtabs-row').props.style).marginHorizontal ?? 0).toBe(0);
+    });
+});
+
