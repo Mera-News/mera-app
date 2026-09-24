@@ -2873,7 +2873,8 @@
     "fewerFromDone": "आपको {{source}} से कम दिखेगा।",
     "undo": "पहले जैसा करें",
     "reportBug": "बग की रिपोर्ट करें",
-    "actionFailed": "यह नहीं हो पाया। फिर से कोशिश करें।"
+    "actionFailed": "यह नहीं हो पाया। फिर से कोशिश करें।",
+    "removeLike": "पसंद हटाएँ"
   },
   "related": {
     "allCountries": "सभी देश",

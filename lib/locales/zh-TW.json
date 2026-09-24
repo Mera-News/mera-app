@@ -2871,7 +2871,8 @@
     "fewerFromDone": "你會看到更少來自 {{source}} 的內容。",
     "undo": "復原",
     "reportBug": "回報問題",
-    "actionFailed": "操作未成功。請再試一次。"
+    "actionFailed": "操作未成功。請再試一次。",
+    "removeLike": "取消喜歡"
   },
   "related": {
     "allCountries": "所有國家",

@@ -2871,7 +2871,8 @@
     "fewerFromDone": "Vedrai meno contenuti da {{source}}.",
     "undo": "Annulla",
     "reportBug": "Segnala un bug",
-    "actionFailed": "Non ha funzionato. Riprova."
+    "actionFailed": "Non ha funzionato. Riprova.",
+    "removeLike": "Rimuovi mi piace"
   },
   "related": {
     "allCountries": "Tutti i paesi",

@@ -2870,7 +2870,8 @@
     "fewerFromDone": "{{source}}의 기사가 줄어들어요.",
     "undo": "실행 취소",
     "reportBug": "버그 신고",
-    "actionFailed": "실패했어요. 다시 시도하세요."
+    "actionFailed": "실패했어요. 다시 시도하세요.",
+    "removeLike": "좋아요 취소"
   },
   "related": {
     "allCountries": "모든 국가",

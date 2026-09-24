@@ -2870,7 +2870,8 @@
     "fewerFromDone": "Kamu akan melihat lebih sedikit dari {{source}}.",
     "undo": "Urungkan",
     "reportBug": "Laporkan bug",
-    "actionFailed": "Itu tidak berhasil. Coba lagi."
+    "actionFailed": "Itu tidak berhasil. Coba lagi.",
+    "removeLike": "Hapus suka"
   },
   "related": {
     "allCountries": "Semua negara",

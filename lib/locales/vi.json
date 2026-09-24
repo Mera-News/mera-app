@@ -2871,7 +2871,8 @@
     "fewerFromDone": "Bạn sẽ thấy ít tin từ {{source}} hơn.",
     "undo": "Hoàn tác",
     "reportBug": "Báo lỗi",
-    "actionFailed": "Không thực hiện được. Hãy thử lại."
+    "actionFailed": "Không thực hiện được. Hãy thử lại.",
+    "removeLike": "Bỏ thích"
   },
   "related": {
     "allCountries": "Tất cả quốc gia",

@@ -2871,7 +2871,8 @@
     "fewerFromDone": "You'll see less from {{source}}.",
     "undo": "Undo",
     "reportBug": "Report a bug",
-    "actionFailed": "That didn't work. Try again."
+    "actionFailed": "That didn't work. Try again.",
+    "removeLike": "Remove like"
   },
   "related": {
     "allCountries": "All countries",

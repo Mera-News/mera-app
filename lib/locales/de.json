@@ -2871,7 +2871,8 @@
     "fewerFromDone": "Du siehst weniger von {{source}}.",
     "undo": "Rückgängig",
     "reportBug": "Fehler melden",
-    "actionFailed": "Das hat nicht geklappt. Versuch es noch einmal."
+    "actionFailed": "Das hat nicht geklappt. Versuch es noch einmal.",
+    "removeLike": "Gefällt mir entfernen"
   },
   "related": {
     "allCountries": "Alle Länder",

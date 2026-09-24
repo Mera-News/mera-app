@@ -2957,7 +2957,8 @@
     "fewerFromDone": "ستشاهد محتوى أقل من {{source}}.",
     "undo": "تراجع",
     "reportBug": "الإبلاغ عن خطأ",
-    "actionFailed": "لم ينجح ذلك. حاول مرة أخرى."
+    "actionFailed": "لم ينجح ذلك. حاول مرة أخرى.",
+    "removeLike": "إزالة الإعجاب"
   },
   "related": {
     "allCountries": "كل البلدان",

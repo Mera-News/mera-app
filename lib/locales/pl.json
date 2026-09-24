@@ -2909,7 +2909,8 @@
     "fewerFromDone": "Zobaczysz mniej z {{source}}.",
     "undo": "Cofnij",
     "reportBug": "Zgłoś błąd",
-    "actionFailed": "Nie udało się. Spróbuj ponownie."
+    "actionFailed": "Nie udało się. Spróbuj ponownie.",
+    "removeLike": "Usuń polubienie"
   },
   "related": {
     "allCountries": "Wszystkie kraje",

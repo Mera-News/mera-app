@@ -2871,7 +2871,8 @@
     "fewerFromDone": "Je ziet minder van {{source}}.",
     "undo": "Ongedaan maken",
     "reportBug": "Bug melden",
-    "actionFailed": "Dat lukte niet. Probeer het opnieuw."
+    "actionFailed": "Dat lukte niet. Probeer het opnieuw.",
+    "removeLike": "Like verwijderen"
   },
   "related": {
     "allCountries": "Alle landen",

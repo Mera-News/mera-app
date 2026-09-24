@@ -2870,7 +2870,8 @@
     "fewerFromDone": "{{source}} の表示が減ります。",
     "undo": "元に戻す",
     "reportBug": "不具合を報告",
-    "actionFailed": "うまくいきませんでした。もう一度お試しください。"
+    "actionFailed": "うまくいきませんでした。もう一度お試しください。",
+    "removeLike": "「いいね」を取り消す"
   },
   "related": {
     "allCountries": "すべての国",
