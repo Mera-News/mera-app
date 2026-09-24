@@ -16,6 +16,9 @@ export interface ReasonNoteProps {
     /** When the note started waiting (see `pendingSinceMs`), for the cap. */
     pendingSinceMs: number | null;
     testID?: string;
+    /** The note exactly as displayed (it may be translated), for the card's
+     *  explicit spoken label. */
+    onNoteDisplayChange?: (text: string) => void;
 }
 
 /** Space above and below the badge row. */
@@ -34,7 +37,7 @@ const BADGE_ROW_PADDING = 6;
  * to disclose. While the note is pending, the placeholder takes the disclosure's
  * place beside the badge, so the box does not jump when the note lands.
  */
-const ReasonNote: React.FC<ReasonNoteProps> = ({ relevance, reason, pendingSinceMs, testID }) => {
+const ReasonNote: React.FC<ReasonNoteProps> = ({ relevance, reason, pendingSinceMs, testID, onNoteDisplayChange }) => {
     const { t } = useTranslation();
     return (
         <Box
@@ -72,6 +75,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({ relevance, reason, pendingSince
                         bold
                         className="text-left"
                         style={{ color: reasonBoxColors.textColor }}
+                        onDisplayChange={onNoteDisplayChange ? (d) => onNoteDisplayChange(d.displayedText) : undefined}
                     />
                 </Box>
             ) : null}

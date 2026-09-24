@@ -1183,3 +1183,65 @@ describe('no icon glyph in any card label', () => {
     expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
   });
 });
+
+// Batch 21 (device): a card root with no explicit label was read as all its
+// text run together: icon glyphs, the dev relevance score ("0.60") and the
+// headline twice (the hero's alt text, then the title). Each card root now
+// carries an explicit label composed from the strings it SHOWS, in the order
+// VoiceOver reads them: headline, publication, age, priority, language, then
+// the AI-note flag and the note.
+describe('card roots carry an explicit spoken label', () => {
+  const inOrder = (label: string, parts: string[]) => {
+    let at = -1;
+    for (const p of parts) {
+      const i = label.indexOf(p, at + 1);
+      expect(i).toBeGreaterThan(at);
+      at = i;
+    }
+  };
+
+  it('Feed card: headline, publication, priority, language, AI note, the note; no score, no glyph, one headline', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} showRecency={false} />,
+    );
+    const label: string = getByTestId('card-sugg-1').props.accessibilityLabel;
+    expect(typeof label).toBe('string');
+    inOrder(label, ['A headline', 'Der Spiegel', 'relevance.a11y', 'aiDisclosure.caption', 'Because you follow Berlin']);
+    expect(label).not.toMatch(/0\.80/);
+    expect(label).not.toMatch(/[-]/);
+    expect(label.split('A headline')).toHaveLength(2);
+  });
+
+  it('Dashboard card with recency: the age sits between publication and priority', () => {
+    const { getByTestId } = render(<ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} flat />);
+    const label: string = getByTestId('card-sugg-1').props.accessibilityLabel;
+    inOrder(label, ['A headline', 'Der Spiegel', 'feed.justNow', 'relevance.a11y', 'aiDisclosure.caption']);
+  });
+
+  it('compact suggestion row: headline, publication, age, priority', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={jest.fn()} surface="for_you" />,
+    );
+    const label: string = getByTestId('card-sugg-1').props.accessibilityLabel;
+    inOrder(label, ['A headline', 'Der Spiegel', 'feed.justNow', 'relevance.a11y']);
+    expect(label).not.toMatch(/[-]/);
+  });
+
+  it('compact article row and standalone card: headline, publication, age', () => {
+    for (const el of [
+      <ArticleStandaloneCompactCard key="c" testID="row" article={makeArticle()} onPress={jest.fn()} />,
+      <ArticleStandaloneCard key="s" article={makeArticle()} onPress={jest.fn()} />,
+    ]) {
+      const { UNSAFE_root, unmount } = render(el);
+      // The root is the one element whose explicit label starts with the headline.
+      const roots = UNSAFE_root.findAll(
+        (n: any) => typeof n.type === 'string' && typeof n.props?.accessibilityLabel === 'string'
+          && n.props.accessibilityLabel.startsWith('Standalone headline'),
+      );
+      expect(roots.length).toBeGreaterThan(0);
+      const label: string = roots[0].props.accessibilityLabel;
+      inOrder(label, ['Standalone headline', 'Die Zeit', 'feed.justNow']);
+      unmount();
+    }
+  });
+});
