@@ -41,10 +41,11 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
 });
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
-    return { MaterialIcons: (props: any) => <View {...props} /> };
+    return { MaterialIcons: (props: any) => <View testID={`icon-${props.name}`} {...props} /> };
 });
+let mockEventIcon: string | null = null;
 jest.mock('@/components/custom/for-you/event-type-icons', () => ({
-    eventTypeIcon: () => null,
+    eventTypeIcon: () => mockEventIcon,
 }));
 
 import FactSectionHeader from '../FactSectionHeader';
@@ -118,5 +119,59 @@ describe('FactSectionHeader', () => {
         );
         fireEvent.press(getByTestId('dashboard-section-open'));
         expect(onPress).toHaveBeenCalled();
+    });
+});
+
+// Captured: the section header's arrow surfaced as its own StaticText holding
+// only an icon-font glyph. A standalone glyph is decoration: hidden from
+// accessibility the documented way on both platforms.
+describe('section header glyphs are hidden from accessibility', () => {
+    const HIDDEN = { includeHiddenElements: true } as const;
+    const hiddenGlyph = (n: any) => {
+        expect(n.props.accessible).toBe(false);
+        expect(n.props.accessibilityElementsHidden).toBe(true);
+        expect(n.props.importantForAccessibility).toBe('no-hide-descendants');
+    };
+    afterEach(() => {
+        mockEventIcon = null;
+    });
+
+    it('hides the round open arrow and the event-type icon', () => {
+        mockEventIcon = 'how-to-vote';
+        const r = render(<FactSectionHeader title="Elections" eventType="election" total={12} onPress={jest.fn()} />);
+        hiddenGlyph(r.getByTestId('icon-arrow-forward', HIDDEN));
+        hiddenGlyph(r.getByTestId('icon-how-to-vote', HIDDEN));
+        // The button itself still speaks.
+        expect(r.getByTestId('dashboard-section-open').props.accessibilityLabel).toBeTruthy();
+    });
+
+    it('hides the View all row chevron', () => {
+        const SectionViewAllText = require('../SectionViewAllText').default;
+        const r = render(<SectionViewAllText total={12} onPress={jest.fn()} />);
+        hiddenGlyph(r.getByTestId('icon-chevron-right', HIDDEN));
+    });
+
+    // Captured (batch 22): iOS still surfaced the arrow as its own 20x20
+    // StaticText although the glyph carried the hidden props, because it sat
+    // INSIDE the button's subtree. The button is now a childless accessible
+    // element laid over the visual circle, so the glyph is outside it.
+    it('keeps the arrow glyph OUTSIDE the button: the button is one childless labelled element', () => {
+        const r = render(<FactSectionHeader title="Elections" eventType={null} total={33} onPress={jest.fn()} />);
+        const button = r.getByTestId('dashboard-section-open');
+        expect(button.props.accessibilityLabel).toBeTruthy();
+        expect(button.props.accessibilityRole).toBe('button');
+        expect(button.findAll((n: any) => typeof n.props?.testID === 'string' && n.props.testID.startsWith('icon-'))).toHaveLength(0);
+        const arrow = r.getByTestId('icon-arrow-forward', HIDDEN);
+        for (let p: any = arrow.parent; p; p = p.parent) expect(p).not.toBe(button);
+    });
+
+    it('still gives the button a 44pt target', () => {
+        const { StyleSheet } = require('react-native');
+        const r = render(<FactSectionHeader title="Elections" eventType={null} total={33} onPress={jest.fn()} />);
+        const b = r.getByTestId('dashboard-section-open');
+        const st = StyleSheet.flatten(b.props.style);
+        const hit = b.props.hitSlop ?? { top: 0, bottom: 0, left: 0, right: 0 };
+        const h = (st.height ?? 0) + (typeof hit === 'number' ? 2 * hit : (hit.top ?? 0) + (hit.bottom ?? 0));
+        expect(h).toBeGreaterThanOrEqual(44);
     });
 });

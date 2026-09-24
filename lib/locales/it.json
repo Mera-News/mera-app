@@ -1768,7 +1768,10 @@
       "bodyFound": "I fact-checker hanno pubblicato su \"{{title}}\".",
       "bodyNone": "Ancora nessuna verifica pubblicata su \"{{title}}\".",
       "bodyUnavailable": "Mera non è riuscita a completare la verifica di \"{{title}}\".",
-      "open": "Apri articolo"
+      "open": "Apri articolo",
+      "bodyFoundUntitled": "I fact checker hanno pubblicato sull'articolo che hai chiesto.",
+      "bodyNoneUntitled": "Ancora nessun fact check pubblicato sull'articolo che hai chiesto.",
+      "bodyUnavailableUntitled": "Mera non è riuscita a completare la verifica dell'articolo che hai chiesto."
     }
   },
   "sourcePrefControl": {
@@ -2856,6 +2859,12 @@
       "what": "Il Profilo contiene quello che hai detto a Mera di te. Notizie e la Dashboard nascono da questi dati.",
       "how1": "Ogni dato diventa ricerche che Mera fa per te. Se modifichi o elimini un dato, cambiano anche le notizie che ne derivavano.",
       "privacy": "Le ricerche che ne derivano non sono mai collegate al tuo account. Il server conserva solo il testo della ricerca, condiviso in forma anonima tra tutti gli utenti, e lo elimina dopo 14 giorni di inutilizzo."
+    },
+    "settings": {
+      "title": "Come funzionano le Impostazioni",
+      "what": "Scegli come funziona Mera su questo telefono e gestisci il tuo account. Il tuo piano e l'uso di oggi sono in alto.",
+      "how1": "Mera Protocol stabilisce dove l'IA legge le tue notizie: nel cloud o su questo telefono. Privacy e dati contiene il tuo backup crittografato e ti permette di eliminare i dati.",
+      "how2": "Sicurezza aggiunge un PIN. Aiuto ha guide e le FAQ. In Account puoi uscire."
     }
   },
   "articleMenu": {

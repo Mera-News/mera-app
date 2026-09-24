@@ -432,7 +432,10 @@
       "bodyFound": "Fact checkers have published on \"{{title}}\".",
       "bodyNone": "No published fact checks yet for \"{{title}}\".",
       "bodyUnavailable": "Mera couldn't finish checking \"{{title}}\".",
-      "open": "Open article"
+      "open": "Open article",
+      "bodyFoundUntitled": "Fact checkers have published on the article you asked about.",
+      "bodyNoneUntitled": "No published fact checks yet for the article you asked about.",
+      "bodyUnavailableUntitled": "Mera couldn't finish checking the article you asked about."
     }
   },
   "newsCluster": {
@@ -987,7 +990,7 @@
     "contentPolicy": "Content Policy",
     "support": "Talk to support",
     "faq": "FAQ",
-    "reportBug": "Report a Bug",
+    "reportBug": "Report a bug",
     "manageData": "Manage data",
     "deleteAccount": "Delete Account",
     "logout": "Log out",
@@ -1057,7 +1060,7 @@
     "yesDelete": "Yes, Delete",
     "refreshSuggestions": "Refresh Suggestions",
     "refreshingSuggestions": "Refreshing...",
-    "refreshSuggestionsSuccessTitle": "Suggestions Refreshed",
+    "refreshSuggestionsSuccessTitle": "Suggestions refreshed",
     "refreshSuggestionsSuccessDescription": "New personalized suggestions are being generated.",
     "refreshSuggestionsFailedTitle": "Refresh Failed",
     "refreshSuggestionsFailedDescription": "Could not refresh suggestions. Please try again.",
@@ -2856,6 +2859,12 @@
       "what": "Profile holds what you told Mera about yourself. Your Feed and Dashboard are built from these facts.",
       "how1": "Each fact becomes searches Mera runs for you. Change or delete a fact and the stories that came from it change too.",
       "privacy": "The searches made from them are never linked to your account. The server keeps only the search text, shared anonymously across all users, and deletes it after 14 days without use."
+    },
+    "settings": {
+      "title": "How Settings works",
+      "what": "Choose how Mera runs on this phone and manage your account. Your plan and today's usage are at the top.",
+      "how1": "Mera Protocol sets where the AI reads your news: in the cloud or on this phone. Privacy and data holds your encrypted backup and lets you delete data.",
+      "how2": "Security adds a PIN. Help has guides and the FAQ. Account is where you sign out."
     }
   },
   "articleMenu": {

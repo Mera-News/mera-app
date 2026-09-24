@@ -219,8 +219,8 @@
     "waitingForNextBatch_one": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
     "waitingForNextBatch_other": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
     "exploreCta": "Khám phá",
-    "statsPublishedPending_other": "{{formatted}} {{articleWord}} đã được đăng trong 24 giờ qua",
-    "statsPublished_other": "đăng {{formatted}} {{articleWord}} trong 24 giờ qua,",
+    "statsPublishedPending_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
+    "statsPublished_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,",
     "statsAnalysed_other": "phân tích {{formatted}} cho bạn,",
     "statsRelevant_other": "{{formatted}} có vẻ phù hợp,",
     "statsRead_other": "và bạn đã đọc {{formatted}}.",
@@ -1769,7 +1769,10 @@
       "bodyFound": "Các tổ chức kiểm chứng đã đăng bài về \"{{title}}\".",
       "bodyNone": "Chưa có bài kiểm chứng nào được đăng về \"{{title}}\".",
       "bodyUnavailable": "Mera không thể hoàn tất kiểm tra \"{{title}}\".",
-      "open": "Mở bài viết"
+      "open": "Mở bài viết",
+      "bodyFoundUntitled": "Các bên kiểm chứng đã công bố về bài viết bạn hỏi.",
+      "bodyNoneUntitled": "Chưa có kết quả kiểm chứng nào được công bố cho bài viết bạn hỏi.",
+      "bodyUnavailableUntitled": "Mera không thể hoàn tất việc kiểm tra bài viết bạn hỏi."
     }
   },
   "sourcePrefControl": {
@@ -2856,6 +2859,12 @@
       "what": "Hồ sơ lưu những gì bạn kể với Mera về bản thân. Bảng tin và Bảng điều khiển được tạo từ các thông tin này.",
       "how1": "Mỗi thông tin trở thành các lượt tìm kiếm Mera chạy cho bạn. Sửa hoặc xóa một thông tin thì các tin đến từ nó cũng thay đổi.",
       "privacy": "Các lượt tìm kiếm tạo từ chúng không bao giờ gắn với tài khoản của bạn. Máy chủ chỉ giữ văn bản tìm kiếm, dùng chung ẩn danh cho mọi người dùng, và xóa sau 14 ngày không dùng."
+    },
+    "settings": {
+      "title": "Cài đặt hoạt động thế nào",
+      "what": "Chọn cách Mera chạy trên điện thoại này và quản lý tài khoản của bạn. Gói và mức dùng hôm nay nằm ở trên cùng.",
+      "how1": "Mera Protocol quyết định nơi AI đọc tin tức của bạn: trên đám mây hay trên điện thoại này. Quyền riêng tư và dữ liệu giữ bản sao lưu đã mã hóa của bạn và cho phép bạn xóa dữ liệu.",
+      "how2": "Bảo mật thêm mã PIN. Trợ giúp có hướng dẫn và câu hỏi thường gặp. Bạn đăng xuất trong Tài khoản."
     }
   },
   "articleMenu": {

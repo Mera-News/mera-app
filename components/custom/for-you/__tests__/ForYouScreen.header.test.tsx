@@ -39,10 +39,19 @@ jest.mock('@react-navigation/native', () => ({ useIsFocused: () => true }));
 jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useLocalSearchParams: () => ({}) }));
 jest.mock('@/components/custom/AbstractGradientBackdrop', () => mockStub('backdrop'));
 jest.mock('@/lib/diagnostics/coldstart-timeline', () => ({ mark: jest.fn() }));
+let mockLocal = false;
+let mockStatusMode = 'idle';
 jest.mock('@/components/custom/FeedSyncIndicator', () => ({
   useFeedSyncRefresh: () => ({ refreshing: false, onRefresh: jest.fn() }),
   useIsFeedProcessing: () => mockProcessing,
 }));
+jest.mock('@/components/custom/for-you/use-mark-active', () => ({
+  useIsFeedMarkActive: () => mockLocal,
+}));
+jest.mock('@/components/custom/feed/FeedStatusMark', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View testID={p.testID} mode={p.mode} /> };
+});
 jest.mock('@/components/custom/for-you/FeedStatusIndicator', () => mockStub('dashboard-status-indicator'));
 jest.mock('@/components/custom/for-you/FeedStatusPanel', () => mockStub('status-panel'));
 jest.mock('@/components/custom/HeaderWorkingGradient', () => mockStub('working-gradient'));
@@ -84,7 +93,7 @@ jest.mock('@/components/ui/pressable', () => {
 jest.mock('@/components/custom/processing/use-processing-snapshot', () => ({
   useProcessingSnapshot: () => ({ stage: 'analysing' }),
 }));
-jest.mock('@/lib/hooks/use-feed-status-mode', () => ({ useFeedStatusMode: () => 'idle' }));
+jest.mock('@/lib/hooks/use-feed-status-mode', () => ({ useFeedStatusMode: () => mockStatusMode }));
 jest.mock('@/lib/hooks/use-status-disclosure', () => ({
   useStatusDisclosure: () => ({ expanded: false, toggle: jest.fn() }),
 }));
@@ -188,6 +197,8 @@ import ForYouScreen from '../ForYouScreen';
 
 beforeEach(() => {
   mockProcessing = false;
+  mockLocal = false;
+  mockStatusMode = 'idle';
   mockLastNewArticlesAt = null;
   mockFontScale = 1;
 });
@@ -201,11 +212,56 @@ const headerIds = () =>
     .map((n: any) => n.props.testID as string);
 
 describe('Dashboard header', () => {
-  it('keeps the title while syncing (D6), with no Mera mark in any state (owner)', () => {
+  it('keeps the title while syncing (D6)', () => {
     mockProcessing = true;
     render(<ForYouScreen />);
     expect(screen.getByText('feed.dashboardTitle')).toBeTruthy();
-    expect(screen.queryByTestId('dashboard-status-indicator')).toBeNull();
+  });
+
+  // Owner: "put the animated mera logo on the left of the notification bell".
+  it('puts the Mera mark directly left of the bell, in the right cluster', () => {
+    render(<ForYouScreen />);
+    const ids = headerIds();
+    const mark = ids.indexOf('dashboard-status-indicator');
+    expect(mark).toBeGreaterThan(ids.indexOf('dashboard-explainer-open'));
+    expect(ids.indexOf('bell')).toBe(mark + 1);
+  });
+
+  // Captured: the Dashboard bell sat 2.7pt left of the other four tabs'. They
+  // pad with `px-5`, which NativeWind inlines at 14pt per rem (see
+  // tailwind.config.js), i.e. 17.5pt; this header padded 20 in points.
+  it('pads its sides exactly like the other tab headers (px-5 = 1.25 x 14 = 17.5pt)', () => {
+    const { StyleSheet } = require('react-native');
+    render(<ForYouScreen />);
+    const vstack = screen.getByTestId('dashboard-header').findAll(
+      (n: any) => typeof n.type === 'string' && StyleSheet.flatten(n.props.style)?.paddingHorizontal !== undefined,
+    )[0];
+    expect(StyleSheet.flatten(vstack.props.style).paddingHorizontal).toBe(1.25 * 14);
+  });
+
+  it('spaces mark and bell by the shared actions gap', () => {
+    const { StyleSheet } = require('react-native');
+    const { HEADER_ACTIONS_GAP } = require('@/components/custom/for-you/HeaderIconButton');
+    render(<ForYouScreen />);
+    expect(StyleSheet.flatten(screen.getByTestId('dashboard-header-actions').props.style).gap).toBe(HEADER_ACTIONS_GAP);
+  });
+
+  it('moves the mark only while useIsFeedMarkActive says so, exactly as the Feed does', () => {
+    // Processing but the mark flag off (nothing moving, or a stale batch).
+    mockProcessing = true;
+    mockStatusMode = 'processing';
+    mockLocal = false;
+    const view = render(<ForYouScreen />);
+    expect(screen.getByTestId('dashboard-status-indicator').props.mode).toBe('idle');
+    mockLocal = true;
+    view.rerender(<ForYouScreen />);
+    expect(screen.getByTestId('dashboard-status-indicator').props.mode).toBe('processing');
+  });
+
+  it('keeps the capped ink on the mark', () => {
+    mockStatusMode = 'limited';
+    render(<ForYouScreen />);
+    expect(screen.getByTestId('dashboard-status-indicator').props.mode).toBe('limited');
   });
 
   it('puts the "?" right after the title, in the title row', () => {
@@ -261,7 +317,7 @@ describe('Dashboard header', () => {
 
   it('lets the pill row bleed by exactly the header side padding', () => {
     render(<ForYouScreen />);
-    expect(screen.getByTestId('subtabs').props.bleed).toBe(20);
+    expect(screen.getByTestId('subtabs').props.bleed).toBe(17.5);
   });
 
   it('carries the "?" explainer (N4)', () => {

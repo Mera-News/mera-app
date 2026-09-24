@@ -255,6 +255,21 @@ describe('DashboardStatsCard', () => {
         expect(style.backgroundColor ?? 'transparent').toBe('transparent');
     });
 
+    // Captured (C3): from the Dashboard mark the panel covers the stats card,
+    // so the card could not close it. A tap on the open panel itself closes.
+    it('closes on a tap anywhere on the open panel', () => {
+        const r = render(<DashboardStatsCard />);
+        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
+        fireEvent.press(r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN));
+        expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
+    });
+
+    it('does not let the panel-wide close swallow VoiceOver: it is not an accessibility element', () => {
+        const r = render(<DashboardStatsCard />);
+        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
+        expect(r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN).props.accessible).toBe(false);
+    });
+
     it('closes before "Manage plan" navigates, so no backdrop is stranded', () => {
         const r = render(<DashboardStatsCard />);
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));

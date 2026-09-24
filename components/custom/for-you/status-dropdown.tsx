@@ -147,7 +147,20 @@ export const StatusDropdownLayer: React.FC<{
                             showsVerticalScrollIndicator={false}
                             testID={`${testIDPrefix}-dropdown-scroll`}
                         >
-                            <FeedStatusPanel expanded mode={mode} onBeforeNavigate={collapse} />
+                            {/* A tap anywhere on the open panel closes it too:
+                                from the Dashboard mark the panel covers the
+                                stats card, its other trigger (captured). The
+                                panel's own controls (Manage plan) are deeper
+                                responders, so they still take their own taps.
+                                Not an accessibility element, so VoiceOver still
+                                reaches the rows inside. */}
+                            <Pressable
+                                onPress={collapse}
+                                accessible={false}
+                                testID={`${testIDPrefix}-dropdown-panel`}
+                            >
+                                <FeedStatusPanel expanded mode={mode} onBeforeNavigate={collapse} />
+                            </Pressable>
                         </ScrollView>
                     </View>
                 </>

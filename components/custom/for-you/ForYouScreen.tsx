@@ -4,6 +4,10 @@ import {
     useFeedSyncRefresh,
     useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
+import { useIsFeedMarkActive } from '@/components/custom/for-you/use-mark-active';
+import FeedStatusMark from '@/components/custom/feed/FeedStatusMark';
+import { feedMarkMode } from '@/components/custom/feed/FeedHeaderTitleRow';
+import { HEADER_ACTIONS_GAP } from '@/components/custom/for-you/HeaderIconButton';
 import {
     headerTitleLineHeight,
     headerTitleSize,
@@ -81,8 +85,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 /** The header's horizontal padding, which the pill row bleeds past. One
- *  constant for both so they cannot drift apart. */
-const HEADER_SIDE_PADDING = 20;
+ *  constant for both so they cannot drift apart. It equals the `px-5` every
+ *  other tab header uses: NativeWind inlines rem at 14pt (tailwind.config.js),
+ *  so px-5 is 1.25 x 14 = 17.5pt. This was 20, which put the Dashboard's bell
+ *  and title ~2.5pt inside the other tabs' (captured: bell x 348 vs 350.7). */
+const HEADER_SIDE_PADDING = 1.25 * 14;
 
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -256,6 +263,12 @@ const MeraNewsScreen: React.FC = () => {
     // Still read here for the empty state. The header carries no status mark
     // any more: the status panel opens from the Overview stats card.
     const statusMode = useFeedStatusMode();
+    // The Mera mark left of the bell (owner), under the Feed's exact rules: it
+    // grows and animates while the phone works or the server scores, and a
+    // wedged batch goes still (use-mark-active.ts).
+    const markMode = feedMarkMode(useIsFeedMarkActive(), statusMode);
+    // The header's first row: the status dropdown drops under it, at its width.
+    const titleRowRef = useRef<View>(null);
 
     // ONE value drives the hidden title, the narration line and the strip, so
     // the three cannot disagree about whether a run is happening.
@@ -471,13 +484,14 @@ const MeraNewsScreen: React.FC = () => {
 
     // ── Header rows ─────────────────────────────────────────────────────────
     //
-    // `|Dashboard (?)                 bell|` over the pill row, and NOTHING that
+    // `|Dashboard (?)            mark bell|` over the pill row, and NOTHING that
     // depends on the selected pill (owner: "the header will stay the same even
     // when the user taps on some other pill"), so its height is identical on
-    // every pill. No Mera mark (owner), no stats sentence and no status panel:
-    // the count sentence and the panel live in the Overview stats card
-    // (DashboardStatsCard). While a sync runs the working strip is the only
-    // visual signal, and the end is announced once to a screen reader.
+    // every pill. No stats sentence and no inline status panel: the count
+    // sentence lives in the Overview stats card, and the panel is the shared
+    // dropdown that card and the Mera mark both open. The mark follows the
+    // Feed's rules (still at rest, animating only while the phone works); the
+    // end of a sync is announced once to a screen reader.
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.
         // The provider holds the Overview stats card's dropdown state; the
@@ -668,7 +682,14 @@ const MeraNewsScreen: React.FC = () => {
                     pointerEvents="box-none"
                     style={{ paddingTop: insets.top + 16, paddingHorizontal: HEADER_SIDE_PADDING }}
                 >
-                    <HStack className="items-start justify-between mb-2" pointerEvents="box-none">
+                    <HStack
+                        ref={titleRowRef}
+                        // Measured as the status dropdown's anchor; a flattened
+                        // view has nothing native to measure.
+                        collapsable={false}
+                        className="items-start justify-between mb-2"
+                        pointerEvents="box-none"
+                    >
                         <VStack className="flex-1 min-w-0 mr-3" pointerEvents="box-none">
                             <HStack
                                 className="items-center min-w-0"
@@ -700,7 +721,23 @@ const MeraNewsScreen: React.FC = () => {
                                 <View pointerEvents="none" className="flex-1" />
                             </HStack>
                         </VStack>
-                        <HStack className="items-center flex-shrink-0" space="md" pointerEvents="box-none">
+                        {/* `[mark] [bell]`, pinned to the title row's height so
+                            both centre on the title. The mark is the same shared
+                            status control as the Feed's: tapping it drops the
+                            one status panel (the stats card is the other trigger
+                            of the same dropdown). It announces nothing itself;
+                            DashboardStatsCard owns the announcement. */}
+                        <HStack
+                            className="items-center flex-shrink-0"
+                            pointerEvents="box-none"
+                            style={{ height: titleRowHeight, gap: HEADER_ACTIONS_GAP }}
+                            testID="dashboard-header-actions"
+                        >
+                            <FeedStatusMark
+                                mode={markMode}
+                                anchorRef={titleRowRef}
+                                testID="dashboard-status-indicator"
+                            />
                             <NotificationBellButton />
                         </HStack>
                     </HStack>

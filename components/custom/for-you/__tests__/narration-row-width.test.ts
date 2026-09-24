@@ -9,7 +9,8 @@ import path from 'path';
 import {
   HEADER_NARRATION_METRICS,
   NARRATION_COLOR,
-  NARRATION_INLINE_WIDTH_PT,
+  NARRATION_INLINE_WIDTH_PT_COMPACT,
+  NARRATION_INLINE_WIDTH_PT_WIDE,
 } from '../header-narration';
 import { contrastRatio, parseRgb } from '../status-ink';
 
@@ -33,7 +34,7 @@ function dictionaryLines(file: string): Row[] {
   return rows;
 }
 
-describe('the narration fits the Feed\'s ~170pt inline slot in every locale', () => {
+describe('the narration fits the Feed\'s inline slot in every locale at 400pt+', () => {
   it('was measured at the size the row draws', () => {
     expect(fixture._fontSize).toBe(HEADER_NARRATION_METRICS.fontSize);
     expect(LOCALES).toHaveLength(20);
@@ -63,7 +64,7 @@ describe('the narration fits the Feed\'s ~170pt inline slot in every locale', ()
     for (const [locale, rows] of Object.entries(fixture)) {
       if (!Array.isArray(rows)) continue;
       for (const r of rows) {
-        if (r.width > NARRATION_INLINE_WIDTH_PT - MARGIN_PT) {
+        if (r.width > NARRATION_INLINE_WIDTH_PT_WIDE - MARGIN_PT) {
           over.push(`${locale} ${r.key}[${r.index}] ${r.width}pt: ${r.text}`);
         }
       }
@@ -76,7 +77,21 @@ describe('the narration fits the Feed\'s ~170pt inline slot in every locale', ()
       ...Object.values(fixture).flatMap((rows) => (Array.isArray(rows) ? rows.map((r) => r.width) : [])),
     );
     expect(widest).toBeGreaterThan(100);
-    expect(widest).toBeLessThanOrEqual(NARRATION_INLINE_WIDTH_PT - MARGIN_PT);
+    expect(widest).toBeLessThanOrEqual(NARRATION_INLINE_WIDTH_PT_WIDE - MARGIN_PT);
+  });
+
+  // Owner decision (a): with the bell in the Feed row, a compact phone's slot
+  // is narrower than some lines, and those lines take a "…" there. The strict
+  // fit above holds at 400pt and wider; this pins that compact really is the
+  // narrower budget (so the ellipsis is a known, bounded trade) and that the
+  // wide slot is not the old 170 any more.
+  it('compact widths are the narrower budget, and some lines ellipsize there by decision', () => {
+    expect(NARRATION_INLINE_WIDTH_PT_COMPACT).toBeLessThan(NARRATION_INLINE_WIDTH_PT_WIDE);
+    const overCompact = Object.values(fixture)
+      .flatMap((rows) => (Array.isArray(rows) ? rows : []))
+      .filter((r) => r.width > NARRATION_INLINE_WIDTH_PT_COMPACT - MARGIN_PT);
+    expect(overCompact.length).toBeGreaterThan(0);
+    expect(overCompact.length).toBeLessThan(20);
   });
 });
 

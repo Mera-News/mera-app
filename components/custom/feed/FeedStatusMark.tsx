@@ -17,9 +17,11 @@ export interface FeedStatusMarkProps {
     readonly mode: FeedStatusMode;
     /** The title row: the panel drops down under it, at its width. */
     readonly anchorRef: React.RefObject<View | null>;
+    /** `feed-status-indicator` on the Feed, `dashboard-status-indicator` on the Dashboard. */
+    readonly testID?: string;
 }
 
-const FeedStatusMark: React.FC<FeedStatusMarkProps> = ({ mode, anchorRef }) => {
+const FeedStatusMark: React.FC<FeedStatusMarkProps> = ({ mode, anchorRef, testID = 'feed-status-indicator' }) => {
     const { expanded, open, collapse } = useStatusDropdown();
     const onPress = useCallback(() => {
         if (expanded) collapse();
@@ -30,7 +32,7 @@ const FeedStatusMark: React.FC<FeedStatusMarkProps> = ({ mode, anchorRef }) => {
             mode={mode}
             expanded={expanded}
             onPress={onPress}
-            testID="feed-status-indicator"
+            testID={testID}
         />
     );
 };

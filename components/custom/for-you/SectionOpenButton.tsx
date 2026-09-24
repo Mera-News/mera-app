@@ -1,6 +1,7 @@
 import { Pressable } from '@/components/ui/pressable';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
@@ -37,22 +38,42 @@ interface SectionOpenButtonProps {
  */
 const SectionOpenButton: React.FC<SectionOpenButtonProps> = ({ total, onPress }) => {
   const { t } = useTranslation();
+  // The circle and its arrow are drawn UNDER a childless button, not inside
+  // it. With the glyph inside the button's subtree, iOS still surfaced it as a
+  // separate 20x20 StaticText holding the icon-font character, hidden props
+  // and all (captured). Outside the subtree, and hidden itself, it cannot.
   return (
-    <Pressable
-      testID="dashboard-section-open"
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={t('forYou.viewAllArticles', { count: total })}
-      hitSlop={HIT_SLOP}
-      className="flex-shrink-0 items-center justify-center rounded-full"
-      style={{
-        width: CIRCLE_SIZE,
-        height: CIRCLE_SIZE,
-        backgroundColor: 'rgba(231, 138, 83, 0.14)',
-      }}
-    >
-      <MaterialIcons name="arrow-forward" size={20} color={ACCENT} />
-    </Pressable>
+    <View style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+      <View
+        pointerEvents="none"
+        accessible={false}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        className="items-center justify-center rounded-full"
+        style={{
+          width: CIRCLE_SIZE,
+          height: CIRCLE_SIZE,
+          backgroundColor: 'rgba(231, 138, 83, 0.14)',
+        }}
+      >
+        <MaterialIcons
+          name="arrow-forward"
+          size={20}
+          color={ACCENT}
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
+      </View>
+      <Pressable
+        testID="dashboard-section-open"
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={t('forYou.viewAllArticles', { count: total })}
+        hitSlop={HIT_SLOP}
+        style={{ position: 'absolute', top: 0, left: 0, width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
+      />
+    </View>
   );
 };
 

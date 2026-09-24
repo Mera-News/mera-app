@@ -77,13 +77,13 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ compact = false }) =>
                 too; the number matters because these surfaces swap as a run
                 starts and ends.
 
-                The COMPACT branch keeps the Mera mark and is deliberately
-                untouched. That branch is the Feed's end-of-list footer, so an
-                idle loop there would run at the bottom of every feed forever,
-                which is a cost with no reader. */}
+                The COMPACT branch keeps the Mera mark, STILL. That branch is
+                the Feed's end-of-list footer, so any loop there runs at the
+                bottom of every feed forever, and the owner's rule is that
+                nothing on the Feed moves unless the feed is updating. */}
             <Box className={compact ? 'mb-3' : 'mb-6'}>
                 {compact ? (
-                    <MeraLogo size={64} animated />
+                    <MeraLogo size={64} animated={false} />
                 ) : (
                     <IdleScene testID="all-caught-up-idle-scene" />
                 )}

@@ -128,6 +128,13 @@ const BODY_KEY: Record<FactCheckOutcome, string> = {
   none: 'factCheck.notify.bodyNone',
   unavailable: 'factCheck.notify.bodyUnavailable',
 };
+/** The same bodies written without {{title}}, for a check with no title at
+ *  all: interpolating an empty one read 'for ""'. */
+const BODY_KEY_UNTITLED: Record<FactCheckOutcome, string> = {
+  found: 'factCheck.notify.bodyFoundUntitled',
+  none: 'factCheck.notify.bodyNoneUntitled',
+  unavailable: 'factCheck.notify.bodyUnavailableUntitled',
+};
 
 function clip(title: string): string {
   const t = title.trim();
@@ -152,6 +159,7 @@ export async function noteFactCheckStored(
 
   const outcome = outcomeFor(row);
   const articleTitle = row.articleTitle ?? asked.title ?? '';
+  const shownTitle = clip(articleTitle);
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { toastManager } = require('../toast-manager') as typeof import('../toast-manager');
@@ -159,7 +167,7 @@ export async function noteFactCheckStored(
       type: 'fact_check_done',
       source: 'fact-check',
       title: 'factCheck.notify.title',
-      body: BODY_KEY[outcome],
+      body: shownTitle ? BODY_KEY[outcome] : BODY_KEY_UNTITLED[outcome],
       icon: 'fact-check',
       context: {
         articleId,
@@ -167,7 +175,7 @@ export async function noteFactCheckStored(
         articleTitle,
         outcome,
         // The body's interpolation value, pre-cut.
-        title: clip(articleTitle),
+        title: shownTitle,
       },
       actions: [{ id: 'open-fact-check', labelKey: 'factCheck.notify.open' }],
     });

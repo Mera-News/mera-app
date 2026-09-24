@@ -154,6 +154,13 @@ describe('AllCaughtUpCard', () => {
       expect(screen.queryByTestId('all-caught-up-idle-scene')).toBeNull();
     });
 
+    // Owner: on the Feed, nothing animates unless the feed is updating. The
+    // compact branch is the Feed's end-of-list footer, always there.
+    it('keeps the compact footer mark STILL: no torch sweep at rest', () => {
+      render(<AllCaughtUpCard compact />);
+      expect(screen.getByTestId('mera-logo').props.animated).toBe(false);
+    });
+
     // The orphan gate guards registry -> disk. This guards CONSUMER -> registry,
     // which nothing else does: `gameAnimationFor` returns undefined for an id
     // the map does not hold, `source={undefined}` renders nothing, and both tsc

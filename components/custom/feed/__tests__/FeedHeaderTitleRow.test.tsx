@@ -37,6 +37,7 @@ const row = (narrating: boolean) =>
             height={54}
             title={<Text testID="title">Feed</Text>}
             mark={<View testID="mark" />}
+            bell={<View testID="bell" />}
             explainer={<View testID="explainer" />}
             narrating={narrating}
             stage={null}
@@ -50,14 +51,14 @@ const order = (r: ReturnType<typeof row>) =>
     );
 
 describe('FeedHeaderTitleRow', () => {
-    it('orders the row title, "?", narration, mark, with the narration on one line', () => {
+    it('orders the row title, "?", narration, mark, bell, with the narration on one line', () => {
         const r = row(true);
         const ids = order(r);
         expect(ids.indexOf('title')).toBeLessThan(ids.indexOf('explainer'));
         expect(ids.indexOf('explainer')).toBeLessThan(ids.indexOf('feed-narration-line'));
         expect(ids.indexOf('feed-narration-line')).toBeLessThan(ids.indexOf('mark'));
-        // The mark is the row's LAST child: the right-most spot.
-        expect(ids[ids.length - 1]).toBe('mark');
+        // Mark then bell close the row (owner: bell right of the mark).
+        expect(ids[ids.length - 1]).toBe('bell');
         expect(r.getByTestId('feed-narration-line').props.numberOfLines).toBe(1);
         const inRow = (n: any): boolean => {
             for (let p = n; p; p = p.parent) if (p.props?.testID === 'feed-header-title-row') return true;
@@ -110,5 +111,38 @@ describe('feedMarkMode', () => {
         expect(feedMarkMode(false, 'limited')).toBe('limited');
         expect(feedMarkMode(false, 'idle')).toBe('idle');
         expect(feedMarkMode(false, 'deferred')).toBe('deferred');
+    });
+});
+
+// The Feed passes `useIsFeedProcessing` to the row and `useIsFeedMarkActive`
+// to `feedMarkMode`, so the two can disagree: a server batch stuck without
+// progress past the stale bound still narrates, but the mark rests.
+describe('stale batch: narration on, mark still', () => {
+    it('narrates while the mark rests', () => {
+        const r = row(true);
+        expect(r.getByTestId('feed-narration-line')).toBeTruthy();
+        // mark flag false, statusMode 'processing': the resting mode.
+        expect(feedMarkMode(false, 'processing')).toBe('idle');
+    });
+});
+
+// Owner: "add the notification button on the right of mera icon in feed".
+describe('the bell, right of the mark', () => {
+    it('ends the row with mark then bell, one actions cluster, the shared gap', () => {
+        const { StyleSheet } = require('react-native');
+        const { HEADER_ACTIONS_GAP } = require('@/components/custom/for-you/HeaderIconButton');
+        const r = row(true);
+        const ids = order(r);
+        expect(ids[ids.length - 1]).toBe('bell');
+        expect(ids.indexOf('mark')).toBe(ids.length - 2);
+        const cluster = StyleSheet.flatten(r.getByTestId('feed-header-actions').props.style);
+        expect(cluster.gap).toBe(HEADER_ACTIONS_GAP);
+    });
+
+    it('clamps the narration to one line with a tail ellipsis (compact widths trim, by decision)', () => {
+        const r = row(true);
+        const line = r.getByTestId('feed-narration-line');
+        expect(line.props.numberOfLines).toBe(1);
+        expect(line.props.ellipsizeMode ?? 'tail').toBe('tail');
     });
 });

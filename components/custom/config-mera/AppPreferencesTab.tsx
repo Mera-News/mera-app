@@ -479,6 +479,8 @@ const AppPreferencesTab: React.FC = () => {
                             className="flex-row items-center justify-center py-3 px-2"
                             onPress={showFeedback}
                             accessibilityRole="button"
+                            // Explicit, or the icon font's glyph leaks into it.
+                            accessibilityLabel={t('preferences.reportBug')}
                         >
                             <HStack space="xs" className="items-center">
                                 <MaterialIcons name="bug-report" size={18} color="rgb(237, 167, 126)" />
@@ -504,6 +506,8 @@ const AppPreferencesTab: React.FC = () => {
                         className="flex-row items-center py-3 px-4"
                         onPress={() => openModal('logout')}
                         accessibilityRole="button"
+                        // Explicit, or the icon font's glyph leaks into it.
+                        accessibilityLabel={t('preferences.logout')}
                     >
                         <MaterialIcons name="logout" size={18} color="#fca5a5" />
                         <Text className="text-base text-red-300 ml-3">
@@ -518,10 +522,23 @@ const AppPreferencesTab: React.FC = () => {
                         <PolicyPill label={t('preferences.contentPolicy')} onPress={() => openInAppBrowser(withAppLanguage(CONTENT_POLICY_URL))} />
                     </HStack>
                     <HStack space="lg" className="items-center mb-3">
-                        <Pressable onPress={() => openInAppBrowser(GITHUB_URL)} hitSlop={8}>
+                        <Pressable
+                            onPress={() => openInAppBrowser(GITHUB_URL)}
+                            hitSlop={8}
+                            // Icon-only links: existing copy names them.
+                            accessibilityRole="link"
+                            accessibilityLabel={t('auth.sourceCode')}
+                            testID="settings-link-source-code"
+                        >
                             <FontAwesome name="github" size={22} color="#9ca3af" />
                         </Pressable>
-                        <Pressable onPress={() => openInAppBrowser(WEBSITE_URL)} hitSlop={8}>
+                        <Pressable
+                            onPress={() => openInAppBrowser(WEBSITE_URL)}
+                            hitSlop={8}
+                            accessibilityRole="link"
+                            accessibilityLabel={t('auth.website')}
+                            testID="settings-link-website"
+                        >
                             <MaterialIcons name="language" size={24} color="#9ca3af" />
                         </Pressable>
                     </HStack>

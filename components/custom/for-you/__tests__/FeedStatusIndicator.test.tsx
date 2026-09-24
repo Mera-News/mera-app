@@ -70,6 +70,12 @@ jest.mock('react-native-reanimated', () => {
 let mockReduceMotion = false;
 const mockWithTiming = jest.fn();
 
+let mockWindowWidth = 375;
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+    __esModule: true,
+    default: () => ({ width: mockWindowWidth, height: 812, scale: 3, fontScale: 1 }),
+}));
+
 import FeedStatusIndicator from '../FeedStatusIndicator';
 
 const OPEN_A11Y = 'feedStatus.openA11y';
@@ -100,7 +106,7 @@ function scaleOf(node: any): number | undefined {
     return transform?.find((e: any) => 'scale' in e)?.scale;
 }
 
-const IDLE_SCALE = 0.82;
+const IDLE_SCALE = 1;
 const PROCESSING_SCALE = 1.55;
 
 describe('FeedStatusIndicator', () => {
@@ -108,21 +114,22 @@ describe('FeedStatusIndicator', () => {
         mockReduceMotion = false;
     });
 
-    // Owner: small and still at idle, bigger than before while processing, and
-    // the strokes draw on instead of the old spotlight sweep.
-    it('draws its strokes on, enlarged past the old 1.3 and pure white, while processing', () => {
+    // Owner: small and still at idle; bigger than before while processing,
+    // with the torch sweeping over cards scrolling right to left.
+    it('sweeps the torch over scrolling cards, enlarged past the old 1.3 and pure white, while processing', () => {
         const { getByTestId } = renderIndicator({ mode: 'processing' });
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(true);
-        expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
+        expect(getByTestId('mera-logo').props.animated).toBe(true);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(true);
         expect(getByTestId('mera-logo').props.color).toBe(ACTIVE);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(PROCESSING_SCALE);
         expect(PROCESSING_SCALE).toBeGreaterThan(1.3);
     });
 
-    it('under Reduce Motion: the processing size, but no stroke animation', () => {
+    it('under Reduce Motion: the processing size, but no torch and no cards', () => {
         mockReduceMotion = true;
         const { getByTestId } = renderIndicator({ mode: 'processing' });
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.animated).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(PROCESSING_SCALE);
     });
 
@@ -130,7 +137,7 @@ describe('FeedStatusIndicator', () => {
         const { getByTestId } = renderIndicator({ mode: 'error' });
         expect(getByTestId('mera-logo').props.color).toBe('#F87171');
         expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
     });
 
@@ -138,7 +145,7 @@ describe('FeedStatusIndicator', () => {
         const { getByTestId } = renderIndicator({ mode: 'limited' });
         expect(getByTestId('mera-logo').props.color).toBe('#FBBF24');
         expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
     });
 
@@ -150,7 +157,7 @@ describe('FeedStatusIndicator', () => {
         const { getByTestId } = renderIndicator({ mode: 'idle', onPress });
         expect(getByTestId('mera-logo').props.color).toBe(RESTING);
         expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
 
         fireEvent.press(getByTestId(TEST_ID));
@@ -166,25 +173,21 @@ describe('FeedStatusIndicator', () => {
         const { getByTestId } = renderIndicator({ mode: 'deferred', onPress });
         expect(getByTestId('mera-logo').props.color).toBe(RESTING);
         expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
-        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(getByTestId('mera-logo').props.scrollCards).toBe(false);
         expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
 
         fireEvent.press(getByTestId(TEST_ID));
         expect(onPress).toHaveBeenCalledTimes(1);
     });
 
-    it('animates in processing and in no other state, and never sweeps', () => {
+    it('animates in processing and in no other state', () => {
         // One assertion over the whole enum, so a new mode cannot quietly start
         // re-rasterising an SVG on the CPU behind a header that is at rest.
         const modes = ['processing', 'error', 'limited', 'deferred', 'idle'] as const;
-        const drawingIn = modes.filter(
-            (mode) => renderIndicator({ mode }).getByTestId('mera-logo').props.drawStrokes === true,
-        );
-        expect(drawingIn).toEqual(['processing']);
-        const sweepingIn = modes.filter(
-            (mode) => renderIndicator({ mode }).getByTestId('mera-logo').props.animated === true,
-        );
-        expect(sweepingIn).toEqual([]);
+        const on = (prop: string) =>
+            modes.filter((mode) => renderIndicator({ mode }).getByTestId('mera-logo').props[prop] === true);
+        expect(on('scrollCards')).toEqual(['processing']);
+        expect(on('animated')).toEqual(['processing']);
     });
 
     it('calls onPress when tapped', () => {
@@ -253,11 +256,94 @@ describe('FeedStatusIndicator: grows, never swaps', () => {
         expect(mockLogoMounts).toBe(1);
     });
 
-    it('animates the scale to 1.55 over 250ms, and starts drawing only after the grow', () => {
+    it('animates the scale to 1.55 over 250ms', () => {
         mockWithTiming.mockClear();
-        const { rerender, getByTestId } = renderIndicator({ mode: 'idle' });
+        const { rerender } = renderIndicator({ mode: 'idle' });
         rerender(<FeedStatusIndicator mode="processing" expanded={false} onPress={jest.fn()} testID={TEST_ID} />);
         expect(mockWithTiming).toHaveBeenCalledWith(1.55, { duration: 250 });
-        expect(getByTestId('mera-logo').props.drawDelayMs).toBe(250);
+    });
+});
+
+// Owner: "the animation should run only when feed is updating, otherwise it
+// stays static". The Feed feeds the mark `feedMarkMode(useIsFeedMarkActive(),
+// statusMode)`; this walks the chain end to end for every state in which the
+// mark flag is off (see use-mark-active.test.tsx for when it is on).
+describe('FeedStatusIndicator: static unless the Feed is really updating', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { feedMarkMode } = require('@/components/custom/feed/FeedHeaderTitleRow');
+    const still = (markActive: boolean, statusMode: string) => {
+        const { getByTestId } = renderIndicator({ mode: feedMarkMode(markActive, statusMode) });
+        const logo = getByTestId('mera-logo');
+        return logo.props.animated === false && logo.props.scrollCards === false;
+    };
+
+    it('is still at rest', () => {
+        expect(still(false, 'idle')).toBe(true);
+        expect(still(false, 'deferred')).toBe(true);
+    });
+
+    it('is still in the error and limited states', () => {
+        expect(still(false, 'error')).toBe(true);
+        expect(still(false, 'limited')).toBe(true);
+    });
+
+    it('is still on a bare scheduler poll, on a stale server batch, and after a sync fails partway', () => {
+        // A poll, or a server batch with no progress past the stale bound:
+        // statusMode is 'processing' but the mark flag is off. A failed sync
+        // publishes state 'failed', which no flag counts; the mode is
+        // then 'error' (scoring failure) or 'processing' (scheduler still
+        // winding down), and neither may move the mark.
+        expect(still(false, 'processing')).toBe(true);
+        expect(still(false, 'error')).toBe(true);
+    });
+
+    it('moves only while the mark flag is on', () => {
+        expect(still(true, 'processing')).toBe(false);
+    });
+});
+
+// Owner: "as big as the Feed text in the same line". The resting mark's
+// layout size IS the measured ink height of "Feed" in the header title
+// (CoreText, system bold: 21.5pt at 30px, 25.8pt at 36px), at scale 1, from
+// the same breakpoint as the title; processing grows it 1.55x by transform.
+describe('FeedStatusIndicator: sized to the Feed title', () => {
+    afterEach(() => {
+        mockWindowWidth = 375;
+    });
+    it('rests at the "Feed" ink height on a compact phone (375pt, 3xl title)', () => {
+        mockWindowWidth = 375;
+        const { getByTestId } = renderIndicator({ mode: 'idle' });
+        expect(getByTestId('mera-logo').props.size).toBe(21.5);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(1);
+    });
+    it('rests at the "Feed" ink height on a wide phone (402pt, 4xl title)', () => {
+        mockWindowWidth = 402;
+        const { getByTestId } = renderIndicator({ mode: 'idle' });
+        expect(getByTestId('mera-logo').props.size).toBe(25.8);
+    });
+    it('grows 1.55x while working, by transform, so the layout box never changes', () => {
+        const { getByTestId } = renderIndicator({ mode: 'processing' });
+        expect(getByTestId('mera-logo').props.size).toBe(21.5);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(1.55);
+    });
+});
+
+// The mark is a tap target on two headers now; a hitSlop-only button measures
+// as its glyph box on device (the "?" did: 24x24). A real 44pt frame, pulled
+// back to the glyph box by negative margins so no row reflows.
+describe('FeedStatusIndicator: a real 44pt tap frame', () => {
+    it('is 44 x 44 with margins that give the frame back to the glyph box, and no hitSlop', () => {
+        const { StyleSheet } = require('react-native');
+        mockWindowWidth = 375;
+        const { getByTestId } = renderIndicator({ mode: 'idle' });
+        const b = getByTestId(TEST_ID);
+        const st = StyleSheet.flatten(b.props.style);
+        expect(st.width).toBe(44);
+        expect(st.height).toBe(44);
+        // Glyph box at 375: 21.5 tall, 0.70 wide (MeraLogo's 514 x 732 viewBox).
+        const glyphW = 21.5 * (514 / 732);
+        expect(st.marginHorizontal).toBeCloseTo(-(44 - glyphW) / 2, 5);
+        expect(st.marginVertical).toBeCloseTo(-(44 - 21.5) / 2, 5);
+        expect(b.props.hitSlop).toBeUndefined();
     });
 });

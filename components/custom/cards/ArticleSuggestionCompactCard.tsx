@@ -7,6 +7,8 @@ import {
 import { useArticleActions } from '@/components/custom/cards/use-article-actions';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import RelevanceChip from '@/components/custom/RelevanceChip';
+import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
+import { useTranslation } from 'react-i18next';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import React, { useMemo } from 'react';
@@ -46,6 +48,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   read = false,
   isNew = false,
 }) => {
+  const { t } = useTranslation();
   const status = suggestion.status;
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
   const relevance = suggestion.relevance ?? 0;
@@ -127,6 +130,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         onPress={() => onPress(suggestion)}
         onLongPress={menu.open}
         priorityAccessory={priorityAccessory}
+        spokenPriority={relevanceReady ? relevanceSpokenLabel(t, relevance) : null}
         onOverflow={menu.open}
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}

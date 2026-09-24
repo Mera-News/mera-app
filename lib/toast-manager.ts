@@ -84,11 +84,15 @@ class ToastManager {
     }
 
     /** i18n key → resolved string; falls back to the raw string on a miss. */
-    private resolveI18n(key: string): string {
+    private resolveI18n(key: string, values?: Record<string, unknown> | null): string {
         if (!key) return '';
         // Cast: i18next.t is strongly typed to known keys, but these may be
-        // dynamic keys OR already-resolved freeform strings.
-        const resolved = (i18next.t as unknown as (k: string) => string)(key);
+        // dynamic keys OR already-resolved freeform strings. `values` fills the
+        // key's {{placeholders}}: without them the reader saw the braces.
+        const resolved = (i18next.t as unknown as (k: string, o?: Record<string, unknown>) => string)(
+            key,
+            values ?? undefined,
+        );
         return typeof resolved === 'string' && resolved.length > 0 ? resolved : key;
     }
 
@@ -322,8 +326,11 @@ class ToastManager {
         const notifiedToastModule = require('@/components/custom/notifications/NotifiedToast');
         const NotifiedToast = notifiedToastModule.default;
 
-        const title = this.resolveI18n(opts.title);
-        const body = this.resolveI18n(opts.body);
+        // The row keeps the raw keys plus `context`, and the notification
+        // centre interpolates from that same context; the toast must too, or
+        // 'No published fact checks yet for "{{title}}".' shows its braces.
+        const title = this.resolveI18n(opts.title, opts.context);
+        const body = this.resolveI18n(opts.body, opts.context);
         const anchor = getBellAnchor();
         const reduceMotion = this.reduceMotion;
         // Whether the toast will fly to the bell or just fade — the two legs

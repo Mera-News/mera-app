@@ -43,7 +43,14 @@ const SectionViewAllText: React.FC<SectionViewAllTextProps> = ({ total, onPress 
         <Text size="sm" className="font-semibold" style={{ color: ROW_COLOR }} numberOfLines={1}>
           {label}
         </Text>
-        <MaterialIcons name="chevron-right" size={18} color={ROW_COLOR} />
+        <MaterialIcons
+          name="chevron-right"
+          size={18}
+          color={ROW_COLOR}
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
       </HStack>
     </Pressable>
   );

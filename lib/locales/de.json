@@ -1768,7 +1768,10 @@
       "bodyFound": "Faktenchecker haben zu „{{title}}“ veröffentlicht.",
       "bodyNone": "Zu „{{title}}“ gibt es noch keine veröffentlichten Faktenchecks.",
       "bodyUnavailable": "Mera konnte die Prüfung von „{{title}}“ nicht abschließen.",
-      "open": "Artikel öffnen"
+      "open": "Artikel öffnen",
+      "bodyFoundUntitled": "Faktenchecker haben zu dem Artikel veröffentlicht, nach dem du gefragt hast.",
+      "bodyNoneUntitled": "Zu dem Artikel, nach dem du gefragt hast, gibt es noch keine veröffentlichten Faktenchecks.",
+      "bodyUnavailableUntitled": "Mera konnte die Prüfung des Artikels, nach dem du gefragt hast, nicht abschließen."
     }
   },
   "sourcePrefControl": {
@@ -2856,6 +2859,12 @@
       "what": "Im Profil steht, was du Mera über dich erzählt hast. Dein Feed und dein Dashboard entstehen aus diesen Fakten.",
       "how1": "Aus jedem Fakt werden Suchanfragen, die Mera für dich ausführt. Änderst oder löschst du einen Fakt, ändern sich auch die Meldungen, die daraus kamen.",
       "privacy": "Die daraus entstandenen Suchanfragen werden nie mit deinem Konto verknüpft. Der Server speichert nur den Suchtext, anonym geteilt über alle Nutzer, und löscht ihn nach 14 Tagen ohne Nutzung."
+    },
+    "settings": {
+      "title": "So funktionieren die Einstellungen",
+      "what": "Lege fest, wie Mera auf diesem Handy läuft, und verwalte dein Konto. Dein Tarif und die heutige Nutzung stehen ganz oben.",
+      "how1": "Mera Protocol legt fest, wo die KI deine Nachrichten liest: in der Cloud oder auf diesem Handy. Unter Datenschutz und Daten findest du dein verschlüsseltes Backup und kannst Daten löschen.",
+      "how2": "Sicherheit fügt eine PIN hinzu. Hilfe enthält Anleitungen und die FAQ. Unter Konto meldest du dich ab."
     }
   },
   "articleMenu": {

@@ -6,6 +6,7 @@ import { bandOf } from '@/lib/news-harness/feed-select/ownership';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
 
 interface RelevanceChipProps {
     relevance: number;
@@ -24,12 +25,7 @@ function tierIcon(relevance: number): keyof typeof MaterialIcons.glyphMap | null
 
 /** What VoiceOver says for each band (the word alone is too terse once the
  *  glyphs are gone). A sub-gate score reads as low. */
-const SPOKEN_LABEL: Partial<Record<ReturnType<typeof bandOf>, 'relevance.a11yEmergency' | 'relevance.a11yHigh' | 'relevance.a11yMedium' | 'relevance.a11yLow'>> = {
-    EMERGENCY: 'relevance.a11yEmergency',
-    HIGH: 'relevance.a11yHigh',
-    MEDIUM: 'relevance.a11yMedium',
-    LOW: 'relevance.a11yLow',
-};
+
 
 const RelevanceChip: React.FC<RelevanceChipProps> = ({ relevance }) => {
     const { t } = useTranslation();
@@ -42,7 +38,7 @@ const RelevanceChip: React.FC<RelevanceChipProps> = ({ relevance }) => {
             style={{ backgroundColor: colors.backgroundColor }}
             // One spoken label for the whole chip: "High priority", not "High".
             accessible
-            accessibilityLabel={t(SPOKEN_LABEL[bandOf(relevance)] ?? 'relevance.a11yLow')}
+            accessibilityLabel={relevanceSpokenLabel(t, relevance)}
         >
             <HStack className="items-center" space="xs">
                 {icon ? <MaterialIcons name={icon} size={11} color={colors.textColor} /> : null}

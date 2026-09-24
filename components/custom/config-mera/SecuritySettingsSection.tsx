@@ -155,10 +155,15 @@ const SecuritySettingsSection: React.FC = () => {
             <GlassPanel radius={8} className="mb-3" fallbackClassName="border border-gray-700 bg-transparent">
                 <HStack className="items-center justify-between py-3 px-4">
                     <HStack space="md" className="items-center flex-1 pr-3">
+                        {/* Decoration: the row's text says it. A standalone glyph
+                            surfaced as its own StaticText (captured). */}
                         <MaterialIcons
                             name={lockEnabled ? 'lock' : 'lock-open'}
                             size={20}
                             color={lockEnabled ? '#10b981' : '#9ca3af'}
+                            accessible={false}
+                            accessibilityElementsHidden
+                            importantForAccessibility="no-hide-descendants"
                         />
                         <VStack className="flex-1">
                             <Text className="text-base text-white">{t('security.requirePinTitle')}</Text>
@@ -187,6 +192,8 @@ const SecuritySettingsSection: React.FC = () => {
                     <Pressable
                         testID="settings-row-change-pin"
                         accessibilityRole="button"
+                        // Explicit, or the chevron's icon-font glyph leaks into it.
+                        accessibilityLabel={t('security.changePin')}
                         className="flex-row items-center justify-between py-3 px-4"
                         onPress={() => {
                             changePinStartRef.current = Date.now();

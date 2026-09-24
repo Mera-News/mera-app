@@ -106,6 +106,10 @@ jest.mock('@/components/custom/UsageWidget', () => {
         ),
     };
 });
+jest.mock('@/components/custom/notifications/NotificationBellButton', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="bell" /> };
+});
 jest.mock('@/components/custom/for-you/TabExplainerButton', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: ({ tab, testID }: any) => <View testID={testID} accessibilityLabel={`explainer:${tab}`} /> };
@@ -380,17 +384,41 @@ describe('ProfileScreen', () => {
         expect(getByTestId('profile-advanced-open').props.hitSlop).toBeUndefined();
     });
 
-    // Measured on device: with the old ~10.7pt gap the two 44pt frames
-    // overlapped by 9.3pt and "?" won the overlap. Each frame reaches
-    // -margin past its 24pt footprint, so the gap must cover both reaches.
-    it('spaces the two header icons so their 44pt frames do not overlap', async () => {
+    // Owner: "Profile (?)" like Feed, Dashboard and Explore, the "?" right
+    // after the title and Advanced alone at the top right.
+    it('puts the "?" right after the title, and keeps Advanced alone at the right', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        const { getByTestId, UNSAFE_root } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        const ids = UNSAFE_root
+            .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+            .map((n: any) => n.props.testID as string);
+        const title = ids.indexOf('profile-title');
+        expect(title).toBeGreaterThanOrEqual(0);
+        expect(ids.indexOf('profile-explainer-open')).toBe(title + 1);
+        expect(ids.indexOf('profile-advanced-open')).toBeGreaterThan(ids.indexOf('profile-explainer-open'));
+        const inGroup = (id: string) => {
+            for (let p: any = getByTestId(id).parent; p; p = p.parent) {
+                if (p.props?.testID === 'profile-title-group') return true;
+            }
+            return false;
+        };
+        expect(inGroup('profile-explainer-open')).toBe(true);
+        expect(inGroup('profile-advanced-open')).toBe(false);
+    });
+
+    it('puts the shared bell right of profile-advanced-open, in one actions cluster with the shared gap', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { StyleSheet } = require('react-native');
-        const margin = getByTestId('profile-advanced-open').props.style.margin;
-        const row = StyleSheet.flatten(getByTestId('profile-header-actions').props.style) ?? {};
-        expect(row.gap).toBeGreaterThanOrEqual(-2 * margin);
+        const { HEADER_ACTIONS_GAP } = require('@/components/custom/for-you/HeaderIconButton');
+        const r = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(r.getByTestId('profile-advanced-open')).toBeTruthy());
+        const ids = r.UNSAFE_root
+            .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+            .map((n: any) => n.props.testID as string);
+        expect(ids.indexOf('bell')).toBe(ids.indexOf('profile-advanced-open') + 1);
+        const cluster = StyleSheet.flatten(r.getByTestId('profile-header-actions').props.style);
+        expect(cluster.gap).toBe(HEADER_ACTIONS_GAP);
     });
 
     it('pressing the header Advanced button navigates to the Advanced route', async () => {
@@ -410,12 +438,21 @@ describe('ProfileScreen', () => {
 
     // ── ux1 P2 (second commit): Refresh Suggestions moved here from
     // AdvancedHubScreen, in Advanced's old bottom slot ─────────────────────
-    it('renders the Refresh Suggestions control at the bottom, after About You', async () => {
+    it('puts Refresh Suggestions in the header, directly left of Advanced, and nothing at the bottom', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByTestId, toJSON } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-        const rendered = JSON.stringify(toJSON());
-        expect(rendered.indexOf('facts-list-mode')).toBeLessThan(rendered.indexOf('advanced-hub-refresh-suggestions'));
+        const r = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+        const ids = r.UNSAFE_root
+            .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+            .map((n: any) => n.props.testID as string);
+        expect(ids.indexOf('profile-advanced-open')).toBe(ids.indexOf('advanced-hub-refresh-suggestions') + 1);
+        let inCluster = false;
+        for (let p: any = r.getByTestId('advanced-hub-refresh-suggestions').parent; p; p = p.parent) {
+            if (p.props?.testID === 'profile-header-actions') inCluster = true;
+        }
+        expect(inCluster).toBe(true);
+        expect(r.queryByTestId('advanced-hub-refresh-frame')).toBeNull();
+        expect(r.queryByTestId('advanced-hub-refresh-hint')).toBeNull();
     });
 
     it('pressing Refresh Suggestions clears the flag, prunes and triggers a feed-sync', async () => {
@@ -429,57 +466,102 @@ describe('ProfileScreen', () => {
         expect(AppScheduler.trigger).toHaveBeenCalledWith('feed-sync');
     });
 
-    it('shows the persona-updated hint only while feedNeedsRefresh is true', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        mockFeedNeedsRefresh = true;
-        const { getByTestId, queryByTestId, rerender } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('advanced-hub-refresh-hint')).toBeTruthy());
-        mockFeedNeedsRefresh = false;
-        rerender(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(queryByTestId('advanced-hub-refresh-hint')).toBeNull());
-    });
-
-    // Batch 16 found two issues with this button once it moved here.
-    it('the Refresh Suggestions button has an explicit a11y label (no icon-glyph leak)', async () => {
-        // Without an explicit accessibilityLabel, RN concatenates every
-        // accessible descendant's text into one label — including the
-        // MaterialIcons glyph, an icon-font character with no meaning to
-        // VoiceOver — which is what produced ", Refresh Suggestions".
+    it('is an icon-only 44pt header button with a spoken label and no glyph leak', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-        // This file's `t` mock returns the raw key when no `defaultValue` is
-        // passed (same convention as `getByText('tabs.profile')` elsewhere in
-        // this suite) — the point of this assertion is that the label is
-        // driven by the SAME source as the visible ButtonText, not that it
-        // resolves to real English under this mock.
-        expect(getByTestId('advanced-hub-refresh-suggestions').props.accessibilityLabel)
-            .toBe('configPanel.refreshSuggestions');
+        const b = getByTestId('advanced-hub-refresh-suggestions');
+        expect(b.props.accessibilityLabel).toBe('configPanel.refreshSuggestions');
+        expect(b.props.accessibilityRole).toBe('button');
+        const { StyleSheet } = require('react-native');
+        expect(StyleSheet.flatten(b.props.style)).toMatchObject({ width: 44, height: 44, margin: -10 });
+        expect(b.props.hitSlop).toBeUndefined();
     });
 
-    it('the Refresh Suggestions button frame is at least 44pt tall', async () => {
+    it('shows a spinner, disables itself and says "Refreshing" while it runs', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        let release: () => void = () => {};
+        mockPruneOrphanedData.mockImplementation(() => new Promise<void>((res) => { release = res; }));
         const { getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-        const style = getByTestId('advanced-hub-refresh-suggestions').props.style;
-        const flat = Array.isArray(style) ? Object.assign({}, ...style) : style;
-        expect(flat?.minHeight).toBeGreaterThanOrEqual(44);
+        fireEvent.press(getByTestId('advanced-hub-refresh-suggestions'));
+        await waitFor(() =>
+            expect(getByTestId('advanced-hub-refresh-suggestions').props.accessibilityLabel).toBe(
+                'configPanel.refreshingSuggestions',
+            ),
+        );
+        expect(getByTestId('advanced-hub-refresh-suggestions').props.accessibilityState).toMatchObject({ disabled: true, busy: true });
+        expect(getByTestId('advanced-hub-refresh-suggestions-spinner')).toBeTruthy();
+        release();
     });
 
-    // Batch 17: STRUCTURAL guard only — jest runs no layout engine, so it
-    // cannot reproduce or catch the actual overlap (the button's painted box
-    // grew to 44pt in Batch 16 while this wrapper's OWN reserved slot stayed
-    // at the button's pre-fix height, which is exactly what a jest test
-    // asserting only `style.minHeight` on the BUTTON already passed without
-    // catching). This asserts the fix is present in the style tree, nothing
-    // about real pixels. See the capture request in the P2 report for the
-    // assertion that actually verifies the geometry.
-    it('the Refresh Suggestions frame reserves at least 44pt (structural, not a layout proof)', async () => {
+    // Owner: the glowing "Would you like to refresh your feed" text sits under
+    // the refresh icon like a tooltip, over the content.
+    describe('the refresh tooltip', () => {
+        const layoutHeader = (r: ReturnType<typeof render>) =>
+            fireEvent(r.getByTestId('profile-header'), 'layout', {
+                nativeEvent: { layout: { x: 0, y: 0, width: 375, height: 70 } },
+            });
+
+        it('floats below the header only while feedNeedsRefresh, with the existing hint verbatim', async () => {
+            mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+            mockFeedNeedsRefresh = true;
+            const r = render(<ProfileScreen userId="u1" />);
+            await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+            layoutHeader(r);
+            const bubble = r.getByTestId('profile-refresh-tooltip', { includeHiddenElements: true });
+            expect(r.getByText('configPanel.personaUpdatedRefreshHint', { includeHiddenElements: true })).toBeTruthy();
+            const { StyleSheet } = require('react-native');
+            const layer = StyleSheet.flatten(r.getByTestId('profile-refresh-tooltip-layer', { includeHiddenElements: true }).props.style);
+            expect(layer).toMatchObject({ position: 'absolute', top: 70 });
+            expect(StyleSheet.flatten(bubble.props.style).maxWidth).toBeLessThanOrEqual(240);
+            expect(r.getByTestId('profile-refresh-glow', { includeHiddenElements: true })).toBeTruthy();
+            // Read once, as the icon's hint, not as a second element.
+            expect(r.getByTestId('advanced-hub-refresh-suggestions').props.accessibilityHint).toBe(
+                'configPanel.personaUpdatedRefreshHint',
+            );
+            expect(bubble.props.accessibilityElementsHidden).toBe(true);
+        });
+
+        it('is absent without the flag', async () => {
+            mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+            const r = render(<ProfileScreen userId="u1" />);
+            await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+            layoutHeader(r);
+            expect(r.queryByTestId('profile-refresh-tooltip', { includeHiddenElements: true })).toBeNull();
+            expect(r.queryByTestId('profile-refresh-glow', { includeHiddenElements: true })).toBeNull();
+        });
+
+        it('refreshes when the bubble is tapped', async () => {
+            mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+            mockFeedNeedsRefresh = true;
+            const r = render(<ProfileScreen userId="u1" />);
+            await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+            layoutHeader(r);
+            fireEvent.press(r.getByTestId('profile-refresh-tooltip', { includeHiddenElements: true }));
+            await waitFor(() => expect(mockPruneOrphanedData).toHaveBeenCalled());
+            expect(AppScheduler.trigger).toHaveBeenCalledWith('feed-sync');
+        });
+
+        it('a tap elsewhere dismisses it for this visit, without refreshing', async () => {
+            mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+            mockFeedNeedsRefresh = true;
+            const r = render(<ProfileScreen userId="u1" />);
+            await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+            layoutHeader(r);
+            fireEvent.press(r.getByTestId('profile-refresh-tooltip-backdrop', { includeHiddenElements: true }));
+            expect(r.queryByTestId('profile-refresh-tooltip', { includeHiddenElements: true })).toBeNull();
+            expect(mockPruneOrphanedData).not.toHaveBeenCalled();
+            // The icon still glows: the flag is still true.
+            expect(r.getByTestId('profile-refresh-glow', { includeHiddenElements: true })).toBeTruthy();
+        });
+    });
+
+    it('shrinks a long localized title to fit instead of cutting it (ja)', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('advanced-hub-refresh-frame')).toBeTruthy());
-        const style = getByTestId('advanced-hub-refresh-frame').props.style;
-        const flat = Array.isArray(style) ? Object.assign({}, ...style) : style;
-        expect(flat?.minHeight).toBeGreaterThanOrEqual(44);
+        const r = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(r.getByTestId('profile-title')).toBeTruthy());
+        expect(r.getByTestId('profile-title').props.adjustsFontSizeToFit).toBe(true);
+        expect(r.getByTestId('profile-title').props.minimumFontScale).toBe(0.75);
     });
 });

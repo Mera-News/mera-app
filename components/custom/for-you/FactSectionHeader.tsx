@@ -89,7 +89,19 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
         </Text>
       )}
       <HStack className="items-start" space="sm">
-        {icon && <MaterialIcons name={icon} size={20} color={ACCENT} style={{ marginTop: 2 }} />}
+        {/* Decoration beside the title: hidden, or it reads as a lone icon-font
+            character. */}
+        {icon && (
+          <MaterialIcons
+            name={icon}
+            size={20}
+            color={ACCENT}
+            style={{ marginTop: 2 }}
+            accessible={false}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          />
+        )}
         <Box className="flex-1 min-w-0">{titleNode}</Box>
         {/* Right-aligned round open affordance; the title wraps to its left.
             The COUNT lives on the section's closing row (SectionViewAllText,

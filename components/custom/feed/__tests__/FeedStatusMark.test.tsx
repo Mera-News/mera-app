@@ -134,6 +134,18 @@ describe('FeedScreen header structure', () => {
         expect(spacer).toBeLessThan(vstackEnd);
     });
 
+    it('drives the mark from useIsFeedMarkActive and the narration from the processing flag', () => {
+        // Owner: the mark animates while the phone works OR the server scores,
+        // with a stale guard (use-mark-active.ts).
+        expect(src).toMatch(/feedMarkMode\(\s*useIsFeedMarkActive\(\)/);
+        expect(src).toMatch(/const narrating = useIsFeedProcessing\(\);/);
+    });
+
+    it('hands the row the shared notification bell (owner: right of the mark)', () => {
+        expect(src).toContain('bell={<NotificationBellButton />}');
+        expect(src).toContain("from '@/components/custom/notifications/NotificationBellButton'");
+    });
+
     it('wraps the screen in the dropdown provider and mounts the layer', () => {
         expect(src).toContain('<StatusDropdownProvider>');
         expect(src).toContain('<StatusDropdownLayer testIDPrefix="feed-status" />');

@@ -88,8 +88,10 @@ import {
   useFeedSyncRefresh,
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
+import { useIsFeedMarkActive } from '@/components/custom/for-you/use-mark-active';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedStatusMark from '@/components/custom/feed/FeedStatusMark';
+import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { StatusDropdownLayer, StatusDropdownProvider } from '@/components/custom/for-you/status-dropdown';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
@@ -347,7 +349,10 @@ const FeedScreen: React.FC = () => {
   // is the reading surface; that would be the billboard `7e96aa4` deleted.
   const narrating = useIsFeedProcessing();
   const statusMode = useFeedStatusMode();
-  const markMode = feedMarkMode(narrating, statusMode);
+  // The mark moves while the phone works OR the server scores the reader's
+  // articles (owner); a batch with no progress for 15 min goes still
+  // (use-mark-active.ts).
+  const markMode = feedMarkMode(useIsFeedMarkActive(), statusMode);
   // The screen announces entering the capped or error state (see the hook).
   useFeedModeAnnouncement(statusMode);
   const titleRowRef = useRef<View>(null);
@@ -1218,6 +1223,8 @@ const FeedScreen: React.FC = () => {
             height={titleRowHeight}
             title={feedTitleSlot}
             mark={feedStatusMark}
+            // The same bell as every other tab header (owner).
+            bell={<NotificationBellButton />}
             narrating={narrating}
             stage={narrationStage}
             onDevice={narrationOnDevice}

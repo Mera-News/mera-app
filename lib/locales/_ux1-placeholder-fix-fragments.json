@@ -1,0 +1,191 @@
+{
+  "_comment": "ux1 P1 (feed scout): placeholder fixes. (1) factCheck.notify.body*Untitled: the fact-check toast body when there is no article title (interpolating an empty title read 'for \"\"'); new keys, all 20 locales. (2) th/vi feed.statsPublished*_other used {{articleWord}}, which no caller passes, so the braces rendered; replaced with the locale's own _one wording (neither language inflects for plural). No dashes.",
+  "en": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Fact checkers have published on the article you asked about.",
+        "bodyNoneUntitled": "No published fact checks yet for the article you asked about.",
+        "bodyUnavailableUntitled": "Mera couldn't finish checking the article you asked about."
+      }
+    }
+  },
+  "ar": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "نشر مدققو الحقائق حول المقال الذي سألت عنه.",
+        "bodyNoneUntitled": "لا توجد تدقيقات حقائق منشورة بعد للمقال الذي سألت عنه.",
+        "bodyUnavailableUntitled": "لم يتمكن Mera من إكمال التحقق من المقال الذي سألت عنه."
+      }
+    }
+  },
+  "de": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Faktenchecker haben zu dem Artikel veröffentlicht, nach dem du gefragt hast.",
+        "bodyNoneUntitled": "Zu dem Artikel, nach dem du gefragt hast, gibt es noch keine veröffentlichten Faktenchecks.",
+        "bodyUnavailableUntitled": "Mera konnte die Prüfung des Artikels, nach dem du gefragt hast, nicht abschließen."
+      }
+    }
+  },
+  "es": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Los verificadores han publicado sobre el artículo que consultaste.",
+        "bodyNoneUntitled": "Aún no hay verificaciones publicadas sobre el artículo que consultaste.",
+        "bodyUnavailableUntitled": "Mera no pudo terminar de verificar el artículo que consultaste."
+      }
+    }
+  },
+  "fr": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Des vérificateurs ont publié sur l'article que vous avez demandé.",
+        "bodyNoneUntitled": "Aucune vérification publiée pour l'instant sur l'article que vous avez demandé.",
+        "bodyUnavailableUntitled": "Mera n'a pas pu terminer la vérification de l'article que vous avez demandé."
+      }
+    }
+  },
+  "hi": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "फ़ैक्ट चेकर्स ने आपके पूछे गए लेख पर प्रकाशित किया है।",
+        "bodyNoneUntitled": "आपके पूछे गए लेख पर अभी तक कोई प्रकाशित फ़ैक्ट चेक नहीं है।",
+        "bodyUnavailableUntitled": "Mera आपके पूछे गए लेख की जाँच पूरी नहीं कर सका।"
+      }
+    }
+  },
+  "id": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Pemeriksa fakta telah menerbitkan tentang artikel yang Anda tanyakan.",
+        "bodyNoneUntitled": "Belum ada cek fakta yang diterbitkan untuk artikel yang Anda tanyakan.",
+        "bodyUnavailableUntitled": "Mera tidak dapat menyelesaikan pemeriksaan artikel yang Anda tanyakan."
+      }
+    }
+  },
+  "it": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "I fact checker hanno pubblicato sull'articolo che hai chiesto.",
+        "bodyNoneUntitled": "Ancora nessun fact check pubblicato sull'articolo che hai chiesto.",
+        "bodyUnavailableUntitled": "Mera non è riuscita a completare la verifica dell'articolo che hai chiesto."
+      }
+    }
+  },
+  "ja": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "お問い合わせの記事について、ファクトチェッカーが公開しています。",
+        "bodyNoneUntitled": "お問い合わせの記事について公開されたファクトチェックはまだありません。",
+        "bodyUnavailableUntitled": "Mera はお問い合わせの記事のチェックを完了できませんでした。"
+      }
+    }
+  },
+  "ko": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "요청하신 기사에 대해 팩트체커가 결과를 발표했습니다.",
+        "bodyNoneUntitled": "요청하신 기사에 대해 아직 발표된 팩트체크가 없습니다.",
+        "bodyUnavailableUntitled": "Mera가 요청하신 기사의 확인을 마치지 못했습니다."
+      }
+    }
+  },
+  "nl": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Factcheckers hebben gepubliceerd over het artikel waarnaar je vroeg.",
+        "bodyNoneUntitled": "Nog geen gepubliceerde factchecks voor het artikel waarnaar je vroeg.",
+        "bodyUnavailableUntitled": "Mera kon de controle van het artikel waarnaar je vroeg niet afronden."
+      }
+    }
+  },
+  "pl": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Weryfikatorzy faktów opublikowali informacje o artykule, o który pytałeś.",
+        "bodyNoneUntitled": "Brak jeszcze opublikowanych weryfikacji artykułu, o który pytałeś.",
+        "bodyUnavailableUntitled": "Mera nie mogła dokończyć sprawdzania artykułu, o który pytałeś."
+      }
+    }
+  },
+  "pt-BR": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Checadores publicaram sobre o artigo que você pediu.",
+        "bodyNoneUntitled": "Ainda não há checagens publicadas sobre o artigo que você pediu.",
+        "bodyUnavailableUntitled": "A Mera não conseguiu concluir a checagem do artigo que você pediu."
+      }
+    }
+  },
+  "ru": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Фактчекеры опубликовали материалы о статье, о которой вы спрашивали.",
+        "bodyNoneUntitled": "Опубликованных проверок фактов по статье, о которой вы спрашивали, пока нет.",
+        "bodyUnavailableUntitled": "Mera не удалось завершить проверку статьи, о которой вы спрашивали."
+      }
+    }
+  },
+  "th": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "ผู้ตรวจสอบข้อเท็จจริงได้เผยแพร่เกี่ยวกับบทความที่คุณถามถึงแล้ว",
+        "bodyNoneUntitled": "ยังไม่มีการตรวจสอบข้อเท็จจริงที่เผยแพร่สำหรับบทความที่คุณถามถึง",
+        "bodyUnavailableUntitled": "Mera ตรวจสอบบทความที่คุณถามถึงไม่เสร็จ"
+      }
+    },
+    "feed": {
+      "statsPublishedPending_other": "{{formatted}} บทความได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา",
+      "statsPublished_other": "{{formatted}} บทความได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา,"
+    }
+  },
+  "tr": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Doğruluk kontrolcüleri sorduğun makale hakkında yayın yaptı.",
+        "bodyNoneUntitled": "Sorduğun makale için henüz yayımlanmış bir doğruluk kontrolü yok.",
+        "bodyUnavailableUntitled": "Mera sorduğun makalenin kontrolünü tamamlayamadı."
+      }
+    }
+  },
+  "uk": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Фактчекери опублікували матеріали про статтю, про яку ви питали.",
+        "bodyNoneUntitled": "Опублікованих перевірок фактів щодо статті, про яку ви питали, ще немає.",
+        "bodyUnavailableUntitled": "Mera не вдалося завершити перевірку статті, про яку ви питали."
+      }
+    }
+  },
+  "vi": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "Các bên kiểm chứng đã công bố về bài viết bạn hỏi.",
+        "bodyNoneUntitled": "Chưa có kết quả kiểm chứng nào được công bố cho bài viết bạn hỏi.",
+        "bodyUnavailableUntitled": "Mera không thể hoàn tất việc kiểm tra bài viết bạn hỏi."
+      }
+    },
+    "feed": {
+      "statsPublishedPending_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
+      "statsPublished_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,"
+    }
+  },
+  "zh-CN": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "事实核查机构已就你询问的文章发布了结果。",
+        "bodyNoneUntitled": "你询问的文章暂无已发布的事实核查。",
+        "bodyUnavailableUntitled": "Mera 无法完成对你询问的文章的核查。"
+      }
+    }
+  },
+  "zh-TW": {
+    "factCheck": {
+      "notify": {
+        "bodyFoundUntitled": "事實查核機構已就你詢問的文章發布了結果。",
+        "bodyNoneUntitled": "你詢問的文章尚無已發布的事實查核。",
+        "bodyUnavailableUntitled": "Mera 無法完成對你詢問的文章的查核。"
+      }
+    }
+  }
+}

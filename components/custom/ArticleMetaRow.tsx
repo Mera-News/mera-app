@@ -3,11 +3,9 @@ import { HStack } from '@/components/ui/hstack';
 import { SourceCountryFlag } from '@/components/custom/SourceCountryFlag';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Text } from '@/components/ui/text';
-import { getLocalizedLanguageName } from '@/lib/language-names';
-import { useAppLanguage } from '@/lib/stores/app-language-store';
-import { useTimeTick } from '@/lib/time-tick';
-import { formatTimeAgo } from '@/lib/utils/time-ago';
+import { useArticleMetaStrings } from '@/components/custom/article-meta-strings';
 import { MaterialIcons } from '@expo/vector-icons';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -68,7 +66,6 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     centerAccessory,
 }) => {
     const { t } = useTranslation();
-    const appLanguage = useAppLanguage();
     // The shared 60s clock (lib/time-tick.ts). THIS is what keeps the age
     // honest: `formatTimeAgo` is pure, so the label is only ever as fresh as
     // the render that produced it — and every card above this row is
@@ -76,26 +73,21 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     // of its own this row would render once and freeze ("37m ago" still
     // reading "37m ago" half an hour later).
     //
-    // Subscribing HERE, in the leaf, is deliberate on two counts: a
+    // The hook subscribes HERE, in the leaf, deliberately on two counts: a
     // component's own store subscription re-renders it whatever its parents'
     // memo says, and the re-render stays inside this row — it cannot reach the
     // Dashboard's throttled section-order snapshot or any parent's row
     // derivation, which must NOT move on a clock tick.
-    const now = useTimeTick();
 
     const isCard = variant === 'card';
     const ageColor = isCard ? 'text-typography-600' : 'text-gray-400';
     const secondaryColor = isCard ? 'text-typography-500' : 'text-gray-400';
     const iconColor = isCard ? '#6B7280' : '#9CA3AF';
 
-    const age = formatTimeAgo(t, pubDate, { now, emptyLabel: t('feed.justNow'), absoluteAfterDays: 7 });
-    // Named in the reader's own language, not its endonym — "简体中文" tells a
-    // reader who doesn't know the script nothing about what they're looking at.
-    const language = getLocalizedLanguageName(languageCode, appLanguage) ?? '';
-    // Shown EXACTLY as stored, card and detail (owner decision): title-casing
-    // turned "Instituto Nacional de Ciberseguridad (INCIBE)" into
-    // "... De ... (Incibe)".
-    const publication = (publicationName ?? '').trim();
+    // Publication (exactly as stored, owner decision), age (the shared 60s
+    // clock) and language (named in the reader's language), from the SAME
+    // hook the card roots read for their spoken label.
+    const { age, language, publication } = useArticleMetaStrings(pubDate, languageCode, publicationName);
 
     // No translate glyph on this row in ANY state, compact rows included
     // (owner decision): a failed translation is explained by the detail
@@ -108,7 +100,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const ageEl =
         showRecency ? (
                 <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-age-slot">
-                    <MaterialIcons name="schedule" size={14} color={iconColor} />
+                    <MaterialIcons name="schedule" size={14} color={iconColor} {...DECORATIVE_ICON_A11Y} />
                     <Text size="sm" className={ageColor}>
                         {age}
                     </Text>
@@ -213,7 +205,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     style={{ flex: 1, minWidth: 0 }}
                     testID="meta-publication-slot"
                 >
-                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
+                    <MaterialIcons name="newspaper" size={12} color={iconColor} {...DECORATIVE_ICON_A11Y} />
                     <Text
                         size="xs"
                         bold
@@ -239,7 +231,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     style={{ flexShrink: 1, minWidth: 0 }}
                     testID="meta-publication-slot"
                 >
-                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
+                    <MaterialIcons name="newspaper" size={12} color={iconColor} {...DECORATIVE_ICON_A11Y} />
                     <Text
                         size="xs"
                         bold

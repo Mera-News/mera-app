@@ -4,6 +4,7 @@ import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import ReasonNote from '@/components/custom/cards/ReasonNote';
+import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { inlineAccessibilityActions } from '@/components/custom/cards/use-article-actions';
 import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
@@ -301,14 +302,26 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     </HStack>
   ) : null;
 
+  // The note as displayed (it may be translated), for the card's spoken label.
+  const [shownReason, setShownReason] = useState<string | null>(null);
   const reasonBoxEl = relevanceReady && (reason || reasonLoading) ? (
     <ReasonNote
       relevance={relevance}
       reason={reason}
       pendingSinceMs={pendingSinceMs(suggestion)}
       testID="card-reason"
+      onNoteDisplayChange={setShownReason}
     />
   ) : null;
+  // What the card root reads after the meta strings: the chip's priority
+  // (only where the chip renders), then the filtered-but-shown notice, the
+  // AI-note flag and the note, exactly as shown. Never the dev score readout.
+  const spokenPriority = reasonBoxEl ? relevanceSpokenLabel(t, relevance) : null;
+  const spokenTail = [
+    hardFilterLabelEl && hardFilterLabel ? t('notInterested.cardExemptLabel', { filter: hardFilterLabel }) : null,
+    reason ? t('aiDisclosure.caption') : null,
+    reason ? shownReason ?? reason : null,
+  ];
 
   const metaAccessory = __DEV__ && relevanceReady ? (
     <Box className="px-2 py-0.5 rounded bg-background-50">
@@ -359,6 +372,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       metaAccessory={metaAccessory}
       metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}
+      spokenPriority={spokenPriority}
+      spokenTail={spokenTail}
     >
       {hardFilterLabelEl}
       {factChipsEl}

@@ -1,9 +1,9 @@
 // ReadTranslateActions — shared read/translate CTA block used by both detail
-// screens. ONE layout in every state: the translation notice, then a HALF-width
-// centred Google Translate button, then the full-width "Read on {publication}"
-// button. Only the colours change with getArticleTranslationSupport, and those
-// three states x two buttons are the regression net below — green (#4ADE80)
-// always marks the route that gets the reader something readable.
+// screens: the translation notice, then "Read on Google Translate" above
+// "Read on {publication}" in one wrapping row, then the blocked-site note.
+// Only the colours change with getArticleTranslationSupport, and those three
+// states x two buttons are the regression net below — green always marks the
+// route that gets the reader something readable.
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 jest.mock('react-i18next', () => ({
@@ -65,11 +65,11 @@ jest.mock('@/components/ui/text', () => {
     const { Text } = require('react-native');
     return { Text };
 });
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+// Icons render their real icon-font glyph (a private-use character), as on
+// device, so a label that would leak it is caught (see icon-glyph-a11y).
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
+import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import ReadTranslateActions, { titleCasePublication } from '../ReadTranslateActions';
@@ -174,7 +174,7 @@ describe('ReadTranslateActions', () => {
         });
 
         it.each(['translatable', 'not-translatable'] as const)(
-            '%s: both routes in one wrapping row, source first, then the note',
+            '%s: both routes in one wrapping row, Google Translate first, then the note',
             (status) => {
                 mockGetArticleTranslationSupport.mockReturnValue({ status, reason: 'unsupported-language' });
                 const { getByTestId, UNSAFE_root } = renderActions();
@@ -185,8 +185,10 @@ describe('ReadTranslateActions', () => {
                 const ids = UNSAFE_root
                     .findAll((n: any) => typeof n.props?.testID === 'string')
                     .map((n: any) => n.props.testID);
-                expect(ids.indexOf(PUBLISHER_BUTTON)).toBeLessThan(ids.indexOf(GT_BUTTON));
-                expect(ids.indexOf('detail-translate-blocked-note')).toBeGreaterThan(ids.indexOf(GT_BUTTON));
+                // Owner: Google Translate above the original. Render order is
+                // also VoiceOver order, so the two agree.
+                expect(ids.indexOf(GT_BUTTON)).toBeLessThan(ids.indexOf(PUBLISHER_BUTTON));
+                expect(ids.indexOf('detail-translate-blocked-note')).toBeGreaterThan(ids.indexOf(PUBLISHER_BUTTON));
                 expect(getByTestId('detail-translate-blocked-note').props.children).toBe(
                     'articleDetail.translateBlockedNote',
                 );
@@ -201,7 +203,7 @@ describe('ReadTranslateActions', () => {
             ).map((n: any) => n.props?.testID ?? String(n.props?.children ?? ''));
             const noticeAt = order.findIndex((v: string) => v.includes('clusterDetail.translatable'));
             expect(noticeAt).toBeGreaterThan(-1);
-            expect(noticeAt).toBeLessThan(order.indexOf(PUBLISHER_BUTTON));
+            expect(noticeAt).toBeLessThan(order.indexOf(GT_BUTTON));
         });
 
         it('shows the translation notice + guide link only when the device can translate', () => {
@@ -250,10 +252,11 @@ describe('ReadTranslateActions', () => {
     // readable; the old fill stays gone. All three states pinned.
     describe('green outline signal', () => {
         const GREEN = '#86EFAC';
-        const outline = (b: any) => ({
-            border: styleOf(b).borderColor,
-            fill: styleOf(b).backgroundColor,
-        });
+        // The outline is drawn by the visible pill inside the 44pt frame.
+        const outline = (b: any) => {
+            const pill = b.findAll((n: any) => n.props?.testID === `${b.props.testID}-pill`)[0];
+            return { border: styleOf(pill).borderColor, fill: styleOf(pill).backgroundColor };
+        };
 
         it('same language: only Read on source, GREEN outline', () => {
             mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
@@ -291,6 +294,43 @@ describe('ReadTranslateActions', () => {
         });
     });
 
+    // Owner: "let's reduce these button sizes by 20%". Height, side padding,
+    // label and icon at about 0.8x; the gap between them too. Width stays full.
+    // The visible pill is below 44pt, so the pressable is a transparent 44pt
+    // frame pulled back to the pill's height by negative margins (not hitSlop).
+    describe('size (20% smaller)', () => {
+        beforeEach(() => mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' }));
+
+        it.each([GT_BUTTON, PUBLISHER_BUTTON])('%s: a 28pt pill with 14pt side padding', (id) => {
+            const { getByTestId } = renderActions();
+            expect(styleOf(getByTestId(`${id}-pill`))).toEqual(
+                expect.objectContaining({ height: 28, paddingHorizontal: 14, borderWidth: 1 }),
+            );
+        });
+
+        it.each([GT_BUTTON, PUBLISHER_BUTTON])('%s: keeps a 44pt touch target that lays out at the pill height', (id) => {
+            const { getByTestId } = renderActions();
+            const frame = styleOf(getByTestId(id));
+            expect(frame).toEqual(expect.objectContaining({ height: 44, marginVertical: -8, flexGrow: 1 }));
+            expect((frame.height as number) + 2 * (frame.marginVertical as number)).toBe(28);
+            expect(getByTestId(id).props.hitSlop).toBeUndefined();
+        });
+
+        it('a 13/20 label and a 14pt icon', () => {
+            const { getByText, getByTestId } = renderActions();
+            expect(styleOf(getByText('articleDetail.readOnGoogleTranslate'))).toEqual(
+                expect.objectContaining({ fontSize: 13, lineHeight: 20 }),
+            );
+            const icons = getByTestId(`${GT_BUTTON}-pill`).findAll((n: any) => n.props?.name === 'g-translate');
+            expect(icons[0].props.size).toBe(14);
+        });
+
+        it('a 10pt gap between the routes', () => {
+            const { getByTestId } = renderActions();
+            expect(styleOf(getByTestId('detail-read-routes')).gap).toBe(10);
+        });
+    });
+
     describe('actions', () => {
         it('calls onOpenUrl with the article URL when the publisher button is pressed', () => {
             mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
@@ -319,5 +359,24 @@ describe('ReadTranslateActions', () => {
             fireEvent.press(getByTestId(GT_BUTTON));
             expect(mockOpenInAppBrowser).toHaveBeenCalledWith(GT_URL);
         });
+    });
+});
+
+// VoiceOver read the icon's font glyph: "<glyph>, Read on Google Translate".
+// Each button carries its visible text as an explicit label.
+describe('accessibility labels', () => {
+    it.each(['translatable', 'not-translatable', 'same-language'] as const)('%s: no label carries an icon glyph', (status) => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status, reason: 'unsupported-language' });
+        const r = renderActions(status === 'same-language' ? { sourceLanguage: 'en' } : {});
+        expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+    });
+
+    it('each button is labelled with exactly its visible text', () => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
+        const r = renderActions();
+        expect(r.getByTestId(GT_BUTTON).props.accessibilityLabel).toBe('articleDetail.readOnGoogleTranslate');
+        expect(r.getByTestId(PUBLISHER_BUTTON).props.accessibilityLabel).toBe(
+            'articleDetail.readOn::{"publication":"The Hindu"}',
+        );
     });
 });

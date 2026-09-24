@@ -122,7 +122,16 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                 <HStack className="items-center mt-0.5" space="xs">
                     <Text size="xs" className="text-gray-300 font-medium flex-shrink" numberOfLines={2}>{usedLabel}</Text>
                     {onInfoPress ? (
-                        <Pressable onPress={onInfoPress} hitSlop={14} accessibilityRole="button">
+                        <Pressable
+                            onPress={onInfoPress}
+                            hitSlop={14}
+                            accessibilityRole="button"
+                            // An icon-only button: explicit, or VoiceOver reads the
+                            // icon font's private-use glyph. It explains the figure,
+                            // so it carries the figure's own label.
+                            accessibilityLabel={usedLabel}
+                            testID="usage-widget-info"
+                        >
                             <MaterialIcons name="info-outline" size={14} color="#9ca3af" />
                         </Pressable>
                     ) : null}
@@ -149,6 +158,10 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                         <Pressable
                             onPress={onUpgrade}
                             accessibilityRole="button"
+                            // Explicit: without it VoiceOver concatenated the icon
+                            // font's glyph into the label ("<glyph>, Manage plan").
+                            accessibilityLabel={upgradeLabel}
+                            testID="usage-widget-upgrade"
                             style={{ minHeight: 44, justifyContent: 'center' }}
                             className="bg-primary-500 rounded-full px-4"
                         >

@@ -1,0 +1,35 @@
+{
+  "_comment": "ux1 P1 (feed scout): the 'Suggestions refreshed' toast title in sentence case (house style). Only locales that used Title Case: en, id, pt-BR. No dashes. Locale-owner pass added the {} placeholders for the other 17 dictionaries, required by _splice-fragments.mjs; the three real values are unchanged from the P1 commit.",
+  "ar": {},
+  "de": {},
+  "en": {
+    "configPanel": {
+      "refreshSuggestionsSuccessTitle": "Suggestions refreshed"
+    }
+  },
+  "es": {},
+  "fr": {},
+  "hi": {},
+  "id": {
+    "configPanel": {
+      "refreshSuggestionsSuccessTitle": "Saran disegarkan"
+    }
+  },
+  "it": {},
+  "ja": {},
+  "ko": {},
+  "nl": {},
+  "pl": {},
+  "pt-BR": {
+    "configPanel": {
+      "refreshSuggestionsSuccessTitle": "Sugestões atualizadas"
+    }
+  },
+  "ru": {},
+  "th": {},
+  "tr": {},
+  "uk": {},
+  "vi": {},
+  "zh-CN": {},
+  "zh-TW": {}
+}

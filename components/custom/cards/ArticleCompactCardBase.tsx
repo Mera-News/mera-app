@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import PressableCard from '@/components/custom/cards/PressableCard';
+import { composeSpokenLabel, useArticleMetaStrings } from '@/components/custom/article-meta-strings';
 import { Text } from '@/components/ui/text';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import { useAdaptiveLineClamp } from '@/lib/typography/useAdaptiveLineClamp';
@@ -146,6 +147,9 @@ export interface ArticleCompactCardBaseProps {
    *  reachable with VoiceOver through these. */
   accessibilityActions?: { name: string; label: string }[];
   onAccessibilityAction?: (e: AccessibilityActionEvent) => void;
+  /** The row's spoken priority (the chip's own label), read between the age
+   *  and the language in the root's explicit label. */
+  spokenPriority?: string | null;
 }
 
 const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
@@ -169,10 +173,24 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   onOverflow,
   accessibilityActions,
   onAccessibilityAction,
+  spokenPriority,
 }) => {
   const { t } = useTranslation();
   const moreLabel = t('articleMenu.openA11y');
   const displayTitle = titleEnglish || titleOriginal || '';
+  // The headline as displayed, and the row root's EXPLICIT label: without one
+  // VoiceOver read the row's text run together, icon glyphs included
+  // (", 12h ago, Medium priority"). Reuses the strings the row shows, in the
+  // order it is read: headline, publication, age, priority, language.
+  const [shownTitle, setShownTitle] = React.useState<string | null>(null);
+  const meta = useArticleMetaStrings(pubDate, languageCode, publicationName);
+  const spokenLabel = composeSpokenLabel([
+    shownTitle ?? displayTitle,
+    meta.publication,
+    meta.age,
+    spokenPriority,
+    meta.language,
+  ]);
   const blurImages = useBlurImagesStore((s) => s.blurImages);
   // The same line count the image is sized against — see COMPACT_IMAGE_SIZE.
   // The clamp still has to grow with the type: a fixed clamp is a fixed number
@@ -267,6 +285,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   // the class lets the `md` token's own 24px line box apply.
                   className="font-medium"
                   numberOfLines={headlineLines}
+                  onDisplayChange={(d) => setShownTitle(d.displayedText)}
                 />
               </Box>
 
@@ -356,6 +375,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
       onPress={onPress}
       onLongPress={onLongPress}
       dimmed={!!dimmed}
+      accessibilityLabel={spokenLabel}
       accessibilityActions={accessibilityActions}
       onAccessibilityAction={onAccessibilityAction}
     >

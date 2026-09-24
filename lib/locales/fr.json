@@ -1775,7 +1775,10 @@
       "bodyFound": "Des vérificateurs ont publié sur « {{title}} ».",
       "bodyNone": "Aucune vérification publiée pour l'instant sur « {{title}} ».",
       "bodyUnavailable": "Mera n'a pas pu terminer la vérification de « {{title}} ».",
-      "open": "Ouvrir l'article"
+      "open": "Ouvrir l'article",
+      "bodyFoundUntitled": "Des vérificateurs ont publié sur l'article que vous avez demandé.",
+      "bodyNoneUntitled": "Aucune vérification publiée pour l'instant sur l'article que vous avez demandé.",
+      "bodyUnavailableUntitled": "Mera n'a pas pu terminer la vérification de l'article que vous avez demandé."
     }
   },
   "sourcePrefControl": {
@@ -2863,6 +2866,12 @@
       "what": "Le Profil contient ce que tu as dit à Mera sur toi. Ton Fil d'actu et ton Tableau de bord sont construits à partir de ces informations.",
       "how1": "Chaque information devient des recherches que Mera fait pour toi. Modifie ou supprime une information et les sujets qui en venaient changent aussi.",
       "privacy": "Les recherches qui en découlent ne sont jamais liées à ton compte. Le serveur ne garde que le texte de recherche, partagé anonymement entre tous les utilisateurs, et le supprime après 14 jours sans utilisation."
+    },
+    "settings": {
+      "title": "Comment fonctionnent les Paramètres",
+      "what": "Choisissez comment Mera fonctionne sur ce téléphone et gérez votre compte. Votre forfait et votre utilisation du jour sont en haut.",
+      "how1": "Mera Protocol définit où l'IA lit vos actualités : dans le cloud ou sur ce téléphone. Confidentialité et données contient votre sauvegarde chiffrée et vous permet de supprimer des données.",
+      "how2": "Sécurité ajoute un code PIN. Aide propose des guides et la FAQ. Compte permet de vous déconnecter."
     }
   },
   "articleMenu": {

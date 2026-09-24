@@ -145,14 +145,24 @@ jest.mock('@/lib/backup/backup-settings', () => ({
 jest.mock('@/lib/translation-service', () => ({
     getNativeLanguageName: (c: string) => ({ en: 'English', ko: '한국어' } as Record<string, string>)[c] ?? null,
 }));
+// Icons render a real private-use glyph, so a label that leaks one fails.
 jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (p: any) => <View {...p} />, FontAwesome: (p: any) => <View {...p} /> };
+    const { Text } = require('react-native');
+    const h = require('react')['createElement'];
+    return {
+        ...require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule(),
+        FontAwesome: (p: any) => h(Text, { ...p, children: String.fromCodePoint(0xf09b) }),
+    };
 });
 let mockRcConfigured = false;
 jest.mock('@/lib/revenuecat', () => ({ isRevenueCatConfigured: () => mockRcConfigured }));
 jest.mock('@/lib/feedback', () => ({ showFeedback: jest.fn() }));
-jest.mock('@/lib/sentry-init', () => ({ SENTRY_ENABLED: false }));
+let mockSentryEnabled = false;
+jest.mock('@/lib/sentry-init', () => ({
+    get SENTRY_ENABLED() {
+        return mockSentryEnabled;
+    },
+}));
 jest.mock('@/lib/web-browser-utils', () => ({ openInAppBrowser: jest.fn(), withAppLanguage: (u: string) => u }));
 jest.mock('@/lib/version', () => ({ getAppVersionLabel: () => 'v0.0.0 · test' }));
 const mockSetStringAsync = jest.fn(async (_s: string) => true);
@@ -162,6 +172,7 @@ jest.mock('@/lib/haptics', () => ({ hapticLight: () => mockHapticLight() }));
 jest.mock('@/lib/stores/app-language-store', () => ({ useAppLanguageStore: (sel: any) => sel({ appLanguage: 'en' }) }));
 
 import AppPreferencesTab from '../AppPreferencesTab';
+import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 const pressSignOut = (getByText: (t: string) => any) =>
     fireEvent.press(getByText('preferences.signOut'));
@@ -488,5 +499,31 @@ describe('Settings groups (ux1)', () => {
         const r = render(<AppPreferencesTab />);
         expect(r.queryByText('backup.restore')).toBeNull();
         expect(r.getByTestId('settings-row-backup')).toBeTruthy();
+    });
+});
+
+// Captured: Settings rows read icon-font codes, e.g. "<glyph>, Manage plan".
+describe('AppPreferencesTab accessibility', () => {
+    afterEach(() => {
+        mockSentryEnabled = false;
+    });
+
+    it('no control in Settings reads an icon glyph', async () => {
+        mockSentryEnabled = true;
+        const r = render(<AppPreferencesTab />);
+        await waitFor(() => expect(r.getByTestId('settings-row-logout')).toBeTruthy());
+        expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+    });
+
+    it('labels the icon rows and the icon-only links with existing copy', async () => {
+        mockSentryEnabled = true;
+        const r = render(<AppPreferencesTab />);
+        await waitFor(() => expect(r.getByTestId('settings-row-logout')).toBeTruthy());
+        expect(r.getByTestId('settings-row-logout').props.accessibilityLabel).toBe('preferences.logout');
+        expect(r.getByTestId('settings-row-report-bug').props.accessibilityLabel).toBe('preferences.reportBug');
+        expect(r.getByTestId('settings-link-source-code').props.accessibilityLabel).toBe('auth.sourceCode');
+        expect(r.getByTestId('settings-link-source-code').props.accessibilityRole).toBe('link');
+        expect(r.getByTestId('settings-link-website').props.accessibilityLabel).toBe('auth.website');
+        expect(r.getByTestId('settings-link-website').props.accessibilityRole).toBe('link');
     });
 });

@@ -41,7 +41,11 @@ describe('AiDisclosureCaption', () => {
 
     it('always renders the sparkle icon alongside the text (icon + text both carry meaning)', () => {
         const { getByTestId } = render(<AiDisclosureCaption />);
-        expect(getByTestId('ai-disclosure-icon').props.name).toBe('auto-awesome');
+        // Still drawn, but decorative: hidden from accessibility (the caption's
+        // own label says it), so the query has to include hidden elements.
+        const icon = getByTestId('ai-disclosure-icon', { includeHiddenElements: true });
+        expect(icon.props.name).toBe('auto-awesome');
+        expect(icon.props.accessibilityElementsHidden).toBe(true);
     });
 
     it('honours a text override — used by the chat thread-header notice, which must not reuse the article caption verbatim', () => {

@@ -40,10 +40,9 @@ jest.mock('@/components/custom/GlassSurface', () => ({ GLASS_OVER_CONTENT_FILL: 
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
 }));
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+// Icons render their real icon-font glyph (a private-use character), as on
+// device, so a label that would leak it is caught (see icon-glyph-a11y).
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 const mockOpenArticleFeedback = jest.fn();
 jest.mock('@/lib/stores/floating-chat-store', () => ({
@@ -64,6 +63,7 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { ActionSheetRow, SHEET_ROW_LABEL_CLASS } from '@/components/custom/cards/ArticleOverflowMenu';
+import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 import FeedbackTreeLevel from '../FeedbackTreeLevel';
 import { leafNeedsConfirm, performFeedbackLeaf } from '../perform-feedback-leaf';
 import { feedbackNodeLabel } from '../label-vars';
@@ -447,3 +447,9 @@ describe('the flat dislike root on prod v4', () => {
     });
 });
 
+it('no tree row reads out an icon glyph', () => {
+    const u = setup(TAGGED);
+    expect(privateUseLabelLeaks(u.UNSAFE_root)).toEqual([]);
+    fireEvent.press(u.getByText('Not a good suggestion'));
+    expect(privateUseLabelLeaks(u.UNSAFE_root)).toEqual([]);
+});

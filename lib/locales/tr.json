@@ -574,7 +574,7 @@
     "support": "Destek ekibiyle görüşün",
     "manageData": "Verileri yönet",
     "deleteAccount": "Hesabı Sil",
-    "logout": "Çıkış Yap",
+    "logout": "Çıkış yap",
     "signOutModalTitle": "Çıkış Yap",
     "signOutConfirm": "Hesabından çıkış yapmak istediğinden emin misin?",
     "signingOut": "Çıkış Yapılıyor...",
@@ -1770,7 +1770,10 @@
       "bodyFound": "Doğruluk kontrolcüleri \"{{title}}\" hakkında yayın yaptı.",
       "bodyNone": "\"{{title}}\" için henüz yayımlanmış bir doğruluk kontrolü yok.",
       "bodyUnavailable": "Mera \"{{title}}\" kontrolünü tamamlayamadı.",
-      "open": "Makaleyi aç"
+      "open": "Makaleyi aç",
+      "bodyFoundUntitled": "Doğruluk kontrolcüleri sorduğun makale hakkında yayın yaptı.",
+      "bodyNoneUntitled": "Sorduğun makale için henüz yayımlanmış bir doğruluk kontrolü yok.",
+      "bodyUnavailableUntitled": "Mera sorduğun makalenin kontrolünü tamamlayamadı."
     }
   },
   "sourcePrefControl": {
@@ -2858,6 +2861,12 @@
       "what": "Profil, Mera'ya kendin hakkında anlattıklarını tutar. Akışın ve Panelin bu bilgilerden oluşturulur.",
       "how1": "Her bilgi, Mera'nın senin için yaptığı aramalara dönüşür. Bir bilgiyi değiştirir ya da silersen ondan gelen haberler de değişir.",
       "privacy": "Bunlardan oluşturulan aramalar hiçbir zaman hesabınla ilişkilendirilmez. Sunucu yalnızca arama metnini tutar, tüm kullanıcılar arasında anonim olarak paylaşılır ve 14 gün kullanılmazsa silinir."
+    },
+    "settings": {
+      "title": "Ayarlar nasıl çalışır",
+      "what": "Mera'nın bu telefonda nasıl çalışacağını seçin ve hesabınızı yönetin. Planınız ve bugünkü kullanımınız en üstte.",
+      "how1": "Mera Protocol, yapay zekânın haberlerinizi nerede okuyacağını belirler: bulutta ya da bu telefonda. Gizlilik ve veriler şifreli yedeğinizi tutar ve veri silmenizi sağlar.",
+      "how2": "Güvenlik bir PIN ekler. Yardım'da kılavuzlar ve SSS var. Hesap'tan çıkış yaparsınız."
     }
   },
   "articleMenu": {

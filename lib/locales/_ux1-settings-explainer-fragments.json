@@ -1,0 +1,203 @@
+{
+  "_comment": "ux1 P3: the Settings tab's \"?\" explainer, owner-approved English verbatim. Pure ADD of tabExplainer.settings.{title,what,how1,how2}, three paragraphs like Profile's sheet (which has three). Group names reuse each locale's existing settings.group* / security.title strings so the sheet matches the screen; 'Mera' and 'Mera Protocol' stay untranslated as in the dictionaries. No em dashes. No --allow-overwrite needed.",
+  "en": {
+    "tabExplainer": {
+      "settings": {
+        "title": "How Settings works",
+        "what": "Choose how Mera runs on this phone and manage your account. Your plan and today's usage are at the top.",
+        "how1": "Mera Protocol sets where the AI reads your news: in the cloud or on this phone. Privacy and data holds your encrypted backup and lets you delete data.",
+        "how2": "Security adds a PIN. Help has guides and the FAQ. Account is where you sign out."
+      }
+    }
+  },
+  "de": {
+    "tabExplainer": {
+      "settings": {
+        "title": "So funktionieren die Einstellungen",
+        "what": "Lege fest, wie Mera auf diesem Handy läuft, und verwalte dein Konto. Dein Tarif und die heutige Nutzung stehen ganz oben.",
+        "how1": "Mera Protocol legt fest, wo die KI deine Nachrichten liest: in der Cloud oder auf diesem Handy. Unter Datenschutz und Daten findest du dein verschlüsseltes Backup und kannst Daten löschen.",
+        "how2": "Sicherheit fügt eine PIN hinzu. Hilfe enthält Anleitungen und die FAQ. Unter Konto meldest du dich ab."
+      }
+    }
+  },
+  "es": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Cómo funcionan los Ajustes",
+        "what": "Elige cómo funciona Mera en este teléfono y gestiona tu cuenta. Tu plan y el uso de hoy están arriba.",
+        "how1": "Mera Protocol define dónde lee la IA tus noticias: en la nube o en este teléfono. Privacidad y datos guarda tu copia de seguridad cifrada y te permite borrar datos.",
+        "how2": "Seguridad añade un PIN. Ayuda tiene guías y las preguntas frecuentes. En Cuenta cierras sesión."
+      }
+    }
+  },
+  "fr": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Comment fonctionnent les Paramètres",
+        "what": "Choisissez comment Mera fonctionne sur ce téléphone et gérez votre compte. Votre forfait et votre utilisation du jour sont en haut.",
+        "how1": "Mera Protocol définit où l'IA lit vos actualités : dans le cloud ou sur ce téléphone. Confidentialité et données contient votre sauvegarde chiffrée et vous permet de supprimer des données.",
+        "how2": "Sécurité ajoute un code PIN. Aide propose des guides et la FAQ. Compte permet de vous déconnecter."
+      }
+    }
+  },
+  "hi": {
+    "tabExplainer": {
+      "settings": {
+        "title": "सेटिंग्स कैसे काम करती हैं",
+        "what": "चुनें कि Mera इस फ़ोन पर कैसे चले और अपना खाता मैनेज करें। आपका प्लान और आज का इस्तेमाल सबसे ऊपर है।",
+        "how1": "Mera Protocol तय करता है कि AI आपकी ख़बरें कहाँ पढ़े: क्लाउड में या इसी फ़ोन पर। निजता और डेटा में आपका एन्क्रिप्ट किया गया बैकअप है और यहाँ आप डेटा मिटा सकते हैं।",
+        "how2": "सुरक्षा से PIN जोड़ें। सहायता में गाइड और FAQ हैं। खाता में जाकर साइन आउट करें।"
+      }
+    }
+  },
+  "id": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Cara kerja Pengaturan",
+        "what": "Pilih cara Mera berjalan di ponsel ini dan kelola akun Anda. Paket dan penggunaan hari ini ada di bagian atas.",
+        "how1": "Mera Protocol menentukan di mana AI membaca berita Anda: di cloud atau di ponsel ini. Privasi dan data menyimpan cadangan terenkripsi Anda dan memungkinkan Anda menghapus data.",
+        "how2": "Keamanan menambahkan PIN. Bantuan berisi panduan dan FAQ. Di Akun Anda bisa keluar."
+      }
+    }
+  },
+  "it": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Come funzionano le Impostazioni",
+        "what": "Scegli come funziona Mera su questo telefono e gestisci il tuo account. Il tuo piano e l'uso di oggi sono in alto.",
+        "how1": "Mera Protocol stabilisce dove l'IA legge le tue notizie: nel cloud o su questo telefono. Privacy e dati contiene il tuo backup crittografato e ti permette di eliminare i dati.",
+        "how2": "Sicurezza aggiunge un PIN. Aiuto ha guide e le FAQ. In Account puoi uscire."
+      }
+    }
+  },
+  "ja": {
+    "tabExplainer": {
+      "settings": {
+        "title": "設定のしくみ",
+        "what": "このスマートフォンでの Mera の動作を選び、アカウントを管理します。プランと今日の利用状況は一番上にあります。",
+        "how1": "Mera Protocol では、AI がニュースを読む場所をクラウドかこのスマートフォンから選べます。プライバシーとデータには暗号化されたバックアップがあり、データを削除することもできます。",
+        "how2": "セキュリティでは PIN を設定できます。ヘルプにはガイドとよくある質問があります。アカウントからログアウトできます。"
+      }
+    }
+  },
+  "ko": {
+    "tabExplainer": {
+      "settings": {
+        "title": "설정의 작동 방식",
+        "what": "이 휴대폰에서 Mera가 작동하는 방식을 정하고 계정을 관리하세요. 요금제와 오늘의 사용량은 맨 위에 있습니다.",
+        "how1": "Mera Protocol에서는 AI가 뉴스를 읽는 곳을 클라우드와 이 휴대폰 중에서 정합니다. 개인정보 및 데이터에는 암호화된 백업이 있고 데이터를 삭제할 수 있습니다.",
+        "how2": "보안에서 PIN을 추가합니다. 도움말에는 가이드와 FAQ가 있습니다. 계정에서 로그아웃합니다."
+      }
+    }
+  },
+  "nl": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Hoe de Instellingen werken",
+        "what": "Kies hoe Mera op deze telefoon werkt en beheer je account. Je abonnement en het gebruik van vandaag staan bovenaan.",
+        "how1": "Mera Protocol bepaalt waar de AI je nieuws leest: in de cloud of op deze telefoon. Privacy en gegevens bevat je versleutelde back-up en laat je gegevens verwijderen.",
+        "how2": "Beveiliging voegt een pincode toe. Hulp heeft handleidingen en de veelgestelde vragen. Bij Account log je uit."
+      }
+    }
+  },
+  "pl": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Jak działają Ustawienia",
+        "what": "Wybierz, jak Mera działa na tym telefonie, i zarządzaj kontem. Twój plan i dzisiejsze wykorzystanie są na górze.",
+        "how1": "Mera Protocol określa, gdzie AI czyta Twoje wiadomości: w chmurze czy na tym telefonie. W sekcji Prywatność i dane jest Twoja zaszyfrowana kopia zapasowa i możesz tam usuwać dane.",
+        "how2": "Bezpieczeństwo dodaje PIN. Pomoc zawiera poradniki i FAQ. W sekcji Konto możesz się wylogować."
+      }
+    }
+  },
+  "pt-BR": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Como as Configurações funcionam",
+        "what": "Escolha como o Mera funciona neste celular e gerencie sua conta. Seu plano e o uso de hoje ficam no topo.",
+        "how1": "Mera Protocol define onde a IA lê suas notícias: na nuvem ou neste celular. Privacidade e dados guarda seu backup criptografado e permite apagar dados.",
+        "how2": "Segurança adiciona um PIN. Ajuda tem guias e as perguntas frequentes. Em Conta você sai da sua conta."
+      }
+    }
+  },
+  "ru": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Как работают Настройки",
+        "what": "Выберите, как Mera работает на этом телефоне, и управляйте аккаунтом. Ваш тариф и использование за сегодня находятся вверху.",
+        "how1": "Mera Protocol определяет, где ИИ читает ваши новости: в облаке или на этом телефоне. В разделе «Конфиденциальность и данные» хранится ваша зашифрованная резервная копия, и там можно удалить данные.",
+        "how2": "Раздел «Безопасность» добавляет PIN-код. В «Помощи» есть руководства и ответы на частые вопросы. В разделе «Аккаунт» можно выйти."
+      }
+    }
+  },
+  "th": {
+    "tabExplainer": {
+      "settings": {
+        "title": "การตั้งค่าทำงานอย่างไร",
+        "what": "เลือกว่า Mera จะทำงานบนโทรศัพท์เครื่องนี้อย่างไร และจัดการบัญชีของคุณ แพ็กเกจและการใช้งานวันนี้อยู่ด้านบนสุด",
+        "how1": "Mera Protocol กำหนดว่า AI จะอ่านข่าวของคุณที่ไหน: บนคลาวด์หรือบนโทรศัพท์เครื่องนี้ ความเป็นส่วนตัวและข้อมูลเก็บข้อมูลสำรองที่เข้ารหัสไว้ของคุณ และให้คุณลบข้อมูลได้",
+        "how2": "ความปลอดภัยใช้เพิ่ม PIN ความช่วยเหลือมีคู่มือและคำถามที่พบบ่อย ออกจากระบบได้ที่บัญชี"
+      }
+    }
+  },
+  "tr": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Ayarlar nasıl çalışır",
+        "what": "Mera'nın bu telefonda nasıl çalışacağını seçin ve hesabınızı yönetin. Planınız ve bugünkü kullanımınız en üstte.",
+        "how1": "Mera Protocol, yapay zekânın haberlerinizi nerede okuyacağını belirler: bulutta ya da bu telefonda. Gizlilik ve veriler şifreli yedeğinizi tutar ve veri silmenizi sağlar.",
+        "how2": "Güvenlik bir PIN ekler. Yardım'da kılavuzlar ve SSS var. Hesap'tan çıkış yaparsınız."
+      }
+    }
+  },
+  "uk": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Як працюють Налаштування",
+        "what": "Виберіть, як Mera працює на цьому телефоні, і керуйте обліковим записом. Ваш тариф і використання за сьогодні вгорі.",
+        "how1": "Mera Protocol визначає, де ШІ читає ваші новини: у хмарі чи на цьому телефоні. У розділі «Конфіденційність і дані» зберігається ваша зашифрована резервна копія, і там можна видалити дані.",
+        "how2": "Розділ «Безпека» додає PIN-код. У «Довідці» є посібники й відповіді на часті запитання. У розділі «Обліковий запис» можна вийти."
+      }
+    }
+  },
+  "vi": {
+    "tabExplainer": {
+      "settings": {
+        "title": "Cài đặt hoạt động thế nào",
+        "what": "Chọn cách Mera chạy trên điện thoại này và quản lý tài khoản của bạn. Gói và mức dùng hôm nay nằm ở trên cùng.",
+        "how1": "Mera Protocol quyết định nơi AI đọc tin tức của bạn: trên đám mây hay trên điện thoại này. Quyền riêng tư và dữ liệu giữ bản sao lưu đã mã hóa của bạn và cho phép bạn xóa dữ liệu.",
+        "how2": "Bảo mật thêm mã PIN. Trợ giúp có hướng dẫn và câu hỏi thường gặp. Bạn đăng xuất trong Tài khoản."
+      }
+    }
+  },
+  "zh-CN": {
+    "tabExplainer": {
+      "settings": {
+        "title": "“设置”如何运作",
+        "what": "选择 Mera 在这部手机上的运行方式，并管理你的账户。你的套餐和今日用量显示在最上方。",
+        "how1": "Mera Protocol 决定 AI 在哪里阅读你的新闻：在云端还是在这部手机上。“隐私和数据”保存你的加密备份，还能让你删除数据。",
+        "how2": "“安全”可添加 PIN 码。“帮助”里有指南和常见问题。在“账户”中退出登录。"
+      }
+    }
+  },
+  "zh-TW": {
+    "tabExplainer": {
+      "settings": {
+        "title": "「設定」如何運作",
+        "what": "選擇 Mera 在這支手機上的運作方式，並管理你的帳號。你的方案和今天的用量顯示在最上方。",
+        "how1": "Mera Protocol 決定 AI 在哪裡閱讀你的新聞：在雲端還是這支手機上。「隱私與資料」保存你的加密備份，也能讓你刪除資料。",
+        "how2": "「安全」可加上 PIN 碼。「說明」有指南和常見問題。在「帳號」中登出。"
+      }
+    }
+  },
+  "ar": {
+    "tabExplainer": {
+      "settings": {
+        "title": "كيف تعمل الإعدادات",
+        "what": "اختر كيف يعمل Mera على هذا الهاتف وأدِر حسابك. تجد خطتك واستخدام اليوم في الأعلى.",
+        "how1": "يحدد Mera Protocol أين يقرأ الذكاء الاصطناعي أخبارك: في السحابة أو على هذا الهاتف. يحتوي قسم الخصوصية والبيانات على نسختك الاحتياطية المشفّرة ويتيح لك حذف البيانات.",
+        "how2": "يضيف الأمان رقم PIN. تضم المساعدة أدلة وأسئلة شائعة. ومن الحساب تسجّل الخروج."
+      }
+    }
+  }
+}

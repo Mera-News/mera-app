@@ -5,8 +5,11 @@ import { HStack } from '@/components/ui/hstack';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
+import { ScrollView, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
+import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
+import { headerTitleLineHeight } from '@/lib/typography/header-title-size';
 import AppPreferencesTab from './AppPreferencesTab';
 
 /**
@@ -29,6 +32,7 @@ const SettingsTabScreen: React.FC = () => {
     // TAB_BAR_HEIGHT again left ~49pt of dead space under Log out.
     const tabBarClearance = useTabBarClearance();
     const { t } = useTranslation();
+    const { width: windowWidth } = useWindowDimensions();
 
     return (
         // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
@@ -43,13 +47,31 @@ const SettingsTabScreen: React.FC = () => {
             {/* No opaque fill: the backdrop above is the page background. */}
             <Box className="flex-1" style={{ paddingTop: insets.top }}>
 
-            <HStack className="items-start justify-between px-5 pt-4 mb-2">
-                {/* No `numberOfLines`: a 1-line clamp on a 36px title truncated the
-                    screen's own name at large Dynamic Type sizes. Nothing below
-                    depends on this row's height, so it wraps instead. */}
-                <Heading size="4xl" className="text-white">
-                    {t('tabs.settings')}
-                </Heading>
+            <HStack className="items-center justify-between px-5 pt-4 mb-2">
+                {/* "Settings (?)", the "?" right after the title as on every
+                    other tab (owner). One line: a shrinking title must truncate,
+                    never wrap mid-word. */}
+                <HStack className="items-center flex-1 min-w-0 mr-3" space="sm">
+                    <Heading
+                        size="4xl"
+                        className="text-white flex-shrink min-w-0"
+                        numberOfLines={1}
+                        testID="settings-title"
+                    >
+                        {t('tabs.settings')}
+                    </Heading>
+                    <TabExplainerButton tab="settings" testID="settings-explainer-open" />
+                </HStack>
+                {/* The bell at the far right (owner), the same component as every
+                    other tab, pinned to the title's line height so it centres on
+                    the title and the row keeps its height. */}
+                <HStack
+                    className="items-center"
+                    style={{ height: headerTitleLineHeight(windowWidth) }}
+                    testID="settings-header-actions"
+                >
+                    <NotificationBellButton />
+                </HStack>
             </HStack>
 
             <ScrollView

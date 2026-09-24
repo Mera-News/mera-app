@@ -1,0 +1,123 @@
+{
+  "_comment": "ux1 P3: sentence case in Settings (owner: Settings copy is sentence case, like 'Talk to support'). Changed: preferences.reportBug en 'Report a Bug' -> 'Report a bug', id 'Laporkan Bug' -> 'Laporkan bug'; preferences.logout tr 'Çıkış Yap' -> 'Çıkış yap'. Every other locale is carried unchanged only because the splice script requires all 20. Splice with: --allow-overwrite preferences.reportBug,preferences.logout",
+  "en": {
+    "preferences": {
+      "reportBug": "Report a bug",
+      "logout": "Log out"
+    }
+  },
+  "de": {
+    "preferences": {
+      "reportBug": "Fehler melden",
+      "logout": "Abmelden"
+    }
+  },
+  "es": {
+    "preferences": {
+      "reportBug": "Informar de un error",
+      "logout": "Cerrar sesión"
+    }
+  },
+  "fr": {
+    "preferences": {
+      "reportBug": "Signaler un bug",
+      "logout": "Déconnexion"
+    }
+  },
+  "hi": {
+    "preferences": {
+      "reportBug": "बग रिपोर्ट करें",
+      "logout": "लॉग आउट"
+    }
+  },
+  "id": {
+    "preferences": {
+      "reportBug": "Laporkan bug",
+      "logout": "Keluar"
+    }
+  },
+  "it": {
+    "preferences": {
+      "reportBug": "Segnala un bug",
+      "logout": "Esci"
+    }
+  },
+  "ja": {
+    "preferences": {
+      "reportBug": "バグを報告",
+      "logout": "ログアウト"
+    }
+  },
+  "ko": {
+    "preferences": {
+      "reportBug": "버그 신고",
+      "logout": "로그아웃"
+    }
+  },
+  "nl": {
+    "preferences": {
+      "reportBug": "Een bug melden",
+      "logout": "Uitloggen"
+    }
+  },
+  "pl": {
+    "preferences": {
+      "reportBug": "Zgłoś błąd",
+      "logout": "Wyloguj się"
+    }
+  },
+  "pt-BR": {
+    "preferences": {
+      "reportBug": "Relatar um bug",
+      "logout": "Sair"
+    }
+  },
+  "ru": {
+    "preferences": {
+      "reportBug": "Сообщить об ошибке",
+      "logout": "Выйти"
+    }
+  },
+  "th": {
+    "preferences": {
+      "reportBug": "รายงานข้อบกพร่อง",
+      "logout": "ออกจากระบบ"
+    }
+  },
+  "tr": {
+    "preferences": {
+      "reportBug": "Hata bildir",
+      "logout": "Çıkış yap"
+    }
+  },
+  "uk": {
+    "preferences": {
+      "reportBug": "Повідомити про помилку",
+      "logout": "Вийти"
+    }
+  },
+  "vi": {
+    "preferences": {
+      "reportBug": "Báo lỗi",
+      "logout": "Đăng xuất"
+    }
+  },
+  "zh-CN": {
+    "preferences": {
+      "reportBug": "报告问题",
+      "logout": "退出登录"
+    }
+  },
+  "zh-TW": {
+    "preferences": {
+      "reportBug": "回報問題",
+      "logout": "登出"
+    }
+  },
+  "ar": {
+    "preferences": {
+      "reportBug": "الإبلاغ عن خطأ",
+      "logout": "تسجيل الخروج"
+    }
+  }
+}

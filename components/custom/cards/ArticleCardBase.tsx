@@ -11,6 +11,8 @@ import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import PressableCard from '@/components/custom/cards/PressableCard';
+import FlatCardSurface from '@/components/custom/cards/FlatCardSurface';
+import { composeSpokenLabel, useArticleMetaStrings } from '@/components/custom/article-meta-strings';
 import { VStack } from '@/components/ui/vstack';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import type { AccessibilityActionEvent } from 'react-native';
@@ -106,6 +108,12 @@ export interface ArticleCardBaseProps {
    *  without finding the ••• button first. */
   accessibilityActions?: { name: string; label: string }[];
   onAccessibilityAction?: (e: AccessibilityActionEvent) => void;
+  /** The card's spoken priority (the chip's own label), read between the age
+   *  and the language in the root's explicit label. */
+  spokenPriority?: string | null;
+  /** What the card's children say, read last in the root's label (the
+   *  filtered-but-shown notice, the AI-note flag, the note as displayed). */
+  spokenTail?: readonly (string | null | undefined | false)[];
 }
 
 /** The content VStack's own horizontal padding (`px-4`). `metaRowRightReserve`
@@ -136,6 +144,8 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   metaRowRightReserve = 0,
   accessibilityActions,
   onAccessibilityAction,
+  spokenPriority,
+  spokenTail,
 }) => {
   const { t } = useTranslation();
   const blurImages = useBlurImagesStore((s) => s.blurImages);
@@ -148,6 +158,23 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   });
 
   const displayTitle = titleEnglish || t('feed.newsCluster');
+  // The headline exactly as displayed (it may be the original or a
+  // translation), for the root's spoken label.
+  const [shownTitle, setShownTitle] = React.useState<string | null>(null);
+  const meta = useArticleMetaStrings(pubDate, languageCode, publicationName);
+  // The root's EXPLICIT label. Without one VoiceOver read all the card's text
+  // run together: the headline twice (the hero's alt, then the title), icon
+  // glyphs and the dev relevance readout. Reuses the strings the card shows,
+  // in the order it is read: headline, publication, age, priority, language,
+  // then what the children say.
+  const spokenLabel = composeSpokenLabel([
+    shownTitle ?? displayTitle,
+    meta.publication,
+    showRecency ? meta.age : null,
+    spokenPriority,
+    meta.language,
+    ...(spokenTail ?? []),
+  ]);
   // Unchanged meaning: a real image, not the placeholder. The h-48/h-28 band
   // split and metaRowRightReserve depend on it.
   const showImage = !!imageUrl && !heroImage.failed;
@@ -235,6 +262,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
             size="lg"
             className=""
             showToggle={false}
+            onDisplayChange={(d) => setShownTitle(d.displayedText)}
           />
           {children}
         </VStack>
@@ -248,29 +276,13 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
       testID={testID}
       onPress={onPress}
       dimmed={!!dimmed}
+      accessibilityLabel={spokenLabel}
       accessibilityActions={accessibilityActions}
       onAccessibilityAction={onAccessibilityAction}
     >
       {flat ? (
-        // Shadow lives on this outer, non-clipping Box — RN drops a view's
-        // shadow the moment that same view also sets `overflow: hidden`, so
-        // the rounded/clipped surface (border + bg + hero image) has to be a
-        // separate inner Box for the floating look to actually show a shadow.
-        <Box className="mb-3 rounded-2xl shadow-hard-2">
-          <Box
-            className={
-              CARDS_USE_GLASS
-                // The opaque `bg-background-0` has to go, not just sit under the
-                // glass: a solid background painted over the plate cancels the
-                // effect entirely.
-                ? 'rounded-2xl overflow-hidden border border-white/10'
-                : 'rounded-2xl overflow-hidden bg-background-0 border border-white/10'
-            }
-          >
-            <CardGlassPlate />
-            {innerContent}
-          </Box>
-        </Box>
+        // The shared floating surface (also the followed-story rows').
+        <FlatCardSurface className="mb-3">{innerContent}</FlatCardSurface>
       ) : CARDS_USE_GLASS ? (
         // The plate must hang off an UNPADDED box, so the margin + radius +
         // clipping move out to this wrapper and the `Card` keeps its own

@@ -19,10 +19,8 @@ jest.mock('@/components/ui/text', () => {
   const { Text } = require('react-native');
   return { Text };
 });
-jest.mock('@expo/vector-icons', () => {
-  const { View } = require('react-native');
-  return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+// Icons draw their real icon-font glyph, as on device (see icon-glyph-a11y).
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('@/components/custom/SourceFlag', () => ({ SourceFlag: () => null }));
 // SourceCountryFlag pulls in the popover ESM (un-transformable under jest-expo).
 jest.mock('@/components/custom/SourceCountryFlag', () => ({ SourceCountryFlag: () => null }));
