@@ -328,3 +328,85 @@ describe('staging run 3 findings', () => {
     ]);
   });
 });
+
+describe('staging run 4 findings', () => {
+  const NL = { neighbourhood: 'Nieuw-West', locality: 'Amsterdam', admin1: 'North Holland', countryCode: 'NL', countryName: 'The Netherlands', bloc: 'EU' as const };
+  const DE = { locality: 'Berlin', admin1: 'Berlin', countryCode: 'DE', countryName: 'Germany', bloc: 'EU' as const };
+  const EXPAT: AgentPersona = {
+    surface: 'CONFIG',
+    facts: [
+      { id: 'o', statement: 'From India', attribute: ORIGIN_KEY },
+      { id: 'x', statement: 'Expat in The Netherlands', attribute: EXPAT_KEY },
+      { id: 'h', statement: 'Lives in Amsterdam, North Holland, The Netherlands, EU', attribute: CANONICAL_LOCATION_KEY },
+    ],
+  };
+  function withPlace(place: typeof NL | typeof DE, saved: Record<string, unknown>[][]) {
+    return {
+      tools: {
+        findSimilarFacts: async () => ({ candidates: [] }),
+        lookupPlace: async () => ({ status: 'resolved' as const, places: [place] }),
+        saveExtractedFacts: async (a: Record<string, unknown>) => { saved.push((a.extracted_user_information as Record<string, unknown>[]) ?? []); return { staged: true }; },
+        deleteUserFacts: async () => ({ deleted: [] }),
+      },
+    };
+  }
+
+  it('reads a bracketed replaces id', async () => {
+    const saved: Record<string, unknown>[][] = [];
+    const h = harness(
+      [
+        res({ content: 'Berlin.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+          { statement: 'Lives in Berlin, Germany', questionnaire_attribute: CANONICAL_LOCATION_KEY, replaces: '[h]' },
+        ] })] }),
+        res({ content: 'Here it is.' }),
+      ],
+      withPlace(DE, saved),
+    );
+    await runAgentTurn({ state: createAgentState(EXPAT), userMessage: 'I moved to Berlin', deps: h.deps });
+    expect(saved.flat().map((e) => [e.statement, e.replaces])).toEqual([
+      ['Lives in Berlin, Germany, EU', 'h'],
+      ['Expat in Germany', 'x'],
+    ]);
+  });
+
+  it('refuses a question once the home card is offered: the card asks', async () => {
+    const saved: Record<string, unknown>[][] = [];
+    const h = harness(
+      [
+        res({ content: 'Berlin.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+          { statement: 'Lives in Berlin, Germany, EU', questionnaire_attribute: CANONICAL_LOCATION_KEY, replaces: 'h' },
+        ] })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Should I replace your Amsterdam address with Berlin?', options: ['Yes', 'No'] })] }),
+        res({ content: 'Here it is.' }),
+      ],
+      withPlace(DE, saved),
+    );
+    const out = await runAgentTurn({ state: createAgentState(EXPAT), userMessage: 'I moved to Berlin', deps: h.deps });
+    expect(out.terminalReason).not.toBe('awaiting-user');
+  });
+
+  it('reads "Is an expat from India" as the origin, and drops a bare "Expat."', async () => {
+    const saved: Record<string, unknown>[][] = [];
+    const h = harness(
+      [
+        res({ content: 'India.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Nieuw-West, Amsterdam' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+          { statement: 'The user is an expat.', questionnaire_attribute: 'residency_status' },
+          { statement: 'Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands', questionnaire_attribute: 'residence' },
+          { statement: 'Is an expat from India', questionnaire_attribute: 'origin' },
+        ] })] }),
+        res({ content: 'Here they are.' }),
+      ],
+      withPlace(NL, saved),
+    );
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: 'expat from India in Nieuw-West', deps: h.deps });
+    expect(saved.flat().map((e) => e.statement)).toEqual([
+      'Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands',
+      'From India',
+      'Expat in The Netherlands',
+    ]);
+  });
+});

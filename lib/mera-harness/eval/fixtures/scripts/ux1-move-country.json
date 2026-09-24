@@ -1,7 +1,7 @@
 {
   "id": "ux1-move-country",
   "cohort": "production",
-  "note": "ux1 owner decision: a move to another country replaces the residence AND offers to update the expat status.",
+  "note": "ux1 owner decision: a move to another country replaces the residence AND offers to update the expat status. The fake lookup also answers the forms the loop itself looks up ('Berlin, Germany'), which staging run 20260924-142008 found unscripted.",
   "persona": {
     "facts": [
       {
@@ -64,6 +64,51 @@
         "lookup_place": [
           {
             "query": "Berlin",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Berlin",
+                  "admin1": "Berlin",
+                  "countryCode": "DE",
+                  "countryName": "Germany",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Berlin, Germany",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Berlin",
+                  "admin1": "Berlin",
+                  "countryCode": "DE",
+                  "countryName": "Germany",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Berlin, Germany, EU",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Berlin",
+                  "admin1": "Berlin",
+                  "countryCode": "DE",
+                  "countryName": "Germany",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Berlin, Berlin, Germany, EU",
             "returns": {
               "status": "resolved",
               "places": [
