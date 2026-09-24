@@ -372,7 +372,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
                 as="heading"
                 size="xl"
                 bold
-                numberOfLines={1}
+                // Two lines, then an ellipsis: a long fact title keeps its
+                // meaning without pushing the list down the screen.
+                numberOfLines={2}
                 className="text-white"
               />
             )}

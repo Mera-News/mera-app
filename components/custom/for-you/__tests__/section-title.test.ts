@@ -53,6 +53,17 @@ describe('sectionTitle', () => {
     );
   });
 
+  // A combined fact ("A; B") titled its section with both statements, five
+  // lines tall. The title is the first; the full text stays on the row.
+  it('titles a fact section with the first of a combined statement', () => {
+    const r = row({
+      kind: 'fact',
+      statement: 'Expat from India living in Nieuw-West, Amsterdam, EU; Lives in Nieuw-West, Amsterdam, EU',
+    });
+    expect(sectionTitle(t, r)).toBe('Expat from India living in Nieuw-West, Amsterdam, EU');
+    expect(r.statement).toContain('; Lives in');
+  });
+
   it('falls back to the raw code when no display name resolves', () => {
     expect(sectionTitle(t, row({ kind: 'headline-country', countryCode: 'ZZ' }))).toBe(
       'forYou.headlineSectionCountry|{"country":"ZZ"}',

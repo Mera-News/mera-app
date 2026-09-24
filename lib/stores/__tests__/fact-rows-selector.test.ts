@@ -1013,3 +1013,22 @@ describe('buildFactRows empty sections (D4)', () => {
     expect(rows[0].groups.length).toBeGreaterThan(0);
   });
 });
+
+// A single fact can hold two statements joined by "; " (a combined persona
+// fact). A section title shows only the first, so it never runs to five lines.
+describe('primaryStatement', () => {
+  const { primaryStatement } = require('../fact-rows-selector');
+  it('keeps the part before the first "; "', () => {
+    expect(
+      primaryStatement(
+        'Expat from India living in New West (Nieuw-West), Amsterdam, EU; Lives in New West (Nieuw-West), Amsterdam, EU',
+      ),
+    ).toBe('Expat from India living in New West (Nieuw-West), Amsterdam, EU');
+  });
+  it('leaves a single statement alone, trimmed', () => {
+    expect(primaryStatement('  Works in fintech  ')).toBe('Works in fintech');
+  });
+  it('falls back to the whole statement when the first part is empty', () => {
+    expect(primaryStatement('; Lives in Berlin')).toBe('; Lives in Berlin');
+  });
+});

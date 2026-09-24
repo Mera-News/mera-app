@@ -328,6 +328,19 @@ export interface FactRow {
   newInterest?: boolean;
 }
 
+/**
+ * The part of a fact statement a TITLE shows: the text before the first "; ".
+ * One persona fact can hold two statements joined that way ("Expat from India
+ * living in Nieuw-West, …; Lives in Nieuw-West, …"), which made a section
+ * title run to five lines. Falls back to the whole statement when the first
+ * part is empty. Titles only: `FactRow.statement` keeps the full text.
+ */
+export function primaryStatement(statement: string): string {
+  const whole = statement.trim();
+  const first = whole.split('; ')[0].trim();
+  return first || whole;
+}
+
 /** Why a fact section has no stories. See {@link FactRow.emptyReason}. */
 export type EmptySectionReason = 'awaiting-first-run' | 'no-match-yet';
 
