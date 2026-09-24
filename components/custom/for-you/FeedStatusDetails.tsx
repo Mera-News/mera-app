@@ -22,12 +22,11 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from '@/components/ui/pressable';
 import { pickScoringProgress, STATUS_INK } from './status-ink';
+import { useLastProcessedLabel } from './use-last-processed-label';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 export interface FeedStatusDetailsProps {
-    /** Human relative label for the last finished processing run, or null. */
-    readonly lastProcessedLabel: string | null;
     /**
      * Called right before the daily-limit "Manage" pill navigates. A host that
      * renders this body inside an RN Modal passes its close here: a
@@ -56,13 +55,10 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
  * copy + selectors the four legacy header banners used to show — current pipeline
  * stage, cloud/device progress, the processed/analysed/relevant counts,
  * last-processed time, the daily-limit notice, and any scoring error. It is
- * rendered in ONE place, the inline status panel both tabs open from their
- * status mark (FeedStatusPanel).
+ * rendered in ONE place, `FeedStatusBody`, which the Feed's header panel and
+ * the Dashboard's Overview stats card both mount, so the two cannot differ.
  */
-const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
-    lastProcessedLabel,
-    onBeforeNavigate,
-}) => {
+const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({ onBeforeNavigate }) => {
     const { t } = useTranslation();
     const tAny = t as any;
     const appLanguage = useAppLanguage();
@@ -71,6 +67,9 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
     // panel, the sheet and the header sentence cannot show different numbers.
     const { articleCount: processedCount, analysedCount, relevantCount } = useFeedCounts();
     const batchProgress = useForYouBatchProgress();
+    // Read here, never passed in: a prop only one screen passed is how the
+    // Feed's panel came to lack this row.
+    const lastProcessedLabel = useLastProcessedLabel();
 
     const syncStatusMessage = useForYouSyncStatusMessage();
     const asyncJobPhase = useForYouAsyncJobPhase();

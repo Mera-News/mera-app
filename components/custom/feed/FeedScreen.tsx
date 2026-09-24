@@ -90,7 +90,7 @@ import {
 } from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
-import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
+import FeedStatusPanel, { STATUS_PANEL_AUTO_COLLAPSE_MS } from '@/components/custom/for-you/FeedStatusPanel';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import {
   headerTitleLineHeight,
@@ -318,9 +318,10 @@ const FeedScreen: React.FC = () => {
   // which `buildFeedList` treats as the legacy geo/language-blind pick.
   const userGeoLanguageCtx = useUserGeoLanguageContext();
 
-  // Status mark + its detail panel. 3000ms: this screen is for reading, so the
-  // panel answers the question and then leaves. (The Dashboard mounts the same
-  // pair with no timeout — there, staying open is the point.)
+  // Status mark + its detail panel. It closes itself after
+  // STATUS_PANEL_AUTO_COLLAPSE_MS: the panel answers the question and then
+  // leaves. The Dashboard's stats card opens the same body and closes it the
+  // same way (owner: "make them similar").
   //
   // `available` is hard-coded true. It used to be `isStatusVisible(statusMode)`,
   // which existed to stop the panel being stranded on screen after the mark that
@@ -340,7 +341,7 @@ const FeedScreen: React.FC = () => {
   const statusMode = useFeedStatusMode();
   const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
     true,
-    3000,
+    STATUS_PANEL_AUTO_COLLAPSE_MS,
   );
 
   // ONE value drives the hidden title, the narration line and the strip.

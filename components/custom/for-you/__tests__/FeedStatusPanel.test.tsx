@@ -94,7 +94,7 @@ jest.mock('../FeedStatusDetails', () => {
     return { __esModule: true, default: () => <View testID="feed-status-details" /> };
 });
 
-import FeedStatusPanel from '../FeedStatusPanel';
+import FeedStatusPanel, { FeedStatusBody, STATUS_PANEL_AUTO_COLLAPSE_MS } from '../FeedStatusPanel';
 
 beforeEach(() => {
     mockBatchProgress = null;
@@ -137,5 +137,19 @@ describe('FeedStatusPanel', () => {
         const { StyleSheet } = require('react-native');
         const style = StyleSheet.flatten(getByTestId('dashboard-status-details-panel').props.style);
         expect(style.backgroundColor).toBe('rgba(18,17,19,0.90)');
+    });
+
+    it('closes itself after the one shared delay, the Feed\'s 3000ms', () => {
+        expect(STATUS_PANEL_AUTO_COLLAPSE_MS).toBe(3000);
+    });
+});
+
+describe('FeedStatusBody', () => {
+    it('renders the same rows with no panel chrome, for hosts that bring their own', () => {
+        mockBatchProgress = { done: 3, total: 10 };
+        const { getByTestId, getByText, queryByTestId } = render(<FeedStatusBody mode="processing" />);
+        expect(getByTestId('feed-status-details')).toBeTruthy();
+        expect(getByText('feed.analysingProgress')).toBeTruthy();
+        expect(queryByTestId('dashboard-status-details-panel')).toBeNull();
     });
 });

@@ -5,7 +5,7 @@ import {
     useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
-import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
+import FeedStatusPanel, { STATUS_PANEL_AUTO_COLLAPSE_MS } from '@/components/custom/for-you/FeedStatusPanel';
 import {
     headerTitleLineHeight,
     headerTitleSize,
@@ -62,7 +62,6 @@ import {
     type ResortTrigger,
 } from '@/lib/feed-ordering/dashboard-resort';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
-import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
@@ -241,12 +240,6 @@ const MeraNewsScreen: React.FC = () => {
         return () => clearInterval(id);
     }, [isFocused, lastProcessingRunFinishedAt, dailyLimitResetAt]);
 
-    // "Last processed" in the status panel and sheet: when a run last finished,
-    // including one that found nothing. That is what the words say.
-    const lastProcessedLabel = useMemo(() => {
-        if (!lastProcessingRunFinishedAt) return null;
-        return formatTimeAgo(t, lastProcessingRunFinishedAt, { now: nowTick });
-    }, [lastProcessingRunFinishedAt, nowTick, t]);
 
 
     // Any client-visible fetch/scoring work still in flight — the shared
@@ -255,17 +248,8 @@ const MeraNewsScreen: React.FC = () => {
     // OR-s in the scheduler flag on its own.
     const isFeedProcessing = useIsFeedProcessing();
 
-    // Same status mark + panel pair the Feed mounts, with NO auto-collapse:
-    // this is the screen you come to in order to look at the numbers, so the
-    // panel stays open until you close it — which is how this accordion has
-    // always behaved.
-    //
-    // `available` is hard-coded true, matching the Feed. It used to be
-    // `isStatusVisible(statusMode)`, whose whole job was closing a panel whose
-    // mark had just unmounted at the end of a sync. The mark is on screen in
-    // every state now, so that guard would only yank an open accordion shut the
-    // moment the pipeline settled — on the one screen whose panel is meant to
-    // stay put.
+    // Same status mark + panel pair the Feed mounts, and the same auto-collapse
+    // (owner: the Dashboard's panel should hide itself like the Feed's does).
     // Title ceiling from the window width; see header-title-size for why this
     // is two steps and not a ramp.
     const { width: windowWidth } = useWindowDimensions();
@@ -275,7 +259,7 @@ const MeraNewsScreen: React.FC = () => {
     const titleRowHeight = headerTitleLineHeight(windowWidth);
 
     const statusMode = useFeedStatusMode();
-    const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(true);
+    const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(true, STATUS_PANEL_AUTO_COLLAPSE_MS);
 
     // ONE value drives the hidden title, the narration line and the strip, so
     // the three cannot disagree about whether a run is happening.
@@ -767,11 +751,7 @@ const MeraNewsScreen: React.FC = () => {
                         OfflineBanner at the root layout, so there is no longer a
                         per-sub-tab connectivity prop to pass. */}
                     <View pointerEvents="box-none">
-                        <FeedStatusPanel
-                            expanded={statusExpanded}
-                            mode={statusMode}
-                            lastProcessedLabel={lastProcessedLabel}
-                        />
+                        <FeedStatusPanel expanded={statusExpanded} mode={statusMode} />
                     </View>
                 </VStack>
             </Animated.View>

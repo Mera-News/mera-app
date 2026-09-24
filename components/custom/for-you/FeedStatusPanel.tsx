@@ -1,4 +1,4 @@
-// The detail panel FeedStatusIndicator opens — everything the old status bar
+// The status body, and the Feed header panel FeedStatusIndicator opens — everything the old status bar
 // used to say, moved from "always on screen" to "there when you ask".
 //
 // Three things live here now that used to render ambiently in the header
@@ -143,27 +143,52 @@ function AnalysingProgress() {
     );
 }
 
-export interface FeedStatusPanelProps {
-    readonly expanded: boolean;
+/**
+ * How long an opened status panel stays open before it closes itself. ONE
+ * value for both tabs: the Feed's header panel and the Dashboard's Overview
+ * stats card open the same body and close it the same way (owner: "make them
+ * similar"). A second tap on the trigger still closes it early.
+ */
+export const STATUS_PANEL_AUTO_COLLAPSE_MS = 3000;
+
+export interface FeedStatusBodyProps {
     readonly mode: FeedStatusMode;
-    /** Human relative label for the last finished run ("4 minutes ago"). The
-     *  Dashboard already computes this for its header line against a 30s tick;
-     *  the Feed tab omits it. */
-    readonly lastProcessedLabel?: string | null;
     /** Passed straight through to FeedStatusDetails — see its own doc. */
     readonly onBeforeNavigate?: () => void;
 }
 
 /**
- * The counts are read by FeedStatusDetails itself, from the shared minute-clock
- * `useFeedCounts`, so this panel, the sheet and the header sentence show the
- * same numbers. `expanded` and `mode` come from the screen, which is what keeps
- * this and the indicator describing the same state.
+ * The status panel's CONTENT, with no chrome: the detail rows plus the
+ * processing-only lines. The single renderer of "what is the pipeline doing"
+ * on both tabs, so every field (Last processed included, which the details
+ * read themselves) is identical wherever it opens.
+ */
+export const FeedStatusBody: React.FC<FeedStatusBodyProps> = ({ mode, onBeforeNavigate }) => (
+    <>
+        <FeedStatusDetails onBeforeNavigate={onBeforeNavigate} />
+        {mode === 'processing' && <AnalysingProgress />}
+        {mode === 'processing' && <ProcessingHeadline />}
+        {mode === 'processing' && <ChunkStripRow />}
+    </>
+);
+
+export interface FeedStatusPanelProps {
+    readonly expanded: boolean;
+    readonly mode: FeedStatusMode;
+    /** Passed straight through to FeedStatusDetails — see its own doc. */
+    readonly onBeforeNavigate?: () => void;
+}
+
+/**
+ * The Feed header's panel: `FeedStatusBody` on the dark over-content base,
+ * because the header is absolute and cards scroll under it. The counts are
+ * read by FeedStatusDetails itself, from the shared minute-clock
+ * `useFeedCounts`, so this panel and the Dashboard's stats card show the same
+ * numbers.
  */
 export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
     expanded,
     mode,
-    lastProcessedLabel = null,
     onBeforeNavigate,
 }) => {
     if (!expanded) return null;
@@ -187,13 +212,7 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
                 style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}
                 testID="dashboard-status-details-panel"
             >
-                <FeedStatusDetails
-                    lastProcessedLabel={lastProcessedLabel}
-                    onBeforeNavigate={onBeforeNavigate}
-                />
-                {mode === 'processing' && <AnalysingProgress />}
-                {mode === 'processing' && <ProcessingHeadline />}
-                {mode === 'processing' && <ChunkStripRow />}
+                <FeedStatusBody mode={mode} onBeforeNavigate={onBeforeNavigate} />
             </GlassPanel>
         </Animated.View>
     );
