@@ -69,7 +69,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   );
   const visit = useMemo(() => visitFromSuggestion(suggestion), [suggestion]);
 
-  const actions = useArticleActions({ subject, suggestion, share, trackActive: false });
+  const actions = useArticleActions({ subject, suggestion, share });
   // No inline row on compact rows: its actions lead the menu instead (and so
   // are VoiceOver custom actions too).
   const rowActions = useMemo(
@@ -103,6 +103,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
       return asked;
     },
     rowActions,
+    onLeafPicked: actions.onLeafPicked,
   });
 
   return (
@@ -128,7 +129,6 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}
       />
-      {actions.element}
       {menu.element}
     </>
   );

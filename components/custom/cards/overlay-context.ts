@@ -1,5 +1,5 @@
-// buildOverlayContext — the on-device LocalFeedbackContext the modal feedback
-// tree (FeedbackTreeOverlay) gates and resolves against, built from a
+// buildOverlayContext — the on-device LocalFeedbackContext the ••• sheet's feedback
+// tree levels (FeedbackTreeLevel) gate and resolves against, built from a
 // FeedbackSubject.
 //
 // Used by useArticleActions. It replaced two verbatim copies (the actions row

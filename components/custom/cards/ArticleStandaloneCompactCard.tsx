@@ -78,7 +78,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
   );
   const visit = useMemo(() => visitFromArticle(article), [article]);
 
-  const actions = useArticleActions({ subject, article, share, trackActive: false });
+  const actions = useArticleActions({ subject, article, share });
   // No inline row on compact rows: its actions lead the menu instead (and so
   // are VoiceOver custom actions too).
   const rowActions = useMemo(
@@ -109,6 +109,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
     },
     extraItems: menuExtraItems,
     rowActions,
+    onLeafPicked: actions.onLeafPicked,
   });
 
   const metaAccessory =
@@ -139,7 +140,6 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}
       />
-      {actions.element}
       {menu.element}
     </>
   );

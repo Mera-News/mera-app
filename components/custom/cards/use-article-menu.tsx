@@ -1,4 +1,8 @@
-import ArticleOverflowMenu, { type ArticleMenuItem } from '@/components/custom/cards/ArticleOverflowMenu';
+import ActionSheet, { ActionSheetRow, type ArticleMenuItem } from '@/components/custom/cards/ArticleOverflowMenu';
+import FeedbackTreeLevel from '@/components/custom/feedback-tree/FeedbackTreeLevel';
+import { leafNeedsConfirm, performFeedbackLeaf } from '@/components/custom/feedback-tree/perform-feedback-leaf';
+import type { FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { VerdictSentiment } from '@/lib/database/services/article-feedback-service';
 import {
     isForeignLanguage,
     openInGoogleTranslate,
@@ -12,7 +16,8 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import { Toast, ToastTitle, useToast } from '@/components/ui/toast';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import { VStack } from '@/components/ui/vstack';
 import { showFeedback } from '@/lib/feedback';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -61,11 +66,51 @@ export interface UseArticleMenuInput {
         /** Undefined when there is nothing to share. */
         onShare?: () => void;
     };
+    /** A feedback-tree leaf settled (see useArticleActions.onLeafPicked). */
+    onLeafPicked?: (sentiment: VerdictSentiment, pathIds: string[], appliedCount: number, committed: boolean) => void;
+    /** Keep the follow state live even while the sheet is closed (a surface
+     *  that draws its own Follow state inline). */
+    followLive?: boolean;
+}
+
+/** A level's own heading and explanation (the confirm and follow levels),
+ *  in the sheet's muted text, above its rows. */
+const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) => (
+    <VStack space="xs" className="px-4 pb-2" testID="sheet-note">
+        <Text style={{ color: 'rgb(230,230,230)', fontSize: 15, fontWeight: '700' }}>{title}</Text>
+        {body ? (
+            <Text size="sm" style={{ color: 'rgb(163,163,163)' }}>
+                {body}
+            </Text>
+        ) : null}
+    </VStack>
+);
+
+/** One level of the sheet's navigation stack. */
+export type SheetLevel =
+    | { kind: 'main' }
+    | { kind: 'tree'; root: VerdictSentiment; pathIds: string[]; browsing: boolean }
+    | { kind: 'tree-confirm'; root: VerdictSentiment; node: FeedbackTreeNode; pathIds: string[] }
+    | { kind: 'follow-tracked' }
+    | { kind: 'follow-locked' };
+
+function levelKey(depth: number, l: SheetLevel): string {
+    if (l.kind === 'tree') return `${depth}:tree:${l.root}:${l.browsing ? 'b' : 'e'}:${l.pathIds.join('/')}`;
+    if (l.kind === 'tree-confirm') return `${depth}:confirm:${l.node.id}`;
+    return `${depth}:${l.kind}`;
 }
 
 export interface UseArticleMenu {
     open: () => void;
-    /** Mount once near the surface root: the sheet plus the follow dialogs. */
+    /** Open the sheet straight at a feedback tree's root (no Back row): an
+     *  inline thumb outside the ••• menu. */
+    openFeedback: (root: VerdictSentiment) => void;
+    /** What an inline Follow button does: start the proposal flow, or open
+     *  the sheet at the "already following" / free-tier level. */
+    openFollow: () => void;
+    /** Whether a story already covers this subject. */
+    tracked: boolean;
+    /** Mount once near the surface root: the sheet. */
     element: React.ReactNode;
     /** The same actions as VoiceOver custom actions, for the card root. */
     accessibilityActions: { name: string; label: string }[];
@@ -103,9 +148,66 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     // nobody has looked at, is waste. It stays live after that, because items
     // run after the sheet has closed.
     const [engaged, setEngaged] = useState(false);
-    const { subject, surface, articleUrl, languageCode, visit, onCheckFacts, extraItems, inlineActions, rowActions } =
-        input;
-    const { tracked, onPress: onTrackPress, dialog: trackDialog } = useTrackButton(subject, engaged);
+    const {
+        subject,
+        surface,
+        articleUrl,
+        languageCode,
+        visit,
+        onCheckFacts,
+        extraItems,
+        inlineActions,
+        rowActions,
+        onLeafPicked,
+        followLive,
+    } = input;
+    const follow = useTrackButton(subject, engaged || !!followLive);
+    const { tracked } = follow;
+
+    // ── The sheet and its navigation stack ─────────────────────────────────
+    // A sub-menu (the feedback tree, its confirm, the follow levels) is a LEVEL
+    // pushed inside the one sheet, never a second Modal. Back pops one level;
+    // Cancel closes the whole sheet from any depth.
+    const [stack, setStack] = useState<SheetLevel[]>([]);
+    const [direction, setDirection] = useState<'push' | 'pop' | 'none'>('none');
+    const [mounted, setMounted] = useState(false);
+    const visibleRef = useRef(false);
+    visibleRef.current = visible;
+    const [treeContext, setTreeContext] = useState<LocalFeedbackContext>({ articleTitle: subject.title });
+
+    /** Show a level: pushed on top when the sheet is open, else the sheet opens
+     *  straight at it (no Back row). */
+    const showLevel = useCallback((level: SheetLevel) => {
+        setEngaged(true);
+        if (visibleRef.current) {
+            setDirection('push');
+            setStack((s) => [...s, level]);
+            return;
+        }
+        setDirection('none');
+        setStack([level]);
+        setMounted(true);
+        setVisible(true);
+    }, []);
+    const back = useCallback(() => {
+        setDirection('pop');
+        setStack((s) => (s.length > 1 ? s.slice(0, -1) : s));
+    }, []);
+
+    const enterTree = useCallback(
+        (root: VerdictSentiment) => {
+            setTreeContext({ articleTitle: subject.title });
+            // Resolved at call time: the context builder reaches the database,
+            // and this hook sits under every card.
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { buildOverlayContext } = require('@/components/custom/cards/overlay-context') as typeof import('@/components/custom/cards/overlay-context');
+            void buildOverlayContext(subject)
+                .then(setTreeContext)
+                .catch(() => {});
+            showLevel({ kind: 'tree', root, pathIds: [], browsing: root === 'like' });
+        },
+        [subject, showLevel],
+    );
 
     const showFailure = useCallback(
         (retry: () => void) => {
@@ -195,14 +297,28 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                     label: rowActions.liked ? t('articleMenu.removeLike') : t('articleFeedback.likeLabel'),
                     icon: rowActions.liked ? 'thumb-up' : 'thumb-up-off-alt',
                     testID: 'menu-like',
-                    run: () => rowActions.onLike(),
+                    staysOpen: true,
+                    opensLevel: !rowActions.liked,
+                    // Recording a like opens its tree as a level of this sheet.
+                    // Removing one needs nothing more, so the sheet closes.
+                    run: () => {
+                        const wasLiked = rowActions.liked;
+                        rowActions.onLike();
+                        if (!wasLiked) enterTree('like');
+                        else if (visibleRef.current) closeRef.current();
+                    },
                 },
                 {
                     key: 'dislike',
                     label: t('articleFeedback.dislikeLabel'),
                     icon: 'thumb-down-off-alt',
                     testID: 'menu-dislike',
-                    run: () => rowActions.onDislike(),
+                    staysOpen: true,
+                    opensLevel: true,
+                    run: () => {
+                        rowActions.onDislike();
+                        enterTree('dislike');
+                    },
                 },
                 {
                     key: 'save',
@@ -240,7 +356,8 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             label: tracked ? t('articleMenu.following') : t('feedbackTree.followStory'),
             icon: 'track-changes',
             testID: 'card-action-track',
-            run: () => onTrackPress(),
+            staysOpen: true,
+            run: () => openFollowRef.current(),
         });
         if (onCheckFacts) {
             list.push({
@@ -300,7 +417,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         subject.title,
         subject.publicationName,
         tracked,
-        onTrackPress,
+        enterTree,
         onCheckFacts,
         surface,
         articleUrl,
@@ -314,7 +431,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
 
     // The sheet stays mounted while its Modal dismisses; `pending` holds the
     // picked item until the dismissal is reported. See the header.
-    const [mounted, setMounted] = useState(false);
     const pendingRef = useRef<ArticleMenuItem | null>(null);
     const fallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const runItemRef = useRef(runItem);
@@ -343,6 +459,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         }
         runAfterUnmountRef.current = true;
         setMounted(false);
+        setStack([]);
     }, []);
     useEffect(() => {
         if (mounted || !runAfterUnmountRef.current) return;
@@ -351,15 +468,41 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     }, [mounted, flushPending]);
 
     const close = useCallback(() => setVisible(false), []);
-    const pick = useCallback(
-        (item: ArticleMenuItem) => {
-            pendingRef.current = item;
+    /** Close the sheet, then run `after` once it has gone (native UI, a
+     *  screen push, a chat, a toast). */
+    const closeThen = useCallback(
+        (after?: () => void) => {
+            pendingRef.current = after ? { key: 'after', label: '', icon: null, testID: '', run: after } : null;
             setVisible(false);
             if (fallbackRef.current) clearTimeout(fallbackRef.current);
             fallbackRef.current = setTimeout(onDismissed, MENU_DISMISS_FALLBACK_MS);
         },
         [onDismissed],
     );
+    const closeRef = useRef<() => void>(() => {});
+    closeRef.current = () => closeThen();
+    const pick = useCallback(
+        (item: ArticleMenuItem) => {
+            // An item that navigates within the sheet runs now; any other runs
+            // after the sheet has gone.
+            if (item.staysOpen) {
+                runItem(item);
+                return;
+            }
+            closeThen(() => runItem(item));
+        },
+        [closeThen, runItem],
+    );
+
+    const openFollow = useCallback(() => {
+        const outcome = follow.resolve();
+        if (outcome === 'tracked') showLevel({ kind: 'follow-tracked' });
+        else if (outcome === 'locked') showLevel({ kind: 'follow-locked' });
+        else if (visibleRef.current) closeThen(follow.startTracking);
+        else follow.startTracking();
+    }, [follow, showLevel, closeThen]);
+    const openFollowRef = useRef(openFollow);
+    openFollowRef.current = openFollow;
 
     // Android has no `onDismiss`: the Modal is gone once it renders hidden.
     useEffect(() => {
@@ -392,27 +535,164 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         [items, runItem, inlineActions],
     );
 
+    // ── The levels ─────────────────────────────────────────────────────────
+    const chrome = useCallback(
+        (key: string, def: string, vars?: Record<string, unknown>) =>
+            t(`feedbackTree.${key}`, { defaultValue: def, ...vars }) as string,
+        [t],
+    );
+    const showInfo = useCallback(
+        (title: string, body?: string) => {
+            toast.show({
+                placement: 'bottom',
+                duration: 2500,
+                render: () => (
+                    <Toast action="info" variant="solid">
+                        <VStack>
+                            <ToastTitle>{title}</ToastTitle>
+                            {body ? <ToastDescription>{body}</ToastDescription> : null}
+                        </VStack>
+                    </Toast>
+                ),
+            });
+        },
+        [toast],
+    );
+    const treeLabel = useCallback(
+        (node: FeedbackTreeNode) => t(node.labelKey, { defaultValue: node.labelDefault }) as string,
+        [t],
+    );
+    const performLeaf = useCallback(
+        (root: VerdictSentiment, node: FeedbackTreeNode, pathIds: string[]) =>
+            performFeedbackLeaf(node, pathIds, {
+                context: treeContext,
+                chatContext: {
+                    kind: 'article-suggestion',
+                    articleId: subject.articleId,
+                    suggestionId: subject.suggestionId,
+                    articleTitle: subject.title,
+                },
+                chatMessage: t(
+                    root === 'like' ? 'articleFeedback.thumbsUpMessage' : 'articleFeedback.thumbsDownMessage',
+                    { title: subject.title },
+                ),
+                label: treeLabel(node),
+                closeThen,
+                onLeafPicked: (p, applied, committed) => onLeafPicked?.(root, p, applied, committed),
+                showInfo,
+                chrome,
+            }),
+        [treeContext, subject, t, treeLabel, closeThen, onLeafPicked, showInfo, chrome],
+    );
+
+    const top = stack[stack.length - 1];
+    const renderLevel = (level: SheetLevel): React.ReactNode => {
+        switch (level.kind) {
+            case 'main':
+                return items.map((item) => (
+                    <ActionSheetRow
+                        key={item.key}
+                        testID={item.testID}
+                        label={item.label}
+                        icon={item.icon}
+                        opensLevel={item.opensLevel}
+                        onPress={() => pick(item)}
+                    />
+                ));
+            case 'tree':
+                return (
+                    <FeedbackTreeLevel
+                        root={level.root}
+                        pathIds={level.pathIds}
+                        browsing={level.browsing}
+                        context={treeContext}
+                        onBrowse={() => showLevel({ ...level, browsing: true })}
+                        onDescend={(node) =>
+                            showLevel({ ...level, browsing: true, pathIds: [...level.pathIds, node.id] })
+                        }
+                        onLeaf={(node, pathIds) =>
+                            leafNeedsConfirm(node)
+                                ? showLevel({ kind: 'tree-confirm', root: level.root, node, pathIds })
+                                : performLeaf(level.root, node, pathIds)
+                        }
+                    />
+                );
+            case 'tree-confirm':
+                return (
+                    <>
+                        <SheetNote
+                            title={chrome('confirmMuteTitle', 'Never show this publication?')}
+                            body={chrome(
+                                'confirmMuteBody',
+                                "You won't see articles from {{publication}} again. You can undo this anytime.",
+                                { publication: treeContext.publicationName ?? 'this publication' },
+                            )}
+                        />
+                        <ActionSheetRow
+                            testID="tree-confirm-destructive"
+                            label={treeLabel(level.node)}
+                            icon="block"
+                            destructive
+                            onPress={() => performLeaf(level.root, level.node, level.pathIds)}
+                        />
+                    </>
+                );
+            case 'follow-tracked':
+                return (
+                    <>
+                        <SheetNote
+                            title={t('trackedStories.alreadyTrackingTitle')}
+                            body={t('trackedStories.alreadyTrackingBody')}
+                        />
+                        <ActionSheetRow
+                            testID="already-tracking-go"
+                            label={t('trackedStories.goToStoryAction')}
+                            icon="open-in-new"
+                            onPress={() => closeThen(follow.goToStory)}
+                        />
+                    </>
+                );
+            case 'follow-locked':
+                return (
+                    <>
+                        <SheetNote title={t('freeTier.trackTitle')} body={t('freeTier.trackBody')} />
+                        <ActionSheetRow
+                            testID="track-locked-see-plans"
+                            label={t('freeTier.seePlans')}
+                            icon="workspace-premium"
+                            onPress={() => closeThen(() => void follow.seePlans())}
+                        />
+                    </>
+                );
+        }
+    };
+
     const element = (
-        <>
-            {trackDialog}
-            <ArticleOverflowMenu
-                mounted={mounted}
-                visible={visible}
-                onDismiss={Platform.OS === 'ios' ? onDismissed : undefined}
-                title={subject.title}
-                onClose={close}
-                items={items}
-                onPick={pick}
-            />
-        </>
+        <ActionSheet
+            mounted={mounted}
+            visible={visible}
+            onDismiss={Platform.OS === 'ios' ? onDismissed : undefined}
+            title={subject.title}
+            onClose={close}
+            levelKey={top ? levelKey(stack.length, top) : 'none'}
+            direction={direction}
+            onBack={stack.length > 1 ? back : undefined}
+        >
+            {top ? renderLevel(top) : null}
+        </ActionSheet>
     );
 
     return {
         open: useCallback(() => {
             setEngaged(true);
+            setDirection('none');
+            setStack([{ kind: 'main' }]);
             setMounted(true);
             setVisible(true);
         }, []),
+        openFeedback: enterTree,
+        openFollow,
+        tracked,
         element,
         accessibilityActions,
         onAccessibilityAction,

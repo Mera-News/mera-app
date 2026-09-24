@@ -1,7 +1,7 @@
 // applyLeafActions — the ONE path from a terminal feedback-tree leaf to applied
 // persona mutations plus an Undo toast.
 //
-// Extracted from FeedbackTreeOverlay so the inline Feed surface
+// Shared by the ••• sheet's tree levels and the inline Feed surface
 // (InlineFeedbackTree) applies leaves through exactly the same machinery: the
 // two presentations differ (modal sheet vs inline panel), their SEMANTICS must
 // not. Previously only the overlay executed leaf actions, which is why the
@@ -47,7 +47,7 @@ export async function applyLeafActions(
       import('@/lib/toast-manager'),
     ]);
     /** i18n chrome helper — always supplies an English default so it renders
-     *  pre-merge (mirrors FeedbackTreeOverlay's `useChrome`). */
+     *  pre-merge (mirrors FeedbackTreeLevel's `useChrome`). */
     const c = (key: string, def: string): string =>
       i18n.t(`feedbackTree.${key}`, { defaultValue: def }) as string;
 

@@ -6,7 +6,9 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
 let mockModal: any = null;
+let mockModalImpl: any = null;
 let mockModalMounted = false;
+let mockModalMounts = 0;
 let mockOS = 'ios';
 jest.mock('react-native', () => {
     const actual = jest.requireActual('react-native');
@@ -15,13 +17,16 @@ jest.mock('react-native', () => {
         get(target, prop) {
             if (prop === 'Modal') {
                 // Records its props so a test can play the native dismissal
-                // (`onDismiss`, iOS only) at the moment it chooses.
-                return (props: any) => {
+                // (`onDismiss`, iOS only) at the moment it chooses. ONE component
+                // identity (cached), so a re-render never counts as a remount.
+                if (mockModalImpl) return mockModalImpl;
+                mockModalImpl = (props: any) => {
                     mockModal = props;
                     // Tracks whether the Modal HOST is still in the tree, so a
                     // test can prove an item ran only after it was removed.
                     ReactLib.useEffect(() => {
                         mockModalMounted = true;
+                        mockModalMounts += 1;
                         return () => {
                             mockModalMounted = false;
                         };
@@ -30,6 +35,7 @@ jest.mock('react-native', () => {
                         ? null
                         : ReactLib.createElement(ReactLib.Fragment, null, props.children);
                 };
+                return mockModalImpl;
             }
             if (prop === 'Platform') return { ...actual.Platform, OS: mockOS };
             return (target as any)[prop];
@@ -85,9 +91,21 @@ jest.mock('@/components/ui/toast', () => ({
     ToastTitle: ({ children }: any) => children,
     useToast: () => ({ show: mockToastShow, close: jest.fn() }),
 }));
-const mockTrackPress = jest.fn();
+const mockFollow = {
+    tracked: false,
+    outcome: 'start' as 'tracked' | 'locked' | 'start',
+    startTracking: jest.fn(),
+    goToStory: jest.fn(),
+    seePlans: jest.fn(async () => {}),
+};
 jest.mock('@/components/custom/tracked-stories/use-track-button', () => ({
-    useTrackButton: () => ({ tracked: false, onPress: mockTrackPress, dialog: null }),
+    useTrackButton: () => ({
+        tracked: mockFollow.tracked,
+        resolve: () => mockFollow.outcome,
+        startTracking: mockFollow.startTracking,
+        goToStory: mockFollow.goToStory,
+        seePlans: mockFollow.seePlans,
+    }),
 }));
 const mockAsk = jest.fn((..._a: any[]) => true);
 jest.mock('@/components/custom/floating-chat/ask-mera', () => ({
@@ -111,6 +129,28 @@ jest.mock('@/components/custom/cards/article-actions', () => ({
     openInGoogleTranslate: jest.fn(async () => true),
     isForeignLanguage: (lang: string | null, app: string | null) =>
         !lang || !app || lang.split('-')[0] !== app.split('-')[0],
+}));
+
+// The tree level is its own suite (feedback-tree-sheet.test.tsx). Here it is a
+// stub that shows which root and depth the sheet asked for.
+jest.mock('@/components/custom/feedback-tree/FeedbackTreeLevel', () => {
+    const { Pressable, Text } = require('react-native');
+    return {
+        __esModule: true,
+        default: (p: any) => (
+            <>
+                <Text testID={`tree-${p.root}-${p.browsing ? 'b' : 'e'}-${p.pathIds.join('.') || 'root'}`}>tree</Text>
+                <Pressable testID="tree-descend" onPress={() => p.onDescend({ id: 'n1', children: [{ id: 'c' }] })} />
+                <Pressable
+                    testID="tree-leaf"
+                    onPress={() => p.onLeaf({ id: 'seen', labelKey: 'k', leaf: { seenOnly: true } }, [...p.pathIds, 'seen'])}
+                />
+            </>
+        ),
+    };
+});
+jest.mock('@/components/custom/cards/overlay-context', () => ({
+    buildOverlayContext: jest.fn(async (s: any) => ({ articleTitle: s.title })),
 }));
 
 import { MENU_DISMISS_FALLBACK_MS, useArticleMenu, type UseArticleMenuInput } from '../use-article-menu';
@@ -138,6 +178,9 @@ function Host(props: Partial<UseArticleMenuInput>) {
             <Pressable testID="open" onPress={menu.open}>
                 <Text>open</Text>
             </Pressable>
+            <Pressable testID="open-like-tree" onPress={() => menu.openFeedback('like')}>
+                <Text>like</Text>
+            </Pressable>
             {menu.element}
         </>
     );
@@ -149,6 +192,9 @@ beforeEach(() => {
     mockSentry = true;
     mockModal = null;
     mockOS = 'ios';
+    mockFollow.tracked = false;
+    mockFollow.outcome = 'start';
+    mockModalMounts = 0;
 });
 afterEach(() => jest.useRealTimers());
 
@@ -268,6 +314,118 @@ describe('compact row actions in the menu', () => {
         r.unmount();
         const fresh = openMenu(<Host rowActions={row(false)} />);
         expect(fresh.getByTestId('menu-like').props.accessibilityLabel).toBe('articleFeedback.likeLabel');
+    });
+});
+
+// Owner: "clicking on 'I like it' should feel like it's opening a submenu ...
+// then clicking on back should take user to the main menu". A sub-menu is a
+// LEVEL pushed inside the one sheet, never a second Modal.
+describe('the ••• sheet as a navigation stack', () => {
+    const row = (liked: boolean) => ({
+        liked,
+        saved: false,
+        onLike: jest.fn(),
+        onDislike: jest.fn(),
+        onToggleSave: jest.fn(),
+        onShare: jest.fn(),
+    });
+
+    it('"I like it" records the like and pushes the like tree into the SAME sheet', () => {
+        const r0 = row(false);
+        const r = openMenu(<Host rowActions={r0} />);
+        fireEvent.press(r.getByTestId('menu-like'));
+        expect(r0.onLike).toHaveBeenCalledTimes(1);
+        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(r.queryByTestId('menu-save')).toBeNull();
+        // Same sheet, still open, and no second Modal was ever mounted.
+        expect(mockModal.visible).toBe(true);
+        expect(mockModalMounts).toBe(1);
+        expect(r.getByTestId('sheet-back')).toBeTruthy();
+    });
+
+    it('Back from the tree root returns to the main menu rows', () => {
+        const r = openMenu(<Host rowActions={row(false)} />);
+        fireEvent.press(r.getByTestId('menu-like'));
+        fireEvent.press(r.getByTestId('sheet-back'));
+        expect(r.getByTestId('menu-like')).toBeTruthy();
+        expect(r.getByTestId('menu-save')).toBeTruthy();
+        expect(r.queryByTestId('sheet-back')).toBeNull();
+    });
+
+    it('a deeper level pops back to the tree root, then to the main menu', () => {
+        const r = openMenu(<Host rowActions={row(false)} />);
+        fireEvent.press(r.getByTestId('menu-like'));
+        fireEvent.press(r.getByTestId('tree-descend'));
+        expect(r.getByTestId('tree-like-b-n1')).toBeTruthy();
+        fireEvent.press(r.getByTestId('sheet-back'));
+        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        fireEvent.press(r.getByTestId('sheet-back'));
+        expect(r.getByTestId('menu-like')).toBeTruthy();
+    });
+
+    it('"Not for me" pushes the dislike tree at its entry level', () => {
+        const r0 = row(false);
+        const r = openMenu(<Host rowActions={r0} />);
+        fireEvent.press(r.getByTestId('menu-dislike'));
+        expect(r0.onDislike).toHaveBeenCalledTimes(1);
+        expect(r.getByTestId('tree-dislike-e-root')).toBeTruthy();
+    });
+
+    it('Cancel closes the whole sheet from any depth and runs nothing', () => {
+        const r = openMenu(<Host rowActions={row(false)} />);
+        fireEvent.press(r.getByTestId('menu-like'));
+        fireEvent.press(r.getByTestId('tree-descend'));
+        fireEvent.press(r.getByTestId('article-menu-cancel'));
+        expect(mockModal.visible).toBe(false);
+        dismiss();
+        expect(mockShowFeedback).not.toHaveBeenCalled();
+    });
+
+    it('a tree opened directly (inline thumb, outside •••) has no Back row', () => {
+        const r = render(<Host rowActions={row(false)} />);
+        fireEvent.press(r.getByTestId('open-like-tree'));
+        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(r.queryByTestId('sheet-back')).toBeNull();
+        expect(r.getByTestId('article-menu-cancel')).toBeTruthy();
+    });
+
+    it('a leaf closes the sheet and reports the path', () => {
+        const picked = jest.fn();
+        const r = openMenu(<Host rowActions={row(false)} onLeafPicked={picked} />);
+        fireEvent.press(r.getByTestId('menu-like'));
+        fireEvent.press(r.getByTestId('tree-leaf'));
+        expect(picked).toHaveBeenCalledWith('like', ['seen'], 0, false);
+        expect(mockModal.visible).toBe(false);
+    });
+
+    it('"Remove like" removes it and closes, with no tree', () => {
+        const r0 = row(true);
+        const r = openMenu(<Host rowActions={r0} />);
+        fireEvent.press(r.getByTestId('menu-like'));
+        expect(r0.onLike).toHaveBeenCalledTimes(1);
+        expect(r.queryByTestId('tree-like-b-root')).toBeNull();
+        expect(mockModal.visible).toBe(false);
+    });
+
+    it('Follow on an already-followed story pushes the follow level; Go to story closes then navigates', () => {
+        mockFollow.tracked = true;
+        mockFollow.outcome = 'tracked';
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('card-action-track'));
+        expect(r.getByTestId('already-tracking-go')).toBeTruthy();
+        expect(r.getByTestId('sheet-back')).toBeTruthy();
+        fireEvent.press(r.getByTestId('already-tracking-go'));
+        expect(mockModal.visible).toBe(false);
+        dismiss();
+        expect(mockFollow.goToStory).toHaveBeenCalledTimes(1);
+    });
+
+    it('Follow on a new story closes the sheet, then starts the proposal', () => {
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('card-action-track'));
+        expect(mockFollow.startTracking).not.toHaveBeenCalled();
+        dismiss();
+        expect(mockFollow.startTracking).toHaveBeenCalledTimes(1);
     });
 });
 

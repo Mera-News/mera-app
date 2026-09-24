@@ -1,5 +1,5 @@
 // useFeedbackTreeEngine — the shared navigation brain for the feedback tree,
-// extracted from FeedbackTreeOverlay so both the overlay (dislike, immediate
+// shared by the ••• sheet's tree levels (FeedbackTreeLevel: like or dislike, immediate
 // persona-apply) and the Feed tab's InlineFeedbackTree (like OR dislike, no
 // persona mutation) drive the SAME tree with the SAME gating + descent logic.
 //

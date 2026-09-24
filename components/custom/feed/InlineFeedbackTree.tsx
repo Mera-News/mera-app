@@ -6,8 +6,8 @@
 //
 // D16 — a TERMINAL leaf is no longer inert. It resolves the leaf's actions
 // against the local context and applies them immediately through the same
-// `useApplyLeafActions` (applyPersonaActions + Undo toast) the modal
-// FeedbackTreeOverlay uses, then stamps the verdict row processed so the
+// `useApplyLeafActions` (applyPersonaActions + Undo toast) the ••• sheet's
+// tree levels use, then stamps the verdict row processed so the
 // digest can never double-apply the same signal. Until then a verdict is
 // provisional: it is written, shown unfilled, and discarded (see
 // article-feedback-service's D15 header).
@@ -54,7 +54,7 @@ const SELECTED_BG = 'rgba(237,167,126,0.18)';
 /** Node whose leaves ask the user to weight a topic without ever naming it
  *  (the like-tree's "More about this topic" → "A lot more" / "A bit more").
  *  This is a well-known content id (mirrors the `findNode('not_important')`
- *  fast-path convention in FeedbackTreeOverlay) rather than a structural
+ *  fast-path convention in FeedbackTreeLevel) rather than a structural
  *  guess — the id is content the server/bundled-fallback own (see
  *  `feedback-tree-v1.ts` server-side, `feedback-tree-snapshot.ts` bundled),
  *  so a future re-shape of this submenu needs a matching update here anyway. */
@@ -288,7 +288,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       // alternative — resolving them per-node — is how "Block {{publication}}
       // instead" would have shipped with the braces still in it, in the chip AND
       // in the breadcrumb crumb (both render through this one callback). Shared
-      // with FeedbackTreeOverlay so the two surfaces cannot supply different
+      // with FeedbackTreeLevel so the two surfaces cannot supply different
       // sets for the same server-authored node — see label-vars.
       return t(node.labelKey, {
         defaultValue: node.labelDefault,

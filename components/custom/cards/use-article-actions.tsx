@@ -1,4 +1,3 @@
-import FeedbackTreeOverlay from '@/components/custom/feedback-tree/FeedbackTreeOverlay';
 import { buildContextJson, type FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import {
   getArticleVerdict,
@@ -14,17 +13,13 @@ import {
   deleteSavedSuggestion,
   isSuggestionSaved,
 } from '@/lib/database/services/saved-article-suggestion-service';
-import { buildOverlayContext } from '@/components/custom/cards/overlay-context';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
-import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
-import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import type { TFunction } from 'i18next';
-import React, { useCallback, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCallback, useEffect, useState } from 'react';
 import { useSavedOverride } from '@/lib/saved-state';
 
 /** A thumb's three states: untouched → tapped-but-context-less → committed. */
@@ -40,24 +35,23 @@ export interface UseArticleActionsInput {
   article?: NewsArticle;
   /** Share params (URL/title). No share handler when absent / no url. */
   share?: ShareArticleParams;
-  /** Whether to read the follow state. False where Follow lives in the •••
-   *  menu instead (the menu reads it itself, once opened). */
-  trackActive?: boolean;
 }
 
 export interface ArticleActions {
   likeState: VerdictState;
   saved: boolean;
-  tracked: boolean;
+  /** Records the like (or removes it when already liked). The feedback tree
+   *  is NOT opened here: the caller pushes it into the ••• sheet. */
   onLike: () => void;
+  /** Records the dislike. The caller pushes the dislike tree. */
   onDislike: () => void;
   onAskMera: () => void;
   onToggleSave: () => void;
-  onTrack: () => void;
   /** Undefined when there is nothing to share. */
   onShare?: () => void;
-  /** Mount once: the feedback tree overlay and the follow dialogs. */
-  element: React.ReactNode;
+  /** A tree leaf settled for `sentiment`: persist the path and, for a
+   *  committed like, fill the thumb. */
+  onLeafPicked: (sentiment: VerdictSentiment, pathIds: string[], appliedCount: number, committed: boolean) => void;
 }
 
 /**
@@ -67,35 +61,25 @@ export interface ArticleActions {
  * action is driven by a {@link FeedbackSubject}, so it works for suggestions
  * and standalone articles alike:
  *   - Like/Dislike → `recordArticleFeedback` carrying origin + surface + a JSON
- *     context snapshot, then opens the feedback tree for THAT verdict (D17: a
- *     thumbs-up used to open nothing, so the like tree's boost/weight leaves
- *     had never run). The thumb stays tinted-not-filled until a leaf is
- *     picked: filled means "this changed your persona" (D15).
+ *     context snapshot. The feedback tree for THAT verdict (D17) is pushed
+ *     into the ••• sheet by the caller (useArticleMenu), never a second
+ *     Modal. The thumb stays tinted-not-filled until a leaf is picked: filled
+ *     means "this changed your persona" (D15).
  *   - Save → suggestions persist via `saveSuggestion`; standalone articles via
  *     `saveStandaloneArticle`. State restored on mount via `isSuggestionSaved`.
  *
- * Costs two local reads per mounted row (verdict, saved). The tree overlay is
- * a Modal that renders nothing until opened.
+ * Costs two local reads per mounted row (verdict, saved).
  */
 export function useArticleActions({
   subject,
   suggestion,
   article,
   share,
-  trackActive = true,
 }: UseArticleActionsInput): ArticleActions {
-  const { t } = useTranslation();
   const [likeState, setLikeState] = useState<VerdictState>('none');
   const liked = likeState !== 'none';
   const [savedFromDb, setSavedFromDb] = useState(false);
-  const [overlayOpen, setOverlayOpen] = useState(false);
-  // Which tree the overlay is showing — D17 gave the thumbs-UP one too.
-  const [overlayRoot, setOverlayRoot] = useState<VerdictSentiment>('dislike');
-  const [overlayCtx, setOverlayCtx] = useState<LocalFeedbackContext>({
-    articleTitle: subject.title,
-  });
   const handleShare = useShareArticle(share);
-  const { tracked, onPress: onTrackPress, dialog: trackDialog } = useTrackButton(subject, trackActive);
 
   // The save/like restore keys off the same id used to persist them.
   const savedId = subject.suggestionId ?? subject.articleId;
@@ -140,9 +124,8 @@ export function useArticleActions({
     };
   }, [savedId]);
 
-  // Records the verdict row and opens the matching tree. Shared by both thumbs;
-  // only the root differs.
-  const recordAndOpenTree = useCallback(
+  // Records the verdict row. Shared by both thumbs; the tree is the caller's.
+  const recordVerdict = useCallback(
     (sentiment: VerdictSentiment) => {
       void recordArticleFeedback({
         articleId: subject.articleId,
@@ -153,12 +136,6 @@ export function useArticleActions({
         surface: subject.surface,
         contextJson: buildContextJson(subject),
       });
-      void (async () => {
-        const ctx = await buildOverlayContext(subject);
-        setOverlayCtx(ctx);
-        setOverlayRoot(sentiment);
-        setOverlayOpen(true);
-      })();
     },
     [subject],
   );
@@ -172,33 +149,30 @@ export function useArticleActions({
     }
     hapticSuccess();
     setLikeState('provisional');
-    recordAndOpenTree('like');
-  }, [liked, subject.articleId, recordAndOpenTree]);
+    recordVerdict('like');
+  }, [liked, subject.articleId, recordVerdict]);
 
   const onDislike = useCallback(() => {
     hapticMedium();
-    recordAndOpenTree('dislike');
-  }, [recordAndOpenTree]);
+    recordVerdict('dislike');
+  }, [recordVerdict]);
 
-  // A terminal leaf settled. `committed` comes from the overlay rather than
+  // A terminal leaf settled. `committed` comes from the leaf rather than
   // being inferred from `appliedCount`: a seenOnly leaf changes nothing by
   // design and must leave the thumb unfilled, while a leaf whose placeholders
   // couldn't be resolved still counts as a reason the user gave. Stamps the row
   // processed when something actually applied, so the 3-hourly digest can't
   // apply a second helping of the same signal.
-  const handleLeafPicked = useCallback(
-    (pathIds: string[], appliedCount: number, committed: boolean) => {
-      const sentiment = overlayRoot;
+  const onLeafPicked = useCallback(
+    (sentiment: VerdictSentiment, pathIds: string[], appliedCount: number, committed: boolean) => {
       if (sentiment === 'like' && committed) setLikeState('committed');
       void (async () => {
         await updateFeedbackContextPath(subject.articleId, sentiment, pathIds, committed);
         if (appliedCount > 0) await markFeedbackProcessedFor(subject.articleId, sentiment);
       })();
     },
-    [overlayRoot, subject.articleId],
+    [subject.articleId],
   );
-
-  const closeOverlay = useCallback(() => setOverlayOpen(false), []);
 
   const onToggleSave = useCallback(() => {
     if (saved) {
@@ -229,42 +203,15 @@ export function useArticleActions({
     void handleShare();
   }, [handleShare]);
 
-  const element = (
-    <>
-      {trackDialog}
-      <FeedbackTreeOverlay
-        visible={overlayOpen}
-        onClose={closeOverlay}
-        root={overlayRoot}
-        onLeafPicked={handleLeafPicked}
-        context={overlayCtx}
-        chatContext={{
-          kind: 'article-suggestion',
-          articleId: subject.articleId,
-          suggestionId: subject.suggestionId,
-          articleTitle: subject.title,
-        }}
-        chatMessage={t(
-          overlayRoot === 'like'
-            ? 'articleFeedback.thumbsUpMessage'
-            : 'articleFeedback.thumbsDownMessage',
-          { title: subject.title },
-        )}
-      />
-    </>
-  );
-
   return {
     likeState,
     saved,
-    tracked,
     onLike,
     onDislike,
     onAskMera,
     onToggleSave,
-    onTrack: onTrackPress,
     onShare: share?.url ? handleSharePress : undefined,
-    element,
+    onLeafPicked,
   };
 }
 

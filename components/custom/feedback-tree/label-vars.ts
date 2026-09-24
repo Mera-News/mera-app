@@ -3,7 +3,7 @@
 //
 // The friction it removes is concrete and already measured in this codebase:
 // two components render this tree (the Feed's `InlineFeedbackTree` and the
-// modal `FeedbackTreeOverlay`) and each built its own `t()` variable bag
+// ••• sheet's `FeedbackTreeLevel`) and each built its own `t()` variable bag
 // inline. The tree is SERVER-OWNED content, so a node authored with a
 // placeholder only one bag supplies renders its braces verbatim — "Show less of
 // {{entity}}" — and only on the surface that was missed, which is invisible to

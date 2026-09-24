@@ -154,9 +154,13 @@ jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
 });
-jest.mock('@/components/custom/feedback-tree/FeedbackTreeOverlay', () => ({
-  __esModule: true,
-  default: () => null,
+// The tree level renders inside the ••• sheet; its own suite covers it.
+jest.mock('@/components/custom/feedback-tree/FeedbackTreeLevel', () => {
+  const { Text } = require('react-native');
+  return { __esModule: true, default: (p: any) => <Text testID={`tree-level-${p.root}`}>tree</Text> };
+});
+jest.mock('@/components/custom/cards/overlay-context', () => ({
+  buildOverlayContext: jest.fn(async (s: any) => ({ articleTitle: s.title })),
 }));
 
 // ── Service / store seams (all touch the native DB or native modules) ──
@@ -199,7 +203,13 @@ jest.mock('@/lib/stores/blur-images-store', () => ({
 // because the real module renders a Gluestack Modal (which pulls @legendapp/motion,
 // untransformed ESM under jest) and is not what these card tests exercise.
 jest.mock('@/components/custom/tracked-stories/use-track-button', () => ({
-  useTrackButton: () => ({ tracked: false, onPress: jest.fn(), dialog: null }),
+  useTrackButton: () => ({
+    tracked: false,
+    resolve: () => 'start',
+    startTracking: jest.fn(),
+    goToStory: jest.fn(),
+    seePlans: jest.fn(async () => {}),
+  }),
 }));
 jest.mock('@/lib/database/services/fact-service', () => ({
   getFactsForTopicTexts: jest.fn(() => Promise.resolve([])),
@@ -849,6 +859,18 @@ describe('ArticleActionsRow', () => {
         expect.objectContaining({ sentiment: 'dislike', origin: 'article', surface: 'explore' }),
       ),
     );
+  });
+
+  // The Saved card's inline thumbs open the SAME sheet as the ••• menu,
+  // straight at the tree's root: no second Modal, no Back row.
+  it('opens the shared sheet at the tree root, with no Back row, on a thumb', async () => {
+    const { getByLabelText, getByTestId, queryByTestId } = render(
+      <ArticleActionsRow subject={subject} article={makeArticle()} />,
+    );
+    fireEvent.press(getByLabelText('articleFeedback.likeLabel'));
+    expect(await waitFor(() => getByTestId('tree-level-like'))).toBeTruthy();
+    expect(queryByTestId('sheet-back')).toBeNull();
+    expect(getByTestId('article-menu-cancel')).toBeTruthy();
   });
 
   it('saves a standalone article via saveStandaloneArticle', async () => {
