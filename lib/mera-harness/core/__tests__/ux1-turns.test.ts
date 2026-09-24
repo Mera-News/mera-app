@@ -2,7 +2,7 @@
 // model. Every case here failed on the loop as it was before ux1.
 
 import { createAgentState, runAgentTurn, type AgentPersona } from '../core';
-import { CANONICAL_LOCATION_KEY, COMBINED_ORIGIN_KEY, ORIGIN_KEY } from '../combined-fact';
+import { CANONICAL_LOCATION_KEY, COMBINED_ORIGIN_KEY, EXPAT_KEY, ORIGIN_KEY } from '../combined-fact';
 import type { AgentDeps, AgentModelResult, Place } from '../types';
 
 const AMS: Place = {
@@ -212,7 +212,9 @@ describe('Q1: the replacement card is the consent for a same-key replace', () =>
   it('a home fact is never replaced by a fact under another key, even after a tap', async () => {
     const h = harness([
       res({ content: 'India.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
-      save({ statement: 'Expat from India living in Amsterdam', questionnaire_attribute: COMBINED_ORIGIN_KEY, replaces: 'home' }),
+      // An ORIGIN fact aimed at the home (a combined statement is now split
+      // into three facts before this guard ever sees it).
+      save({ statement: 'From India', questionnaire_attribute: ORIGIN_KEY, replaces: 'home' }),
       res({ content: 'Here it is.' }),
     ]);
     const state = createAgentState(RESIDENT);
@@ -321,8 +323,10 @@ describe('Q2: a combined origin-and-home fact is offered its split once', () => 
 
     expect(out.combinedRewriteOffered).toBe('c1');
     const split = h.saves[h.saves.length - 1];
+    // Three separate facts (owner decision): origin, expat status, home.
     expect(split).toEqual([
-      { statement: 'Expat from India', questionnaire_attribute: ORIGIN_KEY, replaces: 'c1', topic_skill_id: 'topics/origin' },
+      { statement: 'From India', questionnaire_attribute: ORIGIN_KEY, replaces: 'c1', topic_skill_id: 'topics/origin' },
+      { statement: 'Expat in Netherlands', questionnaire_attribute: EXPAT_KEY, topic_skill_id: 'topics/origin' },
       { statement: 'Lives in Amsterdam, Netherlands, EU', questionnaire_attribute: CANONICAL_LOCATION_KEY, topic_skill_id: 'topics/residence' },
     ]);
     // The synthetic leg reaches the UI like any other.

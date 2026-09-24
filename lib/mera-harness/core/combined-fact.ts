@@ -44,3 +44,81 @@ export function splitCombinedFact(
   if (!origin || !place) return null;
   return { origin, residence: `Lives in ${place}` };
 }
+
+// ---------------------------------------------------------------------------
+// THREE FACTS FOR AN EXPAT (owner decision, ux1). Origin, expat status and
+// residence are separate, each with its own key, each manageable on its own.
+// ---------------------------------------------------------------------------
+
+/** Expat status: which country the user lives in as someone from elsewhere.
+ *  "Expat in The Netherlands". Changes only when the COUNTRY changes. */
+export const EXPAT_KEY = 'background: expat in country of residence';
+
+/** Blocs and continents: the top rung of a place chain, never a country. */
+const NOT_A_COUNTRY = new Set([
+  'eu', 'eea', 'efta', 'europe', 'asia', 'africa', 'north america',
+  'south america', 'oceania', 'antarctica',
+]);
+
+/** "Expat from India" or "Expat originally from Kerala, India" gives
+ *  "From India" / "From Kerala, India". A text with no "from" is returned as is. */
+export function toOriginStatement(originHalf: string): string {
+  const m = /\bfrom\s+(.+?)\s*\.?$/i.exec((originHalf ?? '').trim());
+  return m ? `From ${m[1].trim()}` : (originHalf ?? '').trim();
+}
+
+/** The country rung of a place statement: the last rung that is not a bloc.
+ *  Null when the statement carries no chain ("Lives in Berlin"). */
+export function countryOf(statement: string): string | null {
+  const rungs = (statement ?? '')
+    .replace(/^(?:lives|living|based|resides?)\s+in\s+/i, '')
+    .split(',')
+    .map((r) => r.trim().replace(/\.$/, ''))
+    .filter(Boolean)
+    .filter((r) => !NOT_A_COUNTRY.has(r.toLowerCase()));
+  return rungs.length >= 2 ? rungs[rungs.length - 1] : null;
+}
+
+/** The country an origin statement names ("From Kerala, India" gives "India"). */
+export function originCountry(statement: string): string | null {
+  const rungs = (statement ?? '')
+    .replace(/^(?:expat\s+)?(?:originally\s+)?from\s+/i, '')
+    .split(',')
+    .map((r) => r.trim().replace(/\.$/, ''))
+    .filter(Boolean);
+  return rungs.length > 0 ? rungs[rungs.length - 1] : null;
+}
+
+/** Country names compared loosely: case and a leading "the" do not matter. */
+export function sameCountry(a: string | null, b: string | null): boolean {
+  const n = (x: string | null) => (x ?? '').trim().toLowerCase().replace(/^the\s+/, '');
+  return n(a) !== '' && n(a) === n(b);
+}
+
+export function expatStatement(country: string): string {
+  return `Expat in ${country}`;
+}
+
+export function isOriginStatement(statement: string): boolean {
+  return /^(?:expat\s+)?(?:originally\s+)?from\b/i.test((statement ?? '').trim());
+}
+
+export function isExpatStatement(statement: string): boolean {
+  return /^expat\s+(?:living\s+)?in\b/i.test((statement ?? '').trim());
+}
+
+/**
+ * The three facts a combined origin-and-home statement stands for, in order:
+ * origin, expat status (only when the two countries differ), residence.
+ * Null when the statement does not have the combined shape.
+ */
+export function threeFactsOf(
+  statement: string,
+): { origin: string; expat: string | null; residence: string } | null {
+  const halves = splitCombinedFact(statement);
+  if (!halves) return null;
+  const origin = toOriginStatement(halves.origin);
+  const country = countryOf(halves.residence);
+  const expat = country && !sameCountry(country, originCountry(origin)) ? expatStatement(country) : null;
+  return { origin, expat, residence: halves.residence };
+}

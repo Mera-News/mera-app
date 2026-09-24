@@ -17,12 +17,20 @@ import {
   narratesProcess,
   trailingQuestion,
 } from './prose';
-import { isLocationKey, mayReplace, mayReplaceKey, sameAttributeKey } from './fact-subject';
+import { isLocationKey, isRelationalStatement, mayReplace, mayReplaceKey, sameAttributeKey } from './fact-subject';
 import {
   CANONICAL_LOCATION_KEY,
+  COMBINED_ORIGIN_KEY,
+  EXPAT_KEY,
   ORIGIN_KEY,
+  countryOf,
+  expatStatement,
   isCombinedOriginFact,
-  splitCombinedFact,
+  isExpatStatement,
+  isOriginStatement,
+  originCountry,
+  sameCountry,
+  threeFactsOf,
 } from './combined-fact';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
@@ -262,6 +270,51 @@ function placeFromPayload(payload: unknown): Place | null {
   if (!payload || typeof payload !== 'object') return null;
   const p = payload as Partial<Place>;
   return typeof p.locality === 'string' && typeof p.countryCode === 'string' ? (p as Place) : null;
+}
+
+/**
+ * A combined origin-and-home entry from the model, expanded into its separate
+ * facts; any other entry unchanged. A `replaces` on the combined entry goes
+ * with the residence part, the only part that can replace a home.
+ */
+function expandCombinedEntry(entry: Record<string, unknown>): Record<string, unknown>[] {
+  const statement = typeof entry.statement === 'string' ? entry.statement : '';
+  const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : '';
+  const looksCombined =
+    attribute.trim().toLowerCase() === COMBINED_ORIGIN_KEY
+    || /\b(?:expat|migrant|immigrant|originally|from)\b[^,]*\b(?:living|based|settled|residing)\s+in\b/i.test(statement);
+  const parts = looksCombined ? threeFactsOf(statement) : null;
+  if (!parts) return [entry];
+  const out: Record<string, unknown>[] = [
+    { statement: parts.origin, questionnaire_attribute: ORIGIN_KEY },
+  ];
+  if (parts.expat) out.push({ statement: parts.expat, questionnaire_attribute: EXPAT_KEY });
+  out.push({
+    statement: parts.residence,
+    questionnaire_attribute: CANONICAL_LOCATION_KEY,
+    ...(typeof entry.replaces === 'string' ? { replaces: entry.replaces } : {}),
+  });
+  return out;
+}
+
+/**
+ * The EXACT key for the three identity kinds. The model writes "origin",
+ * "expat" or "location" (measured on staging); the topic generator's home
+ * anchor matches the canonical home string byte for byte, and the loop's own
+ * rules match these constants. Other kinds are left exactly as written.
+ */
+function withExactKey(entry: Record<string, unknown>): Record<string, unknown> {
+  const statement = typeof entry.statement === 'string' ? entry.statement : '';
+  const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : '';
+  const key = attribute.split(':')[0].trim().toLowerCase();
+  const loose = key === '' || ['origin', 'background', 'expat', 'nationality', 'heritage'].includes(key);
+  if (isExpatStatement(statement) && loose) return { ...entry, questionnaire_attribute: EXPAT_KEY };
+  if (isOriginStatement(statement) && loose) return { ...entry, questionnaire_attribute: ORIGIN_KEY };
+  if ((isLocationKey(attribute) || (key === '' && /^lives in\b/i.test(statement.trim())))
+      && !isRelationalStatement(statement)) {
+    return { ...entry, questionnaire_attribute: CANONICAL_LOCATION_KEY };
+  }
+  return entry;
 }
 
 /** An entry that states where the USER lives: the home key, or a residence-
@@ -861,9 +914,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       }
 
       if (call.name === 'saveExtractedFacts') {
-        const list = Array.isArray(args.extracted_user_information)
-          ? (args.extracted_user_information as Record<string, unknown>[])
-          : [];
+        // THREE FACTS, NEVER ONE (owner decision, ux1): a combined
+        // origin-and-home entry is expanded into origin, expat status and
+        // residence before anything else looks at it, and every entry of
+        // those three kinds gets its EXACT key, since the model shortens keys.
+        const list = (
+          Array.isArray(args.extracted_user_information)
+            ? (args.extracted_user_information as Record<string, unknown>[])
+            : []
+        )
+          .flatMap(expandCombinedEntry)
+          .map(withExactKey);
         // THE LIST THE APP ACTUALLY READS. `handleSaveExtractedFacts` builds
         // the cards from `extracted_user_information`, not from `proposals`,
         // so a decision made only on the parallel array is a decision the user
@@ -994,6 +1055,39 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             replaces: replaces === null ? undefined : replaces,
             ...(topicSkill ? { topic_skill_id: topicSkill } : {}),
           });
+        }
+        // A MOVE ACROSS A BORDER also moves the expat status: the residence
+        // card is joined by one updating "Expat in <country>", replacing the
+        // expat fact on file. Never offered for the country the user is from.
+        for (const e of [...sanitised]) {
+          const target = typeof e.replaces === 'string'
+            ? state.persona.facts.find((f) => f.id === e.replaces)
+            : undefined;
+          if (!isHomeEntry(e) || !target) continue;
+          const newCountry = countryOf(String(e.statement));
+          const oldCountry = countryOf(target.statement);
+          if (!newCountry || !oldCountry || sameCountry(newCountry, oldCountry)) continue;
+          const expatFact = state.persona.facts.find(
+            (f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement),
+          );
+          const originFact = state.persona.facts.find(
+            (f) => f.attribute === ORIGIN_KEY || isOriginStatement(f.statement),
+          );
+          if (!expatFact) continue;
+          if (originFact && sameCountry(newCountry, originCountry(originFact.statement))) continue;
+          if (sanitised.some((x) => x.replaces === expatFact.id)) continue;
+          const statement = expatStatement(newCountry);
+          sanitised.push({
+            statement,
+            questionnaire_attribute: EXPAT_KEY,
+            replaces: expatFact.id,
+            ...((deps.skillIds() as readonly string[]).includes('topics/origin')
+              ? { topic_skill_id: 'topics/origin' }
+              : {}),
+          });
+          proposals.push({ statement, kind: 'origin', place: null, replaces: expatFact.id });
+          proposedStatements.add(statement.toLowerCase());
+          offeredThisTurn.push(statement.toLowerCase());
         }
         if (sanitised.length > 0) proposedSomething = true;
         const out = await deps.tools.saveExtractedFacts({
@@ -1228,8 +1322,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     if (!kinds.includes('origin') && !kinds.includes('residence')) return null;
     const combined = combinedFactOnFile;
     if (!combined) return null;
-    const halves = splitCombinedFact(combined.statement);
-    if (!halves) return null;
+    const parts = threeFactsOf(combined.statement);
+    if (!parts) return null;
     // The skill's own origin card already replaces it (see the save handler).
     const originDone = proposals.some((p) => p.replaces === combined.id);
     if (!originDone && deps.combinedFactRewrite && (await deps.combinedFactRewrite.wasOffered(combined.id))) {
@@ -1240,18 +1334,28 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const hasHome =
       state.persona.facts.some((f) => f.id !== combined.id && isLocationKey(f.attribute))
       || proposals.some((p) => p.kind === 'residence');
+    const hasExpat =
+      state.persona.facts.some((f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement))
+      || proposals.some((p) => isExpatStatement(p.statement));
     const candidates: Record<string, unknown>[] = [];
     if (!originDone) {
       candidates.push({
-        statement: halves.origin,
+        statement: parts.origin,
         questionnaire_attribute: ORIGIN_KEY,
         replaces: combined.id,
         ...(topicSkill('origin') ? { topic_skill_id: topicSkill('origin') } : {}),
       });
     }
+    if (parts.expat && !hasExpat) {
+      candidates.push({
+        statement: parts.expat,
+        questionnaire_attribute: EXPAT_KEY,
+        ...(topicSkill('origin') ? { topic_skill_id: topicSkill('origin') } : {}),
+      });
+    }
     if (!hasHome) {
       candidates.push({
-        statement: halves.residence,
+        statement: parts.residence,
         questionnaire_attribute: CANONICAL_LOCATION_KEY,
         ...(topicSkill('residence') ? { topic_skill_id: topicSkill('residence') } : {}),
       });
@@ -1271,7 +1375,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
     const splitProposals: AgentProposal[] = entries.map((e) => ({
       statement: String(e.statement),
-      kind: e.questionnaire_attribute === ORIGIN_KEY ? 'origin' : 'residence',
+      kind: e.questionnaire_attribute === CANONICAL_LOCATION_KEY ? 'residence' : 'origin',
       place: null,
       replaces: typeof e.replaces === 'string' ? e.replaces : null,
     }));
