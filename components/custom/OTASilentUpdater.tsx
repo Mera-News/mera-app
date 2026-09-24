@@ -2,61 +2,134 @@ import { useEffect } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Updates from 'expo-updates';
 
-import { requestRestart } from '@/lib/app-restart';
+import {
+  markOtaRestartAttempted,
+  otaRestartAlreadyAttempted,
+  requestRestart,
+} from '@/lib/app-restart';
 import logger from '@/lib/logger';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 
 /**
  * Fetches OTA updates and shows the user NOTHING. Renders null by design.
  *
- * OTA updates are silent. This component downloads the new bundle and, when the
- * fetch actually produced a NEW one, hands `requestRestart('ota')` to
- * `lib/app-restart.ts` so the user is on it immediately instead of waiting for
- * a cold start they may never perform. The restart itself is silent too: no
- * prompt, no banner, no toast, and every gate (active app state, a 10s floor,
- * live holds) lives in that module rather than here.
+ * This is the whole OTA lifecycle: when to look, and when a downloaded bundle is
+ * worth a restart. It is the app's only restart trigger that fires on its own.
+ *
+ * WHAT IT DOES, AND THE TWO CASES ARE DIFFERENT
+ *   - ON MOUNT: check and fetch, and NEVER restart. expo-updates already
+ *     launches a downloaded update at the next cold start via its own
+ *     launch-time check, so reloading seconds into a launch buys nothing — and
+ *     it is the one restart that can land on a credential screen during
+ *     onboarding. Mounting is also when a device that stays open all day does
+ *     its only check, which is why the fetch still happens here.
+ *   - ON A TRUE `background` -> `active` RETURN: check, fetch, and restart only
+ *     if an update is actually downloaded and pending.
+ *
+ * A RETURN ON ITS OWN IS NOT A REASON TO RESTART. The app briefly reloaded on
+ * every true return whether or not anything had changed, and the owner rejected
+ * it in production: "the app refreshes every time it's foregrounded, even if
+ * it's at the latest version". Nothing here may restart a reader who is already
+ * on the current bundle.
  *
  * DO NOT REINTRODUCE A PROMPT HERE. This used to be a tappable toast, then a
  * non-dismissible takeover modal (`OTAUpdateModal`, deleted) that fired on
  * `isUpdatePending` — which meant every publish, including a copy tweak,
  * interrupted every user and demanded a tap before they could carry on. The
- * escalation to a takeover was aimed at "users sit on stale JS", but the cost
- * landed on the wrong side: shipping a small fix became a user-visible event.
- * The restart closes that same gap with no user-visible event at all, which is
- * the whole point — it is not a licence to ask again.
+ * restart is the silent version of closing that gap, and it is not a licence to
+ * ask again. There is exactly ONE non-dismissible update surface left in the app
+ * and it is not this one: `NativeUpdateGate` -> `ForceUpdateScreen`, driven by
+ * the server's `appVersionInfo.minSupportedVersion` floor.
  *
- * There is exactly ONE non-dismissible update surface left in the app, and it is
- * not this one: `NativeUpdateGate` -> `ForceUpdateScreen`, driven by the
- * server's `appVersionInfo.minSupportedVersion` floor. Blocking a user is a
- * store-version decision made server-side, not a per-OTA decision made here.
+ * ARMS ON `background` ONLY, NEVER `!== 'active'`. iOS reports `inactive` for
+ * the app switcher, a notification banner pulled down and a Control Centre
+ * swipe, and none of those is a departure — arming on them would restart a user
+ * who never left, mid-tap. `lib/subscriptions/subscribe-flow.ts` draws the same
+ * line for the same reason. Note an `inactive` on the way OUT is part of the
+ * normal iOS departure sequence and must not disarm what follows.
  *
- * GATE ON THE RESULT, NOT ON THE CALL RESOLVING. `UpdateFetchResult` is a union
- * and only `UpdateFetchResultSuccess` carries `isNew: true`; both the failure
- * and the `isRollBackToEmbedded` arms report `isNew: false`. Restarting because
- * `fetchUpdateAsync()` resolved would restart on every check that found nothing.
+ * Route blocking and the holds live in `lib/app-restart.ts`, applied to every
+ * reason. They are not this file's business and must not be duplicated here.
  *
- * This component checks on MOUNT, so it runs on every boot — which is why the
- * 10s floor in `lib/app-restart.ts` is seeded across the reload from the marker
- * rather than kept in module state. Without that, a bundle that keeps fetching
- * as new restarts on every boot with nothing to stop it.
- *
- * Since nothing is user-visible anymore, confirm a rollout through Sentry: every
- * event carries `ota_update_id` / `ota_channel` / `runtime_version` from
+ * Since nothing is user-visible, confirm a rollout through Sentry: every event
+ * carries `ota_update_id` / `ota_channel` / `runtime_version` from
  * `lib/observability/app-context.ts`.
  */
+
+/**
+ * Whether a fetch result is the success arm of the union.
+ *
+ * `UpdateFetchResult` has three arms and only `UpdateFetchResultSuccess` carries
+ * `isNew: true`; the failure arm and the `isRollBackToEmbedded` arm both report
+ * false. Gating on "the call resolved" would restart on every check that found
+ * nothing.
+ *
+ * `isNew` is NOT a comparison against the running bundle, despite its docstring:
+ * natively it is hardcoded `true` on the loader's success arm
+ * (`UpdatesModule.swift` / `UpdatesModule.kt`). So it means "a download
+ * completed", which is why it is only one half of the gate below.
+ */
+function fetchedSomethingNew(result: Updates.UpdateFetchResult): boolean {
+  return result.isNew === true;
+}
+
 export default function OTASilentUpdater() {
   useEffect(() => {
     if (!Updates.isEnabled || __DEV__) return;
 
-    const checkForUpdate = async () => {
+    /**
+     * @param mayRestart false on the mount check. See the header.
+     */
+    const checkForUpdate = async (mayRestart: boolean) => {
       try {
         const result = await Updates.checkForUpdateAsync();
-        if (!result.isAvailable) return;
-        const fetched = await Updates.fetchUpdateAsync();
-        // Only the success arm of the union sets this.
-        if (fetched.isNew) {
-          await requestRestart('ota');
+        let fetchedNew = false;
+        if (result.isAvailable) {
+          fetchedNew = fetchedSomethingNew(await Updates.fetchUpdateAsync());
         }
+        if (!mayRestart) return;
+
+        // THE DISJUNCTION, and both arms are load-bearing.
+        //
+        // `fetchUpdateAsync()` awaits the native module and returns its result
+        // directly; NOTHING on that path writes `latestContext`. The context is
+        // written only by a separate asynchronous native event
+        // (`Expo.nativeUpdatesStateChangeEvent`), which is additionally dropped
+        // when its sequence number is not ahead of the last one. So the context
+        // is eventually correct, not synchronously correct.
+        //
+        //   - `isNew` catches a download that completed on THIS transition,
+        //     before that event landed.
+        //   - `isUpdatePending` catches an update downloaded in an EARLIER
+        //     session that never launched. It is already pending at boot and
+        //     needs no new fetch, so the `isNew` arm never sees it.
+        //
+        // No JS test can pin the ordering between them — the state machine is
+        // native — which is exactly why this is an OR and not a choice.
+        const context = Updates.latestContext;
+        if (!fetchedNew && !context?.isUpdatePending) return;
+
+        // AT MOST ONE RESTART PER UPDATE ID. The OTA check is the only restart
+        // trigger left and it runs on every return, so a bundle that downloads,
+        // reloads and fails to launch would otherwise restart on every return
+        // for as long as it keeps downloading. The 10s floor spaces that cycle;
+        // this is what bounds it. Both arms carry the id as `manifest.id` — on
+        // the context it is `downloadedManifest`, not the `downloadedUpdate`
+        // that `useUpdates()` exposes.
+        const updateId = context?.downloadedManifest?.id;
+        if (!updateId) {
+          // Nothing to record an attempt against, so a restart here could not be
+          // bounded. The update still launches at the next cold start.
+          logger.debug('[ota] pending update with no id, leaving it for the next cold start');
+          return;
+        }
+        if (await otaRestartAlreadyAttempted(updateId)) return;
+
+        // Awaited BEFORE the request: a write after `reloadAsync()` never runs,
+        // and an attempt blocked by a hold or a route must still consume the
+        // guard rather than retry on every return.
+        await markOtaRestartAttempted(updateId);
+        await requestRestart('ota');
       } catch (error) {
         // The OTA check is best-effort — a timed-out / lost connection is
         // expected on mobile and recovers on the next foreground. Don't report
@@ -72,19 +145,23 @@ export default function OTASilentUpdater() {
     // CHECK ON MOUNT, not only on the next foreground.
     //
     // `AppState.addEventListener('change', …)` fires on a TRANSITION. At mount
-    // the app is already `active`, so no transition happens and this effect
-    // registered a listener that would not fire until the user backgrounded the
-    // app and came back. An app left open — the normal case for someone using
-    // it — never checked at all, and a freshly published update reached that
-    // device only via expo-updates' own launch-time check on the NEXT cold
-    // start. With the update now silent this matters MORE, not less: the mount
-    // check is what gets the bundle downloaded in time for that cold start.
-    checkForUpdate();
+    // the app is already `active`, so no transition happens and a listener alone
+    // would not fire until the user backgrounded the app and came back. An app
+    // left open — the normal case for someone using it — would never check at
+    // all, and a freshly published update would reach that device only via
+    // expo-updates' own launch-time check on the NEXT cold start. The mount
+    // check is what gets the bundle downloaded in time for that.
+    void checkForUpdate(false);
 
+    let armed = false;
     const handleAppStateChange = (state: AppStateStatus) => {
-      if (state === 'active') {
-        checkForUpdate();
+      if (state === 'background') {
+        armed = true;
+        return;
       }
+      if (state !== 'active' || !armed) return;
+      armed = false;
+      void checkForUpdate(true);
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);

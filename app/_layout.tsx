@@ -23,7 +23,6 @@ import client from '../lib/apollo-client';
 import { OfflineBannerSlot } from '@/components/custom/OfflineBanner';
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
-import AppRestartOnForeground from '@/components/custom/AppRestartOnForeground';
 import NativeUpdateGate from '@/components/custom/NativeUpdateGate';
 import OTASilentUpdater from '@/components/custom/OTASilentUpdater';
 import TranslationUnavailablePrompt from '@/components/custom/TranslationUnavailablePrompt';
@@ -445,11 +444,6 @@ export default Sentry.wrap(function RootLayout() {
             <NativeUpdateGate>
               <ToastInitializer />
               <OTASilentUpdater />
-              {/* Inside the gate's CHILDREN on purpose: a blocked user is
-                  rendered ForceUpdateScreen INSTEAD of these, so nothing here
-                  is mounted and nobody can be restarted out from under the
-                  update screen. */}
-              <AppRestartOnForeground />
               <TranslationUnavailablePrompt />
               <AppRoot />
               {/* LAST on purpose: toasts have to paint above the router stack,
