@@ -422,12 +422,26 @@ describe('ExploreScreen — browse countries + suppressed scopes (Items 7/18)', 
 });
 
 describe('ExploreScreen — search collapsed into the title row (Item 12a)', () => {
-    it('spaces "?" and the magnifier so their 44pt frames do not overlap', () => {
-        const { getByTestId } = render(<ExploreScreen />);
-        const { StyleSheet } = require('react-native');
-        const margin = StyleSheet.flatten(getByTestId('explore-search-open').props.style).margin;
-        const row = StyleSheet.flatten(getByTestId('explore-header-actions').props.style) ?? {};
-        expect(row.gap).toBeGreaterThanOrEqual(-2 * margin);
+    // Owner: "Explore (?)" like Feed and Dashboard, the "?" right after the
+    // title and the magnifier alone at the right.
+    it('puts the "?" right after the title and keeps the magnifier last, at the right', () => {
+        const { getByTestId, UNSAFE_root } = render(<ExploreScreen />);
+        const ids = UNSAFE_root
+            .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+            .map((n: any) => n.props.testID as string);
+        const title = ids.indexOf('explore-title');
+        expect(title).toBeGreaterThanOrEqual(0);
+        expect(ids.indexOf('explore-explainer-open')).toBe(title + 1);
+        expect(ids.indexOf('explore-search-open')).toBeGreaterThan(ids.indexOf('explore-explainer-open'));
+        // The "?" sits with the title, not in a cluster with the magnifier.
+        const inGroup = (id: string) => {
+            for (let p: any = getByTestId(id).parent; p; p = p.parent) {
+                if (p.props?.testID === 'explore-title-group') return true;
+            }
+            return false;
+        };
+        expect(inGroup('explore-explainer-open')).toBe(true);
+        expect(inGroup('explore-search-open')).toBe(false);
     });
 
     it('gives the magnifier a real 44pt frame with a 24pt footprint, not hitSlop', () => {

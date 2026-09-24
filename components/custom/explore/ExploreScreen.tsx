@@ -455,54 +455,53 @@ const ExploreScreen: React.FC = () => {
                             />
                         ) : (
                             <>
-                                <Heading
-                                    size="4xl"
-                                    className="text-white flex-1 mr-3"
-                                    pointerEvents="none"
-                                    // `flex-1` CLAIMS the row's remaining width.
-                                    // `flex-shrink` let this column collapse toward
-                                    // zero in a justify-between row, which is the
-                                    // actual cause of both failures seen here: the
-                                    // title wrapping MID-WORD ("Dashboar"/"d"), and
-                                    // then, with adjustsFontSizeToFit, shrinking to
-                                    // ~8px to fit the collapsed box. No
-                                    // adjustsFontSizeToFit — with a real width the
-                                    // one-line clamp is enough, and scale-to-fit
-                                    // fights the row's minHeight pin.
-                                    numberOfLines={1}
-                                >
-                                    {t('explore.title')}
-                                </Heading>
-                                {/* 20pt: exactly what keeps the two 44pt frames
-                                    (each reaching 10pt past its glyph) from
-                                    overlapping. In points, in `style`: the
-                                    `space` tokens are rem-scaled. */}
+                                {/* "Explore (?)", the "?" right after the title
+                                    as on Feed and Dashboard (owner). The group
+                                    takes the row's remaining width; the title
+                                    shrinks inside it only when it must, so the
+                                    "?" stays beside the word, and the magnifier
+                                    keeps the right edge. */}
                                 <HStack
-                                    className="items-center"
-                                    style={{ gap: 20 }}
-                                    testID="explore-header-actions"
+                                    className="items-center flex-1 min-w-0 mr-3"
+                                    space="sm"
+                                    pointerEvents="box-none"
+                                    testID="explore-title-group"
                                 >
+                                    <Heading
+                                        size="4xl"
+                                        className="text-white flex-shrink min-w-0"
+                                        pointerEvents="none"
+                                        // One line. A shrinking column must never
+                                        // wrap MID-WORD ("Dashboar"/"d"), so the
+                                        // clamp truncates instead. No
+                                        // adjustsFontSizeToFit: it fights the
+                                        // row's minHeight pin.
+                                        numberOfLines={1}
+                                        testID="explore-title"
+                                    >
+                                        {t('explore.title')}
+                                    </Heading>
                                     {/* N4: what this tab is and where its stories come from. */}
                                     <TabExplainerButton tab="explore" testID="explore-explainer-open" />
-                                    <Pressable
-                                        testID="explore-search-open"
-                                        onPress={handleOpenSearch}
-                                        // A real 44pt frame pulled back to the 24pt
-                                        // glyph's footprint, same recipe as the "?"
-                                        // beside it: hitSlop alone measured 24x24.
-                                        style={{
-                                            width: 44,
-                                            height: 44,
-                                            margin: -10,
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}
-                                        accessibilityRole="button"
-                                        accessibilityLabel={t('explore.openSearch')}
-                                    >
-                                        <MaterialIcons name="search" size={24} color="#ffffff" />
-                                    </Pressable>
                                 </HStack>
+                                <Pressable
+                                    testID="explore-search-open"
+                                    onPress={handleOpenSearch}
+                                    // A real 44pt frame pulled back to the 24pt
+                                    // glyph's footprint, same recipe as the "?":
+                                    // hitSlop alone measured 24x24.
+                                    style={{
+                                        width: 44,
+                                        height: 44,
+                                        margin: -10,
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                    }}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t('explore.openSearch')}
+                                >
+                                    <MaterialIcons name="search" size={24} color="#ffffff" />
+                                </Pressable>
                             </>
                         )}
                     </HStack>
