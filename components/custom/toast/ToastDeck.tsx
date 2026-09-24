@@ -234,6 +234,7 @@ function ToastSlot({
             // measures it at zero collapses every toast to an icon-only sliver.
             // An absolutely positioned child is NOT centered by a parent's
             // `alignItems`, so the transform has to live out here.
+            testID={leaving ? 'toast-slot-leaving' : `toast-slot-${depth}`}
             style={[
                 {
                     position: 'absolute',
@@ -241,6 +242,12 @@ function ToastSlot({
                     right: 0,
                     top: 0,
                     alignItems: 'center',
+                    // STACKING IS EXPLICIT, never left to sibling order. On
+                    // device the buried panel painted OVER the front card: the
+                    // front's text read as dimmed to ~60% (a 55% panel on top)
+                    // and no peek showed. Front highest; a leaving clone above
+                    // all, since it must cover the card promoting behind it.
+                    zIndex: leaving ? VISIBLE_DEPTH + 1 : VISIBLE_DEPTH - depth,
                 },
                 animatedStyle,
             ]}

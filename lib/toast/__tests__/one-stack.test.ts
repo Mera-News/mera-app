@@ -129,4 +129,31 @@ describe('one undo-toast style', () => {
         expect(onUndo).toHaveBeenCalledTimes(1);
         expect(ids()).toEqual([]);
     });
+
+    it('shows NO undone follow-up when onUndo resolves false (a newer change owns the value)', async () => {
+        toastManager.showUndoToast({
+            title: 'Less from AD.nl',
+            undoLabel: 'Undo',
+            undoneTitle: 'Change undone',
+            onUndo: async () => false,
+        });
+        (rendered().props.onUndo as () => void)();
+        for (let i = 0; i < 5; i += 1) await Promise.resolve();
+        expect(ids()).toEqual([]);
+    });
+
+    it('still shows the undone follow-up when onUndo returns true or nothing', async () => {
+        for (const result of [true, undefined]) {
+            closeAll();
+            toastManager.showUndoToast({
+                title: 'Less from AD.nl',
+                undoLabel: 'Undo',
+                undoneTitle: 'Change undone',
+                onUndo: () => result,
+            });
+            (rendered().props.onUndo as () => void)();
+            for (let i = 0; i < 5; i += 1) await Promise.resolve();
+            expect(ids()).toHaveLength(1);
+        }
+    });
 });

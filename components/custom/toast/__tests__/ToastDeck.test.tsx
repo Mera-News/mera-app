@@ -5,7 +5,7 @@
  * a permanently mounted overlay would sit under any Modal presented after it.
  */
 import React from 'react';
-import { Platform, Text } from 'react-native';
+import { Platform, StyleSheet, Text } from 'react-native';
 import { act, render } from '@testing-library/react-native';
 
 jest.mock('react-native-reanimated', () => {
@@ -116,6 +116,40 @@ describe('ToastDeck on iOS', () => {
         // FIFO: the first card is read; the second waits behind as a bare panel.
         expect(getByText('First')).toBeTruthy();
         expect(queryByText('Second')).toBeNull();
+    });
+
+    it('peeks the queued card BELOW the front one, painted UNDER it, and never dims the front', () => {
+        const r = render(<ToastDeck />);
+        act(() => {
+            show({ duration: 5000, render: card('First') });
+            show({ duration: 5000, render: card('Second') });
+        });
+        // The buried card needs the front's measured box to draw its panel.
+        act(() => {
+            r.UNSAFE_root.findAll((n: any) => typeof n.props.onLayout === 'function')[0].props.onLayout({
+                nativeEvent: { layout: { width: 240, height: 80 } },
+            });
+        });
+        const slotOf = (node: any) => {
+            let cur = node;
+            while (cur && !String(cur.props?.testID ?? '').startsWith('toast-slot-')) cur = cur.parent;
+            return cur;
+        };
+        const front = slotOf(r.getByText('First'));
+        const back = slotOf(r.getByTestId('toast-buried-panel'));
+        expect(front).toBeTruthy();
+        expect(back).toBeTruthy();
+        const f = StyleSheet.flatten(front.props.style);
+        const b = StyleSheet.flatten(back.props.style);
+        // Stacking is EXPLICIT, not left to sibling order: the front paints on top.
+        expect(f.zIndex).toBeGreaterThan(b.zIndex);
+        // The front is fully opaque; only the card behind is dimmed.
+        expect(f.opacity).toBe(1);
+        expect(b.opacity).toBeGreaterThan(0);
+        expect(b.opacity).toBeLessThan(1);
+        // The back card sits lower, so its bottom edge peeks out.
+        const ty = (st: any) => st.transform.find((t: any) => 'translateY' in t).translateY;
+        expect(ty(b)).toBeGreaterThan(ty(f));
     });
 
     it('detaches the overlay once the last card has faded out', () => {

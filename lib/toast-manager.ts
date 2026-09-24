@@ -222,7 +222,10 @@ class ToastManager {
      * `require`d only when a toast is actually shown.
      *
      * Undo closes this card; `undoneTitle`, when given, follows with a short
-     * info toast. Not debounced: each applied change is a distinct event.
+     * info toast. `onUndo` may return (or resolve to) `false` to say the undo
+     * was REFUSED (a newer change owns the value): then no follow-up shows,
+     * since "Change undone" would be a false claim. `true` or nothing shows it.
+     * Not debounced: each applied change is a distinct event.
      */
     showUndoToast(opts: {
         title: string;
@@ -231,7 +234,7 @@ class ToastManager {
         undoneTitle?: string;
         /** Defaults to `feedback-undo`, the id the harness runbooks address. */
         undoTestID?: string;
-        onUndo: () => void | Promise<void>;
+        onUndo: () => void | boolean | Promise<void | boolean>;
     }) {
         if (!this.toastInstance) {
             logger.warn('[ToastManager] Toast instance not initialized. Call setToastInstance() first.');
@@ -253,14 +256,15 @@ class ToastManager {
                     onUndo: () => {
                         this.toastInstance?.close(id);
                         void (async () => {
+                            let done: void | boolean = undefined;
                             try {
-                                await opts.onUndo();
+                                done = await opts.onUndo();
                             } catch (err) {
                                 logger.captureException(err, {
                                     tags: { component: 'ToastManager', method: 'showUndoToast.undo' },
                                 });
                             }
-                            if (opts.undoneTitle) this.showInfo(opts.undoneTitle);
+                            if (opts.undoneTitle && done !== false) this.showInfo(opts.undoneTitle);
                         })();
                     },
                 }),
