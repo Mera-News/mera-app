@@ -151,6 +151,12 @@ reported `settled` and did nothing — **twice** — because the toast is on top
 a dead button, and will recur on every bottom-anchored CTA in the app.
 → Close the toast first (`adb shell input tap 996 2208`), then press. When a press "succeeds" but
 nothing changes, dump rects from `snapshot --raw --json` and check for an overlay before filing a bug.
+→ **The same band (2146–2271) overlaps the 5-item bottom TAB BAR (2126–2337).** A tab press at the
+row's vertical center (~y=2231) can land on the toast instead of the tab and silently no-op. Tap tabs
+nearer y≈2170–2200, or dismiss the toast first. A cold-restart (force-stop + relaunch) does not stop
+the toast recurring — `BILLING_UNAVAILABLE` is a hardware/Play-Billing gap on the emulator itself, not
+something an account-side entitlement grant can fix, so it fires again within seconds regardless of
+plan tier.
 
 **`agent-device react-native dismiss-overlay` does not clear a stack of LogBox errors.** With 12
 queued it dismisses one and returns *"dismiss action sent, but verification still detects an
