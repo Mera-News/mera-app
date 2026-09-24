@@ -380,11 +380,12 @@ function withExactKey(entry: Record<string, unknown>): Record<string, unknown> {
   const statement = typeof entry.statement === 'string' ? entry.statement : '';
   const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : '';
   const key = attribute.split(':')[0].trim().toLowerCase();
-  // The model invents snake-case keys ("origin_country", "residence_city"):
-  // only their first word is read.
-  const head = key.split(/[_\s-]+/)[0];
-  const loose = key === '' || ['origin', 'background', 'expat', 'nationality', 'heritage'].includes(head);
-  const looseHome = key === '' || ['residence', 'location', 'home', 'city', 'current', 'lives', 'living'].includes(head);
+  // The model invents snake-case keys ("origin_country", "country_of_origin",
+  // "residence_city"): every word is read, and the statement check below
+  // decides which fact it is.
+  const words = key.split(/[_\s-]+/).filter(Boolean);
+  const loose = key === '' || words.some((w) => ['origin', 'background', 'expat', 'nationality', 'heritage'].includes(w));
+  const looseHome = key === '' || words.some((w) => ['residence', 'location', 'home', 'city', 'current', 'lives', 'living'].includes(w));
   if (isExpatStatement(statement) && loose) return { ...entry, questionnaire_attribute: EXPAT_KEY };
   if (isOriginStatement(statement) && loose) {
     // "Expat from India" is the ORIGIN, written "From India"; being an expat

@@ -536,3 +536,34 @@ describe('ruling: no place question before a lookup on a residence turn', () => 
     expect(out.terminalReason).toBe('awaiting-user');
   });
 });
+
+describe('staging run 6 finding', () => {
+  it('reads every word of a snake-case key: country_of_origin is the origin', async () => {
+    const NL = { neighbourhood: 'Nieuw-West', locality: 'Amsterdam', admin1: 'North Holland', countryCode: 'NL', countryName: 'The Netherlands', bloc: 'EU' as const };
+    const saved: Record<string, unknown>[][] = [];
+    const h = harness(
+      [
+        res({ content: 'India.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Nieuw-West, Amsterdam', countryHint: 'NL' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+          { statement: 'The user is an expat from India.', kind: 'origin', questionnaire_attribute: 'country_of_origin', placeChain: { countryName: 'India' } },
+          { statement: 'The user lives in Nieuw-West, Amsterdam, North Holland, The Netherlands.', kind: 'residence', questionnaire_attribute: 'current_residence' },
+        ] })] }),
+        res({ content: 'Here they are.' }),
+      ],
+      {
+        tools: {
+          findSimilarFacts: async () => ({ candidates: [] }),
+          lookupPlace: async () => ({ status: 'resolved', places: [NL] }),
+          saveExtractedFacts: async (a) => { saved.push((a.extracted_user_information as Record<string, unknown>[]) ?? []); return { staged: true }; },
+          deleteUserFacts: async () => ({ deleted: [] }),
+        },
+      },
+    );
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: "I'm an expat from India living in Nieuw-West, Amsterdam", deps: h.deps });
+    const flat = saved.flat().map((e) => [e.statement, e.questionnaire_attribute]);
+    expect(flat).toContainEqual(['From India', ORIGIN_KEY]);
+    expect(flat).toContainEqual(['Expat in The Netherlands', EXPAT_KEY]);
+    expect(flat.find(([, k]) => k === CANONICAL_LOCATION_KEY)?.[0]).toMatch(/^Lives in Nieuw-West, Amsterdam/);
+  });
+});
