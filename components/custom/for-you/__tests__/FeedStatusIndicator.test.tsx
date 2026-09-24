@@ -33,9 +33,20 @@ jest.mock('@/components/ui/pressable', () => {
     const { Pressable: RNPressable } = require('react-native');
     return { Pressable: RNPressable };
 });
+let mockLogoMounts = 0;
 jest.mock('@/components/custom/MeraLogo', () => {
     const { View } = require('react-native');
-    return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
+    const ReactLib = require('react');
+    return {
+        __esModule: true,
+        default: (p: any) => {
+            // Counts MOUNTS, not renders: a remount is what the capture saw.
+            ReactLib.useEffect(() => {
+                mockLogoMounts += 1;
+            }, []);
+            return <View testID="mera-logo" {...p} />;
+        },
+    };
 });
 // `useAnimatedStyle` runs its worklet at render time here, so the style the
 // wrapper receives is whatever the shared value holds on THAT render — which is
@@ -49,9 +60,15 @@ jest.mock('react-native-reanimated', () => {
         default: { View: (p: any) => <View {...p} /> },
         useSharedValue: (initial: unknown) => ({ value: initial }),
         useAnimatedStyle: (fn: () => unknown) => fn(),
-        withTiming: (v: unknown) => v,
+        withTiming: (v: unknown, cfg?: unknown) => {
+            mockWithTiming(v, cfg);
+            return v;
+        },
+        useReducedMotion: () => mockReduceMotion,
     };
 });
+let mockReduceMotion = false;
+const mockWithTiming = jest.fn();
 
 import FeedStatusIndicator from '../FeedStatusIndicator';
 
@@ -83,26 +100,46 @@ function scaleOf(node: any): number | undefined {
     return transform?.find((e: any) => 'scale' in e)?.scale;
 }
 
+const IDLE_SCALE = 0.82;
+const PROCESSING_SCALE = 1.55;
+
 describe('FeedStatusIndicator', () => {
-    it('sweeps the mark, enlarged and pure white, while processing', () => {
+    beforeEach(() => {
+        mockReduceMotion = false;
+    });
+
+    // Owner: small and still at idle, bigger than before while processing, and
+    // the strokes draw on instead of the old spotlight sweep.
+    it('draws its strokes on, enlarged past the old 1.3 and pure white, while processing', () => {
         const { getByTestId } = renderIndicator({ mode: 'processing' });
-        expect(getByTestId('mera-logo').props.animated).toBe(true);
+        expect(getByTestId('mera-logo').props.drawStrokes).toBe(true);
+        expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
         expect(getByTestId('mera-logo').props.color).toBe(ACTIVE);
-        expect(scaleOf(getByTestId(MARK_ID))).toBe(1.3);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(PROCESSING_SCALE);
+        expect(PROCESSING_SCALE).toBeGreaterThan(1.3);
+    });
+
+    it('under Reduce Motion: the processing size, but no stroke animation', () => {
+        mockReduceMotion = true;
+        const { getByTestId } = renderIndicator({ mode: 'processing' });
+        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(PROCESSING_SCALE);
     });
 
     it('renders a red mark on a scoring error', () => {
         const { getByTestId } = renderIndicator({ mode: 'error' });
         expect(getByTestId('mera-logo').props.color).toBe('#F87171');
-        expect(getByTestId('mera-logo').props.animated).toBe(false);
-        expect(scaleOf(getByTestId(MARK_ID))).toBe(1);
+        expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
+        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
     });
 
     it('renders an amber mark when daily-limited', () => {
         const { getByTestId } = renderIndicator({ mode: 'limited' });
         expect(getByTestId('mera-logo').props.color).toBe('#FBBF24');
-        expect(getByTestId('mera-logo').props.animated).toBe(false);
-        expect(scaleOf(getByTestId(MARK_ID))).toBe(1);
+        expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
+        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
     });
 
     it('still renders a still, off-white, tappable mark when idle', () => {
@@ -112,8 +149,9 @@ describe('FeedStatusIndicator', () => {
         const onPress = jest.fn();
         const { getByTestId } = renderIndicator({ mode: 'idle', onPress });
         expect(getByTestId('mera-logo').props.color).toBe(RESTING);
-        expect(getByTestId('mera-logo').props.animated).toBe(false);
-        expect(scaleOf(getByTestId(MARK_ID))).toBe(1);
+        expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
+        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
 
         fireEvent.press(getByTestId(TEST_ID));
         expect(onPress).toHaveBeenCalledTimes(1);
@@ -127,21 +165,26 @@ describe('FeedStatusIndicator', () => {
         const onPress = jest.fn();
         const { getByTestId } = renderIndicator({ mode: 'deferred', onPress });
         expect(getByTestId('mera-logo').props.color).toBe(RESTING);
-        expect(getByTestId('mera-logo').props.animated).toBe(false);
-        expect(scaleOf(getByTestId(MARK_ID))).toBe(1);
+        expect(getByTestId('mera-logo').props.animated ?? false).toBe(false);
+        expect(getByTestId('mera-logo').props.drawStrokes).toBe(false);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(IDLE_SCALE);
 
         fireEvent.press(getByTestId(TEST_ID));
         expect(onPress).toHaveBeenCalledTimes(1);
     });
 
-    it('animates the sweep in processing and in no other state', () => {
+    it('animates in processing and in no other state, and never sweeps', () => {
         // One assertion over the whole enum, so a new mode cannot quietly start
         // re-rasterising an SVG on the CPU behind a header that is at rest.
         const modes = ['processing', 'error', 'limited', 'deferred', 'idle'] as const;
-        const animatedIn = modes.filter(
+        const drawingIn = modes.filter(
+            (mode) => renderIndicator({ mode }).getByTestId('mera-logo').props.drawStrokes === true,
+        );
+        expect(drawingIn).toEqual(['processing']);
+        const sweepingIn = modes.filter(
             (mode) => renderIndicator({ mode }).getByTestId('mera-logo').props.animated === true,
         );
-        expect(animatedIn).toEqual(['processing']);
+        expect(sweepingIn).toEqual([]);
     });
 
     it('calls onPress when tapped', () => {
@@ -179,37 +222,42 @@ describe('FeedStatusIndicator', () => {
         expect(queryByLabelText(new RegExp(`^${key}\\.`))).toBeTruthy();
     });
 
-    it('announces entering limited and error, but not idle', () => {
+    it('announces nothing itself: the screen owns the announcement (use-feed-mode-announcement)', () => {
         const { AccessibilityInfo } = require('react-native');
         const announce = jest
             .spyOn(AccessibilityInfo, 'announceForAccessibility')
             .mockImplementation(() => {});
         try {
-            // Mounting already-capped must NOT announce: the user navigated here.
-            const { rerender } = renderIndicator({ mode: 'limited' });
+            const { rerender, getByTestId } = renderIndicator({ mode: 'idle' });
+            expect(getByTestId(TEST_ID)).toBeTruthy();
+            rerender(
+                <FeedStatusIndicator mode="limited" expanded={false} onPress={jest.fn()} testID={TEST_ID} />,
+            );
             expect(announce).not.toHaveBeenCalled();
-
-            const at = (mode: 'idle' | 'limited' | 'error') =>
-                rerender(
-                    <FeedStatusIndicator
-                        mode={mode}
-                        expanded={false}
-                        onPress={jest.fn()}
-                        testID={TEST_ID}
-                    />,
-                );
-
-            at('idle');
-            expect(announce).not.toHaveBeenCalled();
-
-            at('limited');
-            expect(announce).toHaveBeenCalledWith('feedStatus.modeLimited');
-
-            at('error');
-            expect(announce).toHaveBeenCalledWith('feedStatus.modeError');
-            expect(announce).toHaveBeenCalledTimes(2);
         } finally {
             announce.mockRestore();
         }
+    });
+});
+
+// Captured: at a run's start the 18pt mark vanished in one frame and the big
+// one drew from empty. The mark must be ONE instance that grows.
+describe('FeedStatusIndicator: grows, never swaps', () => {
+    it('keeps the same mark mounted from rest to processing and back', () => {
+        mockLogoMounts = 0;
+        const { rerender, getByTestId } = renderIndicator({ mode: 'idle' });
+        const first = getByTestId('mera-logo');
+        rerender(<FeedStatusIndicator mode="processing" expanded={false} onPress={jest.fn()} testID={TEST_ID} />);
+        expect(getByTestId('mera-logo')).toBe(first);
+        rerender(<FeedStatusIndicator mode="idle" expanded={false} onPress={jest.fn()} testID={TEST_ID} />);
+        expect(mockLogoMounts).toBe(1);
+    });
+
+    it('animates the scale to 1.55 over 250ms, and starts drawing only after the grow', () => {
+        mockWithTiming.mockClear();
+        const { rerender, getByTestId } = renderIndicator({ mode: 'idle' });
+        rerender(<FeedStatusIndicator mode="processing" expanded={false} onPress={jest.fn()} testID={TEST_ID} />);
+        expect(mockWithTiming).toHaveBeenCalledWith(1.55, { duration: 250 });
+        expect(getByTestId('mera-logo').props.drawDelayMs).toBe(250);
     });
 });

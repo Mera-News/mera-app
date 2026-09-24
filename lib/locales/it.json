@@ -241,7 +241,11 @@
     "medium": "Med",
     "low": "Basso",
     "irrelevant": "Irrilevante",
-    "unprocessed": "Non elaborato"
+    "unprocessed": "Non elaborato",
+    "a11yEmergency": "Emergenza",
+    "a11yHigh": "Priorità alta",
+    "a11yMedium": "Priorità media",
+    "a11yLow": "Priorità bassa"
   },
   "aiDisclosure": {
     "caption": "Nota generata dall'IA",
@@ -1232,7 +1236,6 @@
     "contextFor": "A proposito di: {{title}}",
     "back": "Indietro",
     "dismiss": "Ignora",
-    "tellMore": "Dimmi di più",
     "empty": "Nessuna opzione qui",
     "cancel": "Annulla",
     "confirm": "Conferma",
@@ -1248,11 +1251,11 @@
     "moreAboutTopicNamed": "Più su: {{topic}}",
     "moreAboutTopicNamedWithCount": "Più su: {{topic}} e {{extra}} altri",
     "paywallRelatedOption": "Mostra copertura correlata",
-    "paywallRelatedDesc": "Una storia simile da un'altra pubblicazione potrebbe non essere protetta da paywall – controlla gli articoli correlati.",
-    "paywallSubscribeDesc": "Hai visitato {{publication}} {{visits}} volte questo mese – considera l'abbonamento per accesso completo.",
+    "paywallRelatedDesc": "Una storia simile da un'altra pubblicazione potrebbe non essere protetta da paywall. Controlla gli articoli correlati.",
+    "paywallSubscribeDesc": "Hai visitato {{publication}} {{visits}} volte questo mese. Considera l'abbonamento per accesso completo.",
     "paywallBlockOption": "Blocca {{publication}} invece",
     "tooMuchOfThis": "Lo vedo troppo spesso",
-    "managePublicationsDesc": "Aumenta, riduci il rango o muta qualsiasi pubblicazione — compresa questa.",
+    "managePublicationsDesc": "Aumenta, riduci il rango o muta qualsiasi pubblicazione, compresa questa.",
     "managePublicationsOption": "Gestisci pubblicazioni",
     "neverShowPublication": "Non mostrare mai questa pubblicazione",
     "notAGoodSuggestion": "Non è un buon suggerimento",
@@ -2761,45 +2764,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Stiamo lavorando alle tue notizie, qui.",
-        "Aggiornamento avviato su questo telefono."
+        "Aggiornamento avviato",
+        "Su questo telefono"
       ],
       "fetching": [
-        "Cerchiamo le novità di oggi.",
-        "È il tuo telefono a decidere cosa chiedere."
+        "Cerco novità",
+        "Cosa c'è di nuovo"
       ],
       "downloading": [
-        "Portiamo gli articoli sul tuo telefono.",
-        "Arrivano prima a te che a un server."
+        "Scarico gli articoli",
+        "Dal server"
       ],
       "grouping": [
-        "Una notizia esce in una dozzina di posti.",
-        "Teniamo una versione di ogni notizia."
+        "Raggruppo le notizie",
+        "Unisco i doppioni"
       ],
       "analysing": [
-        "Leggiamo ogni articolo per te.",
-        "Cifrato. Solo il tuo telefono ha la chiave."
+        "Valuto la pertinenza",
+        "Leggo ogni articolo"
       ],
       "onDevice": [
-        "Il tuo telefono sta leggendo le notizie.",
-        "Succede qui. Niente esce dal telefono."
+        "Leggo sul tuo telefono",
+        "Resta sul tuo telefono"
       ],
       "summarising": [
-        "Scriviamo una nota breve per ogni notizia.",
-        "Cifrato end to end, per tutto il tragitto."
+        "Scrivo le note",
+        "Una nota per notizia"
       ],
       "preparing": [
-        "Mettiamo in ordine il tuo feed.",
-        "Ci siamo quasi. Le schede arrivano da sole."
+        "Metto in ordine",
+        "Quasi fatto"
       ]
     },
     "nudges": [
-      "Salva quello che ora non riesci a leggere.",
-      "I tuoi articoli salvati aspettano ancora.",
-      "Leggi bene una notizia, non dieci di corsa.",
-      "I titoli principali ti danno la giornata.",
-      "Più nuovo non è meglio. Leggi quello che c'è.",
-      "Nulla arriva prima se resti a guardare."
+      "Salvalo per dopo",
+      "I salvati ti aspettano",
+      "Leggi bene una notizia",
+      "Guarda i titoli",
+      "Nuovo non è meglio",
+      "Non serve guardare"
     ],
     "a11y": "Mera sta aggiornando le tue notizie su questo telefono."
   },
@@ -2867,15 +2870,18 @@
     "fewerFromDone": "Vedrai meno contenuti da {{source}}.",
     "undo": "Annulla",
     "reportBug": "Segnala un bug",
-    "actionFailed": "Non ha funzionato. Riprova."
-  },
-  "factChip": {
-    "label": "Dal tuo profilo: {{label}}",
-    "openA11y": "Notizie su {{label}}"
+    "actionFailed": "Non ha funzionato. Riprova.",
+    "removeLike": "Rimuovi mi piace",
+    "removeDislike": "Rimuovi \"Non fa per me\""
   },
   "related": {
     "allCountries": "Tutti i paesi",
     "allLanguages": "Tutte le lingue",
     "noMatches": "Nessun articolo correlato corrisponde a questi filtri."
+  },
+  "storyExport": {
+    "shareA11y": "Esporta questa storia",
+    "shareDialogTitle": "Esporta storia",
+    "includeReasonHint": "La nota di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Alcuni articoli potrebbero non averla."
   }
 }

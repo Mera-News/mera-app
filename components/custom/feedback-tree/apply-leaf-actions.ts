@@ -1,17 +1,16 @@
 // applyLeafActions — the ONE path from a terminal feedback-tree leaf to applied
 // persona mutations plus an Undo toast.
 //
-// Extracted from FeedbackTreeOverlay so the inline Feed surface
-// (InlineFeedbackTree) applies leaves through exactly the same machinery: the
-// two presentations differ (modal sheet vs inline panel), their SEMANTICS must
-// not. Previously only the overlay executed leaf actions, which is why the
-// entire like-side tree — authored with real `set_topic_weight` /
-// `set_publication_pref` actions — had never once run.
+// Called by perform-feedback-leaf for every tree leaf in the ••• sheet, the one
+// place the tree is shown. Before leaves were applied on the spot, the entire
+// like-side tree (authored with real `set_topic_weight` /
+// `set_publication_pref` actions) had never once run.
 //
 // Deliberately a PLAIN async function, not a hook, and with a module graph of
 // exactly one runtime import (the logger):
-//   • the persona executor / change log / i18n / toast are all imported
-//     DYNAMICALLY, behind the `actions.length === 0` guard, so a surface that
+//   • the persona executor / change log / i18n / toast are all REQUIRED AT
+//     CALL TIME (not `await import()`, which jest cannot run), behind the
+//     `actions.length === 0` guard, so a surface that
 //     merely renders the tree never drags the DB, the native translation module
 //     or the ESM-only gluestack toast entry into its import graph;
 //   • the toast goes through the global `toastManager` (initialized once at the
@@ -41,21 +40,19 @@ export async function applyLeafActions(
 ): Promise<number> {
   if (actions.length === 0) return 0;
   try {
-    const [{ hapticSuccess }, { default: i18n }, { toastManager }] = await Promise.all([
-      import('@/lib/haptics'),
-      import('@/lib/i18n'),
-      import('@/lib/toast-manager'),
-    ]);
+    /* eslint-disable @typescript-eslint/no-require-imports */
+    const { hapticSuccess } = require('@/lib/haptics') as typeof import('@/lib/haptics');
+    const i18n = (require('@/lib/i18n') as typeof import('@/lib/i18n')).default;
+    const { toastManager } = require('@/lib/toast-manager') as typeof import('@/lib/toast-manager');
+    const { applyPersonaActions } = require('@/lib/database/services/persona-action-executor') as typeof import('@/lib/database/services/persona-action-executor');
+    /* eslint-enable @typescript-eslint/no-require-imports */
     /** i18n chrome helper — always supplies an English default so it renders
-     *  pre-merge (mirrors FeedbackTreeOverlay's `useChrome`). */
+     *  pre-merge (mirrors FeedbackTreeLevel's `useChrome`). */
     const c = (key: string, def: string): string =>
       i18n.t(`feedbackTree.${key}`, { defaultValue: def }) as string;
 
     hapticSuccess();
     // ResolvedPersonaAction is structurally a PersonaAction subset.
-    const { applyPersonaActions } = await import(
-      '@/lib/database/services/persona-action-executor'
-    );
     const results = await applyPersonaActions(actions, 'feedback');
     const applied = results.filter((r) => r.applied);
     if (applied.length === 0) return 0;
@@ -64,37 +61,43 @@ export async function applyLeafActions(
       .filter((r) => r.changeLogId)
       .map((r) => r.changeLogId as string);
 
-    if (spend) {
-      const { markFeedbackProcessedFor, recordFeedbackChangeLogIds } = await import(
-        '@/lib/database/services/article-feedback-service'
-      );
-      // Stamp the signal spent, and remember WHAT it changed: un-voting reverts
-      // exactly these ids, so "unfilled" can never mean "still in force".
-      await recordFeedbackChangeLogIds(spend.articleId, spend.sentiment, changeLogIds);
-      await markFeedbackProcessedFor(spend.articleId, spend.sentiment);
-    }
-
+    // The toast goes up the moment the persona write has landed. The spend
+    // bookkeeping below is housekeeping the reader cannot see; making the
+    // toast wait for it is what delayed "Got it" by seconds (batch 16).
     toastManager.showUndoToast({
-      title: c('appliedTitle', 'Got it — feed updated'),
+      title: c('appliedTitle', 'Got it: feed updated'),
       body: summary,
       undoLabel: c('undo', 'Undo'),
       undoneTitle: c('undoneTitle', 'Change undone'),
+      // Resolves to whether ANYTHING was reverted. A compare-and-set revert
+      // refused because a newer change owns the value returns false, and the
+      // toast then claims nothing.
       onUndo: async () => {
-        if (changeLogIds.length === 0) return;
-        const { revertChange } = await import(
-          '@/lib/database/services/persona-change-log-service'
-        );
+        if (changeLogIds.length === 0) return false;
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { revertChange } = require('@/lib/database/services/persona-change-log-service') as typeof import('@/lib/database/services/persona-change-log-service');
+        let any = false;
         for (const cid of changeLogIds) {
           try {
-            await revertChange(cid);
+            if (await revertChange(cid)) any = true;
           } catch (err) {
             logger.captureException(err, {
               tags: { component: 'applyLeafActions', method: 'undo' },
             });
           }
         }
+        return any;
       },
     });
+
+    if (spend) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { markFeedbackProcessedFor, recordFeedbackChangeLogIds } = require('@/lib/database/services/article-feedback-service') as typeof import('@/lib/database/services/article-feedback-service');
+      // Stamp the signal spent, and remember WHAT it changed: un-voting reverts
+      // exactly these ids, so "unfilled" can never mean "still in force".
+      await recordFeedbackChangeLogIds(spend.articleId, spend.sentiment, changeLogIds);
+      await markFeedbackProcessedFor(spend.articleId, spend.sentiment);
+    }
     return applied.length;
   } catch (err) {
     logger.captureException(err, {

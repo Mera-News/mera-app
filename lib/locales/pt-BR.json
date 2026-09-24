@@ -241,7 +241,11 @@
     "medium": "Méd",
     "low": "Baixa",
     "irrelevant": "Irrelevante",
-    "unprocessed": "Não processado"
+    "unprocessed": "Não processado",
+    "a11yEmergency": "Emergência",
+    "a11yHigh": "Prioridade alta",
+    "a11yMedium": "Prioridade média",
+    "a11yLow": "Prioridade baixa"
   },
   "aiDisclosure": {
     "caption": "Nota gerada por IA",
@@ -1234,7 +1238,6 @@
     "contextFor": "Sobre: {{title}}",
     "back": "Voltar",
     "dismiss": "Dispensar",
-    "tellMore": "Conte-me mais",
     "empty": "Nenhuma opção aqui",
     "cancel": "Cancelar",
     "confirm": "Confirmar",
@@ -1248,11 +1251,11 @@
     "nudgeSubscribe": "Assinar {{publication}} desbloqueia artigos completos",
     "nudgeBrowse": "Procure cobertura relacionada de outras fontes",
     "paywallRelatedOption": "Mostrar cobertura relacionada",
-    "paywallRelatedDesc": "Uma história semelhante de outra publicação pode não ter paywall — confira os artigos relacionados.",
-    "paywallSubscribeDesc": "Você visitou {{publication}} {{visits}} vezes neste mês — considere se inscrever para ter acesso completo.",
+    "paywallRelatedDesc": "Uma história semelhante de outra publicação pode não ter paywall. Confira os artigos relacionados.",
+    "paywallSubscribeDesc": "Você visitou {{publication}} {{visits}} vezes neste mês. Considere se inscrever para ter acesso completo.",
     "paywallBlockOption": "Bloquear {{publication}} em vez disso",
     "tooMuchOfThis": "Estou vendo isso com muita frequência",
-    "managePublicationsDesc": "Aumente, diminua o ranking ou silencie qualquer publicação — incluindo esta.",
+    "managePublicationsDesc": "Aumente, diminua o ranking ou silencie qualquer publicação, incluindo esta.",
     "managePublicationsOption": "Gerenciar publicações",
     "neverShowPublication": "Nunca mostrar essa publicação",
     "notAGoodSuggestion": "Não é uma boa sugestão",
@@ -2761,45 +2764,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Trabalhando nas suas notícias, no seu celular.",
-        "Iniciando uma atualização neste aparelho."
+        "Atualizando",
+        "Neste celular"
       ],
       "fetching": [
-        "Procurando o que há de novo hoje.",
-        "Seu celular decide o que pedir."
+        "Buscando novidades",
+        "O que há de novo?"
       ],
       "downloading": [
-        "Trazendo os artigos para o seu celular.",
-        "Chegam primeiro a você, não a um servidor."
+        "Baixando artigos",
+        "Do servidor"
       ],
       "grouping": [
-        "Uma notícia sai em uma dezena de lugares.",
-        "Escolhendo uma versão de cada notícia."
+        "Agrupando notícias",
+        "Unindo duplicadas"
       ],
       "analysing": [
-        "Lendo cada artigo para você.",
-        "Criptografado. Só o seu celular tem a chave."
+        "Medindo relevância",
+        "Lendo cada artigo"
       ],
       "onDevice": [
-        "Seu celular está lendo estas notícias.",
-        "Acontece aqui. Nada sai do seu celular."
+        "Lendo no seu celular",
+        "Fica no seu celular"
       ],
       "summarising": [
-        "Escrevendo uma nota curta por notícia.",
-        "Criptografado de ponta a ponta, o tempo todo."
+        "Escrevendo notas",
+        "Uma nota por notícia"
       ],
       "preparing": [
-        "Organizando o seu feed.",
-        "Quase lá. Os cards aparecem sozinhos."
+        "Colocando em ordem",
+        "Quase pronto"
       ]
     },
     "nudges": [
-      "Salve o que você não consegue ler agora.",
-      "Seus artigos salvos ainda estão esperando.",
-      "Leia uma notícia direito, não dez correndo.",
-      "As manchetes mostram o formato do dia.",
-      "Mais novo não é melhor. Leia o que já tem.",
-      "Nada chega mais rápido se você ficar olhando."
+      "Salve para depois",
+      "Seus salvos esperam",
+      "Leia uma notícia a fundo",
+      "Veja as manchetes",
+      "Novo não é melhor",
+      "Não precisa olhar"
     ],
     "a11y": "A Mera está atualizando suas notícias neste celular."
   },
@@ -2867,15 +2870,18 @@
     "fewerFromDone": "Você verá menos de {{source}}.",
     "undo": "Desfazer",
     "reportBug": "Relatar um bug",
-    "actionFailed": "Não funcionou. Tente de novo."
-  },
-  "factChip": {
-    "label": "Do seu perfil: {{label}}",
-    "openA11y": "Notícias sobre {{label}}"
+    "actionFailed": "Não funcionou. Tente de novo.",
+    "removeLike": "Remover curtida",
+    "removeDislike": "Remover \"Não é para mim\""
   },
   "related": {
     "allCountries": "Todos os países",
     "allLanguages": "Todos os idiomas",
     "noMatches": "Nenhum artigo relacionado corresponde a esses filtros."
+  },
+  "storyExport": {
+    "shareA11y": "Exportar esta história",
+    "shareDialogTitle": "Exportar história",
+    "includeReasonHint": "A nota de uma linha que explica por que cada artigo chegou ao seu feed. Alguns artigos podem não ter essa nota."
   }
 }

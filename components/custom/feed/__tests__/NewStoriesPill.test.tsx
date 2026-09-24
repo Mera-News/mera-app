@@ -12,7 +12,10 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
     return { jsxDEV: R.jsxDEV, Fragment: R.Fragment };
 });
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
-jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
+jest.mock('@expo/vector-icons', () => {
+    const { View } = require('react-native');
+    return { MaterialIcons: (p: any) => <View testID={`icon-${p.name}`} /> };
+});
 jest.mock('@/components/ui/text', () => {
     const { Text } = require('react-native');
     return { Text };
@@ -26,7 +29,13 @@ describe('NewStoriesPill', () => {
         expect(queryByTestId('feed-new-stories-pill')).toBeNull();
     });
 
-    it('is a 44pt labelled button that scrolls on tap', () => {
+    it('carries the refresh glyph, not an arrow', () => {
+        const { getByTestId, queryByTestId } = render(<NewStoriesPill visible onPress={jest.fn()} bottom={80} />);
+        expect(getByTestId('icon-refresh')).toBeTruthy();
+        expect(queryByTestId('icon-arrow-downward')).toBeNull();
+    });
+
+    it('is a 44pt labelled button that fires onPress on tap', () => {
         const onPress = jest.fn();
         const { getByTestId } = render(<NewStoriesPill visible onPress={onPress} bottom={80} />);
         const pill = getByTestId('feed-new-stories-pill');

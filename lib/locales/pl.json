@@ -253,7 +253,11 @@
     "medium": "Śred.",
     "low": "Niska",
     "irrelevant": "Nieistotne",
-    "unprocessed": "Nieprzetworzone"
+    "unprocessed": "Nieprzetworzone",
+    "a11yEmergency": "Pilne",
+    "a11yHigh": "Wysoki priorytet",
+    "a11yMedium": "Średni priorytet",
+    "a11yLow": "Niski priorytet"
   },
   "aiDisclosure": {
     "caption": "Notatka wygenerowana przez AI",
@@ -1252,7 +1256,6 @@
     "contextFor": "Dotyczy: {{title}}",
     "back": "Wstecz",
     "dismiss": "Zamknij",
-    "tellMore": "Powiedz mi więcej",
     "empty": "Brak opcji",
     "cancel": "Anuluj",
     "confirm": "Potwierdź",
@@ -1266,11 +1269,11 @@
     "nudgeSubscribe": "Subskrypcja {{publication}} odblokowuje pełne artykuły",
     "nudgeBrowse": "Poszukaj powiązanych relacji z innych źródeł",
     "paywallRelatedOption": "Pokaż powiązane materiały",
-    "paywallRelatedDesc": "Podobna historia z innego wydawcy może nie być za paywallem — sprawdź powiązane artykuły.",
-    "paywallSubscribeDesc": "Odwiedziłeś {{publication}} {{visits}} razy w tym miesiącu — rozważ subskrypcję, aby uzyskać pełny dostęp.",
+    "paywallRelatedDesc": "Podobna historia z innego wydawcy może nie być za paywallem. Sprawdź powiązane artykuły.",
+    "paywallSubscribeDesc": "Odwiedziłeś {{publication}} {{visits}} razy w tym miesiącu. Rozważ subskrypcję, aby uzyskać pełny dostęp.",
     "paywallBlockOption": "Zamiast tego zablokuj {{publication}}",
     "tooMuchOfThis": "Widzę to zbyt często",
-    "managePublicationsDesc": "Promuj, obniżaj rangę lub wyciszaj dowolne wydawnictwo — łącznie z tym.",
+    "managePublicationsDesc": "Promuj, obniżaj rangę lub wyciszaj dowolne wydawnictwo, łącznie z tym.",
     "managePublicationsOption": "Zarządzaj wydawnictwami",
     "neverShowPublication": "Nigdy nie pokazuj tego wydawnictwa",
     "notAGoodSuggestion": "Nie jest dobrą sugestią",
@@ -2799,45 +2802,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Pracujemy nad twoimi wiadomościami, tutaj.",
-        "Odświeżanie ruszyło na tym urządzeniu."
+        "Odświeżanie",
+        "Na tym telefonie"
       ],
       "fetching": [
-        "Szukamy tego, co dziś nowe.",
-        "To twój telefon decyduje, o co pyta."
+        "Szukam nowości",
+        "Co nowego?"
       ],
       "downloading": [
-        "Artykuły trafiają na twój telefon.",
-        "Najpierw do ciebie, nie na serwer."
+        "Pobieram artykuły",
+        "Z serwera"
       ],
       "grouping": [
-        "Jedna wiadomość biegnie w kilkunastu miejscach.",
-        "Wybieramy jedną wersję każdej wiadomości."
+        "Grupuję tematy",
+        "Łączę duplikaty"
       ],
       "analysing": [
-        "Czytamy dla ciebie każdy artykuł.",
-        "Zaszyfrowane. Klucz ma tylko twój telefon."
+        "Sprawdzam trafność",
+        "Czytam artykuły"
       ],
       "onDevice": [
-        "Twój telefon czyta te wiadomości.",
-        "Dzieje się tutaj. Nic nie opuszcza telefonu."
+        "Czytam na telefonie",
+        "Zostaje na telefonie"
       ],
       "summarising": [
-        "Krótka notatka do każdej wiadomości.",
-        "Szyfrowane end-to-end na całej drodze."
+        "Piszę notatki",
+        "Notka do tematu"
       ],
       "preparing": [
-        "Porządkujemy twój feed.",
-        "Już prawie. Karty pojawią się same."
+        "Układam kolejność",
+        "Prawie gotowe"
       ]
     },
     "nudges": [
-      "Zapisz to, czego teraz nie przeczytasz.",
-      "Twoje zapisane artykuły wciąż czekają.",
-      "Przeczytaj jedno porządnie, nie dziesięć pobieżnie.",
-      "Nagłówki pokażą ci kształt dnia.",
-      "Nowsze nie znaczy lepsze. Czytaj to, co jest.",
-      "Nic nie przyjdzie szybciej, gdy patrzysz."
+      "Zapisz na później",
+      "Zapisane czekają",
+      "Przeczytaj jeden temat",
+      "Zobacz nagłówki",
+      "Nowsze to nie lepsze",
+      "Nie trzeba patrzeć"
     ],
     "a11y": "Mera aktualizuje twoje wiadomości na tym telefonie."
   },
@@ -2905,15 +2908,18 @@
     "fewerFromDone": "Zobaczysz mniej z {{source}}.",
     "undo": "Cofnij",
     "reportBug": "Zgłoś błąd",
-    "actionFailed": "Nie udało się. Spróbuj ponownie."
-  },
-  "factChip": {
-    "label": "Z Twojego profilu: {{label}}",
-    "openA11y": "Wiadomości o {{label}}"
+    "actionFailed": "Nie udało się. Spróbuj ponownie.",
+    "removeLike": "Usuń polubienie",
+    "removeDislike": "Usuń „To nie dla mnie”"
   },
   "related": {
     "allCountries": "Wszystkie kraje",
     "allLanguages": "Wszystkie języki",
     "noMatches": "Żaden powiązany artykuł nie pasuje do tych filtrów."
+  },
+  "storyExport": {
+    "shareA11y": "Eksportuj tę historię",
+    "shareDialogTitle": "Eksportuj historię",
+    "includeReasonHint": "Jednolinijkowa notatka wyjaśniająca, dlaczego każdy artykuł trafił do Twojego kanału. Niektóre artykuły mogą jej nie mieć."
   }
 }

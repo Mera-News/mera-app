@@ -241,7 +241,11 @@
     "medium": "Sedang",
     "low": "Rendah",
     "irrelevant": "Tidak relevan",
-    "unprocessed": "Belum diproses"
+    "unprocessed": "Belum diproses",
+    "a11yEmergency": "Darurat",
+    "a11yHigh": "Prioritas tinggi",
+    "a11yMedium": "Prioritas sedang",
+    "a11yLow": "Prioritas rendah"
   },
   "aiDisclosure": {
     "caption": "Catatan yang dibuat oleh AI",
@@ -1234,7 +1238,6 @@
     "contextFor": "Tentang: {{title}}",
     "back": "Kembali",
     "dismiss": "Tutup",
-    "tellMore": "Beri tahu lebih lanjut",
     "empty": "Tidak ada opsi di sini",
     "cancel": "Batal",
     "confirm": "Konfirmasi",
@@ -1248,11 +1251,11 @@
     "nudgeSubscribe": "Berlangganan {{publication}} membuka artikel lengkap",
     "nudgeBrowse": "Cari liputan terkait dari sumber lain",
     "paywallRelatedOption": "Tampilkan Liputan Terkait",
-    "paywallRelatedDesc": "Cerita serupa dari publikasi lain mungkin tidak dibayar — periksa artikel terkait.",
-    "paywallSubscribeDesc": "Anda telah mengunjungi {{publication}} {{visits}} kali bulan ini — pertimbangkan untuk berlangganan akses penuh.",
+    "paywallRelatedDesc": "Cerita serupa dari publikasi lain mungkin tidak dibayar. Periksa artikel terkait.",
+    "paywallSubscribeDesc": "Anda telah mengunjungi {{publication}} {{visits}} kali bulan ini. Pertimbangkan untuk berlangganan akses penuh.",
     "paywallBlockOption": "Blokir {{publication}} sebagai gantinya",
     "tooMuchOfThis": "Saya terlalu sering melihat ini",
-    "managePublicationsDesc": "Tingkatkan, turunkan peringkat, atau matikan suara publikasi apa pun — termasuk yang ini.",
+    "managePublicationsDesc": "Tingkatkan, turunkan peringkat, atau matikan suara publikasi apa pun, termasuk yang ini.",
     "managePublicationsOption": "Kelola publikasi",
     "neverShowPublication": "Jangan pernah tampilkan publikasi ini",
     "notAGoodSuggestion": "Bukan saran yang baik",
@@ -2760,45 +2763,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Mengerjakan beritamu, di ponselmu.",
-        "Memulai penyegaran di perangkat ini."
+        "Mulai menyegarkan",
+        "Di ponsel ini"
       ],
       "fetching": [
-        "Mencari apa yang baru hari ini.",
-        "Ponselmu yang menentukan apa yang diminta."
+        "Mencari yang baru",
+        "Apa yang baru?"
       ],
       "downloading": [
-        "Menarik artikel ke ponselmu.",
-        "Sampai ke kamu dulu, bukan ke server."
+        "Mengunduh artikel",
+        "Dari server"
       ],
       "grouping": [
-        "Satu berita muncul di belasan tempat.",
-        "Memilih satu versi tiap berita."
+        "Mengelompokkan berita",
+        "Gabung duplikat"
       ],
       "analysing": [
-        "Membaca tiap artikel untukmu.",
-        "Terenkripsi. Hanya ponselmu punya kuncinya."
+        "Menilai relevansi",
+        "Membaca tiap artikel"
       ],
       "onDevice": [
-        "Ponselmu sedang membaca berita ini.",
-        "Berjalan di sini. Tidak ada yang keluar."
+        "Membaca di ponselmu",
+        "Tetap di ponselmu"
       ],
       "summarising": [
-        "Menulis catatan singkat tiap berita.",
-        "Terenkripsi ujung ke ujung, sepanjang jalan."
+        "Menulis catatan",
+        "Catatan per berita"
       ],
       "preparing": [
-        "Merapikan berandamu.",
-        "Hampir selesai. Kartu muncul sendiri."
+        "Mengurutkan",
+        "Hampir selesai"
       ]
     },
     "nudges": [
-      "Simpan yang belum sempat kamu baca.",
-      "Artikel simpananmu masih menunggu.",
-      "Baca satu berita utuh, bukan sepuluh sekilas.",
-      "Berita utama memberi gambaran hari ini.",
-      "Baru bukan berarti lebih baik.",
-      "Tidak ada yang lebih cepat karena ditunggu."
+      "Simpan untuk nanti",
+      "Simpananmu menunggu",
+      "Baca satu berita utuh",
+      "Lihat berita utama",
+      "Terbaru bukan terbaik",
+      "Tak perlu ditunggu"
     ],
     "a11y": "Mera memperbarui beritamu di ponsel ini."
   },
@@ -2866,15 +2869,18 @@
     "fewerFromDone": "Kamu akan melihat lebih sedikit dari {{source}}.",
     "undo": "Urungkan",
     "reportBug": "Laporkan bug",
-    "actionFailed": "Itu tidak berhasil. Coba lagi."
-  },
-  "factChip": {
-    "label": "Dari profilmu: {{label}}",
-    "openA11y": "Berita tentang {{label}}"
+    "actionFailed": "Itu tidak berhasil. Coba lagi.",
+    "removeLike": "Hapus suka",
+    "removeDislike": "Hapus \"Bukan untuk saya\""
   },
   "related": {
     "allCountries": "Semua negara",
     "allLanguages": "Semua bahasa",
     "noMatches": "Tidak ada artikel terkait yang cocok dengan filter ini."
+  },
+  "storyExport": {
+    "shareA11y": "Ekspor cerita ini",
+    "shareDialogTitle": "Ekspor cerita",
+    "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
   }
 }

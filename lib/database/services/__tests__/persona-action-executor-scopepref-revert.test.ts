@@ -176,7 +176,7 @@ describe('set_source_scope_pref — revert', () => {
       'chat',
     );
 
-    await expect(revertChange(res.changeLogId!)).resolves.toBeUndefined();
+    await expect(revertChange(res.changeLogId!)).resolves.toBe(true);
     expect(findScope('IND').status).toBe('retired');
     expect(logRowFor(res.changeLogId).reverted).toBe(true);
   });

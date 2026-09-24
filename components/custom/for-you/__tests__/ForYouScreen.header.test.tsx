@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// The Dashboard header (D6, N11, F16, M3, N4). Every child screen and store is
+// The Dashboard header (D6, N11, F16, N4, ux1). Every child screen and store is
 // stubbed: this suite is about which rows the header draws and when.
 
 jest.mock('react-native-css-interop/jsx-runtime', () => {
@@ -97,22 +97,30 @@ jest.mock('@/components/custom/GlassSurface', () => ({
 jest.mock('@/components/custom/notifications/NotificationBellButton', () => mockStub('bell'));
 jest.mock('@/components/custom/for-you/DashboardEmptyState', () => mockStub('empty-state'));
 jest.mock('@/components/custom/for-you/ForYouSubTabs', () => {
-  const { Pressable, Text } = require('react-native');
+  const { Pressable, Text, View } = require('react-native');
+  const keys = ['feed', 'stories', 'saved', 'factChecks', 'history'];
   return {
     __esModule: true,
-    default: ({ onSelect }: any) => (
-      <Pressable testID="subtab-saved" onPress={() => onSelect('saved')}>
-        <Text>saved</Text>
-      </Pressable>
+    default: ({ onSelect, bleed }: any) => (
+      <View testID="subtabs" bleed={bleed}>
+        {keys.map((k) => (
+          <Pressable key={k} testID={`subtab-${k}`} onPress={() => onSelect(k)}>
+            <Text>{k}</Text>
+          </Pressable>
+        ))}
+      </View>
     ),
   };
 });
 jest.mock('@/components/custom/for-you/StoriesSlotPlaceholder', () => mockStub('stories'));
-jest.mock('@/components/custom/for-you/FeedStatusSheet', () => {
-  const { View } = require('react-native');
-  return { __esModule: true, default: (p: any) => <View testID="status-sheet" isOpen={p.isOpen} /> };
-});
 jest.mock('@/components/custom/for-you/DashboardSectionsFeed', () => mockStub('sections'));
+jest.mock('@/components/custom/for-you/status-dropdown', () => ({
+  StatusDropdownProvider: ({ children }: any) => children,
+  StatusDropdownLayer: () => {
+    const { View } = require('react-native');
+    return <View testID="stats-dropdown-layer" />;
+  },
+}));
 jest.mock('@/components/custom/fact-checks/FactChecksPanel', () => mockStub('fact-checks'));
 jest.mock('@/components/custom/for-you/FeedStatsSentence', () => mockStub('stats-sentence'));
 jest.mock('@/components/custom/saved-suggestions/SavedSuggestionsScreen', () => mockStub('saved'));
@@ -175,7 +183,7 @@ jest.mock('@/lib/stores/network-store', () => ({ useIsConnected: () => true }));
 
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
-import { AccessibilityInfo, StyleSheet } from 'react-native';
+import { AccessibilityInfo } from 'react-native';
 import ForYouScreen from '../ForYouScreen';
 
 beforeEach(() => {
@@ -185,58 +193,58 @@ beforeEach(() => {
 });
 afterEach(() => jest.restoreAllMocks());
 
-const rowHeight = () => StyleSheet.flatten(screen.getByTestId('dashboard-status-row').props.style);
+/** Every host node's testID inside the header, in tree order. */
+const headerIds = () =>
+  screen
+    .getByTestId('dashboard-header')
+    .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+    .map((n: any) => n.props.testID as string);
 
 describe('Dashboard header', () => {
-  it('keeps the title while a sync narrates (D6)', () => {
+  it('keeps the title while syncing (D6), with no Mera mark in any state (owner)', () => {
     mockProcessing = true;
     render(<ForYouScreen />);
     expect(screen.getByText('feed.dashboardTitle')).toBeTruthy();
-    expect(screen.getByTestId('dashboard-narration-line')).toBeTruthy();
+    expect(screen.queryByTestId('dashboard-status-indicator')).toBeNull();
   });
 
-  it('puts the narration on its own one-line row, not beside the title (N11)', () => {
-    mockProcessing = true;
+  it('puts the "?" right after the title, in the title row', () => {
     render(<ForYouScreen />);
-    const titleRow = screen.getByTestId('dashboard-header-title-row');
-    expect(titleRow.findAll((n: any) => n.props.testID === 'dashboard-narration-line')).toHaveLength(0);
-    expect(screen.getByTestId('dashboard-narration-line').props.numberOfLines).toBe(1);
+    const ids = headerIds();
+    expect(ids.indexOf('dashboard-title')).toBeGreaterThanOrEqual(0);
+    expect(ids.indexOf('dashboard-explainer-open')).toBe(ids.indexOf('dashboard-title') + 1);
   });
 
-  it('pins the status row to one height whether narrating, updated or empty', () => {
-    const heights: unknown[] = [];
-    mockLastNewArticlesAt = null;
-    const a = render(<ForYouScreen />);
-    heights.push(rowHeight().height);
-    a.unmount();
-    mockLastNewArticlesAt = Date.now() - 5 * 60_000;
-    const b = render(<ForYouScreen />);
-    heights.push(rowHeight().height);
-    b.unmount();
-    mockProcessing = true;
+  it('draws the same header on every pill, so its height cannot change', () => {
     render(<ForYouScreen />);
-    heights.push(rowHeight().height);
-    expect(new Set(heights).size).toBe(1);
-    expect(heights[0]).toBe(21);
+    const overview = headerIds();
+    // Presence first: the comparison below is not two empty lists.
+    expect(overview).toContain('dashboard-title');
+    for (const k of ['stories', 'saved', 'factChecks', 'history', 'feed']) {
+      fireEvent.press(screen.getByTestId(`subtab-${k}`));
+      expect(headerIds()).toEqual(overview);
+    }
   });
 
-  it('lets the row grow at a large text size', () => {
-    mockFontScale = 1.5;
+  it('has no status sentence row at all: no narration while syncing (owner decision)', () => {
     mockProcessing = true;
     render(<ForYouScreen />);
-    expect(rowHeight().height).toBeUndefined();
-    expect(rowHeight().minHeight).toBe(21);
-    expect(screen.getByTestId('dashboard-narration-line').props.numberOfLines).toBe(3);
+    expect(screen.queryByTestId('dashboard-status-row')).toBeNull();
+    expect(screen.queryByTestId('dashboard-narration-line')).toBeNull();
   });
 
-  it('lets the row wrap already at the next text size up, not only past 1.2', () => {
-    // The widest line fills 329 of 335pt at 14pt; at xLarge (~1.12) it would
-    // overflow a pinned one-line row.
-    mockFontScale = 1.12;
-    mockProcessing = true;
+  it('has no "Updated" line at rest either', () => {
+    mockLastNewArticlesAt = Date.now() - 10_000;
     render(<ForYouScreen />);
-    expect(rowHeight().height).toBeUndefined();
-    expect(screen.getByTestId('dashboard-narration-line').props.numberOfLines).toBe(3);
+    expect(screen.queryByTestId('dashboard-status-row')).toBeNull();
+    expect(screen.queryByTestId('dashboard-updated-label')).toBeNull();
+  });
+
+  it('mounts no status sheet and no status panel: both live in the Overview stats card', () => {
+    render(<ForYouScreen />);
+    expect(screen.getByTestId('dashboard-title')).toBeTruthy();
+    expect(screen.queryByTestId('status-sheet')).toBeNull();
+    expect(screen.queryByTestId('status-panel')).toBeNull();
   });
 
   it('hands the status-bar scrim the header\'s hidden value (F21)', () => {
@@ -244,39 +252,16 @@ describe('Dashboard header', () => {
     expect(screen.getByTestId('scrim').props.coverProgress).toEqual({ value: 0, __hidden: true });
   });
 
-  it('says "Updated just now" in sentence case under a minute (F16)', () => {
-    mockLastNewArticlesAt = Date.now() - 10_000;
+  it('carries no stats sentence: it moved into the Overview list', () => {
     render(<ForYouScreen />);
-    expect(screen.getByTestId('dashboard-updated-label').props.children).toBe('feed.updatedJustNow');
-  });
-
-  it('dates "Updated" from new articles, and shows nothing before any arrived', () => {
-    render(<ForYouScreen />);
-    expect(screen.queryByTestId('dashboard-updated-label')).toBeNull();
-  });
-
-  it('keeps the status row a way into the status sheet while narrating', () => {
-    mockProcessing = true;
-    render(<ForYouScreen />);
-    expect(screen.getByTestId('status-sheet').props.isOpen).toBe(false);
-    const row = screen.getByTestId('dashboard-header-narration');
-    expect(row.props.accessibilityRole).toBe('button');
-    fireEvent.press(row);
-    expect(screen.getByTestId('status-sheet').props.isOpen).toBe(true);
-  });
-
-  it('never says "Updated" while a run is going', () => {
-    mockLastNewArticlesAt = Date.now() - 10_000;
-    mockProcessing = true;
-    render(<ForYouScreen />);
-    expect(screen.queryByTestId('dashboard-updated-label')).toBeNull();
-  });
-
-  it('shows the stats sentence on Overview only (M3)', () => {
-    render(<ForYouScreen />);
-    expect(screen.getByTestId('dashboard-stats-sentence')).toBeTruthy();
-    fireEvent.press(screen.getByTestId('subtab-saved'));
+    expect(screen.getByTestId('dashboard-title')).toBeTruthy();
     expect(screen.queryByTestId('dashboard-stats-sentence')).toBeNull();
+    expect(screen.queryByTestId('stats-sentence')).toBeNull();
+  });
+
+  it('lets the pill row bleed by exactly the header side padding', () => {
+    render(<ForYouScreen />);
+    expect(screen.getByTestId('subtabs').props.bleed).toBe(20);
   });
 
   it('carries the "?" explainer (N4)', () => {
@@ -293,5 +278,14 @@ describe('Dashboard header', () => {
     act(() => view.rerender(<ForYouScreen />));
     expect(announce).toHaveBeenCalledTimes(1);
     expect(announce).toHaveBeenCalledWith('feedStatus.syncDoneA11y');
+  });
+
+  it('mounts the stats dropdown layer in the screen, after the header, so it paints over both', () => {
+    render(<ForYouScreen />);
+    const root = screen.getByTestId('dashboard-screen');
+    const ids = root
+      .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+      .map((n: any) => n.props.testID as string);
+    expect(ids.indexOf('stats-dropdown-layer')).toBeGreaterThan(ids.indexOf('dashboard-header'));
   });
 });

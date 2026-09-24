@@ -1,7 +1,6 @@
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
-import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import {
   GLASS_HEADER_SCRIM,
@@ -31,6 +30,7 @@ import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
+import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -112,7 +112,11 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   // The user's geo/language context (home/other countries + app language) —
   // makes representative election tier-aware. Null while loading/on failure,
   // which `buildFactRows` treats as the legacy geo/language-blind pick.
-  const userGeoLanguageCtx = useUserGeoLanguageContext();
+  //
+  // Held for the visit (see feed/use-session-geo-context): a publication
+  // preference written from a card's ••• sheet re-loads the live context, and a
+  // live one regrouped and re-sorted the cards under the reader.
+  const userGeoLanguageCtx = useSessionGeoLanguageContext(useUserGeoLanguageContext(), factId);
 
   // Hoisted so the "next fact" footer below can reuse it instead of calling
   // `buildFactRows` a second time — this was previously computed inline and
@@ -233,7 +237,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   const { onVerdict, onAskMera, feedbackHandlers } = useFeedbackSheet(factAdapter, {
     onOpenSuggestion: handlePress,
   });
-  const dismissedMap = useFeedbackDismissedStore((s) => s.dismissed);
 
   const renderItem = useCallback(
     ({ item }: { item: FactRowGroup }) => {
@@ -246,9 +249,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
           verdict={verdict}
           onVerdict={onVerdict}
           onAskMera={onAskMera}
-          feedbackVisible={verdict != null && !dismissedMap[item.data.articleId]}
-          feedbackInitialPath={rec?.path}
-          feedbackCommitted={!!rec?.committed}
           feedbackHandlers={feedbackHandlers}
           read={isSuggestionOpened(item.data, openedIds)}
           // NEW pill only for stories that became visible since the last visit —
@@ -258,7 +258,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
         />
       );
     },
-    [handlePress, openedIds, prevVisitMs, verdicts, dismissedMap, onVerdict, onAskMera, feedbackHandlers],
+    [handlePress, openedIds, prevVisitMs, verdicts, onVerdict, onAskMera, feedbackHandlers],
   );
 
   // "Jump from one fact feed list to the next" (r14 #6), in the NEXT section's

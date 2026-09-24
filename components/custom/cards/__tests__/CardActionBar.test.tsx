@@ -50,7 +50,6 @@ function setup(overrides: Partial<React.ComponentProps<typeof CardActionBar>> = 
   const utils = render(
     <CardActionBar
       verdict={overrides.verdict ?? null}
-      provisional={overrides.provisional}
       saved={overrides.saved ?? false}
       onLike={onLike}
       onDislike={onDislike}
@@ -63,24 +62,12 @@ function setup(overrides: Partial<React.ComponentProps<typeof CardActionBar>> = 
       onShare={'onShare' in overrides ? overrides.onShare : onShare}
       horizontalPadding={overrides.horizontalPadding}
       onOverflow={overrides.onOverflow}
-      compact={overrides.compact}
     />,
   );
   return { ...utils, onLike, onDislike, onAskMera, onToggleSave, onShare, onTrack };
 }
 
 describe('CardActionBar', () => {
-  // 601/607: the accessibility tree measures the FRAME. Slop around a 20pt
-  // glyph read as a 20x20 target there, so compact buttons carry a 44pt frame.
-  it('gives every compact button a real 44pt frame, with no slop', () => {
-    const { getByTestId } = setup({ compact: true, onOverflow: jest.fn() });
-    for (const id of ['card-action-like', 'card-action-dislike', 'card-action-save', 'card-action-share', 'card-action-more']) {
-      const node = getByTestId(id);
-      expect(node.props.style).toEqual(expect.objectContaining({ minWidth: 44, minHeight: 44 }));
-      expect(node.props.hitSlop ?? 0).toBe(0);
-    }
-  });
-
   it('fires each handler on tap', () => {
     const { getByLabelText, onLike, onDislike, onAskMera, onToggleSave } = setup();
     fireEvent.press(getByLabelText('articleFeedback.likeLabel'));
@@ -122,32 +109,16 @@ describe('CardActionBar', () => {
     expect(getByTestId('icon-thumbsup').props.fill).toBe('none');
   });
 
-  // D15/F3, and the whole reason the detail screens adopted this row rather
-  // than being restyled in place. Their old treatment carried these three
-  // states in the button's BACKGROUND (orange fill = committed, 18% tint =
-  // provisional, transparent = none), so deleting the circle — the actual ask —
-  // would have collapsed provisional into committed. Here COLOUR says "the
-  // verdict is recorded" and FILL says "a reason backs it", which survives
-  // having no background at all. Pin both halves so a future tidy-up of the
-  // fill logic cannot silently re-merge the two states.
-  it('shows a provisional like coloured but HOLLOW, and a committed one filled', () => {
-    const provisional = setup({ verdict: 'like', provisional: true });
-    expect(provisional.getByTestId('icon-thumbsup').props.color).toBe('#22C55E');
-    expect(provisional.getByTestId('icon-thumbsup').props.fill).toBe('none');
-
-    const committed = setup({ verdict: 'like', provisional: false });
-    expect(committed.getByTestId('icon-thumbsup').props.color).toBe('#22C55E');
-    expect(committed.getByTestId('icon-thumbsup').props.fill).toBe('#22C55E');
-  });
-
-  it('shows a provisional dislike coloured but HOLLOW, and a committed one filled', () => {
-    const provisional = setup({ verdict: 'dislike', provisional: true });
-    expect(provisional.getByTestId('icon-thumbsdown').props.color).toBe('#EF4444');
-    expect(provisional.getByTestId('icon-thumbsdown').props.fill).toBe('none');
-
-    const committed = setup({ verdict: 'dislike', provisional: false });
-    expect(committed.getByTestId('icon-thumbsdown').props.color).toBe('#EF4444');
-    expect(committed.getByTestId('icon-thumbsdown').props.fill).toBe('#EF4444');
+  // Owner: one behaviour everywhere. A recorded verdict is coloured AND
+  // filled at once; there is no hollow "no reason yet" state. D15 is a
+  // learning rule (the digest), not a display one.
+  it.each([
+    ['like', 'icon-thumbsup', '#22C55E'],
+    ['dislike', 'icon-thumbsdown', '#EF4444'],
+  ] as const)('fills a recorded %s at once', (verdict, id, colour) => {
+    const r = setup({ verdict });
+    expect(r.getByTestId(id).props.color).toBe(colour);
+    expect(r.getByTestId(id).props.fill).toBe(colour);
   });
 
   // Item F1-1: the label was the constant "Saved" on every card, so a screen

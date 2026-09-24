@@ -45,10 +45,6 @@ jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: (p: any) => <View {...p} /> };
 });
-jest.mock('@/components/custom/cards/CardFeedbackSurface', () => ({
-  __esModule: true,
-  default: () => null,
-}));
 jest.mock('@/lib/haptics', () => ({
   hapticLight: jest.fn(),
   hapticMedium: jest.fn(),
@@ -62,11 +58,19 @@ jest.mock('@/components/custom/tracked-stories/use-track-button', () => ({
 jest.mock('@/lib/stores/floating-chat-store', () => ({
   useFloatingChatStore: { getState: () => ({ expand: jest.fn() }) },
 }));
-jest.mock('@/lib/services/swipe-feedback', () => ({ openFeedbackChatWithPath: jest.fn() }));
+const mockOpenFeedbackChat = jest.fn();
+jest.mock('@/lib/services/swipe-feedback', () => ({
+  openFeedbackChatWithPath: (...a: any[]) => mockOpenFeedbackChat(...a),
+}));
+jest.mock('@/components/custom/cards/overlay-context', () => ({
+  buildOverlayContext: jest.fn(async (subject: any, fallback: any) => ({ articleTitle: subject.title, subject, fallback })),
+}));
 // The ••• menu is its own suite (cards/__tests__/use-article-menu.test.tsx);
 // here it is a stub, which also keeps the database out of this import graph.
+const mockOpenFeedback = jest.fn();
 const mockUseArticleMenu = jest.fn((..._a: any[]) => ({
   open: jest.fn(),
+  openFeedback: mockOpenFeedback,
   element: null,
   accessibilityActions: [],
   onAccessibilityAction: jest.fn(),
@@ -80,8 +84,11 @@ jest.mock('@/lib/database/services/article-feedback-service', () => ({
   getArticleVerdict: jest.fn(async () => ({ verdict: null, path: [] })),
   recordVerdictFeedback: (...a: any[]) => mockRecordVerdictFeedback(...(a as [])),
   removeArticleFeedback: jest.fn(async () => {}),
-  updateFeedbackContextPath: jest.fn(async () => {}),
+  updateFeedbackContextPath: (...a: any[]) => mockUpdatePath(...a),
+  markFeedbackProcessedFor: (...a: any[]) => mockMarkProcessed(...a),
 }));
+const mockUpdatePath = jest.fn(async (..._a: any[]) => {});
+const mockMarkProcessed = jest.fn(async (..._a: any[]) => {});
 
 const mockGetSuggestionFeedbackContext = jest.fn();
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
@@ -274,4 +281,80 @@ describe('article-detail verdicts persist a real context', () => {
       expect.objectContaining({ publication: 'The Hindu', category: 'Sports' }),
     );
   });
+});
+
+// Owner: the detail screen's thumbs behave exactly like the Feed card's. A
+// thumb records the verdict, then opens the ••• sheet at that verdict's tree
+// root; the leaves come back to this screen's own handlers.
+describe('detail thumbs open the shared sheet', () => {
+  const lastInput = () => mockUseArticleMenu.mock.calls[mockUseArticleMenu.mock.calls.length - 1][0] as any;
+
+  it.each([
+    ['like', 'card-action-like'],
+    ['dislike', 'card-action-dislike'],
+  ])('a %s thumb records the verdict and opens that tree', async (v, id) => {
+    mockGetSuggestionFeedbackContext.mockResolvedValue(SUGGESTION_ROW);
+    const { getByTestId } = render(<ArticleFeedbackPrompt articleId="art-1" title="A story" />);
+    fireEvent.press(getByTestId(id));
+    expect(mockOpenFeedback).toHaveBeenCalledWith(v);
+    await waitFor(() => expect(mockRecordVerdictFeedback).toHaveBeenCalledTimes(1));
+  });
+
+  it('a second tap on the recorded thumb removes it and opens nothing', async () => {
+    mockGetSuggestionFeedbackContext.mockResolvedValue(SUGGESTION_ROW);
+    const { getByTestId } = render(<ArticleFeedbackPrompt articleId="art-1" title="A story" />);
+    fireEvent.press(getByTestId('card-action-like'));
+    fireEvent.press(getByTestId('card-action-like'));
+    expect(mockOpenFeedback).toHaveBeenCalledTimes(1);
+  });
+
+  it('the tree context is the resolved subject plus the standalone fallback, entities included', async () => {
+    mockGetSuggestionFeedbackContext.mockResolvedValue(null);
+    render(<ArticleFeedbackPrompt articleId="art-2" title="A standalone story" article={STANDALONE_ARTICLE as never} />);
+    const ctx = await lastInput().resolveTreeContext();
+    expect(ctx.subject).toMatchObject({ origin: 'article', category: 'Politics', entities: ['Assembly'] });
+    expect(ctx.fallback).toMatchObject({ placeValue: 'Lyon' });
+  });
+
+  it('a committed leaf fills the thumb and persists, re-stamping the row after the commit when it applied', async () => {
+    mockGetSuggestionFeedbackContext.mockResolvedValue(SUGGESTION_ROW);
+    const { getByTestId } = render(<ArticleFeedbackPrompt articleId="art-1" title="A story" />);
+    fireEvent.press(getByTestId('card-action-dislike'));
+    await act(async () => {
+      lastInput().onLeafPicked('dislike', ['a', 'b'], 2, true);
+    });
+    expect(mockUpdatePath).toHaveBeenCalledWith('art-1', 'dislike', ['a', 'b'], true);
+    expect(mockMarkProcessed).toHaveBeenCalledWith('art-1', 'dislike');
+    expect(mockUpdatePath.mock.invocationCallOrder[0]).toBeLessThan(mockMarkProcessed.mock.invocationCallOrder[0]);
+  });
+
+  it('the chat leaf hands off with the verdict and breadcrumb, and commits', async () => {
+    mockGetSuggestionFeedbackContext.mockResolvedValue(SUGGESTION_ROW);
+    render(<ArticleFeedbackPrompt articleId="art-1" title="A story" />);
+    await act(async () => {
+      lastInput().onFeedbackChat('like', ['why']);
+    });
+    await waitFor(() =>
+      expect(mockOpenFeedbackChat).toHaveBeenCalledWith(expect.objectContaining({ _id: 'sugg-9' }), 'like', ['why']),
+    );
+    expect(mockUpdatePath).toHaveBeenCalledWith('art-1', 'like', ['why'], true);
+  });
+
+  it('related coverage goes to the screen (its footer)', () => {
+    const onBrowseRelated = jest.fn();
+    render(<ArticleFeedbackPrompt articleId="art-1" title="A story" onBrowseRelated={onBrowseRelated} />);
+    lastInput().onBrowseRelated('dislike');
+    expect(onBrowseRelated).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Owner: one behaviour. The detail thumb fills at once, before any leaf, and
+// stays filled (Cancel in the sheet keeps the verdict: nothing is removed).
+it('the detail thumb fills at once and nothing removes it without a second tap', async () => {
+  mockGetSuggestionFeedbackContext.mockResolvedValue(SUGGESTION_ROW);
+  const { getByTestId } = render(<ArticleFeedbackPrompt articleId="art-1" title="A story" />);
+  fireEvent.press(getByTestId('card-action-like'));
+  expect(getByTestId('icon-thumbsup').props.fill).toBe('#22C55E');
+  await waitFor(() => expect(mockRecordVerdictFeedback).toHaveBeenCalledTimes(1));
+  expect(require('@/lib/database/services/article-feedback-service').removeArticleFeedback).not.toHaveBeenCalled();
 });

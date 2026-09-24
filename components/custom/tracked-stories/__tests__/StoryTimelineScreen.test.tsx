@@ -134,6 +134,18 @@ jest.mock('@/lib/tracking/track-actions', () => ({
 }));
 jest.mock('@/lib/hooks/use-open-article', () => ({ useOpenArticle: () => jest.fn() }));
 
+// The export reads each member's retention row for its link and note. Mocked
+// for the import-time reason above as much as for the data: the real service
+// reaches lib/database at import.
+const mockGetSaved = jest.fn(async (_id: string): Promise<any> => null);
+jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
+    getSavedSuggestionByServerId: (id: string) => mockGetSaved(id),
+}));
+const mockExportAndShare = jest.fn();
+jest.mock('@/components/custom/saved-suggestions/export-and-share', () => ({
+    exportAndShare: (...a: unknown[]) => mockExportAndShare(...a),
+}));
+
 // The real row pulls the whole compact-card tree (images, blur store, adaptive
 // clamp). The seam under test is the screen's wiring, so the row is reduced to
 // the three props it forwards.
@@ -196,6 +208,12 @@ beforeEach(() => {
     mockRemoveMemberSnapshot.mockImplementation(async () => true);
     mockDeleteTracked.mockImplementation(async () => true);
     mockGetTracked.mockImplementation(async () => mockStory);
+    mockExportAndShare.mockResolvedValue({ status: 'shared', via: 'file' });
+    mockGetSaved.mockImplementation(async (id: string) =>
+        id === 'a1'
+            ? { article_url: 'https://example.com/a1', reason: 'You follow Bhopal.', title_en: null }
+            : null,
+    );
     mockStory = {
         id: 's1',
         llmHeadline: 'Bhopal flooding',
@@ -355,5 +373,95 @@ describe('StoryTimelineScreen: failures say so', () => {
 
         await waitFor(() => expect(queryByText('Unrelated Meghalaya landslide')).toBeTruthy());
         expect(mockShowError).toHaveBeenCalledWith('errors.somethingWentWrong', 'trackedStories.removeFailed');
+    });
+});
+
+describe('StoryTimelineScreen: exporting the story', () => {
+    const checked = (utils: any, id: string) =>
+        utils.getByTestId(`story-export-row-${id}`).props.accessibilityState.checked;
+
+    it('opens the export wizard with every article already ticked', async () => {
+        const utils = await renderScreen();
+        expect(utils.queryByTestId('story-export-modal')).toBeNull();
+
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-timeline-share'));
+        });
+
+        expect(utils.getByTestId('story-export-modal')).toBeTruthy();
+        expect(['a1', 'a2', 'a3'].map((id) => checked(utils, id))).toEqual([true, true, true]);
+        // Nothing is read or shared until the reader picks a format.
+        expect(mockGetSaved).not.toHaveBeenCalled();
+        expect(mockExportAndShare).not.toHaveBeenCalled();
+    });
+
+    it('exports only what stays ticked, with links and notes from retention', async () => {
+        const utils = await renderScreen();
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-timeline-share'));
+        });
+
+        // Untick one. If the wizard re-ran its all-ticked reset on a later
+        // render, this would silently come back and be exported.
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-export-row-a2'));
+        });
+        expect(checked(utils, 'a2')).toBe(false);
+
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-export-next'));
+        });
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-export-next'));
+        });
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-export-format-markdown'));
+        });
+
+        await waitFor(() => expect(mockExportAndShare).toHaveBeenCalledTimes(1));
+        const [call] = mockExportAndShare.mock.calls[0] as any[];
+        expect(call.format).toBe('markdown');
+        expect(call.fileBaseName).toBe('mera-story');
+        expect(call.dialogTitle).toBe('storyExport.shareDialogTitle');
+        expect(call.content.startsWith('# Bhopal flooding\n\n_aiDisclosure.short_\n')).toBe(true);
+        expect(call.content).toContain('## Water enters low-lying colonies');
+        expect(call.content).toContain('## Rescue teams deployed');
+        expect(call.content).not.toContain('Unrelated Meghalaya landslide');
+        expect(call.content).toContain('https://example.com/a1');
+        expect(call.content).toContain('> savedExport.docReasonLabel: You follow Bhopal.');
+        // Retention is read for the chosen members only.
+        expect(mockGetSaved.mock.calls.map((c) => c[0]).sort()).toEqual(['a1', 'a3']);
+    });
+
+    it('says so when the export could not be handed off', async () => {
+        mockExportAndShare.mockResolvedValue({ status: 'failed', error: new Error('nope') });
+        const utils = await renderScreen();
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-timeline-share'));
+        });
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-export-next'));
+        });
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-export-next'));
+        });
+        await act(async () => {
+            fireEvent.press(utils.getByTestId('story-export-format-json'));
+        });
+
+        await waitFor(() =>
+            expect(mockShowError).toHaveBeenCalledWith(
+                'savedExport.failedTitle',
+                'savedExport.failedMessage',
+            ),
+        );
+    });
+
+    it('offers no share button when the story has nothing to export', async () => {
+        mockStory = { ...mockStory, memberSnapshots: [] };
+        const utils = render(<StoryTimelineScreen trackedStoryId="s1" onBack={jest.fn()} />);
+        await waitFor(() => utils.getByText('trackedStories.timelineQuietNote'));
+        // The positive case above proves the query can find the button at all.
+        expect(utils.queryByTestId('story-timeline-share')).toBeNull();
     });
 });

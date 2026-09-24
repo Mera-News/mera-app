@@ -191,7 +191,7 @@ describe('revert runs the MIRROR sweep (D12c)', () => {
     );
     (sweep.unexcludeRetiredHardFilters as jest.Mock).mockRejectedValueOnce(new Error('boom'));
 
-    await expect(revertChange(added.changeLogId!)).resolves.toBeUndefined();
+    await expect(revertChange(added.changeLogId!)).resolves.toBe(true);
     expect(supRows()[0].status).toBe('retired');
     // The undo still landed and was audited.
     expect(logRows().some((r: any) => r.actionType === 'revert_change')).toBe(true);
@@ -242,7 +242,7 @@ describe('retire_suppression revert (soft, keyword)', () => {
       'user',
     );
     await revertChange(retired.changeLogId!);
-    await expect(revertChange(retired.changeLogId!)).resolves.toBeUndefined();
+    await expect(revertChange(retired.changeLogId!)).resolves.toBe(false);
     expect(stored.status).toBe('active');
     expect(added.applied).toBe(true);
   });

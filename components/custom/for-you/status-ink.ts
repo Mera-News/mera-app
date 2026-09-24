@@ -6,10 +6,12 @@
 // on the old panel were `typography-400` (rgb 140) on a 7% white tint over
 // scrolling content: 1.9:1 measured on a device screenshot.
 //
-// The panel sits in the absolute header, so cards scroll UNDER it. That makes
-// it a surface over content, which takes `GLASS_OVER_CONTENT_FILL` as its base
-// (see GlassSurface). `GlassPanel` IGNORES its `fallbackClassName`, so the base
-// has to be passed as a style, not as that class.
+// The panel drops down over list content, so it is a surface over content and
+// takes an OPAQUE dark base (`STATUS_PANEL_OPAQUE_BASE`; the 0.90
+// `GLASS_OVER_CONTENT_FILL` let section text through). `GlassPanel` IGNORES its
+// `fallbackClassName`, so the base has to be passed as a style.
+
+import type { FeedStatusMode } from '@/lib/feed-status-mode';
 
 /** Pure text colours. `secondary` is the floor: rgb 163 only reaches 4.6:1
  *  over the worst modelled panel and rgb 140 reaches 3.5:1. */
@@ -24,6 +26,13 @@ export const STATUS_INK = {
  * content under the 0.90 dark base, then the 7% white lift of
  * `TranslucentPlate`. Brighter content behind cannot make it lighter than this.
  */
+/**
+ * `GLASS_OVER_CONTENT_FILL` (rgba 18,17,19 at 0.90) at full opacity: the
+ * status panel floats over list content, and at 0.90 the text behind it read
+ * through.
+ */
+export const STATUS_PANEL_OPAQUE_BASE = 'rgb(18, 17, 19)';
+
 export const STATUS_PANEL_WORST_BG: readonly [number, number, number] = [57, 56, 57];
 
 function channel(v: number): number {
@@ -72,4 +81,34 @@ export function pickScoringProgress(
   if (batch && batch.total > 0) return { done: batch.done, total: batch.total };
   if (asyncTotal > 0) return { done: asyncDone, total: asyncTotal };
   return null;
+}
+
+/**
+ * The state half of the accessibility label.
+ *
+ * Ink is the ONLY thing that separated these states, which made the capped
+ * state (amber) and the error state (red) identical to a screen reader: the
+ * label was a constant "Open feed status" in every mode. `deferred` folds onto
+ * `idle` here for the same reason it shares the resting colour — it is a
+ * pipeline count the reader cannot act on.
+ *
+ * Also the Dashboard stats card's visible status line at zero articles, and
+ * its toggle's label: one table for both tabs.
+ */
+export function a11yStateKey(mode: FeedStatusMode): string {
+  // Returns a plain string, read by its callers through `tAny`. All four keys exist in
+  // all 20 dictionaries, so this is NOT a missing-key workaround: the key is
+  // genuinely COMPUTED from `mode`, which is what `tAny` exists for in this
+  // file family. Do not "fix" it to a typed `t()` — there is no literal here
+  // to type.
+  switch (mode) {
+    case 'processing':
+      return 'feedStatus.modeProcessing';
+    case 'error':
+      return 'feedStatus.modeError';
+    case 'limited':
+      return 'feedStatus.modeLimited';
+    default:
+      return 'feedStatus.idle';
+  }
 }

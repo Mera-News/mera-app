@@ -1,6 +1,10 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
+import type { ExportFormat } from '@/components/custom/saved-suggestions/export-and-share';
+import ExportWizardModal, {
+    type ExportWizardRow,
+} from '@/components/custom/saved-suggestions/ExportWizardModal';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -20,6 +24,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { ArticleService } from '@/lib/article-service';
 import { getGroupingRowsByIds } from '@/lib/database/services/article-suggestion-service';
+import { getSavedSuggestionByServerId } from '@/lib/database/services/saved-article-suggestion-service';
 import {
     advanceSeenWatermark,
     backfillSnapshotSource,
@@ -30,13 +35,20 @@ import {
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight } from '@/lib/haptics';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
+import { exportDay } from '@/lib/saved-articles-export';
+import {
+    buildStoryJson,
+    buildStoryMarkdown,
+    toStoryExportRows,
+    type StoryRetainedRow,
+} from '@/lib/story-export';
 import { deleteTrackedStoryById, disownStoryMember } from '@/lib/tracking/track-actions';
 import { toastManager } from '@/lib/toast-manager';
 import { buildTimeline, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -164,6 +176,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     // The card the user long-pressed and is being asked about. Holding the CARD
     // (not just its id) keeps the confirm addressable after the list re-renders.
     const [confirmRemove, setConfirmRemove] = useState<TimelineCard | null>(null);
+    const [exportOpen, setExportOpen] = useState(false);
 
     // Deleting retires the linked TOPIC as well as dropping the row — without
     // that the topic keeps pulling this story's coverage every fetch cycle for a
@@ -340,6 +353,58 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         [openArticle],
     );
 
+    // Export: the same wizard as the Saved tab, every article ticked. Memoized
+    // so a re-render while the wizard is open cannot re-tick what the reader
+    // unticked (the wizard resets on open only).
+    const exportRows = useMemo<ExportWizardRow[]>(
+        () =>
+            cards
+                .filter((c) => !!c.articleId)
+                .map((c) => ({
+                    id: c.articleId,
+                    title: c.title,
+                    language: c.languageCode,
+                })),
+        [cards],
+    );
+
+    const buildExport = useCallback(
+        async (chosenIds: string[], includeReason: boolean, format: ExportFormat) => {
+            const chosen = new Set(chosenIds);
+            const members = cards.filter((c) => chosen.has(c.articleId));
+            // Links and notes live on the story's retention rows, not its
+            // snapshots (see lib/story-export.ts). Local reads only, at most
+            // one per member.
+            const kept = await Promise.all(
+                members.map((m) => getSavedSuggestionByServerId(m.articleId).catch(() => null)),
+            );
+            const retainedById = new Map<string, StoryRetainedRow>();
+            kept.forEach((row, i) => {
+                if (row) retainedById.set(members[i].articleId, row);
+            });
+            const rows = toStoryExportRows(members, retainedById, { includeReason });
+            // A story with neither headline falls back to its newest article.
+            const docHeadline = headline || rows[0]?.title || t('trackedStories.title');
+            return format === 'markdown'
+                ? buildStoryMarkdown(rows, {
+                      headline: docHeadline,
+                      headlineAiLabel: isLlmHeadline ? t('aiDisclosure.short') : undefined,
+                      docExported: t('savedExport.docExported', { date: exportDay() }),
+                      reasonLabel: t('savedExport.docReasonLabel'),
+                  })
+                : buildStoryJson(
+                      rows,
+                      { headline: docHeadline, headlineAiGenerated: isLlmHeadline },
+                      { includeReason },
+                  );
+        },
+        [cards, headline, isLlmHeadline, t],
+    );
+
+    const handleExportFailed = useCallback(() => {
+        toastManager.showError(t('savedExport.failedTitle'), t('savedExport.failedMessage'));
+    }, [t]);
+
     const renderItem: ListRenderItem<TimelineCard> = useCallback(
         ({ item }) => {
             const article = cardToNewsArticle(item);
@@ -447,6 +512,20 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                             />
                         )}
                     </Box>
+                    {/* Export. Hidden until there is something to export, so
+                        it never opens an empty wizard. */}
+                    {!isLoading && exportRows.length > 0 && (
+                        <Pressable
+                            testID="story-timeline-share"
+                            onPress={() => setExportOpen(true)}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('storyExport.shareA11y')}
+                            hitSlop={8}
+                            className="p-2"
+                        >
+                            <MaterialIcons name="ios-share" size={24} color="#ffffff" />
+                        </Pressable>
+                    )}
                     {/* Delete is the ONLY way to stop following a story (Q13):
                         the track button no longer untracks, because doing so
                         destroys everything saved here. Hence the confirm. */}
@@ -533,6 +612,19 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                     </ModalFooter>
                 </ModalContent>
             </Modal>
+
+            <ExportWizardModal
+                isOpen={exportOpen}
+                onClose={() => setExportOpen(false)}
+                rows={exportRows}
+                buildContent={buildExport}
+                onFailed={handleExportFailed}
+                dialogTitle={t('storyExport.shareDialogTitle')}
+                reasonHint={t('storyExport.includeReasonHint')}
+                testIDPrefix="story-export"
+                initiallyAllSelected
+                fileBaseName="mera-story"
+            />
 
             <FlatList
                 data={cards}

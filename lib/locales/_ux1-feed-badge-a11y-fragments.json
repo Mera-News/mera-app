@@ -1,0 +1,163 @@
+{
+  "_comment": "ux1 P1 follow-up (feed scout): spoken labels for the priority badge, which lost its arrow glyphs. New keys only, no overwrites. No em dashes.",
+  "en": {
+    "relevance": {
+      "a11yEmergency": "Emergency",
+      "a11yHigh": "High priority",
+      "a11yMedium": "Medium priority",
+      "a11yLow": "Low priority"
+    }
+  },
+  "ar": {
+    "relevance": {
+      "a11yEmergency": "طارئ",
+      "a11yHigh": "أولوية عالية",
+      "a11yMedium": "أولوية متوسطة",
+      "a11yLow": "أولوية منخفضة"
+    }
+  },
+  "de": {
+    "relevance": {
+      "a11yEmergency": "Notfall",
+      "a11yHigh": "Hohe Priorität",
+      "a11yMedium": "Mittlere Priorität",
+      "a11yLow": "Niedrige Priorität"
+    }
+  },
+  "es": {
+    "relevance": {
+      "a11yEmergency": "Emergencia",
+      "a11yHigh": "Prioridad alta",
+      "a11yMedium": "Prioridad media",
+      "a11yLow": "Prioridad baja"
+    }
+  },
+  "fr": {
+    "relevance": {
+      "a11yEmergency": "Urgence",
+      "a11yHigh": "Priorité haute",
+      "a11yMedium": "Priorité moyenne",
+      "a11yLow": "Priorité basse"
+    }
+  },
+  "hi": {
+    "relevance": {
+      "a11yEmergency": "आपातकालीन",
+      "a11yHigh": "उच्च प्राथमिकता",
+      "a11yMedium": "मध्यम प्राथमिकता",
+      "a11yLow": "कम प्राथमिकता"
+    }
+  },
+  "id": {
+    "relevance": {
+      "a11yEmergency": "Darurat",
+      "a11yHigh": "Prioritas tinggi",
+      "a11yMedium": "Prioritas sedang",
+      "a11yLow": "Prioritas rendah"
+    }
+  },
+  "it": {
+    "relevance": {
+      "a11yEmergency": "Emergenza",
+      "a11yHigh": "Priorità alta",
+      "a11yMedium": "Priorità media",
+      "a11yLow": "Priorità bassa"
+    }
+  },
+  "ja": {
+    "relevance": {
+      "a11yEmergency": "緊急",
+      "a11yHigh": "優先度が高い",
+      "a11yMedium": "優先度は中程度",
+      "a11yLow": "優先度が低い"
+    }
+  },
+  "ko": {
+    "relevance": {
+      "a11yEmergency": "긴급",
+      "a11yHigh": "높은 우선순위",
+      "a11yMedium": "중간 우선순위",
+      "a11yLow": "낮은 우선순위"
+    }
+  },
+  "nl": {
+    "relevance": {
+      "a11yEmergency": "Noodgeval",
+      "a11yHigh": "Hoge prioriteit",
+      "a11yMedium": "Gemiddelde prioriteit",
+      "a11yLow": "Lage prioriteit"
+    }
+  },
+  "pl": {
+    "relevance": {
+      "a11yEmergency": "Pilne",
+      "a11yHigh": "Wysoki priorytet",
+      "a11yMedium": "Średni priorytet",
+      "a11yLow": "Niski priorytet"
+    }
+  },
+  "pt-BR": {
+    "relevance": {
+      "a11yEmergency": "Emergência",
+      "a11yHigh": "Prioridade alta",
+      "a11yMedium": "Prioridade média",
+      "a11yLow": "Prioridade baixa"
+    }
+  },
+  "ru": {
+    "relevance": {
+      "a11yEmergency": "Срочно",
+      "a11yHigh": "Высокий приоритет",
+      "a11yMedium": "Средний приоритет",
+      "a11yLow": "Низкий приоритет"
+    }
+  },
+  "th": {
+    "relevance": {
+      "a11yEmergency": "ฉุกเฉิน",
+      "a11yHigh": "ความสำคัญสูง",
+      "a11yMedium": "ความสำคัญปานกลาง",
+      "a11yLow": "ความสำคัญต่ำ"
+    }
+  },
+  "tr": {
+    "relevance": {
+      "a11yEmergency": "Acil",
+      "a11yHigh": "Yüksek öncelik",
+      "a11yMedium": "Orta öncelik",
+      "a11yLow": "Düşük öncelik"
+    }
+  },
+  "uk": {
+    "relevance": {
+      "a11yEmergency": "Терміново",
+      "a11yHigh": "Високий пріоритет",
+      "a11yMedium": "Середній пріоритет",
+      "a11yLow": "Низький пріоритет"
+    }
+  },
+  "vi": {
+    "relevance": {
+      "a11yEmergency": "Khẩn cấp",
+      "a11yHigh": "Ưu tiên cao",
+      "a11yMedium": "Ưu tiên trung bình",
+      "a11yLow": "Ưu tiên thấp"
+    }
+  },
+  "zh-CN": {
+    "relevance": {
+      "a11yEmergency": "紧急",
+      "a11yHigh": "高优先级",
+      "a11yMedium": "中优先级",
+      "a11yLow": "低优先级"
+    }
+  },
+  "zh-TW": {
+    "relevance": {
+      "a11yEmergency": "緊急",
+      "a11yHigh": "高優先級",
+      "a11yMedium": "中優先級",
+      "a11yLow": "低優先級"
+    }
+  }
+}

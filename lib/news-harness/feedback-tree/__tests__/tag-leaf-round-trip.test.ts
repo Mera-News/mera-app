@@ -93,7 +93,7 @@ describe('tag leaves — the filter matches the article it was minted from', () 
     ['a plain ISO country tag', [{ countryCode: 'FR' }]],
     ['a SUPRANATIONAL tag', [{ countryCode: 'MIDDLE_EAST' }]],
   ])('less_place round-trips on %s', (_label, geoTags) => {
-    // Build the context exactly as InlineFeedbackTree does.
+    // Build the context exactly as buildOverlayContext does.
     const ctx: LocalFeedbackContext = {
       geoText: geoTextFromTags(geoTags),
       placeValue: placeValueFromTags(geoTags),

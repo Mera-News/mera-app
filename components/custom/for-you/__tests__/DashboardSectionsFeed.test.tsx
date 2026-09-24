@@ -155,10 +155,16 @@ jest.mock('@/components/custom/cards/ArticleSuggestionCompactCard', () => {
         ),
     };
 });
-jest.mock('@/components/custom/for-you/BreakingStrip', () => ({
-    __esModule: true,
-    default: () => null,
-}));
+jest.mock('@/components/custom/for-you/BreakingStrip', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="breaking-strip" /> };
+});
+// The card has its own suite (auto-hide, zero-count line); here only its
+// POSITION in the list matters.
+jest.mock('@/components/custom/for-you/DashboardStatsCard', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="dashboard-stats-card" /> };
+});
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
@@ -517,5 +523,36 @@ describe('DashboardSectionsFeed: list end padding', () => {
         const { getByTestId } = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)])]);
         const style = getByTestId('dashboard-feed-list').props.contentContainerStyle;
         expect(style.paddingBottom).toBe(24);
+    });
+});
+
+describe('DashboardSectionsFeed: the Overview stats card', () => {
+    const ids = (r: ReturnType<typeof renderFeed>) =>
+        r.UNSAFE_root.findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string').map(
+            (n: any) => n.props.testID as string,
+        );
+
+    it('is the first card, ahead of the breaking strip and every section', () => {
+        const r = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)])], {
+            breaking: [{ id: 'b1' } as any],
+        });
+        const order = ids(r);
+        expect(order.indexOf('dashboard-stats-card')).toBeGreaterThanOrEqual(0);
+        expect(order.indexOf('dashboard-stats-card')).toBeLessThan(order.indexOf('breaking-strip'));
+    });
+
+    it('still leads the no-stories element', () => {
+        const { Text } = require('react-native');
+        const empty = { ...makeRow('f-new', []), emptyReason: 'awaiting-first-run' } as FactRow;
+        const r = renderFeed([empty], {
+            noStoriesLead: <Text testID="lead">lead</Text>,
+        });
+        const order = ids(r);
+        expect(order.indexOf('dashboard-stats-card')).toBeLessThan(order.indexOf('lead'));
+    });
+
+    it('renders even with no sections at all', () => {
+        const r = renderFeed([]);
+        expect(r.getByTestId('dashboard-stats-card')).toBeTruthy();
     });
 });

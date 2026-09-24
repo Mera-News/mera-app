@@ -118,8 +118,8 @@ jest.mock('@/components/custom/ArticleMetaRow', () => {
   // chip lives in this slot, and a mock that swallows it would make "the chip
   // is in the meta row, not the footer" untestable — while still passing.
   return {
-    ArticleMetaRow: ({ publicationName, read, centerAccessory }: any) => (
-      <View testID="meta-row">
+    ArticleMetaRow: ({ publicationName, read, centerAccessory, showFlag, countryCode }: any) => (
+      <View testID="meta-row" showFlag={showFlag} countryCode={countryCode}>
         <Text>{publicationName ?? ''}</Text>
         {read ? <View testID="read-eye-icon" /> : null}
         {centerAccessory ?? null}
@@ -130,11 +130,6 @@ jest.mock('@/components/custom/ArticleMetaRow', () => {
 jest.mock('@/components/custom/RelevanceChip', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: () => <View testID="relevance-chip" /> };
-});
-// Mocked to avoid the InlineFeedbackTree → feedback-tree-service → DB import chain.
-jest.mock('@/components/custom/cards/CardFeedbackSurface', () => {
-  const { View } = require('react-native');
-  return { __esModule: true, default: () => <View testID="card-feedback-surface" /> };
 });
 // Mocked to avoid pulling in the (un-transformable) gluestack icon ESM via
 // @/components/ui/icon — ArticleCompactCardBase imports SourceFlag directly.
@@ -154,9 +149,17 @@ jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
 });
-jest.mock('@/components/custom/feedback-tree/FeedbackTreeOverlay', () => ({
-  __esModule: true,
-  default: () => null,
+// The tree level renders inside the ••• sheet; its own suite covers it.
+jest.mock('@/components/custom/feedback-tree/FeedbackTreeLevel', () => {
+  const { Text } = require('react-native');
+  return { __esModule: true, default: (p: any) => <Text testID={`tree-level-${p.root}`}>tree</Text> };
+});
+jest.mock('@/lib/services/feedback-tree-service', () => ({
+  getFeedbackTree: jest.fn(async () => ({ version: 1, root: [], likeRoot: [] })),
+  refreshFeedbackTree: jest.fn(async () => {}),
+}));
+jest.mock('@/components/custom/cards/overlay-context', () => ({
+  buildOverlayContext: jest.fn(async (s: any) => ({ articleTitle: s.title })),
 }));
 
 // ── Service / store seams (all touch the native DB or native modules) ──
@@ -165,7 +168,9 @@ const mockRecordArticleFeedback = jest.fn((..._a: any[]) => Promise.resolve());
 const mockRemoveArticleFeedback = jest.fn((..._a: any[]) => Promise.resolve());
 const mockHasLiked = jest.fn((..._a: any[]) => Promise.resolve(false));
 jest.mock('@/lib/database/services/article-feedback-service', () => ({
-  recordArticleFeedback: (...a: any[]) => mockRecordArticleFeedback(...a),
+  // Latest wins: every row records through the exclusive writer.
+  recordVerdictFeedback: (...a: any[]) => mockRecordArticleFeedback(...a),
+  getArticleVerdict: jest.fn(async () => ({ verdict: null, path: [] })),
   removeArticleFeedback: (...a: any[]) => mockRemoveArticleFeedback(...a),
   hasLiked: (...a: any[]) => mockHasLiked(...a),
 }));
@@ -199,7 +204,13 @@ jest.mock('@/lib/stores/blur-images-store', () => ({
 // because the real module renders a Gluestack Modal (which pulls @legendapp/motion,
 // untransformed ESM under jest) and is not what these card tests exercise.
 jest.mock('@/components/custom/tracked-stories/use-track-button', () => ({
-  useTrackButton: () => ({ tracked: false, onPress: jest.fn(), dialog: null }),
+  useTrackButton: () => ({
+    tracked: false,
+    resolve: () => 'start',
+    startTracking: jest.fn(),
+    goToStory: jest.fn(),
+    seePlans: jest.fn(async () => {}),
+  }),
 }));
 jest.mock('@/lib/database/services/fact-service', () => ({
   getFactsForTopicTexts: jest.fn(() => Promise.resolve([])),
@@ -555,36 +566,59 @@ describe('ArticleStandaloneCompactCard', () => {
     expect(queryByText('Die Zeit')).toBeTruthy();
   });
 
-  it('draws the compact action row: like, not for me, save, share, then ••• last', () => {
-    const { getByTestId, queryByTestId, UNSAFE_root } = render(
+  // Owner review: compact rows carry NO inline action row. One small ••• at the
+  // right end of the publisher line (44pt target) opens the shared menu, which
+  // gains Like / Not for me / Save / Share on compact surfaces.
+  it('draws no inline action row, only a 44pt ••• on the publisher line', () => {
+    const { getByTestId, queryByTestId, getByText } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
-    const order = UNSAFE_root.findAll(
-      (n: any) => typeof n.props?.testID === 'string' && n.props.testID.startsWith('card-action-') && typeof n.type !== 'string',
-    ).map((n: any) => n.props.testID);
-    const unique = order.filter((id: string, i: number) => order.indexOf(id) === i);
-    expect(unique).toEqual([
-      'card-action-like',
-      'card-action-dislike',
-      'card-action-save',
-      'card-action-share',
-      'card-action-more',
-    ]);
-    // Ask Mera and Follow live in the menu on a row, not inline.
-    expect(queryByTestId('card-action-mera')).toBeNull();
-    expect(queryByTestId('card-action-track')).toBeNull();
-    expect(getByTestId('card-action-more')).toBeTruthy();
+    for (const id of ['card-action-like', 'card-action-dislike', 'card-action-save', 'card-action-share']) {
+      expect(queryByTestId(id)).toBeNull();
+    }
+    const more = getByTestId('compact-card-more');
+    const { StyleSheet } = require('react-native');
+    expect(StyleSheet.flatten(more.props.style)).toEqual(expect.objectContaining({ minWidth: 44, minHeight: 44 }));
+    // Same line as the publisher.
+    const line = getByTestId('compact-card-footer');
+    const inLine = (n: any): boolean => {
+      for (let p = n; p; p = p.parent) if (p === line) return true;
+      return false;
+    };
+    expect(inLine(more)).toBe(true);
+    expect(inLine(getByText('Die Zeit'))).toBe(true);
   });
 
-  it('opens the ••• menu from the button and from a long-press', () => {
+  it('the compact menu leads with Like, Not for me, Save and Share', () => {
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
+    );
+    fireEvent.press(getByTestId('compact-card-more'));
+    for (const id of ['menu-like', 'menu-dislike', 'menu-save', 'menu-share', 'card-action-mera']) {
+      expect(getByTestId(id)).toBeTruthy();
+    }
+  });
+
+  it('moves the country flag to the top row, beside the language', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
+    );
+    const meta = getByTestId('meta-row');
+    expect(meta.props.showFlag).toBe(true);
+    expect(meta.props.countryCode).toBe('DE');
+    expect(queryByTestId('compact-footer-flag')).toBeNull();
+  });
+
+  it('opens the ••• menu from the button and from a long-press', async () => {
     const { getByTestId, queryByTestId, getByText } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
     expect(queryByTestId('article-menu')).toBeNull();
-    fireEvent.press(getByTestId('card-action-more'));
+    fireEvent.press(getByTestId('compact-card-more'));
     expect(getByTestId('article-menu')).toBeTruthy();
     fireEvent.press(getByTestId('article-menu-cancel'));
-    expect(queryByTestId('article-menu')).toBeNull();
+    // The sheet slides down before it goes.
+    await waitFor(() => expect(queryByTestId('article-menu')).toBeNull());
     fireEvent(getByText('Standalone headline'), 'longPress');
     expect(getByTestId('article-menu')).toBeTruthy();
   });
@@ -599,12 +633,12 @@ describe('ArticleStandaloneCompactCard', () => {
     expect(queryByTestId('article-menu')).toBeNull();
   });
 
-  it('lists the inline buttons first among the VoiceOver custom actions', () => {
+  it('keeps every action as a VoiceOver custom action on the row', () => {
     const { getByTestId } = render(
       <ArticleStandaloneCompactCard testID="row" article={makeArticle()} onPress={jest.fn()} />,
     );
     const names = (getByTestId('row').props.accessibilityActions ?? []).map((a: any) => a.name);
-    expect(names.slice(0, 4)).toEqual(['inline-like', 'inline-dislike', 'inline-save', 'inline-share']);
+    expect(names.slice(0, 4)).toEqual(['like', 'dislike', 'save', 'share']);
     expect(names).toContain('ask');
   });
 });
@@ -829,6 +863,18 @@ describe('ArticleActionsRow', () => {
     );
   });
 
+  // The Saved card's inline thumbs open the SAME sheet as the ••• menu,
+  // straight at the tree's root: no second Modal, no Back row.
+  it('opens the shared sheet at the tree root, with no Back row, on a thumb', async () => {
+    const { getByLabelText, getByTestId, queryByTestId } = render(
+      <ArticleActionsRow subject={subject} article={makeArticle()} />,
+    );
+    fireEvent.press(getByLabelText('articleFeedback.likeLabel'));
+    expect(await waitFor(() => getByTestId('tree-level-like'))).toBeTruthy();
+    expect(queryByTestId('sheet-back')).toBeNull();
+    expect(getByTestId('article-menu-cancel')).toBeTruthy();
+  });
+
   it('saves a standalone article via saveStandaloneArticle', async () => {
     const article = makeArticle();
     const { getByLabelText } = render(
@@ -857,26 +903,87 @@ describe('ArticleActionsRow', () => {
   });
 });
 
-describe('ArticleSuggestionCard fact chip (A2)', () => {
-  it('names the matched fact under the note on a Feed card, and opens its story list', async () => {
-    const { getFactsForTopicTexts } = require('@/lib/database/services/fact-service');
-    getFactsForTopicTexts.mockResolvedValueOnce([{ id: 'f9', statement: 'I work in fintech' }]);
-    const onPress = jest.fn();
-    const { findByTestId } = render(
-      <ArticleSuggestionCard
-        suggestion={makeSuggestion({ _id: 'sugg-chip', userTopicIds: ['fintech-a2'] } as any)}
-        onPress={onPress}
-        onVerdict={jest.fn()}
-      />,
+// Owner review: the importance badge and the AI disclosure share ONE row
+// (badge left, disclosure right), the note runs full width below, and there is
+// no fact chip and no second disclosure line under the note.
+describe('ArticleSuggestionCard note block', () => {
+  it('puts the AI disclosure at the right end of the badge row, once', () => {
+    const { getByTestId, queryAllByText, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion({ _id: 'sugg-note' })} onPress={jest.fn()} onVerdict={jest.fn()} />,
     );
-    const chip = await findByTestId('card-fact-chip');
-    fireEvent.press(chip);
-    expect(mockRouterPush).toHaveBeenCalledWith({
-      pathname: '/logged-in/fact-feed',
-      params: { factId: 'f9', statement: 'I work in fintech' },
+    const row = getByTestId('card-reason-badge-row');
+    expect(String(row.props.className)).toContain('justify-between');
+    const inRow = (n: any): boolean => {
+      for (let p = n; p; p = p.parent) if (p === row) return true;
+      return false;
+    };
+    const disclosures = queryAllByText('aiDisclosure.caption');
+    expect(disclosures).toHaveLength(1);
+    expect(inRow(disclosures[0])).toBe(true);
+    expect(queryByTestId('card-fact-chip')).toBeNull();
+  });
+});
+
+// Owner: the Feed card's thumbs open the SAME ••• sheet as the menu, straight
+// at the tree root with no Back row. One behaviour throughout the app; the
+// inline floating panel is gone.
+describe('ArticleSuggestionCard thumbs open the shared sheet', () => {
+  const handlers = () => ({
+    onLeafPicked: jest.fn(),
+    onInvokeMera: jest.fn(),
+    onBrowseRelated: jest.fn(),
+  });
+
+  it.each([
+    ['like', 'articleFeedback.likeLabel'],
+    ['dislike', 'articleFeedback.dislikeLabel'],
+  ])('a %s thumb records the verdict, then opens the sheet at its tree root with no Back row', async (v, label) => {
+    const onVerdict = jest.fn();
+    const s = makeSuggestion();
+    const { getByLabelText, getByTestId, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={s} onPress={jest.fn()} onVerdict={onVerdict} feedbackHandlers={handlers()} />,
+    );
+    fireEvent.press(getByLabelText(label));
+    expect(onVerdict).toHaveBeenCalledWith(s, v);
+    const tree = await waitFor(() => getByTestId(`tree-level-${v}`));
+    // Inside the sheet, not an inline panel on the card.
+    let inSheet = false;
+    for (let p: any = tree; p; p = p.parent) if (p.props?.testID === 'article-menu') inSheet = true;
+    expect(inSheet).toBe(true);
+    expect(queryByTestId('sheet-back')).toBeNull();
+    expect(getByTestId('article-menu-cancel')).toBeTruthy();
+  });
+
+  it('never mounts the inline panel, even with a stored verdict', () => {
+    const { queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} verdict="dislike" feedbackHandlers={handlers()} />,
+    );
+    expect(queryByTestId('tree-level-dislike')).toBeNull();
+    expect(queryByTestId('article-menu')).toBeNull();
+  });
+
+  it('a second tap on the recorded thumb removes it and opens nothing', async () => {
+    const onVerdict = jest.fn();
+    const s = makeSuggestion();
+    const { getByLabelText, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={s} onPress={jest.fn()} onVerdict={onVerdict} verdict="like" feedbackHandlers={handlers()} />,
+    );
+    fireEvent.press(getByLabelText('articleFeedback.likeLabel'));
+    expect(onVerdict).toHaveBeenCalledWith(s, 'like');
+    await act(async () => {
+      await Promise.resolve();
     });
-    // The chip is its own button: the tap never opens the card.
-    expect(onPress).not.toHaveBeenCalled();
+    expect(queryByTestId('article-menu')).toBeNull();
+  });
+
+  it('the VoiceOver like action opens the same sheet', async () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} feedbackHandlers={handlers()} />,
+    );
+    act(() => {
+      getByTestId('card-sugg-1').props.onAccessibilityAction({ nativeEvent: { actionName: 'inline-like' } });
+    });
+    expect(await waitFor(() => getByTestId('tree-level-like'))).toBeTruthy();
   });
 });
 
@@ -897,11 +1004,13 @@ describe('ArticleSuggestionCard VoiceOver actions', () => {
 });
 
 describe('ArticleSuggestionCompactCard action row', () => {
-  it('records a like from the inline row with the suggestion subject', async () => {
+  it('records a like from the menu\'s Like with the suggestion subject', async () => {
     const { getByTestId } = render(
       <ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={jest.fn()} surface="for_you" />,
     );
-    fireEvent.press(getByTestId('card-action-like'));
+    act(() => {
+      getByTestId('card-sugg-1').props.onAccessibilityAction({ nativeEvent: { actionName: 'like' } });
+    });
     await waitFor(() =>
       expect(mockRecordArticleFeedback).toHaveBeenCalledWith(
         expect.objectContaining({ articleId: 'art-1', suggestionId: 'sugg-1', sentiment: 'like', origin: 'suggestion', surface: 'for_you' }),
@@ -955,3 +1064,90 @@ describe('Blur-images preference — compact card thumbnail', () => {
     expect(getByTestId('article-image').props.blurRadius).toBe(24);
   });
 });
+
+// Owner: ONE behaviour for every entry point. A tap on a thumb (inline) or on
+// "I like it" / "Not for me" (•••) records the verdict AT ONCE and the thumb
+// fills at once; the sheet that opens is optional refinement, and Cancel keeps
+// the verdict. D15 still holds: a bare verdict is stored and shown but stamped
+// processed at write, so it never reaches the digest.
+describe('a recorded verdict is immediate and identical on every path', () => {
+  const subject: FeedbackSubject = {
+    origin: 'article',
+    surface: 'explore',
+    articleId: 'art-9',
+    title: 'Standalone headline',
+    publicationName: 'Die Zeit',
+    countryCode: 'DE',
+  };
+
+  it('the Feed card fills a recorded verdict before any leaf is picked', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion()}
+        onPress={jest.fn()}
+        onVerdict={jest.fn()}
+        verdict="dislike"
+        feedbackHandlers={{ onLeafPicked: jest.fn(), onInvokeMera: jest.fn(), onBrowseRelated: jest.fn() }}
+      />,
+    );
+    expect(getByTestId('icon-thumbsdown').props.fill).toBe('#EF4444');
+  });
+
+  it('inline thumb then Cancel, and ••• "I like it" then Cancel, store the same verdict and both read as liked', async () => {
+    // Inline path: the Saved standalone card's row.
+    const inline = render(<ArticleActionsRow subject={subject} article={makeArticle()} />);
+    fireEvent.press(inline.getByLabelText('articleFeedback.likeLabel'));
+    await waitFor(() => inline.getByTestId('article-menu-cancel'));
+    fireEvent.press(inline.getByTestId('article-menu-cancel'));
+    await waitFor(() => expect(mockRecordArticleFeedback).toHaveBeenCalledTimes(1));
+    const inlineCall = mockRecordArticleFeedback.mock.calls[0][0];
+    expect(inline.getByTestId('icon-thumbsup').props.fill).toBe('#22C55E');
+    inline.unmount();
+
+    // ••• path: a compact row's menu.
+    const menu = render(<ArticleStandaloneCompactCard article={makeArticle({ _id: 'art-9' })} onPress={jest.fn()} />);
+    fireEvent.press(menu.getByTestId('compact-card-more'));
+    fireEvent.press(menu.getByTestId('menu-like'));
+    await waitFor(() => menu.getByTestId('tree-level-like'));
+    fireEvent.press(menu.getByTestId('article-menu-cancel'));
+    await waitFor(() => expect(mockRecordArticleFeedback).toHaveBeenCalledTimes(2));
+    const menuCall = mockRecordArticleFeedback.mock.calls[1][0];
+
+    // Same stored state: one like row for the article, nothing removed.
+    for (const key of ['articleId', 'sentiment', 'origin']) {
+      expect(menuCall[key]).toEqual(inlineCall[key]);
+    }
+    expect(mockRemoveArticleFeedback).not.toHaveBeenCalled();
+    fireEvent.press(menu.getByTestId('compact-card-more'));
+    expect(menu.getByTestId('menu-like').props.accessibilityLabel).toBe('articleMenu.removeLike');
+  });
+});
+
+// Batch 16: the ••• sheet's title must be what the card shows (same component,
+// same text / original / language), not the pipeline's English title.
+describe('the ••• sheet title matches the card title', () => {
+  const titleProps = (r: any) =>
+    r.UNSAFE_root.findAll((n: any) => n.type === require('@/components/custom/TranslatableDynamic').default)
+      .map((n: any) => ({ text: n.props.text, originalText: n.props.originalText, originalLanguage: n.props.originalLanguage }));
+
+  it('on a compact suggestion row', () => {
+    const s = makeSuggestion({ title_en: 'Cybersecurity experts warn that the FBI breach could', title_original: 'Cyber experts warn FBI breach could', language_code: 'en' });
+    const r = render(<ArticleSuggestionCompactCard suggestion={s} onPress={jest.fn()} surface="for_you" />);
+    const [card] = titleProps(r);
+    fireEvent.press(r.getByTestId('compact-card-more'));
+    const all = titleProps(r);
+    expect(all.length).toBeGreaterThan(1);
+    expect(all[all.length - 1]).toEqual(card);
+  });
+
+  it('on a Feed card', () => {
+    const s = makeSuggestion({ title_en: 'Cybersecurity experts warn that the FBI breach could', title_original: 'Cyber experts warn FBI breach could', language_code: 'en' });
+    const r = render(<ArticleSuggestionCard suggestion={s} onPress={jest.fn()} onVerdict={jest.fn()} />);
+    const [card] = titleProps(r);
+    fireEvent.press(r.getByTestId('card-action-more'));
+    const all = titleProps(r);
+    expect(all.length).toBeGreaterThan(1);
+    expect(all[all.length - 1]).toEqual(card);
+  });
+});
+

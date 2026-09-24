@@ -92,10 +92,10 @@ describe('ToastManager — with instance', () => {
       expect(toast.show).toHaveBeenCalledTimes(1);
     });
 
-    it('shows with placement "top" and 4s duration', () => {
+    it('names no placement (one top deck) and 4s duration', () => {
       toastManager.showNetworkError();
       const [opts] = toast.show.mock.calls[0];
-      expect(opts.placement).toBe('top');
+      expect(opts.placement).toBeUndefined();
       expect(opts.duration).toBe(4000);
     });
 
@@ -133,10 +133,10 @@ describe('ToastManager — with instance', () => {
       expect(toast.show).toHaveBeenCalledTimes(1);
     });
 
-    it('shows with placement "top" and 4s duration', () => {
+    it('names no placement (one top deck) and 4s duration', () => {
       toastManager.showError('Err', 'msg');
       const [opts] = toast.show.mock.calls[0];
-      expect(opts.placement).toBe('top');
+      expect(opts.placement).toBeUndefined();
       expect(opts.duration).toBe(4000);
     });
 
@@ -159,10 +159,10 @@ describe('ToastManager — with instance', () => {
       expect(toast.show).toHaveBeenCalledTimes(1);
     });
 
-    it('shows with placement "top" and 3s duration', () => {
+    it('names no placement (one top deck) and 3s duration', () => {
       toastManager.showSuccess('OK', 'Saved');
       const [opts] = toast.show.mock.calls[0];
-      expect(opts.placement).toBe('top');
+      expect(opts.placement).toBeUndefined();
       expect(opts.duration).toBe(3000);
     });
 
@@ -187,10 +187,10 @@ describe('ToastManager — with instance', () => {
       expect(toast.show).toHaveBeenCalledTimes(1);
     });
 
-    it('shows with placement "bottom" at the shared minimum duration', () => {
+    it('names no placement (one top deck) and uses the shared minimum duration', () => {
       toastManager.showInfo('For You');
       const [opts] = toast.show.mock.calls[0];
-      expect(opts.placement).toBe('bottom');
+      expect(opts.placement).toBeUndefined();
       // Derived, not hardcoded: this used to be 1500ms, which read as a flicker.
       expect(opts.duration).toBe(TOAST_MIN_DURATION_MS);
     });

@@ -473,13 +473,30 @@ const ExploreScreen: React.FC = () => {
                                 >
                                     {t('explore.title')}
                                 </Heading>
-                                <HStack className="items-center" space="lg">
+                                {/* 20pt: exactly what keeps the two 44pt frames
+                                    (each reaching 10pt past its glyph) from
+                                    overlapping. In points, in `style`: the
+                                    `space` tokens are rem-scaled. */}
+                                <HStack
+                                    className="items-center"
+                                    style={{ gap: 20 }}
+                                    testID="explore-header-actions"
+                                >
                                     {/* N4: what this tab is and where its stories come from. */}
                                     <TabExplainerButton tab="explore" testID="explore-explainer-open" />
                                     <Pressable
                                         testID="explore-search-open"
                                         onPress={handleOpenSearch}
-                                        hitSlop={12}
+                                        // A real 44pt frame pulled back to the 24pt
+                                        // glyph's footprint, same recipe as the "?"
+                                        // beside it: hitSlop alone measured 24x24.
+                                        style={{
+                                            width: 44,
+                                            height: 44,
+                                            margin: -10,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}
                                         accessibilityRole="button"
                                         accessibilityLabel={t('explore.openSearch')}
                                     >

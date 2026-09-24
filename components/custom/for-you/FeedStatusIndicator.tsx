@@ -6,26 +6,26 @@
 // what turned the Feed into a thing you check rather than a thing you read. The
 // information survives; the billboard does not.
 //
-// The glyph is now the Mera mark itself, and it is ALWAYS on screen. The first
-// pass drew a spinner or a warning icon and nothing at all when idle, which cost
-// two things: the header changed shape under the reader every time a sync
-// started or ended, and the detail panel behind it was only reachable during the
-// few seconds a sync happened to be in flight. A mark that is always there is a
-// fixed landmark and a permanent way in.
+// The glyph is the Mera mark itself, and ONLY the Feed mounts it, at the
+// right end of its title row, in EVERY state (owner): small and completely
+// still at rest, bigger with its strokes drawing on while a sync runs. It is
+// always tappable, so the status panel is always one tap away. The Dashboard
+// has no mark; its panel opens from the Overview stats card.
+
+// State is carried by size, ink and motion rather than by presence, so the slot
+// never moves and never empties:
+//   processing    → strokes draw on in a loop, at 1.55x, in pure white
+//   error         → still, 0.82x, red
+//   limited       → still, 0.82x, amber
+//   idle/deferred → still, 0.82x, the theme's off-white
+// At 22pt that is 18pt tall at rest and 34pt while processing, inside a row
+// pinned at 45 / 54pt.
 //
-// State is carried by ink and motion rather than by presence, so the slot never
-// moves and never empties:
-//   processing    → the spotlight sweeps, at 1.3x, in pure white
-//   error         → still, 1x, red
-//   limited       → still, 1x, amber
-//   idle/deferred → still, 1x, the theme's off-white
-//
-// The sweep is MeraLogo's own `animated` prop rather than a second animation
-// written here. That matters beyond duplication: the sweep self-gates on focus +
-// foreground (see AnimatedSpotlight) because RNSVG rasterises on the CPU, so an
-// unattended one would keep re-drawing this header while the user reads another
-// tab. Reproducing the animation would mean reproducing that gate too.
-//
+// The draw-on is MeraLogo's own `drawStrokes` prop rather than an animation
+// written here, and it self-gates on focus + foreground (RNSVG rasterises on
+// the CPU). Under Reduce Motion the size still changes, instantly, and nothing
+// draws.
+
 // The emphasis is a `transform: scale`, NOT a larger `size`. A bigger size grows
 // the SVG's layout box, which reflows the title row and shoves whatever sits
 // beside it sideways every time a sync starts. A transform is composited and
@@ -34,10 +34,10 @@
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Pressable } from '@/components/ui/pressable';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
-import React, { useEffect, useRef } from 'react';
-import { AccessibilityInfo } from 'react-native';
+import { a11yStateKey } from './status-ink';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 
 /** Pure white — the one state that is meant to pull the eye. */
 const ACTIVE = '#FFFFFF';
@@ -51,10 +51,14 @@ const WARN = '#FBBF24';
 /** Sized to the `size="small"` spinner and the 20pt warning glyph this replaced,
  *  so the title row's height is unchanged by the swap. */
 const LOGO_SIZE = 22;
-const ACTIVE_SCALE = 1.3;
+/** Owner: bigger than the old 1.3 while processing, small and still at rest.
+ *  The glyph is 0.70:1, so at 1.55 it is 34 x 24pt and overflows its 15.5pt
+ *  layout box by ~4pt a side into the row's 8pt gaps; nothing reflows. */
+const ACTIVE_SCALE = 1.55;
+const RESTING_SCALE = 0.82;
 /** Long enough that the growth is not a snap, short enough that a sync starting
  *  still reads as an event rather than a transition you sit and watch. */
-const SCALE_MS = 200;
+const SCALE_MS = 250;
 
 /** Ink per state. `deferred` and `idle` share the resting colour: "waiting for
  *  the next batch" is a pipeline count the reader cannot act on, so it gets no
@@ -69,33 +73,6 @@ function inkFor(mode: FeedStatusMode): string {
             return WARN;
         default:
             return RESTING;
-    }
-}
-
-/**
- * The state half of the accessibility label.
- *
- * Ink is the ONLY thing that separated these states, which made the capped
- * state (amber) and the error state (red) identical to a screen reader: the
- * label was a constant "Open feed status" in every mode. `deferred` folds onto
- * `idle` here for the same reason it shares the resting colour — it is a
- * pipeline count the reader cannot act on.
- */
-function a11yStateKey(mode: FeedStatusMode): string {
-    // Returns a plain string, read through `tAny` below. All four keys exist in
-    // all 20 dictionaries, so this is NOT a missing-key workaround: the key is
-    // genuinely COMPUTED from `mode`, which is what `tAny` exists for in this
-    // file family. Do not "fix" it to a typed `t()` — there is no literal here
-    // to type.
-    switch (mode) {
-        case 'processing':
-            return 'feedStatus.modeProcessing';
-        case 'error':
-            return 'feedStatus.modeError';
-        case 'limited':
-            return 'feedStatus.modeLimited';
-        default:
-            return 'feedStatus.idle';
     }
 }
 
@@ -123,29 +100,16 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
     // no longer returns early for the invisible states, so there is nothing left
     // to branch around. Seeded from `mode` rather than from 1 so a header that
     // mounts mid-sync starts at the right size instead of growing into it.
-    const scale = useSharedValue(processing ? ACTIVE_SCALE : 1);
+    const reduceMotion = useReducedMotion();
+    const target = processing ? ACTIVE_SCALE : RESTING_SCALE;
+    const scale = useSharedValue(target);
     useEffect(() => {
-        scale.value = withTiming(processing ? ACTIVE_SCALE : 1, { duration: SCALE_MS });
-    }, [processing, scale]);
+        scale.value = reduceMotion ? target : withTiming(target, { duration: SCALE_MS });
+    }, [target, reduceMotion, scale]);
     const scaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
-    // Announce the two states the user cannot see. A label change alone is not
-    // announced by VoiceOver/TalkBack unless focus happens to be on this glyph,
-    // and entering the capped state is precisely the moment the reader is
-    // somewhere else in the list. `announceForAccessibility` is a no-op when no
-    // screen reader is running, so this costs nothing in the normal case.
-    //
-    // Seeded from the FIRST render's mode rather than from a sentinel, so a
-    // screen that mounts already capped does not fire an announcement for a
-    // state the user just navigated into on purpose.
-    const prevMode = useRef<FeedStatusMode>(mode);
-    useEffect(() => {
-        const was = prevMode.current;
-        prevMode.current = mode;
-        if (was === mode) return;
-        if (mode !== 'limited' && mode !== 'error') return;
-        AccessibilityInfo.announceForAccessibility(tAny(a11yStateKey(mode)));
-    }, [mode, tAny]);
+    // Entering the capped or error state is announced by the SCREEN
+    // (`useFeedModeAnnouncement`), not here: the Dashboard has no mark.
 
     return (
         <Pressable
@@ -170,7 +134,14 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
                 every state. `testID` here is derived rather than fixed — the
                 simulator harness drives the Pressable above by its own id. */}
             <Animated.View testID={`${testID}-mark`} style={scaleStyle}>
-                <MeraLogo size={LOGO_SIZE} animated={processing} color={inkFor(mode)} />
+                <MeraLogo
+                    size={LOGO_SIZE}
+                    drawStrokes={processing && !reduceMotion}
+                    // The finished mark grows first, then draws: starting the
+                    // draw at once blanked the outline in one frame (captured).
+                    drawDelayMs={SCALE_MS}
+                    color={inkFor(mode)}
+                />
             </Animated.View>
         </Pressable>
     );

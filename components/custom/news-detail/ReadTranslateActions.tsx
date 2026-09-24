@@ -1,4 +1,4 @@
-import TranslationNotice from '@/components/custom/news-detail/TranslationNotice';
+import TranslationNotice, { TRANSLATABLE_COLOR } from '@/components/custom/news-detail/TranslationNotice';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -13,8 +13,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-/** Both read routes share one look: a white outline, white label. */
+/** A route that will NOT get the reader something they can read as-is. */
 const ROUTE_COLOR = '#FFFFFF';
+/** A route that WILL: the same green as the translation notice's
+ *  "can translate" hint (green-300), about 12:1 against the dark page. Used
+ *  as an OUTLINE and label only, never a fill (owner: equal-looking buttons,
+ *  the colour is the only signal). */
+const READABLE_COLOR = TRANSLATABLE_COLOR;
 /** Space between the two buttons, across and down. */
 const ROUTE_GAP = 12;
 
@@ -55,14 +60,17 @@ interface ReadTranslateActionsProps {
  * Shared read/translate call-to-action block for the article detail screens
  * (`ArticleSuggestionScreen`, `ArticleDetailScreen`).
  *
- * N8: both read routes are EQUALLY usable, so they look the same.
+ * N8: both read routes are the same size and shape, OUTLINES only; the only
+ * signal is colour. GREEN = this route gets the reader something readable:
  *
- * - Article in the reader's language: only "Read on {{publication}}".
- * - Any other language: `TranslationNotice` (names the source language), then
- *   "Read on {{publication}}" and "Read on Google Translate" as two identical
- *   white outline buttons, then a one-line note that some sites block Google
- *   Translate. The owner asked for no favourite, so the old green fill that
- *   marked one route as "the readable one" is gone.
+ * | article language          | Read on {publication} | Read on Google Translate |
+ * |---------------------------|-----------------------|--------------------------|
+ * | same as the reader's      | green outline         | not shown                |
+ * | other, device CAN translate | green outline       | green outline            |
+ * | other, device CANNOT      | white outline         | green outline            |
+ *
+ * `TranslationNotice` (names the source language) sits above the buttons and a
+ * one-line "some sites block Google Translate" note below them.
  *
  * Side by side when both labels fit, stacked when they do not: the row WRAPS,
  * each button sized by its own label and growing to fill its line, so the
@@ -94,37 +102,48 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
         : null;
     const sameLanguage = support.status === 'same-language';
 
+    // Green marks a route that gets the reader something readable: the
+    // publisher page when the article is in their language or the device can
+    // translate it, and Google Translate always. White is the publisher page
+    // the device cannot translate. Outline + label only, same size either way.
+    const publisherReadable = sameLanguage || support.status === 'translatable';
     const routeButton = (
         testID: string,
         icon: keyof typeof MaterialIcons.glyphMap,
         label: string,
         onPress: () => void,
-    ) => (
-        <Button
-            testID={testID}
-            variant="outline"
-            action="secondary"
-            className="rounded-full border-white"
-            style={{
-                flexGrow: 1,
-                flexShrink: 1,
-                borderWidth: 1,
-                borderColor: ROUTE_COLOR,
-                backgroundColor: 'transparent',
-            }}
-            onPress={onPress}
-        >
-            <ButtonIcon as={() => <MaterialIcons name={icon} size={18} color={ROUTE_COLOR} />} />
-            <ButtonText
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                className="ml-2 text-white"
-                style={{ flexShrink: 1, color: ROUTE_COLOR }}
+        readable: boolean,
+    ) => {
+        const color = readable ? READABLE_COLOR : ROUTE_COLOR;
+        return (
+            <Button
+                testID={testID}
+                variant="outline"
+                action="secondary"
+                // Class AND style, see the header: gluestack's tva sets its own
+                // colours, and which one wins differs between root and label.
+                className={`rounded-full ${readable ? 'border-green-300' : 'border-white'}`}
+                style={{
+                    flexGrow: 1,
+                    flexShrink: 1,
+                    borderWidth: 1,
+                    borderColor: color,
+                    backgroundColor: 'transparent',
+                }}
+                onPress={onPress}
             >
-                {label}
-            </ButtonText>
-        </Button>
-    );
+                <ButtonIcon as={() => <MaterialIcons name={icon} size={18} color={color} />} />
+                <ButtonText
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    className={`ml-2 ${readable ? 'text-green-300' : 'text-white'}`}
+                    style={{ flexShrink: 1, color }}
+                >
+                    {label}
+                </ButtonText>
+            </Button>
+        );
+    };
 
     return (
         // `md` and not `xs`: the action row above, the notice, the buttons and
@@ -147,6 +166,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                     'open-in-new',
                     publication ? t('articleDetail.readOn', { publication }) : t('articleDetail.readArticle'),
                     () => onOpenUrl(articleUrl),
+                    publisherReadable,
                 )}
                 {sameLanguage
                     ? null
@@ -155,6 +175,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                           'g-translate',
                           t('articleDetail.readOnGoogleTranslate'),
                           () => openInAppBrowser(googleTranslateUrl),
+                          true,
                       )}
             </Box>
             {sameLanguage ? null : (

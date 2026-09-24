@@ -247,35 +247,41 @@ export async function deleteSavedSuggestion(serverId: string): Promise<boolean> 
     publishSavedState(serverId, false);
     return false;
   }
-  // Un-saving must not orphan a live fact check: while any fact_checks row
-  // still references the article, the snapshot survives as a retention row
-  // (origin 'fact_check') instead of being destroyed. The un-save itself still
-  // "works" from the user's view — the row leaves the Saved screen and the
-  // bookmark clears.
-  const retainForFactCheck =
-    (await listFactChecksForArticle(row.articleId)).length > 0;
+  // Un-saving must not orphan a live retention reason: while a fact check still
+  // references the article, or a followed story still holds it as a member, the
+  // snapshot survives as a retention row instead of being destroyed. Both
+  // reasons are checked, with the same precedence `releaseRetention` uses:
+  // destroying here would lose a followed story's article for good once the
+  // 48h feed prune has passed. The un-save itself still "works" from the user's
+  // view, since the row leaves the Saved screen and the bookmark clears.
+  const reasons = await retentionReasonsLive(row.articleId);
+  const survivor: RetentionOrigin | null = reasons.factCheck
+    ? 'fact_check'
+    : reasons.trackedStory
+      ? 'tracked_story'
+      : null;
   // A suggestion-keyed save (row id = suggestion _id ≠ article id) is invisible
   // to the article-id fallback, so retention needs an ARTICLE-keyed row; skip
   // the transfer when one already exists.
   const articleKeyedRow =
-    retainForFactCheck && row.id !== row.articleId
+    survivor !== null && row.id !== row.articleId
       ? await findRow(row.articleId)
       : null;
 
   await database.write(async () => {
-    if (!retainForFactCheck) {
+    if (survivor === null) {
       await row.destroyPermanently();
       return;
     }
     if (row.id === row.articleId) {
       await row.update((r) => {
-        r.origin = 'fact_check';
+        r.origin = survivor;
       });
       return;
     }
     if (!articleKeyedRow) {
-      // Transfer the snapshot to an article-keyed retention row. Covers fact
-      // checks that predate retention (no keep ever ran for them).
+      // Transfer the snapshot to an article-keyed retention row. Covers
+      // reasons that predate retention (no keep ever ran for them).
       await savedSuggestionsCol.create((r) => {
         r._raw.id = row.articleId;
         r.articleId = row.articleId;
@@ -293,7 +299,7 @@ export async function deleteSavedSuggestion(serverId: string): Promise<boolean> 
         r.articleUrl = row.articleUrl;
         r.imageUrl = row.imageUrl;
         r.matchedTopicTextsJson = row.matchedTopicTextsJson;
-        r.origin = 'fact_check';
+        r.origin = survivor;
         r.createdAt = row.createdAt;
         r.firstPubDate = row.firstPubDate;
         r.savedAt = row.savedAt;

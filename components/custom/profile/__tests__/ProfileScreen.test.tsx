@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
+import { router } from 'expo-router';
 import React from 'react';
 
 // css-interop JSX shim (reads Platform.OS at module load) — same as other tests.
@@ -104,10 +106,6 @@ jest.mock('@/components/custom/UsageWidget', () => {
         ),
     };
 });
-jest.mock('@/components/custom/profile-hub/HubRow', () => {
-    const { Pressable, Text } = require('react-native');
-    return { __esModule: true, default: ({ label, onPress }: any) => <Pressable accessibilityLabel={label} onPress={onPress}><Text>{label}</Text></Pressable> };
-});
 jest.mock('@/components/custom/for-you/TabExplainerButton', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: ({ tab, testID }: any) => <View testID={testID} accessibilityLabel={`explainer:${tab}`} /> };
@@ -180,8 +178,35 @@ jest.mock('@/lib/subscription/present-free-tier-paywall', () => ({
 }));
 
 jest.mock('@/lib/stores/user-store', () => ({
-    useUserStore: () => ({ userPersona: { blockedByLlm: false }, fetchUserPersona: jest.fn() }),
+    useUserStore: () => ({ userPersona: { _id: 'p1', blockedByLlm: false }, fetchUserPersona: jest.fn() }),
 }));
+
+// --- moved from AdvancedHubScreen: Refresh Suggestions (block + glow + hint) ---
+jest.mock('@/components/ui/toast', () => {
+    const { Text, View } = require('react-native');
+    return {
+        useToast: () => ({ show: jest.fn() }),
+        Toast: (p: any) => <View {...p} />,
+        ToastTitle: (p: any) => <Text {...p} />,
+        ToastDescription: (p: any) => <Text {...p} />,
+    };
+});
+jest.mock('@/lib/hooks/use-pulse', () => ({ usePulse: () => 1 }));
+jest.mock('@/lib/scheduler/AppScheduler', () => ({ AppScheduler: { trigger: jest.fn() } }));
+// Switchable per test, but the object handed to the selector is STABLE across
+// calls (a fresh literal per render would flap any effect that depends on it
+// — see AdvancedHubScreen.test.tsx's header comment for what that costs).
+let mockFeedNeedsRefresh = false;
+const mockSetFeedNeedsRefresh = jest.fn();
+const mockPruneOrphanedData = jest.fn(() => Promise.resolve());
+jest.mock('@/lib/stores/for-you-store', () => {
+    const useForYouStore: any = (selector: any) => selector({ feedNeedsRefresh: mockFeedNeedsRefresh });
+    useForYouStore.getState = () => ({
+        setFeedNeedsRefresh: mockSetFeedNeedsRefresh,
+        pruneOrphanedData: mockPruneOrphanedData,
+    });
+    return { useForYouStore };
+});
 
 jest.mock('@/lib/visibility-tick', () => ({
     notifyScrollTick: jest.fn(),
@@ -194,6 +219,8 @@ beforeEach(() => {
     jest.clearAllMocks();
     mockFetchUserBilling.mockResolvedValue(null);
     mockAiAccess = 'unknown';
+    mockFeedNeedsRefresh = false;
+    mockPruneOrphanedData.mockClear().mockImplementation(() => Promise.resolve());
     mockSubscriptionState = {
         serverTier: null,
         customerInfo: null,
@@ -203,11 +230,11 @@ beforeEach(() => {
 });
 
 describe('ProfileScreen', () => {
-    it('renders the usage card at the top and the Advanced row', async () => {
+    it('renders the header Advanced button and NO usage card (it lives at the top of Settings)', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByTestId, getByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('usage-widget')).toBeTruthy());
-        expect(getByText('Advanced')).toBeTruthy();
+        const { queryByTestId, getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        expect(queryByTestId('usage-widget')).toBeNull();
     });
 
     it('renders the "Profile" screen heading (reusing tabs.profile)', async () => {
@@ -222,9 +249,7 @@ describe('ProfileScreen', () => {
         await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
         expect(queryByText('ABOUT YOU')).toBeNull();
         expect(queryByTestId('facts-list-mode')).toBeNull();
-        // Usage card + Advanced row still present.
-        expect(getByTestId('usage-widget')).toBeTruthy();
-        expect(getByText('Advanced')).toBeTruthy();
+        expect(getByTestId('profile-advanced-open')).toBeTruthy();
     });
 
     it('with facts → renders the About-you heading and the real facts list (FactsList)', async () => {
@@ -298,76 +323,6 @@ describe('ProfileScreen', () => {
         expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
     });
 
-    it('usage-card info icon opens the article-count explainer modal', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByLabelText, getByText } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByLabelText('usage-info')).toBeTruthy());
-        fireEvent.press(getByLabelText('usage-info'));
-        expect(getByText('configPanel.articleAnalysisTitle')).toBeTruthy();
-    });
-
-    // ── The plan label for a granted vs a paying account ────────────────────
-    // `subscriptionTier: 'starter'` is what BOTH report. Both cases hold it
-    // fixed and flip only the store fields.
-    //
-    // REGRESSION GUARD. This first case used to assert "Free Trial" and a
-    // countdown. The server still sends `grantExpiresAt` for an unpaid account
-    // inside the promo window, so the app rendered a trial that no longer
-    // exists — shipped to production before it was caught. The app now reads
-    // that field nowhere, and an unpaid account reads as Starter.
-    it('an unpaid account inside the grant window reads as Starter, never a trial', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        mockSubscriptionState = {
-            serverTier: 'starter',
-            customerInfo: null,
-            grantExpiresAt: '2026-08-20T00:00:00.000Z',
-            isPremium: false,
-        };
-        mockFetchUserBilling.mockResolvedValue({
-            subscriptionTier: 'starter',
-            articlesUsedToday: 1,
-            dailyArticleLimit: 5,
-            resetAt: '2026-08-11T00:00:00.000Z',
-            entitlementExpiresAt: null,
-            grantExpiresAt: '2026-08-20T00:00:00.000Z',
-            hasEverSubscribed: true,
-            showLapseInterstitial: false,
-        });
-        const { getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() =>
-            expect(getByTestId('usage-widget-plan-label').props.children).toBe('configPanel.starterPlan'),
-        );
-        expect(queryByTestId('usage-widget-trial-ends-at')).toBeNull();
-    });
-
-    it('a paying subscriber shows the plain plan name', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        mockSubscriptionState = {
-            serverTier: 'starter',
-            customerInfo: null,
-            // Server invariant: null once a paying subscription (not the grant)
-            // is what's providing access. See subscription-store.ts's own doc.
-            grantExpiresAt: null,
-            isPremium: true,
-        };
-        mockFetchUserBilling.mockResolvedValue({
-            subscriptionTier: 'starter',
-            articlesUsedToday: 1,
-            dailyArticleLimit: 5,
-            resetAt: '2026-08-11T00:00:00.000Z',
-            entitlementExpiresAt: '2026-09-11T00:00:00.000Z',
-            grantExpiresAt: null,
-            hasEverSubscribed: true,
-            showLapseInterstitial: false,
-        });
-        const { getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() =>
-            expect(getByTestId('usage-widget-plan-label').props.children).toBe('configPanel.starterPlan'),
-        );
-        expect(queryByTestId('usage-widget-trial-ends-at')).toBeNull();
-    });
-
-    // ── ux1 Profile ─────────────────────────────────────────────────────────
     it('M10: no "Learn how Mera works" button competes with the title', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { queryByTestId, getByText } = render(<ProfileScreen userId="u1" />);
@@ -388,21 +343,143 @@ describe('ProfileScreen', () => {
         expect(getByTestId('facts-list-mode').props.children).toBe('facts-list');
     });
 
-    it('M9: the usage card comes after the facts, and its button reads Manage plan', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const r = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(r.getByTestId('facts-list-mode')).toBeTruthy());
-        const ids = r.UNSAFE_root
-            .findAll((n: any) => n.props?.testID === 'facts-list-mode' || n.props?.testID === 'usage-widget')
-            .map((n: any) => n.props.testID)
-            .filter((id: string, i: number, all: string[]) => all.indexOf(id) === i);
-        expect(ids).toEqual(['facts-list-mode', 'usage-widget']);
-    });
-
     it('N4: the header carries the Profile explainer button', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('profile-explainer-open')).toBeTruthy());
         expect(getByTestId('profile-explainer-open').props.accessibilityLabel).toBe('explainer:profile');
+    });
+
+    // ── ux1 P2: Advanced moved into the header, icon-only ───────────────────
+    it('the header carries an icon-only Advanced button with the Advanced a11y label', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        expect(getByTestId('profile-advanced-open').props.accessibilityLabel).toBe('Advanced');
+        expect(getByTestId('profile-advanced-open').props.accessibilityRole).toBe('button');
+    });
+
+    // Batch 13 (sim capture 1440-b8-profile-header): measured 24×24, brief
+    // requires 44×44. Frame, not hitSlop, because hitSlop doesn't change the
+    // rect a harness measures. A negative margin keeps the LAYOUT footprint at
+    // 24×24 (the glyph's own size) so the icon and the row around it don't
+    // move — a plain minWidth/minHeight grow would shift the glyph left,
+    // since this is the first of two icons pinned to the header's right edge.
+    it('the Advanced button frame is 44×44 with no layout footprint growth', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        const style = getByTestId('profile-advanced-open').props.style;
+        expect(style.width).toBeGreaterThanOrEqual(44);
+        expect(style.height).toBeGreaterThanOrEqual(44);
+        // Footprint = width + both margins. It must equal the 24pt glyph, or
+        // the icon shifts relative to where it sits today.
+        expect(style.width + 2 * style.margin).toBe(24);
+        // hitSlop stacked on top of an already-44pt frame would make the real
+        // target 64pt and re-widen the overlap with the "?" button next to it.
+        expect(getByTestId('profile-advanced-open').props.hitSlop).toBeUndefined();
+    });
+
+    // Measured on device: with the old ~10.7pt gap the two 44pt frames
+    // overlapped by 9.3pt and "?" won the overlap. Each frame reaches
+    // -margin past its 24pt footprint, so the gap must cover both reaches.
+    it('spaces the two header icons so their 44pt frames do not overlap', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        const { StyleSheet } = require('react-native');
+        const margin = getByTestId('profile-advanced-open').props.style.margin;
+        const row = StyleSheet.flatten(getByTestId('profile-header-actions').props.style) ?? {};
+        expect(row.gap).toBeGreaterThanOrEqual(-2 * margin);
+    });
+
+    it('pressing the header Advanced button navigates to the Advanced route', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        fireEvent.press(getByTestId('profile-advanced-open'));
+        expect(router.push).toHaveBeenCalledWith('/logged-in/profile-advanced');
+    });
+
+    it('no bottom Advanced button remains on the page', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { queryByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(queryByTestId('profile-advanced-open')).toBeTruthy());
+        expect(queryByTestId('profile-row-advanced')).toBeNull();
+    });
+
+    // ── ux1 P2 (second commit): Refresh Suggestions moved here from
+    // AdvancedHubScreen, in Advanced's old bottom slot ─────────────────────
+    it('renders the Refresh Suggestions control at the bottom, after About You', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId, toJSON } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+        const rendered = JSON.stringify(toJSON());
+        expect(rendered.indexOf('facts-list-mode')).toBeLessThan(rendered.indexOf('advanced-hub-refresh-suggestions'));
+    });
+
+    it('pressing Refresh Suggestions clears the flag, prunes and triggers a feed-sync', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        mockFeedNeedsRefresh = true;
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+        fireEvent.press(getByTestId('advanced-hub-refresh-suggestions'));
+        expect(mockSetFeedNeedsRefresh).toHaveBeenCalledWith(false);
+        await waitFor(() => expect(mockPruneOrphanedData).toHaveBeenCalled());
+        expect(AppScheduler.trigger).toHaveBeenCalledWith('feed-sync');
+    });
+
+    it('shows the persona-updated hint only while feedNeedsRefresh is true', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        mockFeedNeedsRefresh = true;
+        const { getByTestId, queryByTestId, rerender } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-hint')).toBeTruthy());
+        mockFeedNeedsRefresh = false;
+        rerender(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(queryByTestId('advanced-hub-refresh-hint')).toBeNull());
+    });
+
+    // Batch 16 found two issues with this button once it moved here.
+    it('the Refresh Suggestions button has an explicit a11y label (no icon-glyph leak)', async () => {
+        // Without an explicit accessibilityLabel, RN concatenates every
+        // accessible descendant's text into one label — including the
+        // MaterialIcons glyph, an icon-font character with no meaning to
+        // VoiceOver — which is what produced ", Refresh Suggestions".
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+        // This file's `t` mock returns the raw key when no `defaultValue` is
+        // passed (same convention as `getByText('tabs.profile')` elsewhere in
+        // this suite) — the point of this assertion is that the label is
+        // driven by the SAME source as the visible ButtonText, not that it
+        // resolves to real English under this mock.
+        expect(getByTestId('advanced-hub-refresh-suggestions').props.accessibilityLabel)
+            .toBe('configPanel.refreshSuggestions');
+    });
+
+    it('the Refresh Suggestions button frame is at least 44pt tall', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+        const style = getByTestId('advanced-hub-refresh-suggestions').props.style;
+        const flat = Array.isArray(style) ? Object.assign({}, ...style) : style;
+        expect(flat?.minHeight).toBeGreaterThanOrEqual(44);
+    });
+
+    // Batch 17: STRUCTURAL guard only — jest runs no layout engine, so it
+    // cannot reproduce or catch the actual overlap (the button's painted box
+    // grew to 44pt in Batch 16 while this wrapper's OWN reserved slot stayed
+    // at the button's pre-fix height, which is exactly what a jest test
+    // asserting only `style.minHeight` on the BUTTON already passed without
+    // catching). This asserts the fix is present in the style tree, nothing
+    // about real pixels. See the capture request in the P2 report for the
+    // assertion that actually verifies the geometry.
+    it('the Refresh Suggestions frame reserves at least 44pt (structural, not a layout proof)', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-frame')).toBeTruthy());
+        const style = getByTestId('advanced-hub-refresh-frame').props.style;
+        const flat = Array.isArray(style) ? Object.assign({}, ...style) : style;
+        expect(flat?.minHeight).toBeGreaterThanOrEqual(44);
     });
 });

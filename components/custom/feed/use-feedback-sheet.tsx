@@ -2,21 +2,16 @@
 // extracted so BOTH the For You feed (FeedScreen) and the fact feed
 // (FactFeedScreen) drive feedback identically.
 //
-// The reason picker is now an INLINE surface rendered inside the card (above its
-// action row) rather than a floating modal — see `CardFeedbackSurface` +
-// `InlineFeedbackTree`. This hook owns only the (stable) card-action handlers:
-//   • a thumb tap records the verdict (fresh / flipped) — the card then reveals
-//     its inline surface (visibility derived from the stored verdict, per row).
-//     That verdict is PROVISIONAL until the user gives it a reason: the thumb
-//     stays hollow and the row is discarded rather than speculated on (D15).
-//     The commit discriminator is a COMMITTED flag set only when a terminal leaf
-//     settles (or the user escalates to Mera) — NOT the stored tree path, which
-//     a mere branch descent also writes and which therefore filled the thumb
-//     while the caption was still promising the tap would be discarded (F2);
+// A thumb tap records the verdict here; the card then opens the shared ••• sheet
+// straight at that verdict's tree root (useArticleMenu.openFeedback), the same
+// sheet and tree every other surface uses. This hook owns only the (stable)
+// card-action handlers:
+//   • a thumb tap records the verdict (fresh / flipped) and the thumb fills at
+//     once; the tree is optional refinement. A bare verdict never reaches the
+//     digest (D15). The row's COMMITTED flag is set only when a terminal leaf
+//     settles (or the user escalates to Mera), never by the tree path (F2);
 //   • re-tapping the SAME thumb REMOVES the verdict and all its feedback;
-//   • the inline tree's path edits persist as the user taps;
-//   • the surface's × closes it (keeps the verdict) via the session-level
-//     `feedback-dismissed-store`; a fresh/flipped verdict un-dismisses it.
+//   • a picked leaf persists its path, and commits when the leaf says so.
 //
 // The one thing that differs per surface is WHERE verdicts live. That is behind
 // the `VerdictStoreAdapter`: FeedScreen backs it with the persisted
@@ -33,9 +28,7 @@
 import { swipeCallbacks } from './swipe-callbacks';
 import { wireSwipeCallbacks } from '@/lib/services/swipe-feedback';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
-import type { FeedbackNudge } from '@/lib/news-harness/feedback-tree';
 import type { Verdict } from '@/lib/stores/feed-order-store';
-import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useCallback, useMemo, useRef } from 'react';
@@ -86,23 +79,25 @@ export interface VerdictStoreAdapter {
 }
 
 /**
- * The stable per-card feedback callbacks a card wires into its inline surface.
+ * The stable per-card callbacks a card wires into its ••• sheet's tree levels.
  * Every method takes the suggestion (not a bound thunk) so the object identity
  * stays stable across renders — the memoized card rows bail out unchanged.
  */
 export interface CardFeedbackHandlers {
-  /** The surface's × was tapped — hide it (keep the verdict). */
-  onClose: (s: ForYouSuggestion) => void;
-  /** A tree node was tapped — persist the tapped node-id path. */
-  onPathChanged: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
-  /** An openChat leaf / Mera escalation — hand off to the chat. */
+  /** A tree leaf settled (see useArticleMenu.onLeafPicked). `committed` is
+   *  the leaf's own word: a seenOnly leaf stores its path and commits nothing. */
+  onLeafPicked: (
+    s: ForYouSuggestion,
+    v: Verdict,
+    pathIds: string[],
+    appliedCount: number,
+    committed: boolean,
+  ) => void;
+  /** An openChat leaf — hand off to the chat with the verdict and breadcrumb. */
   onInvokeMera: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
-  /** A terminal (non-openChat) leaf settled — persist the path (no auto-close). */
-  onLeafCommitted: (s: ForYouSuggestion, v: Verdict, pathIds: string[]) => void;
-  /** A `nudge` leaf settled — act on the SUGGESTION it carries. Fired after
-   *  `onLeafCommitted`, which has already committed the verdict and dismissed
-   *  the surface, so this only has to do the navigation. */
-  onNudge: (s: ForYouSuggestion, nudge: FeedbackNudge) => void;
+  /** The `browse_related` nudge — the related coverage is on the detail
+   *  screen, so open it. */
+  onBrowseRelated: (s: ForYouSuggestion) => void;
 }
 
 /**
@@ -113,8 +108,8 @@ export interface UseFeedbackSheetOptions {
   /** Open a suggestion's detail screen. The 'browse_related' nudge routes here:
    *  the related coverage lives in the detail screen's footer, and this is the
    *  same call the card's own tap-to-open makes, so the card lifecycle
-   *  (markViewed / recordOpen) is stamped identically. Omitted ⇒ the nudge just
-   *  closes the surface, which is what `onLeafCommitted` already did. */
+   *  (markViewed / recordOpen) is stamped identically. Omitted ⇒ the nudge
+   *  just closes the sheet. */
   onOpenSuggestion?: (s: ForYouSuggestion) => void;
 }
 
@@ -123,13 +118,13 @@ export interface UseFeedbackSheet {
   onVerdict: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   /** Card action: the Mera icon was tapped — open the default article chat. */
   onAskMera: (suggestion: ForYouSuggestion) => void;
-  /** Stable handlers the card wires into its inline feedback surface. */
+  /** Stable handlers the card wires into its ••• sheet's tree levels. */
   feedbackHandlers: CardFeedbackHandlers;
 }
 
 /**
  * Returns the card-action handlers (stable across renders) plus the stable
- * inline-surface handlers. `adapter` may be recreated each render — it is read
+ * tree-leaf handlers. `adapter` may be recreated each render — it is read
  * through a ref, so the handlers stay stable and the memoized card rows bail out
  * unchanged.
  */
@@ -147,28 +142,24 @@ export function useFeedbackSheet(
     const key = a.keyFor(suggestion);
     if (!key) return;
     const existing = a.getVerdict(key);
-    const dismiss = useFeedbackDismissedStore.getState();
     if (existing === next) {
       // Re-tap of the same thumb — un-vote: drop the verdict + its feedback.
       a.setVerdict(key, null);
       a.setPath(key, []);
       a.setCommitted(key, false);
-      dismiss.undismiss(key);
       swipeCallbacks.onVerdictRemoved(suggestion, next);
     } else if (existing != null) {
-      // Flip like↔dislike — reset the path and reopen the surface fresh. The
+      // Flip like↔dislike — reset the path; the card opens the new tree. The
       // old sentiment's row (and its commitment) is destroyed by
       // `changeSwipeVerdict`, so the new one starts uncommitted.
       a.setVerdict(key, next);
       a.setPath(key, []);
       a.setCommitted(key, false);
-      dismiss.undismiss(key);
       swipeCallbacks.onVerdictChanged(suggestion, existing, next);
       markSuggestionRead(suggestion);
     } else {
-      // Fresh verdict — record + reveal the surface.
+      // Fresh verdict — record; the card opens its tree.
       a.setVerdict(key, next);
-      dismiss.undismiss(key);
       swipeCallbacks.onVerdict(suggestion, next);
       markSuggestionRead(suggestion);
     }
@@ -180,14 +171,17 @@ export function useFeedbackSheet(
 
   const feedbackHandlers = useMemo<CardFeedbackHandlers>(
     () => ({
-      onClose: (s) => {
-        const key = adapterRef.current.keyFor(s);
-        if (key) useFeedbackDismissedStore.getState().dismiss(key);
-      },
-      onPathChanged: (s, v, pathIds) => {
+      onLeafPicked: (s, v, pathIds, appliedCount, committed) => {
         const key = adapterRef.current.keyFor(s);
         if (key) adapterRef.current.setPath(key, pathIds);
-        swipeCallbacks.onTreePathChanged(s, v, pathIds);
+        if (!committed) {
+          // seenOnly: nothing changed, so nothing may fill the thumb.
+          swipeCallbacks.onTreePathChanged(s, v, pathIds);
+          return;
+        }
+        // The last input in the tree — this, and only this, fills the thumb.
+        swipeCallbacks.onLeafCommitted(s, v, pathIds, appliedCount);
+        if (key) adapterRef.current.setCommitted(key, true);
       },
       onInvokeMera: (s, v, pathIds) => {
         // Escalating to the chat is context the user supplied, so it COMMITS
@@ -196,40 +190,15 @@ export function useFeedbackSheet(
         // the agent's proposals.
         swipeCallbacks.onLeafCommitted(s, v, pathIds);
         swipeCallbacks.onInvokeMera(s, v, pathIds);
-        // Escalating to the chat is a terminal action — close the surface.
-        const key = adapterRef.current.keyFor(s);
-        if (key) {
-          adapterRef.current.setCommitted(key, true);
-          useFeedbackDismissedStore.getState().dismiss(key);
-        }
-      },
-      onLeafCommitted: (s, v, pathIds) => {
-        // The last input in the tree — this, and only this, fills the thumb.
-        // The DB write lives here too: `onTreePathChanged` cannot carry it,
-        // because a branch descent goes through the same callback (F2).
-        swipeCallbacks.onLeafCommitted(s, v, pathIds);
         const key = adapterRef.current.keyFor(s);
         if (key) {
           adapterRef.current.setPath(key, pathIds);
           adapterRef.current.setCommitted(key, true);
-          useFeedbackDismissedStore.getState().dismiss(key);
         }
       },
-      onNudge: (s, nudge) => {
-        // Two nudges are deliberately ignored, for different reasons:
-        //  • 'subscribe' — the current tree authors no such leaf, so it is only
-        //    reachable from a tree cached before that change, and there is
-        //    nothing honest for the app to do with it (there never was a
-        //    subscribe flow; the old leaf only ever showed a toast).
-        //  • 'manage_publication' — already HANDLED. It has one destination on
-        //    every surface and takes no per-suggestion argument, so
-        //    InlineFeedbackTree navigates before calling this (see
-        //    feedback-tree/open-publication-preferences). A `router.push` here
-        //    would double-push.
-        if (nudge !== 'browse_related') return;
-        // `onLeafCommitted` already fired for this leaf, so the verdict is
-        // committed and the surface dismissed; all that is left is to take the
-        // user to the related coverage, which lives on the detail screen.
+      onBrowseRelated: (s) => {
+        // The leaf already committed through `onLeafPicked`; all that is left
+        // is to take the user to the related coverage on the detail screen.
         optionsRef.current?.onOpenSuggestion?.(s);
       },
     }),

@@ -241,7 +241,11 @@
     "medium": "Trung bình",
     "low": "Thấp",
     "irrelevant": "Không liên quan",
-    "unprocessed": "Chưa xử lý"
+    "unprocessed": "Chưa xử lý",
+    "a11yEmergency": "Khẩn cấp",
+    "a11yHigh": "Ưu tiên cao",
+    "a11yMedium": "Ưu tiên trung bình",
+    "a11yLow": "Ưu tiên thấp"
   },
   "aiDisclosure": {
     "caption": "Ghi chú do AI tạo",
@@ -1235,7 +1239,6 @@
     "contextFor": "Về: {{title}}",
     "back": "Quay lại",
     "dismiss": "Bỏ qua",
-    "tellMore": "Nói thêm cho mình biết",
     "empty": "Không có tùy chọn nào ở đây",
     "cancel": "Hủy",
     "confirm": "Xác nhận",
@@ -1249,11 +1252,11 @@
     "nudgeSubscribe": "Đăng ký {{publication}} để mở khóa toàn bộ bài viết",
     "nudgeBrowse": "Tìm các bài đưa tin liên quan từ nguồn khác",
     "paywallRelatedOption": "Hiển thị tin bao phủ liên quan",
-    "paywallRelatedDesc": "Một câu chuyện tương tự từ một ấn phẩm khác có thể không có tường lửa thanh toán — hãy kiểm tra các bài viết liên quan.",
-    "paywallSubscribeDesc": "Bạn đã truy cập {{publication}} {{visits}} lần tháng này — hãy cân nhắc đăng ký để có quyền truy cập đầy đủ.",
+    "paywallRelatedDesc": "Một câu chuyện tương tự từ một ấn phẩm khác có thể không có tường lửa thanh toán. Hãy kiểm tra các bài viết liên quan.",
+    "paywallSubscribeDesc": "Bạn đã truy cập {{publication}} {{visits}} lần tháng này. Hãy cân nhắc đăng ký để có quyền truy cập đầy đủ.",
     "paywallBlockOption": "Chặn {{publication}} thay vào đó",
     "tooMuchOfThis": "Tôi đang thấy quá nhiều nội dung kiểu này",
-    "managePublicationsDesc": "Tăng, hạ xếp hạng hoặc tắt tiếng bất kỳ ấn phẩm nào — bao gồm cái này.",
+    "managePublicationsDesc": "Tăng, hạ xếp hạng hoặc tắt tiếng bất kỳ ấn phẩm nào, bao gồm cái này.",
     "managePublicationsOption": "Quản lý ấn phẩm",
     "neverShowPublication": "Không bao giờ hiển thị ấn phẩm này",
     "notAGoodSuggestion": "Không phải là gợi ý tốt",
@@ -2761,45 +2764,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Đang lo tin của bạn, ngay trên máy này.",
-        "Bắt đầu làm mới trên thiết bị này."
+        "Bắt đầu làm mới",
+        "Trên máy này"
       ],
       "fetching": [
-        "Đang xem hôm nay có gì mới.",
-        "Máy của bạn quyết định sẽ hỏi gì."
+        "Đang tìm tin mới",
+        "Có gì mới?"
       ],
       "downloading": [
-        "Đang kéo các bài về máy của bạn.",
-        "Chúng đến với bạn trước, không qua máy chủ."
+        "Đang tải bài",
+        "Từ máy chủ"
       ],
       "grouping": [
-        "Một tin chạy ở cả chục nơi cùng lúc.",
-        "Chọn một bản cho mỗi tin."
+        "Đang gộp tin",
+        "Gộp tin trùng"
       ],
       "analysing": [
-        "Đang đọc từng bài cho bạn.",
-        "Đã mã hóa. Chỉ máy bạn giữ khóa."
+        "Đang xét độ liên quan",
+        "Đang đọc từng bài"
       ],
       "onDevice": [
-        "Máy của bạn đang đọc các tin này.",
-        "Chạy ngay đây. Không gì rời khỏi máy."
+        "Đọc trên máy bạn",
+        "Ở lại trên máy bạn"
       ],
       "summarising": [
-        "Đang viết ghi chú ngắn cho mỗi tin.",
-        "Mã hóa đầu cuối suốt cả chặng."
+        "Đang viết ghi chú",
+        "Ghi chú cho mỗi tin"
       ],
       "preparing": [
-        "Đang sắp xếp bảng tin của bạn.",
-        "Sắp xong. Các thẻ sẽ tự hiện ra."
+        "Đang sắp xếp",
+        "Sắp xong"
       ]
     },
     "nudges": [
-      "Lưu lại thứ bây giờ bạn chưa đọc được.",
-      "Bài bạn đã lưu vẫn đang chờ.",
-      "Đọc kỹ một bài hơn lướt mười bài.",
-      "Tin nổi bật cho bạn thấy hình dáng của ngày.",
-      "Mới hơn không có nghĩa là hay hơn.",
-      "Nhìn mãi cũng không đến nhanh hơn."
+      "Lưu để đọc sau",
+      "Tin đã lưu đang chờ",
+      "Đọc kỹ một tin",
+      "Xem tin nổi bật",
+      "Mới hơn chưa chắc tốt",
+      "Không cần ngồi chờ"
     ],
     "a11y": "Mera đang cập nhật tin của bạn trên máy này."
   },
@@ -2867,15 +2870,18 @@
     "fewerFromDone": "Bạn sẽ thấy ít tin từ {{source}} hơn.",
     "undo": "Hoàn tác",
     "reportBug": "Báo lỗi",
-    "actionFailed": "Không thực hiện được. Hãy thử lại."
-  },
-  "factChip": {
-    "label": "Từ hồ sơ của bạn: {{label}}",
-    "openA11y": "Tin về {{label}}"
+    "actionFailed": "Không thực hiện được. Hãy thử lại.",
+    "removeLike": "Bỏ thích",
+    "removeDislike": "Bỏ \"Không dành cho tôi\""
   },
   "related": {
     "allCountries": "Tất cả quốc gia",
     "allLanguages": "Tất cả ngôn ngữ",
     "noMatches": "Không có bài liên quan nào khớp với bộ lọc này."
+  },
+  "storyExport": {
+    "shareA11y": "Xuất câu chuyện này",
+    "shareDialogTitle": "Xuất câu chuyện",
+    "includeReasonHint": "Ghi chú một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Một số bài có thể không có ghi chú này."
   }
 }

@@ -1,6 +1,6 @@
-// The Dashboard's status line gets its own full-width row, ONE line, never
-// wrapped beside the title (D6/N11). Budgeted by MEASURED width per locale,
-// not by character count: `fixtures/narration-widths.json` is every line in
+// The narration shows INLINE on the Feed, between its "?" and the Mera mark,
+// about 170pt on a 375pt phone, and is written to fit that on one line.
+// Budgeted by MEASURED width per locale, not by character count: `fixtures/narration-widths.json` is every line in
 // every dictionary shaped by CoreText in the system font at 14pt (see the
 // generator beside it). A character budget over-refused (it wanted 23 lines
 // retranslated) where the measurement shows every line fits.
@@ -9,7 +9,7 @@ import path from 'path';
 import {
   HEADER_NARRATION_METRICS,
   NARRATION_COLOR,
-  NARRATION_ROW_WIDTH_PT,
+  NARRATION_INLINE_WIDTH_PT,
 } from '../header-narration';
 import { contrastRatio, parseRgb } from '../status-ink';
 
@@ -33,7 +33,7 @@ function dictionaryLines(file: string): Row[] {
   return rows;
 }
 
-describe('the Dashboard status row fits one line at 375pt in every locale', () => {
+describe('the narration fits the Feed\'s ~170pt inline slot in every locale', () => {
   it('was measured at the size the row draws', () => {
     expect(fixture._fontSize).toBe(HEADER_NARRATION_METRICS.fontSize);
     expect(LOCALES).toHaveLength(20);
@@ -63,7 +63,7 @@ describe('the Dashboard status row fits one line at 375pt in every locale', () =
     for (const [locale, rows] of Object.entries(fixture)) {
       if (!Array.isArray(rows)) continue;
       for (const r of rows) {
-        if (r.width > NARRATION_ROW_WIDTH_PT - MARGIN_PT) {
+        if (r.width > NARRATION_INLINE_WIDTH_PT - MARGIN_PT) {
           over.push(`${locale} ${r.key}[${r.index}] ${r.width}pt: ${r.text}`);
         }
       }
@@ -75,8 +75,8 @@ describe('the Dashboard status row fits one line at 375pt in every locale', () =
     const widest = Math.max(
       ...Object.values(fixture).flatMap((rows) => (Array.isArray(rows) ? rows.map((r) => r.width) : [])),
     );
-    expect(widest).toBeGreaterThan(300);
-    expect(widest).toBeLessThanOrEqual(NARRATION_ROW_WIDTH_PT - MARGIN_PT);
+    expect(widest).toBeGreaterThan(100);
+    expect(widest).toBeLessThanOrEqual(NARRATION_INLINE_WIDTH_PT - MARGIN_PT);
   });
 });
 

@@ -4,7 +4,6 @@ import {
   CardGlassPlate,
   GLASS_CARD_EDGE,
 } from '@/components/custom/cards/CardGlassPlate';
-import { SourceFlag } from '@/components/custom/SourceFlag';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
@@ -15,6 +14,9 @@ import { Text } from '@/components/ui/text';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import { useAdaptiveLineClamp } from '@/lib/typography/useAdaptiveLineClamp';
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { Pressable as RNPressable } from 'react-native';
+import { Ellipsis } from 'lucide-react-native';
 import type { AccessibilityActionEvent } from 'react-native';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { COMPACT_TARGET_PX } from '@/lib/images/upgrade-image-url';
@@ -30,11 +32,14 @@ import { COMPACT_TARGET_PX } from '@/lib/images/upgrade-image-url';
  *                  `metaAccessory` trails the row.
  *   2. body row  — a left column beside a square image anchored BOTTOM-RIGHT:
  *                    left column  headline (centred in its slack) over the
- *                                 footer (country flag + publisher), which
- *                                 stops where the image starts
+ *                                 footer line: publisher left, the ••• menu
+ *                                 button right, stopping where the image
+ *                                 starts
  *                    image        COMPACT_IMAGE_SIZE, only when there is one
- *   3. `footer`  — optional, the full card width under the body row: the
- *                  compact action row (like, not for me, save, share, •••).
+ *
+ * There is NO inline action row (owner review: it polluted the lists); the
+ * menu carries like / not for me / save / share on compact rows. The country
+ * flag sits in the meta row, immediately left of the language.
  *
  * The image used to be a ¼-width column bleeding down the LEFT edge, holding
  * the Mera watermark when an article had none. The watermark is gone from this
@@ -80,6 +85,19 @@ const HEADLINE_LINE_BOX = 24;
 const FOOTER_LINE_BOX = 21;
 const FOOTER_GAP = 12;
 
+/** The ••• button: a 44pt frame around a 16pt glyph, pulled back into the
+ *  21pt footer line by negative margins so the line (and the image arithmetic)
+ *  keep their height; the glyph lands at the column's right edge. */
+const MORE_BUTTON_STYLE = {
+  minWidth: 44,
+  minHeight: 44,
+  marginVertical: -(44 - FOOTER_LINE_BOX) / 2,
+  marginRight: -14,
+  alignItems: 'center',
+  justifyContent: 'center',
+} as const;
+const MORE_GLYPH_COLOR = 'rgb(156, 163, 175)';
+
 /** The loading tile behind a compact image (F39). */
 export const COMPACT_IMAGE_TILE = 'rgba(255,255,255,0.06)';
 
@@ -120,10 +138,11 @@ export interface ArticleCompactCardBaseProps {
    *  concrete card components to expose a stable, driver-targetable id
    *  (e.g. `card-${articleId}`). No visual/behavioral effect. */
   testID?: string;
-  /** A row pinned under the body, inside the card (the compact action row). */
-  footer?: React.ReactNode;
+  /** Opens the row's ••• menu; the button sits at the right end of the
+   *  publisher line. Absent: no button. */
+  onOverflow?: () => void;
   /** VoiceOver custom actions on the row root (see `useArticleMenu`). The root
-   *  Pressable is ONE accessibility element, so the footer's buttons are only
+   *  Pressable is ONE accessibility element, so the ••• button is only
    *  reachable with VoiceOver through these. */
   accessibilityActions?: { name: string; label: string }[];
   onAccessibilityAction?: (e: AccessibilityActionEvent) => void;
@@ -147,10 +166,12 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   metaAccessory,
   priorityAccessory,
   testID,
-  footer,
+  onOverflow,
   accessibilityActions,
   onAccessibilityAction,
 }) => {
+  const { t } = useTranslation();
+  const moreLabel = t('articleMenu.openA11y');
   const displayTitle = titleEnglish || titleOriginal || '';
   const blurImages = useBlurImagesStore((s) => s.blurImages);
   // The same line count the image is sized against — see COMPACT_IMAGE_SIZE.
@@ -197,11 +218,8 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
       {/* No fixed minHeight: the card wraps its content. It was 128, which
             left visible dead space under a short 2-line headline. */}
         <Box className="flex-col">
-          {/* 1. Meta row — the FULL card width. `countryCode` is deliberately
-              not passed: this row's flag is off (`showFlag={false}`) because the
-              footer draws it, so handing it a country here would only look
-              live. `justify-between` then spaces the three populated slots as
-              time · priority · language. */}
+          {/* 1. Meta row — the FULL card width: time · priority · flag and
+              language (the flag sits immediately left of the language). */}
           <Box className="flex-row items-center" style={{ gap: 6 }}>
             <Box className="flex-1">
               <ArticleMetaRow
@@ -210,7 +228,8 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 variant="card"
                 isNew={isNew}
                 read={read}
-                showFlag={false}
+                countryCode={countryCode}
+                showFlag
                 centerAccessory={priorityAccessory}
               />
             </Box>
@@ -251,22 +270,43 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 />
               </Box>
 
-              {/* Footer: country flag + publisher. Inside the left column, so
-                  it ends where the image starts rather than running the card
-                  width, and it sits at the column's bottom edge — level with
-                  the bottom of the image. `marginTop` is inline rather than
-                  `mt-3` because COMPACT_IMAGE_SIZE is measured against it; see
-                  the note on FOOTER_GAP. */}
+              {/* Footer line: publisher left, ••• right. Inside the left column,
+                  so it ends where the image starts, level with the image's
+                  bottom edge. Its HEIGHT is pinned to FOOTER_LINE_BOX because
+                  COMPACT_IMAGE_SIZE is measured against it; the ••• keeps a
+                  44pt frame through negative vertical margins, so the target
+                  grows without the line growing. `marginTop` is inline rather
+                  than `mt-3`; see the note on FOOTER_GAP. */}
               <HStack
-                className="items-center"
+                className="items-center justify-between"
                 space="xs"
-                style={{ marginTop: FOOTER_GAP, minWidth: 0 }}
+                style={{ marginTop: FOOTER_GAP, minWidth: 0, height: FOOTER_LINE_BOX }}
+                testID="compact-card-footer"
               >
-                <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
                 {publicationName ? (
-                  <Text size="xs" className="text-typography-500 flex-shrink" numberOfLines={1}>
+                  <Text
+                    size="xs"
+                    className="text-typography-500"
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={{ flexShrink: 1 }}
+                  >
                     {publicationName}
                   </Text>
+                ) : (
+                  <Box />
+                )}
+                {onOverflow ? (
+                  <RNPressable
+                    testID="compact-card-more"
+                    onPress={onOverflow}
+                    accessibilityRole="button"
+                    accessibilityLabel={moreLabel}
+                    // STATIC style (a function style is dropped on device).
+                    style={MORE_BUTTON_STYLE}
+                  >
+                    <Ellipsis size={16} strokeWidth={2} color={MORE_GLYPH_COLOR} />
+                  </RNPressable>
                 ) : null}
               </HStack>
             </Box>
@@ -306,7 +346,6 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
               </Box>
             ) : null}
           </Box>
-          {footer ? <Box className="mt-2">{footer}</Box> : null}
         </Box>
       </Card>
   );

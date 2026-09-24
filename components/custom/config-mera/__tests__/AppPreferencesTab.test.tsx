@@ -126,6 +126,10 @@ jest.mock('@/components/custom/GlassSurface', () => {
     return { GlassPanel: ({ children }: any) => <View>{children}</View> };
 });
 jest.mock('@/components/custom/PolicyPill', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/components/custom/config-mera/SettingsUsageCard', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="settings-usage-card" /> };
+});
 jest.mock('@/components/custom/config-mera/SecuritySettingsSection', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: () => <View testID="security-section" /> };
@@ -145,7 +149,8 @@ jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
     return { MaterialIcons: (p: any) => <View {...p} />, FontAwesome: (p: any) => <View {...p} /> };
 });
-jest.mock('@/lib/revenuecat', () => ({ isRevenueCatConfigured: () => false }));
+let mockRcConfigured = false;
+jest.mock('@/lib/revenuecat', () => ({ isRevenueCatConfigured: () => mockRcConfigured }));
 jest.mock('@/lib/feedback', () => ({ showFeedback: jest.fn() }));
 jest.mock('@/lib/sentry-init', () => ({ SENTRY_ENABLED: false }));
 jest.mock('@/lib/web-browser-utils', () => ({ openInAppBrowser: jest.fn(), withAppLanguage: (u: string) => u }));
@@ -460,9 +465,23 @@ describe('Settings groups (ux1)', () => {
         expect(mockPush).toHaveBeenCalledWith('/logged-in/preferences/manage-data');
     });
 
-    it('labels the plan row "Manage plan" and has no separate Restore row', () => {
+    it('has no separate Restore row', () => {
         const r = render(<AppPreferencesTab />);
         expect(r.queryByTestId('settings-row-restore-backup')).toBeNull();
+    });
+
+    it('opens with the usage card, above General, and has no separate Manage plan row', () => {
+        // RevenueCat configured: the case where the old Account row rendered.
+        mockRcConfigured = true;
+        const r = render(<AppPreferencesTab />);
+        mockRcConfigured = false;
+        const ids = r.UNSAFE_root
+            .findAll((n: any) => n.props?.testID === 'settings-usage-card' || n.props?.testID === 'settings-group-general')
+            .map((n: any) => n.props.testID)
+            .filter((id: string, i: number, all: string[]) => all.indexOf(id) === i);
+        expect(ids).toEqual(['settings-usage-card', 'settings-group-general']);
+        expect(r.queryByTestId('settings-row-manage-subscription')).toBeNull();
+        expect(r.queryByTestId('settings-row-manage-plan')).toBeNull();
     });
 
     it('offers no standalone restore entry anywhere in Settings (restore lives in Manage data)', () => {

@@ -1,0 +1,923 @@
+{
+  "_comment": "ux1 P2 (For You scout): the header narration SHORTENED for the Feed's inline slot, ~170pt at 375pt (owner decision). OVERWRITES every pool: run with --allow-overwrite headerNarration.stages.starting,headerNarration.stages.fetching,headerNarration.stages.downloading,headerNarration.stages.grouping,headerNarration.stages.analysing,headerNarration.stages.onDevice,headerNarration.stages.summarising,headerNarration.stages.preparing,headerNarration.nudges. Every line measured with CoreText in SF 14; widest 159.9pt (de) against a 166pt budget. Two lines per stage, six nudges, same lengths in every locale. No placeholders (nothing is interpolated). Every downloading pool names the server; the on-device, starting and nudge pools never mention a server, cloud or upload. No em or en dashes.",
+  "ar": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "بدء التحديث",
+          "يعمل على هذا الهاتف"
+        ],
+        "fetching": [
+          "البحث عن الجديد",
+          "ما الجديد اليوم؟"
+        ],
+        "downloading": [
+          "تنزيل المقالات",
+          "جلبها من الخادم"
+        ],
+        "grouping": [
+          "تجميع القصص",
+          "دمج المكرر"
+        ],
+        "analysing": [
+          "فحص الصلة",
+          "قراءة كل مقال"
+        ],
+        "onDevice": [
+          "القراءة على هاتفك",
+          "تبقى على هاتفك"
+        ],
+        "summarising": [
+          "كتابة الملاحظات",
+          "ملاحظة قصيرة لكل قصة"
+        ],
+        "preparing": [
+          "ترتيبها لك",
+          "أوشكنا"
+        ]
+      },
+      "nudges": [
+        "احفظه لوقت لاحق",
+        "محفوظاتك بانتظارك",
+        "اقرأ قصة واحدة جيدًا",
+        "جرّب أهم العناوين",
+        "الأحدث ليس الأفضل",
+        "لا داعي للانتظار"
+      ]
+    }
+  },
+  "de": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Aktualisierung startet",
+          "Läuft auf diesem Handy"
+        ],
+        "fetching": [
+          "Suche nach Neuem",
+          "Was ist neu?"
+        ],
+        "downloading": [
+          "Artikel werden geladen",
+          "Vom Server geholt"
+        ],
+        "grouping": [
+          "Meldungen bündeln",
+          "Dubletten bündeln"
+        ],
+        "analysing": [
+          "Relevanz wird geprüft",
+          "Artikel werden gelesen"
+        ],
+        "onDevice": [
+          "Liest auf deinem Handy",
+          "Bleibt auf deinem Handy"
+        ],
+        "summarising": [
+          "Notizen schreiben",
+          "Kurze Notiz pro Meldung"
+        ],
+        "preparing": [
+          "Wird sortiert",
+          "Fast fertig"
+        ]
+      },
+      "nudges": [
+        "Für später speichern",
+        "Gespeichertes wartet",
+        "Lies eine Meldung ganz",
+        "Schlagzeilen ansehen",
+        "Neuer ist nicht besser",
+        "Zuschauen hilft nicht"
+      ]
+    }
+  },
+  "en": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Starting a refresh",
+          "Working on this phone"
+        ],
+        "fetching": [
+          "Looking for new stories",
+          "Checking what is new"
+        ],
+        "downloading": [
+          "Downloading articles",
+          "Fetching from the server"
+        ],
+        "grouping": [
+          "Grouping stories",
+          "Merging duplicates"
+        ],
+        "analysing": [
+          "Checking relevance",
+          "Reading each article"
+        ],
+        "onDevice": [
+          "Reading on your phone",
+          "It stays on your phone"
+        ],
+        "summarising": [
+          "Writing notes",
+          "A short note per story"
+        ],
+        "preparing": [
+          "Putting them in order",
+          "Almost there"
+        ]
+      },
+      "nudges": [
+        "Save it for later",
+        "Your saved list is waiting",
+        "Read one story properly",
+        "See the top headlines",
+        "Newer is not better",
+        "No need to watch"
+      ]
+    }
+  },
+  "es": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Empezando a actualizar",
+          "En este teléfono"
+        ],
+        "fetching": [
+          "Buscando novedades",
+          "¿Qué hay de nuevo?"
+        ],
+        "downloading": [
+          "Descargando artículos",
+          "Desde el servidor"
+        ],
+        "grouping": [
+          "Agrupando noticias",
+          "Uniendo duplicados"
+        ],
+        "analysing": [
+          "Midiendo relevancia",
+          "Leyendo cada artículo"
+        ],
+        "onDevice": [
+          "Leyendo en tu teléfono",
+          "Se queda en tu teléfono"
+        ],
+        "summarising": [
+          "Escribiendo notas",
+          "Una nota por noticia"
+        ],
+        "preparing": [
+          "Ordenándolas",
+          "Casi listo"
+        ]
+      },
+      "nudges": [
+        "Guárdalo para luego",
+        "Tus guardados esperan",
+        "Lee bien una noticia",
+        "Mira los titulares",
+        "Lo nuevo no es mejor",
+        "No hace falta mirar"
+      ]
+    }
+  },
+  "fr": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Actualisation lancée",
+          "Sur ce téléphone"
+        ],
+        "fetching": [
+          "Recherche du neuf",
+          "Quoi de neuf ?"
+        ],
+        "downloading": [
+          "Téléchargement",
+          "Depuis le serveur"
+        ],
+        "grouping": [
+          "Regroupement",
+          "Fusion des doublons"
+        ],
+        "analysing": [
+          "Tri par pertinence",
+          "Lecture des articles"
+        ],
+        "onDevice": [
+          "Lecture sur ton tél.",
+          "Rien ne quitte ton tél."
+        ],
+        "summarising": [
+          "Rédaction des notes",
+          "Une note par sujet"
+        ],
+        "preparing": [
+          "Mise en ordre",
+          "Presque fini"
+        ]
+      },
+      "nudges": [
+        "Garde-le pour plus tard",
+        "Tes favoris t'attendent",
+        "Lis un sujet à fond",
+        "Vois les gros titres",
+        "Plus récent, pas mieux",
+        "Inutile de regarder"
+      ]
+    }
+  },
+  "hi": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "रीफ़्रेश शुरू",
+          "इसी फ़ोन पर काम"
+        ],
+        "fetching": [
+          "नई ख़बरें ढूँढ रहे हैं",
+          "क्या नया है?"
+        ],
+        "downloading": [
+          "लेख डाउनलोड हो रहे हैं",
+          "सर्वर से ला रहे हैं"
+        ],
+        "grouping": [
+          "ख़बरें समूह में",
+          "दोहराव हटा रहे हैं"
+        ],
+        "analysing": [
+          "प्रासंगिकता जाँच",
+          "हर लेख पढ़ रहे हैं"
+        ],
+        "onDevice": [
+          "आपके फ़ोन पर पढ़ रहे",
+          "आपके फ़ोन पर ही रहता है"
+        ],
+        "summarising": [
+          "नोट लिख रहे हैं",
+          "हर ख़बर पर छोटा नोट"
+        ],
+        "preparing": [
+          "क्रम में लगा रहे हैं",
+          "बस हो गया"
+        ]
+      },
+      "nudges": [
+        "बाद के लिए सहेजें",
+        "सहेजा हुआ इंतज़ार में",
+        "एक ख़बर ठीक से पढ़ें",
+        "मुख्य सुर्ख़ियाँ देखें",
+        "नया हमेशा बेहतर नहीं",
+        "देखते रहना ज़रूरी नहीं"
+      ]
+    }
+  },
+  "id": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Mulai menyegarkan",
+          "Di ponsel ini"
+        ],
+        "fetching": [
+          "Mencari yang baru",
+          "Apa yang baru?"
+        ],
+        "downloading": [
+          "Mengunduh artikel",
+          "Dari server"
+        ],
+        "grouping": [
+          "Mengelompokkan berita",
+          "Gabung duplikat"
+        ],
+        "analysing": [
+          "Menilai relevansi",
+          "Membaca tiap artikel"
+        ],
+        "onDevice": [
+          "Membaca di ponselmu",
+          "Tetap di ponselmu"
+        ],
+        "summarising": [
+          "Menulis catatan",
+          "Catatan per berita"
+        ],
+        "preparing": [
+          "Mengurutkan",
+          "Hampir selesai"
+        ]
+      },
+      "nudges": [
+        "Simpan untuk nanti",
+        "Simpananmu menunggu",
+        "Baca satu berita utuh",
+        "Lihat berita utama",
+        "Terbaru bukan terbaik",
+        "Tak perlu ditunggu"
+      ]
+    }
+  },
+  "it": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Aggiornamento avviato",
+          "Su questo telefono"
+        ],
+        "fetching": [
+          "Cerco novità",
+          "Cosa c'è di nuovo"
+        ],
+        "downloading": [
+          "Scarico gli articoli",
+          "Dal server"
+        ],
+        "grouping": [
+          "Raggruppo le notizie",
+          "Unisco i doppioni"
+        ],
+        "analysing": [
+          "Valuto la pertinenza",
+          "Leggo ogni articolo"
+        ],
+        "onDevice": [
+          "Leggo sul tuo telefono",
+          "Resta sul tuo telefono"
+        ],
+        "summarising": [
+          "Scrivo le note",
+          "Una nota per notizia"
+        ],
+        "preparing": [
+          "Metto in ordine",
+          "Quasi fatto"
+        ]
+      },
+      "nudges": [
+        "Salvalo per dopo",
+        "I salvati ti aspettano",
+        "Leggi bene una notizia",
+        "Guarda i titoli",
+        "Nuovo non è meglio",
+        "Non serve guardare"
+      ]
+    }
+  },
+  "ja": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "更新を開始",
+          "この端末で処理中"
+        ],
+        "fetching": [
+          "新着を探しています",
+          "新しいものは？"
+        ],
+        "downloading": [
+          "記事をダウンロード",
+          "サーバーから取得"
+        ],
+        "grouping": [
+          "記事をまとめています",
+          "重複をまとめています"
+        ],
+        "analysing": [
+          "関連度を確認中",
+          "記事を読んでいます"
+        ],
+        "onDevice": [
+          "端末で読んでいます",
+          "端末の外に出ません"
+        ],
+        "summarising": [
+          "メモを作成中",
+          "記事ごとに短いメモ"
+        ],
+        "preparing": [
+          "並べ替えています",
+          "もう少しです"
+        ]
+      },
+      "nudges": [
+        "あとで読むに保存",
+        "保存した記事があります",
+        "1本をじっくり読む",
+        "主要ニュースを見る",
+        "新しい＝良いではない",
+        "見ていなくて大丈夫"
+      ]
+    }
+  },
+  "ko": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "새로고침 시작",
+          "이 휴대폰에서 처리 중"
+        ],
+        "fetching": [
+          "새 소식 찾는 중",
+          "무엇이 새로울까요"
+        ],
+        "downloading": [
+          "기사 내려받는 중",
+          "서버에서 가져오는 중"
+        ],
+        "grouping": [
+          "기사 묶는 중",
+          "중복 합치는 중"
+        ],
+        "analysing": [
+          "관련성 확인 중",
+          "기사 읽는 중"
+        ],
+        "onDevice": [
+          "휴대폰에서 읽는 중",
+          "휴대폰 밖으로 안 나가요"
+        ],
+        "summarising": [
+          "메모 쓰는 중",
+          "기사마다 짧은 메모"
+        ],
+        "preparing": [
+          "순서 정리 중",
+          "거의 다 됐어요"
+        ]
+      },
+      "nudges": [
+        "나중에 읽게 저장",
+        "저장한 기사가 있어요",
+        "한 기사를 제대로",
+        "주요 헤드라인 보기",
+        "최신이 최선은 아니에요",
+        "지켜볼 필요 없어요"
+      ]
+    }
+  },
+  "nl": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Verversen gestart",
+          "Op deze telefoon"
+        ],
+        "fetching": [
+          "Zoeken naar nieuws",
+          "Wat is er nieuw?"
+        ],
+        "downloading": [
+          "Artikelen downloaden",
+          "Van de server"
+        ],
+        "grouping": [
+          "Verhalen bundelen",
+          "Dubbelen samenvoegen"
+        ],
+        "analysing": [
+          "Relevantie bepalen",
+          "Elk artikel lezen"
+        ],
+        "onDevice": [
+          "Lezen op je telefoon",
+          "Blijft op je telefoon"
+        ],
+        "summarising": [
+          "Notities schrijven",
+          "Een notitie per verhaal"
+        ],
+        "preparing": [
+          "Op volgorde zetten",
+          "Bijna klaar"
+        ]
+      },
+      "nudges": [
+        "Bewaar voor later",
+        "Je opgeslagen items",
+        "Lees één verhaal goed",
+        "Bekijk de topkoppen",
+        "Nieuwer is niet beter",
+        "Kijken helpt niet"
+      ]
+    }
+  },
+  "pl": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Odświeżanie",
+          "Na tym telefonie"
+        ],
+        "fetching": [
+          "Szukam nowości",
+          "Co nowego?"
+        ],
+        "downloading": [
+          "Pobieram artykuły",
+          "Z serwera"
+        ],
+        "grouping": [
+          "Grupuję tematy",
+          "Łączę duplikaty"
+        ],
+        "analysing": [
+          "Sprawdzam trafność",
+          "Czytam artykuły"
+        ],
+        "onDevice": [
+          "Czytam na telefonie",
+          "Zostaje na telefonie"
+        ],
+        "summarising": [
+          "Piszę notatki",
+          "Notka do tematu"
+        ],
+        "preparing": [
+          "Układam kolejność",
+          "Prawie gotowe"
+        ]
+      },
+      "nudges": [
+        "Zapisz na później",
+        "Zapisane czekają",
+        "Przeczytaj jeden temat",
+        "Zobacz nagłówki",
+        "Nowsze to nie lepsze",
+        "Nie trzeba patrzeć"
+      ]
+    }
+  },
+  "pt-BR": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Atualizando",
+          "Neste celular"
+        ],
+        "fetching": [
+          "Buscando novidades",
+          "O que há de novo?"
+        ],
+        "downloading": [
+          "Baixando artigos",
+          "Do servidor"
+        ],
+        "grouping": [
+          "Agrupando notícias",
+          "Unindo duplicadas"
+        ],
+        "analysing": [
+          "Medindo relevância",
+          "Lendo cada artigo"
+        ],
+        "onDevice": [
+          "Lendo no seu celular",
+          "Fica no seu celular"
+        ],
+        "summarising": [
+          "Escrevendo notas",
+          "Uma nota por notícia"
+        ],
+        "preparing": [
+          "Colocando em ordem",
+          "Quase pronto"
+        ]
+      },
+      "nudges": [
+        "Salve para depois",
+        "Seus salvos esperam",
+        "Leia uma notícia a fundo",
+        "Veja as manchetes",
+        "Novo não é melhor",
+        "Não precisa olhar"
+      ]
+    }
+  },
+  "ru": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Обновление",
+          "На этом телефоне"
+        ],
+        "fetching": [
+          "Ищем новое",
+          "Что нового?"
+        ],
+        "downloading": [
+          "Загрузка статей",
+          "С сервера"
+        ],
+        "grouping": [
+          "Группируем сюжеты",
+          "Убираем дубли"
+        ],
+        "analysing": [
+          "Оценка важности",
+          "Читаем статьи"
+        ],
+        "onDevice": [
+          "Читаем на телефоне",
+          "Остаётся на телефоне"
+        ],
+        "summarising": [
+          "Пишем заметки",
+          "Заметка к сюжету"
+        ],
+        "preparing": [
+          "Наводим порядок",
+          "Почти готово"
+        ]
+      },
+      "nudges": [
+        "Сохраните на потом",
+        "Сохранённое ждёт",
+        "Прочтите один сюжет",
+        "Главные заголовки",
+        "Новее не значит лучше",
+        "Смотреть не нужно"
+      ]
+    }
+  },
+  "th": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "เริ่มรีเฟรช",
+          "ทำงานบนเครื่องนี้"
+        ],
+        "fetching": [
+          "กำลังหาข่าวใหม่",
+          "มีอะไรใหม่บ้าง"
+        ],
+        "downloading": [
+          "ดาวน์โหลดบทความ",
+          "ดึงจากเซิร์ฟเวอร์"
+        ],
+        "grouping": [
+          "จัดกลุ่มข่าว",
+          "รวมข่าวซ้ำ"
+        ],
+        "analysing": [
+          "ตรวจความเกี่ยวข้อง",
+          "อ่านทีละบทความ"
+        ],
+        "onDevice": [
+          "อ่านบนเครื่องคุณ",
+          "อยู่บนเครื่องคุณ"
+        ],
+        "summarising": [
+          "เขียนโน้ต",
+          "โน้ตสั้นต่อข่าว"
+        ],
+        "preparing": [
+          "เรียงลำดับ",
+          "ใกล้เสร็จแล้ว"
+        ]
+      },
+      "nudges": [
+        "บันทึกไว้อ่านทีหลัง",
+        "ข่าวที่บันทึกรออยู่",
+        "อ่านข่าวเดียวให้จบ",
+        "ดูพาดหัวข่าวเด่น",
+        "ใหม่ไม่ได้ดีกว่า",
+        "ไม่ต้องรอดู"
+      ]
+    }
+  },
+  "tr": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Yenileme başladı",
+          "Bu telefonda"
+        ],
+        "fetching": [
+          "Yeni haberler aranıyor",
+          "Neler yeni?"
+        ],
+        "downloading": [
+          "Makaleler iniyor",
+          "Sunucudan alınıyor"
+        ],
+        "grouping": [
+          "Haberler gruplanıyor",
+          "Tekrarlar birleşiyor"
+        ],
+        "analysing": [
+          "Uygunluk ölçülüyor",
+          "Makaleler okunuyor"
+        ],
+        "onDevice": [
+          "Telefonunda okunuyor",
+          "Telefonunda kalır"
+        ],
+        "summarising": [
+          "Notlar yazılıyor",
+          "Habere kısa not"
+        ],
+        "preparing": [
+          "Sıraya konuyor",
+          "Az kaldı"
+        ]
+      },
+      "nudges": [
+        "Sonra oku",
+        "Kaydettiklerin bekliyor",
+        "Bir haberi iyi oku",
+        "Manşetlere bak",
+        "Yeni her zaman iyi değil",
+        "İzlemene gerek yok"
+      ]
+    }
+  },
+  "uk": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Оновлення",
+          "На цьому телефоні"
+        ],
+        "fetching": [
+          "Шукаємо нове",
+          "Що нового?"
+        ],
+        "downloading": [
+          "Завантаження статей",
+          "З сервера"
+        ],
+        "grouping": [
+          "Групуємо сюжети",
+          "Прибираємо дублі"
+        ],
+        "analysing": [
+          "Оцінка важливості",
+          "Читаємо статті"
+        ],
+        "onDevice": [
+          "Читаємо на телефоні",
+          "Лишається на телефоні"
+        ],
+        "summarising": [
+          "Пишемо нотатки",
+          "Нотатка до сюжету"
+        ],
+        "preparing": [
+          "Наводимо лад",
+          "Майже готово"
+        ]
+      },
+      "nudges": [
+        "Збережіть на потім",
+        "Збережене чекає",
+        "Один сюжет целиком",
+        "Головні заголовки",
+        "Новіше не краще",
+        "Дивитися не треба"
+      ]
+    }
+  },
+  "vi": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "Bắt đầu làm mới",
+          "Trên máy này"
+        ],
+        "fetching": [
+          "Đang tìm tin mới",
+          "Có gì mới?"
+        ],
+        "downloading": [
+          "Đang tải bài",
+          "Từ máy chủ"
+        ],
+        "grouping": [
+          "Đang gộp tin",
+          "Gộp tin trùng"
+        ],
+        "analysing": [
+          "Đang xét độ liên quan",
+          "Đang đọc từng bài"
+        ],
+        "onDevice": [
+          "Đọc trên máy bạn",
+          "Ở lại trên máy bạn"
+        ],
+        "summarising": [
+          "Đang viết ghi chú",
+          "Ghi chú cho mỗi tin"
+        ],
+        "preparing": [
+          "Đang sắp xếp",
+          "Sắp xong"
+        ]
+      },
+      "nudges": [
+        "Lưu để đọc sau",
+        "Tin đã lưu đang chờ",
+        "Đọc kỹ một tin",
+        "Xem tin nổi bật",
+        "Mới hơn chưa chắc tốt",
+        "Không cần ngồi chờ"
+      ]
+    }
+  },
+  "zh-CN": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "开始刷新",
+          "在本机处理"
+        ],
+        "fetching": [
+          "寻找新内容",
+          "有什么新的"
+        ],
+        "downloading": [
+          "下载文章",
+          "从服务器获取"
+        ],
+        "grouping": [
+          "归类新闻",
+          "合并重复"
+        ],
+        "analysing": [
+          "判断相关度",
+          "逐篇阅读"
+        ],
+        "onDevice": [
+          "在手机上阅读",
+          "不离开你的手机"
+        ],
+        "summarising": [
+          "撰写短评",
+          "每条一句短评"
+        ],
+        "preparing": [
+          "排序中",
+          "快好了"
+        ]
+      },
+      "nudges": [
+        "留着稍后读",
+        "收藏在等你",
+        "认真读一条",
+        "看看头条",
+        "新的不一定好",
+        "不必盯着看"
+      ]
+    }
+  },
+  "zh-TW": {
+    "headerNarration": {
+      "stages": {
+        "starting": [
+          "開始重新整理",
+          "在本機處理"
+        ],
+        "fetching": [
+          "尋找新內容",
+          "有什麼新的"
+        ],
+        "downloading": [
+          "下載文章",
+          "從伺服器取得"
+        ],
+        "grouping": [
+          "歸類新聞",
+          "合併重複"
+        ],
+        "analysing": [
+          "判斷相關度",
+          "逐篇閱讀"
+        ],
+        "onDevice": [
+          "在手機上閱讀",
+          "不離開你的手機"
+        ],
+        "summarising": [
+          "撰寫短評",
+          "每則一句短評"
+        ],
+        "preparing": [
+          "排序中",
+          "快好了"
+        ]
+      },
+      "nudges": [
+        "留著稍後讀",
+        "收藏在等你",
+        "認真讀一則",
+        "看看頭條",
+        "新的不一定好",
+        "不必盯著看"
+      ]
+    }
+  }
+}

@@ -223,8 +223,9 @@ These don't fail loudly — they hand you a confident wrong answer. Each cost re
   from e.g. the Persona-change-log screen silently does nothing (the tab bar isn't in that stack).
   Pop back to the tab root first — one header-arrow tap at ≈(25,88) per stack level — then switch tabs.
 - **The Profile list DOES scroll with `agent-device scroll bottom`** (updating the older note above).
-  On a fresh launch `profile-row-advanced` sits below the fold, so `scroll bottom` before pressing it —
-  otherwise the press fails silently and you'll blame the testID.
+  Advanced is no longer a row at the bottom of that list — it's an icon-only button in the header,
+  `id=profile-advanced-open`, top-right beside the tab explainer. It's on screen from a fresh launch
+  with no scroll needed; press it directly.
 - **Whether a feed card exposes its children varies per card.** Some cards surface
   `card-action-*` (and, once a feedback panel is open, `feedback-tree-leaf-*`) as real ids in
   `snapshot --raw --json`; others merge the entire card — overlay panel included — into one

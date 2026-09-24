@@ -3,8 +3,10 @@
 // Before this fix the feed had NO db write that distinguished "the user opened a
 // branch" from "a leaf settled": `onLeafCommitted` only touched local state, so
 // the only persisted signal was the path — which a branch descent writes too.
-// These tests pin that a branch descent stays uncommitted and that a leaf (or a
-// Mera escalation) commits on both the adapter and the persistence contract.
+// These tests pin that an uncommitted leaf (seenOnly) stays uncommitted and
+// that a leaf (or a Mera escalation) commits on both the adapter and the
+// persistence contract. The leaves come from the ••• sheet's tree levels, which
+// the card's thumbs open directly (the inline panel is gone).
 
 jest.mock('@/lib/services/swipe-feedback', () => ({
   wireSwipeCallbacks: jest.fn(),
@@ -61,28 +63,38 @@ beforeEach(() => {
 });
 
 describe('useFeedbackSheet — commit vs navigation', () => {
-  it('a branch descent records the path and commits NOTHING', () => {
+  it('an uncommitted leaf (seenOnly) records the path and commits NOTHING', () => {
     const { adapter, state } = makeAdapter();
     const { result } = renderHook(() => useFeedbackSheet(adapter));
 
-    result.current.feedbackHandlers.onPathChanged(suggestion, 'dislike', ['not_important_to_me']);
+    result.current.feedbackHandlers.onLeafPicked(suggestion, 'dislike', ['seen_already'], 0, false);
 
-    expect(state.path).toEqual(['not_important_to_me']);
+    expect(state.path).toEqual(['seen_already']);
     expect(state.committed).toBe(false);
-    expect(onTreePathChanged).toHaveBeenCalled();
+    expect(onTreePathChanged).toHaveBeenCalledWith(suggestion, 'dislike', ['seen_already']);
     expect(onLeafCommitted).not.toHaveBeenCalled();
   });
 
-  it('a terminal leaf commits — locally AND through the persistence contract', () => {
+  it('a terminal leaf commits, locally AND through the persistence contract, with its applied count', () => {
     const { adapter, state } = makeAdapter();
     const { result } = renderHook(() => useFeedbackSheet(adapter));
 
     const path = ['not_important_to_me', 'not_important'];
-    result.current.feedbackHandlers.onLeafCommitted(suggestion, 'dislike', path);
+    result.current.feedbackHandlers.onLeafPicked(suggestion, 'dislike', path, 2, true);
 
     expect(state.committed).toBe(true);
     expect(state.path).toEqual(path);
-    expect(onLeafCommitted).toHaveBeenCalledWith(suggestion, 'dislike', path);
+    expect(onLeafCommitted).toHaveBeenCalledWith(suggestion, 'dislike', path, 2);
+  });
+
+  it('"related coverage" opens the suggestion through the host', () => {
+    const { adapter } = makeAdapter();
+    const onOpenSuggestion = jest.fn();
+    const { result } = renderHook(() => useFeedbackSheet(adapter, { onOpenSuggestion }));
+
+    result.current.feedbackHandlers.onBrowseRelated(suggestion);
+
+    expect(onOpenSuggestion).toHaveBeenCalledWith(suggestion);
   });
 
   it('escalating to Mera commits too', () => {
@@ -100,7 +112,7 @@ describe('useFeedbackSheet — commit vs navigation', () => {
     const { adapter, state } = makeAdapter();
     const { result } = renderHook(() => useFeedbackSheet(adapter));
 
-    result.current.feedbackHandlers.onLeafCommitted(suggestion, 'dislike', ['a', 'b']);
+    result.current.feedbackHandlers.onLeafPicked(suggestion, 'dislike', ['a', 'b'], 1, true);
     state.verdict = 'dislike';
     result.current.onVerdict(suggestion, 'dislike');
 
@@ -112,7 +124,7 @@ describe('useFeedbackSheet — commit vs navigation', () => {
     const { adapter, state } = makeAdapter();
     const { result } = renderHook(() => useFeedbackSheet(adapter));
 
-    result.current.feedbackHandlers.onLeafCommitted(suggestion, 'dislike', ['a', 'b']);
+    result.current.feedbackHandlers.onLeafPicked(suggestion, 'dislike', ['a', 'b'], 1, true);
     state.verdict = 'dislike';
     result.current.onVerdict(suggestion, 'like');
 

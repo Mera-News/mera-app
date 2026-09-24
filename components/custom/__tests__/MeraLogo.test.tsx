@@ -29,6 +29,7 @@ jest.mock('react-native-svg', () => {
 });
 
 const mockCancelAnimation = jest.fn();
+const mockWithDelay = jest.fn((_ms: unknown, v: unknown) => v);
 
 jest.mock('react-native-reanimated', () => ({
   __esModule: true,
@@ -37,9 +38,10 @@ jest.mock('react-native-reanimated', () => ({
   // Non-empty so the animated <G> is distinguishable from the frozen frame,
   // which renders a plain `transform` string and no animatedProps.
   useAnimatedProps: () => ({ transform: [] }),
-  withRepeat: jest.fn(),
+  withRepeat: jest.fn((v: unknown) => v),
   withTiming: jest.fn(),
-  withSequence: jest.fn(),
+  withSequence: jest.fn((...v: unknown[]) => v),
+  withDelay: (ms: unknown, v: unknown) => mockWithDelay(ms, v),
   cancelAnimation: (...args: unknown[]) => mockCancelAnimation(...args),
   Easing: { inOut: () => () => 0, ease: () => 0 },
 }));
@@ -144,5 +146,66 @@ describe('MeraLogo color', () => {
     const utils = render(<MeraLogo size={24} color="#2A2622" />);
     const fills = utils.getAllByTestId('svg-Path').map((n) => n.props.fill).filter(Boolean);
     expect(fills).toContain('#2A2622');
+  });
+});
+
+// Every existing caller renders byte-identically after `drawStrokes` was added.
+// The snapshot was recorded from the component BEFORE that prop existed; a
+// diff here means a default render changed, which no caller asked for.
+describe('MeraLogo default renders are unchanged', () => {
+  beforeEach(() => {
+    mockAnimationsActive = true;
+  });
+  it.each([
+    ['static default', {}],
+    ['static, sized and coloured', { size: 22, color: '#F87171' }],
+    ['animated sweep', { size: 56, animated: true }],
+  ] as const)('%s', (_name, props) => {
+    const { toJSON } = render(<MeraLogo {...(props as any)} />);
+    expect(toJSON()).toMatchSnapshot();
+  });
+});
+
+// Owner: while the Feed processes, the mark's strokes draw on in a loop.
+describe('MeraLogo drawStrokes', () => {
+  beforeEach(() => {
+    mockUseSharedValue.mockClear();
+    mockAnimationsActive = true;
+  });
+  const dashed = (r: ReturnType<typeof render>) =>
+    r.UNSAFE_root.findAll((n: any) => n.props?.strokeDasharray !== undefined && typeof n.type === 'string');
+
+  it('dashes the hexagon outline and the highlighted card, driven by animated props', () => {
+    const r = render(<MeraLogo size={22} drawStrokes />);
+    const nodes = dashed(r);
+    expect(nodes).toHaveLength(2);
+    for (const n of nodes) expect(n.props.animatedProps).toBeDefined();
+    expect(mockUseSharedValue).toHaveBeenCalled();
+  });
+
+  it('does not sweep the spotlight while drawing: the cone holds its frozen frame', () => {
+    const r = render(<MeraLogo size={22} drawStrokes />);
+    const sweeping = r.UNSAFE_root.findAll(
+      (n: any) => n.props?.testID === 'svg-G' && n.props?.animatedProps !== undefined && n.props?.strokeDasharray === undefined,
+    );
+    expect(sweeping).toHaveLength(0);
+    expect(r.UNSAFE_root.findAll((n: any) => n.props?.transform === 'rotate(-15 512 760)').length).toBeGreaterThan(0);
+  });
+
+  it('draws full, still strokes when nobody is looking (blurred or backgrounded)', () => {
+    mockAnimationsActive = false;
+    const r = render(<MeraLogo size={22} drawStrokes />);
+    expect(dashed(r)).toHaveLength(0);
+  });
+
+  // Captured: when a run started, the 18pt mark vanished in one frame and the
+  // big one began drawing from EMPTY. The draw must start from the finished
+  // mark and wait for the grow before it begins.
+  it('starts from the finished mark, and waits the given delay before drawing', () => {
+    mockWithDelay.mockClear();
+    render(<MeraLogo size={22} drawStrokes drawDelayMs={250} />);
+    // The progress value is seeded full (1), not empty (0).
+    expect(mockUseSharedValue).toHaveBeenCalledWith(1);
+    expect(mockWithDelay).toHaveBeenCalledWith(250, expect.anything());
   });
 });

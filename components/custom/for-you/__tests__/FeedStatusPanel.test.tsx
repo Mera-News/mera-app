@@ -94,7 +94,7 @@ jest.mock('../FeedStatusDetails', () => {
     return { __esModule: true, default: () => <View testID="feed-status-details" /> };
 });
 
-import FeedStatusPanel from '../FeedStatusPanel';
+import FeedStatusPanel, { FeedStatusBody, STATUS_PANEL_AUTO_COLLAPSE_MS } from '../FeedStatusPanel';
 
 beforeEach(() => {
     mockBatchProgress = null;
@@ -132,10 +132,28 @@ describe('FeedStatusPanel', () => {
         expect(queryByText('feed.analysingProgress')).toBeNull();
     });
 
-    it('sits on the dark over-content base, passed as a style (GlassPanel ignores fallbackClassName)', () => {
-        const { getByTestId } = render(<FeedStatusPanel expanded mode="processing" />);
+    it('sits on an OPAQUE dark base, passed as a style (GlassPanel ignores fallbackClassName)', () => {
+        // Both tabs drop it over list content; section text read through the
+        // 0.90 over-content fill (captured).
+        const { getByTestId } = render(<FeedStatusPanel expanded mode="idle" />);
         const { StyleSheet } = require('react-native');
+        const { STATUS_PANEL_OPAQUE_BASE } = require('../status-ink');
         const style = StyleSheet.flatten(getByTestId('dashboard-status-details-panel').props.style);
-        expect(style.backgroundColor).toBe('rgba(18,17,19,0.90)');
+        expect(style.backgroundColor).toBe(STATUS_PANEL_OPAQUE_BASE);
+        expect(STATUS_PANEL_OPAQUE_BASE).toMatch(/^rgb\(/);
+    });
+
+    it('closes itself after the one shared delay, the Feed\'s 3000ms', () => {
+        expect(STATUS_PANEL_AUTO_COLLAPSE_MS).toBe(3000);
+    });
+});
+
+describe('FeedStatusBody', () => {
+    it('renders the same rows with no panel chrome, for hosts that bring their own', () => {
+        mockBatchProgress = { done: 3, total: 10 };
+        const { getByTestId, getByText, queryByTestId } = render(<FeedStatusBody mode="processing" />);
+        expect(getByTestId('feed-status-details')).toBeTruthy();
+        expect(getByText('feed.analysingProgress')).toBeTruthy();
+        expect(queryByTestId('dashboard-status-details-panel')).toBeNull();
     });
 });

@@ -5,6 +5,8 @@ import fs from 'fs';
 import path from 'path';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
+let mockFocused = true;
+jest.mock('@/lib/hooks/use-is-focused-safe', () => ({ useIsFocusedSafe: () => mockFocused }));
 jest.mock('@/components/ui/modal', () => {
   const { View } = require('react-native');
   const Pass = ({ children, testID }: any) => <View testID={testID}>{children}</View>;
@@ -62,11 +64,31 @@ describe('TabExplainerButton', () => {
     expect(screen.queryByTestId('tab-explainer-forYou')).toBeNull();
   });
 
+  it('closes when its tab loses focus, so it is not waiting on return', () => {
+    // The sheet lives inside the tab's screen, not above the tab bar: left
+    // open, it reappeared "by itself" when the reader came back to the tab.
+    mockFocused = true;
+    const view = render(<TabExplainerButton tab="explore" testID="explore-explainer-open" />);
+    fireEvent.press(screen.getByTestId('explore-explainer-open'));
+    expect(screen.getByTestId('tab-explainer-explore')).toBeTruthy();
+    mockFocused = false;
+    view.rerender(<TabExplainerButton tab="explore" testID="explore-explainer-open" />);
+    mockFocused = true;
+    view.rerender(<TabExplainerButton tab="explore" testID="explore-explainer-open" />);
+    expect(screen.queryByTestId('tab-explainer-explore')).toBeNull();
+  });
+
   it('is a labelled button with a 44pt target', () => {
     render(<TabExplainerButton tab="feed" testID="feed-explainer-open" />);
     const button = screen.getByTestId('feed-explainer-open');
     expect(button.props.accessibilityLabel).toBe('tabExplainer.openA11y');
-    expect(button.props.hitSlop).toBe(10);
+    // A real 44pt frame, not hitSlop: a slop-only button measured 24x24 on
+    // device. The -10 margin keeps its layout footprint at the 24pt glyph, so
+    // no header row reflows and the glyph does not move.
+    const { StyleSheet } = require('react-native');
+    const style = StyleSheet.flatten(button.props.style);
+    expect(style).toMatchObject({ width: 44, height: 44, margin: -10, alignItems: 'center', justifyContent: 'center' });
+    expect(button.props.hitSlop).toBeUndefined();
   });
 });
 

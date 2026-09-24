@@ -246,24 +246,49 @@ describe('ReadTranslateActions', () => {
         });
     });
 
-    // N8: neither route is the favourite. Both buttons look the same in
-    // every state: white outline, white label, no fill.
-    describe('equal routes', () => {
-        it.each(['same-language', 'translatable', 'not-translatable'] as const)(
-            '%s: every shown button is a plain white outline',
-            (status) => {
+    // Owner: green OUTLINE marks the route that gets the reader something
+    // readable; the old fill stays gone. All three states pinned.
+    describe('green outline signal', () => {
+        const GREEN = '#86EFAC';
+        const outline = (b: any) => ({
+            border: styleOf(b).borderColor,
+            fill: styleOf(b).backgroundColor,
+        });
+
+        it('same language: only Read on source, GREEN outline', () => {
+            mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
+            const { getByTestId, queryByTestId } = renderActions({ sourceLanguage: 'en' });
+            expect(outline(getByTestId(PUBLISHER_BUTTON))).toEqual({ border: GREEN, fill: 'transparent' });
+            expect(queryByTestId(GT_BUTTON)).toBeNull();
+        });
+
+        it('device CAN translate: both GREEN outlines', () => {
+            mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
+            const { getByTestId } = renderActions();
+            expect(outline(getByTestId(PUBLISHER_BUTTON))).toEqual({ border: GREEN, fill: 'transparent' });
+            expect(outline(getByTestId(GT_BUTTON))).toEqual({ border: GREEN, fill: 'transparent' });
+        });
+
+        it('device can NOT translate: source WHITE, Google Translate GREEN', () => {
+            mockGetArticleTranslationSupport.mockReturnValue({ status: 'not-translatable', reason: 'unsupported-language' });
+            const { getByTestId, getByText } = renderActions();
+            expect(outline(getByTestId(PUBLISHER_BUTTON))).toEqual({ border: WHITE, fill: 'transparent' });
+            expect(outline(getByTestId(GT_BUTTON))).toEqual({ border: GREEN, fill: 'transparent' });
+            // The label follows its outline.
+            expect(styleOf(getByText('articleDetail.readOnGoogleTranslate')).color).toBe(GREEN);
+        });
+
+        it('keeps both buttons the same shape: no fill in any state', () => {
+            for (const status of ['same-language', 'translatable', 'not-translatable'] as const) {
                 mockGetArticleTranslationSupport.mockReturnValue({ status, reason: 'unsupported-language' });
-                const { queryByTestId } = renderActions(status === 'same-language' ? { sourceLanguage: 'en' } : {});
+                const { queryByTestId, unmount } = renderActions(status === 'same-language' ? { sourceLanguage: 'en' } : {});
                 for (const id of [PUBLISHER_BUTTON, GT_BUTTON]) {
                     const b = queryByTestId(id);
-                    if (!b) continue;
-                    expect(styleOf(b).backgroundColor).toBe('transparent');
-                    expect(styleOf(b).borderColor).toBe(WHITE);
-                    expect(b.props.className).not.toContain('green');
-                    expect(styleOf(b).flexGrow).toBe(1);
+                    if (b) expect(styleOf(b).flexGrow).toBe(1);
                 }
-            },
-        );
+                unmount();
+            }
+        });
     });
 
     describe('actions', () => {

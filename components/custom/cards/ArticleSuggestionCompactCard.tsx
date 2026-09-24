@@ -1,17 +1,15 @@
 import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCardBase';
-import { ArticleActionBarFor } from '@/components/custom/cards/ArticleActionsRow';
 import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
 import {
   feedbackSubjectFromSuggestion,
   type FeedbackSurface,
 } from '@/components/custom/cards/feedback-subject';
-import { inlineAccessibilityActions, useArticleActions } from '@/components/custom/cards/use-article-actions';
+import { useArticleActions } from '@/components/custom/cards/use-article-actions';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
 interface ArticleSuggestionCompactCardProps {
   suggestion: ForYouSuggestion;
@@ -48,7 +46,6 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   read = false,
   isNew = false,
 }) => {
-  const { t } = useTranslation();
   const status = suggestion.status;
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
   const relevance = suggestion.relevance ?? 0;
@@ -72,17 +69,27 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   );
   const visit = useMemo(() => visitFromSuggestion(suggestion), [suggestion]);
 
-  const actions = useArticleActions({ subject, suggestion, share, trackActive: false });
-  const inlineActions = useMemo(
-    () => inlineAccessibilityActions(t, actions),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t, actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
+  const actions = useArticleActions({ subject, suggestion, share });
+  // No inline row on compact rows: its actions lead the menu instead (and so
+  // are VoiceOver custom actions too).
+  const rowActions = useMemo(
+    () => ({
+      liked: actions.likeState !== 'none',
+      disliked: actions.dislikeState !== 'none',
+      saved: actions.saved,
+      onLike: actions.onLike,
+      onDislike: actions.onDislike,
+      onToggleSave: actions.onToggleSave,
+      onShare: actions.onShare,
+    }),
+    [actions.likeState, actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
   );
   const menu = useArticleMenu({
     surface: 'card',
     subject,
     articleUrl: suggestion.article_url,
     languageCode: suggestion.language_code,
+    titleOriginal: suggestion.title_original,
     visit,
     // Answered on the detail screen, so the row opens it after asking.
     onCheckFacts: () => {
@@ -97,7 +104,8 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
       if (asked) onPress(suggestion);
       return asked;
     },
-    inlineActions,
+    rowActions,
+    onLeafPicked: actions.onLeafPicked,
   });
 
   return (
@@ -119,11 +127,10 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         onPress={() => onPress(suggestion)}
         onLongPress={menu.open}
         priorityAccessory={priorityAccessory}
-        footer={<ArticleActionBarFor actions={actions} onOverflow={menu.open} horizontalPadding={0} compact />}
+        onOverflow={menu.open}
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}
       />
-      {actions.element}
       {menu.element}
     </>
   );

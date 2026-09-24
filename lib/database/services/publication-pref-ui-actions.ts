@@ -77,6 +77,10 @@ export type SourcePrefUiTarget =
 export interface SetSourcePrefResult {
   /** Whether the write actually happened (false ⇒ bad/unmappable input, nothing was touched). */
   readonly applied: boolean;
+  /** The change-log row a boost/downrank wrote. An undo reverts THIS row
+   *  (`revertChange`, compare-and-set) instead of writing a fresh 'none',
+   *  which clobbered any newer change and logged as a new user action. */
+  readonly changeLogId?: string;
 }
 
 const LEVEL_TO_PREF_KIND: Record<'prioritised' | 'deprioritised', 'boost' | 'deprioritize'> = {
@@ -97,7 +101,7 @@ async function setNamedPublicationLevel(
     },
     'user',
   );
-  return { applied: result.applied };
+  return { applied: result.applied, changeLogId: result.changeLogId };
 }
 
 /** Boost/downrank a country scope — routes through the executor, which owns everything else. */
@@ -118,7 +122,7 @@ async function setCountryScopeLevel(
     },
     'user',
   );
-  return { applied: result.applied };
+  return { applied: result.applied, changeLogId: result.changeLogId };
 }
 
 /**

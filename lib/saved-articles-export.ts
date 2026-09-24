@@ -81,7 +81,7 @@ export interface ToExportRowsOptions {
  *  than whoever reads it. UTC rather than local for the same reason: two
  *  exports of the same library should not disagree because of where they were
  *  taken. */
-function isoDay(iso: string): string {
+export function isoDay(iso: string): string {
   return iso.slice(0, 10);
 }
 
@@ -94,8 +94,9 @@ export function exportDay(now: Date = new Date()): string {
 
 /** An ISO string, or null when the value is missing or unparseable. A saved
  *  row's `firstPubDate` is non-null in the schema but reaches here through the
- *  server's article shape, where it is a string that has been wrong before. */
-function toIso(value: string | number | null | undefined): string | null {
+ *  server's article shape, where it is a string that has been wrong before.
+ *  Shared with `story-export.ts`, so both exports follow one date rule. */
+export function toIso(value: string | number | null | undefined): string | null {
   if (value === null || value === undefined || value === '') return null;
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
@@ -104,7 +105,7 @@ function toIso(value: string | number | null | undefined): string | null {
 /** Trim to a single line. A reason is one sentence and a headline is one line,
  *  but both arrive from a server and an embedded newline would break a
  *  Markdown list item into a paragraph mid-entry. */
-function oneLine(value: string | null | undefined): string {
+export function oneLine(value: string | null | undefined): string {
   if (!value) return '';
   return value.replace(/\s+/g, ' ').trim();
 }

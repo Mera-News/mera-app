@@ -76,14 +76,10 @@ export interface ArticleCardBaseProps {
   onPress?: () => void;
   children?: React.ReactNode;
   metaAccessory?: React.ReactNode;
-  /** A control row pinned at the bottom of the card, OUTSIDE the region the
-   *  `overlay` covers (e.g. the like/dislike action bar) — stays visible while
-   *  the overlay is up. When omitted the card is unchanged (pixel-identical). */
+  /** A control row pinned at the bottom of the card, below the content region
+   *  (e.g. the like/dislike action bar). When omitted the card is unchanged
+   *  (pixel-identical). */
   footer?: React.ReactNode;
-  /** A floating panel that covers the card's content region (hero + meta + title
-   *  + children) but NOT the `footer`. Clipped to the card's rounded corners by
-   *  its `overflow-hidden`. Used for the inline feedback surface. */
-  overlay?: React.ReactNode;
   /** Optional testID passthrough for the card's root Pressable — used by
    *  concrete card components to expose a stable, driver-targetable id
    *  (e.g. `card-${articleId}`). No visual/behavioral effect. */
@@ -136,7 +132,6 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   children,
   metaAccessory,
   footer,
-  overlay,
   testID,
   metaRowRightReserve = 0,
   accessibilityActions,
@@ -159,8 +154,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
 
   const innerContent = (
     <>
-      {/* Content region — the `overlay` (when present) floats over exactly this,
-          clipped to the card's rounded corners by the outer overflow-hidden. */}
+      {/* Content region. */}
       <Box className="relative">
         {/* No image, no image region. The whole hero Box is gated, not just its
             contents: an imageless card starts at the meta row. Compact cards
@@ -244,13 +238,6 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
           />
           {children}
         </VStack>
-        {overlay ? (
-          // Absolute fill of the content region. Claims stray taps so the grey
-          // backdrop doesn't fall through to the card's open-article press.
-          <Box className="absolute inset-0" onStartShouldSetResponder={() => true}>
-            {overlay}
-          </Box>
-        ) : null}
       </Box>
       {footer ? <Box className="px-4 pb-4 pt-2">{footer}</Box> : null}
     </>

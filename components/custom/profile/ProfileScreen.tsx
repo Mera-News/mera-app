@@ -1,50 +1,56 @@
 import BlockedBanner from '@/components/custom/BlockedBanner';
-import UsageWidget from '@/components/custom/UsageWidget';
 import FactsList from '@/components/custom/facts/FactsList';
 import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
-import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
-import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
+import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { fetchUserBilling } from '@/lib/billing-service';
-import { useSubscriptionStore } from '@/lib/stores/subscription-store';
-import { resolvePlanDisplay } from '@/lib/subscription/plan-display';
-import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { getFacts } from '@/lib/database/services/fact-service';
-import type { UserBillingInfo } from '@/lib/generated/graphql-types';
-import { getActiveTier } from '@/lib/revenuecat';
+import { usePulse } from '@/lib/hooks/use-pulse';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
+import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
+import { Animated, ScrollView, View } from 'react-native';
+
+// Matches TabExplainerButton's header-right glyph size and muted chrome
+// colour: 24pt icon. The touch FRAME is 44pt (Batch 13, sim capture
+// 1440-b8-profile-header: hitSlop alone measured 24×24, because hitSlop
+// extends what accepts a touch without changing the rect a harness reads).
+// A negative margin equal to half the grown amount keeps the LAYOUT
+// footprint at the glyph's own 24pt, so growing the frame doesn't shift the
+// icon or reflow the row it sits in.
+const HEADER_ICON_GLYPH = 24;
+const HEADER_ICON_TOUCH_TARGET = 44;
+const HEADER_ICON_TOUCH_MARGIN = -(HEADER_ICON_TOUCH_TARGET - HEADER_ICON_GLYPH) / 2;
 
 interface ProfileScreenProps {
     readonly userId: string;
 }
 
 /**
- * Mirror-first Profile tab (redesign). A completely non-technical user sees:
- *   1. The daily-usage card (articles analyzed today, plan + upgrade, reset
- *      time) — moved here from the Advanced hub so usage is always visible.
- *   2. "About you" — the real facts list (`FactsList`, shared with the Your
- *      Facts screen under Advanced): delete, N-articles pill, chevron expand
- *      → topics. (A brand-new user with no persona instead sees a "Start
- *      talking" CTA.)
- *   3. One "Advanced" row → the full power-user hub (AdvancedHubScreen).
- *
- * Wave r6b replaced the old LLM-generated persona-summary strings (+
- * PersonaStringSheet nudge/refine/remove flow) with this list — `FactsList`
- * owns its own real-time refresh (chat mutations, queue drains); this screen
- * only tracks the fact count to drive the empty-persona CTA.
+ * Mirror-first Profile tab: who Mera thinks you are.
+ *   1. The Mera chat invite (the add-an-interest entry).
+ *   2. "About you": the real facts list (`FactsList`, shared with Advanced >
+ *      Facts), with delete behind Edit.
+ *   3. Refresh Suggestions — moved here from AdvancedHubScreen, in the same
+ *      bottom slot the "Advanced" row used to occupy. No copy is left on
+ *      AdvancedHubScreen.
+ * The power-user hub ("Advanced") opens from an icon-only button at the
+ * top-right of the header, beside the tab explainer — there is no bottom
+ * Advanced row any more.
+ * The daily-usage card lives at the top of Settings (SettingsUsageCard), not
+ * here: this tab is about the person, not the plan.
  */
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const { t } = useTranslation();
@@ -55,9 +61,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     // unlike MeraProtocolSettingsScreen which is also mounted mid-onboarding.
 
     const [factCount, setFactCount] = useState<number | null>(null);
-    const [billing, setBilling] = useState<UserBillingInfo | null>(null);
-    const [totalArticleCount, setTotalArticleCount] = useState(0);
-    const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
     // F46: fact deletion lives behind Edit, not on a red trash on every row.
     const [editingFacts, setEditingFacts] = useState(false);
     // A purchase completed but the server has not confirmed the new tier yet.
@@ -74,58 +77,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         if (!userPersona && userId) fetchUserPersona(userId).catch(() => { /* offline */ });
     }, [userId, userPersona, fetchUserPersona, refreshFactCount]);
 
-    // Billing + on-device article count drive the daily-usage card. Both are
-    // best-effort — the widget falls back to the local count when offline.
-    const refreshBilling = useCallback(() => {
-        fetchUserBilling()
-            .then((fresh) => {
-                setBilling(fresh);
-                // Mirror into the store too, so the free-tier state lifts app-wide
-                // and not just on this card. This focus-driven refresh is also
-                // the backstop that eventually heals a purchase whose webhook
-                // outlived every poll below.
-                useSubscriptionStore.getState().setServerBilling(fresh);
-            })
-            .catch(() => { /* offline fallback */ });
-    }, []);
-
-    useEffect(() => {
-        refreshBilling();
-        getTotalArticleSuggestionCount().then(setTotalArticleCount).catch(() => { /* keep last */ });
-    }, [refreshBilling]);
-
-    // Refresh the fact count and the usage card on focus (tabs stay mounted →
-    // focus fires on every switch back) — the fact count drives the
-    // empty-persona CTA, and billing would otherwise stay frozen at whatever it
-    // was when the tab first mounted, including after a purchase made
-    // elsewhere. FactsList (rendered below) owns its own real-time refresh for
-    // the list itself.
+    // Refresh the fact count on focus (tabs stay mounted): it drives the
+    // empty-persona state. FactsList owns its own refresh for the list itself.
     useFocusEffect(
         useCallback(() => {
             refreshFactCount();
-            refreshBilling();
-        }, [refreshFactCount, refreshBilling]),
+        }, [refreshFactCount]),
     );
-
-    // A purchase confirmed on ANOTHER screen (e.g. Manage Subscription) mirrors
-    // its result into the shared store (`setServerBilling`), but this screen
-    // keeps its own local `billing` copy for the full usage-card snapshot
-    // (limit/used-today aren't tracked in the store). Without this, Profile
-    // stays stuck on its last local fetch until it happens to regain focus —
-    // exactly the "purchased elsewhere, still shows the old plan here" bug.
-    // Re-fetching the moment the shared tier changes closes that gap
-    // immediately, independent of navigation.
-    const storeServerTier = useSubscriptionStore((s) => s.serverTier);
-    const customerInfo = useSubscriptionStore((s) => s.customerInfo);
-    const rcTier = getActiveTier(customerInfo);
-    useEffect(() => {
-        if (storeServerTier == null) return;
-        setBilling((current) => {
-            if (current && current.subscriptionTier === storeServerTier) return current;
-            refreshBilling();
-            return current;
-        });
-    }, [storeServerTier, refreshBilling]);
 
     // A chat (or sheet) that mutated facts bumps this — refresh the count so the
     // empty-persona CTA flips promptly.
@@ -135,43 +93,60 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         }
     }, [factMutationVersion, refreshFactCount]);
 
+    // --- Refresh Suggestions (moved from AdvancedHubScreen, whole unit: the
+    // button, the glow ring, the hint and the handler) ----------------------
+    const toast = useToast();
+    const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
+    const feedNeedsRefresh = useForYouStore((s) => s.feedNeedsRefresh);
+    // `feedNeedsRefresh` can stay true indefinitely, and this tab stays
+    // mounted behind whatever is pushed on top of it — `usePulse` gates the
+    // loop on focus + foreground so it doesn't pulse forever off-screen, and
+    // parks at 0.3 (not 0) while pending so the affordance stays visible on a
+    // blurred screen.
+    const glowAnim = usePulse(feedNeedsRefresh);
+
+    const handleRefreshSuggestions = useCallback(async () => {
+        if (isRefreshingSuggestions) return;
+        const personaId = userPersona?._id;
+        if (!personaId) return;
+        setIsRefreshingSuggestions(true);
+        useForYouStore.getState().setFeedNeedsRefresh(false);
+        try {
+            await useForYouStore.getState().pruneOrphanedData();
+            await AppScheduler.trigger('feed-sync');
+            toast.show({
+                placement: 'top',
+                render: () => (
+                    <Toast action="success" variant="solid">
+                        <ToastTitle>{t('configPanel.refreshSuggestionsSuccessTitle')}</ToastTitle>
+                        <ToastDescription>{t('configPanel.refreshSuggestionsSuccessDescription')}</ToastDescription>
+                    </Toast>
+                ),
+            });
+        } catch {
+            toast.show({
+                placement: 'top',
+                render: () => (
+                    <Toast action="error" variant="solid">
+                        <ToastTitle>{t('configPanel.refreshSuggestionsFailedTitle')}</ToastTitle>
+                        <ToastDescription>{t('configPanel.refreshSuggestionsFailedDescription')}</ToastDescription>
+                    </Toast>
+                ),
+            });
+        } finally {
+            setIsRefreshingSuggestions(false);
+        }
+    }, [userPersona, isRefreshingSuggestions, toast, t]);
+
+    // Single source for the Refresh Suggestions button's text AND its
+    // accessibilityLabel (Batch 16) — one computation, so the two can never
+    // read differently to a sighted user vs. VoiceOver.
+    const refreshSuggestionsLabel = isRefreshingSuggestions
+        ? t('configPanel.refreshingSuggestions')
+        : t('configPanel.refreshSuggestions');
+
     const isBlocked = userPersona?.blockedByLlm ?? false;
     const isEmptyPersona = factCount === 0;
-
-    // ONE rule, shared with ManageSubscriptionScreen — see plan-display.ts.
-    // This screen used to derive the label here and the free-tier notice from
-    // `deriveAiAccess`, which have DIFFERENT fallbacks: the label fell back to
-    // RevenueCat's tier, the gate deliberately does not. The result was a
-    // Profile card reading "Individual Plan" directly above a notice saying the
-    // user had no plan. Both were right by their own rule; the rule was the bug.
-    const planDisplay = resolvePlanDisplay({
-        serverTier: billing?.subscriptionTier,
-        rcTier,
-        serverLoaded: billing != null,
-    });
-    const effectiveTier = planDisplay.tier ?? undefined;
-
-    // `pending` means the plan name came from RevenueCat and the server has NOT
-    // confirmed it — the gate below is still locked. Saying "activating" rather
-    // than naming it flat is the difference between the card agreeing with the
-    // free-tier notice and contradicting it.
-    const planLabel = !planDisplay.known
-        // Still loading — no label beats a wrong one; avoids a flash on every
-        // cold mount before the first fetch resolves.
-        ? undefined
-        : planDisplay.tier == null
-            ? t('subscription.freePlan')
-            : (() => {
-                    const name =
-                        planDisplay.tier === 'professional'
-                            ? t('configPanel.professionalPlan')
-                            : planDisplay.tier === 'individual'
-                                ? t('configPanel.individualPlan')
-                                : t('configPanel.starterPlan');
-                    return planDisplay.pending
-                        ? t('subscription.planPending', { plan: name })
-                        : name;
-                })();
 
     return (
         // No `bg-black`: ProfileTabScreen mounts AbstractGradientBackdrop
@@ -193,10 +168,38 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                 >
                     {t('tabs.profile')}
                 </Heading>
-                {/* N4: what this tab is and how it works, in plain words. The
-                    old "Learn how Mera works" button competed with the title
-                    (M10); the guides have one home, Settings > Help. */}
-                <TabExplainerButton tab="profile" testID="profile-explainer-open" />
+                {/* The gap is exactly what keeps the two 44pt frames from
+                    overlapping: each reaches (44 - 24) / 2 past its glyph. The
+                    old `space="md"` (~10.7pt) left 9.3pt of overlap, and the
+                    "?" won it. In points, in `style`, not a rem-scaled class. */}
+                <HStack
+                    className="items-center"
+                    style={{ gap: HEADER_ICON_TOUCH_TARGET - HEADER_ICON_GLYPH }}
+                    testID="profile-header-actions"
+                >
+                    {/* Advanced — icon-only, opens the power-user hub. Was a
+                        full-width row at the bottom of the page; moved here
+                        so it doesn't compete for scroll space with facts. */}
+                    <Pressable
+                        testID="profile-advanced-open"
+                        onPress={() => router.push('/logged-in/profile-advanced')}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('profile.advanced', { defaultValue: 'Advanced' })}
+                        style={{
+                            width: HEADER_ICON_TOUCH_TARGET,
+                            height: HEADER_ICON_TOUCH_TARGET,
+                            margin: HEADER_ICON_TOUCH_MARGIN,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <MaterialIcons name="tune" size={HEADER_ICON_GLYPH} color="rgb(212, 212, 212)" />
+                    </Pressable>
+                    {/* N4: what this tab is and how it works, in plain words. The
+                        old "Learn how Mera works" button competed with the title
+                        (M10); the guides have one home, Settings > Help. */}
+                    <TabExplainerButton tab="profile" testID="profile-explainer-open" />
+                </HStack>
             </HStack>
 
             <ScrollView
@@ -238,65 +241,93 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     </Box>
                 )}
 
-                {/* Daily usage, AFTER the facts (M9): the tab is about you first,
-                    the plan second. */}
-                <UsageWidget
-                    className="mx-4 mb-5"
-                    used={billing?.articlesUsedToday ?? totalArticleCount}
-                    limit={billing?.dailyArticleLimit ?? null}
-                    usedLabel={t('configPanel.articlesAnalyzedLast24h')}
-                    planLabel={planLabel}
-                    // "Manage plan", the same label as Settings > Account, and
-                    // not gated on tier: a Professional subscriber has nothing
-                    // to upgrade to but still has a plan to manage.
-                    onUpgrade={() =>
-                        router.push('/logged-in/preferences/manage-subscription' as any)
-                    }
-                    upgradeLabel={t('subscription.managePlan')}
-                    upgradeIcon="credit-card"
-                    resetAt={billing?.resetAt}
-                    resetLabel={t('configPanel.resetsOn')}
-                    onInfoPress={() => setShowArticleCountInfo(true)}
-                />
-
-                {/* 3 — Advanced */}
-                <Box className="px-4">
-                    <HubRow
-                        testID="profile-row-advanced"
-                        icon="tune"
-                        label={t('profile.advanced', { defaultValue: 'Advanced' })}
-                        subtitle={t('profile.advancedSubtitle', { defaultValue: 'Facts, sources, saved, activity and more' })}
-                        onPress={() => router.push('/logged-in/profile-advanced')}
-                    />
-                </Box>
-            </ScrollView>
-
-            <Modal isOpen={showArticleCountInfo} onClose={() => setShowArticleCountInfo(false)} size="sm">
-                <ModalBackdrop />
-                <ModalContent>
-                    <ModalHeader className="pb-3">
-                        <HStack className="items-center" space="xs">
-                            <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
-                            <Text className="text-base font-semibold text-white">{t('configPanel.articleAnalysisTitle')}</Text>
+                {/* 3 — Refresh Suggestions, moved here from AdvancedHubScreen,
+                    in the bottom slot the "Advanced" row used to occupy. */}
+                <View
+                    testID="advanced-hub-refresh-frame"
+                    style={{
+                        marginHorizontal: 16,
+                        marginTop: 12,
+                        marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12,
+                        position: 'relative',
+                        // Batch 17: the Button's own painted box correctly
+                        // grew to 44pt (Batch 16's fix), but this View's
+                        // OWN reserved slot for margin/sibling purposes did
+                        // not — it stayed at the button's PRE-fix ~31.3pt,
+                        // so the margin below (6pt) was computed from the
+                        // wrong edge, overlapping the hint by ~6.7pt, and
+                        // the glow ring (absolutely positioned against THIS
+                        // View, not the Button) fell short of the button's
+                        // real bottom by the same amount. Pinning the
+                        // View's own minHeight fixes both from one place,
+                        // regardless of why the Button's height didn't
+                        // propagate here — the margin value itself is
+                        // unchanged, so the gap is the same one it had
+                        // before, now measured from the correct edge.
+                        minHeight: 44,
+                    }}
+                >
+                    {feedNeedsRefresh && !isRefreshingSuggestions && (
+                        <Animated.View
+                            pointerEvents="none"
+                            style={{
+                                position: 'absolute',
+                                top: -3,
+                                left: -3,
+                                right: -3,
+                                bottom: -3,
+                                borderRadius: 12,
+                                borderWidth: 2,
+                                borderColor: '#60a5fa',
+                                opacity: glowAnim,
+                            }}
+                        />
+                    )}
+                    <Button
+                        testID="advanced-hub-refresh-suggestions"
+                        variant="outline"
+                        action="primary"
+                        size="sm"
+                        onPress={handleRefreshSuggestions}
+                        disabled={isRefreshingSuggestions}
+                        // Batch 16: without this, RN concatenates every
+                        // accessible descendant into one label, including the
+                        // MaterialIcons glyph (an icon-font character with no
+                        // meaning to VoiceOver) — that produced
+                        // ", Refresh Suggestions". One shared label, reused
+                        // below for ButtonText too, so the spoken and the
+                        // visible text can never drift apart.
+                        accessibilityLabel={refreshSuggestionsLabel}
+                        // Batch 16: `size="sm"` alone measured 31.3pt. A
+                        // minHeight floor brings the real target to 44pt
+                        // without touching padding, icon size or copy — the
+                        // button just isn't quite as short as before.
+                        style={{ minHeight: 44 }}
+                    >
+                        {isRefreshingSuggestions ? (
+                            <HStack space="sm" className="items-center">
+                                <Spinner size="small" />
+                                <ButtonText>{refreshSuggestionsLabel}</ButtonText>
+                            </HStack>
+                        ) : (
+                            <HStack space="sm" className="items-center">
+                                <MaterialIcons name="refresh" size={16} color="#60a5fa" />
+                                <ButtonText>{refreshSuggestionsLabel}</ButtonText>
+                            </HStack>
+                        )}
+                    </Button>
+                </View>
+                {feedNeedsRefresh && !isRefreshingSuggestions && (
+                    <Box testID="advanced-hub-refresh-hint" className="mx-4 mb-3 px-3 py-2 bg-blue-950/60 border border-blue-800 rounded-lg">
+                        <HStack space="xs" className="items-start">
+                            <MaterialIcons name="auto-awesome" size={14} color="#93c5fd" style={{ marginTop: 1 }} />
+                            <Text size="xs" className="text-blue-300 flex-1">
+                                {t('configPanel.personaUpdatedRefreshHint')}
+                            </Text>
                         </HStack>
-                    </ModalHeader>
-                    <ModalBody className="py-4">
-                        <Text className="text-gray-300 text-sm leading-relaxed">
-                            {t('configPanel.articleAnalysisDescription')}
-                        </Text>
-                    </ModalBody>
-                    <ModalFooter className="border-t border-gray-700 pt-4">
-                        <Button
-                            variant="outline"
-                            action="secondary"
-                            onPress={() => setShowArticleCountInfo(false)}
-                            className="w-full"
-                        >
-                            <ButtonText>{t('configPanel.gotIt')}</ButtonText>
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+                    </Box>
+                )}
+            </ScrollView>
         </Box>
     );
 };

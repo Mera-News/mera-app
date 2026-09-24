@@ -1,0 +1,103 @@
+{
+  "_comment": "ux1 P1 follow-up (feed scout): the compact ••• menu's Not for me item once disliked (mirrors Remove like). New key only. No dashes.",
+  "en": {
+    "articleMenu": {
+      "removeDislike": "Remove not for me"
+    }
+  },
+  "ar": {
+    "articleMenu": {
+      "removeDislike": "إزالة «ليس لي»"
+    }
+  },
+  "de": {
+    "articleMenu": {
+      "removeDislike": "„Nichts für mich“ entfernen"
+    }
+  },
+  "es": {
+    "articleMenu": {
+      "removeDislike": "Quitar «No es para mí»"
+    }
+  },
+  "fr": {
+    "articleMenu": {
+      "removeDislike": "Retirer « Pas pour moi »"
+    }
+  },
+  "hi": {
+    "articleMenu": {
+      "removeDislike": "\"मेरे लिए नहीं\" हटाएँ"
+    }
+  },
+  "id": {
+    "articleMenu": {
+      "removeDislike": "Hapus \"Bukan untuk saya\""
+    }
+  },
+  "it": {
+    "articleMenu": {
+      "removeDislike": "Rimuovi \"Non fa per me\""
+    }
+  },
+  "ja": {
+    "articleMenu": {
+      "removeDislike": "「興味なし」を取り消す"
+    }
+  },
+  "ko": {
+    "articleMenu": {
+      "removeDislike": "\"관심 없어요\" 취소"
+    }
+  },
+  "nl": {
+    "articleMenu": {
+      "removeDislike": "\"Niets voor mij\" verwijderen"
+    }
+  },
+  "pl": {
+    "articleMenu": {
+      "removeDislike": "Usuń „To nie dla mnie”"
+    }
+  },
+  "pt-BR": {
+    "articleMenu": {
+      "removeDislike": "Remover \"Não é para mim\""
+    }
+  },
+  "ru": {
+    "articleMenu": {
+      "removeDislike": "Убрать «Не для меня»"
+    }
+  },
+  "th": {
+    "articleMenu": {
+      "removeDislike": "เลิก \"ไม่ใช่สำหรับฉัน\""
+    }
+  },
+  "tr": {
+    "articleMenu": {
+      "removeDislike": "\"Bana göre değil\" işaretini kaldır"
+    }
+  },
+  "uk": {
+    "articleMenu": {
+      "removeDislike": "Прибрати «Не для мене»"
+    }
+  },
+  "vi": {
+    "articleMenu": {
+      "removeDislike": "Bỏ \"Không dành cho tôi\""
+    }
+  },
+  "zh-CN": {
+    "articleMenu": {
+      "removeDislike": "取消“不适合我”"
+    }
+  },
+  "zh-TW": {
+    "articleMenu": {
+      "removeDislike": "取消「不適合我」"
+    }
+  }
+}

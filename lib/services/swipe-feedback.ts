@@ -1,15 +1,14 @@
 // swipe-feedback — the Feed-tab signal-persistence layer (Round-4 P4).
 //
 // Turns a verdict tap/swipe on the Feed into a persisted `article_feedback`
-// row (surface 'swipe'), enriches that row's stored `treePath` as the user taps
-// the inline feedback tree, and converts a verdict + tapped path into a Mera
-// chat handoff.
+// row (surface 'swipe'), stores the tree path of the leaf the user picked in
+// the ••• sheet, and converts a verdict + tapped path into a Mera chat handoff.
 //
 // No persona mutation happens in THIS module, but a verdict is no longer inert:
-//   • a BARE verdict is provisional — written, shown hollow, and reaped at
-//     write so it never reaches the digest (D15, see article-feedback-service);
+//   • a BARE verdict is written and shown (filled), but reaped at write so it
+//     never reaches the digest (D15, see article-feedback-service);
 //   • a tapped tree path re-opens the row for the digest, and a terminal leaf
-//     applies its persona actions immediately (D16, InlineFeedbackTree);
+//     applies its persona actions immediately (D16, perform-feedback-leaf);
 //   • a chat escalation still applies via the agent's confirmed proposals,
 //     which stamps the row processed.
 //
@@ -24,6 +23,7 @@ import {
 import { swipeCallbacks, type Verdict } from '@/components/custom/feed/swipe-callbacks';
 import i18n from '@/lib/i18n';
 import {
+  markFeedbackProcessedFor,
   recordVerdictFeedback,
   removeArticleFeedback,
   updateFeedbackContextPath,
@@ -99,13 +99,20 @@ export async function updateFeedbackTreePath(
 
 /** Marks the stored verdict row COMMITTED — a terminal leaf settled, or the user
  *  escalated to Mera along this path. This is the write a filled thumb is allowed
- *  to read, and it is what makes the fill survive a process restart. */
+ *  to read, and it is what makes the fill survive a process restart.
+ *
+ *  A committed write re-opens the row for the digest (processed_at = null), and
+ *  it lands AFTER applyLeafActions stamped the row spent. So when the leaf
+ *  applied something, stamp it again after the write, or the 3-hourly digest
+ *  applies a second helping of the same signal. */
 export async function commitFeedbackTreePath(
   suggestion: ForYouSuggestion,
   verdict: Verdict,
   path: string[],
+  appliedCount = 0,
 ): Promise<void> {
   await updateFeedbackContextPath(suggestion.articleId, verdict, path, true);
+  if (appliedCount > 0) await markFeedbackProcessedFor(suggestion.articleId, verdict);
 }
 
 /**
@@ -205,8 +212,8 @@ export function wireSwipeCallbacks(): void {
   swipeCallbacks.onTreePathChanged = (suggestion, verdict, path) => {
     void updateFeedbackTreePath(suggestion, verdict, path);
   };
-  swipeCallbacks.onLeafCommitted = (suggestion, verdict, path) => {
-    void commitFeedbackTreePath(suggestion, verdict, path);
+  swipeCallbacks.onLeafCommitted = (suggestion, verdict, path, appliedCount) => {
+    void commitFeedbackTreePath(suggestion, verdict, path, appliedCount);
   };
   swipeCallbacks.onInvokeMera = (suggestion, verdict, path) => {
     void openFeedbackChatWithPath(suggestion, verdict, path);

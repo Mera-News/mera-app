@@ -22,18 +22,17 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from '@/components/ui/pressable';
 import { pickScoringProgress, STATUS_INK } from './status-ink';
+import { useLastProcessedLabel } from './use-last-processed-label';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 export interface FeedStatusDetailsProps {
-    /** Human relative label for the last finished processing run, or null. */
-    readonly lastProcessedLabel: string | null;
     /**
-     * Called right before the daily-limit "Manage" pill navigates. The sheet
-     * passes its `onClose` here: the body renders inside an RN Modal, and a
+     * Called right before the daily-limit "Manage" pill navigates. A host that
+     * renders this body inside an RN Modal passes its close here: a
      * `router.push` out of an open modal leaves the pushed screen stranded
-     * behind the backdrop. The inline shimmer accordion is not a modal, so it
-     * passes nothing.
+     * behind the backdrop. The inline status panel is not a modal and passes
+     * nothing.
      */
     readonly onBeforeNavigate?: () => void;
 }
@@ -56,21 +55,21 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
  * copy + selectors the four legacy header banners used to show — current pipeline
  * stage, cloud/device progress, the processed/analysed/relevant counts,
  * last-processed time, the daily-limit notice, and any scoring error. It is
- * rendered in TWO places: inside the FeedStatusSheet modal body, and inline in
- * the FeedStatusShimmer expand accordion — so the copy is never duplicated.
+ * rendered in ONE place, `FeedStatusBody`, which the Feed's header panel and
+ * the Dashboard's Overview stats card both mount, so the two cannot differ.
  */
-const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
-    lastProcessedLabel,
-    onBeforeNavigate,
-}) => {
+const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({ onBeforeNavigate }) => {
     const { t } = useTranslation();
     const tAny = t as any;
     const appLanguage = useAppLanguage();
     const router = useRouter();
     // Read here rather than passed in, from the shared minute-clock hook, so the
-    // panel, the sheet and the header sentence cannot show different numbers.
+    // body and the stats sentence cannot show different numbers.
     const { articleCount: processedCount, analysedCount, relevantCount } = useFeedCounts();
     const batchProgress = useForYouBatchProgress();
+    // Read here, never passed in: a prop only one screen passed is how the
+    // Feed's panel came to lack this row.
+    const lastProcessedLabel = useLastProcessedLabel();
 
     const syncStatusMessage = useForYouSyncStatusMessage();
     const asyncJobPhase = useForYouAsyncJobPhase();

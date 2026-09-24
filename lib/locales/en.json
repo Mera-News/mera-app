@@ -296,7 +296,11 @@
     "medium": "Med",
     "low": "Low",
     "irrelevant": "Irrelevant",
-    "unprocessed": "Unprocessed"
+    "unprocessed": "Unprocessed",
+    "a11yEmergency": "Emergency",
+    "a11yHigh": "High priority",
+    "a11yMedium": "Medium priority",
+    "a11yLow": "Low priority"
   },
   "aiDisclosure": {
     "caption": "AI-generated note",
@@ -1434,7 +1438,6 @@
     "contextFor": "About: {{title}}",
     "back": "Back",
     "dismiss": "Dismiss",
-    "tellMore": "Tell me more",
     "empty": "No options here",
     "cancel": "Cancel",
     "confirm": "Confirm",
@@ -2761,45 +2764,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Working on your news, here on your phone.",
-        "Starting a refresh on this device."
+        "Starting a refresh",
+        "Working on this phone"
       ],
       "fetching": [
-        "Looking for what is new today.",
-        "Your phone decides what to ask for."
+        "Looking for new stories",
+        "Checking what is new"
       ],
       "downloading": [
-        "Pulling the articles onto your phone.",
-        "They come to you first, not to a server."
+        "Downloading articles",
+        "Fetching from the server"
       ],
       "grouping": [
-        "One story runs in a dozen places.",
-        "Picking one version of each story."
+        "Grouping stories",
+        "Merging duplicates"
       ],
       "analysing": [
-        "Reading each article for you.",
-        "Encrypted. Only your phone holds the key."
+        "Checking relevance",
+        "Reading each article"
       ],
       "onDevice": [
-        "Your phone is reading these stories.",
-        "This runs here. Nothing leaves your phone."
+        "Reading on your phone",
+        "It stays on your phone"
       ],
       "summarising": [
-        "Writing a short note for each story.",
-        "Encrypted end to end, the whole way."
+        "Writing notes",
+        "A short note per story"
       ],
       "preparing": [
-        "Putting your feed in order.",
-        "Almost there. The cards arrive on their own."
+        "Putting them in order",
+        "Almost there"
       ]
     },
     "nudges": [
-      "Save what you cannot read right now.",
-      "Your saved articles are still waiting.",
-      "Read one story properly, not ten fast.",
-      "Top headlines, if you want the shape of today.",
-      "Newer is not better. Read what is here.",
-      "Nothing arrives faster if you watch."
+      "Save it for later",
+      "Your saved list is waiting",
+      "Read one story properly",
+      "See the top headlines",
+      "Newer is not better",
+      "No need to watch"
     ],
     "a11y": "Mera is updating your news on this phone."
   },
@@ -2867,15 +2870,18 @@
     "fewerFromDone": "You'll see less from {{source}}.",
     "undo": "Undo",
     "reportBug": "Report a bug",
-    "actionFailed": "That didn't work. Try again."
-  },
-  "factChip": {
-    "label": "From your profile: {{label}}",
-    "openA11y": "Stories about {{label}}"
+    "actionFailed": "That didn't work. Try again.",
+    "removeLike": "Remove like",
+    "removeDislike": "Remove not for me"
   },
   "related": {
     "allCountries": "All countries",
     "allLanguages": "All languages",
     "noMatches": "No related articles match these filters."
+  },
+  "storyExport": {
+    "shareA11y": "Export this story",
+    "shareDialogTitle": "Export story",
+    "includeReasonHint": "The one-line note explaining why each article reached your feed. Some articles may not have one."
   }
 }

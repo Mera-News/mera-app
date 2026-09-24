@@ -242,11 +242,9 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
           // action-declaring leaf whose actions resolve to nothing is already
           // hidden by `isInertActionLeaf` (useFeedbackTreeEngine), so a
           // `has_matched_topics` gate would be a second moving part for the
-          // identical effect. Deliberately NOT named after the topic: doing that
-          // means extending the `TOPIC_NAMED_NODE_ID` special-case, which lives
-          // in InlineFeedbackTree only — the modal overlay would show a
-          // different label for the same node (D17: presentations may differ,
-          // semantics must not).
+          // identical effect. Deliberately NOT named after the topic: naming
+          // lives in ONE place (`TOPIC_NAMED_NODE_ID` in
+          // feedback-tree/label-vars), which names `more_about_topic` only.
           id: 'too_many',
           labelKey: 'feedbackTree.tooMuchOfThis',
           labelDefault: "I'm seeing too much of this",

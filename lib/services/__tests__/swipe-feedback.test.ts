@@ -6,6 +6,7 @@ jest.mock('@/lib/database/services/article-feedback-service', () => ({
   recordVerdictFeedback: jest.fn(async () => {}),
   removeArticleFeedback: jest.fn(async () => {}),
   updateFeedbackContextPath: jest.fn(async () => {}),
+  markFeedbackProcessedFor: jest.fn(async () => {}),
 }));
 
 const mockOpenArticleFeedback = jest.fn();
@@ -58,6 +59,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import {
+  markFeedbackProcessedFor,
   recordVerdictFeedback,
   removeArticleFeedback,
   updateFeedbackContextPath,
@@ -69,6 +71,7 @@ import {
   changeSwipeVerdict,
   removeSwipeVerdict,
   updateFeedbackTreePath,
+  commitFeedbackTreePath,
   openFeedbackChatWithPath,
   openArticleChat,
   wireSwipeCallbacks,
@@ -147,6 +150,29 @@ describe('updateFeedbackTreePath', () => {
   it('forwards to updateFeedbackContextPath', async () => {
     await updateFeedbackTreePath(makeSuggestion(), 'dislike', ['a', 'b']);
     expect(updateFeedbackContextPath).toHaveBeenCalledWith('art-1', 'dislike', ['a', 'b']);
+  });
+});
+
+// A committed path write re-opens the row for the digest (processed_at =
+// null), and it lands after applyLeafActions stamped the row spent. When a
+// leaf applied something, the commit must stamp it again, AFTER the write.
+describe('commitFeedbackTreePath', () => {
+  it('commits the path, then re-stamps the row spent when the leaf applied something', async () => {
+    const order: string[] = [];
+    (updateFeedbackContextPath as jest.Mock).mockImplementationOnce(async () => {
+      order.push('commit');
+    });
+    (markFeedbackProcessedFor as jest.Mock).mockImplementationOnce(async () => {
+      order.push('spent');
+    });
+    await commitFeedbackTreePath(makeSuggestion(), 'dislike', ['a'], 2);
+    expect(updateFeedbackContextPath).toHaveBeenCalledWith('art-1', 'dislike', ['a'], true);
+    expect(order).toEqual(['commit', 'spent']);
+  });
+
+  it('leaves the row open for the digest when nothing applied', async () => {
+    await commitFeedbackTreePath(makeSuggestion(), 'dislike', ['a'], 0);
+    expect(markFeedbackProcessedFor).not.toHaveBeenCalled();
   });
 });
 

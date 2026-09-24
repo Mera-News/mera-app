@@ -1,0 +1,143 @@
+{
+  "_comment": "Input to _splice-fragments.mjs. The storyExport namespace: the share button in a followed story's header and the two strings the export wizard needs that differ from the Saved tab's. Everything else the story export shows reuses savedExport.*. Splice this before the components that use it, since i18n keys are typed off en.json with no codegen step.",
+  "ar": {
+    "storyExport": {
+      "shareA11y": "تصدير هذه القصة",
+      "shareDialogTitle": "تصدير القصة",
+      "includeReasonHint": "الملاحظة المختصرة التي تشرح سبب وصول كل مقال إلى موجزك. قد لا تحتوي بعض المقالات عليها."
+    }
+  },
+  "de": {
+    "storyExport": {
+      "shareA11y": "Diese Story exportieren",
+      "shareDialogTitle": "Story exportieren",
+      "includeReasonHint": "Der kurze Hinweis, warum jeder Artikel in deinen Feed gelangt ist. Manche Artikel haben keinen."
+    }
+  },
+  "en": {
+    "storyExport": {
+      "shareA11y": "Export this story",
+      "shareDialogTitle": "Export story",
+      "includeReasonHint": "The one-line note explaining why each article reached your feed. Some articles may not have one."
+    }
+  },
+  "es": {
+    "storyExport": {
+      "shareA11y": "Exportar esta historia",
+      "shareDialogTitle": "Exportar historia",
+      "includeReasonHint": "La nota breve que explica por qué cada artículo llegó a tu feed. Es posible que algunos artículos no la tengan."
+    }
+  },
+  "fr": {
+    "storyExport": {
+      "shareA11y": "Exporter cette actualité",
+      "shareDialogTitle": "Exporter l'actualité",
+      "includeReasonHint": "La note d'une ligne qui explique pourquoi chaque article est arrivé dans votre fil. Certains articles peuvent ne pas en avoir."
+    }
+  },
+  "hi": {
+    "storyExport": {
+      "shareA11y": "यह स्टोरी निर्यात करें",
+      "shareDialogTitle": "स्टोरी निर्यात करें",
+      "includeReasonHint": "एक पंक्ति का नोट जो बताता है कि हर लेख आपकी फ़ीड तक क्यों पहुँचा। कुछ लेखों में यह नहीं हो सकता।"
+    }
+  },
+  "id": {
+    "storyExport": {
+      "shareA11y": "Ekspor cerita ini",
+      "shareDialogTitle": "Ekspor cerita",
+      "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
+    }
+  },
+  "it": {
+    "storyExport": {
+      "shareA11y": "Esporta questa storia",
+      "shareDialogTitle": "Esporta storia",
+      "includeReasonHint": "La nota di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Alcuni articoli potrebbero non averla."
+    }
+  },
+  "ja": {
+    "storyExport": {
+      "shareA11y": "このストーリーを書き出す",
+      "shareDialogTitle": "ストーリーを書き出す",
+      "includeReasonHint": "各記事がフィードに届いた理由を説明する 1 行のメモです。メモがない記事もあります。"
+    }
+  },
+  "ko": {
+    "storyExport": {
+      "shareA11y": "이 스토리 내보내기",
+      "shareDialogTitle": "스토리 내보내기",
+      "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 메모입니다. 메모가 없는 기사도 있을 수 있습니다."
+    }
+  },
+  "nl": {
+    "storyExport": {
+      "shareA11y": "Dit verhaal exporteren",
+      "shareDialogTitle": "Verhaal exporteren",
+      "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
+    }
+  },
+  "pl": {
+    "storyExport": {
+      "shareA11y": "Eksportuj tę historię",
+      "shareDialogTitle": "Eksportuj historię",
+      "includeReasonHint": "Jednolinijkowa notatka wyjaśniająca, dlaczego każdy artykuł trafił do Twojego kanału. Niektóre artykuły mogą jej nie mieć."
+    }
+  },
+  "pt-BR": {
+    "storyExport": {
+      "shareA11y": "Exportar esta história",
+      "shareDialogTitle": "Exportar história",
+      "includeReasonHint": "A nota de uma linha que explica por que cada artigo chegou ao seu feed. Alguns artigos podem não ter essa nota."
+    }
+  },
+  "ru": {
+    "storyExport": {
+      "shareA11y": "Экспортировать эту историю",
+      "shareDialogTitle": "Экспорт истории",
+      "includeReasonHint": "Короткая заметка о том, почему каждая статья попала в вашу ленту. У некоторых статей её может не быть."
+    }
+  },
+  "th": {
+    "storyExport": {
+      "shareA11y": "ส่งออกเรื่องราวนี้",
+      "shareDialogTitle": "ส่งออกเรื่องราว",
+      "includeReasonHint": "ข้อความสั้นที่อธิบายว่าทำไมบทความแต่ละชิ้นจึงมาอยู่ในฟีดของคุณ บางบทความอาจไม่มีข้อความนี้"
+    }
+  },
+  "tr": {
+    "storyExport": {
+      "shareA11y": "Bu haberi dışa aktar",
+      "shareDialogTitle": "Haberi dışa aktar",
+      "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Bazı makalelerde bu not bulunmayabilir."
+    }
+  },
+  "uk": {
+    "storyExport": {
+      "shareA11y": "Експортувати цю історію",
+      "shareDialogTitle": "Експорт історії",
+      "includeReasonHint": "Короткий рядок про те, чому кожна стаття потрапила у вашу стрічку. Деякі статті можуть його не мати."
+    }
+  },
+  "vi": {
+    "storyExport": {
+      "shareA11y": "Xuất câu chuyện này",
+      "shareDialogTitle": "Xuất câu chuyện",
+      "includeReasonHint": "Ghi chú một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Một số bài có thể không có ghi chú này."
+    }
+  },
+  "zh-CN": {
+    "storyExport": {
+      "shareA11y": "导出这篇报道",
+      "shareDialogTitle": "导出报道",
+      "includeReasonHint": "说明每篇文章为何出现在你的信息流中的一句话。部分文章可能没有这句话。"
+    }
+  },
+  "zh-TW": {
+    "storyExport": {
+      "shareA11y": "匯出這篇報導",
+      "shareDialogTitle": "匯出報導",
+      "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句話。部分文章可能沒有這句話。"
+    }
+  }
+}

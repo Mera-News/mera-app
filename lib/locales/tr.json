@@ -241,7 +241,11 @@
     "medium": "Orta",
     "low": "Düşük",
     "irrelevant": "İlgisiz",
-    "unprocessed": "İşlenmemiş"
+    "unprocessed": "İşlenmemiş",
+    "a11yEmergency": "Acil",
+    "a11yHigh": "Yüksek öncelik",
+    "a11yMedium": "Orta öncelik",
+    "a11yLow": "Düşük öncelik"
   },
   "aiDisclosure": {
     "caption": "AI tarafından oluşturulan not",
@@ -1236,7 +1240,6 @@
     "contextFor": "Hakkında: {{title}}",
     "back": "Geri",
     "dismiss": "Kapat",
-    "tellMore": "Bana daha fazlasını anlat",
     "empty": "Burada seçenek yok",
     "cancel": "İptal",
     "confirm": "Onayla",
@@ -1250,8 +1253,8 @@
     "nudgeSubscribe": "{{publication}}'a abone olmak makalelerin tamamının kilidini açar",
     "nudgeBrowse": "Diğer kaynaklardan ilgili haberlere göz at",
     "paywallRelatedOption": "İlgili Haberleri Göster",
-    "paywallRelatedDesc": "Başka bir yayından benzer bir haber ödeme duvarı arkasında olmayabilir — ilgili makaleleri kontrol et.",
-    "paywallSubscribeDesc": "{{publication}}'i bu ay {{visits}} kez ziyaret ettin — tam erişim için abone olmayı düşün.",
+    "paywallRelatedDesc": "Başka bir yayından benzer bir haber ödeme duvarı arkasında olmayabilir. İlgili makaleleri kontrol et.",
+    "paywallSubscribeDesc": "{{publication}}'i bu ay {{visits}} kez ziyaret ettin. Tam erişim için abone olmayı düşün.",
     "paywallBlockOption": "Bunun yerine {{publication}}'i Engelle",
     "tooMuchOfThis": "Bunu çok sık görüyorum",
     "managePublicationsDesc": "Herhangi bir yayını (bu yayın dahil) öne çıkarın, arka plana atin veya sessiz yapın.",
@@ -2763,45 +2766,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Haberlerin üzerinde çalışıyoruz, telefonunda.",
-        "Bu cihazda yenileme başladı."
+        "Yenileme başladı",
+        "Bu telefonda"
       ],
       "fetching": [
-        "Bugün ne var diye bakıyoruz.",
-        "Ne isteneceğine telefonun karar veriyor."
+        "Yeni haberler aranıyor",
+        "Neler yeni?"
       ],
       "downloading": [
-        "Yazılar telefonuna geliyor.",
-        "Önce sana gelir, sunucuya değil."
+        "Makaleler iniyor",
+        "Sunucudan alınıyor"
       ],
       "grouping": [
-        "Aynı haber onlarca yerde çıkar.",
-        "Her haberden tek sürüm seçiyoruz."
+        "Haberler gruplanıyor",
+        "Tekrarlar birleşiyor"
       ],
       "analysing": [
-        "Her yazı senin için okunuyor.",
-        "Şifreli. Anahtar yalnızca telefonunda."
+        "Uygunluk ölçülüyor",
+        "Makaleler okunuyor"
       ],
       "onDevice": [
-        "Telefonun bu haberleri okuyor.",
-        "Burada oluyor. Hiçbir şey dışarı çıkmıyor."
+        "Telefonunda okunuyor",
+        "Telefonunda kalır"
       ],
       "summarising": [
-        "Her habere kısa bir not yazılıyor.",
-        "Baştan sona uçtan uca şifreli."
+        "Notlar yazılıyor",
+        "Habere kısa not"
       ],
       "preparing": [
-        "Akışını sıraya koyuyoruz.",
-        "Az kaldı. Kartlar kendiliğinden gelecek."
+        "Sıraya konuyor",
+        "Az kaldı"
       ]
     },
     "nudges": [
-      "Şimdi okuyamayacaklarını kaydet.",
-      "Kaydettiğin yazılar hâlâ bekliyor.",
-      "Bir haberi doğru oku, on tanesini hızlı değil.",
-      "Öne çıkan başlıklar günü özetler.",
-      "Yeni olan daha iyi değil. Elindekini oku.",
-      "Baktığın için daha hızlı gelmez."
+      "Sonra oku",
+      "Kaydettiklerin bekliyor",
+      "Bir haberi iyi oku",
+      "Manşetlere bak",
+      "Yeni her zaman iyi değil",
+      "İzlemene gerek yok"
     ],
     "a11y": "Mera bu telefonda haberlerini güncelliyor."
   },
@@ -2869,15 +2872,18 @@
     "fewerFromDone": "{{source}} kaynağından daha az göreceksin.",
     "undo": "Geri al",
     "reportBug": "Hata bildir",
-    "actionFailed": "Olmadı. Tekrar dene."
-  },
-  "factChip": {
-    "label": "Profilinden: {{label}}",
-    "openA11y": "{{label}} hakkında haberler"
+    "actionFailed": "Olmadı. Tekrar dene.",
+    "removeLike": "Beğeniyi kaldır",
+    "removeDislike": "\"Bana göre değil\" işaretini kaldır"
   },
   "related": {
     "allCountries": "Tüm ülkeler",
     "allLanguages": "Tüm diller",
     "noMatches": "Bu filtrelere uyan ilgili makale yok."
+  },
+  "storyExport": {
+    "shareA11y": "Bu haberi dışa aktar",
+    "shareDialogTitle": "Haberi dışa aktar",
+    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Bazı makalelerde bu not bulunmayabilir."
   }
 }

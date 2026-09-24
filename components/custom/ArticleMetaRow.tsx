@@ -6,16 +6,18 @@ import { Text } from '@/components/ui/text';
 import { getLocalizedLanguageName } from '@/lib/language-names';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useTimeTick } from '@/lib/time-tick';
-import { getArticleTranslatableStatus, useTranslationBlocked } from '@/lib/translation-service';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
-import { toTitleCase } from '@/lib/utils/title-case';
-import { Pressable } from '@/components/ui/pressable';
-import { Tooltip, TooltipContent, TooltipText } from '@/components/ui/tooltip';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React from 'react';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 export type ArticleMetaRowVariant = 'card' | 'screen';
+
+/** The language label's own cap ("Portuguese (Brazil)" fits). */
+const LANGUAGE_MAX_WIDTH = 120;
+/** Breathing room between the centred time and each side column. */
+const SIDE_GAP = 8;
 
 interface ArticleMetaRowProps {
     pubDate?: string | null;
@@ -84,95 +86,37 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const isCard = variant === 'card';
     const ageColor = isCard ? 'text-typography-600' : 'text-gray-400';
     const secondaryColor = isCard ? 'text-typography-500' : 'text-gray-400';
+    const iconColor = isCard ? '#6B7280' : '#9CA3AF';
 
     const age = formatTimeAgo(t, pubDate, { now, emptyLabel: t('feed.justNow'), absoluteAfterDays: 7 });
     // Named in the reader's own language, not its endonym — "简体中文" tells a
     // reader who doesn't know the script nothing about what they're looking at.
     const language = getLocalizedLanguageName(languageCode, appLanguage) ?? '';
-    const publication = toTitleCase(publicationName);
+    // Shown EXACTLY as stored, card and detail (owner decision): title-casing
+    // turned "Instituto Nacional de Ciberseguridad (INCIBE)" into
+    // "... De ... (Incibe)".
+    const publication = (publicationName ?? '').trim();
 
-    const translateStatus = getArticleTranslatableStatus(languageCode, appLanguage);
+    // No translate glyph on this row in ANY state, compact rows included
+    // (owner decision): a failed translation is explained by the detail
+    // screen's translation notice, so the row carries flag + language only.
 
-    // The OS translator has given up on the reader's language, so this
-    // article — which the device COULD normally translate — is showing the
-    // server-side English instead of their language. That is a failure, and
-    // the one the reader can act on, so it gets red.
-    //
-    // Read off the breaker's own reactive subscription, deliberately: this is
-    // the same state that made <TranslatableDynamic> fall back, so the icon
-    // cannot disagree with the text next to it. A separate flag here would
-    // drift the moment one of the two paths changed.
-    // Called unconditionally — the status test is applied to its RESULT, not
-    // used to decide whether to subscribe.
-    const languageBlocked = useTranslationBlocked(appLanguage) !== null;
-    const translationFailed = translateStatus === 'translatable' && languageBlocked;
-    const [showFailureTip, setShowFailureTip] = useState(false);
-
-    // Pastel yellow, not red: the device can't translate this one, but Google
-    // Translate can — that's an alternative route, not a failure. Red is
-    // reserved for the case above, where translation was supposed to work.
-    const translateColor = translationFailed
-        ? '#F87171'
-        : translateStatus === 'not-translatable' ? '#FDE68A' : '#86EFAC';
-    // M6: the language label only when it tells the reader something. An
-    // article already in the reader's language needs no "English" and no
-    // translate glyph next to it.
-    const sameLanguage = !!languageCode && !!appLanguage &&
-        languageCode.split('-')[0].toLowerCase() === appLanguage.split('-')[0].toLowerCase();
-    const showLanguageSlot = !!languageCode && (!sameLanguage || translationFailed);
+    const showLanguageSlot = !!languageCode;
     const showPublicationSlot = !!publication;
 
-    const dot = (
-        <Text size="xs" className={secondaryColor} accessibilityElementsHidden importantForAccessibility="no">
-            ·
-        </Text>
-    );
-
-    return (
-        // M5: GROUPED LEFT, one reading line: flag, publication, age, then the
-        // language. It used to be `justify-between`, which spread four slots
-        // edge to edge and read as four unrelated labels.
-        //
-        // TRUNCATION ORDER, enforced by flex rather than measurement: the time
-        // never shrinks (`flexShrink: 0`); the language shrinks a thousand times
-        // faster than the publication, so under pressure it collapses to nothing
-        // first (its slot clips, dot and glyph included), and only then does
-        // the publication truncate with an ellipsis.
-        <HStack className="items-center" space="xs" style={{ minWidth: 0 }}>
-            {/* 1. Country flag. Tappable on the detail screen to name the country.
-                Hidden when `showFlag` is false (compact card shows it in its footer). */}
-            {showFlag ? (
-                <Box className="flex-shrink-0">
-                    {isCard ? (
-                        <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
-                    ) : (
-                        <SourceCountryFlag countryCode={countryCode} iconClassName="text-gray-400" />
-                    )}
-                </Box>
-            ) : null}
-
-            {/* 2. Publication: truncates second, after the language is gone. */}
-            {showPublicationSlot ? (
-                <Text
-                    size="xs"
-                    bold
-                    className={secondaryColor}
-                    numberOfLines={1}
-                    style={{ flexShrink: 1, minWidth: 0 }}
-                >
-                    {publication}
-                </Text>
-            ) : null}
-
-            {/* 3. Age (+ optional NEW badge). Never shrinks. Omitted wholesale
-                when `showRecency` is false; see the prop's doc. */}
-            {showRecency ? (
-                <HStack className="items-center flex-shrink-0" space="xs">
-                    {showPublicationSlot || showFlag ? dot : null}
-                    <Text size="xs" className={ageColor}>
+    // ── The segments, shared by both layouts ────────────────────────────────
+    const ageEl =
+        showRecency ? (
+                <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-age-slot">
+                    <MaterialIcons name="schedule" size={14} color={iconColor} />
+                    <Text size="sm" className={ageColor}>
                         {age}
                     </Text>
-                    {/* A read card never shows NEW: read wins. */}
+                    {/* No read indicator is drawn. `read` still SUPPRESSES the NEW
+                        badge below — the seen mechanism is intact end to end (card
+                        state, the "All caught up" partition, scoring); it is only
+                        the eye glyph that is deliberately not shown. */}
+                    {/* A read card never shows NEW — read wins. */}
                     {isCard && isNew && !read ? (
                         <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
                             <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
@@ -181,55 +125,139 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                         </Box>
                     ) : null}
                 </HStack>
-            ) : null}
-
-            {/* 4. Caller-supplied accessory (the compact card's priority chip). */}
-            {centerAccessory ? (
-                <Box className="flex-shrink-0">{centerAccessory}</Box>
-            ) : null}
-
-            {/* 5. Language: shrinks FIRST (flexShrink 1000) and clips to nothing. */}
-            {showLanguageSlot ? (
-                <HStack
-                    className="items-center"
-                    space="xs"
-                    style={{ flexShrink: 1000, minWidth: 0, overflow: 'hidden' }}
-                    testID="meta-language-slot"
-                >
-                    {dot}
-                    {/* SAME glyph in every state: only the colour changes. The
-                        failed state additionally makes it tappable, because it
-                        is the only state that has anything to say. */}
-                    {translationFailed ? (
-                        <Tooltip
-                            placement="top"
-                            isOpen={showFailureTip}
-                            onClose={() => setShowFailureTip(false)}
-                            trigger={(triggerProps) => (
-                                <Pressable
-                                    {...triggerProps}
-                                    testID="meta-translate-failed"
-                                    hitSlop={8}
-                                    onPress={() => setShowFailureTip((v) => !v)}
-                                >
-                                    <MaterialIcons name="translate" size={12} color={translateColor} />
-                                </Pressable>
-                            )}
-                        >
-                            <TooltipContent>
-                                <TooltipText>{t('language.translationFailedTooltip')}</TooltipText>
-                            </TooltipContent>
-                        </Tooltip>
-                    ) : (
-                        <MaterialIcons name="translate" size={12} color={translateColor} />
-                    )}
+            ) : null;
+    const languageEl =
+        showLanguageSlot ? (
+                <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-language-slot">
                     {language ? (
-                        <Text size="xs" className={secondaryColor} numberOfLines={1}>
+                        <Text
+                            size="xs"
+                            className={secondaryColor}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            // A long language name trims too, instead of
+                            // squeezing the publication to nothing.
+                            style={{ maxWidth: LANGUAGE_MAX_WIDTH }}
+                        >
                             {language}
                         </Text>
                     ) : null}
                 </HStack>
+            ) : null;
+    const flagEl =
+        showFlag ? (
+                <Box style={{ flexShrink: 0 }} testID="meta-flag">
+                    {isCard ? (
+                        <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
+                    ) : (
+                        <SourceCountryFlag countryCode={countryCode} iconClassName="text-gray-400" />
+                    )}
+                </Box>
+            ) : null;
+
+    // COMPACT rows (no publication in this row; the publisher sits in their
+    // footer and the middle slot is the priority chip): time, chip, then flag
+    // and language together at the right, spread across the width.
+    if (!showPublicationSlot) {
+        return (
+            <HStack className="items-center justify-between" space="sm">
+                {ageEl}
+                {centerAccessory ? <Box style={{ flexShrink: 0 }}>{centerAccessory}</Box> : null}
+                {/* The flag sits immediately left of the language (owner). */}
+                <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-flag-language">
+                    {flagEl}
+                    {languageEl}
+                </HStack>
+            </HStack>
+        );
+    }
+
+    // CARD and DETAIL rows with a publication (owner spec):
+    //
+    //   |📰 De Telegraaf        🕒 22h        🇳🇱 Dutch|
+    //
+    // Publication LEFT (from the left edge up to the centre column, trimmed on
+    // the right with "…"), time CENTRED (never trimmed), flag + language RIGHT
+    // (never trimmed; no translate glyph in any state, owner decision). The two
+    // side columns are equal `flex: 1`, so the time stays truly centred however
+    // long either side is. Without a time (Feed cards) see below.
+    const flagAndLanguage = (
+        <HStack className="items-center" space="xs" style={{ flexShrink: 0 }}>
+            {flagEl}
+            {showLanguageSlot && language ? (
+                <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-language-slot">
+                    <Text
+                        size="xs"
+                        className={secondaryColor}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        style={{ maxWidth: LANGUAGE_MAX_WIDTH }}
+                    >
+                        {language}
+                    </Text>
+                </HStack>
             ) : null}
+        </HStack>
+    );
+
+    // No time (Feed cards, owner Q5): nothing to centre, so the publication
+    // takes all the width up to flag + language and trims on the right.
+    //
+    //   |📰 De Telegraaf                               🇳🇱 Dutch|
+    if (!showRecency) {
+        return (
+            <HStack className="items-center" space="sm" testID="meta-row">
+                <HStack
+                    className="items-center"
+                    space="xs"
+                    style={{ flex: 1, minWidth: 0 }}
+                    testID="meta-publication-slot"
+                >
+                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
+                    <Text
+                        size="xs"
+                        bold
+                        className={secondaryColor}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        style={{ flexShrink: 1, textAlign: 'left' }}
+                    >
+                        {publication}
+                    </Text>
+                </HStack>
+                {flagAndLanguage}
+            </HStack>
+        );
+    }
+
+    return (
+        <HStack className="items-center" testID="meta-row">
+            <HStack className="items-center" style={{ flex: 1, minWidth: 0 }} testID="meta-left">
+                <HStack
+                    className="items-center"
+                    space="xs"
+                    style={{ flexShrink: 1, minWidth: 0 }}
+                    testID="meta-publication-slot"
+                >
+                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
+                    <Text
+                        size="xs"
+                        bold
+                        className={secondaryColor}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        style={{ flexShrink: 1 }}
+                    >
+                        {publication}
+                    </Text>
+                </HStack>
+            </HStack>
+
+            <View style={{ flexShrink: 0, marginHorizontal: SIDE_GAP }}>{ageEl}</View>
+
+            <HStack className="items-center" style={{ flex: 1, justifyContent: 'flex-end' }} testID="meta-right">
+                {flagAndLanguage}
+            </HStack>
         </HStack>
     );
 };

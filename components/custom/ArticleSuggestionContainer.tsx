@@ -32,7 +32,6 @@ import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { reasonBoxColors } from '@/lib/relevance-utils';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import ReasonNote from '@/components/custom/cards/ReasonNote';
-import FactChip from '@/components/custom/cards/FactChip';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -204,11 +203,10 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         status === ArticleSuggestionStatus.ReasonPending && !reason;
 
     // Facts are queried only where a chip can appear: the card variant's chips
-    // on a complete, reason-less row (`factChipsEl` below), and the screen's
-    // ONE fact chip under a complete note (A2). Fetching for any other row is
-    // wasted DB work on every mount. The module-level LRU cache lets rows
-    // sharing a topic set skip the query entirely (perf A5).
-    const canRenderFactChips = isSuggestion && reasonReady && (!reason || variant !== 'card');
+    // on a complete, reason-less row (`factChipsEl` below). Fetching for any
+    // other row is wasted DB work on every mount. The module-level LRU cache
+    // lets rows sharing a topic set skip the query entirely (perf A5).
+    const canRenderFactChips = isSuggestion && reasonReady && !reason && variant === 'card';
     // Primitive dep — `suggestion.userTopicIds` is a fresh array each render, so
     // key the effect on its joined contents instead of the unstable ref.
     const topicIdsKey = (suggestion?.userTopicIds ?? []).join(' ');
@@ -304,7 +302,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             reason={reason}
             pendingSinceMs={pendingSinceMs(suggestion)}
             testID="detail-reason"
-            below={reason ? <FactChip fact={facts[0]} testID="detail-fact-chip" /> : undefined}
         />
     ) : null;
 

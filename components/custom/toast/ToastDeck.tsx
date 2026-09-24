@@ -1,13 +1,8 @@
 import { MENU_PANEL_BORDER, MENU_PANEL_FILL, TOAST_RADIUS, ToastFrontProvider } from '@/components/ui/toast';
-import {
-    close as closeToast,
-    useToastQueue,
-    type ToastEntry,
-    type ToastPlacement,
-} from '@/lib/toast/toast-queue';
+import { close as closeToast, useToastQueue, type ToastEntry } from '@/lib/toast/toast-queue';
 import React, { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, View, useWindowDimensions } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { AccessibilityInfo, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, {
     runOnJS,
     useAnimatedStyle,
@@ -16,9 +11,13 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FullWindowOverlay } from 'react-native-screens';
 
 /**
- * THE TOAST DECK — the single host for every in-app notification.
+ * THE TOAST DECK — the single host for every in-app notification, and the
+ * app's ONLY toast mechanism. It is one stack at the TOP of the screen. There
+ * is no bottom deck: every `show()` joins this stack behind the card already
+ * showing, whatever placement the caller names.
  *
  * It replaces gluestack's `ToastList`, which laid toasts out as a plain flex
  * column: a second toast rendered BELOW the first, a third below that, 4pt
@@ -28,8 +27,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  * piled up and then cleared together.
  *
  * Here the cards are a DECK: the front card is fully readable, the waiting ones
- * peek out behind it, scaled down and dimmed. The footprint is one card height
- * plus ~20pt of peek no matter how many are queued.
+ * peek out below it as narrower, dimmed strips. The footprint is one card height
+ * plus at most two 14pt strips, no matter how many are queued.
  *
  * Order is FIFO (owner call): the OLDEST card holds the front slot, later
  * arrivals wait behind it in arrival order and promote forward as each leaves.
@@ -42,17 +41,27 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const VISIBLE_DEPTH = 3;
 
 /**
- * Per-depth offset toward the middle of the screen, in points. Signed by
- * placement: a `top` deck peeks DOWNWARD, a `bottom` deck peeks upward.
+ * How much of each card behind the front one shows, in points. A buried card is
+ * drawn as ONLY this strip, hanging below the card in front of it; nothing of it
+ * lies over the front card's box.
  *
- * Bigger than the visible peek, because the scale below eats half of it: a
- * card scaled about its own centre pulls its bottom edge UP by
- * `height * (1 - scale) / 2`, which on a 140pt card is ~4pt at depth 1. At an
- * offset of 10 the sliver measured ~6pt on device and read as a rendering
- * artefact rather than a card. These land it at ~14pt per step.
+ * That is load-bearing, not tidiness. A buried card used to be a full-size,
+ * 55%-opaque panel sitting mostly UNDER the front card, and on device it
+ * painted OVER it despite rendering first and carrying a lower zIndex: the
+ * front's text measured 244 -> 160 brightness the moment a second toast queued.
+ * Geometry that cannot overlap does not depend on paint order at all.
  */
-const DEPTH_Y = [0, 18, 34];
-const DEPTH_SCALE = [1, 0.94, 0.88];
+const PEEK_PT = 14;
+
+/** Slot offset per depth. A strip's own top sits `PEEK_PT` above its slot's
+ *  offset, so depth d's strip spans [bottom + PEEK*(d-1), bottom + PEEK*d]. The
+ *  front (depth 0) also uses it as the travel a promoted card slides up. */
+const DEPTH_Y = [0, PEEK_PT, PEEK_PT * 2];
+/** Strip width relative to the front card: each step back is a little narrower,
+ *  which is what reads as a deck. Applied as WIDTH, never as a transform scale,
+ *  so a strip's edges stay exactly where the geometry puts them. */
+const DEPTH_WIDTH = [1, 0.94, 0.88];
+/** Only the strips are dimmed. The front card is always fully opaque. */
 const DEPTH_OPACITY = [1, 0.55, 0.3];
 
 /** The pre-existing enter feel, kept deliberately: fade in over 150ms from 24pt
@@ -106,7 +115,6 @@ function useReduceMotion(): boolean {
 
 interface SlotProps {
     entry: ToastEntry;
-    placement: ToastPlacement;
     /** 0 is the front card. */
     depth: number;
     reduceMotion: boolean;
@@ -119,7 +127,6 @@ interface SlotProps {
 
 function ToastSlot({
     entry,
-    placement,
     depth,
     reduceMotion,
     frontSize,
@@ -137,26 +144,19 @@ function ToastSlot({
     // threw "Dimensions.get is not a function" on the first real swipe, which
     // no test could see. A plain number closes over fine.
     const { height: screenHeight } = useWindowDimensions();
-    // `top` decks stack downward, `bottom` decks upward. Every offset in this
-    // component is expressed as a positive magnitude times this sign.
-    const dir = placement === 'top' ? 1 : -1;
-
     const translateY = useSharedValue(0);
-    const scale = useSharedValue(1);
     const opacity = useSharedValue(0);
     const dragY = useSharedValue(0);
     const mounted = useRef(false);
 
     useEffect(() => {
         const clamped = Math.min(depth, DEPTH_Y.length - 1);
-        const targetY = DEPTH_Y[clamped] * dir;
-        const targetScale = DEPTH_SCALE[clamped];
+        const targetY = DEPTH_Y[clamped];
         const targetOpacity = DEPTH_OPACITY[clamped];
         const motionMs = reduceMotion ? 0 : PROMOTE_MS;
 
         if (!mounted.current) {
             mounted.current = true;
-            scale.value = targetScale;
             if (leaving) {
                 // An exit clone is a fresh mount of a card the user was already
                 // looking at. It starts exactly where that card was and only
@@ -168,7 +168,7 @@ function ToastSlot({
             if (depth === 0) {
                 // Into an empty deck: the original enter, sliding in from
                 // outside the safe area.
-                translateY.value = reduceMotion ? targetY : targetY - ENTER_OFFSET * dir;
+                translateY.value = reduceMotion ? targetY : targetY - ENTER_OFFSET;
                 translateY.value = withTiming(targetY, { duration: reduceMotion ? 0 : ENTER_MS });
             } else {
                 // Arriving BEHIND a card that is already showing — the common
@@ -182,18 +182,17 @@ function ToastSlot({
         }
 
         translateY.value = withTiming(targetY, { duration: motionMs });
-        scale.value = withTiming(targetScale, { duration: motionMs });
         opacity.value = withTiming(targetOpacity, { duration: motionMs });
-    }, [depth, dir, leaving, reduceMotion, opacity, scale, translateY]);
+    }, [depth, leaving, reduceMotion, opacity, translateY]);
 
     // The exit: fade back out the way the card came in.
     useEffect(() => {
         if (!leaving) return;
         opacity.value = withTiming(0, { duration: EXIT_MS });
         if (depth === 0 && !reduceMotion) {
-            translateY.value = withTiming(-ENTER_OFFSET * dir, { duration: EXIT_MS });
+            translateY.value = withTiming(-ENTER_OFFSET, { duration: EXIT_MS });
         }
-    }, [leaving, depth, dir, reduceMotion, opacity, translateY]);
+    }, [leaving, depth, reduceMotion, opacity, translateY]);
 
     const pan = Gesture.Pan()
         .enabled(isFront)
@@ -204,14 +203,15 @@ function ToastSlot({
         // Leave horizontal gestures (navigation's edge swipe) alone.
         .failOffsetX([-20, 20])
         .onUpdate((event) => {
-            const towards = dir === 1 ? Math.min(event.translationY, 0) : Math.max(event.translationY, 0);
+            // Dismissal is a swipe UP, off the top edge.
+            const towards = Math.min(event.translationY, 0);
             const against = event.translationY - towards;
             // Rubber-band the wrong way rather than refusing to move, so the
             // card never feels stuck.
             dragY.value = towards + against * 0.2;
         })
         .onEnd((event) => {
-            const away = -dir;
+            const away = -1;
             const travelled = event.translationY * away;
             const flicked = event.velocityY * away;
             if (travelled > SWIPE_DISTANCE || flicked > SWIPE_VELOCITY) {
@@ -227,7 +227,7 @@ function ToastSlot({
 
     const animatedStyle = useAnimatedStyle(() => ({
         opacity: opacity.value,
-        transform: [{ translateY: translateY.value + dragY.value }, { scale: scale.value }],
+        transform: [{ translateY: translateY.value + dragY.value }],
     }));
 
     return (
@@ -240,13 +240,20 @@ function ToastSlot({
             // measures it at zero collapses every toast to an icon-only sliver.
             // An absolutely positioned child is NOT centered by a parent's
             // `alignItems`, so the transform has to live out here.
+            testID={leaving ? 'toast-slot-leaving' : `toast-slot-${depth}`}
             style={[
                 {
                     position: 'absolute',
                     left: 0,
                     right: 0,
-                    [placement === 'top' ? 'top' : 'bottom']: 0,
+                    top: 0,
                     alignItems: 'center',
+                    // STACKING IS EXPLICIT, never left to sibling order. On
+                    // device the buried panel painted OVER the front card: the
+                    // front's text read as dimmed to ~60% (a 55% panel on top)
+                    // and no peek showed. Front highest; a leaving clone above
+                    // all, since it must cover the card promoting behind it.
+                    zIndex: leaving ? VISIBLE_DEPTH + 1 : VISIBLE_DEPTH - depth,
                 },
                 animatedStyle,
             ]}
@@ -288,14 +295,20 @@ function ToastSlot({
                         <View
                             testID="toast-buried-panel"
                             style={{
-                                // The 4pt is `Toast`'s own `m-1`, which the
-                                // measured box includes.
-                                margin: 4,
-                                width: Math.max(0, frontSize.width - 8),
-                                height: Math.max(0, frontSize.height - 8),
-                                borderRadius: TOAST_RADIUS,
+                                // Starts at the front card's bottom edge (the
+                                // 4pt is `Toast`'s own `m-1`, which the measured
+                                // box includes), less this slot's own offset.
+                                marginTop: Math.max(0, frontSize.height - 4 - PEEK_PT),
+                                width: Math.max(
+                                    0,
+                                    (frontSize.width - 8) * DEPTH_WIDTH[Math.min(depth, DEPTH_WIDTH.length - 1)],
+                                ),
+                                height: PEEK_PT,
+                                borderBottomLeftRadius: TOAST_RADIUS,
+                                borderBottomRightRadius: TOAST_RADIUS,
                                 backgroundColor: MENU_PANEL_FILL,
                                 borderWidth: 1,
+                                borderTopWidth: 0,
                                 borderColor: MENU_PANEL_BORDER,
                             }}
                         />
@@ -306,7 +319,7 @@ function ToastSlot({
     );
 }
 
-function DeckColumn({ placement, entries }: { placement: ToastPlacement; entries: ToastEntry[] }) {
+function DeckColumn({ entries }: { entries: ToastEntry[] }) {
     const insets = useSafeAreaInsets();
     const reduceMotion = useReduceMotion();
     const [frontSize, setFrontSize] = useState<{ width: number; height: number } | undefined>(
@@ -352,7 +365,6 @@ function DeckColumn({ placement, entries }: { placement: ToastPlacement; entries
             <ToastSlot
                 key={entry.id}
                 entry={entry}
-                placement={placement}
                 depth={depth}
                 reduceMotion={reduceMotion}
                 frontSize={frontSize}
@@ -367,7 +379,7 @@ function DeckColumn({ placement, entries }: { placement: ToastPlacement; entries
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                ...(placement === 'top' ? { top: insets.top } : { bottom: insets.bottom }),
+                top: insets.top,
             }}
             pointerEvents="box-none"
         >
@@ -378,7 +390,6 @@ function DeckColumn({ placement, entries }: { placement: ToastPlacement; entries
                 <ToastSlot
                     key={`leaving-${entry.id}`}
                     entry={entry}
-                    placement={placement}
                     depth={depth}
                     reduceMotion={reduceMotion}
                     frontSize={frontSize}
@@ -393,14 +404,44 @@ function DeckColumn({ placement, entries }: { placement: ToastPlacement; entries
 /**
  * Mounted once, at the root, as the LAST child so it paints above the router
  * stack, the tab bar and the floating chat bubble.
+ *
+ * ABOVE A MODAL, TOO, on iOS. An RN `Modal` is a presented view controller, so
+ * a root sibling paints UNDER it however late it mounts: a toast fired while
+ * the ••• sheet or any other Modal is open would sit hidden beneath it and run
+ * out its timer unseen. `FullWindowOverlay` (react-native-screens, already in
+ * the binary) adds its container to the key window when it MOUNTS, which is why
+ * it mounts only while the deck holds a card: each burst attaches on top of
+ * whatever is presented at that moment. It is a separate native root, so it
+ * needs its own `GestureHandlerRootView` or the swipe never fires. Both are
+ * `box-none`: the overlay container returns no hit view of its own, so a touch
+ * beside the card falls through to the screen or the Modal below.
+ *
+ * Android has no equivalent: an RN Modal there is its own Dialog window and
+ * this deck paints under it. Toasting from inside a Modal on Android needs a
+ * host mounted inside that Modal; none exists yet.
  */
 export default function ToastDeck() {
-    const top = useToastQueue((state) => state.top);
-    const bottom = useToastQueue((state) => state.bottom);
+    const entries = useToastQueue((state) => state.entries);
+    const [lingering, setLingering] = useState(false);
+    // Stay mounted through the last card's exit fade, then detach.
+    useEffect(() => {
+        if (entries.length > 0) {
+            setLingering(true);
+            return;
+        }
+        const handle = setTimeout(() => setLingering(false), EXIT_MS + 50);
+        return () => clearTimeout(handle);
+    }, [entries.length]);
+
+    if (entries.length === 0 && !lingering) return null;
+
+    const column = <DeckColumn entries={entries} />;
+    if (Platform.OS !== 'ios') return column;
     return (
-        <>
-            <DeckColumn placement="top" entries={top} />
-            <DeckColumn placement="bottom" entries={bottom} />
-        </>
+        <FullWindowOverlay>
+            <GestureHandlerRootView style={StyleSheet.absoluteFill} pointerEvents="box-none">
+                {column}
+            </GestureHandlerRootView>
+        </FullWindowOverlay>
     );
 }

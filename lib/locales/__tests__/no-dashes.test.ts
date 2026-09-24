@@ -15,10 +15,17 @@ const DASH = /[—–]/g;
 const HAS_DASH = /[—–]/;
 const EXEMPT = new Set(['ja', 'zh-CN', 'zh-TW', 'ru', 'uk']);
 
-/** Dash occurrences per non-English locale, measured after the ux1 sweep. */
+/**
+ * Dash occurrences per non-English locale, measured after the ux1 sweep and
+ * again after the feedbackTree description fix. Tightened to the TRUE count
+ * on that second pass: every value here had drifted 13-18 dashes above the
+ * real count (e.g. `ar` read 38 when the file held 23), which is 13-18
+ * dashes of silent slack a locale could have gained without this test ever
+ * tripping. Lower it further whenever a locale improves; never raise it.
+ */
 const BASELINE: Record<string, number> = {
-  ar: 38, de: 47, es: 35, fr: 38, hi: 37, id: 38, it: 38, ko: 25, nl: 38,
-  pl: 38, 'pt-BR': 38, th: 29, tr: 37, vi: 38,
+  ar: 20, de: 29, es: 19, fr: 20, hi: 20, id: 20, it: 20, ko: 12, nl: 20,
+  pl: 20, 'pt-BR': 20, th: 14, tr: 20, vi: 20,
 };
 
 /**
@@ -79,6 +86,27 @@ describe('locale dash rule', () => {
       0,
     );
     expect(count).toBeLessThanOrEqual(BASELINE[locale]);
+  });
+
+  // The whole-locale ratchet above is a TOTAL COUNT, not a per-key gate: a
+  // key can carry a dash forever as long as its locale's total stays under
+  // baseline. That is exactly why the three feedbackTree description keys
+  // sat with a visible dash for a long time (ux1 P2) without ever failing
+  // this suite — each locale's total was still comfortably under its
+  // (stale) baseline. This is a permanent, narrow gate for those three keys
+  // specifically, so THIS regression can't recur even if a locale's total
+  // has room again. It does not generalize to "every key, every locale":
+  // the BASELINE counts above are still non-zero, so a blanket zero-dash
+  // rule across all keys would fail today on real, pre-existing copy this
+  // fix never touched.
+  it.each(Object.keys(BASELINE))('%s: the three feedbackTree description keys stay dash-free', (locale) => {
+    const dict = new Map(leaves(read(`${locale}.json`)));
+    const offenders = [
+      'feedbackTree.paywallRelatedDesc',
+      'feedbackTree.paywallSubscribeDesc',
+      'feedbackTree.managePublicationsDesc',
+    ].filter((k) => HAS_DASH.test(dict.get(k) ?? ''));
+    expect(offenders).toEqual([]);
   });
 
   it('every non-exempt locale has a baseline', () => {

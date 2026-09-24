@@ -63,9 +63,8 @@
 //
 // Each card carries a small borderless action bar (like / dislike / save /
 // share); Ask-Mera lives on the card's rationale block. Tapping a thumb records
-// a verdict and reveals the card's inline feedback surface
-// (CardFeedbackSurface). Every one of those interactions — plus opening the card
-// — marks it `viewed`.
+// a verdict and opens the shared ••• sheet at that verdict's feedback tree.
+// Every one of those interactions — plus opening the card — marks it `viewed`.
 // The header is the "Feed" heading, a small pipeline-status glyph, and the
 // importance-filter chip — and nothing else. It used to also carry the
 // notification bell, a full-width indeterminate progress bar and the 24h counts
@@ -90,8 +89,9 @@ import {
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
-import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
+import FeedStatusMark from '@/components/custom/feed/FeedStatusMark';
+import { StatusDropdownLayer, StatusDropdownProvider } from '@/components/custom/for-you/status-dropdown';
+import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import {
   headerTitleLineHeight,
@@ -99,16 +99,16 @@ import {
   HEADER_TITLE_MIN_SCALE,
 } from '@/lib/typography/header-title-size';
 import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
-import HeaderNarrationLine from '@/components/custom/for-you/HeaderNarrationLine';
 import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
-import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
-import { HEADER_NARRATION_METRICS } from '@/components/custom/for-you/header-narration';
+import FeedHeaderTitleRow, { feedMarkMode } from '@/components/custom/feed/FeedHeaderTitleRow';
 import NewStoriesPill from '@/components/custom/feed/NewStoriesPill';
+import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
+import { pressNewStoriesPill } from '@/components/custom/feed/new-stories-pill';
 import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
@@ -125,7 +125,6 @@ import {
   type CardFeedbackHandlers,
   type VerdictStoreAdapter,
 } from './use-feedback-sheet';
-import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -201,11 +200,6 @@ const ARRIVAL_STAGGER_CAP = 5;
  *  never re-animates it. */
 const ARRIVAL_ELIGIBLE_MS = 600;
 
-/** Above this Dynamic Type scale the narration row may wrap to three lines
- *  (the header grows once) instead of truncating to one. Same value as the
- *  Dashboard's. */
-const LARGE_TEXT_SCALE = 1.2;
-
 /** Show the scroll-to-top FAB once the feed is scrolled past this many px. */
 const SCROLL_THRESHOLD = 300;
 
@@ -247,10 +241,6 @@ const FeedRow = React.memo(function FeedRow({
   enterDelay: number | null;
 }) {
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
-  const path = useFeedOrderStore((s) => s.verdicts[item.id]?.path);
-  // NOT `path.length > 0` — a branch descent writes a path and commits nothing.
-  const committed = useFeedOrderStore((s) => !!s.verdicts[item.id]?.committed);
-  const surfaceClosed = useFeedbackDismissedStore((s) => !!s.dismissed[item.id]);
   // ONE predicate decides both the read indicator and which block of the sort
   // this card lands in — otherwise a card could show the read state while
   // sitting among the unviewed. Note `articleIds`, not the union `ids`: a
@@ -284,9 +274,6 @@ const FeedRow = React.memo(function FeedRow({
       onVerdict={onVerdict}
       onAskMera={onAskMera}
       onSaveToggled={onSaveToggled}
-      feedbackVisible={verdict != null && !surfaceClosed}
-      feedbackInitialPath={path}
-      feedbackCommitted={committed}
       feedbackHandlers={feedbackHandlers}
       // Seen stories get ONLY the eye indicator (`read`) — no dimming.
       // Dimming is reserved for a recorded verdict (like/dislike).
@@ -327,32 +314,30 @@ const FeedScreen: React.FC = () => {
   // The user's geo/language context (home/other countries + app language) —
   // makes representative election tier-aware. Null while loading/on failure,
   // which `buildFeedList` treats as the legacy geo/language-blind pick.
-  const userGeoLanguageCtx = useUserGeoLanguageContext();
+  // Frozen per reading session (see use-session-geo-context): a publication
+  // preference written from a card's ••• sheet must not regroup and re-sort
+  // the stories under the reader. `sessionEpoch` is bumped by `resetSession`.
+  const [sessionEpoch, setSessionEpoch] = useState(0);
+  const userGeoLanguageCtx = useSessionGeoLanguageContext(useUserGeoLanguageContext(), sessionEpoch);
 
-  // Status mark + its detail panel. 3000ms: this screen is for reading, so the
-  // panel answers the question and then leaves. (The Dashboard mounts the same
-  // pair with no timeout — there, staying open is the point.)
+  // Status mark + its panel. The mark (FeedStatusMark) drops the panel down
+  // under the title row through the screen's StatusDropdownProvider, and it
+  // closes itself after STATUS_PANEL_AUTO_COLLAPSE_MS, exactly as the
+  // Dashboard's stats card does (owner: "make them similar"). A DROPDOWN, never
+  // an inline panel: the inline one grew the header, re-padded the list, and
+  // left it ~99pt down after closing (captured).
   //
-  // `available` is hard-coded true. It used to be `isStatusVisible(statusMode)`,
-  // which existed to stop the panel being stranded on screen after the mark that
-  // opened it unmounted at the end of a sync. The mark no longer unmounts in any
-  // state, so that guard now only does harm: it would slam the panel shut under
-  // a reader the moment the pipeline went idle, with the tappable mark still
-  // sitting right there.
+  // The mark is on screen in every state (owner): small and still at rest,
+  // bigger with its strokes drawing on while a sync narrates.
   // Title ceiling from the window width; see header-title-size for why this is
   // two steps and not a ramp.
-  const { width: windowWidth, fontScale } = useWindowDimensions();
+  const { width: windowWidth } = useWindowDimensions();
   const titleSize = headerTitleSize(windowWidth);
   // Pinned, in BOTH states — see `headerTitleLineHeight`. Without it the row
   // shrinks when the title steps aside for the narration line and the whole
   // list moves under the reader, twice per sync.
   const titleRowHeight = headerTitleLineHeight(windowWidth);
 
-  const statusMode = useFeedStatusMode();
-  const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
-    true,
-    3000,
-  );
 
   // ONE value drives the hidden title, the narration line and the strip.
   // `isFeedProcessing`, NEVER `statusMode === 'processing'` — that one is
@@ -361,6 +346,11 @@ const FeedScreen: React.FC = () => {
   // roughly twelve times an hour to announce a poll that found nothing. This
   // is the reading surface; that would be the billboard `7e96aa4` deleted.
   const narrating = useIsFeedProcessing();
+  const statusMode = useFeedStatusMode();
+  const markMode = feedMarkMode(narrating, statusMode);
+  // The screen announces entering the capped or error state (see the hook).
+  useFeedModeAnnouncement(statusMode);
+  const titleRowRef = useRef<View>(null);
   // The STAGE only. On-device is its own store read, the same one the
   // snapshot itself makes, so no parameter is added to the snapshot.
   const { stage: narrationStage } = useProcessingSnapshot();
@@ -469,6 +459,7 @@ const FeedScreen: React.FC = () => {
    * reason. One function, so the two can never drift apart.
    */
   const resetSession = useCallback(() => {
+    setSessionEpoch((e) => e + 1);
     refreshPartitionSnapshot();
     setPinnedIds([]);
     resetDeepestSeen();
@@ -641,8 +632,8 @@ const FeedScreen: React.FC = () => {
 
   // ── "New stories" pill (N1) ──
   // Arrivals that landed while the reader was scrolled down. They land below
-  // the pinned prefix, i.e. below what the reader has read, so the pill points
-  // down and scrolls to the first of them.
+  // the pinned prefix, i.e. below what the reader has read. Tapping the pill
+  // refreshes exactly like a pull at the top (re-sort, re-pin, back to top).
   const [awayArrivals, setAwayArrivals] = useState<ReadonlySet<string>>(() => new Set());
   const hasAwayArrivalsShared = useSharedValue(false);
   useEffect(() => {
@@ -662,12 +653,6 @@ const FeedScreen: React.FC = () => {
     hasAwayArrivalsShared.value = false;
     setAwayArrivals((prev) => (prev.size === 0 ? prev : new Set()));
   }, [hasAwayArrivalsShared]);
-  const showNewStories = useCallback(() => {
-    const index = listData.findIndex((it) => awayArrivals.has(it.id));
-    clearAwayArrivals();
-    if (index < 0) return;
-    listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
-  }, [listData, awayArrivals, clearAwayArrivals]);
 
   // Seed the pin the first time the list is non-empty. This is NOT redundant
   // with the extend inside the ingest effect: on a cold launch the first ingest
@@ -803,6 +788,12 @@ const FeedScreen: React.FC = () => {
     resetSession();
     onRefreshSync();
   }, [flushSkips, resetSession, onRefreshSync]);
+
+  // The "New stories" pill IS a pull-to-refresh (see new-stories-pill.ts).
+  const showNewStories = useCallback(
+    () => pressNewStoriesPill(clearAwayArrivals, onRefresh),
+    [clearAwayArrivals, onRefresh],
+  );
 
   // Re-tap the Feed tab icon → scroll to top; tap again at the top → refresh.
   // Deliberately the SAME `onRefresh` the RefreshControl below calls, not
@@ -1010,20 +1001,11 @@ const FeedScreen: React.FC = () => {
     return <AllCaughtUpCard />;
   };
 
-  // ── The title row: title, status mark, explainer ─────────────────────────
+  // ── The title row: title, explainer, narration, status mark ─────────────
   //
-  // The title and the mark never reorder or swap out, so `FeedStatusIndicator`
-  // cannot remount mid-run and restart its sweep. The sync narration is NOT in
-  // this row any more: it has its own pinned row below (`feedStatusRow`), the
-  // same layout as the Dashboard, so the two headers now read alike.
-  const feedStatusMark = (
-    <FeedStatusIndicator
-      mode={statusMode}
-      expanded={statusExpanded}
-      onPress={toggleStatus}
-      testID="feed-status-indicator"
-    />
-  );
+  // Nothing here reorders or swaps out, so the mark never remounts and its
+  // draw-on never restarts mid-sync.
+  const feedStatusMark = <FeedStatusMark mode={markMode} anchorRef={titleRowRef} />;
   const feedTitleSlot = (
     <View pointerEvents="none" className="flex-shrink min-w-0">
       {/* A bare 1-line clamp truncated the screen's own name at large Dynamic
@@ -1043,34 +1025,11 @@ const FeedScreen: React.FC = () => {
       </Heading>
     </View>
   );
-  // THE TITLE STANDS ALONE; the sync narration has its OWN full-width row
-  // under it (D6 / N11, same rule as the Dashboard). The row is height-PINNED
-  // in every state, empty included, so a sync starting or ending never moves
-  // the header, the list padding or the refresh spinner offset. One line at
-  // every text size up to large; at a large size it may wrap to three and the
-  // header grows once.
-  const statusRowLines = fontScale > LARGE_TEXT_SCALE ? 3 : 1;
-  const statusRowStyle =
-    statusRowLines === 1
-      ? { height: HEADER_NARRATION_METRICS.lineHeight }
-      : { minHeight: HEADER_NARRATION_METRICS.lineHeight };
-  const feedStatusRow = (
-    <View pointerEvents="none" style={statusRowStyle} testID="feed-status-row">
-      {narrating ? (
-        <View testID="feed-header-narration">
-          <HeaderNarrationLine
-            stage={narrationStage}
-            onDevice={narrationOnDevice}
-            layout="row"
-            maxLines={statusRowLines}
-            testID="feed-narration-line"
-          />
-        </View>
-      ) : null}
-    </View>
-  );
   return (
     // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+    // The provider is context only, no view, so the tab's first subview (the
+    // one react-native-screens walks to) is unchanged.
+    <StatusDropdownProvider>
     <Box className="flex-1" testID="feed-screen">
             {/* App-wide tab background. Must be the FIRST child so it paints behind
                 everything else on the page. */}
@@ -1251,49 +1210,33 @@ const FeedScreen: React.FC = () => {
           pointerEvents="box-none"
           style={{ paddingTop: insets.top + 16 }}
         >
-          {/* Title and status glyph — and nothing else. The notification bell
-              used to sit at the right edge of this row; it lives on the
-              Dashboard only now, and the High/Med/Low priority chip that sat
-              beside it has been removed outright. This screen is the reading
-              surface, and every additional affordance here is something that
+          {/* Title, "?", the inline sync narration and the status mark. The
+              notification bell and the priority chip that once sat here are
+              gone: this is the reading surface, and every extra affordance
               competes with the story you are trying to read. */}
-          <HStack
-            className="items-center"
-            pointerEvents="box-none"
-            style={{ height: titleRowHeight }}
-            testID="feed-header-title-row"
-          >
-            <HStack
-              className="flex-1 min-w-0 items-center"
-              space="sm"
-              pointerEvents="box-none"
-            >
-              {feedTitleSlot}
-              {feedStatusMark}
-              {/* Trailing slack. It stops a short title from being centred and
-                  keeps the status mark tight against it. `flex-basis: 0` means
-                  it contributes nothing to the row's natural width, so a long
-                  localized title still takes the whole row and truncates rather
-                  than being squeezed by a spacer. `pointerEvents="none"`: this
-                  is a full-height band across the header and would otherwise
-                  swallow a pull-to-refresh pan (see the rule above). */}
-              <View pointerEvents="none" className="flex-1" />
-            </HStack>
-            {/* N4: what this tab is and how it orders stories. */}
-            <TabExplainerButton tab="feed" testID="feed-explainer-open" />
-          </HStack>
-
-          {/* The sync narration's own pinned row (see `feedStatusRow`). */}
-          {feedStatusRow}
+          <FeedHeaderTitleRow
+            height={titleRowHeight}
+            title={feedTitleSlot}
+            mark={feedStatusMark}
+            narrating={narrating}
+            stage={narrationStage}
+            onDevice={narrationOnDevice}
+            rowRef={titleRowRef}
+            // N4: what this tab is and how it orders stories.
+            explainer={<TabExplainerButton tab="feed" testID="feed-explainer-open" />}
+          />
 
           {/* The 24h counts sentence that used to sit here is gone — it lives
               on the Dashboard, which is the screen for looking at numbers. It
-              is still one tap away: the panel below carries the same counts. */}
+              is still one tap away: the mark's dropdown carries the same counts. */}
 
-          {/* Opened by the glyph above, and closes itself after 3s. */}
-          <View pointerEvents="box-none">
-            <FeedStatusPanel expanded={statusExpanded} mode={statusMode} />
-          </View>
+          {/* Holds the header at the height every capture was measured
+              against (143pt at 402pt wide): the inline status panel's
+              always-mounted wrapper used to be this VStack's last child, and
+              the `space="xs"` gap before it was part of the header. Removing
+              the wrapper shrank the header to 139.3pt and moved every card up.
+              Empty and `none`: it draws nothing and takes no touch. */}
+          <View pointerEvents="none" testID="feed-header-bottom-spacer" />
         </VStack>
       </Animated.View>
 
@@ -1311,7 +1254,12 @@ const FeedScreen: React.FC = () => {
 
       {/* One-time "What's new" sheet (carried over from the old feed screen). */}
       <WhatsNewSheet />
+
+      {/* The mark's status dropdown, over the list AND the header, LAST. In
+          the screen, not a Modal, so the tab bar stays live. */}
+      <StatusDropdownLayer testIDPrefix="feed-status" />
     </Box>
+    </StatusDropdownProvider>
   );
 };
 

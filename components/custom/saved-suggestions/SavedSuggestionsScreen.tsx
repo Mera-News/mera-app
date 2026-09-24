@@ -185,7 +185,9 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
 
     const renderItem: ListRenderItem<SavedItem> = useCallback(
         ({ item }) => (
-            <Box className="relative">
+            // `mx-4`: the SAME inset as the info note above the list, so the
+            // cards no longer run edge to edge under an inset note.
+            <Box className="relative mx-4" testID={`saved-item-${savedItemId(item)}`}>
                 {/* Both rows pass `flat`: it is the surface the Feed and
                     Dashboard article cards render through (rounded-2xl, hairline
                     border, drop shadow, full-bleed hero), and Saved is the same

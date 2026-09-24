@@ -1,19 +1,51 @@
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { observeUnseenTotal } from '@/lib/database/services/tracked-story-service';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, ScrollView, View } from 'react-native';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+
+/**
+ * Accessibility roles for the row and each pill, per platform.
+ *
+ * iOS: React Native maps `tabbar` to UIAccessibilityTraitTabBar but maps `tab`
+ * to NO trait at all (react-native accessibilityPropsConversions.h), so a pill
+ * marked `tab` is a traitless element: captured on the simulator, every pill
+ * read as `Other`. A UIKit tab bar item is a BUTTON inside a TabBar-trait
+ * container, and that pairing is what VoiceOver reads as "tab, N of 5".
+ * Android has real `tab` / `tablist` roles.
+ */
+export function subTabA11yRoles(os: string): { row: 'tabbar' | 'tablist'; pill: 'button' | 'tab' } {
+    return os === 'ios' ? { row: 'tabbar', pill: 'button' } : { row: 'tablist', pill: 'tab' };
+}
+const A11Y_ROLES = subTabA11yRoles(Platform.OS);
+
+/**
+ * The pressable's vertical padding around the 35-37pt chip, so each pill's
+ * touch frame is at least 44pt. The row gives it back as a negative margin, so
+ * the header does not grow. Padding, not hitSlop: the ScrollView clips touches
+ * to its own bounds, so a slop reaching outside the row would never land.
+ */
+export const PILL_FRAME_PAD = 5;
 
 export type ForYouSubTab = 'feed' | 'stories' | 'saved' | 'history' | 'factChecks';
 
 interface ForYouSubTabsProps {
     readonly activeSubTab: ForYouSubTab;
     readonly onSelect: (tab: ForYouSubTab) => void;
+    /**
+     * The host's horizontal padding. The row pulls itself out by this much and
+     * puts it back as content padding, so at rest the first pill lines up with
+     * the title while scrolled pills run to the SCREEN edges instead of being
+     * clipped at the header's inner padding. Works with or without a header
+     * plate behind it. Default 0: no bleed.
+     */
+    readonly bleed?: number;
 }
 
 interface TabDef {
@@ -42,59 +74,14 @@ const TABS: readonly TabDef[] = [
     { key: 'history', icon: 'history', labelKey: 'forYou.subTabHistory' },
 ];
 
-/** Slack before a fade shows, so a sub-pixel offset does not flicker one in. */
-const FADE_SLOP = 4;
-/** Each fade is stepped bands (no CSS gradient on iOS here). Darkest at the edge. */
-export const PILL_FADE_BANDS = [0.55, 0.4, 0.25, 0.12] as const;
-const PILL_FADE_BAND_WIDTH = 6;
-
 /**
- * Which edges hide pills. A fade at an edge is the ONLY sign more pills exist
- * past it: at 402pt the five pills total ~570pt, so Fact checks and Visited sit
- * off-screen at rest, and a row that simply stops reads as all there is.
- */
-export function pillEdgeFades(
-  scrollX: number,
-  viewportWidth: number,
-  contentWidth: number,
-): { left: boolean; right: boolean } {
-  if (viewportWidth <= 0 || contentWidth <= viewportWidth + FADE_SLOP) {
-    return { left: false, right: false };
-  }
-  return {
-    left: scrollX > FADE_SLOP,
-    right: scrollX + viewportWidth < contentWidth - FADE_SLOP,
-  };
-}
-
-function EdgeFade({ side }: { side: 'left' | 'right' }) {
-  return (
-    <View
-      testID={`dashboard-subtabs-fade-${side}`}
-      pointerEvents="none"
-      style={{
-        position: 'absolute',
-        top: 0,
-        bottom: 0,
-        [side]: 0,
-        width: PILL_FADE_BANDS.length * PILL_FADE_BAND_WIDTH,
-        flexDirection: side === 'left' ? 'row' : 'row-reverse',
-      }}
-    >
-      {PILL_FADE_BANDS.map((alpha) => (
-        <View
-          key={alpha}
-          style={{ width: PILL_FADE_BAND_WIDTH, backgroundColor: `rgba(12,12,14,${alpha})` }}
-        />
-      ))}
-    </View>
-  );
-}
-
-/**
- * The For-You sub-tab pill row — `[Feed] [Stories ●n] [Saved] [History] [Fact checks]`.
- * Pill styling mirrors Explore's ScopeChipRow (accent border, accent-filled active
- * chip). The Stories pill carries a live badge with the total unseen tracked-story
+ * The For-You sub-tab pill row — `[Overview] [Stories ●n] [Saved] [Fact checks] [History]`.
+ * Pill styling is Explore's ScopeChipRow, copied token for token (owner: the
+ * orange outline, orange label and icon together were "too much"): inactive
+ * pills are a round `GlassPanel` with a white label, the active one a solid
+ * accent fill with a black label, and the icons stay because Explore keeps
+ * them. ScopeChipRow itself is not reusable (typed to places, add chip,
+ * long-press remove), so a change there has to be copied here by hand. The Stories pill carries a live badge with the total unseen tracked-story
  * count, subscribed here so it stays fresh without the parent re-rendering.
  *
  * FIVE pills now. The row was already a horizontal `ScrollView` (added when the
@@ -102,7 +89,7 @@ function EdgeFade({ side }: { side: 'left' | 'right' }) {
  * edge), so the fifth scrolls into reach on a narrow device rather than clipping
  * or squeezing its neighbours — no pill was shrunk to make room.
  */
-const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect }) => {
+const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, bleed = 0 }) => {
     const { t } = useTranslation();
     const [unseenTotal, setUnseenTotal] = useState(0);
 
@@ -126,17 +113,10 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
         if (!layout) return;
         // Left-align the pill with a little breathing room, clamped at 0 so the
         // first pills never scroll to a negative offset.
-        scrollRef.current?.scrollTo({ x: Math.max(0, layout.x - 12), animated: true });
-    }, [activeSubTab]);
-
-    // Edge fades: tracked from the ScrollView's own layout, content size and
-    // offset, all JS-side and throttled by the scroll event rate below.
-    const [geom, setGeom] = useState({ x: 0, viewport: 0, content: 0 });
-    const fades = pillEdgeFades(geom.x, geom.viewport, geom.content);
-    const onScroll = useCallback((e: any) => {
-        const x = e?.nativeEvent?.contentOffset?.x ?? 0;
-        setGeom((g) => (g.x === x ? g : { ...g, x }));
-    }, []);
+        // With a bleed the pill lands where the first one rests, in line with
+        // the title; without one, 12pt in from the row's edge as before.
+        scrollRef.current?.scrollTo({ x: Math.max(0, layout.x - (bleed ? 0 : 12)), animated: true });
+    }, [activeSubTab, bleed]);
 
     useEffect(() => {
         const sub = observeUnseenTotal().subscribe({
@@ -160,55 +140,36 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
     // so it never grows into the blank space below the row that pull-to-refresh
     // needs to pass through.
     return (
-        <View testID="dashboard-subtabs-row" pointerEvents="box-none">
+        <View
+            testID="dashboard-subtabs-row"
+            pointerEvents="box-none"
+            style={{ marginVertical: -PILL_FRAME_PAD, ...(bleed ? { marginHorizontal: -bleed } : null) }}
+        >
             <ScrollView
                 ref={scrollRef}
                 testID="dashboard-subtabs-scroll"
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingRight: 20 }}
-                onScroll={onScroll}
-                scrollEventThrottle={32}
-                onLayout={(e) => {
-                    const w = e.nativeEvent.layout.width;
-                    setGeom((g) => (g.viewport === w ? g : { ...g, viewport: w }));
-                }}
-                onContentSizeChange={(w) => {
-                    setGeom((g) => (g.content === w ? g : { ...g, content: w }));
-                }}
+                contentContainerStyle={bleed ? { paddingHorizontal: bleed } : { paddingRight: 20 }}
             >
-                {/* The iOS tab-bar trait makes VoiceOver read each pill as
-                    "tab, N of 5" with no extra copy (RN maps 'tabbar', not
-                    'tablist', to UIAccessibilityTraitTabBar). Android reads
-                    the collection from 'tablist'. */}
+                {/* No edge fade. A painted one (stepped Views, and any single-
+                    colour gradient) read as dark blocks over the translucent
+                    header, which moves over the backdrop, and no mask is
+                    available without a native dependency. The last pill simply
+                    clips at the edge; seen half-cut, it says the row goes on. */}
+                {/* Roles per platform: see `subTabA11yRoles`. */}
                 <HStack
                     className="items-center"
                     space="sm"
-                    accessibilityRole={Platform.OS === 'ios' ? 'tabbar' : 'tablist'}
+                    accessibilityRole={A11Y_ROLES.row}
                     testID="dashboard-subtabs-list"
                 >
                     {TABS.map((tab) => {
                         const active = tab.key === activeSubTab;
                         const showBadge = tab.key === 'stories' && unseenTotal > 0;
-                        return (
-                            <Pressable
-                                key={tab.key}
-                                onPress={() => onSelect(tab.key)}
-                                // x is relative to the HStack, which IS the
-                                // scroll content — so it is directly usable as
-                                // a scroll offset.
-                                onLayout={(e) => {
-                                    const { x, width } = e.nativeEvent.layout;
-                                    pillLayouts.current[tab.key] = { x, width };
-                                }}
-                                accessibilityRole="tab"
-                                accessibilityState={{ selected: active }}
-                                accessibilityLabel={t(tab.labelKey as any)}
-                                testID={`dashboard-tab-${tab.key}`}
-                                className={`flex-row items-center rounded-full border px-4 py-2 ${
-                                    active ? 'bg-primary-400 border-primary-400' : 'border-primary-500 bg-transparent'
-                                }`}
-                            >
+                        const label = t(tab.labelKey as any);
+                        const inner = (
+                            <>
                                 <MaterialIcons
                                     name={tab.icon}
                                     size={16}
@@ -222,13 +183,16 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                                     // helping. See lib/typography/policy.ts.
                                     scaleTier="chrome"
                                     numberOfLines={1}
-                                    className={active ? 'text-black font-semibold' : 'text-primary-500 font-semibold'}
+                                    className={active ? 'text-black font-semibold' : 'text-white'}
                                 >
-                                    {t(tab.labelKey as any)}
+                                    {label}
                                 </Text>
                                 {showBadge && (
                                     <View
-                                        accessibilityLabel={`${unseenTotal}`}
+                                        // Hidden: the count is read as part of the
+                                        // pill's own label, one element per pill.
+                                        accessibilityElementsHidden
+                                        importantForAccessibility="no-hide-descendants"
                                         testID={`dashboard-tab-${tab.key}-badge`}
                                         className="ml-1.5 rounded-full items-center justify-center px-1.5"
                                         // minHeight, not height: the count inside scales
@@ -250,13 +214,59 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                                         </Text>
                                     </View>
                                 )}
+                            </>
+                        );
+                        return (
+                            // The pressable IS the 44pt frame: transparent,
+                            // padded around the visible chip. On it: the role,
+                            // the selected state and the one label, the unseen
+                            // count folded in (`trackedStories.updatesBadge`).
+                            <Pressable
+                                key={tab.key}
+                                onPress={() => onSelect(tab.key)}
+                                // x is relative to the HStack, which IS the
+                                // scroll content, so it is directly usable as
+                                // a scroll offset.
+                                onLayout={(e) => {
+                                    const { x, width } = e.nativeEvent.layout;
+                                    pillLayouts.current[tab.key] = { x, width };
+                                }}
+                                accessibilityRole={A11Y_ROLES.pill}
+                                accessibilityState={{ selected: active }}
+                                accessibilityLabel={
+                                    showBadge
+                                        ? `${label}, ${t('trackedStories.updatesBadge', { count: unseenTotal })}`
+                                        : label
+                                }
+                                testID={`dashboard-tab-${tab.key}`}
+                                style={{ paddingVertical: PILL_FRAME_PAD }}
+                            >
+                                {active ? (
+                                    // Explore's active chip: a solid accent fill,
+                                    // which IS the selection signal, never glassed.
+                                    <View
+                                        className="flex-row items-center rounded-full border px-4 py-2 bg-primary-400 border-primary-400"
+                                        testID={`dashboard-tab-${tab.key}-chip`}
+                                    >
+                                        {inner}
+                                    </View>
+                                ) : (
+                                    // Explore's inactive chip: a round translucent
+                                    // plate with a hairline edge, white label.
+                                    <GlassPanel radius={999}>
+                                        <View
+                                            className="flex-row items-center px-4 py-2"
+                                            testID={`dashboard-tab-${tab.key}-chip`}
+                                        >
+                                            {inner}
+                                        </View>
+                                    </GlassPanel>
+                                )}
                             </Pressable>
                         );
                     })}
                 </HStack>
             </ScrollView>
-            {fades.left && <EdgeFade side="left" />}
-            {fades.right && <EdgeFade side="right" />}
         </View>
     );
 };

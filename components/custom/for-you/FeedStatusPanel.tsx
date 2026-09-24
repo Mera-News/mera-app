@@ -1,4 +1,4 @@
-// The detail panel FeedStatusIndicator opens — everything the old status bar
+// The status body and panel both tabs drop down (status-dropdown.tsx) — everything the old status bar
 // used to say, moved from "always on screen" to "there when you ask".
 //
 // Three things live here now that used to render ambiently in the header
@@ -12,7 +12,7 @@
 // while the panel is actually open, instead of for the whole duration of every
 // sync on both tabs.
 
-import { GLASS_OVER_CONTENT_FILL, GlassPanel } from '@/components/custom/GlassSurface';
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Text } from '@/components/ui/text';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import {
@@ -30,7 +30,7 @@ import { ON_DEVICE_HEADLINES_KEY, stageDef } from '@/components/custom/processin
 import { PROCESSING_STRIP_HEIGHT } from '@/components/custom/processing/types';
 import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import FeedStatusDetails from './FeedStatusDetails';
-import { pickScoringProgress, STATUS_INK } from './status-ink';
+import { pickScoringProgress, STATUS_INK, STATUS_PANEL_OPAQUE_BASE } from './status-ink';
 
 /** The stage headline rotates through its text pool at this cadence. */
 const HEADLINE_CYCLE_MS = 5000;
@@ -143,27 +143,52 @@ function AnalysingProgress() {
     );
 }
 
-export interface FeedStatusPanelProps {
-    readonly expanded: boolean;
+/**
+ * How long an opened status panel stays open before it closes itself. ONE
+ * value for both tabs: the Feed's mark and the Dashboard's Overview stats card
+ * drop the same panel and close it the same way (owner: "make them similar").
+ * A tap outside, the trigger included, still closes it early.
+ */
+export const STATUS_PANEL_AUTO_COLLAPSE_MS = 3000;
+
+export interface FeedStatusBodyProps {
     readonly mode: FeedStatusMode;
-    /** Human relative label for the last finished run ("4 minutes ago"). The
-     *  Dashboard already computes this for its header line against a 30s tick;
-     *  the Feed tab omits it. */
-    readonly lastProcessedLabel?: string | null;
     /** Passed straight through to FeedStatusDetails — see its own doc. */
     readonly onBeforeNavigate?: () => void;
 }
 
 /**
- * The counts are read by FeedStatusDetails itself, from the shared minute-clock
- * `useFeedCounts`, so this panel, the sheet and the header sentence show the
- * same numbers. `expanded` and `mode` come from the screen, which is what keeps
- * this and the indicator describing the same state.
+ * The status panel's CONTENT, with no chrome: the detail rows plus the
+ * processing-only lines. The single renderer of "what is the pipeline doing"
+ * on both tabs, so every field (Last processed included, which the details
+ * read themselves) is identical wherever it opens.
+ */
+export const FeedStatusBody: React.FC<FeedStatusBodyProps> = ({ mode, onBeforeNavigate }) => (
+    <>
+        <FeedStatusDetails onBeforeNavigate={onBeforeNavigate} />
+        {mode === 'processing' && <AnalysingProgress />}
+        {mode === 'processing' && <ProcessingHeadline />}
+        {mode === 'processing' && <ChunkStripRow />}
+    </>
+);
+
+export interface FeedStatusPanelProps {
+    readonly expanded: boolean;
+    readonly mode: FeedStatusMode;
+    /** Passed straight through to FeedStatusDetails — see its own doc. */
+    readonly onBeforeNavigate?: () => void;
+}
+
+/**
+ * The status panel: `FeedStatusBody` on an OPAQUE dark base. Both tabs drop it
+ * over list content with nothing behind it, and section text read straight
+ * through `GLASS_OVER_CONTENT_FILL`, which is 0.90 alpha (captured). The counts
+ * are read by FeedStatusDetails itself, from the shared minute-clock
+ * `useFeedCounts`, so it matches the Dashboard's stats sentence.
  */
 export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
     expanded,
     mode,
-    lastProcessedLabel = null,
     onBeforeNavigate,
 }) => {
     if (!expanded) return null;
@@ -175,25 +200,16 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
             exiting={FadeOut.duration(120)}
             style={{ marginTop: 8 }}
         >
-            {/* A surface over CONTENT: the header is absolute and cards scroll
-                under it, so the panel takes GLASS_OVER_CONTENT_FILL as its base
-                and the translucent lift sits on top. Passed as a STYLE because
-                GlassPanel ignores `fallbackClassName`; the old
-                `bg-gray-950` never applied, which left a 7% white tint with
-                page text reading straight through it. */}
+            {/* A surface over CONTENT, so an opaque dark base with the
+                translucent lift on top. Passed as a STYLE because GlassPanel
+                ignores `fallbackClassName`. */}
             <GlassPanel
                 radius={8}
                 contentClassName="px-3 py-2"
-                style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}
+                style={{ backgroundColor: STATUS_PANEL_OPAQUE_BASE }}
                 testID="dashboard-status-details-panel"
             >
-                <FeedStatusDetails
-                    lastProcessedLabel={lastProcessedLabel}
-                    onBeforeNavigate={onBeforeNavigate}
-                />
-                {mode === 'processing' && <AnalysingProgress />}
-                {mode === 'processing' && <ProcessingHeadline />}
-                {mode === 'processing' && <ChunkStripRow />}
+                <FeedStatusBody mode={mode} onBeforeNavigate={onBeforeNavigate} />
             </GlassPanel>
         </Animated.View>
     );

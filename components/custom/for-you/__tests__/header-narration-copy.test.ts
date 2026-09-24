@@ -133,12 +133,18 @@ describe('the copy fits the pinned two-line row', () => {
 
   it('the ceiling check can actually fail', () => {
     // A length assertion that has never been shown to fire is indistinguishable
-    // from one measuring the wrong field.
+    // from one measuring the wrong field. The shipped lines are now far under
+    // the ceilings (the real budget is the MEASURED width in
+    // narration-row-width.test.ts), so the proof uses a synthetic line rather
+    // than relying on real copy being long.
+    const overCeiling = (text: string, ceiling: number) => text.length > ceiling;
+    expect(overCeiling('x'.repeat(LOCALE_CEILING + 1), LOCALE_CEILING)).toBe(true);
+    expect(overCeiling('x'.repeat(LOCALE_CEILING), LOCALE_CEILING)).toBe(false);
+    expect(overCeiling('x'.repeat(EN_CEILING + 1), EN_CEILING)).toBe(true);
     const longest = Math.max(
       ...LOCALE_FILES.flatMap((f) => linesOf(f).map((l) => l.text.length)),
     );
-    expect(longest).toBeGreaterThan(40);
-    expect(longest).toBeLessThanOrEqual(LOCALE_CEILING);
+    expect(overCeiling('x'.repeat(longest), LOCALE_CEILING)).toBe(false);
   });
 });
 
