@@ -282,13 +282,15 @@ function placeFromPayload(payload: unknown): Place | null {
 function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unknown> {
   let t = typeof entry.statement === 'string' ? entry.statement.trim() : '';
   if (!t) return entry;
-  // "User is an expat ...", "The user lives in ..." (measured on staging).
-  t = t.replace(/^(?:the\s+)?user\s+(?:is\s+(?:an?\s+)?)?/i, '');
   t = t.replace(/^(?:i\s+am|i['’]m|im)\s+(?:an?\s+)?/i, '');
-  // "Is an expat from India": the subject dropped but not the verb. Only for
-  // an origin, so no other fact's wording changes.
-  const bare = t.replace(/^is\s+(?:an?\s+)?/i, '');
-  if (bare !== t && (isOriginStatement(bare) || isExpatStatement(bare))) t = bare;
+  // "User is an expat ...", "The user lives in ...", "Is an expat from
+  // India" (all measured on staging). Stripped only when what is left is a
+  // home, an origin or an expat status, so no other fact's wording changes.
+  const bare = t.replace(/^(?:(?:the\s+)?user\s+)?(?:is\s+(?:an?\s+)?)?/i, '');
+  if (bare !== t && (
+    isOriginStatement(bare) || isExpatStatement(bare) || /^expat\b/i.test(bare)
+    || /^(?:(?:have\s+|recently\s+)?moved|live|lives|living|reside|resides)\s+(?:in|to)\s/i.test(bare)
+  )) t = bare;
   const home = /^(?:i\s+)?(?:(?:have\s+|recently\s+)?moved|live|lives|living|reside|resides)\s+(?:in|to)\s+(.+)$/i.exec(t);
   if (home) {
     const where = home[1]
@@ -1051,8 +1053,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // AN EXPAT ORIGIN BRINGS ITS STATUS: "From India" plus "Expat in
         // <country>" when the current home's country is known and differs.
         addExpatStatus(list, state.persona.facts, placeCandidates);
-        // A BARE "Expat." says nothing the expat status does not: dropped.
-        for (let i = list.length - 1; i >= 0; i--) {
+        // A BARE "Expat." says nothing an expat status does not: dropped when
+        // one is offered or on file, kept when it is the only expat card.
+        const hasExpatStatus =
+          list.some((e) => e.questionnaire_attribute === EXPAT_KEY)
+          || state.persona.facts.some((f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement));
+        for (let i = list.length - 1; hasExpatStatus && i >= 0; i--) {
           if (/^expat\.?$/i.test(String(list[i].statement ?? '').trim())) list.splice(i, 1);
         }
         // THE LIST THE APP ACTUALLY READS. `handleSaveExtractedFacts` builds

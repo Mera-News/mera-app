@@ -410,3 +410,29 @@ describe('staging run 4 findings', () => {
     ]);
   });
 });
+
+describe('the bare-expat drop and the subject strip stay narrow', () => {
+  it('keeps "Expat" when no expat status replaces it', async () => {
+    const h = harness([
+      res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'The user is an expat.', questionnaire_attribute: 'residency_status' },
+      ] })] }),
+      res({ content: 'Here it is.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: "I'm an expat", deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual(['Expat.']);
+  });
+
+  it('leaves a "User ..." fact that is not a home, origin or expat alone', async () => {
+    const h = harness([
+      res({ content: 'Work.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'User researcher at Booking', questionnaire_attribute: 'occupation' },
+      ] })] }),
+      res({ content: 'Here it is.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: 'I research at Booking', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual(['User researcher at Booking']);
+  });
+});
