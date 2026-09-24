@@ -75,7 +75,7 @@ export const NARRATION_COLOR = '#FFFFFF';
 
 /**
  * The widest the narration can be where it is shown: INLINE on the Feed,
- * between the Mera mark and the "?", about 170pt on a 375pt phone. The copy is
+ * between the "?" and the Mera mark, about 170pt on a 375pt phone. The copy is
  * written to fit it on one line; `narration-widths.json` is every line in every
  * locale measured with CoreText at 14pt, and the test holds each one to this
  * less a small margin.

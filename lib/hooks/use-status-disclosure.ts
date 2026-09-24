@@ -1,26 +1,16 @@
 // Open/closed state for a tap-to-reveal status panel.
 //
-// Two callers, two different contracts, one hook:
-//   • The Feed passes `autoCollapseMs` — the panel shows what you asked for and
-//     then gets out of the way on its own. The Feed is a reading surface, and a
-//     status panel left open on it is the ambient chrome this screen exists to
-//     not have.
-//   • The Dashboard passes nothing — the panel is sticky, tap to close, which is
-//     how its accordion has always behaved. The Dashboard is where you go to
-//     look at the numbers, so it lets you keep looking.
+// Both callers pass `autoCollapseMs` = STATUS_PANEL_AUTO_COLLAPSE_MS
+// (for-you/FeedStatusPanel.tsx): the Feed's header panel and the Dashboard's
+// Overview stats card open the same body and close it the same way. Omitting
+// it gives a sticky panel that only closes on a second tap; no caller does.
 //
-// `available` is the affordance's own visibility, and BOTH CURRENT CALLERS PASS
-// `true`. It exists for a state that no longer occurs here: an affordance that
-// unmounts while its panel is open leaves the panel stranded with nothing left
-// to tap. That used to happen on the Feed at the end of every sync, back when
-// the status indicator rendered nothing in idle. The indicator is now the Mera
-// mark and is on screen in every mode, so passing anything but `true` would do
-// the opposite of the original job — yank an open panel shut the moment the
-// pipeline settled.
-//
-// Kept as a parameter rather than deleted because it is the correct guard for
-// any future caller whose trigger CAN disappear, and because the behaviour is
-// covered by tests either way. Do not re-wire it to the pipeline state.
+// `available` is the affordance's own visibility: the panel closes when it
+// goes false, so an open panel is never stranded after the control that opened
+// it unmounts. The Feed passes whether its Mera mark is on screen (while a sync
+// narrates, or in the error or limited state), which goes false at the end of
+// every ordinary run. The Dashboard's stats card is always rendered and passes
+// `true`.
 //
 // No refs and no manual clearing: the timer is armed by an effect keyed on
 // `expanded`, so React's own cleanup covers unmount, a re-tap, and the panel

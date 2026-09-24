@@ -1,4 +1,4 @@
-// The narration shows INLINE on the Feed, between its Mera mark and the "?",
+// The narration shows INLINE on the Feed, between its "?" and the Mera mark,
 // about 170pt on a 375pt phone, and is written to fit that on one line.
 // Budgeted by MEASURED width per locale, not by character count: `fixtures/narration-widths.json` is every line in
 // every dictionary shaped by CoreText in the system font at 14pt (see the

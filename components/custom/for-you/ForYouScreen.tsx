@@ -4,8 +4,6 @@ import {
     useFeedSyncRefresh,
     useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
-import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
-import FeedStatusPanel, { STATUS_PANEL_AUTO_COLLAPSE_MS } from '@/components/custom/for-you/FeedStatusPanel';
 import {
     headerTitleLineHeight,
     headerTitleSize,
@@ -14,7 +12,6 @@ import {
 import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
-import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import {
     GLASS_HEADER_SCRIM,
     GLASS_HEADER_TINT,
@@ -27,7 +24,6 @@ import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/Fo
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FactChecksPanel from '@/components/custom/fact-checks/FactChecksPanel';
-import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import VisitedPublicationsList from '@/components/custom/config-panel/VisitedPublicationsList';
 import ShareStatsFab from '@/components/custom/ShareStatsFab';
@@ -248,8 +244,6 @@ const MeraNewsScreen: React.FC = () => {
     // OR-s in the scheduler flag on its own.
     const isFeedProcessing = useIsFeedProcessing();
 
-    // Same status mark + panel pair the Feed mounts, and the same auto-collapse
-    // (owner: the Dashboard's panel should hide itself like the Feed's does).
     // Title ceiling from the window width; see header-title-size for why this
     // is two steps and not a ramp.
     const { width: windowWidth } = useWindowDimensions();
@@ -258,8 +252,9 @@ const MeraNewsScreen: React.FC = () => {
     // for this twice over: `headerHeight` is handed to all four sub-tab panels.
     const titleRowHeight = headerTitleLineHeight(windowWidth);
 
+    // Still read here for the empty state. The header carries no status mark
+    // any more: the status panel opens from the Overview stats card.
     const statusMode = useFeedStatusMode();
-    const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(true, STATUS_PANEL_AUTO_COLLAPSE_MS);
 
     // ONE value drives the hidden title, the narration line and the strip, so
     // the three cannot disagree about whether a run is happening.
@@ -475,13 +470,13 @@ const MeraNewsScreen: React.FC = () => {
 
     // ── Header rows ─────────────────────────────────────────────────────────
     //
-    // The TITLE IS ALWAYS SHOWN (D6), and there is NO status sentence row
-    // (owner decision): while a sync runs, the Mera mark beside the title
-    // scales up and animates, and that is the whole signal. The mark's scale
-    // is a transform inside the pinned title row, so the header is the same
-    // height at rest and syncing. Tapping the mark toggles the inline status
-    // panel, which also carries "Last processed". The Feed keeps its own
-    // inline narration.
+    // `|Dashboard (?)                 bell|` over the pill row, and NOTHING that
+    // depends on the selected pill (owner: "the header will stay the same even
+    // when the user taps on some other pill"), so its height is identical on
+    // every pill. No Mera mark (owner), no stats sentence and no status panel:
+    // the count sentence and the panel live in the Overview stats card
+    // (DashboardStatsCard). While a sync runs the working strip is the only
+    // visual signal, and the end is announced once to a screen reader.
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.
         <Box className="flex-1" testID="dashboard-screen">
@@ -663,7 +658,7 @@ const MeraNewsScreen: React.FC = () => {
                     RULE: every non-interactive row in this header must be
                     `pointerEvents="none"`, and every row that merely CONTAINS an
                     interactive child must be `box-none`. Only genuine controls
-                    (bell, status line, sub-tab pills) may be `auto`. */}
+                    (the "?", the bell, the sub-tab pills) may be `auto`. */}
                 <VStack
                     className="pb-2"
                     pointerEvents="box-none"
@@ -671,10 +666,6 @@ const MeraNewsScreen: React.FC = () => {
                 >
                     <HStack className="items-start justify-between mb-2" pointerEvents="box-none">
                         <VStack className="flex-1 min-w-0 mr-3" pointerEvents="box-none">
-                            {/* Same in-title dropdown as the Feed. It only
-                                filters the Overview sub-tab's sections —
-                                title-row placement is a deliberate user call
-                                (consistency with Feed over strict scoping). */}
                             <HStack
                                 className="items-center min-w-0"
                                 space="sm"
@@ -700,36 +691,15 @@ const MeraNewsScreen: React.FC = () => {
                                         {t('feed.dashboardTitle')}
                                     </Heading>
                                 </View>
-                                <FeedStatusIndicator
-                                    mode={statusMode}
-                                    expanded={statusExpanded}
-                                    onPress={toggleStatus}
-                                    testID="dashboard-status-indicator"
-                                />
+                                {/* The "?" sits beside the title (owner). */}
+                                <TabExplainerButton tab="forYou" testID="dashboard-explainer-open" />
                                 <View pointerEvents="none" className="flex-1" />
                             </HStack>
                         </VStack>
                         <HStack className="items-center flex-shrink-0" space="md" pointerEvents="box-none">
-                            <TabExplainerButton tab="forYou" testID="dashboard-explainer-open" />
                             <NotificationBellButton />
                         </HStack>
                     </HStack>
-
-
-                    {/* Stats sentence — decorative text, never tapped: fully
-                        transparent to touches so a pull can start on it. */}
-                    {activeSubTab === 'feed' && (
-                    <View pointerEvents="none" testID="dashboard-stats-sentence">
-                        {/* Overview only: on Saved, Visited, Stories and Fact
-                            checks these numbers describe a different list and
-                            cost three lines of header (M3).
-                            Brighter + a little heavier than the muted body step:
-                            this line sits on glass with content moving under it,
-                            where typography-400 was barely legible. Only colour
-                            and weight change — `leading-6 mb-2` is preserved. */}
-                        <FeedStatsSentence className="text-typography-700 font-medium mb-2" />
-                    </View>
-                    )}
 
                     {/* Sub-tab pills. box-none: the ROW is a full-width band and
                         must not swallow a pull — only the pills themselves take
@@ -742,16 +712,6 @@ const MeraNewsScreen: React.FC = () => {
                             // to edge and clips at the screen, not the padding.
                             bleed={HEADER_SIDE_PADDING}
                         />
-                    </View>
-
-                    {/* The detail panel the status glyph in the title row opens.
-                        Same component the Feed mounts; the full-width
-                        indeterminate bar that used to live here is gone from
-                        both tabs. The offline notice moved to the global
-                        OfflineBanner at the root layout, so there is no longer a
-                        per-sub-tab connectivity prop to pass. */}
-                    <View pointerEvents="box-none">
-                        <FeedStatusPanel expanded={statusExpanded} mode={statusMode} />
                     </View>
                 </VStack>
             </Animated.View>

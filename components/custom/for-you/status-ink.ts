@@ -11,6 +11,8 @@
 // (see GlassSurface). `GlassPanel` IGNORES its `fallbackClassName`, so the base
 // has to be passed as a style, not as that class.
 
+import type { FeedStatusMode } from '@/lib/feed-status-mode';
+
 /** Pure text colours. `secondary` is the floor: rgb 163 only reaches 4.6:1
  *  over the worst modelled panel and rgb 140 reaches 3.5:1. */
 export const STATUS_INK = {
@@ -72,4 +74,34 @@ export function pickScoringProgress(
   if (batch && batch.total > 0) return { done: batch.done, total: batch.total };
   if (asyncTotal > 0) return { done: asyncDone, total: asyncTotal };
   return null;
+}
+
+/**
+ * The state half of the accessibility label.
+ *
+ * Ink is the ONLY thing that separated these states, which made the capped
+ * state (amber) and the error state (red) identical to a screen reader: the
+ * label was a constant "Open feed status" in every mode. `deferred` folds onto
+ * `idle` here for the same reason it shares the resting colour — it is a
+ * pipeline count the reader cannot act on.
+ *
+ * Also the Dashboard stats card's visible status line at zero articles, and
+ * its toggle's label: one table for both tabs.
+ */
+export function a11yStateKey(mode: FeedStatusMode): string {
+  // Returns a plain string, read by its callers through `tAny`. All four keys exist in
+  // all 20 dictionaries, so this is NOT a missing-key workaround: the key is
+  // genuinely COMPUTED from `mode`, which is what `tAny` exists for in this
+  // file family. Do not "fix" it to a typed `t()` — there is no literal here
+  // to type.
+  switch (mode) {
+    case 'processing':
+      return 'feedStatus.modeProcessing';
+    case 'error':
+      return 'feedStatus.modeError';
+    case 'limited':
+      return 'feedStatus.modeLimited';
+    default:
+      return 'feedStatus.idle';
+  }
 }

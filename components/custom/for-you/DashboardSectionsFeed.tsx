@@ -1,4 +1,5 @@
 import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
+import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
 import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
@@ -301,13 +302,21 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   // this component is the Dashboard's list and its only consumer — a prop would
   // be indirection with one caller.
   const noStories = breaking.length === 0 && rows.every((r) => r.groups.length === 0);
+  // The stats card is ALWAYS the first card (owner: the count sentence left
+  // the header so the header is identical on every pill). It sits in the list
+  // header, not in `data`: as a data item it would drop below the breaking
+  // strip and hide the empty state.
   const ListHeader = useMemo(
-    () =>
-      breaking.length > 0 ? (
-        <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
-      ) : rows.length > 0 && noStories ? (
-        noStoriesLead
-      ) : null,
+    () => (
+      <>
+        <DashboardStatsCard />
+        {breaking.length > 0 ? (
+          <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
+        ) : rows.length > 0 && noStories ? (
+          noStoriesLead
+        ) : null}
+      </>
+    ),
     [breaking, onPressSuggestion, rows.length, noStories, noStoriesLead],
   );
 

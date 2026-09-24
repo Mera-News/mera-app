@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// The Dashboard header (D6, N11, F16, M3, N4). Every child screen and store is
+// The Dashboard header (D6, N11, F16, N4, ux1). Every child screen and store is
 // stubbed: this suite is about which rows the header draws and when.
 
 jest.mock('react-native-css-interop/jsx-runtime', () => {
@@ -97,13 +97,18 @@ jest.mock('@/components/custom/GlassSurface', () => ({
 jest.mock('@/components/custom/notifications/NotificationBellButton', () => mockStub('bell'));
 jest.mock('@/components/custom/for-you/DashboardEmptyState', () => mockStub('empty-state'));
 jest.mock('@/components/custom/for-you/ForYouSubTabs', () => {
-  const { Pressable, Text } = require('react-native');
+  const { Pressable, Text, View } = require('react-native');
+  const keys = ['feed', 'stories', 'saved', 'factChecks', 'history'];
   return {
     __esModule: true,
     default: ({ onSelect, bleed }: any) => (
-      <Pressable testID="subtab-saved" bleed={bleed} onPress={() => onSelect('saved')}>
-        <Text>saved</Text>
-      </Pressable>
+      <View testID="subtabs" bleed={bleed}>
+        {keys.map((k) => (
+          <Pressable key={k} testID={`subtab-${k}`} onPress={() => onSelect(k)}>
+            <Text>{k}</Text>
+          </Pressable>
+        ))}
+      </View>
     ),
   };
 });
@@ -171,7 +176,7 @@ jest.mock('@/lib/stores/network-store', () => ({ useIsConnected: () => true }));
 
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
-import { AccessibilityInfo, StyleSheet } from 'react-native';
+import { AccessibilityInfo } from 'react-native';
 import ForYouScreen from '../ForYouScreen';
 
 beforeEach(() => {
@@ -181,14 +186,37 @@ beforeEach(() => {
 });
 afterEach(() => jest.restoreAllMocks());
 
-const rowHeight = () => StyleSheet.flatten(screen.getByTestId('dashboard-status-row').props.style);
+/** Every host node's testID inside the header, in tree order. */
+const headerIds = () =>
+  screen
+    .getByTestId('dashboard-header')
+    .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+    .map((n: any) => n.props.testID as string);
 
 describe('Dashboard header', () => {
-  it('keeps the title while syncing (D6)', () => {
+  it('keeps the title while syncing (D6), with no Mera mark in any state (owner)', () => {
     mockProcessing = true;
     render(<ForYouScreen />);
     expect(screen.getByText('feed.dashboardTitle')).toBeTruthy();
-    expect(screen.getByTestId('dashboard-status-indicator')).toBeTruthy();
+    expect(screen.queryByTestId('dashboard-status-indicator')).toBeNull();
+  });
+
+  it('puts the "?" right after the title, in the title row', () => {
+    render(<ForYouScreen />);
+    const ids = headerIds();
+    expect(ids.indexOf('dashboard-title')).toBeGreaterThanOrEqual(0);
+    expect(ids.indexOf('dashboard-explainer-open')).toBe(ids.indexOf('dashboard-title') + 1);
+  });
+
+  it('draws the same header on every pill, so its height cannot change', () => {
+    render(<ForYouScreen />);
+    const overview = headerIds();
+    // Presence first: the comparison below is not two empty lists.
+    expect(overview).toContain('dashboard-title');
+    for (const k of ['stories', 'saved', 'factChecks', 'history', 'feed']) {
+      fireEvent.press(screen.getByTestId(`subtab-${k}`));
+      expect(headerIds()).toEqual(overview);
+    }
   });
 
   it('has no status sentence row at all: no narration while syncing (owner decision)', () => {
@@ -205,10 +233,11 @@ describe('Dashboard header', () => {
     expect(screen.queryByTestId('dashboard-updated-label')).toBeNull();
   });
 
-  it('mounts no modal status sheet: the mark toggles the inline panel', () => {
+  it('mounts no status sheet and no status panel: both live in the Overview stats card', () => {
     render(<ForYouScreen />);
+    expect(screen.getByTestId('dashboard-title')).toBeTruthy();
     expect(screen.queryByTestId('status-sheet')).toBeNull();
-    expect(screen.getByTestId('status-panel')).toBeTruthy();
+    expect(screen.queryByTestId('status-panel')).toBeNull();
   });
 
   it('hands the status-bar scrim the header\'s hidden value (F21)', () => {
@@ -216,16 +245,16 @@ describe('Dashboard header', () => {
     expect(screen.getByTestId('scrim').props.coverProgress).toEqual({ value: 0, __hidden: true });
   });
 
-  it('shows the stats sentence on Overview only (M3)', () => {
+  it('carries no stats sentence: it moved into the Overview list', () => {
     render(<ForYouScreen />);
-    expect(screen.getByTestId('dashboard-stats-sentence')).toBeTruthy();
-    fireEvent.press(screen.getByTestId('subtab-saved'));
+    expect(screen.getByTestId('dashboard-title')).toBeTruthy();
     expect(screen.queryByTestId('dashboard-stats-sentence')).toBeNull();
+    expect(screen.queryByTestId('stats-sentence')).toBeNull();
   });
 
   it('lets the pill row bleed by exactly the header side padding', () => {
     render(<ForYouScreen />);
-    expect(screen.getByTestId('subtab-saved').props.bleed).toBe(20);
+    expect(screen.getByTestId('subtabs').props.bleed).toBe(20);
   });
 
   it('carries the "?" explainer (N4)', () => {

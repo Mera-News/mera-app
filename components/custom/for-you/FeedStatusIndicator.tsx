@@ -6,13 +6,13 @@
 // what turned the Feed into a thing you check rather than a thing you read. The
 // information survives; the billboard does not.
 //
-// The glyph is now the Mera mark itself, and it is ALWAYS on screen. The first
-// pass drew a spinner or a warning icon and nothing at all when idle, which cost
-// two things: the header changed shape under the reader every time a sync
-// started or ended, and the detail panel behind it was only reachable during the
-// few seconds a sync happened to be in flight. A mark that is always there is a
-// fixed landmark and a permanent way in.
-//
+// The glyph is the Mera mark itself, and ONLY the Feed mounts it: at the right
+// end of its title row, and only while Mera is working or needs the reader
+// (`feedMarkVisible` in feed/FeedHeaderTitleRow.tsx: a narrated sync, or the
+// capped or error state). At idle there is no mark (owner). Its row height is
+// pinned, so the mark appearing never moves the header. The Dashboard has no
+// mark; its status panel opens from the Overview stats card.
+
 // State is carried by ink and motion rather than by presence, so the slot never
 // moves and never empties:
 //   processing    → the spotlight sweeps, at 1.3x, in pure white
@@ -34,6 +34,7 @@
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Pressable } from '@/components/ui/pressable';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
+import { a11yStateKey } from './status-ink';
 import React, { useEffect, useRef } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -69,33 +70,6 @@ function inkFor(mode: FeedStatusMode): string {
             return WARN;
         default:
             return RESTING;
-    }
-}
-
-/**
- * The state half of the accessibility label.
- *
- * Ink is the ONLY thing that separated these states, which made the capped
- * state (amber) and the error state (red) identical to a screen reader: the
- * label was a constant "Open feed status" in every mode. `deferred` folds onto
- * `idle` here for the same reason it shares the resting colour — it is a
- * pipeline count the reader cannot act on.
- */
-function a11yStateKey(mode: FeedStatusMode): string {
-    // Returns a plain string, read through `tAny` below. All four keys exist in
-    // all 20 dictionaries, so this is NOT a missing-key workaround: the key is
-    // genuinely COMPUTED from `mode`, which is what `tAny` exists for in this
-    // file family. Do not "fix" it to a typed `t()` — there is no literal here
-    // to type.
-    switch (mode) {
-        case 'processing':
-            return 'feedStatus.modeProcessing';
-        case 'error':
-            return 'feedStatus.modeError';
-        case 'limited':
-            return 'feedStatus.modeLimited';
-        default:
-            return 'feedStatus.idle';
     }
 }
 
