@@ -137,6 +137,9 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
                 <MeraLogo
                     size={LOGO_SIZE}
                     drawStrokes={processing && !reduceMotion}
+                    // The finished mark grows first, then draws: starting the
+                    // draw at once blanked the outline in one frame (captured).
+                    drawDelayMs={SCALE_MS}
                     color={inkFor(mode)}
                 />
             </Animated.View>

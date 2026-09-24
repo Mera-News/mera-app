@@ -29,6 +29,7 @@ jest.mock('react-native-svg', () => {
 });
 
 const mockCancelAnimation = jest.fn();
+const mockWithDelay = jest.fn((_ms: unknown, v: unknown) => v);
 
 jest.mock('react-native-reanimated', () => ({
   __esModule: true,
@@ -37,9 +38,10 @@ jest.mock('react-native-reanimated', () => ({
   // Non-empty so the animated <G> is distinguishable from the frozen frame,
   // which renders a plain `transform` string and no animatedProps.
   useAnimatedProps: () => ({ transform: [] }),
-  withRepeat: jest.fn(),
+  withRepeat: jest.fn((v: unknown) => v),
   withTiming: jest.fn(),
-  withSequence: jest.fn(),
+  withSequence: jest.fn((...v: unknown[]) => v),
+  withDelay: (ms: unknown, v: unknown) => mockWithDelay(ms, v),
   cancelAnimation: (...args: unknown[]) => mockCancelAnimation(...args),
   Easing: { inOut: () => () => 0, ease: () => 0 },
 }));
@@ -194,5 +196,16 @@ describe('MeraLogo drawStrokes', () => {
     mockAnimationsActive = false;
     const r = render(<MeraLogo size={22} drawStrokes />);
     expect(dashed(r)).toHaveLength(0);
+  });
+
+  // Captured: when a run started, the 18pt mark vanished in one frame and the
+  // big one began drawing from EMPTY. The draw must start from the finished
+  // mark and wait for the grow before it begins.
+  it('starts from the finished mark, and waits the given delay before drawing', () => {
+    mockWithDelay.mockClear();
+    render(<MeraLogo size={22} drawStrokes drawDelayMs={250} />);
+    // The progress value is seeded full (1), not empty (0).
+    expect(mockUseSharedValue).toHaveBeenCalledWith(1);
+    expect(mockWithDelay).toHaveBeenCalledWith(250, expect.anything());
   });
 });

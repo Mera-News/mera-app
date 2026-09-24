@@ -7,6 +7,7 @@ import Animated, {
     withRepeat,
     withTiming,
     withSequence,
+    withDelay,
     Easing
 } from 'react-native-reanimated';
 
@@ -115,9 +116,12 @@ const AnimatedSpotlight: React.FC<{ color: string }> = ({ color }) => {
  * RNSVG re-rasterises on the CPU every frame, so when nobody is looking the
  * finished strokes are drawn plain instead.
  */
-const DrawnStrokes: React.FC<{ color: string }> = ({ color }) => {
+const DrawnStrokes: React.FC<{ color: string; delayMs: number }> = ({ color, delayMs }) => {
     const active = useAnimationsActive();
-    const progress = useSharedValue(0);
+    // Seeded FULL: switching drawing on must not blank the mark. Captured when
+    // this started at 0: the outline vanished in one frame and redrew from
+    // empty, which read as the mark being swapped rather than growing.
+    const progress = useSharedValue(1);
 
     useEffect(() => {
         if (!active) {
@@ -125,18 +129,23 @@ const DrawnStrokes: React.FC<{ color: string }> = ({ color }) => {
             progress.value = 1;
             return;
         }
-        progress.value = 0;
-        progress.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: DRAW_MS, easing: Easing.inOut(Easing.ease) }),
-                withTiming(1, { duration: HOLD_MS }),
-                withTiming(0, { duration: 0 }),
+        progress.value = 1;
+        // Hold the finished mark for `delayMs` (the host's grow), then loop:
+        // clear, draw on, hold.
+        progress.value = withDelay(
+            delayMs,
+            withRepeat(
+                withSequence(
+                    withTiming(0, { duration: 0 }),
+                    withTiming(1, { duration: DRAW_MS, easing: Easing.inOut(Easing.ease) }),
+                    withTiming(1, { duration: HOLD_MS }),
+                ),
+                -1,
+                false,
             ),
-            -1,
-            false,
         );
         return () => cancelAnimation(progress);
-    }, [progress, active]);
+    }, [progress, active, delayMs]);
 
     const hexProps = useAnimatedProps(() => ({ strokeDashoffset: HEX_PERIMETER * (1 - progress.value) }));
     const cardProps = useAnimatedProps(() => ({ strokeDashoffset: CARD_PERIMETER * (1 - progress.value) }));
@@ -199,13 +208,22 @@ interface MeraLogoProps {
      * MeraLogo.test.tsx). The spotlight holds its frozen frame while drawing.
      */
     drawStrokes?: boolean;
+    /** With `drawStrokes`: hold the finished mark this long before the first
+     *  draw, so a host growing the mark finishes growing first. Default 0. */
+    drawDelayMs?: number;
 }
 
 // Mera Logo Component. Static by default; opt into the animated spotlight.
 // The viewBox is tightened to the glyph bounds (hexagon x 279–745 / y 170–854
 // plus the 24-unit stroke outset) so a given `size` renders at a visual height
 // consistent with neighboring lucide icons instead of leaving ~33% padding.
-const MeraLogo: React.FC<MeraLogoProps> = ({ size = 80, animated = false, color = '#fff', drawStrokes = false }) => {
+const MeraLogo: React.FC<MeraLogoProps> = ({
+    size = 80,
+    animated = false,
+    color = '#fff',
+    drawStrokes = false,
+    drawDelayMs = 0,
+}) => {
     return (
         <Svg width={size} height={size} viewBox="255 146 514 732">
             {/* Hexagon outline (drawn by DrawnStrokes when drawing on) */}
@@ -243,7 +261,7 @@ const MeraLogo: React.FC<MeraLogoProps> = ({ size = 80, animated = false, color 
             </G>
             {/* Same two strokes, drawing on. The card sits wholly inside the
                 hexagon, so the clip it no longer shares changes nothing. */}
-            {drawStrokes ? <DrawnStrokes color={color} /> : null}
+            {drawStrokes ? <DrawnStrokes color={color} delayMs={drawDelayMs} /> : null}
         </Svg>
     );
 };

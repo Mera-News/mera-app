@@ -33,9 +33,20 @@ jest.mock('@/components/ui/pressable', () => {
     const { Pressable: RNPressable } = require('react-native');
     return { Pressable: RNPressable };
 });
+let mockLogoMounts = 0;
 jest.mock('@/components/custom/MeraLogo', () => {
     const { View } = require('react-native');
-    return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
+    const ReactLib = require('react');
+    return {
+        __esModule: true,
+        default: (p: any) => {
+            // Counts MOUNTS, not renders: a remount is what the capture saw.
+            ReactLib.useEffect(() => {
+                mockLogoMounts += 1;
+            }, []);
+            return <View testID="mera-logo" {...p} />;
+        },
+    };
 });
 // `useAnimatedStyle` runs its worklet at render time here, so the style the
 // wrapper receives is whatever the shared value holds on THAT render — which is
@@ -49,11 +60,15 @@ jest.mock('react-native-reanimated', () => {
         default: { View: (p: any) => <View {...p} /> },
         useSharedValue: (initial: unknown) => ({ value: initial }),
         useAnimatedStyle: (fn: () => unknown) => fn(),
-        withTiming: (v: unknown) => v,
+        withTiming: (v: unknown, cfg?: unknown) => {
+            mockWithTiming(v, cfg);
+            return v;
+        },
         useReducedMotion: () => mockReduceMotion,
     };
 });
 let mockReduceMotion = false;
+const mockWithTiming = jest.fn();
 
 import FeedStatusIndicator from '../FeedStatusIndicator';
 
@@ -222,5 +237,27 @@ describe('FeedStatusIndicator', () => {
         } finally {
             announce.mockRestore();
         }
+    });
+});
+
+// Captured: at a run's start the 18pt mark vanished in one frame and the big
+// one drew from empty. The mark must be ONE instance that grows.
+describe('FeedStatusIndicator: grows, never swaps', () => {
+    it('keeps the same mark mounted from rest to processing and back', () => {
+        mockLogoMounts = 0;
+        const { rerender, getByTestId } = renderIndicator({ mode: 'idle' });
+        const first = getByTestId('mera-logo');
+        rerender(<FeedStatusIndicator mode="processing" expanded={false} onPress={jest.fn()} testID={TEST_ID} />);
+        expect(getByTestId('mera-logo')).toBe(first);
+        rerender(<FeedStatusIndicator mode="idle" expanded={false} onPress={jest.fn()} testID={TEST_ID} />);
+        expect(mockLogoMounts).toBe(1);
+    });
+
+    it('animates the scale to 1.55 over 250ms, and starts drawing only after the grow', () => {
+        mockWithTiming.mockClear();
+        const { rerender, getByTestId } = renderIndicator({ mode: 'idle' });
+        rerender(<FeedStatusIndicator mode="processing" expanded={false} onPress={jest.fn()} testID={TEST_ID} />);
+        expect(mockWithTiming).toHaveBeenCalledWith(1.55, { duration: 250 });
+        expect(getByTestId('mera-logo').props.drawDelayMs).toBe(250);
     });
 });
