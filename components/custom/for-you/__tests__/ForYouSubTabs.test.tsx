@@ -12,7 +12,9 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 });
 
 jest.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key: string) => key }),
+    useTranslation: () => ({
+        t: (key: string, v?: Record<string, unknown>) => (v ? `${key}:${JSON.stringify(v)}` : key),
+    }),
 }));
 
 // jest-expo mis-transforms RN's ScrollView native-component file ("Unexpected
@@ -138,7 +140,7 @@ describe('ForYouSubTabs', () => {
         const { getByText } = render(
             <ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />,
         );
-        expect(getByText('3')).toBeTruthy();
+        expect(getByText('3', { includeHiddenElements: true })).toBeTruthy();
     });
 
     it('hides the badge when there are no unseen stories', () => {
@@ -146,7 +148,7 @@ describe('ForYouSubTabs', () => {
         const { queryByText } = render(
             <ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />,
         );
-        expect(queryByText('0')).toBeNull();
+        expect(queryByText('0', { includeHiddenElements: true })).toBeNull();
     });
 
     it('fires onSelect with the tapped sub-tab', () => {
@@ -231,18 +233,16 @@ describe('ForYouSubTabs: full-bleed row', () => {
 // orange label are gone.
 describe('ForYouSubTabs: Explore pill style', () => {
     const ACCENT = 'rgb(231, 138, 83)';
-    const glassParent = (node: any) => {
-        for (let p = node.parent; p; p = p.parent) if (p.props?.testID === 'glass-chip') return p;
-        return null;
-    };
+    // The pressable is the transparent 44pt frame; the visible chip is inside.
+    const glassIn = (node: any) => node.findAll((n: any) => n.props?.testID === 'glass-chip')[0] ?? null;
 
     it('draws an inactive pill as a round glass chip with a white label and no orange outline', () => {
         const { getByTestId, getByText } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
         const saved = getByTestId('dashboard-tab-saved');
-        const glass = glassParent(saved);
+        const glass = glassIn(saved);
         expect(glass).not.toBeNull();
         expect(glass.props.radius).toBe(999);
-        expect(saved.props.className ?? '').not.toMatch(/border-primary/);
+        expect(getByTestId('dashboard-tab-saved-chip').props.className ?? '').not.toMatch(/border-primary/);
         const label = getByText('forYou.subTabSaved');
         expect(label.props.className).toContain('text-white');
         expect(label.props.className).not.toContain('text-primary');
@@ -251,8 +251,8 @@ describe('ForYouSubTabs: Explore pill style', () => {
     it('fills the active pill with the accent and a black label, outside the glass', () => {
         const { getByTestId, getByText } = render(<ForYouSubTabs activeSubTab="saved" onSelect={jest.fn()} />);
         const saved = getByTestId('dashboard-tab-saved');
-        expect(glassParent(saved)).toBeNull();
-        expect(saved.props.className).toContain('bg-primary-400');
+        expect(glassIn(saved)).toBeNull();
+        expect(getByTestId('dashboard-tab-saved-chip').props.className).toContain('bg-primary-400');
         expect(getByText('forYou.subTabSaved').props.className).toContain('text-black');
     });
 
@@ -296,5 +296,37 @@ describe('ForYouSubTabs: roles on the element that takes the press', () => {
         const { getByTestId } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
         const { row } = subTabA11yRoles(require('react-native').Platform.OS);
         expect(getByTestId('dashboard-subtabs-list').props.accessibilityRole).toBe(row);
+    });
+});
+
+// Captured: the Stories badge was its own accessibility element, and the
+// pills were 35-37pt tall.
+describe('ForYouSubTabs: one element per pill, 44pt tall', () => {
+    const flat = (st: any) => require('react-native').StyleSheet.flatten(st) ?? {};
+
+    it('folds the unseen count into the Stories pill label and hides the badge', () => {
+        const { getByTestId } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
+        expect(getByTestId('dashboard-tab-stories').props.accessibilityLabel).toBe(
+            'forYou.subTabStories, trackedStories.updatesBadge:{"count":3}',
+        );
+        const badge = getByTestId('dashboard-tab-stories-badge', { includeHiddenElements: true });
+        expect(badge.props.accessibilityElementsHidden).toBe(true);
+        expect(badge.props.importantForAccessibility).toBe('no-hide-descendants');
+        expect(badge.props.accessibilityLabel).toBeUndefined();
+    });
+
+    it('keeps the plain label with no unseen stories', () => {
+        mockEmitTotal = 0;
+        const { getByTestId } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
+        expect(getByTestId('dashboard-tab-stories').props.accessibilityLabel).toBe('forYou.subTabStories');
+    });
+
+    it('pads each pressable to a 44pt frame and pulls the row back by the same amount', () => {
+        const { getByTestId } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
+        const pad = flat(getByTestId('dashboard-tab-saved').props.style).paddingVertical;
+        // The chip is 35-37pt; 2 x pad takes the frame to 44 or more.
+        expect(35 + 2 * pad).toBeGreaterThanOrEqual(44);
+        // ...and the row gives the padding back, so the header does not grow.
+        expect(flat(getByTestId('dashboard-subtabs-row').props.style).marginVertical).toBe(-pad);
     });
 });

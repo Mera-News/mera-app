@@ -25,6 +25,14 @@ export function subTabA11yRoles(os: string): { row: 'tabbar' | 'tablist'; pill: 
 }
 const A11Y_ROLES = subTabA11yRoles(Platform.OS);
 
+/**
+ * The pressable's vertical padding around the 35-37pt chip, so each pill's
+ * touch frame is at least 44pt. The row gives it back as a negative margin, so
+ * the header does not grow. Padding, not hitSlop: the ScrollView clips touches
+ * to its own bounds, so a slop reaching outside the row would never land.
+ */
+export const PILL_FRAME_PAD = 5;
+
 export type ForYouSubTab = 'feed' | 'stories' | 'saved' | 'history' | 'factChecks';
 
 interface ForYouSubTabsProps {
@@ -135,7 +143,7 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
         <View
             testID="dashboard-subtabs-row"
             pointerEvents="box-none"
-            style={bleed ? { marginHorizontal: -bleed } : undefined}
+            style={{ marginVertical: -PILL_FRAME_PAD, ...(bleed ? { marginHorizontal: -bleed } : null) }}
         >
             <ScrollView
                 ref={scrollRef}
@@ -181,7 +189,10 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                                 </Text>
                                 {showBadge && (
                                     <View
-                                        accessibilityLabel={`${unseenTotal}`}
+                                        // Hidden: the count is read as part of the
+                                        // pill's own label, one element per pill.
+                                        accessibilityElementsHidden
+                                        importantForAccessibility="no-hide-descendants"
                                         testID={`dashboard-tab-${tab.key}-badge`}
                                         className="ml-1.5 rounded-full items-center justify-center px-1.5"
                                         // minHeight, not height: the count inside scales
@@ -205,43 +216,53 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                                 )}
                             </>
                         );
-                        const pressableProps = {
-                            onPress: () => onSelect(tab.key),
-                            accessibilityRole: A11Y_ROLES.pill,
-                            accessibilityState: { selected: active },
-                            accessibilityLabel: label,
-                            testID: `dashboard-tab-${tab.key}`,
-                        };
                         return (
-                            <View
+                            // The pressable IS the 44pt frame: transparent,
+                            // padded around the visible chip. On it: the role,
+                            // the selected state and the one label, the unseen
+                            // count folded in (`trackedStories.updatesBadge`).
+                            <Pressable
                                 key={tab.key}
-                                // On the wrapper, the HStack's direct child: x is
-                                // relative to the HStack, which IS the scroll
-                                // content, so it is directly usable as an offset.
+                                onPress={() => onSelect(tab.key)}
+                                // x is relative to the HStack, which IS the
+                                // scroll content, so it is directly usable as
+                                // a scroll offset.
                                 onLayout={(e) => {
                                     const { x, width } = e.nativeEvent.layout;
                                     pillLayouts.current[tab.key] = { x, width };
                                 }}
+                                accessibilityRole={A11Y_ROLES.pill}
+                                accessibilityState={{ selected: active }}
+                                accessibilityLabel={
+                                    showBadge
+                                        ? `${label}, ${t('trackedStories.updatesBadge', { count: unseenTotal })}`
+                                        : label
+                                }
+                                testID={`dashboard-tab-${tab.key}`}
+                                style={{ paddingVertical: PILL_FRAME_PAD }}
                             >
                                 {active ? (
                                     // Explore's active chip: a solid accent fill,
                                     // which IS the selection signal, never glassed.
-                                    <Pressable
-                                        {...pressableProps}
+                                    <View
                                         className="flex-row items-center rounded-full border px-4 py-2 bg-primary-400 border-primary-400"
+                                        testID={`dashboard-tab-${tab.key}-chip`}
                                     >
                                         {inner}
-                                    </Pressable>
+                                    </View>
                                 ) : (
                                     // Explore's inactive chip: a round translucent
                                     // plate with a hairline edge, white label.
                                     <GlassPanel radius={999}>
-                                        <Pressable {...pressableProps} className="flex-row items-center px-4 py-2">
+                                        <View
+                                            className="flex-row items-center px-4 py-2"
+                                            testID={`dashboard-tab-${tab.key}-chip`}
+                                        >
                                             {inner}
-                                        </Pressable>
+                                        </View>
                                     </GlassPanel>
                                 )}
-                            </View>
+                            </Pressable>
                         );
                     })}
                 </HStack>
