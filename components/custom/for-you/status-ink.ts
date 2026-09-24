@@ -6,10 +6,10 @@
 // on the old panel were `typography-400` (rgb 140) on a 7% white tint over
 // scrolling content: 1.9:1 measured on a device screenshot.
 //
-// The panel sits in the absolute header, so cards scroll UNDER it. That makes
-// it a surface over content, which takes `GLASS_OVER_CONTENT_FILL` as its base
-// (see GlassSurface). `GlassPanel` IGNORES its `fallbackClassName`, so the base
-// has to be passed as a style, not as that class.
+// The panel drops down over list content, so it is a surface over content and
+// takes an OPAQUE dark base (`STATUS_PANEL_OPAQUE_BASE`; the 0.90
+// `GLASS_OVER_CONTENT_FILL` let section text through). `GlassPanel` IGNORES its
+// `fallbackClassName`, so the base has to be passed as a style.
 
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
 
@@ -27,9 +27,9 @@ export const STATUS_INK = {
  * `TranslucentPlate`. Brighter content behind cannot make it lighter than this.
  */
 /**
- * `GLASS_OVER_CONTENT_FILL` (rgba 18,17,19 at 0.90) at full opacity, for a
- * panel floating over list content with no header scrim or plate beneath it.
- * At 0.90 the section text behind the Dashboard dropdown read through.
+ * `GLASS_OVER_CONTENT_FILL` (rgba 18,17,19 at 0.90) at full opacity: the
+ * status panel floats over list content, and at 0.90 the text behind it read
+ * through.
  */
 export const STATUS_PANEL_OPAQUE_BASE = 'rgb(18, 17, 19)';
 

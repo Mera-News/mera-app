@@ -78,7 +78,7 @@ jest.mock('../FeedStatusPanel', () => {
         __esModule: true,
         default: (p: any) =>
             p.expanded ? (
-                <View testID={`status-panel-${p.mode}`} opaque={p.opaque}>
+                <View testID={`status-panel-${p.mode}`}>
                     <Pressable testID="panel-manage-plan" onPress={() => p.onBeforeNavigate?.()} />
                 </View>
             ) : null,
@@ -116,14 +116,14 @@ let mockFocused = true;
 jest.mock('@/lib/hooks/use-is-focused-safe', () => ({ useIsFocusedSafe: () => mockFocused }));
 
 import DashboardStatsCardOnly from '../DashboardStatsCard';
-import { StatsDropdownLayer, StatsDropdownProvider } from '../stats-dropdown';
+import { StatusDropdownLayer, StatusDropdownProvider } from '../status-dropdown';
 
 /** The card as ForYouScreen hosts it: provider around, layer last. */
 const DashboardStatsCard = () => (
-    <StatsDropdownProvider>
+    <StatusDropdownProvider>
         <DashboardStatsCardOnly />
-        <StatsDropdownLayer />
-    </StatsDropdownProvider>
+        <StatusDropdownLayer testIDPrefix="dashboard-stats" />
+    </StatusDropdownProvider>
 );
 
 beforeEach(() => {
@@ -231,12 +231,6 @@ describe('DashboardStatsCard', () => {
     it('lets touches through the layer while closed', () => {
         const r = render(<DashboardStatsCard />);
         expect(r.getByTestId('dashboard-stats-dropdown-layer', HIDDEN).props.pointerEvents).toBe('none');
-    });
-
-    it('floats the panel on the OPAQUE base', () => {
-        const r = render(<DashboardStatsCard />);
-        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
-        expect(r.getByTestId('status-panel-idle', HIDDEN).props.opaque).toBe(true);
     });
 
     it('anchors the dropdown directly under the card, within the tab bar', () => {

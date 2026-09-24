@@ -132,20 +132,14 @@ describe('FeedStatusPanel', () => {
         expect(queryByText('feed.analysingProgress')).toBeNull();
     });
 
-    it('sits on the dark over-content base, passed as a style (GlassPanel ignores fallbackClassName)', () => {
-        const { getByTestId } = render(<FeedStatusPanel expanded mode="processing" />);
-        const { StyleSheet } = require('react-native');
-        const style = StyleSheet.flatten(getByTestId('dashboard-status-details-panel').props.style);
-        expect(style.backgroundColor).toBe('rgba(18,17,19,0.90)');
-    });
-
-    it('draws an OPAQUE base when floated over bare content (the Dashboard dropdown)', () => {
-        const { getByTestId } = render(<FeedStatusPanel expanded mode="idle" opaque />);
+    it('sits on an OPAQUE dark base, passed as a style (GlassPanel ignores fallbackClassName)', () => {
+        // Both tabs drop it over list content; section text read through the
+        // 0.90 over-content fill (captured).
+        const { getByTestId } = render(<FeedStatusPanel expanded mode="idle" />);
         const { StyleSheet } = require('react-native');
         const { STATUS_PANEL_OPAQUE_BASE } = require('../status-ink');
         const style = StyleSheet.flatten(getByTestId('dashboard-status-details-panel').props.style);
         expect(style.backgroundColor).toBe(STATUS_PANEL_OPAQUE_BASE);
-        // Opaque means alpha 1: section text showed through the 0.90 base.
         expect(STATUS_PANEL_OPAQUE_BASE).toMatch(/^rgb\(/);
     });
 

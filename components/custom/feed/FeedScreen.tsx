@@ -89,8 +89,8 @@ import {
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
-import FeedStatusPanel, { STATUS_PANEL_AUTO_COLLAPSE_MS } from '@/components/custom/for-you/FeedStatusPanel';
+import FeedStatusMark from '@/components/custom/feed/FeedStatusMark';
+import { StatusDropdownLayer, StatusDropdownProvider } from '@/components/custom/for-you/status-dropdown';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import {
@@ -101,7 +101,6 @@ import {
 import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
 import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
-import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
@@ -316,14 +315,15 @@ const FeedScreen: React.FC = () => {
   // which `buildFeedList` treats as the legacy geo/language-blind pick.
   const userGeoLanguageCtx = useUserGeoLanguageContext();
 
-  // Status mark + its detail panel. It closes itself after
-  // STATUS_PANEL_AUTO_COLLAPSE_MS: the panel answers the question and then
-  // leaves. The Dashboard's stats card opens the same body and closes it the
-  // same way (owner: "make them similar").
+  // Status mark + its panel. The mark (FeedStatusMark) drops the panel down
+  // under the title row through the screen's StatusDropdownProvider, and it
+  // closes itself after STATUS_PANEL_AUTO_COLLAPSE_MS, exactly as the
+  // Dashboard's stats card does (owner: "make them similar"). A DROPDOWN, never
+  // an inline panel: the inline one grew the header, re-padded the list, and
+  // left it ~99pt down after closing (captured).
   //
   // The mark is on screen in every state (owner): small and still at rest,
-  // bigger with its strokes drawing on while a sync narrates. So `available`
-  // is true: the panel is one tap away at any time.
+  // bigger with its strokes drawing on while a sync narrates.
   // Title ceiling from the window width; see header-title-size for why this is
   // two steps and not a ramp.
   const { width: windowWidth } = useWindowDimensions();
@@ -345,10 +345,7 @@ const FeedScreen: React.FC = () => {
   const markMode = feedMarkMode(narrating, statusMode);
   // The screen announces entering the capped or error state (see the hook).
   useFeedModeAnnouncement(statusMode);
-  const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
-    true,
-    STATUS_PANEL_AUTO_COLLAPSE_MS,
-  );
+  const titleRowRef = useRef<View>(null);
   // The STAGE only. On-device is its own store read, the same one the
   // snapshot itself makes, so no parameter is added to the snapshot.
   const { stage: narrationStage } = useProcessingSnapshot();
@@ -1002,14 +999,7 @@ const FeedScreen: React.FC = () => {
   //
   // Nothing here reorders or swaps out, so the mark never remounts and its
   // draw-on never restarts mid-sync.
-  const feedStatusMark = (
-    <FeedStatusIndicator
-      mode={markMode}
-      expanded={statusExpanded}
-      onPress={toggleStatus}
-      testID="feed-status-indicator"
-    />
-  );
+  const feedStatusMark = <FeedStatusMark mode={markMode} anchorRef={titleRowRef} />;
   const feedTitleSlot = (
     <View pointerEvents="none" className="flex-shrink min-w-0">
       {/* A bare 1-line clamp truncated the screen's own name at large Dynamic
@@ -1031,6 +1021,9 @@ const FeedScreen: React.FC = () => {
   );
   return (
     // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+    // The provider is context only, no view, so the tab's first subview (the
+    // one react-native-screens walks to) is unchanged.
+    <StatusDropdownProvider>
     <Box className="flex-1" testID="feed-screen">
             {/* App-wide tab background. Must be the FIRST child so it paints behind
                 everything else on the page. */}
@@ -1222,19 +1215,14 @@ const FeedScreen: React.FC = () => {
             narrating={narrating}
             stage={narrationStage}
             onDevice={narrationOnDevice}
+            rowRef={titleRowRef}
             // N4: what this tab is and how it orders stories.
             explainer={<TabExplainerButton tab="feed" testID="feed-explainer-open" />}
           />
 
           {/* The 24h counts sentence that used to sit here is gone — it lives
               on the Dashboard, which is the screen for looking at numbers. It
-              is still one tap away: the panel below carries the same counts. */}
-
-          {/* Opened by the mark above; closes itself after
-              STATUS_PANEL_AUTO_COLLAPSE_MS. */}
-          <View pointerEvents="box-none">
-            <FeedStatusPanel expanded={statusExpanded} mode={statusMode} />
-          </View>
+              is still one tap away: the mark's dropdown carries the same counts. */}
         </VStack>
       </Animated.View>
 
@@ -1252,7 +1240,12 @@ const FeedScreen: React.FC = () => {
 
       {/* One-time "What's new" sheet (carried over from the old feed screen). */}
       <WhatsNewSheet />
+
+      {/* The mark's status dropdown, over the list AND the header, LAST. In
+          the screen, not a Modal, so the tab bar stays live. */}
+      <StatusDropdownLayer testIDPrefix="feed-status" />
     </Box>
+    </StatusDropdownProvider>
   );
 };
 

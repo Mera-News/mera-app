@@ -21,7 +21,7 @@ import {
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import DashboardEmptyState from '@/components/custom/for-you/DashboardEmptyState';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
-import { StatsDropdownLayer, StatsDropdownProvider } from '@/components/custom/for-you/stats-dropdown';
+import { StatusDropdownLayer, StatusDropdownProvider } from '@/components/custom/for-you/status-dropdown';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
 import FactChecksPanel from '@/components/custom/fact-checks/FactChecksPanel';
@@ -482,7 +482,7 @@ const MeraNewsScreen: React.FC = () => {
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.
         // The provider holds the Overview stats card's dropdown state; the
         // card (deep in the list) opens it, the layer (last child) draws it.
-        <StatsDropdownProvider>
+        <StatusDropdownProvider>
         <Box className="flex-1" testID="dashboard-screen">
             {/* App-wide tab background. Must be the FIRST child so it paints behind
                 everything else on the page. */}
@@ -722,9 +722,9 @@ const MeraNewsScreen: React.FC = () => {
 
             {/* The stats card's dropdown, over the list AND the header. In the
                 screen, not a Modal, so the tab bar stays tappable. */}
-            <StatsDropdownLayer />
+            <StatusDropdownLayer testIDPrefix="dashboard-stats" />
         </Box>
-        </StatsDropdownProvider>
+        </StatusDropdownProvider>
     );
 };
 

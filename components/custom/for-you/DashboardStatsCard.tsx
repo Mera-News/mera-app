@@ -7,8 +7,8 @@
 // mark opens (`FeedStatusPanel`) drops down under it, and closes itself after
 // the same STATUS_PANEL_AUTO_COLLAPSE_MS (owner: "make them similar").
 //
-// A DROPDOWN, never an in-place expansion, drawn by `StatsDropdownLayer` in
-// ForYouScreen (see stats-dropdown.tsx for why a screen layer and not a
+// A DROPDOWN, never an in-place expansion, drawn by `StatusDropdownLayer` in
+// ForYouScreen (see status-dropdown.tsx for why a screen layer and not a
 // Modal). This card only measures itself and asks the provider to open.
 //
 // Always rendered. `FeedStatsSentence` says nothing at zero articles, which is
@@ -30,7 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import FeedStatsSentence from './FeedStatsSentence';
 import { measureAnchor } from './stats-card-dropdown';
-import { useStatsDropdown } from './stats-dropdown';
+import { useStatusDropdown } from './status-dropdown';
 import { a11yStateKey, STATUS_INK } from './status-ink';
 import { useFeedModeAnnouncement } from './use-feed-mode-announcement';
 
@@ -44,7 +44,7 @@ export const DashboardStatsCard: React.FC = () => {
     // is mounted for the life of the Overview list, like the mark was.
     useFeedModeAnnouncement(mode);
     const { articleCount } = useFeedCounts();
-    const { expanded, open: openDropdown, collapse } = useStatsDropdown();
+    const { expanded, open: openDropdown, collapse } = useStatusDropdown();
     const stateLabel = tAny(a11yStateKey(mode));
 
     const anchorRef = useRef<View>(null);

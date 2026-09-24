@@ -1,4 +1,4 @@
-// The status body, and the Feed header panel FeedStatusIndicator opens — everything the old status bar
+// The status body and panel both tabs drop down (status-dropdown.tsx) — everything the old status bar
 // used to say, moved from "always on screen" to "there when you ask".
 //
 // Three things live here now that used to render ambiently in the header
@@ -12,7 +12,7 @@
 // while the panel is actually open, instead of for the whole duration of every
 // sync on both tabs.
 
-import { GLASS_OVER_CONTENT_FILL, GlassPanel } from '@/components/custom/GlassSurface';
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Text } from '@/components/ui/text';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import {
@@ -145,9 +145,9 @@ function AnalysingProgress() {
 
 /**
  * How long an opened status panel stays open before it closes itself. ONE
- * value for both tabs: the Feed's header panel and the Dashboard's Overview
- * stats card open the same body and close it the same way (owner: "make them
- * similar"). A second tap on the trigger still closes it early.
+ * value for both tabs: the Feed's mark and the Dashboard's Overview stats card
+ * drop the same panel and close it the same way (owner: "make them similar").
+ * A tap outside, the trigger included, still closes it early.
  */
 export const STATUS_PANEL_AUTO_COLLAPSE_MS = 3000;
 
@@ -177,27 +177,19 @@ export interface FeedStatusPanelProps {
     readonly mode: FeedStatusMode;
     /** Passed straight through to FeedStatusDetails — see its own doc. */
     readonly onBeforeNavigate?: () => void;
-    /**
-     * An opaque base instead of the 0.90 one. For the Dashboard's dropdown,
-     * which floats over list content with nothing else behind it: section
-     * text read straight through the 0.90 base there. The Feed's panel sits
-     * on the header's own scrim and glass plate, so it keeps the 0.90.
-     */
-    readonly opaque?: boolean;
 }
 
 /**
- * The Feed header's panel: `FeedStatusBody` on the dark over-content base,
- * because the header is absolute and cards scroll under it. The counts are
- * read by FeedStatusDetails itself, from the shared minute-clock
- * `useFeedCounts`, so this panel and the Dashboard's stats card show the same
- * numbers.
+ * The status panel: `FeedStatusBody` on an OPAQUE dark base. Both tabs drop it
+ * over list content with nothing behind it, and section text read straight
+ * through `GLASS_OVER_CONTENT_FILL`, which is 0.90 alpha (captured). The counts
+ * are read by FeedStatusDetails itself, from the shared minute-clock
+ * `useFeedCounts`, so it matches the Dashboard's stats sentence.
  */
 export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
     expanded,
     mode,
     onBeforeNavigate,
-    opaque = false,
 }) => {
     if (!expanded) return null;
 
@@ -208,16 +200,13 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
             exiting={FadeOut.duration(120)}
             style={{ marginTop: 8 }}
         >
-            {/* A surface over CONTENT: the header is absolute and cards scroll
-                under it, so the panel takes GLASS_OVER_CONTENT_FILL as its base
-                and the translucent lift sits on top. Passed as a STYLE because
-                GlassPanel ignores `fallbackClassName`; the old
-                `bg-gray-950` never applied, which left a 7% white tint with
-                page text reading straight through it. */}
+            {/* A surface over CONTENT, so an opaque dark base with the
+                translucent lift on top. Passed as a STYLE because GlassPanel
+                ignores `fallbackClassName`. */}
             <GlassPanel
                 radius={8}
                 contentClassName="px-3 py-2"
-                style={{ backgroundColor: opaque ? STATUS_PANEL_OPAQUE_BASE : GLASS_OVER_CONTENT_FILL }}
+                style={{ backgroundColor: STATUS_PANEL_OPAQUE_BASE }}
                 testID="dashboard-status-details-panel"
             >
                 <FeedStatusBody mode={mode} onBeforeNavigate={onBeforeNavigate} />

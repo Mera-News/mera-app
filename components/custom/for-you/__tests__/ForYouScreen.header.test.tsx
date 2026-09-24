@@ -114,9 +114,9 @@ jest.mock('@/components/custom/for-you/ForYouSubTabs', () => {
 });
 jest.mock('@/components/custom/for-you/StoriesSlotPlaceholder', () => mockStub('stories'));
 jest.mock('@/components/custom/for-you/DashboardSectionsFeed', () => mockStub('sections'));
-jest.mock('@/components/custom/for-you/stats-dropdown', () => ({
-  StatsDropdownProvider: ({ children }: any) => children,
-  StatsDropdownLayer: () => {
+jest.mock('@/components/custom/for-you/status-dropdown', () => ({
+  StatusDropdownProvider: ({ children }: any) => children,
+  StatusDropdownLayer: () => {
     const { View } = require('react-native');
     return <View testID="stats-dropdown-layer" />;
   },

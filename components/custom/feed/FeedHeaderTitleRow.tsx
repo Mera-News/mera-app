@@ -31,6 +31,8 @@ export interface FeedHeaderTitleRowProps {
     narrating: boolean;
     stage: ProcessingStageId | null;
     onDevice: boolean;
+    /** The row itself, measured as the status dropdown's anchor. */
+    rowRef?: React.Ref<View>;
 }
 
 /**
@@ -56,8 +58,13 @@ const FeedHeaderTitleRow: React.FC<FeedHeaderTitleRowProps> = ({
     narrating,
     stage,
     onDevice,
+    rowRef,
 }) => (
     <HStack
+        ref={rowRef}
+        // Measured as the status dropdown's anchor; a flattened view has
+        // nothing native to measure.
+        collapsable={false}
         className="items-center"
         space="sm"
         pointerEvents="box-none"

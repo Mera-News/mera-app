@@ -1,5 +1,13 @@
-// The Dashboard stats card's status dropdown: a provider that owns its state,
-// and a layer ForYouScreen mounts over the whole screen.
+// The status panel as a DROPDOWN, on both tabs: a provider that owns its
+// state, and a layer the screen mounts last, over its list and header. The
+// Feed anchors it under its title row (opened from the Mera mark), the
+// Dashboard under the Overview stats card.
+//
+// Why a dropdown at all: an in-place panel changes the list's geometry. On the
+// Dashboard the stats card, growing at the head of the list, was captured
+// growing UPWARD under the header; on the Feed the panel grew the header,
+// which re-padded the list and left it scrolled ~99pt down after the panel
+// closed. A dropdown changes no layout, so neither can happen.
 //
 // Why a layer in the SCREEN, not a Modal: a transparent RN Modal is its own
 // window and covers the tab bar, so with the panel open a tab tap only closed
@@ -7,12 +15,8 @@
 // tab bar sits above every tab screen, so a tab tap reaches the bar, switches
 // tab, and the blur close below shuts the panel.
 //
-// Why a dropdown at all: the card is the head of the Overview list, and
-// growing it in place was captured growing UPWARD under the header at scroll
-// offset 0. The card never changes height, so the list never does.
-//
-// The provider owns the disclosure (the card reads `expanded` for its chevron
-// and label); the layer owns the drawing. Closes on the shared 3s timer, a tap
+// The provider owns the disclosure (the trigger reads `expanded` for its own
+// state and label); the layer owns the drawing. Closes on the shared 3s timer, a tap
 // anywhere on the backdrop (which covers the card, so a second tap on the card
 // closes it), a tab switch, and before "Manage plan" navigates.
 
@@ -27,32 +31,32 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FeedStatusPanel, { STATUS_PANEL_AUTO_COLLAPSE_MS } from './FeedStatusPanel';
 import { type AnchorRect, dropdownFrame, measureAnchor } from './stats-card-dropdown';
 
-interface StatsDropdownState {
+interface StatusDropdownState {
     readonly expanded: boolean;
-    /** The card's rect in WINDOW coordinates (`measureInWindow`). */
+    /** The anchor's rect in WINDOW coordinates (`measureInWindow`). */
     readonly open: (anchorInWindow: AnchorRect) => void;
     readonly collapse: () => void;
 }
 
-interface StatsDropdownInternals extends StatsDropdownState {
+interface StatusDropdownInternals extends StatusDropdownState {
     readonly layerRef: React.RefObject<View | null>;
-    /** The card's rect in the LAYER's coordinates, once measured. */
+    /** The anchor's rect in the LAYER's coordinates, once measured. */
     readonly anchor: AnchorRect | null;
     readonly layerHeight: number;
 }
 
-const Ctx = createContext<StatsDropdownInternals | null>(null);
+const Ctx = createContext<StatusDropdownInternals | null>(null);
 
-const NOOP: StatsDropdownState = { expanded: false, open: () => {}, collapse: () => {} };
+const NOOP: StatusDropdownState = { expanded: false, open: () => {}, collapse: () => {} };
 
-/** For the card. Outside a provider it is inert rather than a crash. */
-export function useStatsDropdown(): StatsDropdownState {
+/** For the trigger. Outside a provider it is inert rather than a crash. */
+export function useStatusDropdown(): StatusDropdownState {
     return useContext(Ctx) ?? NOOP;
 }
 
-export const StatsDropdownProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // `available` true: the card is always rendered; only a tab switch needs
-    // closing, and the blur effect below does that.
+export const StatusDropdownProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // `available` true: both triggers are always rendered; only a tab switch
+    // needs closing, and the blur effect below does that.
     const { expanded, toggle, collapse } = useStatusDisclosure(true, STATUS_PANEL_AUTO_COLLAPSE_MS);
     const layerRef = useRef<View | null>(null);
     const [anchor, setAnchor] = useState<AnchorRect | null>(null);
@@ -88,7 +92,10 @@ export const StatsDropdownProvider: React.FC<{ children: React.ReactNode }> = ({
  * header. Always mounted (it has to be measurable), and touch-transparent
  * while closed.
  */
-export const StatsDropdownLayer: React.FC = () => {
+export const StatusDropdownLayer: React.FC<{
+    /** `{surface}` for the layer's testIDs: `${prefix}-dropdown-layer`, etc. */
+    readonly testIDPrefix: string;
+}> = ({ testIDPrefix }) => {
     const ctx = useContext(Ctx);
     const { t } = useTranslation();
     const mode = useFeedStatusMode();
@@ -109,23 +116,23 @@ export const StatsDropdownLayer: React.FC = () => {
             collapsable={false}
             pointerEvents={showing ? 'auto' : 'none'}
             style={[StyleSheet.absoluteFill, { zIndex: 20 }]}
-            testID="dashboard-stats-dropdown-layer"
+            testID={`${testIDPrefix}-dropdown-layer`}
         >
             {showing ? (
                 <>
                     {/* Invisible: a popover, not a dialog, so nothing dims. It
-                        covers the card too, which is what makes a second tap
-                        on the card close it. */}
+                        covers the trigger too, which is what makes a second
+                        tap on the trigger close it. */}
                     <Pressable
                         style={StyleSheet.absoluteFill}
                         onPress={collapse}
                         accessibilityRole="button"
                         accessibilityLabel={t('feedStatus.collapseA11y')}
-                        testID="dashboard-stats-dropdown-backdrop"
+                        testID={`${testIDPrefix}-dropdown-backdrop`}
                     />
                     <View
                         style={{ position: 'absolute', top: frame.top, left: frame.left, width: frame.width }}
-                        testID="dashboard-stats-dropdown"
+                        testID={`${testIDPrefix}-dropdown`}
                     >
                         {/* The cap lives on the ScrollView itself so a body
                             taller than the room above the tab bar scrolls
@@ -134,12 +141,9 @@ export const StatsDropdownLayer: React.FC = () => {
                             style={{ maxHeight: frame.maxHeight }}
                             bounces={false}
                             showsVerticalScrollIndicator={false}
-                            testID="dashboard-stats-dropdown-scroll"
+                            testID={`${testIDPrefix}-dropdown-scroll`}
                         >
-                            {/* Opaque: it floats over list CONTENT with nothing
-                                behind it, unlike the Feed's panel, which sits on
-                                the header's own scrim and plate. */}
-                            <FeedStatusPanel expanded mode={mode} onBeforeNavigate={collapse} opaque />
+                            <FeedStatusPanel expanded mode={mode} onBeforeNavigate={collapse} />
                         </ScrollView>
                     </View>
                 </>

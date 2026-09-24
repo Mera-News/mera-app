@@ -4,7 +4,7 @@
 // calls back, so a test of the card has to replace the measurement, and the
 // geometry is easier to pin as a function than through a rendered Modal.
 //
-// The dropdown itself (provider + layer) is `stats-dropdown.tsx`.
+// The dropdown itself (provider + layer) is `status-dropdown.tsx`.
 
 import type { View } from 'react-native';
 
