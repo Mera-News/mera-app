@@ -30,6 +30,12 @@ jest.mock('@/components/ui/text', () => {
     const { Text } = require('react-native');
     return { Text };
 });
+// ArticleOverflowMenu titles the sheet with the card's own title component,
+// which reaches the native translator; stubbed like every card suite does.
+jest.mock('@/components/custom/TranslatableDynamic', () => {
+    const { Text } = require('react-native');
+    return { __esModule: true, default: (p: any) => <Text>{p.text}</Text> };
+});
 jest.mock('@/components/custom/GlassSurface', () => ({ GLASS_OVER_CONTENT_FILL: '#111', TranslucentPlate: () => null }));
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
