@@ -1171,10 +1171,15 @@ describe('no icon glyph in any card label', () => {
     const r = render(make());
     expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
   });
-  // KNOWN LEAK, pending a decision: a full-size (Feed / Dashboard) card root has
-  // no explicit label, so VoiceOver reads all its text run together, including
-  // the AI disclosure's `auto-awesome` glyph. Fixing it means designing the
-  // card's spoken label (or hiding the decorative icon, which needs a device
-  // check on Fabric), so it is escalated rather than guessed.
-  it.todo('Feed and Dashboard card roots read no icon glyph');
+  // The full-size card root has no explicit label, so VoiceOver reads its
+  // children's text; the decorative icons inside it (the AI disclosure's
+  // sparkle, the meta row's) are hidden from accessibility so no glyph joins
+  // it. What VoiceOver says is otherwise unchanged.
+  it.each([
+    ['Feed card', () => <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} />],
+    ['Dashboard card', () => <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} flat />],
+  ] as const)('%s root reads no icon glyph', (_n, make) => {
+    const r = render(make());
+    expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+  });
 });

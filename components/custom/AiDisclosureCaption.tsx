@@ -1,6 +1,7 @@
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -88,6 +89,8 @@ const AiDisclosureCaption: React.FC<AiDisclosureCaptionProps> = ({
                 name="auto-awesome"
                 size={compact ? 11 : 13}
                 color={color}
+                // Decorative: the caption's own label already says it.
+                {...DECORATIVE_ICON_A11Y}
             />
             <Text
                 size={compact ? '2xs' : 'xs'}

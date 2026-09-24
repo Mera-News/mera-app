@@ -8,6 +8,7 @@ import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useTimeTick } from '@/lib/time-tick';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -108,7 +109,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const ageEl =
         showRecency ? (
                 <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-age-slot">
-                    <MaterialIcons name="schedule" size={14} color={iconColor} />
+                    <MaterialIcons name="schedule" size={14} color={iconColor} {...DECORATIVE_ICON_A11Y} />
                     <Text size="sm" className={ageColor}>
                         {age}
                     </Text>
@@ -213,7 +214,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     style={{ flex: 1, minWidth: 0 }}
                     testID="meta-publication-slot"
                 >
-                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
+                    <MaterialIcons name="newspaper" size={12} color={iconColor} {...DECORATIVE_ICON_A11Y} />
                     <Text
                         size="xs"
                         bold
@@ -239,7 +240,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     style={{ flexShrink: 1, minWidth: 0 }}
                     testID="meta-publication-slot"
                 >
-                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
+                    <MaterialIcons name="newspaper" size={12} color={iconColor} {...DECORATIVE_ICON_A11Y} />
                     <Text
                         size="xs"
                         bold

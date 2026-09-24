@@ -19,10 +19,8 @@ jest.mock('@/components/ui/text', () => {
   const { Text } = require('react-native');
   return { Text };
 });
-jest.mock('@expo/vector-icons', () => {
-  const { View } = require('react-native');
-  return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+// Icons draw their real icon-font glyph, as on device (see icon-glyph-a11y).
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('@/components/custom/SourceFlag', () => ({ SourceFlag: () => null }));
 // SourceCountryFlag pulls in the popover ESM (un-transformable under jest-expo).
 jest.mock('@/components/custom/SourceCountryFlag', () => ({ SourceCountryFlag: () => null }));
@@ -58,6 +56,7 @@ jest.mock('@/lib/utils/time-ago', () => ({ formatTimeAgo: () => '2h' }));
 import { render } from '@testing-library/react-native';
 import React from 'react';
 import { ArticleMetaRow } from '../ArticleMetaRow';
+import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 const base = {
   pubDate: new Date().toISOString(),
@@ -220,5 +219,20 @@ describe('ArticleMetaRow layout (owner spec)', () => {
     );
     expect(queryByTestId('meta-left')).toBeNull();
     expect(queryByTestId('meta-language-slot')).toBeTruthy();
+  });
+});
+
+// A card root has no explicit label: VoiceOver reads its children's text. The
+// meta row's icons are decorative, so they are hidden from accessibility and
+// no icon-font glyph joins what the card reads ("<glyph> Der Spiegel").
+describe('decorative meta icons stay out of the spoken label', () => {
+  it.each(['card', 'screen'] as const)('%s', (variant) => {
+    const { View } = require('react-native');
+    const r = render(
+      <View accessible testID="card-root">
+        <ArticleMetaRow variant={variant} {...base} showRecency />
+      </View>,
+    );
+    expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
   });
 });

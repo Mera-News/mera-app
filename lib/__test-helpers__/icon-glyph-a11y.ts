@@ -27,9 +27,23 @@ export function glyphIconModule() {
     return { MaterialIcons };
 }
 
+/** A subtree hidden from accessibility the documented way contributes no
+ *  text to its parent's spoken label (iOS `accessibilityElementsHidden`,
+ *  Android `importantForAccessibility="no-hide-descendants"`). */
+const hidden = (node: any) =>
+    node?.props?.accessibilityElementsHidden === true || node?.props?.importantForAccessibility === 'no-hide-descendants';
+
 function textOf(node: any): string {
     if (node == null) return '';
     if (typeof node === 'string') return node;
+    if (hidden(node)) return '';
+    // iOS composes a container's label from its subviews, taking a subview's
+    // OWN accessibilityLabel instead of descending into it (RN's
+    // RCTRecursiveAccessibilityLabel), so an explicitly labelled child
+    // contributes that label, never its glyph.
+    if (typeof node.type === 'string' && typeof node.props?.accessibilityLabel === 'string') {
+        return node.props.accessibilityLabel;
+    }
     const kids = node.children ?? [];
     return kids.map((k: any) => textOf(k)).join('');
 }
