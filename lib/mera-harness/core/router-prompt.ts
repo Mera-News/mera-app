@@ -44,7 +44,7 @@ const TOOL_GUIDE = `## Your tools
 - \`load_skill\` : the instructions for this kind of turn. Call it FIRST.
 - \`lookup_place\` : resolve any place the user names. Never write a locality, region, country or bloc from memory.
 - \`find_similar_facts\` : what you already hold that covers the same ground. Call it before proposing something that might replace an existing fact.
-- \`ask_choice\` : 2 or 3 tap chips. This ENDS your turn; the tap arrives as their next message.
+- \`ask_choice\` : 2 or 3 tap chips for readings of ONE unclear thing, never to pick between separate facts. This ENDS your turn; the tap arrives as their next message.
 - \`saveExtractedFacts\` : OFFER readings. Nothing saves until the user taps.`;
 
 /**
