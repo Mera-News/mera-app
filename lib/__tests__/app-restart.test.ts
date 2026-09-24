@@ -73,6 +73,7 @@ import {
   markOtaRestartAttempted,
   otaRestartAlreadyAttempted,
   restartIsAvailable,
+  restartWouldReload,
   wasJsRestartSync,
 } from '../app-restart';
 import loggerDefault from '@/lib/logger';
@@ -538,6 +539,83 @@ describe('the per-update-id OTA restart guard', () => {
     expect(mockDeleteSetting).toHaveBeenCalledWith(RESTART_MARKER_KEY);
     expect(mockDeleteSetting).not.toHaveBeenCalledWith(OTA_RESTART_GUARD_KEY);
     await expect(otaRestartAlreadyAttempted('update-abc')).resolves.toBe(true);
+  });
+});
+
+describe('restartWouldReload', () => {
+  // The OTA path spends one attempt per bundle and must only spend it on a
+  // request that genuinely reloads. Every non-reloading outcome has to be
+  // covered, or the attempt is consumed by something that never reloaded and the
+  // bundle is stranded until a cold start.
+  it('is true on a production build with nothing in the way', () => {
+    asProductionBuild();
+    expect(restartWouldReload()).toBe(true);
+  });
+
+  it('is false while a hold is live', () => {
+    asProductionBuild();
+    holdRestart('purchase');
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  it('is false on a blocked route', () => {
+    asProductionBuild();
+    mockPathname = '/verify-otp';
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  it('is false when the app is not active', () => {
+    asProductionBuild();
+    mockAppState.currentState = 'background';
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  it('is false inside the cooldown', async () => {
+    asProductionBuild();
+    await requestRestart('ota');
+    jest.setSystemTime(NOW + MIN_RESTART_INTERVAL_MS - 1);
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  // An inert build eating the attempt is the same bug in different clothes.
+  it('is false in a dev build and when updates are disabled', () => {
+    (globalThis as any).__DEV__ = true;
+    expect(restartWouldReload()).toBe(false);
+
+    (globalThis as any).__DEV__ = false;
+    mockUpdatesEnabled = false;
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  // Otherwise a simulator pass sees the decision once and then silently never
+  // again, because the first run consumed the only attempt.
+  it('is false under EXPO_PUBLIC_RESTART_DEBUG', () => {
+    asProductionBuild();
+    process.env.EXPO_PUBLIC_RESTART_DEBUG = 'true';
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  // It must agree with the gate it predicts. A second copy of that ladder is how
+  // the two drift apart, so this pins them to the same answer.
+  it('agrees with requestRestart on every blocker', async () => {
+    asProductionBuild();
+    for (const setUp of [
+      () => { mockAppState.currentState = 'inactive'; },
+      () => { holdRestart('chat-stream'); },
+      () => { mockPathname = '/pin-lock'; },
+    ]) {
+      __resetAppRestartForTests();
+      jest.clearAllMocks();
+      mockAppState.currentState = 'active';
+      mockPathname = '/logged-in/app_container/feed';
+      setUp();
+
+      const predicted = restartWouldReload();
+      await requestRestart('ota');
+
+      expect(predicted).toBe(false);
+      expect(mockReloadAsync).not.toHaveBeenCalled();
+    }
   });
 });
 

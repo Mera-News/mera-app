@@ -36,10 +36,12 @@ jest.mock('@/lib/utils/transient-error', () => ({
 const mockRequestRestart = jest.fn(async (_reason: string) => {});
 const mockAlreadyAttempted = jest.fn(async (_id: string) => false);
 const mockMarkAttempted = jest.fn(async (_id: string) => {});
+const mockWouldReload = jest.fn(() => true);
 jest.mock('@/lib/app-restart', () => ({
     requestRestart: (reason: string) => mockRequestRestart(reason),
     otaRestartAlreadyAttempted: (id: string) => mockAlreadyAttempted(id),
     markOtaRestartAttempted: (id: string) => mockMarkAttempted(id),
+    restartWouldReload: () => mockWouldReload(),
 }));
 
 const mockCheck = jest.fn();
@@ -105,6 +107,7 @@ describe('OTASilentUpdater', () => {
         mockCheck.mockResolvedValue({ isAvailable: false });
         mockFetch.mockResolvedValue(NOTHING_FETCHED);
         mockAlreadyAttempted.mockResolvedValue(false);
+        mockWouldReload.mockReturnValue(true);
         jest.spyOn(AppState, 'addEventListener').mockImplementation((_event, h) => {
             handler = h as (state: AppStateStatus) => void;
             return { remove } as ReturnType<typeof AppState.addEventListener>;
@@ -327,6 +330,93 @@ describe('OTASilentUpdater', () => {
 
             expect(mockRequestRestart).toHaveBeenCalledTimes(2);
             expect(mockMarkAttempted).toHaveBeenLastCalledWith('update-y');
+        });
+    });
+
+    describe('a BLOCKED restart does not consume the attempt', () => {
+        // ONE RELOAD PER BUNDLE, not one request per bundle. A blocked request
+        // never reloaded, so it cannot have failed to launch, so it is not what
+        // the guard bounds. Spending the attempt on it stranded the bundle for
+        // the reader mid-chat-stream, mid-checkout or on /verify-otp when the
+        // download finished — cold start only, for exactly the reader who never
+        // cold-starts.
+        it('leaves the guard UNWRITTEN when the restart would not reload', async () => {
+            mockWouldReload.mockReturnValue(false);
+            mockContext.value = pendingContext('update-x');
+            const { send } = mount();
+            await flush();
+
+            await send('background', 'active');
+
+            expect(mockMarkAttempted).not.toHaveBeenCalled();
+        });
+
+        // The blocker still has to reach the log, or a simulator pass cannot see
+        // which gate stopped it.
+        it('still asks, so the blocker is reported', async () => {
+            mockWouldReload.mockReturnValue(false);
+            mockContext.value = pendingContext('update-x');
+            const { send } = mount();
+            await flush();
+
+            await send('background', 'active');
+
+            expect(mockRequestRestart).toHaveBeenCalledWith('ota');
+        });
+
+        // THE POINT OF THE WHOLE DISTINCTION: the hold clears, or the reader
+        // leaves the blocked route, and the SAME bundle applies on the next
+        // return.
+        it('retries the same update id on the next return, and then marks it', async () => {
+            mockWouldReload.mockReturnValue(false);
+            mockContext.value = pendingContext('update-x');
+            const { send } = mount();
+            await flush();
+
+            await send('background', 'active');
+            expect(mockMarkAttempted).not.toHaveBeenCalled();
+
+            // Hold released / route left.
+            mockWouldReload.mockReturnValue(true);
+            await send('background', 'active');
+
+            expect(mockMarkAttempted).toHaveBeenCalledTimes(1);
+            expect(mockMarkAttempted).toHaveBeenCalledWith('update-x');
+            expect(mockRequestRestart).toHaveBeenCalledTimes(2);
+        });
+
+        // An inert build eating the attempt is the same bug in different
+        // clothes, and it would make the simulator pass misleading.
+        it('does not consume the attempt on an inert build either', async () => {
+            // restartWouldReload() is false under __DEV__, a build without
+            // expo-updates, and EXPO_PUBLIC_RESTART_DEBUG.
+            mockWouldReload.mockReturnValue(false);
+            mockCheck.mockResolvedValue({ isAvailable: true });
+            mockFetch.mockResolvedValue(NEW_FETCH);
+            mockContext.value = pendingContext('update-new');
+            const { send } = mount();
+            await flush();
+
+            await send('background', 'active');
+
+            expect(mockMarkAttempted).not.toHaveBeenCalled();
+        });
+
+        // And the bound still holds on the path that DID reload: this is the
+        // half that must not regress while fixing the other half.
+        it('still bounds a bundle that reloaded and came back', async () => {
+            mockContext.value = pendingContext('update-x');
+            const { send } = mount();
+            await flush();
+
+            await send('background', 'active');
+            expect(mockMarkAttempted).toHaveBeenCalledWith('update-x');
+
+            mockAlreadyAttempted.mockResolvedValue(true);
+            await send('background', 'active');
+            await send('background', 'active');
+
+            expect(mockRequestRestart).toHaveBeenCalledTimes(1);
         });
     });
 

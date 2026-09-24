@@ -6,6 +6,7 @@ import {
   markOtaRestartAttempted,
   otaRestartAlreadyAttempted,
   requestRestart,
+  restartWouldReload,
 } from '@/lib/app-restart';
 import logger from '@/lib/logger';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
@@ -125,10 +126,33 @@ export default function OTASilentUpdater() {
         }
         if (await otaRestartAlreadyAttempted(updateId)) return;
 
-        // Awaited BEFORE the request: a write after `reloadAsync()` never runs,
-        // and an attempt blocked by a hold or a route must still consume the
-        // guard rather than retry on every return.
-        await markOtaRestartAttempted(updateId);
+        // ONE RELOAD PER BUNDLE — not one request per bundle.
+        //
+        // The guard bounds "reloaded and failed to launch". A request that was
+        // BLOCKED never reloaded, so it cannot have failed to launch, and the
+        // next return SHOULD try it again: by then the hold has cleared or the
+        // reader has left the blocked route. Spending the attempt on it instead
+        // stranded the bundle for the reader mid-chat-stream, mid-checkout or on
+        // `/verify-otp` when the download finished — they would only ever get it
+        // at a cold start, and the reader who never cold-starts is the whole
+        // reason this exists.
+        //
+        // So mark only when it would genuinely reload. The mark is still AWAITED
+        // and still BEFORE the request, because a write after `reloadAsync()`
+        // never runs.
+        //
+        // `requestRestart` is called either way, so the blocker still reaches
+        // the log and a simulator pass can see which gate stopped it.
+        //
+        // RESIDUAL RACE, weighed and accepted: a hold can appear between the
+        // predicate and `reloadAsync()`, a few lines later, and that attempt is
+        // consumed. Closing it would mean `requestRestart` reporting its own
+        // outcome, which it cannot do on the path where it succeeds — the JS
+        // context dies mid-call. The cost is one deferred update, not a lost
+        // one: it still launches at the next cold start.
+        if (restartWouldReload()) {
+          await markOtaRestartAttempted(updateId);
+        }
         await requestRestart('ota');
       } catch (error) {
         // The OTA check is best-effort — a timed-out / lost connection is

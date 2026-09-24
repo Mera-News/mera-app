@@ -380,6 +380,34 @@ export function restartIsAvailable(): boolean {
 }
 
 /**
+ * Whether a restart requested RIGHT NOW would actually reload the app.
+ *
+ * Exists for one caller: the OTA path records one attempt per update id, and
+ * that record must only be spent on a request that genuinely reloads. A request
+ * that was blocked did not reload, so it cannot have failed to launch, so it is
+ * not what the guard bounds — retrying it on the next return is correct
+ * behaviour. Consuming the attempt anyway stranded the bundle: a reader mid-chat
+ * -stream, mid-checkout or sitting on `/verify-otp` when the download finished
+ * would never be offered it again on a return, only at a cold start — and the
+ * reader who never cold-starts is the entire premise of the feature.
+ *
+ * REUSES `blockedBy()` rather than restating its ladder. A second copy of that
+ * precedence is how the two drift apart, and a predicate that disagreed with the
+ * gate it predicts would be worse than no predicate.
+ *
+ * FALSE ON THE INERT PATHS TOO, not just when blocked. A dev build or a build
+ * without expo-updates eats the attempt otherwise, which is the same bug in
+ * different clothes; and it is false under `EXPO_PUBLIC_RESTART_DEBUG` as well,
+ * so a simulator pass can watch the decision on every return instead of seeing
+ * it once and then silently never again.
+ */
+export function restartWouldReload(): boolean {
+  if (restartDebugEnabled()) return false;
+  if (!restartIsAvailable()) return false;
+  return blockedBy() == null;
+}
+
+/**
  * Restart the app, if every gate allows it.
  *
  * Silent in every case: no prompt, no banner, no toast. The caller does not find
