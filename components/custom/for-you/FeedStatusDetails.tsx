@@ -64,7 +64,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({ onBeforeNavigate 
     const appLanguage = useAppLanguage();
     const router = useRouter();
     // Read here rather than passed in, from the shared minute-clock hook, so the
-    // panel, the sheet and the header sentence cannot show different numbers.
+    // body and the stats sentence cannot show different numbers.
     const { articleCount: processedCount, analysedCount, relevantCount } = useFeedCounts();
     const batchProgress = useForYouBatchProgress();
     // Read here, never passed in: a prop only one screen passed is how the

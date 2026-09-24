@@ -1,6 +1,6 @@
 // FeedStatsSentence — the presentational "N published / M analysed / K relevant
-// / R read" line. Reads the shared `useFeedCounts()` hook. Mounted in both the
-// Feed tab header and the Dashboard header.
+// / R read" line. Reads the shared `useFeedCounts()` hook. Mounted in ONE
+// place: the Dashboard's Overview stats card (DashboardStatsCard).
 //
 // PLURALS: each clause is its own i18next key with a `count` option, so the
 // library picks the right plural form per language (`_one`/`_other` in en, and
