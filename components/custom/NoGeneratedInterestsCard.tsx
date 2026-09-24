@@ -25,13 +25,12 @@ const NoGeneratedInterestsCard: React.FC = () => {
 
     const innerContent = (
         <Box className="w-full py-20 px-6 items-center justify-center">
-            {/* `animated`: MeraLogo's own spotlight sweep, self-gated on focus +
-                foreground (useAnimationsActive), matching FreeTierCard and
-                MeraChatInvite. This card is a terminal state that can sit on
-                screen indefinitely, which is exactly where a still logo reads
-                as a dead end. */}
+            {/* Still: the owner's rule is that nothing on the Feed moves
+                unless the feed is updating, and this card is a Feed row that
+                can sit on screen indefinitely. The card itself is the tap
+                target, which is what keeps it from reading as a dead end. */}
             <Box className="mb-6">
-                <MeraLogo size={100} animated />
+                <MeraLogo size={100} animated={false} />
             </Box>
 
             {/* Main message */}

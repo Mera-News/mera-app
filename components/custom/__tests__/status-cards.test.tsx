@@ -199,3 +199,14 @@ describe('FeedProcessingCard is flush with the page, not a card on it', () => {
     expect(screen.getByTestId('feed-preparing-explore-cta')).toBeTruthy();
   });
 });
+
+// Owner: on the Feed, nothing animates unless the feed is updating. This card
+// is a Feed row that can sit on screen indefinitely.
+describe('NoGeneratedInterestsCard keeps its mark still', () => {
+  it('renders the Mera mark without the torch sweep', () => {
+    const { UNSAFE_root } = render(<NoGeneratedInterestsCard />);
+    const logos = UNSAFE_root.findAll((n: any) => n.props?.size === 100 && 'animated' in (n.props ?? {}));
+    expect(logos.length).toBeGreaterThan(0);
+    for (const l of logos) expect(l.props.animated).toBe(false);
+  });
+});
