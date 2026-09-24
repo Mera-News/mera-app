@@ -21,7 +21,7 @@ jest.mock('@/lib/stores/selectors', () => ({
     useForYouChunkStates: () => mockChunks,
 }));
 
-import { MARK_STALE_MS, useIsFeedMarkActive } from '../use-mark-active';
+import { MARK_OFF_HOLD_MS, MARK_STALE_MS, useIsFeedMarkActive } from '../use-mark-active';
 
 beforeEach(() => {
     jest.useFakeTimers();
@@ -71,10 +71,49 @@ describe('useIsFeedMarkActive', () => {
             jest.advanceTimersByTime(2000);
         });
         rerender({});
+        // Past the stale bound, then the off-hold.
+        act(() => {
+            jest.advanceTimersByTime(MARK_OFF_HOLD_MS + 10);
+        });
+        rerender({});
         expect(result.current).toBe(false);
         // Progress lands: animate again.
         mockDone = 15;
         rerender({});
         expect(result.current).toBe(true);
+    });
+
+    // Captured: mid-run the mark shrank and regrew within ~0.8s, in the gap
+    // between two server batches. Once active it stays active until "not
+    // active" has held for MARK_OFF_HOLD_MS.
+    it('rides out a short gap between batches, and goes still once the gap holds', () => {
+        expect(MARK_OFF_HOLD_MS).toBe(2500);
+        mockLocal = true;
+        const { result, rerender } = renderHook(() => useIsFeedMarkActive());
+        expect(result.current).toBe(true);
+        mockLocal = false;
+        rerender({});
+        expect(result.current).toBe(true);
+        act(() => {
+            jest.advanceTimersByTime(800);
+        });
+        rerender({});
+        expect(result.current).toBe(true);
+        // Work resumes inside the hold: it never went still.
+        mockLocal = true;
+        rerender({});
+        expect(result.current).toBe(true);
+        mockLocal = false;
+        rerender({});
+        act(() => {
+            jest.advanceTimersByTime(MARK_OFF_HOLD_MS + 10);
+        });
+        rerender({});
+        expect(result.current).toBe(false);
+    });
+
+    it('starts still: the hold only delays going still, never starting', () => {
+        const { result } = renderHook(() => useIsFeedMarkActive());
+        expect(result.current).toBe(false);
     });
 });

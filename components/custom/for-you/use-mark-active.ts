@@ -27,6 +27,11 @@ import { useEffect, useState } from 'react';
  *  module reaches the database at import time, which no header should. */
 export const MARK_STALE_MS = 15 * 60_000;
 
+/** Hysteresis: once active, the mark stays active until "not active" has held
+ *  this long. Captured: mid-run it shrank and regrew within ~0.8s in the gap
+ *  between two server batches. Only going STILL is delayed, never starting. */
+export const MARK_OFF_HOLD_MS = 2500;
+
 export function useIsFeedMarkActive(): boolean {
     const local = useIsFeedWorkingLocally();
     const phase = useForYouAsyncJobPhase();
@@ -52,5 +57,33 @@ export function useIsFeedMarkActive(): boolean {
     }, [phase, lastProgressAt]);
 
     const serverScoring = phase !== 'idle' && Date.now() - lastProgressAt < MARK_STALE_MS;
-    return local || serverScoring;
+    const raw = local || serverScoring;
+
+    // When `raw` last went false while the mark was active; null otherwise.
+    const [offSince, setOffSince] = useState<number | null>(null);
+    const [shown, setShown] = useState(raw);
+    useEffect(() => {
+        if (raw) {
+            setShown(true);
+            setOffSince(null);
+        } else if (shown && offSince === null) {
+            setOffSince(Date.now());
+        }
+    }, [raw, shown, offSince]);
+    useEffect(() => {
+        if (raw || offSince === null) return;
+        const left = offSince + MARK_OFF_HOLD_MS - Date.now();
+        if (left <= 0) {
+            setShown(false);
+            setOffSince(null);
+            return;
+        }
+        const id = setTimeout(() => {
+            setShown(false);
+            setOffSince(null);
+        }, left);
+        return () => clearTimeout(id);
+    }, [raw, offSince]);
+
+    return raw || shown;
 }
