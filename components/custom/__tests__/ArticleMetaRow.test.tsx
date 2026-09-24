@@ -120,44 +120,35 @@ describe('ArticleMetaRow', () => {
   });
 });
 
-// M5, M6 and the truncation order.
-describe('ArticleMetaRow layout (ux1)', () => {
+// Owner rule: every segment keeps its own space; a long one is trimmed with "…"
+// instead of pushing the others out. The detail row once showed
+// "National Cyber Security Centre (NCSC) · 22h ago · Dutc".
+describe('ArticleMetaRow truncation (owner rule)', () => {
   const flat = (st: any) => [st].flat(Infinity).reduce((a: any, x: any) => ({ ...a, ...(x ?? {}) }), {});
+  const LONG = 'National Cyber Security Centre (NCSC) of the Kingdom of Spain';
 
-  it('hides the language slot when the article is already in the reader\'s language', () => {
-    const { queryByTestId, queryByText } = render(
-      <ArticleMetaRow variant="card" {...base} languageCode="en-GB" />,
-    );
-    expect(queryByTestId('meta-language-slot')).toBeNull();
-    expect(queryByText('German')).toBeNull();
-  });
+  it.each(['card', 'screen'] as const)(
+    '%s: a 60-char publisher takes the leftover width and trims; age and language never shrink',
+    (variant) => {
+      const { getByText, getByTestId } = render(
+        <ArticleMetaRow variant={variant} {...base} publicationName={LONG} />,
+      );
+      const pubText = getByText(/National Cyber Security Centre/);
+      expect(pubText.props.numberOfLines).toBe(1);
+      expect(pubText.props.ellipsizeMode).toBe('tail');
+      const pubSlot = flat(getByTestId('meta-publication-slot').props.style);
+      expect(pubSlot.flex).toBe(1);
+      expect(pubSlot.minWidth).toBe(0);
+      expect(flat(getByTestId('meta-age-slot').props.style).flexShrink).toBe(0);
+      expect(flat(getByTestId('meta-language-slot').props.style).flexShrink).toBe(0);
+      const lang = getByText('German');
+      expect(lang.props.numberOfLines).toBe(1);
+      expect(flat(lang.props.style).maxWidth).toBeGreaterThan(0);
+    },
+  );
 
-  it('shows the language slot for an article in another language', () => {
-    const { getByTestId } = render(<ArticleMetaRow variant="card" {...base} />);
+  it('shows the language on every card, the reader\'s own language included', () => {
+    const { getByTestId } = render(<ArticleMetaRow variant="card" {...base} languageCode="en" />);
     expect(getByTestId('meta-language-slot')).toBeTruthy();
-  });
-
-  it('groups the slots LEFT instead of spreading them edge to edge', () => {
-    const { toJSON } = render(<ArticleMetaRow variant="card" {...base} />);
-    const root: any = toJSON();
-    expect(String(root.props.className ?? '')).not.toContain('justify-between');
-  });
-
-  it('drops the language first, truncates the publication second, never the time', () => {
-    const { getByTestId, getByText } = render(<ArticleMetaRow variant="card" {...base} />);
-    const lang = flat(getByTestId('meta-language-slot').props.style);
-    const pub = flat(getByText('Der Spiegel').props.style);
-    expect(lang.flexShrink).toBeGreaterThan(pub.flexShrink);
-    expect(lang.overflow).toBe('hidden');
-    expect(pub.flexShrink).toBeGreaterThan(0);
-    // The age sits in a non-shrinking group.
-    let n: any = getByText('2h');
-    let ageGroupShrinks = true;
-    while (n) {
-      const cls = String(n.props?.className ?? '');
-      if (cls.includes('flex-shrink-0')) { ageGroupShrinks = false; break; }
-      n = n.parent;
-    }
-    expect(ageGroupShrinks).toBe(false);
   });
 });
