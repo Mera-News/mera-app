@@ -15,6 +15,14 @@ import type { LayoutChangeEvent, View } from 'react-native';
 
 export const HEADER_ICON_GLYPH = 24;
 export const HEADER_ICON_COLOR = '#ffffff';
+/**
+ * The gap between neighbouring right-hand header actions (mark, search,
+ * Advanced, refresh, bell), in points and in `style` (the `space` tokens are
+ * rem-scaled). 25 keeps two 44pt frames apart even beside the Feed mark, whose
+ * frame reaches ~14.4pt past its 15.1pt glyph box at 375; a plain icon's
+ * reaches 10.
+ */
+export const HEADER_ACTIONS_GAP = 25;
 const TARGET = 44;
 const FRAME_STYLE = {
     width: TARGET,

@@ -39,10 +39,17 @@ jest.mock('@react-navigation/native', () => ({ useIsFocused: () => true }));
 jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useLocalSearchParams: () => ({}) }));
 jest.mock('@/components/custom/AbstractGradientBackdrop', () => mockStub('backdrop'));
 jest.mock('@/lib/diagnostics/coldstart-timeline', () => ({ mark: jest.fn() }));
+let mockLocal = false;
+let mockStatusMode = 'idle';
 jest.mock('@/components/custom/FeedSyncIndicator', () => ({
   useFeedSyncRefresh: () => ({ refreshing: false, onRefresh: jest.fn() }),
   useIsFeedProcessing: () => mockProcessing,
+  useIsFeedWorkingLocally: () => mockLocal,
 }));
+jest.mock('@/components/custom/feed/FeedStatusMark', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View testID={p.testID} mode={p.mode} /> };
+});
 jest.mock('@/components/custom/for-you/FeedStatusIndicator', () => mockStub('dashboard-status-indicator'));
 jest.mock('@/components/custom/for-you/FeedStatusPanel', () => mockStub('status-panel'));
 jest.mock('@/components/custom/HeaderWorkingGradient', () => mockStub('working-gradient'));
@@ -84,7 +91,7 @@ jest.mock('@/components/ui/pressable', () => {
 jest.mock('@/components/custom/processing/use-processing-snapshot', () => ({
   useProcessingSnapshot: () => ({ stage: 'analysing' }),
 }));
-jest.mock('@/lib/hooks/use-feed-status-mode', () => ({ useFeedStatusMode: () => 'idle' }));
+jest.mock('@/lib/hooks/use-feed-status-mode', () => ({ useFeedStatusMode: () => mockStatusMode }));
 jest.mock('@/lib/hooks/use-status-disclosure', () => ({
   useStatusDisclosure: () => ({ expanded: false, toggle: jest.fn() }),
 }));
@@ -188,6 +195,8 @@ import ForYouScreen from '../ForYouScreen';
 
 beforeEach(() => {
   mockProcessing = false;
+  mockLocal = false;
+  mockStatusMode = 'idle';
   mockLastNewArticlesAt = null;
   mockFontScale = 1;
 });
@@ -201,11 +210,44 @@ const headerIds = () =>
     .map((n: any) => n.props.testID as string);
 
 describe('Dashboard header', () => {
-  it('keeps the title while syncing (D6), with no Mera mark in any state (owner)', () => {
+  it('keeps the title while syncing (D6)', () => {
     mockProcessing = true;
     render(<ForYouScreen />);
     expect(screen.getByText('feed.dashboardTitle')).toBeTruthy();
-    expect(screen.queryByTestId('dashboard-status-indicator')).toBeNull();
+  });
+
+  // Owner: "put the animated mera logo on the left of the notification bell".
+  it('puts the Mera mark directly left of the bell, in the right cluster', () => {
+    render(<ForYouScreen />);
+    const ids = headerIds();
+    const mark = ids.indexOf('dashboard-status-indicator');
+    expect(mark).toBeGreaterThan(ids.indexOf('dashboard-explainer-open'));
+    expect(ids.indexOf('bell')).toBe(mark + 1);
+  });
+
+  it('spaces mark and bell by the shared actions gap', () => {
+    const { StyleSheet } = require('react-native');
+    const { HEADER_ACTIONS_GAP } = require('@/components/custom/for-you/HeaderIconButton');
+    render(<ForYouScreen />);
+    expect(StyleSheet.flatten(screen.getByTestId('dashboard-header-actions').props.style).gap).toBe(HEADER_ACTIONS_GAP);
+  });
+
+  it('moves the mark only while the phone works, exactly as the Feed does', () => {
+    // A cloud batch waiting on the server: processing, but not local work.
+    mockProcessing = true;
+    mockStatusMode = 'processing';
+    mockLocal = false;
+    const view = render(<ForYouScreen />);
+    expect(screen.getByTestId('dashboard-status-indicator').props.mode).toBe('idle');
+    mockLocal = true;
+    view.rerender(<ForYouScreen />);
+    expect(screen.getByTestId('dashboard-status-indicator').props.mode).toBe('processing');
+  });
+
+  it('keeps the capped ink on the mark', () => {
+    mockStatusMode = 'limited';
+    render(<ForYouScreen />);
+    expect(screen.getByTestId('dashboard-status-indicator').props.mode).toBe('limited');
   });
 
   it('puts the "?" right after the title, in the title row', () => {

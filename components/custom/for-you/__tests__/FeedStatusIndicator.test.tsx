@@ -327,3 +327,23 @@ describe('FeedStatusIndicator: sized to the Feed title', () => {
         expect(scaleOf(getByTestId(MARK_ID))).toBe(1.55);
     });
 });
+
+// The mark is a tap target on two headers now; a hitSlop-only button measures
+// as its glyph box on device (the "?" did: 24x24). A real 44pt frame, pulled
+// back to the glyph box by negative margins so no row reflows.
+describe('FeedStatusIndicator: a real 44pt tap frame', () => {
+    it('is 44 x 44 with margins that give the frame back to the glyph box, and no hitSlop', () => {
+        const { StyleSheet } = require('react-native');
+        mockWindowWidth = 375;
+        const { getByTestId } = renderIndicator({ mode: 'idle' });
+        const b = getByTestId(TEST_ID);
+        const st = StyleSheet.flatten(b.props.style);
+        expect(st.width).toBe(44);
+        expect(st.height).toBe(44);
+        // Glyph box at 375: 21.5 tall, 0.70 wide (MeraLogo's 514 x 732 viewBox).
+        const glyphW = 21.5 * (514 / 732);
+        expect(st.marginHorizontal).toBeCloseTo(-(44 - glyphW) / 2, 5);
+        expect(st.marginVertical).toBeCloseTo(-(44 - 21.5) / 2, 5);
+        expect(b.props.hitSlop).toBeUndefined();
+    });
+});

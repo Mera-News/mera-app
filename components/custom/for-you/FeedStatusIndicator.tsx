@@ -68,6 +68,9 @@ const LOGO_SIZE_BY_TITLE: Record<HeaderTitleSize, number> = { '3xl': 21.5, '4xl'
  *  side into the row's gaps; nothing reflows. The largest scale the row holds
  *  vertically is ~2.1x, but that eats the whole gap to the narration. */
 const ACTIVE_SCALE = 1.55;
+const TAP_FRAME = 44;
+/** MeraLogo's viewBox is 514 x 732: the glyph box is 0.70 as wide as tall. */
+const GLYPH_ASPECT = 514 / 732;
 const RESTING_SCALE = 1;
 /** Long enough that the growth is not a snap, short enough that a sync starting
  *  still reads as an event rather than a transition you sit and watch. */
@@ -133,7 +136,6 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
             onPress={onPress}
             // 12 is the header-chrome convention (the bell, the drill-down back
             // button); the mark itself is only ~22pt.
-            hitSlop={12}
             accessibilityRole="button"
             accessibilityState={{ expanded }}
             // State FIRST, then the action. A screen-reader user needs to know
@@ -143,7 +145,17 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
             accessibilityLabel={`${tAny(a11yStateKey(mode))}. ${t(
                 expanded ? 'feedStatus.collapseA11y' : 'feedStatus.openA11y',
             )}`}
-            className="items-center justify-center"
+            // A real 44pt frame (the HeaderIconButton recipe), pulled back to
+            // the glyph box by negative margins so no row reflows: a
+            // hitSlop-only target measures as its glyph box on device.
+            style={{
+                width: TAP_FRAME,
+                height: TAP_FRAME,
+                marginHorizontal: -(TAP_FRAME - logoSize * GLYPH_ASPECT) / 2,
+                marginVertical: -(TAP_FRAME - logoSize) / 2,
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}
         >
             {/* The scale lives on this wrapper, not on the Svg: transforms do not
                 participate in layout, so the row keeps reserving `logoSize` in

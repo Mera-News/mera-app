@@ -24,7 +24,7 @@ jest.mock('@expo/vector-icons', () => {
 });
 
 import { StyleSheet } from 'react-native';
-import HeaderIconButton, { HEADER_ICON_COLOR, HEADER_ICON_GLYPH } from '../HeaderIconButton';
+import HeaderIconButton, { HEADER_ACTIONS_GAP, HEADER_ICON_COLOR, HEADER_ICON_GLYPH } from '../HeaderIconButton';
 
 describe('HeaderIconButton', () => {
     it('is a 44pt frame with a 24pt footprint, a white 24pt glyph and no chip', () => {
@@ -51,5 +51,14 @@ describe('HeaderIconButton', () => {
         expect(HEADER_ICON_COLOR).toBe('#ffffff');
         fireEvent.press(b);
         expect(onPress).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('HEADER_ACTIONS_GAP', () => {
+    it('keeps two 44pt frames apart even beside the Feed mark (glyph box 15.1pt at 375)', () => {
+        const markReach = (44 - 21.5 * (514 / 732)) / 2;
+        const iconReach = (44 - HEADER_ICON_GLYPH) / 2;
+        expect(HEADER_ACTIONS_GAP).toBeGreaterThanOrEqual(markReach + iconReach);
+        expect(HEADER_ACTIONS_GAP).toBe(25);
     });
 });
