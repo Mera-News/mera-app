@@ -155,51 +155,47 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         <Box className="flex-1">
             {/* Screen heading — mirrors the ForYou/Explore top-left title idiom. */}
             <HStack className="items-center justify-between px-5 pt-4 mb-2">
-                {/* Clamp AND scale, matching Feed/Dashboard/Explore: a bare
-                    1-line clamp truncated the screen's own name at large Dynamic
-                    Type, and letting it wrap breaks a single long localized word
-                    mid-word. One line, shrunk to fit, is Apple's own answer for a
-                    title that shares its row with a control — and this row now
-                    has one. */}
-                <Heading
-                    size="4xl"
-                    className="text-white flex-1 mr-3"
-                    numberOfLines={1}
-                >
-                    {t('tabs.profile')}
-                </Heading>
-                {/* The gap is exactly what keeps the two 44pt frames from
-                    overlapping: each reaches (44 - 24) / 2 past its glyph. The
-                    old `space="md"` (~10.7pt) left 9.3pt of overlap, and the
-                    "?" won it. In points, in `style`, not a rem-scaled class. */}
+                {/* "Profile (?)", the "?" right after the title as on Feed,
+                    Dashboard and Explore (owner). The group takes the row's
+                    remaining width and the title shrinks inside it only when it
+                    must, so the "?" stays beside the word; Advanced keeps the
+                    top right on its own. */}
                 <HStack
-                    className="items-center"
-                    style={{ gap: HEADER_ICON_TOUCH_TARGET - HEADER_ICON_GLYPH }}
-                    testID="profile-header-actions"
+                    className="items-center flex-1 min-w-0 mr-3"
+                    space="sm"
+                    testID="profile-title-group"
                 >
-                    {/* Advanced — icon-only, opens the power-user hub. Was a
-                        full-width row at the bottom of the page; moved here
-                        so it doesn't compete for scroll space with facts. */}
-                    <Pressable
-                        testID="profile-advanced-open"
-                        onPress={() => router.push('/logged-in/profile-advanced')}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('profile.advanced', { defaultValue: 'Advanced' })}
-                        style={{
-                            width: HEADER_ICON_TOUCH_TARGET,
-                            height: HEADER_ICON_TOUCH_TARGET,
-                            margin: HEADER_ICON_TOUCH_MARGIN,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
+                    <Heading
+                        size="4xl"
+                        className="text-white flex-shrink min-w-0"
+                        numberOfLines={1}
+                        testID="profile-title"
                     >
-                        <MaterialIcons name="tune" size={HEADER_ICON_GLYPH} color="rgb(212, 212, 212)" />
-                    </Pressable>
+                        {t('tabs.profile')}
+                    </Heading>
                     {/* N4: what this tab is and how it works, in plain words. The
                         old "Learn how Mera works" button competed with the title
                         (M10); the guides have one home, Settings > Help. */}
                     <TabExplainerButton tab="profile" testID="profile-explainer-open" />
                 </HStack>
+                {/* Advanced — icon-only, opens the power-user hub. Was a
+                    full-width row at the bottom of the page; moved here so it
+                    doesn't compete for scroll space with facts. */}
+                <Pressable
+                    testID="profile-advanced-open"
+                    onPress={() => router.push('/logged-in/profile-advanced')}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('profile.advanced', { defaultValue: 'Advanced' })}
+                    style={{
+                        width: HEADER_ICON_TOUCH_TARGET,
+                        height: HEADER_ICON_TOUCH_TARGET,
+                        margin: HEADER_ICON_TOUCH_MARGIN,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <MaterialIcons name="tune" size={HEADER_ICON_GLYPH} color="rgb(212, 212, 212)" />
+                </Pressable>
             </HStack>
 
             <ScrollView

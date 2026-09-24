@@ -380,17 +380,27 @@ describe('ProfileScreen', () => {
         expect(getByTestId('profile-advanced-open').props.hitSlop).toBeUndefined();
     });
 
-    // Measured on device: with the old ~10.7pt gap the two 44pt frames
-    // overlapped by 9.3pt and "?" won the overlap. Each frame reaches
-    // -margin past its 24pt footprint, so the gap must cover both reaches.
-    it('spaces the two header icons so their 44pt frames do not overlap', async () => {
+    // Owner: "Profile (?)" like Feed, Dashboard and Explore, the "?" right
+    // after the title and Advanced alone at the top right.
+    it('puts the "?" right after the title, and keeps Advanced alone at the right', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        const { getByTestId, UNSAFE_root } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
-        const { StyleSheet } = require('react-native');
-        const margin = getByTestId('profile-advanced-open').props.style.margin;
-        const row = StyleSheet.flatten(getByTestId('profile-header-actions').props.style) ?? {};
-        expect(row.gap).toBeGreaterThanOrEqual(-2 * margin);
+        const ids = UNSAFE_root
+            .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+            .map((n: any) => n.props.testID as string);
+        const title = ids.indexOf('profile-title');
+        expect(title).toBeGreaterThanOrEqual(0);
+        expect(ids.indexOf('profile-explainer-open')).toBe(title + 1);
+        expect(ids.indexOf('profile-advanced-open')).toBeGreaterThan(ids.indexOf('profile-explainer-open'));
+        const inGroup = (id: string) => {
+            for (let p: any = getByTestId(id).parent; p; p = p.parent) {
+                if (p.props?.testID === 'profile-title-group') return true;
+            }
+            return false;
+        };
+        expect(inGroup('profile-explainer-open')).toBe(true);
+        expect(inGroup('profile-advanced-open')).toBe(false);
     });
 
     it('pressing the header Advanced button navigates to the Advanced route', async () => {
