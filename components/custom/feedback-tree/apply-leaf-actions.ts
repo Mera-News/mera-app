@@ -73,7 +73,7 @@ export async function applyLeafActions(
     }
 
     toastManager.showUndoToast({
-      title: c('appliedTitle', 'Got it — feed updated'),
+      title: c('appliedTitle', 'Got it: feed updated'),
       body: summary,
       undoLabel: c('undo', 'Undo'),
       undoneTitle: c('undoneTitle', 'Change undone'),

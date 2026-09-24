@@ -22,13 +22,7 @@ export interface FeedbackTreeLevelProps {
     root: FeedbackTreeRoot;
     /** The branch ids opened so far (empty = the tree's root level). */
     pathIds: readonly string[];
-    /** Dislike only: false = the entry level (the one-tap "Not that
-     *  important" plus "Tell me more"); true = the tree itself. The like tree
-     *  has no fast path and always browses. */
-    browsing: boolean;
     context: LocalFeedbackContext;
-    /** "Tell me more" on the dislike entry level. */
-    onBrowse: () => void;
     /** A branch with visible children was tapped: push it. */
     onDescend: (node: FeedbackTreeNode) => void;
     /** A leaf was tapped (the host confirms a destructive one first). */
@@ -49,16 +43,14 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
     tree,
     root,
     pathIds,
-    browsing,
     context,
-    onBrowse,
     onDescend,
     onLeaf,
 }) => {
     const { t } = useTranslation();
     const c = useChrome();
     // Synchronous: the level's rows are final on its first render.
-    const { nodes: currentChildren, findNode, hasVisibleChildren } = resolveTreeLevel(tree, root, pathIds, context);
+    const { nodes: currentChildren, hasVisibleChildren } = resolveTreeLevel(tree, root, pathIds, context);
 
     const label = useCallback((node: FeedbackTreeNode) => feedbackNodeLabel(t, node, context), [t, context]);
     const desc = useCallback(
@@ -94,23 +86,6 @@ const FeedbackTreeLevel: React.FC<FeedbackTreeLevelProps> = ({
             {t('swipeFeed.feedbackCaption')}
         </Text>
     ) : null;
-
-    if (root === 'dislike' && !browsing) {
-        const fast = findNode('not_important');
-        return (
-            <>
-                {fast ? rowFor(fast) : null}
-                <ActionSheetRow
-                    testID="tree-tell-more"
-                    label={c('tellMore', 'Tell me more')}
-                    icon="more-horiz"
-                    opensLevel
-                    onPress={onBrowse}
-                />
-                {caption}
-            </>
-        );
-    }
 
     return (
         <>

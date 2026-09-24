@@ -139,7 +139,7 @@ jest.mock('@/components/custom/feedback-tree/FeedbackTreeLevel', () => {
         __esModule: true,
         default: (p: any) => (
             <>
-                <Text testID={`tree-${p.root}-${p.browsing ? 'b' : 'e'}-${p.pathIds.join('.') || 'root'}`}>tree</Text>
+                <Text testID={`tree-${p.root}-${p.pathIds.join('.') || 'root'}`}>tree</Text>
                 <Pressable testID="tree-descend" onPress={() => p.onDescend({ id: 'n1', children: [{ id: 'c' }] })} />
                 <Pressable
                     testID="tree-leaf"
@@ -385,11 +385,11 @@ describe('the ••• sheet as a navigation stack', () => {
         };
         const r = openMenu(<Host rowActions={r0} />);
         fireEvent.press(r.getByTestId('menu-like'));
-        expect(r.queryByTestId('tree-like-b-root')).toBeNull();
+        expect(r.queryByTestId('tree-like-root')).toBeNull();
         expect(r.getByTestId('menu-save')).toBeTruthy();
         resolveTree({ version: 1, root: [], likeRoot: [] });
         await settle();
-        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(r.getByTestId('tree-like-root')).toBeTruthy();
     });
 
     const row = (liked: boolean) => ({
@@ -407,7 +407,7 @@ describe('the ••• sheet as a navigation stack', () => {
         await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         expect(r0.onLike).toHaveBeenCalledTimes(1);
-        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(r.getByTestId('tree-like-root')).toBeTruthy();
         expect(r.queryByTestId('menu-save')).toBeNull();
         // Same sheet, still open, and no second Modal was ever mounted.
         expect(mockModal.visible).toBe(true);
@@ -430,9 +430,9 @@ describe('the ••• sheet as a navigation stack', () => {
         await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         fireEvent.press(r.getByTestId('tree-descend'));
-        expect(r.getByTestId('tree-like-b-n1')).toBeTruthy();
+        expect(r.getByTestId('tree-like-n1')).toBeTruthy();
         fireEvent.press(r.getByTestId('sheet-back'));
-        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(r.getByTestId('tree-like-root')).toBeTruthy();
         fireEvent.press(r.getByTestId('sheet-back'));
         expect(r.getByTestId('menu-like')).toBeTruthy();
     });
@@ -443,7 +443,7 @@ describe('the ••• sheet as a navigation stack', () => {
         await settle();
         fireEvent.press(r.getByTestId('menu-dislike'));
         expect(r0.onDislike).toHaveBeenCalledTimes(1);
-        expect(r.getByTestId('tree-dislike-e-root')).toBeTruthy();
+        expect(r.getByTestId('tree-dislike-root')).toBeTruthy();
     });
 
     it('Cancel closes the whole sheet from any depth and runs nothing', async () => {
@@ -470,7 +470,7 @@ describe('the ••• sheet as a navigation stack', () => {
         const r = render(<Host rowActions={row(false)} />);
         fireEvent.press(r.getByTestId('open-like-tree'));
         await settle();
-        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(r.getByTestId('tree-like-root')).toBeTruthy();
         expect(r.queryByTestId('sheet-back')).toBeNull();
         expect(r.getByTestId('article-menu-cancel')).toBeTruthy();
     });
@@ -494,7 +494,7 @@ describe('the ••• sheet as a navigation stack', () => {
         expect(r.getByTestId('menu-dislike').props.accessibilityLabel).toBe('articleMenu.removeDislike');
         fireEvent.press(r.getByTestId('menu-dislike'));
         expect(r0.onDislike).toHaveBeenCalledTimes(1);
-        expect(r.queryByTestId('tree-dislike-e-root')).toBeNull();
+        expect(r.queryByTestId('tree-dislike-root')).toBeNull();
         expect(mockModal.visible).toBe(false);
     });
 
@@ -504,7 +504,7 @@ describe('the ••• sheet as a navigation stack', () => {
         await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         expect(r0.onLike).toHaveBeenCalledTimes(1);
-        expect(r.queryByTestId('tree-like-b-root')).toBeNull();
+        expect(r.queryByTestId('tree-like-root')).toBeNull();
         expect(mockModal.visible).toBe(false);
     });
 
@@ -757,7 +757,7 @@ describe('the level transition', () => {
         fireEvent.press(r.getByTestId('menu-like'));
         // Both mounted mid-slide: the old rows ride out, the tree rides in.
         const out = r.getByTestId('article-menu-level-out', HIDDEN);
-        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(r.getByTestId('tree-like-root')).toBeTruthy();
         expect(out.props.pointerEvents).toBe('none');
         // Absolutely placed, so the sheet sizes to the incoming level only.
         expect(StyleSheet.flatten(out.props.style)).toEqual(expect.objectContaining({ position: 'absolute' }));
@@ -765,7 +765,7 @@ describe('the level transition', () => {
             jest.advanceTimersByTime(SHEET_SLIDE_MS + 100);
         });
         expect(r.queryByTestId('article-menu-level-out', HIDDEN)).toBeNull();
-        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(r.getByTestId('tree-like-root')).toBeTruthy();
     });
 
     // Batch 13: on a push to a SHORTER level the sheet shrinks to the new
@@ -828,6 +828,6 @@ describe('the level transition', () => {
         await settle();
         fireEvent.press(r.getByTestId('menu-like'));
         expect(r.queryByTestId('article-menu-level-out', HIDDEN)).toBeNull();
-        expect(r.getByTestId('tree-like-b-root')).toBeTruthy();
+        expect(r.getByTestId('tree-like-root')).toBeTruthy();
     });
 });

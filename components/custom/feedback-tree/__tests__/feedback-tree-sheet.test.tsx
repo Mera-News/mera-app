@@ -56,7 +56,7 @@ jest.mock('@/lib/services/feedback-tree-service', () => ({
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import type { FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { ActionSheetRow, SHEET_ROW_LABEL_CLASS } from '@/components/custom/cards/ArticleOverflowMenu';
 import FeedbackTreeLevel from '../FeedbackTreeLevel';
 import { leafNeedsConfirm, performFeedbackLeaf } from '../perform-feedback-leaf';
@@ -71,7 +71,7 @@ const tStub = ((key: string, opts?: Record<string, unknown>) => {
     return base.replace(/\{\{(\w+)\}\}/g, (_m: string, name: string) => String(opts[name] ?? ''));
 }) as unknown as TFunction;
 
-type Level = { pathIds: string[]; browsing: boolean };
+type Level = { pathIds: string[] };
 
 /** The host's stack, reduced to the tree: a push per branch, the leaf run
  *  through performFeedbackLeaf with a synchronous close. */
@@ -80,10 +80,10 @@ function Harness(props: {
     onLeafPicked: jest.Mock;
     onClose: jest.Mock;
     root?: 'like' | 'dislike';
+    tree?: FeedbackTree;
 }) {
     const root = props.root ?? 'dislike';
-    // The like tree opens browsing; the dislike tree opens on its entry level.
-    const [stack, setStack] = useState<Level[]>([{ pathIds: [], browsing: root === 'like' }]);
+    const [stack, setStack] = useState<Level[]>([{ pathIds: [] }]);
     const [confirm, setConfirm] = useState<{ node: FeedbackTreeNode; pathIds: string[] } | null>(null);
     const top = stack[stack.length - 1];
     const context = { articleTitle: 'A story', ...props.context };
@@ -108,13 +108,11 @@ function Harness(props: {
     }
     return (
         <FeedbackTreeLevel
-            tree={require('@/lib/services/feedback-tree-snapshot').BUNDLED_FEEDBACK_TREE}
+            tree={props.tree ?? require('@/lib/services/feedback-tree-snapshot').BUNDLED_FEEDBACK_TREE}
             root={root}
             pathIds={top.pathIds}
-            browsing={top.browsing}
             context={context}
-            onBrowse={() => setStack((s) => [...s, { ...top, browsing: true }])}
-            onDescend={(n) => setStack((s) => [...s, { browsing: true, pathIds: [...top.pathIds, n.id] }])}
+            onDescend={(n) => setStack((s) => [...s, { pathIds: [...top.pathIds, n.id] }])}
             onLeaf={(node, pathIds) => (leafNeedsConfirm(node) ? setConfirm({ node, pathIds }) : perform(node, pathIds))}
         />
     );
@@ -144,15 +142,8 @@ describe('the feedback tree as sheet levels (shipped v5 tree)', () => {
     it('draws a level\'s final rows synchronously, on its first render', () => {
         const u = setup(TAGGED);
         expect(u.getByText('Not that important')).toBeTruthy();
-        fireEvent.press(u.getByText('Tell me more'));
         expect(u.getByText('Not a good suggestion')).toBeTruthy();
         expect(u.getByText('Issue with this publication')).toBeTruthy();
-    });
-
-    it('opens on the `not_important` fast path and "Tell me more"', async () => {
-        const { getByText } = setup(TAGGED);
-        expect(await waitFor(() => getByText('Not that important'))).toBeTruthy();
-        expect(getByText('Tell me more')).toBeTruthy();
     });
 
     it('applies that fast path in one tap, and commits', async () => {
@@ -164,7 +155,6 @@ describe('the feedback tree as sheet levels (shipped v5 tree)', () => {
 
     it('names the article`s tags in its labels, no raw placeholders', async () => {
         const u = setup(TAGGED);
-        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
         fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
         expect(await waitFor(() => u.getByText('Show less of election'))).toBeTruthy();
         expect(u.getByText('Show less of Reserve Bank of India')).toBeTruthy();
@@ -174,7 +164,6 @@ describe('the feedback tree as sheet levels (shipped v5 tree)', () => {
 
     it('opens the publication-preferences screen for the manage_publication nudge', async () => {
         const u = setup(TAGGED);
-        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
         fireEvent.press(await waitFor(() => u.getByText('Issue with this publication')));
         fireEvent.press(await waitFor(() => u.getByText('Manage publications')));
         expect(router.push).toHaveBeenCalledWith('/logged-in/publication-preferences');
@@ -185,9 +174,8 @@ describe('the feedback tree as sheet levels (shipped v5 tree)', () => {
 
     it('hides the tag leaves on an untagged article', async () => {
         const u = setup({ matchedTopics: [{ topicId: 't1', text: 'cricket' }] });
-        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
         fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
-        await waitFor(() => expect(u.getByText('Not that important')).toBeTruthy());
+        await waitFor(() => expect(u.getByText("I'm seeing too much of this")).toBeTruthy());
         expect(u.queryByText(/^Show less of/)).toBeNull();
     });
 });
@@ -278,7 +266,6 @@ describe('the shipped tree through the sheet (ported from the inline panel)', ()
     // mint a suppression that would filter out a subject the user still wants.
     it('the frequency leaf lowers the matched topic weight, mints no filter, and needs no confirm', async () => {
         const u = setup(TAGGED);
-        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
         fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
         fireEvent.press(await waitFor(() => u.getByText("I'm seeing too much of this")));
         await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
@@ -290,7 +277,6 @@ describe('the shipped tree through the sheet (ported from the inline panel)', ()
 
     it('"I\'ve seen this already" applies nothing and commits nothing', async () => {
         const u = setup(TAGGED);
-        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
         fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
         fireEvent.press(await waitFor(() => u.getByText("I've seen this already")));
         await act(async () => {
@@ -302,7 +288,6 @@ describe('the shipped tree through the sheet (ported from the inline panel)', ()
 
     it('the entity leaf mints the structured filter its label promised', async () => {
         const u = setup(TAGGED);
-        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
         fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
         fireEvent.press(await waitFor(() => u.getByText('Show less of Reserve Bank of India')));
         await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
@@ -321,7 +306,6 @@ describe('the shipped tree through the sheet (ported from the inline panel)', ()
 
     it('the place filter carries the verbatim tag, not the display prose', async () => {
         const u = setup({ ...TAGGED, geoText: 'Middle East', placeValue: 'MIDDLE_EAST' });
-        fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
         fireEvent.press(await waitFor(() => u.getByText('Not a good suggestion')));
         fireEvent.press(await waitFor(() => u.getByText('Show less of Middle East')));
         await waitFor(() => expect(mockApplyLeafActions).toHaveBeenCalledTimes(1));
@@ -331,7 +315,6 @@ describe('the shipped tree through the sheet (ported from the inline panel)', ()
     describe('the paywall branch', () => {
         const PAYWALL_CTX: LocalFeedbackContext = { ...TAGGED, publicationVisits: 7 };
         const openPaywall = async (u: ReturnType<typeof setup>) => {
-            fireEvent.press(await waitFor(() => u.getByText('Tell me more')));
             fireEvent.press(await waitFor(() => u.getByText('Issue with this publication')));
             fireEvent.press(await waitFor(() => u.getByText("It's paywalled")));
         };
@@ -392,6 +375,52 @@ describe('the shipped tree through the sheet (ported from the inline panel)', ()
             const ctx = { matchedTopics: [{ topicId: null, text: 'Synthetic headline' }] } as LocalFeedbackContext;
             expect(feedbackNodeLabel(tStub, node, ctx)).toBe('More about this topic');
         });
+    });
+});
+
+
+// Owner: "move all those options [under Tell me more] to the previous menu".
+// The dislike root lists the tree's own options directly, the one-tap "Not
+// that important" first, and that row is not repeated inside its branch.
+describe('the dislike root is flat (no "Tell me more")', () => {
+    it('shows the one-tap row first, then the tree root options, with the caption', () => {
+        const u = setup(TAGGED);
+        expect(u.queryByTestId('tree-tell-more')).toBeNull();
+        expect(u.queryByText('Tell me more')).toBeNull();
+        const ids = u.UNSAFE_root
+            .findAll((n: any) => typeof n.props?.testID === 'string' && n.props.testID.startsWith('tree-row-') && typeof n.type !== 'string')
+            .map((n: any) => n.props.testID)
+            .filter((id: string, i: number, all: string[]) => all.indexOf(id) === i);
+        expect(ids).toEqual(['tree-row-not_important', 'tree-row-publication_issue', 'tree-row-suggestion']);
+        expect(u.getByTestId('feedback-caption')).toBeTruthy();
+    });
+
+    it('does not repeat "Not that important" inside "Not a good suggestion"', () => {
+        const u = setup(TAGGED);
+        fireEvent.press(u.getByText('Not a good suggestion'));
+        expect(u.getByText("I'm seeing too much of this")).toBeTruthy();
+        expect(u.queryByText('Not that important')).toBeNull();
+    });
+});
+
+describe('the flat dislike root on prod v4', () => {
+    const { FEEDBACK_TREE_V4 } = require('./fixtures/feedback-tree-v4');
+    it('shows "Not that important" first, then the four v4 branches, and no "Tell me more"', () => {
+        const u = render(
+            <Harness context={TAGGED} onLeafPicked={jest.fn()} onClose={jest.fn()} tree={FEEDBACK_TREE_V4} />,
+        );
+        expect(u.queryByText('Tell me more')).toBeNull();
+        for (const label of [
+            'Not that important',
+            'Problem with the site',
+            "Don't like this publication",
+            'Not a good suggestion',
+            'Not important to me',
+        ]) {
+            expect(u.getByText(label)).toBeTruthy();
+        }
+        fireEvent.press(u.getByText('Not a good suggestion'));
+        expect(u.queryByText('Not that important')).toBeNull();
     });
 });
 

@@ -170,3 +170,43 @@ describe('resolveTreeLevel', () => {
     });
   });
 });
+
+describe('resolveTreeLevel: the flat dislike root (shipped tree)', () => {
+    const { BUNDLED_FEEDBACK_TREE } = require('@/lib/services/feedback-tree-snapshot');
+    const CTX: LocalFeedbackContext = { matchedTopics: [{ topicId: 't1', text: 'cricket' }] };
+
+    it('promotes the one-tap "not_important" leaf to the head of the dislike root', () => {
+        expect(ids(BUNDLED_FEEDBACK_TREE, 'dislike', [], CTX)).toEqual(['not_important', 'publication_issue', 'suggestion']);
+    });
+
+    it('drops it from its own branch, so it shows once', () => {
+        expect(ids(BUNDLED_FEEDBACK_TREE, 'dislike', ['suggestion'], CTX)).not.toContain('not_important');
+    });
+
+    it('leaves the like root alone', () => {
+        expect(ids(BUNDLED_FEEDBACK_TREE, 'like', [], CTX)[0]).toBe('more_about_topic');
+    });
+});
+
+// PROD serves v4 today: the flat root must not depend on the tree's shape.
+describe('resolveTreeLevel: the flat dislike root on prod v4', () => {
+    const { FEEDBACK_TREE_V4 } = require('./fixtures/feedback-tree-v4');
+    // A publication, or the publication branches' actions resolve to nothing
+    // and the dead-branch rule hides them (correct, and not what this pins).
+    const CTX: LocalFeedbackContext = { matchedTopics: [{ topicId: 't1', text: 'cricket' }], publicationName: 'NOS' };
+
+    it('promotes "not_important" to the head, then the four v4 branches', () => {
+        expect(ids(FEEDBACK_TREE_V4, 'dislike', [], CTX)).toEqual([
+            'not_important',
+            'publication_website',
+            'publication_content',
+            'suggestion',
+            'not_important_to_me',
+        ]);
+    });
+
+    it('drops it from the branch that holds it, found by id', () => {
+        expect(ids(FEEDBACK_TREE_V4, 'dislike', ['suggestion'], CTX)).toEqual(['not_related', 'seen_already', 'too_many']);
+    });
+});
+

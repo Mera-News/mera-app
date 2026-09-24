@@ -73,6 +73,14 @@ function isVisibleNode(node: FeedbackTreeNode, context: LocalFeedbackContext): b
   return !isDeadBranch(node, context);
 }
 
+/** The dislike tree's one-tap reason, lifted to the head of the dislike root
+ *  (owner: every option on the first level, no "Tell me more") and dropped
+ *  from the branch that holds it, so it shows once. Found BY ID, so it holds
+ *  on any tree version: prod serves v4 (it sits under `suggestion`), the
+ *  bundle is v5 (same). Only a LEAF is lifted: a branch there would open a
+ *  level instead of answering in one tap. */
+export const DISLIKE_PROMOTED_ID = 'not_important';
+
 /**
  * One level of the tree, resolved SYNCHRONOUSLY from a loaded tree, a root, a
  * branch path and the context: the visible nodes at that depth, plus the two
@@ -91,7 +99,7 @@ export function resolveTreeLevel(
   hasVisibleChildren: (node: FeedbackTreeNode) => boolean;
 } {
   const rootNodes = root === 'like' ? tree.likeRoot ?? [] : tree.root;
-  let level = rootNodes;
+  let level: FeedbackTreeNode[] = rootNodes;
   for (const id of pathIds) {
     const node = level.find((n) => n.id === id);
     if (!node || !node.children || node.children.length === 0) break;
@@ -108,9 +116,19 @@ export function resolveTreeLevel(
     };
     return walk(rootNodes);
   };
+  // The lifted leaf, when this tree has one below its root.
+  const promoted =
+    root === 'dislike' && !rootNodes.some((n) => n.id === DISLIKE_PROMOTED_ID)
+      ? findNode(DISLIKE_PROMOTED_ID)
+      : null;
+  const lifted = promoted && promoted.leaf && isVisibleNode(promoted, context) ? promoted : null;
+  const shown = (n: FeedbackTreeNode) => isVisibleNode(n, context) && !(lifted && n.id === lifted.id);
+  const visible = level.filter(shown);
   return {
-    nodes: level.filter((n) => isVisibleNode(n, context)),
+    nodes: lifted && pathIds.length === 0 ? [lifted, ...visible] : visible,
     findNode,
-    hasVisibleChildren: (node) => (node.children ?? []).some((n) => isVisibleNode(n, context)),
+    // Excludes the lifted leaf too: a branch whose only option moved to the
+    // root would otherwise open an empty level.
+    hasVisibleChildren: (node) => (node.children ?? []).some(shown),
   };
 }

@@ -104,13 +104,13 @@ const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) 
 /** One level of the sheet's navigation stack. */
 export type SheetLevel =
     | { kind: 'main' }
-    | { kind: 'tree'; root: VerdictSentiment; pathIds: string[]; browsing: boolean }
+    | { kind: 'tree'; root: VerdictSentiment; pathIds: string[] }
     | { kind: 'tree-confirm'; root: VerdictSentiment; node: FeedbackTreeNode; pathIds: string[] }
     | { kind: 'follow-tracked' }
     | { kind: 'follow-locked' };
 
 function levelKey(depth: number, l: SheetLevel): string {
-    if (l.kind === 'tree') return `${depth}:tree:${l.root}:${l.browsing ? 'b' : 'e'}:${l.pathIds.join('/')}`;
+    if (l.kind === 'tree') return `${depth}:tree:${l.root}:${l.pathIds.join('/')}`;
     if (l.kind === 'tree-confirm') return `${depth}:confirm:${l.node.id}`;
     return `${depth}:${l.kind}`;
 }
@@ -254,7 +254,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
 
     const enterTree = useCallback(
         (root: VerdictSentiment) => {
-            const level: SheetLevel = { kind: 'tree', root, pathIds: [], browsing: root === 'like' };
+            const level: SheetLevel = { kind: 'tree', root, pathIds: [] };
             const prep = prepareTree();
             if (prep.done) showLevel(level);
             else void prep.promise.then(() => showLevel(level));
@@ -600,7 +600,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const showInfo = useCallback(
         (title: string, body?: string) => {
             toast.show({
-                placement: 'bottom',
                 duration: 2500,
                 render: () => (
                     <Toast action="info" variant="solid">
@@ -665,11 +664,9 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                         tree={tree}
                         root={level.root}
                         pathIds={level.pathIds}
-                        browsing={level.browsing}
                         context={treeContext}
-                        onBrowse={() => showLevel({ ...level, browsing: true })}
                         onDescend={(node) =>
-                            showLevel({ ...level, browsing: true, pathIds: [...level.pathIds, node.id] })
+                            showLevel({ ...level, pathIds: [...level.pathIds, node.id] })
                         }
                         onLeaf={(node, pathIds) =>
                             leafNeedsConfirm(node)
