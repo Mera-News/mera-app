@@ -26,9 +26,8 @@ export interface SwipeCallbacks {
   /** A card's verdict was removed (re-tapping the same thumb un-votes it) —
    *  destroys the stored feedback row (verdict + any tree path). */
   onVerdictRemoved: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
-  /** The inline-feedback-tree path changed for a card's verdict (P4 tree).
-   *  Fires for a BRANCH descent too, which commits nothing — see
-   *  `onLeafCommitted` for the write that may fill a thumb. */
+  /** A leaf that commits nothing (seenOnly) settled: store its path only.
+   *  See `onLeafCommitted` for the write that may fill a thumb. */
   onTreePathChanged: (
     suggestion: ForYouSuggestion,
     verdict: Verdict,
@@ -42,10 +41,13 @@ export interface SwipeCallbacks {
     suggestion: ForYouSuggestion,
     verdict: Verdict,
     path: string[],
+    /** How many persona actions the leaf applied; > 0 re-stamps the row
+     *  spent after the commit write (see commitFeedbackTreePath). */
+    appliedCount?: number,
   ) => void;
   /** The user asked to continue the feedback with Mera from a card — a
    *  verdict+path-primed handoff ("convert my taps into a conversation"). Used by
-   *  the feedback-tree overlay's openChat leaves + its Mera entry row. */
+   *  the ••• sheet's openChat tree leaves. */
   onInvokeMera: (
     suggestion: ForYouSuggestion,
     verdict: Verdict,

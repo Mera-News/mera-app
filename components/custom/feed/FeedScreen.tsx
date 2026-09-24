@@ -63,9 +63,8 @@
 //
 // Each card carries a small borderless action bar (like / dislike / save /
 // share); Ask-Mera lives on the card's rationale block. Tapping a thumb records
-// a verdict and reveals the card's inline feedback surface
-// (CardFeedbackSurface). Every one of those interactions — plus opening the card
-// — marks it `viewed`.
+// a verdict and opens the shared ••• sheet at that verdict's feedback tree.
+// Every one of those interactions — plus opening the card — marks it `viewed`.
 // The header is the "Feed" heading, a small pipeline-status glyph, and the
 // importance-filter chip — and nothing else. It used to also carry the
 // notification bell, a full-width indeterminate progress bar and the 24h counts
@@ -125,7 +124,6 @@ import {
   type CardFeedbackHandlers,
   type VerdictStoreAdapter,
 } from './use-feedback-sheet';
-import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
@@ -242,10 +240,8 @@ const FeedRow = React.memo(function FeedRow({
   enterDelay: number | null;
 }) {
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
-  const path = useFeedOrderStore((s) => s.verdicts[item.id]?.path);
   // NOT `path.length > 0` — a branch descent writes a path and commits nothing.
   const committed = useFeedOrderStore((s) => !!s.verdicts[item.id]?.committed);
-  const surfaceClosed = useFeedbackDismissedStore((s) => !!s.dismissed[item.id]);
   // ONE predicate decides both the read indicator and which block of the sort
   // this card lands in — otherwise a card could show the read state while
   // sitting among the unviewed. Note `articleIds`, not the union `ids`: a
@@ -279,8 +275,6 @@ const FeedRow = React.memo(function FeedRow({
       onVerdict={onVerdict}
       onAskMera={onAskMera}
       onSaveToggled={onSaveToggled}
-      feedbackVisible={verdict != null && !surfaceClosed}
-      feedbackInitialPath={path}
       feedbackCommitted={committed}
       feedbackHandlers={feedbackHandlers}
       // Seen stories get ONLY the eye indicator (`read`) — no dimming.

@@ -1,7 +1,6 @@
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
-import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import {
   GLASS_HEADER_SCRIM,
@@ -233,7 +232,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   const { onVerdict, onAskMera, feedbackHandlers } = useFeedbackSheet(factAdapter, {
     onOpenSuggestion: handlePress,
   });
-  const dismissedMap = useFeedbackDismissedStore((s) => s.dismissed);
 
   const renderItem = useCallback(
     ({ item }: { item: FactRowGroup }) => {
@@ -246,8 +244,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
           verdict={verdict}
           onVerdict={onVerdict}
           onAskMera={onAskMera}
-          feedbackVisible={verdict != null && !dismissedMap[item.data.articleId]}
-          feedbackInitialPath={rec?.path}
           feedbackCommitted={!!rec?.committed}
           feedbackHandlers={feedbackHandlers}
           read={isSuggestionOpened(item.data, openedIds)}
@@ -258,7 +254,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
         />
       );
     },
-    [handlePress, openedIds, prevVisitMs, verdicts, dismissedMap, onVerdict, onAskMera, feedbackHandlers],
+    [handlePress, openedIds, prevVisitMs, verdicts, onVerdict, onAskMera, feedbackHandlers],
   );
 
   // "Jump from one fact feed list to the next" (r14 #6), in the NEXT section's

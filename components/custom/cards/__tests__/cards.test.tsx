@@ -927,6 +927,66 @@ describe('ArticleSuggestionCard note block', () => {
   });
 });
 
+// Owner: the Feed card's thumbs open the SAME ••• sheet as the menu, straight
+// at the tree root with no Back row. One behaviour throughout the app; the
+// inline floating panel is gone.
+describe('ArticleSuggestionCard thumbs open the shared sheet', () => {
+  const handlers = () => ({
+    onLeafPicked: jest.fn(),
+    onInvokeMera: jest.fn(),
+    onBrowseRelated: jest.fn(),
+  });
+
+  it.each([
+    ['like', 'articleFeedback.likeLabel'],
+    ['dislike', 'articleFeedback.dislikeLabel'],
+  ])('a %s thumb records the verdict, then opens the sheet at its tree root with no Back row', async (v, label) => {
+    const onVerdict = jest.fn();
+    const s = makeSuggestion();
+    const { getByLabelText, getByTestId, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={s} onPress={jest.fn()} onVerdict={onVerdict} feedbackHandlers={handlers()} />,
+    );
+    fireEvent.press(getByLabelText(label));
+    expect(onVerdict).toHaveBeenCalledWith(s, v);
+    expect(await waitFor(() => getByTestId(`tree-level-${v}`))).toBeTruthy();
+    expect(queryByTestId('sheet-back')).toBeNull();
+    expect(getByTestId('article-menu-cancel')).toBeTruthy();
+    expect(queryByTestId('card-feedback-surface')).toBeNull();
+  });
+
+  it('never mounts the inline panel, even with a stored verdict', () => {
+    const { queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} verdict="dislike" feedbackHandlers={handlers()} />,
+    );
+    expect(queryByTestId('card-feedback-surface')).toBeNull();
+    expect(queryByTestId('article-menu')).toBeNull();
+  });
+
+  it('a second tap on the recorded thumb removes it and opens nothing', async () => {
+    const onVerdict = jest.fn();
+    const s = makeSuggestion();
+    const { getByLabelText, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={s} onPress={jest.fn()} onVerdict={onVerdict} verdict="like" feedbackHandlers={handlers()} />,
+    );
+    fireEvent.press(getByLabelText('articleFeedback.likeLabel'));
+    expect(onVerdict).toHaveBeenCalledWith(s, 'like');
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(queryByTestId('article-menu')).toBeNull();
+  });
+
+  it('the VoiceOver like action opens the same sheet', async () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} feedbackHandlers={handlers()} />,
+    );
+    act(() => {
+      getByTestId('card-sugg-1').props.onAccessibilityAction({ nativeEvent: { actionName: 'inline-like' } });
+    });
+    expect(await waitFor(() => getByTestId('tree-level-like'))).toBeTruthy();
+  });
+});
+
 describe('ArticleSuggestionCard VoiceOver actions', () => {
   it('reaches the action row through custom actions, inline buttons first', () => {
     const onVerdict = jest.fn();

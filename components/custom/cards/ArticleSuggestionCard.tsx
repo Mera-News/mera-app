@@ -1,6 +1,5 @@
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
-import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
 import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
@@ -48,22 +47,18 @@ interface ArticleCardProps {
   // FLAT, memo-safe props so a row re-renders only when its own verdict flips.
   /** The card's currently-stored verdict (null when undecided). */
   verdict?: Verdict | null;
-  /** A thumb was tapped — the host records the verdict + floats the sheet. */
+  /** A thumb was tapped — the host records the verdict; the card then opens
+   *  the ••• sheet at that verdict's tree root. */
   onVerdict?: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   /** The Mera glyph on the rationale block was tapped — open the default article
    *  chat. Absent ⇒ no Ask-Mera affordance renders (e.g. the Saved list). */
   onAskMera?: (suggestion: ForYouSuggestion) => void;
-  // ── Inline feedback surface (floats over the card content once a verdict is
-  // set) ──────────────────────────────────────────────────────────────────
-  /** Whether to show the floating feedback surface (verdict set & not closed). */
-  feedbackVisible?: boolean;
-  /** Stored tree path to resume in the surface. Records NAVIGATION only — a
-   *  branch descent writes one — so it must NOT be read as a commit signal. */
-  feedbackInitialPath?: string[];
+  // ── Feedback tree (in the shared ••• sheet) ─────────────────────────────
   /** True once a TERMINAL leaf settled (or the user escalated to Mera) for this
    *  card. The only thing the filled-thumb treatment may be derived from. */
   feedbackCommitted?: boolean;
-  /** Stable per-card feedback handlers from `useFeedbackSheet`. */
+  /** Stable per-card tree-leaf handlers from `useFeedbackSheet`. Without them
+   *  a thumb only records the verdict (no tree to give a reason in). */
   feedbackHandlers?: CardFeedbackHandlers;
   /** Dims the card (~0.55 opacity) — e.g. already-opened Earlier-zone rows. */
   dimmed?: boolean;
@@ -107,8 +102,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   verdict = null,
   onVerdict,
   onAskMera,
-  feedbackVisible = false,
-  feedbackInitialPath,
   feedbackCommitted = false,
   feedbackHandlers,
   dimmed = false,
@@ -170,13 +163,25 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     titleOriginal: suggestion.title_original,
     sourceLanguage: suggestion.language_code,
   });
+  // A thumb records the verdict, then opens the SAME ••• sheet as the menu,
+  // straight at that verdict's tree root (no Back row): one feedback
+  // behaviour across the app (owner). A second tap on the recorded thumb
+  // removes the verdict and opens nothing. `menuRef` because the menu is
+  // built below with these very actions.
+  const menuRef = React.useRef<{ openFeedback: (v: Verdict) => void } | null>(null);
+  const tapThumb = (v: Verdict) => {
+    if (!onVerdict) return;
+    const opensTree = verdict !== v && !!feedbackHandlers;
+    onVerdict(suggestion, v);
+    if (opensTree) menuRef.current?.openFeedback(v);
+  };
   // The action row's own buttons, as VoiceOver custom actions on the card: the
   // card root is one accessibility element, which hides the row inside it.
   const inlineActions = onVerdict
     ? inlineAccessibilityActions(t, {
         saved,
-        onLike: () => onVerdict(suggestion, 'like'),
-        onDislike: () => onVerdict(suggestion, 'dislike'),
+        onLike: () => tapThumb('like'),
+        onDislike: () => tapThumb('dislike'),
         onToggleSave: handleToggleSave,
         onShare: suggestion.article_url ? () => void handleShare() : undefined,
       })
@@ -203,7 +208,13 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       return asked;
     },
     inlineActions,
+    onLeafPicked: feedbackHandlers
+      ? (v, pathIds, applied, committed) => feedbackHandlers.onLeafPicked(suggestion, v, pathIds, applied, committed)
+      : undefined,
+    onFeedbackChat: feedbackHandlers ? (v, pathIds) => feedbackHandlers.onInvokeMera(suggestion, v, pathIds) : undefined,
+    onBrowseRelated: feedbackHandlers ? () => feedbackHandlers.onBrowseRelated(suggestion) : undefined,
   });
+  menuRef.current = menu;
 
 
   const status = suggestion.status;
@@ -310,8 +321,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     </Box>
   ) : undefined;
 
-  // Action row lives in the base's `footer` slot so the feedback `overlay` can
-  // float over the card content ABOVE it while it stays visible/tappable.
+  // Action row lives in the base's `footer` slot.
   // `horizontalPadding = 0` because the footer wrapper already insets it.
   const actionBar = onVerdict ? (
     <CardActionBar
@@ -324,13 +334,13 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       // deriving fill from it promised "this changed your persona" one tap after
       // the caption promised the opposite.
       //
-      // Gated on `feedbackHandlers`: a host that doesn't wire the feedback
-      // surface can never SHOW the tree, so its user has no way to commit —
+      // Gated on `feedbackHandlers`: a host that doesn't wire the tree leaves
+      // can never SHOW the tree, so its user has no way to commit —
       // a permanently hollow thumb there would be a dead end, not a prompt.
       provisional={!!feedbackHandlers && !feedbackCommitted}
       saved={saved}
-      onLike={() => onVerdict(suggestion, 'like')}
-      onDislike={() => onVerdict(suggestion, 'dislike')}
+      onLike={() => tapThumb('like')}
+      onDislike={() => tapThumb('dislike')}
       onAskMera={() => onAskMera?.(suggestion)}
       onToggleSave={handleToggleSave}
       onShare={suggestion.article_url ? () => void handleShare() : undefined}
@@ -338,21 +348,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       horizontalPadding={0}
     />
   ) : undefined;
-
-  const overlay =
-    onVerdict && feedbackVisible && verdict && feedbackHandlers ? (
-      <CardFeedbackSurface
-        suggestion={suggestion}
-        verdict={verdict}
-        initialPathIds={feedbackInitialPath}
-        committed={feedbackCommitted}
-        onClose={() => feedbackHandlers.onClose(suggestion)}
-        onTreePathChanged={feedbackHandlers.onPathChanged}
-        onInvokeMera={feedbackHandlers.onInvokeMera}
-        onLeafCommitted={feedbackHandlers.onLeafCommitted}
-        onNudge={(n) => feedbackHandlers.onNudge?.(suggestion, n)}
-      />
-    ) : undefined;
 
   return (
     <>
@@ -378,7 +373,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       metaAccessory={metaAccessory}
       metaRowRightReserve={metaRowRightReserve}
       footer={actionBar}
-      overlay={overlay}
     >
       {hardFilterLabelEl}
       {factChipsEl}
