@@ -8,7 +8,7 @@ import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useTimeTick } from '@/lib/time-tick';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -16,9 +16,7 @@ export type ArticleMetaRowVariant = 'card' | 'screen';
 
 /** The language label's own cap ("Portuguese (Brazil)" fits). */
 const LANGUAGE_MAX_WIDTH = 120;
-/** The centred publication never takes more than this share of the row. */
-const PUBLICATION_MAX_SHARE = 0.58;
-/** Breathing room between the centred publication and each side. */
+/** Breathing room between the centred time and each side column. */
 const SIDE_GAP = 8;
 
 interface ArticleMetaRowProps {
@@ -103,10 +101,6 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     // (owner decision): a failed translation is explained by the detail
     // screen's translation notice, so the row carries flag + language only.
 
-    // Measured widths for the centred layout's publication cap.
-    const [rowWidth, setRowWidth] = useState(0);
-    const [leftWidth, setLeftWidth] = useState(0);
-    const [rightWidth, setRightWidth] = useState(0);
     const showLanguageSlot = !!languageCode;
     const showPublicationSlot = !!publication;
 
@@ -178,21 +172,15 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
         );
     }
 
-    // CARD and DETAIL rows with a publication (owner spec, ONE order for both):
+    // CARD and DETAIL rows with a publication (owner spec):
     //
-    //   |🕒 22h      📰 National Cyber Security Cen…      🇳🇱 Dutch|
+    //   |📰 De Telegraaf        🕒 22h        🇳🇱 Dutch|
     //
-    // (Without a time, the Feed, the row returns above: publication left.)
-    // Left: clock + age (+ NEW).
-    // Centre: the publication. Right: flag, then the language name, with NO
-    // translate glyph in any state (owner decision: a failed translation is
-    // explained by the detail screen's translation notice, not by this row).
-    //
-    // The two sides are equal `flex: 1` columns (start- and end-aligned), so
-    // the middle stays truly centred however different the sides are, and grows symmetrically as the name gets longer. Its
-    // width is capped at min(58% of the row, row − 2 × the wider side),
-    // measured with onLayout, so it never overlaps a side; past the cap it is
-    // trimmed on the right. The sides never shrink.
+    // Publication LEFT (from the left edge up to the centre column, trimmed on
+    // the right with "…"), time CENTRED (never trimmed), flag + language RIGHT
+    // (never trimmed; no translate glyph in any state, owner decision). The two
+    // side columns are equal `flex: 1`, so the time stays truly centred however
+    // long either side is. Without a time (Feed cards) see below.
     const flagAndLanguage = (
         <HStack className="items-center" space="xs" style={{ flexShrink: 0 }}>
             {flagEl}
@@ -212,9 +200,8 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
         </HStack>
     );
 
-    // No time on the left (Feed cards, owner Q5): nothing to balance, so the
-    // publication sits at the LEFT edge instead of centred, takes the
-    // remaining width and trims on the right; flag and language stay right.
+    // No time (Feed cards, owner Q5): nothing to centre, so the publication
+    // takes all the width up to flag + language and trims on the right.
     //
     //   |📰 De Telegraaf                               🇳🇱 Dutch|
     if (!showRecency) {
@@ -243,64 +230,33 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
         );
     }
 
-    const sideWidth = Math.max(leftWidth, rightWidth);
-    const publicationCap =
-        rowWidth > 0
-            ? Math.max(0, Math.min(rowWidth * PUBLICATION_MAX_SHARE, rowWidth - 2 * sideWidth - 2 * SIDE_GAP))
-            : undefined;
     return (
-        <HStack
-            className="items-center"
-            testID="meta-row"
-            onLayout={(e) => setRowWidth(Math.round(e.nativeEvent.layout.width))}
-        >
-            <HStack className="items-center" style={{ flex: 1, justifyContent: 'flex-start' }} testID="meta-left">
-                {showRecency ? (
-                    <HStack
-                        className="items-center"
-                        space="xs"
-                        style={{ flexShrink: 0 }}
-                        testID="meta-age-slot"
-                        onLayout={(e) => setLeftWidth(Math.round(e.nativeEvent.layout.width))}
+        <HStack className="items-center" testID="meta-row">
+            <HStack className="items-center" style={{ flex: 1, minWidth: 0 }} testID="meta-left">
+                <HStack
+                    className="items-center"
+                    space="xs"
+                    style={{ flexShrink: 1, minWidth: 0 }}
+                    testID="meta-publication-slot"
+                >
+                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
+                    <Text
+                        size="xs"
+                        bold
+                        className={secondaryColor}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                        style={{ flexShrink: 1 }}
                     >
-                        <MaterialIcons name="schedule" size={14} color={iconColor} />
-                        <Text size="sm" className={ageColor}>
-                            {age}
-                        </Text>
-                        {isCard && isNew && !read ? (
-                            <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
-                                <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-                                    {t('feed.newBadge')}
-                                </Text>
-                            </Box>
-                        ) : null}
-                    </HStack>
-                ) : null}
+                        {publication}
+                    </Text>
+                </HStack>
             </HStack>
 
-            <HStack
-                className="items-center justify-center"
-                space="xs"
-                style={{ maxWidth: publicationCap ?? `${PUBLICATION_MAX_SHARE * 100}%`, minWidth: 0, flexShrink: 1 }}
-                testID="meta-publication-slot"
-            >
-                <MaterialIcons name="newspaper" size={12} color={iconColor} />
-                <Text
-                    size="xs"
-                    bold
-                    className={secondaryColor}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    style={{ flexShrink: 1, textAlign: 'center' }}
-                >
-                    {publication}
-                </Text>
-            </HStack>
+            <View style={{ flexShrink: 0, marginHorizontal: SIDE_GAP }}>{ageEl}</View>
 
             <HStack className="items-center" style={{ flex: 1, justifyContent: 'flex-end' }} testID="meta-right">
-                <View onLayout={(e) => setRightWidth(Math.round(e.nativeEvent.layout.width))}>
-                    {flagAndLanguage}
-                </View>
+                {flagAndLanguage}
             </HStack>
         </HStack>
     );

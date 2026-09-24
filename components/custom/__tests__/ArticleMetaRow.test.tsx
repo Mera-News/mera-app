@@ -133,49 +133,36 @@ describe('ArticleMetaRow', () => {
 // symmetrically, capped, trimmed on the right), flag and time pinned right.
 // Every side segment shows in full. The detail row once showed
 // "National Cyber Security Centre (NCSC) · 22h ago · Dutc".
-describe('ArticleMetaRow centred publication (owner spec)', () => {
-  const { fireEvent } = require('@testing-library/react-native');
+describe('ArticleMetaRow layout (owner spec)', () => {
   const flat = (st: any) => [st].flat(Infinity).reduce((a: any, x: any) => ({ ...a, ...(x ?? {}) }), {});
   const LONG = 'National Cyber Security Centre (NCSC) of the Kingdom of Spain';
-  const layout = (node: any, width: number) =>
-    fireEvent(node, 'layout', { nativeEvent: { layout: { width, height: 20, x: 0, y: 0 } } });
 
-  it.each(['card', 'screen'] as const)('%s: a short name sits between two equal flex sides', (variant) => {
-    const { getByTestId, getByText } = render(<ArticleMetaRow variant={variant} {...base} />);
+  // Owner revision: |📰 De Telegraaf        🕒 22h        🇳🇱 Dutch|
+  // publication LEFT (trims right), time CENTRED between equal-flex columns,
+  // flag + language RIGHT; card, Saved and detail alike.
+  it.each(['card', 'screen'] as const)('%s: publication left, time centred, flag and language right', (variant) => {
+    const { getByTestId } = render(<ArticleMetaRow variant={variant} {...base} />);
     expect(flat(getByTestId('meta-left').props.style).flex).toBe(1);
     expect(flat(getByTestId('meta-right').props.style).flex).toBe(1);
-    const slot = flat(getByTestId('meta-publication-slot').props.style);
-    expect(slot.flex).toBeUndefined();
-    expect(flat(getByText('Der Spiegel').props.style).textAlign).toBe('center');
+    const within = (root: any, id: string) => root.findAll((n: any) => n.props?.testID === id).length > 0;
+    expect(within(getByTestId('meta-left'), 'meta-publication-slot')).toBe(true);
+    expect(within(getByTestId('meta-right'), 'meta-language-slot')).toBe(true);
+    // The time sits between the columns, never inside one.
+    expect(within(getByTestId('meta-left'), 'meta-age-slot')).toBe(false);
+    expect(within(getByTestId('meta-right'), 'meta-age-slot')).toBe(false);
+    expect(flat(getByTestId('meta-age-slot').props.style).flexShrink).toBe(0);
+    expect(getByTestId('meta-right').findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
   });
 
-  it.each(['card', 'screen'] as const)(
-    '%s: a 60-char name is capped at min(58%%, row - 2 x wider side) and trimmed on the right',
-    (variant) => {
-      const { getByTestId, getByText } = render(
-        <ArticleMetaRow variant={variant} {...base} publicationName={LONG} />,
-      );
-      layout(getByTestId('meta-row'), 335);
-      layout(getByTestId('meta-age-slot'), 60);
-      layout(getByTestId('meta-right').children[0], 80);
-      // min(0.58 * 335 = 194.3, 335 - 2 * 80 - 16 = 159)
-      expect(flat(getByTestId('meta-publication-slot').props.style).maxWidth).toBe(159);
-      const name = getByText(/National Cyber Security Centre/);
-      expect(name.props.numberOfLines).toBe(1);
-      expect(name.props.ellipsizeMode).toBe('tail');
-      // Language, time and flag never shrink.
-      expect(flat(getByTestId('meta-language-slot').props.style).flexShrink).toBe(0);
-      expect(flat(getByTestId('meta-age-slot').props.style).flexShrink).toBe(0);
-    },
-  );
-
-  it.each(['card', 'screen'] as const)('%s: time left, flag and language right (no translate glyph)', (variant) => {
-    const { getByTestId } = render(<ArticleMetaRow variant={variant} {...base} />);
-    const right = getByTestId('meta-right');
-    const within = (root: any, id: string) => root.findAll((n: any) => n.props?.testID === id).length > 0;
-    expect(within(getByTestId('meta-left'), 'meta-age-slot')).toBe(true);
-    expect(within(right, 'meta-language-slot')).toBe(true);
-    expect(right.findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
+  it.each(['card', 'screen'] as const)('%s: a 60-char publication trims on the right inside its column', (variant) => {
+    const { getByTestId, getByText } = render(
+      <ArticleMetaRow variant={variant} {...base} publicationName={LONG} />,
+    );
+    const name = getByText(/National Cyber Security Centre/);
+    expect(name.props.numberOfLines).toBe(1);
+    expect(name.props.ellipsizeMode).toBe('tail');
+    expect(flat(getByTestId('meta-publication-slot').props.style).minWidth).toBe(0);
+    expect(flat(getByTestId('meta-language-slot').props.style).flexShrink).toBe(0);
   });
 
   it('draws no translate glyph even when translation failed (owner decision)', () => {
