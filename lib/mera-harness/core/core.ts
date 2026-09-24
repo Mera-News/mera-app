@@ -33,12 +33,14 @@ import {
   sameCountry,
   threeFactsOf,
 } from './combined-fact';
+import { factPickStatement, isFactPickChoice, joinFactPick } from './fact-pick';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import type {
   AgentDeps,
   AgentLeg,
+  AgentModelResult,
   AgentProposal,
   AgentTurnResult,
   AgentTurnState,
@@ -279,6 +281,21 @@ function placeFromPayload(payload: unknown): Place | null {
  * last month". A fact names the user in the third person and a home is
  * "Lives in ...", or none of the loop's rules recognise it.
  */
+/** The loop-written first leg of a "Save all" tap. */
+function saveAllLeg(options: readonly string[]): AgentModelResult {
+  const entries = options.map((o) => ({ statement: factPickStatement(o) }));
+  return {
+    content: '',
+    toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: JSON.stringify({ extracted_user_information: entries }) }],
+    finishReason: 'tool_calls',
+    truncated: false,
+    usage: null,
+    modelSent: 'loop',
+    latencyMs: 0,
+    error: null,
+  };
+}
+
 function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unknown> {
   let t = typeof entry.statement === 'string' ? entry.statement.trim() : '';
   if (!t) return entry;
@@ -487,6 +504,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // The tap arrives as an ordinary message. Matching it here is what lets the
   // next leg save the chosen place without a second lookup.
   const turn = state.turn;
+  let saveAllOptions: string[] | null = null;
   if (turn.pendingChoice) {
     // EXACT match only, and the chips are the only thing that can consume a
     // pending choice. Anything else is a new turn, and the stale choice is
@@ -502,6 +520,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         payload: tapped.payload,
       };
       turn.pendingChoice = null;
+    } else {
+      // A "SAVE ALL" TAP on a chip list of distinct facts (owner rule ux1).
+      // It is NOT a resolved choice: it never authorises a delete or a
+      // cross-key replace. It resumes the asking skill and offers every
+      // option as a card, without asking the model to pick again.
+      const texts = turn.pendingChoice.options.map((o) => o.text);
+      if (isFactPickChoice(texts) && userMessage.trim() === joinFactPick(texts)) {
+        saveAllOptions = texts;
+        turn.pendingChoice = null;
+      }
     }
   }
   // A PLAIN YES to the last question continues that question's subject, the
@@ -523,7 +551,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     && turn.lastSkill.startsWith('facts/')
     && plainAnswer !== null;
   const answerPending =
-    turn.lastTurnAskedQuestion && turn.resolvedChoice === null && !typedYesResume;
+    turn.lastTurnAskedQuestion && turn.resolvedChoice === null && !typedYesResume && saveAllOptions === null;
   // Read BEFORE the turn overwrites it at the end, and held for every leg: the
   // question belongs to the turn being answered, not to the one being written.
   const lastQuestion = turn.lastQuestion;
@@ -575,7 +603,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // statements read as the user's own, because the model had already dropped
   // the girlfriend from the sentence. The subject has to survive the question,
   // which means resuming the skill rather than re-deciding.
-  if ((turn.resolvedChoice !== null || typedYesResume) && turn.lastSkill !== null) {
+  if ((turn.resolvedChoice !== null || typedYesResume || saveAllOptions !== null) && turn.lastSkill !== null) {
     const body = deps.loadSkill(turn.lastSkill);
     if (body !== null) {
       skillLoaded = turn.lastSkill;
@@ -787,7 +815,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // conditions (a 402 spend limit is the live one), and recording those as leg
     // data instead of letting them abort writes a file of empty rows that reads
     // as a model failure.
-    const result = await deps.callModel({
+    // A SAVE ALL TAP's first leg is written by the loop: the offer of every
+    // option, through the ordinary save path, so every guard still applies.
+    const result = index === 0 && saveAllOptions !== null ? saveAllLeg(saveAllOptions) : await deps.callModel({
       role: index === 0 ? 'route' : 'tool',
       model,
       systemPrompt,
@@ -861,8 +891,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     let sawContinuationTool = false;
     let terminatedByChoice = false;
 
-    for (const call of result.toolCalls) {
-      const args = parseArgs(call.argumentsRaw);
+    for (let call of result.toolCalls) {
+      let args = parseArgs(call.argumentsRaw);
       // A MALFORMED call is never executed and is never forcing: a truncated
       // load_skill that counted as forcing would burn the whole cap retrying.
       if (args === null) {
@@ -961,6 +991,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           continuationsSeen.add(callKey);
         }
         continue;
+      }
+
+      // DISTINCT FACTS ARE NEVER A PICK-ONE (owner rule ux1). Measured on the
+      // Android dev build: "Which fact should I offer to save?" over "You are
+      // an expat" / "You are from India" / "You live in New West, Amsterdam".
+      // The question becomes the offer of all of them, through the ordinary
+      // save path, and the prose that asked it is dropped.
+      if (
+        call.name === 'ask_choice'
+        && skillLoaded !== null
+        && skillLoaded.startsWith('facts/')
+        && isFactPickChoice(args.options, placeCandidates)
+      ) {
+        const entries = (args.options as string[]).map((o) => ({ statement: factPickStatement(o) }));
+        call = { ...call, name: 'saveExtractedFacts', argumentsRaw: JSON.stringify({ extracted_user_information: entries }) };
+        args = { extracted_user_information: entries };
+        if (result.content.trim() && !(index === 0 && !resumedSkill)) reply = '';
       }
 
       if (call.name === 'ask_choice') {
