@@ -23,10 +23,16 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, ScrollView, View } from 'react-native';
 
-// Matches TabExplainerButton's header-right glyph: 24pt icon, hitSlop padded
-// out to a 44pt target, same muted chrome colour.
+// Matches TabExplainerButton's header-right glyph size and muted chrome
+// colour: 24pt icon. The touch FRAME is 44pt (Batch 13, sim capture
+// 1440-b8-profile-header: hitSlop alone measured 24×24, because hitSlop
+// extends what accepts a touch without changing the rect a harness reads).
+// A negative margin equal to half the grown amount keeps the LAYOUT
+// footprint at the glyph's own 24pt, so growing the frame doesn't shift the
+// icon or reflow the row it sits in.
 const HEADER_ICON_GLYPH = 24;
-const HEADER_ICON_HIT_SLOP = (44 - HEADER_ICON_GLYPH) / 2;
+const HEADER_ICON_TOUCH_TARGET = 44;
+const HEADER_ICON_TOUCH_MARGIN = -(HEADER_ICON_TOUCH_TARGET - HEADER_ICON_GLYPH) / 2;
 
 interface ProfileScreenProps {
     readonly userId: string;
@@ -162,9 +168,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     <Pressable
                         testID="profile-advanced-open"
                         onPress={() => router.push('/logged-in/profile-advanced')}
-                        hitSlop={HEADER_ICON_HIT_SLOP}
                         accessibilityRole="button"
                         accessibilityLabel={t('profile.advanced', { defaultValue: 'Advanced' })}
+                        style={{
+                            width: HEADER_ICON_TOUCH_TARGET,
+                            height: HEADER_ICON_TOUCH_TARGET,
+                            margin: HEADER_ICON_TOUCH_MARGIN,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
                     >
                         <MaterialIcons name="tune" size={HEADER_ICON_GLYPH} color="rgb(212, 212, 212)" />
                     </Pressable>

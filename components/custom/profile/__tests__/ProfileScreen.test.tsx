@@ -359,6 +359,27 @@ describe('ProfileScreen', () => {
         expect(getByTestId('profile-advanced-open').props.accessibilityRole).toBe('button');
     });
 
+    // Batch 13 (sim capture 1440-b8-profile-header): measured 24×24, brief
+    // requires 44×44. Frame, not hitSlop, because hitSlop doesn't change the
+    // rect a harness measures. A negative margin keeps the LAYOUT footprint at
+    // 24×24 (the glyph's own size) so the icon and the row around it don't
+    // move — a plain minWidth/minHeight grow would shift the glyph left,
+    // since this is the first of two icons pinned to the header's right edge.
+    it('the Advanced button frame is 44×44 with no layout footprint growth', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        const style = getByTestId('profile-advanced-open').props.style;
+        expect(style.width).toBeGreaterThanOrEqual(44);
+        expect(style.height).toBeGreaterThanOrEqual(44);
+        // Footprint = width + both margins. It must equal the 24pt glyph, or
+        // the icon shifts relative to where it sits today.
+        expect(style.width + 2 * style.margin).toBe(24);
+        // hitSlop stacked on top of an already-44pt frame would make the real
+        // target 64pt and re-widen the overlap with the "?" button next to it.
+        expect(getByTestId('profile-advanced-open').props.hitSlop).toBeUndefined();
+    });
+
     it('pressing the header Advanced button navigates to the Advanced route', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { getByTestId } = render(<ProfileScreen userId="u1" />);
