@@ -200,6 +200,15 @@ describe('ArticleMetaRow centred publication (owner spec)', () => {
     expect(getByTestId('meta-language-slot')).toBeTruthy();
   });
 
+  it.each([null, 'blocked'])('compact rows draw no translate glyph (translation blocked: %s)', (blocked) => {
+    mockStatus = 'translatable';
+    mockBlocked = blocked;
+    const { queryByTestId, UNSAFE_root } = render(<ArticleMetaRow variant="card" {...base} publicationName={null} />);
+    expect(queryByTestId('meta-translate-failed')).toBeNull();
+    expect(UNSAFE_root.findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
+    mockBlocked = null;
+  });
+
   it('compact rows put the flag immediately left of the language', () => {
     const { getByTestId } = render(<ArticleMetaRow variant="card" {...base} publicationName={null} />);
     const group = getByTestId('meta-flag-language');

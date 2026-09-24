@@ -6,10 +6,7 @@ import { Text } from '@/components/ui/text';
 import { getLocalizedLanguageName } from '@/lib/language-names';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import { useTimeTick } from '@/lib/time-tick';
-import { getArticleTranslatableStatus, useTranslationBlocked } from '@/lib/translation-service';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
-import { Pressable } from '@/components/ui/pressable';
-import { Tooltip, TooltipContent, TooltipText } from '@/components/ui/tooltip';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -101,33 +98,14 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     // "... De ... (Incibe)".
     const publication = (publicationName ?? '').trim();
 
-    const translateStatus = getArticleTranslatableStatus(languageCode, appLanguage);
+    // No translate glyph on this row in ANY state, compact rows included
+    // (owner decision): a failed translation is explained by the detail
+    // screen's translation notice, so the row carries flag + language only.
 
-    // The OS translator has given up on the reader's language, so this
-    // article — which the device COULD normally translate — is showing the
-    // server-side English instead of their language. That is a failure, and
-    // the one the reader can act on, so it gets red.
-    //
-    // Read off the breaker's own reactive subscription, deliberately: this is
-    // the same state that made <TranslatableDynamic> fall back, so the icon
-    // cannot disagree with the text next to it. A separate flag here would
-    // drift the moment one of the two paths changed.
-    // Called unconditionally — the status test is applied to its RESULT, not
-    // used to decide whether to subscribe.
-    const languageBlocked = useTranslationBlocked(appLanguage) !== null;
-    const translationFailed = translateStatus === 'translatable' && languageBlocked;
-    const [showFailureTip, setShowFailureTip] = useState(false);
     // Measured widths for the centred layout's publication cap.
     const [rowWidth, setRowWidth] = useState(0);
     const [leftWidth, setLeftWidth] = useState(0);
     const [rightWidth, setRightWidth] = useState(0);
-
-    // Pastel yellow, not red: the device can't translate this one, but Google
-    // Translate can — that's an alternative route, not a failure. Red is
-    // reserved for the case above, where translation was supposed to work.
-    const translateColor = translationFailed
-        ? '#F87171'
-        : translateStatus === 'not-translatable' ? '#FDE68A' : '#86EFAC';
     const showLanguageSlot = !!languageCode;
     const showPublicationSlot = !!publication;
 
@@ -156,33 +134,6 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const languageEl =
         showLanguageSlot ? (
                 <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-language-slot">
-                    {/* SAME glyph in every state — only the colour changes, so
-                        the row never gains or loses an element. The failed
-                        state additionally makes it tappable, because it is the
-                        only state that has anything to say. */}
-                    {translationFailed ? (
-                        <Tooltip
-                            placement="top"
-                            isOpen={showFailureTip}
-                            onClose={() => setShowFailureTip(false)}
-                            trigger={(triggerProps) => (
-                                <Pressable
-                                    {...triggerProps}
-                                    testID="meta-translate-failed"
-                                    hitSlop={8}
-                                    onPress={() => setShowFailureTip((v) => !v)}
-                                >
-                                    <MaterialIcons name="translate" size={12} color={translateColor} />
-                                </Pressable>
-                            )}
-                        >
-                            <TooltipContent>
-                                <TooltipText>{t('language.translationFailedTooltip')}</TooltipText>
-                            </TooltipContent>
-                        </Tooltip>
-                    ) : (
-                        <MaterialIcons name="translate" size={12} color={translateColor} />
-                    )}
                     {language ? (
                         <Text
                             size="xs"

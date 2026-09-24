@@ -65,6 +65,9 @@ interface TranslatableProps {
      * screen (detail) variant where there is space for it.
      */
     readonly showToggle?: boolean;
+    /** Draw the small translate glyph before translated text. Default true;
+     *  compact rows pass false (owner: no 文A on compact rows in any state). */
+    readonly showTranslatedIndicator?: boolean;
     /**
      * Fired (in an effect, never during render) whenever the effective
      * displayed text changes — covers the Show original/Show translation toggle
@@ -144,6 +147,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     bold,
     italic,
     showToggle = false,
+    showTranslatedIndicator = true,
     onDisplayChange,
 }) => {
     const { t } = useTranslation();
@@ -453,7 +457,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const translating =
         needsTranslation && cachedTranslation == null && translationPending && !showToggleButton;
 
-    const translatedIndicator = isTranslated && !showToggleButton ? (
+    const translatedIndicator = isTranslated && !showToggleButton && showTranslatedIndicator ? (
         <>
             <MaterialIcons name="translate" size={11} color="#9ca3af" />
             {' '}

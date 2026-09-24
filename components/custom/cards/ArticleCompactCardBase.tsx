@@ -267,6 +267,8 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                   // the class lets the `md` token's own 24px line box apply.
                   className="font-medium"
                   numberOfLines={headlineLines}
+                  // No 文A before the headline on compact rows (owner).
+                  showTranslatedIndicator={false}
                 />
               </Box>
 

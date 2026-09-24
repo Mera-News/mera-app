@@ -97,8 +97,8 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
   // swallows the prop makes it untestable.
   return {
     __esModule: true,
-    default: ({ text, numberOfLines }: any) => (
-      <Text numberOfLines={numberOfLines}>{text}</Text>
+    default: ({ text, numberOfLines, showTranslatedIndicator }: any) => (
+      <Text numberOfLines={numberOfLines} showTranslatedIndicator={showTranslatedIndicator}>{text}</Text>
     ),
   };
 });
@@ -586,6 +586,12 @@ describe('ArticleStandaloneCompactCard', () => {
     for (const id of ['menu-like', 'menu-dislike', 'menu-save', 'menu-share', 'card-action-mera']) {
       expect(getByTestId(id)).toBeTruthy();
     }
+  });
+
+  // Owner: no 文A glyph on compact rows in any state, before the title included.
+  it('draws no translate glyph before the headline', () => {
+    const { getByText } = render(<ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />);
+    expect(getByText('Standalone headline').props.showTranslatedIndicator).toBe(false);
   });
 
   it('moves the country flag to the top row, beside the language', () => {
