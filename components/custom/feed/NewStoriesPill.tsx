@@ -19,9 +19,10 @@ interface NewStoriesPillProps {
  *
  * The pinned prefix means nothing is ever inserted ABOVE the reader, so new
  * stories land just below the part of the list they have read. Nothing told
- * them that; the pill does, and one tap scrolls to the first arrival. It sits
- * bottom-centre and points down because that is where the arrivals are, and
- * it floats over content, so it carries the dark over-content base.
+ * them that; the pill does. One tap refreshes the feed exactly like a pull at
+ * the top (re-sort, re-pin, back to the top), so it carries the refresh glyph,
+ * not an arrow. It floats over content, so it carries the dark over-content
+ * base.
  */
 const NewStoriesPill: React.FC<NewStoriesPillProps> = ({ visible, onPress, bottom }) => {
     const { t } = useTranslation();
@@ -38,7 +39,7 @@ const NewStoriesPill: React.FC<NewStoriesPillProps> = ({ visible, onPress, botto
                 // device in this app (css-interop), taking the pill's shape with it.
                 style={styles.pill}
             >
-                <MaterialIcons name="arrow-downward" size={16} color={ACCENT} />
+                <MaterialIcons name="refresh" size={16} color={ACCENT} />
                 <Text size="sm" className="font-semibold" style={styles.label}>
                     {t('feed.newStoriesPill')}
                 </Text>

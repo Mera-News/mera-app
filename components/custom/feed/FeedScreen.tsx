@@ -109,6 +109,7 @@ import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import { HEADER_NARRATION_METRICS } from '@/components/custom/for-you/header-narration';
 import NewStoriesPill from '@/components/custom/feed/NewStoriesPill';
+import { pressNewStoriesPill } from '@/components/custom/feed/new-stories-pill';
 import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
@@ -641,8 +642,8 @@ const FeedScreen: React.FC = () => {
 
   // ── "New stories" pill (N1) ──
   // Arrivals that landed while the reader was scrolled down. They land below
-  // the pinned prefix, i.e. below what the reader has read, so the pill points
-  // down and scrolls to the first of them.
+  // the pinned prefix, i.e. below what the reader has read. Tapping the pill
+  // refreshes exactly like a pull at the top (re-sort, re-pin, back to top).
   const [awayArrivals, setAwayArrivals] = useState<ReadonlySet<string>>(() => new Set());
   const hasAwayArrivalsShared = useSharedValue(false);
   useEffect(() => {
@@ -662,12 +663,6 @@ const FeedScreen: React.FC = () => {
     hasAwayArrivalsShared.value = false;
     setAwayArrivals((prev) => (prev.size === 0 ? prev : new Set()));
   }, [hasAwayArrivalsShared]);
-  const showNewStories = useCallback(() => {
-    const index = listData.findIndex((it) => awayArrivals.has(it.id));
-    clearAwayArrivals();
-    if (index < 0) return;
-    listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0 });
-  }, [listData, awayArrivals, clearAwayArrivals]);
 
   // Seed the pin the first time the list is non-empty. This is NOT redundant
   // with the extend inside the ingest effect: on a cold launch the first ingest
@@ -803,6 +798,12 @@ const FeedScreen: React.FC = () => {
     resetSession();
     onRefreshSync();
   }, [flushSkips, resetSession, onRefreshSync]);
+
+  // The "New stories" pill IS a pull-to-refresh (see new-stories-pill.ts).
+  const showNewStories = useCallback(
+    () => pressNewStoriesPill(clearAwayArrivals, onRefresh),
+    [clearAwayArrivals, onRefresh],
+  );
 
   // Re-tap the Feed tab icon → scroll to top; tap again at the top → refresh.
   // Deliberately the SAME `onRefresh` the RefreshControl below calls, not
