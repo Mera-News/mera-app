@@ -70,6 +70,12 @@ jest.mock('react-native-reanimated', () => {
 let mockReduceMotion = false;
 const mockWithTiming = jest.fn();
 
+let mockWindowWidth = 375;
+jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
+    __esModule: true,
+    default: () => ({ width: mockWindowWidth, height: 812, scale: 3, fontScale: 1 }),
+}));
+
 import FeedStatusIndicator from '../FeedStatusIndicator';
 
 const OPEN_A11Y = 'feedStatus.openA11y';
@@ -100,7 +106,7 @@ function scaleOf(node: any): number | undefined {
     return transform?.find((e: any) => 'scale' in e)?.scale;
 }
 
-const IDLE_SCALE = 0.82;
+const IDLE_SCALE = 1;
 const PROCESSING_SCALE = 1.55;
 
 describe('FeedStatusIndicator', () => {
@@ -293,5 +299,31 @@ describe('FeedStatusIndicator: static unless the Feed is really updating', () =>
 
     it('moves only while the phone itself works', () => {
         expect(still(true, 'processing')).toBe(false);
+    });
+});
+
+// Owner: "as big as the Feed text in the same line". The resting mark's
+// layout size IS the measured ink height of "Feed" in the header title
+// (CoreText, system bold: 21.5pt at 30px, 25.8pt at 36px), at scale 1, from
+// the same breakpoint as the title; processing grows it 1.55x by transform.
+describe('FeedStatusIndicator: sized to the Feed title', () => {
+    afterEach(() => {
+        mockWindowWidth = 375;
+    });
+    it('rests at the "Feed" ink height on a compact phone (375pt, 3xl title)', () => {
+        mockWindowWidth = 375;
+        const { getByTestId } = renderIndicator({ mode: 'idle' });
+        expect(getByTestId('mera-logo').props.size).toBe(21.5);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(1);
+    });
+    it('rests at the "Feed" ink height on a wide phone (402pt, 4xl title)', () => {
+        mockWindowWidth = 402;
+        const { getByTestId } = renderIndicator({ mode: 'idle' });
+        expect(getByTestId('mera-logo').props.size).toBe(25.8);
+    });
+    it('grows 1.55x while working, by transform, so the layout box never changes', () => {
+        const { getByTestId } = renderIndicator({ mode: 'processing' });
+        expect(getByTestId('mera-logo').props.size).toBe(21.5);
+        expect(scaleOf(getByTestId(MARK_ID))).toBe(1.55);
     });
 });
