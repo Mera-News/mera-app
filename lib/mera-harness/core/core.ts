@@ -25,6 +25,7 @@ import {
   ORIGIN_KEY,
   countryOf,
   expatStatement,
+  toOriginStatement,
   isCombinedOriginFact,
   isExpatStatement,
   isOriginStatement,
@@ -273,6 +274,67 @@ function placeFromPayload(payload: unknown): Place | null {
 }
 
 /**
+ * First-person statements rewritten as facts. Measured on staging: "I am an
+ * expat from India", "I live in Nieuw-West, Amsterdam", "Moved to Berlin, ...
+ * last month". A fact names the user in the third person and a home is
+ * "Lives in ...", or none of the loop's rules recognise it.
+ */
+function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unknown> {
+  let t = typeof entry.statement === 'string' ? entry.statement.trim() : '';
+  if (!t) return entry;
+  t = t.replace(/^(?:i\s+am|i['’]m|im)\s+(?:an?\s+)?/i, '');
+  const home = /^(?:i\s+)?(?:(?:have\s+|recently\s+)?moved|live|lives|living|reside|resides)\s+(?:in|to)\s+(.+)$/i.exec(t);
+  if (home) {
+    const where = home[1]
+      .replace(/\s+(?:last\s+(?:week|month|year)|this\s+(?:month|year)|recently|a\s+few\s+(?:weeks|months|years)\s+ago)\.?$/i, '')
+      .replace(/\.$/, '');
+    t = `Lives in ${where}`;
+  } else {
+    t = t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  return t === entry.statement ? entry : { ...entry, statement: t };
+}
+
+/** "Lives in <what the user said>, <region>, <country>, <bloc>": the user's
+ *  own first rung is kept when it is finer than the locality (a
+ *  neighbourhood), then the looked-up chain. */
+function chainStatement(where: string, place: Place): string {
+  const first = where.split(',')[0].trim();
+  const rungs = [
+    first.toLowerCase() !== place.locality.toLowerCase() ? first : null,
+    place.locality,
+    place.admin1,
+    place.countryName,
+    place.bloc,
+  ].filter((r): r is string => typeof r === 'string' && r.trim().length > 0);
+  return collapseRepeatedRungs(`Lives in ${rungs.join(', ')}`);
+}
+
+/** Append "Expat in <country>" for an origin entry when the user's current
+ *  country is known and differs, unless one is already offered or on file. */
+function addExpatStatus(
+  list: Record<string, unknown>[],
+  facts: AgentPersonaFact[],
+  known: readonly Place[],
+): void {
+  const origin = list.find((e) => e.questionnaire_attribute === ORIGIN_KEY);
+  if (!origin) return;
+  if (list.some((e) => e.questionnaire_attribute === EXPAT_KEY)) return;
+  if (facts.some((f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement))) return;
+  const homeEntry = list.find((e) => isHomeEntry(e));
+  const homeFact = facts.find(
+    (f) => isLocationKey(f.attribute) && !isRelationalStatement(f.statement),
+  );
+  const country = homeEntry
+    ? countryOf(String(homeEntry.statement), known)
+    : homeFact
+      ? countryOf(homeFact.statement, known)
+      : null;
+  if (!country || sameCountry(country, originCountry(String(origin.statement)))) return;
+  list.push({ statement: expatStatement(country), questionnaire_attribute: EXPAT_KEY });
+}
+
+/**
  * A combined origin-and-home entry from the model, expanded into its separate
  * facts; any other entry unchanged. A `replaces` on the combined entry goes
  * with the residence part, the only part that can replace a home.
@@ -312,7 +374,11 @@ function withExactKey(entry: Record<string, unknown>): Record<string, unknown> {
   const key = attribute.split(':')[0].trim().toLowerCase();
   const loose = key === '' || ['origin', 'background', 'expat', 'nationality', 'heritage'].includes(key);
   if (isExpatStatement(statement) && loose) return { ...entry, questionnaire_attribute: EXPAT_KEY };
-  if (isOriginStatement(statement) && loose) return { ...entry, questionnaire_attribute: ORIGIN_KEY };
+  if (isOriginStatement(statement) && loose) {
+    // "Expat from India" is the ORIGIN, written "From India"; being an expat
+    // is its own fact (see addExpatStatus).
+    return { ...entry, statement: toOriginStatement(statement), questionnaire_attribute: ORIGIN_KEY };
+  }
   if ((isLocationKey(attribute) || (key === '' && /^lives in\b/i.test(statement.trim())))
       && !isRelationalStatement(statement)) {
     return { ...entry, questionnaire_attribute: CANONICAL_LOCATION_KEY };
@@ -535,6 +601,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    *  they are not in the payload and executing nothing silently made them look
    *  like a normal turn. */
   const unknownTools: string[] = [];
+  /** The status of the last lookup_place this turn, or null if none ran. */
+  let lastLookupStatus: string | null = null;
   let placeCandidates: Place[] = resumedSkill && turn.confirmedPlace ? [turn.confirmedPlace] : [];
   let similarFactCount: number | null = null;
   const toolResultsThisTurn: { name: string; result: unknown }[] = [];
@@ -872,6 +940,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const countryHint = typeof args.countryHint === 'string' ? args.countryHint : undefined;
         const out = await deps.tools.lookupPlace({ query, countryHint });
         placeCandidates = out.status === 'resolved' ? out.places : [];
+        lastLookupStatus = out.status;
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -883,6 +952,26 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
       if (call.name === 'ask_choice') {
         const question = typeof args.question === 'string' ? args.question : '';
+        // A PLACE THAT RESOLVED TO ONE MATCH IS NOT A QUESTION (owner ruling
+        // Q1: the card is the consent for a replacement). Measured on staging,
+        // "Berlin" resolved to one place and the model still asked "Berlin
+        // replaces your Amsterdam fact?", ending the turn with no card. On a
+        // home or origin turn that question is refused and the leg continues.
+        if (
+          (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin')
+          && lastLookupStatus === 'resolved'
+          && placeCandidates.length === 1
+        ) {
+          const out = {
+            error:
+              'Only an ambiguous place is asked here. Offer the facts now with saveExtractedFacts; '
+              + 'the card asks the user about any replacement.',
+          };
+          leg.toolResults.push({ name: call.name, result: out });
+          toolResultsThisTurn.push({ name: call.name, result: out });
+          sawContinuationTool = true;
+          continue;
+        }
         if (!validateChoiceOptions(args.options) || !question) {
           // A COUNTED terminal state, never a settled prose question: letting
           // this fall through to the settled branch ends the turn as a question
@@ -926,8 +1015,28 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             ? (args.extracted_user_information as Record<string, unknown>[])
             : []
         )
+          .map(asThirdPersonFact)
           .flatMap((e) => expandCombinedEntry(e, placeCandidates))
           .map(withExactKey);
+        // A HOME THE MODEL DID NOT LOOK UP is looked up by the loop, once:
+        // an unresolved "Nieuw-West, Amsterdam" has no country, so it can
+        // anchor nothing and carries no expat status. Only on a turn that
+        // offers an origin (the only case the country is needed for), and only
+        // a single match is used; anything else is left as the model wrote it.
+        const offersOrigin = list.some((e) => e.questionnaire_attribute === ORIGIN_KEY);
+        for (const e of offersOrigin ? list : []) {
+          if (!isHomeEntry(e) || countryOf(String(e.statement), placeCandidates) !== null) continue;
+          const where = String(e.statement).replace(/^lives\s+in\s+/i, '').trim();
+          if (where.length < 2) continue;
+          const found = await deps.tools.lookupPlace({ query: where });
+          if (found.status === 'resolved' && found.places.length === 1) {
+            placeCandidates = found.places;
+            e.statement = chainStatement(where, found.places[0]);
+          }
+        }
+        // AN EXPAT ORIGIN BRINGS ITS STATUS: "From India" plus "Expat in
+        // <country>" when the current home's country is known and differs.
+        addExpatStatus(list, state.persona.facts, placeCandidates);
         // THE LIST THE APP ACTUALLY READS. `handleSaveExtractedFacts` builds
         // the cards from `extracted_user_information`, not from `proposals`,
         // so a decision made only on the parallel array is a decision the user

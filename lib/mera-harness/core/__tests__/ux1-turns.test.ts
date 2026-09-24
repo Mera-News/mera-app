@@ -350,8 +350,9 @@ describe('Q2: a combined origin-and-home fact is offered its split once', () => 
     ]);
     const out = await runAgentTurn({ state: createAgentState(COMBINED), userMessage: 'I am from India', deps: h.deps, onLeg });
     const all = h.saves.flat();
-    // ONE origin card, and it is the one that retires the combined fact.
-    expect(all.filter((e) => e.statement === 'Expat from India')).toEqual([
+    // ONE origin card, and it is the one that retires the combined fact. The
+    // model's "Expat from India" is saved as the origin alone.
+    expect(all.filter((e) => /india/i.test(String(e.statement)))).toEqual([
       expect.objectContaining({ replaces: 'c1' }),
     ]);
     // The home half is still offered, since no home fact is on file.
