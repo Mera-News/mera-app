@@ -97,7 +97,10 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     // Named in the reader's own language, not its endonym — "简体中文" tells a
     // reader who doesn't know the script nothing about what they're looking at.
     const language = getLocalizedLanguageName(languageCode, appLanguage) ?? '';
-    const publication = toTitleCase(publicationName);
+    // The detail screen shows the name exactly as stored ("Instituto Nacional
+    // de Ciberseguridad (INCIBE)"): title-casing turned it into "... De ...
+    // (Incibe)". Cards still normalise shouting feed names (see toTitleCase).
+    const publication = isCard ? toTitleCase(publicationName) : (publicationName ?? '').trim();
 
     const translateStatus = getArticleTranslatableStatus(languageCode, appLanguage);
 

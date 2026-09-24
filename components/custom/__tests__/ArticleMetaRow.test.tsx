@@ -116,6 +116,15 @@ describe('ArticleMetaRow', () => {
     expect(getAcronym('NDTV')).toBeTruthy();
   });
 
+  // Batch 9: detail showed "Instituto Nacional De Ciberseguridad (Incibe)".
+  // On the detail screen the name is shown exactly as stored.
+  it('shows the publication exactly as stored on the detail screen', () => {
+    const { getByText } = render(
+      <ArticleMetaRow variant="screen" {...base} publicationName="Instituto Nacional de Ciberseguridad (INCIBE)" />,
+    );
+    expect(getByText('Instituto Nacional de Ciberseguridad (INCIBE)')).toBeTruthy();
+  });
+
   it('names the article language in the reader\'s language, not its endonym', () => {
     const { getByText } = render(<ArticleMetaRow variant="card" {...base} />);
     expect(getByText('German')).toBeTruthy();
