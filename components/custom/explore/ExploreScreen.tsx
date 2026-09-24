@@ -479,7 +479,16 @@ const ExploreScreen: React.FC = () => {
                                     <Pressable
                                         testID="explore-search-open"
                                         onPress={handleOpenSearch}
-                                        hitSlop={12}
+                                        // A real 44pt frame pulled back to the 24pt
+                                        // glyph's footprint, same recipe as the "?"
+                                        // beside it: hitSlop alone measured 24x24.
+                                        style={{
+                                            width: 44,
+                                            height: 44,
+                                            margin: -10,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}
                                         accessibilityRole="button"
                                         accessibilityLabel={t('explore.openSearch')}
                                     >

@@ -422,6 +422,15 @@ describe('ExploreScreen — browse countries + suppressed scopes (Items 7/18)', 
 });
 
 describe('ExploreScreen — search collapsed into the title row (Item 12a)', () => {
+    it('gives the magnifier a real 44pt frame with a 24pt footprint, not hitSlop', () => {
+        const { getByTestId } = render(<ExploreScreen />);
+        const { StyleSheet } = require('react-native');
+        const button = getByTestId('explore-search-open');
+        const style = StyleSheet.flatten(button.props.style);
+        expect(style).toMatchObject({ width: 44, height: 44, margin: -10, alignItems: 'center', justifyContent: 'center' });
+        expect(button.props.hitSlop).toBeUndefined();
+    });
+
     it('is COLLAPSED by default: heading + magnifier, and the input is not mounted at all', () => {
         const { getByTestId, getByText, queryByTestId } = render(<ExploreScreen />);
         expect(getByText('explore.title')).toBeTruthy();
