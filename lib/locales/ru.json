@@ -2909,10 +2909,6 @@
     "reportBug": "Сообщить об ошибке",
     "actionFailed": "Не получилось. Попробуйте ещё раз."
   },
-  "factChip": {
-    "label": "Из вашего профиля: {{label}}",
-    "openA11y": "Статьи о {{label}}"
-  },
   "related": {
     "allCountries": "Все страны",
     "allLanguages": "Все языки",

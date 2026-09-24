@@ -2868,10 +2868,6 @@
     "reportBug": "버그 신고",
     "actionFailed": "실패했어요. 다시 시도하세요."
   },
-  "factChip": {
-    "label": "내 프로필: {{label}}",
-    "openA11y": "{{label}} 관련 소식"
-  },
   "related": {
     "allCountries": "모든 국가",
     "allLanguages": "모든 언어",

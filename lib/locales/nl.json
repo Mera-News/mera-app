@@ -2869,10 +2869,6 @@
     "reportBug": "Bug melden",
     "actionFailed": "Dat lukte niet. Probeer het opnieuw."
   },
-  "factChip": {
-    "label": "Uit je profiel: {{label}}",
-    "openA11y": "Berichten over {{label}}"
-  },
   "related": {
     "allCountries": "Alle landen",
     "allLanguages": "Alle talen",

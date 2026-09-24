@@ -2871,10 +2871,6 @@
     "reportBug": "Hata bildir",
     "actionFailed": "Olmadı. Tekrar dene."
   },
-  "factChip": {
-    "label": "Profilinden: {{label}}",
-    "openA11y": "{{label}} hakkında haberler"
-  },
   "related": {
     "allCountries": "Tüm ülkeler",
     "allLanguages": "Tüm diller",

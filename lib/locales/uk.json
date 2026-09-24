@@ -2913,10 +2913,6 @@
     "reportBug": "Повідомити про помилку",
     "actionFailed": "Не вдалося. Спробуйте ще раз."
   },
-  "factChip": {
-    "label": "З вашого профілю: {{label}}",
-    "openA11y": "Статті про {{label}}"
-  },
   "related": {
     "allCountries": "Усі країни",
     "allLanguages": "Усі мови",

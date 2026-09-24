@@ -2869,10 +2869,6 @@
     "reportBug": "Informar de un error",
     "actionFailed": "No funcionó. Inténtalo de nuevo."
   },
-  "factChip": {
-    "label": "De tu perfil: {{label}}",
-    "openA11y": "Noticias sobre {{label}}"
-  },
   "related": {
     "allCountries": "Todos los países",
     "allLanguages": "Todos los idiomas",

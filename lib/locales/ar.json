@@ -2955,10 +2955,6 @@
     "reportBug": "الإبلاغ عن خطأ",
     "actionFailed": "لم ينجح ذلك. حاول مرة أخرى."
   },
-  "factChip": {
-    "label": "من ملفك: {{label}}",
-    "openA11y": "قصص عن {{label}}"
-  },
   "related": {
     "allCountries": "كل البلدان",
     "allLanguages": "كل اللغات",

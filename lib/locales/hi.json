@@ -2871,10 +2871,6 @@
     "reportBug": "बग की रिपोर्ट करें",
     "actionFailed": "यह नहीं हो पाया। फिर से कोशिश करें।"
   },
-  "factChip": {
-    "label": "आपकी प्रोफ़ाइल से: {{label}}",
-    "openA11y": "{{label}} से जुड़ी खबरें"
-  },
   "related": {
     "allCountries": "सभी देश",
     "allLanguages": "सभी भाषाएं",

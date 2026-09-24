@@ -2868,10 +2868,6 @@
     "reportBug": "รายงานข้อบกพร่อง",
     "actionFailed": "ทำไม่สำเร็จ ลองอีกครั้ง"
   },
-  "factChip": {
-    "label": "จากโปรไฟล์ของคุณ: {{label}}",
-    "openA11y": "ข่าวเกี่ยวกับ {{label}}"
-  },
   "related": {
     "allCountries": "ทุกประเทศ",
     "allLanguages": "ทุกภาษา",

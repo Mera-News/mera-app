@@ -2869,10 +2869,6 @@
     "reportBug": "Báo lỗi",
     "actionFailed": "Không thực hiện được. Hãy thử lại."
   },
-  "factChip": {
-    "label": "Từ hồ sơ của bạn: {{label}}",
-    "openA11y": "Tin về {{label}}"
-  },
   "related": {
     "allCountries": "Tất cả quốc gia",
     "allLanguages": "Tất cả ngôn ngữ",

@@ -2869,10 +2869,6 @@
     "reportBug": "回報問題",
     "actionFailed": "操作未成功。請再試一次。"
   },
-  "factChip": {
-    "label": "來自你的個人檔案：{{label}}",
-    "openA11y": "關於 {{label}} 的報導"
-  },
   "related": {
     "allCountries": "所有國家",
     "allLanguages": "所有語言",

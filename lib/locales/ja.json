@@ -2868,10 +2868,6 @@
     "reportBug": "不具合を報告",
     "actionFailed": "うまくいきませんでした。もう一度お試しください。"
   },
-  "factChip": {
-    "label": "プロフィールから：{{label}}",
-    "openA11y": "{{label}} に関する記事"
-  },
   "related": {
     "allCountries": "すべての国",
     "allLanguages": "すべての言語",

@@ -2868,10 +2868,6 @@
     "reportBug": "Laporkan bug",
     "actionFailed": "Itu tidak berhasil. Coba lagi."
   },
-  "factChip": {
-    "label": "Dari profilmu: {{label}}",
-    "openA11y": "Berita tentang {{label}}"
-  },
   "related": {
     "allCountries": "Semua negara",
     "allLanguages": "Semua bahasa",
