@@ -600,7 +600,7 @@
     "appVersion": "Versi Aplikasi: {{version}}",
     "contentPolicy": "Kebijakan Konten",
     "faq": "FAQ",
-    "reportBug": "Laporkan Bug",
+    "reportBug": "Laporkan bug",
     "deleteAccountConfirmGrace": "Akun Anda akan dijadwalkan untuk penghapusan, dengan masa tenggang 30 hari. Masuk kembali dalam 30 hari tersebut dan penghapusan akan otomatis dibatalkan.",
     "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, semua data Anda dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.",
     "finalConfirmationBodyGrace": "Ini menjadwalkan akun Anda untuk penghapusan permanen dalam 30 hari.",
