@@ -282,6 +282,8 @@ function placeFromPayload(payload: unknown): Place | null {
 function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unknown> {
   let t = typeof entry.statement === 'string' ? entry.statement.trim() : '';
   if (!t) return entry;
+  // "User is an expat ...", "The user lives in ..." (measured on staging).
+  t = t.replace(/^(?:the\s+)?user\s+(?:is\s+(?:an?\s+)?)?/i, '');
   t = t.replace(/^(?:i\s+am|i['’]m|im)\s+(?:an?\s+)?/i, '');
   const home = /^(?:i\s+)?(?:(?:have\s+|recently\s+)?moved|live|lives|living|reside|resides)\s+(?:in|to)\s+(.+)$/i.exec(t);
   if (home) {
@@ -372,14 +374,18 @@ function withExactKey(entry: Record<string, unknown>): Record<string, unknown> {
   const statement = typeof entry.statement === 'string' ? entry.statement : '';
   const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : '';
   const key = attribute.split(':')[0].trim().toLowerCase();
-  const loose = key === '' || ['origin', 'background', 'expat', 'nationality', 'heritage'].includes(key);
+  // The model invents snake-case keys ("origin_country", "residence_city"):
+  // only their first word is read.
+  const head = key.split(/[_\s-]+/)[0];
+  const loose = key === '' || ['origin', 'background', 'expat', 'nationality', 'heritage'].includes(head);
+  const looseHome = key === '' || ['residence', 'location', 'home', 'city', 'current', 'lives', 'living'].includes(head);
   if (isExpatStatement(statement) && loose) return { ...entry, questionnaire_attribute: EXPAT_KEY };
   if (isOriginStatement(statement) && loose) {
     // "Expat from India" is the ORIGIN, written "From India"; being an expat
     // is its own fact (see addExpatStatus).
     return { ...entry, statement: toOriginStatement(statement), questionnaire_attribute: ORIGIN_KEY };
   }
-  if ((isLocationKey(attribute) || (key === '' && /^lives in\b/i.test(statement.trim())))
+  if ((isLocationKey(attribute) || (looseHome && /^lives in\b/i.test(statement.trim())))
       && !isRelationalStatement(statement)) {
     return { ...entry, questionnaire_attribute: CANONICAL_LOCATION_KEY };
   }
@@ -1020,11 +1026,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           .map(withExactKey);
         // A HOME THE MODEL DID NOT LOOK UP is looked up by the loop, once:
         // an unresolved "Nieuw-West, Amsterdam" has no country, so it can
-        // anchor nothing and carries no expat status. Only on a turn that
-        // offers an origin (the only case the country is needed for), and only
-        // a single match is used; anything else is left as the model wrote it.
-        const offersOrigin = list.some((e) => e.questionnaire_attribute === ORIGIN_KEY);
-        for (const e of offersOrigin ? list : []) {
+        // anchor nothing and carries no expat status. Only when the country is
+        // needed (an origin offered this turn, or an expat status on file that
+        // a border move updates), and only a single match is used; anything
+        // else is left as the model wrote it.
+        const needsCountry =
+          list.some((e) => e.questionnaire_attribute === ORIGIN_KEY)
+          || state.persona.facts.some((f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement));
+        for (const e of needsCountry ? list : []) {
           if (!isHomeEntry(e) || countryOf(String(e.statement), placeCandidates) !== null) continue;
           const where = String(e.statement).replace(/^lives\s+in\s+/i, '').trim();
           if (where.length < 2) continue;

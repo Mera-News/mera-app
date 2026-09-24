@@ -240,3 +240,91 @@ describe('staging run 2 findings', () => {
     expect(saved.flat().map((e) => [e.statement, e.replaces])).toEqual([['Lives in Berlin, Germany, EU', 'h']]);
   });
 });
+
+describe('staging run 3 findings', () => {
+  const NL = { neighbourhood: 'Nieuw-West', locality: 'Amsterdam', admin1: 'North Holland', countryCode: 'NL', countryName: 'The Netherlands', bloc: 'EU' as const };
+  const DE = { locality: 'Berlin', admin1: 'Berlin', countryCode: 'DE', countryName: 'Germany', bloc: 'EU' as const };
+
+  function withPlace(place: typeof NL | typeof DE, saved: Record<string, unknown>[][], lookups: string[] = []) {
+    return {
+      tools: {
+        findSimilarFacts: async () => ({ candidates: [] }),
+        lookupPlace: async (a: { query: string }) => { lookups.push(a.query); return { status: 'resolved' as const, places: [place] }; },
+        saveExtractedFacts: async (a: Record<string, unknown>) => { saved.push((a.extracted_user_information as Record<string, unknown>[]) ?? []); return { staged: true }; },
+        deleteUserFacts: async () => ({ deleted: [] }),
+      },
+    };
+  }
+
+  it('reads "User is ..." statements and snake-case keys as origin and residence', async () => {
+    const saved: Record<string, unknown>[][] = [];
+    const h = harness(
+      [
+        res({ content: 'India.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Nieuw-West, Amsterdam' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+          { statement: 'User is an expat from India', questionnaire_attribute: 'origin' },
+          { statement: 'User lives in Nieuw-West, Amsterdam, North Holland, The Netherlands', questionnaire_attribute: 'residence' },
+        ] })] }),
+        res({ content: 'Here they are.' }),
+      ],
+      withPlace(NL, saved),
+    );
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: 'expat from India in Nieuw-West', deps: h.deps });
+    expect(saved.flat().map((e) => [e.statement, e.questionnaire_attribute])).toEqual([
+      ['From India', ORIGIN_KEY],
+      ['Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands', CANONICAL_LOCATION_KEY],
+      ['Expat in The Netherlands', EXPAT_KEY],
+    ]);
+  });
+
+  it('maps origin_country and residence_location keys', async () => {
+    const saved: Record<string, unknown>[][] = [];
+    const h = harness(
+      [
+        res({ content: 'India.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Nieuw-West' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+          { statement: 'I live in Nieuw-West, Amsterdam', questionnaire_attribute: 'residence_location' },
+          { statement: 'I am an expat from India', questionnaire_attribute: 'origin_country' },
+        ] })] }),
+        res({ content: 'Here they are.' }),
+      ],
+      withPlace(NL, saved),
+    );
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: 'expat from India in Nieuw-West', deps: h.deps });
+    const flat = saved.flat().map((e) => [e.statement, e.questionnaire_attribute]);
+    expect(flat).toContainEqual(['From India', ORIGIN_KEY]);
+    expect(flat).toContainEqual(['Expat in The Netherlands', EXPAT_KEY]);
+    expect(flat.find(([, k]) => k === CANONICAL_LOCATION_KEY)?.[0]).toMatch(/^Lives in Nieuw-West, Amsterdam/);
+  });
+
+  it('a move saved before any lookup still moves the expat status', async () => {
+    const saved: Record<string, unknown>[][] = [];
+    const lookups: string[] = [];
+    const EXPAT: AgentPersona = {
+      surface: 'CONFIG',
+      facts: [
+        { id: 'o', statement: 'From India', attribute: ORIGIN_KEY },
+        { id: 'x', statement: 'Expat in The Netherlands', attribute: EXPAT_KEY },
+        { id: 'h', statement: 'Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands, EU', attribute: CANONICAL_LOCATION_KEY },
+      ],
+    };
+    const h = harness(
+      [
+        res({ content: 'Berlin.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+          { statement: 'Lives in Berlin, Germany', questionnaire_attribute: 'residence_city' },
+        ] })] }),
+        res({ content: 'Here it is.' }),
+      ],
+      withPlace(DE, saved, lookups),
+    );
+    await runAgentTurn({ state: createAgentState(EXPAT), userMessage: 'I moved to Berlin last month', deps: h.deps });
+    expect(lookups).toEqual(['Berlin, Germany']);
+    expect(saved.flat().map((e) => [e.statement, e.replaces])).toEqual([
+      ['Lives in Berlin, Germany, EU', 'h'],
+      ['Expat in Germany', 'x'],
+    ]);
+  });
+});
