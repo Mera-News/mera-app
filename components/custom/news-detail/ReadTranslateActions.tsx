@@ -161,13 +161,8 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                 testID="detail-read-routes"
                 style={{ flexDirection: 'row', flexWrap: 'wrap', gap: ROUTE_GAP }}
             >
-                {routeButton(
-                    'detail-read-publisher',
-                    'open-in-new',
-                    publication ? t('articleDetail.readOn', { publication }) : t('articleDetail.readArticle'),
-                    () => onOpenUrl(articleUrl),
-                    publisherReadable,
-                )}
+                {/* Owner: Google Translate ABOVE the original (first when the two
+                    share a line). Render order is also VoiceOver order. */}
                 {sameLanguage
                     ? null
                     : routeButton(
@@ -177,6 +172,13 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                           () => openInAppBrowser(googleTranslateUrl),
                           true,
                       )}
+                {routeButton(
+                    'detail-read-publisher',
+                    'open-in-new',
+                    publication ? t('articleDetail.readOn', { publication }) : t('articleDetail.readArticle'),
+                    () => onOpenUrl(articleUrl),
+                    publisherReadable,
+                )}
             </Box>
             {sameLanguage ? null : (
                 // Not a failure we can detect: a publisher that refuses to be

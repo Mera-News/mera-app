@@ -174,7 +174,7 @@ describe('ReadTranslateActions', () => {
         });
 
         it.each(['translatable', 'not-translatable'] as const)(
-            '%s: both routes in one wrapping row, source first, then the note',
+            '%s: both routes in one wrapping row, Google Translate first, then the note',
             (status) => {
                 mockGetArticleTranslationSupport.mockReturnValue({ status, reason: 'unsupported-language' });
                 const { getByTestId, UNSAFE_root } = renderActions();
@@ -185,8 +185,10 @@ describe('ReadTranslateActions', () => {
                 const ids = UNSAFE_root
                     .findAll((n: any) => typeof n.props?.testID === 'string')
                     .map((n: any) => n.props.testID);
-                expect(ids.indexOf(PUBLISHER_BUTTON)).toBeLessThan(ids.indexOf(GT_BUTTON));
-                expect(ids.indexOf('detail-translate-blocked-note')).toBeGreaterThan(ids.indexOf(GT_BUTTON));
+                // Owner: Google Translate above the original. Render order is
+                // also VoiceOver order, so the two agree.
+                expect(ids.indexOf(GT_BUTTON)).toBeLessThan(ids.indexOf(PUBLISHER_BUTTON));
+                expect(ids.indexOf('detail-translate-blocked-note')).toBeGreaterThan(ids.indexOf(PUBLISHER_BUTTON));
                 expect(getByTestId('detail-translate-blocked-note').props.children).toBe(
                     'articleDetail.translateBlockedNote',
                 );
@@ -201,7 +203,7 @@ describe('ReadTranslateActions', () => {
             ).map((n: any) => n.props?.testID ?? String(n.props?.children ?? ''));
             const noticeAt = order.findIndex((v: string) => v.includes('clusterDetail.translatable'));
             expect(noticeAt).toBeGreaterThan(-1);
-            expect(noticeAt).toBeLessThan(order.indexOf(PUBLISHER_BUTTON));
+            expect(noticeAt).toBeLessThan(order.indexOf(GT_BUTTON));
         });
 
         it('shows the translation notice + guide link only when the device can translate', () => {
