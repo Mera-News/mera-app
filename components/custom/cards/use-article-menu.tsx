@@ -51,6 +51,9 @@ export interface UseArticleMenuInput {
      *  like, not for me, save and share lead the menu instead. Surfaces with an
      *  inline row (Feed card, detail) leave this out. */
     rowActions?: {
+        /** A like is recorded: the item shows the filled glyph (and, once the
+         *  copy lands, reads "Remove like"); a tap removes it. */
+        liked: boolean;
         saved: boolean;
         onLike: () => void;
         onDislike: () => void;
@@ -188,7 +191,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 {
                     key: 'like',
                     label: t('articleFeedback.likeLabel'),
-                    icon: 'thumb-up-off-alt',
+                    icon: rowActions.liked ? 'thumb-up' : 'thumb-up-off-alt',
                     testID: 'menu-like',
                     run: () => rowActions.onLike(),
                 },
@@ -326,10 +329,24 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         if (item) runItemRef.current(item);
     }, []);
 
+    // The Modal reports it is gone. Take the sheet OUT of the tree first and
+    // run the item one frame after that commit: an item that presents another
+    // RN Modal (the feedback tree behind Like / Not for me) is refused by iOS
+    // while the menu's Modal host is still mounted, and nothing reports it.
+    const runAfterUnmountRef = useRef(false);
     const onDismissed = useCallback(() => {
-        flushPending();
+        if (fallbackRef.current) {
+            clearTimeout(fallbackRef.current);
+            fallbackRef.current = null;
+        }
+        runAfterUnmountRef.current = true;
         setMounted(false);
-    }, [flushPending]);
+    }, []);
+    useEffect(() => {
+        if (mounted || !runAfterUnmountRef.current) return;
+        runAfterUnmountRef.current = false;
+        requestAnimationFrame(() => flushPending());
+    }, [mounted, flushPending]);
 
     const close = useCallback(() => setVisible(false), []);
     const pick = useCallback(

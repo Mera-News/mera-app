@@ -83,13 +83,14 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
   // are VoiceOver custom actions too).
   const rowActions = useMemo(
     () => ({
+      liked: actions.likeState !== 'none',
       saved: actions.saved,
       onLike: actions.onLike,
       onDislike: actions.onDislike,
       onToggleSave: actions.onToggleSave,
       onShare: actions.onShare,
     }),
-    [actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
+    [actions.likeState, actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
   );
   const menu = useArticleMenu({
     surface: 'card',

@@ -6,6 +6,7 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
 let mockModal: any = null;
+let mockModalMounted = false;
 let mockOS = 'ios';
 jest.mock('react-native', () => {
     const actual = jest.requireActual('react-native');
@@ -17,6 +18,14 @@ jest.mock('react-native', () => {
                 // (`onDismiss`, iOS only) at the moment it chooses.
                 return (props: any) => {
                     mockModal = props;
+                    // Tracks whether the Modal HOST is still in the tree, so a
+                    // test can prove an item ran only after it was removed.
+                    ReactLib.useEffect(() => {
+                        mockModalMounted = true;
+                        return () => {
+                            mockModalMounted = false;
+                        };
+                    }, []);
                     return props.visible === false
                         ? null
                         : ReactLib.createElement(ReactLib.Fragment, null, props.children);
@@ -214,15 +223,42 @@ describe('ArticleOverflowMenu sheet', () => {
 // dropped on iOS, and its await never resolves. Items run AFTER the Modal
 // reports it is gone: `onDismiss` on iOS, visible -> false on Android, with a
 // fallback and an unmount flush, exactly once. Never on a timer guess.
-const dismiss = () =>
+// The Modal reports its dismissal; the item runs a frame after the sheet
+// leaves the tree, so `dismiss` plays both.
+const dismiss = () => {
     act(() => {
         mockModal?.onDismiss?.();
     });
+    act(() => {
+        jest.advanceTimersByTime(20);
+    });
+};
 const flushAsync = async () => {
     await act(async () => {
         await Promise.resolve();
     });
 };
+
+describe('compact row actions in the menu', () => {
+    const row = (liked: boolean) => ({
+        liked,
+        saved: false,
+        onLike: jest.fn(),
+        onDislike: jest.fn(),
+        onToggleSave: jest.fn(),
+        onShare: jest.fn(),
+    });
+
+    it('leads with Like, Not for me, Save and Share only when given row actions', () => {
+        const withRow = openMenu(<Host rowActions={row(false)} />);
+        for (const id of ['menu-like', 'menu-dislike', 'menu-save', 'menu-share']) {
+            expect(withRow.getByTestId(id)).toBeTruthy();
+        }
+        withRow.unmount();
+        const plain = openMenu(<Host />);
+        expect(plain.queryByTestId('menu-like')).toBeNull();
+    });
+});
 
 describe('useArticleMenu running items', () => {
     it('iOS: keeps the Modal mounted while it dismisses and runs the item on onDismiss, not on a timer', () => {
@@ -245,6 +281,28 @@ describe('useArticleMenu running items', () => {
         expect(mockShowFeedback).toHaveBeenCalledTimes(1);
     });
 
+    // Batch 10: "I like it" from a compact row wrote the like but its feedback
+    // tree (another RN Modal) never appeared. An item may present ANOTHER
+    // Modal, which iOS refuses while the menu's Modal host is still mounted,
+    // so the item runs only once the sheet is out of the tree, a frame later.
+    it('runs the item only after the menu Modal has left the tree', () => {
+        let mountedWhenRun: boolean | null = null;
+        mockShowFeedback.mockImplementationOnce(() => {
+            mountedWhenRun = mockModalMounted;
+        });
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('menu-report-bug'));
+        act(() => {
+            mockModal?.onDismiss?.();
+        });
+        expect(mockShowFeedback).not.toHaveBeenCalled();
+        act(() => {
+            jest.advanceTimersByTime(20);
+        });
+        expect(mockShowFeedback).toHaveBeenCalledTimes(1);
+        expect(mountedWhenRun).toBe(false);
+    });
+
     it('iOS: runs the item once at the fallback when onDismiss never comes', () => {
         const r = openMenu(<Host />);
         fireEvent.press(r.getByTestId('menu-report-bug'));
@@ -255,6 +313,9 @@ describe('useArticleMenu running items', () => {
         act(() => {
             jest.advanceTimersByTime(1);
         });
+        act(() => {
+            jest.advanceTimersByTime(20);
+        });
         expect(mockShowFeedback).toHaveBeenCalledTimes(1);
         dismiss();
         expect(mockShowFeedback).toHaveBeenCalledTimes(1);
@@ -264,6 +325,9 @@ describe('useArticleMenu running items', () => {
         mockOS = 'android';
         const r = openMenu(<Host />);
         fireEvent.press(r.getByTestId('menu-report-bug'));
+        act(() => {
+            jest.advanceTimersByTime(20);
+        });
         expect(mockShowFeedback).toHaveBeenCalledTimes(1);
         act(() => {
             jest.advanceTimersByTime(MENU_DISMISS_FALLBACK_MS);
