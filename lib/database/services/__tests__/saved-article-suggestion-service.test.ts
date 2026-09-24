@@ -709,6 +709,51 @@ describe('deleteSavedSuggestion with live fact checks', () => {
   });
 });
 
+describe('deleteSavedSuggestion with a live followed story', () => {
+  it('downgrades an article-keyed row to tracked_story instead of destroying it', async () => {
+    mockIsTrackedMember.mockResolvedValue(true);
+    const row = makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'article' });
+    db._setRows(TABLE, [row]);
+
+    const result = await deleteSavedSuggestion('art-9');
+
+    expect(result).toBe(true);
+    expect(mockIsTrackedMember).toHaveBeenCalledWith('art-9');
+    expect(row.destroyPermanently).not.toHaveBeenCalled();
+    expect(row.update).toHaveBeenCalledTimes(1);
+    expect(row.origin).toBe('tracked_story');
+    expect(publishSavedState).toHaveBeenCalledWith('art-9', false);
+  });
+
+  it('transfers a suggestion-keyed row to an article-keyed tracked_story row', async () => {
+    mockIsTrackedMember.mockResolvedValue(true);
+    const row = makeSavedRecord({ id: 'sugg-1', articleId: 'art-1' });
+    db._setRows(TABLE, [row]);
+    const col = db._collections[TABLE] ?? db.get(TABLE);
+    const captured = captureCreate(col);
+
+    await deleteSavedSuggestion('sugg-1');
+
+    expect(mockIsTrackedMember).toHaveBeenCalledWith('art-1');
+    expect(captured.rec._raw.id).toBe('art-1');
+    expect(captured.rec.origin).toBe('tracked_story');
+    expect(captured.rec.articleUrl).toBe('https://example.com/a');
+    expect(row.destroyPermanently).toHaveBeenCalledTimes(1);
+  });
+
+  it('stamps fact_check when both reasons hold, the same precedence release uses', async () => {
+    mockListFactChecks.mockResolvedValue([{ id: 'fc-1' }]);
+    mockIsTrackedMember.mockResolvedValue(true);
+    const row = makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'article' });
+    db._setRows(TABLE, [row]);
+
+    await deleteSavedSuggestion('art-9');
+
+    expect(row.destroyPermanently).not.toHaveBeenCalled();
+    expect(row.origin).toBe('fact_check');
+  });
+});
+
 describe('releaseFactCheckRetention', () => {
   it('destroys the retention row when the last fact check is gone', async () => {
     mockListFactChecks.mockResolvedValue([]);
