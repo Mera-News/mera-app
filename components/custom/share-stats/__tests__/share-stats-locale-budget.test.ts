@@ -42,12 +42,9 @@ import {
   SHELL_METRICS,
 } from '../ShareStatsCard';
 import {
+  HABITS_METRICS,
   KEEP_METRICS,
-  LANGUAGES_METRICS,
-  LANGUAGES_TOP_N,
-  PACE_METRICS,
   REACH_METRICS,
-  RHYTHM_METRICS,
 } from '../stats-cards';
 import { CHART_METRICS } from '../card-charts';
 
@@ -61,7 +58,7 @@ const CARD_METRICS = SHELL_METRICS;
 const CHART_FLAG_CELL = CHART_METRICS.flagCell;
 const CHART_FLAG_ROW_GAP = CHART_METRICS.flagRowGap;
 const CHART_FLAGS_PER_ROW = CHART_METRICS.flagsPerRow;
-const CHART_FLAG_MAX_CELLS = CHART_METRICS.flagMaxCells;
+const CHART_FLAG_ONE_ROW_CELLS = CHART_METRICS.flagOneRowCells;
 const CHART_BAR_HEIGHT = CHART_METRICS.barHeight;
 const CHART_BAR_LEGEND_TOP = CHART_METRICS.barLegendTop;
 const CHART_BAR_LEGEND_SIZE = CHART_METRICS.barLegendSize;
@@ -95,7 +92,10 @@ const TILE_GAP = REACH_METRICS.tileGap;
 
 const CARD_INNER = DESIGN_WIDTH - 2 * OUTER_PADDING;          // 304
 const PANEL_INNER = CARD_INNER - 2 * PANEL_PADDING;           // 276
-const TILE_INNER = (CARD_INNER - TILE_GAP) / 2 - 2 * PANEL_PADDING; // 118
+const TILE_INNER = (CARD_INNER - TILE_GAP) / 2 - 2 * PANEL_PADDING;
+/** A stat row's label column: the card width less the figure beside it. A
+ *  four-character figure at the stat numeral size plus the row's 10pt gap. */
+const STAT_LABEL_COLUMN = CARD_INNER - (4 * 0.6 * REACH_METRICS.statNumeral + 10);
 
 /**
  * Average glyph advance as a fraction of font size.
@@ -176,19 +176,20 @@ const MEASURED: {
   { key: 'publicationsLabel', fontSize: REACH_METRICS.numeralLabel, column: TILE_INNER, maxLines: 3 },
   { key: 'countriesLabel', fontSize: REACH_METRICS.numeralLabel, column: TILE_INNER, maxLines: 3 },
   // Full card width.
-  { key: 'latencyLabel', fontSize: PACE_METRICS.numeralLabel, column: CARD_INNER, maxLines: 2 },
-  { key: 'latencyUnknown', fontSize: CARD_METRICS.qualifier, column: CARD_INNER, maxLines: 3 },
   // The three card titles and the present-tense window line.
   { key: 'reachTitle', fontSize: CARD_METRICS.title, column: CARD_INNER, maxLines: 2 },
   { key: 'keepTitle', fontSize: CARD_METRICS.title, column: CARD_INNER, maxLines: 2 },
-  { key: 'paceTitle', fontSize: CARD_METRICS.title, column: CARD_INNER, maxLines: 2 },
+  { key: 'habitsTitle', fontSize: CARD_METRICS.title, column: CARD_INNER, maxLines: 2 },
   { key: 'windowNow', fontSize: CARD_METRICS.windowLine, column: CARD_INNER, maxLines: 1 },
+  // Stat-row labels share their row with a right-aligned figure.
+  { key: 'languagesLabel', fontSize: REACH_METRICS.statLabel, column: STAT_LABEL_COLUMN, maxLines: 2 },
+  { key: 'daysReadLabel', fontSize: HABITS_METRICS.statLabel, column: STAT_LABEL_COLUMN, maxLines: 2 },
+  { key: 'paceScaleTitle', fontSize: HABITS_METRICS.statLabel, column: STAT_LABEL_COLUMN, maxLines: 2 },
   { key: 'savedLabel', fontSize: KEEP_METRICS.numeralLabel, column: CARD_INNER, maxLines: 2 },
   { key: 'followedLabel', fontSize: KEEP_METRICS.numeralLabel, column: CARD_INNER, maxLines: 2 },
   { key: 'keepNote', fontSize: KEEP_METRICS.note, column: CARD_INNER, maxLines: 3 },
   { key: 'topCountriesTitle', fontSize: REACH_METRICS.listTitle, column: CARD_INNER, maxLines: 2 },
   { key: 'topPublicationsTitle', fontSize: REACH_METRICS.listTitle, column: CARD_INNER, maxLines: 2 },
-  { key: 'paceScaleTitle', fontSize: PACE_METRICS.scaleTitle, column: CARD_INNER, maxLines: 2 },
   {
     key: 'latencyCoverage',
     fontSize: CARD_METRICS.qualifier,
@@ -198,7 +199,7 @@ const MEASURED: {
     vars: { sampled: 41, total: 58 },
   },
   { key: 'openedPartial', fontSize: CARD_METRICS.qualifier, column: CARD_INNER, maxLines: 3 },
-  { key: 'openedLabel', fontSize: PACE_METRICS.numeralLabel, column: CARD_INNER, maxLines: 2 },
+  { key: 'openedLabel', fontSize: HABITS_METRICS.statLabel, column: STAT_LABEL_COLUMN, maxLines: 2 },
   { key: 'privacyLine', fontSize: CARD_METRICS.qualifier, column: CARD_INNER, maxLines: 2 },
 ];
 
@@ -315,6 +316,18 @@ function figureHeight(
   );
 }
 
+/** A stat row: the taller of its figure and its (possibly wrapped) label. */
+function statRowHeight(label: string, labelSize: number, numeralSize: number): number {
+  return Math.max(
+    Math.ceil(numeralSize * CARD_METRICS.numeralLeading),
+    textHeight(label, labelSize, STAT_LABEL_COLUMN),
+  );
+}
+
+/** A proportion bar with its one-line legend. */
+const BAR_HEIGHT =
+  CHART_BAR_HEIGHT + CHART_BAR_LEGEND_TOP + Math.ceil(CHART_BAR_LEGEND_SIZE * CARD_METRICS.textLeading);
+
 /**
  * WORST CASE per card, not the default one. The old single card overflowed in
  * exactly the state nobody modelled: the optional block ON with its full row
@@ -329,27 +342,25 @@ function reachHeight(dict: CardCopy, rows: number): number {
   // Side by side, so the row is the taller of the two.
   const tiles = Math.max(tile(c.countriesLabel), tile(c.publicationsLabel));
 
-  // Three rows of flags is the realistic ceiling at 8 per row and a 24-cell cap.
-  const flagRows = Math.ceil(CHART_FLAG_MAX_CELLS / CHART_FLAGS_PER_ROW);
-  const flags = flagRows * CHART_FLAG_CELL + (flagRows - 1) * CHART_FLAG_ROW_GAP;
+  // ONE row of flags on the merged card; the overflow chip carries the rest.
+  const flags = Math.ceil(CHART_FLAG_ONE_ROW_CELLS / CHART_FLAGS_PER_ROW) * CHART_FLAG_CELL;
 
-  const bar =
-    textHeight(c.topCountriesTitle, m.listTitle, CARD_INNER)
-    + m.listTitleGap
-    + CHART_BAR_HEIGHT
-    + CHART_BAR_LEGEND_TOP
-    + Math.ceil(CHART_BAR_LEGEND_SIZE * CARD_METRICS.textLeading);
+  const countries = textHeight(c.topCountriesTitle, m.listTitle, CARD_INNER) + m.listTitleGap + BAR_HEIGHT;
+  const languages =
+    statRowHeight(c.languagesLabel, m.statLabel, m.statNumeral) + m.listTitleGap + BAR_HEIGHT;
 
   // Names ON, full row count: the state that overflowed last time.
-  const names =
-    textHeight(c.topPublicationsTitle, m.listTitle, CARD_INNER)
-    + m.listTitleGap
-    + rows * (m.rowGap + Math.ceil(m.rowText * CARD_METRICS.textLeading));
+  const names = rows === 0
+    ? 0
+    : textHeight(c.topPublicationsTitle, m.listTitle, CARD_INNER)
+      + m.listTitleGap
+      + rows * (m.rowGap + Math.ceil(m.rowText * CARD_METRICS.textLeading));
 
+  const blocks = rows === 0 ? 4 : 5;
   return (
     shellHeight(dict, c.reachTitle, dict.card.__windowLast30 ?? '')
-    + tiles + flags + bar + names
-    + 3 * m.blockGap
+    + tiles + flags + countries + languages + names
+    + (blocks - 1) * m.blockGap
   );
 }
 
@@ -375,20 +386,33 @@ function keepHeight(dict: CardCopy): number {
   );
 }
 
-function paceHeight(dict: CardCopy): number {
-  const m = PACE_METRICS;
+/** SIX rows, not five. A 30-day window padded to weekday columns needs six
+ *  whenever it starts on a Sunday, about four days a month. Five is what you
+ *  see almost every day, which is exactly why the budget must not use it. */
+const HEAT_WORST_ROWS = 6;
+
+function habitsHeight(dict: CardCopy): number {
+  const m = HABITS_METRICS;
   const c = dict.card;
   const coverage = c.latencyCoverage.replace('{{sampled}}', '41').replace('{{total}}', '58');
 
+  const days =
+    statRowHeight(c.daysReadLabel, m.statLabel, m.statNumeral)
+    + 6
+    + Math.ceil(CHART_HEAT_LABEL_SIZE * CARD_METRICS.textLeading)
+    + CHART_HEAT_LABEL_GAP
+    + HEAT_WORST_ROWS * CHART_HEAT_CELL
+    + (HEAT_WORST_ROWS - 1) * CHART_HEAT_GAP
+    + CHART_HEAT_LEGEND_TOP
+    + Math.ceil(CHART_HEAT_LEGEND_SIZE * CARD_METRICS.textLeading);
+
   const opened =
-    figureHeight(c.openedLabel, m.numeral, m.numeralLabel, m.numeralLabelGap, CARD_INNER)
+    statRowHeight(c.openedLabel, m.statLabel, m.statNumeral)
     + CARD_METRICS.qualifierGap
     + textHeight(c.openedPartial, CARD_METRICS.qualifier, CARD_INNER);
 
-  const scale =
-    textHeight(c.paceScaleTitle, m.scaleTitle, CARD_INNER)
-    + m.scaleTitleGap
-    + Math.ceil(m.scaleValue * CARD_METRICS.numeralLeading)
+  const pace =
+    statRowHeight(c.paceScaleTitle, m.statLabel, m.statNumeral)
     + m.scaleValueGap
     + CHART_SCALE_MARKER
     + CHART_SCALE_LABEL_TOP
@@ -396,53 +420,9 @@ function paceHeight(dict: CardCopy): number {
     + CHART_SCALE_LABEL_TOP
     + textHeight(coverage, CARD_METRICS.qualifier, CARD_INNER);
 
-  return shellHeight(dict, c.paceTitle, dict.card.__windowLast30 ?? '') + opened + scale + m.blockGap;
-}
-
-/** The content box in design points, derived from the export constants rather
- *  than restated. 1420px at 1920px tall on a 640pt grid is 473.33pt. */
-function languagesHeight(dict: CardCopy): number {
-  const m = LANGUAGES_METRICS;
-  const c = dict.card;
-  // The title does this card's labelling, so the figure is a bare numeral.
-  const figure = Math.ceil(m.numeral * CARD_METRICS.numeralLeading);
-  const bar =
-    textHeight(c.topLanguagesTitle, m.listTitle, CARD_INNER)
-    + m.listTitleGap
-    + CHART_BAR_HEIGHT
-    + CHART_BAR_LEGEND_TOP
-    + Math.ceil(CHART_BAR_LEGEND_SIZE * CARD_METRICS.textLeading);
-  // The named list at its CAP, which is why the cap exists: beyond it the bar's
-  // remainder band carries the rest and the card cannot grow past this.
-  const list = LANGUAGES_TOP_N * (m.rowGap + Math.ceil(m.rowText * CARD_METRICS.textLeading));
   return (
-    shellHeight(dict, c.languagesLabel, dict.card.__windowLast30 ?? '')
-    + figure + bar + list + 2 * m.blockGap
-  );
-}
-
-/** SIX rows, not five. A 30-day window padded to weekday columns needs six
- *  whenever it starts on a Sunday — about four days a month. Five is what you
- *  see almost every day, which is exactly why the budget must not use it. */
-const HEAT_WORST_ROWS = 6;
-
-function rhythmHeight(dict: CardCopy): number {
-  const m = RHYTHM_METRICS;
-  const c = dict.card;
-  const figure =
-    figureHeight(c.daysReadLabel, m.numeral, m.numeralLabel, m.numeralLabelGap, CARD_INNER);
-  const grid =
-    Math.ceil(CHART_HEAT_LABEL_SIZE * CARD_METRICS.textLeading)
-    + CHART_HEAT_LABEL_GAP
-    + HEAT_WORST_ROWS * CHART_HEAT_CELL
-    + (HEAT_WORST_ROWS - 1) * CHART_HEAT_GAP
-    + CHART_HEAT_LEGEND_TOP
-    + Math.ceil(CHART_HEAT_LEGEND_SIZE * CARD_METRICS.textLeading);
-  return (
-    shellHeight(dict, c.rhythmTitle, dict.card.__windowLast30 ?? '')
-    + figure + grid
-    + textHeight(c.heatNote, m.note, CARD_INNER)
-    + 2 * m.blockGap
+    shellHeight(dict, c.habitsTitle, dict.card.__windowLast30 ?? '')
+    + days + opened + pace + 2 * m.blockGap
   );
 }
 
@@ -484,33 +464,22 @@ describe('every card fits between the two Instagram reserves, in every locale', 
         if (height > BAND - MARGIN) {
           throw new Error(
             `${locale} reach card stacks to ${Math.round(height)}pt in a ${Math.round(BAND)}pt `
-            + `band (budget ${Math.round(BAND - MARGIN)}pt with margin). Names ON, 3 rows, full `
-            + `flag grid. Shorten a string or lower a size in REACH_METRICS; do NOT add `
+            + `band (budget ${Math.round(BAND - MARGIN)}pt with margin). Names ON, 3 rows, one `
+            + `flag row, both bars. Shorten a string or lower a size in REACH_METRICS; do NOT add `
             + `numberOfLines to a qualifier, they are the truth-bearing half of each figure.`,
           );
         }
         expect(height).toBeLessThanOrEqual(BAND - MARGIN);
       });
 
-      it('languages fits with the named list at its cap', () => {
-        const height = languagesHeight(copy);
+      it('habits fits with a SIX-row grid, the opened qualifier and the pace scale', () => {
+        const height = habitsHeight(copy);
         if (height > BAND - MARGIN) {
           throw new Error(
-            `${locale} languages card stacks to ${Math.round(height)}pt in a ${Math.round(BAND)}pt `
-            + `band (budget ${Math.round(BAND - MARGIN)}pt). ${LANGUAGES_TOP_N} named rows.`,
-          );
-        }
-        expect(height).toBeLessThanOrEqual(BAND - MARGIN);
-      });
-
-      it('rhythm fits with a SIX-row grid, not the five you usually see', () => {
-        const height = rhythmHeight(copy);
-        if (height > BAND - MARGIN) {
-          throw new Error(
-            `${locale} rhythm card stacks to ${Math.round(height)}pt in a ${Math.round(BAND)}pt `
+            `${locale} habits card stacks to ${Math.round(height)}pt in a ${Math.round(BAND)}pt `
             + `band (budget ${Math.round(BAND - MARGIN)}pt) with ${HEAT_WORST_ROWS} heat rows at `
             + `${CHART_HEAT_CELL}pt. Six rows happen whenever the window starts on a Sunday, about `
-            + `four days a month, so do NOT reclaim the row: shrink the cell or split the card.`,
+            + `four days a month, so do NOT reclaim the row.`,
           );
         }
         expect(height).toBeLessThanOrEqual(BAND - MARGIN);
@@ -527,16 +496,6 @@ describe('every card fits between the two Instagram reserves, in every locale', 
         expect(height).toBeLessThanOrEqual(BAND - MARGIN);
       });
 
-      it('pace fits with the scale and the coverage denominator', () => {
-        const height = paceHeight(copy);
-        if (height > BAND - MARGIN) {
-          throw new Error(
-            `${locale} pace card stacks to ${Math.round(height)}pt in a ${Math.round(BAND)}pt band `
-            + `(budget ${Math.round(BAND - MARGIN)}pt).`,
-          );
-        }
-        expect(height).toBeLessThanOrEqual(BAND - MARGIN);
-      });
     });
   }
 
@@ -550,9 +509,9 @@ describe('every card fits between the two Instagram reserves, in every locale', 
     };
     expect(reachHeight(copy, 3)).toBeGreaterThan(reachHeight(copy, 0));
     expect(reachHeight(copy, 3)).toBeGreaterThan(200);
-    // And the rhythm model must actually be using six rows: at five it would
+    // And the habits model must actually be using six rows: at five it would
     // be a whole cell shorter, which is the difference the budget exists for.
     expect(HEAT_WORST_ROWS).toBe(6);
-    expect(rhythmHeight(copy)).toBeGreaterThan(200);
+    expect(habitsHeight(copy)).toBeGreaterThan(200);
   });
 });

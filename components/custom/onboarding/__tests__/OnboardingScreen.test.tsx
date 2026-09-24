@@ -161,17 +161,15 @@ function renderScreen(
     onLoginRedirect = jest.fn(),
     props: { userId?: string; sessionUserId?: string } = {},
 ) {
-    const onFreeTierMode = jest.fn();
     const utils = render(
         <OnboardingScreen
             userId={props.userId ?? 'u1'}
             sessionUserId={'sessionUserId' in props ? props.sessionUserId : 'u1'}
             onLoginRedirect={onLoginRedirect}
             onComplete={onComplete}
-            onFreeTierMode={onFreeTierMode}
         />,
     );
-    return { ...utils, onComplete, onLoginRedirect, onFreeTierMode };
+    return { ...utils, onComplete, onLoginRedirect };
 }
 
 describe('OnboardingScreen fact gate', () => {

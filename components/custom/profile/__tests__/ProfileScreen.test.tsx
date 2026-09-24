@@ -108,9 +108,16 @@ jest.mock('@/components/custom/profile-hub/HubRow', () => {
     const { Pressable, Text } = require('react-native');
     return { __esModule: true, default: ({ label, onPress }: any) => <Pressable accessibilityLabel={label} onPress={onPress}><Text>{label}</Text></Pressable> };
 });
+jest.mock('@/components/custom/for-you/TabExplainerButton', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: ({ tab, testID }: any) => <View testID={testID} accessibilityLabel={`explainer:${tab}`} /> };
+});
 jest.mock('@/components/custom/facts/FactsList', () => {
     const { Text } = require('react-native');
-    return { __esModule: true, default: () => <Text>facts-list</Text> };
+    return {
+        __esModule: true,
+        default: ({ editing }: any) => <Text testID="facts-list-mode">{editing ? 'facts-list:editing' : 'facts-list'}</Text>,
+    };
 });
 
 // --- services / stores ------------------------------------------------------
@@ -211,10 +218,10 @@ describe('ProfileScreen', () => {
 
     it('empty persona → shows the Mera chat invite and no About-you section', async () => {
         mockGetFacts.mockResolvedValue([]);
-        const { getByText, queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
+        const { getByText, queryByText, getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
         expect(queryByText('ABOUT YOU')).toBeNull();
-        expect(queryByText('facts-list')).toBeNull();
+        expect(queryByTestId('facts-list-mode')).toBeNull();
         // Usage card + Advanced row still present.
         expect(getByTestId('usage-widget')).toBeTruthy();
         expect(getByText('Advanced')).toBeTruthy();
@@ -222,9 +229,9 @@ describe('ProfileScreen', () => {
 
     it('with facts → renders the About-you heading and the real facts list (FactsList)', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Lives in Pune' }]);
-        const { getByText } = render(<ProfileScreen userId="u1" />);
+        const { getByText, getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByText('ABOUT YOU')).toBeTruthy());
-        expect(getByText('facts-list')).toBeTruthy();
+        expect(getByTestId('facts-list-mode')).toBeTruthy();
     });
 
     it('Mera chat invite opens the persona chat', async () => {
@@ -249,7 +256,9 @@ describe('ProfileScreen', () => {
         const { queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('mera-chat-invite')).toBeTruthy());
 
-        expect(queryByText('profile.meraInvite')).toBeTruthy();
+        // Facts exist, so Mera invites something NEW rather than greeting a
+        // first-time user.
+        await waitFor(() => expect(queryByText('profile.meraInviteReturning')).toBeTruthy());
         expect(queryByText('freeTier.chatBubble')).toBeNull();
         // Same presentation as before: the logo is still there.
         expect(getByTestId('mera-logo')).toBeTruthy();
@@ -274,16 +283,16 @@ describe('ProfileScreen', () => {
     it('locked → the About-you facts heading and list still render', async () => {
         mockAiAccess = 'locked';
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Lives in Pune' }]);
-        const { getByText } = render(<ProfileScreen userId="u1" />);
+        const { getByText, getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByText('ABOUT YOU')).toBeTruthy());
-        expect(getByText('facts-list')).toBeTruthy();
+        expect(getByTestId('facts-list-mode')).toBeTruthy();
     });
 
     it('entitled → the invite copy and its press target come back', async () => {
         mockAiAccess = 'entitled';
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { getByText, getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
+        await waitFor(() => expect(getByText('profile.meraInviteReturning')).toBeTruthy());
         expect(queryByTestId('mera-chat-invite-locked')).toBeNull();
         fireEvent.press(getByTestId('mera-chat-invite'));
         expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
@@ -356,5 +365,44 @@ describe('ProfileScreen', () => {
             expect(getByTestId('usage-widget-plan-label').props.children).toBe('configPanel.starterPlan'),
         );
         expect(queryByTestId('usage-widget-trial-ends-at')).toBeNull();
+    });
+
+    // ── ux1 Profile ─────────────────────────────────────────────────────────
+    it('M10: no "Learn how Mera works" button competes with the title', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { queryByTestId, getByText } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByText('tabs.profile')).toBeTruthy());
+        expect(queryByTestId('profile-learn-about-mera')).toBeNull();
+    });
+
+    it('F46: Edit turns the facts list into edit mode and Done turns it back', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-edit-facts')).toBeTruthy());
+        expect(getByTestId('facts-list-mode').props.children).toBe('facts-list');
+        const editStyle = getByTestId('profile-edit-facts').props.style;
+        expect(editStyle.minHeight).toBeGreaterThanOrEqual(44);
+        fireEvent.press(getByTestId('profile-edit-facts'));
+        expect(getByTestId('facts-list-mode').props.children).toBe('facts-list:editing');
+        fireEvent.press(getByTestId('profile-edit-facts'));
+        expect(getByTestId('facts-list-mode').props.children).toBe('facts-list');
+    });
+
+    it('M9: the usage card comes after the facts, and its button reads Manage plan', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const r = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(r.getByTestId('facts-list-mode')).toBeTruthy());
+        const ids = r.UNSAFE_root
+            .findAll((n: any) => n.props?.testID === 'facts-list-mode' || n.props?.testID === 'usage-widget')
+            .map((n: any) => n.props.testID)
+            .filter((id: string, i: number, all: string[]) => all.indexOf(id) === i);
+        expect(ids).toEqual(['facts-list-mode', 'usage-widget']);
+    });
+
+    it('N4: the header carries the Profile explainer button', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-explainer-open')).toBeTruthy());
+        expect(getByTestId('profile-explainer-open').props.accessibilityLabel).toBe('explainer:profile');
     });
 });

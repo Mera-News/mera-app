@@ -170,22 +170,30 @@ export const usePinStore = create<PinState>()((set, get) => ({
 /**
  * NOTHING RESTARTS THE APP WHILE THE PIN GATE IS ENGAGED.
  *
- * `locked` is in-memory only: no persist helper, not in `hydrateAllStores`. A
- * JS reload destroys it and `init()` recomputes it from the threshold alone —
- * so without this hold a locked user could step out to their password manager
- * for three seconds, and the restart on their return would come back with
- * `locked: false` and let them straight in. A PIN gate a three-second
- * background defeats is not a PIN gate.
+ * `locked` IS IN-MEMORY ONLY: no persist helper, not in `hydrateAllStores`, and
+ * `app/index.tsx` routes straight off it. So any JS reload destroys it and
+ * `init()` rebuilds it from the background threshold alone — a reload while the
+ * lock screen is up comes back with `locked: false` and lets the user in without
+ * a PIN. That is the whole hazard, and it does not depend on what triggered the
+ * reload.
  *
- * A HOLD rather than a route block, because it does not depend on listener
- * order or on which screen is showing: it covers an OTA restart landing while
- * the lock screen is up just as it covers the return that raised the lock. The
- * route block in `AppRestartOnForeground` stays as well, for the window before
- * this subscription is wired.
+ * WHAT CAN TRIGGER ONE HERE: a downloaded OTA becoming pending. That is rarer
+ * than the trigger this hold was first written against, and exactly as bad — the
+ * reader is sitting on the lock screen, a bundle finishes downloading, and the
+ * restart walks them past the gate. Rarer is not safer; it is harder to
+ * reproduce.
+ *
+ * A HOLD RATHER THAN A ROUTE ENTRY, and both exist. The hold does not depend on
+ * listener order or on which screen is showing, so it covers a restart requested
+ * from anywhere while the gate is engaged. `/pin-lock` is also in
+ * `RESTART_BLOCKED_ROUTES` (now checked inside `blockedBy()` in
+ * lib/app-restart.ts, so it applies to every reason rather than one), which
+ * covers the window before this subscription is wired. Do not delete either one
+ * on the grounds that the other exists.
  *
  * The cost is that a restart requested while locked is DROPPED, not queued —
- * that is the deferral rule in lib/app-restart.ts and it is deliberate. The
- * next unblocked return picks it up.
+ * that is the deferral rule in lib/app-restart.ts and it is deliberate. Nothing
+ * replays it; the update lands at the next cold start instead.
  */
 let releaseRestartHold: (() => void) | null = null;
 

@@ -148,6 +148,11 @@ jest.mock('../ExploreSearchBar', () => {
     };
 });
 
+jest.mock('@/components/custom/for-you/TabExplainerButton', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: (p: any) => <View testID={p.testID} tab={p.tab} /> };
+});
+
 const mockSearchResults = jest.fn();
 jest.mock('../ExploreSearchResults', () => {
     const { View } = require('react-native');
@@ -454,6 +459,39 @@ describe('ExploreScreen — search collapsed into the title row (Item 12a)', () 
         expect(clear).toHaveBeenCalledTimes(1);
         expect(getByText('explore.title')).toBeTruthy();
         expect(getByTestId('explore-search-open')).toBeTruthy();
+    });
+
+    it('shows the Explore "?" beside the magnifier (N4)', () => {
+        const { getByTestId } = render(<ExploreScreen />);
+        expect(getByTestId('explore-explainer-open').props.tab).toBe('explore');
+    });
+
+    // F40: an open, EMPTY bar used to stay where the title belongs after the
+    // keyboard went away.
+    it('collapses an EMPTY bar when the input loses focus', () => {
+        const { getByTestId, getByText } = render(<ExploreScreen />);
+        act(() => {
+            fireEvent.press(getByTestId('explore-search-open'));
+        });
+        const barProps = mockSearchBar.mock.calls[mockSearchBar.mock.calls.length - 1][0];
+        act(() => {
+            barProps.onBlur();
+        });
+        expect(getByText('explore.title')).toBeTruthy();
+    });
+
+    it('keeps the bar open on blur while a query is typed', () => {
+        mockUseNewsSearch.mockReturnValue({ ...defaultSearchState(), query: 'berlin' });
+        const { getByTestId, queryByText } = render(<ExploreScreen />);
+        act(() => {
+            fireEvent.press(getByTestId('explore-search-open'));
+        });
+        const barProps = mockSearchBar.mock.calls[mockSearchBar.mock.calls.length - 1][0];
+        act(() => {
+            barProps.onBlur();
+        });
+        expect(queryByText('explore.title')).toBeNull();
+        expect(getByTestId('explore-search-bar-stub')).toBeTruthy();
     });
 
     it('opening search never remounts the scope list underneath', () => {

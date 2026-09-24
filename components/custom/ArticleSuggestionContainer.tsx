@@ -8,12 +8,15 @@
 // text right-aligned and non-italic. A Mera glyph briefly lived in this block as
 // the Ask-Mera affordance; it was removed again — the action row's Mera button
 // (ArticleFeedbackPrompt / CardActionBar) is the single entry point.
-import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import ExtractedMetadataPanel from '@/components/custom/news-detail/ExtractedMetadataPanel';
+import {
+    DETAIL_BACK_SIZE,
+    DETAIL_BACK_TOP_OFFSET,
+    DETAIL_TOP_BAR_HEIGHT,
+} from '@/components/custom/news-detail/detail-top-bar-metrics';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
-import RelevanceChip from '@/components/custom/RelevanceChip';
 import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
@@ -26,11 +29,14 @@ import { VStack } from '@/components/ui/vstack';
 import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
-import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
+import { reasonBoxColors } from '@/lib/relevance-utils';
+import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
+import ReasonNote from '@/components/custom/cards/ReasonNote';
+import FactChip from '@/components/custom/cards/FactChip';
+import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export type ArticleSuggestionContainerVariant = 'card' | 'screen';
@@ -49,6 +55,10 @@ interface BaseProps {
      *  lazily-rendered footer content (e.g. the related-articles list). */
     onEndReached?: () => void;
     contentTopInset?: number;
+    /** M8/F31: fires when the meta row starts or stops scrolling under the
+     *  detail top bar, so the host can solidify `DetailTopBar`. Only on
+     *  crossings, never per frame. */
+    onTopBarSolidChange?: (solid: boolean) => void;
     contentBottomInset?: number;
     footer?: React.ReactNode;
     // Screen-variant only — slot rendered between the title and the
@@ -71,7 +81,9 @@ type ArticleProps = BaseProps & { article: NewsArticle; suggestion?: never };
 
 type ArticleSuggestionContainerProps = SuggestionProps | ArticleProps;
 
-const SCREEN_HEADER_HEIGHT = 240;
+export const SCREEN_HEADER_HEIGHT = 240;
+/** The content VStack's `p-5`. */
+const CONTENT_PADDING = 20;
 
 // Geometry of the detail screens' floating back button. Both ArticleDetailScreen
 // and ArticleSuggestionScreen render it at `top: insets.top + 8` with `p-3`
@@ -80,8 +92,8 @@ const SCREEN_HEADER_HEIGHT = 240;
 // image the meta row would otherwise start right under the button and collide
 // with it. Push the content down by the button's own footprint + a comfortable
 // gap, derived from these values rather than a magic number.
-const BACK_BUTTON_TOP_OFFSET = 8;
-const BACK_BUTTON_SIZE = 48;
+const BACK_BUTTON_TOP_OFFSET = DETAIL_BACK_TOP_OFFSET;
+const BACK_BUTTON_SIZE = DETAIL_BACK_SIZE;
 const NO_IMAGE_BREATHING_ROOM = 16;
 /** Tint for the meta band's glass plate — dark so the band recedes into the
  *  page instead of reading as a lighter slab. See its call site. */
@@ -126,6 +138,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         onScrollPositionChange,
         onEndReached,
         contentTopInset = 0,
+        onTopBarSolidChange,
         contentBottomInset = 0,
         footer,
         aboveReason,
@@ -177,6 +190,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const metaGeoTags = article?.geo_tags ?? null;
 
     const [imageFailed, setImageFailed] = useState(false);
+    const blurImages = useBlurImagesStore((s) => s.blurImages);
     const showImage = !!imageUrl && !imageFailed;
 
     // Relevance/reason only apply to the suggestion path. Driven by the
@@ -189,13 +203,12 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const reasonLoading =
         status === ArticleSuggestionStatus.ReasonPending && !reason;
 
-    // Fact chips only render on a complete, reason-less suggestion — the
-    // `factChipsEl` branch below gates on `isSuggestion && reasonReady &&
-    // !reason`. Fetching facts for any other card is wasted DB work on every
-    // row mount, so mirror that exact gate here and only query when the chips
-    // can actually appear. The module-level LRU cache lets cards sharing a topic
-    // set skip the query entirely (perf A5).
-    const canRenderFactChips = isSuggestion && reasonReady && !reason;
+    // Facts are queried only where a chip can appear: the card variant's chips
+    // on a complete, reason-less row (`factChipsEl` below), and the screen's
+    // ONE fact chip under a complete note (A2). Fetching for any other row is
+    // wasted DB work on every mount. The module-level LRU cache lets rows
+    // sharing a topic set skip the query entirely (perf A5).
+    const canRenderFactChips = isSuggestion && reasonReady && (!reason || variant !== 'card');
     // Primitive dep — `suggestion.userTopicIds` is a fresh array each render, so
     // key the effect on its joined contents instead of the unstable ref.
     const topicIdsKey = (suggestion?.userTopicIds ?? []).join(' ');
@@ -286,49 +299,35 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     ) : null;
 
     const reasonBoxEl = isSuggestion && relevanceReady && (reason || reasonLoading) ? (
-        <Box
-            className="rounded-lg p-3 flex-row items-center"
-            style={{ backgroundColor: reasonBoxColors.backgroundColor }}
-        >
-            {/* Left column: the priority chip with the Art. 50 disclosure
-                directly beneath it. The Mera glyph briefly lived here; it moved
-                back to the action row, which is the sole Ask-Mera affordance.
-                Reason text stays right-aligned and non-italic.
-
-                `items-start` so the chip keeps hugging its own content instead
-                of stretching to the caption's width (RN's default cross-axis
-                stretch), and a maxWidth so a long localized caption wraps
-                rather than squeezing the reason text. */}
-            <VStack className="items-start" style={{ maxWidth: 150 }}>
-                <RelevanceChip relevance={relevance} />
-                {/* Still gated on `reason` — the disclosure renders only when
-                    there IS AI-generated text to disclose, never beside the
-                    streaming placeholder. */}
-                {reason ? (
-                    <AiDisclosureCaption
-                        color={aiDisclosureColor}
-                        align="left"
-                        className="mt-1"
-                    />
-                ) : null}
-            </VStack>
-            {reason ? (
-                <Box className="ml-3 flex-1 items-end">
-                    <TranslatableDynamic
-                        text={reason}
-                        size="sm"
-                        bold
-                        className="text-right"
-                        style={{ color: reasonBoxColors.textColor }}
-                    />
-                </Box>
-            ) : (
-                <Box className="ml-3 flex-1 items-end">
-                    <StreamingIndicator compact color={reasonBoxColors.textColor} />
-                </Box>
-            )}
-        </Box>
+        <ReasonNote
+            relevance={relevance}
+            reason={reason}
+            pendingSinceMs={pendingSinceMs(suggestion)}
+            testID="detail-reason"
+            below={reason ? <FactChip fact={facts[0]} testID="detail-fact-chip" /> : undefined}
+        />
     ) : null;
+
+    // Where the meta row starts in scroll content, and so how far the reader
+    // scrolls before it passes under the top bar. With a hero the content has
+    // no top inset (the hero bleeds under the status-bar scrim, M7); without
+    // one it starts below the inset and clears the back button.
+    const metaTop = showImage
+        ? SCREEN_HEADER_HEIGHT + CONTENT_PADDING
+        : contentTopInset + CONTENT_PADDING + NO_IMAGE_META_CLEARANCE;
+    const solidAfter = Math.max(0, metaTop - (contentTopInset + DETAIL_TOP_BAR_HEIGHT));
+    const topBarSolid = useRef(false);
+    const handleScrollPosition = useCallback(
+        (y: number) => {
+            onScrollPositionChange?.(y);
+            const solid = y > solidAfter;
+            if (solid !== topBarSolid.current) {
+                topBarSolid.current = solid;
+                onTopBarSolidChange?.(solid);
+            }
+        },
+        [onScrollPositionChange, onTopBarSolidChange, solidAfter],
+    );
 
     if (isCard) {
         return (
@@ -342,6 +341,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                                 className="w-full h-full"
                                 resizeMode="cover"
                                 recyclingKey={suggestion?._id ?? article?._id}
+                                blurRadius={blurImages ? 24 : undefined}
                                 onError={() => setImageFailed(true)}
                             />
                         </Box>
@@ -361,9 +361,11 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         <SmoothScrollView
             ref={scrollViewRef}
             style={{ flex: 1 }}
-            contentContainerStyle={{ paddingTop: contentTopInset }}
+            // M7: a hero starts at the very top, under the status-bar scrim;
+            // the inset only pads a screen with no hero.
+            contentContainerStyle={{ paddingTop: showImage ? 0 : contentTopInset }}
             headerHeight={SCREEN_HEADER_HEIGHT}
-            onScrollPositionChange={onScrollPositionChange}
+            onScrollPositionChange={handleScrollPosition}
             onEndReached={onEndReached}
             parallaxHeader={
                 showImage ? (
@@ -373,6 +375,10 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                             alt={displayTitle}
                             className="w-full h-full"
                             resizeMode="cover"
+                            // N14: "Blur images" covers the detail hero too, not
+                            // only the cards that led here.
+                            blurRadius={blurImages ? 24 : undefined}
+                            testID="detail-hero-image"
                             onError={() => setImageFailed(true)}
                         />
                     </Box>
@@ -380,8 +386,9 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             }
         >
             <VStack className="p-5" space="lg">
-                {/* With an image, `mt-10` spaces the meta row below the hero;
-                    with no image, clear the floating back button instead.
+                {/* With an image the meta row follows the hero at the VStack's
+                    own padding (M7: an extra `mt-10` left ~60pt of dead space);
+                    with no image, it clears the floating back button instead.
 
                     NO BACKGROUND, deliberately. This row used to carry its own
                     `bg-background-50` fill, then a glass plate, to occlude the
@@ -398,7 +405,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                     becomes a problem — SmoothScrollView is shared, so that is
                     not a change to make casually. */}
                 {showImage ? (
-                    <Box className="mt-10 py-1.5">{metaRow}</Box>
+                    <Box testID="detail-meta">{metaRow}</Box>
                 ) : (
                     <Box style={{ marginTop: NO_IMAGE_META_CLEARANCE }}>{metaRow}</Box>
                 )}

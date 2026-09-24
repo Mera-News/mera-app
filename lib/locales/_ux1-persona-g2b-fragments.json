@@ -1,0 +1,51 @@
+{
+  "_comment": "ux1 persona G2: Manage data in sentence case where the dictionary used Title Case.",
+  "ar": {},
+  "de": {},
+  "en": {
+    "preferences": {
+      "manageData": "Manage data"
+    },
+    "manageData": {
+      "title": "Manage data"
+    }
+  },
+  "es": {},
+  "fr": {},
+  "hi": {},
+  "id": {
+    "preferences": {
+      "manageData": "Kelola data"
+    },
+    "manageData": {
+      "title": "Kelola data"
+    }
+  },
+  "it": {},
+  "ja": {},
+  "ko": {},
+  "nl": {},
+  "pl": {},
+  "pt-BR": {
+    "preferences": {
+      "manageData": "Gerenciar dados"
+    },
+    "manageData": {
+      "title": "Gerenciar dados"
+    }
+  },
+  "ru": {},
+  "th": {},
+  "tr": {
+    "preferences": {
+      "manageData": "Verileri yönet"
+    },
+    "manageData": {
+      "title": "Verileri yönet"
+    }
+  },
+  "uk": {},
+  "vi": {},
+  "zh-CN": {},
+  "zh-TW": {}
+}

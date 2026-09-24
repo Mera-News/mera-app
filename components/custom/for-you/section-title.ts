@@ -7,7 +7,7 @@
 // kind + country code rather than being baked into the RN-free selector.
 
 import { countryNameForAlpha2 } from '@/components/custom/locations/location-display';
-import { sectionKindOf, type FactRow } from '@/lib/stores/fact-rows-selector';
+import { primaryStatement, sectionKindOf, type FactRow } from '@/lib/stores/fact-rows-selector';
 import type { TFunction } from 'i18next';
 
 /** The `t` from `useTranslation()`. Typed as i18next's own `TFunction` (the app
@@ -47,6 +47,8 @@ export function sectionTitle(t: Translate, row: FactRow): string {
       return t('forYou.headlineSectionCountry', { country });
     }
     default:
-      return row.statement;
+      // One fact can hold two statements joined by "; "; the title shows the
+      // first (see primaryStatement). The full text stays on `row.statement`.
+      return primaryStatement(row.statement);
   }
 }

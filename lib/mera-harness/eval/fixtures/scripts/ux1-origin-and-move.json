@@ -1,0 +1,95 @@
+{
+  "id": "ux1-origin-and-move",
+  "cohort": "production",
+  "note": "ux1 Q1+Q2. Origin and a new current city in one message are TWO facts: the origin under its own key, and the move as a residence element that replaces the old home directly (the card is the consent, no replacement chip).",
+  "persona": {
+    "facts": [
+      {
+        "id": "f1",
+        "statement": "Lives in Amsterdam, North Holland, Netherlands, EU",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I'm originally from India and I live in Berlin now",
+      "expect": {
+        "routeKind": "origin",
+        "skill": "facts/origin",
+        "tools": [
+          "load_skill",
+          "lookup_place",
+          "find_similar_facts",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "proposals": [
+          {
+            "statementMatches": [
+              "india"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": null
+          },
+          {
+            "statementMatches": [
+              "expat",
+              "germany"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": null
+          },
+          {
+            "statementMatches": [
+              "berlin"
+            ],
+            "kind": "origin",
+            "placeChain": "required",
+            "replaces": "f1"
+          }
+        ]
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "Berlin",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Berlin",
+                  "admin1": "Berlin",
+                  "countryCode": "DE",
+                  "countryName": "Germany",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          }
+        ],
+        "find_similar_facts": [
+          {
+            "kind": "residence",
+            "returns": {
+              "candidates": [
+                {
+                  "factId": "f1",
+                  "statement": "Lives in Amsterdam, North Holland, Netherlands, EU",
+                  "attribute": "location: neighborhood/area, city, and country (preserve specifics)",
+                  "overlap": 0.4
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

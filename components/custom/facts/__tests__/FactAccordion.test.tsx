@@ -395,3 +395,81 @@ describe('FactAccordion — B3: topic list reads observeByFact, not fact.metadat
         expect(queryByText('facts.topicRemovalConsequence')).toBeTruthy();
     });
 });
+
+describe('F14: fact and topic text keep their own casing', () => {
+    // iOS `capitalize` is NSString capitalizedString, which lowercases the rest
+    // of every word: "AI" became "Ai", "(DMA)" became "(Dma)".
+    it('sentence-cases the statement and topics without a capitalize transform', () => {
+        mockTopicRows = [{ id: 't1', text: 'EU digital markets act (DMA)', status: 'active' }];
+        const r = render(
+            <FactAccordion {...baseProps} fact={baseFact({ statement: 'interested in privacy-preserving AI' })} />,
+        );
+        const statement = r.getByText('Interested in privacy-preserving AI');
+        expect(String(statement.props.className ?? '')).not.toMatch(/capitalize/);
+        const topic = r.getByText('EU digital markets act (DMA)');
+        expect(String(topic.props.className ?? '')).not.toMatch(/capitalize/);
+    });
+});
+
+describe('F46: delete lives in edit mode', () => {
+    it('shows no delete control at rest', () => {
+        const r = render(<FactAccordion {...baseProps} isExpanded={false} fact={baseFact()} />);
+        expect(r.queryByTestId('fact-delete-f1')).toBeNull();
+    });
+
+    it('in edit mode shows a labelled delete control, and never expands', () => {
+        const onDeletePress = jest.fn();
+        mockTopicRows = [{ id: 't1', text: 'trail running', status: 'active' }];
+        const r = render(
+            <FactAccordion {...baseProps} isExpanded editing onDeletePress={onDeletePress} fact={baseFact()} />,
+        );
+        const del = r.getByTestId('fact-delete-f1');
+        expect(del.props.accessibilityLabel).toBe('facts.deleteFactA11y');
+        fireEvent.press(del);
+        expect(onDeletePress).toHaveBeenCalledTimes(1);
+        // Expansion is off while editing: the topic list is not rendered.
+        expect(r.queryByText('Trail running')).toBeNull();
+    });
+
+    it('offers Delete as a VoiceOver custom action on every row', () => {
+        const onDeletePress = jest.fn();
+        const r = render(<FactAccordion {...baseProps} isExpanded={false} onDeletePress={onDeletePress} fact={baseFact()} />);
+        const row = r.UNSAFE_root.findAll(
+            (n: any) => Array.isArray(n.props?.accessibilityActions) && typeof n.props?.onAccessibilityAction === 'function',
+        )[0];
+        expect(row.props.accessibilityActions).toEqual([{ name: 'delete', label: 'common.delete' }]);
+        act(() => row.props.onAccessibilityAction({ nativeEvent: { actionName: 'delete' } }));
+        expect(onDeletePress).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('M24 / F45: the count pill always says something true', () => {
+    it('says "No articles yet" for a finished fact with nothing that can appear', () => {
+        const r = render(<FactAccordion {...baseProps} isExpanded={false} fact={baseFact({ topicsStatus: 'done' } as any)} />);
+        expect(r.getByTestId('fact-count-none-f1')).toBeTruthy();
+    });
+
+    it('says "Counting" before the counts land, never a false 0', () => {
+        const r = render(
+            <FactAccordion {...baseProps} isExpanded={false} countState="counting" fact={baseFact({ topicsStatus: 'done' } as any)} />,
+        );
+        expect(r.getByTestId('fact-count-pending-f1')).toBeTruthy();
+        expect(r.queryByTestId('fact-count-none-f1')).toBeNull();
+    });
+
+    it('shows nothing once counting has given up', () => {
+        const r = render(
+            <FactAccordion {...baseProps} isExpanded={false} countState="unavailable" fact={baseFact({ topicsStatus: 'done' } as any)} />,
+        );
+        expect(r.queryByTestId('fact-count-pending-f1')).toBeNull();
+        expect(r.queryByTestId('fact-count-none-f1')).toBeNull();
+    });
+});
+
+it('the edit-mode delete control is at least 44pt', () => {
+    const r = render(<FactAccordion {...baseProps} isExpanded={false} editing fact={baseFact()} />);
+    const del = r.getByTestId('fact-delete-f1');
+    const style = Array.isArray(del.props.style) ? Object.assign({}, ...del.props.style) : del.props.style;
+    expect(style.minWidth).toBeGreaterThanOrEqual(44);
+    expect(style.minHeight).toBeGreaterThanOrEqual(44);
+});

@@ -240,7 +240,7 @@ describe('useCloudPersonaChat', () => {
       expect(lastSecuring).toBeLessThan(firstThinking);
     });
 
-    it('hands the line over on the first visible delta, and leaves it released', async () => {
+    it('hands the line over when the first text is RENDERED, and leaves it released', async () => {
       let release!: () => void;
       const gate = new Promise<void>((r) => { release = r; });
       const seen: string[] = [];
@@ -272,11 +272,13 @@ describe('useCloudPersonaChat', () => {
         },
         { timeout: 3000 },
       );
-      // A phase while the wait ran, released the moment the first delta landed.
-      // The generator runs a SECOND time for the hidden forced-extraction pass,
-      // which has no turn of its own and must never re-narrate: every later
-      // sample stays released.
-      expect(seen.slice(0, 2)).toEqual(['phase', 'released']);
+      // A phase while the wait ran, and STILL a phase right after the delta
+      // arrives: the handover waits for the render that shows the text, so the
+      // wait row never empties a frame before the reply takes its slot
+      // (ux1 C2). The generator runs a SECOND time for the hidden
+      // forced-extraction pass, which must never re-narrate: every later
+      // sample is released.
+      expect(seen.slice(0, 2)).toEqual(['phase', 'phase']);
       expect(seen.slice(2).every((v) => v === 'released')).toBe(true);
       await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
       expect(useChatPhaseStore.getState().view).toEqual({ kind: 'released' });
@@ -719,7 +721,9 @@ describe('useCloudPersonaChat', () => {
 
       const assistant = result.current.messages.filter((m) => m.role === 'assistant');
       expect(assistant.every((m) => !m.content.includes('THIS MUST NEVER BE SHOWN'))).toBe(true);
-      expect(result.current.latestAssistantContent).toBe('Got it — anything else?');
+      // Dash-cleaned once the stream is whole: the single-shot path shipped
+      // model em dashes to users before ux1.
+      expect(result.current.latestAssistantContent).toBe('Got it, anything else?');
     });
 
     it('pushes nothing from the forced pass onto the wire', async () => {
@@ -1951,12 +1955,56 @@ describe('the shipped cloud path drives the agent loop', () => {
     expect(text).not.toContain("I've noted that");
   });
 
+  // TWO BUBBLES: the acknowledgement stays put and the answer lands below it.
+  // One bubble used to take each leg's text in turn and then swap to the final
+  // reply, so the words being read changed and the bubble jumped (audit F4).
+  it('keeps the acknowledgement as its own bubble and puts the answer in a second', async () => {
+    const model = jest.fn();
+    const res = (content: string, over: Record<string, unknown> = {}) => ({
+      content, toolCalls: [], finishReason: 'stop', truncated: false,
+      usage: null, modelSent: 'fake', latencyMs: 1, error: null, ...over,
+    });
+    model
+      .mockImplementationOnce(async (req: { onDelta?: (d: { content?: string }) => void }) => {
+        req.onDelta?.({ content: 'Porto, one moment.' });
+        return res('Porto, one moment.', {
+          toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/residence' }) }],
+        });
+      })
+      .mockImplementation(async (req: { onDelta?: (d: { content?: string }) => void }) => {
+        req.onDelta?.({ content: 'LEG TEXT MUST NOT STREAM' });
+        return res('Got it, Porto. What do you do for work?');
+      });
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: model,
+      tools: {},
+      loadSkill: (id: string) => (id === 'facts/residence' ? 'RESIDENCE BODY' : null),
+      skillIds: () => ['facts/residence'],
+    });
+
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I moved to Porto'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false),
+      { timeout: 3000 },
+    );
+
+    const assistant = useCloudChatStore.getState().messages.filter((m) => m.role === 'assistant');
+    expect(assistant.map((m) => m.content)).toEqual([
+      'Porto, one moment.',
+      'Got it, Porto. What do you do for work?',
+    ]);
+  });
+
   // THE TOOL RECORD'S `input` IS THE ARGUMENTS, NOT THE RESULT.
   // It carried the result, so every card the thread derives from arguments was
   // dropped: ask_choice looks for `input.options` and got `{awaiting:'user'}`,
   // which is fewer than two options, so the chips vanished. On device a correct
   // three-leg turn ending `awaiting-user` showed the user nothing at all.
   it('writes the tool ARGUMENTS into input and the result into result', async () => {
+    // facts/origin, not facts/residence: a residence turn refuses a place
+    // question asked before any lookup, and this fixture has no lookup tool.
+    // The test is about what the hook stores, not about which skill asks.
     const model = jest.fn();
     const res = (over: Record<string, unknown> = {}) => ({
       content: '', toolCalls: [], finishReason: 'stop', truncated: false,
@@ -1965,7 +2013,7 @@ describe('the shipped cloud path drives the agent loop', () => {
     model
       .mockResolvedValueOnce(res({
         content: 'Nieuw-West, one moment.',
-        toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/residence' }) }],
+        toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/origin' }) }],
       }))
       .mockResolvedValue(res({
         toolCalls: [{
@@ -1979,8 +2027,8 @@ describe('the shipped cloud path drives the agent loop', () => {
     mockRunAgentLoopDeps.mockReturnValue({
       callModel: model,
       tools: {},
-      loadSkill: (id: string) => (id === 'facts/residence' ? 'RESIDENCE BODY' : null),
-      skillIds: () => ['facts/residence'],
+      loadSkill: (id: string) => (id === 'facts/origin' ? 'ORIGIN BODY' : null),
+      skillIds: () => ['facts/origin'],
     });
 
     const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
@@ -2100,5 +2148,62 @@ describe('a new conversation drops stale turn state', () => {
     );
     expect(useCloudChatStore.getState().agentTurnState?.pendingChoice).toBeNull();
     expect(useCloudChatStore.getState().agentTurnState?.resolvedChoice).toBeNull();
+  });
+});
+
+// Owner ruling ux1, F7: the loop must know which readings are still waiting on
+// a card, so a typed reply cannot produce a second card for the same thing.
+describe('pendingCardStatements', () => {
+  const { pendingCardStatements } = require('../../hooks/useCloudPersonaChat');
+  const { useFloatingChatStore } = require('../../stores/floating-chat-store');
+  const staged = {
+    staged: true,
+    groupResolutions: {},
+    pendingFacts: [
+      { index: 0, options: ['Lives in Berlin, Germany, EU'] },
+      { index: 1, options: ['Product manager'] },
+    ],
+  };
+  const msg = { id: 'm1', role: 'assistant', content: '', toolCalls: [{ id: 't', name: 'saveExtractedFacts', input: {}, status: 'done', result: staged }] };
+
+  afterEach(() => useFloatingChatStore.setState({ toolCallResults: {} }));
+
+  it('lists every reading on a card nobody has answered', () => {
+    expect(pendingCardStatements([msg])).toEqual(['Lives in Berlin, Germany, EU', 'Product manager']);
+  });
+
+  it('drops a card the user answered, reading the override a tap wrote', () => {
+    const { factChoiceGroupId } = require('../../chat-tools/fact-choice-resolution');
+    const answered = {
+      ...staged,
+      groupResolutions: { [factChoiceGroupId(1, ['Product manager'])]: { status: 'dismissed', options: ['Product manager'], questionnaireAttribute: null } },
+    };
+    useFloatingChatStore.setState({ toolCallResults: { 'm1::0': answered } });
+    expect(pendingCardStatements([msg])).toEqual(['Lives in Berlin, Germany, EU']);
+  });
+});
+
+// ux1 C2: the dash cleanup used to land after the stream and re-wrap a
+// finished bubble. The bubble is now clean on every render.
+describe('single-shot dash cleanup while streaming', () => {
+  it('never shows a clause dash, even before the stream ends', async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((r) => { release = r; });
+    mockCloudChatStream.mockImplementation(async function* () {
+      yield { type: 'text-delta', delta: 'It covers oversight — safety news' };
+      await gate;
+      yield { type: 'text-delta', delta: ' is in that lane.' };
+      yield { type: 'finish', reason: 'stop' };
+    });
+    const agent = makeAgent({ id: 'article-feedback-1', getToolDefinitions: jest.fn().mockReturnValue([]) });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+    act(() => { result.current.sendMessage('why?'); });
+    await waitFor(
+      () => expect(result.current.messages.some((m) => m.role === 'assistant' && m.content.includes('oversight'))).toBe(true),
+      { timeout: 3000 },
+    );
+    const mid = result.current.messages.filter((m) => m.role === 'assistant').map((m) => m.content).join(' ');
+    expect(mid).not.toMatch(/[—–]/);
+    await act(async () => { release(); });
   });
 });

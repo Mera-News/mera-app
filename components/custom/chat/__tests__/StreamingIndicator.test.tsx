@@ -28,8 +28,20 @@ jest.mock('react-native-reanimated', () => {
     withDelay: (_d: number, v: unknown) => v,
     withRepeat: (v: unknown) => v,
     withSequence: (...v: unknown[]) => v[0],
+    makeMutable: (initial: unknown) => ({ value: initial }),
+    cancelAnimation: () => {},
+    useReducedMotion: () => mockReduceMotion,
+    Easing: { linear: (x: number) => x },
   };
 });
+let mockReduceMotion = false;
+let mockAnimationsActive = true;
+jest.mock('@/lib/hooks/use-is-focused-safe', () => ({
+  useAnimationsActive: () => mockAnimationsActive,
+}));
+jest.mock('@/lib/stores/display-prefs-store', () => ({
+  useDisplayPrefsStore: (sel: (s: { staticGradient: boolean }) => unknown) => sel({ staticGradient: false }),
+}));
 
 import StreamingIndicator from '../StreamingIndicator';
 
@@ -81,5 +93,69 @@ describe('StreamingIndicator', () => {
     expect(queryByTestId('mera-logo')).not.toBeNull();
   });
 
-});
+  describe('one gated clock (S9)', () => {
+    beforeEach(() => {
+      mockReduceMotion = false;
+      mockAnimationsActive = true;
+    });
 
+    it('runs ONE caption interval however many indicators are mounted', () => {
+      const spy = jest.spyOn(global, 'setInterval');
+      const { unmount } = render(
+        <View>
+          <StreamingIndicator compact />
+          <StreamingIndicator compact />
+          <StreamingIndicator compact />
+        </View>,
+      );
+      expect(spy).toHaveBeenCalledTimes(1);
+      unmount();
+      spy.mockRestore();
+    });
+
+    it('starts no clock under Reduce Motion, and still shows a caption', () => {
+      mockReduceMotion = true;
+      const spy = jest.spyOn(global, 'setInterval');
+      const { getAllByTestId, unmount } = render(<StreamingIndicator compact />);
+      expect(spy).not.toHaveBeenCalled();
+      expect(getAllByTestId('streaming-caption')).toHaveLength(1);
+      unmount();
+      spy.mockRestore();
+    });
+
+    it('starts no clock while nobody can see it (blurred tab or background)', () => {
+      mockAnimationsActive = false;
+      const spy = jest.spyOn(global, 'setInterval');
+      const { unmount } = render(<StreamingIndicator compact />);
+      expect(spy).not.toHaveBeenCalled();
+      unmount();
+      spy.mockRestore();
+    });
+
+    it('stops cycling and says so once the pending cap has passed', () => {
+      const { getByText, queryByTestId, unmount } = render(
+        <StreamingIndicator
+          compact
+          pendingSinceMs={Date.now() - 91_000}
+          terminalText="Mera couldn't write a note for this one."
+        />,
+      );
+      expect(getByText("Mera couldn't write a note for this one.")).toBeTruthy();
+      expect(queryByTestId('streaming-caption')).toBeNull();
+      unmount();
+    });
+
+    it('flips to the terminal line when the cap passes while mounted', () => {
+      const { getByTestId, queryByTestId, unmount } = render(
+        <StreamingIndicator compact pendingSinceMs={Date.now()} terminalText="gave up" />,
+      );
+      expect(getByTestId('streaming-caption')).toBeTruthy();
+      act(() => {
+        jest.advanceTimersByTime(90_001);
+      });
+      expect(queryByTestId('streaming-caption')).toBeNull();
+      expect(getByTestId('card-reason-unavailable')).toBeTruthy();
+      unmount();
+    });
+  });
+});

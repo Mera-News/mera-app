@@ -204,6 +204,9 @@ const SAVE_SAFE = new RegExp(
     '|offered to save' +
     "|(?:check|confirm)[^.]{0,30}before saving" +
     "|already recorded" +
+    // A NEGATIVE: "no new specifics were added" says the opposite of a save
+    // claim (device capture, ux1 C3).
+    "|\\bno (?:new )?(?:\\w+ ){0,2}(?:were|was|has been|have been) (?:added|saved|recorded|noted|stored)" +
     ')',
   'i',
 );
@@ -299,4 +302,110 @@ export function leaksInternals(text: string): boolean {
   const t = text ?? '';
   if (t.trim().length === 0) return false;
   return INTERNALS.test(t) || looksLikeSerialisedPayload(t);
+}
+
+/**
+ * The loop narrating its own process, or promising a step it has not taken.
+ *
+ * Two device replies this exists for, both shipped as the WHOLE reply:
+ * "I'll start by loading the appropriate skill for this turn." (the route
+ * leg's acknowledgement, left standing when every later leg was silent) and
+ * "Let me check what you already follow, then I can offer this." (a turn that
+ * spent its legs looking things up and ended with no offer). Neither answers
+ * the user; both describe work instead of doing it.
+ *
+ * PRECISION FIRST, like the two detectors above. The verbs are ones the loop
+ * actually narrates (check, look, load, search, find, verify), gated on a
+ * first-person future. "Let me know what else you follow" and "I'll be here"
+ * are ordinary sentences and do not match. A miss leaves today's behaviour; a
+ * false positive re-asks a correct reply, so the list stays narrow.
+ */
+const PROCESS_NARRATION = new RegExp(
+  '(' +
+    "\\b(?:let me|i(?:'ll|’ll| will)|i(?:'m|’m| am) going to)\\s+(?:first\\s+|quickly\\s+|just\\s+)?" +
+    '(?:check|look (?:up|at|for|into|through)|load|search|find|verify|pull up|fetch|figure out|go through|review)\\b' +
+    "|\\bthen i(?:'ll|’ll| will| can)\\s+(?:offer|add|propose|suggest|save)\\b" +
+    '|\\b(?:the|an?) (?:appropriate|right|relevant) (?:skill|guideline|tool)\\b' +
+    '|\\bloading (?:the|a|an) (?:skill|guideline|instructions)\\b' +
+    '|\\bone moment while i\\b' +
+    // Narrating how it READ the message: "I read that as answering the Porto
+    // question, but the word does not fit." (device capture, ux1 C4)
+    "|\\bi(?:'m|’m| am)? ?(?:read|took|reading|interpreted|understood) (?:that|this|it|your (?:message|reply|answer)) as\\b" +
+    '|\\bas (?:an? )?(?:answer|reply) to (?:the|your|my) .{0,40}question\\b' +
+    ')',
+  'i',
+);
+
+/** True when the reply narrates the loop's process or promises an unmade
+ *  offer. Pass CLEANED text. */
+export function narratesProcess(text: string): boolean {
+  const t = text ?? '';
+  if (!t.trim()) return false;
+  // A CONDITIONAL offer is an ordinary sentence, not narration: "If you tell
+  // me where you live, I'll look up the place" is a correct answer from the
+  // G4 corpus. The whole conditional sentence is set aside before matching.
+  const unconditional = t.replace(/\b(?:if|once|when) you\b[^.?!]*[.?!]?/gi, ' ');
+  return PROCESS_NARRATION.test(unconditional);
+}
+
+/**
+ * A plain yes typed in answer to Mera's last question.
+ *
+ * Short and closed on purpose: a yes that carries anything else ("yes, and I
+ * also follow F1") is a new message and routes normally. Never a
+ * confirmation of anything destructive; the loop only uses it to resume the
+ * subject the question was about.
+ */
+const PLAIN_YES = /^(?:yes|yeah|yep|yup|sure|ok(?:ay)?|please|please do|go ahead|do it|sounds good|that'?s right|correct)(?:[ ,]+(?:please|thanks|thank you|add it|add that|do it|go ahead))*[.!]*$/i;
+
+/**
+ * The reply says there is nothing to add: the fact is already on file, or the
+ * profile stays as it is. A forced offer after this sentence contradicts it on
+ * screen (ux1 C3: "That's already on file... I'll leave your profile as it is"
+ * above a card offering the same fact).
+ */
+const NOTHING_TO_ADD = new RegExp(
+  '(' +
+    "\\b(?:that['’]?s|that is|this is|it['’]?s|it is|those are|they['’]?re) already (?:on file|in your profile|saved|there)\\b" +
+    "|\\balready (?:have|had|hold) (?:that|this|it|those)\\b" +
+    "|\\bleave your profile as it is\\b" +
+    "|\\bnothing (?:new )?to add\\b" +
+    ')',
+  'i',
+);
+
+export function declaresNothingToAdd(text: string): boolean {
+  return NOTHING_TO_ADD.test(text ?? '');
+}
+
+/**
+ * A statement in comparable form: lowercased, articles and a leading "user"
+ * dropped, punctuation and spacing collapsed. Used ONLY to recognise a fact
+ * already on file, so a near-identical re-offer is caught the way an exact one
+ * is. Never written back.
+ */
+export function comparableStatement(text: string): string {
+  return (text ?? '')
+    .toLowerCase()
+    .replace(/^(?:the )?user\s+/, '')
+    .replace(/[^a-z0-9\u00c0-\uffff\s]/g, ' ')
+    .replace(/\b(?:the|a|an)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function isPlainYes(text: string): boolean {
+  const t = (text ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!t || t.split(' ').length > 6) return false;
+  return PLAIN_YES.test(t);
+}
+
+const PLAIN_NO = /^(?:no|nope|nah|no thanks|no thank you|not really|not now|skip it|don'?t|do not)(?:[ ,]+(?:thanks|thank you))*[.!]*$/i;
+
+/** A plain no to Mera's last question, from the same closed register as
+ *  `isPlainYes`. */
+export function isPlainNo(text: string): boolean {
+  const t = (text ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  if (!t || t.split(' ').length > 6) return false;
+  return PLAIN_NO.test(t);
 }

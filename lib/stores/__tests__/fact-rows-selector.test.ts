@@ -159,7 +159,9 @@ describe('buildFactRows ownership', () => {
     expect(f1?.groups.map((g) => g.data._id).sort()).toEqual(['at-gate', 'real']);
   });
 
-  it('RULE 2: a fact whose every match is LOW gets NO section', () => {
+  // D4 (owner decision, reverses the no-empty-sections rule): an all-LOW fact
+  // still gets NO STORIES, but it now gets an EMPTY section instead of none.
+  it('RULE 2: a fact whose every match is LOW shows no stories, as an EMPTY section', () => {
     const snap = snapshots(
       [['t-nl', { factId: 'f-nl' }]],
       [['f-nl', { statement: 'Learning Dutch' }]],
@@ -169,7 +171,9 @@ describe('buildFactRows ownership', () => {
       sugg({ _id: `low${n}`, relevance: 0.4, matchedTopics: [{ topicId: 't-nl', text: 'nl' }] }),
     );
     const { rows } = buildFactRows(lows, snap, new Set(), NOW);
-    expect(rows.some((r) => r.factId === 'f-nl')).toBe(false);
+    const nl = rows.find((r) => r.factId === 'f-nl');
+    expect(nl?.groups).toEqual([]);
+    expect(nl?.emptyReason).toBeDefined();
   });
 
   it('RULE 2: one MEDIUM story makes the section viable and its LOW stories are KEPT', () => {
@@ -185,7 +189,7 @@ describe('buildFactRows ownership', () => {
     expect(f1?.groups.map((g) => g.data._id).sort()).toEqual(['low', 'med']);
   });
 
-  it('an all-LOW fact is dropped WITHOUT disturbing a sibling fact that has real coverage', () => {
+  it('an all-LOW fact becomes an empty section AFTER a sibling fact that has real coverage', () => {
     const snap = snapshots(
       [['t-nl', { factId: 'f-nl' }], ['t-ok', { factId: 'f-ok' }]],
       [['f-nl', { statement: 'Learning Dutch' }], ['f-ok', { statement: 'F1' }]],
@@ -193,7 +197,8 @@ describe('buildFactRows ownership', () => {
     const low = sugg({ _id: 'low', relevance: 0.4, matchedTopics: [{ topicId: 't-nl', text: 'nl' }] });
     const ok = sugg({ _id: 'ok', relevance: 0.8, matchedTopics: [{ topicId: 't-ok', text: 'f1' }] });
     const { rows } = buildFactRows([low, ok], snap, new Set(), NOW);
-    expect(rows.map((r) => r.factId)).toEqual(['f-ok']);
+    expect(rows.map((r) => r.factId)).toEqual(['f-ok', 'f-nl']);
+    expect(rows[1].groups).toEqual([]);
   });
 
   it('EMERGENCY/HIGH buckets also make a section viable', () => {
@@ -334,7 +339,8 @@ describe('buildFactRows visibility', () => {
   it('drops sub-render-gate (relevance < RENDER_GATE, 0.4) rows', () => {
     const lo = sugg({ _id: 'lo', relevance: 0.28, matchedTopics: [{ topicId: 't1', text: 'x' }] });
     const { rows } = buildFactRows([lo], snap, new Set(), NOW);
-    expect(rows).toHaveLength(0);
+    // The story is dropped; the fact keeps an EMPTY section (D4).
+    expect(rows.flatMap((r) => r.groups)).toHaveLength(0);
   });
 
   it('hides reason_pending rows (note not written yet), shows complete ones', () => {
@@ -376,7 +382,7 @@ describe('buildFactRows visibility', () => {
       matchedTopics: [{ topicId: 't1', text: 'x' }],
     });
     const { rows } = buildFactRows([old], snap, new Set(), NOW);
-    expect(rows).toHaveLength(0);
+    expect(rows.flatMap((r) => r.groups)).toHaveLength(0);
   });
 });
 
@@ -911,5 +917,118 @@ describe('buildFactRows representative election (source preferences)', () => {
         preferredCountriesAlpha3: new Set(),
       }),
     ).toEqual(baseline);
+  });
+});
+
+// --- D4: empty sections --------------------------------------------------
+
+describe('buildFactRows empty sections (D4)', () => {
+  const DAY = 24 * H;
+
+  it('gives an interest with no stories an EMPTY section, and none to a fact with no active topic', () => {
+    const snap = snapshots(
+      [
+        ['t-f1', { factId: 'f1' }],
+        ['t-new', { factId: 'f-new' }],
+        ['t-retired', { factId: 'f-retired', status: 'retired' }],
+      ],
+      [['f1', {}], ['f-new', { createdAtMs: NOW - H }], ['f-retired', {}]],
+    );
+    const s = sugg({ _id: 'a', matchedTopics: [{ topicId: 't-f1', text: 'x' }] });
+    const { rows } = buildFactRows([s], snap, new Set(), NOW);
+    const ids = rows.map((r) => r.factId);
+    expect(ids).toContain('f-new');
+    expect(ids).not.toContain('f-retired');
+    expect(rows.find((r) => r.factId === 'f-new')?.groups).toEqual([]);
+  });
+
+  it('gives a down-weighted (suppressed) interest no section at all', () => {
+    const snap = snapshots([['tn', { factId: 'fn', weight: -0.5 }]], [['fn', {}]]);
+    const { rows } = buildFactRows([], snap, new Set(), NOW);
+    expect(rows).toHaveLength(0);
+  });
+
+  it('says whether Mera has looked yet: awaiting-first-run vs no-match-yet', () => {
+    const snap = snapshots(
+      [['t-a', { factId: 'f-a' }], ['t-b', { factId: 'f-b' }]],
+      [['f-a', { createdAtMs: NOW - 2 * H }], ['f-b', { createdAtMs: NOW - 10 * H }]],
+    );
+    const lastRun = NOW - 5 * H;
+    const { rows } = buildFactRows([], snap, new Set(), NOW, undefined, null, lastRun);
+    expect(rows.find((r) => r.factId === 'f-a')?.emptyReason).toBe('awaiting-first-run');
+    expect(rows.find((r) => r.factId === 'f-b')?.emptyReason).toBe('no-match-yet');
+
+    const never = buildFactRows([], snap, new Set(), NOW, undefined, null, null);
+    expect(never.rows.every((r) => r.emptyReason === 'awaiting-first-run')).toBe(true);
+  });
+
+  // Owner decision: every empty section goes to the BOTTOM, new interests
+  // included; within the empty tier the newest fact comes first.
+  it('puts sections with stories first, then every empty section, newest first', () => {
+    const snap = snapshots(
+      [
+        ['t-story', { factId: 'f-story' }],
+        ['t-new', { factId: 'f-new' }],
+        ['t-old', { factId: 'f-old' }],
+      ],
+      [
+        ['f-story', { createdAtMs: NOW - 30 * DAY }],
+        ['f-new', { createdAtMs: NOW - 2 * H }],
+        ['f-old', { createdAtMs: NOW - 3 * DAY, weight: 1 }],
+      ],
+    );
+    const s = sugg({ _id: 'a', relevance: 0.8, matchedTopics: [{ topicId: 't-story', text: 'x' }] });
+    const { rows } = buildFactRows([s], snap, new Set(), NOW);
+    expect(rows.map((r) => r.factId)).toEqual(['f-story', 'f-new', 'f-old']);
+    expect(rows[0].emptyReason).toBeUndefined();
+    // The flag survives as the section's label.
+    expect(rows[1].newInterest).toBe(true);
+    expect(rows[2].newInterest).toBe(false);
+  });
+
+  it('a NEW empty interest also sorts below a populated HEADLINE section', () => {
+    const snap = snapshots([['t-new', { factId: 'f-new' }]], [['f-new', { createdAtMs: NOW - 2 * H }]]);
+    const h = sugg({
+      _id: 'h',
+      relevance: 0.8,
+      headlineScope: 'GLOBAL',
+      matchedTopics: [{ topicId: null, text: 'headlines' }],
+    });
+    const { rows } = buildFactRows([h], snap, new Set(), NOW);
+    expect(rows[rows.length - 1].factId).toBe('f-new');
+    expect(rows[rows.length - 1].newInterest).toBe(true);
+    expect(rows[0].groups.length).toBeGreaterThan(0);
+  });
+
+  it('an old empty section sorts below a populated HEADLINE section despite its higher weight', () => {
+    const snap = snapshots([['t-old', { factId: 'f-old' }]], [['f-old', { createdAtMs: NOW - 5 * DAY }]]);
+    const h = sugg({
+      _id: 'h',
+      relevance: 0.8,
+      headlineScope: 'GLOBAL',
+      matchedTopics: [{ topicId: null, text: 'headlines' }],
+    });
+    const { rows } = buildFactRows([h], snap, new Set(), NOW);
+    expect(rows[rows.length - 1].factId).toBe('f-old');
+    expect(rows[0].groups.length).toBeGreaterThan(0);
+  });
+});
+
+// A single fact can hold two statements joined by "; " (a combined persona
+// fact). A section title shows only the first, so it never runs to five lines.
+describe('primaryStatement', () => {
+  const { primaryStatement } = require('../fact-rows-selector');
+  it('keeps the part before the first "; "', () => {
+    expect(
+      primaryStatement(
+        'Expat from India living in New West (Nieuw-West), Amsterdam, EU; Lives in New West (Nieuw-West), Amsterdam, EU',
+      ),
+    ).toBe('Expat from India living in New West (Nieuw-West), Amsterdam, EU');
+  });
+  it('leaves a single statement alone, trimmed', () => {
+    expect(primaryStatement('  Works in fintech  ')).toBe('Works in fintech');
+  });
+  it('falls back to the whole statement when the first part is empty', () => {
+    expect(primaryStatement('; Lives in Berlin')).toBe('; Lives in Berlin');
   });
 });

@@ -71,6 +71,11 @@ interface UseRelatedPagination {
     /** Wire to the scroll container's `onEndReached`. Self-guarding: safe to
      *  call repeatedly, including from `scrollToEnd`. */
     loadMore: () => void;
+    /** The last fetch failed. The screen shows an error row instead of
+     *  silently dropping the section. */
+    error: boolean;
+    /** Re-run the failed fetch. */
+    retry: () => void;
 }
 
 /**
@@ -104,8 +109,12 @@ export function useRelatedPagination({
     const [hasNextPage, setHasNextPage] = useState(false);
     const [isLoadingInitial, setIsLoadingInitial] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [error, setError] = useState(false);
 
     const generationRef = useRef(0);
+    /** Pages appended since the last reset. The settle refetch below must never
+     *  throw away a list the reader has already paged into. */
+    const pagesLoadedRef = useRef(0);
     // Read inside callbacks rather than closed over, so changing the exclusion
     // set does not rebuild `loadMore` and re-arm the scroll container.
     const excludeRef = useRef<string[] | undefined>(excludeIds);
@@ -129,38 +138,45 @@ export function useRelatedPagination({
                 // A reset landed while this was in flight. Its rows belong to a
                 // different ordering and its cursor to different offsets.
                 if (generationRef.current !== generation) return;
-                setEntries((prev) =>
-                    after === null || page.restarted
-                        ? page.articles
-                        : [...prev, ...page.articles],
-                );
+                const replaces = after === null || page.restarted;
+                pagesLoadedRef.current = replaces ? 1 : pagesLoadedRef.current + 1;
+                setEntries((prev) => {
+                    if (replaces) return dedupeById([], page.articles);
+                    // Dedupe on append. A row the server re-serves on a later
+                    // page (a re-clustered story shifting its offsets) would
+                    // otherwise render twice under the same React key.
+                    return dedupeById(prev, page.articles);
+                });
                 setEndCursor(page.pageInfo.endCursor ?? null);
                 setHasNextPage(page.pageInfo.hasNextPage);
-            } catch (error) {
+                setError(false);
+            } catch (err) {
                 if (generationRef.current !== generation) return;
-                logger.captureException(error, {
+                logger.captureException(err, {
                     tags: { hook: 'useRelatedPagination', method: 'fetchPage' },
                     extra: { articleId, after },
                 });
                 // Stop paging rather than retry on every scroll tick. The list
                 // is supplementary; a stuck spinner is worse than a short list.
+                // `error` lets the screen say so and offer a retry, instead of
+                // the section silently disappearing.
                 setHasNextPage(false);
+                setError(true);
             }
         },
         [articleId, stableClusterId, sortMode],
     );
 
-    // First page, and the reset. Keyed on the article and the sort mode: a sort
-    // change means the reader asked for a DIFFERENT set of rows at the top, so
-    // carrying the accumulated pages over would show them the old ordering with
-    // a new label.
-    useEffect(() => {
+    /** Drop everything and fetch page 1 again under a new generation. */
+    const startFromTop = useCallback(() => {
         const generation = generationRef.current + 1;
         generationRef.current = generation;
+        pagesLoadedRef.current = 0;
         setEntries([]);
         setEndCursor(null);
         setHasNextPage(false);
         setIsLoadingMore(false);
+        setError(false);
         if (!articleId || !isConnected) {
             setIsLoadingInitial(false);
             return;
@@ -171,6 +187,35 @@ export function useRelatedPagination({
         });
     }, [articleId, isConnected, fetchPage]);
 
+    // First page, and the reset. Keyed on the article and the sort mode: a sort
+    // change means the reader asked for a DIFFERENT set of rows at the top, so
+    // carrying the accumulated pages over would show them the old ordering with
+    // a new label.
+    useEffect(() => {
+        startFromTop();
+    }, [startFromTop]);
+
+    // The exclusion set SETTLING. The suggestion route computes its local
+    // siblings only after interactions settle, so page 1 goes out with an empty
+    // exclusion set and can carry rows the route also renders itself. When the
+    // set goes from empty to non-empty, fetch page 1 again with it. Keyed on the
+    // sorted id list so a new array with the same ids is not a change; only the
+    // empty to non-empty transition counts; and never once the reader has
+    // loaded a second page, because that would yank the list out from under
+    // them. The caller's dedupe stays as the safety net for that case.
+    const excludeKey = excludeIds && excludeIds.length > 0 ? [...excludeIds].sort().join(' ') : '';
+    const lastExcludeKeyRef = useRef(excludeKey);
+    useEffect(() => {
+        const previous = lastExcludeKeyRef.current;
+        lastExcludeKeyRef.current = excludeKey;
+        if (previous !== '' || excludeKey === '') return;
+        if (pagesLoadedRef.current > 1) return;
+        startFromTop();
+        // startFromTop is deliberately not a dependency: this reacts to the
+        // exclusion set only.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [excludeKey]);
+
     const loadMore = useCallback(() => {
         if (!hasNextPage || isLoadingMore || isLoadingInitial || !endCursor) return;
         const generation = generationRef.current;
@@ -180,5 +225,32 @@ export function useRelatedPagination({
         });
     }, [hasNextPage, isLoadingMore, isLoadingInitial, endCursor, fetchPage]);
 
-    return { entries, isLoadingInitial, isLoadingMore, hasNextPage, loadMore };
+    /** After a failure: page 1 again if nothing is on screen, else the page
+     *  that failed. */
+    const retry = useCallback(() => {
+        if (entries.length === 0 || !endCursor) {
+            startFromTop();
+            return;
+        }
+        const generation = generationRef.current;
+        setError(false);
+        setIsLoadingMore(true);
+        void fetchPage(endCursor, generation).finally(() => {
+            if (generationRef.current === generation) setIsLoadingMore(false);
+        });
+    }, [entries.length, endCursor, startFromTop, fetchPage]);
+
+    return { entries, isLoadingInitial, isLoadingMore, hasNextPage, loadMore, error, retry };
+}
+
+/** `prev` followed by the rows of `next` whose `_id` is not already present. */
+function dedupeById(prev: ArticleSummary[], next: ArticleSummary[]): ArticleSummary[] {
+    const seen = new Set(prev.map((a) => a._id));
+    const out = prev.slice();
+    for (const a of next) {
+        if (seen.has(a._id)) continue;
+        seen.add(a._id);
+        out.push(a);
+    }
+    return out;
 }

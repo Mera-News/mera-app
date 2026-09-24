@@ -1,12 +1,15 @@
-import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import CardFeedbackSurface from '@/components/custom/cards/CardFeedbackSurface';
 import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
 import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
-import RelevanceChip from '@/components/custom/RelevanceChip';
-import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
-import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import { pendingSinceMs } from '@/components/custom/cards/pending-since';
+import ReasonNote from '@/components/custom/cards/ReasonNote';
+import FactChip from '@/components/custom/cards/FactChip';
+import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
+import { inlineAccessibilityActions } from '@/components/custom/cards/use-article-actions';
+import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
+import { feedbackSubjectFromSuggestion } from '@/components/custom/cards/feedback-subject';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -20,11 +23,11 @@ import {
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle } from '@/lib/hooks/useShareArticle';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { aiDisclosureColor, reasonBoxColors } from '@/lib/relevance-utils';
+import { reasonBoxColors } from '@/lib/relevance-utils';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useHardFilterLabel } from '@/lib/stores/hard-filter-label-store';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSavedOverride } from '@/lib/saved-state';
 
@@ -158,12 +161,51 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     onSaveToggled?.(suggestion, !saved);
   };
 
+  // D3: the shared ••• menu. Its hooks run unconditionally; the button and
+  // the sheet render only where the card has an action row at all.
+  const menuSubject = useMemo(() => feedbackSubjectFromSuggestion(suggestion, 'for_you'), [suggestion]);
+  const menuVisit = useMemo(() => visitFromSuggestion(suggestion), [suggestion]);
   const handleShare = useShareArticle({
     url: suggestion.article_url,
     titleEnglish: suggestion.title_en,
     titleOriginal: suggestion.title_original,
     sourceLanguage: suggestion.language_code,
   });
+  // The action row's own buttons, as VoiceOver custom actions on the card: the
+  // card root is one accessibility element, which hides the row inside it.
+  const inlineActions = onVerdict
+    ? inlineAccessibilityActions(t, {
+        saved,
+        onLike: () => onVerdict(suggestion, 'like'),
+        onDislike: () => onVerdict(suggestion, 'dislike'),
+        onToggleSave: handleToggleSave,
+        onShare: suggestion.article_url ? () => void handleShare() : undefined,
+      })
+    : undefined;
+  const menu = useArticleMenu({
+    surface: 'card',
+    subject: menuSubject,
+    articleUrl: suggestion.article_url,
+    languageCode: suggestion.language_code,
+    visit: menuVisit,
+    // A check started from a card is answered on the detail screen, directly
+    // under the action row there, so the card opens it after asking.
+    onCheckFacts: () => {
+      // Required at call time: the fact-check client pulls in Apollo and the
+      // database, and this card is the Feed's row component.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { requestArticleFactCheck } = require('@/lib/fact-check/request-article-fact-check') as typeof import('@/lib/fact-check/request-article-fact-check');
+      const asked = requestArticleFactCheck({
+        articleId: suggestion.articleId,
+        title: suggestion.title_en ?? suggestion.title_original ?? '',
+        suggestion,
+      });
+      if (asked) onPress(suggestion);
+      return asked;
+    },
+    inlineActions,
+  });
+
 
   const status = suggestion.status;
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
@@ -172,10 +214,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const reason = relevanceReady ? suggestion.reason ?? '' : '';
   const reasonLoading = status === ArticleSuggestionStatus.ReasonPending && !reason;
 
-  // Fact chips only render on a complete, reason-less suggestion — mirror that
-  // exact gate here so facts are only queried when the chips can appear. The
-  // module-level LRU cache lets cards sharing a topic set skip the query (A5).
-  const canRenderFactChips = reasonReady && !reason;
+  // Facts are queried only where a chip can appear: the reason-less chip list,
+  // and the ONE fact chip under a complete note (A2). The module-level LRU
+  // cache lets cards sharing a topic set skip the query (A5).
+  const canRenderFactChips = reasonReady;
   const topicIdsKey = (suggestion.userTopicIds ?? []).join(' ');
   useEffect(() => {
     const topicIds = suggestion.userTopicIds ?? [];
@@ -253,55 +295,15 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   ) : null;
 
   const reasonBoxEl = relevanceReady && (reason || reasonLoading) ? (
-    <Box
-      className="rounded-lg p-3"
-      style={{ backgroundColor: reasonBoxColors.backgroundColor }}
-    >
-      {/* Chip + reason are one row; the Art. 50 disclosure sits BELOW that row,
-          owning the box's bottom-left corner. It used to live in the left column
-          directly under the chip, which read as a caption on the chip rather
-          than on the reason text it actually discloses.
-
-          Why not `justify-between` on the old left column: that is a visual
-          no-op whenever the left column is the taller one (chip + caption ≈ 42px
-          vs a 1–2 line reason), which is the common case — the label would only
-          reach the bottom edge on long reasons. This structure holds at every
-          reason length.
-
-          The Mera glyph that briefly lived here moved back to the action row
-          (CardActionBar owns `card-action-mera`), which is now the sole Ask-Mera
-          affordance. Reason text stays right-aligned and non-italic.
-
-          `items-center` keeps the chip vertically centred against a multi-line
-          reason, as before. The old `maxWidth: 150` on the left column is gone
-          with the caption that needed it — the chip hugs its own content, so the
-          reason column is now ~90px wider and wraps later. */}
-      <HStack className="items-center">
-        <RelevanceChip relevance={relevance} />
-        {reason ? (
-          <Box className="ml-3 flex-1 items-end">
-            <TranslatableDynamic
-              text={reason}
-              size="sm"
-              bold
-              className="text-right"
-              style={{ color: reasonBoxColors.textColor }}
-            />
-          </Box>
-        ) : (
-          <Box className="ml-3 flex-1 items-end">
-            <StreamingIndicator compact color={reasonBoxColors.textColor} />
-          </Box>
-        )}
-      </HStack>
-      {/* Still gated on `reason`: the disclosure's whole contract is that it
-          renders when there IS AI-generated text to disclose (see the
-          component's docblock), so it must not appear next to the streaming
-          placeholder. */}
-      {reason ? (
-        <AiDisclosureCaption color={aiDisclosureColor} align="left" className="mt-2" />
-      ) : null}
-    </Box>
+    <ReasonNote
+      relevance={relevance}
+      reason={reason}
+      pendingSinceMs={pendingSinceMs(suggestion)}
+      testID="card-reason"
+      // Only on the Feed's cards (the same `onVerdict` discriminator as the
+      // action row), not in the Saved list.
+      below={reason && onVerdict ? <FactChip fact={facts[0]} testID="card-fact-chip" /> : undefined}
+    />
   ) : null;
 
   const metaAccessory = __DEV__ && relevanceReady ? (
@@ -336,6 +338,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       onAskMera={() => onAskMera?.(suggestion)}
       onToggleSave={handleToggleSave}
       onShare={suggestion.article_url ? () => void handleShare() : undefined}
+      onOverflow={menu.open}
       horizontalPadding={0}
     />
   ) : undefined;
@@ -356,8 +359,11 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     ) : undefined;
 
   return (
+    <>
     <ArticleCardBase
       testID={`card-${suggestion._id}`}
+      accessibilityActions={onVerdict ? menu.accessibilityActions : undefined}
+      onAccessibilityAction={onVerdict ? menu.onAccessibilityAction : undefined}
       imageUrl={suggestion.image_url}
       titleEnglish={suggestion.title_en}
       titleOriginal={suggestion.title_original ?? undefined}
@@ -382,6 +388,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       {factChipsEl}
       {reasonBoxEl}
     </ArticleCardBase>
+    {onVerdict ? menu.element : null}
+    </>
   );
 };
 

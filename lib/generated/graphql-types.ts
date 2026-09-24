@@ -511,6 +511,8 @@ export type Place = {
   city: Scalars['String']['output'];
   countryCode: Scalars['String']['output'];
   displayName: Scalars['String']['output'];
+  latitude?: Maybe<Scalars['Float']['output']>;
+  longitude?: Maybe<Scalars['Float']['output']>;
   normalized: Scalars['String']['output'];
   population?: Maybe<Scalars['Int']['output']>;
   region?: Maybe<Scalars['String']['output']>;
@@ -608,6 +610,8 @@ export type Query = {
   newsClusters: NewsClustersResponse;
   newsClustersForTopicText: NewsClustersResponse;
   newsPublishers: NewsPublishersResponse;
+  /** Exact lookup of the one best place for a city name plus an ISO alpha-2 country code, highest population first. Matching is case-insensitive and diacritic-insensitive, so both "Munchen" and its accented spelling resolve; pass the city exactly as it was displayed. Returns null when nothing matches or either argument is blank, and null means ask the user to confirm the place, never guess a coordinate. */
+  placeCoordinates?: Maybe<Place>;
   /** Typeahead place search (anchored prefix on the lowercase key, population desc). Returns [] for queries under 2 chars; limit capped at 15. */
   placeSearch: Array<Place>;
   /** @deprecated Use newsPublishers and publicationSourcesForNewsPublisher queries instead */
@@ -627,6 +631,7 @@ export type Query = {
   unblockRequestStatus?: Maybe<UnblockRequest>;
   userBilling: UserBillingInfo;
   userPersonaByUserId?: Maybe<UserPersona>;
+  weatherAuthToken: WeatherAuthToken;
 };
 
 
@@ -733,6 +738,12 @@ export type QueryNewsPublishersArgs = {
 };
 
 
+export type QueryPlaceCoordinatesArgs = {
+  city: Scalars['String']['input'];
+  countryCode: Scalars['String']['input'];
+};
+
+
 export type QueryPlaceSearchArgs = {
   limit?: Scalars['Int']['input'];
   query: Scalars['String']['input'];
@@ -753,6 +764,11 @@ export type QueryPublicationSourcesForNewsPublisherArgs = {
 };
 
 
+export type QueryRecentArticleCountArgs = {
+  since?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+
 export type QueryRelatedArticlesArgs = {
   articleId: Scalars['ID']['input'];
   stableClusterId?: InputMaybe<Scalars['String']['input']>;
@@ -763,8 +779,10 @@ export type QueryRelatedArticlesPageArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   articleId: Scalars['ID']['input'];
   context?: InputMaybe<RelatedArticlesContextInput>;
+  countries?: InputMaybe<Array<Scalars['String']['input']>>;
   excludeIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  languages?: InputMaybe<Array<Scalars['String']['input']>>;
   sortMode?: InputMaybe<RelatedSortMode>;
   stableClusterId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -808,6 +826,13 @@ export type QueryUserPersonaByUserIdArgs = {
   userId: Scalars['ID']['input'];
 };
 
+/** Country and language counts over the related set. Each dimension is counted with the filter of the other dimension applied. */
+export type RelatedArticleFacets = {
+  __typename?: 'RelatedArticleFacets';
+  countries: Array<RelatedFacetCount>;
+  languages: Array<RelatedFacetCount>;
+};
+
 /** Anonymous, ephemeral reader signals used to order the RELEVANCE mode. Never persisted, never cached, never linked to a user. */
 export type RelatedArticlesContextInput = {
   /** App-UI language BASE tag (`zh`, not `zh-Hans`). */
@@ -826,9 +851,19 @@ export type RelatedArticlesContextInput = {
 export type RelatedArticlesPage = {
   __typename?: 'RelatedArticlesPage';
   articles: Array<ArticleSummary>;
+  /** Country and language chip counts over the whole related set, not just this page. */
+  facets: RelatedArticleFacets;
   pageInfo: CursorPageInfo;
   /** The `after` cursor did not resolve and this page restarts at index 0. Clients must REPLACE their list, not append. */
   restarted: Scalars['Boolean']['output'];
+};
+
+/** One chip for the related-coverage filters, with its row count. */
+export type RelatedFacetCount = {
+  __typename?: 'RelatedFacetCount';
+  /** Country as ISO alpha-3 (or GLOBAL for international sources), or a base language tag. */
+  code: Scalars['String']['output'];
+  count: Scalars['Int']['output'];
 };
 
 /** Ordering for relatedArticlesPage. RELEVANCE is the tiered country-block order; the two date modes are flat. */
@@ -972,4 +1007,12 @@ export type UserPersona = {
   processingMode: ProcessingMode;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['String']['output'];
+};
+
+export type WeatherAuthToken = {
+  __typename?: 'WeatherAuthToken';
+  /** ISO timestamp when the token expires (one hour after it was minted). Use it to decide whether to re-mint before a refresh, not to schedule a background refresh of the token on its own. */
+  expiresAt: Scalars['String']['output'];
+  /** ES256 JWT for the WeatherKit REST API. Send it as `Authorization: Bearer <token>` on the call to weatherkit.apple.com. Mint one per refresh rather than caching it across sessions; minting is a signature with no I/O and no storage on either side. */
+  token: Scalars['String']['output'];
 };

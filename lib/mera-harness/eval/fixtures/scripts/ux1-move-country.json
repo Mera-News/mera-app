@@ -1,0 +1,144 @@
+{
+  "id": "ux1-move-country",
+  "cohort": "production",
+  "note": "ux1 owner decision: a move to another country replaces the residence AND offers to update the expat status. The fake lookup also answers the forms the loop itself looks up ('Berlin, Germany'), which staging run 20260924-142008 found unscripted.",
+  "persona": {
+    "facts": [
+      {
+        "id": "o",
+        "statement": "From India",
+        "questionnaireAttribute": "background: country of origin",
+        "kind": "origin"
+      },
+      {
+        "id": "x",
+        "statement": "Expat in The Netherlands",
+        "questionnaireAttribute": "background: expat in country of residence",
+        "kind": "origin"
+      },
+      {
+        "id": "h",
+        "statement": "Lives in Amsterdam, North Holland, The Netherlands, EU",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I moved to Berlin last month",
+      "expect": {
+        "routeKind": "residence",
+        "skill": "facts/residence",
+        "tools": [
+          "load_skill",
+          "lookup_place",
+          "find_similar_facts",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "proposals": [
+          {
+            "statementMatches": [
+              "berlin"
+            ],
+            "kind": "residence",
+            "placeChain": "required",
+            "replaces": "h"
+          },
+          {
+            "statementMatches": [
+              "expat",
+              "germany"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": "x"
+          }
+        ]
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "Berlin",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Berlin",
+                  "admin1": "Berlin",
+                  "countryCode": "DE",
+                  "countryName": "Germany",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Berlin, Germany",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Berlin",
+                  "admin1": "Berlin",
+                  "countryCode": "DE",
+                  "countryName": "Germany",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Berlin, Germany, EU",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Berlin",
+                  "admin1": "Berlin",
+                  "countryCode": "DE",
+                  "countryName": "Germany",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Berlin, Berlin, Germany, EU",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Berlin",
+                  "admin1": "Berlin",
+                  "countryCode": "DE",
+                  "countryName": "Germany",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          }
+        ],
+        "find_similar_facts": [
+          {
+            "kind": "residence",
+            "returns": {
+              "candidates": [
+                {
+                  "factId": "h",
+                  "statement": "Lives in Amsterdam, North Holland, The Netherlands, EU",
+                  "attribute": "location: neighborhood/area, city, and country (preserve specifics)",
+                  "overlap": 1
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

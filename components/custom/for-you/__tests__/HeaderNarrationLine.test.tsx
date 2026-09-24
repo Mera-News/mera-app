@@ -312,3 +312,33 @@ describe('HeaderNarrationLine — accessibility and clamping', () => {
     );
   });
 });
+
+describe('HeaderNarrationLine — the Dashboard row', () => {
+  beforeEach(() => {
+    mockReduceMotion = false;
+    seedNudgeAt(0);
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  it('is one line in the row layout, and white', () => {
+    render(<HeaderNarrationLine stage="fetching" onDevice={false} layout="row" />);
+    const node = screen.getByTestId('header-narration-line');
+    expect(node.props.numberOfLines).toBe(1);
+    expect(node.props.style).toEqual(expect.objectContaining({ color: '#FFFFFF' }));
+  });
+
+  it('lets a caller lift the clamp for a large text size', () => {
+    render(<HeaderNarrationLine stage="fetching" onDevice={false} layout="row" maxLines={3} />);
+    expect(screen.getByTestId('header-narration-line').props.numberOfLines).toBe(3);
+  });
+
+  it('fades in 150ms each way, so the unreadable trough is short', () => {
+    const { NARRATION_FADE_MS: fade } = require('../header-narration');
+    expect(fade).toBe(150);
+  });
+});

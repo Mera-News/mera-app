@@ -20,6 +20,11 @@ jest.mock('react-native', () => {
 });
 
 // ── UI primitives → plain RN views ──
+const mockRouterPush = jest.fn();
+jest.mock('expo-router', () => ({ router: { push: (...a: any[]) => mockRouterPush(...a) } }));
+jest.mock('react-native-safe-area-context', () => ({
+    useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
+}));
 jest.mock('react-native-css-interop/jsx-runtime', () => {
   const R = require('react/jsx-runtime');
   return { jsx: R.jsx, jsxs: R.jsxs, Fragment: R.Fragment };
@@ -79,6 +84,8 @@ jest.mock('lucide-react-native', () => {
     Bookmark: (p: any) => <View testID="icon-bookmark" fill={p.fill} color={p.color} />,
     Crosshair: (p: any) => <View testID="icon-crosshair" fill={p.fill} color={p.color} />,
     Share2: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+    Share: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+    Ellipsis: (p: any) => <View testID="icon-more" color={p.color} />,
   };
 });
 
@@ -215,7 +222,9 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 // eslint-disable-next-line import/first
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+// eslint-disable-next-line import/first
+import { StyleSheet } from 'react-native';
 // eslint-disable-next-line import/first
 import React from 'react';
 // eslint-disable-next-line import/first
@@ -235,11 +244,9 @@ import ArticleSuggestionCompactCard from '../ArticleSuggestionCompactCard';
 // eslint-disable-next-line import/first
 import { ArticleImagePlaceholder } from '../ArticleImagePlaceholder';
 // eslint-disable-next-line import/first
-import { COMPACT_HEADLINE_LINES, COMPACT_IMAGE_SIZE } from '../ArticleCompactCardBase';
+import { COMPACT_HEADLINE_LINES, COMPACT_IMAGE_SIZE, COMPACT_IMAGE_TILE } from '../ArticleCompactCardBase';
 // eslint-disable-next-line import/first
 import ArticleActionsRow from '../ArticleActionsRow';
-// eslint-disable-next-line import/first
-import CompactActionsSheet from '../CompactActionsSheet';
 // eslint-disable-next-line import/first
 import type { FeedbackSubject } from '../feedback-subject';
 
@@ -314,6 +321,32 @@ describe('ArticleSuggestionCard', () => {
     );
     expect(getByText('Because you follow Berlin')).toBeTruthy();
     expect(getByTestId('relevance-chip')).toBeTruthy();
+  });
+
+  // F24: the note gets the width. It sits on its own row under the chip,
+  // left-aligned, never in a ragged right-aligned column beside it.
+  it('puts the note on its own full-width row under the chip, left-aligned', () => {
+    const { getByText, getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
+    );
+    const noteRow = getByTestId('card-reason-text');
+    const chip = getByTestId('relevance-chip');
+    // The chip is not inside the note's row, and the note is not inside the
+    // chip's row.
+    let n: any = chip;
+    while (n) {
+      expect(n).not.toBe(noteRow);
+      n = n.parent;
+    }
+    let m: any = getByText('Because you follow Berlin');
+    let inNoteRow = false;
+    while (m) {
+      if (m === noteRow) inNoteRow = true;
+      expect(m).not.toBe(chip.parent);
+      m = m.parent;
+    }
+    expect(inNoteRow).toBe(true);
+    expect(String(getByText('Because you follow Berlin').props.className ?? '')).not.toContain('text-right');
   });
 
   it('shows no reason box while unscored', () => {
@@ -438,6 +471,39 @@ describe('ArticleSuggestionCard', () => {
     expect(opacityOf(getByText('A headline'))).toBe(0.75);
   });
 
+  // Pressed feedback is OPT-IN on card bases (not a Pressable default) and
+  // multiplies with the dimmed treatment rather than replacing it.
+  // The pressed state is React state applied as a STATIC style (PressableCard):
+  // a function `style` on a Pressable is dropped on device here.
+  it('reacts to a press: 0.7 while held, full opacity at rest', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
+    );
+    const card = () => getByTestId('card-sugg-1');
+    expect(typeof card().props.style).not.toBe('function');
+    expect(StyleSheet.flatten(card().props.style)?.opacity ?? 1).toBe(1);
+    act(() => {
+      fireEvent(card(), 'pressIn');
+    });
+    expect(StyleSheet.flatten(card().props.style).opacity).toBeCloseTo(0.7);
+    act(() => {
+      fireEvent(card(), 'pressOut');
+    });
+    expect(StyleSheet.flatten(card().props.style)?.opacity ?? 1).toBe(1);
+  });
+
+  it('a dimmed card still reacts to a press (0.75 x 0.7)', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} dimmed />,
+    );
+    const card = () => getByTestId('card-sugg-1');
+    expect(StyleSheet.flatten(card().props.style).opacity).toBeCloseTo(0.75);
+    act(() => {
+      fireEvent(card(), 'pressIn');
+    });
+    expect(StyleSheet.flatten(card().props.style).opacity).toBeCloseTo(0.525);
+  });
+
   it('does not render the read eye icon by default', () => {
     const { queryByTestId } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
@@ -489,11 +555,57 @@ describe('ArticleStandaloneCompactCard', () => {
     expect(queryByText('Die Zeit')).toBeTruthy();
   });
 
-  it('never mounts a "…" actions button (the compact actions menu was removed)', () => {
-    const { queryByLabelText } = render(
+  it('draws the compact action row: like, not for me, save, share, then ••• last', () => {
+    const { getByTestId, queryByTestId, UNSAFE_root } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
-    expect(queryByLabelText('More actions')).toBeNull();
+    const order = UNSAFE_root.findAll(
+      (n: any) => typeof n.props?.testID === 'string' && n.props.testID.startsWith('card-action-') && typeof n.type !== 'string',
+    ).map((n: any) => n.props.testID);
+    const unique = order.filter((id: string, i: number) => order.indexOf(id) === i);
+    expect(unique).toEqual([
+      'card-action-like',
+      'card-action-dislike',
+      'card-action-save',
+      'card-action-share',
+      'card-action-more',
+    ]);
+    // Ask Mera and Follow live in the menu on a row, not inline.
+    expect(queryByTestId('card-action-mera')).toBeNull();
+    expect(queryByTestId('card-action-track')).toBeNull();
+    expect(getByTestId('card-action-more')).toBeTruthy();
+  });
+
+  it('opens the ••• menu from the button and from a long-press', () => {
+    const { getByTestId, queryByTestId, getByText } = render(
+      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
+    );
+    expect(queryByTestId('article-menu')).toBeNull();
+    fireEvent.press(getByTestId('card-action-more'));
+    expect(getByTestId('article-menu')).toBeTruthy();
+    fireEvent.press(getByTestId('article-menu-cancel'));
+    expect(queryByTestId('article-menu')).toBeNull();
+    fireEvent(getByText('Standalone headline'), 'longPress');
+    expect(getByTestId('article-menu')).toBeTruthy();
+  });
+
+  it('keeps a surface-supplied long-press instead of the menu', () => {
+    const onLongPress = jest.fn();
+    const { getByText, queryByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} onLongPress={onLongPress} />,
+    );
+    fireEvent(getByText('Standalone headline'), 'longPress');
+    expect(onLongPress).toHaveBeenCalledTimes(1);
+    expect(queryByTestId('article-menu')).toBeNull();
+  });
+
+  it('lists the inline buttons first among the VoiceOver custom actions', () => {
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard testID="row" article={makeArticle()} onPress={jest.fn()} />,
+    );
+    const names = (getByTestId('row').props.accessibilityActions ?? []).map((a: any) => a.name);
+    expect(names.slice(0, 4)).toEqual(['inline-like', 'inline-dislike', 'inline-save', 'inline-share']);
+    expect(names).toContain('ask');
   });
 });
 
@@ -571,6 +683,18 @@ describe('no image ⇒ no image region (either card base)', () => {
     expect(queryByTestId('article-image')).toBeNull();
     expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
     expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
+  });
+});
+
+describe('compact card image loading tile (F39)', () => {
+  it('puts a tile behind the square so the image never pops into a blank hole', () => {
+    const { UNSAFE_root } = render(
+      <ArticleStandaloneCompactCard article={makeArticle({ image_url: 'https://x/i.jpg' } as any)} onPress={jest.fn()} />,
+    );
+    const square = UNSAFE_root.findAll(
+      (n: any) => typeof n.type === 'string' && n.props?.style?.width === COMPACT_IMAGE_SIZE,
+    )[0];
+    expect(square.props.style.backgroundColor).toBe(COMPACT_IMAGE_TILE);
   });
 });
 
@@ -733,44 +857,62 @@ describe('ArticleActionsRow', () => {
   });
 });
 
-describe('CompactActionsSheet', () => {
-  const subject: FeedbackSubject = {
-    origin: 'article',
-    surface: 'triage',
-    articleId: 'art-9',
-    title: 'Standalone headline',
-  };
-
-  it('lists all actions (chat/like/dislike/save/share) when open with a shareable url', () => {
-    const { getByText } = render(
-      <CompactActionsSheet
-        visible
-        onClose={jest.fn()}
-        subject={subject}
-        article={makeArticle()}
-        share={{ url: 'https://example.com/s', titleEnglish: 'Standalone headline' }}
+describe('ArticleSuggestionCard fact chip (A2)', () => {
+  it('names the matched fact under the note on a Feed card, and opens its story list', async () => {
+    const { getFactsForTopicTexts } = require('@/lib/database/services/fact-service');
+    getFactsForTopicTexts.mockResolvedValueOnce([{ id: 'f9', statement: 'I work in fintech' }]);
+    const onPress = jest.fn();
+    const { findByTestId } = render(
+      <ArticleSuggestionCard
+        suggestion={makeSuggestion({ _id: 'sugg-chip', userTopicIds: ['fintech-a2'] } as any)}
+        onPress={onPress}
+        onVerdict={jest.fn()}
       />,
     );
-    expect(getByText('Mera')).toBeTruthy();
-    expect(getByText('articleFeedback.likeLabel')).toBeTruthy();
-    expect(getByText('articleFeedback.dislikeLabel')).toBeTruthy();
-    expect(getByText('savedSuggestions.saveAction')).toBeTruthy();
-    expect(getByText('articleDetail.share')).toBeTruthy();
-  });
-
-  it('renders nothing when not visible', () => {
-    const { queryByText } = render(
-      <CompactActionsSheet visible={false} onClose={jest.fn()} subject={subject} article={makeArticle()} />,
-    );
-    expect(queryByText('articleFeedback.likeLabel')).toBeNull();
+    const chip = await findByTestId('card-fact-chip');
+    fireEvent.press(chip);
+    expect(mockRouterPush).toHaveBeenCalledWith({
+      pathname: '/logged-in/fact-feed',
+      params: { factId: 'f9', statement: 'I work in fintech' },
+    });
+    // The chip is its own button: the tap never opens the card.
+    expect(onPress).not.toHaveBeenCalled();
   });
 });
 
-// A compact row must never reach the publisher URL on its own: the detail
-// screen is the only place the translate affordance lives, so a direct open
-// leaves a reader whose language differs from the article's with no way to
-// translate. The row's ONLY job is to hand the tap to its `onPress` (which
-// navigates to a detail screen).
+describe('ArticleSuggestionCard VoiceOver actions', () => {
+  it('reaches the action row through custom actions, inline buttons first', () => {
+    const onVerdict = jest.fn();
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={onVerdict} />,
+    );
+    const root = getByTestId('card-sugg-1');
+    const names = root.props.accessibilityActions.map((x: any) => x.name);
+    expect(names.slice(0, 2)).toEqual(['inline-like', 'inline-dislike']);
+    act(() => {
+      root.props.onAccessibilityAction({ nativeEvent: { actionName: 'inline-dislike' } });
+    });
+    expect(onVerdict).toHaveBeenCalledWith(expect.objectContaining({ _id: 'sugg-1' }), 'dislike');
+  });
+});
+
+describe('ArticleSuggestionCompactCard action row', () => {
+  it('records a like from the inline row with the suggestion subject', async () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={jest.fn()} surface="for_you" />,
+    );
+    fireEvent.press(getByTestId('card-action-like'));
+    await waitFor(() =>
+      expect(mockRecordArticleFeedback).toHaveBeenCalledWith(
+        expect.objectContaining({ articleId: 'art-1', suggestionId: 'sugg-1', sentiment: 'like', origin: 'suggestion', surface: 'for_you' }),
+      ),
+    );
+  });
+});
+
+// A TAP on a compact row never reaches the publisher URL: it hands the tap to
+// `onPress`, which navigates to a detail screen. Opening the publisher from a
+// row goes through the ••• menu, which offers the translate route beside it.
 describe('ArticleStandaloneCompactCard — never opens the article URL directly', () => {
   it('renders no direct-open button', () => {
     const { queryByTestId } = render(

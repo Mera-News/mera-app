@@ -51,7 +51,7 @@
       "retryLogin": "以電子郵件重新登入",
       "useDifferentUser": "使用其他帳號登入",
       "retryFailed": "無法連線至伺服器。請檢查網路後再試。",
-      "switchBody": "切換使用者將永久刪除此裝置上該使用者的所有資料，此操作無法復原。",
+      "switchBody": "切換使用者將永久刪除此裝置上該使用者的所有資料。此操作無法復原。",
       "switchConfirm": "是的，清除資料並切換使用者",
       "switchCancel": "取消"
     },
@@ -228,7 +228,12 @@
     "statsPublishedPending_one": "過去24小時內發佈了{{formatted}}篇文章。",
     "statsPublished_one": "過去24小時內發佈了{{formatted}}篇文章,",
     "statsRead_one": "且您已閱讀{{formatted}}篇。",
-    "statsRelevant_one": "{{formatted}}篇與您相關,"
+    "statsRelevant_one": "{{formatted}}篇與您相關,",
+    "reasonUnavailable": "Mera 無法為這篇文章撰寫說明。",
+    "loadingA11y": "正在載入你的動態",
+    "newStoriesPill": "新文章",
+    "translatingCaption": "正在翻譯…",
+    "updatedJustNow": "剛剛更新"
   },
   "relevance": {
     "emergency": "緊急",
@@ -258,7 +263,9 @@
     "readOn": "在{{publication}}閱讀",
     "readOnGoogleTranslate": "在 Google 翻譯中閱讀",
     "linkUnavailable": "此連結無法安全開啟，因此在此無法使用。",
-    "relatedFromSubscriptions": "來自您的訂閱"
+    "relatedFromSubscriptions": "來自您的訂閱",
+    "relatedLoadFailed": "無法載入相關文章。",
+    "translateBlockedNote": "有些網站會封鎖 Google 翻譯。如果頁面無法載入，請在原網站開啟。"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",
@@ -347,7 +354,10 @@
     "timeNudge": "選擇您可以閱讀、思考和計畫的時間——一天一次或兩次就足夠了。",
     "maxHoursReachedDescription": "最多可選擇 {{count}} 個時間",
     "maxHoursReachedTitle": "已達上限",
-    "selectedCount": "已選擇：{{selected}}/{{max}}"
+    "selectedCount": "已選擇：{{selected}}/{{max}}",
+    "savedInline": "已儲存",
+    "pickAtLeastOneHour": "至少選擇一個時間",
+    "selectedLabel": "已選"
   },
   "language": {
     "title": "語言",
@@ -566,7 +576,7 @@
     "signingOut": "登出中...",
     "signOut": "登出",
     "deleteAccountConfirm": "您確定要永久刪除帳號嗎？",
-    "deleteAccountWarning": "⚠️ 此操作無法復原，將移除您的所有資料。",
+    "deleteAccountWarning": "⚠️ 您的所有資料都將被刪除。此操作無法復原。",
     "continue": "繼續",
     "finalConfirmation": "最終確認",
     "finalConfirmationBody": "這將永久刪除您的所有資料。",
@@ -588,7 +598,7 @@
     "faq": "常見問題",
     "reportBug": "回報問題",
     "deleteAccountConfirmGrace": "你的帳號將排定刪除，有30天的寬限期。在這30天內重新登入，刪除將自動取消。",
-    "deleteAccountWarningGrace": "⚠️ 30天後，此操作無法復原，所有資料將被永久刪除。",
+    "deleteAccountWarningGrace": "⚠️ 30 天後，您的所有資料將被永久刪除。此操作無法復原。",
     "finalConfirmationBodyGrace": "這將在30天後排定永久刪除你的帳號。",
     "accountDeletionScheduledTitle": "刪除已排定",
     "accountDeletionScheduledDescription": "你的帳號將在30天內被永久刪除。在此之前重新登入以取消刪除。"
@@ -615,7 +625,7 @@
     "topicGenQueuedDescription": "主題將很快顯示。",
     "deleteFactTitle": "刪除事實",
     "deleteFactConfirm": "您確定要刪除此事實嗎？",
-    "deleteFactWarning": "這也將移除從此事實產生的所有追蹤主題。",
+    "deleteFactWarning": "它的主題和找到的新聞也會一併刪除，Mera 將不再為此尋找新聞。",
     "deletingFact": "正在刪除...",
     "yesDelete": "是的，刪除",
     "refreshSuggestions": "重新整理建議",
@@ -654,7 +664,9 @@
     "promoInfoTitleEmoji": "🎉 上市優惠 🎊",
     "resetsOn": "重設日",
     "retryTopicGeneration": "重試",
-    "topicGenFailedGeneric": "無法為此產生主題。"
+    "topicGenFailedGeneric": "無法為此產生主題。",
+    "articleCountPending": "統計中",
+    "articleCountNone": "尚無文章"
   },
   "errors": {
     "somethingWentWrong": "發生錯誤",
@@ -765,7 +777,9 @@
       "error": "無法送出你的申請，請再試一次。"
     },
     "topicGenFailed": "無法為此產生主題。",
-    "topicGenRetry": "重試"
+    "topicGenRetry": "重試",
+    "aiUsageNoticeGeneral": "Mera 可能會出錯，重要內容請自行查證。",
+    "trackChooseHint": "選擇要追蹤的內容"
   },
   "articleFeedback": {
     "thumbsUp": "喜歡",
@@ -824,13 +838,14 @@
     "tooltipA11y": "關於閱讀歷史",
     "tooltipIntro": "Mera 為您追蹤閱讀習慣——且資料僅保存在您的裝置上。",
     "tooltipLink": "在這裡查看您的完整閱讀歷史。",
-    "screenIntro": "Mera 追蹤您的閱讀習慣——僅在您的裝置上保留 30 天。這讓您更清楚地了解哪些媒體對您最重要，從而考慮支持那些直接為您帶來價值的媒體。",
+    "screenIntro": "過去 30 天裡你從 Mera 開啟過網站的媒體。此清單只儲存在這台裝置上。",
     "visitedListTitle": "您造訪過的媒體",
     "last30Days": "過去 30 天",
     "lastRead": "上次閱讀 {{time}}",
-    "noArticlesYet": "您尚未閱讀任何文章。",
+    "noArticlesYet": "你從 Mera 開啟過的媒體會顯示在這裡。在 Mera 內閱讀的內容不會列出。",
     "articlesRead": "您閱讀過的文章",
-    "noArticlesLast30Days": "過去 30 天內沒有來自此媒體的文章。"
+    "noArticlesLast30Days": "過去 30 天內沒有來自此媒體的文章。",
+    "emptyTitle": "還沒有媒體"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "需要更新",
@@ -924,7 +939,8 @@
     "title": "已儲存",
     "removedToastTitle": "已移除",
     "saveAction": "儲存",
-    "removeAction": "從已儲存中移除"
+    "removeAction": "從已儲存中移除",
+    "emptyTitle": "還沒有儲存任何內容"
   },
   "subscription": {
     "activating": "正在啟用你的訂閱…",
@@ -935,7 +951,7 @@
     "detailsSection": "訂閱詳情",
     "expiresOn": "到期日",
     "lifetime": "終身",
-    "managePlan": "管理訂閱",
+    "managePlan": "管理方案",
     "periodLabel": "期間",
     "periodNormal": "標準",
     "periodPromotional": "促銷",
@@ -964,7 +980,6 @@
     "activatedBody": "您的個人化動態、儀表板、已追蹤的報導和聊天已準備就緒。",
     "activatedTitle": "{{plan}} 已啟用",
     "lapsedFreeNote": "Mera News 免費版只要您想使用就能一直使用。訂閱方案是讓 Mera 重新為您處理新聞的方式。",
-    "manageBadge": "管理",
     "turnMeraBackOn": "重新開啟 Mera",
     "para1": "Mera News可以免費使用。但那樣的話，就會有人代你付費，可能是購買你的注意力的廣告商、你的資料，或是一份友善的文章。很多看起來像新聞的東西正是這樣。",
     "para2": "廣告資助的媒體沒有上限。不限制它從你身上汲取多少，也不限制稍後用途。我們不想成為那樣的公司，所以這裡的協議很簡單。你保留你的資料。軟體完成工作。你付款。",
@@ -1037,9 +1052,16 @@
     "headlineDenominator_other": "Mera 閱讀了 {{count}} 則頭條 · {{shown}} 值得您關注。",
     "headlineDenominatorNone_one": "Mera 閱讀了 {{count}} 則頭條 · 今天沒有相關的。",
     "headlineDenominatorNone_other": "Mera 閱讀了 {{count}} 則頭條 · 今天沒有相關的。",
-    "subTabHistory": "歷史",
+    "subTabHistory": "造訪過",
     "nextFactPrefix": "接下來",
-    "subTabAnalytics": "分析"
+    "subTabAnalytics": "分析",
+    "emptySection": {
+      "awaiting": "正在尋找相關新聞，下次重新整理後會顯示。",
+      "none": "暫時還沒有與此足夠貼近、可以顯示的新聞。"
+    },
+    "newInterest": "新興趣",
+    "nextSection": "下一個：{{title}}",
+    "backToDashboard": "返回概覽"
   },
   "feedStatus": {
     "title": "動態狀態",
@@ -1058,7 +1080,8 @@
     "published": "已發佈",
     "modeProcessing": "正在更新你的資訊流",
     "modeError": "資訊流發生問題",
-    "modeLimited": "已達每日文章上限"
+    "modeLimited": "已達每日文章上限",
+    "syncDoneA11y": "你的動態已是最新。"
   },
   "trackedStories": {
     "emptyTitle": "還沒有追蹤任何報導",
@@ -1073,7 +1096,6 @@
     "untrackConfirmTitle": "確定要取消追蹤嗎？",
     "untrackConfirmBody": "你將不再看到這則報導的最新進展。",
     "untrackConfirmCta": "停止追蹤",
-    "emptyHint": "從資訊流中打開報導至完整檢視，然後點擊其下方按鈕列中的追蹤圖示。",
     "emptyCta": "前往資訊流",
     "trackChatSeed": "我想追蹤這則報導。",
     "trackProposalTitle": "追蹤這則報導？",
@@ -1089,11 +1111,13 @@
     "followFabLabel": "追蹤新報導",
     "followChatSeed": "我想追蹤一則報導。",
     "followChatIntro": "告訴我你想追蹤的內容，我會為你設定。",
-    "emptyHintFollow": "點擊追蹤按鈕並告訴Mera你想關注的內容。",
     "emptyCtaFollow": "追蹤報導",
     "removeMemberAction": "不屬於此報導",
     "removeMemberConfirmTitle": "移除這篇文章？",
-    "removeMemberConfirmBody": "這篇文章將從報導的時間軸中移除。Mera 會繼續追蹤報導本身。"
+    "removeMemberConfirmBody": "這篇文章將從報導的時間軸中移除。Mera 會繼續追蹤報導本身。",
+    "timelineLoadFailed": "無法載入此報導。下拉即可重試。",
+    "deleteFailed": "無法取消追蹤此報導。請再試一次。",
+    "removeFailed": "無法將此文章從報導中移除。請再試一次。"
   },
   "whatsNew": {
     "title": "更新內容",
@@ -1132,7 +1156,14 @@
     "dailyLimitBody": "你已達到今日文章上限，即將重設。"
   },
   "settings": {
-    "sources": "來源"
+    "sources": "來源",
+    "groupGeneral": "一般",
+    "groupPrivacy": "隱私與資料",
+    "groupHelp": "說明",
+    "groupAccount": "帳號",
+    "languageRow": "語言",
+    "backupRow": "備份與還原",
+    "backupRowNever": "尚未備份"
   },
   "personaAudit": {
     "entryRow": "人物誌變更紀錄",
@@ -1298,7 +1329,7 @@
     "notificationBody_one": "Mera 為您的檔案發現了 {{count}} 項整理項目。",
     "notificationBody_other": "Mera 為你的資料發現了 {{count}} 項可整理內容。",
     "reviewChip": "查看",
-    "title": "人物誌健康度",
+    "title": "整理個人檔案",
     "subtitle": "建議的整理項目",
     "intro": "Mera 發現了一些值得整理的內容。接受你認同的建議即可。",
     "empty": "你的人物誌看起來很健康",
@@ -1307,15 +1338,16 @@
     "reversibleNote": "可從變更紀錄中復原",
     "effectDuplicate": "移除重複項目，保留較強的那一個。",
     "effectTooBroad": "降低此興趣的權重，使其帶來的偏題內容更少。",
-    "effectStaleTopic": "停用這個不活躍的主題。你可以從變更紀錄中復原它。",
+    "effectStaleTopic": "停用這個不活躍的主題。",
     "effectStaleFact": "移除此事實——它的所有主題都已不再活躍。",
     "appliedTitle": "整理已套用",
     "appliedBody": "你的資料已完成整理。查看變更紀錄以了解詳情。",
     "applyFailedTitle": "無法套用整理",
     "applyFailedBody": "請稍後再試。",
-    "profileRow_one": "檔案健康度 · {{count}} 項建議",
-    "profileRow_other": "人物誌健康度 · {{count}} 項建議",
-    "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。舊的可以從更改日誌中復原。"
+    "profileRow_one": "整理個人檔案 · {{count}} 項建議",
+    "profileRow_other": "整理個人檔案 · {{count}} 項建議",
+    "effectIncoherentTopics": "將此興趣的這些主題替換為更好的。",
+    "effectLocationConflict": "保留較新的地點，移除較舊的地點。"
   },
   "locations": {
     "title": "你的地點",
@@ -1452,7 +1484,7 @@
     "visitedSubtitle": "您最近打開的媒體",
     "activity": "活動",
     "activitySubtitle": "你的人物誌變更歷史",
-    "personaHealth": "人物誌健康度",
+    "personaHealth": "整理個人檔案",
     "healthPending_one": "{{count}} 項整理建議",
     "healthPending_other": "{{count}} 項整理建議",
     "healthAllHealthy": "一切正常",
@@ -1489,7 +1521,10 @@
       "remove": "移除",
       "removeConfirm": "再次點按即可移除",
       "limitReached": "每日調整上限已達 — 變更將於明天繼續。"
-    }
+    },
+    "meraInviteReturning": "告訴我一些新的興趣，我會把它加進你的動態。",
+    "editFacts": "編輯",
+    "planUsage": "今日已分析 {{used}}/{{limit}}"
   },
   "facts": {
     "screenTitle": "你的事實",
@@ -1499,7 +1534,8 @@
     "lessInfluence": "減少影響",
     "declinedTopicsTitle": "您移除的主題",
     "allowAgain": "再次允許",
-    "topicRemovalConsequence": "移除的主題不會再被推薦，除非您在「您移除的主題」中再次允許。"
+    "topicRemovalConsequence": "移除的主題不會再被推薦，除非您在「您移除的主題」中再次允許。",
+    "deleteFactA11y": "刪除 {{fact}}"
   },
   "publicationPrefs": {
     "title": "來源偏好",
@@ -1571,7 +1607,7 @@
     "staticGradientTitle": "靜態背景",
     "staticGradientDescription": "使用固定漸變代替動畫背景 — 對電池和舊設備更友善",
     "screenTitle": "顯示",
-    "screenSubtitle": "文字、視覺效果、安全性以及 Mera 在此裝置上的開啟方式",
+    "screenSubtitle": "文字、視覺效果以及 Mera 在此裝置上的開啟方式",
     "sectionText": "文字",
     "sectionVisuals": "視覺",
     "textSizeTitle": "文字大小",
@@ -1724,7 +1760,14 @@
     "checkedByRelatedNote": "這些來自關鍵字搜尋，可能與不同的故事有關。打開其中一個進行檢查。",
     "searchFoundHeading": "搜尋發現的內容",
     "searchFoundEmpty": "搜尋中沒有足夠的內容供 Mera 在此總結。",
-    "headerA11y": "{{title}}。{{status}}。{{action}}"
+    "headerA11y": "{{title}}。{{status}}。{{action}}",
+    "notify": {
+      "title": "事實查證已完成",
+      "bodyFound": "事實查核機構已就「{{title}}」發布查核。",
+      "bodyNone": "目前還沒有關於「{{title}}」的已發布事實查核。",
+      "bodyUnavailable": "Mera 未能完成對「{{title}}」的查證。",
+      "open": "開啟文章"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "優先考慮此來源",
@@ -1744,7 +1787,7 @@
     "welcomeBody": "點按「同意並繼續」即表示您接受我們的服務條款與隱私權政策。"
   },
   "tutorials": {
-    "entryRow": "了解 Mera",
+    "entryRow": "Mera 的運作方式",
     "menuTitle": "了解 Mera",
     "menuSubtitle": "此應用程式如何思考的簡短指南。從任何地方開始。",
     "sectionBasic": "從這裡開始",
@@ -1767,7 +1810,6 @@
     "askMera": "詢問Mera",
     "chatIntro": "詢問我任何有關Mera如何運作的事。我可以解釋，但無法從這裡改變任何內容。",
     "launchButton": "開始導覽",
-    "learnAboutMera": "了解 Mera 如何運作",
     "hintReveal": "點擊每一個。",
     "hintRevealSome": "至少點擊{{count}}個。",
     "hintChoose": "選擇一個。",
@@ -2380,7 +2422,10 @@
     "supportId": "支援 ID：{{id}}",
     "copySupportId": "複製支援 ID",
     "copied": "已複製",
-    "saveHint": "請保存此 ID。支援團隊可以透過它找到你的帳戶。"
+    "saveHint": "請保存此 ID。支援團隊可以透過它找到你的帳戶。",
+    "mailFailedTitle": "無法開啟郵件 App",
+    "mailFailedBody": "複製我們的支援信箱地址，再用任何郵件 App 寄信給我們。",
+    "copyAddress": "複製地址"
   },
   "emailCapture": {
     "title": "新增電子郵件",
@@ -2488,7 +2533,10 @@
     "wifiOnly": "僅限 Wi-Fi",
     "wifiOnlyOff": "已關閉。排程備份可能會使用行動數據。",
     "wifiOnlyOn": "已開啟。排程備份會等待 Wi-Fi 連線。",
-    "working": "處理中…"
+    "working": "處理中…",
+    "statusFromCloud": "上次備份 {{when}}，位於 {{provider}}",
+    "restoreOption": "{{when}} 的備份",
+    "statusFailed": "上次備份於 {{when}} 失敗"
   },
   "factChoice": {
     "titleSingle": "把這條加入你的人物設定嗎",
@@ -2503,14 +2551,19 @@
     "skipAll": "全部略過",
     "addAllA11y": "新增全部 {{count}} 則建議",
     "skipAllA11y": "略過全部 {{count}} 則建議",
-    "titleReplace": "替換已有的一則資訊？",
+    "titleReplace": "替換這則資訊？",
     "replace": "替換",
     "replacesLabel": "將替換",
     "replacesTopics_one": "以及它的 1 個主題",
     "replacesTopics_other": "以及它的 {{count}} 個主題",
     "replacesNoUndo": "原有資訊及其主題將被永久刪除，無法復原。",
     "replacesLoading": "正在確認會替換什麼",
-    "replacesUnavailable": "Mera 暫時無法顯示會刪除哪些內容。請稍後再試。"
+    "replacesUnavailable": "Mera 暫時無法顯示會刪除哪些內容。請稍後再試。",
+    "keepBoth": "兩個都保留",
+    "titleAlsoAdd": "也加入這則嗎？",
+    "pendingHint": "請選擇上方的一個選項，或直接輸入你的回答。",
+    "overlapsLabel": "與此重疊",
+    "overlapsReplaceNote": "替換會刪除它及其相關主題。"
   },
   "subscriptions": {
     "sectionTitle": "您的訂閱",
@@ -2555,7 +2608,6 @@
       "countriesLabel": "你閱讀的國家",
       "latencyLabel": "從發布到閱讀的平均時間",
       "latencyCoverage": "基於 {{total}} 篇中已知發布時間的 {{sampled}} 篇",
-      "latencyUnknown": "已知發布時間的文章還不夠，暫時算不出來",
       "openedLabel": "開啟過的文章",
       "openedPartial": "這是部分統計。Mera 只統計你在推薦卡片上的點按。",
       "topPublicationsTitle": "常讀媒體",
@@ -2563,7 +2615,6 @@
       "latencyValue_other": "{{count}} 小時",
       "reachTitle": "我的新聞來自哪裡",
       "keepTitle": "我留下的內容",
-      "paceTitle": "新聞多久傳到我這裡",
       "windowNow": "此刻",
       "savedLabel": "你儲存的文章",
       "followedLabel": "你在追蹤的報導",
@@ -2574,13 +2625,11 @@
       "paceScaleTitle": "從發布到閱讀",
       "hoursShort": "{{n}} 小時",
       "languagesLabel": "你閱讀的語言",
-      "topLanguagesTitle": "主要閱讀語言",
-      "rhythmTitle": "我閱讀的日子",
       "daysReadLabel": "你讀過內容的天數",
       "heatLegendLess": "少",
       "heatLegendMore": "多",
-      "heatNote": "顏色深淺代表你那天讀了多少篇文章。",
-      "rhythmWeekdays": "一,二,三,四,五,六,日"
+      "rhythmWeekdays": "一,二,三,四,五,六,日",
+      "habitsTitle": "我怎麼讀"
     }
   },
   "analytics": {
@@ -2603,7 +2652,7 @@
     "goneTombstone": "這則資訊已刪除，相關主題也一併移除。",
     "expandA11y": "顯示主題",
     "collapseA11y": "隱藏主題",
-    "accordionTitlePending": "我們會為這則找主題：",
+    "accordionTitlePending": "正在尋找相關主題：",
     "pendingA11y": "正在尋找主題",
     "readyA11y": "主題已就緒",
     "failedA11y": "未能找到主題"
@@ -2637,7 +2686,8 @@
     },
     "noRouteSentence": "Mera 沒能判斷這是關於什麼的。換個說法再試試。",
     "noProposalSentence": "Mera 沒有從中找到可以新增的內容。",
-    "unknownToolSentence": "Mera 這邊出了點問題。再問一次即可繼續。"
+    "unknownToolSentence": "Mera 這邊出了點問題。再問一次即可繼續。",
+    "malformedChoiceSentence": "Mera 沒能顯示選項。再問一次即可繼續。"
   },
   "skillPhrase": {
     "residence": "你居住的地方",
@@ -2772,5 +2822,59 @@
     "docTitle": "已儲存的文章",
     "docExported": "匯出於 {{date}}",
     "docReasonLabel": "Mera 選擇它的理由"
+  },
+  "tabExplainer": {
+    "openA11y": "此分頁如何運作",
+    "close": "知道了",
+    "feed": {
+      "title": "資訊流如何運作",
+      "what": "資訊流顯示 Mera 在過去兩天為你找到的每則新聞。即使很多媒體都報導了，每則新聞也只有一張卡片。",
+      "how1": "Mera 把你介紹自己的內容變成搜尋，取得相符的文章，再由 AI 逐篇閱讀，判斷它對你有多重要。",
+      "how2": "你還沒看過的新聞排在前面，越重要越前面。沒看過的新聞 12 小時後下降一級，一天後再降一級。",
+      "how3": "下次重新排序時，你看過的新聞會往下移，開啟過的排到最後。你正在閱讀位置上方的卡片不會移動。下拉即可重新排序。",
+      "privacy": "排序在這支手機上完成。你開啟了哪些新聞的紀錄，保留在這支手機上。"
+    },
+    "forYou": {
+      "title": "概覽如何運作",
+      "what": "概覽按興趣整理你的新聞。你告訴 Mera 的每件事都有一個欄目，另外還有你所在國家和全球的頭條。",
+      "how1": "每則新聞只歸入最相符的一個興趣，所以只出現一次。如果兩個興趣同樣相符，就歸先新增的那個。",
+      "how2": "你給了更高權重的興趣排在前面。新興趣在第一批新聞到來之前就會有自己的欄目。",
+      "how3": "欄目內未讀新聞排在前面，越重要越前面。離開此分頁時或每 10 分鐘，欄目會重新排序。"
+    },
+    "explore": {
+      "title": "探索如何運作",
+      "what": "探索顯示全球和你所選每個國家過去 24 小時的頭條。所有人看到的都一樣，不是為你挑選的。",
+      "how1": "全球頭條依一則新聞在多少國家被廣泛報導來排序，而不是依文章數量。",
+      "how2": "國家頭條來自總部位於該國的新聞來源。"
+    },
+    "profile": {
+      "title": "「我的」如何運作",
+      "what": "「我的」頁面保存你告訴 Mera 的關於自己的資訊。你的資訊流和概覽都由這些資訊產生。",
+      "how1": "每則資訊都會變成 Mera 為你執行的搜尋。修改或刪除一則資訊，來自它的新聞也會跟著變化。",
+      "privacy": "由它們產生的搜尋從不與你的帳號連結。伺服器只保存搜尋文字，在所有使用者之間匿名共享，14 天未使用即刪除。"
+    }
+  },
+  "articleMenu": {
+    "openA11y": "更多操作",
+    "title": "文章操作",
+    "askMera": "就此詢問 Mera",
+    "following": "已追蹤此報導",
+    "checkFacts": "查找事實查核",
+    "openOn": "在 {{source}} 開啟",
+    "openInTranslate": "在 Google 翻譯中開啟",
+    "fewerFrom": "減少 {{source}} 的內容",
+    "fewerFromDone": "你會看到更少來自 {{source}} 的內容。",
+    "undo": "復原",
+    "reportBug": "回報問題",
+    "actionFailed": "操作未成功。請再試一次。"
+  },
+  "factChip": {
+    "label": "來自你的個人檔案：{{label}}",
+    "openA11y": "關於 {{label}} 的報導"
+  },
+  "related": {
+    "allCountries": "所有國家",
+    "allLanguages": "所有語言",
+    "noMatches": "沒有符合這些篩選條件的相關文章。"
   }
 }

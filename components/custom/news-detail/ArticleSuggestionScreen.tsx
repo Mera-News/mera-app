@@ -9,8 +9,10 @@ import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import { fetchCachedFactCheck } from '@/lib/fact-check/fact-check-graphql-client';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
+import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
+import DetailTopBar, { useDetailTopBarCover } from '@/components/custom/news-detail/DetailTopBar';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
@@ -51,6 +53,7 @@ import {
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
 import { useRelatedPagination } from './use-related-pagination';
+import { mergeRelatedEntries } from './merge-related-entries';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
@@ -312,6 +315,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         isLoadingInitial: isLoadingRelated,
         isLoadingMore: isLoadingMoreRelated,
         loadMore: loadMoreRelated,
+        error: relatedError,
+        retry: retryRelated,
     } = useRelatedPagination({
         articleId: suggestion?.articleId ?? null,
         sortMode: relatedSortMode,
@@ -334,10 +339,13 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     );
 
     const relatedEntries = useMemo<RelatedEntry[]>(
-        () => [...localEntries, ...serverEntries],
-        [localEntries, serverEntries],
+        () => mergeRelatedEntries(localEntries, serverEntries, suggestion?.articleId),
+        [localEntries, serverEntries, suggestion?.articleId],
     );
 
+    // M8/F31 + T-1/T-3: one cover value turns the status area and the bar
+    // behind the back button solid together, once the meta row scrolls under.
+    const { cover: topBarCover, onTopBarSolidChange } = useDetailTopBarCover();
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
     }, []);
@@ -356,6 +364,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         scrollViewRef.current?.scrollToEnd(true);
     }, []);
 
+    // The id this screen already purged, so a re-run of the load effect (it
+    // also depends on `storeSuggestion` and `t`) cannot delete twice.
+    const purgedIdRef = useRef<string | null>(null);
+
     // Hydrate the suggestion from local DB if it wasn't already in the store
     // (e.g. deep-link from notification before store hydration completes).
     useEffect(() => {
@@ -373,6 +385,19 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 if (cancelled) return;
                 if (!row) {
                     setError(t('articleDetail.storyUnavailable'));
+                    // CONFIRMED gone: neither the feed table nor the saved
+                    // table holds it, so drop the stale card from the feed.
+                    // This is the ONLY place that deletes. A read that THREW
+                    // (the `.catch` below) proves nothing about the row, and
+                    // deleting there turned one transient DB error into a card
+                    // lost for good. It used to run in the render branch, on
+                    // every re-render while the error showed; here it runs once
+                    // per load. Idempotent either way.
+                    if (purgedIdRef.current !== articleSuggestionId) {
+                        purgedIdRef.current = articleSuggestionId;
+                        deleteSuggestionByServerId(articleSuggestionId).catch(() => {});
+                        useForYouStore.getState().removeSuggestion(articleSuggestionId);
+                    }
                 } else {
                     setSuggestion(row);
                 }
@@ -478,6 +503,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
      * fact-check from this alone"; the panel below then goes to `processing`
      * and to a result in place.
      */
+    const [factCheckAsked, setFactCheckAsked] = useState(false);
     const handleStartFactCheck = useCallback(() => {
         if (!suggestion) return;
         const asked = requestArticleFactCheck({
@@ -486,17 +512,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             suggestion,
         });
         if (!asked) return;
-        toast.show({
-            placement: 'top',
-            duration: 3000,
-            render: ({ id }: { id: string }) => (
-                <Toast nativeID={id} action="info" variant="solid">
-                    <ToastTitle>{t('factCheck.title')}</ToastTitle>
-                    <ToastDescription>{t('factCheck.checking')}</ToastDescription>
-                </Toast>
-            ),
-        });
-    }, [suggestion, toast, t]);
+        setFactCheckAsked(true);
+    }, [suggestion]);
 
     const handleToggleSave = useCallback(async () => {
         if (!suggestion) return;
@@ -556,16 +573,16 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 <AbstractGradientBackdrop />
 
                 <Spinner size="large" />
+                {/* S8: a way back while loading (the by-id query can take up
+                    to 30s on a slow network before it aborts). */}
+                <DetailTopBar onBack={onBack} backIcon={backIcon} />
             </Box>
         );
     }
 
     if (error || !suggestion) {
-        // If the local row vanished, drop the stale card from the feed.
-        if (!suggestion) {
-            deleteSuggestionByServerId(articleSuggestionId).catch(() => {});
-            useForYouStore.getState().removeSuggestion(articleSuggestionId);
-        }
+        // No deletion here: render must stay pure, and only the load effect's
+        // confirmed not-found branch may delete (see there).
         return (
             <Box className="flex-1 items-center justify-center p-5">
                 {/* Page background. Must be the FIRST child so it paints behind
@@ -597,6 +614,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const articleUrl = secureUrlOrNull(suggestion.article_url);
     const insecureLink = !!suggestion.article_url && !articleUrl;
     const read = isSuggestionOpened(suggestion, openedIds);
+    // Keyed on the ARTICLE id. `startedByReader` shows the working state at
+    // once for a check the reader just asked for (no progress delay, and no
+    // toast: the panel is right under the tick).
+    const factCheckPanel = (
+        <FactCheckPanel articleId={suggestion.articleId} startedByReader={factCheckAsked} />
+    );
 
     return (
         <Box className="flex-1">
@@ -604,30 +627,16 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 everything else on the page. */}
             <AbstractGradientBackdrop />
 
-            {/* Status bar scrim — this screen's hero image is a full-bleed
-                parallax header (ArticleSuggestionContainer's SmoothScrollView),
-                so without this a light photo makes the system clock/battery
-                glyphs illegible. StatusBarScrim's own zIndex (5) sits above the
-                container's default (0) but below the floating back button
-                below (zIndex 20), so the scrim darkens the image behind the
-                status bar without ever covering the tappable back button. */}
-            <StatusBarScrim />
+            {/* Status bar scrim in `overHero` mode (T-1): at rest nothing
+                sits over the hero, so the photo runs under the status bar
+                with no grey band; as `topBarCover` rises (the meta row has
+                scrolled under the top bar) only its dark base fades in, in
+                step with DetailTopBar's opaque bar. Its zIndex (5) stays
+                below the back button (20). */}
+            {/* Transparent over the hero at rest, dark as the cover rises. */}
+            <StatusBarScrim overHero coverProgress={topBarCover} />
 
-            {/* Floating Back Button */}
-            <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
-                <Pressable
-                    onPress={onBack}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(backIcon === 'home' ? 'common.home' : 'common.back')}
-                    className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                >
-                    <MaterialIcons
-                        name={backIcon === 'home' ? 'home' : 'arrow-back'}
-                        size={24}
-                        color="#ffffff"
-                    />
-                </Pressable>
-            </Box>
+            <DetailTopBar onBack={onBack} backIcon={backIcon} cover={topBarCover} />
 
             {/* Content */}
             <ArticleSuggestionContainer
@@ -637,6 +646,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
+                onTopBarSolidChange={onTopBarSolidChange}
                 onEndReached={loadMoreRelated}
                 contentTopInset={insets.top}
                 contentBottomInset={insets.bottom + 20}
@@ -682,6 +692,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     // than this screen could hand it — category,
                                     // event type, cluster size and place.
                                     onBrowseRelated={scrollToRelated}
+                                    publicationName={suggestion.publication_name ?? null}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
                                         origin: 'suggestion',
@@ -713,6 +724,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         displayedLanguage: titleDisplay?.language ?? null,
                                     }}
                                 />
+                                {/* F33: the fact check sits DIRECTLY under the action
+                                    row whose tick starts it, so its "Searching" line
+                                    and its result land where the reader asked, not
+                                    at the very end of the footer below the fold. */}
+                                {factCheckPanel}
                                 <ReadTranslateActions
                                     articleUrl={articleUrl}
                                     sourceLanguage={sourceLanguage}
@@ -729,16 +745,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             </HStack>
                         ) : null}
 
-                        {/* Fact check sits OUTSIDE the URL branch: it is keyed
-                            on the ARTICLE id (not the suggestion id), not the
-                            (possibly refused) local link, so it still renders
-                            for a row whose URL we won't open. Mounted whenever
-                            the feature is on — a pure observer, it renders
-                            nothing itself when nobody has asked about this
-                            article. */}
-                        {(
-                            <FactCheckPanel articleId={suggestion.articleId} />
-                        )}
+                        {/* No link to open: the panel still renders (it is keyed
+                            on the article id), just without the actions above it. */}
+                        {!articleUrl && factCheckPanel}
 
                         {/* Related Articles — ONE flat, sorted list merging the
                             local cluster siblings (the user's own personalized
@@ -752,7 +761,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             Renders unvirtualized (`.map`), which is why the page
                             size is the render budget as much as the network
                             one. */}
-                        {(relatedEntries.length > 0 || isLoadingRelated) && (
+                        {(relatedEntries.length > 0 || isLoadingRelated || relatedError) && (
                             <VStack space="md">
                                 <HStack className="items-center justify-between" space="sm">
                                     <Heading size="lg" className="text-gray-300 flex-1">
@@ -764,9 +773,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         testIDPrefix="related-sort"
                                     />
                                 </HStack>
-                                {relatedEntries.map((entry, index) => (
+                                {relatedEntries.map((entry) => (
                                     <ArticleStandaloneCompactCard
-                                        key={entry.id || `related-${index}`}
+                                        key={entry.id}
                                         article={entry.article}
                                         // `push`, not `replace`: chaining into a
                                         // related story adds a stack entry so
@@ -789,6 +798,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     <Box className="items-center justify-center py-4">
                                         <Spinner size="small" />
                                     </Box>
+                                )}
+                                {relatedError && !isLoadingRelated && !isLoadingMoreRelated && (
+                                    <RelatedErrorRow onRetry={retryRelated} />
                                 )}
                             </VStack>
                         )}

@@ -34,6 +34,7 @@ import { StyleSheet, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ExploreSearchBar from './ExploreSearchBar';
+import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import ExploreSearchResults from './ExploreSearchResults';
 import ScopeArticleList from './ScopeArticleList';
 import ScopeChipRow from './ScopeChipRow';
@@ -122,6 +123,13 @@ const ExploreScreen: React.FC = () => {
         setSearchOpen(false);
         clearSearch();
     }, [clearSearch]);
+    // F40: leaving an EMPTY bar (keyboard dismissed, list scrolled) collapses
+    // it back to the heading. A bar with a query stays: the query is what the
+    // results overlay is showing, and only the X clears it.
+    const searchQuery = search.query;
+    const handleSearchBlur = useCallback(() => {
+        if (searchQuery.trim() === '') setSearchOpen(false);
+    }, [searchQuery]);
 
     // The title row measures ITSELF in its collapsed state and then pins that
     // height for both states, rather than hardcoding one — the heading honours
@@ -443,6 +451,7 @@ const ExploreScreen: React.FC = () => {
                                 query={search.query}
                                 onChangeQuery={search.setQuery}
                                 onClose={handleCloseSearch}
+                                onBlur={handleSearchBlur}
                             />
                         ) : (
                             <>
@@ -464,15 +473,19 @@ const ExploreScreen: React.FC = () => {
                                 >
                                     {t('explore.title')}
                                 </Heading>
-                                <Pressable
-                                    testID="explore-search-open"
-                                    onPress={handleOpenSearch}
-                                    hitSlop={12}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={t('explore.openSearch')}
-                                >
-                                    <MaterialIcons name="search" size={24} color="#ffffff" />
-                                </Pressable>
+                                <HStack className="items-center" space="lg">
+                                    {/* N4: what this tab is and where its stories come from. */}
+                                    <TabExplainerButton tab="explore" testID="explore-explainer-open" />
+                                    <Pressable
+                                        testID="explore-search-open"
+                                        onPress={handleOpenSearch}
+                                        hitSlop={12}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={t('explore.openSearch')}
+                                    >
+                                        <MaterialIcons name="search" size={24} color="#ffffff" />
+                                    </Pressable>
+                                </HStack>
                             </>
                         )}
                     </HStack>

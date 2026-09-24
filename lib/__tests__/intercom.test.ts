@@ -367,3 +367,60 @@ describe('support id autofill', () => {
     expect(nativeTop.present).toHaveBeenCalledTimes(1);
   });
 });
+
+// B6: every support entry point used to go silent when the mail app could not
+// open, because no caller passed `onMailFailed`. The hook now falls back on its
+// own, and still never renders the support address.
+jest.mock('@/lib/i18n', () => ({ __esModule: true, default: { t: (k: string) => k } }));
+const mockSetClipboard = jest.fn(async (_s: string) => true);
+jest.mock('expo-clipboard', () => ({ setStringAsync: (s: string) => mockSetClipboard(s) }));
+
+describe('mail that cannot open is never silent', () => {
+  it('shows an alert that copies the address without displaying it', async () => {
+    const { Linking, Alert } = require('react-native');
+    const openURL = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no mail app') as never);
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    try {
+      mockEndpoints.INTERCOM_APP_ID = '';
+      const { result } = renderHook(() => intercomTop.useSupportAction());
+      await act(async () => {
+        await result.current.openSupport();
+      });
+
+      expect(alert).toHaveBeenCalledTimes(1);
+      const [title, body, buttons] = alert.mock.calls[0] as [string, string, { text: string; onPress?: () => void }[]];
+      expect(title).toBe('support.mailFailedTitle');
+      expect(body).toBe('support.mailFailedBody');
+      expect(`${title} ${body} ${buttons.map((b) => b.text).join(' ')}`).not.toMatch(/@/);
+
+      const copy = buttons.find((b) => b.text === 'support.copyAddress');
+      await act(async () => {
+        copy?.onPress?.();
+      });
+      const { SUPPORT_EMAIL } = require('@/lib/config/branding');
+      expect(mockSetClipboard).toHaveBeenCalledWith(SUPPORT_EMAIL);
+    } finally {
+      openURL.mockRestore();
+      alert.mockRestore();
+    }
+  });
+
+  it('a caller-supplied onMailFailed still wins over the default', async () => {
+    const { Linking, Alert } = require('react-native');
+    const openURL = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no mail app') as never);
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    try {
+      mockEndpoints.INTERCOM_APP_ID = '';
+      const onMailFailed = jest.fn();
+      const { result } = renderHook(() => intercomTop.useSupportAction(onMailFailed));
+      await act(async () => {
+        await result.current.openSupport();
+      });
+      expect(onMailFailed).toHaveBeenCalledTimes(1);
+      expect(alert).not.toHaveBeenCalled();
+    } finally {
+      openURL.mockRestore();
+      alert.mockRestore();
+    }
+  });
+});

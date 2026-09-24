@@ -26,6 +26,7 @@ import React, { useCallback, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 
 type DataAction =
     | 'feedCache'
@@ -40,8 +41,9 @@ type DataLocation = 'device' | 'server';
 
 interface ManageDataScreenProps {
     onBack?: () => void;
-    /** Open the backup recovery-code flow on arrival — Settings > "Restore from
-     *  a backup" deep-links here with `?restore=1`. */
+    /** Open the backup recovery-code flow on arrival. The `?restore=1` deep
+     *  link sets it; Settings itself opens this screen plainly from its
+     *  "Backup and restore" row, with the backup section first. */
     autoOpenRecover?: boolean;
 }
 
@@ -362,20 +364,9 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack, autoOpenRec
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                {onBack && (
-                    <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                        <Pressable
-                            onPress={onBack}
-                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                        >
-                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                        </Pressable>
-                    </Box>
-                )}
-
-                <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                    <Text className="text-xl font-semibold text-white text-center">{t('manageData.title')}</Text>
-                </VStack>
+                <Box style={{ paddingTop: insets.top }}>
+                    <DrillDownHeader title={t('manageData.title')} onBack={onBack} />
+                </Box>
 
                 <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
                     <Text size="sm" className="text-gray-400 mb-5">

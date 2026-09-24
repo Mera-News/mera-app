@@ -767,12 +767,22 @@ function buildTurnBoxes(
     current.toolStepCount += toolSteps.length;
   }
 
-  const withTools = turns.filter((t) => t.toolStepCount > 0);
-  const lastWithTools = withTools[withTools.length - 1];
+  // THE LAST TURN OVERALL, not the last one that happened to call a tool. A
+  // new turn has no tool calls yet, so keying on "last with tools" made the
+  // PREVIOUS turn's box reopen with "Working on it" the moment the user sent
+  // a new message (audit F5, 5 of 5 on device).
+  const lastTurn = turns[turns.length - 1];
+  const withTools = turns.filter(
+    (t) =>
+      t.toolStepCount > 0
+      // A turn with no tools still needs a box to carry its terminal
+      // sentence, or a `no-route` turn ends in silence.
+      || (t === lastTurn && agentTerminal !== null && t.firstAssistantId !== null),
+  );
 
   const out = new Map<string, AgentStepsItem>();
   for (const turn of withTools) {
-    const isLast = turn === lastWithTools;
+    const isLast = turn === lastTurn;
     // Only the LAST turn of the live sequence can still be running.
     const active = !stale && isLast && turnActive === true;
 
@@ -797,6 +807,12 @@ function buildTurnBoxes(
         )
       : turn.steps;
 
+    // ONE ROW PER REPEATED STEP. Three find_similar_facts calls rendered as
+    // "Looking for things you've already told me" three times in one box
+    // (audit F6). Consecutive steps with the same text merge into one row,
+    // which carries the worst status among them.
+    const mergedSteps = mergeRepeatedSteps(steps);
+
     // The leg-start row is the box's first entry and always settled: the box
     // only exists once a tool call has appeared, which means the thinking phase
     // it describes is over.
@@ -809,7 +825,7 @@ function buildTurnBoxes(
     // simulator pass caught that on real pixels across consecutive frames.
     const full: AgentStep[] = [
       legStartStep(turn.firstAssistantId ?? turn.anchorId, true),
-      ...steps,
+      ...mergedSteps,
       ...(active ? [continuingStep(turn.anchorId)] : []),
     ];
 
@@ -826,6 +842,70 @@ function buildTurnBoxes(
       interrupted,
       changedData: changedDataFrom(full),
     });
+  }
+  return out;
+}
+
+const STATUS_RANK: Record<AgentStep['status'], number> = { done: 0, pending: 1, error: 2 };
+
+/** Merge consecutive steps that render the same line. Keeps the first step's
+ *  id, so keys stay stable as later repeats arrive. */
+function mergeRepeatedSteps(steps: AgentStep[]): AgentStep[] {
+  const out: AgentStep[] = [];
+  for (const step of steps) {
+    const prev = out[out.length - 1];
+    const same =
+      prev
+      && prev.kind === step.kind
+      && prev.labelKey === step.labelKey
+      && JSON.stringify(prev.labelValues ?? null) === JSON.stringify(step.labelValues ?? null);
+    if (!same) {
+      out.push(step);
+      continue;
+    }
+    if (STATUS_RANK[step.status] > STATUS_RANK[prev.status]) {
+      out[out.length - 1] = { ...prev, status: step.status, consequenceKey: step.consequenceKey };
+    }
+  }
+  return out;
+}
+
+/** Does the bubble text already carry this question? Compared loosely: case,
+ *  spacing and the closing punctuation do not matter. */
+function bubbleCarries(content: string, question: string): boolean {
+  const norm = (t: string) => t.toLowerCase().replace(/\s+/g, ' ').replace(/[?.!\s]+$/, '').trim();
+  const q = norm(question);
+  return q.length > 0 && norm(content).includes(q);
+}
+
+/**
+ * A proposal card sits AFTER the turn's last assistant bubble.
+ *
+ * A single-shot turn is two messages: the tool call (which owns the card) and
+ * the reply that follows the tool result. Emitted in message order, the card
+ * came first and its own instruction ("Pick the story you want to follow
+ * below") came after it (audit F34). Moved within its own turn only, never
+ * past the next user message or the live tail.
+ */
+function placeProposalCardsLast(items: ChatThreadItem[]): ChatThreadItem[] {
+  const out = [...items];
+  const isBoundary = (it: ChatThreadItem) =>
+    (it.kind === 'message' && it.message.role === 'user')
+    || it.kind === 'typing'
+    || it.kind === 'quick-fact-check-card'
+    || it.kind === 'divider';
+  for (let i = 0; i < out.length; i++) {
+    const card = out[i];
+    if (card.kind !== 'proposal-card') continue;
+    let lastBubble = -1;
+    for (let j = i + 1; j < out.length && !isBoundary(out[j]); j++) {
+      const it = out[j];
+      if (it.kind === 'message' && it.message.role === 'assistant') lastBubble = j;
+    }
+    if (lastBubble === -1) continue;
+    out.splice(i, 1);
+    out.splice(lastBubble, 0, card);
+    i--; // the item now at i has not been examined
   }
   return out;
 }
@@ -911,9 +991,11 @@ function emitMessage(
           cards.push({
             kind: 'ask-choice-card',
             key: `ask-choice-${message.id}-${idx}`,
-            // Suppressed when the bubble already carries the question as
-            // prose, which the model commonly does alongside the call.
-            question: message.content.trim().length > 0 || !question ? null : question,
+            // Suppressed ONLY when the bubble already carries the question as
+            // prose. It used to be suppressed whenever the bubble had ANY text,
+            // so an acknowledgement or a narration beside the call left the
+            // chips on screen with no question above them.
+            question: !question || bubbleCarries(message.content, question) ? null : question,
             options,
             answered: answeredAsk,
           });
@@ -1249,5 +1331,5 @@ export function deriveThreadItems(opts: {
     out.push({ kind: 'quick-fact-check-card', key: `qfc-${entry.id}`, entry });
   }
 
-  return out;
+  return placeProposalCardsLast(out);
 }

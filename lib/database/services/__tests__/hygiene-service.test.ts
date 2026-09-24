@@ -752,4 +752,27 @@ describe('addSanityProposals — the backfill entry point (K-P5)', () => {
     await addSanityProposals(seedCorpus(4), { notify: true });
     expect(toastManager.showNotifiedToast).toHaveBeenCalledTimes(1);
   });
+
+  // F47: the bell said "1 cleanup" while the review listed 2, because the
+  // count was the proposals THIS call added, not what is waiting. It must be
+  // the same outstanding total the review queue and the Profile row show.
+  it('stamps the outstanding total, not the number this call added', async () => {
+    const verdicts = seedCorpus(2);
+    await addSanityProposals(verdicts.slice(0, 1), { notify: false });
+
+    const added = await addSanityProposals(verdicts, { notify: true });
+
+    expect(added).toBe(1);
+    const arg = (toastManager.showNotifiedToast as jest.Mock).mock.calls[0][0];
+    expect(arg.context).toEqual({ count: 2 });
+    expect(await getPendingCount()).toBe(2);
+  });
+
+  it('stamps the outstanding total past the presentation cap too', async () => {
+    const added = await addSanityProposals(seedCorpus(15), { notify: true });
+
+    expect(added).toBe(15);
+    const arg = (toastManager.showNotifiedToast as jest.Mock).mock.calls[0][0];
+    expect(arg.context).toEqual({ count: 15 });
+  });
 });

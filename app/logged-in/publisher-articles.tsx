@@ -3,7 +3,7 @@ import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import PublisherArticleList from '@/components/custom/config-panel/PublisherArticleList';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,9 +14,11 @@ export default function PublisherArticles() {
         publisherName: string;
     }>();
 
+    // A missing param means a malformed deep link, often with no history to go
+    // back to. Navigating during render is a side effect in render; a
+    // Redirect is the declarative equivalent and always has a destination.
     if (!params.publisherId) {
-        router.back();
-        return null;
+        return <Redirect href="/logged-in/app_container/for_you" />;
     }
 
     return (

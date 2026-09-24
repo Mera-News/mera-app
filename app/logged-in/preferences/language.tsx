@@ -1,3 +1,5 @@
+import ErrorBoundary from '@/components/custom/ErrorBoundary';
+import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import LanguageSettingsScreen from '@/components/custom/config-mera/LanguageSettingsScreen';
 import { Stack, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -15,10 +17,13 @@ export default function LanguagePage() {
     return (
         <>
             <Stack.Screen options={{ gestureEnabled: !switching }} />
-            <LanguageSettingsScreen
-                onBack={() => router.back()}
-                onBusyChange={handleBusyChange}
-            />
+            {/* S7: a crash stays on this page, not the root boundary. */}
+            <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+                <LanguageSettingsScreen
+                    onBack={() => router.back()}
+                    onBusyChange={handleBusyChange}
+                />
+            </ErrorBoundary>
         </>
     );
 }

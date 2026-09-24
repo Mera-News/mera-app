@@ -1,34 +1,32 @@
 ---
 id: facts/origin
 name: "Origin facts"
-description: "Extracts where the user is from and composes it with where they live into one fact."
+description: "Extracts where the user is from, their expat status and where they live now, as separate facts."
 routable: true
 when:
   - "router chose new_fact or fact_update with subject origin"
   - "trigger phrases: originally from / I am from / grew up in / my heritage / expat / migrant / moved here from"
   - "signal: the turn names a country of origin, whether or not it also names where they live now"
 outputs:
-  - "one saveExtractedFacts call carrying exactly ONE identity element, never two"
-  - "attribute key background: origin and current residence"
-  - "ask_choice, never prose, for a place choice or a replacement"
+  - "an origin element, an expat-status element when the user lives in another country, and a residence element when the turn names the city, each under its own key"
+  - "ask_choice, never prose, for an ambiguous place; a replacement is set with replaces and never asked first"
 ---
 
-Where the user is FROM. Origin and current residence are one concept, and this guideline owns both
-halves of it.
+Where the user is FROM. An expat is THREE facts, each offered as its own element: where they are
+from, that they are an expat in their current country, and where they live. They change on
+different days, and a move must never rewrite an origin.
 
-## Origin plus residence is ONE fact
-Apart they are useless and together they are the whole thing. This is the single exception to one
-concept per fact.
+## What to offer
+- The origin: "From India", or the region when they said it ("From Kerala, India").
+  `questionnaire_attribute` is exactly `background: country of origin`.
+- The expat status, when they live in a different country from their origin (said in the turn or
+  in Known Facts): "Expat in The Netherlands", naming the COUNTRY only.
+  `questionnaire_attribute` is exactly `background: expat in country of residence`.
+- The current city, only when the turn names it: written and looked up exactly as the residence
+  guideline says, under `location: neighborhood/area, city, and country (preserve specifics)`.
 
-- Known Facts already give a current city: offer exactly ONE element, "Expat from India living in
-  Amsterdam, Netherlands, Europe". Nothing else for this. No separate origin element and no
-  separate residence element.
-- No current city known yet: offer ONE element naming the origin, "Expat originally from India",
-  and ask for the city. Compose the two on the next turn.
-
-Never offer "Expatriate", "Lives outside country of origin" or any wording of that shape. It names
-no country, so it retrieves nothing and it can never be composed with anything later. It is a
-placeholder, not a fact.
+Never write two of these into one statement ("Expat from India living in Amsterdam"). Never offer
+"Expatriate" or "Lives outside country of origin": it names no country and retrieves nothing.
 
 ## Both lookups in one leg
 Issue `lookup_place` and `find_similar_facts` in the same response. `lookup_place` takes
@@ -38,8 +36,7 @@ place proceeds, two or three go to `ask_choice`, and `bloc` is copied from what 
 than worked out.
 
 When the turn names two places, the origin and the current city, look up the CURRENT one. The
-origin country needs no chain: a country is the whole of it, and "Expat from Kerala, India" is
-better than either half only when the user said Kerala.
+origin country needs no chain: a country is the whole of it.
 
 ## Neutral words only
 Write "expat", "diaspora", "overseas citizen", "moved from". Never a country-specific label or
@@ -53,17 +50,9 @@ see.
 ## Checking what is already known
 Branch on the attribute key, never on the score.
 
-- An existing origin fact, different country: this is a correction, and it is theirs to make.
-  `ask_choice` between the two, and set `replaces` only on an explicit choice.
-- An existing residence fact and the turn adds an origin: do NOT replace it. Offer the composed
-  fact with `replaces` set to the residence fact, so one card carries the whole identity instead of
-  two cards splitting it.
-- An existing composed fact and the turn changes only the city: offer the recomposed fact with
-  `replaces` set.
-
-If a choice goes unanswered, offer both facts rather than replacing one. A fact they can remove is
-recoverable; one deleted on a guess is not.
-
-## What to offer
-`questionnaire_attribute` is `background: origin and current residence` for every element this
-guideline offers, composed or not. It is what lets a later turn find this fact and recompose it.
+- An existing origin fact, different country: set `replaces` to it. The card shows the user what
+  it removes; do not ask first.
+- An existing residence fact: never replace it with the origin. Replace it only with a residence
+  element, and only when the turn names a different current city.
+- An older fact under `background: origin and current residence`: leave it alone. Mera offers to
+  split it on its own.

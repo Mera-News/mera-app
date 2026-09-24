@@ -15,6 +15,7 @@ import {
     ModalHeader,
 } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import {
@@ -22,10 +23,12 @@ import {
     observeActive,
 } from '@/lib/database/services/tracked-story-service';
 import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
+import { toastManager } from '@/lib/toast-manager';
+import PressableCard from '@/components/custom/cards/PressableCard';
 import { startFollowStoryChat } from '@/lib/tracking/follow-story-chat';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -72,6 +75,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
 }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const tabClearance = useTabBarClearance();
     const [stories, setStories] = useState<TrackedStoryModel[]>([]);
     const [confirmTarget, setConfirmTarget] = useState<TrackedStoryModel | null>(null);
     // 'unknown' (cold start, no server/RC answer yet) must NOT read as locked —
@@ -101,9 +105,13 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
         // deleteTrackedStoryById, not untrackStory: the latter drops the row but
         // leaves the linked TOPIC active, so the story's coverage kept being
         // fetched after the user deleted it.
-        await deleteTrackedStoryById(id);
-        // The observeActive subscription drops the row automatically.
-    }, [confirmTarget]);
+        const deleted = await deleteTrackedStoryById(id);
+        // The observeActive subscription drops the row automatically on
+        // success. On failure the row is still there, so say why it stayed.
+        if (!deleted) {
+            toastManager.showError(t('errors.somethingWentWrong'), t('trackedStories.deleteFailed'));
+        }
+    }, [confirmTarget, t]);
 
     const renderItem: ListRenderItem<TrackedStoryModel> = useCallback(
         ({ item }) => {
@@ -147,11 +155,17 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     : t('trackedStories.articleCount', { count: total });
             const relative = formatTimeAgo(t, item.lastUpdateAt ?? item.createdAt);
             return (
-                <Pressable
+                <PressableCard
                     onPress={() => openTimeline(item)}
                     onLongPress={() => {
                         hapticLight();
                         setConfirmTarget(item);
+                    }}
+                    // The row is ONE accessibility element, which hides the
+                    // delete button inside it from VoiceOver; this is its way in.
+                    accessibilityActions={[{ name: 'untrack', label: t('trackedStories.untrackAction') }]}
+                    onAccessibilityAction={(e) => {
+                        if (e.nativeEvent.actionName === 'untrack') setConfirmTarget(item);
                     }}
                     accessibilityRole="button"
                     // The card renders four things; a label of just the headline
@@ -241,7 +255,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             <MaterialIcons name="delete-outline" size={20} color="#9CA3AF" />
                         </Pressable>
                     </HStack>
-                </Pressable>
+                </PressableCard>
             );
         },
         [t, openTimeline],
@@ -284,51 +298,30 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
         startFollowStoryChat(t('trackedStories.followChatSeed'));
     }, [t]);
 
+    // M3/F22: the shared empty-state component, so this tab's zero state
+    // reads like the other For You tabs. The follow CTA is the ONE entry point
+    // on an empty list; the FAB below hides there, since two buttons that do
+    // the same thing on an empty screen is one too many.
+    //
+    // Locked: starting a new follow needs a plan, so there is no CTA (it would
+    // be a broken instruction) and the free-tier body explains why. Stories
+    // already followed are unaffected; this is only the zero state.
     const ListEmpty = (
-        <Box className="flex-1 items-center justify-center px-8 py-20">
-            <MaterialIcons name="auto-awesome" size={48} color="#6B7280" />
-            <Text size="lg" className="text-white text-center font-semibold mt-4">
-                {t('trackedStories.emptyTitle')}
-            </Text>
-            <Text size="sm" className="text-typography-400 text-center mt-2">
-                {/* Monetization wave: the default body sends the user to go
-                    track a story, which fails while locked — starting a NEW
-                    story needs an active plan. The free-tier copy explains that
-                    instead. Stories already tracked are unaffected; this is
-                    purely the zero-state message. */}
-                {locked ? t('freeTier.trackedStoriesEmptyBody') : t('trackedStories.emptyBody')}
-            </Text>
-            {/* The hint + CTA used to walk the user to the article DETAIL
-                screen's crosshair, because that was the only place a track could
-                START. It isn't any more: the FAB below starts one from here, so
-                sending them to the Feed to find an article would be the long way
-                round to a thing this screen now does itself. Same handler as the
-                FAB — one entry point, two affordances.
-
-                Locked: both exist only to walk the user through STARTING a new
-                track, which the free-tier body above just said needs a plan —
-                showing them would repeat a broken instruction. Suppressed rather
-                than relabeled; `FreeTierCard`/`FreeTierInlineNotice` already own
-                "See plans" messaging elsewhere and this empty state isn't the
-                place to duplicate it. (The FAB self-gates the same way.) */}
-            {!locked && (
-                <>
-                    <Text size="xs" className="text-typography-500 text-center mt-4">
-                        {t('trackedStories.emptyHintFollow')}
-                    </Text>
-                    <Button
-                        variant="outline"
-                        className="rounded-full border-primary-500 mt-4"
-                        onPress={startFollowStory}
-                        testID="tracked-stories-empty-cta"
-                    >
-                        <ButtonText className="text-primary-400">
-                            {t('trackedStories.emptyCtaFollow')}
-                        </ButtonText>
-                    </Button>
-                </>
-            )}
-        </Box>
+        <ForYouEmptyState
+            icon="auto-awesome"
+            title={t('trackedStories.emptyTitle')}
+            body={locked ? t('freeTier.trackedStoriesEmptyBody') : t('trackedStories.emptyBody')}
+            action={
+                locked
+                    ? undefined
+                    : {
+                          label: t('trackedStories.emptyCtaFollow'),
+                          onPress: startFollowStory,
+                          testID: 'tracked-stories-empty-cta',
+                      }
+            }
+            testID="tracked-stories-empty"
+        />
     );
 
     return (
@@ -345,7 +338,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     <Pressable
                         onPress={onBack}
                         accessibilityRole="button"
-                        accessibilityLabel={t('common.cancel')}
+                        accessibilityLabel={t('common.back')}
                         className="bg-gray-900 rounded-full p-3 shadow-hard-2"
                     >
                         <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
@@ -372,12 +365,14 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             className="px-5 pb-2 mb-3"
                             style={{ paddingTop: embedded ? 8 : insets.top + 16 }}
                         >
-                            <Heading
-                                size="4xl"
-                                className={embedded ? 'text-white' : 'text-white ml-14'}
-                            >
-                                {t('trackedStories.title')}
-                            </Heading>
+                            {/* Standalone only: embedded, the host's header
+                                and sub-tab already name this list, and a 4xl
+                                title under them repeated it. */}
+                            {!embedded && (
+                                <Heading size="4xl" className="text-white ml-14">
+                                    {t('trackedStories.title')}
+                                </Heading>
+                            )}
                         {/* `mb-3` on the block above rather than a spacer
                             element: a <Box style={{height:12}}/> is an
                             invisible node in the tree that no spacing token
@@ -412,7 +407,9 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
                     paddingTop: headerHeight,
-                    paddingBottom: insets.bottom + 40,
+                    // Embedded in a tab: the bar once plus a tail (see
+                    // useTabBarClearance). Standalone: the home indicator.
+                    paddingBottom: embedded ? tabClearance + 24 : insets.bottom + 40,
                     // Retained: this is what lets ListEmpty's `flex-1` fill and
                     // centre. Do not drop it when touching the padding above.
                     flexGrow: 1,
@@ -429,20 +426,21 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 Hidden while locked, deliberately and on the same axis as the
                 empty-state CTA above: `openArticleFeedback` silently no-ops for
                 a free-tier user, so a visible FAB here would be a button that
-                does nothing at all.
+                does nothing at all. Hidden on an empty list too, where the
+                empty state's CTA is the one entry point.
 
                 Bottom offset clears the native tab bar when this screen is
                 EMBEDDED in the Dashboard's Stories sub-tab; standalone (its own
                 route, no tab shell) it only clears the home indicator. Same
                 convention as ScrollToTopFab's `extraBottomOffset`. */}
-            {!locked && (
+            {!locked && stories.length > 0 && (
                 <Pressable
                     testID="tracked-stories-track-fab"
                     onPress={startFollowStory}
                     accessibilityRole="button"
                     accessibilityLabel={t('trackedStories.followFabLabel')}
                     className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-primary-500 shadow-hard-3"
-                    style={{ bottom: 20 + insets.bottom + (embedded ? TAB_BAR_HEIGHT : 0) }}
+                    style={{ bottom: 20 + (embedded ? tabClearance : insets.bottom) }}
                 >
                     <Crosshair size={26} strokeWidth={2} color="#000000" fill="none" />
                 </Pressable>

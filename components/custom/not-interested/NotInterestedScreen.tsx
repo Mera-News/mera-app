@@ -352,7 +352,7 @@ const NotInterestedScreen: React.FC<NotInterestedScreenProps> = ({ onBack }) => 
                                             />
                                             <Text
                                                 size="md"
-                                                className="text-white flex-1 ml-3 mr-2 capitalize"
+                                                className="text-white flex-1 ml-3 mr-2"
                                                 numberOfLines={2}
                                             >
                                                 {pref.publicationName}

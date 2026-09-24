@@ -51,7 +51,7 @@
       "retryLogin": "Reintentar inicio de sesión por correo",
       "useDifferentUser": "Iniciar sesión con otro usuario",
       "retryFailed": "No se pudo conectar al servidor. Verifica tu conexión e inténtalo de nuevo.",
-      "switchBody": "Cambiar de usuario eliminará permanentemente todos los datos de este usuario en este dispositivo. Esta acción no se puede deshacer.",
+      "switchBody": "Cambiar de usuario eliminará permanentemente todos los datos de este usuario en este dispositivo. No se puede deshacer.",
       "switchConfirm": "Sí, borrar datos y cambiar usuario",
       "switchCancel": "Cancelar"
     },
@@ -228,7 +228,12 @@
     "statsRelevant_one": "{{formatted}} parece relevante,",
     "statsRelevant_other": "{{formatted}} parecen relevantes,",
     "statsRead_one": "y has leído {{formatted}}.",
-    "statsRead_other": "y has leído {{formatted}}."
+    "statsRead_other": "y has leído {{formatted}}.",
+    "reasonUnavailable": "Mera no pudo escribir una nota para este artículo.",
+    "loadingA11y": "Cargando tu feed",
+    "newStoriesPill": "Noticias nuevas",
+    "translatingCaption": "Traduciendo…",
+    "updatedJustNow": "Actualizado ahora mismo"
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -258,7 +263,9 @@
     "readOn": "Leer en {{publication}}",
     "readOnGoogleTranslate": "Leer en Google Translate",
     "linkUnavailable": "Este enlace no se puede abrir de forma segura, así que no está disponible aquí.",
-    "relatedFromSubscriptions": "De tus suscripciones"
+    "relatedFromSubscriptions": "De tus suscripciones",
+    "relatedLoadFailed": "No se pudieron cargar los artículos relacionados.",
+    "translateBlockedNote": "Algunos sitios bloquean Google Translate. Si la página no carga, ábrela en el sitio."
   },
   "newsCluster": {
     "failedToLoad": "Error al cargar los detalles del grupo",
@@ -347,7 +354,10 @@
     "timeNudge": "Elige una hora en la que puedas leer, pensar y planificar — una o dos veces al día es suficiente.",
     "maxHoursReachedDescription": "Puedes seleccionar hasta {{count}} horas",
     "maxHoursReachedTitle": "Máximo alcanzado",
-    "selectedCount": "Seleccionadas: {{selected}}/{{max}}"
+    "selectedCount": "Seleccionadas: {{selected}}/{{max}}",
+    "savedInline": "Guardado",
+    "pickAtLeastOneHour": "Elige al menos una hora",
+    "selectedLabel": "Seleccionadas"
   },
   "language": {
     "title": "Idioma",
@@ -566,7 +576,7 @@
     "signingOut": "Cerrando sesión...",
     "signOut": "Cerrar sesión",
     "deleteAccountConfirm": "¿Estás seguro de que quieres eliminar permanentemente tu cuenta?",
-    "deleteAccountWarning": "⚠️ Esta acción no se puede deshacer y eliminará todos tus datos.",
+    "deleteAccountWarning": "⚠️ Esto eliminará todos tus datos. No se puede deshacer.",
     "continue": "Continuar",
     "finalConfirmation": "Confirmación final",
     "finalConfirmationBody": "Esto eliminará permanentemente todos tus datos.",
@@ -588,7 +598,7 @@
     "faq": "Preguntas frecuentes",
     "reportBug": "Informar de un error",
     "deleteAccountConfirmGrace": "Tu cuenta se programará para eliminación, con un período de gracia de 30 días. Inicia sesión de nuevo en esos 30 días y la eliminación se cancela automáticamente.",
-    "deleteAccountWarningGrace": "⚠️ Después de 30 días, esto no se puede deshacer y todos tus datos se eliminan permanentemente.",
+    "deleteAccountWarningGrace": "⚠️ Después de 30 días, todos tus datos se eliminan permanentemente. No se puede deshacer.",
     "finalConfirmationBodyGrace": "Esto programa tu cuenta para eliminación permanente en 30 días.",
     "accountDeletionScheduledTitle": "Eliminación programada",
     "accountDeletionScheduledDescription": "Tu cuenta se eliminará permanentemente en 30 días. Inicia sesión de nuevo antes de entonces para cancelar la eliminación."
@@ -615,7 +625,7 @@
     "topicGenQueuedDescription": "Los temas aparecerán en breve.",
     "deleteFactTitle": "Eliminar hecho",
     "deleteFactConfirm": "¿Estás seguro de que quieres eliminar este hecho?",
-    "deleteFactWarning": "Esto también eliminará todos los temas rastreados generados a partir de este hecho.",
+    "deleteFactWarning": "También se eliminan sus temas y las noticias que encontraron, y Mera deja de buscar noticias sobre ello.",
     "deletingFact": "Eliminando...",
     "yesDelete": "Sí, eliminar",
     "refreshSuggestions": "Actualizar sugerencias",
@@ -654,7 +664,9 @@
     "promoInfoTitleEmoji": "🎉 Oferta de lanzamiento 🎊",
     "resetsOn": "Se reinicia",
     "retryTopicGeneration": "Reintentar",
-    "topicGenFailedGeneric": "No se pudo generar temas."
+    "topicGenFailedGeneric": "No se pudo generar temas.",
+    "articleCountPending": "Contando",
+    "articleCountNone": "Aún no hay artículos"
   },
   "errors": {
     "somethingWentWrong": "Algo salió mal",
@@ -749,7 +761,7 @@
     "newChat": "Nuevo chat",
     "inputPlaceholder": "Escribe un mensaje...",
     "viewPreviousMessages": "Ver mensajes anteriores",
-    "aiInteractionNotice": "Estás hablando con Mera, un asistente de IA — no con una persona.",
+    "aiInteractionNotice": "Estás hablando con Mera, un asistente de IA, no con una persona.",
     "aiUsageNotice": "Este asistente te ayuda a configurar tus preferencias de noticias. Intentar manipularlo o usarlo indebidamente puede hacer que tu cuenta sea bloqueada mientras se revisa.",
     "requestUnblock": {
       "button": "Solicitar desbloqueo",
@@ -765,7 +777,9 @@
       "error": "No se pudo enviar tu solicitud. Por favor, inténtalo de nuevo."
     },
     "topicGenFailed": "No se pudo generar temas.",
-    "topicGenRetry": "Reintentar"
+    "topicGenRetry": "Reintentar",
+    "aiUsageNoticeGeneral": "Mera puede equivocarse, así que comprueba lo importante.",
+    "trackChooseHint": "Elige qué seguir"
   },
   "articleFeedback": {
     "thumbsUp": "Me gusta",
@@ -824,13 +838,14 @@
     "tooltipA11y": "Acerca del historial de lectura",
     "tooltipIntro": "Mera lleva un seguimiento de tus patrones de lectura, y solo existe en tu dispositivo.",
     "tooltipLink": "Ver todo tu historial de lectura aquí.",
-    "screenIntro": "Mera rastrea tus patrones de lectura (solo en tu dispositivo durante 30 días). Esto te da una imagen más clara de qué publicaciones te importan más, para que puedas considerar apoyar las que te benefician directamente.",
+    "screenIntro": "Medios cuyas webs abriste desde Mera en los últimos 30 días. Esta lista se queda en este dispositivo.",
     "visitedListTitle": "Publicaciones que has visitado",
     "last30Days": "Últimos 30 días",
     "lastRead": "Última lectura {{time}}",
-    "noArticlesYet": "Todavía no has leído ningún artículo.",
+    "noArticlesYet": "Los medios que abres desde Mera aparecen aquí. Lo que lees dentro de Mera no se incluye.",
     "articlesRead": "Artículos que has leído",
-    "noArticlesLast30Days": "No hay artículos de esta publicación en los últimos 30 días."
+    "noArticlesLast30Days": "No hay artículos de esta publicación en los últimos 30 días.",
+    "emptyTitle": "Aún no hay medios"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Actualización necesaria",
@@ -924,7 +939,8 @@
     "removeAction": "Quitar de guardados",
     "savedToastMessage": "Artículo guardado para más tarde",
     "savedToastTitle": "Guardado",
-    "title": "Guardados"
+    "title": "Guardados",
+    "emptyTitle": "Nada guardado todavía"
   },
   "subscription": {
     "activating": "Activando tu suscripción…",
@@ -935,7 +951,7 @@
     "detailsSection": "Detalles de la suscripción",
     "expiresOn": "Caduca el",
     "lifetime": "De por vida",
-    "managePlan": "Gestionar suscripción",
+    "managePlan": "Gestionar plan",
     "periodLabel": "Periodo",
     "periodNormal": "Estándar",
     "periodPromotional": "Promocional",
@@ -964,7 +980,6 @@
     "activatedBody": "Tu feed personalizado, panel, historias seguidas y chat están listos.",
     "activatedTitle": "{{plan}} está activo",
     "lapsedFreeNote": "Mera News Gratis es tuyo mientras lo desees. Un plan es lo que hace que Mera vuelva a trabajar en tus noticias.",
-    "manageBadge": "Gestionar",
     "turnMeraBackOn": "Reactivar Mera",
     "para1": "Mera News podría ser gratuita. Solo significaría que alguien más pagaba: un anunciante comprando tu atención, tus datos, o una recomendación amistosa. Mucho de lo que parece noticia es exactamente eso.",
     "para2": "Los medios financiados por publicidad no tienen límite. Ni en cuánto te toman, ni en qué se usa después. No queremos ser esa empresa, así que el trato aquí es simple. Tú guardas tus datos. El software hace el trabajo. Tú lo pagas.",
@@ -1037,9 +1052,16 @@
     "subTabFeed": "Panorama",
     "subTabStories": "Historias",
     "subTabSaved": "Guardados",
-    "subTabHistory": "Historial",
+    "subTabHistory": "Visitados",
     "nextFactPrefix": "Siguiente",
-    "subTabAnalytics": "Analíticas"
+    "subTabAnalytics": "Analíticas",
+    "emptySection": {
+      "awaiting": "Buscando noticias sobre esto. Aparecerán tras la próxima actualización.",
+      "none": "Todavía no hay ninguna noticia que encaje lo bastante con esto."
+    },
+    "newInterest": "Interés nuevo",
+    "nextSection": "Siguiente: {{title}}",
+    "backToDashboard": "Volver al Panel"
   },
   "feedStatus": {
     "title": "Estado del feed",
@@ -1058,7 +1080,8 @@
     "collapseA11y": "Ocultar detalles del estado del feed",
     "modeProcessing": "Actualizando tu feed",
     "modeError": "Problema con el feed",
-    "modeLimited": "Límite diario de artículos alcanzado"
+    "modeLimited": "Límite diario de artículos alcanzado",
+    "syncDoneA11y": "Tu feed está al día."
   },
   "trackedStories": {
     "emptyTitle": "Aún no sigues ninguna historia",
@@ -1083,17 +1106,18 @@
     "deleteStoryAction": "Eliminar historia",
     "deleteStoryConfirmTitle": "¿Eliminar esta historia?",
     "deleteStoryConfirmBody": "Eliminarla quita todo lo que fue guardado para esta historia.",
-    "emptyHint": "Abre un artículo de Noticias para verlo en detalle, luego toca el icono de seguimiento en la fila de botones bajo el artículo.",
     "emptyCta": "Ir a Noticias",
     "untrackConfirmCta": "Sí, dejar de seguir",
     "followFabLabel": "Seguir una nueva historia",
     "followChatSeed": "Quiero seguir una historia.",
     "followChatIntro": "Cuéntame qué te gustaría seguir y lo configuraré.",
-    "emptyHintFollow": "Toca el botón de seguimiento y dile a Mera qué quieres mantener.",
     "emptyCtaFollow": "Seguir una historia",
     "removeMemberAction": "No es parte de esta historia",
     "removeMemberConfirmTitle": "¿Quitar este artículo?",
-    "removeMemberConfirmBody": "Este artículo se quita de la cronología de la historia. Mera sigue la historia igualmente."
+    "removeMemberConfirmBody": "Este artículo se quita de la cronología de la historia. Mera sigue la historia igualmente.",
+    "timelineLoadFailed": "No se pudo cargar esta historia. Desliza hacia abajo para volver a intentarlo.",
+    "deleteFailed": "No se pudo dejar de seguir esta historia. Inténtalo de nuevo.",
+    "removeFailed": "No se pudo quitar este artículo de la historia. Inténtalo de nuevo."
   },
   "whatsNew": {
     "title": "Novedades",
@@ -1132,7 +1156,14 @@
     "dailyLimitBody": "Has alcanzado el límite de artículos de hoy. Se reinicia pronto."
   },
   "settings": {
-    "sources": "Fuentes"
+    "sources": "Fuentes",
+    "groupGeneral": "General",
+    "groupPrivacy": "Privacidad y datos",
+    "groupHelp": "Ayuda",
+    "groupAccount": "Cuenta",
+    "languageRow": "Idioma",
+    "backupRow": "Copia de seguridad y restauración",
+    "backupRowNever": "Sin copia todavía"
   },
   "personaAudit": {
     "entryRow": "Registro de cambios del perfil",
@@ -1297,7 +1328,7 @@
     "notificationBody_one": "Mera encontró {{count}} limpieza para tu perfil.",
     "notificationBody_other": "Mera encontró {{count}} limpiezas para tu perfil.",
     "reviewChip": "Revisar",
-    "title": "Salud del perfil",
+    "title": "Limpieza del perfil",
     "subtitle": "Limpiezas sugeridas",
     "intro": "Mera encontró algunas cosas que vale la pena ordenar. Acepta las que te parezcan bien.",
     "empty": "Tu perfil se ve saludable",
@@ -1306,15 +1337,16 @@
     "reversibleNote": "Reversible desde el registro de cambios",
     "effectDuplicate": "Elimina el duplicado y conserva el más fuerte.",
     "effectTooBroad": "Reduce el peso de este interés para que atraiga menos noticias fuera de tema.",
-    "effectStaleTopic": "Retira este tema inactivo. Puedes restaurarlo desde el registro de cambios.",
+    "effectStaleTopic": "Retira este tema inactivo.",
     "effectStaleFact": "Elimina este hecho: ninguno de sus temas está ya activo.",
     "appliedTitle": "Limpieza aplicada",
     "appliedBody": "Tu perfil fue ordenado. Consulta el registro de cambios para revisarlo.",
     "applyFailedTitle": "No se pudo aplicar la limpieza",
     "applyFailedBody": "Por favor, inténtalo de nuevo más tarde.",
-    "profileRow_one": "Salud del perfil · {{count}} sugerencia",
-    "profileRow_other": "Salud del perfil · {{count}} sugerencias",
-    "effectIncoherentTopics": "Reemplaza estos temas con otros mejores para este interés. Los antiguos son reversibles desde el registro de cambios."
+    "profileRow_one": "Limpieza del perfil · {{count}} sugerencia",
+    "profileRow_other": "Limpieza del perfil · {{count}} sugerencias",
+    "effectIncoherentTopics": "Reemplaza estos temas con otros mejores para este interés.",
+    "effectLocationConflict": "Conserva el lugar más reciente y elimina el anterior."
   },
   "locations": {
     "title": "Tus lugares",
@@ -1451,7 +1483,7 @@
     "visitedSubtitle": "Publicaciones que abriste recientemente",
     "activity": "Actividad",
     "activitySubtitle": "Historial de cambios de tu perfil",
-    "personaHealth": "Salud del perfil",
+    "personaHealth": "Limpieza del perfil",
     "healthPending_one": "{{count}} sugerencia de limpieza",
     "healthPending_other": "{{count}} sugerencias de limpieza",
     "healthAllHealthy": "Todo saludable",
@@ -1488,7 +1520,10 @@
       "remove": "Eliminar esto",
       "removeConfirm": "Toca de nuevo para eliminar",
       "limitReached": "Límite de ajuste diario alcanzado: los cambios continúan mañana"
-    }
+    },
+    "meraInviteReturning": "Cuéntame algo nuevo y lo añadiré a tu feed.",
+    "editFacts": "Editar",
+    "planUsage": "{{used}} de {{limit}} analizados hoy"
   },
   "facts": {
     "screenTitle": "Tus hechos",
@@ -1498,7 +1533,8 @@
     "lessInfluence": "Menos influencia",
     "declinedTopicsTitle": "Temas que quitaste",
     "allowAgain": "Permitir de nuevo",
-    "topicRemovalConsequence": "Los temas que quitaste no se volverán a sugerir a menos que los permitas de nuevo en Temas que quitaste."
+    "topicRemovalConsequence": "Los temas que quitaste no se volverán a sugerir a menos que los permitas de nuevo en Temas que quitaste.",
+    "deleteFactA11y": "Eliminar {{fact}}"
   },
   "publicationPrefs": {
     "title": "Preferencias de fuentes",
@@ -1570,7 +1606,7 @@
     "staticGradientTitle": "Fondo estático",
     "staticGradientDescription": "Usa un gradiente fijo en lugar del fondo animado — más fácil para la batería y dispositivos antiguos",
     "screenTitle": "Pantalla",
-    "screenSubtitle": "Texto, visuales, seguridad y cómo abre Mera en este dispositivo",
+    "screenSubtitle": "Texto, visuales y cómo abre Mera en este dispositivo",
     "sectionText": "Texto",
     "sectionVisuals": "Elementos visuales",
     "textSizeTitle": "Tamaño del texto",
@@ -1636,13 +1672,13 @@
     "blocked": "Esta historia no pudo ser buscada.",
     "claimsHeading": "Afirmaciones verificadas",
     "citationsHeading": "Fuentes consultadas",
-    "noCitations": "Esta verificación no incluyó páginas específicas. No es un error de búsqueda — trata el resumen con un poco más de precaución sin fuentes que respalden.",
+    "noCitations": "Esta verificación no incluyó páginas específicas. No es un error de búsqueda, trata el resumen con un poco más de precaución sin fuentes que respalden.",
     "sourceFallback": "Fuente {{index}}",
     "disclaimer": "Esta es la lectura propia de Mera de una búsqueda web, escrita por IA. Puede ser incorrecta o incompleta, así que lee las fuentes antes de confiar en ella.",
     "verdict": {
       "supported": {
         "label": "Consistente con las fuentes",
-        "detail": "Las fuentes que encontró la búsqueda dicen básicamente lo mismo. Eso no es prueba de que sea cierto — solo que no se encontró nada que lo contradiga."
+        "detail": "Las fuentes que encontró la búsqueda dicen básicamente lo mismo. Eso no es prueba de que sea cierto, solo que no se encontró nada que lo contradiga."
       },
       "disputed": {
         "label": "Las fuentes no coinciden",
@@ -1650,7 +1686,7 @@
       },
       "unsupported": {
         "label": "Sin soporte encontrado",
-        "detail": "La búsqueda no encontró nada que respalde esto. Simplemente puede significar que la historia es nueva o de nicho — no la hace falsa."
+        "detail": "La búsqueda no encontró nada que respalde esto. Simplemente puede significar que la historia es nueva o de nicho, no la hace falsa."
       },
       "mixed": {
         "label": "Parcialmente consistente",
@@ -1675,7 +1711,7 @@
     "checkedByHeading": "Verificaciones de hechos encontradas",
     "dashboard": {
       "deleteA11y": "Eliminar esta verificación de hechos",
-      "empty": "Aún no has verificado ninguna afirmación. Toca la marca bajo una noticia para preguntarle a Mera — el resultado aparece aquí una vez que esté listo.",
+      "empty": "Aún no has verificado ninguna afirmación. Toca la marca bajo una noticia para preguntarle a Mera, el resultado aparece aquí una vez que esté listo.",
       "listSubtitle": "Historias en las que le pediste a Mera que busque verificaciones de hechos. Guardadas solo en este dispositivo.",
       "listTitle": "Verificaciones de hechos",
       "pending": "Buscando aún",
@@ -1693,13 +1729,13 @@
     "explainer": "Mera no verifica hechos en las noticias. Busca lo que organizaciones de verificación de hechos ya han publicado sobre esta historia.",
     "noCheckedBy": "No encontramos una verificación de hechos publicada sobre esta historia. Eso no significa que la historia sea falsa. La mayoría de las historias nunca se verifican.",
     "organisationA11y": "Abre la verificación de hechos de {{organisation}}, calificada {{rating}}, en el navegador en la aplicación",
-    "queued": "Esta verificación continúa ejecutándose en segundo plano. No tienes que esperar aquí — está bien que abandones el artículo.",
+    "queued": "Esta verificación continúa ejecutándose en segundo plano. No tienes que esperar aquí, está bien que abandones el artículo.",
     "queuedHint": "El resultado aparece bajo Verificaciones de hechos en tu Panel una vez que esté listo.",
     "citationA11y": "Abre {{source}} en el navegador en la aplicación",
     "noLink": "No hay enlace disponible",
     "actionA11yPending": "Verificación de hechos solicitada; espera el resultado",
     "actionA11yDone": "Verificación de hechos lista; el resultado se muestra a continuación",
-    "checkedByUnavailable": "No pudimos verificar si una organización de verificación de hechos ha publicado sobre esta noticia — la búsqueda no se completó. Eso es diferente a que nadie haya publicado; a continuación se muestra lo que la búsqueda más amplia encontró.",
+    "checkedByUnavailable": "No pudimos verificar si una organización de verificación de hechos ha publicado sobre esta noticia, la búsqueda no se completó. Eso es diferente a que nadie haya publicado; a continuación se muestra lo que la búsqueda más amplia encontró.",
     "claimProposalTitle": "¿Verificar esta afirmación?",
     "actionCheckClaim": "Verificar esta afirmación",
     "chatSeed": "¿Qué se puede verificar en esta noticia?",
@@ -1708,22 +1744,29 @@
     "optionWholeArticle": "El artículo completo",
     "quickAnswered": "Esto es lo que encontró una búsqueda rápida en la web:",
     "quickArticleFailed": "Mera no pudo confirmar que la solicitud se envió. Intenta de nuevo en un momento.",
-    "quickArticleRequested": "Solicitud enviada. Mera verificará el artículo completo — el resultado aparecerá en Verificaciones de hechos en tu Dashboard cuando esté listo.",
+    "quickArticleRequested": "Solicitud enviada. Mera verificará el artículo completo, el resultado aparecerá en Verificaciones de hechos en tu Dashboard cuando esté listo.",
     "quickArticleSending": "Enviando la solicitud…",
-    "quickCouldNotSearch": "Mera no pudo buscar en la web en este momento, así que esto no es una respuesta — intenta de nuevo en un momento.",
+    "quickCouldNotSearch": "Mera no pudo buscar en la web en este momento, así que esto no es una respuesta, intenta de nuevo en un momento.",
     "quickDisclaimer": "Esta es una búsqueda rápida en la web, no una verificación de una organización verificadora de hechos, y no se guarda. Para una verificación exhaustiva con fuentes nombradas, elige \"El artículo completo\".",
     "quickFailed": "Mera encontró información pero no pudo formular una respuesta esta vez. Intenta de nuevo en un momento.",
-    "quickNothingFound": "La búsqueda no encontró nada al respecto. Eso no significa que sea falso — puede ser nuevo, nicho, o algo que no está ampliamente cubierto en línea.",
+    "quickNothingFound": "La búsqueda no encontró nada al respecto. Eso no significa que sea falso, puede ser nuevo, nicho, o algo que no está ampliamente cubierto en línea.",
     "quickRunning": "Buscando en la web…",
-    "stillChecking": "Esto está tomando más tiempo de lo habitual. Todavía se está verificando en segundo plano — revisa más tarde, o mira en Verificaciones de hechos en tu Dashboard.",
-    "checkedByMultipleNote": "Estas son valoraciones independientes, cada una según la escala propia de esa organización — no siempre coinciden entre sí.",
-    "ownReadingHeading": "Interpretación propia de Mera — secundaria respecto al veredicto anterior",
+    "stillChecking": "Esto está tomando más tiempo de lo habitual. Todavía se está verificando en segundo plano, revisa más tarde, o mira en Verificaciones de hechos en tu Dashboard.",
+    "checkedByMultipleNote": "Estas son valoraciones independientes, cada una según la escala propia de esa organización, no siempre coinciden entre sí.",
+    "ownReadingHeading": "Interpretación propia de Mera, secundaria respecto al veredicto anterior",
     "collapseA11y": "Ocultar esta verificación",
     "expandA11y": "Mostrar esta verificación",
     "checkedByRelatedNote": "Estas provienen de una búsqueda de palabras clave y pueden ser sobre una historia diferente. Abre una para verificar.",
     "searchFoundHeading": "Qué encontró nuestra búsqueda",
     "searchFoundEmpty": "No había suficiente en la búsqueda para que Mera lo resumiera aquí.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Verificación lista",
+      "bodyFound": "Los verificadores han publicado sobre \"{{title}}\".",
+      "bodyNone": "Aún no hay verificaciones publicadas sobre \"{{title}}\".",
+      "bodyUnavailable": "Mera no pudo terminar de verificar \"{{title}}\".",
+      "open": "Abrir artículo"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Priorizar esta fuente",
@@ -1743,7 +1786,7 @@
     "welcomeBody": "Toca \"Aceptar y continuar\" para aceptar nuestros Términos del Servicio y la Política de Privacidad."
   },
   "tutorials": {
-    "entryRow": "Aprende sobre Mera",
+    "entryRow": "Cómo funciona Mera",
     "menuTitle": "Aprende sobre Mera",
     "menuSubtitle": "Guías cortas sobre cómo piensa esta aplicación. Comienza donde quieras.",
     "sectionBasic": "Comienza aquí",
@@ -1766,7 +1809,6 @@
     "askMera": "Pregunta a Mera",
     "chatIntro": "Pregúntame cualquier cosa sobre cómo funciona Mera. Puedo explicar, pero no puedo cambiar nada desde aquí.",
     "launchButton": "Hacer el tour",
-    "learnAboutMera": "Cómo funciona Mera",
     "hintReveal": "Toca cada uno.",
     "hintRevealSome": "Toca al menos {{count}}.",
     "hintChoose": "Elige uno.",
@@ -2379,7 +2421,10 @@
     "supportId": "ID de soporte: {{id}}",
     "copySupportId": "Copiar ID de soporte",
     "copied": "Copiado",
-    "saveHint": "Guarda este ID. El equipo de soporte puede encontrar tu cuenta con él."
+    "saveHint": "Guarda este ID. El equipo de soporte puede encontrar tu cuenta con él.",
+    "mailFailedTitle": "No se pudo abrir tu app de correo",
+    "mailFailedBody": "Copia nuestra dirección de soporte y escríbenos desde cualquier app de correo.",
+    "copyAddress": "Copiar dirección"
   },
   "emailCapture": {
     "title": "Añade tu correo",
@@ -2453,7 +2498,7 @@
     "restartNeeded": "Tus datos han vuelto. Cierra y vuelve a abrir la app para verlos.",
     "restore": "Restaurar desde una copia",
     "restoreConfirmAction": "Reemplazar",
-    "restoreConfirmDescription": "Tus datos, temas, chats, artículos guardados e historial de lectura en este teléfono se reemplazarán con lo que haya en la copia de seguridad. Esto no se puede deshacer. Tu cuenta y tu suscripción no se ven afectadas.",
+    "restoreConfirmDescription": "Tus datos, temas, chats, artículos guardados e historial de lectura en este teléfono se reemplazarán con lo que haya en la copia de seguridad. No se puede deshacer. Tu cuenta y tu suscripción no se ven afectadas.",
     "restoreConfirmTitle": "¿Reemplazar los datos de este dispositivo?",
     "restoreEmpty": "No se encontraron copias aquí. Si antes usaste otra cuenta de Google o de iCloud, inicia sesión con esa.",
     "restoreHint": "Reemplaza los datos de este dispositivo",
@@ -2487,7 +2532,10 @@
     "wifiOnly": "Solo con Wi-Fi",
     "wifiOnlyOff": "Desactivado. Las copias programadas pueden usar datos móviles.",
     "wifiOnlyOn": "Activado. Las copias programadas esperan a tener Wi-Fi.",
-    "working": "Procesando…"
+    "working": "Procesando…",
+    "statusFromCloud": "Última copia {{when}}, encontrada en {{provider}}",
+    "restoreOption": "Copia del {{when}}",
+    "statusFailed": "La última copia falló el {{when}}"
   },
   "factChoice": {
     "titleSingle": "¿Añadir esto a tu persona?",
@@ -2502,14 +2550,19 @@
     "skipAll": "Omitir todo",
     "addAllA11y": "Añadir las {{count}} sugerencias",
     "skipAllA11y": "Omitir las {{count}} sugerencias",
-    "titleReplace": "¿Reemplazar un dato que ya tienes?",
+    "titleReplace": "¿Reemplazar este dato?",
     "replace": "Reemplazar",
     "replacesLabel": "Reemplaza a",
     "replacesTopics_one": "y su 1 tema",
     "replacesTopics_other": "y sus {{count}} temas",
     "replacesNoUndo": "El dato anterior y sus temas se eliminan definitivamente. Esto no se puede deshacer.",
     "replacesLoading": "Comprobando qué reemplaza",
-    "replacesUnavailable": "Mera no puede mostrar ahora qué se eliminaría. Inténtalo en un momento."
+    "replacesUnavailable": "Mera no puede mostrar ahora qué se eliminaría. Inténtalo en un momento.",
+    "keepBoth": "Conservar ambos",
+    "titleAlsoAdd": "¿Añadir esto también?",
+    "pendingHint": "Elige una opción de arriba o escribe tu respuesta.",
+    "overlapsLabel": "Se solapa con",
+    "overlapsReplaceNote": "Reemplazar lo eliminaría junto con sus temas."
   },
   "subscriptions": {
     "sectionTitle": "Tus suscripciones",
@@ -2554,7 +2607,6 @@
       "countriesLabel": "Países de los que leíste",
       "latencyLabel": "Tiempo medio entre la publicación y la lectura",
       "latencyCoverage": "Basado en {{sampled}} de {{total}} artículos con hora de publicación conocida",
-      "latencyUnknown": "Todavía no hay suficientes horas de publicación conocidas para calcularlo",
       "openedLabel": "Artículos abiertos",
       "openedPartial": "Recuento parcial. Mera solo cuenta los toques en tus tarjetas de sugerencias.",
       "topPublicationsTitle": "Publicaciones principales",
@@ -2563,7 +2615,6 @@
       "latencyValue_other": "{{count}} horas",
       "reachTitle": "De dónde vinieron mis noticias",
       "keepTitle": "Lo que guardé",
-      "paceTitle": "Cómo me llegaron las noticias",
       "windowNow": "Ahora mismo",
       "savedLabel": "Artículos que guardaste",
       "followedLabel": "Historias que sigues",
@@ -2574,13 +2625,11 @@
       "paceScaleTitle": "De la publicación a la lectura",
       "hoursShort": "{{n}} h",
       "languagesLabel": "Idiomas en los que leíste",
-      "topLanguagesTitle": "Sobre todo leíste en",
-      "rhythmTitle": "Los días que leí",
       "daysReadLabel": "Días que leíste algo",
       "heatLegendLess": "menos",
       "heatLegendMore": "más",
-      "heatNote": "El sombreado indica cuántos artículos leíste ese día.",
-      "rhythmWeekdays": "L,M,X,J,V,S,D"
+      "rhythmWeekdays": "L,M,X,J,V,S,D",
+      "habitsTitle": "Cómo leo"
     }
   },
   "analytics": {
@@ -2603,7 +2652,7 @@
     "goneTombstone": "Este dato se eliminó, así que sus temas también.",
     "expandA11y": "Mostrar temas",
     "collapseA11y": "Ocultar temas",
-    "accordionTitlePending": "Buscaremos temas sobre:",
+    "accordionTitlePending": "Buscando temas de:",
     "pendingA11y": "Se están buscando temas",
     "readyA11y": "Temas listos",
     "failedA11y": "No se pudieron encontrar temas"
@@ -2637,7 +2686,8 @@
     },
     "noRouteSentence": "Mera no supo de qué se trataba. Prueba a decirlo de otra manera.",
     "noProposalSentence": "Mera no encontró nada que añadir de eso.",
-    "unknownToolSentence": "Algo falló por parte de Mera. Pregunta otra vez para continuar."
+    "unknownToolSentence": "Algo falló por parte de Mera. Pregunta otra vez para continuar.",
+    "malformedChoiceSentence": "Mera no pudo mostrarte las opciones. Pregunta otra vez para continuar."
   },
   "skillPhrase": {
     "residence": "dónde vives",
@@ -2772,5 +2822,59 @@
     "docTitle": "Artículos guardados",
     "docExported": "Exportado el {{date}}",
     "docReasonLabel": "Por qué lo eligió Mera"
+  },
+  "tabExplainer": {
+    "openA11y": "Cómo funciona esta pestaña",
+    "close": "Entendido",
+    "feed": {
+      "title": "Cómo funciona Noticias",
+      "what": "Noticias muestra cada noticia que Mera encontró para ti en los últimos dos días. Cada noticia tiene una sola tarjeta, aunque la hayan cubierto muchos medios.",
+      "how1": "Mera convierte lo que le contaste sobre ti en búsquedas, trae los artículos que coinciden y una IA lee cada uno para valorar cuánto te importa.",
+      "how2": "Primero van las noticias que no has visto, las más importantes delante. Una noticia no vista baja un nivel tras 12 horas y otro tras un día.",
+      "how3": "En la siguiente reordenación, las noticias que ya viste bajan y las que abriste van al final. Las tarjetas por encima de donde lees no se mueven. Desliza hacia abajo para reordenar.",
+      "privacy": "El orden se calcula en este teléfono. El registro de las noticias que abres se queda en este teléfono."
+    },
+    "forYou": {
+      "title": "Cómo funciona el Panel",
+      "what": "El Panel agrupa tus noticias por interés. Cada cosa que le contaste a Mera tiene su sección, además de titulares de tus países y del mundo.",
+      "how1": "Cada noticia va al interés con el que mejor encaja, así que aparece una sola vez. Si dos encajan igual, se la queda el que añadiste primero.",
+      "how2": "Los intereses a los que diste más peso van primero. Un interés nuevo tiene su sección incluso antes de que lleguen sus primeras noticias.",
+      "how3": "Dentro de cada sección, las noticias sin leer van primero, las más importantes delante. Las secciones se reordenan al salir de la pestaña o cada 10 minutos."
+    },
+    "explore": {
+      "title": "Cómo funciona Explorar",
+      "what": "Explorar muestra los titulares de las últimas 24 horas del mundo y de cada país que elijas. Son los mismos para todos, no están elegidos para ti.",
+      "how1": "Los titulares del mundo se ordenan según lo ampliamente que se cubre una noticia en distintos países, no por el número de artículos.",
+      "how2": "Los titulares de un país vienen de fuentes de noticias con sede en ese país."
+    },
+    "profile": {
+      "title": "Cómo funciona el Perfil",
+      "what": "El Perfil guarda lo que le contaste a Mera sobre ti. Noticias y el Panel se crean a partir de estos datos.",
+      "how1": "Cada dato se convierte en búsquedas que Mera hace por ti. Si cambias o borras un dato, también cambian las noticias que venían de él.",
+      "privacy": "Las búsquedas que salen de ellos nunca se vinculan a tu cuenta. El servidor guarda solo el texto de búsqueda, compartido de forma anónima entre todos los usuarios, y lo borra tras 14 días sin uso."
+    }
+  },
+  "articleMenu": {
+    "openA11y": "Más acciones",
+    "title": "Acciones del artículo",
+    "askMera": "Preguntar a Mera sobre esto",
+    "following": "Siguiendo esta historia",
+    "checkFacts": "Buscar verificaciones",
+    "openOn": "Abrir en {{source}}",
+    "openInTranslate": "Abrir en Google Translate",
+    "fewerFrom": "Menos de {{source}}",
+    "fewerFromDone": "Verás menos de {{source}}.",
+    "undo": "Deshacer",
+    "reportBug": "Informar de un error",
+    "actionFailed": "No funcionó. Inténtalo de nuevo."
+  },
+  "factChip": {
+    "label": "De tu perfil: {{label}}",
+    "openA11y": "Noticias sobre {{label}}"
+  },
+  "related": {
+    "allCountries": "Todos los países",
+    "allLanguages": "Todos los idiomas",
+    "noMatches": "Ningún artículo relacionado coincide con estos filtros."
   }
 }

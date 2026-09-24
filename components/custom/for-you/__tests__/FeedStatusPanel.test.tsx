@@ -54,7 +54,10 @@ jest.mock('@/components/ui/text', () => {
 });
 jest.mock('@/components/custom/GlassSurface', () => {
     const { View } = require('react-native');
-    return { GlassPanel: (props: any) => <View {...props} /> };
+    return {
+        GLASS_OVER_CONTENT_FILL: 'rgba(18,17,19,0.90)',
+        GlassPanel: (props: any) => <View {...props} />,
+    };
 });
 
 // The counts + phase selectors are stubbed so this stays isolated from the real
@@ -62,6 +65,8 @@ jest.mock('@/components/custom/GlassSurface', () => {
 let mockBatchProgress: { done: number; total: number } | null = null;
 jest.mock('@/lib/stores/selectors', () => ({
     useForYouAsyncJobPhase: () => 'idle',
+    useForYouAsyncJobProcessedCount: () => 30,
+    useForYouAsyncJobTotalCount: () => 36,
     useForYouBatchProgress: () => mockBatchProgress,
     useForYouDeviceProcessing: () => ({
         isDeviceProcessing: false,
@@ -125,5 +130,12 @@ describe('FeedStatusPanel', () => {
         const { queryByText, queryByTestId } = render(<FeedStatusPanel expanded mode="error" />);
         expect(queryByTestId('feed-status-details')).toBeTruthy();
         expect(queryByText('feed.analysingProgress')).toBeNull();
+    });
+
+    it('sits on the dark over-content base, passed as a style (GlassPanel ignores fallbackClassName)', () => {
+        const { getByTestId } = render(<FeedStatusPanel expanded mode="processing" />);
+        const { StyleSheet } = require('react-native');
+        const style = StyleSheet.flatten(getByTestId('dashboard-status-details-panel').props.style);
+        expect(style.backgroundColor).toBe('rgba(18,17,19,0.90)');
     });
 });

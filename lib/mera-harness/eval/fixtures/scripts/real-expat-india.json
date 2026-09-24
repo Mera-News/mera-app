@@ -1,7 +1,7 @@
 {
   "id": "real-expat-india",
   "cohort": "production",
-  "note": "Production case. Origin plus residence in one statement, which is where the origin guideline must split its output rather than running the domestic ladder of a country the user LEFT.",
+  "note": "Production case. Origin plus residence in one statement, which is where the origin guideline must split its output rather than running the domestic ladder of a country the user LEFT. Since ux1 (owner decision) an expat is three facts: origin, expat status and residence.",
   "persona": {
     "facts": [
       {
@@ -38,6 +38,15 @@
           {
             "statementMatches": [
               "india"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": null
+          },
+          {
+            "statementMatches": [
+              "expat",
+              "netherlands"
             ],
             "kind": "origin",
             "placeChain": null,

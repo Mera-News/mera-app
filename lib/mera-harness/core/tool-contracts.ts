@@ -199,6 +199,20 @@ export function toolsForLeg(opts: {
   /** The `pre-enforcement` control arm only: the route leg carries all four
    *  discovery tools, as it did when the 99 no-route legs were measured. */
   wideRouteLeg?: boolean;
+  /** False once another segment of the same turn has asked its question: one
+   *  question per turn, so later segments put other readings on the card. */
+  allowChoice?: boolean;
+}): ToolDefinition[] {
+  const tools = toolsForLegUnfiltered(opts);
+  return opts.allowChoice === false
+    ? tools.filter((t) => t.function.name !== 'ask_choice')
+    : tools;
+}
+
+function toolsForLegUnfiltered(opts: {
+  skillLoaded: string | null;
+  forcingProposal?: boolean;
+  wideRouteLeg?: boolean;
 }): ToolDefinition[] {
   if (opts.forcingProposal) return [SAVE_FACTS_TOOL, ASK_CHOICE_TOOL];
   // THE ROUTE LEG GETS ONE TOOL.

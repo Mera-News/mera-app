@@ -15,6 +15,10 @@ interface ExploreSearchBarProps {
      * and leaving the row expanded-but-empty is not a state the user asked for.
      */
     readonly onClose: () => void;
+    /** The input lost focus (keyboard dismissed, list scrolled). The screen
+     *  collapses the row when the query is empty (F40): an open, empty bar
+     *  sat where the "Explore" title belongs. */
+    readonly onBlur?: () => void;
 }
 
 /**
@@ -34,7 +38,7 @@ interface ExploreSearchBarProps {
  * InputField is an accessibility container and swallows a testID prop placed
  * directly on it (see AddPhraseModal for the same workaround).
  */
-const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuery, onClose }) => {
+const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuery, onClose, onBlur }) => {
     const { t } = useTranslation();
 
     return (
@@ -50,6 +54,7 @@ const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuer
                     placeholderTextColor="#666666"
                     value={query}
                     onChangeText={onChangeQuery}
+                    onBlur={onBlur}
                     className="text-white"
                     autoCorrect={false}
                     autoCapitalize="none"
@@ -57,8 +62,9 @@ const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuer
                     autoFocus
                 />
                 {/* ALWAYS rendered, unlike the old clear button, which appeared
-                    only once there was text. It is now the only way back to the
-                    heading, so it cannot be conditional on the query. */}
+                    only once there was text. With a query typed it is the only
+                    way back to the heading (blur collapses an EMPTY bar only),
+                    so it cannot be conditional on the query. */}
                 <InputSlot className="pr-3">
                     <Pressable
                         testID="explore-search-close"

@@ -216,15 +216,30 @@ export async function listTrackedMemberArticleIds(): Promise<Set<string>> {
   }
 }
 
-/** Unfollow a story (hard delete). Never throws. */
-export async function untrackStory(id: string): Promise<void> {
+/**
+ * Unfollow a story (hard delete). Never throws.
+ *
+ * Returns true when the row is gone afterwards, INCLUDING when it was already
+ * absent (deleted from another surface): that is the state the caller asked
+ * for. False only when the delete itself failed, so a screen can stay put and
+ * say so instead of navigating away from a story that still exists.
+ *
+ * Looked up by query + a JS id match rather than `collection.find`, which
+ * rejects on a missing id and would make "already gone" indistinguishable
+ * from a failed read.
+ */
+export async function untrackStory(id: string): Promise<boolean> {
   try {
-    const record = await collection.find(id);
+    const rows = await collection.query(Q.where('id', id)).fetch();
+    const record = rows.find((r) => r.id === id);
+    if (!record) return true;
     await database.write(async () => {
       await record.destroyPermanently();
     });
+    return true;
   } catch (err) {
     logger.warn('[tracked-story] untrackStory failed', { id, error: String(err) });
+    return false;
   }
 }
 
@@ -440,23 +455,30 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
  * so the badge is already 0 by the time a card on that screen can be dismissed.
  *
  * No-op (and NO write, so the `observeWithColumns` subscribers don't re-render)
- * when the article isn't a snapshot. Never throws.
+ * when the article isn't a snapshot. Never throws: returns true when the
+ * article is no longer a snapshot afterwards (removed, never a member, or the
+ * story itself is gone) and false only when the write failed, so the timeline
+ * can undo its optimistic removal.
  */
-export async function removeMemberSnapshot(id: string, articleId: string): Promise<void> {
+export async function removeMemberSnapshot(id: string, articleId: string): Promise<boolean> {
   const target = (articleId ?? '').trim();
-  if (!target) return;
+  if (!target) return true;
   try {
-    const record = await collection.find(id);
+    const rows = await collection.query(Q.where('id', id)).fetch();
+    const record = rows.find((r) => r.id === id);
+    if (!record) return true; // story gone, so the member is too
     const current = record.memberSnapshots ?? [];
     const next = current.filter((s) => s?.articleId !== target);
-    if (next.length === current.length) return; // not a member — nothing to write
+    if (next.length === current.length) return true; // not a member: nothing to write
     await database.write(async () => {
       await record.update((m) => {
         m.memberSnapshots = next;
       });
     });
+    return true;
   } catch (err) {
     logger.warn('[tracked-story] removeMemberSnapshot failed', { id, error: String(err) });
+    return false;
   }
 }
 

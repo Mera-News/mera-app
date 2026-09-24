@@ -36,6 +36,7 @@ import { gql } from '@apollo/client';
 import client from '../apollo-client';
 import logger from '../logger';
 import {
+    getFactCheckForClaim,
     listFactChecksByStatus,
     upsertFactCheck,
 } from '../database/services/fact-check-record-service';
@@ -48,6 +49,11 @@ import type { FactCheck as GeneratedFactCheck } from '../generated/graphql-types
 import { FACT_CHECK_FIELDS } from './fact-check-fields';
 import { isTerminalStatus } from './fact-check-state';
 import type { FactCheckRow } from './fact-check-types';
+import {
+    listAskedFactChecks,
+    noteFactCheckStored,
+    recordFactCheckAsked,
+} from './fact-check-settled';
 
 const GET_FACT_CHECK = gql`
   query GetFactCheck($articleId: ID!) {
@@ -86,6 +92,31 @@ async function keepCheckedArticle(
         // catch only defends the contract — a failed keep must never turn a
         // successful ask into a degraded outcome.
     }
+}
+
+/**
+ * THE ONE STORE for a server check, and so the one place a check that has just
+ * settled is noticed. Reads the local row's status first, writes, then hands
+ * both to `noteFactCheckStored`, which notifies only for a check this device
+ * asked for that went from waiting to settled. The panel poll, the mirror and
+ * both re-reads all come through here, so the same change seen by two of them
+ * still notifies once (the ask is consumed by the first).
+ */
+async function storeServerFactCheck(
+    articleId: string,
+    row: FactCheckRow,
+    articleTitle?: string | null,
+): Promise<void> {
+    const previous = await getFactCheckForClaim(articleId);
+    await upsertFactCheck({
+        articleId,
+        factCheckId: String(row._id ?? ''),
+        articleTitle: row.articleTitle ?? articleTitle ?? null,
+        status: row.status,
+        verdict: row.verdict ?? null,
+        payload: row,
+    });
+    await noteFactCheckStored(articleId, previous?.status ?? null, row);
 }
 
 /** One read of `factCheck(articleId)`. `terminal` is derived from `row.status`
@@ -144,16 +175,21 @@ export async function requestFactCheck(
     keep?: FactCheckKeepInput,
 ): Promise<FactCheckQueryOutcome> {
     try {
+        // THE FIRST ASK FROM THIS DEVICE is the one that counts as "asked":
+        // every later call (the panel poll, a re-read) finds a local row
+        // already there. Recorded before the network call, so an answer that
+        // lands while this is in flight is not missed.
+        if ((await getFactCheckForClaim(articleId)) === null) {
+            await recordFactCheckAsked({
+                articleId,
+                suggestionId: keep && 'suggestion' in keep ? keep.suggestion._id : null,
+                title: articleTitle ?? null,
+            });
+            ensureAskedFactCheckPoller();
+        }
         const outcome = await fetchFactCheck(articleId);
         if (outcome.row) {
-            await upsertFactCheck({
-                articleId,
-                factCheckId: String(outcome.row._id ?? ''),
-                articleTitle: outcome.row.articleTitle ?? articleTitle ?? null,
-                status: outcome.row.status,
-                verdict: outcome.row.verdict ?? null,
-                payload: outcome.row,
-            });
+            await storeServerFactCheck(articleId, outcome.row, articleTitle);
         } else {
             // Defensive: the SDL documents an insert-and-enqueue on first ask,
             // but a resolver could legitimately answer "lodged" without
@@ -218,14 +254,7 @@ export async function mirrorArticleFactCheck(
 
     const row = factCheck as FactCheckRow;
     try {
-        await upsertFactCheck({
-            articleId,
-            factCheckId: String(row._id ?? ''),
-            articleTitle: row.articleTitle ?? articleTitle ?? null,
-            status: row.status,
-            verdict: row.verdict ?? null,
-            payload: row,
-        });
+        await storeServerFactCheck(articleId, row, articleTitle);
         await keepCheckedArticle(articleId, keep, row, articleTitle);
         return true;
     } catch (err) {
@@ -363,8 +392,111 @@ export async function reconcileStoredFactChecks(): Promise<void> {
         for (const row of rows) {
             if (budget <= 0) return;
             budget -= 1;
+            // READ-ONLY: `cachedFactCheck` never creates a server row, so a row
+            // the server has since dropped cannot start a new billed job the
+            // way `factCheck` would on a miss.
             // eslint-disable-next-line no-await-in-loop -- see above.
-            await requestFactCheck(row.articleId, row.articleTitle);
+            await rereadFactCheck(row.articleId, row.articleTitle);
         }
     }
+}
+
+/** One read-only re-read through `cachedFactCheck`, stored through the one
+ *  store. Never throws; returns the settled-or-not state it saw, or null
+ *  when the read failed or the server has no row. */
+async function rereadFactCheck(
+    articleId: string,
+    articleTitle?: string | null,
+): Promise<{ terminal: boolean } | null> {
+    try {
+        const { data } = await client.query<{ cachedFactCheck: FactCheckRow | null }>({
+            query: GET_CACHED_FACT_CHECK,
+            variables: { articleId },
+            fetchPolicy: 'no-cache',
+        });
+        const row = data?.cachedFactCheck ?? null;
+        if (!row) return null;
+        await storeServerFactCheck(articleId, row, articleTitle);
+        return { terminal: isTerminalStatus(row.status) };
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { service: 'fact-check-graphql-client', method: 'rereadFactCheck' },
+            extra: { articleId },
+        });
+        return null;
+    }
+}
+
+/** Bound on one re-read pass, carried over from `RECONCILE_CAP`. */
+const ASKED_REREAD_CAP = 20;
+
+/**
+ * Re-reads the checks THIS DEVICE asked for that have not settled, and lets the
+ * one store notify for any that have. The foreground task (data scout's
+ * `fact-check-reconcile`) calls it on every return to the app, which, since a
+ * return reloads JS, is also how the work survives a reload. The asked list is
+ * the filter: `fact_checks` also holds checks mirrored from other readers'
+ * articles, and those are never re-read here.
+ *
+ * Read-only (`cachedFactCheck`), bounded, never throws. Returns how many asks
+ * are still waiting.
+ */
+export async function reconcileAskedFactChecks(): Promise<number> {
+    let waiting = 0;
+    try {
+        const asked = await listAskedFactChecks();
+        for (const ask of asked.slice(0, ASKED_REREAD_CAP)) {
+            // eslint-disable-next-line no-await-in-loop -- bounded, and each
+            // store must land before the next read decides anything.
+            const seen = await rereadFactCheck(ask.articleId, ask.title);
+            if (!seen || !seen.terminal) waiting++;
+        }
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { service: 'fact-check-graphql-client', method: 'reconcileAskedFactChecks' },
+        });
+    }
+    return waiting;
+}
+
+/** How often, and for how long, the in-session poller re-reads. Most checks
+ *  settle within 30s; past the ceiling the foreground task takes over. */
+export const ASKED_POLL_INTERVAL_MS = 6_000;
+export const ASKED_POLL_CEILING_MS = 10 * 60_000;
+
+let pollerTimer: ReturnType<typeof setTimeout> | null = null;
+let pollerRunning = false;
+
+/**
+ * Keeps re-reading asked checks while this JS context lives, so a result that
+ * lands after the reader left the article still reaches them in-session. One
+ * poller at a time; it stops once nothing is waiting or the ceiling passes.
+ * iOS suspends timers in the background and every return reloads JS, so the
+ * foreground task is what covers a result that settled while the app was away.
+ */
+export function ensureAskedFactCheckPoller(now: () => number = Date.now): void {
+    if (pollerRunning) return;
+    pollerRunning = true;
+    const startedAt = now();
+    const schedule = () => {
+        pollerTimer = setTimeout(() => { void tick(); }, ASKED_POLL_INTERVAL_MS);
+    };
+    const tick = async () => {
+        pollerTimer = null;
+        if (!pollerRunning) return;
+        const waiting = await reconcileAskedFactChecks();
+        if (pollerRunning && waiting > 0 && now() - startedAt < ASKED_POLL_CEILING_MS) {
+            schedule();
+        } else {
+            pollerRunning = false;
+        }
+    };
+    schedule();
+}
+
+/** Test seam: stop a poller an earlier test left running. */
+export function stopAskedFactCheckPollerForTest(): void {
+    pollerRunning = false;
+    if (pollerTimer !== null) clearTimeout(pollerTimer);
+    pollerTimer = null;
 }

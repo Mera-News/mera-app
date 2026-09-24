@@ -7,24 +7,31 @@
 // uncoordinated `reloadAsync()` callers and no shared gate between them.
 //
 // WHAT RESTARTS, AND WHEN
-//   - every true background -> active return (`AppRestartOnForeground`)
-//   - a downloaded OTA, immediately (`OTASilentUpdater`)
+//   - a DOWNLOADED, PENDING OTA, on a true background -> active return
+//     (`OTASilentUpdater`, which owns that lifecycle)
 //   - an RTL-crossing language change, and a completed backup restore
-// There is deliberately NO time threshold on the foreground return: any real
-// departure and return restarts. That is the owner's decision, not an oversight.
+//
+// A RETURN ON ITS OWN IS NOT A REASON TO RESTART. The app briefly restarted on
+// every true background -> active return regardless of whether anything had
+// changed, and the owner rejected it in production: a reader who switches away
+// for three seconds should come back to the app they left, not to a relaunch.
+// Do not reintroduce an unconditional foreground restart, and do not add one
+// behind a time threshold either — the objection was to refreshing a reader who
+// is already on the current bundle, which a threshold does not address.
 //
 // WHAT A RESTART COSTS, AND WHO PAYS IT
 // A reload looks exactly like a cold start to every boot path in the app, which
-// is wrong for three of them. Each reads the marker this module writes and
+// is wrong for two of them. Each reads the marker this module writes and
 // treats a restart boot as warm:
 //   - `lib/stores/pin-store.ts`      — otherwise a 3-second background becomes
 //                                      a PIN entry on every return
-//   - `app/_layout.tsx`              — otherwise `handleInitialNotification()`
-//                                      re-deep-links a notification tapped
-//                                      hours ago, on every restart
 //   - `lib/scheduler/AppScheduler.ts`— otherwise the 5s cold-start floor
 //                                      replaces the 60s warm one, so feed-sync
 //                                      fires on every single return
+// Notification taps do NOT read the marker and must not skip restart boots: a
+// tap made from the background returns through a restart. They dedupe on the
+// tap's persisted identifier instead (`handleInitialNotification` in
+// lib/notification-service.ts).
 // Money and credential paths hold the restart off instead, via `holdRestart()`.
 //
 // IMPORT DISCIPLINE. `lib/database/index.ts` opens SQLite at import time and the
@@ -39,7 +46,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 
 import logger from '@/lib/logger';
 
-export type RestartReason = 'foreground' | 'ota' | 'language' | 'restore';
+export type RestartReason = 'ota' | 'language' | 'restore';
 
 export type RestartContext = {
   /** This boot is a JS reload we asked for, not a real cold start. */
@@ -64,6 +71,91 @@ export type RestartContext = {
  * describes one reload on one device and means nothing after it is read.
  */
 export const RESTART_MARKER_KEY = 'js_restart_marker';
+
+/**
+ * Routes where a restart must not wipe what the user came back to finish: a
+ * login, an OTP fetched from their mail app, a PIN being set or entered,
+ * onboarding answers.
+ *
+ * THE LIST LIVES HERE, NOT IN A CALLER, and that is the whole point. It used to
+ * be checked by the foreground restart alone, so `requestRestart('ota')` was
+ * route-blind: a user returning from their mail app to `/verify-otp` had the
+ * foreground restart correctly skipped and was then restarted by the OTA check
+ * on that same transition, wiping the code the return had just delivered.
+ * Applied in `blockedBy()`, so every reason is covered rather than whichever one
+ * happens to own a list.
+ *
+ * `/pin-lock` is here for a SECURITY reason, not a convenience one: `locked`
+ * lives only in memory, so a restart recomputes it from the threshold and a
+ * short trip to a password manager would come back unlocked.
+ * `lib/stores/pin-store.ts` also takes a `holdRestart('pin-lock')` for the whole
+ * time the gate is engaged, which is the order-independent half of that fix. Do
+ * not remove either one on the grounds that the other exists.
+ */
+export const RESTART_BLOCKED_ROUTES = [
+  '/login',
+  '/verify-otp',
+  '/pin-setup',
+  '/pin-lock',
+  '/logged-in/onboarding',
+] as const;
+
+export function isRestartBlockedRoute(pathname: string): boolean {
+  return RESTART_BLOCKED_ROUTES.some((route) => pathname.startsWith(route));
+}
+
+/**
+ * The settings row recording which update id a restart has already been
+ * attempted for.
+ *
+ * OVERWRITTEN, NEVER DELETED, and deliberately NOT part of the restart marker.
+ * The marker is deleted on first read, so a bundle that downloads, restarts and
+ * then fails to launch would have its record cleared by the very boot that
+ * proves it failed — the guard erased by the exact failure it exists to bound.
+ *
+ * WHY IT IS NEEDED AT ALL: the OTA check is now the only restart trigger left,
+ * and it runs on every return. `MIN_RESTART_INTERVAL_MS` only SPACES a repeat,
+ * it does not stop one, so without this a bundle that keeps reporting itself
+ * downloadable leaves the app reloading every ten seconds for as long as that
+ * lasts. `restartCount` on the native context does not help: it counts reloads
+ * and says nothing about WHICH update was attempted.
+ */
+export const OTA_RESTART_GUARD_KEY = 'ota_restart_attempted_update_id';
+
+/** Whether a restart has already been attempted for this update id. */
+export async function otaRestartAlreadyAttempted(updateId: string): Promise<boolean> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getSetting } = require('@/lib/database/services/setting-service');
+    return (await getSetting(OTA_RESTART_GUARD_KEY)) === updateId;
+  } catch (err) {
+    // Fail to "already attempted". An unreadable guard must not license an
+    // unbounded reload loop; the update still launches at the next cold start,
+    // which is what expo-updates does on its own.
+    logger.captureException(err, {
+      tags: { module: 'app-restart', method: 'otaRestartAlreadyAttempted' },
+    });
+    return true;
+  }
+}
+
+/**
+ * Records the attempt. AWAITED BEFORE the restart is requested, never after: a
+ * write after `reloadAsync()` never runs, and an attempt that is then blocked by
+ * a hold or a route must still consume the guard — that update lands at the next
+ * cold start, which is the safe direction.
+ */
+export async function markOtaRestartAttempted(updateId: string): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { setSetting } = require('@/lib/database/services/setting-service');
+    await setSetting(OTA_RESTART_GUARD_KEY, updateId);
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { module: 'app-restart', method: 'markOtaRestartAttempted' },
+    });
+  }
+}
 
 /**
  * Floor between two restarts, ACROSS the reload as well as inside one process.
@@ -251,6 +343,18 @@ function blockedBy(): string | null {
   if (lastRestartAt > 0 && since < MIN_RESTART_INTERVAL_MS) return `cooldown:${since}ms`;
   const held = activeHolds();
   if (held.length > 0) return `hold:${held.join(',')}`;
+  // Lazy-required for the reason this file's header gives: `pin-store` and
+  // `AppScheduler` import this module, and nav-state is cheap but the rule is
+  // absolute. It mirrors the live route for exactly this kind of non-React read.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getCurrentPathname } = require('@/lib/nav-state');
+    const pathname: string = getCurrentPathname();
+    if (isRestartBlockedRoute(pathname)) return `route:${pathname}`;
+  } catch {
+    // An unreadable route is not a reason to block a restart the user asked for
+    // by changing their language or restoring a backup.
+  }
   return null;
 }
 
@@ -273,6 +377,34 @@ export function restartIsAvailable(): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Whether a restart requested RIGHT NOW would actually reload the app.
+ *
+ * Exists for one caller: the OTA path records one attempt per update id, and
+ * that record must only be spent on a request that genuinely reloads. A request
+ * that was blocked did not reload, so it cannot have failed to launch, so it is
+ * not what the guard bounds — retrying it on the next return is correct
+ * behaviour. Consuming the attempt anyway stranded the bundle: a reader mid-chat
+ * -stream, mid-checkout or sitting on `/verify-otp` when the download finished
+ * would never be offered it again on a return, only at a cold start — and the
+ * reader who never cold-starts is the entire premise of the feature.
+ *
+ * REUSES `blockedBy()` rather than restating its ladder. A second copy of that
+ * precedence is how the two drift apart, and a predicate that disagreed with the
+ * gate it predicts would be worse than no predicate.
+ *
+ * FALSE ON THE INERT PATHS TOO, not just when blocked. A dev build or a build
+ * without expo-updates eats the attempt otherwise, which is the same bug in
+ * different clothes; and it is false under `EXPO_PUBLIC_RESTART_DEBUG` as well,
+ * so a simulator pass can watch the decision on every return instead of seeing
+ * it once and then silently never again.
+ */
+export function restartWouldReload(): boolean {
+  if (restartDebugEnabled()) return false;
+  if (!restartIsAvailable()) return false;
+  return blockedBy() == null;
 }
 
 /**
@@ -311,9 +443,10 @@ export async function requestRestart(reason: RestartReason): Promise<void> {
   lastRestartAt = Date.now();
 
   try {
-    // Flush the feed's card states first. FeedScreen already flushes on
-    // `background`, which covers reason 'foreground', but an OTA restart fires
-    // with the app foregrounded where no flush has happened. Synchronous and a
+    // Flush the feed's card states first. FeedScreen flushes on `background`,
+    // so an OTA restart on a return is already covered — but a language or
+    // restore restart fires with the app foregrounded, where nothing has
+    // flushed. Synchronous and a
     // no-op when nothing is pending; its write goes through `setSetting`, and
     // WatermelonDB serializes writes, so awaiting the marker below is also the
     // barrier that guarantees this one landed.

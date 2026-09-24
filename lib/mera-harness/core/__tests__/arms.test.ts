@@ -13,8 +13,8 @@ import { buildRouterPrompt } from '../router-prompt';
 afterEach(() => resetAgentArmsForTest());
 
 describe('the registry', () => {
-  it('ships exactly baseline, router-v1, oneshot-prod and pre-enforcement', () => {
-    expect(agentArmIds().sort()).toEqual(['baseline', 'oneshot-prod', 'pre-enforcement', 'router-v1']);
+  it('ships exactly baseline, router-v1, oneshot-prod, pre-enforcement and multi-subject', () => {
+    expect(agentArmIds().sort()).toEqual(['baseline', 'multi-subject', 'oneshot-prod', 'pre-enforcement', 'router-v1']);
   });
 
   it('an UNKNOWN id THROWS rather than quietly scoring the control', () => {
@@ -35,7 +35,7 @@ describe('the registry', () => {
     // The failure this guards: dropping shipped arms here unregisters them for
     // every test after the first afterEach, and "starts clean" then passes for
     // the wrong reason.
-    expect(agentArmIds().sort()).toEqual(['baseline', 'oneshot-prod', 'pre-enforcement', 'router-v1']);
+    expect(agentArmIds().sort()).toEqual(['baseline', 'multi-subject', 'oneshot-prod', 'pre-enforcement', 'router-v1']);
   });
 });
 

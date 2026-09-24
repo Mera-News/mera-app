@@ -30,6 +30,7 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
+import { sentenceCase } from '@/components/custom/facts/sentence-case';
 
 interface CountryItem {
     code: string;
@@ -140,8 +141,8 @@ const PublisherSearchRow: React.FC<{
                             className="px-4 py-2 border-t border-gray-800"
                         >
                             <HStack className="items-center justify-between">
-                                <Text className="text-gray-300 text-sm capitalize">
-                                    {feed.category === 'general_news' ? 'All' : feed.category}
+                                <Text className="text-gray-300 text-sm">
+                                    {feed.category === 'general_news' ? 'All' : sentenceCase(feed.category)}
                                 </Text>
                                 <MaterialIcons name="chevron-right" size={16} color="#999999" />
                             </HStack>

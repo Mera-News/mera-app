@@ -120,6 +120,7 @@ Rules:
 - KEEP THE CAPITALS on proper nouns in "search" (sentence case, never lowercase): retrieval recognises a place by its capital letter, so an all-lowercase query cannot be filtered by place and pulls the right subject from the wrong town.
 - Scopes must stay matchable indefinitely. Check the Today date in <context>: NEVER name an already-ended year, season or edition, and prefer an UNDATED scope ("Hungarian Grand Prix updates") over a dated one.
 - If the user redirects ("no, the protests themselves"), call proposeTrack AGAIN with re-scoped options.
+- When you call proposeTrack, your message beside the card is ONE line: "Pick the story to follow below." (in the reply language). Never use the word "scope" in anything the user reads, labels included.
 - Mera can only follow a story here. If the user asks for something genuinely different (feed tuning, facts, settings) say plainly that this chat only starts a followed story. Naming a story you have not heard of is NOT one of those cases.
 
 ## The confirm card
@@ -294,7 +295,7 @@ export function getFollowStoryToolDefinitions(
       function: {
         name: 'proposeTrack',
         description:
-          'Propose following the story the user described, as a durable topic. Never follows directly — stages a card the user taps. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground every option in what the USER said; there is no article in this conversation.',
+          'Propose following the story the user described, as a durable topic. Never follows directly — stages a card the user taps. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground every option in what the USER said; there is no article in this conversation. Your message beside the card is one line: "Pick the story to follow below." Never write the word "scope" to the user.',
         parameters: {
           type: 'object',
           properties: {

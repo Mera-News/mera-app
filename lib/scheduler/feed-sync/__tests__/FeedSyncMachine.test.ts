@@ -48,6 +48,7 @@ const mockForYouStoreState = {
   setDailyLimitResetAt: jest.fn(),
   setDailyLimitNoticeDay: jest.fn(),
   markProcessingRunFinished: jest.fn(),
+  markNewArticlesArrived: jest.fn(),
   resetHydrationProgress: jest.fn(),
   setScoringError: jest.fn(),
   relevantArticleCount: 0,
@@ -525,6 +526,31 @@ describe('FeedSyncMachine — full happy path (with new articles)', () => {
   });
 });
 
+describe('FeedSyncMachine — new-articles stamp (F16)', () => {
+  it('stamps markNewArticlesArrived once when the run inserted rows', async () => {
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockForYouStoreState.markNewArticlesArrived).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not stamp it when hydration inserted nothing', async () => {
+    mockStepHydratePersistEnqueue.mockResolvedValueOnce({
+      insertedCount: 0,
+      enqueuedCount: 0,
+      dailyLimitReached: false,
+    });
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockForYouStoreState.markNewArticlesArrived).not.toHaveBeenCalled();
+  });
+});
+
 describe('FeedSyncMachine — no new articles path (diffResult.missingIds is empty)', () => {
   beforeEach(() => {
     mockStepDiff.mockResolvedValue({
@@ -596,6 +622,16 @@ describe('FeedSyncMachine — no new articles path (diffResult.missingIds is emp
   // The one case where the claim would be a lie: a live scoring run already
   // owns the unscored backlog and will stamp its own finalize. Saying "finished"
   // here would resolve the card while work is genuinely still in flight.
+  // F16: "Updated just now" must not reset on a poll that found nothing.
+  it('does NOT stamp new-articles-arrived on a cycle that found nothing', async () => {
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockForYouStoreState.markNewArticlesArrived).not.toHaveBeenCalled();
+  });
+
   it('does NOT stamp it while a scoring run is already in flight', async () => {
     mockGetPipelineStatus.mockResolvedValue('running');
     mockGetRunStartedAt.mockResolvedValue(Date.now());

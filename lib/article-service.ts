@@ -10,6 +10,7 @@ import {
     NewsClustersResponse,
     PersonaQueryInput,
     PersonaQueryResult,
+    RelatedArticleFacets,
     RelatedArticlesContextInput,
     RelatedArticlesPage,
     RelatedSortMode,
@@ -424,6 +425,108 @@ const GET_RELATED_ARTICLES_PAGE = gql`
     }
   }
 `;
+
+/**
+ * N10 related-coverage filters: THE switch. Flip to true only once the server's
+ * `countries` / `languages` arguments and `facets` field on
+ * `relatedArticlesPage` are live on `mera-server` main (prod): an unknown
+ * argument or field fails the WHOLE request there, and `mera-app` ships only to
+ * production. While false, `getRelatedArticlesPage` sends the default document
+ * whatever the caller passes, and the filter chips should read this to decide
+ * whether to render at all.
+ */
+export const RELATED_FILTERS_LIVE = false;
+
+/** A reader's related-coverage filter. Absent or empty list means "All". */
+export interface RelatedArticlesFilter {
+    /** ISO alpha-3 (or GLOBAL for international sources). */
+    countries?: string[] | null;
+    /** Base language tags, e.g. `de`. */
+    languages?: string[] | null;
+}
+
+/** A related page as the service returns it: `facets` is null whenever the
+ *  filtered document was not sent (switch off). */
+export type RelatedArticlesPageResult = Omit<RelatedArticlesPage, 'facets'> & {
+    facets: RelatedArticleFacets | null;
+};
+
+/** Variables of GET_RELATED_ARTICLES_PAGE_FILTERED. Declared so the object
+ *  literal gets excess-property checking: a typo'd key must not compile and
+ *  then take the query down at runtime. */
+interface RelatedPageFilteredVariables {
+    articleId: string;
+    stableClusterId: string | null;
+    sortMode: RelatedSortMode | null;
+    context: RelatedArticlesContextInput | null;
+    excludeIds: string[] | null;
+    first: number | null;
+    after: string | null;
+    countries: string[] | null;
+    languages: string[] | null;
+}
+
+// Same page as GET_RELATED_ARTICLES_PAGE plus the N10 filters and facet counts.
+// A SEPARATE document on purpose: the default one must stay valid against a
+// server that has never heard of either (see RELATED_FILTERS_LIVE).
+const GET_RELATED_ARTICLES_PAGE_FILTERED = gql`
+  query GetRelatedArticlesPageFiltered(
+    $articleId: ID!
+    $stableClusterId: String
+    $sortMode: RelatedSortMode
+    $context: RelatedArticlesContextInput
+    $excludeIds: [ID!]
+    $first: Int
+    $after: String
+    $countries: [String!]
+    $languages: [String!]
+  ) {
+    relatedArticlesPage(
+      articleId: $articleId
+      stableClusterId: $stableClusterId
+      sortMode: $sortMode
+      context: $context
+      excludeIds: $excludeIds
+      first: $first
+      after: $after
+      countries: $countries
+      languages: $languages
+    ) {
+      articles {
+        _id
+        title_en
+        description_en
+        article_url
+        image_url
+        country_code
+        publication_name
+        language_code
+        pubDate
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        pageSize
+      }
+      restarted
+      facets {
+        countries {
+          code
+          count
+        }
+        languages {
+          code
+          count
+        }
+      }
+    }
+  }
+`;
+
+/** A non-empty filter list, or null ("All"). */
+function filterList(v: string[] | null | undefined): string[] | null {
+    return v && v.length > 0 ? v : null;
+}
 
 const GET_RECENT_ARTICLE_COUNT = gql`
   query GetRecentArticleCount {
@@ -948,42 +1051,67 @@ export class ArticleService {
      * than append, or it stacks a second copy of page 1 under what is already on
      * screen. There is no way to detect that from the rows themselves.
      */
-    static async getRelatedArticlesPage(input: {
-        articleId: string;
-        stableClusterId?: string | null;
-        sortMode?: RelatedSortMode | null;
-        context?: RelatedArticlesContextInput | null;
-        excludeIds?: string[] | null;
-        first?: number;
-        after?: string | null;
-    }): Promise<RelatedArticlesPage> {
+    static async getRelatedArticlesPage(
+        input: {
+            articleId: string;
+            stableClusterId?: string | null;
+            sortMode?: RelatedSortMode | null;
+            context?: RelatedArticlesContextInput | null;
+            excludeIds?: string[] | null;
+            first?: number;
+            after?: string | null;
+            /** Ignored while the switch is off. */
+            filter?: RelatedArticlesFilter | null;
+        },
+        /** Injected for tests; production callers never pass it. */
+        filtersLive: boolean = RELATED_FILTERS_LIVE,
+    ): Promise<RelatedArticlesPageResult> {
+        const empty: RelatedArticlesPageResult = {
+            articles: [],
+            pageInfo: { endCursor: null, hasNextPage: false, pageSize: 0 },
+            restarted: false,
+            facets: null,
+        };
         try {
+            // Prefer the retained stable-story id: the server maps it to the
+            // current clustering generation, so the page a reader is scrolling
+            // stays anchored to one story even across a re-clustering run.
+            const base: Omit<RelatedPageFilteredVariables, 'countries' | 'languages'> = {
+                articleId: input.articleId,
+                stableClusterId: input.stableClusterId ?? null,
+                sortMode: input.sortMode ?? null,
+                context: input.context ?? null,
+                excludeIds: input.excludeIds ?? null,
+                first: input.first ?? null,
+                after: input.after ?? null,
+            };
+            if (!filtersLive) {
+                const { data } = await client.query<{
+                    relatedArticlesPage: Omit<RelatedArticlesPage, 'facets'> | null;
+                }>({
+                    query: GET_RELATED_ARTICLES_PAGE,
+                    variables: base,
+                    fetchPolicy: 'no-cache',
+                });
+                return data?.relatedArticlesPage
+                    ? { ...data.relatedArticlesPage, facets: null }
+                    : empty;
+            }
+            const variables: RelatedPageFilteredVariables = {
+                ...base,
+                countries: filterList(input.filter?.countries),
+                languages: filterList(input.filter?.languages),
+            };
             const { data } = await client.query<{
-                relatedArticlesPage: RelatedArticlesPage;
+                relatedArticlesPage: RelatedArticlesPage | null;
             }>({
-                query: GET_RELATED_ARTICLES_PAGE,
-                variables: {
-                    articleId: input.articleId,
-                    // Prefer the retained stable-story id: the server maps it to
-                    // the current clustering generation, so the page a reader is
-                    // scrolling stays anchored to one story even across a
-                    // re-clustering run.
-                    stableClusterId: input.stableClusterId ?? null,
-                    sortMode: input.sortMode ?? null,
-                    context: input.context ?? null,
-                    excludeIds: input.excludeIds ?? null,
-                    first: input.first ?? null,
-                    after: input.after ?? null,
-                },
+                query: GET_RELATED_ARTICLES_PAGE_FILTERED,
+                variables,
                 fetchPolicy: 'no-cache',
             });
-            return (
-                data?.relatedArticlesPage ?? {
-                    articles: [],
-                    pageInfo: { endCursor: null, hasNextPage: false, pageSize: 0 },
-                    restarted: false,
-                }
-            );
+            return data?.relatedArticlesPage
+                ? { ...data.relatedArticlesPage, facets: data.relatedArticlesPage.facets ?? null }
+                : empty;
         } catch (error) {
             this.reportQueryError('getRelatedArticlesPage', error, {
                 articleId: input.articleId,

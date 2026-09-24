@@ -73,6 +73,19 @@ describe('ChatPhaseLine', () => {
     jest.useRealTimers();
   });
 
+  // ux1 C2: the thread moved DOWN 20pt when a one-line phrase gave way to a
+  // two-line one before the first token. The row now holds two lines always.
+  describe('a fixed-height row', () => {
+    it('reserves two lines and never grows past them', () => {
+      act(() => useChatPhaseStore.getState().setPhase('attesting'));
+      render(<ChatPhaseLine />);
+      const node = screen.getByTestId('chat-phase-line');
+      const style = Array.isArray(node.props.style) ? Object.assign({}, ...node.props.style) : node.props.style;
+      expect(node.props.numberOfLines).toBe(2);
+      expect(style.minHeight).toBe(style.lineHeight * 2);
+    });
+  });
+
   describe('the three views', () => {
     it('renders the phase pool while a phase is published', () => {
       act(() => useChatPhaseStore.getState().setPhase('attesting'));

@@ -164,9 +164,9 @@ describe('Stories panel', () => {
         expect(list().props.onScroll).toBeUndefined();
     });
 
-    it('renders its title INSIDE the list so it scrolls with the content', () => {
+    it('renders no title of its own when embedded: the host header and sub-tab name it', () => {
         render(<TrackedStoriesScreen embedded scrollHandler={handler} headerHeight={HEADER_H} />);
-        expect(screen.getByText('trackedStories.title')).toBeTruthy();
+        expect(screen.queryByText('trackedStories.title')).toBeNull();
     });
 });
 
@@ -186,13 +186,17 @@ describe('Saved panel', () => {
         expect(list().props.onScroll).toBeUndefined();
     });
 
-    // The title used to be a SIBLING above the list. Left there it would sit
-    // pinned behind the absolute collapsing header — jammed under the status bar
-    // once the header hid, and eating the space the collapse reclaims. It now
-    // lives in ListHeaderComponent so it scrolls away with the rows. This panel
-    // had no test suite of its own, so without this the relocation is uncovered.
-    it('renders its title INSIDE the list so it scrolls with the content', () => {
+    // M3: embedded, the Dashboard header and the selected pill already name
+    // the list, and a second 34pt title under the 34pt "Dashboard" was the
+    // double heading. The standalone route keeps its title, INSIDE the list so
+    // it scrolls away with the rows.
+    it('draws no second title when embedded', () => {
         render(<SavedSuggestionsScreen embedded onBack={jest.fn()} scrollHandler={handler} headerHeight={HEADER_H} />);
+        expect(screen.queryByText('savedSuggestions.title')).toBeNull();
+    });
+
+    it('keeps its title standalone', () => {
+        render(<SavedSuggestionsScreen onBack={jest.fn()} />);
         expect(screen.getByText('savedSuggestions.title')).toBeTruthy();
     });
 });
@@ -224,3 +228,21 @@ describe('History panel', () => {
         expect(list().props.onScroll).toBeUndefined();
     });
 });
+
+describe('in-tab list end padding counts the tab bar once', () => {
+    // iOS: the tab's own inset already includes the bar (0 here, mocked), so an
+    // embedded list pads by the helper's clearance plus 24, never plus
+    // TAB_BAR_HEIGHT. Measured on device, the old sum left ~2x the bar of dead
+    // space after the last Saved row.
+    it('Saved, embedded and empty (no export FAB reserve)', () => {
+        render(<SavedSuggestionsScreen embedded onBack={jest.fn()} scrollHandler={handler} headerHeight={HEADER_H} />);
+        expect(flat(screen.getByTestId('saved-suggestions-list').props.contentContainerStyle).paddingBottom).toBe(24);
+    });
+
+    it('Visited, embedded', async () => {
+        render(<VisitedPublicationsList embedded onBack={jest.fn()} scrollHandler={handler} headerHeight={HEADER_H} />);
+        await waitFor(() => expect(screen.getByTestId('visited-publications-list')).toBeTruthy());
+        expect(flat(screen.getByTestId('visited-publications-list').props.contentContainerStyle).paddingBottom).toBe(24);
+    });
+});
+

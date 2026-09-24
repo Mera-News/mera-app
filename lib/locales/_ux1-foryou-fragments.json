@@ -1,0 +1,1243 @@
+{
+  "_comment": "ux1 P2 (For You scout). New keys: feed.updatedJustNow, feedStatus.syncDoneA11y, forYou.{emptySection.awaiting, emptySection.none, newInterest, nextSection, backToDashboard}, publicationVisits.emptyTitle, savedSuggestions.emptyTitle, shareStats.card.habitsTitle, the whole tabExplainer namespace. OVERWRITES (run with --allow-overwrite forYou.subTabHistory,publicationVisits.noArticlesYet,publicationVisits.screenIntro): History is relabelled to what it records, publishers the reader opened from Mera (D5), and the old copy claimed reading was tracked. forYou.nextSection is followed in code by the existing trackedStories.articleCount plural, joined with a middle dot, and is used alone when the next section is empty, so it never says 0. tabExplainer.feed.privacy is pending the feed scout's confirmation; explore.* and profile.privacy are server-verified wording. No em or en dashes anywhere. Never edit the 20 dictionaries by hand.",
+  "en": {
+    "feed": {
+      "updatedJustNow": "Updated just now"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Your feed is up to date."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Looking for stories about this. They show up after the next refresh.",
+        "none": "No story here yet fits this closely enough to show."
+      },
+      "newInterest": "New interest",
+      "nextSection": "Next: {{title}}",
+      "backToDashboard": "Back to Dashboard",
+      "subTabHistory": "Visited"
+    },
+    "publicationVisits": {
+      "emptyTitle": "No publishers yet",
+      "noArticlesYet": "Publishers you open from Mera show up here. Reading inside Mera isn't listed.",
+      "screenIntro": "Publishers whose sites you opened from Mera in the last 30 days. This list stays on this device."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Nothing saved yet"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "How I read"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "How this tab works",
+      "close": "Got it",
+      "feed": {
+        "title": "How Feed works",
+        "what": "Feed shows every story Mera found for you in the last two days. Each story gets one card, even when many outlets covered it.",
+        "how1": "Mera turns what you told it about yourself into searches, fetches matching articles, and an AI reads each one to judge how much it matters to you.",
+        "how2": "Stories you haven't seen come first, most important first. An unseen story drops one level after 12 hours and another after a day.",
+        "how3": "Stories you scrolled past move lower, and ones you opened go last. Cards above where you are reading stay put. Pull down to re-sort.",
+        "privacy": "The order is worked out on this phone. Which stories you open is kept only on this phone."
+      },
+      "forYou": {
+        "title": "How the Dashboard works",
+        "what": "The Dashboard groups your news by interest. Each thing you told Mera gets a section, plus headlines from your countries and the world.",
+        "how1": "Each story goes to the one interest it fits best, so it appears once. If two fit equally, the interest you added first keeps it.",
+        "how2": "Interests you gave more weight come first. A new interest appears at the top, even before its first stories arrive.",
+        "how3": "Inside a section, unread stories come first, most important first. Sections reorder when you leave the tab, or every 10 minutes."
+      },
+      "explore": {
+        "title": "How Explore works",
+        "what": "Explore shows the headlines from the last 24 hours for the world and for each country you pick. They are the same for everyone, not picked for you.",
+        "how1": "World headlines are ranked by how widely a story is covered across countries, not by how many articles there are.",
+        "how2": "Country headlines come from news sources based in that country."
+      },
+      "profile": {
+        "title": "How Profile works",
+        "what": "Profile holds what you told Mera about yourself. Your Feed and Dashboard are built from these facts.",
+        "how1": "Each fact becomes searches Mera runs for you. Change or delete a fact and the stories that came from it change too.",
+        "privacy": "The searches made from them are never linked to your account. The server keeps only the search text, shared anonymously across all users, and deletes it after 14 days without use."
+      }
+    }
+  },
+  "de": {
+    "feed": {
+      "updatedJustNow": "Gerade aktualisiert"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Dein Feed ist aktuell."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Mera sucht Artikel zu diesem Thema. Sie erscheinen nach der nächsten Aktualisierung.",
+        "none": "Noch passt keine Meldung eng genug, um hier zu erscheinen."
+      },
+      "newInterest": "Neues Interesse",
+      "nextSection": "Weiter: {{title}}",
+      "backToDashboard": "Zurück zum Dashboard",
+      "subTabHistory": "Besucht"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Noch keine Medien",
+      "noArticlesYet": "Medien, die du aus Mera heraus öffnest, erscheinen hier. Lesen innerhalb von Mera wird nicht aufgeführt.",
+      "screenIntro": "Medien, deren Websites du in den letzten 30 Tagen aus Mera heraus geöffnet hast. Diese Liste bleibt auf diesem Gerät."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Noch nichts gespeichert"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Wie ich lese"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "So funktioniert dieser Tab",
+      "close": "Verstanden",
+      "feed": {
+        "title": "So funktioniert der Feed",
+        "what": "Der Feed zeigt jede Meldung, die Mera in den letzten zwei Tagen für dich gefunden hat. Jede Meldung bekommt eine Karte, auch wenn viele Medien darüber berichtet haben.",
+        "how1": "Mera macht aus dem, was du über dich erzählt hast, Suchanfragen, holt passende Artikel, und eine KI liest jeden, um zu beurteilen, wie wichtig er für dich ist.",
+        "how2": "Meldungen, die du noch nicht gesehen hast, kommen zuerst, die wichtigsten vorne. Eine ungesehene Meldung rutscht nach 12 Stunden eine Stufe tiefer und nach einem Tag noch eine.",
+        "how3": "Meldungen, an denen du vorbeigescrollt hast, rücken nach unten, geöffnete ganz ans Ende. Karten oberhalb deiner Leseposition bleiben stehen. Zum Neusortieren nach unten ziehen.",
+        "privacy": "Die Reihenfolge wird auf diesem Telefon berechnet. Welche Meldungen du öffnest, bleibt nur auf diesem Telefon."
+      },
+      "forYou": {
+        "title": "So funktioniert das Dashboard",
+        "what": "Das Dashboard ordnet deine Nachrichten nach Interessen. Alles, was du Mera erzählt hast, bekommt einen Abschnitt, dazu Schlagzeilen aus deinen Ländern und der Welt.",
+        "how1": "Jede Meldung landet bei dem einen Interesse, zu dem sie am besten passt, und erscheint so nur einmal. Passen zwei gleich gut, behält sie das zuerst hinzugefügte.",
+        "how2": "Interessen mit mehr Gewicht kommen zuerst. Ein neues Interesse steht oben, schon bevor seine ersten Meldungen da sind.",
+        "how3": "Innerhalb eines Abschnitts kommen ungelesene Meldungen zuerst, die wichtigsten vorne. Die Abschnitte ordnen sich neu, wenn du den Tab verlässt, oder alle 10 Minuten."
+      },
+      "explore": {
+        "title": "So funktioniert Entdecken",
+        "what": "Entdecken zeigt die Schlagzeilen der letzten 24 Stunden für die Welt und für jedes Land, das du auswählst. Sie sind für alle gleich und nicht für dich ausgewählt.",
+        "how1": "Welt-Schlagzeilen werden danach geordnet, wie breit eine Meldung über Ländergrenzen hinweg berichtet wird, nicht nach der Zahl der Artikel.",
+        "how2": "Länder-Schlagzeilen stammen von Nachrichtenquellen mit Sitz in diesem Land."
+      },
+      "profile": {
+        "title": "So funktioniert das Profil",
+        "what": "Im Profil steht, was du Mera über dich erzählt hast. Dein Feed und dein Dashboard entstehen aus diesen Fakten.",
+        "how1": "Aus jedem Fakt werden Suchanfragen, die Mera für dich ausführt. Änderst oder löschst du einen Fakt, ändern sich auch die Meldungen, die daraus kamen.",
+        "privacy": "Die daraus entstandenen Suchanfragen werden nie mit deinem Konto verknüpft. Der Server speichert nur den Suchtext, anonym geteilt über alle Nutzer, und löscht ihn nach 14 Tagen ohne Nutzung."
+      }
+    }
+  },
+  "ar": {
+    "feed": {
+      "updatedJustNow": "تم التحديث الآن"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "موجزك محدَّث."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "نبحث عن قصص حول هذا. ستظهر بعد التحديث التالي.",
+        "none": "لا توجد قصة هنا بعد تطابق هذا بما يكفي لعرضها."
+      },
+      "newInterest": "اهتمام جديد",
+      "nextSection": "التالي: {{title}}",
+      "backToDashboard": "العودة إلى لوحة التحكم",
+      "subTabHistory": "المُزارة"
+    },
+    "publicationVisits": {
+      "emptyTitle": "لا توجد جهات نشر بعد",
+      "noArticlesYet": "تظهر هنا جهات النشر التي تفتحها من Mera. القراءة داخل Mera لا تُدرج.",
+      "screenIntro": "جهات النشر التي فتحت مواقعها من Mera خلال آخر 30 يومًا. تبقى هذه القائمة على هذا الجهاز."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "لا شيء محفوظ بعد"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "كيف أقرأ"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "كيف يعمل هذا القسم",
+      "close": "فهمت",
+      "feed": {
+        "title": "كيف يعمل الخلاصة",
+        "what": "يعرض الخلاصة كل قصة وجدها Mera لك في آخر يومين. لكل قصة بطاقة واحدة، حتى لو غطتها منافذ كثيرة.",
+        "how1": "يحوّل Mera ما أخبرته به عن نفسك إلى عمليات بحث، ويجلب المقالات المطابقة، ويقرأ ذكاء اصطناعي كل مقال ليحكم على مدى أهميته لك.",
+        "how2": "تأتي القصص التي لم ترها أولًا، الأهم فالأهم. تنزل القصة غير المرئية مستوى واحدًا بعد 12 ساعة ومستوى آخر بعد يوم.",
+        "how3": "تنزل القصص التي مررت بها، وتأتي القصص التي فتحتها في النهاية. البطاقات فوق موضع قراءتك لا تتحرك. اسحب للأسفل لإعادة الترتيب.",
+        "privacy": "يُحسب الترتيب على هذا الهاتف. القصص التي تفتحها تُحفظ على هذا الهاتف فقط."
+      },
+      "forYou": {
+        "title": "كيف تعمل لوحة التحكم",
+        "what": "تجمع لوحة التحكم أخبارك حسب الاهتمام. لكل ما أخبرت به Mera قسم خاص، إضافة إلى عناوين من بلدانك ومن العالم.",
+        "how1": "تذهب كل قصة إلى الاهتمام الذي يناسبها أكثر، فتظهر مرة واحدة. إذا تساوى اهتمامان، يحتفظ بها الاهتمام الذي أضفته أولًا.",
+        "how2": "الاهتمامات التي منحتها وزنًا أكبر تأتي أولًا. يظهر الاهتمام الجديد في الأعلى، حتى قبل وصول قصصه الأولى.",
+        "how3": "داخل كل قسم، تأتي القصص غير المقروءة أولًا، الأهم فالأهم. يُعاد ترتيب الأقسام عند مغادرة القسم أو كل 10 دقائق."
+      },
+      "explore": {
+        "title": "كيف يعمل الاستكشاف",
+        "what": "يعرض الاستكشاف عناوين آخر 24 ساعة للعالم ولكل بلد تختاره. هي نفسها للجميع، وليست مختارة لك.",
+        "how1": "تُرتَّب عناوين العالم حسب مدى انتشار تغطية القصة عبر البلدان، لا حسب عدد المقالات.",
+        "how2": "تأتي عناوين البلد من مصادر أخبار مقرها في ذلك البلد."
+      },
+      "profile": {
+        "title": "كيف يعمل الملف الشخصي",
+        "what": "يحتوي الملف الشخصي على ما أخبرت به Mera عن نفسك. يُبنى خلاصتك ولوحة التحكم من هذه الحقائق.",
+        "how1": "تتحول كل حقيقة إلى عمليات بحث يجريها Mera لك. إذا غيّرت حقيقة أو حذفتها تتغير القصص التي جاءت منها أيضًا.",
+        "privacy": "عمليات البحث الناتجة عنها لا تُربط بحسابك أبدًا. يحتفظ الخادم بنص البحث فقط، مشتركًا بشكل مجهول بين جميع المستخدمين، ويحذفه بعد 14 يومًا دون استخدام."
+      }
+    }
+  },
+  "es": {
+    "feed": {
+      "updatedJustNow": "Actualizado ahora mismo"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Tu feed está al día."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Buscando noticias sobre esto. Aparecerán tras la próxima actualización.",
+        "none": "Todavía no hay ninguna noticia que encaje lo bastante con esto."
+      },
+      "newInterest": "Interés nuevo",
+      "nextSection": "Siguiente: {{title}}",
+      "backToDashboard": "Volver al Panel",
+      "subTabHistory": "Visitados"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Aún no hay medios",
+      "noArticlesYet": "Los medios que abres desde Mera aparecen aquí. Lo que lees dentro de Mera no se incluye.",
+      "screenIntro": "Medios cuyas webs abriste desde Mera en los últimos 30 días. Esta lista se queda en este dispositivo."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Nada guardado todavía"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Cómo leo"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Cómo funciona esta pestaña",
+      "close": "Entendido",
+      "feed": {
+        "title": "Cómo funciona Noticias",
+        "what": "Noticias muestra cada noticia que Mera encontró para ti en los últimos dos días. Cada noticia tiene una sola tarjeta, aunque la hayan cubierto muchos medios.",
+        "how1": "Mera convierte lo que le contaste sobre ti en búsquedas, trae los artículos que coinciden y una IA lee cada uno para valorar cuánto te importa.",
+        "how2": "Primero van las noticias que no has visto, las más importantes delante. Una noticia no vista baja un nivel tras 12 horas y otro tras un día.",
+        "how3": "Las noticias que pasaste de largo bajan, y las que abriste van al final. Las tarjetas por encima de donde lees no se mueven. Desliza hacia abajo para reordenar.",
+        "privacy": "El orden se calcula en este teléfono. Las noticias que abres se guardan solo en este teléfono."
+      },
+      "forYou": {
+        "title": "Cómo funciona el Panel",
+        "what": "El Panel agrupa tus noticias por interés. Cada cosa que le contaste a Mera tiene su sección, además de titulares de tus países y del mundo.",
+        "how1": "Cada noticia va al interés con el que mejor encaja, así que aparece una sola vez. Si dos encajan igual, se la queda el que añadiste primero.",
+        "how2": "Los intereses a los que diste más peso van primero. Un interés nuevo aparece arriba, incluso antes de que lleguen sus primeras noticias.",
+        "how3": "Dentro de cada sección, las noticias sin leer van primero, las más importantes delante. Las secciones se reordenan al salir de la pestaña o cada 10 minutos."
+      },
+      "explore": {
+        "title": "Cómo funciona Explorar",
+        "what": "Explorar muestra los titulares de las últimas 24 horas del mundo y de cada país que elijas. Son los mismos para todos, no están elegidos para ti.",
+        "how1": "Los titulares del mundo se ordenan según lo ampliamente que se cubre una noticia en distintos países, no por el número de artículos.",
+        "how2": "Los titulares de un país vienen de fuentes de noticias con sede en ese país."
+      },
+      "profile": {
+        "title": "Cómo funciona el Perfil",
+        "what": "El Perfil guarda lo que le contaste a Mera sobre ti. Noticias y el Panel se crean a partir de estos datos.",
+        "how1": "Cada dato se convierte en búsquedas que Mera hace por ti. Si cambias o borras un dato, también cambian las noticias que venían de él.",
+        "privacy": "Las búsquedas que salen de ellos nunca se vinculan a tu cuenta. El servidor guarda solo el texto de búsqueda, compartido de forma anónima entre todos los usuarios, y lo borra tras 14 días sin uso."
+      }
+    }
+  },
+  "fr": {
+    "feed": {
+      "updatedJustNow": "Mis à jour à l'instant"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Ton fil est à jour."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Recherche d'articles sur ce sujet. Ils apparaîtront après la prochaine actualisation.",
+        "none": "Aucun article ne correspond encore assez à ce sujet pour être affiché."
+      },
+      "newInterest": "Nouvel intérêt",
+      "nextSection": "Suivant : {{title}}",
+      "backToDashboard": "Retour au Tableau de bord",
+      "subTabHistory": "Visités"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Aucun média pour l'instant",
+      "noArticlesYet": "Les médias que tu ouvres depuis Mera apparaissent ici. La lecture dans Mera n'est pas listée.",
+      "screenIntro": "Les médias dont tu as ouvert le site depuis Mera ces 30 derniers jours. Cette liste reste sur cet appareil."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Rien d'enregistré pour l'instant"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Comment je lis"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Comment fonctionne cet onglet",
+      "close": "Compris",
+      "feed": {
+        "title": "Comment fonctionne le Fil d'actu",
+        "what": "Le Fil d'actu montre chaque sujet que Mera a trouvé pour toi ces deux derniers jours. Chaque sujet a une seule carte, même si de nombreux médias l'ont couvert.",
+        "how1": "Mera transforme ce que tu lui as dit de toi en recherches, récupère les articles correspondants, et une IA lit chacun pour juger à quel point il compte pour toi.",
+        "how2": "Les sujets que tu n'as pas vus passent en premier, les plus importants devant. Un sujet non vu descend d'un niveau après 12 heures, puis d'un autre après un jour.",
+        "how3": "Les sujets que tu as fait défiler descendent, et ceux que tu as ouverts vont à la fin. Les cartes au-dessus de ta lecture ne bougent pas. Tire vers le bas pour retrier.",
+        "privacy": "L'ordre est calculé sur ce téléphone. Les sujets que tu ouvres restent uniquement sur ce téléphone."
+      },
+      "forYou": {
+        "title": "Comment fonctionne le Tableau de bord",
+        "what": "Le Tableau de bord regroupe tes actualités par intérêt. Chaque chose que tu as dite à Mera a sa section, plus les titres de tes pays et du monde.",
+        "how1": "Chaque sujet va à l'intérêt qui lui correspond le mieux, il n'apparaît donc qu'une fois. Si deux correspondent autant, celui ajouté en premier le garde.",
+        "how2": "Les intérêts auxquels tu as donné plus de poids passent en premier. Un nouvel intérêt apparaît en haut, avant même l'arrivée de ses premiers sujets.",
+        "how3": "Dans une section, les sujets non lus passent en premier, les plus importants devant. Les sections se réordonnent quand tu quittes l'onglet, ou toutes les 10 minutes."
+      },
+      "explore": {
+        "title": "Comment fonctionne Explorer",
+        "what": "Explorer montre les titres des dernières 24 heures pour le monde et pour chaque pays que tu choisis. Ils sont les mêmes pour tout le monde, pas choisis pour toi.",
+        "how1": "Les titres du monde sont classés selon l'ampleur de la couverture d'un sujet dans différents pays, pas selon le nombre d'articles.",
+        "how2": "Les titres d'un pays viennent de sources d'information basées dans ce pays."
+      },
+      "profile": {
+        "title": "Comment fonctionne le Profil",
+        "what": "Le Profil contient ce que tu as dit à Mera sur toi. Ton Fil d'actu et ton Tableau de bord sont construits à partir de ces informations.",
+        "how1": "Chaque information devient des recherches que Mera fait pour toi. Modifie ou supprime une information et les sujets qui en venaient changent aussi.",
+        "privacy": "Les recherches qui en découlent ne sont jamais liées à ton compte. Le serveur ne garde que le texte de recherche, partagé anonymement entre tous les utilisateurs, et le supprime après 14 jours sans utilisation."
+      }
+    }
+  },
+  "hi": {
+    "feed": {
+      "updatedJustNow": "अभी अपडेट हुआ"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "आपकी फ़ीड अप टू डेट है।"
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "इस बारे में ख़बरें खोजी जा रही हैं। वे अगले रीफ़्रेश के बाद दिखेंगी।",
+        "none": "अभी तक कोई ख़बर इससे इतनी मेल नहीं खाती कि यहाँ दिखे।"
+      },
+      "newInterest": "नई रुचि",
+      "nextSection": "अगला: {{title}}",
+      "backToDashboard": "डैशबोर्ड पर वापस जाएँ",
+      "subTabHistory": "देखे गए"
+    },
+    "publicationVisits": {
+      "emptyTitle": "अभी कोई प्रकाशक नहीं",
+      "noArticlesYet": "Mera से आप जिन प्रकाशकों की साइट खोलते हैं, वे यहाँ दिखते हैं। Mera के अंदर पढ़ना यहाँ नहीं दिखता।",
+      "screenIntro": "पिछले 30 दिनों में आपने Mera से जिन प्रकाशकों की साइट खोली। यह सूची इसी डिवाइस पर रहती है।"
+    },
+    "savedSuggestions": {
+      "emptyTitle": "अभी कुछ सहेजा नहीं गया"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "मैं कैसे पढ़ता हूँ"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "यह टैब कैसे काम करता है",
+      "close": "समझ गया",
+      "feed": {
+        "title": "फीड कैसे काम करती है",
+        "what": "फीड वह हर ख़बर दिखाती है जो Mera ने पिछले दो दिनों में आपके लिए ढूँढी। हर ख़बर का एक ही कार्ड होता है, भले ही कई जगहों ने उसे कवर किया हो।",
+        "how1": "Mera आपने अपने बारे में जो बताया उसे खोजों में बदलता है, मेल खाते लेख लाता है, और एक AI हर लेख पढ़कर तय करता है कि वह आपके लिए कितना मायने रखता है।",
+        "how2": "जो ख़बरें आपने नहीं देखीं वे पहले आती हैं, सबसे अहम सबसे ऊपर। बिना देखी ख़बर 12 घंटे बाद एक स्तर नीचे और एक दिन बाद एक और स्तर नीचे जाती है।",
+        "how3": "जिन ख़बरों से आप आगे स्क्रॉल कर गए वे नीचे जाती हैं, और खोली गई ख़बरें सबसे आख़िर में। आप जहाँ पढ़ रहे हैं उसके ऊपर के कार्ड नहीं हिलते। दोबारा क्रम के लिए नीचे खींचें।",
+        "privacy": "क्रम इसी फ़ोन पर तय होता है। आप कौन सी ख़बरें खोलते हैं, यह सिर्फ़ इसी फ़ोन पर रहता है।"
+      },
+      "forYou": {
+        "title": "डैशबोर्ड कैसे काम करता है",
+        "what": "डैशबोर्ड आपकी ख़बरों को रुचि के हिसाब से समूहों में रखता है। आपने Mera को जो भी बताया उसका एक सेक्शन है, साथ में आपके देशों और दुनिया की सुर्ख़ियाँ।",
+        "how1": "हर ख़बर उस एक रुचि में जाती है जिससे वह सबसे ज़्यादा मेल खाती है, इसलिए वह एक ही बार दिखती है। दो बराबर मेल खाएँ तो पहले जोड़ी गई रुचि उसे रखती है।",
+        "how2": "जिन रुचियों को आपने ज़्यादा महत्व दिया वे पहले आती हैं। नई रुचि सबसे ऊपर दिखती है, उसकी पहली ख़बरें आने से पहले भी।",
+        "how3": "हर सेक्शन में बिना पढ़ी ख़बरें पहले आती हैं, सबसे अहम सबसे ऊपर। सेक्शन तब दोबारा क्रम में आते हैं जब आप टैब छोड़ते हैं, या हर 10 मिनट में।"
+      },
+      "explore": {
+        "title": "एक्सप्लोर कैसे काम करता है",
+        "what": "एक्सप्लोर दुनिया और आपके चुने हर देश की पिछले 24 घंटों की सुर्ख़ियाँ दिखाता है। ये सबके लिए एक जैसी हैं, आपके लिए चुनी नहीं गईं।",
+        "how1": "दुनिया की सुर्ख़ियाँ इस आधार पर क्रम में आती हैं कि कोई ख़बर कितने देशों में कवर हो रही है, लेखों की संख्या के आधार पर नहीं।",
+        "how2": "किसी देश की सुर्ख़ियाँ उसी देश में स्थित समाचार स्रोतों से आती हैं।"
+      },
+      "profile": {
+        "title": "प्रोफ़ाइल कैसे काम करती है",
+        "what": "प्रोफ़ाइल में वह है जो आपने Mera को अपने बारे में बताया। आपकी फीड और डैशबोर्ड इन्हीं तथ्यों से बनते हैं।",
+        "how1": "हर तथ्य उन खोजों में बदलता है जो Mera आपके लिए चलाता है। कोई तथ्य बदलें या हटाएँ तो उससे आई ख़बरें भी बदल जाती हैं।",
+        "privacy": "इनसे बनी खोजें कभी आपके खाते से नहीं जोड़ी जातीं। सर्वर सिर्फ़ खोज का टेक्स्ट रखता है, जो सभी उपयोगकर्ताओं में गुमनाम रूप से साझा होता है, और 14 दिन तक इस्तेमाल न होने पर उसे हटा देता है।"
+      }
+    }
+  },
+  "id": {
+    "feed": {
+      "updatedJustNow": "Baru saja diperbarui"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Feed kamu sudah terkini."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Mencari berita tentang ini. Berita akan muncul setelah penyegaran berikutnya.",
+        "none": "Belum ada berita yang cukup cocok untuk ditampilkan di sini."
+      },
+      "newInterest": "Minat baru",
+      "nextSection": "Berikutnya: {{title}}",
+      "backToDashboard": "Kembali ke Dasbor",
+      "subTabHistory": "Dikunjungi"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Belum ada penerbit",
+      "noArticlesYet": "Penerbit yang kamu buka dari Mera muncul di sini. Bacaan di dalam Mera tidak dicantumkan.",
+      "screenIntro": "Penerbit yang situsnya kamu buka dari Mera dalam 30 hari terakhir. Daftar ini tetap di perangkat ini."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Belum ada yang disimpan"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Cara saya membaca"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Cara kerja tab ini",
+      "close": "Mengerti",
+      "feed": {
+        "title": "Cara kerja Umpan",
+        "what": "Umpan menampilkan setiap berita yang ditemukan Mera untukmu dalam dua hari terakhir. Setiap berita punya satu kartu, meski diliput banyak media.",
+        "how1": "Mera mengubah apa yang kamu ceritakan tentang dirimu menjadi pencarian, mengambil artikel yang cocok, lalu AI membaca tiap artikel untuk menilai seberapa penting artikel itu bagimu.",
+        "how2": "Berita yang belum kamu lihat tampil lebih dulu, yang paling penting di depan. Berita yang belum dilihat turun satu tingkat setelah 12 jam dan satu lagi setelah sehari.",
+        "how3": "Berita yang sudah kamu gulir lewat turun ke bawah, dan yang sudah kamu buka paling akhir. Kartu di atas posisi bacamu tidak bergeser. Tarik ke bawah untuk mengurutkan ulang.",
+        "privacy": "Urutan dihitung di ponsel ini. Berita yang kamu buka hanya disimpan di ponsel ini."
+      },
+      "forYou": {
+        "title": "Cara kerja Dasbor",
+        "what": "Dasbor mengelompokkan beritamu berdasarkan minat. Setiap hal yang kamu ceritakan ke Mera punya bagian sendiri, ditambah berita utama dari negaramu dan dunia.",
+        "how1": "Setiap berita masuk ke satu minat yang paling cocok, jadi hanya muncul sekali. Jika dua minat sama cocoknya, minat yang kamu tambahkan lebih dulu yang menyimpannya.",
+        "how2": "Minat yang kamu beri bobot lebih tampil lebih dulu. Minat baru muncul di paling atas, bahkan sebelum berita pertamanya tiba.",
+        "how3": "Di dalam tiap bagian, berita yang belum dibaca tampil lebih dulu, yang paling penting di depan. Bagian diurutkan ulang saat kamu meninggalkan tab, atau setiap 10 menit."
+      },
+      "explore": {
+        "title": "Cara kerja Eksplor",
+        "what": "Eksplor menampilkan berita utama 24 jam terakhir untuk dunia dan setiap negara yang kamu pilih. Isinya sama untuk semua orang, bukan dipilih untukmu.",
+        "how1": "Berita utama dunia diurutkan menurut seberapa luas sebuah berita diliput di berbagai negara, bukan menurut jumlah artikelnya.",
+        "how2": "Berita utama suatu negara berasal dari sumber berita yang berbasis di negara tersebut."
+      },
+      "profile": {
+        "title": "Cara kerja Profil",
+        "what": "Profil berisi apa yang kamu ceritakan ke Mera tentang dirimu. Umpan dan Dasbor kamu dibangun dari fakta-fakta ini.",
+        "how1": "Setiap fakta menjadi pencarian yang dijalankan Mera untukmu. Ubah atau hapus fakta, dan berita yang berasal darinya ikut berubah.",
+        "privacy": "Pencarian yang dibuat darinya tidak pernah dikaitkan dengan akunmu. Server hanya menyimpan teks pencarian, dibagikan secara anonim ke semua pengguna, dan menghapusnya setelah 14 hari tidak dipakai."
+      }
+    }
+  },
+  "it": {
+    "feed": {
+      "updatedJustNow": "Aggiornato ora"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Il tuo feed è aggiornato."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Cerchiamo notizie su questo. Arriveranno dopo il prossimo aggiornamento.",
+        "none": "Nessuna notizia per ora è abbastanza vicina a questo da essere mostrata."
+      },
+      "newInterest": "Nuovo interesse",
+      "nextSection": "Avanti: {{title}}",
+      "backToDashboard": "Torna alla Dashboard",
+      "subTabHistory": "Visitati"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Ancora nessuna testata",
+      "noArticlesYet": "Le testate che apri da Mera compaiono qui. Quello che leggi dentro Mera non è elencato.",
+      "screenIntro": "Testate di cui hai aperto il sito da Mera negli ultimi 30 giorni. Questo elenco resta su questo dispositivo."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Ancora niente di salvato"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Come leggo"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Come funziona questa scheda",
+      "close": "Capito",
+      "feed": {
+        "title": "Come funziona Notizie",
+        "what": "Notizie mostra ogni notizia che Mera ha trovato per te negli ultimi due giorni. Ogni notizia ha una sola scheda, anche se l'hanno coperta molte testate.",
+        "how1": "Mera trasforma quello che le hai detto di te in ricerche, recupera gli articoli corrispondenti e un'IA li legge uno per uno per valutare quanto contano per te.",
+        "how2": "Le notizie che non hai visto vengono prima, le più importanti in testa. Una notizia non vista scende di un livello dopo 12 ore e di un altro dopo un giorno.",
+        "how3": "Le notizie che hai scorso scendono, quelle che hai aperto vanno in fondo. Le schede sopra il punto in cui leggi restano ferme. Trascina verso il basso per riordinare.",
+        "privacy": "L'ordine viene calcolato su questo telefono. Le notizie che apri restano solo su questo telefono."
+      },
+      "forYou": {
+        "title": "Come funziona la Dashboard",
+        "what": "La Dashboard raggruppa le tue notizie per interesse. Ogni cosa che hai detto a Mera ha una sezione, più i titoli dai tuoi paesi e dal mondo.",
+        "how1": "Ogni notizia va all'interesse a cui si adatta meglio, quindi compare una sola volta. Se due si adattano allo stesso modo, la tiene quello aggiunto per primo.",
+        "how2": "Gli interessi a cui hai dato più peso vengono prima. Un nuovo interesse compare in cima, anche prima che arrivino le sue prime notizie.",
+        "how3": "In ogni sezione le notizie non lette vengono prima, le più importanti in testa. Le sezioni si riordinano quando esci dalla scheda, o ogni 10 minuti."
+      },
+      "explore": {
+        "title": "Come funziona Esplora",
+        "what": "Esplora mostra i titoli delle ultime 24 ore per il mondo e per ogni paese che scegli. Sono gli stessi per tutti, non scelti per te.",
+        "how1": "I titoli dal mondo sono ordinati in base a quanto ampiamente una notizia è coperta nei diversi paesi, non al numero di articoli.",
+        "how2": "I titoli di un paese provengono da fonti di notizie con sede in quel paese."
+      },
+      "profile": {
+        "title": "Come funziona il Profilo",
+        "what": "Il Profilo contiene quello che hai detto a Mera di te. Notizie e la Dashboard nascono da questi dati.",
+        "how1": "Ogni dato diventa ricerche che Mera fa per te. Se modifichi o elimini un dato, cambiano anche le notizie che ne derivavano.",
+        "privacy": "Le ricerche che ne derivano non sono mai collegate al tuo account. Il server conserva solo il testo della ricerca, condiviso in forma anonima tra tutti gli utenti, e lo elimina dopo 14 giorni di inutilizzo."
+      }
+    }
+  },
+  "ja": {
+    "feed": {
+      "updatedJustNow": "たった今更新"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "フィードは最新の状態です。"
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "この話題の記事を探しています。次の更新後に表示されます。",
+        "none": "表示できるほど近い記事はまだありません。"
+      },
+      "newInterest": "新しい関心",
+      "nextSection": "次へ：{{title}}",
+      "backToDashboard": "ダッシュボードに戻る",
+      "subTabHistory": "訪問済み"
+    },
+    "publicationVisits": {
+      "emptyTitle": "まだ媒体はありません",
+      "noArticlesYet": "Meraから開いた媒体がここに表示されます。Mera内での閲覧は含まれません。",
+      "screenIntro": "過去30日間にMeraからサイトを開いた媒体です。このリストはこの端末にのみ保存されます。"
+    },
+    "savedSuggestions": {
+      "emptyTitle": "まだ保存したものはありません"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "わたしの読み方"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "このタブのしくみ",
+      "close": "OK",
+      "feed": {
+        "title": "フィードのしくみ",
+        "what": "フィードには、Meraが過去2日間にあなたのために見つけたすべての記事が表示されます。多くの媒体が報じた記事でも、カードは1枚です。",
+        "how1": "Meraはあなたが教えてくれた内容を検索に変え、合う記事を集めます。AIが1本ずつ読み、あなたにとってどれだけ重要かを判断します。",
+        "how2": "まだ見ていない記事が先に、重要なものから並びます。見ていない記事は12時間後に1段階、1日後にもう1段階下がります。",
+        "how3": "スクロールで通り過ぎた記事は下へ、開いた記事は最後に移ります。読んでいる位置より上のカードは動きません。下に引くと並べ直します。",
+        "privacy": "並び順はこのスマートフォンで決まります。どの記事を開いたかは、このスマートフォンにだけ保存されます。"
+      },
+      "forYou": {
+        "title": "ダッシュボードのしくみ",
+        "what": "ダッシュボードはニュースを関心ごとにまとめます。Meraに教えた内容ごとにセクションがあり、あなたの国と世界の見出しも並びます。",
+        "how1": "各記事は最も合う関心1つに入るので、表示は1回だけです。同じくらい合う関心が2つあれば、先に追加した方に入ります。",
+        "how2": "重みを高くした関心が先に並びます。新しい関心は、最初の記事が届く前から一番上に表示されます。",
+        "how3": "各セクションでは未読の記事が先に、重要なものから並びます。セクションはタブを離れたとき、または10分ごとに並び替わります。"
+      },
+      "explore": {
+        "title": "探索のしくみ",
+        "what": "探索には、世界と選んだ国ごとの過去24時間の見出しが表示されます。内容は全員共通で、あなた向けに選んだものではありません。",
+        "how1": "世界の見出しは、記事の数ではなく、その話題がどれだけ多くの国で報じられているかで並びます。",
+        "how2": "国ごとの見出しは、その国に拠点を置くニュースソースから届きます。"
+      },
+      "profile": {
+        "title": "プロフィールのしくみ",
+        "what": "プロフィールには、あなたがMeraに教えた自分についての情報があります。フィードとダッシュボードはこの情報から作られます。",
+        "how1": "情報はそれぞれ、Meraがあなたのために行う検索になります。情報を変えたり消したりすると、そこから来た記事も変わります。",
+        "privacy": "そこから作られた検索があなたのアカウントに結びつくことはありません。サーバーには検索の文字列だけが全ユーザー共通で匿名のまま残り、14日間使われなければ削除されます。"
+      }
+    }
+  },
+  "ko": {
+    "feed": {
+      "updatedJustNow": "방금 업데이트됨"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "피드가 최신 상태입니다."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "이 주제의 기사를 찾고 있습니다. 다음 새로고침 후에 표시됩니다.",
+        "none": "아직 이 주제와 충분히 맞는 기사가 없습니다."
+      },
+      "newInterest": "새 관심사",
+      "nextSection": "다음: {{title}}",
+      "backToDashboard": "대시보드로 돌아가기",
+      "subTabHistory": "방문함"
+    },
+    "publicationVisits": {
+      "emptyTitle": "아직 매체가 없습니다",
+      "noArticlesYet": "Mera에서 연 매체가 여기에 표시됩니다. Mera 안에서 읽은 기사는 표시되지 않습니다.",
+      "screenIntro": "지난 30일 동안 Mera에서 사이트를 연 매체입니다. 이 목록은 이 기기에만 저장됩니다."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "아직 저장한 항목이 없습니다"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "나의 읽는 방식"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "이 탭의 작동 방식",
+      "close": "확인",
+      "feed": {
+        "title": "피드의 작동 방식",
+        "what": "피드에는 Mera가 지난 이틀 동안 찾은 모든 기사가 표시됩니다. 여러 매체가 다룬 기사라도 카드는 하나입니다.",
+        "how1": "Mera는 당신이 알려준 내용을 검색어로 바꾸고, 맞는 기사를 가져온 뒤, AI가 기사마다 읽고 당신에게 얼마나 중요한지 판단합니다.",
+        "how2": "아직 보지 않은 기사가 먼저, 중요한 순서로 나옵니다. 보지 않은 기사는 12시간 뒤 한 단계, 하루 뒤 한 단계 더 내려갑니다.",
+        "how3": "스크롤로 지나친 기사는 아래로, 연 기사는 맨 뒤로 갑니다. 읽고 있는 위치 위의 카드는 움직이지 않습니다. 아래로 당기면 다시 정렬됩니다.",
+        "privacy": "순서는 이 휴대폰에서 정해집니다. 어떤 기사를 열었는지는 이 휴대폰에만 저장됩니다."
+      },
+      "forYou": {
+        "title": "대시보드의 작동 방식",
+        "what": "대시보드는 뉴스를 관심사별로 묶습니다. Mera에 알려준 내용마다 섹션이 있고, 당신의 나라와 세계의 헤드라인도 있습니다.",
+        "how1": "각 기사는 가장 잘 맞는 관심사 하나에만 들어가므로 한 번만 나타납니다. 두 관심사가 똑같이 맞으면 먼저 추가한 쪽이 가져갑니다.",
+        "how2": "가중치를 높인 관심사가 먼저 나옵니다. 새 관심사는 첫 기사가 오기 전에도 맨 위에 나타납니다.",
+        "how3": "섹션 안에서는 읽지 않은 기사가 먼저, 중요한 순서로 나옵니다. 섹션은 탭을 떠날 때나 10분마다 다시 정렬됩니다."
+      },
+      "explore": {
+        "title": "탐색의 작동 방식",
+        "what": "탐색에는 세계와 선택한 나라별로 지난 24시간의 헤드라인이 표시됩니다. 모두에게 같으며, 당신을 위해 고른 것이 아닙니다.",
+        "how1": "세계 헤드라인은 기사 수가 아니라 한 뉴스가 여러 나라에서 얼마나 널리 보도되는지에 따라 정렬됩니다.",
+        "how2": "나라별 헤드라인은 그 나라에 기반을 둔 뉴스 출처에서 옵니다."
+      },
+      "profile": {
+        "title": "프로필의 작동 방식",
+        "what": "프로필에는 당신이 Mera에 알려준 자신에 대한 정보가 있습니다. 피드와 대시보드는 이 정보로 만들어집니다.",
+        "how1": "각 정보는 Mera가 당신을 위해 실행하는 검색이 됩니다. 정보를 바꾸거나 지우면 거기서 나온 기사도 바뀝니다.",
+        "privacy": "여기서 만들어진 검색은 절대 당신의 계정과 연결되지 않습니다. 서버는 모든 사용자가 익명으로 공유하는 검색 문구만 보관하며, 14일 동안 쓰이지 않으면 삭제합니다."
+      }
+    }
+  },
+  "nl": {
+    "feed": {
+      "updatedJustNow": "Zojuist bijgewerkt"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Je feed is bijgewerkt."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Mera zoekt verhalen hierover. Ze verschijnen na de volgende verversing.",
+        "none": "Nog geen verhaal past hier goed genoeg bij om te tonen."
+      },
+      "newInterest": "Nieuwe interesse",
+      "nextSection": "Volgende: {{title}}",
+      "backToDashboard": "Terug naar Dashboard",
+      "subTabHistory": "Bezocht"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Nog geen media",
+      "noArticlesYet": "Media die je vanuit Mera opent, verschijnen hier. Lezen binnen Mera staat hier niet bij.",
+      "screenIntro": "Media waarvan je de site de afgelopen 30 dagen vanuit Mera hebt geopend. Deze lijst blijft op dit apparaat."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Nog niets opgeslagen"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Hoe ik lees"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Hoe dit tabblad werkt",
+      "close": "Begrepen",
+      "feed": {
+        "title": "Hoe de Feed werkt",
+        "what": "De Feed toont elk verhaal dat Mera de afgelopen twee dagen voor je vond. Elk verhaal krijgt één kaart, ook als veel media erover schreven.",
+        "how1": "Mera maakt van wat je over jezelf vertelde zoekopdrachten, haalt passende artikelen op, en een AI leest ze een voor een om te beoordelen hoe belangrijk ze voor je zijn.",
+        "how2": "Verhalen die je nog niet zag komen eerst, de belangrijkste bovenaan. Een ongezien verhaal zakt na 12 uur één niveau en na een dag nog een.",
+        "how3": "Verhalen waar je langs scrolde zakken, en verhalen die je opende komen onderaan. Kaarten boven je leespositie blijven staan. Trek omlaag om opnieuw te sorteren.",
+        "privacy": "De volgorde wordt op deze telefoon bepaald. Welke verhalen je opent, blijft alleen op deze telefoon."
+      },
+      "forYou": {
+        "title": "Hoe het Dashboard werkt",
+        "what": "Het Dashboard groepeert je nieuws per interesse. Alles wat je Mera vertelde krijgt een sectie, plus koppen uit jouw landen en de wereld.",
+        "how1": "Elk verhaal gaat naar de ene interesse waar het het best bij past, dus het verschijnt maar één keer. Passen er twee even goed, dan houdt de eerst toegevoegde het.",
+        "how2": "Interesses waaraan je meer gewicht gaf komen eerst. Een nieuwe interesse staat bovenaan, al voordat de eerste verhalen binnenkomen.",
+        "how3": "Binnen een sectie komen ongelezen verhalen eerst, de belangrijkste bovenaan. De secties worden opnieuw gesorteerd als je het tabblad verlaat, of elke 10 minuten."
+      },
+      "explore": {
+        "title": "Hoe Verkennen werkt",
+        "what": "Verkennen toont de koppen van de afgelopen 24 uur voor de wereld en voor elk land dat je kiest. Ze zijn voor iedereen hetzelfde en niet voor jou gekozen.",
+        "how1": "Wereldkoppen worden gerangschikt naar hoe breed een verhaal in verschillende landen wordt gebracht, niet naar het aantal artikelen.",
+        "how2": "Landkoppen komen van nieuwsbronnen die in dat land gevestigd zijn."
+      },
+      "profile": {
+        "title": "Hoe het Profiel werkt",
+        "what": "Je Profiel bevat wat je Mera over jezelf vertelde. Je Feed en Dashboard worden uit deze feiten opgebouwd.",
+        "how1": "Elk feit wordt zoekopdrachten die Mera voor je uitvoert. Wijzig of verwijder een feit en de verhalen die eruit kwamen veranderen mee.",
+        "privacy": "De zoekopdrachten die eruit voortkomen worden nooit aan je account gekoppeld. De server bewaart alleen de zoektekst, anoniem gedeeld met alle gebruikers, en verwijdert die na 14 dagen zonder gebruik."
+      }
+    }
+  },
+  "pl": {
+    "feed": {
+      "updatedJustNow": "Zaktualizowano przed chwilą"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Twój kanał jest aktualny."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Szukamy artykułów na ten temat. Pojawią się po następnym odświeżeniu.",
+        "none": "Żaden artykuł nie pasuje jeszcze na tyle dobrze, by go tu pokazać."
+      },
+      "newInterest": "Nowe zainteresowanie",
+      "nextSection": "Dalej: {{title}}",
+      "backToDashboard": "Wróć do Pulpitu",
+      "subTabHistory": "Odwiedzone"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Brak wydawców",
+      "noArticlesYet": "Tu pojawiają się wydawcy, których strony otwierasz z Mera. Czytanie w Mera nie jest tu wymieniane.",
+      "screenIntro": "Wydawcy, których strony otworzyłeś z Mera w ciągu ostatnich 30 dni. Ta lista zostaje na tym urządzeniu."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Nic jeszcze nie zapisano"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Jak czytam"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Jak działa ta karta",
+      "close": "Rozumiem",
+      "feed": {
+        "title": "Jak działa Strumień",
+        "what": "Strumień pokazuje każdy temat, który Mera znalazła dla ciebie w ciągu ostatnich dwóch dni. Każdy temat ma jedną kartę, nawet jeśli pisało o nim wiele mediów.",
+        "how1": "Mera zamienia to, co o sobie powiedziałeś, w wyszukiwania, pobiera pasujące artykuły, a AI czyta każdy z nich, by ocenić, jak bardzo jest dla ciebie ważny.",
+        "how2": "Najpierw są tematy, których nie widziałeś, od najważniejszych. Niewidziany temat spada o poziom po 12 godzinach i o kolejny po dniu.",
+        "how3": "Tematy, które przewinąłeś, przesuwają się niżej, a otwarte trafiają na koniec. Karty powyżej miejsca, w którym czytasz, stoją w miejscu. Pociągnij w dół, by posortować.",
+        "privacy": "Kolejność jest ustalana na tym telefonie. To, które tematy otwierasz, zostaje tylko na tym telefonie."
+      },
+      "forYou": {
+        "title": "Jak działa Pulpit",
+        "what": "Pulpit grupuje twoje wiadomości według zainteresowań. Każda rzecz, którą powiedziałeś Mera, ma swoją sekcję, do tego nagłówki z twoich krajów i ze świata.",
+        "how1": "Każdy temat trafia do jednego zainteresowania, do którego pasuje najlepiej, więc pojawia się raz. Jeśli dwa pasują tak samo, zatrzymuje go to dodane wcześniej.",
+        "how2": "Zainteresowania, którym nadałeś większą wagę, są pierwsze. Nowe zainteresowanie pojawia się na górze, jeszcze zanim przyjdą jego pierwsze tematy.",
+        "how3": "W sekcji najpierw są nieprzeczytane tematy, od najważniejszych. Sekcje układają się na nowo, gdy opuszczasz kartę, lub co 10 minut."
+      },
+      "explore": {
+        "title": "Jak działa Odkrywaj",
+        "what": "Odkrywaj pokazuje nagłówki z ostatnich 24 godzin ze świata i z każdego wybranego kraju. Są takie same dla wszystkich, nie dobrane pod ciebie.",
+        "how1": "Nagłówki ze świata są uszeregowane według tego, jak szeroko temat jest opisywany w różnych krajach, a nie według liczby artykułów.",
+        "how2": "Nagłówki z kraju pochodzą ze źródeł wiadomości z siedzibą w tym kraju."
+      },
+      "profile": {
+        "title": "Jak działa Profil",
+        "what": "Profil zawiera to, co powiedziałeś Mera o sobie. Twój Strumień i Pulpit powstają z tych faktów.",
+        "how1": "Każdy fakt zamienia się w wyszukiwania, które Mera wykonuje dla ciebie. Zmień lub usuń fakt, a tematy, które z niego pochodziły, też się zmienią.",
+        "privacy": "Wyszukiwania powstałe z nich nigdy nie są łączone z twoim kontem. Serwer przechowuje tylko tekst wyszukiwania, anonimowo wspólny dla wszystkich użytkowników, i usuwa go po 14 dniach nieużywania."
+      }
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "updatedJustNow": "Atualizado agora mesmo"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Seu feed está atualizado."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Procurando notícias sobre isso. Elas aparecem depois da próxima atualização.",
+        "none": "Ainda nenhuma notícia combina o bastante com isso para aparecer."
+      },
+      "newInterest": "Novo interesse",
+      "nextSection": "Próximo: {{title}}",
+      "backToDashboard": "Voltar ao Painel",
+      "subTabHistory": "Visitados"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Nenhum veículo ainda",
+      "noArticlesYet": "Os veículos que você abre pelo Mera aparecem aqui. O que você lê dentro do Mera não aparece na lista.",
+      "screenIntro": "Veículos cujos sites você abriu pelo Mera nos últimos 30 dias. Esta lista fica neste aparelho."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Nada salvo ainda"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Como eu leio"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Como esta aba funciona",
+      "close": "Entendi",
+      "feed": {
+        "title": "Como o Feed funciona",
+        "what": "O Feed mostra cada notícia que o Mera encontrou para você nos últimos dois dias. Cada notícia tem um único cartão, mesmo quando vários veículos a cobriram.",
+        "how1": "O Mera transforma o que você contou sobre si em buscas, traz os artigos que combinam e uma IA lê cada um para avaliar o quanto ele importa para você.",
+        "how2": "As notícias que você não viu vêm primeiro, as mais importantes na frente. Uma notícia não vista desce um nível depois de 12 horas e outro depois de um dia.",
+        "how3": "As notícias pelas quais você rolou descem, e as que você abriu vão para o fim. Os cartões acima de onde você está lendo não se mexem. Puxe para baixo para reordenar.",
+        "privacy": "A ordem é calculada neste celular. As notícias que você abre ficam guardadas só neste celular."
+      },
+      "forYou": {
+        "title": "Como o Painel funciona",
+        "what": "O Painel agrupa suas notícias por interesse. Cada coisa que você contou ao Mera ganha uma seção, além de manchetes dos seus países e do mundo.",
+        "how1": "Cada notícia vai para o interesse com que mais combina, então aparece só uma vez. Se dois combinam igual, fica com o que você adicionou primeiro.",
+        "how2": "Os interesses a que você deu mais peso vêm primeiro. Um interesse novo aparece no topo, mesmo antes de chegarem as primeiras notícias.",
+        "how3": "Dentro de cada seção, as notícias não lidas vêm primeiro, as mais importantes na frente. As seções se reorganizam quando você sai da aba, ou a cada 10 minutos."
+      },
+      "explore": {
+        "title": "Como o Explorar funciona",
+        "what": "O Explorar mostra as manchetes das últimas 24 horas do mundo e de cada país que você escolher. São as mesmas para todos, não escolhidas para você.",
+        "how1": "As manchetes do mundo são ordenadas pela amplitude com que uma notícia é coberta em diferentes países, não pelo número de artigos.",
+        "how2": "As manchetes de um país vêm de fontes de notícias sediadas nesse país."
+      },
+      "profile": {
+        "title": "Como o Perfil funciona",
+        "what": "O Perfil guarda o que você contou ao Mera sobre si. Seu Feed e seu Painel são montados a partir desses fatos.",
+        "how1": "Cada fato vira buscas que o Mera faz para você. Mude ou apague um fato e as notícias que vieram dele também mudam.",
+        "privacy": "As buscas feitas a partir deles nunca são ligadas à sua conta. O servidor guarda só o texto da busca, compartilhado de forma anônima entre todos os usuários, e o apaga depois de 14 dias sem uso."
+      }
+    }
+  },
+  "ru": {
+    "feed": {
+      "updatedJustNow": "Обновлено только что"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Ваша лента обновлена."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Ищем материалы на эту тему. Они появятся после следующего обновления.",
+        "none": "Пока ни один материал не подходит к этой теме достаточно близко."
+      },
+      "newInterest": "Новый интерес",
+      "nextSection": "Далее: {{title}}",
+      "backToDashboard": "Назад на Панель",
+      "subTabHistory": "Посещённые"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Пока нет изданий",
+      "noArticlesYet": "Здесь появляются издания, которые вы открываете из Mera. Чтение внутри Mera сюда не попадает.",
+      "screenIntro": "Издания, сайты которых вы открывали из Mera за последние 30 дней. Этот список хранится на этом устройстве."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Пока ничего не сохранено"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Как я читаю"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Как работает эта вкладка",
+      "close": "Понятно",
+      "feed": {
+        "title": "Как работает Лента",
+        "what": "В Ленте каждый сюжет, который Mera нашла для вас за последние два дня. У каждого сюжета одна карточка, даже если о нём писали многие издания.",
+        "how1": "Mera превращает то, что вы рассказали о себе, в поисковые запросы, загружает подходящие статьи, а ИИ читает каждую, чтобы оценить, насколько она для вас важна.",
+        "how2": "Сначала идут сюжеты, которые вы не видели, самые важные впереди. Непросмотренный сюжет опускается на уровень через 12 часов и ещё на один через сутки.",
+        "how3": "Сюжеты, мимо которых вы пролистали, опускаются ниже, а открытые уходят в конец. Карточки выше места, где вы читаете, не двигаются. Потяните вниз, чтобы пересортировать.",
+        "privacy": "Порядок рассчитывается на этом телефоне. Какие сюжеты вы открываете, хранится только на этом телефоне."
+      },
+      "forYou": {
+        "title": "Как работает Панель",
+        "what": "Панель группирует ваши новости по интересам. У всего, что вы рассказали Mera, есть свой раздел, а ещё заголовки из ваших стран и со всего мира.",
+        "how1": "Каждый сюжет попадает в тот интерес, которому подходит лучше всего, поэтому показывается один раз. Если два подходят одинаково, он остаётся у добавленного раньше.",
+        "how2": "Интересы, которым вы дали больший вес, идут первыми. Новый интерес появляется наверху, даже до того, как придут его первые сюжеты.",
+        "how3": "Внутри раздела сначала идут непрочитанные сюжеты, самые важные впереди. Разделы пересортировываются, когда вы уходите с вкладки, или каждые 10 минут."
+      },
+      "explore": {
+        "title": "Как работает Обзор",
+        "what": "В Обзоре заголовки за последние 24 часа по миру и по каждой выбранной вами стране. Они одинаковы для всех и не подобраны под вас.",
+        "how1": "Мировые заголовки ранжируются по тому, насколько широко сюжет освещают в разных странах, а не по числу статей.",
+        "how2": "Заголовки страны берутся из источников новостей, расположенных в этой стране."
+      },
+      "profile": {
+        "title": "Как работает Профиль",
+        "what": "В Профиле то, что вы рассказали Mera о себе. Ваша Лента и Панель строятся из этих фактов.",
+        "how1": "Каждый факт превращается в поисковые запросы, которые Mera выполняет для вас. Измените или удалите факт, и сюжеты из него тоже изменятся.",
+        "privacy": "Созданные из них запросы никогда не связываются с вашим аккаунтом. Сервер хранит только текст запроса, анонимно общий для всех пользователей, и удаляет его через 14 дней без использования."
+      }
+    }
+  },
+  "th": {
+    "feed": {
+      "updatedJustNow": "อัปเดตเมื่อสักครู่"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "ฟีดของคุณเป็นปัจจุบันแล้ว"
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "กำลังหาข่าวเรื่องนี้ ข่าวจะแสดงหลังการรีเฟรชครั้งถัดไป",
+        "none": "ยังไม่มีข่าวที่ตรงกับเรื่องนี้มากพอจะแสดง"
+      },
+      "newInterest": "ความสนใจใหม่",
+      "nextSection": "ถัดไป: {{title}}",
+      "backToDashboard": "กลับไปที่แดชบอร์ด",
+      "subTabHistory": "ที่เคยเปิด"
+    },
+    "publicationVisits": {
+      "emptyTitle": "ยังไม่มีสำนักข่าว",
+      "noArticlesYet": "สำนักข่าวที่คุณเปิดจาก Mera จะแสดงที่นี่ การอ่านภายใน Mera จะไม่อยู่ในรายการนี้",
+      "screenIntro": "สำนักข่าวที่คุณเปิดเว็บไซต์จาก Mera ใน 30 วันที่ผ่านมา รายการนี้อยู่บนอุปกรณ์นี้เท่านั้น"
+    },
+    "savedSuggestions": {
+      "emptyTitle": "ยังไม่มีรายการที่บันทึก"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "ฉันอ่านอย่างไร"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "แท็บนี้ทำงานอย่างไร",
+      "close": "เข้าใจแล้ว",
+      "feed": {
+        "title": "ฟีดทำงานอย่างไร",
+        "what": "ฟีดแสดงทุกข่าวที่ Mera หาให้คุณในสองวันที่ผ่านมา แต่ละข่าวมีการ์ดใบเดียว แม้จะมีหลายสำนักรายงาน",
+        "how1": "Mera เปลี่ยนสิ่งที่คุณเล่าเกี่ยวกับตัวเองเป็นการค้นหา ดึงบทความที่ตรงกัน แล้ว AI อ่านทีละบทความเพื่อตัดสินว่าสำคัญกับคุณแค่ไหน",
+        "how2": "ข่าวที่คุณยังไม่เห็นจะอยู่ก่อน โดยเรียงจากสำคัญที่สุด ข่าวที่ยังไม่เห็นจะลดลงหนึ่งระดับหลัง 12 ชั่วโมง และอีกระดับหลังหนึ่งวัน",
+        "how3": "ข่าวที่คุณเลื่อนผ่านจะลงไปข้างล่าง ส่วนข่าวที่เปิดแล้วจะอยู่ท้ายสุด การ์ดที่อยู่เหนือตำแหน่งที่คุณอ่านจะไม่ขยับ ดึงลงเพื่อเรียงใหม่",
+        "privacy": "ลำดับถูกคำนวณบนโทรศัพท์เครื่องนี้ ข่าวที่คุณเปิดจะเก็บไว้บนโทรศัพท์เครื่องนี้เท่านั้น"
+      },
+      "forYou": {
+        "title": "แดชบอร์ดทำงานอย่างไร",
+        "what": "แดชบอร์ดจัดข่าวของคุณตามความสนใจ ทุกเรื่องที่คุณบอก Mera จะมีส่วนของตัวเอง พร้อมพาดหัวข่าวจากประเทศของคุณและจากทั่วโลก",
+        "how1": "แต่ละข่าวจะไปอยู่กับความสนใจที่ตรงที่สุดเพียงเรื่องเดียว จึงแสดงแค่ครั้งเดียว หากตรงสองเรื่องเท่ากัน เรื่องที่คุณเพิ่มก่อนจะได้ไป",
+        "how2": "ความสนใจที่คุณให้น้ำหนักมากกว่าจะอยู่ก่อน ความสนใจใหม่จะแสดงบนสุด แม้ข่าวแรกยังไม่มา",
+        "how3": "ในแต่ละส่วน ข่าวที่ยังไม่อ่านจะอยู่ก่อน โดยเรียงจากสำคัญที่สุด ส่วนต่างๆ จะเรียงใหม่เมื่อคุณออกจากแท็บ หรือทุก 10 นาที"
+      },
+      "explore": {
+        "title": "สำรวจทำงานอย่างไร",
+        "what": "สำรวจแสดงพาดหัวข่าวใน 24 ชั่วโมงที่ผ่านมาของทั่วโลกและของแต่ละประเทศที่คุณเลือก ทุกคนเห็นเหมือนกัน ไม่ได้เลือกมาเพื่อคุณ",
+        "how1": "พาดหัวข่าวโลกเรียงตามว่าข่าวนั้นถูกรายงานกว้างขวางแค่ไหนในหลายประเทศ ไม่ใช่ตามจำนวนบทความ",
+        "how2": "พาดหัวข่าวของแต่ละประเทศมาจากแหล่งข่าวที่ตั้งอยู่ในประเทศนั้น"
+      },
+      "profile": {
+        "title": "โปรไฟล์ทำงานอย่างไร",
+        "what": "โปรไฟล์เก็บสิ่งที่คุณบอก Mera เกี่ยวกับตัวคุณ ฟีดและแดชบอร์ดของคุณสร้างจากข้อมูลเหล่านี้",
+        "how1": "ข้อมูลแต่ละอย่างจะกลายเป็นการค้นหาที่ Mera ทำให้คุณ หากแก้ไขหรือลบข้อมูล ข่าวที่มาจากข้อมูลนั้นก็จะเปลี่ยนไปด้วย",
+        "privacy": "การค้นหาที่สร้างจากข้อมูลเหล่านี้ไม่เคยผูกกับบัญชีของคุณ เซิร์ฟเวอร์เก็บเพียงข้อความค้นหา ซึ่งใช้ร่วมกันแบบไม่ระบุตัวตนกับผู้ใช้ทุกคน และจะลบทิ้งหลังไม่ได้ใช้ 14 วัน"
+      }
+    }
+  },
+  "tr": {
+    "feed": {
+      "updatedJustNow": "Az önce güncellendi"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Akışın güncel."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Bununla ilgili haberler aranıyor. Bir sonraki yenilemeden sonra görünecekler.",
+        "none": "Henüz buraya yeterince uyan bir haber yok."
+      },
+      "newInterest": "Yeni ilgi alanı",
+      "nextSection": "Sonraki: {{title}}",
+      "backToDashboard": "Panele dön",
+      "subTabHistory": "Ziyaret edilenler"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Henüz yayın yok",
+      "noArticlesYet": "Mera'dan açtığın yayınlar burada görünür. Mera içinde okudukların listelenmez.",
+      "screenIntro": "Son 30 günde Mera'dan sitelerini açtığın yayınlar. Bu liste bu cihazda kalır."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Henüz kaydedilen bir şey yok"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Nasıl okuyorum"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Bu sekme nasıl çalışır",
+      "close": "Anladım",
+      "feed": {
+        "title": "Akış nasıl çalışır",
+        "what": "Akış, Mera'nın son iki günde senin için bulduğu her haberi gösterir. Birçok yayın aynı haberi yazsa bile her haberin tek kartı vardır.",
+        "how1": "Mera, kendin hakkında anlattıklarını aramalara dönüştürür, eşleşen makaleleri getirir ve bir yapay zeka her birini okuyup senin için ne kadar önemli olduğunu değerlendirir.",
+        "how2": "Görmediğin haberler önce gelir, en önemliler başta. Görülmemiş bir haber 12 saat sonra bir seviye, bir gün sonra bir seviye daha düşer.",
+        "how3": "Kaydırıp geçtiğin haberler aşağı iner, açtıkların en sona gider. Okuduğun yerin üstündeki kartlar yerinde kalır. Yeniden sıralamak için aşağı çek.",
+        "privacy": "Sıralama bu telefonda hesaplanır. Hangi haberleri açtığın yalnızca bu telefonda tutulur."
+      },
+      "forYou": {
+        "title": "Panel nasıl çalışır",
+        "what": "Panel haberlerini ilgi alanlarına göre gruplar. Mera'ya anlattığın her şeyin bir bölümü olur, ayrıca ülkelerinden ve dünyadan manşetler de yer alır.",
+        "how1": "Her haber en iyi uyduğu tek ilgi alanına gider, böylece yalnızca bir kez görünür. İkisi eşit uyarsa önce eklediğin alan haberi alır.",
+        "how2": "Daha fazla ağırlık verdiğin ilgi alanları önce gelir. Yeni bir ilgi alanı, ilk haberleri gelmeden bile en üstte görünür.",
+        "how3": "Bir bölümde okunmamış haberler önce gelir, en önemliler başta. Bölümler sekmeden ayrıldığında ya da her 10 dakikada bir yeniden sıralanır."
+      },
+      "explore": {
+        "title": "Keşfet nasıl çalışır",
+        "what": "Keşfet, dünya ve seçtiğin her ülke için son 24 saatin manşetlerini gösterir. Herkes için aynıdır, senin için seçilmez.",
+        "how1": "Dünya manşetleri, makale sayısına göre değil, bir haberin farklı ülkelerde ne kadar geniş yer bulduğuna göre sıralanır.",
+        "how2": "Ülke manşetleri o ülkede bulunan haber kaynaklarından gelir."
+      },
+      "profile": {
+        "title": "Profil nasıl çalışır",
+        "what": "Profil, Mera'ya kendin hakkında anlattıklarını tutar. Akışın ve Panelin bu bilgilerden oluşturulur.",
+        "how1": "Her bilgi, Mera'nın senin için yaptığı aramalara dönüşür. Bir bilgiyi değiştirir ya da silersen ondan gelen haberler de değişir.",
+        "privacy": "Bunlardan oluşturulan aramalar hiçbir zaman hesabınla ilişkilendirilmez. Sunucu yalnızca arama metnini tutar, tüm kullanıcılar arasında anonim olarak paylaşılır ve 14 gün kullanılmazsa silinir."
+      }
+    }
+  },
+  "uk": {
+    "feed": {
+      "updatedJustNow": "Оновлено щойно"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Ваша стрічка оновлена."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Шукаємо матеріали на цю тему. Вони з'являться після наступного оновлення.",
+        "none": "Поки жоден матеріал не пасує до цієї теми достатньо близько."
+      },
+      "newInterest": "Новий інтерес",
+      "nextSection": "Далі: {{title}}",
+      "backToDashboard": "Назад на Панель",
+      "subTabHistory": "Відвідані"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Поки немає видань",
+      "noArticlesYet": "Тут з'являються видання, які ви відкриваєте з Mera. Читання всередині Mera сюди не потрапляє.",
+      "screenIntro": "Видання, сайти яких ви відкривали з Mera за останні 30 днів. Цей список зберігається на цьому пристрої."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Поки нічого не збережено"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Як я читаю"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Як працює ця вкладка",
+      "close": "Зрозуміло",
+      "feed": {
+        "title": "Як працює Стрічка",
+        "what": "У Стрічці кожен сюжет, який Mera знайшла для вас за останні два дні. Кожен сюжет має одну картку, навіть якщо про нього писало багато видань.",
+        "how1": "Mera перетворює те, що ви розповіли про себе, на пошукові запити, завантажує відповідні статті, а ШІ читає кожну, щоб оцінити, наскільки вона для вас важлива.",
+        "how2": "Спершу йдуть сюжети, яких ви не бачили, найважливіші попереду. Непереглянутий сюжет опускається на рівень через 12 годин і ще на один через добу.",
+        "how3": "Сюжети, повз які ви прогорнули, опускаються нижче, а відкриті йдуть у кінець. Картки вище місця, де ви читаєте, не рухаються. Потягніть униз, щоб пересортувати.",
+        "privacy": "Порядок обчислюється на цьому телефоні. Які сюжети ви відкриваєте, зберігається лише на цьому телефоні."
+      },
+      "forYou": {
+        "title": "Як працює Панель",
+        "what": "Панель групує ваші новини за інтересами. Усе, що ви розповіли Mera, має свій розділ, а ще заголовки з ваших країн і зі світу.",
+        "how1": "Кожен сюжет потрапляє до інтересу, якому пасує найкраще, тож показується один раз. Якщо два пасують однаково, він лишається в доданого раніше.",
+        "how2": "Інтереси, яким ви дали більшу вагу, йдуть першими. Новий інтерес з'являється вгорі, ще до того, як прийдуть його перші сюжети.",
+        "how3": "У розділі спершу йдуть непрочитані сюжети, найважливіші попереду. Розділи пересортовуються, коли ви залишаєте вкладку, або щодесять хвилин."
+      },
+      "explore": {
+        "title": "Як працює Огляд",
+        "what": "В Огляді заголовки за останні 24 години по світу та по кожній країні, яку ви оберете. Вони однакові для всіх і не підібрані під вас.",
+        "how1": "Світові заголовки впорядковано за тим, наскільки широко сюжет висвітлюють у різних країнах, а не за кількістю статей.",
+        "how2": "Заголовки країни надходять із джерел новин, розташованих у цій країні."
+      },
+      "profile": {
+        "title": "Як працює Профіль",
+        "what": "У Профілі те, що ви розповіли Mera про себе. Ваші Стрічка й Панель будуються з цих фактів.",
+        "how1": "Кожен факт стає пошуковими запитами, які Mera виконує для вас. Змініть чи видаліть факт, і сюжети з нього теж зміняться.",
+        "privacy": "Створені з них запити ніколи не пов'язуються з вашим обліковим записом. Сервер зберігає лише текст запиту, анонімно спільний для всіх користувачів, і видаляє його через 14 днів без використання."
+      }
+    }
+  },
+  "vi": {
+    "feed": {
+      "updatedJustNow": "Vừa cập nhật"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "Bảng tin của bạn đã được cập nhật."
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "Đang tìm tin về chủ đề này. Tin sẽ xuất hiện sau lần làm mới tiếp theo.",
+        "none": "Chưa có tin nào đủ khớp với chủ đề này để hiển thị."
+      },
+      "newInterest": "Mối quan tâm mới",
+      "nextSection": "Tiếp theo: {{title}}",
+      "backToDashboard": "Quay lại Bảng điều khiển",
+      "subTabHistory": "Đã ghé"
+    },
+    "publicationVisits": {
+      "emptyTitle": "Chưa có nhà xuất bản nào",
+      "noArticlesYet": "Những nhà xuất bản bạn mở từ Mera sẽ xuất hiện ở đây. Những gì bạn đọc trong Mera không được liệt kê.",
+      "screenIntro": "Các nhà xuất bản có trang bạn đã mở từ Mera trong 30 ngày qua. Danh sách này ở lại trên thiết bị này."
+    },
+    "savedSuggestions": {
+      "emptyTitle": "Chưa lưu gì"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "Cách tôi đọc"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "Cách thẻ này hoạt động",
+      "close": "Đã hiểu",
+      "feed": {
+        "title": "Bảng tin hoạt động thế nào",
+        "what": "Bảng tin hiện mọi tin Mera tìm cho bạn trong hai ngày qua. Mỗi tin có một thẻ, kể cả khi nhiều báo cùng đưa tin.",
+        "how1": "Mera biến những gì bạn kể về bản thân thành các lượt tìm kiếm, lấy bài viết phù hợp, rồi AI đọc từng bài để đánh giá mức quan trọng với bạn.",
+        "how2": "Tin bạn chưa xem đứng trước, quan trọng nhất ở đầu. Tin chưa xem bị hạ một bậc sau 12 giờ và thêm một bậc sau một ngày.",
+        "how3": "Tin bạn đã cuộn qua xuống dưới, tin đã mở xuống cuối. Các thẻ phía trên chỗ bạn đang đọc giữ nguyên. Kéo xuống để sắp xếp lại.",
+        "privacy": "Thứ tự được tính trên điện thoại này. Những tin bạn mở chỉ được lưu trên điện thoại này."
+      },
+      "forYou": {
+        "title": "Bảng điều khiển hoạt động thế nào",
+        "what": "Bảng điều khiển nhóm tin của bạn theo mối quan tâm. Mỗi điều bạn kể với Mera có một mục riêng, kèm tiêu đề từ các quốc gia của bạn và thế giới.",
+        "how1": "Mỗi tin đi vào mối quan tâm hợp nhất, nên chỉ xuất hiện một lần. Nếu hai mối quan tâm hợp như nhau, mối quan tâm thêm trước sẽ giữ tin đó.",
+        "how2": "Những mối quan tâm bạn cho trọng số cao hơn đứng trước. Mối quan tâm mới hiện ở trên cùng, ngay cả trước khi có tin đầu tiên.",
+        "how3": "Trong mỗi mục, tin chưa đọc đứng trước, quan trọng nhất ở đầu. Các mục được sắp xếp lại khi bạn rời thẻ, hoặc mỗi 10 phút."
+      },
+      "explore": {
+        "title": "Khám phá hoạt động thế nào",
+        "what": "Khám phá hiện các tiêu đề trong 24 giờ qua của thế giới và của từng quốc gia bạn chọn. Mọi người đều thấy giống nhau, không chọn riêng cho bạn.",
+        "how1": "Tiêu đề thế giới được xếp theo mức độ một tin được đưa rộng rãi ở nhiều quốc gia, không theo số lượng bài viết.",
+        "how2": "Tiêu đề của một quốc gia đến từ các nguồn tin đặt tại quốc gia đó."
+      },
+      "profile": {
+        "title": "Hồ sơ hoạt động thế nào",
+        "what": "Hồ sơ lưu những gì bạn kể với Mera về bản thân. Bảng tin và Bảng điều khiển được tạo từ các thông tin này.",
+        "how1": "Mỗi thông tin trở thành các lượt tìm kiếm Mera chạy cho bạn. Sửa hoặc xóa một thông tin thì các tin đến từ nó cũng thay đổi.",
+        "privacy": "Các lượt tìm kiếm tạo từ chúng không bao giờ gắn với tài khoản của bạn. Máy chủ chỉ giữ văn bản tìm kiếm, dùng chung ẩn danh cho mọi người dùng, và xóa sau 14 ngày không dùng."
+      }
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "updatedJustNow": "刚刚更新"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "你的动态已是最新。"
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "正在寻找相关新闻，下次刷新后会显示。",
+        "none": "暂时还没有与此足够贴近、可以显示的新闻。"
+      },
+      "newInterest": "新兴趣",
+      "nextSection": "下一个：{{title}}",
+      "backToDashboard": "返回概览",
+      "subTabHistory": "访问过"
+    },
+    "publicationVisits": {
+      "emptyTitle": "还没有媒体",
+      "noArticlesYet": "你从 Mera 打开过的媒体会显示在这里。在 Mera 内阅读的内容不会列出。",
+      "screenIntro": "过去 30 天里你从 Mera 打开过网站的媒体。此列表只保存在这台设备上。"
+    },
+    "savedSuggestions": {
+      "emptyTitle": "还没有保存任何内容"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "我怎么读"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "此标签页如何运作",
+      "close": "知道了",
+      "feed": {
+        "title": "信息流如何运作",
+        "what": "信息流显示 Mera 在过去两天为你找到的每条新闻。即使很多媒体都报道了，每条新闻也只有一张卡片。",
+        "how1": "Mera 把你介绍自己的内容变成搜索，获取匹配的文章，再由 AI 逐篇阅读，判断它对你有多重要。",
+        "how2": "你还没看过的新闻排在前面，越重要越靠前。没看过的新闻 12 小时后下降一级，一天后再降一级。",
+        "how3": "你滑过的新闻会下移，打开过的排到最后。你正在阅读位置上方的卡片不会移动。下拉即可重新排序。",
+        "privacy": "排序在这部手机上完成。你打开了哪些新闻，只保存在这部手机上。"
+      },
+      "forYou": {
+        "title": "概览如何运作",
+        "what": "概览按兴趣整理你的新闻。你告诉 Mera 的每件事都有一个栏目，另外还有你所在国家和全球的头条。",
+        "how1": "每条新闻只归入最匹配的一个兴趣，所以只出现一次。如果两个兴趣同样匹配，就归先添加的那个。",
+        "how2": "你给了更高权重的兴趣排在前面。新兴趣会显示在最上方，即使它的第一批新闻还没到。",
+        "how3": "栏目内未读新闻排在前面，越重要越靠前。离开此标签页时或每 10 分钟，栏目会重新排序。"
+      },
+      "explore": {
+        "title": "探索如何运作",
+        "what": "探索显示全球和你所选每个国家过去 24 小时的头条。所有人看到的都一样，不是为你挑选的。",
+        "how1": "全球头条按一条新闻在多少国家被广泛报道来排序，而不是按文章数量。",
+        "how2": "国家头条来自总部位于该国的新闻来源。"
+      },
+      "profile": {
+        "title": "“我的”如何运作",
+        "what": "“我的”页面保存你告诉 Mera 的关于自己的信息。你的信息流和概览都由这些信息生成。",
+        "how1": "每条信息都会变成 Mera 为你运行的搜索。修改或删除一条信息，来自它的新闻也会随之变化。",
+        "privacy": "由它们生成的搜索从不与你的账户关联。服务器只保存搜索文字，在所有用户之间匿名共享，14 天未使用即删除。"
+      }
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "updatedJustNow": "剛剛更新"
+    },
+    "feedStatus": {
+      "syncDoneA11y": "你的動態已是最新。"
+    },
+    "forYou": {
+      "emptySection": {
+        "awaiting": "正在尋找相關新聞，下次重新整理後會顯示。",
+        "none": "暫時還沒有與此足夠貼近、可以顯示的新聞。"
+      },
+      "newInterest": "新興趣",
+      "nextSection": "下一個：{{title}}",
+      "backToDashboard": "返回概覽",
+      "subTabHistory": "造訪過"
+    },
+    "publicationVisits": {
+      "emptyTitle": "還沒有媒體",
+      "noArticlesYet": "你從 Mera 開啟過的媒體會顯示在這裡。在 Mera 內閱讀的內容不會列出。",
+      "screenIntro": "過去 30 天裡你從 Mera 開啟過網站的媒體。此清單只儲存在這台裝置上。"
+    },
+    "savedSuggestions": {
+      "emptyTitle": "還沒有儲存任何內容"
+    },
+    "shareStats": {
+      "card": {
+        "habitsTitle": "我怎麼讀"
+      }
+    },
+    "tabExplainer": {
+      "openA11y": "此分頁如何運作",
+      "close": "知道了",
+      "feed": {
+        "title": "資訊流如何運作",
+        "what": "資訊流顯示 Mera 在過去兩天為你找到的每則新聞。即使很多媒體都報導了，每則新聞也只有一張卡片。",
+        "how1": "Mera 把你介紹自己的內容變成搜尋，取得相符的文章，再由 AI 逐篇閱讀，判斷它對你有多重要。",
+        "how2": "你還沒看過的新聞排在前面，越重要越前面。沒看過的新聞 12 小時後下降一級，一天後再降一級。",
+        "how3": "你滑過的新聞會往下移，開啟過的排到最後。你正在閱讀位置上方的卡片不會移動。下拉即可重新排序。",
+        "privacy": "排序在這支手機上完成。你開啟了哪些新聞，只儲存在這支手機上。"
+      },
+      "forYou": {
+        "title": "概覽如何運作",
+        "what": "概覽按興趣整理你的新聞。你告訴 Mera 的每件事都有一個欄目，另外還有你所在國家和全球的頭條。",
+        "how1": "每則新聞只歸入最相符的一個興趣，所以只出現一次。如果兩個興趣同樣相符，就歸先新增的那個。",
+        "how2": "你給了更高權重的興趣排在前面。新興趣會顯示在最上方，即使它的第一批新聞還沒到。",
+        "how3": "欄目內未讀新聞排在前面，越重要越前面。離開此分頁時或每 10 分鐘，欄目會重新排序。"
+      },
+      "explore": {
+        "title": "探索如何運作",
+        "what": "探索顯示全球和你所選每個國家過去 24 小時的頭條。所有人看到的都一樣，不是為你挑選的。",
+        "how1": "全球頭條依一則新聞在多少國家被廣泛報導來排序，而不是依文章數量。",
+        "how2": "國家頭條來自總部位於該國的新聞來源。"
+      },
+      "profile": {
+        "title": "「我的」如何運作",
+        "what": "「我的」頁面保存你告訴 Mera 的關於自己的資訊。你的資訊流和概覽都由這些資訊產生。",
+        "how1": "每則資訊都會變成 Mera 為你執行的搜尋。修改或刪除一則資訊，來自它的新聞也會跟著變化。",
+        "privacy": "由它們產生的搜尋從不與你的帳號連結。伺服器只保存搜尋文字，在所有使用者之間匿名共享，14 天未使用即刪除。"
+      }
+    }
+  }
+}

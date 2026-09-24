@@ -21,6 +21,17 @@ const ACCENT = 'rgb(231, 138, 83)';
 
 const { Icon, Label, VectorIcon } = NativeTabs.Trigger;
 
+/**
+ * D2: VoiceOver read the SF Symbol names ("list.bullet.rectangle.fill",
+ * "grid 2x2", "safari") even though every trigger carries a hidden `<Label>`:
+ * a hidden title is not used as the tab item's accessibility label. The native
+ * tab item takes one directly (react-native-screens `tabBarItemAccessibilityLabel`,
+ * merged last by expo-router), so this stays JS-only.
+ */
+function tabA11y(label: string) {
+    return { tabBarItemAccessibilityLabel: label };
+}
+
 export default function AppLayout() {
     const { t } = useTranslation();
 
@@ -59,7 +70,12 @@ export default function AppLayout() {
                         prop on Trigger itself. Without them UIKit's own
                         scroll-to-top special effect races the JS handler and the
                         second tap can never reach the refresh branch. */}
-                    <NativeTabs.Trigger name="feed" disableScrollToTop disablePopToTop>
+                    <NativeTabs.Trigger
+                        name="feed"
+                        disableScrollToTop
+                        disablePopToTop
+                        unstable_nativeProps={tabA11y(t('tabs.deck'))}
+                    >
                         <Label hidden>{t('tabs.deck')}</Label>
                         <Icon
                             sf="list.bullet.rectangle.fill"
@@ -67,7 +83,12 @@ export default function AppLayout() {
                         />
                     </NativeTabs.Trigger>
                     {/* Dashboard (route `for_you`). */}
-                    <NativeTabs.Trigger name="for_you" disableScrollToTop disablePopToTop>
+                    <NativeTabs.Trigger
+                        name="for_you"
+                        disableScrollToTop
+                        disablePopToTop
+                        unstable_nativeProps={tabA11y(t('tabs.dashboard'))}
+                    >
                         <Label hidden>{t('tabs.dashboard')}</Label>
                         <Icon
                             sf="square.grid.2x2.fill"
@@ -75,21 +96,32 @@ export default function AppLayout() {
                         />
                     </NativeTabs.Trigger>
                     {/* Explore (route `around`). */}
-                    <NativeTabs.Trigger name="around" disableScrollToTop disablePopToTop>
+                    <NativeTabs.Trigger
+                        name="around"
+                        disableScrollToTop
+                        disablePopToTop
+                        unstable_nativeProps={tabA11y(t('tabs.around'))}
+                    >
                         <Label hidden>{t('tabs.around')}</Label>
                         <Icon
                             sf="safari.fill"
                             src={<VectorIcon family={MaterialIcons} name="explore" />}
                         />
                     </NativeTabs.Trigger>
-                    <NativeTabs.Trigger name="profile">
+                    <NativeTabs.Trigger
+                        name="profile"
+                        unstable_nativeProps={tabA11y(t('tabs.profile'))}
+                    >
                         <Label hidden>{t('tabs.profile')}</Label>
                         <Icon
                             sf="person.fill"
                             src={<VectorIcon family={MaterialIcons} name="person" />}
                         />
                     </NativeTabs.Trigger>
-                    <NativeTabs.Trigger name="settings">
+                    <NativeTabs.Trigger
+                        name="settings"
+                        unstable_nativeProps={tabA11y(t('tabs.settings'))}
+                    >
                         <Label hidden>{t('tabs.settings')}</Label>
                         <Icon
                             sf="gearshape.fill"

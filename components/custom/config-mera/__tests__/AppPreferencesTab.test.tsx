@@ -58,6 +58,7 @@ jest.mock('expo-router', () => ({
     // write their paths as `'...' as any` (typedRoutes cannot see through the
     // cast), which makes a wrong path invisible to tsc and to lint.
     useRouter: () => ({ push: (...a: any[]) => mockPush(...a), replace: jest.fn() }),
+    useFocusEffect: (cb: () => void) => { require('react').useEffect(cb, [cb]); },
 }));
 const mockPush = jest.fn();
 
@@ -125,7 +126,21 @@ jest.mock('@/components/custom/GlassSurface', () => {
     return { GlassPanel: ({ children }: any) => <View>{children}</View> };
 });
 jest.mock('@/components/custom/PolicyPill', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/config-mera/LanguageWordTicker', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/components/custom/config-mera/SecuritySettingsSection', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="security-section" /> };
+});
+let mockCadence = 'off';
+let mockProvider: string | null = null;
+let mockLastRun: number | null = null;
+jest.mock('@/lib/backup/backup-settings', () => ({
+    backupCadence: () => mockCadence,
+    backupProviderId: () => mockProvider,
+    backupLastRunAt: () => mockLastRun,
+}));
+jest.mock('@/lib/translation-service', () => ({
+    getNativeLanguageName: (c: string) => ({ en: 'English', ko: '한국어' } as Record<string, string>)[c] ?? null,
+}));
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
     return { MaterialIcons: (p: any) => <View {...p} />, FontAwesome: (p: any) => <View {...p} /> };
@@ -151,6 +166,9 @@ beforeEach(() => {
     calls.length = 0;
     mockCanDismiss = false;
     mockSessionData = null;
+    mockCadence = 'off';
+    mockProvider = null;
+    mockLastRun = null;
 });
 
 describe('Settings → Logout', () => {
@@ -384,5 +402,72 @@ describe('Settings → signed-in email', () => {
         // 't' is mocked to the key, so the interpolated email is not in the
         // output — assert the row exists at all, which is what vanished.
         expect(getByText('preferences.user')).toBeTruthy();
+    });
+});
+
+describe('Settings groups (ux1)', () => {
+    it('renders General, Privacy and data, Security, Help, Account in that order', () => {
+        const r = render(<AppPreferencesTab />);
+        const ids = ['general', 'privacy', 'security', 'help', 'account'];
+        const labels = ids.map((id) => r.getByTestId(`settings-group-${id}`));
+        expect(labels.map((l) => l.props.children)).toEqual([
+            'settings.groupGeneral',
+            'settings.groupPrivacy',
+            'security.title',
+            'settings.groupHelp',
+            'settings.groupAccount',
+        ]);
+        expect(r.getByTestId('security-section')).toBeTruthy();
+    });
+
+    it('puts Log out last among the rows, after Manage plan and the help block', () => {
+        const r = render(<AppPreferencesTab />);
+        const order = r
+            .UNSAFE_root.findAll((n: any) => typeof n.props?.testID === 'string' && /^settings-row-[a-z-]+$/.test(n.props.testID) && typeof n.type !== 'string')
+            .map((n: any) => n.props.testID)
+            .filter((id: string, i: number, all: string[]) => all.indexOf(id) === i);
+        expect(order[order.length - 1]).toBe('settings-row-logout');
+        expect(order.indexOf('settings-row-support')).toBeLessThan(order.indexOf('settings-row-logout'));
+    });
+
+    it('the Language row shows the current language, never a cycling word', () => {
+        jest.useFakeTimers();
+        try {
+            const r = render(<AppPreferencesTab />);
+            act(() => { jest.advanceTimersByTime(10_000); });
+            expect(r.getByTestId('settings-row-language-value').props.children).toBe('English');
+            expect(r.queryByText('언어')).toBeNull();
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('the backup row says Off when backup is not set up, and a date once it has run', () => {
+        const off = render(<AppPreferencesTab />);
+        expect(off.getByTestId('settings-row-backup-value').props.children).toBe('backup.cadence.off');
+        off.unmount();
+
+        mockCadence = 'daily';
+        mockProvider = 'icloud';
+        const never = render(<AppPreferencesTab />);
+        expect(never.getByTestId('settings-row-backup-value').props.children).toBe('settings.backupRowNever');
+        never.unmount();
+
+        mockLastRun = Date.UTC(2026, 8, 23, 12);
+        const ran = render(<AppPreferencesTab />);
+        expect(ran.getByTestId('settings-row-backup-value').props.children).toMatch(/23/);
+        fireEvent.press(ran.getByTestId('settings-row-backup'));
+        expect(mockPush).toHaveBeenCalledWith('/logged-in/preferences/manage-data');
+    });
+
+    it('labels the plan row "Manage plan" and has no separate Restore row', () => {
+        const r = render(<AppPreferencesTab />);
+        expect(r.queryByTestId('settings-row-restore-backup')).toBeNull();
+    });
+
+    it('offers no standalone restore entry anywhere in Settings (restore lives in Manage data)', () => {
+        const r = render(<AppPreferencesTab />);
+        expect(r.queryByText('backup.restore')).toBeNull();
+        expect(r.getByTestId('settings-row-backup')).toBeTruthy();
     });
 });

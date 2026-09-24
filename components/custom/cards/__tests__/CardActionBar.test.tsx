@@ -31,6 +31,8 @@ jest.mock('lucide-react-native', () => {
     Bookmark: (p: any) => <View testID="icon-bookmark" fill={p.fill} color={p.color} />,
     Crosshair: (p: any) => <View testID="icon-crosshair" fill={p.fill} color={p.color} />,
     Share2: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+    Share: (p: any) => <View testID="icon-share" fill={p.fill} color={p.color} />,
+    Ellipsis: (p: any) => <View testID="icon-more" color={p.color} />,
   };
 });
 
@@ -60,12 +62,25 @@ function setup(overrides: Partial<React.ComponentProps<typeof CardActionBar>> = 
       tracked={overrides.tracked}
       onShare={'onShare' in overrides ? overrides.onShare : onShare}
       horizontalPadding={overrides.horizontalPadding}
+      onOverflow={overrides.onOverflow}
+      compact={overrides.compact}
     />,
   );
   return { ...utils, onLike, onDislike, onAskMera, onToggleSave, onShare, onTrack };
 }
 
 describe('CardActionBar', () => {
+  // 601/607: the accessibility tree measures the FRAME. Slop around a 20pt
+  // glyph read as a 20x20 target there, so compact buttons carry a 44pt frame.
+  it('gives every compact button a real 44pt frame, with no slop', () => {
+    const { getByTestId } = setup({ compact: true, onOverflow: jest.fn() });
+    for (const id of ['card-action-like', 'card-action-dislike', 'card-action-save', 'card-action-share', 'card-action-more']) {
+      const node = getByTestId(id);
+      expect(node.props.style).toEqual(expect.objectContaining({ minWidth: 44, minHeight: 44 }));
+      expect(node.props.hitSlop ?? 0).toBe(0);
+    }
+  });
+
   it('fires each handler on tap', () => {
     const { getByLabelText, onLike, onDislike, onAskMera, onToggleSave } = setup();
     fireEvent.press(getByLabelText('articleFeedback.likeLabel'));
@@ -199,5 +214,35 @@ describe('CardActionBar', () => {
     const { queryByTestId, queryByLabelText } = setup({ onToggleSave: undefined });
     expect(queryByTestId('icon-bookmark')).toBeNull();
     expect(queryByLabelText('savedSuggestions.saveAction')).toBeNull();
+  });
+});
+
+// D3: with the shared menu, the row is like, not for me, save, share, •••.
+describe('CardActionBar with the ••• menu', () => {
+  it('shows the four inline actions plus •••, and moves Mera, Follow and fact check into the menu', () => {
+    const onOverflow = jest.fn();
+    const { getByTestId, queryByTestId } = render(
+      <CardActionBar
+        verdict={null}
+        saved={false}
+        onLike={jest.fn()}
+        onDislike={jest.fn()}
+        onAskMera={jest.fn()}
+        onToggleSave={jest.fn()}
+        onTrack={jest.fn()}
+        onFactCheck={jest.fn()}
+        onShare={jest.fn()}
+        onOverflow={onOverflow}
+      />,
+    );
+    for (const id of ['card-action-like', 'card-action-dislike', 'card-action-save', 'card-action-share', 'card-action-more']) {
+      expect(getByTestId(id)).toBeTruthy();
+    }
+    for (const id of ['card-action-mera', 'card-action-track', 'card-action-fact-check']) {
+      expect(queryByTestId(id)).toBeNull();
+    }
+    fireEvent.press(getByTestId('card-action-more'));
+    expect(onOverflow).toHaveBeenCalledTimes(1);
+    expect(getByTestId('card-action-more').props.accessibilityLabel).toBe('articleMenu.openA11y');
   });
 });

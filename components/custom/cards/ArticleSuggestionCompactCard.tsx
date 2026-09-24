@@ -1,10 +1,17 @@
 import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCardBase';
-import CompactActionsSheet from '@/components/custom/cards/CompactActionsSheet';
-import type { FeedbackSubject, FeedbackSurface } from '@/components/custom/cards/feedback-subject';
+import { ArticleActionBarFor } from '@/components/custom/cards/ArticleActionsRow';
+import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
+import {
+  feedbackSubjectFromSuggestion,
+  type FeedbackSurface,
+} from '@/components/custom/cards/feedback-subject';
+import { inlineAccessibilityActions, useArticleActions } from '@/components/custom/cards/use-article-actions';
+import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import RelevanceChip from '@/components/custom/RelevanceChip';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ArticleSuggestionCompactCardProps {
   suggestion: ForYouSuggestion;
@@ -23,13 +30,15 @@ interface ArticleSuggestionCompactCardProps {
 }
 
 /**
- * The compact suggestion variant — a personalized row for dense lists (the
- * upcoming triage screen). `metaAccessory` is the compact RelevanceChip (once
- * relevance is ready). The compact actions sheet is reached by long-pressing
- * the row.
+ * The compact suggestion variant, a personalized row for dense lists (the
+ * Dashboard sections). `priorityAccessory` is the compact RelevanceChip (once
+ * relevance is ready). Under the body sits the compact action row (D3): like,
+ * not for me, save, share, then ••• for everything else; long-press opens the
+ * same menu.
  *
- * The row NEVER opens the publisher URL itself — `onPress` navigates to a
- * detail screen, which is the only surface carrying the translate affordance.
+ * Tapping the row navigates (`onPress`) to a detail screen; the row itself
+ * opens the publisher only from the ••• menu, where the translate route sits
+ * beside it.
  */
 const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardProps> = ({
   suggestion,
@@ -39,8 +48,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   read = false,
   isNew = false,
 }) => {
-  const [sheetOpen, setSheetOpen] = useState(false);
-
+  const { t } = useTranslation();
   const status = suggestion.status;
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
   const relevance = suggestion.relevance ?? 0;
@@ -52,21 +60,45 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
     <RelevanceChip relevance={relevance} />
   ) : undefined;
 
-  const subject: FeedbackSubject = {
-    origin: 'suggestion',
-    surface,
-    articleId: suggestion.articleId,
-    suggestionId: suggestion._id,
-    title: suggestion.title_en ?? '',
-    pubDate: suggestion.firstPubDate ?? null,
-    publicationName: suggestion.publication_name,
-    countryCode: suggestion.country_code,
-    stableClusterId:
-      suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? undefined,
-    eventType: suggestion.eventType ?? undefined,
-    matchedTopics: suggestion.matchedTopics,
-    relevance: suggestion.relevance,
-  };
+  const subject = useMemo(() => feedbackSubjectFromSuggestion(suggestion, surface), [suggestion, surface]);
+  const share = useMemo(
+    () => ({
+      url: suggestion.article_url,
+      titleEnglish: suggestion.title_en,
+      titleOriginal: suggestion.title_original,
+      sourceLanguage: suggestion.language_code,
+    }),
+    [suggestion],
+  );
+  const visit = useMemo(() => visitFromSuggestion(suggestion), [suggestion]);
+
+  const actions = useArticleActions({ subject, suggestion, share, trackActive: false });
+  const inlineActions = useMemo(
+    () => inlineAccessibilityActions(t, actions),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t, actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
+  );
+  const menu = useArticleMenu({
+    surface: 'card',
+    subject,
+    articleUrl: suggestion.article_url,
+    languageCode: suggestion.language_code,
+    visit,
+    // Answered on the detail screen, so the row opens it after asking.
+    onCheckFacts: () => {
+      // Required at call time: the fact-check client pulls in Apollo.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { requestArticleFactCheck } = require('@/lib/fact-check/request-article-fact-check') as typeof import('@/lib/fact-check/request-article-fact-check');
+      const asked = requestArticleFactCheck({
+        articleId: suggestion.articleId,
+        title: suggestion.title_en ?? suggestion.title_original ?? '',
+        suggestion,
+      });
+      if (asked) onPress(suggestion);
+      return asked;
+    },
+    inlineActions,
+  });
 
   return (
     <>
@@ -85,21 +117,14 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         read={read}
         isNew={isNew}
         onPress={() => onPress(suggestion)}
-        onLongPress={() => setSheetOpen(true)}
+        onLongPress={menu.open}
         priorityAccessory={priorityAccessory}
+        footer={<ArticleActionBarFor actions={actions} onOverflow={menu.open} horizontalPadding={0} compact />}
+        accessibilityActions={menu.accessibilityActions}
+        onAccessibilityAction={menu.onAccessibilityAction}
       />
-      <CompactActionsSheet
-        visible={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        subject={subject}
-        suggestion={suggestion}
-        share={{
-          url: suggestion.article_url,
-          titleEnglish: suggestion.title_en,
-          titleOriginal: suggestion.title_original,
-          sourceLanguage: suggestion.language_code,
-        }}
-      />
+      {actions.element}
+      {menu.element}
     </>
   );
 };

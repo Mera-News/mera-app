@@ -32,6 +32,7 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   buildReasonUserMessage,
 } from '../prompts/prompts';
+import { undoUx1HeadlineRuleBan, undoUx1ReasonLabelRule } from './ux1-reason-label';
 
 const SHIPPED: Record<string, string> = {
   relevance: CLOUD_RELEVANCE_SYSTEM_PROMPT,
@@ -79,12 +80,14 @@ describe('pre-geo-control', () => {
       // Cut the promoted section out of the shipped prompt and the control must
       // return byte for byte. This is what stops an unrelated prompt edit
       // landing on one side only and being attributed to the geography rule.
-      const shippedWithoutRule = SHIPPED[slot].replace(/\n\n## Article scope\n[^\n]*/, '');
+      const shippedWithoutRule = undoUx1ReasonLabelRule(
+        SHIPPED[slot].replace(/\n\n## Article scope\n[^\n]*/, ''),
+      );
       expect(arm).toBe(shippedWithoutRule);
     }
   });
 
-  it('differs from the shipped headline reason prompt by TWO things, named', () => {
+  it('differs from the shipped headline reason prompt by THREE things, named', () => {
     // The exception above, spelled out rather than waved through. The shipped
     // headline reason prompt also dropped the anchor table to fit the gateway
     // wire cap, so this arm carries the article-scope rule's ABSENCE and the
@@ -99,7 +102,8 @@ describe('pre-geo-control', () => {
       arm.indexOf('## Anchors (example user'),
       arm.indexOf('## Priority'),
     );
-    const shippedWithAnchorsNoRule = SHIPPED.headlineReason
+    // Third: ux1's rule-name ban, its own named change (ux1-reason-label.ts).
+    const shippedWithAnchorsNoRule = undoUx1HeadlineRuleBan(SHIPPED.headlineReason)
       .replace(/\n\n## Article scope\n[^\n]*/, '')
       .replace('## Priority', `${anchors}## Priority`);
     expect(arm).toBe(shippedWithAnchorsNoRule);

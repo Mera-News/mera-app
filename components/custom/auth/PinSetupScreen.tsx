@@ -139,7 +139,13 @@ const PinSetupScreen: React.FC<PinSetupScreenProps> = ({
           </Box>
 
           {onCancel && (
-            <Pressable onPress={onCancel} hitSlop={8}>
+            <Pressable
+              testID="pin-setup-cancel-button"
+              onPress={onCancel}
+              accessibilityRole="button"
+              // A 44pt frame, not text-sized: C-SEC measured 45x21pt.
+              style={{ minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' }}
+            >
               <Text className="text-primary-400 text-sm">{t('common.cancel')}</Text>
             </Pressable>
           )}

@@ -100,7 +100,7 @@ describe('the dispatcher', () => {
     for (const [card, testID] of [
       ['reach', 'share-stats-card-reach'],
       ['keep', 'share-stats-card-keep'],
-      ['pace', 'share-stats-card-pace'],
+      ['habits', 'share-stats-card-habits'],
     ] as const) {
       const { getByTestId } = render(
         <ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
@@ -119,7 +119,7 @@ describe('the dispatcher', () => {
     // module-level step advanced by a shared 45s interval picks the position in
     // it, so a seeded-only backdrop drifts and two shares of the same stats
     // produce different files.
-    for (const card of ['reach', 'keep', 'pace'] as const) {
+    for (const card of ['reach', 'keep', 'habits'] as const) {
       const { getByTestId } = render(
         <ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
       );
@@ -134,8 +134,8 @@ describe('each card states exactly ONE window', () => {
   // Countries, publications, opened and publish-to-read are 30-day. Saved and
   // followed are present tense. A card that mixed them would carry a heading
   // true of neither, which is the overclaim this split exists to refuse.
-  it('puts the 30-day line on reach and pace', () => {
-    for (const card of ['reach', 'pace'] as const) {
+  it('puts the 30-day line on reach and habits', () => {
+    for (const card of ['reach', 'habits'] as const) {
       const { getByTestId } = render(
         <ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
       );
@@ -188,7 +188,7 @@ describe('top publications', () => {
   });
 
   it('never appears on the other two cards, whatever the flag says', () => {
-    for (const card of ['keep', 'pace'] as const) {
+    for (const card of ['keep', 'habits'] as const) {
       const { queryByText } = render(
         <ShareStatsCard card={card} stats={withNames} showPublicationNames pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
       );
@@ -253,39 +253,72 @@ describe('KeepCard', () => {
   });
 });
 
-describe('PaceCard', () => {
+describe('HabitsCard', () => {
+  const days = Array.from({ length: 30 }, (_, i) => ({
+    dateKey: `2026-09-${String(i + 1).padStart(2, '0')}`,
+    count: i % 5,
+    weekday: i % 7,
+  }));
+
   it('labels the opened count partial, every time', () => {
-    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
-    expect(getByTestId('share-stats-pace-opened-partial')).toBeTruthy();
+    const { getByTestId } = render(<ShareStatsCard card="habits" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
+    expect(getByTestId('share-stats-habits-opened-partial')).toBeTruthy();
   });
 
   it('always carries the coverage denominator beside the latency figure', () => {
     // A bare average over the covered subset, presented as the whole, is the
     // specific claim this line exists to refuse.
-    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
-    expect(getByTestId('share-stats-pace-coverage').props.children).toContain('"sampled":41');
-    expect(getByTestId('share-stats-pace-coverage').props.children).toContain('"total":58');
+    const { getByTestId } = render(<ShareStatsCard card="habits" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
+    expect(getByTestId('share-stats-habits-pace-coverage').props.children).toContain('"sampled":41');
+    expect(getByTestId('share-stats-habits-pace-coverage').props.children).toContain('"total":58');
   });
 
   it('places the marker on the value against a 48h scale', () => {
-    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
+    const { getByTestId } = render(<ShareStatsCard card="habits" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     // 8.6 rounds to 9; 9/48 = 18.75%.
-    expect(getByTestId('share-stats-pace-scale-marker').props.style.left).toBe('18.75%');
+    expect(getByTestId('share-stats-habits-pace-scale-marker').props.style.left).toBe('18.75%');
   });
 
-  it('says there is not enough data instead of showing a zero average', () => {
-    // Null is NOT zero: zero would read as "instant".
-    const { getByTestId, queryByTestId } = render(
+  it('leaves the pace block off, rather than showing a zero, when there is no average', () => {
+    // Null is NOT zero: zero would read as "instant". A figure with nothing
+    // behind it is hidden, like every other one.
+    const { queryByTestId, getByTestId } = render(
       <ShareStatsCard
-        card="pace"
+        card="habits"
         stats={stats({ publishToRead: { averageHours: null, sampledArticles: 0, totalArticles: 12 } })}
         pixelRatio={3} stampedAtMs={STAMP} locale="en-GB"
       />,
     );
-    expect(getByTestId('share-stats-pace-unknown')).toBeTruthy();
-    // And draws no scale: a marker with nothing to mark is worse than none.
-    expect(queryByTestId('share-stats-pace-scale')).toBeNull();
-    expect(queryByTestId('share-stats-pace-coverage')).toBeNull();
+    expect(queryByTestId('share-stats-habits-pace-value')).toBeNull();
+    expect(queryByTestId('share-stats-habits-pace-scale')).toBeNull();
+    expect(queryByTestId('share-stats-habits-pace-coverage')).toBeNull();
+    // The rest of the card still stands.
+    expect(getByTestId('share-stats-habits-opened')).toBeTruthy();
+  });
+
+  it('renders the days-read figure and a cell per day', () => {
+    const { getByTestId } = render(
+      <ShareStatsCard card="habits" stats={stats({ days, daysReadCount: 24 })} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+    );
+    expect(getByTestId('share-stats-habits-days')).toBeTruthy();
+    expect(getByTestId('share-stats-habits-grid-day-2026-09-01')).toBeTruthy();
+    expect(getByTestId('share-stats-habits-grid-day-2026-09-30')).toBeTruthy();
+  });
+
+  it('hides the days block, with its grid, when no day was read', () => {
+    const { queryByTestId } = render(
+      <ShareStatsCard card="habits" stats={stats({ days, daysReadCount: 0 })} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+    );
+    expect(queryByTestId('share-stats-habits-days')).toBeNull();
+    expect(queryByTestId('share-stats-habits-grid-day-2026-09-01')).toBeNull();
+  });
+
+  it('hides the opened figure when nothing was opened', () => {
+    const { queryByTestId } = render(
+      <ShareStatsCard card="habits" stats={stats({ articlesOpened: 0 })} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+    );
+    expect(queryByTestId('share-stats-habits-opened')).toBeNull();
+    expect(queryByTestId('share-stats-habits-opened-partial')).toBeNull();
   });
 });
 
@@ -295,7 +328,7 @@ describe('every text node on every card', () => {
       ? style.reduce<Record<string, unknown>>((acc, s) => ({ ...acc, ...flatten(s) }), {})
       : ((style ?? {}) as Record<string, unknown>);
 
-  function textNodes(card: 'reach' | 'keep' | 'pace') {
+  function textNodes(card: 'reach' | 'keep' | 'habits') {
     const tree = render(<ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     return tree.UNSAFE_getAllByType(
       require('react-native').Text as React.ComponentType<Record<string, unknown>>,
@@ -309,7 +342,7 @@ describe('every text node on every card', () => {
     // rasterised as a dash and an underline stroke, and the same clipping ate
     // the above-base matras off Devanagari at an ordinary 22pt.
     let checked = 0;
-    for (const card of ['reach', 'keep', 'pace'] as const) {
+    for (const card of ['reach', 'keep', 'habits'] as const) {
       for (const node of textNodes(card)) {
         const style = flatten(node.props.style);
         if (style.fontSize === undefined) continue;
@@ -328,7 +361,7 @@ describe('every text node on every card', () => {
     // its own inherits, and what it inherits on a fixed raster is not
     // guaranteed to be legible on the gradient behind it.
     let checked = 0;
-    for (const card of ['reach', 'keep', 'pace'] as const) {
+    for (const card of ['reach', 'keep', 'habits'] as const) {
       for (const node of textNodes(card)) {
         const style = flatten(node.props.style);
         if (style.fontSize === undefined) continue;
@@ -341,7 +374,7 @@ describe('every text node on every card', () => {
   });
 
   it('turns OS Dynamic Type off on every line, because the card is a fixed raster', () => {
-    for (const card of ['reach', 'keep', 'pace'] as const) {
+    for (const card of ['reach', 'keep', 'habits'] as const) {
       for (const node of textNodes(card)) {
         expect(node.props.allowFontScaling).toBe(false);
       }
@@ -352,7 +385,7 @@ describe('every text node on every card', () => {
 
 describe('the made-on date', () => {
   it('sits in the top right of every card', () => {
-    for (const card of ['reach', 'keep', 'pace'] as const) {
+    for (const card of ['reach', 'keep', 'habits'] as const) {
       const { getByTestId } = render(
         <ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
       );
@@ -400,7 +433,7 @@ describe('the made-on date', () => {
   });
 });
 
-describe('LanguagesCard', () => {
+describe('ReachCard languages block', () => {
   const withLanguages = stats({
     languages: [
       { languageCode: 'en', visitCount: 46 },
@@ -412,68 +445,99 @@ describe('LanguagesCard', () => {
     languageCount: 5,
   });
 
-  it('renders the count and the proportion bar', () => {
+  it('renders the count and the bar, with the remainder past the top four', () => {
     const { getByTestId } = render(
-      <ShareStatsCard card="languages" stats={withLanguages} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+      <ShareStatsCard card="reach" stats={withLanguages} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
     );
-    expect(getByTestId('share-stats-languages-count').props.children).toBe('5');
-    expect(getByTestId('share-stats-languages-bar')).toBeTruthy();
+    expect(getByTestId('share-stats-reach-languages-count')).toBeTruthy();
+    expect(getByTestId('share-stats-reach-languages-bar')).toBeTruthy();
+    expect(getByTestId('share-stats-reach-languages-bar-segment-rest')).toBeTruthy();
   });
 
-  it('caps the named list and lets the bar carry the remainder', () => {
-    const { getByTestId } = render(
-      <ShareStatsCard card="languages" stats={withLanguages} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
-    );
-    // Four named rows, so the card cannot grow past what the budget models.
-    expect(getByTestId('share-stats-languages-list').children).toHaveLength(4);
-    expect(getByTestId('share-stats-languages-bar-segment-rest')).toBeTruthy();
-  });
-
-  it('draws no bar and no list when nothing has a language', () => {
+  it('draws no language block when nothing has a language', () => {
     const { queryByTestId } = render(
-      <ShareStatsCard card="languages" stats={emptyReadingStats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+      <ShareStatsCard card="reach" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
     );
-    expect(queryByTestId('share-stats-languages-bar')).toBeNull();
-    expect(queryByTestId('share-stats-languages-list')).toBeNull();
+    expect(queryByTestId('share-stats-reach-languages')).toBeNull();
   });
 });
 
-describe('RhythmCard', () => {
-  const days = Array.from({ length: 30 }, (_, i) => ({
-    dateKey: `2026-09-${String(i + 1).padStart(2, '0')}`,
-    count: i % 5,
-    weekday: i % 7,
-  }));
-
-  it('renders the days-read figure and a cell per day', () => {
-    const { getByTestId } = render(
-      <ShareStatsCard
-        card="rhythm"
-        stats={stats({ days, daysReadCount: 24 })}
-        pixelRatio={3}
-        stampedAtMs={STAMP}
-        locale="en-GB"
-      />,
+describe('zero stats are hidden, never drawn as 0', () => {
+  it('drops the countries tile when there are no countries', () => {
+    const { queryByTestId, getByTestId } = render(
+      <ShareStatsCard card="reach" stats={stats({ countryCount: 0, countries: [] })} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
     );
-    expect(getByTestId('share-stats-rhythm-days')).toBeTruthy();
-    expect(getByTestId('share-stats-rhythm-grid-day-2026-09-01')).toBeTruthy();
-    expect(getByTestId('share-stats-rhythm-grid-day-2026-09-30')).toBeTruthy();
+    expect(queryByTestId('share-stats-reach-countries')).toBeNull();
+    expect(queryByTestId('share-stats-reach-flags')).toBeNull();
+    expect(getByTestId('share-stats-reach-publications')).toBeTruthy();
   });
 
-  it('says READ, never "opened the app"', () => {
-    // There is no app-open record, no session row and no launch counter in the
-    // schema. "Opened" would be a false claim AND would invite someone to add
-    // session tracking to make it true.
-    const { getByTestId } = render(
-      <ShareStatsCard
-        card="rhythm"
-        stats={stats({ days, daysReadCount: 24 })}
-        pixelRatio={3}
-        stampedAtMs={STAMP}
-        locale="en-GB"
-      />,
+  it('drops the followed figure when nothing is followed', () => {
+    const { queryByTestId, getByTestId } = render(
+      <ShareStatsCard card="keep" stats={stats({ keptNow: { savedArticles: 3, followedStories: 0 } })} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
     );
-    expect(getByTestId('share-stats-rhythm-days')).toBeTruthy();
-    expect(getByTestId('share-stats-rhythm-note')).toBeTruthy();
+    expect(queryByTestId('share-stats-keep-followed')).toBeNull();
+    expect(getByTestId('share-stats-keep-saved')).toBeTruthy();
+  });
+});
+
+describe('the text floor', () => {
+  // ~28px at the 1080px export. The design grid is 360 wide, so the floor is
+  // 28 / (1080 / 360) = 9.33 design points; 9.5 is the smallest size used.
+  const FLOOR_PX = 28;
+  const EXPORT_K = 1080 / 360;
+
+  it('renders no text below ~28px at export size on any card', () => {
+    const flatten = (style: unknown): Record<string, unknown> =>
+      Array.isArray(style)
+        ? style.reduce<Record<string, unknown>>((acc, st) => ({ ...acc, ...flatten(st) }), {})
+        : ((style ?? {}) as Record<string, unknown>);
+    const days = Array.from({ length: 30 }, (_, i) => ({
+      dateKey: `2026-09-${String(i + 1).padStart(2, '0')}`,
+      count: i % 5,
+      weekday: i % 7,
+    }));
+    const full = stats({
+      days,
+      daysReadCount: 20,
+      languages: [{ languageCode: 'en', visitCount: 3 }],
+      languageCount: 1,
+      topPublications: [{ publicationName: 'Le Monde', countryCode: 'FR', visitCount: 9 }],
+    });
+    let checked = 0;
+    const small: string[] = [];
+    for (const card of ['reach', 'habits', 'keep'] as const) {
+      // Export path: no hostSize, pixelRatio 1 so the host is the export size.
+      const tree = render(<ShareStatsCard card={card} stats={full} pixelRatio={1} stampedAtMs={STAMP} locale="en-GB" />);
+      for (const node of tree.UNSAFE_getAllByType(
+        require('react-native').Text as React.ComponentType<Record<string, unknown>>,
+      )) {
+        const size = flatten(node.props.style).fontSize as number | undefined;
+        if (size === undefined) continue;
+        checked += 1;
+        if (size < FLOOR_PX) small.push(`${card}: ${size}px "${String(node.props.children).slice(0, 30)}"`);
+      }
+    }
+    expect(checked).toBeGreaterThan(20);
+    expect(small).toEqual([]);
+    expect(EXPORT_K).toBe(3);
+  });
+});
+
+describe('blur images', () => {
+  // The "Blur images" setting blurs every article photograph. The cards carry
+  // no photograph at all (flags, the logo and charts only), which is what makes
+  // them honour it. A remote image added to a card would need the blur too.
+  it('renders no remote image on any card', () => {
+    const { Image } = require('react-native');
+    for (const card of ['reach', 'habits', 'keep'] as const) {
+      const tree = render(
+        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+      );
+      const remote = tree
+        .UNSAFE_queryAllByType(Image)
+        .filter((node: any) => typeof node.props.source?.uri === 'string');
+      expect(remote).toHaveLength(0);
+    }
   });
 });

@@ -27,6 +27,7 @@ import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getByFact } from '@/lib/database/services/topic-service';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
+import { attributeKey, isLocationKey, mayReplaceKey } from '@/lib/mera-harness';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
@@ -42,9 +43,25 @@ import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)';
+
+/**
+ * Would keeping both facts leave the persona contradicting itself? Two home
+ * facts do (two current homes); two facts under the very same attribute do.
+ * The key PREFIX alone is too coarse here: "background: country of origin"
+ * and "background: origin and current residence" share it and can both be
+ * true, which is exactly the owner's Keep both case.
+ */
+function contradicts(a: string | null, b: string | null): boolean {
+  if (isLocationKey(a) && isLocationKey(b)) return true;
+  const norm = (x: string | null) => (x ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return norm(a) === norm(b);
+}
 // The red already used by the blocked banner in ChatThread. Paired with the
 // word "Replace" and the no-undo sentence: never colour alone.
 const DESTRUCTIVE = '#F87171';
+// The overlap label on a Keep both card: readable (~9:1 on the card) and
+// deliberately not the destructive tint.
+const NEUTRAL_LABEL = 'rgb(200, 200, 200)';
 
 function cardEntering() {
   'worklet';
@@ -107,9 +124,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
    * it can name the target: a fast tapper would otherwise wipe a fact and its
    * topics without ever seeing which.
    */
-  const [replaces, setReplaces] = useState<{ statement: string; topicCount: number } | null>(
-    null,
-  );
+  const [replaces, setReplaces] = useState<
+    { statement: string; topicCount: number; attribute: string | null } | null
+  >(null);
   const [replacesFailed, setReplacesFailed] = useState(false);
 
   useEffect(() => {
@@ -133,6 +150,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
         setReplaces({
           statement: target.statement,
           topicCount: topics.filter((t) => t.status === 'active').length,
+          attribute: target.questionnaireAttribute ?? null,
         });
       } catch {
         if (!cancelled) setReplacesFailed(true);
@@ -147,8 +165,36 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   // what disappears. A failed read keeps it disabled rather than falling back
   // to a plain Add, which would write a duplicate AND leave the old fact
   // standing — a silent wrong outcome instead of a visible blocked one.
-  const isReplace = replacesFactId !== null;
+  /**
+   * A HOME FACT IS ONLY REPLACED BY A HOME FACT, on every engine. The cloud
+   * loop already demotes such a replace; the on-device path has no loop, so
+   * the card is the one place both paths pass through. Once the target is
+   * read and the rule refuses, the card is an ordinary add.
+   */
+  const replaceRefused =
+    replaces !== null && !mayReplaceKey(questionnaireAttribute, replaces.attribute);
+  const isReplace = replacesFactId !== null && !replaceRefused;
   const acceptBlocked = isReplace && replaces === null;
+
+  /**
+   * KEEP BOTH (owner ask N17): offered only when both facts can be true at
+   * once, i.e. they sit under DIFFERENT attribute keys (where someone is from
+   * next to where they live). Two facts under the same key contradict each
+   * other (two current homes), so they do not get the option. A retired
+   * combined origin-and-home fact DOES: it still carries the home, and on
+   * device the reply said "I can keep both" above a card that could not
+   * (ux1 C4). Decided from the
+   * target the card has already read, so it is never offered before the card
+   * can name what it would keep.
+   */
+  const canKeepBoth =
+    isReplace
+    && replaces !== null
+    // Both keys KNOWN and different. An unknown key says nothing about
+    // whether the two facts can both be true.
+    && attributeKey(replaces.attribute) !== ''
+    && attributeKey(questionnaireAttribute) !== ''
+    && !contradicts(replaces.attribute, questionnaireAttribute);
 
   // `dismissed` and the derived pending/saved split come from the DERIVER, which
   // reads this group's own slot. This component deliberately no longer decides
@@ -164,8 +210,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     if (node !== null) AccessibilityInfo.setAccessibilityFocus(node);
   };
 
-  const handleAdd = async () => {
+  const handleAdd = (mode: 'replace-or-add' | 'keep-both' = 'replace-or-add') => async () => {
     if (busy || stale || dismissed || acceptBlocked) return;
+    if (mode === 'keep-both' && !canKeepBoth) return;
     setBusy(true);
     void hapticLight();
     try {
@@ -177,8 +224,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           // residence fact. Dropping it here would silently strip `userLocation`
           // from every future topic run.
           questionnaire: questionnaireAttribute ? { attribute: questionnaireAttribute } : undefined,
-          // ONE transaction in fact-commit, never delete-then-add.
-          ...(replacesFactId ? { replaces: replacesFactId } : {}),
+          // ONE transaction in fact-commit, never delete-then-add. Keep both
+          // is a plain add: the old fact and its topics stay.
+          ...(replacesFactId && isReplace && mode === 'replace-or-add' ? { replaces: replacesFactId } : {}),
           // The route the chat turn already chose, so topic generation runs
           // this fact's own guideline instead of the shipped one-size prompt.
           ...(topicSkillId ? { skillId: topicSkillId } : {}),
@@ -262,7 +310,11 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   }
 
   return (
-    <Animated.View entering={cardEntering} style={[styles.card, stale && styles.cardSettled]}>
+    // NO `entering` on the pending card. The cards used to fade in inside the
+    // inverted list while the bulk row below them was already drawn, so
+    // "Skip all / Add all (2)" sat over an empty band (audit F7). A pending
+    // card now lands in the same frame as its bulk row.
+    <Animated.View style={[styles.card, stale && styles.cardSettled]}>
       <View style={styles.headerRow}>
         <MaterialIcons
           name={isReplace ? 'swap-horiz' : 'help-outline'}
@@ -270,7 +322,13 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           color={ACCENT}
         />
         <Text size="sm" bold style={styles.title}>
-          {single ? t('factChoice.titleSingle') : t('factChoice.titleChoose')}
+          {isReplace
+            ? canKeepBoth
+              ? t('factChoice.titleAlsoAdd')
+              : t('factChoice.titleReplace')
+            : single
+              ? t('factChoice.titleSingle')
+              : t('factChoice.titleChoose')}
         </Text>
       </View>
 
@@ -309,7 +367,31 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           old fact and every topic it owns in one transaction with no inverse.
           The statement is its own node rather than an interpolation because it
           goes through TranslatableDynamic, which returns a component. */}
-      {isReplace && !stale && (
+      {/* KEEP BOTH: the old fact is not going anywhere unless Replace is
+          tapped, so it is shown as an overlap in neutral text, with one plain
+          line on what Replace would do. The red, no-undo block is only for a
+          card whose only accept IS the destroy (ux1 C4). */}
+      {canKeepBoth && !stale && replaces && (
+        <View style={styles.replaceBox} testID={`fact-choice-overlaps-${groupIndex}`}>
+          <View style={styles.replaceHeader}>
+            <MaterialIcons name="compare-arrows" size={16} color={NEUTRAL_LABEL} />
+            <Text size="xs" bold style={styles.overlapLabel}>
+              {t('factChoice.overlapsLabel')}
+            </Text>
+          </View>
+          <TranslatableDynamic
+            text={replaces.statement}
+            size="xs"
+            style={styles.replaceStatement}
+            numberOfLines={2}
+          />
+          <Text size="xs" style={styles.replaceDetail} numberOfLines={2}>
+            {t('factChoice.overlapsReplaceNote')}
+          </Text>
+        </View>
+      )}
+
+      {isReplace && !canKeepBoth && !stale && (
         <View style={styles.replaceBox} testID={`fact-choice-replaces-${groupIndex}`}>
           <View style={styles.replaceHeader}>
             <MaterialIcons name="warning-amber" size={16} color={DESTRUCTIVE} />
@@ -347,6 +429,47 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
         <Text size="xs" style={styles.settledSub}>
           {t('factChoice.expired')}
         </Text>
+      ) : isReplace ? (
+        // STACKED, so German-length labels never squeeze. The one filled
+        // (accent) button is the safe choice when it exists: Keep both.
+        // Replace is outlined in the destructive tint; Skip is plain text.
+        <View style={styles.buttonStack}>
+          {canKeepBoth && (
+            <Button
+              testID={`fact-choice-keep-both-${groupIndex}`}
+              onPress={handleAdd('keep-both')}
+              isDisabled={busy}
+              className="rounded-full bg-primary-400"
+              size="sm"
+            >
+              <ButtonText className="text-white text-sm">{t('factChoice.keepBoth')}</ButtonText>
+            </Button>
+          )}
+          <Button
+            testID={`fact-choice-add-${groupIndex}`}
+            onPress={handleAdd('replace-or-add')}
+            isDisabled={busy || acceptBlocked}
+            className="rounded-full bg-transparent border border-error-400"
+            size="sm"
+          >
+            <ButtonText className="text-sm" style={styles.replaceButtonText}>
+              {t('factChoice.replace')}
+            </ButtonText>
+          </Button>
+          <Pressable
+            testID={`fact-choice-dismiss-${groupIndex}`}
+            onPress={handleDismiss}
+            disabled={busy}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: busy }}
+            style={styles.skipText}
+          >
+            <Text size="sm" style={styles.skipLabel}>
+              {t('factChoice.dismiss')}
+            </Text>
+          </Pressable>
+        </View>
       ) : (
         <View style={styles.buttonRow}>
           <Button
@@ -360,14 +483,12 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           </Button>
           <Button
             testID={`fact-choice-add-${groupIndex}`}
-            onPress={handleAdd}
+            onPress={handleAdd('replace-or-add')}
             isDisabled={busy || acceptBlocked}
             className="flex-1 rounded-full bg-primary-400"
             size="sm"
           >
-            <ButtonText className="text-white text-sm">
-              {isReplace ? t('factChoice.replace') : t('factChoice.add')}
-            </ButtonText>
+            <ButtonText className="text-white text-sm">{t('factChoice.add')}</ButtonText>
           </Button>
         </View>
       )}
@@ -410,6 +531,7 @@ const styles = StyleSheet.create({
   },
   replaceHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   replaceLabel: { color: DESTRUCTIVE },
+  overlapLabel: { color: NEUTRAL_LABEL },
   replaceStatement: { color: 'rgb(210, 210, 210)', marginLeft: 22 },
   replaceDetail: { color: 'rgb(190, 190, 190)', marginLeft: 22 },
   replaceWarning: { color: DESTRUCTIVE, marginLeft: 22, marginTop: 2 },
@@ -430,6 +552,10 @@ const styles = StyleSheet.create({
   },
   optionText: { flex: 1, color: 'rgb(210, 210, 210)' },
   buttonRow: { flexDirection: 'row', gap: 10, marginTop: 2 },
+  buttonStack: { gap: 8, marginTop: 2 },
+  replaceButtonText: { color: DESTRUCTIVE },
+  skipText: { alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 16, minHeight: 44, justifyContent: 'center' },
+  skipLabel: { color: 'rgb(200, 200, 200)' },
 });
 
 export default FactChoiceCard;

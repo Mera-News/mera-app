@@ -244,4 +244,89 @@ describe('useFeedBootstrap', () => {
     await Promise.resolve();
     expect(mockHydrate.mock.calls.length).toBeGreaterThan(2);
   });
+
+  // S2: the effect re-runs on focus, so its cleanup fires on BLUR as well as on
+  // unmount. A blur mid-fetch used to drop both the store write and
+  // setIsLoading(false), leaving the tab on a spinner that the refocus early
+  // return never cleared.
+  describe('blur is not unmount', () => {
+    function deferred<T>() {
+      let resolve!: (v: T) => void;
+      const promise = new Promise<T>((r) => {
+        resolve = r;
+      });
+      return { promise, resolve };
+    }
+
+    it('a blur mid-fetch still clears isLoading and writes the flag', async () => {
+      setForYouState({ suggestions: [], hasGeneratedTopics: false });
+      const fetch = deferred<unknown>();
+      mockFetchUserPersonaOrThrow.mockReturnValueOnce(fetch.promise);
+      mockGetActive.mockResolvedValueOnce([{ id: 't1' }]);
+
+      const { result, rerender } = renderHook(() => useFeedBootstrap());
+      await waitFor(() => expect(result.current.isLoading).toBe(true));
+
+      mockIsFocusedRef.current = false;
+      rerender(undefined);
+      fetch.resolve({ _id: 'persona-1' });
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(mockSetHasGeneratedTopics).toHaveBeenCalledWith(true);
+    });
+
+    it('a blur mid-fetch still surfaces the error message', async () => {
+      setForYouState({ suggestions: [], hasGeneratedTopics: false });
+      const fetch = deferred<unknown>();
+      mockFetchUserPersonaOrThrow.mockReturnValueOnce(
+        fetch.promise.then(() => {
+          throw new Error('boom');
+        }),
+      );
+
+      const { result, rerender } = renderHook(() => useFeedBootstrap());
+      await waitFor(() => expect(result.current.isLoading).toBe(true));
+
+      mockIsFocusedRef.current = false;
+      rerender(undefined);
+      fetch.resolve(null);
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(result.current.errorMessage).toBe('errors.feedError');
+    });
+
+    it('a user switch mid-fetch does not write the previous user flag', async () => {
+      setForYouState({ suggestions: [], hasGeneratedTopics: false });
+      const fetch = deferred<unknown>();
+      mockFetchUserPersonaOrThrow.mockReturnValueOnce(fetch.promise);
+      mockFetchUserPersonaOrThrow.mockResolvedValue({ _id: 'persona-2' });
+      mockGetActive.mockResolvedValue([{ id: 't1' }]);
+
+      const { result, rerender } = renderHook(() => useFeedBootstrap());
+      await waitFor(() => expect(result.current.isLoading).toBe(true));
+
+      mockLocalUserIdRef.current = 'user-2';
+      mockSessionRef.current = { user: { id: 'user-2' } };
+      rerender(undefined);
+      fetch.resolve({ _id: 'persona-1' });
+
+      // The first run settles without writing; user-2 then bootstraps itself.
+      await waitFor(() => expect(mockFetchUserPersonaOrThrow).toHaveBeenCalledWith('user-2'));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(mockSetHasGeneratedTopics).toHaveBeenCalledTimes(1);
+    });
+
+    it('a session-only user (no local id) still gets the flag written', async () => {
+      mockLocalUserIdRef.current = null;
+      mockSessionRef.current = { user: { id: 'user-1' } };
+      setForYouState({ suggestions: [], hasGeneratedTopics: false });
+      mockFetchUserPersonaOrThrow.mockResolvedValueOnce({ _id: 'persona-1' });
+      mockGetActive.mockResolvedValueOnce([{ id: 't1' }]);
+
+      const { result } = renderHook(() => useFeedBootstrap());
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      expect(mockSetHasGeneratedTopics).toHaveBeenCalledWith(true);
+    });
+  });
 });

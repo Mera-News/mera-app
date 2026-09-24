@@ -6,6 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { sentenceCase } from '@/components/custom/facts/sentence-case';
 
 const ACCENT = '#EDA77E';
 const SUBTLE = 'rgb(163,163,163)';
@@ -45,9 +46,9 @@ const NegativeTopicRow: React.FC<NegativeTopicRowProps> = ({
             >
                 <MaterialIcons name="label" size={18} color={ACCENT} />
                 <TranslatableDynamic
-                    text={topic.text}
+                    text={sentenceCase(topic.text)}
                     size="md"
-                    className="text-white flex-1 ml-3 mr-2 capitalize"
+                    className="text-white flex-1 ml-3 mr-2"
                     numberOfLines={2}
                 />
                 <View className="rounded-full px-2 py-0.5 mr-1 bg-gray-700">

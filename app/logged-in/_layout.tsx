@@ -135,10 +135,16 @@ export default function LoggedInLayout() {
         />
         <Stack.Screen
           name="fact-feed"
-          options={{
+          // A hop from one section's "Next" row (via: 'next') replaces this
+          // screen with the next section; it crossfades rather than sliding a
+          // second screen in. Every other arrival slides as before.
+          options={({ route }) => ({
             headerShown: false,
-            animation: 'slide_from_right'
-          }}
+            animation:
+              (route.params as { via?: string } | undefined)?.via === 'next'
+                ? 'fade'
+                : 'slide_from_right',
+          })}
         />
         <Stack.Screen
           name="facts"

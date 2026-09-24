@@ -288,7 +288,11 @@ export type ChatThreadItem =
       answered: boolean;
     }
   | { kind: 'divider'; key: string; label: string }
-  | { kind: 'typing'; key: string };
+  | { kind: 'typing'; key: string }
+  // "View previous messages". An ITEM, the oldest one, so it draws at the TOP
+  // of the inverted list. It used to be the list header, which an inverted
+  // list draws at the bottom, between the newest reply and the composer.
+  | { kind: 'history-button'; key: string };
 
 // ---------------------------------------------------------------------------
 // Starter chips
@@ -351,4 +355,16 @@ export interface ChatThreadProps {
   isRefreshingBlockStatus: boolean;
   onSend: (text: string) => void;
   isInputDisabled: boolean;
+  /**
+   * The line under the AI notice on an empty thread. It differs by chat:
+   * the settings assistant's warning about misuse is wrong in an article
+   * chat (audit F12). Omitted means the persona notice.
+   */
+  usageNotice?: string;
+  /**
+   * A NEUTRAL line above the composer while a card waits for an answer. Not
+   * an error and not a gate: the composer stays usable and a typed reply
+   * leaves the card pending (audit F7).
+   */
+  composerHint?: string | null;
 }

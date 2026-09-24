@@ -9,6 +9,12 @@ import { useUserStore } from './stores/user-store';
 import { useNetworkStore } from './stores/network-store';
 import { getSetting, setSetting } from './database/services/setting-service';
 import { ArticleSuggestionStatus } from './database/article-suggestion-status';
+import {
+    isStartupGatePassed,
+    stashPendingNotificationRoute,
+    takePendingNotificationRouteForNavigation,
+    type NotificationHref,
+} from './stores/pending-notification-route';
 
 /** Persisted count of consecutive push-token retrieval failures. Used to keep
  *  the (expected, recoverable) iOS APNs hang at `warning` level until recovery
@@ -237,36 +243,131 @@ async function refreshForYouCacheFromDb(): Promise<void> {
     }
 }
 
-/**
- * Handles navigation from notification tap. Awaits a DB-backed cache refresh
- * before navigating so the For You screen never renders against a half-cleared
- * cache.
- *
- * There is deliberately NO `data.type` switch. A `type === 'fact-check'` branch
- * lived here briefly, deep-linking to the Dashboard's Fact checks chip; it was
- * removed with the push itself. Delivering that notification required the
- * server to store WHICH USER asked about WHICH ARTICLE, and since fact-check
- * rows dedupe by article fingerprint, that field also amounted to a list of the
- * users who doubted the same claim — a durable record of article-level
- * behaviour our privacy policy explicitly promises we do not keep. The linkage
- * was dropped rather than the promise amended, so the push can never be sent
- * and the branch was unreachable.
- *
- * Fact-checking has since moved fully on-device (the pivot that replaced the
- * server pipeline this comment originally described): the runner writes the
- * on-device `fact_checks` table directly as it works, and `useFactCheck` (see
- * lib/fact-check/use-fact-check.ts) observes that table live. There is nothing
- * left to reconcile with a server, and still no `type === 'fact-check'` branch
- * here — there was never anything server-side to deep-link into.
- */
-async function handleNotificationNavigation(data: NotificationDeepLinkData): Promise<void> {
-    try {
-        await refreshForYouCacheFromDb();
+/** Settings row holding the `request.identifier` of the last notification tap
+ *  this device handled. See {@link handleInitialNotification}. */
+export const HANDLED_NOTIFICATION_ID_KEY = 'last_handled_notification_id';
 
-        router.push('/logged-in/app_container/for_you');
+const DASHBOARD_ROUTE: NotificationHref = '/logged-in/app_container/for_you';
+
+function nonBlank(v: unknown): string | null {
+    return typeof v === 'string' && v.trim() !== '' ? v.trim() : null;
+}
+
+/**
+ * Where a notification opens. Shared by an OS tap and an in-app notification
+ * row (NotificationsScreen), so the two can never disagree. Never throws.
+ *
+ * ONE typed destination: `fact_check_done`, which is an ON-DEVICE type (the
+ * payload never came from a server that knows who asked about what). It opens
+ * the suggestion while its row exists, else the standalone article: suggestions
+ * prune at 48h while notification rows live 90 days, and the retention row that
+ * keeps a fact-checked article openable is keyed by ARTICLE id, so a pruned
+ * suggestion id would dead-end on "story unavailable".
+ *
+ * Everything else, including every server payload, opens the Dashboard. In
+ * particular the server `type === 'fact-check'` push must NEVER deep-link: it
+ * was removed because delivering it required the server to store which user
+ * asked about which article, and since fact-check rows dedupe by article
+ * fingerprint that field also amounted to a list of the users who doubted the
+ * same claim, a durable record of article-level behaviour our privacy policy
+ * promises we do not keep. The linkage was dropped rather than the promise
+ * amended, so the name `fact-check` stays a Dashboard route forever and the
+ * on-device type is spelled differently on purpose.
+ */
+export async function resolveNotificationRoute(
+    data: NotificationDeepLinkData | null | undefined,
+): Promise<NotificationHref> {
+    try {
+        if (data?.type === 'fact_check_done') {
+            const suggestionId = nonBlank(data.suggestionId);
+            const articleId = nonBlank(data.articleId);
+            if (suggestionId) {
+                // Lazy require, not `await import()`: the dynamic form does not
+                // run under this repo's jest config (it throws
+                // ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING_FLAG), so a test would
+                // only ever see the catch below.
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                const { getSuggestionByServerId } = require('./database/services/article-suggestion-service') as typeof import('./database/services/article-suggestion-service');
+                if (await getSuggestionByServerId(suggestionId)) {
+                    return {
+                        pathname: '/logged-in/suggestion-detail',
+                        params: { articleSuggestionId: suggestionId },
+                    };
+                }
+            }
+            if (articleId) {
+                return { pathname: '/logged-in/article-detail', params: { articleId } };
+            }
+        }
     } catch (error) {
         logger.captureException(error, {
-            tags: { service: 'notification-service', method: 'handleNotificationNavigation' },
+            tags: { service: 'notification-service', method: 'resolveNotificationRoute' },
+        });
+    }
+    return DASHBOARD_ROUTE;
+}
+
+/** Past the startup gate, PIN unlocked: a tap may navigate in this JS context.
+ *  pin-store is lazy-required so this module's import graph (and its suite)
+ *  does not grow app-restart and the PIN service. */
+function gateIsOpen(): boolean {
+    if (!isStartupGatePassed()) return false;
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { usePinStore } = require('./stores/pin-store') as typeof import('./stores/pin-store');
+        return usePinStore.getState().locked === false;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * One notification tap, from either path (warm listener or boot). Never throws.
+ *
+ * ORDER IS THE WHOLE POINT:
+ *   1. stash the route on disk. Every background -> active return reloads JS
+ *      (lib/app-restart.ts), so a warm tap's own navigation is usually wiped a
+ *      moment later; the startup gate of the NEXT context consumes the row.
+ *   2. record the identifier as handled, so the restart boot (where
+ *      `getLastNotificationResponseAsync()` still returns this tap) does not
+ *      open it a second time. After the stash on purpose: a reload between the
+ *      two re-handles the same tap, which only rewrites the same stash.
+ *   3. navigate now only when the gate is open: startup gate passed in this
+ *      context and the PIN unlocked. Never over the lock screen, never ahead of
+ *      the startup gate; either of those consumes the stash itself (a PIN
+ *      unlock goes back through /logged-in). Navigating now KEEPS the row,
+ *      stamped, because the reload that follows the tap wipes this
+ *      navigation and the new boot skips the handled tap: the next context's
+ *      startup gate reopens it once (see pending-notification-route).
+ * No signed-in user: nothing to open, nothing stashed.
+ */
+async function handleNotificationTap(
+    data: NotificationDeepLinkData,
+    identifier: string | null,
+): Promise<void> {
+    try {
+        const userId = useUserStore.getState().userId;
+        if (userId) {
+            const href = await resolveNotificationRoute(data);
+            await stashPendingNotificationRoute(href, userId);
+        }
+        if (identifier) {
+            await setSetting(HANDLED_NOTIFICATION_ID_KEY, identifier).catch(() => { /* best-effort */ });
+        }
+        if (!userId) return;
+
+        if (!gateIsOpen()) return;
+        // Not a plain consume: the row must outlive this navigation, which the
+        // tap's own foreground reload usually wipes a moment later.
+        const route = await takePendingNotificationRouteForNavigation(userId);
+        if (!route) return;
+        // The Dashboard renders from the in-memory cache; refresh it from the DB
+        // first so it never paints against a half-cleared cache.
+        if (route === DASHBOARD_ROUTE) await refreshForYouCacheFromDb();
+        router.push(route);
+    } catch (error) {
+        logger.captureException(error, {
+            tags: { service: 'notification-service', method: 'handleNotificationTap' },
             extra: { data },
         });
     }
@@ -285,27 +386,38 @@ function setupNotificationListeners(): void {
     responseListener = Notifications.addNotificationResponseReceivedListener(
         (response) => {
             const data = response.notification.request.content.data as NotificationDeepLinkData;
-            void handleNotificationNavigation(data);
+            void handleNotificationTap(data, response.notification.request.identifier ?? null);
         }
     );
 }
 
 /**
- * Checks for and handles notifications that launched the app (when app was not
- * running). Should be called once during app initialization after the router is
- * ready.
+ * Handles the notification tap that launched or foregrounded the app. Called on
+ * EVERY JS boot once navigation is ready, restart boots included.
  *
- * Routes through the same `handleNotificationNavigation` as a warm tap, so
- * there is no second implementation to keep in sync.
+ * `getLastNotificationResponseAsync()` survives a JS reload and every return to
+ * the foreground is one, so this deduplicates on the tap's
+ * `request.identifier`, persisted in {@link HANDLED_NOTIFICATION_ID_KEY}: a tap
+ * already handled (by an earlier boot or by the warm listener just before the
+ * reload) is skipped, and a new one is handled even on a restart boot. The
+ * earlier rule, "skip every restart boot", dropped every tap made while the app
+ * was in the background, because that tap's own return is a restart. The
+ * delivery date is no substitute key: it says when the notification arrived,
+ * not when it was tapped.
+ *
+ * Routes through the same `handleNotificationTap` as a warm tap, so there is no
+ * second implementation to keep in sync.
  */
 export async function handleInitialNotification(): Promise<void> {
     try {
         const response = await Notifications.getLastNotificationResponseAsync();
+        if (!response) return;
 
-        if (response) {
-            const data = response.notification.request.content.data as NotificationDeepLinkData;
-            await handleNotificationNavigation(data);
-        }
+        const identifier = response.notification.request.identifier ?? null;
+        if (identifier && (await getSetting(HANDLED_NOTIFICATION_ID_KEY)) === identifier) return;
+
+        const data = response.notification.request.content.data as NotificationDeepLinkData;
+        await handleNotificationTap(data, identifier);
     } catch (error) {
         logger.captureException(error, {
             tags: { service: 'notification-service', method: 'handleInitialNotification' },

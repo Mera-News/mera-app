@@ -2,7 +2,6 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -24,6 +23,7 @@ import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import UsageWidget from '../UsageWidget';
 import { humanizeKey } from './observability-labels';
+import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 
 const GREEN = '#10b981';
 const AMBER = '#f59e0b';
@@ -336,14 +336,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
             {/* No opaque fill: the backdrop above is the page background. */}
             <Box className="flex-1" style={{ paddingTop: insets.top }}>
 
-            <HStack className="px-4 py-3 items-center">
-                <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
-                    <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
-                </Pressable>
-                <Text className="text-white font-semibold text-base flex-1 text-center mr-9">
-                    {t('subscription.managePlan')}
-                </Text>
-            </HStack>
+            <DrillDownHeader title={t('subscription.managePlan')} onBack={onBack} />
 
             {loading ? (
                 <Box className="flex-1 items-center justify-center">

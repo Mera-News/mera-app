@@ -260,8 +260,10 @@ describe('the bounded loop', () => {
       deps,
     });
 
-    expect(out.terminalReason).toBe('leg-cap');
-    expect(out.legCapped).toBe(true);
+    // The LAST leg of a facts turn is the forced offer, so a turn that spun to
+    // the cap has had its forced leg and ends `no-proposal`, not `leg-cap`.
+    expect(out.forcedProposal).toBe(true);
+    expect(out.terminalReason).toBe('no-proposal');
     expect(out.legBudgetHit).toBe(true);
   });
 
@@ -325,7 +327,9 @@ describe('the bounded loop', () => {
     });
 
     expect(out.replyLeakUnfixed).toBe(true);
-    expect(out.reply).toBe(REPLY_LEAK_FALLBACK);
+    // A card is on screen (this turn staged one), so the leak is dropped
+    // rather than replaced with a question (ux1 C4).
+    expect(out.reply).toBe('');
     expect(out.reply).not.toContain('their residence');
   });
 
@@ -478,8 +482,10 @@ describe('the bounded loop', () => {
       state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
     });
 
-    expect(out.terminalReason).toBe('leg-cap');
-    expect(out.legCapped).toBe(true);
+    // Its last leg was the forced offer (see B13 below), which produced
+    // nothing: counted as `no-proposal`, and still rendered as a terminal.
+    expect(out.forcedProposal).toBe(true);
+    expect(out.terminalReason).toBe('no-proposal');
     expect(out.legBudgetHit).toBe(true);
   });
 
@@ -565,8 +571,9 @@ describe('the bounded loop', () => {
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
     expect(out.legs).toHaveLength(MAX_AGENT_LEGS);
     expect(out.legBudgetHit).toBe(true);
-    expect(out.legCapped).toBe(true);
-    expect(out.terminalReason).toBe('leg-cap');
+    // A facts turn's last leg is the forced offer; with nothing offered the
+    // turn is `no-proposal`, a terminal the UI still renders.
+    expect(out.terminalReason).toBe('no-proposal');
   });
 
   it('a REPEATED load_skill of the ALREADY-LOADED skill settles instead of spinning', async () => {
@@ -761,16 +768,20 @@ describe('destructive and place guards', () => {
     expect(out.legs[0].toolResults[0].result).toEqual({ error: 'confirm with ask_choice first' });
   });
 
-  it('`replaces` is dropped unless a choice was actually confirmed', async () => {
+  // Owner ruling ux1 Q1: a SAME-KEY replace needs no chip (the card is the
+  // consent). A keyless or cross-key one still does, which is what this pins.
+  it('a keyless `replaces` is dropped unless a choice was actually confirmed', async () => {
     const { deps } = scriptedDeps([
       modelResult({
         content: 'ok',
         toolCalls: [tc('saveExtractedFacts', {
-          extracted_user_information: [{ statement: 'Lives in Berlin', replaces: 'f1' }],
+          // NOT a home: a new home always targets the home on file (ux1
+          // batch 5), so a home statement would not test this guard.
+          extracted_user_information: [{ statement: 'Works at Zalando', replaces: 'f1' }],
         })],
       }),
     ]);
-    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'I moved to Berlin', deps });
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'I work at Zalando', deps });
     expect(out.proposals[0].replaces).toBeNull();
   });
 
@@ -897,7 +908,7 @@ describe('the forced proposal leg', () => {
 
   it('ask_choice ALSO discharges the debt, so a genuine question is not forced', async () => {
     const { deps } = scriptedDeps([
-      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
       modelResult({
         content: 'Which one?',
         toolCalls: [tc('ask_choice', { question: 'Which?', options: ['A', 'B'] })],
@@ -1378,9 +1389,11 @@ describe('TestFlight regressions', () => {
     expect(third.skillLoaded).toBe('facts/interest');
   });
 
-  it('a replace is refused once the confirmation belongs to an EARLIER turn', async () => {
+  it('a KEYLESS replace is refused once the confirmation belongs to an EARLIER turn', async () => {
     // The `replaces` gate reads the same flag, so a single tap anywhere in the
-    // conversation used to leave it open for good.
+    // conversation used to leave it open for good. Keyless on purpose: a
+    // same-key replace passes on the card's own consent (ux1 Q1), so only a
+    // replace without a matching key still depends on this turn's tap.
     const state = createAgentState(RESIDENT);
     state.turn.resolvedChoice = { question: 'Which one?', text: 'Berlin', payload: null };
     state.turn.lastSkill = 'facts/residence';
@@ -1395,10 +1408,12 @@ describe('TestFlight regressions', () => {
     // A LATER turn proposing a replace has no confirmation of its own.
     const { deps: t2 } = scriptedDeps([
       modelResult({ content: 'One moment.', toolCalls: [tc2('load_skill', { id: 'facts/residence' })] }),
-      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Porto, Portugal, EU', replaces: 'home' }] })] }),
+      // Not a home statement: a new HOME always targets the home on file
+      // (ux1 batch 5); this pins the keyless cross-key case.
+      modelResult({ content: '', toolCalls: [tc2('saveExtractedFacts', { extracted_user_information: [{ statement: 'Works in Porto, Portugal, EU', replaces: 'home' }] })] }),
       modelResult({ content: 'Here is the reading.' }),
     ]);
-    const second = await runAgentTurn({ state, userMessage: 'I might move to Porto', deps: t2 });
+    const second = await runAgentTurn({ state, userMessage: 'I might work in Porto', deps: t2 });
 
     expect(second.proposals[0].replaces).toBeNull();
   });

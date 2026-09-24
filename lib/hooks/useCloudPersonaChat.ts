@@ -13,7 +13,9 @@ import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from
 import {
   createAgentState,
   createAgentTurnState,
+  replaceClauseDashes,
   runAgentTurn,
+  type AgentDeps,
   type AgentLeg,
   type AgentState,
 } from '../mera-harness';
@@ -26,6 +28,7 @@ import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { makePhaseSink, type PhaseSink } from '@/lib/services/chat-phase';
 import { applyChatPhase, useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
+import { unresolvedGroups } from '../chat-tools/fact-choice-resolution';
 import { estimateTokens } from '../llm/tokens';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
@@ -34,6 +37,70 @@ import {
   KNOWLEDGE_TOOL_NAMES,
   MAX_HISTORY_USER_TURNS,
 } from '../news-harness/persona-management/persona-agent-core';
+
+/**
+ * The one-time split offer for a combined "origin plus residence" fact is
+ * remembered on the device, so a skipped offer is not repeated on every later
+ * residence or origin turn. Stored as a JSON list of fact ids.
+ */
+const COMBINED_SPLIT_OFFERED_KEY = 'mera_combined_fact_split_offered_v1';
+
+/**
+ * Required LAZILY, on purpose. `setting-service` builds its collection at
+ * module scope, so a top-level import here constructs a real SQLiteAdapter the
+ * moment anything imports this hook, and every suite that renders it dies at
+ * load with `initializeJSI`.
+ */
+function settings(): typeof import('../database/services/setting-service') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('../database/services/setting-service');
+}
+
+async function readSplitOffered(): Promise<string[]> {
+  try {
+    const raw = await settings().getSetting(COMBINED_SPLIT_OFFERED_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+function withCombinedFactMemory(deps: AgentDeps): AgentDeps {
+  return {
+    ...deps,
+    combinedFactRewrite: {
+      wasOffered: async (factId) => (await readSplitOffered()).includes(factId),
+      markOffered: async (factId) => {
+        const ids = await readSplitOffered();
+        if (ids.includes(factId)) return;
+        await settings()
+          .setSetting(COMBINED_SPLIT_OFFERED_KEY, JSON.stringify([...ids, factId]))
+          .catch(() => {});
+      },
+    },
+  };
+}
+
+/**
+ * Every reading on a fact-choice card in this thread that the user has not
+ * answered. The store holds the tool call's staged result; a tap writes an
+ * OVERRIDE under `${messageId}::${index}` in the floating-chat store, which
+ * wins when present.
+ */
+export function pendingCardStatements(messages: ConversationMessage[]): string[] {
+  const overrides = useFloatingChatStore.getState().toolCallResults;
+  const out: string[] = [];
+  for (const m of messages) {
+    if (m.role !== 'assistant' || !m.toolCalls) continue;
+    m.toolCalls.forEach((tc, idx) => {
+      if (tc.name !== 'saveExtractedFacts') return;
+      const result = overrides[`${m.id}::${idx}`] ?? (tc.result as Record<string, unknown> | undefined);
+      for (const g of unresolvedGroups(result)) out.push(...g.options);
+    });
+  }
+  return out;
+}
 
 /** Tool arguments arrive as a JSON string. A malformed one must yield an empty
  *  object rather than throwing: this runs inside the live progress write-back,
@@ -263,11 +330,23 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       // The store is the authority on "is this the same conversation".
       if (store.agentTurnState === null) agentStateRef.current = null;
       if (!agentStateRef.current) agentStateRef.current = createAgentState(persona);
+      // Readings still waiting on a card, so a typed reply cannot produce a
+      // second card for the same thing (owner ruling ux1, F7).
+      agentStateRef.current.pendingCardStatements = pendingCardStatements(store.messages);
       // Facts are re-read every turn; only the TURN half persists.
       agentStateRef.current.persona = persona;
 
+      // TWO BUBBLES PER TURN. The acknowledgement streams into its own bubble
+      // and is never replaced; the answer lands in the second one, which also
+      // carries every tool call (and so every card) of the turn. One bubble
+      // used to take every leg's text in turn and then swap to the final
+      // reply, so the words being read changed under the reader and the
+      // bubble jumped. An empty bubble with no cards is not rendered, so a turn
+      // with no acknowledgement shows one bubble, exactly as before.
+      const ackId = `${assistantId}-ack`;
       store.setMessages((prev) => [
         ...prev,
+        { id: ackId, role: 'assistant', content: '' } as ConversationMessage,
         { id: assistantId, role: 'assistant', content: '' } as ConversationMessage,
       ]);
 
@@ -286,7 +365,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         useCloudChatStore
           .getState()
           .setMessages((prev) =>
-            prev.map((m) => (m.id === assistantId ? { ...m, content: acc } : m)),
+            prev.map((m) => (m.id === ackId ? { ...m, content: acc } : m)),
           );
       };
       const schedule = () => {
@@ -326,7 +405,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const out = await runAgentTurn({
           state: agentStateRef.current,
           userMessage,
-          deps: makeAgentDeps(
+          deps: withCombinedFactMemory(makeAgentDeps(
             userMessage,
             (d) => {
               // The arrival signal carries no payload, and the line is already
@@ -334,22 +413,31 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
               // to do here but avoid falling into the content branch.
               if (d.reasoning !== undefined && acc === '') return;
               if (d.content) {
-                // Real text. The bubble is the liveness signal from here, so
-                // the line hands over rather than competing with it.
-                phaseSinkRef.current?.(null);
+                // The ACKNOWLEDGEMENT. It is not the answer, so the wait line
+                // below it keeps running until the answer lands; releasing it
+                // here emptied the wait bubble under the acknowledgement
+                // (ux1 C2). The turn's own finally releases it.
                 acc += d.content;
                 schedule();
               }
             },
             (signal) => phaseSinkRef.current?.(signal),
-          ),
+          )),
           onLeg,
         });
         if (queued) flush();
-        // The loop's reply is dash-cleaned; the streamed accumulation is not,
-        // so the final write is the authoritative one.
+        // The loop's text is dash-cleaned and gated; the streamed accumulation
+        // is not, so these final writes are the authoritative ones. An
+        // acknowledgement the loop dropped (it narrated or leaked) empties its
+        // bubble, which then stops rendering.
         useCloudChatStore.getState().setMessages((prev) =>
-          prev.map((m) => (m.id === assistantId ? { ...m, content: out.reply } : m)),
+          prev.map((m) =>
+            m.id === ackId
+              ? { ...m, content: out.acknowledgement }
+              : m.id === assistantId
+                ? { ...m, content: out.reply }
+                : m,
+          ),
         );
         store.setAgentTurnState({ ...agentStateRef.current.turn });
         // ON SCREEN, not only in the log. Four distinct terminals used to reach
@@ -483,11 +571,23 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         // a bubble that lags the accumulated text.
         let renderQueued = false;
         let renderArmed = true;
+        // Hands the wait line over. Idempotent in the sink.
+        const releaseWaitLine = () => phaseSinkRef.current?.(null);
         const renderContent = () => {
           renderQueued = false;
           if (!renderArmed) return; // the stream failed; the error bubble owns the slot now
+          // Dash-cleaned on EVERY render, not only at the end: a cleanup that
+          // landed after the stream re-wrapped a finished bubble by a line
+          // (ux1 C2, a 21pt shift after the reply had settled).
+          const shown = replaceClauseDashes(accContent);
+          // THE HANDOVER, in the same tick as the first visible text. It used
+          // to happen on the delta, a frame before this render, so the wait
+          // bubble emptied and the thread dropped 42pt, then rose again when
+          // the reply mounted (ux1 C2). Now the reply takes the wait row's
+          // slot in one commit.
+          if (shown.length > 0) releaseWaitLine();
           useCloudChatStore.getState().setMessages((prev) =>
-            prev.map((m) => m.id === targetId ? { ...m, content: accContent } : m),
+            prev.map((m) => m.id === targetId ? { ...m, content: shown } : m),
           );
         };
         const scheduleContentRender = () => {
@@ -498,9 +598,6 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         const flushContentRender = () => {
           if (renderQueued) renderContent();
         };
-        // Hand the wait line over the moment anything visible arrives.
-        // Idempotent in the sink, so calling it per delta costs nothing.
-        const releaseWaitLine = () => phaseSinkRef.current?.(null);
 
         let eventCount = 0;
         try {
@@ -519,11 +616,11 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
             // route, which fires on every call including the many that emit no
             // reasoning at all.
           } else if (event.type === 'text-delta') {
-            releaseWaitLine();
             accContent += event.delta;
             if (!suppressText) scheduleContentRender();
           } else if (event.type === 'tool-call-delta') {
-            releaseWaitLine();
+            // No handover here: the wait row stays until text lands or the
+            // steps box takes over, never an empty bubble in between.
             // The model may send multiple tool calls with the same index (or all index 0).
             // Detect collision: if a NEW name arrives at an existing index, assign a new key.
             const existingAcc = toolCallAccumulators.get(event.index);
@@ -545,6 +642,15 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           }
         }
         flushContentRender();
+        // THE DASH RULE, for the agents that do not run through the loop. The
+        // loop cleans its own replies; the single-shot "why was this shown"
+        // answer reached users with an em dash in it. Applied once the stream
+        // is whole, so a clause dash split across two deltas is still seen.
+        const cleaned = replaceClauseDashes(accContent);
+        if (cleaned !== accContent) {
+          accContent = cleaned;
+          if (!suppressText) renderContent();
+        }
         } finally {
           renderArmed = false;
           // Released in `startTurn`'s finally, the one owner. See the agent

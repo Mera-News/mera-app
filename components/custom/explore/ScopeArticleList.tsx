@@ -9,7 +9,7 @@ import type { NewsArticle, TopHeadline } from '@/lib/generated/graphql-types';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
 import logger from '@/lib/logger';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useIsConnected, useIsOnline } from '@/lib/stores/network-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -22,7 +22,6 @@ import Animated, {
     useComposedEventHandler,
     useSharedValue,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PAGE_SIZE = 10;
 
@@ -126,11 +125,16 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     // `isConnected` too so the copy can say WHICH is broken instead of always
     // blaming the user's connection when it might be Mera.
     const isConnected = useIsConnected();
-    const insets = useSafeAreaInsets();
+    const tabClearance = useTabBarClearance();
     const [headlines, setHeadlines] = useState<TopHeadline[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    // A load that FAILED, as opposed to one that returned nothing. Without it the
+    // empty state fell through to `explore.noArticles` ("no articles") whenever
+    // `isOnline` still read true, blaming the world for a request that never
+    // landed. Cleared by any successful load or refresh.
+    const [loadFailed, setLoadFailed] = useState(false);
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
@@ -178,7 +182,9 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 setHeadlines(appendUniqueHeadlines([], rows));
                 setEndCursor(cursor);
                 setHasNextPage(more);
+                setLoadFailed(false);
             } catch {
+                setLoadFailed(true);
                 // THE LINK OWNS THE CAPTURE. Every fetch on this screen goes
                 // through ArticleService.getTopHeadlinesForCountry ->
                 // client.query, so the Apollo error link has already seen,
@@ -223,7 +229,9 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             setHeadlines(appendUniqueHeadlines([], rows));
             setEndCursor(cursor);
             setHasNextPage(more);
+            setLoadFailed(false);
         } catch {
+            setLoadFailed(true);
             // Breadcrumb only — see the mount load above.
             logger.addBreadcrumb(
                 `[ScopeArticleList] refresh failed`,
@@ -351,15 +359,15 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                         the Explore header, which stacked with the global
                         connectivity band — it belongs here, on the emptiness it
                         explains. */}
-                    {isOnline
-                        ? t('explore.noArticles')
-                        : isConnected
+                    {!isConnected
+                        ? t('explore.offlineUnavailable')
+                        : loadFailed || !isOnline
                             ? t('explore.serverUnavailable')
-                            : t('explore.offlineUnavailable')}
+                            : t('explore.noArticles')}
                 </Text>
             </VStack>
         );
-    }, [isLoading, enabled, isOnline, isConnected, t]);
+    }, [isLoading, enabled, isOnline, isConnected, loadFailed, t]);
 
     // Compose the collapsible-header handler (from ExploreScreen) with a
     // scroll-tick notifier (drives deferred TranslatableDynamic translation as
@@ -401,7 +409,8 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 // Clear the pinned header overlay (measured by ExploreScreen) —
                 // the list scrolls underneath it.
                 paddingTop: headerHeight + 8,
-                paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 20,
+                // The tab bar once, then a tail (see useTabBarClearance).
+                paddingBottom: tabClearance + 24,
                 flexGrow: 1,
             }}
             refreshControl={

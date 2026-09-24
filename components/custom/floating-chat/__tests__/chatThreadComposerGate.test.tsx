@@ -166,11 +166,11 @@ describe('the causes that SHOULD still block', () => {
     expect(getByTestId('prompt-input').props.accessibilityState.disabled).toBe(true);
   });
 
-  it('an unresolved card gate disables the input', () => {
+  it('an unresolved topic-plan gate disables the input', () => {
     const { getByTestId } = render(
       <ChatThread
         {...props({
-          blockedMessage: 'factChoice.resolveBeforeContinuing',
+          blockedMessage: 'topicPlan.resolveBeforeContinuing',
           bannerBlocksInput: true,
         })}
       />,

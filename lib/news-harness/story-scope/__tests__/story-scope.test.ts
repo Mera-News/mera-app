@@ -6,6 +6,7 @@ import {
   buildStoryScopePrompt,
   parseStoryScopeOutput,
   MAX_SCOPE_TITLES,
+  STORY_SCOPE_SYSTEM_PROMPT,
 } from '../index';
 
 /** Fixed injected clock — 2026-03-04. The builder never reads Date.now(), so
@@ -141,5 +142,11 @@ describe('buildStoryScopePrompt', () => {
 
   it('degrades to "unknown" rather than throwing on a non-finite date', () => {
     expect(buildStoryScopePrompt(['A title'], Number.NaN).user).toContain('Today: unknown');
+  });
+});
+
+describe('story-scope label copy (F34)', () => {
+  it('keeps the word "scope" out of the label the user reads', () => {
+    expect(STORY_SCOPE_SYSTEM_PROMPT).toContain('never use the word "scope" in it');
   });
 });

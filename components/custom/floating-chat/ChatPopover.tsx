@@ -16,7 +16,6 @@ import { useTranslation } from 'react-i18next';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import Animated, {
-    Easing,
     Extrapolation,
     interpolate,
     runOnJS,
@@ -29,6 +28,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ACCENT = 'rgb(231,138,83)';
 const PANEL_BG = '#1a1a1a';
+// Neutral, not red: a filled red circle read as a destructive action (audit
+// M15). Closing is not destructive; the reply keeps running either way.
+const CLOSE_ICON = 'rgb(210, 210, 210)';
 const BUBBLE_SIZE = 64; // diameter of the floating bubble the panel morphs from
 
 // Swipe-down-to-close thresholds (header grab zone only).
@@ -72,8 +74,6 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
     // CURRENT position, even if it moved while the panel was open.
     const originX = useSharedValue(0);
     const originY = useSharedValue(0);
-    // Subtle header reveal (slide up 8→0 + fade) once the morph fully settles.
-    const headerReveal = useSharedValue(0);
     // Follows the finger during a swipe-down-to-close drag on the header grab
     // zone; springs back to 0 if released under threshold.
     const dragTranslateY = useSharedValue(0);
@@ -184,23 +184,8 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
         }
     }, [isExpanded, phase, originX, originY, progress, finishOpen, startClosing]);
 
-    // Reveal the header only after the panel finishes opening; reset when fully
-    // closed so it replays on the next open.
-    useEffect(() => {
-        if (phase === 'open') {
-            headerReveal.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.quad) });
-        } else if (phase === 'closed') {
-            headerReveal.value = 0;
-        }
-    }, [phase, headerReveal]);
-
     const backdropStyle = useAnimatedStyle(() => ({
         opacity: progress.value,
-    }));
-
-    const headerStyle = useAnimatedStyle(() => ({
-        opacity: headerReveal.value,
-        transform: [{ translateY: interpolate(headerReveal.value, [0, 1], [8, 0]) }],
     }));
 
     const panelStyle = useAnimatedStyle(() => {
@@ -252,7 +237,10 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                     panelStyle,
                 ]}
             >
-                <Animated.View style={[styles.header, headerStyle]}>
+                {/* The header arrives WITH the panel, on the panel's own morph.
+                    A separate reveal after the morph settled made it pop in
+                    220ms after the body (audit F10). */}
+                <View style={styles.header}>
                     {/* Grab zone (logo + title) — pans down to close. Kept off the X
                         so a swipe-down never eats a tap on the close button. */}
                     <GestureDetector gesture={swipeDownGesture}>
@@ -265,7 +253,7 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                         function-form style props: under NativeWind v4's babel interop
                         the function form gets dropped, which erased these buttons'
                         background fills at runtime (item-13 bug). Dark-mode tokens:
-                        primary-400 = rgb(231,138,83) (ACCENT), error-400 = #ef4444. */}
+                        primary-400 = rgb(231,138,83) (ACCENT); the close button is neutral. */}
                     <Button
                         onPress={onNewChatPress}
                         accessibilityLabel={t('floatingChat.newChat')}
@@ -279,12 +267,12 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                         onPress={onClosePress}
                         accessibilityLabel={t('floatingChat.close')}
                         hitSlop={12}
-                        action="negative"
-                        className="w-9 h-9 p-0 rounded-full bg-error-400 data-[active=true]:bg-error-300"
+                        action="default"
+                        className="w-9 h-9 p-0 rounded-full bg-background-100 data-[active=true]:bg-background-200"
                     >
-                        <MaterialIcons name="close" size={22} color="#fff" />
+                        <MaterialIcons name="close" size={22} color={CLOSE_ICON} />
                     </Button>
-                </Animated.View>
+                </View>
 
                 {/* The panel itself shrinks above the keyboard (see panelStyle), so
                     no KeyboardAvoidingView is needed — it was redundant here and

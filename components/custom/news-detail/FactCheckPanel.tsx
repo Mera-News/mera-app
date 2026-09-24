@@ -38,6 +38,9 @@ const TONE_CLASSES: Record<FactCheckTone, { chip: string; text: string }> = {
 interface FactCheckPanelProps {
     readonly articleId: string | null | undefined;
     readonly testIDPrefix?: string;
+    /** The reader asked for a check from THIS screen's action row just now.
+     *  Shows the working state immediately (see the render gate below). */
+    readonly startedByReader?: boolean;
 }
 
 /**
@@ -84,6 +87,7 @@ interface FactCheckPanelProps {
 const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     articleId,
     testIDPrefix = 'fact-check',
+    startedByReader = false,
 }) => {
     const { t } = useTranslation();
     const { phase, showProgress, rows } = useFactCheck(articleId);
@@ -109,14 +113,20 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
         setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
     }, []);
 
-    if (phase === 'absent') return null;
+    // The reader just tapped the tick on this screen: show the working state
+    // at once, even before the local row lands, and skip the no-flash delay
+    // (that delay exists for checks that resolve faster than a glance, which a
+    // deliberate tap right above this panel does not need protecting from).
+    if (phase === 'absent' && !startedByReader) return null;
 
     const terminalRows = rows.filter((row) => isTerminalStatus(row.status));
     // The no-flash rule: a check that resolves faster than PROGRESS_DELAY_MS
     // must not flash a working indicator on its way to the verdict. If nothing
     // terminal exists yet either, and the poll hasn't stalled either, there is
     // nothing honest to render at all.
-    const showWorking = phase === 'processing' && showProgress;
+    const showWorking =
+        (phase === 'processing' && (showProgress || startedByReader)) ||
+        (phase === 'absent' && startedByReader);
     const showStalled = phase === 'stalled';
     if (terminalRows.length === 0 && !showWorking && !showStalled) return null;
 

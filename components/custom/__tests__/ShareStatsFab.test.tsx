@@ -11,18 +11,24 @@
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (k: string) => k }),
 }));
+// 85, not 34: inside a NativeTabs screen on iOS the tab's own SafeAreaProvider
+// reports the tab bar as part of the bottom inset. Mocking the bare 34pt home
+// indicator is what let this suite pin a sum that counted the bar twice.
 jest.mock('react-native-safe-area-context', () => ({
-    useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
+    useSafeAreaInsets: () => ({ top: 0, bottom: 85, left: 0, right: 0 }),
 }));
 jest.mock('@/components/custom/GlassSurface', () => {
     const { View } = require('react-native');
-    return { GlassPlate: (p: any) => <View {...p} testID="glass-plate" /> };
+    return {
+        GLASS_OVER_CONTENT_FILL: 'rgba(18,17,19,0.90)',
+        GlassPlate: (p: any) => <View {...p} testID="glass-plate" />,
+    };
 });
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
+import { StyleSheet } from 'react-native';
 import ShareStatsFab from '../ShareStatsFab';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 
 const flat = (style: any) =>
     Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style;
@@ -38,14 +44,26 @@ describe('ShareStatsFab', () => {
         );
     });
 
-    it('clears the tab bar and the home indicator, not just one of them', () => {
-        // TAB_BAR_HEIGHT is a conservative estimate of the native bar rather
-        // than its measured height, so it is clearance to respect and not a
-        // number to sit flush against.
+    it('sits 20pt above the tab bar, counting the bar once', () => {
+        // On iOS the in-tab inset (85) already contains the bar. The old sum,
+        // 20 + inset + TAB_BAR_HEIGHT, put the button 154pt up on device.
         render(<ShareStatsFab onPress={jest.fn()} />);
         const style = flat(screen.getByTestId('dashboard-history-share').props.style);
-        expect(style.bottom).toBe(20 + 34 + TAB_BAR_HEIGHT);
+        expect(style.bottom).toBe(20 + 85);
         expect(style.right).toBe(20);
+    });
+
+    it('always paints a solid base under the glass', () => {
+        // The glass plate alone could paint nothing and leave a bare icon.
+        render(<ShareStatsFab onPress={jest.fn()} />);
+        const base = flat(
+            StyleSheet.flatten(
+                screen.getByTestId('dashboard-history-share-base', { includeHiddenElements: true })
+                    .props.style,
+            ),
+        );
+        expect(base.backgroundColor).toBe('rgba(18,17,19,0.90)');
+        expect(base.borderRadius).toBe(25);
     });
 
     it('carries a label, because it is an icon with no text', () => {

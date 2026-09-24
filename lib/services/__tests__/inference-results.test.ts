@@ -54,6 +54,7 @@ jest.mock('@/lib/config/endpoints', () => ({
 
 import {
   discardLowRelevance,
+  finalizeStrandedBelowReasonThreshold,
   fetchResults,
   hexToBytes,
   isRecordNotFoundError,
@@ -385,17 +386,20 @@ describe('reconstructLookups', () => {
 // ---------------------------------------------------------------------------
 
 describe('discardLowRelevance', () => {
-  it('finalizes only rows at or below the 0.3 keep threshold via batchMarkReasonSkipped, never deletes', async () => {
+  // The keep threshold EQUALS the reason threshold (0.4). It was 0.3, and rows
+  // in between were neither finalized nor sent for a reason: stuck in
+  // reason_pending forever (330 of them in one device snapshot).
+  it('finalizes every row below the 0.4 reason threshold, keeps 0.4 and above, never deletes', async () => {
     mockBatchMarkReasonSkipped.mockResolvedValue(undefined);
     const n = await discardLowRelevance(
-      ['a', 'b', 'c', 'd'],
-      { a: 0.1, b: 0.3, c: 0.31, d: 0.9 },
+      ['a', 'b', 'c', 'e', 'd'],
+      { a: 0.1, b: 0.3, c: 0.35, e: 0.4, d: 0.9 },
     );
-    // a (0.1) and b (0.3) are <= threshold; c and d are kept (not passed at all).
-    expect(mockBatchMarkReasonSkipped).toHaveBeenCalledWith(['a', 'b']);
+    // a, b and c are below 0.4; e (exactly 0.4) gets a reason, so it is kept.
+    expect(mockBatchMarkReasonSkipped).toHaveBeenCalledWith(['a', 'b', 'c']);
     expect(mockBatchMarkReasonSkipped).toHaveBeenCalledTimes(1);
     expect(mockDeleteSuggestionsByServerIds).not.toHaveBeenCalled();
-    expect(n).toBe(2);
+    expect(n).toBe(3);
   });
 
   it('skips ids with no relevance entry', async () => {
@@ -412,7 +416,7 @@ describe('discardLowRelevance', () => {
     expect(mockDeleteSuggestionsByServerIds).not.toHaveBeenCalled();
   });
 
-  it('rows above 0.3 are left untouched (not included in the mark-skipped call)', async () => {
+  it('rows at or above 0.4 are left untouched (not included in the mark-skipped call)', async () => {
     mockBatchMarkReasonSkipped.mockResolvedValue(undefined);
     await discardLowRelevance(['a', 'b', 'c'], { a: 0.9, b: 0.5, c: 0.1 });
     expect(mockBatchMarkReasonSkipped).toHaveBeenCalledWith(['c']);
@@ -455,5 +459,28 @@ describe('hexToBytes', () => {
 describe('REASON_RELEVANCE_THRESHOLD', () => {
   it('is the documented 0.4 gate (relevance v3 — moves in lockstep with RENDER_GATE)', () => {
     expect(REASON_RELEVANCE_THRESHOLD).toBe(0.4);
+  });
+});
+
+describe('finalizeStrandedBelowReasonThreshold', () => {
+  it('finalizes stranded rows below 0.4 that no live batch covers', async () => {
+    mockBatchMarkReasonSkipped.mockResolvedValue(undefined);
+    const n = await finalizeStrandedBelowReasonThreshold(
+      [
+        { id: 'stuck', relevance: 0.35 },
+        { id: 'covered', relevance: 0.32 },
+        { id: 'reason', relevance: 0.4 },
+        { id: 'unscored', relevance: null },
+      ],
+      new Set(['covered']),
+    );
+    expect(mockBatchMarkReasonSkipped).toHaveBeenCalledWith(['stuck']);
+    expect(n).toBe(1);
+  });
+
+  it('touches nothing when nothing is stranded', async () => {
+    const n = await finalizeStrandedBelowReasonThreshold([{ id: 'x', relevance: 0.7 }], new Set());
+    expect(n).toBe(0);
+    expect(mockBatchMarkReasonSkipped).not.toHaveBeenCalled();
   });
 });

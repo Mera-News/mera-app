@@ -38,16 +38,10 @@ interface OnboardingScreenProps {
      */
     sessionUserId?: string;
     onLoginRedirect: () => void;
+    /** The ONE landing after onboarding (or for a user who already has facts):
+     *  the route sends it to the Dashboard. There is no second, plan-dependent
+     *  destination any more. */
     onComplete: () => void;
-    /**
-     * No active plan → Mera News Free with onboarding skipped (the standalone
-     * paywall screen was removed 2026-08-19; FreeTierCard on the feed carries
-     * its pitch and actions). Deliberately NOT `onComplete`: that one carries
-     * `fromOnboarding: "1"` and lands on the Dashboard, which is a claim about
-     * a wizard that never ran. Mera News Free's established destination is the
-     * feed.
-     */
-    onFreeTierMode: () => void;
 }
 
 /**
@@ -65,7 +59,7 @@ interface OnboardingScreenProps {
  * Consequence: this gate needs no network at all. It works offline and a dead
  * server session can no longer bounce a user through onboarding.
  */
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onFreeTierMode }) => {
+const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete }) => {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
     // Fail-closed state, mirroring app/logged-in/index.tsx rather than
@@ -105,9 +99,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
     // Written in an effect, never during render (React Compiler is enabled).
     // `useRef`'s initializer already carries the mount-time identities, and this
     // effect is declared BEFORE the gate's so the refresh always lands first.
-    const handlersRef = useRef({ onLoginRedirect, onComplete, onFreeTierMode });
+    const handlersRef = useRef({ onLoginRedirect, onComplete });
     useEffect(() => {
-        handlersRef.current = { onLoginRedirect, onComplete, onFreeTierMode };
+        handlersRef.current = { onLoginRedirect, onComplete };
     });
 
     useEffect(() => {
@@ -265,8 +259,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
             // thing most people saw and most people did not know what it meant.
             //
             // Restoring is now something a user goes and asks for: Settings >
-            // "Restore from a backup", which opens the same flow directly
-            // (`manage-data?restore=1`). Doing it after the wizard is safe —
+            // "Backup and restore" opens Manage data, whose backup section
+            // holds the restore action (`manage-data?restore=1` deep-links
+            // straight to the code step). Doing it after the wizard is safe:
             // `lib/backup/allowlist.ts` forbids the identity settings from ever
             // entering a backup, so the post-restore reload lands on the
             // receiving device's own stamp with facts present.

@@ -228,7 +228,12 @@
     "statsPublishedPending_one": "{{formatted}}件の記事が過去24時間に公開されました。",
     "statsPublished_one": "{{formatted}}件の記事が過去24時間に公開されました、",
     "statsRead_one": "そしてあなたは{{formatted}}件を読みました。",
-    "statsRelevant_one": "{{formatted}}件があなたに関連性があります、"
+    "statsRelevant_one": "{{formatted}}件があなたに関連性があります、",
+    "reasonUnavailable": "この記事のメモを作成できませんでした。",
+    "loadingA11y": "フィードを読み込んでいます",
+    "newStoriesPill": "新着記事",
+    "translatingCaption": "翻訳中…",
+    "updatedJustNow": "たった今更新"
   },
   "relevance": {
     "emergency": "緊急",
@@ -258,7 +263,9 @@
     "readOn": "{{publication}}で読む",
     "readOnGoogleTranslate": "Google 翻訳で読む",
     "linkUnavailable": "このリンクを安全に開くことができないため、ここでは利用できません。",
-    "relatedFromSubscriptions": "購読中のメディアから"
+    "relatedFromSubscriptions": "購読中のメディアから",
+    "relatedLoadFailed": "関連記事を読み込めませんでした。",
+    "translateBlockedNote": "Google 翻訳をブロックするサイトがあります。ページが開かない場合はサイトで開いてください。"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",
@@ -347,7 +354,10 @@
     "timeNudge": "読んだり、考えたり、計画したりできるときを選んでください。1日1～2回で十分です。",
     "maxHoursReachedDescription": "時間は最大{{count}}個まで選択できます",
     "maxHoursReachedTitle": "上限に達しました",
-    "selectedCount": "選択中: {{selected}}/{{max}}"
+    "selectedCount": "選択中: {{selected}}/{{max}}",
+    "savedInline": "保存しました",
+    "pickAtLeastOneHour": "1つ以上の時間を選んでください",
+    "selectedLabel": "選択中"
   },
   "language": {
     "title": "言語",
@@ -566,7 +576,7 @@
     "signingOut": "サインアウト中...",
     "signOut": "サインアウト",
     "deleteAccountConfirm": "アカウントを完全に削除してもよろしいですか？",
-    "deleteAccountWarning": "⚠️ この操作は元に戻せず、すべてのデータが削除されます。",
+    "deleteAccountWarning": "⚠️ すべてのデータが削除されます。この操作は元に戻せません。",
     "continue": "続ける",
     "finalConfirmation": "最終確認",
     "finalConfirmationBody": "これによりすべてのデータが完全に削除されます。",
@@ -588,7 +598,7 @@
     "faq": "よくある質問",
     "reportBug": "バグを報告",
     "deleteAccountConfirmGrace": "アカウントは削除予定になり、30日間の猶予期間があります。その30日以内に再度サインインしてください。削除は自動的にキャンセルされます。",
-    "deleteAccountWarningGrace": "⚠️ 30日後、これは元に戻せず、すべてのデータは永久に削除されます。",
+    "deleteAccountWarningGrace": "⚠️ 30日後、すべてのデータは完全に削除されます。この操作は元に戻せません。",
     "finalConfirmationBodyGrace": "これは30日後のアカウントの永久削除をスケジュールします。",
     "accountDeletionScheduledTitle": "削除がスケジュールされました",
     "accountDeletionScheduledDescription": "アカウントは30日後に永久削除されます。その前に再度サインインして削除をキャンセルしてください。"
@@ -615,7 +625,7 @@
     "topicGenQueuedDescription": "トピックはまもなく表示されます。",
     "deleteFactTitle": "ファクトを削除",
     "deleteFactConfirm": "このファクトを削除してもよろしいですか？",
-    "deleteFactWarning": "これにより、このファクトから生成されたすべてのトラッキングトピックも削除されます。",
+    "deleteFactWarning": "このファクトのトピックと見つかった記事も削除され、Meraはこの件のニュースを探さなくなります。",
     "deletingFact": "削除中...",
     "yesDelete": "はい、削除します",
     "refreshSuggestions": "候補を更新",
@@ -654,7 +664,9 @@
     "promoInfoTitleEmoji": "🎉 ローンチ特典 🎊",
     "resetsOn": "リセット",
     "retryTopicGeneration": "再試行",
-    "topicGenFailedGeneric": "このトピックを生成できませんでした。"
+    "topicGenFailedGeneric": "このトピックを生成できませんでした。",
+    "articleCountPending": "集計中",
+    "articleCountNone": "まだ記事はありません"
   },
   "errors": {
     "somethingWentWrong": "問題が発生しました",
@@ -765,7 +777,9 @@
       "error": "リクエストを送信できませんでした。もう一度お試しください。"
     },
     "topicGenFailed": "このトピックを生成できませんでした。",
-    "topicGenRetry": "再試行"
+    "topicGenRetry": "再試行",
+    "aiUsageNoticeGeneral": "Mera は間違えることがあります。重要なことは確認してください。",
+    "trackChooseHint": "フォローする対象を選んでください"
   },
   "articleFeedback": {
     "thumbsUp": "いいね",
@@ -824,13 +838,14 @@
     "tooltipA11y": "閲覧履歴について",
     "tooltipIntro": "Meraはあなたの閲覧パターンを追跡します — そしてそれはあなたのデバイス上にのみ存在します。",
     "tooltipLink": "すべての閲覧履歴はこちらで確認できます。",
-    "screenIntro": "Meraはあなたの閲覧パターンをデバイス上のみで30日間追跡します。どの出版社があなたにとって最も重要かをより明確に把握でき、直接メリットをもたらしている出版社をサポートすることを検討できます。",
+    "screenIntro": "過去30日間にMeraからサイトを開いた媒体です。このリストはこの端末にのみ保存されます。",
     "visitedListTitle": "訪問した出版社",
     "last30Days": "過去30日間",
     "lastRead": "最終閲覧：{{time}}",
-    "noArticlesYet": "まだ記事を読んでいません。",
+    "noArticlesYet": "Meraから開いた媒体がここに表示されます。Mera内での閲覧は含まれません。",
     "articlesRead": "読んだ記事",
-    "noArticlesLast30Days": "過去30日間にこの出版社の記事はありません。"
+    "noArticlesLast30Days": "過去30日間にこの出版社の記事はありません。",
+    "emptyTitle": "まだ媒体はありません"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "アップデートが必要です",
@@ -924,7 +939,8 @@
     "title": "保存済み",
     "removedToastTitle": "削除しました",
     "saveAction": "保存",
-    "removeAction": "保存済みから削除"
+    "removeAction": "保存済みから削除",
+    "emptyTitle": "まだ保存したものはありません"
   },
   "subscription": {
     "activating": "サブスクリプションを有効化しています…",
@@ -935,7 +951,7 @@
     "detailsSection": "サブスクリプションの詳細",
     "expiresOn": "有効期限",
     "lifetime": "買い切り",
-    "managePlan": "サブスクリプションを管理",
+    "managePlan": "プランを管理",
     "periodLabel": "期間",
     "periodNormal": "通常",
     "periodPromotional": "プロモーション",
@@ -964,7 +980,6 @@
     "activatedBody": "パーソナライズされたフィード、ダッシュボード、フォロー中のストーリー、チャットの準備ができました。",
     "activatedTitle": "{{plan}}がアクティブです",
     "lapsedFreeNote": "Mera News Freeはいつまでもご利用いただけます。プランを開始することでMeraがあなたのニュースを再度分析し始めます。",
-    "manageBadge": "管理",
     "turnMeraBackOn": "Meraをもう一度オンにする",
     "para1": "Mera Newsは無料にすることもできました。ただし、誰か他の誰かが代わりに支払うことになります。広告主があなたの注意、データ、または好意的な報道を買っています。多くのニュースに見えるものはまさにそれです。",
     "para2": "広告でサポートされるメディアには上限がありません。あなたから何をどのくらい取るかについても、その後何に使用されるかについてもです。私たちはそのような会社になりたくないので、ここでの取引は簡単です。あなたはデータを保持します。ソフトウェアが仕事をします。あなたがそれに支払います。",
@@ -1037,9 +1052,16 @@
     "headlineDenominator_other": "Meraが{{count}}件のニュースを読みました。{{shown}}件があなたの時間を価値があるもの。",
     "headlineDenominatorNone_one": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
     "headlineDenominatorNone_other": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
-    "subTabHistory": "履歴",
+    "subTabHistory": "訪問済み",
     "nextFactPrefix": "次へ",
-    "subTabAnalytics": "分析"
+    "subTabAnalytics": "分析",
+    "emptySection": {
+      "awaiting": "この話題の記事を探しています。次の更新後に表示されます。",
+      "none": "表示できるほど近い記事はまだありません。"
+    },
+    "newInterest": "新しい関心",
+    "nextSection": "次へ：{{title}}",
+    "backToDashboard": "ダッシュボードに戻る"
   },
   "feedStatus": {
     "title": "フィードの状態",
@@ -1058,7 +1080,8 @@
     "published": "公開",
     "modeProcessing": "フィードを更新しています",
     "modeError": "フィードの問題",
-    "modeLimited": "1日の記事上限に達しました"
+    "modeLimited": "1日の記事上限に達しました",
+    "syncDoneA11y": "フィードは最新の状態です。"
   },
   "trackedStories": {
     "emptyTitle": "まだフォローしているストーリーはありません",
@@ -1073,7 +1096,6 @@
     "untrackConfirmTitle": "フォローを解除しますか？",
     "untrackConfirmBody": "このストーリーの新しい進展が表示されなくなります。",
     "untrackConfirmCta": "フォローを停止",
-    "emptyHint": "フィードから記事を開いてフルビューにして、記事下のボタン行の フォロー アイコンをタップしてください。",
     "emptyCta": "フィードに移動",
     "trackChatSeed": "このストーリーをフォローしたいです。",
     "trackProposalTitle": "このストーリーをフォローしますか？",
@@ -1089,11 +1111,13 @@
     "followFabLabel": "新しいストーリーをフォロー",
     "followChatSeed": "ストーリーをフォローしたいです。",
     "followChatIntro": "フォローしたいことを教えてくださいセットアップします。",
-    "emptyHintFollow": "フォローボタンをタップして、Meraに何を保持するかを伝えてください。",
     "emptyCtaFollow": "ストーリーをフォロー",
     "removeMemberAction": "このストーリーの一部ではない",
     "removeMemberConfirmTitle": "この記事を削除しますか？",
-    "removeMemberConfirmBody": "この記事はストーリーのタイムラインから削除されます。Mera はストーリー自体を引き続きフォローします。"
+    "removeMemberConfirmBody": "この記事はストーリーのタイムラインから削除されます。Mera はストーリー自体を引き続きフォローします。",
+    "timelineLoadFailed": "このストーリーを読み込めませんでした。下に引いてもう一度お試しください。",
+    "deleteFailed": "このストーリーのフォローを解除できませんでした。もう一度お試しください。",
+    "removeFailed": "この記事をストーリーから削除できませんでした。もう一度お試しください。"
   },
   "whatsNew": {
     "title": "新機能",
@@ -1132,7 +1156,14 @@
     "dailyLimitBody": "本日の記事上限に達しました。まもなくリセットされます。"
   },
   "settings": {
-    "sources": "ソース"
+    "sources": "ソース",
+    "groupGeneral": "一般",
+    "groupPrivacy": "プライバシーとデータ",
+    "groupHelp": "ヘルプ",
+    "groupAccount": "アカウント",
+    "languageRow": "言語",
+    "backupRow": "バックアップと復元",
+    "backupRowNever": "まだバックアップなし"
   },
   "personaAudit": {
     "entryRow": "プロフィール変更ログ",
@@ -1297,7 +1328,7 @@
     "notificationBody_one": "Meraがプロフィールの{{count}}件のクリーンアップを見つけました。",
     "notificationBody_other": "Meraはあなたのプロフィールで{{count}}件の整理項目を見つけました。",
     "reviewChip": "確認",
-    "title": "プロフィールの健全性",
+    "title": "プロフィールの整理",
     "subtitle": "整理の提案",
     "intro": "Meraは整理する価値のあるいくつかの項目を見つけました。同意するものを承認してください。",
     "empty": "あなたのプロフィールは健全です",
@@ -1306,15 +1337,16 @@
     "reversibleNote": "変更ログから元に戻せます",
     "effectDuplicate": "重複を削除し、より強い方を残します。",
     "effectTooBroad": "この興味の重みを下げ、関係の薄いストーリーを減らします。",
-    "effectStaleTopic": "この動きのないトピックを停止します。変更ログから復元できます。",
+    "effectStaleTopic": "この動きのないトピックを停止します。",
     "effectStaleFact": "このファクトを削除します — トピックがすべて非アクティブになっています。",
     "appliedTitle": "整理を適用しました",
     "appliedBody": "プロフィールが整理されました。詳細は変更ログをご確認ください。",
     "applyFailedTitle": "整理を適用できませんでした",
     "applyFailedBody": "後でもう一度お試しください。",
-    "profileRow_one": "ペルソナの健康度・{{count}}件の提案",
-    "profileRow_other": "プロフィールの健全性 · {{count}}件の提案",
-    "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。古いものは変更ログから復元可能です。"
+    "profileRow_one": "プロフィールの整理 · {{count}}件の提案",
+    "profileRow_other": "プロフィールの整理 · {{count}}件の提案",
+    "effectIncoherentTopics": "これらのトピックをこの関心に対するより良いものと置き換えます。",
+    "effectLocationConflict": "新しい場所を残し、古い場所を削除します。"
   },
   "locations": {
     "title": "あなたの場所",
@@ -1451,7 +1483,7 @@
     "visitedSubtitle": "最近開いた出版社",
     "activity": "アクティビティ",
     "activitySubtitle": "プロフィールの変更履歴",
-    "personaHealth": "プロフィールの健全性",
+    "personaHealth": "プロフィールの整理",
     "healthPending_one": "{{count}}件のクリーンアップ提案",
     "healthPending_other": "{{count}}件の整理提案",
     "healthAllHealthy": "すべて健全です",
@@ -1488,7 +1520,10 @@
       "remove": "これを削除",
       "removeConfirm": "もう一度タップして削除",
       "limitReached": "日次調整上限に達しました — 変更は明日も続きます。"
-    }
+    },
+    "meraInviteReturning": "新しいことを教えてください。フィードに追加します。",
+    "editFacts": "編集",
+    "planUsage": "今日の分析 {{used}} / {{limit}}"
   },
   "facts": {
     "screenTitle": "あなたのファクト",
@@ -1498,7 +1533,8 @@
     "lessInfluence": "より小さな影響",
     "declinedTopicsTitle": "削除したトピック",
     "allowAgain": "もう一度許可する",
-    "topicRemovalConsequence": "削除したトピックは、「削除したトピック」からもう一度許可しない限り、二度と提案されません。"
+    "topicRemovalConsequence": "削除したトピックは、「削除したトピック」からもう一度許可しない限り、二度と提案されません。",
+    "deleteFactA11y": "{{fact}} を削除"
   },
   "publicationPrefs": {
     "title": "ソースの設定",
@@ -1570,7 +1606,7 @@
     "staticGradientTitle": "静的背景",
     "staticGradientDescription": "アニメーション背景の代わりに固定グラデーションを使用します — バッテリーと古いデバイスに優しい",
     "screenTitle": "表示",
-    "screenSubtitle": "テキスト、ビジュアル、セキュリティ、およびこのデバイスでMeraを開く方法",
+    "screenSubtitle": "テキスト、ビジュアル、およびこのデバイスでMeraを開く方法",
     "sectionText": "テキスト",
     "sectionVisuals": "ビジュアル",
     "textSizeTitle": "テキストサイズ",
@@ -1723,7 +1759,14 @@
     "checkedByRelatedNote": "これらはキーワード検索から取得したものであり、別のストーリーについても該当する可能性があります。確認するために1つを開いてください。",
     "searchFoundHeading": "検索で見つかった内容",
     "searchFoundEmpty": "検索から要約するのに十分な情報がありませんでした。",
-    "headerA11y": "{{title}}。{{status}}。{{action}}"
+    "headerA11y": "{{title}}。{{status}}。{{action}}",
+    "notify": {
+      "title": "ファクトチェックが完了しました",
+      "bodyFound": "ファクトチェッカーが「{{title}}」について公開しています。",
+      "bodyNone": "「{{title}}」について公開されたファクトチェックはまだありません。",
+      "bodyUnavailable": "Mera は「{{title}}」のチェックを完了できませんでした。",
+      "open": "記事を開く"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "このソースを優先順位付けする",
@@ -1743,7 +1786,7 @@
     "welcomeBody": "「同意して続行」をタップすると、利用規約とプライバシーポリシーに同意したことになります。"
   },
   "tutorials": {
-    "entryRow": "Meraについて学ぶ",
+    "entryRow": "Meraのしくみ",
     "menuTitle": "Meraについて学ぶ",
     "menuSubtitle": "このアプリがどのように機能するかについての短いガイド。どこからでも始めてください。",
     "sectionBasic": "ここから始めてください",
@@ -1766,7 +1809,6 @@
     "askMera": "Meraに聞く",
     "chatIntro": "Meraの仕組みについて何でも聞いてください。説明できますが、ここから何も変更することはできません。",
     "launchButton": "ツアーをする",
-    "learnAboutMera": "Meraの仕組み",
     "hintReveal": "それぞれをタップします。",
     "hintRevealSome": "少なくとも{{count}}をタップしてください。",
     "hintChoose": "1つを選びます。",
@@ -2379,7 +2421,10 @@
     "supportId": "サポートID: {{id}}",
     "copySupportId": "サポートIDをコピー",
     "copied": "コピーしました",
-    "saveHint": "この ID を保存してください。サポートがアカウントを見つける際に使用します。"
+    "saveHint": "この ID を保存してください。サポートがアカウントを見つける際に使用します。",
+    "mailFailedTitle": "メールアプリを開けませんでした",
+    "mailFailedBody": "サポートのアドレスをコピーして、お好きなメールアプリから送信してください。",
+    "copyAddress": "アドレスをコピー"
   },
   "emailCapture": {
     "title": "メールアドレスを追加",
@@ -2487,7 +2532,10 @@
     "wifiOnly": "Wi-Fi のみ",
     "wifiOnlyOff": "オフ。スケジュールされたバックアップはモバイルデータ通信を使うことがあります。",
     "wifiOnlyOn": "オン。スケジュールされたバックアップは Wi-Fi 接続を待ちます。",
-    "working": "処理中…"
+    "working": "処理中…",
+    "statusFromCloud": "前回のバックアップ {{when}}（{{provider}} で検出）",
+    "restoreOption": "{{when}} のバックアップ",
+    "statusFailed": "前回のバックアップは {{when}} に失敗しました"
   },
   "factChoice": {
     "titleSingle": "これをあなたのペルソナに追加しますか",
@@ -2502,14 +2550,19 @@
     "skipAll": "すべてスキップ",
     "addAllA11y": "{{count}} 件の候補をすべて追加",
     "skipAllA11y": "{{count}} 件の候補をすべてスキップ",
-    "titleReplace": "既存の情報を置き換えますか？",
+    "titleReplace": "この情報を置き換えますか？",
     "replace": "置き換える",
     "replacesLabel": "置き換える対象",
     "replacesTopics_one": "と、その 1 件のトピック",
     "replacesTopics_other": "と、その {{count}} 件のトピック",
     "replacesNoUndo": "以前の情報と関連トピックは完全に削除されます。元には戻せません。",
     "replacesLoading": "何が置き換わるか確認しています",
-    "replacesUnavailable": "削除される内容を今は表示できません。少し後にもう一度お試しください。"
+    "replacesUnavailable": "削除される内容を今は表示できません。少し後にもう一度お試しください。",
+    "keepBoth": "両方残す",
+    "titleAlsoAdd": "これも追加しますか？",
+    "pendingHint": "上の選択肢から選ぶか、答えを入力してください。",
+    "overlapsLabel": "重なる情報",
+    "overlapsReplaceNote": "置き換えると、この情報と関連トピックが削除されます。"
   },
   "subscriptions": {
     "sectionTitle": "購読中のメディア",
@@ -2554,7 +2607,6 @@
       "countriesLabel": "読んだ国",
       "latencyLabel": "公開から読むまでの平均時間",
       "latencyCoverage": "公開時刻がわかっている {{total}} 件中 {{sampled}} 件に基づく",
-      "latencyUnknown": "公開時刻がわかっている記事がまだ足りません",
       "openedLabel": "開いた記事",
       "openedPartial": "部分的な数です。Mera はおすすめカードのタップだけを数えます。",
       "topPublicationsTitle": "よく読む媒体",
@@ -2562,7 +2614,6 @@
       "latencyValue_other": "{{count}} 時間",
       "reachTitle": "どこからニュースが届いたか",
       "keepTitle": "とっておいたもの",
-      "paceTitle": "ニュースが届くまで",
       "windowNow": "現在",
       "savedLabel": "保存した記事",
       "followedLabel": "フォロー中のストーリー",
@@ -2573,13 +2624,11 @@
       "paceScaleTitle": "公開から読むまで",
       "hoursShort": "{{n}} 時間",
       "languagesLabel": "読んだ言語",
-      "topLanguagesTitle": "よく読んだ言語",
-      "rhythmTitle": "読んだ日",
       "daysReadLabel": "何かを読んだ日数",
       "heatLegendLess": "少ない",
       "heatLegendMore": "多い",
-      "heatNote": "濃さはその日に読んだ記事の数です。",
-      "rhythmWeekdays": "月,火,水,木,金,土,日"
+      "rhythmWeekdays": "月,火,水,木,金,土,日",
+      "habitsTitle": "わたしの読み方"
     }
   },
   "analytics": {
@@ -2602,7 +2651,7 @@
     "goneTombstone": "この情報は削除されたため、関連トピックもなくなりました。",
     "expandA11y": "トピックを表示",
     "collapseA11y": "トピックを隠す",
-    "accordionTitlePending": "こちらのトピックを探します:",
+    "accordionTitlePending": "トピックを探しています:",
     "pendingA11y": "トピックを検索中",
     "readyA11y": "トピックの準備ができました",
     "failedA11y": "トピックが見つかりませんでした"
@@ -2636,7 +2685,8 @@
     },
     "noRouteSentence": "内容を読み取れませんでした。別の言い方でお試しください。",
     "noProposalSentence": "ここから追加できるものは見つかりませんでした。",
-    "unknownToolSentence": "Mera 側で問題が発生しました。続けるにはもう一度お尋ねください。"
+    "unknownToolSentence": "Mera 側で問題が発生しました。続けるにはもう一度お尋ねください。",
+    "malformedChoiceSentence": "Mera は選択肢を表示できませんでした。続けるにはもう一度お尋ねください。"
   },
   "skillPhrase": {
     "residence": "お住まいの場所",
@@ -2771,5 +2821,59 @@
     "docTitle": "保存した記事",
     "docExported": "{{date}} に書き出し",
     "docReasonLabel": "Mera が選んだ理由"
+  },
+  "tabExplainer": {
+    "openA11y": "このタブのしくみ",
+    "close": "OK",
+    "feed": {
+      "title": "フィードのしくみ",
+      "what": "フィードには、Meraが過去2日間にあなたのために見つけたすべての記事が表示されます。多くの媒体が報じた記事でも、カードは1枚です。",
+      "how1": "Meraはあなたが教えてくれた内容を検索に変え、合う記事を集めます。AIが1本ずつ読み、あなたにとってどれだけ重要かを判断します。",
+      "how2": "まだ見ていない記事が先に、重要なものから並びます。見ていない記事は12時間後に1段階、1日後にもう1段階下がります。",
+      "how3": "次に並べ直すとき、すでに見た記事は下へ、開いた記事は最後に移ります。読んでいる位置より上のカードは動きません。下に引くと並べ直します。",
+      "privacy": "並び順はこのスマートフォンで決まります。どの記事を開いたかの記録は、このスマートフォンにだけ残ります。"
+    },
+    "forYou": {
+      "title": "ダッシュボードのしくみ",
+      "what": "ダッシュボードはニュースを関心ごとにまとめます。Meraに教えた内容ごとにセクションがあり、あなたの国と世界の見出しも並びます。",
+      "how1": "各記事は最も合う関心1つに入るので、表示は1回だけです。同じくらい合う関心が2つあれば、先に追加した方に入ります。",
+      "how2": "重みを高くした関心が先に並びます。新しい関心には、最初の記事が届く前からセクションができます。",
+      "how3": "各セクションでは未読の記事が先に、重要なものから並びます。セクションはタブを離れたとき、または10分ごとに並び替わります。"
+    },
+    "explore": {
+      "title": "探索のしくみ",
+      "what": "探索には、世界と選んだ国ごとの過去24時間の見出しが表示されます。内容は全員共通で、あなた向けに選んだものではありません。",
+      "how1": "世界の見出しは、記事の数ではなく、その話題がどれだけ多くの国で報じられているかで並びます。",
+      "how2": "国ごとの見出しは、その国に拠点を置くニュースソースから届きます。"
+    },
+    "profile": {
+      "title": "プロフィールのしくみ",
+      "what": "プロフィールには、あなたがMeraに教えた自分についての情報があります。フィードとダッシュボードはこの情報から作られます。",
+      "how1": "情報はそれぞれ、Meraがあなたのために行う検索になります。情報を変えたり消したりすると、そこから来た記事も変わります。",
+      "privacy": "そこから作られた検索があなたのアカウントに結びつくことはありません。サーバーには検索の文字列だけが全ユーザー共通で匿名のまま残り、14日間使われなければ削除されます。"
+    }
+  },
+  "articleMenu": {
+    "openA11y": "その他の操作",
+    "title": "記事の操作",
+    "askMera": "Mera に聞く",
+    "following": "このストーリーをフォロー中",
+    "checkFacts": "ファクトチェックを探す",
+    "openOn": "{{source}} で開く",
+    "openInTranslate": "Google 翻訳で開く",
+    "fewerFrom": "{{source}} を減らす",
+    "fewerFromDone": "{{source}} の表示が減ります。",
+    "undo": "元に戻す",
+    "reportBug": "不具合を報告",
+    "actionFailed": "うまくいきませんでした。もう一度お試しください。"
+  },
+  "factChip": {
+    "label": "プロフィールから：{{label}}",
+    "openA11y": "{{label}} に関する記事"
+  },
+  "related": {
+    "allCountries": "すべての国",
+    "allLanguages": "すべての言語",
+    "noMatches": "このフィルターに合う関連記事はありません。"
   }
 }

@@ -2,13 +2,14 @@ import BlockedBanner from '@/components/custom/BlockedBanner';
 import UsageWidget from '@/components/custom/UsageWidget';
 import FactsList from '@/components/custom/facts/FactsList';
 import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
+import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
+import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
-import { HelpCircleIcon } from '@/components/ui/icon';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
+import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { fetchUserBilling } from '@/lib/billing-service';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
@@ -57,6 +58,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
     const [totalArticleCount, setTotalArticleCount] = useState(0);
     const [showArticleCountInfo, setShowArticleCountInfo] = useState(false);
+    // F46: fact deletion lives behind Edit, not on a red trash on every row.
+    const [editingFacts, setEditingFacts] = useState(false);
     // A purchase completed but the server has not confirmed the new tier yet.
     // Mirrors NotSubscribedScreen's `activationDelayed` handling: an honest
     // "still working on it" beats committing a snapshot we know is stale.
@@ -190,22 +193,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                 >
                     {t('tabs.profile')}
                 </Heading>
-                {/* `/tutorials` is a TOP-LEVEL route, not nested under
-                    /logged-in — pushing a nested path here silently no-ops.
-                    Same target as the paywall screen's "Learn how Mera works",
-                    so both entry points land in the same place. */}
-                <Button
-                    testID="profile-learn-about-mera"
-                    variant="outline"
-                    size="xs"
-                    className="rounded-full flex-shrink-0"
-                    onPress={() => router.push('/tutorials' as any)}
-                >
-                    <ButtonIcon as={HelpCircleIcon} className="mr-1 text-white" />
-                    <ButtonText className="text-white">
-                        {t('tutorials.learnAboutMera')}
-                    </ButtonText>
-                </Button>
+                {/* N4: what this tab is and how it works, in plain words. The
+                    old "Learn how Mera works" button competed with the title
+                    (M10); the guides have one home, Settings > Help. */}
+                <TabExplainerButton tab="profile" testID="profile-explainer-open" />
             </HStack>
 
             <ScrollView
@@ -216,32 +207,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
             >
                 {isBlocked && <BlockedBanner reason={userPersona?.blockedByLlmReason} />}
 
-                {/* 1 — Daily-usage card (moved from the Advanced hub) */}
-                <UsageWidget
-                    className="mx-4 mt-2 mb-5"
-                    used={billing?.articlesUsedToday ?? totalArticleCount}
-                    limit={billing?.dailyArticleLimit ?? null}
-                    usedLabel={t('configPanel.articlesAnalyzedLast24h')}
-                    planLabel={planLabel}
-                    // "Manage", not "Upgrade": this pill now opens subscription
-                    // management instead of the paywall, so it is NOT gated on
-                    // tier the way the paywall version was. A professional
-                    // subscriber had nothing to upgrade to and so got no pill at
-                    // all — but they still have a plan to manage, and this tab
-                    // was their only route to it besides Settings.
-                    onUpgrade={() =>
-                        router.push('/logged-in/preferences/manage-subscription' as any)
-                    }
-                    upgradeLabel={t('subscription.manageBadge')}
-                    upgradeIcon="credit-card"
-                    resetAt={billing?.resetAt}
-                    resetLabel={t('configPanel.resetsOn')}
-                    onInfoPress={() => setShowArticleCountInfo(true)}
-                />
-
                 {/* Mera chat invite — static comic speech bubble + logo, replaces
                     the former floating bubble. Taps open the persona chat. */}
-                <MeraChatInvite />
+                <MeraChatInvite returning={factCount !== null && factCount > 0} />
 
                 {/* 2 — About you (the real facts list — same component FactsScreen uses).
                     No outer px-4 here: FactAccordion carries its own mx-4 inset, matching
@@ -252,11 +220,44 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                             <Text className="text-gray-400" style={{ fontSize: 13, fontWeight: '600', letterSpacing: 0.4 }}>
                                 {t('profile.aboutYou', { defaultValue: 'ABOUT YOU' }).toUpperCase()}
                             </Text>
+                            <Pressable
+                                testID="profile-edit-facts"
+                                onPress={() => setEditingFacts((e) => !e)}
+                                accessibilityRole="button"
+                                hitSlop={8}
+                                style={{ minWidth: 44, minHeight: 44 }}
+                                className="px-2 items-center justify-center"
+                            >
+                                <Text className="text-primary-400 font-semibold" size="sm">
+                                    {editingFacts ? t('common.done') : t('profile.editFacts')}
+                                </Text>
+                            </Pressable>
                         </HStack>
 
-                        <FactsList />
+                        <FactsList editing={editingFacts} />
                     </Box>
                 )}
+
+                {/* Daily usage, AFTER the facts (M9): the tab is about you first,
+                    the plan second. */}
+                <UsageWidget
+                    className="mx-4 mb-5"
+                    used={billing?.articlesUsedToday ?? totalArticleCount}
+                    limit={billing?.dailyArticleLimit ?? null}
+                    usedLabel={t('configPanel.articlesAnalyzedLast24h')}
+                    planLabel={planLabel}
+                    // "Manage plan", the same label as Settings > Account, and
+                    // not gated on tier: a Professional subscriber has nothing
+                    // to upgrade to but still has a plan to manage.
+                    onUpgrade={() =>
+                        router.push('/logged-in/preferences/manage-subscription' as any)
+                    }
+                    upgradeLabel={t('subscription.managePlan')}
+                    upgradeIcon="credit-card"
+                    resetAt={billing?.resetAt}
+                    resetLabel={t('configPanel.resetsOn')}
+                    onInfoPress={() => setShowArticleCountInfo(true)}
+                />
 
                 {/* 3 — Advanced */}
                 <Box className="px-4">

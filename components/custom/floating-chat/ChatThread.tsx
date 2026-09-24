@@ -4,8 +4,9 @@
 // fetching, no stores.
 
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
-import MeraStreamAvatar from '@/components/custom/chat/MeraStreamAvatar';
+import MeraStreamAvatar, { AVATAR_GUTTER_WIDTH } from '@/components/custom/chat/MeraStreamAvatar';
 import ChatPhaseLine from '@/components/custom/chat/ChatPhaseLine';
+import { WAIT_ROW_TEXT_HEIGHT } from '@/components/custom/chat/chat-phases';
 import WaitBubble from '@/components/custom/chat/WaitBubble';
 import { Text } from '@/components/ui/text';
 import {
@@ -20,8 +21,8 @@ import {
 import { hapticLight } from '@/lib/haptics';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useContext, useEffect, useRef } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useContext, useEffect, useRef } from 'react';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
@@ -46,6 +47,13 @@ import type { ChatThreadItem, ChatThreadProps } from './types';
 // must not replay this animation when they load in behind the current session.
 const MESSAGE_ENTERING = FadeInDown.springify().damping(20).stiffness(220).mass(0.5);
 
+const HISTORY_ITEM: ChatThreadItem = { kind: 'history-button', key: 'history-button' };
+
+/** A fact card still waiting for the user's answer. */
+function isPendingCard(item: ChatThreadItem): boolean {
+  return item.kind === 'fact-choice-card' && !item.dismissed && !item.stale;
+}
+
 const ChatThread: React.FC<ChatThreadProps> = ({
   items,
   isStreaming: _isStreaming,
@@ -65,6 +73,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   isRefreshingBlockStatus,
   onSend,
   isInputDisabled,
+  usageNotice,
+  composerHint = null,
 }) => {
   const { t } = useTranslation();
 
@@ -86,6 +96,36 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     (item) => item.kind === 'message' && item.message.id !== 'intro',
   );
   const showChips = !hasRealMessage && starterChips.length > 0;
+
+  // A TYPED REPLY WHILE A CARD WAITS leaves the card pending, and the card is
+  // brought back into view so the reader sees it is still open (owner ruling
+  // ux1, F7). Scrolled after the send lands, when the new bubble has pushed
+  // the card up the list.
+  const listRef = useRef<FlatList<ChatThreadItem>>(null);
+  const displayItems = showHistoryButton ? [HISTORY_ITEM, ...items] : items;
+  const revealPendingRef = useRef(false);
+  const send = useCallback(
+    (text: string) => {
+      revealPendingRef.current = displayItems.some(isPendingCard);
+      onSend(text);
+    },
+    [displayItems, onSend],
+  );
+  useEffect(() => {
+    if (!revealPendingRef.current) return;
+    let at = -1;
+    for (let i = displayItems.length - 1; i >= 0; i--) {
+      if (isPendingCard(displayItems[i])) { at = i; break; }
+    }
+    if (at === -1) return;
+    revealPendingRef.current = false;
+    // Reversed data: the newest item is index 0.
+    listRef.current?.scrollToIndex({
+      index: displayItems.length - 1 - at,
+      viewPosition: 0.5,
+      animated: true,
+    });
+  }, [displayItems]);
 
   // Every topic-plan card in the thread — TopicPlanSaveAllRow filters these
   // against the settled map itself, keeping this component store-free.
@@ -136,9 +176,24 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   message while it streams, so the mark does not blink out the
                   instant the first token lands and back in on the next turn. */}
               <View style={styles.gutterRow}>
-                {item.streaming === true && <MeraStreamAvatar />}
+                {/* A SPACER when the mark is not showing, so the bubble keeps
+                    one left edge from the first token to the settled reply.
+                    It used to shift left the moment streaming ended. */}
+                {item.streaming === true ? (
+                  <MeraStreamAvatar />
+                ) : (
+                  <View style={styles.avatarSpacer} testID="mera-avatar-spacer" />
+                )}
                 <MessageContent role="assistant">
-                  <MessageResponse>{message.content}</MessageResponse>
+                  {/* THE SLOT. While streaming the reply holds at least the
+                      wait row's height, so it takes the row's place at the
+                      first token without moving the thread (ux1 C2). */}
+                  <View
+                    testID="mera-reply-slot"
+                    style={item.streaming === true ? styles.replySlotStreaming : undefined}
+                  >
+                    <MessageResponse>{message.content}</MessageResponse>
+                  </View>
                 </MessageContent>
               </View>
             </Message>
@@ -221,6 +276,26 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       case 'quick-fact-check-card':
         return <QuickFactCheckCard entry={item.entry} />;
 
+      case 'history-button':
+        return (
+          <View style={styles.historyButtonRow}>
+            <Pressable
+              style={styles.historyButton}
+              onPress={() => {
+                hapticLight();
+                onRevealHistory();
+              }}
+              accessibilityRole="button"
+              testID="chat-view-previous-messages"
+            >
+              <MaterialIcons name="history" size={16} color="rgb(160, 160, 160)" />
+              <Text size="xs" style={styles.historyButtonText}>
+                {t('floatingChat.viewPreviousMessages')}
+              </Text>
+            </Pressable>
+          </View>
+        );
+
       case 'divider':
         return (
           <View style={styles.dividerRow}>
@@ -279,35 +354,20 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       </View>
       <View style={styles.listWrap}>
         <ConversationContent
-          items={items}
+          items={displayItems}
+          listRef={listRef}
           renderItem={renderItem}
           onLoadOlder={onLoadOlder}
           hasOlder={hasOlder}
           isLoadingOlder={isLoadingOlder}
           header={
-            showHistoryButton || showChips || !hasRealMessage ? (
+            showChips || !hasRealMessage ? (
               <View style={styles.header}>
-                {showHistoryButton && (
-                  <View style={styles.historyButtonRow}>
-                    <Pressable
-                      style={styles.historyButton}
-                      onPress={() => {
-                        hapticLight();
-                        onRevealHistory();
-                      }}
-                    >
-                      <MaterialIcons name="history" size={16} color="rgb(160, 160, 160)" />
-                      <Text size="xs" style={styles.historyButtonText}>
-                        {t('floatingChat.viewPreviousMessages')}
-                      </Text>
-                    </Pressable>
-                  </View>
-                )}
                 {!hasRealMessage && (
                   <View style={styles.noticeRow}>
                     <MaterialIcons name="info-outline" size={14} color="rgb(140, 140, 140)" />
                     <Text size="xs" style={styles.noticeText}>
-                      {t('floatingChat.aiUsageNotice')}
+                      {usageNotice ?? t('floatingChat.aiUsageNotice')}
                     </Text>
                   </View>
                 )}
@@ -372,9 +432,17 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       <TopicPlanSaveAllRow factIds={topicPlanFactIds} />
 
+      {composerHint && !blockedMessage ? (
+        <View style={styles.hintRow} testID="chat-composer-hint">
+          <Text size="xs" style={styles.hintText} accessibilityLiveRegion="polite">
+            {composerHint}
+          </Text>
+        </View>
+      ) : null}
+
       <PromptInput
         ref={promptRef}
-        onSubmit={onSend}
+        onSubmit={send}
         placeholder={t('floatingChat.inputPlaceholder')}
         // NOT `blockedMessage !== null`. A transport error sets that banner
         // too, and the error is only cleared by starting a turn — so gating on
@@ -404,9 +472,18 @@ const styles = StyleSheet.create({
   header: {
     gap: 4,
   },
+  // 16pt sides like the rest of the panel; at 4 the notice ran into the
+  // panel's rounded edge (audit F9).
   aiInteractionRow: {
-    paddingHorizontal: 4,
-    paddingVertical: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    alignItems: 'center',
+  },
+  replySlotStreaming: {
+    minHeight: WAIT_ROW_TEXT_HEIGHT,
+  },
+  avatarSpacer: {
+    width: AVATAR_GUTTER_WIDTH,
   },
   historyButtonRow: {
     alignItems: 'center',
@@ -447,6 +524,15 @@ const styles = StyleSheet.create({
     color: 'rgb(120, 120, 120)',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  // Neutral, not the red banner: nothing has gone wrong, a card is simply
+  // waiting. rgb(185,185,185) on the panel measures ~9:1.
+  hintRow: {
+    marginHorizontal: 16,
+    marginBottom: 6,
+  },
+  hintText: {
+    color: 'rgb(185, 185, 185)',
   },
   blockedBanner: {
     flexDirection: 'row',

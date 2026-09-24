@@ -20,6 +20,7 @@ import {
 import { relevanceSystemPromptFor, reasonSystemPromptFor } from '../article-pipeline/scoring';
 import { DEFAULT_HARNESS_CONFIG } from '../core/config';
 import { estimateTokens } from '@/lib/llm/tokens';
+import { undoUx1ReasonLabelRule } from './ux1-reason-label';
 
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
@@ -50,10 +51,11 @@ describe('the promoted reason prompt', () => {
     expect(a).toBe(b);
   });
 
-  it('is the pre-geo text plus the article-scope rule, and nothing else', () => {
+  it('is the pre-geo text plus the article-scope rule and the ux1 label rule, and nothing else', () => {
     // The second promotion, asserted the same way as the first: cut the one
-    // section back out and the archived string must return byte for byte.
-    const cut = (p: string) => p.replace(/\n\n## Article scope\n[^\n]*/, '');
+    // section back out, undo the named ux1 label edit, and the archived string
+    // must return byte for byte.
+    const cut = (p: string) => undoUx1ReasonLabelRule(p.replace(/\n\n## Article scope\n[^\n]*/, ''));
     expect(cut(CLOUD_REASON_SYSTEM_PROMPT)).toBe(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO);
     // NOT asserted for the headline twin: it took a SECOND change after the
     // promotion, dropping the anchor table to fit the gateway wire cap. Its
@@ -147,11 +149,11 @@ describe('measured sizes after the promotion', () => {
   // Restated on purpose: the reason pass sends one call per article that clears
   // the gate, so these ride on every scored article.
   it('pins the promoted prompts', () => {
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5401);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5511);
     // Smaller than its pre-promotion twin, not larger: the headline reason
     // prompt gained the 130-token rule and then dropped the 1428-token anchor
     // table to fit the gateway wire cap. golden-prompts.test.ts owns that guard.
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(6958);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7066);
   });
 
   it('pins the pre-promotion prompts, which are now the control arms', () => {
@@ -175,17 +177,20 @@ describe('measured sizes after the promotion', () => {
     // One section in the shared base, so the same 130 on every prompt built on
     // it. The reason pass sends one call per article that clears the gate, so
     // this rides on every scored article, and pass 1 pays it per batch of five.
+    // Measured with the ux1 label edit taken back out, which is its own named
+    // change (see ux1-reason-label.ts), so this still isolates the promotion.
     expect(
-      estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)
+      estimateTokens(undoUx1ReasonLabelRule(CLOUD_REASON_SYSTEM_PROMPT))
         - estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO),
     ).toBe(130);
     // The headline reason prompt is NOT comparable this way: it also lost the
     // anchor table to the wire cap, so its delta is the sum of two changes.
     // Asserting 130 here would silently pin that second change as if it were
-    // part of the promotion.
+    // part of the promotion. It also gained RULE_NAME_BAN (ux1, +108), so the
+    // delta is the sum of three changes.
     expect(
       estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)
         - estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT),
-    ).toBe(1168);
+    ).toBe(1060);
   });
 });

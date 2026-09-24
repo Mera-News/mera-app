@@ -163,14 +163,21 @@ export const PURCHASE_HOLD_CEILING_MS = 5 * 60_000;
  * Holds the app restart off across a checkout, and releases it on a timer the
  * caller cannot lose.
  *
- * WHY. Every true background -> foreground return restarts the app
- * (`components/custom/AppRestartOnForeground.tsx`, owner's decision, no time
- * threshold). Both money paths leave the app: the hosted RevenueCat paywall
- * and a publisher's own subscribe page. Without this, the return that carries
- * the user back from a purchase is the return that reloads the JS context, so
+ * WHY. Both money paths take the user OUT of the app: the hosted RevenueCat
+ * paywall hands off to the store's purchase sheet, and a publisher's subscribe
+ * page opens a browser. A pending OTA restarts the app on a true background ->
+ * active return (`OTASilentUpdater`), which is precisely the return that
+ * carries the user back from a purchase. When it lands there,
  * `onReturnFromBackground` never raises "Did you subscribe to X?" and the
- * post-purchase entitlement round trip is thrown away mid-flight. The user
- * paid and the app does not know.
+ * post-purchase entitlement round trip is thrown away mid-flight. The user paid
+ * and the app does not know.
+ *
+ * A RARER TRIGGER IS NOT A WEAKER REASON TO HOLD, and it is the argument to
+ * refuse. The window is narrow — it needs a bundle to have downloaded during
+ * this session — but the cost inside it is a lost purchase, and a fault that
+ * only fires when an update happens to be pending is one nobody will reproduce
+ * on demand. Sizing the guard to the frequency of the trigger rather than to
+ * the damage is how this returns as an unexplained billing complaint.
  *
  * THE RELEASE IS TIMER-OWNED, NOT `finally`-OWNED, and that is the whole
  * design. A `finally` is the wrong moment in both callers: `openSubscribePage`
@@ -188,7 +195,9 @@ export const PURCHASE_HOLD_CEILING_MS = 5 * 60_000;
  * and removes the AppState listener. A LEAKED HOLD DISABLES RESTARTS FOR THE
  * REST OF THE SESSION AND FAILS SILENTLY, which is worse than no hold at all,
  * so there is deliberately no path out of this function that depends on a
- * caller remembering anything.
+ * caller remembering anything. Now that a pending OTA is the only thing that
+ * restarts on a return, a leak here does not cost one skipped window: it is
+ * update delivery switched off for the session, with nothing to observe.
  *
  * `background` ONLY, never `!== 'active'`, for the reason `onReturnFromBackground`
  * gives above. There is no `MIN_AWAY_MS` floor here on purpose: that floor

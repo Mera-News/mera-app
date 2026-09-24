@@ -42,6 +42,7 @@ import {
   backupProviderId,
   connectionSatisfiesWifiOnly,
   hydrateBackupSettings,
+  recordBackupFailure,
   recordBackupRun,
   scheduledBackupEnabled,
   scheduledBackupIsDue,
@@ -133,6 +134,14 @@ export function defineBackupTask(): void {
       // flat battery. `backup_last_run_at` is deliberately untouched, so the
       // next window tries again and the staleness line keeps counting up.
       logger.captureException(err, { tags: { service: 'backup-task' } });
+      // The failure IS stamped, so Settings says "Last backup failed on
+      // <date>" rather than going quiet about a schedule that is not working.
+      // Best effort: a failed write here must not change the task's result.
+      try {
+        await recordBackupFailure(Date.now());
+      } catch {
+        // The staleness line still counts up without it.
+      }
       return BackgroundTask.BackgroundTaskResult.Failed;
     } finally {
       subscription.remove();

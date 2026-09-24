@@ -9,8 +9,10 @@ import { mirrorArticleFactCheck } from '@/lib/fact-check/fact-check-graphql-clie
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
+import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
+import DetailTopBar, { useDetailTopBarCover } from '@/components/custom/news-detail/DetailTopBar';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
@@ -249,6 +251,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         isLoadingInitial: isLoadingRelated,
         isLoadingMore: isLoadingMoreRelated,
         loadMore: loadMoreRelated,
+        error: relatedError,
+        retry: retryRelated,
     } = useRelatedPagination({
         articleId: article?._id ?? null,
         stableClusterId,
@@ -257,6 +261,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         isConnected,
     });
 
+    // M8/F31 + T-1/T-3: one cover value turns the status area and the bar
+    // behind the back button solid together, once the meta row scrolls under.
+    const { cover: topBarCover, onTopBarSolidChange } = useDetailTopBarCover();
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
     }, []);
@@ -477,6 +484,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
      * returns false for a gated no-op, and a toast about work nobody started
      * would be a lie.
      */
+    const [factCheckAsked, setFactCheckAsked] = useState(false);
     const handleStartFactCheck = useCallback(() => {
         if (!article) return;
         const asked = requestArticleFactCheck({
@@ -485,17 +493,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             article,
         });
         if (!asked) return;
-        toast.show({
-            placement: 'top',
-            duration: 3000,
-            render: ({ id }: { id: string }) => (
-                <Toast nativeID={id} action="info" variant="solid">
-                    <ToastTitle>{t('factCheck.title')}</ToastTitle>
-                    <ToastDescription>{t('factCheck.checking')}</ToastDescription>
-                </Toast>
-            ),
-        });
-    }, [article, articleId, toast, t]);
+        setFactCheckAsked(true);
+    }, [article, articleId]);
 
     const handleToggleSave = useCallback(async () => {
         if (!article) return;
@@ -573,6 +572,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 <AbstractGradientBackdrop />
 
                 <Spinner size="large" />
+                {/* S8: a way back while loading (the by-id query can take up
+                    to 30s on a slow network before it aborts). */}
+                <DetailTopBar onBack={onBack} backIcon={backIcon} />
             </Box>
         );
     }
@@ -682,6 +684,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const articleUrl = secureUrlOrNull(rawArticleUrl);
     const insecureLink = !!rawArticleUrl && !articleUrl;
     const read = isOpenedId(article._id, stableClusterId, openedIds);
+    // Keyed on the ARTICLE id. `startedByReader` shows the working state at
+    // once for a check the reader just asked for (no progress delay, and no
+    // toast: the panel is right under the tick).
+    const factCheckPanel = (
+        <FactCheckPanel articleId={article._id ?? articleId} startedByReader={factCheckAsked} />
+    );
 
     return (
         <Box className="flex-1">
@@ -689,29 +697,16 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 everything else on the page. */}
             <AbstractGradientBackdrop />
 
-            {/* Status bar scrim — this screen's hero image is a full-bleed
-                parallax header (ArticleSuggestionContainer's SmoothScrollView),
-                so without this a light photo makes the system clock/battery
-                glyphs illegible. StatusBarScrim's own zIndex (5) sits above the
-                container's default (0) but below the floating back button
-                below (zIndex 20), so the scrim darkens the image behind the
-                status bar without ever covering the tappable back button. */}
-            <StatusBarScrim />
+            {/* Status bar scrim in `overHero` mode (T-1): at rest nothing
+                sits over the hero, so the photo runs under the status bar
+                with no grey band; as `topBarCover` rises (the meta row has
+                scrolled under the top bar) only its dark base fades in, in
+                step with DetailTopBar's opaque bar. Its zIndex (5) stays
+                below the back button (20). */}
+            {/* Transparent over the hero at rest, dark as the cover rises. */}
+            <StatusBarScrim overHero coverProgress={topBarCover} />
 
-            <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
-                <Pressable
-                    onPress={onBack}
-                    accessibilityRole="button"
-                    accessibilityLabel={t(backIcon === 'home' ? 'common.home' : 'common.back')}
-                    className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                >
-                    <MaterialIcons
-                        name={backIcon === 'home' ? 'home' : 'arrow-back'}
-                        size={24}
-                        color="#ffffff"
-                    />
-                </Pressable>
-            </Box>
+            <DetailTopBar onBack={onBack} backIcon={backIcon} cover={topBarCover} />
 
             <ArticleSuggestionContainer
                 article={article}
@@ -720,6 +715,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
+                onTopBarSolidChange={onTopBarSolidChange}
                 onEndReached={loadMoreRelated}
                 contentTopInset={insets.top}
                 contentBottomInset={insets.bottom + 20}
@@ -794,6 +790,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     // publication / category / event / place to
                                     // act on — the gap this wave closed.
                                     article={article}
+                                    publicationName={article.publicationSource?.publication_name ?? null}
                                     onBrowseRelated={scrollToRelated}
                                     save={{ saved: isSaved, onToggle: handleToggleSave }}
                                     track={{
@@ -819,6 +816,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         displayedLanguage: titleDisplay?.language ?? null,
                                     }}
                                 />
+                                {/* F33: the fact check sits DIRECTLY under the action
+                                    row whose tick starts it, so its "Searching" line
+                                    and its result land where the reader asked, not
+                                    at the very end of the footer below the fold. */}
+                                {factCheckPanel}
                                 <ReadTranslateActions
                                     articleUrl={articleUrl}
                                     sourceLanguage={sourceLanguage}
@@ -835,18 +837,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                             </HStack>
                         ) : null}
 
-                        {/* Fact check sits OUTSIDE the URL branch: it is keyed
-                            on the article id, not the (possibly refused) local
-                            link, so it still renders for a row whose URL we
-                            won't open. Always mounted — a pure observer of the
-                            stored rows, it renders nothing itself when nobody
-                            has asked about this article, which is the common
-                            case. */}
-                        <FactCheckPanel articleId={article._id ?? articleId} />
+                        {/* No link to open: the panel still renders (it is keyed
+                            on the article id), just without the actions above it. */}
+                        {!articleUrl && factCheckPanel}
 
                         <SubscribedCoverageBlock articleId={article._id ?? articleId} />
 
-                        {(isLoadingRelated || related.length > 0) && (
+                        {(isLoadingRelated || related.length > 0 || relatedError) && (
                             <VStack space="md">
                                 <HStack className="items-center justify-between" space="sm">
                                     <Heading size="lg" className="text-gray-300 flex-1">
@@ -866,9 +863,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     <>
                                         {/* Server order is final — no client
                                             re-sort. See useRelatedPagination. */}
-                                        {related.map((entry, index) => (
+                                        {/* The hook dedupes by `_id` on every
+                                            page, so the id alone is a unique key. */}
+                                        {related.map((entry) => (
                                             <ArticleStandaloneCompactCard
-                                                key={entry._id || `related-${index}`}
+                                                key={entry._id}
                                                 article={summaryToNewsArticle(entry)}
                                                 onPress={() => handleRelatedPress(entry._id)}
                                                 subjectExtras={{ surface: 'detail' }}
@@ -878,6 +877,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                             <Box className="items-center justify-center py-4">
                                                 <Spinner size="small" />
                                             </Box>
+                                        ) : null}
+                                        {relatedError && !isLoadingMoreRelated ? (
+                                            <RelatedErrorRow onRetry={retryRelated} />
                                         ) : null}
                                     </>
                                 )}

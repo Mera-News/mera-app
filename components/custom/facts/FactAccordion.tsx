@@ -18,6 +18,7 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { sentenceCase } from './sentence-case';
 
 /** Per-tap influence nudge and the clamped UI range (a fact's weight dampens
  *  its topics — 100% default; this control never drives it to 0/negative). */
@@ -30,10 +31,28 @@ function round1(n: number): number {
     return Math.round(n * 10) / 10;
 }
 
+/** Accent for the row's actions. The facts list used an off-palette blue. */
+const ACCENT = 'rgb(231, 138, 83)';
+
+/**
+ * Where the article counts are. `counting` until the first read lands,
+ * `unavailable` once that read failed or ran past its time limit (FactsList
+ * owns the limit), so a row never says "Counting" forever and never shows a
+ * false 0.
+ */
+export type ArticleCountState = 'counting' | 'ready' | 'unavailable';
+
 interface FactAccordionProps {
     readonly fact: Fact;
     readonly isExpanded: boolean;
     readonly articleCountByTopic: Map<string, number>;
+    readonly countState?: ArticleCountState;
+    /**
+     * Edit mode (F46): the delete control shows only here, the row does not
+     * expand, and the statement is the whole row. At rest there is no red
+     * trash on every fact.
+     */
+    readonly editing?: boolean;
     readonly isGeneratingMore: boolean;
     readonly onToggle: (factId: string) => void;
     readonly onDeletePress: (fact: Fact) => void;
@@ -55,8 +74,10 @@ interface FactAccordionProps {
  */
 const FactAccordion: React.FC<FactAccordionProps> = ({
     fact,
-    isExpanded,
+    isExpanded: isExpandedProp,
     articleCountByTopic,
+    countState = 'ready',
+    editing = false,
     isGeneratingMore,
     onToggle,
     onDeletePress,
@@ -67,6 +88,8 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     onGenerateMore,
 }) => {
     const { t } = useTranslation();
+    const isExpanded = isExpandedProp && !editing;
+    const displayStatement = sentenceCase(fact.statement);
 
     // Optimistic mirror of the fact's influence weight (null ⇒ 1.0 baseline).
     // nudgeFactWeight reads the stored value fresh each call, so the UI value
@@ -159,20 +182,41 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
         <GlassPanel className="mx-4 mb-3" fallbackClassName="bg-transparent">
             {/* Accordion header */}
             <HStack className="px-4 py-3 items-center">
-                <Pressable onPress={() => onDeletePress(fact)} hitSlop={8} className="mr-3">
-                    <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
-                </Pressable>
-                <Pressable onPress={() => onToggle(fact.id)} className="flex-1 mr-2">
-                    {/* The statement ALWAYS renders — pending/error never
-                        replace it, only add a secondary line beneath it. This
-                        is the one thing that must survive collapsed, not just
-                        expanded, since the row's whole identity is the fact
-                        phrase. */}
+                {editing && (
+                    <Pressable
+                        testID={`fact-delete-${fact.id}`}
+                        onPress={() => onDeletePress(fact)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('facts.deleteFactA11y', { fact: displayStatement })}
+                        // 44pt measured, not nominal: the frame alone came out
+                        // 39pt on device, so the slop carries the rest.
+                        hitSlop={6}
+                        style={{ minWidth: 44, minHeight: 44 }}
+                        className="-ml-2 mr-1 items-center justify-center"
+                    >
+                        <MaterialIcons name="remove-circle" size={22} color="#ef4444" />
+                    </Pressable>
+                )}
+                <Pressable
+                    onPress={editing ? undefined : () => onToggle(fact.id)}
+                    className="flex-1 mr-2"
+                    accessibilityRole={editing ? undefined : 'button'}
+                    accessibilityState={editing ? undefined : { expanded: isExpanded }}
+                    // Delete is reachable from VoiceOver's actions rotor on
+                    // every row, not only in edit mode.
+                    accessibilityActions={[{ name: 'delete', label: t('common.delete') }]}
+                    onAccessibilityAction={(e) => {
+                        if (e.nativeEvent.actionName === 'delete') onDeletePress(fact);
+                    }}
+                >
+                    {/* The statement ALWAYS renders, in full: pending/error
+                        only add a line beneath it, and it is never clamped,
+                        because a person has to be able to read their own
+                        fact. */}
                     <TranslatableDynamic
-                        text={fact.statement}
+                        text={displayStatement}
                         size="md"
-                        className="text-white capitalize"
-                        numberOfLines={2}
+                        className="text-white"
                     />
                     {status === 'pending' && (
                         <Text size="xs" className="text-typography-400 mt-0.5">
@@ -189,7 +233,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                     {status === 'pending' && (
                         <StatusIndicator status="pending" testID={`fact-topics-pending-${fact.id}`} />
                     )}
-                    {status === 'error' && (
+                    {status === 'error' && !editing && (
                         <Pressable
                             onPress={handleRetry}
                             disabled={isRetrying}
@@ -205,23 +249,43 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                             />
                         </Pressable>
                     )}
-                    {status === 'done' && totalCount > 0 && (
+                    {status === 'done' && countState === 'counting' && (
+                        <Text size="xs" className="text-gray-500" testID={`fact-count-pending-${fact.id}`}>
+                            {t('configPanel.articleCountPending')}
+                        </Text>
+                    )}
+                    {status === 'done' && countState === 'ready' && totalCount > 0 && (
                         <Button
                             variant="outline"
                             size="xs"
                             onPress={() => onFactArticles(fact)}
                             className="rounded-full"
+                            isDisabled={editing}
                         >
                             <ButtonText>{t('configPanel.articleCount', { count: totalCount })}</ButtonText>
                         </Button>
                     )}
-                    <Pressable onPress={() => onToggle(fact.id)} hitSlop={8}>
-                        <MaterialIcons
-                            name={isExpanded ? 'expand-less' : 'expand-more'}
-                            size={20}
-                            color="#9ca3af"
-                        />
-                    </Pressable>
+                    {/* M24: a finished fact with nothing that can appear says
+                        so, instead of showing no pill at all. */}
+                    {status === 'done' && countState === 'ready' && totalCount === 0 && (
+                        <Text size="xs" className="text-gray-500" testID={`fact-count-none-${fact.id}`}>
+                            {t('configPanel.articleCountNone')}
+                        </Text>
+                    )}
+                    {!editing && (
+                        <Pressable
+                            onPress={() => onToggle(fact.id)}
+                            hitSlop={8}
+                            accessibilityElementsHidden
+                            importantForAccessibility="no"
+                        >
+                            <MaterialIcons
+                                name={isExpanded ? 'expand-less' : 'expand-more'}
+                                size={20}
+                                color="#9ca3af"
+                            />
+                        </Pressable>
+                    )}
                 </HStack>
             </HStack>
 
@@ -244,7 +308,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                                 <MaterialIcons
                                     name="remove-circle-outline"
                                     size={22}
-                                    color={influenceMinReached ? '#374151' : '#60a5fa'}
+                                    color={influenceMinReached ? '#374151' : ACCENT}
                                 />
                             </Pressable>
                             <Text size="sm" className="text-gray-200" style={{ minWidth: 44, textAlign: 'center' }}>
@@ -260,7 +324,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                                 <MaterialIcons
                                     name="add-circle-outline"
                                     size={22}
-                                    color={influenceMaxReached ? '#374151' : '#60a5fa'}
+                                    color={influenceMaxReached ? '#374151' : ACCENT}
                                 />
                             </Pressable>
                         </HStack>
@@ -278,7 +342,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                             accessibilityState={{ disabled: isRetrying }}
                             testID={`fact-topics-retry-body-button-${fact.id}`}
                         >
-                            <Text size="sm" className="text-blue-400">
+                            <Text size="sm" className="text-primary-400">
                                 {t('configPanel.retryTopicGeneration')}
                             </Text>
                         </Pressable>
@@ -296,14 +360,16 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                                         <Pressable className="flex-1" onPress={() => onTopicPress(topicRow.text)}>
                                             <HStack className="items-center justify-between flex-1 mr-3">
                                                 <TranslatableDynamic
-                                                    text={topicRow.text}
+                                                    text={sentenceCase(topicRow.text)}
                                                     size="sm"
-                                                    className="text-gray-200 flex-1 mr-2 capitalize"
+                                                    className="text-gray-200 flex-1 mr-2"
                                                     numberOfLines={2}
                                                 />
-                                                <Text size="xs" className="text-gray-500">
-                                                    {t('configPanel.articleCount', { count })}
-                                                </Text>
+                                                {countState === 'ready' && (
+                                                    <Text size="xs" className="text-gray-500">
+                                                        {t('configPanel.articleCount', { count })}
+                                                    </Text>
+                                                )}
                                             </HStack>
                                         </Pressable>
                                         <Pressable
@@ -331,8 +397,8 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                             )}
                             <Pressable onPress={() => onAddTopic(fact)} className="mt-1">
                                 <HStack className="items-center" space="xs">
-                                    <MaterialIcons name="add" size={16} color="#60a5fa" />
-                                    <Text size="sm" className="text-blue-400">{t('configPanel.addTopic')}</Text>
+                                    <MaterialIcons name="add" size={16} color={ACCENT} />
+                                    <Text size="sm" className="text-primary-400">{t('configPanel.addTopic')}</Text>
                                 </HStack>
                             </Pressable>
                             {isGeneratingMore ? (
@@ -343,8 +409,8 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                             ) : (
                                 <Pressable onPress={() => onGenerateMore(fact)} className="mt-1">
                                     <HStack className="items-center" space="xs">
-                                        <MaterialIcons name="auto-awesome" size={16} color="#60a5fa" />
-                                        <Text size="sm" className="text-blue-400">{t('configPanel.generateMoreTopics')}</Text>
+                                        <MaterialIcons name="auto-awesome" size={16} color={ACCENT} />
+                                        <Text size="sm" className="text-primary-400">{t('configPanel.generateMoreTopics')}</Text>
                                     </HStack>
                                 </Pressable>
                             )}

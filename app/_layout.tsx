@@ -23,7 +23,6 @@ import client from '../lib/apollo-client';
 import { OfflineBannerSlot } from '@/components/custom/OfflineBanner';
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
-import AppRestartOnForeground from '@/components/custom/AppRestartOnForeground';
 import NativeUpdateGate from '@/components/custom/NativeUpdateGate';
 import OTASilentUpdater from '@/components/custom/OTASilentUpdater';
 import TranslationUnavailablePrompt from '@/components/custom/TranslationUnavailablePrompt';
@@ -47,6 +46,7 @@ import { Directory, Paths } from 'expo-file-system';
 import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
 import { setCurrentPathname } from '@/lib/nav-state';
+import { holdSplash, SplashReleaser } from '@/lib/splash-hold';
 import { getNavigationTheme } from '@/lib/navigation/navigation-theme';
 import { initNetworkListener } from '@/lib/stores/network-store';
 import {
@@ -67,7 +67,7 @@ import {
 import { defineBackupTask, syncBackupTaskRegistration } from '@/lib/background/backup-task';
 import * as Sentry from '@sentry/react-native';
 import { DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
-import { initRestartContext, restartContext } from '@/lib/app-restart';
+import { initRestartContext } from '@/lib/app-restart';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 // Task registrations — each file calls AppScheduler.register() at module load
 import '@/lib/scheduler/tasks/feed-sync-task';
@@ -81,6 +81,7 @@ import '@/lib/scheduler/tasks/sanity-backfill-task';
 import '@/lib/scheduler/tasks/persona-geo-task';
 import '@/lib/scheduler/tasks/feedback-cycle-task';
 import '@/lib/scheduler/tasks/entitlement-sync-task';
+import '@/lib/scheduler/tasks/fact-check-reconcile-task';
 
 // Register the inference TaskManager task at module load so the
 // expo-notifications silent-push wake (phase-1-done / phase-2-done from the
@@ -331,30 +332,19 @@ function AppRoot() {
     return () => { cancelled = true; AppScheduler.dispose(); };
   }, [setAppInitialized]);
 
-  // Handle notifications that launched the app (when app was not running).
-  // Must wait for navigation to be ready before navigating.
+  // Handle the notification tap that launched or foregrounded the app. Must
+  // wait for navigation to be ready before navigating.
   //
-  // NOT ON A RESTART BOOT. `getLastNotificationResponseAsync()` survives a JS
-  // reload, and every background -> foreground return is now a reload
-  // (lib/app-restart.ts) — so without this gate every return would deep-link
-  // the user back to a notification they tapped hours ago, over and over.
-  //
-  // Awaits the memoised context rather than reading the synchronous cache:
-  // `isNavigationReady` can flip before the marker read resolves, and the cache
-  // reads false until it does. Fails OPEN — an unreadable marker handles the
-  // notification, which is the behaviour this app has always had.
+  // ON EVERY BOOT, restart boots included. `getLastNotificationResponseAsync()`
+  // survives a JS reload and every background -> foreground return is one
+  // (lib/app-restart.ts), so `handleInitialNotification` deduplicates on the
+  // tap's persisted request identifier instead. Skipping restart boots (the old
+  // rule) dropped every tap made while the app was in the background, because
+  // that tap's own return is a restart. The tap never navigates past the
+  // startup/PIN gate: it stashes its route for app/logged-in/index to consume.
   useEffect(() => {
     if (!isNavigationReady) return;
-    let cancelled = false;
-    void restartContext()
-      .then((ctx) => {
-        if (cancelled || ctx.wasJsRestart) return;
-        handleInitialNotification();
-      })
-      .catch(() => {
-        if (!cancelled) handleInitialNotification();
-      });
-    return () => { cancelled = true; };
+    void handleInitialNotification();
   }, [isNavigationReady]);
 
   return (
@@ -420,6 +410,9 @@ function AppRoot() {
                 renders nothing in the common case; insets are read inside the
                 component so this layout gains no new subscription. */}
             <OfflineBannerSlot />
+            {/* F1: releases the held splash on the first route past the
+                startup gates (lib/splash-hold.ts). Renders nothing. */}
+            <SplashReleaser />
             </View>
           </ThemeProvider>
         </ApolloProvider>
@@ -427,6 +420,12 @@ function AppRoot() {
     </ErrorBoundary>
   );
 }
+
+// F1: keep the native splash over the version check and the startup gates
+// until the first real screen commits (capped, so it can never hang). Module
+// scope on purpose: the public preventAutoHideAsync must run before
+// expo-router's own first-render auto-hide.
+holdSplash();
 
 // Root layout: providers + the mandatory-update gate ONLY. Deliberately holds no
 // store subscriptions or boot logic of its own, so background activity can never
@@ -445,11 +444,6 @@ export default Sentry.wrap(function RootLayout() {
             <NativeUpdateGate>
               <ToastInitializer />
               <OTASilentUpdater />
-              {/* Inside the gate's CHILDREN on purpose: a blocked user is
-                  rendered ForceUpdateScreen INSTEAD of these, so nothing here
-                  is mounted and nobody can be restarted out from under the
-                  update screen. */}
-              <AppRestartOnForeground />
               <TranslationUnavailablePrompt />
               <AppRoot />
               {/* LAST on purpose: toasts have to paint above the router stack,

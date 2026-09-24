@@ -35,7 +35,8 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
-import ArticleService from '../article-service';
+import ArticleService, { RELATED_FILTERS_LIVE } from '../article-service';
+import { print } from 'graphql';
 import logger from '@/lib/logger';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -612,7 +613,8 @@ describe('ArticleService.getRelatedArticlesPage', () => {
         const p = page();
         mockQuery.mockResolvedValueOnce({ data: { relatedArticlesPage: p } });
         const result = await ArticleService.getRelatedArticlesPage({ articleId: 'art-1' });
-        expect(result).toEqual(p);
+        // facets is null on the default document (switch off): it was not asked for.
+        expect(result).toEqual({ ...p, facets: null });
     });
 
     it('returns an empty CLOSED page when the field is null/undefined', async () => {
@@ -674,6 +676,64 @@ expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
             expect.objectContaining({ method: 'getRelatedArticlesPage', articleId: 'art-1' }),
             'warning',
         );
+    });
+});
+
+// N10: country/language filters and facets exist only on servers that have the
+// ux1 change. An unknown argument or field fails the WHOLE request, so the
+// filtered document may be sent only while RELATED_FILTERS_LIVE is on; while it
+// is off the default document goes out, byte for byte what prod accepts.
+describe('ArticleService.getRelatedArticlesPage — N10 filters behind the switch', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    const page = (over: Record<string, unknown> = {}) => ({
+        articles: [],
+        pageInfo: { endCursor: null, hasNextPage: false, pageSize: 0 },
+        restarted: false,
+        ...over,
+    });
+
+    const sentQuery = () => print(mockQuery.mock.calls[0][0].query);
+    const sentVars = () => mockQuery.mock.calls[0][0].variables;
+
+    it('ships switched OFF', () => {
+        expect(RELATED_FILTERS_LIVE).toBe(false);
+    });
+
+    it('while off, never sends the filter arguments or facets, even when asked', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { relatedArticlesPage: page() } });
+        const result = await ArticleService.getRelatedArticlesPage({
+            articleId: 'art-1',
+            filter: { countries: ['DEU'], languages: ['de'] },
+        });
+        expect(sentQuery()).not.toMatch(/countries|languages|facets/);
+        expect(sentVars()).not.toHaveProperty('countries');
+        expect(sentVars()).not.toHaveProperty('languages');
+        expect(result.facets).toBeNull();
+    });
+
+    it('while live, sends the filtered document with the chosen filters and returns facets', async () => {
+        const facets = { countries: [{ code: 'DEU', count: 4 }], languages: [{ code: 'de', count: 4 }] };
+        mockQuery.mockResolvedValueOnce({ data: { relatedArticlesPage: page({ facets }) } });
+        const result = await ArticleService.getRelatedArticlesPage(
+            { articleId: 'art-1', filter: { countries: ['DEU'], languages: ['de'] } },
+            true,
+        );
+        expect(sentQuery()).toMatch(/countries: \$countries/);
+        expect(sentQuery()).toMatch(/facets/);
+        expect(sentVars()).toEqual(
+            expect.objectContaining({ countries: ['DEU'], languages: ['de'] }),
+        );
+        expect(result.facets).toEqual(facets);
+    });
+
+    // "All" is the default and is never saved: no chip picked means no
+    // restriction, sent as null rather than an empty list.
+    it('while live with no filter, still asks for facets and sends null filters', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { relatedArticlesPage: page({ facets: { countries: [], languages: [] } }) } });
+        await ArticleService.getRelatedArticlesPage({ articleId: 'art-1', filter: { countries: [] } }, true);
+        expect(sentQuery()).toMatch(/facets/);
+        expect(sentVars()).toEqual(expect.objectContaining({ countries: null, languages: null }));
     });
 });
 

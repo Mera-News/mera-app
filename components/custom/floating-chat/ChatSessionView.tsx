@@ -130,9 +130,18 @@ export default function ChatSessionView({
   // live. Any one of the three being true means a turn is still in flight.
   const responseInFlight = isStreaming || turnActive === true || localTurnBusy === true;
 
-  // The floating chat is an overlay, not a route, so the route-based restart
-  // gate (`AppRestartOnForeground`) cannot see it — this hold is the only
-  // thing that can. The effect's cleanup is the ONE release path and it is
+  // The floating chat is an OVERLAY, open on top of whatever route is
+  // current. `lib/app-restart.ts`'s route gate only blocks a restart for a
+  // fixed list of routes (`RESTART_BLOCKED_ROUTES` — login, OTP, PIN,
+  // onboarding) and chat can be mid-turn over any OTHER route, so that gate
+  // has no way to see it; this hold is the only thing that does. It is not a
+  // split between "plain returns" and "everything else" any more: a plain
+  // foreground return is not a restart trigger at all now, only a pending OTA
+  // (or an explicit language-change/restore) is, and the route gate applies
+  // to every one of those reasons — this hold and that gate are two
+  // independent block reasons `blockedBy()` checks together, not two
+  // mechanisms covering two different triggers. The effect's cleanup is the
+  // ONE release path and it is
   // unconditional: it fires the moment `responseInFlight` flips back to false
   // (normal completion, a user cancel, or an error — all three resolve every
   // one of `isStreaming` / `turnActive` / `localTurnBusy` to false) and it
@@ -547,12 +556,14 @@ export default function ChatSessionView({
       if (!trimmed || isStreaming || effectiveBlocked) return;
       // Disabling PromptInput is not enough: the auto-send effect below and the
       // starter chips both call this directly, bypassing the input entirely.
-      if (hasUnresolvedTopicPlans) return;
+      // Only the legacy topic-plan card gates here: a waiting FACT card takes a
+      // typed answer, and the card stays pending beside it (audit F7).
+      if (unresolvedTopicPlans.length > 0) return;
       void hapticMedium();
       setIntroMessage(null);
       sendMessage(trimmed);
     },
-    [isStreaming, effectiveBlocked, hasUnresolvedTopicPlans, sendMessage],
+    [isStreaming, effectiveBlocked, unresolvedTopicPlans.length, sendMessage],
   );
 
   // Chips send their canned message through the same path (haptic included).
@@ -599,7 +610,12 @@ export default function ChatSessionView({
   // Which of the banner's three causes may also gate the composer. A
   // transport error is deliberately absent: it clears when a turn starts, so
   // blocking the input on it is a deadlock, not a safeguard.
-  const bannerBlocksInput = effectiveBlocked || hasUnresolvedTopicPlans;
+  // A waiting FACT card does not gate the composer any more (audit F7): the
+  // red "Pick a reading" banner showed before the user had done anything, and
+  // a typed answer is a legitimate answer. It leaves the card pending and a
+  // neutral hint says so. The legacy topic-plan card keeps its gate.
+  const bannerBlocksInput = effectiveBlocked || unresolvedTopicPlans.length > 0;
+  const composerHint = unresolvedFactChoices > 0 ? t('factChoice.pendingHint') : null;
 
   const blockedMessage = effectiveBlocked
     ? effectiveBlockedReason ?? t('errors.accountRestricted')
@@ -612,12 +628,8 @@ export default function ChatSessionView({
       // the user to try again in a moment, which is the only action available.
       // Status and body stay on the cloudComplete breadcrumb for triage.
       ? t('chat.inferenceError')
-      : hasUnresolvedTopicPlans
-        // The two cards ask different things. A fact-choice card shows no topics
-        // yet, so offering to "choose an action" over the topics reads as a bug.
-        ? unresolvedFactChoices > 0
-          ? t('factChoice.resolveBeforeContinuing')
-          : t('topicPlan.resolveBeforeContinuing')
+      : unresolvedTopicPlans.length > 0
+        ? t('topicPlan.resolveBeforeContinuing')
         : null;
 
   if (isLoading) {
@@ -655,6 +667,12 @@ export default function ChatSessionView({
         isRefreshingBlockStatus={isRefreshingBlockStatus}
         onSend={handleSend}
         isInputDisabled={isStreaming || effectiveBlocked}
+        composerHint={composerHint}
+        usageNotice={
+          context.kind === 'persona'
+            ? t('floatingChat.aiUsageNotice')
+            : t('floatingChat.aiUsageNoticeGeneral')
+        }
       />
       {!!userId && conversationId && (
         <RequestUnblockModal

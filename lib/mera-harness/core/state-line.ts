@@ -36,6 +36,17 @@ export interface StateLineInput {
   existingFacts?: { factId: string; statement: string }[];
   /** The forced-proposal leg. Says plainly that nothing has been proposed. */
   forcedProposal?: boolean;
+  /** The user typed a plain yes to this question. The turn resumed its skill
+   *  so the subject survives; the model is told to do what the question
+   *  offered and say in one sentence what it offered. */
+  answeredYesTo?: string | null;
+  /** Same, for a plain no: the model is told not to offer what it asked about. */
+  answeredNoTo?: string | null;
+  /** Readings still waiting on a card from an earlier turn. Named so the model
+   *  does not offer them again; the loop also drops exact repeats. */
+  pendingCards?: string[];
+  /** Several subjects in one message: this leg handles one of them. */
+  segmentScope?: { mine: string; others: string[]; questionPending: boolean } | null;
 }
 
 export function buildStateLine(input: StateLineInput): string {
@@ -98,6 +109,43 @@ export function buildStateLine(input: StateLineInput): string {
     parts.push(`They chose: ${escapeUntrusted(input.resolvedChoiceText, 80)}.`);
   }
 
+  if (input.segmentScope) {
+    const others = input.segmentScope.others.map((k) => escapeUntrusted(k, 30)).join(', ');
+    parts.push(
+      `This message has several subjects. You handle only the ${escapeUntrusted(input.segmentScope.mine, 30)} part`
+      + (others ? `; other guidelines handle ${others}. Offer nothing about those.` : '.'),
+    );
+    if (input.segmentScope.questionPending) {
+      parts.push(
+        'A question about another part is already waiting for the user. Ask nothing: if a reading '
+        + 'is uncertain, put the other readings in alternatives.',
+      );
+    }
+  }
+
+  if (input.pendingCards && input.pendingCards.length > 0) {
+    const rows = input.pendingCards.slice(0, 6).map((s) => `"${escapeUntrusted(s, 120)}"`).join('; ');
+    parts.push(
+      `Cards already waiting for the user: ${rows}. Never offer these again, in any wording; `
+      + 'the user can still answer them.',
+    );
+  }
+
+  if (input.answeredNoTo) {
+    parts.push(
+      `They answered no to your question: "${escapeUntrusted(input.answeredNoTo, 160)}". `
+      + 'Do not offer what it asked about. Acknowledge it in one short sentence.',
+    );
+  }
+
+  if (input.answeredYesTo) {
+    parts.push(
+      `They answered yes to your question: "${escapeUntrusted(input.answeredYesTo, 160)}". `
+      + 'Do what that question offered now, and say in one short sentence what you are offering. '
+      + 'A yes is never permission to delete anything.',
+    );
+  }
+
   if (input.forcedProposal) {
     parts.push(
       'You have not proposed anything yet. Propose the fact now or ask one choice question.',
@@ -112,11 +160,11 @@ export function buildStateLine(input: StateLineInput): string {
   // question itself was never sent at all. Stating the question and leaving the
   // reading to the model is both true and the thing that was missing; the
   // do-not-repeat half of the guard is kept verbatim, because that half works.
-  if (input.lastQuestion) {
+  if (input.lastQuestion && !input.answeredYesTo && !input.answeredNoTo) {
     parts.push(
       `Your last turn asked: "${escapeUntrusted(input.lastQuestion, 160)}". `
       + 'This message is most likely its answer, so read it that way if it can be. '
-      + 'Never ask that question again.',
+      + 'Never ask that question again, and never say how you read the message.',
     );
   } else if (input.answerPending) {
     parts.push('They did not answer your last question. Offer, do not ask again.');

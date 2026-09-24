@@ -446,6 +446,14 @@ class FeedSyncMachine {
         suppressEnqueue: suppressScoring,
       });
       useForYouStore.getState().resetHydrationProgress();
+      // "Updated just now" means NEW ARTICLES arrived, not "a sync ran". The
+      // 5-minute poll finishes a run (and must keep stamping
+      // markProcessingRunFinished on its no-op branch above, or "preparing your
+      // feed" never resolves), so the label reads this separate stamp, set
+      // only when this run actually inserted rows.
+      if (hydrateResult.insertedCount > 0) {
+        useForYouStore.getState().markNewArticlesArrived();
+      }
 
       // Daily cap banner: if this run was partially clipped, surface the "limit
       // reached" notice now (we still delivered what fit) rather than waiting for

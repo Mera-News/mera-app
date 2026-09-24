@@ -9,6 +9,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { sentenceCase } from '@/components/custom/facts/sentence-case';
 
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
@@ -80,9 +81,9 @@ const SuppressionRow: React.FC<SuppressionRowProps> = ({
             >
                 <MaterialIcons name={KIND_ICON[kind]} size={18} color={ACCENT} />
                 <TranslatableDynamic
-                    text={display}
+                    text={sentenceCase(display)}
                     size="md"
-                    className="text-white flex-1 ml-3 mr-2 capitalize"
+                    className="text-white flex-1 ml-3 mr-2"
                     numberOfLines={2}
                 />
                 <View

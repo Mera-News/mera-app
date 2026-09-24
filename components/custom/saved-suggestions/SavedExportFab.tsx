@@ -1,9 +1,9 @@
-import { GlassPlate } from '@/components/custom/GlassSurface';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { GLASS_OVER_CONTENT_FILL, GlassPlate } from '@/components/custom/GlassSurface';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface SavedExportFabProps {
@@ -40,16 +40,15 @@ const FAB_RADIUS = 25;
  * ## Why this one takes `embedded` and ShareStatsFab does not
  *
  * `ShareStatsFab` is only ever mounted by `ForYouScreen`, inside the tab
- * navigator, so it can hardcode `TAB_BAR_HEIGHT`. This screen renders in two
+ * navigator, so it always takes `useTabBarClearance()`. This screen renders in two
  * places: the Dashboard's Saved sub-tab, which sits inside the navigator with
  * the bar drawn behind it, and `/logged-in/saved-suggestions`, a Stack screen
- * pushed OUTSIDE it where no bar renders. Hardcoding the clearance would leave
- * the standalone route's button floating 49 points above nothing. Same shape
- * as `TrackedStoriesScreen`'s inline FAB, which takes the same decision.
+ * pushed OUTSIDE it where no bar renders. Embedded takes `useTabBarClearance()`;
+ * standalone takes the plain inset. Never `insets.bottom + TAB_BAR_HEIGHT`
+ * inside a tab: on iOS that inset already includes the bar.
  *
- * `TAB_BAR_HEIGHT` is a conservative ESTIMATE of the native bar rather than its
- * measured height (the bar is `NativeTabs` and does not expose its height to
- * JS), so it is clearance to respect, not a number to sit flush against.
+ * The dark base under the glass is the button's real surface: the glass plate
+ * alone could paint nothing and leave a bare icon over the list.
  *
  * ## The radius is on the plate, not on this Pressable
  *
@@ -58,6 +57,7 @@ const FAB_RADIUS = 25;
  */
 const SavedExportFab: React.FC<SavedExportFabProps> = ({ onPress, embedded }) => {
     const insets = useSafeAreaInsets();
+    const tabClearance = useTabBarClearance();
     const { t } = useTranslation();
 
     return (
@@ -68,9 +68,14 @@ const SavedExportFab: React.FC<SavedExportFabProps> = ({ onPress, embedded }) =>
             accessibilityLabel={t('savedExport.fabA11y')}
             style={[
                 styles.fab,
-                { bottom: 20 + insets.bottom + (embedded ? TAB_BAR_HEIGHT : 0) },
+                { bottom: 20 + (embedded ? tabClearance : insets.bottom) },
             ]}
         >
+            <View
+                testID="saved-export-open-base"
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, styles.base]}
+            />
             <GlassPlate style={{ borderRadius: FAB_RADIUS }} />
             <MaterialIcons name="ios-share" size={24} color="#e5e7eb" />
         </Pressable>
@@ -91,6 +96,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 8,
+    },
+    base: {
+        borderRadius: FAB_RADIUS,
+        backgroundColor: GLASS_OVER_CONTENT_FILL,
     },
 });
 

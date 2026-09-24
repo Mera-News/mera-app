@@ -1,5 +1,7 @@
 import TranslationNotice from '@/components/custom/news-detail/TranslationNotice';
+import { Box } from '@/components/ui/box';
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
 import {
@@ -11,19 +13,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-/** White — the neutral "just open the page as published" action. */
-const VIEW_ORIGINAL_COLOR = '#FFFFFF';
-/** A softer green than the app's `#22C55E`, on the user's ask for something
- *  "Apple might use". `green-400` is lighter and less saturated, which on a dark
- *  backdrop reads as a tint rather than a slab of colour. */
-const GREEN_COLOR = '#4ADE80';
-/** The FILL behind an emphasised button — the same green at 20%, not solid.
- *  This is Apple's tinted-button idiom and the reason the label no longer needs
- *  to flip to near-black: a 20% wash over a dark backdrop leaves the green text
- *  well clear of contrast limits, where white on solid `#22C55E` was ~2.2:1.
- *  MUST stay in lockstep with GREEN_COLOR and with the `bg-green-400/20` class
- *  beside it. */
-const GREEN_TINT_FILL = 'rgba(74, 222, 128, 0.2)';
+/** Both read routes share one look: a white outline, white label. */
+const ROUTE_COLOR = '#FFFFFF';
+/** Space between the two buttons, across and down. */
+const ROUTE_GAP = 12;
 
 /**
  * Title-case a publisher name WITHOUT destroying acronyms: only words that are
@@ -62,32 +55,24 @@ interface ReadTranslateActionsProps {
  * Shared read/translate call-to-action block for the article detail screens
  * (`ArticleSuggestionScreen`, `ArticleDetailScreen`).
  *
- * ONE layout in every state — the translation-support status only changes the
- * notice line and the two buttons' colours, never their order:
+ * N8: both read routes are EQUALLY usable, so they look the same.
  *
- * 1. The Google Translate button — THREE-QUARTER width, centred, deliberately
- *    smaller than the publisher button. Always rendered: prod data has
- *    mislabeled-language articles, so Google Translate must stay reachable
- *    even when on-device translation is (believed to be) moot.
- * 2. `TranslationNotice` (hidden when the article is already in the reader's
- *    language; it is what names the source language, so the buttons don't).
- *    It sits BETWEEN the buttons so it reads as context for the choice.
- * 3. The full-width "Read on {{publication}}" button.
+ * - Article in the reader's language: only "Read on {{publication}}".
+ * - Any other language: `TranslationNotice` (names the source language), then
+ *   "Read on {{publication}}" and "Read on Google Translate" as two identical
+ *   white outline buttons, then a one-line note that some sites block Google
+ *   Translate. The owner asked for no favourite, so the old green fill that
+ *   marked one route as "the readable one" is gone.
  *
- * Colour marks the route that will actually get the reader something they can
- * read:
+ * Side by side when both labels fit, stacked when they do not: the row WRAPS,
+ * each button sized by its own label and growing to fill its line, so the
+ * choice is made by the real text width in each language and text size, not
+ * by a character count. At 375pt the English pair already stacks; wider
+ * screens and short publisher names get the row.
  *
- * | article language          | Google Translate | Read on {publication} |
- * |---------------------------|------------------|-----------------------|
- * | same as the reader's      | white outline    | GREEN FILL            |
- * | other, device CAN translate | GREEN FILL     | green outline         |
- * | other, device CANNOT      | GREEN FILL       | white outline         |
- *
- * Gluestack's `action` variants have no green, so every button is a neutral
- * `variant="outline" action="secondary"` base whose fill/border/label colour is
- * restated BOTH as a Tailwind class and as the matching inline style — see the
- * note on `googleFillClass` for why one of the two is not enough. The half
- * width is an inline style rather than a `w-1/2` class for the same reason.
+ * Colours are stated as a class AND as the matching inline style: gluestack's
+ * `buttonTextStyle` tva sets a label colour of its own per variant, and which
+ * of className/style wins differs between the Pressable root and the Text.
  */
 const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     articleUrl,
@@ -107,135 +92,83 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     const publication = publicationName?.trim()
         ? titleCasePublication(publicationName)
         : null;
-
-    // Green marks the readable route. Same language ⇒ the publisher page is it;
-    // otherwise Google Translate is, and the publisher link is merely ALSO an
-    // option when the device can translate on its own.
     const sameLanguage = support.status === 'same-language';
-    const googleFilled = !sameLanguage;
-    const publisherColor = sameLanguage || support.status === 'translatable'
-        ? GREEN_COLOR
-        : VIEW_ORIGINAL_COLOR;
 
-    // Every colour is expressed TWICE — as a Tailwind class AND as the matching
-    // inline style. Gluestack's `buttonTextStyle` tva sets a label colour of its
-    // own per variant (`text-typography-800` on a solid secondary), and which of
-    // className/style wins the merge differs between the Pressable root and the
-    // Text; stating both means the outcome is the same colour either way.
-    // The class/hex pairs are Tailwind defaults (this config overrides no
-    // greens): green-400 = #4ADE80, and `/20` is the 20% tint above.
-    //
-    // Emphasis is now TINT vs OUTLINE rather than SOLID vs OUTLINE. The three
-    // states stay distinguishable — tinted+bordered, bordered, bordered-white —
-    // and the label is green in both green states instead of flipping to
-    // near-black on the filled one.
-    const googleFillClass = googleFilled
-        ? 'bg-green-400/20 border-green-400'
-        : 'border-white';
-    const googleLabelClass = googleFilled ? 'text-green-400' : 'text-white';
-    const publisherFillClass = sameLanguage
-        ? 'bg-green-400/20 border-green-400'
-        : support.status === 'translatable'
-            ? 'border-green-400'
-            : 'border-white';
-    const publisherLabelClass = sameLanguage
-        ? 'text-green-400'
-        : support.status === 'translatable'
-            ? 'text-green-400'
-            : 'text-white';
+    const routeButton = (
+        testID: string,
+        icon: keyof typeof MaterialIcons.glyphMap,
+        label: string,
+        onPress: () => void,
+    ) => (
+        <Button
+            testID={testID}
+            variant="outline"
+            action="secondary"
+            className="rounded-full border-white"
+            style={{
+                flexGrow: 1,
+                flexShrink: 1,
+                borderWidth: 1,
+                borderColor: ROUTE_COLOR,
+                backgroundColor: 'transparent',
+            }}
+            onPress={onPress}
+        >
+            <ButtonIcon as={() => <MaterialIcons name={icon} size={18} color={ROUTE_COLOR} />} />
+            <ButtonText
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                className="ml-2 text-white"
+                style={{ flexShrink: 1, color: ROUTE_COLOR }}
+            >
+                {label}
+            </ButtonText>
+        </Button>
+    );
 
     return (
-        // `md` and not `xs`: the four things in this column — the action row
-        // above, this Google button, the notice, the publisher button — should
-        // read as one evenly-spaced stack. The parent VStack on both detail
-        // screens uses the SAME token for exactly that reason; if you change
-        // one, change all three or the rhythm breaks at the seam.
+        // `md` and not `xs`: the action row above, the notice, the buttons and
+        // the note read as one evenly spaced stack. The parent VStack on both
+        // detail screens uses the SAME token for exactly that reason.
         <VStack space="md">
-            <Button
-                testID="detail-read-google-translate"
-                variant="outline"
-                action="secondary"
-                size="sm"
-                className={`rounded-full ${googleFillClass}`}
-                style={{
-                    // 3/4, not 1/2. At 375pt a half-width button left ~120pt of
-                    // label room for a string needing ~170, so "Read on Google
-                    // Translate" truncated to "Read on Google Tr…". Still
-                    // visibly subordinate to the full-width publisher button,
-                    // which is the point of sizing it down at all.
-                    width: '75%',
-                    alignSelf: 'center',
-                    borderWidth: 1,
-                    backgroundColor: googleFilled ? GREEN_TINT_FILL : 'transparent',
-                    borderColor: googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR,
-                }}
-                onPress={() => openInAppBrowser(googleTranslateUrl)}
-            >
-                <ButtonIcon
-                    as={() => (
-                        <MaterialIcons
-                            name="g-translate"
-                            size={16}
-                            color={googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR}
-                        />
-                    )}
-                />
-                <ButtonText
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    className={`ml-2 ${googleLabelClass}`}
-                    style={{
-                        flexShrink: 1,
-                        color: googleFilled ? GREEN_COLOR : VIEW_ORIGINAL_COLOR,
-                    }}
-                >
-                    {t('articleDetail.readOnGoogleTranslate')}
-                </ButtonText>
-            </Button>
-
-            {/* BETWEEN the two buttons, deliberately: it explains what language the
-                article is in and which route will read it, so it sits with the
-                choice rather than above it. Its copy no longer says "below" —
-                the Google button is now ABOVE it, and a directional word has
-                already been invalidated twice by layout changes. */}
+            {/* Hidden for a same-language article; it names the source
+                language, so the buttons don't. */}
             <TranslationNotice
                 sourceLanguage={sourceLanguage}
                 support={support}
                 showGuideLink={support.status === 'translatable'}
             />
-
-            <Button
-                testID="detail-read-publisher"
-                variant="outline"
-                action="secondary"
-                className={`rounded-full ${publisherFillClass}`}
-                style={{
-                    borderWidth: 1,
-                    backgroundColor: sameLanguage ? GREEN_TINT_FILL : 'transparent',
-                    borderColor: sameLanguage ? GREEN_COLOR : publisherColor,
-                }}
-                onPress={() => onOpenUrl(articleUrl)}
+            <Box
+                testID="detail-read-routes"
+                style={{ flexDirection: 'row', flexWrap: 'wrap', gap: ROUTE_GAP }}
             >
-                <ButtonIcon
-                    as={() => (
-                        <MaterialIcons
-                            name="open-in-new"
-                            size={18}
-                            color={publisherColor}
-                        />
-                    )}
-                />
-                <ButtonText
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                    className={`ml-2 ${publisherLabelClass}`}
-                    style={{ flexShrink: 1, color: publisherColor }}
+                {routeButton(
+                    'detail-read-publisher',
+                    'open-in-new',
+                    publication ? t('articleDetail.readOn', { publication }) : t('articleDetail.readArticle'),
+                    () => onOpenUrl(articleUrl),
+                )}
+                {sameLanguage
+                    ? null
+                    : routeButton(
+                          'detail-read-google-translate',
+                          'g-translate',
+                          t('articleDetail.readOnGoogleTranslate'),
+                          () => openInAppBrowser(googleTranslateUrl),
+                      )}
+            </Box>
+            {sameLanguage ? null : (
+                // Not a failure we can detect: a publisher that refuses to be
+                // framed gives Google Translate a blank page, so the reader is
+                // told the way out up front.
+                <Text
+                    testID="detail-translate-blocked-note"
+                    size="xs"
+                    className="text-typography-400 text-center"
                 >
-                    {publication
-                        ? t('articleDetail.readOn', { publication })
-                        : t('articleDetail.readArticle')}
-                </ButtonText>
-            </Button>
+                    {t('articleDetail.translateBlockedNote')}
+                </Text>
+            )}
         </VStack>
     );
 };

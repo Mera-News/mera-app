@@ -10,12 +10,13 @@ import {
   GlassPlate,
 } from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
+import NextSectionFooter from '@/components/custom/for-you/NextSectionFooter';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import logger from '@/lib/logger';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import {
   buildFactRows,
@@ -25,8 +26,7 @@ import {
   type FactRowGroup,
 } from '@/lib/stores/fact-rows-selector';
 import { sectionTitle } from '@/components/custom/for-you/section-title';
-import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
-import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
+import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
@@ -37,7 +37,15 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import {
+  AccessibilityInfo,
+  FlatList,
+  findNodeHandle,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
+import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Show the scroll-to-top FAB once the list is scrolled past this many px. */
@@ -52,6 +60,9 @@ interface FactFeedScreenProps {
    *  statement (user data); for a headline section it is already-localized app
    *  copy. */
   statement: string;
+  /** Arrived through the previous section's "Next" row: the screen crossfades
+   *  in and moves screen-reader focus to the new title. */
+  arrivedFromNext?: boolean;
 }
 
 /**
@@ -60,13 +71,12 @@ interface FactFeedScreenProps {
  * story shows the newest member (so the card's timestamp is the newest member's
  * pubDate).
  */
-const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) => {
+const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arrivedFromNext = false }) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const suggestions = useForYouSuggestions();
   const openedIds = useOpenedStoriesStore((s) => s.ids);
   const handlePress = useOpenSuggestion('sectioned');
-  const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
   const isHeadline = isHeadlineSectionId(factId);
 
   // Last-visit timestamp captured on entry (before we mark this visit) — drives
@@ -76,16 +86,12 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
 
   useEffect(() => {
     void useOpenedStoriesStore.getState().hydrate();
-    let cancelled = false;
-    loadSectionSnapshots()
-      .then((s) => { if (!cancelled) setSnapshots(s); })
-      .catch((err: unknown) => {
-        logger.captureException(err, {
-          tags: { screen: 'FactFeedScreen', method: 'loadSectionSnapshots' },
-        });
-      });
-    return () => { cancelled = true; };
   }, []);
+
+  // Kept fresh (facts/locations changes and focus), not loaded once on mount:
+  // a fact added while this screen was open, or a "Next" hop into a section
+  // for a fact created since, used to read a stale snapshot.
+  const snapshots = useSectionSnapshots('FactFeedScreen');
 
   // Visit tracking: read the prior visit time, then mark this section visited
   // (both on entry and again on unmount, so a long dwell still advances the
@@ -142,6 +148,10 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   }, [allRows, factId]);
 
   const nextFactTitle = nextFact ? sectionTitle(t, nextFact) : null;
+  // This section's own row: its empty reason when it is an interest with no
+  // stories yet (D4), which "Next" can land on.
+  const thisRow = useMemo(() => allRows.find((r) => r.factId === factId) ?? null, [allRows, factId]);
+  const isLastSection = thisRow !== null && nextFact === null;
 
   // `router.replace`, not `push`: hopping from fact to fact via this footer
   // must not build a back-stack five deep. Both the visit-tracking effect
@@ -153,9 +163,27 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
     if (!nextFact || !nextFactTitle) return;
     router.replace({
       pathname: '/logged-in/fact-feed',
-      params: { factId: nextFact.factId, statement: nextFactTitle },
+      params: { factId: nextFact.factId, statement: nextFactTitle, via: 'next' },
     });
   }, [nextFact, nextFactTitle]);
+
+  const backToDashboard = useCallback(() => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/logged-in/app_container/for_you');
+  }, []);
+
+  // Screen-reader focus moves to the new section's title after a "Next" hop,
+  // so VoiceOver does not stay on a footer that no longer exists.
+  const titleRef = useRef<View>(null);
+  useEffect(() => {
+    if (!arrivedFromNext) return;
+    const handle = findNodeHandle(titleRef.current);
+    if (handle) AccessibilityInfo.setAccessibilityFocus(handle);
+  }, [arrivedFromNext, factId]);
+
+  // The crossfade on a "Next" hop. Reduce Motion gets a plain cut.
+  const reduceMotion = useReducedMotion();
+  const entering = arrivedFromNext && !reduceMotion ? FadeIn.duration(220) : undefined;
 
   // ── Scroll-to-top FAB ──
   const listRef = useRef<FlatList<FactRowGroup>>(null);
@@ -233,47 +261,41 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
     [handlePress, openedIds, prevVisitMs, verdicts, dismissedMap, onVerdict, onAskMera, feedbackHandlers],
   );
 
-  // "Jump from one fact feed list to the next" (r14 #6) — a tap target naming
-  // the NEXT section in Dashboard-visible order (see `dashboardVisibleRows`
-  // above). Renders nothing when there is no next fact — including on an
-  // empty section, which the user reported is exactly when hopping onward is
-  // most useful, so this deliberately coexists with the `ListEmptyComponent`
-  // below rather than being suppressed by it.
-  //
-  // A headline section's title is app copy, already localized — rendered
-  // as plain `Text`, mirroring the header above. A fact section's title is
-  // user data, so it goes through `TranslatableDynamic`, exactly like the
-  // header's own `statement`.
-  const listFooter = nextFact && nextFactTitle ? (
-    <Pressable
-      testID="fact-feed-next"
-      onPress={goToNextFact}
-      accessibilityRole="button"
-      accessibilityLabel={`${t('forYou.nextFactPrefix')}: ${nextFactTitle}`}
-      className="items-center py-6 px-4"
-    >
-      <HStack className="items-center" space="xs">
-        <Text size="xs" className="text-typography-500">
-          {t('forYou.nextFactPrefix')}
-        </Text>
-        <MaterialIcons name="arrow-forward" size={14} color="#6B7280" />
-      </HStack>
-      {isHeadlineSectionId(nextFact.factId) ? (
-        <Text size="md" bold numberOfLines={1} className="text-white text-center mt-1">
-          {nextFactTitle}
-        </Text>
-      ) : (
-        <TranslatableDynamic
-          text={nextFactTitle}
-          as="text"
-          size="md"
-          bold
-          numberOfLines={1}
-          className="text-white text-center mt-1"
-        />
-      )}
-    </Pressable>
-  ) : null;
+  // "Jump from one fact feed list to the next" (r14 #6), in the NEXT section's
+  // gradient (N13). Renders on an empty section too: that is exactly when
+  // hopping onward is most useful. The last section offers the way back.
+  const listFooter =
+    nextFact && nextFactTitle ? (
+      <NextSectionFooter
+        kind="next"
+        factId={nextFact.factId}
+        title={nextFactTitle}
+        count={nextFact.groups.length}
+        translateTitle={!isHeadlineSectionId(nextFact.factId)}
+        onPress={goToNextFact}
+      />
+    ) : isLastSection ? (
+      <NextSectionFooter kind="back" onPress={backToDashboard} />
+    ) : null;
+
+  // An interest with no stories yet says which of the two it is, like its
+  // Dashboard section (D4); any other empty list is simply caught up.
+  // Nothing until this section's snapshot has loaded: during a "Next" hop the
+  // new screen mounts with no snapshot, and "all caught up" flashed for a
+  // fifth of a second before the section's real content or empty state.
+  const listEmpty = snapshots === null ? null : thisRow?.emptyReason ? (
+    <ForYouEmptyState
+      icon={thisRow.emptyReason === 'awaiting-first-run' ? 'hourglass-empty' : 'search'}
+      body={
+        thisRow.emptyReason === 'awaiting-first-run'
+          ? t('forYou.emptySection.awaiting')
+          : t('forYou.emptySection.none')
+      }
+      testID="fact-feed-empty-section"
+    />
+  ) : (
+    <AllCaughtUpCard />
+  );
 
   return (
     // No `bg-black`: the AbstractGradientBackdrop below is the page background.
@@ -283,6 +305,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
           Seeded with the SECTION id, so every fact list draws its own stable
           palette walk instead of all of them sharing one look. */}
       <AbstractGradientBackdrop seed={factId} />
+
+      {/* Everything above the backdrop crossfades in after a "Next" hop. */}
+      <Animated.View style={{ flex: 1 }} entering={entering}>
 
       {/* Header material. This wrapper is deliberately UNPADDED (all padding
           lives on the HStack below) because `GlassPlate` is an absolute fill
@@ -324,7 +349,13 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
           >
             <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
           </Pressable>
-          <Box className="flex-1 min-w-0">
+          <View
+            ref={titleRef}
+            className="flex-1 min-w-0"
+            accessible
+            accessibilityRole="header"
+            testID="fact-feed-title"
+          >
             {/* A headline section is not "News about:" anything, and its title
                 is app copy already in the reader's language — running it through
                 TranslatableDynamic would machine-translate a localized string. */}
@@ -341,11 +372,13 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
                 as="heading"
                 size="xl"
                 bold
-                numberOfLines={1}
+                // Two lines, then an ellipsis: a long fact title keeps its
+                // meaning without pushing the list down the screen.
+                numberOfLines={2}
                 className="text-white"
               />
             )}
-          </Box>
+          </View>
         </HStack>
       </Box>
       <FlatList
@@ -357,9 +390,11 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        ListEmptyComponent={<AllCaughtUpCard />}
+        ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}
       />
+
+      </Animated.View>
 
       <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
     </Box>

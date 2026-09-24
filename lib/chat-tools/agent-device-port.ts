@@ -17,9 +17,9 @@ import type {
   LookupPlaceResult,
   Place,
 } from '@/lib/mera-harness';
-import { loadSkill, skillIds } from '@/lib/mera-harness';
+import { isCombinedOriginFact, isLocationKey, isRelationalStatement, loadSkill, skillIds } from '@/lib/mera-harness';
 import { findSimilarFacts } from '../database/services/fact-similarity-service';
-import { lookupPlace } from '../place-service';
+import { PLACE_CANDIDATE_LIMIT, lookupPlace, searchPlaces } from '../place-service';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import type { PhaseSignal } from '@/lib/services/chat-phase';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, SMALL_MODEL } from '../llm/constants';
@@ -140,6 +140,48 @@ export function fallbackCandidates(places: Place[], form: string): Place[] | nul
 }
 
 /**
+ * THE PLACE THE USER NAMED EXACTLY must survive the candidate cap.
+ *
+ * `lookupPlace` keeps the first three `placeSearch` rows, ranked by population
+ * over an anchored prefix of every alternate name. For "Porto" that is Porto
+ * Alegre, Port-au-Prince (whose Portuguese name starts "Porto") and Porto
+ * Velho; Porto itself is fourth and was cut, so the user was asked which of
+ * three places they had not named. When none of the three is called exactly
+ * what the user typed, this looks for rows that are, and fetches each one
+ * through `lookupPlace` restricted to its own country (so the mapping to a
+ * candidate stays in place-service). At most two extra countries; nothing
+ * extra is asked when an exact match is already among the three, or when the
+ * caller already gave a country.
+ */
+export async function withExactNameMatches(
+  places: Place[],
+  form: string,
+  countryHint?: string,
+): Promise<Place[]> {
+  const wanted = form.trim().toLowerCase();
+  if (countryHint || places.some((p) => p.locality.trim().toLowerCase() === wanted)) return places;
+  const search = await searchPlaces(form);
+  if (!search.ok) return places;
+  const codes = [
+    ...new Set(
+      search.places
+        .filter((r) => r.city.trim().toLowerCase() === wanted)
+        .map((r) => r.countryCode),
+    ),
+  ].slice(0, 2);
+  const exact: Place[] = [];
+  for (const code of codes) {
+    // eslint-disable-next-line no-await-in-loop -- at most two, in rank order.
+    const out = await lookupPlace(form, code);
+    if (out.status === 'resolved') {
+      exact.push(...out.places.filter((p) => p.locality.trim().toLowerCase() === wanted));
+    }
+  }
+  if (exact.length === 0) return places;
+  return [...exact, ...places].slice(0, PLACE_CANDIDATE_LIMIT);
+}
+
+/**
  * Try each form and return the first result that has earned it, recording
  * which form matched.
  *
@@ -163,7 +205,8 @@ export async function lookupPlaceWithFallback(
     if (out.status === 'unavailable') return out;
     if (out.status === 'resolved' && out.places.length > 0) {
       if (form.toLowerCase() === asked) {
-        return { ...out, places: narrowToExact(out.places, form) };
+        const places = await withExactNameMatches(out.places, form, args.countryHint);
+        return { ...out, places: narrowToExact(places, form) };
       }
       const trusted = fallbackCandidates(out.places, form);
       if (trusted === null) {
@@ -185,10 +228,40 @@ export async function lookupPlaceWithFallback(
   return last;
 }
 
+/** Lookup kinds that ask about where the user lives. */
+const HOME_KINDS = new Set(['residence', 'location', 'home']);
+
+/** The user's own home: any home key (short or canonical) or a residence
+ *  statement, never a relative's and never the retired combined fact. */
+function isOwnHomeFact(f: { statement: string; questionnaireAttribute?: string | null }): boolean {
+  if (isCombinedOriginFact(f.questionnaireAttribute)) return false;
+  if (isRelationalStatement(f.statement)) return false;
+  return (
+    isLocationKey(f.questionnaireAttribute)
+    || /^(?:lives|living|based|resides?)\s+in\b/i.test(f.statement.trim())
+  );
+}
+
 export function makeAgentToolPort(userMessage: string): AgentToolPort {
   return {
     async findSimilarFacts(args: FindSimilarFactsArgs): Promise<FindSimilarFactsResult> {
-      const rows = await findSimilarFacts(args.kind ?? null, userMessage, args.limit ?? 5);
+      const similar = await findSimilarFacts(args.kind ?? null, userMessage, args.limit ?? 5);
+      // THE CURRENT HOME, always, on a residence lookup. Similarity is word
+      // overlap with the user's message, and "I moved to Porto" shares no
+      // word with "Lives in Berlin...", so the model was told there was no
+      // home to replace and offered a plain Add (ux1 batch 5).
+      const homes = HOME_KINDS.has((args.kind ?? '').toLowerCase())
+        ? (await getFacts()).filter(isOwnHomeFact)
+        : [];
+      const rows = [
+        ...homes.map((f) => ({
+          id: f.id,
+          statement: f.statement,
+          questionnaireAttribute: f.questionnaireAttribute ?? null,
+          score: 1,
+        })),
+        ...similar.filter((r) => !homes.some((h) => h.id === r.id)),
+      ];
       return {
         candidates: rows.map((r) => ({
           factId: r.id,
@@ -321,7 +394,11 @@ export function makeAgentDeps(
   onPhase?: (signal: PhaseSignal) => void,
 ): AgentDeps {
   return {
-    callModel: (req) => callModelViaCloud({ ...req, onDelta }, onPhase),
+    // Only the leg the loop marks `streamToUser` reaches the bubble. Passing
+    // `onDelta` on every leg streamed each later leg's text into the
+    // acknowledgement bubble, where the final write then split it off again.
+    callModel: (req) =>
+      callModelViaCloud({ ...req, onDelta: req.streamToUser ? onDelta : undefined }, onPhase),
     tools: makeAgentToolPort(userMessage),
     loadSkill,
     skillIds,

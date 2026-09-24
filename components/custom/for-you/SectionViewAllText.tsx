@@ -5,9 +5,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-/** Same ink as the section title — this row is a quiet continuation of the
- *  section, not a second call-to-action competing with the header pill. */
-const TITLE_COLOR = '#FFFFFF';
+/** A quiet continuation of the section, smaller and lighter than the
+ *  headlines above it. It used to be the section title's own `lg` bold white,
+ *  which made it the loudest line in the section (M4). */
+const ROW_COLOR = 'rgb(212, 212, 212)';
 
 interface SectionViewAllTextProps {
   /** Total articles in the section. */
@@ -17,8 +18,8 @@ interface SectionViewAllTextProps {
 
 /**
  * The closing row of a Dashboard section: right-aligned "View all N articles" +
- * chevron, in the section title's own type style. Lives INSIDE the section's
- * gradient panel as its last row.
+ * chevron. Lives INSIDE the section's gradient panel as its last row, and only
+ * renders when the section holds more than its preview shows.
  *
  * Deliberately NOT a pill. The header already carries one ("N Articles"), and
  * repeating an identical pill at the bottom read as a second, different
@@ -39,10 +40,10 @@ const SectionViewAllText: React.FC<SectionViewAllTextProps> = ({ total, onPress 
       className="self-end px-3 pb-3 pt-1"
     >
       <HStack className="items-center" space="xs">
-        <Text size="lg" bold style={{ color: TITLE_COLOR }} numberOfLines={1}>
+        <Text size="sm" className="font-semibold" style={{ color: ROW_COLOR }} numberOfLines={1}>
           {label}
         </Text>
-        <MaterialIcons name="chevron-right" size={20} color={TITLE_COLOR} />
+        <MaterialIcons name="chevron-right" size={18} color={ROW_COLOR} />
       </HStack>
     </Pressable>
   );

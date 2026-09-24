@@ -18,9 +18,22 @@ jest.mock('../../apollo-client', () => ({
 // which a fixed-arity mock (e.g. `jest.fn(() => ...)`) can't accept.
 const mockUpsertFactCheck = jest.fn();
 const mockListFactChecksByStatus = jest.fn();
+const mockGetFactCheckForClaim = jest.fn();
 jest.mock('../../database/services/fact-check-record-service', () => ({
     upsertFactCheck: (...a: any[]) => mockUpsertFactCheck(...a),
     listFactChecksByStatus: (...a: any[]) => mockListFactChecksByStatus(...a),
+    getFactCheckForClaim: (...a: any[]) => mockGetFactCheckForClaim(...a),
+}));
+
+// The settle detector. Mocked at the module: its own suite covers it, and this
+// one asserts only that every store reaches it.
+const mockNoteStored = jest.fn();
+const mockRecordAsked = jest.fn();
+const mockListAsked = jest.fn();
+jest.mock('../fact-check-settled', () => ({
+    noteFactCheckStored: (...a: any[]) => mockNoteStored(...a),
+    recordFactCheckAsked: (...a: any[]) => mockRecordAsked(...a),
+    listAskedFactChecks: (...a: any[]) => mockListAsked(...a),
 }));
 
 // Retention write — mocked both to keep the real service's SQLite-opening
@@ -49,9 +62,13 @@ import {
     fetchFactCheck,
     fetchCachedFactCheck,
     mirrorArticleFactCheck,
+    reconcileAskedFactChecks,
     reconcileStoredFactChecks,
     requestFactCheck,
+    stopAskedFactCheckPollerForTest,
 } from '../fact-check-graphql-client';
+
+afterEach(() => stopAskedFactCheckPollerForTest());
 
 const TERMINAL_ROW = {
     _id: 'fc1',
@@ -242,23 +259,26 @@ describe('reconcileStoredFactChecks', () => {
         mockListFactChecksByStatus.mockResolvedValue([]);
     });
 
-    it('reads pending, running and failed rows, and re-asks the server for each', async () => {
+    it('reads pending, running and failed rows, and re-reads each READ-ONLY', async () => {
         mockListFactChecksByStatus.mockImplementation((status: string) => {
             if (status === 'pending') return Promise.resolve([{ articleId: 'a1', articleTitle: 'A' }]);
             if (status === 'running') return Promise.resolve([{ articleId: 'a2', articleTitle: 'B' }]);
             if (status === 'failed') return Promise.resolve([{ articleId: 'a3', articleTitle: 'C' }]);
             return Promise.resolve([]);
         });
-        mockQuery.mockResolvedValue({ data: { factCheck: PENDING_ROW } });
+        mockQuery.mockResolvedValue({ data: { cachedFactCheck: PENDING_ROW } });
 
         await reconcileStoredFactChecks();
 
         expect(mockListFactChecksByStatus).toHaveBeenCalledWith('pending', expect.any(Number));
         expect(mockListFactChecksByStatus).toHaveBeenCalledWith('running', expect.any(Number));
         expect(mockListFactChecksByStatus).toHaveBeenCalledWith('failed', expect.any(Number));
-        // One re-ask per row — this is `requestFactCheck` under the hood, so
-        // each one also upserts.
+        // One re-read per row, through `cachedFactCheck`, which never creates
+        // a server row: a row the server dropped cannot start a billed job.
         expect(mockQuery).toHaveBeenCalledTimes(3);
+        for (const [req] of mockQuery.mock.calls) {
+            expect(req.query.definitions[0].name.value).toBe('GetCachedFactCheck');
+        }
         expect(mockUpsertFactCheck).toHaveBeenCalledTimes(3);
     });
 
@@ -299,7 +319,7 @@ describe('reconcileStoredFactChecks', () => {
         // pins that the sweep survives even if that contract were ever broken.
         mockQuery
             .mockRejectedValueOnce(new Error('boom'))
-            .mockResolvedValueOnce({ data: { factCheck: TERMINAL_ROW } });
+            .mockResolvedValueOnce({ data: { cachedFactCheck: TERMINAL_ROW } });
 
         await expect(reconcileStoredFactChecks()).resolves.toBeUndefined();
         expect(mockQuery).toHaveBeenCalledTimes(2);
@@ -458,5 +478,57 @@ describe('fetchCachedFactCheck', () => {
 
         await expect(fetchCachedFactCheck('a1', keep)).resolves.toBe(true);
         expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith(keep);
+    });
+});
+
+// ===========================================================================
+// ux1 N2: "your fact check is ready", for checks THIS device asked for.
+// ===========================================================================
+describe('the asked list and the one store', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockGetFactCheckForClaim.mockResolvedValue(null);
+        mockListAsked.mockResolvedValue([]);
+    });
+
+    it('records the FIRST ask from this device, with the suggestion it came from', async () => {
+        mockQuery.mockResolvedValue({ data: { factCheck: PENDING_ROW } });
+        await requestFactCheck('a1', 'T', { articleId: 'a1', suggestion: { _id: 's1' } as never });
+        expect(mockRecordAsked).toHaveBeenCalledWith({ articleId: 'a1', suggestionId: 's1', title: 'T' });
+    });
+
+    it('does not re-record when a local row already exists (a poll, not an ask)', async () => {
+        mockGetFactCheckForClaim.mockResolvedValue({ status: 'pending' });
+        mockQuery.mockResolvedValue({ data: { factCheck: TERMINAL_ROW } });
+        await requestFactCheck('a1', 'T');
+        expect(mockRecordAsked).not.toHaveBeenCalled();
+        // ...and the store hands the previous status to the detector.
+        expect(mockNoteStored).toHaveBeenCalledWith('a1', 'pending', TERMINAL_ROW);
+    });
+
+    it('a mirrored row goes through the detector too', async () => {
+        mockGetFactCheckForClaim.mockResolvedValue({ status: 'running' });
+        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never);
+        expect(mockNoteStored).toHaveBeenCalledWith('a1', 'running', TERMINAL_ROW);
+    });
+
+    it('re-reads ONLY asked checks, read-only, and counts the ones still waiting', async () => {
+        mockListAsked.mockResolvedValue([
+            { articleId: 'a1', suggestionId: null, title: 'A', askedAt: 1 },
+            { articleId: 'a2', suggestionId: null, title: 'B', askedAt: 2 },
+            { articleId: 'a3', suggestionId: null, title: 'C', askedAt: 3 },
+        ]);
+        mockQuery
+            .mockResolvedValueOnce({ data: { cachedFactCheck: TERMINAL_ROW } })
+            .mockResolvedValueOnce({ data: { cachedFactCheck: PENDING_ROW } })
+            .mockResolvedValueOnce({ data: { cachedFactCheck: null } });
+        const waiting = await reconcileAskedFactChecks();
+        expect(waiting).toBe(2);
+        expect(mockQuery).toHaveBeenCalledTimes(3);
+        for (const [req] of mockQuery.mock.calls) {
+            expect(req.query.definitions[0].name.value).toBe('GetCachedFactCheck');
+        }
+        // A server miss writes nothing: nothing to store, nothing billed.
+        expect(mockUpsertFactCheck).toHaveBeenCalledTimes(2);
     });
 });

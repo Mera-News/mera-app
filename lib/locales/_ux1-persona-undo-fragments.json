@@ -1,0 +1,283 @@
+{
+  "_comment": "ux1 persona: every permanent action ends with the one undo sentence (\"You can't undo this.\"), per the owner's wording decision.",
+  "ar": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "سيؤدي تبديل المستخدمين إلى حذف جميع بيانات هذا المستخدم على هذا الجهاز بشكل دائم. لا يمكنك التراجع عن هذا."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "سيتم استبدال حقائقك ومواضيعك ومحادثاتك ومقالاتك المحفوظة وسجل قراءتك على هذا الهاتف بما هو موجود في النسخة الاحتياطية. لا يمكنك التراجع عن هذا. لن يتأثر حسابك واشتراكك."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ سيؤدي هذا إلى حذف جميع بياناتك. لا يمكنك التراجع عن هذا.",
+      "deleteAccountWarningGrace": "⚠️ بعد 30 يومًا، تُحذف جميع بياناتك نهائيًا. لا يمكنك التراجع عن هذا."
+    }
+  },
+  "de": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Beim Wechsel des Benutzers werden alle Daten dieses Benutzers auf diesem Gerät dauerhaft gelöscht. Das lässt sich nicht rückgängig machen."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Deine Fakten, Themen, Chats, gespeicherten Artikel und dein Leseverlauf auf diesem Telefon werden durch den Inhalt des Backups ersetzt. Das lässt sich nicht rückgängig machen. Dein Konto und dein Abo sind nicht betroffen."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Dadurch werden alle deine Daten entfernt. Das lässt sich nicht rückgängig machen.",
+      "deleteAccountWarningGrace": "⚠️ Nach 30 Tagen werden alle deine Daten endgültig entfernt. Das lässt sich nicht rückgängig machen."
+    }
+  },
+  "en": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Switching users permanently deletes all of this user's data on this device. You can't undo this."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Your facts, topics, chats, saved articles and reading history on this phone will be replaced by what is in the backup. You can't undo this. Your account and subscription are not affected."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ This removes all your data. You can't undo this.",
+      "deleteAccountWarningGrace": "⚠️ After 30 days, all your data is permanently removed. You can't undo this."
+    }
+  },
+  "es": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Cambiar de usuario eliminará permanentemente todos los datos de este usuario en este dispositivo. No se puede deshacer."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Tus datos, temas, chats, artículos guardados e historial de lectura en este teléfono se reemplazarán con lo que haya en la copia de seguridad. No se puede deshacer. Tu cuenta y tu suscripción no se ven afectadas."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Esto eliminará todos tus datos. No se puede deshacer.",
+      "deleteAccountWarningGrace": "⚠️ Después de 30 días, todos tus datos se eliminan permanentemente. No se puede deshacer."
+    }
+  },
+  "fr": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Le changement d'utilisateur supprimera définitivement toutes les données de cet utilisateur sur cet appareil. Cette action est irréversible."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Vos informations, sujets, discussions, articles enregistrés et historique de lecture sur ce téléphone seront remplacés par le contenu de la sauvegarde. Cette action est irréversible. Votre compte et votre abonnement ne sont pas concernés."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Toutes vos données seront supprimées. Cette action est irréversible.",
+      "deleteAccountWarningGrace": "⚠️ Après 30 jours, toutes vos données sont définitivement supprimées. Cette action est irréversible."
+    }
+  },
+  "hi": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "उपयोगकर्ता बदलने पर इस डिवाइस पर इस उपयोगकर्ता का सारा डेटा स्थायी रूप से हटा दिया जाएगा। इसे पूर्ववत नहीं किया जा सकता।"
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "इस फ़ोन पर मौजूद आपके तथ्य, विषय, चैट, सहेजे गए लेख और पढ़ने का इतिहास बैकअप में मौजूद डेटा से बदल दिए जाएंगे। इसे पूर्ववत नहीं किया जा सकता। आपके खाते और सदस्यता पर कोई असर नहीं पड़ेगा।"
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ इससे आपका सारा डेटा हट जाएगा। इसे पूर्ववत नहीं किया जा सकता।",
+      "deleteAccountWarningGrace": "⚠️ 30 दिन के बाद, आपका सारा डेटा स्थायी रूप से हटा दिया जाता है। इसे पूर्ववत नहीं किया जा सकता।"
+    }
+  },
+  "id": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Mengganti pengguna akan menghapus semua data pengguna ini di perangkat ini secara permanen. Tindakan ini tidak dapat dibatalkan."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Fakta, topik, chat, artikel tersimpan, dan riwayat baca Anda di ponsel ini akan diganti dengan isi cadangan. Tindakan ini tidak dapat dibatalkan. Akun dan langganan Anda tidak terpengaruh."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Ini akan menghapus semua data Anda. Tindakan ini tidak dapat dibatalkan.",
+      "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, semua data Anda dihapus secara permanen. Tindakan ini tidak dapat dibatalkan."
+    }
+  },
+  "it": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Cambiare utente eliminerà definitivamente tutti i dati di questo utente su questo dispositivo. Non si può annullare."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "I tuoi dati, argomenti, chat, articoli salvati e cronologia di lettura su questo telefono verranno sostituiti da ciò che c'è nel backup. Non si può annullare. Il tuo account e il tuo abbonamento non vengono toccati."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Tutti i tuoi dati verranno rimossi. Non si può annullare.",
+      "deleteAccountWarningGrace": "⚠️ Dopo 30 giorni, tutti i tuoi dati vengono rimossi in modo permanente. Non si può annullare."
+    }
+  },
+  "ja": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "ユーザーを切り替えると、このデバイス上のユーザーデータがすべて完全に削除されます。この操作は元に戻せません。"
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "このスマートフォンのファクト、トピック、チャット、保存した記事、閲覧履歴が、バックアップの内容に置き換えられます。この操作は元に戻せません。アカウントとサブスクリプションには影響しません。"
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ すべてのデータが削除されます。この操作は元に戻せません。",
+      "deleteAccountWarningGrace": "⚠️ 30日後、すべてのデータは完全に削除されます。この操作は元に戻せません。"
+    }
+  },
+  "ko": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "사용자를 전환하면 이 기기에서 현재 사용자의 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "이 휴대전화의 사실, 토픽, 채팅, 저장한 기사, 열람 기록이 백업의 내용으로 대체됩니다. 이 작업은 되돌릴 수 없습니다. 계정과 구독에는 영향이 없습니다."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ 모든 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+      "deleteAccountWarningGrace": "⚠️ 30일 후에는 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+    }
+  },
+  "nl": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Van gebruiker wisselen verwijdert permanent alle gegevens van deze gebruiker op dit apparaat. Dit kan niet ongedaan worden gemaakt."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Je feiten, onderwerpen, chats, opgeslagen artikelen en leesgeschiedenis op deze telefoon worden vervangen door wat er in de back-up staat. Dit kan niet ongedaan worden gemaakt. Je account en abonnement blijven ongewijzigd."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Hiermee worden al je gegevens verwijderd. Dit kan niet ongedaan worden gemaakt.",
+      "deleteAccountWarningGrace": "⚠️ Na 30 dagen worden al je gegevens permanent verwijderd. Dit kan niet ongedaan worden gemaakt."
+    }
+  },
+  "pl": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Zmiana użytkownika spowoduje trwałe usunięcie wszystkich danych tego użytkownika z tego urządzenia. Nie można tego cofnąć."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Twoje fakty, tematy, czaty, zapisane artykuły i historia czytania na tym telefonie zostaną zastąpione zawartością kopii zapasowej. Nie można tego cofnąć. Twoje konto i subskrypcja pozostaną bez zmian."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Spowoduje to usunięcie wszystkich Twoich danych. Nie można tego cofnąć.",
+      "deleteAccountWarningGrace": "⚠️ Po upływie 30 dni wszystkie Twoje dane zostaną trwale usunięte. Nie można tego cofnąć."
+    }
+  },
+  "pt-BR": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Trocar de usuário irá excluir permanentemente todos os dados deste usuário neste dispositivo. Isso não pode ser desfeito."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Seus fatos, tópicos, conversas, artigos salvos e histórico de leitura neste celular serão substituídos pelo que está no backup. Isso não pode ser desfeito. Sua conta e sua assinatura não são afetadas."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Isso remove todos os seus dados. Isso não pode ser desfeito.",
+      "deleteAccountWarningGrace": "⚠️ Após 30 dias, todos os seus dados são removidos permanentemente. Isso não pode ser desfeito."
+    }
+  },
+  "ru": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Переключение пользователей приведёт к безвозвратному удалению всех данных этого пользователя на устройстве. Это нельзя отменить."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Ваши факты, темы, чаты, сохранённые статьи и история чтения на этом телефоне будут заменены содержимым резервной копии. Это нельзя отменить. Ваша учётная запись и подписка не затрагиваются."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Все ваши данные будут удалены. Это нельзя отменить.",
+      "deleteAccountWarningGrace": "⚠️ Через 30 дней все ваши данные будут удалены навсегда. Это нельзя отменить."
+    }
+  },
+  "th": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "การเปลี่ยนบัญชีจะลบข้อมูลทั้งหมดของบัญชีนี้บนอุปกรณ์นี้อย่างถาวร การดำเนินการนี้ยกเลิกไม่ได้"
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "ข้อเท็จจริง หัวข้อ แชท บทความที่บันทึกไว้ และประวัติการอ่านบนโทรศัพท์เครื่องนี้จะถูกแทนที่ด้วยข้อมูลในข้อมูลสำรอง การดำเนินการนี้ยกเลิกไม่ได้ บัญชีและการสมัครใช้งานของคุณไม่ได้รับผลกระทบ"
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ ข้อมูลทั้งหมดของคุณจะถูกลบ การดำเนินการนี้ยกเลิกไม่ได้",
+      "deleteAccountWarningGrace": "⚠️ หลังจาก 30 วัน ข้อมูลทั้งหมดของคุณจะถูกลบถาวร การดำเนินการนี้ยกเลิกไม่ได้"
+    }
+  },
+  "tr": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Kullanıcı değiştirmek, bu kullanıcının bu cihazdaki tüm verilerini kalıcı olarak siler. Bu geri alınamaz."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Bu telefondaki gerçeklerin, konuların, sohbetlerin, kaydedilen makalelerin ve okuma geçmişin yedekteki içerikle değiştirilecek. Bu geri alınamaz. Hesabın ve aboneliğin etkilenmez."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Bu, tüm verilerini kaldırır. Bu geri alınamaz.",
+      "deleteAccountWarningGrace": "⚠️ 30 gün sonra tüm verilerin kalıcı olarak kaldırılır. Bu geri alınamaz."
+    }
+  },
+  "uk": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Зміна користувача призведе до остаточного видалення всіх даних цього користувача на цьому пристрої. Це не можна скасувати."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Ваші факти, теми, чати, збережені статті та історія читання на цьому телефоні будуть замінені вмістом резервної копії. Це не можна скасувати. Ваш обліковий запис і підписка не змінюються."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Усі ваші дані буде видалено. Це не можна скасувати.",
+      "deleteAccountWarningGrace": "⚠️ Через 30 днів усі ваші дані буде назавжди видалено. Це не можна скасувати."
+    }
+  },
+  "vi": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "Chuyển tài khoản sẽ xóa vĩnh viễn toàn bộ dữ liệu của người dùng này trên thiết bị. Không thể hoàn tác."
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "Các dữ kiện, chủ đề, cuộc trò chuyện, bài viết đã lưu và lịch sử đọc trên điện thoại này sẽ được thay bằng nội dung trong bản sao lưu. Không thể hoàn tác. Tài khoản và gói đăng ký của bạn không bị ảnh hưởng."
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ Toàn bộ dữ liệu của bạn sẽ bị xóa. Không thể hoàn tác.",
+      "deleteAccountWarningGrace": "⚠️ Sau 30 ngày, toàn bộ dữ liệu của bạn sẽ bị xóa vĩnh viễn. Không thể hoàn tác."
+    }
+  },
+  "zh-CN": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "切换用户将永久删除此设备上该用户的所有数据。此操作无法撤消。"
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "这部手机上的事实、话题、聊天、保存的文章和阅读历史将被备份中的内容替换。此操作无法撤消。你的账号和订阅不受影响。"
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ 您的所有数据都将被删除。此操作无法撤消。",
+      "deleteAccountWarningGrace": "⚠️ 30 天后，您的所有数据将被永久删除。此操作无法撤消。"
+    }
+  },
+  "zh-TW": {
+    "auth": {
+      "previousUser": {
+        "switchBody": "切換使用者將永久刪除此裝置上該使用者的所有資料。此操作無法復原。"
+      }
+    },
+    "backup": {
+      "restoreConfirmDescription": "這支手機上的事實、主題、聊天、儲存的文章與閱讀紀錄，將被備份中的內容取代。此操作無法復原。您的帳戶與訂閱不受影響。"
+    },
+    "preferences": {
+      "deleteAccountWarning": "⚠️ 您的所有資料都將被刪除。此操作無法復原。",
+      "deleteAccountWarningGrace": "⚠️ 30 天後，您的所有資料將被永久刪除。此操作無法復原。"
+    }
+  }
+}

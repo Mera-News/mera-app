@@ -228,7 +228,12 @@
     "statsRelevant_one": "{{formatted}} lijkt relevant,",
     "statsRelevant_other": "{{formatted}} lijken relevant,",
     "statsRead_one": "en je hebt {{formatted}} gelezen.",
-    "statsRead_other": "en je hebt {{formatted}} gelezen."
+    "statsRead_other": "en je hebt {{formatted}} gelezen.",
+    "reasonUnavailable": "Mera kon hier geen notitie bij schrijven.",
+    "loadingA11y": "Je feed wordt geladen",
+    "newStoriesPill": "Nieuwe berichten",
+    "translatingCaption": "Vertalen…",
+    "updatedJustNow": "Zojuist bijgewerkt"
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -258,7 +263,9 @@
     "readOn": "Lezen op {{publication}}",
     "readOnGoogleTranslate": "Lezen op Google Translate",
     "linkUnavailable": "Deze link kan niet veilig worden geopend, dus is deze hier niet beschikbaar.",
-    "relatedFromSubscriptions": "Uit je abonnementen"
+    "relatedFromSubscriptions": "Uit je abonnementen",
+    "relatedLoadFailed": "Gerelateerde artikelen konden niet worden geladen.",
+    "translateBlockedNote": "Sommige sites blokkeren Google Translate. Laadt de pagina niet, open hem dan op de site."
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",
@@ -347,7 +354,10 @@
     "timeNudge": "Kies een moment waarop je kunt lezen, nadenken en plannen — eenmaal of tweemaal per dag is voldoende.",
     "maxHoursReachedDescription": "Je kunt maximaal {{count}} uur selecteren",
     "maxHoursReachedTitle": "Maximum bereikt",
-    "selectedCount": "Geselecteerd: {{selected}}/{{max}}"
+    "selectedCount": "Geselecteerd: {{selected}}/{{max}}",
+    "savedInline": "Opgeslagen",
+    "pickAtLeastOneHour": "Kies minstens één uur",
+    "selectedLabel": "Gekozen"
   },
   "language": {
     "title": "Taal",
@@ -566,7 +576,7 @@
     "signingOut": "Uitloggen...",
     "signOut": "Uitloggen",
     "deleteAccountConfirm": "Weet je zeker dat je je account permanent wilt verwijderen?",
-    "deleteAccountWarning": "⚠️ Deze actie kan niet ongedaan worden gemaakt en verwijdert al je gegevens.",
+    "deleteAccountWarning": "⚠️ Hiermee worden al je gegevens verwijderd. Dit kan niet ongedaan worden gemaakt.",
     "continue": "Doorgaan",
     "finalConfirmation": "Laatste bevestiging",
     "finalConfirmationBody": "Dit verwijdert al je gegevens permanent.",
@@ -588,7 +598,7 @@
     "faq": "FAQ",
     "reportBug": "Een bug melden",
     "deleteAccountConfirmGrace": "Je account wordt voor verwijdering ingepland met een karenstermijn van 30 dagen. Meld je binnen deze 30 dagen opnieuw aan en de verwijdering wordt automatisch geannuleerd.",
-    "deleteAccountWarningGrace": "Waarschuwing: na 30 dagen kan dit niet meer ongedaan worden gemaakt en worden al je gegevens permanent verwijderd.",
+    "deleteAccountWarningGrace": "⚠️ Na 30 dagen worden al je gegevens permanent verwijderd. Dit kan niet ongedaan worden gemaakt.",
     "finalConfirmationBodyGrace": "Dit plant je account voor permanente verwijdering over 30 dagen in.",
     "accountDeletionScheduledTitle": "Verwijdering gepland",
     "accountDeletionScheduledDescription": "Je account wordt permanent verwijderd over 30 dagen. Meld je aan voordat dat gebeurt om de verwijdering te annuleren."
@@ -615,7 +625,7 @@
     "topicGenQueuedDescription": "De onderwerpen verschijnen binnenkort.",
     "deleteFactTitle": "Feit verwijderen",
     "deleteFactConfirm": "Weet je zeker dat je dit feit wilt verwijderen?",
-    "deleteFactWarning": "Dit verwijdert ook alle gevolgde onderwerpen die uit dit feit zijn gegenereerd.",
+    "deleteFactWarning": "De onderwerpen en de gevonden artikelen verdwijnen ook, en Mera zoekt er geen nieuws meer over.",
     "deletingFact": "Verwijderen...",
     "yesDelete": "Ja, verwijderen",
     "refreshSuggestions": "Suggesties vernieuwen",
@@ -654,7 +664,9 @@
     "promoInfoTitleEmoji": "🎉 Lanceeraanbieding 🎊",
     "resetsOn": "Reset",
     "retryTopicGeneration": "Opnieuw",
-    "topicGenFailedGeneric": "Kon geen onderwerpen voor dit genereren."
+    "topicGenFailedGeneric": "Kon geen onderwerpen voor dit genereren.",
+    "articleCountPending": "Tellen",
+    "articleCountNone": "Nog geen artikelen"
   },
   "errors": {
     "somethingWentWrong": "Er is iets misgegaan",
@@ -749,7 +761,7 @@
     "newChat": "Nieuwe chat",
     "inputPlaceholder": "Typ een bericht...",
     "viewPreviousMessages": "Eerdere berichten bekijken",
-    "aiInteractionNotice": "Je spreekt met Mera, een AI-assistent — niet met een persoon.",
+    "aiInteractionNotice": "Je spreekt met Mera, een AI-assistent, niet met een persoon.",
     "aiUsageNotice": "Deze assistent helpt bij het instellen van je nieuwsvoorkeuren. Als je probeert deze te manipuleren of te misbruiken, kan je account worden geblokkeerd in afwachting van beoordeling.",
     "requestUnblock": {
       "button": "Deblokkering aanvragen",
@@ -765,7 +777,9 @@
       "error": "Kon je aanvraag niet indienen. Probeer het opnieuw."
     },
     "topicGenFailed": "Kon geen onderwerpen voor dit genereren.",
-    "topicGenRetry": "Opnieuw"
+    "topicGenRetry": "Opnieuw",
+    "aiUsageNoticeGeneral": "Mera kan fouten maken, dus controleer alles wat belangrijk is.",
+    "trackChooseHint": "Kies wat je wilt volgen"
   },
   "articleFeedback": {
     "thumbsUp": "Ik vind het leuk",
@@ -824,13 +838,14 @@
     "tooltipA11y": "Over leesgeschiedenis",
     "tooltipIntro": "Mera houdt je leesgedrag bij, en dit blijft alleen op je apparaat.",
     "tooltipLink": "Bekijk hier al je leesgeschiedenis.",
-    "screenIntro": "Mera volgt je leesgedrag, alleen op je apparaat gedurende 30 dagen. Dit geeft je een duidelijker beeld van welke publicaties het meest voor je betekenen, zodat je kunt overwegen de publicaties te steunen die je het meest direct ten goede komen.",
+    "screenIntro": "Media waarvan je de site de afgelopen 30 dagen vanuit Mera hebt geopend. Deze lijst blijft op dit apparaat.",
     "visitedListTitle": "Publicaties die je hebt bezocht",
     "last30Days": "Afgelopen 30 dagen",
     "lastRead": "Laatst gelezen {{time}}",
-    "noArticlesYet": "Je hebt nog geen artikelen gelezen.",
+    "noArticlesYet": "Media die je vanuit Mera opent, verschijnen hier. Lezen binnen Mera staat hier niet bij.",
     "articlesRead": "Artikelen die je hebt gelezen",
-    "noArticlesLast30Days": "Geen artikelen van deze publicatie in de afgelopen 30 dagen."
+    "noArticlesLast30Days": "Geen artikelen van deze publicatie in de afgelopen 30 dagen.",
+    "emptyTitle": "Nog geen media"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Update vereist",
@@ -924,7 +939,8 @@
     "removeAction": "Verwijderen uit opgeslagen",
     "savedToastMessage": "Artikel opgeslagen voor later",
     "savedToastTitle": "Opgeslagen",
-    "title": "Opgeslagen"
+    "title": "Opgeslagen",
+    "emptyTitle": "Nog niets opgeslagen"
   },
   "subscription": {
     "activating": "Je abonnement wordt geactiveerd…",
@@ -964,7 +980,6 @@
     "activatedBody": "Je persoonlijke feed, dashboard, gevolgde verhalen en chat staan klaar.",
     "activatedTitle": "{{plan}} is actief",
     "lapsedFreeNote": "Mera News Free is voor jou zolang je het wilt. Een plan brengt Mera aan de slag met je nieuws opnieuw.",
-    "manageBadge": "Beheren",
     "turnMeraBackOn": "Mera opnieuw inschakelen",
     "para1": "Mera News zou gratis kunnen zijn. Dat zou alleen betekenen dat iemand anders betaalde: een adverteerder die je aandacht, je gegevens, of een gunstig artikel koopt. Veel van wat als nieuws uitziet, is precies dat.",
     "para2": "Met advertenties gefinancieerde media hebben geen grenzen. Niet in hoeveel het van je neemt, en niet in waarvoor dat later wordt gebruikt. We willen dat bedrijf niet zijn, dus de afspraak hier is simpel. Jij houdt je gegevens. De software doet het werk. Je betaalt ervoor.",
@@ -1037,9 +1052,16 @@
     "subTabFeed": "Overzicht",
     "subTabStories": "Verhalen",
     "subTabSaved": "Opgeslagen",
-    "subTabHistory": "Geschiedenis",
+    "subTabHistory": "Bezocht",
     "nextFactPrefix": "Volgende",
-    "subTabAnalytics": "Analyse"
+    "subTabAnalytics": "Analyse",
+    "emptySection": {
+      "awaiting": "Mera zoekt verhalen hierover. Ze verschijnen na de volgende verversing.",
+      "none": "Nog geen verhaal past hier goed genoeg bij om te tonen."
+    },
+    "newInterest": "Nieuwe interesse",
+    "nextSection": "Volgende: {{title}}",
+    "backToDashboard": "Terug naar Dashboard"
   },
   "feedStatus": {
     "title": "Feedstatus",
@@ -1058,7 +1080,8 @@
     "collapseA11y": "Feedstatus-details verbergen",
     "modeProcessing": "Je feed wordt bijgewerkt",
     "modeError": "Probleem met de feed",
-    "modeLimited": "Daglimiet voor artikelen bereikt"
+    "modeLimited": "Daglimiet voor artikelen bereikt",
+    "syncDoneA11y": "Je feed is bijgewerkt."
   },
   "trackedStories": {
     "emptyTitle": "Nog geen verhalen gevolgd",
@@ -1073,7 +1096,6 @@
     "untrackConfirmTitle": "Stoppen met volgen?",
     "untrackConfirmBody": "Je ziet geen nieuwe ontwikkelingen meer voor dit verhaal.",
     "untrackConfirmCta": "Stoppen met volgen",
-    "emptyHint": "Open een artikel uit de Feed in volledige weergave, tik dan op het volgpictogram in de knoppenrij onder het artikel.",
     "emptyCta": "Naar Feed gaan",
     "trackChatSeed": "Ik wil dit verhaal volgen.",
     "trackProposalTitle": "Dit verhaal volgen?",
@@ -1089,11 +1111,13 @@
     "followFabLabel": "Een nieuw verhaal volgen",
     "followChatSeed": "Ik wil een verhaal volgen.",
     "followChatIntro": "Vertel me wat je wilt volgen en ik stel het in.",
-    "emptyHintFollow": "Tik op de volg-knop en vertel Mera wat je wilt bijhouden.",
     "emptyCtaFollow": "Een verhaal volgen",
     "removeMemberAction": "Hoort niet bij dit verhaal",
     "removeMemberConfirmTitle": "Dit artikel verwijderen?",
-    "removeMemberConfirmBody": "Dit artikel wordt uit de tijdlijn van het verhaal verwijderd. Mera blijft het verhaal zelf volgen."
+    "removeMemberConfirmBody": "Dit artikel wordt uit de tijdlijn van het verhaal verwijderd. Mera blijft het verhaal zelf volgen.",
+    "timelineLoadFailed": "Dit verhaal kon niet worden geladen. Trek omlaag om het opnieuw te proberen.",
+    "deleteFailed": "Ontvolgen is niet gelukt. Probeer het opnieuw.",
+    "removeFailed": "Dit artikel kon niet uit het verhaal worden verwijderd. Probeer het opnieuw."
   },
   "whatsNew": {
     "title": "Wat is er nieuw",
@@ -1132,7 +1156,14 @@
     "dailyLimitBody": "Je hebt de daglimiet voor artikelen bereikt. Deze wordt binnenkort gereset."
   },
   "settings": {
-    "sources": "Bronnen"
+    "sources": "Bronnen",
+    "groupGeneral": "Algemeen",
+    "groupPrivacy": "Privacy en gegevens",
+    "groupHelp": "Hulp",
+    "groupAccount": "Account",
+    "languageRow": "Taal",
+    "backupRow": "Back-up en herstel",
+    "backupRowNever": "Nog geen back-up"
   },
   "personaAudit": {
     "entryRow": "Persona-wijzigingslog",
@@ -1297,7 +1328,7 @@
     "notificationBody_one": "Mera heeft {{count}} opschoning gevonden voor je profiel.",
     "notificationBody_other": "Mera heeft {{count}} opschoningen gevonden voor je profiel.",
     "reviewChip": "Bekijken",
-    "title": "Persona-gezondheid",
+    "title": "Profiel opschonen",
     "subtitle": "Voorgestelde opschoningen",
     "intro": "Mera heeft een paar dingen gevonden die het opschonen waard zijn. Accepteer de suggesties waarmee je het eens bent.",
     "empty": "Je persona ziet er gezond uit",
@@ -1306,15 +1337,16 @@
     "reversibleNote": "Terug te draaien vanuit het wijzigingslog",
     "effectDuplicate": "Verwijdert het duplicaat en behoudt de sterkste.",
     "effectTooBroad": "Verlaagt het gewicht van deze interesse zodat er minder off-topic verhalen binnenkomen.",
-    "effectStaleTopic": "Zet dit stille onderwerp op inactief. Je kunt het herstellen vanuit het wijzigingslog.",
+    "effectStaleTopic": "Zet dit stille onderwerp op inactief.",
     "effectStaleFact": "Verwijdert dit feit: geen van de onderwerpen ervan is nog actief.",
     "appliedTitle": "Opschoning toegepast",
     "appliedBody": "Je profiel is opgeschoond. Bekijk het wijzigingslog om te controleren.",
     "applyFailedTitle": "Kon opschoning niet toepassen",
     "applyFailedBody": "Probeer het later opnieuw.",
-    "profileRow_one": "Persona-gezondheid · {{count}} suggestie",
-    "profileRow_other": "Persona-gezondheid · {{count}} suggesties",
-    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse. De oude onderwerpen kunnen worden teruggedraaid via het wijzigingslogboek."
+    "profileRow_one": "Profiel opschonen · {{count}} suggestie",
+    "profileRow_other": "Profiel opschonen · {{count}} suggesties",
+    "effectIncoherentTopics": "Vervangt deze onderwerpen door betere voor deze interesse.",
+    "effectLocationConflict": "Houdt de nieuwere plaats en verwijdert de oudere."
   },
   "locations": {
     "title": "Jouw plaatsen",
@@ -1451,7 +1483,7 @@
     "visitedSubtitle": "Publicaties die je onlangs hebt geopend",
     "activity": "Activiteit",
     "activitySubtitle": "Je persona-wijzigingsgeschiedenis",
-    "personaHealth": "Persona-gezondheid",
+    "personaHealth": "Profiel opschonen",
     "healthPending_one": "{{count}} opschoningssuggestie",
     "healthPending_other": "{{count}} opschoningssuggesties",
     "healthAllHealthy": "Alles gezond",
@@ -1488,7 +1520,10 @@
       "remove": "Verwijderen",
       "removeConfirm": "Tik nogmaals om te verwijderen",
       "limitReached": "Dagelijkse aanpassingslimiet bereikt: wijzigingen gaan morgen door."
-    }
+    },
+    "meraInviteReturning": "Vertel me iets nieuws, dan voeg ik het toe aan je feed.",
+    "editFacts": "Bewerken",
+    "planUsage": "{{used}} van {{limit}} vandaag geanalyseerd"
   },
   "facts": {
     "screenTitle": "Jouw feiten",
@@ -1498,7 +1533,8 @@
     "lessInfluence": "Minder invloed",
     "declinedTopicsTitle": "Onderwerpen die je verwijderd hebt",
     "allowAgain": "Weer toestaan",
-    "topicRemovalConsequence": "Verwijderde onderwerpen worden niet meer voorgesteld, tenzij je ze weer toestaat bij Onderwerpen die je verwijderd hebt."
+    "topicRemovalConsequence": "Verwijderde onderwerpen worden niet meer voorgesteld, tenzij je ze weer toestaat bij Onderwerpen die je verwijderd hebt.",
+    "deleteFactA11y": "{{fact}} verwijderen"
   },
   "publicationPrefs": {
     "title": "Bronvoorkeuren",
@@ -1570,7 +1606,7 @@
     "staticGradientTitle": "Statische achtergrond",
     "staticGradientDescription": "Gebruik een vaste kleurverloping in plaats van de geanimeerde achtergrond — beter voor de batterij en oudere apparaten",
     "screenTitle": "Weergave",
-    "screenSubtitle": "Tekst, afbeeldingen, veiligheid en hoe Mera op dit apparaat opent",
+    "screenSubtitle": "Tekst, afbeeldingen en hoe Mera op dit apparaat opent",
     "sectionText": "Tekst",
     "sectionVisuals": "Visuele elementen",
     "textSizeTitle": "Tekstgrootte",
@@ -1636,13 +1672,13 @@
     "blocked": "Dit artikel kon niet worden doorzocht.",
     "claimsHeading": "Gecontroleerde beweringen",
     "citationsHeading": "Geraadpleegde bronnen",
-    "noCitations": "Deze controle heeft geen specifieke bronnen aangehaald. Dat betekent niet dat de zoeking is mislukt — wees voorzichtig met de samenvatting zonder bronnen om naar te verwijzen.",
+    "noCitations": "Deze controle heeft geen specifieke bronnen aangehaald. Dat betekent niet dat de zoeking is mislukt, wees voorzichtig met de samenvatting zonder bronnen om naar te verwijzen.",
     "sourceFallback": "Bron {{index}}",
     "disclaimer": "Dit is Mera's eigen kijk op een websearch, geschreven door AI. Het kan onjuist of onvolledig zijn, dus lees de bronnen voordat je het vertrouwt.",
     "verdict": {
       "supported": {
         "label": "Consistent met bronnen",
-        "detail": "De bronnen die de zoekopdracht heeft gevonden, zeggen grotendeels hetzelfde. Dat is niet het bewijs dat het waar is — alleen dat er niets tegenstrijdigs is gevonden."
+        "detail": "De bronnen die de zoekopdracht heeft gevonden, zeggen grotendeels hetzelfde. Dat is niet het bewijs dat het waar is, alleen dat er niets tegenstrijdigs is gevonden."
       },
       "disputed": {
         "label": "Bronnen zijn het oneens",
@@ -1650,7 +1686,7 @@
       },
       "unsupported": {
         "label": "Geen steun gevonden",
-        "detail": "De zoekopdracht heeft niets gevonden dat dit ondersteunt. Dat kan eenvoudig betekenen dat het artikel nieuw of niche is — het maakt het niet onwaar."
+        "detail": "De zoekopdracht heeft niets gevonden dat dit ondersteunt. Dat kan eenvoudig betekenen dat het artikel nieuw of niche is, het maakt het niet onwaar."
       },
       "mixed": {
         "label": "Deels consistent",
@@ -1675,7 +1711,7 @@
     "checkedByHeading": "Feitchecks gevonden in de zoeking",
     "dashboard": {
       "deleteA11y": "Deze feitcheck verwijderen",
-      "empty": "Je hebt nog geen claims gecontroleerd. Tik het vinkje onder een artikel om Mera erover te vragen — het resultaat verschijnt hier zodra het klaar is.",
+      "empty": "Je hebt nog geen claims gecontroleerd. Tik het vinkje onder een artikel om Mera erover te vragen, het resultaat verschijnt hier zodra het klaar is.",
       "listSubtitle": "Artikelen waarvoor je Mera hebt gevraagd feitchecks op te zoeken. Alleen opgeslagen op dit apparaat.",
       "listTitle": "Feitchecks",
       "pending": "Nog steeds zoeken",
@@ -1693,13 +1729,13 @@
     "explainer": "Mera controleert het nieuws niet zelf. Het zoekt naar wat gevestigde feitcheckorganisaties al over dit artikel hebben gepubliceerd.",
     "noCheckedBy": "We hebben geen gepubliceerde feitencheck over dit artikel gevonden. Dat maakt het artikel niet onwaar. De meeste artikelen worden nooit feitgecheckt.",
     "organisationA11y": "Open de feitencheck van {{organisation}}, beoordeeld {{rating}}, in de in-app browser",
-    "queued": "Deze controle wordt op de achtergrond uitgevoerd. Je hoeft hier niet op te wachten — je kunt het artikel gerust verlaten.",
+    "queued": "Deze controle wordt op de achtergrond uitgevoerd. Je hoeft hier niet op te wachten, je kunt het artikel gerust verlaten.",
     "queuedHint": "Het resultaat verschijnt onder Feitenchecks op je Dashboard zodra het klaar is.",
     "citationA11y": "Open bron {{source}} in de in-app browser",
     "noLink": "Geen link beschikbaar",
-    "actionA11yPending": "Feitencheck aangevraagd — controleer op het resultaat",
-    "actionA11yDone": "Feitencheck gereed — het resultaat wordt hieronder weergegeven",
-    "checkedByUnavailable": "We konden niet controleren of een feitenorganisatie over dit artikel heeft gepubliceerd — de opzoeking is niet voltooid. Dat verschilt van het geval dat niemand heeft gepubliceerd; hieronder zie je wat de bredere zoeking wel heeft gevonden.",
+    "actionA11yPending": "Feitencheck aangevraagd, controleer op het resultaat",
+    "actionA11yDone": "Feitencheck gereed, het resultaat wordt hieronder weergegeven",
+    "checkedByUnavailable": "We konden niet controleren of een feitenorganisatie over dit artikel heeft gepubliceerd, de opzoeking is niet voltooid. Dat verschilt van het geval dat niemand heeft gepubliceerd; hieronder zie je wat de bredere zoeking wel heeft gevonden.",
     "claimProposalTitle": "Deze claim feitenchecken?",
     "actionCheckClaim": "Deze claim controleren",
     "chatSeed": "Wat kan je in dit artikel controleren?",
@@ -1708,22 +1744,29 @@
     "optionWholeArticle": "Het hele artikel",
     "quickAnswered": "Dit is wat een snelle webzoeking heeft gevonden:",
     "quickArticleFailed": "Mera kon niet bevestigen dat het verzoek is verzonden. Probeer het over een moment opnieuw.",
-    "quickArticleRequested": "Verzoek verzonden. Mera zal het hele artikel controleren — het resultaat verschijnt onder Feitencontroles op uw Dashboard zodra het klaar is.",
+    "quickArticleRequested": "Verzoek verzonden. Mera zal het hele artikel controleren, het resultaat verschijnt onder Feitencontroles op uw Dashboard zodra het klaar is.",
     "quickArticleSending": "Verzoek wordt verzonden…",
-    "quickCouldNotSearch": "Mera kon het web zojuist niet zoeken, dus dit is geen antwoord — probeer het over een moment opnieuw.",
+    "quickCouldNotSearch": "Mera kon het web zojuist niet zoeken, dus dit is geen antwoord, probeer het over een moment opnieuw.",
     "quickDisclaimer": "Dit is een snelle webzoeking, geen controle door een feitencontrolestichting, en deze wordt niet opgeslagen. Voor een grondige controle met genoemde bronnen, kies \"Het hele artikel\".",
     "quickFailed": "Mera vond wat informatie, maar kon deze keer geen antwoord samenstellen. Probeer het over een moment opnieuw.",
-    "quickNothingFound": "De zoeking heeft niets over dit onderwerp opgeleverd. Dat betekent niet dat het onwaar is — het kan gewoon nieuw, niche of niet veel online te vinden zijn.",
+    "quickNothingFound": "De zoeking heeft niets over dit onderwerp opgeleverd. Dat betekent niet dat het onwaar is, het kan gewoon nieuw, niche of niet veel online te vinden zijn.",
     "quickRunning": "Het web wordt doorzocht…",
-    "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd — kijk later terug of zoek onder Feitencontroles op uw Dashboard.",
-    "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie — ze zijn het niet altijd met elkaar eens.",
-    "ownReadingHeading": "Mera's eigen kijk — ondergeschikt aan het oordeel hierboven",
+    "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd, kijk later terug of zoek onder Feitencontroles op uw Dashboard.",
+    "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie, ze zijn het niet altijd met elkaar eens.",
+    "ownReadingHeading": "Mera's eigen kijk, ondergeschikt aan het oordeel hierboven",
     "collapseA11y": "Deze factcheck verbergen",
     "expandA11y": "Deze factcheck tonen",
     "checkedByRelatedNote": "Deze zijn afkomstig van een trefwoord zoeking en kunnen over een ander artikel gaan. Open er een om te controleren.",
     "searchFoundHeading": "Wat onze zoeking gevonden heeft",
     "searchFoundEmpty": "Er was niet genoeg uit de zoeking voor Mera om dit samen te vatten.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Feitcheck klaar",
+      "bodyFound": "Feitcheckers hebben over \"{{title}}\" gepubliceerd.",
+      "bodyNone": "Nog geen gepubliceerde feitchecks over \"{{title}}\".",
+      "bodyUnavailable": "Mera kon de controle van \"{{title}}\" niet afronden.",
+      "open": "Artikel openen"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Deze bron prioriteren",
@@ -1743,7 +1786,7 @@
     "welcomeBody": "Tik op \"Akkoord en doorgaan\" om onze Servicevoorwaarden en ons Privacybeleid te accepteren."
   },
   "tutorials": {
-    "entryRow": "Meer over Mera",
+    "entryRow": "Hoe Mera werkt",
     "menuTitle": "Meer over Mera",
     "menuSubtitle": "Korte gidsen over hoe deze app werkt. Begin overal.",
     "sectionBasic": "Start hier",
@@ -1766,7 +1809,6 @@
     "askMera": "Vraag Mera",
     "chatIntro": "Vraag me alles over hoe Mera werkt. Ik kan het uitleggen, maar kan niets van hier uit veranderen.",
     "launchButton": "Maak de rondleiding",
-    "learnAboutMera": "Zo werkt Mera",
     "hintReveal": "Tik op elk.",
     "hintRevealSome": "Tik op minstens {{count}}.",
     "hintChoose": "Kies er een.",
@@ -2379,7 +2421,10 @@
     "supportId": "Support-ID: {{id}}",
     "copySupportId": "Support-ID kopiëren",
     "copied": "Gekopieerd",
-    "saveHint": "Bewaar deze ID. Support kan je account ermee vinden."
+    "saveHint": "Bewaar deze ID. Support kan je account ermee vinden.",
+    "mailFailedTitle": "Je mail-app kon niet worden geopend",
+    "mailFailedBody": "Kopieer ons supportadres en stuur ons een e-mail vanuit een willekeurige mail-app.",
+    "copyAddress": "Adres kopiëren"
   },
   "emailCapture": {
     "title": "Voeg je e-mailadres toe",
@@ -2487,7 +2532,10 @@
     "wifiOnly": "Alleen Wi-Fi",
     "wifiOnlyOff": "Uit. Geplande back-ups kunnen mobiele data gebruiken.",
     "wifiOnlyOn": "Aan. Geplande back-ups wachten op Wi-Fi.",
-    "working": "Bezig…"
+    "working": "Bezig…",
+    "statusFromCloud": "Laatste back-up {{when}}, gevonden in {{provider}}",
+    "restoreOption": "Back-up van {{when}}",
+    "statusFailed": "Laatste back-up mislukt op {{when}}"
   },
   "factChoice": {
     "titleSingle": "Dit aan je persona toevoegen?",
@@ -2502,14 +2550,19 @@
     "skipAll": "Alles overslaan",
     "addAllA11y": "Alle {{count}} suggesties toevoegen",
     "skipAllA11y": "Alle {{count}} suggesties overslaan",
-    "titleReplace": "Een bestaand gegeven vervangen?",
+    "titleReplace": "Dit gegeven vervangen?",
     "replace": "Vervangen",
     "replacesLabel": "Vervangt",
     "replacesTopics_one": "en het 1 onderwerp",
     "replacesTopics_other": "en de {{count}} onderwerpen ervan",
     "replacesNoUndo": "Het oude gegeven en de onderwerpen ervan worden definitief verwijderd. Dit kun je niet ongedaan maken.",
     "replacesLoading": "Ik kijk wat dit vervangt",
-    "replacesUnavailable": "Mera kan nu niet tonen wat er verwijderd zou worden. Probeer het zo nog eens."
+    "replacesUnavailable": "Mera kan nu niet tonen wat er verwijderd zou worden. Probeer het zo nog eens.",
+    "keepBoth": "Beide houden",
+    "titleAlsoAdd": "Dit ook toevoegen?",
+    "pendingHint": "Kies hierboven een optie of typ je antwoord.",
+    "overlapsLabel": "Overlapt met",
+    "overlapsReplaceNote": "Vervangen verwijdert het en de onderwerpen ervan."
   },
   "subscriptions": {
     "sectionTitle": "Je abonnementen",
@@ -2554,7 +2607,6 @@
       "countriesLabel": "Landen waaruit je leest",
       "latencyLabel": "Gemiddelde tijd tussen publicatie en lezen",
       "latencyCoverage": "Gebaseerd op {{sampled}} van {{total}} artikelen met een bekende publicatietijd",
-      "latencyUnknown": "Nog te weinig bekende publicatietijden om dit te berekenen",
       "openedLabel": "Geopende artikelen",
       "openedPartial": "Gedeeltelijke telling. Mera telt alleen tikken op je suggestiekaarten.",
       "topPublicationsTitle": "Meestgelezen bronnen",
@@ -2563,7 +2615,6 @@
       "latencyValue_other": "{{count}} uur",
       "reachTitle": "Waar mijn nieuws vandaan kwam",
       "keepTitle": "Wat ik heb bewaard",
-      "paceTitle": "Hoe het nieuws mij bereikte",
       "windowNow": "Nu",
       "savedLabel": "Artikelen die je opsloeg",
       "followedLabel": "Verhalen die je volgt",
@@ -2574,13 +2625,11 @@
       "paceScaleTitle": "Van publicatie tot lezen",
       "hoursShort": "{{n}} u",
       "languagesLabel": "Talen waarin je las",
-      "topLanguagesTitle": "Meest gelezen in",
-      "rhythmTitle": "De dagen dat ik las",
       "daysReadLabel": "Dagen dat je iets las",
       "heatLegendLess": "minder",
       "heatLegendMore": "meer",
-      "heatNote": "De kleur laat zien hoeveel artikelen je die dag las.",
-      "rhythmWeekdays": "M,D,W,D,V,Z,Z"
+      "rhythmWeekdays": "M,D,W,D,V,Z,Z",
+      "habitsTitle": "Hoe ik lees"
     }
   },
   "analytics": {
@@ -2603,7 +2652,7 @@
     "goneTombstone": "Dit gegeven is verwijderd, dus de onderwerpen ervan ook.",
     "expandA11y": "Onderwerpen tonen",
     "collapseA11y": "Onderwerpen verbergen",
-    "accordionTitlePending": "We zoeken onderwerpen voor:",
+    "accordionTitlePending": "Onderwerpen zoeken voor:",
     "pendingA11y": "Onderwerpen worden gezocht",
     "readyA11y": "Onderwerpen klaar",
     "failedA11y": "Onderwerpen konden niet worden gevonden"
@@ -2637,7 +2686,8 @@
     },
     "noRouteSentence": "Mera kon niet opmaken waar dit over ging. Zeg het gerust anders.",
     "noProposalSentence": "Mera heeft hier niets uit gevonden om toe te voegen.",
-    "unknownToolSentence": "Er ging iets mis aan Mera's kant. Vraag het opnieuw om verder te gaan."
+    "unknownToolSentence": "Er ging iets mis aan Mera's kant. Vraag het opnieuw om verder te gaan.",
+    "malformedChoiceSentence": "Mera kon de opties niet tonen. Vraag het opnieuw om verder te gaan."
   },
   "skillPhrase": {
     "residence": "waar je woont",
@@ -2772,5 +2822,59 @@
     "docTitle": "Bewaarde artikelen",
     "docExported": "Geëxporteerd op {{date}}",
     "docReasonLabel": "Waarom Mera dit koos"
+  },
+  "tabExplainer": {
+    "openA11y": "Hoe dit tabblad werkt",
+    "close": "Begrepen",
+    "feed": {
+      "title": "Hoe de Feed werkt",
+      "what": "De Feed toont elk verhaal dat Mera de afgelopen twee dagen voor je vond. Elk verhaal krijgt één kaart, ook als veel media erover schreven.",
+      "how1": "Mera maakt van wat je over jezelf vertelde zoekopdrachten, haalt passende artikelen op, en een AI leest ze een voor een om te beoordelen hoe belangrijk ze voor je zijn.",
+      "how2": "Verhalen die je nog niet zag komen eerst, de belangrijkste bovenaan. Een ongezien verhaal zakt na 12 uur één niveau en na een dag nog een.",
+      "how3": "Bij de volgende herschikking zakken verhalen die je al zag, en verhalen die je opende komen onderaan. Kaarten boven je leespositie blijven staan. Trek omlaag om opnieuw te sorteren.",
+      "privacy": "De volgorde wordt op deze telefoon bepaald. Welke verhalen je opent, wordt alleen op deze telefoon bijgehouden."
+    },
+    "forYou": {
+      "title": "Hoe het Dashboard werkt",
+      "what": "Het Dashboard groepeert je nieuws per interesse. Alles wat je Mera vertelde krijgt een sectie, plus koppen uit jouw landen en de wereld.",
+      "how1": "Elk verhaal gaat naar de ene interesse waar het het best bij past, dus het verschijnt maar één keer. Passen er twee even goed, dan houdt de eerst toegevoegde het.",
+      "how2": "Interesses waaraan je meer gewicht gaf komen eerst. Een nieuwe interesse krijgt al een sectie voordat de eerste verhalen binnenkomen.",
+      "how3": "Binnen een sectie komen ongelezen verhalen eerst, de belangrijkste bovenaan. De secties worden opnieuw gesorteerd als je het tabblad verlaat, of elke 10 minuten."
+    },
+    "explore": {
+      "title": "Hoe Verkennen werkt",
+      "what": "Verkennen toont de koppen van de afgelopen 24 uur voor de wereld en voor elk land dat je kiest. Ze zijn voor iedereen hetzelfde en niet voor jou gekozen.",
+      "how1": "Wereldkoppen worden gerangschikt naar hoe breed een verhaal in verschillende landen wordt gebracht, niet naar het aantal artikelen.",
+      "how2": "Landkoppen komen van nieuwsbronnen die in dat land gevestigd zijn."
+    },
+    "profile": {
+      "title": "Hoe het Profiel werkt",
+      "what": "Je Profiel bevat wat je Mera over jezelf vertelde. Je Feed en Dashboard worden uit deze feiten opgebouwd.",
+      "how1": "Elk feit wordt zoekopdrachten die Mera voor je uitvoert. Wijzig of verwijder een feit en de verhalen die eruit kwamen veranderen mee.",
+      "privacy": "De zoekopdrachten die eruit voortkomen worden nooit aan je account gekoppeld. De server bewaart alleen de zoektekst, anoniem gedeeld met alle gebruikers, en verwijdert die na 14 dagen zonder gebruik."
+    }
+  },
+  "articleMenu": {
+    "openA11y": "Meer acties",
+    "title": "Artikelacties",
+    "askMera": "Vraag Mera hiernaar",
+    "following": "Je volgt dit verhaal",
+    "checkFacts": "Zoek naar factchecks",
+    "openOn": "Openen op {{source}}",
+    "openInTranslate": "Openen in Google Translate",
+    "fewerFrom": "Minder van {{source}}",
+    "fewerFromDone": "Je ziet minder van {{source}}.",
+    "undo": "Ongedaan maken",
+    "reportBug": "Bug melden",
+    "actionFailed": "Dat lukte niet. Probeer het opnieuw."
+  },
+  "factChip": {
+    "label": "Uit je profiel: {{label}}",
+    "openA11y": "Berichten over {{label}}"
+  },
+  "related": {
+    "allCountries": "Alle landen",
+    "allLanguages": "Alle talen",
+    "noMatches": "Geen gerelateerde artikelen passen bij deze filters."
   }
 }

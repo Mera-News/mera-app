@@ -57,7 +57,7 @@ jest.mock('@/lib/chat-tools/fact-commit', () => ({
 }));
 jest.mock('../fact-choice-actions', () => ({ resolveGroup: jest.fn() }));
 
-let mockFacts: { id: string; statement: string }[] = [];
+let mockFacts: { id: string; statement: string; questionnaireAttribute?: string }[] = [];
 let mockTopics: { id: string; status: string }[] = [];
 let mockFactsThrows = false;
 jest.mock('@/lib/database/services/fact-service', () => ({
@@ -180,5 +180,107 @@ describe('an ordinary ADD group is untouched', () => {
     expect(queryByTestId('fact-choice-replaces-0')).toBeNull();
     expect(queryByText('factChoice.replacesNoUndo')).toBeNull();
     expect(getByTestId('fact-choice-add-0').props.accessibilityState.disabled).toBe(false);
+  });
+});
+
+// ===========================================================================
+// N17: "Keep both", offered only when both facts can be true at once.
+// ===========================================================================
+describe('Keep both', () => {
+  const HOME = 'location: neighborhood/area, city, and country (preserve specifics)';
+  const ORIGIN = 'background: country of origin';
+
+  it('is offered, and leads, when the two facts sit under different keys', async () => {
+    // Not a home fact: a home fact is never replaced by another key at all
+    // (see the home-key guard below), so it never reaches this choice.
+    mockFacts = [{ id: 'old-1', statement: 'Product manager', questionnaireAttribute: 'profession: job role and industry' }];
+    const { getByTestId, findByText } = render(
+      <FactChoiceCard {...props} options={['Works at Zalando']} questionnaireAttribute="company: employer name" replacesFactId="old-1" />,
+    );
+    expect(await findByText('factChoice.titleAlsoAdd')).toBeTruthy();
+    expect(getByTestId('fact-choice-keep-both-0')).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(getByTestId('fact-choice-keep-both-0'));
+    });
+    // A plain add: the old fact and its topics stay.
+    expect(mockCommit).toHaveBeenCalledWith([
+      expect.not.objectContaining({ replaces: expect.anything() }),
+    ]);
+  });
+
+  it('is not offered for a true contradiction under the same key', async () => {
+    mockFacts = [{ id: 'old-1', statement: 'Lives in Amsterdam', questionnaireAttribute: HOME }];
+    const { queryByTestId, findByText } = render(
+      <FactChoiceCard {...props} options={['Lives in Berlin']} questionnaireAttribute={HOME} replacesFactId="old-1" />,
+    );
+    expect(await findByText('factChoice.titleReplace')).toBeTruthy();
+    expect(queryByTestId('fact-choice-keep-both-0')).toBeNull();
+  });
+
+  // ux1 C4: the reply said "I can keep both" above a card that could not.
+  it('IS offered when the old fact is a combined origin-and-home one', async () => {
+    mockFacts = [{ id: 'old-1', statement: 'Expat from India living in Amsterdam', questionnaireAttribute: 'background: origin and current residence' }];
+    const { getByTestId, findByText } = render(
+      <FactChoiceCard {...props} options={['Originally from India']} questionnaireAttribute={ORIGIN} replacesFactId="old-1" />,
+    );
+    expect(await findByText('factChoice.titleAlsoAdd')).toBeTruthy();
+    expect(getByTestId('fact-choice-keep-both-0')).toBeTruthy();
+  });
+
+  it('is not offered before the card can name the fact it would keep', () => {
+    mockFacts = [{ id: 'old-1', statement: 'Product manager', questionnaireAttribute: 'profession: job role and industry' }];
+    const { queryByTestId } = render(
+      <FactChoiceCard {...props} options={['Works at Zalando']} questionnaireAttribute="company: employer name" replacesFactId="old-1" />,
+    );
+    expect(queryByTestId('fact-choice-keep-both-0')).toBeNull();
+  });
+});
+
+// A home fact is only ever replaced by a home fact, on EVERY engine. The loop
+// enforces it for the cloud path; the card enforces it for whatever staged the
+// group, including the on-device path, which has no loop.
+describe('the home-key guard on the card', () => {
+  const HOME = 'location: neighborhood/area, city, and country (preserve specifics)';
+
+  it('turns a non-home fact targeting a home fact into a plain add', async () => {
+    mockFacts = [{ id: 'old-1', statement: 'Lives in Nieuw-West, Amsterdam', questionnaireAttribute: HOME }];
+    const { getByTestId, findByText, queryByTestId } = render(
+      <FactChoiceCard
+        {...props}
+        options={['Expat from India living in Amsterdam']}
+        questionnaireAttribute="background: origin and current residence"
+        replacesFactId="old-1"
+      />,
+    );
+    expect(await findByText('factChoice.titleSingle')).toBeTruthy();
+    expect(queryByTestId('fact-choice-replaces-0')).toBeNull();
+    await act(async () => {
+      fireEvent.press(getByTestId('fact-choice-add-0'));
+    });
+    expect(mockCommit).toHaveBeenCalledWith([
+      expect.not.objectContaining({ replaces: expect.anything() }),
+    ]);
+  });
+});
+
+// ux1 C4: a Keep both card showed the red "Replaces... You can't undo this"
+// block as if the destroy were the only outcome.
+describe('the disclosure matches the choice', () => {
+  const ORIGIN_KEY = 'background: country of origin';
+  it('a Keep both card shows a neutral Overlaps block, no red warning', async () => {
+    mockFacts = [{ id: 'old-1', statement: 'Expat from India living in Amsterdam', questionnaireAttribute: 'background: origin and current residence' }];
+    const { getByTestId, findByText, queryByText, queryByTestId } = render(
+      <FactChoiceCard {...props} options={['Expat from India']} questionnaireAttribute={ORIGIN_KEY} replacesFactId="old-1" />,
+    );
+    expect(await findByText('factChoice.overlapsLabel')).toBeTruthy();
+    expect(getByTestId('fact-choice-overlaps-0')).toBeTruthy();
+    expect(queryByText('factChoice.overlapsReplaceNote')).not.toBeNull();
+    expect(queryByText('factChoice.replacesNoUndo')).toBeNull();
+    expect(queryByTestId('fact-choice-replaces-0')).toBeNull();
+  });
+
+  it('a true Replace keeps the red block', async () => {
+    const { findByText } = drawReplace();
+    expect(await findByText('factChoice.replacesNoUndo')).toBeTruthy();
   });
 });

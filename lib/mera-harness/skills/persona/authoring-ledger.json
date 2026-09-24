@@ -7,6 +7,12 @@
       "date": "2026-09-17",
       "note": "Library authored by hand under the pagent wave (P5). Thirteen skills, fifteen expectation cases. The authoring skill and this ledger exist from here on.",
       "items_completed": 13
+    },
+    {
+      "id": 2,
+      "date": "2026-09-23",
+      "note": "ux1: origin and home split into two facts, the replacement card made the consent for a same-key move. Staged run 20260923-215626-ux1-origin passed 2/3. Open: the model abbreviates attribute keys.",
+      "items_completed": 2
     }
   ],
   "items": [
@@ -22,6 +28,8 @@
     { "id": "topics/profession", "scenario": "field generic, then national and bloc", "status": "done", "session": 1 },
     { "id": "topics/family", "scenario": "stay exactly where the fact put you", "status": "done", "session": 1 },
     { "id": "conversation/question", "scenario": "answer, or handle small talk", "status": "done", "session": 1 },
-    { "id": "conversation/correction", "scenario": "fix one thing, extract nothing", "status": "done", "session": 1 }
+    { "id": "conversation/correction", "scenario": "fix one thing, extract nothing", "status": "done", "session": 1 },
+    { "id": "facts/origin#ux1-split", "scenario": "origin and a named current city are two facts; an origin never replaces a home fact; an origin correction sets replaces directly", "status": "done", "eval_label": "20260923-215626-ux1-origin", "result": "2/3 repeats offered origin and the Berlin move (replaces f1) as two cards, 0 errors, $0.0038. The model abbreviates the keys ('origin', 'location') instead of the exact strings; rep 2 set replaces on the home fact from the origin element, which mayReplaceKey demotes", "completed_at": "2026-09-23", "skip_reason": null },
+    { "id": "facts/residence#ux1-card-consent", "scenario": "a same-key move sets replaces with no replacement chip; the place chip only for an ambiguous place", "status": "done", "eval_label": "20260923-215626-ux1-origin", "result": "the move set replaces on the home fact with no replacement chip in 2/3 repeats; no ask_choice was issued for an unambiguous place", "completed_at": "2026-09-23", "skip_reason": null }
   ]
 }

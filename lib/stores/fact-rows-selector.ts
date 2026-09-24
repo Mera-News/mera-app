@@ -315,7 +315,37 @@ export interface FactRow {
    *  count desc). */
   unreadCount: number;
   groups: FactRowGroup[];
+  /** EMPTY SECTIONS ONLY (D4). Present exactly when `groups` is empty on a
+   *  `fact` row: the reader told Mera about this interest and nothing clears
+   *  the bar for it yet. Absent on every row that has stories.
+   *   - `awaiting-first-run`: no processing run has finished since the fact
+   *     was added, so Mera has not looked yet.
+   *   - `no-match-yet`: a run has finished since; nothing matched well enough. */
+  emptyReason?: EmptySectionReason;
+  /** EMPTY SECTIONS ONLY. The fact was added in the last
+   *  {@link NEW_INTEREST_WINDOW_MS}. A LABEL only (the section says it is a new
+   *  interest): it does not change the order, every empty section sorts last. */
+  newInterest?: boolean;
 }
+
+/**
+ * The part of a fact statement a TITLE shows: the text before the first "; ".
+ * One persona fact can hold two statements joined that way ("Expat from India
+ * living in Nieuw-West, …; Lives in Nieuw-West, …"), which made a section
+ * title run to five lines. Falls back to the whole statement when the first
+ * part is empty. Titles only: `FactRow.statement` keeps the full text.
+ */
+export function primaryStatement(statement: string): string {
+  const whole = statement.trim();
+  const first = whole.split('; ')[0].trim();
+  return first || whole;
+}
+
+/** Why a fact section has no stories. See {@link FactRow.emptyReason}. */
+export type EmptySectionReason = 'awaiting-first-run' | 'no-match-yet';
+
+/** How long an empty section counts as a "new interest" (its label). */
+export const NEW_INTEREST_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 export interface FactRowsResult {
   breaking: BreakingCardData[];
@@ -533,6 +563,9 @@ export function buildFactRows(
   nowMs: number = Date.now(),
   config: HarnessConfig = DEFAULT_HARNESS_CONFIG,
   userCtx: UserGeoLanguageContext | null = null,
+  /** When the last processing run finished (null = none yet). Decides an empty
+   *  section's `emptyReason`. */
+  lastProcessingRunFinishedAt: number | null = null,
 ): FactRowsResult {
   const cutoffMs = nowMs - FEED_WINDOW_MS;
   const hpMult = config.scoringEngine.HP_MULT;
@@ -585,7 +618,12 @@ export function buildFactRows(
 
   // 1. Visible pool (note-gated + render gate + FEED_WINDOW_MS).
   const visible = suggestions.filter((s) => isVisible(s, cutoffMs));
-  if (visible.length === 0) return { breaking: [], rows: [] };
+  if (visible.length === 0) {
+    return {
+      breaking: [],
+      rows: sortRows(emptyFactRows(new Set(), snapshots, nowMs, lastProcessingRunFinishedAt), snapshots),
+    };
+  }
 
   // 2. Story-group the visible pool (display thresholds incl. the weighted edge).
   const items: GroupItem[] = visible.map((s) => ({
@@ -792,13 +830,96 @@ export function buildFactRows(
     rows.push(row);
   }
 
+  // D4: every fact the reader holds an active interest for gets a section,
+  // stories or not (the owner reversed the earlier no-empty-sections rule).
+  // Includes facts RULE 2 dropped above: their LOW matches stay hidden, the
+  // section shows its empty state instead. Headline sections are NOT included:
+  // an empty headline scope still disappears, as before.
+  rows.push(
+    ...emptyFactRows(new Set(rows.map((r) => r.factId)), snapshots, nowMs, lastProcessingRunFinishedAt),
+  );
+
   // Section order (Dashboard live resort): section WEIGHT desc first — the one
   // axis on which synthetic headline sections are comparable with real fact
   // sections (a default-weight fact is 1.0, a full-weight home country 0.55,
   // GLOBAL 0.35; see `headlineSectionWeight`) — then unread count desc (a
   // fully-read section sinks below any section with at least one unread story),
   // then by group count desc, ties broken by factId asc for determinism.
-  rows.sort((a, b) => {
+  return { breaking, rows: sortRows(rows, snapshots) };
+}
+
+/**
+ * Empty fact rows (D4) for every fact that owns at least one ACTIVE,
+ * non-negative topic and has no row in `populated`. A fact the reader
+ * down-weighted to below zero is suppression working, not a missing section,
+ * so it gets none.
+ */
+function emptyFactRows(
+  populated: Set<string>,
+  snapshots: FactRowsSnapshots,
+  nowMs: number,
+  lastProcessingRunFinishedAt: number | null,
+): FactRow[] {
+  const factIds = new Set<string>();
+  for (const t of snapshots.topics.values()) {
+    if (t.status !== 'active' || !t.factId || t.weight < 0) continue;
+    factIds.add(t.factId);
+  }
+  const out: FactRow[] = [];
+  for (const factId of factIds) {
+    if (populated.has(factId)) continue;
+    const fact = snapshots.facts.get(factId);
+    if (!fact) continue;
+    const created = fact.createdAtMs;
+    out.push({
+      factId,
+      kind: 'fact',
+      weight: fact.weight ?? 1,
+      statement: fact.statement?.trim() || factId,
+      factStatement: snapshots.factStatements.get(factId) ?? null,
+      latestAddedMs: 0,
+      unreadCount: 0,
+      groups: [],
+      emptyReason:
+        lastProcessingRunFinishedAt === null || created > lastProcessingRunFinishedAt
+          ? 'awaiting-first-run'
+          : 'no-match-yet',
+      newInterest: nowMs - created < NEW_INTEREST_WINDOW_MS,
+    });
+  }
+  return out;
+}
+
+/** 1 = has stories (fact and headline sections), 2 = empty (last). */
+function sortTier(row: FactRow): number {
+  if (row.groups.length > 0 || row.emptyReason === undefined) return 1;
+  return 2;
+}
+
+/**
+ * Section order. An EXPLICIT tier comes first, because the weight axis below
+ * would otherwise put an empty fact section (weight 1.0) above every populated
+ * headline section (0.55 and lower): every section with stories first, then
+ * every empty section, new interests included (owner decision: a section
+ * with nothing to read never sits above one with stories). Within the populated tier:
+ * section WEIGHT desc (the one axis on which headline sections compare with
+ * fact sections: a default-weight fact is 1.0, a full-weight home country
+ * 0.55, GLOBAL 0.35; see `headlineSectionWeight`), then unread count desc (a
+ * fully-read section sinks below any with at least one unread story), then
+ * group count desc, then factId asc for determinism. Within the empty tier:
+ * newest fact first, then factId.
+ */
+function sortRows(rows: FactRow[], snapshots?: FactRowsSnapshots): FactRow[] {
+  return rows.sort((a, b) => {
+    const ta = sortTier(a);
+    const tb = sortTier(b);
+    if (ta !== tb) return ta - tb;
+    if (ta !== 1) {
+      const ca = snapshots?.facts.get(a.factId)?.createdAtMs ?? 0;
+      const cb = snapshots?.facts.get(b.factId)?.createdAtMs ?? 0;
+      if (ca !== cb) return cb - ca;
+      return a.factId < b.factId ? -1 : a.factId > b.factId ? 1 : 0;
+    }
     const wa = a.weight ?? 1;
     const wb = b.weight ?? 1;
     if (wa !== wb) return wb - wa;
@@ -806,8 +927,6 @@ export function buildFactRows(
     if (a.groups.length !== b.groups.length) return b.groups.length - a.groups.length;
     return a.factId < b.factId ? -1 : a.factId > b.factId ? 1 : 0;
   });
-
-  return { breaking, rows };
 }
 
 /** Raw predicate behind `isSuggestionOpened`: true when `articleId` OR

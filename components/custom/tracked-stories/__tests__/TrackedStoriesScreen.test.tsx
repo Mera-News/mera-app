@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
 // The animated gradient backdrop is pure decoration and asserts nothing here,
@@ -141,7 +141,12 @@ jest.mock('@/lib/database', () => ({
 }));
 
 let mockRows: any[] = [];
-const mockUntrack = jest.fn();
+// The service reports success as a boolean and never throws.
+const mockUntrack = jest.fn(async (..._a: any[]): Promise<boolean> => true);
+const mockShowError = jest.fn();
+jest.mock('@/lib/toast-manager', () => ({
+    toastManager: { showError: (...a: any[]) => mockShowError(...a) },
+}));
 jest.mock('@/lib/database/services/tracked-story-service', () => ({
     MAX_MEMBER_IDS: 30,
     observeActive: () => ({
@@ -236,11 +241,8 @@ describe('TrackedStoriesScreen', () => {
         expect(getByText('trackedStories.emptyBody')).toBeTruthy();
     });
 
-    it('gives the empty state an actionable hint + a CTA that starts a follow here', () => {
+    it('gives the empty state a CTA that starts a follow here', () => {
         const { getByText } = render(<TrackedStoriesScreen embedded />);
-        // The hint tells the user WHERE following happens (QA: the action was
-        // three levels deep with nothing on this screen pointing there).
-        expect(getByText('trackedStories.emptyHintFollow')).toBeTruthy();
         // It used to route to the Feed tab because that was the only place a
         // follow could START. This screen now starts one itself.
         fireEvent.press(getByText('trackedStories.emptyCtaFollow'));
@@ -262,7 +264,8 @@ describe('TrackedStoriesScreen', () => {
             expect(mockStartFollowStoryChat).toHaveBeenCalledWith('trackedStories.followChatSeed');
         });
 
-        it('renders on the empty list too, carrying the track crosshair', () => {
+        it('carries the track crosshair', () => {
+            mockRows = [story({ id: 'f1', llmHeadline: 'Existing' })];
             const { getByTestId } = render(<TrackedStoriesScreen embedded />);
 
             const fab = getByTestId('tracked-stories-track-fab');
@@ -270,7 +273,14 @@ describe('TrackedStoriesScreen', () => {
             expect(getByTestId('icon-crosshair')).toBeTruthy();
         });
 
+        it('hides on an empty list, where the empty state CTA is the one entry point', () => {
+            const { queryByTestId, getByTestId } = render(<TrackedStoriesScreen embedded />);
+            expect(queryByTestId('tracked-stories-track-fab')).toBeNull();
+            expect(getByTestId('tracked-stories-empty-cta')).toBeTruthy();
+        });
+
         it('does not follow anything by itself — only opens the chat', () => {
+            mockRows = [story({ id: 'f1', llmHeadline: 'Existing' })];
             const { getByTestId } = render(<TrackedStoriesScreen embedded />);
 
             fireEvent.press(getByTestId('tracked-stories-track-fab'));
@@ -278,6 +288,25 @@ describe('TrackedStoriesScreen', () => {
             expect(mockUntrack).not.toHaveBeenCalled();
             expect(router.push).not.toHaveBeenCalled();
         });
+    });
+
+    it('drops the 4xl title when embedded, keeps it standalone', () => {
+        const embedded = render(<TrackedStoriesScreen embedded />);
+        expect(embedded.queryByText('trackedStories.title')).toBeNull();
+        embedded.unmount();
+        const standalone = render(<TrackedStoriesScreen />);
+        expect(standalone.getByText('trackedStories.title')).toBeTruthy();
+    });
+
+    it('reaches the row delete through a VoiceOver custom action', () => {
+        mockRows = [story({ id: 'f1', llmHeadline: 'Existing' })];
+        const { getByLabelText, getByText } = render(<TrackedStoriesScreen embedded />);
+        const row = getByLabelText(/Existing/);
+        expect(row.props.accessibilityActions).toEqual([{ name: 'untrack', label: 'trackedStories.untrackAction' }]);
+        act(() => {
+            row.props.onAccessibilityAction({ nativeEvent: { actionName: 'untrack' } });
+        });
+        expect(getByText('trackedStories.untrackConfirmCta')).toBeTruthy();
     });
 
     it('gives the row a composite a11y label: title, unseen count, total, age', () => {
@@ -427,5 +456,18 @@ describe('TrackedStoriesScreen', () => {
         // its own string AND a stable testID.
         fireEvent.press(getByTestId('untrack-confirm'));
         expect(mockUntrack).toHaveBeenCalledWith('s4');
+    });
+});
+
+describe('TrackedStoriesScreen: a failed delete says so', () => {
+    it('toasts when deleting the story fails', async () => {
+        mockUntrack.mockImplementationOnce(async () => false);
+        mockRows = [story({ id: 's5', llmHeadline: 'Keep me', unseenCount: 0 })];
+        const { getByTestId, getByLabelText } = render(<TrackedStoriesScreen embedded />);
+        fireEvent(getByLabelText(/^Keep me,/), 'longPress');
+        await act(async () => {
+            fireEvent.press(getByTestId('untrack-confirm'));
+        });
+        expect(mockShowError).toHaveBeenCalledWith('errors.somethingWentWrong', 'trackedStories.deleteFailed');
     });
 });

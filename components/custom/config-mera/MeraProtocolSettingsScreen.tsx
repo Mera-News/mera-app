@@ -55,6 +55,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Linking, Platform, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 
 interface MeraProtocolSettingsScreenProps {
     onBack?: () => void;
@@ -1124,19 +1125,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         everything else on the page. */}
                     <AbstractGradientBackdrop />
 
-                    {onBack && (
-                        <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                            <Pressable
-                                onPress={onBack}
-                                className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                            >
-                                <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                            </Pressable>
-                        </Box>
-                    )}
-                    <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                        <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
-                    </VStack>
+                    <Box style={{ paddingTop: insets.top }}>
+                        <DrillDownHeader title={t('meraProtocol.title')} onBack={onBack} />
+                    </Box>
                     <VStack className="flex-1 justify-center items-center">
                         <Spinner size="large" />
                     </VStack>
@@ -1167,20 +1158,9 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                {onBack && (
-                    <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                        <Pressable
-                            onPress={onBack}
-                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                        >
-                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                        </Pressable>
-                    </Box>
-                )}
-
-                <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                    <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
-                </VStack>
+                <Box style={{ paddingTop: insets.top }}>
+                    <DrillDownHeader title={t('meraProtocol.title')} onBack={onBack} />
+                </Box>
 
                 <ScrollView className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>
                     {renderContent()}

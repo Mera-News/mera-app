@@ -4,10 +4,35 @@
 // the eval runner wires fakes. A harness green is therefore evidence about the
 // app rather than about a parallel implementation.
 
-import { resolveAgentArm, routeEnforcementFor } from './arms';
+import { multiSubjectFor, resolveAgentArm, routeEnforcementFor } from './arms';
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
-import { claimsSaveHappened, cleanProse, leaksInternals, trailingQuestion } from './prose';
-import { mayReplace } from './fact-subject';
+import {
+  claimsSaveHappened,
+  cleanProse,
+  comparableStatement,
+  declaresNothingToAdd,
+  isPlainNo,
+  isPlainYes,
+  leaksInternals,
+  narratesProcess,
+  trailingQuestion,
+} from './prose';
+import { isLocationKey, isRelationalStatement, mayReplace, mayReplaceKey, sameAttributeKey } from './fact-subject';
+import {
+  CANONICAL_LOCATION_KEY,
+  COMBINED_ORIGIN_KEY,
+  EXPAT_KEY,
+  ORIGIN_KEY,
+  countryOf,
+  expatStatement,
+  toOriginStatement,
+  isCombinedOriginFact,
+  isExpatStatement,
+  isOriginStatement,
+  originCountry,
+  sameCountry,
+  threeFactsOf,
+} from './combined-fact';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
@@ -35,6 +60,15 @@ export const MAX_AGENT_LEGS = 4;
  * it would punish the turn for the model's mistake.
  */
 export const MAX_FORMAT_RETRIES = 2;
+
+/**
+ * Several subjects in one turn (the `multi-subject` arm, audit B1): at most
+ * this many skills, and each segment after the first gets this many legs.
+ * Three legs is lookups, the offer, and a closing sentence; the last of them
+ * is the forced offer when nothing was offered yet.
+ */
+export const MAX_SEGMENTS = 3;
+export const SEGMENT_LEGS = 3;
 
 /**
  * Sent back when a route leg produced no usable `load_skill` call.
@@ -75,7 +109,15 @@ export const MAX_REPLY_RETRIES = 1;
  * has forbidden the save wording since the skill was written, and 10% of G4
  * turns used it anyway.
  */
-export function replyFormatError(kind: 'save-claim' | 'leak'): string {
+export function replyFormatError(kind: 'save-claim' | 'leak' | 'process'): string {
+  if (kind === 'process') {
+    return (
+      'Your reply describes what you are about to do instead of answering. The user sees it as '
+      + 'your whole answer. Do not say you will check, look up or load anything, and do not '
+      + 'promise an offer: answer their message now in one or two plain sentences, or ask one '
+      + 'short question.'
+    );
+  }
   if (kind === 'save-claim') {
     return (
       'Your reply says you saved, noted or recorded something. Nothing is saved until the user '
@@ -103,6 +145,17 @@ export function replyFormatError(kind: 'save-claim' | 'leak'): string {
  */
 export const REPLY_LEAK_FALLBACK = 'Got it. Anything else you would like to add?';
 
+/**
+ * Re-asks allowed when the final reply narrates the loop's process. Its own
+ * budget, like the other two, for the same reason: the failures are unrelated.
+ */
+export const MAX_PROCESS_RETRIES = 1;
+
+/** Shown when a narrating reply survives its re-ask on a turn that has no card
+ *  to speak for it. A card on screen needs no words, so there the reply is
+ *  simply dropped. */
+export const REPLY_PROCESS_FALLBACK = "Sorry, I didn't get to that. Could you say it again?";
+
 /** Mirrors lib/llm/tokens.ts::estimateTokens; inlined so this folder imports
  *  nothing from the app. */
 export function estimateTokens(text: string): number {
@@ -126,6 +179,14 @@ export interface AgentPersona {
 export interface AgentState {
   persona: AgentPersona;
   turn: AgentTurnState;
+  /**
+   * Readings on fact cards from earlier turns that the user has not answered
+   * yet, set by the driver before each turn (it is the one that can see which
+   * cards are resolved). A typed message while a card waits is a NEW turn, so
+   * without this the loop could offer the same reading again beside the card
+   * still on screen. Exact repeats are dropped; the model is told the rest.
+   */
+  pendingCardStatements?: string[];
 }
 
 export function createAgentState(persona: AgentPersona): AgentState {
@@ -204,6 +265,185 @@ export function bindChoicePayloads(
   });
 }
 
+/** A chip payload that is a Place (the only structured payload a chip
+ *  carries today), or null. */
+function placeFromPayload(payload: unknown): Place | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const p = payload as Partial<Place>;
+  return typeof p.locality === 'string' && typeof p.countryCode === 'string' ? (p as Place) : null;
+}
+
+/**
+ * First-person statements rewritten as facts. Measured on staging: "I am an
+ * expat from India", "I live in Nieuw-West, Amsterdam", "Moved to Berlin, ...
+ * last month". A fact names the user in the third person and a home is
+ * "Lives in ...", or none of the loop's rules recognise it.
+ */
+function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unknown> {
+  let t = typeof entry.statement === 'string' ? entry.statement.trim() : '';
+  if (!t) return entry;
+  t = t.replace(/^(?:i\s+am|i['’]m|im)\s+(?:an?\s+)?/i, '');
+  // "User is an expat ...", "The user lives in ...", "Is an expat from
+  // India" (all measured on staging). Stripped only when what is left is a
+  // home, an origin or an expat status, so no other fact's wording changes.
+  const bare = t.replace(/^(?:(?:the\s+)?user\s+)?(?:is\s+(?:an?\s+)?)?/i, '');
+  if (bare !== t && (
+    isOriginStatement(bare) || isExpatStatement(bare) || /^expat\b/i.test(bare)
+    || /^(?:(?:have\s+|recently\s+)?moved|live|lives|living|reside|resides)\s+(?:in|to)\s/i.test(bare)
+  )) t = bare;
+  const home = /^(?:i\s+)?(?:(?:have\s+|recently\s+)?moved|live|lives|living|reside|resides)\s+(?:in|to)\s+(.+)$/i.exec(t);
+  if (home) {
+    const where = home[1]
+      .replace(/\s+(?:last\s+(?:week|month|year)|this\s+(?:month|year)|recently|a\s+few\s+(?:weeks|months|years)\s+ago)\.?$/i, '')
+      .replace(/\.$/, '');
+    t = `Lives in ${where}`;
+  } else {
+    t = t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  return t === entry.statement ? entry : { ...entry, statement: t };
+}
+
+/** "Lives in <what the user said>, <region>, <country>, <bloc>": the user's
+ *  own first rung is kept when it is finer than the locality (a
+ *  neighbourhood), then the looked-up chain. */
+function chainStatement(where: string, place: Place): string {
+  const first = where.split(',')[0].trim();
+  const rungs = [
+    first.toLowerCase() !== place.locality.toLowerCase() ? first : null,
+    place.locality,
+    place.admin1,
+    place.countryName,
+    place.bloc,
+  ].filter((r): r is string => typeof r === 'string' && r.trim().length > 0);
+  return collapseRepeatedRungs(`Lives in ${rungs.join(', ')}`);
+}
+
+/** Append "Expat in <country>" for an origin entry when the user's current
+ *  country is known and differs, unless one is already offered or on file. */
+function addExpatStatus(
+  list: Record<string, unknown>[],
+  facts: AgentPersonaFact[],
+  known: readonly Place[],
+): void {
+  const origin = list.find((e) => e.questionnaire_attribute === ORIGIN_KEY);
+  if (!origin) return;
+  if (list.some((e) => e.questionnaire_attribute === EXPAT_KEY)) return;
+  if (facts.some((f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement))) return;
+  const homeEntry = list.find((e) => isHomeEntry(e));
+  const homeFact = facts.find(
+    (f) => isLocationKey(f.attribute) && !isRelationalStatement(f.statement),
+  );
+  const country = homeEntry
+    ? countryOf(String(homeEntry.statement), known)
+    : homeFact
+      ? countryOf(homeFact.statement, known)
+      : null;
+  if (!country || sameCountry(country, originCountry(String(origin.statement)))) return;
+  list.push({ statement: expatStatement(country), questionnaire_attribute: EXPAT_KEY });
+}
+
+/**
+ * A combined origin-and-home entry from the model, expanded into its separate
+ * facts; any other entry unchanged. A `replaces` on the combined entry goes
+ * with the residence part, the only part that can replace a home.
+ */
+function expandCombinedEntry(
+  entry: Record<string, unknown>,
+  known: readonly Place[],
+): Record<string, unknown>[] {
+  const statement = typeof entry.statement === 'string' ? entry.statement : '';
+  const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : '';
+  const looksCombined =
+    attribute.trim().toLowerCase() === COMBINED_ORIGIN_KEY
+    || /\b(?:expat|migrant|immigrant|originally|from)\b[^,]*\b(?:living|based|settled|residing)\s+in\b/i.test(statement);
+  const parts = looksCombined ? threeFactsOf(statement, known) : null;
+  if (!parts) return [entry];
+  const out: Record<string, unknown>[] = [
+    { statement: parts.origin, questionnaire_attribute: ORIGIN_KEY },
+  ];
+  if (parts.expat) out.push({ statement: parts.expat, questionnaire_attribute: EXPAT_KEY });
+  out.push({
+    statement: parts.residence,
+    questionnaire_attribute: CANONICAL_LOCATION_KEY,
+    ...(typeof entry.replaces === 'string' ? { replaces: entry.replaces } : {}),
+  });
+  return out;
+}
+
+/**
+ * The EXACT key for the three identity kinds. The model writes "origin",
+ * "expat" or "location" (measured on staging); the topic generator's home
+ * anchor matches the canonical home string byte for byte, and the loop's own
+ * rules match these constants. Other kinds are left exactly as written.
+ */
+function withExactKey(entry: Record<string, unknown>): Record<string, unknown> {
+  const statement = typeof entry.statement === 'string' ? entry.statement : '';
+  const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : '';
+  const key = attribute.split(':')[0].trim().toLowerCase();
+  // The model invents snake-case keys ("origin_country", "country_of_origin",
+  // "residence_city"): every word is read, and the statement check below
+  // decides which fact it is.
+  const words = key.split(/[_\s-]+/).filter(Boolean);
+  const loose = key === '' || words.some((w) => ['origin', 'background', 'expat', 'nationality', 'heritage'].includes(w));
+  const looseHome = key === '' || words.some((w) => ['residence', 'location', 'home', 'city', 'current', 'lives', 'living'].includes(w));
+  if (isExpatStatement(statement) && loose) return { ...entry, questionnaire_attribute: EXPAT_KEY };
+  if (isOriginStatement(statement) && loose) {
+    // "Expat from India" is the ORIGIN, written "From India"; being an expat
+    // is its own fact (see addExpatStatus).
+    return { ...entry, statement: toOriginStatement(statement), questionnaire_attribute: ORIGIN_KEY };
+  }
+  if ((isLocationKey(attribute) || (looseHome && /^lives in\b/i.test(statement.trim())))
+      && !isRelationalStatement(statement)) {
+    return { ...entry, questionnaire_attribute: CANONICAL_LOCATION_KEY };
+  }
+  return entry;
+}
+
+/** An entry that states where the USER lives: the home key, or a residence-
+ *  shaped statement with no key at all. */
+function isHomeEntry(entry: Record<string, unknown>): boolean {
+  const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : null;
+  if (attribute) return isLocationKey(attribute);
+  return /^lives in\b/i.test(String(entry.statement ?? '').trim());
+}
+
+/** "Lives in Porto, Porto, Portugal" gives "Lives in Porto, Portugal": a rung
+ *  equal to the one before it (ignoring "Lives in" and case) is dropped. */
+export function collapseRepeatedRungs(statement: string): string {
+  const parts = statement.split(',').map((p) => p.trim()).filter(Boolean);
+  const bare = (p: string) => p.replace(/^(?:lives|living|based|resides?)\s+in\s+/i, '').toLowerCase();
+  const out: string[] = [];
+  for (const p of parts) {
+    if (out.length > 0 && bare(out[out.length - 1]) === bare(p)) continue;
+    out.push(p);
+  }
+  return out.join(', ');
+}
+
+/** The user's own current home among the facts on file, or null. */
+function currentHomeFact(
+  facts: AgentPersonaFact[],
+  statement: string,
+): AgentPersonaFact | null {
+  const isResidenceStatement = (s: string) => /^(?:lives|living|based|resides?)\s+in\b/i.test(s.trim());
+  return (
+    facts.find(
+      (f) =>
+        !isCombinedOriginFact(f.attribute)
+        && (isLocationKey(f.attribute) || isResidenceStatement(f.statement))
+        && mayReplace(statement, f.statement)
+        && comparableStatement(f.statement) !== comparableStatement(statement),
+    ) ?? null
+  );
+}
+
+/** Distinct place rungs in a statement ("Porto, Porto, Portugal" is two). */
+function placeRungs(statement: string): number {
+  return new Set(
+    statement.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean),
+  ).size;
+}
+
 /** Only a facts/* turn owes a proposal. A conversation/* turn legitimately
  *  answers in prose and proposes nothing. */
 function isFactSkill(skillId: string | null): boolean {
@@ -241,6 +481,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    *  as measured: a route leg that produced no route ends the turn, and the
    *  route leg carries all four discovery tools. */
   const enforceRoute = routeEnforcementFor(resolveAgentArm(params.promptVariant)) === 'on';
+  const multiSubject = multiSubjectFor(resolveAgentArm(params.promptVariant)) === 'on';
 
   // ---- resolve a pending choice BEFORE anything else -----------------------
   // The tap arrives as an ordinary message. Matching it here is what lets the
@@ -263,7 +504,26 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       turn.pendingChoice = null;
     }
   }
-  const answerPending = turn.lastTurnAskedQuestion && turn.resolvedChoice === null;
+  // A PLAIN YES to the last question continues that question's subject, the
+  // same way a chip tap does, but it is NEVER a confirmation: resolvedChoice
+  // stays null, so it cannot authorise a delete or a tap-gated replace. Measured
+  // on device: "Yes please add it." after an offer routed fresh, landed on
+  // conversation/question, and asked the same thing again as chips.
+  // A PLAIN NO continues the same way (owner ruling ux1, F7): a short answer
+  // to the pending question resumes it, anything else is a new turn.
+  const plainAnswer: 'yes' | 'no' | null = isPlainYes(userMessage)
+    ? 'yes'
+    : isPlainNo(userMessage)
+      ? 'no'
+      : null;
+  const typedYesResume =
+    turn.resolvedChoice === null
+    && turn.lastQuestion !== null
+    && turn.lastSkill !== null
+    && turn.lastSkill.startsWith('facts/')
+    && plainAnswer !== null;
+  const answerPending =
+    turn.lastTurnAskedQuestion && turn.resolvedChoice === null && !typedYesResume;
   // Read BEFORE the turn overwrites it at the end, and held for every leg: the
   // question belongs to the turn being answered, not to the one being written.
   const lastQuestion = turn.lastQuestion;
@@ -284,6 +544,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   });
   let routeKind: string | null = null;
   let skillLoaded: string | null = null;
+  /** Every skill this turn ran, in order. One entry unless the multi-subject
+   *  arm queued more. */
+  const skillsLoaded: string[] = [];
+  /** Skills the route leg asked for beyond the first, waiting their turn. */
+  const queuedSkills: string[] = [];
+  /** Per-segment outcome, collected only when more than one segment ran. */
+  const segmentReplies: { text: string; asked: boolean }[] = [];
+  const segmentTerminals: AgentTurnResult['terminalReason'][] = [];
+  /** The segment whose ask_choice is waiting. A tap resumes THAT skill. */
+  let askingSkill: string | null = null;
+  let proposedAny = false;
   /** True when this turn RESUMED the skill that asked the question, instead of
    *  spending a leg routing a chip tap as if it were a fresh intent. */
   let resumedSkill = false;
@@ -304,15 +575,25 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // statements read as the user's own, because the model had already dropped
   // the girlfriend from the sentence. The subject has to survive the question,
   // which means resuming the skill rather than re-deciding.
-  if (turn.resolvedChoice !== null && turn.lastSkill !== null) {
+  if ((turn.resolvedChoice !== null || typedYesResume) && turn.lastSkill !== null) {
     const body = deps.loadSkill(turn.lastSkill);
     if (body !== null) {
       skillLoaded = turn.lastSkill;
       routeKind = routeKindFromSkill(turn.lastSkill);
       systemPrompt = body;
       resumedSkill = true;
+      skillsLoaded.push(turn.lastSkill);
     }
   }
+  // A place the chip resolved, carried for as long as the asking skill keeps
+  // resuming. Any other turn starts clean.
+  const tappedPlace = placeFromPayload(turn.resolvedChoice?.payload);
+  if (tappedPlace) turn.confirmedPlace = tappedPlace;
+  else if (!resumedSkill) turn.confirmedPlace = null;
+
+  /** The route leg's acknowledgement. Kept apart from `reply` so it can never
+   *  become the answer by default. */
+  let acknowledgement = '';
   let reply = '';
   let legBudgetHit = false;
   /** One closing-sentence leg is allowed after a proposal, never a stream. */
@@ -324,6 +605,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let replyRetries = 0;
   let replyClaimUnfixed = false;
   let replyLeakUnfixed = false;
+  let processRetries = 0;
+  let replyProcessUnfixed = false;
   /** WHY the turn stopped. Counted, so a failure shows up in the rows rather
    *  than as an ordinary settled turn that happened to do nothing. */
   let terminalReason: AgentTurnResult['terminalReason'] = 'settled';
@@ -331,7 +614,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    *  they are not in the payload and executing nothing silently made them look
    *  like a normal turn. */
   const unknownTools: string[] = [];
-  let placeCandidates: Place[] = [];
+  /** The status of the last lookup_place this turn, or null if none ran. */
+  let lastLookupStatus: string | null = null;
+  let placeCandidates: Place[] = resumedSkill && turn.confirmedPlace ? [turn.confirmedPlace] : [];
   let similarFactCount: number | null = null;
   const toolResultsThisTurn: { name: string; result: unknown }[] = [];
   /**
@@ -358,11 +643,28 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let refusedReplaces = 0;
   /** Statements find_similar_facts returned, normalised. A proposal equal to
    *  one is a RE-proposal of a fact already on file, not a new fact. */
-  const existingStatements = new Set<string>();
+  // EVERY fact on file, not just what find_similar_facts returned: a forced
+  // leg re-offered "Follows EU regulation" beside a reply saying it was
+  // already on file (ux1 C3), and that turn had never called the lookup.
+  const existingStatements = new Set<string>(
+    state.persona.facts.map((f) => comparableStatement(f.statement)).filter(Boolean),
+  );
   /** Statements already offered THIS TURN, so one fact cannot become two
    *  cards. Separate from `existingStatements`, which holds facts on file. */
-  const proposedStatements = new Set<string>();
+  // Seeded on a resume: the cards the previous turn offered are still on
+  // screen, so the resumed skill must not offer them a second time.
+  const pendingCardList = (state.pendingCardStatements ?? []).filter((s) => s.trim().length > 0);
+  const proposedStatements = new Set<string>([
+    ...(resumedSkill ? turn.offeredStatements : []),
+    ...pendingCardList.map((s) => s.trim().toLowerCase()),
+  ]);
+  /** What THIS turn offered, carried to the next turn for the same reason. */
+  const offeredThisTurn: string[] = [];
+  /** A home fact was already offered this turn (see the save handler). */
+  let homeOfferedThisTurn = false;
   let existingFacts: { factId: string; statement: string }[] = [];
+  /** A retired combined origin-and-home fact still on file, if any. */
+  const combinedFactOnFile = state.persona.facts.find((f) => isCombinedOriginFact(f.attribute)) ?? null;
 
   /** True for the ONE forced leg. */
   let forcingProposalNow = false;
@@ -373,7 +675,25 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** The violation named back to the model, consumed by the next leg. */
   let formatErrorNote: string | null = null;
 
-  for (let index = 0; ; index++) {
+  let nextLegIndex = 0;
+  segments: while (true) {
+  for (let index = nextLegIndex; ; index++) {
+    nextLegIndex = index + 1;
+    // THE LAST LEG OF A FACTS TURN IS AN OFFER. Measured on device: "I also
+    // follow the Champions League" spent route + three find_similar_facts
+    // (each a different `kind`, so each bought a leg), hit the cap, and ended
+    // `settled` on "Let me check what you already follow, then I can offer
+    // this." with nothing offered. The forced leg used to run only when a leg
+    // settled on prose, which a turn walking to the cap never does.
+    if (
+      index === maxLegsThisTurn + formatRetries - 1
+      && isFactSkill(skillLoaded)
+      && !proposedSomething
+      && !forcingProposalNow
+    ) {
+      forcingProposalNow = true;
+      forcedProposal = true;
+    }
     if (index >= maxLegsThisTurn + formatRetries) {
       legBudgetHit = true;
       // RUNNING OUT OF LEGS IS NOT THE SAME AS FAILING. Measured on G3: 16 of
@@ -390,7 +710,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // painted as a failure, because a turn that correctly proposes NOTHING
       // still failed the proposal test. Keying only on `proposedSomething`
       // makes every correct refusal look broken.
-      terminalReason = proposedSomething || answeredTheUser ? 'settled' : 'leg-cap';
+      terminalReason =
+        proposedSomething || answeredTheUser
+          ? 'settled'
+          : forcedProposal
+            ? 'no-proposal'
+            : 'leg-cap';
       break;
     }
 
@@ -403,6 +728,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       existingFacts,
       forcedProposal: forcingProposalNow,
       lastQuestion,
+      answeredYesTo: typedYesResume && plainAnswer === 'yes' ? lastQuestion : null,
+      answeredNoTo: typedYesResume && plainAnswer === 'no' ? lastQuestion : null,
+      pendingCards: pendingCardList,
+      segmentScope:
+        skillsLoaded.length + queuedSkills.length > 1 && routeKind
+          ? {
+              mine: routeKind,
+              others: [...skillsLoaded, ...queuedSkills]
+                .filter((id) => id !== skillLoaded)
+                .map((id) => routeKindFromSkill(id) ?? id),
+              questionPending: askingSkill !== null,
+            }
+          : null,
     });
 
     // SLIM CONTEXT: system prompt, the user's message, the known facts, this
@@ -464,12 +802,21 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         skillLoaded,
         forcingProposal: forcingProposalNow,
         wideRouteLeg: !enforceRoute,
+        // One question per turn: a later segment never gets ask_choice once an
+        // earlier one is waiting on the user.
+        allowChoice: askingSkill === null,
       }) as unknown[],
       toolChoice: forcingProposalNow ? 'required' : 'auto',
       // FALSE on every call: measured, thinking on returned empty content on 8
       // of 10 probes at 8-10s against 0.8-1.0s and a valid answer every time.
       enableThinking: false,
-      onDelta: params.onDelta,
+      // ONLY THE ROUTE LEG STREAMS. It is the acknowledgement and is never
+      // replaced; every later leg's text used to stream into the same bubble
+      // and was then swapped for the final reply, so the text the user was
+      // reading changed under them and the bubble jumped. The answer arrives
+      // whole at the end of the turn, as its own bubble.
+      onDelta: index === 0 && !resumedSkill ? params.onDelta : undefined,
+      streamToUser: index === 0 && !resumedSkill,
     });
 
     const leg: AgentLeg = {
@@ -488,12 +835,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // Cleaned here too, not only at the end: the acknowledgement is the FIRST
     // thing on screen and is exactly where the measured dashes appeared.
     if (result.content.trim()) {
-      reply = cleanProse(result.content);
-      // AN ANSWER, as distinct from the route leg's acknowledgement. "Porto,
-      // one moment." is about the turn starting; it must never make a turn that
-      // then did nothing look complete. Only prose written once a skill is
-      // loaded is an answer to the user.
-      if (skillLoaded !== null) answeredTheUser = true;
+      const cleaned = cleanProse(result.content);
+      if (index === 0 && !resumedSkill) {
+        // The ACKNOWLEDGEMENT. Kept apart from the answer: it said the turn
+        // began, and when every later leg was silent it used to ship as the
+        // whole reply.
+        acknowledgement = cleaned;
+      } else {
+        reply = cleaned;
+        // AN ANSWER, as distinct from the acknowledgement. Narration of the
+        // loop's own process is not one: "Let me check what you already
+        // follow" made a turn that offered nothing look complete.
+        if (skillLoaded !== null && !narratesProcess(cleaned)) answeredTheUser = true;
+      }
     }
 
     // A leg that RESOLVED with a transport error is terminal: continuing would
@@ -525,6 +879,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // the loop is already running is a no-op, and treating it as progress
         // is what let the loop spin to the cap.
         if (skillLoaded !== null) {
+          // SEVERAL SUBJECTS (multi-subject arm only): a further load_skill on
+          // the ROUTE leg queues its skill as the next segment. Anywhere else,
+          // or on any other arm, it is a reroute, answered and not followed.
+          if (
+            multiSubject
+            && index === 0
+            && id !== skillLoaded
+            && !queuedSkills.includes(id)
+            && skillsLoaded.length + queuedSkills.length < MAX_SEGMENTS
+            && loadSkillFn(id) !== null
+            && !(id.startsWith('conversation/') && skillLoaded.startsWith('facts/'))
+          ) {
+            queuedSkills.push(id);
+            const out = { id, queued: true };
+            leg.toolResults.push({ name: call.name, result: out });
+            continue;
+          }
           // Belt to the payload's braces: a model can still emit a call for a
           // tool that is no longer declared.
           rerouteAttempts++;
@@ -540,6 +911,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           toolResultsThisTurn.push({ name: call.name, result: out });
         } else {
           skillLoaded = id;
+          skillsLoaded.push(id);
           routeKind = routeKindFromSkill(id);
           // The loaded body becomes the NEXT leg's system prompt. It is not a
           // tool result the model reads back: each leg is assembled from
@@ -565,7 +937,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           statement: c.statement,
         }));
         for (const c of out.candidates) {
-          existingStatements.add(c.statement.trim().toLowerCase());
+          existingStatements.add(comparableStatement(c.statement));
         }
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
@@ -581,6 +953,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const countryHint = typeof args.countryHint === 'string' ? args.countryHint : undefined;
         const out = await deps.tools.lookupPlace({ query, countryHint });
         placeCandidates = out.status === 'resolved' ? out.places : [];
+        lastLookupStatus = out.status;
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -592,6 +965,40 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
       if (call.name === 'ask_choice') {
         const question = typeof args.question === 'string' ? args.question : '';
+        // A PLACE THAT RESOLVED TO ONE MATCH IS NOT A QUESTION (owner ruling
+        // Q1: the card is the consent for a replacement). Measured on staging,
+        // "Berlin" resolved to one place and the model still asked "Berlin
+        // replaces your Amsterdam fact?", ending the turn with no card. On a
+        // home or origin turn that question is refused and the leg continues,
+        // as is any question after the home card is already offered ("Should
+        // I replace your Amsterdam address?", measured the same way).
+        if (
+          (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin')
+          && ((lastLookupStatus === 'resolved' && placeCandidates.length === 1) || homeOfferedThisTurn)
+        ) {
+          const out = {
+            error:
+              'Only an ambiguous place is asked here. Offer the facts now with saveExtractedFacts; '
+              + 'the card asks the user about any replacement.',
+          };
+          leg.toolResults.push({ name: call.name, result: out });
+          toolResultsThisTurn.push({ name: call.name, result: out });
+          sawContinuationTool = true;
+          continue;
+        }
+        // NO PLACE QUESTION BEFORE A LOOKUP on a residence turn (owner ruling;
+        // residence.md already says so). Measured on staging: "Where exactly
+        // in Berlin do you live?" with nothing looked up ended the turn with
+        // no card. A tapped place carried into a resumed turn counts as looked up.
+        if (skillLoaded === 'facts/residence' && lastLookupStatus === null && placeCandidates.length === 0) {
+          const out = {
+            error: 'Look the place up with lookup_place first. Ask only if it is ambiguous or not found.',
+          };
+          leg.toolResults.push({ name: call.name, result: out });
+          toolResultsThisTurn.push({ name: call.name, result: out });
+          sawContinuationTool = true;
+          continue;
+        }
         if (!validateChoiceOptions(args.options) || !question) {
           // A COUNTED terminal state, never a settled prose question: letting
           // this fall through to the settled branch ends the turn as a question
@@ -600,7 +1007,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           leg.toolResults.push({ name: call.name, result: out });
           terminatedByChoice = true;
           terminalReason = 'malformed-choice';
-          break;
+          // NOT `break`: see below.
+          continue;
+        }
+        if (terminatedByChoice) {
+          // One question per turn. A second ask_choice in the same leg is
+          // answered with an error rather than overwriting the first.
+          leg.toolResults.push({ name: call.name, result: { error: 'one question per turn' } });
+          continue;
         }
         proposedSomething = true;
         turn.pendingChoice = {
@@ -609,13 +1023,80 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         };
         leg.toolResults.push({ name: call.name, result: { awaiting: 'user' } });
         terminatedByChoice = true;
-        break;
+        // ENDS THE TURN, BUT NOT THE LEG. This used to `break` out of the
+        // tool-call loop, so any saveExtractedFacts the model placed after the
+        // question in the same leg was never executed: "I'm 34, a product
+        // manager in Berlin, from Bangalore" asked which Berlin and dropped
+        // the job and the age. The rest of the leg still runs; the turn ends
+        // after it.
+        continue;
       }
 
       if (call.name === 'saveExtractedFacts') {
-        const list = Array.isArray(args.extracted_user_information)
-          ? (args.extracted_user_information as Record<string, unknown>[])
-          : [];
+        // THREE FACTS, NEVER ONE (owner decision, ux1): a combined
+        // origin-and-home entry is expanded into origin, expat status and
+        // residence before anything else looks at it, and every entry of
+        // those three kinds gets its EXACT key, since the model shortens keys.
+        const list = (
+          Array.isArray(args.extracted_user_information)
+            ? (args.extracted_user_information as Record<string, unknown>[])
+            : []
+        )
+          .map(asThirdPersonFact)
+          .flatMap((e) => expandCombinedEntry(e, placeCandidates))
+          .map(withExactKey);
+        // A HOME THE MODEL DID NOT LOOK UP is looked up by the loop, once:
+        // an unresolved "Nieuw-West, Amsterdam" has no country, so it can
+        // anchor nothing and carries no expat status. Only when the country is
+        // needed (an origin offered this turn, or an expat status on file that
+        // a border move updates), and only a single match is used; anything
+        // else is left as the model wrote it.
+        const needsCountry =
+          list.some((e) => e.questionnaire_attribute === ORIGIN_KEY)
+          || state.persona.facts.some((f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement));
+        for (const e of needsCountry ? list : []) {
+          if (!isHomeEntry(e) || countryOf(String(e.statement), placeCandidates) !== null) continue;
+          const where = String(e.statement).replace(/^lives\s+in\s+/i, '').trim();
+          if (where.length < 2) continue;
+          const found = await deps.tools.lookupPlace({ query: where });
+          if (found.status === 'resolved' && found.places.length === 1) {
+            placeCandidates = found.places;
+            e.statement = chainStatement(where, found.places[0]);
+          }
+        }
+        // A RESOLVED HOME THE MODEL LEFT OUT (owner ruling): a lookup on this
+        // turn resolved one place the user named, and the list has no home,
+        // so the loop offers it as a card (never a silent save). Never a place
+        // in the origin's own country: "I grew up in Delhi" is not a home.
+        const onlyPlace = lastLookupStatus === 'resolved' && placeCandidates.length === 1 ? placeCandidates[0] : null;
+        if (
+          onlyPlace
+          && (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin')
+          && !homeOfferedThisTurn
+          && !list.some((e) => isHomeEntry(e))
+          && userMessage.toLowerCase().includes(onlyPlace.locality.toLowerCase())
+        ) {
+          const originEntry = list.find((e) => e.questionnaire_attribute === ORIGIN_KEY);
+          const originFact = state.persona.facts.find((f) => f.attribute === ORIGIN_KEY || isOriginStatement(f.statement));
+          const from = originCountry(String(originEntry?.statement ?? originFact?.statement ?? ''));
+          if (!sameCountry(onlyPlace.countryName, from)) {
+            list.push({
+              statement: chainStatement(onlyPlace.neighbourhood ?? onlyPlace.locality, onlyPlace),
+              questionnaire_attribute: CANONICAL_LOCATION_KEY,
+            });
+          }
+        }
+        // AN EXPAT ORIGIN BRINGS ITS STATUS: "From India" plus "Expat in
+        // <country>" when the current home's country is known and differs.
+        addExpatStatus(list, state.persona.facts, placeCandidates);
+        // A BARE "Expat." says nothing an expat status does not: dropped when
+        // one is offered or on file, kept when it is the only expat card.
+        const hasExpatStatus =
+          list.some((e) => e.questionnaire_attribute === EXPAT_KEY)
+          || state.persona.facts.some((f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement));
+        for (let i = list.length - 1; hasExpatStatus && i >= 0; i--) {
+          if (/^expat\.?$/i.test(String(list[i].statement ?? '').trim())) list.splice(i, 1);
+        }
         // THE LIST THE APP ACTUALLY READS. `handleSaveExtractedFacts` builds
         // the cards from `extracted_user_information`, not from `proposals`,
         // so a decision made only on the parallel array is a decision the user
@@ -623,14 +1104,31 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // have to land HERE or they are cosmetic. Same failure shape as
         // `runAgentTurn` having no callers and `legCapped` being hardcoded.
         const sanitised: Record<string, unknown>[] = [];
+        // ONE CURRENT HOME PER TURN. The model offered "Lives in Porto,
+        // Portugal, EU" and "Lives in Porto, Porto, Portugal, EU" as two
+        // Replace cards on device (ux1 C1). Within a call the richest chain
+        // is kept; a home offered on a later leg is dropped.
+        const homes = list.filter((e) => isHomeEntry(e));
+        const bestHome = homes.length > 1
+          ? homes.reduce((a, b) => (placeRungs(String(b.statement)) > placeRungs(String(a.statement)) ? b : a))
+          : null;
         for (const entry of list) {
-          const statement = typeof entry.statement === 'string' ? entry.statement.trim() : '';
+          if (isHomeEntry(entry)) {
+            if (homeOfferedThisTurn || (bestHome !== null && entry !== bestHome)) {
+              reProposals++;
+              continue;
+            }
+          }
+          const rawStatement = typeof entry.statement === 'string' ? entry.statement.trim() : '';
+          // "Lives in Porto, Porto, Portugal, EU" (city and region share a
+          // name) reads as a stutter on the card (ux1 C1).
+          const statement = isHomeEntry(entry) ? collapseRepeatedRungs(rawStatement) : rawStatement;
           if (!statement) continue;
           // A RE-PROPOSAL. find_similar_facts showed the model this exact
           // statement as something already on file; offering it back is a
           // duplicate card, and on device it read as a "confirmation" of a
           // fact the user had already replaced.
-          if (existingStatements.has(statement.toLowerCase())) {
+          if (existingStatements.has(comparableStatement(statement))) {
             reProposals++;
             continue;
           }
@@ -653,7 +1151,31 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // was asked: those are different facts, and treating one as the other
           // destroys a fact on a turn nobody consented to.
           const wantsReplace = typeof entry.replaces === 'string' ? entry.replaces : null;
-          let replaces = wantsReplace && turn.resolvedChoice ? wantsReplace : null;
+          const replaceTarget = wantsReplace
+            ? state.persona.facts.find((f) => f.id === wantsReplace)
+            : undefined;
+          const entryAttribute =
+            typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : null;
+          // THE CARD IS THE CONSENT for a same-key replace (owner ruling, ux1
+          // Q1). A replacement card names the fact and the topics it removes
+          // and needs its own tap, so asking first through ask_choice made a
+          // move take two confirmations for one decision. The chip is still
+          // required for anything ELSE: a replace across keys is a judgement
+          // the user has to make before the card, not on it.
+          const sameKey = !!replaceTarget && sameAttributeKey(entryAttribute, replaceTarget.attribute);
+          let replaces = wantsReplace && (turn.resolvedChoice || sameKey) ? wantsReplace : null;
+          // THE OLD COMBINED FACT GOES WITH ITS OWN ORIGIN HALF. An origin element
+          // offered while a combined origin-and-home fact is on file replaces it
+          // (ux1 Q2): the split and the skill's own offer are then ONE card, not
+          // two cards saying "Expat from India".
+          if (replaces === null && entryAttribute === ORIGIN_KEY && combinedFactOnFile) {
+            replaces = combinedFactOnFile.id;
+          }
+          // A HOME FACT IS ONLY REPLACED BY A HOME FACT. Demoted, never dropped.
+          if (replaces !== null && replaceTarget && !mayReplaceKey(entryAttribute, replaceTarget.attribute)) {
+            refusedReplaces++;
+            replaces = null;
+          }
           // SUBJECT AGREEMENT. A replace is a destroy, and the confirmed-choice
           // guard above does not speak to WHOSE fact is being destroyed: the
           // user confirming which Porto Santo they meant is not consent to
@@ -666,7 +1188,20 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
               replaces = null;
             }
           }
+          // A MOVE REPLACES THE CURRENT HOME, found by the loop rather than
+          // left to the model. On device "I moved to Porto" beside "Lives in
+          // Berlin..." came back as a plain Add ("I did not find any existing
+          // residence fact"), which would leave two current homes. A new home
+          // with no target takes the one home on file: under any home key,
+          // short or canonical, or a residence statement with no key at all,
+          // and never a relative's.
+          if (replaces === null && isHomeEntry(entry)) {
+            const home = currentHomeFact(state.persona.facts, statement);
+            if (home) replaces = home.id;
+          }
+          if (isHomeEntry(entry)) homeOfferedThisTurn = true;
           proposals.push({ statement, kind: routeKind, place, replaces });
+          offeredThisTurn.push(statement.toLowerCase());
           // Carry the entry through with the loop's verdict on `replaces`
           // applied, and nothing else touched: `alternatives` and
           // `questionnaire_attribute` are the card's own and are not this
@@ -688,11 +1223,45 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
               : undefined;
           sanitised.push({
             ...entry,
+            statement,
             replaces: replaces === null ? undefined : replaces,
             ...(topicSkill ? { topic_skill_id: topicSkill } : {}),
           });
         }
-        if (proposals.length > 0) proposedSomething = true;
+        // A MOVE ACROSS A BORDER also moves the expat status: the residence
+        // card is joined by one updating "Expat in <country>", replacing the
+        // expat fact on file. Never offered for the country the user is from.
+        for (const e of [...sanitised]) {
+          const target = typeof e.replaces === 'string'
+            ? state.persona.facts.find((f) => f.id === e.replaces)
+            : undefined;
+          if (!isHomeEntry(e) || !target) continue;
+          const newCountry = countryOf(String(e.statement), placeCandidates);
+          const oldCountry = countryOf(target.statement);
+          if (!newCountry || !oldCountry || sameCountry(newCountry, oldCountry)) continue;
+          const expatFact = state.persona.facts.find(
+            (f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement),
+          );
+          const originFact = state.persona.facts.find(
+            (f) => f.attribute === ORIGIN_KEY || isOriginStatement(f.statement),
+          );
+          if (!expatFact) continue;
+          if (originFact && sameCountry(newCountry, originCountry(originFact.statement))) continue;
+          if (sanitised.some((x) => x.replaces === expatFact.id)) continue;
+          const statement = expatStatement(newCountry);
+          sanitised.push({
+            statement,
+            questionnaire_attribute: EXPAT_KEY,
+            replaces: expatFact.id,
+            ...((deps.skillIds() as readonly string[]).includes('topics/origin')
+              ? { topic_skill_id: 'topics/origin' }
+              : {}),
+          });
+          proposals.push({ statement, kind: 'origin', place: null, replaces: expatFact.id });
+          proposedStatements.add(statement.toLowerCase());
+          offeredThisTurn.push(statement.toLowerCase());
+        }
+        if (sanitised.length > 0) proposedSomething = true;
         const out = await deps.tools.saveExtractedFacts({
           extracted_user_information: sanitised,
           proposals,
@@ -769,7 +1338,15 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // facts/interest and then produced two legs of prose and no card, and the
     // residence turn asked four prose questions and "confirmed" a stale fact.
     // Prose is not a proposal, so one forced leg runs before settling.
-    if (isFactSkill(skillLoaded) && !proposedSomething && !forcingProposalNow) {
+    // A reply that says there is nothing to add is an answer, not a missing
+    // offer: forcing an offer after it put a card under "that's already on
+    // file" (ux1 C3).
+    if (
+      isFactSkill(skillLoaded)
+      && !proposedSomething
+      && !forcingProposalNow
+      && !declaresNothingToAdd(cleanProse(reply))
+    ) {
       forcingProposalNow = true;
       forcedProposal = true;
       continue;
@@ -787,6 +1364,22 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     //
     // On CLEANED text, because that is what reaches the bubble.
     const finalReply = cleanProse(reply);
+    // PROCESS NARRATION, checked after the leak test and before the save
+    // claim. On a facts turn that has offered nothing, the fix is the offer
+    // itself, not better wording: the forced leg runs instead of a re-ask.
+    if (!leaksInternals(finalReply) && narratesProcess(finalReply)) {
+      if (isFactSkill(skillLoaded) && !proposedSomething && !forcingProposalNow) {
+        forcingProposalNow = true;
+        forcedProposal = true;
+        continue;
+      }
+      if (processRetries < MAX_PROCESS_RETRIES) {
+        processRetries++;
+        formatErrorNote = replyFormatError('process');
+        maxLegsThisTurn++;
+        continue;
+      }
+    }
     const gateKind = leaksInternals(finalReply)
       ? ('leak' as const)
       : claimsSaveHappened(finalReply)
@@ -807,13 +1400,193 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // claim is KEPT and counted: a slightly wrong word beside a visible card
       // beats a mangled sentence, and the residue stays measurable.
       if (gateKind === 'leak') {
-        reply = REPLY_LEAK_FALLBACK;
+        // A card on screen speaks for itself: the fallback's "anything else?"
+        // beside a choice still waiting asked for more at the wrong moment
+        // (ux1 C4).
+        reply = proposedSomething ? '' : REPLY_LEAK_FALLBACK;
         replyLeakUnfixed = true;
       } else {
         replyClaimUnfixed = true;
       }
     }
     break;
+  }
+
+    // ---- NEXT SEGMENT (multi-subject arm) ------------------------------
+    // The segment that just ended keeps its proposals, its question and its
+    // reply; the next one starts from its own guideline with a clean slate
+    // of lookups, so it never reads the previous subject's tool results.
+    proposedAny = proposedAny || proposedSomething;
+    if (
+      queuedSkills.length > 0
+      && terminalReason !== 'transport-error'
+      && terminalReason !== 'no-route'
+    ) {
+      segmentReplies.push({ text: reply, asked: terminalReason === 'awaiting-user' });
+      segmentTerminals.push(terminalReason);
+      if (terminalReason === 'awaiting-user') askingSkill = skillLoaded;
+      const next = queuedSkills.shift() as string;
+      const body = loadSkillFn(next);
+      if (body !== null) {
+        skillLoaded = next;
+        skillsLoaded.push(next);
+        routeKind = routeKindFromSkill(next);
+        systemPrompt = body;
+        placeCandidates = [];
+        similarFactCount = null;
+        existingFacts = [];
+        toolResultsThisTurn.length = 0;
+        continuationsSeen.clear();
+        forcingProposalNow = false;
+        silentLegAfterProposal = false;
+        answeredTheUser = false;
+        proposedSomething = false;
+        reply = '';
+        formatErrorNote = null;
+        terminalReason = 'settled';
+        maxLegsThisTurn = nextLegIndex + SEGMENT_LEGS - formatRetries;
+        continue segments;
+      }
+    }
+    break;
+  }
+
+  // ---- ONE ANSWER FOR SEVERAL SEGMENTS ---------------------------------
+  // Each segment's reply in order, the one whose question is waiting LAST,
+  // so the bubble ends on the question its chips answer.
+  if (segmentReplies.length > 0) {
+    segmentReplies.push({ text: reply, asked: terminalReason === 'awaiting-user' });
+    segmentTerminals.push(terminalReason);
+    if (terminalReason === 'awaiting-user') askingSkill = skillLoaded;
+    reply = [
+      ...segmentReplies.filter((r) => !r.asked),
+      ...segmentReplies.filter((r) => r.asked),
+    ]
+      .map((r) => r.text.trim())
+      .filter((t) => t.length > 0)
+      .join(' ');
+    terminalReason = segmentTerminals.includes('awaiting-user')
+      ? 'awaiting-user'
+      : segmentTerminals.find((t) => t !== 'settled') ?? 'settled';
+    proposedSomething = proposedAny;
+    // The skill a chip tap must resume is the one that asked.
+    if (askingSkill !== null) {
+      skillLoaded = askingSkill;
+      routeKind = routeKindFromSkill(askingSkill);
+    }
+  }
+
+  /**
+   * Origin and residence are no longer combined into one fact (owner ruling,
+   * ux1 Q2). A persona that still holds a combined fact is offered its split
+   * ONCE, on the first origin or residence turn, as an ordinary card: the
+   * origin half replaces the combined fact, and the home half is added when
+   * no home fact exists yet. Written by the loop, not asked of the model: the
+   * combined shape is the loop's own old output, so splitting it is mechanical.
+   */
+  async function offerCombinedFactSplit(): Promise<string | null> {
+    if (terminalReason === 'transport-error') return null;
+    // Never while a question is waiting: the split card used to land under
+    // "Which Porto did you mean?" before the move itself was settled (ux1 C1).
+    // The resumed turn that answers the question offers it instead.
+    if (terminalReason === 'awaiting-user' || turn.pendingChoice !== null) return null;
+    const kinds = skillsLoaded.map((id) => routeKindFromSkill(id));
+    if (!kinds.includes('origin') && !kinds.includes('residence')) return null;
+    const combined = combinedFactOnFile;
+    if (!combined) return null;
+    const parts = threeFactsOf(combined.statement);
+    if (!parts) return null;
+    // The skill's own origin card already replaces it (see the save handler).
+    const originDone = proposals.some((p) => p.replaces === combined.id);
+    if (!originDone && deps.combinedFactRewrite && (await deps.combinedFactRewrite.wasOffered(combined.id))) {
+      return null;
+    }
+    const topicSkill = (kind: string) =>
+      (deps.skillIds() as readonly string[]).includes(`topics/${kind}`) ? `topics/${kind}` : undefined;
+    const hasHome =
+      state.persona.facts.some((f) => f.id !== combined.id && isLocationKey(f.attribute))
+      || proposals.some((p) => p.kind === 'residence');
+    const hasExpat =
+      state.persona.facts.some((f) => f.attribute === EXPAT_KEY || isExpatStatement(f.statement))
+      || proposals.some((p) => isExpatStatement(p.statement));
+    const candidates: Record<string, unknown>[] = [];
+    if (!originDone) {
+      candidates.push({
+        statement: parts.origin,
+        questionnaire_attribute: ORIGIN_KEY,
+        replaces: combined.id,
+        ...(topicSkill('origin') ? { topic_skill_id: topicSkill('origin') } : {}),
+      });
+    }
+    if (parts.expat && !hasExpat) {
+      candidates.push({
+        statement: parts.expat,
+        questionnaire_attribute: EXPAT_KEY,
+        ...(topicSkill('origin') ? { topic_skill_id: topicSkill('origin') } : {}),
+      });
+    }
+    if (!hasHome) {
+      candidates.push({
+        statement: parts.residence,
+        questionnaire_attribute: CANONICAL_LOCATION_KEY,
+        ...(topicSkill('residence') ? { topic_skill_id: topicSkill('residence') } : {}),
+      });
+    }
+    // Same duplicate rules as any other offer: never a statement already on
+    // file or already offered this turn.
+    const entries = candidates.filter((e) => {
+      const statement = String(e.statement);
+      return (
+        !existingStatements.has(comparableStatement(statement))
+        && !proposedStatements.has(statement.trim().toLowerCase())
+      );
+    });
+    if (entries.length === 0) {
+      if (originDone) await deps.combinedFactRewrite?.markOffered(combined.id);
+      return originDone ? combined.id : null;
+    }
+    const splitProposals: AgentProposal[] = entries.map((e) => ({
+      statement: String(e.statement),
+      kind: e.questionnaire_attribute === CANONICAL_LOCATION_KEY ? 'residence' : 'origin',
+      place: null,
+      replaces: typeof e.replaces === 'string' ? e.replaces : null,
+    }));
+    const out = await deps.tools.saveExtractedFacts({
+      extracted_user_information: entries,
+      proposals: splitProposals,
+    });
+    const callRaw = JSON.stringify({ extracted_user_information: entries });
+    const leg: AgentLeg = {
+      index: legs.length,
+      role: 'tool',
+      systemPrompt: '',
+      messages: [],
+      toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+      toolResults: [{ name: 'saveExtractedFacts', result: out }],
+      rawOutput: '',
+      result: {
+        content: '',
+        toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+        finishReason: 'synthetic',
+        truncated: false,
+        usage: null,
+        modelSent: null,
+        latencyMs: 0,
+        error: null,
+      },
+      inputTokens: 0,
+      synthetic: true,
+    };
+    legs.push(leg);
+    proposals.push(...splitProposals);
+    for (const p of splitProposals) {
+      proposedStatements.add(p.statement.toLowerCase());
+      offeredThisTurn.push(p.statement.toLowerCase());
+    }
+    proposedSomething = true;
+    await deps.combinedFactRewrite?.markOffered(combined.id);
+    params.onLeg?.(leg);
+    return combined.id;
   }
 
   if (unknownTools.length > 0 && terminalReason === 'settled') {
@@ -839,11 +1612,27 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // re-ask failed. A save claim is left alone here for the same reason it is
   // left alone above.
   if (leaksInternals(cleanProse(reply))) {
-    reply = REPLY_LEAK_FALLBACK;
+    reply = proposedSomething ? '' : REPLY_LEAK_FALLBACK;
     replyLeakUnfixed = true;
+  } else if (narratesProcess(cleanProse(reply))) {
+    // Same placement rule as the leak check: every exit, not just the settle
+    // break. A card on screen needs no words; otherwise one plain line.
+    reply = proposedSomething ? '' : REPLY_PROCESS_FALLBACK;
+    replyProcessUnfixed = true;
+  }
+  // The acknowledgement is rendered too, so it gets the same two checks. It is
+  // dropped rather than replaced: the reply below it carries the turn.
+  if (leaksInternals(acknowledgement) || narratesProcess(acknowledgement)) {
+    acknowledgement = '';
   }
 
+  // ---- THE ONE-TIME SPLIT OF A COMBINED FACT -------------------------------
+  const combinedRewriteOffered = await offerCombinedFactSplit();
+
   turn.turnActive = false;
+  turn.offeredStatements = resumedSkill
+    ? [...new Set([...turn.offeredStatements, ...offeredThisTurn])]
+    : offeredThisTurn;
   turn.lastTurnAskedQuestion = turn.pendingChoice !== null || /\?\s*$/.test(reply);
   // The chip question wins over the prose one: when both exist the chips are
   // what is on screen, so they are what the next message answers.
@@ -876,10 +1665,18 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // Deterministic dash removal. Invariant 7 is unenforceable on model output
     // by prompt alone: 25% of measured prose rows carried one despite the ban.
     reply: cleanProse(reply),
+    acknowledgement,
+    processRetries,
+    replyProcessUnfixed,
+    typedYesResume,
+    combinedRewriteOffered,
     terminalReason,
     unknownTools,
-    routeKind,
-    skillLoaded,
+    // The PRIMARY route, so routing accuracy scores what the route leg chose
+    // first; `skillsLoaded` carries the rest.
+    routeKind: skillsLoaded.length > 0 ? routeKindFromSkill(skillsLoaded[0]) : routeKind,
+    skillLoaded: skillsLoaded[0] ?? skillLoaded,
+    skillsLoaded: [...skillsLoaded],
     proposals,
     legBudgetHit,
     // WHAT THE UI SHOWS. `legBudgetHit` is the raw budget signal the eval reads;

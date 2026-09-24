@@ -134,7 +134,9 @@ describe('headline sections — a headline row now reaches a section', () => {
       topics: [['t1', { factId: 'f1' }]],
       facts: [['f1', {}]],
     }));
-    expect(rows.map((r) => r.factId)).toEqual([COUNTRY_IN_SECTION]);
+    // f1 appears only as an EMPTY section (D4): the headline did not join it.
+    expect(rows.filter((r) => r.groups.length > 0).map((r) => r.factId)).toEqual([COUNTRY_IN_SECTION]);
+    expect(rows.find((r) => r.factId === 'f1')?.groups).toEqual([]);
   });
 
   it('CITY scope has no section (never requested as its own retrieval scope)', () => {
@@ -247,7 +249,9 @@ describe('headline sections — the relevance bar is the EXISTING one', () => {
   // any more, so it now pins the opposite: both kinds vanish together on the
   // same all-LOW membership. Kept rather than deleted because a future change
   // that reintroduces an empty-shell state for either kind should fail here.
-  it('a FACT and a HEADLINE section with all-LOW membership BOTH disappear', () => {
+  // D4: the FACT section now stays as an empty section; the HEADLINE section
+  // still disappears (empty headline scopes keep the old rule).
+  it('an all-LOW HEADLINE section disappears; an all-LOW FACT section stays EMPTY', () => {
     const { rows } = build(
       [
         sugg({ relevance: REL_LOW, matchedTopics: [{ topicId: 't1', text: 'dutch tax' }] }),
@@ -255,7 +259,8 @@ describe('headline sections — the relevance bar is the EXISTING one', () => {
       ],
       snapshots({ topics: [['t1', { factId: 'f1' }]], facts: [['f1', {}]] }),
     );
-    expect(rows).toHaveLength(0);
+    expect(rows.map((r) => r.factId)).toEqual(['f1']);
+    expect(rows[0].groups).toEqual([]);
   });
 });
 

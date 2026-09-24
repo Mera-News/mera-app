@@ -318,7 +318,7 @@ describe('incoherent_topics', () => {
 
     expect(p.summary).toContain('2 topics');
     expect(p.summary).toContain("don't match it");
-    expect(p.summary).toContain('replace them');
+    expect(p.summary).toContain('Replace them');
   });
 
   it('orders generate_replacements FIRST, then the retires', () => {
@@ -400,5 +400,87 @@ describe('incoherent_topics', () => {
     const out = run({ facts: [cricket], topics: [good, bad1] })
       .filter((p) => p.kind === 'incoherent_topics');
     expect(out).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ux1: location conflicts, the user's own downranks, and dash-free summaries
+// ---------------------------------------------------------------------------
+
+const RESIDENCE_KEY = 'location: neighborhood/area, city, and country (preserve specifics)';
+const COMBINED_KEY = 'background: origin and current residence';
+
+function placeFact(id: string, statement: string, attr: string, createdAtMs: number) {
+  return { ...fact(id, statement, null), createdAtMs, questionnaireAttribute: attr };
+}
+
+describe('location_conflict', () => {
+  it('proposes removing an older place fact that shares nothing with the newest one', () => {
+    const facts = [
+      placeFact('old', 'Expat from India living in Nieuw West, Amsterdam, North Holland, Netherlands, Europe', COMBINED_KEY, NOW - 30 * DAY),
+      placeFact('new', 'Lives in Berlin, State of Berlin, Germany, EU', RESIDENCE_KEY, NOW - DAY),
+    ];
+    const out = run({ facts, topics: [] }).filter((p) => p.kind === 'location_conflict');
+    expect(out).toHaveLength(1);
+    expect(out[0].ops).toEqual([{ type: 'delete_fact', factId: 'old' }]);
+    expect(out[0].targetFactIds).toEqual(['new', 'old']);
+    expect(out[0].invertible).toBe(false);
+  });
+
+  it('does not treat the same place said twice as a conflict', () => {
+    const facts = [
+      placeFact('a', 'Expat from India living in Berlin, Germany, Europe', COMBINED_KEY, NOW - 30 * DAY),
+      placeFact('b', 'Lives in Berlin, State of Berlin, Germany, EU', RESIDENCE_KEY, NOW - DAY),
+    ];
+    expect(run({ facts, topics: [] }).some((p) => p.kind === 'location_conflict')).toBe(false);
+  });
+
+  it('never counts a relative\'s address as the user\'s own place', () => {
+    const facts = [
+      placeFact('mum', 'My parents live in Chennai, India', RESIDENCE_KEY, NOW - 30 * DAY),
+      placeFact('me', 'Lives in Berlin, Germany, EU', RESIDENCE_KEY, NOW - DAY),
+    ];
+    expect(run({ facts, topics: [] }).some((p) => p.kind === 'location_conflict')).toBe(false);
+  });
+
+  it('ignores facts with no place key', () => {
+    const facts = [
+      fact('x', 'Works in Amsterdam as a product manager'),
+      placeFact('me', 'Lives in Berlin, Germany, EU', RESIDENCE_KEY, NOW - DAY),
+    ];
+    expect(run({ facts, topics: [] }).some((p) => p.kind === 'location_conflict')).toBe(false);
+  });
+});
+
+describe('incoherent_topics never touches the user\'s own downrank', () => {
+  it('a fact whose flagged topic is negative-weight gets no incoherent proposal', () => {
+    const f = fact('f1', 'Follows Formula 1');
+    const downranked = topic('t-neg', 'f1', 'Formula 1 gossip', { weight: -0.5 });
+    const out = run({
+      facts: [f],
+      topics: [downranked, topic('t-ok', 'f1', 'Formula 1 race results')],
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-neg'], fillTo: 2 }],
+    }).filter((p) => p.kind === 'incoherent_topics');
+    expect(out).toHaveLength(0);
+  });
+});
+
+describe('hygiene summaries are dash-free user copy', () => {
+  it('no summary carries an em dash', () => {
+    const facts = [
+      fact('d1', 'Follows German housing market news'),
+      fact('d2', 'Follows German housing market news closely'),
+      fact('broad', 'Sports'),
+      fact('stale', 'Likes chess'),
+      placeFact('old', 'Lives in Amsterdam, Netherlands', RESIDENCE_KEY, NOW - 30 * DAY),
+      placeFact('new', 'Lives in Berlin, Germany', RESIDENCE_KEY, NOW - DAY),
+    ];
+    const topics = [
+      topic('ts', 'stale', 'chess', { weight: 0.8, status: 'retired' }),
+      topic('tq', 'broad', 'football', { weight: 0.1, lastSignalAtMs: NOW - 90 * DAY }),
+    ];
+    const out = run({ facts, topics });
+    expect(out.length).toBeGreaterThan(2);
+    for (const p of out) expect(p.summary).not.toMatch(/[\u2014\u2013]/);
   });
 });

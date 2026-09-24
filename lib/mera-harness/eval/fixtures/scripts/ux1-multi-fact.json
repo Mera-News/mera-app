@@ -1,0 +1,40 @@
+{
+  "id": "ux1-multi-fact",
+  "cohort": "production",
+  "note": "ux1 B1 (G3). The device message that dropped the job and the origin: every subject must reach a card. Run interleaved as --variant baseline,multi-subject; baseline is expected to FAIL the profession proposal, which is the comparison that decides whether G3 switches on.",
+  "persona": { "facts": [], "topics": [] },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I'm 34 and work as a product manager in Berlin. I moved here from Bangalore a few years ago.",
+      "expect": {
+        "routeKind": "origin",
+        "skill": "facts/origin",
+        "tools": ["load_skill", "lookup_place", "find_similar_facts", "saveExtractedFacts"],
+        "legs": 7,
+        "proposals": [
+          { "statementMatches": ["bangalore"], "kind": "origin", "placeChain": null, "replaces": null },
+          { "statementMatches": ["berlin"], "kind": "origin", "placeChain": "required", "replaces": null },
+          { "statementMatches": ["product manager"], "kind": "profession", "placeChain": null, "replaces": null }
+        ]
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "Berlin",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                { "locality": "Berlin", "admin1": "Berlin", "countryCode": "DE", "countryName": "Germany", "bloc": "EU" }
+              ]
+            }
+          }
+        ],
+        "find_similar_facts": [
+          { "kind": null, "returns": { "candidates": [] } }
+        ]
+      }
+    }
+  ]
+}

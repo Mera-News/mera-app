@@ -81,6 +81,9 @@ function languagesMatch(a: string | null | undefined, b: string | null | undefin
     return a.split('-')[0].toLowerCase() === b.split('-')[0].toLowerCase();
 }
 
+/** How far the untranslated text dims while its translation is in flight. */
+const TRANSLATING_OPACITY = 0.6;
+
 /** Buffer (in px) around the viewport used to pre-translate items that are
  *  just off-screen, so they don't flash untranslated when scrolled in. */
 const VISIBILITY_BUFFER_PX = 200;
@@ -193,6 +196,11 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     // every translation anywhere (2+ per feed card).
     const cachedTranslation = useAppLanguageStore((s) =>
         needsTranslation ? s.cache.get(text) : undefined,
+    );
+    // A request for THIS text is in flight (same per-key subscription shape as
+    // above: a boolean, so only this node re-renders when it flips).
+    const translationPending = useAppLanguageStore((s) =>
+        needsTranslation ? s.pending.has(text) : false,
     );
 
     const nodeRef = useRef<MeasurableNode | null>(null);
@@ -437,6 +445,14 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const showToggleButton = showToggle && !!originalText && !originalIsTargetLang;
 
     // Inline icon — shown only in non-toggle mode.
+    // N9: the text on screen is about to be replaced by its translation. Dim it
+    // and say so inline, so the swap (and the re-wrap it can cause) reads as a
+    // translation arriving rather than as the card changing under the reader.
+    // Inline, not a new row: this component must stay ONE Text node so it drops
+    // into any parent layout exactly as a Text would.
+    const translating =
+        needsTranslation && cachedTranslation == null && translationPending && !showToggleButton;
+
     const translatedIndicator = isTranslated && !showToggleButton ? (
         <>
             <MaterialIcons name="translate" size={11} color="#9ca3af" />
@@ -448,12 +464,25 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         <>
             {translatedIndicator}
             {displayText}
+            {translating ? (
+                <Text
+                    size="xs"
+                    testID="translatable-pending"
+                    style={{ color: '#9ca3af', fontWeight: '400', fontStyle: 'normal' }}
+                >
+                    {'  '}
+                    {t('feed.translatingCaption')}
+                </Text>
+            ) : null}
         </>
     );
 
     // Line height comes from the size token's class now (see the note above),
-    // so the caller's style is passed straight through.
-    const mergedStyle = style ?? {};
+    // so the caller's style is passed straight through. Dimmed while a
+    // translation is in flight (N9).
+    const mergedStyle = translating
+        ? [style ?? {}, { opacity: TRANSLATING_OPACITY }]
+        : (style ?? {});
 
     const sharedProps = {
         ref: setNodeRef,

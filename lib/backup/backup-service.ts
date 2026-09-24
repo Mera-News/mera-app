@@ -33,6 +33,7 @@ import { exportBackup, type ExportProgress } from './export';
 import { importBackup, inspectBackup, type ImportProgress, type ImportResult } from './import';
 import { getBackupKey, isRecoveryCodeConfirmed } from './key-store';
 import { REMOTE_DIRECTORY } from './providers/shared';
+import { REMOTE_FILENAME_PREFIX, remoteFilenameFor } from './remote-names';
 import {
   BACKUP_DOCUMENT_DIRECTORY,
   BACKUP_SCRATCH_DIRECTORY,
@@ -44,8 +45,7 @@ import {
 /** Blobs kept in the cloud. Older ones are pruned after a successful upload. */
 export const BACKUP_KEEP_COUNT = 3;
 
-/** Every blob this app writes starts with this, and `list` filters on it. */
-export const REMOTE_FILENAME_PREFIX = 'mera-backup-';
+export { REMOTE_FILENAME_PREFIX, remoteFilenameFor } from './remote-names';
 
 export class BackupServiceError extends Error {
   constructor(
@@ -61,11 +61,6 @@ export interface BackupRunResult {
   readonly header: BackupHeader;
   readonly blobBytes: number;
   readonly remotePath: string;
-}
-
-/** Timestamp only. No user id, no device name, no email. */
-export function remoteFilenameFor(createdAt: number): string {
-  return `${REMOTE_FILENAME_PREFIX}${new Date(createdAt).toISOString().replace(/[:.]/g, '-')}.bin`;
 }
 
 /** RNFS wants a plain path; expo-file-system hands back a `file://` URI. */

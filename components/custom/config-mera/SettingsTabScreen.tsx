@@ -2,7 +2,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
@@ -25,6 +25,9 @@ import AppPreferencesTab from './AppPreferencesTab';
  */
 const SettingsTabScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
+    // NativeTabs' own SafeAreaProvider already counts the bar on iOS; adding
+    // TAB_BAR_HEIGHT again left ~49pt of dead space under Log out.
+    const tabBarClearance = useTabBarClearance();
     const { t } = useTranslation();
 
     return (
@@ -51,7 +54,7 @@ const SettingsTabScreen: React.FC = () => {
 
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24 }}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: tabBarClearance + 24 }}
                 showsVerticalScrollIndicator={false}
             >
                 <AppPreferencesTab />

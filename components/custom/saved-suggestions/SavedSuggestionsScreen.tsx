@@ -23,15 +23,16 @@ import {
     type SavedItem,
 } from '@/lib/database/services/saved-article-suggestion-service';
 import logger from '@/lib/logger';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import SavedExportFab, { SAVED_EXPORT_FAB_RESERVE } from './SavedExportFab';
 import SavedExportModal from './SavedExportModal';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { savedItemId } from './saved-item-id';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ListRenderItem } from 'react-native';
+import { ListRenderItem, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -92,6 +93,9 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const { t } = useTranslation();
     const toast = useToast();
     const insets = useSafeAreaInsets();
+    // Inside a tab on iOS the inset already includes the tab bar; measured on
+    // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
+    const tabClearance = useTabBarClearance();
     const [saved, setSaved] = useState<SavedItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     // The row pending deletion — non-null opens the confirm dialog.
@@ -267,17 +271,31 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     // here yet.
     const showExportFab = saved.length > 0;
 
+    // After a delete leaves the list SHORTER than the screen, iOS keeps the old
+    // scroll offset: the rows sat part-way up under the Dashboard header (a
+    // delete button at y=198pt under a 211pt header, captured), and with
+    // nothing left to scroll, swipes and scroll-to-top could not bring them
+    // back. When the content fits, settle it back to the top, which also
+    // reveals the collapsing header.
+    const listRef = useRef<any>(null);
+    const viewportH = useRef(0);
+    const settleIfShort = useCallback((_w: number, contentH: number) => {
+        if (viewportH.current > 0 && contentH <= viewportH.current) {
+            listRef.current?.scrollToOffset?.({ offset: 0, animated: true });
+        }
+    }, []);
+
     const ListEmpty = isLoading ? (
         <Box className="items-center justify-center py-20">
             <Spinner size="large" />
         </Box>
     ) : (
-        <Box className="items-center justify-center py-20 px-6">
-            <MaterialIcons name="bookmark-border" size={48} color="#6B7280" />
-            <Text size="md" className="text-typography-400 text-center mt-4">
-                {t('savedSuggestions.empty')}
-            </Text>
-        </Box>
+        <ForYouEmptyState
+            icon="bookmark-border"
+            title={t('savedSuggestions.emptyTitle')}
+            body={t('savedSuggestions.empty')}
+            testID="saved-empty"
+        />
     );
 
     return (
@@ -303,27 +321,33 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 (headerHeight 0) keeps its exact sequence: title, 12px, banner,
                 rows. */}
             <Animated.FlatList
+                ref={listRef}
                 testID="saved-suggestions-list"
                 data={saved}
+                onLayout={(e) => {
+                    viewportH.current = e.nativeEvent.layout.height;
+                }}
+                onContentSizeChange={settleIfShort}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
                 ListHeaderComponent={
                     <>
+                        {/* Standalone only. Embedded, the Dashboard header and
+                            the selected pill already name this list, and a
+                            second 34pt title under the 34pt "Dashboard" was the
+                            double heading (M3). */}
+                        {embedded ? (
+                            <View style={{ height: 12 }} />
+                        ) : (
                         <VStack
                             className="px-5 pb-2 mb-3"
-                            style={{ paddingTop: embedded ? 8 : insets.top + 16 }}
+                            style={{ paddingTop: insets.top + 16 }}
                         >
-                            <Heading
-                                size="4xl"
-                                className={embedded ? 'text-white' : 'text-white ml-14'}
-                            >
+                            <Heading size="4xl" className="text-white ml-14">
                                 {t('savedSuggestions.title')}
                             </Heading>
-                        {/* `mb-3` on the block above rather than a spacer
-                            element: a <Box style={{height:12}}/> is an
-                            invisible node in the tree that no spacing token
-                            governs and no layout tool can see. */}
                         </VStack>
+                        )}
                         {/* The banner explains how saving works on THIS device;
                             over an empty list it explained a list that isn't
                             there, stacked above the "you haven't saved anything"
@@ -350,7 +374,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     // rows have no corner control.
                     paddingBottom:
                         (embedded
-                            ? insets.bottom + TAB_BAR_HEIGHT + 24
+                            ? tabClearance + 24
                             : insets.bottom + 40) +
                         (showExportFab ? SAVED_EXPORT_FAB_RESERVE : 0),
                 }}

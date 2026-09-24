@@ -13,6 +13,11 @@ import { render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
+// Reanimated import trap: the real backdrop breaks this suite at import.
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="startup-backdrop" /> };
+});
 jest.mock('@/components/ui/box', () => { const { View } = require('react-native'); return { Box: (p: any) => <View {...p} /> }; });
 jest.mock('react-native-css-interop/jsx-runtime', () => {
     const ReactJSXRuntime = require('react/jsx-runtime');
@@ -151,5 +156,12 @@ describe('install-boundary reset (S10)', () => {
         renderGate();
 
         await waitFor(() => expect(mockRedirect).toHaveBeenCalledWith('/logged-in'));
+    });
+});
+
+describe('F1: no flat-black splash', () => {
+    it('paints the gradient backdrop while the launch route resolves', () => {
+        const r = renderGate();
+        expect(r.getByTestId('startup-backdrop')).toBeTruthy();
     });
 });

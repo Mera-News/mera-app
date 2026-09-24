@@ -1,0 +1,163 @@
+{
+  "_comment": "ux1 P2 (For You scout): the feed scout's verified wording for two explainer keys. OVERWRITES ONLY, run with --allow-overwrite tabExplainer.feed.how3,tabExplainer.feed.privacy. how3 says the move happens at the next re-sort (the Feed's order is a snapshot refreshed on pull or after time away), and privacy says the RECORD of opens stays on the phone (opening from Explore, related or History fetches the article by id from the server). No em or en dashes.",
+  "ar": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "عند إعادة الترتيب التالية، تنزل القصص التي اطلعت عليها، وتأتي القصص التي فتحتها في النهاية. البطاقات فوق موضع قراءتك لا تتحرك. اسحب للأسفل لإعادة الترتيب.",
+        "privacy": "يُحسب الترتيب على هذا الهاتف. يبقى سجل القصص التي تفتحها على هذا الهاتف."
+      }
+    }
+  },
+  "de": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Beim nächsten Neusortieren rücken Meldungen, die du schon angesehen hast, nach unten, geöffnete ganz ans Ende. Karten oberhalb deiner Leseposition bleiben stehen. Zum Neusortieren nach unten ziehen.",
+        "privacy": "Die Reihenfolge wird auf diesem Telefon berechnet. Welche Meldungen du öffnest, wird nur auf diesem Telefon festgehalten."
+      }
+    }
+  },
+  "en": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "At the next re-sort, stories you already looked at move lower and ones you opened go last. Cards above where you are reading stay put. Pull down to re-sort.",
+        "privacy": "The order is worked out on this phone. The record of which stories you open stays on this phone."
+      }
+    }
+  },
+  "es": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "En la siguiente reordenación, las noticias que ya viste bajan y las que abriste van al final. Las tarjetas por encima de donde lees no se mueven. Desliza hacia abajo para reordenar.",
+        "privacy": "El orden se calcula en este teléfono. El registro de las noticias que abres se queda en este teléfono."
+      }
+    }
+  },
+  "fr": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Au prochain tri, les sujets que tu as déjà vus descendent et ceux que tu as ouverts vont à la fin. Les cartes au-dessus de ta lecture ne bougent pas. Tire vers le bas pour retrier.",
+        "privacy": "L'ordre est calculé sur ce téléphone. La liste des sujets que tu ouvres reste sur ce téléphone."
+      }
+    }
+  },
+  "hi": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "अगली बार क्रम बदलने पर, जो ख़बरें आप देख चुके हैं वे नीचे जाती हैं और खोली गई ख़बरें सबसे आख़िर में। आप जहाँ पढ़ रहे हैं उसके ऊपर के कार्ड नहीं हिलते। दोबारा क्रम के लिए नीचे खींचें।",
+        "privacy": "क्रम इसी फ़ोन पर तय होता है। आप कौन सी ख़बरें खोलते हैं, इसका रिकॉर्ड इसी फ़ोन पर रहता है।"
+      }
+    }
+  },
+  "id": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Saat pengurutan ulang berikutnya, berita yang sudah kamu lihat turun, dan yang sudah kamu buka paling akhir. Kartu di atas posisi bacamu tidak bergeser. Tarik ke bawah untuk mengurutkan ulang.",
+        "privacy": "Urutan dihitung di ponsel ini. Catatan berita yang kamu buka tetap ada di ponsel ini."
+      }
+    }
+  },
+  "it": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Al prossimo riordino, le notizie che hai già visto scendono e quelle che hai aperto vanno in fondo. Le schede sopra il punto in cui leggi restano ferme. Trascina verso il basso per riordinare.",
+        "privacy": "L'ordine viene calcolato su questo telefono. L'elenco delle notizie che apri resta su questo telefono."
+      }
+    }
+  },
+  "ja": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "次に並べ直すとき、すでに見た記事は下へ、開いた記事は最後に移ります。読んでいる位置より上のカードは動きません。下に引くと並べ直します。",
+        "privacy": "並び順はこのスマートフォンで決まります。どの記事を開いたかの記録は、このスマートフォンにだけ残ります。"
+      }
+    }
+  },
+  "ko": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "다음에 다시 정렬할 때 이미 본 기사는 아래로, 연 기사는 맨 뒤로 갑니다. 읽고 있는 위치 위의 카드는 움직이지 않습니다. 아래로 당기면 다시 정렬됩니다.",
+        "privacy": "순서는 이 휴대폰에서 정해집니다. 어떤 기사를 열었는지에 대한 기록은 이 휴대폰에만 남습니다."
+      }
+    }
+  },
+  "nl": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Bij de volgende herschikking zakken verhalen die je al zag, en verhalen die je opende komen onderaan. Kaarten boven je leespositie blijven staan. Trek omlaag om opnieuw te sorteren.",
+        "privacy": "De volgorde wordt op deze telefoon bepaald. Welke verhalen je opent, wordt alleen op deze telefoon bijgehouden."
+      }
+    }
+  },
+  "pl": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Przy następnym sortowaniu tematy, które już widziałeś, przesuwają się niżej, a otwarte trafiają na koniec. Karty powyżej miejsca, w którym czytasz, stoją w miejscu. Pociągnij w dół, by posortować.",
+        "privacy": "Kolejność jest ustalana na tym telefonie. Zapis tego, które tematy otwierasz, zostaje na tym telefonie."
+      }
+    }
+  },
+  "pt-BR": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Na próxima reorganização, as notícias que você já viu descem e as que você abriu vão para o fim. Os cartões acima de onde você está lendo não se mexem. Puxe para baixo para reordenar.",
+        "privacy": "A ordem é calculada neste celular. O registro das notícias que você abre fica neste celular."
+      }
+    }
+  },
+  "ru": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "При следующей пересортировке сюжеты, которые вы уже видели, опускаются ниже, а открытые уходят в конец. Карточки выше места, где вы читаете, не двигаются. Потяните вниз, чтобы пересортировать.",
+        "privacy": "Порядок рассчитывается на этом телефоне. Запись о том, какие сюжеты вы открываете, остаётся на этом телефоне."
+      }
+    }
+  },
+  "th": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "เมื่อเรียงใหม่ครั้งถัดไป ข่าวที่คุณเคยดูแล้วจะลงไปข้างล่าง ส่วนข่าวที่เปิดแล้วจะอยู่ท้ายสุด การ์ดที่อยู่เหนือตำแหน่งที่คุณอ่านจะไม่ขยับ ดึงลงเพื่อเรียงใหม่",
+        "privacy": "ลำดับถูกคำนวณบนโทรศัพท์เครื่องนี้ บันทึกว่าคุณเปิดข่าวใดบ้างจะอยู่บนโทรศัพท์เครื่องนี้"
+      }
+    }
+  },
+  "tr": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Bir sonraki yeniden sıralamada, baktığın haberler aşağı iner, açtıkların en sona gider. Okuduğun yerin üstündeki kartlar yerinde kalır. Yeniden sıralamak için aşağı çek.",
+        "privacy": "Sıralama bu telefonda hesaplanır. Hangi haberleri açtığının kaydı bu telefonda kalır."
+      }
+    }
+  },
+  "uk": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Під час наступного пересортування сюжети, які ви вже бачили, опускаються нижче, а відкриті йдуть у кінець. Картки вище місця, де ви читаєте, не рухаються. Потягніть униз, щоб пересортувати.",
+        "privacy": "Порядок обчислюється на цьому телефоні. Запис про те, які сюжети ви відкриваєте, лишається на цьому телефоні."
+      }
+    }
+  },
+  "vi": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "Ở lần sắp xếp lại tiếp theo, tin bạn đã xem xuống dưới, tin đã mở xuống cuối. Các thẻ phía trên chỗ bạn đang đọc giữ nguyên. Kéo xuống để sắp xếp lại.",
+        "privacy": "Thứ tự được tính trên điện thoại này. Bản ghi những tin bạn mở vẫn nằm trên điện thoại này."
+      }
+    }
+  },
+  "zh-CN": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "下次重新排序时，你看过的新闻会下移，打开过的排到最后。你正在阅读位置上方的卡片不会移动。下拉即可重新排序。",
+        "privacy": "排序在这部手机上完成。你打开了哪些新闻的记录，保留在这部手机上。"
+      }
+    }
+  },
+  "zh-TW": {
+    "tabExplainer": {
+      "feed": {
+        "how3": "下次重新排序時，你看過的新聞會往下移，開啟過的排到最後。你正在閱讀位置上方的卡片不會移動。下拉即可重新排序。",
+        "privacy": "排序在這支手機上完成。你開啟了哪些新聞的紀錄，保留在這支手機上。"
+      }
+    }
+  }
+}

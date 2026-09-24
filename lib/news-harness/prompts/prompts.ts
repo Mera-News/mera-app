@@ -275,6 +275,15 @@ ${CLOUD_SCORING_GEO_SCOPE_RULE}`;
  * (config.test.ts "pins the second-person voice rule"), and QA 2026-07-28
  * showed what its absence costs: third-person reasons leaked to users.
  */
+/**
+ * Every reason prompt's ban on naming the scoring rules in the sentence a
+ * reader sees. A rule name leaked twice: "foreign-domestic" copied from an
+ * example, then "foreign domestic policy" once the hyphenated form alone was
+ * banned. So the ban names the category in any spelling and says what to
+ * write instead. Guarded by golden-prompts.test.ts.
+ */
+export const RULE_NAME_BAN = `Say what the rules found, never their names: the sentence must not contain a rule name in ANY spelling ("foreign-domestic", "foreign domestic", with or without the hyphen, in any order), nor "tangential", "exclude", "stake", a tag such as "home" or "interest" used as a label, or any other word from these instructions. The reader has never seen them. Say whose story it is in plain words instead ("a Bulgarian domestic matter").`;
+
 const CLOUD_REASON_VOICE_RULE = `Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, low scores included. Wrong: "User follows Formula 1; the race matches this interest, no personal stake." Right: "The race matches your Formula 1 interest, but carries no personal stake."`;
 
 /**
@@ -348,6 +357,26 @@ Score → tone. Match your confidence to the score — a confident reason on a l
 - **0.55–0.75** — one hedge word, name the live bridge. "EU AI Act vote may apply to your AI work in Amsterdam." / "OpenAI's new framework directly relates to your AI engineering work."
 - **0.4–0.55** — light hedge, name what's relevant. "Netherlands economy report covers your country." / "New Amsterdam architecture project is in your city."
 - **0.25–0.4** — state the topic-only link plainly. "South Africa's draft AI policy matches your AI-industry interest." / "Sweden's tech-sector headwinds are adjacent to your industry."
+- **≤0.25** — minimal, honest. State the surface topic match and the disconnect in one short clause each. Do NOT use "may influence", "could shape", "via EU-wide trends", "through broader industry trends", or any phrasing that bridges a foreign/unrelated story to the user. Examples: "Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country." "Manchester building fire is a UK-local emergency; you're in Amsterdam."
+
+${RULE_NAME_BAN}
+
+${CLOUD_REASON_VOICE_RULE}
+
+Never fabricate a connection. The reason must match the article — if the article is about holiday homes, the reason is about holiday homes, not the AI Act. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##). Plain sentence only.`;
+
+/** ARCHIVE, frozen: the pass-2 middle exactly as it shipped before ux1. Its
+ *  low-score example used the rubric label "foreign-domestic", which the model
+ *  copied into a reader's note. Only the archived control arms compose it; a
+ *  byte of change here would make their past numbers unreproducible. */
+const CLOUD_REASON_TASK_MIDDLE_V1 = `Every reason MUST contain all three: (a) a specific detail from the article (event, entity, place, policy, product) — not "this topic"; (b) the specific user fact creating the link (city / profession / employer / family location / investment / hobby) — not "your interests"; (c) tone matched to the score.
+
+Score → tone. Match your confidence to the score — a confident reason on a low score is wrong, and a hedging reason on a high score is also wrong.
+- **>0.9** — direct, no hedging. "Evacuation ordered in Jordaan, where you live."
+- **0.75–0.9** — confident, not urgent. "Dutch startup tax vote directly affects your Amsterdam startup work."
+- **0.55–0.75** — one hedge word, name the live bridge. "EU AI Act vote may apply to your AI work in Amsterdam." / "OpenAI's new framework directly relates to your AI engineering work."
+- **0.4–0.55** — light hedge, name what's relevant. "Netherlands economy report covers your country." / "New Amsterdam architecture project is in your city."
+- **0.25–0.4** — state the topic-only link plainly. "South Africa's draft AI policy matches your AI-industry interest." / "Sweden's tech-sector headwinds are adjacent to your industry."
 - **≤0.25** — minimal, honest. State the surface topic match and the disconnect in one short clause each. Do NOT use "may influence", "could shape", "via EU-wide trends", "through broader industry trends", or any phrasing that bridges a foreign/unrelated story to the user. Examples: "Bulgaria's digital-ID policy is foreign-domestic; no tie to your country." "Manchester building fire is a UK-local emergency; you're in Amsterdam."
 
 ${CLOUD_REASON_VOICE_RULE}
@@ -381,8 +410,16 @@ const REASON_OUTPUT_STRING = `Output: single plain string, no prefixes, no markd
  */
 const REASON_OUTPUT_OBJECT = `Output: exactly ONE JSON object and nothing else. No prose before or after it, no markdown fence. Examples of the SHAPE (not of the answer): {"k":"home","s":0.93,"reason":"Evacuation ordered in Jordaan, where you live."} and {"k":"none","s":0.18,"reason":"Manchester building fire is a UK-local emergency; you're in Amsterdam."}`;
 
-/** The shipped pass-2 task block: opener, middle, output, in that order. */
+/** ARCHIVE: the pass-2 task block as it shipped before ux1, composed only by
+ *  the frozen control arms. The shipped block is {@link CLOUD_REASON_TASK}. */
 const CLOUD_REASON_TASK_V1 = `${CLOUD_REASON_TASK_OPENER_V1}
+
+${CLOUD_REASON_TASK_MIDDLE_V1}
+
+${REASON_OUTPUT_STRING}`;
+
+/** The shipped pass-2 task block: opener, middle, output, in that order. */
+const CLOUD_REASON_TASK = `${CLOUD_REASON_TASK_OPENER_V1}
 
 ${CLOUD_REASON_TASK_MIDDLE}
 
@@ -687,7 +724,7 @@ ${REASON_OUTPUT_OBJECT}`;
  */
 export const CLOUD_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 
-${CLOUD_REASON_TASK_V1}
+${CLOUD_REASON_TASK}
 ${REASON_V2_RULES}`;
 
 /**
@@ -703,6 +740,8 @@ export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT_
 ${CLOUD_HEADLINE_IMPACT_BLOCK}
 
 ${CLOUD_HEADLINE_REASON_TASK_V1}
+
+${RULE_NAME_BAN}
 ${REASON_V2_RULES}`;
 
 // ---------------------------------------------------------------------------
@@ -928,7 +967,9 @@ Tone by score:
 - **0.55–0.75** — one hedge word, name the live bridge. "EU AI bill may apply to your AI work in Amsterdam."
 - **0.4–0.55** — light hedge, name what's relevant. "Netherlands economy covers your country."
 - **0.25–0.4** — topic-only link. "South Africa AI policy matches your industry interest."
-- **≤0.25** — minimal, honest. Surface topic match + disconnect, one short clause each. NEVER use "may influence", "could shape", "EU-wide trends", "broader industry trends". "Bulgaria digital-ID is foreign-domestic; no tie to your country."
+- **≤0.25** — minimal, honest. Surface topic match + disconnect, one short clause each. NEVER use "may influence", "could shape", "EU-wide trends", "broader industry trends". "Bulgaria's digital-ID policy is a Bulgarian domestic matter; no tie to your country."
+
+${RULE_NAME_BAN}
 
 Voice: write TO the user — "you"/"your", never "the user", "User …", or third person, in every band. Wrong: "User follows F1; the race matches this interest." Right: "The race matches your F1 interest."
 

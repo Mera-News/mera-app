@@ -51,7 +51,7 @@
       "retryLogin": "이메일로 로그인 재시도",
       "useDifferentUser": "다른 사용자로 로그인",
       "retryFailed": "서버에 연결할 수 없습니다. 연결 상태를 확인하고 다시 시도해 주세요.",
-      "switchBody": "사용자를 전환하면 이 기기에서 현재 사용자의 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 취소할 수 없습니다.",
+      "switchBody": "사용자를 전환하면 이 기기에서 현재 사용자의 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
       "switchConfirm": "예, 데이터를 삭제하고 사용자를 전환합니다",
       "switchCancel": "취소"
     },
@@ -228,7 +228,12 @@
     "statsPublishedPending_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
     "statsPublished_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다,",
     "statsRead_one": "당신은 {{formatted}}개를 읽었습니다.",
-    "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,"
+    "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,",
+    "reasonUnavailable": "Mera가 이 기사에 대한 메모를 작성하지 못했어요.",
+    "loadingA11y": "피드를 불러오는 중",
+    "newStoriesPill": "새 소식",
+    "translatingCaption": "번역 중…",
+    "updatedJustNow": "방금 업데이트됨"
   },
   "relevance": {
     "emergency": "긴급",
@@ -258,7 +263,9 @@
     "readOn": "{{publication}}에서 읽기",
     "readOnGoogleTranslate": "구글 번역으로 읽기",
     "linkUnavailable": "이 링크는 안전하게 열 수 없으므로 여기서 사용할 수 없습니다.",
-    "relatedFromSubscriptions": "구독 중인 매체에서"
+    "relatedFromSubscriptions": "구독 중인 매체에서",
+    "relatedLoadFailed": "관련 기사를 불러오지 못했어요.",
+    "translateBlockedNote": "일부 사이트는 Google 번역을 차단해요. 페이지가 열리지 않으면 사이트에서 여세요."
   },
   "newsCluster": {
     "failedToLoad": "클러스터 세부 정보를 불러오지 못했습니다",
@@ -347,7 +354,10 @@
     "timeNudge": "읽고, 생각하고, 계획할 수 있는 시간을 선택하세요. 하루에 한두 번이면 충분합니다.",
     "maxHoursReachedDescription": "시간은 최대 {{count}}개까지 선택할 수 있습니다",
     "maxHoursReachedTitle": "최대 개수 도달",
-    "selectedCount": "선택됨: {{selected}}/{{max}}"
+    "selectedCount": "선택됨: {{selected}}/{{max}}",
+    "savedInline": "저장됨",
+    "pickAtLeastOneHour": "한 시간 이상 선택하세요",
+    "selectedLabel": "선택됨"
   },
   "language": {
     "title": "언어",
@@ -566,7 +576,7 @@
     "signingOut": "로그아웃 중...",
     "signOut": "로그아웃",
     "deleteAccountConfirm": "정말로 계정을 영구적으로 삭제하시겠습니까?",
-    "deleteAccountWarning": "⚠️ 이 작업은 취소할 수 없으며 모든 데이터가 삭제됩니다.",
+    "deleteAccountWarning": "⚠️ 모든 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
     "continue": "계속",
     "finalConfirmation": "최종 확인",
     "finalConfirmationBody": "모든 데이터가 영구적으로 삭제됩니다.",
@@ -588,7 +598,7 @@
     "faq": "자주 묻는 질문",
     "reportBug": "버그 신고",
     "deleteAccountConfirmGrace": "계정이 30일의 유예 기간과 함께 삭제 예약됩니다. 30일 내에 다시 로그인하면 삭제가 자동으로 취소됩니다.",
-    "deleteAccountWarningGrace": "경고: 30일 후에는 이를 취소할 수 없으며 모든 데이터가 영구적으로 삭제됩니다.",
+    "deleteAccountWarningGrace": "⚠️ 30일 후에는 모든 데이터가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
     "finalConfirmationBodyGrace": "계정이 30일 후 영구 삭제되도록 예약됩니다.",
     "accountDeletionScheduledTitle": "삭제 예약됨",
     "accountDeletionScheduledDescription": "계정이 30일 후 영구 삭제됩니다. 그 전에 다시 로그인하여 삭제를 취소하세요."
@@ -615,7 +625,7 @@
     "topicGenQueuedDescription": "잠시 후 토픽이 표시됩니다.",
     "deleteFactTitle": "사실 삭제",
     "deleteFactConfirm": "이 사실을 삭제하시겠습니까?",
-    "deleteFactWarning": "이 사실에서 생성된 모든 추적 토픽도 함께 제거됩니다.",
+    "deleteFactWarning": "관련 주제와 찾은 기사도 함께 삭제되고, Mera는 이에 대한 뉴스를 더 이상 찾지 않습니다.",
     "deletingFact": "삭제 중...",
     "yesDelete": "예, 삭제합니다",
     "refreshSuggestions": "추천 새로고침",
@@ -654,7 +664,9 @@
     "promoInfoTitleEmoji": "🎉 출시 기념 혜택 🎊",
     "resetsOn": "초기화",
     "retryTopicGeneration": "재시도",
-    "topicGenFailedGeneric": "이 주제에 대한 토픽을 생성할 수 없습니다."
+    "topicGenFailedGeneric": "이 주제에 대한 토픽을 생성할 수 없습니다.",
+    "articleCountPending": "집계 중",
+    "articleCountNone": "아직 기사 없음"
   },
   "errors": {
     "somethingWentWrong": "문제가 발생했습니다",
@@ -765,7 +777,9 @@
       "error": "요청을 제출하지 못했습니다. 다시 시도해 주세요."
     },
     "topicGenFailed": "이 주제에 대한 토픽을 생성할 수 없습니다.",
-    "topicGenRetry": "재시도"
+    "topicGenRetry": "재시도",
+    "aiUsageNoticeGeneral": "Mera도 실수할 수 있으니 중요한 내용은 확인하세요.",
+    "trackChooseHint": "팔로우할 항목을 고르세요"
   },
   "articleFeedback": {
     "thumbsUp": "좋아요",
@@ -824,13 +838,14 @@
     "tooltipA11y": "열람 기록 정보",
     "tooltipIntro": "Mera가 독서 패턴을 추적합니다: 기기에만 저장됩니다.",
     "tooltipLink": "전체 열람 기록을 여기에서 확인하세요.",
-    "screenIntro": "Mera는 독서 패턴을 추적합니다. 기기에만 30일 동안 저장됩니다. 어떤 발행사가 가장 중요한지 파악하여, 직접 도움이 되는 발행사를 후원할지 고려할 수 있습니다.",
+    "screenIntro": "지난 30일 동안 Mera에서 사이트를 연 매체입니다. 이 목록은 이 기기에만 저장됩니다.",
     "visitedListTitle": "방문한 발행사",
     "last30Days": "최근 30일",
     "lastRead": "마지막 읽기: {{time}}",
-    "noArticlesYet": "아직 읽은 기사가 없습니다.",
+    "noArticlesYet": "Mera에서 연 매체가 여기에 표시됩니다. Mera 안에서 읽은 기사는 표시되지 않습니다.",
     "articlesRead": "읽은 기사",
-    "noArticlesLast30Days": "지난 30일 동안 이 발행사의 기사가 없습니다."
+    "noArticlesLast30Days": "지난 30일 동안 이 발행사의 기사가 없습니다.",
+    "emptyTitle": "아직 매체가 없습니다"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "업데이트 필요",
@@ -924,7 +939,8 @@
     "title": "저장됨",
     "removedToastTitle": "삭제됨",
     "saveAction": "저장",
-    "removeAction": "저장에서 제거"
+    "removeAction": "저장에서 제거",
+    "emptyTitle": "아직 저장한 항목이 없습니다"
   },
   "subscription": {
     "activating": "구독을 활성화하는 중…",
@@ -935,7 +951,7 @@
     "detailsSection": "구독 상세 정보",
     "expiresOn": "만료일",
     "lifetime": "평생",
-    "managePlan": "구독 관리",
+    "managePlan": "요금제 관리",
     "periodLabel": "기간",
     "periodNormal": "표준",
     "periodPromotional": "프로모션",
@@ -964,7 +980,6 @@
     "activatedBody": "맞춤 피드, 대시보드, 팔로우한 스토리, 채팅이 준비되었습니다.",
     "activatedTitle": "{{plan}}이(가) 활성화되었습니다",
     "lapsedFreeNote": "Mera News 무료는 원하는 기간 동안 사용할 수 있습니다. 플랜을 시작하면 Mera가 다시 뉴스를 처리하기 시작합니다.",
-    "manageBadge": "관리",
     "turnMeraBackOn": "Mera 다시 켜기",
     "para1": "Mera News는 무료일 수 있습니다. 단지 누군가 다른 사람이 대가를 지불한다는 뜻입니다. 광고주가 당신의 관심, 데이터 또는 호의적인 기사를 구매하는 방식이죠. 뉴스처럼 보이는 많은 콘텐츠가 정확히 그런 것입니다.",
     "para2": "광고 기반 미디어는 한계가 없습니다. 당신에게서 얼마나 많이 가져가는지, 그것이 나중에 어떻게 사용되는지도 마찬가지입니다. 우리는 그런 회사가 되고 싶지 않으므로, 여기서의 거래는 간단합니다. 당신은 데이터를 지킵니다. 소프트웨어가 일을 합니다. 당신이 비용을 지불합니다.",
@@ -1037,9 +1052,16 @@
     "headlineDenominator_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · {{shown}}개가 당신의 시간을 가치 있게 합니다.",
     "headlineDenominatorNone_one": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
     "headlineDenominatorNone_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
-    "subTabHistory": "기록",
+    "subTabHistory": "방문함",
     "nextFactPrefix": "다음",
-    "subTabAnalytics": "분석"
+    "subTabAnalytics": "분석",
+    "emptySection": {
+      "awaiting": "이 주제의 기사를 찾고 있습니다. 다음 새로고침 후에 표시됩니다.",
+      "none": "아직 이 주제와 충분히 맞는 기사가 없습니다."
+    },
+    "newInterest": "새 관심사",
+    "nextSection": "다음: {{title}}",
+    "backToDashboard": "대시보드로 돌아가기"
   },
   "feedStatus": {
     "title": "피드 상태",
@@ -1058,7 +1080,8 @@
     "published": "게시됨",
     "modeProcessing": "피드를 업데이트하는 중",
     "modeError": "피드 문제",
-    "modeLimited": "일일 기사 한도에 도달함"
+    "modeLimited": "일일 기사 한도에 도달함",
+    "syncDoneA11y": "피드가 최신 상태입니다."
   },
   "trackedStories": {
     "emptyTitle": "아직 팔로우한 스토리가 없습니다",
@@ -1073,7 +1096,6 @@
     "untrackConfirmTitle": "팔로우를 취소할까요?",
     "untrackConfirmBody": "이 스토리의 새로운 진행 상황을 더 이상 확인할 수 없습니다.",
     "untrackConfirmCta": "팔로우 중지",
-    "emptyHint": "피드에서 기사를 열어 전체 보기로 본 다음, 기사 아래의 버튼 행에서 팔로우 아이콘을 탭합니다.",
     "emptyCta": "피드로 이동",
     "trackChatSeed": "이 스토리를 팔로우하고 싶어요.",
     "trackProposalTitle": "이 스토리를 팔로우할까요?",
@@ -1089,11 +1111,13 @@
     "followFabLabel": "새 스토리 팔로우",
     "followChatSeed": "스토리를 팔로우하고 싶습니다.",
     "followChatIntro": "팔로우하고 싶은 것을 알려주면 설정하겠습니다.",
-    "emptyHintFollow": "팔로우 버튼을 탭하고 Mera에 계속 지켜보고 싶은 것을 알려주세요.",
     "emptyCtaFollow": "스토리 팔로우",
     "removeMemberAction": "이 스토리에 속하지 않음",
     "removeMemberConfirmTitle": "이 기사를 삭제할까요?",
-    "removeMemberConfirmBody": "이 기사는 스토리 타임라인에서 삭제됩니다. Mera는 스토리 자체를 계속 팔로우합니다."
+    "removeMemberConfirmBody": "이 기사는 스토리 타임라인에서 삭제됩니다. Mera는 스토리 자체를 계속 팔로우합니다.",
+    "timelineLoadFailed": "이 스토리를 불러오지 못했어요. 아래로 당겨 다시 시도하세요.",
+    "deleteFailed": "이 스토리의 팔로우를 해제하지 못했어요. 다시 시도하세요.",
+    "removeFailed": "이 기사를 스토리에서 제거하지 못했어요. 다시 시도하세요."
   },
   "whatsNew": {
     "title": "새로운 기능",
@@ -1132,7 +1156,14 @@
     "dailyLimitBody": "오늘의 기사 한도에 도달했습니다. 곧 초기화됩니다."
   },
   "settings": {
-    "sources": "소스"
+    "sources": "소스",
+    "groupGeneral": "일반",
+    "groupPrivacy": "개인정보 및 데이터",
+    "groupHelp": "도움말",
+    "groupAccount": "계정",
+    "languageRow": "언어",
+    "backupRow": "백업 및 복원",
+    "backupRowNever": "아직 백업 안 됨"
   },
   "personaAudit": {
     "entryRow": "페르소나 변경 기록",
@@ -1297,7 +1328,7 @@
     "notificationBody_one": "Mera가 프로필을 위한 {{count}}개의 정리를 찾았습니다.",
     "notificationBody_other": "Mera가 회원님의 프로필에서 {{count}}개의 정리 항목을 찾았습니다.",
     "reviewChip": "검토",
-    "title": "페르소나 상태",
+    "title": "프로필 정리",
     "subtitle": "정리 제안",
     "intro": "Mera가 정리할 만한 몇 가지 항목을 찾았습니다. 동의하는 항목을 수락해 주세요.",
     "empty": "회원님의 페르소나는 양호한 상태입니다",
@@ -1306,15 +1337,16 @@
     "reversibleNote": "변경 기록에서 되돌릴 수 있습니다",
     "effectDuplicate": "중복 항목을 제거하고 더 강력한 항목을 유지합니다.",
     "effectTooBroad": "이 관심사의 가중치를 낮춰 관련 없는 기사가 덜 유입되도록 합니다.",
-    "effectStaleTopic": "활동이 뜸한 이 토픽을 제거합니다. 변경 기록에서 복원할 수 있습니다.",
+    "effectStaleTopic": "활동이 뜸한 이 토픽을 제거합니다.",
     "effectStaleFact": "이 정보를 제거합니다: 관련 토픽이 더 이상 활성화되어 있지 않습니다.",
     "appliedTitle": "정리가 적용되었습니다",
     "appliedBody": "프로필이 정리되었습니다. 변경 기록에서 확인해 보세요.",
     "applyFailedTitle": "정리를 적용하지 못했습니다",
     "applyFailedBody": "나중에 다시 시도해 주세요.",
-    "profileRow_one": "페르소나 상태 · {{count}}개 제안",
-    "profileRow_other": "페르소나 상태 · 제안 {{count}}개",
-    "effectIncoherentTopics": "이 관심사에 대해 더 나은 주제로 바꿉니다. 이전 것들은 변경 로그에서 복원할 수 있습니다."
+    "profileRow_one": "프로필 정리 · 제안 {{count}}개",
+    "profileRow_other": "프로필 정리 · 제안 {{count}}개",
+    "effectIncoherentTopics": "이 관심사에 대해 더 나은 주제로 바꿉니다.",
+    "effectLocationConflict": "최신 장소를 유지하고 이전 장소를 삭제해요."
   },
   "locations": {
     "title": "내 장소",
@@ -1451,7 +1483,7 @@
     "visitedSubtitle": "최근에 열어본 출판사",
     "activity": "활동",
     "activitySubtitle": "페르소나 변경 기록",
-    "personaHealth": "페르소나 상태",
+    "personaHealth": "프로필 정리",
     "healthPending_one": "{{count}}개 정리 제안",
     "healthPending_other": "정리 제안 {{count}}개",
     "healthAllHealthy": "모두 양호",
@@ -1488,7 +1520,10 @@
       "remove": "삭제",
       "removeConfirm": "다시 탭하면 삭제됩니다",
       "limitReached": "일일 조정 한도에 도달했습니다. 변경 사항은 내일 계속됩니다."
-    }
+    },
+    "meraInviteReturning": "새로운 관심사를 알려 주시면 피드에 추가할게요.",
+    "editFacts": "편집",
+    "planUsage": "오늘 {{limit}}개 중 {{used}}개 분석"
   },
   "facts": {
     "screenTitle": "내 정보",
@@ -1498,7 +1533,8 @@
     "lessInfluence": "더 작은 영향도",
     "declinedTopicsTitle": "제거한 주제",
     "allowAgain": "다시 허용",
-    "topicRemovalConsequence": "제거한 주제는 '제거한 주제'에서 다시 허용하지 않는 한 다시 추천되지 않습니다."
+    "topicRemovalConsequence": "제거한 주제는 '제거한 주제'에서 다시 허용하지 않는 한 다시 추천되지 않습니다.",
+    "deleteFactA11y": "{{fact}} 삭제"
   },
   "publicationPrefs": {
     "title": "소스 선호도",
@@ -1570,7 +1606,7 @@
     "staticGradientTitle": "정적 배경",
     "staticGradientDescription": "애니메이션 배경 대신 고정 그래디언트를 사용합니다 — 배터리와 오래된 장치에 더 친절합니다",
     "screenTitle": "디스플레이",
-    "screenSubtitle": "텍스트, 시각 효과, 보안 및 메라가 이 기기에서 열리는 방식",
+    "screenSubtitle": "텍스트, 시각 효과 및 메라가 이 기기에서 열리는 방식",
     "sectionText": "텍스트",
     "sectionVisuals": "시각 자료",
     "textSizeTitle": "텍스트 크기",
@@ -1636,7 +1672,7 @@
     "blocked": "이 기사를 검색할 수 없습니다.",
     "claimsHeading": "확인된 주장",
     "citationsHeading": "검토한 출처",
-    "noCitations": "이 확인에서 특정 페이지를 인용하지 않았습니다. 검색 실패가 아닙니다 — 출처가 없으므로 요약을 좀 더 주의 깊게 다루세요.",
+    "noCitations": "이 확인에서 특정 페이지를 인용하지 않았습니다. 검색 실패가 아닙니다, 출처가 없으므로 요약을 좀 더 주의 깊게 다루세요.",
     "sourceFallback": "출처 {{index}}",
     "disclaimer": "메라가 웹 검색에서 얻은 자체 해석이며, AI가 작성했습니다. 틀리거나 불완전할 수 있으므로 신뢰하기 전에 출처를 읽으세요.",
     "verdict": {
@@ -1675,7 +1711,7 @@
     "checkedByHeading": "검색에서 발견된 팩트 체크",
     "dashboard": {
       "deleteA11y": "이 팩트 체크 삭제",
-      "empty": "아직 확인한 주장이 없습니다. 기사 아래의 체크 아이콘을 탭하여 Mera에 물어보세요 — 결과가 준비되면 여기에 표시됩니다.",
+      "empty": "아직 확인한 주장이 없습니다. 기사 아래의 체크 아이콘을 탭하여 Mera에 물어보세요, 결과가 준비되면 여기에 표시됩니다.",
       "listSubtitle": "메라에 팩트 체크를 찾아달라고 요청한 기사입니다. 이 기기에만 보관됩니다.",
       "listTitle": "팩트 체크",
       "pending": "검색 중",
@@ -1693,13 +1729,13 @@
     "explainer": "메라는 뉴스를 직접 팩트 체크하지 않습니다. 확인된 팩트 체킹 기관이 이 기사에 대해 발표한 내용을 검색합니다.",
     "noCheckedBy": "이 기사에 대해 발표한 팩트 체킹 기관을 찾을 수 없습니다. 이것이 기사가 틀렸다는 뜻은 아닙니다. 대부분의 기사는 팩트 체크되지 않습니다.",
     "organisationA11y": "인앱 브라우저에서 {{organisation}}의 팩트 체크(평가: {{rating}})를 열기",
-    "queued": "이 확인은 백그라운드에서 계속 실행됩니다. 여기서 기다릴 필요가 없습니다 — 기사를 떠나도 괜찮습니다.",
+    "queued": "이 확인은 백그라운드에서 계속 실행됩니다. 여기서 기다릴 필요가 없습니다, 기사를 떠나도 괜찮습니다.",
     "queuedHint": "결과가 준비되면 대시보드의 팩트 체크 섹션에 나타납니다.",
     "citationA11y": "출처 {{source}}를 인앱 브라우저에서 열기",
     "noLink": "사용 가능한 링크 없음",
-    "actionA11yPending": "팩트 체크 요청됨 — 결과를 확인하세요",
-    "actionA11yDone": "팩트 체크 완료 — 결과가 아래에 표시됩니다",
-    "checkedByUnavailable": "팩트 체킹 조직이 이 이야기에 대해 발표했는지 확인할 수 없었습니다 — 조회가 완료되지 않았습니다. 이는 아무도 발표하지 않은 것과는 다릅니다. 아래는 더 광범위한 검색이 찾은 결과입니다.",
+    "actionA11yPending": "팩트 체크 요청됨, 결과를 확인하세요",
+    "actionA11yDone": "팩트 체크 완료, 결과가 아래에 표시됩니다",
+    "checkedByUnavailable": "팩트 체킹 조직이 이 이야기에 대해 발표했는지 확인할 수 없었습니다, 조회가 완료되지 않았습니다. 이는 아무도 발표하지 않은 것과는 다릅니다. 아래는 더 광범위한 검색이 찾은 결과입니다.",
     "claimProposalTitle": "이 주장을 팩트 체크하시겠어요?",
     "actionCheckClaim": "주장 확인하기",
     "chatSeed": "이 기사에서 팩트 체크할 수 있는 것은 무엇인가요?",
@@ -1708,22 +1744,29 @@
     "optionWholeArticle": "전체 기사",
     "quickAnswered": "웹 검색으로 찾은 결과입니다:",
     "quickArticleFailed": "Mera에서 요청 전송을 확인할 수 없습니다. 잠시 후 다시 시도해주세요.",
-    "quickArticleRequested": "요청을 보냈습니다. Mera에서 전체 기사를 확인할 것입니다 — 결과가 준비되면 대시보드의 팩트 체크에서 확인할 수 있습니다.",
+    "quickArticleRequested": "요청을 보냈습니다. Mera에서 전체 기사를 확인할 것입니다, 결과가 준비되면 대시보드의 팩트 체크에서 확인할 수 있습니다.",
     "quickArticleSending": "요청을 보내는 중…",
-    "quickCouldNotSearch": "방금 웹을 검색할 수 없었습니다. 따라서 이것은 답변이 아닙니다 — 잠시 후 다시 시도해주세요.",
+    "quickCouldNotSearch": "방금 웹을 검색할 수 없었습니다. 따라서 이것은 답변이 아닙니다, 잠시 후 다시 시도해주세요.",
     "quickDisclaimer": "이것은 팩트체킹 기관의 확인이 아닌 빠른 웹 검색이며, 저장되지 않습니다. 출처가 명시된 철저한 확인을 원하면 \"전체 기사\"를 선택하세요.",
     "quickFailed": "Mera에서 정보를 찾았지만 이번에는 답변을 구성할 수 없습니다. 잠시 후 다시 시도해주세요.",
-    "quickNothingFound": "검색 결과 이에 대한 정보가 없습니다. 이것이 거짓이라는 의미는 아닙니다 — 새로운 내용이거나 틈새 주제이거나 온라인에서 광범위하게 다루어지지 않은 내용일 수 있습니다.",
+    "quickNothingFound": "검색 결과 이에 대한 정보가 없습니다. 이것이 거짓이라는 의미는 아닙니다, 새로운 내용이거나 틈새 주제이거나 온라인에서 광범위하게 다루어지지 않은 내용일 수 있습니다.",
     "quickRunning": "웹을 검색 중…",
-    "stillChecking": "평소보다 시간이 더 걸리고 있습니다. 백그라운드에서 확인 중입니다 — 나중에 다시 확인하거나 대시보드의 팩트 체크에서 확인하세요.",
+    "stillChecking": "평소보다 시간이 더 걸리고 있습니다. 백그라운드에서 확인 중입니다, 나중에 다시 확인하거나 대시보드의 팩트 체크에서 확인하세요.",
     "checkedByMultipleNote": "이는 각 기관이 독자적인 기준으로 독립적으로 평가한 결과이며, 서로 항상 일치하지는 않습니다.",
-    "ownReadingHeading": "메라의 자체 해석 — 위 판정에 대해 부차적인 견해",
+    "ownReadingHeading": "메라의 자체 해석, 위 판정에 대해 부차적인 견해",
     "collapseA11y": "이 팩트 체크 숨기기",
     "expandA11y": "이 팩트 체크 보기",
     "checkedByRelatedNote": "이들은 키워드 검색에서 나온 것이며 다른 기사에 관한 것일 수 있습니다. 확인하려면 하나를 열어보세요.",
     "searchFoundHeading": "검색에서 발견된 내용",
     "searchFoundEmpty": "검색에서 메라가 요약할 수 있는 충분한 내용이 없었습니다.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "팩트 체크 완료",
+      "bodyFound": "팩트체커가 \"{{title}}\"에 대해 발표했어요.",
+      "bodyNone": "\"{{title}}\"에 대해 아직 발표된 팩트 체크가 없어요.",
+      "bodyUnavailable": "Mera가 \"{{title}}\" 확인을 마치지 못했어요.",
+      "open": "기사 열기"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "이 출처 우선순위 지정",
@@ -1743,7 +1786,7 @@
     "welcomeBody": "\"동의하고 계속\"을 탭하면 서비스 약관과 개인정보 처리방침에 동의하게 됩니다."
   },
   "tutorials": {
-    "entryRow": "메라에 대해 알아보기",
+    "entryRow": "Mera 작동 방식",
     "menuTitle": "메라에 대해 알아보기",
     "menuSubtitle": "이 앱이 어떻게 생각하는지에 대한 짧은 가이드입니다. 어디서나 시작할 수 있습니다.",
     "sectionBasic": "여기서 시작",
@@ -1766,7 +1809,6 @@
     "askMera": "Mera에 물어보기",
     "chatIntro": "Mera 작동 방식에 대해 무엇이든 물어봐도 됩니다. 설명할 수는 있지만 여기에서는 아무것도 변경할 수 없습니다.",
     "launchButton": "투어 시작",
-    "learnAboutMera": "Mera 작동 방식",
     "hintReveal": "각 항목을 탭하세요.",
     "hintRevealSome": "최소 {{count}}개를 탭하세요.",
     "hintChoose": "하나를 선택하세요.",
@@ -2379,7 +2421,10 @@
     "supportId": "지원 ID: {{id}}",
     "copySupportId": "지원 ID 복사",
     "copied": "복사됨",
-    "saveHint": "이 ID를 저장해 두세요. 지원팀이 이 ID로 계정을 찾을 수 있습니다."
+    "saveHint": "이 ID를 저장해 두세요. 지원팀이 이 ID로 계정을 찾을 수 있습니다.",
+    "mailFailedTitle": "메일 앱을 열 수 없습니다",
+    "mailFailedBody": "지원 주소를 복사해 아무 메일 앱에서나 이메일을 보내 주세요.",
+    "copyAddress": "주소 복사"
   },
   "emailCapture": {
     "title": "이메일 추가",
@@ -2487,7 +2532,10 @@
     "wifiOnly": "Wi-Fi에서만",
     "wifiOnlyOff": "사용 안 함. 예약된 백업이 모바일 데이터를 사용할 수 있습니다.",
     "wifiOnlyOn": "사용 중. 예약된 백업은 Wi-Fi 연결을 기다립니다.",
-    "working": "작업 중…"
+    "working": "작업 중…",
+    "statusFromCloud": "마지막 백업 {{when}}, {{provider}}에서 찾음",
+    "restoreOption": "{{when}} 백업",
+    "statusFailed": "마지막 백업이 {{when}}에 실패했습니다"
   },
   "factChoice": {
     "titleSingle": "이걸 페르소나에 추가할까요",
@@ -2502,14 +2550,19 @@
     "skipAll": "모두 건너뛰기",
     "addAllA11y": "{{count}}개 제안 모두 추가",
     "skipAllA11y": "{{count}}개 제안 모두 건너뛰기",
-    "titleReplace": "기존 정보를 바꿀까요?",
+    "titleReplace": "이 정보를 바꿀까요?",
     "replace": "바꾸기",
     "replacesLabel": "대체 대상",
     "replacesTopics_one": "및 관련 주제 1개",
     "replacesTopics_other": "및 관련 주제 {{count}}개",
     "replacesNoUndo": "이전 정보와 관련 주제가 완전히 삭제돼요. 되돌릴 수 없어요.",
     "replacesLoading": "무엇이 바뀌는지 확인하고 있어요",
-    "replacesUnavailable": "지금은 무엇이 삭제될지 보여드릴 수 없어요. 잠시 후 다시 시도해 주세요."
+    "replacesUnavailable": "지금은 무엇이 삭제될지 보여드릴 수 없어요. 잠시 후 다시 시도해 주세요.",
+    "keepBoth": "둘 다 유지",
+    "titleAlsoAdd": "이것도 추가할까요?",
+    "pendingHint": "위에서 옵션을 고르거나 답을 입력하세요.",
+    "overlapsLabel": "겹치는 정보",
+    "overlapsReplaceNote": "바꾸면 이 정보와 관련 주제가 삭제돼요."
   },
   "subscriptions": {
     "sectionTitle": "구독 중인 매체",
@@ -2554,7 +2607,6 @@
       "countriesLabel": "읽은 나라",
       "latencyLabel": "게시부터 읽기까지 걸린 평균 시간",
       "latencyCoverage": "게시 시각을 아는 {{total}}건 중 {{sampled}}건 기준",
-      "latencyUnknown": "아직 게시 시각을 아는 기사가 충분하지 않아요",
       "openedLabel": "열어 본 기사",
       "openedPartial": "일부만 센 값입니다. Mera는 추천 카드를 누른 횟수만 셉니다.",
       "topPublicationsTitle": "자주 읽는 매체",
@@ -2562,7 +2614,6 @@
       "latencyValue_other": "{{count}}시간",
       "reachTitle": "내 뉴스가 온 곳",
       "keepTitle": "내가 간직한 것",
-      "paceTitle": "뉴스가 나에게 닿기까지",
       "windowNow": "지금",
       "savedLabel": "저장한 기사",
       "followedLabel": "팔로우 중인 스토리",
@@ -2573,13 +2624,11 @@
       "paceScaleTitle": "발행부터 읽기까지",
       "hoursShort": "{{n}}시간",
       "languagesLabel": "읽은 언어",
-      "topLanguagesTitle": "주로 읽은 언어",
-      "rhythmTitle": "내가 읽은 날",
       "daysReadLabel": "무언가를 읽은 날",
       "heatLegendLess": "적음",
       "heatLegendMore": "많음",
-      "heatNote": "색의 진하기는 그날 읽은 기사 수예요.",
-      "rhythmWeekdays": "월,화,수,목,금,토,일"
+      "rhythmWeekdays": "월,화,수,목,금,토,일",
+      "habitsTitle": "나의 읽는 방식"
     }
   },
   "analytics": {
@@ -2602,7 +2651,7 @@
     "goneTombstone": "이 정보가 삭제되어 관련 주제도 사라졌어요.",
     "expandA11y": "주제 보기",
     "collapseA11y": "주제 숨기기",
-    "accordionTitlePending": "관련 주제를 찾아 둘게요:",
+    "accordionTitlePending": "관련 주제를 찾는 중:",
     "pendingA11y": "주제를 찾는 중",
     "readyA11y": "주제 준비 완료",
     "failedA11y": "주제를 찾지 못했어요"
@@ -2636,7 +2685,8 @@
     },
     "noRouteSentence": "무엇에 대한 내용인지 파악하지 못했어요. 다르게 말해 봐 주세요.",
     "noProposalSentence": "여기에서 추가할 만한 내용을 찾지 못했어요.",
-    "unknownToolSentence": "Mera 쪽에서 문제가 생겼어요. 계속하려면 다시 물어봐 주세요."
+    "unknownToolSentence": "Mera 쪽에서 문제가 생겼어요. 계속하려면 다시 물어봐 주세요.",
+    "malformedChoiceSentence": "Mera가 선택지를 보여 주지 못했어요. 계속하려면 다시 물어봐 주세요."
   },
   "skillPhrase": {
     "residence": "사는 곳",
@@ -2771,5 +2821,59 @@
     "docTitle": "저장한 기사",
     "docExported": "{{date}}에 내보냄",
     "docReasonLabel": "Mera가 선택한 이유"
+  },
+  "tabExplainer": {
+    "openA11y": "이 탭의 작동 방식",
+    "close": "확인",
+    "feed": {
+      "title": "피드의 작동 방식",
+      "what": "피드에는 Mera가 지난 이틀 동안 찾은 모든 기사가 표시됩니다. 여러 매체가 다룬 기사라도 카드는 하나입니다.",
+      "how1": "Mera는 당신이 알려준 내용을 검색어로 바꾸고, 맞는 기사를 가져온 뒤, AI가 기사마다 읽고 당신에게 얼마나 중요한지 판단합니다.",
+      "how2": "아직 보지 않은 기사가 먼저, 중요한 순서로 나옵니다. 보지 않은 기사는 12시간 뒤 한 단계, 하루 뒤 한 단계 더 내려갑니다.",
+      "how3": "다음에 다시 정렬할 때 이미 본 기사는 아래로, 연 기사는 맨 뒤로 갑니다. 읽고 있는 위치 위의 카드는 움직이지 않습니다. 아래로 당기면 다시 정렬됩니다.",
+      "privacy": "순서는 이 휴대폰에서 정해집니다. 어떤 기사를 열었는지에 대한 기록은 이 휴대폰에만 남습니다."
+    },
+    "forYou": {
+      "title": "대시보드의 작동 방식",
+      "what": "대시보드는 뉴스를 관심사별로 묶습니다. Mera에 알려준 내용마다 섹션이 있고, 당신의 나라와 세계의 헤드라인도 있습니다.",
+      "how1": "각 기사는 가장 잘 맞는 관심사 하나에만 들어가므로 한 번만 나타납니다. 두 관심사가 똑같이 맞으면 먼저 추가한 쪽이 가져갑니다.",
+      "how2": "가중치를 높인 관심사가 먼저 나옵니다. 새 관심사는 첫 기사가 오기 전에도 섹션이 생깁니다.",
+      "how3": "섹션 안에서는 읽지 않은 기사가 먼저, 중요한 순서로 나옵니다. 섹션은 탭을 떠날 때나 10분마다 다시 정렬됩니다."
+    },
+    "explore": {
+      "title": "탐색의 작동 방식",
+      "what": "탐색에는 세계와 선택한 나라별로 지난 24시간의 헤드라인이 표시됩니다. 모두에게 같으며, 당신을 위해 고른 것이 아닙니다.",
+      "how1": "세계 헤드라인은 기사 수가 아니라 한 뉴스가 여러 나라에서 얼마나 널리 보도되는지에 따라 정렬됩니다.",
+      "how2": "나라별 헤드라인은 그 나라에 기반을 둔 뉴스 출처에서 옵니다."
+    },
+    "profile": {
+      "title": "프로필의 작동 방식",
+      "what": "프로필에는 당신이 Mera에 알려준 자신에 대한 정보가 있습니다. 피드와 대시보드는 이 정보로 만들어집니다.",
+      "how1": "각 정보는 Mera가 당신을 위해 실행하는 검색이 됩니다. 정보를 바꾸거나 지우면 거기서 나온 기사도 바뀝니다.",
+      "privacy": "여기서 만들어진 검색은 절대 당신의 계정과 연결되지 않습니다. 서버는 모든 사용자가 익명으로 공유하는 검색 문구만 보관하며, 14일 동안 쓰이지 않으면 삭제합니다."
+    }
+  },
+  "articleMenu": {
+    "openA11y": "작업 더보기",
+    "title": "기사 작업",
+    "askMera": "Mera에게 물어보기",
+    "following": "이 스토리를 팔로우 중",
+    "checkFacts": "팩트체크 찾기",
+    "openOn": "{{source}}에서 열기",
+    "openInTranslate": "Google 번역에서 열기",
+    "fewerFrom": "{{source}} 줄이기",
+    "fewerFromDone": "{{source}}의 기사가 줄어들어요.",
+    "undo": "실행 취소",
+    "reportBug": "버그 신고",
+    "actionFailed": "실패했어요. 다시 시도하세요."
+  },
+  "factChip": {
+    "label": "내 프로필: {{label}}",
+    "openA11y": "{{label}} 관련 소식"
+  },
+  "related": {
+    "allCountries": "모든 국가",
+    "allLanguages": "모든 언어",
+    "noMatches": "이 필터에 맞는 관련 기사가 없어요."
   }
 }

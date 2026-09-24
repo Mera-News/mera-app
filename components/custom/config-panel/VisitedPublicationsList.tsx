@@ -2,6 +2,7 @@ import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -10,15 +11,15 @@ import {
     type VisitedPublication,
 } from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListRenderItem, RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DrillDownHeader from './DrillDownHeader';
 
 interface Props {
@@ -50,6 +51,9 @@ interface Props {
      *  neither is a scrollable, so they cannot scroll under the header and would
      *  otherwise render behind it. */
     headerHeight?: number;
+    /** Told the row count after every load, so an embedded host can hide
+     *  controls that mean nothing over an empty list (the share FAB). */
+    onCountChange?: (count: number) => void;
 }
 
 const VisitedPublicationsList: React.FC<Props> = ({
@@ -58,8 +62,11 @@ const VisitedPublicationsList: React.FC<Props> = ({
     active = true,
     scrollHandler,
     headerHeight = 0,
+    onCountChange,
 }) => {
-    const insets = useSafeAreaInsets();
+    // Inside a tab on iOS the inset already includes the tab bar; measured on
+    // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
+    const tabClearance = useTabBarClearance();
     const { t } = useTranslation();
     const [items, setItems] = useState<VisitedPublication[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -70,15 +77,22 @@ const VisitedPublicationsList: React.FC<Props> = ({
         try {
             const rows = await getTopVisitedPublications();
             setItems(rows);
+            onCountChange?.(rows.length);
         } catch (error) {
             logger.captureException(error, {
                 tags: { screen: 'VisitedPublicationsList', method: 'load' },
             });
         }
-    }, []);
+    }, [onCountChange]);
 
+    // Reload whenever the list becomes VISIBLE: the sub-tab selected AND the
+    // Dashboard tab focused. `active` alone missed the common path (open an
+    // article, tap through to the publisher, come back): the sub-tab never
+    // changed, so the visit just recorded never showed (B4).
+    const isFocused = useIsFocusedSafe();
+    const visible = active && isFocused;
     useEffect(() => {
-        if (!active) return;
+        if (!visible) return;
         if (!hasFetched.current) {
             hasFetched.current = true;
             setIsLoading(true);
@@ -87,7 +101,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
         }
         // Re-activation of an already-fetched embedded list: silent refresh.
         void load();
-    }, [active, load]);
+    }, [visible, load]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -183,74 +197,55 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     }
                 />
             )}
-            {/* These two branches render INSTEAD of the list, so there is no
-                scrollable in them and the host's header cannot collapse — it just
-                stays revealed, which is correct. They do need the header's height
-                as plain padding though, or they render behind it.
-
-                The "header hidden with nothing to scroll" trap is already closed
-                without extra wiring: `selectSubTab` reveals on every sub-tab
-                switch, and the only other route into these branches from a
-                scrolled state is a pull-to-refresh that returns zero rows — the
-                pull itself sits at offset 0, which use-collapsible-header's
-                `y <= 0` branch reveals on. */}
-            {isLoading ? (
-                <Box
-                    className="flex-1 items-center justify-center"
-                    style={{ paddingTop: headerHeight }}
-                >
-                    <Spinner size="large" />
-                </Box>
-            ) : items.length === 0 ? (
-                // KNOWN GAP (pre-existing, deliberately not fixed here): this
-                // branch renders instead of the FlatList, so it carries no
-                // RefreshControl — a user whose history is empty cannot pull to
-                // refresh, and a visit recorded while this panel was mounted but
-                // hidden has no way to appear until a remount. The `active` prop
-                // above exists to paper over exactly this. The real fix is to
-                // render the list always and move both branches into
-                // `ListEmptyComponent`; that changes the standalone route's
-                // behaviour, so it wants its own wave.
-                <VStack
-                    className="flex-1 items-center justify-center p-6"
-                    space="md"
-                    style={{ paddingTop: headerHeight }}
-                >
-                    <MaterialIcons name="visibility-off" size={48} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
-                        {t('publicationVisits.noArticlesYet')}
-                    </Text>
-                </VStack>
-            ) : (
-                <Animated.FlatList
-                    testID="visited-publications-list"
-                    data={items}
-                    renderItem={renderItem}
-                    keyExtractor={keyExtractor}
-                    ListHeaderComponent={ListHeader}
-                    contentContainerStyle={{
-                        paddingTop: headerHeight,
-                        paddingBottom: embedded
-                            ? insets.bottom + TAB_BAR_HEIGHT + 24
-                            : 20,
-                    }}
-                    showsVerticalScrollIndicator={false}
-                    onScroll={scrollHandler}
-                    scrollEventThrottle={16}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            tintColor="#ffffff"
-                            colors={['#ffffff']}
-                            // Without this the spinner drops from behind the
-                            // collapsing header — the same leg DashboardSectionsFeed
-                            // already carries. 0 standalone, so unchanged there.
-                            progressViewOffset={headerHeight}
+            {/* The list ALWAYS renders, with loading and empty as its own
+                empty component, so an empty list still has pull-to-refresh
+                and scrolls under the host's header like the others. */}
+            <Animated.FlatList
+                testID="visited-publications-list"
+                data={items}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                ListHeaderComponent={items.length > 0 ? ListHeader : null}
+                ListEmptyComponent={
+                    isLoading ? (
+                        <Box className="items-center justify-center py-20">
+                            <Spinner size="large" />
+                        </Box>
+                    ) : (
+                        // What this list IS: publishers the reader opened from
+                        // Mera. It used to say "You haven't read any articles
+                        // yet" while the reader had read several in the app,
+                        // which this list never records (D5).
+                        <ForYouEmptyState
+                            icon="history"
+                            title={t('publicationVisits.emptyTitle')}
+                            body={t('publicationVisits.noArticlesYet')}
+                            testID="visited-publications-empty"
                         />
-                    }
-                />
-            )}
+                    )
+                }
+                contentContainerStyle={{
+                    paddingTop: headerHeight,
+                    paddingBottom: embedded
+                        ? tabClearance + 24
+                        : 20,
+                }}
+                showsVerticalScrollIndicator={false}
+                onScroll={scrollHandler}
+                scrollEventThrottle={16}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        tintColor="#ffffff"
+                        colors={['#ffffff']}
+                        // Without this the spinner drops from behind the
+                        // collapsing header — the same leg DashboardSectionsFeed
+                        // already carries. 0 standalone, so unchanged there.
+                        progressViewOffset={headerHeight}
+                    />
+                }
+            />
         </Box>
     );
 };

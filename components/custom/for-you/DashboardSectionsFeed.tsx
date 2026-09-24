@@ -3,10 +3,11 @@ import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
 import SectionDenominatorLine from '@/components/custom/for-you/SectionDenominatorLine';
+import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { sectionTitle } from '@/components/custom/for-you/section-title';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
-import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
@@ -14,9 +15,11 @@ import {
   isHeadlineRow,
   isSuggestionOpened,
   type BreakingCardData,
+  type EmptySectionReason,
   type FactRow,
   type FactRowGroup,
 } from '@/lib/stores/fact-rows-selector';
+import { Text } from '@/components/ui/text';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { router } from 'expo-router';
 import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
@@ -29,7 +32,6 @@ import Animated, {
   useComposedEventHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Pull-to-refresh spinner tint — same value the Feed tab uses. */
 const REFRESH_TINT = '#EDA77E';
@@ -61,6 +63,12 @@ interface SectionItem {
   /** True for the two headline section kinds: adds the denominator line and
    *  drops the "News about:" prefix / dynamic translation of the title. */
   headline: boolean;
+  /** D4: set on an interest with no stories yet. The section still shows, with
+   *  an empty state saying which of the two it is. */
+  emptyReason?: EmptySectionReason;
+  /** D4: the interest was added in the last 24h, and the header says so. Empty
+   *  sections, new or not, sort after every section with stories. */
+  newInterest: boolean;
 }
 
 interface DashboardSectionsFeedProps {
@@ -79,6 +87,11 @@ interface DashboardSectionsFeedProps {
   /** Dashboard header height — content top padding. */
   headerHeight: number;
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
+  /** Shown ABOVE the sections when no section has a story yet (a first run
+   *  with only empty interest sections). Without it a new reader would see a
+   *  column of "looking for stories" sections and nothing saying work is under
+   *  way. */
+  noStoriesLead?: React.ReactElement | null;
   /** Pull-to-refresh spinner state. Driven by the scheduler's feed-sync flag
    *  (see `useFeedSyncRefresh`), NOT by local state — so it rises on the same
    *  frame as the pull and stays up for the real duration of the sync. */
@@ -104,10 +117,13 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   scrollHandler,
   headerHeight,
   ListEmptyComponent,
+  noStoriesLead = null,
   refreshing,
   onRefresh,
 }) => {
-  const insets = useSafeAreaInsets();
+  // Inside a tab on iOS the inset already includes the tab bar; measured on
+  // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
+  const tabClearance = useTabBarClearance();
   const { t } = useTranslation();
 
   // Re-tap the Dashboard tab icon → scroll to top; tap again at the top →
@@ -158,6 +174,8 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         total: row.groups.length,
         title: sectionTitle(t, row),
         headline: isHeadlineRow(row),
+        emptyReason: row.emptyReason,
+        newInterest: row.newInterest === true,
       });
     }
     return data;
@@ -191,12 +209,50 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
 
   const renderItem = useCallback(
     ({ item }: { item: SectionItem }) => {
-      const { row, preview, total, title, headline } = item;
+      const { row, preview, total, title, headline, emptyReason, newInterest } = item;
       const open = () => openFactFeed(row, title);
+      if (emptyReason) {
+        // D4: an interest with no story yet still gets its section. Copy per
+        // reason and never a count: the Facts screen can list "38 articles"
+        // for the same fact (it counts every matched row, below the render
+        // gate included), so a "0" here would contradict it.
+        return (
+          <SectionGradientPanel factId={row.factId} style={{ marginTop: 16, marginBottom: 8 }}>
+            {newInterest ? (
+              <Text
+                size="xs"
+                className="font-semibold px-3 pt-2.5"
+                style={{ color: 'rgb(231, 138, 83)' }}
+                testID={`dashboard-section-new-${row.factId}`}
+              >
+                {t('forYou.newInterest')}
+              </Text>
+            ) : null}
+            <FactSectionHeader
+              title={title}
+              eventType={null}
+              total={0}
+              onPress={undefined}
+              translateTitle
+            />
+            <ForYouEmptyState
+              compact
+              icon={emptyReason === 'awaiting-first-run' ? 'hourglass-empty' : 'search'}
+              body={
+                emptyReason === 'awaiting-first-run'
+                  ? t('forYou.emptySection.awaiting')
+                  : t('forYou.emptySection.none')
+              }
+              testID={`dashboard-section-empty-${row.factId}`}
+            />
+          </SectionGradientPanel>
+        );
+      }
       // The ONLY zero-card section is a headline section where nothing cleared
       // the bar; its denominator line is the content, so it gets no header
       // affordance and no "View all" row pointing at an empty list.
       const canOpen = total > 0;
+      const showViewAll = total > SECTION_PREVIEW_COUNT;
       return (
         // ONE gradient panel per section, wrapping header + cards + closing
         // pill, so the pastel ink groups the whole section and the next section
@@ -217,7 +273,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
           {headline && (
             <SectionDenominatorLine read={row.headlineReadCount ?? 0} shown={total} />
           )}
-          <Box className="px-2">
+          <Box className={showViewAll ? 'px-2' : 'px-2 pb-2'}>
             {preview.map((group) => (
               <ArticleSuggestionCompactCard
                 key={group.data._id}
@@ -228,24 +284,31 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
               />
             ))}
           </Box>
-          {/* Closing row: plain "View all N articles" + chevron in the section
-              title's type style — NOT a second pill. */}
-          {canOpen && <SectionViewAllText total={total} onPress={open} />}
+          {/* Closing row, only when the section holds MORE than the preview
+              shows. "View all 1 article" under the one article it named was a
+              larger, bolder line than the headline itself and duplicated the
+              header's open button (M4). The header button still opens every
+              section; the small bottom padding above keeps a short section
+              from looking cut off. */}
+          {showViewAll && <SectionViewAllText total={total} onPress={open} />}
         </SectionGradientPanel>
       );
     },
-    [onPressSuggestion, openedIds, openFactFeed],
+    [onPressSuggestion, openedIds, openFactFeed, t],
   );
 
   // Mounted here rather than threaded down from ForYouScreen as a prop because
   // this component is the Dashboard's list and its only consumer — a prop would
   // be indirection with one caller.
+  const noStories = breaking.length === 0 && rows.every((r) => r.groups.length === 0);
   const ListHeader = useMemo(
     () =>
       breaking.length > 0 ? (
         <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
+      ) : rows.length > 0 && noStories ? (
+        noStoriesLead
       ) : null,
-    [breaking, onPressSuggestion],
+    [breaking, onPressSuggestion, rows.length, noStories, noStoriesLead],
   );
 
   return (
@@ -274,11 +337,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         contentContainerStyle={{
           paddingTop: headerHeight + 12,
           paddingHorizontal: 12,
-          // Bottom clearance for the floating tab bar — same expression as
-          // FeedScreen's list (safe-area bottom + tab-bar height + a fixed
-          // breathing-room tail), converged here from a previous ad-hoc
-          // `TAB_BAR_HEIGHT + 120` that omitted the safe-area inset entirely.
-          paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24,
+          // Bottom clearance for the tab bar plus a breathing-room tail. The
+          // helper, never insets.bottom + TAB_BAR_HEIGHT (see tab-bar.ts).
+          paddingBottom: tabClearance + 24,
         }}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}

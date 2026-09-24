@@ -38,6 +38,8 @@ jest.mock('react-native', () => {
 // like `hookOptions`). `mock`-prefixed because jest's hoisting rule requires it
 // for anything a jest.mock factory closes over.
 let mockListOnEndReached: (() => Promise<void> | void) | null = null;
+let mockListContentStyle: any = null;
+let mockInsetBottom = 0;
 
 // Reanimated: render Animated.FlatList as items (+ refreshControl/empty/footer),
 // and stub the scroll-handler hooks so composition doesn't crash. This mock
@@ -58,12 +60,14 @@ jest.mock('react-native-reanimated', () => {
                 ListFooterComponent,
                 refreshControl,
                 onEndReached,
+                contentContainerStyle,
             }: any,
             _ref: any,
         ) => {
             // Exposed so a test can drive pagination — the real list calls this
             // on scroll, which this mock has no notion of.
             mockListOnEndReached = onEndReached;
+            mockListContentStyle = contentContainerStyle;
             const items = data ?? [];
             const kids: any[] = [];
             if (refreshControl) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'rc' }, refreshControl));
@@ -96,7 +100,7 @@ jest.mock('react-native-reanimated', () => {
 });
 
 jest.mock('react-native-safe-area-context', () => ({
-    useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+    useSafeAreaInsets: () => ({ top: 0, bottom: mockInsetBottom, left: 0, right: 0 }),
 }));
 
 jest.mock('@/components/ui/box', () => { const { View } = require('react-native'); return { Box: (p: any) => <View {...p} /> }; });
@@ -153,6 +157,7 @@ beforeEach(() => {
     jest.clearAllMocks();
     hookOptions = null;
     mockListOnEndReached = null;
+    mockInsetBottom = 0;
 });
 
 // Regression: "Encountered two children with the same key" on the Explore tab.
@@ -228,6 +233,17 @@ describe('ScopeArticleList — the link owns the capture', () => {
             expect.objectContaining({ method: 'loadMore' }),
             'warning',
         );
+    });
+});
+
+describe('ScopeArticleList: list end padding', () => {
+    it('counts the tab bar once on iOS, where the tab inset already includes it', async () => {
+        // A Face ID iPhone's tab-screen inset (bar + home indicator).
+        mockInsetBottom = 85;
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['a'], null, false));
+        const { getByTestId } = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />);
+        await waitFor(() => expect(getByTestId('card-a')).toBeTruthy());
+        expect(mockListContentStyle.paddingBottom).toBe(85 + 24);
     });
 });
 
@@ -339,5 +355,36 @@ describe('ScopeArticleList pull-to-refresh', () => {
             await hookOptions.onRefresh();
         });
         expect(mockGetTopHeadlines).not.toHaveBeenCalled();
+    });
+});
+
+// S5: a load that FAILED is not a load that found nothing. The empty state used
+// to say "no articles" whenever the device still read as online, which blamed
+// the world for a request that never landed.
+describe('ScopeArticleList: failure is not emptiness', () => {
+    it('says Mera cannot be reached, not "no articles", when the first load fails online', async () => {
+        mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+        const { getByText, queryByText, queryByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+        await waitFor(() => expect(queryByTestId('explore-loading')).toBeNull());
+
+        expect(getByText('explore.serverUnavailable')).toBeTruthy();
+        expect(queryByText('explore.noArticles')).toBeNull();
+    });
+
+    it('goes back to the honest empty copy once a refresh succeeds with nothing', async () => {
+        mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+        const { getByText, queryByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+        await waitFor(() => expect(queryByTestId('explore-loading')).toBeNull());
+
+        mockGetTopHeadlines.mockResolvedValueOnce(page([], null, false));
+        await act(async () => {
+            await hookOptions.onRefresh();
+        });
+
+        expect(getByText('explore.noArticles')).toBeTruthy();
     });
 });

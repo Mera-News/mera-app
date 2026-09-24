@@ -203,14 +203,21 @@ export async function retainStoryMember(
  * Order matters: `removeMemberSnapshot` first, release second. The release asks
  * whether any active story still holds the article, and that question reads the
  * SNAPSHOTS — releasing first would still see the article as a member and
- * decline every time.
+ * decline every time. For the same reason a FAILED removal skips the release.
+ *
+ * Returns false when the snapshot removal failed, so the timeline can put back
+ * the card it removed optimistically. The release never fails the result: a
+ * retention row left behind is harmless and `deleteOrphanedRetention` (the
+ * daily data-cleanup sweep) removes it.
  */
 export async function disownStoryMember(
   trackedStoryId: string,
   articleId: string,
-): Promise<void> {
-  await removeMemberSnapshot(trackedStoryId, articleId);
+): Promise<boolean> {
+  const removed = await removeMemberSnapshot(trackedStoryId, articleId);
+  if (!removed) return false;
   await releaseTrackedStoryRetention(articleId);
+  return true;
 }
 
 /**
@@ -223,10 +230,16 @@ export async function disownStoryMember(
  * retrieving coverage for a story the user believes they removed. Retire, not
  * hard-delete, mirrors how chat retires a topic (dedup/history preserved).
  *
- * Never throws — a failed topic retire must not block the row delete.
+ * Never throws. Returns true when the story row is gone afterwards, false when
+ * the row delete failed; the screens stay and say so on false rather than
+ * leaving a story that still exists. A failed topic retire does NOT block the
+ * row delete (owner decision) and does not change the result: it is reported
+ * to Sentry instead, because nothing on screen would ever reveal it.
+ * Retention release failures never change the result either (see
+ * {@link disownStoryMember}).
  */
-export async function deleteTrackedStoryById(id: string): Promise<void> {
-  if (!id) return;
+export async function deleteTrackedStoryById(id: string): Promise<boolean> {
+  if (!id) return true;
   let memberIds: string[] = [];
   try {
     const row = await getTrackedStoryById(id);
@@ -237,9 +250,12 @@ export async function deleteTrackedStoryById(id: string): Promise<void> {
     const topicId = row?.topicId ?? null;
     if (topicId) await retire(topicId);
   } catch (err) {
-    logger.warn('[track-actions] topic retire failed', { id, error: String(err) });
+    logger.captureException(err, {
+      tags: { module: 'track-actions', method: 'deleteTrackedStoryById.retire' },
+    });
   }
-  await untrackStory(id);
+  const deleted = await untrackStory(id);
+  if (!deleted) return false;
   // Release after the row is gone, and one at a time rather than in parallel:
   // each release re-checks every OTHER active story, so an article still
   // followed elsewhere (or still fact-checked) keeps its retention.
@@ -247,17 +263,7 @@ export async function deleteTrackedStoryById(id: string): Promise<void> {
   for (const articleId of memberIds) {
     await releaseTrackedStoryRetention(articleId);
   }
-}
-
-/** Unfollow the active story matching `subject` (no-op when none matches).
- *  Thin subject→id resolver over {@link deleteTrackedStoryById}. */
-export async function untrackStoryFromSubject(subject: FeedbackSubject): Promise<void> {
-  const id = await findActiveTrackedId({
-    stableClusterId: subject.stableClusterId ?? null,
-    articleId: subject.articleId,
-  });
-  if (!id) return;
-  await deleteTrackedStoryById(id);
+  return true;
 }
 
 /** Is the story described by `subject` already followed (active only)? */

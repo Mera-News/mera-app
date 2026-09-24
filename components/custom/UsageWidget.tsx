@@ -1,4 +1,5 @@
 import { GlassPanel } from '@/components/custom/GlassSurface';
+import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -73,6 +74,16 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
     const { t, i18n } = useTranslation();
 
     const hasLimit = typeof limit === 'number' && limit > 0;
+    // Grouped in the app language: "10,000", not "10000" (M9). A malformed
+    // language tag throws in some Hermes builds, so the bare number is the
+    // fallback rather than a crash on the usage card.
+    const formatCount = (n: number): string => {
+        try {
+            return n.toLocaleString(i18n.language);
+        } catch {
+            return String(n);
+        }
+    };
     const pct = hasLimit ? Math.min(100, Math.round((used / (limit as number)) * 100)) : 0;
 
     const resetText = (() => {
@@ -94,58 +105,29 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
             contentClassName="p-5"
             fallbackClassName="bg-gray-900 border border-gray-800"
         >
-            <HStack className="items-start justify-between mb-3">
-                <VStack className="flex-1 min-w-0">
-                    {/* No `leading-9` (1.2 on 30px type). The content here is
-                        digits, so nothing clips today — but a tight override
-                        left in place is how the clipping bug comes back the
-                        moment a localized string lands in this slot.
-                        `text-3xl` now carries a script-safe 45px line box. */}
-                    <Text className="text-white font-bold text-3xl">
-                        {used}
-                        {hasLimit ? (
-                            <Text className="text-gray-400 font-semibold text-xl"> / {limit}</Text>
-                        ) : null}
-                    </Text>
-                    <HStack className="items-center mt-0.5" space="xs">
-                        <Text size="xs" className="text-gray-300 font-medium flex-shrink" numberOfLines={2}>{usedLabel}</Text>
-                        {onInfoPress ? (
-                            <Pressable onPress={onInfoPress} hitSlop={8}>
-                                <MaterialIcons name="info-outline" size={14} color="#9ca3af" />
-                            </Pressable>
-                        ) : null}
-                    </HStack>
-                </VStack>
-                {(planLabel || resetText || onUpgrade) ? (
-                    <VStack className="items-end ml-3">
-                        <HStack className="items-center" space="xs">
-                            {planLabel ? (
-                                <Text size="xs" className="text-primary-400 font-semibold">{planLabel}</Text>
-                            ) : null}
-                            {onUpgrade ? (
-                                <Pressable
-                                    onPress={onUpgrade}
-                                    hitSlop={8}
-                                    className="bg-primary-500 rounded-full px-2.5 py-1"
-                                >
-                                    <HStack className="items-center" space="xs">
-                                        <MaterialIcons name={upgradeIcon} size={12} color="#ffffff" />
-                                        {upgradeLabel ? (
-                                            <Text size="xs" className="text-white font-semibold">{upgradeLabel}</Text>
-                                        ) : null}
-                                    </HStack>
-                                </Pressable>
-                            ) : null}
-                        </HStack>
-                        {resetText ? (
-                            <>
-                                <Text size="xs" className="text-gray-300 font-medium mt-1">{resetLabel}</Text>
-                                <Text size="xs" className="text-gray-100 font-semibold">{resetText}</Text>
-                            </>
-                        ) : null}
-                    </VStack>
-                ) : null}
-            </HStack>
+            {/* Stacked, not side by side (C-PRO): with the plan chip beside it
+                the figure wrapped ("1,123 /" over "10,000") and the label was
+                cut off. The figure and its label own the full width; the plan,
+                its button and the reset time get their own rows below. */}
+            <VStack className="mb-3">
+                {/* No `leading-9` (1.2 on 30px type): `text-3xl` carries a
+                    script-safe line box, and a tight override is how clipping
+                    comes back the moment a localized string lands here. */}
+                <Text className="text-white font-bold text-3xl" numberOfLines={1} testID="usage-widget-figure">
+                    {formatCount(used)}
+                    {hasLimit ? (
+                        <Text className="text-gray-400 font-semibold text-xl"> / {formatCount(limit as number)}</Text>
+                    ) : null}
+                </Text>
+                <HStack className="items-center mt-0.5" space="xs">
+                    <Text size="xs" className="text-gray-300 font-medium flex-shrink" numberOfLines={2}>{usedLabel}</Text>
+                    {onInfoPress ? (
+                        <Pressable onPress={onInfoPress} hitSlop={14} accessibilityRole="button">
+                            <MaterialIcons name="info-outline" size={14} color="#9ca3af" />
+                        </Pressable>
+                    ) : null}
+                </HStack>
+            </VStack>
             {hasLimit ? (
                 <View style={{ height: 8, borderRadius: 4, backgroundColor: '#1f2937', overflow: 'hidden' }}>
                     <View
@@ -157,6 +139,33 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                         }}
                     />
                 </View>
+            ) : null}
+            {(planLabel || onUpgrade) ? (
+                <HStack className="items-center justify-between mt-4" space="sm">
+                    {planLabel ? (
+                        <Text size="sm" className="text-primary-400 font-semibold flex-shrink" numberOfLines={2}>{planLabel}</Text>
+                    ) : <Box />}
+                    {onUpgrade ? (
+                        <Pressable
+                            onPress={onUpgrade}
+                            accessibilityRole="button"
+                            style={{ minHeight: 44, justifyContent: 'center' }}
+                            className="bg-primary-500 rounded-full px-4"
+                        >
+                            <HStack className="items-center" space="xs">
+                                <MaterialIcons name={upgradeIcon} size={14} color="#ffffff" />
+                                {upgradeLabel ? (
+                                    <Text size="sm" className="text-white font-semibold">{upgradeLabel}</Text>
+                                ) : null}
+                            </HStack>
+                        </Pressable>
+                    ) : null}
+                </HStack>
+            ) : null}
+            {resetText ? (
+                <Text size="xs" className="text-gray-300 font-medium mt-2">
+                    {resetLabel} <Text size="xs" className="text-gray-100 font-semibold">{resetText}</Text>
+                </Text>
             ) : null}
         </GlassPanel>
     );

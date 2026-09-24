@@ -39,6 +39,12 @@ export interface AgentArm {
    *  leg producing no load_skill call ends the turn instead of being re-asked,
    *  and the route leg carries all four discovery tools. */
   routeEnforcement?: 'off' | 'on';
+  /** Absent means OFF. 'on' lets the route leg load one skill per subject
+   *  (up to three) and runs them as ordered segments of one turn. */
+  multiSubject?: 'off' | 'on';
+  /** A fixed section appended after the shipped router procedure. A value,
+   *  like `routerPrompt`: it never rewrites the shipped text, it follows it. */
+  routerAddendum?: string;
 }
 
 const BASELINE: AgentArm = {
@@ -120,8 +126,28 @@ const PRE_ENFORCEMENT: AgentArm = {
   routeEnforcement: 'off',
 };
 
+/**
+ * SEVERAL SUBJECTS IN ONE TURN (audit B1, release group G3). OFF by default:
+ * it ships only after the corpus comparison against `baseline` passes.
+ *
+ * "I'm 34 and work as a product manager in Berlin. I moved here from Bangalore"
+ * loaded one skill and dropped the job and the origin. Under this arm the route
+ * leg loads one skill per subject and the loop runs each as its own segment,
+ * with its own guideline, place lookups, replace rules and topic skill.
+ */
+export const MULTI_SUBJECT_ARM_ID = 'multi-subject';
+const MULTI_SUBJECT: AgentArm = {
+  id: MULTI_SUBJECT_ARM_ID,
+  description:
+    'B1: the route leg loads one skill per subject (up to three) and the loop runs them as '
+    + 'ordered segments of one turn. Compare fact recall and legs per turn against baseline.',
+  multiSubject: 'on',
+  routerAddendum: `## Several subjects in one message
+This section overrides the two-subjects tie-break above. When the message states facts about two or three DIFFERENT subjects (a job, a home, where they are from, a relative, an interest), call \`load_skill\` once for EACH subject, the one they led with first, at most three calls in this one response. Origin plus current home is still ONE subject: origin. A question or small talk beside the facts adds no call. One subject is one call, as always.`,
+};
+
 /** Arms that ship. A runner may add more for a throwaway probe. */
-const SHIPPED_ARMS: AgentArm[] = [ROUTER_V1, ONESHOT_PROD, PRE_ENFORCEMENT];
+const SHIPPED_ARMS: AgentArm[] = [ROUTER_V1, ONESHOT_PROD, PRE_ENFORCEMENT, MULTI_SUBJECT];
 
 const REGISTRY = new Map<string, AgentArm>([
   [BASELINE_ARM, BASELINE],
@@ -185,4 +211,9 @@ export function routerProcedureFor(arm: AgentArm): 'skill' | 'inline-legacy' {
 /** Absent means ON, so the shipped loop is what gets measured. */
 export function routeEnforcementFor(arm: AgentArm): 'off' | 'on' {
   return arm.routeEnforcement ?? 'on';
+}
+
+/** Absent means OFF: one skill per turn is what ships until G3 is switched on. */
+export function multiSubjectFor(arm: AgentArm): 'off' | 'on' {
+  return arm.multiSubject ?? 'off';
 }

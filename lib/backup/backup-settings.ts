@@ -26,6 +26,7 @@ export const BACKUP_CADENCE_KEY = 'backup_cadence';
 export const BACKUP_PROVIDER_KEY = 'backup_provider';
 export const BACKUP_WIFI_ONLY_KEY = 'backup_wifi_only';
 export const BACKUP_LAST_RUN_KEY = 'backup_last_run_at';
+export const BACKUP_LAST_FAILED_KEY = 'backup_last_failed_at';
 
 export type BackupProviderId = 'icloud' | 'google-drive';
 
@@ -51,12 +52,20 @@ interface Mirror {
   provider: BackupProviderId | null;
   wifiOnly: boolean;
   lastRunAt: number | null;
+  /** When the most recent attempt failed. Shown only while newer than lastRunAt. */
+  lastFailedAt: number | null;
 }
 
 // Defaults are the safe ones: backup is OFF until the user turns it on, and
 // Wi-Fi-only is ON, because a 25 MB upload over a metered connection is a cost
 // the user did not agree to.
-const mirror: Mirror = { cadence: 'off', provider: null, wifiOnly: true, lastRunAt: null };
+const mirror: Mirror = {
+  cadence: 'off',
+  provider: null,
+  wifiOnly: true,
+  lastRunAt: null,
+  lastFailedAt: null,
+};
 
 /**
  * Hydrates the mirror. Runs inside `hydrateAllStores`' Promise.all, so it must
@@ -66,11 +75,12 @@ const mirror: Mirror = { cadence: 'off', provider: null, wifiOnly: true, lastRun
  */
 export async function hydrateBackupSettings(): Promise<void> {
   try {
-    const [cadence, provider, wifiOnly, lastRun] = await Promise.all([
+    const [cadence, provider, wifiOnly, lastRun, lastFailed] = await Promise.all([
       getSetting(BACKUP_CADENCE_KEY),
       getSetting(BACKUP_PROVIDER_KEY),
       getSetting(BACKUP_WIFI_ONLY_KEY),
       getSetting(BACKUP_LAST_RUN_KEY),
+      getSetting(BACKUP_LAST_FAILED_KEY),
     ]);
     mirror.cadence = isCadence(cadence) ? cadence : 'off';
     mirror.provider = isProviderId(provider) ? provider : null;
@@ -78,6 +88,7 @@ export async function hydrateBackupSettings(): Promise<void> {
     // been asked must not start uploading over cellular.
     mirror.wifiOnly = wifiOnly !== '0';
     mirror.lastRunAt = lastRun ? Number(lastRun) : null;
+    mirror.lastFailedAt = lastFailed ? Number(lastFailed) : null;
   } catch {
     resetBackupSettingsMirror();
   }
@@ -98,6 +109,15 @@ export function backupWifiOnly(): boolean {
 }
 export function backupLastRunAt(): number | null {
   return mirror.lastRunAt;
+}
+/**
+ * The last FAILED attempt, or null when the newest attempt succeeded. A failure
+ * older than the last success is history, not status.
+ */
+export function backupLastFailedAt(): number | null {
+  if (mirror.lastFailedAt === null) return null;
+  if (mirror.lastRunAt !== null && mirror.lastRunAt >= mirror.lastFailedAt) return null;
+  return mirror.lastFailedAt;
 }
 
 /**
@@ -164,9 +184,20 @@ export async function setBackupWifiOnly(wifiOnly: boolean): Promise<void> {
   await setSetting(BACKUP_WIFI_ONLY_KEY, wifiOnly ? '1' : '0');
 }
 
+/**
+ * Stamps a finished upload. EVERY path that runs a backup must call this, the
+ * manual button included: the status line reads nothing else, so a run that is
+ * not stamped reads as "No backup saved yet" straight after it succeeded.
+ */
 export async function recordBackupRun(at: number): Promise<void> {
   mirror.lastRunAt = at;
   await setSetting(BACKUP_LAST_RUN_KEY, String(at));
+}
+
+/** Stamps a failed attempt, so the status can say so instead of going quiet. */
+export async function recordBackupFailure(at: number): Promise<void> {
+  mirror.lastFailedAt = at;
+  await setSetting(BACKUP_LAST_FAILED_KEY, String(at));
 }
 
 /** Back to the declared defaults. Used by the failed-hydration path and tests. */
@@ -175,6 +206,7 @@ export function resetBackupSettingsMirror(): void {
   mirror.provider = null;
   mirror.wifiOnly = true;
   mirror.lastRunAt = null;
+  mirror.lastFailedAt = null;
 }
 
 /**

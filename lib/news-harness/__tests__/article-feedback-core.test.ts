@@ -73,6 +73,17 @@ function scoredContext(overrides: Partial<SuggestionFeedbackContext['suggestion'
   };
 }
 
+// F34: see follow-story-core.test.ts. The article chat stages the same card.
+describe('article-feedback follow card copy (F34)', () => {
+  it('asks for the fixed line and bans "scope", in the prompt and the tool description', () => {
+    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+    expect(prompt).toContain('"Pick the story to follow below."');
+    expect(prompt).toContain('Never use the word "scope" in anything the user reads');
+    const track = getArticleFeedbackToolDefinitions().find((t) => t.function.name === 'proposeTrack')!;
+    expect(track.function.description).toContain('Never write the word "scope" to the user');
+  });
+});
+
 describe('buildArticleFeedbackSystemPrompt', () => {
   it('includes the XML tool-call format block only when needsToolFormat', () => {
     const withFormat = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });

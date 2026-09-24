@@ -41,6 +41,12 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
+// blockedBy() now reads the live route through nav-state's module mirror.
+let mockPathname = '/logged-in/app_container/feed';
+jest.mock('@/lib/nav-state', () => ({
+  getCurrentPathname: () => mockPathname,
+}));
+
 const mockAddEventListener = jest.fn((..._a: any[]) => ({ remove: jest.fn() }));
 const mockAppState: { currentState: string } = { currentState: 'active' };
 jest.mock('react-native', () => ({
@@ -54,6 +60,8 @@ jest.mock('react-native', () => ({
 
 import {
   MIN_RESTART_INTERVAL_MS,
+  OTA_RESTART_GUARD_KEY,
+  RESTART_BLOCKED_ROUTES,
   RESTART_MARKER_KEY,
   __resetAppRestartForTests,
   activeHolds,
@@ -61,7 +69,11 @@ import {
   initRestartContext,
   requestRestart,
   restartContext,
+  isRestartBlockedRoute,
+  markOtaRestartAttempted,
+  otaRestartAlreadyAttempted,
   restartIsAvailable,
+  restartWouldReload,
   wasJsRestartSync,
 } from '../app-restart';
 import loggerDefault from '@/lib/logger';
@@ -92,6 +104,7 @@ beforeEach(() => {
   mockDeleteSetting.mockResolvedValue(undefined);
   mockReloadAsync.mockResolvedValue(undefined);
   mockAppState.currentState = 'active';
+  mockPathname = '/logged-in/app_container/feed';
   delete process.env.EXPO_PUBLIC_RESTART_DEBUG;
   (globalThis as any).__DEV__ = true;
   mockUpdatesEnabled = true;
@@ -242,7 +255,7 @@ describe('requestRestart', () => {
     jest.setSystemTime(NOW + 3_000);
     handler('active');
 
-    await requestRestart('foreground');
+    await requestRestart('ota');
 
     const payload = JSON.parse(mockSetSetting.mock.calls[0][1] as string);
     expect(payload.backgroundedAt).toBe(NOW);
@@ -263,7 +276,7 @@ describe('requestRestart', () => {
 
   it('does nothing in a dev build', async () => {
     (globalThis as any).__DEV__ = true;
-    await requestRestart('foreground');
+    await requestRestart('ota');
     expect(mockReloadAsync).not.toHaveBeenCalled();
     expect(mockSetSetting).not.toHaveBeenCalled();
   });
@@ -271,7 +284,7 @@ describe('requestRestart', () => {
   it('does nothing when updates are disabled', async () => {
     asProductionBuild();
     mockUpdatesEnabled = false;
-    await requestRestart('foreground');
+    await requestRestart('ota');
     expect(mockReloadAsync).not.toHaveBeenCalled();
   });
 
@@ -287,7 +300,7 @@ describe('requestRestart', () => {
     asProductionBuild();
     const release = holdRestart('purchase');
 
-    await requestRestart('foreground');
+    await requestRestart('ota');
     expect(mockReloadAsync).not.toHaveBeenCalled();
 
     release();
@@ -305,7 +318,7 @@ describe('requestRestart', () => {
     expect(mockReloadAsync).toHaveBeenCalledTimes(1);
 
     jest.setSystemTime(NOW + MIN_RESTART_INTERVAL_MS + 1);
-    await requestRestart('foreground');
+    await requestRestart('ota');
     expect(mockReloadAsync).toHaveBeenCalledTimes(1);
   });
 
@@ -378,10 +391,10 @@ describe('EXPO_PUBLIC_RESTART_DEBUG', () => {
     process.env.EXPO_PUBLIC_RESTART_DEBUG = 'true';
     holdRestart('purchase');
 
-    await requestRestart('foreground');
+    await requestRestart('ota');
 
     expect(mockLogger.info).toHaveBeenCalledWith(
-      '[app-restart] would restart (foreground, blocked-by: hold:purchase)',
+      '[app-restart] would restart (ota, blocked-by: hold:purchase)',
     );
   });
 
@@ -395,6 +408,214 @@ describe('EXPO_PUBLIC_RESTART_DEBUG', () => {
     expect(mockLogger.info).toHaveBeenCalledWith(
       '[app-restart] would restart (language, blocked-by: none)',
     );
+  });
+});
+
+describe('route blocking', () => {
+  // THE LIST LIVES IN THE AUTHORITY so every reason is covered. It used to be
+  // checked by the foreground restart alone, which left `requestRestart('ota')`
+  // route-blind: a user returning from their mail app to /verify-otp had the
+  // foreground restart skipped and was then restarted by the OTA check on the
+  // same transition, wiping the code that return delivered.
+  it('blocks exactly these five routes, no more and no fewer', () => {
+    expect([...RESTART_BLOCKED_ROUTES]).toEqual([
+      '/login',
+      '/verify-otp',
+      '/pin-setup',
+      '/pin-lock',
+      '/logged-in/onboarding',
+    ]);
+    expect(RESTART_BLOCKED_ROUTES).toHaveLength(5);
+  });
+
+  it('isRestartBlockedRoute matches on prefix and nothing else', () => {
+    expect(isRestartBlockedRoute('/verify-otp?email=x')).toBe(true);
+    expect(isRestartBlockedRoute('/logged-in/onboarding/step-2')).toBe(true);
+    expect(isRestartBlockedRoute('/logged-in/app_container/feed')).toBe(false);
+    expect(isRestartBlockedRoute('/logged-in/notifications')).toBe(false);
+  });
+
+  it.each([...RESTART_BLOCKED_ROUTES])('refuses an OTA restart on %s', async (route) => {
+    asProductionBuild();
+    mockPathname = route;
+
+    await requestRestart('ota');
+
+    expect(mockReloadAsync).not.toHaveBeenCalled();
+  });
+
+  it.each(['language', 'restore'] as const)('refuses a %s restart on a blocked route', async (reason) => {
+    asProductionBuild();
+    mockPathname = '/pin-lock';
+
+    await requestRestart(reason);
+
+    expect(mockReloadAsync).not.toHaveBeenCalled();
+  });
+
+  it('names the route as the blocker, so the sim log says which one', async () => {
+    process.env.EXPO_PUBLIC_RESTART_DEBUG = 'true';
+    mockPathname = '/verify-otp';
+
+    await requestRestart('ota');
+
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      '[app-restart] would restart (ota, blocked-by: route:/verify-otp)',
+    );
+  });
+
+  it('restarts on an ordinary route', async () => {
+    asProductionBuild();
+    mockPathname = '/logged-in/app_container/feed';
+
+    await requestRestart('ota');
+
+    expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not block when the route cannot be read', async () => {
+    // A language change or a restore is a restart the user asked for; an
+    // unreadable route must not swallow it.
+    asProductionBuild();
+    const navState = jest.requireMock('@/lib/nav-state') as { getCurrentPathname: () => string };
+    const spy = jest
+      .spyOn(navState, 'getCurrentPathname')
+      .mockImplementation(() => {
+        throw new Error('no router yet');
+      });
+
+    await requestRestart('language');
+
+    expect(mockReloadAsync).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+  });
+});
+
+describe('the per-update-id OTA restart guard', () => {
+  // The OTA check is the only restart trigger left and it runs on every return,
+  // so a bundle that downloads, reloads and fails to launch would restart on
+  // every return. MIN_RESTART_INTERVAL_MS spaces that cycle; this bounds it.
+  it('is a settings row keyed on the update id', async () => {
+    await markOtaRestartAttempted('update-abc');
+    expect(mockSetSetting).toHaveBeenCalledWith(OTA_RESTART_GUARD_KEY, 'update-abc');
+  });
+
+  it('reports an id it has already seen, and only that id', async () => {
+    mockGetSetting.mockResolvedValue('update-abc');
+    await expect(otaRestartAlreadyAttempted('update-abc')).resolves.toBe(true);
+    await expect(otaRestartAlreadyAttempted('update-def')).resolves.toBe(false);
+  });
+
+  it('reports false when nothing has been attempted', async () => {
+    mockGetSetting.mockResolvedValue(null);
+    await expect(otaRestartAlreadyAttempted('update-abc')).resolves.toBe(false);
+  });
+
+  // Fails to "already attempted": an unreadable guard must not license an
+  // unbounded reload loop. The update still launches at the next cold start.
+  it('fails CLOSED on an unreadable guard', async () => {
+    mockGetSetting.mockRejectedValue(new Error('db gone'));
+    await expect(otaRestartAlreadyAttempted('update-abc')).resolves.toBe(true);
+    expect(mockLogger.captureException).toHaveBeenCalled();
+  });
+
+  // It must NOT ride on the restart marker, which is deleted on first read: the
+  // boot that proves a bundle failed to launch would erase its own guard.
+  it('is a different row from the restart marker', () => {
+    expect(OTA_RESTART_GUARD_KEY).not.toBe(RESTART_MARKER_KEY);
+  });
+
+  it('survives reading the marker, which deletes only the marker', async () => {
+    mockGetSetting.mockImplementation((key: string) =>
+      Promise.resolve(
+        key === RESTART_MARKER_KEY
+          ? JSON.stringify({ reason: 'ota', at: NOW, backgroundedAt: null, lastForegroundAt: null })
+          : 'update-abc',
+      ),
+    );
+
+    await restartContext();
+
+    expect(mockDeleteSetting).toHaveBeenCalledWith(RESTART_MARKER_KEY);
+    expect(mockDeleteSetting).not.toHaveBeenCalledWith(OTA_RESTART_GUARD_KEY);
+    await expect(otaRestartAlreadyAttempted('update-abc')).resolves.toBe(true);
+  });
+});
+
+describe('restartWouldReload', () => {
+  // The OTA path spends one attempt per bundle and must only spend it on a
+  // request that genuinely reloads. Every non-reloading outcome has to be
+  // covered, or the attempt is consumed by something that never reloaded and the
+  // bundle is stranded until a cold start.
+  it('is true on a production build with nothing in the way', () => {
+    asProductionBuild();
+    expect(restartWouldReload()).toBe(true);
+  });
+
+  it('is false while a hold is live', () => {
+    asProductionBuild();
+    holdRestart('purchase');
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  it('is false on a blocked route', () => {
+    asProductionBuild();
+    mockPathname = '/verify-otp';
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  it('is false when the app is not active', () => {
+    asProductionBuild();
+    mockAppState.currentState = 'background';
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  it('is false inside the cooldown', async () => {
+    asProductionBuild();
+    await requestRestart('ota');
+    jest.setSystemTime(NOW + MIN_RESTART_INTERVAL_MS - 1);
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  // An inert build eating the attempt is the same bug in different clothes.
+  it('is false in a dev build and when updates are disabled', () => {
+    (globalThis as any).__DEV__ = true;
+    expect(restartWouldReload()).toBe(false);
+
+    (globalThis as any).__DEV__ = false;
+    mockUpdatesEnabled = false;
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  // Otherwise a simulator pass sees the decision once and then silently never
+  // again, because the first run consumed the only attempt.
+  it('is false under EXPO_PUBLIC_RESTART_DEBUG', () => {
+    asProductionBuild();
+    process.env.EXPO_PUBLIC_RESTART_DEBUG = 'true';
+    expect(restartWouldReload()).toBe(false);
+  });
+
+  // It must agree with the gate it predicts. A second copy of that ladder is how
+  // the two drift apart, so this pins them to the same answer.
+  it('agrees with requestRestart on every blocker', async () => {
+    asProductionBuild();
+    for (const setUp of [
+      () => { mockAppState.currentState = 'inactive'; },
+      () => { holdRestart('chat-stream'); },
+      () => { mockPathname = '/pin-lock'; },
+    ]) {
+      __resetAppRestartForTests();
+      jest.clearAllMocks();
+      mockAppState.currentState = 'active';
+      mockPathname = '/logged-in/app_container/feed';
+      setUp();
+
+      const predicted = restartWouldReload();
+      await requestRestart('ota');
+
+      expect(predicted).toBe(false);
+      expect(mockReloadAsync).not.toHaveBeenCalled();
+    }
   });
 });
 

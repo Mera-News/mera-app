@@ -21,6 +21,9 @@ import Animated, {
 /** Gutter width. Fixed, so the bubble's left edge does not shift when the
  *  avatar appears at the start of a turn and goes at the end of it. */
 export const AVATAR_SIZE = 22;
+/** The full gutter, avatar plus its breathing room. A bubble without an
+ *  avatar keeps a spacer this wide, so its left edge never moves. */
+export const AVATAR_GUTTER_WIDTH = AVATAR_SIZE + 6;
 const BREATHE_MS = 1_800;
 
 export interface MeraStreamAvatarProps {
@@ -62,7 +65,7 @@ export const MeraStreamAvatar: React.FC<MeraStreamAvatarProps> = ({
 
 const styles = StyleSheet.create({
   gutter: {
-    width: AVATAR_SIZE + 6,
+    width: AVATAR_GUTTER_WIDTH,
     alignItems: 'center',
     justifyContent: 'flex-end',
     paddingBottom: 2,

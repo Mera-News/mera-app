@@ -1,7 +1,7 @@
-import { GlassPlate } from '@/components/custom/GlassSurface';
+import { GLASS_OVER_CONTENT_FILL, GlassPlate } from '@/components/custom/GlassSurface';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,11 +9,17 @@ interface ScrollToTopFabProps {
     visible: boolean;
     onPress: () => void;
     /**
-     * Extra bottom clearance on top of `insets.bottom` — set this to
-     * TAB_BAR_HEIGHT (lib/navigation/tab-bar.ts) when the host screen sits
-     * inside the bottom tab shell, so the FAB doesn't sit under the tab bar.
+     * Extra bottom clearance on top of `insets.bottom`. Ignored when
+     * `bottomInset` is given.
      */
     extraBottomOffset?: number;
+    /**
+     * The whole bottom clearance, replacing `insets.bottom + extraBottomOffset`.
+     * A host INSIDE the tab navigator passes `useTabBarClearance()` here: on iOS
+     * the tab's own inset already includes the bar, so adding TAB_BAR_HEIGHT to
+     * it counts the bar twice.
+     */
+    bottomInset?: number;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -22,7 +28,12 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
  * Floating Action Button for scrolling to top of a list
  * Positioned at bottom-right, above the native tab bar
  */
-const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress, extraBottomOffset = 0 }) => {
+const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({
+    visible,
+    onPress,
+    extraBottomOffset = 0,
+    bottomInset,
+}) => {
     const insets = useSafeAreaInsets();
 
     if (!visible) return null;
@@ -33,19 +44,22 @@ const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress, extra
             entering={FadeIn.duration(200)}
             exiting={FadeOut.duration(200)}
             onPress={onPress}
-            style={[styles.fab, { bottom: 20 + insets.bottom + extraBottomOffset }]}
+            style={[styles.fab, { bottom: 20 + (bottomInset ?? insets.bottom + extraBottomOffset) }]}
         >
             {/* Radius goes on the plate's own style rather than clipping the
                 Pressable: RN drops a view's shadow the moment that same view sets
                 `overflow: hidden`, and the FAB's shadow is what lifts it off the
                 feed.
 
-                `GlassPlate` is the ONLY surface here on every platform now. It
-                used to paint nothing off iOS 26, so this file carried a
-                near-white pill with a dark chevron as its fallback — the single
-                largest visual mismatch between the two platforms, a white button
-                on Android against a translucent one on iOS. The plate's own
-                fallback replaced it. */}
+                The dark base is the button's real surface. With the glass plate
+                as the only surface, a settled screen could show a bare arrow
+                over the text behind it (seen on device): the plate can paint
+                nothing. The glass on top only tints the base. */}
+            <View
+                testID="feed-scroll-top-fab-base"
+                pointerEvents="none"
+                style={[StyleSheet.absoluteFill, styles.base]}
+            />
             <GlassPlate style={{ borderRadius: FAB_RADIUS }} />
             <MaterialIcons name="keyboard-arrow-up" size={28} color="#e5e7eb" />
         </AnimatedPressable>
@@ -68,6 +82,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 8, // Android shadow
+    },
+    base: {
+        borderRadius: FAB_RADIUS,
+        backgroundColor: GLASS_OVER_CONTENT_FILL,
     },
 });
 

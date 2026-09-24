@@ -1,0 +1,130 @@
+{
+  "id": "ux1-expat-three-facts",
+  "cohort": "production",
+  "note": "ux1 owner decision: an expat statement yields THREE separate facts (origin, expat status, residence), each under its own key, never the combined key. The fake lookup answers every query form the model used on staging (run 20260924-140712 asked for 'Nieuw-West', which the first version did not script).",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I'm an expat from India living in Nieuw-West, Amsterdam",
+      "expect": {
+        "routeKind": "origin",
+        "skill": "facts/origin",
+        "tools": [
+          "load_skill",
+          "lookup_place",
+          "find_similar_facts",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "proposals": [
+          {
+            "statementMatches": [
+              "india"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": null
+          },
+          {
+            "statementMatches": [
+              "expat",
+              "netherlands"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": null
+          },
+          {
+            "statementMatches": [
+              "amsterdam"
+            ],
+            "kind": "origin",
+            "placeChain": "required",
+            "replaces": null
+          }
+        ]
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "Nieuw-West",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Nieuw-West, Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Nieuw-West Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          }
+        ],
+        "find_similar_facts": [
+          {
+            "kind": null,
+            "returns": {
+              "candidates": []
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -45,6 +45,9 @@ jest.mock('@/lib/backup/backup-service', () => ({
 
 let mockProviderId: string | null = null;
 let mockLastRunAt: number | null = null;
+let mockLastFailedAt: number | null = null;
+const mockRecordRun = jest.fn(async (at: number) => { calls.push('recordBackupRun'); mockLastRunAt = at; });
+const mockRecordFailure = jest.fn(async (at: number) => { calls.push('recordBackupFailure'); mockLastFailedAt = at; });
 const mockSetProviderId = jest.fn(async (id: string) => { calls.push(`setProvider:${id}`); mockProviderId = id; });
 const mockSetCadence = jest.fn(async (c: string) => { calls.push(`setCadence:${c}`); });
 jest.mock('@/lib/backup/backup-settings', () => ({
@@ -52,6 +55,9 @@ jest.mock('@/lib/backup/backup-settings', () => ({
     backupProviderId: () => mockProviderId,
     backupCadence: () => 'daily',
     backupLastRunAt: () => mockLastRunAt,
+    backupLastFailedAt: () => mockLastFailedAt,
+    recordBackupRun: (at: number) => mockRecordRun(at),
+    recordBackupFailure: (at: number) => mockRecordFailure(at),
     backupWifiOnly: () => true,
     setBackupProviderId: (id: string) => mockSetProviderId(id),
     setBackupCadence: (c: string) => mockSetCadence(c),
@@ -173,6 +179,7 @@ beforeEach(() => {
     calls.length = 0;
     mockProviderId = null;
     mockLastRunAt = null;
+    mockLastFailedAt = null;
     mockICloudSupported = true;
     mockConnectResult = { ok: true };
     mockBgAvailable = true;
@@ -411,5 +418,55 @@ describe('the configured state', () => {
         fireEvent.press(r.getByTestId('backup-turn-off-confirm'));
         await waitFor(() => expect(calls).toContain('clearBackupKey'));
         expect(calls).toContain('setCadence:off');
+    });
+
+    // N6: the manual button used to upload and then report "No backup saved
+    // yet", because only the OS task stamped backup_last_run_at.
+    it('stamps a manual backup with its header time and shows the date', async () => {
+        mockProviderId = 'icloud';
+        mockLastRunAt = Date.UTC(2026, 8, 1);
+        mockIsConfirmed.mockResolvedValue(true);
+        const createdAt = Date.UTC(2026, 8, 23, 21, 14);
+        mockRunBackup.mockImplementationOnce(async () => {
+            calls.push('runBackup');
+            return { header: { createdAt, tables: [{ table: 'facts', rows: 3, rowsAvailable: 3 }] }, blobBytes: 1 } as any;
+        });
+        const r = render(<BackupSection />);
+        await waitFor(() => r.getByTestId('backup-run-now'));
+        fireEvent.press(r.getByTestId('backup-run-now'));
+        await waitFor(() => expect(mockRecordRun).toHaveBeenCalledWith(createdAt));
+        await waitFor(() => r.getByText('backup.statusLast'));
+        expect(r.queryByText('backup.statusNever')).toBeNull();
+    });
+
+    it('says when the last backup failed, with its date', async () => {
+        mockProviderId = 'icloud';
+        mockLastRunAt = Date.UTC(2026, 8, 1);
+        mockIsConfirmed.mockResolvedValue(true);
+        mockRunBackup.mockImplementationOnce(async () => { throw new Error('provider down'); });
+        const r = render(<BackupSection />);
+        await waitFor(() => r.getByTestId('backup-run-now'));
+        fireEvent.press(r.getByTestId('backup-run-now'));
+        await waitFor(() => expect(mockRecordFailure).toHaveBeenCalled());
+        await waitFor(() => r.getByText('backup.statusFailed'));
+    });
+
+    it('never stamped here: reads the newest backup date from the cloud', async () => {
+        mockProviderId = 'icloud';
+        mockIsConfirmed.mockResolvedValue(true);
+        const r = render(<BackupSection />);
+        await waitFor(() => r.getByText('backup.statusFromCloud'));
+        expect(calls).toContain('listBackups');
+    });
+
+    it('offers restore points as dates, not file names', async () => {
+        mockProviderId = 'icloud';
+        mockLastRunAt = Date.UTC(2026, 8, 1);
+        mockIsConfirmed.mockResolvedValue(true);
+        const r = render(<BackupSection />);
+        await waitFor(() => r.getByTestId('backup-restore'));
+        fireEvent.press(r.getByTestId('backup-restore'));
+        await waitFor(() => r.getByText('backup.restoreOption'));
+        expect(r.queryByText('mera-backup-2026-08-18T00-00-00-000Z.bin')).toBeNull();
     });
 });

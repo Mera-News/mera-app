@@ -51,7 +51,7 @@
       "retryLogin": "Thử đăng nhập lại qua email",
       "useDifferentUser": "Đăng nhập bằng tài khoản khác",
       "retryFailed": "Không thể kết nối đến máy chủ. Kiểm tra kết nối và thử lại.",
-      "switchBody": "Chuyển tài khoản sẽ xóa vĩnh viễn toàn bộ dữ liệu của người dùng này trên thiết bị. Hành động này không thể hoàn tác.",
+      "switchBody": "Chuyển tài khoản sẽ xóa vĩnh viễn toàn bộ dữ liệu của người dùng này trên thiết bị. Không thể hoàn tác.",
       "switchConfirm": "Có, xóa dữ liệu và chuyển tài khoản",
       "switchCancel": "Hủy"
     },
@@ -228,7 +228,12 @@
     "statsPublishedPending_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
     "statsPublished_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,",
     "statsRead_one": "và bạn đã đọc {{formatted}}.",
-    "statsRelevant_one": "{{formatted}} có vẻ phù hợp,"
+    "statsRelevant_one": "{{formatted}} có vẻ phù hợp,",
+    "reasonUnavailable": "Mera không thể viết ghi chú cho bài này.",
+    "loadingA11y": "Đang tải bảng tin của bạn",
+    "newStoriesPill": "Tin mới",
+    "translatingCaption": "Đang dịch…",
+    "updatedJustNow": "Vừa cập nhật"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -258,7 +263,9 @@
     "readOn": "Đọc trên {{publication}}",
     "readOnGoogleTranslate": "Đọc trên Google Dịch",
     "linkUnavailable": "Liên kết này không thể được mở an toàn, vì vậy nó không khả dụng ở đây.",
-    "relatedFromSubscriptions": "Từ gói đăng ký của bạn"
+    "relatedFromSubscriptions": "Từ gói đăng ký của bạn",
+    "relatedLoadFailed": "Không tải được các bài liên quan.",
+    "translateBlockedNote": "Một số trang chặn Google Dịch. Nếu trang không tải, hãy mở trên trang gốc."
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",
@@ -347,7 +354,10 @@
     "timeNudge": "Chọn một thời gian khi bạn có thể đọc, suy nghĩ và lên kế hoạch — một hoặc hai lần một ngày là đủ.",
     "maxHoursReachedDescription": "Bạn có thể chọn tối đa {{count}} giờ",
     "maxHoursReachedTitle": "Đã đạt mức tối đa",
-    "selectedCount": "Đã chọn: {{selected}}/{{max}}"
+    "selectedCount": "Đã chọn: {{selected}}/{{max}}",
+    "savedInline": "Đã lưu",
+    "pickAtLeastOneHour": "Chọn ít nhất một giờ",
+    "selectedLabel": "Đã chọn"
   },
   "language": {
     "title": "Ngôn ngữ",
@@ -566,7 +576,7 @@
     "signingOut": "Đang đăng xuất...",
     "signOut": "Đăng xuất",
     "deleteAccountConfirm": "Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản không?",
-    "deleteAccountWarning": "⚠️ Hành động này không thể hoàn tác và sẽ xóa toàn bộ dữ liệu của bạn.",
+    "deleteAccountWarning": "⚠️ Toàn bộ dữ liệu của bạn sẽ bị xóa. Không thể hoàn tác.",
     "continue": "Tiếp tục",
     "finalConfirmation": "Xác nhận lần cuối",
     "finalConfirmationBody": "Thao tác này sẽ xóa vĩnh viễn toàn bộ dữ liệu của bạn.",
@@ -588,7 +598,7 @@
     "faq": "Câu hỏi thường gặp",
     "reportBug": "Báo lỗi",
     "deleteAccountConfirmGrace": "Tài khoản của bạn sẽ được lên lịch xóa, với thời gian ân hạn 30 ngày. Đăng nhập lại trong 30 ngày đó và việc xóa được tự động hủy.",
-    "deleteAccountWarningGrace": "Cảnh báo, sau 30 ngày, điều này không thể được hoàn tác và toàn bộ dữ liệu của bạn bị xóa vĩnh viễn.",
+    "deleteAccountWarningGrace": "⚠️ Sau 30 ngày, toàn bộ dữ liệu của bạn sẽ bị xóa vĩnh viễn. Không thể hoàn tác.",
     "finalConfirmationBodyGrace": "Điều này lên lịch tài khoản của bạn để xóa vĩnh viễn trong 30 ngày.",
     "accountDeletionScheduledTitle": "Xóa đã được lên lịch",
     "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn trong 30 ngày. Đăng nhập lại trước đó để hủy việc xóa."
@@ -615,7 +625,7 @@
     "topicGenQueuedDescription": "Các chủ đề sẽ xuất hiện trong giây lát.",
     "deleteFactTitle": "Xóa thông tin",
     "deleteFactConfirm": "Bạn có chắc chắn muốn xóa thông tin này không?",
-    "deleteFactWarning": "Thao tác này cũng sẽ xóa tất cả các chủ đề theo dõi được tạo từ thông tin này.",
+    "deleteFactWarning": "Các chủ đề và tin bài đã tìm được cũng bị xóa, và Mera sẽ ngừng tìm tin về điều này.",
     "deletingFact": "Đang xóa...",
     "yesDelete": "Có, xóa",
     "refreshSuggestions": "Làm mới gợi ý",
@@ -654,7 +664,9 @@
     "promoInfoTitleEmoji": "🎉 Ưu đãi ra mắt 🎊",
     "resetsOn": "Đặt lại",
     "retryTopicGeneration": "Thử lại",
-    "topicGenFailedGeneric": "Không thể tạo chủ đề cho điều này."
+    "topicGenFailedGeneric": "Không thể tạo chủ đề cho điều này.",
+    "articleCountPending": "Đang đếm",
+    "articleCountNone": "Chưa có bài viết"
   },
   "errors": {
     "somethingWentWrong": "Đã xảy ra lỗi",
@@ -749,7 +761,7 @@
     "newChat": "Trò chuyện mới",
     "inputPlaceholder": "Nhập tin nhắn...",
     "viewPreviousMessages": "Xem tin nhắn trước đó",
-    "aiInteractionNotice": "Bạn đang trò chuyện với Mera, một trợ lý AI — không phải một người.",
+    "aiInteractionNotice": "Bạn đang trò chuyện với Mera, một trợ lý AI, không phải một người.",
     "aiUsageNotice": "Trợ lý này giúp bạn thiết lập tùy chọn tin tức. Cố tình thao túng hoặc lạm dụng có thể khiến tài khoản của bạn bị khóa chờ xem xét.",
     "requestUnblock": {
       "button": "Yêu cầu mở khóa",
@@ -765,7 +777,9 @@
       "error": "Không thể gửi yêu cầu của bạn. Vui lòng thử lại."
     },
     "topicGenFailed": "Không thể tạo chủ đề cho điều này.",
-    "topicGenRetry": "Thử lại"
+    "topicGenRetry": "Thử lại",
+    "aiUsageNoticeGeneral": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra những điều quan trọng.",
+    "trackChooseHint": "Chọn nội dung để theo dõi"
   },
   "articleFeedback": {
     "thumbsUp": "Tôi thích",
@@ -824,13 +838,14 @@
     "tooltipA11y": "Về lịch sử đọc",
     "tooltipIntro": "Mera theo dõi thói quen đọc của bạn và dữ liệu này chỉ lưu trên thiết bị của bạn.",
     "tooltipLink": "Xem toàn bộ lịch sử đọc của bạn tại đây.",
-    "screenIntro": "Mera theo dõi thói quen đọc của bạn: chỉ trên thiết bị trong 30 ngày. Điều này giúp bạn thấy rõ ấn phẩm nào quan trọng nhất với mình, để bạn có thể cân nhắc ủng hộ những ấn phẩm mang lại lợi ích trực tiếp cho bạn.",
+    "screenIntro": "Các nhà xuất bản có trang bạn đã mở từ Mera trong 30 ngày qua. Danh sách này ở lại trên thiết bị này.",
     "visitedListTitle": "Ấn phẩm bạn đã ghé thăm",
     "last30Days": "30 ngày qua",
     "lastRead": "Đọc lần cuối lúc {{time}}",
-    "noArticlesYet": "Bạn chưa đọc bài viết nào.",
+    "noArticlesYet": "Những nhà xuất bản bạn mở từ Mera sẽ xuất hiện ở đây. Những gì bạn đọc trong Mera không được liệt kê.",
     "articlesRead": "Bài viết bạn đã đọc",
-    "noArticlesLast30Days": "Không có bài viết nào từ ấn phẩm này trong 30 ngày qua."
+    "noArticlesLast30Days": "Không có bài viết nào từ ấn phẩm này trong 30 ngày qua.",
+    "emptyTitle": "Chưa có nhà xuất bản nào"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Cần cập nhật",
@@ -924,7 +939,8 @@
     "removeAction": "Xóa khỏi mục đã lưu",
     "savedToastMessage": "Đã lưu bài viết để xem sau",
     "savedToastTitle": "Đã lưu",
-    "title": "Đã lưu"
+    "title": "Đã lưu",
+    "emptyTitle": "Chưa lưu gì"
   },
   "subscription": {
     "activating": "Đang kích hoạt gói đăng ký của bạn…",
@@ -935,7 +951,7 @@
     "detailsSection": "Chi tiết gói đăng ký",
     "expiresOn": "Hết hạn vào",
     "lifetime": "Trọn đời",
-    "managePlan": "Quản lý gói đăng ký",
+    "managePlan": "Quản lý gói",
     "periodLabel": "Chu kỳ",
     "periodNormal": "Tiêu chuẩn",
     "periodPromotional": "Khuyến mãi",
@@ -964,7 +980,6 @@
     "activatedBody": "Bảng tin cá nhân, bảng điều khiển, những câu chuyện theo dõi và trò chuyện đã sẵn sàng.",
     "activatedTitle": "{{plan}} đã hoạt động",
     "lapsedFreeNote": "Mera News Free là của bạn miễn là bạn muốn. Một gói là điều bắt đầu Mera hoạt động lại trên tin tức của bạn.",
-    "manageBadge": "Quản lý",
     "turnMeraBackOn": "Bật Mera lại",
     "para1": "Mera News có thể miễn phí. Đó chỉ có nghĩa là ai đó khác trả tiền: một nhà quảng cáo mua sự chú ý của bạn, dữ liệu của bạn, hoặc một bài viết tích cực. Rất nhiều thứ trông giống tin tức chính là như thế.",
     "para2": "Phương tiện tài trợ bởi quảng cáo không có giới hạn. Không có giới hạn về những gì nó lấy từ bạn, và không có giới hạn về cách sử dụng sau đó. Chúng tôi không muốn là công ty đó, vì vậy thỏa thuận ở đây rất đơn giản. Bạn giữ dữ liệu của bạn. Phần mềm làm công việc. Bạn trả tiền cho nó.",
@@ -1037,9 +1052,16 @@
     "subTabFeed": "Tổng quan",
     "subTabStories": "Câu chuyện",
     "subTabSaved": "Đã lưu",
-    "subTabHistory": "Lịch sử",
+    "subTabHistory": "Đã ghé",
     "nextFactPrefix": "Tiếp theo",
-    "subTabAnalytics": "Phân tích"
+    "subTabAnalytics": "Phân tích",
+    "emptySection": {
+      "awaiting": "Đang tìm tin về chủ đề này. Tin sẽ xuất hiện sau lần làm mới tiếp theo.",
+      "none": "Chưa có tin nào đủ khớp với chủ đề này để hiển thị."
+    },
+    "newInterest": "Mối quan tâm mới",
+    "nextSection": "Tiếp theo: {{title}}",
+    "backToDashboard": "Quay lại Bảng điều khiển"
   },
   "feedStatus": {
     "title": "Trạng thái bản tin",
@@ -1058,7 +1080,8 @@
     "collapseA11y": "Ẩn chi tiết trạng thái bản tin",
     "modeProcessing": "Đang cập nhật bảng tin của bạn",
     "modeError": "Sự cố bảng tin",
-    "modeLimited": "Đã đạt giới hạn bài viết hằng ngày"
+    "modeLimited": "Đã đạt giới hạn bài viết hằng ngày",
+    "syncDoneA11y": "Bảng tin của bạn đã được cập nhật."
   },
   "trackedStories": {
     "emptyTitle": "Chưa theo dõi câu chuyện nào",
@@ -1073,7 +1096,6 @@
     "untrackConfirmTitle": "Ngừng theo dõi?",
     "untrackConfirmBody": "Bạn sẽ không còn thấy diễn biến mới của câu chuyện này nữa.",
     "untrackConfirmCta": "Ngừng theo dõi",
-    "emptyHint": "Mở một bài viết từ Bảng tin đến chế độ xem đầy đủ, sau đó nhấn vào biểu tượng theo dõi trong hàng nút dưới bài viết.",
     "emptyCta": "Đi tới Bảng tin",
     "trackChatSeed": "Tôi muốn theo dõi câu chuyện này.",
     "trackProposalTitle": "Theo dõi câu chuyện này?",
@@ -1089,11 +1111,13 @@
     "followFabLabel": "Theo dõi một câu chuyện mới",
     "followChatSeed": "Tôi muốn theo dõi một câu chuyện.",
     "followChatIntro": "Hãy cho tôi biết những gì bạn muốn theo dõi và tôi sẽ thiết lập nó.",
-    "emptyHintFollow": "Nhấn nút theo dõi và cho Mera biết những gì bạn muốn theo dõi.",
     "emptyCtaFollow": "Theo dõi một câu chuyện",
     "removeMemberAction": "Không thuộc câu chuyện này",
     "removeMemberConfirmTitle": "Xóa bài viết này?",
-    "removeMemberConfirmBody": "Bài viết này bị xóa khỏi dòng thời gian của câu chuyện. Mera vẫn tiếp tục theo dõi câu chuyện."
+    "removeMemberConfirmBody": "Bài viết này bị xóa khỏi dòng thời gian của câu chuyện. Mera vẫn tiếp tục theo dõi câu chuyện.",
+    "timelineLoadFailed": "Không tải được câu chuyện này. Kéo xuống để thử lại.",
+    "deleteFailed": "Không thể bỏ theo dõi câu chuyện này. Hãy thử lại.",
+    "removeFailed": "Không thể xóa bài này khỏi câu chuyện. Hãy thử lại."
   },
   "whatsNew": {
     "title": "Có gì mới",
@@ -1132,7 +1156,14 @@
     "dailyLimitBody": "Bạn đã đạt giới hạn bài viết hôm nay. Giới hạn này sẽ sớm được đặt lại."
   },
   "settings": {
-    "sources": "Nguồn"
+    "sources": "Nguồn",
+    "groupGeneral": "Chung",
+    "groupPrivacy": "Quyền riêng tư và dữ liệu",
+    "groupHelp": "Trợ giúp",
+    "groupAccount": "Tài khoản",
+    "languageRow": "Ngôn ngữ",
+    "backupRow": "Sao lưu và khôi phục",
+    "backupRowNever": "Chưa sao lưu"
   },
   "personaAudit": {
     "entryRow": "Nhật ký thay đổi hồ sơ",
@@ -1298,7 +1329,7 @@
     "notificationBody_one": "Mera tìm thấy {{count}} dọn dẹp cho hồ sơ của bạn.",
     "notificationBody_other": "Mera đã tìm thấy {{count}} mục cần dọn dẹp trong hồ sơ của bạn.",
     "reviewChip": "Xem xét",
-    "title": "Tình trạng hồ sơ",
+    "title": "Dọn dẹp hồ sơ",
     "subtitle": "Đề xuất dọn dẹp",
     "intro": "Mera đã tìm thấy một vài điều đáng dọn dẹp. Hãy chấp nhận những đề xuất bạn đồng ý.",
     "empty": "Hồ sơ của bạn trông ổn",
@@ -1307,15 +1338,16 @@
     "reversibleNote": "Có thể hoàn tác từ nhật ký thay đổi",
     "effectDuplicate": "Xóa mục trùng lặp và giữ lại mục mạnh hơn.",
     "effectTooBroad": "Giảm trọng số của sở thích này để nó kéo về ít bài viết lạc chủ đề hơn.",
-    "effectStaleTopic": "Ngừng theo dõi chủ đề ít hoạt động này. Bạn có thể khôi phục từ nhật ký thay đổi.",
+    "effectStaleTopic": "Ngừng theo dõi chủ đề ít hoạt động này.",
     "effectStaleFact": "Xóa thông tin này: không còn chủ đề nào của nó đang hoạt động.",
     "appliedTitle": "Đã dọn dẹp",
     "appliedBody": "Hồ sơ của bạn đã được dọn dẹp. Xem nhật ký thay đổi để kiểm tra lại.",
     "applyFailedTitle": "Không thể áp dụng dọn dẹp",
     "applyFailedBody": "Vui lòng thử lại sau.",
-    "profileRow_one": "Sức khỏe nhân cách · {{count}} gợi ý",
-    "profileRow_other": "Tình trạng hồ sơ · {{count}} đề xuất",
-    "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này. Những cái cũ có thể đảo ngược từ nhật ký thay đổi."
+    "profileRow_one": "Dọn dẹp hồ sơ · {{count}} đề xuất",
+    "profileRow_other": "Dọn dẹp hồ sơ · {{count}} đề xuất",
+    "effectIncoherentTopics": "Thay thế các chủ đề này bằng những cái tốt hơn cho sở thích này.",
+    "effectLocationConflict": "Giữ nơi mới hơn và xóa nơi cũ."
   },
   "locations": {
     "title": "Địa điểm của bạn",
@@ -1452,7 +1484,7 @@
     "visitedSubtitle": "Các ấn phẩm bạn mở gần đây",
     "activity": "Hoạt động",
     "activitySubtitle": "Lịch sử thay đổi hồ sơ của bạn",
-    "personaHealth": "Tình trạng hồ sơ",
+    "personaHealth": "Dọn dẹp hồ sơ",
     "healthPending_one": "{{count}} gợi ý dọn dẹp",
     "healthPending_other": "{{count}} đề xuất dọn dẹp",
     "healthAllHealthy": "Tất cả đều ổn",
@@ -1489,7 +1521,10 @@
       "remove": "Xóa mục này",
       "removeConfirm": "Chạm lại để xóa",
       "limitReached": "Đã đạt giới hạn điều chỉnh hàng ngày, các thay đổi sẽ tiếp tục vào ngày mai."
-    }
+    },
+    "meraInviteReturning": "Hãy kể cho tôi điều gì mới, tôi sẽ thêm vào bảng tin của bạn.",
+    "editFacts": "Sửa",
+    "planUsage": "Đã phân tích {{used}}/{{limit}} hôm nay"
   },
   "facts": {
     "screenTitle": "Thông tin của bạn",
@@ -1499,7 +1534,8 @@
     "lessInfluence": "Ảnh hưởng ít hơn",
     "declinedTopicsTitle": "Chủ đề bạn đã xóa",
     "allowAgain": "Cho phép lại",
-    "topicRemovalConsequence": "Các chủ đề đã xóa sẽ không được đề xuất lại trừ khi bạn cho phép lại trong mục Chủ đề bạn đã xóa."
+    "topicRemovalConsequence": "Các chủ đề đã xóa sẽ không được đề xuất lại trừ khi bạn cho phép lại trong mục Chủ đề bạn đã xóa.",
+    "deleteFactA11y": "Xóa {{fact}}"
   },
   "publicationPrefs": {
     "title": "Tùy chọn nguồn",
@@ -1571,7 +1607,7 @@
     "staticGradientTitle": "Nền tĩnh",
     "staticGradientDescription": "Sử dụng gradient cố định thay vì nền động — tiết kiệm pin và dễ hơn trên các thiết bị cũ",
     "screenTitle": "Hiển thị",
-    "screenSubtitle": "Văn bản, hình ảnh, bảo mật và cách Mera mở trên thiết bị này",
+    "screenSubtitle": "Văn bản, hình ảnh và cách Mera mở trên thiết bị này",
     "sectionText": "Văn bản",
     "sectionVisuals": "Hình ảnh",
     "textSizeTitle": "Kích thước văn bản",
@@ -1637,13 +1673,13 @@
     "blocked": "Không thể tìm kiếm câu chuyện này.",
     "claimsHeading": "Các khẳng định được kiểm chứng",
     "citationsHeading": "Các nguồn được tham khảo",
-    "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại — hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
+    "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại, hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
     "sourceFallback": "Nguồn {{index}}",
     "disclaimer": "Đây là cách đọc của Mera từ tìm kiếm web, được viết bởi AI. Nó có thể sai hoặc không hoàn chỉnh, vì vậy vui lòng đọc các nguồn trước khi dựa vào nó.",
     "verdict": {
       "supported": {
         "label": "Phù hợp với các nguồn",
-        "detail": "Các nguồn tìm kiếm tìm thấy nói chung điều tương tự. Điều đó không phải là bằng chứng nó đúng — chỉ là không tìm thấy gì mâu thuẫn."
+        "detail": "Các nguồn tìm kiếm tìm thấy nói chung điều tương tự. Điều đó không phải là bằng chứng nó đúng, chỉ là không tìm thấy gì mâu thuẫn."
       },
       "disputed": {
         "label": "Các nguồn không đồng ý",
@@ -1651,7 +1687,7 @@
       },
       "unsupported": {
         "label": "Không tìm thấy hỗ trợ",
-        "detail": "Tìm kiếm không tìm thấy gì hỗ trợ điều này. Điều đó chỉ có thể có nghĩa là câu chuyện mới hoặc chuyên biệt — nó không làm cho nó sai."
+        "detail": "Tìm kiếm không tìm thấy gì hỗ trợ điều này. Điều đó chỉ có thể có nghĩa là câu chuyện mới hoặc chuyên biệt, nó không làm cho nó sai."
       },
       "mixed": {
         "label": "Một phần phù hợp",
@@ -1676,7 +1712,7 @@
     "checkedByHeading": "Các kiểm chứng được tìm thấy",
     "dashboard": {
       "deleteA11y": "Xóa kiểm chứng sự kiện này",
-      "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera — kết quả sẽ xuất hiện ở đây khi sẵn sàng.",
+      "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera, kết quả sẽ xuất hiện ở đây khi sẵn sàng.",
       "listSubtitle": "Những câu chuyện bạn đã yêu cầu Mera tìm kiếm kiểm chứng sự kiện. Chỉ được lưu trên thiết bị này.",
       "listTitle": "Kiểm chứng sự kiện",
       "pending": "Đang tìm kiếm",
@@ -1694,13 +1730,13 @@
     "explainer": "Mera không kiểm chứng tin tức trực tiếp. Nó tìm kiếm những gì các tổ chức kiểm chứng đã công bố về câu chuyện này.",
     "noCheckedBy": "Chúng tôi không tìm thấy bất kỳ kiểm chứng nào được công bố về câu chuyện này. Điều đó không có nghĩa là câu chuyện sai. Phần lớn các câu chuyện không bao giờ được kiểm chứng.",
     "organisationA11y": "Mở kiểm chứng của {{organisation}}, được đánh giá {{rating}}, trong trình duyệt trong ứng dụng",
-    "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây — có thể rời khỏi bài viết.",
+    "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây, có thể rời khỏi bài viết.",
     "queuedHint": "Kết quả sẽ xuất hiện dưới mục Kiểm tra sự thật trên Dashboard khi sẵn sàng.",
     "citationA11y": "Mở nguồn {{source}} trong trình duyệt trong ứng dụng",
     "noLink": "Không có liên kết",
-    "actionA11yPending": "Kiểm tra sự thật được yêu cầu — kiểm tra kết quả",
-    "actionA11yDone": "Kiểm tra sự thật sẵn sàng — kết quả được hiển thị bên dưới",
-    "checkedByUnavailable": "Chúng tôi không thể kiểm tra xem một tổ chức kiểm tra sự thật có công bố về bài viết này hay không — tìm kiếm không thành công. Điều này khác với trường hợp không ai công bố; dưới đây là những gì tìm kiếm rộng hơn đã tìm thấy.",
+    "actionA11yPending": "Kiểm tra sự thật được yêu cầu, kiểm tra kết quả",
+    "actionA11yDone": "Kiểm tra sự thật sẵn sàng, kết quả được hiển thị bên dưới",
+    "checkedByUnavailable": "Chúng tôi không thể kiểm tra xem một tổ chức kiểm tra sự thật có công bố về bài viết này hay không, tìm kiếm không thành công. Điều này khác với trường hợp không ai công bố; dưới đây là những gì tìm kiếm rộng hơn đã tìm thấy.",
     "claimProposalTitle": "Kiểm tra khẳng định này?",
     "actionCheckClaim": "Kiểm tra khẳng định này",
     "chatSeed": "Có gì có thể kiểm tra trong bài viết này?",
@@ -1709,22 +1745,29 @@
     "optionWholeArticle": "Toàn bộ bài viết",
     "quickAnswered": "Đây là những gì tìm kiếm web nhanh tìm thấy:",
     "quickArticleFailed": "Mera không thể xác nhận yêu cầu đã gửi. Thử lại sau lát.",
-    "quickArticleRequested": "Yêu cầu đã gửi. Mera sẽ kiểm tra toàn bộ bài viết — kết quả sẽ hiện dưới Fact checks trên Dashboard khi sẵn sàng.",
+    "quickArticleRequested": "Yêu cầu đã gửi. Mera sẽ kiểm tra toàn bộ bài viết, kết quả sẽ hiện dưới Fact checks trên Dashboard khi sẵn sàng.",
     "quickArticleSending": "Đang gửi yêu cầu…",
-    "quickCouldNotSearch": "Mera không thể tìm kiếm web lúc này, vì vậy đây không phải là câu trả lời — thử lại sau lát.",
+    "quickCouldNotSearch": "Mera không thể tìm kiếm web lúc này, vì vậy đây không phải là câu trả lời, thử lại sau lát.",
     "quickDisclaimer": "Đây là tìm kiếm web nhanh, không phải kiểm tra bởi một tổ chức kiểm tra sự thật, và nó không được lưu lại. Để kiểm tra kỹ lưỡng với các nguồn có tên, chọn \"Toàn bộ bài viết\".",
     "quickFailed": "Mera tìm thấy một số thông tin nhưng không thể soạn thành câu trả lời lần này. Thử lại sau lát.",
-    "quickNothingFound": "Tìm kiếm không tìm thấy bất cứ điều gì về vấn đề này. Điều đó không có nghĩa là sai — nó có thể là mới, niche, hoặc không được đề cập rộng rãi trực tuyến.",
+    "quickNothingFound": "Tìm kiếm không tìm thấy bất cứ điều gì về vấn đề này. Điều đó không có nghĩa là sai, nó có thể là mới, niche, hoặc không được đề cập rộng rãi trực tuyến.",
     "quickRunning": "Đang tìm kiếm web…",
-    "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra — quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
-    "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó — chúng không phải lúc nào cũng thống nhất với nhau.",
-    "ownReadingHeading": "Nhận định riêng của Mera — thứ yếu so với kết luận ở trên",
+    "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra, quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
+    "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó, chúng không phải lúc nào cũng thống nhất với nhau.",
+    "ownReadingHeading": "Nhận định riêng của Mera, thứ yếu so với kết luận ở trên",
     "collapseA11y": "Ẩn phần kiểm chứng này",
     "expandA11y": "Hiện phần kiểm chứng này",
     "checkedByRelatedNote": "Những điều này xuất phát từ tìm kiếm từ khóa và có thể về một câu chuyện khác. Mở một trong những điều đó để kiểm tra.",
     "searchFoundHeading": "Những gì tìm kiếm của chúng tôi tìm thấy",
     "searchFoundEmpty": "Tìm kiếm không cung cấp đủ thông tin để Mera tóm tắt tại đây.",
-    "headerA11y": "{{title}}. {{status}}. {{action}}"
+    "headerA11y": "{{title}}. {{status}}. {{action}}",
+    "notify": {
+      "title": "Đã có kết quả kiểm chứng",
+      "bodyFound": "Các tổ chức kiểm chứng đã đăng bài về \"{{title}}\".",
+      "bodyNone": "Chưa có bài kiểm chứng nào được đăng về \"{{title}}\".",
+      "bodyUnavailable": "Mera không thể hoàn tất kiểm tra \"{{title}}\".",
+      "open": "Mở bài viết"
+    }
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",
@@ -1744,7 +1787,7 @@
     "welcomeBody": "Nhấn \"Đồng ý và tiếp tục\" để chấp nhận Điều khoản dịch vụ và Chính sách quyền riêng tư của chúng tôi."
   },
   "tutorials": {
-    "entryRow": "Tìm hiểu về Mera",
+    "entryRow": "Cách Mera hoạt động",
     "menuTitle": "Tìm hiểu về Mera",
     "menuSubtitle": "Hướng dẫn ngắn về cách ứng dụng này hoạt động. Bắt đầu ở bất cứ đâu.",
     "sectionBasic": "Bắt đầu từ đây",
@@ -1767,7 +1810,6 @@
     "askMera": "Hỏi Mera",
     "chatIntro": "Hỏi tôi bất cứ điều gì về cách Mera hoạt động. Tôi có thể giải thích, nhưng tôi không thể thay đổi bất cứ điều gì từ đây.",
     "launchButton": "Tham quan",
-    "learnAboutMera": "Mera hoạt động thế nào",
     "hintReveal": "Nhấn từng cái một.",
     "hintRevealSome": "Nhấn ít nhất {{count}}.",
     "hintChoose": "Chọn một cái.",
@@ -2380,7 +2422,10 @@
     "supportId": "ID hỗ trợ: {{id}}",
     "copySupportId": "Sao chép ID hỗ trợ",
     "copied": "Đã sao chép",
-    "saveHint": "Hãy lưu ID này. Bộ phận hỗ trợ có thể tìm tài khoản của bạn bằng ID này."
+    "saveHint": "Hãy lưu ID này. Bộ phận hỗ trợ có thể tìm tài khoản của bạn bằng ID này.",
+    "mailFailedTitle": "Không mở được ứng dụng email",
+    "mailFailedBody": "Sao chép địa chỉ hỗ trợ và gửi email cho chúng tôi từ bất kỳ ứng dụng email nào.",
+    "copyAddress": "Sao chép địa chỉ"
   },
   "emailCapture": {
     "title": "Thêm email của bạn",
@@ -2488,7 +2533,10 @@
     "wifiOnly": "Chỉ dùng Wi-Fi",
     "wifiOnlyOff": "Tắt. Các bản sao lưu theo lịch có thể dùng dữ liệu di động.",
     "wifiOnlyOn": "Bật. Các bản sao lưu theo lịch sẽ chờ Wi-Fi.",
-    "working": "Đang xử lý…"
+    "working": "Đang xử lý…",
+    "statusFromCloud": "Sao lưu gần nhất {{when}}, tìm thấy trong {{provider}}",
+    "restoreOption": "Bản sao lưu từ {{when}}",
+    "statusFailed": "Lần sao lưu gần nhất thất bại vào {{when}}"
   },
   "factChoice": {
     "titleSingle": "Thêm điều này vào persona của bạn?",
@@ -2503,14 +2551,19 @@
     "skipAll": "Bỏ qua tất cả",
     "addAllA11y": "Thêm tất cả {{count}} gợi ý",
     "skipAllA11y": "Bỏ qua tất cả {{count}} gợi ý",
-    "titleReplace": "Thay thế một thông tin đã có?",
+    "titleReplace": "Thay thế thông tin này?",
     "replace": "Thay thế",
     "replacesLabel": "Thay cho",
     "replacesTopics_one": "và 1 chủ đề của nó",
     "replacesTopics_other": "và {{count}} chủ đề của nó",
     "replacesNoUndo": "Thông tin cũ và các chủ đề của nó bị xóa vĩnh viễn. Bạn không thể hoàn tác.",
     "replacesLoading": "Đang kiểm tra cái gì sẽ bị thay",
-    "replacesUnavailable": "Mera chưa hiển thị được những gì sẽ bị xóa. Hãy thử lại sau giây lát."
+    "replacesUnavailable": "Mera chưa hiển thị được những gì sẽ bị xóa. Hãy thử lại sau giây lát.",
+    "keepBoth": "Giữ cả hai",
+    "titleAlsoAdd": "Thêm cả điều này?",
+    "pendingHint": "Chọn một tùy chọn ở trên hoặc nhập câu trả lời của bạn.",
+    "overlapsLabel": "Trùng với",
+    "overlapsReplaceNote": "Thay thế sẽ xóa thông tin này và các chủ đề của nó."
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",
@@ -2555,7 +2608,6 @@
       "countriesLabel": "Các quốc gia bạn đã đọc",
       "latencyLabel": "Thời gian trung bình từ khi đăng đến khi đọc",
       "latencyCoverage": "Dựa trên {{sampled}} trong {{total}} bài có thời gian đăng đã biết",
-      "latencyUnknown": "Chưa đủ thời gian đăng đã biết để tính con số này",
       "openedLabel": "Bài viết đã mở",
       "openedPartial": "Số đếm một phần. Mera chỉ đếm lượt chạm vào thẻ gợi ý của bạn.",
       "topPublicationsTitle": "Các báo đọc nhiều nhất",
@@ -2563,7 +2615,6 @@
       "latencyValue_other": "{{count}} giờ",
       "reachTitle": "Tin của tôi đến từ đâu",
       "keepTitle": "Những gì tôi giữ lại",
-      "paceTitle": "Tin đến với tôi thế nào",
       "windowNow": "Ngay bây giờ",
       "savedLabel": "Bài viết bạn đã lưu",
       "followedLabel": "Câu chuyện bạn đang theo dõi",
@@ -2574,13 +2625,11 @@
       "paceScaleTitle": "Từ lúc đăng đến lúc đọc",
       "hoursShort": "{{n}} giờ",
       "languagesLabel": "Ngôn ngữ bạn đã đọc",
-      "topLanguagesTitle": "Chủ yếu đọc bằng",
-      "rhythmTitle": "Những ngày tôi đọc",
       "daysReadLabel": "Số ngày bạn đã đọc gì đó",
       "heatLegendLess": "ít",
       "heatLegendMore": "nhiều",
-      "heatNote": "Độ đậm cho biết bạn đã đọc bao nhiêu bài hôm đó.",
-      "rhythmWeekdays": "H,B,T,N,S,B,C"
+      "rhythmWeekdays": "H,B,T,N,S,B,C",
+      "habitsTitle": "Cách tôi đọc"
     }
   },
   "analytics": {
@@ -2603,7 +2652,7 @@
     "goneTombstone": "Thông tin này đã bị xóa, nên các chủ đề của nó cũng mất.",
     "expandA11y": "Hiện chủ đề",
     "collapseA11y": "Ẩn chủ đề",
-    "accordionTitlePending": "Chúng tôi sẽ tìm chủ đề cho:",
+    "accordionTitlePending": "Đang tìm chủ đề cho:",
     "pendingA11y": "Đang tìm chủ đề",
     "readyA11y": "Chủ đề đã sẵn sàng",
     "failedA11y": "Không tìm được chủ đề"
@@ -2637,7 +2686,8 @@
     },
     "noRouteSentence": "Mera chưa hiểu việc này nói về điều gì. Hãy thử diễn đạt cách khác.",
     "noProposalSentence": "Mera không tìm thấy gì để thêm từ việc này.",
-    "unknownToolSentence": "Có lỗi xảy ra ở phía Mera. Hãy hỏi lại để tiếp tục."
+    "unknownToolSentence": "Có lỗi xảy ra ở phía Mera. Hãy hỏi lại để tiếp tục.",
+    "malformedChoiceSentence": "Mera không thể hiển thị các lựa chọn. Hãy hỏi lại để tiếp tục."
   },
   "skillPhrase": {
     "residence": "nơi bạn sống",
@@ -2772,5 +2822,59 @@
     "docTitle": "Bài viết đã lưu",
     "docExported": "Đã xuất ngày {{date}}",
     "docReasonLabel": "Vì sao Mera chọn bài này"
+  },
+  "tabExplainer": {
+    "openA11y": "Cách thẻ này hoạt động",
+    "close": "Đã hiểu",
+    "feed": {
+      "title": "Bảng tin hoạt động thế nào",
+      "what": "Bảng tin hiện mọi tin Mera tìm cho bạn trong hai ngày qua. Mỗi tin có một thẻ, kể cả khi nhiều báo cùng đưa tin.",
+      "how1": "Mera biến những gì bạn kể về bản thân thành các lượt tìm kiếm, lấy bài viết phù hợp, rồi AI đọc từng bài để đánh giá mức quan trọng với bạn.",
+      "how2": "Tin bạn chưa xem đứng trước, quan trọng nhất ở đầu. Tin chưa xem bị hạ một bậc sau 12 giờ và thêm một bậc sau một ngày.",
+      "how3": "Ở lần sắp xếp lại tiếp theo, tin bạn đã xem xuống dưới, tin đã mở xuống cuối. Các thẻ phía trên chỗ bạn đang đọc giữ nguyên. Kéo xuống để sắp xếp lại.",
+      "privacy": "Thứ tự được tính trên điện thoại này. Bản ghi những tin bạn mở vẫn nằm trên điện thoại này."
+    },
+    "forYou": {
+      "title": "Bảng điều khiển hoạt động thế nào",
+      "what": "Bảng điều khiển nhóm tin của bạn theo mối quan tâm. Mỗi điều bạn kể với Mera có một mục riêng, kèm tiêu đề từ các quốc gia của bạn và thế giới.",
+      "how1": "Mỗi tin đi vào mối quan tâm hợp nhất, nên chỉ xuất hiện một lần. Nếu hai mối quan tâm hợp như nhau, mối quan tâm thêm trước sẽ giữ tin đó.",
+      "how2": "Những mối quan tâm bạn cho trọng số cao hơn đứng trước. Mối quan tâm mới có mục riêng ngay cả trước khi có tin đầu tiên.",
+      "how3": "Trong mỗi mục, tin chưa đọc đứng trước, quan trọng nhất ở đầu. Các mục được sắp xếp lại khi bạn rời thẻ, hoặc mỗi 10 phút."
+    },
+    "explore": {
+      "title": "Khám phá hoạt động thế nào",
+      "what": "Khám phá hiện các tiêu đề trong 24 giờ qua của thế giới và của từng quốc gia bạn chọn. Mọi người đều thấy giống nhau, không chọn riêng cho bạn.",
+      "how1": "Tiêu đề thế giới được xếp theo mức độ một tin được đưa rộng rãi ở nhiều quốc gia, không theo số lượng bài viết.",
+      "how2": "Tiêu đề của một quốc gia đến từ các nguồn tin đặt tại quốc gia đó."
+    },
+    "profile": {
+      "title": "Hồ sơ hoạt động thế nào",
+      "what": "Hồ sơ lưu những gì bạn kể với Mera về bản thân. Bảng tin và Bảng điều khiển được tạo từ các thông tin này.",
+      "how1": "Mỗi thông tin trở thành các lượt tìm kiếm Mera chạy cho bạn. Sửa hoặc xóa một thông tin thì các tin đến từ nó cũng thay đổi.",
+      "privacy": "Các lượt tìm kiếm tạo từ chúng không bao giờ gắn với tài khoản của bạn. Máy chủ chỉ giữ văn bản tìm kiếm, dùng chung ẩn danh cho mọi người dùng, và xóa sau 14 ngày không dùng."
+    }
+  },
+  "articleMenu": {
+    "openA11y": "Thao tác khác",
+    "title": "Thao tác với bài viết",
+    "askMera": "Hỏi Mera về bài này",
+    "following": "Đang theo dõi câu chuyện này",
+    "checkFacts": "Tìm kiểm chứng",
+    "openOn": "Mở trên {{source}}",
+    "openInTranslate": "Mở trong Google Dịch",
+    "fewerFrom": "Ít hơn từ {{source}}",
+    "fewerFromDone": "Bạn sẽ thấy ít tin từ {{source}} hơn.",
+    "undo": "Hoàn tác",
+    "reportBug": "Báo lỗi",
+    "actionFailed": "Không thực hiện được. Hãy thử lại."
+  },
+  "factChip": {
+    "label": "Từ hồ sơ của bạn: {{label}}",
+    "openA11y": "Tin về {{label}}"
+  },
+  "related": {
+    "allCountries": "Tất cả quốc gia",
+    "allLanguages": "Tất cả ngôn ngữ",
+    "noMatches": "Không có bài liên quan nào khớp với bộ lọc này."
   }
 }

@@ -1,4 +1,7 @@
 import { Box } from "@/components/ui/box";
+import AbstractGradientBackdrop from "@/components/custom/AbstractGradientBackdrop";
+import ErrorBoundary from "@/components/custom/ErrorBoundary";
+import { FullScreenErrorFallback } from "@/components/custom/ErrorFallback";
 import MeraLogo from "@/components/custom/MeraLogo";
 import IdentitySwitchFailedScreen from "@/components/custom/auth/IdentitySwitchFailedScreen";
 import { authClient } from "@/lib/auth-client";
@@ -20,13 +23,43 @@ import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { readStartupTab } from "@/lib/navigation/startup-tab";
+import { releaseSplash } from "@/lib/splash-hold";
+import {
+    consumePendingNotificationRoute,
+    markStartupGatePassed,
+} from "@/lib/stores/pending-notification-route";
 import {
     startEntitlementWarmup,
 } from "@/lib/subscription/onboarding-paywall";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 
+/**
+ * After the startup tab is in place: the gate is passed, so a notification tap
+ * in this JS context may navigate directly from now on, and a tap that booted
+ * (or reloaded) this process opens on top of the tab, so back returns there.
+ * The stash is keyed to the user, so it is consumed only past identity.
+ */
+async function openPendingNotificationRoute(
+    userId: string,
+    isCancelled: () => boolean,
+): Promise<void> {
+    markStartupGatePassed();
+    const href = await consumePendingNotificationRoute(userId);
+    if (href && !isCancelled()) router.push(href);
+}
+
+/** S7: a render crash on the gate stays on the gate's own fallback. The async
+ *  routing failures are handled by the effect's own narrowed catch. */
 export default function LoggedInIndex() {
+    return (
+        <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+            <LoggedInGate />
+        </ErrorBoundary>
+    );
+}
+
+function LoggedInGate() {
     // useSession is a non-blocking enhancement — routing is driven by LOCAL
     // persona state so the app works offline and a dead session never bounces
     // the user out.
@@ -292,6 +325,7 @@ export default function LoggedInIndex() {
                     const startupTab = await readStartupTab();
                     if (cancelled) return;
                     router.replace(`/logged-in/app_container/${startupTab}`);
+                    await openPendingNotificationRoute(userId, () => cancelled);
                     return;
                 }
 
@@ -324,8 +358,12 @@ export default function LoggedInIndex() {
                     extra: { identityStamped },
                 });
                 if (cancelled) return;
-                if (identityStamped) router.replace('/logged-in/app_container/feed');
-                else setWipeFailed(true);
+                if (identityStamped) {
+                    router.replace('/logged-in/app_container/feed');
+                    await openPendingNotificationRoute(userId, () => cancelled);
+                } else {
+                    setWipeFailed(true);
+                }
             }
         };
 
@@ -343,12 +381,19 @@ export default function LoggedInIndex() {
     // store and no persona — see its header for why that is a correctness rule
     // rather than a preference.
     if (wipeFailed) {
+        // Rendered in place on the gate's own pathname, so no route releases
+        // the held splash (lib/splash-hold.ts). Release it here.
+        releaseSplash('identity-switch-failed');
         return <IdentitySwitchFailedScreen onRetry={handleRetry} />;
     }
 
     // Spinner while (and after) routing — the replace() unmounts this screen.
+    // F1: the same unseeded backdrop every tab mounts (one shared colour
+    // sequence), so the handoff is not flat black followed by a jump to colour.
+    // Never on the fail-closed branch above: that screen reads nothing.
     return (
         <Box className="flex-1 justify-center items-center bg-black">
+            <AbstractGradientBackdrop />
             <MeraLogo size={96} animated />
         </Box>
     );

@@ -26,7 +26,18 @@ const LOGO_SIZE = 56;
  * and each throttled scroll tick, so the popover always animates out of the logo
  * rather than the top-left corner.
  */
-const MeraChatInvite: React.FC = () => {
+interface MeraChatInviteProps {
+    /**
+     * The user already has facts. The first-run line ("Tell me what you're
+     * into") read as if Mera knew nothing about someone with twenty facts; a
+     * returning user is invited to add something new instead. The row itself
+     * stays mounted either way: it is the only add-an-interest entry on the
+     * tab and it publishes the chat's open-animation origin.
+     */
+    readonly returning?: boolean;
+}
+
+const MeraChatInvite: React.FC<MeraChatInviteProps> = ({ returning = false }) => {
     const { t } = useTranslation();
     const iconRef = useRef<View>(null);
 
@@ -64,7 +75,7 @@ const MeraChatInvite: React.FC = () => {
                     style={styles.bubbleBorder}
                 >
                     <Text className="text-white" style={styles.bubbleText}>
-                        {t('profile.meraInvite')}
+                        {returning ? t('profile.meraInviteReturning') : t('profile.meraInvite')}
                     </Text>
                 </GlassPanel>
                 {/* Right-edge tail pointing at the logo (rotated square whose

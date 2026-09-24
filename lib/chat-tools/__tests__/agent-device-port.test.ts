@@ -4,7 +4,11 @@
 // SQLiteAdapter at module scope and kills the suite at load. Mock at the
 // service boundary, the same way useCloudPersonaChat.test.tsx does.
 jest.mock('../../database/services/fact-similarity-service', () => ({ findSimilarFacts: jest.fn() }));
-jest.mock('../../place-service', () => ({ lookupPlace: jest.fn() }));
+jest.mock('../../place-service', () => ({
+  lookupPlace: jest.fn(),
+  searchPlaces: jest.fn(async () => ({ ok: true, places: [] })),
+  PLACE_CANDIDATE_LIMIT: 3,
+}));
 jest.mock('../../llm/cloudComplete', () => ({ cloudChatStream: jest.fn() }));
 jest.mock('../../database/services/fact-service', () => ({ getFacts: jest.fn() }));
 jest.mock('../tool-handlers', () => ({
@@ -17,12 +21,14 @@ jest.mock('../../logger', () => ({
 }));
 
 import {
+  callModelViaCloud,
+  makeAgentDeps,
   fallbackCandidates,
   lookupPlaceWithFallback,
   narrowToExact,
   placeQueryForms,
 } from '../agent-device-port';
-import { lookupPlace } from '../../place-service';
+import { lookupPlace, searchPlaces } from '../../place-service';
 
 const mockLookupPlace = lookupPlace as jest.MockedFunction<typeof lookupPlace>;
 import type { Place } from '@/lib/mera-harness';
@@ -170,5 +176,94 @@ describe('lookupPlaceWithFallback', () => {
     mockLookupPlace.mockResolvedValue({ status: 'unavailable' as const });
     const out = await lookupPlaceWithFallback({ query: 'Nieuw-West Amsterdam' });
     expect(out.status).toBe('unavailable');
+  });
+});
+
+
+// ux1 C1: "Porto" offered Porto Alegre, Port-au-Prince and Porto Velho, because
+// the real Porto ranked fourth by population and was cut at three.
+describe('the place named exactly survives the candidate cap', () => {
+  const mockSearch = searchPlaces as jest.MockedFunction<typeof searchPlaces>;
+  const pt = (locality: string): Place => ({ ...place(locality), countryCode: 'PT', countryName: 'Portugal', admin1: 'Porto' });
+
+  beforeEach(() => {
+    mockLookupPlace.mockReset();
+    mockSearch.mockReset();
+  });
+
+  it('fetches the exact-name row and resolves to it', async () => {
+    mockLookupPlace.mockImplementation(async (_q: string, hint?: string) =>
+      hint === 'PT'
+        ? { status: 'resolved', places: [pt('Porto')] }
+        : { status: 'resolved', places: [place('Porto Alegre'), place('Port-au-Prince'), place('Porto Velho')] },
+    );
+    mockSearch.mockResolvedValue({
+      ok: true,
+      places: [
+        { city: 'Porto Alegre', countryCode: 'BR' },
+        { city: 'Port-au-Prince', countryCode: 'HT' },
+        { city: 'Porto Velho', countryCode: 'BR' },
+        { city: 'Porto', countryCode: 'PT' },
+      ] as never,
+    });
+    const out = await lookupPlaceWithFallback({ query: 'Porto' });
+    expect(out.status).toBe('resolved');
+    expect(out.status === 'resolved' && out.places.map((p) => p.locality)).toEqual(['Porto']);
+  });
+
+  it('asks nothing extra when an exact match is already among the three', async () => {
+    mockLookupPlace.mockResolvedValue({ status: 'resolved', places: [place('Amsterdam'), place('Amstelveen')] });
+    await lookupPlaceWithFallback({ query: 'Amsterdam' });
+    expect(mockSearch).not.toHaveBeenCalled();
+  });
+});
+
+// ux1 C1: every leg's text streamed into the acknowledgement bubble.
+describe('makeAgentDeps streams only the leg the loop marks', () => {
+  const { cloudChatStream } = require('../../llm/cloudComplete');
+  async function* text(delta: string) {
+    yield { type: 'text-delta', delta };
+    yield { type: 'finish', reason: 'stop' };
+  }
+  it('forwards deltas for streamToUser legs only', async () => {
+    (cloudChatStream as jest.Mock).mockImplementation(() => text('hi'));
+    const onDelta = jest.fn();
+    const deps = makeAgentDeps('msg', onDelta);
+    const base = { role: 'tool' as const, model: 'BIG', systemPrompt: 's', messages: [] };
+    await deps.callModel({ ...base });
+    expect(onDelta).not.toHaveBeenCalled();
+    await deps.callModel({ ...base, streamToUser: true });
+    expect(onDelta).toHaveBeenCalledWith({ content: 'hi' });
+    expect(callModelViaCloud).toBeDefined();
+  });
+});
+
+// ux1 batch 5: the model was told "no existing residence fact" while "Lives in
+// Berlin..." was on file, because similarity to "I moved to Porto" is zero.
+describe('find_similar_facts always shows the current home on a residence lookup', () => {
+  const { findSimilarFacts } = require('../../database/services/fact-similarity-service');
+  const { getFacts } = require('../../database/services/fact-service');
+
+  it('puts the home first even when it shares no word with the message', async () => {
+    (findSimilarFacts as jest.Mock).mockResolvedValue([
+      { id: 'job', statement: 'Product manager', questionnaireAttribute: 'profession: x', score: 0.2 },
+    ]);
+    (getFacts as jest.Mock).mockResolvedValue([
+      { id: 'job', statement: 'Product manager', questionnaireAttribute: 'profession: x' },
+      { id: 'berlin', statement: 'Lives in Berlin, Germany, EU', questionnaireAttribute: 'location: residence' },
+    ]);
+    const { makeAgentToolPort } = require('../agent-device-port');
+    const out = await makeAgentToolPort('I moved to Porto').findSimilarFacts({ kind: 'residence' });
+    expect(out.candidates.map((c: { factId: string }) => c.factId)).toEqual(['berlin', 'job']);
+  });
+
+  it('leaves other kinds alone', async () => {
+    (findSimilarFacts as jest.Mock).mockResolvedValue([]);
+    (getFacts as jest.Mock).mockResolvedValue([
+      { id: 'berlin', statement: 'Lives in Berlin, Germany, EU', questionnaireAttribute: 'location: residence' },
+    ]);
+    const { makeAgentToolPort } = require('../agent-device-port');
+    const out = await makeAgentToolPort('I play chess').findSimilarFacts({ kind: 'interest' });
+    expect(out.candidates).toEqual([]);
   });
 });

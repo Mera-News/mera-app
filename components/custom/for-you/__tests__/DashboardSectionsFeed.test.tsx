@@ -40,7 +40,10 @@ jest.mock('react-native-reanimated', () => {
         ListHeaderComponent,
         ListFooterComponent,
         ListEmptyComponent,
+        testID,
+        contentContainerStyle,
     }: any) => {
+        const { View } = jest.requireActual('react-native');
         const items = data ?? [];
         const kids: any[] = [];
         const header = asNode(ListHeaderComponent);
@@ -66,7 +69,9 @@ jest.mock('react-native-reanimated', () => {
         // reason to model it, not the presence of a particular footer.
         const footer = asNode(ListFooterComponent);
         if (footer) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'lf' }, footer));
-        return ReactLib.createElement(ReactLib.Fragment, null, kids);
+        // A View carrying the list's own testID and content style, so a test
+        // can read the padding the component handed the list.
+        return ReactLib.createElement(View, { testID, contentContainerStyle }, kids);
     };
     return {
         __esModule: true,
@@ -117,6 +122,17 @@ jest.mock('@/components/custom/for-you/SectionDenominatorLine', () => {
         __esModule: true,
         default: ({ read, shown }: any) => <Text>{`denom:${read}/${shown}`}</Text>,
     };
+});
+jest.mock('@/components/custom/for-you/ForYouEmptyState', () => {
+    const { Text } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ body, testID }: any) => <Text testID={testID}>{`empty:${body}`}</Text>,
+    };
+});
+jest.mock('@/components/ui/text', () => {
+    const { Text } = require('react-native');
+    return { Text: (p: any) => <Text {...p} /> };
 });
 jest.mock('@/components/custom/for-you/SectionViewAllText', () => {
     const { Text, Pressable } = require('react-native');
@@ -224,16 +240,38 @@ describe('DashboardSectionsFeed', () => {
         expect(getByText('viewall:5')).toBeTruthy();
     });
 
-    // Previously the footer only rendered when a section had MORE than 3
-    // articles, so a one-article section looked broken next to its siblings.
-    // The closing row is now unconditional.
-    it('renders the closing row even for a section that fits in the preview', () => {
-        const { getAllByText, getByText, getByLabelText } = renderFeed([
+    // M4: "View all 1 article" under the one article it named. The closing
+    // row renders only when the section holds more than the preview shows;
+    // the header's open button still opens every section.
+    it('renders no closing row for a section that fits in the preview', () => {
+        const { getAllByText, queryByLabelText } = renderFeed([
             makeRow('f1', [makeGroup('g1', 1000, 1000), makeGroup('g2', 900, 900)]),
         ]);
         expect(getAllByText(/^card:/)).toHaveLength(2);
-        expect(getByLabelText('viewall')).toBeTruthy();
-        expect(getByText('viewall:2')).toBeTruthy();
+        expect(queryByLabelText('viewall')).toBeNull();
+    });
+
+    it('renders no closing row at exactly the preview count', () => {
+        const { queryByLabelText } = renderFeed([
+            makeRow('f1', [
+                makeGroup('g1', 1000, 1000),
+                makeGroup('g2', 900, 900),
+                makeGroup('g3', 800, 800),
+            ]),
+        ]);
+        expect(queryByLabelText('viewall')).toBeNull();
+    });
+
+    it('renders the closing row one past the preview count', () => {
+        const { getByText } = renderFeed([
+            makeRow('f1', [
+                makeGroup('g1', 1000, 1000),
+                makeGroup('g2', 900, 900),
+                makeGroup('g3', 800, 800),
+                makeGroup('g4', 700, 700),
+            ]),
+        ]);
+        expect(getByText('viewall:4')).toBeTruthy();
     });
 
     it('navigates to the fact feed when the header is pressed', () => {
@@ -246,7 +284,9 @@ describe('DashboardSectionsFeed', () => {
     });
 
     it('navigates to the fact feed when the closing row is pressed', () => {
-        const { getByLabelText } = renderFeed([makeRow('f1', [makeGroup('g1', 1000, 1000)])]);
+        const { getByLabelText } = renderFeed([
+            makeRow('f1', ['g1', 'g2', 'g3', 'g4'].map((id, i) => makeGroup(id, 1000 - i, 1000 - i))),
+        ]);
         fireEvent.press(getByLabelText('viewall'));
         expect(mockRouterPush).toHaveBeenCalledWith({
             pathname: '/logged-in/fact-feed',
@@ -360,7 +400,10 @@ describe('DashboardSectionsFeed — headline sections', () => {
     it('opens the section feed with the LOCALIZED title, not the empty statement', () => {
         const { getByLabelText } = renderFeed([
             makeHeadlineRow('headline-country-in', 'headline-country', 8, [
-                makeGroup('g1', 1, 1),
+                makeGroup('g1', 4, 4),
+                makeGroup('g2', 3, 3),
+                makeGroup('g3', 2, 2),
+                makeGroup('g4', 1, 1),
             ], 'IN'),
         ]);
         fireEvent.press(getByLabelText('viewall'));
@@ -401,6 +444,7 @@ describe('DashboardSectionsFeed — no importance gate', () => {
             makeGroup('hi', 3000, 3000, 0.9),
             makeGroup('med', 2000, 2000, 0.6),
             makeGroup('lo', 1000, 1000, 0.4),
+            makeGroup('lo2', 500, 500, 0.4),
         ];
         const { getAllByText, getByText } = renderFeed([makeRow('f1', groups)]);
         expect(getAllByText(/^card:/).map((n: any) => n.props.children)).toEqual([
@@ -408,8 +452,8 @@ describe('DashboardSectionsFeed — no importance gate', () => {
             'card:med',
             'card:lo',
         ]);
-        expect(getByText('total:3')).toBeTruthy();
-        expect(getByText('viewall:3')).toBeTruthy();
+        expect(getByText('total:4')).toBeTruthy();
+        expect(getByText('viewall:4')).toBeTruthy();
     });
 
     it('keeps a section whose only group is LOW band', () => {
@@ -418,5 +462,60 @@ describe('DashboardSectionsFeed — no importance gate', () => {
         ]);
         expect(getByLabelText('header:Statement f1')).toBeTruthy();
         expect(getAllByText(/^card:/)).toHaveLength(1);
+    });
+});
+
+describe('DashboardSectionsFeed: empty interest sections (D4)', () => {
+    function emptyRow(factId: string, emptyReason: 'awaiting-first-run' | 'no-match-yet', newInterest = false): FactRow {
+        return { ...makeRow(factId, []), emptyReason, newInterest } as FactRow;
+    }
+
+    it('renders an empty section with the reason copy and no open button or count', () => {
+        const { getByTestId, getByText, queryByLabelText } = renderFeed([
+            emptyRow('f-new', 'awaiting-first-run'),
+        ]);
+        expect(getByTestId('dashboard-section-empty-f-new')).toBeTruthy();
+        expect(getByText('empty:forYou.emptySection.awaiting')).toBeTruthy();
+        expect(queryByLabelText('viewall')).toBeNull();
+        expect(getByText('total:0')).toBeTruthy();
+    });
+
+    it('says the other reason once a run has looked and found nothing', () => {
+        const { getByText } = renderFeed([emptyRow('f-old', 'no-match-yet')]);
+        expect(getByText('empty:forYou.emptySection.none')).toBeTruthy();
+    });
+
+    it('labels a new interest as new', () => {
+        const { getByTestId, queryByTestId } = renderFeed([
+            emptyRow('f-new', 'awaiting-first-run', true),
+            emptyRow('f-old', 'no-match-yet', false),
+        ]);
+        expect(getByTestId('dashboard-section-new-f-new')).toBeTruthy();
+        expect(queryByTestId('dashboard-section-new-f-old')).toBeNull();
+    });
+
+    it('leads with the no-stories element when only empty sections exist', () => {
+        const { Text } = require('react-native');
+        const { getByText } = renderFeed([emptyRow('f-new', 'awaiting-first-run')], {
+            noStoriesLead: <Text>lead</Text>,
+        });
+        expect(getByText('lead')).toBeTruthy();
+    });
+
+    it('does not show the lead once any section has a story', () => {
+        const { Text } = require('react-native');
+        const { queryByText } = renderFeed(
+            [makeRow('f1', [makeGroup('g1', 1, 1)]), emptyRow('f-new', 'awaiting-first-run')],
+            { noStoriesLead: <Text>lead</Text> },
+        );
+        expect(queryByText('lead')).toBeNull();
+    });
+});
+
+describe('DashboardSectionsFeed: list end padding', () => {
+    it('counts the tab bar once (the in-tab inset already includes it on iOS)', () => {
+        const { getByTestId } = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)])]);
+        const style = getByTestId('dashboard-feed-list').props.contentContainerStyle;
+        expect(style.paddingBottom).toBe(24);
     });
 });

@@ -59,10 +59,13 @@ import { VStack } from '@/components/ui/vstack';
 
 import {
   backupCadence,
+  backupLastFailedAt,
   backupLastRunAt,
   backupProviderId,
   backupWifiOnly,
   hydrateBackupSettings,
+  recordBackupFailure,
+  recordBackupRun,
   setBackupCadence,
   setBackupProviderId,
   setBackupWifiOnly,
@@ -88,6 +91,7 @@ import {
   type DriveConnectResult,
 } from '@/lib/backup/providers/google-drive';
 import { icloudProvider, isICloudSupported } from '@/lib/backup/providers/icloud';
+import { createdAtFromRemoteFilename } from '@/lib/backup/remote-names';
 import BackupRecoveryFlow from '@/components/custom/backup/BackupRecoveryFlow';
 import { backgroundBackupIsAvailable } from '@/lib/background/backup-task';
 import type { BackupCadence, BackupProvider } from '@/lib/backup/types';
@@ -125,9 +129,24 @@ export interface BackupSectionProps {
   autoOpenRecover?: boolean;
 }
 
+/**
+ * Date and time in the APP language, not the device locale: someone reading
+ * Mera in German on an English phone should not get an English date here.
+ * `toLocaleString` throws on a malformed tag in some Hermes builds, so the bare
+ * default is the fallback rather than a crash on the status line.
+ */
+function formatWhen(ms: number, language: string | undefined): string {
+  try {
+    return new Date(ms).toLocaleString(language, { dateStyle: 'medium', timeStyle: 'short' });
+  } catch {
+    return new Date(ms).toLocaleString();
+  }
+}
+
 const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }) => {
   const toast = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n?.language;
 
   const [stage, setStage] = useState<Stage>('loading');
   const [code, setCode] = useState<string | null>(null);
@@ -140,6 +159,10 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
   const [restoreOptions, setRestoreOptions] = useState<readonly string[] | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<string | null>(null);
   const [confirmOff, setConfirmOff] = useState(false);
+  // Newest backup found in the cloud, for a device that has never stamped one
+  // itself (a new phone after restore, or a code adopted from another device).
+  // `backup_last_run_at` is device state and never travels in a backup.
+  const [cloudLastAt, setCloudLastAt] = useState<number | null>(null);
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
 
@@ -192,6 +215,19 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         const configured = backupProviderId() !== null && (await isRecoveryCodeConfirmed());
         if (cancelled) return;
         setStage(configured ? 'on' : 'off');
+        // Only when this device has no stamp of its own, and never blocking the
+        // stage: one list call, and a failure just leaves "No backup saved yet".
+        const id = backupProviderId();
+        const cloud = id ? cloudProviderFor(id) : null;
+        if (configured && cloud && backupLastRunAt() === null) {
+          listBackups(cloud)
+            .then((paths) => {
+              if (cancelled) return;
+              const newest = paths.map(createdAtFromRemoteFilename).find((ms) => ms !== null);
+              setCloudLastAt(newest ?? null);
+            })
+            .catch(() => {});
+        }
       } catch (err) {
         if (!cancelled) {
           fail(err, 'load');
@@ -341,9 +377,24 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         tRef.current('backup.doneTitle'),
         tRef.current('backup.doneDescription', { count: rows }),
       );
+      // Stamp it. Only the background task used to, so a manual backup that
+      // had just uploaded still read "No backup saved yet". Its own catch: the
+      // upload DID happen, and a failed settings write must not paint "Something
+      // went wrong" over it.
+      try {
+        await recordBackupRun(result.header.createdAt ?? Date.now());
+      } catch (err) {
+        logger.captureException(err, { tags: { screen: 'backup', action: 'stamp-run' } });
+      }
       refresh();
     } catch (err) {
       fail(err, 'run-backup');
+      try {
+        await recordBackupFailure(Date.now());
+      } catch {
+        // The toast above already told the user; the status line is best effort.
+      }
+      refresh();
     } finally {
       setBusy(null);
     }
@@ -516,11 +567,34 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
 
   const stalenessLine = (id: BackupProviderId) => {
     const last = backupLastRunAt();
-    if (last === null) {
-      return (
-        <Text size="sm" className="text-amber-400">
-          {t('backup.statusNever')}
+    const failedAt = backupLastFailedAt();
+    const failedLine =
+      failedAt !== null ? (
+        <Text size="sm" className="text-amber-400" testID="backup-status-failed">
+          {t('backup.statusFailed', { when: formatWhen(failedAt, language) })}
         </Text>
+      ) : null;
+    if (last === null) {
+      if (cloudLastAt !== null) {
+        return (
+          <>
+            {failedLine}
+            <Text size="sm" className="text-gray-400">
+              {t('backup.statusFromCloud', {
+                when: formatWhen(cloudLastAt, language),
+                provider: t(id === 'icloud' ? 'backup.icloud' : 'backup.drive'),
+              })}
+            </Text>
+          </>
+        );
+      }
+      return (
+        <>
+          {failedLine}
+          <Text size="sm" className="text-amber-400">
+            {t('backup.statusNever')}
+          </Text>
+        </>
       );
     }
     const age = Date.now() - last;
@@ -529,11 +603,14 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
     // has a month-old backup and no reason to suspect it.
     const stale = age > STALE_BACKUP_MS;
     return (
-      <Text size="sm" className={stale ? 'text-amber-400' : 'text-gray-400'}>
-        {stale
-          ? t('backup.statusStale', { days: Math.floor(age / (24 * 60 * 60 * 1000)) })
-          : t('backup.statusLast', { when: new Date(last).toLocaleDateString() })}
-      </Text>
+      <>
+        {failedLine}
+        <Text size="sm" className={stale ? 'text-amber-400' : 'text-gray-400'}>
+          {stale
+            ? t('backup.statusStale', { days: Math.floor(age / (24 * 60 * 60 * 1000)) })
+            : t('backup.statusLast', { when: formatWhen(last, language) })}
+        </Text>
+      </>
     );
   };
 
@@ -798,15 +875,25 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
               {(restoreOptions ?? []).length === 0 ? (
                 <Text className="text-gray-300">{t('backup.restoreEmpty')}</Text>
               ) : (
-                (restoreOptions ?? []).map((path) => (
-                  <Pressable
-                    key={path}
-                    className="py-3 px-3 border border-gray-700 rounded-lg"
-                    onPress={() => setRestoreTarget(path)}
-                  >
-                    <Text className="text-white">{path.split('/').pop()}</Text>
-                  </Pressable>
-                ))
+                (restoreOptions ?? []).map((path) => {
+                  // A date the user recognises, not the blob's file name. A
+                  // name we cannot parse is not ours to relabel, so it shows
+                  // as it is.
+                  const at = createdAtFromRemoteFilename(path);
+                  return (
+                    <Pressable
+                      key={path}
+                      className="py-3 px-3 border border-gray-700 rounded-lg"
+                      onPress={() => setRestoreTarget(path)}
+                    >
+                      <Text className="text-white">
+                        {at !== null
+                          ? t('backup.restoreOption', { when: formatWhen(at, language) })
+                          : path.split('/').pop()}
+                      </Text>
+                    </Pressable>
+                  );
+                })
               )}
             </VStack>
           </ModalBody>

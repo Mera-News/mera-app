@@ -10,7 +10,7 @@ when:
 outputs:
   - "one leg issuing lookup_place and find_similar_facts together, then one saveExtractedFacts call"
   - "the residence element carries only rungs lookup_place returned, plus the attribute key location: neighborhood/area, city, and country (preserve specifics)"
-  - "ask_choice, never prose, for a place choice or a replacement"
+  - "ask_choice, never prose, for an ambiguous place; a replacement is set with replaces and never asked first"
 ---
 
 The turn is about where the user themselves lives. Offer it. Never save it.
@@ -26,10 +26,11 @@ to its full chain. Fill every rung the lookup gives you and invent none.
 Residence is one fact. A turn that also carries a job or a partner carries other facts too: offer
 each as its own element.
 
-**Origin plus residence is one fact, not two.** If the turn says the user is an expat, a migrant, or
-originally from somewhere else, and also gives their current city, that is one statement: "Expat
-from India living in Amsterdam, Netherlands, Europe". Never split it, and never offer "Expatriate /
-lives outside country of origin", which names no country at all.
+**Where they are from is its own fact**, and so is being an expat. If the turn says the user is
+an expat or from somewhere else, offer "From India" (`background: country of origin`) and
+"Expat in The Netherlands" (`background: expat in country of residence`) as their own elements.
+Never fold either into the residence statement. A move to another country is also an expat-status
+change: Mera adds that update to the move itself.
 
 A move is still one fact. Offer the new residence and let the replacement rule below retire the old
 one. Offer a second reading only when the two would retrieve different news.
@@ -58,27 +59,26 @@ The statuses are `resolved`, `no_match`, `too_short` and `unavailable`. A `resol
 - **unavailable**: the lookup failed, which is not the user's problem. Offer their own words with no
   rungs added and do not mention the tool.
 
-## Confirmations go through ask_choice
-The two things you may need confirmed, the place and a replacement, are both `ask_choice` calls with
-two or three short options. Never ask for either in prose that needs a typed reply: a question the
-user has to answer in words is one they can also ignore, and then you are guessing anyway.
+## Only an ambiguous place is asked
+An ambiguous place is an `ask_choice` call with two or three short options, never a question in
+prose. A replacement is never asked: set `replaces` and the card shows the user what it removes and
+lets them decide there.
 
 Option labels are text the user reads, so they follow the same rule your prose does. Nothing is
 saved yet, so no option says "saved", "added" or "noted".
 
-If a choice goes unanswered, do not ask it again. Take the reading their other facts support and
-offer it, and where the choice was a replacement, **offer both facts rather than replacing one**.
-A fact the user can remove is recoverable. One you deleted for them is not.
+If the place choice goes unanswered, do not ask it again. Take the reading their other facts
+support and offer it.
 
 ## Reading find_similar_facts
 Branch on the attribute key, never on the score.
 
-- Same key, **different** place: a replacement, and it is the user's to make. `ask_choice` between
-  the two places, and set `replaces` only on an explicit choice.
+- Same key, **different** place: a move. Set `replaces` to that id and do not ask first.
 - Same key, same place at a **deeper** rung ("Lives in Barcelona" against "Lives in Gràcia,
   Barcelona"): set `replaces` and say so in one line. No choice is needed, because nothing is lost.
 - A **different** key: not a replacement. A relative's address, a workplace and a residence all
-  coexist.
+  coexist. An older fact under `background: origin and current residence` is left alone too: Mera
+  offers to split it on its own.
 
 ## What to offer
 `questionnaire_attribute` must be exactly `location: neighborhood/area, city, and country

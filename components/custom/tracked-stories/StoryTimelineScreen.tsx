@@ -31,6 +31,7 @@ import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight } from '@/lib/haptics';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { deleteTrackedStoryById, disownStoryMember } from '@/lib/tracking/track-actions';
+import { toastManager } from '@/lib/toast-manager';
 import { buildTimeline, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -155,6 +156,10 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const [cards, setCards] = useState<TimelineCard[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    // Why the list is empty, when it is not simply "no coverage yet". A load
+    // that threw and a story deleted elsewhere both used to show the quiet
+    // "no new coverage" note, which reads as a working story with nothing new.
+    const [emptyReason, setEmptyReason] = useState<'quiet' | 'load-failed' | 'gone'>('quiet');
     const [confirmDelete, setConfirmDelete] = useState(false);
     // The card the user long-pressed and is being asked about. Holding the CARD
     // (not just its id) keeps the confirm addressable after the list re-renders.
@@ -166,9 +171,15 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     // gone.
     const handleConfirmDelete = useCallback(async () => {
         setConfirmDelete(false);
-        await deleteTrackedStoryById(trackedStoryId);
+        const deleted = await deleteTrackedStoryById(trackedStoryId);
+        if (!deleted) {
+            // Stay: leaving would tell the reader a story that still exists is
+            // gone. The service never throws; false is its failure signal.
+            toastManager.showError(t('errors.somethingWentWrong'), t('trackedStories.deleteFailed'));
+            return;
+        }
         onBack();
-    }, [trackedStoryId, onBack]);
+    }, [trackedStoryId, onBack, t]);
 
     /**
      * "Not part of this story" — drop ONE article from this timeline.
@@ -197,9 +208,23 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         const card = confirmRemove;
         setConfirmRemove(null);
         if (!card?.articleId) return;
-        setCards((prev) => prev.filter((c) => c.articleId !== card.articleId));
-        await disownStoryMember(trackedStoryId, card.articleId);
-    }, [confirmRemove, trackedStoryId]);
+        let removedAt = -1;
+        setCards((prev) => {
+            removedAt = prev.findIndex((c) => c.articleId === card.articleId);
+            return prev.filter((c) => c.articleId !== card.articleId);
+        });
+        const removed = await disownStoryMember(trackedStoryId, card.articleId);
+        if (!removed) {
+            // Roll the optimistic removal back into its old slot.
+            setCards((prev) => {
+                if (prev.some((c) => c.articleId === card.articleId)) return prev;
+                const next = prev.slice();
+                next.splice(removedAt < 0 ? next.length : Math.min(removedAt, next.length), 0, card);
+                return next;
+            });
+            toastManager.showError(t('errors.somethingWentWrong'), t('trackedStories.removeFailed'));
+        }
+    }, [confirmRemove, trackedStoryId, t]);
 
     // Monotonic run token — each load() invalidates prior in-flight runs, and
     // the focus-effect cleanup bumps it so a load resolving after blur/unmount
@@ -216,7 +241,13 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
             try {
                 const story = await getTrackedStoryById(trackedStoryId);
                 if (!alive()) return;
-                if (!story) return;
+                if (!story) {
+                    // Deleted elsewhere (another screen, or a sync). Say so.
+                    setCards([]);
+                    setEmptyReason('gone');
+                    return;
+                }
+                setEmptyReason('quiet');
                 setHeadline(story.llmHeadline ?? story.fallbackTitle ?? '');
                 setIsLlmHeadline(!!story.llmHeadline);
 
@@ -272,6 +303,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 }
             } catch (err) {
                 // Failed load — deliberately do NOT advance the watermark.
+                if (alive()) setEmptyReason('load-failed');
                 logger.captureException(err, {
                     tags: { screen: 'StoryTimelineScreen', method: 'load' },
                     extra: { trackedStoryId },
@@ -311,21 +343,28 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const renderItem: ListRenderItem<TimelineCard> = useCallback(
         ({ item }) => {
             const article = cardToNewsArticle(item);
+            const askRemove = () => {
+                hapticLight();
+                setConfirmRemove(item);
+            };
             return (
                 <ArticleStandaloneCompactCard
                     testID={`story-timeline-card-${item.articleId}`}
                     article={article}
                     onPress={() => handleArticlePress(item.articleId, stableClusterId)}
-                    // Long-press to disown a card, matching the Followed-stories
-                    // list one screen up (and Explore's scope chips). The row
-                    // draws no affordance: a visible button on every card would
-                    // re-add the "…" the compact-card cleanup removed. RN
-                    // resolves a gesture as press OR long-press, never both, so
-                    // this cannot fight the tap-to-open.
-                    onLongPress={() => {
-                        hapticLight();
-                        setConfirmRemove(item);
-                    }}
+                    // Disowning a card: long-press (kept, matching the
+                    // Followed-stories list one screen up) and the ••• menu's
+                    // "Not part of this story", both through the same confirm.
+                    onLongPress={askRemove}
+                    menuExtraItems={[
+                        {
+                            key: 'remove-from-story',
+                            label: t('trackedStories.removeMemberAction'),
+                            icon: 'remove-circle-outline',
+                            testID: 'menu-remove-from-story',
+                            run: askRemove,
+                        },
+                    ]}
                     subjectExtras={{
                         surface: 'tracked',
                         stableClusterId: stableClusterId ?? undefined,
@@ -333,7 +372,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 />
             );
         },
-        [handleArticlePress, stableClusterId],
+        [handleArticlePress, stableClusterId, t],
     );
 
     const keyExtractor = useCallback(
@@ -345,11 +384,20 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         <Box className="items-center justify-center py-20">
             <Spinner size="large" />
         </Box>
-    ) : (
+    ) : emptyReason === 'quiet' ? (
         <Box className="items-center justify-center py-20 px-8">
             <MaterialIcons name="hourglass-empty" size={40} color="#6B7280" />
             <Text size="sm" className="text-typography-400 text-center mt-4">
                 {t('trackedStories.timelineQuietNote')}
+            </Text>
+        </Box>
+    ) : (
+        <Box className="items-center justify-center py-20 px-8" testID={`story-timeline-${emptyReason}`}>
+            <MaterialIcons name="error-outline" size={40} color="#9CA3AF" />
+            <Text size="sm" className="text-typography-400 text-center mt-4">
+                {emptyReason === 'gone'
+                    ? t('articleDetail.storyUnavailable')
+                    : t('trackedStories.timelineLoadFailed')}
             </Text>
         </Box>
     );
@@ -366,7 +414,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                     <Pressable
                         onPress={onBack}
                         accessibilityRole="button"
-                        accessibilityLabel={t('common.cancel')}
+                        accessibilityLabel={t('common.back')}
                         hitSlop={8}
                         className="p-2"
                     >
@@ -501,6 +549,9 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 }
                 contentContainerStyle={{
                     paddingTop: 8,
+                    // F35: the same 16pt side margins as Explore's list; the
+                    // cards ran edge to edge.
+                    paddingHorizontal: 16,
                     paddingBottom: insets.bottom + 40,
                     flexGrow: 1,
                 }}

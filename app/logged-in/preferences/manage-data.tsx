@@ -1,3 +1,5 @@
+import ErrorBoundary from '@/components/custom/ErrorBoundary';
+import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ManageDataScreen from '@/components/custom/config-mera/ManageDataScreen';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -12,5 +14,11 @@ export default function ManageDataPage() {
     // what sets it.
     const [autoOpenRecover] = useState(restore === '1');
 
-    return <ManageDataScreen onBack={() => router.back()} autoOpenRecover={autoOpenRecover} />;
+    return (
+        // S7: a crash here stays on this page instead of reaching the root
+        // boundary, which swaps the whole app for a fallback.
+        <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+            <ManageDataScreen onBack={() => router.back()} autoOpenRecover={autoOpenRecover} />
+        </ErrorBoundary>
+    );
 }

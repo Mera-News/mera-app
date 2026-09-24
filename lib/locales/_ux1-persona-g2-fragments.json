@@ -1,0 +1,104 @@
+{
+  "_comment": "ux1 persona G2: hygiene undo wording follows the app standard (\"You can undo this in the change log.\"), said once per card.",
+  "ar": {
+    "hygiene": {
+      "effectStaleTopic": "يُقاعد هذا الموضوع الهادئ."
+    }
+  },
+  "de": {
+    "hygiene": {
+      "effectStaleTopic": "Stellt dieses ruhige Thema zurück."
+    }
+  },
+  "en": {
+    "hygiene": {
+      "effectStaleTopic": "Retires this quiet topic.",
+      "reversibleNote": "You can undo this in the change log."
+    }
+  },
+  "es": {
+    "hygiene": {
+      "effectStaleTopic": "Retira este tema inactivo."
+    }
+  },
+  "fr": {
+    "hygiene": {
+      "effectStaleTopic": "Retire ce sujet silencieux."
+    }
+  },
+  "hi": {
+    "hygiene": {
+      "effectStaleTopic": "इस शांत विषय को रिटायर करता है।"
+    }
+  },
+  "id": {
+    "hygiene": {
+      "effectStaleTopic": "Menghentikan topik yang sepi ini."
+    }
+  },
+  "it": {
+    "hygiene": {
+      "effectStaleTopic": "Ritira questo argomento inattivo."
+    }
+  },
+  "ja": {
+    "hygiene": {
+      "effectStaleTopic": "この動きのないトピックを停止します。"
+    }
+  },
+  "ko": {
+    "hygiene": {
+      "effectStaleTopic": "활동이 뜸한 이 토픽을 제거합니다."
+    }
+  },
+  "nl": {
+    "hygiene": {
+      "effectStaleTopic": "Zet dit stille onderwerp op inactief."
+    }
+  },
+  "pl": {
+    "hygiene": {
+      "effectStaleTopic": "Wygasza ten nieaktywny temat."
+    }
+  },
+  "pt-BR": {
+    "hygiene": {
+      "effectStaleTopic": "Desativa este tópico pouco usado."
+    }
+  },
+  "ru": {
+    "hygiene": {
+      "effectStaleTopic": "Удаляет эту неактивную тему."
+    }
+  },
+  "th": {
+    "hygiene": {
+      "effectStaleTopic": "ปลดหัวข้อที่เงียบหายนี้"
+    }
+  },
+  "tr": {
+    "hygiene": {
+      "effectStaleTopic": "Bu sessiz konuyu emekliye ayırır."
+    }
+  },
+  "uk": {
+    "hygiene": {
+      "effectStaleTopic": "Вимикає цю неактивну тему."
+    }
+  },
+  "vi": {
+    "hygiene": {
+      "effectStaleTopic": "Ngừng theo dõi chủ đề ít hoạt động này."
+    }
+  },
+  "zh-CN": {
+    "hygiene": {
+      "effectStaleTopic": "停用这个不活跃的话题。"
+    }
+  },
+  "zh-TW": {
+    "hygiene": {
+      "effectStaleTopic": "停用這個不活躍的主題。"
+    }
+  }
+}

@@ -10,9 +10,10 @@ import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
-import { Pressable } from '@/components/ui/pressable';
+import PressableCard from '@/components/custom/cards/PressableCard';
 import { VStack } from '@/components/ui/vstack';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
+import type { AccessibilityActionEvent } from 'react-native';
 import React from 'react';
 import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
@@ -104,6 +105,11 @@ export interface ArticleCardBaseProps {
    * country flag.
    */
   metaRowRightReserve?: number;
+  /** The ••• menu's actions as VoiceOver custom actions on the card itself
+   *  (see `useArticleMenu`), so a screen-reader user reaches every action
+   *  without finding the ••• button first. */
+  accessibilityActions?: { name: string; label: string }[];
+  onAccessibilityAction?: (e: AccessibilityActionEvent) => void;
 }
 
 /** The content VStack's own horizontal padding (`px-4`). `metaRowRightReserve`
@@ -133,6 +139,8 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   overlay,
   testID,
   metaRowRightReserve = 0,
+  accessibilityActions,
+  onAccessibilityAction,
 }) => {
   const { t } = useTranslation();
   const blurImages = useBlurImagesStore((s) => s.blurImages);
@@ -249,7 +257,13 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   );
 
   return (
-    <Pressable testID={testID} onPress={onPress} style={dimmed ? { opacity: 0.75 } : undefined}>
+    <PressableCard
+      testID={testID}
+      onPress={onPress}
+      dimmed={!!dimmed}
+      accessibilityActions={accessibilityActions}
+      onAccessibilityAction={onAccessibilityAction}
+    >
       {flat ? (
         // Shadow lives on this outer, non-clipping Box — RN drops a view's
         // shadow the moment that same view also sets `overflow: hidden`, so
@@ -286,7 +300,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
           {innerContent}
         </Card>
       )}
-    </Pressable>
+    </PressableCard>
   );
 };
 

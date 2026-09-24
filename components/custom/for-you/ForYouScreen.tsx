@@ -1,13 +1,11 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
-import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import {
     useFeedSyncRefresh,
     useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
-import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
 import {
     headerTitleLineHeight,
     headerTitleSize,
@@ -15,6 +13,9 @@ import {
 } from '@/lib/typography/header-title-size';
 import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
 import HeaderNarrationLine from '@/components/custom/for-you/HeaderNarrationLine';
+import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
+import { HEADER_NARRATION_METRICS, NARRATION_COLOR } from '@/components/custom/for-you/header-narration';
+import { Text } from '@/components/ui/text';
 import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
@@ -25,10 +26,7 @@ import {
     GlassPlate,
 } from '@/components/custom/GlassSurface';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
-import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import DailyLimitCard from '@/components/custom/DailyLimitCard';
-import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
-import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
+import DashboardEmptyState from '@/components/custom/for-you/DashboardEmptyState';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
@@ -40,15 +38,13 @@ import VisitedPublicationsList from '@/components/custom/config-panel/VisitedPub
 import ShareStatsFab from '@/components/custom/ShareStatsFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
-import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
+import { useSectionSnapshots } from '@/components/custom/for-you/use-section-snapshots';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { MaterialIcons } from '@expo/vector-icons';
 import { Pressable } from '@/components/ui/pressable';
-import { Spinner } from '@/components/ui/spinner';
 import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
 import { getFacts } from '@/lib/database/services/fact-service';
@@ -59,6 +55,7 @@ import {
     useForYouAsyncJobPhase,
     useForYouDeviceProcessing,
     useForYouHasGeneratedTopics,
+    useForYouLastNewArticlesAt,
     useForYouLastProcessingRunFinishedAt,
     useForYouSuggestions,
     useForYouSyncStatusMessage,
@@ -75,18 +72,15 @@ import {
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
-import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useIsConnected } from '@/lib/stores/network-store';
-import { Icon, AlertCircleIcon } from '@/components/ui/icon';
-import { Text } from '@/components/ui/text';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { AccessibilityInfo, AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -97,6 +91,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // the gesture: the strip was its only caller.
 
 
+/** Above this OS text scale the status row may wrap and the header grow. 1.0,
+ *  not higher: the one-line budget is measured at 14pt, the widest line fills
+ *  329 of 335pt, and the narration scales with Dynamic Type, so the very next
+ *  size up (xLarge, ~1.12) would overflow a pinned one-line row. */
+const LARGE_TEXT_SCALE = 1.0;
+
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
     // Local UI state only
@@ -106,7 +106,7 @@ const MeraNewsScreen: React.FC = () => {
     const { isLoading, errorMessage } = useFeedBootstrap();
     const handleSuggestionPress = useOpenSuggestion('sectioned');
     // Collapsing Dashboard header (hides on scroll-down, reveals on scroll-up).
-    const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal, resetScrollOrigin } =
+    const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal, resetScrollOrigin, hidden } =
         useCollapsibleHeader();
     // Live opened set — subscribed so the per-card read treatment updates as
     // stories are opened. (There is no green tick; `read` only suppresses the
@@ -199,6 +199,10 @@ const MeraNewsScreen: React.FC = () => {
     const [savedVisited, setSavedVisited] = useState(false);
     const [historyVisited, setHistoryVisited] = useState(false);
     const [factChecksVisited, setFactChecksVisited] = useState(false);
+    // Rows on the Visited list, reported by the list after each load. The share
+    // FAB means nothing over an empty list (the share screen would show its own
+    // empty state), so it is hidden until there is something to share.
+    const [visitedCount, setVisitedCount] = useState(0);
     const selectSubTab = useCallback((tab: ForYouSubTab) => {
         setActiveSubTab(tab);
         if (tab === 'stories') setStoriesVisited(true);
@@ -224,7 +228,7 @@ const MeraNewsScreen: React.FC = () => {
     // Pull-to-refresh — the SAME handler the Feed tab uses. `refreshing` tracks
     // the scheduler's feed-sync flag (not local state), so it rises on the same
     // frame as the pull and stays up for the real duration of the sync. This is
-    // also what finally makes the "pull down to retry" copy in renderEmpty true;
+    // also what finally makes the "pull down to retry" copy in the empty state true;
     // the Dashboard list had no refresh control at all before.
     const { refreshing, onRefresh } = useFeedSyncRefresh(reveal);
 
@@ -232,28 +236,42 @@ const MeraNewsScreen: React.FC = () => {
     const suggestions = useForYouSuggestions();
 
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
-    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const asyncJobPhase = useForYouAsyncJobPhase();
     const unscoredCount = useForYouUnscoredCount();
     const syncStatusMessage = useForYouSyncStatusMessage();
     const scoringError = useForYouScoringError();
     const dailyLimitResetAt = useForYouDailyLimitResetAt();
     const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
+    const lastNewArticlesAt = useForYouLastNewArticlesAt();
     const [nowTick, setNowTick] = useState(() => Date.now());
 
     useEffect(() => {
         // Pause the ticking clock while blurred; re-arm + snap forward on focus.
         if (!isFocused) return;
-        if (!lastProcessingRunFinishedAt && !dailyLimitResetAt) return;
+        if (!lastProcessingRunFinishedAt && !dailyLimitResetAt && !lastNewArticlesAt) return;
         setNowTick(Date.now());
         const id = setInterval(() => setNowTick(Date.now()), 30_000);
         return () => clearInterval(id);
-    }, [isFocused, lastProcessingRunFinishedAt, dailyLimitResetAt]);
+    }, [isFocused, lastProcessingRunFinishedAt, dailyLimitResetAt, lastNewArticlesAt]);
 
+    // "Last processed" in the status panel and sheet: when a run last finished,
+    // including one that found nothing. That is what the words say.
     const lastProcessedLabel = useMemo(() => {
         if (!lastProcessingRunFinishedAt) return null;
         return formatTimeAgo(t, lastProcessingRunFinishedAt, { now: nowTick });
     }, [lastProcessingRunFinishedAt, nowTick, t]);
+
+    // "Updated <time>" in the header: when new articles last ARRIVED
+    // (`lastNewArticlesAt`), never when a poll that found nothing finished,
+    // which reset it to "just now" while the reader was reading (F16). Null
+    // until a sync has delivered something, and then the row simply shows
+    // nothing. Under a minute it is its own sentence-case string: splicing
+    // "Just now" into "Updated {{time}}" read "Updated Just now".
+    const updatedLabel = useMemo(() => {
+        if (!lastNewArticlesAt) return null;
+        if (nowTick - lastNewArticlesAt < 60_000) return t('feed.updatedJustNow');
+        return t('feed.updatedAt', { time: formatTimeAgo(t, lastNewArticlesAt, { now: nowTick }) });
+    }, [lastNewArticlesAt, nowTick, t]);
 
     // Any client-visible fetch/scoring work still in flight — the shared
     // derivation (see components/custom/FeedSyncIndicator). Used here only for
@@ -297,6 +315,17 @@ const MeraNewsScreen: React.FC = () => {
     // articles must be silent"), so `isFeedProcessing` is true exactly when
     // articles are really being downloaded, grouped and scored.
     const narrating = isFeedProcessing;
+
+    // The narration stops cycling when the sync ends (the line unmounts) and
+    // the end is announced ONCE to a screen reader, rather than the line being
+    // a live region that talks over the list every four seconds.
+    const wasNarrating = useRef(narrating);
+    useEffect(() => {
+        if (wasNarrating.current && !narrating && isFocused) {
+            AccessibilityInfo.announceForAccessibility(t('feedStatus.syncDoneA11y'));
+        }
+        wasNarrating.current = narrating;
+    }, [narrating, isFocused, t]);
     // Read for the STAGE only. The snapshot's own `visible` is the wider
     // scheduler-inclusive question and is deliberately not consulted here.
     // No parameter is added to the snapshot for this; on-device is its own
@@ -313,10 +342,6 @@ const MeraNewsScreen: React.FC = () => {
     const isConnected = useIsConnected();
     const insets = useSafeAreaInsets();
 
-    // ── Fact-rows feed (Round-3 C1/C2) ──
-    // Persona snapshots (topics/facts/locations). Null while loading.
-    const [snapshots, setSnapshots] = useState<SectionSnapshots | null>(null);
-
     // Hydrate the persisted section-visit map once on mount so the Dashboard's
     // "+N new" section badges are correct on first paint.
     useEffect(() => {
@@ -324,19 +349,9 @@ const MeraNewsScreen: React.FC = () => {
     }, []);
 
 
-    // Load the persona snapshots when interests exist or the feed size changes
-    // (tiny tables; a new sync's insert/remove is the coarse trigger).
-    useEffect(() => {
-        let cancelled = false;
-        loadSectionSnapshots()
-            .then((s) => { if (!cancelled) setSnapshots(s); })
-            .catch((err: unknown) => {
-                logger.captureException(err, {
-                    tags: { screen: 'ForYouScreen', method: 'loadSectionSnapshots' },
-                });
-            });
-        return () => { cancelled = true; };
-    }, [hasGeneratedInterests, suggestions.length]);
+    // Persona snapshots, reloaded on a facts or locations change, on focus, and
+    // on the two coarse triggers this screen always had (see the hook).
+    const snapshots = useSectionSnapshots('ForYouScreen', [hasGeneratedInterests, suggestions.length]);
 
     // The user's geo/language context (home/other countries + app language) —
     // makes representative election tier-aware. Null while loading/on failure,
@@ -357,10 +372,24 @@ const MeraNewsScreen: React.FC = () => {
     // arrival, or a snapshot input change — never on a live open.
     const feed = useMemo(() => {
         if (!snapshots) return { breaking: [], rows: [] };
-        return buildFactRows(suggestions, snapshots, sortSnapshot.openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
-    }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx]);
+        return buildFactRows(
+            suggestions,
+            snapshots,
+            sortSnapshot.openedIds,
+            Date.now(),
+            DEFAULT_HARNESS_CONFIG,
+            userGeoLanguageCtx,
+            // Decides an empty section's reason: not looked yet, or looked and
+            // found nothing close enough (D4).
+            lastProcessingRunFinishedAt,
+        );
+    }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx, lastProcessingRunFinishedAt]);
 
-    const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
+    // "Something to show" means a STORY. Empty interest sections (D4) are rows
+    // too, and counting them would retire the processing card and the empty-
+    // feed watchdog the moment a reader has any interest at all.
+    const hasRenderableContent =
+        feed.breaking.length > 0 || feed.rows.some((r) => r.groups.length > 0);
 
     // DEV-only twin of FeedScreen's paint mark. `hasRenderableContent` is the
     // Dashboard's OWN "there is something to show" predicate (it already gates
@@ -475,125 +504,40 @@ const MeraNewsScreen: React.FC = () => {
         }
     }, [isConnected, scoringError, isDailyLimited, reveal]);
 
-    const renderEmpty = useCallback(() => {
-        if (showOnboardingWait) {
-            return <OnboardingWaitingCard />;
-        }
-        if (isLoading && !stuckOnEmpty) {
-            return (
-                <Box className="items-center justify-center py-20" testID="dashboard-loading">
-                    <Spinner size="large" />
-                </Box>
-            );
-        }
-        if (stuckOnEmpty) {
-            return (
-                <Box className="items-center justify-center py-20 px-6" testID="dashboard-stuck-empty">
-                    <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
-                    <Text size="md" className="text-error-400 text-center font-semibold mb-1">
-                        {t('feed.stuckTitle')}
-                    </Text>
-                    <Text size="sm" className="text-typography-400 text-center">
-                        {t('feed.stuckDescription')}
-                    </Text>
-                    <Text size="xs" className="text-typography-500 text-center mt-3">
-                        {t('feed.stuckHint')}
-                    </Text>
-                </Box>
-            );
-        }
-        if (errorMessage) {
-            return (
-                <Box className="items-center justify-center py-20 px-6" testID="dashboard-error">
-                    <Icon as={AlertCircleIcon} size="xl" className="text-error-400 mb-3" />
-                    <Text size="md" className="text-error-400 text-center font-semibold mb-1">
-                        {t('errors.failedToLoad')}
-                    </Text>
-                    <Text size="sm" className="text-typography-400 text-center">
-                        {errorMessage}
-                    </Text>
-                    <Text size="xs" className="text-typography-500 text-center mt-3">
-                        {t('feed.pullDownToRetry')}
-                    </Text>
-                </Box>
-            );
-        }
-        if (!hasGeneratedInterests) {
-            return <NoGeneratedInterestsCard />;
-        }
-        // Capped, with nothing in flight. Must come BEFORE the processing
-        // branch: `useFeedStatusMode` ranks processing above limited, so a real
-        // run still reports 'processing' and still reaches the card below. This
-        // catches the case that used to fall through and claim the feed was
-        // being prepared while the header indicator said the limit was reached.
-        if (statusMode === 'limited') {
-            return <DailyLimitCard />;
-        }
-        if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
-            return <FeedProcessingCard />;
-        }
-        return <AllCaughtUpCard />;
-    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, statusMode, isFeedProcessing, lastProcessingRunFinishedAt]);
-
-    // ── The three things that share the title row's first two slots ────────
-    //
-    // Built here rather than inline so the render below is a plain keyed array
-    // and the keys are impossible to miss. `statusMark` appears in BOTH
-    // branches with the SAME key, which is what makes its reorder a move.
-    //
-    // THE FEED DELIBERATELY DOES THE OPPOSITE — there the title STAYS and the
-    // narration sits beside the mark — and the reason is measured, not
-    // stylistic. "Dashboard" is 184pt and this header also carries the bell at
-    // 45, so a side-by-side line would get 88pt: about twelve characters a
-    // line, against copy that runs to 46 in English and 58 in the longer
-    // locales. It truncated to "Save what you cannot…" on a device. The Feed's
-    // title is 82pt with no bell, so it has 245 and does not have this
-    // problem. Each header does what its own width allows; do not "unify"
-    // these two without re-measuring.
-    const statusMark = (
-        <FeedStatusIndicator
-            key="mark"
-            mode={statusMode}
-            expanded={statusExpanded}
-            onPress={toggleStatus}
-            testID="dashboard-status-indicator"
+    // An ELEMENT, not a component type: see DashboardEmptyState (S11).
+    const emptyState = (
+        <DashboardEmptyState
+            showOnboardingWait={showOnboardingWait}
+            isLoading={isLoading}
+            stuckOnEmpty={stuckOnEmpty}
+            errorMessage={errorMessage}
+            hasGeneratedInterests={hasGeneratedInterests}
+            statusMode={statusMode}
+            isFeedProcessing={isFeedProcessing}
+            lastProcessingRunFinishedAt={lastProcessingRunFinishedAt}
         />
     );
-    const titleSlot = (
-        <View key="title" pointerEvents="none" className="flex-shrink min-w-0">
-            <Heading
-                size={titleSize}
-                className="text-white"
-                numberOfLines={1}
-                // SHRINK THE TYPE, DO NOT CUT THE WORD. At a fixed 36px
-                // "Dashboard" truncated to "Dasbo…" — a screen title that
-                // cannot say its own name. `titleSize` lowers the ceiling on a
-                // compact phone; this pair handles the case no breakpoint can
-                // know about, which is that "Tableau de bord" needs room
-                // "Dashboard" does not. It was also the original fix for a
-                // separate bug: at a larger Dynamic Type setting this wrapped
-                // MID-WORD ("Dashboar"/"d").
-                adjustsFontSizeToFit
-                minimumFontScale={HEADER_TITLE_MIN_SCALE}
-            >
-                {t('feed.dashboardTitle')}
-            </Heading>
-        </View>
-    );
-    const narrationSlot = (
-        <View
-            key="narration"
-            pointerEvents="none"
-            className="flex-1 min-w-0"
-            testID="dashboard-header-narration"
-        >
-            <HeaderNarrationLine
-                stage={stage}
-                onDevice={isDeviceProcessing}
-                testID="dashboard-narration-line"
-            />
-        </View>
-    );
+
+    // ── Header rows ─────────────────────────────────────────────────────────
+    //
+    // The TITLE IS ALWAYS SHOWN (D6). It used to step aside while a sync ran
+    // and hand its slot to the narration, which then had 88pt beside the mark
+    // and the bell: "Dashboard" is 184pt wide. The narration truncated
+    // mid-sentence and the screen lost its name. The status sentence now has
+    // its OWN full-width row under the title (N11), one line at every text
+    // size up to large, and the row is height-PINNED in every state, empty
+    // included, so a sync starting or ending never moves the header, and so
+    // never moves the four panels padded by its height. At a large text size
+    // the row may wrap to three lines and the header grows once.
+    //
+    // The Feed still puts its line beside its title: its title is 82pt and it
+    // has no bell, so it has 245pt there. Do not unify without re-measuring.
+    const { fontScale } = useWindowDimensions();
+    const statusRowLines = fontScale > LARGE_TEXT_SCALE ? 3 : 1;
+    const statusRowStyle =
+        statusRowLines === 1
+            ? { height: HEADER_NARRATION_METRICS.lineHeight }
+            : { minHeight: HEADER_NARRATION_METRICS.lineHeight };
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.
         <Box className="flex-1" testID="dashboard-screen">
@@ -615,7 +559,8 @@ const MeraNewsScreen: React.FC = () => {
                         onPressSuggestion={handleSuggestionPress}
                         scrollHandler={scrollHandler}
                         headerHeight={headerHeight}
-                        ListEmptyComponent={renderEmpty}
+                        ListEmptyComponent={emptyState}
+                        noStoriesLead={emptyState}
                         refreshing={refreshing}
                         onRefresh={onRefresh}
                     />
@@ -667,7 +612,7 @@ const MeraNewsScreen: React.FC = () => {
                             entry label — but under its own testID, because a
                             shared id returns the FIRST match and would let an
                             assertion pass against the wrong instance. */}
-                        <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} />
+                        <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} onCountChange={setVisitedCount} />
                         {/* A FAB, floating over the list, NOT a row above it.
                             The row version wrapped itself in `paddingTop:
                             headerHeight` so it would clear the collapsing
@@ -682,7 +627,9 @@ const MeraNewsScreen: React.FC = () => {
                             and land in the same place. They never co-occur:
                             that one is mounted by FactFeedScreen, which is the
                             Fact checks sub-tab, not this one. */}
-                        <ShareStatsFab onPress={() => router.push('/logged-in/share-stats')} />
+                        {visitedCount > 0 && (
+                            <ShareStatsFab onPress={() => router.push('/logged-in/share-stats')} />
+                        )}
                     </View>
                 )}
 
@@ -704,7 +651,9 @@ const MeraNewsScreen: React.FC = () => {
                 sub-tab content, below the header (zIndex 10). Shared across
                 all three sub-tabs (Feed/Stories/Saved) since the header above
                 it is too. */}
-            <StatusBarScrim />
+            {/* The dark base under the clock follows the header's own hidden
+                value: there only while the header is out of the way (F21). */}
+            <StatusBarScrim coverProgress={hidden} />
 
             {/* Collapsing Dashboard header — absolute overlay, translates up on
                 scroll-down and back on scroll-up / reveal(). */}
@@ -789,59 +738,104 @@ const MeraNewsScreen: React.FC = () => {
                                 style={{ height: titleRowHeight }}
                                 testID="dashboard-header-title-row"
                             >
-                                {/* A KEYED ARRAY, not a ternary of fragments,
-                                    and that is the load-bearing part. React
-                                    reconciles an array by key, so the mark
-                                    moving from index 1 to index 0 is a MOVE.
-                                    With a ternary the child at index 0 changes
-                                    type, `FeedStatusIndicator` unmounts and
-                                    remounts twice a run, the MeraLogo sweep
-                                    restarts mid-sync and accessibility focus is
-                                    dropped. The mark leads while narrating,
-                                    which is the whole point of moving it. */}
-                                {narrating
-                                    ? [statusMark, narrationSlot]
-                                    : [titleSlot, statusMark]}
-                                {/* Trailing slack. It used to pin the importance
-                                    chip hard right; the chip is gone and the
-                                    spacer stays, because it is what keeps the
-                                    status mark tight against the title instead
-                                    of letting the row space itself out.
-                                    `flex-basis: 0` means it adds nothing to the
-                                    row's natural width, so a long title still
-                                    gets the whole row and truncates rather than
-                                    being squeezed by a spacer.
-                                    `pointerEvents="none"` per the header rule
-                                    above: a full-height band that is not a
-                                    control must never swallow a refresh pan. */}
+                                <View pointerEvents="none" className="flex-shrink min-w-0">
+                                    <Heading
+                                        size={titleSize}
+                                        className="text-white"
+                                        numberOfLines={1}
+                                        // SHRINK THE TYPE, DO NOT CUT THE WORD. At a
+                                        // fixed 36px "Dashboard" truncated to "Dasbo…".
+                                        // `titleSize` lowers the ceiling on a compact
+                                        // phone; this pair handles "Tableau de bord"
+                                        // needing room "Dashboard" does not, and a
+                                        // larger Dynamic Type wrapping MID-WORD.
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={HEADER_TITLE_MIN_SCALE}
+                                        testID="dashboard-title"
+                                    >
+                                        {t('feed.dashboardTitle')}
+                                    </Heading>
+                                </View>
+                                <FeedStatusIndicator
+                                    mode={statusMode}
+                                    expanded={statusExpanded}
+                                    onPress={toggleStatus}
+                                    testID="dashboard-status-indicator"
+                                />
                                 <View pointerEvents="none" className="flex-1" />
                             </HStack>
-                            {lastProcessedLabel && (
-                                <Pressable
-                                    onPress={openStatusSheet}
-                                    hitSlop={8}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={t('feedStatus.openA11y')}
-                                    testID="dashboard-open-status-sheet"
-                                >
-                                    <FeedSyncLastUpdateText lastProcessedLabel={lastProcessedLabel} />
-                                </Pressable>
-                            )}
                         </VStack>
-                        <HStack className="items-center flex-shrink-0" space="sm" pointerEvents="box-none">
+                        <HStack className="items-center flex-shrink-0" space="md" pointerEvents="box-none">
+                            <TabExplainerButton tab="forYou" testID="dashboard-explainer-open" />
                             <NotificationBellButton />
                         </HStack>
                     </HStack>
 
+                    {/* The status row: full width, its own line, pinned. While a
+                        sync runs it narrates; otherwise it says when new
+                        articles last arrived, and a tap opens the status sheet.
+                        Never "Updated" while a run is going. */}
+                    <View
+                        pointerEvents="box-none"
+                        className="mb-2"
+                        style={statusRowStyle}
+                        testID="dashboard-status-row"
+                    >
+                        {narrating ? (
+                            // Still the way into the status sheet while a sync
+                            // runs; the status mark should not be the only one.
+                            <Pressable
+                                onPress={openStatusSheet}
+                                hitSlop={8}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('feedStatus.openA11y')}
+                                testID="dashboard-header-narration"
+                            >
+                                <HeaderNarrationLine
+                                    stage={stage}
+                                    onDevice={isDeviceProcessing}
+                                    layout="row"
+                                    maxLines={statusRowLines}
+                                    testID="dashboard-narration-line"
+                                />
+                            </Pressable>
+                        ) : updatedLabel ? (
+                            <Pressable
+                                onPress={openStatusSheet}
+                                hitSlop={8}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('feedStatus.openA11y')}
+                                testID="dashboard-open-status-sheet"
+                            >
+                                <Text
+                                    numberOfLines={statusRowLines}
+                                    style={{
+                                        color: NARRATION_COLOR,
+                                        fontSize: HEADER_NARRATION_METRICS.fontSize,
+                                        lineHeight: HEADER_NARRATION_METRICS.lineHeight,
+                                    }}
+                                    testID="dashboard-updated-label"
+                                >
+                                    {updatedLabel}
+                                </Text>
+                            </Pressable>
+                        ) : null}
+                    </View>
+
                     {/* Stats sentence — decorative text, never tapped: fully
                         transparent to touches so a pull can start on it. */}
-                    <View pointerEvents="none">
-                        {/* Brighter + a little heavier than the muted body step:
+                    {activeSubTab === 'feed' && (
+                    <View pointerEvents="none" testID="dashboard-stats-sentence">
+                        {/* Overview only: on Saved, Visited, Stories and Fact
+                            checks these numbers describe a different list and
+                            cost three lines of header (M3).
+                            Brighter + a little heavier than the muted body step:
                             this line sits on glass with content moving under it,
                             where typography-400 was barely legible. Only colour
                             and weight change — `leading-6 mb-2` is preserved. */}
                         <FeedStatsSentence className="text-typography-700 font-medium mb-2" />
                     </View>
+                    )}
 
                     {/* Sub-tab pills. box-none: the ROW is a full-width band and
                         must not swallow a pull — only the pills themselves take
@@ -872,9 +866,6 @@ const MeraNewsScreen: React.FC = () => {
             <FeedStatusSheet
                 isOpen={statusSheetOpen}
                 onClose={() => setStatusSheetOpen(false)}
-                processedCount={articleCount}
-                analysedCount={analysedCount}
-                relevantCount={relevantCount}
                 lastProcessedLabel={lastProcessedLabel}
             />
         </Box>
