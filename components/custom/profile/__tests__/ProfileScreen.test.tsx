@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { router } from 'expo-router';
 import React from 'react';
 
@@ -177,8 +178,35 @@ jest.mock('@/lib/subscription/present-free-tier-paywall', () => ({
 }));
 
 jest.mock('@/lib/stores/user-store', () => ({
-    useUserStore: () => ({ userPersona: { blockedByLlm: false }, fetchUserPersona: jest.fn() }),
+    useUserStore: () => ({ userPersona: { _id: 'p1', blockedByLlm: false }, fetchUserPersona: jest.fn() }),
 }));
+
+// --- moved from AdvancedHubScreen: Refresh Suggestions (block + glow + hint) ---
+jest.mock('@/components/ui/toast', () => {
+    const { Text, View } = require('react-native');
+    return {
+        useToast: () => ({ show: jest.fn() }),
+        Toast: (p: any) => <View {...p} />,
+        ToastTitle: (p: any) => <Text {...p} />,
+        ToastDescription: (p: any) => <Text {...p} />,
+    };
+});
+jest.mock('@/lib/hooks/use-pulse', () => ({ usePulse: () => 1 }));
+jest.mock('@/lib/scheduler/AppScheduler', () => ({ AppScheduler: { trigger: jest.fn() } }));
+// Switchable per test, but the object handed to the selector is STABLE across
+// calls (a fresh literal per render would flap any effect that depends on it
+// — see AdvancedHubScreen.test.tsx's header comment for what that costs).
+let mockFeedNeedsRefresh = false;
+const mockSetFeedNeedsRefresh = jest.fn();
+const mockPruneOrphanedData = jest.fn(() => Promise.resolve());
+jest.mock('@/lib/stores/for-you-store', () => {
+    const useForYouStore: any = (selector: any) => selector({ feedNeedsRefresh: mockFeedNeedsRefresh });
+    useForYouStore.getState = () => ({
+        setFeedNeedsRefresh: mockSetFeedNeedsRefresh,
+        pruneOrphanedData: mockPruneOrphanedData,
+    });
+    return { useForYouStore };
+});
 
 jest.mock('@/lib/visibility-tick', () => ({
     notifyScrollTick: jest.fn(),
@@ -191,6 +219,8 @@ beforeEach(() => {
     jest.clearAllMocks();
     mockFetchUserBilling.mockResolvedValue(null);
     mockAiAccess = 'unknown';
+    mockFeedNeedsRefresh = false;
+    mockPruneOrphanedData.mockClear().mockImplementation(() => Promise.resolve());
     mockSubscriptionState = {
         serverTier: null,
         customerInfo: null,
@@ -342,5 +372,36 @@ describe('ProfileScreen', () => {
         const { queryByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(queryByTestId('profile-advanced-open')).toBeTruthy());
         expect(queryByTestId('profile-row-advanced')).toBeNull();
+    });
+
+    // ── ux1 P2 (second commit): Refresh Suggestions moved here from
+    // AdvancedHubScreen, in Advanced's old bottom slot ─────────────────────
+    it('renders the Refresh Suggestions control at the bottom, after About You', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId, toJSON } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+        const rendered = JSON.stringify(toJSON());
+        expect(rendered.indexOf('facts-list-mode')).toBeLessThan(rendered.indexOf('advanced-hub-refresh-suggestions'));
+    });
+
+    it('pressing Refresh Suggestions clears the flag, prunes and triggers a feed-sync', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        mockFeedNeedsRefresh = true;
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
+        fireEvent.press(getByTestId('advanced-hub-refresh-suggestions'));
+        expect(mockSetFeedNeedsRefresh).toHaveBeenCalledWith(false);
+        await waitFor(() => expect(mockPruneOrphanedData).toHaveBeenCalled());
+        expect(AppScheduler.trigger).toHaveBeenCalledWith('feed-sync');
+    });
+
+    it('shows the persona-updated hint only while feedNeedsRefresh is true', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        mockFeedNeedsRefresh = true;
+        const { getByTestId, queryByTestId, rerender } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('advanced-hub-refresh-hint')).toBeTruthy());
+        mockFeedNeedsRefresh = false;
+        rerender(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(queryByTestId('advanced-hub-refresh-hint')).toBeNull());
     });
 });

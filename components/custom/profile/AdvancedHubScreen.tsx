@@ -3,26 +3,19 @@ import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { useNotInterestedData } from '@/components/custom/not-interested/use-not-interested-data';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { HEADLINE_DEPTH_UI_ENABLED } from '@/lib/config/feature-gates';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive } from '@/lib/database/services/publication-preference-service';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
-import { usePulse } from '@/lib/hooks/use-pulse';
-import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
-import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
-import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Animated, ScrollView, View } from 'react-native';
+import { ScrollView } from 'react-native';
 
 interface AdvancedHubScreenProps {
     readonly userId: string;
@@ -47,33 +40,25 @@ const SectionLabel: React.FC<{ readonly slug: string; readonly text: string; rea
 
 /**
  * Advanced persona hub (mirror-first redesign). This is the former Profile-tab
- * ProfileHubScreen — the blocked banner, the refresh-suggestions button, and
- * the focused hub rows (Facts / Locations / Sources / Saved / Source
- * preferences / Activity / Persona health) — now pushed as a dedicated
- * sub-screen from the single "Advanced" row on the new mirror-first
- * ProfileScreen. (The daily-usage card now lives at the top of ProfileScreen.)
+ * ProfileHubScreen — the blocked banner and the focused hub rows (Facts /
+ * Locations / Sources / Saved / Source preferences / Activity / Persona
+ * health) — now pushed as a dedicated sub-screen from the icon-only
+ * "Advanced" button on the new mirror-first ProfileScreen's header. (The
+ * daily-usage card lives at the top of Settings; Refresh Suggestions moved to
+ * the bottom of ProfileScreen, in Advanced's old bottom slot there.)
  * Everything power users need lives here; the tab itself stays approachable.
  */
 const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack }) => {
     const { t } = useTranslation();
-    const toast = useToast();
     const { userPersona, fetchUserPersona } = useUserStore();
     const [isLoading, setIsLoading] = useState(true);
     const [factCount, setFactCount] = useState(0);
     const [prefCount, setPrefCount] = useState(0);
     const [hygieneCount, setHygieneCount] = useState(0);
-    const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
 
     const { total: notInterestedTotal } = useNotInterestedData();
 
-    const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
     const factMutationVersion = useFloatingChatFactMutationVersion();
-    // `feedNeedsRefresh` can stay true indefinitely, and this screen stays
-    // mounted behind whatever is pushed on top of it — `usePulse` gates the
-    // loop on focus + foreground so it doesn't pulse forever off-screen, and
-    // parks at 0.3 (not 0) while pending so the affordance stays visible on a
-    // blurred screen.
-    const glowAnim = usePulse(feedNeedsRefresh);
 
     const lastCountsRefreshRef = useRef(0);
 
@@ -120,39 +105,6 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
         }
     }, [factMutationVersion, refreshCounts]);
 
-    const handleRefreshSuggestions = useCallback(async () => {
-        if (isRefreshingSuggestions) return;
-        const personaId = userPersona?._id;
-        if (!personaId) return;
-        setIsRefreshingSuggestions(true);
-        useForYouStore.getState().setFeedNeedsRefresh(false);
-        try {
-            await useForYouStore.getState().pruneOrphanedData();
-            await AppScheduler.trigger('feed-sync');
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="success" variant="solid">
-                        <ToastTitle>{t('configPanel.refreshSuggestionsSuccessTitle')}</ToastTitle>
-                        <ToastDescription>{t('configPanel.refreshSuggestionsSuccessDescription')}</ToastDescription>
-                    </Toast>
-                ),
-            });
-        } catch {
-            toast.show({
-                placement: 'top',
-                render: () => (
-                    <Toast action="error" variant="solid">
-                        <ToastTitle>{t('configPanel.refreshSuggestionsFailedTitle')}</ToastTitle>
-                        <ToastDescription>{t('configPanel.refreshSuggestionsFailedDescription')}</ToastDescription>
-                    </Toast>
-                ),
-            });
-        } finally {
-            setIsRefreshingSuggestions(false);
-        }
-    }, [userPersona, isRefreshingSuggestions, toast, t]);
-
     const isBlocked = userPersona?.blockedByLlm ?? false;
 
     const factsSubtitle = factCount > 0
@@ -190,55 +142,6 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                     scrollEventThrottle={16}
                 >
                     {isBlocked && <BlockedBanner reason={userPersona?.blockedByLlmReason} />}
-
-                    <View style={{ marginHorizontal: 16, marginTop: 12, marginBottom: feedNeedsRefresh && !isRefreshingSuggestions ? 6 : 12, position: 'relative' }}>
-                        {feedNeedsRefresh && !isRefreshingSuggestions && (
-                            <Animated.View
-                                pointerEvents="none"
-                                style={{
-                                    position: 'absolute',
-                                    top: -3,
-                                    left: -3,
-                                    right: -3,
-                                    bottom: -3,
-                                    borderRadius: 12,
-                                    borderWidth: 2,
-                                    borderColor: '#60a5fa',
-                                    opacity: glowAnim,
-                                }}
-                            />
-                        )}
-                        <Button
-                            testID="advanced-hub-refresh-suggestions"
-                            variant="outline"
-                            action="primary"
-                            size="sm"
-                            onPress={handleRefreshSuggestions}
-                            disabled={isRefreshingSuggestions}
-                        >
-                            {isRefreshingSuggestions ? (
-                                <HStack space="sm" className="items-center">
-                                    <Spinner size="small" />
-                                    <ButtonText>{t('configPanel.refreshingSuggestions')}</ButtonText>
-                                </HStack>
-                            ) : (
-                                <HStack space="sm" className="items-center">
-                                    <MaterialIcons name="refresh" size={16} color="#60a5fa" />
-                                    <ButtonText>{t('configPanel.refreshSuggestions')}</ButtonText>
-                                </HStack>
-                            )}
-                        </Button>
-                    </View>
-                    {feedNeedsRefresh && !isRefreshingSuggestions && (
-                        <Box testID="advanced-hub-refresh-hint" className="mx-4 mb-3 px-3 py-2 bg-blue-950/60 border border-blue-800 rounded-lg">
-                            <HStack space="xs" className="items-start">
-                                <MaterialIcons name="auto-awesome" size={14} color="#93c5fd" style={{ marginTop: 1 }} />
-                                <Text size="xs" className="text-blue-300 flex-1">
-                                    {t('configPanel.personaUpdatedRefreshHint')}
-                                </Text>
-                            </HStack>
-                        </Box>
-                    )}
 
                     {/* Hub rows — the same eight destinations, now under four
                         labels so the list reads as groups rather than a wall. */}
