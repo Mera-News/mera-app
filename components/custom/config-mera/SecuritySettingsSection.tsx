@@ -187,6 +187,8 @@ const SecuritySettingsSection: React.FC = () => {
                     <Pressable
                         testID="settings-row-change-pin"
                         accessibilityRole="button"
+                        // Explicit, or the chevron's icon-font glyph leaks into it.
+                        accessibilityLabel={t('security.changePin')}
                         className="flex-row items-center justify-between py-3 px-4"
                         onPress={() => {
                             changePinStartRef.current = Date.now();

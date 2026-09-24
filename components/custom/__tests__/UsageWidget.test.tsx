@@ -11,7 +11,8 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
     return { jsxDEV: R.jsxDEV, Fragment: R.Fragment };
 });
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k, i18n: { language: 'en' } }) }));
-jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
+// Icons render their real private-use glyph, so a label that leaks one fails.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('@/components/custom/GlassSurface', () => {
     const { View } = require('react-native');
     return { __esModule: true, GlassPanel: (p: any) => <View {...p} /> };
@@ -23,6 +24,7 @@ jest.mock('@/components/ui/text', () => { const { Text } = require('react-native
 jest.mock('@/components/ui/pressable', () => { const { Pressable } = require('react-native'); return { Pressable }; });
 
 import UsageWidget from '../UsageWidget';
+import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 it('groups the used and limit figures', () => {
     const r = render(<UsageWidget used={2330} limit={10000} usedLabel="analysed" />);
@@ -47,4 +49,28 @@ it('keeps the figure on one full-width line, above the plan row (C-PRO)', () => 
         .map((n: any) => n.props.children)
         .filter((c: string, i: number, all: string[]) => all.indexOf(c) === i);
     expect(order).toEqual(['analysed', 'Professional Plan', 'Manage plan']);
+});
+
+// Captured: Settings read the Manage plan button as "<glyph>, Manage plan".
+describe('UsageWidget accessibility', () => {
+    it('labels its buttons explicitly, so no icon glyph reaches VoiceOver', () => {
+        const r = render(
+            <UsageWidget
+                used={10}
+                limit={250}
+                usedLabel="Articles analysed"
+                onInfoPress={() => {}}
+                onUpgrade={() => {}}
+                upgradeLabel="Manage plan"
+                upgradeIcon="credit-card"
+                planLabel="Starter"
+            />,
+        );
+        expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+        expect(r.getByTestId('usage-widget-upgrade').props.accessibilityLabel).toBe('Manage plan');
+        expect(r.getByTestId('usage-widget-upgrade').props.accessibilityRole).toBe('button');
+        // The info button says what it explains: the figure's own label.
+        expect(r.getByTestId('usage-widget-info').props.accessibilityLabel).toBe('Articles analysed');
+        expect(r.getByTestId('usage-widget-info').props.accessibilityRole).toBe('button');
+    });
 });

@@ -63,7 +63,8 @@ jest.mock('@/components/ui/toast', () => ({
     ToastTitle: (p: any) => { const { Text } = require('react-native'); return <Text {...p} />; },
     ToastDescription: (p: any) => { const { Text } = require('react-native'); return <Text {...p} />; },
 }));
-jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
+// Icons render a real private-use glyph, so a label that leaks one fails.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 // --- PIN screens → stubs that expose their callbacks -----------------------
 jest.mock('@/components/custom/auth/PinSetupScreen', () => {
@@ -182,5 +183,15 @@ describe('SecuritySettingsSection — every flow can be left', () => {
         fireEvent.press(getByTestId('pin-verify-cancel'));
         expect(queryByTestId('pin-lock-screen')).toBeNull();
         expect(mockSetLockEnabled).not.toHaveBeenCalled();
+    });
+});
+
+describe('SecuritySettingsSection accessibility', () => {
+    it('reads no icon glyph, Change PIN included', () => {
+        mockLockEnabled = true;
+        const { privateUseLabelLeaks } = require('@/lib/__test-helpers__/icon-glyph-a11y');
+        const r = render(<SecuritySettingsSection />);
+        expect(r.getByTestId('settings-row-change-pin').props.accessibilityLabel).toBe('security.changePin');
+        expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
     });
 });
