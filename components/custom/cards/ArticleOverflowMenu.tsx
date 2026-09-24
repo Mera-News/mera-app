@@ -27,6 +27,9 @@ export const SHEET_SLIDE_MS = 220;
 export const SHEET_ENTER_MS = 250;
 /** Its slide back down (ease-in). The Modal stays shown until it ends. */
 export const SHEET_EXIT_MS = 250;
+/** If the Modal never reports `onShow`, rise anyway this long after the sheet
+ *  has laid out. A safety net: a sheet that never appears is the worst case. */
+export const SHEET_PRESENT_FALLBACK_MS = 150;
 /** Reduce Motion: a short fade, no slide, both ways. */
 const SHEET_FADE_MS = 150;
 const SCRIM = 'rgba(0,0,0,0.78)';
@@ -214,23 +217,59 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
     // below the screen edge. The Modal stays SHOWN until the slide-down ends,
     // so native UI an item presents after the dismissal (a browser, the
     // share sheet, the feedback form) is never presented over a leaving sheet.
+    //
+    // The rise waits until the sheet can be SEEN: the Modal has presented
+    // (`onShow`, or a short fallback) and the sheet has laid out. Started any
+    // earlier, it ran behind a Modal that was not on screen yet, and the reader
+    // saw a fully dark scrim and a sheet already most of the way up. It starts
+    // from a FIXED off-screen offset (the window height): the measured height
+    // is 0 until onLayout, and switching to it mid-slide made the sheet jump.
     const enter = useRef(new Animated.Value(0)).current;
     const [modalShown, setModalShown] = useState(visible);
-    const [sheetHeight, setSheetHeight] = useState(0);
+    const [presented, setPresented] = useState(false);
+    const [laidOut, setLaidOut] = useState(false);
     const onExitedRef = useRef(onExited);
     onExitedRef.current = onExited;
+    const canRise = presented && laidOut;
+    // Whether this opening ever started to rise. A close before that has
+    // nothing on screen to slide down (the sheet is still transparent).
+    const rose = useRef(false);
+    useEffect(() => {
+        if (!visible || presented || !laidOut) return;
+        const id = setTimeout(() => setPresented(true), SHEET_PRESENT_FALLBACK_MS);
+        return () => clearTimeout(id);
+    }, [visible, presented, laidOut]);
+    // Rise: once shown AND visible to the reader.
     useLayoutEffect(() => {
-        if (visible) {
-            setModalShown(true);
-            const anim = Animated.timing(enter, {
-                toValue: 1,
-                duration: reduceMotion ? SHEET_FADE_MS : SHEET_ENTER_MS,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            });
-            anim.start();
-            return () => anim.stop();
+        if (!visible) return;
+        setModalShown(true);
+        if (!canRise) return;
+        rose.current = true;
+        const anim = Animated.timing(enter, {
+            toValue: 1,
+            duration: reduceMotion ? SHEET_FADE_MS : SHEET_ENTER_MS,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+        });
+        anim.start();
+        return () => anim.stop();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visible, canRise]);
+    // Fall: only when `visible` itself turns false (never re-run by the
+    // presented/laid-out reset that ends the fall).
+    useLayoutEffect(() => {
+        if (visible) return;
+        const finish = () => {
+            setModalShown(false);
+            setPresented(false);
+            setLaidOut(false);
+            onExitedRef.current?.();
+        };
+        if (!rose.current) {
+            finish();
+            return;
         }
+        rose.current = false;
         const anim = Animated.timing(enter, {
             toValue: 0,
             duration: reduceMotion ? SHEET_FADE_MS : SHEET_EXIT_MS,
@@ -238,21 +277,20 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
             useNativeDriver: true,
         });
         anim.start(({ finished }) => {
-            if (!finished) return;
-            setModalShown(false);
-            onExitedRef.current?.();
+            if (finished) finish();
         });
         return () => anim.stop();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [visible]);
     const sheetMotion = reduceMotion
-        ? { opacity: enter }
+        ? { opacity: laidOut ? enter : 0 }
         : {
+              opacity: laidOut ? 1 : 0,
               transform: [
                   {
                       translateY: enter.interpolate({
                           inputRange: [0, 1],
-                          outputRange: [sheetHeight || windowHeight, 0],
+                          outputRange: [windowHeight, 0],
                       }),
                   },
               ],
@@ -320,6 +358,7 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
             onDismiss={onDismiss}
             transparent
             animationType="none"
+            onShow={() => setPresented(true)}
             onRequestClose={onBack ?? onClose}
             statusBarTranslucent
         >
@@ -337,7 +376,7 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                 <Animated.View
                     testID="article-menu-sheet"
                     style={[{ width: '100%' }, sheetMotion]}
-                    onLayout={(e) => setSheetHeight(e.nativeEvent.layout.height)}
+                    onLayout={() => setLaidOut(true)}
                 >
                 <Pressable onPress={() => {}} style={{ width: '100%' }} accessible={false}>
                     <Box

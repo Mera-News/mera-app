@@ -115,6 +115,10 @@ const mockSetPref = jest.fn(async (..._a: any[]) => ({ applied: true }));
 jest.mock('@/lib/database/services/publication-pref-ui-actions', () => ({
     setSourcePrefFromUi: (...a: any[]) => mockSetPref(...a),
 }));
+const mockShowUndoToast = jest.fn();
+jest.mock('@/lib/toast-manager', () => ({
+    toastManager: { showUndoToast: (...a: any[]) => mockShowUndoToast(...a) },
+}));
 const mockShowFeedback = jest.fn();
 jest.mock('@/lib/feedback', () => ({ showFeedback: (...a: any[]) => mockShowFeedback(...a) }));
 let mockSentry = true;
@@ -678,7 +682,19 @@ describe('useArticleMenu running items', () => {
         await flushAsync();
         await flushAsync();
         expect(mockSetPref).toHaveBeenCalledWith({ kind: 'publication', publicationName: 'NOS' }, 'deprioritised');
-        expect(mockToastShow).toHaveBeenCalledTimes(1);
+        // The app's one undo toast (toast-manager), not a hand-built one.
+        expect(mockToastShow).not.toHaveBeenCalled();
+        expect(mockShowUndoToast).toHaveBeenCalledTimes(1);
+        const opts = mockShowUndoToast.mock.calls[0][0];
+        expect(opts).toEqual(
+            expect.objectContaining({
+                title: 'articleMenu.fewerFromDone:NOS',
+                undoLabel: 'articleMenu.undo',
+                undoTestID: 'article-menu-undo',
+            }),
+        );
+        await opts.onUndo();
+        expect(mockSetPref).toHaveBeenLastCalledWith({ kind: 'publication', publicationName: 'NOS' }, 'none');
     });
 });
 
@@ -874,6 +890,14 @@ describe('the sheet slides up and down', () => {
     // reports done, and the item runs only after the dismissal.
     it('keeps the Modal shown through the slide-down, then hides it; the item runs only after', () => {
         const r = openMenu(<Host />);
+        // Presented and laid out, as on a device: the sheet has risen.
+        act(() => {
+            mockModal.onShow?.();
+            r.getByTestId('article-menu-sheet').props.onLayout({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height: 300 } } });
+        });
+        act(() => {
+            jest.advanceTimersByTime(SHEET_ENTER_MS + 50);
+        });
         fireEvent.press(r.getByTestId('menu-open-source'));
         expect(mockModal.visible).toBe(true);
         expect(mockOpenOnSource).not.toHaveBeenCalled();
@@ -906,3 +930,73 @@ describe('the sheet slides up and down', () => {
         expect(t.some((x: any) => 'translateY' in x)).toBe(false);
     });
 });
+
+// Batch 15: the slide-up worked on 1 open in 3. On the bad ones the scrim was
+// dark in one frame and the sheet appeared most of the way up. Two causes:
+// the start offset came from the MEASURED height (0 until onLayout, then a
+// jump mid-slide), and the animation ran before the Modal's first frame was
+// presented. Now: a FIXED off-screen start (the window height), the sheet
+// transparent until laid out, and the rise starts only once the Modal is shown
+// (onShow, with a short fallback) AND the sheet is laid out.
+describe('the slide-up starts from off-screen, once the sheet can be seen', () => {
+    const { SHEET_ENTER_MS, SHEET_PRESENT_FALLBACK_MS } = require('../ArticleOverflowMenu');
+    const RN = jest.requireActual('react-native');
+    const layout = (r: any, height = 300) =>
+        act(() => {
+            r.getByTestId('article-menu-sheet').props.onLayout({ nativeEvent: { layout: { x: 0, y: 0, width: 390, height } } });
+        });
+    const enterStarts = (spy: jest.SpyInstance) =>
+        spy.mock.calls.filter(([, cfg]: any) => cfg?.toValue === 1 && cfg?.duration === SHEET_ENTER_MS).length;
+    afterEach(() => jest.restoreAllMocks());
+
+    it('waits for the Modal to be shown and the sheet laid out before rising', () => {
+        const spy = jest.spyOn(RN.Animated, 'timing');
+        const r = openMenu(<Host />);
+        expect(enterStarts(spy)).toBe(0);
+        act(() => {
+            mockModal.onShow?.();
+        });
+        expect(enterStarts(spy)).toBe(0);
+        layout(r);
+        expect(enterStarts(spy)).toBe(1);
+    });
+
+    it('starts anyway after a short fallback if the Modal never reports shown', () => {
+        const spy = jest.spyOn(RN.Animated, 'timing');
+        const r = openMenu(<Host />);
+        layout(r);
+        expect(enterStarts(spy)).toBe(0);
+        act(() => {
+            jest.advanceTimersByTime(SHEET_PRESENT_FALLBACK_MS + 10);
+        });
+        expect(enterStarts(spy)).toBe(1);
+    });
+
+    it('keeps the sheet transparent until it is laid out', () => {
+        const r = openMenu(<Host />);
+        expect(RN.StyleSheet.flatten(r.getByTestId('article-menu-sheet').props.style).opacity).toBe(0);
+        layout(r);
+        expect(RN.StyleSheet.flatten(r.getByTestId('article-menu-sheet').props.style).opacity).not.toBe(0);
+    });
+
+    it('starts from the window height, never the measured sheet height', () => {
+        const spy = jest.spyOn(RN.Animated.Value.prototype, 'interpolate');
+        const r = openMenu(<Host />);
+        layout(r, 300);
+        const { height, width } = RN.Dimensions.get('window');
+        // The vertical ones only (the level slide interpolates the WIDTH).
+        const starts = spy.mock.calls
+            .map(([cfg]: any) => cfg.outputRange)
+            .filter((o: any[]) => o.length === 2 && o[1] === 0 && o[0] > 0 && o[0] !== width);
+        expect(starts.length).toBeGreaterThan(0);
+        expect(starts.every((o: any[]) => o[0] === height)).toBe(true);
+    });
+});
+
+it('a close before the sheet has risen hides it at once: nothing is on screen to slide down', () => {
+    const r = openMenu(<Host />);
+    fireEvent.press(r.getByTestId('article-menu-cancel'));
+    expect(mockModal.visible).toBe(false);
+    expect(r.queryByTestId('article-menu-sheet')).toBeNull();
+});
+

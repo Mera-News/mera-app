@@ -313,30 +313,20 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             const { setSourcePrefFromUi } = require('@/lib/database/services/publication-pref-ui-actions') as typeof import('@/lib/database/services/publication-pref-ui-actions');
             const res = await setSourcePrefFromUi({ kind: 'publication', publicationName }, 'deprioritised');
             if (!res.applied) return false;
-            toast.show({
-                placement: 'top',
-                duration: 6000,
-                render: ({ id }: { id: string }) => (
-                    <Toast nativeID={id} action="info" variant="solid">
-                        <ToastTitle>{t('articleMenu.fewerFromDone', { source: publicationName })}</ToastTitle>
-                        <Pressable
-                            testID="article-menu-undo"
-                            accessibilityRole="button"
-                            accessibilityLabel={t('articleMenu.undo')}
-                            hitSlop={12}
-                            onPress={() => {
-                                toast.close(id);
-                                void setSourcePrefFromUi({ kind: 'publication', publicationName }, 'none');
-                            }}
-                        >
-                            <Text className="font-semibold text-white">{t('articleMenu.undo')}</Text>
-                        </Pressable>
-                    </Toast>
-                ),
+            // The app's one undo toast. Required at call time, like the writer.
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { toastManager } = require('@/lib/toast-manager') as typeof import('@/lib/toast-manager');
+            toastManager.showUndoToast({
+                title: t('articleMenu.fewerFromDone', { source: publicationName }),
+                undoLabel: t('articleMenu.undo'),
+                undoTestID: 'article-menu-undo',
+                onUndo: async () => {
+                    await setSourcePrefFromUi({ kind: 'publication', publicationName }, 'none');
+                },
             });
             return true;
         },
-        [toast, t],
+        [t],
     );
 
     const items = useMemo<ArticleMenuItem[]>(() => {
