@@ -277,13 +277,16 @@ function placeFromPayload(payload: unknown): Place | null {
  * facts; any other entry unchanged. A `replaces` on the combined entry goes
  * with the residence part, the only part that can replace a home.
  */
-function expandCombinedEntry(entry: Record<string, unknown>): Record<string, unknown>[] {
+function expandCombinedEntry(
+  entry: Record<string, unknown>,
+  known: readonly Place[],
+): Record<string, unknown>[] {
   const statement = typeof entry.statement === 'string' ? entry.statement : '';
   const attribute = typeof entry.questionnaire_attribute === 'string' ? entry.questionnaire_attribute : '';
   const looksCombined =
     attribute.trim().toLowerCase() === COMBINED_ORIGIN_KEY
     || /\b(?:expat|migrant|immigrant|originally|from)\b[^,]*\b(?:living|based|settled|residing)\s+in\b/i.test(statement);
-  const parts = looksCombined ? threeFactsOf(statement) : null;
+  const parts = looksCombined ? threeFactsOf(statement, known) : null;
   if (!parts) return [entry];
   const out: Record<string, unknown>[] = [
     { statement: parts.origin, questionnaire_attribute: ORIGIN_KEY },
@@ -923,7 +926,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             ? (args.extracted_user_information as Record<string, unknown>[])
             : []
         )
-          .flatMap(expandCombinedEntry)
+          .flatMap((e) => expandCombinedEntry(e, placeCandidates))
           .map(withExactKey);
         // THE LIST THE APP ACTUALLY READS. `handleSaveExtractedFacts` builds
         // the cards from `extracted_user_information`, not from `proposals`,
@@ -1064,7 +1067,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             ? state.persona.facts.find((f) => f.id === e.replaces)
             : undefined;
           if (!isHomeEntry(e) || !target) continue;
-          const newCountry = countryOf(String(e.statement));
+          const newCountry = countryOf(String(e.statement), placeCandidates);
           const oldCountry = countryOf(target.statement);
           if (!newCountry || !oldCountry || sameCountry(newCountry, oldCountry)) continue;
           const expatFact = state.persona.facts.find(

@@ -50,6 +50,15 @@ describe('helpers', () => {
     expect(countryOf('Lives in Berlin, State of Berlin, Germany, EU')).toBe('Germany');
     expect(countryOf('Lives in Berlin')).toBeNull();
   });
+
+  // Staging run 20260924-140712-ux1-expat: an unresolved "Nieuw-West,
+  // Amsterdam" gave "Expat in Amsterdam". A country is read only from a
+  // resolved chain (it ends in a bloc) or from a place the lookup returned.
+  it('never reads a city as a country', () => {
+    expect(countryOf('Lives in Nieuw-West, Amsterdam')).toBeNull();
+    expect(countryOf('Lives in Nieuw-West, Amsterdam', [{ locality: 'Amsterdam', countryName: 'The Netherlands' }]))
+      .toBe('The Netherlands');
+  });
 });
 
 describe('a combined statement from the model becomes three facts', () => {
@@ -81,6 +90,20 @@ describe('a combined statement from the model becomes three facts', () => {
     ]);
     await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: 'expat from india in amsterdam', deps: h.deps });
     expect(h.saves.flat().map((e) => e.questionnaire_attribute)).toEqual([ORIGIN_KEY, EXPAT_KEY, CANONICAL_LOCATION_KEY]);
+  });
+});
+
+describe('an unresolved place gets no expat status', () => {
+  it('splits into origin and residence only when no country is known', async () => {
+    const h = harness([
+      res({ content: 'India.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'I am an expat from India living in Nieuw-West, Amsterdam.' },
+      ] })] }),
+      res({ content: 'Here they are.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: 'expat from India in Nieuw-West Amsterdam', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual(['From India', 'Lives in Nieuw-West, Amsterdam']);
   });
 });
 

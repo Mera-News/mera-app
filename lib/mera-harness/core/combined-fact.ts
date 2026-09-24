@@ -67,16 +67,31 @@ export function toOriginStatement(originHalf: string): string {
   return m ? `From ${m[1].trim()}` : (originHalf ?? '').trim();
 }
 
-/** The country rung of a place statement: the last rung that is not a bloc.
- *  Null when the statement carries no chain ("Lives in Berlin"). */
-export function countryOf(statement: string): string | null {
-  const rungs = (statement ?? '')
-    .replace(/^(?:lives|living|based|resides?)\s+in\s+/i, '')
+/**
+ * The country of a place statement, or null when it cannot be KNOWN.
+ *
+ * Read from a RESOLVED chain only: one that ends in a bloc ("..., Germany,
+ * EU"), which is how every looked-up place is written, so the rung before the
+ * bloc is the country. Or from a place the lookup actually returned whose
+ * locality appears in the statement. Never the last rung of an unresolved
+ * text: "Nieuw-West, Amsterdam" gave "Expat in Amsterdam" on staging.
+ */
+export function countryOf(
+  statement: string,
+  known: readonly { locality: string; countryName: string }[] = [],
+): string | null {
+  const text = (statement ?? '').replace(/^(?:lives|living|based|resides?)\s+in\s+/i, '');
+  const rungs = text
     .split(',')
     .map((r) => r.trim().replace(/\.$/, ''))
-    .filter(Boolean)
-    .filter((r) => !NOT_A_COUNTRY.has(r.toLowerCase()));
-  return rungs.length >= 2 ? rungs[rungs.length - 1] : null;
+    .filter(Boolean);
+  if (rungs.length >= 2 && NOT_A_COUNTRY.has(rungs[rungs.length - 1].toLowerCase())) {
+    const country = rungs[rungs.length - 2];
+    return NOT_A_COUNTRY.has(country.toLowerCase()) ? null : country;
+  }
+  const lower = text.toLowerCase();
+  const hit = known.find((p) => p.locality && lower.includes(p.locality.toLowerCase()));
+  return hit ? hit.countryName : null;
 }
 
 /** The country an origin statement names ("From Kerala, India" gives "India"). */
@@ -114,11 +129,12 @@ export function isExpatStatement(statement: string): boolean {
  */
 export function threeFactsOf(
   statement: string,
+  known: readonly { locality: string; countryName: string }[] = [],
 ): { origin: string; expat: string | null; residence: string } | null {
   const halves = splitCombinedFact(statement);
   if (!halves) return null;
   const origin = toOriginStatement(halves.origin);
-  const country = countryOf(halves.residence);
+  const country = countryOf(halves.residence, known);
   const expat = country && !sameCountry(country, originCountry(origin)) ? expatStatement(country) : null;
   return { origin, expat, residence: halves.residence };
 }
