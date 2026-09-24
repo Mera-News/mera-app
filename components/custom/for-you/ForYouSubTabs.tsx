@@ -1,3 +1,4 @@
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -51,9 +52,13 @@ const TABS: readonly TabDef[] = [
 ];
 
 /**
- * The For-You sub-tab pill row — `[Feed] [Stories ●n] [Saved] [History] [Fact checks]`.
- * Pill styling mirrors Explore's ScopeChipRow (accent border, accent-filled active
- * chip). The Stories pill carries a live badge with the total unseen tracked-story
+ * The For-You sub-tab pill row — `[Overview] [Stories ●n] [Saved] [Fact checks] [History]`.
+ * Pill styling is Explore's ScopeChipRow, copied token for token (owner: the
+ * orange outline, orange label and icon together were "too much"): inactive
+ * pills are a round `GlassPanel` with a white label, the active one a solid
+ * accent fill with a black label, and the icons stay because Explore keeps
+ * them. ScopeChipRow itself is not reusable (typed to places, add chip,
+ * long-press remove), so a change there has to be copied here by hand. The Stories pill carries a live badge with the total unseen tracked-story
  * count, subscribed here so it stays fresh without the parent re-rendering.
  *
  * FIVE pills now. The row was already a horizontal `ScrollView` (added when the
@@ -142,25 +147,9 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                     {TABS.map((tab) => {
                         const active = tab.key === activeSubTab;
                         const showBadge = tab.key === 'stories' && unseenTotal > 0;
-                        return (
-                            <Pressable
-                                key={tab.key}
-                                onPress={() => onSelect(tab.key)}
-                                // x is relative to the HStack, which IS the
-                                // scroll content — so it is directly usable as
-                                // a scroll offset.
-                                onLayout={(e) => {
-                                    const { x, width } = e.nativeEvent.layout;
-                                    pillLayouts.current[tab.key] = { x, width };
-                                }}
-                                accessibilityRole="tab"
-                                accessibilityState={{ selected: active }}
-                                accessibilityLabel={t(tab.labelKey as any)}
-                                testID={`dashboard-tab-${tab.key}`}
-                                className={`flex-row items-center rounded-full border px-4 py-2 ${
-                                    active ? 'bg-primary-400 border-primary-400' : 'border-primary-500 bg-transparent'
-                                }`}
-                            >
+                        const label = t(tab.labelKey as any);
+                        const inner = (
+                            <>
                                 <MaterialIcons
                                     name={tab.icon}
                                     size={16}
@@ -174,9 +163,9 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                                     // helping. See lib/typography/policy.ts.
                                     scaleTier="chrome"
                                     numberOfLines={1}
-                                    className={active ? 'text-black font-semibold' : 'text-primary-500 font-semibold'}
+                                    className={active ? 'text-black font-semibold' : 'text-white'}
                                 >
-                                    {t(tab.labelKey as any)}
+                                    {label}
                                 </Text>
                                 {showBadge && (
                                     <View
@@ -202,7 +191,45 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                                         </Text>
                                     </View>
                                 )}
-                            </Pressable>
+                            </>
+                        );
+                        const pressableProps = {
+                            onPress: () => onSelect(tab.key),
+                            accessibilityRole: 'tab' as const,
+                            accessibilityState: { selected: active },
+                            accessibilityLabel: label,
+                            testID: `dashboard-tab-${tab.key}`,
+                        };
+                        return (
+                            <View
+                                key={tab.key}
+                                // On the wrapper, the HStack's direct child: x is
+                                // relative to the HStack, which IS the scroll
+                                // content, so it is directly usable as an offset.
+                                onLayout={(e) => {
+                                    const { x, width } = e.nativeEvent.layout;
+                                    pillLayouts.current[tab.key] = { x, width };
+                                }}
+                            >
+                                {active ? (
+                                    // Explore's active chip: a solid accent fill,
+                                    // which IS the selection signal, never glassed.
+                                    <Pressable
+                                        {...pressableProps}
+                                        className="flex-row items-center rounded-full border px-4 py-2 bg-primary-400 border-primary-400"
+                                    >
+                                        {inner}
+                                    </Pressable>
+                                ) : (
+                                    // Explore's inactive chip: a round translucent
+                                    // plate with a hairline edge, white label.
+                                    <GlassPanel radius={999}>
+                                        <Pressable {...pressableProps} className="flex-row items-center px-4 py-2">
+                                            {inner}
+                                        </Pressable>
+                                    </GlassPanel>
+                                )}
+                            </View>
                         );
                     })}
                 </HStack>

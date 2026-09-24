@@ -57,6 +57,16 @@ jest.mock('@/components/ui/text', () => {
     const { Text: RNText } = require('react-native');
     return { Text: RNText };
 });
+jest.mock('@/components/custom/GlassSurface', () => {
+    const { View } = require('react-native');
+    return {
+        GlassPanel: ({ children, radius }: any) => (
+            <View testID="glass-chip" radius={radius}>
+                {children}
+            </View>
+        ),
+    };
+});
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
     return { MaterialIcons: (props: any) => <View {...props} /> };
@@ -212,3 +222,44 @@ describe('ForYouSubTabs: full-bleed row', () => {
     });
 });
 
+// Owner: "make the top pills the same style as the pills in the Explore tab".
+// The tokens below are Explore's ScopeChipRow, copied: its component is typed
+// to places and carries an add chip and a long-press remove, so it is not
+// reusable here. Class names cannot show colour (the device capture does);
+// what these pin is that the tokens are Explore's and the orange outline and
+// orange label are gone.
+describe('ForYouSubTabs: Explore pill style', () => {
+    const ACCENT = 'rgb(231, 138, 83)';
+    const glassParent = (node: any) => {
+        for (let p = node.parent; p; p = p.parent) if (p.props?.testID === 'glass-chip') return p;
+        return null;
+    };
+
+    it('draws an inactive pill as a round glass chip with a white label and no orange outline', () => {
+        const { getByTestId, getByText } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
+        const saved = getByTestId('dashboard-tab-saved');
+        const glass = glassParent(saved);
+        expect(glass).not.toBeNull();
+        expect(glass.props.radius).toBe(999);
+        expect(saved.props.className ?? '').not.toMatch(/border-primary/);
+        const label = getByText('forYou.subTabSaved');
+        expect(label.props.className).toContain('text-white');
+        expect(label.props.className).not.toContain('text-primary');
+    });
+
+    it('fills the active pill with the accent and a black label, outside the glass', () => {
+        const { getByTestId, getByText } = render(<ForYouSubTabs activeSubTab="saved" onSelect={jest.fn()} />);
+        const saved = getByTestId('dashboard-tab-saved');
+        expect(glassParent(saved)).toBeNull();
+        expect(saved.props.className).toContain('bg-primary-400');
+        expect(getByText('forYou.subTabSaved').props.className).toContain('text-black');
+    });
+
+    it('keeps the icons, as Explore does: accent when inactive, black when active', () => {
+        const { getByTestId } = render(<ForYouSubTabs activeSubTab="saved" onSelect={jest.fn()} />);
+        const icon = (key: string) =>
+            getByTestId(`dashboard-tab-${key}`).findAll((n: any) => n.props?.name !== undefined && n.props?.size === 16)[0];
+        expect(icon('feed').props.color).toBe(ACCENT);
+        expect(icon('saved').props.color).toBe('#000000');
+    });
+});
