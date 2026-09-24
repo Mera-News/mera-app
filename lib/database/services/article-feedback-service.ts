@@ -13,8 +13,9 @@
 // `aggregateCandidates`) to lower a topic weight, with nothing shown to the
 // user. That aggregation is deliberately retired here.
 //
-// The row is still written (it drives the inline feedback surface, the
-// un-vote, and the impression bookkeeping), but a row whose `context_json`
+// The row is still written (it drives the filled thumb and the ••• menu's
+// "Remove like" / "Remove not for me", the un-vote, and the impression
+// bookkeeping), but a row whose `context_json`
 // carries no non-empty `treePath` is REAPED AT WRITE: `processed_at` is
 // stamped immediately, so the existing `processed_at IS NULL` predicate in
 // `getUnprocessedFeedback` / `countUnprocessedFeedback` excludes it by
