@@ -106,6 +106,10 @@ jest.mock('@/components/custom/UsageWidget', () => {
         ),
     };
 });
+jest.mock('@/components/custom/notifications/NotificationBellButton', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="bell" /> };
+});
 jest.mock('@/components/custom/for-you/TabExplainerButton', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: ({ tab, testID }: any) => <View testID={testID} accessibilityLabel={`explainer:${tab}`} /> };
@@ -401,6 +405,20 @@ describe('ProfileScreen', () => {
         };
         expect(inGroup('profile-explainer-open')).toBe(true);
         expect(inGroup('profile-advanced-open')).toBe(false);
+    });
+
+    it('puts the shared bell right of profile-advanced-open, in one actions cluster with the shared gap', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { StyleSheet } = require('react-native');
+        const { HEADER_ACTIONS_GAP } = require('@/components/custom/for-you/HeaderIconButton');
+        const r = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(r.getByTestId('profile-advanced-open')).toBeTruthy());
+        const ids = r.UNSAFE_root
+            .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+            .map((n: any) => n.props.testID as string);
+        expect(ids.indexOf('bell')).toBe(ids.indexOf('profile-advanced-open') + 1);
+        const cluster = StyleSheet.flatten(r.getByTestId('profile-header-actions').props.style);
+        expect(cluster.gap).toBe(HEADER_ACTIONS_GAP);
     });
 
     it('pressing the header Advanced button navigates to the Advanced route', async () => {

@@ -2,6 +2,8 @@ import BlockedBanner from '@/components/custom/BlockedBanner';
 import FactsList from '@/components/custom/facts/FactsList';
 import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
+import { HEADER_ACTIONS_GAP } from '@/components/custom/for-you/HeaderIconButton';
+import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -178,24 +180,33 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                         (M10); the guides have one home, Settings > Help. */}
                     <TabExplainerButton tab="profile" testID="profile-explainer-open" />
                 </HStack>
-                {/* Advanced — icon-only, opens the power-user hub. Was a
-                    full-width row at the bottom of the page; moved here so it
-                    doesn't compete for scroll space with facts. */}
-                <Pressable
-                    testID="profile-advanced-open"
-                    onPress={() => router.push('/logged-in/profile-advanced')}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('profile.advanced', { defaultValue: 'Advanced' })}
-                    style={{
-                        width: HEADER_ICON_TOUCH_TARGET,
-                        height: HEADER_ICON_TOUCH_TARGET,
-                        margin: HEADER_ICON_TOUCH_MARGIN,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
+                {/* `[Advanced] [bell]` (owner), spaced like every tab's right
+                    cluster so the 44pt frames do not overlap. */}
+                <HStack
+                    className="items-center"
+                    style={{ gap: HEADER_ACTIONS_GAP }}
+                    testID="profile-header-actions"
                 >
-                    <MaterialIcons name="tune" size={HEADER_ICON_GLYPH} color="rgb(212, 212, 212)" />
-                </Pressable>
+                    {/* Advanced — icon-only, opens the power-user hub. Was a
+                        full-width row at the bottom of the page; moved here so it
+                        doesn't compete for scroll space with facts. */}
+                    <Pressable
+                        testID="profile-advanced-open"
+                        onPress={() => router.push('/logged-in/profile-advanced')}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('profile.advanced', { defaultValue: 'Advanced' })}
+                        style={{
+                            width: HEADER_ICON_TOUCH_TARGET,
+                            height: HEADER_ICON_TOUCH_TARGET,
+                            margin: HEADER_ICON_TOUCH_MARGIN,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }}
+                    >
+                        <MaterialIcons name="tune" size={HEADER_ICON_GLYPH} color="rgb(212, 212, 212)" />
+                    </Pressable>
+                    <NotificationBellButton />
+                </HStack>
             </HStack>
 
             <ScrollView
