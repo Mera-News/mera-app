@@ -223,6 +223,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           <AskChoiceCard
             question={item.question}
             options={item.options}
+            saveAll={item.saveAll}
             answered={item.answered}
             // The thread's existing send, i.e. ChatSessionView.handleSend —
             // the one funnel every gate already sits on.

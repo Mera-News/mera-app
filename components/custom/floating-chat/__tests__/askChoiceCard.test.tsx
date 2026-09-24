@@ -78,3 +78,34 @@ describe('answered chips', () => {
     expect(chip.props.accessibilityLabel).toContain('askChoice.answeredA11y');
   });
 });
+
+describe('Save all', () => {
+  const FACTS = ['You are an expat', 'You are from India', 'You live in New West, Amsterdam'];
+  const JOINED = 'You are an expat. You are from India. You live in New West, Amsterdam.';
+
+  it('sends the joined facts through the thread send', () => {
+    const onSend = jest.fn();
+    const { getByTestId, getByText } = render(
+      <AskChoiceCard question={null} options={FACTS} saveAll={JOINED} answered={false} onSend={onSend} />,
+    );
+    expect(getByText('askChoice.saveAll')).toBeTruthy();
+    fireEvent.press(getByTestId('ask-choice-save-all'));
+    expect(onSend).toHaveBeenCalledWith(JOINED);
+  });
+
+  it('is spent like the others', () => {
+    const onSend = jest.fn();
+    const { getByTestId } = render(
+      <AskChoiceCard question={null} options={FACTS} saveAll={JOINED} answered onSend={onSend} />,
+    );
+    fireEvent.press(getByTestId('ask-choice-save-all'));
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it('is absent on a question between readings', () => {
+    const { queryByTestId } = render(
+      <AskChoiceCard question={null} options={OPTIONS} saveAll={null} answered={false} onSend={jest.fn()} />,
+    );
+    expect(queryByTestId('ask-choice-save-all')).toBeNull();
+  });
+});

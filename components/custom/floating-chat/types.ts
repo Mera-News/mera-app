@@ -283,6 +283,10 @@ export type ChatThreadItem =
        *  model often writes the question as prose AND calls the tool. */
       question: string | null;
       options: string[];
+      /** The exact text a "Save all" tap sends when the options are distinct
+       *  facts (owner rule ux1), covering every option; null on a question
+       *  between readings of one thing. */
+      saveAll: string | null;
       /** A later user message exists, so the offer is spent. Rendered inert
        *  rather than removed, so the thread keeps what was offered. */
       answered: boolean;

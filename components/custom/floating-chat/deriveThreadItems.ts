@@ -24,6 +24,7 @@ import {
 } from '@/lib/chat-tools/fact-choice-resolution';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
+import { isFactPickChoice, joinFactPick } from '@/lib/mera-harness/core/fact-pick';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
 import type {
   AgentStep,
@@ -984,7 +985,11 @@ function emitMessage(
       // see whether a later user message exists.
       if (tc.name === 'ask_choice') {
         const askInput = asRecord(tc.input) ?? {};
-        const options = toStringArray(askInput.options).slice(0, 3);
+        const allOptions = toStringArray(askInput.options);
+        // Distinct facts are never a pick-one: their chip list carries Save
+        // all, which always covers EVERY option, even past the chips shown.
+        const factPick = isFactPickChoice(allOptions);
+        const options = allOptions.slice(0, factPick ? 4 : 3);
         if (options.length >= 2) {
           const question =
             typeof askInput.question === 'string' ? askInput.question.trim() : '';
@@ -997,6 +1002,7 @@ function emitMessage(
             // chips on screen with no question above them.
             question: !question || bubbleCarries(message.content, question) ? null : question,
             options,
+            saveAll: factPick ? joinFactPick(allOptions) : null,
             answered: answeredAsk,
           });
         }
