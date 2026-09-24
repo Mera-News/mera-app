@@ -149,8 +149,8 @@ describe('ArticleMetaRow centred publication (owner spec)', () => {
         <ArticleMetaRow variant={variant} {...base} publicationName={LONG} />,
       );
       layout(getByTestId('meta-row'), 335);
-      layout(getByTestId('meta-left').children[0], 80);
       layout(getByTestId('meta-age-slot'), 60);
+      layout(getByTestId('meta-right').children[0], 80);
       // min(0.58 * 335 = 194.3, 335 - 2 * 80 - 16 = 159)
       expect(flat(getByTestId('meta-publication-slot').props.style).maxWidth).toBe(159);
       const name = getByText(/National Cyber Security Centre/);
@@ -162,13 +162,13 @@ describe('ArticleMetaRow centred publication (owner spec)', () => {
     },
   );
 
-  it('puts flag and language left (no translate glyph), time right', () => {
-    const { getByTestId } = render(<ArticleMetaRow variant="card" {...base} />);
-    const left = getByTestId('meta-left');
+  it.each(['card', 'screen'] as const)('%s: time left, flag and language right (no translate glyph)', (variant) => {
+    const { getByTestId } = render(<ArticleMetaRow variant={variant} {...base} />);
+    const right = getByTestId('meta-right');
     const within = (root: any, id: string) => root.findAll((n: any) => n.props?.testID === id).length > 0;
-    expect(within(left, 'meta-language-slot')).toBe(true);
-    expect(left.findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
-    expect(within(getByTestId('meta-right'), 'meta-age-slot')).toBe(true);
+    expect(within(getByTestId('meta-left'), 'meta-age-slot')).toBe(true);
+    expect(within(right, 'meta-language-slot')).toBe(true);
+    expect(right.findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
   });
 
   it('draws no translate glyph even when translation failed (owner decision)', () => {
@@ -176,15 +176,15 @@ describe('ArticleMetaRow centred publication (owner spec)', () => {
     mockBlocked = 'blocked';
     const { getByTestId, queryByTestId } = render(<ArticleMetaRow variant="card" {...base} />);
     expect(queryByTestId('meta-translate-failed')).toBeNull();
-    expect(getByTestId('meta-left').findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
+    expect(getByTestId('meta-right').findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
     mockBlocked = null;
   });
 
-  it('keeps an empty right side on the Feed, so the name stays centred', () => {
+  it('keeps an empty LEFT side on the Feed (no time), so the name stays centred', () => {
     const { getByTestId, queryByTestId } = render(
       <ArticleMetaRow variant="card" {...base} showRecency={false} />,
     );
-    expect(flat(getByTestId('meta-right').props.style).flex).toBe(1);
+    expect(flat(getByTestId('meta-left').props.style).flex).toBe(1);
     expect(queryByTestId('meta-age-slot')).toBeNull();
   });
 
