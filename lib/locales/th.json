@@ -2698,7 +2698,8 @@
     "topics": "หัวข้อของคุณ"
   },
   "askChoice": {
-    "answeredA11y": "ตอบแล้ว"
+    "answeredA11y": "ตอบแล้ว",
+    "saveAll": "บันทึกทั้งหมด"
   },
   "streamingWords": {
     "w1": "กำลังคิด",

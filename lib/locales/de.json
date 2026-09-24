@@ -2699,7 +2699,8 @@
     "topics": "deine Themen"
   },
   "askChoice": {
-    "answeredA11y": "bereits beantwortet"
+    "answeredA11y": "bereits beantwortet",
+    "saveAll": "Alle speichern"
   },
   "streamingWords": {
     "w1": "Denken",

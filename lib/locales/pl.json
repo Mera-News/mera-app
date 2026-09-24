@@ -2737,7 +2737,8 @@
     "topics": "twoje tematy"
   },
   "askChoice": {
-    "answeredA11y": "już odpowiedziano"
+    "answeredA11y": "już odpowiedziano",
+    "saveAll": "Zapisz wszystko"
   },
   "streamingWords": {
     "w1": "Myślę",

@@ -2699,7 +2699,8 @@
     "topics": "你的主题"
   },
   "askChoice": {
-    "answeredA11y": "已回答"
+    "answeredA11y": "已回答",
+    "saveAll": "全部保存"
   },
   "streamingWords": {
     "w1": "思考中",

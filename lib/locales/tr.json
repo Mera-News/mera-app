@@ -2701,7 +2701,8 @@
     "topics": "konularını"
   },
   "askChoice": {
-    "answeredA11y": "zaten yanıtlandı"
+    "answeredA11y": "zaten yanıtlandı",
+    "saveAll": "Tümünü kaydet"
   },
   "streamingWords": {
     "w1": "Düşünüyorum",

@@ -2701,7 +2701,8 @@
     "topics": "आपके विषय"
   },
   "askChoice": {
-    "answeredA11y": "पहले ही उत्तर दिया गया"
+    "answeredA11y": "पहले ही उत्तर दिया गया",
+    "saveAll": "सभी सेव करें"
   },
   "streamingWords": {
     "w1": "सोच रहे हैं",

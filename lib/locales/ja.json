@@ -2698,7 +2698,8 @@
     "topics": "ご関心のトピック"
   },
   "askChoice": {
-    "answeredA11y": "回答済み"
+    "answeredA11y": "回答済み",
+    "saveAll": "すべて保存"
   },
   "streamingWords": {
     "w1": "考え中",

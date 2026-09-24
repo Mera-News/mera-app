@@ -2699,7 +2699,8 @@
     "topics": "chủ đề của bạn"
   },
   "askChoice": {
-    "answeredA11y": "đã trả lời"
+    "answeredA11y": "đã trả lời",
+    "saveAll": "Lưu tất cả"
   },
   "streamingWords": {
     "w1": "Đang nghĩ",
