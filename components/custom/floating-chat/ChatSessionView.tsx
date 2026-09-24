@@ -130,9 +130,18 @@ export default function ChatSessionView({
   // live. Any one of the three being true means a turn is still in flight.
   const responseInFlight = isStreaming || turnActive === true || localTurnBusy === true;
 
-  // The floating chat is an overlay, not a route, so the route-based restart
-  // gate (`AppRestartOnForeground`) cannot see it — this hold is the only
-  // thing that can. The effect's cleanup is the ONE release path and it is
+  // The floating chat is an OVERLAY, open on top of whatever route is
+  // current. `lib/app-restart.ts`'s route gate only blocks a restart for a
+  // fixed list of routes (`RESTART_BLOCKED_ROUTES` — login, OTP, PIN,
+  // onboarding) and chat can be mid-turn over any OTHER route, so that gate
+  // has no way to see it; this hold is the only thing that does. It is not a
+  // split between "plain returns" and "everything else" any more: a plain
+  // foreground return is not a restart trigger at all now, only a pending OTA
+  // (or an explicit language-change/restore) is, and the route gate applies
+  // to every one of those reasons — this hold and that gate are two
+  // independent block reasons `blockedBy()` checks together, not two
+  // mechanisms covering two different triggers. The effect's cleanup is the
+  // ONE release path and it is
   // unconditional: it fires the moment `responseInFlight` flips back to false
   // (normal completion, a user cancel, or an error — all three resolve every
   // one of `isStreaming` / `turnActive` / `localTurnBusy` to false) and it

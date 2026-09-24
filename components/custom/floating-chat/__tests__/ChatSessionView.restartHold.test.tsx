@@ -1,15 +1,19 @@
 // A restart must never land while a chat response is arriving. The floating
-// chat is an overlay, not a route, so `AppRestartOnForeground`'s route gate
-// cannot see it — `holdRestart` from lib/app-restart is the only thing that
-// can, and ChatSessionView is the one place that sees both `isStreaming` and
-// the cloud loop's `turnActive`.
+// chat is an overlay, open over whatever route is current, and
+// `lib/app-restart.ts`'s route gate only blocks a fixed list of routes
+// (login, OTP, PIN, onboarding) — chat can be mid-turn over any other route,
+// so that gate cannot see it. `holdRestart` from lib/app-restart is the only
+// thing that can, and ChatSessionView is the one place that sees `isStreaming`,
+// the cloud loop's `turnActive`, and on-device's `localTurnBusy` together.
 //
 // `isStreaming` (status === 'streaming') is a PROXY, not the authoritative
-// signal, on the cloud path: `status` goes idle EARLY, while a
-// forced-extraction or continuation pass keeps writing facts (see
-// useCloudPersonaChat's `setTurnBusy` — "turnBusyRef, not isStreamingRef").
-// So the hold must track `isStreaming || turnActive`, and this suite proves
-// each end path releases it: normal completion, an error, and unmount.
+// signal, on EITHER engine: `status` goes idle EARLY while a cloud
+// forced-extraction/continuation pass or an on-device tool-execution loop
+// keeps writing facts (see useCloudPersonaChat's `setTurnBusy` — "turnBusyRef,
+// not isStreamingRef" — and useLocalLLM's `turnBusy`). So the hold must track
+// `isStreaming || turnActive === true || localTurnBusy === true`, and this
+// suite proves each end path releases it: normal completion, an error, and
+// unmount.
 
 import React from 'react';
 import { render } from '@testing-library/react-native';
