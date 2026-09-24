@@ -2002,6 +2002,9 @@ describe('the shipped cloud path drives the agent loop', () => {
   // which is fewer than two options, so the chips vanished. On device a correct
   // three-leg turn ending `awaiting-user` showed the user nothing at all.
   it('writes the tool ARGUMENTS into input and the result into result', async () => {
+    // facts/origin, not facts/residence: a residence turn refuses a place
+    // question asked before any lookup, and this fixture has no lookup tool.
+    // The test is about what the hook stores, not about which skill asks.
     const model = jest.fn();
     const res = (over: Record<string, unknown> = {}) => ({
       content: '', toolCalls: [], finishReason: 'stop', truncated: false,
@@ -2010,7 +2013,7 @@ describe('the shipped cloud path drives the agent loop', () => {
     model
       .mockResolvedValueOnce(res({
         content: 'Nieuw-West, one moment.',
-        toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/residence' }) }],
+        toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/origin' }) }],
       }))
       .mockResolvedValue(res({
         toolCalls: [{
@@ -2024,8 +2027,8 @@ describe('the shipped cloud path drives the agent loop', () => {
     mockRunAgentLoopDeps.mockReturnValue({
       callModel: model,
       tools: {},
-      loadSkill: (id: string) => (id === 'facts/residence' ? 'RESIDENCE BODY' : null),
-      skillIds: () => ['facts/residence'],
+      loadSkill: (id: string) => (id === 'facts/origin' ? 'ORIGIN BODY' : null),
+      skillIds: () => ['facts/origin'],
     });
 
     const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
