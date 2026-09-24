@@ -35,8 +35,7 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import { Pressable } from '@/components/ui/pressable';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { a11yStateKey } from './status-ink';
-import React, { useEffect, useRef } from 'react';
-import { AccessibilityInfo } from 'react-native';
+import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -103,23 +102,9 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
     }, [processing, scale]);
     const scaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
-    // Announce the two states the user cannot see. A label change alone is not
-    // announced by VoiceOver/TalkBack unless focus happens to be on this glyph,
-    // and entering the capped state is precisely the moment the reader is
-    // somewhere else in the list. `announceForAccessibility` is a no-op when no
-    // screen reader is running, so this costs nothing in the normal case.
-    //
-    // Seeded from the FIRST render's mode rather than from a sentinel, so a
-    // screen that mounts already capped does not fire an announcement for a
-    // state the user just navigated into on purpose.
-    const prevMode = useRef<FeedStatusMode>(mode);
-    useEffect(() => {
-        const was = prevMode.current;
-        prevMode.current = mode;
-        if (was === mode) return;
-        if (mode !== 'limited' && mode !== 'error') return;
-        AccessibilityInfo.announceForAccessibility(tAny(a11yStateKey(mode)));
-    }, [mode, tAny]);
+    // Entering the capped or error state is announced by the SCREEN
+    // (`useFeedModeAnnouncement`), not here: this mark mounts only when needed,
+    // so it would seed its "previous mode" with the new state and stay silent.
 
     return (
         <Pressable

@@ -128,4 +128,17 @@ describe('DashboardStatsCard', () => {
         const toggle = r.getByTestId('dashboard-stats-card-toggle');
         expect(toggle.props.accessibilityLabel).toBe('feedStatus.idle. feedStatus.openA11y');
     });
+
+    it('announces entering the capped state, which the removed header mark used to do', () => {
+        const { AccessibilityInfo } = require('react-native');
+        const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+        try {
+            const r = render(<DashboardStatsCard />);
+            mockMode = 'limited';
+            r.rerender(<DashboardStatsCard />);
+            expect(announce).toHaveBeenCalledWith('feedStatus.modeLimited');
+        } finally {
+            announce.mockRestore();
+        }
+    });
 });

@@ -179,35 +179,18 @@ describe('FeedStatusIndicator', () => {
         expect(queryByLabelText(new RegExp(`^${key}\\.`))).toBeTruthy();
     });
 
-    it('announces entering limited and error, but not idle', () => {
+    it('announces nothing itself: the screen owns the announcement (use-feed-mode-announcement)', () => {
         const { AccessibilityInfo } = require('react-native');
         const announce = jest
             .spyOn(AccessibilityInfo, 'announceForAccessibility')
             .mockImplementation(() => {});
         try {
-            // Mounting already-capped must NOT announce: the user navigated here.
-            const { rerender } = renderIndicator({ mode: 'limited' });
+            const { rerender, getByTestId } = renderIndicator({ mode: 'idle' });
+            expect(getByTestId(TEST_ID)).toBeTruthy();
+            rerender(
+                <FeedStatusIndicator mode="limited" expanded={false} onPress={jest.fn()} testID={TEST_ID} />,
+            );
             expect(announce).not.toHaveBeenCalled();
-
-            const at = (mode: 'idle' | 'limited' | 'error') =>
-                rerender(
-                    <FeedStatusIndicator
-                        mode={mode}
-                        expanded={false}
-                        onPress={jest.fn()}
-                        testID={TEST_ID}
-                    />,
-                );
-
-            at('idle');
-            expect(announce).not.toHaveBeenCalled();
-
-            at('limited');
-            expect(announce).toHaveBeenCalledWith('feedStatus.modeLimited');
-
-            at('error');
-            expect(announce).toHaveBeenCalledWith('feedStatus.modeError');
-            expect(announce).toHaveBeenCalledTimes(2);
         } finally {
             announce.mockRestore();
         }

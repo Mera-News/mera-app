@@ -91,6 +91,7 @@ import {
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
 import FeedStatusPanel, { STATUS_PANEL_AUTO_COLLAPSE_MS } from '@/components/custom/for-you/FeedStatusPanel';
+import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import {
   headerTitleLineHeight,
@@ -348,6 +349,9 @@ const FeedScreen: React.FC = () => {
   const narrating = useIsFeedProcessing();
   const statusMode = useFeedStatusMode();
   const markVisible = feedMarkVisible(narrating, statusMode);
+  // Seeded from the SCREEN's first render, not the mark's: the mark mounts
+  // only when needed, so it cannot notice the transition it would announce.
+  useFeedModeAnnouncement(statusMode);
   const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
     markVisible,
     STATUS_PANEL_AUTO_COLLAPSE_MS,

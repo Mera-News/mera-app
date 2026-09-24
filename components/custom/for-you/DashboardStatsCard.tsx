@@ -29,12 +29,17 @@ import { View } from 'react-native';
 import FeedStatsSentence from './FeedStatsSentence';
 import { FeedStatusBody, STATUS_PANEL_AUTO_COLLAPSE_MS } from './FeedStatusPanel';
 import { a11yStateKey, STATUS_INK } from './status-ink';
+import { useFeedModeAnnouncement } from './use-feed-mode-announcement';
 
 export const DashboardStatsCard: React.FC = () => {
     const { t } = useTranslation();
     // `a11yStateKey` is computed from the mode; see its own note on `tAny`.
     const tAny = t as unknown as (key: string) => string;
     const mode = useFeedStatusMode();
+    // The Dashboard's announcement of entering the capped or error state. It
+    // lived in the header's Mera mark, which this tab no longer has. The card
+    // is mounted for the life of the Overview list, like the mark was.
+    useFeedModeAnnouncement(mode);
     const { articleCount } = useFeedCounts();
     // `available` is true: this card is on screen in every state.
     const { expanded, toggle } = useStatusDisclosure(true, STATUS_PANEL_AUTO_COLLAPSE_MS);
