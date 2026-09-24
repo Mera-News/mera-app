@@ -134,10 +134,10 @@ describe('FeedScreen header structure', () => {
         expect(spacer).toBeLessThan(vstackEnd);
     });
 
-    it('drives the mark from the LOCAL work flag and the narration from the processing flag', () => {
-        // Owner: "still during wait". A server-only wait narrates but must not
-        // grow or animate the mark.
-        expect(src).toMatch(/feedMarkMode\(\s*useIsFeedWorkingLocally\(\)/);
+    it('drives the mark from useIsFeedMarkActive and the narration from the processing flag', () => {
+        // Owner: the mark animates while the phone works OR the server scores,
+        // with a stale guard (use-mark-active.ts).
+        expect(src).toMatch(/feedMarkMode\(\s*useIsFeedMarkActive\(\)/);
         expect(src).toMatch(/const narrating = useIsFeedProcessing\(\);/);
     });
 

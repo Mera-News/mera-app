@@ -44,7 +44,9 @@ let mockStatusMode = 'idle';
 jest.mock('@/components/custom/FeedSyncIndicator', () => ({
   useFeedSyncRefresh: () => ({ refreshing: false, onRefresh: jest.fn() }),
   useIsFeedProcessing: () => mockProcessing,
-  useIsFeedWorkingLocally: () => mockLocal,
+}));
+jest.mock('@/components/custom/for-you/use-mark-active', () => ({
+  useIsFeedMarkActive: () => mockLocal,
 }));
 jest.mock('@/components/custom/feed/FeedStatusMark', () => {
   const { View } = require('react-native');
@@ -244,8 +246,8 @@ describe('Dashboard header', () => {
     expect(StyleSheet.flatten(screen.getByTestId('dashboard-header-actions').props.style).gap).toBe(HEADER_ACTIONS_GAP);
   });
 
-  it('moves the mark only while the phone works, exactly as the Feed does', () => {
-    // A cloud batch waiting on the server: processing, but not local work.
+  it('moves the mark only while useIsFeedMarkActive says so, exactly as the Feed does', () => {
+    // Processing but the mark flag off (nothing moving, or a stale batch).
     mockProcessing = true;
     mockStatusMode = 'processing';
     mockLocal = false;

@@ -3,8 +3,8 @@ import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import {
     useFeedSyncRefresh,
     useIsFeedProcessing,
-    useIsFeedWorkingLocally,
 } from '@/components/custom/FeedSyncIndicator';
+import { useIsFeedMarkActive } from '@/components/custom/for-you/use-mark-active';
 import FeedStatusMark from '@/components/custom/feed/FeedStatusMark';
 import { feedMarkMode } from '@/components/custom/feed/FeedHeaderTitleRow';
 import { HEADER_ACTIONS_GAP } from '@/components/custom/for-you/HeaderIconButton';
@@ -264,8 +264,9 @@ const MeraNewsScreen: React.FC = () => {
     // any more: the status panel opens from the Overview stats card.
     const statusMode = useFeedStatusMode();
     // The Mera mark left of the bell (owner), under the Feed's exact rules: it
-    // grows and animates only while the PHONE works, never on a server wait.
-    const markMode = feedMarkMode(useIsFeedWorkingLocally(), statusMode);
+    // grows and animates while the phone works or the server scores, and a
+    // wedged batch goes still (use-mark-active.ts).
+    const markMode = feedMarkMode(useIsFeedMarkActive(), statusMode);
     // The header's first row: the status dropdown drops under it, at its width.
     const titleRowRef = useRef<View>(null);
 

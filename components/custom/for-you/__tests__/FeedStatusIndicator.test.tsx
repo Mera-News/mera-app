@@ -265,14 +265,14 @@ describe('FeedStatusIndicator: grows, never swaps', () => {
 });
 
 // Owner: "the animation should run only when feed is updating, otherwise it
-// stays static", and "still during wait". The Feed feeds the mark
-// `feedMarkMode(workingLocally, statusMode)`; this walks the chain end to end
-// for every state in which the phone itself is not working.
+// stays static". The Feed feeds the mark `feedMarkMode(useIsFeedMarkActive(),
+// statusMode)`; this walks the chain end to end for every state in which the
+// mark flag is off (see use-mark-active.test.tsx for when it is on).
 describe('FeedStatusIndicator: static unless the Feed is really updating', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { feedMarkMode } = require('@/components/custom/feed/FeedHeaderTitleRow');
-    const still = (workingLocally: boolean, statusMode: string) => {
-        const { getByTestId } = renderIndicator({ mode: feedMarkMode(workingLocally, statusMode) });
+    const still = (markActive: boolean, statusMode: string) => {
+        const { getByTestId } = renderIndicator({ mode: feedMarkMode(markActive, statusMode) });
         const logo = getByTestId('mera-logo');
         return logo.props.animated === false && logo.props.scrollCards === false;
     };
@@ -287,17 +287,17 @@ describe('FeedStatusIndicator: static unless the Feed is really updating', () =>
         expect(still(false, 'limited')).toBe(true);
     });
 
-    it('is still on a bare scheduler poll, while a batch only waits on the server, and after a sync fails partway', () => {
-        // A poll, or a cloud batch waiting on the server: statusMode is
-        // 'processing' but the phone is not working. A failed sync publishes state 'failed', which
-        // neither flag counts, so the phone is not working; the mode is
+    it('is still on a bare scheduler poll, on a stale server batch, and after a sync fails partway', () => {
+        // A poll, or a server batch with no progress past the stale bound:
+        // statusMode is 'processing' but the mark flag is off. A failed sync
+        // publishes state 'failed', which no flag counts; the mode is
         // then 'error' (scoring failure) or 'processing' (scheduler still
         // winding down), and neither may move the mark.
         expect(still(false, 'processing')).toBe(true);
         expect(still(false, 'error')).toBe(true);
     });
 
-    it('moves only while the phone itself works', () => {
+    it('moves only while the mark flag is on', () => {
         expect(still(true, 'processing')).toBe(false);
     });
 });

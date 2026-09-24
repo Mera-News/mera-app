@@ -90,8 +90,8 @@ export function useIsFeedProcessing(): boolean {
  * batch that is only WAITING on the server (`asyncJobPhase` relevance /
  * reasons). Such a wait can last up to BATCH_STALE_MS (15 min) per attempt
  * and survives a relaunch, since the phase is restored from the persisted
- * run. The Feed's Mera mark reads THIS flag (owner: "still during wait"),
- * while the header narration keeps reading `useIsFeedProcessing`.
+ * run. `useIsFeedMarkActive` (for-you/use-mark-active.ts) builds on it, adding
+ * the server phase with a no-progress stale guard.
  */
 export function useIsFeedWorkingLocally(): boolean {
     const { isDeviceProcessing } = useForYouDeviceProcessing();

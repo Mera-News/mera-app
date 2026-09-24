@@ -10,15 +10,15 @@ import { View } from 'react-native';
  * The mode the Feed's Mera mark draws (owner: always there, small and still at
  * rest, bigger and drawing only while Mera is working).
  *
- * 'processing' only while the PHONE is working (`useIsFeedWorkingLocally`:
- * the sync machine is active or on-device scoring runs). `statusMode` alone is
- * `schedulerRunning || isFeedProcessing`: true on every five-minute poll that
- * finds nothing, and during a cloud batch that only waits on the server (owner:
- * "still during wait"; the narration keeps showing then). Every other state
- * passes through, so error (red) and limited (amber) show on a still mark.
+ * 'processing' only while `useIsFeedMarkActive` holds: the phone works, or the
+ * server is scoring the reader's articles and progressing (a batch with no
+ * progress for 15 min goes still). `statusMode` alone is `schedulerRunning ||
+ * isFeedProcessing`: true on every five-minute poll that finds nothing. Every
+ * other state passes through, so error (red) and limited (amber) show on a
+ * still mark.
  */
-export function feedMarkMode(workingLocally: boolean, mode: FeedStatusMode): FeedStatusMode {
-    return mode === 'processing' && !workingLocally ? 'idle' : mode;
+export function feedMarkMode(markActive: boolean, mode: FeedStatusMode): FeedStatusMode {
+    return mode === 'processing' && !markActive ? 'idle' : mode;
 }
 
 export interface FeedHeaderTitleRowProps {
