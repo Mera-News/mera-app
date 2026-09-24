@@ -1,5 +1,6 @@
-// The Feed's geo/language context, frozen per READING SESSION, like its sort
-// partition (FeedScreen `partitionSnapshot`).
+// A card list's geo/language context, frozen per READING SESSION: the Feed
+// (like its sort partition, FeedScreen `partitionSnapshot`) and a fact's
+// screen (FactFeedScreen, one session per visit).
 //
 // The friction it removes: `useUserGeoLanguageContext` re-loads on every
 // publication-preference write (it observes `publication_preferences`), and
@@ -20,10 +21,11 @@ import { useRef } from 'react';
 
 export function useSessionGeoLanguageContext(
     live: UserGeoLanguageContext | null,
-    /** Bumped at every new reading session (FeedScreen `resetSession`). */
-    sessionEpoch: number,
+    /** Changes at every new reading session (FeedScreen: a counter bumped by
+     *  `resetSession`; FactFeedScreen: the fact id). */
+    sessionEpoch: string | number,
 ): UserGeoLanguageContext | null {
-    const held = useRef<{ ctx: UserGeoLanguageContext | null; epoch: number }>({ ctx: null, epoch: sessionEpoch });
+    const held = useRef<{ ctx: UserGeoLanguageContext | null; epoch: string | number }>({ ctx: null, epoch: sessionEpoch });
     const h = held.current;
     if (
         live &&

@@ -30,6 +30,7 @@ import { useForYouSuggestions } from '@/lib/stores/selectors';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
+import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -111,7 +112,11 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   // The user's geo/language context (home/other countries + app language) —
   // makes representative election tier-aware. Null while loading/on failure,
   // which `buildFactRows` treats as the legacy geo/language-blind pick.
-  const userGeoLanguageCtx = useUserGeoLanguageContext();
+  //
+  // Held for the visit (see feed/use-session-geo-context): a publication
+  // preference written from a card's ••• sheet re-loads the live context, and a
+  // live one regrouped and re-sorted the cards under the reader.
+  const userGeoLanguageCtx = useSessionGeoLanguageContext(useUserGeoLanguageContext(), factId);
 
   // Hoisted so the "next fact" footer below can reuse it instead of calling
   // `buildFactRows` a second time — this was previously computed inline and
