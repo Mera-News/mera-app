@@ -81,7 +81,7 @@ const RESIDENT: AgentPersona = {
 describe('B1 (G1 part): ask_choice ends the turn, not the leg', () => {
   it('a save placed after the question in the same leg still reaches the tool', async () => {
     const h = harness([
-      res({ content: 'Berlin, one moment.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ content: 'Berlin, one moment.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
       res({
         toolCalls: [
           tc('ask_choice', { question: 'Which Berlin?', options: ['Berlin, Germany', 'Berlin, USA'] }),
@@ -247,7 +247,7 @@ describe('Q1: the replacement card is the consent for a same-key replace', () =>
   it('a resumed turn does not re-offer a card still waiting on screen', async () => {
     const state = createAgentState(RESIDENT);
     const t1 = harness([
-      res({ content: 'One moment.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ content: 'One moment.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
       res({
         toolCalls: [
           tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Product manager' }] }),
@@ -399,7 +399,7 @@ describe('batch 3 captures', () => {
   it('C1: marks only the route leg for streaming to the user', async () => {
     const flags: (boolean | undefined)[] = [];
     const h = harness([
-      res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
       res({ content: 'Which Porto did you mean?', toolCalls: [tc('ask_choice', { question: 'Which Porto?', options: ['Porto, Portugal', 'Porto Alegre'] })] }),
     ]);
     const inner = h.deps.callModel;
@@ -414,7 +414,7 @@ describe('batch 3 captures', () => {
       facts: [{ id: 'c1', statement: 'Expat from India living in Nieuw West, Amsterdam', attribute: COMBINED_ORIGIN_KEY }],
     };
     const h = harness([
-      res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
       res({ toolCalls: [tc('ask_choice', { question: 'Which Porto?', options: ['Porto, Portugal', 'Porto Alegre'] })] }),
     ]);
     const out = await runAgentTurn({ state: createAgentState(COMBINED), userMessage: 'I moved to Porto', deps: h.deps });

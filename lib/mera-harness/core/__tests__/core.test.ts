@@ -908,7 +908,7 @@ describe('the forced proposal leg', () => {
 
   it('ask_choice ALSO discharges the debt, so a genuine question is not forced', async () => {
     const { deps } = scriptedDeps([
-      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/interest' })] }),
       modelResult({
         content: 'Which one?',
         toolCalls: [tc('ask_choice', { question: 'Which?', options: ['A', 'B'] })],

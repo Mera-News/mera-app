@@ -985,6 +985,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           sawContinuationTool = true;
           continue;
         }
+        // NO PLACE QUESTION BEFORE A LOOKUP on a residence turn (owner ruling;
+        // residence.md already says so). Measured on staging: "Where exactly
+        // in Berlin do you live?" with nothing looked up ended the turn with
+        // no card. A tapped place carried into a resumed turn counts as looked up.
+        if (skillLoaded === 'facts/residence' && lastLookupStatus === null && placeCandidates.length === 0) {
+          const out = {
+            error: 'Look the place up with lookup_place first. Ask only if it is ambiguous or not found.',
+          };
+          leg.toolResults.push({ name: call.name, result: out });
+          toolResultsThisTurn.push({ name: call.name, result: out });
+          sawContinuationTool = true;
+          continue;
+        }
         if (!validateChoiceOptions(args.options) || !question) {
           // A COUNTED terminal state, never a settled prose question: letting
           // this fall through to the settled branch ends the turn as a question
@@ -1048,6 +1061,28 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           if (found.status === 'resolved' && found.places.length === 1) {
             placeCandidates = found.places;
             e.statement = chainStatement(where, found.places[0]);
+          }
+        }
+        // A RESOLVED HOME THE MODEL LEFT OUT (owner ruling): a lookup on this
+        // turn resolved one place the user named, and the list has no home,
+        // so the loop offers it as a card (never a silent save). Never a place
+        // in the origin's own country: "I grew up in Delhi" is not a home.
+        const onlyPlace = lastLookupStatus === 'resolved' && placeCandidates.length === 1 ? placeCandidates[0] : null;
+        if (
+          onlyPlace
+          && (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin')
+          && !homeOfferedThisTurn
+          && !list.some((e) => isHomeEntry(e))
+          && userMessage.toLowerCase().includes(onlyPlace.locality.toLowerCase())
+        ) {
+          const originEntry = list.find((e) => e.questionnaire_attribute === ORIGIN_KEY);
+          const originFact = state.persona.facts.find((f) => f.attribute === ORIGIN_KEY || isOriginStatement(f.statement));
+          const from = originCountry(String(originEntry?.statement ?? originFact?.statement ?? ''));
+          if (!sameCountry(onlyPlace.countryName, from)) {
+            list.push({
+              statement: chainStatement(onlyPlace.neighbourhood ?? onlyPlace.locality, onlyPlace),
+              questionnaire_attribute: CANONICAL_LOCATION_KEY,
+            });
           }
         }
         // AN EXPAT ORIGIN BRINGS ITS STATUS: "From India" plus "Expat in
