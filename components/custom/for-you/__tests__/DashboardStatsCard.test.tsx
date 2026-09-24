@@ -228,9 +228,12 @@ describe('DashboardStatsCard', () => {
         expect(cardIds(r)).toEqual(before);
     });
 
-    it('lets touches through the layer while closed', () => {
+    it('lets touches through the layer and hides it from accessibility while closed', () => {
         const r = render(<DashboardStatsCard />);
-        expect(r.getByTestId('dashboard-stats-dropdown-layer', HIDDEN).props.pointerEvents).toBe('none');
+        const layer = r.getByTestId('dashboard-stats-dropdown-layer', HIDDEN);
+        expect(layer.props.pointerEvents).toBe('none');
+        expect(layer.props.accessibilityElementsHidden).toBe(true);
+        expect(layer.props.importantForAccessibility).toBe('no-hide-descendants');
     });
 
     it('anchors the dropdown directly under the card, within the tab bar', () => {

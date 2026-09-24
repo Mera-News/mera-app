@@ -115,6 +115,10 @@ export const StatusDropdownLayer: React.FC<{
             // Measurable while closed: a flattened view has nothing native.
             collapsable={false}
             pointerEvents={showing ? 'auto' : 'none'}
+            // A full-screen view: while closed it must not sit in the
+            // accessibility tree (captured there, 402x874, on both tabs).
+            accessibilityElementsHidden={!showing}
+            importantForAccessibility={showing ? 'auto' : 'no-hide-descendants'}
             style={[StyleSheet.absoluteFill, { zIndex: 20 }]}
             testID={`${testIDPrefix}-dropdown-layer`}
         >
