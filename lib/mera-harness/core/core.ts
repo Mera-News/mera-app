@@ -281,6 +281,20 @@ function placeFromPayload(payload: unknown): Place | null {
  * last month". A fact names the user in the third person and a home is
  * "Lives in ...", or none of the loop's rules recognise it.
  */
+/**
+ * The origin a message states PLAINLY, or null: exactly one "I'm (an expat)
+ * from X" / "originally from X" naming one to three words, title-cased. Any
+ * second "from" ("partly from india and partly from kenya") is not plain.
+ */
+function plainOriginOf(message: string): string | null {
+  const t = message.replace(/[’]/g, "'");
+  if ((t.match(/\bfrom\b/gi) ?? []).length !== 1) return null;
+  const m = /\b(?:i'?m|i\s+am)\s+(?:(?:an?\s+)?(?:expat|immigrant|migrant)\s+|originally\s+)?from\s+([a-z][a-z'.-]*(?:\s+[a-z][a-z'.-]*){0,2}?)\s*(?:$|[,.!?;]|\s+and\b|\s+but\b)/i.exec(t)
+    ?? /\boriginally\s+from\s+([a-z][a-z'.-]*(?:\s+[a-z][a-z'.-]*){0,2}?)\s*(?:$|[,.!?;]|\s+and\b|\s+but\b)/i.exec(t);
+  if (!m) return null;
+  return m[1].split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
 /** The loop-written first leg of a "Save all" tap. */
 function saveAllLeg(options: readonly string[]): AgentModelResult {
   const entries = options.map((o) => ({ statement: factPickStatement(o) }));
@@ -314,6 +328,9 @@ function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unkno
       .replace(/\s+(?:last\s+(?:week|month|year)|this\s+(?:month|year)|recently|a\s+few\s+(?:weeks|months|years)\s+ago)\.?$/i, '')
       .replace(/\.$/, '');
     t = `Lives in ${where}`;
+    // "Nieuw-West, Amsterdam (North Holland, The Netherlands)": the chain is
+    // written in the comma form (measured on staging).
+    t = collapseRepeatedRungs(t.replace(/\s*\(([^()]+)\)\s*$/, ', $1'));
   } else {
     t = t.charAt(0).toUpperCase() + t.slice(1);
   }
@@ -644,6 +661,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const unknownTools: string[] = [];
   /** The status of the last lookup_place this turn, or null if none ran. */
   let lastLookupStatus: string | null = null;
+  /** Every lookup this turn that resolved to exactly ONE place. A later
+   *  lookup ("India") resets `placeCandidates`, so the end-of-turn offer
+   *  reads this instead. */
+  const resolvedPlacesThisTurn: Place[] = [];
   let placeCandidates: Place[] = resumedSkill && turn.confirmedPlace ? [turn.confirmedPlace] : [];
   let similarFactCount: number | null = null;
   const toolResultsThisTurn: { name: string; result: unknown }[] = [];
@@ -984,6 +1005,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const out = await deps.tools.lookupPlace({ query, countryHint });
         placeCandidates = out.status === 'resolved' ? out.places : [];
         lastLookupStatus = out.status;
+        if (out.status === 'resolved' && out.places.length === 1) resolvedPlacesThisTurn.push(out.places[0]);
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -1531,6 +1553,91 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    * no home fact exists yet. Written by the loop, not asked of the model: the
    * combined shape is the loop's own old output, so splitting it is mechanical.
    */
+  /**
+   * Owner ruling (ux1): a facts turn that ends on PROSE with nothing offered,
+   * after a lookup this turn resolved exactly one place the user named, gets
+   * that residence as a card from the loop (never a silent save). An origin
+   * the message states plainly ("I'm an expat from india") comes with it,
+   * through the same normalisation, so the expat status follows. Measured on
+   * staging: the model resolved Nieuw-West and then asked "is India the
+   * country you originally come from?" with no card.
+   */
+  async function offerResolvedPlaceAtEnd(): Promise<void> {
+    if (terminalReason === 'transport-error' || terminalReason === 'awaiting-user') return;
+    if (turn.pendingChoice !== null || proposedSomething || homeOfferedThisTurn) return;
+    if (!skillsLoaded.some((id) => id.startsWith('facts/'))) return;
+    const said = userMessage.toLowerCase();
+    const named = resolvedPlacesThisTurn.filter(
+      (p) => said.includes(p.locality.toLowerCase())
+        || (p.neighbourhood !== undefined && said.includes(p.neighbourhood.toLowerCase())),
+    );
+    const distinct = [...new Map(named.map((p) => [`${p.neighbourhood ?? ''}|${p.locality}|${p.countryCode}`, p])).values()];
+    if (distinct.length !== 1) return;
+    const place = distinct[0];
+    const origin = plainOriginOf(userMessage);
+    const originOnFile = state.persona.facts.find((f) => f.attribute === ORIGIN_KEY || isOriginStatement(f.statement));
+    const from = origin ?? (originOnFile ? originCountry(originOnFile.statement) : null);
+    if (sameCountry(place.countryName, from)) return;
+    const list: Record<string, unknown>[] = [
+      { statement: chainStatement(place.neighbourhood ?? place.locality, place), questionnaire_attribute: CANONICAL_LOCATION_KEY },
+    ];
+    if (origin && !originOnFile) list.push({ statement: `From ${origin}`, questionnaire_attribute: ORIGIN_KEY });
+    addExpatStatus(list, state.persona.facts, [place]);
+    const topicSkill = (kind: string) =>
+      (deps.skillIds() as readonly string[]).includes(`topics/${kind}`) ? `topics/${kind}` : undefined;
+    const entries = list
+      .filter((e) => {
+        const statement = String(e.statement);
+        return !existingStatements.has(comparableStatement(statement)) && !proposedStatements.has(statement.trim().toLowerCase());
+      })
+      .map((e): Record<string, unknown> => {
+        const kind = e.questionnaire_attribute === CANONICAL_LOCATION_KEY ? 'residence' : 'origin';
+        return { ...e, ...(topicSkill(kind) ? { topic_skill_id: topicSkill(kind) } : {}) };
+      });
+    if (entries.length === 0) return;
+    const endProposals: AgentProposal[] = entries.map((e) => ({
+      statement: String(e.statement),
+      kind: e.questionnaire_attribute === CANONICAL_LOCATION_KEY ? 'residence' : 'origin',
+      place: e.questionnaire_attribute === CANONICAL_LOCATION_KEY ? place : null,
+      replaces: null,
+    }));
+    const out = await deps.tools.saveExtractedFacts({ extracted_user_information: entries, proposals: endProposals });
+    const callRaw = JSON.stringify({ extracted_user_information: entries });
+    const leg: AgentLeg = {
+      index: legs.length,
+      role: 'tool',
+      systemPrompt: '',
+      messages: [],
+      toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+      toolResults: [{ name: 'saveExtractedFacts', result: out }],
+      rawOutput: '',
+      result: {
+        content: '',
+        toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+        finishReason: 'synthetic',
+        truncated: false,
+        usage: null,
+        modelSent: null,
+        latencyMs: 0,
+        error: null,
+      },
+      inputTokens: 0,
+      synthetic: true,
+    };
+    legs.push(leg);
+    proposals.push(...endProposals);
+    for (const p of endProposals) {
+      proposedStatements.add(p.statement.toLowerCase());
+      offeredThisTurn.push(p.statement.toLowerCase());
+    }
+    proposedSomething = true;
+    homeOfferedThisTurn = true;
+    // The cards answer the question the prose was asking; it is not left
+    // above them.
+    if (/\?\s*$/.test(cleanProse(reply))) reply = '';
+    params.onLeg?.(leg);
+  }
+
   async function offerCombinedFactSplit(): Promise<string | null> {
     if (terminalReason === 'transport-error') return null;
     // Never while a question is waiting: the split card used to land under
@@ -1672,6 +1779,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   if (leaksInternals(acknowledgement) || narratesProcess(acknowledgement)) {
     acknowledgement = '';
   }
+
+  // ---- A RESOLVED PLACE THE TURN NEVER OFFERED -----------------------------
+  await offerResolvedPlaceAtEnd();
 
   // ---- THE ONE-TIME SPLIT OF A COMBINED FACT -------------------------------
   const combinedRewriteOffered = await offerCombinedFactSplit();

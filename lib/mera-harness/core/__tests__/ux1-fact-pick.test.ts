@@ -130,3 +130,85 @@ describe('the device case', () => {
     expect(out.terminalReason).not.toBe('awaiting-user');
   });
 });
+
+// Staging run 20260924-150827 repeat 0, verbatim: the model resolved the place,
+// then ended on a prose question with nothing offered.
+describe('ruling: a turn that ends on prose with a resolved place offers it', () => {
+  const NW = { neighbourhood: 'Nieuw-West', locality: 'Amsterdam', admin1: 'North Holland', countryCode: 'NL', countryName: 'The Netherlands', bloc: 'EU' as const };
+  const lookup: AgentDeps['tools']['lookupPlace'] = async (a) =>
+    /west/i.test(a.query) ? { status: 'resolved', places: [NW] } : { status: 'unavailable' };
+  const REPEAT0 = [
+    res({ content: 'Got it, an expat from India living in Nieuw-West. One moment.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+    res({
+      content: 'I’d like to save both details, but first I need to pin down the places properly. Let me check them.',
+      toolCalls: [tc('lookup_place', { query: 'New West Amsterdam', countryHint: 'NL' }), tc('lookup_place', { query: 'India' })],
+    }),
+    res({ toolCalls: [tc('lookup_place', { query: 'India' })] }),
+    res({ content: "Great, that's helpful. One quick check before I lock this in: is **India** the country you originally come from (your expat origin), or just where you lived before the Netherlands?" }),
+  ];
+
+  it('offers the residence, and the origin and expat status the message states plainly', async () => {
+    const h = harness(REPEAT0, lookup);
+    const out = await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: DEVICE_MESSAGE, deps: h.deps });
+    const flat = h.saves.flat().map((e) => [e.statement, e.questionnaire_attribute]);
+    expect(flat).toContainEqual(['Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands, EU', CANONICAL_LOCATION_KEY]);
+    expect(flat).toContainEqual(['From India', ORIGIN_KEY]);
+    expect(flat).toContainEqual(['Expat in The Netherlands', EXPAT_KEY]);
+    // The question the cards now answer is not left above them.
+    expect(out.reply).not.toMatch(/\?\s*$/);
+  });
+
+  it('offers only the residence when the rest of the message is not plain', async () => {
+    const h = harness(REPEAT0, lookup);
+    await runAgentTurn({
+      state: createAgentState({ surface: 'CONFIG', facts: [] }),
+      userMessage: 'I live in niew West Amsterdam, my family is partly from india and partly from kenya',
+      deps: h.deps,
+    });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual(['Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands, EU']);
+  });
+
+  it('never when a home was already offered, or the place is in the origin country', async () => {
+    const IN = { locality: 'Delhi', admin1: 'Delhi', countryCode: 'IN', countryName: 'India', bloc: null };
+    const h = harness(
+      [
+        res({ content: 'Delhi.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Delhi' })] }),
+        res({ content: 'Did you grow up in Delhi, or just live there for a while?' }),
+      ],
+      async () => ({ status: 'resolved', places: [IN] }),
+    );
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: "I'm from India, I grew up in Delhi", deps: h.deps });
+    expect(h.saves).toEqual([]);
+  });
+
+  it('never on a turn that asked with chips', async () => {
+    const h = harness(
+      [
+        res({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'New West' })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Which one?', options: ['Nieuw-West, Amsterdam', 'New West, Canada'] })] }),
+      ],
+      // Two matches: a real place question, which the loop lets through.
+      async () => ({ status: 'resolved', places: [NW, { locality: 'New Westminster', admin1: 'British Columbia', countryCode: 'CA', countryName: 'Canada', bloc: null }] }),
+    );
+    const out = await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: 'I live in New West', deps: h.deps });
+    expect(out.terminalReason).toBe('awaiting-user');
+    expect(h.saves).toEqual([]);
+  });
+});
+
+describe('ruling: a parenthesised place chain is written in the comma form', () => {
+  it('Lives in Nieuw-West, Amsterdam (North Holland, The Netherlands)', async () => {
+    const h = harness([
+      res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      res({ toolCalls: [tc('lookup_place', { query: 'Nieuw-West' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'Lives in Nieuw-West, Amsterdam (North Holland, The Netherlands)', questionnaire_attribute: CANONICAL_LOCATION_KEY },
+      ] })] }),
+      res({ content: 'Here it is.' }),
+    ], async () => ({ status: 'resolved', places: [{ neighbourhood: 'Nieuw-West', ...NL }] }));
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', facts: [] }), userMessage: 'I live in Nieuw-West', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual(['Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands']);
+  });
+});
