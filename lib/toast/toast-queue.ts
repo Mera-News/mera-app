@@ -32,13 +32,19 @@ import logger from '@/lib/logger';
  *  holding the screen for the sum of its durations. */
 export const TOAST_MIN_DURATION_MS = 2000;
 
-/** Cards held per placement. The deck only paints three; the rest wait. A cap
+/** Cards held in the stack. The deck only paints three; the rest wait. A cap
  *  exists so the queue cannot grow without bound, not because it is reached in
  *  practice — a burst that big has never been observed. */
 export const TOAST_QUEUE_CAP = 5;
 
-export type ToastPlacement = 'top' | 'bottom';
-
+/**
+ * ONE STACK, AT THE TOP. There used to be a second, bottom lane with its own
+ * queue and timer, so a toast shown there never stacked with the one already
+ * at the top (the feedback sheet's Undo toast landed there). Owner decision:
+ * the top deck is the only toast mechanism. `placement` is still accepted so
+ * the gluestack-shaped `show()` signature keeps compiling, and it is IGNORED:
+ * a stray 'bottom' joins the same stack behind whatever is showing.
+ */
 /**
  * Unchanged from gluestack's, deliberately: whether a card is the FRONT one
  * reaches its subtree through `ToastFrontProvider` in `@/components/ui/toast`
@@ -60,7 +66,8 @@ export interface ToastShowOptions {
      * one.
      */
     id?: string;
-    placement?: ToastPlacement;
+    /** Ignored. Kept for signature compatibility; every card joins the top stack. */
+    placement?: 'top' | 'bottom';
     /** `null` means "until something closes it" — see the persistent lane below. */
     duration?: number | null;
     /**
@@ -74,7 +81,6 @@ export interface ToastShowOptions {
 
 export interface ToastEntry {
     id: string;
-    placement: ToastPlacement;
     duration: number | null;
     holdFullDuration: boolean;
     render: (props: ToastRenderProps) => ReactNode;
@@ -83,21 +89,19 @@ export interface ToastEntry {
 }
 
 interface ToastQueueState {
-    /** Each array is in DISPLAY order: index 0 is the front card. */
-    top: ToastEntry[];
-    bottom: ToastEntry[];
+    /** In DISPLAY order: index 0 is the front card. */
+    entries: ToastEntry[];
 }
 
 export const useToastQueue = create<ToastQueueState>(() => ({
-    top: [],
-    bottom: [],
+    entries: [],
 }));
 
 let nextId = 1;
 let nextSeq = 1;
 
 /**
- * The single armed timer per placement, plus enough bookkeeping to RE-ARM it
+ * The single armed timer, plus enough bookkeeping to RE-ARM it
  * correctly. `startedAt` is when the front card began showing and `armedFor` is
  * the total lifetime currently promised, so when a new arrival shortens that
  * promise we can fire after `armedFor - elapsed` rather than restarting the
@@ -110,18 +114,12 @@ interface ActiveTimer {
     armedFor: number;
 }
 
-const timers: Record<ToastPlacement, ActiveTimer | null> = {
-    top: null,
-    bottom: null,
-};
+let timer: ActiveTimer | null = null;
 
-const PLACEMENTS: readonly ToastPlacement[] = ['top', 'bottom'];
-
-function clearTimer(placement: ToastPlacement): void {
-    const timer = timers[placement];
+function clearTimer(): void {
     if (timer) {
         clearTimeout(timer.handle);
-        timers[placement] = null;
+        timer = null;
     }
 }
 
@@ -143,28 +141,28 @@ function inDisplayOrder(entries: ToastEntry[]): ToastEntry[] {
 }
 
 /**
- * Arm, re-arm or clear the timer for one placement's front card.
+ * Arm, re-arm or clear the timer for the front card.
  *
  * ONLY the front card is ever timed, and its clock starts when it BECOMES the
  * front card, not when it was enqueued. That is the whole of "they go away one
  * by one": under FIFO the second card cannot expire while it is still an
  * unreadable sliver behind the first.
  */
-function syncTimer(placement: ToastPlacement): void {
-    const front = useToastQueue.getState()[placement][0];
+function syncTimer(): void {
+    const entries = useToastQueue.getState().entries;
+    const front = entries[0];
 
     if (!front || front.duration === null) {
-        clearTimer(placement);
+        clearTimer();
         return;
     }
 
-    const backlog = useToastQueue.getState()[placement].length > 1;
+    const backlog = entries.length > 1;
     const desired =
         backlog && !front.holdFullDuration
             ? Math.min(front.duration, TOAST_MIN_DURATION_MS)
             : front.duration;
 
-    const timer = timers[placement];
     if (timer && timer.id === front.id) {
         // Already counting down for this card. Only ever SHORTEN it: a backlog
         // that drains must not hand the front card extra time it was already
@@ -172,7 +170,7 @@ function syncTimer(placement: ToastPlacement): void {
         if (timer.armedFor <= desired) return;
         clearTimeout(timer.handle);
         const remaining = Math.max(0, desired - (Date.now() - timer.startedAt));
-        timers[placement] = {
+        timer = {
             id: front.id,
             handle: setTimeout(() => close(front.id), remaining),
             startedAt: timer.startedAt,
@@ -181,8 +179,8 @@ function syncTimer(placement: ToastPlacement): void {
         return;
     }
 
-    clearTimer(placement);
-    timers[placement] = {
+    clearTimer();
+    timer = {
         id: front.id,
         handle: setTimeout(() => close(front.id), desired),
         startedAt: Date.now(),
@@ -208,14 +206,12 @@ function applyCap(entries: ToastEntry[]): ToastEntry[] {
 }
 
 export function show(options: ToastShowOptions): string {
-    const placement: ToastPlacement = options.placement === 'bottom' ? 'bottom' : 'top';
     const id = options.id ?? `${nextId++}`;
     // Replacing in place, not queueing a duplicate. Clear the timer first: the
     // card being replaced may be the one currently counting down.
     if (isActive(id)) close(id);
     const entry: ToastEntry = {
         id,
-        placement,
         // `undefined` means "not specified" and takes gluestack's old 5000ms
         // default; `null` means persistent and must survive the check.
         duration: options.duration === undefined ? 5000 : options.duration,
@@ -225,10 +221,10 @@ export function show(options: ToastShowOptions): string {
     };
 
     useToastQueue.setState((state) => ({
-        [placement]: applyCap(inDisplayOrder([...state[placement], entry])),
-    }) as Partial<ToastQueueState>);
+        entries: applyCap(inDisplayOrder([...state.entries, entry])),
+    }));
 
-    syncTimer(placement);
+    syncTimer();
     return id;
 }
 
@@ -238,27 +234,21 @@ export function show(options: ToastShowOptions): string {
  * normally lives at the BACK of the queue and has never been timed.
  */
 export function close(id: string): void {
-    for (const placement of PLACEMENTS) {
-        const queue = useToastQueue.getState()[placement];
-        if (!queue.some((entry) => entry.id === id)) continue;
+    const queue = useToastQueue.getState().entries;
+    if (!queue.some((entry) => entry.id === id)) return;
 
-        if (timers[placement]?.id === id) clearTimer(placement);
-        useToastQueue.setState({
-            [placement]: queue.filter((entry) => entry.id !== id),
-        } as Partial<ToastQueueState>);
-        syncTimer(placement);
-        return;
-    }
+    if (timer?.id === id) clearTimer();
+    useToastQueue.setState({ entries: queue.filter((entry) => entry.id !== id) });
+    syncTimer();
 }
 
 export function closeAll(): void {
-    for (const placement of PLACEMENTS) clearTimer(placement);
-    useToastQueue.setState({ top: [], bottom: [] });
+    clearTimer();
+    useToastQueue.setState({ entries: [] });
 }
 
 export function isActive(id: string): boolean {
-    const state = useToastQueue.getState();
-    return PLACEMENTS.some((placement) => state[placement].some((entry) => entry.id === id));
+    return useToastQueue.getState().entries.some((entry) => entry.id === id);
 }
 
 /** Test-only: drop every card and every timer, and rewind the id counters so

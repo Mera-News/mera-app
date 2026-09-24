@@ -41,9 +41,12 @@ export interface NotifiedToastOptions {
  * 2. Call toastManager.showNetworkError() or toastManager.showError() from anywhere
  */
 
-/** The subset of useToast()'s show() options this manager actually passes. */
+/**
+ * The subset of useToast()'s show() options this manager actually passes.
+ * No `placement`: the top deck is the app's ONLY toast mechanism, so every
+ * method here joins the one stack behind whatever card is already showing.
+ */
 export interface ToastShowOptions {
-    placement?: 'top' | 'bottom';
     duration?: number;
     /** Exempt from the deck's backlog clamp — see `showNotifiedToast`. */
     holdFullDuration?: boolean;
@@ -154,14 +157,12 @@ class ToastManager {
         title: string,
         message: string | undefined,
         duration: number,
-        placement: 'top' | 'bottom' = 'top',
     ) {
         const React = require('react');
         const { Toast } = require('@/components/ui/toast');
         const { Text } = require('react-native');
 
         this.toastInstance!.show({
-            placement,
             duration,
             render: () =>
                 React.createElement(
@@ -224,7 +225,7 @@ class ToastManager {
             return;
         }
 
-        this.showPlainToast('info', title, message, TOAST_MIN_DURATION_MS, 'bottom');
+        this.showPlainToast('info', title, message, TOAST_MIN_DURATION_MS);
     }
 
     /**
@@ -273,7 +274,6 @@ class ToastManager {
         // Do not "tidy" this back to the gluestack primitives without checking
         // it on a device; jest cannot see any of this.
         this.toastInstance.show({
-            placement: 'bottom',
             duration: 6000,
             render: ({ id }: { id: string }) =>
                 React.createElement(
@@ -383,7 +383,6 @@ class ToastManager {
         const canFly = !reduceMotion && anchor != null;
 
         this.toastInstance.show({
-            placement: 'top',
             // Match the toast's lifetime to the animation EXACTLY. NotifiedToast
             // holds fully opaque (so it can be READ) and only then leaves. Too
             // short and it is torn off mid-flight; too long and an invisible

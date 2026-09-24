@@ -20,8 +20,7 @@ import {
 } from '../toast-queue';
 
 const render = () => null;
-const ids = (placement: 'top' | 'bottom' = 'top') =>
-    useToastQueue.getState()[placement].map((entry) => entry.id);
+const ids = () => useToastQueue.getState().entries.map((entry) => entry.id);
 
 beforeEach(() => {
     jest.useFakeTimers();
@@ -41,11 +40,14 @@ describe('order', () => {
         expect(ids()).toEqual([first, second, third]);
     });
 
-    it('keeps top and bottom as separate decks', () => {
-        const top = show({ render });
-        const bottom = show({ placement: 'bottom', render });
-        expect(ids('top')).toEqual([top]);
-        expect(ids('bottom')).toEqual([bottom]);
+    it('has ONE stack: there is no bottom lane', () => {
+        expect(Object.keys(useToastQueue.getState())).toEqual(['entries']);
+    });
+
+    it("joins a stray 'bottom' placement to the one stack, behind the card showing", () => {
+        const showing = show({ render });
+        const stray = show({ placement: 'bottom', render });
+        expect(ids()).toEqual([showing, stray]);
     });
 
     it('sorts a persistent card behind every transient one', () => {
@@ -174,12 +176,11 @@ describe('close', () => {
         expect(ids()).toEqual([]);
     });
 
-    it('closeAll empties every placement', () => {
+    it('closeAll empties the stack', () => {
         show({ render });
         show({ placement: 'bottom', render });
         closeAll();
-        expect(ids('top')).toEqual([]);
-        expect(ids('bottom')).toEqual([]);
+        expect(ids()).toEqual([]);
     });
 });
 
