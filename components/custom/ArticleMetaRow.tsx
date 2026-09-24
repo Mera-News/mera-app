@@ -19,6 +19,10 @@ export type ArticleMetaRowVariant = 'card' | 'screen';
 
 /** The language label's own cap ("Portuguese (Brazil)" fits). */
 const LANGUAGE_MAX_WIDTH = 120;
+/** The centred publication never takes more than this share of the row. */
+const PUBLICATION_MAX_SHARE = 0.58;
+/** Breathing room between the centred publication and each side. */
+const SIDE_GAP = 8;
 
 interface ArticleMetaRowProps {
     pubDate?: string | null;
@@ -111,6 +115,10 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const languageBlocked = useTranslationBlocked(appLanguage) !== null;
     const translationFailed = translateStatus === 'translatable' && languageBlocked;
     const [showFailureTip, setShowFailureTip] = useState(false);
+    // Measured widths for the centred layout's publication cap.
+    const [rowWidth, setRowWidth] = useState(0);
+    const [leftWidth, setLeftWidth] = useState(0);
+    const [rightWidth, setRightWidth] = useState(0);
 
     // Pastel yellow, not red: the device can't translate this one, but Google
     // Translate can — that's an alternative route, not a failure. Red is
@@ -121,20 +129,9 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     const showLanguageSlot = !!languageCode;
     const showPublicationSlot = !!publication;
 
-    return (
-        // Spread across the width (`justify-between`): time at the start, the
-        // flag at the end, language and publication between. OWNER RULE: every
-        // segment keeps its own space, and a long one is trimmed with "…"
-        // instead of pushing the others out. So time, the middle slot, the
-        // language and the flag never shrink (`flexShrink: 0`; the language
-        // label has its own max width), and the publication is the ONLY
-        // `flex: 1, minWidth: 0` segment: it takes whatever is left and
-        // ellipsizes first. A long publisher once pushed "Dutch" to "Dutc".
-        // Inline styles, not classes, so the flex rules are visible to tests.
-        <HStack className="items-center justify-between" space="sm">
-            {/* 1. Age (+ optional NEW badge) — omitted wholesale when
-                `showRecency` is false; see the prop's doc. */}
-            {showRecency ? (
+    // ── The segments, shared by both layouts ────────────────────────────────
+    const ageEl =
+        showRecency ? (
                 <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-age-slot">
                     <MaterialIcons name="schedule" size={14} color={iconColor} />
                     <Text size="sm" className={ageColor}>
@@ -153,15 +150,9 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                         </Box>
                     ) : null}
                 </HStack>
-            ) : null}
-
-            {/* 2. Caller-supplied middle slot (the compact card's priority chip). */}
-            {centerAccessory ? (
-                <Box className="flex-shrink-0">{centerAccessory}</Box>
-            ) : null}
-
-            {/* 3. Translate icon + language name */}
-            {showLanguageSlot ? (
+            ) : null;
+    const languageEl =
+        showLanguageSlot ? (
                 <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-language-slot">
                     {/* SAME glyph in every state — only the colour changes, so
                         the row never gains or loses an element. The failed
@@ -204,34 +195,9 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                         </Text>
                     ) : null}
                 </HStack>
-            ) : null}
-
-            {/* 4. Newspaper icon + publication name — natural width, truncating a
-                long name instead of bleeding when the row runs tight. */}
-            {showPublicationSlot ? (
-                <HStack
-                    className="items-center"
-                    space="xs"
-                    style={{ flex: 1, minWidth: 0 }}
-                    testID="meta-publication-slot"
-                >
-                    <MaterialIcons name="newspaper" size={12} color={iconColor} />
-                    <Text
-                        size="xs"
-                        bold
-                        className={secondaryColor}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                        style={{ flexShrink: 1 }}
-                    >
-                        {publication}
-                    </Text>
-                </HStack>
-            ) : null}
-
-            {/* 5. Country flag — tappable on the detail screen to name the country.
-                Hidden when `showFlag` is false (compact card shows it in its footer). */}
-            {showFlag ? (
+            ) : null;
+    const flagEl =
+        showFlag ? (
                 <Box style={{ flexShrink: 0 }}>
                     {isCard ? (
                         <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
@@ -239,7 +205,114 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                         <SourceCountryFlag countryCode={countryCode} iconClassName="text-gray-400" />
                     )}
                 </Box>
-            ) : null}
+            ) : null;
+
+    // COMPACT rows (no publication in this row; the publisher sits in their
+    // footer and the middle slot is the priority chip): time, chip, language,
+    // flag, spread across the width. Unchanged by the centred layout below.
+    if (!showPublicationSlot) {
+        return (
+            <HStack className="items-center justify-between" space="sm">
+                {ageEl}
+                {centerAccessory ? <Box style={{ flexShrink: 0 }}>{centerAccessory}</Box> : null}
+                {languageEl}
+                {flagEl}
+            </HStack>
+        );
+    }
+
+    // CARD and DETAIL rows with a publication (owner spec):
+    //
+    //   |🇳🇱 Dutch      📰 National Cyber Security Cen…      🕒 22h|
+    //
+    // Left: flag, then the language name, with NO translate glyph in any
+    // state (owner decision: a failed translation is explained by the detail
+    // screen's translation notice, not by this row). Centre: the publication.
+    // Right: clock + age (+ NEW), or nothing on the Feed, which hides it.
+    //
+    // The two sides are equal `flex: 1` columns (start- and end-aligned), so
+    // the middle stays truly centred however different the sides are (an empty
+    // right side included), and grows symmetrically as the name gets longer.
+    // Its width is capped at min(58% of the row, row − 2 × the wider side),
+    // measured with onLayout, so it never overlaps a side; past the cap it is
+    // trimmed on the right. The sides never shrink.
+    const sideWidth = Math.max(leftWidth, rightWidth);
+    const publicationCap =
+        rowWidth > 0
+            ? Math.max(0, Math.min(rowWidth * PUBLICATION_MAX_SHARE, rowWidth - 2 * sideWidth - 2 * SIDE_GAP))
+            : undefined;
+    return (
+        <HStack
+            className="items-center"
+            testID="meta-row"
+            onLayout={(e) => setRowWidth(Math.round(e.nativeEvent.layout.width))}
+        >
+            <HStack className="items-center" style={{ flex: 1, justifyContent: 'flex-start' }} testID="meta-left">
+                <HStack
+                    className="items-center"
+                    space="xs"
+                    style={{ flexShrink: 0 }}
+                    onLayout={(e) => setLeftWidth(Math.round(e.nativeEvent.layout.width))}
+                >
+                    {flagEl}
+                    {showLanguageSlot && language ? (
+                        <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-language-slot">
+                            <Text
+                                size="xs"
+                                className={secondaryColor}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                                style={{ maxWidth: LANGUAGE_MAX_WIDTH }}
+                            >
+                                {language}
+                            </Text>
+                        </HStack>
+                    ) : null}
+                </HStack>
+            </HStack>
+
+            <HStack
+                className="items-center justify-center"
+                space="xs"
+                style={{ maxWidth: publicationCap ?? `${PUBLICATION_MAX_SHARE * 100}%`, minWidth: 0, flexShrink: 1 }}
+                testID="meta-publication-slot"
+            >
+                <MaterialIcons name="newspaper" size={12} color={iconColor} />
+                <Text
+                    size="xs"
+                    bold
+                    className={secondaryColor}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={{ flexShrink: 1, textAlign: 'center' }}
+                >
+                    {publication}
+                </Text>
+            </HStack>
+
+            <HStack className="items-center" style={{ flex: 1, justifyContent: 'flex-end' }} testID="meta-right">
+                {showRecency ? (
+                    <HStack
+                        className="items-center"
+                        space="xs"
+                        style={{ flexShrink: 0 }}
+                        testID="meta-age-slot"
+                        onLayout={(e) => setRightWidth(Math.round(e.nativeEvent.layout.width))}
+                    >
+                        <MaterialIcons name="schedule" size={14} color={iconColor} />
+                        <Text size="sm" className={ageColor}>
+                            {age}
+                        </Text>
+                        {isCard && isNew && !read ? (
+                            <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
+                                <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                                    {t('feed.newBadge')}
+                                </Text>
+                            </Box>
+                        ) : null}
+                    </HStack>
+                ) : null}
+            </HStack>
         </HStack>
     );
 };

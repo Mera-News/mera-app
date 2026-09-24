@@ -27,9 +27,11 @@ jest.mock('@/components/custom/SourceFlag', () => ({ SourceFlag: () => null }));
 // SourceCountryFlag pulls in the popover ESM (un-transformable under jest-expo).
 jest.mock('@/components/custom/SourceCountryFlag', () => ({ SourceCountryFlag: () => null }));
 jest.mock('@/lib/stores/app-language-store', () => ({ useAppLanguage: () => 'en' }));
+let mockStatus = 'translatable';
+let mockBlocked: string | null = null;
 jest.mock('@/lib/translation-service', () => ({
-  getArticleTranslatableStatus: () => 'translatable',
-  useTranslationBlocked: () => null,
+  getArticleTranslatableStatus: () => mockStatus,
+  useTranslationBlocked: () => mockBlocked,
 }));
 jest.mock('@/components/ui/pressable', () => {
   const { Pressable } = require('react-native');
@@ -120,35 +122,82 @@ describe('ArticleMetaRow', () => {
   });
 });
 
-// Owner rule: every segment keeps its own space; a long one is trimmed with "…"
-// instead of pushing the others out. The detail row once showed
+// Owner spec: language pinned left, the publication CENTRED (growing
+// symmetrically, capped, trimmed on the right), flag and time pinned right.
+// Every side segment shows in full. The detail row once showed
 // "National Cyber Security Centre (NCSC) · 22h ago · Dutc".
-describe('ArticleMetaRow truncation (owner rule)', () => {
+describe('ArticleMetaRow centred publication (owner spec)', () => {
+  const { fireEvent } = require('@testing-library/react-native');
   const flat = (st: any) => [st].flat(Infinity).reduce((a: any, x: any) => ({ ...a, ...(x ?? {}) }), {});
   const LONG = 'National Cyber Security Centre (NCSC) of the Kingdom of Spain';
+  const layout = (node: any, width: number) =>
+    fireEvent(node, 'layout', { nativeEvent: { layout: { width, height: 20, x: 0, y: 0 } } });
+
+  it.each(['card', 'screen'] as const)('%s: a short name sits between two equal flex sides', (variant) => {
+    const { getByTestId, getByText } = render(<ArticleMetaRow variant={variant} {...base} />);
+    expect(flat(getByTestId('meta-left').props.style).flex).toBe(1);
+    expect(flat(getByTestId('meta-right').props.style).flex).toBe(1);
+    const slot = flat(getByTestId('meta-publication-slot').props.style);
+    expect(slot.flex).toBeUndefined();
+    expect(flat(getByText('Der Spiegel').props.style).textAlign).toBe('center');
+  });
 
   it.each(['card', 'screen'] as const)(
-    '%s: a 60-char publisher takes the leftover width and trims; age and language never shrink',
+    '%s: a 60-char name is capped at min(58%%, row - 2 x wider side) and trimmed on the right',
     (variant) => {
-      const { getByText, getByTestId } = render(
+      const { getByTestId, getByText } = render(
         <ArticleMetaRow variant={variant} {...base} publicationName={LONG} />,
       );
-      const pubText = getByText(/National Cyber Security Centre/);
-      expect(pubText.props.numberOfLines).toBe(1);
-      expect(pubText.props.ellipsizeMode).toBe('tail');
-      const pubSlot = flat(getByTestId('meta-publication-slot').props.style);
-      expect(pubSlot.flex).toBe(1);
-      expect(pubSlot.minWidth).toBe(0);
-      expect(flat(getByTestId('meta-age-slot').props.style).flexShrink).toBe(0);
+      layout(getByTestId('meta-row'), 335);
+      layout(getByTestId('meta-left').children[0], 80);
+      layout(getByTestId('meta-age-slot'), 60);
+      // min(0.58 * 335 = 194.3, 335 - 2 * 80 - 16 = 159)
+      expect(flat(getByTestId('meta-publication-slot').props.style).maxWidth).toBe(159);
+      const name = getByText(/National Cyber Security Centre/);
+      expect(name.props.numberOfLines).toBe(1);
+      expect(name.props.ellipsizeMode).toBe('tail');
+      // Language, time and flag never shrink.
       expect(flat(getByTestId('meta-language-slot').props.style).flexShrink).toBe(0);
-      const lang = getByText('German');
-      expect(lang.props.numberOfLines).toBe(1);
-      expect(flat(lang.props.style).maxWidth).toBeGreaterThan(0);
+      expect(flat(getByTestId('meta-age-slot').props.style).flexShrink).toBe(0);
     },
   );
+
+  it('puts flag and language left (no translate glyph), time right', () => {
+    const { getByTestId } = render(<ArticleMetaRow variant="card" {...base} />);
+    const left = getByTestId('meta-left');
+    const within = (root: any, id: string) => root.findAll((n: any) => n.props?.testID === id).length > 0;
+    expect(within(left, 'meta-language-slot')).toBe(true);
+    expect(left.findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
+    expect(within(getByTestId('meta-right'), 'meta-age-slot')).toBe(true);
+  });
+
+  it('draws no translate glyph even when translation failed (owner decision)', () => {
+    mockStatus = 'translatable';
+    mockBlocked = 'blocked';
+    const { getByTestId, queryByTestId } = render(<ArticleMetaRow variant="card" {...base} />);
+    expect(queryByTestId('meta-translate-failed')).toBeNull();
+    expect(getByTestId('meta-left').findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
+    mockBlocked = null;
+  });
+
+  it('keeps an empty right side on the Feed, so the name stays centred', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ArticleMetaRow variant="card" {...base} showRecency={false} />,
+    );
+    expect(flat(getByTestId('meta-right').props.style).flex).toBe(1);
+    expect(queryByTestId('meta-age-slot')).toBeNull();
+  });
 
   it('shows the language on every card, the reader\'s own language included', () => {
     const { getByTestId } = render(<ArticleMetaRow variant="card" {...base} languageCode="en" />);
     expect(getByTestId('meta-language-slot')).toBeTruthy();
+  });
+
+  it('leaves compact rows (no publication) spread: time, chip, language', () => {
+    const { queryByTestId } = render(
+      <ArticleMetaRow variant="card" {...base} publicationName={null} showFlag={false} />,
+    );
+    expect(queryByTestId('meta-left')).toBeNull();
+    expect(queryByTestId('meta-language-slot')).toBeTruthy();
   });
 });
