@@ -1768,7 +1768,10 @@
       "bodyFound": "ファクトチェッカーが「{{title}}」について公開しています。",
       "bodyNone": "「{{title}}」について公開されたファクトチェックはまだありません。",
       "bodyUnavailable": "Mera は「{{title}}」のチェックを完了できませんでした。",
-      "open": "記事を開く"
+      "open": "記事を開く",
+      "bodyFoundUntitled": "お問い合わせの記事について、ファクトチェッカーが公開しています。",
+      "bodyNoneUntitled": "お問い合わせの記事について公開されたファクトチェックはまだありません。",
+      "bodyUnavailableUntitled": "Mera はお問い合わせの記事のチェックを完了できませんでした。"
     }
   },
   "sourcePrefControl": {

@@ -1770,7 +1770,10 @@
       "bodyFound": "Doğruluk kontrolcüleri \"{{title}}\" hakkında yayın yaptı.",
       "bodyNone": "\"{{title}}\" için henüz yayımlanmış bir doğruluk kontrolü yok.",
       "bodyUnavailable": "Mera \"{{title}}\" kontrolünü tamamlayamadı.",
-      "open": "Makaleyi aç"
+      "open": "Makaleyi aç",
+      "bodyFoundUntitled": "Doğruluk kontrolcüleri sorduğun makale hakkında yayın yaptı.",
+      "bodyNoneUntitled": "Sorduğun makale için henüz yayımlanmış bir doğruluk kontrolü yok.",
+      "bodyUnavailableUntitled": "Mera sorduğun makalenin kontrolünü tamamlayamadı."
     }
   },
   "sourcePrefControl": {

@@ -1768,7 +1768,10 @@
       "bodyFound": "Pemeriksa fakta sudah memublikasikan tentang \"{{title}}\".",
       "bodyNone": "Belum ada pemeriksaan fakta yang dipublikasikan untuk \"{{title}}\".",
       "bodyUnavailable": "Mera tidak bisa menyelesaikan pemeriksaan \"{{title}}\".",
-      "open": "Buka artikel"
+      "open": "Buka artikel",
+      "bodyFoundUntitled": "Pemeriksa fakta telah menerbitkan tentang artikel yang Anda tanyakan.",
+      "bodyNoneUntitled": "Belum ada cek fakta yang diterbitkan untuk artikel yang Anda tanyakan.",
+      "bodyUnavailableUntitled": "Mera tidak dapat menyelesaikan pemeriksaan artikel yang Anda tanyakan."
     }
   },
   "sourcePrefControl": {

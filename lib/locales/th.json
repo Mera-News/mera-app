@@ -219,8 +219,8 @@
     "waitingForNextBatch_one": "มี{{count}}บทความใหม่รอการวิเคราะห์รอบถัดไป",
     "waitingForNextBatch_other": "มีบทความใหม่ {{count}} รายการรอการวิเคราะห์รอบถัดไป",
     "exploreCta": "สำรวจ",
-    "statsPublishedPending_other": "{{formatted}} {{articleWord}} ได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา",
-    "statsPublished_other": "เผยแพร่ {{formatted}} {{articleWord}} ใน 24 ชั่วโมงที่ผ่านมา,",
+    "statsPublishedPending_other": "{{formatted}} บทความได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา",
+    "statsPublished_other": "{{formatted}} บทความได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา,",
     "statsAnalysed_other": "วิเคราะห์ {{formatted}} ให้คุณแล้ว,",
     "statsRelevant_other": "{{formatted}} ดูเกี่ยวข้องกับคุณ,",
     "statsRead_other": "และคุณได้อ่าน {{formatted}}.",
@@ -1768,7 +1768,10 @@
       "bodyFound": "ผู้ตรวจสอบข้อเท็จจริงได้เผยแพร่เรื่อง \"{{title}}\" แล้ว",
       "bodyNone": "ยังไม่มีการตรวจสอบข้อเท็จจริงที่เผยแพร่เกี่ยวกับ \"{{title}}\"",
       "bodyUnavailable": "Mera ตรวจสอบ \"{{title}}\" ไม่เสร็จ",
-      "open": "เปิดบทความ"
+      "open": "เปิดบทความ",
+      "bodyFoundUntitled": "ผู้ตรวจสอบข้อเท็จจริงได้เผยแพร่เกี่ยวกับบทความที่คุณถามถึงแล้ว",
+      "bodyNoneUntitled": "ยังไม่มีการตรวจสอบข้อเท็จจริงที่เผยแพร่สำหรับบทความที่คุณถามถึง",
+      "bodyUnavailableUntitled": "Mera ตรวจสอบบทความที่คุณถามถึงไม่เสร็จ"
     }
   },
   "sourcePrefControl": {

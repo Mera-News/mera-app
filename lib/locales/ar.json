@@ -1842,7 +1842,10 @@
       "bodyFound": "نشر مدققو الحقائق عن \"{{title}}\".",
       "bodyNone": "لا توجد تحققات منشورة بعد عن \"{{title}}\".",
       "bodyUnavailable": "لم يتمكن Mera من إكمال التحقق من \"{{title}}\".",
-      "open": "فتح المقال"
+      "open": "فتح المقال",
+      "bodyFoundUntitled": "نشر مدققو الحقائق حول المقال الذي سألت عنه.",
+      "bodyNoneUntitled": "لا توجد تدقيقات حقائق منشورة بعد للمقال الذي سألت عنه.",
+      "bodyUnavailableUntitled": "لم يتمكن Mera من إكمال التحقق من المقال الذي سألت عنه."
     }
   },
   "sourcePrefControl": {

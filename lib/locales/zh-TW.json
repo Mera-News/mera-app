@@ -1769,7 +1769,10 @@
       "bodyFound": "事實查核機構已就「{{title}}」發布查核。",
       "bodyNone": "目前還沒有關於「{{title}}」的已發布事實查核。",
       "bodyUnavailable": "Mera 未能完成對「{{title}}」的查證。",
-      "open": "開啟文章"
+      "open": "開啟文章",
+      "bodyFoundUntitled": "事實查核機構已就你詢問的文章發布了結果。",
+      "bodyNoneUntitled": "你詢問的文章尚無已發布的事實查核。",
+      "bodyUnavailableUntitled": "Mera 無法完成對你詢問的文章的查核。"
     }
   },
   "sourcePrefControl": {

@@ -1769,7 +1769,10 @@
       "bodyFound": "事实核查机构已就“{{title}}”发布了核查。",
       "bodyNone": "目前还没有关于“{{title}}”的已发布事实核查。",
       "bodyUnavailable": "Mera 未能完成对“{{title}}”的核查。",
-      "open": "打开文章"
+      "open": "打开文章",
+      "bodyFoundUntitled": "事实核查机构已就你询问的文章发布了结果。",
+      "bodyNoneUntitled": "你询问的文章暂无已发布的事实核查。",
+      "bodyUnavailableUntitled": "Mera 无法完成对你询问的文章的核查。"
     }
   },
   "sourcePrefControl": {

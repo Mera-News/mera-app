@@ -1768,7 +1768,10 @@
       "bodyFound": "I fact-checker hanno pubblicato su \"{{title}}\".",
       "bodyNone": "Ancora nessuna verifica pubblicata su \"{{title}}\".",
       "bodyUnavailable": "Mera non è riuscita a completare la verifica di \"{{title}}\".",
-      "open": "Apri articolo"
+      "open": "Apri articolo",
+      "bodyFoundUntitled": "I fact checker hanno pubblicato sull'articolo che hai chiesto.",
+      "bodyNoneUntitled": "Ancora nessun fact check pubblicato sull'articolo che hai chiesto.",
+      "bodyUnavailableUntitled": "Mera non è riuscita a completare la verifica dell'articolo che hai chiesto."
     }
   },
   "sourcePrefControl": {

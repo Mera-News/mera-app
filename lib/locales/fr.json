@@ -1775,7 +1775,10 @@
       "bodyFound": "Des vérificateurs ont publié sur « {{title}} ».",
       "bodyNone": "Aucune vérification publiée pour l'instant sur « {{title}} ».",
       "bodyUnavailable": "Mera n'a pas pu terminer la vérification de « {{title}} ».",
-      "open": "Ouvrir l'article"
+      "open": "Ouvrir l'article",
+      "bodyFoundUntitled": "Des vérificateurs ont publié sur l'article que vous avez demandé.",
+      "bodyNoneUntitled": "Aucune vérification publiée pour l'instant sur l'article que vous avez demandé.",
+      "bodyUnavailableUntitled": "Mera n'a pas pu terminer la vérification de l'article que vous avez demandé."
     }
   },
   "sourcePrefControl": {

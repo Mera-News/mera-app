@@ -432,7 +432,10 @@
       "bodyFound": "Fact checkers have published on \"{{title}}\".",
       "bodyNone": "No published fact checks yet for \"{{title}}\".",
       "bodyUnavailable": "Mera couldn't finish checking \"{{title}}\".",
-      "open": "Open article"
+      "open": "Open article",
+      "bodyFoundUntitled": "Fact checkers have published on the article you asked about.",
+      "bodyNoneUntitled": "No published fact checks yet for the article you asked about.",
+      "bodyUnavailableUntitled": "Mera couldn't finish checking the article you asked about."
     }
   },
   "newsCluster": {

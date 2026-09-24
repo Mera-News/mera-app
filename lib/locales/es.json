@@ -1768,7 +1768,10 @@
       "bodyFound": "Los verificadores han publicado sobre \"{{title}}\".",
       "bodyNone": "Aún no hay verificaciones publicadas sobre \"{{title}}\".",
       "bodyUnavailable": "Mera no pudo terminar de verificar \"{{title}}\".",
-      "open": "Abrir artículo"
+      "open": "Abrir artículo",
+      "bodyFoundUntitled": "Los verificadores han publicado sobre el artículo que consultaste.",
+      "bodyNoneUntitled": "Aún no hay verificaciones publicadas sobre el artículo que consultaste.",
+      "bodyUnavailableUntitled": "Mera no pudo terminar de verificar el artículo que consultaste."
     }
   },
   "sourcePrefControl": {

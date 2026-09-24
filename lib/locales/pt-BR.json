@@ -1768,7 +1768,10 @@
       "bodyFound": "Checadores publicaram sobre \"{{title}}\".",
       "bodyNone": "Ainda não há verificações publicadas sobre \"{{title}}\".",
       "bodyUnavailable": "Não foi possível terminar a verificação de \"{{title}}\".",
-      "open": "Abrir artigo"
+      "open": "Abrir artigo",
+      "bodyFoundUntitled": "Checadores publicaram sobre o artigo que você pediu.",
+      "bodyNoneUntitled": "Ainda não há checagens publicadas sobre o artigo que você pediu.",
+      "bodyUnavailableUntitled": "A Mera não conseguiu concluir a checagem do artigo que você pediu."
     }
   },
   "sourcePrefControl": {

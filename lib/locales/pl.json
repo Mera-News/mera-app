@@ -1800,7 +1800,10 @@
       "bodyFound": "Weryfikatorzy faktów opublikowali ocenę „{{title}}”.",
       "bodyNone": "Nie ma jeszcze opublikowanych weryfikacji dla „{{title}}”.",
       "bodyUnavailable": "Mera nie mogła dokończyć sprawdzania „{{title}}”.",
-      "open": "Otwórz artykuł"
+      "open": "Otwórz artykuł",
+      "bodyFoundUntitled": "Weryfikatorzy faktów opublikowali informacje o artykule, o który pytałeś.",
+      "bodyNoneUntitled": "Brak jeszcze opublikowanych weryfikacji artykułu, o który pytałeś.",
+      "bodyUnavailableUntitled": "Mera nie mogła dokończyć sprawdzania artykułu, o który pytałeś."
     }
   },
   "sourcePrefControl": {

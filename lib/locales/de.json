@@ -1768,7 +1768,10 @@
       "bodyFound": "Faktenchecker haben zu „{{title}}“ veröffentlicht.",
       "bodyNone": "Zu „{{title}}“ gibt es noch keine veröffentlichten Faktenchecks.",
       "bodyUnavailable": "Mera konnte die Prüfung von „{{title}}“ nicht abschließen.",
-      "open": "Artikel öffnen"
+      "open": "Artikel öffnen",
+      "bodyFoundUntitled": "Faktenchecker haben zu dem Artikel veröffentlicht, nach dem du gefragt hast.",
+      "bodyNoneUntitled": "Zu dem Artikel, nach dem du gefragt hast, gibt es noch keine veröffentlichten Faktenchecks.",
+      "bodyUnavailableUntitled": "Mera konnte die Prüfung des Artikels, nach dem du gefragt hast, nicht abschließen."
     }
   },
   "sourcePrefControl": {

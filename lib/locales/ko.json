@@ -1768,7 +1768,10 @@
       "bodyFound": "팩트체커가 \"{{title}}\"에 대해 발표했어요.",
       "bodyNone": "\"{{title}}\"에 대해 아직 발표된 팩트 체크가 없어요.",
       "bodyUnavailable": "Mera가 \"{{title}}\" 확인을 마치지 못했어요.",
-      "open": "기사 열기"
+      "open": "기사 열기",
+      "bodyFoundUntitled": "요청하신 기사에 대해 팩트체커가 결과를 발표했습니다.",
+      "bodyNoneUntitled": "요청하신 기사에 대해 아직 발표된 팩트체크가 없습니다.",
+      "bodyUnavailableUntitled": "Mera가 요청하신 기사의 확인을 마치지 못했습니다."
     }
   },
   "sourcePrefControl": {

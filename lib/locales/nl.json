@@ -1768,7 +1768,10 @@
       "bodyFound": "Feitcheckers hebben over \"{{title}}\" gepubliceerd.",
       "bodyNone": "Nog geen gepubliceerde feitchecks over \"{{title}}\".",
       "bodyUnavailable": "Mera kon de controle van \"{{title}}\" niet afronden.",
-      "open": "Artikel openen"
+      "open": "Artikel openen",
+      "bodyFoundUntitled": "Factcheckers hebben gepubliceerd over het artikel waarnaar je vroeg.",
+      "bodyNoneUntitled": "Nog geen gepubliceerde factchecks voor het artikel waarnaar je vroeg.",
+      "bodyUnavailableUntitled": "Mera kon de controle van het artikel waarnaar je vroeg niet afronden."
     }
   },
   "sourcePrefControl": {
