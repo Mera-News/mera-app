@@ -92,3 +92,20 @@ describe('SplashReleaser', () => {
     },
   );
 });
+
+describe('Android', () => {
+  it('Android: holdSplash is a no-op (expo-router auto-hides as before)', () => {
+    const RN = require('react-native');
+    const original = RN.Platform.OS;
+    Object.defineProperty(RN.Platform, 'OS', { configurable: true, get: () => 'android' });
+    try {
+      holdSplash();
+      releaseSplash('route');
+      act(() => { jest.advanceTimersByTime(SPLASH_MAX_HOLD_MS + 50); });
+      expect(mockPrevent).not.toHaveBeenCalled();
+      expect(mockHide).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(RN.Platform, 'OS', { configurable: true, get: () => original });
+    }
+  });
+});

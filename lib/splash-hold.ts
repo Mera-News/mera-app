@@ -20,9 +20,21 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { usePathname } from 'expo-router';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 
 /** The most the splash may be held past JS start. */
 export const SPLASH_MAX_HOLD_MS = 4000;
+
+/**
+ * iOS ONLY. On Android, holding and then manually hiding the splash left the
+ * window with no opaque background after the hide (frames never cleared:
+ * text smeared over black), so Android keeps expo-router's own auto-hide,
+ * exactly as before the hold existed. Do not re-enable on Android without a
+ * verified fix on a device or emulator.
+ */
+function holdsSplash(): boolean {
+  return Platform.OS === 'ios';
+}
 
 /** Pathnames of the startup gates: while one of these is showing, nothing the
  *  user came for has rendered yet. */
@@ -42,7 +54,7 @@ function hideNow(): void {
 
 /** Call once, at module scope in the root layout. Idempotent. */
 export function holdSplash(): void {
-  if (held) return;
+  if (!holdsSplash() || held) return;
   held = true;
   void SplashScreen.preventAutoHideAsync().catch(() => {
     // Already hidden or no native module: nothing is being held.
@@ -64,7 +76,7 @@ export function holdSplash(): void {
  * either.
  */
 export function releaseSplash(_reason: string): void {
-  if (released) return;
+  if (!holdsSplash() || released) return;
   released = true;
   if (capTimer) {
     clearTimeout(capTimer);
