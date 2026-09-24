@@ -5,6 +5,8 @@ import fs from 'fs';
 import path from 'path';
 
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
+let mockFocused = true;
+jest.mock('@/lib/hooks/use-is-focused-safe', () => ({ useIsFocusedSafe: () => mockFocused }));
 jest.mock('@/components/ui/modal', () => {
   const { View } = require('react-native');
   const Pass = ({ children, testID }: any) => <View testID={testID}>{children}</View>;
@@ -60,6 +62,20 @@ describe('TabExplainerButton', () => {
     expect(screen.getByText('tabExplainer.forYou.how1')).toBeTruthy();
     fireEvent.press(screen.getByTestId('tab-explainer-forYou-close'));
     expect(screen.queryByTestId('tab-explainer-forYou')).toBeNull();
+  });
+
+  it('closes when its tab loses focus, so it is not waiting on return', () => {
+    // The sheet lives inside the tab's screen, not above the tab bar: left
+    // open, it reappeared "by itself" when the reader came back to the tab.
+    mockFocused = true;
+    const view = render(<TabExplainerButton tab="explore" testID="explore-explainer-open" />);
+    fireEvent.press(screen.getByTestId('explore-explainer-open'));
+    expect(screen.getByTestId('tab-explainer-explore')).toBeTruthy();
+    mockFocused = false;
+    view.rerender(<TabExplainerButton tab="explore" testID="explore-explainer-open" />);
+    mockFocused = true;
+    view.rerender(<TabExplainerButton tab="explore" testID="explore-explainer-open" />);
+    expect(screen.queryByTestId('tab-explainer-explore')).toBeNull();
   });
 
   it('is a labelled button with a 44pt target', () => {

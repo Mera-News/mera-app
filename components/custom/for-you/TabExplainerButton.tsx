@@ -8,7 +8,8 @@
 
 import { Pressable } from '@/components/ui/pressable';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import TabExplainerSheet, { type ExplainedTab } from './TabExplainerSheet';
 
@@ -24,6 +25,14 @@ export interface TabExplainerButtonProps {
 const TabExplainerButton: React.FC<TabExplainerButtonProps> = ({ tab, testID }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  // The sheet renders inside the tab's screen, not above the tab bar, so it
+  // survives a tab switch and was waiting open when the reader came back.
+  // Close it whenever the tab loses focus. The safe variant, because a header
+  // can render outside a navigator (tests, a standalone route).
+  const focused = useIsFocusedSafe();
+  useEffect(() => {
+    if (!focused) setOpen(false);
+  }, [focused]);
   return (
     <>
       <Pressable
