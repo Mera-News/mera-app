@@ -106,7 +106,7 @@ import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggesti
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
-import FeedHeaderTitleRow, { feedMarkVisible } from '@/components/custom/feed/FeedHeaderTitleRow';
+import FeedHeaderTitleRow, { feedMarkMode } from '@/components/custom/feed/FeedHeaderTitleRow';
 import NewStoriesPill from '@/components/custom/feed/NewStoriesPill';
 import { pressNewStoriesPill } from '@/components/custom/feed/new-stories-pill';
 import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
@@ -321,12 +321,9 @@ const FeedScreen: React.FC = () => {
   // leaves. The Dashboard's stats card opens the same body and closes it the
   // same way (owner: "make them similar").
   //
-  // The mark is NOT always on screen (owner): it shows while a sync narrates,
-  // and holds still in its colour while the feed is capped or scoring failed,
-  // since the mark's ink is this screen's only signal for those two states and
-  // the panel behind it is the only path to "Manage plan". At idle there is no
-  // mark, so `available` is the mark's own visibility: an open panel closes
-  // with it instead of being stranded at the end of a run.
+  // The mark is on screen in every state (owner): small and still at rest,
+  // bigger with its strokes drawing on while a sync narrates. So `available`
+  // is true: the panel is one tap away at any time.
   // Title ceiling from the window width; see header-title-size for why this is
   // two steps and not a ramp.
   const { width: windowWidth } = useWindowDimensions();
@@ -345,12 +342,11 @@ const FeedScreen: React.FC = () => {
   // is the reading surface; that would be the billboard `7e96aa4` deleted.
   const narrating = useIsFeedProcessing();
   const statusMode = useFeedStatusMode();
-  const markVisible = feedMarkVisible(narrating, statusMode);
-  // Seeded from the SCREEN's first render, not the mark's: the mark mounts
-  // only when needed, so it cannot notice the transition it would announce.
+  const markMode = feedMarkMode(narrating, statusMode);
+  // The screen announces entering the capped or error state (see the hook).
   useFeedModeAnnouncement(statusMode);
   const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
-    markVisible,
+    true,
     STATUS_PANEL_AUTO_COLLAPSE_MS,
   );
   // The STAGE only. On-device is its own store read, the same one the
@@ -1004,17 +1000,16 @@ const FeedScreen: React.FC = () => {
 
   // ── The title row: title, explainer, narration, status mark ─────────────
   //
-  // The title never reorders or swaps out. The mark is mounted only while
-  // `markVisible`; during a run it stays mounted for the whole run, so its
-  // sweep never restarts mid-sync.
-  const feedStatusMark = markVisible ? (
+  // Nothing here reorders or swaps out, so the mark never remounts and its
+  // draw-on never restarts mid-sync.
+  const feedStatusMark = (
     <FeedStatusIndicator
-      mode={statusMode}
+      mode={markMode}
       expanded={statusExpanded}
       onPress={toggleStatus}
       testID="feed-status-indicator"
     />
-  ) : null;
+  );
   const feedTitleSlot = (
     <View pointerEvents="none" className="flex-shrink min-w-0">
       {/* A bare 1-line clamp truncated the screen's own name at large Dynamic
@@ -1236,7 +1231,7 @@ const FeedScreen: React.FC = () => {
               is still one tap away: the panel below carries the same counts. */}
 
           {/* Opened by the mark above; closes itself after
-              STATUS_PANEL_AUTO_COLLAPSE_MS, or when the mark goes away. */}
+              STATUS_PANEL_AUTO_COLLAPSE_MS. */}
           <View pointerEvents="box-none">
             <FeedStatusPanel expanded={statusExpanded} mode={statusMode} />
           </View>

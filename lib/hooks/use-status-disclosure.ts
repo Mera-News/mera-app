@@ -7,10 +7,10 @@
 //
 // `available` is the affordance's own visibility: the panel closes when it
 // goes false, so an open panel is never stranded after the control that opened
-// it unmounts. The Feed passes whether its Mera mark is on screen (while a sync
-// narrates, or in the error or limited state), which goes false at the end of
-// every ordinary run. The Dashboard's stats card is always rendered and passes
-// `true`.
+// it unmounts. Both current callers pass `true`: the Feed's Mera mark is on
+// screen in every state, and the Dashboard's stats card always renders (its
+// dropdown closes on a tab switch through its own blur effect). Kept for a
+// caller whose trigger CAN disappear.
 //
 // No refs and no manual clearing: the timer is armed by an effect keyed on
 // `expanded`, so React's own cleanup covers unmount, a re-tap, and the panel

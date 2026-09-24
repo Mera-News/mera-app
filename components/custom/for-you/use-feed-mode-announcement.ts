@@ -6,9 +6,10 @@
 // is a no-op when no screen reader is running.
 //
 // Called by the SCREEN (FeedScreen, and DashboardStatsCard on the Dashboard),
-// never by the Mera mark. The Dashboard has no mark, and the Feed's mounts only
-// while it is needed: a mark mounting already capped would seed "previous" with
-// the new state and miss the very transition this exists for.
+// never by the Mera mark: the Dashboard has no mark, and one owner per screen
+// keeps the announcement independent of whatever the mark's lifecycle becomes
+// (a mark mounting already capped would seed "previous" with the new state and
+// miss the very transition this exists for).
 //
 // Seeded from the screen's FIRST render, so a screen that mounts already capped
 // does not announce a state the user navigated into on purpose.

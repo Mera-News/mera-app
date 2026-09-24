@@ -29,14 +29,14 @@ jest.mock('@/components/custom/for-you/HeaderNarrationLine', () => {
 });
 
 import { Text, View } from 'react-native';
-import FeedHeaderTitleRow, { feedMarkVisible } from '../FeedHeaderTitleRow';
+import FeedHeaderTitleRow, { feedMarkMode } from '../FeedHeaderTitleRow';
 
-const row = (narrating: boolean, withMark = true) =>
+const row = (narrating: boolean) =>
     render(
         <FeedHeaderTitleRow
             height={54}
             title={<Text testID="title">Feed</Text>}
-            mark={withMark ? <View testID="mark" /> : null}
+            mark={<View testID="mark" />}
             explainer={<View testID="explainer" />}
             narrating={narrating}
             stage={null}
@@ -83,35 +83,32 @@ describe('FeedHeaderTitleRow', () => {
         expect(line.props.align).toBe('center');
     });
 
-    it('draws no mark when the screen passes none, and keeps the "?"', () => {
-        const r = row(false, false);
-        expect(r.getByTestId('explainer')).toBeTruthy();
-        expect(r.queryByTestId('mark')).toBeNull();
-    });
-
     it('keeps the row the same height with and without a sync', () => {
         const { StyleSheet } = require('react-native');
-        const idle = row(false, false);
+        const idle = row(false);
         const idleH = StyleSheet.flatten(idle.getByTestId('feed-header-title-row').props.style).height;
         expect(idle.queryByTestId('feed-narration-line')).toBeNull();
         idle.unmount();
-        const busy = row(true, true);
-        // Same height whether or not the mark and the narration are drawn.
+        const busy = row(true);
+        // Same height whether or not the narration is drawn.
         expect(StyleSheet.flatten(busy.getByTestId('feed-header-title-row').props.style).height).toBe(idleH);
     });
 });
 
-describe('feedMarkVisible', () => {
-    it('shows the mark while a sync narrates', () => {
-        expect(feedMarkVisible(true, 'processing')).toBe(true);
+// Owner: the mark is always there; it grows and draws only while Mera is
+// really working. `statusMode` alone is 'processing' on every five-minute poll
+// that finds nothing, which must not grow the mark.
+describe('feedMarkMode', () => {
+    it('is processing only while a sync really narrates', () => {
+        expect(feedMarkMode(true, 'processing')).toBe('processing');
     });
-    it('keeps it in the capped and error states, which only its ink announces', () => {
-        expect(feedMarkVisible(false, 'limited')).toBe(true);
-        expect(feedMarkVisible(false, 'error')).toBe(true);
+    it('rests on a bare scheduler poll', () => {
+        expect(feedMarkMode(false, 'processing')).toBe('idle');
     });
-    it('hides it at idle, deferred, and on a bare scheduler poll', () => {
-        expect(feedMarkVisible(false, 'idle')).toBe(false);
-        expect(feedMarkVisible(false, 'deferred')).toBe(false);
-        expect(feedMarkVisible(false, 'processing')).toBe(false);
+    it('keeps every other state, error and limited included, so their ink still shows', () => {
+        expect(feedMarkMode(false, 'error')).toBe('error');
+        expect(feedMarkMode(false, 'limited')).toBe('limited');
+        expect(feedMarkMode(false, 'idle')).toBe('idle');
+        expect(feedMarkMode(false, 'deferred')).toBe('deferred');
     });
 });
