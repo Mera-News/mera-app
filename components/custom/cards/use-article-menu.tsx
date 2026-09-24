@@ -324,6 +324,9 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 title: t('articleMenu.fewerFromDone', { source: publicationName }),
                 undoLabel: t('articleMenu.undo'),
                 undoTestID: 'article-menu-undo',
+                // The same "Change undone" the leaf's undo shows; the manager
+                // skips it when the revert was refused (onUndo → false).
+                undoneTitle: t('feedbackTree.undoneTitle'),
                 // Reverts THIS change (compare-and-set): if a newer change owns
                 // the publication's value, nothing is written and the toast
                 // claims nothing. A fresh 'none' write clobbered a later boost

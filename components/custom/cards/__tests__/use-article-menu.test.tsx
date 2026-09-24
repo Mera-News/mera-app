@@ -715,6 +715,8 @@ describe('useArticleMenu running items', () => {
                 title: 'articleMenu.fewerFromDone:NOS',
                 undoLabel: 'articleMenu.undo',
                 undoTestID: 'article-menu-undo',
+                // The same confirmation the leaf's "Got it" undo shows (batch 17).
+                undoneTitle: 'feedbackTree.undoneTitle',
             }),
         );
         // Undo REVERTS this exact change (compare-and-set in revertChange), never
