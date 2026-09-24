@@ -10,6 +10,21 @@ import { Platform, ScrollView, View } from 'react-native';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
+/**
+ * Accessibility roles for the row and each pill, per platform.
+ *
+ * iOS: React Native maps `tabbar` to UIAccessibilityTraitTabBar but maps `tab`
+ * to NO trait at all (react-native accessibilityPropsConversions.h), so a pill
+ * marked `tab` is a traitless element: captured on the simulator, every pill
+ * read as `Other`. A UIKit tab bar item is a BUTTON inside a TabBar-trait
+ * container, and that pairing is what VoiceOver reads as "tab, N of 5".
+ * Android has real `tab` / `tablist` roles.
+ */
+export function subTabA11yRoles(os: string): { row: 'tabbar' | 'tablist'; pill: 'button' | 'tab' } {
+    return os === 'ios' ? { row: 'tabbar', pill: 'button' } : { row: 'tablist', pill: 'tab' };
+}
+const A11Y_ROLES = subTabA11yRoles(Platform.OS);
+
 export type ForYouSubTab = 'feed' | 'stories' | 'saved' | 'history' | 'factChecks';
 
 interface ForYouSubTabsProps {
@@ -134,14 +149,11 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                     header, which moves over the backdrop, and no mask is
                     available without a native dependency. The last pill simply
                     clips at the edge; seen half-cut, it says the row goes on. */}
-                {/* The iOS tab-bar trait makes VoiceOver read each pill as
-                    "tab, N of 5" with no extra copy (RN maps 'tabbar', not
-                    'tablist', to UIAccessibilityTraitTabBar). Android reads
-                    the collection from 'tablist'. */}
+                {/* Roles per platform: see `subTabA11yRoles`. */}
                 <HStack
                     className="items-center"
                     space="sm"
-                    accessibilityRole={Platform.OS === 'ios' ? 'tabbar' : 'tablist'}
+                    accessibilityRole={A11Y_ROLES.row}
                     testID="dashboard-subtabs-list"
                 >
                     {TABS.map((tab) => {
@@ -195,7 +207,7 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                         );
                         const pressableProps = {
                             onPress: () => onSelect(tab.key),
-                            accessibilityRole: 'tab' as const,
+                            accessibilityRole: A11Y_ROLES.pill,
                             accessibilityState: { selected: active },
                             accessibilityLabel: label,
                             testID: `dashboard-tab-${tab.key}`,

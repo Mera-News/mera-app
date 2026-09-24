@@ -72,7 +72,7 @@ jest.mock('@expo/vector-icons', () => {
     return { MaterialIcons: (props: any) => <View {...props} /> };
 });
 
-import ForYouSubTabs from '../ForYouSubTabs';
+import ForYouSubTabs, { subTabA11yRoles } from '../ForYouSubTabs';
 
 describe('ForYouSubTabs', () => {
     beforeEach(() => {
@@ -198,7 +198,8 @@ describe('ForYouSubTabs: every pill is reachable and announced (F19)', () => {
         const { getByTestId } = render(<ForYouSubTabs activeSubTab="saved" onSelect={jest.fn()} />);
         expect(getByTestId('dashboard-subtabs-list').props.accessibilityRole).toBe('tabbar');
         const saved = getByTestId('dashboard-tab-saved');
-        expect(saved.props.accessibilityRole).toBe('tab');
+        // iOS: a tab bar item is a button (see the roles block below).
+        expect(saved.props.accessibilityRole).toBe('button');
         expect(saved.props.accessibilityState).toEqual({ selected: true });
         expect(getByTestId('dashboard-tab-feed').props.accessibilityState).toEqual({ selected: false });
     });
@@ -261,5 +262,39 @@ describe('ForYouSubTabs: Explore pill style', () => {
             getByTestId(`dashboard-tab-${key}`).findAll((n: any) => n.props?.name !== undefined && n.props?.size === 16)[0];
         expect(icon('feed').props.color).toBe(ACCENT);
         expect(icon('saved').props.color).toBe('#000000');
+    });
+});
+
+// Captured on the iOS sim: every pill reported as `Other`. React Native maps
+// only `tabbar` to a UIKit trait; `tab` maps to NONE on iOS
+// (accessibilityPropsConversions.h), so a pill carrying it is a traitless
+// element. A UIKit tab bar item is a BUTTON inside a TabBar-trait container,
+// which is what VoiceOver turns into "tab, N of 5". Android has real
+// tab/tablist roles.
+describe('ForYouSubTabs: roles on the element that takes the press', () => {
+    it('uses button-in-tabbar on iOS and tab-in-tablist on Android', () => {
+        expect(subTabA11yRoles('ios')).toEqual({ row: 'tabbar', pill: 'button' });
+        expect(subTabA11yRoles('android')).toEqual({ row: 'tablist', pill: 'tab' });
+    });
+
+    it('puts the pill role and selected state on the pressable itself, and pressing THAT element selects', () => {
+        const onSelect = jest.fn();
+        const { getByTestId } = render(<ForYouSubTabs activeSubTab="feed" onSelect={onSelect} />);
+        const { pill } = subTabA11yRoles(require('react-native').Platform.OS);
+        const saved = getByTestId('dashboard-tab-saved');
+        expect(saved.props.accessibilityRole).toBe(pill);
+        expect(saved.props.accessibilityState).toEqual({ selected: false });
+        expect(getByTestId('dashboard-tab-feed').props.accessibilityState).toEqual({ selected: true });
+        // The element carrying the role is the one that handles the press:
+        // no ancestor between it and the handler.
+        expect(typeof saved.props.onClick === 'function' || typeof saved.props.onResponderRelease === 'function').toBe(true);
+        fireEvent.press(saved);
+        expect(onSelect).toHaveBeenCalledWith('saved');
+    });
+
+    it('puts the row role on the pills\' container', () => {
+        const { getByTestId } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
+        const { row } = subTabA11yRoles(require('react-native').Platform.OS);
+        expect(getByTestId('dashboard-subtabs-list').props.accessibilityRole).toBe(row);
     });
 });
