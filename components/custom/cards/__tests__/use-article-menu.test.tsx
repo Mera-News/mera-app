@@ -315,7 +315,18 @@ describe('ArticleOverflowMenu sheet', () => {
 // fallback and an unmount flush, exactly once. Never on a timer guess.
 // The Modal reports its dismissal; the item runs a frame after the sheet
 // leaves the tree, so `dismiss` plays both.
+/** Let the sheet's slide-down finish: the Modal hides only when it ends.
+ *  Twice: the post-exit frame is queued when the first act() flushes. */
+const exitSheet = () => {
+    act(() => {
+        jest.advanceTimersByTime(300);
+    });
+    act(() => {
+        jest.advanceTimersByTime(50);
+    });
+};
 const dismiss = () => {
+    exitSheet();
     act(() => {
         mockModal?.onDismiss?.();
     });
@@ -452,6 +463,7 @@ describe('the ••• sheet as a navigation stack', () => {
         fireEvent.press(r.getByTestId('menu-like'));
         fireEvent.press(r.getByTestId('tree-descend'));
         fireEvent.press(r.getByTestId('article-menu-cancel'));
+        exitSheet();
         expect(mockModal.visible).toBe(false);
         dismiss();
         expect(mockShowFeedback).not.toHaveBeenCalled();
@@ -482,6 +494,7 @@ describe('the ••• sheet as a navigation stack', () => {
         fireEvent.press(r.getByTestId('menu-like'));
         fireEvent.press(r.getByTestId('tree-leaf'));
         expect(picked).toHaveBeenCalledWith('like', ['seen'], 0, false);
+        exitSheet();
         expect(mockModal.visible).toBe(false);
     });
 
@@ -495,6 +508,7 @@ describe('the ••• sheet as a navigation stack', () => {
         fireEvent.press(r.getByTestId('menu-dislike'));
         expect(r0.onDislike).toHaveBeenCalledTimes(1);
         expect(r.queryByTestId('tree-dislike-root')).toBeNull();
+        exitSheet();
         expect(mockModal.visible).toBe(false);
     });
 
@@ -505,6 +519,7 @@ describe('the ••• sheet as a navigation stack', () => {
         fireEvent.press(r.getByTestId('menu-like'));
         expect(r0.onLike).toHaveBeenCalledTimes(1);
         expect(r.queryByTestId('tree-like-root')).toBeNull();
+        exitSheet();
         expect(mockModal.visible).toBe(false);
     });
 
@@ -516,6 +531,7 @@ describe('the ••• sheet as a navigation stack', () => {
         expect(r.getByTestId('already-tracking-go')).toBeTruthy();
         expect(r.getByTestId('sheet-back')).toBeTruthy();
         fireEvent.press(r.getByTestId('already-tracking-go'));
+        exitSheet();
         expect(mockModal.visible).toBe(false);
         dismiss();
         expect(mockFollow.goToStory).toHaveBeenCalledTimes(1);
@@ -534,6 +550,7 @@ describe('useArticleMenu running items', () => {
     it('iOS: keeps the Modal mounted while it dismisses and runs the item on onDismiss, not on a timer', () => {
         const r = openMenu(<Host />);
         fireEvent.press(r.getByTestId('menu-report-bug'));
+        exitSheet();
         expect(mockModal.visible).toBe(false);
         expect(typeof mockModal.onDismiss).toBe('function');
         act(() => {
@@ -595,9 +612,8 @@ describe('useArticleMenu running items', () => {
         mockOS = 'android';
         const r = openMenu(<Host />);
         fireEvent.press(r.getByTestId('menu-report-bug'));
-        act(() => {
-            jest.advanceTimersByTime(20);
-        });
+        expect(mockShowFeedback).not.toHaveBeenCalled();
+        exitSheet();
         expect(mockShowFeedback).toHaveBeenCalledTimes(1);
         act(() => {
             jest.advanceTimersByTime(MENU_DISMISS_FALLBACK_MS);
@@ -677,6 +693,7 @@ describe('host overrides for the Feed and detail thumbs', () => {
         fireEvent.press(r.getByTestId('open-like-tree'));
         await settle();
         fireEvent.press(r.getByTestId('tree-chat'));
+        exitSheet();
         expect(mockModal.visible).toBe(false);
         expect(onFeedbackChat).not.toHaveBeenCalled();
         dismiss();
@@ -829,5 +846,63 @@ describe('the level transition', () => {
         fireEvent.press(r.getByTestId('menu-like'));
         expect(r.queryByTestId('article-menu-level-out', HIDDEN)).toBeNull();
         expect(r.getByTestId('tree-like-root')).toBeTruthy();
+    });
+});
+
+// Owner: "the bottom menus just appear. can they slide up and slide down?"
+// The backdrop fades while the sheet slides from below the screen edge; every
+// close runs the reverse. The Modal stays shown until the slide-down has
+// FINISHED, so an item that presents native UI still runs only after the
+// sheet has fully left (onDismiss on iOS, the exit's end on Android).
+describe('the sheet slides up and down', () => {
+    const { SHEET_ENTER_MS, SHEET_EXIT_MS } = require('../ArticleOverflowMenu');
+    const { AccessibilityInfo, StyleSheet } = jest.requireActual('react-native');
+    afterEach(() => jest.restoreAllMocks());
+
+    it('animates the sheet itself: no Modal animation, a separate scrim and a sliding sheet', () => {
+        const r = openMenu(<Host />);
+        expect(mockModal.animationType).toBe('none');
+        expect(r.getByTestId('article-menu-scrim')).toBeTruthy();
+        const t = StyleSheet.flatten(r.getByTestId('article-menu-sheet').props.style)?.transform ?? [];
+        expect(t.some((x: any) => 'translateY' in x)).toBe(true);
+        expect(SHEET_ENTER_MS).toBe(250);
+    });
+
+    // Jest completes a native-driver animation on its first frame, so the
+    // 250ms itself is not observable here; the ORDER is: the Modal is still
+    // shown when the close is asked for, hides only when the slide-down
+    // reports done, and the item runs only after the dismissal.
+    it('keeps the Modal shown through the slide-down, then hides it; the item runs only after', () => {
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('menu-open-source'));
+        expect(mockModal.visible).toBe(true);
+        expect(mockOpenOnSource).not.toHaveBeenCalled();
+        act(() => {
+            jest.advanceTimersByTime(SHEET_EXIT_MS + 50);
+        });
+        expect(mockModal.visible).toBe(false);
+        expect(mockOpenOnSource).not.toHaveBeenCalled();
+        dismiss();
+        expect(mockOpenOnSource).toHaveBeenCalledTimes(1);
+    });
+
+    it('on Android (no onDismiss) the item runs once the slide-down has finished, not before', () => {
+        mockOS = 'android';
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('menu-open-source'));
+        expect(mockModal.visible).toBe(true);
+        expect(mockOpenOnSource).not.toHaveBeenCalled();
+        exitSheet();
+        expect(r.queryByTestId('article-menu')).toBeNull();
+        expect(mockOpenOnSource).toHaveBeenCalledTimes(1);
+    });
+
+    it('Reduce Motion fades the sheet without sliding it', async () => {
+        jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(true);
+        const r = render(<Host />);
+        fireEvent.press(r.getByTestId('open'));
+        await settle();
+        const t = StyleSheet.flatten(r.getByTestId('article-menu-sheet').props.style)?.transform ?? [];
+        expect(t.some((x: any) => 'translateY' in x)).toBe(false);
     });
 });

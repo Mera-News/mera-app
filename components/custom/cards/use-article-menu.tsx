@@ -139,7 +139,7 @@ export interface UseArticleMenu {
  * everywhere.
  *
  * Every item runs AFTER the sheet's Modal has finished dismissing: on
- * `onDismiss` on iOS, once the Modal is hidden on Android (RN has no
+ * `onDismiss` on iOS, when the sheet's slide-down ends on Android (RN has no
  * `onDismiss` there), with a MENU_DISMISS_FALLBACK_MS fallback and a flush on
  * unmount, exactly once. Never on a timer guess: iOS silently drops native UI
  * presented while a Modal is dismissing (SFSafariViewController for "Open on
@@ -560,10 +560,6 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const openFollowRef = useRef(openFollow);
     openFollowRef.current = openFollow;
 
-    // Android has no `onDismiss`: the Modal is gone once it renders hidden.
-    useEffect(() => {
-        if (Platform.OS !== 'ios' && mounted && !visible) onDismissed();
-    }, [mounted, visible, onDismissed]);
 
     // A host that unmounts mid-dismissal (the row scrolled away, the screen
     // closed) still runs what the reader picked, once.
@@ -730,6 +726,9 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             mounted={mounted}
             visible={visible}
             onDismiss={Platform.OS === 'ios' ? onDismissed : undefined}
+            // Android has no `onDismiss`: the sheet has gone once its slide-down
+            // finishes and the Modal is hidden.
+            onExited={Platform.OS === 'ios' ? undefined : onDismissed}
             title={subject.title}
             onClose={close}
             levelKey={top ? levelKey(stack.length, top) : 'none'}

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import {
     AccessibilityInfo,
     Animated,
+    Easing,
     LayoutAnimation,
     Modal,
     Platform,
@@ -22,6 +23,13 @@ const ACCENT = '#EDA77E';
 const DESTRUCTIVE = '#F87171';
 /** One slide between levels, both ways. */
 export const SHEET_SLIDE_MS = 220;
+/** The sheet sliding up from below the screen edge (ease-out). */
+export const SHEET_ENTER_MS = 250;
+/** Its slide back down (ease-in). The Modal stays shown until it ends. */
+export const SHEET_EXIT_MS = 250;
+/** Reduce Motion: a short fade, no slide, both ways. */
+const SHEET_FADE_MS = 150;
+const SCRIM = 'rgba(0,0,0,0.78)';
 const ROW_STYLE = { minHeight: 48, justifyContent: 'center' } as const;
 /** The row label: the SAME class and style on every level of every sheet, so a
  *  pushed level cannot drift from the main ••• rows (batch 11: the old tree
@@ -140,6 +148,9 @@ export interface ActionSheetProps {
     visible: boolean;
     /** The Modal has finished dismissing (iOS only: RN calls it there). */
     onDismiss?: () => void;
+    /** The slide-down has finished and the Modal is hidden (every platform).
+     *  Android has no `onDismiss`, so this is its dismissal signal. */
+    onExited?: () => void;
     /** The article's headline, as the sheet's title (one line), every level. */
     title?: string;
     /** Cancel / backdrop / hardware back at the root: close the whole sheet. */
@@ -184,6 +195,7 @@ const ActionSheet: React.FC<ActionSheetProps> = (props) =>
 const ActionSheetBody: React.FC<ActionSheetProps> = ({
     visible,
     onDismiss,
+    onExited,
     title,
     onClose,
     levelKey,
@@ -193,8 +205,58 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
 }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
-    const { width } = useWindowDimensions();
+    const { width, height: windowHeight } = useWindowDimensions();
     const reduceMotion = useReduceMotion();
+
+    // ── Slide up / slide down ──────────────────────────────────────────────
+    // The sheet animates itself (never Modal `animationType="slide"`, which
+    // would slide the scrim too): the scrim fades while the sheet rises from
+    // below the screen edge. The Modal stays SHOWN until the slide-down ends,
+    // so native UI an item presents after the dismissal (a browser, the
+    // share sheet, the feedback form) is never presented over a leaving sheet.
+    const enter = useRef(new Animated.Value(0)).current;
+    const [modalShown, setModalShown] = useState(visible);
+    const [sheetHeight, setSheetHeight] = useState(0);
+    const onExitedRef = useRef(onExited);
+    onExitedRef.current = onExited;
+    useLayoutEffect(() => {
+        if (visible) {
+            setModalShown(true);
+            const anim = Animated.timing(enter, {
+                toValue: 1,
+                duration: reduceMotion ? SHEET_FADE_MS : SHEET_ENTER_MS,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+            });
+            anim.start();
+            return () => anim.stop();
+        }
+        const anim = Animated.timing(enter, {
+            toValue: 0,
+            duration: reduceMotion ? SHEET_FADE_MS : SHEET_EXIT_MS,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+        });
+        anim.start(({ finished }) => {
+            if (!finished) return;
+            setModalShown(false);
+            onExitedRef.current?.();
+        });
+        return () => anim.stop();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [visible]);
+    const sheetMotion = reduceMotion
+        ? { opacity: enter }
+        : {
+              transform: [
+                  {
+                      translateY: enter.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [sheetHeight || windowHeight, 0],
+                      }),
+                  },
+              ],
+          };
     // 0 → 1 over one transition. Incoming: from the side it came from to 0.
     // Outgoing: from 0 to the opposite side.
     const progress = useRef(new Animated.Value(1)).current;
@@ -254,19 +316,29 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
 
     return (
         <Modal
-            visible={visible}
+            visible={modalShown}
             onDismiss={onDismiss}
             transparent
-            animationType="fade"
+            animationType="none"
             onRequestClose={onBack ?? onClose}
             statusBarTranslucent
         >
             <Pressable
                 accessibilityLabel={t('common.cancel')}
                 onPress={onClose}
-                style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.78)', justifyContent: 'flex-end' }}
+                style={{ flex: 1, justifyContent: 'flex-end' }}
                 testID="article-menu-backdrop"
             >
+                <Animated.View
+                    testID="article-menu-scrim"
+                    pointerEvents="none"
+                    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: SCRIM, opacity: enter }}
+                />
+                <Animated.View
+                    testID="article-menu-sheet"
+                    style={[{ width: '100%' }, sheetMotion]}
+                    onLayout={(e) => setSheetHeight(e.nativeEvent.layout.height)}
+                >
                 <Pressable onPress={() => {}} style={{ width: '100%' }} accessible={false}>
                     <Box
                         className="rounded-t-3xl overflow-hidden border-t border-white/10"
@@ -337,6 +409,7 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                         </Box>
                     </Box>
                 </Pressable>
+                </Animated.View>
             </Pressable>
         </Modal>
     );

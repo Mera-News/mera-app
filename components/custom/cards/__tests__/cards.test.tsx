@@ -609,7 +609,7 @@ describe('ArticleStandaloneCompactCard', () => {
     expect(queryByTestId('compact-footer-flag')).toBeNull();
   });
 
-  it('opens the ••• menu from the button and from a long-press', () => {
+  it('opens the ••• menu from the button and from a long-press', async () => {
     const { getByTestId, queryByTestId, getByText } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
@@ -617,7 +617,8 @@ describe('ArticleStandaloneCompactCard', () => {
     fireEvent.press(getByTestId('compact-card-more'));
     expect(getByTestId('article-menu')).toBeTruthy();
     fireEvent.press(getByTestId('article-menu-cancel'));
-    expect(queryByTestId('article-menu')).toBeNull();
+    // The sheet slides down before it goes.
+    await waitFor(() => expect(queryByTestId('article-menu')).toBeNull());
     fireEvent(getByText('Standalone headline'), 'longPress');
     expect(getByTestId('article-menu')).toBeTruthy();
   });
