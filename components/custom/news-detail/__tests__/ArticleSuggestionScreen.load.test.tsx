@@ -26,20 +26,32 @@ jest.mock('@/components/custom/news-detail/ReadTranslateActions', () => ({ __esM
 jest.mock('@/components/custom/news-detail/RelatedSortDropdown', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/PublicationVisitBadge', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/ScrollToTopFab', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/StatusBarScrim', () => ({ __esModule: true, default: () => null }));
-// DetailTopBar's plate is a Reanimated view; the load path only needs the back
-// button, so the bar is a stub with the same testID and a static cover.
+// Records what the screen hands the status area, the back button and the
+// scroll container, so the "no dark header" rule can be asserted here.
+const mockHeaderProps: { scrim?: any; bar?: any; container?: any } = {};
+jest.mock('@/components/custom/StatusBarScrim', () => ({
+    __esModule: true,
+    default: (p: any) => {
+        mockHeaderProps.scrim = p;
+        return null;
+    },
+}));
 jest.mock('@/components/custom/news-detail/DetailTopBar', () => {
     const { Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ onBack }: any) => <Pressable testID="detail-back" onPress={onBack} />,
-        useDetailTopBarCover: () => ({ cover: { value: 0 }, onTopBarSolidChange: () => {} }),
+        default: (p: any) => {
+            mockHeaderProps.bar = p;
+            return <Pressable testID="detail-back" onPress={p.onBack} />;
+        },
     };
 });
 jest.mock('@/components/custom/ArticleFeedbackPrompt', () => ({ ArticleFeedbackPrompt: () => null }));
 jest.mock('@/components/custom/ArticleSuggestionContainer', () => ({
-    ArticleSuggestionContainer: () => null,
+    ArticleSuggestionContainer: (p: any) => {
+        mockHeaderProps.container = p;
+        return null;
+    },
 }));
 jest.mock('@/components/custom/cards/ArticleStandaloneCompactCard', () => ({
     ArticleStandaloneCompactCard: () => null,
@@ -165,5 +177,29 @@ describe('ArticleSuggestionScreen local load', () => {
         mockGetSuggestion.mockReturnValue(new Promise(() => {}));
         const screen = render(<ArticleSuggestionScreen articleSuggestionId="s1" onBack={() => {}} />);
         expect(screen.getByTestId('detail-back')).toBeTruthy();
+    });
+
+    // Owner: "earlier in detail page i never saw this dark header. even when
+    // scrolled up." The loaded screen hands the status area only its top fade
+    // (no scroll-driven cover), the back button no cover, and the scroll
+    // container no top-bar callback: nothing can turn solid on scroll.
+    it('has no dark header at any scroll position', async () => {
+        mockGetSuggestion.mockResolvedValue({
+            _id: 's1',
+            articleId: 'a1',
+            title_en: 'A story',
+            publication_name: 'NOS',
+            language_code: 'nl',
+            clusters: [],
+            matchedTopics: [],
+            status: 'complete',
+        });
+        mockGetSaved.mockResolvedValue(null);
+        render(<ArticleSuggestionScreen articleSuggestionId="s1" onBack={() => {}} />);
+        await waitFor(() => expect(mockHeaderProps.container).toBeDefined());
+        expect(mockHeaderProps.scrim).toEqual(expect.objectContaining({ overHero: true }));
+        expect(mockHeaderProps.scrim.coverProgress).toBeUndefined();
+        expect(mockHeaderProps.bar.cover).toBeUndefined();
+        expect(mockHeaderProps.container.onTopBarSolidChange).toBeUndefined();
     });
 });

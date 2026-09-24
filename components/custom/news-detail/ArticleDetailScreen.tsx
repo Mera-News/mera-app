@@ -12,7 +12,7 @@ import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDrop
 import RelatedErrorRow from '@/components/custom/news-detail/RelatedErrorRow';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
-import DetailTopBar, { useDetailTopBarCover } from '@/components/custom/news-detail/DetailTopBar';
+import DetailTopBar from '@/components/custom/news-detail/DetailTopBar';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
@@ -261,9 +261,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         isConnected,
     });
 
-    // M8/F31 + T-1/T-3: one cover value turns the status area and the bar
-    // behind the back button solid together, once the meta row scrolls under.
-    const { cover: topBarCover, onTopBarSolidChange } = useDetailTopBarCover();
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
     }, []);
@@ -697,16 +694,16 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 everything else on the page. */}
             <AbstractGradientBackdrop />
 
-            {/* Status bar scrim in `overHero` mode (T-1): at rest nothing
-                sits over the hero, so the photo runs under the status bar
-                with no grey band; as `topBarCover` rises (the meta row has
-                scrolled under the top bar) only its dark base fades in, in
-                step with DetailTopBar's opaque bar. Its zIndex (5) stays
-                below the back button (20). */}
-            {/* Transparent over the hero at rest, dark as the cover rises. */}
-            <StatusBarScrim overHero coverProgress={topBarCover} />
+            {/* Status bar scrim in `overHero` mode (T-1): only a soft top-down
+                fade inside the status-bar height, so the white clock and
+                battery glyphs stay readable over a light photo. No dark band
+                at ANY scroll position (owner: "earlier in detail page i never
+                saw this dark header. even when scrolled up."): content scrolls
+                freely under the status area. zIndex 5, below the back button
+                (20), which floats on its own dark circle. */}
+            <StatusBarScrim overHero />
 
-            <DetailTopBar onBack={onBack} backIcon={backIcon} cover={topBarCover} />
+            <DetailTopBar onBack={onBack} backIcon={backIcon} />
 
             <ArticleSuggestionContainer
                 article={article}
@@ -715,7 +712,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
-                onTopBarSolidChange={onTopBarSolidChange}
                 onEndReached={loadMoreRelated}
                 contentTopInset={insets.top}
                 contentBottomInset={insets.bottom + 20}

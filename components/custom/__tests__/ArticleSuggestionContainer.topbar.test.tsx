@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // M7/M8/F31: the hero starts at the top, and the detail top bar turns solid
 // exactly when the meta row scrolls under it.
-import { act, render } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import React from 'react';
 
 jest.mock('react-native-css-interop/jsx-runtime', () => {
@@ -65,12 +65,8 @@ jest.mock('@/lib/stores/blur-images-store', () => ({
     useBlurImagesStore: (sel: (s: { blurImages: boolean }) => unknown) => sel({ blurImages: false }),
 }));
 
-import { ArticleSuggestionContainer, SCREEN_HEADER_HEIGHT } from '../ArticleSuggestionContainer';
-import DetailTopBar, {
-    DETAIL_TOP_BAR_FADE_MS,
-    DETAIL_TOP_BAR_FILL,
-    DETAIL_TOP_BAR_HEIGHT,
-} from '../news-detail/DetailTopBar';
+import { ArticleSuggestionContainer } from '../ArticleSuggestionContainer';
+import DetailTopBar from '../news-detail/DetailTopBar';
 
 const withImage = { _id: 'a1', title: 'T', image_url: 'https://x/img.jpg' } as any;
 const noImage = { _id: 'a2', title: 'T' } as any;
@@ -92,78 +88,32 @@ describe('detail hero (M7)', () => {
     });
 });
 
-describe('detail top bar turns solid on scroll (M8/F31)', () => {
-    it('reports only the crossings, at the point the meta row reaches the bar', () => {
-        const onSolid = jest.fn();
-        render(
-            <ArticleSuggestionContainer
-                article={withImage}
-                variant="screen"
-                contentTopInset={INSET}
-                onTopBarSolidChange={onSolid}
-            />,
-        );
-        // Meta row top = hero + p-5; bar bottom = inset + bar height.
-        const solidAfter = SCREEN_HEADER_HEIGHT + 20 - (INSET + DETAIL_TOP_BAR_HEIGHT);
-        act(() => mockScroll!(0));
-        act(() => mockScroll!(solidAfter));
-        expect(onSolid).not.toHaveBeenCalled();
-        act(() => mockScroll!(solidAfter + 1));
-        act(() => mockScroll!(solidAfter + 50));
-        expect(onSolid).toHaveBeenCalledTimes(1);
-        expect(onSolid).toHaveBeenLastCalledWith(true);
-        act(() => mockScroll!(0));
-        expect(onSolid).toHaveBeenCalledTimes(2);
-        expect(onSolid).toHaveBeenLastCalledWith(false);
-    });
-
-    it('with no hero, turns solid almost at once, since the meta row starts just under the button', () => {
-        const onSolid = jest.fn();
-        render(
-            <ArticleSuggestionContainer
-                article={noImage}
-                variant="screen"
-                contentTopInset={INSET}
-                onTopBarSolidChange={onSolid}
-            />,
-        );
-        act(() => mockScroll!(40));
-        expect(onSolid).toHaveBeenCalledWith(true);
-    });
-});
-
-describe('DetailTopBar plate', () => {
+// Owner: "earlier in detail page i never saw this dark header. even when
+// scrolled up. can we make it like that again". No dark band at any scroll
+// position: content scrolls freely under the status area, and the back button
+// floats over it on its own dark circle.
+describe('no dark header on the detail screens', () => {
     const { StyleSheet } = require('react-native');
-    const plate = (r: any) => r.getByTestId('detail-top-plate', { includeHiddenElements: true });
 
-    it('follows the shared cover value: invisible at rest, opaque when covered', () => {
-        const rest = render(<DetailTopBar onBack={jest.fn()} cover={{ value: 0 } as any} />);
-        expect(StyleSheet.flatten(plate(rest).props.style).opacity).toBe(0);
-        rest.unmount();
-        const covered = render(<DetailTopBar onBack={jest.fn()} cover={{ value: 1 } as any} />);
-        const style = StyleSheet.flatten(plate(covered).props.style);
-        expect(style.opacity).toBe(1);
-        // OPAQUE: a translucent bar let the headline show through it (725).
-        expect(style.backgroundColor).toBe(DETAIL_TOP_BAR_FILL);
+    it('DetailTopBar draws only the floating back button, never a plate behind it', () => {
+        const r = render(<DetailTopBar onBack={jest.fn()} />);
+        expect(r.queryByTestId('detail-top-plate', { includeHiddenElements: true })).toBeNull();
+        const back = r.getByTestId('detail-back');
+        // Its own dark circle keeps it legible over photos and text.
+        expect(back.props.className).toEqual(expect.stringContaining('bg-gray-900'));
+        expect(back.props.className).toEqual(expect.stringContaining('rounded-full'));
     });
 
-    it('covers the status bar and the button, never catching taps', () => {
-        const r = render(<DetailTopBar onBack={jest.fn()} cover={{ value: 1 } as any} />);
-        expect(StyleSheet.flatten(plate(r).props.style).height).toBe(INSET + DETAIL_TOP_BAR_HEIGHT);
-        expect(plate(r).props.pointerEvents).toBe('none');
+    it('the scroll container hands scroll position straight to the host: no crossing logic', () => {
+        const onScroll = jest.fn();
+        render(<ArticleSuggestionContainer article={withImage} variant="screen" contentTopInset={INSET} onScrollPositionChange={onScroll} />);
+        expect(mockScroll).toBe(onScroll);
     });
 
-    it('animates the cover on each crossing, for the status area and the bar alike', () => {
-        const { useDetailTopBarCover } = require('../news-detail/DetailTopBar');
-        let api: any;
-        const Probe = () => {
-            api = useDetailTopBarCover();
-            return null;
-        };
-        render(<Probe />);
-        act(() => api.onTopBarSolidChange(true));
-        expect(api.cover.value).toEqual({ to: 1, duration: DETAIL_TOP_BAR_FADE_MS });
-        act(() => api.onTopBarSolidChange(false));
-        expect(api.cover.value).toEqual({ to: 0, duration: DETAIL_TOP_BAR_FADE_MS });
+    it('the button sits at the safe-area top, above the content', () => {
+        const r = render(<DetailTopBar onBack={jest.fn()} />);
+        let frame: any = r.getByTestId('detail-back');
+        while (frame && !(frame.props?.style && StyleSheet.flatten(frame.props.style)?.position === 'absolute')) frame = frame.parent;
+        expect(StyleSheet.flatten(frame.props.style)).toEqual(expect.objectContaining({ top: INSET + 8, zIndex: 20 }));
     });
 });

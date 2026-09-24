@@ -13,7 +13,6 @@ import ExtractedMetadataPanel from '@/components/custom/news-detail/ExtractedMet
 import {
     DETAIL_BACK_SIZE,
     DETAIL_BACK_TOP_OFFSET,
-    DETAIL_TOP_BAR_HEIGHT,
 } from '@/components/custom/news-detail/detail-top-bar-metrics';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
@@ -35,7 +34,7 @@ import ReasonNote from '@/components/custom/cards/ReasonNote';
 import { pendingSinceMs } from '@/components/custom/cards/pending-since';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export type ArticleSuggestionContainerVariant = 'card' | 'screen';
@@ -54,10 +53,6 @@ interface BaseProps {
      *  lazily-rendered footer content (e.g. the related-articles list). */
     onEndReached?: () => void;
     contentTopInset?: number;
-    /** M8/F31: fires when the meta row starts or stops scrolling under the
-     *  detail top bar, so the host can solidify `DetailTopBar`. Only on
-     *  crossings, never per frame. */
-    onTopBarSolidChange?: (solid: boolean) => void;
     contentBottomInset?: number;
     footer?: React.ReactNode;
     // Screen-variant only — slot rendered between the title and the
@@ -81,8 +76,6 @@ type ArticleProps = BaseProps & { article: NewsArticle; suggestion?: never };
 type ArticleSuggestionContainerProps = SuggestionProps | ArticleProps;
 
 export const SCREEN_HEADER_HEIGHT = 240;
-/** The content VStack's `p-5`. */
-const CONTENT_PADDING = 20;
 
 // Geometry of the detail screens' floating back button. Both ArticleDetailScreen
 // and ArticleSuggestionScreen render it at `top: insets.top + 8` with `p-3`
@@ -137,7 +130,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         onScrollPositionChange,
         onEndReached,
         contentTopInset = 0,
-        onTopBarSolidChange,
         contentBottomInset = 0,
         footer,
         aboveReason,
@@ -305,27 +297,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         />
     ) : null;
 
-    // Where the meta row starts in scroll content, and so how far the reader
-    // scrolls before it passes under the top bar. With a hero the content has
-    // no top inset (the hero bleeds under the status-bar scrim, M7); without
-    // one it starts below the inset and clears the back button.
-    const metaTop = showImage
-        ? SCREEN_HEADER_HEIGHT + CONTENT_PADDING
-        : contentTopInset + CONTENT_PADDING + NO_IMAGE_META_CLEARANCE;
-    const solidAfter = Math.max(0, metaTop - (contentTopInset + DETAIL_TOP_BAR_HEIGHT));
-    const topBarSolid = useRef(false);
-    const handleScrollPosition = useCallback(
-        (y: number) => {
-            onScrollPositionChange?.(y);
-            const solid = y > solidAfter;
-            if (solid !== topBarSolid.current) {
-                topBarSolid.current = solid;
-                onTopBarSolidChange?.(solid);
-            }
-        },
-        [onScrollPositionChange, onTopBarSolidChange, solidAfter],
-    );
-
     if (isCard) {
         return (
             <Pressable onPress={onPress}>
@@ -362,7 +333,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             // the inset only pads a screen with no hero.
             contentContainerStyle={{ paddingTop: showImage ? 0 : contentTopInset }}
             headerHeight={SCREEN_HEADER_HEIGHT}
-            onScrollPositionChange={handleScrollPosition}
+            onScrollPositionChange={onScrollPositionChange}
             onEndReached={onEndReached}
             parallaxHeader={
                 showImage ? (
