@@ -1,0 +1,103 @@
+{
+  "_comment": "ux1 chat (P3): the Save all chip on a chip list of distinct facts. New key only.",
+  "en": {
+    "askChoice": {
+      "saveAll": "Save all"
+    }
+  },
+  "ar": {
+    "askChoice": {
+      "saveAll": "حفظ الكل"
+    }
+  },
+  "de": {
+    "askChoice": {
+      "saveAll": "Alle speichern"
+    }
+  },
+  "es": {
+    "askChoice": {
+      "saveAll": "Guardar todo"
+    }
+  },
+  "fr": {
+    "askChoice": {
+      "saveAll": "Tout enregistrer"
+    }
+  },
+  "hi": {
+    "askChoice": {
+      "saveAll": "सभी सेव करें"
+    }
+  },
+  "id": {
+    "askChoice": {
+      "saveAll": "Simpan semua"
+    }
+  },
+  "it": {
+    "askChoice": {
+      "saveAll": "Salva tutto"
+    }
+  },
+  "ja": {
+    "askChoice": {
+      "saveAll": "すべて保存"
+    }
+  },
+  "ko": {
+    "askChoice": {
+      "saveAll": "모두 저장"
+    }
+  },
+  "nl": {
+    "askChoice": {
+      "saveAll": "Alles opslaan"
+    }
+  },
+  "pl": {
+    "askChoice": {
+      "saveAll": "Zapisz wszystko"
+    }
+  },
+  "pt-BR": {
+    "askChoice": {
+      "saveAll": "Salvar tudo"
+    }
+  },
+  "ru": {
+    "askChoice": {
+      "saveAll": "Сохранить все"
+    }
+  },
+  "th": {
+    "askChoice": {
+      "saveAll": "บันทึกทั้งหมด"
+    }
+  },
+  "tr": {
+    "askChoice": {
+      "saveAll": "Tümünü kaydet"
+    }
+  },
+  "uk": {
+    "askChoice": {
+      "saveAll": "Зберегти все"
+    }
+  },
+  "vi": {
+    "askChoice": {
+      "saveAll": "Lưu tất cả"
+    }
+  },
+  "zh-CN": {
+    "askChoice": {
+      "saveAll": "全部保存"
+    }
+  },
+  "zh-TW": {
+    "askChoice": {
+      "saveAll": "全部儲存"
+    }
+  }
+}

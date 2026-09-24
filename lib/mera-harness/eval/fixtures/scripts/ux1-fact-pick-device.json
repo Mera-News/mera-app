@@ -1,0 +1,336 @@
+{
+  "id": "ux1-fact-pick-device",
+  "cohort": "production",
+  "note": "ux1 owner rule: distinct facts are never a pick-one. The Android dev build turned this exact message into 'Which fact should I offer to save?' over three fact chips. Pass: all three facts offered as cards, or a chip list that carries Save all. The fake lookup answers the spellings a model or the loop may send for Nieuw-West ('niew West', 'New West', ...).",
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I live in niew West Amsterdam and I'm an expat from india",
+      "expect": {
+        "routeKind": "origin",
+        "skill": "facts/origin",
+        "tools": [
+          "load_skill",
+          "lookup_place",
+          "find_similar_facts",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "proposals": [
+          {
+            "statementMatches": [
+              "india"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": null
+          },
+          {
+            "statementMatches": [
+              "expat",
+              "netherlands"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": null
+          },
+          {
+            "statementMatches": [
+              "amsterdam"
+            ],
+            "kind": "origin",
+            "placeChain": "required",
+            "replaces": null
+          }
+        ]
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "niew West Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "niew West, Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "niew West",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Niew West",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Nieuw-West",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Nieuw West",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Nieuw-West, Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Nieuw West, Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Nieuw-West Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Nieuw West Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "New West",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "New West, Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "New West Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Amsterdam-West",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Amsterdam Nieuw-West",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "neighbourhood": "Nieuw-West",
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Amsterdam",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Amsterdam, Netherlands",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Amsterdam",
+                  "admin1": "North Holland",
+                  "countryCode": "NL",
+                  "countryName": "The Netherlands",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          }
+        ],
+        "find_similar_facts": [
+          {
+            "kind": null,
+            "returns": {
+              "candidates": []
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
