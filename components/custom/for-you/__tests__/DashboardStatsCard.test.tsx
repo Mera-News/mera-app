@@ -78,7 +78,7 @@ jest.mock('../FeedStatusPanel', () => {
         __esModule: true,
         default: (p: any) =>
             p.expanded ? (
-                <View testID={`status-panel-${p.mode}`}>
+                <View testID={`status-panel-${p.mode}`} opaque={p.opaque}>
                     <Pressable testID="panel-manage-plan" onPress={() => p.onBeforeNavigate?.()} />
                 </View>
             ) : null,
@@ -96,18 +96,35 @@ jest.mock('@/components/custom/processing/ChunkStrip', () => () => null);
 jest.mock('@/lib/stores/selectors', () => ({}));
 jest.mock('../FeedStatusDetails', () => () => null);
 // jest's host views mock measureInWindow as a no-op that never calls back.
+// The card and the layer are both measured; the layer sits 10pt down the
+// window, so the dropdown must land in LAYER coordinates.
 const ANCHOR = { x: 12, y: 195, width: 351, height: 64 };
+const LAYER = { x: 0, y: 10, width: 375, height: 812 };
 jest.mock('../stats-card-dropdown', () => {
     const actual = jest.requireActual('../stats-card-dropdown');
-    return { ...actual, measureAnchor: (_n: any, done: any) => done(ANCHOR) };
+    return {
+        ...actual,
+        measureAnchor: (node: any, done: any) =>
+            done(node?.props?.testID === 'dashboard-stats-dropdown-layer' ? LAYER : ANCHOR),
+    };
 });
+jest.mock('@/lib/navigation/tab-bar', () => ({ useTabBarClearance: () => 83 }));
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 20, bottom: 49, left: 0, right: 0 }),
 }));
 let mockFocused = true;
 jest.mock('@/lib/hooks/use-is-focused-safe', () => ({ useIsFocusedSafe: () => mockFocused }));
 
-import DashboardStatsCard from '../DashboardStatsCard';
+import DashboardStatsCardOnly from '../DashboardStatsCard';
+import { StatsDropdownLayer, StatsDropdownProvider } from '../stats-dropdown';
+
+/** The card as ForYouScreen hosts it: provider around, layer last. */
+const DashboardStatsCard = () => (
+    <StatsDropdownProvider>
+        <DashboardStatsCardOnly />
+        <StatsDropdownLayer />
+    </StatsDropdownProvider>
+);
 
 beforeEach(() => {
     mockArticleCount = 12;
@@ -190,20 +207,36 @@ describe('DashboardStatsCard', () => {
         }
     });
 
-    it('drops the panel in a Modal, outside the card, so the list never changes height', () => {
+    it('drops the panel in the screen layer, outside the card and NOT in a Modal, so the list never changes height', () => {
         const r = render(<DashboardStatsCard />);
         const before = cardIds(r);
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
         const panel = r.getByTestId('status-panel-idle', HIDDEN);
         let inModal = false;
         let inCard = false;
+        let inLayer = false;
         for (let p: any = panel.parent; p; p = p.parent) {
             if (p.type === 'Modal' || p.type?.displayName === 'Modal' || p.type?.name === 'Modal') inModal = true;
             if (p.props?.testID === 'dashboard-stats-card') inCard = true;
+            if (p.props?.testID === 'dashboard-stats-dropdown-layer') inLayer = true;
         }
-        expect(inModal).toBe(true);
+        // A Modal is its own window and covered the tab bar (captured).
+        expect(inModal).toBe(false);
+        expect(inLayer).toBe(true);
         expect(inCard).toBe(false);
+        expect(r.queryByTestId('rn-modal', HIDDEN)).toBeNull();
         expect(cardIds(r)).toEqual(before);
+    });
+
+    it('lets touches through the layer while closed', () => {
+        const r = render(<DashboardStatsCard />);
+        expect(r.getByTestId('dashboard-stats-dropdown-layer', HIDDEN).props.pointerEvents).toBe('none');
+    });
+
+    it('floats the panel on the OPAQUE base', () => {
+        const r = render(<DashboardStatsCard />);
+        fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
+        expect(r.getByTestId('status-panel-idle', HIDDEN).props.opaque).toBe(true);
     });
 
     it('anchors the dropdown directly under the card, within the tab bar', () => {
@@ -211,7 +244,8 @@ describe('DashboardStatsCard', () => {
         const r = render(<DashboardStatsCard />);
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
         const frame = StyleSheet.flatten(r.getByTestId('dashboard-stats-dropdown', HIDDEN).props.style);
-        expect(frame).toMatchObject({ position: 'absolute', top: 259, left: 12, width: 351 });
+        // Window y 195 + 64, less the layer's own window y of 10.
+        expect(frame).toMatchObject({ position: 'absolute', top: 249, left: 12, width: 351 });
         const scroll = StyleSheet.flatten(r.getByTestId('dashboard-stats-dropdown-scroll', HIDDEN).props.style);
         expect(scroll.maxHeight).toBeGreaterThan(0);
     });

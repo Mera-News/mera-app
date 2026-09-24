@@ -114,6 +114,13 @@ jest.mock('@/components/custom/for-you/ForYouSubTabs', () => {
 });
 jest.mock('@/components/custom/for-you/StoriesSlotPlaceholder', () => mockStub('stories'));
 jest.mock('@/components/custom/for-you/DashboardSectionsFeed', () => mockStub('sections'));
+jest.mock('@/components/custom/for-you/stats-dropdown', () => ({
+  StatsDropdownProvider: ({ children }: any) => children,
+  StatsDropdownLayer: () => {
+    const { View } = require('react-native');
+    return <View testID="stats-dropdown-layer" />;
+  },
+}));
 jest.mock('@/components/custom/fact-checks/FactChecksPanel', () => mockStub('fact-checks'));
 jest.mock('@/components/custom/for-you/FeedStatsSentence', () => mockStub('stats-sentence'));
 jest.mock('@/components/custom/saved-suggestions/SavedSuggestionsScreen', () => mockStub('saved'));
@@ -271,5 +278,14 @@ describe('Dashboard header', () => {
     act(() => view.rerender(<ForYouScreen />));
     expect(announce).toHaveBeenCalledTimes(1);
     expect(announce).toHaveBeenCalledWith('feedStatus.syncDoneA11y');
+  });
+
+  it('mounts the stats dropdown layer in the screen, after the header, so it paints over both', () => {
+    render(<ForYouScreen />);
+    const root = screen.getByTestId('dashboard-screen');
+    const ids = root
+      .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+      .map((n: any) => n.props.testID as string);
+    expect(ids.indexOf('stats-dropdown-layer')).toBeGreaterThan(ids.indexOf('dashboard-header'));
   });
 });

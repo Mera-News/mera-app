@@ -4,10 +4,7 @@
 // calls back, so a test of the card has to replace the measurement, and the
 // geometry is easier to pin as a function than through a rendered Modal.
 //
-// Why a dropdown at all: the card is the head of the Overview list, and
-// growing it in place was captured growing UPWARD under the header at scroll
-// offset 0 (the list keeps its visible content position), hiding the first
-// rows of the body. A dropdown in a Modal never changes the list's height.
+// The dropdown itself (provider + layer) is `stats-dropdown.tsx`.
 
 import type { View } from 'react-native';
 
@@ -31,21 +28,19 @@ export const DROPDOWN_EDGE_GAP = 8;
 
 /**
  * The dropdown sits directly under the card, never above the status bar and
- * never over the tab bar.
- *
- * `bottomReserve` is what the tab bar and home indicator take at the bottom
- * of the WINDOW (the Modal covers the whole window, tab bar included). On iOS
- * that is the in-tab `insets.bottom`, which already contains the bar; on
- * Android it is the inset plus the bar. See `dropdownBottomReserve`.
+ * never over the tab bar. All in the LAYER's coordinates: `containerHeight`
+ * is the tab screen's height and `bottomReserve` is `useTabBarClearance()`
+ * (the in-tab inset on iOS, where content runs under the bar; 0 on Android,
+ * where content ends at the bar).
  */
 export function dropdownFrame(
     anchor: AnchorRect,
-    windowHeight: number,
+    containerHeight: number,
     topInset: number,
     bottomReserve: number,
 ): DropdownFrame {
     const top = Math.max(anchor.y + anchor.height, topInset + DROPDOWN_EDGE_GAP);
-    const bottom = windowHeight - bottomReserve - DROPDOWN_EDGE_GAP;
+    const bottom = containerHeight - bottomReserve - DROPDOWN_EDGE_GAP;
     return {
         top,
         left: anchor.x,
@@ -54,16 +49,7 @@ export function dropdownFrame(
     };
 }
 
-/**
- * The window-bottom reserve for the tab bar. NOT `tabBarClearance`: that
- * answers "inside the tab's content area", which on Android already ends at
- * the bar, while a Modal draws over the bar and has to step over it.
- */
-export function dropdownBottomReserve(os: string, insetsBottom: number, tabBarHeight: number): number {
-    return os === 'ios' ? insetsBottom : insetsBottom + tabBarHeight;
-}
-
-/** Measure the card in window coordinates; the Modal draws in the same space. */
+/** Measure a view in window coordinates (the card, and the layer's own origin). */
 export function measureAnchor(node: View | null, done: (rect: AnchorRect) => void): void {
     if (!node) return;
     node.measureInWindow((x, y, width, height) => done({ x, y, width, height }));

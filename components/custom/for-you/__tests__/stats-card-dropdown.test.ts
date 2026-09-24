@@ -1,4 +1,4 @@
-import { DROPDOWN_EDGE_GAP, dropdownBottomReserve, dropdownFrame } from '../stats-card-dropdown';
+import { DROPDOWN_EDGE_GAP, dropdownFrame } from '../stats-card-dropdown';
 
 // 375x667 (iPhone SE class): status bar 20, in-tab bottom inset 49 (bar, no
 // home indicator). The card sits under a ~183pt header.
@@ -23,14 +23,5 @@ describe('dropdownFrame', () => {
     it('never reports a negative height', () => {
         const f = dropdownFrame({ x: 0, y: 600, width: 375, height: 60 }, SE.windowHeight, SE.topInset, SE.bottomReserve);
         expect(f.maxHeight).toBe(0);
-    });
-});
-
-describe('dropdownBottomReserve', () => {
-    it('is the in-tab inset alone on iOS, which already contains the bar', () => {
-        expect(dropdownBottomReserve('ios', 83, 49)).toBe(83);
-    });
-    it('adds the bar on Android, where the inset does not include it', () => {
-        expect(dropdownBottomReserve('android', 24, 56)).toBe(80);
     });
 });
