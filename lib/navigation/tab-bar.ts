@@ -28,18 +28,20 @@ export const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 56;
  * twice: measured on device, the Dashboard's share FAB sat 154pt from the
  * bottom (20 + 85 + 49) and 70pt above the bar instead of 20.
  *
- * ## Android is unchanged until measured
+ * ## Why Android returns zero
  *
- * NativeTabs on Android wraps the tab in a bottom-edge `SafeAreaView` instead,
- * so the answer there differs and is not inferred from iOS. It keeps the
- * previous arithmetic until an emulator capture measures it.
+ * NativeTabs on Android wraps the tab in a bottom-edge `SafeAreaView`, and the
+ * tab's content area already ENDS at the bar. Measured on an API 35 emulator
+ * (gesture nav, 24dp inset, bar 80.4dp): every list viewport ended exactly at
+ * the bar's top edge, and the old `insets.bottom + TAB_BAR_HEIGHT` floated the
+ * Visited share FAB 99.8dp above the bar instead of 20.
  *
  * Only for components rendered INSIDE the tab navigator. A standalone Stack
  * route has no bar behind it and takes `insets.bottom` alone.
  */
 export function tabBarClearance(os: string, insetsBottom: number): number {
-  if (os === 'ios') return insetsBottom;
-  return insetsBottom + TAB_BAR_HEIGHT;
+  if (os === 'android') return 0;
+  return insetsBottom;
 }
 
 /** `tabBarClearance` for the current platform and the current tab's insets. */
