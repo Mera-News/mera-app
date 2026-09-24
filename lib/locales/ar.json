@@ -2785,7 +2785,8 @@
     "topics": "مواضيعك"
   },
   "askChoice": {
-    "answeredA11y": "تمت الإجابة بالفعل"
+    "answeredA11y": "تمت الإجابة بالفعل",
+    "saveAll": "حفظ الكل"
   },
   "streamingWords": {
     "w1": "أفكر",

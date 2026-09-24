@@ -89,3 +89,27 @@ describe('when the offer is spent', () => {
     expect(asks(items)[0].answered).toBe(true);
   });
 });
+
+// Owner rule (ux1): a chip list of distinct facts always carries "Save all".
+// The device case: "I live in niew West Amsterdam and I'm an expat from india".
+describe('Save all on a chip list of distinct facts', () => {
+  const FACTS = ['You are an expat', 'You are from India', 'You live in New West, Amsterdam'];
+
+  it('carries the exact text a Save all tap sends', () => {
+    const items = deriveThreadItems(base({ live: [user('u1'), asst('a1', '', [askCall(FACTS)])] }));
+    expect(asks(items)[0].saveAll).toBe('You are an expat. You are from India. You live in New West, Amsterdam.');
+  });
+
+  it('covers every option, even past the chips shown', () => {
+    const four = [...FACTS, 'You work at Booking'];
+    const items = deriveThreadItems(base({ live: [user('u1'), asst('a1', '', [askCall(four)])] }));
+    expect(asks(items)[0].saveAll).toContain('You work at Booking.');
+  });
+
+  it('never on a question between readings of one thing', () => {
+    const items = deriveThreadItems(
+      base({ live: [user('u1'), asst('a1', '', [askCall(['Porto, Portugal', 'Porto Alegre'])])] }),
+    );
+    expect(asks(items)[0].saveAll).toBeNull();
+  });
+});

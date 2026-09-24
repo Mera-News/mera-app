@@ -2698,7 +2698,8 @@
     "topics": "topikmu"
   },
   "askChoice": {
-    "answeredA11y": "sudah dijawab"
+    "answeredA11y": "sudah dijawab",
+    "saveAll": "Simpan semua"
   },
   "streamingWords": {
     "w1": "Berpikir",

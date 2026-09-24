@@ -2743,7 +2743,8 @@
     "topics": "ваші теми"
   },
   "askChoice": {
-    "answeredA11y": "уже відповіли"
+    "answeredA11y": "уже відповіли",
+    "saveAll": "Зберегти все"
   },
   "streamingWords": {
     "w1": "Думаю",

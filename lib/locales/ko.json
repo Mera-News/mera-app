@@ -2698,7 +2698,8 @@
     "topics": "관심 주제"
   },
   "askChoice": {
-    "answeredA11y": "이미 답변함"
+    "answeredA11y": "이미 답변함",
+    "saveAll": "모두 저장"
   },
   "streamingWords": {
     "w1": "생각 중",

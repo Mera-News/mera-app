@@ -2706,7 +2706,8 @@
     "topics": "tes sujets"
   },
   "askChoice": {
-    "answeredA11y": "déjà répondu"
+    "answeredA11y": "déjà répondu",
+    "saveAll": "Tout enregistrer"
   },
   "streamingWords": {
     "w1": "Réflexion",

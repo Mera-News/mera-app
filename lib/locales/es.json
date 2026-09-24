@@ -2699,7 +2699,8 @@
     "topics": "tus temas"
   },
   "askChoice": {
-    "answeredA11y": "ya respondido"
+    "answeredA11y": "ya respondido",
+    "saveAll": "Guardar todo"
   },
   "streamingWords": {
     "w1": "Pensando",

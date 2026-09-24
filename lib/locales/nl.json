@@ -2699,7 +2699,8 @@
     "topics": "je onderwerpen"
   },
   "askChoice": {
-    "answeredA11y": "al beantwoord"
+    "answeredA11y": "al beantwoord",
+    "saveAll": "Alles opslaan"
   },
   "streamingWords": {
     "w1": "Denken",

@@ -33,12 +33,14 @@ import {
   sameCountry,
   threeFactsOf,
 } from './combined-fact';
+import { factPickStatement, isFactPickChoice, joinFactPick } from './fact-pick';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import type {
   AgentDeps,
   AgentLeg,
+  AgentModelResult,
   AgentProposal,
   AgentTurnResult,
   AgentTurnState,
@@ -279,6 +281,35 @@ function placeFromPayload(payload: unknown): Place | null {
  * last month". A fact names the user in the third person and a home is
  * "Lives in ...", or none of the loop's rules recognise it.
  */
+/**
+ * The origin a message states PLAINLY, or null: exactly one "I'm (an expat)
+ * from X" / "originally from X" naming one to three words, title-cased. Any
+ * second "from" ("partly from india and partly from kenya") is not plain.
+ */
+function plainOriginOf(message: string): string | null {
+  const t = message.replace(/[’]/g, "'");
+  if ((t.match(/\bfrom\b/gi) ?? []).length !== 1) return null;
+  const m = /\b(?:i'?m|i\s+am)\s+(?:(?:an?\s+)?(?:expat|immigrant|migrant)\s+|originally\s+)?from\s+([a-z][a-z'.-]*(?:\s+[a-z][a-z'.-]*){0,2}?)\s*(?:$|[,.!?;]|\s+and\b|\s+but\b)/i.exec(t)
+    ?? /\boriginally\s+from\s+([a-z][a-z'.-]*(?:\s+[a-z][a-z'.-]*){0,2}?)\s*(?:$|[,.!?;]|\s+and\b|\s+but\b)/i.exec(t);
+  if (!m) return null;
+  return m[1].split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+}
+
+/** The loop-written first leg of a "Save all" tap. */
+function saveAllLeg(options: readonly string[]): AgentModelResult {
+  const entries = options.map((o) => ({ statement: factPickStatement(o) }));
+  return {
+    content: '',
+    toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: JSON.stringify({ extracted_user_information: entries }) }],
+    finishReason: 'tool_calls',
+    truncated: false,
+    usage: null,
+    modelSent: 'loop',
+    latencyMs: 0,
+    error: null,
+  };
+}
+
 function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unknown> {
   let t = typeof entry.statement === 'string' ? entry.statement.trim() : '';
   if (!t) return entry;
@@ -297,6 +328,9 @@ function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unkno
       .replace(/\s+(?:last\s+(?:week|month|year)|this\s+(?:month|year)|recently|a\s+few\s+(?:weeks|months|years)\s+ago)\.?$/i, '')
       .replace(/\.$/, '');
     t = `Lives in ${where}`;
+    // "Nieuw-West, Amsterdam (North Holland, The Netherlands)": the chain is
+    // written in the comma form (measured on staging).
+    t = collapseRepeatedRungs(t.replace(/\s*\(([^()]+)\)\s*$/, ', $1'));
   } else {
     t = t.charAt(0).toUpperCase() + t.slice(1);
   }
@@ -487,6 +521,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // The tap arrives as an ordinary message. Matching it here is what lets the
   // next leg save the chosen place without a second lookup.
   const turn = state.turn;
+  let saveAllOptions: string[] | null = null;
   if (turn.pendingChoice) {
     // EXACT match only, and the chips are the only thing that can consume a
     // pending choice. Anything else is a new turn, and the stale choice is
@@ -502,6 +537,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         payload: tapped.payload,
       };
       turn.pendingChoice = null;
+    } else {
+      // A "SAVE ALL" TAP on a chip list of distinct facts (owner rule ux1).
+      // It is NOT a resolved choice: it never authorises a delete or a
+      // cross-key replace. It resumes the asking skill and offers every
+      // option as a card, without asking the model to pick again.
+      const texts = turn.pendingChoice.options.map((o) => o.text);
+      if (isFactPickChoice(texts) && userMessage.trim() === joinFactPick(texts)) {
+        saveAllOptions = texts;
+        turn.pendingChoice = null;
+      }
     }
   }
   // A PLAIN YES to the last question continues that question's subject, the
@@ -523,7 +568,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     && turn.lastSkill.startsWith('facts/')
     && plainAnswer !== null;
   const answerPending =
-    turn.lastTurnAskedQuestion && turn.resolvedChoice === null && !typedYesResume;
+    turn.lastTurnAskedQuestion && turn.resolvedChoice === null && !typedYesResume && saveAllOptions === null;
   // Read BEFORE the turn overwrites it at the end, and held for every leg: the
   // question belongs to the turn being answered, not to the one being written.
   const lastQuestion = turn.lastQuestion;
@@ -575,7 +620,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // statements read as the user's own, because the model had already dropped
   // the girlfriend from the sentence. The subject has to survive the question,
   // which means resuming the skill rather than re-deciding.
-  if ((turn.resolvedChoice !== null || typedYesResume) && turn.lastSkill !== null) {
+  if ((turn.resolvedChoice !== null || typedYesResume || saveAllOptions !== null) && turn.lastSkill !== null) {
     const body = deps.loadSkill(turn.lastSkill);
     if (body !== null) {
       skillLoaded = turn.lastSkill;
@@ -616,6 +661,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const unknownTools: string[] = [];
   /** The status of the last lookup_place this turn, or null if none ran. */
   let lastLookupStatus: string | null = null;
+  /** Every lookup this turn that resolved to exactly ONE place. A later
+   *  lookup ("India") resets `placeCandidates`, so the end-of-turn offer
+   *  reads this instead. */
+  const resolvedPlacesThisTurn: Place[] = [];
   let placeCandidates: Place[] = resumedSkill && turn.confirmedPlace ? [turn.confirmedPlace] : [];
   let similarFactCount: number | null = null;
   const toolResultsThisTurn: { name: string; result: unknown }[] = [];
@@ -787,7 +836,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // conditions (a 402 spend limit is the live one), and recording those as leg
     // data instead of letting them abort writes a file of empty rows that reads
     // as a model failure.
-    const result = await deps.callModel({
+    // A SAVE ALL TAP's first leg is written by the loop: the offer of every
+    // option, through the ordinary save path, so every guard still applies.
+    const result = index === 0 && saveAllOptions !== null ? saveAllLeg(saveAllOptions) : await deps.callModel({
       role: index === 0 ? 'route' : 'tool',
       model,
       systemPrompt,
@@ -861,8 +912,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     let sawContinuationTool = false;
     let terminatedByChoice = false;
 
-    for (const call of result.toolCalls) {
-      const args = parseArgs(call.argumentsRaw);
+    for (let call of result.toolCalls) {
+      let args = parseArgs(call.argumentsRaw);
       // A MALFORMED call is never executed and is never forcing: a truncated
       // load_skill that counted as forcing would burn the whole cap retrying.
       if (args === null) {
@@ -954,6 +1005,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const out = await deps.tools.lookupPlace({ query, countryHint });
         placeCandidates = out.status === 'resolved' ? out.places : [];
         lastLookupStatus = out.status;
+        if (out.status === 'resolved' && out.places.length === 1) resolvedPlacesThisTurn.push(out.places[0]);
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -961,6 +1013,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           continuationsSeen.add(callKey);
         }
         continue;
+      }
+
+      // DISTINCT FACTS ARE NEVER A PICK-ONE (owner rule ux1). Measured on the
+      // Android dev build: "Which fact should I offer to save?" over "You are
+      // an expat" / "You are from India" / "You live in New West, Amsterdam".
+      // The question becomes the offer of all of them, through the ordinary
+      // save path, and the prose that asked it is dropped.
+      if (
+        call.name === 'ask_choice'
+        && skillLoaded !== null
+        && skillLoaded.startsWith('facts/')
+        && isFactPickChoice(args.options, placeCandidates)
+      ) {
+        const entries = (args.options as string[]).map((o) => ({ statement: factPickStatement(o) }));
+        call = { ...call, name: 'saveExtractedFacts', argumentsRaw: JSON.stringify({ extracted_user_information: entries }) };
+        args = { extracted_user_information: entries };
+        if (result.content.trim() && !(index === 0 && !resumedSkill)) reply = '';
       }
 
       if (call.name === 'ask_choice') {
@@ -1484,6 +1553,91 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    * no home fact exists yet. Written by the loop, not asked of the model: the
    * combined shape is the loop's own old output, so splitting it is mechanical.
    */
+  /**
+   * Owner ruling (ux1): a facts turn that ends on PROSE with nothing offered,
+   * after a lookup this turn resolved exactly one place the user named, gets
+   * that residence as a card from the loop (never a silent save). An origin
+   * the message states plainly ("I'm an expat from india") comes with it,
+   * through the same normalisation, so the expat status follows. Measured on
+   * staging: the model resolved Nieuw-West and then asked "is India the
+   * country you originally come from?" with no card.
+   */
+  async function offerResolvedPlaceAtEnd(): Promise<void> {
+    if (terminalReason === 'transport-error' || terminalReason === 'awaiting-user') return;
+    if (turn.pendingChoice !== null || proposedSomething || homeOfferedThisTurn) return;
+    if (!skillsLoaded.some((id) => id.startsWith('facts/'))) return;
+    const said = userMessage.toLowerCase();
+    const named = resolvedPlacesThisTurn.filter(
+      (p) => said.includes(p.locality.toLowerCase())
+        || (p.neighbourhood !== undefined && said.includes(p.neighbourhood.toLowerCase())),
+    );
+    const distinct = [...new Map(named.map((p) => [`${p.neighbourhood ?? ''}|${p.locality}|${p.countryCode}`, p])).values()];
+    if (distinct.length !== 1) return;
+    const place = distinct[0];
+    const origin = plainOriginOf(userMessage);
+    const originOnFile = state.persona.facts.find((f) => f.attribute === ORIGIN_KEY || isOriginStatement(f.statement));
+    const from = origin ?? (originOnFile ? originCountry(originOnFile.statement) : null);
+    if (sameCountry(place.countryName, from)) return;
+    const list: Record<string, unknown>[] = [
+      { statement: chainStatement(place.neighbourhood ?? place.locality, place), questionnaire_attribute: CANONICAL_LOCATION_KEY },
+    ];
+    if (origin && !originOnFile) list.push({ statement: `From ${origin}`, questionnaire_attribute: ORIGIN_KEY });
+    addExpatStatus(list, state.persona.facts, [place]);
+    const topicSkill = (kind: string) =>
+      (deps.skillIds() as readonly string[]).includes(`topics/${kind}`) ? `topics/${kind}` : undefined;
+    const entries = list
+      .filter((e) => {
+        const statement = String(e.statement);
+        return !existingStatements.has(comparableStatement(statement)) && !proposedStatements.has(statement.trim().toLowerCase());
+      })
+      .map((e): Record<string, unknown> => {
+        const kind = e.questionnaire_attribute === CANONICAL_LOCATION_KEY ? 'residence' : 'origin';
+        return { ...e, ...(topicSkill(kind) ? { topic_skill_id: topicSkill(kind) } : {}) };
+      });
+    if (entries.length === 0) return;
+    const endProposals: AgentProposal[] = entries.map((e) => ({
+      statement: String(e.statement),
+      kind: e.questionnaire_attribute === CANONICAL_LOCATION_KEY ? 'residence' : 'origin',
+      place: e.questionnaire_attribute === CANONICAL_LOCATION_KEY ? place : null,
+      replaces: null,
+    }));
+    const out = await deps.tools.saveExtractedFacts({ extracted_user_information: entries, proposals: endProposals });
+    const callRaw = JSON.stringify({ extracted_user_information: entries });
+    const leg: AgentLeg = {
+      index: legs.length,
+      role: 'tool',
+      systemPrompt: '',
+      messages: [],
+      toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+      toolResults: [{ name: 'saveExtractedFacts', result: out }],
+      rawOutput: '',
+      result: {
+        content: '',
+        toolCalls: [{ name: 'saveExtractedFacts', argumentsRaw: callRaw }],
+        finishReason: 'synthetic',
+        truncated: false,
+        usage: null,
+        modelSent: null,
+        latencyMs: 0,
+        error: null,
+      },
+      inputTokens: 0,
+      synthetic: true,
+    };
+    legs.push(leg);
+    proposals.push(...endProposals);
+    for (const p of endProposals) {
+      proposedStatements.add(p.statement.toLowerCase());
+      offeredThisTurn.push(p.statement.toLowerCase());
+    }
+    proposedSomething = true;
+    homeOfferedThisTurn = true;
+    // The cards answer the question the prose was asking; it is not left
+    // above them.
+    if (/\?\s*$/.test(cleanProse(reply))) reply = '';
+    params.onLeg?.(leg);
+  }
+
   async function offerCombinedFactSplit(): Promise<string | null> {
     if (terminalReason === 'transport-error') return null;
     // Never while a question is waiting: the split card used to land under
@@ -1625,6 +1779,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   if (leaksInternals(acknowledgement) || narratesProcess(acknowledgement)) {
     acknowledgement = '';
   }
+
+  // ---- A RESOLVED PLACE THE TURN NEVER OFFERED -----------------------------
+  await offerResolvedPlaceAtEnd();
 
   // ---- THE ONE-TIME SPLIT OF A COMBINED FACT -------------------------------
   const combinedRewriteOffered = await offerCombinedFactSplit();

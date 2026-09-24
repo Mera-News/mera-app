@@ -2739,7 +2739,8 @@
     "topics": "ваши темы"
   },
   "askChoice": {
-    "answeredA11y": "уже отвечено"
+    "answeredA11y": "уже отвечено",
+    "saveAll": "Сохранить все"
   },
   "streamingWords": {
     "w1": "Думаю",

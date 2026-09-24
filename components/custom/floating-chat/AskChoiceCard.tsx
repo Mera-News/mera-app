@@ -39,6 +39,10 @@ function cardEntering() {
 export interface AskChoiceCardProps {
   question: string | null;
   options: string[];
+  /** The text a "Save all" tap sends; null hides the chip. Only a list of
+   *  distinct facts has one (owner rule ux1): the loop reads it back as the
+   *  offer of every option as cards, never a silent save. */
+  saveAll?: string | null;
   answered: boolean;
   onSend: (text: string) => void;
 }
@@ -46,6 +50,7 @@ export interface AskChoiceCardProps {
 export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
   question,
   options,
+  saveAll = null,
   answered,
   onSend,
 }) => {
@@ -86,6 +91,27 @@ export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
             </Text>
           </Pressable>
         ))}
+        {saveAll !== null && (
+          <Pressable
+            onPress={() => {
+              if (answered) return;
+              void hapticLight();
+              onSend(saveAll);
+            }}
+            disabled={answered}
+            style={[styles.chip, styles.chipPrimary, answered && styles.chipAnswered]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: answered }}
+            accessibilityLabel={
+              answered ? `${t('askChoice.saveAll')}, ${t('askChoice.answeredA11y')}` : t('askChoice.saveAll')
+            }
+            testID="ask-choice-save-all"
+          >
+            <Text size="xs" style={answered ? styles.chipTextAnswered : styles.chipTextPrimary}>
+              {t('askChoice.saveAll')}
+            </Text>
+          </Pressable>
+        )}
       </View>
     </Animated.View>
   );
@@ -113,7 +139,10 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     backgroundColor: 'transparent',
   },
+  // Save all: the one filled chip, so it reads as the main action.
+  chipPrimary: { backgroundColor: ACCENT },
   chipText: { color: 'rgb(226, 226, 226)', flexShrink: 1 },
+  chipTextPrimary: { color: 'rgb(24, 24, 24)', fontWeight: '600' },
   chipTextAnswered: { color: 'rgb(170, 170, 170)', flexShrink: 1 },
 });
 

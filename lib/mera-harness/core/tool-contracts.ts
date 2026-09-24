@@ -102,7 +102,7 @@ export const ASK_CHOICE_TOOL: ToolDefinition = {
   function: {
     name: 'ask_choice',
     description:
-      'Ask the user to pick between 2 or 3 readings, shown as tap chips. Use it when a place is ambiguous, or when a new fact might replace one they already have. This ENDS your turn: the tap arrives as their next message. Ask nothing else in the same turn.',
+      'Ask the user to pick between 2 or 3 readings, shown as tap chips. Use it when a place is ambiguous, or when a new fact might replace one they already have. Never to pick between separate facts: offer every one of those with saveExtractedFacts. This ENDS your turn: the tap arrives as their next message. Ask nothing else in the same turn.',
     parameters: {
       type: 'object',
       properties: {
