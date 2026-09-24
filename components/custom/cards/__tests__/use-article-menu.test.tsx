@@ -5,15 +5,24 @@
 import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
+let mockModal: any = null;
+let mockOS = 'ios';
 jest.mock('react-native', () => {
     const actual = jest.requireActual('react-native');
     const ReactLib = require('react');
     return new Proxy(actual, {
         get(target, prop) {
             if (prop === 'Modal') {
-                return ({ visible, children }: any) =>
-                    visible === false ? null : ReactLib.createElement(ReactLib.Fragment, null, children);
+                // Records its props so a test can play the native dismissal
+                // (`onDismiss`, iOS only) at the moment it chooses.
+                return (props: any) => {
+                    mockModal = props;
+                    return props.visible === false
+                        ? null
+                        : ReactLib.createElement(ReactLib.Fragment, null, props.children);
+                };
             }
+            if (prop === 'Platform') return { ...actual.Platform, OS: mockOS };
             return (target as any)[prop];
         },
     });
@@ -95,7 +104,7 @@ jest.mock('@/components/custom/cards/article-actions', () => ({
         !lang || !app || lang.split('-')[0] !== app.split('-')[0],
 }));
 
-import { MENU_CLOSE_MS, useArticleMenu, type UseArticleMenuInput } from '../use-article-menu';
+import { MENU_DISMISS_FALLBACK_MS, useArticleMenu, type UseArticleMenuInput } from '../use-article-menu';
 
 const subject = {
     origin: 'suggestion' as const,
@@ -129,6 +138,8 @@ beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
     mockSentry = true;
+    mockModal = null;
+    mockOS = 'ios';
 });
 afterEach(() => jest.useRealTimers());
 
@@ -198,49 +209,124 @@ describe('ArticleOverflowMenu sheet', () => {
     });
 });
 
+// The browser bug: an item that presents native UI (SFSafariViewController,
+// the feedback form) while the RN Modal is still dismissing is silently
+// dropped on iOS, and its await never resolves. Items run AFTER the Modal
+// reports it is gone: `onDismiss` on iOS, visible -> false on Android, with a
+// fallback and an unmount flush, exactly once. Never on a timer guess.
+const dismiss = () =>
+    act(() => {
+        mockModal?.onDismiss?.();
+    });
+const flushAsync = async () => {
+    await act(async () => {
+        await Promise.resolve();
+    });
+};
+
 describe('useArticleMenu running items', () => {
-    it('runs an item only after the sheet has closed', () => {
+    it('iOS: keeps the Modal mounted while it dismisses and runs the item on onDismiss, not on a timer', () => {
         const r = openMenu(<Host />);
         fireEvent.press(r.getByTestId('menu-report-bug'));
-        expect(r.queryByTestId('article-menu')).toBeNull();
-        expect(mockShowFeedback).not.toHaveBeenCalled();
+        expect(mockModal.visible).toBe(false);
+        expect(typeof mockModal.onDismiss).toBe('function');
         act(() => {
-            jest.advanceTimersByTime(MENU_CLOSE_MS);
+            jest.advanceTimersByTime(250);
         });
+        expect(mockShowFeedback).not.toHaveBeenCalled();
+        dismiss();
         expect(mockShowFeedback).toHaveBeenCalledTimes(1);
         // No article id or URL is ever handed to the bug report.
         expect(mockShowFeedback).toHaveBeenCalledWith();
+        dismiss();
+        act(() => {
+            jest.advanceTimersByTime(MENU_DISMISS_FALLBACK_MS);
+        });
+        expect(mockShowFeedback).toHaveBeenCalledTimes(1);
+    });
+
+    it('iOS: runs the item once at the fallback when onDismiss never comes', () => {
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('menu-report-bug'));
+        act(() => {
+            jest.advanceTimersByTime(MENU_DISMISS_FALLBACK_MS - 1);
+        });
+        expect(mockShowFeedback).not.toHaveBeenCalled();
+        act(() => {
+            jest.advanceTimersByTime(1);
+        });
+        expect(mockShowFeedback).toHaveBeenCalledTimes(1);
+        dismiss();
+        expect(mockShowFeedback).toHaveBeenCalledTimes(1);
+    });
+
+    it('Android: runs the item once the Modal is hidden (no onDismiss there)', () => {
+        mockOS = 'android';
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('menu-report-bug'));
+        expect(mockShowFeedback).toHaveBeenCalledTimes(1);
+        act(() => {
+            jest.advanceTimersByTime(MENU_DISMISS_FALLBACK_MS);
+        });
+        expect(mockShowFeedback).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs a picked item once when the host unmounts mid-dismissal', () => {
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('menu-report-bug'));
+        r.unmount();
+        expect(mockShowFeedback).toHaveBeenCalledTimes(1);
+        act(() => {
+            jest.advanceTimersByTime(MENU_DISMISS_FALLBACK_MS);
+        });
+        expect(mockShowFeedback).toHaveBeenCalledTimes(1);
+    });
+
+    it('Cancel runs nothing and unmounts the sheet after the dismissal', () => {
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('article-menu-cancel'));
+        dismiss();
+        expect(mockShowFeedback).not.toHaveBeenCalled();
+        expect(mockOpenOnSource).not.toHaveBeenCalled();
     });
 
     it('opens on source through the shared helper that records the visit', async () => {
         const visit = { publicationName: 'NOS', countryCode: 'NL', articleId: 'art-1' };
         const r = openMenu(<Host visit={visit} />);
         fireEvent.press(r.getByTestId('menu-open-source'));
-        await act(async () => {
-            jest.advanceTimersByTime(MENU_CLOSE_MS);
-        });
+        expect(mockOpenOnSource).not.toHaveBeenCalled();
+        dismiss();
+        await flushAsync();
+        expect(mockOpenOnSource).toHaveBeenCalledTimes(1);
         expect(mockOpenOnSource).toHaveBeenCalledWith('https://nos.nl/a', visit);
+    });
+
+    it('opens Google Translate the same way, after the dismissal', async () => {
+        const { openInGoogleTranslate } = require('@/components/custom/cards/article-actions');
+        const r = openMenu(<Host />);
+        fireEvent.press(r.getByTestId('menu-open-translate'));
+        expect(openInGoogleTranslate).not.toHaveBeenCalled();
+        dismiss();
+        await flushAsync();
+        expect(openInGoogleTranslate).toHaveBeenCalledTimes(1);
+        expect(openInGoogleTranslate).toHaveBeenCalledWith('https://nos.nl/a', 'en');
     });
 
     it('says so, with a retry, when an item fails', async () => {
         mockAsk.mockReturnValueOnce(false);
         const r = openMenu(<Host />);
         fireEvent.press(r.getByTestId('card-action-mera'));
-        await act(async () => {
-            jest.advanceTimersByTime(MENU_CLOSE_MS);
-        });
+        dismiss();
+        await flushAsync();
         expect(mockToastShow).toHaveBeenCalledTimes(1);
     });
 
     it('turns a source down with an undo, never silently', async () => {
         const r = openMenu(<Host />);
         fireEvent.press(r.getByTestId('menu-fewer-from-source'));
-        await act(async () => {
-            jest.advanceTimersByTime(MENU_CLOSE_MS);
-        });
-        await act(async () => {
-            await Promise.resolve();
-        });
+        dismiss();
+        await flushAsync();
+        await flushAsync();
         expect(mockSetPref).toHaveBeenCalledWith({ kind: 'publication', publicationName: 'NOS' }, 'deprioritised');
         expect(mockToastShow).toHaveBeenCalledTimes(1);
     });

@@ -15,13 +15,13 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastTitle, useToast } from '@/components/ui/toast';
 import { showFeedback } from '@/lib/feedback';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { AccessibilityActionEvent } from 'react-native';
+import { Platform, type AccessibilityActionEvent } from 'react-native';
 
-/** Long enough for the sheet's fade-out to finish, so a follow-up surface (the
- *  feedback form, a chat, a browser) never opens underneath the closing sheet. */
-export const MENU_CLOSE_MS = 250;
+/** If the Modal never reports its dismissal, run the picked item anyway after
+ *  this long. A safety net only: the real signal is the dismissal itself. */
+export const MENU_DISMISS_FALLBACK_MS = 1200;
 
 export type ArticleMenuSurface = 'card' | 'detail';
 
@@ -64,9 +64,14 @@ export interface UseArticleMenu {
  * puts everything else here, so a new action is added once and appears
  * everywhere.
  *
- * Every item runs AFTER the sheet has closed (MENU_CLOSE_MS), which matters
- * for "Report a bug" (the form must not open under a closing modal) and for
- * anything that opens another surface. A failed item says so with a retry.
+ * Every item runs AFTER the sheet's Modal has finished dismissing: on
+ * `onDismiss` on iOS, once the Modal is hidden on Android (RN has no
+ * `onDismiss` there), with a MENU_DISMISS_FALLBACK_MS fallback and a flush on
+ * unmount, exactly once. Never on a timer guess: iOS silently drops native UI
+ * presented while a Modal is dismissing (SFSafariViewController for "Open on
+ * source" and Google Translate, the feedback form), and the await never
+ * resolves, so the item did nothing and said nothing. A failed item says so
+ * with a retry.
  *
  * Report a bug NEVER attaches the article's id or URL: that would be a record
  * of which article this user read, which invariant 9 rules out.
@@ -254,14 +259,49 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         extraItems,
     ]);
 
+    // The sheet stays mounted while its Modal dismisses; `pending` holds the
+    // picked item until the dismissal is reported. See the header.
+    const [mounted, setMounted] = useState(false);
+    const pendingRef = useRef<ArticleMenuItem | null>(null);
+    const fallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const runItemRef = useRef(runItem);
+    runItemRef.current = runItem;
+
+    /** Runs the pending item, if any, exactly once. */
+    const flushPending = useCallback(() => {
+        if (fallbackRef.current) {
+            clearTimeout(fallbackRef.current);
+            fallbackRef.current = null;
+        }
+        const item = pendingRef.current;
+        pendingRef.current = null;
+        if (item) runItemRef.current(item);
+    }, []);
+
+    const onDismissed = useCallback(() => {
+        flushPending();
+        setMounted(false);
+    }, [flushPending]);
+
     const close = useCallback(() => setVisible(false), []);
     const pick = useCallback(
         (item: ArticleMenuItem) => {
+            pendingRef.current = item;
             setVisible(false);
-            setTimeout(() => runItem(item), MENU_CLOSE_MS);
+            if (fallbackRef.current) clearTimeout(fallbackRef.current);
+            fallbackRef.current = setTimeout(onDismissed, MENU_DISMISS_FALLBACK_MS);
         },
-        [runItem],
+        [onDismissed],
     );
+
+    // Android has no `onDismiss`: the Modal is gone once it renders hidden.
+    useEffect(() => {
+        if (Platform.OS !== 'ios' && mounted && !visible) onDismissed();
+    }, [mounted, visible, onDismissed]);
+
+    // A host that unmounts mid-dismissal (the row scrolled away, the screen
+    // closed) still runs what the reader picked, once.
+    useEffect(() => () => flushPending(), [flushPending]);
 
     const accessibilityActions = useMemo(
         () => [
@@ -289,7 +329,9 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         <>
             {trackDialog}
             <ArticleOverflowMenu
+                mounted={mounted}
                 visible={visible}
+                onDismiss={Platform.OS === 'ios' ? onDismissed : undefined}
                 title={subject.title}
                 onClose={close}
                 items={items}
@@ -301,6 +343,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     return {
         open: useCallback(() => {
             setEngaged(true);
+            setMounted(true);
             setVisible(true);
         }, []),
         element,

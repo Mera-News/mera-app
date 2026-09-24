@@ -34,7 +34,12 @@ export interface ArticleMenuItem {
 }
 
 interface ArticleOverflowMenuProps {
+    /** The sheet is in the tree: open, OR closing and not yet dismissed. */
+    mounted: boolean;
+    /** The sheet is showing; false starts the Modal's dismissal. */
     visible: boolean;
+    /** The Modal has finished dismissing (iOS only: RN calls it there). */
+    onDismiss?: () => void;
     /** The article's headline, as the sheet's title (one line). */
     title?: string;
     onClose: () => void;
@@ -53,15 +58,32 @@ interface ArticleOverflowMenuProps {
  * Cancel (F38: the old long-press sheet had neither title nor Cancel).
  */
 const ArticleOverflowMenu: React.FC<ArticleOverflowMenuProps> = (props) =>
-    // The sheet (and its safe-area read) mounts only while open: this sits
-    // under every card, and a closed menu must cost nothing.
-    props.visible ? <ArticleOverflowSheet {...props} /> : null;
+    // The sheet (and its safe-area read) is in the tree only while open or
+    // DISMISSING: this sits under every card, and a closed menu must cost
+    // nothing. It stays mounted through the dismissal so the Modal can report
+    // `onDismiss`: an item that presents native UI (a browser, a form) must
+    // wait for it, see useArticleMenu.
+    props.mounted ? <ArticleOverflowSheet {...props} /> : null;
 
-const ArticleOverflowSheet: React.FC<ArticleOverflowMenuProps> = ({ title, onClose, items, onPick }) => {
+const ArticleOverflowSheet: React.FC<ArticleOverflowMenuProps> = ({
+    visible,
+    onDismiss,
+    title,
+    onClose,
+    items,
+    onPick,
+}) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     return (
-        <Modal visible transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+        <Modal
+            visible={visible}
+            onDismiss={onDismiss}
+            transparent
+            animationType="fade"
+            onRequestClose={onClose}
+            statusBarTranslucent
+        >
             <Pressable
                 accessibilityLabel={t('common.cancel')}
                 onPress={onClose}
