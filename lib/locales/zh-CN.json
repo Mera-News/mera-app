@@ -2878,5 +2878,10 @@
     "allCountries": "所有国家",
     "allLanguages": "所有语言",
     "noMatches": "没有符合这些筛选条件的相关文章。"
+  },
+  "storyExport": {
+    "shareA11y": "导出这篇报道",
+    "shareDialogTitle": "导出报道",
+    "includeReasonHint": "说明每篇文章为何出现在你的信息流中的一句话。部分文章可能没有这句话。"
   }
 }

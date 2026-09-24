@@ -2877,5 +2877,10 @@
     "allCountries": "Semua negara",
     "allLanguages": "Semua bahasa",
     "noMatches": "Tidak ada artikel terkait yang cocok dengan filter ini."
+  },
+  "storyExport": {
+    "shareA11y": "Ekspor cerita ini",
+    "shareDialogTitle": "Ekspor cerita",
+    "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
   }
 }

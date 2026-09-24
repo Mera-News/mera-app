@@ -2878,5 +2878,10 @@
     "allCountries": "所有國家",
     "allLanguages": "所有語言",
     "noMatches": "沒有符合這些篩選條件的相關文章。"
+  },
+  "storyExport": {
+    "shareA11y": "匯出這篇報導",
+    "shareDialogTitle": "匯出報導",
+    "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句話。部分文章可能沒有這句話。"
   }
 }

@@ -2916,5 +2916,10 @@
     "allCountries": "Wszystkie kraje",
     "allLanguages": "Wszystkie języki",
     "noMatches": "Żaden powiązany artykuł nie pasuje do tych filtrów."
+  },
+  "storyExport": {
+    "shareA11y": "Eksportuj tę historię",
+    "shareDialogTitle": "Eksportuj historię",
+    "includeReasonHint": "Jednolinijkowa notatka wyjaśniająca, dlaczego każdy artykuł trafił do Twojego kanału. Niektóre artykuły mogą jej nie mieć."
   }
 }

@@ -1,4 +1,4 @@
-// export-and-share — write the saved-articles export to a file and hand it to
+// export-and-share — write an export (saved articles, or a followed story) to a file and hand it to
 // the OS share sheet. Everything specific to `expo-sharing` and
 // `expo-file-system` lives here so the wizard stays a wizard.
 //
@@ -29,8 +29,10 @@ import { Share } from 'react-native';
 // `saved-export-route-safety.test.ts` fails if this regresses. `react-native`'s
 // own `Share` is core, always present, and is the fallback below.
 
-/** The share sheet shows these, so they are names a human reads. */
-const FILENAME = { markdown: 'mera-saved-articles.md', json: 'mera-saved-articles.json' } as const;
+/** The share sheet shows the file name, so it is a name a human reads. Each
+ *  caller names its own export; the Saved tab keeps the original. */
+const DEFAULT_FILE_BASE_NAME = 'mera-saved-articles';
+const EXTENSION = { markdown: 'md', json: 'json' } as const;
 
 /** iOS wants a UTI as well as a MIME type, or some targets refuse the item
  *  even though the extension is right. */
@@ -39,7 +41,7 @@ const TYPES = {
   json: { mimeType: 'application/json', UTI: 'public.json' },
 } as const;
 
-export type ExportFormat = keyof typeof FILENAME;
+export type ExportFormat = keyof typeof EXTENSION;
 
 export type ExportShareResult =
   | { status: 'shared'; via: 'file' | 'text' }
@@ -72,6 +74,8 @@ export interface ExportAndShareOptions {
   content: string;
   format: ExportFormat;
   dialogTitle: string;
+  /** File name without extension. Defaults to the Saved tab's. */
+  fileBaseName?: string;
 }
 
 /**
@@ -98,6 +102,7 @@ async function shareAsFile(
   content: string,
   format: ExportFormat,
   dialogTitle: string,
+  fileBaseName: string,
 ): Promise<boolean> {
   let Sharing: typeof import('expo-sharing');
   let Haptics: typeof import('expo-haptics');
@@ -122,7 +127,7 @@ async function shareAsFile(
     // cache for nothing.
     if (!(await Sharing.isAvailableAsync())) return false;
 
-    const destination = new File(Paths.cache, FILENAME[format]);
+    const destination = new File(Paths.cache, `${fileBaseName}.${EXTENSION[format]}`);
     removeIfPresent(destination);
     destination.create();
     destination.write(content);
@@ -153,8 +158,9 @@ export async function exportAndShare({
   content,
   format,
   dialogTitle,
+  fileBaseName = DEFAULT_FILE_BASE_NAME,
 }: ExportAndShareOptions): Promise<ExportShareResult> {
-  if (await shareAsFile(content, format, dialogTitle)) {
+  if (await shareAsFile(content, format, dialogTitle, fileBaseName)) {
     return { status: 'shared', via: 'file' };
   }
 

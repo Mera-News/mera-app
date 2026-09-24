@@ -2880,5 +2880,10 @@
     "allCountries": "Tüm ülkeler",
     "allLanguages": "Tüm diller",
     "noMatches": "Bu filtrelere uyan ilgili makale yok."
+  },
+  "storyExport": {
+    "shareA11y": "Bu haberi dışa aktar",
+    "shareDialogTitle": "Haberi dışa aktar",
+    "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Bazı makalelerde bu not bulunmayabilir."
   }
 }

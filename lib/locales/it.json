@@ -2878,5 +2878,10 @@
     "allCountries": "Tutti i paesi",
     "allLanguages": "Tutte le lingue",
     "noMatches": "Nessun articolo correlato corrisponde a questi filtri."
+  },
+  "storyExport": {
+    "shareA11y": "Esporta questa storia",
+    "shareDialogTitle": "Esporta storia",
+    "includeReasonHint": "La nota di una riga che spiega perché ogni articolo è arrivato nel tuo feed. Alcuni articoli potrebbero non averla."
   }
 }

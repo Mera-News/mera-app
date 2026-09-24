@@ -2878,5 +2878,10 @@
     "allCountries": "Tất cả quốc gia",
     "allLanguages": "Tất cả ngôn ngữ",
     "noMatches": "Không có bài liên quan nào khớp với bộ lọc này."
+  },
+  "storyExport": {
+    "shareA11y": "Xuất câu chuyện này",
+    "shareDialogTitle": "Xuất câu chuyện",
+    "includeReasonHint": "Ghi chú một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Một số bài có thể không có ghi chú này."
   }
 }

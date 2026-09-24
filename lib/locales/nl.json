@@ -2878,5 +2878,10 @@
     "allCountries": "Alle landen",
     "allLanguages": "Alle talen",
     "noMatches": "Geen gerelateerde artikelen passen bij deze filters."
+  },
+  "storyExport": {
+    "shareA11y": "Dit verhaal exporteren",
+    "shareDialogTitle": "Verhaal exporteren",
+    "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
   }
 }

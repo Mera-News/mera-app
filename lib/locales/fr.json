@@ -2885,5 +2885,10 @@
     "allCountries": "Tous les pays",
     "allLanguages": "Toutes les langues",
     "noMatches": "Aucun article associé ne correspond à ces filtres."
+  },
+  "storyExport": {
+    "shareA11y": "Exporter cette actualité",
+    "shareDialogTitle": "Exporter l'actualité",
+    "includeReasonHint": "La note d'une ligne qui explique pourquoi chaque article est arrivé dans votre fil. Certains articles peuvent ne pas en avoir."
   }
 }

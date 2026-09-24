@@ -2878,5 +2878,10 @@
     "allCountries": "All countries",
     "allLanguages": "All languages",
     "noMatches": "No related articles match these filters."
+  },
+  "storyExport": {
+    "shareA11y": "Export this story",
+    "shareDialogTitle": "Export story",
+    "includeReasonHint": "The one-line note explaining why each article reached your feed. Some articles may not have one."
   }
 }
