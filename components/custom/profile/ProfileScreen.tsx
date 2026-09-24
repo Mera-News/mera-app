@@ -161,7 +161,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                 >
                     {t('tabs.profile')}
                 </Heading>
-                <HStack className="items-center" space="md">
+                {/* The gap is exactly what keeps the two 44pt frames from
+                    overlapping: each reaches (44 - 24) / 2 past its glyph. The
+                    old `space="md"` (~10.7pt) left 9.3pt of overlap, and the
+                    "?" won it. In points, in `style`, not a rem-scaled class. */}
+                <HStack
+                    className="items-center"
+                    style={{ gap: HEADER_ICON_TOUCH_TARGET - HEADER_ICON_GLYPH }}
+                    testID="profile-header-actions"
+                >
                     {/* Advanced — icon-only, opens the power-user hub. Was a
                         full-width row at the bottom of the page; moved here
                         so it doesn't compete for scroll space with facts. */}

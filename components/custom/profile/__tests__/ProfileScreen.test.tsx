@@ -380,6 +380,19 @@ describe('ProfileScreen', () => {
         expect(getByTestId('profile-advanced-open').props.hitSlop).toBeUndefined();
     });
 
+    // Measured on device: with the old ~10.7pt gap the two 44pt frames
+    // overlapped by 9.3pt and "?" won the overlap. Each frame reaches
+    // -margin past its 24pt footprint, so the gap must cover both reaches.
+    it('spaces the two header icons so their 44pt frames do not overlap', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('profile-advanced-open')).toBeTruthy());
+        const { StyleSheet } = require('react-native');
+        const margin = getByTestId('profile-advanced-open').props.style.margin;
+        const row = StyleSheet.flatten(getByTestId('profile-header-actions').props.style) ?? {};
+        expect(row.gap).toBeGreaterThanOrEqual(-2 * margin);
+    });
+
     it('pressing the header Advanced button navigates to the Advanced route', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { getByTestId } = render(<ProfileScreen userId="u1" />);
