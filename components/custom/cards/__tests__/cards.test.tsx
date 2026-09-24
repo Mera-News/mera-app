@@ -1151,3 +1151,12 @@ describe('the ••• sheet title matches the card title', () => {
   });
 });
 
+
+// The Dashboard's floating card surface is ONE component (FlatCardSurface),
+// shared with the followed-story rows, so the two can never drift apart.
+describe('flat card surface is shared', () => {
+  it('a flat article card draws the shared card-surface', () => {
+    const { getByTestId } = render(<ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} flat />);
+    expect(getByTestId('card-surface').props.className).toEqual(expect.stringContaining('border-white/10'));
+  });
+});

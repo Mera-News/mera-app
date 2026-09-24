@@ -25,6 +25,7 @@ import {
 import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import { toastManager } from '@/lib/toast-manager';
 import PressableCard from '@/components/custom/cards/PressableCard';
+import FlatCardSurface from '@/components/custom/cards/FlatCardSurface';
 import { startFollowStoryChat } from '@/lib/tracking/follow-story-chat';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
@@ -189,9 +190,13 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     ]
                         .filter(Boolean)
                         .join(', ')}
-                    className="mx-4 mb-3 rounded-2xl border border-gray-800 bg-gray-900 px-4 py-3"
+                    className="mx-4"
                 >
-                    <HStack className="items-start" space="sm">
+                    {/* The article cards' own translucent surface (owner: "make
+                        these cards similar to the translucent cards like the
+                        article cards"), shared rather than copied. */}
+                    <FlatCardSurface className="mb-3">
+                    <HStack className="items-start px-4 py-3" space="sm">
                         <VStack className="flex-1 min-w-0" space="xs">
                             <HStack className="items-center flex-wrap" space="xs">
                                 {unseen > 0 && (
@@ -255,6 +260,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             <MaterialIcons name="delete-outline" size={20} color="#9CA3AF" />
                         </Pressable>
                     </HStack>
+                    </FlatCardSurface>
                 </PressableCard>
             );
         },

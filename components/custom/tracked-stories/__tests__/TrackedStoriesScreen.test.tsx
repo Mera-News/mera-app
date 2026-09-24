@@ -197,6 +197,13 @@ jest.mock('@/components/ui/modal', () => {
         ModalHeader: (p: any) => <View {...p} />,
     };
 });
+// The article cards' translucent plate, surfaced so the row's surface can be
+// asserted to be the SAME one (owner: "make these cards similar to the
+// translucent cards like the article cards").
+jest.mock('@/components/custom/cards/CardGlassPlate', () => {
+    const { View } = require('react-native');
+    return { CARDS_USE_GLASS: true, GLASS_CARD_EDGE: '', CardGlassPlate: () => <View testID="glass-plate" /> };
+});
 jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/custom/TranslatableDynamic', () => {
     const { Text } = require('react-native');
@@ -469,5 +476,30 @@ describe('TrackedStoriesScreen: a failed delete says so', () => {
             fireEvent.press(getByTestId('untrack-confirm'));
         });
         expect(mockShowError).toHaveBeenCalledWith('errors.somethingWentWrong', 'trackedStories.deleteFailed');
+    });
+
+    // Owner: the followed-story rows were solid dark navy cards; they take the
+    // article cards' own translucent surface (the shared FlatCardSurface:
+    // rounded-2xl, hairline white/10 border, the glass plate, the shadow),
+    // not a copy of its values.
+    it('renders each row on the article cards\' translucent surface, not a solid card', () => {
+        mockRows = [story({ id: 's1', llmHeadline: 'Glass row' })];
+        const { getByText, UNSAFE_root } = render(<TrackedStoriesScreen embedded />);
+        let node: any = getByText('Glass row');
+        let surface: any = null;
+        for (let p = node; p; p = p.parent) {
+            if (p.props?.testID === 'card-surface') {
+                surface = p;
+                break;
+            }
+        }
+        expect(surface).not.toBeNull();
+        expect(surface.props.className).toEqual(expect.stringContaining('border-white/10'));
+        expect(surface.props.className).toEqual(expect.stringContaining('rounded-2xl'));
+        expect(surface.findAll((n: any) => n.props?.testID === 'glass-plate').length).toBeGreaterThan(0);
+        const solid = UNSAFE_root.findAll(
+            (n: any) => typeof n.props?.className === 'string' && /\bbg-gray-900\b/.test(n.props.className),
+        );
+        expect(solid).toHaveLength(0);
     });
 });
