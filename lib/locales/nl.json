@@ -2765,45 +2765,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "We werken aan je nieuws, hier op je telefoon.",
-        "Verversen gestart op dit toestel."
+        "Verversen gestart",
+        "Op deze telefoon"
       ],
       "fetching": [
-        "We kijken wat er vandaag nieuw is.",
-        "Je telefoon bepaalt wat er gevraagd wordt."
+        "Zoeken naar nieuws",
+        "Wat is er nieuw?"
       ],
       "downloading": [
-        "De artikelen komen naar je telefoon.",
-        "Ze komen eerst bij jou, niet bij een server."
+        "Artikelen downloaden",
+        "Van de server"
       ],
       "grouping": [
-        "Eén bericht staat op tientallen plekken.",
-        "We kiezen één versie van elk bericht."
+        "Verhalen bundelen",
+        "Dubbelen samenvoegen"
       ],
       "analysing": [
-        "Elk artikel wordt voor je gelezen.",
-        "Versleuteld. Alleen jouw telefoon heeft de sleutel."
+        "Relevantie bepalen",
+        "Elk artikel lezen"
       ],
       "onDevice": [
-        "Je telefoon leest deze berichten.",
-        "Dit gebeurt hier. Er gaat niets weg."
+        "Lezen op je telefoon",
+        "Blijft op je telefoon"
       ],
       "summarising": [
-        "Een kort briefje bij elk bericht.",
-        "Van begin tot eind versleuteld."
+        "Notities schrijven",
+        "Een notitie per verhaal"
       ],
       "preparing": [
-        "We zetten je feed op volgorde.",
-        "Bijna klaar. De kaarten komen vanzelf."
+        "Op volgorde zetten",
+        "Bijna klaar"
       ]
     },
     "nudges": [
-      "Bewaar wat je nu niet kunt lezen.",
-      "Je bewaarde artikelen wachten nog.",
-      "Lees één bericht goed, niet tien snel.",
-      "Met de koppen zie je hoe de dag eruitziet.",
-      "Nieuwer is niet beter. Lees wat er is.",
-      "Er komt niets sneller door te kijken."
+      "Bewaar voor later",
+      "Je opgeslagen items",
+      "Lees één verhaal goed",
+      "Bekijk de topkoppen",
+      "Nieuwer is niet beter",
+      "Kijken helpt niet"
     ],
     "a11y": "Mera werkt je nieuws bij op deze telefoon."
   },

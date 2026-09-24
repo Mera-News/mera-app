@@ -2764,45 +2764,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Mengerjakan beritamu, di ponselmu.",
-        "Memulai penyegaran di perangkat ini."
+        "Mulai menyegarkan",
+        "Di ponsel ini"
       ],
       "fetching": [
-        "Mencari apa yang baru hari ini.",
-        "Ponselmu yang menentukan apa yang diminta."
+        "Mencari yang baru",
+        "Apa yang baru?"
       ],
       "downloading": [
-        "Menarik artikel ke ponselmu.",
-        "Sampai ke kamu dulu, bukan ke server."
+        "Mengunduh artikel",
+        "Dari server"
       ],
       "grouping": [
-        "Satu berita muncul di belasan tempat.",
-        "Memilih satu versi tiap berita."
+        "Mengelompokkan berita",
+        "Gabung duplikat"
       ],
       "analysing": [
-        "Membaca tiap artikel untukmu.",
-        "Terenkripsi. Hanya ponselmu punya kuncinya."
+        "Menilai relevansi",
+        "Membaca tiap artikel"
       ],
       "onDevice": [
-        "Ponselmu sedang membaca berita ini.",
-        "Berjalan di sini. Tidak ada yang keluar."
+        "Membaca di ponselmu",
+        "Tetap di ponselmu"
       ],
       "summarising": [
-        "Menulis catatan singkat tiap berita.",
-        "Terenkripsi ujung ke ujung, sepanjang jalan."
+        "Menulis catatan",
+        "Catatan per berita"
       ],
       "preparing": [
-        "Merapikan berandamu.",
-        "Hampir selesai. Kartu muncul sendiri."
+        "Mengurutkan",
+        "Hampir selesai"
       ]
     },
     "nudges": [
-      "Simpan yang belum sempat kamu baca.",
-      "Artikel simpananmu masih menunggu.",
-      "Baca satu berita utuh, bukan sepuluh sekilas.",
-      "Berita utama memberi gambaran hari ini.",
-      "Baru bukan berarti lebih baik.",
-      "Tidak ada yang lebih cepat karena ditunggu."
+      "Simpan untuk nanti",
+      "Simpananmu menunggu",
+      "Baca satu berita utuh",
+      "Lihat berita utama",
+      "Terbaru bukan terbaik",
+      "Tak perlu ditunggu"
     ],
     "a11y": "Mera memperbarui beritamu di ponsel ini."
   },

@@ -2772,45 +2772,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "On travaille sur vos infos, sur votre téléphone.",
-        "Actualisation en cours sur cet appareil."
+        "Actualisation lancée",
+        "Sur ce téléphone"
       ],
       "fetching": [
-        "On cherche les nouveautés du jour.",
-        "Votre téléphone décide quoi demander."
+        "Recherche du neuf",
+        "Quoi de neuf ?"
       ],
       "downloading": [
-        "Les articles arrivent sur votre téléphone.",
-        "Ils viennent à vous, pas à un serveur."
+        "Téléchargement",
+        "Depuis le serveur"
       ],
       "grouping": [
-        "Une info paraît à une dizaine d'endroits.",
-        "On garde une version de chaque info."
+        "Regroupement",
+        "Fusion des doublons"
       ],
       "analysing": [
-        "Chaque article est lu pour vous.",
-        "Chiffré. Seul votre téléphone a la clé."
+        "Tri par pertinence",
+        "Lecture des articles"
       ],
       "onDevice": [
-        "Votre téléphone lit ces articles.",
-        "Tout se passe ici. Rien ne sort du téléphone."
+        "Lecture sur ton tél.",
+        "Rien ne quitte ton tél."
       ],
       "summarising": [
-        "Une courte note pour chaque sujet.",
-        "Chiffré de bout en bout, tout du long."
+        "Rédaction des notes",
+        "Une note par sujet"
       ],
       "preparing": [
-        "On met votre fil en ordre.",
-        "Presque fini. Les cartes arrivent seules."
+        "Mise en ordre",
+        "Presque fini"
       ]
     },
     "nudges": [
-      "Enregistrez ce que vous ne lirez pas maintenant.",
-      "Vos articles enregistrés attendent encore.",
-      "Lisez bien un article, pas dix vite fait.",
-      "Les gros titres donnent la forme du jour.",
-      "Plus récent n'est pas mieux. Lisez l'existant.",
-      "Rien n'arrive plus vite si vous regardez."
+      "Garde-le pour plus tard",
+      "Tes favoris t'attendent",
+      "Lis un sujet à fond",
+      "Vois les gros titres",
+      "Plus récent, pas mieux",
+      "Inutile de regarder"
     ],
     "a11y": "Mera met à jour vos infos sur ce téléphone."
   },

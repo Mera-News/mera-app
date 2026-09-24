@@ -2765,45 +2765,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Wir arbeiten an deinen News, hier auf dem Handy.",
-        "Aktualisierung startet auf diesem Gerät."
+        "Aktualisierung startet",
+        "Läuft auf diesem Handy"
       ],
       "fetching": [
-        "Wir schauen, was es heute Neues gibt.",
-        "Dein Handy entscheidet, was es abfragt."
+        "Suche nach Neuem",
+        "Was ist neu?"
       ],
       "downloading": [
-        "Die Artikel kommen auf dein Handy.",
-        "Sie kommen zuerst zu dir, nicht zum Server."
+        "Artikel werden geladen",
+        "Vom Server geholt"
       ],
       "grouping": [
-        "Eine Meldung läuft an einem Dutzend Stellen.",
-        "Wir wählen eine Fassung pro Meldung."
+        "Meldungen bündeln",
+        "Dubletten bündeln"
       ],
       "analysing": [
-        "Jeder Artikel wird für dich gelesen.",
-        "Verschlüsselt. Nur dein Handy hat den Schlüssel."
+        "Relevanz wird geprüft",
+        "Artikel werden gelesen"
       ],
       "onDevice": [
-        "Dein Handy liest diese Meldungen.",
-        "Das läuft hier. Nichts verlässt dein Handy."
+        "Liest auf deinem Handy",
+        "Bleibt auf deinem Handy"
       ],
       "summarising": [
-        "Zu jeder Meldung entsteht eine Notiz.",
-        "Durchgehend Ende zu Ende verschlüsselt."
+        "Notizen schreiben",
+        "Kurze Notiz pro Meldung"
       ],
       "preparing": [
-        "Dein Feed wird sortiert.",
-        "Fast fertig. Die Karten kommen von selbst."
+        "Wird sortiert",
+        "Fast fertig"
       ]
     },
     "nudges": [
-      "Sichere, was du jetzt nicht lesen kannst.",
-      "Deine gespeicherten Artikel warten noch.",
-      "Lies eine Meldung richtig, nicht zehn schnell.",
-      "Top-Schlagzeilen zeigen dir den Tag.",
-      "Neuer ist nicht besser. Lies, was da ist.",
-      "Nichts kommt schneller, wenn du zusiehst."
+      "Für später speichern",
+      "Gespeichertes wartet",
+      "Lies eine Meldung ganz",
+      "Schlagzeilen ansehen",
+      "Neuer ist nicht besser",
+      "Zuschauen hilft nicht"
     ],
     "a11y": "Mera aktualisiert deine News auf diesem Handy."
   },

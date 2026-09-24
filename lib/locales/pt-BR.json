@@ -2765,45 +2765,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Trabalhando nas suas notícias, no seu celular.",
-        "Iniciando uma atualização neste aparelho."
+        "Atualizando",
+        "Neste celular"
       ],
       "fetching": [
-        "Procurando o que há de novo hoje.",
-        "Seu celular decide o que pedir."
+        "Buscando novidades",
+        "O que há de novo?"
       ],
       "downloading": [
-        "Trazendo os artigos para o seu celular.",
-        "Chegam primeiro a você, não a um servidor."
+        "Baixando artigos",
+        "Do servidor"
       ],
       "grouping": [
-        "Uma notícia sai em uma dezena de lugares.",
-        "Escolhendo uma versão de cada notícia."
+        "Agrupando notícias",
+        "Unindo duplicadas"
       ],
       "analysing": [
-        "Lendo cada artigo para você.",
-        "Criptografado. Só o seu celular tem a chave."
+        "Medindo relevância",
+        "Lendo cada artigo"
       ],
       "onDevice": [
-        "Seu celular está lendo estas notícias.",
-        "Acontece aqui. Nada sai do seu celular."
+        "Lendo no seu celular",
+        "Fica no seu celular"
       ],
       "summarising": [
-        "Escrevendo uma nota curta por notícia.",
-        "Criptografado de ponta a ponta, o tempo todo."
+        "Escrevendo notas",
+        "Uma nota por notícia"
       ],
       "preparing": [
-        "Organizando o seu feed.",
-        "Quase lá. Os cards aparecem sozinhos."
+        "Colocando em ordem",
+        "Quase pronto"
       ]
     },
     "nudges": [
-      "Salve o que você não consegue ler agora.",
-      "Seus artigos salvos ainda estão esperando.",
-      "Leia uma notícia direito, não dez correndo.",
-      "As manchetes mostram o formato do dia.",
-      "Mais novo não é melhor. Leia o que já tem.",
-      "Nada chega mais rápido se você ficar olhando."
+      "Salve para depois",
+      "Seus salvos esperam",
+      "Leia uma notícia a fundo",
+      "Veja as manchetes",
+      "Novo não é melhor",
+      "Não precisa olhar"
     ],
     "a11y": "A Mera está atualizando suas notícias neste celular."
   },

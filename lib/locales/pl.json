@@ -2803,45 +2803,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Pracujemy nad twoimi wiadomościami, tutaj.",
-        "Odświeżanie ruszyło na tym urządzeniu."
+        "Odświeżanie",
+        "Na tym telefonie"
       ],
       "fetching": [
-        "Szukamy tego, co dziś nowe.",
-        "To twój telefon decyduje, o co pyta."
+        "Szukam nowości",
+        "Co nowego?"
       ],
       "downloading": [
-        "Artykuły trafiają na twój telefon.",
-        "Najpierw do ciebie, nie na serwer."
+        "Pobieram artykuły",
+        "Z serwera"
       ],
       "grouping": [
-        "Jedna wiadomość biegnie w kilkunastu miejscach.",
-        "Wybieramy jedną wersję każdej wiadomości."
+        "Grupuję tematy",
+        "Łączę duplikaty"
       ],
       "analysing": [
-        "Czytamy dla ciebie każdy artykuł.",
-        "Zaszyfrowane. Klucz ma tylko twój telefon."
+        "Sprawdzam trafność",
+        "Czytam artykuły"
       ],
       "onDevice": [
-        "Twój telefon czyta te wiadomości.",
-        "Dzieje się tutaj. Nic nie opuszcza telefonu."
+        "Czytam na telefonie",
+        "Zostaje na telefonie"
       ],
       "summarising": [
-        "Krótka notatka do każdej wiadomości.",
-        "Szyfrowane end-to-end na całej drodze."
+        "Piszę notatki",
+        "Notka do tematu"
       ],
       "preparing": [
-        "Porządkujemy twój feed.",
-        "Już prawie. Karty pojawią się same."
+        "Układam kolejność",
+        "Prawie gotowe"
       ]
     },
     "nudges": [
-      "Zapisz to, czego teraz nie przeczytasz.",
-      "Twoje zapisane artykuły wciąż czekają.",
-      "Przeczytaj jedno porządnie, nie dziesięć pobieżnie.",
-      "Nagłówki pokażą ci kształt dnia.",
-      "Nowsze nie znaczy lepsze. Czytaj to, co jest.",
-      "Nic nie przyjdzie szybciej, gdy patrzysz."
+      "Zapisz na później",
+      "Zapisane czekają",
+      "Przeczytaj jeden temat",
+      "Zobacz nagłówki",
+      "Nowsze to nie lepsze",
+      "Nie trzeba patrzeć"
     ],
     "a11y": "Mera aktualizuje twoje wiadomości na tym telefonie."
   },

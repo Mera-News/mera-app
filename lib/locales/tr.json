@@ -2767,45 +2767,45 @@
   "headerNarration": {
     "stages": {
       "starting": [
-        "Haberlerin üzerinde çalışıyoruz, telefonunda.",
-        "Bu cihazda yenileme başladı."
+        "Yenileme başladı",
+        "Bu telefonda"
       ],
       "fetching": [
-        "Bugün ne var diye bakıyoruz.",
-        "Ne isteneceğine telefonun karar veriyor."
+        "Yeni haberler aranıyor",
+        "Neler yeni?"
       ],
       "downloading": [
-        "Yazılar telefonuna geliyor.",
-        "Önce sana gelir, sunucuya değil."
+        "Makaleler iniyor",
+        "Sunucudan alınıyor"
       ],
       "grouping": [
-        "Aynı haber onlarca yerde çıkar.",
-        "Her haberden tek sürüm seçiyoruz."
+        "Haberler gruplanıyor",
+        "Tekrarlar birleşiyor"
       ],
       "analysing": [
-        "Her yazı senin için okunuyor.",
-        "Şifreli. Anahtar yalnızca telefonunda."
+        "Uygunluk ölçülüyor",
+        "Makaleler okunuyor"
       ],
       "onDevice": [
-        "Telefonun bu haberleri okuyor.",
-        "Burada oluyor. Hiçbir şey dışarı çıkmıyor."
+        "Telefonunda okunuyor",
+        "Telefonunda kalır"
       ],
       "summarising": [
-        "Her habere kısa bir not yazılıyor.",
-        "Baştan sona uçtan uca şifreli."
+        "Notlar yazılıyor",
+        "Habere kısa not"
       ],
       "preparing": [
-        "Akışını sıraya koyuyoruz.",
-        "Az kaldı. Kartlar kendiliğinden gelecek."
+        "Sıraya konuyor",
+        "Az kaldı"
       ]
     },
     "nudges": [
-      "Şimdi okuyamayacaklarını kaydet.",
-      "Kaydettiğin yazılar hâlâ bekliyor.",
-      "Bir haberi doğru oku, on tanesini hızlı değil.",
-      "Öne çıkan başlıklar günü özetler.",
-      "Yeni olan daha iyi değil. Elindekini oku.",
-      "Baktığın için daha hızlı gelmez."
+      "Sonra oku",
+      "Kaydettiklerin bekliyor",
+      "Bir haberi iyi oku",
+      "Manşetlere bak",
+      "Yeni her zaman iyi değil",
+      "İzlemene gerek yok"
     ],
     "a11y": "Mera bu telefonda haberlerini güncelliyor."
   },
