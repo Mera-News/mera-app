@@ -200,6 +200,14 @@ describe('ArticleMetaRow centred publication (owner spec)', () => {
     expect(getByTestId('meta-language-slot')).toBeTruthy();
   });
 
+  it('compact rows put the flag immediately left of the language', () => {
+    const { getByTestId } = render(<ArticleMetaRow variant="card" {...base} publicationName={null} />);
+    const group = getByTestId('meta-flag-language');
+    const ids = group.findAll((n: any) => typeof n.props?.testID === 'string').map((n: any) => n.props.testID);
+    expect(ids).toContain('meta-flag');
+    expect(ids.indexOf('meta-flag')).toBeLessThan(ids.indexOf('meta-language-slot'));
+  });
+
   it('leaves compact rows (no publication) spread: time, chip, language', () => {
     const { queryByTestId } = render(
       <ArticleMetaRow variant="card" {...base} publicationName={null} showFlag={false} />,

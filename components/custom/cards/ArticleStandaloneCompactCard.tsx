@@ -1,16 +1,14 @@
 import ArticleCompactCardBase from '@/components/custom/cards/ArticleCompactCardBase';
-import { ArticleActionBarFor } from '@/components/custom/cards/ArticleActionsRow';
 import type { ArticleMenuItem } from '@/components/custom/cards/ArticleOverflowMenu';
 import { visitFromArticle } from '@/components/custom/cards/article-actions';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
-import { inlineAccessibilityActions, useArticleActions } from '@/components/custom/cards/use-article-actions';
+import { useArticleActions } from '@/components/custom/cards/use-article-actions';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { extractDomain } from '@/lib/publisher-utils';
 import React, { useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
 
 interface ArticleStandaloneCompactCardProps {
   article: NewsArticle;
@@ -47,7 +45,6 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
   menuExtraItems,
   testID,
 }) => {
-  const { t } = useTranslation();
   const publisherName =
     article.publicationSource?.publication_name ||
     (article.source_uri ? extractDomain(article.source_uri) : 'Source');
@@ -82,10 +79,17 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
   const visit = useMemo(() => visitFromArticle(article), [article]);
 
   const actions = useArticleActions({ subject, article, share, trackActive: false });
-  const inlineActions = useMemo(
-    () => inlineAccessibilityActions(t, actions),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [t, actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
+  // No inline row on compact rows: its actions lead the menu instead (and so
+  // are VoiceOver custom actions too).
+  const rowActions = useMemo(
+    () => ({
+      saved: actions.saved,
+      onLike: actions.onLike,
+      onDislike: actions.onDislike,
+      onToggleSave: actions.onToggleSave,
+      onShare: actions.onShare,
+    }),
+    [actions.saved, actions.onLike, actions.onDislike, actions.onToggleSave, actions.onShare],
   );
   const menu = useArticleMenu({
     surface: 'card',
@@ -103,7 +107,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
       return asked;
     },
     extraItems: menuExtraItems,
-    inlineActions,
+    rowActions,
   });
 
   const metaAccessory =
@@ -130,7 +134,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
         onLongPress={onLongPress ?? menu.open}
         metaAccessory={metaAccessory}
         testID={testID}
-        footer={<ArticleActionBarFor actions={actions} onOverflow={menu.open} horizontalPadding={0} compact />}
+        onOverflow={menu.open}
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}
       />

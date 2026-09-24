@@ -7,8 +7,6 @@
 //     (FactFeedScreen).
 //   - ArticleFeedbackPrompt — the article + suggestion DETAIL screens.
 //   - ArticleActionsRow — the standalone card (Saved list).
-//   - The compact rows (ArticleSuggestionCompactCard, ArticleStandaloneCompactCard),
-//     in the `compact` size with •••.
 // The latter two used to hand-roll their own row of 48pt round,
 // primary-orange-outlined buttons. They were converted to this component
 // because the circle was load-bearing for state, not just decoration: it was
@@ -53,9 +51,6 @@ const SAVE_ACCENT = 'rgb(231,138,83)';
 /** Disabled ink for a control that has already done its job. */
 const MUTED = '#6B7280';
 const ICON_SIZE = 27;
-/** Compact rows: smaller glyphs inside a full 44pt frame. */
-const COMPACT_ICON_SIZE = 20;
-const COMPACT_FRAME = { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' } as const;
 const STROKE = 1.8;
 
 interface CardActionBarProps {
@@ -114,8 +109,6 @@ interface CardActionBarProps {
    *  Check for fact checks live in the menu instead of inline. Absent: the row
    *  renders exactly as before, for any host not yet on the menu. */
   onOverflow?: () => void;
-  /** Compact rows: 20pt glyphs, each in a 44pt frame. */
-  compact?: boolean;
 }
 
 const CardActionBar: React.FC<CardActionBarProps> = ({
@@ -133,16 +126,11 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   horizontalPadding = 16,
   provisional = false,
   onOverflow,
-  compact = false,
 }) => {
   const { t } = useTranslation();
-  const iconSize = compact ? COMPACT_ICON_SIZE : ICON_SIZE;
-  // Compact glyphs are 20pt, so each button carries a real 44pt FRAME (the
-  // accessibility tree measures the frame, not the slop: a 20pt frame with
-  // 12pt of slop read as 20x20 there). Regular glyphs keep 10pt of slop
-  // around 27, as they always have.
-  const hitSlop = compact ? 0 : 10;
-  const frame = compact ? COMPACT_FRAME : undefined;
+  const iconSize = ICON_SIZE;
+  // 10pt of slop around a 27pt glyph: a ~47pt target.
+  const hitSlop = 10;
   const liked = verdict === 'like';
   const disliked = verdict === 'dislike';
   // Colour tracks the verdict (so a tap is always visibly registered); FILL
@@ -155,7 +143,7 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       className="items-center"
       style={{
         paddingHorizontal: horizontalPadding,
-        paddingVertical: compact ? 0 : 12,
+        paddingVertical: 12,
         justifyContent: 'space-evenly',
       }}
     >
@@ -164,7 +152,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           testID="card-action-mera"
           onPress={onAskMera}
           hitSlop={hitSlop}
-          style={frame}
           accessibilityRole="button"
           accessibilityLabel={t('swipeFeed.askMera')}
         >
@@ -176,7 +163,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         testID="card-action-like"
         onPress={onLike}
         hitSlop={hitSlop}
-        style={frame}
         accessibilityRole="button"
         accessibilityState={{ selected: liked }}
         accessibilityLabel={t('articleFeedback.likeLabel')}
@@ -193,7 +179,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
         testID="card-action-dislike"
         onPress={onDislike}
         hitSlop={hitSlop}
-        style={frame}
         accessibilityRole="button"
         accessibilityState={{ selected: disliked }}
         accessibilityLabel={t('articleFeedback.dislikeLabel')}
@@ -211,7 +196,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           testID="card-action-save"
           onPress={onToggleSave}
           hitSlop={hitSlop}
-          style={frame}
           accessibilityRole="button"
           accessibilityState={{ selected: saved }}
           accessibilityLabel={t(saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction')}
@@ -230,7 +214,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           testID="card-action-track"
           onPress={onTrack}
           hitSlop={hitSlop}
-          style={frame}
           accessibilityRole="button"
           accessibilityState={{ selected: tracked }}
           accessibilityLabel={t(tracked ? 'trackedStories.untrackAction' : 'trackedStories.trackAction')}
@@ -262,7 +245,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           onPress={factCheckState === 'done' ? undefined : onFactCheck}
           disabled={factCheckState === 'done'}
           hitSlop={hitSlop}
-          style={frame}
           accessibilityRole="button"
           accessibilityState={{
             selected: factCheckState !== 'none',
@@ -302,7 +284,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           testID="card-action-share"
           onPress={onShare}
           hitSlop={hitSlop}
-          style={frame}
           accessibilityRole="button"
           accessibilityLabel={t('articleDetail.share')}
         >
@@ -322,7 +303,6 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
           testID="card-action-more"
           onPress={onOverflow}
           hitSlop={hitSlop}
-          style={frame}
           accessibilityRole="button"
           accessibilityLabel={t('articleMenu.openA11y')}
         >

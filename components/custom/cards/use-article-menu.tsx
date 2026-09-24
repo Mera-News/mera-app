@@ -47,6 +47,17 @@ export interface UseArticleMenuInput {
      *  accessibility element, so the buttons drawn inside it are otherwise
      *  unreachable with VoiceOver. */
     inlineActions?: readonly InlineAccessibilityAction[];
+    /** COMPACT rows only: they draw no inline action row (owner review), so
+     *  like, not for me, save and share lead the menu instead. Surfaces with an
+     *  inline row (Feed card, detail) leave this out. */
+    rowActions?: {
+        saved: boolean;
+        onLike: () => void;
+        onDislike: () => void;
+        onToggleSave: () => void;
+        /** Undefined when there is nothing to share. */
+        onShare?: () => void;
+    };
 }
 
 export interface UseArticleMenu {
@@ -89,7 +100,8 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     // nobody has looked at, is waste. It stays live after that, because items
     // run after the sheet has closed.
     const [engaged, setEngaged] = useState(false);
-    const { subject, surface, articleUrl, languageCode, visit, onCheckFacts, extraItems, inlineActions } = input;
+    const { subject, surface, articleUrl, languageCode, visit, onCheckFacts, extraItems, inlineActions, rowActions } =
+        input;
     const { tracked, onPress: onTrackPress, dialog: trackDialog } = useTrackButton(subject, engaged);
 
     const showFailure = useCallback(
@@ -171,6 +183,41 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
 
     const items = useMemo<ArticleMenuItem[]>(() => {
         const list: ArticleMenuItem[] = [];
+        if (rowActions) {
+            list.push(
+                {
+                    key: 'like',
+                    label: t('articleFeedback.likeLabel'),
+                    icon: 'thumb-up-off-alt',
+                    testID: 'menu-like',
+                    run: () => rowActions.onLike(),
+                },
+                {
+                    key: 'dislike',
+                    label: t('articleFeedback.dislikeLabel'),
+                    icon: 'thumb-down-off-alt',
+                    testID: 'menu-dislike',
+                    run: () => rowActions.onDislike(),
+                },
+                {
+                    key: 'save',
+                    label: t(rowActions.saved ? 'savedSuggestions.removeAction' : 'savedSuggestions.saveAction'),
+                    icon: rowActions.saved ? 'bookmark' : 'bookmark-border',
+                    testID: 'menu-save',
+                    run: () => rowActions.onToggleSave(),
+                },
+            );
+            const share = rowActions.onShare;
+            if (share) {
+                list.push({
+                    key: 'share',
+                    label: t('articleDetail.share'),
+                    icon: Platform.OS === 'ios' ? 'ios-share' : 'share',
+                    testID: 'menu-share',
+                    run: () => share(),
+                });
+            }
+        }
         list.push({
             key: 'ask',
             label: t('articleMenu.askMera'),
@@ -257,6 +304,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         appLanguage,
         fewerFromSource,
         extraItems,
+        rowActions,
     ]);
 
     // The sheet stays mounted while its Modal dismisses; `pending` holds the

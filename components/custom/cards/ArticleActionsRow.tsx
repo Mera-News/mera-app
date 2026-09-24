@@ -56,8 +56,7 @@ export const ArticleActionBarFor: React.FC<{
   horizontalPadding?: number;
   /** D3: when set, Ask Mera and Follow move into the ••• menu. */
   onOverflow?: () => void;
-  compact?: boolean;
-}> = ({ actions, horizontalPadding, onOverflow, compact }) => (
+}> = ({ actions, horizontalPadding, onOverflow }) => (
   <CardActionBar
     verdict={actions.likeState !== 'none' ? 'like' : null}
     provisional={actions.likeState === 'provisional'}
@@ -71,7 +70,6 @@ export const ArticleActionBarFor: React.FC<{
     onShare={actions.onShare}
     onOverflow={onOverflow}
     horizontalPadding={horizontalPadding}
-    compact={compact}
   />
 );
 

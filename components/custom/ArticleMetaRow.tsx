@@ -200,7 +200,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
             ) : null;
     const flagEl =
         showFlag ? (
-                <Box style={{ flexShrink: 0 }}>
+                <Box style={{ flexShrink: 0 }} testID="meta-flag">
                     {isCard ? (
                         <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
                     ) : (
@@ -210,15 +210,18 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
             ) : null;
 
     // COMPACT rows (no publication in this row; the publisher sits in their
-    // footer and the middle slot is the priority chip): time, chip, language,
-    // flag, spread across the width. Unchanged by the centred layout below.
+    // footer and the middle slot is the priority chip): time, chip, then flag
+    // and language together at the right, spread across the width.
     if (!showPublicationSlot) {
         return (
             <HStack className="items-center justify-between" space="sm">
                 {ageEl}
                 {centerAccessory ? <Box style={{ flexShrink: 0 }}>{centerAccessory}</Box> : null}
-                {languageEl}
-                {flagEl}
+                {/* The flag sits immediately left of the language (owner). */}
+                <HStack className="items-center" space="xs" style={{ flexShrink: 0 }} testID="meta-flag-language">
+                    {flagEl}
+                    {languageEl}
+                </HStack>
             </HStack>
         );
     }

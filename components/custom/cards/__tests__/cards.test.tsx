@@ -118,8 +118,8 @@ jest.mock('@/components/custom/ArticleMetaRow', () => {
   // chip lives in this slot, and a mock that swallows it would make "the chip
   // is in the meta row, not the footer" untestable — while still passing.
   return {
-    ArticleMetaRow: ({ publicationName, read, centerAccessory }: any) => (
-      <View testID="meta-row">
+    ArticleMetaRow: ({ publicationName, read, centerAccessory, showFlag, countryCode }: any) => (
+      <View testID="meta-row" showFlag={showFlag} countryCode={countryCode}>
         <Text>{publicationName ?? ''}</Text>
         {read ? <View testID="read-eye-icon" /> : null}
         {centerAccessory ?? null}
@@ -555,25 +555,47 @@ describe('ArticleStandaloneCompactCard', () => {
     expect(queryByText('Die Zeit')).toBeTruthy();
   });
 
-  it('draws the compact action row: like, not for me, save, share, then ••• last', () => {
-    const { getByTestId, queryByTestId, UNSAFE_root } = render(
+  // Owner review: compact rows carry NO inline action row. One small ••• at the
+  // right end of the publisher line (44pt target) opens the shared menu, which
+  // gains Like / Not for me / Save / Share on compact surfaces.
+  it('draws no inline action row, only a 44pt ••• on the publisher line', () => {
+    const { getByTestId, queryByTestId, getByText } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
-    const order = UNSAFE_root.findAll(
-      (n: any) => typeof n.props?.testID === 'string' && n.props.testID.startsWith('card-action-') && typeof n.type !== 'string',
-    ).map((n: any) => n.props.testID);
-    const unique = order.filter((id: string, i: number) => order.indexOf(id) === i);
-    expect(unique).toEqual([
-      'card-action-like',
-      'card-action-dislike',
-      'card-action-save',
-      'card-action-share',
-      'card-action-more',
-    ]);
-    // Ask Mera and Follow live in the menu on a row, not inline.
-    expect(queryByTestId('card-action-mera')).toBeNull();
-    expect(queryByTestId('card-action-track')).toBeNull();
-    expect(getByTestId('card-action-more')).toBeTruthy();
+    for (const id of ['card-action-like', 'card-action-dislike', 'card-action-save', 'card-action-share']) {
+      expect(queryByTestId(id)).toBeNull();
+    }
+    const more = getByTestId('compact-card-more');
+    const { StyleSheet } = require('react-native');
+    expect(StyleSheet.flatten(more.props.style)).toEqual(expect.objectContaining({ minWidth: 44, minHeight: 44 }));
+    // Same line as the publisher.
+    const line = getByTestId('compact-card-footer');
+    const inLine = (n: any): boolean => {
+      for (let p = n; p; p = p.parent) if (p === line) return true;
+      return false;
+    };
+    expect(inLine(more)).toBe(true);
+    expect(inLine(getByText('Die Zeit'))).toBe(true);
+  });
+
+  it('the compact menu leads with Like, Not for me, Save and Share', () => {
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
+    );
+    fireEvent.press(getByTestId('compact-card-more'));
+    for (const id of ['menu-like', 'menu-dislike', 'menu-save', 'menu-share', 'card-action-mera']) {
+      expect(getByTestId(id)).toBeTruthy();
+    }
+  });
+
+  it('moves the country flag to the top row, beside the language', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
+    );
+    const meta = getByTestId('meta-row');
+    expect(meta.props.showFlag).toBe(true);
+    expect(meta.props.countryCode).toBe('DE');
+    expect(queryByTestId('compact-footer-flag')).toBeNull();
   });
 
   it('opens the ••• menu from the button and from a long-press', () => {
@@ -581,7 +603,7 @@ describe('ArticleStandaloneCompactCard', () => {
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
     expect(queryByTestId('article-menu')).toBeNull();
-    fireEvent.press(getByTestId('card-action-more'));
+    fireEvent.press(getByTestId('compact-card-more'));
     expect(getByTestId('article-menu')).toBeTruthy();
     fireEvent.press(getByTestId('article-menu-cancel'));
     expect(queryByTestId('article-menu')).toBeNull();
@@ -599,12 +621,12 @@ describe('ArticleStandaloneCompactCard', () => {
     expect(queryByTestId('article-menu')).toBeNull();
   });
 
-  it('lists the inline buttons first among the VoiceOver custom actions', () => {
+  it('keeps every action as a VoiceOver custom action on the row', () => {
     const { getByTestId } = render(
       <ArticleStandaloneCompactCard testID="row" article={makeArticle()} onPress={jest.fn()} />,
     );
     const names = (getByTestId('row').props.accessibilityActions ?? []).map((a: any) => a.name);
-    expect(names.slice(0, 4)).toEqual(['inline-like', 'inline-dislike', 'inline-save', 'inline-share']);
+    expect(names.slice(0, 4)).toEqual(['like', 'dislike', 'save', 'share']);
     expect(names).toContain('ask');
   });
 });
@@ -895,11 +917,13 @@ describe('ArticleSuggestionCard VoiceOver actions', () => {
 });
 
 describe('ArticleSuggestionCompactCard action row', () => {
-  it('records a like from the inline row with the suggestion subject', async () => {
+  it('records a like from the menu\'s Like with the suggestion subject', async () => {
     const { getByTestId } = render(
       <ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={jest.fn()} surface="for_you" />,
     );
-    fireEvent.press(getByTestId('card-action-like'));
+    act(() => {
+      getByTestId('card-sugg-1').props.onAccessibilityAction({ nativeEvent: { actionName: 'like' } });
+    });
     await waitFor(() =>
       expect(mockRecordArticleFeedback).toHaveBeenCalledWith(
         expect.objectContaining({ articleId: 'art-1', suggestionId: 'sugg-1', sentiment: 'like', origin: 'suggestion', surface: 'for_you' }),
