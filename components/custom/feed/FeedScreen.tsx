@@ -107,6 +107,7 @@ import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import FeedHeaderTitleRow, { feedMarkMode } from '@/components/custom/feed/FeedHeaderTitleRow';
 import NewStoriesPill from '@/components/custom/feed/NewStoriesPill';
+import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import { pressNewStoriesPill } from '@/components/custom/feed/new-stories-pill';
 import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
@@ -313,7 +314,11 @@ const FeedScreen: React.FC = () => {
   // The user's geo/language context (home/other countries + app language) —
   // makes representative election tier-aware. Null while loading/on failure,
   // which `buildFeedList` treats as the legacy geo/language-blind pick.
-  const userGeoLanguageCtx = useUserGeoLanguageContext();
+  // Frozen per reading session (see use-session-geo-context): a publication
+  // preference written from a card's ••• sheet must not regroup and re-sort
+  // the stories under the reader. `sessionEpoch` is bumped by `resetSession`.
+  const [sessionEpoch, setSessionEpoch] = useState(0);
+  const userGeoLanguageCtx = useSessionGeoLanguageContext(useUserGeoLanguageContext(), sessionEpoch);
 
   // Status mark + its panel. The mark (FeedStatusMark) drops the panel down
   // under the title row through the screen's StatusDropdownProvider, and it
@@ -454,6 +459,7 @@ const FeedScreen: React.FC = () => {
    * reason. One function, so the two can never drift apart.
    */
   const resetSession = useCallback(() => {
+    setSessionEpoch((e) => e + 1);
     refreshPartitionSnapshot();
     setPinnedIds([]);
     resetDeepestSeen();
