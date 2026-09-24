@@ -41,10 +41,11 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
 });
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
-    return { MaterialIcons: (props: any) => <View {...props} /> };
+    return { MaterialIcons: (props: any) => <View testID={`icon-${props.name}`} {...props} /> };
 });
+let mockEventIcon: string | null = null;
 jest.mock('@/components/custom/for-you/event-type-icons', () => ({
-    eventTypeIcon: () => null,
+    eventTypeIcon: () => mockEventIcon,
 }));
 
 import FactSectionHeader from '../FactSectionHeader';
@@ -118,5 +119,35 @@ describe('FactSectionHeader', () => {
         );
         fireEvent.press(getByTestId('dashboard-section-open'));
         expect(onPress).toHaveBeenCalled();
+    });
+});
+
+// Captured: the section header's arrow surfaced as its own StaticText holding
+// only an icon-font glyph. A standalone glyph is decoration: hidden from
+// accessibility the documented way on both platforms.
+describe('section header glyphs are hidden from accessibility', () => {
+    const HIDDEN = { includeHiddenElements: true } as const;
+    const hiddenGlyph = (n: any) => {
+        expect(n.props.accessible).toBe(false);
+        expect(n.props.accessibilityElementsHidden).toBe(true);
+        expect(n.props.importantForAccessibility).toBe('no-hide-descendants');
+    };
+    afterEach(() => {
+        mockEventIcon = null;
+    });
+
+    it('hides the round open arrow and the event-type icon', () => {
+        mockEventIcon = 'how-to-vote';
+        const r = render(<FactSectionHeader title="Elections" eventType="election" total={12} onPress={jest.fn()} />);
+        hiddenGlyph(r.getByTestId('icon-arrow-forward', HIDDEN));
+        hiddenGlyph(r.getByTestId('icon-how-to-vote', HIDDEN));
+        // The button itself still speaks.
+        expect(r.getByTestId('dashboard-section-open').props.accessibilityLabel).toBeTruthy();
+    });
+
+    it('hides the View all row chevron', () => {
+        const SectionViewAllText = require('../SectionViewAllText').default;
+        const r = render(<SectionViewAllText total={12} onPress={jest.fn()} />);
+        hiddenGlyph(r.getByTestId('icon-chevron-right', HIDDEN));
     });
 });

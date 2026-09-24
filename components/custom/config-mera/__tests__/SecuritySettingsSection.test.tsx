@@ -194,4 +194,28 @@ describe('SecuritySettingsSection accessibility', () => {
         expect(r.getByTestId('settings-row-change-pin').props.accessibilityLabel).toBe('security.changePin');
         expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
     });
+
+    // Captured: the lock icon beside "Ask for a 4-digit PIN when you open Mera"
+    // was its own StaticText holding only the glyph.
+    it('hides the standalone lock icon from accessibility', () => {
+        const r = render(<SecuritySettingsSection />);
+        const glyphs = r.UNSAFE_root.findAll(
+            (n: any) => typeof n.type === 'string' && /^[\uE000-\uF8FF]$/.test(String(n.props.children ?? '')),
+        );
+        expect(glyphs.length).toBeGreaterThan(0);
+        for (const n of glyphs) {
+            let hidden = false;
+            for (let p: any = n; p; p = p.parent) {
+                if (p.props?.accessibilityElementsHidden === true && p.props?.importantForAccessibility === 'no-hide-descendants') hidden = true;
+                if (p.props?.accessible === true && p !== n) break;
+            }
+            // A glyph inside an accessible control is read through the
+            // control's explicit label; only STANDALONE glyphs must be hidden.
+            const inControl = (() => {
+                for (let p: any = n.parent; p; p = p.parent) if (p.props?.accessible === true) return true;
+                return false;
+            })();
+            if (!inControl) expect(hidden).toBe(true);
+        }
+    });
 });

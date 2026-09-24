@@ -51,7 +51,16 @@ const SectionOpenButton: React.FC<SectionOpenButtonProps> = ({ total, onPress })
         backgroundColor: 'rgba(231, 138, 83, 0.14)',
       }}
     >
-      <MaterialIcons name="arrow-forward" size={20} color={ACCENT} />
+      {/* Decoration: the button's label speaks. A standalone glyph surfaced
+          as its own StaticText holding the icon-font character (captured). */}
+      <MaterialIcons
+        name="arrow-forward"
+        size={20}
+        color={ACCENT}
+        accessible={false}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      />
     </Pressable>
   );
 };
