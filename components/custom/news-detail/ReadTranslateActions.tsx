@@ -1,6 +1,5 @@
 import TranslationNotice, { TRANSLATABLE_COLOR } from '@/components/custom/news-detail/TranslationNotice';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
@@ -11,7 +10,7 @@ import {
 import { appendReferrer, openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
-import { View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 
@@ -38,6 +37,11 @@ const ICON_GAP = 6;
  *  pill's height by negative margins so the layout sees 28pt (never hitSlop). */
 const TOUCH_TARGET = 44;
 const FRAME_BLEED = (TOUCH_TARGET - PILL_HEIGHT) / 2;
+const HIDDEN = {
+    accessible: false,
+    accessibilityElementsHidden: true,
+    importantForAccessibility: 'no-hide-descendants',
+} as const;
 
 /**
  * Title-case a publisher name WITHOUT destroying acronyms: only words that are
@@ -133,33 +137,27 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     ) => {
         const color = readable ? READABLE_COLOR : ROUTE_COLOR;
         return (
-            // The pressable is the transparent 44pt FRAME; the outline is the
-            // pill inside it (see TOUCH_TARGET).
-            <Button
-                testID={testID}
-                // Exactly the visible text. Without it VoiceOver read the icon's
-                // font glyph first ("<glyph>, Read on Google Translate").
-                accessibilityRole="button"
-                accessibilityLabel={label}
-                // `outline` as before, not `link` (whose label underlines while
-                // pressed); its border is zeroed here, the pill draws it.
-                variant="outline"
-                action="secondary"
-                className="bg-transparent border-0"
+            // A transparent 44pt FRAME pulled back to the pill's height; the
+            // outline is the pill inside it (see TOUCH_TARGET). The pill is a
+            // hidden visual and a CHILDLESS labelled button is laid over it: a
+            // glyph inside a button surfaced on iOS as its own StaticText
+            // (captured, open-in-new after "Read on ..."), hidden props or not.
+            <View
+                testID={`${testID}-frame`}
                 style={{
                     flexGrow: 1,
                     flexShrink: 1,
                     height: TOUCH_TARGET,
                     marginVertical: -FRAME_BLEED,
-                    paddingHorizontal: 0,
-                    borderWidth: 0,
-                    backgroundColor: 'transparent',
+                    flexDirection: 'row',
+                    alignItems: 'center',
                     justifyContent: 'center',
                 }}
-                onPress={onPress}
             >
                 <View
                     testID={`${testID}-pill`}
+                    pointerEvents="none"
+                    {...HIDDEN}
                     // Class AND style, see the header: gluestack's tva sets its
                     // own colours, and which one wins differs between root and label.
                     className={`rounded-full ${readable ? 'border-green-300' : 'border-white'}`}
@@ -177,17 +175,28 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                         justifyContent: 'center',
                     }}
                 >
-                    <MaterialIcons name={icon} size={ICON_SIZE} color={color} />
-                    <ButtonText
+                    <MaterialIcons name={icon} size={ICON_SIZE} color={color} {...HIDDEN} />
+                    {/* What ButtonText resolved to: semibold body face, chrome
+                        text scaling; size and colour come from the style. */}
+                    <Text
                         numberOfLines={1}
                         ellipsizeMode="tail"
-                        className={readable ? 'text-green-300' : 'text-white'}
+                        scaleTier="chrome"
+                        className={`font-semibold font-body ${readable ? 'text-green-300' : 'text-white'}`}
                         style={{ flexShrink: 1, color, fontSize: LABEL_FONT, lineHeight: LABEL_LINE, marginLeft: ICON_GAP }}
                     >
                         {label}
-                    </ButtonText>
+                    </Text>
                 </View>
-            </Button>
+                <Pressable
+                    testID={testID}
+                    // Exactly the visible text.
+                    accessibilityRole="button"
+                    accessibilityLabel={label}
+                    onPress={onPress}
+                    style={StyleSheet.absoluteFill}
+                />
+            </View>
         );
     };
 

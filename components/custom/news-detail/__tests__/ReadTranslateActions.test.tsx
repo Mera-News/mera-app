@@ -70,9 +70,13 @@ jest.mock('@/components/ui/text', () => {
 jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
-import { fireEvent, render } from '@testing-library/react-native';
+import { configure, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import ReadTranslateActions, { titleCasePublication } from '../ReadTranslateActions';
+
+// The pill (label + icon) is a hidden visual under a childless labelled
+// button, so text and pill queries must see hidden elements.
+configure({ defaultIncludeHiddenElements: true });
 
 const ARTICLE_URL = 'https://publisher.example.com/story';
 // What appendReferrer returns for ARTICLE_URL — the UTM-wrapped article URL
@@ -266,7 +270,9 @@ describe('ReadTranslateActions', () => {
         const GREEN = '#86EFAC';
         // The outline is drawn by the visible pill inside the 44pt frame.
         const outline = (b: any) => {
-            const pill = b.findAll((n: any) => n.props?.testID === `${b.props.testID}-pill`)[0];
+            let root = b;
+            while (root.parent) root = root.parent;
+            const pill = root.findAll((n: any) => n.props?.testID === `${b.props.testID}-pill`)[0];
             return { border: styleOf(pill).borderColor, fill: styleOf(pill).backgroundColor };
         };
 
@@ -298,7 +304,7 @@ describe('ReadTranslateActions', () => {
                 mockGetArticleTranslationSupport.mockReturnValue({ status, reason: 'unsupported-language' });
                 const { queryByTestId, unmount } = renderActions(status === 'same-language' ? { sourceLanguage: 'en' } : {});
                 for (const id of [PUBLISHER_BUTTON, GT_BUTTON]) {
-                    const b = queryByTestId(id);
+                    const b = queryByTestId(`${id}-frame`);
                     if (b) expect(styleOf(b).flexGrow).toBe(1);
                 }
                 unmount();
@@ -322,7 +328,7 @@ describe('ReadTranslateActions', () => {
 
         it.each([GT_BUTTON, PUBLISHER_BUTTON])('%s: keeps a 44pt touch target that lays out at the pill height', (id) => {
             const { getByTestId } = renderActions();
-            const frame = styleOf(getByTestId(id));
+            const frame = styleOf(getByTestId(`${id}-frame`));
             expect(frame).toEqual(expect.objectContaining({ height: 44, marginVertical: -8, flexGrow: 1 }));
             expect((frame.height as number) + 2 * (frame.marginVertical as number)).toBe(28);
             expect(getByTestId(id).props.hitSlop).toBeUndefined();
@@ -390,5 +396,35 @@ describe('accessibility labels', () => {
         expect(r.getByTestId(PUBLISHER_BUTTON).props.accessibilityLabel).toBe(
             'articleDetail.readOn::{"publication":"The Hindu"}',
         );
+    });
+});
+
+// Captured (ux2 batch 27): an open-in-new glyph StaticText right after "Read on
+// Ars Technica". Each button is childless, laid over its hidden pill.
+describe('icon glyphs', () => {
+    it.each(['translatable', 'not-translatable', 'same-language'] as const)('%s: no private-use StaticText in the route row', (status) => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status, reason: 'unsupported-language' });
+        const r = renderActions(status === 'same-language' ? { sourceLanguage: 'en' } : {});
+        // The route row only: TranslationNotice (its own file) draws the
+        // translate glyph above it.
+        const glyphs = r.getByTestId('detail-read-routes').findAll(
+            (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+        );
+        expect(glyphs.length).toBe(status === 'same-language' ? 1 : 2);
+        for (const g of glyphs) {
+            expect(g.props.accessible).toBe(false);
+            expect(g.props.accessibilityElementsHidden).toBe(true);
+            expect(g.props.importantForAccessibility).toBe('no-hide-descendants');
+            for (let p: any = g.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+        }
+    });
+
+    it('each button is childless, so it cannot compose a glyph', () => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
+        const r = renderActions();
+        for (const id of [GT_BUTTON, PUBLISHER_BUTTON]) {
+            const b = r.getByTestId(id);
+            expect(b.findAll((n: any) => n !== b && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
+        }
     });
 });

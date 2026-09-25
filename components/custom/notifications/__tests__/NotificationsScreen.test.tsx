@@ -10,14 +10,16 @@ jest.mock('react-i18next', () => ({
     t: (k: string, o?: Record<string, unknown>) => (o && 'count' in o ? `${k}:${o.count}` : k),
   }),
 }));
-jest.mock('@/components/custom/config-panel/DrillDownHeader', () => ({ __esModule: true, default: () => null }));
+// Renders only the screen's own right action (Clear all), which it passes in.
+jest.mock('@/components/custom/config-panel/DrillDownHeader', () => ({ __esModule: true, default: (p: any) => p.rightAction ?? null }));
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/ui/box', () => ({ Box: (p: any) => require('react').createElement(require('react-native').View, p) }));
 jest.mock('@/components/ui/hstack', () => ({ HStack: (p: any) => require('react').createElement(require('react-native').View, p) }));
 jest.mock('@/components/ui/vstack', () => ({ VStack: (p: any) => require('react').createElement(require('react-native').View, p) }));
 jest.mock('@/components/ui/pressable', () => ({ Pressable: (p: any) => require('react').createElement(require('react-native').Pressable, p) }));
 jest.mock('@/components/ui/text', () => ({ Text: (p: any) => require('react').createElement(require('react-native').Text, p) }));
-jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
+// Real icon-font glyphs, so a glyph under an accessible element is caught.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 // The real FlatList pulls in a native ScrollView spec jest cannot parse; a plain
 // map renders the same rows.
 jest.mock('react-native/Libraries/Lists/FlatList', () => {
@@ -101,4 +103,40 @@ it('states the cleanups waiting now, not the count stamped when the row was writ
   const screen = render(<NotificationsScreen onBack={jest.fn()} />);
   await act(async () => {});
   expect(screen.getByText('hygiene.notificationBody:2')).toBeTruthy();
+});
+
+// Captured (ux2 batch 27): a row Button read "<glyph>, Fact check ready, ...",
+// its icon inside the accessible row. Clear all had its glyph inside too.
+it('exposes no private-use StaticText anywhere: row icons and Clear all', async () => {
+  mockRows = [row({
+    type: 'fact_check_done',
+    title: 'factCheck.notify.title',
+    body: 'factCheck.notify.bodyNone',
+    actionsJson: JSON.stringify([{ id: 'open-fact-check', labelKey: 'factCheck.notify.open' }]),
+  })];
+  const r = render(<NotificationsScreen onBack={jest.fn()} />);
+  await act(async () => {});
+  const glyphs = r.UNSAFE_root.findAll(
+    (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+  );
+  // The row icon and the Clear all glyph.
+  expect(glyphs.length).toBe(2);
+  for (const g of glyphs) {
+    expect(g.props.accessible).toBe(false);
+    expect(g.props.accessibilityElementsHidden).toBe(true);
+    expect(g.props.importantForAccessibility).toBe('no-hide-descendants');
+    for (let p: any = g.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+  }
+});
+
+it('keeps Clear all a labelled 44pt button', async () => {
+  mockRows = [row({})];
+  const { StyleSheet } = require('react-native');
+  const r = render(<NotificationsScreen onBack={jest.fn()} />);
+  await act(async () => {});
+  const clear = r.getByTestId('notifications-clear-all');
+  expect(clear.props.accessibilityLabel).toBe('notificationCenter.clearAll');
+  const flat = StyleSheet.flatten(clear.props.style);
+  expect(flat.width).toBe(44);
+  expect(flat.height).toBe(44);
 });
