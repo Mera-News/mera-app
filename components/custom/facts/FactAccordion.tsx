@@ -14,7 +14,6 @@ import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service'
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { useForYouStore } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -146,7 +145,6 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
             void hapticLight();
             try {
                 await nudgeFactWeight(fact.id, delta, 'user');
-                useForYouStore.getState().setFeedNeedsRefresh(true);
             } catch (err) {
                 setInfluence(prev); // revert optimistic update on failure
                 logger.warn('[fact-accordion] influence nudge failed', {

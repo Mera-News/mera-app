@@ -221,7 +221,6 @@ let mockLastRunFinishedAt: number | null = null;
 jest.mock('@/lib/stores/for-you-store', () => {
     const useForYouStore = (sel: (s: unknown) => unknown) =>
         sel({ lastProcessingRunFinishedAt: mockLastRunFinishedAt });
-    useForYouStore.getState = () => ({ setFeedNeedsRefresh: jest.fn() });
     return { useForYouStore };
 });
 

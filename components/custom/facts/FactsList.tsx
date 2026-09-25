@@ -202,7 +202,6 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
         if (factMutationVersion > 0) {
             void reloadArticleCounts();
             if (userId) fetchUserPersona(userId, true);
-            useForYouStore.getState().setFeedNeedsRefresh(true);
         }
     }, [factMutationVersion, reloadArticleCounts, fetchUserPersona, userId]);
 
@@ -247,7 +246,6 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
             setFactToDelete(null);
             void reloadArticleCounts();
             if (userId) fetchUserPersona(userId, true);
-            useForYouStore.getState().setFeedNeedsRefresh(true);
             toast.show({
                 placement: 'top',
                 render: () => (
@@ -305,7 +303,6 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
         try {
             await deleteTopicWithDecline(topicRow.id);
             if (userId) fetchUserPersona(userId, true);
-            useForYouStore.getState().setFeedNeedsRefresh(true);
         } catch (error) {
             logger.error('[FactsList] deleteTopic failed', error, {
                 factId: fact.id,
@@ -340,7 +337,6 @@ await createTopics([{ factId: addTopicFact.id, text: trimmed , weight: DEFAULT_H
             // counts this screen still fetches one-shot (pending observeFacts).
             void reloadArticleCounts();
             if (userId) fetchUserPersona(userId, true);
-            useForYouStore.getState().setFeedNeedsRefresh(true);
         } catch (error) {
             logger.error('[FactsList] addTopic failed', error, { factId: addTopicFact?.id });
         } finally {
@@ -430,7 +426,6 @@ await createTopics([{ factId: addTopicFact.id, text: trimmed , weight: DEFAULT_H
                 await syncLlmTopicsForFact(fact.id, newTopics);
                 void reloadArticleCounts();
                 fetchUserPersona(userId, true);
-                useForYouStore.getState().setFeedNeedsRefresh(true);
             }
             clearGeneratingMore(fact.id);
         } catch (error) {

@@ -105,9 +105,6 @@ jest.mock('@/lib/database/services/mutation-rails-service', () => ({
 }));
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { error: jest.fn(), warn: jest.fn() } }));
-jest.mock('@/lib/stores/for-you-store', () => ({
-    useForYouStore: { getState: () => ({ setFeedNeedsRefresh: jest.fn() }) },
-}));
 
 const mockRetryTopicGeneration = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/lib/chat-tools/tool-handlers', () => ({
