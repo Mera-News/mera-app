@@ -488,9 +488,10 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
             </Text>
           )}
 
-          {/* OPTIONAL, AND LOOKS IT (owner request, ux2): a quiet text button,
-              not an accent pill that read as the next required step. The
-              frame is a number (NativeWind rem is 14). */}
+          {/* OPTIONAL, AND LOOKS IT (owner request, ux2): a small pill with a
+              thin neutral outline, not the accent pill that read as the next
+              required step. The 44pt touch frame is a number (NativeWind rem
+              is 14); the pill inside it is about 30pt. */}
           <Pressable
             onPress={handleFindMore}
             disabled={isFindingMore}
@@ -501,9 +502,11 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
             accessibilityLabel={isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
             testID={`chat-topics-more-${factId}`}
           >
-            <Text size="xs" style={styles.moreText}>
-              {isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
-            </Text>
+            <View style={styles.morePill} testID={`chat-topics-more-pill-${factId}`}>
+              <Text size="xs" style={styles.moreText}>
+                {isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
+              </Text>
+            </View>
           </Pressable>
         </View>
       )}
@@ -537,8 +540,15 @@ const styles = StyleSheet.create({
   },
   savedHint: { color: 'rgb(200, 200, 200)' },
   moreButton: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
-  // Muted, but at least 4.5:1 on this card's ground (same value as the done tick).
-  moreText: { color: 'rgb(150, 150, 150)', textDecorationLine: 'underline' },
+  morePill: {
+    borderWidth: 1,
+    borderColor: 'rgb(150, 150, 150)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  // Neutral, the same grey as the outline and the done tick.
+  moreText: { color: 'rgb(150, 150, 150)' },
   title: { color: ACCENT, flexShrink: 0 },
   factLine: { flex: 1, color: 'rgb(190, 190, 190)' },
   section: { gap: 6 },

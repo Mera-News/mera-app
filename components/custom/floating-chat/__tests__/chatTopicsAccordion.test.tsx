@@ -349,18 +349,26 @@ describe('ux2 P9 owner request: the done card says the topics are saved, and Fin
     expect(r.queryByTestId('chat-topics-saved-f1', { includeHiddenElements: true })).toBeNull();
   });
 
-  it('Find more is the subtle variant: no border or fill, a numeric 44pt frame, label = visible text, after the line', () => {
+  it('Find more is a quiet outlined button: thin neutral outline, no fill, no accent, a numeric 44pt frame, label = visible text, after the line', () => {
     mockStatus = 'done';
     const r = draw();
     expandedIfClosed(r);
     const { StyleSheet } = require('react-native');
     const more = r.getByTestId('chat-topics-more-f1');
-    const flat = StyleSheet.flatten(more.props.style) ?? {};
-    expect(flat.minHeight).toBe(44);
-    expect(flat.borderWidth ?? 0).toBe(0);
-    expect(flat.backgroundColor).toBeUndefined();
+    const frame = StyleSheet.flatten(more.props.style) ?? {};
+    expect(frame.minHeight).toBe(44);
+    expect(frame.borderWidth ?? 0).toBe(0);
+    const pill = StyleSheet.flatten(r.getByTestId('chat-topics-more-pill-f1').props.style) ?? {};
+    expect(pill.borderWidth).toBe(1);
+    expect(pill.borderColor).toBe('rgb(150, 150, 150)');
+    expect(pill.backgroundColor).toBeUndefined();
+    const text = r.getByText('chatTopics.findMore');
+    const textStyle = StyleSheet.flatten(text.props.style) ?? {};
+    expect(textStyle.color).toBe('rgb(150, 150, 150)');
+    expect(textStyle.textDecorationLine).toBeUndefined();
+    expect(text.props.bold).toBeFalsy();
+    expect(JSON.stringify([pill, textStyle])).not.toMatch(/231,\s*138,\s*83/);
     expect(more.props.accessibilityLabel).toBe('chatTopics.findMore');
-    expect(r.getByText('chatTopics.findMore')).toBeTruthy();
     // Reading order: the saved line, then the optional Find more.
     const order = JSON.stringify(r.toJSON()).match(/chat-topics-(saved|more)-f1/g);
     expect(order).toEqual(['chat-topics-saved-f1', 'chat-topics-more-f1']);
