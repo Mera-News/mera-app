@@ -2,18 +2,15 @@ import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { authClient } from '@/lib/auth-client';
 import { getRenderableArticleCountByTopicTexts } from '@/lib/database/services/article-suggestion-service';
-import { deleteFact, getFacts, observeFacts } from '@/lib/database/services/fact-service';
-import { enqueueJob } from '@/lib/database/services/inference-job-service';
+import { deleteFact, observeFacts } from '@/lib/database/services/fact-service';
 import { deleteTopicWithDecline } from '@/lib/database/services/topic-decline-service';
-import { createTopics, syncLlmTopicsForFact } from '@/lib/database/services/topic-service';
-import { buildTopicGenContext } from '@/lib/inference/handlers/topic-gen-handler';
+import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
+import { createTopics } from '@/lib/database/services/topic-service';
 import { inferenceQueue } from '@/lib/inference/InferenceQueue';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { generateTopicsForFact } from '@/lib/mera-protocol/topic-generation-service';
 import { useFloatingChatFactMutationVersion, useFloatingChatIsExpanded } from '@/lib/stores/floating-chat-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
-import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import { router, useFocusEffect } from 'expo-router';
@@ -88,7 +85,6 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
     const [generatingMoreFactIds, setGeneratingMoreFactIds] = useState<Set<string>>(new Set());
 
     const isChatExpanded = useFloatingChatIsExpanded();
-    const isOnDeviceProcessing = useIsOnDeviceProcessing();
     const factMutationVersion = useFloatingChatFactMutationVersion();
     const knownFactIdsRef = useRef<Set<string>>(new Set());
     const isInitialLoadRef = useRef(true);
@@ -389,41 +385,25 @@ await createTopics([{ factId: addTopicFact.id, text: trimmed , weight: DEFAULT_H
         if (!fact || generatingMoreFactIds.has(fact.id) || !userId) return;
         setGenerateMoreFact(null);
         setGeneratingMoreFactIds(prev => new Set(prev).add(fact.id));
-        const existingTopics = fact.metadata?.topics ?? [];
         try {
-            if (isOnDeviceProcessing) {
-                await enqueueJob('topic_gen', {
-                    factId: fact.id,
-                    factStatement: fact.statement,
-                    useCloud: false,
-                    mode: 'append',
-                    totalCount: GENERATE_MORE_TOPIC_COUNT,
-                    excludeTopics: existingTopics,
-                });
+            // F1: isolated per fact. generateMoreTopicsForFact picks cloud vs.
+            // on-device itself and reads this fact's own topics plus the full
+            // declined list at run time — no exclusion snapshot built from
+            // other facts (the excludeFactId leak this closes), no cloud/
+            // on-device branch here any more.
+            const out = await generateMoreTopicsForFact(fact.id, fact.statement, {
+                count: GENERATE_MORE_TOPIC_COUNT,
+            });
+            if (out.mode === 'queued') {
                 // Busy state clears when the queue drains (job done or failed);
                 // the handler's notifyFactMutation() refreshes the fact list.
+                // generateMoreTopicsForFact already enqueued and notified.
                 inferenceQueue.onDrain(() => clearGeneratingMore(fact.id));
-                inferenceQueue.notify();
                 return;
             }
-            const allFacts = await getFacts();
-            const { userLocation, otherFacts } = buildTopicGenContext(allFacts, fact.id);
-            const newTopics = await generateTopicsForFact({
-                factStatement: fact.statement,
-                userLocation,
-                otherFacts,
-                useCloud: true,
-                totalCount: GENERATE_MORE_TOPIC_COUNT,
-                excludeTopics: existingTopics,
-            });
-            if (newTopics.length === 0) {
+            if (out.mode === 'skipped' || out.added === 0) {
                 showGenerateMoreFailedToast();
             } else {
-                // Converges with the on-device job handler
-                // (lib/inference/handlers/topic-gen-handler.ts), which already
-                // calls this — the cloud branch was the one path that used to
-                // mint into metadata only and never reach the topics table.
-                await syncLlmTopicsForFact(fact.id, newTopics);
                 void reloadArticleCounts();
                 fetchUserPersona(userId, true);
             }
@@ -433,7 +413,7 @@ await createTopics([{ factId: addTopicFact.id, text: trimmed , weight: DEFAULT_H
             showGenerateMoreFailedToast();
             clearGeneratingMore(fact.id);
         }
-    }, [generateMoreFact, generatingMoreFactIds, userId, isOnDeviceProcessing, clearGeneratingMore, showGenerateMoreFailedToast, reloadArticleCounts, fetchUserPersona]);
+    }, [generateMoreFact, generatingMoreFactIds, userId, clearGeneratingMore, showGenerateMoreFailedToast, reloadArticleCounts, fetchUserPersona]);
 
     return (
         <>
