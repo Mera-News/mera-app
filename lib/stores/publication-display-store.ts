@@ -113,7 +113,9 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
       inFlight = true;
       let answer: Record<string, string>;
       try {
-        answer = await activePorts.fetch(language, batch);
+        const raw: unknown = await activePorts.fetch(language, batch);
+        // No data (or not a map) means "no display names": keep the raw ones.
+        answer = raw && typeof raw === 'object' ? (raw as Record<string, string>) : {};
       } catch {
         inFlight = false;
         // A switch mid-call already rebuilt `pending` for the new language.
@@ -134,7 +136,7 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
       }
       failures = 0;
       const names = { ...get().names };
-      for (const n of batch) names[n] = answer[n] ?? n;
+      for (const n of batch) names[n] = typeof answer[n] === 'string' && answer[n] ? answer[n] : n;
       set({ names });
       activePorts.save(language, { savedAt: Date.now(), names: capNames(names) }).catch(() => undefined);
       schedule();
@@ -145,7 +147,7 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
       names: {},
 
       request: (name) => {
-        if (!name || pending.has(name)) return;
+        if (typeof name !== 'string' || !name || pending.has(name)) return;
         if (get().names[name] !== undefined) {
           if (!stale.has(name)) return;
           stale.delete(name);
@@ -198,17 +200,27 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
 
 export const usePublicationDisplayStore = createPublicationDisplayStore();
 
-/** The hook factory, so tests can bind it to their own store. */
-export function makeUseDisplayPublication(store: PublicationDisplayStore) {
+/**
+ * The hook factory, so tests can bind it to their own store.
+ *
+ * The store parameter MUST be named `use…`. The app is built with the React
+ * Compiler, which memoises any call whose callee is not named like a hook: a
+ * binding named `store` made `store(selector)` run only when `name` changed,
+ * so zustand's hooks were skipped on the next render and the card crashed
+ * with a hook-order change. `publication-display-store.compiled.test.ts`
+ * renders this module compiled, and fails if that comes back.
+ */
+export function makeUseDisplayPublication(useStore: PublicationDisplayStore) {
   function useDisplay(name: string): string;
   function useDisplay(name: string | null | undefined): string | null | undefined;
   function useDisplay(name: string | null | undefined): string | null | undefined {
-    const display = store((s) => (name ? s.names[name] : undefined));
+    const key = typeof name === 'string' ? name : '';
+    const display = useStore((s) => (key ? s.names[key] : undefined));
     // On every name (a stale cached one is refreshed once); `request` is
     // idempotent, so a settled name costs nothing and cannot loop.
     useEffect(() => {
-      if (name) store.getState().request(name);
-    }, [name, display]);
+      if (key) useStore.getState().request(key);
+    }, [key, display]);
     return display ?? name;
   }
   return useDisplay;
