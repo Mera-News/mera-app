@@ -24,7 +24,7 @@ jest.mock('../../stores/floating-chat-store', () => ({
 }));
 
 const mockSyncLlmTopicsForFact = jest.fn((..._args: unknown[]) => Promise.resolve([]));
-let mockOwnTopics: { text: string; status: string }[] = [];
+let mockOwnTopics: { text: string; status: string; provenance?: string }[] = [];
 jest.mock('../../database/services/topic-service', () => ({
   syncLlmTopicsForFact: (...args: unknown[]) => mockSyncLlmTopicsForFact(...args),
   getByFact: async () => mockOwnTopics,
@@ -150,5 +150,27 @@ describe('on-device: the local engine, isolated too', () => {
     }));
     expect(mockSyncLlmTopicsForFact).toHaveBeenCalledWith('f2', ['nurse staffing']);
     expect(mockMarkTopicGenerationSettled).toHaveBeenCalledWith(['f2']);
+  });
+});
+
+
+describe('ux2 F6 fixes', () => {
+  it('lists only this fact\'s NON-combo topics as already covered', async () => {
+    mockOwnTopics = [
+      { text: 'Alkmaar cheese market', status: 'active', provenance: 'llm' },
+      { text: 'Alkmaar nurse housing', status: 'active', provenance: 'combo' },
+    ];
+    await handleTopicGenJob({ factId: 'f1', factStatement: FACTS[0].statement, useCloud: true });
+    const { prompt } = mockCloudComplete.mock.calls[0][0];
+    expect(prompt).toContain('Alkmaar cheese market');
+    expect(prompt).not.toContain('Alkmaar nurse housing');
+  });
+
+  it('on device, a first run with nothing usable settles as an ERROR (Retry), never an empty done', async () => {
+    mockLocalGenerate.mockResolvedValue([]);
+    await handleTopicGenJob({ factId: 'f2', factStatement: 'Works as a paediatric nurse', useCloud: false });
+    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f2', expect.any(String));
+    expect(mockMarkTopicGenerationSettled).not.toHaveBeenCalled();
+    expect(mockSyncLlmTopicsForFact).not.toHaveBeenCalled();
   });
 });

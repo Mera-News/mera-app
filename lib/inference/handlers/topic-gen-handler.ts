@@ -72,7 +72,14 @@ async function readExclusionsNow(factId: string): Promise<{
   declined: Set<string>;
 }> {
   const ownTopics = await getByFact(factId)
-    .then((rows) => rows.filter((r) => r.status === 'active').map((r) => r.text).filter(Boolean))
+    .then((rows) =>
+      rows
+        // NOT combo rows (ux2 F6): they name OTHER facts' subjects, and an
+        // isolated call shown them drifts onto those subjects.
+        .filter((r) => r.status === 'active' && r.provenance !== 'combo')
+        .map((r) => r.text)
+        .filter(Boolean),
+    )
     .catch((err: unknown) => {
       logger.warn('[topic-gen] own-topic read failed', { factId, error: String(err) });
       return [] as string[];
