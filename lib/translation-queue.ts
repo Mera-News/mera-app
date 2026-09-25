@@ -17,40 +17,46 @@
 // per-call ceiling and a `[200, 600, 1800]` retry ladder, one bad string can
 // hold the head of that line for seconds of pure sleeping.
 //
-// WHAT THIS FIXES, and what it deliberately does not.
+// WHAT IT DOES.
 //
-//  1. ROUTE EPOCH — the highest-value change, and free. Native translation
-//     cannot be cancelled (`onTranslateTask` exposes no abort), so a call that
-//     has STARTED must run to completion. But a call that has not started can
-//     simply never be made. Every route change bumps the epoch; queued items
-//     stamped with an older epoch are dropped before dispatch. The work the
-//     user navigated away from costs nothing.
+//  1. ROUTE EPOCH. Native translation cannot be cancelled (`onTranslateTask`
+//     exposes no abort), so a call that has STARTED must run to completion.
+//     But a call that has not started can simply never be made. Every route
+//     change bumps the epoch; queued items stamped with an older epoch are
+//     dropped before dispatch.
 //
-//  2. PRIORITY — items dispatch by (priority asc, enqueue order asc) instead of
-//     pure arrival order, so the text nearest the top of the viewport goes
-//     first. See {@link visibilityPriority}.
+//  2. VISIBLE FIRST. Each item carries a class (`priority`: the probe's
+//     PROBE_PRIORITY beats everything) and a rank ({@link QueueRank}). Within a
+//     class: rows on screen before rows that left it; among those, the ones
+//     that most recently BECAME visible (the scroll-tick generation, see
+//     lib/visibility-tick) first; then top to bottom. A caller re-ranks or
+//     cancels its queued item through the {@link TranslationTaskHandle}, so a
+//     row that scrolls away stops competing and one that comes back jumps in.
 //
-//  3. CONCURRENCY stays at ONE. See {@link TRANSLATION_CONCURRENCY}.
+//  3. ONE SLOT, HELD UNTIL NATIVE SETTLES. {@link TRANSLATION_CONCURRENCY} is
+//     one. A task may return early (the caller's JS timeout) while its native
+//     call is still running; it hands that call to `hold`, and the slot stays
+//     taken until it settles. Freeing it at the JS timeout let the next call
+//     start on top of a live one, and the native module's shared hosting
+//     controller answered "The operation was cancelled" (MERA-APP-7G,
+//     MERA-APP-15). Every hold has a ceiling, because the vendored Swift can
+//     leak its continuation and never settle; a ceiling release is logged.
 //
-// A dropped item resolves with {@link DROPPED} — never rejects, never throws.
+// A dropped or cancelled item resolves with {@link DROPPED}, never rejects.
 // Callers MUST distinguish it from a failure: a failure means "the OS could not
-// translate this", a drop means "we chose not to ask yet", and a caller that
-// conflates them will mark the text permanently un-translatable for the
-// session (see TranslatableDynamic's `firedRef`).
+// translate this", a drop means "we chose not to ask yet".
 
 import logger from '@/lib/logger';
+import { getScrollTickGeneration } from '@/lib/visibility-tick';
 
 /**
  * How many native translation calls may be in flight at once.
  *
- * ONE, unchanged from the promise-chain it replaces, and that is a decision
- * rather than an oversight. The serial queue was load-bearing: Apple's
- * Translation framework cancels concurrent translation sessions, which is the
- * exact transient failure the `TRANSLATE_RETRY_DELAYS_MS` ladder in
- * translation-service exists to absorb. Raising this blind would manufacture
- * more of the failures the retry ladder is paying for, and the failures count
- * toward the availability breaker — i.e. the plausible outcome of a blind raise
- * is LESS translation, not faster translation.
+ * ONE, and a decision rather than an oversight: Apple's Translation framework
+ * cancels concurrent translation sessions, and the native module keeps one
+ * shared hosting controller that a second call overwrites. Raising this blind
+ * would manufacture "operation was cancelled" failures, which count toward the
+ * availability breaker, i.e. the plausible outcome is LESS translation.
  *
  * Raising it needs a measurement on real hardware (the iOS Simulator cannot
  * translate at all — `deviceCanTranslate()` is false there), which is not
@@ -76,31 +82,40 @@ export function isDropped(value: unknown): value is Dropped {
  */
 export const PROBE_PRIORITY = -1_000_000;
 
-/**
- * Turn a node's measured window-space `y` into a queue priority (lower first).
- *
- * Measured y IS visible rank, and it is a better one than a list's item index:
- * it is per-TEXT-NODE rather than per-card (a card's title and its reason are
- * ranked separately, in reading order), it needs no plumbing through the card
- * components, and it works identically on every screen — including Dashboard
- * and Explore, whose lists have no `viewabilityConfigCallbackPairs` at all.
- *
- * Nodes ABOVE the viewport (negative y — scrolled past, still mounted, still
- * inside the visibility buffer) sort behind everything currently on screen, and
- * further above sorts later still. They are the least likely to be read next.
- */
-export function visibilityPriority(y: number): number {
-    if (!Number.isFinite(y)) return 0;
-    return y >= 0 ? y : 100_000 - y;
+/** Where a queued row sits on screen right now. */
+export interface QueueRank {
+    /** On screen (within the visibility buffer). */
+    readonly visible: boolean;
+    /** Measured window-space y: lower goes first among equally recent rows. */
+    readonly y: number;
 }
+
+/** What the caller holds on a scheduled task. */
+export interface TranslationTaskHandle<T> {
+    /** The task's value, or {@link DROPPED} if it never ran. */
+    readonly promise: Promise<T | Dropped>;
+    /** Re-rank a still-queued task. No effect once dispatched. */
+    setPriority(rank: QueueRank): void;
+    /** Drop a still-queued task (it resolves DROPPED). False once dispatched:
+     *  a native call cannot be stopped. */
+    cancel(): boolean;
+}
+
+/** Register a native call the slot must wait for, with a ceiling in ms. */
+export type HoldSlot = (native: Promise<unknown>, ceilingMs: number) => void;
 
 interface PendingItem {
     readonly seq: number;
     /** null ⇒ exempt from epoch drops (the probe). */
     readonly epoch: number | null;
+    /** Class: lower first, before any rank. */
     readonly priority: number;
+    visible: boolean;
+    y: number;
+    /** Scroll-tick generation at which it last BECAME visible. */
+    visibleSince: number;
     readonly label: string;
-    readonly run: () => Promise<unknown>;
+    readonly run: (hold: HoldSlot) => Promise<unknown>;
     readonly resolve: (value: unknown) => void;
     readonly reject: (error: unknown) => void;
 }
@@ -183,23 +198,29 @@ export interface EnqueueOptions {
      * swallow the one call that verifies the language and opens the gate.
      */
     readonly epoch?: number | null;
-    /** Lower dispatches sooner. Default 0. */
+    /** Class, lower dispatches sooner, before any rank. Default 0; the probe
+     *  passes {@link PROBE_PRIORITY}. */
     readonly priority?: number;
+    /** Where the row is on screen. Default: visible, at the top. */
+    readonly rank?: QueueRank;
     /** Diagnostic only. */
     readonly label?: string;
 }
 
-/** Index of the next item to dispatch: lowest priority, then lowest seq. */
+/** Negative when `a` should dispatch before `b`. */
+function compare(a: PendingItem, b: PendingItem): number {
+    if (a.priority !== b.priority) return a.priority - b.priority;
+    if (a.visible !== b.visible) return a.visible ? -1 : 1;
+    if (a.visible && a.visibleSince !== b.visibleSince) return b.visibleSince - a.visibleSince;
+    if (a.y !== b.y) return a.y - b.y;
+    return a.seq - b.seq;
+}
+
+/** Index of the next item to dispatch. */
 function nextIndex(): number {
     let best = -1;
     for (let i = 0; i < pending.length; i++) {
-        if (best === -1) {
-            best = i;
-            continue;
-        }
-        const a = pending[i];
-        const b = pending[best];
-        if (a.priority < b.priority || (a.priority === b.priority && a.seq < b.seq)) best = i;
+        if (best === -1 || compare(pending[i], pending[best]) < 0) best = i;
     }
     return best;
 }
@@ -235,61 +256,120 @@ function pump(): void {
             priority: item.priority,
             pending: pending.length,
         });
+
+        // The slot frees when the task has returned AND every native call it
+        // handed to `hold` has settled (or hit its ceiling).
+        const holds: Promise<unknown>[] = [];
+        const hold: HoldSlot = (native, ceilingMs) => {
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            const ceiling = new Promise<void>((resolve) => {
+                timer = setTimeout(() => {
+                    logger.warn('[TranslationQueue] Native call never settled; freeing the slot at the ceiling', {
+                        label: item.label,
+                        ceilingMs,
+                    });
+                    resolve();
+                }, ceilingMs);
+            });
+            const settled = native.then(
+                () => undefined,
+                () => undefined,
+            );
+            void settled.then(() => {
+                if (timer) clearTimeout(timer);
+            });
+            holds.push(Promise.race([settled, ceiling]));
+        };
+
         let call: Promise<unknown>;
         try {
-            call = Promise.resolve(item.run());
+            call = Promise.resolve(item.run(hold));
         } catch (err) {
             call = Promise.reject(err);
         }
         call.then(item.resolve, item.reject);
-        void call.then(
-            () => {},
-            () => {},
-        ).then(() => {
-            inFlight -= 1;
-            completedCount += 1;
-            logger.debug('[TranslationQueue] Complete', {
-                label: item.label,
-                epoch: item.epoch,
-                pending: pending.length,
+        void call
+            .then(
+                () => {},
+                () => {},
+            )
+            .then(() => Promise.all(holds))
+            .then(() => {
+                inFlight -= 1;
+                completedCount += 1;
+                logger.debug('[TranslationQueue] Complete', {
+                    label: item.label,
+                    epoch: item.epoch,
+                    pending: pending.length,
+                });
+                pump();
             });
-            pump();
-        });
     }
 }
 
 /**
- * Queue one native translation call. Resolves with the task's value, or with
- * {@link DROPPED} if the route moved on before it was ever dispatched.
+ * Queue one native translation call and get a handle on it. Resolves with the
+ * task's value, or {@link DROPPED} if it was cancelled or the route moved on
+ * before it was dispatched.
  */
-export function enqueueTranslationTask<T>(
-    run: () => Promise<T>,
+export function scheduleTranslationTask<T>(
+    run: (hold: HoldSlot) => Promise<T>,
     options: EnqueueOptions = {},
-): Promise<T | Dropped> {
+): TranslationTaskHandle<T> {
     const itemEpoch = options.epoch === undefined ? epoch : options.epoch;
     const priority = options.priority ?? 0;
     const label = options.label ?? 'translate';
+    const rank = options.rank ?? { visible: true, y: 0 };
 
-    return new Promise<T | Dropped>((resolve, reject) => {
+    let item!: PendingItem;
+    const promise = new Promise<T | Dropped>((resolve, reject) => {
         seqCounter += 1;
         enqueuedCount += 1;
-        pending.push({
+        item = {
             seq: seqCounter,
             epoch: itemEpoch,
             priority,
+            visible: rank.visible,
+            y: Number.isFinite(rank.y) ? rank.y : 0,
+            visibleSince: getScrollTickGeneration(),
             label,
-            run: run as () => Promise<unknown>,
+            run: run as (hold: HoldSlot) => Promise<unknown>,
             resolve: resolve as (value: unknown) => void,
             reject,
-        });
-        logger.debug('[TranslationQueue] Enqueue', {
-            label,
-            epoch: itemEpoch,
-            priority,
-            pending: pending.length,
-        });
-        pump();
+        };
+        pending.push(item);
     });
+    logger.debug('[TranslationQueue] Enqueue', { label, epoch: itemEpoch, priority, pending: pending.length });
+    pump();
+
+    return {
+        promise,
+        setPriority: (next) => {
+            if (!pending.includes(item)) return;
+            if (next.visible && !item.visible) item.visibleSince = getScrollTickGeneration();
+            item.visible = next.visible;
+            item.y = Number.isFinite(next.y) ? next.y : 0;
+        },
+        cancel: () => {
+            const index = pending.indexOf(item);
+            if (index === -1) return false;
+            pending.splice(index, 1);
+            droppedCount += 1;
+            item.resolve(DROPPED);
+            return true;
+        },
+    };
+}
+
+/**
+ * Queue one native translation call when the caller needs only its value (the
+ * probe, and anything that never re-ranks or cancels).
+ */
+export function enqueueTranslationTask<T>(
+    run: (hold: HoldSlot) => Promise<T>,
+    options: EnqueueOptions = {},
+): Promise<T | Dropped> {
+    return scheduleTranslationTask(run, options).promise;
 }
 
 export function getTranslationQueueStats(): TranslationQueueStats {

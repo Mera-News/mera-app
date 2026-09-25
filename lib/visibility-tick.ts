@@ -17,6 +17,14 @@ const THROTTLE_MS = 150;
 
 let lastFireAt = 0;
 let trailingTimer: ReturnType<typeof setTimeout> | null = null;
+/** Counts fired ticks. Rows measured in the same tick share it, which is how
+ *  the translation queue tells "came into view together" (sorted top to
+ *  bottom) from "came into view later" (goes first). */
+let generation = 0;
+
+export function getScrollTickGeneration(): number {
+    return generation;
+}
 
 export function subscribeScrollTick(fn: Listener): () => void {
     listeners.add(fn);
@@ -27,6 +35,7 @@ export function subscribeScrollTick(fn: Listener): () => void {
 
 function fire(): void {
     lastFireAt = Date.now();
+    generation += 1;
     listeners.forEach((fn) => fn());
 }
 
