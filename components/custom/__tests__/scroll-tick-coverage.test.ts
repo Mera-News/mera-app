@@ -23,8 +23,6 @@ const EXEMPT: Record<string, string> = {
   // Horizontal: visibility is measured on y only, so every chip already counts
   // as on screen.
   'for-you/BreakingStrip.tsx': 'horizontal strip',
-  // Owned by the chat scout (ux2 P9), routed there.
-  'floating-chat/ChatThread.tsx': 'chat-owned, routed to P9',
 };
 
 function walk(dir: string, out: string[] = []): string[] {
