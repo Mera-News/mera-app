@@ -90,7 +90,13 @@ export function countryOf(
     return NOT_A_COUNTRY.has(country.toLowerCase()) ? null : country;
   }
   const lower = text.toLowerCase();
-  const hit = known.find((p) => p.locality && lower.includes(p.locality.toLowerCase()));
+  // The LONGEST place named wins, not the first: "Newcastle" is inside
+  // "Newcastle-under-Lyme" (ux2 batch 27, same trap as bindChoicePayloads).
+  let hit: { locality: string; countryName: string } | null = null;
+  for (const p of known) {
+    const name = p.locality?.toLowerCase();
+    if (name && lower.includes(name) && (!hit || name.length > hit.locality.length)) hit = p;
+  }
   return hit ? hit.countryName : null;
 }
 

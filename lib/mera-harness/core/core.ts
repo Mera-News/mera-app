@@ -46,6 +46,7 @@ import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import type {
+  AgentChoiceOption,
   AgentDeps,
   AgentLeg,
   AgentModelResult,
@@ -290,6 +291,57 @@ export function bindChoicePayloads(
     }
     return { text, payload: hit };
   });
+}
+
+/** A place's chain from lookup data only: district, city, region, country,
+ *  with a part that repeats the one before it dropped ("Singapore,
+ *  Singapore"). Never invented. */
+function placeChainLabel(p: Place): string {
+  const parts: string[] = [];
+  for (const part of [p.neighbourhood, p.locality, p.admin1, p.countryName]) {
+    const t = part?.trim();
+    if (t && !parts.some((q) => q.toLowerCase() === t.toLowerCase())) parts.push(t);
+  }
+  return parts.join(', ');
+}
+
+/** Everyday names for a country that the lookup data does not spell out. */
+const COUNTRY_ALIASES: Record<string, string[]> = { GB: ['uk', 'britain'], US: ['usa'] };
+
+function namesItsCountry(text: string, p: Place): boolean {
+  const lower = text.toLowerCase();
+  if (p.countryName && lower.includes(p.countryName.toLowerCase())) return true;
+  const words = new Set(lower.split(/[^a-z]+/).filter(Boolean));
+  return words.has(p.countryCode.toLowerCase()) || (COUNTRY_ALIASES[p.countryCode] ?? []).some((a) => words.has(a));
+}
+
+/**
+ * A place chip reads as the place it stands for (ux2 batch 27). The model
+ * writes chips freely and, with candidates resolved, wrote bare localities 5
+ * of 5 times ("Newcastle upon Tyne", "Newcastle", "Newcastle-under-Lyme"): a
+ * bare "Newcastle" says nothing about which one. When the chips are not
+ * already distinct AND country-bearing, or two share a city, EVERY bound chip
+ * takes its lookup chain. An unbound chip stays verbatim. Texts that would
+ * collide after expansion keep the model's wording, since the tap is matched
+ * back by text.
+ */
+export function expandChoiceLabels(bound: AgentChoiceOption[]): AgentChoiceOption[] {
+  const places = bound.map((b) => placeFromPayload(b.payload));
+  if (places.every((p) => p === null)) return bound;
+  const texts = bound.map((b) => b.text.trim().toLowerCase());
+  const distinct = new Set(texts).size === texts.length;
+  const cities = places.filter((p): p is Place => p !== null).map((p) => p.locality.toLowerCase());
+  const sharedCity = new Set(cities).size !== cities.length;
+  const allNameCountry = bound.every((b, i) => places[i] === null || namesItsCountry(b.text, places[i] as Place));
+  if (distinct && !sharedCity && allNameCountry) return bound;
+  const expanded = bound.map((b, i) => {
+    const place = places[i];
+    if (!place) return b;
+    const text = placeChainLabel(place);
+    return text === b.text ? b : { ...b, text, modelText: b.text };
+  });
+  const out = expanded.map((e) => e.text.trim().toLowerCase());
+  return new Set(out).size === out.length ? expanded : bound;
 }
 
 /** A chip payload that is a Place (the only structured payload a chip
@@ -582,8 +634,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // pending choice. Anything else is a new turn, and the stale choice is
     // dropped rather than carried: a bare "Yes" typed into a fresh thread must
     // never be read as the answer to a question from another conversation.
+    // The chip's text, or the model's own wording a chain replaced: typing
+    // "Amsterdam" still answers a chip that reads "Amsterdam, North Holland,
+    // Netherlands".
+    const said = userMessage.trim().toLowerCase();
     const tapped = turn.pendingChoice.options.find(
-      (o) => o.text.trim().toLowerCase() === userMessage.trim().toLowerCase(),
+      (o) => o.text.trim().toLowerCase() === said || o.modelText?.trim().toLowerCase() === said,
     );
     if (tapped) {
       turn.resolvedChoice = {
@@ -1251,10 +1307,18 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           continue;
         }
         proposedSomething = true;
-        turn.pendingChoice = {
-          question,
-          options: bindChoicePayloads(args.options, placeCandidates),
-        };
+        const chips = expandChoiceLabels(bindChoicePayloads(args.options, placeCandidates));
+        turn.pendingChoice = { question, options: chips };
+        // The THREAD draws its chips from this call's arguments and sends the
+        // tapped text back, so it carries the same texts as pendingChoice.
+        const shownOptions = chips.map((c) => c.text);
+        const modelOptions = (args?.options ?? []) as string[];
+        if (shownOptions.some((t, i) => t !== modelOptions[i])) {
+          args = { ...(args ?? {}), options: shownOptions };
+          const at = leg.toolCalls.indexOf(call);
+          call = { ...call, argumentsRaw: JSON.stringify(args) };
+          if (at >= 0) leg.toolCalls[at] = call;
+        }
         leg.toolResults.push({
           name: call.name,
           result: isFactSkill(skillLoaded)

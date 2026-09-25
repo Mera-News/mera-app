@@ -811,6 +811,69 @@ describe('ux2 D10: the persona agent can search the web', () => {
   });
 });
 
+describe('ux2 batch 27: a place chip shows the chain it stands for', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+  const TYNE: Place = { locality: 'Newcastle upon Tyne', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' };
+  const NSW: Place = { locality: 'Newcastle', admin1: 'New South Wales', countryCode: 'AU', countryName: 'Australia', bloc: null };
+  const LYME: Place = { locality: 'Newcastle-under-Lyme', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' };
+  const CHAINS = [
+    'Newcastle upon Tyne, England, United Kingdom',
+    'Newcastle, New South Wales, Australia',
+    'Newcastle-under-Lyme, England, United Kingdom',
+  ];
+
+  // The options the model wrote 5 of 5 times on staging (run 20260925-175739).
+  const ask = async (options: string[], places: Place[] = [TYNE, NSW, LYME]) => {
+    const legs: { toolCalls: { name: string; argumentsRaw: string }[]; toolResults: { name: string; result: unknown }[] }[] = [];
+    const h = harness(
+      [
+        res({ content: 'Newcastle.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Newcastle' })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Which Newcastle?', options })] }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places }) },
+    );
+    const state = createAgentState(NOBODY);
+    await runAgentTurn({ state, userMessage: 'I live in Newcastle', deps: h.deps, onLeg: (l) => legs.push(l as never) });
+    const askCall = legs.flatMap((l) => l.toolCalls).find((c) => c.name === 'ask_choice');
+    const askResult = legs.flatMap((l) => l.toolResults).find((r) => r.name === 'ask_choice');
+    return {
+      state,
+      chips: state.turn.pendingChoice?.options.map((o) => o.text),
+      persisted: (JSON.parse(askCall?.argumentsRaw ?? '{}') as { options?: string[] }).options,
+      askResult,
+    };
+  };
+
+  it('the Newcastle trio shows three distinct chains, the same in the loop and in the thread', async () => {
+    const { chips, persisted } = await ask(['Newcastle upon Tyne', 'Newcastle', 'Newcastle-under-Lyme']);
+    expect(chips).toEqual(CHAINS);
+    // The thread derives its chips from the persisted call, and a tap sends
+    // that text back, so the two must be identical.
+    expect(persisted).toEqual(CHAINS);
+  });
+
+  it.each([[0, TYNE], [1, NSW], [2, LYME]] as const)('a tap on chip %i resolves its own place', async (i, place) => {
+    const { state } = await ask(['Newcastle upon Tyne', 'Newcastle', 'Newcastle-under-Lyme']);
+    const h = harness([res({ content: 'Offered.' })]);
+    await runAgentTurn({ state, userMessage: CHAINS[i], deps: h.deps });
+    expect(state.turn.confirmedPlace).toEqual(place);
+  });
+
+  it('distinct chips that each name their country are left as the model wrote them', async () => {
+    const options = ['Newcastle upon Tyne, UK', 'Newcastle, Australia'];
+    const { chips, persisted } = await ask(options, [TYNE, NSW]);
+    expect(chips).toEqual(options);
+    expect(persisted).toEqual(options);
+  });
+
+  it('an unbound chip stays verbatim, and the save-as-written chip is untouched', async () => {
+    const { chips, askResult } = await ask(['Newcastle', 'Somewhere else']);
+    expect(chips).toEqual(['Newcastle, New South Wales, Australia', 'Somewhere else']);
+    expect(askResult?.result).toMatchObject({ saveAsWritten: { statement: 'Lives in Newcastle' } });
+  });
+});
+
 describe('ux2 batch 26 D6: a question turn is never left on its acknowledgement', () => {
   const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
 
@@ -871,7 +934,11 @@ describe('ux2 D9: "Save as I wrote it" is added by the loop, never the model', (
         topic_skill_id: 'topics/residence',
       },
     }]);
-    expect(state.turn.pendingChoice?.options.map((o) => o.text)).toEqual(['Newcastle upon Tyne', 'Newcastle-under-Lyme']);
+    // Neither chip names a country, so both show their lookup chain (ux2 batch 27).
+    expect(state.turn.pendingChoice?.options.map((o) => o.text)).toEqual([
+      'Newcastle upon Tyne, England, United Kingdom',
+      'Newcastle-under-Lyme, England, United Kingdom',
+    ]);
   });
 
   it('a relative\'s place never takes the user\'s home key', async () => {

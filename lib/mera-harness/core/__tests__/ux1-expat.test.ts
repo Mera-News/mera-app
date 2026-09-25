@@ -59,6 +59,15 @@ describe('helpers', () => {
     expect(countryOf('Lives in Nieuw-West, Amsterdam', [{ locality: 'Amsterdam', countryName: 'The Netherlands' }]))
       .toBe('The Netherlands');
   });
+
+  it('ux2 batch 27: the longest known place the statement names wins, not the first', () => {
+    const known = [
+      { locality: 'Newcastle', countryName: 'Australia' },
+      { locality: 'Newcastle-under-Lyme', countryName: 'United Kingdom' },
+    ];
+    expect(countryOf('Lives in Newcastle-under-Lyme', known)).toBe('United Kingdom');
+    expect(countryOf('Lives in Newcastle', known)).toBe('Australia');
+  });
 });
 
 describe('a combined statement from the model becomes three facts', () => {

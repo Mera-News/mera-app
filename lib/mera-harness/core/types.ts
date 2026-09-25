@@ -130,6 +130,9 @@ export interface AgentChoiceOption {
    *  id for a replace confirmation. Without it the tap arrives as a bare display
    *  string and the next turn re-runs lookup_place on the same words. */
   payload: unknown;
+  /** The model's own wording when the loop replaced it with the place's chain
+   *  (expandChoiceLabels). A typed reply in those words still answers. */
+  modelText?: string;
 }
 
 export interface AgentTurnState {
