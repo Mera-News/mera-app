@@ -79,6 +79,11 @@ jest.mock('../handlers/tracked-story-migrate-handler', () => ({
   handleTrackedStoryMigrateJob: (...args: unknown[]) => mockHandleTrackedStoryMigrateJob(...args),
 }));
 
+const mockHandleTopicComboJob = jest.fn();
+jest.mock('../handlers/topic-combo-handler', () => ({
+  handleTopicComboJob: (...args: unknown[]) => mockHandleTopicComboJob(...args),
+}));
+
 const mockResetContext = jest.fn();
 
 jest.mock('../../mera-protocol-toolkit', () => ({
@@ -962,6 +967,19 @@ describe('InferenceQueue', () => {
       expect(handler).toHaveBeenCalledWith(job.payload, { jobId: 'c9' });
       expect(job.markDone).toHaveBeenCalledWith({ applied: 1 });
       expect(mockFinishComboPassIfDrained).toHaveBeenCalledTimes(1);
+    });
+
+    it('topic_combo is wired to the real handleTopicComboJob, with its job id', async () => {
+      mockHandleTopicComboJob.mockResolvedValue({ applied: 2 });
+      const job = comboJob('c7');
+      serveOnce(job);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(mockHandleTopicComboJob).toHaveBeenCalledWith(job.payload, { jobId: 'c7' });
+      expect(job.markDone).toHaveBeenCalledWith({ applied: 2 });
+      expect(job.markUnrunnable).not.toHaveBeenCalled();
     });
 
     it('a non-combo job never runs the combo pre-check or end-of-pass check', async () => {

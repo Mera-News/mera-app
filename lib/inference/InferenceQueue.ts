@@ -26,6 +26,7 @@ import { handleTopicGenJob } from './handlers/topic-gen-handler';
 import { handlePersonaSummaryJob } from './handlers/persona-summary-handler';
 import { handleStoryHeadlineJob } from './handlers/story-headline-handler';
 import { handleTrackedStoryMigrateJob } from './handlers/tracked-story-migrate-handler';
+import { handleTopicComboJob } from './handlers/topic-combo-handler';
 import { resetContext } from '../mera-protocol-toolkit';
 import type { InferenceJobType } from '../database/models/InferenceJob';
 import logger from '../logger';
@@ -53,23 +54,25 @@ function adaptHandler<P, R>(
   return (p, ctx) => handler(p as P, ctx) as Promise<Record<string, unknown>>;
 }
 
-// PARTIAL only until the combo handler (chat area) lands; then this goes back
-// to an exhaustive Record so a new job type without a handler fails tsc. A
-// type with no entry is `markUnrunnable`d, which is bounded.
-const JOB_HANDLERS: Partial<Record<InferenceJobType, JobHandler>> = {
+// EXHAUSTIVE on purpose: a new job type without a handler fails tsc here. A
+// row whose type this bundle does not know (an OTA rollback) still reaches the
+// `!handler` branch at runtime, which `markUnrunnable` keeps bounded.
+const JOB_HANDLERS: Record<InferenceJobType, JobHandler> = {
   topic_gen: adaptHandler(handleTopicGenJob),
   persona_summary: adaptHandler(handlePersonaSummaryJob),
   story_headline: adaptHandler(handleStoryHeadlineJob),
   tracked_story_migrate: adaptHandler(handleTrackedStoryMigrateJob),
+  topic_combo: adaptHandler(handleTopicComboJob),
 };
 
-/** Test seam: install or remove a handler for one type. */
+const REAL_HANDLERS = { ...JOB_HANDLERS };
+
+/** Test seam: override one type's handler; `undefined` restores the real one. */
 export function __setJobHandlerForTests(
   type: InferenceJobType,
   handler: ((payload: never, ctx: JobContext) => Promise<unknown>) | undefined,
 ): void {
-  if (handler) JOB_HANDLERS[type] = adaptHandler(handler);
-  else delete JOB_HANDLERS[type];
+  JOB_HANDLERS[type] = handler ? adaptHandler(handler) : REAL_HANDLERS[type];
 }
 
 /**
