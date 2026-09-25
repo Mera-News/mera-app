@@ -46,7 +46,6 @@ import {
     isTranslationVerified,
     probeTranslationLanguage,
     translateTextDetailed,
-    requestTranslation,
     TRANSLATION_FAILURE_THRESHOLD,
     TRANSLATION_PROBE_TIMEOUT_MS,
     TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS,
@@ -712,10 +711,11 @@ describe('translation availability breaker', () => {
 
         expect(results.every((r) => r === null)).toBe(true);
         expect(isTranslationBlocked('de')).toBe(true);
-        // Each request counts once, at its first failed attempt, so the
-        // language blocks after the verified threshold's worth of calls; every
-        // queued row and pending retry then stops at the head-of-queue check.
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(VERIFIED_TRANSLATION_FAILURE_THRESHOLD);
+        // Each translateText spends the full retry ladder before it counts as
+        // one failure, and the language blocks after the verified threshold.
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(
+            VERIFIED_TRANSLATION_FAILURE_THRESHOLD * 4,
+        );
     });
 
     it('reports a non-permanent failure when the cause is unknown', async () => {
@@ -816,10 +816,11 @@ describe('translation availability breaker', () => {
         await jest.runAllTimersAsync();
         await Promise.all(promises);
 
-        // One tap, one attempt: a failed retry must not re-arm the loop. The
-        // failure counts at the first failed call, which re-blocks at once, so
-        // its retries and the other two requests stop at the head of the queue.
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+        // One tap, one translateText — a failed retry must not re-arm the
+        // loop. The language is verified here, so that single attempt spends
+        // the in-call retry ladder (4 native calls) and then re-blocks; no
+        // sheet can appear for a language whose assets are installed.
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(4);
         expect(isTranslationBlocked('de')).toBe(true);
     });
 
@@ -1021,7 +1022,7 @@ describe('translateTextDetailed + the route epoch', () => {
         expect(isTranslationVerified('fr')).toBe(true);
     });
 
-    it('forwards the caller rank so the visible text goes first', async () => {
+    it('forwards the caller priority so the visible text goes first', async () => {
         await openGate('fr');
         // Occupy the single slot with a call we control, so the next two are
         // still QUEUED (and therefore orderable) when we release it.
@@ -1041,8 +1042,8 @@ describe('translateTextDetailed + the route epoch', () => {
         });
         // Enqueued bottom-first on purpose: pure FIFO would translate the text
         // the reader has scrolled past before the one under their thumb.
-        void translateTextDetailed('Bottom of screen', 'fr', { rank: { visible: true, y: 900 } });
-        void translateTextDetailed('Top of screen', 'fr', { rank: { visible: true, y: 10 } });
+        void translateTextDetailed('Bottom of screen', 'fr', { priority: 900 });
+        void translateTextDetailed('Top of screen', 'fr', { priority: 10 });
         expect(getTranslationQueueStats().pending).toBe(2);
 
         releaseHead({ translatedTexts: 'ok' });
@@ -1076,164 +1077,5 @@ describe('translateTextDetailed + the route epoch', () => {
         await jest.runAllTimersAsync();
         await expect(probe).resolves.toBe('success');
         expect(isTranslationVerified('de')).toBe(true);
-    });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ux2: requests as handles, shared joins, retries outside the slot, and no
-// overlap with a native call the JS timeout gave up on.
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('requestTranslation', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-        jest.useFakeTimers();
-        __resetTranslationStateForTests();
-    });
-    afterEach(() => {
-        jest.useRealTimers();
-    });
-
-    /** Occupy the slot with a native call we release by hand. */
-    async function occupySlot(): Promise<(v?: unknown) => void> {
-        let release!: (v?: unknown) => void;
-        mockOnTranslateTask.mockReturnValueOnce(new Promise((r) => (release = r)));
-        void translateTextDetailed('Head', 'fr');
-        await Promise.resolve();
-        return () => release({ translatedTexts: 'ok' });
-    }
-
-    it('cancel() before dispatch drops it, with no native call', async () => {
-        await openGate('fr');
-        const release = await occupySlot();
-        const req = requestTranslation('Row', 'fr', { rank: { visible: true, y: 100 } });
-        req.cancel();
-        release();
-        await jest.runAllTimersAsync();
-        await expect(req.promise).resolves.toEqual({ status: 'dropped', text: null });
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1); // Head only
-    });
-
-    it('two requests for the same text share ONE native call and its answer', async () => {
-        await openGate('fr');
-        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Bonjour' });
-        const a = requestTranslation('Hello', 'fr');
-        const b = requestTranslation('Hello', 'fr');
-        await jest.runAllTimersAsync();
-        await expect(a.promise).resolves.toEqual({ status: 'ok', text: 'Bonjour' });
-        await expect(b.promise).resolves.toEqual({ status: 'ok', text: 'Bonjour' });
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
-    });
-
-    it('a joined request shares the failure too, with no second call', async () => {
-        await openGate('fr');
-        mockOnTranslateTask.mockResolvedValue({}); // no text: a failure, not retried
-        const a = requestTranslation('Hello', 'fr');
-        const b = requestTranslation('Hello', 'fr');
-        await jest.runAllTimersAsync();
-        await expect(a.promise).resolves.toEqual({ status: 'failed', text: null });
-        await expect(b.promise).resolves.toEqual({ status: 'failed', text: null });
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
-    });
-
-    it('one participant leaving does not drop a request another still wants', async () => {
-        await openGate('fr');
-        const release = await occupySlot();
-        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Bonjour' });
-        const a = requestTranslation('Hello', 'fr');
-        const b = requestTranslation('Hello', 'fr');
-        a.cancel();
-        release();
-        await jest.runAllTimersAsync();
-        await expect(b.promise).resolves.toEqual({ status: 'ok', text: 'Bonjour' });
-    });
-
-    it('a retry waits OUTSIDE the slot: the next queued row runs during its backoff', async () => {
-        await openGate('fr');
-        const calls: string[] = [];
-        let first = true;
-        mockOnTranslateTask.mockImplementation((args: any) => {
-            calls.push(args.input);
-            if (args.input === 'A' && first) {
-                first = false;
-                return Promise.reject(new Error('session busy'));
-            }
-            return Promise.resolve({ translatedTexts: `${args.input}!` });
-        });
-        const a = requestTranslation('A', 'fr', { rank: { visible: true, y: 0 } });
-        const b = requestTranslation('B', 'fr', { rank: { visible: true, y: 500 } });
-        await jest.runAllTimersAsync();
-        await expect(a.promise).resolves.toEqual({ status: 'ok', text: 'A!' });
-        await expect(b.promise).resolves.toEqual({ status: 'ok', text: 'B!' });
-        expect(calls).toEqual(['A', 'B', 'A']);
-    });
-
-    it('a retry keeps its route: an epoch bump during the backoff drops it', async () => {
-        await openGate('fr');
-        mockOnTranslateTask.mockRejectedValueOnce(new Error('session busy'));
-        const a = requestTranslation('A', 'fr');
-        await Promise.resolve();
-        await Promise.resolve();
-        await Promise.resolve();
-        bumpTranslationEpoch('/somewhere-else');
-        await jest.runAllTimersAsync();
-        await expect(a.promise).resolves.toEqual({ status: 'dropped', text: null });
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
-    });
-
-    it('everyone leaving during the backoff drops the retry', async () => {
-        await openGate('fr');
-        mockOnTranslateTask.mockRejectedValueOnce(new Error('session busy'));
-        const a = requestTranslation('A', 'fr');
-        for (let i = 0; i < 5; i++) await Promise.resolve();
-        a.cancel();
-        await jest.runAllTimersAsync();
-        await expect(a.promise).resolves.toEqual({ status: 'dropped', text: null });
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
-    });
-
-    it('a timeout is not retried, and the next call waits for the stuck native call', async () => {
-        await openGate('fr');
-        let settleStuck!: (v: unknown) => void;
-        mockOnTranslateTask.mockReturnValueOnce(new Promise((r) => (settleStuck = r)));
-        const stuck = requestTranslation('Stuck', 'fr');
-        await jest.advanceTimersByTimeAsync(20_000); // the JS timeout
-        await expect(stuck.promise).resolves.toEqual({ status: 'failed', text: null });
-
-        mockOnTranslateTask.mockResolvedValue({ translatedTexts: 'Suivant' });
-        const next = requestTranslation('Next', 'fr');
-        await jest.advanceTimersByTimeAsync(1_000);
-        // The OS is still on 'Stuck': starting 'Next' now is the overlap that
-        // made the native module cancel the running call.
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
-
-        settleStuck({ translatedTexts: 'late' });
-        await jest.runAllTimersAsync();
-        await expect(next.promise).resolves.toEqual({ status: 'ok', text: 'Suivant' });
-        expect(mockOnTranslateTask).toHaveBeenCalledTimes(2);
-    });
-
-    it('a request after a failure starts fresh (nothing latches in the service)', async () => {
-        await openGate('fr');
-        mockOnTranslateTask.mockResolvedValueOnce({});
-        const a = requestTranslation('Hello', 'fr');
-        await jest.runAllTimersAsync();
-        await expect(a.promise).resolves.toEqual({ status: 'failed', text: null });
-        mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Bonjour' });
-        const again = requestTranslation('Hello', 'fr');
-        await jest.runAllTimersAsync();
-        await expect(again.promise).resolves.toEqual({ status: 'ok', text: 'Bonjour' });
-    });
-
-    it('counts a request that fails every attempt ONCE toward the breaker', async () => {
-        await openGate('fr');
-        mockOnTranslateTask.mockRejectedValue(new Error('always fails'));
-        for (const text of ['one', 'two']) {
-            const r = requestTranslation(text, 'fr');
-            await jest.runAllTimersAsync();
-            await r.promise;
-        }
-        // Two failed requests (eight attempts) stay under the verified threshold.
-        expect(isTranslationBlocked('fr')).toBe(false);
     });
 });
