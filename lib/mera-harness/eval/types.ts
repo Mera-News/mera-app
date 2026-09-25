@@ -213,6 +213,9 @@ export interface ExpectedProposal {
   /** Lowercase substrings, ALL of which must appear. Never a full-phrase
    *  equality: the model's wording is not what is under test. */
   statementMatches: string[];
+  /** Lowercase substrings NONE of which may appear: an invented rung
+   *  ("machico") or a question mark in a statement. Optional. */
+  statementExcludes?: string[];
   kind: string | null;
   placeChain: 'required' | 'forbidden' | null;
   replaces: string | null;

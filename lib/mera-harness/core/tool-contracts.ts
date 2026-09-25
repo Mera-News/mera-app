@@ -75,7 +75,7 @@ export const LOOKUP_PLACE_TOOL: ToolDefinition = {
   function: {
     name: 'lookup_place',
     description:
-      "Resolve a place the user named into its real locality, region and country. Call it before writing any place into a fact. Never write a country or region from memory. It returns 1 to 3 candidates: with one, use it; with more, ask the user which they meant. If it returns no match, ask which place they meant; if it reports the lookup is unavailable, say the lookup did not work and ask them to write the place out in full.",
+      "Resolve a place the user named into its real locality, region and country. Call it before writing any place into a fact. Never write a country or region from memory. It returns 1 to 3 candidates: with one, use it, and put any unmatched words first as the district, spelled the usual way (an obvious typo is corrected, never asked about); with more, ask the user which they meant. With no match, offer the user's own words, never invented alternatives; if it reports the lookup is unavailable, offer their words as written and do not mention the tool.",
     parameters: {
       type: 'object',
       properties: {

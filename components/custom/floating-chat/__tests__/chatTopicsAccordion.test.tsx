@@ -263,3 +263,14 @@ describe('Find more topics', () => {
     expect(mockGenerateMore).toHaveBeenCalledWith('f1', 'I moved to Nieuw-West');
   });
 });
+
+describe('ux2 M1: the fact sits on the title line', () => {
+  it('renders the fact inside the header row, beside "Topics for:"', () => {
+    mockStatus = 'done';
+    const { getByTestId } = draw();
+    const { within } = require('@testing-library/react-native');
+    const row = getByTestId('chat-topics-title-row-f1');
+    expect(within(row).getByText('chatTopics.accordionTitle')).toBeTruthy();
+    expect(within(row).getByText('I moved to Nieuw-West')).toBeTruthy();
+  });
+});

@@ -311,7 +311,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
         }`}
         testID={`chat-topics-header-${factId}`}
       >
-        <View style={styles.headerRow}>
+        <View style={styles.headerRow} testID={`chat-topics-title-row-${factId}`}>
           <MaterialIcons
             name={expanded ? 'expand-more' : 'chevron-right'}
             size={18}
@@ -323,6 +323,18 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
               ? t('chatTopics.accordionTitlePending')
               : t('chatTopics.accordionTitle')}
           </Text>
+
+          {/* ON THE TITLE LINE (ux2 M1): on its own line below, a one-line
+              clip left "Topics for:" with nothing after the colon. Its own
+              node, because TranslatableDynamic returns a component and needs
+              its own layout to decide when to translate. */}
+          <TranslatableDynamic
+            text={factStatement}
+            size="sm"
+            italic
+            style={styles.factLine}
+            numberOfLines={2}
+          />
 
           {/* Small and muted on purpose: a finished background job should be
               confirmable at a glance, not announce itself. */}
@@ -362,16 +374,6 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
             </Pressable>
           )}
         </View>
-
-        {/* The fact statement is its own node rather than an interpolation:
-            it goes through TranslatableDynamic, which returns a component. */}
-        <TranslatableDynamic
-          text={factStatement}
-          size="xs"
-          italic
-          style={styles.factLine}
-          numberOfLines={2}
-        />
 
         {/* A failure is stated while COLLAPSED too, because the user has to do
             something about it. A problem you must open a drawer to discover is
@@ -492,7 +494,7 @@ const styles = StyleSheet.create({
   },
   // 48dp target on the header row.
   header: { minHeight: 48, justifyContent: 'center', gap: 4 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   body: { gap: 10, paddingTop: 2 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tombstone: {
@@ -511,8 +513,8 @@ const styles = StyleSheet.create({
     borderColor: ACCENT,
     paddingHorizontal: 14,
   },
-  title: { color: ACCENT },
-  factLine: { color: 'rgb(190, 190, 190)' },
+  title: { color: ACCENT, flexShrink: 0 },
+  factLine: { flex: 1, color: 'rgb(190, 190, 190)' },
   section: { gap: 6 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
   statusText: { flex: 1, color: 'rgb(200, 200, 200)' },

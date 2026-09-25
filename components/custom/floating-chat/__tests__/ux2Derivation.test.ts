@@ -1,0 +1,133 @@
+// ux2 Part D: what the thread shows around a turn that asked, offered or
+// skipped. Driven through the real deriver.
+
+import { factChoiceGroupId } from '@/lib/chat-tools/fact-choice-resolution';
+import type { ConversationMessage, ToolCallRecord } from '@/lib/llm/types';
+import { deriveThreadItems } from '../deriveThreadItems';
+import type { ChatThreadItem } from '../types';
+
+function derive(live: ConversationMessage[], extra: Partial<Parameters<typeof deriveThreadItems>[0]> = {}) {
+  return deriveThreadItems({
+    live,
+    history: [],
+    introMessage: null,
+    isStreaming: false,
+    earlierConversationLabel: 'Earlier',
+    turnActive: false,
+    ...extra,
+  });
+}
+
+const ask = (result: Record<string, unknown> | undefined): ToolCallRecord => ({
+  id: 'a0',
+  name: 'ask_choice',
+  input: { question: 'Which part?', options: ['Nieuw-West', 'Nieuw-Oost'] },
+  result,
+  status: 'done',
+});
+
+function staged(statement: string, dismissed: boolean): ToolCallRecord {
+  const gid = factChoiceGroupId(0, [statement]);
+  return {
+    id: 's0',
+    name: 'saveExtractedFacts',
+    input: {},
+    status: 'done',
+    result: {
+      success: true,
+      staged: true,
+      factsSaved: 0,
+      savedFacts: [],
+      conflicts: [],
+      groupResolutions: dismissed
+        ? { [gid]: { status: 'dismissed', options: [statement], questionnaireAttribute: null } }
+        : {},
+      pendingFacts: [{ index: 0, groupId: gid, options: [statement], questionnaireAttribute: null }],
+    },
+  };
+}
+
+const kindsOf = (items: ChatThreadItem[]) => items.map((i) => i.kind);
+
+describe('ux2 D4: chips render only for a question the loop accepted', () => {
+  it('a refused ask_choice renders no chips', () => {
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in niew west Amsterdam' },
+      { id: 'a1', role: 'assistant', content: 'Which part?', toolCalls: [ask({ error: 'Only an ambiguous place is asked here.' })] },
+    ]);
+    expect(kindsOf(items)).not.toContain('ask-choice-card');
+  });
+
+  it('an accepted ask_choice still renders its chips', () => {
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in Newcastle' },
+      { id: 'a1', role: 'assistant', content: '', toolCalls: [ask({ awaiting: 'user' })] },
+    ]);
+    expect(kindsOf(items)).toContain('ask-choice-card');
+  });
+});
+
+describe('ux2 D7: a skipped card leaves once the user moves on', () => {
+  it('keeps the dismissed card, with its Undo, until the next user message', () => {
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in Hoorn' },
+      { id: 'a1', role: 'assistant', content: 'Offered.', toolCalls: [staged('Lives in Hoorn', true)] },
+    ]);
+    expect(items.filter((i) => i.kind === 'fact-choice-card')).toHaveLength(1);
+  });
+
+  it('removes it entirely once a later user message exists', () => {
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in Hoorn' },
+      { id: 'a1', role: 'assistant', content: 'Offered.', toolCalls: [staged('Lives in Hoorn', true)] },
+      { id: 'u2', role: 'user', content: 'thanks' },
+    ]);
+    expect(items.filter((i) => i.kind === 'fact-choice-card')).toHaveLength(0);
+  });
+});
+
+describe('ux2 D7: no empty Done row after an ordinary turn', () => {
+  it('a settled turn that staged a card shows the card and no steps box', () => {
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in Hoorn' },
+      { id: 'a1', role: 'assistant', content: 'Offered.', toolCalls: [staged('Lives in Hoorn', false)] },
+    ]);
+    expect(kindsOf(items)).not.toContain('agent-steps');
+    expect(kindsOf(items)).toContain('fact-choice-card');
+  });
+
+  it('a failed step still keeps the box', () => {
+    const failed: ToolCallRecord = { id: 'x', name: 'lookup_place', input: { query: 'x' }, status: 'error' };
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in X' },
+      { id: 'a1', role: 'assistant', content: 'Hmm.', toolCalls: [failed] },
+    ]);
+    expect(kindsOf(items)).toContain('agent-steps');
+  });
+});
+
+describe('ux2 D5: "didn\'t find anything" never sits beside a card', () => {
+  it('drops the no-proposal terminal when the turn produced a card', () => {
+    const items = derive(
+      [
+        { id: 'u1', role: 'user', content: 'I live in Hoorn' },
+        { id: 'a1', role: 'assistant', content: '', toolCalls: [staged('Lives in Hoorn', false)] },
+      ],
+      { agentTerminal: 'no-proposal' },
+    );
+    const box = items.find((i) => i.kind === 'agent-steps');
+    expect(box === undefined || (box.kind === 'agent-steps' && box.terminal === null)).toBe(true);
+  });
+
+  it('keeps it when the turn produced nothing', () => {
+    const items = derive(
+      [
+        { id: 'u1', role: 'user', content: 'hmm' },
+        { id: 'a1', role: 'assistant', content: 'Okay.' },
+      ],
+      { agentTerminal: 'no-proposal' },
+    );
+    const box = items.find((i) => i.kind === 'agent-steps');
+    expect(box && box.kind === 'agent-steps' && box.terminal).toBe('no-proposal');
+  });
+});

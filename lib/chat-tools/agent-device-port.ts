@@ -193,6 +193,48 @@ export async function withExactNameMatches(
  * `unavailable` short-circuits: the lookup FAILED, and retrying a narrower
  * form would turn a transport failure into a confident "no such place".
  */
+/** Filler words that are never part of a place name the user wrote. */
+const FILLER = new Set(['in', 'at', 'near', 'the', 'of', 'from', 'to', 'and', 'area', 'district']);
+
+/**
+ * The words of `asked` that the matched `form` did not use, in the user's
+ * order, filler dropped: "niew west" for "niew west Amsterdam" matched on
+ * "Amsterdam". The place service has no districts, and without this the finer
+ * area the user named was thrown away with nothing telling the model (ux2 D1).
+ */
+export function unmatchedWords(asked: string, form: string): string {
+  const used = new Set(form.toLowerCase().split(/[\s,]+/).filter(Boolean));
+  return asked
+    .split(/[\s,]+/)
+    .filter((w) => w && !used.has(w.toLowerCase()) && !FILLER.has(w.toLowerCase()))
+    .join(' ');
+}
+
+/** Lower case, accents and punctuation dropped, for a prefix comparison. */
+function foldName(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+/**
+ * A single place reached through one of its ALTERNATE names carries the
+ * user's own term: "Porto Santo" is only a search key of Vila Baleira, and a
+ * statement without it names a place the user never said (ux2 D13). A
+ * prefix of the locality, or the locality itself, is not an alias.
+ */
+export function withUserTerm(places: Place[], form: string): Place[] {
+  if (places.length !== 1) return places;
+  const p = places[0];
+  const f = foldName(form);
+  const l = foldName(p.locality);
+  if (!f || l.startsWith(f) || f.startsWith(l) || (p.neighbourhood && foldName(p.neighbourhood).startsWith(f))) {
+    return places;
+  }
+  const term = form.trim() === form.trim().toLowerCase()
+    ? form.trim().split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    : form.trim();
+  return [{ ...p, userTerm: term }];
+}
+
 export async function lookupPlaceWithFallback(
   args: LookupPlaceArgs,
 ): Promise<LookupPlaceResult> {
@@ -206,7 +248,7 @@ export async function lookupPlaceWithFallback(
     if (out.status === 'resolved' && out.places.length > 0) {
       if (form.toLowerCase() === asked) {
         const places = await withExactNameMatches(out.places, form, args.countryHint);
-        return { ...out, places: narrowToExact(places, form) };
+        return { ...out, places: withUserTerm(narrowToExact(places, form), form) };
       }
       const trusted = fallbackCandidates(out.places, form);
       if (trusted === null) {
@@ -221,7 +263,12 @@ export async function lookupPlaceWithFallback(
         asked: args.query,
         matched: form,
       });
-      return { ...out, places: trusted };
+      const unmatched = unmatchedWords(args.query, form);
+      return {
+        ...out,
+        places: withUserTerm(trusted, form),
+        ...(unmatched ? { unmatched } : {}),
+      };
     }
     if (out.status !== 'too_short') last = out;
   }

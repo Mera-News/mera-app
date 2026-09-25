@@ -579,6 +579,7 @@ function emitFactChoiceGroups(
   result: Record<string, unknown>,
   resolutions: ReturnType<typeof readGroupResolutions> & object,
   stale: boolean,
+  followedByUser = false,
 ): void {
   const resultKey = `${messageId}::${idx}`;
   const groups = readPendingGroups(result);
@@ -612,6 +613,10 @@ function emitFactChoiceGroups(
     }
 
     if (resolution.status === 'dismissed') {
+      // GONE once the user has moved on (owner ruling ux2 M3). A skipped card
+      // kept its Undo forever and "✕ Not added" cards piled up down the
+      // thread; Undo stays reachable until the next user message.
+      if (followedByUser) continue;
       cards.push({
         kind: 'fact-choice-card',
         key: `fact-choice-${messageId}-${idx}-${groupId}`,
@@ -713,6 +718,19 @@ interface TurnAccum {
   firstAssistantId: string | null;
   steps: AgentStep[];
   toolStepCount: number;
+  /** The turn put a card or chips on screen. */
+  offered: boolean;
+}
+
+/** A tool call that leaves something on screen for the user to act on. */
+function offersSomething(tc: ToolCallRecord): boolean {
+  const r = asRecord(tc.result);
+  if (!r || typeof r.error === 'string') return false;
+  if (tc.name === 'ask_choice') return r.awaiting === 'user';
+  if (tc.name === 'saveExtractedFacts') {
+    return readPendingGroups(r).length > 0 || (Array.isArray(r.savedFacts) && r.savedFacts.length > 0);
+  }
+  return tc.name === 'deleteUserFacts';
 }
 
 interface SeqEntry {
@@ -753,6 +771,7 @@ function buildTurnBoxes(
         firstAssistantId: null,
         steps: [],
         toolStepCount: 0,
+        offered: false,
       };
       turns.push(current);
       continue;
@@ -765,6 +784,7 @@ function buildTurnBoxes(
         firstAssistantId: message.id,
         steps: [],
         toolStepCount: 0,
+        offered: false,
       };
       turns.push(current);
     }
@@ -772,6 +792,7 @@ function buildTurnBoxes(
     const toolSteps = stepsForMessage(message.id, message.toolCalls, false);
     current.steps.push(...toolSteps);
     current.toolStepCount += toolSteps.length;
+    if ((message.toolCalls ?? []).some(offersSomething)) current.offered = true;
   }
 
   // THE LAST TURN OVERALL, not the last one that happened to call a tool. A
@@ -845,7 +866,10 @@ function buildTurnBoxes(
       failedCount: full.filter((s) => s.status === 'error').length,
       // Only the LAST turn: the store holds one terminal, and stamping it on an
       // older box would relabel a turn that ended for a different reason.
-      terminal: isLast ? (agentTerminal ?? null) : null,
+      // "Mera didn't find anything to add" beside the card it just offered
+      // (ux2 D5 backstop): a turn that put a card on screen did find something.
+      terminal:
+        isLast && !(agentTerminal === 'no-proposal' && turn.offered) ? (agentTerminal ?? null) : null,
       interrupted,
       changedData: changedDataFrom(full),
     });
@@ -937,7 +961,9 @@ function placeProposalCardsLast(items: ChatThreadItem[]): ChatThreadItem[] {
  */
 function keepBox(box: AgentStepsItem): boolean {
   if (!box.collapsed) return true;
-  return box.changedData || box.failedCount > 0 || box.terminal !== null;
+  // NOT `changedData` (ux2 M2): an ordinary settled turn that staged a card
+  // showed an empty "✓ Done" row after every message. The card is the result.
+  return box.failedCount > 0 || box.terminal !== null;
 }
 
 // ---------------------------------------------------------------------------
@@ -996,6 +1022,12 @@ function emitMessage(
       // `answered` is decided by the caller, which is the only place that can
       // see whether a later user message exists.
       if (tc.name === 'ask_choice') {
+        // CHIPS ONLY FOR A QUESTION THE LOOP ACCEPTED (ux2 D4). A refused call
+        // (`{error}`) still rendered chips, so the user saw a question beside
+        // the card the loop offered instead, and a chip read as Mera's own
+        // first-person sentence. A record with no result yet is still waiting.
+        const askResult = asRecord(tc.result);
+        if (askResult && askResult.awaiting !== 'user') return;
         const askInput = asRecord(tc.input) ?? {};
         const allOptions = toStringArray(askInput.options);
         // Distinct facts are never a pick-one: their chip list carries Save
@@ -1060,7 +1092,7 @@ function emitMessage(
         // with placeholder ids and write resolutions nothing could read back.
         const pendingGroups = readPendingGroups(result);
         if (resolutions !== null || pendingGroups.length > 0) {
-          emitFactChoiceGroups(cards, message.id, idx, result, resolutions ?? {}, stale);
+          emitFactChoiceGroups(cards, message.id, idx, result, resolutions ?? {}, stale, answeredAsk);
         } else {
           // LEGACY blob (no `groupResolutions` marker): a result persisted by a
           // pre-change bundle. Rendered exactly as it was — this is the whole

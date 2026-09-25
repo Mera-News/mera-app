@@ -42,19 +42,21 @@ the other's answer, so sequencing them costs the user a round trip and buys noth
 
 ## Reading lookup_place
 The statuses are `resolved`, `no_match`, `too_short` and `unavailable`. A `resolved` answer carries
-`places`, one to three of `{ neighbourhood?, locality, admin1, countryCode, countryName, bloc }`.
+`places`, one to three of `{ neighbourhood?, userTerm?, locality, admin1, countryCode, countryName,
+bloc }`, and `unmatched`: the user's words the lookup could not place, usually a district.
 
 - **One place**: use it. Build the statement from the rungs that place actually carries, in order,
   and stop at the last one present. Never add a rung the place does not carry and never work your way
   to a continent: `bloc` is filled in code, so copy it.
-  `neighbourhood` is the user's own words and nothing else. Code checks it appears in their turn and
-  drops it when it does not, so a neighbourhood you spelled but never heard is discarded and the fact
-  quietly loses a rung. Never supply one you did not hear.
+  A district comes only from the user's words (`unmatched`, or the finer area in the state line).
+  Put it first, spelled the usual way: an obvious typo is offered corrected ("niew west" is
+  "Nieuw-West, Amsterdam, ..."), never asked about. Code drops a district they did not say.
+  With `userTerm`, their own name leads: "Porto Santo (Vila Baleira), Madeira, Portugal, EU".
 - **Two or three places**: call `ask_choice` with one short option per place. Offer no residence
   fact this turn.
 - **no_match**: if the words are ambiguous on their face (Newcastle, Springfield, Georgia), call
-  `ask_choice` with their words and "somewhere else". Otherwise offer their words with only the rung
-  they themselves named, usually the country, and nothing inferred. Never guess a country.
+  `ask_choice` with their words and "somewhere else". Otherwise offer their own words, spelled
+  normally, with only the rung they named. Never invent alternatives and never guess a country.
 - **too_short**: too little to place ("I moved"). Ask for the city and offer nothing.
 - **unavailable**: the lookup failed, which is not the user's problem. Offer their own words with no
   rungs added and do not mention the tool.

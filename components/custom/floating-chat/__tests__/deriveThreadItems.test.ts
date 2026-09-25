@@ -241,9 +241,9 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', 'Saved!', [tc])] }),
     );
 
-    // A saveExtractedFacts turn also emits a steps box: the turn changed data,
-    // so its settled line is kept. Pinned here rather than filtered blindly.
-    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
+    // A settled turn with nothing failed shows no steps box (ux2 M2): the
+    // cards are the result. Pinned here rather than filtered blindly.
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(0);
 
     // message + fact-card + one topic-plan-card per saved fact (Wave 11).
     const only = cards(items);
@@ -308,9 +308,8 @@ describe('deriveThreadItems', () => {
     );
     expect(items.some((i) => i.kind === 'fact-card')).toBe(false);
     expect(cards(items)).toHaveLength(1); // just the message
-    // The turn still ran the tool, so the box stands and says so. "Saved
-    // nothing" is a RESULT; the box reports what was attempted.
-    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
+    // A settled turn with nothing failed shows no steps box (ux2 M2).
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(0);
   });
 
   it('derives a deleted card, preferring result.deletedStatements', () => {
@@ -433,9 +432,9 @@ describe('deriveThreadItems', () => {
     );
     // Message is skipped (empty content) but the fact-card + topic-plan survive.
     expect(keys(cards(items))).toEqual(['card-a1-0', 'topic-plan-a1-0-f1']);
-    // …and the box rides with them, which is the whole point of pushing it
-    // past the "empty assistant message" guard.
-    expect(keys(items)).toContain('agent-steps-a1');
+    // A settled box with nothing failed is not shown (ux2 M2): the cards are
+    // the result, and an empty "Done" row under them was noise.
+    expect(keys(items)).not.toContain('agent-steps-a1');
   });
 
   it('produces stable, unique keys across history and live', () => {

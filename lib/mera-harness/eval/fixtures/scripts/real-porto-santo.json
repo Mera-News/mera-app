@@ -1,0 +1,115 @@
+{
+  "id": "real-porto-santo",
+  "cohort": "production",
+  "note": "Production case (ux2 D13). Real doc shape: 'Porto Santo' is only an ALIAS search key of Vila Baleira, Madeira, PT, and the doc has no Machico. The port marks an alias match with userTerm. Expected: one relational card that keeps 'Porto Santo', invents no rung, and asks no 'whose' question.",
+  "persona": {
+    "facts": [
+      {
+        "id": "home",
+        "statement": "Lives in Nieuw-West, Amsterdam, North Holland, Netherlands, EU",
+        "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+        "kind": "residence"
+      }
+    ],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "My girlfriend's parents live in Porto Santo",
+      "expect": {
+        "routeKind": "family",
+        "skill": "facts/family",
+        "tools": [
+          "load_skill",
+          "lookup_place",
+          "saveExtractedFacts"
+        ],
+        "legs": 4,
+        "proposals": [
+          {
+            "statementMatches": [
+              "porto santo",
+              "parents"
+            ],
+            "statementExcludes": [
+              "machico",
+              "whose"
+            ],
+            "kind": "family",
+            "placeChain": null,
+            "replaces": null
+          }
+        ]
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "Porto Santo",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Vila Baleira",
+                  "admin1": "Madeira",
+                  "countryCode": "PT",
+                  "countryName": "Portugal",
+                  "bloc": "EU",
+                  "userTerm": "Porto Santo"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Porto Santo, Portugal",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Vila Baleira",
+                  "admin1": "Madeira",
+                  "countryCode": "PT",
+                  "countryName": "Portugal",
+                  "bloc": "EU",
+                  "userTerm": "Porto Santo"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Porto Santo, Madeira",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Vila Baleira",
+                  "admin1": "Madeira",
+                  "countryCode": "PT",
+                  "countryName": "Portugal",
+                  "bloc": "EU",
+                  "userTerm": "Porto Santo"
+                }
+              ]
+            }
+          },
+          {
+            "query": "Vila Baleira",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Vila Baleira",
+                  "admin1": "Madeira",
+                  "countryCode": "PT",
+                  "countryName": "Portugal",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

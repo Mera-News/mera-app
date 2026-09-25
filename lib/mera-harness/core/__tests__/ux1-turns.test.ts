@@ -1,7 +1,7 @@
 // ux1 audit regressions, each driven through the real loop with a scripted
 // model. Every case here failed on the loop as it was before ux1.
 
-import { createAgentState, runAgentTurn, type AgentPersona } from '../core';
+import { createAgentState, reconcilePlaceChain, runAgentTurn, type AgentPersona } from '../core';
 import { CANONICAL_LOCATION_KEY, COMBINED_ORIGIN_KEY, EXPAT_KEY, ORIGIN_KEY } from '../combined-fact';
 import type { AgentDeps, AgentModelResult, Place } from '../types';
 
@@ -584,6 +584,128 @@ describe('ux2 C4: a blocked delete names what it would remove', () => {
         error: 'confirm with ask_choice first',
         pendingStatements: ['Lives in Amsterdam, North Holland, Netherlands, EU'],
       },
+    ]);
+  });
+});
+
+describe('ux2 D: districts, typos and the place the user named', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+  const VILA: Place = {
+    locality: 'Vila Baleira', admin1: 'Madeira', countryCode: 'PT', countryName: 'Portugal', bloc: 'EU',
+    userTerm: 'Porto Santo',
+  };
+
+  it('D1: the state line carries the finer area the lookup could not place', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'niew west amsterdam' })] }),
+        res({ content: 'Noted.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [AMS], unmatched: 'niew west' }) },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.calls[2].stateLine).toContain('Finer area as the user wrote it: "niew west"');
+  });
+
+  it('D2: reconcilePlaceChain keeps a canonical district spelling of a typo', () => {
+    expect(reconcilePlaceChain({ neighbourhood: 'Nieuw-West' }, [AMS], 'I live in niew west Amsterdam'))
+      .toMatchObject({ locality: 'Amsterdam', neighbourhood: 'Nieuw-West' });
+    expect(reconcilePlaceChain({ neighbourhood: 'Nieuw-Oost' }, [AMS], 'I live in niew west Amsterdam'))
+      .toMatchObject({ locality: 'Amsterdam', neighbourhood: undefined });
+  });
+
+  it('D3+D5: a loop offer keeps the district, corrected, and settles the turn', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'niew west amsterdam' })] }),
+        res({ content: 'You live in Nieuw-West in Amsterdam.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [AMS], unmatched: 'niew west' }) },
+    );
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual([
+      'Lives in Nieuw-West, Amsterdam, North Holland, Netherlands, EU',
+    ]);
+    expect(out.terminalReason).toBe('settled');
+  });
+
+  it('D3: with no model spelling, the user\'s own words are kept, never downgraded to the city', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'niew west amsterdam' })] }),
+        res({ content: 'Noted.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [AMS], unmatched: 'niew west' }) },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual([
+      'Lives in Niew West, Amsterdam, North Holland, Netherlands, EU',
+    ]);
+  });
+
+  it('D4: never proposes the home on a turn that asked about it, even a refused ask', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'amsterdam' })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Which part?', options: ['Nieuw-West', 'Nieuw-Oost'] })] }),
+        res({ content: 'Tell me which part of Amsterdam.' }),
+      ],
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.saves.flat()).toEqual([]);
+  });
+
+  it('D7: a reply cut off by the token cap ends at its last whole sentence', async () => {
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: 'Porto Santo is an island in Madeira. Would you prefer', finishReason: 'length', truncated: true }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(out.reply).toBe('Porto Santo is an island in Madeira.');
+  });
+
+  it('D13a: a place matched through an alias keeps the user\'s term first', async () => {
+    const h = harness(
+      [
+        res({ content: 'Porto Santo.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Porto Santo' })] }),
+        res({ content: 'Noted.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [VILA] }) },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in Porto Santo', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual([
+      'Lives in Porto Santo (Vila Baleira), Madeira, Portugal, EU',
+    ]);
+  });
+
+  it('D13b: an invented rung is removed and the user\'s term restored in a relative\'s fact', async () => {
+    const h = harness(
+      [
+        res({ content: 'Porto Santo.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Porto Santo' })] }),
+        res({
+          toolCalls: [tc('saveExtractedFacts', {
+            extracted_user_information: [
+              { statement: "Girlfriend's parents live in Vila Baleira, Machico, Madeira, Portugal, EU" },
+            ],
+          })],
+        }),
+        res({ content: 'Offered.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [VILA] }) },
+    );
+    await runAgentTurn({
+      state: createAgentState(NOBODY),
+      userMessage: "My girlfriend's parents live in Porto Santo",
+      deps: h.deps,
+    });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual([
+      "Girlfriend's parents live in Porto Santo (Vila Baleira), Madeira, Portugal, EU",
     ]);
   });
 });

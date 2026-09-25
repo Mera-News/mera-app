@@ -11,6 +11,7 @@ import {
   cleanProse,
   comparableStatement,
   declaresNothingToAdd,
+  endAtLastSentence,
   isPlainNo,
   isPlainYes,
   leaksInternals,
@@ -34,6 +35,7 @@ import {
   threeFactsOf,
 } from './combined-fact';
 import { factPickStatement, isFactPickChoice, joinFactPick } from './fact-pick';
+import { correctedDistrict, guardPlaceRungs, userSaidPlace } from './fuzzy-place';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
@@ -237,11 +239,14 @@ export function reconcilePlaceChain(
   // `neighbourhood` is the one place field with no GraphQL source, so it is the
   // one the model can invent. Accept it only when the user actually said it;
   // otherwise DROP it and keep the rest of the chain, which is still good.
+  // A TYPO-DISTANCE match counts (ux2 D2): "Nieuw-West" against "niew west"
+  // is the canonical spelling of what the user said, and the model can only
+  // propose the district if this accepts it. An invented district of similar
+  // length still fails.
   const suppliedHood =
     supplied && typeof supplied.neighbourhood === 'string' ? supplied.neighbourhood.trim() : '';
-  const haystack = userMessage.toLowerCase().replace(/\s+/g, ' ');
   const hood =
-    suppliedHood && haystack.includes(suppliedHood.toLowerCase().replace(/\s+/g, ' '))
+    suppliedHood && userSaidPlace(suppliedHood, userMessage)
       ? suppliedHood
       : match.neighbourhood;
 
@@ -342,9 +347,13 @@ function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unkno
  *  neighbourhood), then the looked-up chain. */
 function chainStatement(where: string, place: Place): string {
   const first = where.split(',')[0].trim();
+  const own = (r: string | undefined) => !!r && first.toLowerCase() === r.toLowerCase();
   const rungs = [
-    first.toLowerCase() !== place.locality.toLowerCase() ? first : null,
-    place.locality,
+    own(place.locality) || own(place.userTerm) ? null : first,
+    // THE USER'S TERM FIRST when it matched only an alias (ux2 D13): "Porto
+    // Santo" resolves to Vila Baleira, and a chain without it names a place the
+    // user never said, so no topic ever mentions Porto Santo.
+    place.userTerm ? `${place.userTerm} (${place.locality})` : place.locality,
     place.admin1,
     place.countryName,
     place.bloc,
@@ -661,6 +670,36 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const unknownTools: string[] = [];
   /** The status of the last lookup_place this turn, or null if none ran. */
   let lastLookupStatus: string | null = null;
+  /** Words a single-place lookup could not use ("niew west" beside Amsterdam),
+   *  with the place they belong to. The place service has no districts, so
+   *  this is the only record of the finer area the user named (ux2 D1). */
+  let finerArea: { words: string; place: Place } | null = null;
+  /** An ask_choice about the home ran this turn, refused or not. The loop then
+   *  offers no home of its own: never propose and ask on one fact (ux2 D4). */
+  let askedAboutHome = false;
+  /** Everything the model wrote this turn, read only for its spelling of the
+   *  finer area. */
+  const modelTexts: string[] = [];
+  /** The district a loop-written home leads with: the looked-up neighbourhood,
+   *  else the finer area in the model's spelling or the user's own words, else
+   *  nothing (the locality alone). Never downgrades to the city while the user
+   *  named something finer (ux2 D3). */
+  const districtFor = (place: Place): string =>
+    place.neighbourhood
+    ?? (finerArea && finerArea.place.locality === place.locality && finerArea.place.countryCode === place.countryCode
+      ? correctedDistrict(finerArea.words, modelTexts)
+      : place.locality);
+  /** The loop may offer a home of its own only when the message is about the
+   *  USER's home. "My girlfriend's parents live in Porto Santo" on an origin
+   *  turn was offered back as "Lives in Porto Santo" for the user (ux2 D13). */
+  const aboutOwnHome =
+    !isRelationalStatement(userMessage)
+    || /\b(?:i|we)(?:['’]m|\s+am|\s+are|['’]re)?\s+(?:(?:have\s+|just\s+|recently\s+)*moved|live|living|based|reside)\b/i.test(userMessage);
+  /** A place the user named, up to a typo, by any of its names. */
+  const userNamed = (p: Place): boolean =>
+    userSaidPlace(p.locality, userMessage)
+    || (p.neighbourhood !== undefined && userSaidPlace(p.neighbourhood, userMessage))
+    || (p.userTerm !== undefined && userSaidPlace(p.userTerm, userMessage));
   /** Every lookup this turn that resolved to exactly ONE place. A later
    *  lookup ("India") resets `placeCandidates`, so the end-of-turn offer
    *  reads this instead. */
@@ -780,6 +819,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       answeredYesTo: typedYesResume && plainAnswer === 'yes' ? lastQuestion : null,
       answeredNoTo: typedYesResume && plainAnswer === 'no' ? lastQuestion : null,
       pendingCards: pendingCardList,
+      finerArea: finerArea?.words ?? null,
       segmentScope:
         skillsLoaded.length + queuedSkills.length > 1 && routeKind
           ? {
@@ -882,11 +922,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       inputTokens,
     };
     legs.push(leg);
+    modelTexts.push(result.content, ...result.toolCalls.map((c) => c.argumentsRaw));
+
+    // A LEG CUT BY THE TOKEN CAP ends at its last whole sentence. `truncated`
+    // was never read, and "...Would you prefer" shipped as a bubble's tail
+    // (ux2 D7). A leg with no whole sentence counts as silent.
+    const legText = result.truncated ? endAtLastSentence(result.content) : result.content;
 
     // Cleaned here too, not only at the end: the acknowledgement is the FIRST
     // thing on screen and is exactly where the measured dashes appeared.
-    if (result.content.trim()) {
-      const cleaned = cleanProse(result.content);
+    if (legText.trim()) {
+      const cleaned = cleanProse(legText);
       if (index === 0 && !resumedSkill) {
         // The ACKNOWLEDGEMENT. Kept apart from the answer: it said the turn
         // began, and when every later leg was silent it used to ship as the
@@ -1005,6 +1051,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const out = await deps.tools.lookupPlace({ query, countryHint });
         placeCandidates = out.status === 'resolved' ? out.places : [];
         lastLookupStatus = out.status;
+        if (out.status === 'resolved' && out.places.length === 1 && out.unmatched && out.unmatched.trim()) {
+          finerArea = { words: out.unmatched.trim(), place: out.places[0] };
+        }
         if (out.status === 'resolved' && out.places.length === 1) resolvedPlacesThisTurn.push(out.places[0]);
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
@@ -1034,6 +1083,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
       if (call.name === 'ask_choice') {
         const question = typeof args.question === 'string' ? args.question : '';
+        // Recorded BEFORE any refusal below: a refused question still reached
+        // the model's prose, so a loop offer for the same home would put a card
+        // under a question about it (ux2 D4).
+        if (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin') askedAboutHome = true;
         // A PLACE THAT RESOLVED TO ONE MATCH IS NOT A QUESTION (owner ruling
         // Q1: the card is the consent for a replacement). Measured on staging,
         // "Berlin" resolved to one place and the model still asked "Berlin
@@ -1142,15 +1195,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           onlyPlace
           && (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin')
           && !homeOfferedThisTurn
+          && !askedAboutHome
+          && aboutOwnHome
           && !list.some((e) => isHomeEntry(e))
-          && userMessage.toLowerCase().includes(onlyPlace.locality.toLowerCase())
+          && userNamed(onlyPlace)
         ) {
           const originEntry = list.find((e) => e.questionnaire_attribute === ORIGIN_KEY);
           const originFact = state.persona.facts.find((f) => f.attribute === ORIGIN_KEY || isOriginStatement(f.statement));
           const from = originCountry(String(originEntry?.statement ?? originFact?.statement ?? ''));
           if (!sameCountry(onlyPlace.countryName, from)) {
             list.push({
-              statement: chainStatement(onlyPlace.neighbourhood ?? onlyPlace.locality, onlyPlace),
+              statement: chainStatement(districtFor(onlyPlace), onlyPlace),
               questionnaire_attribute: CANONICAL_LOCATION_KEY,
             });
           }
@@ -1190,8 +1245,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           }
           const rawStatement = typeof entry.statement === 'string' ? entry.statement.trim() : '';
           // "Lives in Porto, Porto, Portugal, EU" (city and region share a
-          // name) reads as a stutter on the card (ux1 C1).
-          const statement = isHomeEntry(entry) ? collapseRepeatedRungs(rawStatement) : rawStatement;
+          // name) reads as a stutter on the card (ux1 C1). Then the chain is
+          // checked against what the lookup returned: an invented rung goes
+          // and the user's own term for an alias match comes first (ux2 D13).
+          const statement = guardPlaceRungs(
+            isHomeEntry(entry) ? collapseRepeatedRungs(rawStatement) : rawStatement,
+            [...placeCandidates, ...resolvedPlacesThisTurn],
+            userMessage,
+          );
           if (!statement) continue;
           // A RE-PROPOSAL. find_similar_facts showed the model this exact
           // statement as something already on file; offering it back is a
@@ -1406,7 +1467,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
 
     if (sawContinuationTool) continue;
-    if (!result.content.trim()) {
+    if (!legText.trim()) {
       // A leg that acted and said nothing owes the user a closing sentence, and
       // is given exactly ONE leg to write it. Unbounded, this is how a finished
       // turn walks to the cap: the proposal lands, the leg is silent, the loop
@@ -1581,13 +1642,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    */
   async function offerResolvedPlaceAtEnd(): Promise<void> {
     if (terminalReason === 'transport-error' || terminalReason === 'awaiting-user') return;
-    if (turn.pendingChoice !== null || proposedSomething || homeOfferedThisTurn) return;
+    if (turn.pendingChoice !== null || proposedSomething || homeOfferedThisTurn || askedAboutHome) return;
+    if (!aboutOwnHome) return;
     if (!skillsLoaded.some((id) => id.startsWith('facts/'))) return;
-    const said = userMessage.toLowerCase();
-    const named = resolvedPlacesThisTurn.filter(
-      (p) => said.includes(p.locality.toLowerCase())
-        || (p.neighbourhood !== undefined && said.includes(p.neighbourhood.toLowerCase())),
-    );
+    const named = resolvedPlacesThisTurn.filter(userNamed);
     const distinct = [...new Map(named.map((p) => [`${p.neighbourhood ?? ''}|${p.locality}|${p.countryCode}`, p])).values()];
     if (distinct.length !== 1) return;
     const place = distinct[0];
@@ -1596,7 +1654,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const from = origin ?? (originOnFile ? originCountry(originOnFile.statement) : null);
     if (sameCountry(place.countryName, from)) return;
     const list: Record<string, unknown>[] = [
-      { statement: chainStatement(place.neighbourhood ?? place.locality, place), questionnaire_attribute: CANONICAL_LOCATION_KEY },
+      { statement: chainStatement(districtFor(place), place), questionnaire_attribute: CANONICAL_LOCATION_KEY },
     ];
     if (origin && !originOnFile) list.push({ statement: `From ${origin}`, questionnaire_attribute: ORIGIN_KEY });
     addExpatStatus(list, state.persona.facts, [place]);
@@ -1649,6 +1707,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
     proposedSomething = true;
     homeOfferedThisTurn = true;
+    // THE TURN PROPOSED SOMETHING, so it did not end without a proposal: the
+    // "didn't find anything to add" line showed beside this very card (ux2 D5).
+    if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
     // The cards answer the question the prose was asking; it is not left
     // above them.
     if (/\?\s*$/.test(cleanProse(reply))) reply = '';
@@ -1755,6 +1816,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       offeredThisTurn.push(p.statement.toLowerCase());
     }
     proposedSomething = true;
+    if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
     await deps.combinedFactRewrite?.markOffered(combined.id);
     params.onLeg?.(leg);
     return combined.id;

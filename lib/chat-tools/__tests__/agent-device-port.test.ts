@@ -172,6 +172,28 @@ describe('lookupPlaceWithFallback', () => {
     expect(out.status === 'resolved' && out.places).toHaveLength(2);
   });
 
+  it('ux2 D1: returns the words the fallback match did not use', async () => {
+    mockLookupPlace.mockImplementation(async (q: string) =>
+      q.toLowerCase() === 'amsterdam'
+        ? { status: 'resolved' as const, places: [place('Amsterdam')] }
+        : { status: 'no_match' as const, query: q },
+    );
+    const out = await lookupPlaceWithFallback({ query: 'niew west Amsterdam' });
+    expect(out).toMatchObject({ status: 'resolved', unmatched: 'niew west' });
+  });
+
+  it('ux2 D13: an alias match carries the user term, a name match does not', async () => {
+    const vila: Place = { ...place('Vila Baleira'), admin1: 'Madeira', countryCode: 'PT', countryName: 'Portugal' };
+    mockLookupPlace.mockResolvedValue({ status: 'resolved' as const, places: [vila] });
+    const alias = await lookupPlaceWithFallback({ query: 'porto santo' });
+    expect(alias.status === 'resolved' && alias.places[0].userTerm).toBe('Porto Santo');
+
+    mockLookupPlace.mockResolvedValue({ status: 'resolved' as const, places: [place('Amsterdam')] });
+    const named = await lookupPlaceWithFallback({ query: 'Amsterdam' });
+    expect(named.status === 'resolved' && named.places[0].userTerm).toBeUndefined();
+    expect(named).not.toHaveProperty('unmatched');
+  });
+
   it('a transport failure never becomes a confident no-such-place', async () => {
     mockLookupPlace.mockResolvedValue({ status: 'unavailable' as const });
     const out = await lookupPlaceWithFallback({ query: 'Nieuw-West Amsterdam' });
