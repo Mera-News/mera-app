@@ -1,7 +1,7 @@
 // ux1 audit regressions, each driven through the real loop with a scripted
 // model. Every case here failed on the loop as it was before ux1.
 
-import { createAgentState, reconcilePlaceChain, runAgentTurn, type AgentPersona } from '../core';
+import { REPLY_PROCESS_FALLBACK, createAgentState, reconcilePlaceChain, runAgentTurn, type AgentPersona } from '../core';
 import { CANONICAL_LOCATION_KEY, COMBINED_ORIGIN_KEY, EXPAT_KEY, ORIGIN_KEY } from '../combined-fact';
 import type { AgentDeps, AgentModelResult, Place } from '../types';
 
@@ -808,6 +808,36 @@ describe('ux2 D10: the persona agent can search the web', () => {
     expect(webSearch).toHaveBeenCalledWith({ queries: ['Porto Santo'] });
     expect(out.reply).toBe('Porto Santo is an island in the Madeira archipelago.');
     expect(out.unknownTools).toEqual([]);
+  });
+});
+
+describe('ux2 batch 26 D6: a question turn is never left on its acknowledgement', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+
+  it('a question whose legs all stay silent ends on a plain line, not on the ack alone', async () => {
+    // Captured on device: "Got it, you're asking about Porto Santo. One
+    // moment." and then nothing. The question leg never called webSearch and
+    // never wrote a word, so the turn walked to the cap with an empty reply.
+    const webSearch = jest.fn(async () => ({ searched: true, results: [] }));
+    const h = harness(
+      [
+        res({ content: "Got it, you're asking about Porto Santo. One moment.", toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+        res({ content: '' }),
+      ],
+      { webSearch },
+    );
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(out.acknowledgement).toBe("Got it, you're asking about Porto Santo. One moment.");
+    expect(out.reply).toBe(REPLY_PROCESS_FALLBACK);
+  });
+
+  it('an answered question keeps its answer', async () => {
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: 'Porto Santo is an island.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(out.reply).toBe('Porto Santo is an island.');
   });
 });
 

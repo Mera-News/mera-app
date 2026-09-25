@@ -2014,6 +2014,22 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // break. A card on screen needs no words; otherwise one plain line.
     reply = proposedSomething ? '' : REPLY_PROCESS_FALLBACK;
     replyProcessUnfixed = true;
+  } else if (
+    // NEVER SILENT ON A QUESTION (ux2 batch 26 D6). A conversation leg that
+    // neither answers nor calls a tool is re-run to the cap and ends with an
+    // empty reply, and the acknowledgement ("One moment.") was then the
+    // whole turn on screen. A facts turn has its own closing UI (a card, the
+    // no-proposal line, the save-as-written chip); a conversation turn has
+    // nothing but this line.
+    !cleanProse(reply).trim()
+    && !proposedSomething
+    && turn.pendingChoice === null
+    && terminalReason !== 'transport-error'
+    && skillLoaded !== null
+    && skillLoaded.startsWith('conversation/')
+  ) {
+    reply = REPLY_PROCESS_FALLBACK;
+    replyProcessUnfixed = true;
   }
   // The acknowledgement is rendered too, so it gets the same two checks. It is
   // dropped rather than replaced: the reply below it carries the turn.
