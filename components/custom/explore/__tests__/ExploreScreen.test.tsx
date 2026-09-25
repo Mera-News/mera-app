@@ -82,8 +82,8 @@ const mockListRender = jest.fn();
 jest.mock('../ScopeArticleList', () => {
     const ReactLib = require('react');
     const { View } = require('react-native');
-    const ScopeArticleListStub = ({ scope, enabled }: any) => {
-        mockListRender({ scopeId: scope.id, enabled });
+    const ScopeArticleListStub = ({ scope, enabled, active }: any) => {
+        mockListRender({ scopeId: scope.id, enabled, active });
         ReactLib.useEffect(() => {
             mockListMount(scope.id);
         }, []);
@@ -105,7 +105,13 @@ jest.mock('@/components/custom/for-you/SwipeTabs', () => {
         __esModule: true,
         default: (p: any) => {
             mockSwipe = p;
-            return <View testID="swipe-tabs">{p.children}</View>;
+            // The active panel only; the window itself is SwipeTabs' own suite.
+            // Keyed like the real pager, so a different tab is a fresh mount.
+            return (
+              <View testID="swipe-tabs">
+                <View key={p.keyOf(p.index)}>{p.renderPanel(p.index, true)}</View>
+              </View>
+            );
         },
     };
 });
@@ -253,7 +259,7 @@ describe('ExploreScreen — cold-open flicker gate', () => {
             emitLocations!([row(), row({ id: 'loc2', city: 'paris', countryCode: 'FR', role: 'interest', weight: 0.4 })]);
         });
 
-        expect(mockListRender).toHaveBeenLastCalledWith({ scopeId: 'world', enabled: true });
+        expect(mockListRender).toHaveBeenLastCalledWith({ scopeId: 'world', enabled: true, active: true });
 
         // Exactly one mount. World now leads the row, so that is the landing
         // chip — the point of the gate is still that the pre-emission render
@@ -673,5 +679,19 @@ describe('ExploreScreen: swipe between scopes', () => {
         await act(async () => mockSwipe.onIndexChange(1));
         await waitFor(() => expect(r.getByTestId('scope-article-list').props.accessibilityLabel).toBe(scopes[1].id));
         expect(mockSwipe.index).toBe(1);
+    });
+
+    // ux2 B3 window: each scope is keyed by its id, so the cached previous and
+    // the warmed next scope are never remounted, and an off-screen one is told
+    // it is inactive (no pagination, no tab-press refresh).
+    it('keys each panel by its scope id and hands `active` to the list', async () => {
+        render(<ExploreScreen />);
+        await waitFor(() => expect(mockSwipe).not.toBeNull());
+        const scopes = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0].scopes;
+        scopes.forEach((sc: any, i: number) => expect(mockSwipe.keyOf(i)).toBe(sc.id));
+        mockListRender.mockClear();
+        const off = render(<>{mockSwipe.renderPanel(1, false)}</>);
+        expect(mockListRender).toHaveBeenLastCalledWith(expect.objectContaining({ scopeId: scopes[1].id, active: false }));
+        off.unmount();
     });
 });

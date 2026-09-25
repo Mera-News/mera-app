@@ -107,3 +107,18 @@ describe('VisitedPublicationsList', () => {
     await waitFor(() => expect(onCountChange).toHaveBeenCalledWith(1));
   });
 });
+
+// ux2 B3 window: History is mounted off-screen as a neighbour. It reads once
+// while warm, so swiping in shows the rows at once, with no spinner.
+describe('VisitedPublicationsList warmed off-screen (active=false)', () => {
+  it('reads once while warm, and arriving shows the rows with no loading state', async () => {
+    mockRows = [{ publicationName: 'NOS', countryCode: 'NL', visitCount: 2, lastVisitedAt: Date.now() }];
+    const view = render(<VisitedPublicationsList embedded active={false} onBack={jest.fn()} />);
+    await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByText('NOS')).toBeTruthy());
+    view.rerender(<VisitedPublicationsList embedded active onBack={jest.fn()} />);
+    // Same frame as the arrival: the rows, never the spinner or the empty state.
+    expect(screen.getByText('NOS')).toBeTruthy();
+    expect(screen.queryByTestId('visited-publications-empty')).toBeNull();
+  });
+});

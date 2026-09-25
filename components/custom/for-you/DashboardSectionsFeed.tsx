@@ -99,6 +99,10 @@ interface DashboardSectionsFeedProps {
   refreshing?: boolean;
   /** Pull-to-refresh handler. Omit both props to render no refresh control. */
   onRefresh?: () => void;
+  /** False while this is a warmed or cached neighbour in the Dashboard swipe
+   *  window (ux2 B3): no scroll ticks, and the tab re-tap neither scrolls nor
+   *  refreshes (a feed sync) through it. Default true. */
+  active?: boolean;
 }
 
 /**
@@ -121,6 +125,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   noStoriesLead = null,
   refreshing,
   onRefresh,
+  active = true,
 }) => {
   // Inside a tab on iOS the inset already includes the tab bar; measured on
   // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
@@ -134,10 +139,12 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   // (useFeedSyncRefresh), so the two paths are literally the same function.
   const listRef = useRef<Animated.FlatList<SectionItem>>(null);
   const lastOffsetShared = useSharedValue(0);
+  // Only the active panel may act on a tab re-tap (an off-screen one reads as
+  // "at the top" with nothing to refresh).
   useTabPressScrollRefresh({
     listRef,
-    getOffset: () => lastOffsetShared.value,
-    onRefresh,
+    getOffset: () => (active ? lastOffsetShared.value : 0),
+    onRefresh: active ? onRefresh : undefined,
     isRefreshing: !!refreshing,
   });
   // Section content order: the SAME rule the Feed tab uses
@@ -357,7 +364,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         // tick at mount, TranslatableDynamic titles stay on the original text
         // until the user's first scroll and then swap (and re-wrap) under them.
         // Plain JS prop; does not touch the reanimated `onScroll` above.
-        onContentSizeChange={notifyScrollTick}
+        onContentSizeChange={active ? notifyScrollTick : undefined}
         // Tuned for SECTIONS, not rows: each item is ~5 subviews, so these are
         // scaled down from the old per-row values to keep a comparable amount of
         // work per batch.

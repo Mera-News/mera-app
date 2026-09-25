@@ -42,10 +42,16 @@ jest.mock('react-native-gesture-handler', () => {
   const { View } = require('react-native');
   const R = require('react');
   return {
-    ScrollView: R.forwardRef((p: any, ref: any) => <View ref={ref} testID="gh-scroll" horizontal={p.horizontal}>{p.children}</View>),
+    ScrollView: R.forwardRef((p: any, ref: any) => (
+      <View ref={ref} testID="gh-scroll" horizontal={p.horizontal} onScroll={p.onScroll} scrollEventThrottle={p.scrollEventThrottle}>
+        {p.children}
+      </View>
+    )),
   };
 });
 const mockBlocker = { current: null };
+const mockNotifyScrollTick = jest.fn();
+jest.mock('@/lib/visibility-tick', () => ({ notifyScrollTick: () => mockNotifyScrollTick() }));
 jest.mock('../SwipeTabs', () => ({ useSwipeTabsBlocker: () => mockBlocker }));
 
 import BreakingStrip from '../BreakingStrip';
@@ -132,4 +138,16 @@ it('keeps the warning glyph out of the card button, which is childless', () => {
     expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
     const b = r.getByRole('button');
     expect(b.findAll((n: any) => n !== b && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
+});
+
+// Translated card titles measure themselves on scroll ticks, and they count as
+// on screen only inside the screen's width (ux2 B3). A card scrolled in
+// sideways must therefore re-measure: the strip ticks on its own scroll.
+it('sends a scroll tick as the strip scrolls sideways', () => {
+  const { fireEvent } = require('@testing-library/react-native');
+  const r = render(<BreakingStrip items={[item('a', 'One'), item('b', 'Two')]} onPressItem={jest.fn()} />);
+  const scroller = r.getByTestId('gh-scroll');
+  expect(scroller.props.scrollEventThrottle).toBe(16);
+  fireEvent.scroll(scroller, { nativeEvent: { contentOffset: { x: 120, y: 0 } } });
+  expect(mockNotifyScrollTick).toHaveBeenCalledTimes(1);
 });

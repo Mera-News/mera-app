@@ -42,6 +42,7 @@ jest.mock('react-native-reanimated', () => {
         ListEmptyComponent,
         testID,
         contentContainerStyle,
+        onContentSizeChange,
     }: any) => {
         const { View } = jest.requireActual('react-native');
         const items = data ?? [];
@@ -71,7 +72,7 @@ jest.mock('react-native-reanimated', () => {
         if (footer) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'lf' }, footer));
         // A View carrying the list's own testID and content style, so a test
         // can read the padding the component handed the list.
-        return ReactLib.createElement(View, { testID, contentContainerStyle }, kids);
+        return ReactLib.createElement(View, { testID, contentContainerStyle, onContentSizeChange }, kids);
     };
     return {
         __esModule: true,
@@ -554,5 +555,29 @@ describe('DashboardSectionsFeed: the Overview stats card', () => {
     it('renders even with no sections at all', () => {
         const r = renderFeed([]);
         expect(r.getByTestId('dashboard-stats-card')).toBeTruthy();
+    });
+});
+
+// ux2 B3 window: the Overview panel stays mounted as a neighbour of Stories.
+// Off-screen it must not feed the translation scheduler's scroll ticks, and a
+// Dashboard tab re-tap must not scroll or refresh (a feed sync) through it.
+describe('DashboardSectionsFeed: off-screen (active=false)', () => {
+    const tabPress = () => require('@/lib/hooks/use-tab-press-scroll-refresh').useTabPressScrollRefresh as jest.Mock;
+
+    it('sends no scroll tick on a content-size change', () => {
+        const r = renderFeed([], { active: false, onRefresh: jest.fn() });
+        const list = r.UNSAFE_root.findAll((n: any) => n.props?.contentContainerStyle && n.type === 'View')[0];
+        expect(list.props.onContentSizeChange).toBeUndefined();
+        const opts = tabPress().mock.calls.at(-1)[0];
+        expect(opts.onRefresh).toBeUndefined();
+        expect(opts.getOffset()).toBe(0);
+    });
+
+    it('does all of it when active (the default)', () => {
+        const onRefresh = jest.fn();
+        const r = renderFeed([], { onRefresh });
+        const list = r.UNSAFE_root.findAll((n: any) => n.props?.contentContainerStyle && n.type === 'View')[0];
+        expect(typeof list.props.onContentSizeChange).toBe('function');
+        expect(tabPress().mock.calls.at(-1)[0].onRefresh).toBe(onRefresh);
     });
 });

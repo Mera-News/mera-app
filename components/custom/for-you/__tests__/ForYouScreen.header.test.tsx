@@ -15,6 +15,11 @@ function mockStub(testID: string) {
   const { View } = require('react-native');
   return { __esModule: true, default: () => <View testID={testID} /> };
 }
+/** A stub that keeps the `active` prop it was given, for the swipe window. */
+function mockActiveStub(testID: string) {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View testID={testID} active={p.active} /> };
+}
 let mockProcessing = false;
 let mockLastNewArticlesAt: number | null = null;
 let mockFontScale = 1;
@@ -112,7 +117,13 @@ jest.mock('@/components/custom/for-you/SwipeTabs', () => {
     __esModule: true,
     default: (p: any) => {
       mockSwipe = p;
-      return <View testID="swipe-tabs">{p.children}</View>;
+      // The active panel only; the window itself is SwipeTabs' own suite.
+      // Keyed like the real pager, so a different tab is a fresh mount.
+      return (
+        <View testID="swipe-tabs">
+          <View key={p.keyOf(p.index)}>{p.renderPanel(p.index, true)}</View>
+        </View>
+      );
     },
   };
 });
@@ -134,7 +145,7 @@ jest.mock('@/components/custom/for-you/ForYouSubTabs', () => {
   };
 });
 jest.mock('@/components/custom/for-you/StoriesSlotPlaceholder', () => mockStub('stories'));
-jest.mock('@/components/custom/for-you/DashboardSectionsFeed', () => mockStub('sections'));
+jest.mock('@/components/custom/for-you/DashboardSectionsFeed', () => mockActiveStub('sections'));
 jest.mock('@/components/custom/for-you/status-dropdown', () => ({
   StatusDropdownProvider: ({ children }: any) => children,
   StatusDropdownLayer: () => {
@@ -142,10 +153,22 @@ jest.mock('@/components/custom/for-you/status-dropdown', () => ({
     return <View testID="stats-dropdown-layer" />;
   },
 }));
-jest.mock('@/components/custom/fact-checks/FactChecksPanel', () => mockStub('fact-checks'));
+jest.mock('@/components/custom/fact-checks/FactChecksPanel', () => mockActiveStub('fact-checks'));
 jest.mock('@/components/custom/for-you/FeedStatsSentence', () => mockStub('stats-sentence'));
-jest.mock('@/components/custom/saved-suggestions/SavedSuggestionsScreen', () => mockStub('saved'));
-jest.mock('@/components/custom/config-panel/VisitedPublicationsList', () => mockStub('visited'));
+jest.mock('@/components/custom/saved-suggestions/SavedSuggestionsScreen', () => mockActiveStub('saved'));
+// Reports 3 rows, as a loaded History list does, so the share button has
+// something to share.
+jest.mock('@/components/custom/config-panel/VisitedPublicationsList', () => {
+  const { View } = require('react-native');
+  const R = require('react');
+  return {
+    __esModule: true,
+    default: (p: any) => {
+      R.useEffect(() => p.onCountChange?.(3), []);
+      return <View testID="visited" active={p.active} />;
+    },
+  };
+});
 jest.mock('@/components/custom/ShareStatsFab', () => mockStub('share-fab'));
 jest.mock('@/components/custom/StatusBarScrim', () => {
   const { View } = require('react-native');
@@ -372,5 +395,32 @@ describe('Dashboard header', () => {
     act(() => mockSwipe.onIndexChange(2));
     expect(mockSwipe.index).toBe(2);
     expect(screen.getByTestId('dashboard-saved-content')).toBeTruthy();
+  });
+
+  // ux2 B3 window: each pill is keyed by its own tab, so a panel kept in the
+  // window is never remounted, and an off-screen one is told it is inactive.
+  it('keys each panel by its sub-tab and hands `active` down to every panel', () => {
+    render(<ForYouScreen />);
+    const order = ['feed', 'stories', 'saved', 'factChecks', 'history'];
+    order.forEach((k, i) => expect(mockSwipe.keyOf(i)).toBe(k));
+    const withActive: Record<string, string> = { feed: 'sections', saved: 'saved', factChecks: 'fact-checks', history: 'visited' };
+    for (const [k, id] of Object.entries(withActive)) {
+      const i = order.indexOf(k);
+      for (const active of [false, true]) {
+        const r = render(<>{mockSwipe.renderPanel(i, active)}</>);
+        expect(r.getByTestId(id).props.active).toBe(active);
+        r.unmount();
+      }
+    }
+  });
+
+  it('shows the History share button only on the active History panel', () => {
+    render(<ForYouScreen />);
+    act(() => mockSwipe.onIndexChange(4));
+    // Presence first: active, with rows, it is there.
+    expect(screen.getByTestId('share-fab')).toBeTruthy();
+    const off = render(<>{mockSwipe.renderPanel(4, false)}</>);
+    expect(off.queryByTestId('share-fab')).toBeNull();
+    off.unmount();
   });
 });

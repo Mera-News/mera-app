@@ -356,8 +356,8 @@ const ExploreScreen: React.FC = () => {
 {/* Swipe left/right between the scopes (ux2 B3): the list only, never
                 the header, whose chip row scrolls horizontally itself. A swipe
                 selects through `handleSelect`, the same path as a tap. The
-                wrapper's first subview is still the list, so react-native-
-                screens' subviews[0] walk still finds it. */}
+                pager draws the ACTIVE scope's list first, so react-native-
+                screens' subviews[0] walk still lands on a list. */}
             <SwipeTabs
                 index={Math.max(0, scopes.findIndex((sc) => sc.id === selectedScope.id))}
                 count={scopes.length}
@@ -365,27 +365,40 @@ const ExploreScreen: React.FC = () => {
                     const next = scopes[i];
                     if (next) handleSelect(next);
                 }}
+                // Keyed by scope id: a scope kept in the window (the cached
+                // previous one, the warmed next one) is never remounted, so it
+                // shows its already-fetched page at once. Real locations landing
+                // can change the ids, which re-keys, as before.
+                keyOf={(i) => scopes[i]?.id ?? String(i)}
+                renderPanel={(i, active) => {
+                    const scope = scopes[i];
+                    if (!scope) return null;
+                    return (
+                        <ScopeArticleList
+                            scope={scope}
+                            // Off-screen neighbours fetch their first page once
+                            // (so arriving shows it at once) but start no tab-press
+                            // refresh, pagination or scroll-tick work.
+                            active={active}
+                            // Gate the QUERY, not the mount: fetching before the locations
+                            // observable has emitted would hit the device-country fallback,
+                            // and the real locations landing re-keys this component — a
+                            // wasted round-trip plus a flash of the wrong country.
+                            enabled={locationsLoaded}
+                            // Measured height of the pinned header overlay below — the
+                            // list's content top padding is derived from it rather than
+                            // hardcoded — the header grows and shrinks (the offline banner
+                            // appears/disappears, chip labels wrap), and a fixed number
+                            // would hide the first article behind the chips.
+                            headerHeight={headerHeight}
+                            // Collapsible-header worklet — composed with the list's own
+                            // scroll-tick handler inside ScopeArticleList.
+                            scrollHandler={scrollHandler}
+                        />
+                    );
+                }}
                 testID="explore-swipe-tabs"
-            >
-                <ScopeArticleList
-                    key={selectedScope.id}
-                    scope={selectedScope}
-                    // Gate the QUERY, not the mount: fetching before the locations
-                    // observable has emitted would hit the device-country fallback,
-                    // and the real locations landing re-keys this component — a
-                    // wasted round-trip plus a flash of the wrong country.
-                    enabled={locationsLoaded}
-                    // Measured height of the pinned header overlay below — the
-                    // list's content top padding is derived from it rather than
-                    // hardcoded — the header grows and shrinks (the offline banner
-                    // appears/disappears, chip labels wrap), and a fixed number
-                    // would hide the first article behind the chips.
-                    headerHeight={headerHeight}
-                    // Collapsible-header worklet — composed with the list's own
-                    // scroll-tick handler inside ScopeArticleList.
-                    scrollHandler={scrollHandler}
-                />
-            </SwipeTabs>
+            />
 
             {/* Pinned header overlay — title, offline banner, scope chips.
                 This sits ON TOP of the list, and the chip row's

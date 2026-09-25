@@ -253,6 +253,49 @@ describe('TranslatableDynamic mount-time visibility ladder', () => {
         );
     });
 
+    // ux2 B3: the swipe window keeps the neighbouring panels mounted exactly
+    // one screen width to either side, at the same y as the active one. Only
+    // `y` was measured, so every card in a warmed neighbour counted as on
+    // screen and jumped the translation queue. A vertical list is unchanged.
+    describe('horizontal bound', () => {
+        const W = () => require('react-native').Dimensions.get('window').width;
+        const measuredAt = (x: number, w = 320) => {
+            mockMeasureImpl = (_call, cb) => cb(x, 100, w, 40);
+        };
+        const settle = () =>
+            act(() => {
+                jest.advanceTimersByTime(500);
+            });
+
+        it('a node one width to the right (the warmed next panel) is not on screen', () => {
+            measuredAt(W() + 16);
+            render(<TranslatableDynamic text="Next panel headline" />);
+            settle();
+            expect(requestTranslation).not.toHaveBeenCalled();
+        });
+
+        it('a node one width to the left (the cached previous panel) is not on screen', () => {
+            measuredAt(-W() + 16);
+            render(<TranslatableDynamic text="Previous panel headline" />);
+            settle();
+            expect(requestTranslation).not.toHaveBeenCalled();
+        });
+
+        it('a horizontal strip card partly on screen still counts', () => {
+            measuredAt(W() - 50, 300);
+            render(<TranslatableDynamic text="Strip card headline" />);
+            settle();
+            expect(requestTranslation).toHaveBeenCalledWith('Strip card headline', 'de', { rank: { visible: true, y: 100 } });
+        });
+
+        it('a vertical list node at the usual inset still counts', () => {
+            measuredAt(16);
+            render(<TranslatableDynamic text="Feed headline" />);
+            settle();
+            expect(requestTranslation).toHaveBeenCalledWith('Feed headline', 'de', { rank: { visible: true, y: 100 } });
+        });
+    });
+
     it('does not treat a callback that never fires as visible', () => {
         // Guard against "just assume visible on timeout" — that would translate
         // (and pay the OS translator cost for) every off-screen node in the list.

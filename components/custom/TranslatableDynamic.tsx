@@ -253,11 +253,17 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         const node = nodeRef.current;
         if (!node || typeof node.measureInWindow !== 'function') return;
         try {
-            node.measureInWindow((_x, y, _w, h) => {
-                const { height: screenH } = Dimensions.get('window');
+            node.measureInWindow((x, y, w, h) => {
+                const { width: screenW, height: screenH } = Dimensions.get('window');
+                // Horizontally too, with no buffer: a swipe pager keeps its
+                // neighbouring panels mounted exactly one screen width to
+                // either side at the same `y` (ux2 B3), and those must not
+                // count. A horizontal strip card partly on screen still does.
                 const visible =
                     y + h > -VISIBILITY_BUFFER_PX &&
-                    y < screenH + VISIBILITY_BUFFER_PX;
+                    y < screenH + VISIBILITY_BUFFER_PX &&
+                    x + w > 0 &&
+                    x < screenW;
                 lastYRef.current = y;
                 setIsOnScreen(visible);
                 if (visible) requestRef.current?.setPriority({ visible: true, y });

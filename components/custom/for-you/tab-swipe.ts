@@ -41,3 +41,14 @@ export function swipeTarget({ dx, vx, width, index, count, rtl }: SwipeInput): n
     const next = index + step;
     return next >= 0 && next < count ? next : null;
 }
+
+/**
+ * The panels a pager keeps mounted around `index`, the active one FIRST
+ * (owner: cache and warm one screen each side; the ends only one). Never more
+ * than 3. Active first, so a native walk of `subviews[0]` (react-native-
+ * screens) lands on the list the reader is looking at.
+ */
+export function swipeWindow(index: number, count: number): number[] {
+    if (count <= 0 || index < 0 || index >= count) return [];
+    return [index, index - 1, index + 1].filter((i) => i >= 0 && i < count);
+}

@@ -421,3 +421,33 @@ it('empty state: exposes no icon glyph as its own StaticText', async () => {
     await waitFor(() => expect(r.queryByTestId('explore-empty')).toBeTruthy());
     expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
 });
+
+// ux2 B3 window: the neighbouring scopes are mounted off-screen. A warmed list
+// fetches its first page ONCE, so arriving shows it at once; it starts no
+// pagination or tab-press refresh until it is the active one.
+describe('ScopeArticleList: warmed off-screen (active=false)', () => {
+    beforeEach(() => mockGetTopHeadlines.mockReset());
+
+    it('fetches once while warm, and arriving triggers no refetch and no loading state', async () => {
+        mockGetTopHeadlines.mockResolvedValue(page(['a', 'b'], 'c1', true));
+        const r = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} active={false} />);
+        await waitFor(() => expect(r.queryByTestId('explore-loading')).toBeNull());
+        expect(mockGetTopHeadlines).toHaveBeenCalledTimes(1);
+        r.rerender(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} active />);
+        expect(r.queryByTestId('explore-loading')).toBeNull();
+        await act(async () => {});
+        expect(mockGetTopHeadlines).toHaveBeenCalledTimes(1);
+    });
+
+    it('paginates and takes the tab-press refresh only when active', async () => {
+        mockGetTopHeadlines.mockResolvedValue(page(['a'], 'c1', true));
+        const r = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} active={false} />);
+        await waitFor(() => expect(r.queryByTestId('explore-loading')).toBeNull());
+        expect(mockListOnEndReached ?? undefined).toBeUndefined();
+        expect(hookOptions.onRefresh).toBeUndefined();
+        expect(hookOptions.getOffset()).toBe(0);
+        r.rerender(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} active />);
+        expect(typeof mockListOnEndReached).toBe('function');
+        expect(typeof hookOptions.onRefresh).toBe('function');
+    });
+});

@@ -33,14 +33,19 @@ const mockRefresh = jest.fn((..._args: unknown[]) => {
     calls.push('refresh');
     return Promise.resolve();
 });
+const mockLoad = jest.fn((..._args: unknown[]) => {
+    calls.push('load');
+    return Promise.resolve();
+});
 const mockRemove = jest.fn((..._args: unknown[]) => Promise.resolve());
 let mockItems: Array<{ id: string; status: string }> = [];
+let mockHydrated = true;
 jest.mock('@/lib/stores/fact-checks-store', () => ({
     useFactCheckItems: () => mockItems,
-    useFactChecksHydrated: () => true,
+    useFactChecksHydrated: () => mockHydrated,
     useFactChecksRefreshing: () => false,
     useFactChecksStore: (selector: (s: any) => unknown) =>
-        selector({ refresh: mockRefresh, remove: mockRemove }),
+        selector({ refresh: mockRefresh, load: mockLoad, remove: mockRemove }),
 }));
 
 jest.mock('@/lib/hooks/use-open-article', () => ({
@@ -131,23 +136,44 @@ describe('FactChecksPanel', () => {
         jest.clearAllMocks();
         calls.length = 0;
         capturedListProps = null;
+        mockHydrated = true;
     });
 
-    it('reconciles BEFORE refreshing on activation — a row the sweep advances must already be in the table before the read', async () => {
+    // ux2 B3 window: arriving must show the list with no loading flash, so the
+    // activation re-read is the SILENT `load`, never the spinner-raising
+    // `refresh` (that one is pull-to-refresh only).
+    it('reconciles BEFORE re-reading on activation, silently: no spinner-raising refresh', async () => {
         render(<FactChecksPanel active />);
         await flush();
 
         expect(mockReconcile).toHaveBeenCalledTimes(1);
-        expect(mockRefresh).toHaveBeenCalledTimes(1);
-        expect(calls).toEqual(['reconcile', 'refresh']);
+        expect(mockRefresh).not.toHaveBeenCalled();
+        expect(calls).toEqual(['reconcile', 'load']);
     });
 
-    it('does nothing while inactive — the chip is not selected', async () => {
+    it('while inactive and already read, does nothing: no sweep, no read', async () => {
         render(<FactChecksPanel active={false} />);
         await flush();
 
         expect(mockReconcile).not.toHaveBeenCalled();
         expect(mockRefresh).not.toHaveBeenCalled();
+        expect(mockLoad).not.toHaveBeenCalled();
+    });
+
+    it('warmed off-screen before any read: one local read, no sweep, so arriving shows the rows', async () => {
+        mockHydrated = false;
+        render(<FactChecksPanel active={false} />);
+        await flush();
+
+        expect(calls).toEqual(['load']);
+        expect(mockReconcile).not.toHaveBeenCalled();
+    });
+
+    it('sends scroll ticks on content changes only while active', () => {
+        const { rerender } = render(<FactChecksPanel active={false} />);
+        expect(capturedListProps.onContentSizeChange).toBeUndefined();
+        rerender(<FactChecksPanel active />);
+        expect(typeof capturedListProps.onContentSizeChange).toBe('function');
     });
 
     it('pull-to-refresh runs the SAME reconcile-then-refresh sequence, not a bare refresh', async () => {

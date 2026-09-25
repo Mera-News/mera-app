@@ -31,11 +31,12 @@ interface Props {
      *  SavedSuggestionsScreen's `embedded` prop. Route usage leaves this unset,
      *  which keeps non-embedded behavior byte-identical. */
     embedded?: boolean;
-    /** Embedded hosts keep this component mounted behind display:none and flip
-     *  this when the sub-tab becomes visible. Visits recorded while hidden
-     *  (e.g. the open-article button on feed cards) would otherwise never show:
-     *  the initial fetch runs once, and the empty state renders outside the
-     *  FlatList so pull-to-refresh can't recover either. Unset = always active. */
+    /** Embedded hosts keep this component mounted off-screen (the Dashboard
+     *  swipe window, ux2 B3) and flip this when the sub-tab becomes visible.
+     *  It reads once on mount either way, so a warmed panel has its rows drawn
+     *  before the swipe lands; becoming visible re-reads silently, so visits
+     *  recorded meanwhile (the open-article button on feed cards) show.
+     *  Unset = always active. */
     active?: boolean;
     /** The host's collapsing-header scroll handler (Dashboard sub-tab use). The
      *  list MUST be an `Animated.FlatList` for this to do anything — a
@@ -93,15 +94,16 @@ const VisitedPublicationsList: React.FC<Props> = ({
     const isFocused = useIsFocusedSafe();
     const visible = active && isFocused;
     useEffect(() => {
-        if (!visible) return;
         if (!hasFetched.current) {
+            // First read on mount, visible or not: warmed off-screen, the rows
+            // are drawn before the reader swipes in.
             hasFetched.current = true;
             setIsLoading(true);
             load().finally(() => setIsLoading(false));
             return;
         }
-        // Re-activation of an already-fetched embedded list: silent refresh.
-        void load();
+        // Becoming visible again: silent re-read, no spinner.
+        if (visible) void load();
     }, [visible, load]);
 
     const onRefresh = useCallback(async () => {

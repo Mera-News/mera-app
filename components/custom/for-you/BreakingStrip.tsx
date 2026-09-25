@@ -12,6 +12,7 @@ import { StyleSheet, View } from 'react-native';
 // RNGH's ScrollView, not RN's: the Dashboard's tab swipe (SwipeTabs) waits
 // for it through `useSwipeTabsBlocker`, so the strip scrolls on its own.
 import { ScrollView } from 'react-native-gesture-handler';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 import { useSwipeTabsBlocker } from './SwipeTabs';
 
 const RED = '#EF4444'; // error/red accent
@@ -100,6 +101,10 @@ const BreakingStrip: React.FC<BreakingStripProps> = ({ items, onPressItem }) => 
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingRight: 8 }}
+          // Translated titles count as on screen only inside the screen's
+          // width, so a card scrolled in sideways must re-measure.
+          onScroll={notifyScrollTick}
+          scrollEventThrottle={16}
         >
           {cards}
         </ScrollView>

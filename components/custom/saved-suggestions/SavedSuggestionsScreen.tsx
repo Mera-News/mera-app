@@ -54,6 +54,10 @@ interface SavedSuggestionsScreenProps {
      *  host padding a wrapper View (which would leave a dead gap once the header
      *  translates away). Defaults to 0 — standalone route is unchanged. */
     headerHeight?: number;
+    /** False while Saved is a warmed or cached neighbour in the Dashboard
+     *  swipe window (ux2 B3): no scroll ticks until it is the active panel.
+     *  Default true. */
+    active?: boolean;
 }
 
 // ── Delete-button geometry ────────────────────────────────────────────────
@@ -90,6 +94,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     embedded = false,
     scrollHandler,
     headerHeight = 0,
+    active = true,
 }) => {
     const { t } = useTranslation();
     const toast = useToast();
@@ -301,11 +306,12 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const viewportH = useRef(0);
     const settleIfShort = useCallback((_w: number, contentH: number) => {
         // New content can land rows on screen with no scroll: re-measure them.
-        notifyScrollTick();
+        // Only the active panel feeds the translation scheduler.
+        if (active) notifyScrollTick();
         if (viewportH.current > 0 && contentH <= viewportH.current) {
             listRef.current?.scrollToOffset?.({ offset: 0, animated: true });
         }
-    }, []);
+    }, [active]);
 
     const ListEmpty = isLoading ? (
         <Box className="items-center justify-center py-20">

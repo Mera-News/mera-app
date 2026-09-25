@@ -46,3 +46,32 @@ describe('swipeTarget', () => {
         expect(at(committing, 0, 2, 5, true)).toBe(3);
     });
 });
+
+// Owner (ux2 B3): cache and warm one screen each side; the ends only one.
+describe('swipeWindow: the mounted panels, active first', () => {
+    const { swipeWindow } = require('../tab-swipe');
+
+    it('mounts the active panel and one neighbour each side', () => {
+        expect(swipeWindow(2, 5)).toEqual([2, 1, 3]);
+    });
+
+    it('mounts only the one existing neighbour at either end', () => {
+        expect(swipeWindow(0, 5)).toEqual([0, 1]);
+        expect(swipeWindow(4, 5)).toEqual([4, 3]);
+    });
+
+    it('never mounts more than 3, for any index and count', () => {
+        for (let count = 0; count <= 8; count++) {
+            for (let i = 0; i < Math.max(count, 1); i++) {
+                const w = swipeWindow(i, count);
+                expect(w.length).toBeLessThanOrEqual(3);
+                for (const j of w) expect(j >= 0 && j < count).toBe(true);
+            }
+        }
+    });
+
+    it('a single tab mounts just itself, and no tabs mount nothing', () => {
+        expect(swipeWindow(0, 1)).toEqual([0]);
+        expect(swipeWindow(0, 0)).toEqual([]);
+    });
+});
