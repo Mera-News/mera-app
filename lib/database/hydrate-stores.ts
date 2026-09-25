@@ -71,6 +71,8 @@ export function hydrateAllStores(): Promise<void> {
       .catch(() => undefined),
   ])
     .then(() => {
+      // Publication display names follow the (now-hydrated) app language.
+      require('../publication-display-service').installPublicationDisplayNames().catch(() => undefined);
       // Fire-and-forget: back-fill the persona's primary language_codes from the
       // (now-hydrated) app UI language for users who picked a language before the
       // sync existed. Deliberately NOT awaited — it must never gate
