@@ -51,12 +51,13 @@ jest.mock('@/components/ui/pressable', () => {
 });
 
 let mockFinishedAt: number | null = null;
+let mockLimitResetAt: number | null = null;
 jest.mock('@/lib/stores/selectors', () => ({
     useForYouAsyncJobPhase: () => 'idle',
     useForYouAsyncJobProcessedCount: () => 0,
     useForYouAsyncJobTotalCount: () => 0,
     useForYouBatchProgress: () => null,
-    useForYouDailyLimitResetAt: () => null,
+    useForYouDailyLimitResetAt: () => mockLimitResetAt,
     useForYouDeviceProcessing: () => ({
         isDeviceProcessing: false,
         deviceProcessedCount: 0,
@@ -71,6 +72,7 @@ import FeedStatusDetails from '../FeedStatusDetails';
 
 beforeEach(() => {
     mockFinishedAt = null;
+    mockLimitResetAt = null;
 });
 
 describe('FeedStatusDetails', () => {
@@ -90,27 +92,37 @@ describe('FeedStatusDetails', () => {
 });
 
 // Captured (sim R3, 2544): the open dropdown, its panel and a StaticText all
-// read as the stage row's "sync" icon glyph. A container's label is composed
-// from its subviews, and an explicitly labelled child contributes its OWN
-// label, never its glyph (hidden props do not stop iOS reading it).
+// read as the stage row's "sync" icon glyph, and later (2617) the icon was its
+// own StaticText inside the labelled row. The words are the accessible element
+// and every glyph sits outside any accessible element, hidden itself.
 describe('FeedStatusDetails: the stage row never reads as its icon', () => {
     const PUA = /[\uE000-\uF8FF]/;
-    // The label iOS composes for a container: a child's explicit label, else
-    // its text, recursively (same rule as icon-glyph-a11y's textOf).
-    const composed = (n: any): string => {
-        if (n == null) return '';
-        if (typeof n === 'string') return n;
-        if (typeof n.type === 'string' && typeof n.props?.accessibilityLabel === 'string') return n.props.accessibilityLabel;
-        return (n.children ?? []).map(composed).join('');
-    };
-
-    it('labels the stage row with its words, so no container composes the glyph', () => {
+    it('labels the stage row with its words', () => {
         const { privateUseLabelLeaks } = require('@/lib/__test-helpers__/icon-glyph-a11y');
         const r = render(<FeedStatusDetails />);
         const row = r.getByTestId('feed-status-stage-row');
         expect(row.props.accessible).toBe(true);
         expect(row.props.accessibilityLabel).toBe('feedStatus.idle');
-        expect(PUA.test(composed(r.UNSAFE_root))).toBe(false);
         expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+    });
+
+    // Captured (batch 26): the row read right, but the icon inside it was
+    // STILL its own StaticText. No private-use Text may be exposed anywhere:
+    // each must be hidden itself and sit under no accessible element.
+    it('exposes no private-use StaticText anywhere in the tree', () => {
+        // Daily limit on, so the Manage plan pill and its card glyph render too.
+        mockLimitResetAt = Date.now() + 3_600_000;
+        const r = render(<FeedStatusDetails />);
+        expect(r.getByTestId('feed-status-manage-subscription')).toBeTruthy();
+        const glyphs = r.UNSAFE_root.findAll(
+            (n: any) => typeof n.type === 'string' && PUA.test(String(n.props?.children ?? '')),
+        );
+        expect(glyphs.length).toBeGreaterThan(0);
+        for (const g of glyphs) {
+            expect(g.props.accessible).toBe(false);
+            expect(g.props.accessibilityElementsHidden).toBe(true);
+            expect(g.props.importantForAccessibility).toBe('no-hide-descendants');
+            for (let p: any = g.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+        }
     });
 });

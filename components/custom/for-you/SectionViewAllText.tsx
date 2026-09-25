@@ -3,6 +3,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 /** A quiet continuation of the section, smaller and lighter than the
@@ -29,17 +30,19 @@ interface SectionViewAllTextProps {
 const SectionViewAllText: React.FC<SectionViewAllTextProps> = ({ total, onPress }) => {
   const { t } = useTranslation();
   const label = t('forYou.viewAllArticles', { count: total });
+  // Childless labelled button laid over the visual row. A chevron INSIDE the
+  // button still surfaced on iOS as its own StaticText after the button, hidden
+  // props and all (captured); outside it, nothing reads it.
   return (
-    <Pressable
-      testID="dashboard-view-all"
-      onPress={onPress}
-      accessibilityRole="button"
-      // Spoken label equals the visible text, count included.
-      accessibilityLabel={label}
-      hitSlop={8}
-      className="self-end px-3 pb-3 pt-1"
-    >
-      <HStack className="items-center" space="xs">
+    <View className="self-end px-3 pb-3 pt-1">
+      <HStack
+        className="items-center"
+        space="xs"
+        pointerEvents="none"
+        accessible={false}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
         <Text size="sm" className="font-semibold" style={{ color: ROW_COLOR }} numberOfLines={1}>
           {label}
         </Text>
@@ -52,7 +55,16 @@ const SectionViewAllText: React.FC<SectionViewAllTextProps> = ({ total, onPress 
           importantForAccessibility="no-hide-descendants"
         />
       </HStack>
-    </Pressable>
+      <Pressable
+        testID="dashboard-view-all"
+        onPress={onPress}
+        accessibilityRole="button"
+        // Spoken label equals the visible text, count included.
+        accessibilityLabel={label}
+        hitSlop={8}
+        style={StyleSheet.absoluteFill}
+      />
+    </View>
   );
 };
 
