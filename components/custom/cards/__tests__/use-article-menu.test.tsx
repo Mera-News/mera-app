@@ -69,7 +69,7 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
     return {
         __esModule: true,
         default: (p: any) => (
-            <Text testID="title-text" numberOfLines={p.numberOfLines}>
+            <Text testID="title-text" numberOfLines={p.numberOfLines} style={p.style}>
                 {[p.text, p.originalText ?? '', p.originalLanguage ?? ''].join('|')}
             </Text>
         ),
@@ -730,6 +730,31 @@ describe('useArticleMenu running items', () => {
         await expect(opts.onUndo()).resolves.toBe(true);
         expect(mockSetPref).toHaveBeenCalledTimes(1);
     });
+
+    // ux2 A7: the display name is DISPLAY ONLY. The rows and the toast read
+    // the publication in the app language; the preference write keeps the raw
+    // name, which is the key every filter, pref and visit row matches on.
+    describe('display name vs key', () => {
+        const { usePublicationDisplayStore } = require('@/lib/stores/publication-display-store');
+        beforeEach(() => {
+            usePublicationDisplayStore.setState({ language: 'ru', names: { NOS: 'НОС' } });
+        });
+        afterEach(() => {
+            usePublicationDisplayStore.setState({ language: null, names: {} });
+        });
+
+        it('"Fewer from" shows the display name and writes the original', async () => {
+            const r = openMenu(<Host />);
+            expect(r.getByText('articleMenu.fewerFrom:НОС')).toBeTruthy();
+            expect(r.getByText('articleMenu.openOn:НОС')).toBeTruthy();
+            fireEvent.press(r.getByTestId('menu-fewer-from-source'));
+            dismiss();
+            await flushAsync();
+            await flushAsync();
+            expect(mockSetPref).toHaveBeenCalledWith({ kind: 'publication', publicationName: 'NOS' }, 'deprioritised');
+            expect(mockShowUndoToast.mock.calls[0][0].title).toBe('articleMenu.fewerFromDone:НОС');
+        });
+    });
 });
 
 // The Feed card and the detail screen hand their own hosts the leaves only
@@ -1041,3 +1066,29 @@ it('no ••• sheet row, Back or Cancel reads out an icon glyph', async () =>
     fireEvent.press(r.getByTestId('menu-like'));
     expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
 });
+
+// ux2 B6 (owner): every icon and label in the ••• sheet is WHITE, the title
+// included, for uniformity; only a destructive row stays red.
+describe('the sheet is all white', () => {
+    const { StyleSheet } = jest.requireActual('react-native');
+    const WHITE = /^(#fff|#ffffff|white|rgb\(255, ?255, ?255\))$/i;
+    const iconColours = (r: any) =>
+        r.UNSAFE_root.findAll((n: any) => typeof n.type === 'string' && typeof n.props?.name === 'string' && n.props?.color)
+            .map((n: any) => [n.props.name, n.props.color]);
+
+    it('main menu: every icon, every label and the title are white', () => {
+        const r = openMenu(<Host rowActions={{ liked: false, saved: false, onLike: jest.fn(), onDislike: jest.fn(), onToggleSave: jest.fn(), onShare: jest.fn() }} />);
+        const icons = iconColours(r);
+        expect(icons.length).toBeGreaterThan(3);
+        for (const [name, colour] of icons) expect([name, colour]).toEqual([name, expect.stringMatching(WHITE)]);
+        expect(StyleSheet.flatten(r.getByTestId('title-text').props.style).color).toMatch(WHITE);
+    });
+
+    it('a destructive row stays red', () => {
+        const { ActionSheetRow } = require('../ArticleOverflowMenu');
+        const r = render(<ActionSheetRow testID="d" label="Never show" icon="block" destructive onPress={jest.fn()} />);
+        const [[, colour]] = iconColours(r);
+        expect(colour).toBe('#F87171');
+    });
+});
+

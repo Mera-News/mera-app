@@ -79,7 +79,9 @@ describe('one box per TURN, not per message', () => {
         live: [
           user('u1'),
           asst('a1', '', [tool('find_similar_facts', 'done')]),
-          asst('a2', 'here you go', [tool('saveExtractedFacts', 'done')]),
+          // A failed step keeps the settled box on screen (ux2 M2), so the
+          // turn structure stays observable.
+          asst('a2', 'here you go', [tool('saveExtractedFacts', 'error')]),
         ],
       }),
     );
@@ -99,9 +101,9 @@ describe('one box per TURN, not per message', () => {
       base({
         live: [
           user('u1'),
-          asst('a1', 'one', [tool('saveExtractedFacts', 'done')]),
+          asst('a1', 'one', [tool('saveExtractedFacts', 'error')]),
           user('u2'),
-          asst('a2', 'two', [tool('deleteUserFacts', 'done')]),
+          asst('a2', 'two', [tool('deleteUserFacts', 'error')]),
         ],
       }),
     );
@@ -164,8 +166,10 @@ describe('EXACTLY ONE LIVENESS SIGNAL, in the shape the runtime actually produce
     // fixture here would assert over an empty list and pass for the wrong
     // reason. A mutating turn keeps its box, which is what makes this check
     // about the pending row rather than about the box existing.
+    // A failed step keeps the settled box (ux2 M2), so this asserts on the
+    // rows of a box that exists rather than over an empty list.
     const settled = base({
-      live: [user('u1'), asst('a1', 'Noted.', [tool('saveExtractedFacts', 'done')])],
+      live: [user('u1'), asst('a1', 'Noted.', [tool('saveExtractedFacts', 'done'), tool('lookup_place', 'error')])],
       isStreaming: false,
       turnActive: false,
     });
@@ -293,18 +297,17 @@ describe('collapse, and what survives in scroll-back', () => {
       false,
     );
 
-    const done = [user('u1'), asst('a1', 'ok', [tool('saveExtractedFacts', 'done')])];
+    const done = [user('u1'), asst('a1', 'ok', [tool('saveExtractedFacts', 'error')])];
     expect(boxes(deriveThreadItems(base({ live: done, turnActive: false })))[0].collapsed).toBe(
       true,
     );
   });
 
-  it('keeps a settled box for a turn that changed data', () => {
+  it('drops a settled box even for a turn that changed data (ux2 M2: no empty Done row)', () => {
     const items = deriveThreadItems(
       base({ live: [user('u1'), asst('a1', 'ok', [tool('saveExtractedFacts', 'done')])] }),
     );
-    expect(boxes(items)).toHaveLength(1);
-    expect(boxes(items)[0].changedData).toBe(true);
+    expect(boxes(items)).toHaveLength(0);
   });
 
   it('SUPPRESSES a settled box for a pure-read turn', () => {

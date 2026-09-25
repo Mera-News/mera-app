@@ -6,9 +6,12 @@ import { getLocalizedLanguageName } from '@/lib/language-names';
 import { useTimeTick } from '@/lib/time-tick';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useTranslation } from 'react-i18next';
+import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 
 export interface ArticleMetaStrings {
-    /** Shown EXACTLY as stored (owner decision). '' when absent. */
+    /** The publication as the reader should SEE it: its display name in the
+     *  app language (lib/stores/publication-display-store), else the stored
+     *  name. Display only, never a key. '' when absent. */
     publication: string;
     /** The relative age, on the shared 60s clock. */
     age: string;
@@ -30,8 +33,9 @@ export function useArticleMetaStrings(
     // age is only as fresh as the render that produced it. Subscribing here
     // keeps every consumer (the row, the card's label) ticking together.
     const now = useTimeTick();
+    const publication = useDisplayPublication((publicationName ?? '').trim());
     return {
-        publication: (publicationName ?? '').trim(),
+        publication,
         age: formatTimeAgo(t, pubDate ?? '', { now, emptyLabel: t('feed.justNow'), absoluteAfterDays: 7 }),
         language: getLocalizedLanguageName(languageCode, appLanguage) ?? '',
     };

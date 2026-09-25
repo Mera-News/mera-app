@@ -161,6 +161,36 @@ describe('Skip and Undo', () => {
     expect(mockResolveGroup).toHaveBeenCalledWith('m1::0', '0:abcd1234', undefined, BASE);
   });
 
+  it('ux2 batch 26: the dismissed card is not one element, so Undo is reachable and focus has a target', () => {
+    const { AccessibilityInfo } = require('react-native');
+    const focus = jest.spyOn(AccessibilityInfo, 'setAccessibilityFocus').mockImplementation(() => {});
+    const { getByTestId, getByText } = render(<FactChoiceCard {...props} dismissed />);
+    expect(getByTestId('fact-choice-dismissed-0').props.accessible).not.toBe(true);
+    const undo = getByTestId('fact-choice-undo-0');
+    const accessibleAncestors: string[] = [];
+    for (let p: any = undo.parent; p; p = p.parent) {
+      if (typeof p.type === 'string' && p.props?.accessible === true) accessibleAncestors.push(String(p.props.testID ?? p.type));
+    }
+    expect(accessibleAncestors).toEqual([]);
+    // Focus lands on the settled title, an element, not on the card root.
+    expect(getByText('factChoice.dismissedTitle')).toBeTruthy();
+    // RN's jest setup already mocks this, so the spy shares earlier calls.
+    focus.mockClear();
+    fireEvent.press(undo);
+    expect(focus).toHaveBeenCalledTimes(1);
+    focus.mockRestore();
+  });
+
+  it('ux2 batch 27: Undo is a 44pt-tall touch frame sized by number, the pill inside it unchanged', () => {
+    const { StyleSheet } = require('react-native');
+    const { getByTestId } = render(<FactChoiceCard {...props} dismissed />);
+    const undo = getByTestId('fact-choice-undo-0');
+    // NativeWind rem is 14, and the pill's own padding measured 32pt tall.
+    expect(StyleSheet.flatten(undo.props.style).minHeight).toBe(44);
+    const pill = getByTestId('fact-choice-undo-pill-0');
+    expect(StyleSheet.flatten(pill.props.style)).toMatchObject({ paddingVertical: 6, borderRadius: 999 });
+  });
+
   it('a STALE dismissed card offers no Undo — its context is gone', () => {
     const { queryByTestId } = render(<FactChoiceCard {...props} dismissed stale />);
     expect(queryByTestId('fact-choice-undo-0')).toBeNull();

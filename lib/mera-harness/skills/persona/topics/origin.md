@@ -81,7 +81,6 @@ recognition, or voting from abroad, and stop when those run out.
 
 ## Worked example
 Fact: "Expat from the Philippines living in Dublin, Leinster, Ireland, Europe"
-Other facts: "Works as a theatre nurse"
 Existing topics: none
 
 Origin and residence in one fact. The first three topics are the rungs in order: origin, host,

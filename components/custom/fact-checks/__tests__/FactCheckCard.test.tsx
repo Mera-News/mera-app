@@ -53,10 +53,8 @@ jest.mock('@/components/ui/pressable', () => {
     const { Pressable } = require('react-native');
     return { Pressable };
 });
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+// Real icon-font glyphs, so a glyph under an accessible element is caught.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
@@ -351,4 +349,14 @@ describe('FactCheckCard', () => {
         const chipText = getByText(`Full Fact: ${sentence}`);
         expect(chipText.props.numberOfLines).toBe(1);
     });
+});
+
+// Captured (ux2 batch 28): the Fact checks tab exposed the delete glyph as its
+// own StaticText, once per card. It is drawn beside a childless labelled button.
+it('exposes no icon glyph, and the delete button is childless', () => {
+    const { exposedGlyphTexts } = require('@/lib/__test-helpers__/icon-glyph-a11y');
+    const r = render(<FactCheckCard item={stored()} onPress={jest.fn()} onDelete={jest.fn()} testIDPrefix="fc" />);
+    expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);
+    const b = r.getByTestId('fc-delete-row1');
+    expect(b.findAll((n: any) => n !== b && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
 });

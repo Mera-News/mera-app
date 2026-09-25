@@ -18,6 +18,8 @@
 //     scopes leave the device. No raw weights, fact weights, or location
 //     ids are included in the output.
 
+import { normalizeTopicText } from '../persona-management/persona-migration';
+
 export interface RetrievalTopicInput {
   topicId: string;
   text: string;
@@ -130,6 +132,18 @@ const LOCATION_ROLES_ALWAYS = new Set(['home', 'family', 'partner_family']);
  * Topics: only active topics with effectiveWeight (w_eff) > 0 are kept —
  * negatives, zero-weight, suppressed/retired topics never appear here.
  *
+ * Duplicate texts collapse BEFORE the `maxTopics` cap. One text can live on
+ * several facts ("EU AI Act enforcement" on five), and the server answers per
+ * TEXT, so each extra entry only took a slot and pushed a distinct topic past
+ * the cap. Merge rule, by normalised text (lowercase, trimmed, whitespace
+ * collapsed), deterministic: the representative is the member first in the
+ * sort (highest effectiveWeight, then text, then topicId), so its topicId,
+ * text and effectiveWeight (the max) are what is sent, which is also the id
+ * feed-sync's first-writer-wins `textToTopicId` already attributed results
+ * to; `limit` is the max across members. `strictMatch` is not a profile
+ * field: feed-sync derives it per normalised text over ALL active topics
+ * (loose wins), so a merged text carries the flag its members would have.
+ *
  * Headline scopes: one COUNTRY scope per distinct qualifying country code,
  * derived from locations with role home/family/partner_family (always) or
  * a non-expired role 'travel' (role 'interest' is excluded entirely). Capped
@@ -171,10 +185,26 @@ export function buildRetrievalProfile(input: BuildRetrievalProfileInput): Retrie
 
   kept.sort((a, b) => {
     if (b.effectiveWeight !== a.effectiveWeight) return b.effectiveWeight - a.effectiveWeight;
-    return a.text < b.text ? -1 : a.text > b.text ? 1 : 0;
+    if (a.text !== b.text) return a.text < b.text ? -1 : 1;
+    return a.topicId < b.topicId ? -1 : a.topicId > b.topicId ? 1 : 0;
   });
 
-  const topics = kept.slice(0, maxTopics);
+  // Collapse duplicate texts (see the merge rule above), then cap.
+  const byText = new Map<string, RetrievalProfileTopic>();
+  const distinct: RetrievalProfileTopic[] = [];
+  for (const t of kept) {
+    const key = normalizeTopicText(t.text);
+    const representative = byText.get(key);
+    if (representative) {
+      if (t.limit > representative.limit) representative.limit = t.limit;
+      continue;
+    }
+    const entry = { ...t };
+    byText.set(key, entry);
+    distinct.push(entry);
+  }
+
+  const topics = distinct.slice(0, maxTopics);
 
   // --- Headline scopes --------------------------------------------------
   // Track the best (max) weight seen per distinct, normalized country code.

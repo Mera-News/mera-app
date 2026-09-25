@@ -49,12 +49,27 @@ import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agree
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, rosterWarnings, TOPICGEN_ARM_MODELS } from '../lib/model-catalog';
 import { hasReasoningLeak, postCompletion, SpendLimitError } from '../lib/near-call';
-import { COHORTS, loadCohort, type CorpusFact } from '../lib/corpus';
+import { COHORTS, loadCohort, type Cohort, type CorpusFact, type CorpusPersona } from '../lib/corpus';
 // STEP A. The skill-guided topic prompt against the shipped one-shot prompt,
 // carried as an ARM VALUE so both sit in ONE interleaved run. Two runs would
 // be invalid on this repo's own evidence: a byte-identical control arm moved
 // its kept count by 7 between runs half an hour apart.
-import { resolveAgentArm, topicPromptFor } from '../../lib/mera-harness/core/arms';
+import {
+  agentArmIds,
+  resolveAgentArm,
+  topicFlowFor,
+  topicPromptFor,
+} from '../../lib/mera-harness/core/arms';
+import type { AgentModelResult } from '../../lib/mera-harness/core/types';
+// The skill core, from the harness's public entry, exactly as the app's
+// topic-gen handler imports it.
+import {
+  MAX_TOPICS_PER_FACT,
+  generateTopicsForFact,
+  namesFact,
+  normalizeTopicText,
+  topicSkillForAttribute,
+} from '@/lib/mera-harness';
 import { ensureNullControlArm } from '../../lib/mera-harness/eval/null-control';
 import { PERSONA_SKILLS } from '../../lib/mera-harness/skills/index.generated';
 import {
@@ -62,7 +77,14 @@ import {
   parseTopicsFromOutput,
   splitCount,
 } from '../../lib/news-harness/persona-management/topic-generation';
-import { buildTopicGenSystemPrompt } from '../../lib/news-harness/prompts/persona-prompts';
+import {
+  COMBO_PASS_MAX_TOPICS,
+  COMBO_PASS_TOPIC_SYSTEM_PROMPT,
+  buildComboPassUserMessage,
+  buildTopicGenSystemPrompt,
+} from '../../lib/news-harness/prompts/persona-prompts';
+import { planTopupTopicRows } from '../../lib/news-harness/persona-management/topic-topup';
+import { f6Words } from './score-topic-run';
 import { promptVariantIds, resolvePromptVariant } from '../../lib/news-harness/prompts/prompt-variants';
 import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-archive-v1';
 
@@ -71,6 +93,177 @@ import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-arc
 registerV1ControlArms();
 ensureNullControlArm();
 
+// ---- THE ISOLATED+COMBO FLOW (ux2 F6) ---------------------------------------
+//
+// What ships since ux2 F1/F3, measured against the 'current' arm's batch path.
+// Per persona: one isolated call per fact through the skill core, which sees
+// THAT FACT ONLY (no other facts, no location line, exclusions = this fact's
+// own topics plus the declined list); then one combination call per fact over
+// its supporting facts, newest first, deduped against everything already on
+// the device. Both halves are exported so a test can capture the outgoing
+// request: the runner holds the whole persona while it builds the isolated
+// call, so a leak is one wrong argument away and must be caught mechanically.
+
+export type FlowStage = 'isolated' | 'combo';
+
+export interface FlowFact {
+  id: string;
+  statement: string;
+  questionnaireAttribute: string;
+  createdAtMs: number;
+}
+
+export interface FlowModelRequest {
+  systemPrompt: string;
+  userMessage: string;
+  temperature: number;
+  maxTokens: number;
+  enableThinking: false;
+}
+
+export type FlowCaller = (
+  req: FlowModelRequest,
+  meta: { stage: FlowStage; factIndex: number },
+) => Promise<AgentModelResult>;
+
+export interface FlowCallRecord {
+  stage: FlowStage;
+  factIndex: number;
+  factId: string;
+  skillId: string | null;
+  request: FlowModelRequest;
+  result: AgentModelResult;
+  /** What the flow KEEPS: after the isolated call's veto, filter and place
+   *  term, or after the combo stage's global dedupe. */
+  topics: string[];
+  /** A ceiling in both stages, never an exact count. */
+  requested: number;
+  /** Model calls this record stands for. The core retries an empty isolated
+   *  answer (up to three calls), and `result.usage` is their SUM, so cost is
+   *  billed in full while a fact stays one row. */
+  attempts: number;
+  /** Combo only: the parsed answer BEFORE the names-its-fact filter and the
+   *  dedupe, so the prompt's own share can still be measured. */
+  preFilterTopics?: string[];
+}
+
+/** The combo handler's own numbers (lib/inference/handlers/topic-combo-handler.ts).
+ *  Restated, not imported: that module reaches the database at load. */
+export const COMBO_MAX_SUPPORTING_FACTS = 25;
+const COMBO_TEMPERATURE = 0.3;
+const COMBO_MAX_TOKENS = 400;
+
+function sumUsage(results: AgentModelResult[]): AgentModelResult['usage'] {
+  const used = results.map((r) => r.usage).filter((u): u is NonNullable<AgentModelResult['usage']> => u !== null);
+  if (used.length === 0) return null;
+  return used.reduce((a, u) => ({
+    promptTokens: a.promptTokens + u.promptTokens,
+    completionTokens: a.completionTokens + u.completionTokens,
+    cachedTokens: a.cachedTokens + u.cachedTokens,
+    reasoningTokens: a.reasoningTokens + u.reasoningTokens,
+  }));
+}
+
+export async function runIsolatedStep(p: {
+  facts: FlowFact[];
+  factIndex: number;
+  existingTopicsByFact: Map<string, string[]>;
+  declinedTopics: string[];
+  call: FlowCaller;
+}): Promise<FlowCallRecord> {
+  const fact = p.facts[p.factIndex];
+  const skillId = topicSkillForAttribute(fact.questionnaireAttribute);
+  const requests: FlowModelRequest[] = [];
+  const results: AgentModelResult[] = [];
+  const outcome = await generateTopicsForFact({
+    // ONLY this fact. No otherFacts, no location, by the core's own contract.
+    fact: { statement: fact.statement, questionnaireAttribute: fact.questionnaireAttribute },
+    skillId,
+    existingTopics: p.existingTopicsByFact.get(fact.id) ?? [],
+    declinedTopics: p.declinedTopics,
+    deps: {
+      callModel: async (req) => {
+        const request: FlowModelRequest = {
+          systemPrompt: req.systemPrompt,
+          userMessage: req.messages.map((m) => m.content).join('\n'),
+          temperature: req.temperature,
+          maxTokens: req.maxTokens,
+          enableThinking: false,
+        };
+        requests.push(request);
+        const r = await p.call(request, { stage: 'isolated', factIndex: p.factIndex });
+        results.push(r);
+        return r;
+      },
+    },
+  });
+  return {
+    stage: 'isolated',
+    factIndex: p.factIndex,
+    factId: fact.id,
+    skillId,
+    // The FIRST request is the fact's prompt; retries only append a nudge.
+    request: requests[0],
+    result: { ...outcome.result, usage: sumUsage(results), latencyMs: results.reduce((a, r) => a + r.latencyMs, 0) },
+    topics: outcome.result.error ? [] : outcome.topics,
+    requested: MAX_TOPICS_PER_FACT,
+    attempts: results.length,
+  };
+}
+
+/**
+ * One combination call for one fact. `seen` holds the normalised text of every
+ * topic on the device plus the declined list; each accepted text joins it, so
+ * two facts of one pass cannot mint near twins. Null when there is nothing to
+ * combine with, as the handler settles that case without a call.
+ */
+export async function runComboStep(p: {
+  facts: FlowFact[];
+  factIndex: number;
+  seen: Set<string>;
+  call: FlowCaller;
+}): Promise<FlowCallRecord | null> {
+  const fact = p.facts[p.factIndex];
+  const supporting = p.facts
+    .filter((_, i) => i !== p.factIndex)
+    .sort((a, b) => b.createdAtMs - a.createdAtMs)
+    .slice(0, COMBO_MAX_SUPPORTING_FACTS)
+    .map((f) => f.statement);
+  if (supporting.length === 0) return null;
+
+  const request: FlowModelRequest = {
+    systemPrompt: COMBO_PASS_TOPIC_SYSTEM_PROMPT,
+    userMessage: buildComboPassUserMessage(fact.statement, supporting, COMBO_PASS_MAX_TOPICS),
+    temperature: COMBO_TEMPERATURE,
+    maxTokens: COMBO_MAX_TOKENS,
+    enableThinking: false,
+  };
+  const result = await p.call(request, { stage: 'combo', factIndex: p.factIndex });
+  const preFilterTopics = result.error ? [] : parseTopicsFromOutput(result.content, fact.statement);
+  // As the app's combo handler does: a combination topic must name its own
+  // fact, and one that does not is dropped before the dedupe.
+  const topics = planTopupTopicRows(
+    p.seen,
+    preFilterTopics.filter((t) => namesFact(t, fact.statement)),
+    normalizeTopicText,
+  )
+    .map((row) => row.text)
+    .slice(0, COMBO_PASS_MAX_TOPICS);
+  for (const t of topics) p.seen.add(normalizeTopicText(t));
+  return {
+    stage: 'combo',
+    factIndex: p.factIndex,
+    factId: fact.id,
+    skillId: null,
+    request,
+    result,
+    topics,
+    requested: COMBO_PASS_MAX_TOPICS,
+    attempts: 1,
+    preFilterTopics,
+  };
+}
+
 interface Args {
   label: string;
   cohort: string;
@@ -78,6 +271,9 @@ interface Args {
   totals: number[];
   accept: number;
   repeat: number;
+  /** The first repeat INDEX. Re-running one repeat of an earlier run keeps its
+   *  index, so the re-run rows can stand in for that repeat's rows. */
+  repeatStart: number;
   variants: string[];
   dryRun: boolean;
   duplicateEvery: number;
@@ -91,6 +287,11 @@ interface Args {
   /** STEP A: drive the kind-bearing fact corpus instead of a cohort. Opt-in,
    *  so the cohort path this runner already had is untouched. */
   factsFile: string | null;
+  /** A persona fixture file loaded directly, bypassing the COHORTS list: a
+   *  persona with no chat script (the F6 owner persona) has no cohort. */
+  personaFile: string | null;
+  /** Where the run directory is created. Default .local-test-data/runs. */
+  runsRoot: string | null;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -101,12 +302,15 @@ function parseArgs(argv: string[]): Args {
     totals: [10],
     accept: 6,
     repeat: 3,
+    repeatStart: 0,
     variants: ['baseline'],
     dryRun: false,
     duplicateEvery: 0,
     maxTokens: {},
     noCombo: false,
     factsFile: null,
+    personaFile: null,
+    runsRoot: null,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -116,12 +320,15 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--totals') args.totals = (argv[++i] ?? '').split(',').map(Number).filter((n) => n > 0);
     else if (a === '--accept') args.accept = Number(argv[++i]);
     else if (a === '--repeat') args.repeat = Number(argv[++i]);
+    else if (a === '--repeat-start') args.repeatStart = Number(argv[++i]);
     else if (a === '--variant') {
       args.variants = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
     }
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--no-combo') args.noCombo = true;
     else if (a === '--facts') args.factsFile = argv[++i] ?? null;
+    else if (a === '--persona') args.personaFile = argv[++i] ?? null;
+    else if (a === '--runs-root') args.runsRoot = argv[++i] ?? null;
     else if (a === '--duplicate-every') args.duplicateEvery = Number(argv[++i]);
     else if (a === '--max-tokens') {
       for (const pair of (argv[++i] ?? '').split(',').filter(Boolean)) {
@@ -137,7 +344,7 @@ function parseArgs(argv: string[]): Args {
       }
     }
   }
-  if (!(COHORTS as readonly string[]).includes(args.cohort)) {
+  if (!args.personaFile && !(COHORTS as readonly string[]).includes(args.cohort)) {
     throw new Error(`harness-local: unknown cohort '${args.cohort}'. Known: ${COHORTS.join(', ')}.`);
   }
   if (args.totals.length === 0) throw new Error('harness-local: --totals resolved to nothing.');
@@ -175,6 +382,54 @@ function dryRunTopics(factIndex: number, count: number, kind: string, repeat: nu
   return JSON.stringify(topics);
 }
 
+function isAgentArm(id: string): boolean {
+  return agentArmIds().includes(id);
+}
+
+/**
+ * Which topic flow a variant runs. Step A (--facts) keeps its own path: its
+ * arms carry no topicFlow, so topicFlowFor would send the one-shot control
+ * down the skill core and silently measure the wrong prompt. A news-harness
+ * prompt variant that is not an agent arm is the batch path it always was.
+ */
+function flowFor(variantId: string, stepA: boolean): 'step-a' | 'current' | 'isolated+combo' {
+  if (stepA) return 'step-a';
+  if (!isAgentArm(variantId)) return 'current';
+  return topicFlowFor(resolveAgentArm(variantId));
+}
+
+/** Words for the dry run's stand-in topics: distinct, so the stand-ins do not
+ *  near-duplicate each other and the S7 line reads the planted cases only. */
+const DRY_WORDS = ['alpha', 'bravo', 'charlie', 'delta', 'echo', 'foxtrot'];
+
+/**
+ * The dry run's stand-in output for the isolated+combo flow, with TWO planted
+ * defects on repeat 0 only, so the scorer's detectors are seen firing as well
+ * as staying quiet: fact 0's isolated set carries the first content word of
+ * fact 1 (a cross-fact leak), and fact 0's combo set carries a topic naming
+ * nothing of fact 0 (a combo that lost its subject).
+ */
+export function dryRunFlowTopics(
+  facts: FlowFact[],
+  factIndex: number,
+  stage: FlowStage,
+  repeat: number,
+): string {
+  const wordOf = (i: number): string =>
+    (facts[i]?.statement ?? '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 3)[1] ??
+    `fact${i}`;
+  if (stage === 'isolated') {
+    const topics = DRY_WORDS.map((w) => `${stage} ${w} ${factIndex}`);
+    if (repeat === 0 && factIndex === 0 && facts.length > 1) topics[0] = `planted ${wordOf(1)} leak`;
+    return JSON.stringify(topics);
+  }
+  // A word the scorer counts as content, so only the planted miss misses.
+  const own = [...f6Words(facts[factIndex]?.statement ?? '')][0] ?? 'fact';
+  const topics = [`${own} ${stage} ${DRY_WORDS[0]} ${factIndex}`, `${own} ${stage} ${DRY_WORDS[1]} ${factIndex}`];
+  if (repeat === 0 && factIndex === 0) topics[1] = 'planted subjectless topic';
+  return JSON.stringify(topics);
+}
+
 async function main(): Promise<number> {
   const argv = process.argv.slice(2);
   applyTargetOverride(argv);
@@ -191,9 +446,10 @@ async function main(): Promise<number> {
   // id a startup error in both dry and live modes.
   for (const v of args.variants) {
     try {
-      // Step A selects AGENT arms (they carry topicPrompt); the cohort path
-      // keeps the news-harness prompt variants it always used.
-      if (args.factsFile) resolveAgentArm(v);
+      // Step A selects AGENT arms (they carry topicPrompt). The cohort path
+      // takes an agent arm first (its topicFlow picks the flow, ux2 F6) and
+      // falls back to the news-harness prompt variants it always used.
+      if (args.factsFile || isAgentArm(v)) resolveAgentArm(v);
       else resolvePromptVariant(v);
     } catch (err) {
       throw new Error(
@@ -203,7 +459,14 @@ async function main(): Promise<number> {
     }
   }
 
-  const cohort = loadCohort(args.cohort);
+  const cohort: Cohort = args.personaFile
+    ? (() => {
+        const persona = JSON.parse(readFileSync(resolve(args.personaFile), 'utf8')) as CorpusPersona;
+        return { name: persona.cohort, persona, turns: [] };
+      })()
+    : loadCohort(args.cohort);
+  // Rows carry the cohort name; a persona file names its own.
+  args.cohort = cohort.name;
   // STEP A drives the kind-bearing corpus: the cohort personas carry no
   // `kind`, and without one there is no guideline to select, so the
   // skill-guided arm would have nothing to be skill-guided BY.
@@ -261,7 +524,7 @@ async function main(): Promise<number> {
   };
   const existingTopics = stepAFacts ? [] : cohort.persona.topics.map((t) => t.text);
 
-  const run = createRunWriter({ label: args.label });
+  const run = createRunWriter({ label: args.label, runsRoot: args.runsRoot ? resolve(args.runsRoot) : undefined });
   const rows = createJsonlWriter({ dir: run.dir });
   const runId = run.dir.split('/').pop() ?? args.label;
 
@@ -308,8 +571,160 @@ async function main(): Promise<number> {
   /** topic (lowercased) -> the facts it was generated under, per arm+total+rep. */
   const crossFact = new Map<string, Map<string, Set<string>>>();
 
+  // ---- the isolated+combo flow's inputs (ux2 F6) ----------------------------
+  const flowFacts: FlowFact[] = facts.map((f) => ({
+    id: f.id,
+    statement: f.statement,
+    questionnaireAttribute: f.questionnaireAttribute,
+    createdAtMs: f.createdAtMs,
+  }));
+  /** THIS fact's topics, which are the isolated call's only exclusions. */
+  const existingTopicsByFact = new Map<string, string[]>();
+  for (const t of stepAFacts ? [] : cohort.persona.topics) {
+    if (!t.factId || t.status !== 'active') continue;
+    existingTopicsByFact.set(t.factId, [...(existingTopicsByFact.get(t.factId) ?? []), t.text]);
+  }
+  const flowVariants = args.variants.filter((v) => flowFor(v, Boolean(args.factsFile)) === 'isolated+combo');
+
+  const callerFor = (model: string, rep: number): FlowCaller => async (req, meta) => {
+    planned.push({
+      model,
+      systemChars: req.systemPrompt.length,
+      promptChars: req.userMessage.length,
+      maxOutputTokens: args.maxTokens[model] ?? req.maxTokens,
+    });
+    if (args.dryRun) {
+      return {
+        content: dryRunFlowTopics(flowFacts, meta.factIndex, meta.stage, rep),
+        toolCalls: [], finishReason: 'stop', truncated: false,
+        usage: { promptTokens: 700, completionTokens: 60, cachedTokens: 0, reasoningTokens: 0 },
+        modelSent: model, latencyMs: 12 + meta.factIndex, error: null,
+      };
+    }
+    const r = await postCompletion({
+      baseUrl: env.nearAiBaseUrl,
+      apiKey: env.nearAiApiKey,
+      model,
+      messages: [
+        { role: 'system', content: req.systemPrompt },
+        { role: 'user', content: req.userMessage },
+      ],
+      temperature: req.temperature,
+      maxTokens: args.maxTokens[model] ?? req.maxTokens,
+      enableThinking: false,
+    });
+    return {
+      content: r.content,
+      toolCalls: r.toolCalls.map((t) => ({ name: t.name, argumentsRaw: t.argumentsRaw })),
+      finishReason: r.finishReason,
+      truncated: r.truncated,
+      usage: r.usage,
+      modelSent: r.modelSent,
+      latencyMs: r.latencyMs,
+      error: r.error,
+    };
+  };
+
+  const writeFlowRow = (rec: FlowCallRecord, model: string, variantId: string, total: number, rep: number): void => {
+    const bucketKey = `${model}@${variantId}|${total}|${rep}`;
+    const bucket = crossFact.get(bucketKey) ?? new Map<string, Set<string>>();
+    for (const t of rec.topics) {
+      const key = t.toLowerCase().trim();
+      bucket.set(key, (bucket.get(key) ?? new Set<string>()).add(rec.factId));
+    }
+    crossFact.set(bucketKey, bucket);
+
+    const info = catalog[model];
+    const result = rec.result;
+    const row: RunRow & {
+      stage: FlowStage; skillId: string | null; attempts: number; preFilterTopics?: string[];
+    } = {
+      rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
+      cohort: args.cohort, turnIndex: rec.factIndex,
+      arm: `${model}@${variantId}@${total}(isolated+combo)`,
+      // The isolated call is this flow's first pass, the like-for-like of the
+      // batch path's fact-only half; `stage` is what the scorer reads.
+      callType: rec.stage === 'isolated' ? 'topicgen-factOnly' : 'topicgen-combo',
+      stage: rec.stage,
+      skillId: rec.skillId,
+      attempts: rec.attempts,
+      ...(rec.preFilterTopics ? { preFilterTopics: rec.preFilterTopics } : {}),
+      interleaveGroup: `${total}:${rec.factIndex}:${rec.stage}`, lane: 'near', surface: 'TOPICGEN',
+      variant: variantId,
+      promptHash: hashMessages([
+        { role: 'system', content: rec.request.systemPrompt },
+        { role: 'user', content: rec.request.userMessage },
+      ]),
+      // Both prompts are fixture-determined: the isolated call's exclusions are
+      // this fact's fixture topics, and the combo prompt is statements only.
+      promptDeterministic: true,
+      fenceNonce: null,
+      modelRequested: model, modelSent: result.modelSent,
+      fallbackFrom: null, hedged: false,
+      input: {
+        systemPrompt: rec.request.systemPrompt,
+        messages: [{ role: 'user', content: rec.request.userMessage }],
+        toolSchemaNames: [],
+      },
+      personaStateIn: {
+        factCount: facts.length,
+        topicCount: rec.stage === 'isolated' ? (existingTopicsByFact.get(rec.factId) ?? []).length : existingTopics.length,
+        factsInPrompt: rec.stage === 'isolated' ? 1 : Math.min(facts.length, COMBO_MAX_SUPPORTING_FACTS + 1),
+        turnsInPrompt: 1,
+      },
+      rawOutput: result.content,
+      toolCalls: [],
+      parsedSchema: rec.topics,
+      items: [{ id: rec.factId }],
+      requestedCount: rec.requested,
+      returnedCount: result.error ? null : rec.topics.length,
+      personaStateDelta: null,
+      finishReason: result.finishReason, truncated: result.truncated,
+      reasoningLeak: hasReasoningLeak(result.content),
+      usage: result.usage,
+      cost: result.usage && info
+        ? {
+            inputTokens: result.usage.promptTokens,
+            cachedInputTokens: result.usage.cachedTokens,
+            outputTokens: result.usage.completionTokens,
+            usd: costOf(info, result.usage),
+          }
+        : null,
+      latencyMs: result.latencyMs, ttVisibleMs: null, error: result.error,
+    };
+    writeRow(row);
+  };
+
+  // THE PLAN, written before any call, so a run a spend limit cut short can be
+  // told apart from a complete one: the scorer compares rows against this.
+  if (!args.factsFile) {
+    const perCell = args.repeat * args.totals.length * args.arms.length;
+    run.writeJson('f6-plan', {
+      cohort: args.cohort,
+      facts: flowFacts.map((f) => ({ ...f, skillId: topicSkillForAttribute(f.questionnaireAttribute) })),
+      variants: args.variants.map((v) => {
+        const flow = flowFor(v, false);
+        const multi = facts.length > 1 && !args.noCombo;
+        return {
+          variant: v,
+          flow,
+          expectedRows:
+            flow === 'isolated+combo'
+              ? { isolated: facts.length * perCell, combo: facts.length > 1 ? facts.length * perCell : 0 }
+              : {
+                  factOnly: facts.length * perCell,
+                  combo: multi
+                    ? facts.length * args.repeat * args.arms.length *
+                      args.totals.filter((t) => splitCount(t, true).combo > 0).length
+                    : 0,
+                },
+        };
+      }),
+    });
+  }
+
   for (const total of args.totals) {
-    for (let rep = 0; rep < args.repeat; rep++) {
+    for (let rep = args.repeatStart; rep < args.repeatStart + args.repeat; rep++) {
       // Each arm walks the SAME sequential accept, so their exclude lists grow
       // the same way and the comparison stays fair.
       // One exclude list per ARM, and an arm is now (model, variant): two
@@ -317,6 +732,8 @@ async function main(): Promise<number> {
       // told not to repeat the other's output.
       const armIds = args.arms.flatMap((m) => args.variants.map((v) => `${m}@${v}`));
       const acquired = new Map<string, string[]>(armIds.map((a) => [a, [...existingTopics]]));
+      /** Every isolated topic this repeat produced, per isolated-flow arm. */
+      const isolatedByArm = new Map<string, string[]>();
 
       for (let fi = 0; fi < facts.length; fi++) {
         const fact = facts[fi];
@@ -335,6 +752,21 @@ async function main(): Promise<number> {
         // comparison made across separate runs.
         for (const variantId of args.variants) {
         for (const model of args.arms) {
+          if (flowFor(variantId, Boolean(args.factsFile)) === 'isolated+combo') {
+            const rec = await runIsolatedStep({
+              facts: flowFacts,
+              factIndex: fi,
+              existingTopicsByFact,
+              declinedTopics: [],
+              call: callerFor(model, rep),
+            });
+            isolatedByArm.set(`${model}@${variantId}`, [
+              ...(isolatedByArm.get(`${model}@${variantId}`) ?? []),
+              ...rec.topics,
+            ]);
+            writeFlowRow(rec, model, variantId, total, rep);
+            continue;
+          }
           const armId = `${model}@${variantId}`;
           const excludeTopics = acquired.get(armId) ?? [];
           // The production builder, so gear and prompts cannot drift from it.
@@ -364,8 +796,10 @@ async function main(): Promise<number> {
             useSkill
               ? { factOnly: skillBody, combo: skillBody }
               : {
-                  factOnly: buildTopicGenSystemPrompt('factOnly', args.factsFile ? 'baseline' : variantId),
-                  combo: buildTopicGenSystemPrompt('combo', args.factsFile ? 'baseline' : variantId),
+                  // An agent arm (topics-current) runs the SHIPPED prompts; its
+                  // id is not a prompt variant and would throw here.
+                  factOnly: buildTopicGenSystemPrompt('factOnly', args.factsFile || isAgentArm(variantId) ? 'baseline' : variantId),
+                  combo: buildTopicGenSystemPrompt('combo', args.factsFile || isAgentArm(variantId) ? 'baseline' : variantId),
                 },
           );
 
@@ -484,6 +918,26 @@ async function main(): Promise<number> {
         }
         }
       }
+
+      // THE COMBINATION PASS, once every isolated call of this repeat is in,
+      // as the app drains its topic_gen jobs before any topic_combo job. One
+      // call per fact, arms interleaved per fact. `seen` is everything on the
+      // device for that arm: the persona's topics plus this repeat's isolated
+      // topics (the fixtures carry no declined list).
+      const seenByArm = new Map<string, Set<string>>();
+      for (let fi = 0; fi < facts.length; fi++) {
+        for (const variantId of flowVariants) {
+          for (const model of args.arms) {
+            const armKey = `${model}@${variantId}`;
+            const seen =
+              seenByArm.get(armKey) ??
+              new Set([...existingTopics, ...(isolatedByArm.get(armKey) ?? [])].map(normalizeTopicText));
+            seenByArm.set(armKey, seen);
+            const rec = await runComboStep({ facts: flowFacts, factIndex: fi, seen, call: callerFor(model, rep) });
+            if (rec) writeFlowRow(rec, model, variantId, total, rep);
+          }
+        }
+      }
     }
   }
 
@@ -504,10 +958,16 @@ async function main(): Promise<number> {
   for (const row of readJsonl(rows.path)) {
     if (row.dupOf !== null || row.error !== null) continue;
     if (row.returnedCount !== null && row.requestedCount !== null) {
-      if (row.callType === 'topicgen-factOnly' && row.returnedCount !== row.requestedCount) {
+      // The isolated+combo flow asks for a CEILING in both stages (`stage`
+      // rows), so only an over-count is a violation there.
+      const stage = (row as RunRow & { stage?: FlowStage }).stage;
+      if (stage && row.returnedCount > row.requestedCount) {
+        overCount.push(`  ${row.arm} ${stage} fact ${row.turnIndex} rep ${row.repeat}: ceiling ${row.requestedCount}, got ${row.returnedCount} OVER`);
+      }
+      if (!stage && row.callType === 'topicgen-factOnly' && row.returnedCount !== row.requestedCount) {
         overCount.push(`  ${row.arm} ${row.callType} fact ${row.turnIndex} rep ${row.repeat}: asked ${row.requestedCount}, got ${row.returnedCount}`);
       }
-      if (row.callType === 'topicgen-combo' && row.returnedCount > row.requestedCount) {
+      if (!stage && row.callType === 'topicgen-combo' && row.returnedCount > row.requestedCount) {
         overCount.push(`  ${row.arm} combo fact ${row.turnIndex} rep ${row.repeat}: ceiling ${row.requestedCount}, got ${row.returnedCount} OVER`);
       }
       if (row.returnedCount === 0) {
@@ -520,8 +980,13 @@ async function main(): Promise<number> {
   for (const [bucketKey, bucket] of crossFact) {
     const collisions = [...bucket.entries()].filter(([, owners]) => owners.size > 1);
     if (collisions.length > 0) {
+      // An isolated-flow arm has no persona-wide exclusion by design (ux2 F1),
+      // so a collision there is EXPECTED, not the hard fail it is on the
+      // batch path. Labelled so nobody reads it as a regression.
+      const isolatedFlow = flowVariants.some((v) => bucketKey.split('|')[0].endsWith(`@${v}`));
       dupLines.push(
-        `  ${bucketKey}: ${collisions.length} topic(s) generated under more than one fact in the same accept`,
+        `  ${bucketKey}: ${collisions.length} topic(s) generated under more than one fact in the same accept` +
+          (isolatedFlow ? '  (isolated flow: expected, no persona-wide exclusion; the combo stage dedupes)' : ''),
       );
       for (const [topic, owners] of collisions.slice(0, 5)) {
         dupLines.push(`      "${topic}" under ${[...owners].join(', ')}`);
@@ -549,7 +1014,7 @@ async function main(): Promise<number> {
   return report.integrityFailures.some((fl) => fl.startsWith('RUNNER BUG')) ? 1 : 0;
 }
 
-main().then(
+if (/run-topicgen-corpus\.ts$/.test(process.argv[1] ?? '')) main().then(
   (code) => process.exit(code),
   (err) => {
     // A spend limit ends the run on the FIRST refusal. Recording it as data

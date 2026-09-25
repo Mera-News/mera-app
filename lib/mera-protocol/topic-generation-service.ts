@@ -10,16 +10,8 @@
 // mockable) prompt constants at the seam so behaviour is unchanged.
 
 import logger from '../logger';
-import {
-  cloudBatchComplete,
-  HEDGE_DELAY_MS,
-  type BatchCompletionResult,
-} from '../llm/cloudComplete';
-import type { BatchCall } from '../llm/types';
 import { completeLocal } from '../llm/completeLocal';
 import {
-  CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-  CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
   asUntrusted,
@@ -28,7 +20,6 @@ import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
   buildBaseUserPrompt,
   splitCount,
-  buildCloudBatchCallsForFact as harnessBuildCloudBatchCallsForFact,
   mergeRealOutputsForFact as harnessMergeRealOutputsForFact,
   parseTopicsFromOutput as harnessParseTopicsFromOutput,
   type RealTopicGenInputs,
@@ -45,7 +36,6 @@ export type { RealTopicGenInputs };
 // while `DEFAULT_HARNESS_CONFIG.topicGen` (the batch path) minted 10 and
 // `topicPlan.generateMoreTopicsWarning` promised the user 10. Reading the config
 // makes a third source of truth impossible.
-const DEFAULT_TOTAL_CLOUD = DEFAULT_HARNESS_CONFIG.topicGen.totalCloud;
 const DEFAULT_TOTAL_LOCAL = DEFAULT_HARNESS_CONFIG.topicGen.totalLocal;
 
 /**
@@ -69,12 +59,6 @@ const DEFAULT_TOTAL_LOCAL = DEFAULT_HARNESS_CONFIG.topicGen.totalLocal;
  */
 const LOCAL_TOPIC_GEN_MAX_TOKENS = 1024;
 
-/** CLOUD topic-generation output budget. Sourced from the harness config so this
- *  (duplicate) generation path can never drift from the harness builder's value
- *  — both run with thinking OFF, so ~55 answer tokens are the whole cost.
- *  See TopicGenConfig.cloudMaxTokens (and do NOT reach for
- *  cloudThinkingMaxTokens, which now belongs to the top-up alone). */
-const cloudMaxTokens = DEFAULT_HARNESS_CONFIG.topicGen.cloudMaxTokens;
 
 /**
  * Merge the raw factOnly + combo outputs for a single fact into a deduped
@@ -96,21 +80,6 @@ export function mergeRealOutputsForFact(
 
 export function parseTopicsFromOutput(output: string, factStatement: string): string[] {
   return harnessParseTopicsFromOutput(output, factStatement, appHarnessLogger);
-}
-
-/**
- * Build the up-to-2 real BatchCall entries for one fact: factOnly (always) +
- * combo (when other facts exist). Wrapper over the harness builder that injects
- * the cloud topic-gen system prompts.
- */
-export function buildCloudBatchCallsForFact(
-  inputs: Omit<RealTopicGenInputs, 'useCloud'>,
-  idPrefix: string,
-): BatchCall[] {
-  return harnessBuildCloudBatchCallsForFact(inputs, idPrefix, {
-    factOnly: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
-    combo: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-  });
 }
 
 /**
@@ -136,95 +105,53 @@ export async function generateTopicsFromFact(
 }
 
 /**
- * End-to-end real topic generation for a SINGLE fact. Used by the single-
- * fact handler (topic-gen-handler). The multi-fact batch path in
- * tool-handlers uses the lower-level builders directly to share batches.
+ * Topic generation for a SINGLE fact on the ON-DEVICE engine, used by the
+ * topic_gen handler's local branch.
  *
- * Cloud → two parallel batch calls (factOnly + combo). Local → sequential.
+ * LOCAL ONLY (ux2 F5): the cloud branch is retired. Cloud topics are one
+ * isolated call through the skill core (topic-gen-handler), and combination
+ * topics come from the deferred pass. `useCloud` is ignored; the handler never
+ * sends it here.
  */
 export async function generateTopicsForFact(
   inputs: RealTopicGenInputs,
 ): Promise<string[]> {
-  const total =
-    inputs.totalCount ?? (inputs.useCloud ? DEFAULT_TOTAL_CLOUD : DEFAULT_TOTAL_LOCAL);
+  const total = inputs.totalCount ?? DEFAULT_TOTAL_LOCAL;
   const hasOthers = inputs.otherFacts.length > 0;
   const { factOnly: factOnlyCount, combo: comboCount } = splitCount(total, hasOthers);
 
   let factOnlyOutput: string | null = null;
   let comboOutput: string | null = null;
 
-  try {
-    if (inputs.useCloud) {
-      const calls: BatchCall[] = [];
-      if (factOnlyCount > 0) {
-        calls.push({
-          id: 'factOnly',
-          system: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
-          prompt: `${buildBaseUserPrompt(inputs, false)}\nGenerate ${factOnlyCount} topics.`,
-          temperature: 0.3,
-          maxTokens: cloudMaxTokens,
-        });
-      }
-      if (comboCount > 0 && hasOthers) {
-        calls.push({
-          id: 'combo',
-          system: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-          prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
-          temperature: 0.3,
-          maxTokens: cloudMaxTokens,
-        });
-      }
-      if (calls.length > 0) {
-        // Hedged: topic generation blocks the user-visible onboarding/persona
-        // flow, so a cold primary costs the user directly.
-        const results = (await cloudBatchComplete(calls, undefined, {
-          hedgeAfterMs: HEDGE_DELAY_MS,
-        })) as BatchCompletionResult[];
-        for (const r of results) {
-          if (r.error) {
-            logger.warn('[topic-gen] cloud half failed', { half: r.id, error: r.error });
-            continue;
-          }
-          if (r.id === 'factOnly') factOnlyOutput = r.output;
-          else if (r.id === 'combo') comboOutput = r.output;
-        }
-      }
-    } else {
-      if (factOnlyCount > 0) {
-        try {
-          factOnlyOutput = await completeLocal({
-            systemPrompt: LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
-            prompt: `${buildBaseUserPrompt(inputs, false)}\nGenerate ${factOnlyCount} topics.`,
-            maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, factOnlyCount * 30),
-            temperature: 0.3,
-            responseFormat: 'json',
-          });
-        } catch (err) {
-          logger.warn('[topic-gen] local factOnly failed', {
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
-      }
-      if (comboCount > 0 && hasOthers) {
-        try {
-          comboOutput = await completeLocal({
-            systemPrompt: LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-            prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
-            maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, comboCount * 30),
-            temperature: 0.3,
-            responseFormat: 'json',
-          });
-        } catch (err) {
-          logger.warn('[topic-gen] local combo failed', {
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
-      }
+  if (factOnlyCount > 0) {
+    try {
+      factOnlyOutput = await completeLocal({
+        systemPrompt: LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
+        prompt: `${buildBaseUserPrompt(inputs, false)}\nGenerate ${factOnlyCount} topics.`,
+        maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, factOnlyCount * 30),
+        temperature: 0.3,
+        responseFormat: 'json',
+      });
+    } catch (err) {
+      logger.warn('[topic-gen] local factOnly failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
-  } catch (err) {
-    logger.warn('[topic-gen] real-stage failed', {
-      error: err instanceof Error ? err.message : String(err),
-    });
+  }
+  if (comboCount > 0 && hasOthers) {
+    try {
+      comboOutput = await completeLocal({
+        systemPrompt: LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
+        prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
+        maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, comboCount * 30),
+        temperature: 0.3,
+        responseFormat: 'json',
+      });
+    } catch (err) {
+      logger.warn('[topic-gen] local combo failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   return mergeRealOutputsForFact(factOnlyOutput, comboOutput, inputs.factStatement);

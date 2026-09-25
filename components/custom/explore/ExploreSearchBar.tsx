@@ -1,9 +1,66 @@
 import { Box } from '@/components/ui/box';
-import { Input, InputField, InputSlot } from '@/components/ui/input';
+import { Input, InputField } from '@/components/ui/input';
 import { Pressable } from '@/components/ui/pressable';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+
+// Icons are drawn in plain hidden Views over the Input from its parent, never
+// inside it: in an InputSlot (a Pressable) a glyph surfaced as its own
+// StaticText, and even hidden inside the Input root it was still composed into
+// the containers' labels (both captured). The close tap target is a
+// childless 44pt button laid over the bar from OUTSIDE the Input, whose
+// overflow-hidden 35pt box would clip it; the bar's own box bleeds to hold it.
+const GLYPH = 18;
+/** pl-3 / pr-3 at NativeWind's 14pt rem: the slots' old padding. */
+const SLOT_PAD = 10.5;
+/** The outline variant's 1pt border. */
+const INPUT_BORDER = 1;
+const CLOSE_TARGET = 44;
+const HIDDEN = {
+    accessible: false,
+    accessibilityElementsHidden: true,
+    importantForAccessibility: 'no-hide-descendants',
+} as const;
+/** The md Input's h-10 at NativeWind's 14pt rem. */
+const INPUT_HEIGHT = 35;
+/** How far the bar's box bleeds past the Input so the 44pt target stays
+ *  INSIDE its parent (a button overflowing its parent can miss taps on
+ *  Android). Matching negative margins keep the layout footprint. */
+const BLEED_Y = (CLOSE_TARGET - INPUT_HEIGHT) / 2;
+/** Centres the target on the X glyph: its centre sits border + pad + half a
+ *  glyph in from the Input's right edge. */
+const BLEED_RIGHT = CLOSE_TARGET / 2 - (INPUT_BORDER + SLOT_PAD + GLYPH / 2);
+const BOX_STYLE = {
+    paddingVertical: BLEED_Y,
+    marginVertical: -BLEED_Y,
+    paddingRight: BLEED_RIGHT,
+    marginRight: -BLEED_RIGHT,
+} as const;
+/** Each glyph over the Input, where its slot used to draw it: border + pad in
+ *  from the Input's edge, centred in the Input's height. */
+const SEARCH_GLYPH_STYLE = {
+    position: 'absolute',
+    top: BLEED_Y,
+    height: INPUT_HEIGHT,
+    left: INPUT_BORDER + SLOT_PAD,
+    justifyContent: 'center',
+} as const;
+const CLOSE_GLYPH_STYLE = {
+    position: 'absolute',
+    top: BLEED_Y,
+    height: INPUT_HEIGHT,
+    right: BLEED_RIGHT + INPUT_BORDER + SLOT_PAD,
+    justifyContent: 'center',
+} as const;
+const CLOSE_TARGET_STYLE = {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: CLOSE_TARGET,
+    height: CLOSE_TARGET,
+} as const;
 
 interface ExploreSearchBarProps {
     readonly query: string;
@@ -44,12 +101,17 @@ const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuer
     return (
         // flex-1, no padding/margin of its own: it is a CHILD of the title
         // HStack now, which already owns the row's px-5 and its bottom margin.
-        <Box testID="explore-search-input" className="flex-1">
-            <Input variant="outline" size="md" className="border-gray-700">
-                <InputSlot className="pl-3">
-                    <MaterialIcons name="search" size={18} color="#999999" />
-                </InputSlot>
+        <Box testID="explore-search-input" className="flex-1" style={BOX_STYLE}>
+            <Input variant="outline" size="md" className="border-gray-700" testID="explore-search-field">
+                {/* Spacers hold the glyphs' old width; the glyphs themselves
+                    are drawn over the Input below, from OUTSIDE it: inside,
+                    the bar's containers read "<glyph>, Search recent news,
+                    <glyph>" on device even with every hidden prop set. */}
+                <View style={{ width: SLOT_PAD + GLYPH }} />
                 <InputField
+                    // The placeholder is the field's name; gluestack's default
+                    // label was the literal "Input Field".
+                    aria-label={t('explore.searchPlaceholder')}
                     placeholder={t('explore.searchPlaceholder')}
                     placeholderTextColor="#666666"
                     value={query}
@@ -64,19 +126,23 @@ const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuer
                 {/* ALWAYS rendered, unlike the old clear button, which appeared
                     only once there was text. With a query typed it is the only
                     way back to the heading (blur collapses an EMPTY bar only),
-                    so it cannot be conditional on the query. */}
-                <InputSlot className="pr-3">
-                    <Pressable
-                        testID="explore-search-close"
-                        onPress={onClose}
-                        hitSlop={8}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('explore.closeSearch')}
-                    >
-                        <MaterialIcons name="close" size={18} color="#999999" />
-                    </Pressable>
-                </InputSlot>
+                    so it cannot be conditional on the query. The tap target is
+                    the button below, outside the Input. */}
+                <View style={{ width: GLYPH + SLOT_PAD }} />
             </Input>
+            <View pointerEvents="none" {...HIDDEN} style={SEARCH_GLYPH_STYLE}>
+                <MaterialIcons name="search" size={GLYPH} color="#999999" {...HIDDEN} />
+            </View>
+            <View pointerEvents="none" {...HIDDEN} style={CLOSE_GLYPH_STYLE}>
+                <MaterialIcons name="close" size={GLYPH} color="#999999" {...HIDDEN} />
+            </View>
+            <Pressable
+                testID="explore-search-close"
+                onPress={onClose}
+                accessibilityRole="button"
+                accessibilityLabel={t('explore.closeSearch')}
+                style={CLOSE_TARGET_STYLE}
+            />
         </Box>
     );
 };

@@ -11,7 +11,14 @@ import {
   pruneCompletedJobs,
   purgeFailedJobs,
   getActiveTopicGenFactIds,
+  countActiveJobsExcluding,
 } from '../database/services/inference-job-service';
+import {
+  precheckComboJob,
+  dropPendingComboJobs,
+  finishComboPassIfDrained,
+} from '../database/services/combo-pass-service';
+import { deferDelayMs, isDeferrableError } from './job-defer';
 import { getFacts, markOrphanedFactsAsFailed } from '../database/services/fact-service';
 import { destroyOrphanedTopics, getAllTopicIds } from '../database/services/topic-service';
 import { purgeSuggestionsForDeadTopics } from '../database/services/article-suggestion-service';
@@ -19,29 +26,66 @@ import { handleTopicGenJob } from './handlers/topic-gen-handler';
 import { handlePersonaSummaryJob } from './handlers/persona-summary-handler';
 import { handleStoryHeadlineJob } from './handlers/story-headline-handler';
 import { handleTrackedStoryMigrateJob } from './handlers/tracked-story-migrate-handler';
+import { handleTopicComboJob } from './handlers/topic-combo-handler';
 import { resetContext } from '../mera-protocol-toolkit';
 import type { InferenceJobType } from '../database/models/InferenceJob';
 import logger from '../logger';
 
 type QueueState = 'stopped' | 'running' | 'paused';
 
-type JobHandler = (payload: Record<string, unknown>) => Promise<Record<string, unknown>>;
+/** What a handler knows about the row it is running. `jobId` lets a handler
+ *  that settles its own job (the combo pass marks it done in the same batch as
+ *  its topic writes) name it. */
+export interface JobContext {
+  jobId: string;
+}
+
+type JobHandler = (
+  payload: Record<string, unknown>,
+  ctx: JobContext,
+) => Promise<Record<string, unknown>>;
 
 // Adapt a strongly-typed handler to the generic JobHandler map signature.
 // The payload/result shapes are validated by the handler itself; the queue
 // only needs the Record<string, unknown> contract for storage/serialization.
 function adaptHandler<P, R>(
-  handler: (payload: P) => Promise<R>,
+  handler: (payload: P, ctx: JobContext) => Promise<R>,
 ): JobHandler {
-  return (p) => handler(p as P) as Promise<Record<string, unknown>>;
+  return (p, ctx) => handler(p as P, ctx) as Promise<Record<string, unknown>>;
 }
 
+// EXHAUSTIVE on purpose: a new job type without a handler fails tsc here. A
+// row whose type this bundle does not know (an OTA rollback) still reaches the
+// `!handler` branch at runtime, which `markUnrunnable` keeps bounded.
 const JOB_HANDLERS: Record<InferenceJobType, JobHandler> = {
   topic_gen: adaptHandler(handleTopicGenJob),
   persona_summary: adaptHandler(handlePersonaSummaryJob),
   story_headline: adaptHandler(handleStoryHeadlineJob),
   tracked_story_migrate: adaptHandler(handleTrackedStoryMigrateJob),
+  topic_combo: adaptHandler(handleTopicComboJob),
 };
+
+const REAL_HANDLERS = { ...JOB_HANDLERS };
+
+/** Test seam: override one type's handler; `undefined` restores the real one. */
+export function __setJobHandlerForTests(
+  type: InferenceJobType,
+  handler: ((payload: never, ctx: JobContext) => Promise<unknown>) | undefined,
+): void {
+  JOB_HANDLERS[type] = handler ? adaptHandler(handler) : REAL_HANDLERS[type];
+}
+
+/**
+ * Types whose failures may be a DEFERRAL (lib/inference/job-defer.ts) rather
+ * than a spent attempt. Only the combination pass: it runs unattended after a
+ * chat closes, often exactly when the phone goes offline.
+ */
+const DEFERRABLE_TYPES: ReadonlySet<InferenceJobType> = new Set<InferenceJobType>(['topic_combo']);
+
+/** Types `onDrain` does not wait for. A combination pass can sit deferred for
+ *  as long as the device is offline, and a fact's "generating more" spinner
+ *  must not wait on it. */
+const DRAIN_IGNORES: InferenceJobType[] = ['topic_combo'];
 
 /**
  * Idle poll cadence, as a BACKOFF rather than a fixed interval.
@@ -78,6 +122,17 @@ class InferenceQueueImpl {
   /** Current idle backoff. See POLL_INTERVAL_MIN/MAX. */
   private idleDelay = POLL_INTERVAL_MIN;
   private appStateSub: { remove: () => void } | null = null;
+  /**
+   * DEFER GATES, per job type: the type is left out of `dequeueJob` until
+   * `gateUntil`. In memory on purpose: there is no column for it (a schema bump
+   * is not worth it), and losing it on a kill only means an earlier retry,
+   * which the pre-check re-gates if the conditions still hold. Gating the TYPE
+   * rather than a row is what stops a deferred priority-15 job from sitting at
+   * the head of the queue in front of every priority-20 job.
+   */
+  private gateUntil = new Map<InferenceJobType, number>();
+  /** Consecutive deferrals per type, for the backoff. Reset on a success. */
+  private deferCount = new Map<InferenceJobType, number>();
 
   /**
    * Start the queue consumer loop.
@@ -228,7 +283,50 @@ class InferenceQueueImpl {
     this.drainCallbacks.push(callback);
   }
 
+  /** Test seam: clear every defer gate and backoff. */
+  __resetTypeGatesForTests(): void {
+    this.gateUntil.clear();
+    this.deferCount.clear();
+  }
+
   // ── Internal ────────────────────────────────────────────────
+
+  /** Types still inside their defer window; expired gates are dropped. */
+  private gatedTypes(): InferenceJobType[] {
+    const now = Date.now();
+    const out: InferenceJobType[] = [];
+    for (const [type, until] of this.gateUntil) {
+      if (until > now) out.push(type);
+      else this.gateUntil.delete(type);
+    }
+    return out;
+  }
+
+  private deferType(type: InferenceJobType, reason: string): void {
+    const count = this.deferCount.get(type) ?? 0;
+    const delay = deferDelayMs(count);
+    this.deferCount.set(type, count + 1);
+    this.gateUntil.set(type, Date.now() + delay);
+    logger.debug('[InferenceQueue] Deferred job type', { type, reason, delayMs: delay });
+  }
+
+  private async fireDrainIfIdle(): Promise<void> {
+    if (this.drainCallbacks.length === 0) return;
+    const remaining = await countActiveJobsExcluding(DRAIN_IGNORES).catch(() => 1);
+    if (remaining > 0) return;
+    const callbacks = this.drainCallbacks.splice(0);
+    for (const cb of callbacks) {
+      try { cb(); } catch (err) {
+        logger.error('[InferenceQueue] Drain callback failed', err);
+      }
+    }
+  }
+
+  private async afterComboSettled(): Promise<void> {
+    await finishComboPassIfDrained().catch((err) =>
+      logger.error('[InferenceQueue] End-of-pass check failed', err),
+    );
+  }
 
   private async consumeLoop(): Promise<void> {
     while (this.state !== 'stopped') {
@@ -251,17 +349,12 @@ class InferenceQueueImpl {
         );
       }
 
-      const job = await dequeueJob();
+      // Drain = no NON-combo work left (see DRAIN_IGNORES). Checked before the
+      // dequeue so a combo job at the head does not hold it back.
+      await this.fireDrainIfIdle();
+
+      const job = await dequeueJob({ excludeTypes: this.gatedTypes() });
       if (!job) {
-        // No pending jobs — fire drain callbacks if any
-        if (this.drainCallbacks.length > 0) {
-          const callbacks = this.drainCallbacks.splice(0);
-          for (const cb of callbacks) {
-            try { cb(); } catch (err) {
-              logger.error('[InferenceQueue] Drain callback failed', err);
-            }
-          }
-        }
         // Nothing to do — back off before polling again, so an idle app is not
         // running two DB round-trips every 2s forever. Any enqueue calls
         // notify() -> wake(), which resets this to the minimum immediately.
@@ -284,23 +377,55 @@ class InferenceQueueImpl {
       // Check state again after dequeue (might have been paused/stopped while querying)
       if (this.state !== 'running') continue;
 
+      const isCombo = job.jobType === 'topic_combo';
+
+      // Combo pre-check, BEFORE markRunning so a "not now" spends no attempt.
+      if (isCombo) {
+        const verdict = await precheckComboJob().catch(() => 'defer' as const);
+        if (verdict === 'defer') {
+          this.deferType(job.jobType, 'precheck');
+          continue;
+        }
+        if (verdict === 'drop') {
+          // Switched to on-device mid-pass: the pass does not apply there.
+          await dropPendingComboJobs().catch((err) =>
+            logger.error('[InferenceQueue] Dropping combo jobs failed', err),
+          );
+          await this.afterComboSettled();
+          continue;
+        }
+      }
+
       const handler = JOB_HANDLERS[job.jobType];
       if (!handler) {
+        // markUnrunnable COUNTS an attempt. Plain markFailed did not (the job
+        // never reached markRunning), so an OTA rollback that left a job type
+        // this bundle cannot run re-pended it on every loop, forever.
         logger.error('[InferenceQueue] Unknown job type', { jobType: job.jobType, jobId: job.id });
-        await job.markFailed(`Unknown job type: ${job.jobType}`);
+        await job.markUnrunnable(`Unknown job type: ${job.jobType}`);
+        if (isCombo) await this.afterComboSettled();
         continue;
       }
 
       const jobExec = (async () => {
+        let deferred = false;
         try {
           await job.markRunning();
 
-          const result = await handler(job.payload);
+          const result = await handler(job.payload, { jobId: job.id });
           await job.markDone(result);
+          this.deferCount.delete(job.jobType);
         } catch (err) {
           const errorMsg =
             (err as Error)?.message ||
             (err ? String(err) : 'Native crash (no error message)');
+          if (DEFERRABLE_TYPES.has(job.jobType) && isDeferrableError(err)) {
+            deferred = true;
+            logger.warn('[InferenceQueue] Job deferred', { jobId: job.id, jobType: job.jobType, error: errorMsg });
+            await job.markDeferred(errorMsg);
+            this.deferType(job.jobType, errorMsg);
+            return;
+          }
           logger.error('[InferenceQueue] Job failed', err, {
             jobId: job.id,
             jobType: job.jobType,
@@ -319,6 +444,8 @@ class InferenceQueueImpl {
               logger.error('[InferenceQueue] Context reset failed', e),
             );
           }
+        } finally {
+          if (isCombo && !deferred) await this.afterComboSettled();
         }
       })();
 
@@ -364,6 +491,9 @@ class InferenceQueueImpl {
     if (this.appStateSub) return;
     this.appStateSub = AppState.addEventListener('change', (next) => {
       if (next === 'active') {
+        // A return is the natural moment to retry a deferral (the network is
+        // often back); the pre-check re-gates at once if it is not.
+        this.gateUntil.clear();
         this.wake(); // resets idleDelay to the minimum and unblocks the sleep
       } else {
         this.idleDelay = POLL_INTERVAL_MAX;

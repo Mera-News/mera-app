@@ -15,6 +15,7 @@ import type { ConversationMessage, IAgent, ToolCallRecord } from './types';
 import { estimateTokens } from './tokens';
 import { selectHistoryWindow } from '../news-harness/persona-management/history-window';
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
+import { createThinkStripper } from './think-strip';
 import {
   HISTORY_RESERVE_TOKENS,
   MAX_HISTORY_USER_TURNS,
@@ -409,6 +410,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         let insideToolCall = false;
         let toolCallBuffer = '';
         let fullResponse = '';
+        const thinkStripper = createThinkStripper();
 
         // Generation has started and no token has been flushed yet.
         phase?.('deviceThinking');
@@ -419,8 +421,14 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
           maxTokens: MAX_OUTPUT_TOKENS,
           temperature: 0.4,
         })) {
-          fullResponse += token;
-          pendingBuffer += token;
+          // Think tags go BEFORE the tool-call parser: its `<` holdback plus the
+          // end-of-stream `startsWith('<')` discard would otherwise swallow the
+          // reply after a stray tag, and a <tool_call> inside a think block
+          // must never run. `fullResponse` feeds the rescan, so it is stripped too.
+          const visibleToken = thinkStripper.push(token);
+          if (!visibleToken) continue;
+          fullResponse += visibleToken;
+          pendingBuffer += visibleToken;
 
           const flushed = flushBuffer(pendingBuffer, insideToolCall, toolCallBuffer);
           pendingBuffer = flushed.remaining;
@@ -457,6 +465,23 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
               );
             }
           }
+        }
+
+        const thinkTail = thinkStripper.flush();
+        if (thinkTail) {
+          fullResponse += thinkTail;
+          pendingBuffer += thinkTail;
+          const flushed = flushBuffer(pendingBuffer, insideToolCall, toolCallBuffer);
+          pendingBuffer = flushed.remaining;
+          insideToolCall = flushed.insideToolCall;
+          toolCallBuffer = flushed.toolCallBuffer;
+          // Tool calls in the tail are left to the rescan below.
+          for (const event of flushed.events) {
+            if (event.type === 'text-delta') accContent += event.delta;
+          }
+          setMessages((prev) =>
+            prev.map((m) => m.id === assistantId ? { ...m, content: accContent } : m),
+          );
         }
 
         // Flush remaining buffer (discard incomplete <tool_call> openers)
@@ -637,6 +662,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         id: `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         role: 'user',
         content: trimmed,
+        createdAt: Date.now(),
         ...(hidden ? { hidden: true } : {}),
       };
       const newMessages = [...messagesRef.current, userMsg];

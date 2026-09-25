@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { act, fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 // The animated gradient backdrop is pure decoration and asserts nothing here.
@@ -82,8 +82,8 @@ const mockListRender = jest.fn();
 jest.mock('../ScopeArticleList', () => {
     const ReactLib = require('react');
     const { View } = require('react-native');
-    const ScopeArticleListStub = ({ scope, enabled }: any) => {
-        mockListRender({ scopeId: scope.id, enabled });
+    const ScopeArticleListStub = ({ scope, enabled, active }: any) => {
+        mockListRender({ scopeId: scope.id, enabled, active });
         ReactLib.useEffect(() => {
             mockListMount(scope.id);
         }, []);
@@ -96,6 +96,24 @@ jest.mock('../ScopeArticleList', () => {
         );
     };
     return { __esModule: true, default: ScopeArticleListStub };
+});
+
+let mockSwipe: any = null;
+jest.mock('@/components/custom/for-you/SwipeTabs', () => {
+    const { View } = require('react-native');
+    return {
+        __esModule: true,
+        default: (p: any) => {
+            mockSwipe = p;
+            // The active panel only; the window itself is SwipeTabs' own suite.
+            // Keyed like the real pager, so a different tab is a fresh mount.
+            return (
+              <View testID="swipe-tabs">
+                <View key={p.keyOf(p.index)}>{p.renderPanel(p.index, true)}</View>
+              </View>
+            );
+        },
+    };
 });
 
 const mockChipRow = jest.fn();
@@ -241,7 +259,7 @@ describe('ExploreScreen — cold-open flicker gate', () => {
             emitLocations!([row(), row({ id: 'loc2', city: 'paris', countryCode: 'FR', role: 'interest', weight: 0.4 })]);
         });
 
-        expect(mockListRender).toHaveBeenLastCalledWith({ scopeId: 'world', enabled: true });
+        expect(mockListRender).toHaveBeenLastCalledWith({ scopeId: 'world', enabled: true, active: true });
 
         // Exactly one mount. World now leads the row, so that is the landing
         // chip — the point of the gate is still that the pre-emission render
@@ -465,7 +483,8 @@ describe('ExploreScreen — search collapsed into the title row (Item 12a)', () 
         const { getByTestId } = render(<ExploreScreen />);
         const { StyleSheet } = require('react-native');
         const button = getByTestId('explore-search-open');
-        const style = StyleSheet.flatten(button.props.style);
+        // The frame is the wrapper; the button inside it is childless (glyph rule).
+        const style = StyleSheet.flatten(getByTestId('explore-search-open-frame').props.style);
         expect(style).toMatchObject({ width: 44, height: 44, margin: -10, alignItems: 'center', justifyContent: 'center' });
         expect(button.props.hitSlop).toBeUndefined();
     });
@@ -635,5 +654,44 @@ describe('ExploreScreen — search results overlay (Item 12a)', () => {
         expect(queryByTestId('explore-search-overlay')).toBeNull();
         expect(mockListMount).toHaveBeenCalledTimes(1);
         expect(getByTestId('scope-article-list')).toBeTruthy();
+    });
+});
+
+// ux2 B3: swipe left/right between the scopes (the "+" chip is not a scope).
+describe('ExploreScreen: swipe between scopes', () => {
+    it('wraps the article list in the swipe container, sized to the scopes', async () => {
+        const r = render(<ExploreScreen />);
+        await waitFor(() => expect(mockSwipe).not.toBeNull());
+        const scopes = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0].scopes;
+        expect(mockSwipe.count).toBe(scopes.length);
+        expect(scopes.some((s: any) => s.id === 'add-places')).toBe(false);
+        const list = r.getByTestId('scope-article-list');
+        let inSwipe = false;
+        for (let p: any = list.parent; p; p = p.parent) if (p.props?.testID === 'swipe-tabs') inSwipe = true;
+        expect(inSwipe).toBe(true);
+    });
+
+    it('a swipe selects the neighbouring scope, through the same path as a tap', async () => {
+        const r = render(<ExploreScreen />);
+        await waitFor(() => expect(mockSwipe).not.toBeNull());
+        const scopes = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0].scopes;
+        expect(scopes.length).toBeGreaterThanOrEqual(2);
+        await act(async () => mockSwipe.onIndexChange(1));
+        await waitFor(() => expect(r.getByTestId('scope-article-list').props.accessibilityLabel).toBe(scopes[1].id));
+        expect(mockSwipe.index).toBe(1);
+    });
+
+    // ux2 B3 window: each scope is keyed by its id, so the cached previous and
+    // the warmed next scope are never remounted, and an off-screen one is told
+    // it is inactive (no pagination, no tab-press refresh).
+    it('keys each panel by its scope id and hands `active` to the list', async () => {
+        render(<ExploreScreen />);
+        await waitFor(() => expect(mockSwipe).not.toBeNull());
+        const scopes = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0].scopes;
+        scopes.forEach((sc: any, i: number) => expect(mockSwipe.keyOf(i)).toBe(sc.id));
+        mockListRender.mockClear();
+        const off = render(<>{mockSwipe.renderPanel(1, false)}</>);
+        expect(mockListRender).toHaveBeenLastCalledWith(expect.objectContaining({ scopeId: scopes[1].id, active: false }));
+        off.unmount();
     });
 });

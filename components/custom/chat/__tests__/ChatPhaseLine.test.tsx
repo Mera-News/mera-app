@@ -76,12 +76,15 @@ describe('ChatPhaseLine', () => {
   // ux1 C2: the thread moved DOWN 20pt when a one-line phrase gave way to a
   // two-line one before the first token. The row now holds two lines always.
   describe('a fixed-height row', () => {
-    it('reserves two lines and never grows past them', () => {
+    // ux2 M4 (owner ruling): up to THREE lines, so the longer locales read the
+    // truthful phase copy in full instead of ellipsizing. Two lines stay
+    // reserved, so a short English line never moves the thread.
+    it('reserves two lines and grows to at most three', () => {
       act(() => useChatPhaseStore.getState().setPhase('attesting'));
       render(<ChatPhaseLine />);
       const node = screen.getByTestId('chat-phase-line');
       const style = Array.isArray(node.props.style) ? Object.assign({}, ...node.props.style) : node.props.style;
-      expect(node.props.numberOfLines).toBe(2);
+      expect(node.props.numberOfLines).toBe(3);
       expect(style.minHeight).toBe(style.lineHeight * 2);
     });
   });

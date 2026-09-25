@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{done}} di {{total}} articoli scaricati",
       "chunks": {
-        "ready": "{{ready}} di {{total}} cicli di analisi completati",
-        "a11y": "Cicli di analisi: {{ready}} di {{total}} completati"
+        "ready": "{{ready}} di {{total}} cicli di analisi completati"
       },
       "stageA11y": "Passaggio {{index}} di {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRead_other": "e hai letto {{formatted}}.",
     "reasonUnavailable": "Mera non è riuscita a scrivere una nota per questo articolo.",
     "loadingA11y": "Caricamento del tuo feed",
-    "newStoriesPill": "Nuove notizie",
     "translatingCaption": "Traduzione in corso…",
     "updatedJustNow": "Aggiornato ora"
   },
@@ -263,7 +261,7 @@
     "share": "Condividi",
     "shareVia": "Condiviso tramite {{downloadUrl}}",
     "sourceCountryGlobal": "Mondiale",
-    "sourceCountryA11y": "Paese di origine: {{country}}. Tocca per mostrare il nome del paese.",
+    "sourceCountryA11y": "Paese di origine: {{country}}. Tocca per mostrare il paese, poi tocca il nome per vedere le sue testate.",
     "readOn": "Leggi su {{publication}}",
     "readOnGoogleTranslate": "Leggi su Google Translate",
     "linkUnavailable": "Questo link non può essere aperto in modo sicuro, quindi non è disponibile qui.",
@@ -294,7 +292,9 @@
     "addToExplore": "Aggiungi a Esplora",
     "addedToExplore": "Aggiunto a Esplora",
     "badgeGovernment": "Fonte governativa",
-    "badgeRegulator": "Agenzia ufficiale"
+    "badgeRegulator": "Agenzia ufficiale",
+    "sectionCountries": "Paesi",
+    "sectionPublications": "Testate"
   },
   "clusterDetail": {
     "translatable": "Questo articolo è in {{language}}: il tuo dispositivo può tradurlo mentre leggi. Se la traduzione non funziona, puoi aprire il sito in Google Translate; tieni presente che in quel caso lo visiterai tramite Google.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Vengono rimossi anche i suoi argomenti e gli articoli trovati, e Mera smette di cercare notizie su questo.",
     "deletingFact": "Eliminazione...",
     "yesDelete": "Sì, elimina",
-    "refreshSuggestions": "Aggiorna suggerimenti",
-    "refreshingSuggestions": "Aggiornamento...",
-    "refreshSuggestionsSuccessTitle": "Suggerimenti aggiornati",
-    "refreshSuggestionsSuccessDescription": "Vengono generati nuovi suggerimenti personalizzati.",
-    "refreshSuggestionsFailedTitle": "Aggiornamento non riuscito",
-    "refreshSuggestionsFailedDescription": "Impossibile aggiornare i suggerimenti. Riprova.",
-    "personaUpdatedRefreshHint": "Vedo che hai aggiornato il tuo profilo, vuoi che rigeneri il tuo feed?",
     "articleCount_one": "{{count}} articolo",
     "articleCount_other": "{{count}} articoli",
     "addTopic": "Aggiungi argomento",
@@ -783,7 +776,13 @@
     "topicGenFailed": "Impossibile generare gli argomenti.",
     "topicGenRetry": "Riprova",
     "aiUsageNoticeGeneral": "Mera può sbagliare, quindi verifica le cose importanti.",
-    "trackChooseHint": "Scegli cosa seguire"
+    "trackChooseHint": "Scegli cosa seguire",
+    "factDeletePendingTitle": "Verrà rimosso dal tuo profilo",
+    "saveAsWritten": "Salva come l'ho scritto",
+    "factDeleteRemove": "Rimuovi",
+    "factDeleteKeep": "Tieni",
+    "factDeleteKept": "Non è stato rimosso nulla.",
+    "topicsSavedHint": "Argomenti salvati! Puoi continuare ad aggiungere informazioni, oppure tocca {{close}} per iniziare a esplorare."
   },
   "articleFeedback": {
     "thumbsUp": "Mi piace",
@@ -876,7 +875,8 @@
     "formError": "Compila tutti i campi obbligatori.",
     "emailError": "Inserisci un indirizzo email valido.",
     "captureScreenshotError": "Impossibile acquisire lo screenshot.",
-    "genericError": "Impossibile inviare il feedback a causa di un errore imprevisto."
+    "genericError": "Impossibile inviare il feedback a causa di un errore imprevisto.",
+    "chatAttachmentNote": "La tua chat con Mera sarà allegata a questa segnalazione."
   },
   "observability": {
     "title": "Osservabilità",
@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "Raccontami qualcosa di nuovo e lo aggiungerò al tuo feed.",
     "editFacts": "Modifica",
-    "planUsage": "{{used}} di {{limit}} analizzati oggi"
+    "planUsage": "{{used}} di {{limit}} analizzati oggi",
+    "updatingAllFacts": "Aggiornamento di tutti i fatti",
+    "pleaseWait": "Attendi"
   },
   "facts": {
     "screenTitle": "I tuoi fatti",
@@ -2568,7 +2570,11 @@
     "titleAlsoAdd": "Aggiungere anche questo?",
     "pendingHint": "Scegli un'opzione qui sopra o scrivi la tua risposta.",
     "overlapsLabel": "Si sovrappone a",
-    "overlapsReplaceNote": "Sostituire la rimuoverebbe insieme ai suoi argomenti."
+    "overlapsReplaceNote": "Sostituire la rimuoverebbe insieme ai suoi argomenti.",
+    "replaceAll": "Sostituisci tutto",
+    "keepAll": "Tieni tutto",
+    "replaceAllA11y": "Sostituisci con tutti i {{count}} suggerimenti",
+    "keepAllA11y": "Tieni i tuoi fatti e aggiungi tutti i {{count}} suggerimenti"
   },
   "subscriptions": {
     "sectionTitle": "I tuoi abbonamenti",
@@ -2731,37 +2737,36 @@
       "Stiamo preparando la tua domanda."
     ],
     "queued": [
-      "La tua richiesta è in coda.",
-      "Ci sono un paio di cose in corso. La tua è la prossima."
+      "La tua richiesta è la prossima sul tuo telefono."
     ],
     "securing": [
-      "Il tuo messaggio viene chiuso in modo che solo il modello possa aprirlo.",
-      "Le tue parole vengono cifrate prima di lasciare il telefono."
+      "Cifratura del messaggio, così solo il modello nel suo ambiente attendibile può leggerlo.",
+      "Le tue parole vengono cifrate sul telefono prima di uscire."
     ],
     "attesting": [
-      "Stiamo preparando un canale privato verso il modello.",
-      "Recuperiamo la chiave che tiene tutto questo tra te e Mera.",
-      "Una conversazione privata richiede un momento per essere avviata."
+      "Stabilendo una connessione sicura tra te e il modello in un ambiente attendibile.",
+      "Recupero della chiave dall'ambiente attendibile del modello, così solo il modello può leggere questo."
     ],
     "thinking": [
-      "Mera sta leggendo quello che hai scritto.",
-      "Stiamo cercando il modo migliore di rispondere."
+      "Il modello sta leggendo il tuo messaggio.",
+      "Sto cercando la risposta migliore."
     ],
     "retrying": [
-      "Ci sta mettendo più del solito. Mera sta provando un'altra strada.",
-      "Ci stiamo ancora lavorando. Grazie per l'attesa."
+      "Ci vuole più del solito. Provo un altro percorso sicuro.",
+      "Ci sto ancora lavorando. Grazie per l'attesa."
     ],
     "deviceLoading": [
-      "Stiamo avviando il modello sul tuo telefono.",
-      "La prima risposta richiede un po' più di tempo mentre si carica."
+      "Caricamento del modello sul telefono.",
+      "La prima risposta richiede un po' di più mentre si carica."
     ],
     "devicePreparing": [
-      "Mera sta raccogliendo quello che sa già di te.",
-      "Stiamo preparando il telefono a rispondere."
+      "Preparo il telefono a rispondere."
     ],
     "deviceThinking": [
-      "Mera ci sta pensando sul tuo telefono.",
-      "Tutto avviene sul tuo dispositivo, quindi non viene inviato nulla da nessuna parte."
+      "Ci penso sul tuo telefono. Nulla lascia il dispositivo."
+    ],
+    "webSearch": [
+      "Ricerca sul web dal tuo dispositivo…"
     ]
   },
   "headerNarration": {
@@ -2800,12 +2805,16 @@
       ]
     },
     "nudges": [
-      "Salvalo per dopo",
-      "I salvati ti aspettano",
-      "Leggi bene una notizia",
-      "Guarda i titoli",
-      "Nuovo non è meglio",
-      "Non serve guardare"
+      "Leggi l'articolo intero",
+      "Poco tempo? Salvalo",
+      "Le notizie dal mondo?",
+      "Visti i tuoi paesi?",
+      "Segui una notizia",
+      "Controlla quelle seguite",
+      "Il profilo è aggiornato?",
+      "Non fa per te? Dillo",
+      "Metti mi piace per altre",
+      "Condividi con i tuoi cari"
     ],
     "a11y": "Mera sta aggiornando le tue notizie su questo telefono."
   },

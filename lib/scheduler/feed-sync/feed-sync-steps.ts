@@ -469,13 +469,13 @@ async function fetchTopicIdsPersona(
       //
       // Keyed on NORMALIZED text, not topicId, for the same reason the billing
       // partition is (see computeFreeTopicTexts): the server answers keyed by
-      // topic TEXT, and buildRetrievalProfile does not dedupe texts — a tracked
-      // topic and a fact-owned interest topic can legitimately carry the same
-      // one, and are sent as two entries. Keying on the normalized text is what
-      // guarantees both entries carry the SAME flag, and computeFreeTopicTexts
-      // guarantees that flag is absent whenever any non-tracked topic shares
-      // the text. LOOSE always wins a collision: tightening a followed story
-      // must never quietly tighten an ordinary interest's feed.
+      // topic TEXT. A tracked topic and a fact-owned interest topic can
+      // legitimately carry the same text; buildRetrievalProfile collapses such
+      // normalised duplicates into ONE entry before its cap, and
+      // computeFreeTopicTexts, over ALL active topics, guarantees the flag is
+      // absent whenever any non-tracked topic shares the text. LOOSE always
+      // wins a collision: tightening a followed story must never quietly
+      // tighten an ordinary interest's feed.
       //
       // OMITTED, not false, when not tracked-only — the same absence-is-default
       // rule the headline scopes follow just below, so a reader who follows no

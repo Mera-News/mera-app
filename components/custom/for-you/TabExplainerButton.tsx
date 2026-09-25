@@ -14,6 +14,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import React, { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import TabExplainerSheet, { type ExplainedTab } from './TabExplainerSheet';
 
@@ -46,15 +47,25 @@ const TabExplainerButton: React.FC<TabExplainerButtonProps> = ({ tab, testID }) 
   }, [focused]);
   return (
     <>
-      <Pressable
-        onPress={() => setOpen(true)}
-        style={TARGET_STYLE}
-        accessibilityRole="button"
-        accessibilityLabel={t('tabExplainer.openA11y')}
-        testID={testID}
-      >
-        <MaterialIcons name="help-outline" size={GLYPH} color="rgb(212, 212, 212)" />
-      </Pressable>
+      {/* The frame holds the glyph; a CHILDLESS labelled button is laid over
+          it. A glyph inside a button surfaced on iOS as its own StaticText. */}
+      <View style={TARGET_STYLE} testID={`${testID}-frame`}>
+        <MaterialIcons
+          name="help-outline"
+          size={GLYPH}
+          color="rgb(212, 212, 212)"
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
+        <Pressable
+          onPress={() => setOpen(true)}
+          style={StyleSheet.absoluteFill}
+          accessibilityRole="button"
+          accessibilityLabel={t('tabExplainer.openA11y')}
+          testID={testID}
+        />
+      </View>
       <TabExplainerSheet tab={tab} isOpen={open} onClose={() => setOpen(false)} />
     </>
   );

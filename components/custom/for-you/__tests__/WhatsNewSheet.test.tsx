@@ -56,7 +56,7 @@ jest.mock('@/components/ui/hstack', () => ({ HStack: require('react-native').Vie
 jest.mock('@/components/ui/vstack', () => ({ VStack: require('react-native').View }));
 jest.mock('@/components/ui/text', () => ({ Text: require('react-native').Text }));
 jest.mock('@/components/ui/heading', () => ({ Heading: require('react-native').Text }));
-jest.mock('@expo/vector-icons', () => ({ MaterialIcons: require('react-native').View }));
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 import WhatsNewSheet from '../WhatsNewSheet';
 
@@ -116,4 +116,38 @@ describe('WhatsNewSheet gate', () => {
         expect(mockLoadFeedMetadata).not.toHaveBeenCalled();
         expect(mockSetSetting).not.toHaveBeenCalled();
     });
+});
+
+// Every icon-font glyph must be hidden itself and sit under no accessible
+// element: iOS surfaces any other as its own StaticText (captured, ux2).
+const glyphProblems = (root: any): string[] => {
+    const glyphs = root.findAll(
+        (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+    );
+    if (glyphs.length === 0) return ['no glyph rendered'];
+    const out: string[] = [];
+    for (const g of glyphs) {
+        if (
+            g.props.accessible !== false ||
+            g.props.accessibilityElementsHidden !== true ||
+            g.props.importantForAccessibility !== 'no-hide-descendants'
+        ) {
+            out.push(`glyph ${JSON.stringify(g.props.children)} not hidden`);
+        }
+        for (let p: any = g.parent; p; p = p.parent) {
+            if (p.props?.accessible === true) {
+                out.push(`glyph under accessible ${p.props.testID ?? p.type}`);
+                break;
+            }
+        }
+    }
+    return out;
+};
+
+it('exposes no icon glyph as its own StaticText', async () => {
+    mockGetSetting.mockResolvedValue(null);
+    mockLoadFeedMetadata.mockResolvedValue({ lastRunAt: 1 });
+    const r = render(<WhatsNewSheet />);
+    expect(await r.findByText('whatsNew.starterTitle')).toBeTruthy();
+    expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
 });

@@ -57,9 +57,9 @@ interface AiDisclosureCaptionProps {
  * the surface actually has AI-generated text to disclose in the first place.
  *
  * Accessibility precedent: `RelevanceChip` — never convey meaning by colour
- * alone. The sparkle icon is decorative; the text alone carries the meaning,
- * and the row exposes a single composed `accessibilityLabel` so a screen
- * reader announces the full disclosure once rather than icon-then-text.
+ * alone. The sparkle icon is decorative and hidden; the text alone carries the
+ * meaning and is the one element a screen reader lands on. The row is not
+ * accessible: an accessible row put the icon glyph back as a StaticText.
  */
 const DEFAULT_COLOR = 'rgb(148, 148, 148)';
 
@@ -82,8 +82,10 @@ const AiDisclosureCaption: React.FC<AiDisclosureCaptionProps> = ({
             // right-aligned reason, flush left under the priority chip.
             className={`items-center ${left ? 'justify-start' : 'justify-end'}${className ? ` ${className}` : ''}`}
             space="xs"
-            accessible
-            accessibilityLabel={message}
+            // NOT an accessible row (ux2 batch 26): on iOS a glyph under ANY
+            // accessible ancestor surfaces as its own StaticText, hidden props
+            // and all. The words are the element; the icon sits beside them.
+            testID="ai-disclosure-caption"
         >
             <MaterialIcons
                 name="auto-awesome"
@@ -97,6 +99,7 @@ const AiDisclosureCaption: React.FC<AiDisclosureCaptionProps> = ({
                 italic={!compact}
                 className={left ? 'text-left' : 'text-right'}
                 style={{ color }}
+                accessibilityLabel={message}
             >
                 {message}
             </Text>

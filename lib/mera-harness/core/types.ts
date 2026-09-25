@@ -42,6 +42,13 @@ export interface Place {
    * chain is still good.
    */
   neighbourhood?: string;
+  /**
+   * The USER'S OWN NAME for this place when their words matched only one of
+   * its alternate names: "Porto Santo" resolves to Vila Baleira. Kept first in
+   * any statement ("Porto Santo (Vila Baleira), Madeira, ..."), or no topic
+   * ever names the place the user actually said (ux2 D13).
+   */
+  userTerm?: string;
   locality: string;
   admin1: string | null;
   /** ISO alpha-2, GeoNames convention. */
@@ -72,7 +79,14 @@ export interface SimilarFactCandidate {
 export type FindSimilarFactsResult = { candidates: SimilarFactCandidate[] };
 
 export type LookupPlaceResult =
-  | { status: 'resolved'; places: Place[] }
+  | {
+      status: 'resolved';
+      places: Place[];
+      /** The words of the query the match did NOT use ("niew west" when only
+       *  "Amsterdam" resolved). The place service has no districts, so this is
+       *  the only record of the finer area the user named (ux2 D1). */
+      unmatched?: string;
+    }
   | { status: 'no_match'; query: string }
   /** The lookup FAILED. Never means "no match" — collapsing the two shows a
    *  user an interrogation during a GraphQL outage. */
@@ -116,6 +130,9 @@ export interface AgentChoiceOption {
    *  id for a replace confirmation. Without it the tap arrives as a bare display
    *  string and the next turn re-runs lookup_place on the same words. */
   payload: unknown;
+  /** The model's own wording when the loop replaced it with the place's chain
+   *  (expandChoiceLabels). A typed reply in those words still answers. */
+  modelText?: string;
 }
 
 export interface AgentTurnState {
@@ -264,6 +281,9 @@ export interface AgentToolPort {
   lookupPlace(args: LookupPlaceArgs): Promise<LookupPlaceResult>;
   saveExtractedFacts(args: Record<string, unknown>): Promise<Record<string, unknown>>;
   deleteUserFacts(args: { fact_ids: string[] }): Promise<Record<string, unknown>>;
+  /** The web, from the device. ABSENT when the user switched "Web search in
+   *  chat" off, and then the tool is not declared at all. */
+  webSearch?(args: { queries: string[] }): Promise<Record<string, unknown>>;
 }
 
 export interface AgentDeps {

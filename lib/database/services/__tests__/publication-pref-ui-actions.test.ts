@@ -3,23 +3,22 @@
 // services themselves (those have their own suites):
 //   - concrete-kind writes ('prioritised'/'deprioritised') go through
 //     `applyPersonaAction` with the right action shape — the executor itself
-//     owns the change-log row, the sweep and the D18 dirty-flag, so nothing
+//     owns the change-log row and the sweep, so nothing
 //     else should happen here for those two levels.
 //   - 'none' (clear) has no executor action, so this module hand-appends the
 //     change-log row and — for a NAMED PUBLICATION only — runs the same sweep
 //     policy the executor would have. A country SCOPE clear never sweeps
-//     (scopes can never be muted), it only dirties the feed.
+//     (scopes can never be muted).
 //
 // The "nine before→after transitions" (before ∈ {none, prioritised,
 // deprioritised} × requested level ∈ {none, prioritised, deprioritised}) are
 // exercised against the PUBLICATION target: the 6 transitions landing on a
 // concrete kind route through `applyPersonaAction` (mocked — its internal
 // sweep is not re-observed here, exactly the executor's own contract), and
-// the 3 landing on 'none' hand-append + call `sweepForMutation`/`runSweepFor`/
-// `markFeedNeedsRefresh` directly, which ARE observed here. The country-scope
+// the 3 landing on 'none' hand-append + call `sweepForMutation`/`runSweepFor`
+// directly, which ARE observed here. The country-scope
 // target gets a smaller, separate set: routing, alpha-2→alpha-3 conversion
-// (plus its failure mode), label plumbing, and the no-sweep-just-refresh
-// clear policy.
+// (plus its failure mode), label plumbing, and the no-sweep clear policy.
 
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
@@ -47,11 +46,9 @@ jest.mock('../persona-change-log-service', () => ({
   append: (...a: unknown[]) => mockAppend(...a),
 }));
 
-const mockMarkFeedNeedsRefresh = jest.fn((..._a: unknown[]) => {});
 const mockRunSweepFor = jest.fn(async (..._a: unknown[]) => false);
 const mockSweepForMutation = jest.fn((..._a: unknown[]) => null as 'purge' | 'unexclude' | null);
 jest.mock('../persona-mutation-sweeps', () => ({
-  markFeedNeedsRefresh: (...a: unknown[]) => mockMarkFeedNeedsRefresh(...a),
   runSweepFor: (...a: unknown[]) => mockRunSweepFor(...a),
   sweepForMutation: (...a: unknown[]) => mockSweepForMutation(...a),
 }));
@@ -129,10 +126,9 @@ describe('publication target — clear / "none" (the remaining 3 of the 9 transi
     { before: 'mute', sweep: 'unexclude' },
     // 'purge' can never actually come back for a `prefAfter: 'none'` call in
     // production (only landing ON mute purges) — included anyway so this
-    // module's generic `if (!purged) markFeedNeedsRefresh()` branch is
-    // exercised for BOTH outcomes, not just the one this call site can reach
-    // today; `sweepForMutation` is mocked here precisely so this module's own
-    // handling of its contract is what's under test, not the real policy.
+    // module handles BOTH sweep outcomes, not just the one this call site can
+    // reach today; `sweepForMutation` is mocked here precisely so this
+    // module's own handling of its contract is what's under test.
     { before: 'boost', sweep: 'purge' },
   ];
 
@@ -159,13 +155,6 @@ describe('publication target — clear / "none" (the remaining 3 of the 9 transi
         prefAfter: 'none',
       });
       expect(mockRunSweepFor).toHaveBeenCalledWith(sweep, 'set_publication_pref');
-      // markFeedNeedsRefresh fires whenever the sweep did NOT already purge —
-      // i.e. every case here except a successful purge.
-      if (sweep === 'purge') {
-        expect(mockMarkFeedNeedsRefresh).not.toHaveBeenCalled();
-      } else {
-        expect(mockMarkFeedNeedsRefresh).toHaveBeenCalledTimes(1);
-      }
       expect(result).toEqual({ applied: true });
     },
   );
@@ -237,7 +226,6 @@ describe('country-scope target', () => {
     // policy, unlike the named-publication clear above.
     expect(mockSweepForMutation).not.toHaveBeenCalled();
     expect(mockRunSweepFor).not.toHaveBeenCalled();
-    expect(mockMarkFeedNeedsRefresh).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ applied: true });
   });
 

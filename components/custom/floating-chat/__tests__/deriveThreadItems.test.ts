@@ -60,7 +60,79 @@ function cards(items: ChatThreadItem[]): ChatThreadItem[] {
   return items.filter((i) => i.kind !== 'agent-steps');
 }
 
+describe('ux2 C4: delete cards', () => {
+  const blocked = (i: number, pendingStatements?: string[]): ToolCallRecord => ({
+    id: `d${i}`,
+    name: 'deleteUserFacts',
+    input: { fact_ids: ['f1', 'f2'] },
+    result: { error: 'confirm with ask_choice first', ...(pendingStatements ? { pendingStatements } : {}) },
+    status: 'done',
+  });
+  const factCards = (items: ChatThreadItem[]) => items.filter((i) => i.kind === 'fact-card');
+
+  it('a blocked delete never renders "Removed" and never lists ids', () => {
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'Sure?', [blocked(0)])] }));
+    expect(factCards(items)).toEqual([]);
+  });
+
+  it('a blocked delete with statements renders ONE pending card, even when called twice', () => {
+    const items = deriveThreadItems(
+      base({
+        live: [
+          assistantMsg('a1', 'Sure?', [
+            blocked(0, ['Lives in Porto', 'From India']),
+            blocked(1, ['Lives in Porto', 'From India']),
+          ]),
+        ],
+      }),
+    );
+    expect(factCards(items)).toEqual([
+      expect.objectContaining({ action: 'deletePending', statements: ['Lives in Porto', 'From India'] }),
+    ]);
+  });
+
+  it('a confirmed delete renders the real statements as Removed', () => {
+    const done: ToolCallRecord = {
+      id: 'd9',
+      name: 'deleteUserFacts',
+      input: { fact_ids: ['f1'] },
+      result: { success: true, deletedCount: 1, deletedStatements: ['Lives in Porto'] },
+      status: 'done',
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', '', [done])] }));
+    expect(factCards(items)).toEqual([
+      expect.objectContaining({ action: 'deleted', statements: ['Lives in Porto'] }),
+    ]);
+  });
+
+  it('a delete result without statements falls back to nothing, never the ids', () => {
+    const legacy: ToolCallRecord = {
+      id: 'd8',
+      name: 'deleteUserFacts',
+      input: { fact_ids: ['f1'] },
+      result: { success: true, deletedCount: 1 },
+      status: 'done',
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'ok', [legacy])] }));
+    expect(factCards(items)).toEqual([]);
+  });
+});
+
 describe('deriveThreadItems', () => {
+  it('strips think tags from a persisted assistant bubble, keeping the answer (ux2 D11)', () => {
+    const items = deriveThreadItems(
+      base({
+        history: [
+          persisted('h1', 'c0', 'assistant', 'Your parents live in Bhopal. </think>', 1),
+          persisted('h2', 'c0', 'assistant', '<think>trace</think>', 2),
+        ],
+      }),
+    );
+    const bubbles = items.filter((i) => i.kind === 'message');
+    expect(bubbles).toHaveLength(1);
+    expect(bubbles[0]).toMatchObject({ message: { content: 'Your parents live in Bhopal. ' } });
+  });
+
   it('maps a plain live conversation oldest-first, newest last', () => {
     const items = deriveThreadItems(
       base({
@@ -169,9 +241,9 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', 'Saved!', [tc])] }),
     );
 
-    // A saveExtractedFacts turn also emits a steps box: the turn changed data,
-    // so its settled line is kept. Pinned here rather than filtered blindly.
-    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
+    // A settled turn with nothing failed shows no steps box (ux2 M2): the
+    // cards are the result. Pinned here rather than filtered blindly.
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(0);
 
     // message + fact-card + one topic-plan-card per saved fact (Wave 11).
     const only = cards(items);
@@ -236,9 +308,8 @@ describe('deriveThreadItems', () => {
     );
     expect(items.some((i) => i.kind === 'fact-card')).toBe(false);
     expect(cards(items)).toHaveLength(1); // just the message
-    // The turn still ran the tool, so the box stands and says so. "Saved
-    // nothing" is a RESULT; the box reports what was attempted.
-    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
+    // A settled turn with nothing failed shows no steps box (ux2 M2).
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(0);
   });
 
   it('derives a deleted card, preferring result.deletedStatements', () => {
@@ -254,21 +325,6 @@ describe('deriveThreadItems', () => {
     );
     const card = items.find((i) => i.kind === 'fact-card');
     expect(card).toMatchObject({ action: 'deleted', statements: ['Lives in Berlin'] });
-  });
-
-  it('falls back to input.fact_ids for deleted card', () => {
-    const tc: ToolCallRecord = {
-      id: 't1',
-      name: 'deleteUserFacts',
-      input: { fact_ids: ['location: city'] },
-      status: 'done',
-      result: { success: true, deletedCount: 1 },
-    };
-    const items = deriveThreadItems(
-      base({ live: [assistantMsg('a1', 'Removed', [tc])] }),
-    );
-    const card = items.find((i) => i.kind === 'fact-card');
-    expect(card).toMatchObject({ action: 'deleted', statements: ['location: city'] });
   });
 
   it('derives an updated card with empty statements', () => {
@@ -376,9 +432,9 @@ describe('deriveThreadItems', () => {
     );
     // Message is skipped (empty content) but the fact-card + topic-plan survive.
     expect(keys(cards(items))).toEqual(['card-a1-0', 'topic-plan-a1-0-f1']);
-    // …and the box rides with them, which is the whole point of pushing it
-    // past the "empty assistant message" guard.
-    expect(keys(items)).toContain('agent-steps-a1');
+    // A settled box with nothing failed is not shown (ux2 M2): the cards are
+    // the result, and an empty "Done" row under them was noise.
+    expect(keys(items)).not.toContain('agent-steps-a1');
   });
 
   it('produces stable, unique keys across history and live', () => {

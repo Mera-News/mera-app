@@ -11,6 +11,7 @@ import {
   cleanProse,
   comparableStatement,
   declaresNothingToAdd,
+  endAtLastSentence,
   isPlainNo,
   isPlainYes,
   leaksInternals,
@@ -34,10 +35,18 @@ import {
   threeFactsOf,
 } from './combined-fact';
 import { factPickStatement, isFactPickChoice, joinFactPick } from './fact-pick';
+import { correctedDistrict, guardPlaceRungs, hyphenatedSpelling, userSaidPlace } from './fuzzy-place';
+import { contentJaccard, isSubsetTopic } from './topic-similarity';
+
+/** Content-word overlap at which a new fact is taken for a rewording of one on
+ *  file ("Now building an AI news app" / "Building an AI news app" is 0.8;
+ *  "Follows Formula 1" / "Follows Formula E" is 0.5). */
+const NEAR_TWIN_JACCARD = 0.6;
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import type {
+  AgentChoiceOption,
   AgentDeps,
   AgentLeg,
   AgentModelResult,
@@ -237,11 +246,14 @@ export function reconcilePlaceChain(
   // `neighbourhood` is the one place field with no GraphQL source, so it is the
   // one the model can invent. Accept it only when the user actually said it;
   // otherwise DROP it and keep the rest of the chain, which is still good.
+  // A TYPO-DISTANCE match counts (ux2 D2): "Nieuw-West" against "niew west"
+  // is the canonical spelling of what the user said, and the model can only
+  // propose the district if this accepts it. An invented district of similar
+  // length still fails.
   const suppliedHood =
     supplied && typeof supplied.neighbourhood === 'string' ? supplied.neighbourhood.trim() : '';
-  const haystack = userMessage.toLowerCase().replace(/\s+/g, ' ');
   const hood =
-    suppliedHood && haystack.includes(suppliedHood.toLowerCase().replace(/\s+/g, ' '))
+    suppliedHood && userSaidPlace(suppliedHood, userMessage)
       ? suppliedHood
       : match.neighbourhood;
 
@@ -251,20 +263,85 @@ export function reconcilePlaceChain(
 /** Pair each chip with the structured value it stands for. Matched by content,
  *  not position: positional pairing silently mis-binds the moment the model
  *  reorders its own options. Unmatched options carry a null payload rather than
- *  a wrong one. */
+ *  a wrong one.
+ *
+ *  The MOST SPECIFIC match wins, not the first: "Newcastle" is inside
+ *  "Newcastle-under-Lyme", and a first-hit match bound that chip to Newcastle,
+ *  New South Wales (ux2 batch 27). */
 export function bindChoicePayloads(
   options: string[],
   candidates: Place[],
 ): { text: string; payload: unknown }[] {
   return options.map((text) => {
     const lower = text.toLowerCase();
-    const hit = candidates.find(
-      (c) =>
-        (c.neighbourhood && lower.includes(c.neighbourhood.toLowerCase())) ||
-        lower.includes(c.locality.toLowerCase()),
-    );
-    return { text, payload: hit ?? null };
+    // Score = the characters of the option this candidate's names account
+    // for, so district plus city beats city alone, and a longer city beats a
+    // shorter one it contains. Ties keep the earlier candidate.
+    let hit: Place | null = null;
+    let best = 0;
+    for (const c of candidates) {
+      const score = [c.neighbourhood, c.locality]
+        .map((name) => name?.toLowerCase())
+        .filter((n): n is string => !!n && lower.includes(n))
+        .reduce((sum, n) => sum + n.length, 0);
+      if (score > best) {
+        hit = c;
+        best = score;
+      }
+    }
+    return { text, payload: hit };
   });
+}
+
+/** A place's chain from lookup data only: district, city, region, country,
+ *  with a part that repeats the one before it dropped ("Singapore,
+ *  Singapore"). Never invented. */
+function placeChainLabel(p: Place): string {
+  const parts: string[] = [];
+  for (const part of [p.neighbourhood, p.locality, p.admin1, p.countryName]) {
+    const t = part?.trim();
+    if (t && !parts.some((q) => q.toLowerCase() === t.toLowerCase())) parts.push(t);
+  }
+  return parts.join(', ');
+}
+
+/** Everyday names for a country that the lookup data does not spell out. */
+const COUNTRY_ALIASES: Record<string, string[]> = { GB: ['uk', 'britain'], US: ['usa'] };
+
+function namesItsCountry(text: string, p: Place): boolean {
+  const lower = text.toLowerCase();
+  if (p.countryName && lower.includes(p.countryName.toLowerCase())) return true;
+  const words = new Set(lower.split(/[^a-z]+/).filter(Boolean));
+  return words.has(p.countryCode.toLowerCase()) || (COUNTRY_ALIASES[p.countryCode] ?? []).some((a) => words.has(a));
+}
+
+/**
+ * A place chip reads as the place it stands for (ux2 batch 27). The model
+ * writes chips freely and, with candidates resolved, wrote bare localities 5
+ * of 5 times ("Newcastle upon Tyne", "Newcastle", "Newcastle-under-Lyme"): a
+ * bare "Newcastle" says nothing about which one. When the chips are not
+ * already distinct AND country-bearing, or two share a city, EVERY bound chip
+ * takes its lookup chain. An unbound chip stays verbatim. Texts that would
+ * collide after expansion keep the model's wording, since the tap is matched
+ * back by text.
+ */
+export function expandChoiceLabels(bound: AgentChoiceOption[]): AgentChoiceOption[] {
+  const places = bound.map((b) => placeFromPayload(b.payload));
+  if (places.every((p) => p === null)) return bound;
+  const texts = bound.map((b) => b.text.trim().toLowerCase());
+  const distinct = new Set(texts).size === texts.length;
+  const cities = places.filter((p): p is Place => p !== null).map((p) => p.locality.toLowerCase());
+  const sharedCity = new Set(cities).size !== cities.length;
+  const allNameCountry = bound.every((b, i) => places[i] === null || namesItsCountry(b.text, places[i] as Place));
+  if (distinct && !sharedCity && allNameCountry) return bound;
+  const expanded = bound.map((b, i) => {
+    const place = places[i];
+    if (!place) return b;
+    const text = placeChainLabel(place);
+    return text === b.text ? b : { ...b, text, modelText: b.text };
+  });
+  const out = expanded.map((e) => e.text.trim().toLowerCase());
+  return new Set(out).size === out.length ? expanded : bound;
 }
 
 /** A chip payload that is a Place (the only structured payload a chip
@@ -342,9 +419,13 @@ function asThirdPersonFact(entry: Record<string, unknown>): Record<string, unkno
  *  neighbourhood), then the looked-up chain. */
 function chainStatement(where: string, place: Place): string {
   const first = where.split(',')[0].trim();
+  const own = (r: string | undefined) => !!r && first.toLowerCase() === r.toLowerCase();
   const rungs = [
-    first.toLowerCase() !== place.locality.toLowerCase() ? first : null,
-    place.locality,
+    own(place.locality) || own(place.userTerm) ? null : first,
+    // THE USER'S TERM FIRST when it matched only an alias (ux2 D13): "Porto
+    // Santo" resolves to Vila Baleira, and a chain without it names a place the
+    // user never said, so no topic ever mentions Porto Santo.
+    place.userTerm ? `${place.userTerm} (${place.locality})` : place.locality,
     place.admin1,
     place.countryName,
     place.bloc,
@@ -454,6 +535,32 @@ export function collapseRepeatedRungs(statement: string): string {
   return out.join(', ');
 }
 
+/**
+ * The facts a deleteUserFacts call names, in the order named, deduplicated:
+ * `all: true` is every fact; otherwise each entry is an exact id (brackets
+ * stripped), else an attribute key that names exactly ONE fact, else a
+ * statement equal in comparable form. An entry naming several facts by key
+ * names none: the card must never remove more than was meant.
+ */
+export function resolveDeleteTargets(
+  args: Record<string, unknown>,
+  facts: AgentPersonaFact[],
+): AgentPersonaFact[] {
+  if (args.all === true) return [...facts];
+  const named = Array.isArray(args.fact_ids) ? (args.fact_ids as unknown[]) : [];
+  const out: AgentPersonaFact[] = [];
+  for (const raw of named) {
+    if (typeof raw !== 'string') continue;
+    const key = raw.trim().replace(/^\[|\]$/g, '');
+    const byId = facts.find((f) => f.id === key);
+    const byAttr = facts.filter((f) => (f.attribute ?? '').trim().toLowerCase() === key.toLowerCase());
+    const byText = facts.filter((f) => comparableStatement(f.statement) === comparableStatement(key));
+    const hit = byId ?? (byAttr.length === 1 ? byAttr[0] : byText.length === 1 ? byText[0] : undefined);
+    if (hit && !out.includes(hit)) out.push(hit);
+  }
+  return out;
+}
+
 /** The user's own current home among the facts on file, or null. */
 function currentHomeFact(
   facts: AgentPersonaFact[],
@@ -527,8 +634,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // pending choice. Anything else is a new turn, and the stale choice is
     // dropped rather than carried: a bare "Yes" typed into a fresh thread must
     // never be read as the answer to a question from another conversation.
+    // The chip's text, or the model's own wording a chain replaced: typing
+    // "Amsterdam" still answers a chip that reads "Amsterdam, North Holland,
+    // Netherlands".
+    const said = userMessage.trim().toLowerCase();
     const tapped = turn.pendingChoice.options.find(
-      (o) => o.text.trim().toLowerCase() === userMessage.trim().toLowerCase(),
+      (o) => o.text.trim().toLowerCase() === said || o.modelText?.trim().toLowerCase() === said,
     );
     if (tapped) {
       turn.resolvedChoice = {
@@ -661,6 +772,68 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const unknownTools: string[] = [];
   /** The status of the last lookup_place this turn, or null if none ran. */
   let lastLookupStatus: string | null = null;
+  /** Words a single-place lookup could not use ("niew west" beside Amsterdam),
+   *  with the place they belong to. The place service has no districts, so
+   *  this is the only record of the finer area the user named (ux2 D1). */
+  let finerArea: { words: string; place: Place } | null = null;
+  /** An ask_choice about the home ran this turn, refused or not. The loop then
+   *  offers no home of its own: never propose and ask on one fact (ux2 D4). */
+  let askedAboutHome = false;
+  /** Everything the model wrote this turn, read only for its spelling of the
+   *  finer area. */
+  const modelTexts: string[] = [];
+  /** A lookup this turn could not place what the user named. */
+  let sawNoMatch = false;
+  /** A removal card is on screen this turn; it is the question. */
+  let deleteCardOffered = false;
+  /** An unverified home was held back because it would replace the verified
+   *  home on file; the chip offers the user's own words instead. */
+  let heldBackUnverifiedHome = false;
+
+  /**
+   * "SAVE AS I WROTE IT" (owner ruling ux2 D9): the user's own sentence, as a
+   * fact, for the chip the UI adds under a question or after a failed lookup.
+   * Written by the loop, never the model, and never an option of
+   * `pendingChoice`: a chip there becomes `resolvedChoice`, which authorises
+   * deletes and cross-key replaces. The UI commits it directly on tap. Only the
+   * prefix is made third person ("I live in X" gives "Lives in X"); no content
+   * word changes. The home key only on a residence turn about the user.
+   */
+  const saveAsWrittenEntry = (): Record<string, unknown> => {
+    const original = (resumedSkill && turn.lastUserMessage ? turn.lastUserMessage : userMessage).trim();
+    const shaped = asThirdPersonFact({ statement: original }).statement;
+    const statement = typeof shaped === 'string' && shaped.trim() ? shaped.trim() : original;
+    const topicSkill = routeKind && (deps.skillIds() as readonly string[]).includes(`topics/${routeKind}`)
+      ? `topics/${routeKind}`
+      : undefined;
+    return {
+      statement,
+      ...(skillLoaded === 'facts/residence' && !isRelationalStatement(original)
+        ? { questionnaire_attribute: CANONICAL_LOCATION_KEY }
+        : {}),
+      ...(topicSkill ? { topic_skill_id: topicSkill } : {}),
+    };
+  };
+  /** The district a loop-written home leads with: the looked-up neighbourhood,
+   *  else the finer area in the model's spelling or the user's own words, else
+   *  nothing (the locality alone). Never downgrades to the city while the user
+   *  named something finer (ux2 D3). */
+  const districtFor = (place: Place): string =>
+    place.neighbourhood
+    ?? (finerArea && finerArea.place.locality === place.locality && finerArea.place.countryCode === place.countryCode
+      ? correctedDistrict(finerArea.words, modelTexts)
+      : place.locality);
+  /** The loop may offer a home of its own only when the message is about the
+   *  USER's home. "My girlfriend's parents live in Porto Santo" on an origin
+   *  turn was offered back as "Lives in Porto Santo" for the user (ux2 D13). */
+  const aboutOwnHome =
+    !isRelationalStatement(userMessage)
+    || /\b(?:i|we)(?:['’]m|\s+am|\s+are|['’]re)?\s+(?:(?:have\s+|just\s+|recently\s+)*moved|live|living|based|reside)\b/i.test(userMessage);
+  /** A place the user named, up to a typo, by any of its names. */
+  const userNamed = (p: Place): boolean =>
+    userSaidPlace(p.locality, userMessage)
+    || (p.neighbourhood !== undefined && userSaidPlace(p.neighbourhood, userMessage))
+    || (p.userTerm !== undefined && userSaidPlace(p.userTerm, userMessage));
   /** Every lookup this turn that resolved to exactly ONE place. A later
    *  lookup ("India") resets `placeCandidates`, so the end-of-turn offer
    *  reads this instead. */
@@ -711,6 +884,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const offeredThisTurn: string[] = [];
   /** A home fact was already offered this turn (see the save handler). */
   let homeOfferedThisTurn = false;
+  /** Facts a card already offers to replace this turn. A second offer for the
+   *  same old fact is merged into the first card (same call) or dropped (later
+   *  leg): the owner saw two "Replace this fact?" cards for one old fact. */
+  const replaceTargetsThisTurn = new Set<string>();
   let existingFacts: { factId: string; statement: string }[] = [];
   /** A retired combined origin-and-home fact still on file, if any. */
   const combinedFactOnFile = state.persona.facts.find((f) => isCombinedOriginFact(f.attribute)) ?? null;
@@ -780,6 +957,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       answeredYesTo: typedYesResume && plainAnswer === 'yes' ? lastQuestion : null,
       answeredNoTo: typedYesResume && plainAnswer === 'no' ? lastQuestion : null,
       pendingCards: pendingCardList,
+      finerArea: finerArea?.words ?? null,
       segmentScope:
         skillsLoaded.length + queuedSkills.length > 1 && routeKind
           ? {
@@ -856,6 +1034,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // One question per turn: a later segment never gets ask_choice once an
         // earlier one is waiting on the user.
         allowChoice: askingSkill === null,
+        webSearch: typeof deps.tools.webSearch === 'function',
       }) as unknown[],
       toolChoice: forcingProposalNow ? 'required' : 'auto',
       // FALSE on every call: measured, thinking on returned empty content on 8
@@ -882,11 +1061,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       inputTokens,
     };
     legs.push(leg);
+    modelTexts.push(result.content, ...result.toolCalls.map((c) => c.argumentsRaw));
+
+    // A LEG CUT BY THE TOKEN CAP ends at its last whole sentence. `truncated`
+    // was never read, and "...Would you prefer" shipped as a bubble's tail
+    // (ux2 D7). A leg with no whole sentence counts as silent.
+    const legText = result.truncated ? endAtLastSentence(result.content) : result.content;
 
     // Cleaned here too, not only at the end: the acknowledgement is the FIRST
     // thing on screen and is exactly where the measured dashes appeared.
-    if (result.content.trim()) {
-      const cleaned = cleanProse(result.content);
+    if (legText.trim()) {
+      const cleaned = cleanProse(legText);
       if (index === 0 && !resumedSkill) {
         // The ACKNOWLEDGEMENT. Kept apart from the answer: it said the turn
         // began, and when every later leg was silent it used to ship as the
@@ -1005,7 +1190,31 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const out = await deps.tools.lookupPlace({ query, countryHint });
         placeCandidates = out.status === 'resolved' ? out.places : [];
         lastLookupStatus = out.status;
+        if (out.status === 'no_match') sawNoMatch = true;
+        if (out.status === 'resolved' && out.places.length === 1 && out.unmatched && out.unmatched.trim()) {
+          finerArea = { words: out.unmatched.trim(), place: out.places[0] };
+        }
         if (out.status === 'resolved' && out.places.length === 1) resolvedPlacesThisTurn.push(out.places[0]);
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        if (!isRepeat) {
+          sawContinuationTool = true;
+          continuationsSeen.add(callKey);
+        }
+        continue;
+      }
+
+      if (call.name === 'webSearch') {
+        // The device searches (ux2 D10). No port method means the setting is
+        // off; the tool was not declared, so a call is answered, never run.
+        const queries = Array.isArray(args.queries)
+          ? (args.queries as unknown[]).filter((q): q is string => typeof q === 'string' && q.trim().length > 0).slice(0, 4)
+          : [];
+        const out = deps.tools.webSearch
+          ? queries.length > 0
+            ? await deps.tools.webSearch({ queries })
+            : { error: 'queries must be a non-empty array of strings', searched: false }
+          : { error: 'web search is not available', searched: false };
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -1032,8 +1241,20 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         if (result.content.trim() && !(index === 0 && !resumedSkill)) reply = '';
       }
 
+      if (call.name === 'ask_choice' && deleteCardOffered) {
+        // The delete card already asks; a chip question would ask twice.
+        const out = { error: 'The removal card already asks the user. Ask nothing more.' };
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        continue;
+      }
+
       if (call.name === 'ask_choice') {
         const question = typeof args.question === 'string' ? args.question : '';
+        // Recorded BEFORE any refusal below: a refused question still reached
+        // the model's prose, so a loop offer for the same home would put a card
+        // under a question about it (ux2 D4).
+        if (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin') askedAboutHome = true;
         // A PLACE THAT RESOLVED TO ONE MATCH IS NOT A QUESTION (owner ruling
         // Q1: the card is the consent for a replacement). Measured on staging,
         // "Berlin" resolved to one place and the model still asked "Berlin
@@ -1041,9 +1262,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // home or origin turn that question is refused and the leg continues,
         // as is any question after the home card is already offered ("Should
         // I replace your Amsterdam address?", measured the same way).
+        // After a TAPPED place, a BACKGROUND question is refused too (ux2 batch
+        // 28): the NSW tap resumed facts/residence, the model asked "Are you an
+        // expat in Australia, or originally from there?", and the turn ended
+        // with no card. Expat status is added by the loop (addExpatStatus) and
+        // origin is only offered when said, so the question buys nothing. A
+        // question that narrows the tapped place ("Which part?") still asks.
+        const askedText = [question, ...(Array.isArray(args?.options) ? (args.options as unknown[]) : [])]
+          .filter((x): x is string => typeof x === 'string')
+          .join(' ');
+        const backgroundQuestion = /\b(?:expat|originally|born|grew up|from there|where (?:are|were) you from)\b/i.test(askedText);
         if (
           (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin')
-          && ((lastLookupStatus === 'resolved' && placeCandidates.length === 1) || homeOfferedThisTurn)
+          && (
+            (lastLookupStatus === 'resolved' && placeCandidates.length === 1)
+            || homeOfferedThisTurn
+            || (resumedSkill && tappedPlace !== null && backgroundQuestion)
+          )
         ) {
           const out = {
             error:
@@ -1086,11 +1321,24 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           continue;
         }
         proposedSomething = true;
-        turn.pendingChoice = {
-          question,
-          options: bindChoicePayloads(args.options, placeCandidates),
-        };
-        leg.toolResults.push({ name: call.name, result: { awaiting: 'user' } });
+        const chips = expandChoiceLabels(bindChoicePayloads(args.options, placeCandidates));
+        turn.pendingChoice = { question, options: chips };
+        // The THREAD draws its chips from this call's arguments and sends the
+        // tapped text back, so it carries the same texts as pendingChoice.
+        const shownOptions = chips.map((c) => c.text);
+        const modelOptions = (args?.options ?? []) as string[];
+        if (shownOptions.some((t, i) => t !== modelOptions[i])) {
+          args = { ...(args ?? {}), options: shownOptions };
+          const at = leg.toolCalls.indexOf(call);
+          call = { ...call, argumentsRaw: JSON.stringify(args) };
+          if (at >= 0) leg.toolCalls[at] = call;
+        }
+        leg.toolResults.push({
+          name: call.name,
+          result: isFactSkill(skillLoaded)
+            ? { awaiting: 'user', saveAsWritten: saveAsWrittenEntry() }
+            : { awaiting: 'user' },
+        });
         terminatedByChoice = true;
         // ENDS THE TURN, BUT NOT THE LEG. This used to `break` out of the
         // tool-call loop, so any saveExtractedFacts the model placed after the
@@ -1142,15 +1390,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           onlyPlace
           && (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin')
           && !homeOfferedThisTurn
+          && !askedAboutHome
+          && aboutOwnHome
           && !list.some((e) => isHomeEntry(e))
-          && userMessage.toLowerCase().includes(onlyPlace.locality.toLowerCase())
+          && userNamed(onlyPlace)
         ) {
           const originEntry = list.find((e) => e.questionnaire_attribute === ORIGIN_KEY);
           const originFact = state.persona.facts.find((f) => f.attribute === ORIGIN_KEY || isOriginStatement(f.statement));
           const from = originCountry(String(originEntry?.statement ?? originFact?.statement ?? ''));
           if (!sameCountry(onlyPlace.countryName, from)) {
             list.push({
-              statement: chainStatement(onlyPlace.neighbourhood ?? onlyPlace.locality, onlyPlace),
+              statement: chainStatement(districtFor(onlyPlace), onlyPlace),
               questionnaire_attribute: CANONICAL_LOCATION_KEY,
             });
           }
@@ -1190,8 +1440,20 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           }
           const rawStatement = typeof entry.statement === 'string' ? entry.statement.trim() : '';
           // "Lives in Porto, Porto, Portugal, EU" (city and region share a
-          // name) reads as a stutter on the card (ux1 C1).
-          const statement = isHomeEntry(entry) ? collapseRepeatedRungs(rawStatement) : rawStatement;
+          // name) reads as a stutter on the card (ux1 C1). Then the chain is
+          // checked against what the lookup returned: an invented rung goes
+          // and the user's own term for an alias match comes first (ux2 D13).
+          const guarded = guardPlaceRungs(
+            isHomeEntry(entry) ? collapseRepeatedRungs(rawStatement) : rawStatement,
+            [...placeCandidates, ...resolvedPlacesThisTurn],
+            userMessage,
+          );
+          // A home's first rung in the hyphenated spelling this turn used
+          // elsewhere (ux2 batch 25, D1).
+          const statement = isHomeEntry(entry)
+            ? guarded.replace(/^(lives in )([^,(]+)/i, (_m, lead: string, rung: string) =>
+                `${lead}${hyphenatedSpelling(rung.trim(), modelTexts)}`)
+            : guarded;
           if (!statement) continue;
           // A RE-PROPOSAL. find_similar_facts showed the model this exact
           // statement as something already on file; offering it back is a
@@ -1268,6 +1530,59 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             const home = currentHomeFact(state.persona.facts, statement);
             if (home) replaces = home.id;
           }
+          // A NEAR-IDENTICAL FACT ON FILE IS THE TARGET (ux2 batch 25, D9):
+          // "Now building an AI news app" beside "Building an AI news app" came
+          // back as a plain Add, two copies of one fact. The card still offers
+          // Keep both, so a wrong target costs nothing.
+          if (replaces === null && !isHomeEntry(entry)) {
+            const twin = state.persona.facts.find(
+              (f) =>
+                !isLocationKey(f.attribute)
+                && (contentJaccard(statement, f.statement) >= NEAR_TWIN_JACCARD
+                  || isSubsetTopic(f.statement, statement)
+                  || isSubsetTopic(statement, f.statement))
+                && mayReplace(statement, f.statement),
+            );
+            if (twin) replaces = twin.id;
+          }
+          if (replaces !== null && replaceTargetsThisTurn.has(replaces)) {
+            // ONE CARD PER OLD FACT (owner, ux2). In the same call the readings
+            // join the first card as alternatives; a later leg's is dropped,
+            // since its card is already on screen.
+            const into = sanitised.find((e) => e.replaces === replaces);
+            if (into) {
+              const seen = new Set([comparableStatement(String(into.statement))]);
+              const merged: string[] = [];
+              for (const alt of [
+                ...(Array.isArray(into.alternatives) ? into.alternatives : []),
+                statement,
+                ...(Array.isArray(entry.alternatives) ? entry.alternatives : []),
+              ]) {
+                if (typeof alt !== 'string' || !alt.trim()) continue;
+                const key = comparableStatement(alt);
+                if (seen.has(key)) continue;
+                seen.add(key);
+                merged.push(alt.trim());
+              }
+              into.alternatives = merged.slice(0, 3);
+            }
+            reProposals++;
+            continue;
+          }
+          if (replaces !== null) replaceTargetsThisTurn.add(replaces);
+          // AN UNVERIFIED PLACE NEVER REPLACES A VERIFIED HOME (ux2 batch 25,
+          // D4): "I live in Zzqq" found nothing, and the card offered to
+          // replace "Lives in Berlin" with it. Held back; the chip offers the
+          // user's own words, which never replace anything.
+          const nothingFound =
+            (sawNoMatch || lastLookupStatus === 'unavailable')
+            && resolvedPlacesThisTurn.length === 0
+            && placeCandidates.length === 0;
+          if (isHomeEntry(entry) && replaces !== null && nothingFound) {
+            heldBackUnverifiedHome = true;
+            reProposals++;
+            continue;
+          }
           if (isHomeEntry(entry)) homeOfferedThisTurn = true;
           proposals.push({ statement, kind: routeKind, place, replaces });
           offeredThisTurn.push(statement.toLowerCase());
@@ -1343,7 +1658,24 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       if (call.name === 'deleteUserFacts') {
         // GATED. Model-triggered, irreversible, and it cascades to topics.
         if (!turn.resolvedChoice) {
-          const out = { error: 'confirm with ask_choice first' };
+          // THE CARD IS THE CONFIRMATION (owner-approved M6, ux2 batch 25). A
+          // delete is never run from the model's call: the loop resolves what
+          // it names (ids, attribute keys, statements, or `all`) against the
+          // persona and hands the card that list, with Remove and Keep. The
+          // count comes from the data (the model said "all 18" of 20), and the
+          // text, never ids, is what the user reads.
+          const pending = resolveDeleteTargets(args, state.persona.facts);
+          const out = pending.length > 0
+            ? {
+                error: 'The card asks the user to confirm this removal. Do not ask again.',
+                pendingFactIds: pending.map((f) => f.id),
+                pendingStatements: pending.map((f) => f.statement),
+              }
+            : { error: 'No fact on file matches. Say you cannot find it and quote what you hold on that subject.' };
+          if (pending.length > 0) {
+            deleteCardOffered = true;
+            proposedSomething = true;
+          }
           leg.toolResults.push({ name: call.name, result: out });
           toolResultsThisTurn.push({ name: call.name, result: out });
           continue;
@@ -1389,7 +1721,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
 
     if (sawContinuationTool) continue;
-    if (!result.content.trim()) {
+    if (!legText.trim()) {
       // A leg that acted and said nothing owes the user a closing sentence, and
       // is given exactly ONE leg to write it. Unbounded, this is how a finished
       // turn walks to the cap: the proposal lands, the leg is silent, the loop
@@ -1564,13 +1896,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
    */
   async function offerResolvedPlaceAtEnd(): Promise<void> {
     if (terminalReason === 'transport-error' || terminalReason === 'awaiting-user') return;
-    if (turn.pendingChoice !== null || proposedSomething || homeOfferedThisTurn) return;
+    if (turn.pendingChoice !== null || proposedSomething || homeOfferedThisTurn || askedAboutHome) return;
+    if (!aboutOwnHome) return;
     if (!skillsLoaded.some((id) => id.startsWith('facts/'))) return;
-    const said = userMessage.toLowerCase();
-    const named = resolvedPlacesThisTurn.filter(
-      (p) => said.includes(p.locality.toLowerCase())
-        || (p.neighbourhood !== undefined && said.includes(p.neighbourhood.toLowerCase())),
-    );
+    const named = resolvedPlacesThisTurn.filter(userNamed);
     const distinct = [...new Map(named.map((p) => [`${p.neighbourhood ?? ''}|${p.locality}|${p.countryCode}`, p])).values()];
     if (distinct.length !== 1) return;
     const place = distinct[0];
@@ -1579,7 +1908,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     const from = origin ?? (originOnFile ? originCountry(originOnFile.statement) : null);
     if (sameCountry(place.countryName, from)) return;
     const list: Record<string, unknown>[] = [
-      { statement: chainStatement(place.neighbourhood ?? place.locality, place), questionnaire_attribute: CANONICAL_LOCATION_KEY },
+      { statement: chainStatement(districtFor(place), place), questionnaire_attribute: CANONICAL_LOCATION_KEY },
     ];
     if (origin && !originOnFile) list.push({ statement: `From ${origin}`, questionnaire_attribute: ORIGIN_KEY });
     addExpatStatus(list, state.persona.facts, [place]);
@@ -1632,6 +1961,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
     proposedSomething = true;
     homeOfferedThisTurn = true;
+    // THE TURN PROPOSED SOMETHING, so it did not end without a proposal: the
+    // "didn't find anything to add" line showed beside this very card (ux2 D5).
+    if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
     // The cards answer the question the prose was asking; it is not left
     // above them.
     if (/\?\s*$/.test(cleanProse(reply))) reply = '';
@@ -1738,6 +2070,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       offeredThisTurn.push(p.statement.toLowerCase());
     }
     proposedSomething = true;
+    if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
     await deps.combinedFactRewrite?.markOffered(combined.id);
     params.onLeg?.(leg);
     return combined.id;
@@ -1773,6 +2106,22 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // break. A card on screen needs no words; otherwise one plain line.
     reply = proposedSomething ? '' : REPLY_PROCESS_FALLBACK;
     replyProcessUnfixed = true;
+  } else if (
+    // NEVER SILENT ON A QUESTION (ux2 batch 26 D6). A conversation leg that
+    // neither answers nor calls a tool is re-run to the cap and ends with an
+    // empty reply, and the acknowledgement ("One moment.") was then the
+    // whole turn on screen. A facts turn has its own closing UI (a card, the
+    // no-proposal line, the save-as-written chip); a conversation turn has
+    // nothing but this line.
+    !cleanProse(reply).trim()
+    && !proposedSomething
+    && turn.pendingChoice === null
+    && terminalReason !== 'transport-error'
+    && skillLoaded !== null
+    && skillLoaded.startsWith('conversation/')
+  ) {
+    reply = REPLY_PROCESS_FALLBACK;
+    replyProcessUnfixed = true;
   }
   // The acknowledgement is rendered too, so it gets the same two checks. It is
   // dropped rather than replaced: the reply below it carries the turn.
@@ -1782,6 +2131,44 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
   // ---- A RESOLVED PLACE THE TURN NEVER OFFERED -----------------------------
   await offerResolvedPlaceAtEnd();
+
+  // ---- A PLACE NOBODY COULD FIND: the user's own words, as a chip ---------
+  // After a `no_match` on a facts turn that put nothing on screen, the chip is
+  // the one way to keep what the user said (ux2 D9). A loop-written leg, like
+  // the offers above, so the UI renders it from the thread like any call.
+  if (
+    (sawNoMatch || heldBackUnverifiedHome)
+    && (!proposedSomething || heldBackUnverifiedHome)
+    && turn.pendingChoice === null
+    && terminalReason !== 'transport-error'
+    && skillsLoaded.some((id) => id.startsWith('facts/'))
+  ) {
+    const out = { saveAsWritten: saveAsWrittenEntry() };
+    const leg: AgentLeg = {
+      index: legs.length,
+      role: 'tool',
+      systemPrompt: '',
+      messages: [],
+      toolCalls: [{ name: 'saveAsWritten', argumentsRaw: '{}' }],
+      toolResults: [{ name: 'saveAsWritten', result: out }],
+      rawOutput: '',
+      result: {
+        content: '',
+        toolCalls: [{ name: 'saveAsWritten', argumentsRaw: '{}' }],
+        finishReason: 'synthetic',
+        truncated: false,
+        usage: null,
+        modelSent: null,
+        latencyMs: 0,
+        error: null,
+      },
+      inputTokens: 0,
+      synthetic: true,
+    };
+    legs.push(leg);
+    if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
+    params.onLeg?.(leg);
+  }
 
   // ---- THE ONE-TIME SPLIT OF A COMBINED FACT -------------------------------
   const combinedRewriteOffered = await offerCombinedFactSplit();

@@ -65,12 +65,10 @@ over the moment itself.
 
 ## Worked example
 Fact: "Parents are currently travelling in Chhindwara, India"
-Other facts: "Works in logistics"; "Lives in Gràcia, Barcelona, Catalonia, Spain, Europe"
 Existing topics: none
 
 Relational and temporary, so the same set as living there, and no ladder. One rung, so the array
-opens on it. No Madhya Pradesh, no India, no Asia, and nothing about the logistics job or
-Barcelona. Two daily-life topics, weather and power. Six is the honest length; the ceiling of 8 is
+opens on it. No Madhya Pradesh, no India, no Asia. Two daily-life topics, weather and power. Six is the honest length; the ceiling of 8 is
 not a target.
 
 ```json

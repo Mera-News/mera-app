@@ -45,14 +45,14 @@ describe('StatusIndicator', () => {
       <StatusIndicator status="pending" label="Checking the area" testID="si" />,
     );
     expect(getByTestId('si-spinner')).toBeTruthy();
-    expect(queryByTestId('icon-check')).toBeNull();
+    expect(queryByTestId('icon-check', { includeHiddenElements: true })).toBeNull();
   });
 
   it('ticks when done, with no failure line', () => {
     const { getByTestId, queryByTestId } = render(
       <StatusIndicator status="done" label="Done" testID="si" />,
     );
-    expect(getByTestId('icon-check')).toBeTruthy();
+    expect(getByTestId('icon-check', { includeHiddenElements: true })).toBeTruthy();
     expect(queryByTestId('si-consequence')).toBeNull();
   });
 
@@ -60,7 +60,7 @@ describe('StatusIndicator', () => {
     const { getByTestId } = render(
       <StatusIndicator status="error" label="Checking the area" errorText="Mera used what it knew" testID="si" />,
     );
-    expect(getByTestId('icon-block')).toBeTruthy();
+    expect(getByTestId('icon-block', { includeHiddenElements: true })).toBeTruthy();
     expect(getByTestId('si-consequence').props.children).toBe('Mera used what it knew');
   });
 
@@ -84,5 +84,17 @@ describe('StatusIndicator', () => {
   it('works with no label at all', () => {
     const { getByTestId } = render(<StatusIndicator status="done" testID="si" />);
     expect(getByTestId('si').props.accessibilityLabel).toBe('t:agentSteps.stateDone');
+  });
+
+  it('its glyph is hidden and sits under no accessible element; the words carry the label (ux2 batch 26)', () => {
+    for (const status of ['done', 'error'] as const) {
+      const { getByTestId } = render(<StatusIndicator status={status} label="Saved" testID="si" />);
+      const icon = getByTestId(status === 'done' ? 'icon-check' : 'icon-block', { includeHiddenElements: true });
+      expect(icon.props.accessible).toBe(false);
+      expect(icon.props.accessibilityElementsHidden).toBe(true);
+      expect(icon.props.importantForAccessibility).toBe('no-hide-descendants');
+      for (let p: any = icon.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+      expect(getByTestId('si').props.accessible).toBe(true);
+    }
   });
 });

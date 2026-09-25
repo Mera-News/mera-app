@@ -154,7 +154,8 @@ jest.mock('@/components/custom/cards/ArticleStandaloneCompactCard', () => {
     return {
         ArticleStandaloneCompactCard: ({ article, onPress, onLongPress, menuExtraItems, testID }: any) => (
             <Pressable testID={testID} onPress={onPress} onLongPress={onLongPress}>
-                <Text>{article.title}</Text>
+                {/* As the real card: English first, then the original. */}
+                <Text>{article.title_en_internal_only ?? article.title}</Text>
                 {(menuExtraItems ?? []).map((i: any) => (
                     <Pressable key={i.key} testID={`${testID}-${i.testID}`} onPress={i.run}>
                         <Text>{i.label}</Text>

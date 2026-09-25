@@ -25,10 +25,21 @@ jest.mock('react-native-reanimated', () => {
     };
 });
 
+// Every `.enabled(x)` a Pan is built with, in render order.
+const mockPanEnabled: boolean[] = [];
+
 jest.mock('react-native-gesture-handler', () => {
     const { View } = require('react-native');
     const R = require('react');
-    const chain: any = new Proxy({}, { get: () => () => chain });
+    const chain: any = new Proxy(
+        {},
+        {
+            get: (_t, key) => (arg: unknown) => {
+                if (key === 'enabled') mockPanEnabled.push(arg as boolean);
+                return chain;
+            },
+        },
+    );
     return {
         Gesture: { Pan: () => chain },
         GestureDetector: ({ children }: any) => children,
@@ -40,7 +51,12 @@ jest.mock('react-native-screens', () => {
     const { View } = require('react-native');
     const R = require('react');
     return {
-        FullWindowOverlay: (p: any) => R.createElement(View, { testID: 'toast-full-window-overlay' }, p.children),
+        FullWindowOverlay: (p: any) =>
+            R.createElement(
+                View,
+                { testID: 'toast-full-window-overlay', a11yModal: p.unstable_accessibilityContainerViewIsModal },
+                p.children,
+            ),
     };
 });
 
@@ -195,6 +211,38 @@ describe('ToastDeck on iOS', () => {
         }
         // Two strips, stacked one under the other, not on top of each other.
         expect(new Set(edges).size).toBe(2);
+    });
+
+    it('a non-dismissible front card cannot be swiped; an ordinary one can', () => {
+        render(<ToastDeck />);
+        mockPanEnabled.length = 0;
+        act(() => {
+            show({ id: 'facts-combo', duration: null, dismissible: false, render: card('Updating') });
+        });
+        expect(mockPanEnabled.length).toBeGreaterThan(0);
+        expect(mockPanEnabled[mockPanEnabled.length - 1]).toBe(false);
+
+        act(() => closeAll());
+        // Let the closed card's exit clone (never swipeable) finish and leave.
+        act(() => {
+            jest.advanceTimersByTime(1000);
+        });
+        mockPanEnabled.length = 0;
+        act(() => {
+            show({ duration: 5000, render: card('Ordinary') });
+        });
+        expect(mockPanEnabled[mockPanEnabled.length - 1]).toBe(true);
+    });
+
+    it('never hides the screen underneath from VoiceOver', () => {
+        // react-native-screens' overlay container defaults to
+        // accessibilityViewIsModal = YES, which hid EVERY view outside it: on
+        // device the accessibility tree held only the toast while it showed.
+        const { getByTestId } = render(<ToastDeck />);
+        act(() => {
+            show({ duration: 5000, render: card('First') });
+        });
+        expect(getByTestId('toast-full-window-overlay').props.a11yModal).toBe(false);
     });
 
     it('detaches the overlay once the last card has faded out', () => {

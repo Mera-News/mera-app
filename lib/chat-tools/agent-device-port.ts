@@ -24,6 +24,8 @@ import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import type { PhaseSignal } from '@/lib/services/chat-phase';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, SMALL_MODEL } from '../llm/constants';
 import { handleDeleteUserFacts, handleSaveExtractedFacts } from './tool-handlers';
+import { handleWebSearch } from './web-search-handler';
+import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { getFacts } from '../database/services/fact-service';
 import type { AgentPersona } from '@/lib/mera-harness';
 import logger from '../logger';
@@ -158,27 +160,42 @@ export async function withExactNameMatches(
   form: string,
   countryHint?: string,
 ): Promise<Place[]> {
-  const wanted = form.trim().toLowerCase();
-  if (countryHint || places.some((p) => p.locality.trim().toLowerCase() === wanted)) return places;
+  return (await exactMatchesFor(places, form, countryHint)).places;
+}
+
+/**
+ * The candidates plus the ones named EXACTLY: by their name, or by one of
+ * their alternate names equal to the query (ux2 batch 25, D2). "Porto Santo"
+ * is an exact search key of Vila Baleira and only a prefix of Porto Santo
+ * Stefano, so Vila Baleira is the place the user named. A prefix alias
+ * ("Porto" in "Porto Príncipe") is not exact and is never promoted.
+ */
+async function exactMatchesFor(
+  places: Place[],
+  form: string,
+  countryHint?: string,
+): Promise<{ places: Place[]; exact: Place[] }> {
+  const wanted = foldName(form);
+  const named = places.filter((p) => foldName(p.locality) === wanted);
+  if (countryHint || named.length > 0) return { places, exact: named };
   const search = await searchPlaces(form);
-  if (!search.ok) return places;
-  const codes = [
-    ...new Set(
-      search.places
-        .filter((r) => r.city.trim().toLowerCase() === wanted)
-        .map((r) => r.countryCode),
-    ),
-  ].slice(0, 2);
+  if (!search.ok) return { places, exact: [] };
+  const hits = search.places.filter(
+    (r) => foldName(r.city) === wanted || (r.search_keys ?? []).some((k) => foldName(k) === wanted),
+  );
+  const cities = new Set(hits.map((r) => foldName(r.city)));
+  const codes = [...new Set(hits.map((r) => r.countryCode))].slice(0, 2);
   const exact: Place[] = [];
   for (const code of codes) {
     // eslint-disable-next-line no-await-in-loop -- at most two, in rank order.
     const out = await lookupPlace(form, code);
     if (out.status === 'resolved') {
-      exact.push(...out.places.filter((p) => p.locality.trim().toLowerCase() === wanted));
+      exact.push(...out.places.filter((p) => cities.has(foldName(p.locality))));
     }
   }
-  if (exact.length === 0) return places;
-  return [...exact, ...places].slice(0, PLACE_CANDIDATE_LIMIT);
+  if (exact.length === 0) return { places, exact };
+  const merged = [...exact, ...places.filter((p) => !exact.some((e) => e.locality === p.locality && e.countryCode === p.countryCode))];
+  return { places: merged.slice(0, PLACE_CANDIDATE_LIMIT), exact };
 }
 
 /**
@@ -193,6 +210,48 @@ export async function withExactNameMatches(
  * `unavailable` short-circuits: the lookup FAILED, and retrying a narrower
  * form would turn a transport failure into a confident "no such place".
  */
+/** Filler words that are never part of a place name the user wrote. */
+const FILLER = new Set(['in', 'at', 'near', 'the', 'of', 'from', 'to', 'and', 'area', 'district']);
+
+/**
+ * The words of `asked` that the matched `form` did not use, in the user's
+ * order, filler dropped: "niew west" for "niew west Amsterdam" matched on
+ * "Amsterdam". The place service has no districts, and without this the finer
+ * area the user named was thrown away with nothing telling the model (ux2 D1).
+ */
+export function unmatchedWords(asked: string, form: string): string {
+  const used = new Set(form.toLowerCase().split(/[\s,]+/).filter(Boolean));
+  return asked
+    .split(/[\s,]+/)
+    .filter((w) => w && !used.has(w.toLowerCase()) && !FILLER.has(w.toLowerCase()))
+    .join(' ');
+}
+
+/** Lower case, accents and punctuation dropped, for a prefix comparison. */
+function foldName(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+/**
+ * A single place reached through one of its ALTERNATE names carries the
+ * user's own term: "Porto Santo" is only a search key of Vila Baleira, and a
+ * statement without it names a place the user never said (ux2 D13). A
+ * prefix of the locality, or the locality itself, is not an alias.
+ */
+export function withUserTerm(places: Place[], form: string): Place[] {
+  if (places.length !== 1) return places;
+  const p = places[0];
+  const f = foldName(form);
+  const l = foldName(p.locality);
+  if (!f || l.startsWith(f) || f.startsWith(l) || (p.neighbourhood && foldName(p.neighbourhood).startsWith(f))) {
+    return places;
+  }
+  const term = form.trim() === form.trim().toLowerCase()
+    ? form.trim().split(/\s+/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    : form.trim();
+  return [{ ...p, userTerm: term }];
+}
+
 export async function lookupPlaceWithFallback(
   args: LookupPlaceArgs,
 ): Promise<LookupPlaceResult> {
@@ -205,8 +264,10 @@ export async function lookupPlaceWithFallback(
     if (out.status === 'unavailable') return out;
     if (out.status === 'resolved' && out.places.length > 0) {
       if (form.toLowerCase() === asked) {
-        const places = await withExactNameMatches(out.places, form, args.countryHint);
-        return { ...out, places: narrowToExact(places, form) };
+        const { places, exact } = await exactMatchesFor(out.places, form, args.countryHint);
+        // ONE place named exactly, by name or by alias, is the answer.
+        const narrowed = exact.length === 1 ? exact : narrowToExact(places, form);
+        return { ...out, places: withUserTerm(narrowed, form) };
       }
       const trusted = fallbackCandidates(out.places, form);
       if (trusted === null) {
@@ -221,7 +282,12 @@ export async function lookupPlaceWithFallback(
         asked: args.query,
         matched: form,
       });
-      return { ...out, places: trusted };
+      const unmatched = unmatchedWords(args.query, form);
+      return {
+        ...out,
+        places: withUserTerm(trusted, form),
+        ...(unmatched ? { unmatched } : {}),
+      };
     }
     if (out.status !== 'too_short') last = out;
   }
@@ -242,7 +308,10 @@ function isOwnHomeFact(f: { statement: string; questionnaireAttribute?: string |
   );
 }
 
-export function makeAgentToolPort(userMessage: string): AgentToolPort {
+export function makeAgentToolPort(
+  userMessage: string,
+  onPhase?: (signal: PhaseSignal) => void,
+): AgentToolPort {
   return {
     async findSimilarFacts(args: FindSimilarFactsArgs): Promise<FindSimilarFactsResult> {
       const similar = await findSimilarFacts(args.kind ?? null, userMessage, args.limit ?? 5);
@@ -278,6 +347,19 @@ export function makeAgentToolPort(userMessage: string): AgentToolPort {
     deleteUserFacts(args) {
       return handleDeleteUserFacts(args as unknown as Record<string, unknown>);
     },
+    // GATE 1: offered only while "Web search in chat" is on, so the loop never
+    // declares the tool otherwise. `handleWebSearch` re-checks the setting
+    // before any await (gate 2), for a switch flipped mid-turn.
+    ...(useMeraProtocolStore.getState().webSearchInChat
+      ? {
+          webSearch: (args: { queries: string[] }) => {
+            // "Searching the web from your device…" while it runs (ux2 D10).
+            // The next model call opens with 'reset', which moves the line on.
+            onPhase?.('webSearch');
+            return handleWebSearch(args);
+          },
+        }
+      : {}),
   };
 }
 
@@ -399,7 +481,7 @@ export function makeAgentDeps(
     // acknowledgement bubble, where the final write then split it off again.
     callModel: (req) =>
       callModelViaCloud({ ...req, onDelta: req.streamToUser ? onDelta : undefined }, onPhase),
-    tools: makeAgentToolPort(userMessage),
+    tools: makeAgentToolPort(userMessage, onPhase),
     loadSkill,
     skillIds,
     now: () => Date.now(),

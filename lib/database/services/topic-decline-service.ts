@@ -363,6 +363,17 @@ export async function getDeclinedTopicTexts(
   return rows.map((r) => r.normalizedText);
 }
 
+/**
+ * EVERY declined normalized text, with no page limit — the veto set for
+ * anything that mints topics unattended (the combination pass, and isolated
+ * generation's exclusions). `getDeclinedTopicTexts` is a 50-row PROMPT page;
+ * vetoing against it lets the 51st-oldest decline come back.
+ */
+export async function getAllDeclinedNormalizedTexts(): Promise<Set<string>> {
+  const rows = await declinedCollection.query().fetch();
+  return new Set(rows.map((r) => r.normalizedText));
+}
+
 /** Live "Topics you removed" list, newest first. A plain `observe()` is right:
  *  rows are only created and destroyed, never edited in a way the list shows. */
 export function listDeclinedTopics() {

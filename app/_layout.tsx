@@ -27,6 +27,7 @@ import NativeUpdateGate from '@/components/custom/NativeUpdateGate';
 import OTASilentUpdater from '@/components/custom/OTASilentUpdater';
 import TranslationUnavailablePrompt from '@/components/custom/TranslationUnavailablePrompt';
 import ToastInitializer from '@/components/custom/ToastInitializer';
+import FactsComboToast from '@/components/custom/toast/FactsComboToast';
 import ToastDeck from '@/components/custom/toast/ToastDeck';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { TextScaleProvider } from '@/lib/typography/TextScaleProvider';
@@ -446,6 +447,8 @@ export default Sentry.wrap(function RootLayout() {
               <OTASilentUpdater />
               <TranslationUnavailablePrompt />
               <AppRoot />
+              {/* Renders nothing: shows the facts-combo progress card on the deck. */}
+              <FactsComboToast />
               {/* LAST on purpose: toasts have to paint above the router stack,
                   the tab bar and the floating chat bubble, and on native that
                   is decided by sibling order. Inside TextScaleProvider so they

@@ -357,6 +357,46 @@ describe('SourcesL1CountryList — publisher search (Item 8)', () => {
         // only the publisher hit shows.
         expect(queryByText('USA')).toBeNull();
         expect(queryByText('IND')).toBeNull();
+        // Only publications matched: no Countries header.
+        expect(queryByText('sources.sectionCountries')).toBeNull();
+        expect(getByText('sources.sectionPublications')).toBeTruthy();
+    });
+
+    // ux2 B5: two sections, Countries first, then Publications, each shown
+    // only when it has rows (type "china": China first, then the papers).
+    it('lists matching countries first under a Countries header, then publications under theirs', async () => {
+        mockSearchPublishers.mockResolvedValueOnce({
+            publishers: [
+                {
+                    _id: 'pub-1',
+                    name: 'India Today',
+                    website_url: null,
+                    country_code: 'IND',
+                    country_name: 'India',
+                    matchingSources: [],
+                },
+            ],
+            pageInfo: { endCursor: null, hasNextPage: false, pageSize: 10 },
+        });
+        const { getByPlaceholderText, toJSON } = render(<SourcesL1CountryList />);
+        await flushInitialLoad();
+        act(() => {
+            fireEvent.changeText(getByPlaceholderText('sources.searchCountriesOrPublishers'), 'in');
+        });
+        await flushDebounceAndSearch();
+        const out = JSON.stringify(toJSON());
+        const at = (s: string) => out.indexOf(s);
+        expect(at('sources.sectionCountries')).toBeGreaterThan(-1);
+        expect(at('sources.sectionCountries')).toBeLessThan(at('"IND"'));
+        expect(at('"IND"')).toBeLessThan(at('sources.sectionPublications'));
+        expect(at('sources.sectionPublications')).toBeLessThan(at('India Today'));
+    });
+
+    it('shows no section headers outside a search', async () => {
+        const { queryByText } = render(<SourcesL1CountryList />);
+        await flushInitialLoad();
+        expect(queryByText('sources.sectionCountries')).toBeNull();
+        expect(queryByText('sources.sectionPublications')).toBeNull();
     });
 });
 

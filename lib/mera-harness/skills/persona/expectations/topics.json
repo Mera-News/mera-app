@@ -15,7 +15,7 @@
       "ladder": {
         "neighbourhood": [
           "gracia",
-          "gr\u00e0cia"
+          "gràcia"
         ],
         "city": [
           "barcelona"
@@ -35,19 +35,7 @@
         ]
       },
       "fieldGeneric": null,
-      "crossProducts": [
-        {
-          "a": [
-            "barcelona",
-            "catalonia"
-          ],
-          "b": [
-            "nursing",
-            "nurse",
-            "school"
-          ]
-        }
-      ],
+      "crossProducts": [],
       "mustNotContain": [
         "portugal",
         "france",
@@ -102,7 +90,7 @@
       "ladder": {
         "city": [
           "reykjavik",
-          "reykjav\u00edk"
+          "reykjavík"
         ],
         "country": [
           "iceland",
@@ -430,20 +418,7 @@
         "engine",
         "schools"
       ],
-      "crossProducts": [
-        {
-          "a": [
-            "chess"
-          ],
-          "b": [
-            "netherlands",
-            "dutch",
-            "amsterdam",
-            "wijk aan zee",
-            "tata steel"
-          ]
-        }
-      ],
+      "crossProducts": [],
       "mustNotContain": [
         "chess news",
         "chess updates",
@@ -471,20 +446,7 @@
         "club night",
         "radio"
       ],
-      "crossProducts": [
-        {
-          "a": [
-            "drum and bass",
-            "bass music"
-          ],
-          "b": [
-            "netherlands",
-            "dutch",
-            "amsterdam",
-            "rotterdam"
-          ]
-        }
-      ],
+      "crossProducts": [],
       "mustNotContain": [
         "drum and bass news",
         "music news",

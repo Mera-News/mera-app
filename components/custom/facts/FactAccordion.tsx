@@ -14,10 +14,11 @@ import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service'
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { useForYouStore } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
+import ReanimatedSwipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { sentenceCase } from './sentence-case';
 
 /** Per-tap influence nudge and the clamped UI range (a fact's weight dampens
@@ -33,6 +34,12 @@ function round1(n: number): number {
 
 /** Accent for the row's actions. The facts list used an off-palette blue. */
 const ACCENT = 'rgb(231, 138, 83)';
+
+/** The trailing "badge slot" (spinner / retry / article-count pill) is
+ *  pinned to this height so switching between pending, error and done never
+ *  jumps the row — the pill Button and the bare StatusIndicator have no
+ *  natural size in common otherwise. */
+const BADGE_SLOT_MIN_HEIGHT = 32;
 
 /**
  * Where the article counts are. `counting` until the first read lands,
@@ -61,6 +68,18 @@ interface FactAccordionProps {
     readonly onDeleteTopic: (fact: Fact, topicRow: { id: string; text: string }) => void;
     readonly onAddTopic: (fact: Fact) => void;
     readonly onGenerateMore: (fact: Fact) => void;
+    /**
+     * B7: fired when this row's swipe starts opening, so a parent list can
+     * close every other open row (only one open at a time).
+     */
+    readonly onSwipeOpen?: (factId: string) => void;
+    /**
+     * B7: hands the parent list this row's imperative handle (`.close()`),
+     * so it can close this row from outside — on scroll, on another row
+     * opening, or when edit mode turns on. Called with `null` on unmount,
+     * matching a ref-callback's own contract.
+     */
+    readonly swipeableRef?: (factId: string, ref: SwipeableMethods | null) => void;
 }
 
 /**
@@ -86,6 +105,8 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     onDeleteTopic,
     onAddTopic,
     onGenerateMore,
+    onSwipeOpen,
+    swipeableRef,
 }) => {
     const { t } = useTranslation();
     const isExpanded = isExpandedProp && !editing;
@@ -100,6 +121,18 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     }, [fact.id, fact.weight]);
 
     const influenceMinReached = influence <= INFLUENCE_MIN + 1e-6;
+
+    // B7: ReanimatedSwipeableProps types `ref` as a plain `RefObject`, not
+    // the usual callback-accepting `Ref<T>` union RN components take — so a
+    // callback ref cannot go on the element directly. Take an object ref
+    // instead, and forward it to the list's own callback once React has
+    // attached it. `swipeableRef` is fine as an effect dependency here: the
+    // list passes a `useCallback`-stable function.
+    const localSwipeableRef = useRef<SwipeableMethods>(null);
+    useEffect(() => {
+        swipeableRef?.(fact.id, localSwipeableRef.current);
+        return () => swipeableRef?.(fact.id, null);
+    }, [fact.id, swipeableRef]);
     const influenceMaxReached = influence >= INFLUENCE_MAX - 1e-6;
 
     const handleInfluence = useCallback(
@@ -112,7 +145,6 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
             void hapticLight();
             try {
                 await nudgeFactWeight(fact.id, delta, 'user');
-                useForYouStore.getState().setFeedNeedsRefresh(true);
             } catch (err) {
                 setInfluence(prev); // revert optimistic update on failure
                 logger.warn('[fact-accordion] influence nudge failed', {
@@ -179,7 +211,39 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     }, [isRetrying, fact.id, fact.statement]);
 
     return (
-        <GlassPanel className="mx-4 mb-3" fallbackClassName="bg-transparent">
+        <ReanimatedSwipeable
+            ref={localSwipeableRef}
+            testID={`fact-swipeable-${fact.id}`}
+            // Edit mode already puts a persistent red delete control at the
+            // same left edge (above) — the swipe reveal would sit exactly on
+            // top of it, so it's off for the whole time that control is on.
+            enabled={!editing}
+            friction={2}
+            leftThreshold={40}
+            overshootLeft={false}
+            containerStyle={{ marginHorizontal: 16, marginBottom: 12 }}
+            onSwipeableWillOpen={() => onSwipeOpen?.(fact.id)}
+            renderLeftActions={() => (
+                <Pressable
+                    testID={`fact-swipe-delete-${fact.id}`}
+                    onPress={() => onDeletePress(fact)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('facts.deleteFactA11y', { fact: displayStatement })}
+                    style={{
+                        width: 72,
+                        minHeight: 44,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#ef4444',
+                        borderTopLeftRadius: 12,
+                        borderBottomLeftRadius: 12,
+                    }}
+                >
+                    <MaterialIcons name="delete" size={24} color="#ffffff" />
+                </Pressable>
+            )}
+        >
+        <GlassPanel fallbackClassName="bg-transparent">
             {/* Accordion header */}
             <HStack className="px-4 py-3 items-center">
                 {editing && (
@@ -229,9 +293,25 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                         </Text>
                     )}
                 </Pressable>
-                <HStack space="xs" className="items-center">
+                <HStack space="xs" className="items-center" style={{ minHeight: BADGE_SLOT_MIN_HEIGHT }}>
                     {status === 'pending' && (
-                        <StatusIndicator status="pending" testID={`fact-topics-pending-${fact.id}`} />
+                        <View
+                            testID={`fact-topics-pending-${fact.id}-slot`}
+                            accessible
+                            accessibilityLabel={t('chatTopics.finding', { defaultValue: 'Finding topics' })}
+                        >
+                            {/* Nesting one `accessible` view inside another is
+                                the standard RN pattern for "read the OUTER
+                                label as one stop, not the inner one too" — no
+                                importantForAccessibility/accessibilityElementsHidden
+                                needed (and neither is safe to add here: RNTL's
+                                queries skip elements hidden that way, which
+                                broke every pre-existing test reaching into
+                                this subtree by testID). StatusIndicator's own
+                                testID and `-spinner` derivation are
+                                unchanged; only this outer wrapper is new. */}
+                            <StatusIndicator status="pending" testID={`fact-topics-pending-${fact.id}`} />
+                        </View>
                     )}
                     {status === 'error' && !editing && (
                         <Pressable
@@ -419,6 +499,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                 </Box>
             )}
         </GlassPanel>
+        </ReanimatedSwipeable>
     );
 };
 

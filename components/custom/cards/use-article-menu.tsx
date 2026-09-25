@@ -1,6 +1,6 @@
 import ActionSheet, { ActionSheetRow, type ArticleMenuItem } from '@/components/custom/cards/ArticleOverflowMenu';
 import FeedbackTreeLevel from '@/components/custom/feedback-tree/FeedbackTreeLevel';
-import { feedbackNodeLabel } from '@/components/custom/feedback-tree/label-vars';
+import { feedbackNodeLabel, type FeedbackLabelContext } from '@/components/custom/feedback-tree/label-vars';
 import { leafNeedsConfirm, performFeedbackLeaf } from '@/components/custom/feedback-tree/perform-feedback-leaf';
 import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import type { VerdictSentiment } from '@/lib/database/services/article-feedback-service';
@@ -21,6 +21,7 @@ import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/t
 import { VStack } from '@/components/ui/vstack';
 import { showFeedback } from '@/lib/feedback';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
+import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, type AccessibilityActionEvent } from 'react-native';
@@ -96,7 +97,7 @@ export interface UseArticleMenuInput {
  *  in the sheet's muted text, above its rows. */
 const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) => (
     <VStack space="xs" className="px-4 pb-2" testID="sheet-note">
-        <Text style={{ color: 'rgb(230,230,230)', fontSize: 15, fontWeight: '700' }}>{title}</Text>
+        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '700' }}>{title}</Text>
         {body ? (
             <Text size="sm" style={{ color: 'rgb(163,163,163)' }}>
                 {body}
@@ -186,6 +187,11 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     resolveTreeContextRef.current = input.resolveTreeContext;
     const follow = useTrackButton(subject, engaged || !!followLive);
     const { tracked } = follow;
+    // The publication's raw name is the KEY: "Fewer from" writes it and every
+    // filter matches on it. Its display name (in the app language) is only
+    // what the rows and the toast SAY.
+    const publication = (subject.publicationName ?? visit?.publicationName ?? '').trim();
+    const publicationShown = useDisplayPublication(publication);
 
     // ── The sheet and its navigation stack ─────────────────────────────────
     // A sub-menu (the feedback tree, its confirm, the follow levels) is a LEVEL
@@ -310,7 +316,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     );
 
     const fewerFromSource = useCallback(
-        async (publicationName: string): Promise<boolean> => {
+        async (publicationName: string, shownAs: string): Promise<boolean> => {
             // Resolved at call time: the preference writer pulls in the persona
             // executor and the database, and this hook sits under every card.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -321,7 +327,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
             const { toastManager } = require('@/lib/toast-manager') as typeof import('@/lib/toast-manager');
             toastManager.showUndoToast({
-                title: t('articleMenu.fewerFromDone', { source: publicationName }),
+                title: t('articleMenu.fewerFromDone', { source: shownAs }),
                 undoLabel: t('articleMenu.undo'),
                 undoTestID: 'article-menu-undo',
                 // The same "Change undone" the leaf's undo shows; the manager
@@ -428,12 +434,11 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 run: onCheckFacts,
             });
         }
-        const publication = (subject.publicationName ?? visit?.publicationName ?? '').trim();
         if (surface !== 'detail' && articleUrl) {
             list.push({
                 key: 'open-source',
                 label: publication
-                    ? t('articleMenu.openOn', { source: publication })
+                    ? t('articleMenu.openOn', { source: publicationShown })
                     : t('articleDetail.readArticle'),
                 icon: 'open-in-new',
                 testID: 'menu-open-source',
@@ -452,10 +457,10 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         if (publication) {
             list.push({
                 key: 'fewer-from',
-                label: t('articleMenu.fewerFrom', { source: publication }),
+                label: t('articleMenu.fewerFrom', { source: publicationShown }),
                 icon: 'trending-down',
                 testID: 'menu-fewer-from-source',
-                run: () => fewerFromSource(publication),
+                run: () => fewerFromSource(publication, publicationShown),
             });
         }
         if (extraItems) list.push(...extraItems);
@@ -475,7 +480,8 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         subject.articleId,
         subject.suggestionId,
         subject.title,
-        subject.publicationName,
+        publication,
+        publicationShown,
         tracked,
         enterTree,
         onCheckFacts,
@@ -613,10 +619,18 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         },
         [toast],
     );
+    // What the tree's rows SAY: the context plus the publication's display
+    // name for {{publication}}. The leaf actions keep `treeContext`, whose
+    // `publicationName` stays the raw key a publication filter matches on.
+    const treePublicationShown = useDisplayPublication(treeContext.publicationName ?? '');
+    const labelContext = useMemo<FeedbackLabelContext>(
+        () => ({ ...treeContext, publicationDisplayName: treePublicationShown || null }),
+        [treeContext, treePublicationShown],
+    );
     // The Undo toast names the leaf exactly as its row did (vars filled).
     const treeLabel = useCallback(
-        (node: FeedbackTreeNode) => feedbackNodeLabel(t, node, treeContext),
-        [t, treeContext],
+        (node: FeedbackTreeNode) => feedbackNodeLabel(t, node, labelContext),
+        [t, labelContext],
     );
     const performLeaf = useCallback(
         (root: VerdictSentiment, node: FeedbackTreeNode, pathIds: string[]) =>
@@ -664,7 +678,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                         tree={tree}
                         root={level.root}
                         pathIds={level.pathIds}
-                        context={treeContext}
+                        context={labelContext}
                         onDescend={(node) =>
                             showLevel({ ...level, pathIds: [...level.pathIds, node.id] })
                         }
@@ -683,7 +697,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                             body={chrome(
                                 'confirmMuteBody',
                                 "You won't see articles from {{publication}} again. You can undo this anytime.",
-                                { publication: treeContext.publicationName ?? 'this publication' },
+                                { publication: treePublicationShown || 'this publication' },
                             )}
                         />
                         <ActionSheetRow

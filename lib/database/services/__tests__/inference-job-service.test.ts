@@ -18,7 +18,9 @@ import {
   purgeFailedJobs,
   hasPendingJob,
   getActiveTopicGenFactIds,
+  countActiveJobsExcluding,
 } from '../inference-job-service';
+import { Q } from '@nozbe/watermelondb';
 
 const db = database as any;
 
@@ -454,5 +456,52 @@ describe('getActiveTopicGenFactIds', () => {
     const result = await getActiveTopicGenFactIds();
     expect(result.size).toBe(1);
     expect(result.has('f1')).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Type gates (the combo-pass defer) — the mock ignores Q.where, so these
+// assert on the query args, which ARE the behaviour.
+// ---------------------------------------------------------------------------
+
+describe('dequeueJob excludeTypes', () => {
+  it('adds a job_type NOT IN clause for gated types', async () => {
+    await dequeueJob({ excludeTypes: ['topic_combo'] });
+    const args = JSON.stringify(db._collections['inference_jobs'].query.mock.calls[0]);
+    expect(args).toContain(JSON.stringify(Q.where('job_type', Q.notIn(['topic_combo']))));
+  });
+
+  it('adds no clause when nothing is gated', async () => {
+    await dequeueJob({ excludeTypes: [] });
+    await dequeueJob();
+    for (const call of db._collections['inference_jobs'].query.mock.calls) {
+      expect(JSON.stringify(call)).not.toContain('job_type');
+    }
+  });
+
+  it('gives topic_combo priority 15, after topic_gen and before the niceties', async () => {
+    const captured: Record<string, unknown> = {};
+    db._collections['inference_jobs'].create.mockImplementationOnce(
+      async (fn: (r: Record<string, unknown>) => void) => {
+        fn(captured);
+        return makeJob({ id: 'x' });
+      },
+    );
+    await enqueueJob('topic_combo', { factId: 'f1', passId: 'p1' });
+    expect(captured.priority).toBe(15);
+  });
+});
+
+describe('countActiveJobsExcluding', () => {
+  it('counts pending+running jobs of every OTHER type', async () => {
+    db._setRows('inference_jobs', [
+      makeJob({ jobType: 'topic_gen', status: 'pending' }),
+      makeJob({ jobType: 'topic_gen', status: 'running' }),
+      makeJob({ jobType: 'topic_combo', status: 'pending' }),
+      makeJob({ jobType: 'story_headline', status: 'done' }),
+    ]);
+    expect(await countActiveJobsExcluding(['topic_combo'])).toBe(2);
+    const args = JSON.stringify(db._collections['inference_jobs'].query.mock.calls[0]);
+    expect(args).toContain(JSON.stringify(Q.where('job_type', Q.notIn(['topic_combo']))));
   });
 });

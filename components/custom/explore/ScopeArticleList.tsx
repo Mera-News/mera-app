@@ -81,6 +81,11 @@ interface ScopeArticleListProps {
      *  here with this list's own scroll-tick handler via
      *  `useComposedEventHandler` (mirrors DashboardSectionsFeed). */
     readonly scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
+    /** False while this scope is a warmed or cached neighbour in the Explore
+     *  swipe window (ux2 B3): it still fetches its first page once, so arriving
+     *  shows it at once, but it paginates and takes the tab-press refresh only
+     *  when active. Default true. */
+    readonly active?: boolean;
 }
 
 /**
@@ -94,8 +99,8 @@ interface ScopeArticleListProps {
  * Pull-to-refresh — and the Explore tab-icon re-tap — refetch page 1 for the
  * active scope; see `onRefresh`.
  *
- * Mounted with a `key={scope.id}` by the parent, so switching scope resets all
- * state via remount.
+ * Keyed by `scope.id` in the parent's swipe window, so a different scope is a
+ * fresh mount, and a scope kept in the window keeps its page.
  *
  * ── WHY THE FlatList IS ALWAYS RENDERED ──
  * react-native-screens locates a tab's scroll view by walking `subviews[0]`
@@ -117,6 +122,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     enabled = true,
     headerHeight = 0,
     scrollHandler,
+    active = true,
 }) => {
     const { t } = useTranslation();
     const isOnline = useIsOnline();
@@ -251,10 +257,12 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     // UI-thread shared value (not a plain ref) — set inside the worklet tick
     // handler below, same as DashboardSectionsFeed's `lastOffsetShared`.
     const lastOffsetShared = useSharedValue(0);
+    // Every mounted scope hears the tab press: only the active one may act
+    // (an off-screen one reads as "at the top" with nothing to refresh).
     useTabPressScrollRefresh({
         listRef,
-        getOffset: () => lastOffsetShared.value,
-        onRefresh,
+        getOffset: () => (active ? lastOffsetShared.value : 0),
+        onRefresh: active ? onRefresh : undefined,
         isRefreshing,
     });
 
@@ -345,7 +353,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         }
         return (
             <VStack className="items-center justify-center py-20 p-6" space="md" testID="explore-empty">
-                <MaterialIcons name="article" size={48} color="#666666" />
+                <MaterialIcons name="article" size={48} color="#666666" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
                 <Text size="md" className="text-gray-400 text-center">
                     {/* Explore is server-paginated with no local cache, so an
                         offline OR Mera-unreachable visit produces an empty list
@@ -429,7 +437,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             showsVerticalScrollIndicator={false}
             onScroll={onScroll}
             scrollEventThrottle={16}
-            onEndReached={loadMore}
+            onEndReached={active ? loadMore : undefined}
             onEndReachedThreshold={0.5}
             ListEmptyComponent={ListEmptyComponent}
             ListFooterComponent={ListFooterComponent}

@@ -25,11 +25,6 @@ jest.mock('@/lib/services/suppression-sweep', () => ({
   unexcludeRetiredHardFilters: jest.fn(async () => ({ resetIds: [], stillExcluded: 0 })),
 }));
 
-const mockSetFeedNeedsRefresh = jest.fn();
-jest.mock('@/lib/stores/for-you-store', () => ({
-  useForYouStore: { getState: () => ({ setFeedNeedsRefresh: mockSetFeedNeedsRefresh }) },
-}));
-
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import { applyPersonaAction } from '../persona-action-executor';
@@ -163,21 +158,18 @@ describe('revert runs the MIRROR sweep (D12c)', () => {
     expect(sweep.unexcludeRetiredHardFilters).not.toHaveBeenCalled();
   });
 
-  it('reverting a topic mutation runs no sweep but still marks the feed dirty', async () => {
+  it('reverting a topic mutation runs no sweep', async () => {
     db._setRows('topics', [makeRecord({ id: 't1', status: 'active', weight: 0.5 })]);
     const retiredTopic = await applyPersonaAction(
       { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId: 't1' },
       'user',
     );
-    mockSetFeedNeedsRefresh.mockClear();
 
     await revertChange(retiredTopic.changeLogId!);
     expect(db._collections['topics']._rows[0].status).toBe('active');
 
     expect(sweep.purgeHardFilteredSuggestions).not.toHaveBeenCalled();
     expect(sweep.unexcludeRetiredHardFilters).not.toHaveBeenCalled();
-    // D18: reverting a weight is exactly as score-affecting as setting one.
-    expect(mockSetFeedNeedsRefresh).toHaveBeenCalledWith(true);
   });
 
   it('a sweep failure never fails the revert (it is already committed)', async () => {

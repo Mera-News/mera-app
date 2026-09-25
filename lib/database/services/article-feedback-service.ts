@@ -190,8 +190,7 @@ function readChangeLogIds(contextJson: string | null | undefined): string[] {
  * A partial revert reverts what it can and logs the shortfall rather than
  * rolling the successes back.
  *
- * `revertChange` (Phase 3) runs the retroactive sweeps and sets the feed-dirty
- * flag itself, so reverting a leaf that minted a hard filter also un-excludes
+ * `revertChange` (Phase 3) runs the retroactive sweeps itself, so reverting a leaf that minted a hard filter also un-excludes
  * its casualties. Nothing here re-implements that.
  */
 export async function removeArticleFeedback(

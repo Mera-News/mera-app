@@ -24,7 +24,8 @@ import {
 } from '@/components/custom/GlassSurface';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import DashboardEmptyState from '@/components/custom/for-you/DashboardEmptyState';
-import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
+import ForYouSubTabs, { FOR_YOU_SUB_TAB_ORDER, type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
+import SwipeTabs from '@/components/custom/for-you/SwipeTabs';
 import { StatusDropdownLayer, StatusDropdownProvider } from '@/components/custom/for-you/status-dropdown';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
@@ -185,28 +186,19 @@ const MeraNewsScreen: React.FC = () => {
         return () => clearTimeout(timer);
     }, [isFocused, sortSnapshot, applyResort]);
 
-    // Sub-tab state — Feed / Stories / Saved / History. All four are kept
-    // mounted after their first visit (display-toggled) so scroll state
-    // survives a switch.
+    // Sub-tab state. The active pill and its two neighbours are mounted by
+    // SwipeTabs (ux2 B3 window); anything further away is unmounted.
     const [activeSubTab, setActiveSubTab] = useState<ForYouSubTab>('feed');
-    const [storiesVisited, setStoriesVisited] = useState(false);
-    const [savedVisited, setSavedVisited] = useState(false);
-    const [historyVisited, setHistoryVisited] = useState(false);
-    const [factChecksVisited, setFactChecksVisited] = useState(false);
     // Rows on the Visited list, reported by the list after each load. The share
     // FAB means nothing over an empty list (the share screen would show its own
     // empty state), so it is hidden until there is something to share.
     const [visitedCount, setVisitedCount] = useState(0);
     const selectSubTab = useCallback((tab: ForYouSubTab) => {
         setActiveSubTab(tab);
-        if (tab === 'stories') setStoriesVisited(true);
-        if (tab === 'saved') setSavedVisited(true);
-        if (tab === 'history') setHistoryVisited(true);
-        if (tab === 'factChecks') setFactChecksVisited(true);
         // Always reveal the header on a sub-tab switch.
         reveal();
-        // ...and drop the scroll baseline. All four panels stay mounted behind
-        // display:'none' and keep their own offsets, but they SHARE one handler,
+        // ...and drop the scroll baseline. The mounted panels keep their own
+        // offsets, but they SHARE one handler,
         // so `lastY` holds whichever panel scrolled last. Without this the first
         // scroll on the panel being switched TO reads the difference between two
         // panels as travel — a spurious hide/reveal in whichever direction the
@@ -492,71 +484,52 @@ const MeraNewsScreen: React.FC = () => {
     // dropdown that card and the Mera mark both open. The mark follows the
     // Feed's rules (still at rest, animating only while the phone works); the
     // end of a sync is announced once to a screen reader.
-    return (
-        // No `bg-black`: the AbstractGradientBackdrop below is the page background.
-        // The provider holds the Overview stats card's dropdown state; the
-        // card (deep in the list) opens it, the layer (last child) draws it.
-        <StatusDropdownProvider>
-        <Box className="flex-1" testID="dashboard-screen">
-            {/* App-wide tab background. Must be the FIRST child so it paints behind
-                everything else on the page. */}
-            <AbstractGradientBackdrop />
-
-            {/* Keep-mounted sub-tab content — rendered FIRST so the absolute
-                collapsing header paints on top of it. */}
-            <View style={{ flex: 1 }}>
-                {/* Feed — the list handles its own top padding (contentContainer)
-                    so it can scroll under the collapsing header. */}
-                <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }} testID="dashboard-feed-content">
-                    <DashboardSectionsFeed
-                        breaking={feed.breaking}
-                        rows={feed.rows}
-                        openedIds={openedIds}
-                        sortSnapshot={sortSnapshot}
-                        onPressSuggestion={handleSuggestionPress}
-                        scrollHandler={scrollHandler}
-                        headerHeight={headerHeight}
-                        ListEmptyComponent={emptyState}
-                        noStoriesLead={emptyState}
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                    />
-                </View>
-
-                {/* Stories / Saved / History — each owns its own list, so each
-                    gets the SAME four legs the Feed panel above already has:
-                    `scrollHandler` on an `Animated.FlatList`, `scrollEventThrottle`,
-                    the header's height as the list's content `paddingTop`, and
-                    `progressViewOffset` wherever a RefreshControl exists.
-
-                    The wrapper Views used to carry `paddingTop: headerHeight`
-                    instead — which is exactly why the header stayed pinned here:
-                    padding a wrapper reserves the space statically, so there was
-                    nothing to scroll under and hiding the header would only have
-                    left a dead gap. The padding now lives inside each list's
-                    contentContainer, and each panel's own title scrolls with it.
-
-                    Child ORDER is untouched on purpose: react-native-screens finds
-                    a tab's scroll view by walking subviews[0], AbstractGradientBackdrop
-                    occupies that slot, and that is the measured reason these lists
-                    get no automatic content inset. Threading props is safe;
-                    reordering is not. */}
-                {storiesVisited && (
-                    <View style={{ flex: 1, display: activeSubTab === 'stories' ? 'flex' : 'none' }} testID="dashboard-stories-content">
+    // One Dashboard sub-tab, for SwipeTabs' window. `active` is false for a
+    // warmed or cached neighbour, which must not start scroll-tick, re-read
+    // or refresh work (each panel gates its own).
+    //
+    // Every panel owns its list, with the same four legs: `scrollHandler` on an
+    // `Animated.FlatList`, `scrollEventThrottle`, the header's height as the
+    // list's content `paddingTop` (never a wrapper's, or the header stays
+    // pinned over a dead gap), and `progressViewOffset` wherever a
+    // RefreshControl exists.
+    const renderSubTab = (i: number, active: boolean) => {
+        switch (FOR_YOU_SUB_TAB_ORDER[i]) {
+            case 'feed':
+                // The list handles its own top padding (contentContainer) so it
+                // can scroll under the collapsing header.
+                return (
+                    <View style={{ flex: 1 }} testID="dashboard-feed-content">
+                        <DashboardSectionsFeed
+                            breaking={feed.breaking}
+                            rows={feed.rows}
+                            openedIds={openedIds}
+                            sortSnapshot={sortSnapshot}
+                            onPressSuggestion={handleSuggestionPress}
+                            scrollHandler={scrollHandler}
+                            headerHeight={headerHeight}
+                            ListEmptyComponent={emptyState}
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            active={active}
+                        />
+                    </View>
+                );
+            case 'stories':
+                return (
+                    <View style={{ flex: 1 }} testID="dashboard-stories-content">
                         <StoriesSlotPlaceholder scrollHandler={scrollHandler} headerHeight={headerHeight} />
                     </View>
-                )}
-
-                {/* Saved (lazy-mounted on first visit) */}
-                {savedVisited && (
-                    <View style={{ flex: 1, display: activeSubTab === 'saved' ? 'flex' : 'none' }} testID="dashboard-saved-content">
-                        <SavedSuggestionsScreen embedded onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} />
+                );
+            case 'saved':
+                return (
+                    <View style={{ flex: 1 }} testID="dashboard-saved-content">
+                        <SavedSuggestionsScreen embedded active={active} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} />
                     </View>
-                )}
-
-                {/* History (lazy-mounted on first visit) */}
-                {historyVisited && (
-                    <View style={{ flex: 1, display: activeSubTab === 'history' ? 'flex' : 'none' }} testID="dashboard-history-content">
+                );
+            case 'history':
+                return (
+                    <View style={{ flex: 1 }} testID="dashboard-history-content">
                         {/* Share control for the History tab.
                             It lives HERE rather than in VisitedPublicationsList
                             because that component suppresses its DrillDownHeader
@@ -569,7 +542,7 @@ const MeraNewsScreen: React.FC = () => {
                             entry label — but under its own testID, because a
                             shared id returns the FIRST match and would let an
                             assertion pass against the wrong instance. */}
-                        <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} onCountChange={setVisitedCount} />
+                        <VisitedPublicationsList embedded active={active} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} onCountChange={setVisitedCount} />
                         {/* A FAB, floating over the list, NOT a row above it.
                             The row version wrapped itself in `paddingTop:
                             headerHeight` so it would clear the collapsing
@@ -584,23 +557,46 @@ const MeraNewsScreen: React.FC = () => {
                             and land in the same place. They never co-occur:
                             that one is mounted by FactFeedScreen, which is the
                             Fact checks sub-tab, not this one. */}
-                        {visitedCount > 0 && (
+                        {active && visitedCount > 0 && (
                             <ShareStatsFab onPress={() => router.push('/logged-in/share-stats')} />
                         )}
                     </View>
-                )}
-
-                {/* Fact checks (lazy-mounted on first visit) — the ONLY surface
-                    for the feature. `active` drives its bounded re-read: the
-                    panel stays mounted behind display:'none' once visited, so a
-                    mount-only read would go stale after the first visit. */}
-                {factChecksVisited && (
-                    <View style={{ flex: 1, display: activeSubTab === 'factChecks' ? 'flex' : 'none' }} testID="dashboard-fact-checks-content">
-                        <FactChecksPanel active={activeSubTab === 'factChecks'} scrollHandler={scrollHandler} headerHeight={headerHeight} />
+                );
+            case 'factChecks':
+                // `active` drives its bounded re-read.
+                return (
+                    <View style={{ flex: 1 }} testID="dashboard-fact-checks-content">
+                        <FactChecksPanel active={active} scrollHandler={scrollHandler} headerHeight={headerHeight} />
                     </View>
-                )}
+                );
+            default:
+                return null;
+        }
+    };
 
-            </View>
+    return (
+        // No `bg-black`: the AbstractGradientBackdrop below is the page background.
+        // The provider holds the Overview stats card's dropdown state; the
+        // card (deep in the list) opens it, the layer (last child) draws it.
+        <StatusDropdownProvider>
+        <Box className="flex-1" testID="dashboard-screen">
+            {/* App-wide tab background. Must be the FIRST child so it paints behind
+                everything else on the page. */}
+            <AbstractGradientBackdrop />
+
+            {/* Sub-tab content, rendered BEFORE the absolute collapsing header
+                so the header paints on top of it. */}
+            {/* Swipe left/right between the pills (ux2 B3): the CONTENT only,
+                never the header, whose pill row scrolls horizontally itself. A
+                swipe selects through `selectSubTab`, the same path as a tap. */}
+            <SwipeTabs
+                index={FOR_YOU_SUB_TAB_ORDER.indexOf(activeSubTab)}
+                count={FOR_YOU_SUB_TAB_ORDER.length}
+                onIndexChange={(i) => selectSubTab(FOR_YOU_SUB_TAB_ORDER[i])}
+                keyOf={(i) => FOR_YOU_SUB_TAB_ORDER[i]}
+                renderPanel={renderSubTab}
+                testID="dashboard-swipe-tabs"
+            />
 
             {/* Status-bar scrim — covers the Dynamic Island/clock/battery region
                 so content is never visible behind it once the collapsing

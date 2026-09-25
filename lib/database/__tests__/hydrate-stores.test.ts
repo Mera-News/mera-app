@@ -154,6 +154,11 @@ jest.mock('@/lib/logger', () => ({
   default: { captureException: jest.fn() },
 }));
 
+const mockInstallPublicationDisplayNames = jest.fn(() => Promise.resolve());
+jest.mock('../../publication-display-service', () => ({
+  installPublicationDisplayNames: () => mockInstallPublicationDisplayNames(),
+}));
+
 import { hydrateAllStores } from '../hydrate-stores';
 import { pruneStaleVisits } from '../services/publication-visit-service';
 import logger from '@/lib/logger';
@@ -216,6 +221,26 @@ describe('hydrateAllStores', () => {
     mockHydrateSuggestionsFromDb.mockRejectedValueOnce(new Error('paint fail'));
     await expect(hydrateAllStores()).resolves.toBeUndefined();
     expect(logger.captureException).toHaveBeenCalled();
+  });
+
+  it('wires publication display names once the app language hydrates, not after everything', async () => {
+    let releaseUser: () => void = () => {};
+    mockUserHydrateFromDb.mockImplementationOnce(() => new Promise<void>((r) => (releaseUser = r)));
+    const done = hydrateAllStores();
+    await Promise.resolve();
+    await Promise.resolve();
+    // The user hydrate is still pending, and the display names are already wired.
+    expect(mockInstallPublicationDisplayNames).toHaveBeenCalledTimes(1);
+    releaseUser();
+    await done;
+  });
+
+  it('still wires display names when an unrelated hydration fails, and a failed wiring still reaches setReady', async () => {
+    mockUserHydrateFromDb.mockRejectedValueOnce(new Error('user hydrate fail'));
+    mockInstallPublicationDisplayNames.mockRejectedValueOnce(new Error('install fail'));
+    await expect(hydrateAllStores()).rejects.toThrow('user hydrate fail');
+    expect(mockInstallPublicationDisplayNames).toHaveBeenCalledTimes(1);
+    expect(mockSetReady).toHaveBeenCalledWith(true);
   });
 
   it('captures exception when pruneStaleVisits throws', async () => {

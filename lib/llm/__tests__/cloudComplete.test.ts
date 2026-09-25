@@ -2405,6 +2405,29 @@ describe('cloudChatStream', () => {
       expect(mockDecryptContent).toHaveBeenCalledWith('hexA', expect.any(Uint8Array), 'ed25519');
     });
 
+    it('strips think tags split across deltas, keeping the answer (ux2 D11)', async () => {
+      mockDecryptContent.mockImplementation((s: string) => s);
+      mockFetch.mockResolvedValueOnce(
+        makeSseResponse([
+          sseChunk({ choices: [{ delta: { content: '<thi' }, finish_reason: null }] }),
+          sseChunk({ choices: [{ delta: { content: 'nk>trace</think>Your parents' }, finish_reason: null }] }),
+          sseChunk({ choices: [{ delta: { content: ' live in Bhopal. </th' }, finish_reason: null }] }),
+          sseChunk({ choices: [{ delta: { content: 'ink>' }, finish_reason: 'stop' }] }),
+          SSE_DONE,
+        ]),
+      );
+
+      const events = await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] }),
+      );
+      const text = events
+        .filter((e): e is { type: 'text-delta'; delta: string } => e.type === 'text-delta')
+        .map((e) => e.delta);
+      expect(text.join('')).toBe('Your parents live in Bhopal. ');
+      expect(text.every((d) => d.length > 0)).toBe(true);
+      expect(events[events.length - 1]).toEqual({ type: 'finish', reason: 'stop' });
+    });
+
     it('reassembles deltas split across chunk boundaries', async () => {
       mockDecryptContent.mockImplementation((s: string) => s);
       const frame = sseChunk({ choices: [{ delta: { content: 'hexAll' }, finish_reason: 'stop' }] });

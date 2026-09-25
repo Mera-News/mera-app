@@ -281,6 +281,70 @@ describe('apollo-client', () => {
     });
   });
 
+  // ── errorLink expectedErrorCodes opt-in (ux2) ─────────────────────────────
+  // An operation may list GraphQL error codes it EXPECTS and handles itself:
+  // publicationDisplayNames on a server that has not deployed the query
+  // (GRAPHQL_VALIDATION_FAILED). Those become a breadcrumb, not a Sentry event.
+  // Only the listed codes, only on the operation that lists them.
+  describe('errorLink expectedErrorCodes opt-in', () => {
+    const QUERY = gql`query ExpectedErrorProbe { probe }`;
+    const respondWith = (code: string) => ({
+      status: 200,
+      ok: true,
+      headers: { get: () => 'application/json' },
+      text: async () =>
+        JSON.stringify({ data: null, errors: [{ message: 'Cannot query field "probe"', extensions: { code } }] }),
+    });
+    let fetchSpy: jest.SpyInstance;
+    let captureSpy: jest.SpyInstance;
+    let breadcrumbSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      fetchSpy = jest.spyOn(global, 'fetch');
+      captureSpy = jest.spyOn(logger, 'captureException').mockImplementation(() => undefined as never);
+      breadcrumbSpy = jest.spyOn(logger, 'addBreadcrumb');
+      useNetworkStore.setState({ isConnected: true });
+    });
+    afterEach(() => {
+      fetchSpy.mockRestore();
+      captureSpy.mockRestore();
+      breadcrumbSpy.mockRestore();
+    });
+
+    it('an expected code on the opting-in operation is a breadcrumb, not a capture', async () => {
+      fetchSpy.mockResolvedValue(respondWith('GRAPHQL_VALIDATION_FAILED') as unknown as Response);
+      await expect(
+        client.query({
+          query: QUERY,
+          fetchPolicy: 'network-only',
+          context: { noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+        }),
+      ).rejects.toBeTruthy();
+      expect(captureSpy).not.toHaveBeenCalled();
+      expect(breadcrumbSpy).toHaveBeenCalled();
+    });
+
+    it('a code the operation did not list is still captured', async () => {
+      fetchSpy.mockResolvedValue(respondWith('INTERNAL_SERVER_ERROR') as unknown as Response);
+      await expect(
+        client.query({
+          query: QUERY,
+          fetchPolicy: 'network-only',
+          context: { noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+        }),
+      ).rejects.toBeTruthy();
+      expect(captureSpy).toHaveBeenCalled();
+    });
+
+    it('another operation with the same code is still captured', async () => {
+      fetchSpy.mockResolvedValue(respondWith('GRAPHQL_VALIDATION_FAILED') as unknown as Response);
+      await expect(
+        client.query({ query: QUERY, fetchPolicy: 'network-only', context: { noSyncStatus: true } }),
+      ).rejects.toBeTruthy();
+      expect(captureSpy).toHaveBeenCalled();
+    });
+  });
+
   // ── errorLink Sentry-capture gating (Sentry MERA-APP-5F/4P/4N) ───────────
   // Previously captureException fired unconditionally for every network
   // error; the isConnected gate only suppressed the toast. That meant every

@@ -21,7 +21,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
 const ACCENT = '#EDA77E';
 
@@ -31,6 +31,25 @@ type NotificationAction = { id: string; labelKey?: string; label?: string };
 const FACT_CHECK_DONE = 'fact_check_done';
 
 /** Default leading icon per notification type when the row has no explicit icon. */
+const ROW_ICON = 22;
+const GLYPH_HIDDEN = {
+    accessible: false,
+    accessibilityElementsHidden: true,
+    importantForAccessibility: 'no-hide-descendants',
+} as const;
+/** p-2 at NativeWind's 14pt rem, numeric so the ring size is known here. */
+const CLEAR_PAD = 7;
+const CLEAR_GLYPH = 20;
+const CLEAR_RING = CLEAR_GLYPH + 2 * CLEAR_PAD + 2;
+const CLEAR_TARGET = 44;
+const CLEAR_FRAME = {
+    width: CLEAR_TARGET,
+    height: CLEAR_TARGET,
+    margin: -(CLEAR_TARGET - CLEAR_RING) / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+} as const;
+
 function iconForType(type: string): keyof typeof MaterialIcons.glyphMap {
     switch (type) {
         case 'calibration':
@@ -234,21 +253,31 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
         const body = resolveText(n.body, params);
         const icon = (n.icon as keyof typeof MaterialIcons.glyphMap) || iconForType(n.type);
         const actions = parseJson<NotificationAction[]>(n.actionsJson) ?? [];
+        const chipLabel = (a: NotificationAction) => (a.labelKey ? resolveText(a.labelKey) : a.label ?? a.id);
+        const time = relativeTime(n.createdAt);
 
+        // The icon is drawn OVER the row, not inside it: a glyph inside the
+        // accessible row led its label ("<glyph>, Fact check ready", captured).
+        // A 22pt spacer holds its column; pointerEvents none lets a tap on the
+        // icon fall through to the row beneath.
         return (
+            <View>
             <Pressable
+                testID={`notification-row-${n.id}`}
                 onPress={() => onRowPress(n)}
                 accessibilityRole="button"
+                // The chips are nested buttons inside this accessible row, so
+                // VoiceOver cannot land on them: each is a named action on the
+                // row instead, running the chip's own handler. Touch is unchanged.
+                accessibilityLabel={[title, body, time].filter(Boolean).join(', ')}
+                accessibilityActions={actions.map((a) => ({ name: `chip:${a.id}`, label: chipLabel(a) }))}
+                onAccessibilityAction={(e) => {
+                    const a = actions.find((x) => `chip:${x.id}` === e.nativeEvent.actionName);
+                    if (a) void onChipPress(n, a);
+                }}
                 className="flex-row px-4 py-3 border-b border-gray-800"
             >
-                <MaterialIcons
-                    name={icon}
-                    size={22}
-                    color={ACCENT}
-                    style={{ marginTop: 2 }}
-                    accessibilityElementsHidden={true}
-                    importantForAccessibility="no-hide-descendants"
-                />
+                <View style={{ width: ROW_ICON }} />
                 <VStack className="flex-1 ml-3" space="xs">
                     <HStack className="items-start justify-between">
                         <Text className="text-white font-semibold flex-1" numberOfLines={2}>
@@ -276,17 +305,21 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                                     className="border border-primary-500 rounded-full px-3 py-1 mr-2 mb-1"
                                 >
                                     <Text className="text-xs" style={{ color: ACCENT }}>
-                                        {a.labelKey ? resolveText(a.labelKey) : a.label ?? a.id}
+                                        {chipLabel(a)}
                                     </Text>
                                 </Pressable>
                             ))}
                         </HStack>
                     ) : null}
                     <Text className="text-xs" style={{ color: 'rgb(115,115,115)' }}>
-                        {relativeTime(n.createdAt)}
+                        {time}
                     </Text>
                 </VStack>
             </Pressable>
+            <View pointerEvents="none" {...GLYPH_HIDDEN} className="absolute left-4 top-3">
+                <MaterialIcons name={icon} size={ROW_ICON} color={ACCENT} style={{ marginTop: 2 }} {...GLYPH_HIDDEN} />
+            </View>
+            </View>
         );
     }, [onRowPress, onChipPress, resolveText, hygienePending]);
 
@@ -301,15 +334,27 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                 onBack={onBack}
                 rightAction={
                     items.length > 0 ? (
-                        <Pressable
-                            onPress={() => void clearAll()}
-                            hitSlop={10}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('notificationCenter.clearAll')}
-                            className="p-2 rounded-full border border-primary-500"
-                        >
-                            <MaterialIcons name="delete-sweep" size={20} color={ACCENT} />
-                        </Pressable>
+                        // A numeric 44pt frame pulled back to the 36pt ring by
+                        // negative margins holds the ring, with a childless
+                        // labelled button filling the frame (glyph rule; a
+                        // hitSlop target measured as the ring on device).
+                        <View testID="notifications-clear-all-frame" style={CLEAR_FRAME}>
+                            <View
+                                pointerEvents="none"
+                                {...GLYPH_HIDDEN}
+                                className="rounded-full border-primary-500"
+                                style={{ padding: CLEAR_PAD, borderWidth: 1 }}
+                            >
+                                <MaterialIcons name="delete-sweep" size={CLEAR_GLYPH} color={ACCENT} {...GLYPH_HIDDEN} />
+                            </View>
+                            <Pressable
+                                testID="notifications-clear-all"
+                                onPress={() => void clearAll()}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('notificationCenter.clearAll')}
+                                style={StyleSheet.absoluteFill}
+                            />
+                        </View>
                     ) : undefined
                 }
             />

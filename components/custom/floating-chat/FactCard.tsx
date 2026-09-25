@@ -5,11 +5,13 @@
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Button, ButtonText } from '@/components/ui/button';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
-import type { FactCardAction } from './types';
+import type { FactCardAction, PendingDelete } from './types';
 
 const ACCENT = 'rgb(231, 138, 83)';
 
@@ -37,27 +39,57 @@ function factCardEntering() {
 export interface FactCardProps {
   action: FactCardAction;
   statements: string[];
+  /** A live pending removal: Remove and Keep act on exactly these facts. */
+  pendingDelete?: PendingDelete;
 }
 
 const ICON_BY_ACTION: Record<FactCardAction, keyof typeof MaterialIcons.glyphMap> = {
   saved: 'check-circle',
   deleted: 'delete',
+  deletePending: 'delete-outline',
+  deleteKept: 'undo',
   updated: 'tune',
 };
 
 const TITLE_KEY_BY_ACTION = {
   saved: 'floatingChat.factSavedTitle',
   deleted: 'floatingChat.factDeletedTitle',
+  deletePending: 'floatingChat.factDeletePendingTitle',
+  deleteKept: 'floatingChat.factDeleteKept',
   updated: 'floatingChat.factUpdatedTitle',
 } as const satisfies Record<FactCardAction, string>;
 
-const FactCard: React.FC<FactCardProps> = ({ action, statements }) => {
+const FactCard: React.FC<FactCardProps> = ({ action, statements, pendingDelete }) => {
   const { t } = useTranslation();
+  const [busy, setBusy] = useState(false);
+
+  const answer = (choice: 'remove' | 'keep') => async () => {
+    if (!pendingDelete || busy) return;
+    setBusy(true);
+    try {
+      // LAZY: the action reaches the database, which must stay out of every
+      // suite that renders this card.
+      const { confirmPendingDelete } =
+        require('./fact-choice-actions') as typeof import('./fact-choice-actions');
+      await confirmPendingDelete(pendingDelete, choice);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Keep answered the card: one quiet line, nothing else.
+  if (action === 'deleteKept') {
+    return (
+      <Text size="sm" style={styles.keptLine} testID="fact-delete-kept">
+        {t(TITLE_KEY_BY_ACTION.deleteKept)}
+      </Text>
+    );
+  }
 
   return (
     <Animated.View entering={factCardEntering} style={styles.card}>
       <View style={styles.headerRow}>
-        <MaterialIcons name={ICON_BY_ACTION[action]} size={18} color={ACCENT} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name={ICON_BY_ACTION[action]} size={18} color={ACCENT} />
         <Text size="sm" bold style={styles.title}>
           {t(TITLE_KEY_BY_ACTION[action])}
         </Text>
@@ -80,6 +112,36 @@ const FactCard: React.FC<FactCardProps> = ({ action, statements }) => {
               />
             </View>
           ))}
+        </View>
+      )}
+      {pendingDelete && (
+        <View style={styles.buttonStack}>
+          <Button
+            testID="fact-delete-remove"
+            onPress={answer('remove')}
+            isDisabled={busy}
+            className="rounded-full bg-transparent border border-error-400"
+            size="sm"
+            style={styles.tapTarget}
+            accessibilityLabel={t('floatingChat.factDeleteRemove')}
+          >
+            <ButtonText className="text-sm" style={styles.removeText}>
+              {t('floatingChat.factDeleteRemove')}
+            </ButtonText>
+          </Button>
+          <Pressable
+            testID="fact-delete-keep"
+            onPress={answer('keep')}
+            disabled={busy}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: busy }}
+            accessibilityLabel={t('floatingChat.factDeleteKeep')}
+            style={styles.keepButton}
+          >
+            <Text size="sm" style={styles.keepText}>
+              {t('floatingChat.factDeleteKeep')}
+            </Text>
+          </Pressable>
         </View>
       )}
     </Animated.View>
@@ -123,6 +185,12 @@ const styles = StyleSheet.create({
     flex: 1,
     color: 'rgb(193, 193, 193)',
   },
+  buttonStack: { gap: 4, marginTop: 4 },
+  tapTarget: { minHeight: 44 },
+  removeText: { color: '#F87171' },
+  keepButton: { minHeight: 44, alignSelf: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  keepText: { color: 'rgb(200, 200, 200)' },
+  keptLine: { color: 'rgb(150, 150, 150)', paddingHorizontal: 4 },
 });
 
 export default FactCard;

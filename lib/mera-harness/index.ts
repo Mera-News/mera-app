@@ -58,6 +58,7 @@ export {
   generateTopicsForFact,
   normalizeTopicText,
   parseTopics,
+  topicSkillForAttribute,
   type GenerateTopicsOutcome,
   type GenerateTopicsParams,
   type TopicCallFact,
@@ -108,6 +109,7 @@ export {
   DETECT_JACCARD,
   FILTER_DROP_JACCARD,
   contentJaccard,
+  namesFact,
   isSubsetTopic,
   sharedTokens,
 } from './core/topic-similarity';

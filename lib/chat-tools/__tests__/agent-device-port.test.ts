@@ -15,6 +15,14 @@ jest.mock('../tool-handlers', () => ({
   handleDeleteUserFacts: jest.fn(),
   handleSaveExtractedFacts: jest.fn(),
 }));
+const mockHandleWebSearch = jest.fn(async () => ({ searched: true, results: [] }));
+jest.mock('../web-search-handler', () => ({
+  handleWebSearch: (...a: unknown[]) => mockHandleWebSearch(...(a as [])),
+}));
+let mockWebSearchInChat = true;
+jest.mock('../../stores/mera-protocol-store', () => ({
+  useMeraProtocolStore: { getState: () => ({ webSearchInChat: mockWebSearchInChat }) },
+}));
 jest.mock('../../logger', () => ({
   __esModule: true,
   default: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
@@ -172,6 +180,28 @@ describe('lookupPlaceWithFallback', () => {
     expect(out.status === 'resolved' && out.places).toHaveLength(2);
   });
 
+  it('ux2 D1: returns the words the fallback match did not use', async () => {
+    mockLookupPlace.mockImplementation(async (q: string) =>
+      q.toLowerCase() === 'amsterdam'
+        ? { status: 'resolved' as const, places: [place('Amsterdam')] }
+        : { status: 'no_match' as const, query: q },
+    );
+    const out = await lookupPlaceWithFallback({ query: 'niew west Amsterdam' });
+    expect(out).toMatchObject({ status: 'resolved', unmatched: 'niew west' });
+  });
+
+  it('ux2 D13: an alias match carries the user term, a name match does not', async () => {
+    const vila: Place = { ...place('Vila Baleira'), admin1: 'Madeira', countryCode: 'PT', countryName: 'Portugal' };
+    mockLookupPlace.mockResolvedValue({ status: 'resolved' as const, places: [vila] });
+    const alias = await lookupPlaceWithFallback({ query: 'porto santo' });
+    expect(alias.status === 'resolved' && alias.places[0].userTerm).toBe('Porto Santo');
+
+    mockLookupPlace.mockResolvedValue({ status: 'resolved' as const, places: [place('Amsterdam')] });
+    const named = await lookupPlaceWithFallback({ query: 'Amsterdam' });
+    expect(named.status === 'resolved' && named.places[0].userTerm).toBeUndefined();
+    expect(named).not.toHaveProperty('unmatched');
+  });
+
   it('a transport failure never becomes a confident no-such-place', async () => {
     mockLookupPlace.mockResolvedValue({ status: 'unavailable' as const });
     const out = await lookupPlaceWithFallback({ query: 'Nieuw-West Amsterdam' });
@@ -265,5 +295,72 @@ describe('find_similar_facts always shows the current home on a residence lookup
     const { makeAgentToolPort } = require('../agent-device-port');
     const out = await makeAgentToolPort('I play chess').findSimilarFacts({ kind: 'interest' });
     expect(out.candidates).toEqual([]);
+  });
+});
+
+
+describe('ux2 D10: web search through the device port', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockWebSearchInChat = true;
+  });
+
+  it('offers webSearch when the setting is on and runs it on the device', async () => {
+    const deps = makeAgentDeps('what is porto santo', jest.fn());
+    expect(typeof deps.tools.webSearch).toBe('function');
+    await deps.tools.webSearch?.({ queries: ['Porto Santo'] });
+    expect(mockHandleWebSearch).toHaveBeenCalledWith({ queries: ['Porto Santo'] });
+  });
+
+  it('narrates the wait with the webSearch phase before the search runs', async () => {
+    const seen: unknown[] = [];
+    mockHandleWebSearch.mockImplementationOnce(async () => {
+      seen.push('handler');
+      return { searched: true, results: [] };
+    });
+    const deps = makeAgentDeps('what is porto santo', jest.fn(), (p) => seen.push(p));
+    await deps.tools.webSearch?.({ queries: ['Porto Santo'] });
+    expect(seen).toEqual(['webSearch', 'handler']);
+  });
+
+  it('offers no webSearch when the setting is off', () => {
+    mockWebSearchInChat = false;
+    const deps = makeAgentDeps('what is porto santo', jest.fn());
+    expect(deps.tools.webSearch).toBeUndefined();
+  });
+});
+
+describe('ux2 batch 25 D2: an EXACT alias beats a prefix match', () => {
+  const mockSearch = searchPlaces as jest.MockedFunction<typeof searchPlaces>;
+  const it_ = { ...place('Porto Santo Stefano'), countryCode: 'IT', countryName: 'Italy', admin1: 'Tuscany' };
+  const vila: Place = { ...place('Vila Baleira'), countryCode: 'PT', countryName: 'Portugal', admin1: 'Madeira' };
+  const row = (city: string, countryCode: string, keys: string[]) =>
+    ({ _id: city, city, countryCode, displayName: city, normalized: city.toLowerCase(), search_keys: keys }) as never;
+
+  beforeEach(() => {
+    mockLookupPlace.mockReset();
+    mockSearch.mockReset();
+  });
+
+  it('"Porto Santo" resolves to Vila Baleira alone, carrying the user term', async () => {
+    mockLookupPlace.mockImplementation(async (_q: string, code?: string) =>
+      code === 'PT'
+        ? { status: 'resolved' as const, places: [vila] }
+        : { status: 'resolved' as const, places: [it_, vila] });
+    mockSearch.mockResolvedValue({
+      ok: true,
+      places: [row('Porto Santo Stefano', 'IT', ['porto santo stefano']), row('Vila Baleira', 'PT', ['vila baleira', 'porto santo', 'vila de porto santo'])],
+    });
+    const out = await lookupPlaceWithFallback({ query: 'Porto Santo' });
+    expect(out.status === 'resolved' && out.places.map((p) => [p.locality, p.userTerm])).toEqual([['Vila Baleira', 'Porto Santo']]);
+  });
+
+  it('a PREFIX alias is not exact: "Porto" never resolves to Port-au-Prince', async () => {
+    const pap = { ...place('Port-au-Prince'), countryCode: 'HT', countryName: 'Haiti', admin1: 'Ouest' };
+    const alegre = { ...place('Porto Alegre'), countryCode: 'BR', countryName: 'Brazil', admin1: 'RS' };
+    mockLookupPlace.mockResolvedValue({ status: 'resolved' as const, places: [alegre, pap] });
+    mockSearch.mockResolvedValue({ ok: true, places: [row('Porto Alegre', 'BR', ['porto alegre']), row('Port-au-Prince', 'HT', ['port au prince', 'porto principe'])] });
+    const out = await lookupPlaceWithFallback({ query: 'Porto' });
+    expect(out.status === 'resolved' && out.places.length).toBe(2);
   });
 });

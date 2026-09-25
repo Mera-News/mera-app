@@ -50,6 +50,7 @@ import {
   OPENING_PHASE_ID,
   PHASE_CYCLE_MS,
   WAIT_LINE_HEIGHT,
+  WAIT_LINE_MAX_LINES,
   WAIT_ROW_TEXT_HEIGHT,
 } from './chat-phases';
 
@@ -128,7 +129,7 @@ export const ChatPhaseLine: React.FC<ChatPhaseLineProps> = ({ testID = 'chat-pha
         // FIXED HEIGHT: two lines, always. Phrases of one and two lines
         // alternate while a turn waits, and a row that followed its text
         // moved the whole thread by a line on every swap (ux1 C2).
-        numberOfLines={2}
+        numberOfLines={WAIT_LINE_MAX_LINES}
       >
         {line}
       </Text>

@@ -5,6 +5,23 @@ import { VStack } from '@/components/ui/vstack';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
+
+const BACK_GLYPH = 22;
+/** p-1 at NativeWind's 14pt rem: the old box's padding and left pull. */
+const BACK_PAD = 3.5;
+const BACK_BOX = BACK_GLYPH + 2 * BACK_PAD;
+const BACK_TARGET = 44;
+const BACK_BLEED = (BACK_TARGET - BACK_BOX) / 2;
+const BACK_FRAME = {
+    width: BACK_TARGET,
+    height: BACK_TARGET,
+    marginVertical: -BACK_BLEED,
+    marginLeft: -BACK_BLEED - BACK_PAD,
+    marginRight: -BACK_BLEED,
+    alignItems: 'center',
+    justifyContent: 'center',
+} as const;
 
 interface DrillDownHeaderProps {
     readonly title: string;
@@ -40,22 +57,37 @@ const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({
     const { t } = useTranslation();
     return (
         <HStack className="px-4 py-3 items-center border-b border-gray-800">
-            {/* hitSlop 12 brings a ~30pt glyph target to ~54pt, over Apple's
-                44pt minimum. The label says what the control DOES ("Back"),
+            {/* A numeric 44pt frame pulled back by negative margins to the old
+                29pt box (22pt glyph + 3.5pt padding, 3.5pt left of the row's
+                padding), so nothing reflows and the arrow does not move. The
+                arrow sits OUTSIDE the button: a glyph inside one surfaces on
+                iOS as its own StaticText, and a hitSlop target measured as its
+                visible box. The label says what the control DOES ("Back"),
                 not the page title, which VoiceOver already reads below. */}
             {onBack && (
-                <Pressable
-                    testID={backTestID}
-                    onPress={onBack}
-                    disabled={backDisabled}
-                    hitSlop={12}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('common.back')}
-                    accessibilityState={{ disabled: backDisabled }}
-                    className={`p-1 -ml-1 rounded-full ${backDisabled ? 'opacity-40' : ''}`}
+                <View
+                    testID={backTestID ? `${backTestID}-frame` : undefined}
+                    style={BACK_FRAME}
                 >
-                    <MaterialIcons name="arrow-back" size={22} color="#FFFFFF" />
-                </Pressable>
+                    <MaterialIcons
+                        name="arrow-back"
+                        size={BACK_GLYPH}
+                        color="#FFFFFF"
+                        style={backDisabled ? { opacity: 0.4 } : undefined}
+                        accessible={false}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                    <Pressable
+                        testID={backTestID}
+                        onPress={onBack}
+                        disabled={backDisabled}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('common.back')}
+                        accessibilityState={{ disabled: backDisabled }}
+                        style={StyleSheet.absoluteFill}
+                    />
+                </View>
             )}
             <VStack className={onBack ? 'ml-2 flex-1' : 'flex-1'}>
                 {subtitle && (

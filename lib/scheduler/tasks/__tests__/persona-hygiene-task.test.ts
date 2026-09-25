@@ -16,10 +16,6 @@ jest.mock('@/lib/database/services/hygiene-service', () => ({
   runHygieneSweep: jest.fn(),
 }));
 
-jest.mock('@/lib/database/services/topic-topup-service', () => ({
-  runTopicTopup: jest.fn(async () => ({ ran: false, appended: 0, considered: 0 })),
-}));
-
 jest.mock('@/lib/scheduler/background-idle', () => ({
   backgroundWorkIsIdle: jest.fn(() => true),
 }));

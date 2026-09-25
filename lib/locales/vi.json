@@ -189,8 +189,7 @@
       },
       "downloadProgress": "Đã tải {{done}} trong {{total}} bài viết",
       "chunks": {
-        "ready": "Đã xong {{ready}} trong {{total}} đợt phân tích",
-        "a11y": "Đợt phân tích: đã xong {{ready}} trong {{total}}"
+        "ready": "Đã xong {{ready}} trong {{total}} đợt phân tích"
       },
       "stageA11y": "Bước {{index}} trên {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}} có vẻ phù hợp,",
     "reasonUnavailable": "Mera không thể viết ghi chú cho bài này.",
     "loadingA11y": "Đang tải bảng tin của bạn",
-    "newStoriesPill": "Tin mới",
     "translatingCaption": "Đang dịch…",
     "updatedJustNow": "Vừa cập nhật"
   },
@@ -263,7 +261,7 @@
     "share": "Chia sẻ",
     "shareVia": "Chia sẻ qua {{downloadUrl}}",
     "sourceCountryGlobal": "Toàn cầu",
-    "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Nhấn để hiển thị tên quốc gia.",
+    "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Chạm để hiện quốc gia, rồi chạm vào tên để xem các báo của quốc gia đó.",
     "readOn": "Đọc trên {{publication}}",
     "readOnGoogleTranslate": "Đọc trên Google Dịch",
     "linkUnavailable": "Liên kết này không thể được mở an toàn, vì vậy nó không khả dụng ở đây.",
@@ -294,7 +292,9 @@
     "addToExplore": "Thêm vào Khám phá",
     "addedToExplore": "Đã thêm vào Khám phá",
     "badgeGovernment": "Nguồn chính phủ",
-    "badgeRegulator": "Cơ quan chính thức"
+    "badgeRegulator": "Cơ quan chính thức",
+    "sectionCountries": "Quốc gia",
+    "sectionPublications": "Ấn phẩm"
   },
   "clusterDetail": {
     "translatable": "Bài viết này bằng {{language}}: thiết bị của bạn có thể dịch trong khi bạn đọc. Nếu tính năng dịch không hoạt động, bạn có thể mở trang web bằng Google Dịch; chỉ cần lưu ý rằng bạn sẽ xem qua Google.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Các chủ đề và tin bài đã tìm được cũng bị xóa, và Mera sẽ ngừng tìm tin về điều này.",
     "deletingFact": "Đang xóa...",
     "yesDelete": "Có, xóa",
-    "refreshSuggestions": "Làm mới gợi ý",
-    "refreshingSuggestions": "Đang làm mới...",
-    "refreshSuggestionsSuccessTitle": "Đã làm mới gợi ý",
-    "refreshSuggestionsSuccessDescription": "Đang tạo gợi ý cá nhân hóa mới.",
-    "refreshSuggestionsFailedTitle": "Làm mới thất bại",
-    "refreshSuggestionsFailedDescription": "Không thể làm mới gợi ý. Vui lòng thử lại.",
-    "personaUpdatedRefreshHint": "Tôi thấy bạn đã cập nhật hồ sơ, bạn có muốn tôi tạo lại bản tin không?",
     "articleCount_one": "{{count}} bài viết",
     "articleCount_other": "{{count}} bài viết",
     "addTopic": "Thêm chủ đề",
@@ -783,7 +776,13 @@
     "topicGenFailed": "Không thể tạo chủ đề cho điều này.",
     "topicGenRetry": "Thử lại",
     "aiUsageNoticeGeneral": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra những điều quan trọng.",
-    "trackChooseHint": "Chọn nội dung để theo dõi"
+    "trackChooseHint": "Chọn nội dung để theo dõi",
+    "factDeletePendingTitle": "Sẽ bị xóa khỏi hồ sơ của bạn",
+    "saveAsWritten": "Lưu đúng như tôi đã viết",
+    "factDeleteRemove": "Xóa",
+    "factDeleteKeep": "Giữ lại",
+    "factDeleteKept": "Không có gì bị xóa.",
+    "topicsSavedHint": "Đã lưu chủ đề! Bạn cứ tiếp tục thêm thông tin, hoặc nhấn {{close}} để bắt đầu khám phá."
   },
   "articleFeedback": {
     "thumbsUp": "Tôi thích",
@@ -876,7 +875,8 @@
     "formError": "Vui lòng điền đầy đủ các trường bắt buộc.",
     "emailError": "Vui lòng nhập địa chỉ email hợp lệ.",
     "captureScreenshotError": "Không thể chụp ảnh màn hình.",
-    "genericError": "Không thể gửi phản hồi do lỗi không mong muốn."
+    "genericError": "Không thể gửi phản hồi do lỗi không mong muốn.",
+    "chatAttachmentNote": "Cuộc trò chuyện của bạn với Mera sẽ được đính kèm vào báo cáo này."
   },
   "observability": {
     "title": "Quan sát",
@@ -1527,7 +1527,9 @@
     },
     "meraInviteReturning": "Hãy kể cho tôi điều gì mới, tôi sẽ thêm vào bảng tin của bạn.",
     "editFacts": "Sửa",
-    "planUsage": "Đã phân tích {{used}}/{{limit}} hôm nay"
+    "planUsage": "Đã phân tích {{used}}/{{limit}} hôm nay",
+    "updatingAllFacts": "Đang cập nhật tất cả thông tin",
+    "pleaseWait": "Vui lòng đợi"
   },
   "facts": {
     "screenTitle": "Thông tin của bạn",
@@ -2569,7 +2571,11 @@
     "titleAlsoAdd": "Thêm cả điều này?",
     "pendingHint": "Chọn một tùy chọn ở trên hoặc nhập câu trả lời của bạn.",
     "overlapsLabel": "Trùng với",
-    "overlapsReplaceNote": "Thay thế sẽ xóa thông tin này và các chủ đề của nó."
+    "overlapsReplaceNote": "Thay thế sẽ xóa thông tin này và các chủ đề của nó.",
+    "replaceAll": "Thay thế tất cả",
+    "keepAll": "Giữ tất cả",
+    "replaceAllA11y": "Thay bằng tất cả {{count}} gợi ý",
+    "keepAllA11y": "Giữ thông tin của bạn và thêm tất cả {{count}} gợi ý"
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",
@@ -2731,37 +2737,36 @@
       "Đang sắp xếp câu hỏi của bạn."
     ],
     "queued": [
-      "Đang xếp yêu cầu của bạn vào hàng.",
-      "Có vài việc đang chạy cùng lúc. Bạn là người tiếp theo."
+      "Yêu cầu của bạn là yêu cầu tiếp theo trên điện thoại."
     ],
     "securing": [
-      "Đang khóa tin nhắn của bạn để chỉ mô hình mới mở được.",
-      "Lời của bạn được mã hóa trước khi rời khỏi điện thoại."
+      "Đang mã hóa tin nhắn để chỉ mô hình trong môi trường tin cậy của nó đọc được.",
+      "Lời bạn được mã hóa trên điện thoại trước khi gửi đi."
     ],
     "attesting": [
-      "Đang thiết lập một kênh riêng tới mô hình.",
-      "Đang lấy khóa giữ cho việc này chỉ nằm giữa bạn và Mera.",
-      "Một cuộc trò chuyện riêng tư cần một chút thời gian để thiết lập."
+      "Đang thiết lập kết nối an toàn giữa bạn và mô hình trong môi trường tin cậy.",
+      "Đang lấy khóa từ môi trường tin cậy của mô hình, để chỉ mô hình đọc được nội dung này."
     ],
     "thinking": [
-      "Mera đang đọc những gì bạn viết.",
-      "Đang tìm cách trả lời tốt nhất."
+      "Mô hình đang đọc tin nhắn của bạn.",
+      "Đang tìm câu trả lời tốt nhất."
     ],
     "retrying": [
-      "Việc này lâu hơn bình thường. Mera đang thử một hướng khác.",
-      "Vẫn đang chạy. Cảm ơn bạn đã chờ."
+      "Việc này lâu hơn bình thường. Đang thử một đường an toàn khác.",
+      "Vẫn đang xử lý. Cảm ơn bạn đã chờ."
     ],
     "deviceLoading": [
-      "Đang đánh thức mô hình trên điện thoại của bạn.",
-      "Câu trả lời đầu tiên lâu hơn một chút trong lúc tải."
+      "Đang tải mô hình trên điện thoại.",
+      "Câu trả lời đầu tiên lâu hơn một chút khi đang tải."
     ],
     "devicePreparing": [
-      "Đang tập hợp những gì Mera đã biết về bạn.",
-      "Đang chuẩn bị điện thoại của bạn để trả lời."
+      "Đang chuẩn bị điện thoại để trả lời."
     ],
     "deviceThinking": [
-      "Đang suy nghĩ ngay trên điện thoại của bạn.",
-      "Việc này chạy trên thiết bị của bạn nên không có gì được gửi đi đâu cả."
+      "Đang suy nghĩ trên điện thoại của bạn. Không gì rời khỏi thiết bị."
+    ],
+    "webSearch": [
+      "Đang tìm trên web từ thiết bị của bạn…"
     ]
   },
   "headerNarration": {
@@ -2800,12 +2805,16 @@
       ]
     },
     "nudges": [
-      "Lưu để đọc sau",
-      "Tin đã lưu đang chờ",
-      "Đọc kỹ một tin",
-      "Xem tin nổi bật",
-      "Mới hơn chưa chắc tốt",
-      "Không cần ngồi chờ"
+      "Đọc toàn bộ bài viết",
+      "Bận? Lưu lại đã",
+      "Đã xem tin thế giới?",
+      "Đã xem nước của bạn?",
+      "Theo dõi một tin",
+      "Xem tin đang theo dõi",
+      "Hồ sơ còn đúng chứ?",
+      "Không hợp? Báo Mera",
+      "Thích để xem thêm",
+      "Chia sẻ với người thân"
     ],
     "a11y": "Mera đang cập nhật tin của bạn trên máy này."
   },

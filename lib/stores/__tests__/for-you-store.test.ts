@@ -111,7 +111,6 @@ const initialState = {
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
     lastNewArticlesAt: null as number | null,
-    feedNeedsRefresh: false,
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -566,15 +565,6 @@ describe('useForYouStore', () => {
         await new Promise((r) => setImmediate(r));
         const last = mockPersistFeedMetadata.mock.calls.at(-1)?.[0];
         expect(last).toEqual(expect.objectContaining({ lastNewArticlesAt: 4321 }));
-    });
-
-    // ── setFeedNeedsRefresh ──────────────────────────────────────────────────
-
-    it('setFeedNeedsRefresh updates feedNeedsRefresh flag', () => {
-        useForYouStore.getState().setFeedNeedsRefresh(true);
-        expect(useForYouStore.getState().feedNeedsRefresh).toBe(true);
-        useForYouStore.getState().setFeedNeedsRefresh(false);
-        expect(useForYouStore.getState().feedNeedsRefresh).toBe(false);
     });
 
     // ── clearData ────────────────────────────────────────────────────────────

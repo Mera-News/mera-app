@@ -1,7 +1,7 @@
 // ux1 audit regressions, each driven through the real loop with a scripted
 // model. Every case here failed on the loop as it was before ux1.
 
-import { createAgentState, runAgentTurn, type AgentPersona } from '../core';
+import { REPLY_PROCESS_FALLBACK, createAgentState, reconcilePlaceChain, runAgentTurn, type AgentPersona } from '../core';
 import { CANONICAL_LOCATION_KEY, COMBINED_ORIGIN_KEY, EXPAT_KEY, ORIGIN_KEY } from '../combined-fact';
 import type { AgentDeps, AgentModelResult, Place } from '../types';
 
@@ -561,5 +561,575 @@ describe('batch 5: a move replaces the current home', () => {
     const h = harness(move('Lives in Porto, Porto, Portugal, EU'));
     await runAgentTurn({ state: createAgentState(BERLIN_HOME), userMessage: 'I moved to Porto', deps: h.deps });
     expect(h.saves[0][0].statement).toBe('Lives in Porto, Portugal, EU');
+  });
+});
+
+describe('ux2 C4: a blocked delete names what it would remove', () => {
+  it('attaches the statements of the facts it names, skipping unknown ids', async () => {
+    const results: unknown[] = [];
+    const h = harness([
+      res({ content: 'Right.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ toolCalls: [tc('deleteUserFacts', { fact_ids: ['home', 'ghost'] })] }),
+      res({ content: 'Shall I remove it?' }),
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(RESIDENT),
+      userMessage: 'delete all my facts',
+      deps: h.deps,
+      onLeg: (leg) => results.push(...leg.toolResults.filter((r) => r.name === 'deleteUserFacts').map((r) => r.result)),
+    });
+    expect(out.legs.length).toBeGreaterThan(0);
+    expect(results).toEqual([
+      {
+        error: expect.stringMatching(/card asks the user to confirm/),
+        pendingFactIds: ['home'],
+        pendingStatements: ['Lives in Amsterdam, North Holland, Netherlands, EU'],
+      },
+    ]);
+  });
+});
+
+describe('ux2 D: districts, typos and the place the user named', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+  const VILA: Place = {
+    locality: 'Vila Baleira', admin1: 'Madeira', countryCode: 'PT', countryName: 'Portugal', bloc: 'EU',
+    userTerm: 'Porto Santo',
+  };
+
+  it('D1: the state line carries the finer area the lookup could not place', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'niew west amsterdam' })] }),
+        res({ content: 'Noted.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [AMS], unmatched: 'niew west' }) },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.calls[2].stateLine).toContain('Finer area as the user wrote it: "niew west"');
+  });
+
+  it('D2: reconcilePlaceChain keeps a canonical district spelling of a typo', () => {
+    expect(reconcilePlaceChain({ neighbourhood: 'Nieuw-West' }, [AMS], 'I live in niew west Amsterdam'))
+      .toMatchObject({ locality: 'Amsterdam', neighbourhood: 'Nieuw-West' });
+    expect(reconcilePlaceChain({ neighbourhood: 'Nieuw-Oost' }, [AMS], 'I live in niew west Amsterdam'))
+      .toMatchObject({ locality: 'Amsterdam', neighbourhood: undefined });
+  });
+
+  it('D3+D5: a loop offer keeps the district, corrected, and settles the turn', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'niew west amsterdam' })] }),
+        res({ content: 'You live in Nieuw-West in Amsterdam.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [AMS], unmatched: 'niew west' }) },
+    );
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual([
+      'Lives in Nieuw-West, Amsterdam, North Holland, Netherlands, EU',
+    ]);
+    expect(out.terminalReason).toBe('settled');
+  });
+
+  it('D3: with no model spelling, the user\'s own words are kept, never downgraded to the city', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'niew west amsterdam' })] }),
+        res({ content: 'Noted.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [AMS], unmatched: 'niew west' }) },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual([
+      'Lives in Niew West, Amsterdam, North Holland, Netherlands, EU',
+    ]);
+  });
+
+  it('D4: never proposes the home on a turn that asked about it, even a refused ask', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'amsterdam' })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Which part?', options: ['Nieuw-West', 'Nieuw-Oost'] })] }),
+        res({ content: 'Tell me which part of Amsterdam.' }),
+      ],
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.saves.flat()).toEqual([]);
+  });
+
+  it('D7: a reply cut off by the token cap ends at its last whole sentence', async () => {
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: 'Porto Santo is an island in Madeira. Would you prefer', finishReason: 'length', truncated: true }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(out.reply).toBe('Porto Santo is an island in Madeira.');
+  });
+
+  it('D13a: a place matched through an alias keeps the user\'s term first', async () => {
+    const h = harness(
+      [
+        res({ content: 'Porto Santo.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Porto Santo' })] }),
+        res({ content: 'Noted.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [VILA] }) },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in Porto Santo', deps: h.deps });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual([
+      'Lives in Porto Santo (Vila Baleira), Madeira, Portugal, EU',
+    ]);
+  });
+
+  it('D13b: an invented rung is removed and the user\'s term restored in a relative\'s fact', async () => {
+    const h = harness(
+      [
+        res({ content: 'Porto Santo.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Porto Santo' })] }),
+        res({
+          toolCalls: [tc('saveExtractedFacts', {
+            extracted_user_information: [
+              { statement: "Girlfriend's parents live in Vila Baleira, Machico, Madeira, Portugal, EU" },
+            ],
+          })],
+        }),
+        res({ content: 'Offered.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [VILA] }) },
+    );
+    await runAgentTurn({
+      state: createAgentState(NOBODY),
+      userMessage: "My girlfriend's parents live in Porto Santo",
+      deps: h.deps,
+    });
+    expect(h.saves.flat().map((e) => e.statement)).toEqual([
+      "Girlfriend's parents live in Porto Santo (Vila Baleira), Madeira, Portugal, EU",
+    ]);
+  });
+});
+
+describe('ux2 owner: two cards for the SAME old fact become one', () => {
+  const WORK = 'profession: job role and industry';
+  const FOUNDER: AgentPersona = {
+    surface: 'CONFIG',
+    languageName: 'English',
+    facts: [
+      { id: 'w1', statement: 'Entrepreneur building a tech startup', attribute: WORK },
+      { id: 'w2', statement: 'Founder starting a new business', attribute: WORK },
+    ],
+  };
+  const save = (entries: unknown[]) => res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: entries })] });
+
+  it('merges two proposals for the same target into one, options de-duplicated', async () => {
+    const h = harness([
+      res({ content: 'An AI news app.', toolCalls: [tc('load_skill', { id: 'facts/profession' })] }),
+      save([
+        { statement: 'Founder of an AI news app', questionnaire_attribute: WORK, replaces: 'w2', alternatives: ['Developer building an AI news app'] },
+        { statement: 'Developer building an AI news app', questionnaire_attribute: WORK, replaces: 'w2', alternatives: ['Building an AI curated news app'] },
+      ]),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(FOUNDER), userMessage: "I'm building an ai news app", deps: h.deps });
+    const entries = h.saves.flat();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      statement: 'Founder of an AI news app',
+      replaces: 'w2',
+      alternatives: ['Developer building an AI news app', 'Building an AI curated news app'],
+    });
+  });
+
+  it('keeps one card per DIFFERENT overlapped fact', async () => {
+    const h = harness([
+      res({ content: 'An AI news app.', toolCalls: [tc('load_skill', { id: 'facts/profession' })] }),
+      save([
+        { statement: 'Building an AI news app', questionnaire_attribute: WORK, replaces: 'w1' },
+        { statement: 'Founder of an AI curated news app', questionnaire_attribute: WORK, replaces: 'w2' },
+      ]),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(FOUNDER), userMessage: "I'm building an ai news app", deps: h.deps });
+    expect(h.saves.flat().map((e) => e.replaces)).toEqual(['w1', 'w2']);
+  });
+
+  it('a later leg never offers a second card for a fact already targeted this turn', async () => {
+    const h = harness([
+      res({ content: 'An AI news app.', toolCalls: [tc('load_skill', { id: 'facts/profession' })] }),
+      save([{ statement: 'Founder of an AI news app', questionnaire_attribute: WORK, replaces: 'w2' }]),
+      save([{ statement: 'Building an AI curated news app', questionnaire_attribute: WORK, replaces: 'w2' }]),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(FOUNDER), userMessage: "I'm building an ai news app", deps: h.deps });
+    expect(h.saves.flat()).toHaveLength(1);
+  });
+});
+
+describe('ux2 D10: the persona agent can search the web', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+  const names = (c: Call) => c.tools.map((t) => t.function.name);
+
+  it('declares webSearch on facts and question legs, never on the route leg', async () => {
+    const webSearch = jest.fn(async () => ({ searched: true, results: [] }));
+    const h = harness(
+      [
+        res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+        res({ content: 'Porto Santo is an island.' }),
+      ],
+      { webSearch },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(names(h.calls[0])).not.toContain('webSearch');
+    expect(names(h.calls[1])).toContain('webSearch');
+  });
+
+  it('is not declared when the port has no webSearch (the setting is off)', async () => {
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: 'An island.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(names(h.calls[1])).not.toContain('webSearch');
+  });
+
+  it('runs the search on the device and reads its result on the next leg', async () => {
+    const webSearch = jest.fn(async () => ({ searched: true, results: [{ title: 'Porto Santo island' }] }));
+    const h = harness(
+      [
+        res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+        res({ toolCalls: [tc('webSearch', { queries: ['Porto Santo'] })] }),
+        res({ content: 'Porto Santo is an island in the Madeira archipelago.' }),
+      ],
+      { webSearch },
+    );
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(webSearch).toHaveBeenCalledWith({ queries: ['Porto Santo'] });
+    expect(out.reply).toBe('Porto Santo is an island in the Madeira archipelago.');
+    expect(out.unknownTools).toEqual([]);
+  });
+});
+
+describe('ux2 batch 27: a place chip shows the chain it stands for', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+  const TYNE: Place = { locality: 'Newcastle upon Tyne', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' };
+  const NSW: Place = { locality: 'Newcastle', admin1: 'New South Wales', countryCode: 'AU', countryName: 'Australia', bloc: null };
+  const LYME: Place = { locality: 'Newcastle-under-Lyme', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' };
+  const CHAINS = [
+    'Newcastle upon Tyne, England, United Kingdom',
+    'Newcastle, New South Wales, Australia',
+    'Newcastle-under-Lyme, England, United Kingdom',
+  ];
+
+  // The options the model wrote 5 of 5 times on staging (run 20260925-175739).
+  const ask = async (options: string[], places: Place[] = [TYNE, NSW, LYME]) => {
+    const legs: { toolCalls: { name: string; argumentsRaw: string }[]; toolResults: { name: string; result: unknown }[] }[] = [];
+    const h = harness(
+      [
+        res({ content: 'Newcastle.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Newcastle' })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Which Newcastle?', options })] }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places }) },
+    );
+    const state = createAgentState(NOBODY);
+    await runAgentTurn({ state, userMessage: 'I live in Newcastle', deps: h.deps, onLeg: (l) => legs.push(l as never) });
+    const askCall = legs.flatMap((l) => l.toolCalls).find((c) => c.name === 'ask_choice');
+    const askResult = legs.flatMap((l) => l.toolResults).find((r) => r.name === 'ask_choice');
+    return {
+      state,
+      chips: state.turn.pendingChoice?.options.map((o) => o.text),
+      persisted: (JSON.parse(askCall?.argumentsRaw ?? '{}') as { options?: string[] }).options,
+      askResult,
+    };
+  };
+
+  it('the Newcastle trio shows three distinct chains, the same in the loop and in the thread', async () => {
+    const { chips, persisted } = await ask(['Newcastle upon Tyne', 'Newcastle', 'Newcastle-under-Lyme']);
+    expect(chips).toEqual(CHAINS);
+    // The thread derives its chips from the persisted call, and a tap sends
+    // that text back, so the two must be identical.
+    expect(persisted).toEqual(CHAINS);
+  });
+
+  it.each([[0, TYNE], [1, NSW], [2, LYME]] as const)('a tap on chip %i resolves its own place', async (i, place) => {
+    const { state } = await ask(['Newcastle upon Tyne', 'Newcastle', 'Newcastle-under-Lyme']);
+    const h = harness([res({ content: 'Offered.' })]);
+    await runAgentTurn({ state, userMessage: CHAINS[i], deps: h.deps });
+    expect(state.turn.confirmedPlace).toEqual(place);
+  });
+
+  it('batch 28: after a tapped place, a follow-up question is refused and the home is offered', async () => {
+    // Captured on device: the NSW tap resumed facts/residence, the model asked
+    // "Are you an expat in Australia, or originally from there?", and the turn
+    // ended on that question with no card. residence.md asks only an AMBIGUOUS
+    // place; a tapped place is not ambiguous.
+    const { state } = await ask(['Newcastle upon Tyne', 'Newcastle', 'Newcastle-under-Lyme']);
+    const results: { name: string; result: unknown }[] = [];
+    const h = harness([
+      res({ toolCalls: [tc('ask_choice', {
+        question: 'Are you an expat in Australia, or originally from there?',
+        options: ['Expat in Australia', 'Originally from Australia'],
+      })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'Lives in Newcastle, New South Wales, Australia', questionnaire_attribute: CANONICAL_LOCATION_KEY },
+      ] })] }),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({
+      state, userMessage: CHAINS[1], deps: h.deps,
+      onLeg: (l) => results.push(...l.toolResults),
+    });
+    expect(state.turn.confirmedPlace).toEqual(NSW);
+    expect(results.find((r) => r.name === 'ask_choice')?.result).toHaveProperty('error');
+    expect(state.turn.pendingChoice).toBeNull();
+    expect(h.saves.flat().map((e) => e.statement)).toContain('Lives in Newcastle, New South Wales, Australia');
+  });
+
+  it('distinct chips that each name their country are left as the model wrote them', async () => {
+    const options = ['Newcastle upon Tyne, UK', 'Newcastle, Australia'];
+    const { chips, persisted } = await ask(options, [TYNE, NSW]);
+    expect(chips).toEqual(options);
+    expect(persisted).toEqual(options);
+  });
+
+  it('an unbound chip stays verbatim, and the save-as-written chip is untouched', async () => {
+    const { chips, askResult } = await ask(['Newcastle', 'Somewhere else']);
+    expect(chips).toEqual(['Newcastle, New South Wales, Australia', 'Somewhere else']);
+    expect(askResult?.result).toMatchObject({ saveAsWritten: { statement: 'Lives in Newcastle' } });
+  });
+});
+
+describe('ux2 batch 26 D6: a question turn is never left on its acknowledgement', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+
+  it('a question whose legs all stay silent ends on a plain line, not on the ack alone', async () => {
+    // Captured on device: "Got it, you're asking about Porto Santo. One
+    // moment." and then nothing. The question leg never called webSearch and
+    // never wrote a word, so the turn walked to the cap with an empty reply.
+    const webSearch = jest.fn(async () => ({ searched: true, results: [] }));
+    const h = harness(
+      [
+        res({ content: "Got it, you're asking about Porto Santo. One moment.", toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+        res({ content: '' }),
+      ],
+      { webSearch },
+    );
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(out.acknowledgement).toBe("Got it, you're asking about Porto Santo. One moment.");
+    expect(out.reply).toBe(REPLY_PROCESS_FALLBACK);
+  });
+
+  it('an answered question keeps its answer', async () => {
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: 'Porto Santo is an island.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(out.reply).toBe('Porto Santo is an island.');
+  });
+});
+
+describe('ux2 D9: "Save as I wrote it" is added by the loop, never the model', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+  const NEWCASTLES: Place[] = [
+    { locality: 'Newcastle upon Tyne', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' },
+    { locality: 'Newcastle-under-Lyme', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' },
+  ];
+
+  it('an accepted question carries the user\'s sentence, residence key and skill; the chip is never an option', async () => {
+    const results: unknown[] = [];
+    const h = harness(
+      [
+        res({ content: 'Newcastle.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Newcastle' })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Which Newcastle?', options: ['Newcastle upon Tyne', 'Newcastle-under-Lyme'] })] }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: NEWCASTLES }) },
+    );
+    const state = createAgentState(NOBODY);
+    await runAgentTurn({
+      state, userMessage: 'I live in Newcastle', deps: h.deps,
+      onLeg: (leg) => results.push(...leg.toolResults.filter((r) => r.name === 'ask_choice').map((r) => r.result)),
+    });
+    expect(results).toEqual([{
+      awaiting: 'user',
+      saveAsWritten: {
+        statement: 'Lives in Newcastle',
+        questionnaire_attribute: CANONICAL_LOCATION_KEY,
+        topic_skill_id: 'topics/residence',
+      },
+    }]);
+    // Neither chip names a country, so both show their lookup chain (ux2 batch 27).
+    expect(state.turn.pendingChoice?.options.map((o) => o.text)).toEqual([
+      'Newcastle upon Tyne, England, United Kingdom',
+      'Newcastle-under-Lyme, England, United Kingdom',
+    ]);
+  });
+
+  it('a relative\'s place never takes the user\'s home key', async () => {
+    const results: unknown[] = [];
+    const h = harness(
+      [
+        res({ content: 'Newcastle.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Which Newcastle?', options: ['Newcastle upon Tyne', 'Newcastle-under-Lyme'] })] }),
+      ],
+    );
+    await runAgentTurn({
+      state: createAgentState(NOBODY), userMessage: 'My parents live in Newcastle', deps: h.deps,
+      onLeg: (leg) => results.push(...leg.toolResults.filter((r) => r.name === 'ask_choice').map((r) => r.result)),
+    });
+    expect(results[0]).toMatchObject({ saveAsWritten: { statement: 'My parents live in Newcastle' } });
+    expect((results[0] as { saveAsWritten: Record<string, unknown> }).saveAsWritten).not.toHaveProperty('questionnaire_attribute');
+  });
+
+  it('a lookup that placed nothing, on a turn that offered no card, ends with the chip', async () => {
+    const legs: { toolCalls: { name: string }[]; toolResults: { result: unknown }[] }[] = [];
+    const h = harness(
+      [
+        res({ content: 'Zzqq.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Zzqq' })] }),
+        res({ content: 'I could not find Zzqq. Where is it?' }),
+      ],
+      { lookupPlace: async () => ({ status: 'no_match', query: 'Zzqq' }) },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in Zzqq', deps: h.deps, onLeg: (l) => legs.push(l) });
+    const last = legs[legs.length - 1];
+    expect(last.toolCalls.map((c) => c.name)).toEqual(['saveAsWritten']);
+    expect(last.toolResults[0].result).toMatchObject({ saveAsWritten: { statement: 'Lives in Zzqq' } });
+  });
+});
+
+describe('ux2 batch 25 D4: a place nobody could find never replaces a verified home', () => {
+  const BERLIN: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [{ id: 'home', statement: 'Lives in Berlin, State of Berlin, Germany, EU', attribute: CANONICAL_LOCATION_KEY }],
+  };
+  it('drops the unverified home card and offers "Save as I wrote it" instead', async () => {
+    const legs: { toolCalls: { name: string }[] }[] = [];
+    const h = harness(
+      [
+        res({ content: 'Zzqq.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Zzqq' })] }),
+        res({
+          content: 'Could you spell the place?',
+          toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Zzqq', questionnaire_attribute: CANONICAL_LOCATION_KEY }] })],
+        }),
+        res({ content: 'Could you spell the place?' }),
+      ],
+      { lookupPlace: async () => ({ status: 'no_match', query: 'Zzqq' }) },
+    );
+    await runAgentTurn({ state: createAgentState(BERLIN), userMessage: 'I live in Zzqq', deps: h.deps, onLeg: (l) => legs.push(l) });
+    expect(h.saves.flat().map((e) => e.statement)).not.toContain('Lives in Zzqq');
+    expect(legs[legs.length - 1].toolCalls.map((c) => c.name)).toEqual(['saveAsWritten']);
+  });
+
+  it('with no home on file, the unverified place is still offered as a plain card', async () => {
+    const h = harness(
+      [
+        res({ content: 'Zzqq.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Zzqq' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Zzqq', questionnaire_attribute: CANONICAL_LOCATION_KEY }] })] }),
+        res({ content: 'Offered.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'no_match', query: 'Zzqq' }) },
+    );
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', languageName: 'English', facts: [] }), userMessage: 'I live in Zzqq', deps: h.deps });
+    expect(h.saves.flat()).toEqual([expect.objectContaining({ statement: 'Lives in Zzqq' })]);
+    expect(h.saves.flat()[0].replaces).toBeUndefined();
+  });
+});
+
+describe('ux2 batch 25 D9: a near-identical fact on file is the replace target', () => {
+  const APP: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [
+      { id: 'app', statement: 'Building an AI news app', attribute: 'topics: general interests' },
+      { id: 'f1', statement: 'Follows Formula E', attribute: 'topics: general interests' },
+    ],
+  };
+  const run = async (statement: string) => {
+    const h = harness([
+      res({ content: 'Noted.', toolCalls: [tc('load_skill', { id: 'facts/profession' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement, questionnaire_attribute: 'topics: general interests' }] })] }),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(APP), userMessage: `I'm ${statement}`, deps: h.deps });
+    return h.saves.flat()[0];
+  };
+  it('targets it when the model named none', async () => {
+    expect((await run('Now building an AI news app')).replaces).toBe('app');
+  });
+  it('leaves an unrelated fact alone', async () => {
+    expect((await run('Follows Formula 1')).replaces).toBeUndefined();
+  });
+});
+
+describe('ux2 batch 25 D1: the hyphenated spelling the turn used wins', () => {
+  it('a model statement "Nieuw West" takes the "Nieuw-West" its own lookup used', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Nieuw-West Amsterdam' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Nieuw West, Amsterdam, North Holland, Netherlands, EU', questionnaire_attribute: CANONICAL_LOCATION_KEY }] })] }),
+        res({ content: 'Offered.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [AMS], unmatched: 'Nieuw-West' }) },
+    );
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', languageName: 'English', facts: [] }), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.saves.flat()[0].statement).toBe('Lives in Nieuw-West, Amsterdam, North Holland, Netherlands, EU');
+  });
+
+  it('a loop-written home prefers the hyphenated spelling among the turn\'s', () => {
+    const { correctedDistrict } = require('../fuzzy-place') as typeof import('../fuzzy-place');
+    expect(correctedDistrict('niew west', ['You live in Nieuw West.', '{"query":"Nieuw-West Amsterdam"}'])).toBe('Nieuw-West');
+  });
+});
+
+describe('ux2 batch 25 C2/9: the delete card is the confirmation', () => {
+  const MANY: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [
+      { id: 'h1', statement: 'Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands, EU', attribute: CANONICAL_LOCATION_KEY },
+      { id: 'o1', statement: 'From India', attribute: ORIGIN_KEY },
+      { id: 'i1', statement: 'Follows Formula 1', attribute: 'topics: general interests' },
+    ],
+  };
+  const results = (h: ReturnType<typeof harness>) => h;
+  const runDelete = async (args: unknown, extraLegs: AgentModelResult[] = []) => {
+    const out: unknown[] = [];
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ toolCalls: [tc('deleteUserFacts', args)] }),
+      ...extraLegs,
+      res({ content: 'The card has them.' }),
+    ]);
+    results(h);
+    await runAgentTurn({
+      state: createAgentState(MANY), userMessage: 'delete my facts', deps: h.deps,
+      onLeg: (leg) => out.push(...leg.toolResults.map((r) => [r.name, r.result])),
+    });
+    return out;
+  };
+
+  it('all: true lists every fact, counted from the data', async () => {
+    const out = await runDelete({ all: true });
+    expect(out).toContainEqual(['deleteUserFacts', expect.objectContaining({
+      pendingFactIds: ['h1', 'o1', 'i1'],
+      pendingStatements: MANY.facts.map((f) => f.statement),
+    })]);
+  });
+
+  it('resolves an id, an attribute key and a statement alike', async () => {
+    const out = await runDelete({ fact_ids: ['[i1]', ORIGIN_KEY, 'Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands, EU'] });
+    expect(out).toContainEqual(['deleteUserFacts', expect.objectContaining({ pendingFactIds: ['i1', 'o1', 'h1'] })]);
+  });
+
+  it('a question about the same removal is refused: the card asks', async () => {
+    const out = await runDelete({ all: true }, [
+      res({ toolCalls: [tc('ask_choice', { question: 'Delete them all?', options: ['Yes', 'No'] })] }),
+    ]);
+    expect(out).toContainEqual(['ask_choice', expect.objectContaining({ error: expect.stringMatching(/card/) })]);
   });
 });

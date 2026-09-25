@@ -20,7 +20,26 @@ export type { PersistedMessage } from '@/lib/database/services/conversation-serv
 // Thread items
 // ---------------------------------------------------------------------------
 
-export type FactCardAction = 'saved' | 'deleted' | 'updated';
+/** The user's own sentence as a fact, offered by the loop (ux2 D9). */
+export interface SaveAsWrittenOffer {
+  /** `${messageId}::${toolCallIndex}`, where the saved outcome is recorded. */
+  resultKey: string;
+  /** The tool call's own result, the base the override is merged into. */
+  baseResult: Record<string, unknown>;
+  entry: { statement: string; questionnaire_attribute?: string; topic_skill_id?: string };
+}
+
+export type FactCardAction = 'saved' | 'deleted' | 'deletePending' | 'deleteKept' | 'updated';
+
+/** What a pending removal card's Remove / Keep acts on (ux2 M6). */
+export interface PendingDelete {
+  /** `${messageId}::${toolCallIndex}`, where the outcome is recorded. */
+  resultKey: string;
+  /** The call's own result, the base the outcome is merged into. */
+  baseResult: Record<string, unknown>;
+  /** Exactly the facts the card lists. */
+  factIds: string[];
+}
 
 // ---------------------------------------------------------------------------
 // Agent steps (pagent P2)
@@ -130,6 +149,8 @@ export type ChatThreadItem =
       action: FactCardAction;
       statements: string[];
       factIds: string[];
+      /** A live pending removal: the card shows Remove and Keep. */
+      pendingDelete?: PendingDelete;
     }
   | { kind: 'proposal-card'; key: string; proposal: StagedProposal }
   // Round-4 C5 — pinned interactive daily-optimisation-plan card at the top of an
@@ -205,6 +226,8 @@ export type ChatThreadItem =
         options: string[];
         questionnaireAttribute: string | null;
         topicSkillId: string | null;
+        /** The fact this group would replace, or null for a plain add. */
+        replaces: string | null;
       }[];
     }
   /**
@@ -226,6 +249,9 @@ export type ChatThreadItem =
       key: string;
       factId: string;
       factStatement: string;
+      /** The topic guideline the chat turn chose, carried into Retry and
+       *  Generate more. Absent: the job derives one from the attribute. */
+      topicSkillId?: string;
     }
   // Wave 11 U-B1 — save-time fact-conflict resolution card.
   | { kind: 'conflict-card'; key: string; conflict: FactConflict }
@@ -287,6 +313,10 @@ export type ChatThreadItem =
        *  facts (owner rule ux1), covering every option; null on a question
        *  between readings of one thing. */
       saveAll: string | null;
+      /** "Save as I wrote it" (ux2 D9): the loop-written entry for the user's
+       *  own sentence and where its outcome is recorded. Committed directly on
+       *  tap, never sent to the model. Null when not offered. */
+      saveAsWritten: SaveAsWrittenOffer | null;
       /** A later user message exists, so the offer is spent. Rendered inert
        *  rather than removed, so the thread keeps what was offered. */
       answered: boolean;

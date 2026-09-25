@@ -27,7 +27,7 @@ import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import FeedStatsSentence from './FeedStatsSentence';
 import { measureAnchor } from './stats-card-dropdown';
 import { useStatusDropdown } from './status-dropdown';
@@ -54,16 +54,18 @@ export const DashboardStatsCard: React.FC = () => {
         // `collapsable={false}`: a flattened view has nothing native to measure.
         <View ref={anchorRef} collapsable={false} className="mb-2" testID="dashboard-stats-card-anchor">
         <GlassPanel radius={12} contentClassName="px-4 py-3" testID="dashboard-stats-card">
-            <Pressable
-                onPress={expanded ? collapse : open}
-                accessibilityRole="button"
-                accessibilityState={{ expanded }}
-                accessibilityLabel={`${stateLabel}. ${t(
-                    expanded ? 'feedStatus.collapseA11y' : 'feedStatus.openA11y',
-                )}`}
-                testID="dashboard-stats-card-toggle"
-            >
-                <HStack className="items-start" space="sm">
+            {/* The row is a hidden visual with a CHILDLESS labelled button laid
+                over it: the chevron glyph inside the button surfaced on iOS as
+                its own StaticText (captured class, ux2). */}
+            <View>
+                <HStack
+                    className="items-start"
+                    space="sm"
+                    pointerEvents="none"
+                    accessible={false}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
+                >
                     <View style={{ flex: 1, minWidth: 0 }}>
                         {articleCount > 0 ? (
                             <FeedStatsSentence className="text-typography-700 font-medium" />
@@ -82,9 +84,22 @@ export const DashboardStatsCard: React.FC = () => {
                         name={expanded ? 'expand-less' : 'expand-more'}
                         size={20}
                         color={STATUS_INK.secondary}
+                        accessible={false}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
                     />
                 </HStack>
-            </Pressable>
+                <Pressable
+                    onPress={expanded ? collapse : open}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded }}
+                    accessibilityLabel={`${stateLabel}. ${t(
+                        expanded ? 'feedStatus.collapseA11y' : 'feedStatus.openA11y',
+                    )}`}
+                    testID="dashboard-stats-card-toggle"
+                    style={StyleSheet.absoluteFill}
+                />
+            </View>
         </GlassPanel>
         </View>
     );

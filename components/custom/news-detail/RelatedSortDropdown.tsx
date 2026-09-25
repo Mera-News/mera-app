@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text';
 import type { RelatedSortMode } from '@/lib/feed-grouping/related-articles-sort';
 import { RELATED_SORT_MODES } from '@/lib/stores/related-sort-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
@@ -47,12 +47,26 @@ const RelatedSortDropdown: React.FC<RelatedSortDropdownProps> = ({
     testIDPrefix,
 }) => {
     const { t } = useTranslation();
+    // Controlled, so VoiceOver's escape gesture can close it.
+    const [open, setOpen] = useState(false);
+    const openMenu = useCallback(() => setOpen(true), []);
+    const closeMenu = useCallback(() => setOpen(false), []);
 
     return (
         <Menu
             placement="bottom right"
             offset={6}
             closeOnSelect
+            isOpen={open}
+            onOpen={openMenu}
+            onClose={closeMenu}
+            // VoiceOver could not reach the items: gluestack portals the menu
+            // to the app root, outside the native screen. A native modal is on
+            // top, and VoiceOver moves into it.
+            useRNModal
+            // VoiceOver's escape (two-finger scrub) closes it; reaches the
+            // menu's content view.
+            onAccessibilityEscape={closeMenu}
             trigger={(triggerProps) => (
                 <Pressable
                     {...triggerProps}

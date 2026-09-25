@@ -1,0 +1,103 @@
+{
+  "_comment": "ux2 P9 C4: title of the chat card shown while a delete waits for the user to confirm. It lists the fact text; after the tap the existing factDeletedTitle card replaces it. Pure ADD, one key. Wording mirrors each locale's factDeletedTitle in the future tense.",
+  "en": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Will be removed from your persona"
+    }
+  },
+  "ar": {
+    "floatingChat": {
+      "factDeletePendingTitle": "ستتم إزالته من ملفك الشخصي"
+    }
+  },
+  "de": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Wird aus deinem Profil entfernt"
+    }
+  },
+  "es": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Se eliminará de tu perfil"
+    }
+  },
+  "fr": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Sera supprimé de votre profil"
+    }
+  },
+  "hi": {
+    "floatingChat": {
+      "factDeletePendingTitle": "आपके प्रोफ़ाइल से हटाया जाएगा"
+    }
+  },
+  "id": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Akan dihapus dari profil Anda"
+    }
+  },
+  "it": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Verrà rimosso dal tuo profilo"
+    }
+  },
+  "ja": {
+    "floatingChat": {
+      "factDeletePendingTitle": "プロフィールから削除されます"
+    }
+  },
+  "ko": {
+    "floatingChat": {
+      "factDeletePendingTitle": "프로필에서 제거될 예정"
+    }
+  },
+  "nl": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Wordt verwijderd uit je profiel"
+    }
+  },
+  "pl": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Zostanie usunięte z Twojego profilu"
+    }
+  },
+  "pt-BR": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Será removido do seu perfil"
+    }
+  },
+  "ru": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Будет удалено из вашего профиля"
+    }
+  },
+  "th": {
+    "floatingChat": {
+      "factDeletePendingTitle": "จะถูกลบออกจากโปรไฟล์ของคุณ"
+    }
+  },
+  "tr": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Profilinden kaldırılacak"
+    }
+  },
+  "uk": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Буде видалено з вашого профілю"
+    }
+  },
+  "vi": {
+    "floatingChat": {
+      "factDeletePendingTitle": "Sẽ bị xóa khỏi hồ sơ của bạn"
+    }
+  },
+  "zh-CN": {
+    "floatingChat": {
+      "factDeletePendingTitle": "将从你的档案中移除"
+    }
+  },
+  "zh-TW": {
+    "floatingChat": {
+      "factDeletePendingTitle": "將從你的檔案中移除"
+    }
+  }
+}

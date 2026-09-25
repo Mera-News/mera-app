@@ -60,6 +60,8 @@ const sug = (
   firstPubDate: extra.firstPubDate ?? new Date(1700000000000),
   imageUrl: extra.imageUrl ?? null,
   publicationName: extra.publicationName ?? null,
+  titleOriginal: extra.titleOriginal ?? null,
+  languageCode: extra.languageCode ?? null,
 });
 
 describe('reconcileTrackedStories — topic path', () => {
@@ -102,6 +104,21 @@ describe('reconcileTrackedStories — topic path', () => {
     expect(mockNotify).not.toHaveBeenCalled();
     // Topic stories are stamped checked but NEVER end (no recordMiss here).
     expect(mockStampChecked).toHaveBeenCalledWith('t1');
+  });
+
+  // ux2: the snapshot keeps the article's REAL original title beside the
+  // English one. With only English, the timeline passed English as the
+  // original of a Japanese article, and a Japanese reader got English.
+  it('snapshots the original-language title beside the English one', async () => {
+    mockGetActiveForTopicReconcile.mockResolvedValue([
+      { id: 't1', topicId: 'top-1', memberArticleIds: [] },
+    ]);
+    mockFetch.mockResolvedValue([
+      sug('a2', ['top-1'], { titleEn: 'Tokyo rain', titleOriginal: '東京で雨', languageCode: 'ja' }),
+    ]);
+    await reconcileTrackedStories();
+    const snap = mockApplyUpdates.mock.calls[0][1].newSnapshots[0];
+    expect(snap).toEqual(expect.objectContaining({ title: 'Tokyo rain', titleOriginal: '東京で雨', languageCode: 'ja' }));
   });
 
   it('stamps but does not grow / notify when no fresh members match', async () => {

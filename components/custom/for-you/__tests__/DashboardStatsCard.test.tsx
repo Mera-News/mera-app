@@ -37,10 +37,7 @@ jest.mock('react-native', () => {
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key }),
 }));
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (p: any) => <View testID={`icon-${p.name}`} /> };
-});
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('@/components/ui/text', () => {
     const { Text } = require('react-native');
     return { Text: (p: any) => <Text {...p} /> };
@@ -91,8 +88,6 @@ jest.mock('react-native-reanimated', () => {
     const anim = { duration: () => anim };
     return { __esModule: true, default: { View }, FadeIn: anim, FadeOut: anim, LinearTransition: {} };
 });
-jest.mock('@/components/custom/processing/use-processing-snapshot', () => ({ useProcessingSnapshot: () => ({}) }));
-jest.mock('@/components/custom/processing/ChunkStrip', () => () => null);
 jest.mock('@/lib/stores/selectors', () => ({}));
 jest.mock('../FeedStatusDetails', () => () => null);
 // jest's host views mock measureInWindow as a no-op that never calls back.
@@ -147,7 +142,7 @@ const cardIds = (r: ReturnType<typeof render>) =>
 describe('DashboardStatsCard', () => {
     it('shows the article-count sentence, collapsed', () => {
         const r = render(<DashboardStatsCard />);
-        expect(r.getByTestId('stats-sentence')).toBeTruthy();
+        expect(r.getByTestId('stats-sentence', HIDDEN)).toBeTruthy();
         expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
 
@@ -183,7 +178,7 @@ describe('DashboardStatsCard', () => {
         mockMode = 'limited';
         const r = render(<DashboardStatsCard />);
         expect(r.queryByTestId('stats-sentence')).toBeNull();
-        expect(r.getByTestId('dashboard-stats-card-state').props.children).toBe('feedStatus.modeLimited');
+        expect(r.getByTestId('dashboard-stats-card-state', HIDDEN).props.children).toBe('feedStatus.modeLimited');
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
         expect(r.getByTestId('status-panel-limited', HIDDEN)).toBeTruthy();
     });
@@ -260,14 +255,23 @@ describe('DashboardStatsCard', () => {
     it('closes on a tap anywhere on the open panel', () => {
         const r = render(<DashboardStatsCard />);
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
-        fireEvent.press(r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN));
+        fireEvent(r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN), 'touchEnd');
         expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
 
-    it('does not let the panel-wide close swallow VoiceOver: it is not an accessibility element', () => {
+    // Captured (sim batch 24): the panel-wide close was a Pressable, and iOS
+    // exposed it as ONE element labelled with the stage icon's private-use
+    // glyph, accessible={false} and all. The close is now a plain View's touch
+    // end: no press handlers, no accessibility element, the rows stay readable.
+    it('closes through a plain View, never a Pressable, so it is no accessibility element', () => {
         const r = render(<DashboardStatsCard />);
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
-        expect(r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN).props.accessible).toBe(false);
+        const w = r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN);
+        expect(w.props.onResponderRelease).toBeUndefined();
+        expect(w.props.onClick).toBeUndefined();
+        expect(w.props.accessibilityRole).toBeUndefined();
+        expect(w.props.accessible).not.toBe(true);
+        expect(typeof w.props.onTouchEnd).toBe('function');
     });
 
     it('closes before "Manage plan" navigates, so no backdrop is stranded', () => {
@@ -285,4 +289,37 @@ describe('DashboardStatsCard', () => {
         r.rerender(<DashboardStatsCard />);
         expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
+});
+
+// Every icon-font glyph must be hidden itself and sit under no accessible
+// element: iOS surfaces any other as its own StaticText (captured, ux2).
+const glyphProblems = (root: any): string[] => {
+    const glyphs = root.findAll(
+        (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+    );
+    if (glyphs.length === 0) return ['no glyph rendered'];
+    const out: string[] = [];
+    for (const g of glyphs) {
+        if (
+            g.props.accessible !== false ||
+            g.props.accessibilityElementsHidden !== true ||
+            g.props.importantForAccessibility !== 'no-hide-descendants'
+        ) {
+            out.push(`glyph ${JSON.stringify(g.props.children)} not hidden`);
+        }
+        for (let p: any = g.parent; p; p = p.parent) {
+            if (p.props?.accessible === true) {
+                out.push(`glyph under accessible ${p.props.testID ?? p.type}`);
+                break;
+            }
+        }
+    }
+    return out;
+};
+
+it('keeps the chevron glyph out of the toggle, which is childless', () => {
+    const r = render(<DashboardStatsCard />);
+    expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
+    const b = r.getByTestId('dashboard-stats-card-toggle');
+    expect(b.findAll((n: any) => n !== b && typeof n.props?.testID === 'string' && n.props.testID !== 'dashboard-stats-card-toggle')).toHaveLength(0);
 });

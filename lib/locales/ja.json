@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{total}}件中{{done}}件の記事をダウンロード済み",
       "chunks": {
-        "ready": "{{total}}件中{{ready}}件の分析バッチが完了",
-        "a11y": "分析バッチ: {{total}}件中{{ready}}件が完了"
+        "ready": "{{total}}件中{{ready}}件の分析バッチが完了"
       },
       "stageA11y": "ステップ {{index}}/{{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}}件があなたに関連性があります、",
     "reasonUnavailable": "この記事のメモを作成できませんでした。",
     "loadingA11y": "フィードを読み込んでいます",
-    "newStoriesPill": "新着記事",
     "translatingCaption": "翻訳中…",
     "updatedJustNow": "たった今更新"
   },
@@ -263,7 +261,7 @@
     "share": "共有",
     "shareVia": "{{downloadUrl}}経由で共有",
     "sourceCountryGlobal": "グローバル",
-    "sourceCountryA11y": "情報源の国: {{country}}。タップすると国名が表示されます。",
+    "sourceCountryA11y": "発信国: {{country}}。タップで国名を表示し、国名をタップするとその国の媒体を表示します。",
     "readOn": "{{publication}}で読む",
     "readOnGoogleTranslate": "Google 翻訳で読む",
     "linkUnavailable": "このリンクを安全に開くことができないため、ここでは利用できません。",
@@ -294,7 +292,9 @@
     "addToExplore": "探索に追加",
     "addedToExplore": "探索に追加しました",
     "badgeGovernment": "政府ソース",
-    "badgeRegulator": "公式機関"
+    "badgeRegulator": "公式機関",
+    "sectionCountries": "国・地域",
+    "sectionPublications": "メディア"
   },
   "clusterDetail": {
     "translatable": "この記事は{{language}}で書かれています。読んでいる間、端末が翻訳できます。翻訳がうまくいかない場合は、Google 翻訳でサイトを開くこともできますが、その場合はGoogle経由での閲覧になる点にご注意ください。",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "このファクトのトピックと見つかった記事も削除され、Meraはこの件のニュースを探さなくなります。",
     "deletingFact": "削除中...",
     "yesDelete": "はい、削除します",
-    "refreshSuggestions": "候補を更新",
-    "refreshingSuggestions": "更新中...",
-    "refreshSuggestionsSuccessTitle": "候補を更新しました",
-    "refreshSuggestionsSuccessDescription": "新しいパーソナライズされた候補が生成されています。",
-    "refreshSuggestionsFailedTitle": "更新に失敗しました",
-    "refreshSuggestionsFailedDescription": "候補を更新できませんでした。もう一度お試しください。",
-    "personaUpdatedRefreshHint": "ペルソナが更新されたようです。フィードを再生成しますか？",
     "articleCount_one": "{{count}}件の記事",
     "articleCount_other": "{{count}}件の記事",
     "addTopic": "トピックを追加",
@@ -783,7 +776,13 @@
     "topicGenFailed": "このトピックを生成できませんでした。",
     "topicGenRetry": "再試行",
     "aiUsageNoticeGeneral": "Mera は間違えることがあります。重要なことは確認してください。",
-    "trackChooseHint": "フォローする対象を選んでください"
+    "trackChooseHint": "フォローする対象を選んでください",
+    "factDeletePendingTitle": "プロフィールから削除されます",
+    "saveAsWritten": "書いたとおりに保存",
+    "factDeleteRemove": "削除",
+    "factDeleteKeep": "残す",
+    "factDeleteKept": "何も削除していません。",
+    "topicsSavedHint": "トピックを保存しました。引き続き情報を追加するか、{{close}} をタップして探索を始めましょう。"
   },
   "articleFeedback": {
     "thumbsUp": "いいね",
@@ -876,7 +875,8 @@
     "formError": "必須項目をすべて入力してください。",
     "emailError": "有効なメールアドレスを入力してください。",
     "captureScreenshotError": "スクリーンショットの撮影に失敗しました。",
-    "genericError": "予期しないエラーによりフィードバックを送信できませんでした。"
+    "genericError": "予期しないエラーによりフィードバックを送信できませんでした。",
+    "chatAttachmentNote": "Mera とのチャットがこのレポートに添付されます。"
   },
   "observability": {
     "title": "オブザーバビリティ",
@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "新しいことを教えてください。フィードに追加します。",
     "editFacts": "編集",
-    "planUsage": "今日の分析 {{used}} / {{limit}}"
+    "planUsage": "今日の分析 {{used}} / {{limit}}",
+    "updatingAllFacts": "すべてのファクトを更新中",
+    "pleaseWait": "しばらくお待ちください"
   },
   "facts": {
     "screenTitle": "あなたのファクト",
@@ -2568,7 +2570,11 @@
     "titleAlsoAdd": "これも追加しますか？",
     "pendingHint": "上の選択肢から選ぶか、答えを入力してください。",
     "overlapsLabel": "重なる情報",
-    "overlapsReplaceNote": "置き換えると、この情報と関連トピックが削除されます。"
+    "overlapsReplaceNote": "置き換えると、この情報と関連トピックが削除されます。",
+    "replaceAll": "すべて置き換える",
+    "keepAll": "すべて残す",
+    "replaceAllA11y": "{{count}} 件の候補ですべて置き換える",
+    "keepAllA11y": "今の情報を残して {{count}} 件の候補をすべて追加"
   },
   "subscriptions": {
     "sectionTitle": "購読中のメディア",
@@ -2730,37 +2736,36 @@
       "質問を組み立てています。"
     ],
     "queued": [
-      "リクエストを順番に並べています。",
-      "ほかの処理が動いています。次はあなたの番です。"
+      "あなたのリクエストはスマホで次の順番です。"
     ],
     "securing": [
-      "モデルだけが開けるようにメッセージを施錠しています。",
-      "あなたの言葉は端末を出る前に暗号化されます。"
+      "信頼できる環境にあるモデルだけが読めるよう、メッセージを暗号化しています。",
+      "あなたの言葉はスマホから送られる前に暗号化されます。"
     ],
     "attesting": [
-      "モデルとのプライベートな経路を用意しています。",
-      "あなたとMeraだけのやり取りにするための鍵を取得しています。",
-      "プライベートな会話は準備に少し時間がかかります。"
+      "信頼できる環境で、あなたとモデルの間に安全な接続を確立しています。",
+      "モデルの信頼できる環境から鍵を取得しています。これを読めるのはモデルだけです。"
     ],
     "thinking": [
-      "Meraがあなたの言葉を読んでいます。",
-      "いちばん良い答え方を考えています。"
+      "モデルがメッセージを読んでいます。",
+      "最適な回答を考えています。"
     ],
     "retrying": [
-      "いつもより時間がかかっています。Meraが別の経路を試しています。",
-      "まだ続いています。お待ちいただきありがとうございます。"
+      "いつもより時間がかかっています。別の安全な経路を試しています。",
+      "まだ処理中です。お待ちいただきありがとうございます。"
     ],
     "deviceLoading": [
-      "端末のモデルを起動しています。",
-      "読み込み中のため、最初の回答は少し時間がかかります。"
+      "スマホでモデルを読み込んでいます。",
+      "読み込み中は最初の回答に少し時間がかかります。"
     ],
     "devicePreparing": [
-      "Meraがあなたについて知っていることをまとめています。",
-      "回答に向けて端末を準備しています。"
+      "スマホが回答の準備をしています。"
     ],
     "deviceThinking": [
-      "端末の中で考えています。",
-      "これはあなたの端末で動いているので、どこにも送信されません。"
+      "スマホで考えています。何もデバイスの外に出ません。"
+    ],
+    "webSearch": [
+      "デバイスからウェブを検索しています…"
     ]
   },
   "headerNarration": {
@@ -2799,12 +2804,16 @@
       ]
     },
     "nudges": [
-      "あとで読むに保存",
-      "保存した記事があります",
-      "1本をじっくり読む",
-      "主要ニュースを見る",
-      "新しい＝良いではない",
-      "見ていなくて大丈夫"
+      "記事を全文読む",
+      "時間がない？保存しよう",
+      "世界のニュースは見た？",
+      "あなたの国は見た？",
+      "ニュースをフォローする",
+      "フォロー中を確認",
+      "プロフィールは最新？",
+      "違う？Mera に伝えよう",
+      "いいねで似た記事を",
+      "大切な人にシェア"
     ],
     "a11y": "Meraがこの端末でニュースを更新しています。"
   },

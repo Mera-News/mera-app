@@ -19,6 +19,7 @@ import { formatCount } from '@/lib/utils/format-count';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from '@/components/ui/pressable';
 import { pickScoringProgress, STATUS_INK } from './status-ink';
@@ -124,10 +125,28 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({ onBeforeNavigate 
 
     return (
         <VStack space="md" className="py-1">
-            {/* Current stage */}
+            {/* Current stage. The WORDS are the one accessible element; the
+                icon sits beside them, outside it. An icon is a Text holding a
+                private-use glyph: inside a container it became that
+                container's label, and even inside a labelled row iOS still
+                surfaced it as its own StaticText (both captured). */}
             <HStack className="items-center" space="sm">
-                <MaterialIcons name="sync" size={18} color={ACCENT} />
-                <Text size="sm" className="font-semibold flex-1" style={{ color: STATUS_INK.primary }}>
+                <MaterialIcons
+                    name="sync"
+                    size={18}
+                    color={ACCENT}
+                    accessible={false}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
+                />
+                <Text
+                    size="sm"
+                    className="font-semibold flex-1"
+                    style={{ color: STATUS_INK.primary }}
+                    accessible
+                    accessibilityLabel={stageMessage}
+                    testID="feed-status-stage-row"
+                >
                     {stageMessage}
                 </Text>
             </HStack>
@@ -178,24 +197,43 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({ onBeforeNavigate 
                         destination — the cap is a plan limit, so management (which
                         is where Upgrade lives) is the one useful action here. */}
                     <HStack className="justify-end mt-2">
-                        <Pressable
-                            onPress={() => {
-                                onBeforeNavigate?.();
-                                router.push('/logged-in/preferences/manage-subscription' as any);
-                            }}
-                            hitSlop={8}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('subscription.managePlan')}
-                            testID="feed-status-manage-subscription"
-                            className="bg-primary-500 rounded-full px-2.5 py-1"
-                        >
-                            <HStack className="items-center" space="xs">
-                                <MaterialIcons name="credit-card" size={12} color="#ffffff" />
-                                <Text size="xs" className="text-white font-semibold">
-                                    {t('subscription.managePlan')}
-                                </Text>
-                            </HStack>
-                        </Pressable>
+                        {/* Childless labelled button laid over the visual
+                            pill: a glyph inside a button still surfaces as its
+                            own StaticText on iOS, hidden props or not. */}
+                        <View>
+                            <Box
+                                pointerEvents="none"
+                                accessible={false}
+                                accessibilityElementsHidden
+                                importantForAccessibility="no-hide-descendants"
+                                className="bg-primary-500 rounded-full px-2.5 py-1"
+                            >
+                                <HStack className="items-center" space="xs">
+                                    <MaterialIcons
+                                        name="credit-card"
+                                        size={12}
+                                        color="#ffffff"
+                                        accessible={false}
+                                        accessibilityElementsHidden
+                                        importantForAccessibility="no-hide-descendants"
+                                    />
+                                    <Text size="xs" className="text-white font-semibold">
+                                        {t('subscription.managePlan')}
+                                    </Text>
+                                </HStack>
+                            </Box>
+                            <Pressable
+                                onPress={() => {
+                                    onBeforeNavigate?.();
+                                    router.push('/logged-in/preferences/manage-subscription' as any);
+                                }}
+                                hitSlop={8}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('subscription.managePlan')}
+                                testID="feed-status-manage-subscription"
+                                style={StyleSheet.absoluteFill}
+                            />
+                        </View>
                     </HStack>
                 </Box>
             )}

@@ -4,38 +4,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "احفظه لوقت لاحق",
-      "width" : 99.5
+      "text" : "اقرأ المقال كاملًا",
+      "width" : 85.799999999999997
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "محفوظاتك بانتظارك",
-      "width" : 108.5
+      "text" : "لا وقت لديك؟ احفظه",
+      "width" : 115.5
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "اقرأ قصة واحدة جيدًا",
-      "width" : 113.40000000000001
+      "text" : "هل رأيت أخبار العالم؟",
+      "width" : 119
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "جرّب أهم العناوين",
-      "width" : 99.700000000000003
+      "text" : "هل رأيت أخبار بلدانك؟",
+      "width" : 122.3
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "الأحدث ليس الأفضل",
-      "width" : 111
+      "text" : "تابع قصة",
+      "width" : 48.600000000000001
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "لا داعي للانتظار",
-      "width" : 81.200000000000003
+      "text" : "راجع القصص المتابَعة",
+      "width" : 117.8
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "هل ملفك محدَّث؟",
+      "width" : 100.2
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "ليس لك؟ أخبر Mera",
+      "width" : 114.59999999999999
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "أعجبك؟ لترى المزيد",
+      "width" : 110.2
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "شارك من تحب",
+      "width" : 80.599999999999994
     },
     {
       "index" : 0,
@@ -138,38 +162,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Für später speichern",
-      "width" : 133.30000000000001
+      "text" : "Lies den ganzen Artikel",
+      "width" : 150
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Gespeichertes wartet",
-      "width" : 138.5
+      "text" : "Keine Zeit? Speichern",
+      "width" : 140.40000000000001
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Lies eine Meldung ganz",
-      "width" : 152.09999999999999
+      "text" : "Welt schon gesehen?",
+      "width" : 137.80000000000001
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Schlagzeilen ansehen",
-      "width" : 139.80000000000001
+      "text" : "Deine Länder gesehen?",
+      "width" : 151.69999999999999
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Neuer ist nicht besser",
-      "width" : 141.40000000000001
+      "text" : "Folge einer Meldung",
+      "width" : 131.59999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Zuschauen hilft nicht",
-      "width" : 135.80000000000001
+      "text" : "Gefolgtes prüfen",
+      "width" : 108.59999999999999
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Ist dein Profil aktuell?",
+      "width" : 137.69999999999999
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Nichts für dich? Sag es",
+      "width" : 148.90000000000001
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Gefällt? Mehr davon",
+      "width" : 129
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Mit Liebsten teilen",
+      "width" : 118.40000000000001
     },
     {
       "index" : 0,
@@ -272,38 +320,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Save it for later",
-      "width" : 97.400000000000006
+      "text" : "Read the full article",
+      "width" : 124.7
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Your saved list is waiting",
-      "width" : 157.5
+      "text" : "Short on time? Save it",
+      "width" : 141
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Read one story properly",
-      "width" : 154.5
+      "text" : "Checked world news?",
+      "width" : 140.59999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "See the top headlines",
-      "width" : 139.69999999999999
+      "text" : "Checked your countries?",
+      "width" : 160.30000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Newer is not better",
-      "width" : 123.59999999999999
+      "text" : "Follow a story",
+      "width" : 89.200000000000003
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "No need to watch",
-      "width" : 113.5
+      "text" : "Check followed stories",
+      "width" : 146.19999999999999
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Is your profile current?",
+      "width" : 145.40000000000001
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Not for you? Tell Mera",
+      "width" : 141.40000000000001
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Like it to see more",
+      "width" : 118.3
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Share with loved ones",
+      "width" : 141.5
     },
     {
       "index" : 0,
@@ -406,38 +478,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Guárdalo para luego",
-      "width" : 130.5
+      "text" : "Lee el artículo entero",
+      "width" : 135.69999999999999
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Tus guardados esperan",
-      "width" : 151.19999999999999
+      "text" : "¿Sin tiempo? Guárdalo",
+      "width" : 144.80000000000001
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Lee bien una noticia",
-      "width" : 128.69999999999999
+      "text" : "¿Viste lo del mundo?",
+      "width" : 133.59999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Mira los titulares",
-      "width" : 106.59999999999999
+      "text" : "¿Viste tus países?",
+      "width" : 115.59999999999999
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Lo nuevo no es mejor",
-      "width" : 137.40000000000001
+      "text" : "Sigue una noticia",
+      "width" : 110.5
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "No hace falta mirar",
-      "width" : 122.40000000000001
+      "text" : "Revisa lo que sigues",
+      "width" : 131
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "¿Tu perfil está al día?",
+      "width" : 136.09999999999999
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "¿No es para ti? Dilo",
+      "width" : 124.40000000000001
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Me gusta para ver más",
+      "width" : 146.80000000000001
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Comparte con tu gente",
+      "width" : 149.09999999999999
     },
     {
       "index" : 0,
@@ -540,38 +636,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Garde-le pour plus tard",
-      "width" : 150.80000000000001
+      "text" : "Lisez l'article en entier",
+      "width" : 145.40000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Tes favoris t'attendent",
-      "width" : 144.30000000000001
+      "text" : "Pressé ? Enregistrez-le",
+      "width" : 148.09999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Lis un sujet à fond",
-      "width" : 117.5
+      "text" : "Vu l'actu du monde ?",
+      "width" : 135.80000000000001
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Vois les gros titres",
-      "width" : 118.8
+      "text" : "Vu vos pays ?",
+      "width" : 87.900000000000006
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Plus récent, pas mieux",
-      "width" : 145.59999999999999
+      "text" : "Suivez une histoire",
+      "width" : 121.59999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Inutile de regarder",
-      "width" : 118.2
+      "text" : "Vos histoires suivies",
+      "width" : 130.5
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Profil à jour ?",
+      "width" : 84
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Pas pour vous ? Dites-le",
+      "width" : 156.5
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Aimez pour en voir plus",
+      "width" : 151.40000000000001
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Partagez à vos proches",
+      "width" : 151.19999999999999
     },
     {
       "index" : 0,
@@ -674,38 +794,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "बाद के लिए सहेजें",
-      "width" : 91.5
+      "text" : "पूरा लेख पढ़ें",
+      "width" : 62.799999999999997
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "सहेजा हुआ इंतज़ार में",
-      "width" : 107.3
+      "text" : "समय कम है? सेव करें",
+      "width" : 112
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "एक ख़बर ठीक से पढ़ें",
-      "width" : 109.09999999999999
+      "text" : "दुनिया की ख़बरें देखीं?",
+      "width" : 113.2
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "मुख्य सुर्ख़ियाँ देखें",
-      "width" : 88.099999999999994
+      "text" : "अपने देश देखे?",
+      "width" : 77.400000000000006
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "नया हमेशा बेहतर नहीं",
-      "width" : 110.7
+      "text" : "कोई ख़बर फ़ॉलो करें",
+      "width" : 105.8
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "देखते रहना ज़रूरी नहीं",
-      "width" : 111.90000000000001
+      "text" : "फ़ॉलो की ख़बरें देखें",
+      "width" : 99.400000000000006
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "प्रोफ़ाइल अपडेट है?",
+      "width" : 101.2
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "पसंद नहीं? Mera को बताएँ",
+      "width" : 143.09999999999999
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "और देखने को लाइक करें",
+      "width" : 127
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "अपनों से शेयर करें",
+      "width" : 93.099999999999994
     },
     {
       "index" : 0,
@@ -808,38 +952,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Simpan untuk nanti",
-      "width" : 124
+      "text" : "Baca artikel lengkapnya",
+      "width" : 152.30000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Simpananmu menunggu",
-      "width" : 156.19999999999999
+      "text" : "Sibuk? Simpan saja",
+      "width" : 124.3
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Baca satu berita utuh",
-      "width" : 137.30000000000001
+      "text" : "Cek berita dunia?",
+      "width" : 112.40000000000001
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Lihat berita utama",
-      "width" : 116.7
+      "text" : "Sudah cek negaramu?",
+      "width" : 143.09999999999999
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Terbaru bukan terbaik",
-      "width" : 141.09999999999999
+      "text" : "Ikuti sebuah berita",
+      "width" : 119.3
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Tak perlu ditunggu",
-      "width" : 120.2
+      "text" : "Cek berita yang diikuti",
+      "width" : 143.80000000000001
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Profil sudah terbaru?",
+      "width" : 134.40000000000001
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Tidak cocok? Beri tahu",
+      "width" : 146.80000000000001
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Sukai untuk lihat lagi",
+      "width" : 132.69999999999999
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Bagikan ke orang dekat",
+      "width" : 150.80000000000001
     },
     {
       "index" : 0,
@@ -942,38 +1110,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Salvalo per dopo",
-      "width" : 108.09999999999999
+      "text" : "Leggi l'articolo intero",
+      "width" : 135.90000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "I salvati ti aspettano",
-      "width" : 128.90000000000001
+      "text" : "Poco tempo? Salvalo",
+      "width" : 134.30000000000001
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Leggi bene una notizia",
-      "width" : 145.19999999999999
+      "text" : "Le notizie dal mondo?",
+      "width" : 140.80000000000001
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Guarda i titoli",
-      "width" : 85.700000000000003
+      "text" : "Visti i tuoi paesi?",
+      "width" : 108.3
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Nuovo non è meglio",
-      "width" : 127.8
+      "text" : "Segui una notizia",
+      "width" : 110.2
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Non serve guardare",
-      "width" : 127
+      "text" : "Controlla quelle seguite",
+      "width" : 152.30000000000001
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Il profilo è aggiornato?",
+      "width" : 144.09999999999999
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Non fa per te? Dillo",
+      "width" : 123.2
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Metti mi piace per altre",
+      "width" : 148.59999999999999
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Condividi con i tuoi cari",
+      "width" : 150.69999999999999
     },
     {
       "index" : 0,
@@ -1076,38 +1268,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "あとで読むに保存",
-      "width" : 108.09999999999999
+      "text" : "記事を全文読む",
+      "width" : 96
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "保存した記事があります",
-      "width" : 148.59999999999999
+      "text" : "時間がない？保存しよう",
+      "width" : 149.19999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "1本をじっくり読む",
-      "width" : 113.8
+      "text" : "世界のニュースは見た？",
+      "width" : 148.59999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "主要ニュースを見る",
+      "text" : "あなたの国は見た？",
       "width" : 121.40000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "新しい＝良いではない",
-      "width" : 134.69999999999999
+      "text" : "ニュースをフォローする",
+      "width" : 146.19999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "見ていなくて大丈夫",
-      "width" : 122
+      "text" : "フォロー中を確認",
+      "width" : 108.09999999999999
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "プロフィールは最新？",
+      "width" : 134.69999999999999
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "違う？Mera に伝えよう",
+      "width" : 144.59999999999999
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "いいねで似た記事を",
+      "width" : 121.40000000000001
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "大切な人にシェア",
+      "width" : 108.09999999999999
     },
     {
       "index" : 0,
@@ -1210,37 +1426,61 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "나중에 읽게 저장",
-      "width" : 92.299999999999997
+      "text" : "기사 전체 읽기",
+      "width" : 80.200000000000003
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "저장한 기사가 있어요",
-      "width" : 116.59999999999999
+      "text" : "시간이 없나요? 저장하기",
+      "width" : 135.69999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "한 기사를 제대로",
-      "width" : 92.299999999999997
+      "text" : "세계 뉴스 확인했나요?",
+      "width" : 123.59999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "주요 헤드라인 보기",
-      "width" : 104.5
+      "text" : "내 나라 확인했나요?",
+      "width" : 111.5
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "최신이 최선은 아니에요",
-      "width" : 128.69999999999999
+      "text" : "뉴스 팔로우하기",
+      "width" : 88.599999999999994
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "지켜볼 필요 없어요",
+      "text" : "팔로우한 뉴스 확인",
+      "width" : 104.5
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "프로필이 최신인가요?",
+      "width" : 119.8
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "관심 없나요? 알려주세요",
+      "width" : 135.69999999999999
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "좋아요로 더 보기",
+      "width" : 92.299999999999997
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "소중한 사람과 공유",
       "width" : 104.5
     },
     {
@@ -1344,38 +1584,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Bewaar voor later",
-      "width" : 112.7
+      "text" : "Lees het hele artikel",
+      "width" : 129.19999999999999
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Je opgeslagen items",
-      "width" : 133.09999999999999
+      "text" : "Weinig tijd? Bewaar het",
+      "width" : 150.5
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Lees één verhaal goed",
-      "width" : 145
+      "text" : "Wereldnieuws gezien?",
+      "width" : 143.69999999999999
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Bekijk de topkoppen",
-      "width" : 131.5
+      "text" : "Je landen gezien?",
+      "width" : 115.90000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Nieuwer is niet beter",
-      "width" : 133
+      "text" : "Volg een verhaal",
+      "width" : 106.59999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Kijken helpt niet",
-      "width" : 103
+      "text" : "Bekijk je verhalen",
+      "width" : 112.2
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Is je profiel actueel?",
+      "width" : 128.69999999999999
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Niets voor jou? Zeg het",
+      "width" : 149.59999999999999
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Like voor meer zoals dit",
+      "width" : 152.90000000000001
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Deel met je dierbaren",
+      "width" : 138.09999999999999
     },
     {
       "index" : 0,
@@ -1478,38 +1742,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Zapisz na później",
-      "width" : 112.3
+      "text" : "Przeczytaj cały artykuł",
+      "width" : 147
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Zapisane czekają",
-      "width" : 111.2
+      "text" : "Brak czasu? Zapisz",
+      "width" : 124.7
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Przeczytaj jeden temat",
-      "width" : 147.59999999999999
+      "text" : "Świat już sprawdzony?",
+      "width" : 146
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Zobacz nagłówki",
-      "width" : 109.5
+      "text" : "Twoje kraje sprawdzone?",
+      "width" : 161.5
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Nowsze to nie lepsze",
-      "width" : 136.09999999999999
+      "text" : "Obserwuj temat",
+      "width" : 102.3
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Nie trzeba patrzeć",
-      "width" : 119
+      "text" : "Sprawdź obserwowane",
+      "width" : 148.59999999999999
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Profil jest aktualny?",
+      "width" : 125.40000000000001
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Nie dla ciebie? Powiedz",
+      "width" : 151.69999999999999
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Polub, by było więcej",
+      "width" : 136.09999999999999
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Udostępnij bliskim",
+      "width" : 118.5
     },
     {
       "index" : 0,
@@ -1612,38 +1900,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Salve para depois",
-      "width" : 114.3
+      "text" : "Leia o artigo completo",
+      "width" : 143.69999999999999
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Seus salvos esperam",
-      "width" : 136
+      "text" : "Sem tempo? Salve",
+      "width" : 119.2
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Leia uma notícia a fundo",
-      "width" : 157
+      "text" : "Viu as notícias globais?",
+      "width" : 150.30000000000001
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Veja as manchetes",
-      "width" : 120.8
+      "text" : "Viu os seus países?",
+      "width" : 126
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Novo não é melhor",
-      "width" : 121
+      "text" : "Siga uma notícia",
+      "width" : 106.2
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Não precisa olhar",
-      "width" : 112.8
+      "text" : "Veja as que você segue",
+      "width" : 151.59999999999999
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Seu perfil está em dia?",
+      "width" : 146.90000000000001
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Não é para você? Diga",
+      "width" : 144.80000000000001
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Curta para ver mais",
+      "width" : 126.09999999999999
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Mande para quem ama",
+      "width" : 147.5
     },
     {
       "index" : 0,
@@ -1746,38 +2058,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Сохраните на потом",
-      "width" : 137.40000000000001
+      "text" : "Прочтите статью",
+      "width" : 115.3
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Сохранённое ждёт",
-      "width" : 127.8
+      "text" : "Некогда? Сохраните",
+      "width" : 139.40000000000001
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Прочтите один сюжет",
-      "width" : 148.69999999999999
+      "text" : "Новости мира?",
+      "width" : 102.8
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Главные заголовки",
-      "width" : 128.40000000000001
+      "text" : "Ваши страны видели?",
+      "width" : 148.30000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Новее не значит лучше",
-      "width" : 158.30000000000001
+      "text" : "Следите за сюжетом",
+      "width" : 141.19999999999999
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Смотреть не нужно",
-      "width" : 131.80000000000001
+      "text" : "Ваши сюжеты",
+      "width" : 93.799999999999997
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Профиль актуален?",
+      "width" : 132.30000000000001
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Не ваше? Скажите",
+      "width" : 126.2
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Лайк, чтобы было ещё",
+      "width" : 151.90000000000001
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Поделитесь с близкими",
+      "width" : 162
     },
     {
       "index" : 0,
@@ -1880,38 +2216,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "บันทึกไว้อ่านทีหลัง",
-      "width" : 105.7
+      "text" : "อ่านบทความฉบับเต็ม",
+      "width" : 123
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "ข่าวที่บันทึกรออยู่",
-      "width" : 98.200000000000003
+      "text" : "ไม่มีเวลา? บันทึกไว้",
+      "width" : 110.8
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "อ่านข่าวเดียวให้จบ",
-      "width" : 107.3
+      "text" : "ดูข่าวโลกแล้วหรือยัง",
+      "width" : 117
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "ดูพาดหัวข่าวเด่น",
-      "width" : 95.299999999999997
+      "text" : "ดูประเทศคุณแล้วยัง",
+      "width" : 113.2
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "ใหม่ไม่ได้ดีกว่า",
-      "width" : 87.099999999999994
+      "text" : "ติดตามข่าว",
+      "width" : 65.200000000000003
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "ไม่ต้องรอดู",
-      "width" : 63.200000000000003
+      "text" : "ดูข่าวที่ติดตาม",
+      "width" : 83.299999999999997
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "โปรไฟล์เป็นปัจจุบันไหม",
+      "width" : 134.5
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "ไม่ใช่ที่ชอบ? บอก Mera",
+      "width" : 137.90000000000001
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "กดถูกใจเพื่อดูเพิ่ม",
+      "width" : 102.3
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "แชร์ให้คนที่คุณรัก",
+      "width" : 102.3
     },
     {
       "index" : 0,
@@ -2014,38 +2374,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Sonra oku",
-      "width" : 65
+      "text" : "Haberin tamamını oku",
+      "width" : 140.59999999999999
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Kaydettiklerin bekliyor",
-      "width" : 142.80000000000001
+      "text" : "Vaktin yok mu? Kaydet",
+      "width" : 145.69999999999999
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Bir haberi iyi oku",
-      "width" : 107
+      "text" : "Dünyaya baktın mı?",
+      "width" : 124.7
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Manşetlere bak",
-      "width" : 99
+      "text" : "Ülkelerin tamam mı?",
+      "width" : 130.40000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Yeni her zaman iyi değil",
-      "width" : 151.30000000000001
+      "text" : "Bir haberi takip et",
+      "width" : 113.8
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "İzlemene gerek yok",
-      "width" : 124.8
+      "text" : "Takip ettiklerine bak",
+      "width" : 129.09999999999999
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Profilin güncel mi?",
+      "width" : 118.09999999999999
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Beğenmedin mi? Söyle",
+      "width" : 146
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Daha fazlası için beğen",
+      "width" : 148.59999999999999
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Sevdiklerinle paylaş",
+      "width" : 126.90000000000001
     },
     {
       "index" : 0,
@@ -2148,38 +2532,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Збережіть на потім",
-      "width" : 129.30000000000001
+      "text" : "Прочитайте статтю",
+      "width" : 130.90000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Збережене чекає",
-      "width" : 118.09999999999999
+      "text" : "Нема часу? Збережіть",
+      "width" : 151
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Один сюжет целиком",
-      "width" : 145
+      "text" : "Світ уже бачили?",
+      "width" : 117
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Головні заголовки",
-      "width" : 122.7
+      "text" : "Ваші країни бачили?",
+      "width" : 138.30000000000001
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Новіше не краще",
-      "width" : 116
+      "text" : "Стежте за сюжетом",
+      "width" : 133.30000000000001
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Дивитися не треба",
-      "width" : 127.8
+      "text" : "Ваші сюжети",
+      "width" : 87.200000000000003
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Профіль актуальний?",
+      "width" : 143.19999999999999
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Не ваше? Скажіть",
+      "width" : 120.7
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Лайк, щоб бачити ще",
+      "width" : 143.90000000000001
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Поділіться з рідними",
+      "width" : 141.09999999999999
     },
     {
       "index" : 0,
@@ -2282,38 +2690,62 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "Lưu để đọc sau",
-      "width" : 99.700000000000003
+      "text" : "Đọc toàn bộ bài viết",
+      "width" : 129.40000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "Tin đã lưu đang chờ",
-      "width" : 128
+      "text" : "Bận? Lưu lại đã",
+      "width" : 97.900000000000006
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "Đọc kỹ một tin",
-      "width" : 93.900000000000006
+      "text" : "Đã xem tin thế giới?",
+      "width" : 127.2
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "Xem tin nổi bật",
-      "width" : 96.799999999999997
+      "text" : "Đã xem nước của bạn?",
+      "width" : 146
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "Mới hơn chưa chắc tốt",
-      "width" : 143.30000000000001
+      "text" : "Theo dõi một tin",
+      "width" : 105.40000000000001
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "Không cần ngồi chờ",
-      "width" : 128
+      "text" : "Xem tin đang theo dõi",
+      "width" : 141.80000000000001
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "Hồ sơ còn đúng chứ?",
+      "width" : 137.5
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "Không hợp? Báo Mera",
+      "width" : 142.09999999999999
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "Thích để xem thêm",
+      "width" : 123.59999999999999
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "Chia sẻ với người thân",
+      "width" : 142.5
     },
     {
       "index" : 0,
@@ -2416,37 +2848,61 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "留着稍后读",
-      "width" : 69.5
+      "text" : "阅读全文",
+      "width" : 55.600000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "收藏在等你",
-      "width" : 69.5
+      "text" : "没时间？先保存",
+      "width" : 97.200000000000003
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "认真读一条",
-      "width" : 69.5
+      "text" : "看过世界新闻了吗？",
+      "width" : 125
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "看看头条",
-      "width" : 55.600000000000001
+      "text" : "看过你的国家了吗？",
+      "width" : 125
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "新的不一定好",
+      "text" : "关注一个新闻",
       "width" : 83.299999999999997
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "不必盯着看",
+      "text" : "看看关注的新闻",
+      "width" : 97.200000000000003
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "资料是最新的吗？",
+      "width" : 111.09999999999999
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "不感兴趣？告诉 Mera",
+      "width" : 133.69999999999999
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "点赞看到更多",
+      "width" : 83.299999999999997
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "分享给亲友",
       "width" : 69.5
     },
     {
@@ -2550,37 +3006,61 @@
     {
       "index" : 0,
       "key" : "nudges",
-      "text" : "留著稍後讀",
-      "width" : 69.5
+      "text" : "閱讀全文",
+      "width" : 55.600000000000001
     },
     {
       "index" : 1,
       "key" : "nudges",
-      "text" : "收藏在等你",
-      "width" : 69.5
+      "text" : "沒時間？先儲存",
+      "width" : 97.200000000000003
     },
     {
       "index" : 2,
       "key" : "nudges",
-      "text" : "認真讀一則",
-      "width" : 69.5
+      "text" : "看過世界新聞了嗎？",
+      "width" : 125
     },
     {
       "index" : 3,
       "key" : "nudges",
-      "text" : "看看頭條",
-      "width" : 55.600000000000001
+      "text" : "看過你的國家了嗎？",
+      "width" : 125
     },
     {
       "index" : 4,
       "key" : "nudges",
-      "text" : "新的不一定好",
+      "text" : "關注一則新聞",
       "width" : 83.299999999999997
     },
     {
       "index" : 5,
       "key" : "nudges",
-      "text" : "不必盯著看",
+      "text" : "看看關注的新聞",
+      "width" : 97.200000000000003
+    },
+    {
+      "index" : 6,
+      "key" : "nudges",
+      "text" : "個人檔案是最新的嗎？",
+      "width" : 138.90000000000001
+    },
+    {
+      "index" : 7,
+      "key" : "nudges",
+      "text" : "不感興趣？告訴 Mera",
+      "width" : 133.69999999999999
+    },
+    {
+      "index" : 8,
+      "key" : "nudges",
+      "text" : "按讚看到更多",
+      "width" : 83.299999999999997
+    },
+    {
+      "index" : 9,
+      "key" : "nudges",
+      "text" : "分享給親友",
       "width" : 69.5
     },
     {

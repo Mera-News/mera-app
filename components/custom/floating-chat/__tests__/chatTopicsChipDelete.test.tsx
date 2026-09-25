@@ -15,11 +15,7 @@ jest.mock('@/components/ui/text', () => {
   const { Text } = require('react-native');
   return { Text };
 });
-jest.mock('@expo/vector-icons', () => {
-  const R = require('react');
-  const RN = require('react-native');
-  return { MaterialIcons: (p: any) => R.createElement(RN.View, p) };
-});
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('react-native/Libraries/Components/ActivityIndicator/ActivityIndicator', () => {
   const R = require('react');
   const RN = require('react-native');
@@ -87,6 +83,7 @@ jest.mock('@/lib/database/services/topic-decline-service', () => ({
 let screenReader = false;
 
 import ChatTopicsCard from '../ChatTopicsCard';
+import { exposedGlyphTexts } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 const facts = [{ factId: 'f1', factStatement: 'I moved to Nieuw-West' }];
 
@@ -237,5 +234,20 @@ describe('Android back', () => {
     render(<ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />);
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
+  });
+});
+
+describe('ux2 batch 26: the chip X is a childless button', () => {
+  it('no chip glyph is its own StaticText, before and after a remove', async () => {
+    const { getByTestId, UNSAFE_root } = render(<ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />);
+    openAccordion(getByTestId);
+    const glyphs = () => UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)));
+    expect(glyphs().length).toBeGreaterThan(1);
+    expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
+    await act(async () => {
+      fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
+    });
+    expect(getByTestId('chat-topic-chip-undo-t1').props.accessibilityLabel).toBe('topicPlan.undo');
+    expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
   });
 });

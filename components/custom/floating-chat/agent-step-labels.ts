@@ -37,6 +37,7 @@ const LABEL_KEY: Record<string, string> = {
   saveExtractedFacts: 'agentSteps.writeUp',
   deleteUserFacts: 'agentSteps.removing',
   ask_choice: 'agentSteps.asking',
+  webSearch: 'chatPhases.webSearch',
 };
 
 /**
@@ -173,11 +174,11 @@ export function legStartStep(messageId: string, settled: boolean): AgentStep {
  * in all twenty dictionaries, rather than minting a key for a row that says
  * exactly that.
  */
-export function continuingStep(anchorId: string): AgentStep {
+export function continuingStep(anchorId: string, labelKey: string = GENERIC_LABEL_KEY): AgentStep {
   return {
     id: `${anchorId}::continuing`,
     kind: 'leg-start',
-    labelKey: GENERIC_LABEL_KEY,
+    labelKey,
     status: 'pending',
   };
 }

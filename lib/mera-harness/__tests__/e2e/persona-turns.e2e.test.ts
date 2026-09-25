@@ -187,7 +187,13 @@ describe('conversation 2: an ambiguous place', () => {
 
     expect(turn1.legs).toHaveLength(2);               // ask_choice TERMINATES
     expect(first.lookups).toEqual(['the centre']);
-    expect(state.turn.pendingChoice?.options.map((o) => o.text)).toEqual(['Alkmaar', 'Amsterdam']);
+    // Neither chip names its country, so each shows its lookup chain (ux2
+    // batch 27); the model's words stay as an alias a typed reply can match.
+    expect(state.turn.pendingChoice?.options.map((o) => o.text)).toEqual([
+      'Alkmaar, North Holland, Netherlands',
+      'Amsterdam, North Holland, Netherlands',
+    ]);
+    expect(state.turn.pendingChoice?.options.map((o) => o.modelText)).toEqual(['Alkmaar', 'Amsterdam']);
     expect(state.turn.pendingChoice?.options[0].payload).toEqual(ALKMAAR);
     expect(state.turn.lastTurnAskedQuestion).toBe(true);
 

@@ -17,6 +17,7 @@ import { getCachedAttestation, invalidateCachedAttestation } from '../e2ee/e2ee-
 import logger from '../logger';
 import { CHAT_REASONING_HEADROOM_TOKENS, SMALL_MODEL } from './constants';
 import { stripLeakedReasoning } from './reasoning-leak';
+import { createThinkStripper } from './think-strip';
 import {
   fallbackFor,
   reportModelFailure,
@@ -1528,8 +1529,33 @@ export async function* cloudChatStream(
 }
 
 /** Turn an OK chat response into events, streaming when the gateway relayed
- *  SSE and buffering when it relayed JSON. */
+ *  SSE and buffering when it relayed JSON.
+ *
+ *  Think tags are stripped HERE, once, for every cloud chat consumer (the
+ *  persona loop, single-shot and article chat): a reply rendered
+ *  "... Bhopal. </think>". A tag split across deltas is held until it resolves,
+ *  and an all-reasoning delta yields nothing rather than an empty delta. */
 async function* consumeChatResponse(
+  response: Response,
+  privateKey: Uint8Array,
+  algo: SigningAlgo,
+): AsyncGenerator<SseEvent> {
+  const think = createThinkStripper();
+  for await (const event of consumeChatResponseRaw(response, privateKey, algo)) {
+    if (event.type === 'text-delta') {
+      const delta = think.push(event.delta);
+      if (delta) yield { ...event, delta };
+      continue;
+    }
+    if (event.type === 'finish') {
+      const tail = think.flush();
+      if (tail) yield { type: 'text-delta', delta: tail };
+    }
+    yield event;
+  }
+}
+
+async function* consumeChatResponseRaw(
   response: Response,
   privateKey: Uint8Array,
   algo: SigningAlgo,

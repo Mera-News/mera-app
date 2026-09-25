@@ -308,8 +308,6 @@ interface ForYouState {
     setHydrationProgress: (completed: number, total: number) => void;
     resetHydrationProgress: () => void;
     markProcessingRunFinished: () => void;
-    feedNeedsRefresh: boolean;
-    setFeedNeedsRefresh: (val: boolean) => void;
 }
 
 const initialState = {
@@ -338,7 +336,6 @@ const initialState = {
     hydrationTotal: 0,
     lastProcessingRunFinishedAt: null as number | null,
     lastNewArticlesAt: null as number | null,
-    feedNeedsRefresh: false,
 };
 
 /**
@@ -507,8 +504,6 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             tags: { store: 'for-you-store', method: 'markNewArticlesArrived' },
         }));
     },
-
-    setFeedNeedsRefresh: (val) => set({ feedNeedsRefresh: val }),
 
     clearData: async () => {
         // Reset all counts to zero — stale article counts from the previous

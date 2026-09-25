@@ -9,6 +9,7 @@ import {
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
+import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -25,6 +26,8 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
     const { width: screenWidth } = useWindowDimensions();
     const [count, setCount] = useState<number | null>(null);
     const [tooltipOpen, setTooltipOpen] = useState(false);
+    // Display only; the visit count below is looked up by the raw name.
+    const publicationShown = useDisplayPublication((publicationName ?? '').trim());
 
     useEffect(() => {
         const name = (publicationName ?? '').trim();
@@ -63,6 +66,10 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
             offset={6}
             crossOffset={0}
             size="sm"
+            // VoiceOver could not reach the bubble: gluestack portals popover
+            // content to the app root, outside the native screen. A native
+            // modal is on top, and VoiceOver moves into it.
+            useRNModal
             trigger={(triggerProps) => (
                 <Pressable
                     {...triggerProps}
@@ -74,7 +81,7 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
                         <MaterialIcons name="visibility" size={16} color="#ffffff" />
                         <Text size="xs" italic className="flex-1 text-white">
                             {t('publicationVisits.badge', {
-                                publication: publicationName,
+                                publication: publicationShown,
                                 count,
                             })}
                         </Text>
@@ -88,18 +95,27 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
                 plate rather than replacing it. */}
             <PopoverContent style={{ maxWidth: screenWidth - 32 }}>
                 <PopoverArrow className="bg-background-0 border border-white/10" />
-                <PopoverBody>
-                    <Text size="xs" className="text-white">
-                        {t('publicationVisits.tooltipIntro')}{' '}
-                        <Text
-                            size="xs"
-                            bold
-                            className="text-white underline"
-                            onPress={openHistory}
-                        >
-                            {t('publicationVisits.tooltipLink')}
+                <PopoverBody
+                    testID="publication-visit-bubble"
+                    // VoiceOver's escape (two-finger scrub) closes the bubble.
+                    onAccessibilityEscape={closeTooltip}
+                >
+                    {/* ONE link element. The link used to be a nested Text with
+                        onPress, which iOS does not expose on its own, so
+                        VoiceOver could not activate it. The whole sentence is
+                        the tap target now, and reads intro, then the link. */}
+                    <Pressable
+                        accessibilityRole="link"
+                        accessibilityLabel={`${t('publicationVisits.tooltipIntro')} ${t('publicationVisits.tooltipLink')}`}
+                        onPress={openHistory}
+                    >
+                        <Text size="xs" className="text-white">
+                            {t('publicationVisits.tooltipIntro')}{' '}
+                            <Text size="xs" bold className="text-white underline">
+                                {t('publicationVisits.tooltipLink')}
+                            </Text>
                         </Text>
-                    </Text>
+                    </Pressable>
                 </PopoverBody>
             </PopoverContent>
         </Popover>

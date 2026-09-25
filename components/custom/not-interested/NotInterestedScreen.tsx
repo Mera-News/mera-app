@@ -32,6 +32,8 @@ import AddPhraseModal from './AddPhraseModal';
 import NegativeTopicRow from './NegativeTopicRow';
 import SuppressionRow from './SuppressionRow';
 import { useNotInterestedData } from './use-not-interested-data';
+import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 const ACCENT = '#EDA77E';
 const SUBTLE = 'rgb(163,163,163)';
@@ -271,6 +273,11 @@ const NotInterestedScreen: React.FC<NotInterestedScreenProps> = ({ onBack }) => 
                 </VStack>
             ) : (
                 <ScrollView
+                    // Rows below the first screen ask for their translation only
+                    // when a scroll tick finds them on screen (lib/visibility-tick).
+                    onScroll={notifyScrollTick}
+                    scrollEventThrottle={16}
+                    onContentSizeChange={notifyScrollTick}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={{ paddingTop: 8, paddingBottom: 64 }}
                 >
@@ -355,7 +362,7 @@ const NotInterestedScreen: React.FC<NotInterestedScreenProps> = ({ onBack }) => 
                                                 className="text-white flex-1 ml-3 mr-2"
                                                 numberOfLines={2}
                                             >
-                                                {pref.publicationName}
+                                                <DisplayPublicationName name={pref.publicationName} />
                                             </Text>
                                             <View className="rounded-full px-2 py-0.5 bg-gray-700">
                                                 <Text size="xs" style={{ color: SUBTLE }}>

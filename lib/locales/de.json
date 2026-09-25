@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{done}} von {{total}} Artikeln geladen",
       "chunks": {
-        "ready": "{{ready}} von {{total}} Analyserunden fertig",
-        "a11y": "Analyserunden: {{ready}} von {{total}} fertig"
+        "ready": "{{ready}} von {{total}} Analyserunden fertig"
       },
       "stageA11y": "Schritt {{index}} von {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRead_other": "und Sie haben {{formatted}} gelesen.",
     "reasonUnavailable": "Mera konnte hierzu keine Notiz schreiben.",
     "loadingA11y": "Dein Feed wird geladen",
-    "newStoriesPill": "Neue Meldungen",
     "translatingCaption": "Wird übersetzt…",
     "updatedJustNow": "Gerade aktualisiert"
   },
@@ -263,7 +261,7 @@
     "share": "Teilen",
     "shareVia": "Geteilt über {{downloadUrl}}",
     "sourceCountryGlobal": "Weltweit",
-    "sourceCountryA11y": "Quellenland: {{country}}. Tippen, um den Ländernamen anzuzeigen.",
+    "sourceCountryA11y": "Herkunftsland: {{country}}. Tippen, um das Land anzuzeigen, dann auf seinen Namen tippen, um seine Medien zu sehen.",
     "readOn": "Bei {{publication}} lesen",
     "readOnGoogleTranslate": "Bei Google Translate lesen",
     "linkUnavailable": "Dieser Link kann nicht sicher geöffnet werden, daher ist er hier nicht verfügbar.",
@@ -294,7 +292,9 @@
     "addToExplore": "Zu Explore hinzufügen",
     "addedToExplore": "Zu Explore hinzugefügt",
     "badgeGovernment": "Regierungsquelle",
-    "badgeRegulator": "Offizielle Behörde"
+    "badgeRegulator": "Offizielle Behörde",
+    "sectionCountries": "Länder",
+    "sectionPublications": "Publikationen"
   },
   "clusterDetail": {
     "translatable": "Dieser Artikel ist auf {{language}} verfasst: Dein Gerät kann ihn beim Lesen übersetzen. Falls die Übersetzung nicht funktioniert, kannst du die Seite in Google Translate öffnen; beachte dabei, dass du sie dann über Google aufrufst.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Seine Themen und die dazu gefundenen Artikel werden ebenfalls entfernt, und Mera sucht dazu keine Nachrichten mehr.",
     "deletingFact": "Wird gelöscht...",
     "yesDelete": "Ja, löschen",
-    "refreshSuggestions": "Vorschläge aktualisieren",
-    "refreshingSuggestions": "Wird aktualisiert...",
-    "refreshSuggestionsSuccessTitle": "Vorschläge aktualisiert",
-    "refreshSuggestionsSuccessDescription": "Neue personalisierte Vorschläge werden generiert.",
-    "refreshSuggestionsFailedTitle": "Aktualisierung fehlgeschlagen",
-    "refreshSuggestionsFailedDescription": "Vorschläge konnten nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
-    "personaUpdatedRefreshHint": "Ich sehe, Sie haben Ihre Persona aktualisiert. Möchten Sie, dass ich Ihren Feed neu generiere?",
     "articleCount_one": "{{count}} Artikel",
     "articleCount_other": "{{count}} Artikel",
     "addTopic": "Thema hinzufügen",
@@ -783,7 +776,13 @@
     "topicGenFailed": "Themen konnten nicht generiert werden.",
     "topicGenRetry": "Erneut versuchen",
     "aiUsageNoticeGeneral": "Mera kann Fehler machen. Prüf also alles Wichtige nach.",
-    "trackChooseHint": "Wähle, was du verfolgen willst"
+    "trackChooseHint": "Wähle, was du verfolgen willst",
+    "factDeletePendingTitle": "Wird aus deinem Profil entfernt",
+    "saveAsWritten": "So speichern, wie ich es geschrieben habe",
+    "factDeleteRemove": "Entfernen",
+    "factDeleteKeep": "Behalten",
+    "factDeleteKept": "Es wurde nichts entfernt.",
+    "topicsSavedHint": "Themen gespeichert! Du kannst gern weitere Fakten hinzufügen oder auf {{close}} tippen, um mit dem Entdecken zu beginnen."
   },
   "articleFeedback": {
     "thumbsUp": "Gefällt mir",
@@ -876,7 +875,8 @@
     "formError": "Bitte füllen Sie alle erforderlichen Felder aus.",
     "emailError": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
     "captureScreenshotError": "Screenshot konnte nicht aufgenommen werden.",
-    "genericError": "Feedback konnte aufgrund eines unerwarteten Fehlers nicht gesendet werden."
+    "genericError": "Feedback konnte aufgrund eines unerwarteten Fehlers nicht gesendet werden.",
+    "chatAttachmentNote": "Dein Chat mit Mera wird diesem Bericht beigefügt."
   },
   "observability": {
     "title": "Beobachtbarkeit",
@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "Erzähl mir von etwas Neuem, dann nehme ich es in deinen Feed auf.",
     "editFacts": "Bearbeiten",
-    "planUsage": "{{used}} von {{limit}} heute analysiert"
+    "planUsage": "{{used}} von {{limit}} heute analysiert",
+    "updatingAllFacts": "Alle Fakten werden aktualisiert",
+    "pleaseWait": "Bitte warten"
   },
   "facts": {
     "screenTitle": "Ihre Fakten",
@@ -2568,7 +2570,11 @@
     "titleAlsoAdd": "Das auch hinzufügen?",
     "pendingHint": "Wähle oben eine Option oder schreib deine Antwort.",
     "overlapsLabel": "Überschneidet sich mit",
-    "overlapsReplaceNote": "Ersetzen würde die Angabe und ihre Themen entfernen."
+    "overlapsReplaceNote": "Ersetzen würde die Angabe und ihre Themen entfernen.",
+    "replaceAll": "Alle ersetzen",
+    "keepAll": "Alle behalten",
+    "replaceAllA11y": "Durch alle {{count}} Vorschläge ersetzen",
+    "keepAllA11y": "Deine Fakten behalten und alle {{count}} Vorschläge hinzufügen"
   },
   "subscriptions": {
     "sectionTitle": "Deine Abos",
@@ -2731,37 +2737,36 @@
       "Deine Frage wird vorbereitet."
     ],
     "queued": [
-      "Deine Anfrage wird eingereiht.",
-      "Gerade läuft noch etwas anderes. Du bist als Nächstes dran."
+      "Deine Anfrage ist auf deinem Handy als Nächstes an der Reihe."
     ],
     "securing": [
-      "Deine Nachricht wird so verschlossen, dass nur das Modell sie öffnen kann.",
-      "Deine Worte werden verschlüsselt, bevor sie dein Handy verlassen."
+      "Deine Nachricht wird verschlüsselt, damit nur das Modell in seiner vertrauenswürdigen Umgebung sie lesen kann.",
+      "Deine Worte werden auf deinem Handy verschlüsselt, bevor sie es verlassen."
     ],
     "attesting": [
-      "Ein privater Kanal zum Modell wird aufgebaut.",
-      "Der Schlüssel wird geholt, der das zwischen dir und Mera hält.",
-      "Ein privates Gespräch braucht einen Moment zum Einrichten."
+      "Sichere Verbindung zwischen dir und dem Modell in einer vertrauenswürdigen Umgebung wird aufgebaut.",
+      "Schlüssel aus der vertrauenswürdigen Umgebung des Modells wird geholt, damit nur das Modell dies lesen kann."
     ],
     "thinking": [
-      "Mera liest, was du geschrieben hast.",
-      "Der beste Weg zur Antwort wird gesucht."
+      "Das Modell liest deine Nachricht.",
+      "Die beste Antwort wird erarbeitet."
     ],
     "retrying": [
-      "Das dauert länger als sonst. Mera versucht einen anderen Weg.",
-      "Läuft noch. Danke fürs Warten."
+      "Das dauert länger als sonst. Ein anderer sicherer Weg wird versucht.",
+      "Wird noch bearbeitet. Danke fürs Warten."
     ],
     "deviceLoading": [
-      "Das Modell auf deinem Handy wird gestartet.",
-      "Die erste Antwort dauert etwas länger, solange es lädt."
+      "Das Modell wird auf deinem Handy geladen.",
+      "Die erste Antwort dauert etwas länger, während es lädt."
     ],
     "devicePreparing": [
-      "Mera trägt zusammen, was sie schon über dich weiß.",
       "Dein Handy wird für die Antwort vorbereitet."
     ],
     "deviceThinking": [
-      "Mera denkt auf deinem Handy nach.",
-      "Das läuft auf deinem Gerät, es wird nichts irgendwohin geschickt."
+      "Wird auf deinem Handy durchdacht. Nichts verlässt dein Gerät."
+    ],
+    "webSearch": [
+      "Suche im Web von deinem Gerät aus…"
     ]
   },
   "headerNarration": {
@@ -2800,12 +2805,16 @@
       ]
     },
     "nudges": [
-      "Für später speichern",
-      "Gespeichertes wartet",
-      "Lies eine Meldung ganz",
-      "Schlagzeilen ansehen",
-      "Neuer ist nicht besser",
-      "Zuschauen hilft nicht"
+      "Lies den ganzen Artikel",
+      "Keine Zeit? Speichern",
+      "Welt schon gesehen?",
+      "Deine Länder gesehen?",
+      "Folge einer Meldung",
+      "Gefolgtes prüfen",
+      "Ist dein Profil aktuell?",
+      "Nichts für dich? Sag es",
+      "Gefällt? Mehr davon",
+      "Mit Liebsten teilen"
     ],
     "a11y": "Mera aktualisiert deine News auf diesem Handy."
   },

@@ -57,7 +57,7 @@ const MeraChatInvite: React.FC<MeraChatInviteProps> = ({ returning = false }) =>
     const openChat = useCallback(() => {
         void hapticMedium();
         publishCenter(); // freshest origin right before the morph
-        useFloatingChatStore.getState().expand({ kind: 'persona' });
+        useFloatingChatStore.getState().expand({ kind: 'persona', origin: 'profile' });
     }, [publishCenter]);
 
     const content = (

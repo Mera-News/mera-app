@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{done}} dari {{total}} artikel terunduh",
       "chunks": {
-        "ready": "{{ready}} dari {{total}} putaran analisis selesai",
-        "a11y": "Putaran analisis: {{ready}} dari {{total}} selesai"
+        "ready": "{{ready}} dari {{total}} putaran analisis selesai"
       },
       "stageA11y": "Langkah {{index}} dari {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}} terlihat relevan,",
     "reasonUnavailable": "Mera tidak bisa menulis catatan untuk artikel ini.",
     "loadingA11y": "Memuat feed kamu",
-    "newStoriesPill": "Berita baru",
     "translatingCaption": "Menerjemahkan…",
     "updatedJustNow": "Baru saja diperbarui"
   },
@@ -263,7 +261,7 @@
     "share": "Bagikan",
     "shareVia": "Dibagikan melalui {{downloadUrl}}",
     "sourceCountryGlobal": "Global",
-    "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan nama negara.",
+    "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan negara, lalu ketuk namanya untuk melihat publikasinya.",
     "readOn": "Baca di {{publication}}",
     "readOnGoogleTranslate": "Baca di Google Translate",
     "linkUnavailable": "Tautan ini tidak dapat dibuka dengan aman, jadi tidak tersedia di sini.",
@@ -294,7 +292,9 @@
     "addToExplore": "Tambahkan ke Jelajahi",
     "addedToExplore": "Ditambahkan ke Jelajahi",
     "badgeGovernment": "Sumber pemerintah",
-    "badgeRegulator": "Lembaga resmi"
+    "badgeRegulator": "Lembaga resmi",
+    "sectionCountries": "Negara",
+    "sectionPublications": "Publikasi"
   },
   "clusterDetail": {
     "translatable": "Artikel ini dalam bahasa {{language}}: perangkatmu bisa menerjemahkannya saat kamu membaca. Jika terjemahan tidak berfungsi, kamu bisa membuka situsnya di Google Translate; perlu diketahui, kamu akan menjelajahinya melalui Google.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Topik dan berita yang ditemukannya ikut terhapus, dan Mera berhenti mencari berita tentang hal ini.",
     "deletingFact": "Menghapus...",
     "yesDelete": "Ya, Hapus",
-    "refreshSuggestions": "Segarkan Saran",
-    "refreshingSuggestions": "Menyegarkan...",
-    "refreshSuggestionsSuccessTitle": "Saran disegarkan",
-    "refreshSuggestionsSuccessDescription": "Saran personalisasi baru sedang dibuat.",
-    "refreshSuggestionsFailedTitle": "Penyegaran Gagal",
-    "refreshSuggestionsFailedDescription": "Tidak dapat menyegarkan saran. Silakan coba lagi.",
-    "personaUpdatedRefreshHint": "Saya melihat Anda telah memperbarui persona Anda, apakah Anda ingin saya membuat ulang feed Anda?",
     "articleCount_one": "{{count}} artikel",
     "articleCount_other": "{{count}} artikel",
     "addTopic": "Tambah topik",
@@ -783,7 +776,13 @@
     "topicGenFailed": "Tidak dapat membuat topik untuk ini.",
     "topicGenRetry": "Coba Lagi",
     "aiUsageNoticeGeneral": "Mera bisa keliru, jadi periksa hal yang penting.",
-    "trackChooseHint": "Pilih yang ingin diikuti"
+    "trackChooseHint": "Pilih yang ingin diikuti",
+    "factDeletePendingTitle": "Akan dihapus dari profil Anda",
+    "saveAsWritten": "Simpan seperti yang saya tulis",
+    "factDeleteRemove": "Hapus",
+    "factDeleteKeep": "Simpan",
+    "factDeleteKept": "Tidak ada yang dihapus.",
+    "topicsSavedHint": "Topik tersimpan! Silakan terus tambahkan fakta, atau ketuk {{close}} untuk mulai menjelajah."
   },
   "articleFeedback": {
     "thumbsUp": "Saya suka",
@@ -876,7 +875,8 @@
     "formError": "Harap isi semua kolom yang wajib diisi.",
     "emailError": "Harap masukkan alamat email yang valid.",
     "captureScreenshotError": "Gagal mengambil tangkapan layar.",
-    "genericError": "Tidak dapat mengirim masukan karena terjadi kesalahan yang tidak terduga."
+    "genericError": "Tidak dapat mengirim masukan karena terjadi kesalahan yang tidak terduga.",
+    "chatAttachmentNote": "Chat Anda dengan Mera akan dilampirkan pada laporan ini."
   },
   "observability": {
     "title": "Keterlihatan",
@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "Ceritakan hal baru, nanti saya tambahkan ke feed Anda.",
     "editFacts": "Edit",
-    "planUsage": "{{used}} dari {{limit}} dianalisis hari ini"
+    "planUsage": "{{used}} dari {{limit}} dianalisis hari ini",
+    "updatingAllFacts": "Memperbarui semua fakta",
+    "pleaseWait": "Harap tunggu"
   },
   "facts": {
     "screenTitle": "Fakta Anda",
@@ -2568,7 +2570,11 @@
     "titleAlsoAdd": "Tambahkan ini juga?",
     "pendingHint": "Pilih salah satu opsi di atas, atau ketik jawabanmu.",
     "overlapsLabel": "Tumpang tindih dengan",
-    "overlapsReplaceNote": "Mengganti akan menghapusnya beserta topiknya."
+    "overlapsReplaceNote": "Mengganti akan menghapusnya beserta topiknya.",
+    "replaceAll": "Ganti semua",
+    "keepAll": "Simpan semua",
+    "replaceAllA11y": "Ganti dengan semua {{count}} saran",
+    "keepAllA11y": "Simpan fakta Anda dan tambahkan semua {{count}} saran"
   },
   "subscriptions": {
     "sectionTitle": "Langganan Anda",
@@ -2730,37 +2736,36 @@
       "Menyiapkan pertanyaanmu."
     ],
     "queued": [
-      "Mengantrekan permintaanmu.",
-      "Ada beberapa hal yang sedang berjalan. Punyamu berikutnya."
+      "Permintaan Anda berikutnya dalam antrean di ponsel Anda."
     ],
     "securing": [
-      "Mengunci pesanmu agar hanya model yang bisa membukanya.",
-      "Kata-katamu dienkripsi sebelum meninggalkan ponselmu."
+      "Mengenkripsi pesan Anda agar hanya model di lingkungan tepercayanya yang bisa membacanya.",
+      "Kata-kata Anda dienkripsi di ponsel sebelum dikirim."
     ],
     "attesting": [
-      "Menyiapkan jalur pribadi ke model.",
-      "Mengambil kunci yang menjaga ini tetap antara kamu dan Mera.",
-      "Percakapan pribadi butuh sesaat untuk disiapkan."
+      "Membuat koneksi aman antara Anda dan model di lingkungan tepercaya.",
+      "Mengambil kunci dari lingkungan tepercaya model, jadi hanya model yang bisa membaca ini."
     ],
     "thinking": [
-      "Mera sedang membaca yang kamu tulis.",
-      "Mencari cara terbaik untuk menjawab."
+      "Model sedang membaca pesan Anda.",
+      "Menyusun jawaban terbaik."
     ],
     "retrying": [
-      "Ini lebih lama dari biasanya. Mera mencoba jalur lain.",
-      "Masih berjalan. Terima kasih sudah menunggu."
+      "Ini lebih lama dari biasanya. Mencoba jalur aman lain.",
+      "Masih dikerjakan. Terima kasih sudah menunggu."
     ],
     "deviceLoading": [
-      "Membangunkan model di ponselmu.",
-      "Jawaban pertama butuh sedikit lebih lama selagi dimuat."
+      "Memuat model di ponsel Anda.",
+      "Jawaban pertama sedikit lebih lama saat model dimuat."
     ],
     "devicePreparing": [
-      "Mengumpulkan apa yang sudah Mera ketahui tentang kamu.",
-      "Menyiapkan ponselmu untuk menjawab."
+      "Menyiapkan ponsel Anda untuk menjawab."
     ],
     "deviceThinking": [
-      "Memikirkannya di ponselmu.",
-      "Ini berjalan di perangkatmu, jadi tidak ada yang dikirim ke mana pun."
+      "Memikirkannya di ponsel Anda. Tidak ada yang keluar dari perangkat."
+    ],
+    "webSearch": [
+      "Mencari di web dari perangkat Anda…"
     ]
   },
   "headerNarration": {
@@ -2799,12 +2804,16 @@
       ]
     },
     "nudges": [
-      "Simpan untuk nanti",
-      "Simpananmu menunggu",
-      "Baca satu berita utuh",
-      "Lihat berita utama",
-      "Terbaru bukan terbaik",
-      "Tak perlu ditunggu"
+      "Baca artikel lengkapnya",
+      "Sibuk? Simpan saja",
+      "Cek berita dunia?",
+      "Sudah cek negaramu?",
+      "Ikuti sebuah berita",
+      "Cek berita yang diikuti",
+      "Profil sudah terbaru?",
+      "Tidak cocok? Beri tahu",
+      "Sukai untuk lihat lagi",
+      "Bagikan ke orang dekat"
     ],
     "a11y": "Mera memperbarui beritamu di ponsel ini."
   },

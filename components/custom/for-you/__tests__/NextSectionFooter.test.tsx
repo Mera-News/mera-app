@@ -37,7 +37,8 @@ jest.mock('@/components/ui/pressable', () => {
   const { Pressable } = require('react-native');
   return { Pressable };
 });
-jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
+// Real icon-font glyphs, so a glyph under an accessible element is caught.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
@@ -54,20 +55,47 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 const over = (top: number[], alpha: number, under: number[]) =>
   top.map((c, i) => c * alpha + under[i] * (1 - alpha)) as [number, number, number];
 
+const HIDDEN = { includeHiddenElements: true } as const;
+
 describe('NextSectionFooter', () => {
+  // Captured (ux2 batch 27): the "Next" row's chevron was its own StaticText
+  // inside the labelled button. Both rows are childless labelled buttons laid
+  // over a hidden visual.
+  it.each(['next', 'back'] as const)('%s: no private-use StaticText, and the button is childless', (kind) => {
+    const r = render(
+      kind === 'next'
+        ? <NextSectionFooter kind="next" factId="f2" title="Formula 1" count={12} translateTitle onPress={jest.fn()} />
+        : <NextSectionFooter kind="back" onPress={jest.fn()} />,
+    );
+    const glyphs = r.UNSAFE_root.findAll(
+      (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+    );
+    expect(glyphs.length).toBe(1);
+    for (const g of glyphs) {
+      expect(g.props.accessible).toBe(false);
+      expect(g.props.accessibilityElementsHidden).toBe(true);
+      expect(g.props.importantForAccessibility).toBe('no-hide-descendants');
+      for (let p: any = g.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+    }
+    const button = r.getByTestId(kind === 'next' ? 'fact-feed-next' : 'fact-feed-back-to-dashboard');
+    expect(button.findAll((n: any) => n !== button && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
+    expect(button.props.accessibilityRole).toBe('button');
+  });
+
   it('draws the NEXT section gradient on a dark base, with the count', () => {
     render(
       <NextSectionFooter kind="next" factId="f2" title="Formula 1" count={12} translateTitle onPress={jest.fn()} />,
     );
-    const panel = screen.getByTestId('panel-f2');
+    // The visual is hidden from accessibility: the button over it carries the label.
+    const panel = screen.getByTestId('panel-f2', HIDDEN);
     expect(panel.props.style).toEqual(expect.objectContaining({ backgroundColor: 'rgba(18,17,19,0.90)' }));
-    expect(screen.getByText('Formula 1')).toBeTruthy();
-    expect(screen.getByTestId('fact-feed-next-count').props.children).toBe('trackedStories.articleCount:{"count":12}');
+    expect(screen.getByText('Formula 1', HIDDEN)).toBeTruthy();
+    expect(screen.getByTestId('fact-feed-next-count', HIDDEN).props.children).toBe('trackedStories.articleCount:{"count":12}');
   });
 
   it('never says 0 for an empty next section', () => {
     render(<NextSectionFooter kind="next" factId="f3" title="Cooking" count={0} translateTitle onPress={jest.fn()} />);
-    expect(screen.queryByTestId('fact-feed-next-count')).toBeNull();
+    expect(screen.queryByTestId('fact-feed-next-count', HIDDEN)).toBeNull();
     expect(screen.getByTestId('fact-feed-next').props.accessibilityLabel).toBe('forYou.nextSection:{"title":"Cooking"}');
   });
 

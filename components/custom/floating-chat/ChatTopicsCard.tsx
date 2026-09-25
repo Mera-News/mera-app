@@ -41,6 +41,8 @@ import { observeByFact } from '@/lib/database/services/topic-service';
 import type TopicModel from '@/lib/database/models/Topic';
 import { hapticLight } from '@/lib/haptics';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GlyphSafeButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
@@ -83,9 +85,11 @@ interface Chip {
 export interface ChatTopicsCardProps {
   factId: string;
   factStatement: string;
+  /** The guideline the chat turn chose; absent, the job derives one. */
+  topicSkillId?: string;
 }
 
-const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }) => {
+const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, topicSkillId }) => {
   const { t } = useTranslation();
 
   const [rows, setRows] = useState<Chip[]>([]);
@@ -245,7 +249,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
     setIsFindingMore(true);
     void hapticLight();
     try {
-      await generateMoreTopicsForFact(factId, factStatement);
+      await generateMoreTopicsForFact(factId, factStatement, topicSkillId ? { skillId: topicSkillId } : {});
     } finally {
       setIsFindingMore(false);
     }
@@ -257,7 +261,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
     setOfferRetry(false);
     void hapticLight();
     try {
-      await retryTopicGeneration(factId, factStatement);
+      await retryTopicGeneration(factId, factStatement, topicSkillId);
     } finally {
       setIsRetrying(false);
     }
@@ -295,94 +299,103 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
 
   return (
     <Animated.View entering={cardEntering} style={styles.card} testID="chat-topics-card">
-      <Pressable
-        onPress={() => {
-          void hapticLight();
-          userToggledRef.current = true;
-          setExpanded((v) => !v);
-        }}
-        style={styles.header}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
-        // The spinner is decorative, so the state reaches assistive tech
-        // here, in the header's own label.
-        accessibilityLabel={`${statusWord}. ${
-          expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')
-        }`}
-        testID={`chat-topics-header-${factId}`}
-      >
-        <View style={styles.headerRow}>
-          <MaterialIcons
-            name={expanded ? 'expand-more' : 'chevron-right'}
-            size={18}
-            color={ACCENT}
-          />
-
-          <Text size="sm" bold style={styles.title}>
-            {status === 'pending'
-              ? t('chatTopics.accordionTitlePending')
-              : t('chatTopics.accordionTitle')}
-          </Text>
-
-          {/* Small and muted on purpose: a finished background job should be
-              confirmable at a glance, not announce itself. */}
-          {/* A small spinner while generating. Without one the rows ran one
-              at a time with nothing moving, and the card read as finished
-              (audit F13). The card still opens itself when topics land. */}
-          {status === 'pending' && (
-            <ActivityIndicator
-              size="small"
-              color={ACCENT}
-              testID={`chat-topics-spinner-${factId}`}
-            />
-          )}
-
-          {status === 'done' && (
+      {/* ux2 batch 26: the toggle is a childless button over a hidden visual
+          (a glyph inside a labelled button surfaced as its own StaticText),
+          and Retry is its SIBLING. Nested inside the toggle, Retry was never
+          reachable by VoiceOver. */}
+      <View style={styles.headerOuter}>
+        <GlyphSafeButton
+          onPress={() => {
+            void hapticLight();
+            userToggledRef.current = true;
+            setExpanded((v) => !v);
+          }}
+          style={styles.headerToggle}
+          visualStyle={styles.header}
+          accessibilityState={{ expanded }}
+          // The spinner is decorative, so the state reaches assistive tech
+          // here, in the header's own label.
+          accessibilityLabel={`${statusWord}. ${
+            expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')
+          }`}
+          testID={`chat-topics-header-${factId}`}
+        >
+          <View style={styles.headerRow} testID={`chat-topics-title-row-${factId}`}>
             <MaterialIcons
-              name="check"
-              size={14}
-              color="rgb(150, 150, 150)"
-              testID={`chat-topics-done-${factId}`}
+              {...DECORATIVE_ICON_A11Y}
+              name={expanded ? 'expand-more' : 'chevron-right'}
+              size={18}
+              color={ACCENT}
             />
-          )}
 
+            <Text size="sm" bold style={styles.title}>
+              {status === 'pending'
+                ? t('chatTopics.accordionTitlePending')
+                : t('chatTopics.accordionTitle')}
+            </Text>
+
+            {/* ON THE TITLE LINE (ux2 M1): on its own line below, a one-line
+                clip left "Topics for:" with nothing after the colon. Its own
+                node, because TranslatableDynamic returns a component and needs
+                its own layout to decide when to translate. */}
+            <TranslatableDynamic
+              text={factStatement}
+              size="sm"
+              italic
+              style={styles.factLine}
+              numberOfLines={2}
+            />
+
+            {/* Small and muted on purpose: a finished background job should be
+                confirmable at a glance, not announce itself. */}
+            {/* A small spinner while generating. Without one the rows ran one
+                at a time with nothing moving, and the card read as finished
+                (audit F13). The card still opens itself when topics land. */}
+            {status === 'pending' && (
+              <ActivityIndicator
+                size="small"
+                color={ACCENT}
+                testID={`chat-topics-spinner-${factId}`}
+              />
+            )}
+
+            {status === 'done' && (
+              <MaterialIcons
+                {...DECORATIVE_ICON_A11Y}
+                name="check"
+                size={14}
+                color="rgb(150, 150, 150)"
+                testID={`chat-topics-done-${factId}`}
+              />
+            )}
+          </View>
+
+          {/* A failure is stated while COLLAPSED too, because the user has to do
+              something about it. A problem you must open a drawer to discover is
+              one nobody sees. Pending is the opposite case: nothing to act on,
+              so nothing is said until you look. */}
           {status === 'error' && (
-            <Pressable
-              onPress={handleRetry}
-              disabled={isRetrying}
-              hitSlop={16}
-              style={styles.retryButton}
-              accessibilityRole="button"
-              accessibilityLabel={t('floatingChat.topicGenRetry')}
-              testID="chat-topics-retry"
-            >
-              <Text size="xs" bold style={styles.retryText}>
-                {t('floatingChat.topicGenRetry')}
-              </Text>
-            </Pressable>
+            <Text size="xs" style={styles.statusText} numberOfLines={2}>
+              {t('floatingChat.topicGenFailed')}
+            </Text>
           )}
-        </View>
-
-        {/* The fact statement is its own node rather than an interpolation:
-            it goes through TranslatableDynamic, which returns a component. */}
-        <TranslatableDynamic
-          text={factStatement}
-          size="xs"
-          italic
-          style={styles.factLine}
-          numberOfLines={2}
-        />
-
-        {/* A failure is stated while COLLAPSED too, because the user has to do
-            something about it. A problem you must open a drawer to discover is
-            one nobody sees. Pending is the opposite case: nothing to act on,
-            so nothing is said until you look. */}
+        </GlyphSafeButton>
         {status === 'error' && (
-          <Text size="xs" style={styles.statusText} numberOfLines={2}>
-            {t('floatingChat.topicGenFailed')}
-          </Text>
+          <Pressable
+            onPress={handleRetry}
+            disabled={isRetrying}
+            hitSlop={16}
+            style={styles.retryButton}
+            accessibilityRole="button"
+            accessibilityLabel={t('floatingChat.topicGenRetry')}
+            testID="chat-topics-retry"
+          >
+            <Text size="xs" bold style={styles.retryText}>
+              {t('floatingChat.topicGenRetry')}
+            </Text>
+          </Pressable>
         )}
-      </Pressable>
+      </View>
 
       {expanded && (
         <View style={styles.body}>
@@ -439,40 +452,61 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
                       }}
                       numberOfLines={1}
                     />
-                    <Pressable
+                    <GlyphSafeButton
                       onPress={() => (removing ? handleUndoRemove(chip) : handleRemove(chip))}
                       disabled={busyId === chip.id}
                       hitSlop={16}
-                      style={styles.chipButton}
-                      accessibilityRole="button"
+                      visualStyle={styles.chipButton}
                       accessibilityLabel={removing ? t('topicPlan.undo') : t('topicPlan.delete')}
                       testID={`chat-topic-chip-${removing ? 'undo' : 'remove'}-${chip.id}`}
                     >
                       <MaterialIcons
+                        {...DECORATIVE_ICON_A11Y}
                         name={removing ? 'undo' : 'close'}
                         size={14}
                         color={removing ? ACCENT : 'rgb(190, 190, 190)'}
                       />
-                    </Pressable>
+                    </GlyphSafeButton>
                   </View>
                 );
               })}
             </View>
           )}
 
+          {/* SAVED, THEN WHAT NEXT (owner request, ux2). Only once topics are
+              saved: the user may keep adding facts or close the chat. The ✕
+              is a plain text character drawn like the header Close; the
+              spoken label says "Close" instead of reading the character. */}
+          {status === 'done' && !empty && (
+            <Text
+              size="xs"
+              style={styles.savedHint}
+              accessibilityLabel={t('floatingChat.topicsSavedHint', { close: t('floatingChat.close') })}
+              testID={`chat-topics-saved-${factId}`}
+            >
+              {t('floatingChat.topicsSavedHint', { close: '\u2715' })}
+            </Text>
+          )}
+
+          {/* OPTIONAL, AND LOOKS IT (owner request, ux2): a small pill with a
+              thin neutral outline, not the accent pill that read as the next
+              required step. The 44pt touch frame is a number (NativeWind rem
+              is 14); the pill inside it is about 30pt. */}
           <Pressable
             onPress={handleFindMore}
             disabled={isFindingMore}
-            hitSlop={12}
+            hitSlop={8}
             style={styles.moreButton}
             accessibilityRole="button"
             accessibilityState={{ disabled: isFindingMore }}
-            accessibilityLabel={t('chatTopics.findMore')}
+            accessibilityLabel={isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
             testID={`chat-topics-more-${factId}`}
           >
-            <Text size="xs" bold style={styles.retryText}>
-              {isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
-            </Text>
+            <View style={styles.morePill} testID={`chat-topics-more-pill-${factId}`}>
+              <Text size="xs" style={styles.moreText}>
+                {isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
+              </Text>
+            </View>
           </Pressable>
         </View>
       )}
@@ -491,8 +525,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   // 48dp target on the header row.
+  headerOuter: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  headerToggle: { flex: 1 },
   header: { minHeight: 48, justifyContent: 'center', gap: 4 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   body: { gap: 10, paddingTop: 2 },
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tombstone: {
@@ -502,17 +538,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  moreButton: {
-    minHeight: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 999,
+  savedHint: { color: 'rgb(200, 200, 200)' },
+  moreButton: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  morePill: {
     borderWidth: 1,
-    borderColor: ACCENT,
-    paddingHorizontal: 14,
+    borderColor: 'rgb(150, 150, 150)',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  title: { color: ACCENT },
-  factLine: { color: 'rgb(190, 190, 190)' },
+  // Neutral, the same grey as the outline and the done tick.
+  moreText: { color: 'rgb(150, 150, 150)' },
+  title: { color: ACCENT, flexShrink: 0 },
+  factLine: { flex: 1, color: 'rgb(190, 190, 190)' },
   section: { gap: 6 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
   statusText: { flex: 1, color: 'rgb(200, 200, 200)' },

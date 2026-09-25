@@ -155,6 +155,9 @@ export async function executeProposalActions(
             break;
           }
           await updateFact(action.fact_id, { statement });
+          // A reworded fact gets topics for its new wording, isolated like
+          // every other run (ux2 F1); the job excludes what it already has.
+          newFactEntries.push({ id: action.fact_id, statement });
           applied++;
           break;
         }
@@ -417,7 +420,7 @@ export async function executeProposalActions(
     }
   }
 
-  // Newly-added facts need topics generated (same trigger as chat fact-saving).
+  // Added and reworded facts need topics generated (same trigger as chat fact-saving).
   triggerTopicGeneration(newFactEntries);
 
   useFloatingChatStore.getState().notifyFactMutation();

@@ -46,55 +46,51 @@ beforeEach(() => {
   mockEnqueueJob.mockResolvedValue('job-1');
 });
 
-describe('generateMoreTopicsForFact', () => {
-  it('cloud mode: runs handleTopicGenJob inline with append + excludeTopics', async () => {
+describe('generateMoreTopicsForFact (ux2 F1: isolated, exclusions read at run time)', () => {
+  it('cloud mode: runs the job inline as an append, and reports how many it added', async () => {
     mockProcessingMode.mockReturnValue('CLOUD');
-
-    const outcome = await generateMoreTopicsForFact('f1', 'Works in AI');
-
+    const outcome = await generateMoreTopicsForFact('f1', 'Works in AI', { skillId: 'topics/profession', count: 5 });
     expect(mockHandleTopicGenJob).toHaveBeenCalledWith({
       factId: 'f1',
       factStatement: 'Works in AI',
       useCloud: true,
       mode: 'append',
-      excludeTopics: ['AI policy', 'ML safety'],
+      skillId: 'topics/profession',
+      totalCount: 5,
     });
-    expect(outcome).toEqual({ mode: 'inline' });
-    expect(mockEnqueueJob).not.toHaveBeenCalled();
+    expect(outcome).toEqual({ mode: 'inline', added: 1 });
+  });
+
+  it('never sends an exclusion snapshot: the job reads its own lists', async () => {
+    mockProcessingMode.mockReturnValue('CLOUD');
+    await generateMoreTopicsForFact('f1', 'Works in AI');
+    expect(mockHandleTopicGenJob.mock.calls[0][0]).not.toHaveProperty('excludeTopics');
   });
 
   it('cloud mode: returns skipped and does not throw when generation fails', async () => {
     mockProcessingMode.mockReturnValue('CLOUD');
-    mockHandleTopicGenJob.mockRejectedValueOnce(new Error('gateway down'));
-
-    const outcome = await generateMoreTopicsForFact('f1', 'Works in AI');
-    expect(outcome).toEqual({ mode: 'skipped' });
+    mockHandleTopicGenJob.mockRejectedValue(new Error('boom'));
+    await expect(generateMoreTopicsForFact('f1', 'Works in AI')).resolves.toEqual({ mode: 'skipped', added: 0 });
   });
 
   it('on-device mode: enqueues an append job and notifies the queue', async () => {
     mockProcessingMode.mockReturnValue('ON_DEVICE');
-
-    const outcome = await generateMoreTopicsForFact('f1', 'Works in AI');
-
+    const outcome = await generateMoreTopicsForFact('f1', 'Works in AI', { count: 5 });
     expect(mockEnqueueJob).toHaveBeenCalledWith('topic_gen', {
       factId: 'f1',
       factStatement: 'Works in AI',
       useCloud: false,
       mode: 'append',
-      excludeTopics: ['AI policy', 'ML safety'],
+      totalCount: 5,
     });
     expect(mockNotify).toHaveBeenCalled();
-    expect(outcome).toEqual({ mode: 'queued' });
-    expect(mockHandleTopicGenJob).not.toHaveBeenCalled();
+    expect(outcome).toEqual({ mode: 'queued', added: 0 });
   });
 
   it('on-device mode: skips when a job is already pending for the fact', async () => {
     mockProcessingMode.mockReturnValue('ON_DEVICE');
-    mockHasPendingJob.mockResolvedValueOnce(true);
-
-    const outcome = await generateMoreTopicsForFact('f1', 'Works in AI');
-
+    mockHasPendingJob.mockResolvedValue(true);
+    await expect(generateMoreTopicsForFact('f1', 'Works in AI')).resolves.toEqual({ mode: 'skipped', added: 0 });
     expect(mockEnqueueJob).not.toHaveBeenCalled();
-    expect(outcome).toEqual({ mode: 'skipped' });
   });
 });

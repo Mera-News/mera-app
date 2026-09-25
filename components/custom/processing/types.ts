@@ -79,10 +79,6 @@ export const PROCESSING_METRICS = {
   barGap: 12,
   /** `components/ui/progress` at `size="xs"` is `h-1`. */
   barHeight: 4,
-  /** Reserved whenever a run could appear, including before the first batch
-   *  exists. Chunk COUNT grows mid-run, so the strip absorbs that by making its
-   *  segments narrower; it must never get taller. */
-  stripHeight: 28,
   progressLineHeight: 17,
   ctaGap: 16,
   /** `components/ui/button` at `size="sm"` is `h-9`. */
@@ -105,17 +101,8 @@ export const PROCESSING_CONTENT_HEIGHT =
 /** The square animation block inside the card, in points. */
 export const PROCESSING_SCENE_SIZE = PROCESSING_METRICS.sceneSize;
 
-/** The chunk strip's reserved height, in points. */
-export const PROCESSING_STRIP_HEIGHT = PROCESSING_METRICS.stripHeight;
-
 /** How long a rotating headline holds before the crossfade. */
 export const PROCESSING_HEADLINE_CYCLE_MS = 5000;
-
-/**
- * Beyond this many chunks the strip buckets rather than drawing one segment
- * each: at the card's width a 40-segment strip is a grey smear.
- */
-export const PROCESSING_MAX_CHUNK_SEGMENTS = 24;
 
 /**
  * What one stage draws when no animation file exists for it.

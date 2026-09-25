@@ -67,15 +67,44 @@ jest.mock('@/components/ui/spinner', () => {
     return { Spinner: (p: any) => <View {...p} /> };
 });
 
+// B7: the first ReanimatedSwipeable in the repo, no house mock exists yet.
+// Renders renderLeftActions' output ahead of children (so the trash is
+// queryable/pressable), forwards `enabled` onto the host node (so a test can
+// read it back), and exposes a `-trigger-open` Pressable that stands in for
+// a real swipe gesture, which jest cannot simulate — pressing it fires
+// onSwipeableWillOpen exactly as a real swipe-open would. The ref resolves
+// to a fresh `{ close, openLeft, openRight, reset }` jest.fn() bag per
+// mounted instance, not shared module state, so two rows in the same test
+// don't observe each other's calls.
+jest.mock('react-native-gesture-handler/ReanimatedSwipeable', () => {
+    const R = require('react');
+    const { View, Pressable } = require('react-native');
+    const MockSwipeable = R.forwardRef((props: any, ref: any) => {
+        const methods = R.useRef({ close: jest.fn(), openLeft: jest.fn(), openRight: jest.fn(), reset: jest.fn() });
+        R.useImperativeHandle(ref, () => methods.current);
+        const left = props.renderLeftActions
+            ? props.renderLeftActions({ value: 0 }, { value: 0 }, methods.current)
+            : null;
+        return (
+            <View testID={props.testID} enabled={props.enabled}>
+                {left}
+                <Pressable
+                    testID={`${props.testID}-trigger-open`}
+                    onPress={() => props.onSwipeableWillOpen?.('left')}
+                />
+                {props.children}
+            </View>
+        );
+    });
+    return { __esModule: true, default: MockSwipeable };
+});
+
 const mockNudgeFactWeight = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/lib/database/services/mutation-rails-service', () => ({
     nudgeFactWeight: (...a: unknown[]) => mockNudgeFactWeight(...a),
 }));
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { error: jest.fn(), warn: jest.fn() } }));
-jest.mock('@/lib/stores/for-you-store', () => ({
-    useForYouStore: { getState: () => ({ setFeedNeedsRefresh: jest.fn() }) },
-}));
 
 const mockRetryTopicGeneration = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/lib/chat-tools/tool-handlers', () => ({
@@ -251,6 +280,49 @@ describe('FactAccordion — pending/done/error, driven by fact.topicsStatus (P3\
         expect(getByText('configPanel.generatingTopics')).toBeTruthy();
         expect(queryByTestId('fact-topics-retry-f1')).toBeNull();
         expect(queryByText('Mountain trail running')).toBeNull();
+        // The owner's complaint was "just the spinner is visible" — the
+        // statement itself is unconditional in the JSX, but assert it here
+        // too so this exact regression (statement hidden while pending) has
+        // a test tied to the same fixture the complaint was about.
+        expect(getByText('Loves hiking in the mountains')).toBeTruthy();
+    });
+
+    it('pending: the spinner slot is labelled "Finding topics" and sized like the done badge, so the row does not jump', () => {
+        const pendingFact = baseFact({ topicsStatus: 'pending' });
+        const pending = render(<FactAccordion {...baseProps} fact={pendingFact} />);
+        // Base testID (`fact-topics-pending-f1`) and its `-spinner` child
+        // are unchanged — they're StatusIndicator's own, asserted in the
+        // test above. The new a11y wrapper around it carries `-slot`.
+        const pendingSlot = pending.getByTestId('fact-topics-pending-f1-slot');
+        expect(pendingSlot.props.accessibilityLabel).toBe('Finding topics');
+        expect(pending.getByTestId('fact-topics-pending-f1')).toBeTruthy();
+        expect(pending.getByTestId('fact-topics-pending-f1-spinner')).toBeTruthy();
+
+        mockTopicRows = [{ id: 't1', text: 'trail running', status: 'active' }];
+        const doneFact = baseFact({ topicsStatus: 'done' });
+        const done = render(
+            <FactAccordion
+                {...baseProps}
+                fact={doneFact}
+                articleCountByTopic={new Map([['trail running', 5]])}
+            />,
+        );
+        const badge = done.getAllByText('configPanel.articleCount')[0];
+
+        // Both slots sit in the SAME trailing HStack, which carries the
+        // shared minHeight — read it off the row ancestor they share rather
+        // than the leaf, since the leaf nodes are different element types
+        // (a View with a spinner vs a pill Button) with no comparable size
+        // of their own.
+        const pendingRow = pending.UNSAFE_root.findAll(
+            (n: any) => typeof n.props?.style?.minHeight === 'number',
+        )[0];
+        const doneRow = done.UNSAFE_root.findAll(
+            (n: any) => typeof n.props?.style?.minHeight === 'number',
+        )[0];
+        expect(pendingRow.props.style.minHeight).toBeGreaterThan(0);
+        expect(pendingRow.props.style.minHeight).toBe(doneRow.props.style.minHeight);
+        expect(badge).toBeTruthy();
     });
 
     it('done: zero topics is a valid done state — no spinner, no error, no retry, just the add/generate affordances', () => {
@@ -440,6 +512,57 @@ describe('F46: delete lives in edit mode', () => {
         expect(row.props.accessibilityActions).toEqual([{ name: 'delete', label: 'common.delete' }]);
         act(() => row.props.onAccessibilityAction({ nativeEvent: { actionName: 'delete' } }));
         expect(onDeletePress).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('B7: swipe right to reveal a delete icon', () => {
+    it('the swipe-revealed trash is labelled and calls onDeletePress, same as edit mode', () => {
+        const onDeletePress = jest.fn();
+        const fact = baseFact();
+        const r = render(<FactAccordion {...baseProps} isExpanded={false} onDeletePress={onDeletePress} fact={fact} />);
+        const trash = r.getByTestId('fact-swipe-delete-f1');
+        expect(trash.props.accessibilityLabel).toBe('facts.deleteFactA11y');
+        expect(trash.props.accessibilityRole).toBe('button');
+        fireEvent.press(trash);
+        expect(onDeletePress).toHaveBeenCalledTimes(1);
+        expect(onDeletePress).toHaveBeenCalledWith(fact);
+    });
+
+    it('the trash target is at least 44pt', () => {
+        const r = render(<FactAccordion {...baseProps} isExpanded={false} fact={baseFact()} />);
+        const style = r.getByTestId('fact-swipe-delete-f1').props.style;
+        const flat = Array.isArray(style) ? Object.assign({}, ...style) : style;
+        expect(flat.minHeight).toBeGreaterThanOrEqual(44);
+        expect(flat.width).toBeGreaterThanOrEqual(44);
+    });
+
+    it('the swipe is disabled while editing — edit mode already has its own delete control', () => {
+        const r = render(<FactAccordion {...baseProps} isExpanded editing fact={baseFact()} />);
+        expect(r.getByTestId('fact-swipeable-f1').props.enabled).toBe(false);
+    });
+
+    it('the swipe is enabled at rest (not editing)', () => {
+        const r = render(<FactAccordion {...baseProps} isExpanded={false} fact={baseFact()} />);
+        expect(r.getByTestId('fact-swipeable-f1').props.enabled).toBe(true);
+    });
+
+    it('opening the swipe reports the fact id so a list can close every other open row', () => {
+        const onSwipeOpen = jest.fn();
+        const r = render(
+            <FactAccordion {...baseProps} isExpanded={false} onSwipeOpen={onSwipeOpen} fact={baseFact()} />,
+        );
+        fireEvent.press(r.getByTestId('fact-swipeable-f1-trigger-open'));
+        expect(onSwipeOpen).toHaveBeenCalledWith('f1');
+    });
+
+    it('hands the list a close()-able ref, and releases it on unmount', () => {
+        const swipeableRef = jest.fn();
+        const r = render(
+            <FactAccordion {...baseProps} isExpanded={false} swipeableRef={swipeableRef} fact={baseFact()} />,
+        );
+        expect(swipeableRef).toHaveBeenCalledWith('f1', expect.objectContaining({ close: expect.any(Function) }));
+        r.unmount();
+        expect(swipeableRef).toHaveBeenLastCalledWith('f1', null);
     });
 });
 

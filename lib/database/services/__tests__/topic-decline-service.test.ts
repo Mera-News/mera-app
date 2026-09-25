@@ -321,3 +321,17 @@ describe('getAllTopicIds keeps staged rows — the purge guard', () => {
     expect(JSON.stringify(args ?? [])).not.toContain('pending_delete_at');
   });
 });
+
+describe('getAllDeclinedNormalizedTexts — the FULL veto list', () => {
+  it('returns every declined normalized text with NO page limit', async () => {
+    db._setRows(
+      'declined_topics',
+      Array.from({ length: 60 }, (_, i) => makeRecord({ id: `d${i}`, normalizedText: `t ${i}` })),
+    );
+    const set = await svc.getAllDeclinedNormalizedTexts();
+    expect(set.size).toBe(60);
+    // The mock ignores Q.take, so the limit can only be caught on the args.
+    const args = JSON.stringify(db._collections.declined_topics.query.mock.calls.at(-1));
+    expect(args).not.toContain('take');
+  });
+});

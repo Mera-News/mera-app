@@ -151,6 +151,19 @@ describe('section header glyphs are hidden from accessibility', () => {
         hiddenGlyph(r.getByTestId('icon-chevron-right', HIDDEN));
     });
 
+    // Captured (batch 26): the chevron still surfaced as its own StaticText
+    // after the labelled "View all" button, hidden props and all, because it
+    // sat inside the button. It is now drawn under a childless labelled button.
+    it('keeps the View all chevron OUTSIDE the button, under no accessible element', () => {
+        const SectionViewAllText = require('../SectionViewAllText').default;
+        const r = render(<SectionViewAllText total={51} onPress={jest.fn()} />);
+        const button = r.getByTestId('dashboard-view-all');
+        expect(button.props.accessibilityLabel).toBe('forYou.viewAllArticles');
+        expect(button.findAll((n: any) => typeof n.props?.testID === 'string' && n.props.testID.startsWith('icon-'))).toHaveLength(0);
+        const chevron = r.getByTestId('icon-chevron-right', HIDDEN);
+        for (let p: any = chevron.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+    });
+
     // Captured (batch 22): iOS still surfaced the arrow as its own 20x20
     // StaticText although the glyph carried the hidden props, because it sat
     // INSIDE the button's subtree. The button is now a childless accessible

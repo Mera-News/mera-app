@@ -7,28 +7,17 @@
 // STYLING prop respectively; neither reaches the accessibility tree.
 
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
+import { exposedGlyphTexts } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 import { PromptInput } from '../index';
+
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (k: string) => k }),
 }));
-
-// The gluestack Button drags in ActivityIndicator, whose native-component
-// shim does not resolve under this jest environment. The button is exercised
-// here purely for the props it forwards to the a11y tree, so a host-view stand
-// in that preserves them is the right level of fidelity.
-jest.mock('@/components/ui/button', () => {
-    const { Pressable } = jest.requireActual('react-native');
-    return {
-        Button: ({ children, isDisabled, ...rest }: Record<string, unknown> & {
-            children?: React.ReactNode;
-            isDisabled?: boolean;
-        }) => <Pressable {...rest}>{children}</Pressable>,
-        ButtonText: ({ children }: { children?: React.ReactNode }) => children,
-    };
-});
 
 const noop = () => {};
 
@@ -73,5 +62,33 @@ describe('PromptInput accessibility state', () => {
         expect(getByLabelText('chat.send').props.accessibilityState).toMatchObject({
             disabled: true,
         });
+    });
+});
+
+describe('the send button (ux2 batch 26)', () => {
+    it('is a childless, labelled 44x44 frame sized by number', () => {
+        // `w-9 h-9` rendered 31.5pt: NativeWind inlines rem at 14. Only a
+        // numeric style is a real 44.
+        const { getByLabelText } = render(<PromptInput onSubmit={noop} placeholder="ph" />);
+        const send = getByLabelText('chat.send');
+        const flat = StyleSheet.flatten(send.props.style) ?? {};
+        expect(flat.width).toBe(44);
+        expect(flat.height).toBe(44);
+        expect(send.findAll((n: any) => typeof n.type === 'string' && n !== send)).toHaveLength(0);
+    });
+
+    it('its arrow is never its own StaticText', () => {
+        const { UNSAFE_root } = render(<PromptInput onSubmit={noop} placeholder="ph" />);
+        const glyphs = UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)));
+        expect(glyphs).toHaveLength(1);
+        expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
+    });
+
+    it('still sends what was typed', () => {
+        const onSubmit = jest.fn();
+        const { getByLabelText, getByPlaceholderText } = render(<PromptInput onSubmit={onSubmit} placeholder="ph" />);
+        fireEvent.changeText(getByPlaceholderText('ph'), '  hello ');
+        fireEvent.press(getByLabelText('chat.send'));
+        expect(onSubmit).toHaveBeenCalledWith('hello');
     });
 });

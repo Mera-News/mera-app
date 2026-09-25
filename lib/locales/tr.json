@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{total}} makalenin {{done}} tanesi indirildi",
       "chunks": {
-        "ready": "{{total}} analiz turundan {{ready}} tanesi tamamlandı",
-        "a11y": "Analiz turları: {{total}} turdan {{ready}} tanesi tamamlandı"
+        "ready": "{{total}} analiz turundan {{ready}} tanesi tamamlandı"
       },
       "stageA11y": "Adım {{index}} / {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRead_other": "ve {{formatted}} okumuşsun.",
     "reasonUnavailable": "Mera bu haber için not yazamadı.",
     "loadingA11y": "Akışın yükleniyor",
-    "newStoriesPill": "Yeni haberler",
     "translatingCaption": "Çevriliyor…",
     "updatedJustNow": "Az önce güncellendi"
   },
@@ -263,7 +261,7 @@
     "share": "Paylaş",
     "shareVia": "{{downloadUrl}} üzerinden paylaşıldı",
     "sourceCountryGlobal": "Dünya Geneli",
-    "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülke adını göstermek için dokunun.",
+    "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülkeyi göstermek için dokunun, ardından yayınlarını görmek için adına dokunun.",
     "readOn": "{{publication}}'da Oku",
     "readOnGoogleTranslate": "Google Translate'de Oku",
     "linkUnavailable": "Bu bağlantı güvenli bir şekilde açılamıyor, bu yüzden burada mevcut değil.",
@@ -294,7 +292,9 @@
     "addToExplore": "Keşfete ekle",
     "addedToExplore": "Keşfete eklendi",
     "badgeGovernment": "Hükümet kaynağı",
-    "badgeRegulator": "Resmi kurum"
+    "badgeRegulator": "Resmi kurum",
+    "sectionCountries": "Ülkeler",
+    "sectionPublications": "Yayınlar"
   },
   "clusterDetail": {
     "translatable": "Bu makale {{language}} dilinde: okurken cihazın onu çevirebilir. Çeviri çalışmazsa siteyi Google Translate'de açabilirsin; ama o zaman siteyi Google üzerinden görüntülediğini unutma.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Konuları ve bulunan haberler de silinir, Mera bununla ilgili haber aramayı bırakır.",
     "deletingFact": "Siliniyor...",
     "yesDelete": "Evet, sil",
-    "refreshSuggestions": "Önerileri yenile",
-    "refreshingSuggestions": "Yenileniyor...",
-    "refreshSuggestionsSuccessTitle": "Öneriler yenilendi",
-    "refreshSuggestionsSuccessDescription": "Yeni kişiselleştirilmiş öneriler oluşturuluyor.",
-    "refreshSuggestionsFailedTitle": "Yenileme başarısız",
-    "refreshSuggestionsFailedDescription": "Öneriler yenilenemedi. Lütfen tekrar dene.",
-    "personaUpdatedRefreshHint": "Profilini güncellediğini gördüm, haber akışını yeniden oluşturmamı ister misin?",
     "articleCount_one": "{{count}} makale",
     "articleCount_other": "{{count}} makale",
     "addTopic": "Konu ekle",
@@ -783,7 +776,13 @@
     "topicGenFailed": "Bu için konular oluşturulamadı.",
     "topicGenRetry": "Tekrar Dene",
     "aiUsageNoticeGeneral": "Mera hata yapabilir, önemli şeyleri kontrol et.",
-    "trackChooseHint": "Neyi takip edeceğini seç"
+    "trackChooseHint": "Neyi takip edeceğini seç",
+    "factDeletePendingTitle": "Profilinden kaldırılacak",
+    "saveAsWritten": "Yazdığım gibi kaydet",
+    "factDeleteRemove": "Kaldır",
+    "factDeleteKeep": "Tut",
+    "factDeleteKept": "Hiçbir şey kaldırılmadı.",
+    "topicsSavedHint": "Konular kaydedildi! Bilgi eklemeye devam edebilir ya da keşfetmeye başlamak için {{close}} simgesine dokunabilirsin."
   },
   "articleFeedback": {
     "thumbsUp": "Beğendim",
@@ -876,7 +875,8 @@
     "formError": "Lütfen tüm zorunlu alanları doldurun.",
     "emailError": "Lütfen geçerli bir e-posta adresi girin.",
     "captureScreenshotError": "Ekran görüntüsü alınamadı.",
-    "genericError": "Beklenmeyen bir hata nedeniyle geri bildirim gönderilemedi."
+    "genericError": "Beklenmeyen bir hata nedeniyle geri bildirim gönderilemedi.",
+    "chatAttachmentNote": "Mera ile sohbetin bu rapora eklenecek."
   },
   "observability": {
     "title": "Gözlemlenebilirlik",
@@ -1528,7 +1528,9 @@
     },
     "meraInviteReturning": "Bana yeni bir şeyden bahset, akışına ekleyeyim.",
     "editFacts": "Düzenle",
-    "planUsage": "Bugün {{limit}} içinden {{used}} analiz edildi"
+    "planUsage": "Bugün {{limit}} içinden {{used}} analiz edildi",
+    "updatingAllFacts": "Tüm bilgiler güncelleniyor",
+    "pleaseWait": "Lütfen bekleyin"
   },
   "facts": {
     "screenTitle": "Bilgilerin",
@@ -2570,7 +2572,11 @@
     "titleAlsoAdd": "Bu da eklensin mi?",
     "pendingHint": "Yukarıdan bir seçenek belirle ya da cevabını yaz.",
     "overlapsLabel": "Şununla örtüşüyor",
-    "overlapsReplaceNote": "Değiştirmek onu ve konularını siler."
+    "overlapsReplaceNote": "Değiştirmek onu ve konularını siler.",
+    "replaceAll": "Tümünü değiştir",
+    "keepAll": "Tümünü tut",
+    "replaceAllA11y": "{{count}} önerinin tümüyle değiştir",
+    "keepAllA11y": "Bilgilerini tut ve {{count}} önerinin tümünü ekle"
   },
   "subscriptions": {
     "sectionTitle": "Abonelikleriniz",
@@ -2733,37 +2739,36 @@
       "Sorun hazırlanıyor."
     ],
     "queued": [
-      "İsteğin sıraya alınıyor.",
-      "Aynı anda birkaç iş çalışıyor. Sıradaki sensin."
+      "İsteğin telefonunda sıradaki."
     ],
     "securing": [
-      "Mesajın yalnızca modelin açabileceği şekilde kilitleniyor.",
-      "Sözlerin telefonundan çıkmadan önce şifreleniyor."
+      "Mesajın, yalnızca güvenilir ortamındaki modelin okuyabileceği şekilde şifreleniyor.",
+      "Sözlerin telefonundan çıkmadan önce şifrelenir."
     ],
     "attesting": [
-      "Modele özel bir kanal kuruluyor.",
-      "Bunu seninle Mera arasında tutan anahtar alınıyor.",
-      "Özel bir görüşmenin kurulması bir an sürüyor."
+      "Seninle model arasında güvenilir bir ortamda güvenli bağlantı kuruluyor.",
+      "Anahtar, modelin güvenilir ortamından alınıyor; böylece bunu yalnızca model okuyabilir."
     ],
     "thinking": [
-      "Mera yazdıklarını okuyor.",
-      "En iyi cevap yolu aranıyor."
+      "Model mesajını okuyor.",
+      "En iyi yanıt hazırlanıyor."
     ],
     "retrying": [
-      "Bu her zamankinden uzun sürüyor. Mera başka bir yol deniyor.",
-      "Hâlâ devam ediyor. Beklediğin için teşekkürler."
+      "Bu her zamankinden uzun sürüyor. Başka bir güvenli yol deneniyor.",
+      "Hâlâ üzerinde çalışılıyor. Beklediğin için teşekkürler."
     ],
     "deviceLoading": [
-      "Telefonundaki model uyandırılıyor.",
-      "Yüklenirken ilk cevap biraz daha uzun sürüyor."
+      "Model telefonuna yükleniyor.",
+      "İlk yanıt, model yüklenirken biraz daha uzun sürer."
     ],
     "devicePreparing": [
-      "Mera senin hakkında bildiklerini topluyor.",
-      "Telefonun cevap vermeye hazırlanıyor."
+      "Telefonun yanıt vermeye hazırlanıyor."
     ],
     "deviceThinking": [
-      "Telefonunda düşünülüyor.",
-      "Bu, cihazında çalışıyor, bu yüzden hiçbir şey hiçbir yere gönderilmiyor."
+      "Telefonunda düşünülüyor. Hiçbir şey cihazından çıkmaz."
+    ],
+    "webSearch": [
+      "Cihazından web'de aranıyor…"
     ]
   },
   "headerNarration": {
@@ -2802,12 +2807,16 @@
       ]
     },
     "nudges": [
-      "Sonra oku",
-      "Kaydettiklerin bekliyor",
-      "Bir haberi iyi oku",
-      "Manşetlere bak",
-      "Yeni her zaman iyi değil",
-      "İzlemene gerek yok"
+      "Haberin tamamını oku",
+      "Vaktin yok mu? Kaydet",
+      "Dünyaya baktın mı?",
+      "Ülkelerin tamam mı?",
+      "Bir haberi takip et",
+      "Takip ettiklerine bak",
+      "Profilin güncel mi?",
+      "Beğenmedin mi? Söyle",
+      "Daha fazlası için beğen",
+      "Sevdiklerinle paylaş"
     ],
     "a11y": "Mera bu telefonda haberlerini güncelliyor."
   },

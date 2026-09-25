@@ -46,7 +46,7 @@ jest.mock('@/lib/services/suppression-sweep', () => ({
 
 // Additive (P3): every applied mutation now marks the feed dirty (D18).
 jest.mock('@/lib/stores/for-you-store', () => ({
-  useForYouStore: { getState: () => ({ setFeedNeedsRefresh: jest.fn() }) },
+  useForYouStore: { getState: () => ({}) },
 }));
 
 jest.mock('../location-service', () => ({

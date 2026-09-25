@@ -1,0 +1,323 @@
+{
+  "_comment": "ux2 P3 C2: the Feed header's nudges become the owner's 10 lines (en verbatim), replacing the 6 old ones; stage lines unchanged. Every line measured with CoreText at 14pt (system font): widest 162.0pt, all within the 400pt+ budget (168 less 4); 4 lines exceed the compact budget (157 less 4) and take a '…' there by owner decision. No em dashes; 'Mera' untranslated. Splice with: --allow-overwrite headerNarration.nudges, then regenerate components/custom/for-you/__tests__/fixtures/narration-widths.json with measure-narration.swift.",
+  "en": {
+    "headerNarration": {
+      "nudges": [
+        "Read the full article",
+        "Short on time? Save it",
+        "Checked world news?",
+        "Checked your countries?",
+        "Follow a story",
+        "Check followed stories",
+        "Is your profile current?",
+        "Not for you? Tell Mera",
+        "Like it to see more",
+        "Share with loved ones"
+      ]
+    }
+  },
+  "de": {
+    "headerNarration": {
+      "nudges": [
+        "Lies den ganzen Artikel",
+        "Keine Zeit? Speichern",
+        "Welt schon gesehen?",
+        "Deine Länder gesehen?",
+        "Folge einer Meldung",
+        "Gefolgtes prüfen",
+        "Ist dein Profil aktuell?",
+        "Nichts für dich? Sag es",
+        "Gefällt? Mehr davon",
+        "Mit Liebsten teilen"
+      ]
+    }
+  },
+  "es": {
+    "headerNarration": {
+      "nudges": [
+        "Lee el artículo entero",
+        "¿Sin tiempo? Guárdalo",
+        "¿Viste lo del mundo?",
+        "¿Viste tus países?",
+        "Sigue una noticia",
+        "Revisa lo que sigues",
+        "¿Tu perfil está al día?",
+        "¿No es para ti? Dilo",
+        "Me gusta para ver más",
+        "Comparte con tu gente"
+      ]
+    }
+  },
+  "fr": {
+    "headerNarration": {
+      "nudges": [
+        "Lisez l'article en entier",
+        "Pressé ? Enregistrez-le",
+        "Vu l'actu du monde ?",
+        "Vu vos pays ?",
+        "Suivez une histoire",
+        "Vos histoires suivies",
+        "Profil à jour ?",
+        "Pas pour vous ? Dites-le",
+        "Aimez pour en voir plus",
+        "Partagez à vos proches"
+      ]
+    }
+  },
+  "hi": {
+    "headerNarration": {
+      "nudges": [
+        "पूरा लेख पढ़ें",
+        "समय कम है? सेव करें",
+        "दुनिया की ख़बरें देखीं?",
+        "अपने देश देखे?",
+        "कोई ख़बर फ़ॉलो करें",
+        "फ़ॉलो की ख़बरें देखें",
+        "प्रोफ़ाइल अपडेट है?",
+        "पसंद नहीं? Mera को बताएँ",
+        "और देखने को लाइक करें",
+        "अपनों से शेयर करें"
+      ]
+    }
+  },
+  "id": {
+    "headerNarration": {
+      "nudges": [
+        "Baca artikel lengkapnya",
+        "Sibuk? Simpan saja",
+        "Cek berita dunia?",
+        "Sudah cek negaramu?",
+        "Ikuti sebuah berita",
+        "Cek berita yang diikuti",
+        "Profil sudah terbaru?",
+        "Tidak cocok? Beri tahu",
+        "Sukai untuk lihat lagi",
+        "Bagikan ke orang dekat"
+      ]
+    }
+  },
+  "it": {
+    "headerNarration": {
+      "nudges": [
+        "Leggi l'articolo intero",
+        "Poco tempo? Salvalo",
+        "Le notizie dal mondo?",
+        "Visti i tuoi paesi?",
+        "Segui una notizia",
+        "Controlla quelle seguite",
+        "Il profilo è aggiornato?",
+        "Non fa per te? Dillo",
+        "Metti mi piace per altre",
+        "Condividi con i tuoi cari"
+      ]
+    }
+  },
+  "ja": {
+    "headerNarration": {
+      "nudges": [
+        "記事を全文読む",
+        "時間がない？保存しよう",
+        "世界のニュースは見た？",
+        "あなたの国は見た？",
+        "ニュースをフォローする",
+        "フォロー中を確認",
+        "プロフィールは最新？",
+        "違う？Mera に伝えよう",
+        "いいねで似た記事を",
+        "大切な人にシェア"
+      ]
+    }
+  },
+  "ko": {
+    "headerNarration": {
+      "nudges": [
+        "기사 전체 읽기",
+        "시간이 없나요? 저장하기",
+        "세계 뉴스 확인했나요?",
+        "내 나라 확인했나요?",
+        "뉴스 팔로우하기",
+        "팔로우한 뉴스 확인",
+        "프로필이 최신인가요?",
+        "관심 없나요? 알려주세요",
+        "좋아요로 더 보기",
+        "소중한 사람과 공유"
+      ]
+    }
+  },
+  "nl": {
+    "headerNarration": {
+      "nudges": [
+        "Lees het hele artikel",
+        "Weinig tijd? Bewaar het",
+        "Wereldnieuws gezien?",
+        "Je landen gezien?",
+        "Volg een verhaal",
+        "Bekijk je verhalen",
+        "Is je profiel actueel?",
+        "Niets voor jou? Zeg het",
+        "Like voor meer zoals dit",
+        "Deel met je dierbaren"
+      ]
+    }
+  },
+  "pl": {
+    "headerNarration": {
+      "nudges": [
+        "Przeczytaj cały artykuł",
+        "Brak czasu? Zapisz",
+        "Świat już sprawdzony?",
+        "Twoje kraje sprawdzone?",
+        "Obserwuj temat",
+        "Sprawdź obserwowane",
+        "Profil jest aktualny?",
+        "Nie dla ciebie? Powiedz",
+        "Polub, by było więcej",
+        "Udostępnij bliskim"
+      ]
+    }
+  },
+  "pt-BR": {
+    "headerNarration": {
+      "nudges": [
+        "Leia o artigo completo",
+        "Sem tempo? Salve",
+        "Viu as notícias globais?",
+        "Viu os seus países?",
+        "Siga uma notícia",
+        "Veja as que você segue",
+        "Seu perfil está em dia?",
+        "Não é para você? Diga",
+        "Curta para ver mais",
+        "Mande para quem ama"
+      ]
+    }
+  },
+  "ru": {
+    "headerNarration": {
+      "nudges": [
+        "Прочтите статью",
+        "Некогда? Сохраните",
+        "Новости мира?",
+        "Ваши страны видели?",
+        "Следите за сюжетом",
+        "Ваши сюжеты",
+        "Профиль актуален?",
+        "Не ваше? Скажите",
+        "Лайк, чтобы было ещё",
+        "Поделитесь с близкими"
+      ]
+    }
+  },
+  "th": {
+    "headerNarration": {
+      "nudges": [
+        "อ่านบทความฉบับเต็ม",
+        "ไม่มีเวลา? บันทึกไว้",
+        "ดูข่าวโลกแล้วหรือยัง",
+        "ดูประเทศคุณแล้วยัง",
+        "ติดตามข่าว",
+        "ดูข่าวที่ติดตาม",
+        "โปรไฟล์เป็นปัจจุบันไหม",
+        "ไม่ใช่ที่ชอบ? บอก Mera",
+        "กดถูกใจเพื่อดูเพิ่ม",
+        "แชร์ให้คนที่คุณรัก"
+      ]
+    }
+  },
+  "tr": {
+    "headerNarration": {
+      "nudges": [
+        "Haberin tamamını oku",
+        "Vaktin yok mu? Kaydet",
+        "Dünyaya baktın mı?",
+        "Ülkelerin tamam mı?",
+        "Bir haberi takip et",
+        "Takip ettiklerine bak",
+        "Profilin güncel mi?",
+        "Beğenmedin mi? Söyle",
+        "Daha fazlası için beğen",
+        "Sevdiklerinle paylaş"
+      ]
+    }
+  },
+  "uk": {
+    "headerNarration": {
+      "nudges": [
+        "Прочитайте статтю",
+        "Нема часу? Збережіть",
+        "Світ уже бачили?",
+        "Ваші країни бачили?",
+        "Стежте за сюжетом",
+        "Ваші сюжети",
+        "Профіль актуальний?",
+        "Не ваше? Скажіть",
+        "Лайк, щоб бачити ще",
+        "Поділіться з рідними"
+      ]
+    }
+  },
+  "vi": {
+    "headerNarration": {
+      "nudges": [
+        "Đọc toàn bộ bài viết",
+        "Bận? Lưu lại đã",
+        "Đã xem tin thế giới?",
+        "Đã xem nước của bạn?",
+        "Theo dõi một tin",
+        "Xem tin đang theo dõi",
+        "Hồ sơ còn đúng chứ?",
+        "Không hợp? Báo Mera",
+        "Thích để xem thêm",
+        "Chia sẻ với người thân"
+      ]
+    }
+  },
+  "zh-CN": {
+    "headerNarration": {
+      "nudges": [
+        "阅读全文",
+        "没时间？先保存",
+        "看过世界新闻了吗？",
+        "看过你的国家了吗？",
+        "关注一个新闻",
+        "看看关注的新闻",
+        "资料是最新的吗？",
+        "不感兴趣？告诉 Mera",
+        "点赞看到更多",
+        "分享给亲友"
+      ]
+    }
+  },
+  "zh-TW": {
+    "headerNarration": {
+      "nudges": [
+        "閱讀全文",
+        "沒時間？先儲存",
+        "看過世界新聞了嗎？",
+        "看過你的國家了嗎？",
+        "關注一則新聞",
+        "看看關注的新聞",
+        "個人檔案是最新的嗎？",
+        "不感興趣？告訴 Mera",
+        "按讚看到更多",
+        "分享給親友"
+      ]
+    }
+  },
+  "ar": {
+    "headerNarration": {
+      "nudges": [
+        "اقرأ المقال كاملًا",
+        "لا وقت لديك؟ احفظه",
+        "هل رأيت أخبار العالم؟",
+        "هل رأيت أخبار بلدانك؟",
+        "تابع قصة",
+        "راجع القصص المتابَعة",
+        "هل ملفك محدَّث؟",
+        "ليس لك؟ أخبر Mera",
+        "أعجبك؟ لترى المزيد",
+        "شارك من تحب"
+      ]
+    }
+  }
+}

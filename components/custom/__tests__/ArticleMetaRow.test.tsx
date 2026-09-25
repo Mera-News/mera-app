@@ -121,6 +121,25 @@ describe('ArticleMetaRow', () => {
     expect(getByText('Instituto Nacional de Ciberseguridad (INCIBE)')).toBeTruthy();
   });
 
+  // ux2 A7: the name in the app language, once the display store knows it.
+  // Never re-cased: the display form is shown exactly as the server gave it.
+  it('shows the publication by its display name, on every variant', () => {
+    const { usePublicationDisplayStore } = require('@/lib/stores/publication-display-store');
+    usePublicationDisplayStore.setState({ language: 'en', names: { '人民日报': 'Renmin Ribao' } });
+    try {
+      for (const variant of ['card', 'screen'] as const) {
+        const { getByText, queryByText, unmount } = render(
+          <ArticleMetaRow variant={variant} {...base} publicationName="人民日报" />,
+        );
+        expect(getByText('Renmin Ribao')).toBeTruthy();
+        expect(queryByText('人民日报')).toBeNull();
+        unmount();
+      }
+    } finally {
+      usePublicationDisplayStore.setState({ language: null, names: {} });
+    }
+  });
+
   it('names the article language in the reader\'s language, not its endonym', () => {
     const { getByText } = render(<ArticleMetaRow variant="card" {...base} />);
     expect(getByText('German')).toBeTruthy();

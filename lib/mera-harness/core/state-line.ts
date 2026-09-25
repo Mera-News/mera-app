@@ -45,6 +45,8 @@ export interface StateLineInput {
   /** Readings still waiting on a card from an earlier turn. Named so the model
    *  does not offer them again; the loop also drops exact repeats. */
   pendingCards?: string[];
+  /** Words the place lookup could not use, as the user wrote them. */
+  finerArea?: string | null;
   /** Several subjects in one message: this leg handles one of them. */
   segmentScope?: { mine: string; others: string[]; questionPending: boolean } | null;
 }
@@ -62,7 +64,7 @@ export function buildStateLine(input: StateLineInput): string {
     // Every interpolated value is escaped: the literal scaffolding is ours,
     // the values are not.
     const chain = (p: Place) =>
-      [p.neighbourhood, p.locality, p.admin1, p.countryName, p.bloc]
+      [p.neighbourhood, p.userTerm ? `${p.userTerm} (${p.locality})` : p.locality, p.admin1, p.countryName, p.bloc]
         .filter(Boolean)
         .map((v) => escapeUntrusted(String(v), 60))
         .join(', ');
@@ -87,6 +89,16 @@ export function buildStateLine(input: StateLineInput): string {
         + `Full chains: ${input.resolvedPlaces.map(chain).join(' | ')}.`,
       );
     }
+  }
+
+  if (input.finerArea) {
+    // The place service has no districts, so the lookup dropped these words.
+    // Named back so the model keeps the user's granularity (canonical spelling
+    // for an obvious typo) instead of asking about it (ux2 D1).
+    parts.push(
+      `Finer area as the user wrote it: "${escapeUntrusted(input.finerArea, 60)}". `
+      + 'Keep it as the first rung, in its usual spelling; never ask about it.',
+    );
   }
 
   if (input.existingFacts && input.existingFacts.length > 0) {

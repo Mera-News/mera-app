@@ -14,9 +14,10 @@
 //    `feedCompare` score and placed at the FRONT. Existing rows keep their
 //    relative order and every index simply shifts down. Because the screen's
 //    display sort tie-breaks on this index, a fresh arrival lands at the top of
-//    its own relevance band rather than the top of the whole feed. Paired with
-//    FlatList's `maintainVisibleContentPosition`, the card being read does not
-//    move on screen.
+//    its own relevance band inside the Feed's DYNAMIC region, which starts
+//    below the pinned prefix (what the reader has already scrolled past), so
+//    an arrival never lands above the reader and the card being read does not
+//    move. There is no "New stories" pill: nothing needs announcing.
 //  • Every laid-out card carries a LIFECYCLE STATE: `unviewed` (the default,
 //    represented by the ABSENCE of a `cardStates` entry) → `skipped` (dwelt on
 //    in the viewport for DWELL_READ_SECONDS without being touched) or `viewed`

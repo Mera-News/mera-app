@@ -202,6 +202,45 @@ describe('useLocalLLM', () => {
       );
     });
 
+    it('strips think tags, including a split stray closer, from the bubble (ux2 D11)', async () => {
+      mockInferStream.mockImplementation(() =>
+        makeTextStream(['<think>re', 'ason</think>Your parents', ' live in Bhopal. </thi', 'nk>']),
+      );
+      const agent = makeAgent();
+      const { result } = renderHook(() => useLocalLLM(agent));
+
+      act(() => {
+        result.current.sendMessage('test');
+      });
+
+      await waitFor(
+        () => expect(result.current.status).toBe('idle'),
+        { timeout: 3000 },
+      );
+      expect(
+        result.current.messages.find((m) => m.role === 'assistant')?.content,
+      ).toBe('Your parents live in Bhopal. ');
+    });
+
+    it('never runs a tool call written inside a think block (ux2 D11)', async () => {
+      mockInferStream.mockImplementation(() =>
+        makeTextStream([
+          '<think><tool_call>{"name":"deleteUserFacts","arguments":{"fact_ids":["f1"]}}</tool_call></think>Okay.',
+        ]),
+      );
+      const executeTool = jest.fn().mockResolvedValue({ result: {} });
+      const agent = makeAgent({ executeTool });
+      const { result } = renderHook(() => useLocalLLM(agent));
+
+      act(() => {
+        result.current.sendMessage('test');
+      });
+
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+      expect(executeTool).not.toHaveBeenCalled();
+      expect(result.current.messages.find((m) => m.role === 'assistant')?.content).toBe('Okay.');
+    });
+
     it('adds an assistant message to state during inference', async () => {
       mockInferStream.mockImplementation(() => makeTextStream(['eventual text']));
 

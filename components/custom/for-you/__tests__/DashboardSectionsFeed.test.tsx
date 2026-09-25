@@ -42,6 +42,7 @@ jest.mock('react-native-reanimated', () => {
         ListEmptyComponent,
         testID,
         contentContainerStyle,
+        onContentSizeChange,
     }: any) => {
         const { View } = jest.requireActual('react-native');
         const items = data ?? [];
@@ -71,7 +72,7 @@ jest.mock('react-native-reanimated', () => {
         if (footer) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'lf' }, footer));
         // A View carrying the list's own testID and content style, so a test
         // can read the padding the component handed the list.
-        return ReactLib.createElement(View, { testID, contentContainerStyle }, kids);
+        return ReactLib.createElement(View, { testID, contentContainerStyle, onContentSizeChange }, kids);
     };
     return {
         __esModule: true,
@@ -379,15 +380,14 @@ describe('DashboardSectionsFeed — headline sections', () => {
         expect(getByText('denom:20/3')).toBeTruthy();
     });
 
-    it('still renders title + line, and NO cards or view-all, when nothing cleared the bar', () => {
-        const { getByText, queryAllByText, queryByLabelText, getByLabelText } = renderFeed([
+    // Owner: no empty sections on the Overview, headline scopes included (the
+    // selector already drops a headline scope with no viable story).
+    it('draws nothing for a headline section with no stories', () => {
+        const { queryByText, queryByLabelText } = renderFeed([
             makeHeadlineRow('headline-global', 'headline-global', 20, []),
         ]);
-        expect(getByLabelText('header:forYou.headlineSectionGlobal')).toBeTruthy();
-        expect(getByText('denom:20/0')).toBeTruthy();
-        expect(queryAllByText(/^card:/)).toHaveLength(0);
-        // No "View all" pointing at an empty list — the line IS the content.
-        expect(queryByLabelText('viewall')).toBeNull();
+        expect(queryByLabelText('header:forYou.headlineSectionGlobal')).toBeNull();
+        expect(queryByText(/^denom:/)).toBeNull();
     });
 
     it('drops the "News about:" prefix and does not re-translate the title', () => {
@@ -422,15 +422,6 @@ describe('DashboardSectionsFeed — headline sections', () => {
         });
     });
 
-    // A headline shell carries no groups at all — nothing cleared the
-    // render/section bar upstream — and still renders its denominator line.
-    it('keeps the empty-shell denominator line', () => {
-        const { getByText, queryAllByText } = renderFeed([
-            makeHeadlineRow('headline-global', 'headline-global', 20, []),
-        ]);
-        expect(getByText('denom:20/0')).toBeTruthy();
-        expect(queryAllByText(/^card:/)).toHaveLength(0);
-    });
 });
 
 // ── Every group renders ────────────────────────────────────────────────────
@@ -471,50 +462,51 @@ describe('DashboardSectionsFeed — no importance gate', () => {
     });
 });
 
-describe('DashboardSectionsFeed: empty interest sections (D4)', () => {
+// Owner (reversing D4): "let's get rid of empty sections ... the experience
+// is much better". A section with no stories is not drawn at all on the
+// Overview: no header, no placeholder, no "looking for stories" row. Nothing
+// is persisted, so it appears as soon as a refresh gives it a story.
+describe('DashboardSectionsFeed: empty sections are hidden', () => {
     function emptyRow(factId: string, emptyReason: 'awaiting-first-run' | 'no-match-yet', newInterest = false): FactRow {
         return { ...makeRow(factId, []), emptyReason, newInterest } as FactRow;
     }
 
-    it('renders an empty section with the reason copy and no open button or count', () => {
-        const { getByTestId, getByText, queryByLabelText } = renderFeed([
-            emptyRow('f-new', 'awaiting-first-run'),
-        ]);
-        expect(getByTestId('dashboard-section-empty-f-new')).toBeTruthy();
-        expect(getByText('empty:forYou.emptySection.awaiting')).toBeTruthy();
-        expect(queryByLabelText('viewall')).toBeNull();
-        expect(getByText('total:0')).toBeTruthy();
+    it('draws nothing for an empty section: no header, no placeholder, no reason copy', () => {
+        const r = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)]), emptyRow('f-new', 'awaiting-first-run', true), emptyRow('f-old', 'no-match-yet')]);
+        // Presence first: the populated section is drawn.
+        expect(r.getByLabelText('header:Statement f1')).toBeTruthy();
+        expect(r.queryByLabelText('header:Statement f-new')).toBeNull();
+        expect(r.queryByLabelText('header:Statement f-old')).toBeNull();
+        expect(r.queryByTestId('dashboard-section-empty-f-new')).toBeNull();
+        expect(r.queryByTestId('dashboard-section-new-f-new')).toBeNull();
+        expect(r.queryByText(/emptySection/)).toBeNull();
     });
 
-    it('says the other reason once a run has looked and found nothing', () => {
-        const { getByText } = renderFeed([emptyRow('f-old', 'no-match-yet')]);
-        expect(getByText('empty:forYou.emptySection.none')).toBeTruthy();
-    });
-
-    it('labels a new interest as new', () => {
-        const { getByTestId, queryByTestId } = renderFeed([
-            emptyRow('f-new', 'awaiting-first-run', true),
-            emptyRow('f-old', 'no-match-yet', false),
-        ]);
-        expect(getByTestId('dashboard-section-new-f-new')).toBeTruthy();
-        expect(queryByTestId('dashboard-section-new-f-old')).toBeNull();
-    });
-
-    it('leads with the no-stories element when only empty sections exist', () => {
+    it('with every section empty, shows the Overview\'s own nothing-yet state and no sections', () => {
         const { Text } = require('react-native');
-        const { getByText } = renderFeed([emptyRow('f-new', 'awaiting-first-run')], {
-            noStoriesLead: <Text>lead</Text>,
+        const r = renderFeed([emptyRow('f-new', 'awaiting-first-run'), emptyRow('f-old', 'no-match-yet')], {
+            ListEmptyComponent: <Text testID="nothing-yet">nothing yet</Text>,
         });
-        expect(getByText('lead')).toBeTruthy();
+        expect(r.getAllByTestId('nothing-yet')).toHaveLength(1);
+        expect(r.queryByLabelText(/^header:/)).toBeNull();
+        expect(r.getByTestId('dashboard-stats-card')).toBeTruthy();
     });
 
-    it('does not show the lead once any section has a story', () => {
-        const { Text } = require('react-native');
-        const { queryByText } = renderFeed(
-            [makeRow('f1', [makeGroup('g1', 1, 1)]), emptyRow('f-new', 'awaiting-first-run')],
-            { noStoriesLead: <Text>lead</Text> },
+    it('draws a section as soon as a refresh gives it a story', () => {
+        const r = renderFeed([emptyRow('f-new', 'awaiting-first-run')]);
+        expect(r.queryByLabelText('header:Statement f-new')).toBeNull();
+        r.rerender(
+            <DashboardSectionsFeed
+                breaking={[]}
+                rows={[makeRow('f-new', [makeGroup('g1', 1, 1)])]}
+                openedIds={new Set()}
+                sortSnapshot={EMPTY_SNAPSHOT}
+                onPressSuggestion={jest.fn()}
+                scrollHandler={noopHandler}
+                headerHeight={100}
+            />,
         );
-        expect(queryByText('lead')).toBeNull();
+        expect(r.getByLabelText('header:Statement f-new')).toBeTruthy();
     });
 });
 
@@ -541,18 +533,43 @@ describe('DashboardSectionsFeed: the Overview stats card', () => {
         expect(order.indexOf('dashboard-stats-card')).toBeLessThan(order.indexOf('breaking-strip'));
     });
 
-    it('still leads the no-stories element', () => {
+    it('still leads the nothing-yet state when every section is empty', () => {
         const { Text } = require('react-native');
         const empty = { ...makeRow('f-new', []), emptyReason: 'awaiting-first-run' } as FactRow;
         const r = renderFeed([empty], {
-            noStoriesLead: <Text testID="lead">lead</Text>,
+            ListEmptyComponent: <Text testID="nothing-yet">nothing yet</Text>,
         });
         const order = ids(r);
-        expect(order.indexOf('dashboard-stats-card')).toBeLessThan(order.indexOf('lead'));
+        expect(order.indexOf('dashboard-stats-card')).toBeGreaterThanOrEqual(0);
+        expect(order.indexOf('dashboard-stats-card')).toBeLessThan(order.indexOf('nothing-yet'));
     });
 
     it('renders even with no sections at all', () => {
         const r = renderFeed([]);
         expect(r.getByTestId('dashboard-stats-card')).toBeTruthy();
+    });
+});
+
+// ux2 B3 window: the Overview panel stays mounted as a neighbour of Stories.
+// Off-screen it must not feed the translation scheduler's scroll ticks, and a
+// Dashboard tab re-tap must not scroll or refresh (a feed sync) through it.
+describe('DashboardSectionsFeed: off-screen (active=false)', () => {
+    const tabPress = () => require('@/lib/hooks/use-tab-press-scroll-refresh').useTabPressScrollRefresh as jest.Mock;
+
+    it('sends no scroll tick on a content-size change', () => {
+        const r = renderFeed([], { active: false, onRefresh: jest.fn() });
+        const list = r.UNSAFE_root.findAll((n: any) => n.props?.contentContainerStyle && n.type === 'View')[0];
+        expect(list.props.onContentSizeChange).toBeUndefined();
+        const opts = tabPress().mock.calls.at(-1)[0];
+        expect(opts.onRefresh).toBeUndefined();
+        expect(opts.getOffset()).toBe(0);
+    });
+
+    it('does all of it when active (the default)', () => {
+        const onRefresh = jest.fn();
+        const r = renderFeed([], { onRefresh });
+        const list = r.UNSAFE_root.findAll((n: any) => n.props?.contentContainerStyle && n.type === 'View')[0];
+        expect(typeof list.props.onContentSizeChange).toBe('function');
+        expect(tabPress().mock.calls.at(-1)[0].onRefresh).toBe(onRefresh);
     });
 });

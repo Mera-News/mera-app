@@ -1,0 +1,57 @@
+{
+  "_note": "The owner's case for the ux2 F6 topic-flow measurement: a Nieuw-West home, an Indian origin and the expat status as three facts, Portugal and Madeira visits, and a girlfriend's parents on Porto Santo. Several place words (Netherlands, Portugal, Madeira, EU) sit in two facts at once, which is what makes cross-fact leakage visible here. Attribute keys are the canonical ones (questionnaire-data.ts, combined-fact.ts) so the topic skill is derived from the attribute exactly as the app derives it. No topics yet: a fresh profile. Load with --persona, not --cohort: it has no chat script.",
+  "cohort": "owner-nieuw-west",
+  "facts": [
+    {
+      "id": "o01",
+      "statement": "Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands, EU",
+      "questionnaireAttribute": "location: neighborhood/area, city, and country (preserve specifics)",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000060000,
+      "metadata": { "topics": [] }
+    },
+    {
+      "id": "o02",
+      "statement": "From India",
+      "questionnaireAttribute": "background: country of origin",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000120000,
+      "metadata": { "topics": [] }
+    },
+    {
+      "id": "o03",
+      "statement": "Expat in The Netherlands",
+      "questionnaireAttribute": "background: expat in country of residence",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000180000,
+      "metadata": { "topics": [] }
+    },
+    {
+      "id": "o04",
+      "statement": "Visits Portugal and Madeira",
+      "questionnaireAttribute": "frequent_destinations: frequent travel",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000240000,
+      "metadata": { "topics": [] }
+    },
+    {
+      "id": "o05",
+      "statement": "Girlfriend's parents live in Porto Santo (Vila Baleira), Madeira, Portugal, EU",
+      "questionnaireAttribute": "parents_location: where parents live",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000300000,
+      "metadata": { "topics": [] }
+    }
+  ],
+  "topics": []
+}

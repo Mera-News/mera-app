@@ -4,6 +4,7 @@ import {
   generateTopicsForFact,
   parseTopics,
   parseTopicsDetailed,
+  topicSkillForAttribute,
 } from '../topic-call';
 import type { AgentModelResult } from '../types';
 
@@ -74,6 +75,10 @@ describe('exclusions reach the prompt', () => {
   });
 });
 
+// A non-residence guideline, so the residence place-term guarantee (tested on
+// its own below) does not add a topic to what these cases count.
+const VETO_SKILL = 'topics/interest';
+
 describe('THE VETO: the database is advisory, this is the guarantee', () => {
   it('a declined text the model returns ANYWAY never reaches the caller', async () => {
     // The failure this guards is precisely "the model ignored the prompt":
@@ -82,7 +87,7 @@ describe('THE VETO: the database is advisory, this is the guarantee', () => {
     const deps = depsReturning('["Alkmaar weather", "Alkmaar housing pressure"]');
     const out = await generateTopicsForFact({
       fact: FACT,
-      skillId: 'topics/residence',
+      skillId: VETO_SKILL,
       declinedTopics: ['Alkmaar weather'],
       deps,
     });
@@ -93,7 +98,7 @@ describe('THE VETO: the database is advisory, this is the guarantee', () => {
   it('matches on NORMALISED form, or the veto silently passes everything', async () => {
     const deps = depsReturning('["  ALKMAAR   Weather  "]');
     const out = await generateTopicsForFact({
-      fact: FACT, skillId: 'topics/residence', declinedTopics: ['alkmaar weather'], deps,
+      fact: FACT, skillId: VETO_SKILL, declinedTopics: ['alkmaar weather'], deps,
     });
     expect(out.topics).toEqual([]);
     expect(out.dropped.veto).toBe(1);
@@ -102,7 +107,7 @@ describe('THE VETO: the database is advisory, this is the guarantee', () => {
   it('reports veto and filter drops SEPARATELY so "done with zero" is explainable', async () => {
     const deps = depsReturning('["Alkmaar weather", "Rotterdam port logistics", "Rotterdam logistics port"]');
     const out = await generateTopicsForFact({
-      fact: FACT, skillId: 'topics/residence', declinedTopics: ['Alkmaar weather'], deps,
+      fact: FACT, skillId: VETO_SKILL, declinedTopics: ['Alkmaar weather'], deps,
     });
     expect(out.dropped).toEqual({ veto: 1, filter: 1 });
     expect(out.topics).toEqual(['Rotterdam port logistics']);
@@ -114,7 +119,7 @@ describe('ceiling and parsing', () => {
   it('caps at MAX_TOPICS_PER_FACT and nowhere lower', async () => {
     const many = Array.from({ length: 20 }, (_, i) => `subject${i} news item`);
     const out = await generateTopicsForFact({
-      fact: FACT, skillId: 'topics/residence', deps: depsReturning(JSON.stringify(many)),
+      fact: FACT, skillId: VETO_SKILL, deps: depsReturning(JSON.stringify(many)),
     });
     expect(out.topics).toHaveLength(MAX_TOPICS_PER_FACT);
   });
@@ -122,7 +127,7 @@ describe('ceiling and parsing', () => {
   it('honours a skill body asking for 10 without clamping to something smaller', async () => {
     const ten = Array.from({ length: 10 }, (_, i) => `distinct${i} subject here`);
     const out = await generateTopicsForFact({
-      fact: FACT, skillId: 'topics/residence', deps: depsReturning(JSON.stringify(ten)),
+      fact: FACT, skillId: VETO_SKILL, deps: depsReturning(JSON.stringify(ten)),
     });
     expect(out.topics).toHaveLength(10);
   });
@@ -184,5 +189,157 @@ describe('decoding, with the discipline the scoring decoder uses', () => {
     const out = await generateTopicsForFact({ fact: FACT, skillId: 'topics/residence', deps });
     expect(out.proseAroundArray).toBe(true);
     expect(out.topics).toEqual(['Alkmaar housing']);
+  });
+});
+
+describe('ux2 F1: isolated per fact', () => {
+  it('the prompt carries this fact only, never other facts or a location line', async () => {
+    const deps = depsReturning('["a"]');
+    await generateTopicsForFact({
+      fact: FACT,
+      skillId: 'topics/residence',
+      // A caller that still passes other facts must not reach the prompt.
+      ...({ otherFacts: ['Works as a nurse', 'From India'] } as object),
+      deps,
+    });
+    const msg = deps.callModel.mock.calls[0][0].messages[0].content;
+    expect(msg).not.toMatch(/Other user facts|nurse|India|User location/);
+    expect(msg).toContain('Alkmaar');
+  });
+
+  it('picks the topic guideline from the attribute when the caller named none', () => {
+    expect(topicSkillForAttribute('location: neighborhood/area, city, and country (preserve specifics)')).toBe('topics/residence');
+    expect(topicSkillForAttribute('background: country of origin')).toBe('topics/origin');
+    expect(topicSkillForAttribute('profession: job role and industry')).toBe('topics/profession');
+    expect(topicSkillForAttribute('family: parents location')).toBe('topics/family');
+    expect(topicSkillForAttribute('teams_following')).toBe('topics/interest');
+    expect(topicSkillForAttribute(null)).toBe('topics/generic');
+    expect(topicSkillForAttribute('something else')).toBe('topics/generic');
+  });
+
+  it('a residence fact always gets a topic in the user\'s own place term', async () => {
+    const deps = depsReturning('["Vila Baleira safety", "Madeira ferry strikes"]');
+    const out = await generateTopicsForFact({
+      fact: { statement: 'Lives in Porto Santo (Vila Baleira), Madeira, Portugal, EU' },
+      skillId: 'topics/residence',
+      deps,
+    });
+    expect(out.topics.some((t) => t.includes('Porto Santo'))).toBe(true);
+  });
+
+  it('adds nothing when a topic already names the user\'s term', async () => {
+    const deps = depsReturning('["Porto Santo ferry"]');
+    const out = await generateTopicsForFact({
+      fact: { statement: "Girlfriend's parents live in Porto Santo (Vila Baleira), Madeira, Portugal, EU" },
+      skillId: 'topics/family',
+      deps,
+    });
+    expect(out.topics).toEqual(['Porto Santo ferry']);
+  });
+});
+
+describe('ux2 F6 fix 1: an isolated set never settles empty', () => {
+  function seq(...outputs: string[]) {
+    let i = 0;
+    const callModel = jest.fn(async (_req: Req) => res(outputs[Math.min(i++, outputs.length - 1)]));
+    return { callModel, loadSkill: (id: string) => `SKILL:${id}` };
+  }
+
+  it('retries a well-formed [] once, with a nudge, on the same guideline', async () => {
+    const deps = seq('[]', '["marathon entry rules", "running shoe recalls", "park run safety"]');
+    const out = await generateTopicsForFact({ fact: { statement: 'Runs three times a week' }, skillId: 'topics/interest', deps });
+    expect(deps.callModel).toHaveBeenCalledTimes(2);
+    expect(deps.callModel.mock.calls[1][0].systemPrompt).toBe('SKILL:topics/interest');
+    expect(deps.callModel.mock.calls[1][0].messages[0].content).toMatch(/at least 3 topics about this fact/);
+    expect(out.topics).toHaveLength(3);
+    expect(out.result.content).toContain('marathon');
+  });
+
+  it('falls back to topics/generic when the retry is empty too', async () => {
+    const deps = seq('[]', '[]', '["Polish language exams", "Dutch integration exam changes", "EU language rights"]');
+    const out = await generateTopicsForFact({ fact: { statement: 'Speaks Polish, Dutch and English' }, skillId: 'topics/origin', deps });
+    expect(deps.callModel).toHaveBeenCalledTimes(3);
+    expect(deps.callModel.mock.calls[2][0].systemPrompt).toBe('SKILL:topics/generic');
+    expect(out.topics).toHaveLength(3);
+  });
+
+  it('a guideline that IS generic retries once and stops', async () => {
+    const deps = seq('[]', '[]');
+    const out = await generateTopicsForFact({ fact: { statement: 'x' }, skillId: 'topics/generic', deps });
+    expect(deps.callModel).toHaveBeenCalledTimes(2);
+    expect(out.topics).toEqual([]);
+  });
+
+  it('an ERROR result is not retried: the caller records the failure', async () => {
+    const callModel = jest.fn(async (_req: Req) => ({ ...res(''), error: 'timeout' }));
+    await generateTopicsForFact({ fact: FACT, skillId: 'topics/residence', deps: { callModel, loadSkill: (id: string) => id } });
+    expect(callModel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('ux2 F6 fix 2: the guideline follows what the attribute means', () => {
+  it.each([
+    ['location: residence', 'topics/residence'],
+    ['location: neighborhood/area, city, and country (preserve specifics)', 'topics/residence'],
+    ['profession: job', 'topics/profession'],
+    ['profession: job role and industry', 'topics/profession'],
+    ['background: origin', 'topics/origin'],
+    ['background: country of origin', 'topics/origin'],
+    ['background: expat in country of residence', 'topics/origin'],
+    ['background: languages', 'topics/generic'],
+    ['family: status', 'topics/family'],
+    ['family: children', 'topics/family'],
+    ['parents_location: where parents live', 'topics/family'],
+    ['property: home', 'topics/generic'],
+    ['finance: mortgage', 'topics/generic'],
+    ['finance: investing', 'topics/generic'],
+    ['interest: sport', 'topics/interest'],
+    ['interest: topic', 'topics/interest'],
+    ['lifestyle: exercise', 'topics/interest'],
+    ['lifestyle: diet', 'topics/generic'],
+    ['lifestyle: transport', 'topics/generic'],
+    ['community: volunteering', 'topics/generic'],
+    ['concern: employment', 'topics/generic'],
+    ['education: plans', 'topics/generic'],
+    ['concern: environment', 'topics/generic'],
+    ['travel: frequent', 'topics/generic'],
+    ['frequent_destinations: frequent travel', 'topics/generic'],
+    ['teams_following', 'topics/interest'],
+    ['sports_playing', 'topics/interest'],
+    ['hobbies', 'topics/interest'],
+    ['topics: general interests', 'topics/interest'],
+  ])('%s -> %s', (attribute, skill) => {
+    expect(topicSkillForAttribute(attribute)).toBe(skill);
+  });
+});
+
+describe('ux2 F6 fix 3: the exclusion list is a dedupe list, never a source of subjects', () => {
+  it('drops an existing topic that shares no word with this fact', () => {
+    const msg = buildTopicUserMessage({
+      fact: { statement: 'Child attends a bilingual primary school' },
+      existingTopics: ['Poland news', 'Bilingual schooling', 'Polish community events'],
+      declinedTopics: [],
+      deps: { callModel: jest.fn() },
+    });
+    expect(msg).not.toMatch(/Poland|Polish/);
+    expect(msg).toContain('Bilingual schooling');
+  });
+
+  it('phrases the block as a dedupe list', () => {
+    const msg = buildTopicUserMessage({
+      fact: FACT,
+      existingTopics: ['Alkmaar cheese market'],
+      declinedTopics: ['alkmaar weather'],
+      deps: { callModel: jest.fn() },
+    });
+    expect(msg).toMatch(/Already covered, do not repeat these \(a dedupe list, not a hint about the person\)/);
+    expect(msg).not.toMatch(/existing topics/i);
+  });
+
+  it('declined topics are still passed whatever their words: the veto needs them', () => {
+    const msg = buildTopicUserMessage({
+      fact: FACT, existingTopics: [], declinedTopics: ['Poland news'], deps: { callModel: jest.fn() },
+    });
+    expect(msg).toContain('Poland news');
   });
 });

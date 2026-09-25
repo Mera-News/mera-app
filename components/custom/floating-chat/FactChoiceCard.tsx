@@ -30,6 +30,8 @@ import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { attributeKey, isLocationKey, mayReplaceKey } from '@/lib/mera-harness';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GlyphSafeButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -114,7 +116,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   // (one option) really is one tap.
   const [selected, setSelected] = useState(0);
   const [busy, setBusy] = useState(false);
-  const cardRef = useRef<View>(null);
+  // The settled card's TITLE, not the card: focus needs an accessibility
+  // element, and the card root is no longer one (ux2 batch 26).
+  const cardRef = useRef<React.ComponentRef<typeof Text>>(null);
 
   /**
    * What a replacement would destroy.
@@ -196,6 +200,16 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     && attributeKey(questionnaireAttribute) !== ''
     && !contradicts(replaces.attribute, questionnaireAttribute);
 
+  /**
+   * KEEP BOTH IS ALWAYS OFFERED on a replace card (owner ruling ux2: "there
+   * should always be an option to keep both"): it adds the chosen reading and
+   * leaves the old fact and its topics untouched. `canKeepBoth` above now only
+   * picks the wording and the disclosure: a non-contradicting pair gets the
+   * neutral "Also add this?", a contradiction keeps "Replace this fact?" and
+   * its red block. Offered once the card can name the fact it would keep.
+   */
+  const keepBothOffered = isReplace && replaces !== null;
+
   // `dismissed` and the derived pending/saved split come from the DERIVER, which
   // reads this group's own slot. This component deliberately no longer decides
   // "am I answered" from the presence of a value at `resultKey`: that check was
@@ -212,7 +226,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
 
   const handleAdd = (mode: 'replace-or-add' | 'keep-both' = 'replace-or-add') => async () => {
     if (busy || stale || dismissed || acceptBlocked) return;
-    if (mode === 'keep-both' && !canKeepBoth) return;
+    if (mode === 'keep-both' && !keepBothOffered) return;
     setBusy(true);
     void hapticLight();
     try {
@@ -232,11 +246,17 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           ...(topicSkillId ? { skillId: topicSkillId } : {}),
         },
       ]);
+      // KEEP BOTH ALREADY ANSWERED THE CONFLICT with the fact it keeps (ux2
+      // batch 25, D4): a second "Possible conflict" card asked the same thing.
+      const shown =
+        mode === 'keep-both' && replacesFactId
+          ? conflicts.filter((c) => c.existingFactId !== replacesFactId)
+          : conflicts;
       // Only THIS group's slot changes. Every sibling keeps its own state.
       resolveGroup(
         resultKey,
         groupId,
-        { status: 'saved', statements: [statement], savedFacts, conflicts },
+        { status: 'saved', statements: [statement], savedFacts, conflicts: shown },
         baseResult,
       );
       void hapticSuccess();
@@ -275,30 +295,35 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   if (dismissed) {
     return (
       <Animated.View
-        ref={cardRef}
         entering={cardEntering}
         style={[styles.card, styles.cardSettled]}
-        accessible
+        // NOT `accessible` (ux2 batch 26): as one element it swallowed the Undo
+        // button, which VoiceOver could not reach, and exposed the header glyph.
+        // The title, the summary and Undo are now separate elements.
         accessibilityLiveRegion="polite"
         testID={`fact-choice-dismissed-${groupIndex}`}
       >
         <View style={styles.headerRow}>
-          <MaterialIcons name="close" size={18} color={ACCENT} />
-          <Text size="sm" bold style={styles.title}>
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={18} color={ACCENT} />
+          <Text ref={cardRef} size="sm" bold style={styles.title}>
             {t('factChoice.dismissedTitle')}
           </Text>
           {!stale && (
+            // A 44pt-tall frame around the 32pt pill (ux2 batch 27). The
+            // negative margin keeps the header row the height it was.
             <Pressable
               onPress={handleUndo}
               hitSlop={12}
-              style={styles.undoButton}
+              style={styles.undoFrame}
               accessibilityRole="button"
               accessibilityLabel={t('topicPlan.undo')}
               testID={`fact-choice-undo-${groupIndex}`}
             >
-              <Text size="xs" bold style={styles.undoText}>
-                {t('topicPlan.undo')}
-              </Text>
+              <View style={styles.undoButton} testID={`fact-choice-undo-pill-${groupIndex}`}>
+                <Text size="xs" bold style={styles.undoText}>
+                  {t('topicPlan.undo')}
+                </Text>
+              </View>
             </Pressable>
           )}
         </View>
@@ -317,6 +342,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     <Animated.View style={[styles.card, stale && styles.cardSettled]}>
       <View style={styles.headerRow}>
         <MaterialIcons
+          {...DECORATIVE_ICON_A11Y}
           name={isReplace ? 'swap-horiz' : 'help-outline'}
           size={18}
           color={ACCENT}
@@ -337,17 +363,22 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           const isSel = idx === selected;
           const interactive = !single && !stale && !busy;
           return (
-            <Pressable
+            // Childless button over a hidden visual (ux2 batch 26): the radio
+            // glyph inside the labelled row surfaced as its own StaticText.
+            <GlyphSafeButton
               key={`${resultKey}-${groupIndex}-${idx}`}
               onPress={interactive ? () => setSelected(idx) : undefined}
               disabled={!interactive}
               accessibilityRole={single ? 'text' : 'radio'}
               accessibilityState={{ selected: isSel }}
+              // The reading itself, never the radio glyph before it.
+              accessibilityLabel={option}
               testID={`fact-choice-option-${groupIndex}-${idx}`}
-              style={[styles.optionRow, isSel && !single && styles.optionRowSelected]}
+              visualStyle={[styles.optionRow, isSel && !single && styles.optionRowSelected]}
             >
               {!single && (
                 <MaterialIcons
+                  {...DECORATIVE_ICON_A11Y}
                   name={isSel ? 'radio-button-checked' : 'radio-button-unchecked'}
                   size={18}
                   color={isSel ? ACCENT : 'rgb(150, 150, 150)'}
@@ -357,7 +388,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
                   reaches addFact. Only the RENDERING is translated — the commit
                   reads `options[selected]`, never what is drawn here. */}
               <TranslatableDynamic text={option} size="sm" style={styles.optionText} numberOfLines={3} />
-            </Pressable>
+            </GlyphSafeButton>
           );
         })}
       </View>
@@ -374,7 +405,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
       {canKeepBoth && !stale && replaces && (
         <View style={styles.replaceBox} testID={`fact-choice-overlaps-${groupIndex}`}>
           <View style={styles.replaceHeader}>
-            <MaterialIcons name="compare-arrows" size={16} color={NEUTRAL_LABEL} />
+            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="compare-arrows" size={16} color={NEUTRAL_LABEL} />
             <Text size="xs" bold style={styles.overlapLabel}>
               {t('factChoice.overlapsLabel')}
             </Text>
@@ -394,7 +425,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
       {isReplace && !canKeepBoth && !stale && (
         <View style={styles.replaceBox} testID={`fact-choice-replaces-${groupIndex}`}>
           <View style={styles.replaceHeader}>
-            <MaterialIcons name="warning-amber" size={16} color={DESTRUCTIVE} />
+            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="warning-amber" size={16} color={DESTRUCTIVE} />
             <Text size="xs" bold style={styles.replaceLabel}>
               {replaces ? t('factChoice.replacesLabel') : null}
             </Text>
@@ -430,21 +461,10 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           {t('factChoice.expired')}
         </Text>
       ) : isReplace ? (
-        // STACKED, so German-length labels never squeeze. The one filled
-        // (accent) button is the safe choice when it exists: Keep both.
-        // Replace is outlined in the destructive tint; Skip is plain text.
+        // STACKED, so German-length labels never squeeze. Owner order (ux2):
+        // Replace (outlined, destructive tint), Keep both (the one filled,
+        // safe choice), Skip as plain text.
         <View style={styles.buttonStack}>
-          {canKeepBoth && (
-            <Button
-              testID={`fact-choice-keep-both-${groupIndex}`}
-              onPress={handleAdd('keep-both')}
-              isDisabled={busy}
-              className="rounded-full bg-primary-400"
-              size="sm"
-            >
-              <ButtonText className="text-white text-sm">{t('factChoice.keepBoth')}</ButtonText>
-            </Button>
-          )}
           <Button
             testID={`fact-choice-add-${groupIndex}`}
             onPress={handleAdd('replace-or-add')}
@@ -456,6 +476,17 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
               {t('factChoice.replace')}
             </ButtonText>
           </Button>
+          {keepBothOffered && (
+            <Button
+              testID={`fact-choice-keep-both-${groupIndex}`}
+              onPress={handleAdd('keep-both')}
+              isDisabled={busy}
+              className="rounded-full bg-primary-400"
+              size="sm"
+            >
+              <ButtonText className="text-white text-sm">{t('factChoice.keepBoth')}</ButtonText>
+            </Button>
+          )}
           <Pressable
             testID={`fact-choice-dismiss-${groupIndex}`}
             onPress={handleDismiss}
@@ -515,6 +546,8 @@ const styles = StyleSheet.create({
   // floor for body text. This is the settled state's only prose, so it is the
   // one place that mattered.
   settledSub: { color: 'rgb(200, 200, 200)' },
+  // A number, not a class: NativeWind rem is 14.
+  undoFrame: { minHeight: 44, justifyContent: 'center', marginVertical: -6 },
   undoButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,

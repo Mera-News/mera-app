@@ -765,7 +765,7 @@ describe('destructive and place guards', () => {
     );
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'drop it', deps });
     expect(deleteUserFacts).not.toHaveBeenCalled();
-    expect(out.legs[0].toolResults[0].result).toEqual({ error: 'confirm with ask_choice first' });
+    expect(out.legs[0].toolResults[0].result).toMatchObject({ error: expect.stringMatching(/card asks the user to confirm/) });
   });
 
   // Owner ruling ux1 Q1: a SAME-KEY replace needs no chip (the card is the
@@ -855,6 +855,29 @@ describe('bindChoicePayloads', () => {
   it('gives an unmatched option a null payload rather than a wrong one', () => {
     const bound = bindChoicePayloads(['Neither of those'], [AMS]);
     expect(bound[0].payload).toBeNull();
+  });
+
+  it('ux2 batch 27: a longer place wins over a shorter one it contains, in any candidate order', () => {
+    // The model wrote exactly these three options 5 of 5 times on staging
+    // (run 20260925-175739). By first substring hit, "Newcastle-under-Lyme"
+    // bound to Newcastle, New South Wales, and its tap saved the wrong place.
+    const TYNE = { locality: 'Newcastle upon Tyne', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' } as const;
+    const NSW = { locality: 'Newcastle', admin1: 'New South Wales', countryCode: 'AU', countryName: 'Australia', bloc: 'OTHER' } as const;
+    const LYME = { locality: 'Newcastle-under-Lyme', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' } as const;
+    const options = ['Newcastle upon Tyne', 'Newcastle', 'Newcastle-under-Lyme'];
+    for (const order of [[TYNE, NSW, LYME], [NSW, LYME, TYNE], [LYME, TYNE, NSW]]) {
+      const bound = bindChoicePayloads(options, order as never);
+      expect(bound.map((b) => (b.payload as { locality: string } | null)?.locality)).toEqual([
+        'Newcastle upon Tyne', 'Newcastle', 'Newcastle-under-Lyme',
+      ]);
+    }
+  });
+
+  it('a candidate matching district AND city beats one matching the city alone', () => {
+    const CITY = { ...AMS, neighbourhood: undefined };
+    const NOORD = { ...AMS, neighbourhood: 'Noord' };
+    const bound = bindChoicePayloads(['Noord, Amsterdam'], [CITY, NOORD] as never);
+    expect((bound[0].payload as { neighbourhood?: string }).neighbourhood).toBe('Noord');
   });
 });
 

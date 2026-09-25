@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{total}}개 중 {{done}}개 기사를 내려받았습니다",
       "chunks": {
-        "ready": "{{total}}개 분석 배치 중 {{ready}}개 완료",
-        "a11y": "분석 배치: {{total}}개 중 {{ready}}개 완료"
+        "ready": "{{total}}개 분석 배치 중 {{ready}}개 완료"
       },
       "stageA11y": "{{total}}단계 중 {{index}}단계: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,",
     "reasonUnavailable": "Mera가 이 기사에 대한 메모를 작성하지 못했어요.",
     "loadingA11y": "피드를 불러오는 중",
-    "newStoriesPill": "새 소식",
     "translatingCaption": "번역 중…",
     "updatedJustNow": "방금 업데이트됨"
   },
@@ -263,7 +261,7 @@
     "share": "공유",
     "shareVia": "{{downloadUrl}}를 통해 공유됨",
     "sourceCountryGlobal": "글로벌",
-    "sourceCountryA11y": "출처 국가: {{country}}. 탭하면 국가 이름이 표시됩니다.",
+    "sourceCountryA11y": "출처 국가: {{country}}. 탭하면 국가가 표시되고, 국가 이름을 탭하면 해당 국가의 매체를 볼 수 있습니다.",
     "readOn": "{{publication}}에서 읽기",
     "readOnGoogleTranslate": "구글 번역으로 읽기",
     "linkUnavailable": "이 링크는 안전하게 열 수 없으므로 여기서 사용할 수 없습니다.",
@@ -294,7 +292,9 @@
     "addToExplore": "탐색에 추가",
     "addedToExplore": "탐색에 추가됨",
     "badgeGovernment": "정부 출처",
-    "badgeRegulator": "공식 기관"
+    "badgeRegulator": "공식 기관",
+    "sectionCountries": "국가",
+    "sectionPublications": "매체"
   },
   "clusterDetail": {
     "translatable": "이 기사는 {{language}}(으)로 작성되었어요. 읽는 동안 기기가 번역해 줄 수 있어요. 번역이 안 되면 구글 번역으로 사이트를 열 수 있어요. 이 경우 구글을 통해 열람하게 된다는 점만 참고하세요.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "관련 주제와 찾은 기사도 함께 삭제되고, Mera는 이에 대한 뉴스를 더 이상 찾지 않습니다.",
     "deletingFact": "삭제 중...",
     "yesDelete": "예, 삭제합니다",
-    "refreshSuggestions": "추천 새로고침",
-    "refreshingSuggestions": "새로고침 중...",
-    "refreshSuggestionsSuccessTitle": "추천 새로고침 완료",
-    "refreshSuggestionsSuccessDescription": "새로운 맞춤 추천이 생성되고 있습니다.",
-    "refreshSuggestionsFailedTitle": "새로고침 실패",
-    "refreshSuggestionsFailedDescription": "추천을 새로고침할 수 없습니다. 다시 시도해 주세요.",
-    "personaUpdatedRefreshHint": "페르소나를 업데이트하셨군요. 피드를 다시 생성해 드릴까요?",
     "articleCount_one": "기사 {{count}}개",
     "articleCount_other": "기사 {{count}}개",
     "addTopic": "토픽 추가",
@@ -783,7 +776,13 @@
     "topicGenFailed": "이 주제에 대한 토픽을 생성할 수 없습니다.",
     "topicGenRetry": "재시도",
     "aiUsageNoticeGeneral": "Mera도 실수할 수 있으니 중요한 내용은 확인하세요.",
-    "trackChooseHint": "팔로우할 항목을 고르세요"
+    "trackChooseHint": "팔로우할 항목을 고르세요",
+    "factDeletePendingTitle": "프로필에서 제거될 예정",
+    "saveAsWritten": "쓴 그대로 저장",
+    "factDeleteRemove": "삭제",
+    "factDeleteKeep": "유지",
+    "factDeleteKept": "아무것도 삭제하지 않았습니다.",
+    "topicsSavedHint": "주제가 저장되었습니다! 계속 정보를 추가하거나 {{close}}을(를) 탭해 둘러보기를 시작하세요."
   },
   "articleFeedback": {
     "thumbsUp": "좋아요",
@@ -876,7 +875,8 @@
     "formError": "필수 항목을 모두 입력해 주세요.",
     "emailError": "올바른 이메일 주소를 입력해 주세요.",
     "captureScreenshotError": "스크린샷 촬영에 실패했습니다.",
-    "genericError": "예기치 않은 오류로 인해 피드백을 보낼 수 없습니다."
+    "genericError": "예기치 않은 오류로 인해 피드백을 보낼 수 없습니다.",
+    "chatAttachmentNote": "Mera와의 채팅이 이 신고에 첨부됩니다."
   },
   "observability": {
     "title": "관찰성",
@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "새로운 관심사를 알려 주시면 피드에 추가할게요.",
     "editFacts": "편집",
-    "planUsage": "오늘 {{limit}}개 중 {{used}}개 분석"
+    "planUsage": "오늘 {{limit}}개 중 {{used}}개 분석",
+    "updatingAllFacts": "모든 정보 업데이트 중",
+    "pleaseWait": "잠시 기다려 주세요"
   },
   "facts": {
     "screenTitle": "내 정보",
@@ -2568,7 +2570,11 @@
     "titleAlsoAdd": "이것도 추가할까요?",
     "pendingHint": "위에서 옵션을 고르거나 답을 입력하세요.",
     "overlapsLabel": "겹치는 정보",
-    "overlapsReplaceNote": "바꾸면 이 정보와 관련 주제가 삭제돼요."
+    "overlapsReplaceNote": "바꾸면 이 정보와 관련 주제가 삭제돼요.",
+    "replaceAll": "모두 바꾸기",
+    "keepAll": "모두 유지",
+    "replaceAllA11y": "{{count}}개 제안으로 모두 바꾸기",
+    "keepAllA11y": "기존 정보를 유지하고 {{count}}개 제안 모두 추가"
   },
   "subscriptions": {
     "sectionTitle": "구독 중인 매체",
@@ -2730,37 +2736,36 @@
       "질문을 정리하고 있어요."
     ],
     "queued": [
-      "요청을 순서대로 놓고 있어요.",
-      "몇 가지가 함께 돌아가고 있어요. 다음은 회원님 차례예요."
+      "휴대폰에서 요청이 다음 순서입니다."
     ],
     "securing": [
-      "모델만 열 수 있도록 메시지를 잠그고 있어요.",
-      "보낸 말은 휴대폰을 떠나기 전에 암호화돼요."
+      "신뢰할 수 있는 환경의 모델만 읽을 수 있도록 메시지를 암호화하는 중입니다.",
+      "보내기 전에 휴대폰에서 내용이 암호화됩니다."
     ],
     "attesting": [
-      "모델과의 비공개 통로를 만들고 있어요.",
-      "회원님과 Mera 사이에만 남도록 열쇠를 가져오고 있어요.",
-      "비공개 대화는 준비하는 데 잠시 걸려요."
+      "신뢰할 수 있는 환경에서 사용자와 모델 사이에 보안 연결을 설정하는 중입니다.",
+      "모델의 신뢰할 수 있는 환경에서 키를 가져오는 중입니다. 이 내용은 모델만 읽을 수 있습니다."
     ],
     "thinking": [
-      "Mera가 보낸 내용을 읽고 있어요.",
-      "가장 좋은 답변 방법을 찾고 있어요."
+      "모델이 메시지를 읽고 있습니다.",
+      "가장 좋은 답을 찾고 있습니다."
     ],
     "retrying": [
-      "평소보다 오래 걸리고 있어요. Mera가 다른 경로를 시도하고 있어요.",
-      "계속 진행 중이에요. 기다려 주셔서 고마워요."
+      "평소보다 오래 걸리고 있습니다. 다른 보안 경로를 시도하는 중입니다.",
+      "아직 처리 중입니다. 기다려 주셔서 감사합니다."
     ],
     "deviceLoading": [
-      "휴대폰에서 모델을 깨우고 있어요.",
-      "불러오는 동안 첫 답변은 조금 더 걸려요."
+      "휴대폰에서 모델을 불러오는 중입니다.",
+      "불러오는 동안 첫 답변은 조금 더 걸립니다."
     ],
     "devicePreparing": [
-      "Mera가 이미 알고 있는 내용을 모으고 있어요.",
-      "답변할 수 있도록 휴대폰을 준비하고 있어요."
+      "휴대폰이 답변을 준비하는 중입니다."
     ],
     "deviceThinking": [
-      "휴대폰 안에서 생각하고 있어요.",
-      "이 작업은 기기에서 실행되므로 아무것도 전송되지 않아요."
+      "휴대폰에서 생각하는 중입니다. 기기 밖으로 나가는 것은 없습니다."
+    ],
+    "webSearch": [
+      "기기에서 웹을 검색하는 중…"
     ]
   },
   "headerNarration": {
@@ -2799,12 +2804,16 @@
       ]
     },
     "nudges": [
-      "나중에 읽게 저장",
-      "저장한 기사가 있어요",
-      "한 기사를 제대로",
-      "주요 헤드라인 보기",
-      "최신이 최선은 아니에요",
-      "지켜볼 필요 없어요"
+      "기사 전체 읽기",
+      "시간이 없나요? 저장하기",
+      "세계 뉴스 확인했나요?",
+      "내 나라 확인했나요?",
+      "뉴스 팔로우하기",
+      "팔로우한 뉴스 확인",
+      "프로필이 최신인가요?",
+      "관심 없나요? 알려주세요",
+      "좋아요로 더 보기",
+      "소중한 사람과 공유"
     ],
     "a11y": "Mera가 이 기기에서 뉴스를 업데이트하고 있어요."
   },

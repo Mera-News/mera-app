@@ -627,16 +627,15 @@ describe('stepFetchTopicIds', () => {
     for (const t of topics) expect('strictMatch' in t).toBe(false);
   });
 
-  // Two rows can carry the same NORMALIZED text and are sent as two entries
-  // (buildRetrievalProfile does not dedupe). Keying the flag on the normalized
-  // text is what stops the same text going out strict on one entry and loose on
-  // the other.
-  it('gives every entry sharing a normalized text the same flag', async () => {
+  // Two rows can carry the same NORMALIZED text. buildRetrievalProfile
+  // collapses them into ONE entry before its cap, and the flag, keyed on the
+  // normalized text, is the one both rows would have had.
+  it('sends a normalized text once, with the flag its rows share', async () => {
     const topics = await topicsSentFor([
       { id: 't1', text: 'Gaza Ceasefire', provenance: 'tracked' },
       { id: 't2', text: '  gaza   ceasefire  ', provenance: 'tracked' },
     ]);
-    expect(topics).toHaveLength(2);
+    expect(topics).toHaveLength(1);
     for (const t of topics) expect(t.strictMatch).toBe(true);
   });
 

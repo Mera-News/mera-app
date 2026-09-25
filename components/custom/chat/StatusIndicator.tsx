@@ -14,6 +14,7 @@
 // the failure is always in WORDS and never colour or a glyph alone.
 
 import { Text } from '@/components/ui/text';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
@@ -63,17 +64,22 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   const a11y = label ? `${label}, ${stateWord}` : stateWord;
 
   return (
-    <View
-      style={styles.row}
-      accessible
-      accessibilityLabel={failureLine ? `${a11y}. ${failureLine}` : a11y}
-      testID={testID}
-    >
+    // The WORDS are the accessible element and the glyph sits beside them,
+    // hidden (ux2 batch 26): on iOS a glyph under ANY accessible ancestor
+    // surfaces as its own StaticText, hidden props and all.
+    <View style={styles.row}>
       <View style={[styles.glyph, { width: glyph, height: glyph }]}>
         {status === 'pending' ? (
-          <ActivityIndicator size="small" color={ACCENT} testID={testID && `${testID}-spinner`} />
+          // Not an element of its own: the state word is in the label beside it.
+          <ActivityIndicator
+            size="small"
+            color={ACCENT}
+            accessible={false}
+            testID={testID && `${testID}-spinner`}
+          />
         ) : (
           <MaterialIcons
+            {...DECORATIVE_ICON_A11Y}
             name={status === 'done' ? 'check' : 'block'}
             size={glyph}
             color={status === 'done' ? ACCENT : FAILED}
@@ -82,7 +88,12 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
         )}
       </View>
 
-      <View style={styles.body}>
+      <View
+        style={styles.body}
+        accessible
+        accessibilityLabel={failureLine ? `${a11y}. ${failureLine}` : a11y}
+        testID={testID}
+      >
         {label !== undefined && (
           // Two lines, tail-truncated. German and Dutch run long and a
           // mid-word cut is worse than a wrap.

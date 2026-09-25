@@ -22,6 +22,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, View } from 'react-native';
 import { actionDisplay, isRevertible, sourceLabelKey } from './action-display';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 const ACCENT = '#EDA77E';
 const MUTED = 'rgb(115,115,115)';
@@ -168,6 +169,11 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                 </VStack>
             ) : (
                 <FlatList
+                    // Rows below the first screen ask for their translation only
+                    // when a scroll tick finds them on screen (lib/visibility-tick).
+                    onScroll={notifyScrollTick}
+                    scrollEventThrottle={16}
+                    onContentSizeChange={notifyScrollTick}
                     data={items}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}

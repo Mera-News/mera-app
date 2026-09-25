@@ -39,10 +39,7 @@ jest.mock('@/components/ui/pressable', () => {
   const { Pressable } = require('react-native');
   return { Pressable };
 });
-jest.mock('@expo/vector-icons', () => {
-  const { View } = require('react-native');
-  return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
@@ -86,7 +83,8 @@ describe('TabExplainerButton', () => {
     // device. The -10 margin keeps its layout footprint at the 24pt glyph, so
     // no header row reflows and the glyph does not move.
     const { StyleSheet } = require('react-native');
-    const style = StyleSheet.flatten(button.props.style);
+    // The frame is the wrapper; the button over the glyph is childless.
+    const style = StyleSheet.flatten(screen.getByTestId('feed-explainer-open-frame').props.style);
     expect(style).toMatchObject({ width: 44, height: 44, margin: -10, alignItems: 'center', justifyContent: 'center' });
     expect(button.props.hitSlop).toBeUndefined();
   });
@@ -149,4 +147,37 @@ describe('the explainer copy', () => {
     const en = JSON.parse(fs.readFileSync(path.join(LOCALES_DIR, 'en.json'), 'utf8'));
     for (const key of keys) expect(String(get(en, key))).not.toMatch(/open source/i);
   });
+});
+
+// Every icon-font glyph must be hidden itself and sit under no accessible
+// element: iOS surfaces any other as its own StaticText (captured, ux2).
+const glyphProblems = (root: any): string[] => {
+    const glyphs = root.findAll(
+        (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+    );
+    if (glyphs.length === 0) return ['no glyph rendered'];
+    const out: string[] = [];
+    for (const g of glyphs) {
+        if (
+            g.props.accessible !== false ||
+            g.props.accessibilityElementsHidden !== true ||
+            g.props.importantForAccessibility !== 'no-hide-descendants'
+        ) {
+            out.push(`glyph ${JSON.stringify(g.props.children)} not hidden`);
+        }
+        for (let p: any = g.parent; p; p = p.parent) {
+            if (p.props?.accessible === true) {
+                out.push(`glyph under accessible ${p.props.testID ?? p.type}`);
+                break;
+            }
+        }
+    }
+    return out;
+};
+
+it('keeps the "?" glyph out of the button, which is childless', () => {
+    const r = render(<TabExplainerButton tab="feed" testID="feed-explainer-open" />);
+    expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
+    const b = r.getByTestId('feed-explainer-open');
+    expect(b.findAll((n: any) => n !== b && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
 });

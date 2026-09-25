@@ -60,6 +60,8 @@ import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FactCheckCard from '@/components/custom/fact-checks/FactCheckCard';
 import { useStoredFactCheck } from '@/lib/fact-check/use-stored-fact-check';
+import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface ArticleDetailScreenProps {
     articleId: string;
@@ -141,7 +143,7 @@ const SubscribedCoverageBlock: React.FC<{ readonly articleId: string }> = ({ art
             <VStack space="sm">
                 {coverage.publicationName ? (
                     <Text size="sm" className="text-gray-400">
-                        {coverage.publicationName}
+                        <DisplayPublicationName name={coverage.publicationName} />
                     </Text>
                 ) : null}
                 {coverage.titleEn ? (
@@ -615,6 +617,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 <AbstractGradientBackdrop />
 
                 <ScrollView
+                    // Rows below the first screen ask for their translation only
+                    // when a scroll tick finds them on screen (lib/visibility-tick).
+                    onScroll={notifyScrollTick}
+                    scrollEventThrottle={16}
+                    onContentSizeChange={notifyScrollTick}
                     contentContainerStyle={{
                         flexGrow: 1,
                         justifyContent: orphanFactChecks.length > 0 ? 'flex-start' : 'center',

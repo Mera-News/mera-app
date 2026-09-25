@@ -19,6 +19,9 @@ const DEFAULT_PRIORITY: Record<InferenceJobType, number> = {
   // Migrating a legacy follow to the topic model — a background nicety, same low
   // priority as story_headline so it never contends with topic generation.
   tracked_story_migrate: 20,
+  // One fact of the deferred combination pass. Behind topic_gen (10) so the
+  // isolated topics a chat just saved drain first, ahead of the niceties.
+  topic_combo: 15,
 };
 
 const DEFAULT_MAX_ATTEMPTS = 3;
@@ -49,11 +52,20 @@ export async function enqueueJob(
 /**
  * Dequeue the next pending job (lowest priority number = highest priority, then oldest).
  * Returns null if no pending jobs.
+ *
+ * `excludeTypes` is the queue's in-memory DEFER gate. It must remove the type
+ * from the query itself, not be checked after it: this takes only the head row,
+ * so a deferred job skipped after the fact would still be the head on every
+ * poll and would starve every lower-priority job behind it.
  */
-export async function dequeueJob(): Promise<InferenceJobModel | null> {
+export async function dequeueJob(opts?: {
+  excludeTypes?: InferenceJobType[];
+}): Promise<InferenceJobModel | null> {
+  const excluded = opts?.excludeTypes ?? [];
   const pending = await jobsCollection
     .query(
       Q.where('status', 'pending'),
+      ...(excluded.length > 0 ? [Q.where('job_type', Q.notIn(excluded))] : []),
       Q.sortBy('priority', Q.asc),
       Q.sortBy('created_at', Q.asc),
       Q.take(1),
@@ -212,4 +224,22 @@ export async function getActiveTopicGenFactIds(): Promise<Set<string>> {
     if (typeof factId === 'string') factIds.add(factId);
   }
   return factIds;
+}
+
+/**
+ * Pending + running jobs of every type EXCEPT `types`. The queue's drain check:
+ * `onDrain` callers wait for their own work (a fact's "generating more"), and
+ * a combination pass behind it, which can sit deferred for as long as the
+ * device is offline, must not hold that spinner up.
+ */
+export async function countActiveJobsExcluding(types: InferenceJobType[]): Promise<number> {
+  const rows = await jobsCollection
+    .query(
+      Q.where('status', Q.oneOf(['pending', 'running'])),
+      ...(types.length > 0 ? [Q.where('job_type', Q.notIn(types))] : []),
+    )
+    .fetch();
+  return rows.filter(
+    (j) => (j.status === 'pending' || j.status === 'running') && !types.includes(j.jobType),
+  ).length;
 }

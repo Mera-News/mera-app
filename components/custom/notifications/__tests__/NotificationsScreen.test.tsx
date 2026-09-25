@@ -10,14 +10,16 @@ jest.mock('react-i18next', () => ({
     t: (k: string, o?: Record<string, unknown>) => (o && 'count' in o ? `${k}:${o.count}` : k),
   }),
 }));
-jest.mock('@/components/custom/config-panel/DrillDownHeader', () => ({ __esModule: true, default: () => null }));
+// Renders only the screen's own right action (Clear all), which it passes in.
+jest.mock('@/components/custom/config-panel/DrillDownHeader', () => ({ __esModule: true, default: (p: any) => p.rightAction ?? null }));
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/ui/box', () => ({ Box: (p: any) => require('react').createElement(require('react-native').View, p) }));
 jest.mock('@/components/ui/hstack', () => ({ HStack: (p: any) => require('react').createElement(require('react-native').View, p) }));
 jest.mock('@/components/ui/vstack', () => ({ VStack: (p: any) => require('react').createElement(require('react-native').View, p) }));
 jest.mock('@/components/ui/pressable', () => ({ Pressable: (p: any) => require('react').createElement(require('react-native').Pressable, p) }));
 jest.mock('@/components/ui/text', () => ({ Text: (p: any) => require('react').createElement(require('react-native').Text, p) }));
-jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
+// Real icon-font glyphs, so a glyph under an accessible element is caught.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 // The real FlatList pulls in a native ScrollView spec jest cannot parse; a plain
 // map renders the same rows.
 jest.mock('react-native/Libraries/Lists/FlatList', () => {
@@ -101,4 +103,78 @@ it('states the cleanups waiting now, not the count stamped when the row was writ
   const screen = render(<NotificationsScreen onBack={jest.fn()} />);
   await act(async () => {});
   expect(screen.getByText('hygiene.notificationBody:2')).toBeTruthy();
+});
+
+// Captured (ux2 batch 27): a row Button read "<glyph>, Fact check ready, ...",
+// its icon inside the accessible row. Clear all had its glyph inside too.
+it('exposes no private-use StaticText anywhere: row icons and Clear all', async () => {
+  mockRows = [row({
+    type: 'fact_check_done',
+    title: 'factCheck.notify.title',
+    body: 'factCheck.notify.bodyNone',
+    actionsJson: JSON.stringify([{ id: 'open-fact-check', labelKey: 'factCheck.notify.open' }]),
+  })];
+  const r = render(<NotificationsScreen onBack={jest.fn()} />);
+  await act(async () => {});
+  const glyphs = r.UNSAFE_root.findAll(
+    (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+  );
+  // The row icon and the Clear all glyph.
+  expect(glyphs.length).toBe(2);
+  for (const g of glyphs) {
+    expect(g.props.accessible).toBe(false);
+    expect(g.props.accessibilityElementsHidden).toBe(true);
+    expect(g.props.importantForAccessibility).toBe('no-hide-descendants');
+    for (let p: any = g.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+  }
+});
+
+it('keeps Clear all a labelled 44pt button', async () => {
+  mockRows = [row({})];
+  const { StyleSheet } = require('react-native');
+  const r = render(<NotificationsScreen onBack={jest.fn()} />);
+  await act(async () => {});
+  const clear = r.getByTestId('notifications-clear-all');
+  expect(clear.props.accessibilityLabel).toBe('notificationCenter.clearAll');
+  // The 44pt frame is the button's own parent, pulled back to the 36pt ring by
+  // negative margins: a button overflowing its parent can miss taps on Android.
+  const frame = StyleSheet.flatten(r.getByTestId('notifications-clear-all-frame').props.style);
+  expect(frame).toMatchObject({ width: 44, height: 44, margin: -4 });
+  expect(StyleSheet.flatten(clear.props.style)).toMatchObject({ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 });
+});
+
+// The action chips sit inside the accessible row, so VoiceOver could not reach
+// them. Each is a custom action on the row, wired to the chip's own handler;
+// the chips stay as they are for touch.
+describe('row action chips for VoiceOver', () => {
+  const hygieneRow = () => row({
+    id: 'h1',
+    type: 'hygiene',
+    title: 'hygiene.notificationTitle',
+    body: 'hygiene.notificationBody',
+    actionsJson: JSON.stringify([{ id: 'review-hygiene', labelKey: 'hygiene.reviewChip' }]),
+  });
+
+  it('lists each chip as a named action on the row, and labels the row without the chips', async () => {
+    mockRows = [hygieneRow()];
+    const r = render(<NotificationsScreen onBack={jest.fn()} />);
+    await act(async () => {});
+    const rowEl = r.getByTestId('notification-row-h1');
+    expect(rowEl.props.accessibilityActions).toEqual([{ name: 'chip:review-hygiene', label: 'hygiene.reviewChip' }]);
+    expect(rowEl.props.accessibilityLabel.startsWith('hygiene.notificationTitle, hygiene.notificationBody')).toBe(true);
+    expect(rowEl.props.accessibilityLabel).not.toContain('hygiene.reviewChip');
+  });
+
+  it('runs the chip handler from the row action, same as a tap on the chip', async () => {
+    mockRows = [hygieneRow()];
+    const r = render(<NotificationsScreen onBack={jest.fn()} />);
+    await act(async () => {});
+    await act(async () => {
+      fireEvent(r.getByTestId('notification-row-h1'), 'accessibilityAction', { nativeEvent: { actionName: 'chip:review-hygiene' } });
+    });
+    expect(mockPush).toHaveBeenCalledWith('/logged-in/hygiene-review');
+    mockPush.mockClear();
+    await act(async () => { fireEvent.press(r.getByText('hygiene.reviewChip')); });
+    expect(mockPush).toHaveBeenCalledWith('/logged-in/hygiene-review');
+  });
 });

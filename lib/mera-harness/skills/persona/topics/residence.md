@@ -21,8 +21,6 @@ examples:
   - "Gràcia street safety"
   - "Gràcia housing pressure"
   - "Barcelona metro disruptions"
-  - "Barcelona school places"
-  - "Catalonia nursing pay dispute"
   - "Spain rail strikes"
   - "Spain energy prices"
   - "Schengen entry rules"
@@ -43,7 +41,7 @@ news about a place the user never mentioned.
 
 ## The chain comes first, and it is mandatory
 Every rung the fact names gets at least one topic that NAMES that rung, and those come FIRST, in
-rung order from smallest to largest, before the daily round, before any cross-product, before a
+rung order from smallest to largest, before the daily round, before a
 second topic on any rung. "Lives in Gràcia, Barcelona, Catalonia, Spain, Europe" opens with a
 Gràcia topic, a Barcelona one, a Catalonia one, a Spain one, then an EU one.
 
@@ -59,7 +57,10 @@ It sits last, so emit it before any second city topic. A chain stopping at the c
 migration, trade and energy, which is most of what reaches a resident from above their own
 government.
 
-Fill what is left with further rung topics, the daily round and cross-products.
+Fill what is left with further rung topics and the daily round.
+
+When the first rung reads "Name (Other)", Name is what the user calls the place, and at least one
+topic uses Name itself: a place they named that no topic mentions is news they never see.
 
 ## Safety, and it is mandatory
 **One safety topic at the place the user actually lives**: the neighbourhood rung when the fact
@@ -79,17 +80,8 @@ A daily-life topic is a service disrupted, struck, delayed or cut: metro, tram, 
 roadworks, water, power, waste. Housing, schools, healthcare or energy **policy** is an ordinary
 rung topic and does not count against this cap.
 
-## Cross-products
-Let the persona's other facts shade these topics without taking the subject away from the place.
-The place is the subject of every topic here.
-
-- Good: residence Spain plus profession paediatric nurse gives "Spain nursing pay dispute".
-- Bad: "nursing shortage news". That belongs to the profession fact's own run, not to this one.
-
-At most three of the output may be cross-products. The rest belong to the plain chain.
-
 ## Exclude
-A rung name is not what makes a topic new. If "logistics jobs" is already in the persona's topics,
+A rung name is not what makes a topic new. If "logistics jobs" is already among this fact's topics,
 "Barcelona logistics jobs" is a duplicate wearing a hat.
 
 ## Never
@@ -97,19 +89,17 @@ A country other than the fact's own country and its bloc. Every prohibition abov
 
 ## Worked example
 Fact: "Lives in Gràcia, Barcelona, Catalonia, Spain, Europe"
-Other facts: "Paediatric nurse at a public hospital"; "Has two children in primary school"
 Existing topics: "Spain healthcare reform"
 
 Five rungs, so up to 20, at most four per rung. The first five are the chain, in order, bloc
-included. Then the mandatory safety topic, the daily round, the cross-products, and further rung
-topics. "Spain healthcare reform" is excluded, so the nursing cross-product moves to the region
-rung rather than being dropped.
+included. Then the mandatory safety topic, the daily round and further rung topics. "Spain
+healthcare reform" is excluded, so no healthcare topic repeats it.
 
 ```json
-["Gràcia neighbourhood news", "Barcelona news", "Catalonia regional politics", "Spain immigration policy", "EU housing regulation", "Gràcia street safety", "Gràcia housing pressure", "Barcelona metro disruptions", "Barcelona school places", "Catalonia nursing pay dispute", "Spain rail strikes", "Spain energy prices", "Schengen entry rules"]
+["Gràcia neighbourhood news", "Barcelona news", "Catalonia regional politics", "Spain immigration policy", "EU housing regulation", "Gràcia street safety", "Gràcia housing pressure", "Barcelona metro disruptions", "Spain rail strikes", "Spain energy prices", "Schengen entry rules"]
 ```
 
-Thirteen, not twenty: the ceiling is what the chain can carry, never a quota to fill.
+Eleven, not twenty: the ceiling is what the chain can carry, never a quota to fill.
 
 Read the shapes, not the places. A fact naming a different country must produce none of these
 strings.

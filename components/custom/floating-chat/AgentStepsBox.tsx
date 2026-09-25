@@ -54,7 +54,13 @@ export interface AgentStepsBoxProps {
   interrupted: boolean;
 }
 
-export const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
+export /** The first line of a phrase pool, or the value itself when it is a string. */
+function firstLine(value: unknown): string {
+  if (Array.isArray(value)) return typeof value[0] === 'string' ? value[0] : '';
+  return typeof value === 'string' ? value : '';
+}
+
+const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   steps,
   collapsed,
   doneCount,
@@ -74,6 +80,9 @@ export const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
     'agentSteps.removing': t('agentSteps.removing'),
     'agentSteps.asking': t('agentSteps.asking'),
     'agentSteps.working': t('agentSteps.working'),
+    // The wait line's own copy, so the box says the same thing the line
+    // would (ux2 batch 25, D6). A pool: its first line.
+    'chatPhases.webSearch': firstLine(t('chatPhases.webSearch', { returnObjects: true })),
   };
 
   const SKILL_PHRASE: Record<string, string> = {

@@ -22,10 +22,7 @@ jest.mock('@/components/ui/button', () => {
     ButtonText: (p: any) => <Text {...p} />,
   };
 });
-jest.mock('@expo/vector-icons', () => {
-  const { View } = require('react-native');
-  return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
   return {
@@ -39,9 +36,22 @@ jest.mock('@/lib/haptics', () => ({ hapticSuccess: jest.fn() }));
 // cards suite. Without it the real component drags in `expo-translate-text`,
 // whose native module does not exist under jest ("Cannot find native module
 // 'ExpoTranslateText'"), and the whole suite fails to load.
+// `mockTranslate` on: the line shows (and reports, as the real component
+// does) a translated rendering, so a label built from it can be checked.
+let mockTranslate = false;
 jest.mock('@/components/custom/TranslatableDynamic', () => {
+  const R = require('react');
   const { Text } = require('react-native');
-  return { __esModule: true, default: ({ text }: any) => <Text>{text}</Text> };
+  return {
+    __esModule: true,
+    default: ({ text, onDisplayChange }: any) => {
+      const shown = mockTranslate ? `DE:${text}` : text;
+      R.useEffect(() => {
+        onDisplayChange?.({ showingOriginal: !mockTranslate, displayedText: shown, displayedLanguage: mockTranslate ? 'de' : 'en' });
+      }, [shown]);
+      return <Text>{shown}</Text>;
+    },
+  };
 });
 
 const mockExecuteProposalActions = jest.fn().mockResolvedValue(undefined);
@@ -58,6 +68,7 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
 }));
 
 import ProposalCard from '../ProposalCard';
+import { exposedGlyphTexts } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 const subject = {
   origin: 'article' as const,
@@ -191,4 +202,27 @@ describe('ProposalCard track copy', () => {
     expect(queryByText('articleFeedback.chooseOneHint')).toBeNull();
     expect(queryAllByText('trackedStories.trackAction')).toHaveLength(0);
   });
+});
+
+describe('ux2 batch 26: radio rows keep their glyphs out of the accessibility tree', () => {
+  it('a pending choose-one card exposes no glyph, and each row reads its own words', () => {
+    const { UNSAFE_root, getByTestId } = render(<ProposalCard proposal={trackProposal} isLast />);
+    const glyphs = UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)));
+    expect(glyphs.length).toBeGreaterThan(0);
+    expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
+    const label = getByTestId('proposal-action-row-0').props.accessibilityLabel;
+    expect(typeof label).toBe('string');
+    expect(label.length).toBeGreaterThan(0);
+  });
+});
+
+it('ux2 batch 26: a choose-one row reads the words it SHOWS, translated when they are', () => {
+  mockTranslate = true;
+  try {
+    const { getByTestId } = render(<ProposalCard proposal={trackProposal} isLast />);
+    const label: string = getByTestId('proposal-action-row-0').props.accessibilityLabel;
+    expect(label).toContain('DE:');
+  } finally {
+    mockTranslate = false;
+  }
 });

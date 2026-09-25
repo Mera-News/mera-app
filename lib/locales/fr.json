@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{done}} sur {{total}} articles téléchargés",
       "chunks": {
-        "ready": "{{ready}} sur {{total}} lots d'analyse terminés",
-        "a11y": "Lots d'analyse : {{ready}} sur {{total}} terminés"
+        "ready": "{{ready}} sur {{total}} lots d'analyse terminés"
       },
       "stageA11y": "Étape {{index}} sur {{total}} : {{name}}"
     },
@@ -236,7 +235,6 @@
     "statsRead_other": "et vous avez lu {{formatted}}.",
     "reasonUnavailable": "Mera n'a pas pu rédiger de note pour cet article.",
     "loadingA11y": "Chargement de votre fil",
-    "newStoriesPill": "Nouveaux articles",
     "translatingCaption": "Traduction…",
     "updatedJustNow": "Mis à jour à l'instant"
   },
@@ -268,7 +266,7 @@
     "share": "Partager",
     "shareVia": "Partagé via {{downloadUrl}}",
     "sourceCountryGlobal": "International",
-    "sourceCountryA11y": "Pays de la source : {{country}}. Appuyez pour afficher le nom du pays.",
+    "sourceCountryA11y": "Pays d'origine : {{country}}. Touchez pour afficher le pays, puis touchez son nom pour voir ses médias.",
     "readOn": "Lire sur {{publication}}",
     "readOnGoogleTranslate": "Lire sur Google Translate",
     "linkUnavailable": "Ce lien ne peut pas être ouvert de manière sécurisée, il n'est donc pas disponible ici.",
@@ -299,7 +297,9 @@
     "addToExplore": "Ajouter à Explorer",
     "addedToExplore": "Ajouté à Explorer",
     "badgeGovernment": "Source gouvernementale",
-    "badgeRegulator": "Agence officielle"
+    "badgeRegulator": "Agence officielle",
+    "sectionCountries": "Pays",
+    "sectionPublications": "Publications"
   },
   "clusterDetail": {
     "translatable": "Cet article est en {{language}} : ton appareil peut le traduire pendant que tu lis. Si la traduction ne fonctionne pas, tu peux ouvrir le site dans Google Translate ; note que tu le consulteras alors via Google.",
@@ -637,13 +637,6 @@
     "deleteFactWarning": "Ses sujets et les articles trouvés partent aussi, et Mera arrête de chercher des actualités à ce sujet.",
     "deletingFact": "Suppression...",
     "yesDelete": "Oui, supprimer",
-    "refreshSuggestions": "Actualiser les suggestions",
-    "refreshingSuggestions": "Actualisation...",
-    "refreshSuggestionsSuccessTitle": "Suggestions actualisées",
-    "refreshSuggestionsSuccessDescription": "De nouvelles suggestions personnalisées sont en cours de génération.",
-    "refreshSuggestionsFailedTitle": "Échec de l'actualisation",
-    "refreshSuggestionsFailedDescription": "Impossible d'actualiser les suggestions. Veuillez réessayer.",
-    "personaUpdatedRefreshHint": "Je vois que vous avez mis à jour votre profil, souhaitez-vous que je régénère votre fil ?",
     "articleCount_one": "{{count}} article",
     "articleCount_other": "{{count}} articles",
     "addTopic": "Ajouter un sujet",
@@ -788,7 +781,13 @@
     "topicGenFailed": "Impossible de générer les sujets.",
     "topicGenRetry": "Réessayer",
     "aiUsageNoticeGeneral": "Mera peut se tromper, alors vérifie tout ce qui est important.",
-    "trackChooseHint": "Choisis ce que tu veux suivre"
+    "trackChooseHint": "Choisis ce que tu veux suivre",
+    "factDeletePendingTitle": "Sera supprimé de votre profil",
+    "saveAsWritten": "Enregistrer tel que je l'ai écrit",
+    "factDeleteRemove": "Supprimer",
+    "factDeleteKeep": "Garder",
+    "factDeleteKept": "Rien n'a été supprimé.",
+    "topicsSavedHint": "Sujets enregistrés ! Vous pouvez continuer à ajouter des informations, ou appuyer sur {{close}} pour commencer à explorer."
   },
   "articleFeedback": {
     "thumbsUp": "J'aime",
@@ -881,7 +880,8 @@
     "formError": "Veuillez remplir tous les champs obligatoires.",
     "emailError": "Veuillez entrer une adresse e-mail valide.",
     "captureScreenshotError": "Échec de la capture d'écran.",
-    "genericError": "Impossible d'envoyer le retour en raison d'une erreur inattendue."
+    "genericError": "Impossible d'envoyer le retour en raison d'une erreur inattendue.",
+    "chatAttachmentNote": "Votre discussion avec Mera sera jointe à ce rapport."
   },
   "observability": {
     "title": "Observabilité",
@@ -1533,7 +1533,9 @@
     },
     "meraInviteReturning": "Parlez-moi de quelque chose de nouveau et je l'ajouterai à votre fil.",
     "editFacts": "Modifier",
-    "planUsage": "{{used}} sur {{limit}} analysés aujourd'hui"
+    "planUsage": "{{used}} sur {{limit}} analysés aujourd'hui",
+    "updatingAllFacts": "Mise à jour de tous les faits",
+    "pleaseWait": "Veuillez patienter"
   },
   "facts": {
     "screenTitle": "Vos faits",
@@ -2575,7 +2577,11 @@
     "titleAlsoAdd": "Ajouter aussi ceci ?",
     "pendingHint": "Choisis une option ci-dessus ou écris ta réponse.",
     "overlapsLabel": "Recoupe",
-    "overlapsReplaceNote": "Remplacer la supprimerait avec ses sujets."
+    "overlapsReplaceNote": "Remplacer la supprimerait avec ses sujets.",
+    "replaceAll": "Tout remplacer",
+    "keepAll": "Tout garder",
+    "replaceAllA11y": "Remplacer par les {{count}} suggestions",
+    "keepAllA11y": "Garder vos faits et ajouter les {{count}} suggestions"
   },
   "subscriptions": {
     "sectionTitle": "Vos abonnements",
@@ -2738,37 +2744,36 @@
       "Votre question est en préparation."
     ],
     "queued": [
-      "Votre demande est mise en file.",
-      "Deux ou trois choses tournent en même temps. La vôtre est la suivante."
+      "Votre demande est la prochaine en file sur votre téléphone."
     ],
     "securing": [
-      "Votre message est verrouillé pour que seul le modèle puisse l'ouvrir.",
-      "Vos mots sont chiffrés avant de quitter votre téléphone."
+      "Chiffrement de votre message pour que seul le modèle, dans son environnement de confiance, puisse le lire.",
+      "Vos mots sont chiffrés sur votre téléphone avant de le quitter."
     ],
     "attesting": [
-      "Mise en place d'un canal privé vers le modèle.",
-      "Récupération de la clé qui garde ceci entre vous et Mera.",
-      "Une conversation privée met un instant à se mettre en place."
+      "Établissement d'une connexion sécurisée entre vous et le modèle dans un environnement de confiance.",
+      "Récupération de la clé depuis l'environnement de confiance du modèle, pour que seul le modèle puisse lire ceci."
     ],
     "thinking": [
-      "Mera lit ce que vous avez écrit.",
-      "Recherche de la meilleure façon de répondre."
+      "Le modèle lit votre message.",
+      "Recherche de la meilleure réponse."
     ],
     "retrying": [
-      "Cela prend plus de temps que d'habitude. Mera essaie une autre voie.",
+      "Cela prend plus de temps que d'habitude. Essai d'une autre voie sécurisée.",
       "Toujours en cours. Merci de patienter."
     ],
     "deviceLoading": [
-      "Réveil du modèle sur votre téléphone.",
+      "Chargement du modèle sur votre téléphone.",
       "La première réponse prend un peu plus de temps pendant le chargement."
     ],
     "devicePreparing": [
-      "Mera rassemble ce qu'elle sait déjà de vous.",
-      "Votre téléphone se prépare à répondre."
+      "Préparation de votre téléphone pour répondre."
     ],
     "deviceThinking": [
-      "Mera y réfléchit sur votre téléphone.",
-      "Tout se passe sur votre appareil, rien n'est envoyé nulle part."
+      "Réflexion sur votre téléphone. Rien ne quitte votre appareil."
+    ],
+    "webSearch": [
+      "Recherche sur le web depuis votre appareil…"
     ]
   },
   "headerNarration": {
@@ -2807,12 +2812,16 @@
       ]
     },
     "nudges": [
-      "Garde-le pour plus tard",
-      "Tes favoris t'attendent",
-      "Lis un sujet à fond",
-      "Vois les gros titres",
-      "Plus récent, pas mieux",
-      "Inutile de regarder"
+      "Lisez l'article en entier",
+      "Pressé ? Enregistrez-le",
+      "Vu l'actu du monde ?",
+      "Vu vos pays ?",
+      "Suivez une histoire",
+      "Vos histoires suivies",
+      "Profil à jour ?",
+      "Pas pour vous ? Dites-le",
+      "Aimez pour en voir plus",
+      "Partagez à vos proches"
     ],
     "a11y": "Mera met à jour vos infos sur ce téléphone."
   },

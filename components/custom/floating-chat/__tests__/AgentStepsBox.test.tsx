@@ -223,3 +223,12 @@ describe('accessibility and motion', () => {
     expect(getByTestId('agent-step-s1-spinner')).toBeTruthy();
   });
 });
+
+describe('ux2 batch 25 D6: the web search row', () => {
+  it('reads the first line of the webSearch phase pool', () => {
+    const { getByText } = render(
+      <AgentStepsBox {...props({ steps: [step({ id: 'c', kind: 'leg-start', toolName: undefined, labelKey: 'chatPhases.webSearch' })] })} />,
+    );
+    expect(getByText('t:chatPhases.webSearch:{"returnObjects":true}')).toBeTruthy();
+  });
+});

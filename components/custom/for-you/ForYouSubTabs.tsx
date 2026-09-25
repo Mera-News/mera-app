@@ -6,9 +6,14 @@ import { observeUnseenTotal } from '@/lib/database/services/tracked-story-servic
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, ScrollView, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+const GLYPH_HIDDEN = {
+    accessible: false,
+    accessibilityElementsHidden: true,
+    importantForAccessibility: 'no-hide-descendants',
+} as const;
 
 /**
  * Accessibility roles for the row and each pill, per platform.
@@ -73,6 +78,9 @@ const TABS: readonly TabDef[] = [
     { key: 'factChecks', icon: 'fact-check', labelKey: 'factCheck.dashboard.title' },
     { key: 'history', icon: 'history', labelKey: 'forYou.subTabHistory' },
 ];
+
+/** The pills' order: the tap row and the swipe (SwipeTabs) step through it. */
+export const FOR_YOU_SUB_TAB_ORDER: readonly ForYouSubTab[] = TABS.map((tab) => tab.key);
 
 /**
  * The For-You sub-tab pill row — `[Overview] [Stories ●n] [Saved] [Fact checks] [History]`.
@@ -175,6 +183,7 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                                     size={16}
                                     color={active ? '#000000' : ACCENT}
                                     style={{ marginRight: 6 }}
+                                    {...GLYPH_HIDDEN}
                                 />
                                 <Text
                                     size="sm"
@@ -217,13 +226,14 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                             </>
                         );
                         return (
-                            // The pressable IS the 44pt frame: transparent,
-                            // padded around the visible chip. On it: the role,
-                            // the selected state and the one label, the unseen
-                            // count folded in (`trackedStories.updatesBadge`).
-                            <Pressable
+                            // The frame is the transparent 44pt box, padded
+                            // around the visible chip. The button filling it
+                            // carries the role, the selected state and the one
+                            // label, the unseen count folded in
+                            // (`trackedStories.updatesBadge`).
+                            <View
                                 key={tab.key}
-                                onPress={() => onSelect(tab.key)}
+                                testID={`dashboard-tab-${tab.key}-frame`}
                                 // x is relative to the HStack, which IS the
                                 // scroll content, so it is directly usable as
                                 // a scroll offset.
@@ -231,38 +241,48 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect, b
                                     const { x, width } = e.nativeEvent.layout;
                                     pillLayouts.current[tab.key] = { x, width };
                                 }}
-                                accessibilityRole={A11Y_ROLES.pill}
-                                accessibilityState={{ selected: active }}
-                                accessibilityLabel={
-                                    showBadge
-                                        ? `${label}, ${t('trackedStories.updatesBadge', { count: unseenTotal })}`
-                                        : label
-                                }
-                                testID={`dashboard-tab-${tab.key}`}
                                 style={{ paddingVertical: PILL_FRAME_PAD }}
                             >
-                                {active ? (
-                                    // Explore's active chip: a solid accent fill,
-                                    // which IS the selection signal, never glassed.
-                                    <View
-                                        className="flex-row items-center rounded-full border px-4 py-2 bg-primary-400 border-primary-400"
-                                        testID={`dashboard-tab-${tab.key}-chip`}
-                                    >
-                                        {inner}
-                                    </View>
-                                ) : (
-                                    // Explore's inactive chip: a round translucent
-                                    // plate with a hairline edge, white label.
-                                    <GlassPanel radius={999}>
+                                {/* The chip is a hidden visual with a CHILDLESS
+                                    button laid over the whole frame: a glyph
+                                    inside a button surfaces on iOS as its own
+                                    StaticText (captured class, ux2). */}
+                                <View pointerEvents="none" {...GLYPH_HIDDEN}>
+                                    {active ? (
+                                        // Explore's active chip: a solid accent fill,
+                                        // which IS the selection signal, never glassed.
                                         <View
-                                            className="flex-row items-center px-4 py-2"
+                                            className="flex-row items-center rounded-full border px-4 py-2 bg-primary-400 border-primary-400"
                                             testID={`dashboard-tab-${tab.key}-chip`}
                                         >
                                             {inner}
                                         </View>
-                                    </GlassPanel>
-                                )}
-                            </Pressable>
+                                    ) : (
+                                        // Explore's inactive chip: a round translucent
+                                        // plate with a hairline edge, white label.
+                                        <GlassPanel radius={999}>
+                                            <View
+                                                className="flex-row items-center px-4 py-2"
+                                                testID={`dashboard-tab-${tab.key}-chip`}
+                                            >
+                                                {inner}
+                                            </View>
+                                        </GlassPanel>
+                                    )}
+                                </View>
+                                <Pressable
+                                    onPress={() => onSelect(tab.key)}
+                                    accessibilityRole={A11Y_ROLES.pill}
+                                    accessibilityState={{ selected: active }}
+                                    accessibilityLabel={
+                                        showBadge
+                                            ? `${label}, ${t('trackedStories.updatesBadge', { count: unseenTotal })}`
+                                            : label
+                                    }
+                                    testID={`dashboard-tab-${tab.key}`}
+                                    style={StyleSheet.absoluteFill}
+                                />
+                            </View>
                         );
                     })}
                 </HStack>

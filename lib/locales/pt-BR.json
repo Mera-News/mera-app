@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{done}} de {{total}} artigos baixados",
       "chunks": {
-        "ready": "{{ready}} de {{total}} lotes de análise concluídos",
-        "a11y": "Lotes de análise: {{ready}} de {{total}} concluídos"
+        "ready": "{{ready}} de {{total}} lotes de análise concluídos"
       },
       "stageA11y": "Etapa {{index}} de {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRead_other": "e você leu {{formatted}}.",
     "reasonUnavailable": "A Mera não conseguiu escrever uma nota para este artigo.",
     "loadingA11y": "Carregando seu feed",
-    "newStoriesPill": "Novas notícias",
     "translatingCaption": "Traduzindo…",
     "updatedJustNow": "Atualizado agora mesmo"
   },
@@ -263,7 +261,7 @@
     "share": "Compartilhar",
     "shareVia": "Compartilhado via {{downloadUrl}}",
     "sourceCountryGlobal": "Mundial",
-    "sourceCountryA11y": "País de origem: {{country}}. Toque para exibir o nome do país.",
+    "sourceCountryA11y": "País de origem: {{country}}. Toque para mostrar o país e depois toque no nome para ver os veículos dele.",
     "readOn": "Ler em {{publication}}",
     "readOnGoogleTranslate": "Ler no Google Translate",
     "linkUnavailable": "Este link não pode ser aberto com segurança, então não está disponível aqui.",
@@ -294,7 +292,9 @@
     "addToExplore": "Adicionar à Explorar",
     "addedToExplore": "Adicionado à Explorar",
     "badgeGovernment": "Fonte governamental",
-    "badgeRegulator": "Agência oficial"
+    "badgeRegulator": "Agência oficial",
+    "sectionCountries": "Países",
+    "sectionPublications": "Publicações"
   },
   "clusterDetail": {
     "translatable": "Este artigo está em {{language}}: seu dispositivo pode traduzi-lo enquanto você lê. Se a tradução não funcionar, você pode abrir o site no Google Translate; só lembre que você estará navegando por meio do Google.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Os tópicos e as notícias encontradas também são removidos, e o Mera para de buscar notícias sobre isso.",
     "deletingFact": "Excluindo...",
     "yesDelete": "Sim, Excluir",
-    "refreshSuggestions": "Atualizar Sugestões",
-    "refreshingSuggestions": "Atualizando...",
-    "refreshSuggestionsSuccessTitle": "Sugestões atualizadas",
-    "refreshSuggestionsSuccessDescription": "Novas sugestões personalizadas estão sendo geradas.",
-    "refreshSuggestionsFailedTitle": "Falha na Atualização",
-    "refreshSuggestionsFailedDescription": "Não foi possível atualizar as sugestões. Por favor, tente novamente.",
-    "personaUpdatedRefreshHint": "Vejo que você atualizou seu perfil, gostaria que eu regenerasse seu feed?",
     "articleCount_one": "{{count}} artigo",
     "articleCount_other": "{{count}} artigos",
     "addTopic": "Adicionar tópico",
@@ -783,7 +776,13 @@
     "topicGenFailed": "Não foi possível gerar tópicos para isso.",
     "topicGenRetry": "Tentar novamente",
     "aiUsageNoticeGeneral": "O Mera pode cometer erros, então confira o que for importante.",
-    "trackChooseHint": "Escolha o que seguir"
+    "trackChooseHint": "Escolha o que seguir",
+    "factDeletePendingTitle": "Será removido do seu perfil",
+    "saveAsWritten": "Salvar como eu escrevi",
+    "factDeleteRemove": "Remover",
+    "factDeleteKeep": "Manter",
+    "factDeleteKept": "Nada foi removido.",
+    "topicsSavedHint": "Temas salvos! Fique à vontade para continuar adicionando informações ou toque em {{close}} para começar a explorar."
   },
   "articleFeedback": {
     "thumbsUp": "Gostei",
@@ -876,7 +875,8 @@
     "formError": "Preencha todos os campos obrigatórios.",
     "emailError": "Digite um endereço de e-mail válido.",
     "captureScreenshotError": "Falha ao capturar a tela.",
-    "genericError": "Não foi possível enviar o feedback devido a um erro inesperado."
+    "genericError": "Não foi possível enviar o feedback devido a um erro inesperado.",
+    "chatAttachmentNote": "Sua conversa com a Mera será anexada a este relatório."
   },
   "observability": {
     "title": "Observabilidade",
@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "Me conte algo novo e eu adiciono ao seu feed.",
     "editFacts": "Editar",
-    "planUsage": "{{used}} de {{limit}} analisados hoje"
+    "planUsage": "{{used}} de {{limit}} analisados hoje",
+    "updatingAllFacts": "Atualizando todos os fatos",
+    "pleaseWait": "Aguarde"
   },
   "facts": {
     "screenTitle": "Seus fatos",
@@ -2568,7 +2570,11 @@
     "titleAlsoAdd": "Adicionar isto também?",
     "pendingHint": "Escolha uma opção acima ou digite sua resposta.",
     "overlapsLabel": "Sobrepõe-se a",
-    "overlapsReplaceNote": "Substituir removeria a informação e os temas dela."
+    "overlapsReplaceNote": "Substituir removeria a informação e os temas dela.",
+    "replaceAll": "Substituir tudo",
+    "keepAll": "Manter tudo",
+    "replaceAllA11y": "Substituir pelas {{count}} sugestões",
+    "keepAllA11y": "Manter seus fatos e adicionar as {{count}} sugestões"
   },
   "subscriptions": {
     "sectionTitle": "Suas assinaturas",
@@ -2731,37 +2737,36 @@
       "Preparando sua pergunta."
     ],
     "queued": [
-      "Colocando seu pedido na fila.",
-      "Tem umas coisas rodando ao mesmo tempo. A sua é a próxima."
+      "Seu pedido é o próximo da fila no seu celular."
     ],
     "securing": [
-      "Trancando sua mensagem para que só o modelo consiga abrir.",
-      "Suas palavras são criptografadas antes de sair do seu celular."
+      "Criptografando sua mensagem para que só o modelo, no ambiente confiável dele, possa lê-la.",
+      "Suas palavras são criptografadas no seu celular antes de sair."
     ],
     "attesting": [
-      "Preparando um canal privado com o modelo.",
-      "Buscando a chave que mantém isso entre você e a Mera.",
-      "Uma conversa privada leva um instante para ser preparada."
+      "Estabelecendo uma conexão segura entre você e o modelo em um ambiente confiável.",
+      "Obtendo a chave do ambiente confiável do modelo, para que só o modelo possa ler isto."
     ],
     "thinking": [
-      "A Mera está lendo o que você escreveu.",
-      "Procurando a melhor forma de responder."
+      "O modelo está lendo sua mensagem.",
+      "Pensando na melhor resposta."
     ],
     "retrying": [
-      "Está demorando mais que o normal. A Mera está tentando outro caminho.",
-      "Ainda em andamento. Obrigado por esperar."
+      "Está demorando mais que o normal. Tentando outra rota segura.",
+      "Ainda trabalhando nisso. Obrigado por esperar."
     ],
     "deviceLoading": [
-      "Acordando o modelo no seu celular.",
+      "Carregando o modelo no seu celular.",
       "A primeira resposta demora um pouco mais enquanto carrega."
     ],
     "devicePreparing": [
-      "Reunindo o que a Mera já sabe sobre você.",
       "Preparando seu celular para responder."
     ],
     "deviceThinking": [
-      "Pensando nisso no seu celular.",
-      "Isso roda no seu aparelho, então nada é enviado para lugar nenhum."
+      "Pensando no seu celular. Nada sai do seu aparelho."
+    ],
+    "webSearch": [
+      "Pesquisando na web a partir do seu aparelho…"
     ]
   },
   "headerNarration": {
@@ -2800,12 +2805,16 @@
       ]
     },
     "nudges": [
-      "Salve para depois",
-      "Seus salvos esperam",
-      "Leia uma notícia a fundo",
-      "Veja as manchetes",
-      "Novo não é melhor",
-      "Não precisa olhar"
+      "Leia o artigo completo",
+      "Sem tempo? Salve",
+      "Viu as notícias globais?",
+      "Viu os seus países?",
+      "Siga uma notícia",
+      "Veja as que você segue",
+      "Seu perfil está em dia?",
+      "Não é para você? Diga",
+      "Curta para ver mais",
+      "Mande para quem ama"
     ],
     "a11y": "A Mera está atualizando suas notícias neste celular."
   },

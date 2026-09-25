@@ -189,8 +189,7 @@
       },
       "downloadProgress": "已下載 {{total}} 篇中的 {{done}} 篇",
       "chunks": {
-        "ready": "已完成 {{total}} 個分析批次中的 {{ready}} 個",
-        "a11y": "分析批次：已完成 {{total}} 個中的 {{ready}} 個"
+        "ready": "已完成 {{total}} 個分析批次中的 {{ready}} 個"
       },
       "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}}篇與您相關,",
     "reasonUnavailable": "Mera 無法為這篇文章撰寫說明。",
     "loadingA11y": "正在載入你的動態",
-    "newStoriesPill": "新文章",
     "translatingCaption": "正在翻譯…",
     "updatedJustNow": "剛剛更新"
   },
@@ -263,7 +261,7 @@
     "share": "分享",
     "shareVia": "分享自 {{downloadUrl}}",
     "sourceCountryGlobal": "全球",
-    "sourceCountryA11y": "來源國家：{{country}}。點一下可顯示國家名稱。",
+    "sourceCountryA11y": "來源國家：{{country}}。點按顯示國家，再點按國家名稱查看該國的媒體。",
     "readOn": "在{{publication}}閱讀",
     "readOnGoogleTranslate": "在 Google 翻譯中閱讀",
     "linkUnavailable": "此連結無法安全開啟，因此在此無法使用。",
@@ -294,7 +292,9 @@
     "addToExplore": "新增至探索",
     "addedToExplore": "已新增至探索",
     "badgeGovernment": "政府來源",
-    "badgeRegulator": "官方機構"
+    "badgeRegulator": "官方機構",
+    "sectionCountries": "國家和地區",
+    "sectionPublications": "媒體"
   },
   "clusterDetail": {
     "translatable": "這篇文章是{{language}}內容:你的裝置可以在你閱讀時進行翻譯。如果翻譯無法使用,你可以用 Google 翻譯開啟該網站;請注意屆時你會透過 Google 瀏覽內容。",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "它的主題和找到的新聞也會一併刪除，Mera 將不再為此尋找新聞。",
     "deletingFact": "正在刪除...",
     "yesDelete": "是的，刪除",
-    "refreshSuggestions": "重新整理建議",
-    "refreshingSuggestions": "重新整理中...",
-    "refreshSuggestionsSuccessTitle": "建議已重新整理",
-    "refreshSuggestionsSuccessDescription": "正在產生新的個人化建議。",
-    "refreshSuggestionsFailedTitle": "重新整理失敗",
-    "refreshSuggestionsFailedDescription": "無法重新整理建議。請再試一次。",
-    "personaUpdatedRefreshHint": "我看到您已更新個人資料，您希望我重新產生您的動態嗎？",
     "articleCount_one": "{{count}} 篇文章",
     "articleCount_other": "{{count}} 篇文章",
     "addTopic": "新增主題",
@@ -783,7 +776,13 @@
     "topicGenFailed": "無法為此產生主題。",
     "topicGenRetry": "重試",
     "aiUsageNoticeGeneral": "Mera 可能會出錯，重要內容請自行查證。",
-    "trackChooseHint": "選擇要追蹤的內容"
+    "trackChooseHint": "選擇要追蹤的內容",
+    "factDeletePendingTitle": "將從你的檔案中移除",
+    "saveAsWritten": "照我寫的儲存",
+    "factDeleteRemove": "移除",
+    "factDeleteKeep": "保留",
+    "factDeleteKept": "沒有移除任何內容。",
+    "topicsSavedHint": "主題已儲存！你可以繼續新增資訊，或點按 {{close}} 開始探索。"
   },
   "articleFeedback": {
     "thumbsUp": "喜歡",
@@ -876,7 +875,8 @@
     "formError": "請填寫所有必填欄位。",
     "emailError": "請輸入有效的電子郵件地址。",
     "captureScreenshotError": "螢幕截圖擷取失敗。",
-    "genericError": "發生未預期的錯誤，無法傳送回饋。"
+    "genericError": "發生未預期的錯誤，無法傳送回饋。",
+    "chatAttachmentNote": "你與 Mera 的聊天將附在此回報中。"
   },
   "observability": {
     "title": "可觀測性",
@@ -1527,7 +1527,9 @@
     },
     "meraInviteReturning": "告訴我一些新的興趣，我會把它加進你的動態。",
     "editFacts": "編輯",
-    "planUsage": "今日已分析 {{used}}/{{limit}}"
+    "planUsage": "今日已分析 {{used}}/{{limit}}",
+    "updatingAllFacts": "正在更新所有事實",
+    "pleaseWait": "請稍候"
   },
   "facts": {
     "screenTitle": "你的事實",
@@ -2569,7 +2571,11 @@
     "titleAlsoAdd": "也加入這則嗎？",
     "pendingHint": "請選擇上方的一個選項，或直接輸入你的回答。",
     "overlapsLabel": "與此重疊",
-    "overlapsReplaceNote": "替換會刪除它及其相關主題。"
+    "overlapsReplaceNote": "替換會刪除它及其相關主題。",
+    "replaceAll": "全部替換",
+    "keepAll": "全部保留",
+    "replaceAllA11y": "以全部 {{count}} 則建議替換",
+    "keepAllA11y": "保留你的資訊並新增全部 {{count}} 則建議"
   },
   "subscriptions": {
     "sectionTitle": "您的訂閱",
@@ -2731,37 +2737,36 @@
       "正在組織你的問題。"
     ],
     "queued": [
-      "正在把你的請求排入佇列。",
-      "同時還有幾件事在跑，下一個就是你。"
+      "你的要求在手機上排在下一個。"
     ],
     "securing": [
-      "正在鎖定你的訊息，只有模型能打開。",
+      "正在加密你的訊息，只有可信環境中的模型能讀取。",
       "你的文字在離開手機前就已加密。"
     ],
     "attesting": [
-      "正在建立通往模型的私密通道。",
-      "正在取得金鑰，讓這段對話只屬於你和 Mera。",
-      "私密對話需要一點時間來建立。"
+      "正在可信環境中建立你與模型之間的安全連線。",
+      "正在從模型的可信環境取得金鑰，只有模型能讀取這些內容。"
     ],
     "thinking": [
-      "Mera 正在讀你寫的內容。",
-      "正在想最好的回答方式。"
+      "模型正在閱讀你的訊息。",
+      "正在想出最佳回答。"
     ],
     "retrying": [
-      "這次比平常久一些，Mera 正在換一條路線。",
-      "還在進行中，謝謝你的等待。"
+      "這比平時慢。正在嘗試另一條安全線路。",
+      "仍在處理中。感謝等候。"
     ],
     "deviceLoading": [
-      "正在喚醒手機上的模型。",
-      "載入期間，第一個回答會稍微久一點。"
+      "正在手機上載入模型。",
+      "載入期間，第一個回答會稍慢一些。"
     ],
     "devicePreparing": [
-      "正在整理 Mera 已經了解你的內容。",
-      "正在讓手機準備好作答。"
+      "正在讓手機準備回答。"
     ],
     "deviceThinking": [
-      "正在你的手機上思考。",
-      "這一切都在你的裝置上執行，不會傳送到任何地方。"
+      "正在手機上思考。沒有任何內容離開你的裝置。"
+    ],
+    "webSearch": [
+      "正在從你的裝置搜尋網頁…"
     ]
   },
   "headerNarration": {
@@ -2800,12 +2805,16 @@
       ]
     },
     "nudges": [
-      "留著稍後讀",
-      "收藏在等你",
-      "認真讀一則",
-      "看看頭條",
-      "新的不一定好",
-      "不必盯著看"
+      "閱讀全文",
+      "沒時間？先儲存",
+      "看過世界新聞了嗎？",
+      "看過你的國家了嗎？",
+      "關注一則新聞",
+      "看看關注的新聞",
+      "個人檔案是最新的嗎？",
+      "不感興趣？告訴 Mera",
+      "按讚看到更多",
+      "分享給親友"
     ],
     "a11y": "Mera 正在這支手機上更新你的新聞。"
   },

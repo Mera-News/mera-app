@@ -39,6 +39,8 @@ import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-s
 import { discardTopicPlan, saveTopicPlan } from './topic-plan-actions';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GlyphSafeButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
@@ -235,7 +237,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
         testID={`topic-plan-discarded-${factId}`}
       >
         <View style={styles.headerRow}>
-          <MaterialIcons name="delete-outline" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="delete-outline" size={18} color={ACCENT} />
           <Text size="sm" bold style={styles.title}>
             {t('topicPlan.discardedTitle')}
           </Text>
@@ -258,7 +260,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
         testID={`topic-plan-saved-${factId}`}
       >
         <View style={styles.headerRow}>
-          <MaterialIcons name="check-circle" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={18} color={ACCENT} />
           <Text size="sm" bold style={styles.title}>
             {t('topicPlan.settledTitle')}
           </Text>
@@ -286,7 +288,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
   return (
     <Animated.View entering={cardEntering} style={styles.card}>
       <View style={styles.headerRow}>
-        <MaterialIcons name="account-tree" size={18} color={ACCENT} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="account-tree" size={18} color={ACCENT} />
         <Text size="sm" bold style={styles.title}>
           {t('topicPlan.title')}
         </Text>
@@ -305,7 +307,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
 
       {showFailed ? (
         <View style={styles.failedRow} testID="topic-plan-failed">
-          <MaterialIcons name="error-outline" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="error-outline" size={18} color={ACCENT} />
           <Text size="xs" style={styles.failedText}>
             {t('floatingChat.topicGenFailed')}
           </Text>
@@ -350,25 +352,25 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
                   numberOfLines={2}
                 />
                 {retired ? (
-                  <Pressable
+                  <GlyphSafeButton
                     onPress={() => handleUndo(row)}
                     disabled={rowBusy}
                     hitSlop={8}
-                    style={styles.iconButton}
+                    visualStyle={styles.iconButton}
                     accessibilityLabel={t('topicPlan.undo')}
                   >
-                    <MaterialIcons name="undo" size={18} color={ACCENT} />
-                  </Pressable>
+                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="undo" size={18} color={ACCENT} />
+                  </GlyphSafeButton>
                 ) : (
-                  <Pressable
+                  <GlyphSafeButton
                     onPress={() => handleDelete(row)}
                     disabled={rowBusy}
                     hitSlop={8}
-                    style={styles.iconButton}
+                    visualStyle={styles.iconButton}
                     accessibilityLabel={t('topicPlan.delete')}
                   >
-                    <MaterialIcons name="close" size={18} color="rgb(150, 150, 150)" />
-                  </Pressable>
+                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={18} color="rgb(150, 150, 150)" />
+                  </GlyphSafeButton>
                 )}
               </View>
             );

@@ -21,10 +21,15 @@ jest.mock('react-i18next', () => ({
 // token 'export'") — same trap documented in AddLocationView.test.tsx /
 // ScopeChipRow.test.tsx. Proxy RN so ScrollView renders as a plain View; every
 // other export stays lazy/real.
+const mockScrollTo = jest.fn();
 jest.mock('react-native', () => {
     const actual = jest.requireActual('react-native');
     const ReactLib = require('react');
-    const StubScrollView = ({ children, ...rest }: any) => ReactLib.createElement(actual.View, rest, children);
+    // forwardRef + scrollTo, so scroll-into-view is observable.
+    const StubScrollView: any = ReactLib.forwardRef(({ children, ...rest }: any, ref: any) => {
+        ReactLib.useImperativeHandle(ref, () => ({ scrollTo: (a: any) => mockScrollTo(a) }));
+        return ReactLib.createElement(actual.View, rest, children);
+    });
     StubScrollView.Context = ReactLib.createContext(null);
     return new Proxy(actual, {
         get(target, prop) {
@@ -69,12 +74,17 @@ jest.mock('@/components/custom/GlassSurface', () => {
         ),
     };
 });
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (props: any) => <View {...props} /> };
-});
+// Real icon-font glyphs, so a glyph under an accessible element is caught.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
+import { exposedGlyphTexts } from '@/lib/__test-helpers__/icon-glyph-a11y';
+import { configure } from '@testing-library/react-native';
 import ForYouSubTabs, { subTabA11yRoles } from '../ForYouSubTabs';
+
+// Each pill's chip (label, icon, badge) is a hidden visual under a childless
+// labelled button, so text queries must see hidden elements, and a press
+// goes to the button by its testID.
+configure({ defaultIncludeHiddenElements: true });
 
 describe('ForYouSubTabs', () => {
     beforeEach(() => {
@@ -120,10 +130,10 @@ describe('ForYouSubTabs', () => {
 
     it('fires onSelect with factChecks when the Fact checks pill is tapped', () => {
         const onSelect = jest.fn();
-        const { getByText } = render(
+        const { getByTestId } = render(
             <ForYouSubTabs activeSubTab="feed" onSelect={onSelect} />,
         );
-        fireEvent.press(getByText('factCheck.dashboard.title'));
+        fireEvent.press(getByTestId('dashboard-tab-factChecks'));
         expect(onSelect).toHaveBeenCalledWith('factChecks');
     });
 
@@ -153,19 +163,19 @@ describe('ForYouSubTabs', () => {
 
     it('fires onSelect with the tapped sub-tab', () => {
         const onSelect = jest.fn();
-        const { getByText } = render(
+        const { getByTestId } = render(
             <ForYouSubTabs activeSubTab="feed" onSelect={onSelect} />,
         );
-        fireEvent.press(getByText('forYou.subTabStories'));
+        fireEvent.press(getByTestId('dashboard-tab-stories'));
         expect(onSelect).toHaveBeenCalledWith('stories');
     });
 
     it('fires onSelect with history when the History pill is tapped', () => {
         const onSelect = jest.fn();
-        const { getByText } = render(
+        const { getByTestId } = render(
             <ForYouSubTabs activeSubTab="feed" onSelect={onSelect} />,
         );
-        fireEvent.press(getByText('forYou.subTabHistory'));
+        fireEvent.press(getByTestId('dashboard-tab-history'));
         expect(onSelect).toHaveBeenCalledWith('history');
     });
 
@@ -233,12 +243,12 @@ describe('ForYouSubTabs: full-bleed row', () => {
 // orange label are gone.
 describe('ForYouSubTabs: Explore pill style', () => {
     const ACCENT = 'rgb(231, 138, 83)';
-    // The pressable is the transparent 44pt frame; the visible chip is inside.
+    // The frame is the transparent 44pt box; the visible chip is inside it.
     const glassIn = (node: any) => node.findAll((n: any) => n.props?.testID === 'glass-chip')[0] ?? null;
 
     it('draws an inactive pill as a round glass chip with a white label and no orange outline', () => {
         const { getByTestId, getByText } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
-        const saved = getByTestId('dashboard-tab-saved');
+        const saved = getByTestId('dashboard-tab-saved-frame');
         const glass = glassIn(saved);
         expect(glass).not.toBeNull();
         expect(glass.props.radius).toBe(999);
@@ -250,7 +260,7 @@ describe('ForYouSubTabs: Explore pill style', () => {
 
     it('fills the active pill with the accent and a black label, outside the glass', () => {
         const { getByTestId, getByText } = render(<ForYouSubTabs activeSubTab="saved" onSelect={jest.fn()} />);
-        const saved = getByTestId('dashboard-tab-saved');
+        const saved = getByTestId('dashboard-tab-saved-frame');
         expect(glassIn(saved)).toBeNull();
         expect(getByTestId('dashboard-tab-saved-chip').props.className).toContain('bg-primary-400');
         expect(getByText('forYou.subTabSaved').props.className).toContain('text-black');
@@ -259,7 +269,7 @@ describe('ForYouSubTabs: Explore pill style', () => {
     it('keeps the icons, as Explore does: accent when inactive, black when active', () => {
         const { getByTestId } = render(<ForYouSubTabs activeSubTab="saved" onSelect={jest.fn()} />);
         const icon = (key: string) =>
-            getByTestId(`dashboard-tab-${key}`).findAll((n: any) => n.props?.name !== undefined && n.props?.size === 16)[0];
+            getByTestId(`dashboard-tab-${key}-frame`).findAll((n: any) => n.props?.name !== undefined && n.props?.size === 16)[0];
         expect(icon('feed').props.color).toBe(ACCENT);
         expect(icon('saved').props.color).toBe('#000000');
     });
@@ -321,12 +331,41 @@ describe('ForYouSubTabs: one element per pill, 44pt tall', () => {
         expect(getByTestId('dashboard-tab-stories').props.accessibilityLabel).toBe('forYou.subTabStories');
     });
 
-    it('pads each pressable to a 44pt frame and pulls the row back by the same amount', () => {
+    it('pads each pill frame to 44pt and pulls the row back by the same amount', () => {
         const { getByTestId } = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
-        const pad = flat(getByTestId('dashboard-tab-saved').props.style).paddingVertical;
+        const pad = flat(getByTestId('dashboard-tab-saved-frame').props.style).paddingVertical;
         // The chip is 35-37pt; 2 x pad takes the frame to 44 or more.
         expect(35 + 2 * pad).toBeGreaterThanOrEqual(44);
         // ...and the row gives the padding back, so the header does not grow.
         expect(flat(getByTestId('dashboard-subtabs-row').props.style).marginVertical).toBe(-pad);
+    });
+});
+
+// Captured class (ux2): a glyph inside a button surfaces on iOS as its own
+// StaticText. Each pill is a childless labelled button over its hidden chip.
+describe('ForYouSubTabs: pill glyphs', () => {
+    it('exposes no icon glyph, and each pill button is childless', () => {
+        const r = render(<ForYouSubTabs activeSubTab="saved" onSelect={jest.fn()} />);
+        expect(r.UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)))).toHaveLength(5);
+        expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);
+        for (const key of ['feed', 'stories', 'saved', 'factChecks', 'history']) {
+            const b = r.getByTestId(`dashboard-tab-${key}`);
+            expect(b.findAll((n: any) => n !== b && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
+        }
+    });
+
+    // B3: a swipe changes the selected tab from outside; the row must scroll
+    // THAT pill into view, from the layout its frame measured.
+    it('scrolls the newly selected pill into view from its frame\'s layout', () => {
+        mockScrollTo.mockClear();
+        const r = render(<ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />);
+        const xs: Record<string, number> = { feed: 0, stories: 90, saved: 190, factChecks: 290, history: 420 };
+        for (const [key, x] of Object.entries(xs)) {
+            fireEvent(r.getByTestId(`dashboard-tab-${key}-frame`), 'layout', { nativeEvent: { layout: { x, y: 0, width: 90, height: 44 } } });
+        }
+        r.rerender(<ForYouSubTabs activeSubTab="history" onSelect={jest.fn()} />);
+        expect(mockScrollTo).toHaveBeenLastCalledWith({ x: 420 - 12, animated: true });
+        r.rerender(<ForYouSubTabs activeSubTab="stories" onSelect={jest.fn()} />);
+        expect(mockScrollTo).toHaveBeenLastCalledWith({ x: 90 - 12, animated: true });
     });
 });

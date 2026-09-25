@@ -5,7 +5,9 @@
 // is mounted fresh on every open (unmount on close guarantees a fresh session).
 
 import MeraLogo from '@/components/custom/MeraLogo';
-import { Button } from '@/components/ui/button';
+import ChatBugReportButton from './ChatBugReportButton';
+import { GlyphSafeIconButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { hapticLight } from '@/lib/haptics';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import { useFloatingChatIsExpanded, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -249,29 +251,31 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                             <Text style={styles.title}>{t('floatingChat.title')}</Text>
                         </View>
                     </GestureDetector>
-                    {/* Gluestack Buttons (className/tva-driven), NOT Pressables with
-                        function-form style props: under NativeWind v4's babel interop
-                        the function form gets dropped, which erased these buttons'
-                        background fills at runtime (item-13 bug). Dark-mode tokens:
-                        primary-400 = rgb(231,138,83) (ACCENT); the close button is neutral. */}
-                    <Button
+                    {/* Left of New chat (ux2 H): the whole chat, attached to a
+                        report the user chooses to send. */}
+                    <ChatBugReportButton />
+                    {/* Real 44pt frames (ux2 batch 26): a childless labelled
+                        Pressable sized by NUMBER, the 36pt disc laid over it.
+                        `w-11 h-11` measured 38.5pt (NativeWind rem is 14), and an
+                        icon inside the button surfaced as its own StaticText. */}
+                    <GlyphSafeIconButton
                         onPress={onNewChatPress}
                         accessibilityLabel={t('floatingChat.newChat')}
-                        hitSlop={12}
-                        action="default"
-                        className="w-9 h-9 p-0 rounded-full bg-primary-400/25 data-[active=true]:bg-primary-400/40"
+                        testID="chat-header-new-chat"
                     >
-                        <MaterialIcons name="add-comment" size={20} color={ACCENT} />
-                    </Button>
-                    <Button
+                        <View style={[styles.headerDisc, styles.newChatDisc]}>
+                            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="add-comment" size={20} color={ACCENT} />
+                        </View>
+                    </GlyphSafeIconButton>
+                    <GlyphSafeIconButton
                         onPress={onClosePress}
                         accessibilityLabel={t('floatingChat.close')}
-                        hitSlop={12}
-                        action="default"
-                        className="w-9 h-9 p-0 rounded-full bg-background-100 data-[active=true]:bg-background-200"
+                        testID="chat-header-close"
                     >
-                        <MaterialIcons name="close" size={22} color={CLOSE_ICON} />
-                    </Button>
+                        <View style={[styles.headerDisc, styles.neutralDisc]}>
+                            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={22} color={CLOSE_ICON} />
+                        </View>
+                    </GlyphSafeIconButton>
                 </View>
 
                 {/* The panel itself shrinks above the keyboard (see panelStyle), so
@@ -300,13 +304,23 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        gap: 2,
+        paddingLeft: 16,
+        paddingRight: 12,
+        paddingVertical: 8,
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: 'rgba(255, 255, 255, 0.12)',
         zIndex: 2, // keep header (and its tappable X) above the body content
     },
+    headerDisc: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    newChatDisc: { backgroundColor: 'rgba(231, 138, 83, 0.25)' },
+    neutralDisc: { backgroundColor: 'rgb(51, 51, 51)' }, // dark background-100
     headerGrab: {
         flex: 1,
         flexDirection: 'row',

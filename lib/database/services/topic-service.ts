@@ -395,7 +395,8 @@ export async function getWeightsByIds(ids: string[]): Promise<{ id: string; weig
 
 /**
  * Every normalized text currently on the device, ANY fact, ANY status, ANY
- * provenance — the exclusion set the fact-combination top-up plans against.
+ * provenance — the exclusion set the combination pass (combo-pass-service)
+ * and the sanity replacement plan against.
  *
  * Deliberately global and deliberately including retired and tracked rows:
  *  - a `tracked` collision would mint a metered row for a text a followed story
@@ -433,35 +434,6 @@ export async function getTopupTopicSnapshots(): Promise<TopupTopicSnapshot[]> {
     createdAtMs: t.createdAt instanceof Date ? t.createdAt.getTime() : 0,
     isActive: t.status === 'active',
   }));
-}
-
-/**
- * Append top-up topics to a fact. APPEND-ONLY: no existing row is updated,
- * re-weighted, retired, or destroyed.
- *
- * Seeded at `topupTopicWeight` rather than the full `llmTopicWeight` — these are
- * speculative combinations the user never asked for, and the seed weight drives
- * per-topic retrieval depth, so a lower weight costs less quota per appended
- * topic. Provenance is `llm`: they are ordinary metered interest topics derived
- * from persona facts, and marking them `tracked` would grant quota-exempt
- * hydration for articles the user never followed.
- */
-export async function appendTopupTopicsForFact(
-  factId: string,
-  planned: { text: string; normalizedText: string }[],
-): Promise<TopicModel[]> {
-  if (planned.length === 0) return [];
-  return createTopics(
-    planned.map((p) => ({
-      factId,
-      text: p.text,
-      normalizedText: p.normalizedText,
-      weight: DEFAULT_HARNESS_CONFIG.topicGen.topupTopicWeight,
-      status: 'active' as const,
-      provenance: 'llm' as const,
-      highPriority: false,
-    })),
-  );
 }
 
 /** All topics sharing a normalized text (dedup + cross-fact overlap detection). */

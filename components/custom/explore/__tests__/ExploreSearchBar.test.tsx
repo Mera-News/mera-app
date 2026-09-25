@@ -22,18 +22,20 @@ jest.mock('@/components/ui/pressable', () => {
     const { Pressable } = require('react-native');
     return { Pressable };
 });
+// As on device: InputSlot IS a Pressable (accessible), and InputField is an
+// accessible TextInput whose label defaults to "Input Field".
 jest.mock('@/components/ui/input', () => {
-    const { View, TextInput } = require('react-native');
+    const { View, TextInput, Pressable } = require('react-native');
     return {
         Input: (p: any) => <View {...p} />,
-        InputField: (p: any) => <TextInput {...p} />,
-        InputSlot: (p: any) => <View {...p} />,
+        InputField: ({ 'aria-label': aria = 'Input Field', ...p }: any) => (
+            <TextInput accessible accessibilityLabel={aria} {...p} />
+        ),
+        InputSlot: (p: any) => <Pressable accessible {...p} />,
     };
 });
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+// Real icon-font glyphs, so a glyph under an accessible element is caught.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 import ExploreSearchBar from '../ExploreSearchBar';
 
@@ -83,5 +85,59 @@ describe('ExploreSearchBar', () => {
         );
         fireEvent.press(getByTestId('explore-search-close'));
         expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    // Captured (ux2 batch 27): with the bar open, the search glyph was its own
+    // StaticText and part of a container label (", Input Field, Close search"),
+    // and Close search measured 18x18.
+    it('exposes no private-use StaticText anywhere', () => {
+        const r = render(<ExploreSearchBar query="india" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
+        const glyphs = r.UNSAFE_root.findAll(
+            (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+        );
+        expect(glyphs.length).toBe(2);
+        for (const g of glyphs) {
+            expect(g.props.accessible).toBe(false);
+            expect(g.props.accessibilityElementsHidden).toBe(true);
+            expect(g.props.importantForAccessibility).toBe('no-hide-descendants');
+            for (let p: any = g.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+        }
+    });
+
+    it('makes Close search a childless labelled 44x44 numeric frame', () => {
+        const { StyleSheet } = require('react-native');
+        const { getByTestId } = render(<ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
+        const close = getByTestId('explore-search-close');
+        expect(close.props.accessibilityLabel).toBe('explore.closeSearch');
+        expect(close.props.accessibilityRole).toBe('button');
+        const flat = StyleSheet.flatten(close.props.style);
+        expect(flat).toMatchObject({ position: 'absolute', top: 0, right: 0, width: 44, height: 44 });
+        // It sits INSIDE its parent: the bar's box bleeds to 44pt tall and 1.5pt
+        // right by padding, with matching negative margins so nothing reflows
+        // (a button overflowing its parent can miss taps on Android).
+        const box = StyleSheet.flatten(getByTestId('explore-search-input').props.style);
+        expect(box).toMatchObject({ paddingVertical: 4.5, marginVertical: -4.5, paddingRight: 1.5, marginRight: -1.5 });
+        expect(35 + 2 * box.paddingVertical).toBe(44);
+        expect(close.findAll((n: any) => n !== close && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
+    });
+
+    it('keeps the input focusable and labelled with its placeholder, not "Input Field"', () => {
+        const { getByPlaceholderText } = render(<ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
+        const input = getByPlaceholderText('explore.searchPlaceholder');
+        expect(input.props.accessible).toBe(true);
+        expect(input.props.accessibilityLabel).toBe('explore.searchPlaceholder');
+    });
+
+    // Captured (ux2 batch 28): with the glyphs hidden, the bar's containers
+    // still read "<glyph>, Search recent news, <glyph>": exactly the children
+    // of the gluestack Input root (Close search, outside the Input, was not in
+    // it). The glyphs are drawn over the Input from its parent instead, with
+    // spacers holding their old width inside it.
+    it('keeps both glyphs out of the Input root, so no container composes them', () => {
+        const { exposedGlyphTexts } = require('@/lib/__test-helpers__/icon-glyph-a11y');
+        const r = render(<ExploreSearchBar query="india" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
+        expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);
+        const field = r.getByTestId('explore-search-field');
+        expect(field.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)))).toHaveLength(0);
     });
 });

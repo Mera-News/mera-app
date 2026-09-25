@@ -138,11 +138,9 @@ jest.mock('@/lib/database/services/persona-change-log-service', () => ({
     append: (...a: unknown[]) => mockAppend(...a),
 }));
 
-const mockMarkFeedNeedsRefresh = jest.fn((..._a: unknown[]) => {});
 const mockRunSweepFor = jest.fn(async (..._a: unknown[]) => false);
 const mockSweepForMutation = jest.fn((..._a: unknown[]) => 'unexclude');
 jest.mock('@/lib/database/services/persona-mutation-sweeps', () => ({
-    markFeedNeedsRefresh: (...a: unknown[]) => mockMarkFeedNeedsRefresh(...a),
     runSweepFor: (...a: unknown[]) => mockRunSweepFor(...a),
     sweepForMutation: (...a: unknown[]) => mockSweepForMutation(...a),
 }));
@@ -252,18 +250,14 @@ describe('PublicationPreferencesScreen', () => {
             prefAfter: 'none',
         });
         expect(mockRunSweepFor).toHaveBeenCalledWith('unexclude', 'set_publication_pref');
-        // runSweepFor resolved false (not a successful purge) → the screen must
-        // still mark the feed dirty, exactly like applyPersonaAction would.
-        expect(mockMarkFeedNeedsRefresh).toHaveBeenCalledTimes(1);
     });
 
-    it('does not double-dirty the feed when the sweep already reconciled it (a purge that reports true)', async () => {
+    it('runs the sweep exactly once when it reports a successful purge', async () => {
         mockObservedRows = [makeNamedPref()];
         mockRunSweepFor.mockResolvedValue(true as any);
         const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
         fireEvent.press(getByTestId('row-pref1-clear'));
         await waitFor(() => expect(mockRunSweepFor).toHaveBeenCalledTimes(1));
-        expect(mockMarkFeedNeedsRefresh).not.toHaveBeenCalled();
     });
 
     it('scope clear calls setScopePreferenceKind with "none" and hand-appends, without touching the named-publication service calls', async () => {
@@ -279,7 +273,6 @@ describe('PublicationPreferencesScreen', () => {
             ),
         );
         expect(mockSetPreferenceKind).not.toHaveBeenCalled();
-        expect(mockMarkFeedNeedsRefresh).toHaveBeenCalledTimes(1);
     });
 
     it('keys busy state on pref.id, so a scope row and a same-named publication row never share a busy lock', async () => {

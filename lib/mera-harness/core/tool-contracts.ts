@@ -75,7 +75,7 @@ export const LOOKUP_PLACE_TOOL: ToolDefinition = {
   function: {
     name: 'lookup_place',
     description:
-      "Resolve a place the user named into its real locality, region and country. Call it before writing any place into a fact. Never write a country or region from memory. It returns 1 to 3 candidates: with one, use it; with more, ask the user which they meant. If it returns no match, ask which place they meant; if it reports the lookup is unavailable, say the lookup did not work and ask them to write the place out in full.",
+      "Resolve a place the user named into its real locality, region and country. Call it before writing any place into a fact. Never write a country or region from memory. It returns 1 to 3 candidates: with one, use it, and put any unmatched words first as the district, spelled the usual way (an obvious typo is corrected, never asked about); with more, ask the user which they meant. With no match, offer the user's own words, never invented alternatives; if it reports the lookup is unavailable, offer their words as written and do not mention the tool.",
     parameters: {
       type: 'object',
       properties: {
@@ -158,18 +158,50 @@ export const SAVE_FACTS_TOOL: ToolDefinition = {
   },
 };
 
+/**
+ * THE WEB, from the user's device through the gateway (ux2 D10). `queries`,
+ * never `query`: one call carries up to 4 searches and the gateway fans them
+ * out. The query leaves the device in plaintext and is not linked to the user,
+ * which the existing chat web-search disclosure already says.
+ *
+ * Declared only on facts and question legs, and only when the device offers
+ * the tool (the "Web search in chat" setting is on). Never on the route leg.
+ */
+export const WEB_SEARCH_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'webSearch',
+    description:
+      'Search the web for what a place, organisation or term is. Use it only when a lookup found nothing or the user asks what something is. A result never becomes a region or country in a fact; those come only from lookup_place.',
+    parameters: {
+      type: 'object',
+      properties: {
+        queries: {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 1,
+          maxItems: 4,
+          description: '1 to 4 short search queries.',
+        },
+      },
+      required: ['queries'],
+    },
+  },
+};
+
 export const DELETE_FACTS_TOOL: ToolDefinition = {
   type: 'function',
   function: {
     name: 'deleteUserFacts',
     description:
-      'Remove facts the user asked you to remove. Pass EXACT fact ids from the existing-facts list, never an attribute or a statement. Ask with ask_choice and wait for the tap before calling this: it is irreversible and it deletes the topics too.',
+      'Offer to remove facts the user asked you to remove. Pass EXACT fact ids from the known facts, or all: true when they want everything gone. Nothing is removed by this call: a card lists the facts and the user taps Remove or Keep, so never ask about the removal with ask_choice.',
     parameters: {
       type: 'object',
       properties: {
         fact_ids: { type: 'array', items: { type: 'string' }, description: 'Exact fact ids.' },
+        all: { type: 'boolean', description: 'true when the user wants every fact removed.' },
       },
-      required: ['fact_ids'],
+      required: [],
     },
   },
 };
@@ -202,11 +234,21 @@ export function toolsForLeg(opts: {
   /** False once another segment of the same turn has asked its question: one
    *  question per turn, so later segments put other readings on the card. */
   allowChoice?: boolean;
+  /** The device offers web search (the setting is on). Declared on facts and
+   *  question legs only, never on the route or forced leg. */
+  webSearch?: boolean;
 }): ToolDefinition[] {
   const tools = toolsForLegUnfiltered(opts);
+  const withSearch =
+    opts.webSearch === true
+    && !opts.forcingProposal
+    && opts.skillLoaded !== null
+    && (opts.skillLoaded.startsWith('facts/') || opts.skillLoaded === 'conversation/question')
+      ? [...tools, WEB_SEARCH_TOOL]
+      : tools;
   return opts.allowChoice === false
-    ? tools.filter((t) => t.function.name !== 'ask_choice')
-    : tools;
+    ? withSearch.filter((t) => t.function.name !== 'ask_choice')
+    : withSearch;
 }
 
 function toolsForLegUnfiltered(opts: {

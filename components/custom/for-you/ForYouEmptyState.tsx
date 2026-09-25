@@ -41,7 +41,8 @@ const ForYouEmptyState: React.FC<ForYouEmptyStateProps> = ({
     className={compact ? 'items-center px-4 py-4' : 'items-center justify-center px-8 py-16'}
     space="sm"
   >
-    <MaterialIcons name={icon} size={compact ? 28 : 48} color={EMPTY_STATE_INK.icon} />
+    {/* Decoration: hidden, or it surfaces as its own icon-font StaticText. */}
+    <MaterialIcons name={icon} size={compact ? 28 : 48} color={EMPTY_STATE_INK.icon} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
     {title ? (
       <Text size="lg" className="text-center font-semibold" style={{ color: EMPTY_STATE_INK.title }}>
         {title}

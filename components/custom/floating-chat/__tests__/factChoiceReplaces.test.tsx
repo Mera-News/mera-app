@@ -190,7 +190,7 @@ describe('Keep both', () => {
   const HOME = 'location: neighborhood/area, city, and country (preserve specifics)';
   const ORIGIN = 'background: country of origin';
 
-  it('is offered, and leads, when the two facts sit under different keys', async () => {
+  it('is offered when the two facts sit under different keys', async () => {
     // Not a home fact: a home fact is never replaced by another key at all
     // (see the home-key guard below), so it never reaches this choice.
     mockFacts = [{ id: 'old-1', statement: 'Product manager', questionnaireAttribute: 'profession: job role and industry' }];
@@ -208,13 +208,29 @@ describe('Keep both', () => {
     ]);
   });
 
-  it('is not offered for a true contradiction under the same key', async () => {
+  // OWNER RULING (ux2): "there should always be an option to keep both".
+  // A true contradiction keeps its Replace title and red disclosure, and still
+  // offers Keep both, which adds the new fact and leaves the old one untouched.
+  it('IS offered on every replace card, a same-key contradiction included', async () => {
     mockFacts = [{ id: 'old-1', statement: 'Lives in Amsterdam', questionnaireAttribute: HOME }];
-    const { queryByTestId, findByText } = render(
+    const { getByTestId, findByText } = render(
       <FactChoiceCard {...props} options={['Lives in Berlin']} questionnaireAttribute={HOME} replacesFactId="old-1" />,
     );
     expect(await findByText('factChoice.titleReplace')).toBeTruthy();
-    expect(queryByTestId('fact-choice-keep-both-0')).toBeNull();
+    expect(getByTestId('fact-choice-replaces-0')).toBeTruthy();
+    await act(async () => {
+      fireEvent.press(getByTestId('fact-choice-keep-both-0'));
+    });
+    expect(mockCommit).toHaveBeenCalledWith([
+      expect.not.objectContaining({ replaces: expect.anything() }),
+    ]);
+  });
+
+  it('orders the actions Replace, Keep both, Skip', async () => {
+    const { toJSON, findByText } = drawReplace();
+    await findByText('Lives in Amsterdam');
+    const ids = JSON.stringify(toJSON()).match(/fact-choice-(add|keep-both|dismiss)-0/g);
+    expect(ids).toEqual(['fact-choice-add-0', 'fact-choice-keep-both-0', 'fact-choice-dismiss-0']);
   });
 
   // ux1 C4: the reply said "I can keep both" above a card that could not.
@@ -282,5 +298,23 @@ describe('the disclosure matches the choice', () => {
   it('a true Replace keeps the red block', async () => {
     const { findByText } = drawReplace();
     expect(await findByText('factChoice.replacesNoUndo')).toBeTruthy();
+  });
+});
+
+describe('ux2 batch 25 D4: Keep both raises no conflict with the fact it keeps', () => {
+  it('drops a conflict against the kept fact, keeps any other', async () => {
+    const { resolveGroup } = require('../fact-choice-actions') as { resolveGroup: jest.Mock };
+    mockCommit.mockResolvedValueOnce({
+      savedFacts: [{ id: 'new', statement: 's' }],
+      conflicts: [
+        { newFactId: 'new', existingFactId: 'old-1', newStatement: 's', existingStatement: 'Lives in Amsterdam', kind: 'attribute', suggestedMerge: '' },
+        { newFactId: 'new', existingFactId: 'other', newStatement: 's', existingStatement: 'x', kind: 'attribute', suggestedMerge: '' },
+      ],
+    } as never);
+    const { getByTestId, findByText } = drawReplace();
+    await findByText('Lives in Amsterdam');
+    await act(async () => { fireEvent.press(getByTestId('fact-choice-keep-both-0')); });
+    const resolution = resolveGroup.mock.calls[0][2];
+    expect(resolution.conflicts.map((c: { existingFactId: string }) => c.existingFactId)).toEqual(['other']);
   });
 });

@@ -25,6 +25,7 @@ import {
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
 import { isFactPickChoice, joinFactPick } from '@/lib/mera-harness/core/fact-pick';
+import { stripThinkTags } from '@/lib/llm/think-strip';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
 import type {
   AgentStep,
@@ -32,6 +33,7 @@ import type {
   ChatThreadItem,
   FactCardAction,
   PersistedMessage,
+  SaveAsWrittenOffer,
 } from './types';
 import {
   changedDataFrom,
@@ -103,6 +105,55 @@ function toStringArray(value: unknown): string[] {
     .filter((v) => v.length > 0);
 }
 
+/** The loop's "Save as I wrote it" entry on a call's result, and its saved
+ *  outcome once tapped (ux2 D9). Null when the call carries none. */
+function saveAsWrittenOf(
+  tc: ToolCallRecord,
+  resultKey: string,
+): { offer: SaveAsWrittenOffer; saved: { id: string; statement: string }[] | null } | null {
+  const result = asRecord(tc.result);
+  const raw = asRecord(result?.saveAsWritten);
+  if (!result || !raw || typeof raw.statement !== 'string' || !raw.statement.trim()) return null;
+  const entry: SaveAsWrittenOffer['entry'] = {
+    statement: raw.statement,
+    ...(typeof raw.questionnaire_attribute === 'string' ? { questionnaire_attribute: raw.questionnaire_attribute } : {}),
+    ...(typeof raw.topic_skill_id === 'string' ? { topic_skill_id: raw.topic_skill_id } : {}),
+  };
+  const saved = Array.isArray(result.saveAsWrittenSaved)
+    ? (result.saveAsWrittenSaved as unknown[])
+        .map((f) => asRecord(f))
+        .filter((f): f is Record<string, unknown> => !!f && typeof f.id === 'string' && typeof f.statement === 'string')
+        .map((f) => ({ id: f.id as string, statement: f.statement as string }))
+    : null;
+  return { offer: { resultKey, baseResult: result, entry }, saved: saved && saved.length > 0 ? saved : null };
+}
+
+/** The saved sentence and its topics, in place of the chip. */
+function pushSavedAsWritten(
+  cards: ChatThreadItem[],
+  messageId: string,
+  idx: number,
+  saved: { id: string; statement: string }[],
+  topicSkillId?: string,
+): void {
+  cards.push({
+    kind: 'fact-card',
+    key: `card-${messageId}-${idx}-as-written`,
+    action: 'saved',
+    statements: saved.map((f) => f.statement),
+    factIds: saved.map((f) => f.id),
+  });
+  for (const f of saved) {
+    cards.push({
+      kind: 'chat-topics-card',
+      key: `chat-topics-${messageId}-${idx}-as-written-${f.id}`,
+      factId: f.id,
+      factStatement: f.statement,
+      ...(topicSkillId ? { topicSkillId } : {}),
+    });
+  }
+}
+
 /** Maps one completed tool call to a fact card, or null if it should not surface. */
 function deriveCard(toolCall: ToolCallRecord): DerivedCard | null {
   if (toolCall.status !== 'done') return null;
@@ -136,16 +187,28 @@ function deriveCard(toolCall: ToolCallRecord): DerivedCard | null {
     }
 
     case 'deleteUserFacts': {
-      const fromResult = toStringArray(result.deletedStatements);
-      if (fromResult.length > 0) {
-        return { action: 'deleted', statements: fromResult, factIds: [] };
+      // A BLOCKED delete (the loop's ask-first gate) is an error result. It
+      // used to fall through to `input.fact_ids` and render "Removed from your
+      // persona" listing ids, once per blocked call, before the user had
+      // confirmed anything (ux2 C4). With the statements the gate resolved it
+      // is a PENDING card; without them it is nothing.
+      // The user answered the card (ux2 M6): the outcome is recorded on the
+      // call's result by `confirmPendingDelete`.
+      if (result.deleteOutcome === 'removed') {
+        const gone = toStringArray(result.deletedStatements);
+        return gone.length > 0 ? { action: 'deleted', statements: gone, factIds: [] } : null;
       }
-      // Actual handler returns { success, deletedCount }. If nothing was
-      // deleted, don't surface a card.
-      if (typeof result.deletedCount === 'number' && result.deletedCount === 0) return null;
-      const statements = toStringArray(input.fact_ids);
-      return statements.length > 0
-        ? { action: 'deleted', statements, factIds: [] }
+      if (result.deleteOutcome === 'kept') return { action: 'deleteKept', statements: [], factIds: [] };
+      if (typeof result.error === 'string') {
+        const pending = toStringArray(result.pendingStatements);
+        return pending.length > 0
+          ? { action: 'deletePending', statements: pending, factIds: toStringArray(result.pendingFactIds) }
+          : null;
+      }
+      // Only what the handler actually removed, never the ids it was handed.
+      const fromResult = toStringArray(result.deletedStatements);
+      return fromResult.length > 0
+        ? { action: 'deleted', statements: fromResult, factIds: [] }
         : null;
     }
 
@@ -330,6 +393,11 @@ export function parseProposalAction(value: unknown): ProposalAction | null {
 /** Rebuilds a StagedProposal from a completed `proposeChanges` tool call. */
 function deriveProposal(toolCall: ToolCallRecord): StagedProposal | null {
   if (toolCall.status !== 'done' || toolCall.name !== 'proposeChanges') return null;
+  // A REFUSED proposal draws no card (ux2 batch 25, F7): the card was built
+  // from the tool INPUT regardless, so a proposal the agent rejected
+  // (`{ error }`) rendered already "no longer active" and nothing could be
+  // added. Same class as chips for a refused ask_choice.
+  if (typeof asRecord(toolCall.result)?.error === 'string') return null;
 
   const input = asRecord(toolCall.input) ?? {};
   const rawActions = Array.isArray(input.actions) ? input.actions : [];
@@ -573,6 +641,7 @@ function emitFactChoiceGroups(
   result: Record<string, unknown>,
   resolutions: ReturnType<typeof readGroupResolutions> & object,
   stale: boolean,
+  followedByUser = false,
 ): void {
   const resultKey = `${messageId}::${idx}`;
   const groups = readPendingGroups(result);
@@ -606,6 +675,10 @@ function emitFactChoiceGroups(
     }
 
     if (resolution.status === 'dismissed') {
+      // GONE once the user has moved on (owner ruling ux2 M3). A skipped card
+      // kept its Undo forever and "✕ Not added" cards piled up down the
+      // thread; Undo stays reachable until the next user message.
+      if (followedByUser) continue;
       cards.push({
         kind: 'fact-choice-card',
         key: `fact-choice-${messageId}-${idx}-${groupId}`,
@@ -651,6 +724,7 @@ function emitFactChoiceGroups(
         key: `chat-topics-${messageId}-${idx}-${groupId}-${f.id}`,
         factId: f.id,
         factStatement: f.statement,
+        ...(group.topicSkillId ? { topicSkillId: group.topicSkillId } : {}),
       });
     }
   }
@@ -659,15 +733,11 @@ function emitFactChoiceGroups(
   // only while 2+ remain pending. Spliced rather than appended so it cannot end
   // up below an already-resolved group's cards.
   //
-  // A REPLACEMENT GROUP IS EXCLUDED, from the row and from the count that
-  // decides whether the row renders at all. "Add all" performing an
-  // irreversible destroy on facts the user never looked at individually is
-  // consent fabricated in bulk — the same shape as forcing a tool call the
-  // user never asked for. A replacement has to be tapped on its own card,
-  // where what it destroys is named.
-  const bulkable = groups.filter(
-    (g) => resolutions[groupIdOf(g)] === undefined && !g.replaces,
-  );
+  // REPLACEMENT GROUPS ARE INCLUDED (owner ruling ux2). The row then says
+  // what it does: "Replace all" / "Keep all" / "Skip all", never a plain
+  // "Add all" that would destroy facts under an add label, and each replace
+  // card above it still names what it removes. Every pending group counts.
+  const bulkable = groups.filter((g) => resolutions[groupIdOf(g)] === undefined);
   if (bulkable.length >= 2 && !stale && lastPendingAt >= 0) {
     cards.splice(lastPendingAt + 1, 0, {
       kind: 'fact-choice-bulk-row',
@@ -680,6 +750,7 @@ function emitFactChoiceGroups(
         options: g.options,
         questionnaireAttribute: g.questionnaireAttribute,
         topicSkillId: g.topicSkillId ?? null,
+        replaces: g.replaces ?? null,
       })),
     });
   }
@@ -707,6 +778,20 @@ interface TurnAccum {
   firstAssistantId: string | null;
   steps: AgentStep[];
   toolStepCount: number;
+  /** The turn put a card or chips on screen. */
+  offered: boolean;
+}
+
+/** A tool call that leaves something on screen for the user to act on. */
+function offersSomething(tc: ToolCallRecord): boolean {
+  const r = asRecord(tc.result);
+  if (!r || typeof r.error === 'string') return false;
+  if (tc.name === 'ask_choice') return r.awaiting === 'user';
+  if (tc.name === 'saveAsWritten') return true;
+  if (tc.name === 'saveExtractedFacts') {
+    return readPendingGroups(r).length > 0 || (Array.isArray(r.savedFacts) && r.savedFacts.length > 0);
+  }
+  return tc.name === 'deleteUserFacts';
 }
 
 interface SeqEntry {
@@ -735,6 +820,7 @@ function buildTurnBoxes(
   stale: boolean,
   turnActive: boolean | undefined,
   agentTerminal: AgentTerminal | null,
+  waitPhase: string | null = null,
 ): Map<string, AgentStepsItem> {
   const turns: TurnAccum[] = [];
   let current: TurnAccum | null = null;
@@ -747,6 +833,7 @@ function buildTurnBoxes(
         firstAssistantId: null,
         steps: [],
         toolStepCount: 0,
+        offered: false,
       };
       turns.push(current);
       continue;
@@ -759,6 +846,7 @@ function buildTurnBoxes(
         firstAssistantId: message.id,
         steps: [],
         toolStepCount: 0,
+        offered: false,
       };
       turns.push(current);
     }
@@ -766,6 +854,7 @@ function buildTurnBoxes(
     const toolSteps = stepsForMessage(message.id, message.toolCalls, false);
     current.steps.push(...toolSteps);
     current.toolStepCount += toolSteps.length;
+    if ((message.toolCalls ?? []).some(offersSomething)) current.offered = true;
   }
 
   // THE LAST TURN OVERALL, not the last one that happened to call a tool. A
@@ -827,7 +916,10 @@ function buildTurnBoxes(
     const full: AgentStep[] = [
       legStartStep(turn.firstAssistantId ?? turn.anchorId, true),
       ...mergedSteps,
-      ...(active ? [continuingStep(turn.anchorId)] : []),
+      // The live row carries the wait line's phase when it is the web search
+      // (ux2 batch 25, D6): the wait line itself is suppressed while a box is
+      // live, so "Searching the web from your device…" could never show.
+      ...(active ? [continuingStep(turn.anchorId, waitPhase === 'webSearch' ? 'chatPhases.webSearch' : undefined)] : []),
     ];
 
     out.set(turn.anchorId, {
@@ -839,7 +931,10 @@ function buildTurnBoxes(
       failedCount: full.filter((s) => s.status === 'error').length,
       // Only the LAST turn: the store holds one terminal, and stamping it on an
       // older box would relabel a turn that ended for a different reason.
-      terminal: isLast ? (agentTerminal ?? null) : null,
+      // "Mera didn't find anything to add" beside the card it just offered
+      // (ux2 D5 backstop): a turn that put a card on screen did find something.
+      terminal:
+        isLast && !(agentTerminal === 'no-proposal' && turn.offered) ? (agentTerminal ?? null) : null,
       interrupted,
       changedData: changedDataFrom(full),
     });
@@ -876,7 +971,11 @@ function mergeRepeatedSteps(steps: AgentStep[]): AgentStep[] {
 function bubbleCarries(content: string, question: string): boolean {
   const norm = (t: string) => t.toLowerCase().replace(/\s+/g, ' ').replace(/[?.!\s]+$/, '').trim();
   const q = norm(question);
-  return q.length > 0 && norm(content).includes(q);
+  if (q.length > 0 && norm(content).includes(q)) return true;
+  // THE SAME QUESTION IN OTHER WORDS (ux2 batch 25, D5): "Which Newcastle did
+  // you mean?" in the bubble over "Which Newcastle is home?" on the card read
+  // as asking twice. A bubble that ENDS on a question is asking this one.
+  return /\?\s*$/.test(content.trim());
 }
 
 /**
@@ -931,7 +1030,9 @@ function placeProposalCardsLast(items: ChatThreadItem[]): ChatThreadItem[] {
  */
 function keepBox(box: AgentStepsItem): boolean {
   if (!box.collapsed) return true;
-  return box.changedData || box.failedCount > 0 || box.terminal !== null;
+  // NOT `changedData` (ux2 M2): an ordinary settled turn that staged a card
+  // showed an empty "✓ Done" row after every message. The card is the result.
+  return box.failedCount > 0 || box.terminal !== null;
 }
 
 // ---------------------------------------------------------------------------
@@ -956,6 +1057,12 @@ function emitMessage(
   // cards. Filtered here rather than at the call sites so every source (live,
   // resume, history) is covered by one line.
   if (message.hidden) return;
+  // Think tags are stripped at the engines; this covers history persisted
+  // before that, one line for every source.
+  if (message.role === 'assistant') {
+    const shown = stripThinkTags(message.content);
+    if (shown !== message.content) message = { ...message, content: shown };
+  }
 
   const cards: ChatThreadItem[] = [];
   if (message.role === 'assistant' && message.toolCalls) {
@@ -983,13 +1090,38 @@ function emitMessage(
       // ask_choice: chips under this bubble. Derived from the tool INPUT, and
       // `answered` is decided by the caller, which is the only place that can
       // see whether a later user message exists.
+      // "SAVE AS I WROTE IT" standing alone: the loop wrote it after a lookup
+      // that placed nothing (ux2 D9). Rendered as a chip-only card.
+      if (tc.name === 'saveAsWritten') {
+        const own = saveAsWrittenOf(tc, `${message.id}::${idx}`);
+        if (own?.saved) pushSavedAsWritten(cards, message.id, idx, own.saved, own.offer.entry.topic_skill_id);
+        else if (own) {
+          cards.push({
+            kind: 'ask-choice-card',
+            key: `ask-choice-${message.id}-${idx}`,
+            question: null,
+            options: [],
+            saveAll: null,
+            saveAsWritten: own.offer,
+            answered: answeredAsk,
+          });
+        }
+        return;
+      }
       if (tc.name === 'ask_choice') {
+        // CHIPS ONLY FOR A QUESTION THE LOOP ACCEPTED (ux2 D4). A refused call
+        // (`{error}`) still rendered chips, so the user saw a question beside
+        // the card the loop offered instead, and a chip read as Mera's own
+        // first-person sentence. A record with no result yet is still waiting.
+        const askResult = asRecord(tc.result);
+        if (askResult && askResult.awaiting !== 'user') return;
         const askInput = asRecord(tc.input) ?? {};
         const allOptions = toStringArray(askInput.options);
         // Distinct facts are never a pick-one: their chip list carries Save
         // all, which always covers EVERY option, even past the chips shown.
         const factPick = isFactPickChoice(allOptions);
         const options = allOptions.slice(0, factPick ? 4 : 3);
+        const own = saveAsWrittenOf(tc, `${message.id}::${idx}`);
         if (options.length >= 2) {
           const question =
             typeof askInput.question === 'string' ? askInput.question.trim() : '';
@@ -1003,13 +1135,29 @@ function emitMessage(
             question: !question || bubbleCarries(message.content, question) ? null : question,
             options,
             saveAll: factPick ? joinFactPick(allOptions) : null,
+            saveAsWritten: own && !own.saved ? own.offer : null,
             answered: answeredAsk,
           });
+          if (own?.saved) pushSavedAsWritten(cards, message.id, idx, own.saved, own.offer.entry.topic_skill_id);
         }
         return;
       }
 
       const card = deriveCard(tc);
+      // One pending-delete card per statement set per message: the model
+      // retrying a blocked delete must not stack identical cards.
+      if (
+        card
+        && card.action === 'deletePending'
+        && cards.some(
+          (c) =>
+            c.kind === 'fact-card'
+            && c.action === 'deletePending'
+            && c.statements.join('\u0001') === card.statements.join('\u0001'),
+        )
+      ) {
+        return;
+      }
       if (card) {
         cards.push({
           kind: 'fact-card',
@@ -1017,6 +1165,10 @@ function emitMessage(
           action: card.action,
           statements: card.statements,
           factIds: card.factIds,
+          // Live only: a card from an earlier conversation removes nothing.
+          ...(card.action === 'deletePending' && card.factIds.length > 0 && !stale
+            ? { pendingDelete: { resultKey: `${message.id}::${idx}`, baseResult: asRecord(tc.result) ?? {}, factIds: card.factIds } }
+            : {}),
         });
       }
 
@@ -1034,7 +1186,7 @@ function emitMessage(
         // with placeholder ids and write resolutions nothing could read back.
         const pendingGroups = readPendingGroups(result);
         if (resolutions !== null || pendingGroups.length > 0) {
-          emitFactChoiceGroups(cards, message.id, idx, result, resolutions ?? {}, stale);
+          emitFactChoiceGroups(cards, message.id, idx, result, resolutions ?? {}, stale, answeredAsk);
         } else {
           // LEGACY blob (no `groupResolutions` marker): a result persisted by a
           // pre-change bundle. Rendered exactly as it was — this is the whole
@@ -1106,6 +1258,7 @@ function toConversationMessage(m: PersistedMessage): ConversationMessage {
     role: m.role,
     content: m.content,
     toolCalls: m.toolCalls ?? undefined,
+    createdAt: m.createdAt,
   };
 }
 
@@ -1166,6 +1319,8 @@ export function deriveThreadItems(opts: {
   turnActive?: boolean;
   /** Why the latest agent turn stopped, when the user needs telling. */
   agentTerminal?: AgentTerminal | null;
+  /** The wait line's current phase, when one is published. */
+  waitPhase?: string | null;
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
@@ -1264,6 +1419,7 @@ export function deriveThreadItems(opts: {
     false,
     opts.turnActive,
     opts.agentTerminal ?? null,
+    opts.waitPhase ?? null,
   );
   for (const persisted of sortedResume) {
     // Resumed CURRENT-conversation messages are live for this purpose: their

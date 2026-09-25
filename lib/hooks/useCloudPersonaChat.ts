@@ -430,10 +430,16 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         // is not, so these final writes are the authoritative ones. An
         // acknowledgement the loop dropped (it narrated or leaked) empties its
         // bubble, which then stops rendering.
+        // ONE BUBBLE PER TURN (owner ruling ux2 D12, option a). The streamed
+        // acknowledgement restated the user's message, and with the answer
+        // below it every turn read as an echo. An answer with text now takes
+        // the acknowledgement's slot (the emptied bubble stops rendering); a
+        // card-only turn keeps the acknowledgement as its one bubble.
+        const answer = out.reply.trim();
         useCloudChatStore.getState().setMessages((prev) =>
           prev.map((m) =>
             m.id === ackId
-              ? { ...m, content: out.acknowledgement }
+              ? { ...m, content: answer ? '' : out.acknowledgement }
               : m.id === assistantId
                 ? { ...m, content: out.reply }
                 : m,
@@ -1077,6 +1083,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           id: `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
           role: 'user',
           content: trimmed,
+          createdAt: Date.now(),
         };
         store.setMessages((prev) => [...prev, userMsg]);
       }

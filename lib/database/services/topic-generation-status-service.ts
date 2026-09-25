@@ -87,8 +87,8 @@ export async function completeTopicGeneration(
   // with its own row, and never once asked about: the user sees a full topic
   // list where every line reads "0 articles".
   //
-  // The two sibling minting paths, `syncLlmTopicsForFact` and
-  // `appendTopupTopicsForFact`, both pass these. This one did not, and it
+  // The sibling minting path, `syncLlmTopicsForFact`, passes these. This one
+  // did not, and it
   // became reachable the moment the `topics/*` guidelines were wired to the
   // chat route, so every fact saved through a skill-guided run produced dead
   // topics.

@@ -56,6 +56,7 @@ import {
   inputTokenReport,
   percentile,
   proseReport,
+  proposalReport,
   thinkingGearReport,
   toolValidityReport,
 } from '../../lib/mera-harness/eval/agent-metrics';
@@ -378,7 +379,7 @@ async function main(): Promise<number> {
   const text = formatAgreementReport(report);
   // eslint-disable-next-line no-console
   console.log(`\n${text}`);
-  printAgentBlocks(collected, args.oneShotVariant, mismatches);
+  printAgentBlocks(collected, args.oneShotVariant, mismatches, scripts);
 
   run.finish({
     args, target: env.target, rows: rows.path, agreement: report,
@@ -434,7 +435,7 @@ export function armDistinctnessFailures(rows: EvalRow[]): string[] {
 }
 
 /** Damage before quality, quality before cost. */
-function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismatches: string[]): void {
+function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismatches: string[], scripts: AgentScript[]): void {
   const turns = groupTurns(rows);
   const out: string[] = [];
 
@@ -477,6 +478,13 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
   out.push(`  correct ${sr.outcomes.correct}, wrong id ${sr.outcomes['wrong-id']}, ` +
     `none loaded ${sr.outcomes['none-loaded']}, id that does not exist ${sr.outcomes['nonexistent-id']}`);
   out.push(`  route correct but skill wrong: ${sr.routeCorrectSkillWrong}`);
+
+  const props = proposalReport(turns, (id, idx) =>
+    scripts.find((s) => s.id === id)?.turns.find((t) => t.index === idx)?.expect ?? null);
+  out.push(`\nPROPOSALS (offered statements, sanitised; matches all present, excludes none)  ${props.met}/${props.expected}`);
+  for (const m of props.misses.slice(0, 8)) {
+    out.push(`  MISS ${m.scriptId} turn ${m.turnIndex} r${m.repeat}: wanted [${m.wanted.join(', ')}] offered ${JSON.stringify(m.offered)}`);
+  }
 
   const tools = toolValidityReport(rows);
   out.push('\nTOOL CALLS (unparseable and schema-invalid are different findings, never one rate)');

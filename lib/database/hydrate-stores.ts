@@ -50,7 +50,12 @@ export function hydrateAllStores(): Promise<void> {
     useUserStore.getState().hydrateFromDb(),
     useMeraProtocolStore.getState().hydrateFromDb(),
     useOnboardingStore.getState().hydrateFromDb(),
-    useAppLanguageStore.getState().hydrateFromDb(),
+    // Publication display names follow the app language: wired the moment it
+    // is known (not after the whole hydrate), so the cached map is on screen
+    // with the first cards, and even when an unrelated hydration fails.
+    useAppLanguageStore.getState().hydrateFromDb().finally(() => {
+      require('../publication-display-service').installPublicationDisplayNames().catch(() => undefined);
+    }),
     useAppStateStore.getState().hydrateFromDb(),
     useForYouPrefsStore.getState().hydrate(),
     useBlurImagesStore.getState().hydrate(),

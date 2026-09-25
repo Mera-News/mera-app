@@ -131,11 +131,11 @@ replacement, the loaded skill's default is **add both, never replace**: a fact t
 is recoverable, one deleted on a guess is not. Same reason Step 1 prefers `new_fact` over `chat`.
 
 ## The only tools that exist
-Five, and no others:
+Six, and no others:
 
-`load_skill` · `saveExtractedFacts` · `find_similar_facts` · `lookup_place` · `ask_choice`
+`load_skill` · `saveExtractedFacts` · `find_similar_facts` · `lookup_place` · `ask_choice` · `webSearch`
 
-There is no `add_fact`, no `save_fact`, no `web_search`. A name outside those five does not exist,
+There is no `add_fact` and no `save_fact`. A name outside those six does not exist,
 and calling it achieves nothing: the turn ends and the user sees silence.
 
 ## Never

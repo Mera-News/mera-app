@@ -41,15 +41,25 @@ import {
   AccessibilityInfo,
   FlatList,
   findNodeHandle,
+  StyleSheet,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** Show the scroll-to-top FAB once the list is scrolled past this many px. */
 const SCROLL_THRESHOLD = 300;
+/** The Back button's tap frame: 44pt, pulled back to the 24pt glyph. */
+const BACK_FRAME = {
+  width: 44,
+  height: 44,
+  margin: -10,
+  alignItems: 'center',
+  justifyContent: 'center',
+} as const;
 
 interface FactFeedScreenProps {
   /** The SECTION id — a fact id, or a synthetic headline-scope id (see
@@ -140,20 +150,20 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
     );
   }, [allRows, factId]);
 
-  // The NEXT fact, in Dashboard order — so tapping the footer below always
-  // lands on a section the user could also have reached by scrolling the
-  // Dashboard. This used to drop rows whose every group the Dashboard's
-  // importance pill had hidden; with that pill gone the Dashboard shows every
-  // row it builds, so `allRows` IS the Dashboard-visible order.
+  // The NEXT fact, in Dashboard order, skipping sections with no stories (the
+  // Dashboard does not draw them, owner decision), so tapping the footer
+  // below always lands on a section the user could also have reached by
+  // scrolling the Dashboard. None left: the footer offers the way back.
   const nextFact = useMemo(() => {
     const idx = allRows.findIndex((r) => r.factId === factId);
     if (idx === -1) return null;
-    return allRows[idx + 1] ?? null;
+    return allRows.slice(idx + 1).find((r) => r.groups.length > 0) ?? null;
   }, [allRows, factId]);
 
   const nextFactTitle = nextFact ? sectionTitle(t, nextFact) : null;
   // This section's own row: its empty reason when it is an interest with no
-  // stories yet (D4), which "Next" can land on.
+  // stories yet. "Next" never lands on one, but a fact opened directly (from
+  // Profile, a deep link) can be empty and says so.
   const thisRow = useMemo(() => allRows.find((r) => r.factId === factId) ?? null, [allRows, factId]);
   const isLastSection = thisRow !== null && nextFact === null;
 
@@ -193,6 +203,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   const listRef = useRef<FlatList<FactRowGroup>>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    // Rows below the first screen ask for their translation only when a tick
+    // finds them on screen (lib/visibility-tick).
+    notifyScrollTick();
     const next = e.nativeEvent.contentOffset.y > SCROLL_THRESHOLD;
     // Functional update → only re-render when the boolean actually flips.
     setShowScrollToTop((prev) => (prev === next ? prev : next));
@@ -263,7 +276,8 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
 
   // "Jump from one fact feed list to the next" (r14 #6), in the NEXT section's
   // gradient (N13). Renders on an empty section too: that is exactly when
-  // hopping onward is most useful. The last section offers the way back.
+  // hopping onward is most useful. With no section with stories left, it
+  // offers the way back.
   const listFooter =
     nextFact && nextFactTitle ? (
       <NextSectionFooter
@@ -278,8 +292,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
       <NextSectionFooter kind="back" onPress={backToDashboard} />
     ) : null;
 
-  // An interest with no stories yet says which of the two it is, like its
-  // Dashboard section (D4); any other empty list is simply caught up.
+  // An interest with no stories yet (reached directly: the Dashboard and "Next"
+  // skip it) says which of the two it is; any other empty list is simply
+  // caught up.
   // Nothing until this section's snapshot has loaded: during a "Next" hop the
   // new screen mounts with no snapshot, and "all caught up" flashed for a
   // fifth of a second before the section's real content or empty state.
@@ -341,14 +356,27 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
           style={{ paddingTop: insets.top + 12 }}
           space="sm"
         >
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.back')}
-          >
-            <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-          </Pressable>
+          {/* A real 44pt frame pulled back to the 24pt glyph by a -10 margin
+              (hitSlop measured 24x24 on device; numeric, since NativeWind rem
+              is 14 and w-11 is 38.5pt). The arrow sits OUTSIDE the button: a
+              glyph inside one still surfaced as its own StaticText (captured). */}
+          <View testID="fact-feed-back-frame" style={BACK_FRAME}>
+            <MaterialIcons
+              name="arrow-back"
+              size={24}
+              color="#FFFFFF"
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
+            <Pressable
+              testID="fact-feed-back"
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back')}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
           <View
             ref={titleRef}
             className="flex-1 min-w-0"
@@ -389,6 +417,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
         contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
+        onContentSizeChange={notifyScrollTick}
         scrollEventThrottle={16}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}

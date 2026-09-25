@@ -62,9 +62,11 @@ const EN = jest.requireActual('../../../../lib/locales/en.json') as {
   };
 };
 
-/** The seed is `Math.random() * 6`; pin it so the nudge pool is deterministic. */
+/** The seed is `Math.random()` times the nudge pool's length; pin it so the
+ *  nudge pool is deterministic. */
+const NUDGE_COUNT = EN.headerNarration.nudges.length;
 function seedNudgeAt(index: number) {
-  jest.spyOn(Math, 'random').mockReturnValue(index / 6);
+  jest.spyOn(Math, 'random').mockReturnValue(index / NUDGE_COUNT);
 }
 
 function textOf(): string {
@@ -148,6 +150,22 @@ describe('HeaderNarrationLine', () => {
     renderLine('fetching');
     advanceOneSlot();
     expect(textOf()).toBe(EN.headerNarration.nudges[3]);
+  });
+
+  // ux2 C2: the pool grew to the owner's 10 lines. The seed covers the WHOLE
+  // pool, whatever its length, so the last nudge can open a run too.
+  it('can open a run on the LAST nudge: the seed range is the pool length', () => {
+    jest.spyOn(Math, 'random').mockReturnValue(0.9999);
+    renderLine('fetching');
+    advanceOneSlot();
+    expect(textOf()).toBe(EN.headerNarration.nudges[NUDGE_COUNT - 1]);
+  });
+
+  it('hard-codes no pool size in the seed (the pool length is read at run start)', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const src: string = fs.readFileSync(path.resolve(__dirname, '../HeaderNarrationLine.tsx'), 'utf8');
+    expect(src).not.toMatch(/Math\.random\(\)\s*\*\s*\d/);
   });
 
   it('switches pool when the stage changes, and opens that pool on its FIRST line', () => {

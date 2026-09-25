@@ -85,7 +85,6 @@ function resetStores() {
         hydrationCompleted: 0,
         hydrationTotal: 0,
         lastProcessingRunFinishedAt: null,
-        feedNeedsRefresh: false,
     });
     useUserStore.setState({
         userId: null,

@@ -8,8 +8,13 @@ import { getLanguageNameIn } from '@/lib/language-names';
 import {
     __resetTranslationQueueForTests,
     enqueueTranslationTask,
+    getTranslationEpoch,
     isDropped,
     PROBE_PRIORITY,
+    scheduleTranslationTask,
+    type HoldSlot,
+    type QueueRank,
+    type TranslationTaskHandle,
 } from '@/lib/translation-queue';
 
 /**
@@ -557,6 +562,8 @@ export function __resetTranslationStateForTests(): void {
     availabilityListeners.clear();
     probeTimedOut.clear();
     probeErrors.clear();
+    for (const shared of sharedRequests.values()) shared.abandon();
+    sharedRequests.clear();
     __resetTranslationQueueForTests();
 }
 
@@ -608,28 +615,33 @@ export function deviceCanTranslate(): boolean {
     return Device.isDevice !== false;
 }
 
-// Native translation calls are serialized and PRIORITISED by the scheduler in
-// `lib/translation-queue` — one in flight at a time (the OS cancels concurrent
-// translation sessions), dispatched nearest-the-viewport first, and dropped
-// before dispatch when the route they were queued for is no longer on screen.
+// Native translation calls are serialized and ranked by the scheduler in
+// `lib/translation-queue`: one in flight at a time (the OS cancels concurrent
+// translation sessions), visible rows first, dropped before dispatch when the
+// route they were queued for is gone, and the slot held until the native call
+// really settles.
 
-// Delays (ms) between retry attempts. The OS translator throws transiently
-// when the translation session is busy; a short pause is enough to recover.
-const TRANSLATE_RETRY_DELAYS_MS = [200, 600, 1800] as const;
+/**
+ * Backoff (ms) before each retry of a failed ordinary request. The retry is a
+ * NEW queue entry after this wait, never a sleep inside the slot: sleeping in
+ * the slot held every other row behind one bad string. The OS translator
+ * throws transiently when its session is busy; a short pause recovers it.
+ */
+const RETRY_BACKOFF_MS = [200, 600, 1800] as const;
 
-// No in-call retries. Used on iOS for a language we have never successfully
-// translated into, because there every attempt against missing assets
-// re-presents Apple's download sheet. The transient "session busy" case the
-// ladder exists for still recovers: a single failure is below
-// TRANSLATION_FAILURE_THRESHOLD, so the next request gets a clean second try.
-const NO_RETRY_DELAYS_MS = [] as const;
-
-function retryDelaysFor(targetLangCode: string): readonly number[] {
-    if (Platform.OS === 'ios' && !verifiedLanguages.has(targetLangCode)) {
-        return NO_RETRY_DELAYS_MS;
-    }
-    return TRANSLATE_RETRY_DELAYS_MS;
+/**
+ * Whether a failed request may be retried at all. Never on iOS for a language
+ * not yet verified (every attempt against missing assets re-presents Apple's
+ * download sheet), and never for the probe, which gets exactly one shot.
+ */
+function retriesAllowed(targetLangCode: string, isProbe: boolean): boolean {
+    if (isProbe) return false;
+    return !(Platform.OS === 'ios' && !verifiedLanguages.has(targetLangCode));
 }
+
+/** How long past its JS timeout a native call may keep the slot before the
+ *  queue gives up on it (a leaked continuation never settles). */
+const NATIVE_OVERRUN_CEILING_MS = 60_000;
 
 /**
  * Ceiling on a single native call for ordinary (non-probe) translation.
@@ -697,6 +709,7 @@ function callNativeWithTimeout(
     sourceLangCode: string,
     targetLangCode: string,
     timeoutMs: number,
+    hold: HoldSlot,
 ): Promise<string | null> {
     const call = onTranslateTask({
         input: text,
@@ -712,6 +725,11 @@ function callNativeWithTimeout(
         requiresWifi: false,
         requireCharging: false,
     });
+
+    // The queue slot stays taken until THIS settles, not until the timeout
+    // below gives up on it: a second call started on top of a live one is what
+    // made the native module cancel the running call.
+    hold(call, timeoutMs + NATIVE_OVERRUN_CEILING_MS);
 
     let settled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -833,12 +851,8 @@ export interface TranslateOptions {
     /** Marks the one caller allowed through the gate. Defaults to false. */
     readonly isProbe?: boolean;
     readonly timeoutMs?: number;
-    /**
-     * Queue priority — LOWER dispatches sooner. Callers that know where their
-     * text sits on screen should pass `visibilityPriority(measuredY)`; the
-     * default 0 means "as soon as the queue reaches you".
-     */
-    readonly priority?: number;
+    /** Where the text sits on screen (the queue runs visible rows first). */
+    readonly rank?: QueueRank;
     /**
      * Set false to exempt this call from route-epoch dropping. Defaults to true
      * for ordinary calls; the probe is exempt automatically.
@@ -863,6 +877,332 @@ export interface TranslationResult {
     readonly text: string | null;
 }
 
+/** How one native attempt ended. */
+type AttemptOutcome =
+    | { readonly kind: 'ok'; readonly text: string }
+    /** Blocked, gated or unsupported: nothing was asked, nothing to record. */
+    | { readonly kind: 'skipped' }
+    /** The OS answered with no text. Not retried. */
+    | { readonly kind: 'empty' }
+    | { readonly kind: 'error'; readonly error: unknown; readonly timedOut: boolean };
+
+/**
+ * One native attempt, run INSIDE the queue slot. Records success; a failure is
+ * counted once per REQUEST ({@link countFailure}, at its first failed attempt)
+ * and logged once at its last ({@link logFinalFailure}).
+ */
+async function runNativeAttempt(
+    text: string,
+    targetLangCode: string,
+    timeoutMs: number,
+    isProbe: boolean,
+    hold: HoldSlot,
+): Promise<AttemptOutcome> {
+    // Checked HERE, at the head of the queue — NOT when the request was made.
+    // A language switch fires every mounted <TranslatableDynamic> in one
+    // effect flush, so all N calls are already queued before the first failure
+    // lands; a call-time check would let every one of them reach the native
+    // module and present its own sheet.
+    if (blockedLanguages.has(targetLangCode)) return { kind: 'skipped' };
+
+    // The two "this can never work" checks come BEFORE the gate: both are pure
+    // and free, and both need to RECORD their verdict (the permanent block is
+    // what the article notice and the unavailable prompt read).
+    if (!canTranslateIntoLanguage(targetLangCode)) {
+        blockLanguage(targetLangCode, 'unsupported-target-language', true);
+        return { kind: 'skipped' };
+    }
+    if (!deviceCanTranslate()) {
+        blockLanguage(targetLangCode, 'device-cannot-translate', true, true);
+        return { kind: 'skipped' };
+    }
+
+    // THE GATE. An unverified iOS language may only be reached by the probe.
+    // Everything else falls back to the English it already has, silently and
+    // without a native call; see the block comment above isNativeCallGated.
+    if (!isProbe && isNativeCallGated(targetLangCode)) return { kind: 'skipped' };
+
+    // Android's Kotlin bridge treats the literal string 'auto' as a signal to
+    // run its own silent language-ID step first. iOS has no equivalent:
+    // 'auto' is not a real BCP-47 tag and fails outright, while a nil source
+    // lets Apple auto-detect but may present its own "select a language"
+    // sheet. `text` is always English by this app's design (title_en,
+    // description_en, reason), so iOS declares 'en'.
+    const sourceLangCode = Platform.OS === 'android' ? 'auto' : 'en';
+    try {
+        const translated = await callNativeWithTimeout(text, sourceLangCode, targetLangCode, timeoutMs, hold);
+        if (translated == null) {
+            logger.warn('[TranslationService] Translation returned no text', {
+                textPreview: text.slice(0, 20),
+                sourceLangCode,
+                targetLangCode,
+            });
+            return { kind: 'empty' };
+        }
+        recordTranslationSuccess(targetLangCode);
+        return { kind: 'ok', text: translated };
+    } catch (err) {
+        logger.warn('[TranslationService] Translation attempt failed', {
+            textPreview: text.slice(0, 20),
+            sourceLangCode,
+            targetLangCode,
+            error: err instanceof Error ? err.message : String(err),
+        });
+        return { kind: 'error', error: err, timedOut: err instanceof TranslationTimeoutError };
+    }
+}
+
+function failureMessage(outcome: AttemptOutcome): string | null {
+    if (outcome.kind === 'empty') return 'translator returned no text';
+    if (outcome.kind !== 'error') return null;
+    return outcome.error instanceof Error ? outcome.error.message : String(outcome.error);
+}
+
+/**
+ * Count one failed REQUEST toward the availability breaker, at its FIRST
+ * failed attempt. Not per attempt (a verified language would block after two
+ * bad strings), and not at the last attempt either: requests interleave while
+ * a retry waits out its backoff, so counting late let a broken translator take
+ * every queued row's full set of attempts before the breaker saw one failure.
+ * A retry that then succeeds clears the count (recordTranslationSuccess).
+ */
+function countFailure(targetLangCode: string, outcome: AttemptOutcome): void {
+    const message = failureMessage(outcome);
+    if (message === null) return;
+    // An empty answer counts too: the caller gets nothing back, so repeating
+    // it for the next 40 strings helps no one.
+    recordTranslationFailure(targetLangCode, message);
+}
+
+/** Log a request that has run out of attempts. Once per request. */
+function logFinalFailure(
+    text: string,
+    targetLangCode: string,
+    outcome: AttemptOutcome,
+    isProbe: boolean,
+): void {
+    const sourceLangCode = Platform.OS === 'android' ? 'auto' : 'en';
+    if (outcome.kind === 'empty') {
+        if (isProbe) probeErrors.set(targetLangCode, 'translator returned no text');
+        return;
+    }
+    if (outcome.kind !== 'error') return;
+    const err = outcome.error;
+    const message = err instanceof Error ? err.message : String(err);
+    if (isProbe) {
+        probeErrors.set(targetLangCode, message);
+        if (outcome.timedOut) probeTimedOut.set(targetLangCode, true);
+    }
+    if (outcome.timedOut) {
+        // Expected and self-healing, not a bug: the late-success handler in
+        // callNativeWithTimeout still verifies the language if the pack
+        // finishes after we gave up. A breadcrumb is the right weight.
+        logger.warn('[TranslationService] Translation timed out', {
+            textPreview: text.slice(0, 20),
+            sourceLangCode,
+            targetLangCode,
+            isProbe,
+        });
+    } else if (/cancelled/i.test(message)) {
+        // The native bridge's "operation was cancelled" is NOT the user's
+        // cancel button. It is a native-module defect (expo-translate-text's
+        // shared hostingController, or the OS tearing the session down on
+        // backgrounding). Kept at warning with a stable fingerprint so every
+        // occurrence groups into ONE issue: it is the only signal that the
+        // slot-hold fix (or a future native fix) worked. Do not route it
+        // through lib/logger's generic AbortError suppression.
+        logger.captureException(err, {
+            level: 'warning',
+            fingerprint: ['translation-native-cancelled'],
+            extra: {
+                message: '[TranslationService] Translation failed',
+                textPreview: text.slice(0, 20),
+                sourceLangCode,
+                targetLangCode,
+                isProbe,
+            },
+        });
+    } else {
+        logger.error('[TranslationService] Translation failed', err as Error, {
+            textPreview: text.slice(0, 20),
+            sourceLangCode,
+            targetLangCode,
+        });
+    }
+}
+
+/** A handle on one caller's interest in a translation. */
+export interface TranslationRequest {
+    /** Settles once for every caller sharing the request. Never rejects. */
+    readonly promise: Promise<TranslationResult>;
+    /** Report where this caller's text is on screen now. */
+    setPriority(rank: QueueRank): void;
+    /** This caller no longer needs it. The request is dropped only when no
+     *  caller is left and it has not reached the OS. */
+    cancel(): void;
+}
+
+/**
+ * One in-flight translation of (text, language), shared by every caller that
+ * asks for it while it runs, so N nodes showing the same headline cost ONE
+ * native call and all get its outcome, failure included.
+ */
+class SharedRequest {
+    private readonly participants = new Map<number, QueueRank>();
+    private nextId = 0;
+    private handle: TranslationTaskHandle<AttemptOutcome> | null = null;
+    private backoff: ReturnType<typeof setTimeout> | null = null;
+    private attempts = 0;
+    /** Whether this request's failure has been counted (once, ever). */
+    private counted = false;
+    private settled = false;
+    /** The route this request was made for; retries keep it, so a retry for a
+     *  screen the reader has left is dropped at dispatch. */
+    private readonly epoch = getTranslationEpoch();
+    readonly promise: Promise<TranslationResult>;
+    private resolve!: (r: TranslationResult) => void;
+
+    constructor(
+        private readonly key: string,
+        private readonly text: string,
+        private readonly targetLangCode: string,
+    ) {
+        this.promise = new Promise((r) => (this.resolve = r));
+    }
+
+    join(rank: QueueRank): TranslationRequest {
+        const id = this.nextId++;
+        this.participants.set(id, rank);
+        this.handle?.setPriority(this.bestRank());
+        return {
+            promise: this.promise,
+            setPriority: (next) => {
+                if (!this.participants.has(id)) return;
+                this.participants.set(id, next);
+                this.handle?.setPriority(this.bestRank());
+            },
+            cancel: () => {
+                if (!this.participants.delete(id)) return;
+                if (this.participants.size > 0) {
+                    this.handle?.setPriority(this.bestRank());
+                    return;
+                }
+                if (this.backoff) {
+                    clearTimeout(this.backoff);
+                    this.backoff = null;
+                    this.settle({ status: 'dropped', text: null });
+                    return;
+                }
+                // Resolves DROPPED through the attempt's own handler.
+                this.handle?.cancel();
+            },
+        };
+    }
+
+    start(): void {
+        this.attempt();
+    }
+
+    /** Test reset: settle without touching the queue. */
+    abandon(): void {
+        if (this.backoff) clearTimeout(this.backoff);
+        this.settle({ status: 'dropped', text: null });
+    }
+
+    private bestRank(): QueueRank {
+        let best: QueueRank | null = null;
+        for (const r of this.participants.values()) {
+            if (!best || (r.visible && !best.visible) || (r.visible === best.visible && r.y < best.y)) best = r;
+        }
+        return best ?? { visible: false, y: 0 };
+    }
+
+    private attempt(): void {
+        this.attempts += 1;
+        const handle = scheduleTranslationTask(
+            (hold) => runNativeAttempt(this.text, this.targetLangCode, TRANSLATE_CALL_TIMEOUT_MS, false, hold),
+            {
+                epoch: this.epoch,
+                rank: this.bestRank(),
+                label: `${this.targetLangCode}:${this.text.slice(0, 16)}`,
+            },
+        );
+        this.handle = handle;
+        handle.promise.then(
+            (value) => {
+                this.handle = null;
+                if (isDropped(value)) {
+                    this.settle({ status: 'dropped', text: null });
+                    return;
+                }
+                if (value.kind === 'ok') {
+                    this.settle({ status: 'ok', text: value.text });
+                    return;
+                }
+                if (!this.counted && failureMessage(value) !== null) {
+                    this.counted = true;
+                    countFailure(this.targetLangCode, value);
+                }
+                const retry =
+                    value.kind === 'error'
+                    && !value.timedOut
+                    && this.attempts <= RETRY_BACKOFF_MS.length
+                    && this.participants.size > 0
+                    && retriesAllowed(this.targetLangCode, false);
+                if (retry) {
+                    this.backoff = setTimeout(() => {
+                        this.backoff = null;
+                        this.attempt();
+                    }, RETRY_BACKOFF_MS[this.attempts - 1]);
+                    return;
+                }
+                logFinalFailure(this.text, this.targetLangCode, value, false);
+                this.settle({ status: 'failed', text: null });
+            },
+            (err) => {
+                this.handle = null;
+                logger.warn('[TranslationService] Translation task rejected', {
+                    targetLangCode: this.targetLangCode,
+                    error: err instanceof Error ? err.message : String(err),
+                });
+                this.settle({ status: 'failed', text: null });
+            },
+        );
+    }
+
+    private settle(result: TranslationResult): void {
+        if (this.settled) return;
+        this.settled = true;
+        if (sharedRequests.get(this.key) === this) sharedRequests.delete(this.key);
+        this.resolve(result);
+    }
+}
+
+/** In-flight shared requests, by (language, text). Removed on settle, so a
+ *  request after a failure starts fresh: nothing latches here. */
+const sharedRequests = new Map<string, SharedRequest>();
+
+/**
+ * Ask for a translation and get a handle on it: re-rank it as the text moves
+ * on screen, cancel it when the text leaves. Callers asking for the same text
+ * while it runs share it. Never the probe (see {@link probeTranslationLanguage}).
+ */
+export function requestTranslation(
+    text: string,
+    targetLangCode: string,
+    options: { readonly rank?: QueueRank } = {},
+): TranslationRequest {
+    const rank = options.rank ?? { visible: true, y: 0 };
+    const key = `${targetLangCode}\u0000${text}`;
+    let shared = sharedRequests.get(key);
+    if (shared) return shared.join(rank);
+    shared = new SharedRequest(key, text, targetLangCode);
+    sharedRequests.set(key, shared);
+    const request = shared.join(rank);
+    shared.start();
+    return request;
+}
+
 /**
  * Translate a single text string, reporting WHY it ended. Never rejects.
  *
@@ -875,179 +1215,45 @@ export function translateTextDetailed(
     options: TranslateOptions = {},
 ): Promise<TranslationResult> {
     const isProbe = options.isProbe === true;
+    if (!isProbe) {
+        if (options.epochScoped === false || options.timeoutMs !== undefined) {
+            // Not shareable: a caller-specific ceiling or epoch exemption.
+            return runSingle(text, targetLangCode, options, false);
+        }
+        return requestTranslation(text, targetLangCode, { rank: options.rank }).promise;
+    }
+    probeTimedOut.set(targetLangCode, false);
+    probeErrors.set(targetLangCode, null);
+    return runSingle(text, targetLangCode, options, true);
+}
+
+/** One un-shared, un-retried request: the probe, or a caller with its own
+ *  timeout or epoch exemption. */
+function runSingle(
+    text: string,
+    targetLangCode: string,
+    options: TranslateOptions,
+    isProbe: boolean,
+): Promise<TranslationResult> {
     const timeoutMs = options.timeoutMs
         ?? (isProbe ? TRANSLATION_PROBE_TIMEOUT_MS : TRANSLATE_CALL_TIMEOUT_MS);
-    if (isProbe) {
-        probeTimedOut.set(targetLangCode, false);
-        probeErrors.set(targetLangCode, null);
-    }
-
-    const task = async (): Promise<string | null> => {
-        // Checked HERE, at the head of the queue — NOT when translateText was
-        // called. A language switch fires every mounted <TranslatableDynamic>
-        // in one effect flush, so all N calls are already queued before the
-        // first failure lands; a call-time check would let every one of them
-        // reach the native module and present its own sheet.
-        if (blockedLanguages.has(targetLangCode)) return null;
-
-        // The two "this can never work" checks come BEFORE the gate, not
-        // after. Both are pure and free, and both need to RECORD their verdict
-        // — the permanent block is what the article notices and the
-        // unavailable prompt read to explain themselves. Gating first would
-        // silently swallow the verdict and leave the UI with nothing to say.
-        //
-        // A language the OS cannot translate into will never succeed, and a
-        // doomed attempt still costs the user a sheet before it fails.
-        if (!canTranslateIntoLanguage(targetLangCode)) {
-            blockLanguage(targetLangCode, 'unsupported-target-language', true);
-            return null;
-        }
-
-        // Same reasoning, one level up: no translator on this device at all.
-        if (!deviceCanTranslate()) {
-            blockLanguage(targetLangCode, 'device-cannot-translate', true, true);
-            return null;
-        }
-
-        // THE GATE. An unverified iOS language may only be reached by the
-        // probe. Everything else falls back to the English it already has,
-        // silently and without a native call — see the block comment above
-        // isNativeCallGated.
-        if (!isProbe && isNativeCallGated(targetLangCode)) return null;
-
-        const retryDelays = retryDelaysFor(targetLangCode);
-        // Android's Kotlin bridge treats the literal string 'auto' as a
-        // signal to run its own silent language-ID step first — no user-
-        // facing UI. iOS has no equivalent: passing 'auto' isn't a real
-        // BCP-47 tag (Swift feeds it straight into `Locale.Language`) and
-        // fails outright, while omitting sourceLangCode (nil source) lets
-        // Apple's Translation framework auto-detect — but when it can't
-        // confidently detect the source, it presents its own disruptive
-        // native "select a language" bottom sheet. Since `text` is always
-        // meant to be English by this app's design (title_en, description_en,
-        // reason are all English-sourced fields), iOS always declares 'en'
-        // and lets a wrong assumption fail quietly through the retry/catch/
-        // log path below instead of surfacing OS UI.
-        const sourceLangCode = Platform.OS === 'android' ? 'auto' : 'en';
-        for (let attempt = 0; attempt <= retryDelays.length; attempt++) {
-            try {
-                const translated = await callNativeWithTimeout(
-                    text,
-                    sourceLangCode,
-                    targetLangCode,
-                    timeoutMs,
-                );
-                if (translated == null) {
-                    logger.warn('[TranslationService] Translation returned no text', {
-                        textPreview: text.slice(0, 20),
-                        sourceLangCode,
-                        targetLangCode,
-                        attempt,
-                    });
-                    // Counts as a failure: the caller gets nothing back, so
-                    // repeating it for the next 40 strings helps no one.
-                    if (isProbe) probeErrors.set(targetLangCode, 'translator returned no text');
-                    recordTranslationFailure(targetLangCode, 'translator returned no text');
-                } else {
-                    recordTranslationSuccess(targetLangCode);
-                }
-                return translated;
-            } catch (err) {
-                if (isProbe) {
-                    probeErrors.set(
-                        targetLangCode,
-                        err instanceof Error ? err.message : String(err),
-                    );
-                    if (err instanceof TranslationTimeoutError) {
-                        probeTimedOut.set(targetLangCode, true);
-                    }
-                }
-                logger.warn('[TranslationService] Translation attempt failed', {
-                    textPreview: text.slice(0, 20),
-                    sourceLangCode,
-                    targetLangCode,
-                    attempt,
-                    error: err instanceof Error ? err.message : String(err),
-                });
-                if (attempt < retryDelays.length) {
-                    await new Promise<void>((resolve) =>
-                        setTimeout(resolve, retryDelays[attempt]),
-                    );
-                } else {
-                    const message = err instanceof Error ? err.message : String(err);
-                    if (err instanceof TranslationTimeoutError) {
-                        // Expected and self-healing, not a bug: the module's own
-                        // late-success handler (callNativeWithTimeout's `call.then`)
-                        // still verifies the language if the pack finishes
-                        // downloading after we gave up, and the probe path never
-                        // blocks permanently on a timeout. A breadcrumb is the
-                        // right weight — this must never page as an error.
-                        logger.warn('[TranslationService] Translation timed out', {
-                            textPreview: text.slice(0, 20),
-                            sourceLangCode,
-                            targetLangCode,
-                            isProbe,
-                        });
-                    } else if (/cancelled/i.test(message)) {
-                        // The native bridge's "operation was cancelled" is NOT the
-                        // user's cancel button — that path (useLanguageSwitch.cancel)
-                        // never touches this promise. It is a native-module defect
-                        // (expo-translate-text's shared hostingController, or the OS
-                        // tearing down the translation session on backgrounding) that
-                        // cannot be fixed from this repo. Kept at warning with a
-                        // stable fingerprint so every occurrence groups into ONE
-                        // issue rather than scattering across Hermes' unreliable
-                        // culprits — this is the only signal a future native-side fix
-                        // actually worked, so it must stay captured, just off the
-                        // default error triage. Do not route this through the
-                        // generic AbortError cancellation suppression in lib/logger —
-                        // that rule is for inert cancellations nobody can act on, and
-                        // this one is actionable evidence.
-                        logger.captureException(err, {
-                            level: 'warning',
-                            fingerprint: ['translation-native-cancelled'],
-                            extra: {
-                                message: '[TranslationService] Translation failed',
-                                textPreview: text.slice(0, 20),
-                                sourceLangCode,
-                                targetLangCode,
-                                isProbe,
-                            },
-                        });
-                    } else {
-                        logger.error('[TranslationService] Translation failed', err as Error, {
-                            textPreview: text.slice(0, 20),
-                            sourceLangCode,
-                            targetLangCode,
-                        });
-                    }
-                    recordTranslationFailure(targetLangCode, message);
-                    return null;
-                }
-            }
-        }
-        return null;
-    };
-
-    return enqueueTranslationTask(task, {
+    return enqueueTranslationTask((hold) => runNativeAttempt(text, targetLangCode, timeoutMs, isProbe, hold), {
         // The probe is epoch-EXEMPT. It holds the queue for up to 90s while
         // Apple's download sheet is up, and a route change is entirely
         // plausible in that window (the picker modal dismissing is one). Drop
-        // it and the language never verifies, the gate never opens, and
-        // switching language silently stops working — a far worse outcome than
-        // one call the user no longer needs.
+        // it and the language never verifies and the gate never opens.
         epoch: isProbe || options.epochScoped === false ? null : undefined,
-        priority: isProbe ? PROBE_PRIORITY : (options.priority ?? 0),
+        priority: isProbe ? PROBE_PRIORITY : 0,
+        rank: options.rank,
         label: `${targetLangCode}:${text.slice(0, 16)}`,
     }).then(
         (value): TranslationResult => {
             if (isDropped(value)) return { status: 'dropped', text: null };
-            return value == null
-                ? { status: 'failed', text: null }
-                : { status: 'ok', text: value };
+            if (value.kind === 'ok') return { status: 'ok', text: value.text };
+            countFailure(targetLangCode, value);
+            logFinalFailure(text, targetLangCode, value, isProbe);
+            return { status: 'failed', text: null };
         },
-        // The task body catches everything already; this is the last net so a
-        // caller can never be handed a rejected promise.
         (err): TranslationResult => {
             logger.warn('[TranslationService] Translation task rejected', {
                 targetLangCode,

@@ -19,6 +19,7 @@ import { quickFactCheckCopyKey } from '@/lib/chat-tools/quick-fact-check-handler
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -58,7 +59,7 @@ const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
     return (
       <View style={styles.card}>
         <View style={styles.headerRow}>
-          <MaterialIcons name="cloud-upload" size={16} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="cloud-upload" size={16} color={ACCENT} />
           <Text size="xs" bold style={styles.title}>
             {entry.label}
           </Text>
@@ -79,7 +80,7 @@ const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
     return (
       <View style={styles.card}>
         <View style={styles.headerRow}>
-          <MaterialIcons name="travel-explore" size={16} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="travel-explore" size={16} color={ACCENT} />
           <Text size="xs" bold style={styles.title}>
             {entry.label}
           </Text>
@@ -102,7 +103,7 @@ const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
-        <MaterialIcons name="travel-explore" size={16} color={ACCENT} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="travel-explore" size={16} color={ACCENT} />
         <Text size="xs" bold style={styles.title}>
           {entry.label}
         </Text>

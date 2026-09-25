@@ -192,3 +192,20 @@ describe('caller-supplied ids', () => {
         expect(isActive(id)).toBe(false);
     });
 });
+
+describe('dismissible', () => {
+    it('defaults to dismissible', () => {
+        show({ render });
+        expect(useToastQueue.getState().entries[0].dismissible).toBe(true);
+    });
+
+    it('records dismissible:false, still queues it behind transients, and still closes it by id', () => {
+        const progress = show({ id: 'facts-combo', duration: null, dismissible: false, render });
+        const transient = show({ duration: 5000, render });
+        const entries = useToastQueue.getState().entries;
+        expect(entries.map((e) => e.id)).toEqual([transient, progress]);
+        expect(entries[1].dismissible).toBe(false);
+        close(progress);
+        expect(isActive(progress)).toBe(false);
+    });
+});

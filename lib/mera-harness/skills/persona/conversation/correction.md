@@ -8,7 +8,7 @@ when:
   - "trigger phrases: no, that is not what I said / that is wrong / why did you save that / remove that / I did not mean that"
   - "signal: the turn is about Mera's reading rather than about the world"
 outputs:
-  - "at most one saveExtractedFacts element and at most one deleteUserFacts call"
+  - "at most one saveExtractedFacts element and at most one deleteUserFacts call (ids or all: true)"
   - "nothing new extracted in the same turn"
 ---
 
@@ -25,13 +25,14 @@ words verbatim, and carry NO `alternatives`: they have just answered the questio
 exist to ask, so offering choices again asks it twice. Keep their span exactly, including
 capitalisation and anything that reads awkwardly.
 
-**"I want that gone."** Call `deleteUserFacts` with the attribute keys of the facts to remove, taken
-from Known Facts in the context block.
+**"I want that gone."** Call `deleteUserFacts` with the fact ids in brackets from Known Facts, or
+`all: true` when they want everything gone. Nothing is removed yet: a card lists the facts and the
+user taps Remove or Keep there, so never ask about the removal yourself and never count the facts.
 
-- One fact matches: delete it and say what went.
-- More than one matches: call `ask_choice` with the candidates and call nothing else this turn.
-  Deleting is not undoable, and guessing which of three they meant is a coin flip with their data.
-- Nothing matches: say you cannot find it and quote what you do hold on that subject. Never delete
+- One fact or several named plainly: pass their ids and say in one line that the card is there.
+- It could be more than one fact and they did not say which: call `ask_choice` with the candidates
+  and call nothing else this turn. Guessing which of three they meant is a coin flip with their data.
+- Nothing matches: say you cannot find it and quote what you do hold on that subject. Never offer
   something adjacent because it is the closest thing to hand.
 
 ## Fix one thing only

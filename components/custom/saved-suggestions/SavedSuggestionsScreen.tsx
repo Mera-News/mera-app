@@ -32,9 +32,10 @@ import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { savedItemId } from './saved-item-id';
 import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ListRenderItem, View } from 'react-native';
+import { ListRenderItem, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface SavedSuggestionsScreenProps {
     onBack: () => void;
@@ -53,6 +54,10 @@ interface SavedSuggestionsScreenProps {
      *  host padding a wrapper View (which would leave a dead gap once the header
      *  translates away). Defaults to 0 — standalone route is unchanged. */
     headerHeight?: number;
+    /** False while Saved is a warmed or cached neighbour in the Dashboard
+     *  swipe window (ux2 B3): no scroll ticks until it is the active panel.
+     *  Default true. */
+    active?: boolean;
 }
 
 // ── Delete-button geometry ────────────────────────────────────────────────
@@ -89,6 +94,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     embedded = false,
     scrollHandler,
     headerHeight = 0,
+    active = true,
 }) => {
     const { t } = useTranslation();
     const toast = useToast();
@@ -223,12 +229,10 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     inset, not a percentage, so the clearance can't drift with the
                     card's width; `hitSlop` grows the target everywhere EXCEPT
                     rightwards, so it never reaches back into the strip. */}
-                <Pressable
-                    testID="saved-delete"
-                    onPress={() => setConfirmTarget(item)}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 4 }}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('savedSuggestions.deleteConfirmCta')}
+                {/* The circle holds the glyph and a CHILDLESS labelled button
+                    filling it: a glyph inside a button surfaces on iOS as its
+                    own StaticText (captured, one per row). */}
+                <View
                     className="bg-gray-900 rounded-full p-2 shadow-hard-2"
                     style={{
                         position: 'absolute',
@@ -237,8 +241,23 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                         zIndex: 10,
                     }}
                 >
-                    <MaterialIcons name="delete" size={20} color="#ffffff" />
-                </Pressable>
+                    <MaterialIcons
+                        name="delete"
+                        size={20}
+                        color="#ffffff"
+                        accessible={false}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                    <Pressable
+                        testID="saved-delete"
+                        onPress={() => setConfirmTarget(item)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 4 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('savedSuggestions.deleteConfirmCta')}
+                        style={StyleSheet.absoluteFill}
+                    />
+                </View>
             </Box>
         ),
         [handleArticlePress, handleSuggestionPress, t],
@@ -260,6 +279,10 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     size={16}
                     color="#9ca3af"
                     style={{ marginTop: 2 }}
+                    // Decoration: hidden, or it surfaces as its own icon-font StaticText.
+                    accessible={false}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
                 />
                 <Text size="xs" className="text-gray-400 flex-1">
                     {t('savedSuggestions.note')}
@@ -282,10 +305,13 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const listRef = useRef<any>(null);
     const viewportH = useRef(0);
     const settleIfShort = useCallback((_w: number, contentH: number) => {
+        // New content can land rows on screen with no scroll: re-measure them.
+        // Only the active panel feeds the translation scheduler.
+        if (active) notifyScrollTick();
         if (viewportH.current > 0 && contentH <= viewportH.current) {
             listRef.current?.scrollToOffset?.({ offset: 0, animated: true });
         }
-    }, []);
+    }, [active]);
 
     const ListEmpty = isLoading ? (
         <Box className="items-center justify-center py-20">
@@ -381,7 +407,10 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                         (showExportFab ? SAVED_EXPORT_FAB_RESERVE : 0),
                 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={scrollHandler}
+                // Embedded, the collapsible header's handler ticks; standalone,
+                // tick directly. At rest, a content change re-measures (see
+                // settleIfShort).
+                onScroll={scrollHandler ?? notifyScrollTick}
                 scrollEventThrottle={16}
             />
 

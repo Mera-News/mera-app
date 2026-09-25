@@ -57,10 +57,16 @@ describe('NotificationBellButton', () => {
     it('matches the Explore search button: 44pt frame, white 24pt glyph, no chip', () => {
         const { getByTestId } = render(<NotificationBellButton />);
         const bell = getByTestId('feed-notification-bell');
-        expect(StyleSheet.flatten(bell.props.style)).toMatchObject({ width: 44, height: 44, margin: -10 });
+        // The frame is the wrapper; the labelled button inside it is childless,
+        // since a glyph inside a button surfaces on iOS as its own StaticText.
+        expect(StyleSheet.flatten(getByTestId('feed-notification-bell-frame').props.style)).toMatchObject({
+            width: 44,
+            height: 44,
+            margin: -10,
+        });
         expect(bell.props.hitSlop).toBeUndefined();
         expect(bell.props.className ?? '').not.toMatch(/border|rounded|p-3/);
-        const icon = getByTestId('icon-notifications-none');
+        const icon = getByTestId('icon-notifications-none', HIDDEN);
         expect(icon.props.size).toBe(24);
         expect(icon.props.color).toBe('#ffffff');
     });
@@ -75,6 +81,19 @@ describe('NotificationBellButton', () => {
         const badge = getByTestId('feed-notification-bell-badge', HIDDEN);
         expect(badge.props.accessibilityElementsHidden).toBe(true);
         expect(badge.props.importantForAccessibility).toBe('no-hide-descendants');
+    });
+
+    // The icon here is the private-use glyph Text on device, and the count is a
+    // Text too: under the button either one surfaced as its own StaticText
+    // (captured). The real-glyph scan is HeaderIconButton.glyph.test.tsx.
+    it('keeps the glyph and the badge count under no accessible element', () => {
+        mockUnread = 3;
+        const { getByTestId, getByText } = render(<NotificationBellButton />);
+        const bell = getByTestId('feed-notification-bell');
+        expect(bell.findAll((n: any) => n !== bell && typeof n.props?.testID === 'string' && n.props.testID !== 'feed-notification-bell')).toHaveLength(0);
+        for (const el of [getByTestId('icon-notifications-none', HIDDEN), getByText('3', HIDDEN)]) {
+            for (let p: any = el.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+        }
     });
 
     it('keeps the plain label with nothing unread', () => {

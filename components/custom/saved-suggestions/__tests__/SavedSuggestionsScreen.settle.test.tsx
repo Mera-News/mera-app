@@ -57,12 +57,17 @@ jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
 jest.mock('../SavedExportModal', () => ({ __esModule: true, default: () => null }));
 jest.mock('../SavedExportFab', () => ({ __esModule: true, default: () => null, SAVED_EXPORT_FAB_RESERVE: 82 }));
 jest.mock('@/components/custom/for-you/ForYouEmptyState', () => ({ __esModule: true, default: () => null }));
+const mockNotifyScrollTick = jest.fn();
+jest.mock('@/lib/visibility-tick', () => ({ notifyScrollTick: () => mockNotifyScrollTick() }));
 
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 import SavedSuggestionsScreen from '../SavedSuggestionsScreen';
 
-beforeEach(() => mockScrollToOffset.mockClear());
+beforeEach(() => {
+  mockScrollToOffset.mockClear();
+  mockNotifyScrollTick.mockClear();
+});
 
 describe('SavedSuggestionsScreen scroll settle', () => {
   it('scrolls back to the top when the content now fits the viewport', () => {
@@ -79,5 +84,22 @@ describe('SavedSuggestionsScreen scroll settle', () => {
     fireEvent(list, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 402, height: 790 } } });
     fireEvent(list, 'contentSizeChange', 402, 2400);
     expect(mockScrollToOffset).not.toHaveBeenCalled();
+  });
+});
+
+// ux2 B3 window: Saved stays mounted off-screen as a neighbour. Its content
+// changes must not feed the translation scheduler's scroll ticks until it is
+// the active panel.
+describe('SavedSuggestionsScreen off-screen (active=false)', () => {
+  it('sends no scroll tick on a content-size change', () => {
+    render(<SavedSuggestionsScreen embedded active={false} onBack={jest.fn()} headerHeight={211} />);
+    fireEvent(screen.getByTestId('saved-suggestions-list'), 'contentSizeChange', 402, 620);
+    expect(mockNotifyScrollTick).not.toHaveBeenCalled();
+  });
+
+  it('sends one when active (the default)', () => {
+    render(<SavedSuggestionsScreen embedded onBack={jest.fn()} headerHeight={211} />);
+    fireEvent(screen.getByTestId('saved-suggestions-list'), 'contentSizeChange', 402, 620);
+    expect(mockNotifyScrollTick).toHaveBeenCalledTimes(1);
   });
 });

@@ -29,19 +29,38 @@ jest.mock('expo-router', () => ({
     },
 }));
 
+const mockToastShow = jest.fn();
 jest.mock('@/components/ui/toast', () => ({
-    useToast: () => ({ show: jest.fn() }),
+    useToast: () => ({ show: (...a: unknown[]) => mockToastShow(...a) }),
     Toast: (p: any) => { const { View } = require('react-native'); return <View {...p} />; },
     ToastTitle: (p: any) => { const { Text } = require('react-native'); return <Text {...p} />; },
     ToastDescription: (p: any) => { const { Text } = require('react-native'); return <Text {...p} />; },
 }));
 
 // --- child components → light stubs, wired to the same handler props FactsList passes. ---
+// B7: each mounted row registers a stub SwipeableMethods bag (keyed by fact
+// id, "mock"-prefixed so babel-plugin-jest-hoist lets this factory close
+// over it) so a test can assert `.close` was called on the RIGHT row, and
+// exposes a Pressable standing in for "this row's swipe started opening".
+const mockSwipeCloseFns = new Map<string, jest.Mock>();
 jest.mock('../FactAccordion', () => {
     const { View, Text, Pressable } = require('react-native');
-    return {
-        __esModule: true,
-        default: ({ fact, onDeletePress, onToggle, onDeleteTopic, onAddTopic, onGenerateMore, countState, editing, articleCountByTopic }: any) => (
+    const ReactLib = require('react');
+    // A named, capitalized component — not an anonymous arrow assigned to
+    // `default` — so eslint's react-hooks/rules-of-hooks recognizes the
+    // useEffect below as belonging to a component rather than flagging it as
+    // a hook called from a plain function.
+    function MockFactAccordion({ fact, onDeletePress, onToggle, onDeleteTopic, onAddTopic, onGenerateMore, countState, editing, articleCountByTopic, onSwipeOpen, swipeableRef }: any) {
+        ReactLib.useEffect(() => {
+            const close = jest.fn();
+            mockSwipeCloseFns.set(fact.id, close);
+            swipeableRef?.(fact.id, { close, openLeft: jest.fn(), openRight: jest.fn(), reset: jest.fn() });
+            return () => {
+                swipeableRef?.(fact.id, null);
+                mockSwipeCloseFns.delete(fact.id);
+            };
+        }, [fact.id]);
+        return (
             <View>
                 <Text>{fact.statement}</Text>
                 <Text testID={`count-state-${fact.id}`}>{`${countState}:${editing ? 'editing' : 'rest'}:${articleCountByTopic?.get?.('hiking') ?? 0}`}</Text>
@@ -53,10 +72,30 @@ jest.mock('../FactAccordion', () => {
                 />
                 <Pressable accessibilityLabel={`add-topic-${fact.id}`} onPress={() => onAddTopic(fact)} />
                 <Pressable accessibilityLabel={`generate-more-${fact.id}`} onPress={() => onGenerateMore(fact)} />
+                <Pressable accessibilityLabel={`swipe-open-${fact.id}`} onPress={() => onSwipeOpen?.(fact.id)} />
             </View>
-        ),
+        );
+    }
+    return {
+        __esModule: true,
+        default: MockFactAccordion,
     };
 });
+
+// B7: real pub/sub has no native deps, but throttling/leading-edge timing
+// makes a real notifyScrollTick() call non-deterministic across tests in one
+// file. Mock it to capture the listener directly, same "mock"-prefix
+// hoisting rule as mockSwipeCloseFns above.
+let mockScrollTickListeners: (() => void)[] = [];
+jest.mock('@/lib/visibility-tick', () => ({
+    subscribeScrollTick: (fn: () => void) => {
+        mockScrollTickListeners.push(fn);
+        return () => {
+            mockScrollTickListeners = mockScrollTickListeners.filter((l) => l !== fn);
+        };
+    },
+    notifyScrollTick: jest.fn(),
+}));
 jest.mock('../DeleteFactModal', () => {
     const { View, Text, Pressable } = require('react-native');
     return {
@@ -120,12 +159,8 @@ function emitFacts(facts: FactFixture[]) {
     mockFacts = facts;
     for (const cb of mockFactSubscribers) cb(facts);
 }
-// getFacts() itself survives as a one-shot read for handleGenerateMoreConfirm's
-// on-device branch (building generation context) — unrelated to the list.
-const mockGetFacts = jest.fn().mockResolvedValue([]);
 const mockDeleteFact = jest.fn();
 jest.mock('@/lib/database/services/fact-service', () => ({
-    getFacts: (...a: unknown[]) => mockGetFacts(...a),
     deleteFact: (...a: unknown[]) => mockDeleteFact(...a),
     observeFacts: () => ({
         subscribe: (cb: (facts: FactFixture[]) => void) => {
@@ -150,10 +185,8 @@ jest.mock('@/lib/database/services/topic-decline-service', () => ({
 }));
 
 const mockCreateTopics = jest.fn().mockResolvedValue([]);
-const mockSyncLlmTopicsForFact = jest.fn().mockResolvedValue([]);
 jest.mock('@/lib/database/services/topic-service', () => ({
     createTopics: (...a: unknown[]) => mockCreateTopics(...a),
-    syncLlmTopicsForFact: (...a: unknown[]) => mockSyncLlmTopicsForFact(...a),
 }));
 
 const mockRenderableCounts = jest.fn((): Promise<Map<string, number>> => Promise.resolve(new Map()));
@@ -161,21 +194,17 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
     getRenderableArticleCountByTopicTexts: () => mockRenderableCounts(),
 }));
 
-jest.mock('@/lib/database/services/inference-job-service', () => ({
-    enqueueJob: jest.fn(),
-}));
-
-jest.mock('@/lib/inference/handlers/topic-gen-handler', () => ({
-    buildTopicGenContext: () => ({ userLocation: null, otherFacts: [] }),
+// F1: the isolated-per-fact call. FactsList no longer picks cloud vs.
+// on-device itself (no more useIsOnDeviceProcessing, enqueueJob,
+// buildTopicGenContext or mera-protocol's generateTopicsForFact here) — it
+// calls this ONE function and branches only on its outcome.
+const mockGenerateMoreTopicsForFact = jest.fn();
+jest.mock('@/lib/database/services/topic-planning-service', () => ({
+    generateMoreTopicsForFact: (...a: unknown[]) => mockGenerateMoreTopicsForFact(...a),
 }));
 
 jest.mock('@/lib/inference/InferenceQueue', () => ({
     inferenceQueue: { onDrain: jest.fn(), notify: jest.fn() },
-}));
-
-jest.mock('@/lib/mera-protocol/topic-generation-service', () => ({
-    generateTopicsForFact: jest.fn(),
-    mergeTopicsAppend: (a: string[], b: string[]) => [...a, ...b],
 }));
 
 jest.mock('@/lib/stores/floating-chat-store', () => ({
@@ -187,13 +216,8 @@ let mockLastRunFinishedAt: number | null = null;
 jest.mock('@/lib/stores/for-you-store', () => {
     const useForYouStore = (sel: (s: unknown) => unknown) =>
         sel({ lastProcessingRunFinishedAt: mockLastRunFinishedAt });
-    useForYouStore.getState = () => ({ setFeedNeedsRefresh: jest.fn() });
     return { useForYouStore };
 });
-
-jest.mock('@/lib/stores/mera-protocol-store', () => ({
-    useIsOnDeviceProcessing: () => false,
-}));
 
 // Selector-shaped: the component reads the LOCAL identity via
 // `useUserStore((s) => s.userId)` AND destructures actions off a bare call.
@@ -216,10 +240,13 @@ beforeEach(() => {
     mockLocalUserIdRef.current = 'u1';
     mockFacts = [];
     mockFactSubscribers = [];
-    mockGetFacts.mockResolvedValue([]);
+    mockGenerateMoreTopicsForFact.mockReset();
+    mockToastShow.mockClear();
     mockFocusCallbacks.length = 0;
     mockLastRunFinishedAt = null;
     mockRenderableCounts.mockImplementation(() => Promise.resolve(new Map()));
+    mockScrollTickListeners = [];
+    mockSwipeCloseFns.clear();
 });
 
 describe('FactsList', () => {
@@ -340,12 +367,13 @@ describe('FactsList', () => {
         expect(input.weight).toBeGreaterThan(0);
     });
 
-    it("generate-more's cloud branch routes through syncLlmTopicsForFact, converging with the on-device job handler's own call", async () => {
+    // F1: handleGenerateMoreConfirm calls ONE isolated-per-fact function and
+    // branches only on its { mode, added } outcome — no more picking cloud
+    // vs. on-device here, no exclusion snapshot built from other facts
+    // (excludeFactId leak, closed by this same change).
+    it('calls generateMoreTopicsForFact with the fact id, statement and count', async () => {
         mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
-        const {
-            generateTopicsForFact,
-        } = require('@/lib/mera-protocol/topic-generation-service') as { generateTopicsForFact: jest.Mock };
-        generateTopicsForFact.mockResolvedValue(['New topic']);
+        mockGenerateMoreTopicsForFact.mockResolvedValue({ mode: 'inline', added: 3 });
 
         const { getByText, getByLabelText } = render(<FactsList />);
         await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
@@ -353,9 +381,88 @@ describe('FactsList', () => {
         fireEvent.press(getByLabelText('generate-more-f1'));
         fireEvent.press(getByLabelText('confirm-generate-more'));
 
-        await waitFor(() =>
-            expect(mockSyncLlmTopicsForFact).toHaveBeenCalledWith('f1', ['New topic']),
-        );
+        await waitFor(() => expect(mockGenerateMoreTopicsForFact).toHaveBeenCalledWith(
+            'f1',
+            'Lives in Pune',
+            { count: 10 },
+        ));
+    });
+
+    it("mode 'queued' registers onDrain and shows no failed toast", async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        mockGenerateMoreTopicsForFact.mockResolvedValue({ mode: 'queued', added: 0 });
+        const { inferenceQueue } = require('@/lib/inference/InferenceQueue') as {
+            inferenceQueue: { onDrain: jest.Mock };
+        };
+
+        const { getByText, getByLabelText } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('generate-more-f1'));
+        fireEvent.press(getByLabelText('confirm-generate-more'));
+
+        await waitFor(() => expect(mockGenerateMoreTopicsForFact).toHaveBeenCalled());
+        expect(inferenceQueue.onDrain).toHaveBeenCalledTimes(1);
+        expect(mockToastShow).not.toHaveBeenCalled();
+    });
+
+    it("mode 'inline' with added > 0 shows no failed toast", async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        mockGenerateMoreTopicsForFact.mockResolvedValue({ mode: 'inline', added: 2 });
+
+        const { getByText, getByLabelText } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('generate-more-f1'));
+        fireEvent.press(getByLabelText('confirm-generate-more'));
+
+        await waitFor(() => expect(mockGenerateMoreTopicsForFact).toHaveBeenCalled());
+        expect(mockToastShow).not.toHaveBeenCalled();
+    });
+
+    it("mode 'inline' with added === 0 shows the failed toast", async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        mockGenerateMoreTopicsForFact.mockResolvedValue({ mode: 'inline', added: 0 });
+
+        const { getByText, getByLabelText } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('generate-more-f1'));
+        fireEvent.press(getByLabelText('confirm-generate-more'));
+
+        await waitFor(() => expect(mockToastShow).toHaveBeenCalledTimes(1));
+        const { render: renderToast } = mockToastShow.mock.calls[0][0];
+        const { getByText: getByToastText } = render(renderToast());
+        expect(getByToastText('configPanel.generateMoreTopicsFailedTitle')).toBeTruthy();
+    });
+
+    it("mode 'skipped' shows the failed toast", async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        mockGenerateMoreTopicsForFact.mockResolvedValue({ mode: 'skipped', added: 0 });
+
+        const { getByText, getByLabelText } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('generate-more-f1'));
+        fireEvent.press(getByLabelText('confirm-generate-more'));
+
+        await waitFor(() => expect(mockToastShow).toHaveBeenCalledTimes(1));
+        const { render: renderToast } = mockToastShow.mock.calls[0][0];
+        const { getByText: getByToastText } = render(renderToast());
+        expect(getByToastText('configPanel.generateMoreTopicsFailedTitle')).toBeTruthy();
+    });
+
+    it('a thrown rejection also shows the failed toast (never crashes)', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        mockGenerateMoreTopicsForFact.mockRejectedValue(new Error('boom'));
+
+        const { getByText, getByLabelText } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('generate-more-f1'));
+        fireEvent.press(getByLabelText('confirm-generate-more'));
+
+        await waitFor(() => expect(mockToastShow).toHaveBeenCalledTimes(1));
     });
 });
 
@@ -390,5 +497,52 @@ describe('FactsList article counts (F45, Q13)', () => {
         mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
         const r = render(<FactsList editing />);
         await waitFor(() => expect(r.getByTestId('count-state-f1').props.children).toMatch(/:editing:/));
+    });
+});
+
+describe('FactsList — B7: only one swipe row open at a time', () => {
+    it('opening a second row closes the first, and does not close itself', async () => {
+        mockFacts = [
+            { id: 'f1', statement: 'Lives in Pune' },
+            { id: 'f2', statement: 'Works at Acme' },
+        ];
+        const r = render(<FactsList />);
+        await waitFor(() => expect(r.getByText('Lives in Pune')).toBeTruthy());
+
+        act(() => { fireEvent.press(r.getByLabelText('swipe-open-f1')); });
+        expect(mockSwipeCloseFns.get('f1')).not.toHaveBeenCalled();
+
+        act(() => { fireEvent.press(r.getByLabelText('swipe-open-f2')); });
+        expect(mockSwipeCloseFns.get('f1')).toHaveBeenCalledTimes(1);
+        expect(mockSwipeCloseFns.get('f2')).not.toHaveBeenCalled();
+    });
+
+    it('a scroll tick closes the open row', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        const r = render(<FactsList />);
+        await waitFor(() => expect(r.getByText('Lives in Pune')).toBeTruthy());
+
+        act(() => { fireEvent.press(r.getByLabelText('swipe-open-f1')); });
+        expect(mockSwipeCloseFns.get('f1')).not.toHaveBeenCalled();
+
+        act(() => { mockScrollTickListeners.forEach((fn) => fn()); });
+        expect(mockSwipeCloseFns.get('f1')).toHaveBeenCalledTimes(1);
+
+        // Idempotent: a second tick with nothing open must not throw or
+        // re-call close on a row that isn't open.
+        act(() => { mockScrollTickListeners.forEach((fn) => fn()); });
+        expect(mockSwipeCloseFns.get('f1')).toHaveBeenCalledTimes(1);
+    });
+
+    it('turning edit mode on closes the open row', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        const r = render(<FactsList />);
+        await waitFor(() => expect(r.getByText('Lives in Pune')).toBeTruthy());
+
+        act(() => { fireEvent.press(r.getByLabelText('swipe-open-f1')); });
+        expect(mockSwipeCloseFns.get('f1')).not.toHaveBeenCalled();
+
+        r.rerender(<FactsList editing />);
+        expect(mockSwipeCloseFns.get('f1')).toHaveBeenCalledTimes(1);
     });
 });

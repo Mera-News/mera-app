@@ -62,6 +62,10 @@ export const CLOUD_PHASE_ORDER = [
   'attesting',
   'thinking',
   'retrying',
+  // The persona agent's web search (ux2 D10). Published by the device port
+  // BETWEEN model calls, after the leg that asked for it, so it ranks above
+  // everything that leg could have shown; the next call's 'reset' clears it.
+  'webSearch',
 ] as const;
 
 /**

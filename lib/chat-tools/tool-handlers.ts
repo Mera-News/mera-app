@@ -14,23 +14,14 @@ import { useUserStore } from '../stores/user-store';
 import { ProcessingMode } from '../generated/graphql-types';
 import { enqueueJob, hasPendingJob } from '../database/services/inference-job-service';
 import { inferenceQueue } from '../inference/InferenceQueue';
-import { cloudComplete, cloudBatchComplete, HEDGE_DELAY_MS } from '../llm/cloudComplete';
 import logger from '../logger';
 import {
   filterFactChoiceGroups,
   normalizeStatement,
   type FactEntry,
 } from '@/lib/news-harness/persona-management/fact-rules';
-import { generateTopicsForFactsBatch } from '@/lib/news-harness/persona-management/topic-generation';
 import { factChoiceGroupId } from './fact-choice-resolution';
-import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-service';
-import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
-import { syncLlmTopicsForFact } from '../database/services/topic-service';
-import {
-  beginTopicGeneration,
-  failTopicGeneration,
-  markTopicGenerationSettled,
-} from '../database/services/topic-generation-status-service';
+import { beginTopicGeneration } from '../database/services/topic-generation-status-service';
 
 // MAX_FACT_LENGTH's canonical home is the harness fact-rules module; re-exported
 // here so existing importers of it from tool-handlers keep working.
@@ -201,42 +192,19 @@ export async function handleSaveExtractedFacts(
 }
 
 /**
- * factIds with a CLOUD topic-generation batch in flight.
- *
- * The local branch is deduped by `hasPendingJob('topic_gen', ...)` against the
- * inference_jobs table, but the cloud branch has no such record — so before this
- * set, a double-tapped Retry (TopicPlanCard) fired two concurrent
- * `cloudBatchComplete` calls for the same fact. Module-level because the guard
- * has to hold across every caller, not per component instance.
+ * Facts with an enqueue in flight right now. `hasPendingJob` reads the table
+ * asynchronously, so two same-tick callers (a double-tapped Retry) would both
+ * see "no job" and enqueue two. Synchronous claim, released once the enqueue
+ * settles; after that the job row itself is the dedupe.
  */
-const inFlightCloudTopicGen = new Set<string>();
+const enqueuingTopicGen = new Set<string>();
 
-/** Claim the entries not already in flight (synchronously, so two callers in the
- *  same tick cannot both win). Returns only the entries this caller owns. */
-function claimTopicGen(
-  entries: Array<{ id: string; statement: string }>,
-): Array<{ id: string; statement: string }> {
-  const claimed = entries.filter((e) => !inFlightCloudTopicGen.has(e.id));
-  for (const e of claimed) inFlightCloudTopicGen.add(e.id);
-  return claimed;
-}
-
-/** True while a cloud topic-generation batch is running for this fact. */
-export function isTopicGenerationInFlight(factId: string): boolean {
-  return inFlightCloudTopicGen.has(factId);
-}
-
-/**
- * Kicks off topic generation for newly-saved facts. Cloud mode issues one
- * batch call; on-device mode enqueues an individual job per fact for
- * sequential llama.rn access. Fire-and-forget — errors are logged, never
- * thrown. Shared by chat fact-saving and the proposal executor.
- */
 export interface TopicGenEntry {
   id: string;
   statement: string;
   /** The topic guideline the CHAT TURN chose for this fact, e.g.
-   *  `topics/residence`. Absent keeps the shipped prompt. */
+   *  `topics/residence`. Absent: the handler derives one from the fact's
+   *  attribute at run time, falling back to `topics/generic`. */
   skillId?: string;
 }
 
@@ -247,163 +215,50 @@ export function triggerTopicGeneration(
 }
 
 /**
- * Awaitable form of {@link triggerTopicGeneration}. Same behaviour, but the
- * promise settles when generation does, so a UI retry can keep its button
- * disabled for the real duration instead of guessing. Never rejects.
+ * ONE QUEUED JOB PER FACT, cloud or on-device (ux2 F1). Every run is ISOLATED:
+ * the handler sees this fact alone, and combination topics come only from the
+ * deferred pass. The cloud path used to make one inline batch call carrying the
+ * other facts and a location line from another fact; that is retired. A queued
+ * job survives an app kill and `InferenceQueue.start()` recovers it.
+ *
+ * Resolves once the jobs are enqueued, not when generation is done: the cards
+ * observe `topics_status`. Never rejects.
  */
 export async function startTopicGeneration(
   savedFactEntries: TopicGenEntry[],
 ): Promise<void> {
   if (savedFactEntries.length === 0) return;
-
   const useCloud =
     useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud;
 
-  // A fact whose kind the chat turn chose runs the SKILL-GUIDED path, and that
-  // path is queued rather than inline.
-  const skillGuided = savedFactEntries.filter((e) => useCloud && e.skillId);
-  const shipped = savedFactEntries.filter((e) => !(useCloud && e.skillId));
-
-  // ONE JOB PER FACT, on the PERSISTED queue. The cloud path used to make a
-  // single in-memory batch call inside the chat turn, so a generation started
-  // on an accept died with the app and left nothing to resume; a queued job
-  // survives, and InferenceQueue.start() already recovers crashed ones.
-  for (const entry of skillGuided) {
-    hasPendingJob('topic_gen', 'factId', entry.id)
-      .then((exists) => {
-        if (exists) return;
-        return enqueueJob('topic_gen', {
+  await Promise.all(
+    savedFactEntries.map(async (entry) => {
+      if (enqueuingTopicGen.has(entry.id)) return;
+      enqueuingTopicGen.add(entry.id);
+      try {
+        if (await hasPendingJob('topic_gen', 'factId', entry.id)) return;
+        await enqueueJob('topic_gen', {
           factId: entry.id,
           factStatement: entry.statement,
-          useCloud: true,
-          skillId: entry.skillId,
+          useCloud,
+          ...(entry.skillId ? { skillId: entry.skillId } : {}),
           // Deliberately NO excludeTopics: the handler reads the live lists at
-          // RUN time. A snapshot here is durable and stale by the time a
-          // sibling job has run.
-        }).then(() => inferenceQueue.notify());
-      })
-      .catch((err: unknown) =>
-        logger.warn('Failed to enqueue skill-guided topic gen', { error: String(err) }),
-      );
-  }
-
-  if (shipped.length === 0) return;
-
-  if (useCloud) {
-    // Cloud path, shipped prompt: single batch call for all facts, minus any
-    // already running.
-    const entries = claimTopicGen(shipped);
-    if (entries.length === 0) return;
-    try {
-      await batchGenerateTopics(entries);
-      await settleBatchTopicGen(entries);
-    } catch (err: unknown) {
-      logger.warn('[saveExtractedFacts] Batch topic gen failed', { error: String(err) });
-      // The harness catches a batch-call throw and writes topicGenError itself,
-      // but a throw from anywhere else (call building, fact reads, metadata
-      // writes) escapes it — and a fact with neither topics nor an error leaves
-      // TopicPlanCard spinning forever. Record the failure so the card settles.
-      await markTopicGenFailed(entries, err);
-    } finally {
-      for (const e of entries) inFlightCloudTopicGen.delete(e.id);
-    }
-  } else {
-    // Local path: enqueue individual jobs for sequential llama.rn access
-    for (const entry of shipped) {
-      hasPendingJob('topic_gen', 'factId', entry.id).then((exists) => {
-        if (!exists) {
-          enqueueJob('topic_gen', {
-            factId: entry.id,
-            factStatement: entry.statement,
-            useCloud: false,
-          }).then(() => inferenceQueue.notify());
-        }
-      }).catch((err: unknown) => logger.warn('Failed to enqueue topic gen', { error: String(err) }));
-    }
-  }
+          // RUN time. A snapshot here is durable and stale by the time it runs.
+        });
+        inferenceQueue.notify();
+      } catch (err: unknown) {
+        logger.warn('Failed to enqueue topic gen', { factId: entry.id, error: String(err) });
+      } finally {
+        enqueuingTopicGen.delete(entry.id);
+      }
+    }),
+  );
 }
 
 /** Read one fact's current metadata (empty object if it can't be read). */
 async function readFactMetadata(factId: string): Promise<Record<string, string[]>> {
   const facts = await getFacts();
   return facts.find((f) => f.id === factId)?.metadata ?? {};
-}
-
-/**
- * Settle `topics_status` for a finished batch, PER FACT.
- *
- * THE BUG THIS EXISTS FOR: `fact-commit` stamps every accepted fact 'pending'
- * at commit, and the batch generator writes topics without ever touching the
- * column. Its facts therefore spun forever: chips visible in the chat card
- * under a live "Finding topics" spinner, and a profile row showing a spinner
- * and no statement.
- *
- * PER FACT, not one blanket stamp over `entries`, because
- * `generateTopicsForFactsBatch` RESOLVES on a generation failure. It catches
- * the batch throw, catches a missing or empty per-fact result, writes
- * `metadata.topicGenError` for that fact and returns normally. So reaching this
- * line says nothing about whether any given fact succeeded, and a blanket
- * 'done' would stamp a FAILED fact 'done' beside its own error marker. That is
- * strictly worse than the spinner: `markOrphanedFactsAsFailed` sweeps
- * 'pending', so a 'done'-with-error fact is invisible to the rescue sweep and
- * never repairs.
- *
- * The generator writes exactly one of the two markers for every fact, so its
- * metadata is the authority on the outcome. One `getFacts()` for the whole set
- * rather than one read per fact.
- *
- * Stamp-only on the success side (never `completeTopicGeneration`, which would
- * mint the same topics a second time); `failTopicGeneration` on the other,
- * which stamps 'error' and keeps the legacy marker in step.
- */
-async function settleBatchTopicGen(
-  entries: Array<{ id: string; statement: string }>,
-): Promise<void> {
-  const metaById = new Map(
-    (await getFacts()).map((f) => [f.id, f.metadata ?? {}] as const),
-  );
-  const done: string[] = [];
-  for (const entry of entries) {
-    const meta = metaById.get(entry.id) ?? {};
-    const topics = meta.topics;
-    if (Array.isArray(topics) && topics.length > 0) {
-      done.push(entry.id);
-      continue;
-    }
-    const recorded = meta.topicGenError?.[0];
-    await failTopicGeneration(
-      entry.id,
-      recorded ?? 'Topic generation returned no topics',
-    );
-  }
-  await markTopicGenerationSettled(done);
-}
-
-/**
- * Records a topic-generation failure the harness didn't record itself, so the
- * fact carries the same `topicGenError` marker every reader already understands
- * (TopicPlanCard, FactAccordion, PersonaL1MeraProtocol).
- */
-async function markTopicGenFailed(
-  entries: Array<{ id: string; statement: string }>,
-  err: unknown,
-): Promise<void> {
-  const message = err instanceof Error ? err.message : String(err);
-  for (const entry of entries) {
-    try {
-      // `failTopicGeneration` stamps topics_status 'error' AND writes the
-      // legacy topicGenError marker in one go. Writing only the marker, as this
-      // did, left the column on 'pending', so a FAILED batch span forever in
-      // exactly the same way a successful one did.
-      await failTopicGeneration(entry.id, message);
-    } catch (writeErr: unknown) {
-      logger.warn('[topicGen] Failed to record topicGenError', {
-        factId: entry.id,
-        error: String(writeErr),
-      });
-    }
-  }
-  useFloatingChatStore.getState().notifyFactMutation();
 }
 
 /** Drops the stored `topicGenError` so the fact leaves the failed state. */
@@ -416,19 +271,15 @@ async function clearTopicGenError(factId: string): Promise<void> {
 }
 
 /**
- * User-initiated retry of topic generation for ONE fact (TopicPlanCard's failed
- * state). Clears the recorded error, then re-runs the SAME path
- * `startTopicGeneration` uses — no duplicated batch call, and the cloud in-flight
- * claim is what actually makes a double-fire impossible (it is synchronous, so
- * the second of two same-tick retries finds the fact claimed and drops out).
- * Never rejects.
+ * User-initiated retry of topic generation for ONE fact. Clears the recorded
+ * error, re-stamps 'pending', then enqueues through `startTopicGeneration`,
+ * whose synchronous claim makes a double tap one job. Never rejects.
  */
 export async function retryTopicGeneration(
   factId: string,
   factStatement: string,
   skillId?: string,
 ): Promise<void> {
-  if (inFlightCloudTopicGen.has(factId)) return; // fast path: already running
   try {
     await clearTopicGenError(factId);
     // Back to 'pending' for the duration of the run. Clearing the marker alone
@@ -442,59 +293,6 @@ export async function retryTopicGeneration(
     });
   }
   await startTopicGeneration([{ id: factId, statement: factStatement, skillId }]);
-}
-
-/**
- * Batch-generates real topics for all facts in ONE cloud API call. Thin adapter
- * over the harness `generateTopicsForFactsBatch`: builds the LLM + persona-store
- * ports from `cloudBatchComplete` + the fact-service, runs the harness flow, then
- * notifies the chat store. The harness owns the location lookup, call building,
- * result decoding, and metadata writes; observable behaviour is unchanged.
- */
-async function batchGenerateTopics(
-  factEntries: Array<{ id: string; statement: string }>,
-): Promise<void> {
-  await generateTopicsForFactsBatch(
-    {
-      llm: {
-        // Hedged: this batch runs inside a live chat turn, so a cold primary is
-        // dead air the user sits through. The single `complete` below is a
-        // background touch-up and stays un-hedged.
-        batchComplete: (calls, opts) =>
-          cloudBatchComplete(calls, opts?.model, {
-            hedgeAfterMs: HEDGE_DELAY_MS,
-            lane: 'interactive',
-          }),
-        complete: (req) => cloudComplete(req, { lane: 'interactive' }),
-      },
-      personaStore: {
-        getFacts: () => getFacts(),
-        updateFactMetadata: async (id, metadata) => {
-          // Legacy dual-write: keep the fact.metadata.topics string list exactly
-          // as before (older code paths + the config panel still read it).
-          await updateFact(id, { metadata });
-          // Wave 11 gap-fix: ALSO mint `topics` rows so generated topics reach the
-          // wave-7 feed retrieval (which reads the topics TABLE, not metadata).
-          // Deduped per fact so re-generation never duplicates.
-          if (Array.isArray(metadata.topics) && metadata.topics.length > 0) {
-            await syncLlmTopicsForFact(id, metadata.topics).catch((err: unknown) =>
-              logger.warn('[saveExtractedFacts] topic-row minting failed', {
-                factId: id,
-                error: String(err),
-              }),
-            );
-          }
-        },
-      },
-      logger: appHarnessLogger,
-      // Inject the topic-generation-service builder so the app keeps a single
-      // call-building seam (prompt constants + mocks) on the call path.
-      buildCalls: buildCloudBatchCallsForFact,
-    },
-    factEntries,
-  );
-
-  useFloatingChatStore.getState().notifyFactMutation();
 }
 
 /** Updates user language config immediately on the server (settings, not PII). */

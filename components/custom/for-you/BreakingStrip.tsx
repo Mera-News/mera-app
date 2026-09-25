@@ -8,9 +8,19 @@ import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+// RNGH's ScrollView, not RN's: the Dashboard's tab swipe (SwipeTabs) waits
+// for it through `useSwipeTabsBlocker`, so the strip scrolls on its own.
+import { ScrollView } from 'react-native-gesture-handler';
+import { notifyScrollTick } from '@/lib/visibility-tick';
+import { useSwipeTabsBlocker } from './SwipeTabs';
 
 const RED = '#EF4444'; // error/red accent
+const HIDDEN = {
+  accessible: false,
+  accessibilityElementsHidden: true,
+  importantForAccessibility: 'no-hide-descendants',
+} as const;
 
 interface BreakingStripProps {
   items: BreakingCardData[];
@@ -40,36 +50,46 @@ interface BreakingStripProps {
  */
 const BreakingStrip: React.FC<BreakingStripProps> = ({ items, onPressItem }) => {
   const { t } = useTranslation();
+  const swipeBlocker = useSwipeTabsBlocker();
   if (items.length === 0) return null;
 
   const cards = items.map(({ data }) => {
     const title = data.title_en ?? data.title_original ?? '';
+    // The card is a hidden visual with a CHILDLESS labelled button laid over
+    // it: the warning glyph inside the button surfaced on iOS as its own
+    // StaticText (captured class, ux2).
     return (
-      <Pressable
+      <View
         key={data._id}
-        onPress={() => onPressItem(data)}
-        accessibilityRole="button"
-        accessibilityLabel={`${t('relevance.emergency')}: ${title}`}
+        testID={`breaking-card-${data._id}`}
         className="rounded-xl border border-error-700 bg-gray-950 px-3 py-2 mr-2"
         style={{ maxWidth: 320, minWidth: 260 }}
       >
-        <HStack className="items-center mb-1" space="xs">
-          <MaterialIcons name="warning" size={14} color={RED} />
-          <Box className="rounded-full px-2 py-0.5" style={{ backgroundColor: RED }}>
-            <Text size="2xs" bold style={{ color: '#FFFFFF' }}>
-              {t('relevance.emergency').toUpperCase()}
-            </Text>
-          </Box>
-        </HStack>
-        <TranslatableDynamic
-          text={title}
-          originalText={data.title_original ?? undefined}
-          originalLanguage={data.language_code ?? undefined}
-          size="sm"
-          numberOfLines={2}
-          className="text-white"
+        <View pointerEvents="none" {...HIDDEN}>
+          <HStack className="items-center mb-1" space="xs">
+            <MaterialIcons name="warning" size={14} color={RED} {...HIDDEN} />
+            <Box className="rounded-full px-2 py-0.5" style={{ backgroundColor: RED }}>
+              <Text size="2xs" bold style={{ color: '#FFFFFF' }}>
+                {t('relevance.emergency').toUpperCase()}
+              </Text>
+            </Box>
+          </HStack>
+          <TranslatableDynamic
+            text={title}
+            originalText={data.title_original ?? undefined}
+            originalLanguage={data.language_code ?? undefined}
+            size="sm"
+            numberOfLines={2}
+            className="text-white"
+          />
+        </View>
+        <Pressable
+          onPress={() => onPressItem(data)}
+          accessibilityRole="button"
+          accessibilityLabel={`${t('relevance.emergency')}: ${title}`}
+          style={StyleSheet.absoluteFill}
         />
-      </Pressable>
+      </View>
     );
   });
 
@@ -77,9 +97,14 @@ const BreakingStrip: React.FC<BreakingStripProps> = ({ items, onPressItem }) => 
     <Box className="mb-2">
       {items.length > 1 ? (
         <ScrollView
+          ref={swipeBlocker ?? undefined}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingRight: 8 }}
+          // Translated titles count as on screen only inside the screen's
+          // width, so a card scrolled in sideways must re-measure.
+          onScroll={notifyScrollTick}
+          scrollEventThrottle={16}
         >
           {cards}
         </ScrollView>

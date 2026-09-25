@@ -8,6 +8,7 @@ import {
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { getCountryName } from '@/lib/country-utils';
+import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -19,7 +20,8 @@ interface Props {
 
 /**
  * A source-country flag that, when tapped, reveals a small popover naming the
- * country. Used on the article detail screen. When the country can't be named
+ * country; the name is a link to that country's publication list (the same
+ * route the Sources list opens), owner ux2 B4. Used on the article detail screen. When the country can't be named
  * (no / unrecognised code), it renders a plain, non-interactive flag.
  */
 export const SourceCountryFlag: React.FC<Props> = ({ countryCode, iconClassName }) => {
@@ -27,6 +29,19 @@ export const SourceCountryFlag: React.FC<Props> = ({ countryCode, iconClassName 
     const [open, setOpen] = useState(false);
     const closeTooltip = useCallback(() => setOpen(false), []);
     const openTooltip = useCallback(() => setOpen(true), []);
+    // `countryCode` is the article's own (alpha-3, or GLOBAL for the Global
+    // list), the same code the Sources list passes for a country row.
+    const openCountry = useCallback(
+        (countryName: string) => {
+            setOpen(false);
+            if (!countryCode) return;
+            router.push({
+                pathname: '/logged-in/sources-publishers',
+                params: { countryCode, countryName },
+            });
+        },
+        [countryCode],
+    );
 
     const flag = <SourceFlag countryCode={countryCode} size="sm" iconClassName={iconClassName} />;
 
@@ -63,6 +78,11 @@ export const SourceCountryFlag: React.FC<Props> = ({ countryCode, iconClassName 
             placement="left"
             offset={6}
             size="sm"
+            // VoiceOver could not reach the bubble: gluestack portals popover
+            // content to the app root, outside the native screen this detail
+            // page lives in. A native modal presents it on top, and VoiceOver
+            // moves into it (the backdrop is hidden from it).
+            useRNModal
             trigger={(triggerProps) => (
                 <Pressable
                     {...triggerProps}
@@ -90,10 +110,23 @@ export const SourceCountryFlag: React.FC<Props> = ({ countryCode, iconClassName 
                 caller's light fill showing as a frame around the plate, with
                 dark text on a dark panel inside it. */}
             <PopoverContent className="max-w-[200px]">
-                <PopoverBody>
-                    <Text size="xs" className="text-typography-900">
-                        {label}
-                    </Text>
+                <PopoverBody
+                    testID="source-country-bubble"
+                    // VoiceOver's escape (two-finger scrub) closes the bubble.
+                    onAccessibilityEscape={closeTooltip}
+                >
+                    {/* A link: VoiceOver reads "<country>, link". */}
+                    <Pressable
+                        testID="source-country-link"
+                        accessibilityRole="link"
+                        accessibilityLabel={label}
+                        onPress={() => openCountry(label)}
+                        hitSlop={12}
+                    >
+                        <Text size="xs" className="text-typography-900 underline">
+                            {label}
+                        </Text>
+                    </Pressable>
                 </PopoverBody>
             </PopoverContent>
         </Popover>

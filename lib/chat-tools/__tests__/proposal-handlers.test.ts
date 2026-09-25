@@ -108,6 +108,12 @@ describe('executeProposalActions — happy paths', () => {
     expect(result).toEqual({ applied: 1, errors: [], summaries: [], changeLogIds: [] });
   });
 
+  it('update_fact regenerates the fact\'s own topics, isolated (ux2 F1)', async () => {
+    mockGetFacts.mockResolvedValueOnce([{ id: 'f1', statement: 'old' } as never]);
+    await executeProposalActions([{ type: 'update_fact', fact_id: 'f1', new_statement: 'new statement' }]);
+    expect(mockTriggerTopicGeneration).toHaveBeenCalledWith([{ id: 'f1', statement: 'new statement' }]);
+  });
+
   it('delete_fact deletes an existing fact', async () => {
     mockGetFacts.mockResolvedValueOnce([{ id: 'f1', statement: 'gone soon' } as never]);
 

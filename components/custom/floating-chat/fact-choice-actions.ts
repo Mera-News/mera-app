@@ -20,6 +20,9 @@ import {
   type FactChoiceResolution,
 } from '@/lib/chat-tools/fact-choice-resolution';
 import logger from '@/lib/logger';
+import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
+import type { PendingDelete, SaveAsWrittenOffer } from './types';
+import { handleDeleteUserFacts } from '@/lib/chat-tools/tool-handlers';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 
 /**
@@ -110,4 +113,73 @@ export function resolveGroups(
     });
   }
   return settled;
+}
+
+/**
+ * "Save as I wrote it" (ux2 D9): commit the user's own sentence, then record
+ * the saved fact on the offering call's result so the thread swaps the chip
+ * for a Saved card and its topics. It goes through `commitFactChoices`, so topic
+ * minting and geo derivation run as for any accepted fact, and the model never
+ * sees the tap. Same store-then-durable shape as `resolveGroup`.
+ */
+export async function commitSaveAsWritten(offer: SaveAsWrittenOffer): Promise<void> {
+  const { entry, resultKey, baseResult } = offer;
+  try {
+    const { savedFacts } = await commitFactChoices([
+      {
+        statement: entry.statement,
+        ...(entry.questionnaire_attribute ? { questionnaire: { attribute: entry.questionnaire_attribute } } : {}),
+        ...(entry.topic_skill_id ? { skillId: entry.topic_skill_id } : {}),
+      },
+    ]);
+    const store = useFloatingChatStore.getState();
+    const current = (store.toolCallResults[resultKey] as Record<string, unknown> | undefined) ?? baseResult;
+    const next = { ...current, saveAsWrittenSaved: savedFacts };
+    store.setToolCallResult(resultKey, next);
+    const [messageId, indexRaw] = resultKey.split('::');
+    const index = Number(indexRaw);
+    if (messageId && Number.isInteger(index)) {
+      void patchMessageToolCallResult(messageId, index, next).catch((err: unknown) => {
+        logger.warn('[fact-choice] save-as-written patch failed', { resultKey, error: String(err) });
+        return false;
+      });
+    }
+  } catch (err) {
+    logger.error('[fact-choice] save as written failed', err, { resultKey });
+  }
+}
+
+/**
+ * The removal card's Remove or Keep (owner-approved M6, ux2 batch 25). Remove
+ * deletes exactly the listed facts through the ordinary handler, with no model
+ * turn; either way the outcome is recorded on the call's result, which is what
+ * turns the card into "Removed from your persona" or "Nothing was removed."
+ */
+export async function confirmPendingDelete(pending: PendingDelete, choice: 'remove' | 'keep'): Promise<void> {
+  const { resultKey, baseResult, factIds } = pending;
+  try {
+    let outcome: Record<string, unknown> = { deleteOutcome: 'kept' };
+    if (choice === 'remove') {
+      const out = await handleDeleteUserFacts({ fact_ids: factIds });
+      outcome = {
+        deleteOutcome: 'removed',
+        deletedStatements: Array.isArray(out.deletedStatements) ? out.deletedStatements : [],
+        deletedCount: typeof out.deletedCount === 'number' ? out.deletedCount : 0,
+      };
+    }
+    const store = useFloatingChatStore.getState();
+    const current = (store.toolCallResults[resultKey] as Record<string, unknown> | undefined) ?? baseResult;
+    const next = { ...current, ...outcome };
+    store.setToolCallResult(resultKey, next);
+    const [messageId, indexRaw] = resultKey.split('::');
+    const index = Number(indexRaw);
+    if (messageId && Number.isInteger(index)) {
+      void patchMessageToolCallResult(messageId, index, next).catch((err: unknown) => {
+        logger.warn('[fact-choice] delete outcome patch failed', { resultKey, error: String(err) });
+        return false;
+      });
+    }
+  } catch (err) {
+    logger.error('[fact-choice] removal failed', err, { resultKey });
+  }
 }

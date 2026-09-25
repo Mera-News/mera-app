@@ -101,4 +101,37 @@ describe('InferenceJob model', () => {
       expect((job as any).status).toBe('pending');
     });
   });
+
+  describe('markUnrunnable() — the rollback-loop guard', () => {
+    it('counts an attempt, so an unknown job type cannot spin forever', async () => {
+      // An OTA rollback leaves a job type this bundle has no handler for. It
+      // never reaches markRunning, so without its own increment the attempt
+      // count never moves and markFailed re-pends it on every loop, forever.
+      const job = makeJob({ attempts: 0 as any, maxAttempts: 3 as any });
+      await job.markUnrunnable('Unknown job type: topic_combo');
+      expect((job as any).attempts).toBe(1);
+      expect((job as any).status).toBe('pending');
+      expect((job as any).errorMessage).toBe('Unknown job type: topic_combo');
+      await job.markUnrunnable('again');
+      await job.markUnrunnable('again');
+      expect(job.destroyPermanently).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('markDeferred()', () => {
+    it('re-pends and gives back the attempt markRunning took', async () => {
+      const job = makeJob({ status: 'running' as any, attempts: 2 as any });
+      await job.markDeferred('offline');
+      expect((job as any).status).toBe('pending');
+      expect((job as any).attempts).toBe(1);
+      expect((job as any).errorMessage).toBe('offline');
+      expect(job.destroyPermanently).not.toHaveBeenCalled();
+    });
+
+    it('never drops attempts below zero', async () => {
+      const job = makeJob({ status: 'running' as any, attempts: 0 as any });
+      await job.markDeferred('offline');
+      expect((job as any).attempts).toBe(0);
+    });
+  });
 });

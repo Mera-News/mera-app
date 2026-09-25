@@ -409,3 +409,13 @@ export function isPlainNo(text: string): boolean {
   if (!t || t.split(' ').length > 6) return false;
   return PLAIN_NO.test(t);
 }
+
+/**
+ * A reply the token cap cut mid-sentence, ended at its last whole sentence.
+ * Measured on device: "...Would you prefer" as the whole tail of a bubble
+ * (ux2 D7). Returns '' when not even one sentence finished.
+ */
+export function endAtLastSentence(text: string): string {
+  const m = /^[\s\S]*[.!?](?=\s|$)/.exec(text.trim());
+  return m ? m[0].trim() : '';
+}

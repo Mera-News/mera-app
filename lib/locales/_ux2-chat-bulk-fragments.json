@@ -1,0 +1,163 @@
+{
+  "_comment": "ux2 P9 owner ruling: the fact-choice bulk row shows Replace all / Keep all / Skip all when any pending card is a replace card. Four new factChoice.* keys: the two button labels and their count-bearing a11y labels. Skip all reuses factChoice.skipAll. Pure ADD.",
+  "en": {
+    "factChoice": {
+      "replaceAll": "Replace all",
+      "keepAll": "Keep all",
+      "replaceAllA11y": "Replace with all {{count}} suggestions",
+      "keepAllA11y": "Keep your facts and add all {{count}} suggestions"
+    }
+  },
+  "ar": {
+    "factChoice": {
+      "replaceAll": "استبدال الكل",
+      "keepAll": "الإبقاء على الكل",
+      "replaceAllA11y": "الاستبدال بكل الاقتراحات الـ {{count}}",
+      "keepAllA11y": "الإبقاء على حقائقك وإضافة كل الاقتراحات الـ {{count}}"
+    }
+  },
+  "de": {
+    "factChoice": {
+      "replaceAll": "Alle ersetzen",
+      "keepAll": "Alle behalten",
+      "replaceAllA11y": "Durch alle {{count}} Vorschläge ersetzen",
+      "keepAllA11y": "Deine Fakten behalten und alle {{count}} Vorschläge hinzufügen"
+    }
+  },
+  "es": {
+    "factChoice": {
+      "replaceAll": "Reemplazar todo",
+      "keepAll": "Conservar todo",
+      "replaceAllA11y": "Reemplazar con las {{count}} sugerencias",
+      "keepAllA11y": "Conservar tus datos y añadir las {{count}} sugerencias"
+    }
+  },
+  "fr": {
+    "factChoice": {
+      "replaceAll": "Tout remplacer",
+      "keepAll": "Tout garder",
+      "replaceAllA11y": "Remplacer par les {{count}} suggestions",
+      "keepAllA11y": "Garder vos faits et ajouter les {{count}} suggestions"
+    }
+  },
+  "hi": {
+    "factChoice": {
+      "replaceAll": "सभी बदलें",
+      "keepAll": "सभी रखें",
+      "replaceAllA11y": "सभी {{count}} सुझावों से बदलें",
+      "keepAllA11y": "अपने तथ्य रखें और सभी {{count}} सुझाव जोड़ें"
+    }
+  },
+  "id": {
+    "factChoice": {
+      "replaceAll": "Ganti semua",
+      "keepAll": "Simpan semua",
+      "replaceAllA11y": "Ganti dengan semua {{count}} saran",
+      "keepAllA11y": "Simpan fakta Anda dan tambahkan semua {{count}} saran"
+    }
+  },
+  "it": {
+    "factChoice": {
+      "replaceAll": "Sostituisci tutto",
+      "keepAll": "Tieni tutto",
+      "replaceAllA11y": "Sostituisci con tutti i {{count}} suggerimenti",
+      "keepAllA11y": "Tieni i tuoi fatti e aggiungi tutti i {{count}} suggerimenti"
+    }
+  },
+  "ja": {
+    "factChoice": {
+      "replaceAll": "すべて置き換える",
+      "keepAll": "すべて残す",
+      "replaceAllA11y": "{{count}} 件の候補ですべて置き換える",
+      "keepAllA11y": "今の情報を残して {{count}} 件の候補をすべて追加"
+    }
+  },
+  "ko": {
+    "factChoice": {
+      "replaceAll": "모두 바꾸기",
+      "keepAll": "모두 유지",
+      "replaceAllA11y": "{{count}}개 제안으로 모두 바꾸기",
+      "keepAllA11y": "기존 정보를 유지하고 {{count}}개 제안 모두 추가"
+    }
+  },
+  "nl": {
+    "factChoice": {
+      "replaceAll": "Alles vervangen",
+      "keepAll": "Alles houden",
+      "replaceAllA11y": "Vervangen door alle {{count}} suggesties",
+      "keepAllA11y": "Je feiten houden en alle {{count}} suggesties toevoegen"
+    }
+  },
+  "pl": {
+    "factChoice": {
+      "replaceAll": "Zastąp wszystko",
+      "keepAll": "Zachowaj wszystko",
+      "replaceAllA11y": "Zastąp wszystkimi {{count}} propozycjami",
+      "keepAllA11y": "Zachowaj swoje fakty i dodaj wszystkie {{count}} propozycje"
+    }
+  },
+  "pt-BR": {
+    "factChoice": {
+      "replaceAll": "Substituir tudo",
+      "keepAll": "Manter tudo",
+      "replaceAllA11y": "Substituir pelas {{count}} sugestões",
+      "keepAllA11y": "Manter seus fatos e adicionar as {{count}} sugestões"
+    }
+  },
+  "ru": {
+    "factChoice": {
+      "replaceAll": "Заменить все",
+      "keepAll": "Оставить все",
+      "replaceAllA11y": "Заменить всеми {{count}} предложениями",
+      "keepAllA11y": "Оставить ваши факты и добавить все {{count}} предложения"
+    }
+  },
+  "th": {
+    "factChoice": {
+      "replaceAll": "แทนที่ทั้งหมด",
+      "keepAll": "เก็บไว้ทั้งหมด",
+      "replaceAllA11y": "แทนที่ด้วยข้อเสนอทั้ง {{count}} รายการ",
+      "keepAllA11y": "เก็บข้อมูลเดิมไว้และเพิ่มข้อเสนอทั้ง {{count}} รายการ"
+    }
+  },
+  "tr": {
+    "factChoice": {
+      "replaceAll": "Tümünü değiştir",
+      "keepAll": "Tümünü tut",
+      "replaceAllA11y": "{{count}} önerinin tümüyle değiştir",
+      "keepAllA11y": "Bilgilerini tut ve {{count}} önerinin tümünü ekle"
+    }
+  },
+  "uk": {
+    "factChoice": {
+      "replaceAll": "Замінити всі",
+      "keepAll": "Залишити всі",
+      "replaceAllA11y": "Замінити всіма {{count}} пропозиціями",
+      "keepAllA11y": "Залишити ваші факти й додати всі {{count}} пропозиції"
+    }
+  },
+  "vi": {
+    "factChoice": {
+      "replaceAll": "Thay thế tất cả",
+      "keepAll": "Giữ tất cả",
+      "replaceAllA11y": "Thay bằng tất cả {{count}} gợi ý",
+      "keepAllA11y": "Giữ thông tin của bạn và thêm tất cả {{count}} gợi ý"
+    }
+  },
+  "zh-CN": {
+    "factChoice": {
+      "replaceAll": "全部替换",
+      "keepAll": "全部保留",
+      "replaceAllA11y": "用全部 {{count}} 条建议替换",
+      "keepAllA11y": "保留你的信息并添加全部 {{count}} 条建议"
+    }
+  },
+  "zh-TW": {
+    "factChoice": {
+      "replaceAll": "全部替換",
+      "keepAll": "全部保留",
+      "replaceAllA11y": "以全部 {{count}} 則建議替換",
+      "keepAllA11y": "保留你的資訊並新增全部 {{count}} 則建議"
+    }
+  }
+}

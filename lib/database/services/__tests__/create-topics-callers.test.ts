@@ -23,9 +23,9 @@ const LIB = path.join(ROOT, 'lib');
 const CALL_SITES: Record<string, number> = {
   'lib/database/services/mutation-rails-service.ts': 1,
   'lib/database/services/persona-action-executor.ts': 2,
-  // appendTopupTopicsForFact + syncLlmTopicsForFact delegate here; the
-  // declaration itself and the doc-comment mention are stripped below.
-  'lib/database/services/topic-service.ts': 2,
+  // syncLlmTopicsForFact delegates here; the declaration itself and the
+  // doc-comment mention are stripped below.
+  'lib/database/services/topic-service.ts': 1,
   // completeTopicGeneration. Passes a factId, so its topics DO reach the
   // facts screen — which is correct: they are that fact's topics. Reviewed
   // and intended, which is the decision this table exists to force.
@@ -33,7 +33,7 @@ const CALL_SITES: Record<string, number> = {
   'lib/inference/handlers/tracked-story-migrate-handler.ts': 1,
   'lib/tracking/track-actions.ts': 1,
 };
-const EXPECTED_TOTAL = 8;
+const EXPECTED_TOTAL = 7;
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

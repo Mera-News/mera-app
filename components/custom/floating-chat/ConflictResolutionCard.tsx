@@ -29,6 +29,8 @@ import {
   type ConflictResolution,
 } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GlyphSafeButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
@@ -125,7 +127,7 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
   return (
     <Animated.View entering={cardEntering} style={[styles.card, dimmed && styles.cardDimmed]}>
       <View style={styles.headerRow}>
-        <MaterialIcons name="compare-arrows" size={18} color={WARN} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="compare-arrows" size={18} color={WARN} />
         <Text size="sm" bold style={styles.title}>
           {t('conflict.title')}
         </Text>
@@ -242,7 +244,7 @@ const ConflictResolutionCard: React.FC<ConflictResolutionCardProps> = ({ conflic
 
       {resolved !== null && (
         <View style={styles.statusRow}>
-          <MaterialIcons name="check-circle" size={16} color={WARN} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={16} color={WARN} />
           <Text size="xs" style={styles.statusText}>
             {t(STATUS_LABEL_KEY[resolved])}
           </Text>
@@ -260,9 +262,17 @@ interface VerbRowProps {
   disabled?: boolean;
 }
 
+// Childless button over a hidden visual (ux2 batch 26): the verb glyph inside
+// the labelled row surfaced as its own StaticText.
 const VerbRow: React.FC<VerbRowProps> = ({ icon, label, preview, onPress, disabled }) => (
-  <Pressable onPress={onPress} disabled={disabled} style={styles.verbRow}>
-    <MaterialIcons name={icon} size={18} color={WARN} style={styles.verbIcon} />
+  <GlyphSafeButton
+    onPress={onPress}
+    disabled={disabled}
+    visualStyle={styles.verbRow}
+    accessibilityState={{ disabled: !!disabled }}
+    accessibilityLabel={`${label}. ${preview}`}
+  >
+    <MaterialIcons {...DECORATIVE_ICON_A11Y} name={icon} size={18} color={WARN} style={styles.verbIcon} />
     <View style={styles.verbBody}>
       <Text size="sm" bold style={styles.verbLabel}>
         {label}
@@ -271,7 +281,7 @@ const VerbRow: React.FC<VerbRowProps> = ({ icon, label, preview, onPress, disabl
         {preview}
       </Text>
     </View>
-  </Pressable>
+  </GlyphSafeButton>
 );
 
 const styles = StyleSheet.create({

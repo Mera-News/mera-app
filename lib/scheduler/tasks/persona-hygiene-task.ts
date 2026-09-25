@@ -7,7 +7,6 @@
 
 import { authClient } from '@/lib/auth-client';
 import { runHygieneSweep } from '@/lib/database/services/hygiene-service';
-import { runTopicTopup } from '@/lib/database/services/topic-topup-service';
 import { AppScheduler } from '../AppScheduler';
 import { backgroundWorkIsIdle } from '../background-idle';
 
@@ -79,19 +78,5 @@ AppScheduler.register({
     } else {
       ctx.log(`hygiene sweep complete — ${result.proposalCount} proposal(s)`);
     }
-
-    // Fact-combination top-up (r12 J-P3). FIRE-AND-FORGET on purpose: it only
-    // mints rows, nothing downstream waits on it, and keeping it off the awaited
-    // path means a slow generation can never push the handler past its timeout
-    // into a retry (which would re-issue a billed batch). The cost is that a
-    // backgrounded app loses the run — acceptable at a weekly cadence, since the
-    // watermark is only advanced on a completed pass, so nothing is skipped.
-    void runTopicTopup()
-      .then((r) => {
-        if (r.ran) ctx.log(`topic top-up — ${r.appended} appended across ${r.considered} fact(s)`);
-      })
-      .catch(() => {
-        /* the service never throws; this is belt-and-braces */
-      });
   },
 });

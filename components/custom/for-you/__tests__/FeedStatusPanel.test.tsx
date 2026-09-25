@@ -33,20 +33,6 @@ jest.mock('react-native-reanimated', () => {
     };
 });
 
-// `useProcessingSnapshot` reaches FeedSyncIndicator, which imports AppScheduler
-// and with it `lib/database/index.ts` — that module builds a real SQLiteAdapter
-// at import time and throws `initializeJSI` outside a native runtime. Stubbing
-// the indicator is the narrowest cut that keeps the snapshot hook itself real.
-jest.mock('@/components/custom/FeedSyncIndicator', () => ({
-    useFeedSyncRunning: () => false,
-    useIsFeedProcessing: () => false,
-}));
-
-// Same reason, second path in: the prefs store imports `setting-service`, which
-// imports the same database module.
-jest.mock('@/lib/stores/display-prefs-store', () => ({
-    useDisplayPrefsStore: (sel: any) => sel({ staticGradient: false }),
-}));
 
 jest.mock('@/components/ui/text', () => {
     const { Text: RNText } = require('react-native');
@@ -73,13 +59,6 @@ jest.mock('@/lib/stores/selectors', () => ({
         deviceProcessedCount: 0,
         deviceTotalCount: 0,
     }),
-    // `useProcessingSnapshot` reads five more selectors than this panel does
-    // directly. They are stubbed at rest: this file tests which lines the panel
-    // shows per mode, and the snapshot's own stage logic is covered by its tests.
-    useForYouSyncStatusMessage: () => null,
-    useForYouChunkStates: () => [],
-    useForYouHydrationProgress: () => ({ hydrationCompleted: 0, hydrationTotal: 0 }),
-    useForYouLastProcessingRunFinishedAt: () => null,
 }));
 jest.mock('@/lib/hooks/use-feed-counts', () => ({
     useFeedCounts: () => ({
@@ -110,7 +89,7 @@ describe('FeedStatusPanel', () => {
         const { queryByTestId } = render(<FeedStatusPanel expanded mode="processing" />);
         expect(queryByTestId('feed-status-details')).toBeTruthy();
         // The harness and the old accordion both key off this id.
-        expect(queryByTestId('dashboard-status-details-panel')).toBeTruthy();
+        expect(queryByTestId('status-details-panel')).toBeTruthy();
     });
 
     it('shows the "Analysing X of Y articles" progress line while processing', () => {
@@ -138,7 +117,7 @@ describe('FeedStatusPanel', () => {
         const { getByTestId } = render(<FeedStatusPanel expanded mode="idle" />);
         const { StyleSheet } = require('react-native');
         const { STATUS_PANEL_OPAQUE_BASE } = require('../status-ink');
-        const style = StyleSheet.flatten(getByTestId('dashboard-status-details-panel').props.style);
+        const style = StyleSheet.flatten(getByTestId('status-details-panel').props.style);
         expect(style.backgroundColor).toBe(STATUS_PANEL_OPAQUE_BASE);
         expect(STATUS_PANEL_OPAQUE_BASE).toMatch(/^rgb\(/);
     });
@@ -154,6 +133,27 @@ describe('FeedStatusBody', () => {
         const { getByTestId, getByText, queryByTestId } = render(<FeedStatusBody mode="processing" />);
         expect(getByTestId('feed-status-details')).toBeTruthy();
         expect(getByText('feed.analysingProgress')).toBeTruthy();
-        expect(queryByTestId('dashboard-status-details-panel')).toBeNull();
+        expect(queryByTestId('status-details-panel')).toBeNull();
+    });
+});
+
+// Owner (ux2 C1): the panel closes at 3s, before a 5s rotation ever fired, so
+// readers only saw line 0. No rotating headline and no chunk strip: the fixed
+// progress line and the detail rows say it.
+describe('FeedStatusPanel: no rotating text', () => {
+    it('draws no rotating headline and no chunk strip while processing', () => {
+        mockBatchProgress = { done: 3, total: 10 };
+        const { queryByTestId, getByText } = render(<FeedStatusPanel expanded mode="processing" />);
+        expect(getByText('feed.analysingProgress')).toBeTruthy();
+        expect(queryByTestId('status-panel-headline')).toBeNull();
+        expect(queryByTestId('processing-chunk-strip')).toBeNull();
+    });
+
+    it('has no chunk strip module left to render', () => {
+        const fs = require('fs');
+        const path = require('path');
+        expect(fs.existsSync(path.resolve(__dirname, '../../processing/ChunkStrip.tsx'))).toBe(false);
+        const src = fs.readFileSync(path.resolve(__dirname, '../FeedStatusPanel.tsx'), 'utf8');
+        expect(src).not.toMatch(/ProcessingHeadline|ChunkStrip|HEADLINE_CYCLE_MS/);
     });
 });

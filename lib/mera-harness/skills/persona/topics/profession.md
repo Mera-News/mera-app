@@ -30,10 +30,11 @@ a place joins only as a flavour of it.
    software role that is AI, cyber security and developer tooling; for a clinical role it is
    workforce, licensing and drug approvals; for a legal role it is rulings and regulation. Name the
    field's live subjects, never the field itself.
-2. **National flavour.** The same field inside the country the persona's residence fact names. Read
-   that country off their other facts. If they have no residence fact, skip this band entirely
-   rather than guessing a country.
-3. **Bloc flavour.** The same field at the bloc, where the bloc genuinely legislates for it.
+2. **National flavour.** The same field inside the country the fact itself names ("nurse in
+   Dublin" gives Ireland). A fact naming no place skips this band and the next entirely: never
+   guess a country.
+3. **Bloc flavour.** The same field at that country's bloc, where the bloc genuinely legislates for
+   it.
 
 At most 10 in total. A field with a thin news surface honestly yields five.
 
@@ -60,8 +61,7 @@ If you cannot say what would appear in the article, the topic is not one.
 - Any prohibition above. They all still stand.
 
 ## Worked example
-Fact: "Theatre nurse at a public hospital"
-Other facts: "Expat from the Philippines living in Dublin, Leinster, Ireland, Europe"
+Fact: "Theatre nurse at a public hospital in Dublin"
 Existing topics: "Ireland qualification recognition"
 
 Four field-generic topics naming no place, two national, two bloc. The employer is a public

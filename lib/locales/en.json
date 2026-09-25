@@ -251,8 +251,7 @@
       },
       "downloadProgress": "{{done}} of {{total}} articles downloaded",
       "chunks": {
-        "ready": "{{ready}} of {{total}} analysis batches finished",
-        "a11y": "Analysis batches: {{ready}} of {{total}} finished"
+        "ready": "{{ready}} of {{total}} analysis batches finished"
       },
       "stageA11y": "Step {{index}} of {{total}}: {{name}}"
     },
@@ -286,7 +285,6 @@
     "statsRead_other": "and you've read {{formatted}}.",
     "reasonUnavailable": "Mera couldn't write a note for this one.",
     "loadingA11y": "Loading your feed",
-    "newStoriesPill": "New stories",
     "translatingCaption": "Translating…",
     "updatedJustNow": "Updated just now"
   },
@@ -320,7 +318,7 @@
     "share": "Share",
     "shareVia": "Shared via {{downloadUrl}}",
     "sourceCountryGlobal": "Worldwide",
-    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name.",
+    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country, then tap its name to see its publications.",
     "linkUnavailable": "This link can't be opened securely, so it isn't available here.",
     "relatedFromSubscriptions": "From your subscriptions",
     "relatedLoadFailed": "Couldn't load related articles.",
@@ -461,7 +459,9 @@
     "addToExplore": "Add to Explore",
     "addedToExplore": "Added to Explore",
     "badgeGovernment": "Government source",
-    "badgeRegulator": "Official agency"
+    "badgeRegulator": "Official agency",
+    "sectionCountries": "Countries",
+    "sectionPublications": "Publications"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioritise this source",
@@ -1058,13 +1058,6 @@
     "deleteFactWarning": "Its topics and the stories they found go too, and Mera stops looking for news about it.",
     "deletingFact": "Deleting...",
     "yesDelete": "Yes, Delete",
-    "refreshSuggestions": "Refresh Suggestions",
-    "refreshingSuggestions": "Refreshing...",
-    "refreshSuggestionsSuccessTitle": "Suggestions refreshed",
-    "refreshSuggestionsSuccessDescription": "New personalized suggestions are being generated.",
-    "refreshSuggestionsFailedTitle": "Refresh Failed",
-    "refreshSuggestionsFailedDescription": "Could not refresh suggestions. Please try again.",
-    "personaUpdatedRefreshHint": "I see you've updated your persona, would you like me to regenerate your feed?",
     "articleCount_one": "{{count}} article",
     "articleCount_other": "{{count}} articles",
     "addTopic": "Add topic",
@@ -1209,7 +1202,13 @@
     "topicGenFailed": "Couldn't generate topics for this.",
     "topicGenRetry": "Retry",
     "aiUsageNoticeGeneral": "Mera can make mistakes, so check anything important.",
-    "trackChooseHint": "Choose what to follow"
+    "trackChooseHint": "Choose what to follow",
+    "factDeletePendingTitle": "Will be removed from your persona",
+    "saveAsWritten": "Save as I wrote it",
+    "factDeleteRemove": "Remove",
+    "factDeleteKeep": "Keep",
+    "factDeleteKept": "Nothing was removed.",
+    "topicsSavedHint": "Topics saved! Feel free to keep adding facts, or tap {{close}} to start exploring."
   },
   "articleFeedback": {
     "thumbsUp": "I like it",
@@ -1317,7 +1316,8 @@
     "formError": "Please fill out all required fields.",
     "emailError": "Please enter a valid email address.",
     "captureScreenshotError": "Failed to capture screenshot.",
-    "genericError": "Unable to send feedback due to an unexpected error."
+    "genericError": "Unable to send feedback due to an unexpected error.",
+    "chatAttachmentNote": "Your chat with Mera will be attached to this report."
   },
   "observability": {
     "title": "Observability",
@@ -1533,7 +1533,11 @@
     "titleAlsoAdd": "Also add this?",
     "pendingHint": "Choose an option above, or type your answer.",
     "overlapsLabel": "Overlaps with",
-    "overlapsReplaceNote": "Replace would remove it and its topics."
+    "overlapsReplaceNote": "Replace would remove it and its topics.",
+    "replaceAll": "Replace all",
+    "keepAll": "Keep all",
+    "replaceAllA11y": "Replace with all {{count}} suggestions",
+    "keepAllA11y": "Keep your facts and add all {{count}} suggestions"
   },
   "conflict": {
     "title": "Possible conflict",
@@ -1756,7 +1760,9 @@
     },
     "meraInviteReturning": "Tell me about something new and I'll add it to your feed.",
     "editFacts": "Edit",
-    "planUsage": "{{used}} of {{limit}} analysed today"
+    "planUsage": "{{used}} of {{limit}} analysed today",
+    "updatingAllFacts": "Updating all facts",
+    "pleaseWait": "Please wait"
   },
   "facts": {
     "screenTitle": "Your facts",
@@ -2731,37 +2737,36 @@
       "Putting your question together."
     ],
     "queued": [
-      "Lining up your request.",
-      "A couple of things are running at once. Yours is next."
+      "Your request is next in line on your phone."
     ],
     "securing": [
-      "Locking your message so only the model can open it.",
-      "Your words are encrypted before they leave your phone."
+      "Encrypting your message so only the model in its trusted environment can read it.",
+      "Your words are encrypted on your phone before they leave."
     ],
     "attesting": [
-      "Setting up a private channel to the model.",
-      "Getting the key that keeps this between you and Mera.",
-      "A private conversation takes a moment to set up."
+      "Establishing a secure connection between you and the model in a trusted environment.",
+      "Getting the key from the model's trusted environment, so only the model can read this."
     ],
     "thinking": [
-      "Mera is reading what you said.",
-      "Working out the best way to answer."
+      "The model is reading your message.",
+      "Working out the best answer."
     ],
     "retrying": [
-      "This is taking longer than usual. Mera is trying another route.",
-      "Still going. Thanks for waiting."
+      "This is taking longer than usual. Trying another secure route.",
+      "Still working on it. Thanks for waiting."
     ],
     "deviceLoading": [
-      "Waking up the model on your phone.",
+      "Loading the model on your phone.",
       "The first answer takes a little longer while it loads."
     ],
     "devicePreparing": [
-      "Gathering what Mera already knows about you.",
       "Getting your phone ready to answer."
     ],
     "deviceThinking": [
-      "Thinking it through on your phone.",
-      "This runs on your device, so nothing is being sent anywhere."
+      "Thinking it through on your phone. Nothing leaves your device."
+    ],
+    "webSearch": [
+      "Searching the web from your device…"
     ]
   },
   "headerNarration": {
@@ -2800,12 +2805,16 @@
       ]
     },
     "nudges": [
-      "Save it for later",
-      "Your saved list is waiting",
-      "Read one story properly",
-      "See the top headlines",
-      "Newer is not better",
-      "No need to watch"
+      "Read the full article",
+      "Short on time? Save it",
+      "Checked world news?",
+      "Checked your countries?",
+      "Follow a story",
+      "Check followed stories",
+      "Is your profile current?",
+      "Not for you? Tell Mera",
+      "Like it to see more",
+      "Share with loved ones"
     ],
     "a11y": "Mera is updating your news on this phone."
   },

@@ -75,6 +75,10 @@ const TranslationNotice: React.FC<TranslationNoticeProps> = ({
                     name="translate"
                     size={14}
                     color={translatable ? TRANSLATABLE_COLOR : NOT_TRANSLATABLE_COLOR}
+                    // Decoration: hidden, or it surfaces as its own icon-font StaticText.
+                    accessible={false}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
                 />
                 <Text
                     size="xs"

@@ -23,7 +23,6 @@ import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import {
   createTopics,
   getAllNormalizedTexts,
-  appendTopupTopicsForFact,
 } from '../topic-service';
 
 const db = database as any;
@@ -239,58 +238,5 @@ describe('getAllNormalizedTexts — the GLOBAL exclusion set', () => {
   it('is empty for an empty table', async () => {
     seed([]);
     expect(await getAllNormalizedTexts()).toEqual(new Set());
-  });
-});
-
-describe('appendTopupTopicsForFact', () => {
-  beforeEach(() => {
-    (db.batch as jest.Mock).mockClear();
-    (db.write as jest.Mock).mockClear();
-    seed([]);
-  });
-
-  it('mints at the reduced top-up weight, not the full llm seed weight', async () => {
-    const out = await appendTopupTopicsForFact('f1', [
-      { text: 'Bengaluru cricket news', normalizedText: 'bengaluru cricket news' },
-    ]);
-
-    // 0.5 requests ~30 articles per sync where 0.75 would request 40.
-    expect(out[0].weight).toBe(0.5);
-  });
-
-  it("mints as 'llm' provenance, never 'tracked'", async () => {
-    // 'tracked' would grant quota-exempt hydration for articles the user never
-    // followed — a billing bug, not a labelling nicety.
-    const out = await appendTopupTopicsForFact('f1', [
-      { text: 'Bengaluru cricket news', normalizedText: 'bengaluru cricket news' },
-    ]);
-
-    expect(out[0].provenance).toBe('llm');
-    expect(out[0].factId).toBe('f1');
-    expect(out[0].status).toBe('active');
-    expect(out[0].highPriority).toBe(false);
-  });
-
-  it('is a no-op for an empty plan', async () => {
-    expect(await appendTopupTopicsForFact('f1', [])).toEqual([]);
-    expect(db.write).not.toHaveBeenCalled();
-  });
-
-  it('still passes through the createTopics dedupe floor', async () => {
-    seed([
-      makeRecord({
-        id: 'existing',
-        normalizedText: 'bengaluru cricket news',
-        factId: 'f1',
-        status: 'active',
-      }),
-    ]);
-
-    const out = await appendTopupTopicsForFact('f1', [
-      { text: 'Bengaluru cricket news', normalizedText: 'bengaluru cricket news' },
-    ]);
-
-    expect(out[0].id).toBe('existing');
-    expect(db.batch).not.toHaveBeenCalled();
   });
 });

@@ -20,6 +20,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 const REFRESH_TINT = '#EDA77E';
 
@@ -85,6 +86,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     const hydrated = useFactChecksHydrated();
     const refreshing = useFactChecksRefreshing();
     const refresh = useFactChecksStore((s) => s.refresh);
+    const load = useFactChecksStore((s) => s.load);
     const remove = useFactChecksStore((s) => s.remove);
 
     // The reconcile-then-refresh sequence, shared by the activation effect
@@ -97,14 +99,27 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
         await refresh();
     }, [refresh]);
 
-    // Re-read whenever the chip becomes active. The panel stays mounted behind
-    // `display: 'none'` once visited, so a mount-only effect would fire exactly
-    // once per app launch and every later visit would show a frozen list.
-    // Bounded: terminal rows are skipped, so a settled table costs no requests.
+    // Re-read whenever the chip becomes active: the panel stays mounted as a
+    // neighbour in the Dashboard swipe window (ux2 B3), so a mount-only effect
+    // would show a frozen list on every later visit. Bounded: terminal rows are
+    // skipped, so a settled table costs no requests. SILENT (`load`, not
+    // `refresh`): arriving must not flash the pull-to-refresh spinner.
     useEffect(() => {
         if (!active) return;
-        void reconcileAndRefresh();
-    }, [active, reconcileAndRefresh]);
+        void (async () => {
+            await reconcileStoredFactChecks();
+            await load();
+        })();
+    }, [active, load]);
+
+    // Warmed off-screen before anything has read the table: one local read (no
+    // network, no spinner), so the rows are already drawn when the reader
+    // swipes in.
+    useEffect(() => {
+        if (!active && !hydrated) void load();
+        // Once per mount: `hydrated` flips true after this read.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Checks still in flight. Each pending row already says "Still searching"
     // on its own card, but nothing at the top of the list said work was under
@@ -196,7 +211,11 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                     paddingBottom: tabClearance + 24,
                 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={scrollHandler}
+                // Embedded, the collapsible header's handler ticks; standalone,
+                // tick directly. At rest, a content change re-measures.
+                onScroll={scrollHandler ?? notifyScrollTick}
+                // Only the active panel feeds the translation scheduler.
+                onContentSizeChange={active ? notifyScrollTick : undefined}
                 scrollEventThrottle={16}
                 ListEmptyComponent={
                     // Only once a read has completed — otherwise the empty state

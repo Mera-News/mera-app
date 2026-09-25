@@ -1,5 +1,10 @@
 // FactChoiceBulkRow — "Add all (N)" / "Skip all" for ONE message's pending
-// fact-choice group.
+// fact-choice group, or "Replace all" / "Keep all" / "Skip all" once any card
+// in it is a replace card (owner ruling ux2).
+//
+// THE MIXED RULE: Replace all replaces on every replace card and ADDS every add
+// card; Keep all adds every card and replaces nothing; Skip all dismisses all.
+// Every card commits its preferred reading, as tapping its own button would.
 //
 // Placement is deliberate and differs from TopicPlanSaveAllRow: that row is
 // thread-wide and therefore lives as fixed chrome above the composer, while a
@@ -37,6 +42,7 @@ export interface FactChoiceBulkRowProps {
     options: string[];
     questionnaireAttribute: string | null;
     topicSkillId: string | null;
+    replaces: string | null;
   }[];
 }
 
@@ -52,7 +58,9 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
   // 2+, but the guard stays: a re-render mid-tap must not show a one-group row.
   if (groups.length < 2) return null;
 
-  const handleAddAll = async () => {
+  const hasReplace = groups.some((g) => g.replaces !== null);
+
+  const handleAddAll = (mode: 'add' | 'replace' | 'keep' = 'add') => async () => {
     if (busy) return;
     setBusy(true);
     void hapticSuccess();
@@ -70,6 +78,9 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
         // Per GROUP, not per batch: two facts accepted together can have been
         // routed to different guidelines.
         ...(g.topicSkillId ? { skillId: g.topicSkillId } : {}),
+        // Only "Replace all" replaces. A missing target degrades to an add in
+        // commitFactChoices, never to a lost fact.
+        ...(mode === 'replace' && g.replaces ? { replaces: g.replaces } : {}),
       }));
       // ONE commitFactChoices call, so conflict detection runs against the same
       // pre-batch bank a single multi-fact turn always used and topic generation
@@ -97,9 +108,10 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
       });
       resolveGroups(resultKey, entries, baseResult);
     } catch (err) {
-      logger.error('[FactChoiceBulkRow] add all failed', err, {
+      logger.error('[FactChoiceBulkRow] bulk accept failed', err, {
         resultKey,
         groups: groups.length,
+        mode,
       });
     } finally {
       setBusy(false);
@@ -144,19 +156,50 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
           {t('factChoice.skipAll')}
         </ButtonText>
       </Button>
-      <Button
-        testID="fact-choice-add-all"
-        onPress={handleAddAll}
-        isDisabled={busy}
-        className="rounded-full bg-primary-400"
-        size="sm"
-        style={styles.tapTarget}
-        accessibilityLabel={t('factChoice.addAllA11y', { count: groups.length })}
-      >
-        <ButtonText className="text-white text-sm">
-          {t('factChoice.addAll', { count: groups.length })}
-        </ButtonText>
-      </Button>
+      {hasReplace ? (
+        <>
+          <Button
+            testID="fact-choice-keep-all"
+            onPress={handleAddAll('keep')}
+            isDisabled={busy}
+            className="rounded-full bg-primary-400"
+            size="sm"
+            style={styles.tapTarget}
+            accessibilityLabel={t('factChoice.keepAllA11y', { count: groups.length })}
+          >
+            <ButtonText className="text-white text-sm">
+              {t('factChoice.keepAll')}
+            </ButtonText>
+          </Button>
+          <Button
+            testID="fact-choice-replace-all"
+            onPress={handleAddAll('replace')}
+            isDisabled={busy}
+            className="rounded-full bg-transparent border border-error-400"
+            size="sm"
+            style={styles.tapTarget}
+            accessibilityLabel={t('factChoice.replaceAllA11y', { count: groups.length })}
+          >
+            <ButtonText className="text-sm" style={styles.replaceText}>
+              {t('factChoice.replaceAll')}
+            </ButtonText>
+          </Button>
+        </>
+      ) : (
+        <Button
+          testID="fact-choice-add-all"
+          onPress={handleAddAll('add')}
+          isDisabled={busy}
+          className="rounded-full bg-primary-400"
+          size="sm"
+          style={styles.tapTarget}
+          accessibilityLabel={t('factChoice.addAllA11y', { count: groups.length })}
+        >
+          <ButtonText className="text-white text-sm">
+            {t('factChoice.addAll', { count: groups.length })}
+          </ButtonText>
+        </Button>
+      )}
     </View>
   );
 };
@@ -164,12 +207,14 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
     paddingVertical: 6,
   },
   tapTarget: { minHeight: 48, paddingHorizontal: 18 },
+  replaceText: { color: 'rgb(248, 113, 113)' },
 });
 
 export default FactChoiceBulkRow;

@@ -27,14 +27,20 @@ jest.mock('expo-router', () => ({
 // RN's internal horizontal-ScrollView native-component file, so rendering a real
 // FlatList throws "Unexpected token 'export'". A Proxy over the actual module
 // keeps every other RN export lazy (our ui mocks read View/Text/Pressable).
+const mockScrollToIndex = jest.fn();
 jest.mock('react-native', () => {
     const actual = jest.requireActual('react-native');
     const ReactLib = require('react');
     return new Proxy(actual, {
         get(target, prop) {
             if (prop === 'FlatList') {
-                return ({ data, renderItem, keyExtractor }: any) =>
-                    ReactLib.createElement(
+                // forwardRef so the row's scroll-into-view can be observed.
+                return ReactLib.forwardRef(({ data, renderItem, keyExtractor }: any, ref: any) => {
+                    ReactLib.useImperativeHandle(ref, () => ({
+                        scrollToIndex: (a: unknown) => mockScrollToIndex(a),
+                        scrollToOffset: () => {},
+                    }));
+                    return ReactLib.createElement(
                         ReactLib.Fragment,
                         null,
                         (data ?? []).map((item: any, index: number) =>
@@ -45,6 +51,7 @@ jest.mock('react-native', () => {
                             ),
                         ),
                     );
+                });
             }
             return (target as any)[prop];
         },
@@ -63,12 +70,18 @@ jest.mock('@/components/ui/text', () => {
     const { Text: RNText } = require('react-native');
     return { Text: RNText };
 });
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (props: any) => <View {...props} /> };
-});
+// Real icon-font glyphs, so a glyph under an accessible element is caught.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
+import { exposedGlyphTexts } from '@/lib/__test-helpers__/icon-glyph-a11y';
+import { configure } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import ScopeChipRow from '../ScopeChipRow';
+
+// Each chip's label and icon are a hidden visual under a childless labelled
+// button, so text queries must see hidden elements; presses and long-presses
+// go to the button by its label.
+configure({ defaultIncludeHiddenElements: true });
 
 // Mirrors the real order: countries first, World always last. (The city scope
 // is a DEPRECATED kind kept only for already-persisted selection ids; it is
@@ -99,10 +112,10 @@ describe('ScopeChipRow', () => {
 
     it('fires onSelect with the tapped scope', () => {
         const onSelect = jest.fn();
-        const { getByText } = render(
+        const { getByLabelText } = render(
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} onRemove={jest.fn()} />,
         );
-        fireEvent.press(getByText('Mumbai'));
+        fireEvent.press(getByLabelText('Mumbai'));
         expect(onSelect).toHaveBeenCalledWith(scopes[2]);
     });
 
@@ -140,7 +153,7 @@ describe('ScopeChipRow — long-press to reveal "×" (Item 18)', () => {
         const { getByText, getByLabelText } = render(
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={onRemove} />,
         );
-        fireEvent(getByText('India'), 'longPress');
+        fireEvent(getByLabelText('India'), 'longPress');
         const removeButton = getByLabelText('explore.removeScope');
         fireEvent.press(removeButton);
         expect(onRemove).toHaveBeenCalledWith(scopes[1]);
@@ -154,34 +167,75 @@ describe('ScopeChipRow — long-press to reveal "×" (Item 18)', () => {
     });
 
     it('World is never hideable — long-pressing it reveals no "×"', () => {
-        const { getByText, queryByLabelText } = render(
+        const { queryByLabelText, getByLabelText } = render(
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={jest.fn()} />,
         );
-        fireEvent(getByText('explore.scopeWorld'), 'longPress');
+        fireEvent(getByLabelText('explore.scopeWorld'), 'longPress');
         expect(queryByLabelText('explore.removeScope')).toBeNull();
     });
 
     it('tapping the chip to select dismisses a revealed "×" without firing onRemove', () => {
         const onSelect = jest.fn();
         const onRemove = jest.fn();
-        const { getByText, queryByLabelText } = render(
+        const { queryByLabelText, getByLabelText } = render(
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} onRemove={onRemove} />,
         );
-        fireEvent(getByText('India'), 'longPress');
+        fireEvent(getByLabelText('India'), 'longPress');
         expect(queryByLabelText('explore.removeScope')).toBeTruthy();
 
-        fireEvent.press(getByText('India'));
+        fireEvent.press(getByLabelText('India'));
         expect(onSelect).toHaveBeenCalledWith(scopes[1]);
         expect(onRemove).not.toHaveBeenCalled();
         expect(queryByLabelText('explore.removeScope')).toBeNull();
     });
 
     it('long-pressing a different chip moves the "×" instead of stacking two', () => {
-        const { getByText, getAllByLabelText } = render(
+        const { getAllByLabelText, getByLabelText } = render(
             <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={jest.fn()} />,
         );
-        fireEvent(getByText('France'), 'longPress');
-        fireEvent(getByText('India'), 'longPress');
+        fireEvent(getByLabelText('France'), 'longPress');
+        fireEvent(getByLabelText('India'), 'longPress');
         expect(getAllByLabelText('explore.removeScope')).toHaveLength(1);
+    });
+});
+
+// ux2 B3: a swipe can select a scope whose chip is off-screen; the row scrolls
+// it into view, like the Dashboard pills do.
+describe('ScopeChipRow: scroll-into-view', () => {
+    it('scrolls the selected chip into view when the selection changes', () => {
+        mockScrollToIndex.mockClear();
+        const r = render(<ScopeChipRow scopes={scopes} selectedId={scopes[0].id} onSelect={jest.fn()} onRemove={jest.fn()} />);
+        mockScrollToIndex.mockClear();
+        r.rerender(<ScopeChipRow scopes={scopes} selectedId={scopes[scopes.length - 1].id} onSelect={jest.fn()} onRemove={jest.fn()} />);
+        expect(mockScrollToIndex).toHaveBeenCalledWith(expect.objectContaining({ index: scopes.length - 1, animated: true }));
+    });
+});
+
+// Captured class (ux2): a glyph inside a button surfaces on iOS as its own
+// StaticText. Every chip, the "+" and the revealed "x" are childless labelled
+// buttons over a hidden visual; the "x" is a numeric 44pt frame.
+describe('ScopeChipRow: glyphs and targets', () => {
+    const glyphs = (root: any) => root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)));
+    const childless = (b: any) => b.findAll((n: any) => n !== b && typeof n.type === 'string' && n.type !== 'View').length === 0;
+
+    it('exposes no icon glyph with a chip selected and one "x" revealed', () => {
+        const r = render(<ScopeChipRow scopes={scopes} selectedId="city:IND:mumbai" onSelect={jest.fn()} onRemove={jest.fn()} />);
+        fireEvent(r.getByLabelText('India'), 'longPress');
+        // "+", Mumbai's city icon, World's globe, and the "x" (flags are emoji, not glyphs).
+        expect(glyphs(r.UNSAFE_root)).toHaveLength(4);
+        expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);
+        for (const label of ['India', 'Mumbai', 'explore.scopeWorld', 'explore.addSources', 'explore.removeScope']) {
+            expect(childless(r.getByLabelText(label))).toBe(true);
+        }
+    });
+
+    it('makes the revealed "x" a numeric 44x44 frame that still removes', () => {
+        const onRemove = jest.fn();
+        const r = render(<ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={onRemove} />);
+        fireEvent(r.getByLabelText('India'), 'longPress');
+        const frame = StyleSheet.flatten(r.getByTestId('explore-scope-remove-frame').props.style);
+        expect(frame).toMatchObject({ position: 'absolute', width: 44, height: 44 });
+        fireEvent.press(r.getByLabelText('explore.removeScope'));
+        expect(onRemove).toHaveBeenCalledWith(expect.objectContaining({ id: 'country:IND' }));
     });
 });

@@ -107,7 +107,7 @@ jest.mock('@/components/ui/box', () => { const { View } = require('react-native'
 jest.mock('@/components/ui/vstack', () => { const { View } = require('react-native'); return { VStack: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text }; });
 jest.mock('@/components/ui/spinner', () => { const { View } = require('react-native'); return { Spinner: (p: any) => <View {...p} /> }; });
-jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 jest.mock('@/components/custom/cards/ArticleStandaloneCompactCard', () => {
     const { View } = require('react-native');
@@ -386,5 +386,68 @@ describe('ScopeArticleList: failure is not emptiness', () => {
         });
 
         expect(getByText('explore.noArticles')).toBeTruthy();
+    });
+});
+
+// Every icon-font glyph must be hidden itself and sit under no accessible
+// element: iOS surfaces any other as its own StaticText (captured, ux2).
+const glyphProblems = (root: any): string[] => {
+    const glyphs = root.findAll(
+        (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+    );
+    if (glyphs.length === 0) return ['no glyph rendered'];
+    const out: string[] = [];
+    for (const g of glyphs) {
+        if (
+            g.props.accessible !== false ||
+            g.props.accessibilityElementsHidden !== true ||
+            g.props.importantForAccessibility !== 'no-hide-descendants'
+        ) {
+            out.push(`glyph ${JSON.stringify(g.props.children)} not hidden`);
+        }
+        for (let p: any = g.parent; p; p = p.parent) {
+            if (p.props?.accessible === true) {
+                out.push(`glyph under accessible ${p.props.testID ?? p.type}`);
+                break;
+            }
+        }
+    }
+    return out;
+};
+
+it('empty state: exposes no icon glyph as its own StaticText', async () => {
+    mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+    const r = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />);
+    await waitFor(() => expect(r.queryByTestId('explore-empty')).toBeTruthy());
+    expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
+});
+
+// ux2 B3 window: the neighbouring scopes are mounted off-screen. A warmed list
+// fetches its first page ONCE, so arriving shows it at once; it starts no
+// pagination or tab-press refresh until it is the active one.
+describe('ScopeArticleList: warmed off-screen (active=false)', () => {
+    beforeEach(() => mockGetTopHeadlines.mockReset());
+
+    it('fetches once while warm, and arriving triggers no refetch and no loading state', async () => {
+        mockGetTopHeadlines.mockResolvedValue(page(['a', 'b'], 'c1', true));
+        const r = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} active={false} />);
+        await waitFor(() => expect(r.queryByTestId('explore-loading')).toBeNull());
+        expect(mockGetTopHeadlines).toHaveBeenCalledTimes(1);
+        r.rerender(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} active />);
+        expect(r.queryByTestId('explore-loading')).toBeNull();
+        await act(async () => {});
+        expect(mockGetTopHeadlines).toHaveBeenCalledTimes(1);
+    });
+
+    it('paginates and takes the tab-press refresh only when active', async () => {
+        mockGetTopHeadlines.mockResolvedValue(page(['a'], 'c1', true));
+        const r = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} active={false} />);
+        await waitFor(() => expect(r.queryByTestId('explore-loading')).toBeNull());
+        expect(mockListOnEndReached ?? undefined).toBeUndefined();
+        expect(hookOptions.onRefresh).toBeUndefined();
+        expect(hookOptions.getOffset()).toBe(0);
+        r.rerender(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} active />);
+        expect(typeof mockListOnEndReached).toBe('function');
+        expect(typeof hookOptions.onRefresh).toBe('function');
     });
 });

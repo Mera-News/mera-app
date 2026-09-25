@@ -1,0 +1,103 @@
+{
+  "_comment": "ux2 P1 B4 (feed scout): the detail flag's spoken hint now says the country name opens its publications. Value change on an existing key; {{country}} kept in every locale. No dashes.",
+  "en": {
+    "articleDetail": {
+      "sourceCountryA11y": "Source country: {{country}}. Tap to show the country, then tap its name to see its publications."
+    }
+  },
+  "ar": {
+    "articleDetail": {
+      "sourceCountryA11y": "بلد المصدر: {{country}}. انقر لإظهار البلد، ثم انقر اسمه لعرض منشوراته."
+    }
+  },
+  "de": {
+    "articleDetail": {
+      "sourceCountryA11y": "Herkunftsland: {{country}}. Tippen, um das Land anzuzeigen, dann auf seinen Namen tippen, um seine Medien zu sehen."
+    }
+  },
+  "es": {
+    "articleDetail": {
+      "sourceCountryA11y": "País de origen: {{country}}. Toca para ver el país y luego toca su nombre para ver sus medios."
+    }
+  },
+  "fr": {
+    "articleDetail": {
+      "sourceCountryA11y": "Pays d'origine : {{country}}. Touchez pour afficher le pays, puis touchez son nom pour voir ses médias."
+    }
+  },
+  "hi": {
+    "articleDetail": {
+      "sourceCountryA11y": "स्रोत देश: {{country}}। देश दिखाने के लिए टैप करें, फिर उसके प्रकाशन देखने के लिए उसके नाम पर टैप करें।"
+    }
+  },
+  "id": {
+    "articleDetail": {
+      "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan negara, lalu ketuk namanya untuk melihat publikasinya."
+    }
+  },
+  "it": {
+    "articleDetail": {
+      "sourceCountryA11y": "Paese di origine: {{country}}. Tocca per mostrare il paese, poi tocca il nome per vedere le sue testate."
+    }
+  },
+  "ja": {
+    "articleDetail": {
+      "sourceCountryA11y": "発信国: {{country}}。タップで国名を表示し、国名をタップするとその国の媒体を表示します。"
+    }
+  },
+  "ko": {
+    "articleDetail": {
+      "sourceCountryA11y": "출처 국가: {{country}}. 탭하면 국가가 표시되고, 국가 이름을 탭하면 해당 국가의 매체를 볼 수 있습니다."
+    }
+  },
+  "nl": {
+    "articleDetail": {
+      "sourceCountryA11y": "Land van herkomst: {{country}}. Tik om het land te tonen en tik daarna op de naam om de media ervan te zien."
+    }
+  },
+  "pl": {
+    "articleDetail": {
+      "sourceCountryA11y": "Kraj źródła: {{country}}. Stuknij, aby pokazać kraj, a potem stuknij jego nazwę, aby zobaczyć jego media."
+    }
+  },
+  "pt-BR": {
+    "articleDetail": {
+      "sourceCountryA11y": "País de origem: {{country}}. Toque para mostrar o país e depois toque no nome para ver os veículos dele."
+    }
+  },
+  "ru": {
+    "articleDetail": {
+      "sourceCountryA11y": "Страна источника: {{country}}. Нажмите, чтобы показать страну, затем нажмите на её название, чтобы увидеть её издания."
+    }
+  },
+  "th": {
+    "articleDetail": {
+      "sourceCountryA11y": "ประเทศต้นทาง: {{country}} แตะเพื่อแสดงประเทศ แล้วแตะชื่อประเทศเพื่อดูสื่อของประเทศนั้น"
+    }
+  },
+  "tr": {
+    "articleDetail": {
+      "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülkeyi göstermek için dokunun, ardından yayınlarını görmek için adına dokunun."
+    }
+  },
+  "uk": {
+    "articleDetail": {
+      "sourceCountryA11y": "Країна джерела: {{country}}. Торкніться, щоб показати країну, потім торкніться її назви, щоб побачити її видання."
+    }
+  },
+  "vi": {
+    "articleDetail": {
+      "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Chạm để hiện quốc gia, rồi chạm vào tên để xem các báo của quốc gia đó."
+    }
+  },
+  "zh-CN": {
+    "articleDetail": {
+      "sourceCountryA11y": "来源国家：{{country}}。点按显示国家，再点按国家名称查看该国的媒体。"
+    }
+  },
+  "zh-TW": {
+    "articleDetail": {
+      "sourceCountryA11y": "來源國家：{{country}}。點按顯示國家，再點按國家名稱查看該國的媒體。"
+    }
+  }
+}

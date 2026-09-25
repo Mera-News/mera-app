@@ -22,6 +22,7 @@ export const CHAT_PHASES = [
   { id: 'attesting', phrasesKey: 'chatPhases.attesting' },
   { id: 'thinking', phrasesKey: 'chatPhases.thinking' },
   { id: 'retrying', phrasesKey: 'chatPhases.retrying' },
+  { id: 'webSearch', phrasesKey: 'chatPhases.webSearch' },
   { id: 'deviceLoading', phrasesKey: 'chatPhases.deviceLoading' },
   { id: 'devicePreparing', phrasesKey: 'chatPhases.devicePreparing' },
   { id: 'deviceThinking', phrasesKey: 'chatPhases.deviceThinking' },
@@ -74,6 +75,13 @@ export function chatPhaseDef(id: ChatPhaseId): PhaseDef {
 
 /** Re-exported so the registry test can assert exhaustiveness in one import. */
 export { CHAT_PHASE_IDS };
+
+/**
+ * The wait row RESERVES two lines and may grow to three (owner ruling ux2 M4),
+ * so the longer locales read the phase copy in full. The reservation, not the
+ * cap, is what keeps a short line from moving the thread.
+ */
+export const WAIT_LINE_MAX_LINES = 3;
 
 /**
  * The wait row's text height: two lines of the wait line's 21pt line height.
