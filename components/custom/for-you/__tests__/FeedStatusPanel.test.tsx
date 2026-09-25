@@ -89,7 +89,7 @@ describe('FeedStatusPanel', () => {
         const { queryByTestId } = render(<FeedStatusPanel expanded mode="processing" />);
         expect(queryByTestId('feed-status-details')).toBeTruthy();
         // The harness and the old accordion both key off this id.
-        expect(queryByTestId('dashboard-status-details-panel')).toBeTruthy();
+        expect(queryByTestId('status-details-panel')).toBeTruthy();
     });
 
     it('shows the "Analysing X of Y articles" progress line while processing', () => {
@@ -117,7 +117,7 @@ describe('FeedStatusPanel', () => {
         const { getByTestId } = render(<FeedStatusPanel expanded mode="idle" />);
         const { StyleSheet } = require('react-native');
         const { STATUS_PANEL_OPAQUE_BASE } = require('../status-ink');
-        const style = StyleSheet.flatten(getByTestId('dashboard-status-details-panel').props.style);
+        const style = StyleSheet.flatten(getByTestId('status-details-panel').props.style);
         expect(style.backgroundColor).toBe(STATUS_PANEL_OPAQUE_BASE);
         expect(STATUS_PANEL_OPAQUE_BASE).toMatch(/^rgb\(/);
     });
@@ -133,7 +133,7 @@ describe('FeedStatusBody', () => {
         const { getByTestId, getByText, queryByTestId } = render(<FeedStatusBody mode="processing" />);
         expect(getByTestId('feed-status-details')).toBeTruthy();
         expect(getByText('feed.analysingProgress')).toBeTruthy();
-        expect(queryByTestId('dashboard-status-details-panel')).toBeNull();
+        expect(queryByTestId('status-details-panel')).toBeNull();
     });
 });
 

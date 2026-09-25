@@ -177,7 +177,12 @@ export const StatusDropdownLayer: React.FC<{
                                 }}
                                 testID={`${testIDPrefix}-dropdown-panel`}
                             >
-                                <FeedStatusPanel expanded mode={mode} onBeforeNavigate={collapse} />
+                                <FeedStatusPanel
+                                    expanded
+                                    mode={mode}
+                                    onBeforeNavigate={collapse}
+                                    testID={`${testIDPrefix}-details-panel`}
+                                />
                             </View>
                         </ScrollView>
                     </View>

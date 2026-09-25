@@ -46,7 +46,7 @@ jest.mock('@/components/custom/for-you/FeedStatusPanel', () => {
         STATUS_PANEL_AUTO_COLLAPSE_MS: 3000,
         default: (p: any) =>
             p.expanded ? (
-                <View testID="status-panel">
+                <View testID="status-panel" panelTestID={p.testID}>
                     <Text>{String.fromCodePoint(0xe627)}</Text>
                     <Text>Up to date</Text>
                 </View>
@@ -184,5 +184,15 @@ describe('the open dropdown and icon glyphs', () => {
         const w = r.getByTestId('feed-status-dropdown-panel', HIDDEN);
         expect(w.props.onResponderRelease).toBeUndefined();
         expect(w.props.accessible).not.toBe(true);
+    });
+});
+
+// Captured (R3): the Feed dropdown carried `dashboard-status-details-panel`,
+// the Dashboard's id. Each screen's panel is named for its own surface.
+describe('the dropdown panel testID', () => {
+    it('is the Feed\'s own on the Feed', () => {
+        const r = render(<Harness />);
+        fireEvent.press(r.getByTestId('feed-status-indicator'));
+        expect(r.getByTestId('status-panel', HIDDEN).props.panelTestID).toBe('feed-status-details-panel');
     });
 });

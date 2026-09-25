@@ -70,6 +70,9 @@ export const FeedStatusBody: React.FC<FeedStatusBodyProps> = ({ mode, onBeforeNa
 
 export interface FeedStatusPanelProps {
     readonly expanded: boolean;
+    /** Per surface (`feed-status-details-panel`, `dashboard-stats-details-panel`):
+     *  one shared id made the Feed's panel answer to the Dashboard's name. */
+    readonly testID?: string;
     readonly mode: FeedStatusMode;
     /** Passed straight through to FeedStatusDetails — see its own doc. */
     readonly onBeforeNavigate?: () => void;
@@ -86,6 +89,7 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
     expanded,
     mode,
     onBeforeNavigate,
+    testID = 'status-details-panel',
 }) => {
     if (!expanded) return null;
 
@@ -103,7 +107,7 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
                 radius={8}
                 contentClassName="px-3 py-2"
                 style={{ backgroundColor: STATUS_PANEL_OPAQUE_BASE }}
-                testID="dashboard-status-details-panel"
+                testID={testID}
             >
                 <FeedStatusBody mode={mode} onBeforeNavigate={onBeforeNavigate} />
             </GlassPanel>

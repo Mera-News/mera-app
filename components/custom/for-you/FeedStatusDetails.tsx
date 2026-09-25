@@ -124,8 +124,18 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({ onBeforeNavigate 
 
     return (
         <VStack space="md" className="py-1">
-            {/* Current stage */}
-            <HStack className="items-center" space="sm">
+            {/* Current stage. ONE element with an explicit label: a container's
+                label is composed from its subviews, and the icon is a Text
+                holding a private-use glyph, which iOS read as the whole
+                dropdown's label (captured), hidden props or not. A labelled
+                child contributes its own label, never its glyph. */}
+            <HStack
+                className="items-center"
+                space="sm"
+                accessible
+                accessibilityLabel={stageMessage}
+                testID="feed-status-stage-row"
+            >
                 <MaterialIcons name="sync" size={18} color={ACCENT} />
                 <Text size="sm" className="font-semibold flex-1" style={{ color: STATUS_INK.primary }}>
                     {stageMessage}

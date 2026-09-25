@@ -35,6 +35,8 @@ jest.mock('@/components/ui/box', () => {
     const { View } = require('react-native');
     return { Box: (p: any) => <View {...p} /> };
 });
+// Icons render their real private-use glyph, as they do on device.
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('@/components/ui/hstack', () => {
     const { View } = require('react-native');
     return { HStack: (p: any) => <View {...p} /> };
@@ -84,5 +86,31 @@ describe('FeedStatusDetails', () => {
         // Presence first, so the absence below is not a query that finds nothing.
         expect(getByText('feedStatus.published')).toBeTruthy();
         expect(queryByText('feedStatus.lastProcessed')).toBeNull();
+    });
+});
+
+// Captured (sim R3, 2544): the open dropdown, its panel and a StaticText all
+// read as the stage row's "sync" icon glyph. A container's label is composed
+// from its subviews, and an explicitly labelled child contributes its OWN
+// label, never its glyph (hidden props do not stop iOS reading it).
+describe('FeedStatusDetails: the stage row never reads as its icon', () => {
+    const PUA = /[\uE000-\uF8FF]/;
+    // The label iOS composes for a container: a child's explicit label, else
+    // its text, recursively (same rule as icon-glyph-a11y's textOf).
+    const composed = (n: any): string => {
+        if (n == null) return '';
+        if (typeof n === 'string') return n;
+        if (typeof n.type === 'string' && typeof n.props?.accessibilityLabel === 'string') return n.props.accessibilityLabel;
+        return (n.children ?? []).map(composed).join('');
+    };
+
+    it('labels the stage row with its words, so no container composes the glyph', () => {
+        const { privateUseLabelLeaks } = require('@/lib/__test-helpers__/icon-glyph-a11y');
+        const r = render(<FeedStatusDetails />);
+        const row = r.getByTestId('feed-status-stage-row');
+        expect(row.props.accessible).toBe(true);
+        expect(row.props.accessibilityLabel).toBe('feedStatus.idle');
+        expect(PUA.test(composed(r.UNSAFE_root))).toBe(false);
+        expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
     });
 });
