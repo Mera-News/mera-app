@@ -13,8 +13,8 @@ import { buildRouterPrompt } from '../router-prompt';
 afterEach(() => resetAgentArmsForTest());
 
 describe('the registry', () => {
-  it('ships exactly baseline, router-v1, oneshot-prod, pre-enforcement and multi-subject', () => {
-    expect(agentArmIds().sort()).toEqual(['baseline', 'multi-subject', 'oneshot-prod', 'pre-enforcement', 'router-v1']);
+  it('ships exactly baseline, router-v1, oneshot-prod, pre-enforcement, multi-subject and topics-current', () => {
+    expect(agentArmIds().sort()).toEqual(['baseline', 'multi-subject', 'oneshot-prod', 'pre-enforcement', 'router-v1', 'topics-current']);
   });
 
   it('an UNKNOWN id THROWS rather than quietly scoring the control', () => {
@@ -35,7 +35,7 @@ describe('the registry', () => {
     // The failure this guards: dropping shipped arms here unregisters them for
     // every test after the first afterEach, and "starts clean" then passes for
     // the wrong reason.
-    expect(agentArmIds().sort()).toEqual(['baseline', 'multi-subject', 'oneshot-prod', 'pre-enforcement', 'router-v1']);
+    expect(agentArmIds().sort()).toEqual(['baseline', 'multi-subject', 'oneshot-prod', 'pre-enforcement', 'router-v1', 'topics-current']);
   });
 });
 
@@ -84,5 +84,15 @@ describe('baseline is a byte-exact no-op', () => {
 
   it('an unknown arm throws out of the BUILDER too, not just the resolver', () => {
     expect(() => buildRouterPrompt({ surface: 'CONFIG', arm: 'nope' })).toThrow(/Unknown agent arm/);
+  });
+});
+
+describe('ux2 F6: the topic flow arm', () => {
+  const { topicFlowFor, TOPICS_CURRENT_ARM_ID } = require('../arms') as typeof import('../arms');
+  it('ships isolated topics plus the deferred combination pass', () => {
+    expect(topicFlowFor(resolveAgentArm())).toBe('isolated+combo');
+  });
+  it('carries the previous flow as its own arm, for the measurement', () => {
+    expect(topicFlowFor(resolveAgentArm(TOPICS_CURRENT_ARM_ID))).toBe('current');
   });
 });

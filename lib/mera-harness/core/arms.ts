@@ -45,6 +45,12 @@ export interface AgentArm {
   /** A fixed section appended after the shipped router procedure. A value,
    *  like `routerPrompt`: it never rewrites the shipped text, it follows it. */
   routerAddendum?: string;
+  /** How a fact's topics are made. Absent means 'isolated+combo', which ships
+   *  (ux2 F1/F3): one isolated call per fact, then the deferred combination
+   *  pass. 'current' is the flow before it: a fact-only half and a combo half
+   *  in one batch, with a location line and the other facts. The topic corpus
+   *  runner reads this; the app does not. */
+  topicFlow?: 'current' | 'isolated+combo';
 }
 
 const BASELINE: AgentArm = {
@@ -146,8 +152,24 @@ const MULTI_SUBJECT: AgentArm = {
 This section overrides the two-subjects tie-break above. When the message states facts about two or three DIFFERENT subjects (a job, a home, where they are from, a relative, an interest), call \`load_skill\` once for EACH subject, the one they led with first, at most three calls in this one response. Origin plus current home is still ONE subject: origin. A question or small talk beside the facts adds no call. One subject is one call, as always.`,
 };
 
+/**
+ * THE TOPIC FLOW CONTROL (ux2 F6). The owner's rule, fixed before the run: the
+ * isolated topics' share with no content word from any other fact must be at
+ * least 95% and higher than this arm's first-pass share; guards are combo
+ * topics naming the fact's subject, S7 near-duplicates at most 10%, ladder
+ * coverage not worse, and `error` checked on every row.
+ */
+export const TOPICS_CURRENT_ARM_ID = 'topics-current';
+const TOPICS_CURRENT: AgentArm = {
+  id: TOPICS_CURRENT_ARM_ID,
+  description:
+    'F6 control: topics made the way they were before isolation (fact-only half plus combo '
+    + 'half in one batch, location line and other facts included). Compare against baseline.',
+  topicFlow: 'current',
+};
+
 /** Arms that ship. A runner may add more for a throwaway probe. */
-const SHIPPED_ARMS: AgentArm[] = [ROUTER_V1, ONESHOT_PROD, PRE_ENFORCEMENT, MULTI_SUBJECT];
+const SHIPPED_ARMS: AgentArm[] = [ROUTER_V1, ONESHOT_PROD, PRE_ENFORCEMENT, MULTI_SUBJECT, TOPICS_CURRENT];
 
 const REGISTRY = new Map<string, AgentArm>([
   [BASELINE_ARM, BASELINE],
@@ -216,4 +238,9 @@ export function routeEnforcementFor(arm: AgentArm): 'off' | 'on' {
 /** Absent means OFF: one skill per turn is what ships until G3 is switched on. */
 export function multiSubjectFor(arm: AgentArm): 'off' | 'on' {
   return arm.multiSubject ?? 'off';
+}
+
+/** The topic flow an arm measures. Absent is what ships. */
+export function topicFlowFor(arm: AgentArm): 'current' | 'isolated+combo' {
+  return arm.topicFlow ?? 'isolated+combo';
 }
