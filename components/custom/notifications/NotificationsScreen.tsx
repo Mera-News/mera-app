@@ -21,7 +21,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, View } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 
 const ACCENT = '#EDA77E';
 
@@ -42,12 +42,12 @@ const CLEAR_PAD = 7;
 const CLEAR_GLYPH = 20;
 const CLEAR_RING = CLEAR_GLYPH + 2 * CLEAR_PAD + 2;
 const CLEAR_TARGET = 44;
-const CLEAR_TARGET_STYLE = {
-    position: 'absolute',
+const CLEAR_FRAME = {
     width: CLEAR_TARGET,
     height: CLEAR_TARGET,
-    top: (CLEAR_RING - CLEAR_TARGET) / 2,
-    left: (CLEAR_RING - CLEAR_TARGET) / 2,
+    margin: -(CLEAR_TARGET - CLEAR_RING) / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
 } as const;
 
 function iconForType(type: string): keyof typeof MaterialIcons.glyphMap {
@@ -322,10 +322,11 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                 onBack={onBack}
                 rightAction={
                     items.length > 0 ? (
-                        // The 36pt ring is the visual; a childless 44pt
-                        // button is laid over it (glyph rule, and hitSlop
-                        // measured as the ring on device).
-                        <View>
+                        // A numeric 44pt frame pulled back to the 36pt ring by
+                        // negative margins holds the ring, with a childless
+                        // labelled button filling the frame (glyph rule; a
+                        // hitSlop target measured as the ring on device).
+                        <View testID="notifications-clear-all-frame" style={CLEAR_FRAME}>
                             <View
                                 pointerEvents="none"
                                 {...GLYPH_HIDDEN}
@@ -339,7 +340,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                                 onPress={() => void clearAll()}
                                 accessibilityRole="button"
                                 accessibilityLabel={t('notificationCenter.clearAll')}
-                                style={CLEAR_TARGET_STYLE}
+                                style={StyleSheet.absoluteFill}
                             />
                         </View>
                     ) : undefined

@@ -69,7 +69,7 @@ jest.mock('@/components/ui/text', () => {
 // device, so a label that would leak it is caught (see icon-glyph-a11y).
 jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
-import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
+import { exposedGlyphTexts, privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 import { configure, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import ReadTranslateActions, { titleCasePublication } from '../ReadTranslateActions';
@@ -402,21 +402,14 @@ describe('accessibility labels', () => {
 // Captured (ux2 batch 27): an open-in-new glyph StaticText right after "Read on
 // Ars Technica". Each button is childless, laid over its hidden pill.
 describe('icon glyphs', () => {
-    it.each(['translatable', 'not-translatable', 'same-language'] as const)('%s: no private-use StaticText in the route row', (status) => {
+    it.each(['translatable', 'not-translatable', 'same-language'] as const)('%s: no private-use StaticText anywhere', (status) => {
         mockGetArticleTranslationSupport.mockReturnValue({ status, reason: 'unsupported-language' });
         const r = renderActions(status === 'same-language' ? { sourceLanguage: 'en' } : {});
-        // The route row only: TranslationNotice (its own file) draws the
-        // translate glyph above it.
-        const glyphs = r.getByTestId('detail-read-routes').findAll(
-            (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
-        );
-        expect(glyphs.length).toBe(status === 'same-language' ? 1 : 2);
-        for (const g of glyphs) {
-            expect(g.props.accessible).toBe(false);
-            expect(g.props.accessibilityElementsHidden).toBe(true);
-            expect(g.props.importantForAccessibility).toBe('no-hide-descendants');
-            for (let p: any = g.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
-        }
+        // Presence first: the route glyphs, plus TranslationNotice's translate
+        // glyph whenever the notice shows.
+        const glyphs = r.UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)));
+        expect(glyphs.length).toBe(status === 'same-language' ? 1 : 3);
+        expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);
     });
 
     it('each button is childless, so it cannot compose a glyph', () => {

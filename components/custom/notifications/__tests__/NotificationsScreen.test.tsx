@@ -136,7 +136,9 @@ it('keeps Clear all a labelled 44pt button', async () => {
   await act(async () => {});
   const clear = r.getByTestId('notifications-clear-all');
   expect(clear.props.accessibilityLabel).toBe('notificationCenter.clearAll');
-  const flat = StyleSheet.flatten(clear.props.style);
-  expect(flat.width).toBe(44);
-  expect(flat.height).toBe(44);
+  // The 44pt frame is the button's own parent, pulled back to the 36pt ring by
+  // negative margins: a button overflowing its parent can miss taps on Android.
+  const frame = StyleSheet.flatten(r.getByTestId('notifications-clear-all-frame').props.style);
+  expect(frame).toMatchObject({ width: 44, height: 44, margin: -4 });
+  expect(StyleSheet.flatten(clear.props.style)).toMatchObject({ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 });
 });

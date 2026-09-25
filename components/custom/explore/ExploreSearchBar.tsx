@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 // any other accessible element: a glyph under one surfaced on iOS as its own
 // StaticText and in a container label (captured). The close tap target is a
 // childless 44pt button laid over the bar from OUTSIDE the Input, whose
-// overflow-hidden 35pt box would clip it.
+// overflow-hidden 35pt box would clip it; the bar's own box bleeds to hold it.
 const GLYPH = 18;
 /** pl-3 / pr-3 at NativeWind's 14pt rem: the slots' old padding. */
 const SLOT_PAD = 10.5;
@@ -22,15 +22,27 @@ const HIDDEN = {
     accessibilityElementsHidden: true,
     importantForAccessibility: 'no-hide-descendants',
 } as const;
+/** The md Input's h-10 at NativeWind's 14pt rem. */
+const INPUT_HEIGHT = 35;
+/** How far the bar's box bleeds past the Input so the 44pt target stays
+ *  INSIDE its parent (a button overflowing its parent can miss taps on
+ *  Android). Matching negative margins keep the layout footprint. */
+const BLEED_Y = (CLOSE_TARGET - INPUT_HEIGHT) / 2;
+/** Centres the target on the X glyph: its centre sits border + pad + half a
+ *  glyph in from the Input's right edge. */
+const BLEED_RIGHT = CLOSE_TARGET / 2 - (INPUT_BORDER + SLOT_PAD + GLYPH / 2);
+const BOX_STYLE = {
+    paddingVertical: BLEED_Y,
+    marginVertical: -BLEED_Y,
+    paddingRight: BLEED_RIGHT,
+    marginRight: -BLEED_RIGHT,
+} as const;
 const CLOSE_TARGET_STYLE = {
     position: 'absolute',
+    top: 0,
+    right: 0,
     width: CLOSE_TARGET,
     height: CLOSE_TARGET,
-    top: '50%',
-    marginTop: -CLOSE_TARGET / 2,
-    // Centred on the glyph: its centre sits border + pad + half a glyph in
-    // from the bar's right edge.
-    right: INPUT_BORDER + SLOT_PAD + GLYPH / 2 - CLOSE_TARGET / 2,
 } as const;
 
 interface ExploreSearchBarProps {
@@ -72,7 +84,7 @@ const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuer
     return (
         // flex-1, no padding/margin of its own: it is a CHILD of the title
         // HStack now, which already owns the row's px-5 and its bottom margin.
-        <Box testID="explore-search-input" className="flex-1">
+        <Box testID="explore-search-input" className="flex-1" style={BOX_STYLE}>
             <Input variant="outline" size="md" className="border-gray-700">
                 <View pointerEvents="none" {...HIDDEN} style={{ paddingLeft: SLOT_PAD, justifyContent: 'center', alignItems: 'center' }}>
                     <MaterialIcons name="search" size={GLYPH} color="#999999" {...HIDDEN} />

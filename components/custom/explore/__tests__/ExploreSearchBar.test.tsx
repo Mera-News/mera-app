@@ -111,8 +111,13 @@ describe('ExploreSearchBar', () => {
         expect(close.props.accessibilityLabel).toBe('explore.closeSearch');
         expect(close.props.accessibilityRole).toBe('button');
         const flat = StyleSheet.flatten(close.props.style);
-        expect(flat.width).toBe(44);
-        expect(flat.height).toBe(44);
+        expect(flat).toMatchObject({ position: 'absolute', top: 0, right: 0, width: 44, height: 44 });
+        // It sits INSIDE its parent: the bar's box bleeds to 44pt tall and 1.5pt
+        // right by padding, with matching negative margins so nothing reflows
+        // (a button overflowing its parent can miss taps on Android).
+        const box = StyleSheet.flatten(getByTestId('explore-search-input').props.style);
+        expect(box).toMatchObject({ paddingVertical: 4.5, marginVertical: -4.5, paddingRight: 1.5, marginRight: -1.5 });
+        expect(35 + 2 * box.paddingVertical).toBe(44);
         expect(close.findAll((n: any) => n !== close && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
     });
 
