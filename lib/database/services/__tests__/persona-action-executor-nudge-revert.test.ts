@@ -34,7 +34,7 @@ jest.mock('@/lib/services/suppression-sweep', () => ({
 }));
 
 jest.mock('@/lib/stores/for-you-store', () => ({
-  useForYouStore: { getState: () => ({ setFeedNeedsRefresh: jest.fn() }) },
+  useForYouStore: { getState: () => ({}) },
 }));
 
 import database from '@/lib/database/index';

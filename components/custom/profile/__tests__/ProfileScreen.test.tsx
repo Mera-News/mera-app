@@ -200,13 +200,11 @@ jest.mock('@/lib/scheduler/AppScheduler', () => ({ AppScheduler: { trigger: jest
 // Switchable per test, but the object handed to the selector is STABLE across
 // calls (a fresh literal per render would flap any effect that depends on it
 // — see AdvancedHubScreen.test.tsx's header comment for what that costs).
-let mockFeedNeedsRefresh = false;
-const mockSetFeedNeedsRefresh = jest.fn();
+const mockForYouState = {};
 const mockPruneOrphanedData = jest.fn(() => Promise.resolve());
 jest.mock('@/lib/stores/for-you-store', () => {
-    const useForYouStore: any = (selector: any) => selector({ feedNeedsRefresh: mockFeedNeedsRefresh });
+    const useForYouStore: any = (selector: any) => selector(mockForYouState);
     useForYouStore.getState = () => ({
-        setFeedNeedsRefresh: mockSetFeedNeedsRefresh,
         pruneOrphanedData: mockPruneOrphanedData,
     });
     return { useForYouStore };
@@ -223,7 +221,6 @@ beforeEach(() => {
     jest.clearAllMocks();
     mockFetchUserBilling.mockResolvedValue(null);
     mockAiAccess = 'unknown';
-    mockFeedNeedsRefresh = false;
     mockPruneOrphanedData.mockClear().mockImplementation(() => Promise.resolve());
     mockSubscriptionState = {
         serverTier: null,
@@ -442,7 +439,6 @@ describe('ProfileScreen', () => {
     // feed-sync now runs by itself at the end of the combination pass.
     it('has no refresh control, glow or tooltip: the header is [Advanced] [bell]', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        mockFeedNeedsRefresh = true;
         const r = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(r.getByTestId('profile-advanced-open')).toBeTruthy());
         const HIDDEN = { includeHiddenElements: true } as const;

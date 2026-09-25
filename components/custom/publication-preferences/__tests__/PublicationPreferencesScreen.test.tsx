@@ -252,7 +252,7 @@ describe('PublicationPreferencesScreen', () => {
         expect(mockRunSweepFor).toHaveBeenCalledWith('unexclude', 'set_publication_pref');
     });
 
-    it('does not double-dirty the feed when the sweep already reconciled it (a purge that reports true)', async () => {
+    it('runs the sweep exactly once when it reports a successful purge', async () => {
         mockObservedRows = [makeNamedPref()];
         mockRunSweepFor.mockResolvedValue(true as any);
         const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
