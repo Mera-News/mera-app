@@ -31,12 +31,10 @@ jest.mock('@/lib/database/services/topic-service', () => ({
 jest.mock('@/lib/database/services/combo-pass-service', () => ({
   runPendingComboPass: jest.fn(async () => 'none'),
 }));
-// P9's module; virtual so this suite does not depend on it existing yet.
-jest.mock(
-  '@/lib/services/facts-draft-service',
-  () => ({ recoverOpenFactsDraft: jest.fn(async () => false) }),
-  { virtual: true },
-);
+// Mocked, not real: it reaches fact-service and setting-service, i.e. SQLite.
+jest.mock('@/lib/services/facts-draft-service', () => ({
+  recoverOpenFactsDraft: jest.fn(async () => false),
+}));
 
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
