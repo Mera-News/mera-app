@@ -2088,8 +2088,12 @@ describe('the shipped cloud path drives the agent loop', () => {
       'Amsterdam',
       'Amsterdam-Zuidoost',
     ]);
-    // ...and the result is kept, in its own field.
-    expect(ask?.result).toEqual({ awaiting: 'user' });
+    // ...and the result is kept, in its own field, with the loop's "Save as I
+    // wrote it" entry for the user's own sentence (ux2 D9).
+    expect(ask?.result).toEqual({
+      awaiting: 'user',
+      saveAsWritten: { statement: 'Lives in Nieuw-West Amsterdam' },
+    });
   });
 
   it('releases the turn when the loop finishes, so the composer unblocks', async () => {
