@@ -11,7 +11,6 @@ import { getAll as getAllLocations } from '@/lib/database/services/location-serv
 import { hapticLight } from '@/lib/haptics';
 import type LocationModel from '@/lib/database/models/Location';
 import logger from '@/lib/logger';
-import { useForYouStore } from '@/lib/stores/for-you-store';
 import { toastManager } from '@/lib/toast-manager';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -108,14 +107,8 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
                 return next;
             });
             try {
+                // Takes effect on the next retrieval (the next feed sync).
                 await chooseHeadlineDepth(scopeKey, depth);
-                // Depth only takes effect on the NEXT retrieval, so without a
-                // signal the reader walks back to an unchanged feed and reads
-                // the setting as broken. Flag it rather than syncing inline —
-                // a feed-sync per chip tap is worse than the silence it fixes.
-                // This lights the glow on the Advanced hub's refresh button the
-                // reader just walked past, whose hint already explains it.
-                useForYouStore.getState().setFeedNeedsRefresh(true);
             } catch (error) {
                 logger.captureException(error, {
                     tags: { component: 'HeadlineDepthScreen', method: 'choose' },

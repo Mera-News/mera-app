@@ -78,3 +78,16 @@ describe('HEADLINE_DEPTH_UI_ENABLED = false', () => {
     }
   });
 });
+
+// ux2 G: the Profile refresh control is gone, so nothing reads
+// feedNeedsRefresh any more; this screen must not keep writing it.
+describe('HeadlineDepthScreen and the retired refresh flag', () => {
+    it('does not write feedNeedsRefresh', () => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const fs = require('fs');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const path = require('path');
+        const src: string = fs.readFileSync(path.resolve(__dirname, '../HeadlineDepthScreen.tsx'), 'utf8');
+        expect(src).not.toMatch(/setFeedNeedsRefresh|feedNeedsRefresh/);
+    });
+});
