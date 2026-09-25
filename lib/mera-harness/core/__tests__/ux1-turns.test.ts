@@ -563,3 +563,27 @@ describe('batch 5: a move replaces the current home', () => {
     expect(h.saves[0][0].statement).toBe('Lives in Porto, Portugal, EU');
   });
 });
+
+describe('ux2 C4: a blocked delete names what it would remove', () => {
+  it('attaches the statements of the facts it names, skipping unknown ids', async () => {
+    const results: unknown[] = [];
+    const h = harness([
+      res({ content: 'Right.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ toolCalls: [tc('deleteUserFacts', { fact_ids: ['home', 'ghost'] })] }),
+      res({ content: 'Shall I remove it?' }),
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(RESIDENT),
+      userMessage: 'delete all my facts',
+      deps: h.deps,
+      onLeg: (leg) => results.push(...leg.toolResults.filter((r) => r.name === 'deleteUserFacts').map((r) => r.result)),
+    });
+    expect(out.legs.length).toBeGreaterThan(0);
+    expect(results).toEqual([
+      {
+        error: 'confirm with ask_choice first',
+        pendingStatements: ['Lives in Amsterdam, North Holland, Netherlands, EU'],
+      },
+    ]);
+  });
+});

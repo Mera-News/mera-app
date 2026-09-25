@@ -20,7 +20,7 @@ export type { PersistedMessage } from '@/lib/database/services/conversation-serv
 // Thread items
 // ---------------------------------------------------------------------------
 
-export type FactCardAction = 'saved' | 'deleted' | 'updated';
+export type FactCardAction = 'saved' | 'deleted' | 'deletePending' | 'updated';
 
 // ---------------------------------------------------------------------------
 // Agent steps (pagent P2)

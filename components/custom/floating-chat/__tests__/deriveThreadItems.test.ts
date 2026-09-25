@@ -60,6 +60,64 @@ function cards(items: ChatThreadItem[]): ChatThreadItem[] {
   return items.filter((i) => i.kind !== 'agent-steps');
 }
 
+describe('ux2 C4: delete cards', () => {
+  const blocked = (i: number, pendingStatements?: string[]): ToolCallRecord => ({
+    id: `d${i}`,
+    name: 'deleteUserFacts',
+    input: { fact_ids: ['f1', 'f2'] },
+    result: { error: 'confirm with ask_choice first', ...(pendingStatements ? { pendingStatements } : {}) },
+    status: 'done',
+  });
+  const factCards = (items: ChatThreadItem[]) => items.filter((i) => i.kind === 'fact-card');
+
+  it('a blocked delete never renders "Removed" and never lists ids', () => {
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'Sure?', [blocked(0)])] }));
+    expect(factCards(items)).toEqual([]);
+  });
+
+  it('a blocked delete with statements renders ONE pending card, even when called twice', () => {
+    const items = deriveThreadItems(
+      base({
+        live: [
+          assistantMsg('a1', 'Sure?', [
+            blocked(0, ['Lives in Porto', 'From India']),
+            blocked(1, ['Lives in Porto', 'From India']),
+          ]),
+        ],
+      }),
+    );
+    expect(factCards(items)).toEqual([
+      expect.objectContaining({ action: 'deletePending', statements: ['Lives in Porto', 'From India'] }),
+    ]);
+  });
+
+  it('a confirmed delete renders the real statements as Removed', () => {
+    const done: ToolCallRecord = {
+      id: 'd9',
+      name: 'deleteUserFacts',
+      input: { fact_ids: ['f1'] },
+      result: { success: true, deletedCount: 1, deletedStatements: ['Lives in Porto'] },
+      status: 'done',
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', '', [done])] }));
+    expect(factCards(items)).toEqual([
+      expect.objectContaining({ action: 'deleted', statements: ['Lives in Porto'] }),
+    ]);
+  });
+
+  it('a delete result without statements falls back to nothing, never the ids', () => {
+    const legacy: ToolCallRecord = {
+      id: 'd8',
+      name: 'deleteUserFacts',
+      input: { fact_ids: ['f1'] },
+      result: { success: true, deletedCount: 1 },
+      status: 'done',
+    };
+    const items = deriveThreadItems(base({ live: [assistantMsg('a1', 'ok', [legacy])] }));
+    expect(factCards(items)).toEqual([]);
+  });
+});
+
 describe('deriveThreadItems', () => {
   it('strips think tags from a persisted assistant bubble, keeping the answer (ux2 D11)', () => {
     const items = deriveThreadItems(
@@ -268,21 +326,6 @@ describe('deriveThreadItems', () => {
     );
     const card = items.find((i) => i.kind === 'fact-card');
     expect(card).toMatchObject({ action: 'deleted', statements: ['Lives in Berlin'] });
-  });
-
-  it('falls back to input.fact_ids for deleted card', () => {
-    const tc: ToolCallRecord = {
-      id: 't1',
-      name: 'deleteUserFacts',
-      input: { fact_ids: ['location: city'] },
-      status: 'done',
-      result: { success: true, deletedCount: 1 },
-    };
-    const items = deriveThreadItems(
-      base({ live: [assistantMsg('a1', 'Removed', [tc])] }),
-    );
-    const card = items.find((i) => i.kind === 'fact-card');
-    expect(card).toMatchObject({ action: 'deleted', statements: ['location: city'] });
   });
 
   it('derives an updated card with empty statements', () => {

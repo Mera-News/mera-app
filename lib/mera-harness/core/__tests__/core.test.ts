@@ -765,7 +765,7 @@ describe('destructive and place guards', () => {
     );
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'drop it', deps });
     expect(deleteUserFacts).not.toHaveBeenCalled();
-    expect(out.legs[0].toolResults[0].result).toEqual({ error: 'confirm with ask_choice first' });
+    expect(out.legs[0].toolResults[0].result).toMatchObject({ error: 'confirm with ask_choice first' });
   });
 
   // Owner ruling ux1 Q1: a SAME-KEY replace needs no chip (the card is the

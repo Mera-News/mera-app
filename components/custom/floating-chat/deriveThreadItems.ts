@@ -137,16 +137,21 @@ function deriveCard(toolCall: ToolCallRecord): DerivedCard | null {
     }
 
     case 'deleteUserFacts': {
-      const fromResult = toStringArray(result.deletedStatements);
-      if (fromResult.length > 0) {
-        return { action: 'deleted', statements: fromResult, factIds: [] };
+      // A BLOCKED delete (the loop's ask-first gate) is an error result. It
+      // used to fall through to `input.fact_ids` and render "Removed from your
+      // persona" listing ids, once per blocked call, before the user had
+      // confirmed anything (ux2 C4). With the statements the gate resolved it
+      // is a PENDING card; without them it is nothing.
+      if (typeof result.error === 'string') {
+        const pending = toStringArray(result.pendingStatements);
+        return pending.length > 0
+          ? { action: 'deletePending', statements: pending, factIds: [] }
+          : null;
       }
-      // Actual handler returns { success, deletedCount }. If nothing was
-      // deleted, don't surface a card.
-      if (typeof result.deletedCount === 'number' && result.deletedCount === 0) return null;
-      const statements = toStringArray(input.fact_ids);
-      return statements.length > 0
-        ? { action: 'deleted', statements, factIds: [] }
+      // Only what the handler actually removed, never the ids it was handed.
+      const fromResult = toStringArray(result.deletedStatements);
+      return fromResult.length > 0
+        ? { action: 'deleted', statements: fromResult, factIds: [] }
         : null;
     }
 
@@ -1017,6 +1022,20 @@ function emitMessage(
       }
 
       const card = deriveCard(tc);
+      // One pending-delete card per statement set per message: the model
+      // retrying a blocked delete must not stack identical cards.
+      if (
+        card
+        && card.action === 'deletePending'
+        && cards.some(
+          (c) =>
+            c.kind === 'fact-card'
+            && c.action === 'deletePending'
+            && c.statements.join('\u0001') === card.statements.join('\u0001'),
+        )
+      ) {
+        return;
+      }
       if (card) {
         cards.push({
           kind: 'fact-card',

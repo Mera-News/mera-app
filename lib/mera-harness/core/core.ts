@@ -1343,7 +1343,24 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       if (call.name === 'deleteUserFacts') {
         // GATED. Model-triggered, irreversible, and it cascades to topics.
         if (!turn.resolvedChoice) {
-          const out = { error: 'confirm with ask_choice first' };
+          // THE PENDING CARD'S TEXT. The UI shows "Will be removed from your
+          // persona" with these statements, never the raw ids: a blocked call
+          // used to fall back to `input.fact_ids` and render a false "Removed"
+          // card listing ids, once per blocked call (ux2 C4). An id the persona
+          // does not hold is skipped, never shown.
+          const named = Array.isArray(args.fact_ids) ? (args.fact_ids as unknown[]) : [];
+          const pendingStatements = [
+            ...new Set(
+              named
+                .map((raw) => (typeof raw === 'string' ? raw.trim().replace(/^\[|\]$/g, '') : ''))
+                .map((id) => state.persona.facts.find((f) => f.id === id)?.statement ?? null)
+                .filter((s): s is string => s !== null),
+            ),
+          ];
+          const out = {
+            error: 'confirm with ask_choice first',
+            ...(pendingStatements.length > 0 ? { pendingStatements } : {}),
+          };
           leg.toolResults.push({ name: call.name, result: out });
           toolResultsThisTurn.push({ name: call.name, result: out });
           continue;
