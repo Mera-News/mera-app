@@ -329,3 +329,38 @@ describe('ux2 D10: web search through the device port', () => {
     expect(deps.tools.webSearch).toBeUndefined();
   });
 });
+
+describe('ux2 batch 25 D2: an EXACT alias beats a prefix match', () => {
+  const mockSearch = searchPlaces as jest.MockedFunction<typeof searchPlaces>;
+  const it_ = { ...place('Porto Santo Stefano'), countryCode: 'IT', countryName: 'Italy', admin1: 'Tuscany' };
+  const vila: Place = { ...place('Vila Baleira'), countryCode: 'PT', countryName: 'Portugal', admin1: 'Madeira' };
+  const row = (city: string, countryCode: string, keys: string[]) =>
+    ({ _id: city, city, countryCode, displayName: city, normalized: city.toLowerCase(), search_keys: keys }) as never;
+
+  beforeEach(() => {
+    mockLookupPlace.mockReset();
+    mockSearch.mockReset();
+  });
+
+  it('"Porto Santo" resolves to Vila Baleira alone, carrying the user term', async () => {
+    mockLookupPlace.mockImplementation(async (_q: string, code?: string) =>
+      code === 'PT'
+        ? { status: 'resolved' as const, places: [vila] }
+        : { status: 'resolved' as const, places: [it_, vila] });
+    mockSearch.mockResolvedValue({
+      ok: true,
+      places: [row('Porto Santo Stefano', 'IT', ['porto santo stefano']), row('Vila Baleira', 'PT', ['vila baleira', 'porto santo', 'vila de porto santo'])],
+    });
+    const out = await lookupPlaceWithFallback({ query: 'Porto Santo' });
+    expect(out.status === 'resolved' && out.places.map((p) => [p.locality, p.userTerm])).toEqual([['Vila Baleira', 'Porto Santo']]);
+  });
+
+  it('a PREFIX alias is not exact: "Porto" never resolves to Port-au-Prince', async () => {
+    const pap = { ...place('Port-au-Prince'), countryCode: 'HT', countryName: 'Haiti', admin1: 'Ouest' };
+    const alegre = { ...place('Porto Alegre'), countryCode: 'BR', countryName: 'Brazil', admin1: 'RS' };
+    mockLookupPlace.mockResolvedValue({ status: 'resolved' as const, places: [alegre, pap] });
+    mockSearch.mockResolvedValue({ ok: true, places: [row('Porto Alegre', 'BR', ['porto alegre']), row('Port-au-Prince', 'HT', ['port au prince', 'porto principe'])] });
+    const out = await lookupPlaceWithFallback({ query: 'Porto' });
+    expect(out.status === 'resolved' && out.places.length).toBe(2);
+  });
+});

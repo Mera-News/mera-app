@@ -27,6 +27,7 @@ const PLACE_SEARCH = gql`
       displayName
       normalized
       population
+      search_keys
     }
   }
 `;

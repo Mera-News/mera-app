@@ -160,27 +160,42 @@ export async function withExactNameMatches(
   form: string,
   countryHint?: string,
 ): Promise<Place[]> {
-  const wanted = form.trim().toLowerCase();
-  if (countryHint || places.some((p) => p.locality.trim().toLowerCase() === wanted)) return places;
+  return (await exactMatchesFor(places, form, countryHint)).places;
+}
+
+/**
+ * The candidates plus the ones named EXACTLY: by their name, or by one of
+ * their alternate names equal to the query (ux2 batch 25, D2). "Porto Santo"
+ * is an exact search key of Vila Baleira and only a prefix of Porto Santo
+ * Stefano, so Vila Baleira is the place the user named. A prefix alias
+ * ("Porto" in "Porto Príncipe") is not exact and is never promoted.
+ */
+async function exactMatchesFor(
+  places: Place[],
+  form: string,
+  countryHint?: string,
+): Promise<{ places: Place[]; exact: Place[] }> {
+  const wanted = foldName(form);
+  const named = places.filter((p) => foldName(p.locality) === wanted);
+  if (countryHint || named.length > 0) return { places, exact: named };
   const search = await searchPlaces(form);
-  if (!search.ok) return places;
-  const codes = [
-    ...new Set(
-      search.places
-        .filter((r) => r.city.trim().toLowerCase() === wanted)
-        .map((r) => r.countryCode),
-    ),
-  ].slice(0, 2);
+  if (!search.ok) return { places, exact: [] };
+  const hits = search.places.filter(
+    (r) => foldName(r.city) === wanted || (r.search_keys ?? []).some((k) => foldName(k) === wanted),
+  );
+  const cities = new Set(hits.map((r) => foldName(r.city)));
+  const codes = [...new Set(hits.map((r) => r.countryCode))].slice(0, 2);
   const exact: Place[] = [];
   for (const code of codes) {
     // eslint-disable-next-line no-await-in-loop -- at most two, in rank order.
     const out = await lookupPlace(form, code);
     if (out.status === 'resolved') {
-      exact.push(...out.places.filter((p) => p.locality.trim().toLowerCase() === wanted));
+      exact.push(...out.places.filter((p) => cities.has(foldName(p.locality))));
     }
   }
-  if (exact.length === 0) return places;
-  return [...exact, ...places].slice(0, PLACE_CANDIDATE_LIMIT);
+  if (exact.length === 0) return { places, exact };
+  const merged = [...exact, ...places.filter((p) => !exact.some((e) => e.locality === p.locality && e.countryCode === p.countryCode))];
+  return { places: merged.slice(0, PLACE_CANDIDATE_LIMIT), exact };
 }
 
 /**
@@ -249,8 +264,10 @@ export async function lookupPlaceWithFallback(
     if (out.status === 'unavailable') return out;
     if (out.status === 'resolved' && out.places.length > 0) {
       if (form.toLowerCase() === asked) {
-        const places = await withExactNameMatches(out.places, form, args.countryHint);
-        return { ...out, places: withUserTerm(narrowToExact(places, form), form) };
+        const { places, exact } = await exactMatchesFor(out.places, form, args.countryHint);
+        // ONE place named exactly, by name or by alias, is the answer.
+        const narrowed = exact.length === 1 ? exact : narrowToExact(places, form);
+        return { ...out, places: withUserTerm(narrowed, form) };
       }
       const trusted = fallbackCandidates(out.places, form);
       if (trusted === null) {
