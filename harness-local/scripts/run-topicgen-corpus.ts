@@ -239,6 +239,9 @@ interface Args {
   totals: number[];
   accept: number;
   repeat: number;
+  /** The first repeat INDEX. Re-running one repeat of an earlier run keeps its
+   *  index, so the re-run rows can stand in for that repeat's rows. */
+  repeatStart: number;
   variants: string[];
   dryRun: boolean;
   duplicateEvery: number;
@@ -267,6 +270,7 @@ function parseArgs(argv: string[]): Args {
     totals: [10],
     accept: 6,
     repeat: 3,
+    repeatStart: 0,
     variants: ['baseline'],
     dryRun: false,
     duplicateEvery: 0,
@@ -284,6 +288,7 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--totals') args.totals = (argv[++i] ?? '').split(',').map(Number).filter((n) => n > 0);
     else if (a === '--accept') args.accept = Number(argv[++i]);
     else if (a === '--repeat') args.repeat = Number(argv[++i]);
+    else if (a === '--repeat-start') args.repeatStart = Number(argv[++i]);
     else if (a === '--variant') {
       args.variants = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
     }
@@ -683,7 +688,7 @@ async function main(): Promise<number> {
   }
 
   for (const total of args.totals) {
-    for (let rep = 0; rep < args.repeat; rep++) {
+    for (let rep = args.repeatStart; rep < args.repeatStart + args.repeat; rep++) {
       // Each arm walks the SAME sequential accept, so their exclude lists grow
       // the same way and the comparison stays fair.
       // One exclude list per ARM, and an arm is now (model, variant): two
