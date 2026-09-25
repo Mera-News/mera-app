@@ -581,7 +581,8 @@ describe('ux2 C4: a blocked delete names what it would remove', () => {
     expect(out.legs.length).toBeGreaterThan(0);
     expect(results).toEqual([
       {
-        error: 'confirm with ask_choice first',
+        error: expect.stringMatching(/card asks the user to confirm/),
+        pendingFactIds: ['home'],
         pendingStatements: ['Lives in Amsterdam, North Holland, Netherlands, EU'],
       },
     ]);
@@ -959,5 +960,52 @@ describe('ux2 batch 25 D1: the hyphenated spelling the turn used wins', () => {
   it('a loop-written home prefers the hyphenated spelling among the turn\'s', () => {
     const { correctedDistrict } = require('../fuzzy-place') as typeof import('../fuzzy-place');
     expect(correctedDistrict('niew west', ['You live in Nieuw West.', '{"query":"Nieuw-West Amsterdam"}'])).toBe('Nieuw-West');
+  });
+});
+
+describe('ux2 batch 25 C2/9: the delete card is the confirmation', () => {
+  const MANY: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [
+      { id: 'h1', statement: 'Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands, EU', attribute: CANONICAL_LOCATION_KEY },
+      { id: 'o1', statement: 'From India', attribute: ORIGIN_KEY },
+      { id: 'i1', statement: 'Follows Formula 1', attribute: 'topics: general interests' },
+    ],
+  };
+  const results = (h: ReturnType<typeof harness>) => h;
+  const runDelete = async (args: unknown, extraLegs: AgentModelResult[] = []) => {
+    const out: unknown[] = [];
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ toolCalls: [tc('deleteUserFacts', args)] }),
+      ...extraLegs,
+      res({ content: 'The card has them.' }),
+    ]);
+    results(h);
+    await runAgentTurn({
+      state: createAgentState(MANY), userMessage: 'delete my facts', deps: h.deps,
+      onLeg: (leg) => out.push(...leg.toolResults.map((r) => [r.name, r.result])),
+    });
+    return out;
+  };
+
+  it('all: true lists every fact, counted from the data', async () => {
+    const out = await runDelete({ all: true });
+    expect(out).toContainEqual(['deleteUserFacts', expect.objectContaining({
+      pendingFactIds: ['h1', 'o1', 'i1'],
+      pendingStatements: MANY.facts.map((f) => f.statement),
+    })]);
+  });
+
+  it('resolves an id, an attribute key and a statement alike', async () => {
+    const out = await runDelete({ fact_ids: ['[i1]', ORIGIN_KEY, 'Lives in Nieuw-West, Amsterdam, North Holland, The Netherlands, EU'] });
+    expect(out).toContainEqual(['deleteUserFacts', expect.objectContaining({ pendingFactIds: ['i1', 'o1', 'h1'] })]);
+  });
+
+  it('a question about the same removal is refused: the card asks', async () => {
+    const out = await runDelete({ all: true }, [
+      res({ toolCalls: [tc('ask_choice', { question: 'Delete them all?', options: ['Yes', 'No'] })] }),
+    ]);
+    expect(out).toContainEqual(['ask_choice', expect.objectContaining({ error: expect.stringMatching(/card/) })]);
   });
 });

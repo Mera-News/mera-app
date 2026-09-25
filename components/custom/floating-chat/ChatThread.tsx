@@ -245,7 +245,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         );
 
       case 'fact-card':
-        return <FactCard action={item.action} statements={item.statements} />;
+        return <FactCard action={item.action} statements={item.statements} pendingDelete={item.pendingDelete} />;
 
       case 'optimisation-plan-card':
         return <OptimisationPlanCard />;

@@ -1,0 +1,143 @@
+{
+  "_comment": "ux2 P9 batch 25 M6 (owner-approved): the pending removal card gets Remove and Keep; Keep leaves one quiet line. Three new floatingChat keys, pure ADD.",
+  "en": {
+    "floatingChat": {
+      "factDeleteRemove": "Remove",
+      "factDeleteKeep": "Keep",
+      "factDeleteKept": "Nothing was removed."
+    }
+  },
+  "ar": {
+    "floatingChat": {
+      "factDeleteRemove": "إزالة",
+      "factDeleteKeep": "الإبقاء",
+      "factDeleteKept": "لم تتم إزالة أي شيء."
+    }
+  },
+  "de": {
+    "floatingChat": {
+      "factDeleteRemove": "Entfernen",
+      "factDeleteKeep": "Behalten",
+      "factDeleteKept": "Es wurde nichts entfernt."
+    }
+  },
+  "es": {
+    "floatingChat": {
+      "factDeleteRemove": "Eliminar",
+      "factDeleteKeep": "Conservar",
+      "factDeleteKept": "No se eliminó nada."
+    }
+  },
+  "fr": {
+    "floatingChat": {
+      "factDeleteRemove": "Supprimer",
+      "factDeleteKeep": "Garder",
+      "factDeleteKept": "Rien n'a été supprimé."
+    }
+  },
+  "hi": {
+    "floatingChat": {
+      "factDeleteRemove": "हटाएं",
+      "factDeleteKeep": "रखें",
+      "factDeleteKept": "कुछ भी नहीं हटाया गया।"
+    }
+  },
+  "id": {
+    "floatingChat": {
+      "factDeleteRemove": "Hapus",
+      "factDeleteKeep": "Simpan",
+      "factDeleteKept": "Tidak ada yang dihapus."
+    }
+  },
+  "it": {
+    "floatingChat": {
+      "factDeleteRemove": "Rimuovi",
+      "factDeleteKeep": "Tieni",
+      "factDeleteKept": "Non è stato rimosso nulla."
+    }
+  },
+  "ja": {
+    "floatingChat": {
+      "factDeleteRemove": "削除",
+      "factDeleteKeep": "残す",
+      "factDeleteKept": "何も削除していません。"
+    }
+  },
+  "ko": {
+    "floatingChat": {
+      "factDeleteRemove": "삭제",
+      "factDeleteKeep": "유지",
+      "factDeleteKept": "아무것도 삭제하지 않았습니다."
+    }
+  },
+  "nl": {
+    "floatingChat": {
+      "factDeleteRemove": "Verwijderen",
+      "factDeleteKeep": "Houden",
+      "factDeleteKept": "Er is niets verwijderd."
+    }
+  },
+  "pl": {
+    "floatingChat": {
+      "factDeleteRemove": "Usuń",
+      "factDeleteKeep": "Zachowaj",
+      "factDeleteKept": "Nic nie zostało usunięte."
+    }
+  },
+  "pt-BR": {
+    "floatingChat": {
+      "factDeleteRemove": "Remover",
+      "factDeleteKeep": "Manter",
+      "factDeleteKept": "Nada foi removido."
+    }
+  },
+  "ru": {
+    "floatingChat": {
+      "factDeleteRemove": "Удалить",
+      "factDeleteKeep": "Оставить",
+      "factDeleteKept": "Ничего не удалено."
+    }
+  },
+  "th": {
+    "floatingChat": {
+      "factDeleteRemove": "ลบ",
+      "factDeleteKeep": "เก็บไว้",
+      "factDeleteKept": "ไม่มีสิ่งใดถูกลบ"
+    }
+  },
+  "tr": {
+    "floatingChat": {
+      "factDeleteRemove": "Kaldır",
+      "factDeleteKeep": "Tut",
+      "factDeleteKept": "Hiçbir şey kaldırılmadı."
+    }
+  },
+  "uk": {
+    "floatingChat": {
+      "factDeleteRemove": "Видалити",
+      "factDeleteKeep": "Залишити",
+      "factDeleteKept": "Нічого не видалено."
+    }
+  },
+  "vi": {
+    "floatingChat": {
+      "factDeleteRemove": "Xóa",
+      "factDeleteKeep": "Giữ lại",
+      "factDeleteKept": "Không có gì bị xóa."
+    }
+  },
+  "zh-CN": {
+    "floatingChat": {
+      "factDeleteRemove": "移除",
+      "factDeleteKeep": "保留",
+      "factDeleteKept": "没有移除任何内容。"
+    }
+  },
+  "zh-TW": {
+    "floatingChat": {
+      "factDeleteRemove": "移除",
+      "factDeleteKeep": "保留",
+      "factDeleteKept": "沒有移除任何內容。"
+    }
+  }
+}

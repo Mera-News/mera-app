@@ -29,7 +29,17 @@ export interface SaveAsWrittenOffer {
   entry: { statement: string; questionnaire_attribute?: string; topic_skill_id?: string };
 }
 
-export type FactCardAction = 'saved' | 'deleted' | 'deletePending' | 'updated';
+export type FactCardAction = 'saved' | 'deleted' | 'deletePending' | 'deleteKept' | 'updated';
+
+/** What a pending removal card's Remove / Keep acts on (ux2 M6). */
+export interface PendingDelete {
+  /** `${messageId}::${toolCallIndex}`, where the outcome is recorded. */
+  resultKey: string;
+  /** The call's own result, the base the outcome is merged into. */
+  baseResult: Record<string, unknown>;
+  /** Exactly the facts the card lists. */
+  factIds: string[];
+}
 
 // ---------------------------------------------------------------------------
 // Agent steps (pagent P2)
@@ -139,6 +149,8 @@ export type ChatThreadItem =
       action: FactCardAction;
       statements: string[];
       factIds: string[];
+      /** A live pending removal: the card shows Remove and Keep. */
+      pendingDelete?: PendingDelete;
     }
   | { kind: 'proposal-card'; key: string; proposal: StagedProposal }
   // Round-4 C5 — pinned interactive daily-optimisation-plan card at the top of an

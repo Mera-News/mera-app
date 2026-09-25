@@ -20,6 +20,11 @@ jest.mock('@/lib/chat-tools/fact-commit', () => ({
   commitFactChoices: (...a: unknown[]) => mockCommit(...(a as [])),
 }));
 
+const mockDelete = jest.fn(async () => ({ success: true, deletedCount: 1, deletedStatements: ['Lives in Porto'] }));
+jest.mock('@/lib/chat-tools/tool-handlers', () => ({
+  handleDeleteUserFacts: (...a: unknown[]) => mockDelete(...(a as [])),
+}));
+
 let mockStoreResults: Record<string, Record<string, unknown>> = {};
 jest.mock('@/lib/stores/floating-chat-store', () => ({
   useFloatingChatStore: {
@@ -252,5 +257,23 @@ describe('ux2 D9: commitSaveAsWritten', () => {
     ]);
     expect(mockStoreResults['a1::2']).toEqual({ ...base, saveAsWrittenSaved: [{ id: 'f9', statement: 'Lives in Zzqq' }] });
     expect(mockPatch).toHaveBeenCalledWith('a1', 2, mockStoreResults['a1::2']);
+  });
+});
+
+describe('ux2 batch 25 M6: confirmPendingDelete', () => {
+  const { confirmPendingDelete } = require('../fact-choice-actions') as typeof import('../fact-choice-actions');
+  const pending = { resultKey: 'a1::0', baseResult: { pendingFactIds: ['h1'] }, factIds: ['h1'] };
+  beforeEach(() => { mockStoreResults = {}; mockDelete.mockClear(); mockPatch.mockClear(); });
+
+  it('Remove deletes exactly those ids and records what went', async () => {
+    await confirmPendingDelete(pending, 'remove');
+    expect(mockDelete).toHaveBeenCalledWith({ fact_ids: ['h1'] });
+    expect(mockStoreResults['a1::0']).toMatchObject({ deleteOutcome: 'removed', deletedStatements: ['Lives in Porto'] });
+    expect(mockPatch).toHaveBeenCalledWith('a1', 0, mockStoreResults['a1::0']);
+  });
+  it('Keep deletes nothing', async () => {
+    await confirmPendingDelete(pending, 'keep');
+    expect(mockDelete).not.toHaveBeenCalled();
+    expect(mockStoreResults['a1::0']).toMatchObject({ deleteOutcome: 'kept' });
   });
 });

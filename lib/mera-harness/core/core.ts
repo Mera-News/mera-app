@@ -469,6 +469,32 @@ export function collapseRepeatedRungs(statement: string): string {
   return out.join(', ');
 }
 
+/**
+ * The facts a deleteUserFacts call names, in the order named, deduplicated:
+ * `all: true` is every fact; otherwise each entry is an exact id (brackets
+ * stripped), else an attribute key that names exactly ONE fact, else a
+ * statement equal in comparable form. An entry naming several facts by key
+ * names none: the card must never remove more than was meant.
+ */
+export function resolveDeleteTargets(
+  args: Record<string, unknown>,
+  facts: AgentPersonaFact[],
+): AgentPersonaFact[] {
+  if (args.all === true) return [...facts];
+  const named = Array.isArray(args.fact_ids) ? (args.fact_ids as unknown[]) : [];
+  const out: AgentPersonaFact[] = [];
+  for (const raw of named) {
+    if (typeof raw !== 'string') continue;
+    const key = raw.trim().replace(/^\[|\]$/g, '');
+    const byId = facts.find((f) => f.id === key);
+    const byAttr = facts.filter((f) => (f.attribute ?? '').trim().toLowerCase() === key.toLowerCase());
+    const byText = facts.filter((f) => comparableStatement(f.statement) === comparableStatement(key));
+    const hit = byId ?? (byAttr.length === 1 ? byAttr[0] : byText.length === 1 ? byText[0] : undefined);
+    if (hit && !out.includes(hit)) out.push(hit);
+  }
+  return out;
+}
+
 /** The user's own current home among the facts on file, or null. */
 function currentHomeFact(
   facts: AgentPersonaFact[],
@@ -688,6 +714,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const modelTexts: string[] = [];
   /** A lookup this turn could not place what the user named. */
   let sawNoMatch = false;
+  /** A removal card is on screen this turn; it is the question. */
+  let deleteCardOffered = false;
   /** An unverified home was held back because it would replace the verified
    *  home on file; the chip offers the user's own words instead. */
   let heldBackUnverifiedHome = false;
@@ -1143,6 +1171,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         if (result.content.trim() && !(index === 0 && !resumedSkill)) reply = '';
       }
 
+      if (call.name === 'ask_choice' && deleteCardOffered) {
+        // The delete card already asks; a chip question would ask twice.
+        const out = { error: 'The removal card already asks the user. Ask nothing more.' };
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        continue;
+      }
+
       if (call.name === 'ask_choice') {
         const question = typeof args.question === 'string' ? args.question : '';
         // Recorded BEFORE any refusal below: a refused question still reached
@@ -1530,24 +1566,24 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       if (call.name === 'deleteUserFacts') {
         // GATED. Model-triggered, irreversible, and it cascades to topics.
         if (!turn.resolvedChoice) {
-          // THE PENDING CARD'S TEXT. The UI shows "Will be removed from your
-          // persona" with these statements, never the raw ids: a blocked call
-          // used to fall back to `input.fact_ids` and render a false "Removed"
-          // card listing ids, once per blocked call (ux2 C4). An id the persona
-          // does not hold is skipped, never shown.
-          const named = Array.isArray(args.fact_ids) ? (args.fact_ids as unknown[]) : [];
-          const pendingStatements = [
-            ...new Set(
-              named
-                .map((raw) => (typeof raw === 'string' ? raw.trim().replace(/^\[|\]$/g, '') : ''))
-                .map((id) => state.persona.facts.find((f) => f.id === id)?.statement ?? null)
-                .filter((s): s is string => s !== null),
-            ),
-          ];
-          const out = {
-            error: 'confirm with ask_choice first',
-            ...(pendingStatements.length > 0 ? { pendingStatements } : {}),
-          };
+          // THE CARD IS THE CONFIRMATION (owner-approved M6, ux2 batch 25). A
+          // delete is never run from the model's call: the loop resolves what
+          // it names (ids, attribute keys, statements, or `all`) against the
+          // persona and hands the card that list, with Remove and Keep. The
+          // count comes from the data (the model said "all 18" of 20), and the
+          // text, never ids, is what the user reads.
+          const pending = resolveDeleteTargets(args, state.persona.facts);
+          const out = pending.length > 0
+            ? {
+                error: 'The card asks the user to confirm this removal. Do not ask again.',
+                pendingFactIds: pending.map((f) => f.id),
+                pendingStatements: pending.map((f) => f.statement),
+              }
+            : { error: 'No fact on file matches. Say you cannot find it and quote what you hold on that subject.' };
+          if (pending.length > 0) {
+            deleteCardOffered = true;
+            proposedSomething = true;
+          }
           leg.toolResults.push({ name: call.name, result: out });
           toolResultsThisTurn.push({ name: call.name, result: out });
           continue;

@@ -270,3 +270,35 @@ describe('ux2 batch 25 D6: a live search is narrated on the steps box', () => {
     expect(liveRow('thinking')?.labelKey).toBe('agentSteps.working');
   });
 });
+
+describe('ux2 batch 25 M6: the removal card', () => {
+  const blocked = {
+    error: 'The card asks the user to confirm this removal. Do not ask again.',
+    pendingFactIds: ['h1', 'o1'],
+    pendingStatements: ['Lives in Porto', 'From India'],
+  };
+  const del = (result: Record<string, unknown>): ToolCallRecord => ({
+    id: 'd0', name: 'deleteUserFacts', input: { all: true }, status: 'done', result,
+  });
+  const cardOf = (result: Record<string, unknown>, toolCallResults = {}) =>
+    derive([
+      { id: 'u1', role: 'user', content: 'delete all my facts' },
+      { id: 'a1', role: 'assistant', content: 'The card has them.', toolCalls: [del(result)] },
+    ], { toolCallResults } as never).find((i) => i.kind === 'fact-card');
+
+  it('a pending card carries what Remove needs', () => {
+    expect(cardOf(blocked)).toMatchObject({
+      action: 'deletePending',
+      statements: ['Lives in Porto', 'From India'],
+      pendingDelete: { resultKey: 'a1::0', factIds: ['h1', 'o1'] },
+    });
+  });
+  it('after Remove it is the Removed card with what was removed', () => {
+    const c = cardOf(blocked, { 'a1::0': { ...blocked, deleteOutcome: 'removed', deletedStatements: ['Lives in Porto', 'From India'] } });
+    expect(c).toMatchObject({ action: 'deleted', statements: ['Lives in Porto', 'From India'] });
+    expect(c).not.toHaveProperty('pendingDelete');
+  });
+  it('after Keep it is one quiet line', () => {
+    expect(cardOf(blocked, { 'a1::0': { ...blocked, deleteOutcome: 'kept' } })).toMatchObject({ action: 'deleteKept', statements: [] });
+  });
+});

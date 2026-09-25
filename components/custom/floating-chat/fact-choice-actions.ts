@@ -21,7 +21,8 @@ import {
 } from '@/lib/chat-tools/fact-choice-resolution';
 import logger from '@/lib/logger';
 import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
-import type { SaveAsWrittenOffer } from './types';
+import type { PendingDelete, SaveAsWrittenOffer } from './types';
+import { handleDeleteUserFacts } from '@/lib/chat-tools/tool-handlers';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 
 /**
@@ -145,5 +146,40 @@ export async function commitSaveAsWritten(offer: SaveAsWrittenOffer): Promise<vo
     }
   } catch (err) {
     logger.error('[fact-choice] save as written failed', err, { resultKey });
+  }
+}
+
+/**
+ * The removal card's Remove or Keep (owner-approved M6, ux2 batch 25). Remove
+ * deletes exactly the listed facts through the ordinary handler, with no model
+ * turn; either way the outcome is recorded on the call's result, which is what
+ * turns the card into "Removed from your persona" or "Nothing was removed."
+ */
+export async function confirmPendingDelete(pending: PendingDelete, choice: 'remove' | 'keep'): Promise<void> {
+  const { resultKey, baseResult, factIds } = pending;
+  try {
+    let outcome: Record<string, unknown> = { deleteOutcome: 'kept' };
+    if (choice === 'remove') {
+      const out = await handleDeleteUserFacts({ fact_ids: factIds });
+      outcome = {
+        deleteOutcome: 'removed',
+        deletedStatements: Array.isArray(out.deletedStatements) ? out.deletedStatements : [],
+        deletedCount: typeof out.deletedCount === 'number' ? out.deletedCount : 0,
+      };
+    }
+    const store = useFloatingChatStore.getState();
+    const current = (store.toolCallResults[resultKey] as Record<string, unknown> | undefined) ?? baseResult;
+    const next = { ...current, ...outcome };
+    store.setToolCallResult(resultKey, next);
+    const [messageId, indexRaw] = resultKey.split('::');
+    const index = Number(indexRaw);
+    if (messageId && Number.isInteger(index)) {
+      void patchMessageToolCallResult(messageId, index, next).catch((err: unknown) => {
+        logger.warn('[fact-choice] delete outcome patch failed', { resultKey, error: String(err) });
+        return false;
+      });
+    }
+  } catch (err) {
+    logger.error('[fact-choice] removal failed', err, { resultKey });
   }
 }

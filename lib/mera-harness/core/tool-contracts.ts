@@ -194,13 +194,14 @@ export const DELETE_FACTS_TOOL: ToolDefinition = {
   function: {
     name: 'deleteUserFacts',
     description:
-      'Remove facts the user asked you to remove. Pass EXACT fact ids from the existing-facts list, never an attribute or a statement. Ask with ask_choice and wait for the tap before calling this: it is irreversible and it deletes the topics too.',
+      'Offer to remove facts the user asked you to remove. Pass EXACT fact ids from the known facts, or all: true when they want everything gone. Nothing is removed by this call: a card lists the facts and the user taps Remove or Keep, so never ask about the removal with ask_choice.',
     parameters: {
       type: 'object',
       properties: {
         fact_ids: { type: 'array', items: { type: 'string' }, description: 'Exact fact ids.' },
+        all: { type: 'boolean', description: 'true when the user wants every fact removed.' },
       },
-      required: ['fact_ids'],
+      required: [],
     },
   },
 };

@@ -192,10 +192,17 @@ function deriveCard(toolCall: ToolCallRecord): DerivedCard | null {
       // persona" listing ids, once per blocked call, before the user had
       // confirmed anything (ux2 C4). With the statements the gate resolved it
       // is a PENDING card; without them it is nothing.
+      // The user answered the card (ux2 M6): the outcome is recorded on the
+      // call's result by `confirmPendingDelete`.
+      if (result.deleteOutcome === 'removed') {
+        const gone = toStringArray(result.deletedStatements);
+        return gone.length > 0 ? { action: 'deleted', statements: gone, factIds: [] } : null;
+      }
+      if (result.deleteOutcome === 'kept') return { action: 'deleteKept', statements: [], factIds: [] };
       if (typeof result.error === 'string') {
         const pending = toStringArray(result.pendingStatements);
         return pending.length > 0
-          ? { action: 'deletePending', statements: pending, factIds: [] }
+          ? { action: 'deletePending', statements: pending, factIds: toStringArray(result.pendingFactIds) }
           : null;
       }
       // Only what the handler actually removed, never the ids it was handed.
@@ -1158,6 +1165,10 @@ function emitMessage(
           action: card.action,
           statements: card.statements,
           factIds: card.factIds,
+          // Live only: a card from an earlier conversation removes nothing.
+          ...(card.action === 'deletePending' && card.factIds.length > 0 && !stale
+            ? { pendingDelete: { resultKey: `${message.id}::${idx}`, baseResult: asRecord(tc.result) ?? {}, factIds: card.factIds } }
+            : {}),
         });
       }
 
