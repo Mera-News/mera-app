@@ -41,6 +41,7 @@ import {
   AccessibilityInfo,
   FlatList,
   findNodeHandle,
+  StyleSheet,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -51,6 +52,14 @@ import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** Show the scroll-to-top FAB once the list is scrolled past this many px. */
 const SCROLL_THRESHOLD = 300;
+/** The Back button's tap frame: 44pt, pulled back to the 24pt glyph. */
+const BACK_FRAME = {
+  width: 44,
+  height: 44,
+  margin: -10,
+  alignItems: 'center',
+  justifyContent: 'center',
+} as const;
 
 interface FactFeedScreenProps {
   /** The SECTION id — a fact id, or a synthetic headline-scope id (see
@@ -345,14 +354,27 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
           style={{ paddingTop: insets.top + 12 }}
           space="sm"
         >
-          <Pressable
-            onPress={() => router.back()}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('common.back')}
-          >
-            <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-          </Pressable>
+          {/* A real 44pt frame pulled back to the 24pt glyph by a -10 margin
+              (hitSlop measured 24x24 on device; numeric, since NativeWind rem
+              is 14 and w-11 is 38.5pt). The arrow sits OUTSIDE the button: a
+              glyph inside one still surfaced as its own StaticText (captured). */}
+          <View testID="fact-feed-back-frame" style={BACK_FRAME}>
+            <MaterialIcons
+              name="arrow-back"
+              size={24}
+              color="#FFFFFF"
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
+            <Pressable
+              testID="fact-feed-back"
+              onPress={() => router.back()}
+              accessibilityRole="button"
+              accessibilityLabel={t('common.back')}
+              style={StyleSheet.absoluteFill}
+            />
+          </View>
           <View
             ref={titleRef}
             className="flex-1 min-w-0"
