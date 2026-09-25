@@ -210,3 +210,24 @@ describe('ux2 F1: a saved fact\'s topics card carries its guideline', () => {
     expect(items.find((i) => i.kind === 'chat-topics-card')).toMatchObject({ factId: 'f1', topicSkillId: 'topics/residence' });
   });
 });
+
+describe('ux2 batch 25 F7: a refused proposal draws no card', () => {
+  const propose = (result: Record<string, unknown>): ToolCallRecord => ({
+    id: 'p0', name: 'proposeChanges', status: 'done', result,
+    input: { explanation: 'You follow MotoGP.', expected_effects: 'More MotoGP.', actions: [{ type: 'add_fact', statement: 'Follows MotoGP' }] },
+  });
+  it('an {error} result renders no proposal card', () => {
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I also follow MotoGP' },
+      { id: 'a1', role: 'assistant', content: "I'll add MotoGP.", toolCalls: [propose({ error: 'invalid action type: add_fact' })] },
+    ]);
+    expect(kindsOf(items)).not.toContain('proposal-card');
+  });
+  it('a staged result still does', () => {
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I also follow MotoGP' },
+      { id: 'a1', role: 'assistant', content: '', toolCalls: [propose({ staged: true })] },
+    ]);
+    expect(kindsOf(items)).toContain('proposal-card');
+  });
+});

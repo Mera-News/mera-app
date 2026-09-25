@@ -386,6 +386,11 @@ export function parseProposalAction(value: unknown): ProposalAction | null {
 /** Rebuilds a StagedProposal from a completed `proposeChanges` tool call. */
 function deriveProposal(toolCall: ToolCallRecord): StagedProposal | null {
   if (toolCall.status !== 'done' || toolCall.name !== 'proposeChanges') return null;
+  // A REFUSED proposal draws no card (ux2 batch 25, F7): the card was built
+  // from the tool INPUT regardless, so a proposal the agent rejected
+  // (`{ error }`) rendered already "no longer active" and nothing could be
+  // added. Same class as chips for a refused ask_choice.
+  if (typeof asRecord(toolCall.result)?.error === 'string') return null;
 
   const input = asRecord(toolCall.input) ?? {};
   const rawActions = Array.isArray(input.actions) ? input.actions : [];
