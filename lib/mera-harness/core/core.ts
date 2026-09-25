@@ -36,6 +36,12 @@ import {
 } from './combined-fact';
 import { factPickStatement, isFactPickChoice, joinFactPick } from './fact-pick';
 import { correctedDistrict, guardPlaceRungs, userSaidPlace } from './fuzzy-place';
+import { contentJaccard, isSubsetTopic } from './topic-similarity';
+
+/** Content-word overlap at which a new fact is taken for a rewording of one on
+ *  file ("Now building an AI news app" / "Building an AI news app" is 0.8;
+ *  "Follows Formula 1" / "Follows Formula E" is 0.5). */
+const NEAR_TWIN_JACCARD = 0.6;
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
@@ -1389,6 +1395,21 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           if (replaces === null && isHomeEntry(entry)) {
             const home = currentHomeFact(state.persona.facts, statement);
             if (home) replaces = home.id;
+          }
+          // A NEAR-IDENTICAL FACT ON FILE IS THE TARGET (ux2 batch 25, D9):
+          // "Now building an AI news app" beside "Building an AI news app" came
+          // back as a plain Add, two copies of one fact. The card still offers
+          // Keep both, so a wrong target costs nothing.
+          if (replaces === null && !isHomeEntry(entry)) {
+            const twin = state.persona.facts.find(
+              (f) =>
+                !isLocationKey(f.attribute)
+                && (contentJaccard(statement, f.statement) >= NEAR_TWIN_JACCARD
+                  || isSubsetTopic(f.statement, statement)
+                  || isSubsetTopic(statement, f.statement))
+                && mayReplace(statement, f.statement),
+            );
+            if (twin) replaces = twin.id;
           }
           if (replaces !== null && replaceTargetsThisTurn.has(replaces)) {
             // ONE CARD PER OLD FACT (owner, ux2). In the same call the readings

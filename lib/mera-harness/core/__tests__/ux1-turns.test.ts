@@ -915,3 +915,28 @@ describe('ux2 batch 25 D4: a place nobody could find never replaces a verified h
     expect(h.saves.flat()[0].replaces).toBeUndefined();
   });
 });
+
+describe('ux2 batch 25 D9: a near-identical fact on file is the replace target', () => {
+  const APP: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [
+      { id: 'app', statement: 'Building an AI news app', attribute: 'topics: general interests' },
+      { id: 'f1', statement: 'Follows Formula E', attribute: 'topics: general interests' },
+    ],
+  };
+  const run = async (statement: string) => {
+    const h = harness([
+      res({ content: 'Noted.', toolCalls: [tc('load_skill', { id: 'facts/profession' })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement, questionnaire_attribute: 'topics: general interests' }] })] }),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(APP), userMessage: `I'm ${statement}`, deps: h.deps });
+    return h.saves.flat()[0];
+  };
+  it('targets it when the model named none', async () => {
+    expect((await run('Now building an AI news app')).replaces).toBe('app');
+  });
+  it('leaves an unrelated fact alone', async () => {
+    expect((await run('Follows Formula 1')).replaces).toBeUndefined();
+  });
+});
