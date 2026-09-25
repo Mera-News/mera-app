@@ -4,7 +4,6 @@ import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
 import SectionDenominatorLine from '@/components/custom/for-you/SectionDenominatorLine';
-import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { sectionTitle } from '@/components/custom/for-you/section-title';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
@@ -16,7 +15,6 @@ import {
   isHeadlineRow,
   isSuggestionOpened,
   type BreakingCardData,
-  type EmptySectionReason,
   type FactRow,
   type FactRowGroup,
 } from '@/lib/stores/fact-rows-selector';
@@ -64,12 +62,6 @@ interface SectionItem {
   /** True for the two headline section kinds: adds the denominator line and
    *  drops the "News about:" prefix / dynamic translation of the title. */
   headline: boolean;
-  /** D4: set on an interest with no stories yet. The section still shows, with
-   *  an empty state saying which of the two it is. */
-  emptyReason?: EmptySectionReason;
-  /** D4: the interest was added in the last 24h, and the header says so. Empty
-   *  sections, new or not, sort after every section with stories. */
-  newInterest: boolean;
 }
 
 interface DashboardSectionsFeedProps {
@@ -87,12 +79,9 @@ interface DashboardSectionsFeedProps {
   scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
   /** Dashboard header height — content top padding. */
   headerHeight: number;
+  /** The Overview's nothing-yet state: shown when no section has a story (the
+   *  empty sections themselves are never drawn). */
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
-  /** Shown ABOVE the sections when no section has a story yet (a first run
-   *  with only empty interest sections). Without it a new reader would see a
-   *  column of "looking for stories" sections and nothing saying work is under
-   *  way. */
-  noStoriesLead?: React.ReactElement | null;
   /** Pull-to-refresh spinner state. Driven by the scheduler's feed-sync flag
    *  (see `useFeedSyncRefresh`), NOT by local state — so it rises on the same
    *  frame as the pull and stays up for the real duration of the sync. */
@@ -122,7 +111,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   scrollHandler,
   headerHeight,
   ListEmptyComponent,
-  noStoriesLead = null,
   refreshing,
   onRefresh,
   active = true,
@@ -158,6 +146,11 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   const sectionData = useMemo(() => {
     const data: SectionItem[] = [];
     for (const row of rows) {
+      // Owner (reversing D4): a section with no stories is not drawn at all,
+      // no header and no placeholder. The selector still builds it (a fact
+      // feed opened directly shows its own empty state), nothing is persisted,
+      // and it appears as soon as a refresh gives it a story.
+      if (row.groups.length === 0) continue;
       // Every group the row carries renders. A display-only importance pill
       // used to cut this list first, and a row whose groups it emptied was
       // dropped; both are gone, so the preview, the total and the
@@ -182,8 +175,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         total: row.groups.length,
         title: sectionTitle(t, row),
         headline: isHeadlineRow(row),
-        emptyReason: row.emptyReason,
-        newInterest: row.newInterest === true,
       });
     }
     return data;
@@ -217,49 +208,8 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
 
   const renderItem = useCallback(
     ({ item }: { item: SectionItem }) => {
-      const { row, preview, total, title, headline, emptyReason, newInterest } = item;
+      const { row, preview, total, title, headline } = item;
       const open = () => openFactFeed(row, title);
-      if (emptyReason) {
-        // D4: an interest with no story yet still gets its section. Copy per
-        // reason and never a count: the Facts screen can list "38 articles"
-        // for the same fact (it counts every matched row, below the render
-        // gate included), so a "0" here would contradict it.
-        return (
-          <SectionGradientPanel factId={row.factId} style={{ marginTop: 16, marginBottom: 8 }}>
-            {newInterest ? (
-              <Text
-                size="xs"
-                className="font-semibold px-3 pt-2.5"
-                style={{ color: 'rgb(231, 138, 83)' }}
-                testID={`dashboard-section-new-${row.factId}`}
-              >
-                {t('forYou.newInterest')}
-              </Text>
-            ) : null}
-            <FactSectionHeader
-              title={title}
-              eventType={null}
-              total={0}
-              onPress={undefined}
-              translateTitle
-            />
-            <ForYouEmptyState
-              compact
-              icon={emptyReason === 'awaiting-first-run' ? 'hourglass-empty' : 'search'}
-              body={
-                emptyReason === 'awaiting-first-run'
-                  ? t('forYou.emptySection.awaiting')
-                  : t('forYou.emptySection.none')
-              }
-              testID={`dashboard-section-empty-${row.factId}`}
-            />
-          </SectionGradientPanel>
-        );
-      }
-      // The ONLY zero-card section is a headline section where nothing cleared
-      // the bar; its denominator line is the content, so it gets no header
-      // affordance and no "View all" row pointing at an empty list.
-      const canOpen = total > 0;
       const showViewAll = total > SECTION_PREVIEW_COUNT;
       return (
         // ONE gradient panel per section, wrapping header + cards + closing
@@ -272,7 +222,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
             title={title}
             eventType={row.groups[0]?.data.eventType ?? null}
             total={total}
-            onPress={canOpen ? open : undefined}
+            onPress={open}
             // A headline section is not "News about:" anything, and its title is
             // app copy that is already in the reader's language.
             prefix={headline ? null : undefined}
@@ -302,13 +252,9 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         </SectionGradientPanel>
       );
     },
-    [onPressSuggestion, openedIds, openFactFeed, t],
+    [onPressSuggestion, openedIds, openFactFeed],
   );
 
-  // Mounted here rather than threaded down from ForYouScreen as a prop because
-  // this component is the Dashboard's list and its only consumer — a prop would
-  // be indirection with one caller.
-  const noStories = breaking.length === 0 && rows.every((r) => r.groups.length === 0);
   // The stats card is ALWAYS the first card (owner: the count sentence left
   // the header so the header is identical on every pill). It sits in the list
   // header, not in `data`: as a data item it would drop below the breaking
@@ -317,14 +263,10 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     () => (
       <>
         <DashboardStatsCard />
-        {breaking.length > 0 ? (
-          <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
-        ) : rows.length > 0 && noStories ? (
-          noStoriesLead
-        ) : null}
+        {breaking.length > 0 ? <BreakingStrip items={breaking} onPressItem={onPressSuggestion} /> : null}
       </>
     ),
-    [breaking, onPressSuggestion, rows.length, noStories, noStoriesLead],
+    [breaking, onPressSuggestion],
   );
 
   return (

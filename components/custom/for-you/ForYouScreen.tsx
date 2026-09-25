@@ -509,7 +509,6 @@ const MeraNewsScreen: React.FC = () => {
                             scrollHandler={scrollHandler}
                             headerHeight={headerHeight}
                             ListEmptyComponent={emptyState}
-                            noStoriesLead={emptyState}
                             refreshing={refreshing}
                             onRefresh={onRefresh}
                             active={active}
