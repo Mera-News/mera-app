@@ -116,7 +116,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   // (one option) really is one tap.
   const [selected, setSelected] = useState(0);
   const [busy, setBusy] = useState(false);
-  const cardRef = useRef<View>(null);
+  // The settled card's TITLE, not the card: focus needs an accessibility
+  // element, and the card root is no longer one (ux2 batch 26).
+  const cardRef = useRef<React.ComponentRef<typeof Text>>(null);
 
   /**
    * What a replacement would destroy.
@@ -293,7 +295,6 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   if (dismissed) {
     return (
       <Animated.View
-        ref={cardRef}
         entering={cardEntering}
         style={[styles.card, styles.cardSettled]}
         // NOT `accessible` (ux2 batch 26): as one element it swallowed the Undo
@@ -304,7 +305,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
       >
         <View style={styles.headerRow}>
           <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={18} color={ACCENT} />
-          <Text size="sm" bold style={styles.title}>
+          <Text ref={cardRef} size="sm" bold style={styles.title}>
             {t('factChoice.dismissedTitle')}
           </Text>
           {!stale && (

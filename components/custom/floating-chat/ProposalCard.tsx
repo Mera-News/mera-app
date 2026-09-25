@@ -360,6 +360,12 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   // Single-select: which alternative the user has picked (defaults to the first,
   // so Confirm is always meaningful). Only used when proposal.chooseOne.
   const [selectedIndex, setSelectedIndex] = useState(0);
+  // What each translated line of a row actually SHOWS, keyed `h<idx>` /
+  // `d<idx>`. A choose-one row's label is built from it, so VoiceOver reads
+  // the words on screen in the reader's language, not the agent's English.
+  const [shownText, setShownText] = useState<Record<string, string>>({});
+  const noteShown = (key: string) => (st: { displayedText: string }) =>
+    setShownText((prev) => (prev[key] === st.displayedText ? prev : { ...prev, [key]: st.displayedText }));
 
   // Shared with both agents' applyProposal (which REFUSE such a proposal) so the
   // "is this single-select?" reading cannot drift between the card and the model.
@@ -503,6 +509,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                       size="sm"
                       bold
                       style={styles.actionHeading}
+                      onDisplayChange={noteShown(`h${idx}`)}
                     />
                   ) : (
                     <Text size="sm" bold style={styles.actionHeading}>
@@ -522,6 +529,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                       text={row.detail}
                       size="sm"
                       style={styles.actionDetail}
+                      onDisplayChange={noteShown(`d${idx}`)}
                     />
                   ) : (
                     <Text size="sm" style={styles.actionDetail}>
@@ -548,8 +556,9 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
                       ? t(row.labelKey as TKey, { defaultValue: row.labelDefault })
                       : t(row.labelKey as TKey)
                     : null,
-                  row.heading,
-                  row.detail,
+                  row.heading ? (shownText[`h${idx}`] ?? row.heading) : null,
+                  row.chip ? t(row.chip.key as TKey, { defaultValue: row.chip.default }) : null,
+                  row.detail ? (shownText[`d${idx}`] ?? row.detail) : null,
                 ]
                   .filter(Boolean)
                   .join('. ')}

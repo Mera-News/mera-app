@@ -36,9 +36,22 @@ jest.mock('@/lib/haptics', () => ({ hapticSuccess: jest.fn() }));
 // cards suite. Without it the real component drags in `expo-translate-text`,
 // whose native module does not exist under jest ("Cannot find native module
 // 'ExpoTranslateText'"), and the whole suite fails to load.
+// `mockTranslate` on: the line shows (and reports, as the real component
+// does) a translated rendering, so a label built from it can be checked.
+let mockTranslate = false;
 jest.mock('@/components/custom/TranslatableDynamic', () => {
+  const R = require('react');
   const { Text } = require('react-native');
-  return { __esModule: true, default: ({ text }: any) => <Text>{text}</Text> };
+  return {
+    __esModule: true,
+    default: ({ text, onDisplayChange }: any) => {
+      const shown = mockTranslate ? `DE:${text}` : text;
+      R.useEffect(() => {
+        onDisplayChange?.({ showingOriginal: !mockTranslate, displayedText: shown, displayedLanguage: mockTranslate ? 'de' : 'en' });
+      }, [shown]);
+      return <Text>{shown}</Text>;
+    },
+  };
 });
 
 const mockExecuteProposalActions = jest.fn().mockResolvedValue(undefined);
@@ -201,4 +214,15 @@ describe('ux2 batch 26: radio rows keep their glyphs out of the accessibility tr
     expect(typeof label).toBe('string');
     expect(label.length).toBeGreaterThan(0);
   });
+});
+
+it('ux2 batch 26: a choose-one row reads the words it SHOWS, translated when they are', () => {
+  mockTranslate = true;
+  try {
+    const { getByTestId } = render(<ProposalCard proposal={trackProposal} isLast />);
+    const label: string = getByTestId('proposal-action-row-0').props.accessibilityLabel;
+    expect(label).toContain('DE:');
+  } finally {
+    mockTranslate = false;
+  }
 });
