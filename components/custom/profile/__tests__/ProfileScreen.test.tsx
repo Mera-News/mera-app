@@ -438,123 +438,22 @@ describe('ProfileScreen', () => {
 
     // ── ux1 P2 (second commit): Refresh Suggestions moved here from
     // AdvancedHubScreen, in Advanced's old bottom slot ─────────────────────
-    it('puts Refresh Suggestions in the header, directly left of Advanced, and nothing at the bottom', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const r = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-        const ids = r.UNSAFE_root
-            .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
-            .map((n: any) => n.props.testID as string);
-        expect(ids.indexOf('profile-advanced-open')).toBe(ids.indexOf('advanced-hub-refresh-suggestions') + 1);
-        let inCluster = false;
-        for (let p: any = r.getByTestId('advanced-hub-refresh-suggestions').parent; p; p = p.parent) {
-            if (p.props?.testID === 'profile-header-actions') inCluster = true;
-        }
-        expect(inCluster).toBe(true);
-        expect(r.queryByTestId('advanced-hub-refresh-frame')).toBeNull();
-        expect(r.queryByTestId('advanced-hub-refresh-hint')).toBeNull();
-    });
-
-    it('pressing Refresh Suggestions clears the flag, prunes and triggers a feed-sync', async () => {
+    // Owner (ux2 G): Refresh Suggestions is gone from Profile. Its prune plus
+    // feed-sync now runs by itself at the end of the combination pass.
+    it('has no refresh control, glow or tooltip: the header is [Advanced] [bell]', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         mockFeedNeedsRefresh = true;
-        const { getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-        fireEvent.press(getByTestId('advanced-hub-refresh-suggestions'));
-        expect(mockSetFeedNeedsRefresh).toHaveBeenCalledWith(false);
-        await waitFor(() => expect(mockPruneOrphanedData).toHaveBeenCalled());
-        expect(AppScheduler.trigger).toHaveBeenCalledWith('feed-sync');
-    });
-
-    it('is an icon-only 44pt header button with a spoken label and no glyph leak', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-        const b = getByTestId('advanced-hub-refresh-suggestions');
-        expect(b.props.accessibilityLabel).toBe('configPanel.refreshSuggestions');
-        expect(b.props.accessibilityRole).toBe('button');
-        const { StyleSheet } = require('react-native');
-        expect(StyleSheet.flatten(b.props.style)).toMatchObject({ width: 44, height: 44, margin: -10 });
-        expect(b.props.hitSlop).toBeUndefined();
-    });
-
-    it('shows a spinner, disables itself and says "Refreshing" while it runs', async () => {
-        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        let release: () => void = () => {};
-        mockPruneOrphanedData.mockImplementation(() => new Promise<void>((res) => { release = res; }));
-        const { getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-        fireEvent.press(getByTestId('advanced-hub-refresh-suggestions'));
-        await waitFor(() =>
-            expect(getByTestId('advanced-hub-refresh-suggestions').props.accessibilityLabel).toBe(
-                'configPanel.refreshingSuggestions',
-            ),
-        );
-        expect(getByTestId('advanced-hub-refresh-suggestions').props.accessibilityState).toMatchObject({ disabled: true, busy: true });
-        expect(getByTestId('advanced-hub-refresh-suggestions-spinner')).toBeTruthy();
-        release();
-    });
-
-    // Owner: the glowing "Would you like to refresh your feed" text sits under
-    // the refresh icon like a tooltip, over the content.
-    describe('the refresh tooltip', () => {
-        const layoutHeader = (r: ReturnType<typeof render>) =>
-            fireEvent(r.getByTestId('profile-header'), 'layout', {
-                nativeEvent: { layout: { x: 0, y: 0, width: 375, height: 70 } },
-            });
-
-        it('floats below the header only while feedNeedsRefresh, with the existing hint verbatim', async () => {
-            mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-            mockFeedNeedsRefresh = true;
-            const r = render(<ProfileScreen userId="u1" />);
-            await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-            layoutHeader(r);
-            const bubble = r.getByTestId('profile-refresh-tooltip', { includeHiddenElements: true });
-            expect(r.getByText('configPanel.personaUpdatedRefreshHint', { includeHiddenElements: true })).toBeTruthy();
-            const { StyleSheet } = require('react-native');
-            const layer = StyleSheet.flatten(r.getByTestId('profile-refresh-tooltip-layer', { includeHiddenElements: true }).props.style);
-            expect(layer).toMatchObject({ position: 'absolute', top: 70 });
-            expect(StyleSheet.flatten(bubble.props.style).maxWidth).toBeLessThanOrEqual(240);
-            expect(r.getByTestId('profile-refresh-glow', { includeHiddenElements: true })).toBeTruthy();
-            // Read once, as the icon's hint, not as a second element.
-            expect(r.getByTestId('advanced-hub-refresh-suggestions').props.accessibilityHint).toBe(
-                'configPanel.personaUpdatedRefreshHint',
-            );
-            expect(bubble.props.accessibilityElementsHidden).toBe(true);
-        });
-
-        it('is absent without the flag', async () => {
-            mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-            const r = render(<ProfileScreen userId="u1" />);
-            await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-            layoutHeader(r);
-            expect(r.queryByTestId('profile-refresh-tooltip', { includeHiddenElements: true })).toBeNull();
-            expect(r.queryByTestId('profile-refresh-glow', { includeHiddenElements: true })).toBeNull();
-        });
-
-        it('refreshes when the bubble is tapped', async () => {
-            mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-            mockFeedNeedsRefresh = true;
-            const r = render(<ProfileScreen userId="u1" />);
-            await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-            layoutHeader(r);
-            fireEvent.press(r.getByTestId('profile-refresh-tooltip', { includeHiddenElements: true }));
-            await waitFor(() => expect(mockPruneOrphanedData).toHaveBeenCalled());
-            expect(AppScheduler.trigger).toHaveBeenCalledWith('feed-sync');
-        });
-
-        it('a tap elsewhere dismisses it for this visit, without refreshing', async () => {
-            mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-            mockFeedNeedsRefresh = true;
-            const r = render(<ProfileScreen userId="u1" />);
-            await waitFor(() => expect(r.getByTestId('advanced-hub-refresh-suggestions')).toBeTruthy());
-            layoutHeader(r);
-            fireEvent.press(r.getByTestId('profile-refresh-tooltip-backdrop', { includeHiddenElements: true }));
-            expect(r.queryByTestId('profile-refresh-tooltip', { includeHiddenElements: true })).toBeNull();
-            expect(mockPruneOrphanedData).not.toHaveBeenCalled();
-            // The icon still glows: the flag is still true.
-            expect(r.getByTestId('profile-refresh-glow', { includeHiddenElements: true })).toBeTruthy();
-        });
+        const r = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(r.getByTestId('profile-advanced-open')).toBeTruthy());
+        const HIDDEN = { includeHiddenElements: true } as const;
+        expect(r.queryByTestId('advanced-hub-refresh-suggestions', HIDDEN)).toBeNull();
+        expect(r.queryByTestId('profile-refresh-glow', HIDDEN)).toBeNull();
+        expect(r.queryByTestId('profile-refresh-tooltip', HIDDEN)).toBeNull();
+        expect(r.queryByText('configPanel.personaUpdatedRefreshHint', HIDDEN)).toBeNull();
+        const ids = r.getByTestId('profile-header-actions')
+            .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
+            .map((n: any) => n.props.testID as string);
+        expect(ids.filter((id: string) => id !== 'profile-header-actions')).toEqual(['profile-advanced-open', 'bell']);
     });
 
     it('shrinks a long localized title to fit instead of cutting it (ja)', async () => {
