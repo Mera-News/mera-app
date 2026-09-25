@@ -86,13 +86,13 @@ it('caps the supporting facts at 25, newest first', async () => {
 it('dedupes against every topic on the device, the declined list, and across the batch', async () => {
   mockClaimSiblings.mockResolvedValue([{ jobId: 'j2', factId: 'f2' }]);
   mockAllTexts = new Set(['portugal nurse pay dispute']);
-  mockDeclined = new Set(['india diaspora voting']);
+  mockDeclined = new Set(['india nurse voting rights']);
   mockBatch.mockResolvedValue([
-    ok('j1', ['Portugal nurse pay dispute', 'India diaspora voting', 'Porto hospital India recruitment']),
-    ok('j2', ['Porto hospital recruitment India', 'Porto India direct flights']),
+    ok('j1', ['Portugal nurse pay dispute', 'India nurse voting rights', 'Porto nurse India recruitment']),
+    ok('j2', ['Porto nurse recruitment India', 'Porto India direct flights']),
   ]);
   await handleTopicComboJob({ factId: 'f1', passId: 'p1' }, { jobId: 'j1' });
-  expect(mockApply).toHaveBeenCalledWith('f1', ['Porto hospital India recruitment'], 'j1');
+  expect(mockApply).toHaveBeenCalledWith('f1', ['Porto nurse India recruitment'], 'j1');
   expect(mockApply).toHaveBeenCalledWith('f2', ['Porto India direct flights'], 'j2');
 });
 
@@ -141,4 +141,11 @@ it('a per-call error on the head applies the siblings, then throws for the head'
   await expect(handleTopicComboJob({ factId: 'f1', passId: 'p1' }, { jobId: 'j1' })).rejects.toThrow('timeout');
   expect(mockApply).toHaveBeenCalledWith('f2', ['Porto India direct flights'], 'j2');
   expect(mockRelease).not.toHaveBeenCalled();
+});
+
+
+it('ux2 F6: drops a combination topic that does not name its own fact', async () => {
+  mockBatch.mockResolvedValue([ok('j1', ['Portugal nurse pay dispute', 'Porto India direct flights'])]);
+  await handleTopicComboJob({ factId: 'f1', passId: 'p1' }, { jobId: 'j1' });
+  expect(mockApply).toHaveBeenCalledWith('f1', ['Portugal nurse pay dispute'], 'j1');
 });

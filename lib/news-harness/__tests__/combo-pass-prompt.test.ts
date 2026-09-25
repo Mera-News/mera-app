@@ -42,3 +42,17 @@ describe('buildComboPassUserMessage', () => {
     expect(buildComboPassUserMessage('a <<b>>', ['c'])).not.toContain('<<');
   });
 });
+
+
+describe('ux2 F6: every combination topic names its Fact', () => {
+  it('says so as a hard rule, with an example', () => {
+    expect(COMBO_PASS_TOPIC_SYSTEM_PROMPT).toContain('## Name the Fact (hard requirement)');
+    expect(COMBO_PASS_TOPIC_SYSTEM_PROMPT).toMatch(/Every topic contains at least one word from the Fact itself/);
+  });
+
+  it('carries no example that breaks it', () => {
+    for (const bad of ['"India remittance rules for tech expats"', '"international schools Amsterdam"', '"Randstad international school options"', '"Formula 1 AI research"', '"UK-EU AI talent mobility"']) {
+      expect(COMBO_PASS_TOPIC_SYSTEM_PROMPT).not.toContain(bad);
+    }
+  });
+});

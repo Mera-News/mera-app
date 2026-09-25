@@ -41,6 +41,7 @@ import {
 import { parseTopicsFromOutput } from '../../news-harness/persona-management/topic-generation';
 import { planTopupTopicRows } from '../../news-harness/persona-management/topic-topup';
 import { isDeferrableError } from '../job-defer';
+import { namesFact } from '@/lib/mera-harness';
 import logger from '../../logger';
 import type { JobContext } from '../InferenceQueue';
 
@@ -124,7 +125,10 @@ export async function handleTopicComboJob(
         continue;
       }
       const statement = byId.get(w.factId)?.statement ?? '';
-      const texts = planTopupTopicRows(seen, parseTopicsFromOutput(result!.output, statement), normalizeTopicText)
+      // Every combination topic names its own fact (ux2 F6): the prompt says
+      // so, and this drops the ones that still do not.
+      const aboutFact = parseTopicsFromOutput(result!.output, statement).filter((t) => namesFact(t, statement));
+      const texts = planTopupTopicRows(seen, aboutFact, normalizeTopicText)
         .map((row) => row.text)
         .slice(0, COMBO_PASS_MAX_TOPICS);
       for (const t of texts) seen.add(normalizeTopicText(t));

@@ -929,6 +929,19 @@ const COMBO_PASS_EDITS: readonly (readonly [string, string])[] = [
     'Empty is correct —\nthe sibling fact-only prompt still covers this fact.)',
     'Empty is correct:\nthe Fact already has its own topics.)',
   ],
+  // NAME THE FACT (ux2 F6, measured: 40 of 146 combination topics named no
+  // word of their own fact). The rule, and the shipped examples that broke it.
+  [
+    '## Count rule (hard requirement',
+    '## Name the Fact (hard requirement)\nEvery topic contains at least one word from the Fact itself: its place, role, team, thing or group, spelled as the Fact spells it. "Bhopal elder care" for "Parents live in Bhopal"; never "India remittance rules", which names no word of the Fact. A topic only a reader of the Other facts would connect to the Fact is dropped.\n\n## Count rule (hard requirement',
+  ],
+  ['"Bhopal AI elder-care apps", "India remittance rules for tech expats" (Fact-subject preserved)', '"Bhopal AI elder-care apps", "Bhopal elder care for tech families" (Fact-subject preserved)'],
+  ['"international schools Amsterdam"', '"Amsterdam expat international schools"'],
+  ['"Randstad international school options"', '"Randstad expat school options"'],
+  [
+    '["DeepMind Amsterdam recruitment", "UK-EU AI talent mobility", "Formula 1 AI research", "DeepMind racing simulation"]',
+    '["DeepMind Amsterdam recruitment", "DeepMind UK-EU engineer mobility", "DeepMind racing simulation"]',
+  ],
 ];
 
 export const COMBO_PASS_TOPIC_SYSTEM_PROMPT = COMBO_PASS_EDITS.reduce(
