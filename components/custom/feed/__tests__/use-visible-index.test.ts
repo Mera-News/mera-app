@@ -1,11 +1,25 @@
 // use-visible-index.test.ts — renderHook tests for
 // components/custom/feed/use-visible-index.ts
+//
+// ux2 B2 (owner): a card counts as SEEN only while its BOTTOM edge sits inside
+// the visible band [header bottom, window height minus the tab bar clearance],
+// continuously for DWELL_READ_SECONDS. The 75% pair now only moves the pinned
+// prefix anchor.
 
 const mockMarkSkipped = jest.fn();
+let mockTick: (() => void) | null = null;
 
 jest.mock('@/lib/stores/feed-order-store', () => ({
   useFeedOrderStore: {
     getState: jest.fn(() => ({ markSkipped: mockMarkSkipped })),
+  },
+}));
+jest.mock('@/lib/visibility-tick', () => ({
+  subscribeScrollTick: (fn: () => void) => {
+    mockTick = fn;
+    return () => {
+      mockTick = null;
+    };
   },
 }));
 
@@ -20,15 +34,54 @@ function token(id: string, isViewable: boolean): ViewToken {
   return { key: id, index: 0, item: { id }, isViewable };
 }
 
-type DwellCallback = (info: { changed: ViewToken[] }) => void;
+type PairCallback = (info: { changed: ViewToken[] }) => void;
+type Pair = {
+  viewabilityConfig: { itemVisiblePercentThreshold: number; minimumViewTime: number };
+  onViewableItemsChanged: PairCallback;
+};
 
-/** Pull the sole pair out with the narrow callback signature it actually has
- *  at runtime. */
+/** Pair 0: the pinned-prefix anchor (75%). */
 function getDwell(pairs: ReturnType<typeof useVisibleIndex>['viewabilityConfigCallbackPairs']) {
-  return pairs[0] as unknown as {
-    viewabilityConfig: { itemVisiblePercentThreshold: number; minimumViewTime: number };
-    onViewableItemsChanged: DwellCallback;
+  return pairs[0] as unknown as Pair;
+}
+/** Pair 1: which rows are on screen at all. */
+function getOnScreen(pairs: ReturnType<typeof useVisibleIndex>['viewabilityConfigCallbackPairs']) {
+  return pairs[1] as unknown as Pair;
+}
+
+/** Band: header bottom at 100, tab bar top at 700. */
+const BAND = { top: 100, bottom: 700 };
+
+function setupBand() {
+  const bandRef = { current: () => BAND };
+  const { result, unmount } = renderHook(() => useVisibleIndex(undefined, bandRef));
+  const onScreen = getOnScreen(result.current.viewabilityConfigCallbackPairs);
+  /** Where each row is in the window: y and height (measureInWindow). */
+  const geometry = new Map<string, { y: number; h: number }>();
+  const place = (id: string, y: number, h: number) => {
+    geometry.set(id, { y, h });
+    act(() => {
+      result.current.registerRow(id)({
+        measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => {
+          const g = geometry.get(id)!;
+          cb(0, g.y, 390, g.h);
+        },
+      } as never);
+    });
   };
+  const show = (id: string, on = true) =>
+    act(() => {
+      onScreen.onViewableItemsChanged({ changed: [token(id, on)] });
+    });
+  const tick = () =>
+    act(() => {
+      mockTick?.();
+    });
+  const wait = (ms: number) =>
+    act(() => {
+      jest.advanceTimersByTime(ms);
+    });
+  return { result, unmount, place, show, tick, wait, geometry };
 }
 
 describe('useVisibleIndex', () => {
@@ -43,305 +96,175 @@ describe('useVisibleIndex', () => {
   });
 
   describe('shape', () => {
-    it('returns exactly one viewabilityConfigCallbackPairs entry', () => {
+    it('returns two pairs: the 75% anchor and a low-threshold on-screen pair', () => {
       const { result } = renderHook(() => useVisibleIndex());
-      expect(result.current.viewabilityConfigCallbackPairs).toHaveLength(1);
-    });
-
-    it('the pair (skip dwell) uses 75% / 0ms', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-      expect(dwell.viewabilityConfig).toEqual({
-        itemVisiblePercentThreshold: 75,
-        minimumViewTime: 0,
-      });
+      const pairs = result.current.viewabilityConfigCallbackPairs;
+      expect(pairs).toHaveLength(2);
+      expect(getDwell(pairs).viewabilityConfig).toEqual({ itemVisiblePercentThreshold: 75, minimumViewTime: 0 });
+      expect(getOnScreen(pairs).viewabilityConfig.itemVisiblePercentThreshold).toBeLessThanOrEqual(1);
     });
 
     it('returns a referentially stable pairs array across re-renders', () => {
       const { result, rerender } = renderHook(() => useVisibleIndex());
       const first = result.current.viewabilityConfigCallbackPairs;
       rerender({});
-      const second = result.current.viewabilityConfigCallbackPairs;
-      expect(second).toBe(first);
+      expect(result.current.viewabilityConfigCallbackPairs).toBe(first);
     });
   });
 
-  describe('dwell', () => {
-    it('enter -> exit after LESS than SKIP_DWELL_MS produces no skip', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
-      const belowDwell = Math.floor(SKIP_DWELL_MS / 3); // clearly below the threshold
-
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0
-      });
-      act(() => {
-        jest.advanceTimersByTime(belowDwell);
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] }); // exit, dwell=belowDwell
-      });
-      act(() => {
-        jest.advanceTimersByTime(1200); // let the debounce elapse
-      });
-
-      expect(mockMarkSkipped).not.toHaveBeenCalled();
-    });
-
-    it('enter -> exit after MORE than SKIP_DWELL_MS, then the debounce elapses, marks skipped exactly once', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0
-      });
-      act(() => {
-        // Crosses SKIP_DWELL_MS while still on screen. This also fires (and
-        // no-ops) the debounce timer scheduled by the enter call itself.
-        jest.advanceTimersByTime(SKIP_DWELL_MS + 500);
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] }); // exit, dwell > SKIP_DWELL_MS
-      });
-      act(() => {
-        jest.advanceTimersByTime(1200); // debounce elapses
-      });
-
+  describe('seen = bottom edge in the band for the dwell', () => {
+    it('bottom edge in the band for the full dwell, then it leaves: marked seen once', () => {
+      const t = setupBand();
+      t.place('a', 200, 300); // bottom 500: in band
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS + 100);
+      t.geometry.set('a', { y: -400, h: 300 }); // scrolled up past the header
+      t.tick();
+      t.wait(1300);
       expect(mockMarkSkipped).toHaveBeenCalledTimes(1);
       expect(mockMarkSkipped).toHaveBeenCalledWith(['a']);
     });
 
-    it('a dwell of just UNDER SKIP_DWELL_MS produces no skip', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0
-      });
-      act(() => {
-        jest.advanceTimersByTime(SKIP_DWELL_MS - 1);
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] }); // exit, dwell = SKIP_DWELL_MS - 1
-      });
-      act(() => {
-        jest.advanceTimersByTime(1200); // let the debounce elapse
-      });
-
+    it('in the band for less than the dwell: not seen', () => {
+      const t = setupBand();
+      t.place('a', 200, 300);
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS - 200);
+      t.geometry.set('a', { y: -400, h: 300 });
+      t.tick();
+      t.wait(1300);
       expect(mockMarkSkipped).not.toHaveBeenCalled();
     });
 
-    it('a dwell of EXACTLY SKIP_DWELL_MS counts as dwelt (>= comparison)', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
+    it('a card whose bottom sits under the tab bar never counts, however long it is on screen', () => {
+      const t = setupBand();
+      t.place('a', 300, 450); // bottom 750: under the tab bar (band ends at 700)
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS * 4);
+      act(() => t.result.current.flushSkips());
+      expect(mockMarkSkipped).not.toHaveBeenCalled();
+    });
 
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0
-      });
-      act(() => {
-        jest.advanceTimersByTime(SKIP_DWELL_MS);
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] }); // exit, dwell = SKIP_DWELL_MS exactly
-      });
-      act(() => {
-        jest.advanceTimersByTime(1200); // let the debounce elapse
-      });
+    it('a tall card qualifies once its END scrolls into the band', () => {
+      const t = setupBand();
+      t.place('tall', 150, 900); // bottom 1050: below the band
+      t.show('tall');
+      t.tick();
+      t.wait(SKIP_DWELL_MS * 2);
+      act(() => t.result.current.flushSkips());
+      expect(mockMarkSkipped).not.toHaveBeenCalled();
+      t.geometry.set('tall', { y: -300, h: 900 }); // bottom 600: in band now
+      t.tick();
+      t.wait(SKIP_DWELL_MS + 100);
+      act(() => t.result.current.flushSkips());
+      expect(mockMarkSkipped).toHaveBeenCalledWith(['tall']);
+    });
 
+    it('two short stays in the band do not add up', () => {
+      const t = setupBand();
+      t.place('a', 200, 300);
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS / 2);
+      t.geometry.set('a', { y: 500, h: 300 }); // bottom 800: out
+      t.tick();
+      t.geometry.set('a', { y: 200, h: 300 }); // back in
+      t.tick();
+      t.wait(SKIP_DWELL_MS / 2 + 100);
+      t.geometry.set('a', { y: -400, h: 300 });
+      t.tick();
+      t.wait(1300);
+      expect(mockMarkSkipped).not.toHaveBeenCalled();
+    });
+
+    it('a row that scrolls off screen after earning its dwell is marked', () => {
+      const t = setupBand();
+      t.place('a', 200, 300);
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS + 100);
+      t.show('a', false); // the on-screen pair reports it gone
+      t.wait(1300);
+      expect(mockMarkSkipped).toHaveBeenCalledWith(['a']);
+    });
+
+    it('flushSkips() drains a row still in the band past its dwell', () => {
+      const t = setupBand();
+      t.place('a', 200, 300);
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS + 100);
+      act(() => t.result.current.flushSkips());
       expect(mockMarkSkipped).toHaveBeenCalledTimes(1);
       expect(mockMarkSkipped).toHaveBeenCalledWith(['a']);
     });
 
-    it('calls markSkipped ZERO times synchronously inside the callback', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] });
-      });
-      act(() => {
-        jest.advanceTimersByTime(SKIP_DWELL_MS + 100);
-      });
-      act(() => {
-        // Exit happens well past the dwell threshold — if the callback ever
-        // called markSkipped synchronously, it would show up immediately.
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] });
-      });
-
+    it('an unmeasured row (height 0) is not timed until it measures', () => {
+      const t = setupBand();
+      t.place('a', 0, 0);
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS * 2);
+      act(() => t.result.current.flushSkips());
       expect(mockMarkSkipped).not.toHaveBeenCalled();
     });
 
-    it('a duplicate enter event for an already-entered id does not restart its dwell clock', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
+    it('a list at rest: a first measure that never calls back is retried on the ladder, no scroll needed', () => {
+      const t = setupBand();
+      let calls = 0;
       act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0
+        t.result.current.registerRow('a')({
+          measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => {
+            calls += 1;
+            // Fabric: a fresh cell with no committed position never calls back.
+            if (calls === 1) return;
+            cb(0, 200, 390, 300);
+          },
+        } as never);
       });
-      act(() => {
-        jest.advanceTimersByTime(1000); // t=1000
-      });
-      act(() => {
-        // Duplicate enter — must NOT reset enterAt to t=1000.
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] });
-      });
-      act(() => {
-        // t = 1000 + (SKIP_DWELL_MS - 1000 + 300): elapsed since t=0 is
-        // SKIP_DWELL_MS + 300 (>= threshold), elapsed since the duplicate's
-        // t=1000 is only SKIP_DWELL_MS - 700 (< threshold).
-        jest.advanceTimersByTime(SKIP_DWELL_MS - 700);
-      });
-      act(() => {
-        result.current.flushSkips();
-      });
-
-      // If the duplicate enter had restarted the clock, dwell since t=1000
-      // would only be (SKIP_DWELL_MS - 700)ms (< SKIP_DWELL_MS) and this
-      // would not have fired.
+      t.show('a'); // no tick follows: the list is at rest
+      t.wait(500); // the ladder re-measures at 150 and 450 ms
+      expect(calls).toBeGreaterThanOrEqual(2);
+      t.wait(SKIP_DWELL_MS);
+      act(() => t.result.current.flushSkips());
       expect(mockMarkSkipped).toHaveBeenCalledWith(['a']);
     });
 
-    it('two short separate visits do not accumulate into a skip', () => {
+    it('75% visibility ALONE never marks a card seen (the anchor pair does not time dwell)', () => {
       const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
-      // Each visit dwells for a bit over half the threshold — individually
-      // well under SKIP_DWELL_MS, but their sum comfortably exceeds it, so a
-      // buggy cumulative-dwell implementation would still fire a skip.
-      const visitDwell = Math.floor(SKIP_DWELL_MS * 0.55);
-      expect(visitDwell * 2).toBeGreaterThan(SKIP_DWELL_MS);
-      expect(visitDwell).toBeLessThan(SKIP_DWELL_MS);
-
+      const anchor = getDwell(result.current.viewabilityConfigCallbackPairs);
+      act(() => anchor.onViewableItemsChanged({ changed: [token('a', true)] }));
       act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0
+        jest.advanceTimersByTime(SKIP_DWELL_MS * 3);
       });
-      act(() => {
-        jest.advanceTimersByTime(visitDwell); // first visit dwell so far
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] }); // exit, dwell=visitDwell
-      });
-      act(() => {
-        jest.advanceTimersByTime(100); // small gap between visits
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // re-enter
-      });
-      act(() => {
-        jest.advanceTimersByTime(visitDwell); // second visit dwell so far
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] }); // exit, dwell=visitDwell
-      });
-      act(() => {
-        jest.advanceTimersByTime(1200); // let any pending debounce elapse
-      });
-
+      act(() => anchor.onViewableItemsChanged({ changed: [token('a', false)] }));
+      act(() => result.current.flushSkips());
       expect(mockMarkSkipped).not.toHaveBeenCalled();
     });
 
-    it('several callback invocations inside one debounce window produce exactly ONE flush', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0, schedules the ONE timer
-      });
-      act(() => {
-        jest.advanceTimersByTime(300); // t=300
-      });
-      act(() => {
-        // A second invocation inside the same debounce window must not
-        // schedule a second timer (non-resetting debounce).
-        dwell.onViewableItemsChanged({ changed: [token('b', true)] });
-      });
-      act(() => {
-        jest.advanceTimersByTime(200); // t=500
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] }); // exit @ t=500, dwell=500 (no skip)
-      });
-      act(() => {
-        jest.advanceTimersByTime(1200); // the single debounce timer (scheduled @ t=0, fires @ t=1200) elapses
-      });
-
-      // Only one flush should ever have run in this window — assert via the
-      // total call count staying at (at most) one invocation, none of which
-      // had anything to report.
-      expect(mockMarkSkipped).not.toHaveBeenCalled();
-
-      act(() => {
-        jest.advanceTimersByTime(1200); // nothing new scheduled — no second flush
-      });
+    it('never writes the store synchronously inside a tick', () => {
+      const t = setupBand();
+      t.place('a', 200, 300);
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS + 100);
+      t.geometry.set('a', { y: -400, h: 300 });
+      t.tick();
       expect(mockMarkSkipped).not.toHaveBeenCalled();
     });
 
-    it('flushSkips() called explicitly flushes early; a subsequent timer fire is a no-op', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0
-      });
-      act(() => {
-        jest.advanceTimersByTime(SKIP_DWELL_MS + 500); // dwell exceeded, still on screen (debounce no-ops mid-window)
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] }); // exit, dwell > SKIP_DWELL_MS -> buffered
-      });
-
-      act(() => {
-        result.current.flushSkips(); // explicit early flush
-      });
-      expect(mockMarkSkipped).toHaveBeenCalledTimes(1);
-      expect(mockMarkSkipped).toHaveBeenCalledWith(['a']);
-
-      act(() => {
-        jest.advanceTimersByTime(5000); // any subsequent timer fire must be a no-op
-      });
-      expect(mockMarkSkipped).toHaveBeenCalledTimes(1);
-    });
-
-    it('flushSkips() drains an item still on screen but already past its dwell', () => {
-      const { result } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0, never exits
-      });
-      act(() => {
-        jest.advanceTimersByTime(SKIP_DWELL_MS + 100); // advance past dwell without an exit event
-      });
-      act(() => {
-        result.current.flushSkips();
-      });
-
-      expect(mockMarkSkipped).toHaveBeenCalledTimes(1);
-      expect(mockMarkSkipped).toHaveBeenCalledWith(['a']);
-    });
-
-    it('unmounting the hook flushes a non-empty buffer', () => {
-      const { result, unmount } = renderHook(() => useVisibleIndex());
-      const dwell = getDwell(result.current.viewabilityConfigCallbackPairs);
-
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', true)] }); // enter @ t=0
-      });
-      act(() => {
-        jest.advanceTimersByTime(SKIP_DWELL_MS + 500);
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('a', false)] }); // exit, buffered (not yet flushed)
-      });
-
-      expect(mockMarkSkipped).not.toHaveBeenCalled();
-
-      act(() => {
-        unmount();
-      });
-
-      expect(mockMarkSkipped).toHaveBeenCalledTimes(1);
+    it('unmounting flushes a non-empty buffer', () => {
+      const t = setupBand();
+      t.place('a', 200, 300);
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS + 100);
+      t.geometry.set('a', { y: -400, h: 300 });
+      t.tick();
+      act(() => t.unmount());
       expect(mockMarkSkipped).toHaveBeenCalledWith(['a']);
     });
   });
@@ -457,23 +380,6 @@ describe('useVisibleIndex', () => {
         dwell.onViewableItemsChanged({ changed: [tokenAt('feed-divider-caught-up', 2)] });
       });
       expect(result.current.deepestSeenIdRef.current).toBe('s1');
-    });
-
-    it('still records dwell normally while tracking (the two writes do not interfere)', () => {
-      const { dwell } = setup(['s0', 's1']);
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [tokenAt('s0', 0)] });
-      });
-      act(() => {
-        jest.advanceTimersByTime(SKIP_DWELL_MS + 100);
-      });
-      act(() => {
-        dwell.onViewableItemsChanged({ changed: [token('s0', false)] });
-      });
-      act(() => {
-        jest.advanceTimersByTime(2000);
-      });
-      expect(mockMarkSkipped).toHaveBeenCalledWith(['s0']);
     });
   });
 });

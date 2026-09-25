@@ -225,6 +225,7 @@ const FeedRow = React.memo(function FeedRow({
   onSaveToggled,
   feedbackHandlers,
   enterDelay,
+  registerRow,
 }: {
   item: FeedListItem;
   onPress: (suggestion: ForYouSuggestion) => void;
@@ -236,6 +237,9 @@ const FeedRow = React.memo(function FeedRow({
    *  transition at all — a row that was already here, or a reader who asked
    *  for less motion. */
   enterDelay: number | null;
+  /** `useVisibleIndex().registerRow`: the row's view, measured for the
+   *  bottom-edge seen rule. Stable per id. */
+  registerRow: (id: string) => (node: any) => void;
 }) {
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
   // ONE predicate decides both the read indicator and which block of the sort
@@ -253,6 +257,7 @@ const FeedRow = React.memo(function FeedRow({
     // The wrapper is UNCONDITIONAL and only `entering` varies, so the tree
     // shape never changes between renders of the same row.
     <Animated.View
+      ref={registerRow(item.id)}
       entering={
         enterDelay === null
           ? undefined
@@ -393,8 +398,17 @@ const FeedScreen: React.FC = () => {
   //    writes mid-scroll). `FeedRow` subscribes to the opened set per row for
   //    its own eye indicator, so the screen deliberately does NOT — that used
   //    to re-render the entire list on every markOpened. ──
-  const { viewabilityConfigCallbackPairs, flushSkips, deepestSeenIdRef, resetDeepestSeen } =
-    useVisibleIndex(renderedIdsRef);
+  // ux2 B2: a card is SEEN only while its bottom edge sits in this band (the
+  // header's bottom edge .. the window height minus the tab bar clearance).
+  // Read at tick time, so the collapsing header's live position counts.
+  const { height: windowHeight } = useWindowDimensions();
+  const seenBandRef = useRef(() => ({ top: 0, bottom: 0 }));
+  seenBandRef.current = () => ({
+    top: Math.max(insets.top, headerHeight * (1 - headerHidden.value)),
+    bottom: windowHeight - tabClearance,
+  });
+  const { viewabilityConfigCallbackPairs, flushSkips, deepestSeenIdRef, resetDeepestSeen, registerRow } =
+    useVisibleIndex(renderedIdsRef, seenBandRef);
 
   // ── Scroll-to-top FAB ── The list ref forwards to the underlying FlatList
   // (Animated.createAnimatedComponent), so scrollToOffset is available. The
@@ -852,9 +866,10 @@ const FeedScreen: React.FC = () => {
             ? Math.min(index, ARRIVAL_STAGGER_CAP) * ARRIVAL_STAGGER_MS
             : null
         }
+        registerRow={registerRow}
       />
     ),
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
