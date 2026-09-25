@@ -252,3 +252,21 @@ describe('ux2 batch 25 D5: the question shows once', () => {
     expect(c && c.kind === 'ask-choice-card' && c.question).toBe('Which Newcastle is home?');
   });
 });
+
+describe('ux2 batch 25 D6: a live search is narrated on the steps box', () => {
+  const pendingTurn: ConversationMessage[] = [
+    { id: 'u1', role: 'user', content: 'what is Porto Santo' },
+    { id: 'a1', role: 'assistant', content: '', toolCalls: [{ id: 't', name: 'load_skill', input: { id: 'conversation/question' }, status: 'done', result: {} }] },
+  ];
+  const liveRow = (waitPhase?: string) => {
+    const box = derive(pendingTurn, { turnActive: true, isStreaming: true, ...(waitPhase ? { waitPhase } : {}) } as never)
+      .find((i) => i.kind === 'agent-steps');
+    return box && box.kind === 'agent-steps' ? box.steps[box.steps.length - 1] : null;
+  };
+  it('the pending row reads the search line while the search runs', () => {
+    expect(liveRow('webSearch')).toMatchObject({ status: 'pending', labelKey: 'chatPhases.webSearch' });
+  });
+  it('and the ordinary working line otherwise', () => {
+    expect(liveRow('thinking')?.labelKey).toBe('agentSteps.working');
+  });
+});

@@ -31,6 +31,7 @@ import RequestUnblockModal from './RequestUnblockModal';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { deriveThreadItems } from './deriveThreadItems';
 import { registerChatTranscriptSource } from './chat-bug-report';
+import { useChatPhaseStore } from '@/lib/llm/chat-phase-store';
 import { decideTopicPlanTurn } from './topic-plan-turn';
 import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
 import { getAiAccess } from '@/lib/stores/subscription-store';
@@ -228,6 +229,9 @@ export default function ChatSessionView({
   // exist to prevent. Same signal the agent reads, so the three gates agree.
   const isOnDevice = useIsOnDeviceProcessing();
 
+  // The wait line's phase, for the steps box's live row (ux2 batch 25, D6).
+  const waitPhase = useChatPhaseStore((st) => (st.view.kind === 'phase' ? st.view.id : null));
+
   const items = useMemo(
     () =>
       deriveThreadItems({
@@ -243,8 +247,10 @@ export default function ChatSessionView({
         toolCallResults,
         turnActive,
         agentTerminal,
+        waitPhase,
       }),
     [
+      waitPhase,
       messages,
       history,
       introMessage,

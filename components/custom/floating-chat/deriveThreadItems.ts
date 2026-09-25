@@ -813,6 +813,7 @@ function buildTurnBoxes(
   stale: boolean,
   turnActive: boolean | undefined,
   agentTerminal: AgentTerminal | null,
+  waitPhase: string | null = null,
 ): Map<string, AgentStepsItem> {
   const turns: TurnAccum[] = [];
   let current: TurnAccum | null = null;
@@ -908,7 +909,10 @@ function buildTurnBoxes(
     const full: AgentStep[] = [
       legStartStep(turn.firstAssistantId ?? turn.anchorId, true),
       ...mergedSteps,
-      ...(active ? [continuingStep(turn.anchorId)] : []),
+      // The live row carries the wait line's phase when it is the web search
+      // (ux2 batch 25, D6): the wait line itself is suppressed while a box is
+      // live, so "Searching the web from your device…" could never show.
+      ...(active ? [continuingStep(turn.anchorId, waitPhase === 'webSearch' ? 'chatPhases.webSearch' : undefined)] : []),
     ];
 
     out.set(turn.anchorId, {
@@ -1304,6 +1308,8 @@ export function deriveThreadItems(opts: {
   turnActive?: boolean;
   /** Why the latest agent turn stopped, when the user needs telling. */
   agentTerminal?: AgentTerminal | null;
+  /** The wait line's current phase, when one is published. */
+  waitPhase?: string | null;
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
@@ -1402,6 +1408,7 @@ export function deriveThreadItems(opts: {
     false,
     opts.turnActive,
     opts.agentTerminal ?? null,
+    opts.waitPhase ?? null,
   );
   for (const persisted of sortedResume) {
     // Resumed CURRENT-conversation messages are live for this purpose: their
