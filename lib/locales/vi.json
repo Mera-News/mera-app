@@ -53,7 +53,8 @@
       "retryFailed": "Không thể kết nối đến máy chủ. Kiểm tra kết nối và thử lại.",
       "switchBody": "Chuyển tài khoản sẽ xóa vĩnh viễn toàn bộ dữ liệu của người dùng này trên thiết bị. Không thể hoàn tác.",
       "switchConfirm": "Có, xóa dữ liệu và chuyển tài khoản",
-      "switchCancel": "Hủy"
+      "switchCancel": "Hủy",
+      "subtitleWithDevice": "Chúng tôi không thể tải tài khoản của bạn lúc này. Hãy thử lại bằng email, đăng nhập không cần email hoặc đăng nhập bằng tài khoản khác."
     },
     "contentPolicy": "Chính sách nội dung",
     "faq": "Câu hỏi thường gặp",
@@ -83,7 +84,14 @@
     "sourceCode": "Mã nguồn",
     "website": "Trang web",
     "failedToSendBody": "Gửi mã OTP thất bại",
-    "signingYouIn": "Đang đăng nhập cho bạn…"
+    "signingYouIn": "Đang đăng nhập cho bạn…",
+    "signInWithoutEmail": "Đăng nhập không cần email",
+    "differentAccount": {
+      "title": "Chuyển sang tài khoản của điện thoại này?",
+      "body": "Đăng nhập không cần email sẽ mở tài khoản riêng của điện thoại này, không phải tài khoản bạn đang dùng. Mọi dữ liệu đã lưu trên điện thoại này cho tài khoản đó sẽ bị xóa. Không thể hoàn tác. Tài khoản còn lại của bạn và gói của tài khoản đó vẫn an toàn, và bạn có thể đăng nhập lại vào tài khoản đó sau.",
+      "continue": "Tiếp tục không cần email",
+      "useEmail": "Quay lại"
+    }
   },
   "account": {
     "pendingTitle": "Tài khoản đang chờ phê duyệt",

@@ -114,6 +114,29 @@ describe('wipeAllLocalUserData — the complete list', () => {
         expect(mockClearAllStores).toHaveBeenCalled();
     });
 
+    // An ACCOUNT SWITCH (clearPreviousUserData): the session keys belong to the
+    // account that just signed in, so they are the ONLY thing spared. Every
+    // other secret and identity of the previous account still goes.
+    it('keepSession spares only the incoming session and still erases everything else', async () => {
+        await wipeAllLocalUserData({ keepSession: true });
+
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_cookie');
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_session_data');
+        for (const key of [
+            'mera_pin_record',
+            'mera_pin_attempts',
+            'mera_app_lock_enabled',
+            'mera_backup_key',
+            'async_pipeline_privkey',
+            'async_inference_pending_job_privkey',
+        ]) {
+            expect(mockDeleteItemAsync).toHaveBeenCalledWith(key);
+        }
+        expect(mockLogoutRevenueCat).toHaveBeenCalled();
+        expect(mockPinSetState).toHaveBeenCalled();
+        expect(mockClearAllStores).toHaveBeenCalled();
+    });
+
     it('wipes the keychain BEFORE the database, so an interrupted wipe stays detectable', async () => {
         await wipeAllLocalUserData();
 

@@ -9,7 +9,7 @@ import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/t
 import { VStack } from '@/components/ui/vstack';
 import { clearAuthStorage, sendOTP } from '@/lib/auth-client';
 import logger from '@/lib/logger';
-import { clearAllStores } from '@/lib/stores';
+import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +25,12 @@ interface PreviousUserViewProps {
     onUseDifferentUser: () => void;
     /** Called with the email after an OTP is successfully dispatched. */
     onOTPSent: (email: string) => void;
+    /**
+     * Device sign-in, the phone's own account. Absent when the device cannot
+     * attest, and on Forgot PIN, where holding the phone must not be enough to
+     * reset the lock. The parent routes it through the consent step.
+     */
+    onSignInWithoutEmail?: () => void;
 }
 
 /**
@@ -39,6 +45,7 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
     userId,
     onUseDifferentUser,
     onOTPSent,
+    onSignInWithoutEmail,
 }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
@@ -85,8 +92,11 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
         setShowSwitchConfirm(false);
         setIsSwitching(true);
         try {
+            // The logout button's sequence: the FULL wipe, not clearAllStores()
+            // alone, which left this account's PIN lock, backup key, backup
+            // files and E2EE keys for whoever signs in next.
             await clearAuthStorage();
-            await clearAllStores();
+            await wipeAllLocalUserData();
             onUseDifferentUser();
         } catch (err) {
             logger.captureException(err, {
@@ -111,7 +121,14 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
                         {t('auth.previousUser.title')}
                     </Text>
                     <Text className="text-gray-300 text-base text-center">
-                        {t('auth.previousUser.subtitle')}
+                        {/* Names "sign in without email" only when that
+                            button is actually on screen: it is hidden on
+                            Forgot PIN and on devices that cannot attest. */}
+                        {t(
+                            onSignInWithoutEmail
+                                ? 'auth.previousUser.subtitleWithDevice'
+                                : 'auth.previousUser.subtitle',
+                        )}
                     </Text>
 
                     <Box className="items-center">
@@ -147,6 +164,18 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
                                 </ButtonText>
                             )}
                         </Button>
+                        {onSignInWithoutEmail ? (
+                            <Button
+                                testID="previous-user-device-sign-in"
+                                variant="outline"
+                                action="secondary"
+                                onPress={onSignInWithoutEmail}
+                                disabled={isBusy}
+                                className="w-full"
+                            >
+                                <ButtonText>{t('auth.signInWithoutEmail')}</ButtonText>
+                            </Button>
+                        ) : null}
                         <Button
                             variant="outline"
                             action="secondary"

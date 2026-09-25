@@ -20,8 +20,10 @@ jest.mock('@/lib/database/services/setting-service', () => ({
 }));
 
 let mockBlocked = false;
+let mockHeld: string | null = null;
 jest.mock('@/lib/security/identity-gate', () => ({
     isIdentitySwitchBlocked: () => mockBlocked,
+    isAccountSwitchHeld: (id: string | null | undefined) => !!id && id === mockHeld,
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -38,6 +40,7 @@ beforeEach(() => {
     __resetIdentitySwitchWatcherForTests();
     mockSession = null;
     mockBlocked = false;
+    mockHeld = null;
     mockGetSetting.mockResolvedValue(null);
 });
 
@@ -155,3 +158,29 @@ describe('IdentitySwitchWatcher', () => {
 });
 
 export {};
+
+// "Sign in without email" opened account B while the device holds A, and
+// AuthScreen is still asking whether to switch. /login is pushed over this
+// layout, so the watcher sees B; handing it to the gate would wipe A unasked.
+describe('IdentitySwitchWatcher — held account switch', () => {
+    it('does nothing for the HELD account', async () => {
+        mockSession = { user: { id: 'B' } };
+        mockHeld = 'B';
+        mockGetSetting.mockResolvedValue('A');
+
+        render(<IdentitySwitchWatcher />);
+        await settle();
+
+        expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('still fires for any OTHER mismatched account', async () => {
+        mockSession = { user: { id: 'C' } };
+        mockHeld = 'B';
+        mockGetSetting.mockResolvedValue('A');
+
+        render(<IdentitySwitchWatcher />);
+
+        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in'));
+    });
+});

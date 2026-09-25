@@ -53,7 +53,8 @@
       "retryFailed": "No se pudo conectar al servidor. Verifica tu conexión e inténtalo de nuevo.",
       "switchBody": "Cambiar de usuario eliminará permanentemente todos los datos de este usuario en este dispositivo. No se puede deshacer.",
       "switchConfirm": "Sí, borrar datos y cambiar usuario",
-      "switchCancel": "Cancelar"
+      "switchCancel": "Cancelar",
+      "subtitleWithDevice": "No pudimos cargar tu cuenta en este momento. Inténtalo de nuevo con tu correo, inicia sesión sin correo o inicia sesión con un usuario diferente."
     },
     "contentPolicy": "Política de contenido",
     "faq": "Preguntas frecuentes",
@@ -83,7 +84,14 @@
     "sourceCode": "Código fuente",
     "website": "Sitio web",
     "failedToSendBody": "No se pudo enviar el código OTP",
-    "signingYouIn": "Iniciando sesión…"
+    "signingYouIn": "Iniciando sesión…",
+    "signInWithoutEmail": "Iniciar sesión sin correo",
+    "differentAccount": {
+      "title": "¿Cambiar a la cuenta de este teléfono?",
+      "body": "Al iniciar sesión sin correo se abre la cuenta propia de este teléfono, no la que estabas usando. Se borrará todo lo guardado en este teléfono para esa cuenta. No se puede deshacer. Tu otra cuenta y su plan siguen a salvo, y puedes volver a iniciar sesión en ella más tarde.",
+      "continue": "Continuar sin correo",
+      "useEmail": "Volver"
+    }
   },
   "account": {
     "pendingTitle": "Cuenta pendiente de aprobación",

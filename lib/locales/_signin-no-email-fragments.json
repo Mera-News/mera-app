@@ -1,0 +1,283 @@
+{
+  "_comment": "Sign in without email: the phone's own account, offered on the previous-user and email views, plus the confirm shown when the phone opens a different account than the one on this device. previousUser.subtitleWithDevice is the Welcome back subtitle shown only WITH that button (the plain subtitle stays as it was, for Forgot PIN and devices that cannot attest). 'You can't undo this' and the sign-in/email terms are harvested from each locale's existing auth.previousUser.switchBody and auth.alreadyHaveAccount. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "en": {
+    "auth": {
+      "signInWithoutEmail": "Sign in without email",
+      "differentAccount": {
+        "title": "Switch to this phone's account?",
+        "body": "Signing in without email opens this phone's own account, not the one you were using. Everything saved on this phone for that account will be erased. You can't undo this. Your other account and its plan stay safe, and you can sign in to it again later.",
+        "continue": "Continue without email",
+        "useEmail": "Go back"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "We couldn't load your account just now. Try again with email, sign in without email, or sign in as a different user."
+      }
+    }
+  },
+  "ar": {
+    "auth": {
+      "signInWithoutEmail": "تسجيل الدخول بدون بريد إلكتروني",
+      "differentAccount": {
+        "title": "هل تريد التبديل إلى حساب هذا الهاتف؟",
+        "body": "يؤدي تسجيل الدخول بدون بريد إلكتروني إلى فتح الحساب الخاص بهذا الهاتف، وليس الحساب الذي كنت تستخدمه. سيتم حذف كل ما هو محفوظ على هذا الهاتف لذلك الحساب. لا يمكنك التراجع عن هذا. يبقى حسابك الآخر وخطته في أمان، ويمكنك تسجيل الدخول إليه مرة أخرى لاحقًا.",
+        "continue": "المتابعة بدون بريد إلكتروني",
+        "useEmail": "رجوع"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "تعذّر تحميل حسابك في الوقت الحالي. حاول مرة أخرى بالبريد الإلكتروني، أو سجّل الدخول بدون بريد إلكتروني، أو سجّل الدخول بحساب مختلف."
+      }
+    }
+  },
+  "de": {
+    "auth": {
+      "signInWithoutEmail": "Ohne E-Mail anmelden",
+      "differentAccount": {
+        "title": "Zum Konto dieses Telefons wechseln?",
+        "body": "Wenn Sie sich ohne E-Mail anmelden, wird das eigene Konto dieses Telefons geöffnet, nicht das Konto, das Sie bisher verwendet haben. Alles, was für dieses Konto auf diesem Telefon gespeichert ist, wird gelöscht. Das lässt sich nicht rückgängig machen. Ihr anderes Konto und sein Tarif bleiben erhalten, und Sie können sich später wieder dort anmelden.",
+        "continue": "Ohne E-Mail fortfahren",
+        "useEmail": "Zurück"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Ihr Konto konnte gerade nicht geladen werden. Versuchen Sie es erneut per E-Mail, melden Sie sich ohne E-Mail an oder melden Sie sich als anderer Benutzer an."
+      }
+    }
+  },
+  "es": {
+    "auth": {
+      "signInWithoutEmail": "Iniciar sesión sin correo",
+      "differentAccount": {
+        "title": "¿Cambiar a la cuenta de este teléfono?",
+        "body": "Al iniciar sesión sin correo se abre la cuenta propia de este teléfono, no la que estabas usando. Se borrará todo lo guardado en este teléfono para esa cuenta. No se puede deshacer. Tu otra cuenta y su plan siguen a salvo, y puedes volver a iniciar sesión en ella más tarde.",
+        "continue": "Continuar sin correo",
+        "useEmail": "Volver"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "No pudimos cargar tu cuenta en este momento. Inténtalo de nuevo con tu correo, inicia sesión sin correo o inicia sesión con un usuario diferente."
+      }
+    }
+  },
+  "fr": {
+    "auth": {
+      "signInWithoutEmail": "Se connecter sans e-mail",
+      "differentAccount": {
+        "title": "Passer au compte de ce téléphone ?",
+        "body": "Se connecter sans e-mail ouvre le compte propre à ce téléphone, et non celui que vous utilisiez. Tout ce qui est enregistré sur ce téléphone pour ce compte sera effacé. Cette action est irréversible. Votre autre compte et son abonnement restent intacts, et vous pourrez vous y reconnecter plus tard.",
+        "continue": "Continuer sans e-mail",
+        "useEmail": "Retour"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Nous n'avons pas pu charger votre compte pour le moment. Réessayez par e-mail, connectez-vous sans e-mail, ou connectez-vous avec un autre utilisateur."
+      }
+    }
+  },
+  "hi": {
+    "auth": {
+      "signInWithoutEmail": "ईमेल के बिना साइन इन करें",
+      "differentAccount": {
+        "title": "इस फ़ोन के खाते पर जाएं?",
+        "body": "ईमेल के बिना साइन इन करने पर इस फ़ोन का अपना खाता खुलता है, वह खाता नहीं जिसका आप उपयोग कर रहे थे। इस फ़ोन पर उस खाते के लिए सहेजा गया सब कुछ मिटा दिया जाएगा। इसे पूर्ववत नहीं किया जा सकता। आपका दूसरा खाता और उसका प्लान सुरक्षित रहते हैं, और आप बाद में उसमें फिर से साइन इन कर सकते हैं।",
+        "continue": "ईमेल के बिना जारी रखें",
+        "useEmail": "वापस जाएं"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "अभी आपका खाता लोड नहीं हो सका। ईमेल से फिर से प्रयास करें, ईमेल के बिना साइन इन करें, या किसी अन्य उपयोगकर्ता के रूप में साइन इन करें।"
+      }
+    }
+  },
+  "id": {
+    "auth": {
+      "signInWithoutEmail": "Masuk tanpa email",
+      "differentAccount": {
+        "title": "Beralih ke akun ponsel ini?",
+        "body": "Masuk tanpa email akan membuka akun milik ponsel ini, bukan akun yang sedang Anda gunakan. Semua yang tersimpan di ponsel ini untuk akun tersebut akan dihapus. Tindakan ini tidak dapat dibatalkan. Akun Anda yang lain dan paketnya tetap aman, dan Anda dapat masuk kembali ke akun itu nanti.",
+        "continue": "Lanjutkan tanpa email",
+        "useEmail": "Kembali"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Kami tidak dapat memuat akun Anda saat ini. Coba lagi dengan email, masuk tanpa email, atau masuk sebagai pengguna lain."
+      }
+    }
+  },
+  "it": {
+    "auth": {
+      "signInWithoutEmail": "Accedi senza email",
+      "differentAccount": {
+        "title": "Passare all'account di questo telefono?",
+        "body": "Accedendo senza email si apre l'account di questo telefono, non quello che stavi usando. Tutto ciò che è salvato su questo telefono per quell'account verrà cancellato. Non si può annullare. L'altro account e il suo piano restano al sicuro, e potrai accedervi di nuovo più tardi.",
+        "continue": "Continua senza email",
+        "useEmail": "Indietro"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Non è stato possibile caricare il tuo account al momento. Riprova con l'email, accedi senza email o accedi come un altro utente."
+      }
+    }
+  },
+  "ja": {
+    "auth": {
+      "signInWithoutEmail": "メールなしでログイン",
+      "differentAccount": {
+        "title": "この端末のアカウントに切り替えますか？",
+        "body": "メールなしでログインすると、これまで使っていたアカウントではなく、この端末専用のアカウントが開きます。この端末に保存されている、そのアカウントのデータはすべて削除されます。この操作は元に戻せません。もう一方のアカウントとそのプランはそのまま残り、後でもう一度ログインできます。",
+        "continue": "メールなしで続行",
+        "useEmail": "戻る"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "現在アカウントを読み込めませんでした。メールで再試行するか、メールなしでログインするか、別のユーザーとしてサインインしてください。"
+      }
+    }
+  },
+  "ko": {
+    "auth": {
+      "signInWithoutEmail": "이메일 없이 로그인",
+      "differentAccount": {
+        "title": "이 휴대폰의 계정으로 전환할까요?",
+        "body": "이메일 없이 로그인하면 사용하던 계정이 아니라 이 휴대폰의 계정이 열립니다. 이 휴대폰에 저장된 해당 계정의 모든 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다. 다른 계정과 그 요금제는 안전하게 유지되며, 나중에 다시 로그인할 수 있습니다.",
+        "continue": "이메일 없이 계속",
+        "useEmail": "돌아가기"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "지금은 계정을 불러올 수 없습니다. 이메일로 다시 시도하거나, 이메일 없이 로그인하거나, 다른 사용자로 로그인해 주세요."
+      }
+    }
+  },
+  "nl": {
+    "auth": {
+      "signInWithoutEmail": "Inloggen zonder e-mail",
+      "differentAccount": {
+        "title": "Overschakelen naar het account van deze telefoon?",
+        "body": "Als je inlogt zonder e-mail, wordt het eigen account van deze telefoon geopend, niet het account dat je gebruikte. Alles wat op deze telefoon voor dat account is opgeslagen, wordt gewist. Dit kan niet ongedaan worden gemaakt. Je andere account en het abonnement daarvan blijven veilig, en je kunt er later weer op inloggen.",
+        "continue": "Doorgaan zonder e-mail",
+        "useEmail": "Terug"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "We konden je account niet laden. Probeer het opnieuw met e-mail, log in zonder e-mail of log in als een andere gebruiker."
+      }
+    }
+  },
+  "pl": {
+    "auth": {
+      "signInWithoutEmail": "Zaloguj się bez e-maila",
+      "differentAccount": {
+        "title": "Przełączyć na konto tego telefonu?",
+        "body": "Logowanie bez e-maila otwiera własne konto tego telefonu, a nie dotychczasowe konto. Wszystko, co zapisano na tym telefonie dla tamtego konta, zostanie usunięte. Nie można tego cofnąć. Twoje drugie konto i jego plan pozostają bezpieczne, a później możesz się na nie ponownie zalogować.",
+        "continue": "Kontynuuj bez e-maila",
+        "useEmail": "Wróć"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Nie udało się teraz załadować Twojego konta. Spróbuj ponownie przez e-mail, zaloguj się bez e-maila lub zaloguj się jako inny użytkownik."
+      }
+    }
+  },
+  "pt-BR": {
+    "auth": {
+      "signInWithoutEmail": "Entrar sem e-mail",
+      "differentAccount": {
+        "title": "Mudar para a conta deste celular?",
+        "body": "Ao entrar sem e-mail, você abre a conta própria deste celular, não a que estava usando. Tudo o que está salvo neste celular para aquela conta será apagado. Isso não pode ser desfeito. Sua outra conta e o plano dela continuam seguros, e você pode entrar nela de novo depois.",
+        "continue": "Continuar sem e-mail",
+        "useEmail": "Voltar"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Não conseguimos carregar sua conta agora. Tente novamente com e-mail, entre sem e-mail ou entre com outro usuário."
+      }
+    }
+  },
+  "ru": {
+    "auth": {
+      "signInWithoutEmail": "Войти без электронной почты",
+      "differentAccount": {
+        "title": "Перейти на учётную запись этого телефона?",
+        "body": "При входе без электронной почты откроется собственная учётная запись этого телефона, а не та, которой вы пользовались. Всё, что сохранено на этом телефоне для той учётной записи, будет удалено. Это нельзя отменить. Ваша другая учётная запись и её тариф останутся в сохранности, и позже вы сможете снова в неё войти.",
+        "continue": "Продолжить без электронной почты",
+        "useEmail": "Назад"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Не удалось загрузить вашу учётную запись. Попробуйте ещё раз через электронную почту, войдите без электронной почты или войдите как другой пользователь."
+      }
+    }
+  },
+  "th": {
+    "auth": {
+      "signInWithoutEmail": "ลงชื่อเข้าใช้โดยไม่ใช้อีเมล",
+      "differentAccount": {
+        "title": "เปลี่ยนไปใช้บัญชีของโทรศัพท์เครื่องนี้ไหม",
+        "body": "การลงชื่อเข้าใช้โดยไม่ใช้อีเมลจะเปิดบัญชีของโทรศัพท์เครื่องนี้เอง ไม่ใช่บัญชีที่คุณใช้อยู่ ข้อมูลทั้งหมดที่บันทึกไว้ในโทรศัพท์เครื่องนี้สำหรับบัญชีนั้นจะถูกลบ การดำเนินการนี้ยกเลิกไม่ได้ บัญชีอื่นของคุณและแพ็กเกจของบัญชีนั้นยังคงปลอดภัย และคุณสามารถลงชื่อเข้าใช้บัญชีนั้นอีกครั้งได้ในภายหลัง",
+        "continue": "ดำเนินการต่อโดยไม่ใช้อีเมล",
+        "useEmail": "ย้อนกลับ"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "เราไม่สามารถโหลดบัญชีของคุณได้ในขณะนี้ ลองใหม่อีกครั้งด้วยอีเมล ลงชื่อเข้าใช้โดยไม่ใช้อีเมล หรือเข้าสู่ระบบด้วยบัญชีอื่น"
+      }
+    }
+  },
+  "tr": {
+    "auth": {
+      "signInWithoutEmail": "E-posta olmadan giriş yap",
+      "differentAccount": {
+        "title": "Bu telefonun hesabına geçilsin mi?",
+        "body": "E-posta olmadan giriş yapmak, kullandığın hesabı değil, bu telefonun kendi hesabını açar. Bu telefonda o hesap için kayıtlı her şey silinir. Bu geri alınamaz. Diğer hesabın ve planı güvende kalır, daha sonra o hesaba yeniden giriş yapabilirsin.",
+        "continue": "E-posta olmadan devam et",
+        "useEmail": "Geri dön"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Hesabın şu an yüklenemedi. E-postayla tekrar deneyebilir, e-posta olmadan giriş yapabilir ya da farklı bir kullanıcıyla giriş yapabilirsin."
+      }
+    }
+  },
+  "uk": {
+    "auth": {
+      "signInWithoutEmail": "Увійти без електронної пошти",
+      "differentAccount": {
+        "title": "Перейти на обліковий запис цього телефона?",
+        "body": "Вхід без електронної пошти відкриває власний обліковий запис цього телефона, а не той, яким ви користувалися. Усе, що збережено на цьому телефоні для того облікового запису, буде видалено. Це не можна скасувати. Ваш інший обліковий запис і його тариф залишаються в безпеці, і згодом ви зможете знову в нього увійти.",
+        "continue": "Продовжити без електронної пошти",
+        "useEmail": "Назад"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Наразі не вдалося завантажити ваш обліковий запис. Спробуйте ще раз через електронну пошту, увійдіть без електронної пошти або увійдіть як інший користувач."
+      }
+    }
+  },
+  "vi": {
+    "auth": {
+      "signInWithoutEmail": "Đăng nhập không cần email",
+      "differentAccount": {
+        "title": "Chuyển sang tài khoản của điện thoại này?",
+        "body": "Đăng nhập không cần email sẽ mở tài khoản riêng của điện thoại này, không phải tài khoản bạn đang dùng. Mọi dữ liệu đã lưu trên điện thoại này cho tài khoản đó sẽ bị xóa. Không thể hoàn tác. Tài khoản còn lại của bạn và gói của tài khoản đó vẫn an toàn, và bạn có thể đăng nhập lại vào tài khoản đó sau.",
+        "continue": "Tiếp tục không cần email",
+        "useEmail": "Quay lại"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "Chúng tôi không thể tải tài khoản của bạn lúc này. Hãy thử lại bằng email, đăng nhập không cần email hoặc đăng nhập bằng tài khoản khác."
+      }
+    }
+  },
+  "zh-CN": {
+    "auth": {
+      "signInWithoutEmail": "不使用电子邮件登录",
+      "differentAccount": {
+        "title": "要切换到这部手机的账户吗？",
+        "body": "不使用电子邮件登录将打开这部手机自己的账户，而不是您之前使用的账户。此手机上为该账户保存的所有内容都将被删除。此操作无法撤消。您的另一个账户及其套餐仍然安全，您之后可以再次登录该账户。",
+        "continue": "不使用电子邮件继续",
+        "useEmail": "返回"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "我们暂时无法加载您的账户，请使用电子邮件重试、不使用电子邮件登录，或使用其他用户登录。"
+      }
+    }
+  },
+  "zh-TW": {
+    "auth": {
+      "signInWithoutEmail": "不使用電子郵件登入",
+      "differentAccount": {
+        "title": "要切換到這支手機的帳號嗎？",
+        "body": "不使用電子郵件登入會開啟這支手機自己的帳號，而不是您先前使用的帳號。此手機上為該帳號儲存的所有內容都將被刪除。此操作無法復原。您的另一個帳號及其方案仍然安全，您之後可以再次登入該帳號。",
+        "continue": "不使用電子郵件繼續",
+        "useEmail": "返回"
+      },
+      "previousUser": {
+        "subtitleWithDevice": "我們暫時無法載入您的帳號。請使用電子郵件再試一次、不使用電子郵件登入，或以其他使用者身份登入。"
+      }
+    }
+  }
+}

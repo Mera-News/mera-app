@@ -3,6 +3,7 @@ import { FullScreenErrorFallback } from "@/components/custom/ErrorFallback";
 import AuthScreen from "@/components/custom/auth/AuthScreen";
 import { authClient } from "@/lib/auth-client";
 import { getSetting } from "@/lib/database/services/setting-service";
+import { isAccountSwitchHeld } from "@/lib/security/identity-gate";
 import { clearPin } from "@/lib/security/pin-service";
 import { usePinStore } from "@/lib/stores/pin-store";
 import logger from "@/lib/logger";
@@ -41,6 +42,7 @@ export default function LoginScreen() {
         if (suppressSessionShortcut && !session) setSuppressSessionShortcut(false);
     }, [session, suppressSessionShortcut]);
 
+
     // Routed through the logger (debug is __DEV__-gated + Sentry-aware) so we
     // don't leak session details to a raw console in any build.
     logger.debug('[Login] useSession', { hasSession: !!session, isPending, reauthMode });
@@ -62,7 +64,17 @@ export default function LoginScreen() {
     // /logged-in resolves all three and then routes: feed when facts exist,
     // paywall / free-tier / onboarding otherwise. There is no case where jumping
     // past that is right, because this route cannot know which of them applies.
-    if (session && !isPending && !reauthMode && !suppressSessionShortcut) {
+    if (
+        session &&
+        !isPending &&
+        !reauthMode &&
+        !suppressSessionShortcut &&
+        // "Sign in without email" opened a DIFFERENT account and AuthScreen is
+        // asking whether to switch. Shortcutting on that session would route to
+        // /logged-in, whose gate wipes this device's account before the user
+        // answered. Continue navigates by itself. See holdAccountSwitch.
+        !isAccountSwitchHeld(session.user?.id)
+    ) {
         logger.debug('[Login] Session found, redirecting to /logged-in');
         return <Redirect href="/logged-in" />;
     }
@@ -122,6 +134,12 @@ export default function LoginScreen() {
         <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
             <AuthScreen
                 onLoginSuccess={reauthMode ? (userId) => { void handleReauthSuccess(userId); } : undefined}
+                // Forgot PIN never offers "Sign in without email": device
+                // sign-in proves only that someone holds the phone, which is
+                // who the PIN guards against, and a same-account resume here
+                // goes straight to clearPin() + /pin-setup. The PARAM is the
+                // guard, never usePinStore.lockEnabled (see above).
+                allowDeviceSignIn={reauth !== 'pin'}
             />
         </ErrorBoundary>
     );

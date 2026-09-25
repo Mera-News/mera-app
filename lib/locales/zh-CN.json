@@ -53,7 +53,8 @@
       "retryFailed": "无法连接服务器，请检查网络后重试。",
       "switchBody": "切换用户将永久删除此设备上该用户的所有数据。此操作无法撤消。",
       "switchConfirm": "是的，清除数据并切换用户",
-      "switchCancel": "取消"
+      "switchCancel": "取消",
+      "subtitleWithDevice": "我们暂时无法加载您的账户，请使用电子邮件重试、不使用电子邮件登录，或使用其他用户登录。"
     },
     "contentPolicy": "内容政策",
     "faq": "常见问题",
@@ -83,7 +84,14 @@
     "sourceCode": "源代码",
     "website": "网站",
     "failedToSendBody": "OTP 发送失败",
-    "signingYouIn": "正在登录…"
+    "signingYouIn": "正在登录…",
+    "signInWithoutEmail": "不使用电子邮件登录",
+    "differentAccount": {
+      "title": "要切换到这部手机的账户吗？",
+      "body": "不使用电子邮件登录将打开这部手机自己的账户，而不是您之前使用的账户。此手机上为该账户保存的所有内容都将被删除。此操作无法撤消。您的另一个账户及其套餐仍然安全，您之后可以再次登录该账户。",
+      "continue": "不使用电子邮件继续",
+      "useEmail": "返回"
+    }
   },
   "account": {
     "pendingTitle": "账户待审核",

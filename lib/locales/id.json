@@ -53,7 +53,8 @@
       "retryFailed": "Tidak dapat terhubung ke server. Periksa koneksi Anda dan coba lagi.",
       "switchBody": "Mengganti pengguna akan menghapus semua data pengguna ini di perangkat ini secara permanen. Tindakan ini tidak dapat dibatalkan.",
       "switchConfirm": "Ya, hapus data dan ganti pengguna",
-      "switchCancel": "Batal"
+      "switchCancel": "Batal",
+      "subtitleWithDevice": "Kami tidak dapat memuat akun Anda saat ini. Coba lagi dengan email, masuk tanpa email, atau masuk sebagai pengguna lain."
     },
     "contentPolicy": "Kebijakan Konten",
     "faq": "FAQ",
@@ -83,7 +84,14 @@
     "sourceCode": "Kode sumber",
     "website": "Situs web",
     "failedToSendBody": "Gagal mengirim kode OTP",
-    "signingYouIn": "Sedang masuk…"
+    "signingYouIn": "Sedang masuk…",
+    "signInWithoutEmail": "Masuk tanpa email",
+    "differentAccount": {
+      "title": "Beralih ke akun ponsel ini?",
+      "body": "Masuk tanpa email akan membuka akun milik ponsel ini, bukan akun yang sedang Anda gunakan. Semua yang tersimpan di ponsel ini untuk akun tersebut akan dihapus. Tindakan ini tidak dapat dibatalkan. Akun Anda yang lain dan paketnya tetap aman, dan Anda dapat masuk kembali ke akun itu nanti.",
+      "continue": "Lanjutkan tanpa email",
+      "useEmail": "Kembali"
+    }
   },
   "account": {
     "pendingTitle": "Akun Menunggu Persetujuan",

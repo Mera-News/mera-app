@@ -53,7 +53,8 @@
       "retryFailed": "Não foi possível alcançar o servidor. Verifique sua conexão e tente novamente.",
       "switchBody": "Trocar de usuário irá excluir permanentemente todos os dados deste usuário neste dispositivo. Isso não pode ser desfeito.",
       "switchConfirm": "Sim, limpar dados e trocar de usuário",
-      "switchCancel": "Cancelar"
+      "switchCancel": "Cancelar",
+      "subtitleWithDevice": "Não conseguimos carregar sua conta agora. Tente novamente com e-mail, entre sem e-mail ou entre com outro usuário."
     },
     "contentPolicy": "Política de conteúdo",
     "faq": "Perguntas frequentes",
@@ -83,7 +84,14 @@
     "sourceCode": "Código-fonte",
     "website": "Site",
     "failedToSendBody": "Falha ao enviar o código OTP",
-    "signingYouIn": "Fazendo login…"
+    "signingYouIn": "Fazendo login…",
+    "signInWithoutEmail": "Entrar sem e-mail",
+    "differentAccount": {
+      "title": "Mudar para a conta deste celular?",
+      "body": "Ao entrar sem e-mail, você abre a conta própria deste celular, não a que estava usando. Tudo o que está salvo neste celular para aquela conta será apagado. Isso não pode ser desfeito. Sua outra conta e o plano dela continuam seguros, e você pode entrar nela de novo depois.",
+      "continue": "Continuar sem e-mail",
+      "useEmail": "Voltar"
+    }
   },
   "account": {
     "pendingTitle": "Conta Pendente de Aprovação",

@@ -31,11 +31,14 @@ import {
     clearPendingAuthUserId,
     effectiveSessionUserId,
     hasIdentityFault,
+    holdAccountSwitch,
+    isAccountSwitchHeld,
     isIdentitySwitchBlocked,
     isOwnershipFault,
     readPendingAuthUserId,
     recordAuthenticatedUser,
     recordOwnershipFault,
+    releaseAccountSwitch,
     resolveIdentity,
     setIdentitySwitchBlocked,
 } from '../identity-gate';
@@ -432,5 +435,48 @@ describe('hasIdentityFault / clearIdentityFault', () => {
     it('deletes the persisted marker', async () => {
         await clearIdentityFault();
         expect(mockDeleteSetting).toHaveBeenCalledWith(IDENTITY_FAULT_KEY);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Held account switch: "Sign in without email" opened a DIFFERENT account and
+// the user has not answered "switch?". Every gate must read that session as
+// unresolved, or it wipes this device's account unasked (found on the staging
+// simulator: /login is pushed over a mounted /logged-in tree).
+// ---------------------------------------------------------------------------
+
+describe('held account switch', () => {
+    it('a held session reads as unresolved: no wipe of the account on disk', () => {
+        holdAccountSwitch('phone');
+        expect(effectiveSessionUserId('phone', null)).toBeNull();
+        expect(
+            resolveIdentity({ sessionUserId: 'phone', cachedUserId: 'email', isConnected: true }),
+        ).toBe('coherent');
+    });
+
+    it('is keyed on the id: any OTHER account still resolves and still wipes', () => {
+        holdAccountSwitch('phone');
+        expect(effectiveSessionUserId('other', null)).toBe('other');
+        expect(
+            resolveIdentity({ sessionUserId: 'other', cachedUserId: 'email', isConnected: true }),
+        ).toBe('wipeAndProceed');
+    });
+
+    it('releasing it restores the normal verdict (the confirmed switch wipes)', () => {
+        holdAccountSwitch('phone');
+        releaseAccountSwitch();
+        expect(isAccountSwitchHeld('phone')).toBe(false);
+        expect(
+            resolveIdentity({ sessionUserId: 'phone', cachedUserId: 'email', isConnected: true }),
+        ).toBe('wipeAndProceed');
+    });
+
+    it('never holds an empty id, and the test reset clears it', () => {
+        expect(isAccountSwitchHeld(undefined)).toBe(false);
+        holdAccountSwitch('');
+        expect(isAccountSwitchHeld('')).toBe(false);
+        holdAccountSwitch('phone');
+        __resetIdentityStateForTests();
+        expect(isAccountSwitchHeld('phone')).toBe(false);
     });
 });

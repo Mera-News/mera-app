@@ -53,7 +53,8 @@
       "retryFailed": "Sunucuya ulaşılamıyor. Bağlantını kontrol edip tekrar dene.",
       "switchBody": "Kullanıcı değiştirmek, bu kullanıcının bu cihazdaki tüm verilerini kalıcı olarak siler. Bu geri alınamaz.",
       "switchConfirm": "Evet, verileri sil ve kullanıcı değiştir",
-      "switchCancel": "İptal"
+      "switchCancel": "İptal",
+      "subtitleWithDevice": "Hesabın şu an yüklenemedi. E-postayla tekrar deneyebilir, e-posta olmadan giriş yapabilir ya da farklı bir kullanıcıyla giriş yapabilirsin."
     },
     "contentPolicy": "İçerik Politikası",
     "faq": "SSS",
@@ -83,7 +84,14 @@
     "sourceCode": "Kaynak kodu",
     "website": "Web sitesi",
     "failedToSendBody": "OTP gönderilemedi",
-    "signingYouIn": "Giriş yapılıyor…"
+    "signingYouIn": "Giriş yapılıyor…",
+    "signInWithoutEmail": "E-posta olmadan giriş yap",
+    "differentAccount": {
+      "title": "Bu telefonun hesabına geçilsin mi?",
+      "body": "E-posta olmadan giriş yapmak, kullandığın hesabı değil, bu telefonun kendi hesabını açar. Bu telefonda o hesap için kayıtlı her şey silinir. Bu geri alınamaz. Diğer hesabın ve planı güvende kalır, daha sonra o hesaba yeniden giriş yapabilirsin.",
+      "continue": "E-posta olmadan devam et",
+      "useEmail": "Geri dön"
+    }
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",
