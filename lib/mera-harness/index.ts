@@ -58,6 +58,7 @@ export {
   generateTopicsForFact,
   normalizeTopicText,
   parseTopics,
+  topicSkillForAttribute,
   type GenerateTopicsOutcome,
   type GenerateTopicsParams,
   type TopicCallFact,

@@ -83,9 +83,11 @@ interface Chip {
 export interface ChatTopicsCardProps {
   factId: string;
   factStatement: string;
+  /** The guideline the chat turn chose; absent, the job derives one. */
+  topicSkillId?: string;
 }
 
-const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }) => {
+const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, topicSkillId }) => {
   const { t } = useTranslation();
 
   const [rows, setRows] = useState<Chip[]>([]);
@@ -245,7 +247,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
     setIsFindingMore(true);
     void hapticLight();
     try {
-      await generateMoreTopicsForFact(factId, factStatement);
+      await generateMoreTopicsForFact(factId, factStatement, topicSkillId ? { skillId: topicSkillId } : {});
     } finally {
       setIsFindingMore(false);
     }
@@ -257,7 +259,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
     setOfferRetry(false);
     void hapticLight();
     try {
-      await retryTopicGeneration(factId, factStatement);
+      await retryTopicGeneration(factId, factStatement, topicSkillId);
     } finally {
       setIsRetrying(false);
     }

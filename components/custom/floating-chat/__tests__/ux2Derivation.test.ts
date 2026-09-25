@@ -191,3 +191,22 @@ describe('ux2 D9: "Save as I wrote it"', () => {
     expect(items.find((i) => i.kind === 'chat-topics-card')).toMatchObject({ factId: 'f9' });
   });
 });
+
+describe('ux2 F1: a saved fact\'s topics card carries its guideline', () => {
+  it('passes the group\'s topic skill to the chat-topics card', () => {
+    const gid = factChoiceGroupId(0, ['Lives in Hoorn']);
+    const tc: ToolCallRecord = {
+      id: 's0', name: 'saveExtractedFacts', input: {}, status: 'done',
+      result: {
+        success: true, staged: true, factsSaved: 0, savedFacts: [], conflicts: [],
+        groupResolutions: { [gid]: { status: 'saved', statements: ['Lives in Hoorn'], savedFacts: [{ id: 'f1', statement: 'Lives in Hoorn' }], conflicts: [] } },
+        pendingFacts: [{ index: 0, groupId: gid, options: ['Lives in Hoorn'], questionnaireAttribute: null, topicSkillId: 'topics/residence' }],
+      },
+    };
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in Hoorn' },
+      { id: 'a1', role: 'assistant', content: '', toolCalls: [tc] },
+    ]);
+    expect(items.find((i) => i.kind === 'chat-topics-card')).toMatchObject({ factId: 'f1', topicSkillId: 'topics/residence' });
+  });
+});

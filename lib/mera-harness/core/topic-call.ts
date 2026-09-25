@@ -1,12 +1,15 @@
 // mera-harness/core — the background topic call. PURE, RN-free.
 //
-// TERMINAL: one call per accepted fact, nothing follows it. The whole system
-// prompt is the composed topic guideline for the fact kind chosen UPSTREAM by
-// the chat turn; the fact, the other facts and the exclusions go in the user
-// message. The model returns a list and the job ends.
+// TERMINAL: one call per fact, nothing follows it. The whole system prompt is
+// the composed topic guideline for the fact kind chosen UPSTREAM by the chat
+// turn (or derived from the fact's attribute); the fact and the exclusions go
+// in the user message. The model returns a list and the job ends.
 //
-// No fact-only/combo split, no two halves to re-key, no merge step: the
-// cross-product decision lives in the guideline's own section.
+// ISOLATED (owner design ux2 F1, which revises the pagent "one call, no halves"
+// rule): the call sees THIS FACT ONLY, never other facts and never a location
+// line. Topics that exist because two facts sit side by side come from the
+// deferred combination pass (lib/inference/handlers/topic-combo-handler.ts),
+// cloud only.
 
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { escapeUntrusted } from './state-line';
@@ -38,8 +41,8 @@ export interface GenerateTopicsParams {
    *  durable, so a job enqueued before an OTA outlives the build that named
    *  its skill. */
   skillId?: string;
-  otherFacts?: string[];
-  /** The persona's ACTIVE topic texts, read at RUN time by the caller. */
+  /** THIS FACT's topic texts, read at RUN time by the caller. Other facts'
+   *  topics are not the isolated call's business. */
   existingTopics?: string[];
   /** Declined texts, read at RUN time by the caller. */
   declinedTopics?: string[];
@@ -77,6 +80,34 @@ export interface GenerateTopicsOutcome {
 
 const FALLBACK_SKILL = 'topics/generic';
 
+/**
+ * The topic guideline for a fact whose caller named none (Profile retries,
+ * "Generate more", a job from an older bundle): read off the attribute key's
+ * words. Unknown falls back to `topics/generic`, never to a failure.
+ */
+export function topicSkillForAttribute(attribute: string | null | undefined): string {
+  const words = (attribute ?? '').toLowerCase().split(/[^a-z]+/).filter(Boolean);
+  const has = (...w: string[]) => words.some((x) => w.includes(x));
+  // FAMILY FIRST: "family: parents location" is a relative's fact, and the
+  // residence guideline would anchor it as the user's own home.
+  if (has('family', 'parents', 'relatives', 'partner', 'children', 'spouse')) return 'topics/family';
+  if (has('location', 'residence', 'home', 'neighborhood', 'neighbourhood')) return 'topics/residence';
+  if (has('origin', 'background', 'expat', 'nationality', 'heritage')) return 'topics/origin';
+  if (has('profession', 'job', 'work', 'occupation', 'employer', 'company', 'industry', 'career')) return 'topics/profession';
+  if (has('hobbies', 'sports', 'teams', 'entertainment', 'artists', 'interests', 'topics')) return 'topics/interest';
+  return FALLBACK_SKILL;
+}
+
+/** The place as the USER said it: the first rung after "live(s) in", with a
+ *  canonical name in brackets dropped ("Porto Santo (Vila Baleira)" gives
+ *  "Porto Santo"). Null when the statement names no home. */
+function userPlaceTerm(statement: string): string | null {
+  const m = /\blives?\s+in\s+([^,]+)/i.exec(statement);
+  if (!m) return null;
+  const term = m[1].replace(/\s*\([^)]*\)\s*$/, '').trim();
+  return term.length >= 2 ? term : null;
+}
+
 export function normalizeTopicText(s: string): string {
   return s.toLowerCase().trim().replace(/\s+/g, ' ');
 }
@@ -85,10 +116,6 @@ export function buildTopicUserMessage(p: GenerateTopicsParams): string {
   const lines: string[] = [`Fact: "${escapeUntrusted(p.fact.statement, 400)}"`];
   if (p.fact.questionnaireAttribute) {
     lines.push(`Attribute: ${escapeUntrusted(p.fact.questionnaireAttribute, 120)}`);
-  }
-  const others = (p.otherFacts ?? []).filter(Boolean);
-  if (others.length > 0) {
-    lines.push(`Other user facts:\n${others.map((s) => `- ${escapeUntrusted(s, 300)}`).join('\n')}`);
   }
   // Existing AND declined go into the SAME exclusion block: to the model they
   // are one instruction, "do not produce these".
@@ -233,8 +260,23 @@ export async function generateTopicsForFact(
       ? { kept, dropped: [] as DedupeDrop[] }
       : filterNearDuplicates(kept);
 
+  // THE USER'S OWN PLACE TERM (ux2 D13c): "Porto Santo" resolved to Vila
+  // Baleira, and without a topic in the user's words no Porto Santo news is
+  // ever found. The guideline asks for it; this makes sure of it.
+  let topics = deduped.kept.slice(0, ceiling);
+  const term =
+    params.skillId === 'topics/residence' || params.skillId === 'topics/family'
+      ? userPlaceTerm(params.fact.statement)
+      : null;
+  if (term && !topics.some((t) => t.toLowerCase().includes(term.toLowerCase()))) {
+    const added = `${term} news`;
+    if (!declined.has(normalizeTopicText(added))) {
+      topics = [added, ...topics].slice(0, ceiling);
+    }
+  }
+
   return {
-    topics: deduped.kept.slice(0, ceiling),
+    topics,
     result,
     dropped: { veto: vetoed, filter: deduped.dropped.length },
     filterDrops: deduped.dropped,

@@ -344,6 +344,11 @@ export function resolveUserLocationFact<T extends UserLocationCandidate>(
 }
 
 /**
+ * DEPRECATE (ux2 F1): no app path calls this any more; every topic run is a
+ * queued, isolated job through the skill core. Kept only because
+ * harness-local/scripts/test-news-harness-persona-management.ts imports it;
+ * delete together with that script's migration.
+ *
  * Batch-generates real topics for all facts in ONE cloud API call. Each fact
  * contributes up to 2 BatchCall entries (fact-only + combo). Generated topics are
  * saved to fact.metadata.topics (or fact.metadata.topicGenError) via the persona

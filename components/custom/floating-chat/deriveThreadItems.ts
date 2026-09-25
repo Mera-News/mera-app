@@ -134,6 +134,7 @@ function pushSavedAsWritten(
   messageId: string,
   idx: number,
   saved: { id: string; statement: string }[],
+  topicSkillId?: string,
 ): void {
   cards.push({
     kind: 'fact-card',
@@ -148,6 +149,7 @@ function pushSavedAsWritten(
       key: `chat-topics-${messageId}-${idx}-as-written-${f.id}`,
       factId: f.id,
       factStatement: f.statement,
+      ...(topicSkillId ? { topicSkillId } : {}),
     });
   }
 }
@@ -710,6 +712,7 @@ function emitFactChoiceGroups(
         key: `chat-topics-${messageId}-${idx}-${groupId}-${f.id}`,
         factId: f.id,
         factStatement: f.statement,
+        ...(group.topicSkillId ? { topicSkillId: group.topicSkillId } : {}),
       });
     }
   }
@@ -1071,7 +1074,7 @@ function emitMessage(
       // that placed nothing (ux2 D9). Rendered as a chip-only card.
       if (tc.name === 'saveAsWritten') {
         const own = saveAsWrittenOf(tc, `${message.id}::${idx}`);
-        if (own?.saved) pushSavedAsWritten(cards, message.id, idx, own.saved);
+        if (own?.saved) pushSavedAsWritten(cards, message.id, idx, own.saved, own.offer.entry.topic_skill_id);
         else if (own) {
           cards.push({
             kind: 'ask-choice-card',
@@ -1115,7 +1118,7 @@ function emitMessage(
             saveAsWritten: own && !own.saved ? own.offer : null,
             answered: answeredAsk,
           });
-          if (own?.saved) pushSavedAsWritten(cards, message.id, idx, own.saved);
+          if (own?.saved) pushSavedAsWritten(cards, message.id, idx, own.saved, own.offer.entry.topic_skill_id);
         }
         return;
       }

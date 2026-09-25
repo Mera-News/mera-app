@@ -1,27 +1,22 @@
-// topic-gen-handler.test.ts — unit tests for lib/inference/handlers/topic-gen-handler.ts
+// topic-gen-handler.test.ts — the topic_gen job, ISOLATED per fact (ux2 F1).
+//
+// Every run sees one fact: never another fact, never a location line. Topics
+// that need two facts side by side come from the deferred combination pass.
 
 const mockGetFacts = jest.fn();
 const mockUpdateFact = jest.fn();
-
 jest.mock('../../database/services/fact-service', () => ({
   getFacts: (...args: unknown[]) => mockGetFacts(...args),
   updateFact: (...args: unknown[]) => mockUpdateFact(...args),
 }));
 
-const mockBuildAttributeTextToIdMap = jest.fn();
-
-jest.mock('../../mera-protocol/questionnaire-data', () => ({
-  buildAttributeTextToIdMap: (...args: unknown[]) => mockBuildAttributeTextToIdMap(...args),
-}));
-
-const mockGenerateTopicsForFact = jest.fn();
-
+const mockLocalGenerate = jest.fn();
 jest.mock('../../mera-protocol/topic-generation-service', () => ({
-  generateTopicsForFact: (...args: unknown[]) => mockGenerateTopicsForFact(...args),
+  generateTopicsForFact: (...args: unknown[]) => mockLocalGenerate(...args),
+  mergeTopicsAppend: (a: string[], b: string[]) => [...a, ...b],
 }));
 
 const mockNotifyFactMutation = jest.fn();
-
 jest.mock('../../stores/floating-chat-store', () => ({
   useFloatingChatStore: {
     getState: jest.fn(() => ({ notifyFactMutation: mockNotifyFactMutation })),
@@ -29,29 +24,26 @@ jest.mock('../../stores/floating-chat-store', () => ({
 }));
 
 const mockSyncLlmTopicsForFact = jest.fn((..._args: unknown[]) => Promise.resolve([]));
-
-const mockGetActive = jest.fn(async () => [] as { text: string }[]);
+let mockOwnTopics: { text: string; status: string }[] = [];
 jest.mock('../../database/services/topic-service', () => ({
   syncLlmTopicsForFact: (...args: unknown[]) => mockSyncLlmTopicsForFact(...args),
-  getActive: () => mockGetActive(),
+  getByFact: async () => mockOwnTopics,
+  normalizeTopicText: (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim(),
 }));
 
-// These three reach lib/database/index, which constructs a real SQLiteAdapter
-// at module scope and dies under jest with `Cannot read properties of
-// undefined (reading 'initializeJSI')`. Mocking the SERVICE keeps the handler
-// honest while keeping the adapter out of the import graph.
-const mockGetDeclinedTopicTexts = jest.fn(async () => [] as string[]);
+// Reaches lib/database/index at module scope; mocked at the SERVICE boundary.
+let mockDeclined = new Set<string>();
 jest.mock('../../database/services/topic-decline-service', () => ({
-  getDeclinedTopicTexts: () => mockGetDeclinedTopicTexts(),
+  getAllDeclinedNormalizedTexts: async () => mockDeclined,
 }));
 
-const mockCompleteTopicGeneration = jest.fn(async () => []);
-const mockFailTopicGeneration = jest.fn(async () => undefined);
-const mockMarkTopicGenerationSettled = jest.fn(async () => undefined);
+const mockCompleteTopicGeneration = jest.fn(async (..._a: unknown[]) => []);
+const mockFailTopicGeneration = jest.fn(async (..._a: unknown[]) => undefined);
+const mockMarkTopicGenerationSettled = jest.fn(async (..._a: unknown[]) => undefined);
 jest.mock('../../database/services/topic-generation-status-service', () => ({
-  completeTopicGeneration: (...a: unknown[]) => mockCompleteTopicGeneration(...(a as [])),
-  failTopicGeneration: (...a: unknown[]) => mockFailTopicGeneration(...(a as [])),
-  markTopicGenerationSettled: (...a: unknown[]) => mockMarkTopicGenerationSettled(...(a as [])),
+  completeTopicGeneration: (...a: unknown[]) => mockCompleteTopicGeneration(...a),
+  failTopicGeneration: (...a: unknown[]) => mockFailTopicGeneration(...a),
+  markTopicGenerationSettled: (...a: unknown[]) => mockMarkTopicGenerationSettled(...a),
 }));
 
 const mockCloudComplete = jest.fn(async (_req: { systemPrompt: string; prompt: string }) => '[]');
@@ -59,407 +51,104 @@ jest.mock('../../llm/cloudComplete', () => ({
   cloudComplete: (req: { systemPrompt: string; prompt: string }) => mockCloudComplete(req),
 }));
 jest.mock('../../llm/constants', () => ({ SMALL_MODEL: 'test-small' }));
-
 jest.mock('../../logger', () => ({
   __esModule: true,
-  default: {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  },
+  default: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
 import { handleTopicGenJob } from '../handlers/topic-gen-handler';
-import type { TopicGenPayload } from '../handlers/topic-gen-handler';
 
-const ATTR_MAP = new Map([
-  ['location: neighborhood/area, city, and country', 'q1_location'],
-  ['where you grew up', 'q2_origin'],
-  ['neighborhood', 'q4_neighborhood'],
-]);
+const HOME = 'location: neighborhood/area, city, and country (preserve specifics)';
+const FACTS = [
+  { id: 'f1', statement: 'Lives in Alkmaar, North Holland, Netherlands, EU', questionnaireAttribute: HOME },
+  { id: 'f2', statement: 'Works as a paediatric nurse', questionnaireAttribute: 'profession: job role and industry' },
+  { id: 'f3', statement: 'From India', questionnaireAttribute: 'background: country of origin' },
+];
 
-describe('handleTopicGenJob', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockBuildAttributeTextToIdMap.mockReturnValue(ATTR_MAP);
-    mockUpdateFact.mockResolvedValue(undefined);
-    mockGenerateTopicsForFact.mockResolvedValue(['topic A', 'topic B']);
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockGetFacts.mockResolvedValue(FACTS);
+  mockOwnTopics = [];
+  mockDeclined = new Set();
+  mockCloudComplete.mockResolvedValue('["Alkmaar news", "Alkmaar street safety"]');
+});
+
+describe('cloud: the skill core, isolated', () => {
+  it('sends THIS fact only: no other fact, no location line', async () => {
+    await handleTopicGenJob({ factId: 'f2', factStatement: 'Works as a paediatric nurse', useCloud: true });
+    const { prompt } = mockCloudComplete.mock.calls[0][0];
+    expect(prompt).toContain('paediatric nurse');
+    expect(prompt).not.toMatch(/Alkmaar|India|Other user facts|User location/);
   });
 
-  it('returns generated topics and updates fact metadata', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'the target fact', questionnaireAttribute: null },
-    ]);
-
-    const payload: TopicGenPayload = {
-      factId: 'f1',
-      factStatement: 'the target fact',
-      useCloud: false,
-    };
-
-    const result = await handleTopicGenJob(payload);
-
-    expect(result.topics).toEqual(['topic A', 'topic B']);
-    expect(mockUpdateFact).toHaveBeenCalledWith('f1', {
-      metadata: { topics: ['topic A', 'topic B'] },
-    });
-    // Wave 11: mints topic ROWS alongside the legacy metadata dual-write.
-    expect(mockSyncLlmTopicsForFact).toHaveBeenCalledWith('f1', ['topic A', 'topic B']);
-    expect(mockNotifyFactMutation).toHaveBeenCalled();
+  it('derives the guideline from the attribute when the payload names none', async () => {
+    await handleTopicGenJob({ factId: 'f1', factStatement: FACTS[0].statement, useCloud: true });
+    expect(mockCloudComplete.mock.calls[0][0].systemPrompt).toMatch(/Residence ladders further/);
   });
 
-  it('does NOT mint topic rows when no topics were generated', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'the target fact', questionnaireAttribute: null },
-    ]);
-    mockGenerateTopicsForFact.mockResolvedValue([]);
-
-    await handleTopicGenJob({ factId: 'f1', factStatement: 'the target fact' });
-
-    expect(mockSyncLlmTopicsForFact).not.toHaveBeenCalled();
+  it('keeps a skill the chat turn named', async () => {
+    await handleTopicGenJob({ factId: 'f3', factStatement: 'From India', useCloud: true, skillId: 'topics/origin' });
+    expect(mockCloudComplete.mock.calls[0][0].systemPrompt).toMatch(/id: topics\/origin|diaspora/i);
   });
 
-  it('returns empty topics and skips updateFact when no topics generated', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'the target fact', questionnaireAttribute: null },
-    ]);
-    mockGenerateTopicsForFact.mockResolvedValue([]);
-
-    const payload: TopicGenPayload = { factId: 'f1', factStatement: 'the target fact' };
-
-    const result = await handleTopicGenJob(payload);
-
-    expect(result.topics).toEqual([]);
-    expect(mockUpdateFact).not.toHaveBeenCalled();
-    expect(mockNotifyFactMutation).not.toHaveBeenCalled();
+  it('excludes THIS fact\'s topics and every declined topic, read at run time', async () => {
+    mockOwnTopics = [{ text: 'Alkmaar cheese market', status: 'active' }];
+    mockDeclined = new Set(['alkmaar weather']);
+    await handleTopicGenJob({ factId: 'f1', factStatement: FACTS[0].statement, useCloud: true });
+    const { prompt } = mockCloudComplete.mock.calls[0][0];
+    expect(prompt).toContain('Alkmaar cheese market');
+    expect(prompt).toContain('alkmaar weather');
   });
 
-  // The SHIPPED path settles `topics_status` too. fact-commit stamps every
-  // accepted fact 'pending' whichever path generates for it, and this one used
-  // to write its metadata, mint its rows and return without touching the
-  // column, so an on-device generation left the chat card and the profile row
-  // spinning forever in exactly the way the cloud batch did.
+  it('never mints a declined topic or one the fact already has', async () => {
+    mockOwnTopics = [{ text: 'Alkmaar news', status: 'active' }];
+    mockDeclined = new Set(['alkmaar street safety']);
+    mockCloudComplete.mockResolvedValue('["Alkmaar news", "Alkmaar, street safety!", "North Holland dyke works"]');
+    await handleTopicGenJob({ factId: 'f1', factStatement: FACTS[0].statement, useCloud: true, mode: 'append' });
+    expect(mockCompleteTopicGeneration).toHaveBeenCalledWith('f1', ['North Holland dyke works']);
+  });
 
-  it('stamps done on the shipped path, so an on-device run stops spinning', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'the target fact', questionnaireAttribute: null },
-    ]);
-
-    await handleTopicGenJob({ factId: 'f1', factStatement: 'the target fact', useCloud: false });
-
-    // Stamp-only: this path already wrote its own metadata and minted its own
-    // rows, so completeTopicGeneration would mint them a second time.
+  it('an append run that finds nothing new settles, it does not fail', async () => {
+    mockOwnTopics = [{ text: 'Alkmaar news', status: 'active' }, { text: 'Alkmaar street safety', status: 'active' }];
+    await handleTopicGenJob({ factId: 'f1', factStatement: FACTS[0].statement, useCloud: true, mode: 'append' });
+    expect(mockFailTopicGeneration).not.toHaveBeenCalled();
     expect(mockMarkTopicGenerationSettled).toHaveBeenCalledWith(['f1']);
-    expect(mockCompleteTopicGeneration).not.toHaveBeenCalled();
   });
 
-  it('stamps ERROR on the shipped path when nothing usable was generated', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'the target fact', questionnaireAttribute: null },
-    ]);
-    mockGenerateTopicsForFact.mockResolvedValue([]);
-
-    await handleTopicGenJob({ factId: 'f1', factStatement: 'the target fact' });
-
-    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f1', expect.any(String));
-    expect(mockMarkTopicGenerationSettled).not.toHaveBeenCalled();
+  it('a first run that yields nothing records a failure, so the card settles', async () => {
+    mockCloudComplete.mockResolvedValue('[]');
+    await handleTopicGenJob({ factId: 'f2', factStatement: 'Works as a paediatric nurse', useCloud: true });
+    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f2', expect.any(String));
   });
 
-  it('excludes the target fact itself from otherFacts', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'target', questionnaireAttribute: null },
-      { id: 'f2', statement: 'other', questionnaireAttribute: null },
-    ]);
-
-    const payload: TopicGenPayload = { factId: 'f1', factStatement: 'target' };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    expect(callArgs.otherFacts).toEqual(['other']);
-    expect(callArgs.otherFacts).not.toContain('target');
+  it('a throw records a failure rather than leaving pending forever', async () => {
+    mockCloudComplete.mockRejectedValue(new Error('boom'));
+    await handleTopicGenJob({ factId: 'f2', factStatement: 'Works as a paediatric nurse', useCloud: true });
+    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f2', 'boom');
   });
 
-  it('identifies userLocation from q1_location attribute', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'target fact', questionnaireAttribute: null },
-      {
-        id: 'f2',
-        statement: 'I live in Berlin',
-        questionnaireAttribute: 'location: neighborhood/area, city, and country',
-      },
-    ]);
-
-    const payload: TopicGenPayload = { factId: 'f1', factStatement: 'target fact' };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    expect(callArgs.userLocation).toBe('I live in Berlin');
-  });
-
-  it('identifies userLocation from q4_neighborhood attribute', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'target', questionnaireAttribute: null },
-      {
-        id: 'f3',
-        statement: 'I live in Prenzlauer Berg',
-        questionnaireAttribute: 'neighborhood',
-      },
-    ]);
-
-    const payload: TopicGenPayload = { factId: 'f1', factStatement: 'target' };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    expect(callArgs.userLocation).toBe('I live in Prenzlauer Berg');
-  });
-
-  it('passes null userLocation when no location fact exists', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'target', questionnaireAttribute: null },
-      { id: 'f2', statement: 'I work in finance', questionnaireAttribute: null },
-    ]);
-
-    const payload: TopicGenPayload = { factId: 'f1', factStatement: 'target' };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    expect(callArgs.userLocation).toBeNull();
-  });
-
-  it('excludes the location fact from otherFacts', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'target', questionnaireAttribute: null },
-      {
-        id: 'f2',
-        statement: 'I live in Berlin',
-        questionnaireAttribute: 'location: neighborhood/area, city, and country',
-      },
-      { id: 'f3', statement: 'I work in tech', questionnaireAttribute: null },
-    ]);
-
-    const payload: TopicGenPayload = { factId: 'f1', factStatement: 'target' };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    // Location fact should not appear in otherFacts
-    expect(callArgs.otherFacts).not.toContain('I live in Berlin');
-    expect(callArgs.otherFacts).toContain('I work in tech');
-  });
-
-  it('does not use target fact as location even if it has a location attribute', async () => {
-    mockGetFacts.mockResolvedValue([
-      {
-        id: 'f1',
-        statement: 'I live in Berlin',
-        questionnaireAttribute: 'location: neighborhood/area, city, and country',
-      },
-    ]);
-
-    const payload: TopicGenPayload = {
-      factId: 'f1',
-      factStatement: 'I live in Berlin',
-    };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    // Target fact is excluded from userLocation search (f.id === payload.factId check)
-    expect(callArgs.userLocation).toBeNull();
-  });
-
-  it('passes useCloud=false by default', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'target', questionnaireAttribute: null },
-    ]);
-
-    const payload: TopicGenPayload = { factId: 'f1', factStatement: 'target' };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    expect(callArgs.useCloud).toBe(false);
-  });
-
-  it('passes useCloud=true when specified', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'target', questionnaireAttribute: null },
-    ]);
-
-    const payload: TopicGenPayload = {
-      factId: 'f1',
-      factStatement: 'target',
-      useCloud: true,
-    };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    expect(callArgs.useCloud).toBe(true);
-  });
-
-  it('passes factStatement to generateTopicsForFact', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'specific statement', questionnaireAttribute: null },
-    ]);
-
-    const payload: TopicGenPayload = {
-      factId: 'f1',
-      factStatement: 'specific statement',
-    };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    expect(callArgs.factStatement).toBe('specific statement');
-  });
-
-  it('handles empty facts array gracefully', async () => {
-    mockGetFacts.mockResolvedValue([]);
-
-    const payload: TopicGenPayload = {
-      factId: 'f99',
-      factStatement: 'orphan fact',
-    };
-    await handleTopicGenJob(payload);
-
-    const callArgs = mockGenerateTopicsForFact.mock.calls[0][0];
-    expect(callArgs.otherFacts).toEqual([]);
-    expect(callArgs.userLocation).toBeNull();
-  });
-
-  it('propagates errors from generateTopicsForFact', async () => {
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'target', questionnaireAttribute: null },
-    ]);
-    mockGenerateTopicsForFact.mockRejectedValue(new Error('LLM error'));
-
-    const payload: TopicGenPayload = { factId: 'f1', factStatement: 'target' };
-
-    await expect(handleTopicGenJob(payload)).rejects.toThrow('LLM error');
-  });
-
-  it('propagates errors from getFacts', async () => {
-    mockGetFacts.mockRejectedValue(new Error('DB error'));
-
-    const payload: TopicGenPayload = { factId: 'f1', factStatement: 'target' };
-
-    await expect(handleTopicGenJob(payload)).rejects.toThrow('DB error');
+  it('a fact deleted before its job ran is a no-op', async () => {
+    const out = await handleTopicGenJob({ factId: 'gone', factStatement: 'x', useCloud: true });
+    expect(out.topics).toEqual([]);
+    expect(mockCloudComplete).not.toHaveBeenCalled();
+    expect(mockFailTopicGeneration).not.toHaveBeenCalled();
   });
 });
 
-// ---------------------------------------------------------------------------
-// The SKILL-GUIDED path (pagent P1)
-// ---------------------------------------------------------------------------
-describe('skill-guided topic generation', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockGetFacts.mockResolvedValue([
-      { id: 'f1', statement: 'Lives in Alkmaar', metadata: {} },
-      { id: 'f2', statement: 'Theatre nurse', metadata: {} },
-    ]);
-    mockGetActive.mockResolvedValue([]);
-    mockGetDeclinedTopicTexts.mockResolvedValue([]);
-  });
-
-  it('a payload with NO skillId takes the shipped path, unchanged', async () => {
-    // inference_jobs is durable: a job enqueued by an older bundle drains on a
-    // later boot and must behave exactly as it did when it was created.
-    mockGenerateTopicsForFact.mockResolvedValue(['legacy topic']);
-
-    const out = await handleTopicGenJob({
-      factId: 'f1', factStatement: 'Lives in Alkmaar', useCloud: true,
-    });
-
-    expect(mockGenerateTopicsForFact).toHaveBeenCalled();
-    expect(mockCloudComplete).not.toHaveBeenCalled();
-    expect(mockCompleteTopicGeneration).not.toHaveBeenCalled();
-    expect(out.topics).toEqual(['legacy topic']);
-  });
-
-  it('a payload WITH skillId runs the terminal call and completes through P3', async () => {
-    mockCloudComplete.mockResolvedValue('["Alkmaar housing pressure", "Netherlands rail strikes"]');
-
-    const out = await handleTopicGenJob({
-      factId: 'f1', factStatement: 'Lives in Alkmaar', useCloud: true, skillId: 'topics/residence',
-    });
-
-    expect(mockGenerateTopicsForFact).not.toHaveBeenCalled();
-    expect(mockCloudComplete).toHaveBeenCalledTimes(1);   // ONE call. Terminal.
-    expect(out.topics).toEqual(['Alkmaar housing pressure', 'Netherlands rail strikes']);
-    expect(mockCompleteTopicGeneration).toHaveBeenCalledWith('f1', out.topics);
-    expect(mockFailTopicGeneration).not.toHaveBeenCalled();
-  });
-
-  it('reads the exclusion lists at RUN time, not from the payload', async () => {
-    // A payload snapshot is durable and wrong: two facts accepted in one turn
-    // enqueue two jobs in the same tick, so job 2's snapshot predates job 1's
-    // writes. The queue drains serially, so only a live read sees them.
-    mockGetActive.mockResolvedValue([{ text: 'Alkmaar hospital news' }]);
-    mockGetDeclinedTopicTexts.mockResolvedValue(['Alkmaar weather']);
-    mockCloudComplete.mockResolvedValue('["Netherlands rail strikes"]');
-
-    await handleTopicGenJob({
-      factId: 'f1', factStatement: 'Lives in Alkmaar', useCloud: true, skillId: 'topics/residence',
-      // A STALE snapshot on the payload must be ignored entirely.
-      excludeTopics: ['something from three days ago'],
-    });
-
-    const prompt = mockCloudComplete.mock.calls[0][0].prompt;
-    expect(prompt).toContain('Alkmaar hospital news');
-    expect(prompt).toContain('Alkmaar weather');
-    expect(prompt).not.toContain('something from three days ago');
-  });
-
-  it('VETOES a declined text the model returns anyway', async () => {
-    mockGetDeclinedTopicTexts.mockResolvedValue(['Alkmaar weather']);
-    mockCloudComplete.mockResolvedValue('["Alkmaar weather", "Netherlands rail strikes"]');
-
-    const out = await handleTopicGenJob({
-      factId: 'f1', factStatement: 'Lives in Alkmaar', useCloud: true, skillId: 'topics/residence',
-    });
-
-    expect(out.topics).toEqual(['Netherlands rail strikes']);
-    expect(mockCompleteTopicGeneration).toHaveBeenCalledWith('f1', ['Netherlands rail strikes']);
-  });
-
-  it('a read failure degrades to generating WITHOUT exclusions, never a failed job', async () => {
-    mockGetActive.mockRejectedValue(new Error('db gone'));
-    mockGetDeclinedTopicTexts.mockRejectedValue(new Error('db gone'));
-    mockCloudComplete.mockResolvedValue('["Netherlands rail strikes"]');
-
-    const out = await handleTopicGenJob({
-      factId: 'f1', factStatement: 'Lives in Alkmaar', useCloud: true, skillId: 'topics/residence',
-    });
-
-    expect(out.topics).toEqual(['Netherlands rail strikes']);
-    expect(mockFailTopicGeneration).not.toHaveBeenCalled();
-  });
-
-  it('records a FAILURE when nothing usable comes back, so the card settles', async () => {
-    mockCloudComplete.mockResolvedValue('sorry, I cannot help with that');
-
-    const out = await handleTopicGenJob({
-      factId: 'f1', factStatement: 'Lives in Alkmaar', useCloud: true, skillId: 'topics/residence',
-    });
-
-    expect(out.topics).toEqual([]);
-    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f1', expect.stringContaining('no usable'));
-  });
-
-  it('records a FAILURE when the call throws, rather than leaving pending forever', async () => {
-    mockCloudComplete.mockRejectedValue(new Error('gateway 502'));
-
-    const out = await handleTopicGenJob({
-      factId: 'f1', factStatement: 'Lives in Alkmaar', useCloud: true, skillId: 'topics/residence',
-    });
-
-    expect(out.topics).toEqual([]);
-    expect(mockFailTopicGeneration).toHaveBeenCalledWith('f1', 'gateway 502');
-  });
-
-  it('ON-DEVICE mode keeps the shipped prompt even with a skillId', async () => {
-    mockGenerateTopicsForFact.mockResolvedValue(['local topic']);
-    const out = await handleTopicGenJob({
-      factId: 'f1', factStatement: 'Lives in Alkmaar', useCloud: false, skillId: 'topics/residence',
-    });
-    expect(mockCloudComplete).not.toHaveBeenCalled();
-    expect(out.topics).toEqual(['local topic']);
+describe('on-device: the local engine, isolated too', () => {
+  it('passes no location and no other facts', async () => {
+    mockLocalGenerate.mockResolvedValue(['nurse staffing']);
+    mockOwnTopics = [{ text: 'paediatric wards', status: 'active' }];
+    mockDeclined = new Set(['nurse pay']);
+    await handleTopicGenJob({ factId: 'f2', factStatement: 'Works as a paediatric nurse', useCloud: false });
+    expect(mockLocalGenerate).toHaveBeenCalledWith(expect.objectContaining({
+      factStatement: 'Works as a paediatric nurse',
+      userLocation: null,
+      otherFacts: [],
+      useCloud: false,
+      excludeTopics: ['paediatric wards', 'nurse pay'],
+    }));
+    expect(mockSyncLlmTopicsForFact).toHaveBeenCalledWith('f2', ['nurse staffing']);
+    expect(mockMarkTopicGenerationSettled).toHaveBeenCalledWith(['f2']);
   });
 });

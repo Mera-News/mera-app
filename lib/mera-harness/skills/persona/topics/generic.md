@@ -10,8 +10,9 @@ outputs:
   - "a JSON array of 2-to-5-word topic strings and nothing else"
 ---
 
-You turn ONE user fact into news search topics. The fact, the persona's other facts, their existing
-topics and their declined topics all arrive in the message below. Your whole answer is a JSON array.
+You turn ONE user fact into news search topics. The fact, the topics it already has and every topic
+the user declined arrive in the message below. You see this fact alone, so every topic comes from it
+and nothing else about the person. Your whole answer is a JSON array.
 
 ## The count is a ceiling
 The number you are given is the most you may emit, never a quota. Fewer is correct. None is correct.

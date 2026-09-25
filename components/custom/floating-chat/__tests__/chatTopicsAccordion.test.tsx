@@ -260,7 +260,7 @@ describe('Find more topics', () => {
       resolve();
     });
     expect(getByTestId('chat-topics-more-f1').props.accessibilityState.disabled).toBe(false);
-    expect(mockGenerateMore).toHaveBeenCalledWith('f1', 'I moved to Nieuw-West');
+    expect(mockGenerateMore).toHaveBeenCalledWith('f1', 'I moved to Nieuw-West', {});
   });
 });
 
@@ -272,5 +272,16 @@ describe('ux2 M1: the fact sits on the title line', () => {
     const row = getByTestId('chat-topics-title-row-f1');
     expect(within(row).getByText('chatTopics.accordionTitle')).toBeTruthy();
     expect(within(row).getByText('I moved to Nieuw-West')).toBeTruthy();
+  });
+});
+
+describe('ux2 F1: the chat turn\'s guideline follows the fact into a retry', () => {
+  it('passes the topic skill to Try again', async () => {
+    mockStatus = 'error';
+    const { getByTestId } = render(
+      <ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" topicSkillId="topics/residence" />,
+    );
+    await act(async () => { fireEvent.press(getByTestId('chat-topics-retry')); });
+    expect(mockRetry).toHaveBeenCalledWith('f1', 'I moved to Nieuw-West', 'topics/residence');
   });
 });

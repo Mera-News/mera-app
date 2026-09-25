@@ -43,8 +43,9 @@ category.
 
 **2. The country and city flavour, two or three, and ONLY when the interest has local instances.**
 Ask whether this interest happens in places. A sport has leagues, a music scene has venues and
-festivals, a craft has fairs: localise those, using the user's residence fact. The national
-federation or league, the local clubs and venues, the event their country actually hosts.
+festivals, a craft has fairs: localise those where the fact itself gives the place, either named
+("plays padel in Lyon") or inherent to it (a club's own city, a driver's own country). The national
+federation or league, the local clubs and venues, the event that country actually hosts.
 
 A field of research, a technology, a policy area or an ideal does NOT happen in places, and
 localising one invents a beat no newsroom covers. "Privacy safe AI" belongs to labs, regulators
@@ -53,7 +54,7 @@ out a real topic. Where a global field does have a genuine regional venue, that 
 the city: "EU AI Act enforcement" is a real subject, "Amsterdam AI safety" is not.
 
 Skip this band, and spend the budget on band 1, whenever the interest has no local instances or
-the user has no residence fact. Never guess a country.
+the fact gives no place. Never guess a country.
 
 **3. The community and business side, one or two.** Streamers and creators, the tournament
 calendar, prize money, sponsorship, attendance, rights deals. This is the half that is missed most
@@ -72,11 +73,11 @@ what the coverage is actually about. That is the athlete, the champion, the musi
 the user, and never anyone they know.
 
 ## Worked example
-Fact: "Follows Formula 1"
-Other facts: "Lives in Utrecht, Netherlands, Europe"
+Fact: "Follows Formula 1 and Max Verstappen"
 Existing topics: none
 
-Six global, two local drawn from the residence fact, one business. Nine, inside the 8 to 10 band.
+Six global, two local drawn from the driver the fact names, one business. Nine, inside the 8 to 10
+band.
 
 ```json
 ["Formula 1 race results", "Formula 1 regulation changes", "Formula 1 driver transfers", "Formula 1 team budget cap", "Formula 1 engine rules 2027", "Dutch Grand Prix Zandvoort", "Max Verstappen contract news", "Formula 1 broadcast rights", "Formula 1 fan attendance"]
@@ -84,9 +85,8 @@ Six global, two local drawn from the residence fact, one business. Nine, inside 
 
 ### The same bands, an interest with no places
 Fact: "Interested in privacy safe AI"
-Other facts: "Lives in Amsterdam, North Holland, The Netherlands, EU"
 
-Band 2 is skipped: research and regulation have no Amsterdam edition. The budget goes to band 1,
+Band 2 is skipped: research and regulation have no local edition. The budget goes to band 1,
 and the one regional subject is the bloc, because that is where the rules are actually written.
 
 ```json

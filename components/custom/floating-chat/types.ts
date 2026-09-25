@@ -237,6 +237,9 @@ export type ChatThreadItem =
       key: string;
       factId: string;
       factStatement: string;
+      /** The topic guideline the chat turn chose, carried into Retry and
+       *  Generate more. Absent: the job derives one from the attribute. */
+      topicSkillId?: string;
     }
   // Wave 11 U-B1 — save-time fact-conflict resolution card.
   | { kind: 'conflict-card'; key: string; conflict: FactConflict }

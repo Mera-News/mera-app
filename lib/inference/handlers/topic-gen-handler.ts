@@ -1,5 +1,6 @@
-// Handler for topic_gen jobs — runs fact-only + combo prompts (parallel on
-// cloud, sequential on-device) and saves the resulting topic texts to the fact.
+// Handler for topic_gen jobs: ISOLATED topics for one fact (ux2 F1), through
+// the skill core on cloud and the local engine on device. Combination topics
+// come only from the deferred pass (topic-combo-handler.ts), cloud only.
 
 import { resolveUserLocationFact } from '../../news-harness/persona-management/topic-generation';
 import {
@@ -10,16 +11,15 @@ import {
   generateTopicsForFact,
   mergeTopicsAppend,
 } from '../../mera-protocol/topic-generation-service';
-import { syncLlmTopicsForFact } from '../../database/services/topic-service';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
-import { getActive } from '../../database/services/topic-service';
-import { getDeclinedTopicTexts } from '../../database/services/topic-decline-service';
+import { getByFact, normalizeTopicText, syncLlmTopicsForFact } from '../../database/services/topic-service';
+import { getAllDeclinedNormalizedTexts } from '../../database/services/topic-decline-service';
 import {
   completeTopicGeneration,
   failTopicGeneration,
   markTopicGenerationSettled,
 } from '../../database/services/topic-generation-status-service';
-import { generateTopicsForFact as generateViaSkill } from '@/lib/mera-harness';
+import { generateTopicsForFact as generateViaSkill, topicSkillForAttribute } from '@/lib/mera-harness';
 import { cloudComplete } from '../../llm/cloudComplete';
 import { SMALL_MODEL } from '../../llm/constants';
 import logger from '../../logger';
@@ -57,8 +57,10 @@ export interface TopicGenResult {
 }
 
 /**
- * Assemble the location + other-facts context for topic generation. The user's
- * own location (primary residence only) is used for geographic anchoring.
+ * DEPRECATE: no longer used by any generation path here (ux2 F1 isolates every
+ * run). Kept only while `components/custom/facts/FactsList.tsx` still imports
+ * it; delete together with that caller's migration to
+ * `generateMoreTopicsForFact`.
  */
 export function buildTopicGenContext(
   allFacts: Fact[],
@@ -78,54 +80,66 @@ export function buildTopicGenContext(
 }
 
 /**
- * The exclusion lists, read at RUN time.
+ * The exclusion lists, read at RUN time: THIS FACT's own topics and EVERY
+ * declined topic (ux2 F1). Other facts' topics are not the isolated call's
+ * business; the combination pass dedupes across facts.
  *
- * NOT from the payload. A snapshot taken at enqueue is durable and wrong: two
- * facts accepted in one turn enqueue two jobs in the same tick, and the queue
- * drains serially, so only a live read lets job 2 see what job 1 minted.
+ * NOT from the payload. A snapshot taken at enqueue is durable and wrong: a job
+ * enqueued before an app kill would replay a stale list days later.
  *
  * Best-effort: a failure degrades to generating without exclusions rather than
  * failing the job, because a fact with no topics is worse than a fact with a
  * near-duplicate.
  */
 async function readExclusionsNow(factId: string): Promise<{
-  existingTopics: string[];
-  declinedTopics: string[];
+  ownTopics: string[];
+  declined: Set<string>;
 }> {
-  const existingTopics = await getActive()
-    // `getActive()`, NOT `getActiveTopicSnapshots()`: that snapshot type is
-    // { id, factId, weight, highPriority } and carries no `text` at all.
-    .then((rows) => rows.map((r) => r.text).filter(Boolean))
+  const ownTopics = await getByFact(factId)
+    .then((rows) => rows.filter((r) => r.status === 'active').map((r) => r.text).filter(Boolean))
     .catch((err: unknown) => {
-      logger.warn('[topic-gen] active-topic read failed', { factId, error: String(err) });
+      logger.warn('[topic-gen] own-topic read failed', { factId, error: String(err) });
       return [] as string[];
     });
-  const declinedTopics = await getDeclinedTopicTexts().catch((err: unknown) => {
+  const declined = await getAllDeclinedNormalizedTexts().catch((err: unknown) => {
     logger.warn('[topic-gen] declined-topic read failed', { factId, error: String(err) });
-    return [] as string[];
+    return new Set<string>();
   });
-  return { existingTopics, declinedTopics };
+  return { ownTopics, declined };
+}
+
+/** What a run may still mint: never a declined text and never one the fact
+ *  already owns, both compared in topic-service's normalised form (the core's
+ *  own veto only folds case and spaces). */
+function freshTopics(topics: string[], ownTopics: string[], declined: Set<string>): string[] {
+  const owned = new Set(ownTopics.map(normalizeTopicText));
+  const seen = new Set<string>();
+  return topics.filter((t) => {
+    const key = normalizeTopicText(t);
+    if (!key || owned.has(key) || declined.has(key) || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /**
- * The SKILL-GUIDED path: one terminal call whose whole system prompt is the
- * composed guideline for the kind the chat turn chose. Cloud only -- the
- * on-device path keeps the shipped prompt, because the harness's model port is
- * a cloud completion and the local engine has its own.
+ * CLOUD: one terminal call through the skill core, isolated. The guideline is
+ * the one the chat turn chose, else the one the fact's attribute implies, else
+ * `topics/generic`.
  */
 async function runSkillGuided(
   payload: TopicGenPayload,
-  otherFacts: string[],
-): Promise<{ topics: string[]; dropped: { veto: number; filter: number } }> {
-  const { existingTopics, declinedTopics } = await readExclusionsNow(payload.factId);
-
+  fact: Fact,
+  ownTopics: string[],
+  declined: Set<string>,
+): Promise<string[]> {
   const out = await generateViaSkill({
-    fact: { statement: payload.factStatement },
-    skillId: payload.skillId,
-    otherFacts,
-    existingTopics,
-    declinedTopics,
+    fact: { statement: fact.statement, questionnaireAttribute: fact.questionnaireAttribute ?? null },
+    skillId: payload.skillId ?? topicSkillForAttribute(fact.questionnaireAttribute),
+    existingTopics: ownTopics,
+    declinedTopics: [...declined],
     model: SMALL_MODEL,
+    ...(payload.totalCount ? { ceiling: payload.totalCount } : {}),
     deps: {
       callModel: async (req) => {
         const started = Date.now();
@@ -164,23 +178,31 @@ async function runSkillGuided(
       kept: out.topics.length,
     });
   }
-  return { topics: out.topics, dropped: out.dropped };
+  return out.topics;
 }
 
 export async function handleTopicGenJob(
   payload: TopicGenPayload,
 ): Promise<TopicGenResult> {
   const allFacts = await getFacts();
-  const { userLocation, otherFacts } = buildTopicGenContext(allFacts, payload.factId);
+  const fact = allFacts.find((f) => f.id === payload.factId);
+  // Deleted before its job ran: nothing to generate for and nothing to settle.
+  if (!fact) return { topics: [] };
+  const { ownTopics, declined } = await readExclusionsNow(payload.factId);
+  const append = payload.mode === 'append';
 
-  // SKILL-GUIDED when the chat turn named a guideline AND this is the cloud
-  // path. A payload with no skillId is a job from an older bundle, and it takes
-  // the shipped path below unchanged.
-  if (payload.skillId && payload.useCloud) {
+  if (payload.useCloud) {
     try {
-      const { topics } = await runSkillGuided(payload, otherFacts);
+      const topics = freshTopics(
+        await runSkillGuided(payload, fact, ownTopics, declined),
+        ownTopics,
+        declined,
+      );
       if (topics.length === 0) {
-        await failTopicGeneration(payload.factId, 'Topic generation returned no usable topics');
+        // "Generate more" that found nothing new leaves the fact as it was;
+        // a first run with nothing usable is a failure the card can retry.
+        if (append) await markTopicGenerationSettled([payload.factId]);
+        else await failTopicGeneration(payload.factId, 'Topic generation returned no usable topics');
         return { topics: [] };
       }
       await completeTopicGeneration(payload.factId, topics);
@@ -194,59 +216,44 @@ export async function handleTopicGenJob(
     }
   }
 
-  logger.debug('[topic-gen] starting', {
-    factId: payload.factId,
-    useCloud: payload.useCloud ?? false,
-    mode: payload.mode ?? 'replace',
-    otherFactCount: otherFacts.length,
-  });
-
-  const realTopics = await generateTopicsForFact({
-    factStatement: payload.factStatement,
-    userLocation,
-    otherFacts,
-    useCloud: payload.useCloud ?? false,
+  // ON-DEVICE: the local engine's own prompt, isolated the same way. No
+  // location line and no other facts: a location drawn from ANOTHER fact
+  // anchored a non-place fact to it, which is a combination, and on-device
+  // mode has no combination pass (owner decision).
+  const generated = await generateTopicsForFact({
+    factStatement: fact.statement,
+    userLocation: null,
+    otherFacts: [],
+    useCloud: false,
     totalCount: payload.totalCount,
-    excludeTopics: payload.excludeTopics,
+    excludeTopics: [...ownTopics, ...declined],
   });
-
-  logger.debug('[topic-gen] generated', {
-    factId: payload.factId,
-    realCount: realTopics.length,
-  });
+  const realTopics = freshTopics(generated, ownTopics, declined);
 
   if (realTopics.length === 0) {
-    // Settle, do not just return. This path is reached in on-device mode and by
-    // any cloud job from a bundle older than the skill-guided payload, and it
-    // used to leave `topics_status` on the 'pending' that fact-commit stamped —
-    // the same perpetual spinner the batch path had.
-    await failTopicGeneration(payload.factId, 'Topic generation returned no usable topics');
+    if (append) await markTopicGenerationSettled([payload.factId]);
+    else await failTopicGeneration(payload.factId, 'Topic generation returned no usable topics');
     return { topics: [] };
   }
 
-  if (payload.mode === 'append') {
-    const fact = allFacts.find((f) => f.id === payload.factId);
-    const existing = fact?.metadata?.topics ?? [];
+  if (append) {
+    const existing = fact.metadata?.topics ?? [];
     await updateFact(payload.factId, {
-      metadata: {
-        ...(fact?.metadata ?? {}),
-        topics: mergeTopicsAppend(existing, realTopics),
-      },
+      metadata: { ...(fact.metadata ?? {}), topics: mergeTopicsAppend(existing, realTopics) },
     });
   } else {
-    await updateFact(payload.factId, { metadata: { topics: realTopics } });
+    await updateFact(payload.factId, { metadata: { ...(fact.metadata ?? {}), topics: realTopics } });
   }
-  // Wave 11 gap-fix: mint `topics` rows alongside the legacy metadata dual-write
-  // so on-device-generated topics reach the wave-7 feed retrieval. Deduped per
-  // fact, so this is safe across regeneration + append runs.
+  // Mint `topics` rows alongside the legacy metadata write so on-device
+  // topics reach feed retrieval. Deduped per fact.
   await syncLlmTopicsForFact(payload.factId, realTopics).catch((err: unknown) =>
     logger.warn('[topic-gen] topic-row minting failed', {
       factId: payload.factId,
       error: String(err),
     }),
   );
-  // Stamp-only: this path has already written its own metadata and minted its
-  // own rows, so `completeTopicGeneration` would mint them a second time.
+  // Stamp-only: the rows are minted above, and `completeTopicGeneration`
+  // would mint them a second time.
   await markTopicGenerationSettled([payload.factId]);
   useFloatingChatStore.getState().notifyFactMutation();
   return { topics: realTopics };
