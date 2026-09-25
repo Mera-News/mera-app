@@ -1,7 +1,7 @@
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
+import TapPressable from '@/components/custom/cards/TapPressable';
 import { Text } from '@/components/ui/text';
 import type { BreakingCardData } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -83,7 +83,9 @@ const BreakingStrip: React.FC<BreakingStripProps> = ({ items, onPressItem }) => 
             className="text-white"
           />
         </View>
-        <Pressable
+        {/* Opens on a TAP only: a sideways drag released over the card (at
+            the strip's ends, or the tab swipe) is not a press. */}
+        <TapPressable
           onPress={() => onPressItem(data)}
           accessibilityRole="button"
           accessibilityLabel={`${t('relevance.emergency')}: ${title}`}

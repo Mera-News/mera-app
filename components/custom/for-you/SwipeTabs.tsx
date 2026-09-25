@@ -73,6 +73,11 @@ export interface SwipeTabsProps {
 const SwipeTabs: React.FC<SwipeTabsProps> = ({ index, count, onIndexChange, keyOf, renderPanel, testID }) => {
     const blockerRef = useRef<any>(null);
     const [width, setWidth] = useState(0);
+    // A drag or slide is in flight: NO panel takes a touch, the active one
+    // included, until it has landed (owner, in prod: a sideways swipe opened
+    // the card under the finger, on either screen). The card itself also
+    // ignores a release past its tap slop (`useTapGuard`).
+    const [moving, setMoving] = useState(false);
     const reduceMotion = useReducedMotion();
     const rtl = I18nManager.isRTL;
     const dir = rtl ? -1 : 1;
@@ -101,19 +106,34 @@ const SwipeTabs: React.FC<SwipeTabsProps> = ({ index, count, onIndexChange, keyO
 
     const onLayout = useCallback((e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width), []);
 
-    const land = useCallback((next: number) => onIndexChange(next), [onIndexChange]);
+    // One render: the new tab and touches back together, after the slide.
+    const land = useCallback(
+        (next: number) => {
+            setMoving(false);
+            onIndexChange(next);
+        },
+        [onIndexChange],
+    );
+    const settle = useCallback(() => setMoving(false), []);
 
     const finish = useCallback(
         (dx: number, vx: number) => {
             const next = swipeTarget({ dx, vx, width, index, count, rtl });
             if (next === null) {
-                offset.value = reduceMotion ? base : withSpring(base);
+                if (reduceMotion) {
+                    offset.value = base;
+                    setMoving(false);
+                } else {
+                    offset.value = withSpring(base, undefined, (finished) => {
+                        if (finished) runOnJS(settle)();
+                    });
+                }
                 return;
             }
             const target = -dir * next * width;
             if (reduceMotion || width <= 0) {
                 offset.value = target;
-                onIndexChange(next);
+                land(next);
                 return;
             }
             // The neighbour is already mounted and drawn: slide onto it, then
@@ -122,7 +142,7 @@ const SwipeTabs: React.FC<SwipeTabsProps> = ({ index, count, onIndexChange, keyO
                 if (finished) runOnJS(land)(next);
             });
         },
-        [width, index, count, rtl, dir, base, reduceMotion, onIndexChange, land, offset],
+        [width, index, count, rtl, dir, base, reduceMotion, land, settle, offset],
     );
 
     const pan = useMemo(
@@ -132,6 +152,9 @@ const SwipeTabs: React.FC<SwipeTabsProps> = ({ index, count, onIndexChange, keyO
                 .failOffsetY([-12, 12])
                 .hitSlop({ left: -EDGE_INSET, right: -EDGE_INSET })
                 .requireExternalGestureToFail(blockerRef)
+                .onStart(() => {
+                    runOnJS(setMoving)(true);
+                })
                 .onUpdate((e) => {
                     if (!reduceMotion) offset.value = base + e.translationX * TAB_SWIPE_DAMPING;
                 })
@@ -160,7 +183,7 @@ const SwipeTabs: React.FC<SwipeTabsProps> = ({ index, count, onIndexChange, keyO
                                     key={key}
                                     testID={testID ? `${testID}-panel-${key}` : undefined}
                                     style={[StyleSheet.absoluteFill, { transform: [{ translateX: dir * i * width }] }]}
-                                    pointerEvents={active ? 'auto' : 'none'}
+                                    pointerEvents={active && !moving ? 'auto' : 'none'}
                                     accessibilityElementsHidden={!active}
                                     importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
                                 >

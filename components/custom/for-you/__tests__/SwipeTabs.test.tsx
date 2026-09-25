@@ -37,6 +37,15 @@ jest.mock('react-native-gesture-handler', () => {
     };
 });
 let mockReduceMotion = false;
+/** When set, a timing's completion waits for `mockFinishTiming()`, so a test can
+ *  look at the tree mid-slide. */
+let mockDeferTiming = false;
+let mockPendingTiming: ((f: boolean) => void) | null = null;
+const mockFinishTiming = () => {
+    const cb = mockPendingTiming;
+    mockPendingTiming = null;
+    cb?.(true);
+};
 jest.mock('react-native-reanimated', () => {
     const { View } = require('react-native');
     const R = require('react');
@@ -56,9 +65,15 @@ jest.mock('react-native-reanimated', () => {
                 },
             ),
         useReducedMotion: () => mockReduceMotion,
-        withSpring: (v: number) => v,
-        withTiming: (v: number, _c: unknown, cb?: (f: boolean) => void) => {
+        withSpring: (v: number, _c?: unknown, cb?: (f: boolean) => void) => {
             if (cb) cb(true);
+            return v;
+        },
+        withTiming: (v: number, _c: unknown, cb?: (f: boolean) => void) => {
+            if (cb) {
+                if (mockDeferTiming) mockPendingTiming = cb;
+                else cb(true);
+            }
             return v;
         },
         runOnJS: (fn: any) => fn,
@@ -121,6 +136,8 @@ const panelX = (r: any, k: string) => tx(r.getByTestId(`swipe-panel-${k}`, HIDDE
 
 beforeEach(() => {
     mockReduceMotion = false;
+    mockDeferTiming = false;
+    mockPendingTiming = null;
     for (const k of Object.keys(mockPan)) delete mockPan[k];
     for (const o of [mounts, unmounts, activeSeen]) for (const k of Object.keys(o)) delete (o as any)[k];
     (I18nManager as any).isRTL = false;
@@ -298,5 +315,47 @@ describe('SwipeTabs: re-measure on arrival', () => {
         act(() => r.rerender(tree(3, 5, onIndexChange)));
         act(() => jest.advanceTimersByTime(200));
         expect(mockNotifyScrollTick).toHaveBeenCalledTimes(1);
+    });
+});
+
+// Owner, in prod: a sideways swipe opened an article, "the card under the
+// finger when it lifts", on the screen the swipe started on or the one it went
+// to. No panel takes a touch while a drag or slide is in flight, and the
+// arriving panel stays untouchable until its slide has finished.
+describe('SwipeTabs: no touches while swiping', () => {
+    const pe = (r: any, k: string) => r.getByTestId(`swipe-panel-${k}`, HIDDEN).props.pointerEvents;
+
+    it('any drag that starts the tab swipe has already passed the card tap slop', () => {
+        const { TAP_SLOP } = require('@/components/custom/cards/use-tap-guard');
+        setup();
+        expect(TAP_SLOP).toBeLessThan(Math.abs(mockPan.activeOffsetX[1]));
+    });
+
+    it('every panel, the active one included, takes no touch once the swipe starts', () => {
+        const { r } = setup(2, 5);
+        act(() => mockPan.onStart({}));
+        for (const k of ['t1', 't2', 't3']) expect(pe(r, k)).toBe('none');
+    });
+
+    it('the arriving panel stays untouchable until the slide has finished', () => {
+        mockDeferTiming = true;
+        const { r, onIndexChange } = setup(2, 5);
+        act(() => mockPan.onStart({}));
+        act(() => mockPan.onEnd({ translationX: -300, velocityX: 0 }));
+        // Mid-slide: the tab has not changed, and nothing takes a touch.
+        expect(onIndexChange).not.toHaveBeenCalled();
+        for (const k of ['t1', 't2', 't3']) expect(pe(r, k)).toBe('none');
+        act(() => mockFinishTiming());
+        expect(onIndexChange).toHaveBeenCalledWith(3);
+        act(() => r.rerender(tree(3, 5, onIndexChange)));
+        expect(pe(r, 't3')).toBe('auto');
+        expect(pe(r, 't2')).toBe('none');
+    });
+
+    it('a drag that springs back gives the active panel its touches back', () => {
+        const { r } = setup(2, 5);
+        act(() => mockPan.onStart({}));
+        act(() => mockPan.onEnd({ translationX: -40, velocityX: 0 }));
+        expect(pe(r, 't2')).toBe('auto');
     });
 });
