@@ -90,8 +90,8 @@ export const NARRATION_INLINE_WIDTH_PT_COMPACT = 157;
 
 /**
  * The line's typography and its wrap budget, in ONE place because the row
- * height is pinned from the same numbers. `maxLines` is the Feed's INLINE
- * placement beside its title; the Dashboard's full-width row is one line.
+ * height is pinned from the same numbers. Only the Feed narrates, one line
+ * inline in its title row.
  *
  * `2 x 21 = 42`, against a `3xl` title's 45pt line box, is where the copy's
  * 46-character English ceiling comes from. A third line does not fit and is

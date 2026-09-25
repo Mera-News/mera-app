@@ -1,6 +1,6 @@
 /**
- * What the Feed and Dashboard headers say while a sync is really running, as a
- * pure function.
+ * What the Feed header says while a sync is really running (only the Feed
+ * narrates; the Dashboard shows the Mera mark instead), as a pure function.
  *
  * ── Why this lives in lib/services and not beside the component ─────────────
  *
@@ -98,9 +98,9 @@ export interface ResolveHeaderNarrationInput {
   /**
    * Where in the nudge pool this run starts.
    *
-   * Runs happen many times a day and the pool is six long, so without this
-   * every run would open on the same nudge and a reader would see one sentence
-   * far more than the other five. The caller picks it once per run; the
+   * Runs happen many times a day, so without this every run would open on the
+   * same nudge and a reader would see one sentence far more than the rest. The
+   * caller draws it across the pool's whole length. The caller picks it once per run; the
    * resolver only adds it, so a fixed seed makes the whole table deterministic
    * in a test.
    */

@@ -86,10 +86,9 @@ export interface HeaderNarrationLineProps {
   /** Scoring is running locally rather than in the cloud. */
   readonly onDevice: boolean;
   /**
-   * `inline` (default): beside a title, up to two lines (the Feed).
-   * `row`: the Dashboard's own full-width status row, ONE line. At a large
-   * text size the row is allowed to wrap and the header to grow, so a caller
-   * can pass `maxLines` to lift the clamp there.
+   * `inline` (default): up to two lines. `row`: ONE line. Only the Feed
+   * narrates (its title row uses `row` with `maxLines={1}`); `maxLines` lifts
+   * or tightens the clamp.
    */
   readonly layout?: 'inline' | 'row';
   readonly maxLines?: number;
@@ -114,12 +113,15 @@ export const HeaderNarrationLine: React.FC<HeaderNarrationLineProps> = ({
   // own, the interval below is what does. Seeded once per mount, and a mount
   // IS a run — the parent renders this only while `isFeedProcessing`.
   //
-  // The seed is random per run because the pool is six long and a run happens
-  // many times a day: without it every run opens on the same nudge and a
-  // reader sees one sentence far more than the other five.
+  // The seed is random per run across the WHOLE nudge pool, whatever its
+  // length (read here, never hard-coded): a run happens many times a day, and
+  // without it every run opens on the same nudge and a reader sees one sentence
+  // far more than the rest.
   const runRef = useRef<HeaderNarrationRun | null>(null);
   if (runRef.current === null) {
-    runRef.current = startHeaderNarrationRun(stage, onDevice, Math.floor(Math.random() * 6));
+    const nudges = tAny(HEADER_NARRATION_KEYS.nudges, { returnObjects: true });
+    const nudgeCount = Array.isArray(nudges) && nudges.length > 0 ? nudges.length : 1;
+    runRef.current = startHeaderNarrationRun(stage, onDevice, Math.floor(Math.random() * nudgeCount));
   }
 
   // Mirrors the ref so a swap actually repaints. `slot` is what the render
