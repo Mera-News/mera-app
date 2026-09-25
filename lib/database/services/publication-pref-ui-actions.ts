@@ -19,11 +19,8 @@
 //
 // Concrete-kind writes (prioritised/deprioritised) route through
 // `applyPersonaAction` — never a bare `setPreferenceKind`/`setScopePreferenceKind`
-// — because the executor already owns the change-log row (Activity undo), the
-// sweep decision, and the D18 feed-dirty flag (see
-// `persona-action-executor.applyPersonaAction`, which marks the feed dirty at
-// its own call site whenever a mutation applies and did not already purge).
-// Nothing further is needed here for those two levels.
+// — because the executor already owns the change-log row (Activity undo) and
+// the sweep decision. Nothing further is needed here for those two levels.
 //
 // `'none'` (clear) has no executor action — `SET_PUBLICATION_PREF` /
 // `SET_SOURCE_SCOPE_PREF` both require a concrete `publicationPref` — so this
@@ -37,11 +34,7 @@ import { applyPersonaAction } from './persona-action-executor';
 import * as publicationPreferenceService from './publication-preference-service';
 import type { SourceScopeRef } from './publication-preference-service';
 import * as changeLogService from './persona-change-log-service';
-import {
-  markFeedNeedsRefresh,
-  runSweepFor,
-  sweepForMutation,
-} from './persona-mutation-sweeps';
+import { runSweepFor, sweepForMutation } from './persona-mutation-sweeps';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 // Import-only: this module does not own lib/explore/**. Pure/RN-free (see its
 // own header), so pulling it in here adds no native/DB coupling.
@@ -140,7 +133,7 @@ async function clearNamedPublicationLevel(publicationName: string): Promise<SetS
     source: 'user',
     summary: `Cleared publication preference: ${publicationName}`,
   });
-  const purged = await runSweepFor(
+  await runSweepFor(
     sweepForMutation({
       actionType: ACTION_NAMES.SET_PUBLICATION_PREF,
       prefBefore: before,
@@ -148,7 +141,6 @@ async function clearNamedPublicationLevel(publicationName: string): Promise<SetS
     }),
     ACTION_NAMES.SET_PUBLICATION_PREF,
   );
-  if (!purged) markFeedNeedsRefresh();
   return { applied: true };
 }
 
@@ -156,8 +148,8 @@ async function clearNamedPublicationLevel(publicationName: string): Promise<SetS
  * Clear a country-scope preference. A scope can never be muted (the executor
  * rejects it, stage-scoring never derives a hard filter from one), so there is
  * nothing to retroactively sweep — unlike the named-publication clear above,
- * this never calls `sweepForMutation`/`runSweepFor`; it just dirties the feed
- * for a rescore. Mirrors `PublicationPreferencesScreen`'s pre-existing scope
+ * this never calls `sweepForMutation`/`runSweepFor`; the next scoring pass
+ * picks the change up. Mirrors `PublicationPreferencesScreen`'s pre-existing scope
  * clear exactly.
  */
 async function clearCountryScopeLevel(
@@ -175,7 +167,6 @@ async function clearCountryScopeLevel(
     source: 'user',
     summary: `Cleared source-scope preference: ${label}`,
   });
-  markFeedNeedsRefresh();
   return { applied: true };
 }
 

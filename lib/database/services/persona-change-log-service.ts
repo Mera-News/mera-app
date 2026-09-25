@@ -21,7 +21,6 @@ import * as publicationPreferenceService from './publication-preference-service'
 import type { PublicationPrefKind } from './publication-preference-service';
 import { ACTION_NAMES } from '../../news-harness/persona-management/action-names';
 import {
-  markFeedNeedsRefresh,
   runSweepFor,
   sweepForRevert,
   type SweepDecisionInput,
@@ -145,8 +144,7 @@ async function suppressionWasHard(suppressionId: string): Promise<boolean> {
 /**
  * Reverts a logged persona mutation by applying its inverse, marks the row
  * `reverted`, appends a `revert_change` entry (source 'user'), and then runs
- * whatever retroactive feed sweep the undo requires (D12) plus the feed-dirty
- * flag (D18) — the same reconciliation the persona-action-executor seam does,
+ * whatever retroactive feed sweep the undo requires (D12), the same reconciliation the persona-action-executor seam does,
  * via the same shared policy module. A revert is a persona mutation like any
  * other; skipping this is what let an undone hard filter leave its purged
  * articles gone for the rest of the 48h window.
@@ -175,7 +173,7 @@ export async function revertChange(changeLogId: string): Promise<boolean> {
   if (row.reverted) return false;
   const action = parseAction(row);
 
-  // D12 + D18. A revert is a persona mutation like any other, so it owes the
+  // D12. A revert is a persona mutation like any other, so it owes the
   // feed the same reconciliation the forward path does. Described in FORWARD
   // terms — `sweepForRevert` mirrors it — so a new action type can never be
   // wired into one path and forgotten in the other.
@@ -369,13 +367,12 @@ export async function revertChange(changeLogId: string): Promise<boolean> {
     summary: `Reverted: ${row.summary}`,
   });
 
-  // D12 + D18, AFTER the inverse is committed and audited (both sweeps read the
+  // D12, AFTER the inverse is committed and audited (both sweeps read the
   // persona live, so running earlier would screen against the pre-revert
   // state). Identical policy and identical failure handling to the executor
   // seam: a sweep failure is caught and logged inside runSweepFor, never
   // propagated — the revert already happened, so throwing here would report a
-  // completed undo as failed. A failed purge falls through to the dirty flag.
-  const purged = await runSweepFor(sweepForRevert(sweepInput), row.actionType);
-  if (!purged) markFeedNeedsRefresh();
+  // completed undo as failed.
+  await runSweepFor(sweepForRevert(sweepInput), row.actionType);
   return true;
 }

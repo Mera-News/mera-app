@@ -1,6 +1,5 @@
 // Persona-mutation sweep policy — the ONE place that answers "does this
-// persona mutation need a retroactive feed sweep, and which one?" (D12), plus
-// the D18 feed-dirty rule that rides along with the answer.
+// persona mutation need a retroactive feed sweep, and which one?" (D12).
 //
 // WHY THIS MODULE EXISTS (the friction, named): the decision used to live
 // inline in persona-action-executor.dispatch. `revertChange` is a SECOND
@@ -136,28 +135,12 @@ async function runSweep(kind: SweepKind, actionType: string): Promise<boolean> {
 }
 
 /**
- * D18. A persona change means the feed is stale. Never throws: a missing store
- * must not turn a committed mutation into a failure.
- */
-export function markFeedNeedsRefresh(): void {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const store = require('@/lib/stores/for-you-store') as typeof import('@/lib/stores/for-you-store');
-    store.useForYouStore.getState().setFeedNeedsRefresh(true);
-  } catch (error) {
-    logger.captureException(error, {
-      tags: { service: 'persona-mutation-sweeps', step: 'mark-feed-dirty' },
-    });
-  }
-}
-
-/**
  * Run the sweep a committed mutation needs.
  *
- * Returns `true` iff a PURGE ran AND succeeded — meaning the feed is already
- * reconciled (the purge ends in an immediate refreshUi) and must NOT also be
- * marked dirty. Every other outcome returns `false` and the caller dirties:
- *   - no sweep needed          → the change still needs a rescore
+ * Returns `true` iff a PURGE ran AND succeeded, meaning the feed is already
+ * reconciled (the purge ends in an immediate refreshUi). Every other outcome
+ * returns `false`:
+ *   - no sweep needed          → the change waits for the next scoring pass
  *   - un-exclude               → released rows come back `unscored`
  *   - a purge that FAILED      → the feed was never reconciled
  */

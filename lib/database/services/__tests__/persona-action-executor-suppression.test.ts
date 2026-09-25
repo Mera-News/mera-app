@@ -3,7 +3,7 @@
 // Covers what persona-action-executor.test.ts deliberately does not: the v46
 // kind/value passthrough, the row-source fix, the new retire_suppression case,
 // and — the part that is easy to get silently wrong — WHICH action/condition
-// pairs run WHICH retroactive sweep (D12) and which mark the feed dirty (D18).
+// pairs run WHICH retroactive sweep (D12).
 // Every collaborator is mocked; this is a dispatch test, not a DB test.
 
 jest.mock('@/lib/logger', () => ({
@@ -61,11 +61,6 @@ jest.mock('@/lib/services/suppression-sweep', () => ({
     evictedFromFeed: 0,
   })),
   unexcludeRetiredHardFilters: jest.fn(async () => ({ resetIds: [], stillExcluded: 0 })),
-}));
-
-const mockSetFeedNeedsRefresh = jest.fn();
-jest.mock('@/lib/stores/for-you-store', () => ({
-  useForYouStore: { getState: () => ({ setFeedNeedsRefresh: mockSetFeedNeedsRefresh }) },
 }));
 
 import { applyPersonaAction } from '../persona-action-executor';
@@ -409,81 +404,11 @@ describe('retire_suppression', () => {
 });
 
 // ---------------------------------------------------------------------------
-// D18 — persona change ⇒ feed marked dirty (with the purge exception)
+// Public result shape
 // ---------------------------------------------------------------------------
 
-describe('D18: feed dirty marking at the seam', () => {
-  it('marks the feed dirty for a soft suppression (needs a rescore)', async () => {
-    await applyPersonaAction(
-      {
-        action_type: ACTION_NAMES.ADD_SUPPRESSION,
-        suppressionPattern: 'gossip',
-        suppressionStrength: 0.5,
-      },
-      'feedback',
-    );
-    expect(mockSetFeedNeedsRefresh).toHaveBeenCalledWith(true);
-  });
-
-  it('marks the feed dirty for a chat/feedback topic mutation (the pre-P3 gap)', async () => {
-    await applyPersonaAction(
-      { action_type: ACTION_NAMES.RETIRE_TOPIC, topicId: 't1' },
-      'chat',
-    );
-    expect(mockSetFeedNeedsRefresh).toHaveBeenCalledWith(true);
-  });
-
-  it('does NOT dirty after a purge — that already refreshed the UI immediately', async () => {
-    await applyPersonaAction(
-      {
-        action_type: ACTION_NAMES.ADD_SUPPRESSION,
-        suppressionPattern: 'gossip',
-        suppressionStrength: 0.9,
-      },
-      'user',
-    );
-    expect(purge).toHaveBeenCalled();
-    expect(mockSetFeedNeedsRefresh).not.toHaveBeenCalled();
-  });
-
-  it('DOES dirty after an un-exclude — released rows come back unscored', async () => {
-    getAllSuppressions.mockResolvedValue([row({ strength: 0.9 })]);
-    await applyPersonaAction(
-      { action_type: ACTION_NAMES.RETIRE_SUPPRESSION, suppressionId: 'sup-1' },
-      'user',
-    );
-    expect(unexclude).toHaveBeenCalled();
-    expect(mockSetFeedNeedsRefresh).toHaveBeenCalledWith(true);
-  });
-
-  it('dirties when a purge FAILED — the feed was never reconciled', async () => {
-    purge.mockRejectedValueOnce(new Error('boom'));
-    await applyPersonaAction(
-      {
-        action_type: ACTION_NAMES.ADD_SUPPRESSION,
-        suppressionPattern: 'gossip',
-        suppressionStrength: 0.9,
-      },
-      'user',
-    );
-    expect(mockSetFeedNeedsRefresh).toHaveBeenCalledWith(true);
-  });
-
-  it('does NOT dirty for a nudge suggestion or an unsupported action', async () => {
-    await applyPersonaAction(
-      { action_type: ACTION_NAMES.NUDGE_BROWSE_RELATED, topicText: 'space' },
-      'feedback',
-    );
-    await applyPersonaAction({ action_type: ACTION_NAMES.MERGE_FACTS }, 'feedback');
-    expect(mockSetFeedNeedsRefresh).not.toHaveBeenCalled();
-  });
-
-  it('does NOT dirty for a skipped action', async () => {
-    await applyPersonaAction({ action_type: ACTION_NAMES.RETIRE_TOPIC }, 'feedback');
-    expect(mockSetFeedNeedsRefresh).not.toHaveBeenCalled();
-  });
-
-  it('never leaks the internal `purged` flag into the public result', async () => {
+describe('applyPersonaAction result', () => {
+  it('returns exactly applied, changeLogId and summary after a purge', async () => {
     const res = await applyPersonaAction(
       {
         action_type: ACTION_NAMES.ADD_SUPPRESSION,

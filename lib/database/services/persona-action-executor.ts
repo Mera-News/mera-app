@@ -26,11 +26,7 @@ import type { PersonaChangeLogSource } from '../models/PersonaChangeLog';
 import type { PublicationPreferenceProvenance, SourceScopeKind } from '../models/PublicationPreference';
 import { SUPPRESSION_KINDS } from '../models/PersonaSuppression';
 import type { PersonaSuppressionKind } from '../models/PersonaSuppression';
-import {
-  markFeedNeedsRefresh,
-  runSweepFor,
-  sweepForMutation,
-} from './persona-mutation-sweeps';
+import { runSweepFor, sweepForMutation } from './persona-mutation-sweeps';
 
 /** Default weight for a minted NEGATIVE topic when the action omits one. */
 const DEFAULT_NEGATIVE_TOPIC_WEIGHT = -0.6;
@@ -79,13 +75,6 @@ export interface ApplyActionResult {
   summary: string;
 }
 
-/** Internal-only dispatch result. `purged` is not part of the public contract —
- *  it just tells the seam whether an immediate hard-filter purge already
- *  reconciled the feed, so the D18 dirty-marking can be skipped. */
-interface DispatchResult extends ApplyActionResult {
-  purged?: boolean;
-}
-
 /** Short 2-dp weight label for summaries (English only). */
 function fmt(w: number): string {
   return w.toFixed(2);
@@ -128,17 +117,6 @@ function normalizeSuppressionKind(
 }
 
 /**
- * D18. A persona change means the feed is stale. This executor is the single
- * choke point every FORWARD mutation flows through (feedback leaves, chat
- * proposals, plan accepts, the filter actions) — before this, only the
- * persona-EDITING screens set the flag, so a persona changed via feedback or
- * chat produced no refresh hint at all.
- *
- * `revertChange` is the OTHER mutation path; it applies the same rule via the
- * same shared module, which is why the sweep policy lives there and not here.
- */
-
-/**
  * Single dispatch point for ALL deterministic persona mutations (feedback tree
  * leaves + feedback agent proposals). Routes each action_type to the right
  * service, and every mutation appends an invertible persona_change_log row.
@@ -148,17 +126,7 @@ export async function applyPersonaAction(
   source: PersonaChangeLogSource,
 ): Promise<ApplyActionResult> {
   try {
-    const { purged, ...result } = await dispatch(action, source);
-    // D18. Mark the feed stale for anything that actually landed. Gating on
-    // `applied` excludes nudges/skips/unsupported without a per-case list.
-    //
-    // Asymmetry, deliberate: a PURGE already ran an immediate refreshUi and the
-    // excluded rows are gone from the screen, so there is nothing to re-derive —
-    // dirtying is for changes that need a RESCORE. An UN-exclude is the other
-    // way round: it resets rows to `unscored`, which only the next scoring pass
-    // can resolve, so it does mark the feed dirty (it is not flagged `purged`).
-    if (result.applied && !purged) markFeedNeedsRefresh();
-    return result;
+    return await dispatch(action, source);
   } catch (error) {
     logger.captureException(error, {
       tags: { service: 'persona-action-executor', action_type: action.action_type },
@@ -183,7 +151,7 @@ export async function applyPersonaActions(
 async function dispatch(
   action: PersonaAction,
   source: PersonaChangeLogSource,
-): Promise<DispatchResult> {
+): Promise<ApplyActionResult> {
   switch (action.action_type) {
     // -- Topic weight -------------------------------------------------------
     case ACTION_NAMES.SET_TOPIC_WEIGHT: {
@@ -362,14 +330,14 @@ async function dispatch(
       // Compare the strength WE clamped/defaulted, not the persisted row's:
       // the decision is about the action, and it must not depend on the shape
       // the service happens to return.
-      const purged = await runSweepFor(
+      await runSweepFor(
         sweepForMutation({
           actionType: action.action_type,
           hardFilter: strength >= suppressionService.HARD_SUPPRESSION_STRENGTH,
         }),
         action.action_type,
       );
-      return { applied: true, changeLogId: row.id, summary: `Suppressed: ${pattern}`, purged };
+      return { applied: true, changeLogId: row.id, summary: `Suppressed: ${pattern}` };
     }
 
     // -- Remove a suppression (audited, invertible) -------------------------
@@ -398,9 +366,8 @@ async function dispatch(
       // D12c. Retiring a HARD filter gives its casualties a second chance. Rows
       // a still-active filter also matches stay excluded (the sweep re-screens
       // against the live persona, so the two-filters-on-one-row case is free).
-      // runSweepFor returns false for an un-exclude — the released rows come
-      // back `unscored` and need the next scoring pass, so the feed IS dirty.
-      const purged = await runSweepFor(
+      // The released rows come back `unscored` for the next scoring pass.
+      await runSweepFor(
         sweepForMutation({ actionType: action.action_type, hardFilter: wasHard }),
         action.action_type,
       );
@@ -408,7 +375,6 @@ async function dispatch(
         applied: true,
         changeLogId: row.id,
         summary: `Removed filter: ${pattern}`,
-        purged,
       };
     }
 
@@ -452,7 +418,7 @@ async function dispatch(
       // see it live with no extra plumbing here. Muting purges retroactively;
       // raising the weight back above -0.9 (unmute, incl. switching to
       // boost/deprioritize/none) releases what the mute had excluded.
-      const purged = await runSweepFor(
+      await runSweepFor(
         sweepForMutation({
           actionType: action.action_type,
           prefBefore: before,
@@ -464,7 +430,6 @@ async function dispatch(
         applied: true,
         changeLogId: row.id,
         summary: `Set publication preference: ${action.publicationId} → ${action.publicationPref}`,
-        purged,
       };
     }
 
@@ -521,7 +486,7 @@ async function dispatch(
       // that a new action type can never be live in one path and missing in
       // the other; if a scope exclusion is ever implemented, the boundary rule
       // and its mirror are already here.
-      const purged = await runSweepFor(
+      await runSweepFor(
         sweepForMutation({
           actionType: action.action_type,
           prefBefore: before,
@@ -529,7 +494,7 @@ async function dispatch(
         }),
         action.action_type,
       );
-      return { applied: true, changeLogId: row.id, summary, purged };
+      return { applied: true, changeLogId: row.id, summary };
     }
 
     // -- Nudges are SUGGESTIONS, not mutations — no change-log row ----------
