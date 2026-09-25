@@ -46,35 +46,39 @@ const mockSwipeCloseFns = new Map<string, jest.Mock>();
 jest.mock('../FactAccordion', () => {
     const { View, Text, Pressable } = require('react-native');
     const ReactLib = require('react');
+    // A named, capitalized component — not an anonymous arrow assigned to
+    // `default` — so eslint's react-hooks/rules-of-hooks recognizes the
+    // useEffect below as belonging to a component rather than flagging it as
+    // a hook called from a plain function.
+    function MockFactAccordion({ fact, onDeletePress, onToggle, onDeleteTopic, onAddTopic, onGenerateMore, countState, editing, articleCountByTopic, onSwipeOpen, swipeableRef }: any) {
+        ReactLib.useEffect(() => {
+            const close = jest.fn();
+            mockSwipeCloseFns.set(fact.id, close);
+            swipeableRef?.(fact.id, { close, openLeft: jest.fn(), openRight: jest.fn(), reset: jest.fn() });
+            return () => {
+                swipeableRef?.(fact.id, null);
+                mockSwipeCloseFns.delete(fact.id);
+            };
+        }, [fact.id]);
+        return (
+            <View>
+                <Text>{fact.statement}</Text>
+                <Text testID={`count-state-${fact.id}`}>{`${countState}:${editing ? 'editing' : 'rest'}:${articleCountByTopic?.get?.('hiking') ?? 0}`}</Text>
+                <Pressable accessibilityLabel={`delete-${fact.id}`} onPress={() => onDeletePress(fact)} />
+                <Pressable accessibilityLabel={`toggle-${fact.id}`} onPress={() => onToggle(fact.id)} />
+                <Pressable
+                    accessibilityLabel={`delete-topic-${fact.id}`}
+                    onPress={() => onDeleteTopic(fact, { id: 'topic-1', text: 'Mountain trail running' })}
+                />
+                <Pressable accessibilityLabel={`add-topic-${fact.id}`} onPress={() => onAddTopic(fact)} />
+                <Pressable accessibilityLabel={`generate-more-${fact.id}`} onPress={() => onGenerateMore(fact)} />
+                <Pressable accessibilityLabel={`swipe-open-${fact.id}`} onPress={() => onSwipeOpen?.(fact.id)} />
+            </View>
+        );
+    }
     return {
         __esModule: true,
-        default: ({ fact, onDeletePress, onToggle, onDeleteTopic, onAddTopic, onGenerateMore, countState, editing, articleCountByTopic, onSwipeOpen, swipeableRef }: any) => {
-            ReactLib.useEffect(() => {
-                const close = jest.fn();
-                mockSwipeCloseFns.set(fact.id, close);
-                swipeableRef?.(fact.id, { close, openLeft: jest.fn(), openRight: jest.fn(), reset: jest.fn() });
-                return () => {
-                    swipeableRef?.(fact.id, null);
-                    mockSwipeCloseFns.delete(fact.id);
-                };
-                // eslint-disable-next-line react-hooks/exhaustive-deps
-            }, [fact.id]);
-            return (
-                <View>
-                    <Text>{fact.statement}</Text>
-                    <Text testID={`count-state-${fact.id}`}>{`${countState}:${editing ? 'editing' : 'rest'}:${articleCountByTopic?.get?.('hiking') ?? 0}`}</Text>
-                    <Pressable accessibilityLabel={`delete-${fact.id}`} onPress={() => onDeletePress(fact)} />
-                    <Pressable accessibilityLabel={`toggle-${fact.id}`} onPress={() => onToggle(fact.id)} />
-                    <Pressable
-                        accessibilityLabel={`delete-topic-${fact.id}`}
-                        onPress={() => onDeleteTopic(fact, { id: 'topic-1', text: 'Mountain trail running' })}
-                    />
-                    <Pressable accessibilityLabel={`add-topic-${fact.id}`} onPress={() => onAddTopic(fact)} />
-                    <Pressable accessibilityLabel={`generate-more-${fact.id}`} onPress={() => onGenerateMore(fact)} />
-                    <Pressable accessibilityLabel={`swipe-open-${fact.id}`} onPress={() => onSwipeOpen?.(fact.id)} />
-                </View>
-            );
-        },
+        default: MockFactAccordion,
     };
 });
 
