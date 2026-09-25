@@ -66,6 +66,7 @@ import type { AgentModelResult } from '../../lib/mera-harness/core/types';
 import {
   MAX_TOPICS_PER_FACT,
   generateTopicsForFact,
+  namesFact,
   normalizeTopicText,
   topicSkillForAttribute,
 } from '@/lib/mera-harness';
@@ -137,6 +138,13 @@ export interface FlowCallRecord {
   topics: string[];
   /** A ceiling in both stages, never an exact count. */
   requested: number;
+  /** Model calls this record stands for. The core retries an empty isolated
+   *  answer (up to three calls), and `result.usage` is their SUM, so cost is
+   *  billed in full while a fact stays one row. */
+  attempts: number;
+  /** Combo only: the parsed answer BEFORE the names-its-fact filter and the
+   *  dedupe, so the prompt's own share can still be measured. */
+  preFilterTopics?: string[];
 }
 
 /** The combo handler's own numbers (lib/inference/handlers/topic-combo-handler.ts).
@@ -144,6 +152,17 @@ export interface FlowCallRecord {
 export const COMBO_MAX_SUPPORTING_FACTS = 25;
 const COMBO_TEMPERATURE = 0.3;
 const COMBO_MAX_TOKENS = 400;
+
+function sumUsage(results: AgentModelResult[]): AgentModelResult['usage'] {
+  const used = results.map((r) => r.usage).filter((u): u is NonNullable<AgentModelResult['usage']> => u !== null);
+  if (used.length === 0) return null;
+  return used.reduce((a, u) => ({
+    promptTokens: a.promptTokens + u.promptTokens,
+    completionTokens: a.completionTokens + u.completionTokens,
+    cachedTokens: a.cachedTokens + u.cachedTokens,
+    reasoningTokens: a.reasoningTokens + u.reasoningTokens,
+  }));
+}
 
 export async function runIsolatedStep(p: {
   facts: FlowFact[];
@@ -154,7 +173,8 @@ export async function runIsolatedStep(p: {
 }): Promise<FlowCallRecord> {
   const fact = p.facts[p.factIndex];
   const skillId = topicSkillForAttribute(fact.questionnaireAttribute);
-  let request: FlowModelRequest | null = null;
+  const requests: FlowModelRequest[] = [];
+  const results: AgentModelResult[] = [];
   const outcome = await generateTopicsForFact({
     // ONLY this fact. No otherFacts, no location, by the core's own contract.
     fact: { statement: fact.statement, questionnaireAttribute: fact.questionnaireAttribute },
@@ -162,15 +182,18 @@ export async function runIsolatedStep(p: {
     existingTopics: p.existingTopicsByFact.get(fact.id) ?? [],
     declinedTopics: p.declinedTopics,
     deps: {
-      callModel: (req) => {
-        request = {
+      callModel: async (req) => {
+        const request: FlowModelRequest = {
           systemPrompt: req.systemPrompt,
           userMessage: req.messages.map((m) => m.content).join('\n'),
           temperature: req.temperature,
           maxTokens: req.maxTokens,
           enableThinking: false,
         };
-        return p.call(request, { stage: 'isolated', factIndex: p.factIndex });
+        requests.push(request);
+        const r = await p.call(request, { stage: 'isolated', factIndex: p.factIndex });
+        results.push(r);
+        return r;
       },
     },
   });
@@ -179,10 +202,12 @@ export async function runIsolatedStep(p: {
     factIndex: p.factIndex,
     factId: fact.id,
     skillId,
-    request: request as unknown as FlowModelRequest,
-    result: outcome.result,
+    // The FIRST request is the fact's prompt; retries only append a nudge.
+    request: requests[0],
+    result: { ...outcome.result, usage: sumUsage(results), latencyMs: results.reduce((a, r) => a + r.latencyMs, 0) },
     topics: outcome.result.error ? [] : outcome.topics,
     requested: MAX_TOPICS_PER_FACT,
+    attempts: results.length,
   };
 }
 
@@ -214,11 +239,16 @@ export async function runComboStep(p: {
     enableThinking: false,
   };
   const result = await p.call(request, { stage: 'combo', factIndex: p.factIndex });
-  const topics = result.error
-    ? []
-    : planTopupTopicRows(p.seen, parseTopicsFromOutput(result.content, fact.statement), normalizeTopicText)
-        .map((row) => row.text)
-        .slice(0, COMBO_PASS_MAX_TOPICS);
+  const preFilterTopics = result.error ? [] : parseTopicsFromOutput(result.content, fact.statement);
+  // As the app's combo handler does: a combination topic must name its own
+  // fact, and one that does not is dropped before the dedupe.
+  const topics = planTopupTopicRows(
+    p.seen,
+    preFilterTopics.filter((t) => namesFact(t, fact.statement)),
+    normalizeTopicText,
+  )
+    .map((row) => row.text)
+    .slice(0, COMBO_PASS_MAX_TOPICS);
   for (const t of topics) p.seen.add(normalizeTopicText(t));
   return {
     stage: 'combo',
@@ -229,6 +259,8 @@ export async function runComboStep(p: {
     result,
     topics,
     requested: COMBO_PASS_MAX_TOPICS,
+    attempts: 1,
+    preFilterTopics,
   };
 }
 
@@ -604,7 +636,9 @@ async function main(): Promise<number> {
 
     const info = catalog[model];
     const result = rec.result;
-    const row: RunRow & { stage: FlowStage; skillId: string | null } = {
+    const row: RunRow & {
+      stage: FlowStage; skillId: string | null; attempts: number; preFilterTopics?: string[];
+    } = {
       rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
       cohort: args.cohort, turnIndex: rec.factIndex,
       arm: `${model}@${variantId}@${total}(isolated+combo)`,
@@ -613,6 +647,8 @@ async function main(): Promise<number> {
       callType: rec.stage === 'isolated' ? 'topicgen-factOnly' : 'topicgen-combo',
       stage: rec.stage,
       skillId: rec.skillId,
+      attempts: rec.attempts,
+      ...(rec.preFilterTopics ? { preFilterTopics: rec.preFilterTopics } : {}),
       interleaveGroup: `${total}:${rec.factIndex}:${rec.stage}`, lane: 'near', surface: 'TOPICGEN',
       variant: variantId,
       promptHash: hashMessages([

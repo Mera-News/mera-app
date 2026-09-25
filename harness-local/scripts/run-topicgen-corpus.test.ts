@@ -24,7 +24,7 @@ import {
   type FlowFact,
   type FlowModelRequest,
 } from './run-topicgen-corpus';
-import { f6Leak, f6NamesSubject, f6Words } from './score-topic-run';
+import { f6Leak, f6LeakKind, f6NamesSubject, f6Words } from './score-topic-run';
 
 const FACTS: FlowFact[] = [
   {
@@ -109,7 +109,7 @@ test('the isolated call routes the skill off the attribute', async () => {
 });
 
 test('CONTROL: the combo call does carry the other facts, newest first', async () => {
-  const { call, seen } = recordingCaller('["Rotterdam port India trade"]');
+  const { call, seen } = recordingCaller('["Amsterdam harbour India trade"]');
   const seenTexts = new Set<string>();
   const rec = await runComboStep({ facts: FACTS, factIndex: 0, seen: seenTexts, call });
   assert.ok(rec, 'a combo record');
@@ -121,7 +121,7 @@ test('CONTROL: the combo call does carry the other facts, newest first', async (
   assert.equal(seen[0].maxTokens, 400);
   assert.equal(seen[0].enableThinking, false);
   assert.equal(rec!.stage, 'combo');
-  assert.deepEqual(rec!.topics, ['Rotterdam port India trade']);
+  assert.deepEqual(rec!.topics, ['Amsterdam harbour India trade']);
 });
 
 test('the combo stage drops what is already on the device or declined', async () => {
@@ -154,4 +154,46 @@ test('the subject proxy matches a shared word or a 5-letter prefix, and misses a
   assert.equal(f6NamesSubject('Indian diaspora voting rules', 'From India'), true);
   assert.equal(f6NamesSubject('Portuguese ferry strikes', 'Visits Portugal and Madeira'), true);
   assert.equal(f6NamesSubject('Rotterdam marathon', 'Runs three times a week'), false);
+});
+
+test('an empty isolated answer is retried by the core, and EVERY attempt stays isolated and is billed', async () => {
+  let n = 0;
+  const seen: FlowModelRequest[] = [];
+  const call: FlowCaller = async (req) => {
+    seen.push(req);
+    n += 1;
+    return {
+      content: n < 3 ? '[]' : '["Rotterdam harbour pilot licensing"]',
+      toolCalls: [], finishReason: 'stop', truncated: false,
+      usage: { promptTokens: 100, completionTokens: 10, cachedTokens: 0, reasoningTokens: 0 },
+      modelSent: 'fake', latencyMs: 5, error: null,
+    };
+  };
+  const rec = await runIsolatedStep({
+    facts: FACTS, factIndex: 2, existingTopicsByFact: new Map(), declinedTopics: [], call,
+  });
+  assert.equal(seen.length, 3, 'two retries after two empty answers');
+  for (const req of seen) {
+    for (const other of [FACTS[0].statement, FACTS[1].statement]) {
+      assert.ok(!`${req.systemPrompt}\n${req.userMessage}`.includes(other), 'a retry carries another fact');
+    }
+  }
+  assert.equal(rec.attempts, 3);
+  assert.deepEqual(rec.result.usage, { promptTokens: 300, completionTokens: 30, cachedTokens: 0, reasoningTokens: 0 });
+  assert.deepEqual(rec.topics, ['Rotterdam harbour pilot licensing']);
+});
+
+test('the combo stage drops a topic that names no word of its fact, as the app does, and keeps the prompt-only list', async () => {
+  const { call } = recordingCaller('["India remittance rules", "Amsterdam Indian community"]');
+  const rec = await runComboStep({ facts: FACTS, factIndex: 0, seen: new Set(), call });
+  assert.deepEqual(rec!.topics, ['Amsterdam Indian community']);
+  assert.deepEqual(rec!.preFilterTopics, ['India remittance rules', 'Amsterdam Indian community']);
+});
+
+test('a leak kind is a proper noun in the other fact, or a shared common word', () => {
+  const others = ['Originally from Gdansk, Poland', 'Worried about port automation and jobs', 'Expat in The Netherlands'];
+  assert.equal(f6LeakKind('poland', others), 'entity');
+  assert.equal(f6LeakKind('port', others), 'common');
+  assert.equal(f6LeakKind('expat', others), 'common', "a statement's first word is not a proper noun");
+  assert.equal(f6LeakKind('netherland', others), 'entity');
 });

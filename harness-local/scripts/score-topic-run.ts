@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import { readJsonl } from '../lib/agreement';
+import { namesFact } from '../../lib/mera-harness/core/topic-similarity';
 import { ladderOrder, parseExpectations, scoreCase, selectCase } from '../../lib/mera-harness/eval/expectations';
 import {
   EMPTY_CONTENT_GATE,
@@ -270,6 +271,28 @@ export function f6Leak(
   return { primary: literal.filter((w) => !own.has(w)), literal };
 }
 
+/**
+ * THE KIND OF A LEAK, a heuristic fixed before the ux2 F6 re-run. A leaked
+ * word written as a PROPER NOUN in another fact (capitalised, and not that
+ * statement's first word: Rotterdam, Poland, Dutch, EU, Feyenoord) is that
+ * fact's own subject arriving in this one, i.e. a genuine other-fact leak.
+ * A lowercase word (port, rate, public, automation) is a common word two
+ * facts share, the candidate for legitimate domain overlap. Both lists are
+ * printed in full so the heuristic can be checked line by line.
+ */
+export function f6LeakKind(word: string, otherStatements: readonly string[]): 'entity' | 'common' {
+  for (const s of otherStatements) {
+    const tokens = s.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+    for (let i = 1; i < tokens.length; i++) {
+      const w = tokens[i];
+      const norm = w.toLowerCase();
+      const stem = norm.length > 3 && norm.endsWith('s') && !norm.endsWith('ss') ? norm.slice(0, -1) : norm;
+      if (stem === word && /^\p{Lu}/u.test(w)) return 'entity';
+    }
+  }
+  return 'common';
+}
+
 export function f6NamesSubject(topic: string, ownStatement: string): boolean {
   const own = [...f6Words(ownStatement)];
   for (const w of f6Words(topic)) {
@@ -335,7 +358,11 @@ interface F6Plan {
   facts: F6PlanFact[];
   variants: { variant: string; flow: string; expectedRows: Record<string, number> }[];
 }
-type FlowRow = ReturnType<typeof readJsonl>[number] & { stage?: 'isolated' | 'combo' };
+type FlowRow = ReturnType<typeof readJsonl>[number] & {
+  stage?: 'isolated' | 'combo';
+  attempts?: number;
+  preFilterTopics?: string[];
+};
 
 function stageOf(r: FlowRow): 'first' | 'combo' {
   if (r.stage) return r.stage === 'isolated' ? 'first' : 'combo';
@@ -399,13 +426,16 @@ export function scoreFlow(argv: string[]): number {
     firstTopics: number; firstClean: number; firstCleanLiteral: number;
     comboTopics: number; comboClean: number; comboNamed: number;
     comboMisses: string[]; leaks: string[];
+    leakEntity: string[]; leakCommon: string[];
+    preTopics: number; preNamedApp: number; preNamedProxy: number; retried: number; isolatedRows: number;
     s7Sum: number; s7Sets: number; s7FirstSum: number; s7FirstSets: number;
     errorRows: number; emptyFirst: number; rows: number; usd: number;
     firstSample: string[]; comboSample: string[];
   }
   const blank = (): Acc => ({
     firstTopics: 0, firstClean: 0, firstCleanLiteral: 0, comboTopics: 0, comboClean: 0, comboNamed: 0,
-    comboMisses: [], leaks: [], s7Sum: 0, s7Sets: 0, s7FirstSum: 0, s7FirstSets: 0,
+    comboMisses: [], leaks: [], leakEntity: [], leakCommon: [],
+    preTopics: 0, preNamedApp: 0, preNamedProxy: 0, retried: 0, isolatedRows: 0, s7Sum: 0, s7Sets: 0, s7FirstSum: 0, s7FirstSets: 0,
     errorRows: 0, emptyFirst: 0, rows: 0, usd: 0, firstSample: [], comboSample: [],
   });
   const pooled: Record<string, Acc> = Object.fromEntries(arms.map((a) => [a, blank()]));
@@ -448,6 +478,15 @@ export function scoreFlow(argv: string[]): number {
         a.usd += usd;
         if (r.error !== null) a.errorRows += 1;
         if (stage === 'first' && r.error === null && topics.length === 0) a.emptyFirst += 1;
+        if (r.stage === 'isolated') {
+          a.isolatedRows += 1;
+          if ((r.attempts ?? 1) > 1) a.retried += 1;
+        }
+        for (const t of r.preFilterTopics ?? []) {
+          a.preTopics += 1;
+          if (namesFact(t, fact.statement)) a.preNamedApp += 1;
+          if (f6NamesSubject(t, fact.statement)) a.preNamedProxy += 1;
+        }
       }
       for (const t of topics) {
         const leak = f6Leak(t, fact.statement, others);
@@ -466,7 +505,12 @@ export function scoreFlow(argv: string[]): number {
         const a = pooled[r.variant];
         if (stage === 'first') {
           a.firstSample.push(line);
-          if (leak.primary.length > 0) a.leaks.push(`${line}   [${leak.primary.join(', ')}]`);
+          if (leak.primary.length > 0) {
+            const tagged = `${line}   [${leak.primary.join(', ')}]`;
+            a.leaks.push(tagged);
+            const entity = leak.primary.some((w) => f6LeakKind(w, others) === 'entity');
+            (entity ? a.leakEntity : a.leakCommon).push(tagged);
+          }
         } else {
           a.comboSample.push(line);
           if (!f6NamesSubject(t, fact.statement)) a.comboMisses.push(line);
@@ -565,6 +609,21 @@ export function scoreFlow(argv: string[]): number {
   say('');
   say(`NULL-CONTROL FLOOR (|${ARM} - ${NULL}|): first-pass leak-free ${P(floorLeak)}, S7 ${P(floorS7)}, ladder@matched ${P(floorLadder)}`);
   say(`ladder cells matched ${ladderCells}, excluded (an arm returned nothing) ${ladderUnmatched}`);
+  say('');
+  say('DIAGNOSTICS (not gated)');
+  for (const a of arms) {
+    const acc = pooled[a];
+    say(
+      `  ${a.padEnd(16)} first-pass leaks by kind: other-fact proper noun ${acc.leakEntity.length}, ` +
+        `shared common word ${acc.leakCommon.length}` +
+        (acc.preTopics > 0
+          ? `   combo PROMPT-ONLY (before the names-its-fact filter): app namesFact ` +
+            `${acc.preNamedApp}/${acc.preTopics} ${P(rate(acc.preNamedApp, acc.preTopics))}, ` +
+            `scorer proxy ${acc.preNamedProxy}/${acc.preTopics} ${P(rate(acc.preNamedProxy, acc.preTopics))}`
+          : '') +
+        (acc.isolatedRows > 0 ? `   isolated sets retried after an empty answer ${acc.retried}/${acc.isolatedRows}` : ''),
+    );
+  }
 
   const errors = arms.reduce((n, a) => n + pooled[a].errorRows, 0);
   const empties = arms.reduce((n, a) => n + pooled[a].emptyFirst, 0);
@@ -605,8 +664,11 @@ export function scoreFlow(argv: string[]): number {
   }
 
   say('');
-  say(`${ARM} first-pass topics carrying another fact's word (primary), all ${pooled[ARM].leaks.length}:`);
-  for (const l of pooled[ARM].leaks) say(`  ${l}`);
+  say(`${ARM} leaks, OTHER-FACT PROPER NOUN (genuine other-fact subject), all ${pooled[ARM].leakEntity.length}:`);
+  for (const l of pooled[ARM].leakEntity) say(`  ${l}`);
+  say('');
+  say(`${ARM} leaks, SHARED COMMON WORD (domain-overlap candidates), all ${pooled[ARM].leakCommon.length}:`);
+  for (const l of pooled[ARM].leakCommon) say(`  ${l}`);
   say('');
   say(`${CONTROL} first-pass topics carrying another fact's word (primary), all ${pooled[CONTROL].leaks.length}:`);
   for (const l of pooled[CONTROL].leaks) say(`  ${l}`);
