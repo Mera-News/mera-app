@@ -268,7 +268,7 @@ describe('ProfileScreen', () => {
         const { getByText } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
         fireEvent.press(getByText('profile.meraInvite'));
-        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
+        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona', origin: 'profile' });
     });
 
     // ── Mera News Free ────────────────────────────────────────────────────
@@ -305,7 +305,7 @@ describe('ProfileScreen', () => {
         expect(queryByTestId('mera-chat-invite-locked')).toBeNull();
 
         fireEvent.press(getByTestId('mera-chat-invite'));
-        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
+        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona', origin: 'profile' });
         expect(mockPresentFreeTierPaywall).not.toHaveBeenCalled();
     });
 
@@ -324,7 +324,7 @@ describe('ProfileScreen', () => {
         await waitFor(() => expect(getByText('profile.meraInviteReturning')).toBeTruthy());
         expect(queryByTestId('mera-chat-invite-locked')).toBeNull();
         fireEvent.press(getByTestId('mera-chat-invite'));
-        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
+        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona', origin: 'profile' });
     });
 
     it('M10: no "Learn how Mera works" button competes with the title', async () => {
