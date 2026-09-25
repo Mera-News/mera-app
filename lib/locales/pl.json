@@ -788,7 +788,8 @@
     "topicGenFailed": "Nie udało się wygenerować tematy dla tego.",
     "topicGenRetry": "Ponów",
     "aiUsageNoticeGeneral": "Mera może się mylić, więc sprawdzaj ważne rzeczy.",
-    "trackChooseHint": "Wybierz, co obserwować"
+    "trackChooseHint": "Wybierz, co obserwować",
+    "factDeletePendingTitle": "Zostanie usunięte z Twojego profilu"
   },
   "articleFeedback": {
     "thumbsUp": "Podoba mi się",

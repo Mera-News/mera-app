@@ -776,7 +776,8 @@
     "topicGenFailed": "ไม่สามารถสร้างหัวข้อได้",
     "topicGenRetry": "ลองใหม่",
     "aiUsageNoticeGeneral": "Mera อาจผิดพลาดได้ จึงควรตรวจสอบเรื่องสำคัญ",
-    "trackChooseHint": "เลือกสิ่งที่จะติดตาม"
+    "trackChooseHint": "เลือกสิ่งที่จะติดตาม",
+    "factDeletePendingTitle": "จะถูกลบออกจากโปรไฟล์ของคุณ"
   },
   "articleFeedback": {
     "thumbsUp": "ถูกใจ",

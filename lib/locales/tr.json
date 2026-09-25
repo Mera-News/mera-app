@@ -776,7 +776,8 @@
     "topicGenFailed": "Bu için konular oluşturulamadı.",
     "topicGenRetry": "Tekrar Dene",
     "aiUsageNoticeGeneral": "Mera hata yapabilir, önemli şeyleri kontrol et.",
-    "trackChooseHint": "Neyi takip edeceğini seç"
+    "trackChooseHint": "Neyi takip edeceğini seç",
+    "factDeletePendingTitle": "Profilinden kaldırılacak"
   },
   "articleFeedback": {
     "thumbsUp": "Beğendim",

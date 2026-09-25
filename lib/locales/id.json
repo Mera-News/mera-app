@@ -776,7 +776,8 @@
     "topicGenFailed": "Tidak dapat membuat topik untuk ini.",
     "topicGenRetry": "Coba Lagi",
     "aiUsageNoticeGeneral": "Mera bisa keliru, jadi periksa hal yang penting.",
-    "trackChooseHint": "Pilih yang ingin diikuti"
+    "trackChooseHint": "Pilih yang ingin diikuti",
+    "factDeletePendingTitle": "Akan dihapus dari profil Anda"
   },
   "articleFeedback": {
     "thumbsUp": "Saya suka",

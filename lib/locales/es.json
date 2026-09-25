@@ -776,7 +776,8 @@
     "topicGenFailed": "No se pudo generar temas.",
     "topicGenRetry": "Reintentar",
     "aiUsageNoticeGeneral": "Mera puede equivocarse, así que comprueba lo importante.",
-    "trackChooseHint": "Elige qué seguir"
+    "trackChooseHint": "Elige qué seguir",
+    "factDeletePendingTitle": "Se eliminará de tu perfil"
   },
   "articleFeedback": {
     "thumbsUp": "Me gusta",

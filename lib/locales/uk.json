@@ -790,7 +790,8 @@
     "topicGenFailed": "Не вдалося створити теми для цього.",
     "topicGenRetry": "Повторити",
     "aiUsageNoticeGeneral": "Mera може помилятися, тож перевіряй усе важливе.",
-    "trackChooseHint": "Обери, за чим стежити"
+    "trackChooseHint": "Обери, за чим стежити",
+    "factDeletePendingTitle": "Буде видалено з вашого профілю"
   },
   "articleFeedback": {
     "thumbsUp": "Подобається",

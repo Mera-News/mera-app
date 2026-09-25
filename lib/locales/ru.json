@@ -790,7 +790,8 @@
     "topicGenFailed": "Не удалось сгенерировать темы для этого.",
     "topicGenRetry": "Повторить",
     "aiUsageNoticeGeneral": "Mera может ошибаться, поэтому проверяй всё важное.",
-    "trackChooseHint": "Выбери, за чем следить"
+    "trackChooseHint": "Выбери, за чем следить",
+    "factDeletePendingTitle": "Будет удалено из вашего профиля"
   },
   "articleFeedback": {
     "thumbsUp": "Нравится",

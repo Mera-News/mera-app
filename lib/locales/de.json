@@ -776,7 +776,8 @@
     "topicGenFailed": "Themen konnten nicht generiert werden.",
     "topicGenRetry": "Erneut versuchen",
     "aiUsageNoticeGeneral": "Mera kann Fehler machen. Prüf also alles Wichtige nach.",
-    "trackChooseHint": "Wähle, was du verfolgen willst"
+    "trackChooseHint": "Wähle, was du verfolgen willst",
+    "factDeletePendingTitle": "Wird aus deinem Profil entfernt"
   },
   "articleFeedback": {
     "thumbsUp": "Gefällt mir",

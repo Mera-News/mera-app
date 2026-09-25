@@ -776,7 +776,8 @@
     "topicGenFailed": "Không thể tạo chủ đề cho điều này.",
     "topicGenRetry": "Thử lại",
     "aiUsageNoticeGeneral": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra những điều quan trọng.",
-    "trackChooseHint": "Chọn nội dung để theo dõi"
+    "trackChooseHint": "Chọn nội dung để theo dõi",
+    "factDeletePendingTitle": "Sẽ bị xóa khỏi hồ sơ của bạn"
   },
   "articleFeedback": {
     "thumbsUp": "Tôi thích",

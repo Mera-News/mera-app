@@ -776,7 +776,8 @@
     "topicGenFailed": "無法為此產生主題。",
     "topicGenRetry": "重試",
     "aiUsageNoticeGeneral": "Mera 可能會出錯，重要內容請自行查證。",
-    "trackChooseHint": "選擇要追蹤的內容"
+    "trackChooseHint": "選擇要追蹤的內容",
+    "factDeletePendingTitle": "將從你的檔案中移除"
   },
   "articleFeedback": {
     "thumbsUp": "喜歡",

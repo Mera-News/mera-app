@@ -804,7 +804,8 @@
     "topicGenFailed": "تعذّر إنشاء الموضوعات لهذا.",
     "topicGenRetry": "إعادة المحاولة",
     "aiUsageNoticeGeneral": "قد يخطئ Mera، لذا تحقّق من أي شيء مهم.",
-    "trackChooseHint": "اختر ما تريد متابعته"
+    "trackChooseHint": "اختر ما تريد متابعته",
+    "factDeletePendingTitle": "ستتم إزالته من ملفك الشخصي"
   },
   "articleFeedback": {
     "thumbsUp": "أعجبني",

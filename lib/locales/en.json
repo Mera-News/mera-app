@@ -1202,7 +1202,8 @@
     "topicGenFailed": "Couldn't generate topics for this.",
     "topicGenRetry": "Retry",
     "aiUsageNoticeGeneral": "Mera can make mistakes, so check anything important.",
-    "trackChooseHint": "Choose what to follow"
+    "trackChooseHint": "Choose what to follow",
+    "factDeletePendingTitle": "Will be removed from your persona"
   },
   "articleFeedback": {
     "thumbsUp": "I like it",

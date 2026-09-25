@@ -781,7 +781,8 @@
     "topicGenFailed": "Impossible de générer les sujets.",
     "topicGenRetry": "Réessayer",
     "aiUsageNoticeGeneral": "Mera peut se tromper, alors vérifie tout ce qui est important.",
-    "trackChooseHint": "Choisis ce que tu veux suivre"
+    "trackChooseHint": "Choisis ce que tu veux suivre",
+    "factDeletePendingTitle": "Sera supprimé de votre profil"
   },
   "articleFeedback": {
     "thumbsUp": "J'aime",

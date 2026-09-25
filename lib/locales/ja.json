@@ -776,7 +776,8 @@
     "topicGenFailed": "このトピックを生成できませんでした。",
     "topicGenRetry": "再試行",
     "aiUsageNoticeGeneral": "Mera は間違えることがあります。重要なことは確認してください。",
-    "trackChooseHint": "フォローする対象を選んでください"
+    "trackChooseHint": "フォローする対象を選んでください",
+    "factDeletePendingTitle": "プロフィールから削除されます"
   },
   "articleFeedback": {
     "thumbsUp": "いいね",

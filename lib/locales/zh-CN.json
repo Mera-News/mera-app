@@ -776,7 +776,8 @@
     "topicGenFailed": "无法为此生成主题。",
     "topicGenRetry": "重试",
     "aiUsageNoticeGeneral": "Mera 可能会出错，重要内容请自行核实。",
-    "trackChooseHint": "选择要关注的内容"
+    "trackChooseHint": "选择要关注的内容",
+    "factDeletePendingTitle": "将从你的档案中移除"
   },
   "articleFeedback": {
     "thumbsUp": "喜欢",

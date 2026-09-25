@@ -776,7 +776,8 @@
     "topicGenFailed": "इसके लिए विषय तैयार नहीं हो सके।",
     "topicGenRetry": "पुनः प्रयास करें",
     "aiUsageNoticeGeneral": "Mera से गलती हो सकती है, इसलिए ज़रूरी बातें जाँच लें।",
-    "trackChooseHint": "चुनें कि क्या फ़ॉलो करना है"
+    "trackChooseHint": "चुनें कि क्या फ़ॉलो करना है",
+    "factDeletePendingTitle": "आपके प्रोफ़ाइल से हटाया जाएगा"
   },
   "articleFeedback": {
     "thumbsUp": "मुझे पसंद है",

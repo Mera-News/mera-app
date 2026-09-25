@@ -776,7 +776,8 @@
     "topicGenFailed": "이 주제에 대한 토픽을 생성할 수 없습니다.",
     "topicGenRetry": "재시도",
     "aiUsageNoticeGeneral": "Mera도 실수할 수 있으니 중요한 내용은 확인하세요.",
-    "trackChooseHint": "팔로우할 항목을 고르세요"
+    "trackChooseHint": "팔로우할 항목을 고르세요",
+    "factDeletePendingTitle": "프로필에서 제거될 예정"
   },
   "articleFeedback": {
     "thumbsUp": "좋아요",

@@ -776,7 +776,8 @@
     "topicGenFailed": "Kon geen onderwerpen voor dit genereren.",
     "topicGenRetry": "Opnieuw",
     "aiUsageNoticeGeneral": "Mera kan fouten maken, dus controleer alles wat belangrijk is.",
-    "trackChooseHint": "Kies wat je wilt volgen"
+    "trackChooseHint": "Kies wat je wilt volgen",
+    "factDeletePendingTitle": "Wordt verwijderd uit je profiel"
   },
   "articleFeedback": {
     "thumbsUp": "Ik vind het leuk",
