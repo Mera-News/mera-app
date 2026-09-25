@@ -940,3 +940,24 @@ describe('ux2 batch 25 D9: a near-identical fact on file is the replace target',
     expect((await run('Follows Formula 1')).replaces).toBeUndefined();
   });
 });
+
+describe('ux2 batch 25 D1: the hyphenated spelling the turn used wins', () => {
+  it('a model statement "Nieuw West" takes the "Nieuw-West" its own lookup used', async () => {
+    const h = harness(
+      [
+        res({ content: 'Amsterdam.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Nieuw-West Amsterdam' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Nieuw West, Amsterdam, North Holland, Netherlands, EU', questionnaire_attribute: CANONICAL_LOCATION_KEY }] })] }),
+        res({ content: 'Offered.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: [AMS], unmatched: 'Nieuw-West' }) },
+    );
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', languageName: 'English', facts: [] }), userMessage: 'I live in niew west Amsterdam', deps: h.deps });
+    expect(h.saves.flat()[0].statement).toBe('Lives in Nieuw-West, Amsterdam, North Holland, Netherlands, EU');
+  });
+
+  it('a loop-written home prefers the hyphenated spelling among the turn\'s', () => {
+    const { correctedDistrict } = require('../fuzzy-place') as typeof import('../fuzzy-place');
+    expect(correctedDistrict('niew west', ['You live in Nieuw West.', '{"query":"Nieuw-West Amsterdam"}'])).toBe('Nieuw-West');
+  });
+});

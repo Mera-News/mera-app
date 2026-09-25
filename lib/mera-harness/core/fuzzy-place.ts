@@ -101,19 +101,42 @@ function titleCase(words: string): string {
  */
 export function correctedDistrict(finerArea: string, modelTexts: readonly string[]): string {
   const wanted = foldPlace(finerArea);
+  let found: string | null = null;
   for (const text of modelTexts) {
-    const tokens = text.split(/[\s,.!?;:()"“”]+/).filter(Boolean);
+    const tokens = text.split(/[\s,.!?;:()"“”{}\[\]]+/).filter(Boolean);
     for (let i = 0; i < tokens.length; i++) {
       for (let len = 1; len <= 3 && i + len <= tokens.length; len++) {
         const run = tokens.slice(i, i + len).join(' ');
         if (!/[A-Z]/.test(run)) continue;
         const folded = foldPlace(run);
         if (Math.abs(folded.length - wanted.length) > 3) continue;
-        if (userSaidPlace(run, finerArea) && userSaidPlace(finerArea, run)) return run;
+        if (userSaidPlace(run, finerArea) && userSaidPlace(finerArea, run)) {
+          // A HYPHENATED spelling wins over a spaced one (ux2 batch 25, D1):
+          // "Nieuw-West" from the model's own lookup over "Nieuw West" copied
+          // from an older fact.
+          if (run.includes('-')) return run;
+          found = found ?? run;
+        }
       }
     }
   }
-  return titleCase(finerArea);
+  return found ?? titleCase(finerArea);
+}
+
+/**
+ * The hyphenated spelling of `term` the turn used anywhere, when one folds to
+ * the same words; else `term`. The place service has no districts, so the
+ * turn's own text is the only source of a canonical district spelling.
+ */
+export function hyphenatedSpelling(term: string, modelTexts: readonly string[]): string {
+  const wanted = foldPlace(term);
+  if (!wanted || term.includes('-')) return term;
+  for (const text of modelTexts) {
+    for (const token of text.split(/[\s,.!?;:()"“”{}\[\]]+/)) {
+      if (token.includes('-') && foldPlace(token) === wanted) return token;
+    }
+  }
+  return term;
 }
 
 function endsWithTerm(head: string, term: string | null | undefined): boolean {

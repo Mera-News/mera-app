@@ -35,7 +35,7 @@ import {
   threeFactsOf,
 } from './combined-fact';
 import { factPickStatement, isFactPickChoice, joinFactPick } from './fact-pick';
-import { correctedDistrict, guardPlaceRungs, userSaidPlace } from './fuzzy-place';
+import { correctedDistrict, guardPlaceRungs, hyphenatedSpelling, userSaidPlace } from './fuzzy-place';
 import { contentJaccard, isSubsetTopic } from './topic-similarity';
 
 /** Content-word overlap at which a new fact is taken for a rewording of one on
@@ -1315,11 +1315,17 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           // name) reads as a stutter on the card (ux1 C1). Then the chain is
           // checked against what the lookup returned: an invented rung goes
           // and the user's own term for an alias match comes first (ux2 D13).
-          const statement = guardPlaceRungs(
+          const guarded = guardPlaceRungs(
             isHomeEntry(entry) ? collapseRepeatedRungs(rawStatement) : rawStatement,
             [...placeCandidates, ...resolvedPlacesThisTurn],
             userMessage,
           );
+          // A home's first rung in the hyphenated spelling this turn used
+          // elsewhere (ux2 batch 25, D1).
+          const statement = isHomeEntry(entry)
+            ? guarded.replace(/^(lives in )([^,(]+)/i, (_m, lead: string, rung: string) =>
+                `${lead}${hyphenatedSpelling(rung.trim(), modelTexts)}`)
+            : guarded;
           if (!statement) continue;
           // A RE-PROPOSAL. find_similar_facts showed the model this exact
           // statement as something already on file; offering it back is a
