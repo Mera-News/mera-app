@@ -51,7 +51,12 @@ jest.mock('react-native-screens', () => {
     const { View } = require('react-native');
     const R = require('react');
     return {
-        FullWindowOverlay: (p: any) => R.createElement(View, { testID: 'toast-full-window-overlay' }, p.children),
+        FullWindowOverlay: (p: any) =>
+            R.createElement(
+                View,
+                { testID: 'toast-full-window-overlay', a11yModal: p.unstable_accessibilityContainerViewIsModal },
+                p.children,
+            ),
     };
 });
 
@@ -227,6 +232,17 @@ describe('ToastDeck on iOS', () => {
             show({ duration: 5000, render: card('Ordinary') });
         });
         expect(mockPanEnabled[mockPanEnabled.length - 1]).toBe(true);
+    });
+
+    it('never hides the screen underneath from VoiceOver', () => {
+        // react-native-screens' overlay container defaults to
+        // accessibilityViewIsModal = YES, which hid EVERY view outside it: on
+        // device the accessibility tree held only the toast while it showed.
+        const { getByTestId } = render(<ToastDeck />);
+        act(() => {
+            show({ duration: 5000, render: card('First') });
+        });
+        expect(getByTestId('toast-full-window-overlay').props.a11yModal).toBe(false);
     });
 
     it('detaches the overlay once the last card has faded out', () => {

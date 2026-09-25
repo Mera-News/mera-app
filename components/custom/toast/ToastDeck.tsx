@@ -439,7 +439,12 @@ export default function ToastDeck() {
     const column = <DeckColumn entries={entries} />;
     if (Platform.OS !== 'ios') return column;
     return (
-        <FullWindowOverlay>
+        // NOT modal to VoiceOver. The native container defaults to
+        // accessibilityViewIsModal = YES, which hides EVERY view outside it: on
+        // device the accessibility tree held only the toast, and a chat
+        // composer under a persistent card could not be reached at all. Only
+        // the card itself is an accessibility element; everything else passes.
+        <FullWindowOverlay unstable_accessibilityContainerViewIsModal={false}>
             <GestureHandlerRootView style={StyleSheet.absoluteFill} pointerEvents="box-none">
                 {column}
             </GestureHandlerRootView>
