@@ -99,3 +99,36 @@ export function isSubsetTopic(a: string, b: string): boolean {
   for (const t of ta) if (!tb.has(t)) return false;
   return true;
 }
+
+/**
+ * Words a fact is phrased with that are never its subject: "Lives in", "Works
+ * as", "Follows", "since", counts. A topic sharing only these does not name
+ * the fact.
+ */
+const FACT_FRAME_WORDS: ReadonlySet<string> = new Set([
+  'is', 'are', 'was', 'be', 'has', 'have', 'had', 'my', 'our', 'their', 'his', 'her', 'its',
+  'who', 'about', 'near', 'very', 'especially', 'since', 'year', 'years', 'week', 'weeks', 'month',
+  'times', 'twice', 'once', 'one', 'two', 'three', 'round', 'all', 'part', 'time',
+  'live', 'lives', 'living', 'work', 'works', 'working', 'follow', 'follows', 'likes', 'loves',
+  'enjoys', 'reads', 'uses', 'owns', 'holds', 'plans', 'cares', 'worried', 'attends',
+]);
+
+/** The words that can carry a fact's subject. */
+function subjectWords(text: string): string[] {
+  return [...tokenize(text)].filter((w) => !FACT_FRAME_WORDS.has(w) && !/^\d+$/.test(w));
+}
+
+/**
+ * True when `topic` names `fact`'s own subject: a shared subject word, or a
+ * shared 5-letter stem ("vegetarian" / "Vegetarian", "commuter" / "Commutes").
+ * Used to keep a combination topic about its fact (ux2 F6) and to keep an
+ * isolated call's dedupe list free of other facts' subjects.
+ */
+export function namesFact(topic: string, fact: string): boolean {
+  const factWords = subjectWords(fact);
+  const factSet = new Set(factWords);
+  const factStems = new Set(factWords.filter((w) => w.length >= 5).map((w) => w.slice(0, 5)));
+  return subjectWords(topic).some(
+    (w) => factSet.has(w) || (w.length >= 5 && factStems.has(w.slice(0, 5))),
+  );
+}

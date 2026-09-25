@@ -14,6 +14,7 @@
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { escapeUntrusted } from './state-line';
 import { filterNearDuplicates, type DedupeDrop } from './topic-dedupe';
+import { namesFact } from './topic-similarity';
 import type { AgentModelResult, PlaceChain } from './types';
 
 /** The only cap. There is NO per-persona ceiling. */
@@ -80,6 +81,10 @@ export interface GenerateTopicsOutcome {
 
 const FALLBACK_SKILL = 'topics/generic';
 
+/** Appended when a guideline returned a well-formed but empty array. */
+export const EMPTY_RETRY_NUDGE =
+  'Your last answer was empty. Return at least 3 topics about this fact: what gets reported about it.';
+
 /**
  * The topic guideline for a fact whose caller named none (Profile retries,
  * "Generate more", a job from an older bundle): read off the attribute key's
@@ -88,13 +93,17 @@ const FALLBACK_SKILL = 'topics/generic';
 export function topicSkillForAttribute(attribute: string | null | undefined): string {
   const words = (attribute ?? '').toLowerCase().split(/[^a-z]+/).filter(Boolean);
   const has = (...w: string[]) => words.some((x) => w.includes(x));
-  // FAMILY FIRST: "family: parents location" is a relative's fact, and the
-  // residence guideline would anchor it as the user's own home.
+  // ORDER IS MEANING (ux2 F6, measured): family before location ("family:
+  // parents location" is a relative's), expat and origin before residence
+  // ("expat in country of residence" is the expat status), languages before
+  // origin ("background: languages" returned [] from origin 6 of 6). A home
+  // the user OWNS is property, not where they live: no ladder, generic.
   if (has('family', 'parents', 'relatives', 'partner', 'children', 'spouse')) return 'topics/family';
-  if (has('location', 'residence', 'home', 'neighborhood', 'neighbourhood')) return 'topics/residence';
-  if (has('origin', 'background', 'expat', 'nationality', 'heritage')) return 'topics/origin';
-  if (has('profession', 'job', 'work', 'occupation', 'employer', 'company', 'industry', 'career')) return 'topics/profession';
-  if (has('hobbies', 'sports', 'teams', 'entertainment', 'artists', 'interests', 'topics')) return 'topics/interest';
+  if (has('languages', 'language', 'property')) return FALLBACK_SKILL;
+  if (has('expat', 'origin', 'nationality', 'heritage')) return 'topics/origin';
+  if (has('location', 'residence', 'neighborhood', 'neighbourhood')) return 'topics/residence';
+  if (has('profession', 'job', 'occupation', 'employer', 'company', 'industry', 'career')) return 'topics/profession';
+  if (has('hobbies', 'sport', 'sports', 'teams', 'entertainment', 'artists', 'interest', 'interests', 'topics', 'exercise')) return 'topics/interest';
   return FALLBACK_SKILL;
 }
 
@@ -117,12 +126,16 @@ export function buildTopicUserMessage(p: GenerateTopicsParams): string {
   if (p.fact.questionnaireAttribute) {
     lines.push(`Attribute: ${escapeUntrusted(p.fact.questionnaireAttribute, 120)}`);
   }
-  // Existing AND declined go into the SAME exclusion block: to the model they
-  // are one instruction, "do not produce these".
-  const exclusions = [...(p.existingTopics ?? []), ...(p.declinedTopics ?? [])].filter(Boolean);
+  // A DEDUPE LIST, NOT CONTEXT (ux2 F6, measured): the model read the list as
+  // facts about the person, and a school fact whose list held "Poland news"
+  // came back with six Poland school topics. So this fact's own topics are
+  // listed only when they name this fact, and the block says what it is.
+  // Declined texts are always listed: the veto below needs them regardless.
+  const own = (p.existingTopics ?? []).filter((t) => t && namesFact(t, p.fact.statement));
+  const exclusions = [...new Set([...own, ...(p.declinedTopics ?? []).filter(Boolean)])];
   if (exclusions.length > 0) {
     lines.push(
-      `Do NOT repeat these existing topics:\n${exclusions
+      `Already covered, do not repeat these (a dedupe list, not a hint about the person):\n${exclusions
         .map((s) => `- ${escapeUntrusted(s, 200)}`)
         .join('\n')}`,
     );
@@ -231,17 +244,33 @@ export async function generateTopicsForFact(
   const systemPrompt =
     (params.skillId ? loadSkillFn(params.skillId) : null) ?? loadSkillFn(FALLBACK_SKILL) ?? '';
 
-  const result = await params.deps.callModel({
-    role: 'topicgen',
-    model: params.model ?? 'SMALL',
-    systemPrompt,
-    messages: [{ role: 'user', content: buildTopicUserMessage({ ...params, ceiling }) }],
-    temperature: TOPIC_CALL_TEMPERATURE,
-    maxTokens: TOPIC_CALL_MAX_TOKENS,
-    enableThinking: false,
-  });
+  const userMessage = buildTopicUserMessage({ ...params, ceiling });
+  const call = (system: string, content: string) =>
+    params.deps.callModel({
+      role: 'topicgen',
+      model: params.model ?? 'SMALL',
+      systemPrompt: system,
+      messages: [{ role: 'user', content }],
+      temperature: TOPIC_CALL_TEMPERATURE,
+      maxTokens: TOPIC_CALL_MAX_TOKENS,
+      enableThinking: false,
+    });
 
-  const decoded = parseTopicsDetailed(result.content);
+  // AN ISOLATED SET NEVER SETTLES EMPTY (ux2 F6, measured: 29 of 120 were the
+  // model's well-formed [] on running, languages, diet, travel). One retry on
+  // the same guideline with a nudge, then `topics/generic`. A transport ERROR
+  // is not retried: the caller records it and the card offers Retry.
+  let result = await call(systemPrompt, userMessage);
+  let decoded = parseTopicsDetailed(result.content);
+  if (!result.error && decoded.topics.length === 0) {
+    result = await call(systemPrompt, `${userMessage}\n${EMPTY_RETRY_NUDGE}`);
+    decoded = parseTopicsDetailed(result.content);
+    const generic = loadSkillFn(FALLBACK_SKILL);
+    if (!result.error && decoded.topics.length === 0 && generic && generic !== systemPrompt) {
+      result = await call(generic, `${userMessage}\n${EMPTY_RETRY_NUDGE}`);
+      decoded = parseTopicsDetailed(result.content);
+    }
+  }
   const raw = decoded.topics;
 
   const declined = new Set((params.declinedTopics ?? []).map(normalizeTopicText));

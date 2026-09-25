@@ -109,6 +109,7 @@ export {
   DETECT_JACCARD,
   FILTER_DROP_JACCARD,
   contentJaccard,
+  namesFact,
   isSubsetTopic,
   sharedTokens,
 } from './core/topic-similarity';

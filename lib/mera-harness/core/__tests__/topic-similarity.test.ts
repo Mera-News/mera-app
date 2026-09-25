@@ -94,3 +94,21 @@ describe('filterNearDuplicates', () => {
     expect(dropped).toHaveLength(0);
   });
 });
+
+describe('namesFact (ux2 F6 fix 4)', () => {
+  const { namesFact } = require('../topic-similarity') as typeof import('../topic-similarity');
+  it('a shared content word names the fact', () => {
+    expect(namesFact('Feyenoord stadium plans', 'Follows Dutch football, especially Feyenoord')).toBe(true);
+  });
+  it('a shared 5-letter stem names the fact', () => {
+    expect(namesFact('vegetarian school meals', 'Vegetarian since 2019')).toBe(true);
+    expect(namesFact('cycling lane funding', 'Commutes by bicycle year round')).toBe(false);
+    expect(namesFact('commuter rail strikes', 'Commutes by bicycle year round')).toBe(true);
+  });
+  it('a topic about another fact does not', () => {
+    expect(namesFact('Rotterdam port strikes', 'Married with one child')).toBe(false);
+  });
+  it('function words never count', () => {
+    expect(namesFact('lives of dock workers', 'Lives in Rotterdam')).toBe(false);
+  });
+});
