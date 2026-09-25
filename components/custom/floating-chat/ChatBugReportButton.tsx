@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { hapticLight } from '@/lib/haptics';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { currentChatTranscript, openChatBugReport } from './chat-bug-report';
 
@@ -22,14 +23,26 @@ const ChatBugReportButton: React.FC = () => {
     <Button
       onPress={onPress}
       accessibilityLabel={t('preferences.reportBug')}
-      // 36pt disc, 44pt+ touch frame, same as New chat and Close.
-      hitSlop={12}
+      // A 44pt frame around a 36pt disc, same as New chat and Close.
       action="default"
-      className="w-9 h-9 p-0 rounded-full bg-background-100 data-[active=true]:bg-background-200"
+      className="w-11 h-11 p-0 rounded-full bg-transparent items-center justify-center"
     >
-      <MaterialIcons name="bug-report" size={20} color={ICON} />
+      <View style={styles.disc}>
+        <MaterialIcons name="bug-report" size={20} color={ICON} />
+      </View>
     </Button>
   );
 };
+
+const styles = StyleSheet.create({
+  disc: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgb(51, 51, 51)', // dark background-100
+  },
+});
 
 export default ChatBugReportButton;

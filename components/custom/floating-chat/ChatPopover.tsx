@@ -33,6 +33,8 @@ const PANEL_BG = '#1a1a1a';
 // M15). Closing is not destructive; the reply keeps running either way.
 const CLOSE_ICON = 'rgb(210, 210, 210)';
 const BUBBLE_SIZE = 64; // diameter of the floating bubble the panel morphs from
+/** A 44pt transparent touch frame; the visible 36pt disc is its child. */
+export const HEADER_BUTTON_FRAME = 'w-11 h-11 p-0 rounded-full bg-transparent items-center justify-center';
 
 // Swipe-down-to-close thresholds (header grab zone only).
 const SWIPE_CLOSE_DISTANCE = 90; // px of downward travel that commits a close
@@ -258,23 +260,28 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                     {/* Left of New chat (ux2 H): the whole chat, attached to a
                         report the user chooses to send. */}
                     <ChatBugReportButton />
+                    {/* 44pt FRAMES around the 36pt discs (ux2 batch 25): VoiceOver
+                        measured 31-32pt frames. The header's gap and padding
+                        shrink by the difference, so the discs do not move. */}
                     <Button
                         onPress={onNewChatPress}
                         accessibilityLabel={t('floatingChat.newChat')}
-                        hitSlop={12}
                         action="default"
-                        className="w-9 h-9 p-0 rounded-full bg-primary-400/25 data-[active=true]:bg-primary-400/40"
+                        className={HEADER_BUTTON_FRAME}
                     >
-                        <MaterialIcons name="add-comment" size={20} color={ACCENT} />
+                        <View style={[styles.headerDisc, styles.newChatDisc]}>
+                            <MaterialIcons name="add-comment" size={20} color={ACCENT} />
+                        </View>
                     </Button>
                     <Button
                         onPress={onClosePress}
                         accessibilityLabel={t('floatingChat.close')}
-                        hitSlop={12}
                         action="default"
-                        className="w-9 h-9 p-0 rounded-full bg-background-100 data-[active=true]:bg-background-200"
+                        className={HEADER_BUTTON_FRAME}
                     >
-                        <MaterialIcons name="close" size={22} color={CLOSE_ICON} />
+                        <View style={[styles.headerDisc, styles.neutralDisc]}>
+                            <MaterialIcons name="close" size={22} color={CLOSE_ICON} />
+                        </View>
                     </Button>
                 </View>
 
@@ -304,13 +311,23 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        gap: 2,
+        paddingLeft: 16,
+        paddingRight: 12,
+        paddingVertical: 8,
         borderBottomWidth: StyleSheet.hairlineWidth,
         borderBottomColor: 'rgba(255, 255, 255, 0.12)',
         zIndex: 2, // keep header (and its tappable X) above the body content
     },
+    headerDisc: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    newChatDisc: { backgroundColor: 'rgba(231, 138, 83, 0.25)' },
+    neutralDisc: { backgroundColor: 'rgb(51, 51, 51)' }, // dark background-100
     headerGrab: {
         flex: 1,
         flexDirection: 'row',

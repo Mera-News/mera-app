@@ -53,3 +53,14 @@ it('puts Report a bug to the LEFT of New chat', () => {
   const order = JSON.stringify(toJSON()).match(/icon-(bug-report|add-comment|close)/g);
   expect(order).toEqual(['icon-bug-report', 'icon-add-comment', 'icon-close']);
 });
+
+it('every header button has a 44pt frame (ux2 batch 25)', () => {
+  act(() => useFloatingChatStore.getState().expand());
+  const { getAllByLabelText } = render(<ChatPopover><></></ChatPopover>);
+  for (const label of ['preferences.reportBug', 'floatingChat.newChat', 'floatingChat.close']) {
+    // The header button, not the backdrop that shares the close label.
+    const buttons = getAllByLabelText(label).filter((n) => typeof n.props.className === 'string');
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].props.className).toMatch(/\bw-11\b.*\bh-11\b/);
+  }
+});

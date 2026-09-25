@@ -261,7 +261,14 @@ interface VerbRowProps {
 }
 
 const VerbRow: React.FC<VerbRowProps> = ({ icon, label, preview, onPress, disabled }) => (
-  <Pressable onPress={onPress} disabled={disabled} style={styles.verbRow}>
+  <Pressable
+    onPress={onPress}
+    disabled={disabled}
+    style={styles.verbRow}
+    accessibilityRole="button"
+    accessibilityState={{ disabled: !!disabled }}
+    accessibilityLabel={`${label}. ${preview}`}
+  >
     <MaterialIcons name={icon} size={18} color={WARN} style={styles.verbIcon} />
     <View style={styles.verbBody}>
       <Text size="sm" bold style={styles.verbLabel}>

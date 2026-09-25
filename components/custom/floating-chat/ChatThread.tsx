@@ -306,6 +306,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 onRevealHistory();
               }}
               accessibilityRole="button"
+              // Explicit: without it VoiceOver reads the history glyph first.
+              accessibilityLabel={t('floatingChat.viewPreviousMessages')}
               testID="chat-view-previous-messages"
             >
               <MaterialIcons name="history" size={16} color="rgb(160, 160, 160)" />
@@ -430,6 +432,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                         onRefreshBlockStatus();
                       }}
                       disabled={isRefreshingBlockStatus}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: isRefreshingBlockStatus }}
+                      accessibilityLabel={t('floatingChat.requestUnblock.refreshButton')}
                     >
                       <MaterialIcons name="refresh" size={14} color="#F87171" />
                       <Text size="xs" style={styles.refreshText}>

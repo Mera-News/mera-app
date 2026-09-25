@@ -187,6 +187,7 @@ const OptimisationPlanCard: React.FC = () => {
                 key={a.fingerprint}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked }}
+                accessibilityLabel={a.summary}
                 onPress={() =>
                   setCheckedAuto((prev) => ({ ...prev, [a.fingerprint]: !checked }))
                 }
@@ -262,6 +263,7 @@ const OptimisationPlanCard: React.FC = () => {
                       key={idx}
                       accessibilityRole="radio"
                       accessibilityState={{ selected }}
+                      accessibilityLabel={opt.label}
                       onPress={() =>
                         setReviewChoice((prev) => ({ ...prev, [item.fingerprint]: idx }))
                       }

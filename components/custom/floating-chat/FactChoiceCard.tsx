@@ -359,6 +359,8 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
               disabled={!interactive}
               accessibilityRole={single ? 'text' : 'radio'}
               accessibilityState={{ selected: isSel }}
+              // The reading itself, never the radio glyph before it.
+              accessibilityLabel={option}
               testID={`fact-choice-option-${groupIndex}-${idx}`}
               style={[styles.optionRow, isSel && !single && styles.optionRowSelected]}
             >
