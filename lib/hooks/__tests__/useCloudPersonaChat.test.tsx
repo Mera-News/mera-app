@@ -1955,10 +1955,10 @@ describe('the shipped cloud path drives the agent loop', () => {
     expect(text).not.toContain("I've noted that");
   });
 
-  // TWO BUBBLES: the acknowledgement stays put and the answer lands below it.
-  // One bubble used to take each leg's text in turn and then swap to the final
-  // reply, so the words being read changed and the bubble jumped (audit F4).
-  it('keeps the acknowledgement as its own bubble and puts the answer in a second', async () => {
+  // ONE BUBBLE PER TURN (owner ruling ux2 D12, option a). The acknowledgement
+  // streams, and at turn end an answer with text takes its slot; a card-only
+  // turn keeps the acknowledgement. Leg text never streams (audit F4).
+  it('ends a turn with an answer as ONE bubble holding the answer', async () => {
     const model = jest.fn();
     const res = (content: string, over: Record<string, unknown> = {}) => ({
       content, toolCalls: [], finishReason: 'stop', truncated: false,
@@ -1989,11 +1989,51 @@ describe('the shipped cloud path drives the agent loop', () => {
       { timeout: 3000 },
     );
 
-    const assistant = useCloudChatStore.getState().messages.filter((m) => m.role === 'assistant');
-    expect(assistant.map((m) => m.content)).toEqual([
-      'Porto, one moment.',
-      'Got it, Porto. What do you do for work?',
-    ]);
+    const assistant = useCloudChatStore
+      .getState()
+      .messages.filter((m) => m.role === 'assistant' && m.content.trim().length > 0);
+    expect(assistant.map((m) => m.content)).toEqual(['Got it, Porto. What do you do for work?']);
+  });
+
+  it('ends a card-only turn as ONE bubble holding the acknowledgement', async () => {
+    const model = jest.fn();
+    const res = (content: string, over: Record<string, unknown> = {}) => ({
+      content, toolCalls: [], finishReason: 'stop', truncated: false,
+      usage: null, modelSent: 'fake', latencyMs: 1, error: null, ...over,
+    });
+    model
+      .mockImplementationOnce(async (req: { onDelta?: (d: { content?: string }) => void }) => {
+        req.onDelta?.({ content: 'Porto, one moment.' });
+        return res('Porto, one moment.', {
+          toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/interest' }) }],
+        });
+      })
+      .mockImplementationOnce(async () =>
+        res('', {
+          toolCalls: [{
+            name: 'saveExtractedFacts',
+            argumentsRaw: JSON.stringify({ extracted_user_information: [{ statement: 'Follows FC Porto' }] }),
+          }],
+        }))
+      .mockImplementation(async () => res(''));
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: model,
+      tools: { saveExtractedFacts: async () => ({ staged: true }) },
+      loadSkill: (id: string) => (id === 'facts/interest' ? 'INTEREST BODY' : null),
+      skillIds: () => ['facts/interest'],
+    });
+
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I follow FC Porto'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false),
+      { timeout: 3000 },
+    );
+
+    const assistant = useCloudChatStore
+      .getState()
+      .messages.filter((m) => m.role === 'assistant' && m.content.trim().length > 0);
+    expect(assistant.map((m) => m.content)).toEqual(['Porto, one moment.']);
   });
 
   // THE TOOL RECORD'S `input` IS THE ARGUMENTS, NOT THE RESULT.
