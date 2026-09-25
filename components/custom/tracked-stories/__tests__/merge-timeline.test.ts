@@ -101,3 +101,28 @@ describe('buildTimeline', () => {
     expect(idOf(out)).toEqual(['seed-newest', 'older']);
   });
 });
+
+// ux2: a timeline card never hands English to the card as the ORIGINAL title.
+// English as the "original" of a Japanese article told TranslatableDynamic the
+// original was already in the reader's language, so it never translated.
+describe('timelineCardToArticle', () => {
+  const { timelineCardToArticle, localToCard } = require('../merge-timeline');
+
+  it('keeps the real original title as `title` and English as the internal title', () => {
+    const card = localToCard({
+      articleId: 'a', title: 'Tokyo rain', titleOriginal: '東京で雨', pubDateMs: 1, languageCode: 'ja',
+    });
+    const article = timelineCardToArticle(card);
+    expect(article.title).toBe('東京で雨');
+    expect(article.title_en_internal_only).toBe('Tokyo rain');
+    expect(article.original_language_code).toBe('ja');
+  });
+
+  it('leaves `title` empty when there is no original, never the English', () => {
+    const article = timelineCardToArticle(
+      localToCard({ articleId: 'a', title: 'Tokyo rain', pubDateMs: 1, languageCode: 'ja' }),
+    );
+    expect(article.title).toBeUndefined();
+    expect(article.title_en_internal_only).toBe('Tokyo rain');
+  });
+});

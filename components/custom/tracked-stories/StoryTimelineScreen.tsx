@@ -44,7 +44,7 @@ import {
 } from '@/lib/story-export';
 import { deleteTrackedStoryById, disownStoryMember } from '@/lib/tracking/track-actions';
 import { toastManager } from '@/lib/toast-manager';
-import { buildTimeline, type TimelineCard } from './merge-timeline';
+import { buildTimeline, timelineCardToArticle, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -114,29 +114,6 @@ async function hydrateSource(
         logger.warn('[story-timeline] source hydrate failed', { error: String(err) });
         return cards;
     }
-}
-
-/** Map a merged timeline card onto the NewsArticle shape the compact card
- *  expects. Cards are lean (no descriptions / language), so unmappable fields
- *  are left undefined — the card degrades gracefully. */
-function cardToNewsArticle(card: TimelineCard): NewsArticle {
-    return {
-        _id: card.articleId,
-        title: card.title,
-        title_en_internal_only: card.title,
-        pubDate: card.pubDateMs ? new Date(card.pubDateMs).toISOString() : undefined,
-        image_url: card.imageUrl,
-        article_url: card.articleUrl,
-        original_language_code: card.languageCode,
-        publicationSource:
-            card.publicationName || card.countryCode
-                ? ({
-                      _id: card.articleId,
-                      publication_name: card.publicationName,
-                      country_code: card.countryCode,
-                  } as NewsArticle['publicationSource'])
-                : undefined,
-    } as NewsArticle;
 }
 
 /**
@@ -407,7 +384,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
 
     const renderItem: ListRenderItem<TimelineCard> = useCallback(
         ({ item }) => {
-            const article = cardToNewsArticle(item);
+            const article = timelineCardToArticle(item);
             const askRemove = () => {
                 hapticLight();
                 setConfirmRemove(item);

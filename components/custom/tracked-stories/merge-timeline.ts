@@ -8,12 +8,16 @@
 // TimelineCard shape, dedupes by articleId, and orders strictly newest-first.
 
 import type { TrackedStoryMemberSnapshot } from '@/lib/database/models/TrackedStory';
+import type { NewsArticle } from '@/lib/generated/graphql-types';
 
 /** The card shape the local member snapshots are normalized into before
  *  rendering. `pubDateMs` drives the strict newest-first ordering. */
 export interface TimelineCard {
   articleId: string;
+  /** English. */
   title: string;
+  /** The title in the article's own language, when the snapshot has it. */
+  titleOriginal?: string;
   pubDateMs: number;
   imageUrl?: string;
   publicationName?: string;
@@ -26,6 +30,7 @@ export function localToCard(snap: TrackedStoryMemberSnapshot): TimelineCard {
   return {
     articleId: snap.articleId,
     title: snap.title ?? '',
+    titleOriginal: snap.titleOriginal,
     pubDateMs: snap.pubDateMs ?? 0,
     imageUrl: snap.imageUrl,
     publicationName: snap.publicationName,
@@ -46,4 +51,32 @@ export function buildTimeline(local: TrackedStoryMemberSnapshot[]): TimelineCard
     byId.set(l.articleId, localToCard(l));
   }
   return [...byId.values()].sort((a, b) => b.pubDateMs - a.pubDateMs);
+}
+
+/**
+ * A timeline card as the NewsArticle the compact card renders. `title` is the
+ * ORIGINAL-language title and is left undefined when the snapshot has none:
+ * the card passes it to TranslatableDynamic as `originalText` beside
+ * `original_language_code`, and English there (with a `ja` code, say) reads as
+ * "already in a Japanese reader's language", so the English is never
+ * translated. Cards are lean, so fields they lack stay undefined.
+ */
+export function timelineCardToArticle(card: TimelineCard): NewsArticle {
+  return {
+    _id: card.articleId,
+    title: card.titleOriginal || undefined,
+    title_en_internal_only: card.title,
+    pubDate: card.pubDateMs ? new Date(card.pubDateMs).toISOString() : undefined,
+    image_url: card.imageUrl,
+    article_url: card.articleUrl,
+    original_language_code: card.languageCode,
+    publicationSource:
+      card.publicationName || card.countryCode
+        ? ({
+            _id: card.articleId,
+            publication_name: card.publicationName,
+            country_code: card.countryCode,
+          } as NewsArticle['publicationSource'])
+        : undefined,
+  } as NewsArticle;
 }

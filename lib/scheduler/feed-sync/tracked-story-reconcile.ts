@@ -39,6 +39,8 @@ function snapshotFromSuggestion(row: ArticleSuggestionModel): TrackedStoryMember
   return {
     articleId: row.id, // WMDB row id === server article _id
     title: row.titleEn ?? '',
+    // The real original, never the English (see TrackedStoryMemberSnapshot).
+    titleOriginal: row.titleOriginal || undefined,
     pubDateMs: pubDateMs(row),
     imageUrl: row.imageUrl ?? undefined,
     publicationName: row.publicationName ?? undefined,
