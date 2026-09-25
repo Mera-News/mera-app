@@ -22,6 +22,22 @@ export function __resetColdStartLatchForTests(): void {
 }
 
 /**
+ * The chat area's facts-draft module, or null while it is absent from the
+ * bundle. The `require` MUST be the direct statement of a `try` block: that is
+ * the only shape Metro (Expo's `allowOptionalDependencies`) treats as an
+ * optional dependency. Nested one level deeper (inside an `if` in the try) it
+ * is a hard dependency, and a module that does not exist yet fails the BUNDLE,
+ * while tsc and jest (virtual mock) both stay green.
+ */
+function loadFactsDraftService(): { recoverOpenFactsDraft: () => Promise<boolean> } | null {
+  try {
+    return require('@/lib/services/facts-draft-service');
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Resume the combination pass. On the first run, a draft the Profile chat left
  * open with different facts becomes a pending pass first. Then a pending flag
  * becomes jobs (cloud) or a refresh (on-device); a pass already queued resumes
@@ -31,12 +47,10 @@ async function resumeComboPass(ctx: { log: (m: string) => void }): Promise<void>
   try {
     if (!firstRunDone) {
       firstRunDone = true;
-      // Lazy: P9's chat-area module, and it reaches the facts tables.
-      const { recoverOpenFactsDraft } =
-        require('@/lib/services/facts-draft-service') as {
-          recoverOpenFactsDraft: () => Promise<boolean>;
-        };
-      if (await recoverOpenFactsDraft()) ctx.log('facts draft left open with changes');
+      const draft = loadFactsDraftService();
+      if (draft && (await draft.recoverOpenFactsDraft())) {
+        ctx.log('facts draft left open with changes');
+      }
     }
     const outcome = await runPendingComboPass();
     if (outcome !== 'none') ctx.log(`combination pass: ${outcome}`);
