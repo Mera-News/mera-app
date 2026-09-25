@@ -1,0 +1,123 @@
+{
+  "_comment": "ux2 P3 B5: section headers for the Sources search, Countries first then Publications, each shown only when it has rows. Pure ADD of sources.sectionCountries and sources.sectionPublications. No em dashes.",
+  "en": {
+    "sources": {
+      "sectionCountries": "Countries",
+      "sectionPublications": "Publications"
+    }
+  },
+  "de": {
+    "sources": {
+      "sectionCountries": "Länder",
+      "sectionPublications": "Publikationen"
+    }
+  },
+  "es": {
+    "sources": {
+      "sectionCountries": "Países",
+      "sectionPublications": "Publicaciones"
+    }
+  },
+  "fr": {
+    "sources": {
+      "sectionCountries": "Pays",
+      "sectionPublications": "Publications"
+    }
+  },
+  "hi": {
+    "sources": {
+      "sectionCountries": "देश",
+      "sectionPublications": "प्रकाशन"
+    }
+  },
+  "id": {
+    "sources": {
+      "sectionCountries": "Negara",
+      "sectionPublications": "Publikasi"
+    }
+  },
+  "it": {
+    "sources": {
+      "sectionCountries": "Paesi",
+      "sectionPublications": "Testate"
+    }
+  },
+  "ja": {
+    "sources": {
+      "sectionCountries": "国・地域",
+      "sectionPublications": "メディア"
+    }
+  },
+  "ko": {
+    "sources": {
+      "sectionCountries": "국가",
+      "sectionPublications": "매체"
+    }
+  },
+  "nl": {
+    "sources": {
+      "sectionCountries": "Landen",
+      "sectionPublications": "Publicaties"
+    }
+  },
+  "pl": {
+    "sources": {
+      "sectionCountries": "Kraje",
+      "sectionPublications": "Publikacje"
+    }
+  },
+  "pt-BR": {
+    "sources": {
+      "sectionCountries": "Países",
+      "sectionPublications": "Publicações"
+    }
+  },
+  "ru": {
+    "sources": {
+      "sectionCountries": "Страны",
+      "sectionPublications": "Издания"
+    }
+  },
+  "th": {
+    "sources": {
+      "sectionCountries": "ประเทศ",
+      "sectionPublications": "สื่อ"
+    }
+  },
+  "tr": {
+    "sources": {
+      "sectionCountries": "Ülkeler",
+      "sectionPublications": "Yayınlar"
+    }
+  },
+  "uk": {
+    "sources": {
+      "sectionCountries": "Країни",
+      "sectionPublications": "Видання"
+    }
+  },
+  "vi": {
+    "sources": {
+      "sectionCountries": "Quốc gia",
+      "sectionPublications": "Ấn phẩm"
+    }
+  },
+  "zh-CN": {
+    "sources": {
+      "sectionCountries": "国家和地区",
+      "sectionPublications": "媒体"
+    }
+  },
+  "zh-TW": {
+    "sources": {
+      "sectionCountries": "國家和地區",
+      "sectionPublications": "媒體"
+    }
+  },
+  "ar": {
+    "sources": {
+      "sectionCountries": "الدول",
+      "sectionPublications": "المنشورات"
+    }
+  }
+}
