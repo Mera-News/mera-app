@@ -18,6 +18,7 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 import ReanimatedSwipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { sentenceCase } from './sentence-case';
 
@@ -34,6 +35,12 @@ function round1(n: number): number {
 
 /** Accent for the row's actions. The facts list used an off-palette blue. */
 const ACCENT = 'rgb(231, 138, 83)';
+
+/** The trailing "badge slot" (spinner / retry / article-count pill) is
+ *  pinned to this height so switching between pending, error and done never
+ *  jumps the row — the pill Button and the bare StatusIndicator have no
+ *  natural size in common otherwise. */
+const BADGE_SLOT_MIN_HEIGHT = 32;
 
 /**
  * Where the article counts are. `counting` until the first read lands,
@@ -288,9 +295,25 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                         </Text>
                     )}
                 </Pressable>
-                <HStack space="xs" className="items-center">
+                <HStack space="xs" className="items-center" style={{ minHeight: BADGE_SLOT_MIN_HEIGHT }}>
                     {status === 'pending' && (
-                        <StatusIndicator status="pending" testID={`fact-topics-pending-${fact.id}`} />
+                        <View
+                            testID={`fact-topics-pending-${fact.id}-slot`}
+                            accessible
+                            accessibilityLabel={t('chatTopics.finding', { defaultValue: 'Finding topics' })}
+                        >
+                            {/* Nesting one `accessible` view inside another is
+                                the standard RN pattern for "read the OUTER
+                                label as one stop, not the inner one too" — no
+                                importantForAccessibility/accessibilityElementsHidden
+                                needed (and neither is safe to add here: RNTL's
+                                queries skip elements hidden that way, which
+                                broke every pre-existing test reaching into
+                                this subtree by testID). StatusIndicator's own
+                                testID and `-spinner` derivation are
+                                unchanged; only this outer wrapper is new. */}
+                            <StatusIndicator status="pending" testID={`fact-topics-pending-${fact.id}`} />
+                        </View>
                     )}
                     {status === 'error' && !editing && (
                         <Pressable

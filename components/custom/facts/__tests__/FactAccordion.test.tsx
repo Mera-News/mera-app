@@ -283,6 +283,49 @@ describe('FactAccordion — pending/done/error, driven by fact.topicsStatus (P3\
         expect(getByText('configPanel.generatingTopics')).toBeTruthy();
         expect(queryByTestId('fact-topics-retry-f1')).toBeNull();
         expect(queryByText('Mountain trail running')).toBeNull();
+        // The owner's complaint was "just the spinner is visible" — the
+        // statement itself is unconditional in the JSX, but assert it here
+        // too so this exact regression (statement hidden while pending) has
+        // a test tied to the same fixture the complaint was about.
+        expect(getByText('Loves hiking in the mountains')).toBeTruthy();
+    });
+
+    it('pending: the spinner slot is labelled "Finding topics" and sized like the done badge, so the row does not jump', () => {
+        const pendingFact = baseFact({ topicsStatus: 'pending' });
+        const pending = render(<FactAccordion {...baseProps} fact={pendingFact} />);
+        // Base testID (`fact-topics-pending-f1`) and its `-spinner` child
+        // are unchanged — they're StatusIndicator's own, asserted in the
+        // test above. The new a11y wrapper around it carries `-slot`.
+        const pendingSlot = pending.getByTestId('fact-topics-pending-f1-slot');
+        expect(pendingSlot.props.accessibilityLabel).toBe('Finding topics');
+        expect(pending.getByTestId('fact-topics-pending-f1')).toBeTruthy();
+        expect(pending.getByTestId('fact-topics-pending-f1-spinner')).toBeTruthy();
+
+        mockTopicRows = [{ id: 't1', text: 'trail running', status: 'active' }];
+        const doneFact = baseFact({ topicsStatus: 'done' });
+        const done = render(
+            <FactAccordion
+                {...baseProps}
+                fact={doneFact}
+                articleCountByTopic={new Map([['trail running', 5]])}
+            />,
+        );
+        const badge = done.getAllByText('configPanel.articleCount')[0];
+
+        // Both slots sit in the SAME trailing HStack, which carries the
+        // shared minHeight — read it off the row ancestor they share rather
+        // than the leaf, since the leaf nodes are different element types
+        // (a View with a spinner vs a pill Button) with no comparable size
+        // of their own.
+        const pendingRow = pending.UNSAFE_root.findAll(
+            (n: any) => typeof n.props?.style?.minHeight === 'number',
+        )[0];
+        const doneRow = done.UNSAFE_root.findAll(
+            (n: any) => typeof n.props?.style?.minHeight === 'number',
+        )[0];
+        expect(pendingRow.props.style.minHeight).toBeGreaterThan(0);
+        expect(pendingRow.props.style.minHeight).toBe(doneRow.props.style.minHeight);
+        expect(badge).toBeTruthy();
     });
 
     it('done: zero topics is a valid done state — no spinner, no error, no retry, just the add/generate affordances', () => {
