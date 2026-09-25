@@ -20,6 +20,15 @@ export type { PersistedMessage } from '@/lib/database/services/conversation-serv
 // Thread items
 // ---------------------------------------------------------------------------
 
+/** The user's own sentence as a fact, offered by the loop (ux2 D9). */
+export interface SaveAsWrittenOffer {
+  /** `${messageId}::${toolCallIndex}`, where the saved outcome is recorded. */
+  resultKey: string;
+  /** The tool call's own result, the base the override is merged into. */
+  baseResult: Record<string, unknown>;
+  entry: { statement: string; questionnaire_attribute?: string; topic_skill_id?: string };
+}
+
 export type FactCardAction = 'saved' | 'deleted' | 'deletePending' | 'updated';
 
 // ---------------------------------------------------------------------------
@@ -289,6 +298,10 @@ export type ChatThreadItem =
        *  facts (owner rule ux1), covering every option; null on a question
        *  between readings of one thing. */
       saveAll: string | null;
+      /** "Save as I wrote it" (ux2 D9): the loop-written entry for the user's
+       *  own sentence and where its outcome is recorded. Committed directly on
+       *  tap, never sent to the model. Null when not offered. */
+      saveAsWritten: SaveAsWrittenOffer | null;
       /** A later user message exists, so the offer is spent. Rendered inert
        *  rather than removed, so the thread keeps what was offered. */
       answered: boolean;

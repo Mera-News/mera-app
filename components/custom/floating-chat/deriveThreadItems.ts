@@ -33,6 +33,7 @@ import type {
   ChatThreadItem,
   FactCardAction,
   PersistedMessage,
+  SaveAsWrittenOffer,
 } from './types';
 import {
   changedDataFrom,
@@ -102,6 +103,53 @@ function toStringArray(value: unknown): string[] {
   return value
     .map((v) => (typeof v === 'string' ? v.trim() : ''))
     .filter((v) => v.length > 0);
+}
+
+/** The loop's "Save as I wrote it" entry on a call's result, and its saved
+ *  outcome once tapped (ux2 D9). Null when the call carries none. */
+function saveAsWrittenOf(
+  tc: ToolCallRecord,
+  resultKey: string,
+): { offer: SaveAsWrittenOffer; saved: { id: string; statement: string }[] | null } | null {
+  const result = asRecord(tc.result);
+  const raw = asRecord(result?.saveAsWritten);
+  if (!result || !raw || typeof raw.statement !== 'string' || !raw.statement.trim()) return null;
+  const entry: SaveAsWrittenOffer['entry'] = {
+    statement: raw.statement,
+    ...(typeof raw.questionnaire_attribute === 'string' ? { questionnaire_attribute: raw.questionnaire_attribute } : {}),
+    ...(typeof raw.topic_skill_id === 'string' ? { topic_skill_id: raw.topic_skill_id } : {}),
+  };
+  const saved = Array.isArray(result.saveAsWrittenSaved)
+    ? (result.saveAsWrittenSaved as unknown[])
+        .map((f) => asRecord(f))
+        .filter((f): f is Record<string, unknown> => !!f && typeof f.id === 'string' && typeof f.statement === 'string')
+        .map((f) => ({ id: f.id as string, statement: f.statement as string }))
+    : null;
+  return { offer: { resultKey, baseResult: result, entry }, saved: saved && saved.length > 0 ? saved : null };
+}
+
+/** The saved sentence and its topics, in place of the chip. */
+function pushSavedAsWritten(
+  cards: ChatThreadItem[],
+  messageId: string,
+  idx: number,
+  saved: { id: string; statement: string }[],
+): void {
+  cards.push({
+    kind: 'fact-card',
+    key: `card-${messageId}-${idx}-as-written`,
+    action: 'saved',
+    statements: saved.map((f) => f.statement),
+    factIds: saved.map((f) => f.id),
+  });
+  for (const f of saved) {
+    cards.push({
+      kind: 'chat-topics-card',
+      key: `chat-topics-${messageId}-${idx}-as-written-${f.id}`,
+      factId: f.id,
+      factStatement: f.statement,
+    });
+  }
 }
 
 /** Maps one completed tool call to a fact card, or null if it should not surface. */
@@ -724,6 +772,7 @@ function offersSomething(tc: ToolCallRecord): boolean {
   const r = asRecord(tc.result);
   if (!r || typeof r.error === 'string') return false;
   if (tc.name === 'ask_choice') return r.awaiting === 'user';
+  if (tc.name === 'saveAsWritten') return true;
   if (tc.name === 'saveExtractedFacts') {
     return readPendingGroups(r).length > 0 || (Array.isArray(r.savedFacts) && r.savedFacts.length > 0);
   }
@@ -1018,6 +1067,24 @@ function emitMessage(
       // ask_choice: chips under this bubble. Derived from the tool INPUT, and
       // `answered` is decided by the caller, which is the only place that can
       // see whether a later user message exists.
+      // "SAVE AS I WROTE IT" standing alone: the loop wrote it after a lookup
+      // that placed nothing (ux2 D9). Rendered as a chip-only card.
+      if (tc.name === 'saveAsWritten') {
+        const own = saveAsWrittenOf(tc, `${message.id}::${idx}`);
+        if (own?.saved) pushSavedAsWritten(cards, message.id, idx, own.saved);
+        else if (own) {
+          cards.push({
+            kind: 'ask-choice-card',
+            key: `ask-choice-${message.id}-${idx}`,
+            question: null,
+            options: [],
+            saveAll: null,
+            saveAsWritten: own.offer,
+            answered: answeredAsk,
+          });
+        }
+        return;
+      }
       if (tc.name === 'ask_choice') {
         // CHIPS ONLY FOR A QUESTION THE LOOP ACCEPTED (ux2 D4). A refused call
         // (`{error}`) still rendered chips, so the user saw a question beside
@@ -1031,6 +1098,7 @@ function emitMessage(
         // all, which always covers EVERY option, even past the chips shown.
         const factPick = isFactPickChoice(allOptions);
         const options = allOptions.slice(0, factPick ? 4 : 3);
+        const own = saveAsWrittenOf(tc, `${message.id}::${idx}`);
         if (options.length >= 2) {
           const question =
             typeof askInput.question === 'string' ? askInput.question.trim() : '';
@@ -1044,8 +1112,10 @@ function emitMessage(
             question: !question || bubbleCarries(message.content, question) ? null : question,
             options,
             saveAll: factPick ? joinFactPick(allOptions) : null,
+            saveAsWritten: own && !own.saved ? own.offer : null,
             answered: answeredAsk,
           });
+          if (own?.saved) pushSavedAsWritten(cards, message.id, idx, own.saved);
         }
         return;
       }

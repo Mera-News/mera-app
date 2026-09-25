@@ -154,3 +154,40 @@ describe('ux2 owner: the bulk row includes replace cards', () => {
     expect(row && row.kind === 'fact-choice-bulk-row' && row.groups.map((g) => g.replaces)).toEqual(['w1', 'w2']);
   });
 });
+
+describe('ux2 D9: "Save as I wrote it"', () => {
+  const entry = { statement: 'Lives in Zzqq', questionnaire_attribute: 'location: neighborhood/area, city, and country (preserve specifics)' };
+
+  it('rides on an accepted question as an extra chip', () => {
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in Newcastle' },
+      { id: 'a1', role: 'assistant', content: '', toolCalls: [{ ...ask({ awaiting: 'user', saveAsWritten: entry }) }] },
+    ]);
+    const card = items.find((i) => i.kind === 'ask-choice-card');
+    expect(card && card.kind === 'ask-choice-card' && card.saveAsWritten).toMatchObject({ resultKey: 'a1::0', entry });
+  });
+
+  it('stands alone after a lookup that placed nothing', () => {
+    const tc: ToolCallRecord = { id: 'x', name: 'saveAsWritten', input: {}, status: 'done', result: { saveAsWritten: entry } };
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in Zzqq' },
+      { id: 'a1', role: 'assistant', content: 'I could not find Zzqq.', toolCalls: [tc] },
+    ]);
+    const card = items.find((i) => i.kind === 'ask-choice-card');
+    expect(card && card.kind === 'ask-choice-card' && [card.options, card.saveAsWritten?.entry]).toEqual([[], entry]);
+  });
+
+  it('once saved, shows the saved fact and its topics instead of the chip', () => {
+    const tc: ToolCallRecord = {
+      id: 'x', name: 'saveAsWritten', input: {}, status: 'done',
+      result: { saveAsWritten: entry, saveAsWrittenSaved: [{ id: 'f9', statement: 'Lives in Zzqq' }] },
+    };
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I live in Zzqq' },
+      { id: 'a1', role: 'assistant', content: '', toolCalls: [tc] },
+    ]);
+    expect(kindsOf(items)).not.toContain('ask-choice-card');
+    expect(items.find((i) => i.kind === 'fact-card')).toMatchObject({ action: 'saved', statements: ['Lives in Zzqq'] });
+    expect(items.find((i) => i.kind === 'chat-topics-card')).toMatchObject({ factId: 'f9' });
+  });
+});

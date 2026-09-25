@@ -109,3 +109,25 @@ describe('Save all', () => {
     expect(queryByTestId('ask-choice-save-all')).toBeNull();
   });
 });
+
+describe('ux2 D9: the Save as I wrote it chip', () => {
+  it('commits directly on tap and never sends text to the model', () => {
+    const onSend = jest.fn();
+    const onSaveAsWritten = jest.fn();
+    const { getByTestId } = render(
+      <AskChoiceCard question={null} options={[]} answered={false} onSend={onSend} onSaveAsWritten={onSaveAsWritten} />,
+    );
+    fireEvent.press(getByTestId('ask-choice-save-as-written'));
+    expect(onSaveAsWritten).toHaveBeenCalledTimes(1);
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
+  it('is inert once the user moved on', () => {
+    const onSaveAsWritten = jest.fn();
+    const { getByTestId } = render(
+      <AskChoiceCard question={null} options={[]} answered onSend={jest.fn()} onSaveAsWritten={onSaveAsWritten} />,
+    );
+    fireEvent.press(getByTestId('ask-choice-save-as-written'));
+    expect(onSaveAsWritten).not.toHaveBeenCalled();
+  });
+});

@@ -20,6 +20,8 @@ import {
   type FactChoiceResolution,
 } from '@/lib/chat-tools/fact-choice-resolution';
 import logger from '@/lib/logger';
+import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
+import type { SaveAsWrittenOffer } from './types';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 
 /**
@@ -110,4 +112,38 @@ export function resolveGroups(
     });
   }
   return settled;
+}
+
+/**
+ * "Save as I wrote it" (ux2 D9): commit the user's own sentence, then record
+ * the saved fact on the offering call's result so the thread swaps the chip
+ * for a Saved card and its topics. It goes through `commitFactChoices`, so topic
+ * minting and geo derivation run as for any accepted fact, and the model never
+ * sees the tap. Same store-then-durable shape as `resolveGroup`.
+ */
+export async function commitSaveAsWritten(offer: SaveAsWrittenOffer): Promise<void> {
+  const { entry, resultKey, baseResult } = offer;
+  try {
+    const { savedFacts } = await commitFactChoices([
+      {
+        statement: entry.statement,
+        ...(entry.questionnaire_attribute ? { questionnaire: { attribute: entry.questionnaire_attribute } } : {}),
+        ...(entry.topic_skill_id ? { skillId: entry.topic_skill_id } : {}),
+      },
+    ]);
+    const store = useFloatingChatStore.getState();
+    const current = (store.toolCallResults[resultKey] as Record<string, unknown> | undefined) ?? baseResult;
+    const next = { ...current, saveAsWrittenSaved: savedFacts };
+    store.setToolCallResult(resultKey, next);
+    const [messageId, indexRaw] = resultKey.split('::');
+    const index = Number(indexRaw);
+    if (messageId && Number.isInteger(index)) {
+      void patchMessageToolCallResult(messageId, index, next).catch((err: unknown) => {
+        logger.warn('[fact-choice] save-as-written patch failed', { resultKey, error: String(err) });
+        return false;
+      });
+    }
+  } catch (err) {
+    logger.error('[fact-choice] save as written failed', err, { resultKey });
+  }
 }

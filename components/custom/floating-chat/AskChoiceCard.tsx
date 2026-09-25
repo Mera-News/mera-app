@@ -45,6 +45,10 @@ export interface AskChoiceCardProps {
   saveAll?: string | null;
   answered: boolean;
   onSend: (text: string) => void;
+  /** "Save as I wrote it" (ux2 D9). The ONE chip that never goes through
+   *  `onSend`: it commits the user's own sentence directly, and the model
+   *  never sees the tap. Null or absent hides the chip. */
+  onSaveAsWritten?: (() => void) | null;
 }
 
 export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
@@ -53,6 +57,7 @@ export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
   saveAll = null,
   answered,
   onSend,
+  onSaveAsWritten = null,
 }) => {
   const { t } = useTranslation();
 
@@ -109,6 +114,29 @@ export const AskChoiceCard: React.FC<AskChoiceCardProps> = ({
           >
             <Text size="xs" style={answered ? styles.chipTextAnswered : styles.chipTextPrimary}>
               {t('askChoice.saveAll')}
+            </Text>
+          </Pressable>
+        )}
+        {onSaveAsWritten && (
+          <Pressable
+            onPress={() => {
+              if (answered) return;
+              void hapticLight();
+              onSaveAsWritten();
+            }}
+            disabled={answered}
+            style={[styles.chip, answered && styles.chipAnswered]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: answered }}
+            accessibilityLabel={
+              answered
+                ? `${t('floatingChat.saveAsWritten')}, ${t('askChoice.answeredA11y')}`
+                : t('floatingChat.saveAsWritten')
+            }
+            testID="ask-choice-save-as-written"
+          >
+            <Text size="xs" style={answered ? styles.chipTextAnswered : styles.chipText}>
+              {t('floatingChat.saveAsWritten')}
             </Text>
           </Pressable>
         )}

@@ -15,6 +15,11 @@ jest.mock('@/lib/logger', () => ({
   default: { warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
 }));
 
+const mockCommit = jest.fn(async () => ({ savedFacts: [{ id: 'f9', statement: 'Lives in Zzqq' }], conflicts: [] }));
+jest.mock('@/lib/chat-tools/fact-commit', () => ({
+  commitFactChoices: (...a: unknown[]) => mockCommit(...(a as [])),
+}));
+
 let mockStoreResults: Record<string, Record<string, unknown>> = {};
 jest.mock('@/lib/stores/floating-chat-store', () => ({
   useFloatingChatStore: {
@@ -33,7 +38,7 @@ import {
   readPendingGroups,
   unresolvedGroups,
 } from '@/lib/chat-tools/fact-choice-resolution';
-import { resolveGroup, resolveGroups } from '../fact-choice-actions';
+import { commitSaveAsWritten, resolveGroup, resolveGroups } from '../fact-choice-actions';
 
 const KEY = 'msg-1::0';
 const OPTIONS = [['Lives in Hoorn'], ['Works as a farmer'], ['Parents in Malaga']];
@@ -217,5 +222,35 @@ describe('resolveGroups', () => {
     const resolutions = readGroupResolutions(mockStoreResults[KEY]) ?? {};
     expect(Object.keys(resolutions)).toHaveLength(3);
     expect(mockStoreResults[KEY].savedFacts).toHaveLength(3);
+  });
+});
+
+describe('ux2 D9: commitSaveAsWritten', () => {
+  beforeEach(() => {
+    mockStoreResults = {};
+    mockCommit.mockClear();
+    mockPatch.mockClear();
+  });
+
+  it('commits the sentence with its key and skill, and records the saved fact on the offering call', async () => {
+    const base = { saveAsWritten: { statement: 'Lives in Zzqq' } };
+    await commitSaveAsWritten({
+      resultKey: 'a1::2',
+      baseResult: base,
+      entry: {
+        statement: 'Lives in Zzqq',
+        questionnaire_attribute: 'location: neighborhood/area, city, and country (preserve specifics)',
+        topic_skill_id: 'topics/residence',
+      },
+    });
+    expect(mockCommit).toHaveBeenCalledWith([
+      {
+        statement: 'Lives in Zzqq',
+        questionnaire: { attribute: 'location: neighborhood/area, city, and country (preserve specifics)' },
+        skillId: 'topics/residence',
+      },
+    ]);
+    expect(mockStoreResults['a1::2']).toEqual({ ...base, saveAsWrittenSaved: [{ id: 'f9', statement: 'Lives in Zzqq' }] });
+    expect(mockPatch).toHaveBeenCalledWith('a1', 2, mockStoreResults['a1::2']);
   });
 });

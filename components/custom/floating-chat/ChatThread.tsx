@@ -228,6 +228,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             // The thread's existing send, i.e. ChatSessionView.handleSend —
             // the one funnel every gate already sits on.
             onSend={onSend}
+            // Never through onSend: the model must not see this tap (ux2 D9).
+            // LAZY: the actions reach WatermelonDB, which must stay out of
+            // every suite that renders the thread.
+            onSaveAsWritten={
+              item.saveAsWritten
+                ? () => {
+                    const { commitSaveAsWritten } =
+                      require('./fact-choice-actions') as typeof import('./fact-choice-actions');
+                    void commitSaveAsWritten(item.saveAsWritten!);
+                  }
+                : null
+            }
           />
         );
 

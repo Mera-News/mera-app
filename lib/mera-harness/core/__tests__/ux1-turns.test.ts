@@ -809,3 +809,69 @@ describe('ux2 D10: the persona agent can search the web', () => {
     expect(out.unknownTools).toEqual([]);
   });
 });
+
+describe('ux2 D9: "Save as I wrote it" is added by the loop, never the model', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+  const NEWCASTLES: Place[] = [
+    { locality: 'Newcastle upon Tyne', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' },
+    { locality: 'Newcastle-under-Lyme', admin1: 'England', countryCode: 'GB', countryName: 'United Kingdom', bloc: 'UK' },
+  ];
+
+  it('an accepted question carries the user\'s sentence, residence key and skill; the chip is never an option', async () => {
+    const results: unknown[] = [];
+    const h = harness(
+      [
+        res({ content: 'Newcastle.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Newcastle' })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Which Newcastle?', options: ['Newcastle upon Tyne', 'Newcastle-under-Lyme'] })] }),
+      ],
+      { lookupPlace: async () => ({ status: 'resolved', places: NEWCASTLES }) },
+    );
+    const state = createAgentState(NOBODY);
+    await runAgentTurn({
+      state, userMessage: 'I live in Newcastle', deps: h.deps,
+      onLeg: (leg) => results.push(...leg.toolResults.filter((r) => r.name === 'ask_choice').map((r) => r.result)),
+    });
+    expect(results).toEqual([{
+      awaiting: 'user',
+      saveAsWritten: {
+        statement: 'Lives in Newcastle',
+        questionnaire_attribute: CANONICAL_LOCATION_KEY,
+        topic_skill_id: 'topics/residence',
+      },
+    }]);
+    expect(state.turn.pendingChoice?.options.map((o) => o.text)).toEqual(['Newcastle upon Tyne', 'Newcastle-under-Lyme']);
+  });
+
+  it('a relative\'s place never takes the user\'s home key', async () => {
+    const results: unknown[] = [];
+    const h = harness(
+      [
+        res({ content: 'Newcastle.', toolCalls: [tc('load_skill', { id: 'facts/origin' })] }),
+        res({ toolCalls: [tc('ask_choice', { question: 'Which Newcastle?', options: ['Newcastle upon Tyne', 'Newcastle-under-Lyme'] })] }),
+      ],
+    );
+    await runAgentTurn({
+      state: createAgentState(NOBODY), userMessage: 'My parents live in Newcastle', deps: h.deps,
+      onLeg: (leg) => results.push(...leg.toolResults.filter((r) => r.name === 'ask_choice').map((r) => r.result)),
+    });
+    expect(results[0]).toMatchObject({ saveAsWritten: { statement: 'My parents live in Newcastle' } });
+    expect((results[0] as { saveAsWritten: Record<string, unknown> }).saveAsWritten).not.toHaveProperty('questionnaire_attribute');
+  });
+
+  it('a lookup that placed nothing, on a turn that offered no card, ends with the chip', async () => {
+    const legs: { toolCalls: { name: string }[]; toolResults: { result: unknown }[] }[] = [];
+    const h = harness(
+      [
+        res({ content: 'Zzqq.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Zzqq' })] }),
+        res({ content: 'I could not find Zzqq. Where is it?' }),
+      ],
+      { lookupPlace: async () => ({ status: 'no_match', query: 'Zzqq' }) },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'I live in Zzqq', deps: h.deps, onLeg: (l) => legs.push(l) });
+    const last = legs[legs.length - 1];
+    expect(last.toolCalls.map((c) => c.name)).toEqual(['saveAsWritten']);
+    expect(last.toolResults[0].result).toMatchObject({ saveAsWritten: { statement: 'Lives in Zzqq' } });
+  });
+});

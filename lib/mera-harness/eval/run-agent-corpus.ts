@@ -122,6 +122,8 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
 const KNOWN_TOOLS = new Set([
   'load_skill', 'find_similar_facts', 'findSimilarFacts', 'lookup_place', 'lookupPlace',
   'ask_choice', 'saveExtractedFacts', 'deleteUserFacts', 'webSearch',
+  // Loop-written, never the model's: the "Save as I wrote it" chip (ux2 D9).
+  'saveAsWritten',
 ]);
 
 /** The tool names a request actually carried, read off the request itself. */

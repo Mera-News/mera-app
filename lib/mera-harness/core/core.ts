@@ -680,6 +680,32 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** Everything the model wrote this turn, read only for its spelling of the
    *  finer area. */
   const modelTexts: string[] = [];
+  /** A lookup this turn could not place what the user named. */
+  let sawNoMatch = false;
+  /**
+   * "SAVE AS I WROTE IT" (owner ruling ux2 D9): the user's own sentence, as a
+   * fact, for the chip the UI adds under a question or after a failed lookup.
+   * Written by the loop, never the model, and never an option of
+   * `pendingChoice`: a chip there becomes `resolvedChoice`, which authorises
+   * deletes and cross-key replaces. The UI commits it directly on tap. Only the
+   * prefix is made third person ("I live in X" gives "Lives in X"); no content
+   * word changes. The home key only on a residence turn about the user.
+   */
+  const saveAsWrittenEntry = (): Record<string, unknown> => {
+    const original = (resumedSkill && turn.lastUserMessage ? turn.lastUserMessage : userMessage).trim();
+    const shaped = asThirdPersonFact({ statement: original }).statement;
+    const statement = typeof shaped === 'string' && shaped.trim() ? shaped.trim() : original;
+    const topicSkill = routeKind && (deps.skillIds() as readonly string[]).includes(`topics/${routeKind}`)
+      ? `topics/${routeKind}`
+      : undefined;
+    return {
+      statement,
+      ...(skillLoaded === 'facts/residence' && !isRelationalStatement(original)
+        ? { questionnaire_attribute: CANONICAL_LOCATION_KEY }
+        : {}),
+      ...(topicSkill ? { topic_skill_id: topicSkill } : {}),
+    };
+  };
   /** The district a loop-written home leads with: the looked-up neighbourhood,
    *  else the finer area in the model's spelling or the user's own words, else
    *  nothing (the locality alone). Never downgrades to the city while the user
@@ -1056,6 +1082,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const out = await deps.tools.lookupPlace({ query, countryHint });
         placeCandidates = out.status === 'resolved' ? out.places : [];
         lastLookupStatus = out.status;
+        if (out.status === 'no_match') sawNoMatch = true;
         if (out.status === 'resolved' && out.places.length === 1 && out.unmatched && out.unmatched.trim()) {
           finerArea = { words: out.unmatched.trim(), place: out.places[0] };
         }
@@ -1168,7 +1195,12 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           question,
           options: bindChoicePayloads(args.options, placeCandidates),
         };
-        leg.toolResults.push({ name: call.name, result: { awaiting: 'user' } });
+        leg.toolResults.push({
+          name: call.name,
+          result: isFactSkill(skillLoaded)
+            ? { awaiting: 'user', saveAsWritten: saveAsWrittenEntry() }
+            : { awaiting: 'user' },
+        });
         terminatedByChoice = true;
         // ENDS THE TURN, BUT NOT THE LEG. This used to `break` out of the
         // tool-call loop, so any saveExtractedFacts the model placed after the
@@ -1911,6 +1943,44 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
   // ---- A RESOLVED PLACE THE TURN NEVER OFFERED -----------------------------
   await offerResolvedPlaceAtEnd();
+
+  // ---- A PLACE NOBODY COULD FIND: the user's own words, as a chip ---------
+  // After a `no_match` on a facts turn that put nothing on screen, the chip is
+  // the one way to keep what the user said (ux2 D9). A loop-written leg, like
+  // the offers above, so the UI renders it from the thread like any call.
+  if (
+    sawNoMatch
+    && !proposedSomething
+    && turn.pendingChoice === null
+    && terminalReason !== 'transport-error'
+    && skillsLoaded.some((id) => id.startsWith('facts/'))
+  ) {
+    const out = { saveAsWritten: saveAsWrittenEntry() };
+    const leg: AgentLeg = {
+      index: legs.length,
+      role: 'tool',
+      systemPrompt: '',
+      messages: [],
+      toolCalls: [{ name: 'saveAsWritten', argumentsRaw: '{}' }],
+      toolResults: [{ name: 'saveAsWritten', result: out }],
+      rawOutput: '',
+      result: {
+        content: '',
+        toolCalls: [{ name: 'saveAsWritten', argumentsRaw: '{}' }],
+        finishReason: 'synthetic',
+        truncated: false,
+        usage: null,
+        modelSent: null,
+        latencyMs: 0,
+        error: null,
+      },
+      inputTokens: 0,
+      synthetic: true,
+    };
+    legs.push(leg);
+    if (terminalReason === 'no-proposal' || terminalReason === 'leg-cap') terminalReason = 'settled';
+    params.onLeg?.(leg);
+  }
 
   // ---- THE ONE-TIME SPLIT OF A COMBINED FACT -------------------------------
   const combinedRewriteOffered = await offerCombinedFactSplit();
