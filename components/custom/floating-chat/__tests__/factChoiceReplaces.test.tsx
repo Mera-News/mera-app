@@ -300,3 +300,21 @@ describe('the disclosure matches the choice', () => {
     expect(await findByText('factChoice.replacesNoUndo')).toBeTruthy();
   });
 });
+
+describe('ux2 batch 25 D4: Keep both raises no conflict with the fact it keeps', () => {
+  it('drops a conflict against the kept fact, keeps any other', async () => {
+    const { resolveGroup } = require('../fact-choice-actions') as { resolveGroup: jest.Mock };
+    mockCommit.mockResolvedValueOnce({
+      savedFacts: [{ id: 'new', statement: 's' }],
+      conflicts: [
+        { newFactId: 'new', existingFactId: 'old-1', newStatement: 's', existingStatement: 'Lives in Amsterdam', kind: 'attribute', suggestedMerge: '' },
+        { newFactId: 'new', existingFactId: 'other', newStatement: 's', existingStatement: 'x', kind: 'attribute', suggestedMerge: '' },
+      ],
+    } as never);
+    const { getByTestId, findByText } = drawReplace();
+    await findByText('Lives in Amsterdam');
+    await act(async () => { fireEvent.press(getByTestId('fact-choice-keep-both-0')); });
+    const resolution = resolveGroup.mock.calls[0][2];
+    expect(resolution.conflicts.map((c: { existingFactId: string }) => c.existingFactId)).toEqual(['other']);
+  });
+});

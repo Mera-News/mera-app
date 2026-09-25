@@ -682,6 +682,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const modelTexts: string[] = [];
   /** A lookup this turn could not place what the user named. */
   let sawNoMatch = false;
+  /** An unverified home was held back because it would replace the verified
+   *  home on file; the chip offers the user's own words instead. */
+  let heldBackUnverifiedHome = false;
+
   /**
    * "SAVE AS I WROTE IT" (owner ruling ux2 D9): the user's own sentence, as a
    * fact, for the chip the UI adds under a question or after a failed lookup.
@@ -1411,6 +1415,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             continue;
           }
           if (replaces !== null) replaceTargetsThisTurn.add(replaces);
+          // AN UNVERIFIED PLACE NEVER REPLACES A VERIFIED HOME (ux2 batch 25,
+          // D4): "I live in Zzqq" found nothing, and the card offered to
+          // replace "Lives in Berlin" with it. Held back; the chip offers the
+          // user's own words, which never replace anything.
+          const nothingFound =
+            (sawNoMatch || lastLookupStatus === 'unavailable')
+            && resolvedPlacesThisTurn.length === 0
+            && placeCandidates.length === 0;
+          if (isHomeEntry(entry) && replaces !== null && nothingFound) {
+            heldBackUnverifiedHome = true;
+            reProposals++;
+            continue;
+          }
           if (isHomeEntry(entry)) homeOfferedThisTurn = true;
           proposals.push({ statement, kind: routeKind, place, replaces });
           offeredThisTurn.push(statement.toLowerCase());
@@ -1949,8 +1966,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // the one way to keep what the user said (ux2 D9). A loop-written leg, like
   // the offers above, so the UI renders it from the thread like any call.
   if (
-    sawNoMatch
-    && !proposedSomething
+    (sawNoMatch || heldBackUnverifiedHome)
+    && (!proposedSomething || heldBackUnverifiedHome)
     && turn.pendingChoice === null
     && terminalReason !== 'transport-error'
     && skillsLoaded.some((id) => id.startsWith('facts/'))

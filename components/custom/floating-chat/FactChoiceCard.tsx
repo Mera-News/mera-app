@@ -242,11 +242,17 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           ...(topicSkillId ? { skillId: topicSkillId } : {}),
         },
       ]);
+      // KEEP BOTH ALREADY ANSWERED THE CONFLICT with the fact it keeps (ux2
+      // batch 25, D4): a second "Possible conflict" card asked the same thing.
+      const shown =
+        mode === 'keep-both' && replacesFactId
+          ? conflicts.filter((c) => c.existingFactId !== replacesFactId)
+          : conflicts;
       // Only THIS group's slot changes. Every sibling keeps its own state.
       resolveGroup(
         resultKey,
         groupId,
-        { status: 'saved', statements: [statement], savedFacts, conflicts },
+        { status: 'saved', statements: [statement], savedFacts, conflicts: shown },
         baseResult,
       );
       void hapticSuccess();

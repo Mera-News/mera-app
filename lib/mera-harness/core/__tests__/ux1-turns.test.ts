@@ -875,3 +875,43 @@ describe('ux2 D9: "Save as I wrote it" is added by the loop, never the model', (
     expect(last.toolResults[0].result).toMatchObject({ saveAsWritten: { statement: 'Lives in Zzqq' } });
   });
 });
+
+describe('ux2 batch 25 D4: a place nobody could find never replaces a verified home', () => {
+  const BERLIN: AgentPersona = {
+    surface: 'CONFIG', languageName: 'English',
+    facts: [{ id: 'home', statement: 'Lives in Berlin, State of Berlin, Germany, EU', attribute: CANONICAL_LOCATION_KEY }],
+  };
+  it('drops the unverified home card and offers "Save as I wrote it" instead', async () => {
+    const legs: { toolCalls: { name: string }[] }[] = [];
+    const h = harness(
+      [
+        res({ content: 'Zzqq.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Zzqq' })] }),
+        res({
+          content: 'Could you spell the place?',
+          toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Zzqq', questionnaire_attribute: CANONICAL_LOCATION_KEY }] })],
+        }),
+        res({ content: 'Could you spell the place?' }),
+      ],
+      { lookupPlace: async () => ({ status: 'no_match', query: 'Zzqq' }) },
+    );
+    await runAgentTurn({ state: createAgentState(BERLIN), userMessage: 'I live in Zzqq', deps: h.deps, onLeg: (l) => legs.push(l) });
+    expect(h.saves.flat().map((e) => e.statement)).not.toContain('Lives in Zzqq');
+    expect(legs[legs.length - 1].toolCalls.map((c) => c.name)).toEqual(['saveAsWritten']);
+  });
+
+  it('with no home on file, the unverified place is still offered as a plain card', async () => {
+    const h = harness(
+      [
+        res({ content: 'Zzqq.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        res({ toolCalls: [tc('lookup_place', { query: 'Zzqq' })] }),
+        res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [{ statement: 'Lives in Zzqq', questionnaire_attribute: CANONICAL_LOCATION_KEY }] })] }),
+        res({ content: 'Offered.' }),
+      ],
+      { lookupPlace: async () => ({ status: 'no_match', query: 'Zzqq' }) },
+    );
+    await runAgentTurn({ state: createAgentState({ surface: 'CONFIG', languageName: 'English', facts: [] }), userMessage: 'I live in Zzqq', deps: h.deps });
+    expect(h.saves.flat()).toEqual([expect.objectContaining({ statement: 'Lives in Zzqq' })]);
+    expect(h.saves.flat()[0].replaces).toBeUndefined();
+  });
+});
