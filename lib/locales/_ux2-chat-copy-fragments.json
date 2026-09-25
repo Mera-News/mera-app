@@ -1,0 +1,843 @@
+{
+  "_comment": "ux2 P9: C3 chat wait lines (owner-approved English, truthful per phase; `preparing` unchanged and omitted), the new webSearch phase (D10), the Save as I wrote it chip (D9, floatingChat.saveAsWritten) and the chat bug report disclosure (H, feedback.chatAttachmentNote). OVERWRITES the eight existing chatPhases pools: splice with --allow-overwrite chatPhases.attesting,chatPhases.securing,chatPhases.queued,chatPhases.thinking,chatPhases.retrying,chatPhases.deviceLoading,chatPhases.devicePreparing,chatPhases.deviceThinking. Everything else is a pure ADD. No em or en dash anywhere.",
+  "en": {
+    "chatPhases": {
+      "attesting": [
+        "Establishing a secure connection between you and the model in a trusted environment.",
+        "Getting the key from the model's trusted environment, so only the model can read this."
+      ],
+      "securing": [
+        "Encrypting your message so only the model in its trusted environment can read it.",
+        "Your words are encrypted on your phone before they leave."
+      ],
+      "queued": [
+        "Your request is next in line on your phone."
+      ],
+      "thinking": [
+        "The model is reading your message.",
+        "Working out the best answer."
+      ],
+      "retrying": [
+        "This is taking longer than usual. Trying another secure route.",
+        "Still working on it. Thanks for waiting."
+      ],
+      "deviceLoading": [
+        "Loading the model on your phone.",
+        "The first answer takes a little longer while it loads."
+      ],
+      "devicePreparing": [
+        "Getting your phone ready to answer."
+      ],
+      "deviceThinking": [
+        "Thinking it through on your phone. Nothing leaves your device."
+      ],
+      "webSearch": [
+        "Searching the web from your device…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Save as I wrote it"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Your chat with Mera will be attached to this report."
+    }
+  },
+  "de": {
+    "chatPhases": {
+      "attesting": [
+        "Sichere Verbindung zwischen dir und dem Modell in einer vertrauenswürdigen Umgebung wird aufgebaut.",
+        "Schlüssel aus der vertrauenswürdigen Umgebung des Modells wird geholt, damit nur das Modell dies lesen kann."
+      ],
+      "securing": [
+        "Deine Nachricht wird verschlüsselt, damit nur das Modell in seiner vertrauenswürdigen Umgebung sie lesen kann.",
+        "Deine Worte werden auf deinem Handy verschlüsselt, bevor sie es verlassen."
+      ],
+      "queued": [
+        "Deine Anfrage ist auf deinem Handy als Nächstes an der Reihe."
+      ],
+      "thinking": [
+        "Das Modell liest deine Nachricht.",
+        "Die beste Antwort wird erarbeitet."
+      ],
+      "retrying": [
+        "Das dauert länger als sonst. Ein anderer sicherer Weg wird versucht.",
+        "Wird noch bearbeitet. Danke fürs Warten."
+      ],
+      "deviceLoading": [
+        "Das Modell wird auf deinem Handy geladen.",
+        "Die erste Antwort dauert etwas länger, während es lädt."
+      ],
+      "devicePreparing": [
+        "Dein Handy wird für die Antwort vorbereitet."
+      ],
+      "deviceThinking": [
+        "Wird auf deinem Handy durchdacht. Nichts verlässt dein Gerät."
+      ],
+      "webSearch": [
+        "Suche im Web von deinem Gerät aus…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "So speichern, wie ich es geschrieben habe"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Dein Chat mit Mera wird diesem Bericht beigefügt."
+    }
+  },
+  "fr": {
+    "chatPhases": {
+      "attesting": [
+        "Établissement d'une connexion sécurisée entre vous et le modèle dans un environnement de confiance.",
+        "Récupération de la clé depuis l'environnement de confiance du modèle, pour que seul le modèle puisse lire ceci."
+      ],
+      "securing": [
+        "Chiffrement de votre message pour que seul le modèle, dans son environnement de confiance, puisse le lire.",
+        "Vos mots sont chiffrés sur votre téléphone avant de le quitter."
+      ],
+      "queued": [
+        "Votre demande est la prochaine en file sur votre téléphone."
+      ],
+      "thinking": [
+        "Le modèle lit votre message.",
+        "Recherche de la meilleure réponse."
+      ],
+      "retrying": [
+        "Cela prend plus de temps que d'habitude. Essai d'une autre voie sécurisée.",
+        "Toujours en cours. Merci de patienter."
+      ],
+      "deviceLoading": [
+        "Chargement du modèle sur votre téléphone.",
+        "La première réponse prend un peu plus de temps pendant le chargement."
+      ],
+      "devicePreparing": [
+        "Préparation de votre téléphone pour répondre."
+      ],
+      "deviceThinking": [
+        "Réflexion sur votre téléphone. Rien ne quitte votre appareil."
+      ],
+      "webSearch": [
+        "Recherche sur le web depuis votre appareil…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Enregistrer tel que je l'ai écrit"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Votre discussion avec Mera sera jointe à ce rapport."
+    }
+  },
+  "es": {
+    "chatPhases": {
+      "attesting": [
+        "Estableciendo una conexión segura entre tú y el modelo en un entorno de confianza.",
+        "Obteniendo la clave del entorno de confianza del modelo, para que solo el modelo pueda leer esto."
+      ],
+      "securing": [
+        "Cifrando tu mensaje para que solo el modelo, en su entorno de confianza, pueda leerlo.",
+        "Tus palabras se cifran en tu teléfono antes de salir."
+      ],
+      "queued": [
+        "Tu solicitud es la siguiente en tu teléfono."
+      ],
+      "thinking": [
+        "El modelo está leyendo tu mensaje.",
+        "Buscando la mejor respuesta."
+      ],
+      "retrying": [
+        "Esto tarda más de lo habitual. Probando otra ruta segura.",
+        "Seguimos trabajando. Gracias por esperar."
+      ],
+      "deviceLoading": [
+        "Cargando el modelo en tu teléfono.",
+        "La primera respuesta tarda un poco más mientras se carga."
+      ],
+      "devicePreparing": [
+        "Preparando tu teléfono para responder."
+      ],
+      "deviceThinking": [
+        "Pensándolo en tu teléfono. Nada sale de tu dispositivo."
+      ],
+      "webSearch": [
+        "Buscando en la web desde tu dispositivo…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Guardar tal como lo escribí"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Tu chat con Mera se adjuntará a este informe."
+    }
+  },
+  "it": {
+    "chatPhases": {
+      "attesting": [
+        "Stabilendo una connessione sicura tra te e il modello in un ambiente attendibile.",
+        "Recupero della chiave dall'ambiente attendibile del modello, così solo il modello può leggere questo."
+      ],
+      "securing": [
+        "Cifratura del messaggio, così solo il modello nel suo ambiente attendibile può leggerlo.",
+        "Le tue parole vengono cifrate sul telefono prima di uscire."
+      ],
+      "queued": [
+        "La tua richiesta è la prossima sul tuo telefono."
+      ],
+      "thinking": [
+        "Il modello sta leggendo il tuo messaggio.",
+        "Sto cercando la risposta migliore."
+      ],
+      "retrying": [
+        "Ci vuole più del solito. Provo un altro percorso sicuro.",
+        "Ci sto ancora lavorando. Grazie per l'attesa."
+      ],
+      "deviceLoading": [
+        "Caricamento del modello sul telefono.",
+        "La prima risposta richiede un po' di più mentre si carica."
+      ],
+      "devicePreparing": [
+        "Preparo il telefono a rispondere."
+      ],
+      "deviceThinking": [
+        "Ci penso sul tuo telefono. Nulla lascia il dispositivo."
+      ],
+      "webSearch": [
+        "Ricerca sul web dal tuo dispositivo…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Salva come l'ho scritto"
+    },
+    "feedback": {
+      "chatAttachmentNote": "La tua chat con Mera sarà allegata a questa segnalazione."
+    }
+  },
+  "nl": {
+    "chatPhases": {
+      "attesting": [
+        "Een beveiligde verbinding tussen jou en het model in een vertrouwde omgeving opzetten.",
+        "De sleutel ophalen uit de vertrouwde omgeving van het model, zodat alleen het model dit kan lezen."
+      ],
+      "securing": [
+        "Je bericht versleutelen zodat alleen het model in zijn vertrouwde omgeving het kan lezen.",
+        "Je woorden worden op je telefoon versleuteld voordat ze vertrekken."
+      ],
+      "queued": [
+        "Je verzoek is als volgende aan de beurt op je telefoon."
+      ],
+      "thinking": [
+        "Het model leest je bericht.",
+        "Het beste antwoord uitwerken."
+      ],
+      "retrying": [
+        "Dit duurt langer dan normaal. Een andere beveiligde route proberen.",
+        "Nog bezig. Bedankt voor het wachten."
+      ],
+      "deviceLoading": [
+        "Het model wordt op je telefoon geladen.",
+        "Het eerste antwoord duurt iets langer tijdens het laden."
+      ],
+      "devicePreparing": [
+        "Je telefoon wordt klaargemaakt om te antwoorden."
+      ],
+      "deviceThinking": [
+        "Wordt op je telefoon overdacht. Niets verlaat je apparaat."
+      ],
+      "webSearch": [
+        "Op het web zoeken vanaf je apparaat…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Opslaan zoals ik het schreef"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Je chat met Mera wordt bij dit rapport gevoegd."
+    }
+  },
+  "pt-BR": {
+    "chatPhases": {
+      "attesting": [
+        "Estabelecendo uma conexão segura entre você e o modelo em um ambiente confiável.",
+        "Obtendo a chave do ambiente confiável do modelo, para que só o modelo possa ler isto."
+      ],
+      "securing": [
+        "Criptografando sua mensagem para que só o modelo, no ambiente confiável dele, possa lê-la.",
+        "Suas palavras são criptografadas no seu celular antes de sair."
+      ],
+      "queued": [
+        "Seu pedido é o próximo da fila no seu celular."
+      ],
+      "thinking": [
+        "O modelo está lendo sua mensagem.",
+        "Pensando na melhor resposta."
+      ],
+      "retrying": [
+        "Está demorando mais que o normal. Tentando outra rota segura.",
+        "Ainda trabalhando nisso. Obrigado por esperar."
+      ],
+      "deviceLoading": [
+        "Carregando o modelo no seu celular.",
+        "A primeira resposta demora um pouco mais enquanto carrega."
+      ],
+      "devicePreparing": [
+        "Preparando seu celular para responder."
+      ],
+      "deviceThinking": [
+        "Pensando no seu celular. Nada sai do seu aparelho."
+      ],
+      "webSearch": [
+        "Pesquisando na web a partir do seu aparelho…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Salvar como eu escrevi"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Sua conversa com a Mera será anexada a este relatório."
+    }
+  },
+  "pl": {
+    "chatPhases": {
+      "attesting": [
+        "Nawiązywanie bezpiecznego połączenia między Tobą a modelem w zaufanym środowisku.",
+        "Pobieranie klucza z zaufanego środowiska modelu, aby tylko model mógł to przeczytać."
+      ],
+      "securing": [
+        "Szyfrowanie wiadomości, aby tylko model w swoim zaufanym środowisku mógł ją przeczytać.",
+        "Twoje słowa są szyfrowane na telefonie, zanim go opuszczą."
+      ],
+      "queued": [
+        "Twoje zapytanie jest następne w kolejce na telefonie."
+      ],
+      "thinking": [
+        "Model czyta Twoją wiadomość.",
+        "Szukam najlepszej odpowiedzi."
+      ],
+      "retrying": [
+        "To trwa dłużej niż zwykle. Próbuję innej bezpiecznej drogi.",
+        "Wciąż nad tym pracuję. Dziękuję za cierpliwość."
+      ],
+      "deviceLoading": [
+        "Wczytywanie modelu na telefonie.",
+        "Pierwsza odpowiedź trwa nieco dłużej, gdy model się wczytuje."
+      ],
+      "devicePreparing": [
+        "Przygotowuję telefon do odpowiedzi."
+      ],
+      "deviceThinking": [
+        "Przemyślam to na Twoim telefonie. Nic nie opuszcza urządzenia."
+      ],
+      "webSearch": [
+        "Szukam w internecie z Twojego urządzenia…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Zapisz tak, jak napisałem"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Twój czat z Merą zostanie dołączony do tego zgłoszenia."
+    }
+  },
+  "tr": {
+    "chatPhases": {
+      "attesting": [
+        "Seninle model arasında güvenilir bir ortamda güvenli bağlantı kuruluyor.",
+        "Anahtar, modelin güvenilir ortamından alınıyor; böylece bunu yalnızca model okuyabilir."
+      ],
+      "securing": [
+        "Mesajın, yalnızca güvenilir ortamındaki modelin okuyabileceği şekilde şifreleniyor.",
+        "Sözlerin telefonundan çıkmadan önce şifrelenir."
+      ],
+      "queued": [
+        "İsteğin telefonunda sıradaki."
+      ],
+      "thinking": [
+        "Model mesajını okuyor.",
+        "En iyi yanıt hazırlanıyor."
+      ],
+      "retrying": [
+        "Bu her zamankinden uzun sürüyor. Başka bir güvenli yol deneniyor.",
+        "Hâlâ üzerinde çalışılıyor. Beklediğin için teşekkürler."
+      ],
+      "deviceLoading": [
+        "Model telefonuna yükleniyor.",
+        "İlk yanıt, model yüklenirken biraz daha uzun sürer."
+      ],
+      "devicePreparing": [
+        "Telefonun yanıt vermeye hazırlanıyor."
+      ],
+      "deviceThinking": [
+        "Telefonunda düşünülüyor. Hiçbir şey cihazından çıkmaz."
+      ],
+      "webSearch": [
+        "Cihazından web'de aranıyor…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Yazdığım gibi kaydet"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Mera ile sohbetin bu rapora eklenecek."
+    }
+  },
+  "id": {
+    "chatPhases": {
+      "attesting": [
+        "Membuat koneksi aman antara Anda dan model di lingkungan tepercaya.",
+        "Mengambil kunci dari lingkungan tepercaya model, jadi hanya model yang bisa membaca ini."
+      ],
+      "securing": [
+        "Mengenkripsi pesan Anda agar hanya model di lingkungan tepercayanya yang bisa membacanya.",
+        "Kata-kata Anda dienkripsi di ponsel sebelum dikirim."
+      ],
+      "queued": [
+        "Permintaan Anda berikutnya dalam antrean di ponsel Anda."
+      ],
+      "thinking": [
+        "Model sedang membaca pesan Anda.",
+        "Menyusun jawaban terbaik."
+      ],
+      "retrying": [
+        "Ini lebih lama dari biasanya. Mencoba jalur aman lain.",
+        "Masih dikerjakan. Terima kasih sudah menunggu."
+      ],
+      "deviceLoading": [
+        "Memuat model di ponsel Anda.",
+        "Jawaban pertama sedikit lebih lama saat model dimuat."
+      ],
+      "devicePreparing": [
+        "Menyiapkan ponsel Anda untuk menjawab."
+      ],
+      "deviceThinking": [
+        "Memikirkannya di ponsel Anda. Tidak ada yang keluar dari perangkat."
+      ],
+      "webSearch": [
+        "Mencari di web dari perangkat Anda…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Simpan seperti yang saya tulis"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Chat Anda dengan Mera akan dilampirkan pada laporan ini."
+    }
+  },
+  "vi": {
+    "chatPhases": {
+      "attesting": [
+        "Đang thiết lập kết nối an toàn giữa bạn và mô hình trong môi trường tin cậy.",
+        "Đang lấy khóa từ môi trường tin cậy của mô hình, để chỉ mô hình đọc được nội dung này."
+      ],
+      "securing": [
+        "Đang mã hóa tin nhắn để chỉ mô hình trong môi trường tin cậy của nó đọc được.",
+        "Lời bạn được mã hóa trên điện thoại trước khi gửi đi."
+      ],
+      "queued": [
+        "Yêu cầu của bạn là yêu cầu tiếp theo trên điện thoại."
+      ],
+      "thinking": [
+        "Mô hình đang đọc tin nhắn của bạn.",
+        "Đang tìm câu trả lời tốt nhất."
+      ],
+      "retrying": [
+        "Việc này lâu hơn bình thường. Đang thử một đường an toàn khác.",
+        "Vẫn đang xử lý. Cảm ơn bạn đã chờ."
+      ],
+      "deviceLoading": [
+        "Đang tải mô hình trên điện thoại.",
+        "Câu trả lời đầu tiên lâu hơn một chút khi đang tải."
+      ],
+      "devicePreparing": [
+        "Đang chuẩn bị điện thoại để trả lời."
+      ],
+      "deviceThinking": [
+        "Đang suy nghĩ trên điện thoại của bạn. Không gì rời khỏi thiết bị."
+      ],
+      "webSearch": [
+        "Đang tìm trên web từ thiết bị của bạn…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Lưu đúng như tôi đã viết"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Cuộc trò chuyện của bạn với Mera sẽ được đính kèm vào báo cáo này."
+    }
+  },
+  "ru": {
+    "chatPhases": {
+      "attesting": [
+        "Устанавливаем защищенное соединение между вами и моделью в доверенной среде.",
+        "Получаем ключ из доверенной среды модели, чтобы прочитать это могла только модель."
+      ],
+      "securing": [
+        "Шифруем ваше сообщение, чтобы его могла прочитать только модель в своей доверенной среде.",
+        "Ваши слова шифруются на телефоне до отправки."
+      ],
+      "queued": [
+        "Ваш запрос следующий в очереди на телефоне."
+      ],
+      "thinking": [
+        "Модель читает ваше сообщение.",
+        "Подбираем лучший ответ."
+      ],
+      "retrying": [
+        "Это занимает больше времени, чем обычно. Пробуем другой защищенный путь.",
+        "Еще работаем над этим. Спасибо за ожидание."
+      ],
+      "deviceLoading": [
+        "Загружаем модель на телефон.",
+        "Первый ответ займет чуть больше времени, пока она загружается."
+      ],
+      "devicePreparing": [
+        "Готовим телефон к ответу."
+      ],
+      "deviceThinking": [
+        "Обдумываем на вашем телефоне. Ничего не покидает устройство."
+      ],
+      "webSearch": [
+        "Ищем в интернете с вашего устройства…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Сохранить так, как я написал"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Ваш чат с Mera будет приложен к этому отчету."
+    }
+  },
+  "uk": {
+    "chatPhases": {
+      "attesting": [
+        "Встановлюємо захищене з'єднання між вами та моделлю в довіреному середовищі.",
+        "Отримуємо ключ із довіреного середовища моделі, щоб прочитати це могла лише модель."
+      ],
+      "securing": [
+        "Шифруємо ваше повідомлення, щоб його могла прочитати лише модель у своєму довіреному середовищі.",
+        "Ваші слова шифруються на телефоні перед надсиланням."
+      ],
+      "queued": [
+        "Ваш запит наступний у черзі на телефоні."
+      ],
+      "thinking": [
+        "Модель читає ваше повідомлення.",
+        "Підбираємо найкращу відповідь."
+      ],
+      "retrying": [
+        "Це триває довше, ніж зазвичай. Пробуємо інший захищений шлях.",
+        "Ще працюємо над цим. Дякуємо за очікування."
+      ],
+      "deviceLoading": [
+        "Завантажуємо модель на телефон.",
+        "Перша відповідь займе трохи більше часу, поки вона завантажується."
+      ],
+      "devicePreparing": [
+        "Готуємо телефон до відповіді."
+      ],
+      "deviceThinking": [
+        "Обмірковуємо на вашому телефоні. Ніщо не залишає пристрій."
+      ],
+      "webSearch": [
+        "Шукаємо в інтернеті з вашого пристрою…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "Зберегти так, як я написав"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Ваш чат із Mera буде додано до цього звіту."
+    }
+  },
+  "ar": {
+    "chatPhases": {
+      "attesting": [
+        "جارٍ إنشاء اتصال آمن بينك وبين النموذج في بيئة موثوقة.",
+        "جارٍ الحصول على المفتاح من البيئة الموثوقة للنموذج، كي لا يقرأ هذا إلا النموذج."
+      ],
+      "securing": [
+        "جارٍ تشفير رسالتك كي لا يقرأها إلا النموذج في بيئته الموثوقة.",
+        "تُشفَّر كلماتك على هاتفك قبل أن تغادره."
+      ],
+      "queued": [
+        "طلبك هو التالي على هاتفك."
+      ],
+      "thinking": [
+        "النموذج يقرأ رسالتك.",
+        "جارٍ إعداد أفضل إجابة."
+      ],
+      "retrying": [
+        "يستغرق هذا وقتًا أطول من المعتاد. جارٍ تجربة مسار آمن آخر.",
+        "ما زلنا نعمل على ذلك. شكرًا على انتظارك."
+      ],
+      "deviceLoading": [
+        "جارٍ تحميل النموذج على هاتفك.",
+        "تستغرق الإجابة الأولى وقتًا أطول قليلًا أثناء التحميل."
+      ],
+      "devicePreparing": [
+        "جارٍ تجهيز هاتفك للإجابة."
+      ],
+      "deviceThinking": [
+        "جارٍ التفكير على هاتفك. لا شيء يغادر جهازك."
+      ],
+      "webSearch": [
+        "جارٍ البحث في الويب من جهازك…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "احفظ كما كتبته"
+    },
+    "feedback": {
+      "chatAttachmentNote": "ستُرفق محادثتك مع Mera بهذا البلاغ."
+    }
+  },
+  "hi": {
+    "chatPhases": {
+      "attesting": [
+        "भरोसेमंद वातावरण में आपके और मॉडल के बीच सुरक्षित कनेक्शन बनाया जा रहा है।",
+        "मॉडल के भरोसेमंद वातावरण से कुंजी ली जा रही है, ताकि इसे केवल मॉडल पढ़ सके।"
+      ],
+      "securing": [
+        "आपका संदेश एन्क्रिप्ट किया जा रहा है, ताकि इसे केवल अपने भरोसेमंद वातावरण में मौजूद मॉडल पढ़ सके।",
+        "आपके शब्द फ़ोन से निकलने से पहले एन्क्रिप्ट होते हैं।"
+      ],
+      "queued": [
+        "आपका अनुरोध आपके फ़ोन पर अगला है।"
+      ],
+      "thinking": [
+        "मॉडल आपका संदेश पढ़ रहा है।",
+        "सबसे अच्छा जवाब तैयार हो रहा है।"
+      ],
+      "retrying": [
+        "इसमें सामान्य से ज़्यादा समय लग रहा है। दूसरा सुरक्षित रास्ता आज़माया जा रहा है।",
+        "अभी भी काम जारी है। इंतज़ार के लिए धन्यवाद।"
+      ],
+      "deviceLoading": [
+        "आपके फ़ोन पर मॉडल लोड हो रहा है।",
+        "लोड होते समय पहला जवाब थोड़ा ज़्यादा समय लेता है।"
+      ],
+      "devicePreparing": [
+        "आपका फ़ोन जवाब देने के लिए तैयार हो रहा है।"
+      ],
+      "deviceThinking": [
+        "आपके फ़ोन पर सोचा जा रहा है। कुछ भी आपके डिवाइस से बाहर नहीं जाता।"
+      ],
+      "webSearch": [
+        "आपके डिवाइस से वेब पर खोजा जा रहा है…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "जैसा मैंने लिखा वैसे सेव करें"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Mera के साथ आपकी चैट इस रिपोर्ट के साथ जोड़ी जाएगी।"
+    }
+  },
+  "th": {
+    "chatPhases": {
+      "attesting": [
+        "กำลังสร้างการเชื่อมต่อที่ปลอดภัยระหว่างคุณกับโมเดลในสภาพแวดล้อมที่เชื่อถือได้",
+        "กำลังรับคีย์จากสภาพแวดล้อมที่เชื่อถือได้ของโมเดล เพื่อให้มีเพียงโมเดลที่อ่านข้อความนี้ได้"
+      ],
+      "securing": [
+        "กำลังเข้ารหัสข้อความของคุณ เพื่อให้มีเพียงโมเดลในสภาพแวดล้อมที่เชื่อถือได้ที่อ่านได้",
+        "ข้อความของคุณถูกเข้ารหัสบนโทรศัพท์ก่อนส่งออก"
+      ],
+      "queued": [
+        "คำขอของคุณเป็นลำดับถัดไปบนโทรศัพท์"
+      ],
+      "thinking": [
+        "โมเดลกำลังอ่านข้อความของคุณ",
+        "กำลังหาคำตอบที่ดีที่สุด"
+      ],
+      "retrying": [
+        "ใช้เวลานานกว่าปกติ กำลังลองเส้นทางที่ปลอดภัยอีกทาง",
+        "ยังดำเนินการอยู่ ขอบคุณที่รอ"
+      ],
+      "deviceLoading": [
+        "กำลังโหลดโมเดลบนโทรศัพท์ของคุณ",
+        "คำตอบแรกจะใช้เวลานานขึ้นเล็กน้อยระหว่างโหลด"
+      ],
+      "devicePreparing": [
+        "กำลังเตรียมโทรศัพท์ให้พร้อมตอบ"
+      ],
+      "deviceThinking": [
+        "กำลังคิดบนโทรศัพท์ของคุณ ไม่มีอะไรออกจากอุปกรณ์"
+      ],
+      "webSearch": [
+        "กำลังค้นหาบนเว็บจากอุปกรณ์ของคุณ…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "บันทึกตามที่ฉันเขียน"
+    },
+    "feedback": {
+      "chatAttachmentNote": "แชตของคุณกับ Mera จะแนบไปกับรายงานนี้"
+    }
+  },
+  "ja": {
+    "chatPhases": {
+      "attesting": [
+        "信頼できる環境で、あなたとモデルの間に安全な接続を確立しています。",
+        "モデルの信頼できる環境から鍵を取得しています。これを読めるのはモデルだけです。"
+      ],
+      "securing": [
+        "信頼できる環境にあるモデルだけが読めるよう、メッセージを暗号化しています。",
+        "あなたの言葉はスマホから送られる前に暗号化されます。"
+      ],
+      "queued": [
+        "あなたのリクエストはスマホで次の順番です。"
+      ],
+      "thinking": [
+        "モデルがメッセージを読んでいます。",
+        "最適な回答を考えています。"
+      ],
+      "retrying": [
+        "いつもより時間がかかっています。別の安全な経路を試しています。",
+        "まだ処理中です。お待ちいただきありがとうございます。"
+      ],
+      "deviceLoading": [
+        "スマホでモデルを読み込んでいます。",
+        "読み込み中は最初の回答に少し時間がかかります。"
+      ],
+      "devicePreparing": [
+        "スマホが回答の準備をしています。"
+      ],
+      "deviceThinking": [
+        "スマホで考えています。何もデバイスの外に出ません。"
+      ],
+      "webSearch": [
+        "デバイスからウェブを検索しています…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "書いたとおりに保存"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Mera とのチャットがこのレポートに添付されます。"
+    }
+  },
+  "ko": {
+    "chatPhases": {
+      "attesting": [
+        "신뢰할 수 있는 환경에서 사용자와 모델 사이에 보안 연결을 설정하는 중입니다.",
+        "모델의 신뢰할 수 있는 환경에서 키를 가져오는 중입니다. 이 내용은 모델만 읽을 수 있습니다."
+      ],
+      "securing": [
+        "신뢰할 수 있는 환경의 모델만 읽을 수 있도록 메시지를 암호화하는 중입니다.",
+        "보내기 전에 휴대폰에서 내용이 암호화됩니다."
+      ],
+      "queued": [
+        "휴대폰에서 요청이 다음 순서입니다."
+      ],
+      "thinking": [
+        "모델이 메시지를 읽고 있습니다.",
+        "가장 좋은 답을 찾고 있습니다."
+      ],
+      "retrying": [
+        "평소보다 오래 걸리고 있습니다. 다른 보안 경로를 시도하는 중입니다.",
+        "아직 처리 중입니다. 기다려 주셔서 감사합니다."
+      ],
+      "deviceLoading": [
+        "휴대폰에서 모델을 불러오는 중입니다.",
+        "불러오는 동안 첫 답변은 조금 더 걸립니다."
+      ],
+      "devicePreparing": [
+        "휴대폰이 답변을 준비하는 중입니다."
+      ],
+      "deviceThinking": [
+        "휴대폰에서 생각하는 중입니다. 기기 밖으로 나가는 것은 없습니다."
+      ],
+      "webSearch": [
+        "기기에서 웹을 검색하는 중…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "쓴 그대로 저장"
+    },
+    "feedback": {
+      "chatAttachmentNote": "Mera와의 채팅이 이 신고에 첨부됩니다."
+    }
+  },
+  "zh-CN": {
+    "chatPhases": {
+      "attesting": [
+        "正在可信环境中建立你与模型之间的安全连接。",
+        "正在从模型的可信环境获取密钥，只有模型能读取这些内容。"
+      ],
+      "securing": [
+        "正在加密你的消息，只有可信环境中的模型能读取。",
+        "你的文字在离开手机前就已加密。"
+      ],
+      "queued": [
+        "你的请求在手机上排在下一个。"
+      ],
+      "thinking": [
+        "模型正在阅读你的消息。",
+        "正在想出最佳回答。"
+      ],
+      "retrying": [
+        "这比平时慢。正在尝试另一条安全线路。",
+        "仍在处理中。感谢等待。"
+      ],
+      "deviceLoading": [
+        "正在手机上加载模型。",
+        "加载期间，第一个回答会稍慢一些。"
+      ],
+      "devicePreparing": [
+        "正在让手机准备回答。"
+      ],
+      "deviceThinking": [
+        "正在手机上思考。没有任何内容离开你的设备。"
+      ],
+      "webSearch": [
+        "正在从你的设备搜索网页…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "按我写的保存"
+    },
+    "feedback": {
+      "chatAttachmentNote": "你与 Mera 的聊天将附在此报告中。"
+    }
+  },
+  "zh-TW": {
+    "chatPhases": {
+      "attesting": [
+        "正在可信環境中建立你與模型之間的安全連線。",
+        "正在從模型的可信環境取得金鑰，只有模型能讀取這些內容。"
+      ],
+      "securing": [
+        "正在加密你的訊息，只有可信環境中的模型能讀取。",
+        "你的文字在離開手機前就已加密。"
+      ],
+      "queued": [
+        "你的要求在手機上排在下一個。"
+      ],
+      "thinking": [
+        "模型正在閱讀你的訊息。",
+        "正在想出最佳回答。"
+      ],
+      "retrying": [
+        "這比平時慢。正在嘗試另一條安全線路。",
+        "仍在處理中。感謝等候。"
+      ],
+      "deviceLoading": [
+        "正在手機上載入模型。",
+        "載入期間，第一個回答會稍慢一些。"
+      ],
+      "devicePreparing": [
+        "正在讓手機準備回答。"
+      ],
+      "deviceThinking": [
+        "正在手機上思考。沒有任何內容離開你的裝置。"
+      ],
+      "webSearch": [
+        "正在從你的裝置搜尋網頁…"
+      ]
+    },
+    "floatingChat": {
+      "saveAsWritten": "照我寫的儲存"
+    },
+    "feedback": {
+      "chatAttachmentNote": "你與 Mera 的聊天將附在此回報中。"
+    }
+  }
+}
