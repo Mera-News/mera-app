@@ -19,14 +19,14 @@ jest.mock('@/components/ui/pressable', () => {
 jest.mock('@/components/ui/popover', () => {
     const { View } = require('react-native');
     return {
-        Popover: ({ isOpen, trigger, children }: any) => (
-            <View>
+        Popover: ({ isOpen, trigger, children, useRNModal }: any) => (
+            <View testID="popover" {...{ useRNModal }}>
                 {trigger({})}
                 {isOpen ? children : null}
             </View>
         ),
         PopoverBackdrop: () => null,
-        PopoverBody: ({ children }: any) => <View>{children}</View>,
+        PopoverBody: ({ children, ...p }: any) => <View {...p}>{children}</View>,
         PopoverContent: ({ children }: any) => <View>{children}</View>,
     };
 });
@@ -59,5 +59,32 @@ it('Global opens the Global list', () => {
     expect(mockPush).toHaveBeenCalledWith({
         pathname: '/logged-in/sources-publishers',
         params: { countryCode: 'GLOBAL', countryName: 'articleDetail.sourceCountryGlobal' },
+    });
+});
+
+// ux2: VoiceOver could not reach the bubble. Gluestack portals popover content
+// to the app root, outside the native screen the detail page lives in, so the
+// link was not in the accessibility tree. In an RN Modal it is on top, and
+// VoiceOver moves into it.
+describe('the open bubble is reachable by VoiceOver', () => {
+    it('presents in a native modal', () => {
+        const r = render(<SourceCountryFlag countryCode="NLD" />);
+        expect(r.getByTestId('popover').props.useRNModal).toBe(true);
+    });
+
+    it('its link is one accessible element: role link, label the country name', () => {
+        const r = render(<SourceCountryFlag countryCode="NLD" />);
+        fireEvent.press(r.getByLabelText('articleDetail.sourceCountryA11y::{"country":"Netherlands"}'));
+        const link = r.getByRole('link', { name: 'Netherlands' });
+        expect(link.props.accessible).not.toBe(false);
+        expect(link.props.accessibilityLabel).toBe('Netherlands');
+    });
+
+    it('the VoiceOver escape gesture closes it', () => {
+        const r = render(<SourceCountryFlag countryCode="NLD" />);
+        fireEvent.press(r.getByLabelText('articleDetail.sourceCountryA11y::{"country":"Netherlands"}'));
+        const escapable = r.getByTestId('source-country-bubble');
+        fireEvent(escapable, 'accessibilityEscape');
+        expect(r.queryByTestId('source-country-link')).toBeNull();
     });
 });
