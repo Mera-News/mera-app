@@ -264,7 +264,8 @@ export async function countActiveComboJobs(): Promise<number> {
 /** Live count of pending + running combo jobs, for the "Updating all facts"
  *  toast. From the DB, so it survives a kill. */
 export function observeActiveComboJobCount() {
-  return activeComboQuery().observeCount();
+  // UNTHROTTLED on purpose: the default observeCount() throttles leading-only, so a job marked done within 250ms of the previous write is dropped and the count never reaches 0.
+  return activeComboQuery().observeCount(false);
 }
 
 // ── The per-fact diff ──────────────────────────────────────────────────────
