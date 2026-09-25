@@ -312,6 +312,17 @@ describe('ux2 D10: web search through the device port', () => {
     expect(mockHandleWebSearch).toHaveBeenCalledWith({ queries: ['Porto Santo'] });
   });
 
+  it('narrates the wait with the webSearch phase before the search runs', async () => {
+    const seen: unknown[] = [];
+    mockHandleWebSearch.mockImplementationOnce(async () => {
+      seen.push('handler');
+      return { searched: true, results: [] };
+    });
+    const deps = makeAgentDeps('what is porto santo', jest.fn(), (p) => seen.push(p));
+    await deps.tools.webSearch?.({ queries: ['Porto Santo'] });
+    expect(seen).toEqual(['webSearch', 'handler']);
+  });
+
   it('offers no webSearch when the setting is off', () => {
     mockWebSearchInChat = false;
     const deps = makeAgentDeps('what is porto santo', jest.fn());

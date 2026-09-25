@@ -28,11 +28,20 @@ describe('chat-phase orders', () => {
     expect(chatPhaseIndex('nope' as ChatPhaseId)).toBe(-1);
   });
 
-  it('keeps `retrying` last in the cloud order', () => {
+  it('keeps `retrying` above every phase a model call publishes', () => {
     // A hedge or a stream retry re-enters the request builder. If `retrying`
     // outranked nothing, the builder's own `securing` would win and walk the
     // reader back to "encrypting" at the longest point of the wait.
-    expect(CLOUD_PHASE_ORDER[CLOUD_PHASE_ORDER.length - 1]).toBe('retrying');
+    const retrying = CLOUD_PHASE_ORDER.indexOf('retrying');
+    for (const id of ['preparing', 'queued', 'securing', 'attesting', 'thinking'] as const) {
+      expect(CLOUD_PHASE_ORDER.indexOf(id)).toBeLessThan(retrying);
+    }
+  });
+
+  it('puts `webSearch` last: it runs BETWEEN model calls (ux2 D10)', () => {
+    // Published by the device port after the leg that asked for it, so it must
+    // outrank whatever that leg showed; the next call's 'reset' clears it.
+    expect(CLOUD_PHASE_ORDER[CLOUD_PHASE_ORDER.length - 1]).toBe('webSearch');
   });
 });
 

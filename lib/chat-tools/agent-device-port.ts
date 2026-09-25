@@ -291,7 +291,10 @@ function isOwnHomeFact(f: { statement: string; questionnaireAttribute?: string |
   );
 }
 
-export function makeAgentToolPort(userMessage: string): AgentToolPort {
+export function makeAgentToolPort(
+  userMessage: string,
+  onPhase?: (signal: PhaseSignal) => void,
+): AgentToolPort {
   return {
     async findSimilarFacts(args: FindSimilarFactsArgs): Promise<FindSimilarFactsResult> {
       const similar = await findSimilarFacts(args.kind ?? null, userMessage, args.limit ?? 5);
@@ -331,7 +334,14 @@ export function makeAgentToolPort(userMessage: string): AgentToolPort {
     // declares the tool otherwise. `handleWebSearch` re-checks the setting
     // before any await (gate 2), for a switch flipped mid-turn.
     ...(useMeraProtocolStore.getState().webSearchInChat
-      ? { webSearch: (args: { queries: string[] }) => handleWebSearch(args) }
+      ? {
+          webSearch: (args: { queries: string[] }) => {
+            // "Searching the web from your device…" while it runs (ux2 D10).
+            // The next model call opens with 'reset', which moves the line on.
+            onPhase?.('webSearch');
+            return handleWebSearch(args);
+          },
+        }
       : {}),
   };
 }
@@ -454,7 +464,7 @@ export function makeAgentDeps(
     // acknowledgement bubble, where the final write then split it off again.
     callModel: (req) =>
       callModelViaCloud({ ...req, onDelta: req.streamToUser ? onDelta : undefined }, onPhase),
-    tools: makeAgentToolPort(userMessage),
+    tools: makeAgentToolPort(userMessage, onPhase),
     loadSkill,
     skillIds,
     now: () => Date.now(),

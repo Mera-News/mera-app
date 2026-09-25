@@ -50,16 +50,21 @@ describe('the registry', () => {
 });
 
 describe('the English copy', () => {
-  it('resolves every key to a pool of at least two non-empty sentences', () => {
+  // ONE line is a legal pool (ux2 C3): the owner-approved copy says one
+  // truthful thing for `queued`, `devicePreparing`, `deviceThinking` and
+  // `webSearch` rather than padding a second line to rotate through.
+  it('resolves every key to a pool of at least one non-empty sentence', () => {
     for (const { id, phrasesKey } of CHAT_PHASES) {
       const lines = pool(phrasesKey);
-      expect(lines.length).toBeGreaterThanOrEqual(2);
+      expect(lines.length).toBeGreaterThanOrEqual(1);
       for (const line of lines) {
         expect(typeof line).toBe('string');
         expect(line.trim().length).toBeGreaterThan(0);
         // Every line stands alone, so the cycle never depends on reading them
         // in order and a reader who catches only one still learns something.
-        expect(line.trim()).toMatch(/[.!?]$/);
+        // An ellipsis ends a line that narrates work in progress ("Searching
+        // the web from your device…").
+        expect(line.trim()).toMatch(/[.!?…]$/);
         expect(`${id}: ${line}`).not.toMatch(/\{\{/);
       }
     }
@@ -112,5 +117,12 @@ describe('on-device honesty', () => {
     // Without this, a typo in the pattern above turns the honesty test into a
     // test that nothing matches nothing, and it passes forever.
     expect(CLOUD_LINES.some((l) => OFF_DEVICE.test(l))).toBe(true);
+  });
+});
+
+describe('ux2 D10: the web search wait line', () => {
+  it('is a registered cloud phase with the owner copy', () => {
+    expect(CLOUD_PHASE_ORDER).toContain('webSearch');
+    expect(pool(chatPhaseDef('webSearch').phrasesKey)).toEqual(['Searching the web from your device…']);
   });
 });
