@@ -51,7 +51,8 @@ const PUBLISHER_SEARCH_MIN_LENGTH = 2;
 
 type L1Row =
     | { readonly kind: 'country'; readonly item: CountryItem }
-    | { readonly kind: 'publisher'; readonly item: PublisherSearchHit };
+    | { readonly kind: 'publisher'; readonly item: PublisherSearchHit }
+    | { readonly kind: 'header'; readonly section: 'countries' | 'publications' };
 
 /**
  * One publisher search hit — name, the country it belongs to, and its
@@ -313,17 +314,20 @@ const SourcesL1CountryList: React.FC = () => {
         ];
     }, [countryCodes, searchQuery]);
 
-    // While a publisher search is active, publisher hits lead the list
-    // (structurally distinct rows — Item 8), followed by any still-matching
-    // country rows; everything else is filtered out. Outside search mode this
-    // is just the plain country list, unchanged.
+    // While a publisher search is active the list has two sections (owner,
+    // ux2 B5): matching COUNTRIES first under their header, then PUBLICATIONS
+    // under theirs, each shown only when it has rows ("china": China first,
+    // then the papers). Outside search mode this is the plain country list,
+    // with no headers.
     const listData: L1Row[] = useMemo(() => {
         if (!isPublisherSearchActive) {
             return countryList.map((item) => ({ kind: 'country' as const, item }));
         }
         return [
-            ...publisherHits.map((item) => ({ kind: 'publisher' as const, item })),
+            ...(countryList.length > 0 ? [{ kind: 'header' as const, section: 'countries' as const }] : []),
             ...countryList.map((item) => ({ kind: 'country' as const, item })),
+            ...(publisherHits.length > 0 ? [{ kind: 'header' as const, section: 'publications' as const }] : []),
+            ...publisherHits.map((item) => ({ kind: 'publisher' as const, item })),
         ];
     }, [isPublisherSearchActive, countryList, publisherHits]);
 
@@ -439,7 +443,16 @@ const SourcesL1CountryList: React.FC = () => {
 
     const renderItem: ListRenderItem<L1Row> = useCallback(
         ({ item }) =>
-            item.kind === 'publisher' ? (
+            item.kind === 'header' ? (
+                <Text
+                    size="xs"
+                    className="text-gray-400 font-semibold uppercase mx-4 mt-4 mb-2"
+                    accessibilityRole="header"
+                    testID={`sources-section-${item.section}`}
+                >
+                    {item.section === 'countries' ? t('sources.sectionCountries') : t('sources.sectionPublications')}
+                </Text>
+            ) : item.kind === 'publisher' ? (
                 <PublisherSearchRow
                     hit={item.item}
                     onSubscribe={subscribeHandlerFor(item.item)}
@@ -447,11 +460,16 @@ const SourcesL1CountryList: React.FC = () => {
             ) : (
                 renderCountryRow(item.item)
             ),
-        [renderCountryRow, subscribeHandlerFor]
+        [renderCountryRow, subscribeHandlerFor, t]
     );
 
     const keyExtractor = useCallback(
-        (row: L1Row) => (row.kind === 'publisher' ? `publisher-${row.item._id}` : `country-${row.item.code}`),
+        (row: L1Row) =>
+            row.kind === 'header'
+                ? `header-${row.section}`
+                : row.kind === 'publisher'
+                  ? `publisher-${row.item._id}`
+                  : `country-${row.item.code}`,
         []
     );
 
