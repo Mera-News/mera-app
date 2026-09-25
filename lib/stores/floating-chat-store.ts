@@ -40,7 +40,10 @@ export interface QuickFactCheckEntry {
 }
 
 export type ChatContext =
-    | { kind: 'persona' }
+    // `origin: 'profile'` marks the chat opened from the Profile invite. Only
+    // that chat is an editing session whose close may owe a combination pass
+    // (ux2 F2); the floating bubble never sets it.
+    | { kind: 'persona'; origin?: 'profile' }
     // At least one of articleId / suggestionId must be set; the agent resolves
     // the other (and the suggestion row) from whichever id is provided.
     | {
@@ -459,3 +462,42 @@ export const useFloatingChatResolvedConflicts = () =>
     useFloatingChatStore((state) => state.resolvedConflicts);
 export const useFloatingChatQuickFactChecks = () =>
     useFloatingChatStore((state) => state.quickFactChecks);
+
+// ---------------------------------------------------------------------------
+// THE PROFILE CHAT'S FACTS DRAFT (ux2 F2)
+// ---------------------------------------------------------------------------
+// Every close path (the X, the backdrop, the swipe, a toggle) ends in
+// `isExpanded` going false, so the transition is watched here rather than at
+// each call site. Opening from Profile fingerprints the facts; any close
+// settles that fingerprint and starts the combination pass when facts changed.
+// The Profile origin is dropped on close, or a later bubble open (which keeps
+// the previous context) would count as a Profile chat.
+/** A draft opened in THIS JS context. A draft a kill left open is settled at
+ *  the next launch by inference-recover instead, so a plain close never has to
+ *  load the service (and WatermelonDB) for a chat that opened none. */
+let profileDraftOpen = false;
+useFloatingChatStore.subscribe((state, prev) => {
+    if (state.isExpanded === prev.isExpanded) return;
+    const opening =
+        state.isExpanded && state.context.kind === 'persona' && state.context.origin === 'profile';
+    if (!opening && !(profileDraftOpen && !state.isExpanded)) return;
+    // LAZY: the service reaches WatermelonDB, which must stay out of every
+    // suite that imports this store. The module exists, so Metro bundles it.
+    const draft =
+        require('@/lib/services/facts-draft-service') as typeof import('@/lib/services/facts-draft-service');
+    const report = (err: unknown) =>
+        (require('@/lib/logger') as typeof import('@/lib/logger')).default.captureException(err, {
+            tags: { area: 'facts-draft' },
+        });
+    if (opening) {
+        profileDraftOpen = true;
+        void draft.openFactsDraft().catch(report);
+        return;
+    }
+    profileDraftOpen = false;
+    // A failed settle leaves the open marker, which the next launch recovers.
+    void draft.settleProfileChatClose().catch(report);
+    if (state.context.kind === 'persona' && state.context.origin) {
+        useFloatingChatStore.setState({ context: { kind: 'persona' } });
+    }
+});
