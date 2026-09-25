@@ -263,7 +263,7 @@
     "share": "Bagikan",
     "shareVia": "Dibagikan melalui {{downloadUrl}}",
     "sourceCountryGlobal": "Global",
-    "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan nama negara.",
+    "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan negara, lalu ketuk namanya untuk melihat publikasinya.",
     "readOn": "Baca di {{publication}}",
     "readOnGoogleTranslate": "Baca di Google Translate",
     "linkUnavailable": "Tautan ini tidak dapat dibuka dengan aman, jadi tidak tersedia di sini.",

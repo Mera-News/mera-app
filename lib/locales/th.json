@@ -263,7 +263,7 @@
     "share": "แชร์",
     "shareVia": "แชร์ผ่าน {{downloadUrl}}",
     "sourceCountryGlobal": "ทั่วโลก",
-    "sourceCountryA11y": "ประเทศต้นทาง: {{country}} แตะเพื่อแสดงชื่อประเทศ",
+    "sourceCountryA11y": "ประเทศต้นทาง: {{country}} แตะเพื่อแสดงประเทศ แล้วแตะชื่อประเทศเพื่อดูสื่อของประเทศนั้น",
     "readOn": "อ่านบน {{publication}}",
     "readOnGoogleTranslate": "อ่านบน Google Translate",
     "linkUnavailable": "ลิงก์นี้ไม่สามารถเปิดได้อย่างปลอดภัย จึงไม่พร้อมใช้งานที่นี่",

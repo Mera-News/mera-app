@@ -320,7 +320,7 @@
     "share": "Share",
     "shareVia": "Shared via {{downloadUrl}}",
     "sourceCountryGlobal": "Worldwide",
-    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name.",
+    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country, then tap its name to see its publications.",
     "linkUnavailable": "This link can't be opened securely, so it isn't available here.",
     "relatedFromSubscriptions": "From your subscriptions",
     "relatedLoadFailed": "Couldn't load related articles.",

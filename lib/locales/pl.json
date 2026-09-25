@@ -275,7 +275,7 @@
     "share": "Udostępnij",
     "shareVia": "Udostępniono przez {{downloadUrl}}",
     "sourceCountryGlobal": "Cały świat",
-    "sourceCountryA11y": "Kraj źródła: {{country}}. Dotknij, aby wyświetlić nazwę kraju.",
+    "sourceCountryA11y": "Kraj źródła: {{country}}. Stuknij, aby pokazać kraj, a potem stuknij jego nazwę, aby zobaczyć jego media.",
     "readOn": "Czytaj w {{publication}}",
     "readOnGoogleTranslate": "Czytaj w Google Translate",
     "linkUnavailable": "Tego linku nie można otworzyć bezpiecznie, dlatego nie jest tu dostępny.",

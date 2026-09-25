@@ -263,7 +263,7 @@
     "share": "Compartilhar",
     "shareVia": "Compartilhado via {{downloadUrl}}",
     "sourceCountryGlobal": "Mundial",
-    "sourceCountryA11y": "País de origem: {{country}}. Toque para exibir o nome do país.",
+    "sourceCountryA11y": "País de origem: {{country}}. Toque para mostrar o país e depois toque no nome para ver os veículos dele.",
     "readOn": "Ler em {{publication}}",
     "readOnGoogleTranslate": "Ler no Google Translate",
     "linkUnavailable": "Este link não pode ser aberto com segurança, então não está disponível aqui.",

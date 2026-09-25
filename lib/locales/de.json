@@ -263,7 +263,7 @@
     "share": "Teilen",
     "shareVia": "Geteilt über {{downloadUrl}}",
     "sourceCountryGlobal": "Weltweit",
-    "sourceCountryA11y": "Quellenland: {{country}}. Tippen, um den Ländernamen anzuzeigen.",
+    "sourceCountryA11y": "Herkunftsland: {{country}}. Tippen, um das Land anzuzeigen, dann auf seinen Namen tippen, um seine Medien zu sehen.",
     "readOn": "Bei {{publication}} lesen",
     "readOnGoogleTranslate": "Bei Google Translate lesen",
     "linkUnavailable": "Dieser Link kann nicht sicher geöffnet werden, daher ist er hier nicht verfügbar.",

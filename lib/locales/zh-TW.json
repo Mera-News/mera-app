@@ -263,7 +263,7 @@
     "share": "分享",
     "shareVia": "分享自 {{downloadUrl}}",
     "sourceCountryGlobal": "全球",
-    "sourceCountryA11y": "來源國家：{{country}}。點一下可顯示國家名稱。",
+    "sourceCountryA11y": "來源國家：{{country}}。點按顯示國家，再點按國家名稱查看該國的媒體。",
     "readOn": "在{{publication}}閱讀",
     "readOnGoogleTranslate": "在 Google 翻譯中閱讀",
     "linkUnavailable": "此連結無法安全開啟，因此在此無法使用。",

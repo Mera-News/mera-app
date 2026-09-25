@@ -275,7 +275,7 @@
     "share": "Поделиться",
     "shareVia": "Отправлено через {{downloadUrl}}",
     "sourceCountryGlobal": "Весь мир",
-    "sourceCountryA11y": "Страна источника: {{country}}. Нажмите, чтобы показать название страны.",
+    "sourceCountryA11y": "Страна источника: {{country}}. Нажмите, чтобы показать страну, затем нажмите на её название, чтобы увидеть её издания.",
     "readOn": "Читать в {{publication}}",
     "readOnGoogleTranslate": "Читать в Google Translate",
     "linkUnavailable": "Эта ссылка не может быть открыта безопасно, поэтому она недоступна здесь.",

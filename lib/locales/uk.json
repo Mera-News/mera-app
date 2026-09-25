@@ -275,7 +275,7 @@
     "share": "Поділитися",
     "shareVia": "Надіслано через {{downloadUrl}}",
     "sourceCountryGlobal": "Світове видання",
-    "sourceCountryA11y": "Країна джерела: {{country}}. Торкніться, щоб показати назву країни.",
+    "sourceCountryA11y": "Країна джерела: {{country}}. Торкніться, щоб показати країну, потім торкніться її назви, щоб побачити її видання.",
     "readOn": "Читати в {{publication}}",
     "readOnGoogleTranslate": "Читати в Google Translate",
     "linkUnavailable": "Це посилання не можна безпечно відкрити, тому воно недоступне тут.",

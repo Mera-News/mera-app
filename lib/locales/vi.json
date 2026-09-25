@@ -263,7 +263,7 @@
     "share": "Chia sẻ",
     "shareVia": "Chia sẻ qua {{downloadUrl}}",
     "sourceCountryGlobal": "Toàn cầu",
-    "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Nhấn để hiển thị tên quốc gia.",
+    "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Chạm để hiện quốc gia, rồi chạm vào tên để xem các báo của quốc gia đó.",
     "readOn": "Đọc trên {{publication}}",
     "readOnGoogleTranslate": "Đọc trên Google Dịch",
     "linkUnavailable": "Liên kết này không thể được mở an toàn, vì vậy nó không khả dụng ở đây.",

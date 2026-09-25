@@ -263,7 +263,7 @@
     "share": "Paylaş",
     "shareVia": "{{downloadUrl}} üzerinden paylaşıldı",
     "sourceCountryGlobal": "Dünya Geneli",
-    "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülke adını göstermek için dokunun.",
+    "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülkeyi göstermek için dokunun, ardından yayınlarını görmek için adına dokunun.",
     "readOn": "{{publication}}'da Oku",
     "readOnGoogleTranslate": "Google Translate'de Oku",
     "linkUnavailable": "Bu bağlantı güvenli bir şekilde açılamıyor, bu yüzden burada mevcut değil.",

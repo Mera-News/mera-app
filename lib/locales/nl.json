@@ -263,7 +263,7 @@
     "share": "Delen",
     "shareVia": "Gedeeld via {{downloadUrl}}",
     "sourceCountryGlobal": "Wereldwijd",
-    "sourceCountryA11y": "Bronland: {{country}}. Tik om de landnaam te tonen.",
+    "sourceCountryA11y": "Land van herkomst: {{country}}. Tik om het land te tonen en tik daarna op de naam om de media ervan te zien.",
     "readOn": "Lezen op {{publication}}",
     "readOnGoogleTranslate": "Lezen op Google Translate",
     "linkUnavailable": "Deze link kan niet veilig worden geopend, dus is deze hier niet beschikbaar.",

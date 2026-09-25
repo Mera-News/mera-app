@@ -287,7 +287,7 @@
     "share": "مشاركة",
     "shareVia": "تمت المشاركة عبر {{downloadUrl}}",
     "sourceCountryGlobal": "عالمي",
-    "sourceCountryA11y": "بلد المصدر: {{country}}. اضغط لعرض اسم البلد.",
+    "sourceCountryA11y": "بلد المصدر: {{country}}. انقر لإظهار البلد، ثم انقر اسمه لعرض منشوراته.",
     "readOn": "اقرأ على {{publication}}",
     "readOnGoogleTranslate": "اقرأ على Google Translate",
     "linkUnavailable": "لا يمكن فتح هذا الرابط بشكل آمن، لذا غير متاح هنا.",

@@ -263,7 +263,7 @@
     "share": "साझा करें",
     "shareVia": "{{downloadUrl}} के ज़रिए साझा किया गया",
     "sourceCountryGlobal": "वैश्विक",
-    "sourceCountryA11y": "स्रोत देश: {{country}}। देश का नाम दिखाने के लिए टैप करें।",
+    "sourceCountryA11y": "स्रोत देश: {{country}}। देश दिखाने के लिए टैप करें, फिर उसके प्रकाशन देखने के लिए उसके नाम पर टैप करें।",
     "readOn": "{{publication}} पर पढ़ें",
     "readOnGoogleTranslate": "Google Translate पर पढ़ें",
     "linkUnavailable": "यह लिंक सुरक्षित रूप से नहीं खोला जा सकता, इसलिए यह यहाँ उपलब्ध नहीं है।",

@@ -263,7 +263,7 @@
     "share": "共有",
     "shareVia": "{{downloadUrl}}経由で共有",
     "sourceCountryGlobal": "グローバル",
-    "sourceCountryA11y": "情報源の国: {{country}}。タップすると国名が表示されます。",
+    "sourceCountryA11y": "発信国: {{country}}。タップで国名を表示し、国名をタップするとその国の媒体を表示します。",
     "readOn": "{{publication}}で読む",
     "readOnGoogleTranslate": "Google 翻訳で読む",
     "linkUnavailable": "このリンクを安全に開くことができないため、ここでは利用できません。",

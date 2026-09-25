@@ -268,7 +268,7 @@
     "share": "Partager",
     "shareVia": "Partagé via {{downloadUrl}}",
     "sourceCountryGlobal": "International",
-    "sourceCountryA11y": "Pays de la source : {{country}}. Appuyez pour afficher le nom du pays.",
+    "sourceCountryA11y": "Pays d'origine : {{country}}. Touchez pour afficher le pays, puis touchez son nom pour voir ses médias.",
     "readOn": "Lire sur {{publication}}",
     "readOnGoogleTranslate": "Lire sur Google Translate",
     "linkUnavailable": "Ce lien ne peut pas être ouvert de manière sécurisée, il n'est donc pas disponible ici.",
