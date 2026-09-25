@@ -158,6 +158,37 @@ export const SAVE_FACTS_TOOL: ToolDefinition = {
   },
 };
 
+/**
+ * THE WEB, from the user's device through the gateway (ux2 D10). `queries`,
+ * never `query`: one call carries up to 4 searches and the gateway fans them
+ * out. The query leaves the device in plaintext and is not linked to the user,
+ * which the existing chat web-search disclosure already says.
+ *
+ * Declared only on facts and question legs, and only when the device offers
+ * the tool (the "Web search in chat" setting is on). Never on the route leg.
+ */
+export const WEB_SEARCH_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'webSearch',
+    description:
+      'Search the web for what a place, organisation or term is. Use it only when a lookup found nothing or the user asks what something is. A result never becomes a region or country in a fact; those come only from lookup_place.',
+    parameters: {
+      type: 'object',
+      properties: {
+        queries: {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 1,
+          maxItems: 4,
+          description: '1 to 4 short search queries.',
+        },
+      },
+      required: ['queries'],
+    },
+  },
+};
+
 export const DELETE_FACTS_TOOL: ToolDefinition = {
   type: 'function',
   function: {
@@ -202,11 +233,21 @@ export function toolsForLeg(opts: {
   /** False once another segment of the same turn has asked its question: one
    *  question per turn, so later segments put other readings on the card. */
   allowChoice?: boolean;
+  /** The device offers web search (the setting is on). Declared on facts and
+   *  question legs only, never on the route or forced leg. */
+  webSearch?: boolean;
 }): ToolDefinition[] {
   const tools = toolsForLegUnfiltered(opts);
+  const withSearch =
+    opts.webSearch === true
+    && !opts.forcingProposal
+    && opts.skillLoaded !== null
+    && (opts.skillLoaded.startsWith('facts/') || opts.skillLoaded === 'conversation/question')
+      ? [...tools, WEB_SEARCH_TOOL]
+      : tools;
   return opts.allowChoice === false
-    ? tools.filter((t) => t.function.name !== 'ask_choice')
-    : tools;
+    ? withSearch.filter((t) => t.function.name !== 'ask_choice')
+    : withSearch;
 }
 
 function toolsForLegUnfiltered(opts: {

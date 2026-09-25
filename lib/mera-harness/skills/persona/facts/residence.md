@@ -60,6 +60,8 @@ bloc }`, and `unmatched`: the user's words the lookup could not place, usually a
 - **too_short**: too little to place ("I moved"). Ask for the city and offer nothing.
 - **unavailable**: the lookup failed, which is not the user's problem. Offer their own words with no
   rungs added and do not mention the tool.
+- After `no_match` or `unavailable` only, `webSearch` may say what the place is. Its result never
+  becomes a rung; rungs come only from `lookup_place`.
 
 ## Only an ambiguous place is asked
 An ambiguous place is an `ask_choice` call with two or three short options, never a question in

@@ -765,3 +765,47 @@ describe('ux2 owner: two cards for the SAME old fact become one', () => {
     expect(h.saves.flat()).toHaveLength(1);
   });
 });
+
+describe('ux2 D10: the persona agent can search the web', () => {
+  const NOBODY: AgentPersona = { surface: 'CONFIG', languageName: 'English', facts: [] };
+  const names = (c: Call) => c.tools.map((t) => t.function.name);
+
+  it('declares webSearch on facts and question legs, never on the route leg', async () => {
+    const webSearch = jest.fn(async () => ({ searched: true, results: [] }));
+    const h = harness(
+      [
+        res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+        res({ content: 'Porto Santo is an island.' }),
+      ],
+      { webSearch },
+    );
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(names(h.calls[0])).not.toContain('webSearch');
+    expect(names(h.calls[1])).toContain('webSearch');
+  });
+
+  it('is not declared when the port has no webSearch (the setting is off)', async () => {
+    const h = harness([
+      res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      res({ content: 'An island.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(names(h.calls[1])).not.toContain('webSearch');
+  });
+
+  it('runs the search on the device and reads its result on the next leg', async () => {
+    const webSearch = jest.fn(async () => ({ searched: true, results: [{ title: 'Porto Santo island' }] }));
+    const h = harness(
+      [
+        res({ content: 'Sure.', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+        res({ toolCalls: [tc('webSearch', { queries: ['Porto Santo'] })] }),
+        res({ content: 'Porto Santo is an island in the Madeira archipelago.' }),
+      ],
+      { webSearch },
+    );
+    const out = await runAgentTurn({ state: createAgentState(NOBODY), userMessage: 'what is porto santo', deps: h.deps });
+    expect(webSearch).toHaveBeenCalledWith({ queries: ['Porto Santo'] });
+    expect(out.reply).toBe('Porto Santo is an island in the Madeira archipelago.');
+    expect(out.unknownTools).toEqual([]);
+  });
+});

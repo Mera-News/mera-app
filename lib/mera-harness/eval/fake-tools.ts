@@ -160,6 +160,18 @@ export function createFakeTools(script: AgentScript): FakeToolsHandle {
       return { accepted, rejected };
     },
 
+    // Deterministic and offline: the eval never reaches the web. An empty,
+    // honestly-labelled answer, so a turn that searched is scored on what it
+    // did with "nothing found" rather than on a fixture's invented results.
+    async webSearch(args: { queries: string[] }): Promise<Record<string, unknown>> {
+      count('webSearch');
+      return {
+        searched: true,
+        searches: args.queries.map((query) => ({ query, searched: true, results: [] })),
+        note: 'The search returned nothing. Answer from what you already have.',
+      };
+    },
+
     async deleteUserFacts(args: { fact_ids: string[] }): Promise<Record<string, unknown>> {
       count('deleteUserFacts');
       // Observed, never refused here. See the header: the gate is the loop's.

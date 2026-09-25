@@ -102,6 +102,8 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
       schemaValid = Array.isArray(parsed.extracted_user_information);
     } else if (name === 'deleteUserFacts') {
       schemaValid = Array.isArray(parsed.fact_ids);
+    } else if (name === 'webSearch') {
+      schemaValid = Array.isArray(parsed.queries) && parsed.queries.length >= 1;
     }
   }
   return { name, argumentsRaw, parsed, schemaValid, unknownTool: !knownTools.has(name), result };
@@ -119,7 +121,7 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
  */
 const KNOWN_TOOLS = new Set([
   'load_skill', 'find_similar_facts', 'findSimilarFacts', 'lookup_place', 'lookupPlace',
-  'ask_choice', 'saveExtractedFacts', 'deleteUserFacts',
+  'ask_choice', 'saveExtractedFacts', 'deleteUserFacts', 'webSearch',
 ]);
 
 /** The tool names a request actually carried, read off the request itself. */

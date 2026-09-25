@@ -15,6 +15,14 @@ jest.mock('../tool-handlers', () => ({
   handleDeleteUserFacts: jest.fn(),
   handleSaveExtractedFacts: jest.fn(),
 }));
+const mockHandleWebSearch = jest.fn(async () => ({ searched: true, results: [] }));
+jest.mock('../web-search-handler', () => ({
+  handleWebSearch: (...a: unknown[]) => mockHandleWebSearch(...(a as [])),
+}));
+let mockWebSearchInChat = true;
+jest.mock('../../stores/mera-protocol-store', () => ({
+  useMeraProtocolStore: { getState: () => ({ webSearchInChat: mockWebSearchInChat }) },
+}));
 jest.mock('../../logger', () => ({
   __esModule: true,
   default: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
@@ -287,5 +295,26 @@ describe('find_similar_facts always shows the current home on a residence lookup
     const { makeAgentToolPort } = require('../agent-device-port');
     const out = await makeAgentToolPort('I play chess').findSimilarFacts({ kind: 'interest' });
     expect(out.candidates).toEqual([]);
+  });
+});
+
+
+describe('ux2 D10: web search through the device port', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockWebSearchInChat = true;
+  });
+
+  it('offers webSearch when the setting is on and runs it on the device', async () => {
+    const deps = makeAgentDeps('what is porto santo', jest.fn());
+    expect(typeof deps.tools.webSearch).toBe('function');
+    await deps.tools.webSearch?.({ queries: ['Porto Santo'] });
+    expect(mockHandleWebSearch).toHaveBeenCalledWith({ queries: ['Porto Santo'] });
+  });
+
+  it('offers no webSearch when the setting is off', () => {
+    mockWebSearchInChat = false;
+    const deps = makeAgentDeps('what is porto santo', jest.fn());
+    expect(deps.tools.webSearch).toBeUndefined();
   });
 });

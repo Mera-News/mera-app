@@ -278,6 +278,9 @@ export interface AgentToolPort {
   lookupPlace(args: LookupPlaceArgs): Promise<LookupPlaceResult>;
   saveExtractedFacts(args: Record<string, unknown>): Promise<Record<string, unknown>>;
   deleteUserFacts(args: { fact_ids: string[] }): Promise<Record<string, unknown>>;
+  /** The web, from the device. ABSENT when the user switched "Web search in
+   *  chat" off, and then the tool is not declared at all. */
+  webSearch?(args: { queries: string[] }): Promise<Record<string, unknown>>;
 }
 
 export interface AgentDeps {

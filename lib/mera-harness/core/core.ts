@@ -900,6 +900,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // One question per turn: a later segment never gets ask_choice once an
         // earlier one is waiting on the user.
         allowChoice: askingSkill === null,
+        webSearch: typeof deps.tools.webSearch === 'function',
       }) as unknown[],
       toolChoice: forcingProposalNow ? 'required' : 'auto',
       // FALSE on every call: measured, thinking on returned empty content on 8
@@ -1059,6 +1060,26 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           finerArea = { words: out.unmatched.trim(), place: out.places[0] };
         }
         if (out.status === 'resolved' && out.places.length === 1) resolvedPlacesThisTurn.push(out.places[0]);
+        leg.toolResults.push({ name: call.name, result: out });
+        toolResultsThisTurn.push({ name: call.name, result: out });
+        if (!isRepeat) {
+          sawContinuationTool = true;
+          continuationsSeen.add(callKey);
+        }
+        continue;
+      }
+
+      if (call.name === 'webSearch') {
+        // The device searches (ux2 D10). No port method means the setting is
+        // off; the tool was not declared, so a call is answered, never run.
+        const queries = Array.isArray(args.queries)
+          ? (args.queries as unknown[]).filter((q): q is string => typeof q === 'string' && q.trim().length > 0).slice(0, 4)
+          : [];
+        const out = deps.tools.webSearch
+          ? queries.length > 0
+            ? await deps.tools.webSearch({ queries })
+            : { error: 'queries must be a non-empty array of strings', searched: false }
+          : { error: 'web search is not available', searched: false };
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {

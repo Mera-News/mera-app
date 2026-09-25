@@ -24,6 +24,8 @@ import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import type { PhaseSignal } from '@/lib/services/chat-phase';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, SMALL_MODEL } from '../llm/constants';
 import { handleDeleteUserFacts, handleSaveExtractedFacts } from './tool-handlers';
+import { handleWebSearch } from './web-search-handler';
+import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { getFacts } from '../database/services/fact-service';
 import type { AgentPersona } from '@/lib/mera-harness';
 import logger from '../logger';
@@ -325,6 +327,12 @@ export function makeAgentToolPort(userMessage: string): AgentToolPort {
     deleteUserFacts(args) {
       return handleDeleteUserFacts(args as unknown as Record<string, unknown>);
     },
+    // GATE 1: offered only while "Web search in chat" is on, so the loop never
+    // declares the tool otherwise. `handleWebSearch` re-checks the setting
+    // before any await (gate 2), for a switch flipped mid-turn.
+    ...(useMeraProtocolStore.getState().webSearchInChat
+      ? { webSearch: (args: { queries: string[] }) => handleWebSearch(args) }
+      : {}),
   };
 }
 
