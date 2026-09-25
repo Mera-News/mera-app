@@ -127,4 +127,17 @@ describe('ExploreSearchBar', () => {
         expect(input.props.accessible).toBe(true);
         expect(input.props.accessibilityLabel).toBe('explore.searchPlaceholder');
     });
+
+    // Captured (ux2 batch 28): with the glyphs hidden, the bar's containers
+    // still read "<glyph>, Search recent news, <glyph>": exactly the children
+    // of the gluestack Input root (Close search, outside the Input, was not in
+    // it). The glyphs are drawn over the Input from its parent instead, with
+    // spacers holding their old width inside it.
+    it('keeps both glyphs out of the Input root, so no container composes them', () => {
+        const { exposedGlyphTexts } = require('@/lib/__test-helpers__/icon-glyph-a11y');
+        const r = render(<ExploreSearchBar query="india" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
+        expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);
+        const field = r.getByTestId('explore-search-field');
+        expect(field.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)))).toHaveLength(0);
+    });
 });

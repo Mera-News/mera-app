@@ -12,6 +12,7 @@ import { describeCheckedBy } from '@/lib/fact-check/fact-check-state';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
@@ -155,16 +156,27 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
             </Pressable>
 
             {onDelete ? (
-                <Pressable
-                    onPress={() => onDelete(item.id)}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('factCheck.dashboard.deleteA11y')}
-                    testID={`${testIDPrefix}-delete-${item.id}`}
-                    hitSlop={12}
-                    className="absolute top-2 right-2 p-1"
-                >
-                    <MaterialIcons name="delete-outline" size={20} color="#9ca3af" />
-                </Pressable>
+                // The box holds the glyph and a CHILDLESS labelled button filling
+                // it: a glyph inside a button surfaces on iOS as its own
+                // StaticText (captured, one per card).
+                <View className="absolute top-2 right-2 p-1">
+                    <MaterialIcons
+                        name="delete-outline"
+                        size={20}
+                        color="#9ca3af"
+                        accessible={false}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                    <Pressable
+                        onPress={() => onDelete(item.id)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('factCheck.dashboard.deleteA11y')}
+                        testID={`${testIDPrefix}-delete-${item.id}`}
+                        hitSlop={12}
+                        style={StyleSheet.absoluteFill}
+                    />
+                </View>
             ) : null}
         </Box>
     );

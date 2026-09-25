@@ -421,3 +421,37 @@ describe('icon glyphs', () => {
         }
     });
 });
+
+// Captured regression (ux2 batch 28): with the gluestack Button gone the pair
+// sat side by side at 402pt. The Button root's `px-5` resolved to
+// paddingLeft/paddingRight 17.5, which beat its inline paddingHorizontal: 0
+// (a side wins over the shorthand), so every frame carried 17.5pt a side and
+// the English pair STACKED. That padding is restored as a number.
+describe('layout and colours as the old gluestack Button drew them', () => {
+    it.each([GT_BUTTON, PUBLISHER_BUTTON])('%s: the frame keeps the Button root\'s 17.5pt side padding', (id) => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
+        const r = renderActions();
+        const frame = styleOf(r.getByTestId(`${id}-frame`));
+        expect(frame).toEqual(expect.objectContaining({ paddingLeft: 17.5, paddingRight: 17.5, flexGrow: 1 }));
+        expect(styleOf(r.getByTestId('detail-read-routes'))).toEqual(
+            expect.objectContaining({ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }),
+        );
+    });
+
+    // The N8 table: GREEN = the route gets the reader something readable.
+    it.each([
+        ['same-language', { [PUBLISHER_BUTTON]: '#86EFAC' }],
+        ['translatable', { [PUBLISHER_BUTTON]: '#86EFAC', [GT_BUTTON]: '#86EFAC' }],
+        ['not-translatable', { [PUBLISHER_BUTTON]: WHITE, [GT_BUTTON]: '#86EFAC' }],
+    ] as const)('%s: outline and label colours', (status, expected) => {
+        mockGetArticleTranslationSupport.mockReturnValue({ status, reason: 'unsupported-language' });
+        const r = renderActions(status === 'same-language' ? { sourceLanguage: 'en' } : {});
+        for (const [id, color] of Object.entries(expected)) {
+            const pill = styleOf(r.getByTestId(`${id}-pill`));
+            expect(pill.borderColor).toBe(color);
+            expect(pill.backgroundColor).toBe('transparent');
+            const label = r.getByTestId(`${id}-pill`).findAll((n: any) => n.type === 'Text' && typeof n.props.children === 'string' && !/[\uE000-\uF8FF]/.test(n.props.children))[0];
+            expect(styleOf(label).color).toBe(color);
+        }
+    });
+});

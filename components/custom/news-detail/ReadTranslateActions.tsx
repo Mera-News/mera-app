@@ -37,6 +37,11 @@ const ICON_GAP = 6;
  *  pill's height by negative margins so the layout sees 28pt (never hitSlop). */
 const TOUCH_TARGET = 44;
 const FRAME_BLEED = (TOUCH_TARGET - PILL_HEIGHT) / 2;
+/** What the old gluestack `md` Button root drew around the pill: its `px-5`
+ *  resolved to paddingLeft/paddingRight 17.5pt, which beat the inline
+ *  `paddingHorizontal: 0` (a side wins over the shorthand in React Native).
+ *  It decides when the pair wraps: the English pair STACKS at 402pt. */
+const FRAME_PAD_X = 17.5;
 const HIDDEN = {
     accessible: false,
     accessibilityElementsHidden: true,
@@ -149,6 +154,8 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
                     flexShrink: 1,
                     height: TOUCH_TARGET,
                     marginVertical: -FRAME_BLEED,
+                    paddingLeft: FRAME_PAD_X,
+                    paddingRight: FRAME_PAD_X,
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',

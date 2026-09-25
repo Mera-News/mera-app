@@ -32,7 +32,7 @@ import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { savedItemId } from './saved-item-id';
 import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ListRenderItem, View } from 'react-native';
+import { ListRenderItem, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -224,12 +224,10 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     inset, not a percentage, so the clearance can't drift with the
                     card's width; `hitSlop` grows the target everywhere EXCEPT
                     rightwards, so it never reaches back into the strip. */}
-                <Pressable
-                    testID="saved-delete"
-                    onPress={() => setConfirmTarget(item)}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 4 }}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('savedSuggestions.deleteConfirmCta')}
+                {/* The circle holds the glyph and a CHILDLESS labelled button
+                    filling it: a glyph inside a button surfaces on iOS as its
+                    own StaticText (captured, one per row). */}
+                <View
                     className="bg-gray-900 rounded-full p-2 shadow-hard-2"
                     style={{
                         position: 'absolute',
@@ -238,8 +236,23 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                         zIndex: 10,
                     }}
                 >
-                    <MaterialIcons name="delete" size={20} color="#ffffff" />
-                </Pressable>
+                    <MaterialIcons
+                        name="delete"
+                        size={20}
+                        color="#ffffff"
+                        accessible={false}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                    <Pressable
+                        testID="saved-delete"
+                        onPress={() => setConfirmTarget(item)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 4 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('savedSuggestions.deleteConfirmCta')}
+                        style={StyleSheet.absoluteFill}
+                    />
+                </View>
             </Box>
         ),
         [handleArticlePress, handleSuggestionPress, t],
@@ -261,6 +274,10 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     size={16}
                     color="#9ca3af"
                     style={{ marginTop: 2 }}
+                    // Decoration: hidden, or it surfaces as its own icon-font StaticText.
+                    accessible={false}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
                 />
                 <Text size="xs" className="text-gray-400 flex-1">
                     {t('savedSuggestions.note')}
