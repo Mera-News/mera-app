@@ -2,13 +2,14 @@
 // ordinary report form with the whole transcript attached, sent only if the
 // user taps Send. Sits left of New chat, in the same round header style.
 
-import { Button } from '@/components/ui/button';
 import { hapticLight } from '@/lib/haptics';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { currentChatTranscript, openChatBugReport } from './chat-bug-report';
+import { GlyphSafeIconButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 
 const ICON = 'rgb(210, 210, 210)';
 
@@ -20,17 +21,16 @@ const ChatBugReportButton: React.FC = () => {
   }, [t]);
 
   return (
-    <Button
+    // A real 44pt frame around a 36pt disc, same as New chat and Close.
+    <GlyphSafeIconButton
       onPress={onPress}
       accessibilityLabel={t('preferences.reportBug')}
-      // A 44pt frame around a 36pt disc, same as New chat and Close.
-      action="default"
-      className="w-11 h-11 p-0 rounded-full bg-transparent items-center justify-center"
+      testID="chat-header-report-bug"
     >
       <View style={styles.disc}>
-        <MaterialIcons name="bug-report" size={20} color={ICON} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="bug-report" size={20} color={ICON} />
       </View>
-    </Button>
+    </GlyphSafeIconButton>
   );
 };
 

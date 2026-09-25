@@ -41,6 +41,8 @@ import { observeByFact } from '@/lib/database/services/topic-service';
 import type TopicModel from '@/lib/database/models/Topic';
 import { hapticLight } from '@/lib/haptics';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GlyphSafeButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
@@ -297,96 +299,103 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
 
   return (
     <Animated.View entering={cardEntering} style={styles.card} testID="chat-topics-card">
-      <Pressable
-        onPress={() => {
-          void hapticLight();
-          userToggledRef.current = true;
-          setExpanded((v) => !v);
-        }}
-        style={styles.header}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
-        // The spinner is decorative, so the state reaches assistive tech
-        // here, in the header's own label.
-        accessibilityLabel={`${statusWord}. ${
-          expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')
-        }`}
-        testID={`chat-topics-header-${factId}`}
-      >
-        <View style={styles.headerRow} testID={`chat-topics-title-row-${factId}`}>
-          <MaterialIcons
-            name={expanded ? 'expand-more' : 'chevron-right'}
-            size={18}
-            color={ACCENT}
-          />
-
-          <Text size="sm" bold style={styles.title}>
-            {status === 'pending'
-              ? t('chatTopics.accordionTitlePending')
-              : t('chatTopics.accordionTitle')}
-          </Text>
-
-          {/* ON THE TITLE LINE (ux2 M1): on its own line below, a one-line
-              clip left "Topics for:" with nothing after the colon. Its own
-              node, because TranslatableDynamic returns a component and needs
-              its own layout to decide when to translate. */}
-          <TranslatableDynamic
-            text={factStatement}
-            size="sm"
-            italic
-            style={styles.factLine}
-            numberOfLines={2}
-          />
-
-          {/* Small and muted on purpose: a finished background job should be
-              confirmable at a glance, not announce itself. */}
-          {/* A small spinner while generating. Without one the rows ran one
-              at a time with nothing moving, and the card read as finished
-              (audit F13). The card still opens itself when topics land. */}
-          {status === 'pending' && (
-            <ActivityIndicator
-              size="small"
-              color={ACCENT}
-              testID={`chat-topics-spinner-${factId}`}
-            />
-          )}
-
-          {status === 'done' && (
+      {/* ux2 batch 26: the toggle is a childless button over a hidden visual
+          (a glyph inside a labelled button surfaced as its own StaticText),
+          and Retry is its SIBLING. Nested inside the toggle, Retry was never
+          reachable by VoiceOver. */}
+      <View style={styles.headerOuter}>
+        <GlyphSafeButton
+          onPress={() => {
+            void hapticLight();
+            userToggledRef.current = true;
+            setExpanded((v) => !v);
+          }}
+          style={styles.headerToggle}
+          visualStyle={styles.header}
+          accessibilityState={{ expanded }}
+          // The spinner is decorative, so the state reaches assistive tech
+          // here, in the header's own label.
+          accessibilityLabel={`${statusWord}. ${
+            expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')
+          }`}
+          testID={`chat-topics-header-${factId}`}
+        >
+          <View style={styles.headerRow} testID={`chat-topics-title-row-${factId}`}>
             <MaterialIcons
-              name="check"
-              size={14}
-              color="rgb(150, 150, 150)"
-              testID={`chat-topics-done-${factId}`}
+              {...DECORATIVE_ICON_A11Y}
+              name={expanded ? 'expand-more' : 'chevron-right'}
+              size={18}
+              color={ACCENT}
             />
-          )}
 
+            <Text size="sm" bold style={styles.title}>
+              {status === 'pending'
+                ? t('chatTopics.accordionTitlePending')
+                : t('chatTopics.accordionTitle')}
+            </Text>
+
+            {/* ON THE TITLE LINE (ux2 M1): on its own line below, a one-line
+                clip left "Topics for:" with nothing after the colon. Its own
+                node, because TranslatableDynamic returns a component and needs
+                its own layout to decide when to translate. */}
+            <TranslatableDynamic
+              text={factStatement}
+              size="sm"
+              italic
+              style={styles.factLine}
+              numberOfLines={2}
+            />
+
+            {/* Small and muted on purpose: a finished background job should be
+                confirmable at a glance, not announce itself. */}
+            {/* A small spinner while generating. Without one the rows ran one
+                at a time with nothing moving, and the card read as finished
+                (audit F13). The card still opens itself when topics land. */}
+            {status === 'pending' && (
+              <ActivityIndicator
+                size="small"
+                color={ACCENT}
+                testID={`chat-topics-spinner-${factId}`}
+              />
+            )}
+
+            {status === 'done' && (
+              <MaterialIcons
+                {...DECORATIVE_ICON_A11Y}
+                name="check"
+                size={14}
+                color="rgb(150, 150, 150)"
+                testID={`chat-topics-done-${factId}`}
+              />
+            )}
+          </View>
+
+          {/* A failure is stated while COLLAPSED too, because the user has to do
+              something about it. A problem you must open a drawer to discover is
+              one nobody sees. Pending is the opposite case: nothing to act on,
+              so nothing is said until you look. */}
           {status === 'error' && (
-            <Pressable
-              onPress={handleRetry}
-              disabled={isRetrying}
-              hitSlop={16}
-              style={styles.retryButton}
-              accessibilityRole="button"
-              accessibilityLabel={t('floatingChat.topicGenRetry')}
-              testID="chat-topics-retry"
-            >
-              <Text size="xs" bold style={styles.retryText}>
-                {t('floatingChat.topicGenRetry')}
-              </Text>
-            </Pressable>
+            <Text size="xs" style={styles.statusText} numberOfLines={2}>
+              {t('floatingChat.topicGenFailed')}
+            </Text>
           )}
-        </View>
-
-        {/* A failure is stated while COLLAPSED too, because the user has to do
-            something about it. A problem you must open a drawer to discover is
-            one nobody sees. Pending is the opposite case: nothing to act on,
-            so nothing is said until you look. */}
+        </GlyphSafeButton>
         {status === 'error' && (
-          <Text size="xs" style={styles.statusText} numberOfLines={2}>
-            {t('floatingChat.topicGenFailed')}
-          </Text>
+          <Pressable
+            onPress={handleRetry}
+            disabled={isRetrying}
+            hitSlop={16}
+            style={styles.retryButton}
+            accessibilityRole="button"
+            accessibilityLabel={t('floatingChat.topicGenRetry')}
+            testID="chat-topics-retry"
+          >
+            <Text size="xs" bold style={styles.retryText}>
+              {t('floatingChat.topicGenRetry')}
+            </Text>
+          </Pressable>
         )}
-      </Pressable>
+      </View>
 
       {expanded && (
         <View style={styles.body}>
@@ -443,21 +452,21 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
                       }}
                       numberOfLines={1}
                     />
-                    <Pressable
+                    <GlyphSafeButton
                       onPress={() => (removing ? handleUndoRemove(chip) : handleRemove(chip))}
                       disabled={busyId === chip.id}
                       hitSlop={16}
-                      style={styles.chipButton}
-                      accessibilityRole="button"
+                      visualStyle={styles.chipButton}
                       accessibilityLabel={removing ? t('topicPlan.undo') : t('topicPlan.delete')}
                       testID={`chat-topic-chip-${removing ? 'undo' : 'remove'}-${chip.id}`}
                     >
                       <MaterialIcons
+                        {...DECORATIVE_ICON_A11Y}
                         name={removing ? 'undo' : 'close'}
                         size={14}
                         color={removing ? ACCENT : 'rgb(190, 190, 190)'}
                       />
-                    </Pressable>
+                    </GlyphSafeButton>
                   </View>
                 );
               })}
@@ -495,6 +504,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   // 48dp target on the header row.
+  headerOuter: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  headerToggle: { flex: 1 },
   header: { minHeight: 48, justifyContent: 'center', gap: 4 },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   body: { gap: 10, paddingTop: 2 },

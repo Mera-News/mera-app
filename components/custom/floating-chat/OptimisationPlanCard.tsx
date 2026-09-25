@@ -25,6 +25,8 @@ import {
   type PendingPlan,
 } from '@/lib/database/services/optimisation-plan-service';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GlyphSafeButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
@@ -148,7 +150,7 @@ const OptimisationPlanCard: React.FC = () => {
     return (
       <Animated.View entering={cardEntering} style={[styles.card, styles.cardSettled]}>
         <View style={styles.headerRow}>
-          <MaterialIcons name="check-circle" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="check-circle" size={18} color={ACCENT} />
           <Text size="sm" bold style={styles.title}>
             {t('optimisationPlan.appliedTitle')}
           </Text>
@@ -165,7 +167,7 @@ const OptimisationPlanCard: React.FC = () => {
   return (
     <Animated.View entering={cardEntering} style={styles.card}>
       <View style={styles.headerRow}>
-        <MaterialIcons name="auto-fix-high" size={18} color={ACCENT} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name="auto-fix-high" size={18} color={ACCENT} />
         <Text size="sm" bold style={styles.title}>
           {t('optimisationPlan.cardTitle')}
         </Text>
@@ -183,7 +185,8 @@ const OptimisationPlanCard: React.FC = () => {
           {plan.autoChanges.map((a) => {
             const checked = checkedAuto[a.fingerprint] ?? true;
             return (
-              <Pressable
+              // Childless button over a hidden visual (ux2 batch 26).
+              <GlyphSafeButton
                 key={a.fingerprint}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked }}
@@ -191,9 +194,10 @@ const OptimisationPlanCard: React.FC = () => {
                 onPress={() =>
                   setCheckedAuto((prev) => ({ ...prev, [a.fingerprint]: !checked }))
                 }
-                style={styles.row}
+                visualStyle={styles.row}
               >
                 <MaterialIcons
+                  {...DECORATIVE_ICON_A11Y}
                   name={checked ? 'check-box' : 'check-box-outline-blank'}
                   size={18}
                   color={checked ? ACCENT : 'rgb(140, 140, 140)'}
@@ -205,7 +209,7 @@ const OptimisationPlanCard: React.FC = () => {
                     Display only — handleApply sends fingerprints and option
                     INDICES, never any of this text. */}
                 <TranslatableDynamic text={a.summary} size="sm" style={styles.rowLabel} />
-              </Pressable>
+              </GlyphSafeButton>
             );
           })}
         </View>
@@ -259,7 +263,7 @@ const OptimisationPlanCard: React.FC = () => {
                 {item.options.map((opt, idx) => {
                   const selected = idx === chosen;
                   return (
-                    <Pressable
+                    <GlyphSafeButton
                       key={idx}
                       accessibilityRole="radio"
                       accessibilityState={{ selected }}
@@ -267,9 +271,10 @@ const OptimisationPlanCard: React.FC = () => {
                       onPress={() =>
                         setReviewChoice((prev) => ({ ...prev, [item.fingerprint]: idx }))
                       }
-                      style={[styles.row, styles.optionRow, selected && styles.optionRowSelected]}
+                      visualStyle={[styles.row, styles.optionRow, selected && styles.optionRowSelected]}
                     >
                       <MaterialIcons
+                        {...DECORATIVE_ICON_A11Y}
                         name={selected ? 'radio-button-checked' : 'radio-button-unchecked'}
                         size={18}
                         color={selected ? ACCENT : 'rgb(140, 140, 140)'}
@@ -280,7 +285,7 @@ const OptimisationPlanCard: React.FC = () => {
                         size="sm"
                         style={styles.rowLabel}
                       />
-                    </Pressable>
+                    </GlyphSafeButton>
                   );
                 })}
               </View>

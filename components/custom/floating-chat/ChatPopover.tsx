@@ -6,7 +6,8 @@
 
 import MeraLogo from '@/components/custom/MeraLogo';
 import ChatBugReportButton from './ChatBugReportButton';
-import { Button } from '@/components/ui/button';
+import { GlyphSafeIconButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import { hapticLight } from '@/lib/haptics';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import { useFloatingChatIsExpanded, useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -33,8 +34,6 @@ const PANEL_BG = '#1a1a1a';
 // M15). Closing is not destructive; the reply keeps running either way.
 const CLOSE_ICON = 'rgb(210, 210, 210)';
 const BUBBLE_SIZE = 64; // diameter of the floating bubble the panel morphs from
-/** A 44pt transparent touch frame; the visible 36pt disc is its child. */
-export const HEADER_BUTTON_FRAME = 'w-11 h-11 p-0 rounded-full bg-transparent items-center justify-center';
 
 // Swipe-down-to-close thresholds (header grab zone only).
 const SWIPE_CLOSE_DISTANCE = 90; // px of downward travel that commits a close
@@ -252,37 +251,31 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                             <Text style={styles.title}>{t('floatingChat.title')}</Text>
                         </View>
                     </GestureDetector>
-                    {/* Gluestack Buttons (className/tva-driven), NOT Pressables with
-                        function-form style props: under NativeWind v4's babel interop
-                        the function form gets dropped, which erased these buttons'
-                        background fills at runtime (item-13 bug). Dark-mode tokens:
-                        primary-400 = rgb(231,138,83) (ACCENT); the close button is neutral. */}
                     {/* Left of New chat (ux2 H): the whole chat, attached to a
                         report the user chooses to send. */}
                     <ChatBugReportButton />
-                    {/* 44pt FRAMES around the 36pt discs (ux2 batch 25): VoiceOver
-                        measured 31-32pt frames. The header's gap and padding
-                        shrink by the difference, so the discs do not move. */}
-                    <Button
+                    {/* Real 44pt frames (ux2 batch 26): a childless labelled
+                        Pressable sized by NUMBER, the 36pt disc laid over it.
+                        `w-11 h-11` measured 38.5pt (NativeWind rem is 14), and an
+                        icon inside the button surfaced as its own StaticText. */}
+                    <GlyphSafeIconButton
                         onPress={onNewChatPress}
                         accessibilityLabel={t('floatingChat.newChat')}
-                        action="default"
-                        className={HEADER_BUTTON_FRAME}
+                        testID="chat-header-new-chat"
                     >
                         <View style={[styles.headerDisc, styles.newChatDisc]}>
-                            <MaterialIcons name="add-comment" size={20} color={ACCENT} />
+                            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="add-comment" size={20} color={ACCENT} />
                         </View>
-                    </Button>
-                    <Button
+                    </GlyphSafeIconButton>
+                    <GlyphSafeIconButton
                         onPress={onClosePress}
                         accessibilityLabel={t('floatingChat.close')}
-                        action="default"
-                        className={HEADER_BUTTON_FRAME}
+                        testID="chat-header-close"
                     >
                         <View style={[styles.headerDisc, styles.neutralDisc]}>
-                            <MaterialIcons name="close" size={22} color={CLOSE_ICON} />
+                            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={22} color={CLOSE_ICON} />
                         </View>
-                    </Button>
+                    </GlyphSafeIconButton>
                 </View>
 
                 {/* The panel itself shrinks above the keyboard (see panelStyle), so

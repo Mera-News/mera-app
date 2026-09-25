@@ -30,8 +30,10 @@ import {
   useFloatingChatStore,
 } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GlyphSafeButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
@@ -422,6 +424,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
     >
       <View style={styles.headerRow}>
         <MaterialIcons
+          {...DECORATIVE_ICON_A11Y}
           name={
             isTrackProposal
               ? 'track-changes'
@@ -484,7 +487,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
             : row.icon;
           const body = (
             <>
-              <MaterialIcons name={rowIcon} size={16} color={ACCENT} style={styles.actionIcon} />
+              <MaterialIcons {...DECORATIVE_ICON_A11Y} name={rowIcon} size={16} color={ACCENT} style={styles.actionIcon} />
               <View style={styles.actionBody}>
                 {showLabel && (
                   <Text size="xs" bold style={styles.actionLabel}>
@@ -530,16 +533,30 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
           );
           if (chooseOne && isPending) {
             return (
-              <Pressable
+              // Childless button over a hidden visual (ux2 batch 26): the radio
+              // glyph inside the row surfaced as its own StaticText. The label
+              // is the row's own words, which the row used to compose.
+              <GlyphSafeButton
                 key={idx}
                 testID={`proposal-action-row-${idx}`}
                 onPress={() => setSelectedIndex(idx)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected }}
-                style={[styles.actionRow, styles.actionRowSelectable, selected && styles.actionRowSelected]}
+                accessibilityLabel={[
+                  showLabel
+                    ? row.labelDefault
+                      ? t(row.labelKey as TKey, { defaultValue: row.labelDefault })
+                      : t(row.labelKey as TKey)
+                    : null,
+                  row.heading,
+                  row.detail,
+                ]
+                  .filter(Boolean)
+                  .join('. ')}
+                visualStyle={[styles.actionRow, styles.actionRowSelectable, selected && styles.actionRowSelected]}
               >
                 {body}
-              </Pressable>
+              </GlyphSafeButton>
             );
           }
           // Terminal state: no Pressable, no selection box (the radio icon above
@@ -602,6 +619,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
       {resolved !== null && (
         <View style={styles.statusRow}>
           <MaterialIcons
+            {...DECORATIVE_ICON_A11Y}
             name={resolved === 'applied' ? 'check-circle' : 'cancel'}
             size={16}
             color={resolved === 'applied' ? ACCENT : 'rgb(150, 150, 150)'}

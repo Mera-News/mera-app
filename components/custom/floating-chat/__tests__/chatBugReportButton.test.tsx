@@ -10,11 +10,6 @@ jest.mock('@expo/vector-icons', () => {
   const RN = require('react-native');
   return { MaterialIcons: (p: any) => R.createElement(RN.View, { testID: `icon-${p.name}` }) };
 });
-jest.mock('@/components/ui/button', () => {
-  const R = require('react');
-  const RN = require('react-native');
-  return { Button: (p: any) => R.createElement(RN.Pressable, p, p.children) };
-});
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 const mockOpen = jest.fn();
 jest.mock('../chat-bug-report', () => ({
@@ -26,7 +21,8 @@ import ChatBugReportButton from '../ChatBugReportButton';
 
 it('is labelled Report a bug and opens the report with the transcript and the disclosure', () => {
   const { getByLabelText, getByTestId } = render(<ChatBugReportButton />);
-  expect(getByTestId('icon-bug-report')).toBeTruthy();
+  // Drawn, but hidden from assistive tech: the button's label is the only reading.
+  expect(getByTestId('icon-bug-report', { includeHiddenElements: true })).toBeTruthy();
   fireEvent.press(getByLabelText('preferences.reportBug'));
   expect(mockOpen).toHaveBeenCalledWith('09:05 You: hi', 'feedback.chatAttachmentNote');
 });

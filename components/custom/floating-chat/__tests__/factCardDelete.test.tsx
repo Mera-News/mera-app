@@ -32,7 +32,7 @@ const mockConfirm = jest.fn(async () => undefined);
 jest.mock('../fact-choice-actions', () => ({ confirmPendingDelete: (...a: unknown[]) => mockConfirm(...(a as [])) }));
 
 import FactCard from '../FactCard';
-import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
+import { exposedGlyphTexts, privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 const pending = { resultKey: 'a1::0', baseResult: { pendingFactIds: ['h1'] }, factIds: ['h1'] };
 
@@ -63,4 +63,8 @@ it('the kept line is one sentence', () => {
 it('leaks no icon glyph into an accessible label', () => {
   const { UNSAFE_root } = render(<FactCard action="deletePending" statements={['Lives in Porto']} pendingDelete={pending} />);
   expect(privateUseLabelLeaks(UNSAFE_root)).toEqual([]);
+  // ux2 batch 26: no icon stands alone as its own StaticText either, and
+  // the check is not vacuous: glyphs did render.
+  expect(UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children))).length).toBeGreaterThan(0);
+  expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
 });

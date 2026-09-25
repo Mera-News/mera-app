@@ -32,6 +32,12 @@ describe('AiDisclosureCaption', () => {
         expect(getByText('aiDisclosure.caption')).toBeTruthy();
     });
 
+    it('the icon sits under no accessible element: only the words are read (ux2 batch 26)', () => {
+        const { getByTestId } = render(<AiDisclosureCaption />);
+        const icon = getByTestId('ai-disclosure-icon', { includeHiddenElements: true });
+        for (let p: any = icon.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+    });
+
     it('carries a non-empty accessibilityLabel matching the shown text — never colour-only', () => {
         const { getByLabelText } = render(<AiDisclosureCaption />);
         const row = getByLabelText('aiDisclosure.caption');
@@ -77,22 +83,22 @@ describe('AiDisclosureCaption', () => {
     // since moved to align="left", under their left-aligned headings).
     describe('align', () => {
         it('hugs the RIGHT edge by default — unchanged for the pre-existing consumers', () => {
-            const { getByLabelText, getByText } = render(<AiDisclosureCaption />);
-            expect(getByLabelText('aiDisclosure.caption').props.className).toContain('justify-end');
+            const { getByTestId, getByText } = render(<AiDisclosureCaption />);
+            expect(getByTestId('ai-disclosure-caption').props.className).toContain('justify-end');
             expect(getByText('aiDisclosure.caption').props.className).toBe('text-right');
         });
 
         it('hugs the LEFT edge with align="left" (under the priority chip)', () => {
-            const { getByLabelText, getByText } = render(<AiDisclosureCaption align="left" />);
-            const row = getByLabelText('aiDisclosure.caption');
+            const { getByTestId, getByText } = render(<AiDisclosureCaption align="left" />);
+            const row = getByTestId('ai-disclosure-caption');
             expect(row.props.className).toContain('justify-start');
             expect(row.props.className).not.toContain('justify-end');
             expect(getByText('aiDisclosure.caption').props.className).toBe('text-left');
         });
 
         it('keeps appending an extra className after the alignment classes', () => {
-            const { getByLabelText } = render(<AiDisclosureCaption align="left" className="mt-1" />);
-            expect(getByLabelText('aiDisclosure.caption').props.className).toContain('mt-1');
+            const { getByTestId } = render(<AiDisclosureCaption align="left" className="mt-1" />);
+            expect(getByTestId('ai-disclosure-caption').props.className).toContain('mt-1');
         });
     });
 });

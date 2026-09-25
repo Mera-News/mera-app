@@ -21,8 +21,10 @@ export function glyphIconModule() {
     const h = require('react')['createElement'];
     const { Text } = require('react-native');
     const glyphs = require('@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/MaterialIcons.json');
+    // testID defaults to `icon-<name>`, so this drops in for the View mocks
+    // that suites use to pin a glyph by name.
     const MaterialIcons = (p: any) =>
-        h(Text, { ...p, children: String.fromCodePoint(glyphs[p.name] ?? 0xe000) });
+        h(Text, { testID: `icon-${p.name}`, ...p, children: String.fromCodePoint(glyphs[p.name] ?? 0xe000) });
     MaterialIcons.glyphMap = glyphs;
     return { MaterialIcons };
 }
@@ -36,7 +38,9 @@ function textOf(node: any): string {
     // iOS composes a container's label from its subviews, taking a subview's
     // OWN accessibilityLabel instead of descending into it (RN's
     // RCTRecursiveAccessibilityLabel), so an explicitly labelled child
-    // contributes that label, never its glyph.
+    // contributes that label, never its glyph. That is the LABEL only: the
+    // glyph can still surface as its own StaticText under a labelled
+    // container, which exposedGlyphTexts below checks.
     if (typeof node.type === 'string' && typeof node.props?.accessibilityLabel === 'string') {
         return node.props.accessibilityLabel;
     }
@@ -57,4 +61,32 @@ export function privateUseLabelLeaks(root: any): string[] {
         if (PRIVATE_USE.test(label)) leaks.push(`${n.props.testID ?? '(no testID)'}: ${JSON.stringify(label)}`);
     }
     return leaks;
+}
+
+/** Icon glyphs VoiceOver can land on as their own StaticText (captured on
+ *  device, ux2 batch 26). On iOS the hidden props do NOT hide a glyph that has
+ *  ANY accessible ancestor, labelled or not, so a glyph passes only when it
+ *  carries `accessible={false}`, `accessibilityElementsHidden` and
+ *  `importantForAccessibility="no-hide-descendants"` itself AND no host
+ *  ancestor is `accessible`. A labelled button with an icon is therefore a
+ *  childless Pressable laid over a hidden visual, never a wrapper. */
+export function exposedGlyphTexts(root: any): string[] {
+    const exposed: string[] = [];
+    const glyphTexts = root.findAll(
+        (n: any) => n.type === 'Text' && PRIVATE_USE.test(textOf(n)),
+    );
+    for (const t of glyphTexts) {
+        const hidden = t.props?.accessible === false
+            && t.props?.accessibilityElementsHidden === true
+            && t.props?.importantForAccessibility === 'no-hide-descendants';
+        let underAccessible = false;
+        for (let p = t.parent; p; p = p.parent) {
+            if (typeof p.type === 'string' && p.props?.accessible === true) underAccessible = true;
+        }
+        if (!hidden || underAccessible) {
+            const why = !hidden ? 'not hidden' : 'under an accessible element';
+            exposed.push(`${t.props?.testID ?? '(no testID)'} (${why}): ${JSON.stringify(textOf(t))}`);
+        }
+    }
+    return exposed;
 }

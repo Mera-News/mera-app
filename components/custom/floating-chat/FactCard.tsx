@@ -5,6 +5,7 @@
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -88,7 +89,7 @@ const FactCard: React.FC<FactCardProps> = ({ action, statements, pendingDelete }
   return (
     <Animated.View entering={factCardEntering} style={styles.card}>
       <View style={styles.headerRow}>
-        <MaterialIcons name={ICON_BY_ACTION[action]} size={18} color={ACCENT} />
+        <MaterialIcons {...DECORATIVE_ICON_A11Y} name={ICON_BY_ACTION[action]} size={18} color={ACCENT} />
         <Text size="sm" bold style={styles.title}>
           {t(TITLE_KEY_BY_ACTION[action])}
         </Text>

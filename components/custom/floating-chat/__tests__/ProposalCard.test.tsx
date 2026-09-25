@@ -22,10 +22,7 @@ jest.mock('@/components/ui/button', () => {
     ButtonText: (p: any) => <Text {...p} />,
   };
 });
-jest.mock('@expo/vector-icons', () => {
-  const { View } = require('react-native');
-  return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
   return {
@@ -58,6 +55,7 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
 }));
 
 import ProposalCard from '../ProposalCard';
+import { exposedGlyphTexts } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 const subject = {
   origin: 'article' as const,
@@ -190,5 +188,17 @@ describe('ProposalCard track copy', () => {
     expect(queryByText('floatingChat.trackChooseHint')).not.toBeNull();
     expect(queryByText('articleFeedback.chooseOneHint')).toBeNull();
     expect(queryAllByText('trackedStories.trackAction')).toHaveLength(0);
+  });
+});
+
+describe('ux2 batch 26: radio rows keep their glyphs out of the accessibility tree', () => {
+  it('a pending choose-one card exposes no glyph, and each row reads its own words', () => {
+    const { UNSAFE_root, getByTestId } = render(<ProposalCard proposal={trackProposal} isLast />);
+    const glyphs = UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)));
+    expect(glyphs.length).toBeGreaterThan(0);
+    expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
+    const label = getByTestId('proposal-action-row-0').props.accessibilityLabel;
+    expect(typeof label).toBe('string');
+    expect(label.length).toBeGreaterThan(0);
   });
 });

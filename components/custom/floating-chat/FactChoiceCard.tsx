@@ -30,6 +30,8 @@ import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { attributeKey, isLocationKey, mayReplaceKey } from '@/lib/mera-harness';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GlyphSafeButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -294,12 +296,14 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
         ref={cardRef}
         entering={cardEntering}
         style={[styles.card, styles.cardSettled]}
-        accessible
+        // NOT `accessible` (ux2 batch 26): as one element it swallowed the Undo
+        // button, which VoiceOver could not reach, and exposed the header glyph.
+        // The title, the summary and Undo are now separate elements.
         accessibilityLiveRegion="polite"
         testID={`fact-choice-dismissed-${groupIndex}`}
       >
         <View style={styles.headerRow}>
-          <MaterialIcons name="close" size={18} color={ACCENT} />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="close" size={18} color={ACCENT} />
           <Text size="sm" bold style={styles.title}>
             {t('factChoice.dismissedTitle')}
           </Text>
@@ -333,6 +337,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     <Animated.View style={[styles.card, stale && styles.cardSettled]}>
       <View style={styles.headerRow}>
         <MaterialIcons
+          {...DECORATIVE_ICON_A11Y}
           name={isReplace ? 'swap-horiz' : 'help-outline'}
           size={18}
           color={ACCENT}
@@ -353,7 +358,9 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           const isSel = idx === selected;
           const interactive = !single && !stale && !busy;
           return (
-            <Pressable
+            // Childless button over a hidden visual (ux2 batch 26): the radio
+            // glyph inside the labelled row surfaced as its own StaticText.
+            <GlyphSafeButton
               key={`${resultKey}-${groupIndex}-${idx}`}
               onPress={interactive ? () => setSelected(idx) : undefined}
               disabled={!interactive}
@@ -362,10 +369,11 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
               // The reading itself, never the radio glyph before it.
               accessibilityLabel={option}
               testID={`fact-choice-option-${groupIndex}-${idx}`}
-              style={[styles.optionRow, isSel && !single && styles.optionRowSelected]}
+              visualStyle={[styles.optionRow, isSel && !single && styles.optionRowSelected]}
             >
               {!single && (
                 <MaterialIcons
+                  {...DECORATIVE_ICON_A11Y}
                   name={isSel ? 'radio-button-checked' : 'radio-button-unchecked'}
                   size={18}
                   color={isSel ? ACCENT : 'rgb(150, 150, 150)'}
@@ -375,7 +383,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
                   reaches addFact. Only the RENDERING is translated — the commit
                   reads `options[selected]`, never what is drawn here. */}
               <TranslatableDynamic text={option} size="sm" style={styles.optionText} numberOfLines={3} />
-            </Pressable>
+            </GlyphSafeButton>
           );
         })}
       </View>
@@ -392,7 +400,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
       {canKeepBoth && !stale && replaces && (
         <View style={styles.replaceBox} testID={`fact-choice-overlaps-${groupIndex}`}>
           <View style={styles.replaceHeader}>
-            <MaterialIcons name="compare-arrows" size={16} color={NEUTRAL_LABEL} />
+            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="compare-arrows" size={16} color={NEUTRAL_LABEL} />
             <Text size="xs" bold style={styles.overlapLabel}>
               {t('factChoice.overlapsLabel')}
             </Text>
@@ -412,7 +420,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
       {isReplace && !canKeepBoth && !stale && (
         <View style={styles.replaceBox} testID={`fact-choice-replaces-${groupIndex}`}>
           <View style={styles.replaceHeader}>
-            <MaterialIcons name="warning-amber" size={16} color={DESTRUCTIVE} />
+            <MaterialIcons {...DECORATIVE_ICON_A11Y} name="warning-amber" size={16} color={DESTRUCTIVE} />
             <Text size="xs" bold style={styles.replaceLabel}>
               {replaces ? t('factChoice.replacesLabel') : null}
             </Text>

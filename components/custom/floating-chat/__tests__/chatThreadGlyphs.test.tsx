@@ -111,7 +111,7 @@ jest.mock('../TopicPlanSaveAllRow', () => ({ __esModule: true, default: () => nu
 
 import ChatThread from '../ChatThread';
 import type { ChatThreadItem } from '../types';
-import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
+import { exposedGlyphTexts, privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 const props = (over: Record<string, unknown> = {}) => ({
   items: [] as ChatThreadItem[],
@@ -141,4 +141,8 @@ it('the thread chrome (history button, unblock refresh) leaks no glyph', () => {
     <ChatThread {...props({ showHistoryButton: true, blockedMessage: 'blocked', bannerBlocksInput: true, showUnblockControls: true, unblockPending: true })} />,
   );
   expect(privateUseLabelLeaks(UNSAFE_root)).toEqual([]);
+  // ux2 batch 26: no icon stands alone as its own StaticText either, and
+  // the check is not vacuous: glyphs did render.
+  expect(UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children))).length).toBeGreaterThan(0);
+  expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
 });

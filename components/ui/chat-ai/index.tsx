@@ -23,6 +23,7 @@ import React, {
 import {
   FlatList,
   type FlatListProps,
+  Pressable,
   type ListRenderItem,
   StyleSheet,
   type StyleProp,
@@ -33,7 +34,6 @@ import {
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
 import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/typography/policy';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
 
@@ -54,6 +54,10 @@ export const GLOW_BRIGHT = 'rgba(255, 255, 255, 0.52)';
 // share this size/line-height so the conversation reads as one system.
 /** Composer ceiling at 1x — about 6.6 lines of 15/21. Scaled at the call site. */
 const COMPOSER_MAX_HEIGHT = 140;
+/** Touch frame of the send button, a number: NativeWind rem is 14. */
+const SEND_FRAME = 44;
+/** The drawn send disc, what `w-9` rendered. */
+const SEND_DISC = 31.5;
 const CHAT_FONT_SIZE = 15;
 const CHAT_LINE_HEIGHT = 21;
 
@@ -149,7 +153,15 @@ function ConversationContentInner<T extends { key: string }>(
       ListFooterComponent={
         isLoadingOlder ? (
           <View style={styles.olderSpinnerRow}>
-            <MaterialIcons name="hourglass-empty" size={18} color={ACCENT} />
+            <MaterialIcons
+              name="hourglass-empty"
+              size={18}
+              color={ACCENT}
+              // A loose glyph is its own StaticText on iOS (ux2 batch 26).
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
           </View>
         ) : null
       }
@@ -324,6 +336,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
   }));
 
   const isSendDisabled = disabled || text.trim().length === 0;
+  const [sendPressed, setSendPressed] = useState(false);
 
   // The composer's 140pt ceiling is ~6.6 lines at the default 15/21, but under
   // 3 lines once the OS is scaling text — so at exactly the sizes where a
@@ -372,26 +385,53 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
         style={[styles.textInput, { maxHeight: composerMaxHeight }]}
         maxFontSizeMultiplier={maxFontSizeMultiplierFor('content', userScale)}
       />
-      {/* Gluestack Button (className/tva-driven) rather than a Pressable with a
-          function-form style prop — NativeWind v4's babel interop drops that
-          form, which erased this button's orange fill at runtime (item-13 bug).
-          Dark-mode primary-400 = rgb(231,138,83); isDisabled dims via the
-          Button's built-in data-[disabled=true]:opacity-40. */}
-      <Button
-        onPress={handleSend}
-        isDisabled={isSendDisabled}
-        accessibilityLabel={t('chat.send')}
-        // `isDisabled` is a gluestack STYLING prop: it dims the fill through
-        // data-[disabled=true]:opacity-40 and stops the press, but it does not
-        // reach the accessibility tree. Without this the button announced as an
-        // available action while visibly dimmed and doing nothing — in the
-        // blocked state, and on every turn while a response streams.
-        accessibilityState={{ disabled: isSendDisabled }}
-        hitSlop={8}
-        className="w-9 h-9 p-0 rounded-full bg-primary-400 data-[active=true]:bg-primary-300 data-[active=true]:scale-90"
-      >
-        <MaterialIcons name="arrow-upward" size={20} color="#FFFFFF" />
-      </Button>
+      {/* A real 44pt frame (ux2 batch 26): a childless labelled Pressable sized
+          by NUMBER, with the 31.5pt disc laid over it as a sibling. `w-9 h-9`
+          is 31.5pt (NativeWind rem is 14), and an icon INSIDE the button
+          surfaced on iOS as its own StaticText. The negative margin keeps the
+          row's layout exactly where the 31.5pt button put it. Static styles
+          only: NativeWind v4's babel interop drops a function-form style,
+          which once erased this fill (item-13 bug), so pressed is state. */}
+      <View style={styles.sendBox}>
+        <Pressable
+          onPress={handleSend}
+          onPressIn={() => setSendPressed(true)}
+          onPressOut={() => setSendPressed(false)}
+          disabled={isSendDisabled}
+          accessibilityRole="button"
+          accessibilityLabel={t('chat.send')}
+          // `disabled` stops the press; the state is what VoiceOver reads, so
+          // a dimmed button never announces as available.
+          accessibilityState={{ disabled: isSendDisabled }}
+          hitSlop={8}
+          testID="chat-send"
+          style={styles.sendFrame}
+        />
+        <View
+          pointerEvents="none"
+          accessible={false}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          style={styles.sendOverlay}
+        >
+          <View
+            style={[
+              styles.sendDisc,
+              sendPressed && !isSendDisabled && styles.sendDiscPressed,
+              isSendDisabled && styles.sendDiscDisabled,
+            ]}
+          >
+            <MaterialIcons
+              name="arrow-upward"
+              size={20}
+              color="#FFFFFF"
+              accessible={false}
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            />
+          </View>
+        </View>
+      </View>
     </View>
   );
 });
@@ -472,6 +512,29 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     gap: 8,
   },
+  // The send button. SEND_DISC is what `w-9` rendered (2.25rem at 14), so the
+  // visual is unchanged; the frame around it is a true 44.
+  sendBox: {
+    width: SEND_FRAME,
+    height: SEND_FRAME,
+    margin: -(SEND_FRAME - SEND_DISC) / 2,
+  },
+  sendFrame: { width: SEND_FRAME, height: SEND_FRAME },
+  sendOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendDisc: {
+    width: SEND_DISC,
+    height: SEND_DISC,
+    borderRadius: SEND_DISC / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: ACCENT, // primary-400
+  },
+  sendDiscPressed: { backgroundColor: 'rgb(203, 121, 73)', transform: [{ scale: 0.9 }] }, // primary-300
+  sendDiscDisabled: { opacity: 0.4 },
   textInput: {
     flex: 1,
     backgroundColor: INPUT_SURFACE,

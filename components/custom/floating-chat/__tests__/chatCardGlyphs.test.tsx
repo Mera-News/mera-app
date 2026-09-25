@@ -43,7 +43,7 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
 
 import { FactChoiceCard } from '../FactChoiceCard';
 import ConflictResolutionCard from '../ConflictResolutionCard';
-import { privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
+import { exposedGlyphTexts, privateUseLabelLeaks } from '@/lib/__test-helpers__/icon-glyph-a11y';
 
 it('fact-choice readings leak no glyph', () => {
   const { UNSAFE_root } = render(
@@ -51,6 +51,10 @@ it('fact-choice readings leak no glyph', () => {
       options={['Lives in Porto', 'Lives in Porto Alegre']} questionnaireAttribute={null} />,
   );
   expect(privateUseLabelLeaks(UNSAFE_root)).toEqual([]);
+  // ux2 batch 26: no icon stands alone as its own StaticText either, and
+  // the check is not vacuous: glyphs did render.
+  expect(UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children))).length).toBeGreaterThan(0);
+  expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
 });
 
 it('conflict choices leak no glyph', () => {
@@ -61,4 +65,8 @@ it('conflict choices leak no glyph', () => {
     }} />,
   );
   expect(privateUseLabelLeaks(UNSAFE_root)).toEqual([]);
+  // ux2 batch 26: no icon stands alone as its own StaticText either, and
+  // the check is not vacuous: glyphs did render.
+  expect(UNSAFE_root.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children))).length).toBeGreaterThan(0);
+  expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
 });

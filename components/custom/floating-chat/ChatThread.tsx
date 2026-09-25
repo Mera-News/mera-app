@@ -21,6 +21,8 @@ import {
 import { hapticLight } from '@/lib/haptics';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
+import { GlyphSafeButton } from './glyph-safe';
+import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
 import React, { useCallback, useContext, useEffect, useRef } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -299,22 +301,22 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       case 'history-button':
         return (
           <View style={styles.historyButtonRow}>
-            <Pressable
-              style={styles.historyButton}
+            {/* Childless button over a hidden visual: the history glyph inside
+                a labelled button still surfaced as its own StaticText. */}
+            <GlyphSafeButton
+              visualStyle={styles.historyButton}
               onPress={() => {
                 hapticLight();
                 onRevealHistory();
               }}
-              accessibilityRole="button"
-              // Explicit: without it VoiceOver reads the history glyph first.
               accessibilityLabel={t('floatingChat.viewPreviousMessages')}
               testID="chat-view-previous-messages"
             >
-              <MaterialIcons name="history" size={16} color="rgb(160, 160, 160)" />
+              <MaterialIcons {...DECORATIVE_ICON_A11Y} name="history" size={16} color="rgb(160, 160, 160)" />
               <Text size="xs" style={styles.historyButtonText}>
                 {t('floatingChat.viewPreviousMessages')}
               </Text>
-            </Pressable>
+            </GlyphSafeButton>
           </View>
         );
 
@@ -393,7 +395,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
               <View style={styles.header}>
                 {!hasRealMessage && (
                   <View style={styles.noticeRow}>
-                    <MaterialIcons name="info-outline" size={14} color="rgb(140, 140, 140)" />
+                    <MaterialIcons {...DECORATIVE_ICON_A11Y} name="info-outline" size={14} color="rgb(140, 140, 140)" />
                     <Text size="xs" style={styles.noticeText}>
                       {usageNotice ?? t('floatingChat.aiUsageNotice')}
                     </Text>
@@ -410,7 +412,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       {blockedMessage && (
         <View style={styles.blockedBanner}>
-          <MaterialIcons name="block" size={20} color="#F87171" />
+          <MaterialIcons {...DECORATIVE_ICON_A11Y} name="block" size={20} color="#F87171" />
           <View style={styles.blockedBody}>
             <Text size="sm" style={styles.blockedText}>
               {blockedMessage}
@@ -420,27 +422,27 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 {unblockPending ? (
                   <>
                     <View style={styles.pendingPill}>
-                      <MaterialIcons name="hourglass-empty" size={14} color="rgb(180, 180, 180)" />
+                      <MaterialIcons {...DECORATIVE_ICON_A11Y} name="hourglass-empty" size={14} color="rgb(180, 180, 180)" />
                       <Text size="xs" style={styles.pendingText}>
                         {t('floatingChat.requestUnblock.pendingButton')}
                       </Text>
                     </View>
-                    <Pressable
-                      style={styles.refreshPill}
+                    <GlyphSafeButton
+                      visualStyle={styles.refreshPill}
                       onPress={() => {
                         hapticLight();
                         onRefreshBlockStatus();
                       }}
                       disabled={isRefreshingBlockStatus}
-                      accessibilityRole="button"
                       accessibilityState={{ disabled: isRefreshingBlockStatus }}
                       accessibilityLabel={t('floatingChat.requestUnblock.refreshButton')}
+                      testID="chat-unblock-refresh"
                     >
-                      <MaterialIcons name="refresh" size={14} color="#F87171" />
+                      <MaterialIcons {...DECORATIVE_ICON_A11Y} name="refresh" size={14} color="#F87171" />
                       <Text size="xs" style={styles.refreshText}>
                         {t('floatingChat.requestUnblock.refreshButton')}
                       </Text>
-                    </Pressable>
+                    </GlyphSafeButton>
                   </>
                 ) : (
                   <Pressable
