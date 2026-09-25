@@ -14,11 +14,13 @@ import { useCallback, useState } from 'react';
 import type { LayoutChangeEvent } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import {
+  runOnJS,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** Cumulative downward travel (px) before the header hides. */
 const DOWN_THRESHOLD = 24;
@@ -80,6 +82,9 @@ export function useCollapsibleHeader(): CollapsibleHeader {
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (e) => {
+      // Every list this drives scrolls translatable rows, and a row asks for
+      // its translation only once a tick finds it on screen (visibility-tick).
+      runOnJS(notifyScrollTick)();
       const y = e.contentOffset.y;
       // Ignore iOS rubber-band overscroll above the top.
       if (y < 0) return;

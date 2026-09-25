@@ -25,9 +25,13 @@ jest.mock('react-native-reanimated', () => ({
   // semantics: one stable box per call site.
   useSharedValue: (initial: any) => require('react').useRef({ value: initial }).current,
   useAnimatedScrollHandler: (cfg: any) => cfg,
+  runOnJS: (fn: any) => fn,
   useAnimatedStyle: (fn: any) => fn,
   withTiming: (toValue: any) => toValue,
 }));
+
+const mockNotifyScrollTick = jest.fn();
+jest.mock('@/lib/visibility-tick', () => ({ notifyScrollTick: () => mockNotifyScrollTick() }));
 
 import { act, renderHook } from '@testing-library/react-native';
 import { useCollapsibleHeader } from '../use-collapsible-header';
@@ -170,5 +174,19 @@ describe('multi-list use (Dashboard sub-tabs) — the cross-panel artifact', () 
     const { result, translateY } = setup();
     act(() => result.current.resetScrollOrigin());
     expect(translateY()).toBe(0);
+  });
+});
+
+// ux2: every list that takes this handler (the Dashboard's Stories, Saved and
+// Fact checks panels) scrolls translatable rows, and a row only asks for its
+// translation once a scroll tick finds it on screen.
+describe('scroll ticks', () => {
+  it('every scroll event ticks, rubber-band included', () => {
+    mockNotifyScrollTick.mockClear();
+    const { result } = renderHook(() => useCollapsibleHeader());
+    const onScroll = (result.current.scrollHandler as any).onScroll;
+    act(() => onScroll({ contentOffset: { y: 40 } }));
+    act(() => onScroll({ contentOffset: { y: -10 } }));
+    expect(mockNotifyScrollTick).toHaveBeenCalledTimes(2);
   });
 });

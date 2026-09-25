@@ -52,6 +52,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** Pull-to-refresh spinner tint — matches FeedScreen's. */
 const REFRESH_TINT = '#EDA77E';
@@ -604,6 +605,11 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
             />
 
             <FlatList
+                // Rows below the first screen ask for their translation only
+                // when a scroll tick finds them on screen (lib/visibility-tick).
+                onScroll={notifyScrollTick}
+                scrollEventThrottle={16}
+                onContentSizeChange={notifyScrollTick}
                 data={cards}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}

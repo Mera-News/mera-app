@@ -35,6 +35,7 @@ import { useTranslation } from 'react-i18next';
 import { ListRenderItem, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface SavedSuggestionsScreenProps {
     onBack: () => void;
@@ -282,6 +283,8 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     const listRef = useRef<any>(null);
     const viewportH = useRef(0);
     const settleIfShort = useCallback((_w: number, contentH: number) => {
+        // New content can land rows on screen with no scroll: re-measure them.
+        notifyScrollTick();
         if (viewportH.current > 0 && contentH <= viewportH.current) {
             listRef.current?.scrollToOffset?.({ offset: 0, animated: true });
         }
@@ -381,7 +384,10 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                         (showExportFab ? SAVED_EXPORT_FAB_RESERVE : 0),
                 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={scrollHandler}
+                // Embedded, the collapsible header's handler ticks; standalone,
+                // tick directly. At rest, a content change re-measures (see
+                // settleIfShort).
+                onScroll={scrollHandler ?? notifyScrollTick}
                 scrollEventThrottle={16}
             />
 

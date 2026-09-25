@@ -40,6 +40,7 @@ import { useTranslation } from 'react-i18next';
 import { ListRenderItem } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface TrackedStoriesScreenProps {
     /** Embedded inside the For-You "Stories" sub-tab — hides the back button and
@@ -421,7 +422,10 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     flexGrow: 1,
                 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={scrollHandler}
+                // Embedded, the collapsible header's handler ticks; standalone,
+                // tick directly. At rest, a content change re-measures.
+                onScroll={scrollHandler ?? notifyScrollTick}
+                onContentSizeChange={notifyScrollTick}
                 scrollEventThrottle={16}
             />
 

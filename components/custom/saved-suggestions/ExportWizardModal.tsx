@@ -20,6 +20,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { FlatList, useWindowDimensions, type ListRenderItem } from 'react-native';
 import { exportAndShare, type ExportFormat } from './export-and-share';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** Dark-mode `--color-primary-500`. A literal because MaterialIcons takes a
  *  colour prop, not a class, and the app mounts dark-only. */
@@ -360,6 +361,11 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                         </Pressable>
 
                         <FlatList
+                            // Rows below the first screen ask for their translation only
+                            // when a scroll tick finds them on screen (lib/visibility-tick).
+                            onScroll={notifyScrollTick}
+                            scrollEventThrottle={16}
+                            onContentSizeChange={notifyScrollTick}
                             testID={`${testIDPrefix}-list`}
                             data={rows}
                             renderItem={renderRow}

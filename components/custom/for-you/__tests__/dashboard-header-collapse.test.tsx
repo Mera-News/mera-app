@@ -161,7 +161,8 @@ describe('Stories panel', () => {
     it('standalone (no headerHeight) pads by 0 and wires no handler', () => {
         render(<TrackedStoriesScreen onBack={jest.fn()} />);
         expect(flat(list().props.contentContainerStyle).paddingTop).toBe(0);
-        expect(list().props.onScroll).toBeUndefined();
+        // No header handler; standalone, the list ticks for translations itself.
+        expect(list().props.onScroll).toBe(require('@/lib/visibility-tick').notifyScrollTick);
     });
 
     it('renders no title of its own when embedded: the host header and sub-tab name it', () => {
@@ -183,7 +184,8 @@ describe('Saved panel', () => {
     it('standalone (no headerHeight) pads by 0 and wires no handler', () => {
         render(<SavedSuggestionsScreen onBack={jest.fn()} />);
         expect(flat(list().props.contentContainerStyle).paddingTop).toBe(0);
-        expect(list().props.onScroll).toBeUndefined();
+        // No header handler; standalone, the list ticks for translations itself.
+        expect(list().props.onScroll).toBe(require('@/lib/visibility-tick').notifyScrollTick);
     });
 
     // M3: embedded, the Dashboard header and the selected pill already name

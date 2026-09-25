@@ -13,6 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, type ListRenderItem } from 'react-native';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface ExploreSearchResultsProps {
     readonly status: NewsSearchStatus;
@@ -128,6 +129,11 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
 
     return (
         <FlatList
+            // Rows below the first screen ask for their translation only
+            // when a scroll tick finds them on screen (lib/visibility-tick).
+            onScroll={notifyScrollTick}
+            scrollEventThrottle={16}
+            onContentSizeChange={notifyScrollTick}
             testID="explore-search-results"
             data={hits}
             renderItem={renderItem}

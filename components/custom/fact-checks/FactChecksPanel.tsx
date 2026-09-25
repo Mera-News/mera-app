@@ -20,6 +20,7 @@ import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 const REFRESH_TINT = '#EDA77E';
 
@@ -196,7 +197,10 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                     paddingBottom: tabClearance + 24,
                 }}
                 showsVerticalScrollIndicator={false}
-                onScroll={scrollHandler}
+                // Embedded, the collapsible header's handler ticks; standalone,
+                // tick directly. At rest, a content change re-measures.
+                onScroll={scrollHandler ?? notifyScrollTick}
+                onContentSizeChange={notifyScrollTick}
                 scrollEventThrottle={16}
                 ListEmptyComponent={
                     // Only once a read has completed — otherwise the empty state

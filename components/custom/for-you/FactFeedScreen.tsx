@@ -47,6 +47,7 @@ import {
 } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** Show the scroll-to-top FAB once the list is scrolled past this many px. */
 const SCROLL_THRESHOLD = 300;
@@ -193,6 +194,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   const listRef = useRef<FlatList<FactRowGroup>>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    // Rows below the first screen ask for their translation only when a tick
+    // finds them on screen (lib/visibility-tick).
+    notifyScrollTick();
     const next = e.nativeEvent.contentOffset.y > SCROLL_THRESHOLD;
     // Functional update → only re-render when the boolean actually flips.
     setShowScrollToTop((prev) => (prev === next ? prev : next));
@@ -389,6 +393,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
         contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
+        onContentSizeChange={notifyScrollTick}
         scrollEventThrottle={16}
         ListEmptyComponent={listEmpty}
         ListFooterComponent={listFooter}
