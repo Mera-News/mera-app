@@ -33,7 +33,7 @@ describe('HeaderIconButton', () => {
             <HeaderIconButton icon="search" onPress={onPress} accessibilityLabel="Search" testID="b" />,
         );
         const b = getByTestId('b');
-        expect(StyleSheet.flatten(b.props.style)).toMatchObject({
+        expect(StyleSheet.flatten(getByTestId('b-frame').props.style)).toMatchObject({
             width: 44,
             height: 44,
             margin: -10,
@@ -44,13 +44,45 @@ describe('HeaderIconButton', () => {
         expect(b.props.className ?? '').not.toMatch(/border|rounded|bg-/);
         expect(b.props.accessibilityRole).toBe('button');
         expect(b.props.accessibilityLabel).toBe('Search');
-        const icon = getByTestId('icon-search');
+        const icon = getByTestId('icon-search', { includeHiddenElements: true });
         expect(icon.props.size).toBe(HEADER_ICON_GLYPH);
         expect(HEADER_ICON_GLYPH).toBe(24);
         expect(icon.props.color).toBe(HEADER_ICON_COLOR);
         expect(HEADER_ICON_COLOR).toBe('#ffffff');
         fireEvent.press(b);
         expect(onPress).toHaveBeenCalledTimes(1);
+    });
+});
+
+// Captured (ux2 batch 26 class): a glyph INSIDE a button surfaces on iOS as its
+// own StaticText, hidden props or not. The button is childless and laid over a
+// hidden visual that holds the glyph and any overlay (the bell badge).
+describe('HeaderIconButton glyph', () => {
+    it('draws the glyph and overlays OUTSIDE a childless labelled button', () => {
+        const { View: RNView } = require('react-native');
+        const { getByTestId } = render(
+            <HeaderIconButton icon="notifications-none" onPress={jest.fn()} accessibilityLabel="Bell" testID="b">
+                <RNView testID="badge" />
+            </HeaderIconButton>,
+        );
+        const b = getByTestId('b');
+        expect(b.props.accessibilityLabel).toBe('Bell');
+        expect(b.findAll((n: any) => typeof n.props?.testID === 'string' && n.props.testID !== 'b')).toHaveLength(0);
+        for (const id of ['icon-notifications-none', 'badge']) {
+            const el = getByTestId(id, { includeHiddenElements: true });
+            for (let p: any = el.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
+        }
+    });
+
+    it('forwards the ref and onLayout to the 44pt frame, the node the bell measures', () => {
+        const ref = React.createRef<any>();
+        const onLayout = jest.fn();
+        const { getByTestId } = render(
+            <HeaderIconButton ref={ref} icon="search" onPress={jest.fn()} onLayout={onLayout} accessibilityLabel="S" testID="b" />,
+        );
+        const frame = getByTestId('b-frame');
+        expect(frame.props.onLayout).toBe(onLayout);
+        expect(ref.current).toBeTruthy();
     });
 });
 

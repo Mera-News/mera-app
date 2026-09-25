@@ -477,7 +477,8 @@ describe('ExploreScreen — search collapsed into the title row (Item 12a)', () 
         const { getByTestId } = render(<ExploreScreen />);
         const { StyleSheet } = require('react-native');
         const button = getByTestId('explore-search-open');
-        const style = StyleSheet.flatten(button.props.style);
+        // The frame is the wrapper; the button inside it is childless (glyph rule).
+        const style = StyleSheet.flatten(getByTestId('explore-search-open-frame').props.style);
         expect(style).toMatchObject({ width: 44, height: 44, margin: -10, alignItems: 'center', justifyContent: 'center' });
         expect(button.props.hitSlop).toBeUndefined();
     });
