@@ -61,6 +61,20 @@ function cards(items: ChatThreadItem[]): ChatThreadItem[] {
 }
 
 describe('deriveThreadItems', () => {
+  it('strips think tags from a persisted assistant bubble, keeping the answer (ux2 D11)', () => {
+    const items = deriveThreadItems(
+      base({
+        history: [
+          persisted('h1', 'c0', 'assistant', 'Your parents live in Bhopal. </think>', 1),
+          persisted('h2', 'c0', 'assistant', '<think>trace</think>', 2),
+        ],
+      }),
+    );
+    const bubbles = items.filter((i) => i.kind === 'message');
+    expect(bubbles).toHaveLength(1);
+    expect(bubbles[0]).toMatchObject({ message: { content: 'Your parents live in Bhopal. ' } });
+  });
+
   it('maps a plain live conversation oldest-first, newest last', () => {
     const items = deriveThreadItems(
       base({

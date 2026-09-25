@@ -25,6 +25,7 @@ import {
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
 import { isFactPickChoice, joinFactPick } from '@/lib/mera-harness/core/fact-pick';
+import { stripThinkTags } from '@/lib/llm/think-strip';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
 import type {
   AgentStep,
@@ -956,6 +957,12 @@ function emitMessage(
   // cards. Filtered here rather than at the call sites so every source (live,
   // resume, history) is covered by one line.
   if (message.hidden) return;
+  // Think tags are stripped at the engines; this covers history persisted
+  // before that, one line for every source.
+  if (message.role === 'assistant') {
+    const shown = stripThinkTags(message.content);
+    if (shown !== message.content) message = { ...message, content: shown };
+  }
 
   const cards: ChatThreadItem[] = [];
   if (message.role === 'assistant' && message.toolCalls) {
