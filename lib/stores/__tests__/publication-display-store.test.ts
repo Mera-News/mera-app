@@ -138,7 +138,7 @@ describe('publication-display-store', () => {
     expect(f.fetch).not.toHaveBeenCalled();
   });
 
-  it('a stale cache still shows instantly but is refreshed in the background', async () => {
+  it('a stale cache still shows instantly and is refreshed once the name is displayed again', async () => {
     const store = createPublicationDisplayStore();
     const f = fakePorts({ en: { '人民日报': 'Renmin Ribao (new)' } });
     f.saved.set('en', {
@@ -150,9 +150,19 @@ describe('publication-display-store', () => {
       await store.getState().setLanguage('en');
     });
     expect(store.getState().names['人民日报']).toBe('Renmin Ribao');
+    // Nothing fetched at launch: before sign-in there is no session to ask with,
+    // and an UNAUTHENTICATED answer feeds the auth-failure breaker.
+    await settle();
+    expect(f.fetch).not.toHaveBeenCalled();
+    // A card showing it (signed in by then) refreshes it, once.
+    store.getState().request('人民日报');
+    store.getState().request('人民日报');
     await settle();
     expect(f.fetch).toHaveBeenCalledTimes(1);
     expect(store.getState().names['人民日报']).toBe('Renmin Ribao (new)');
+    store.getState().request('人民日报');
+    await settle();
+    expect(f.fetch).toHaveBeenCalledTimes(1);
   });
 
   it('a language switch drops the old map and refetches every name seen, in the new language', async () => {

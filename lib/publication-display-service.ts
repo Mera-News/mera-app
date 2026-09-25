@@ -71,6 +71,9 @@ export async function fetchPublicationDisplayNames(
       // The store and its settings row are the cache; Apollo's would only be
       // a second, unbounded copy.
       fetchPolicy: 'no-cache',
+      // Not part of the feed sync. A failure here (a server that has not
+      // deployed the query yet) must never paint "sync failed" on the feed.
+      context: { noSyncStatus: true },
     });
     for (const row of data?.publicationDisplayNames ?? []) {
       if (row?.name && row.displayName) out[row.name] = row.displayName;

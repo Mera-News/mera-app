@@ -12,6 +12,7 @@ import {
 } from '@/lib/news-harness/feedback-tree';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { displayPublicationName } from '@/lib/stores/publication-display-store';
 import { getAiAccess } from '@/lib/stores/subscription-store';
 
 export interface FeedbackLeafDeps {
@@ -72,7 +73,8 @@ export function performFeedbackLeaf(node: FeedbackTreeNode, pathIds: string[], d
             d.closeThen(() =>
                 d.showInfo(
                     d.chrome('nudgeSubscribe', 'Subscribing unlocks full articles', {
-                        publication: d.context.publicationName ?? '',
+                        // What the toast SAYS; `d.context` keeps the raw key.
+                        publication: displayPublicationName(d.context.publicationName ?? ''),
                     }),
                 ),
             );

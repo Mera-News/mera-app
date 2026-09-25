@@ -16,8 +16,11 @@
 //    batched call, at most PUBLICATION_DISPLAY_BATCH_MAX per call.
 //  - The map is cached per language by the `load`/`save` ports (the settings
 //    table), so it shows instantly on launch and survives being offline. A
-//    cache older than PUBLICATION_DISPLAY_REFRESH_MS is shown AND refreshed,
-//    which is how a name the server translated later reaches the app.
+//    cache older than PUBLICATION_DISPLAY_REFRESH_MS is shown, and each name
+//    is refreshed the next time it is DISPLAYED, never eagerly at launch:
+//    before sign-in there is no session, and an UNAUTHENTICATED answer feeds
+//    the auth-failure breaker. That refresh is how a name the server
+//    translated later reaches the app.
 //  - A language switch drops the map, loads that language's cache and
 //    refetches every name seen this session in the new language.
 //
@@ -86,6 +89,8 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
   const seen = new Set<string>();
   /** Names waiting for the next call, in the current language. */
   let pending = new Set<string>();
+  /** Cached names older than the refresh window, refreshed when next shown. */
+  let stale = new Set<string>();
   let timer: ReturnType<typeof setTimeout> | null = null;
   let inFlight = false;
   let failures = 0;
@@ -140,9 +145,14 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
       names: {},
 
       request: (name) => {
-        if (!name || get().names[name] !== undefined) return;
-        if (pending.has(name)) return;
-        if (seen.has(name) && get().language !== null) return;
+        if (!name || pending.has(name)) return;
+        if (get().names[name] !== undefined) {
+          if (!stale.has(name)) return;
+          stale.delete(name);
+        } else if (seen.has(name) && get().language !== null) {
+          // In flight, or failed and waiting on its backoff retry.
+          return;
+        }
         seen.add(name);
         pending.add(name);
         schedule();
@@ -165,9 +175,11 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
         // Switched again while the cache loaded: that call owns the store now.
         if (get().language !== language) return;
         const names = cached?.names ?? {};
-        const stale = cached ? Date.now() - cached.savedAt > PUBLICATION_DISPLAY_REFRESH_MS : false;
-        pending = new Set(Array.from(seen).filter((n) => names[n] === undefined));
-        if (stale) for (const n of Object.keys(names)) pending.add(n);
+        const expired = cached ? Date.now() - cached.savedAt > PUBLICATION_DISPLAY_REFRESH_MS : false;
+        // Names already shown this session are fetched now (the session is
+        // live); every other expired entry waits until it is displayed.
+        pending = new Set(Array.from(seen).filter((n) => names[n] === undefined || expired));
+        stale = expired ? new Set(Object.keys(names).filter((n) => !pending.has(n))) : new Set();
         set({ names });
         schedule();
       },
@@ -192,8 +204,10 @@ export function makeUseDisplayPublication(store: PublicationDisplayStore) {
   function useDisplay(name: string | null | undefined): string | null | undefined;
   function useDisplay(name: string | null | undefined): string | null | undefined {
     const display = store((s) => (name ? s.names[name] : undefined));
+    // On every name (a stale cached one is refreshed once); `request` is
+    // idempotent, so a settled name costs nothing and cannot loop.
     useEffect(() => {
-      if (name && display === undefined) store.getState().request(name);
+      if (name) store.getState().request(name);
     }, [name, display]);
     return display ?? name;
   }

@@ -68,6 +68,9 @@ describe('publication-display-service', () => {
       const call = mockQuery.mock.calls[0][0];
       expect(call.variables).toEqual({ language: 'zh-CN', names: ['人民日报'] });
       expect(call.fetchPolicy).toBe('no-cache');
+      // Not part of the feed sync: a failure (a server without the query yet)
+      // must never paint the feed-wide "sync failed" banner.
+      expect(call.context).toEqual(expect.objectContaining({ noSyncStatus: true }));
     });
 
     it('splits more than 200 names into several calls', async () => {
