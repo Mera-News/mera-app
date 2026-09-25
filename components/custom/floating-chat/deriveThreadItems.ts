@@ -960,7 +960,11 @@ function mergeRepeatedSteps(steps: AgentStep[]): AgentStep[] {
 function bubbleCarries(content: string, question: string): boolean {
   const norm = (t: string) => t.toLowerCase().replace(/\s+/g, ' ').replace(/[?.!\s]+$/, '').trim();
   const q = norm(question);
-  return q.length > 0 && norm(content).includes(q);
+  if (q.length > 0 && norm(content).includes(q)) return true;
+  // THE SAME QUESTION IN OTHER WORDS (ux2 batch 25, D5): "Which Newcastle did
+  // you mean?" in the bubble over "Which Newcastle is home?" on the card read
+  // as asking twice. A bubble that ENDS on a question is asking this one.
+  return /\?\s*$/.test(content.trim());
 }
 
 /**

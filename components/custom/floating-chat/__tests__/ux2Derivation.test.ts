@@ -231,3 +231,24 @@ describe('ux2 batch 25 F7: a refused proposal draws no card', () => {
     expect(kindsOf(items)).toContain('proposal-card');
   });
 });
+
+describe('ux2 batch 25 D5: the question shows once', () => {
+  const askNewcastle: ToolCallRecord = {
+    id: 'a0', name: 'ask_choice', status: 'done', result: { awaiting: 'user' },
+    input: { question: 'Which Newcastle is home?', options: ['Newcastle, NSW', 'Newcastle upon Tyne'] },
+  };
+  const card = (content: string) =>
+    derive([
+      { id: 'u1', role: 'user', content: 'I live in Newcastle' },
+      { id: 'a1', role: 'assistant', content, toolCalls: [askNewcastle] },
+    ]).find((i) => i.kind === 'ask-choice-card');
+
+  it('drops the card title when the bubble already asks a question in other words', () => {
+    const c = card('Which Newcastle did you mean?');
+    expect(c && c.kind === 'ask-choice-card' && c.question).toBeNull();
+  });
+  it('keeps the title when the bubble asks nothing', () => {
+    const c = card('Got it, Newcastle.');
+    expect(c && c.kind === 'ask-choice-card' && c.question).toBe('Which Newcastle is home?');
+  });
+});
