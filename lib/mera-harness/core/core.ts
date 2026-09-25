@@ -262,19 +262,33 @@ export function reconcilePlaceChain(
 /** Pair each chip with the structured value it stands for. Matched by content,
  *  not position: positional pairing silently mis-binds the moment the model
  *  reorders its own options. Unmatched options carry a null payload rather than
- *  a wrong one. */
+ *  a wrong one.
+ *
+ *  The MOST SPECIFIC match wins, not the first: "Newcastle" is inside
+ *  "Newcastle-under-Lyme", and a first-hit match bound that chip to Newcastle,
+ *  New South Wales (ux2 batch 27). */
 export function bindChoicePayloads(
   options: string[],
   candidates: Place[],
 ): { text: string; payload: unknown }[] {
   return options.map((text) => {
     const lower = text.toLowerCase();
-    const hit = candidates.find(
-      (c) =>
-        (c.neighbourhood && lower.includes(c.neighbourhood.toLowerCase())) ||
-        lower.includes(c.locality.toLowerCase()),
-    );
-    return { text, payload: hit ?? null };
+    // Score = the characters of the option this candidate's names account
+    // for, so district plus city beats city alone, and a longer city beats a
+    // shorter one it contains. Ties keep the earlier candidate.
+    let hit: Place | null = null;
+    let best = 0;
+    for (const c of candidates) {
+      const score = [c.neighbourhood, c.locality]
+        .map((name) => name?.toLowerCase())
+        .filter((n): n is string => !!n && lower.includes(n))
+        .reduce((sum, n) => sum + n.length, 0);
+      if (score > best) {
+        hit = c;
+        best = score;
+      }
+    }
+    return { text, payload: hit };
   });
 }
 
