@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text';
 import type { ExploreScope } from '@/lib/explore/scopes';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, type ListRenderItem } from 'react-native';
 
@@ -79,6 +79,17 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
         },
         [onSelect],
     );
+
+    // Keep the SELECTED chip on screen: a swipe (ux2 B3) can select a scope
+    // whose chip is scrolled off, which would leave the row showing a
+    // different chip as the current one. Only on change; `viewPosition` 0.5
+    // centres it. A not-yet-measured index falls back to a rough offset.
+    const listRef = useRef<FlatList<ChipItem>>(null);
+    useEffect(() => {
+        const index = data.findIndex((item) => item.id === selectedId);
+        if (index < 0) return;
+        listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+    }, [selectedId, data]);
 
     const handleRemove = useCallback(
         (scope: ExploreScope) => {
@@ -193,8 +204,12 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
 
     return (
         <FlatList
+            ref={listRef}
             horizontal
             data={data}
+            onScrollToIndexFailed={({ averageItemLength, index }) =>
+                listRef.current?.scrollToOffset({ offset: averageItemLength * index, animated: true })
+            }
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}

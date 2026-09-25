@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { act, fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 // The animated gradient backdrop is pure decoration and asserts nothing here.
@@ -96,6 +96,18 @@ jest.mock('../ScopeArticleList', () => {
         );
     };
     return { __esModule: true, default: ScopeArticleListStub };
+});
+
+let mockSwipe: any = null;
+jest.mock('@/components/custom/for-you/SwipeTabs', () => {
+    const { View } = require('react-native');
+    return {
+        __esModule: true,
+        default: (p: any) => {
+            mockSwipe = p;
+            return <View testID="swipe-tabs">{p.children}</View>;
+        },
+    };
 });
 
 const mockChipRow = jest.fn();
@@ -635,5 +647,30 @@ describe('ExploreScreen — search results overlay (Item 12a)', () => {
         expect(queryByTestId('explore-search-overlay')).toBeNull();
         expect(mockListMount).toHaveBeenCalledTimes(1);
         expect(getByTestId('scope-article-list')).toBeTruthy();
+    });
+});
+
+// ux2 B3: swipe left/right between the scopes (the "+" chip is not a scope).
+describe('ExploreScreen: swipe between scopes', () => {
+    it('wraps the article list in the swipe container, sized to the scopes', async () => {
+        const r = render(<ExploreScreen />);
+        await waitFor(() => expect(mockSwipe).not.toBeNull());
+        const scopes = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0].scopes;
+        expect(mockSwipe.count).toBe(scopes.length);
+        expect(scopes.some((s: any) => s.id === 'add-places')).toBe(false);
+        const list = r.getByTestId('scope-article-list');
+        let inSwipe = false;
+        for (let p: any = list.parent; p; p = p.parent) if (p.props?.testID === 'swipe-tabs') inSwipe = true;
+        expect(inSwipe).toBe(true);
+    });
+
+    it('a swipe selects the neighbouring scope, through the same path as a tap', async () => {
+        const r = render(<ExploreScreen />);
+        await waitFor(() => expect(mockSwipe).not.toBeNull());
+        const scopes = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0].scopes;
+        expect(scopes.length).toBeGreaterThanOrEqual(2);
+        await act(async () => mockSwipe.onIndexChange(1));
+        await waitFor(() => expect(r.getByTestId('scope-article-list').props.accessibilityLabel).toBe(scopes[1].id));
+        expect(mockSwipe.index).toBe(1);
     });
 });

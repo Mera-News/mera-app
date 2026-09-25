@@ -27,14 +27,20 @@ jest.mock('expo-router', () => ({
 // RN's internal horizontal-ScrollView native-component file, so rendering a real
 // FlatList throws "Unexpected token 'export'". A Proxy over the actual module
 // keeps every other RN export lazy (our ui mocks read View/Text/Pressable).
+const mockScrollToIndex = jest.fn();
 jest.mock('react-native', () => {
     const actual = jest.requireActual('react-native');
     const ReactLib = require('react');
     return new Proxy(actual, {
         get(target, prop) {
             if (prop === 'FlatList') {
-                return ({ data, renderItem, keyExtractor }: any) =>
-                    ReactLib.createElement(
+                // forwardRef so the row's scroll-into-view can be observed.
+                return ReactLib.forwardRef(({ data, renderItem, keyExtractor }: any, ref: any) => {
+                    ReactLib.useImperativeHandle(ref, () => ({
+                        scrollToIndex: (a: unknown) => mockScrollToIndex(a),
+                        scrollToOffset: () => {},
+                    }));
+                    return ReactLib.createElement(
                         ReactLib.Fragment,
                         null,
                         (data ?? []).map((item: any, index: number) =>
@@ -45,6 +51,7 @@ jest.mock('react-native', () => {
                             ),
                         ),
                     );
+                });
             }
             return (target as any)[prop];
         },
@@ -183,5 +190,17 @@ describe('ScopeChipRow — long-press to reveal "×" (Item 18)', () => {
         fireEvent(getByText('France'), 'longPress');
         fireEvent(getByText('India'), 'longPress');
         expect(getAllByLabelText('explore.removeScope')).toHaveLength(1);
+    });
+});
+
+// ux2 B3: a swipe can select a scope whose chip is off-screen; the row scrolls
+// it into view, like the Dashboard pills do.
+describe('ScopeChipRow: scroll-into-view', () => {
+    it('scrolls the selected chip into view when the selection changes', () => {
+        mockScrollToIndex.mockClear();
+        const r = render(<ScopeChipRow scopes={scopes} selectedId={scopes[0].id} onSelect={jest.fn()} onRemove={jest.fn()} />);
+        mockScrollToIndex.mockClear();
+        r.rerender(<ScopeChipRow scopes={scopes} selectedId={scopes[scopes.length - 1].id} onSelect={jest.fn()} onRemove={jest.fn()} />);
+        expect(mockScrollToIndex).toHaveBeenCalledWith(expect.objectContaining({ index: scopes.length - 1, animated: true }));
     });
 });
