@@ -253,6 +253,8 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
         const body = resolveText(n.body, params);
         const icon = (n.icon as keyof typeof MaterialIcons.glyphMap) || iconForType(n.type);
         const actions = parseJson<NotificationAction[]>(n.actionsJson) ?? [];
+        const chipLabel = (a: NotificationAction) => (a.labelKey ? resolveText(a.labelKey) : a.label ?? a.id);
+        const time = relativeTime(n.createdAt);
 
         // The icon is drawn OVER the row, not inside it: a glyph inside the
         // accessible row led its label ("<glyph>, Fact check ready", captured).
@@ -261,8 +263,18 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
         return (
             <View>
             <Pressable
+                testID={`notification-row-${n.id}`}
                 onPress={() => onRowPress(n)}
                 accessibilityRole="button"
+                // The chips are nested buttons inside this accessible row, so
+                // VoiceOver cannot land on them: each is a named action on the
+                // row instead, running the chip's own handler. Touch is unchanged.
+                accessibilityLabel={[title, body, time].filter(Boolean).join(', ')}
+                accessibilityActions={actions.map((a) => ({ name: `chip:${a.id}`, label: chipLabel(a) }))}
+                onAccessibilityAction={(e) => {
+                    const a = actions.find((x) => `chip:${x.id}` === e.nativeEvent.actionName);
+                    if (a) void onChipPress(n, a);
+                }}
                 className="flex-row px-4 py-3 border-b border-gray-800"
             >
                 <View style={{ width: ROW_ICON }} />
@@ -293,14 +305,14 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                                     className="border border-primary-500 rounded-full px-3 py-1 mr-2 mb-1"
                                 >
                                     <Text className="text-xs" style={{ color: ACCENT }}>
-                                        {a.labelKey ? resolveText(a.labelKey) : a.label ?? a.id}
+                                        {chipLabel(a)}
                                     </Text>
                                 </Pressable>
                             ))}
                         </HStack>
                     ) : null}
                     <Text className="text-xs" style={{ color: 'rgb(115,115,115)' }}>
-                        {relativeTime(n.createdAt)}
+                        {time}
                     </Text>
                 </VStack>
             </Pressable>
