@@ -54,8 +54,7 @@ const TITLE_KEY_BY_ACTION = {
   saved: 'floatingChat.factSavedTitle',
   deleted: 'floatingChat.factDeletedTitle',
   deletePending: 'floatingChat.factDeletePendingTitle',
-  // TODO(ux2 splice): drop the casts once `_ux2-chat-delete-fragments.json` lands.
-  deleteKept: 'floatingChat.factDeleteKept' as 'floatingChat.factDeletedTitle',
+  deleteKept: 'floatingChat.factDeleteKept',
   updated: 'floatingChat.factUpdatedTitle',
 } as const satisfies Record<FactCardAction, string>;
 
@@ -123,10 +122,10 @@ const FactCard: React.FC<FactCardProps> = ({ action, statements, pendingDelete }
             className="rounded-full bg-transparent border border-error-400"
             size="sm"
             style={styles.tapTarget}
-            accessibilityLabel={t('floatingChat.factDeleteRemove' as 'floatingChat.factDeletedTitle')}
+            accessibilityLabel={t('floatingChat.factDeleteRemove')}
           >
             <ButtonText className="text-sm" style={styles.removeText}>
-              {t('floatingChat.factDeleteRemove' as 'floatingChat.factDeletedTitle')}
+              {t('floatingChat.factDeleteRemove')}
             </ButtonText>
           </Button>
           <Pressable
@@ -135,11 +134,11 @@ const FactCard: React.FC<FactCardProps> = ({ action, statements, pendingDelete }
             disabled={busy}
             accessibilityRole="button"
             accessibilityState={{ disabled: busy }}
-            accessibilityLabel={t('floatingChat.factDeleteKeep' as 'floatingChat.factDeletedTitle')}
+            accessibilityLabel={t('floatingChat.factDeleteKeep')}
             style={styles.keepButton}
           >
             <Text size="sm" style={styles.keepText}>
-              {t('floatingChat.factDeleteKeep' as 'floatingChat.factDeletedTitle')}
+              {t('floatingChat.factDeleteKeep')}
             </Text>
           </Pressable>
         </View>
