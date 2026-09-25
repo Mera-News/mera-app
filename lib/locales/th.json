@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "เล่าเรื่องใหม่ให้ฟัง แล้วฉันจะเพิ่มลงในฟีดของคุณ",
     "editFacts": "แก้ไข",
-    "planUsage": "วิเคราะห์วันนี้ {{used}} จาก {{limit}}"
+    "planUsage": "วิเคราะห์วันนี้ {{used}} จาก {{limit}}",
+    "updatingAllFacts": "กำลังอัปเดตข้อเท็จจริงทั้งหมด",
+    "pleaseWait": "โปรดรอสักครู่"
   },
   "facts": {
     "screenTitle": "ข้อเท็จจริงของคุณ",

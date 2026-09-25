@@ -1558,7 +1558,9 @@
     },
     "meraInviteReturning": "Расскажите о чём-то новом, и я добавлю это в вашу ленту.",
     "editFacts": "Изменить",
-    "planUsage": "Сегодня проанализировано {{used}} из {{limit}}"
+    "planUsage": "Сегодня проанализировано {{used}} из {{limit}}",
+    "updatingAllFacts": "Обновление всех фактов",
+    "pleaseWait": "Подождите"
   },
   "facts": {
     "screenTitle": "Ваши факты",

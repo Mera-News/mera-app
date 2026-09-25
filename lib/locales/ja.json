@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "新しいことを教えてください。フィードに追加します。",
     "editFacts": "編集",
-    "planUsage": "今日の分析 {{used}} / {{limit}}"
+    "planUsage": "今日の分析 {{used}} / {{limit}}",
+    "updatingAllFacts": "すべてのファクトを更新中",
+    "pleaseWait": "しばらくお待ちください"
   },
   "facts": {
     "screenTitle": "あなたのファクト",

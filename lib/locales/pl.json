@@ -1556,7 +1556,9 @@
     },
     "meraInviteReturning": "Opowiedz mi o czymś nowym, a dodam to do Twojego kanału.",
     "editFacts": "Edytuj",
-    "planUsage": "{{used}} z {{limit}} przeanalizowanych dziś"
+    "planUsage": "{{used}} z {{limit}} przeanalizowanych dziś",
+    "updatingAllFacts": "Aktualizowanie wszystkich faktów",
+    "pleaseWait": "Proszę czekać"
   },
   "facts": {
     "screenTitle": "Twoje fakty",

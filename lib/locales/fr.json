@@ -1533,7 +1533,9 @@
     },
     "meraInviteReturning": "Parlez-moi de quelque chose de nouveau et je l'ajouterai à votre fil.",
     "editFacts": "Modifier",
-    "planUsage": "{{used}} sur {{limit}} analysés aujourd'hui"
+    "planUsage": "{{used}} sur {{limit}} analysés aujourd'hui",
+    "updatingAllFacts": "Mise à jour de tous les faits",
+    "pleaseWait": "Veuillez patienter"
   },
   "facts": {
     "screenTitle": "Vos faits",

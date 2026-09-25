@@ -1527,7 +1527,9 @@
     },
     "meraInviteReturning": "Hãy kể cho tôi điều gì mới, tôi sẽ thêm vào bảng tin của bạn.",
     "editFacts": "Sửa",
-    "planUsage": "Đã phân tích {{used}}/{{limit}} hôm nay"
+    "planUsage": "Đã phân tích {{used}}/{{limit}} hôm nay",
+    "updatingAllFacts": "Đang cập nhật tất cả thông tin",
+    "pleaseWait": "Vui lòng đợi"
   },
   "facts": {
     "screenTitle": "Thông tin của bạn",

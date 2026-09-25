@@ -1562,7 +1562,9 @@
     },
     "meraInviteReturning": "Розкажіть про щось нове, і я додам це до вашої стрічки.",
     "editFacts": "Редагувати",
-    "planUsage": "Сьогодні проаналізовано {{used}} з {{limit}}"
+    "planUsage": "Сьогодні проаналізовано {{used}} з {{limit}}",
+    "updatingAllFacts": "Оновлення всіх фактів",
+    "pleaseWait": "Зачекайте"
   },
   "facts": {
     "screenTitle": "Ваші факти",

@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "Ceritakan hal baru, nanti saya tambahkan ke feed Anda.",
     "editFacts": "Edit",
-    "planUsage": "{{used}} dari {{limit}} dianalisis hari ini"
+    "planUsage": "{{used}} dari {{limit}} dianalisis hari ini",
+    "updatingAllFacts": "Memperbarui semua fakta",
+    "pleaseWait": "Harap tunggu"
   },
   "facts": {
     "screenTitle": "Fakta Anda",

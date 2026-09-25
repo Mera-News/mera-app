@@ -1528,7 +1528,9 @@
     },
     "meraInviteReturning": "Bana yeni bir şeyden bahset, akışına ekleyeyim.",
     "editFacts": "Düzenle",
-    "planUsage": "Bugün {{limit}} içinden {{used}} analiz edildi"
+    "planUsage": "Bugün {{limit}} içinden {{used}} analiz edildi",
+    "updatingAllFacts": "Tüm bilgiler güncelleniyor",
+    "pleaseWait": "Lütfen bekleyin"
   },
   "facts": {
     "screenTitle": "Bilgilerin",

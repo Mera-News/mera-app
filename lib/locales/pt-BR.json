@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "Me conte algo novo e eu adiciono ao seu feed.",
     "editFacts": "Editar",
-    "planUsage": "{{used}} de {{limit}} analisados hoje"
+    "planUsage": "{{used}} de {{limit}} analisados hoje",
+    "updatingAllFacts": "Atualizando todos os fatos",
+    "pleaseWait": "Aguarde"
   },
   "facts": {
     "screenTitle": "Seus fatos",

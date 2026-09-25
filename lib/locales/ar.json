@@ -1596,7 +1596,9 @@
     },
     "meraInviteReturning": "أخبرني بشيء جديد وسأضيفه إلى موجزك.",
     "editFacts": "تعديل",
-    "planUsage": "{{used}} من {{limit}} تم تحليلها اليوم"
+    "planUsage": "{{used}} من {{limit}} تم تحليلها اليوم",
+    "updatingAllFacts": "جارٍ تحديث كل الحقائق",
+    "pleaseWait": "يُرجى الانتظار"
   },
   "facts": {
     "screenTitle": "حقائقك",

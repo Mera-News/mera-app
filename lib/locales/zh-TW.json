@@ -1527,7 +1527,9 @@
     },
     "meraInviteReturning": "告訴我一些新的興趣，我會把它加進你的動態。",
     "editFacts": "編輯",
-    "planUsage": "今日已分析 {{used}}/{{limit}}"
+    "planUsage": "今日已分析 {{used}}/{{limit}}",
+    "updatingAllFacts": "正在更新所有事實",
+    "pleaseWait": "請稍候"
   },
   "facts": {
     "screenTitle": "你的事實",

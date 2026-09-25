@@ -1756,7 +1756,9 @@
     },
     "meraInviteReturning": "Tell me about something new and I'll add it to your feed.",
     "editFacts": "Edit",
-    "planUsage": "{{used}} of {{limit}} analysed today"
+    "planUsage": "{{used}} of {{limit}} analysed today",
+    "updatingAllFacts": "Updating all facts",
+    "pleaseWait": "Please wait"
   },
   "facts": {
     "screenTitle": "Your facts",

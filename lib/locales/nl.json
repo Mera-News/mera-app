@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "Vertel me iets nieuws, dan voeg ik het toe aan je feed.",
     "editFacts": "Bewerken",
-    "planUsage": "{{used}} van {{limit}} vandaag geanalyseerd"
+    "planUsage": "{{used}} van {{limit}} vandaag geanalyseerd",
+    "updatingAllFacts": "Alle feiten bijwerken",
+    "pleaseWait": "Even geduld"
   },
   "facts": {
     "screenTitle": "Jouw feiten",

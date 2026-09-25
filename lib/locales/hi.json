@@ -1528,7 +1528,9 @@
     },
     "meraInviteReturning": "मुझे कुछ नया बताइए, मैं उसे आपकी फ़ीड में जोड़ दूँगी।",
     "editFacts": "संपादित करें",
-    "planUsage": "आज {{limit}} में से {{used}} का विश्लेषण हुआ"
+    "planUsage": "आज {{limit}} में से {{used}} का विश्लेषण हुआ",
+    "updatingAllFacts": "सभी तथ्य अपडेट हो रहे हैं",
+    "pleaseWait": "कृपया प्रतीक्षा करें"
   },
   "facts": {
     "screenTitle": "आपके तथ्य",

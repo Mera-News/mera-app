@@ -1526,7 +1526,9 @@
     },
     "meraInviteReturning": "새로운 관심사를 알려 주시면 피드에 추가할게요.",
     "editFacts": "편집",
-    "planUsage": "오늘 {{limit}}개 중 {{used}}개 분석"
+    "planUsage": "오늘 {{limit}}개 중 {{used}}개 분석",
+    "updatingAllFacts": "모든 정보 업데이트 중",
+    "pleaseWait": "잠시 기다려 주세요"
   },
   "facts": {
     "screenTitle": "내 정보",
