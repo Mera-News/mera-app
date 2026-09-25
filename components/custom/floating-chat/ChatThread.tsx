@@ -29,6 +29,7 @@ import { PopoverPhaseContext } from './ChatPopover';
 import AgentStepsBox from './AgentStepsBox';
 import ArticleContextCard from './ArticleContextCard';
 import AskChoiceCard from './AskChoiceCard';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
 import ProposalCard from './ProposalCard';
@@ -375,6 +376,12 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         <ConversationContent
           items={displayItems}
           listRef={listRef}
+          // Visibility ticks: TranslatableDynamic translates only once it
+          // measures itself on screen, and waits for a tick to re-measure.
+          // Without these, cards below the fold never translated.
+          onScroll={notifyScrollTick}
+          scrollEventThrottle={16}
+          onContentSizeChange={notifyScrollTick}
           renderItem={renderItem}
           onLoadOlder={onLoadOlder}
           hasOlder={hasOlder}

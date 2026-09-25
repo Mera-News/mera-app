@@ -82,7 +82,10 @@ const Conversation = forwardRef<View, ConversationProps>(function Conversation(
 // ---------------------------------------------------------------------------
 
 export interface ConversationContentProps<T extends { key: string }>
-  extends Pick<FlatListProps<T>, 'ListEmptyComponent'> {
+  extends Pick<
+    FlatListProps<T>,
+    'ListEmptyComponent' | 'onScroll' | 'scrollEventThrottle' | 'onContentSizeChange'
+  > {
   /** Items ordered newest LAST — this component reverses + inverts internally. */
   items: T[];
   renderItem: (item: T) => React.ReactElement | null;
@@ -97,7 +100,19 @@ export interface ConversationContentProps<T extends { key: string }>
 }
 
 function ConversationContentInner<T extends { key: string }>(
-  { items, renderItem, onLoadOlder, hasOlder, isLoadingOlder, header, ListEmptyComponent, listRef }: ConversationContentProps<T>,
+  {
+    items,
+    renderItem,
+    onLoadOlder,
+    hasOlder,
+    isLoadingOlder,
+    header,
+    ListEmptyComponent,
+    listRef,
+    onScroll,
+    scrollEventThrottle,
+    onContentSizeChange,
+  }: ConversationContentProps<T>,
 ) {
   // Inverted FlatList renders data[0] at the bottom. Reverse so the newest item
   // (last in `items`) sits at index 0 and therefore at the bottom of the view.
@@ -124,6 +139,9 @@ function ConversationContentInner<T extends { key: string }>(
       keyExtractor={(item) => item.key}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
+      onScroll={onScroll}
+      scrollEventThrottle={scrollEventThrottle}
+      onContentSizeChange={onContentSizeChange}
       onEndReached={hasOlder && !isLoadingOlder ? onLoadOlder : undefined}
       onEndReachedThreshold={0.4}
       // In an inverted list the "footer" is drawn at the top of the view — the

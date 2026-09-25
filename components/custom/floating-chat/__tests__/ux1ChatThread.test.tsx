@@ -83,6 +83,7 @@ jest.mock('@/lib/stores/cloud-chat-store', () => ({
 
 const mockSubmit = jest.fn();
 const mockScrollToIndex = jest.fn();
+let mockContentProps: Record<string, unknown> = {};
 jest.mock('@/components/ui/chat-ai', () => {
   const R = require('react');
   const RN = require('react-native');
@@ -90,6 +91,7 @@ jest.mock('@/components/ui/chat-ai', () => {
     Conversation: (p: any) => R.createElement(RN.View, null, p.children),
     // Renders the ITEMS, in order, so position in the list is observable.
     ConversationContent: (p: any) => {
+      mockContentProps = p;
       if (p.listRef && typeof p.listRef === 'object') p.listRef.current = { scrollToIndex: mockScrollToIndex };
       return R.createElement(
         RN.View,
@@ -238,5 +240,16 @@ describe('the reply takes over the wait row in place', () => {
   it('a finished reply keeps its own height', () => {
     const { getByTestId } = render(<ChatThread {...props({ items: [reply('a1')] })} />);
     expect(getByTestId('mera-reply-slot').props.style).toBeUndefined();
+  });
+});
+
+
+describe('ux2: off-screen cards get visibility ticks, so they translate', () => {
+  it('wires scroll and content-size changes to the visibility tick', () => {
+    const { notifyScrollTick } = require('@/lib/visibility-tick');
+    render(<ChatThread {...props({ items: [reply('a1')] })} />);
+    expect(mockContentProps.onScroll).toBe(notifyScrollTick);
+    expect(mockContentProps.onContentSizeChange).toBe(notifyScrollTick);
+    expect(mockContentProps.scrollEventThrottle).toBe(16);
   });
 });
