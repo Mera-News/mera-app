@@ -2,7 +2,50 @@ import { recoverCycle } from '@/lib/services/cycle-state-machine';
 import { rescueStalePendingTopicFacts } from '@/lib/database/services/fact-service';
 import { flushPendingDeletes } from '@/lib/database/services/topic-decline-service';
 import { repairUnweightedTopics } from '@/lib/database/services/topic-service';
+import { runPendingComboPass } from '@/lib/database/services/combo-pass-service';
+import logger from '@/lib/logger';
 import { AppScheduler } from '../AppScheduler';
+
+/**
+ * First run in THIS JS context. A kill, a crash and a JS reload all start a new
+ * context, and in every one of them the Profile chat is certainly closed, so
+ * that first run may treat a still-open facts draft as abandoned. On a plain
+ * foreground the chat may legitimately be open, so the draft is not touched.
+ * Deliberately not `coldStart` from the scheduler: that is false on a JS reload,
+ * which closes the chat just the same.
+ */
+let firstRunDone = false;
+
+/** Test seam. */
+export function __resetColdStartLatchForTests(): void {
+  firstRunDone = false;
+}
+
+/**
+ * Resume the combination pass. On the first run, a draft the Profile chat left
+ * open with different facts becomes a pending pass first. Then a pending flag
+ * becomes jobs (cloud) or a refresh (on-device); a pass already queued resumes
+ * on its own once the queue runs.
+ */
+async function resumeComboPass(ctx: { log: (m: string) => void }): Promise<void> {
+  try {
+    if (!firstRunDone) {
+      firstRunDone = true;
+      // Lazy: P9's chat-area module, and it reaches the facts tables.
+      const { recoverOpenFactsDraft } =
+        require('@/lib/services/facts-draft-service') as {
+          recoverOpenFactsDraft: () => Promise<boolean>;
+        };
+      if (await recoverOpenFactsDraft()) ctx.log('facts draft left open with changes');
+    }
+    const outcome = await runPendingComboPass();
+    if (outcome !== 'none') ctx.log(`combination pass: ${outcome}`);
+  } catch (err) {
+    // Never fail recovery over it: the flag stays set and the next foreground
+    // tries again.
+    logger.captureException(err, { tags: { task: 'inference-recover', step: 'combo-pass' } });
+  }
+}
 
 AppScheduler.register({
   name: 'inference-recover',
@@ -47,6 +90,9 @@ AppScheduler.register({
     // component must never own it.
     const committed = await flushPendingDeletes();
     if (committed > 0) ctx.log(`committed ${committed} staged topic deletes`);
+
+    // After the flush, so the pass reads the persona the user actually sees.
+    await resumeComboPass(ctx);
 
     // No ctx.markNoOp(): "nothing to rescue, nothing staged" is the NORMAL
     // state, and suppressing the lastRun stamp on a routine skip turns this

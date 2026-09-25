@@ -28,6 +28,16 @@ jest.mock('@/lib/database/services/topic-service', () => ({
   repairUnweightedTopics: jest.fn(async () => 0),
 }));
 
+jest.mock('@/lib/database/services/combo-pass-service', () => ({
+  runPendingComboPass: jest.fn(async () => 'none'),
+}));
+// P9's module; virtual so this suite does not depend on it existing yet.
+jest.mock(
+  '@/lib/services/facts-draft-service',
+  () => ({ recoverOpenFactsDraft: jest.fn(async () => false) }),
+  { virtual: true },
+);
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
@@ -38,7 +48,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 // Load the task — triggers registration side-effect
-import '../inference-recover-task';
+import { __resetColdStartLatchForTests } from '../inference-recover-task';
 
 // Retrieve mock references after module load
 const { AppScheduler: { register: mockRegister } } = jest.requireMock('@/lib/scheduler/AppScheduler') as any;
@@ -152,6 +162,56 @@ describe('inference-recover-task handler', () => {
   it('succeeds when recoverCycle returns non-idle state', async () => {
     mockRecoverCycle.mockResolvedValue('waiting-for-reason');
     await expect(registeredDef.handler(undefined, makeCtx())).resolves.toBeUndefined();
+  });
+});
+
+describe('inference-recover-task: the combination pass', () => {
+  const { runPendingComboPass } = jest.requireMock(
+    '@/lib/database/services/combo-pass-service',
+  ) as { runPendingComboPass: jest.Mock };
+  const { recoverOpenFactsDraft } = jest.requireMock(
+    '@/lib/services/facts-draft-service',
+  ) as { recoverOpenFactsDraft: jest.Mock };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockRecoverCycle.mockResolvedValue('idle');
+    __resetColdStartLatchForTests();
+  });
+
+  it('cold start: recovers a draft left open by a kill, THEN runs the pending pass', async () => {
+    const order: string[] = [];
+    recoverOpenFactsDraft.mockImplementationOnce(async () => {
+      order.push('draft');
+      return true;
+    });
+    runPendingComboPass.mockImplementationOnce(async () => {
+      order.push('pass');
+      return 'enqueued';
+    });
+
+    await registeredDef.handler(undefined, makeCtx());
+
+    expect(order).toEqual(['draft', 'pass']);
+  });
+
+  it('plain foreground: never touches the draft (the Profile chat may still be open), still resumes the pass', async () => {
+    await registeredDef.handler(undefined, makeCtx()); // cold start
+    jest.clearAllMocks();
+
+    await registeredDef.handler(undefined, makeCtx()); // foreground
+
+    expect(recoverOpenFactsDraft).not.toHaveBeenCalled();
+    expect(runPendingComboPass).toHaveBeenCalledTimes(1);
+  });
+
+  it('a combo failure is reported and never fails the recovery task', async () => {
+    runPendingComboPass.mockRejectedValueOnce(new Error('db busy'));
+    const ctx = makeCtx();
+    await expect(registeredDef.handler(undefined, ctx)).resolves.toBeUndefined();
+    const logger = (jest.requireMock('@/lib/logger') as any).default;
+    expect(logger.captureException).toHaveBeenCalled();
+    expect(ctx.markNoOp).not.toHaveBeenCalled();
   });
 });
 

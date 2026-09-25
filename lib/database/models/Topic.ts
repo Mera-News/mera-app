@@ -19,7 +19,10 @@ export type TopicProvenance =
   | 'exploration'
   // A topic minted when the user taps "Track story" — followed continuously
   // server-side; retired on untrack (see lib/tracking/track-actions.ts).
-  | 'tracked';
+  | 'tracked'
+  // Minted by the deferred combination pass (a fact read against the others).
+  // The pass diffs ONLY these rows; every other provenance is out of its reach.
+  | 'combo';
 
 export default class Topic extends Model {
   static table = 'topics';

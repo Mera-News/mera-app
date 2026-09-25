@@ -8,6 +8,7 @@ const mockRecoverCrashedJobs = jest.fn();
 const mockPruneCompletedJobs = jest.fn();
 const mockPurgeFailedJobs = jest.fn();
 const mockGetActiveTopicGenFactIds = jest.fn();
+const mockCountActiveJobsExcluding = jest.fn();
 
 jest.mock('../../database/services/inference-job-service', () => ({
   dequeueJob: (...args: unknown[]) => mockDequeueJob(...args),
@@ -17,6 +18,21 @@ jest.mock('../../database/services/inference-job-service', () => ({
   pruneCompletedJobs: (...args: unknown[]) => mockPruneCompletedJobs(...args),
   purgeFailedJobs: (...args: unknown[]) => mockPurgeFailedJobs(...args),
   getActiveTopicGenFactIds: (...args: unknown[]) => mockGetActiveTopicGenFactIds(...args),
+  countActiveJobsExcluding: (...args: unknown[]) => mockCountActiveJobsExcluding(...args),
+}));
+
+const mockPrecheckComboJob = jest.fn();
+const mockDropPendingComboJobs = jest.fn();
+const mockFinishComboPassIfDrained = jest.fn();
+jest.mock('../../database/services/combo-pass-service', () => ({
+  precheckComboJob: (...args: unknown[]) => mockPrecheckComboJob(...args),
+  dropPendingComboJobs: (...args: unknown[]) => mockDropPendingComboJobs(...args),
+  finishComboPassIfDrained: (...args: unknown[]) => mockFinishComboPassIfDrained(...args),
+}));
+
+let mockIsConnected: boolean | null = true;
+jest.mock('../../stores/network-store', () => ({
+  useNetworkStore: { getState: () => ({ isConnected: mockIsConnected }) },
 }));
 
 const mockMarkOrphanedFactsAsFailed = jest.fn();
@@ -85,7 +101,8 @@ jest.useFakeTimers();
 
 import { AppState } from 'react-native';
 
-import { inferenceQueue } from '../InferenceQueue';
+import { inferenceQueue, __setJobHandlerForTests } from '../InferenceQueue';
+import { DEFER_BASE_MS } from '../job-defer';
 
 // Helper to build fake job objects
 function makeFakeJob(opts: {
@@ -102,6 +119,8 @@ function makeFakeJob(opts: {
     markRunning: jest.fn().mockResolvedValue(undefined),
     markDone: jest.fn().mockResolvedValue(undefined),
     markFailed: jest.fn().mockResolvedValue(undefined),
+    markUnrunnable: jest.fn().mockResolvedValue(undefined),
+    markDeferred: jest.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -141,6 +160,13 @@ describe('InferenceQueue', () => {
     mockGetFailedJobs.mockResolvedValue([]);
     mockDequeueJob.mockResolvedValue(null);
     mockPurgeFailedJobs.mockResolvedValue(undefined);
+    mockCountActiveJobsExcluding.mockResolvedValue(0);
+    mockPrecheckComboJob.mockResolvedValue('run');
+    mockDropPendingComboJobs.mockResolvedValue(0);
+    mockFinishComboPassIfDrained.mockResolvedValue(false);
+    mockIsConnected = true;
+    inferenceQueue.__resetTypeGatesForTests();
+    __setJobHandlerForTests('topic_combo', undefined);
   });
 
   afterEach(async () => {
@@ -353,7 +379,7 @@ describe('InferenceQueue', () => {
       await flushMicrotasks(25);
 
       expect(job.markRunning).toHaveBeenCalled();
-      expect(mockHandleTopicGenJob).toHaveBeenCalledWith(job.payload);
+      expect(mockHandleTopicGenJob).toHaveBeenCalledWith(job.payload, { jobId: 'j1' });
       expect(job.markDone).toHaveBeenCalledWith({ topics: ['topicA'] });
     });
 
@@ -420,9 +446,12 @@ describe('InferenceQueue', () => {
       await inferenceQueue.start();
       await flushMicrotasks(25);
 
-      expect(job.markFailed).toHaveBeenCalledWith(
+      // Through markUnrunnable, which COUNTS an attempt: plain markFailed never
+      // incremented here, so a rolled-back bundle re-pended the job forever.
+      expect(job.markUnrunnable).toHaveBeenCalledWith(
         expect.stringContaining('Unknown job type: unknown_type'),
       );
+      expect(job.markFailed).not.toHaveBeenCalled();
       expect(mockHandleTopicGenJob).not.toHaveBeenCalled();
     });
 
@@ -784,6 +813,191 @@ describe('InferenceQueue', () => {
         restore();
         addSpy.mockRestore();
       }
+    });
+  });
+
+  describe('topic_combo: pre-check, defer, drop, end of pass', () => {
+    function comboJob(id = 'c1') {
+      return makeFakeJob({ id, jobType: 'topic_combo', payload: { factId: 'f1', passId: 'p1' }, attempts: 0 });
+    }
+    function serveOnce(job: unknown) {
+      let n = 0;
+      mockDequeueJob.mockImplementation(() => {
+        n++;
+        return Promise.resolve(n === 1 ? job : null);
+      });
+    }
+    /** The excludeTypes the loop passed on its most recent dequeue. */
+    function lastExcluded(): unknown {
+      const calls = mockDequeueJob.mock.calls;
+      return calls[calls.length - 1]?.[0]?.excludeTypes;
+    }
+
+    it('pre-check defer: no attempt, no handler, and the TYPE leaves the dequeue', async () => {
+      const handler = jest.fn();
+      __setJobHandlerForTests('topic_combo', handler);
+      mockPrecheckComboJob.mockResolvedValue('defer');
+      const job = comboJob();
+      serveOnce(job);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(job.markRunning).not.toHaveBeenCalled();
+      expect(job.markFailed).not.toHaveBeenCalled();
+      expect(handler).not.toHaveBeenCalled();
+      // Gated out, so a deferred combo job at priority 15 can never sit in
+      // front of priority-20 work.
+      expect(lastExcluded()).toEqual(['topic_combo']);
+    });
+
+    it('post-run 503: markDeferred (attempt given back), never markFailed', async () => {
+      __setJobHandlerForTests(
+        'topic_combo',
+        jest.fn().mockRejectedValue(new Error('E2EE batch failed: 503 Service Unavailable')),
+      );
+      const job = comboJob();
+      serveOnce(job);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(job.markRunning).toHaveBeenCalled();
+      expect(job.markDeferred).toHaveBeenCalledWith(expect.stringContaining('503'));
+      expect(job.markFailed).not.toHaveBeenCalled();
+      expect(lastExcluded()).toEqual(['topic_combo']);
+      expect(mockFinishComboPassIfDrained).not.toHaveBeenCalled();
+    });
+
+    it('offline network failure while confirmed offline also defers', async () => {
+      mockIsConnected = false;
+      __setJobHandlerForTests('topic_combo', jest.fn().mockRejectedValue(new Error('Network request failed')));
+      const job = comboJob();
+      serveOnce(job);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(job.markDeferred).toHaveBeenCalled();
+      expect(job.markFailed).not.toHaveBeenCalled();
+    });
+
+    it('an ordinary combo failure is a normal failed attempt, then checks for the end of the pass', async () => {
+      __setJobHandlerForTests('topic_combo', jest.fn().mockRejectedValue(new Error('parse error')));
+      const job = comboJob();
+      serveOnce(job);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(job.markFailed).toHaveBeenCalledWith('parse error');
+      expect(job.markDeferred).not.toHaveBeenCalled();
+      expect(mockFinishComboPassIfDrained).toHaveBeenCalledTimes(1);
+    });
+
+    it('the gate lifts after the backoff, and a foreground lifts it at once', async () => {
+      mockPrecheckComboJob.mockResolvedValue('defer');
+      serveOnce(comboJob());
+      const listeners: Array<(s: string) => void> = [];
+      const spy = jest
+        .spyOn(AppState, 'addEventListener')
+        .mockImplementation(((_: string, cb: (s: string) => void) => {
+          listeners.push(cb);
+          return { remove: jest.fn() };
+        }) as never);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+      expect(lastExcluded()).toEqual(['topic_combo']);
+
+      listeners.forEach((cb) => cb('active'));
+      await flushMicrotasks(40);
+      expect(lastExcluded()).toEqual([]);
+
+      spy.mockRestore();
+    });
+
+    it('the gate expires on its own after the backoff', async () => {
+      mockPrecheckComboJob.mockResolvedValue('defer');
+      serveOnce(comboJob());
+      const now = Date.now();
+      const clock = jest.spyOn(Date, 'now').mockReturnValue(now);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+      expect(lastExcluded()).toEqual(['topic_combo']);
+
+      clock.mockReturnValue(now + DEFER_BASE_MS + 1);
+      inferenceQueue.notify();
+      await flushMicrotasks(40);
+      expect(lastExcluded()).toEqual([]);
+      clock.mockRestore();
+    });
+
+    it('mode switched to on-device: drops the pass and runs the end-of-pass check', async () => {
+      const handler = jest.fn();
+      __setJobHandlerForTests('topic_combo', handler);
+      mockPrecheckComboJob.mockResolvedValue('drop');
+      const job = comboJob();
+      serveOnce(job);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(mockDropPendingComboJobs).toHaveBeenCalledTimes(1);
+      expect(mockFinishComboPassIfDrained).toHaveBeenCalledTimes(1);
+      expect(handler).not.toHaveBeenCalled();
+      expect(job.markRunning).not.toHaveBeenCalled();
+    });
+
+    it('a completed combo job passes its own job id to the handler and checks the end of the pass', async () => {
+      const handler = jest.fn().mockResolvedValue({ applied: 1 });
+      __setJobHandlerForTests('topic_combo', handler);
+      const job = comboJob('c9');
+      serveOnce(job);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(handler).toHaveBeenCalledWith(job.payload, { jobId: 'c9' });
+      expect(job.markDone).toHaveBeenCalledWith({ applied: 1 });
+      expect(mockFinishComboPassIfDrained).toHaveBeenCalledTimes(1);
+    });
+
+    it('a non-combo job never runs the combo pre-check or end-of-pass check', async () => {
+      mockHandleTopicGenJob.mockResolvedValue({});
+      serveOnce(makeFakeJob({ id: 't', jobType: 'topic_gen', payload: { factId: 'f1' } }));
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(mockPrecheckComboJob).not.toHaveBeenCalled();
+      expect(mockFinishComboPassIfDrained).not.toHaveBeenCalled();
+    });
+
+    it('onDrain ignores combo jobs: it asks for NON-combo work only', async () => {
+      const cb = jest.fn();
+      inferenceQueue.onDrain(cb);
+      mockCountActiveJobsExcluding.mockResolvedValue(0);
+      serveOnce(comboJob());
+      mockPrecheckComboJob.mockResolvedValue('defer');
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(mockCountActiveJobsExcluding).toHaveBeenCalledWith(['topic_combo']);
+      expect(cb).toHaveBeenCalledTimes(1);
+    });
+
+    it('onDrain waits while non-combo work remains', async () => {
+      const cb = jest.fn();
+      inferenceQueue.onDrain(cb);
+      mockCountActiveJobsExcluding.mockResolvedValue(2);
+
+      await inferenceQueue.start();
+      await flushMicrotasks(40);
+
+      expect(cb).not.toHaveBeenCalled();
     });
   });
 });
