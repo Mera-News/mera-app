@@ -105,11 +105,23 @@ jest.mock('@/components/custom/GlassSurface', () => ({
 }));
 jest.mock('@/components/custom/notifications/NotificationBellButton', () => mockStub('bell'));
 jest.mock('@/components/custom/for-you/DashboardEmptyState', () => mockStub('empty-state'));
+let mockSwipe: any = null;
+jest.mock('@/components/custom/for-you/SwipeTabs', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: (p: any) => {
+      mockSwipe = p;
+      return <View testID="swipe-tabs">{p.children}</View>;
+    },
+  };
+});
 jest.mock('@/components/custom/for-you/ForYouSubTabs', () => {
   const { Pressable, Text, View } = require('react-native');
   const keys = ['feed', 'stories', 'saved', 'factChecks', 'history'];
   return {
     __esModule: true,
+    FOR_YOU_SUB_TAB_ORDER: keys,
     default: ({ onSelect, bleed }: any) => (
       <View testID="subtabs" bleed={bleed}>
         {keys.map((k) => (
@@ -343,5 +355,22 @@ describe('Dashboard header', () => {
       .findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string')
       .map((n: any) => n.props.testID as string);
     expect(ids.indexOf('stats-dropdown-layer')).toBeGreaterThan(ids.indexOf('dashboard-header'));
+  });
+
+  // ux2 B3: swipe left/right between the pills, on the content only.
+  it('wraps the sub-tab content, not the header, in the swipe container, in pill order', () => {
+    render(<ForYouScreen />);
+    const swipe = screen.getByTestId('swipe-tabs');
+    for (let p: any = swipe.parent; p; p = p.parent) expect(p.props?.testID).not.toBe('dashboard-header');
+    expect(swipe.findAll((n: any) => n.props?.testID === 'dashboard-feed-content').length).toBeGreaterThan(0);
+    expect(mockSwipe.count).toBe(5);
+    expect(mockSwipe.index).toBe(0);
+  });
+
+  it('a swipe selects the neighbouring pill through the same path as a tap', () => {
+    render(<ForYouScreen />);
+    act(() => mockSwipe.onIndexChange(2));
+    expect(mockSwipe.index).toBe(2);
+    expect(screen.getByTestId('dashboard-saved-content')).toBeTruthy();
   });
 });

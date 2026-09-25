@@ -24,7 +24,8 @@ import {
 } from '@/components/custom/GlassSurface';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import DashboardEmptyState from '@/components/custom/for-you/DashboardEmptyState';
-import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
+import ForYouSubTabs, { FOR_YOU_SUB_TAB_ORDER, type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
+import SwipeTabs from '@/components/custom/for-you/SwipeTabs';
 import { StatusDropdownLayer, StatusDropdownProvider } from '@/components/custom/for-you/status-dropdown';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
@@ -504,7 +505,15 @@ const MeraNewsScreen: React.FC = () => {
 
             {/* Keep-mounted sub-tab content — rendered FIRST so the absolute
                 collapsing header paints on top of it. */}
-            <View style={{ flex: 1 }}>
+            {/* Swipe left/right between the pills (ux2 B3): the CONTENT only,
+                never the header, whose pill row scrolls horizontally itself. A
+                swipe selects through `selectSubTab`, the same path as a tap. */}
+            <SwipeTabs
+                index={FOR_YOU_SUB_TAB_ORDER.indexOf(activeSubTab)}
+                count={FOR_YOU_SUB_TAB_ORDER.length}
+                onIndexChange={(i) => selectSubTab(FOR_YOU_SUB_TAB_ORDER[i])}
+                testID="dashboard-swipe-tabs"
+            >
                 {/* Feed — the list handles its own top padding (contentContainer)
                     so it can scroll under the collapsing header. */}
                 <View style={{ flex: 1, display: activeSubTab === 'feed' ? 'flex' : 'none' }} testID="dashboard-feed-content">
@@ -600,7 +609,7 @@ const MeraNewsScreen: React.FC = () => {
                     </View>
                 )}
 
-            </View>
+            </SwipeTabs>
 
             {/* Status-bar scrim — covers the Dynamic Island/clock/battery region
                 so content is never visible behind it once the collapsing

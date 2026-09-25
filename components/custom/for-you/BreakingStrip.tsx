@@ -8,7 +8,10 @@ import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
+// RNGH's ScrollView, not RN's: the Dashboard's tab swipe (SwipeTabs) waits
+// for it through `useSwipeTabsBlocker`, so the strip scrolls on its own.
+import { ScrollView } from 'react-native-gesture-handler';
+import { useSwipeTabsBlocker } from './SwipeTabs';
 
 const RED = '#EF4444'; // error/red accent
 
@@ -40,6 +43,7 @@ interface BreakingStripProps {
  */
 const BreakingStrip: React.FC<BreakingStripProps> = ({ items, onPressItem }) => {
   const { t } = useTranslation();
+  const swipeBlocker = useSwipeTabsBlocker();
   if (items.length === 0) return null;
 
   const cards = items.map(({ data }) => {
@@ -77,6 +81,7 @@ const BreakingStrip: React.FC<BreakingStripProps> = ({ items, onPressItem }) => 
     <Box className="mb-2">
       {items.length > 1 ? (
         <ScrollView
+          ref={swipeBlocker ?? undefined}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingRight: 8 }}

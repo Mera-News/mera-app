@@ -34,6 +34,18 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
   };
 });
 
+// The strip's scroller is RNGH's ScrollView, so the Dashboard's tab swipe can
+// wait for it. Mocked to a View carrying its props.
+jest.mock('react-native-gesture-handler', () => {
+  const { View } = require('react-native');
+  const R = require('react');
+  return {
+    ScrollView: R.forwardRef((p: any, ref: any) => <View ref={ref} testID="gh-scroll" horizontal={p.horizontal}>{p.children}</View>),
+  };
+});
+const mockBlocker = { current: null };
+jest.mock('../SwipeTabs', () => ({ useSwipeTabsBlocker: () => mockBlocker }));
+
 import BreakingStrip from '../BreakingStrip';
 
 const item = (id: string, title: string): BreakingCardData => ({
@@ -70,5 +82,16 @@ describe('BreakingStrip', () => {
     const flat = Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style;
     expect(flat.maxWidth).toBeGreaterThanOrEqual(320);
     expect(flat.minWidth).toBeGreaterThanOrEqual(260);
+  });
+
+  // ux2 B3: inside the Dashboard's swipe area, the strip must keep scrolling on
+  // its own: its scroller is RNGH's and registers as the swipe's blocker.
+  it('scrolls with RNGH ScrollView registered as the tab swipe blocker', () => {
+    const r = render(
+      <BreakingStrip items={[item('a', 'One'), item('b', 'Two')]} onPressItem={jest.fn()} />,
+    );
+    const scroll = r.getByTestId('gh-scroll');
+    expect(scroll.props.horizontal).toBe(true);
+    expect(mockBlocker.current).not.toBeNull();
   });
 });

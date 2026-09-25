@@ -74,6 +74,9 @@ const TABS: readonly TabDef[] = [
     { key: 'history', icon: 'history', labelKey: 'forYou.subTabHistory' },
 ];
 
+/** The pills' order: the tap row and the swipe (SwipeTabs) step through it. */
+export const FOR_YOU_SUB_TAB_ORDER: readonly ForYouSubTab[] = TABS.map((tab) => tab.key);
+
 /**
  * The For-You sub-tab pill row — `[Overview] [Stories ●n] [Saved] [Fact checks] [History]`.
  * Pill styling is Explore's ScopeChipRow, copied token for token (owner: the
