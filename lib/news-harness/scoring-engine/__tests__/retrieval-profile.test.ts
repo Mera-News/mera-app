@@ -305,3 +305,84 @@ describe('buildRetrievalProfile — per-scope headlineDepthByScope', () => {
     expect(headlineScopes[0]).toEqual({ scope: 'COUNTRY', countryCode: 'IN' });
   });
 });
+
+// ux2: one topic text can live on several facts ("EU AI Act enforcement" x5).
+// The server answers per TEXT, so every duplicate entry after the first only
+// filled a slot under the 200 cap and pushed distinct topics out.
+describe('buildRetrievalProfile — duplicate texts collapse before the cap', () => {
+  it('collapses duplicates by normalised text to ONE entry', () => {
+    const { topics } = buildRetrievalProfile({
+      topics: [
+        topic({ topicId: 'a', text: 'EU AI Act enforcement', weight: 0.5 }),
+        topic({ topicId: 'b', text: 'eu ai act  enforcement ', weight: 0.5 }),
+        topic({ topicId: 'c', text: 'EU AI Act enforcement', weight: 0.5 }),
+        topic({ topicId: 'd', text: 'Dutch housing', weight: 0.5 }),
+      ],
+      locations: [],
+    });
+    expect(topics.map((t) => t.text).sort()).toEqual(['Dutch housing', 'EU AI Act enforcement']);
+  });
+
+  it('keeps the max effective weight and the max limit, on the highest-weight member', () => {
+    const { topics } = buildRetrievalProfile({
+      topics: [
+        topic({ topicId: 'low', text: 'EU AI Act', weight: 0.2, highPriority: true }),
+        topic({ topicId: 'high', text: 'eu ai act', weight: 0.6 }),
+      ],
+      locations: [],
+    });
+    expect(topics).toHaveLength(1);
+    // Representative: the highest-weight member, its id and text (what the
+    // server echoes back and feed-sync maps to an id).
+    expect(topics[0].topicId).toBe('high');
+    expect(topics[0].text).toBe('eu ai act');
+    expect(topics[0].effectiveWeight).toBeCloseTo(0.6, 6);
+    // max(limit(0.2 x1.4)=21, limit(0.6)=34) = 34
+    expect(topics[0].limit).toBe(34);
+  });
+
+  it('the limit is the max even when a lower-weight member has the larger one', () => {
+    const { topics } = buildRetrievalProfile({
+      topics: [
+        topic({ topicId: 'hp', text: 'X', weight: 0.5, highPriority: true }), // limit 38
+        topic({ topicId: 'w', text: 'x', weight: 0.55 }), // limit 32, higher weight
+      ],
+      locations: [],
+    });
+    expect(topics).toHaveLength(1);
+    expect(topics[0].topicId).toBe('w');
+    expect(topics[0].limit).toBe(38);
+  });
+
+  it('ties on weight pick the representative deterministically (text, then id)', () => {
+    const a = buildRetrievalProfile({
+      topics: [topic({ topicId: 'z', text: 'Gaza', weight: 0.5 }), topic({ topicId: 'y', text: 'gaza', weight: 0.5 })],
+      locations: [],
+    }).topics[0];
+    const b = buildRetrievalProfile({
+      topics: [topic({ topicId: 'y', text: 'gaza', weight: 0.5 }), topic({ topicId: 'z', text: 'Gaza', weight: 0.5 })],
+      locations: [],
+    }).topics[0];
+    expect(a).toEqual(b);
+  });
+
+  it('the cap counts DISTINCT texts: 232 topics over 204 texts send all 200 slots distinct', () => {
+    const input: RetrievalTopicInput[] = [];
+    for (let i = 0; i < 204; i++) input.push(topic({ topicId: `t${i}`, text: `topic ${i}`, weight: 0.5 }));
+    // 28 duplicates of one text, at a higher weight so they would have led.
+    for (let i = 0; i < 28; i++) input.push(topic({ topicId: `dup${i}`, text: 'EU AI Act enforcement', weight: 0.9 }));
+    const { topics } = buildRetrievalProfile({ topics: input, locations: [] });
+    expect(topics).toHaveLength(200);
+    expect(new Set(topics.map((t) => t.text.toLowerCase())).size).toBe(200);
+    expect(topics[0].text).toBe('EU AI Act enforcement');
+  });
+
+  it('a negative member does not drag a text out: only positive members are merged', () => {
+    const { topics } = buildRetrievalProfile({
+      topics: [topic({ topicId: 'neg', text: 'X', weight: -0.5 }), topic({ topicId: 'pos', text: 'x', weight: 0.4 })],
+      locations: [],
+    });
+    expect(topics).toHaveLength(1);
+    expect(topics[0].topicId).toBe('pos');
+  });
+});
