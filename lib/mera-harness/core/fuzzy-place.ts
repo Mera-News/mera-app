@@ -157,7 +157,14 @@ export function guardPlaceRungs(
       .filter((v): v is string => typeof v === 'string' && v.length > 0)
       .map(foldPlace),
   );
-  const kept = rest.filter((r) => allowed.has(foldPlace(r)) || userSaidPlace(r, userMessage));
+  // A rung the first one already names goes too: "Porto Santo (Vila Baleira),
+  // Porto Santo, Madeira" was measured on staging, a stutter on the card.
+  const inFirst = ` ${foldPlace(first)} `;
+  const kept = rest.filter(
+    (r) =>
+      (allowed.has(foldPlace(r)) || userSaidPlace(r, userMessage))
+      && !inFirst.includes(` ${foldPlace(r)} `),
+  );
   const out = [first, ...kept].join(', ');
   return out === parts.join(', ') ? statement : out;
 }

@@ -37,3 +37,23 @@ describe('userSaidPlace (ux2 D2 fuzzy district guard)', () => {
     expect(userSaidPlace('  ', msg)).toBe(false);
   });
 });
+
+describe('guardPlaceRungs (ux2 D13)', () => {
+  const { guardPlaceRungs } = require('../fuzzy-place') as typeof import('../fuzzy-place');
+  const VILA = {
+    locality: 'Vila Baleira', admin1: 'Madeira', countryCode: 'PT', countryName: 'Portugal', bloc: 'EU' as const,
+    userTerm: 'Porto Santo',
+  };
+  const msg = "My girlfriend's parents live in Porto Santo";
+
+  it('drops a rung the first rung already names (measured on staging)', () => {
+    expect(
+      guardPlaceRungs("My girlfriend's parents live in Porto Santo (Vila Baleira), Porto Santo, Madeira, Portugal, EU", [VILA], msg),
+    ).toBe("My girlfriend's parents live in Porto Santo (Vila Baleira), Madeira, Portugal, EU");
+  });
+
+  it('keeps an ordinary chain whole', () => {
+    expect(guardPlaceRungs('Lives in Porto Santo (Vila Baleira), Madeira, Portugal, EU', [VILA], msg))
+      .toBe('Lives in Porto Santo (Vila Baleira), Madeira, Portugal, EU');
+  });
+});
