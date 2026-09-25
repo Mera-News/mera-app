@@ -2564,7 +2564,11 @@
     "titleAlsoAdd": "¿Añadir esto también?",
     "pendingHint": "Elige una opción de arriba o escribe tu respuesta.",
     "overlapsLabel": "Se solapa con",
-    "overlapsReplaceNote": "Reemplazar lo eliminaría junto con sus temas."
+    "overlapsReplaceNote": "Reemplazar lo eliminaría junto con sus temas.",
+    "replaceAll": "Reemplazar todo",
+    "keepAll": "Conservar todo",
+    "replaceAllA11y": "Reemplazar con las {{count}} sugerencias",
+    "keepAllA11y": "Conservar tus datos y añadir las {{count}} sugerencias"
   },
   "subscriptions": {
     "sectionTitle": "Tus suscripciones",

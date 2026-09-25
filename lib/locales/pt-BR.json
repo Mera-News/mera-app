@@ -2564,7 +2564,11 @@
     "titleAlsoAdd": "Adicionar isto também?",
     "pendingHint": "Escolha uma opção acima ou digite sua resposta.",
     "overlapsLabel": "Sobrepõe-se a",
-    "overlapsReplaceNote": "Substituir removeria a informação e os temas dela."
+    "overlapsReplaceNote": "Substituir removeria a informação e os temas dela.",
+    "replaceAll": "Substituir tudo",
+    "keepAll": "Manter tudo",
+    "replaceAllA11y": "Substituir pelas {{count}} sugestões",
+    "keepAllA11y": "Manter seus fatos e adicionar as {{count}} sugestões"
   },
   "subscriptions": {
     "sectionTitle": "Suas assinaturas",

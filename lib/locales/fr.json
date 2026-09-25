@@ -2571,7 +2571,11 @@
     "titleAlsoAdd": "Ajouter aussi ceci ?",
     "pendingHint": "Choisis une option ci-dessus ou écris ta réponse.",
     "overlapsLabel": "Recoupe",
-    "overlapsReplaceNote": "Remplacer la supprimerait avec ses sujets."
+    "overlapsReplaceNote": "Remplacer la supprimerait avec ses sujets.",
+    "replaceAll": "Tout remplacer",
+    "keepAll": "Tout garder",
+    "replaceAllA11y": "Remplacer par les {{count}} suggestions",
+    "keepAllA11y": "Garder vos faits et ajouter les {{count}} suggestions"
   },
   "subscriptions": {
     "sectionTitle": "Vos abonnements",

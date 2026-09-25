@@ -1527,7 +1527,11 @@
     "titleAlsoAdd": "Also add this?",
     "pendingHint": "Choose an option above, or type your answer.",
     "overlapsLabel": "Overlaps with",
-    "overlapsReplaceNote": "Replace would remove it and its topics."
+    "overlapsReplaceNote": "Replace would remove it and its topics.",
+    "replaceAll": "Replace all",
+    "keepAll": "Keep all",
+    "replaceAllA11y": "Replace with all {{count}} suggestions",
+    "keepAllA11y": "Keep your facts and add all {{count}} suggestions"
   },
   "conflict": {
     "title": "Possible conflict",

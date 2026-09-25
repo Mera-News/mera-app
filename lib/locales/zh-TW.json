@@ -2565,7 +2565,11 @@
     "titleAlsoAdd": "也加入這則嗎？",
     "pendingHint": "請選擇上方的一個選項，或直接輸入你的回答。",
     "overlapsLabel": "與此重疊",
-    "overlapsReplaceNote": "替換會刪除它及其相關主題。"
+    "overlapsReplaceNote": "替換會刪除它及其相關主題。",
+    "replaceAll": "全部替換",
+    "keepAll": "全部保留",
+    "replaceAllA11y": "以全部 {{count}} 則建議替換",
+    "keepAllA11y": "保留你的資訊並新增全部 {{count}} 則建議"
   },
   "subscriptions": {
     "sectionTitle": "您的訂閱",

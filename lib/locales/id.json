@@ -2564,7 +2564,11 @@
     "titleAlsoAdd": "Tambahkan ini juga?",
     "pendingHint": "Pilih salah satu opsi di atas, atau ketik jawabanmu.",
     "overlapsLabel": "Tumpang tindih dengan",
-    "overlapsReplaceNote": "Mengganti akan menghapusnya beserta topiknya."
+    "overlapsReplaceNote": "Mengganti akan menghapusnya beserta topiknya.",
+    "replaceAll": "Ganti semua",
+    "keepAll": "Simpan semua",
+    "replaceAllA11y": "Ganti dengan semua {{count}} saran",
+    "keepAllA11y": "Simpan fakta Anda dan tambahkan semua {{count}} saran"
   },
   "subscriptions": {
     "sectionTitle": "Langganan Anda",

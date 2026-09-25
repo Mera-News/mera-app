@@ -2564,7 +2564,11 @@
     "titleAlsoAdd": "これも追加しますか？",
     "pendingHint": "上の選択肢から選ぶか、答えを入力してください。",
     "overlapsLabel": "重なる情報",
-    "overlapsReplaceNote": "置き換えると、この情報と関連トピックが削除されます。"
+    "overlapsReplaceNote": "置き換えると、この情報と関連トピックが削除されます。",
+    "replaceAll": "すべて置き換える",
+    "keepAll": "すべて残す",
+    "replaceAllA11y": "{{count}} 件の候補ですべて置き換える",
+    "keepAllA11y": "今の情報を残して {{count}} 件の候補をすべて追加"
   },
   "subscriptions": {
     "sectionTitle": "購読中のメディア",

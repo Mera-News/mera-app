@@ -2566,7 +2566,11 @@
     "titleAlsoAdd": "इसे भी जोड़ें?",
     "pendingHint": "ऊपर से कोई विकल्प चुनें, या अपना जवाब लिखें।",
     "overlapsLabel": "इससे मेल खाता है",
-    "overlapsReplaceNote": "बदलने से यह और इसके विषय हट जाएँगे।"
+    "overlapsReplaceNote": "बदलने से यह और इसके विषय हट जाएँगे।",
+    "replaceAll": "सभी बदलें",
+    "keepAll": "सभी रखें",
+    "replaceAllA11y": "सभी {{count}} सुझावों से बदलें",
+    "keepAllA11y": "अपने तथ्य रखें और सभी {{count}} सुझाव जोड़ें"
   },
   "subscriptions": {
     "sectionTitle": "आपकी सदस्यताएँ",

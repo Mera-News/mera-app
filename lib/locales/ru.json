@@ -2602,7 +2602,11 @@
     "titleAlsoAdd": "Добавить и это?",
     "pendingHint": "Выбери вариант выше или напиши ответ.",
     "overlapsLabel": "Пересекается с",
-    "overlapsReplaceNote": "Замена удалит этот факт и его темы."
+    "overlapsReplaceNote": "Замена удалит этот факт и его темы.",
+    "replaceAll": "Заменить все",
+    "keepAll": "Оставить все",
+    "replaceAllA11y": "Заменить всеми {{count}} предложениями",
+    "keepAllA11y": "Оставить ваши факты и добавить все {{count}} предложения"
   },
   "subscriptions": {
     "sectionTitle": "Ваши подписки",

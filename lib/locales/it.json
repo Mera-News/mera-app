@@ -2564,7 +2564,11 @@
     "titleAlsoAdd": "Aggiungere anche questo?",
     "pendingHint": "Scegli un'opzione qui sopra o scrivi la tua risposta.",
     "overlapsLabel": "Si sovrappone a",
-    "overlapsReplaceNote": "Sostituire la rimuoverebbe insieme ai suoi argomenti."
+    "overlapsReplaceNote": "Sostituire la rimuoverebbe insieme ai suoi argomenti.",
+    "replaceAll": "Sostituisci tutto",
+    "keepAll": "Tieni tutto",
+    "replaceAllA11y": "Sostituisci con tutti i {{count}} suggerimenti",
+    "keepAllA11y": "Tieni i tuoi fatti e aggiungi tutti i {{count}} suggerimenti"
   },
   "subscriptions": {
     "sectionTitle": "I tuoi abbonamenti",

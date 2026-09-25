@@ -2564,7 +2564,11 @@
     "titleAlsoAdd": "Das auch hinzufügen?",
     "pendingHint": "Wähle oben eine Option oder schreib deine Antwort.",
     "overlapsLabel": "Überschneidet sich mit",
-    "overlapsReplaceNote": "Ersetzen würde die Angabe und ihre Themen entfernen."
+    "overlapsReplaceNote": "Ersetzen würde die Angabe und ihre Themen entfernen.",
+    "replaceAll": "Alle ersetzen",
+    "keepAll": "Alle behalten",
+    "replaceAllA11y": "Durch alle {{count}} Vorschläge ersetzen",
+    "keepAllA11y": "Deine Fakten behalten und alle {{count}} Vorschläge hinzufügen"
   },
   "subscriptions": {
     "sectionTitle": "Deine Abos",

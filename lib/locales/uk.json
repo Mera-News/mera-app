@@ -2606,7 +2606,11 @@
     "titleAlsoAdd": "Додати й це?",
     "pendingHint": "Обери варіант вище або напиши відповідь.",
     "overlapsLabel": "Перетинається з",
-    "overlapsReplaceNote": "Заміна видалить цей факт і його теми."
+    "overlapsReplaceNote": "Заміна видалить цей факт і його теми.",
+    "replaceAll": "Замінити всі",
+    "keepAll": "Залишити всі",
+    "replaceAllA11y": "Замінити всіма {{count}} пропозиціями",
+    "keepAllA11y": "Залишити ваші факти й додати всі {{count}} пропозиції"
   },
   "subscriptions": {
     "sectionTitle": "Ваші передплати",

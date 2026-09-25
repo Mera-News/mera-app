@@ -2565,7 +2565,11 @@
     "titleAlsoAdd": "Thêm cả điều này?",
     "pendingHint": "Chọn một tùy chọn ở trên hoặc nhập câu trả lời của bạn.",
     "overlapsLabel": "Trùng với",
-    "overlapsReplaceNote": "Thay thế sẽ xóa thông tin này và các chủ đề của nó."
+    "overlapsReplaceNote": "Thay thế sẽ xóa thông tin này và các chủ đề của nó.",
+    "replaceAll": "Thay thế tất cả",
+    "keepAll": "Giữ tất cả",
+    "replaceAllA11y": "Thay bằng tất cả {{count}} gợi ý",
+    "keepAllA11y": "Giữ thông tin của bạn và thêm tất cả {{count}} gợi ý"
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",

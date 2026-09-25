@@ -2564,7 +2564,11 @@
     "titleAlsoAdd": "Dit ook toevoegen?",
     "pendingHint": "Kies hierboven een optie of typ je antwoord.",
     "overlapsLabel": "Overlapt met",
-    "overlapsReplaceNote": "Vervangen verwijdert het en de onderwerpen ervan."
+    "overlapsReplaceNote": "Vervangen verwijdert het en de onderwerpen ervan.",
+    "replaceAll": "Alles vervangen",
+    "keepAll": "Alles houden",
+    "replaceAllA11y": "Vervangen door alle {{count}} suggesties",
+    "keepAllA11y": "Je feiten houden en alle {{count}} suggesties toevoegen"
   },
   "subscriptions": {
     "sectionTitle": "Je abonnementen",

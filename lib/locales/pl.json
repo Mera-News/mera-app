@@ -2600,7 +2600,11 @@
     "titleAlsoAdd": "Dodać też to?",
     "pendingHint": "Wybierz opcję powyżej albo wpisz odpowiedź.",
     "overlapsLabel": "Pokrywa się z",
-    "overlapsReplaceNote": "Zastąpienie usunie ją razem z jej tematami."
+    "overlapsReplaceNote": "Zastąpienie usunie ją razem z jej tematami.",
+    "replaceAll": "Zastąp wszystko",
+    "keepAll": "Zachowaj wszystko",
+    "replaceAllA11y": "Zastąp wszystkimi {{count}} propozycjami",
+    "keepAllA11y": "Zachowaj swoje fakty i dodaj wszystkie {{count}} propozycje"
   },
   "subscriptions": {
     "sectionTitle": "Twoje subskrypcje",

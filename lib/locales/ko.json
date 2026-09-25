@@ -2564,7 +2564,11 @@
     "titleAlsoAdd": "이것도 추가할까요?",
     "pendingHint": "위에서 옵션을 고르거나 답을 입력하세요.",
     "overlapsLabel": "겹치는 정보",
-    "overlapsReplaceNote": "바꾸면 이 정보와 관련 주제가 삭제돼요."
+    "overlapsReplaceNote": "바꾸면 이 정보와 관련 주제가 삭제돼요.",
+    "replaceAll": "모두 바꾸기",
+    "keepAll": "모두 유지",
+    "replaceAllA11y": "{{count}}개 제안으로 모두 바꾸기",
+    "keepAllA11y": "기존 정보를 유지하고 {{count}}개 제안 모두 추가"
   },
   "subscriptions": {
     "sectionTitle": "구독 중인 매체",

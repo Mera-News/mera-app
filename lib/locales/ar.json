@@ -2646,7 +2646,11 @@
     "titleAlsoAdd": "هل تضيف هذا أيضًا؟",
     "pendingHint": "اختر أحد الخيارات أعلاه، أو اكتب إجابتك.",
     "overlapsLabel": "يتداخل مع",
-    "overlapsReplaceNote": "سيؤدي الاستبدال إلى حذفها مع مواضيعها."
+    "overlapsReplaceNote": "سيؤدي الاستبدال إلى حذفها مع مواضيعها.",
+    "replaceAll": "استبدال الكل",
+    "keepAll": "الإبقاء على الكل",
+    "replaceAllA11y": "الاستبدال بكل الاقتراحات الـ {{count}}",
+    "keepAllA11y": "الإبقاء على حقائقك وإضافة كل الاقتراحات الـ {{count}}"
   },
   "subscriptions": {
     "sectionTitle": "اشتراكاتك",
