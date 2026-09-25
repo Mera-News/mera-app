@@ -6,6 +6,7 @@ import {
   groupTurns,
   inputTokenReport,
   legReport,
+  proposalReport,
   proseReport,
   routerReport,
   skillReport,
@@ -236,5 +237,33 @@ describe('prose', () => {
     ]);
     expect(r.rowsWithProse).toBe(2);
     expect(r.bannedDash).toBe(1);
+  });
+});
+
+describe('proposal expectations (ux2 D8)', () => {
+  const saved = (accepted: string[]) => ({
+    name: 'saveExtractedFacts', argumentsRaw: '{}', parsed: {}, schemaValid: true, unknownTool: false,
+    result: { accepted, rejected: [] },
+  });
+  const expectFor = () => ({
+    routeKind: 'family', skill: 'facts/family', tools: [], legs: 4,
+    proposals: [{ statementMatches: ['porto santo', 'parents'], statementExcludes: ['machico'], kind: 'family', placeChain: null, replaces: null }],
+  });
+
+  it('passes a statement carrying every match and no exclude', () => {
+    const turns = groupTurns([
+      row({ legIndex: 2, callType: 'agent-tool', toolCalls: [saved(["Girlfriend's parents live in Porto Santo (Vila Baleira), Madeira"])] }),
+    ]);
+    const r = proposalReport(turns, expectFor);
+    expect(r).toMatchObject({ expected: 1, met: 1, misses: [] });
+  });
+
+  it('fails a statement carrying an excluded word, however well it matches', () => {
+    const turns = groupTurns([
+      row({ legIndex: 2, callType: 'agent-tool', toolCalls: [saved(["Girlfriend's parents live in Porto Santo, Machico, Madeira"])] }),
+    ]);
+    const r = proposalReport(turns, expectFor);
+    expect(r.met).toBe(0);
+    expect(r.misses).toHaveLength(1);
   });
 });

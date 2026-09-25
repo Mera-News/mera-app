@@ -254,6 +254,58 @@ export function legReport(
 }
 
 // ---------------------------------------------------------------------------
+// Proposal expectations
+// ---------------------------------------------------------------------------
+
+export interface ProposalReport {
+  /** Expected proposals across every scored turn. */
+  expected: number;
+  /** Expectations some OFFERED statement met: every `statementMatches`
+   *  substring present and no `statementExcludes` substring. */
+  met: number;
+  misses: { scriptId: string; turnIndex: number; repeat: number; wanted: string[]; offered: string[] }[];
+}
+
+/**
+ * Reads the statements the fake save ACCEPTED, i.e. after the loop sanitised
+ * them (an invented rung removed, the user's term put first), never the
+ * model's raw arguments: the card shows the sanitised form. Until this existed
+ * no metric read `expect.proposals`, so every fixture's proposal expectation
+ * was inert.
+ */
+export function proposalReport(
+  turns: readonly TurnRows[],
+  expectFor: (scriptId: string, turnIndex: number) => ScriptTurn['expect'] | null,
+): ProposalReport {
+  let expected = 0;
+  let met = 0;
+  const misses: ProposalReport['misses'] = [];
+  for (const t of turns) {
+    const wanted = expectFor(t.scriptId, t.turnIndex)?.proposals ?? [];
+    if (wanted.length === 0) continue;
+    const offered = t.legs.flatMap((l) =>
+      l.toolCalls
+        .filter((c) => c.name === 'saveExtractedFacts')
+        .flatMap((c) => {
+          const r = c.result as { accepted?: unknown } | null;
+          return Array.isArray(r?.accepted) ? r.accepted.filter((x): x is string => typeof x === 'string') : [];
+        }),
+    );
+    for (const w of wanted) {
+      expected += 1;
+      const hit = offered.some((s) => {
+        const lower = s.toLowerCase();
+        return w.statementMatches.every((m) => lower.includes(m))
+          && !(w.statementExcludes ?? []).some((x) => lower.includes(x));
+      });
+      if (hit) met += 1;
+      else misses.push({ scriptId: t.scriptId, turnIndex: t.turnIndex, repeat: t.repeat, wanted: w.statementMatches, offered });
+    }
+  }
+  return { expected, met, misses };
+}
+
+// ---------------------------------------------------------------------------
 // Time to first prose
 // ---------------------------------------------------------------------------
 
