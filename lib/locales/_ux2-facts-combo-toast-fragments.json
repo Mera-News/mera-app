@@ -1,0 +1,123 @@
+{
+  "_comment": "ux2 P5: the persistent progress toast shown while the facts combination pass has topic_combo jobs pending or running (components/custom/toast/FactsComboToast.tsx). Two new keys: profile.updatingAllFacts (the constant title) and profile.pleaseWait (the small line under it). Pure ADD, no --allow-overwrite. The word for facts follows each locale's existing profileHub.facts / facts.screenTitle; the register follows that locale's existing Profile copy. No em dashes, no ellipsis: the bar under the text carries the in-progress signal.",
+  "en": {
+    "profile": {
+      "updatingAllFacts": "Updating all facts",
+      "pleaseWait": "Please wait"
+    }
+  },
+  "ar": {
+    "profile": {
+      "updatingAllFacts": "جارٍ تحديث كل الحقائق",
+      "pleaseWait": "يُرجى الانتظار"
+    }
+  },
+  "de": {
+    "profile": {
+      "updatingAllFacts": "Alle Fakten werden aktualisiert",
+      "pleaseWait": "Bitte warten"
+    }
+  },
+  "es": {
+    "profile": {
+      "updatingAllFacts": "Actualizando todos los hechos",
+      "pleaseWait": "Espera un momento"
+    }
+  },
+  "fr": {
+    "profile": {
+      "updatingAllFacts": "Mise à jour de tous les faits",
+      "pleaseWait": "Veuillez patienter"
+    }
+  },
+  "hi": {
+    "profile": {
+      "updatingAllFacts": "सभी तथ्य अपडेट हो रहे हैं",
+      "pleaseWait": "कृपया प्रतीक्षा करें"
+    }
+  },
+  "id": {
+    "profile": {
+      "updatingAllFacts": "Memperbarui semua fakta",
+      "pleaseWait": "Harap tunggu"
+    }
+  },
+  "it": {
+    "profile": {
+      "updatingAllFacts": "Aggiornamento di tutti i fatti",
+      "pleaseWait": "Attendi"
+    }
+  },
+  "ja": {
+    "profile": {
+      "updatingAllFacts": "すべてのファクトを更新中",
+      "pleaseWait": "しばらくお待ちください"
+    }
+  },
+  "ko": {
+    "profile": {
+      "updatingAllFacts": "모든 정보 업데이트 중",
+      "pleaseWait": "잠시 기다려 주세요"
+    }
+  },
+  "nl": {
+    "profile": {
+      "updatingAllFacts": "Alle feiten bijwerken",
+      "pleaseWait": "Even geduld"
+    }
+  },
+  "pl": {
+    "profile": {
+      "updatingAllFacts": "Aktualizowanie wszystkich faktów",
+      "pleaseWait": "Proszę czekać"
+    }
+  },
+  "pt-BR": {
+    "profile": {
+      "updatingAllFacts": "Atualizando todos os fatos",
+      "pleaseWait": "Aguarde"
+    }
+  },
+  "ru": {
+    "profile": {
+      "updatingAllFacts": "Обновление всех фактов",
+      "pleaseWait": "Подождите"
+    }
+  },
+  "th": {
+    "profile": {
+      "updatingAllFacts": "กำลังอัปเดตข้อเท็จจริงทั้งหมด",
+      "pleaseWait": "โปรดรอสักครู่"
+    }
+  },
+  "tr": {
+    "profile": {
+      "updatingAllFacts": "Tüm bilgiler güncelleniyor",
+      "pleaseWait": "Lütfen bekleyin"
+    }
+  },
+  "uk": {
+    "profile": {
+      "updatingAllFacts": "Оновлення всіх фактів",
+      "pleaseWait": "Зачекайте"
+    }
+  },
+  "vi": {
+    "profile": {
+      "updatingAllFacts": "Đang cập nhật tất cả thông tin",
+      "pleaseWait": "Vui lòng đợi"
+    }
+  },
+  "zh-CN": {
+    "profile": {
+      "updatingAllFacts": "正在更新所有事实",
+      "pleaseWait": "请稍候"
+    }
+  },
+  "zh-TW": {
+    "profile": {
+      "updatingAllFacts": "正在更新所有事實",
+      "pleaseWait": "請稍候"
+    }
+  }
+}

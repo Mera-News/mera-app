@@ -71,12 +71,20 @@ export interface ToastShowOptions {
     placement?: 'top' | 'bottom';
     /** `null` means "until something closes it" — see the persistent lane below. */
     duration?: number | null;
+    /**
+     * `false` turns off swipe-to-dismiss for this card. For a status only its
+     * owner can end (the "Updating all facts" progress toast, closed when the
+     * job count reaches 0): a reader who swiped it away would lose the only
+     * sign the work is still running. `close(id)` still removes it. Default true.
+     */
+    dismissible?: boolean;
     render: (props: ToastRenderProps) => ReactNode;
 }
 
 export interface ToastEntry {
     id: string;
     duration: number | null;
+    dismissible: boolean;
     render: (props: ToastRenderProps) => ReactNode;
     /** Arrival order. The sort is stable on this, never on array position. */
     seq: number;
@@ -178,6 +186,7 @@ export function show(options: ToastShowOptions): string {
         // `undefined` means "not specified" and takes gluestack's old 5000ms
         // default; `null` means persistent and must survive the check.
         duration: options.duration === undefined ? 5000 : options.duration,
+        dismissible: options.dismissible !== false,
         render: options.render,
         seq: nextSeq++,
     };

@@ -195,7 +195,8 @@ function ToastSlot({
     }, [leaving, depth, reduceMotion, opacity, translateY]);
 
     const pan = Gesture.Pan()
-        .enabled(isFront)
+        // A non-dismissible card (a status only its owner ends) never swipes.
+        .enabled(isFront && entry.dismissible)
         // 10pt before the pan claims the gesture. This threshold is the ONLY
         // reason `showUndoToast`'s Undo button still works: a tap never travels
         // far enough to activate, so it reaches the Pressable inside the card.
