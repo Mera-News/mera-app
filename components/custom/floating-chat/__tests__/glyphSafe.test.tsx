@@ -67,3 +67,8 @@ it('the helper does catch an icon inside a labelled button (the check is not vac
   );
   expect(exposedGlyphTexts(UNSAFE_root)).toHaveLength(1);
 });
+
+it('exposedGlyphTexts refuses a tree that drew no glyph, so a scan can never pass vacuously', () => {
+  const { UNSAFE_root } = render(<Text>No icon here</Text>);
+  expect(() => exposedGlyphTexts(UNSAFE_root)).toThrow(/no private-use glyph rendered/);
+});

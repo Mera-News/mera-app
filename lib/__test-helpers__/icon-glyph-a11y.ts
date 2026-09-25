@@ -69,12 +69,20 @@ export function privateUseLabelLeaks(root: any): string[] {
  *  carries `accessible={false}`, `accessibilityElementsHidden` and
  *  `importantForAccessibility="no-hide-descendants"` itself AND no host
  *  ancestor is `accessible`. A labelled button with an icon is therefore a
- *  childless Pressable laid over a hidden visual, never a wrapper. */
+ *  childless Pressable laid over a hidden visual, never a wrapper.
+ *  THROWS when the tree drew no glyph at all: an empty scan always passes. */
 export function exposedGlyphTexts(root: any): string[] {
     const exposed: string[] = [];
     const glyphTexts = root.findAll(
         (n: any) => n.type === 'Text' && PRIVATE_USE.test(textOf(n)),
     );
+    // A scan of a tree that drew no glyph cannot fail, so it is not a check:
+    // the icon mock is missing, or the state under test renders no icon.
+    if (glyphTexts.length === 0) {
+        throw new Error(
+            'exposedGlyphTexts: no private-use glyph rendered. Mock @expo/vector-icons with glyphIconModule() and render a state that draws an icon.',
+        );
+    }
     for (const t of glyphTexts) {
         const hidden = t.props?.accessible === false
             && t.props?.accessibilityElementsHidden === true
