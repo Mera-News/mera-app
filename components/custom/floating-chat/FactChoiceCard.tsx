@@ -309,17 +309,21 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
             {t('factChoice.dismissedTitle')}
           </Text>
           {!stale && (
+            // A 44pt-tall frame around the 32pt pill (ux2 batch 27). The
+            // negative margin keeps the header row the height it was.
             <Pressable
               onPress={handleUndo}
               hitSlop={12}
-              style={styles.undoButton}
+              style={styles.undoFrame}
               accessibilityRole="button"
               accessibilityLabel={t('topicPlan.undo')}
               testID={`fact-choice-undo-${groupIndex}`}
             >
-              <Text size="xs" bold style={styles.undoText}>
-                {t('topicPlan.undo')}
-              </Text>
+              <View style={styles.undoButton} testID={`fact-choice-undo-pill-${groupIndex}`}>
+                <Text size="xs" bold style={styles.undoText}>
+                  {t('topicPlan.undo')}
+                </Text>
+              </View>
             </Pressable>
           )}
         </View>
@@ -542,6 +546,8 @@ const styles = StyleSheet.create({
   // floor for body text. This is the settled state's only prose, so it is the
   // one place that mattered.
   settledSub: { color: 'rgb(200, 200, 200)' },
+  // A number, not a class: NativeWind rem is 14.
+  undoFrame: { minHeight: 44, justifyContent: 'center', marginVertical: -6 },
   undoButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,

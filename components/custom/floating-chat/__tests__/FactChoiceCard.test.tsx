@@ -181,6 +181,16 @@ describe('Skip and Undo', () => {
     focus.mockRestore();
   });
 
+  it('ux2 batch 27: Undo is a 44pt-tall touch frame sized by number, the pill inside it unchanged', () => {
+    const { StyleSheet } = require('react-native');
+    const { getByTestId } = render(<FactChoiceCard {...props} dismissed />);
+    const undo = getByTestId('fact-choice-undo-0');
+    // NativeWind rem is 14, and the pill's own padding measured 32pt tall.
+    expect(StyleSheet.flatten(undo.props.style).minHeight).toBe(44);
+    const pill = getByTestId('fact-choice-undo-pill-0');
+    expect(StyleSheet.flatten(pill.props.style)).toMatchObject({ paddingVertical: 6, borderRadius: 999 });
+  });
+
   it('a STALE dismissed card offers no Undo — its context is gone', () => {
     const { queryByTestId } = render(<FactChoiceCard {...props} dismissed stale />);
     expect(queryByTestId('fact-choice-undo-0')).toBeNull();
