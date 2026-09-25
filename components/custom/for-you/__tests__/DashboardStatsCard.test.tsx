@@ -91,8 +91,6 @@ jest.mock('react-native-reanimated', () => {
     const anim = { duration: () => anim };
     return { __esModule: true, default: { View }, FadeIn: anim, FadeOut: anim, LinearTransition: {} };
 });
-jest.mock('@/components/custom/processing/use-processing-snapshot', () => ({ useProcessingSnapshot: () => ({}) }));
-jest.mock('@/components/custom/processing/ChunkStrip', () => () => null);
 jest.mock('@/lib/stores/selectors', () => ({}));
 jest.mock('../FeedStatusDetails', () => () => null);
 // jest's host views mock measureInWindow as a no-op that never calls back.

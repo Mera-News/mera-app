@@ -81,7 +81,6 @@ import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 import ProcessingArea from '../ProcessingArea';
-import { bucketChunks } from '../ChunkStrip';
 import { PROCESSING_STAGES } from '../processing-stages';
 import {
   PROCESSING_CARD_HEIGHT,
@@ -143,7 +142,6 @@ describe('the card is a fixed-height box, so the STACK has to fit it', () => {
         'labelLineHeight',
         'progressLineHeight',
         'sceneSize',
-        'stripHeight',
       ].sort(),
     );
   });
@@ -197,8 +195,7 @@ describe('ProcessingArea — the strip is NOT here', () => {
   // Two progress bars on one card read as one control drawn twice. The
   // six-stage bar stayed because it is the only element that says how far
   // through the run you are; the strip's counts are already on the progress
-  // line in words. The strip itself still ships and is covered by
-  // ChunkStrip.test.tsx, where FeedStatusPanel still renders it.
+  // line in words. The strip component is gone entirely (ux2 C1).
   it('draws no chunk strip, even with chunks in the snapshot', () => {
     const chunks: ChunkState[] = ['ready', 'failed', 'in-flight', 'queued'];
     render(<ProcessingArea snapshot={snap({ chunks, chunksReady: 1, chunksTotal: 4 })} />);
@@ -212,25 +209,6 @@ describe('ProcessingArea — the strip is NOT here', () => {
     expect(screen.getAllByTestId('processing-stage-bar')).toHaveLength(1);
     // And no second run of segments beneath it.
     expect(screen.queryByTestId('processing-chunk-strip')).toBeNull();
-  });
-});
-
-describe('bucketChunks', () => {
-  it('passes a short run through untouched', () => {
-    expect(bucketChunks(['ready', 'queued'], 24)).toEqual(['ready', 'queued']);
-  });
-
-  it('collapses a long run to exactly the cap, never wrapping to a second row', () => {
-    const many: ChunkState[] = Array.from({ length: 97 }, () => 'ready');
-    expect(bucketChunks(many, 24)).toHaveLength(24);
-  });
-
-  it('lets a problem survive the collapse: a bucket takes its WORST state', () => {
-    // One failed chunk among ninety-five finished ones must still be visible,
-    // or the strip hides the only thing worth looking at.
-    const many: ChunkState[] = Array.from({ length: 96 }, () => 'ready');
-    many[50] = 'failed';
-    expect(bucketChunks(many, 24)).toContain('failed');
   });
 });
 
