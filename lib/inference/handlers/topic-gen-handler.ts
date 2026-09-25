@@ -2,7 +2,6 @@
 // the skill core on cloud and the local engine on device. Combination topics
 // come only from the deferred pass (topic-combo-handler.ts), cloud only.
 
-import { resolveUserLocationFact } from '../../news-harness/persona-management/topic-generation';
 import {
   getFacts,
   updateFact,
@@ -54,29 +53,6 @@ export interface TopicGenPayload {
 
 export interface TopicGenResult {
   topics: string[];
-}
-
-/**
- * DEPRECATE: no longer used by any generation path here (ux2 F1 isolates every
- * run). Kept only while `components/custom/facts/FactsList.tsx` still imports
- * it; delete together with that caller's migration to
- * `generateMoreTopicsForFact`.
- */
-export function buildTopicGenContext(
-  allFacts: Fact[],
-  factId: string,
-): { userLocation: string | null; otherFacts: string[] } {
-  // Shared with the batch flow (news-harness topic-generation) so the two paths
-  // can never disagree about what counts as "where the user lives". This used
-  // to require a byte-identical canonical questionnaire attribute, which the
-  // chat agent does not always mint — see resolveUserLocationFact's header.
-  const userLocation = resolveUserLocationFact(allFacts, { excludeFactId: factId });
-
-  const otherFacts = allFacts
-    .filter((f) => f.id !== factId && f.id !== userLocation?.id)
-    .map((f) => f.statement);
-
-  return { userLocation: userLocation?.statement ?? null, otherFacts };
 }
 
 /**
