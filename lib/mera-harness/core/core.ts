@@ -1262,9 +1262,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         // home or origin turn that question is refused and the leg continues,
         // as is any question after the home card is already offered ("Should
         // I replace your Amsterdam address?", measured the same way).
+        // After a TAPPED place, a BACKGROUND question is refused too (ux2 batch
+        // 28): the NSW tap resumed facts/residence, the model asked "Are you an
+        // expat in Australia, or originally from there?", and the turn ended
+        // with no card. Expat status is added by the loop (addExpatStatus) and
+        // origin is only offered when said, so the question buys nothing. A
+        // question that narrows the tapped place ("Which part?") still asks.
+        const askedText = [question, ...(Array.isArray(args?.options) ? (args.options as unknown[]) : [])]
+          .filter((x): x is string => typeof x === 'string')
+          .join(' ');
+        const backgroundQuestion = /\b(?:expat|originally|born|grew up|from there|where (?:are|were) you from)\b/i.test(askedText);
         if (
           (skillLoaded === 'facts/residence' || skillLoaded === 'facts/origin')
-          && ((lastLookupStatus === 'resolved' && placeCandidates.length === 1) || homeOfferedThisTurn)
+          && (
+            (lastLookupStatus === 'resolved' && placeCandidates.length === 1)
+            || homeOfferedThisTurn
+            || (resumedSkill && tappedPlace !== null && backgroundQuestion)
+          )
         ) {
           const out = {
             error:

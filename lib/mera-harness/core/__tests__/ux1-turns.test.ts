@@ -860,6 +860,33 @@ describe('ux2 batch 27: a place chip shows the chain it stands for', () => {
     expect(state.turn.confirmedPlace).toEqual(place);
   });
 
+  it('batch 28: after a tapped place, a follow-up question is refused and the home is offered', async () => {
+    // Captured on device: the NSW tap resumed facts/residence, the model asked
+    // "Are you an expat in Australia, or originally from there?", and the turn
+    // ended on that question with no card. residence.md asks only an AMBIGUOUS
+    // place; a tapped place is not ambiguous.
+    const { state } = await ask(['Newcastle upon Tyne', 'Newcastle', 'Newcastle-under-Lyme']);
+    const results: { name: string; result: unknown }[] = [];
+    const h = harness([
+      res({ toolCalls: [tc('ask_choice', {
+        question: 'Are you an expat in Australia, or originally from there?',
+        options: ['Expat in Australia', 'Originally from Australia'],
+      })] }),
+      res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: [
+        { statement: 'Lives in Newcastle, New South Wales, Australia', questionnaire_attribute: CANONICAL_LOCATION_KEY },
+      ] })] }),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({
+      state, userMessage: CHAINS[1], deps: h.deps,
+      onLeg: (l) => results.push(...l.toolResults),
+    });
+    expect(state.turn.confirmedPlace).toEqual(NSW);
+    expect(results.find((r) => r.name === 'ask_choice')?.result).toHaveProperty('error');
+    expect(state.turn.pendingChoice).toBeNull();
+    expect(h.saves.flat().map((e) => e.statement)).toContain('Lives in Newcastle, New South Wales, Australia');
+  });
+
   it('distinct chips that each name their country are left as the model wrote them', async () => {
     const options = ['Newcastle upon Tyne, UK', 'Newcastle, Australia'];
     const { chips, persisted } = await ask(options, [TYNE, NSW]);
