@@ -65,6 +65,9 @@ const SECURE_STORE_KEYS = [
   'async_inference_pending_job_privkey',
 ];
 
+/** The better-auth session, the only keys `keepSession` preserves. */
+const SESSION_KEYS = new Set([`${APP_SLUG}_cookie`, `${APP_SLUG}_session_data`]);
+
 /** The only AsyncStorage key the app has ever written (a since-deleted LLM
  *  capability token). Everything else lives in WatermelonDB or the keychain. */
 const ASYNC_STORAGE_KEYS = ['mera.cycle.capabilityToken'];
@@ -112,9 +115,21 @@ export async function hasLocalUserData(): Promise<boolean> {
  *
  * Every step except the final one swallows its own failure: one unreadable
  * keychain item must not stop the database from being wiped.
+ *
+ * `keepSession` is for an ACCOUNT SWITCH, where a different account has just
+ * signed in and the previous one's data is still on the device (the identity
+ * gate's `clearPreviousUserData`). The session keys then belong to the INCOMING
+ * account, so they are the only thing kept; every other step still runs. That
+ * gate used to call `clearAllStores()` alone, which left the previous account's
+ * PIN lock, backup key, staged backup files, E2EE keys and Drive/Intercom/
+ * RevenueCat identities for the next account to inherit. One list, one
+ * exemption: never copy this function for a variant.
  */
-export async function wipeAllLocalUserData(): Promise<void> {
+export async function wipeAllLocalUserData(
+  opts: { keepSession?: boolean } = {},
+): Promise<void> {
   for (const key of SECURE_STORE_KEYS) {
+    if (opts.keepSession && SESSION_KEYS.has(key)) continue;
     try {
       await secureStore.deleteItemAsync(key);
     } catch (err) {

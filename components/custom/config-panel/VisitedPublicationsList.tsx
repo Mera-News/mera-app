@@ -17,6 +17,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import TapPressable from '@/components/custom/cards/TapPressable';
 import { useTranslation } from 'react-i18next';
 import { ListRenderItem, RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
@@ -133,7 +134,9 @@ const VisitedPublicationsList: React.FC<Props> = ({
 
     const renderItem: ListRenderItem<VisitedPublication> = useCallback(
         ({ item }) => (
-            <Pressable onPress={() => handlePublicationPress(item)}>
+            // Opens on a TAP only: a sideways drag (the Dashboard tab swipe)
+            // released over a row is not a press.
+            <TapPressable onPress={() => handlePublicationPress(item)} testID={`visited-row-${item.publicationName}`}>
                 <HStack
                     className="mx-4 mb-2 p-3 items-center"
                     space="md"
@@ -154,7 +157,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     </Box>
                     <MaterialIcons name="chevron-right" size={20} color="#999999" />
                 </HStack>
-            </Pressable>
+            </TapPressable>
         ),
         [handlePublicationPress, t],
     );

@@ -151,3 +151,29 @@ it('sends a scroll tick as the strip scrolls sideways', () => {
   fireEvent.scroll(scroller, { nativeEvent: { contentOffset: { x: 120, y: 0 } } });
   expect(mockNotifyScrollTick).toHaveBeenCalledTimes(1);
 });
+const at = (x: number, y: number) => ({ nativeEvent: { pageX: x, pageY: y } });
+
+// Owner, in prod: a sideways swipe opened an article. A strip card opens on a
+// TAP only (a sideways drag that the strip itself cannot scroll, at its ends,
+// would otherwise open the card under the finger).
+describe('BreakingStrip: a card opens on a tap, never on a drag', () => {
+  const { fireEvent } = require('@testing-library/react-native');
+
+  it('a sideways drag across a card does not open it', () => {
+    const onPressItem = jest.fn();
+    const r = render(<BreakingStrip items={[item('a', 'One')]} onPressItem={onPressItem} />);
+    const card = r.getByRole('button');
+    fireEvent(card, 'pressIn', at(40, 300));
+    fireEvent(card, 'press', at(250, 304));
+    expect(onPressItem).not.toHaveBeenCalled();
+  });
+
+  it('a tap still opens it', () => {
+    const onPressItem = jest.fn();
+    const r = render(<BreakingStrip items={[item('a', 'One')]} onPressItem={onPressItem} />);
+    const card = r.getByRole('button');
+    fireEvent(card, 'pressIn', at(100, 300));
+    fireEvent(card, 'press', at(101, 302));
+    expect(onPressItem).toHaveBeenCalledTimes(1);
+  });
+});

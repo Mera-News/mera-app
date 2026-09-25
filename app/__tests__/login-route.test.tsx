@@ -55,12 +55,14 @@ jest.mock('@/lib/auth-client', () => ({
 // Capture onLoginSuccess so the reauth tests can drive the handler directly.
 // Outside reauth mode the route passes `undefined`, which is itself asserted.
 let mockOnLoginSuccess: ((userId: string) => void) | undefined;
+let mockAllowDeviceSignIn: boolean | undefined;
 jest.mock('@/components/custom/auth/AuthScreen', () => {
     const { View } = require('react-native');
     return {
         __esModule: true,
         default: (props: any) => {
             mockOnLoginSuccess = props.onLoginSuccess;
+            mockAllowDeviceSignIn = props.allowDeviceSignIn;
             return <View testID="auth-screen" />;
         },
     };
@@ -91,6 +93,7 @@ beforeEach(() => {
     mockSession = null;
     mockIsPending = false;
     mockOnLoginSuccess = undefined;
+    mockAllowDeviceSignIn = undefined;
     mockGetSetting.mockResolvedValue(null);
 });
 
@@ -240,5 +243,49 @@ describe('login route — reauth destination', () => {
     it('outside reauth mode AuthScreen gets no onLoginSuccess at all', () => {
         render(<LoginScreen />);
         expect(mockOnLoginSuccess).toBeUndefined();
+    });
+});
+
+// "Sign in without email" proves only that someone holds the phone. On Forgot
+// PIN that is exactly the person the lock is for, and a same-account resume
+// there goes straight to clearPin() + /pin-setup, so the route withholds it.
+describe('login route — device sign-in offer', () => {
+    it('Forgot PIN (reauth=pin) never offers sign-in without email', () => {
+        mockParams = { reauth: 'pin' };
+        render(<LoginScreen />);
+        expect(mockAllowDeviceSignIn).toBe(false);
+    });
+
+    it('a session reauth (reauth=1) offers it', () => {
+        mockParams = { reauth: '1' };
+        render(<LoginScreen />);
+        expect(mockAllowDeviceSignIn).toBe(true);
+    });
+
+    it('a plain visit offers it', () => {
+        render(<LoginScreen />);
+        expect(mockAllowDeviceSignIn).toBe(true);
+    });
+});
+
+// While AuthScreen asks whether to switch to the phone's account (and after
+// the user declines), that account's session must never trigger the shortcut:
+// /logged-in's gate would wipe this device's account without an answer.
+describe('login route — held phone account', () => {
+    const gate = require('@/lib/security/identity-gate');
+    afterEach(() => gate.__resetIdentityStateForTests());
+
+    it("never shortcuts on the held phone account's session", () => {
+        gate.holdAccountSwitch('phone-user');
+        mockSession = { user: { id: 'phone-user' } };
+        render(<LoginScreen />);
+        expect(mockRedirect).not.toHaveBeenCalled();
+    });
+
+    it('still shortcuts for a DIFFERENT account, such as a later email sign-in', () => {
+        gate.holdAccountSwitch('phone-user');
+        mockSession = { user: { id: 'email-user' } };
+        render(<LoginScreen />);
+        expect(mockRedirect).toHaveBeenCalledWith('/logged-in');
     });
 });

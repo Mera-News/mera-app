@@ -127,11 +127,20 @@ export const clearAllStores = async () => {
  * active userId. Reads `cached_user_id` directly from the DB (no Zustand
  * hydration needed, so no race) and wipes all local state when the session
  * belongs to a different user than the one whose data is on-device.
+ *
+ * The FULL wipe, not `clearAllStores()` alone: the database and Zustand are
+ * only part of what an account leaves behind. The keychain (PIN, backup key,
+ * E2EE keys), the staged backup files and the natively held SDK identities
+ * (Drive, Intercom, RevenueCat) would otherwise pass to the incoming account,
+ * whose Drive backup would then upload into the previous account's Drive.
+ * `keepSession` spares only the incoming account's own session cookie. Lazy
+ * require: local-wipe lazy-requires this module back.
  */
 export const clearPreviousUserData = async (newUserId: string): Promise<void> => {
     const { getSetting } = require('../database/services/setting-service');
     const cachedUserId = await getSetting('cached_user_id');
     if (cachedUserId && cachedUserId !== newUserId) {
-        await clearAllStores();
+        const { wipeAllLocalUserData } = require('../security/local-wipe');
+        await wipeAllLocalUserData({ keepSession: true });
     }
 };

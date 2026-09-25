@@ -1,6 +1,6 @@
 import { authClient } from '@/lib/auth-client';
 import { getSetting } from '@/lib/database/services/setting-service';
-import { isIdentitySwitchBlocked } from '@/lib/security/identity-gate';
+import { isAccountSwitchHeld, isIdentitySwitchBlocked } from '@/lib/security/identity-gate';
 import logger from '@/lib/logger';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
@@ -51,6 +51,10 @@ export default function IdentitySwitchWatcher() {
     // Rule 1. Not `!== undefined`: null is the same non-answer.
     if (!sessionUserId) return;
     if (latched) return;
+    // A device sign-in opened this account and the user is still being asked
+    // whether to switch to it (/login is pushed over this layout). Not a
+    // switch yet, so not ours to hand to the gate. See holdAccountSwitch.
+    if (isAccountSwitchHeld(sessionUserId)) return;
     // The failure screen is up and the ids genuinely disagree, which is exactly
     // what this watches for. Navigating there would yank a user out of the one
     // screen that is telling them what happened.

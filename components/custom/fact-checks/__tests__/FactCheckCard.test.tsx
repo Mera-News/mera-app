@@ -360,3 +360,26 @@ it('exposes no icon glyph, and the delete button is childless', () => {
     const b = r.getByTestId('fc-delete-row1');
     expect(b.findAll((n: any) => n !== b && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
 });
+const at = (x: number, y: number) => ({ nativeEvent: { pageX: x, pageY: y } });
+
+// Owner, in prod: a sideways swipe opened an article. The card body opens on a
+// TAP only; a release after a drag past the tap slop is not a press.
+describe('FactCheckCard: opens on a tap, never on a drag', () => {
+    it('a sideways drag across the card does not open it', () => {
+        const onPress = jest.fn();
+        const r = render(<FactCheckCard item={stored()} onPress={onPress} testIDPrefix="fc" />);
+        const body = r.getByTestId('fc-open-row1');
+        fireEvent(body, 'pressIn', at(40, 300));
+        fireEvent(body, 'press', at(250, 304));
+        expect(onPress).not.toHaveBeenCalled();
+    });
+
+    it('a tap still opens it', () => {
+        const onPress = jest.fn();
+        const r = render(<FactCheckCard item={stored()} onPress={onPress} testIDPrefix="fc" />);
+        const body = r.getByTestId('fc-open-row1');
+        fireEvent(body, 'pressIn', at(100, 300));
+        fireEvent(body, 'press', at(103, 302));
+        expect(onPress).toHaveBeenCalledTimes(1);
+    });
+});

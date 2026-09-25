@@ -53,7 +53,8 @@
       "retryFailed": "Kan de server niet bereiken. Controleer je verbinding en probeer het opnieuw.",
       "switchBody": "Van gebruiker wisselen verwijdert permanent alle gegevens van deze gebruiker op dit apparaat. Dit kan niet ongedaan worden gemaakt.",
       "switchConfirm": "Ja, gegevens wissen en van gebruiker wisselen",
-      "switchCancel": "Annuleren"
+      "switchCancel": "Annuleren",
+      "subtitleWithDevice": "We konden je account niet laden. Probeer het opnieuw met e-mail, log in zonder e-mail of log in als een andere gebruiker."
     },
     "contentPolicy": "Inhoudsbeleid",
     "faq": "FAQ",
@@ -83,7 +84,14 @@
     "sourceCode": "Broncode",
     "website": "Website",
     "failedToSendBody": "Kan OTP niet verzenden",
-    "signingYouIn": "Je wordt ingelogd…"
+    "signingYouIn": "Je wordt ingelogd…",
+    "signInWithoutEmail": "Inloggen zonder e-mail",
+    "differentAccount": {
+      "title": "Overschakelen naar het account van deze telefoon?",
+      "body": "Als je inlogt zonder e-mail, wordt het eigen account van deze telefoon geopend, niet het account dat je gebruikte. Alles wat op deze telefoon voor dat account is opgeslagen, wordt gewist. Dit kan niet ongedaan worden gemaakt. Je andere account en het abonnement daarvan blijven veilig, en je kunt er later weer op inloggen.",
+      "continue": "Doorgaan zonder e-mail",
+      "useEmail": "Terug"
+    }
   },
   "account": {
     "pendingTitle": "Account wacht op goedkeuring",

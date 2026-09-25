@@ -2,6 +2,7 @@ import { DIMMED_OPACITY, PRESSED_OPACITY } from '@/components/custom/cards/press
 import { Pressable } from '@/components/ui/pressable';
 import React, { useCallback, useState } from 'react';
 import type { GestureResponderEvent } from 'react-native';
+import { useTapGuard } from './use-tap-guard';
 
 type PressableProps = React.ComponentProps<typeof Pressable>;
 
@@ -16,17 +17,21 @@ export interface PressableCardProps extends Omit<PressableProps, 'style'> {
  * STATIC style: a function `style={({ pressed }) => ...}` on a Pressable is
  * dropped on device in this app (the css-interop wrapper), which silently
  * removed both the pressed feedback and the dimmed treatment of read cards.
+ *
+ * It opens on a TAP only (`useTapGuard`): a release after a sideways drag is
+ * not a press, or the tab swipe and any stray drag opened the article.
  */
 const PressableCard = React.forwardRef<React.ComponentRef<typeof Pressable>, PressableCardProps>(
-    function PressableCard({ dimmed = false, onPressIn, onPressOut, ...rest }, ref) {
+    function PressableCard({ dimmed = false, onPressIn, onPressOut, onPress, ...rest }, ref) {
         const [pressed, setPressed] = useState(false);
-        const handleIn = useCallback(
+        const markIn = useCallback(
             (e: GestureResponderEvent) => {
                 setPressed(true);
                 onPressIn?.(e);
             },
             [onPressIn],
         );
+        const tap = useTapGuard(onPress, markIn);
         const handleOut = useCallback(
             (e: GestureResponderEvent) => {
                 setPressed(false);
@@ -40,7 +45,8 @@ const PressableCard = React.forwardRef<React.ComponentRef<typeof Pressable>, Pre
             <Pressable
                 ref={ref}
                 {...rest}
-                onPressIn={handleIn}
+                onPress={tap.onPress}
+                onPressIn={tap.onPressIn}
                 onPressOut={handleOut}
                 style={opacity === 1 ? undefined : { opacity }}
             />

@@ -53,7 +53,8 @@
       "retryFailed": "Der Server war nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
       "switchBody": "Beim Wechsel des Benutzers werden alle Daten dieses Benutzers auf diesem Gerät dauerhaft gelöscht. Das lässt sich nicht rückgängig machen.",
       "switchConfirm": "Ja, Daten löschen und Benutzer wechseln",
-      "switchCancel": "Abbrechen"
+      "switchCancel": "Abbrechen",
+      "subtitleWithDevice": "Ihr Konto konnte gerade nicht geladen werden. Versuchen Sie es erneut per E-Mail, melden Sie sich ohne E-Mail an oder melden Sie sich als anderer Benutzer an."
     },
     "contentPolicy": "Inhaltsrichtlinie",
     "faq": "FAQ",
@@ -83,7 +84,14 @@
     "sourceCode": "Quellcode",
     "website": "Website",
     "failedToSendBody": "OTP konnte nicht gesendet werden",
-    "signingYouIn": "Du wirst angemeldet…"
+    "signingYouIn": "Du wirst angemeldet…",
+    "signInWithoutEmail": "Ohne E-Mail anmelden",
+    "differentAccount": {
+      "title": "Zum Konto dieses Telefons wechseln?",
+      "body": "Wenn Sie sich ohne E-Mail anmelden, wird das eigene Konto dieses Telefons geöffnet, nicht das Konto, das Sie bisher verwendet haben. Alles, was für dieses Konto auf diesem Telefon gespeichert ist, wird gelöscht. Das lässt sich nicht rückgängig machen. Ihr anderes Konto und sein Tarif bleiben erhalten, und Sie können sich später wieder dort anmelden.",
+      "continue": "Ohne E-Mail fortfahren",
+      "useEmail": "Zurück"
+    }
   },
   "account": {
     "pendingTitle": "Konto wartet auf Freischaltung",

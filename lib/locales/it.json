@@ -53,7 +53,8 @@
       "retryFailed": "Impossibile raggiungere il server. Controlla la connessione e riprova.",
       "switchBody": "Cambiare utente eliminerà definitivamente tutti i dati di questo utente su questo dispositivo. Non si può annullare.",
       "switchConfirm": "Sì, cancella i dati e cambia utente",
-      "switchCancel": "Annulla"
+      "switchCancel": "Annulla",
+      "subtitleWithDevice": "Non è stato possibile caricare il tuo account al momento. Riprova con l'email, accedi senza email o accedi come un altro utente."
     },
     "contentPolicy": "Norme sui contenuti",
     "faq": "FAQ",
@@ -83,7 +84,14 @@
     "sourceCode": "Codice sorgente",
     "website": "Sito web",
     "failedToSendBody": "Invio del codice OTP non riuscito",
-    "signingYouIn": "Accesso in corso…"
+    "signingYouIn": "Accesso in corso…",
+    "signInWithoutEmail": "Accedi senza email",
+    "differentAccount": {
+      "title": "Passare all'account di questo telefono?",
+      "body": "Accedendo senza email si apre l'account di questo telefono, non quello che stavi usando. Tutto ciò che è salvato su questo telefono per quell'account verrà cancellato. Non si può annullare. L'altro account e il suo piano restano al sicuro, e potrai accedervi di nuovo più tardi.",
+      "continue": "Continua senza email",
+      "useEmail": "Indietro"
+    }
   },
   "account": {
     "pendingTitle": "Account in attesa di approvazione",

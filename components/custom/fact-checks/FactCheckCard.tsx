@@ -12,6 +12,7 @@ import { describeCheckedBy } from '@/lib/fact-check/fact-check-state';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useTapGuard } from '@/components/custom/cards/use-tap-guard';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
@@ -55,6 +56,9 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
     testIDPrefix = 'fact-check-card',
 }) => {
     const { t } = useTranslation();
+    // Opens on a TAP only: a release after a sideways drag (the tab swipe) is
+    // not a press.
+    const tap = useTapGuard(onPress ? () => onPress(item) : undefined);
 
     const checkedBy = (item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy;
     const checkedByStatus = (item.payload as { checkedByStatus?: CheckedByStatus } | null)?.checkedByStatus;
@@ -81,7 +85,8 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
         // keeps the target at ~44pt on a narrow screen.
         <Box testID={`${testIDPrefix}-${item.id}`} className="relative">
             <Pressable
-                onPress={onPress ? () => onPress(item) : undefined}
+                onPress={tap.onPress}
+                onPressIn={tap.onPressIn}
                 disabled={!onPress}
                 accessibilityRole={onPress ? 'button' : undefined}
                 accessibilityLabel={onPress ? t('factCheck.dashboard.openA11y') : undefined}

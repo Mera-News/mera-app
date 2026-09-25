@@ -53,7 +53,8 @@
       "retryFailed": "Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.",
       "switchBody": "Zmiana użytkownika spowoduje trwałe usunięcie wszystkich danych tego użytkownika z tego urządzenia. Nie można tego cofnąć.",
       "switchConfirm": "Tak, wyczyść dane i zmień użytkownika",
-      "switchCancel": "Anuluj"
+      "switchCancel": "Anuluj",
+      "subtitleWithDevice": "Nie udało się teraz załadować Twojego konta. Spróbuj ponownie przez e-mail, zaloguj się bez e-maila lub zaloguj się jako inny użytkownik."
     },
     "contentPolicy": "Zasady dotyczące treści",
     "faq": "FAQ",
@@ -83,7 +84,14 @@
     "sourceCode": "Kod źródłowy",
     "website": "Strona internetowa",
     "failedToSendBody": "Nie udało się wysłać kodu OTP",
-    "signingYouIn": "Logujemy Cię…"
+    "signingYouIn": "Logujemy Cię…",
+    "signInWithoutEmail": "Zaloguj się bez e-maila",
+    "differentAccount": {
+      "title": "Przełączyć na konto tego telefonu?",
+      "body": "Logowanie bez e-maila otwiera własne konto tego telefonu, a nie dotychczasowe konto. Wszystko, co zapisano na tym telefonie dla tamtego konta, zostanie usunięte. Nie można tego cofnąć. Twoje drugie konto i jego plan pozostają bezpieczne, a później możesz się na nie ponownie zalogować.",
+      "continue": "Kontynuuj bez e-maila",
+      "useEmail": "Wróć"
+    }
   },
   "account": {
     "pendingTitle": "Konto oczekuje na zatwierdzenie",

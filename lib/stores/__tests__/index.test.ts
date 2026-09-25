@@ -16,6 +16,11 @@ jest.mock('@/lib/database/services/setting-service', () => ({
     deleteSetting: jest.fn(() => Promise.resolve()),
 }));
 
+const mockWipeAllLocalUserData = jest.fn(async (_opts?: { keepSession?: boolean }) => {});
+jest.mock('@/lib/security/local-wipe', () => ({
+    wipeAllLocalUserData: (opts?: { keepSession?: boolean }) => mockWipeAllLocalUserData(opts),
+}));
+
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
     loadSuggestions: jest.fn(() => Promise.resolve([])),
     persistFeedMetadata: jest.fn(() => Promise.resolve()),
@@ -227,52 +232,45 @@ describe('clearAllStores', () => {
 });
 
 describe('clearPreviousUserData', () => {
+    beforeEach(() => {
+        mockWipeAllLocalUserData.mockClear();
+        mockWipeAllLocalUserData.mockResolvedValue(undefined);
+    });
+
     it('does nothing when no cached user exists', async () => {
         const { getSetting } = require('@/lib/database/services/setting-service');
         (getSetting as jest.Mock).mockResolvedValueOnce(null);
         await expect(storeIndex.clearPreviousUserData('new-user')).resolves.toBeUndefined();
+        expect(mockWipeAllLocalUserData).not.toHaveBeenCalled();
     });
 
     it('does nothing when cached user matches new user', async () => {
         const { getSetting } = require('@/lib/database/services/setting-service');
         (getSetting as jest.Mock).mockResolvedValueOnce('same-user');
-        // Clear call counts from any prior tests before asserting
-        const database = require('@/lib/database').default;
-        (database.write as jest.Mock).mockClear();
         await storeIndex.clearPreviousUserData('same-user');
-        expect(database.write).not.toHaveBeenCalled();
+        // Otherwise every cold start would erase the returning user's data,
+        // and with it the last-known tier the offline fallback depends on.
+        expect(mockWipeAllLocalUserData).not.toHaveBeenCalled();
     });
 
-    it('calls clearAllStores when cached user differs from new user', async () => {
+    // An account switch must take EVERYTHING the previous account left, not
+    // just the database: clearAllStores alone left the PIN lock, backup key,
+    // staged backup files, E2EE keys and the Drive/Intercom/RevenueCat
+    // identities for the incoming account. Only the incoming session survives.
+    it('runs the FULL wipe, keeping only the session, when the cached user differs', async () => {
         const { getSetting } = require('@/lib/database/services/setting-service');
         (getSetting as jest.Mock).mockResolvedValueOnce('old-user');
         await storeIndex.clearPreviousUserData('new-user');
-        const database = require('@/lib/database').default;
-        expect(database.write).toHaveBeenCalled();
+        expect(mockWipeAllLocalUserData).toHaveBeenCalledTimes(1);
+        expect(mockWipeAllLocalUserData).toHaveBeenCalledWith({ keepSession: true });
     });
 
-    // The USER-SWITCH half of the cross-user leak guard above. This is the path
-    // a fresh login on a used device takes, and it is the one that would hand
-    // user B user A's entitlement.
-    it("wipes the previous user's last-known subscription tier on a user switch", async () => {
-        const { getSetting, deleteSetting } = require('@/lib/database/services/setting-service');
+    // The identity gate fails CLOSED on a throw (no stamp, no route), so the
+    // rejection must reach it rather than being swallowed here.
+    it('propagates a failed wipe', async () => {
+        const { getSetting } = require('@/lib/database/services/setting-service');
         (getSetting as jest.Mock).mockResolvedValueOnce('old-user');
-        (deleteSetting as jest.Mock).mockClear();
-
-        await storeIndex.clearPreviousUserData('new-user');
-
-        expect(deleteSetting).toHaveBeenCalledWith('last_known_subscription_tier');
-    });
-
-    it('leaves the last-known tier alone when the SAME user returns', async () => {
-        const { getSetting, deleteSetting } = require('@/lib/database/services/setting-service');
-        (getSetting as jest.Mock).mockResolvedValueOnce('same-user');
-        (deleteSetting as jest.Mock).mockClear();
-
-        await storeIndex.clearPreviousUserData('same-user');
-
-        // Otherwise every cold start would throw away the very memory the
-        // offline-subscriber fallback depends on.
-        expect(deleteSetting).not.toHaveBeenCalled();
+        mockWipeAllLocalUserData.mockRejectedValueOnce(new Error('db locked'));
+        await expect(storeIndex.clearPreviousUserData('new-user')).rejects.toThrow('db locked');
     });
 });

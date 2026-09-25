@@ -15,10 +15,11 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { sendOTP } from '@/lib/auth-client';
+import { clearAuthStorage, sendOTP } from '@/lib/auth-client';
 import {
     deviceSignInAvailability,
     signInWithDevice,
+    type DeviceSignInAvailability,
     type DeviceSignInFailureReason,
     type DeviceSignInResult,
 } from '@/lib/device-auth';
@@ -28,7 +29,12 @@ import {
 type DeviceSignInSuccess = Extract<DeviceSignInResult, { status: 'success' }>;
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
-import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
+import {
+    clearIdentityFault,
+    holdAccountSwitch,
+    recordAuthenticatedUser,
+    releaseAccountSwitch,
+} from '@/lib/security/identity-gate';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -42,6 +48,47 @@ import {
     markLegalAcceptedThisProcess,
     silentlyAcceptLegal,
 } from './legal-consent';
+
+/**
+ * The bookkeeping a device sign-in owes the account it signed in, before
+ * anything navigates. Mirrors OTPVerificationView's post-verify steps, minus
+ * the email cache (an anonymous account has no real address).
+ *
+ * Every step describes the INCOMING account, which is why it is a function the
+ * consent step calls only once it knows this is the account the user meant:
+ * when the phone opens a different account than the one on this device, it
+ * runs only after the user confirms the switch (DifferentAccountView), so a
+ * user who backs out leaves nothing recorded for an account they declined.
+ */
+async function completeDeviceSignIn(result: DeviceSignInSuccess): Promise<void> {
+    // Recorded BEFORE anything navigates — the identity gates read it while
+    // better-auth's session atom is still settling.
+    recordAuthenticatedUser(result.userId);
+    useUserStore.getState().setNeedsReauth(false);
+    // Device sign-in re-proves which account this device holds, same as an
+    // OTP verify — the other site that clears the fault.
+    clearIdentityFault().catch(() => {});
+    // Latch FIRST, unconditionally, and only then do the network work.
+    //
+    // Consent is a fact about what the user just did, not about whether a
+    // call succeeded: they tapped "Agree and continue" on the consent step.
+    // The latch records that fact so ConsentGate stands down for the rest of
+    // this process.
+    //
+    // This used to latch only on a landed stamp, on the reasoning that a
+    // failed one should let ConsentGate re-ask. It does re-ask — immediately,
+    // as a blocking screen, wearing "we've updated our terms" copy, to
+    // somebody who installed the app a minute ago. A failed WRITE is ours to
+    // retry, which ConsentGate now does silently; it is not grounds to
+    // re-interrogate the user. Same ordering as silentlyAcceptLegal on the
+    // email path, which is why that path never produced this bug.
+    markLegalAcceptedThisProcess(result.userId);
+    // Fetched HERE, not prefetched at mount: appConfig requires a SESSION
+    // ("pre-paywall" in its schema doc means before entitlement, not before
+    // auth — the pre-auth fetch 401s, e2e-proven on staging).
+    const versions = await fetchLegalVersions();
+    if (versions) await acceptLegal(versions);
+}
 
 interface PreAuthFooterProps {
     /** The email view keeps the tour pill; views that surface the tutorials
@@ -88,9 +135,16 @@ const PreAuthFooter: React.FC<PreAuthFooterProps> = ({ showTutorialLaunch = true
 interface EmailInputViewProps {
     onOTPSent: (email: string) => void;
     initialEmail?: string;
+    /** Device sign-in, the phone's own account. Absent when the device cannot
+     *  attest, and on Forgot PIN. */
+    onSignInWithoutEmail?: () => void;
 }
 
-const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail }) => {
+const EmailInputView: React.FC<EmailInputViewProps> = ({
+    onOTPSent,
+    initialEmail,
+    onSignInWithoutEmail,
+}) => {
     const [email, setEmail] = useState(initialEmail ?? '');
     const [loading, setLoading] = useState(false);
     const toast = useToast();
@@ -206,6 +260,28 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                     )}
                 </Pressable>
             </HStack>
+
+            {/* The phone's own account, always reachable: an email is one way
+                in, never the only one. Outline pill, so the email row above
+                stays the primary action of this view. */}
+            {onSignInWithoutEmail ? (
+                <Pressable
+                    testID="auth-email-device-sign-in"
+                    onPress={() => {
+                        void hapticLight();
+                        onSignInWithoutEmail();
+                    }}
+                    disabled={loading}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={t('auth.signInWithoutEmail')}
+                    className="mt-4 self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
+                >
+                    <Text size="sm" className="text-primary-500 font-semibold text-center">
+                        {t('auth.signInWithoutEmail')}
+                    </Text>
+                </Pressable>
+            ) : null}
 
             {/* Lower band — the gap between the input and the cluster. */}
             <Box style={{ flex: 1 }} />
@@ -427,6 +503,11 @@ interface ConsentStepViewProps {
     /** Device sign-in completed and the identity bookkeeping is done. The full
      *  success result travels so the caller can route on it. */
     onSuccess: (result: DeviceSignInSuccess) => void;
+    /** The account this device already holds (`cached_user_id`), when any. */
+    expectedUserId?: string | null;
+    /** The phone opened a DIFFERENT account than `expectedUserId`. Called with
+     *  NO bookkeeping done, so the caller can ask before switching. */
+    onDifferentAccount?: (result: DeviceSignInSuccess) => void;
 }
 
 /**
@@ -440,7 +521,12 @@ interface ConsentStepViewProps {
  * Email sign-ins NEVER pass through here: they accepted at their original
  * sign-up and are stamped silently (silentlyAcceptLegal).
  */
-const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess }) => {
+const ConsentStepView: React.FC<ConsentStepViewProps> = ({
+    onUseEmail,
+    onSuccess,
+    expectedUserId,
+    onDifferentAccount,
+}) => {
     const { t } = useTranslation();
     const [working, setWorking] = useState(false);
     const [failure, setFailure] = useState<DeviceSignInFailureReason | null>(null);
@@ -453,37 +539,15 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
         // fresh nonce each time, so a retry can never resubmit a consumed one.
         const result = await signInWithDevice();
         if (result.status === 'success') {
-            // Mirror OTPVerificationView's post-verify bookkeeping, minus the
-            // email cache (an anonymous account has no real address).
-            // Recorded BEFORE anything navigates — the identity gates read it
-            // while better-auth's session atom is still settling.
-            recordAuthenticatedUser(result.userId);
-            useUserStore.getState().setNeedsReauth(false);
-            // Device sign-in re-proves which account this device holds, same
-            // as an OTP verify — the other site that clears the fault.
-            clearIdentityFault().catch(() => {});
-            // Latch FIRST, unconditionally, and only then do the network work.
-            //
-            // Consent is a fact about what the user just did, not about
-            // whether a call succeeded: they tapped "Agree and continue" on
-            // the previous frame. The latch records that fact so ConsentGate
-            // stands down for the rest of this process.
-            //
-            // This used to latch only on a landed stamp, on the reasoning that
-            // a failed one should let ConsentGate re-ask. It does re-ask —
-            // immediately, as a blocking screen, wearing "we've updated our
-            // terms" copy, to somebody who installed the app a minute ago.
-            // A failed WRITE is ours to retry, which ConsentGate now does
-            // silently; it is not grounds to re-interrogate the user. Same
-            // ordering as silentlyAcceptLegal on the email path, which is why
-            // that path never produced this bug.
-            markLegalAcceptedThisProcess(result.userId);
-            // Fetched HERE, not prefetched at mount: appConfig requires a
-            // SESSION ("pre-paywall" in its schema doc means before
-            // entitlement, not before auth — the pre-auth fetch 401s,
-            // e2e-proven on staging).
-            const versions = await fetchLegalVersions();
-            if (versions) await acceptLegal(versions);
+            // Compare BEFORE any bookkeeping. The phone's account is the one
+            // its key is bound to, and for an account made with an email code
+            // that is a different account. Nothing is recorded, latched or
+            // persisted for it until the user confirms the switch.
+            if (expectedUserId && result.userId !== expectedUserId && onDifferentAccount) {
+                onDifferentAccount(result);
+                return;
+            }
+            await completeDeviceSignIn(result);
             onSuccess(result);
             // Leave `working` true: the caller replaces this screen.
             return;
@@ -575,17 +639,121 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
     );
 };
 
-interface AuthScreenProps {
-    onLoginSuccess?: (userId: string) => void;
+interface DifferentAccountViewProps {
+    /** Switch: the caller finishes the sign-in and routes. */
+    onContinue: () => Promise<void>;
+    /** Decline: the caller signs the phone's account out and goes back. */
+    onGoBack: () => Promise<void>;
 }
 
-type ViewMode = 'loading' | 'previous' | 'language' | 'welcome' | 'consent' | 'email' | 'otp';
+/**
+ * The phone opened a different account than the one on this device. Moving
+ * between accounts erases this device's data (the identity gate's full wipe
+ * runs on arrival), so the user decides here, after sign-in and before any of
+ * its bookkeeping. Same shape as PreviousUserView's switch confirmation.
+ */
+const DifferentAccountView: React.FC<DifferentAccountViewProps> = ({ onContinue, onGoBack }) => {
+    const { t } = useTranslation();
+    const [busy, setBusy] = useState(false);
 
-const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
+    const run = async (action: () => Promise<void>) => {
+        if (busy) return;
+        setBusy(true);
+        try {
+            await action();
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return (
+        // Same three-band skeleton and F2 scoping as the sibling views.
+        <Box testID="auth-different-account-root" accessible={false} className="flex-1 px-5">
+            <Box accessible={false} className="items-center justify-center" style={{ flex: 5 }}>
+                <MeraLogo size={120} animated />
+            </Box>
+
+            <VStack accessible={false} space="lg">
+                <Text size="2xl" className="text-white font-semibold text-center">
+                    {t('auth.differentAccount.title')}
+                </Text>
+                <Text size="sm" className="text-red-400 leading-relaxed text-center">
+                    {t('auth.differentAccount.body')}
+                </Text>
+
+                <Pressable
+                    testID="auth-different-account-continue"
+                    onPress={() => run(onContinue)}
+                    disabled={busy}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={t('auth.differentAccount.continue')}
+                    accessibilityState={busy ? { busy: true, disabled: true } : undefined}
+                    className={`h-14 rounded-full items-center justify-center ${busy ? 'bg-gray-700' : 'bg-error-500'}`}
+                >
+                    {busy ? (
+                        <Spinner size="small" color="white" />
+                    ) : (
+                        <Text className="text-white text-base font-semibold">
+                            {t('auth.differentAccount.continue')}
+                        </Text>
+                    )}
+                </Pressable>
+                <Pressable
+                    testID="auth-different-account-back"
+                    onPress={() => run(onGoBack)}
+                    disabled={busy}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={t('auth.differentAccount.useEmail')}
+                    className="h-14 rounded-full items-center justify-center border border-primary-500 bg-transparent"
+                >
+                    <Text className="text-primary-500 text-base font-semibold">
+                        {t('auth.differentAccount.useEmail')}
+                    </Text>
+                </Pressable>
+            </VStack>
+
+            {/* Lower band — keeps the actions off the home indicator. */}
+            <Box style={{ flex: 1 }} />
+        </Box>
+    );
+};
+
+interface AuthScreenProps {
+    onLoginSuccess?: (userId: string) => void;
+    /**
+     * Whether device sign-in ("Sign in without email") may be offered on the
+     * previous-user and email views. login.tsx passes false on Forgot PIN
+     * (`reauth=pin`): device sign-in proves only that someone holds the phone,
+     * which is exactly who the PIN guards against, so resetting it there needs
+     * the email code.
+     */
+    allowDeviceSignIn?: boolean;
+}
+
+type ViewMode =
+    | 'loading'
+    | 'previous'
+    | 'language'
+    | 'welcome'
+    | 'consent'
+    | 'different-account'
+    | 'email'
+    | 'otp';
+
+const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSignIn = true }) => {
     const [currentView, setCurrentView] = useState<ViewMode>('loading');
     const [pendingEmail, setPendingEmail] = useState<string>('');
     const [cachedEmail, setCachedEmail] = useState<string | null>(null);
+    // The account whose data is on this device, email or not. The consent step
+    // compares a device sign-in against it.
     const [cachedUserId, setCachedUserId] = useState<string | null>(null);
+    const [availability, setAvailability] = useState<DeviceSignInAvailability>('unavailable');
+    // Where the consent step was entered from, so its email fallback and the
+    // different-account back-out return the user to the view they left.
+    const [consentReturnView, setConsentReturnView] = useState<ViewMode>('welcome');
+    const [pendingSwitch, setPendingSwitch] = useState<DeviceSignInSuccess | null>(null);
 
     // On mount, check whether a previous user is remembered on this device.
     // We only need both the email and the user id present — they're written
@@ -610,9 +778,10 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     deviceSignInAvailability(),
                 ]);
                 if (cancelled) return;
+                setAvailability(availability);
+                setCachedUserId(userId ?? null);
                 if (email && userId) {
                     setCachedEmail(email);
-                    setCachedUserId(userId);
                     setCurrentView('previous');
                 } else if (availability !== 'unavailable') {
                     setCurrentView(appLanguageRow ? 'welcome' : 'language');
@@ -656,11 +825,29 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         setCurrentView('email');
     };
 
+    // The consent step's email fallback. Entered from the previous-user view,
+    // "Sign in with email" means that user's own email, so go back there.
+    const handleConsentUseEmail = () => {
+        setCurrentView(consentReturnView === 'previous' ? 'previous' : 'email');
+    };
+
+    // "Sign in without email": the phone's own account, offered to every user
+    // (an email account included) unless the device cannot attest or this is
+    // Forgot PIN. Runs through the consent step, whose "Agree and continue" is
+    // the sign-in, so a newly minted account has seen the terms it is stamped
+    // with (the server stamps consent at mint on that premise).
+    const canSignInWithoutEmail = allowDeviceSignIn && availability !== 'unavailable';
+    const signInWithoutEmailFrom = (view: ViewMode) => () => {
+        setConsentReturnView(view);
+        setCurrentView('consent');
+    };
+
     const handleLanguageChosen = () => {
         setCurrentView('welcome');
     };
 
     const handleGetStarted = () => {
+        setConsentReturnView('welcome');
         setCurrentView('consent');
     };
 
@@ -681,6 +868,35 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             return;
         }
         router.replace('/logged-in');
+    };
+
+    const handleDifferentAccount = (result: DeviceSignInSuccess) => {
+        // Synchronously, before better-auth's atom can settle on this account:
+        // the identity gates, the watcher and login.tsx's shortcut all react to
+        // that atom, and each would wipe this device's account unasked.
+        holdAccountSwitch(result.userId);
+        setPendingSwitch(result);
+        setCurrentView('different-account');
+    };
+
+    // Switch confirmed. The bookkeeping the consent step withheld runs now,
+    // then the normal routing: /logged-in's identity gate sees a new user id
+    // and runs the full wipe of the previous account before anything renders.
+    const handleSwitchContinue = async () => {
+        if (!pendingSwitch) return;
+        releaseAccountSwitch();
+        await completeDeviceSignIn(pendingSwitch);
+        handleDeviceSignInSuccess(pendingSwitch);
+    };
+
+    // Switch declined. The phone's account signed in but nothing was recorded
+    // for it; sign it out through the one sign-out path (bounded, local truth
+    // wins) and return. `cached_user_id` / `cached_user_email` are untouched,
+    // so the previous-user view renders exactly as before.
+    const handleSwitchGoBack = async () => {
+        await clearAuthStorage();
+        setPendingSwitch(null);
+        setCurrentView(consentReturnView);
     };
 
     if (currentView === 'loading') {
@@ -709,6 +925,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     userId={cachedUserId}
                     onUseDifferentUser={handleUseDifferentUser}
                     onOTPSent={handleOTPSent}
+                    onSignInWithoutEmail={
+                        canSignInWithoutEmail ? signInWithoutEmailFrom('previous') : undefined
+                    }
                 />
             </Box>
         );
@@ -752,7 +971,28 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                <ConsentStepView onUseEmail={handleUseEmail} onSuccess={handleDeviceSignInSuccess} />
+                <ConsentStepView
+                    onUseEmail={handleConsentUseEmail}
+                    onSuccess={handleDeviceSignInSuccess}
+                    expectedUserId={cachedUserId}
+                    onDifferentAccount={handleDifferentAccount}
+                />
+            </Box>
+        );
+    }
+
+    if (currentView === 'different-account' && pendingSwitch) {
+        return (
+            // No opaque fill: the AbstractGradientBackdrop below is the page background.
+            <Box testID="auth-different-account-screen" accessible={false} className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
+                <DifferentAccountView
+                    onContinue={handleSwitchContinue}
+                    onGoBack={handleSwitchGoBack}
+                />
             </Box>
         );
     }
@@ -781,7 +1021,13 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                 everything else on the page. */}
             <AbstractGradientBackdrop />
 
-            <EmailInputView onOTPSent={handleOTPSent} initialEmail={pendingEmail} />
+            <EmailInputView
+                onOTPSent={handleOTPSent}
+                initialEmail={pendingEmail}
+                onSignInWithoutEmail={
+                    canSignInWithoutEmail ? signInWithoutEmailFrom('email') : undefined
+                }
+            />
         </Box>
     );
 };

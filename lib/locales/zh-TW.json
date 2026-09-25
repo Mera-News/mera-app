@@ -53,7 +53,8 @@
       "retryFailed": "無法連線至伺服器。請檢查網路後再試。",
       "switchBody": "切換使用者將永久刪除此裝置上該使用者的所有資料。此操作無法復原。",
       "switchConfirm": "是的，清除資料並切換使用者",
-      "switchCancel": "取消"
+      "switchCancel": "取消",
+      "subtitleWithDevice": "我們暫時無法載入您的帳號。請使用電子郵件再試一次、不使用電子郵件登入，或以其他使用者身份登入。"
     },
     "contentPolicy": "內容政策",
     "faq": "常見問題",
@@ -83,7 +84,14 @@
     "sourceCode": "原始碼",
     "website": "網站",
     "failedToSendBody": "無法傳送 OTP",
-    "signingYouIn": "正在登入…"
+    "signingYouIn": "正在登入…",
+    "signInWithoutEmail": "不使用電子郵件登入",
+    "differentAccount": {
+      "title": "要切換到這支手機的帳號嗎？",
+      "body": "不使用電子郵件登入會開啟這支手機自己的帳號，而不是您先前使用的帳號。此手機上為該帳號儲存的所有內容都將被刪除。此操作無法復原。您的另一個帳號及其方案仍然安全，您之後可以再次登入該帳號。",
+      "continue": "不使用電子郵件繼續",
+      "useEmail": "返回"
+    }
   },
   "account": {
     "pendingTitle": "帳號待審核",

@@ -91,7 +91,10 @@ export function effectiveSessionUserId(
 ): string | null {
   // Truthiness, not `??`: an empty-string id is not an identity, and letting it
   // win would suppress the recorder for the one caller that produced it.
-  if (sessionUserId) return sessionUserId;
+  //
+  // A HELD account (see holdAccountSwitch) is not an answer yet: the user has
+  // not decided whether to switch to it, so it reads as an unresolved session.
+  if (sessionUserId && !isAccountSwitchHeld(sessionUserId)) return sessionUserId;
   return pendingAuthUserId || null;
 }
 
@@ -209,6 +212,41 @@ export function isIdentitySwitchBlocked(): boolean {
   return identitySwitchBlocked;
 }
 
+// ---------------------------------------------------------------------------
+// Held account switch
+// ---------------------------------------------------------------------------
+//
+// "Sign in without email" can open the phone's own account, a DIFFERENT one
+// from the account on this device. The sign-in has already set that account's
+// cookie, so better-auth's session atom settles on it while AuthScreen is still
+// asking whether to switch. /login?reauth=1 is PUSHED over a mounted /logged-in
+// tree (ReauthBanner), so three things react to that atom underneath: the
+// watcher in the logged-in layout, OnboardingScreen's gate (sessionUserId is in
+// its deps) and login.tsx's session shortcut. Each would reach the cross-user
+// wipe and erase this device's account before the user answered (seen on the
+// staging simulator).
+//
+// So the id is HELD: every gate reads it as an unresolved session (through
+// effectiveSessionUserId, the one door the session id enters by), the watcher
+// ignores it, and login.tsx never shortcuts on it. Only "Continue" releases it.
+// After "Go back" it stays held for the process, because signOut() clears the
+// atom asynchronously and a stale read of the declined account must never act.
+// Keyed on the id, so any OTHER account (a later email sign-in) is unaffected.
+
+let heldAccountSwitchUserId: string | null = null;
+
+export function holdAccountSwitch(userId: string): void {
+  heldAccountSwitchUserId = userId || null;
+}
+
+export function releaseAccountSwitch(): void {
+  heldAccountSwitchUserId = null;
+}
+
+export function isAccountSwitchHeld(sessionUserId: string | null | undefined): boolean {
+  return !!sessionUserId && sessionUserId === heldAccountSwitchUserId;
+}
+
 /**
  * Test-only: reset EVERY piece of module state in this file.
  *
@@ -219,6 +257,7 @@ export function isIdentitySwitchBlocked(): boolean {
 export function __resetIdentityStateForTests(): void {
   pendingAuthUserId = null;
   identitySwitchBlocked = false;
+  heldAccountSwitchUserId = null;
   faultTriggered = false;
 }
 

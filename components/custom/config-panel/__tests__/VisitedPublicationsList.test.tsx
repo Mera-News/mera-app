@@ -70,7 +70,7 @@ jest.mock('@/components/ui/pressable', () => {
 });
 jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
 
-import { render, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 import VisitedPublicationsList from '../VisitedPublicationsList';
 
@@ -120,5 +120,33 @@ describe('VisitedPublicationsList warmed off-screen (active=false)', () => {
     // Same frame as the arrival: the rows, never the spinner or the empty state.
     expect(screen.getByText('NOS')).toBeTruthy();
     expect(screen.queryByTestId('visited-publications-empty')).toBeNull();
+  });
+});
+const at = (x: number, y: number) => ({ nativeEvent: { pageX: x, pageY: y } });
+
+// Owner, in prod: a sideways swipe opened what was under the finger. A row
+// opens its publication on a TAP only.
+describe('VisitedPublicationsList: rows open on a tap, never on a drag', () => {
+  const nos = { publicationName: 'NOS', countryCode: 'NL', visitCount: 2, lastVisitedAt: Date.now() };
+  const { router } = require('expo-router');
+
+  it('a sideways drag across a row does not open it', async () => {
+    mockRows = [nos];
+    render(<VisitedPublicationsList embedded active onBack={jest.fn()} />);
+    const row = await waitFor(() => screen.getByTestId('visited-row-NOS'));
+    (router.push as jest.Mock).mockClear();
+    fireEvent(row, 'pressIn', at(40, 300));
+    fireEvent(row, 'press', at(250, 304));
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it('a tap still opens it', async () => {
+    mockRows = [nos];
+    render(<VisitedPublicationsList embedded active onBack={jest.fn()} />);
+    const row = await waitFor(() => screen.getByTestId('visited-row-NOS'));
+    (router.push as jest.Mock).mockClear();
+    fireEvent(row, 'pressIn', at(100, 300));
+    fireEvent(row, 'press', at(102, 301));
+    expect(router.push).toHaveBeenCalledTimes(1);
   });
 });

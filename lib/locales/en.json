@@ -61,7 +61,8 @@
       "retryFailed": "Couldn't reach the server. Check your connection and try again.",
       "switchBody": "Switching users permanently deletes all of this user's data on this device. You can't undo this.",
       "switchConfirm": "Yes, clear data and switch user",
-      "switchCancel": "Cancel"
+      "switchCancel": "Cancel",
+      "subtitleWithDevice": "We couldn't load your account just now. Try again with email, sign in without email, or sign in as a different user."
     },
     "deviceSignInWorking": "Signing you in",
     "deviceSignInFailed": "Something went wrong. Try again, or sign in with email.",
@@ -83,7 +84,14 @@
     "sourceCode": "Source code",
     "website": "Website",
     "failedToSendBody": "Failed to send OTP",
-    "signingYouIn": "Signing you in…"
+    "signingYouIn": "Signing you in…",
+    "signInWithoutEmail": "Sign in without email",
+    "differentAccount": {
+      "title": "Switch to this phone's account?",
+      "body": "Signing in without email opens this phone's own account, not the one you were using. Everything saved on this phone for that account will be erased. You can't undo this. Your other account and its plan stay safe, and you can sign in to it again later.",
+      "continue": "Continue without email",
+      "useEmail": "Go back"
+    }
   },
   "account": {
     "pendingTitle": "Subscribe to Mera",
