@@ -781,7 +781,8 @@
     "saveAsWritten": "So speichern, wie ich es geschrieben habe",
     "factDeleteRemove": "Entfernen",
     "factDeleteKeep": "Behalten",
-    "factDeleteKept": "Es wurde nichts entfernt."
+    "factDeleteKept": "Es wurde nichts entfernt.",
+    "topicsSavedHint": "Themen gespeichert! Du kannst gern weitere Fakten hinzufügen oder auf {{close}} tippen, um mit dem Entdecken zu beginnen."
   },
   "articleFeedback": {
     "thumbsUp": "Gefällt mir",

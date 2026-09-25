@@ -781,7 +781,8 @@
     "saveAsWritten": "書いたとおりに保存",
     "factDeleteRemove": "削除",
     "factDeleteKeep": "残す",
-    "factDeleteKept": "何も削除していません。"
+    "factDeleteKept": "何も削除していません。",
+    "topicsSavedHint": "トピックを保存しました。引き続き情報を追加するか、{{close}} をタップして探索を始めましょう。"
   },
   "articleFeedback": {
     "thumbsUp": "いいね",

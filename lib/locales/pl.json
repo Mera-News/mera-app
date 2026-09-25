@@ -793,7 +793,8 @@
     "saveAsWritten": "Zapisz tak, jak napisałem",
     "factDeleteRemove": "Usuń",
     "factDeleteKeep": "Zachowaj",
-    "factDeleteKept": "Nic nie zostało usunięte."
+    "factDeleteKept": "Nic nie zostało usunięte.",
+    "topicsSavedHint": "Tematy zapisane! Możesz dalej dodawać informacje albo dotknąć {{close}}, aby zacząć odkrywać."
   },
   "articleFeedback": {
     "thumbsUp": "Podoba mi się",

@@ -786,7 +786,8 @@
     "saveAsWritten": "Enregistrer tel que je l'ai écrit",
     "factDeleteRemove": "Supprimer",
     "factDeleteKeep": "Garder",
-    "factDeleteKept": "Rien n'a été supprimé."
+    "factDeleteKept": "Rien n'a été supprimé.",
+    "topicsSavedHint": "Sujets enregistrés ! Vous pouvez continuer à ajouter des informations, ou appuyer sur {{close}} pour commencer à explorer."
   },
   "articleFeedback": {
     "thumbsUp": "J'aime",

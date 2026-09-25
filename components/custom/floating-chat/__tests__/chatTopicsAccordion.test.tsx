@@ -5,7 +5,10 @@
 import React from 'react';
 import { act, fireEvent, render } from '@testing-library/react-native';
 
-jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
+// `close` is echoed so the saved line's glyph vs spoken word can be told apart.
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (k: string, o?: { close?: string }) => (o?.close ? `${k}|close=${o.close}` : k) }),
+}));
 jest.mock('@/components/ui/text', () => {
   const { Text } = require('react-native');
   return { Text };
@@ -47,6 +50,7 @@ jest.mock('@/lib/database/services/topic-decline-service', () => ({
 }));
 
 let mockStatus = 'pending';
+let mockRows: unknown[] = [{ id: 't1', text: 'Amsterdam housing', status: 'active' }];
 let mockEmitStatus: ((v: string) => void) | null = null;
 jest.mock('@/lib/database/services/fact-service', () => ({
   observeTopicsStatus: () => ({
@@ -60,7 +64,7 @@ jest.mock('@/lib/database/services/fact-service', () => ({
 jest.mock('@/lib/database/services/topic-service', () => ({
   observeByFact: () => ({
     subscribe: (fn: (rows: unknown[]) => void) => {
-      fn([{ id: 't1', text: 'Amsterdam housing', status: 'active' }]);
+      fn(mockRows);
       return { unsubscribe: jest.fn() };
     },
   }),
@@ -304,5 +308,62 @@ describe('ux2 batch 26: no glyph is its own StaticText, and Retry is reachable',
     const header = getByTestId('chat-topics-header-f1');
     for (let p: any = retry.parent; p; p = p.parent) expect(p).not.toBe(header);
     expect(header.findAll((n: any) => typeof n.type === 'string' && n !== header)).toHaveLength(0);
+  });
+});
+
+describe('ux2 P9 owner request: the done card says the topics are saved, and Find more is quiet', () => {
+  const open = (r: ReturnType<typeof draw>) => act(() => { fireEvent.press(r.getByTestId('chat-topics-header-f1')); });
+  const expandedIfClosed = (r: ReturnType<typeof draw>) => {
+    if (!r.getByTestId('chat-topics-header-f1').props.accessibilityState?.expanded) open(r);
+  };
+  afterEach(() => { mockRows = [{ id: 't1', text: 'Amsterdam housing', status: 'active' }]; });
+
+  it('done with a topic: the saved line shows the close glyph and reads "Close"', () => {
+    mockStatus = 'done';
+    const r = draw();
+    expandedIfClosed(r);
+    const line = r.getByTestId('chat-topics-saved-f1');
+    expect(line.props.children).toBe('floatingChat.topicsSavedHint|close=\u2715');
+    expect(line.props.accessibilityLabel).toBe('floatingChat.topicsSavedHint|close=floatingChat.close');
+  });
+
+  it.each(['pending', 'error'])('no saved line while %s', (status) => {
+    mockStatus = status;
+    const r = draw();
+    expandedIfClosed(r);
+    expect(r.queryByTestId('chat-topics-saved-f1', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('no saved line when the job finished with no topic', () => {
+    mockStatus = 'done';
+    mockRows = [];
+    const r = draw();
+    expandedIfClosed(r);
+    expect(r.queryByTestId('chat-topics-saved-f1', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('no saved line on the tombstone', () => {
+    mockStatus = 'gone';
+    const r = draw();
+    expect(r.getByTestId('chat-topics-gone')).toBeTruthy();
+    expect(r.queryByTestId('chat-topics-saved-f1', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('Find more is the subtle variant: no border or fill, a numeric 44pt frame, label = visible text, after the line', () => {
+    mockStatus = 'done';
+    const r = draw();
+    expandedIfClosed(r);
+    const { StyleSheet } = require('react-native');
+    const more = r.getByTestId('chat-topics-more-f1');
+    const flat = StyleSheet.flatten(more.props.style) ?? {};
+    expect(flat.minHeight).toBe(44);
+    expect(flat.borderWidth ?? 0).toBe(0);
+    expect(flat.backgroundColor).toBeUndefined();
+    expect(more.props.accessibilityLabel).toBe('chatTopics.findMore');
+    expect(r.getByText('chatTopics.findMore')).toBeTruthy();
+    // Reading order: the saved line, then the optional Find more.
+    const order = JSON.stringify(r.toJSON()).match(/chat-topics-(saved|more)-f1/g);
+    expect(order).toEqual(['chat-topics-saved-f1', 'chat-topics-more-f1']);
+    expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);
   });
 });

@@ -1,0 +1,103 @@
+{
+  "_comment": "ux2 P9 owner request: the chat topics card's done state says the topics are saved and what to do next. One new floatingChat key, pure ADD; {{close}} is the close glyph on screen and the word Close in the spoken label.",
+  "en": {
+    "floatingChat": {
+      "topicsSavedHint": "Topics saved! Feel free to keep adding facts, or tap {{close}} to start exploring."
+    }
+  },
+  "ar": {
+    "floatingChat": {
+      "topicsSavedHint": "تم حفظ المواضيع! يمكنك مواصلة إضافة المعلومات، أو اضغط على {{close}} لبدء الاستكشاف."
+    }
+  },
+  "de": {
+    "floatingChat": {
+      "topicsSavedHint": "Themen gespeichert! Du kannst gern weitere Fakten hinzufügen oder auf {{close}} tippen, um mit dem Entdecken zu beginnen."
+    }
+  },
+  "es": {
+    "floatingChat": {
+      "topicsSavedHint": "¡Temas guardados! Puedes seguir añadiendo datos o tocar {{close}} para empezar a explorar."
+    }
+  },
+  "fr": {
+    "floatingChat": {
+      "topicsSavedHint": "Sujets enregistrés ! Vous pouvez continuer à ajouter des informations, ou appuyer sur {{close}} pour commencer à explorer."
+    }
+  },
+  "hi": {
+    "floatingChat": {
+      "topicsSavedHint": "विषय सेव हो गए! आप और तथ्य जोड़ते रह सकते हैं, या एक्सप्लोर करना शुरू करने के लिए {{close}} पर टैप करें।"
+    }
+  },
+  "id": {
+    "floatingChat": {
+      "topicsSavedHint": "Topik tersimpan! Silakan terus tambahkan fakta, atau ketuk {{close}} untuk mulai menjelajah."
+    }
+  },
+  "it": {
+    "floatingChat": {
+      "topicsSavedHint": "Argomenti salvati! Puoi continuare ad aggiungere informazioni, oppure tocca {{close}} per iniziare a esplorare."
+    }
+  },
+  "ja": {
+    "floatingChat": {
+      "topicsSavedHint": "トピックを保存しました。引き続き情報を追加するか、{{close}} をタップして探索を始めましょう。"
+    }
+  },
+  "ko": {
+    "floatingChat": {
+      "topicsSavedHint": "주제가 저장되었습니다! 계속 정보를 추가하거나 {{close}}을(를) 탭해 둘러보기를 시작하세요."
+    }
+  },
+  "nl": {
+    "floatingChat": {
+      "topicsSavedHint": "Onderwerpen opgeslagen! Voeg gerust meer feiten toe, of tik op {{close}} om te beginnen met ontdekken."
+    }
+  },
+  "pl": {
+    "floatingChat": {
+      "topicsSavedHint": "Tematy zapisane! Możesz dalej dodawać informacje albo dotknąć {{close}}, aby zacząć odkrywać."
+    }
+  },
+  "pt-BR": {
+    "floatingChat": {
+      "topicsSavedHint": "Temas salvos! Fique à vontade para continuar adicionando informações ou toque em {{close}} para começar a explorar."
+    }
+  },
+  "ru": {
+    "floatingChat": {
+      "topicsSavedHint": "Темы сохранены! Можете и дальше добавлять факты или нажмите {{close}}, чтобы начать знакомство с новостями."
+    }
+  },
+  "th": {
+    "floatingChat": {
+      "topicsSavedHint": "บันทึกหัวข้อแล้ว! คุณเพิ่มข้อมูลต่อได้เลย หรือแตะ {{close}} เพื่อเริ่มสำรวจ"
+    }
+  },
+  "tr": {
+    "floatingChat": {
+      "topicsSavedHint": "Konular kaydedildi! Bilgi eklemeye devam edebilir ya da keşfetmeye başlamak için {{close}} simgesine dokunabilirsin."
+    }
+  },
+  "uk": {
+    "floatingChat": {
+      "topicsSavedHint": "Теми збережено! Можете й далі додавати факти або натисніть {{close}}, щоб почати огляд."
+    }
+  },
+  "vi": {
+    "floatingChat": {
+      "topicsSavedHint": "Đã lưu chủ đề! Bạn cứ tiếp tục thêm thông tin, hoặc nhấn {{close}} để bắt đầu khám phá."
+    }
+  },
+  "zh-CN": {
+    "floatingChat": {
+      "topicsSavedHint": "主题已保存！你可以继续添加信息，或点按 {{close}} 开始探索。"
+    }
+  },
+  "zh-TW": {
+    "floatingChat": {
+      "topicsSavedHint": "主題已儲存！你可以繼續新增資訊，或點按 {{close}} 開始探索。"
+    }
+  }
+}

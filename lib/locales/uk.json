@@ -795,7 +795,8 @@
     "saveAsWritten": "Зберегти так, як я написав",
     "factDeleteRemove": "Видалити",
     "factDeleteKeep": "Залишити",
-    "factDeleteKept": "Нічого не видалено."
+    "factDeleteKept": "Нічого не видалено.",
+    "topicsSavedHint": "Теми збережено! Можете й далі додавати факти або натисніть {{close}}, щоб почати огляд."
   },
   "articleFeedback": {
     "thumbsUp": "Подобається",

@@ -809,7 +809,8 @@
     "saveAsWritten": "احفظ كما كتبته",
     "factDeleteRemove": "إزالة",
     "factDeleteKeep": "الإبقاء",
-    "factDeleteKept": "لم تتم إزالة أي شيء."
+    "factDeleteKept": "لم تتم إزالة أي شيء.",
+    "topicsSavedHint": "تم حفظ المواضيع! يمكنك مواصلة إضافة المعلومات، أو اضغط على {{close}} لبدء الاستكشاف."
   },
   "articleFeedback": {
     "thumbsUp": "أعجبني",

@@ -781,7 +781,8 @@
     "saveAsWritten": "Guardar tal como lo escribí",
     "factDeleteRemove": "Eliminar",
     "factDeleteKeep": "Conservar",
-    "factDeleteKept": "No se eliminó nada."
+    "factDeleteKept": "No se eliminó nada.",
+    "topicsSavedHint": "¡Temas guardados! Puedes seguir añadiendo datos o tocar {{close}} para empezar a explorar."
   },
   "articleFeedback": {
     "thumbsUp": "Me gusta",

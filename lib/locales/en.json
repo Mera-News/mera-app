@@ -1207,7 +1207,8 @@
     "saveAsWritten": "Save as I wrote it",
     "factDeleteRemove": "Remove",
     "factDeleteKeep": "Keep",
-    "factDeleteKept": "Nothing was removed."
+    "factDeleteKept": "Nothing was removed.",
+    "topicsSavedHint": "Topics saved! Feel free to keep adding facts, or tap {{close}} to start exploring."
   },
   "articleFeedback": {
     "thumbsUp": "I like it",

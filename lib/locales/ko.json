@@ -781,7 +781,8 @@
     "saveAsWritten": "쓴 그대로 저장",
     "factDeleteRemove": "삭제",
     "factDeleteKeep": "유지",
-    "factDeleteKept": "아무것도 삭제하지 않았습니다."
+    "factDeleteKept": "아무것도 삭제하지 않았습니다.",
+    "topicsSavedHint": "주제가 저장되었습니다! 계속 정보를 추가하거나 {{close}}을(를) 탭해 둘러보기를 시작하세요."
   },
   "articleFeedback": {
     "thumbsUp": "좋아요",

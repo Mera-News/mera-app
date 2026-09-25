@@ -473,17 +473,35 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
             </View>
           )}
 
+          {/* SAVED, THEN WHAT NEXT (owner request, ux2). Only once topics are
+              saved: the user may keep adding facts or close the chat. The ✕
+              is a plain text character drawn like the header Close; the
+              spoken label says "Close" instead of reading the character. */}
+          {status === 'done' && !empty && (
+            <Text
+              size="xs"
+              style={styles.savedHint}
+              accessibilityLabel={t('floatingChat.topicsSavedHint', { close: t('floatingChat.close') })}
+              testID={`chat-topics-saved-${factId}`}
+            >
+              {t('floatingChat.topicsSavedHint', { close: '\u2715' })}
+            </Text>
+          )}
+
+          {/* OPTIONAL, AND LOOKS IT (owner request, ux2): a quiet text button,
+              not an accent pill that read as the next required step. The
+              frame is a number (NativeWind rem is 14). */}
           <Pressable
             onPress={handleFindMore}
             disabled={isFindingMore}
-            hitSlop={12}
+            hitSlop={8}
             style={styles.moreButton}
             accessibilityRole="button"
             accessibilityState={{ disabled: isFindingMore }}
-            accessibilityLabel={t('chatTopics.findMore')}
+            accessibilityLabel={isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
             testID={`chat-topics-more-${factId}`}
           >
-            <Text size="xs" bold style={styles.retryText}>
+            <Text size="xs" style={styles.moreText}>
               {isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
             </Text>
           </Pressable>
@@ -517,15 +535,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
-  moreButton: {
-    minHeight: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: ACCENT,
-    paddingHorizontal: 14,
-  },
+  savedHint: { color: 'rgb(200, 200, 200)' },
+  moreButton: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  // Muted, but at least 4.5:1 on this card's ground (same value as the done tick).
+  moreText: { color: 'rgb(150, 150, 150)', textDecorationLine: 'underline' },
   title: { color: ACCENT, flexShrink: 0 },
   factLine: { flex: 1, color: 'rgb(190, 190, 190)' },
   section: { gap: 6 },

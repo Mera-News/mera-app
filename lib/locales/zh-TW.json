@@ -781,7 +781,8 @@
     "saveAsWritten": "照我寫的儲存",
     "factDeleteRemove": "移除",
     "factDeleteKeep": "保留",
-    "factDeleteKept": "沒有移除任何內容。"
+    "factDeleteKept": "沒有移除任何內容。",
+    "topicsSavedHint": "主題已儲存！你可以繼續新增資訊，或點按 {{close}} 開始探索。"
   },
   "articleFeedback": {
     "thumbsUp": "喜歡",

@@ -781,7 +781,8 @@
     "saveAsWritten": "Salva come l'ho scritto",
     "factDeleteRemove": "Rimuovi",
     "factDeleteKeep": "Tieni",
-    "factDeleteKept": "Non è stato rimosso nulla."
+    "factDeleteKept": "Non è stato rimosso nulla.",
+    "topicsSavedHint": "Argomenti salvati! Puoi continuare ad aggiungere informazioni, oppure tocca {{close}} per iniziare a esplorare."
   },
   "articleFeedback": {
     "thumbsUp": "Mi piace",

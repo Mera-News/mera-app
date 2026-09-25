@@ -781,7 +781,8 @@
     "saveAsWritten": "Opslaan zoals ik het schreef",
     "factDeleteRemove": "Verwijderen",
     "factDeleteKeep": "Houden",
-    "factDeleteKept": "Er is niets verwijderd."
+    "factDeleteKept": "Er is niets verwijderd.",
+    "topicsSavedHint": "Onderwerpen opgeslagen! Voeg gerust meer feiten toe, of tik op {{close}} om te beginnen met ontdekken."
   },
   "articleFeedback": {
     "thumbsUp": "Ik vind het leuk",

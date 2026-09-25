@@ -781,7 +781,8 @@
     "saveAsWritten": "บันทึกตามที่ฉันเขียน",
     "factDeleteRemove": "ลบ",
     "factDeleteKeep": "เก็บไว้",
-    "factDeleteKept": "ไม่มีสิ่งใดถูกลบ"
+    "factDeleteKept": "ไม่มีสิ่งใดถูกลบ",
+    "topicsSavedHint": "บันทึกหัวข้อแล้ว! คุณเพิ่มข้อมูลต่อได้เลย หรือแตะ {{close}} เพื่อเริ่มสำรวจ"
   },
   "articleFeedback": {
     "thumbsUp": "ถูกใจ",

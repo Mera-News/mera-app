@@ -781,7 +781,8 @@
     "saveAsWritten": "जैसा मैंने लिखा वैसे सेव करें",
     "factDeleteRemove": "हटाएं",
     "factDeleteKeep": "रखें",
-    "factDeleteKept": "कुछ भी नहीं हटाया गया।"
+    "factDeleteKept": "कुछ भी नहीं हटाया गया।",
+    "topicsSavedHint": "विषय सेव हो गए! आप और तथ्य जोड़ते रह सकते हैं, या एक्सप्लोर करना शुरू करने के लिए {{close}} पर टैप करें।"
   },
   "articleFeedback": {
     "thumbsUp": "मुझे पसंद है",

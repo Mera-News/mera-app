@@ -795,7 +795,8 @@
     "saveAsWritten": "Сохранить так, как я написал",
     "factDeleteRemove": "Удалить",
     "factDeleteKeep": "Оставить",
-    "factDeleteKept": "Ничего не удалено."
+    "factDeleteKept": "Ничего не удалено.",
+    "topicsSavedHint": "Темы сохранены! Можете и дальше добавлять факты или нажмите {{close}}, чтобы начать знакомство с новостями."
   },
   "articleFeedback": {
     "thumbsUp": "Нравится",

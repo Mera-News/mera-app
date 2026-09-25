@@ -781,7 +781,8 @@
     "saveAsWritten": "Yazdığım gibi kaydet",
     "factDeleteRemove": "Kaldır",
     "factDeleteKeep": "Tut",
-    "factDeleteKept": "Hiçbir şey kaldırılmadı."
+    "factDeleteKept": "Hiçbir şey kaldırılmadı.",
+    "topicsSavedHint": "Konular kaydedildi! Bilgi eklemeye devam edebilir ya da keşfetmeye başlamak için {{close}} simgesine dokunabilirsin."
   },
   "articleFeedback": {
     "thumbsUp": "Beğendim",
