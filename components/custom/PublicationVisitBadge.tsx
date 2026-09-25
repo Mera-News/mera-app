@@ -9,6 +9,7 @@ import {
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
+import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -25,6 +26,8 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
     const { width: screenWidth } = useWindowDimensions();
     const [count, setCount] = useState<number | null>(null);
     const [tooltipOpen, setTooltipOpen] = useState(false);
+    // Display only; the visit count below is looked up by the raw name.
+    const publicationShown = useDisplayPublication((publicationName ?? '').trim());
 
     useEffect(() => {
         const name = (publicationName ?? '').trim();
@@ -74,7 +77,7 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
                         <MaterialIcons name="visibility" size={16} color="#ffffff" />
                         <Text size="xs" italic className="flex-1 text-white">
                             {t('publicationVisits.badge', {
-                                publication: publicationName,
+                                publication: publicationShown,
                                 count,
                             })}
                         </Text>

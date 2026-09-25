@@ -302,7 +302,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 style={{ marginTop: FOOTER_GAP, minWidth: 0, height: FOOTER_LINE_BOX }}
                 testID="compact-card-footer"
               >
-                {publicationName ? (
+                {meta.publication ? (
                   <Text
                     size="xs"
                     className="text-typography-500"
@@ -310,7 +310,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                     ellipsizeMode="tail"
                     style={{ flexShrink: 1 }}
                   >
-                    {publicationName}
+                    {meta.publication}
                   </Text>
                 ) : (
                   <Box />

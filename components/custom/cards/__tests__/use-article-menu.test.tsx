@@ -730,6 +730,31 @@ describe('useArticleMenu running items', () => {
         await expect(opts.onUndo()).resolves.toBe(true);
         expect(mockSetPref).toHaveBeenCalledTimes(1);
     });
+
+    // ux2 A7: the display name is DISPLAY ONLY. The rows and the toast read
+    // the publication in the app language; the preference write keeps the raw
+    // name, which is the key every filter, pref and visit row matches on.
+    describe('display name vs key', () => {
+        const { usePublicationDisplayStore } = require('@/lib/stores/publication-display-store');
+        beforeEach(() => {
+            usePublicationDisplayStore.setState({ language: 'ru', names: { NOS: 'НОС' } });
+        });
+        afterEach(() => {
+            usePublicationDisplayStore.setState({ language: null, names: {} });
+        });
+
+        it('"Fewer from" shows the display name and writes the original', async () => {
+            const r = openMenu(<Host />);
+            expect(r.getByText('articleMenu.fewerFrom:НОС')).toBeTruthy();
+            expect(r.getByText('articleMenu.openOn:НОС')).toBeTruthy();
+            fireEvent.press(r.getByTestId('menu-fewer-from-source'));
+            dismiss();
+            await flushAsync();
+            await flushAsync();
+            expect(mockSetPref).toHaveBeenCalledWith({ kind: 'publication', publicationName: 'NOS' }, 'deprioritised');
+            expect(mockShowUndoToast.mock.calls[0][0].title).toBe('articleMenu.fewerFromDone:НОС');
+        });
+    });
 });
 
 // The Feed card and the detail screen hand their own hosts the leaves only

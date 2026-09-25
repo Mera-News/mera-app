@@ -42,9 +42,17 @@ export interface FeedbackLabelVars {
   place: string;
 }
 
-export function feedbackLabelVars(context: LocalFeedbackContext): FeedbackLabelVars {
+/** The tree context as LABELS read it: plus the publication's display name
+ *  in the app language (lib/stores/publication-display-store). Labels only:
+ *  resolve-leaf-actions reads `publicationName`, the raw key a publication
+ *  filter matches on, and never sees this field. */
+export type FeedbackLabelContext = LocalFeedbackContext & {
+  publicationDisplayName?: string | null;
+};
+
+export function feedbackLabelVars(context: FeedbackLabelContext): FeedbackLabelVars {
   return {
-    publication: context.publicationName ?? '',
+    publication: context.publicationDisplayName || context.publicationName || '',
     visits: context.publicationVisits ?? 0,
     eventType: context.eventType ?? '',
     entity: context.entity ?? '',
@@ -58,7 +66,7 @@ export function feedbackLabelVars(context: LocalFeedbackContext): FeedbackLabelV
  * matched-topic naming for `more_about_topic`. Falls back to the generic label
  * when there is no real topic to name, never an empty "More about: ".
  */
-export function feedbackNodeLabel(t: TFunction, node: FeedbackTreeNode, context: LocalFeedbackContext): string {
+export function feedbackNodeLabel(t: TFunction, node: FeedbackTreeNode, context: FeedbackLabelContext): string {
   if (node.id === TOPIC_NAMED_NODE_ID) {
     const choice = resolveTopicLabel(context);
     if (choice) {

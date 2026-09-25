@@ -117,6 +117,18 @@ describe('ReadTranslateActions', () => {
             expect(getByText('articleDetail.readOn::{"publication":"The Hindu"}')).toBeTruthy();
         });
 
+        it('names the publisher by its display name in the app language (ux2 A7)', () => {
+            const { usePublicationDisplayStore } = require('@/lib/stores/publication-display-store');
+            usePublicationDisplayStore.setState({ language: 'en', names: { '人民日报': 'Renmin Ribao' } });
+            try {
+                mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
+                const { getByText } = renderActions({ sourceLanguage: 'en', publicationName: '人民日报' });
+                expect(getByText('articleDetail.readOn::{"publication":"Renmin Ribao"}')).toBeTruthy();
+            } finally {
+                usePublicationDisplayStore.setState({ language: null, names: {} });
+            }
+        });
+
         it('falls back to the generic label when no publication name is supplied', () => {
             mockGetArticleTranslationSupport.mockReturnValue({ status: 'same-language' });
             const { getByText } = renderActions({ sourceLanguage: 'en', publicationName: null });

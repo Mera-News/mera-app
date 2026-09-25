@@ -13,6 +13,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 
 /** A route that will NOT get the reader something they can read as-is. */
 const ROUTE_COLOR = '#FFFFFF';
@@ -112,9 +113,10 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     // Mera (Google Translate carries the wrapped `u` param through).
     const googleTranslateUrl = buildGoogleTranslateUrl(appendReferrer(articleUrl), appLanguage);
 
-    const publication = publicationName?.trim()
-        ? titleCasePublication(publicationName)
-        : null;
+    // Display only: the publication in the app language when known. The
+    // visit `onOpenUrl` records is keyed by the screen's raw name, not this.
+    const publicationShown = useDisplayPublication(publicationName?.trim() ?? '');
+    const publication = publicationShown ? titleCasePublication(publicationShown) : null;
     const sameLanguage = support.status === 'same-language';
 
     // Green marks a route that gets the reader something readable: the

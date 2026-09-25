@@ -60,6 +60,7 @@ import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FactCheckCard from '@/components/custom/fact-checks/FactCheckCard';
 import { useStoredFactCheck } from '@/lib/fact-check/use-stored-fact-check';
+import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
 
 interface ArticleDetailScreenProps {
     articleId: string;
@@ -141,7 +142,7 @@ const SubscribedCoverageBlock: React.FC<{ readonly articleId: string }> = ({ art
             <VStack space="sm">
                 {coverage.publicationName ? (
                     <Text size="sm" className="text-gray-400">
-                        {coverage.publicationName}
+                        <DisplayPublicationName name={coverage.publicationName} />
                     </Text>
                 ) : null}
                 {coverage.titleEn ? (

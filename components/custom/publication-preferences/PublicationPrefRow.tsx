@@ -9,6 +9,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
 
 type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
 
@@ -100,7 +101,7 @@ const PublicationPrefRow: React.FC<PublicationPrefRowProps> = ({ pref, busy, onS
                     </VStack>
                 ) : (
                     <Text size="md" className="text-white flex-1 mr-2" numberOfLines={2}>
-                        {pref.publicationName}
+                        <DisplayPublicationName name={pref.publicationName} />
                     </Text>
                 )}
                 <Pressable

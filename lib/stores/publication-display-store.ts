@@ -212,3 +212,14 @@ export function displayPublicationName(name: string): string {
   if (!name) return name;
   return usePublicationDisplayStore.getState().names[name] ?? name;
 }
+
+/**
+ * `name` rendered in its display form, for a list row where a hook cannot sit
+ * inside `.map`. Nest it inside a <Text>: it renders a bare string.
+ */
+export function DisplayPublicationName({ name }: { name: string }): string {
+  // A bare string return, not createElement: the NativeWind babel transform
+  // rewrites a createElement import even in a .ts file, and a suite that
+  // mocks react-native-css-interop then throws on it.
+  return useDisplayPublication(name);
+}

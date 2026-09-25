@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { ListRenderItem, RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import DrillDownHeader from './DrillDownHeader';
+import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
 
 interface Props {
     readonly onBack: () => void;
@@ -138,7 +139,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     <SourceFlag countryCode={item.countryCode} size="xl" />
                     <VStack className="flex-1" space="xs">
                         <Text size="md" className="text-white" numberOfLines={1}>
-                            {item.publicationName}
+                            <DisplayPublicationName name={item.publicationName} />
                         </Text>
                         <Text size="xs" className="text-gray-400">
                             {t('publicationVisits.lastRead', { time: formatTimeAgo(t, item.lastVisitedAt) })}

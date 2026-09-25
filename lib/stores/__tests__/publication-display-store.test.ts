@@ -292,3 +292,19 @@ describe('publication-display-store', () => {
     });
   });
 });
+
+describe('DisplayPublicationName (list rows)', () => {
+  it('renders the display form as a bare string inside a Text', () => {
+    const { render } = require('@testing-library/react-native');
+    const { Text } = require('react-native');
+    const R = require('react');
+    const { usePublicationDisplayStore, DisplayPublicationName } = require('../publication-display-store');
+    usePublicationDisplayStore.setState({ language: 'en', names: { '人民日报': 'Renmin Ribao' } });
+    try {
+      const r = render(R['createElement'](Text, null, R['createElement'](DisplayPublicationName, { name: '人民日报' })));
+      expect(r.getByText('Renmin Ribao')).toBeTruthy();
+    } finally {
+      usePublicationDisplayStore.setState({ language: null, names: {} });
+    }
+  });
+});

@@ -32,6 +32,7 @@ import AddPhraseModal from './AddPhraseModal';
 import NegativeTopicRow from './NegativeTopicRow';
 import SuppressionRow from './SuppressionRow';
 import { useNotInterestedData } from './use-not-interested-data';
+import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
 
 const ACCENT = '#EDA77E';
 const SUBTLE = 'rgb(163,163,163)';
@@ -355,7 +356,7 @@ const NotInterestedScreen: React.FC<NotInterestedScreenProps> = ({ onBack }) => 
                                                 className="text-white flex-1 ml-3 mr-2"
                                                 numberOfLines={2}
                                             >
-                                                {pref.publicationName}
+                                                <DisplayPublicationName name={pref.publicationName} />
                                             </Text>
                                             <View className="rounded-full px-2 py-0.5 bg-gray-700">
                                                 <Text size="xs" style={{ color: SUBTLE }}>

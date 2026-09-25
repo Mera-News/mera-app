@@ -6,10 +6,10 @@
 // taps; what a leaf DOES is `performFeedbackLeaf`.
 
 import { ActionSheetRow } from '@/components/custom/cards/ArticleOverflowMenu';
-import { feedbackLabelVars, feedbackNodeLabel } from '@/components/custom/feedback-tree/label-vars';
+import { feedbackLabelVars, feedbackNodeLabel, type FeedbackLabelContext } from '@/components/custom/feedback-tree/label-vars';
 import { resolveTreeLevel, type FeedbackTreeRoot } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 import { Text } from '@/components/ui/text';
-import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackTree, FeedbackTreeNode } from '@/lib/news-harness/feedback-tree';
 import type { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,9 @@ export interface FeedbackTreeLevelProps {
     root: FeedbackTreeRoot;
     /** The branch ids opened so far (empty = the tree's root level). */
     pathIds: readonly string[];
-    context: LocalFeedbackContext;
+    /** Gates the rows and fills their labels; `publicationDisplayName` is
+     *  what {{publication}} SAYS (display only). */
+    context: FeedbackLabelContext;
     /** A branch with visible children was tapped: push it. */
     onDescend: (node: FeedbackTreeNode) => void;
     /** A leaf was tapped (the host confirms a destructive one first). */

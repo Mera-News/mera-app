@@ -10,6 +10,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
 
 interface Props {
     topPublications: VisitedPublication[];
@@ -48,7 +49,7 @@ const TopVisitedPublicationsCard: React.FC<Props> = ({ topPublications }) => {
                                         className="text-white flex-1"
                                         numberOfLines={1}
                                     >
-                                        {p.publicationName}
+                                        <DisplayPublicationName name={p.publicationName} />
                                     </Text>
                                 </HStack>
                                 <Box className="px-2 py-0.5 rounded-full bg-background-50">

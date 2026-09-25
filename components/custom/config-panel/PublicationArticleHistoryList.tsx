@@ -22,6 +22,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
+import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 
 interface Props {
     readonly publicationName: string;
@@ -54,6 +55,8 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
     onBack,
 }) => {
     const { t } = useTranslation();
+    // Display only: the visits below are looked up by the raw name.
+    const publicationShown = useDisplayPublication(publicationName);
     const [items, setItems] = useState<VisitedArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -193,7 +196,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
         // its SafeAreaView, so the page background spans the safe areas.
         <Box className="flex-1">
             <DrillDownHeader
-                title={publicationName}
+                title={publicationShown}
                 subtitle={t('publicationVisits.articlesRead')}
                 onBack={onBack}
             />
