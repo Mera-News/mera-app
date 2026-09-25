@@ -22,6 +22,7 @@ import {
 
 import type { ToolDefinition } from '../core/types';
 import { buildExampleQuestionsText } from './questionnaire-data';
+import { asUntrusted } from './untrusted-text';
 
 /**
  * Builds tool definitions in OpenAI JSON Schema format (sent to cloud backend).
@@ -887,6 +888,71 @@ Generate at most 3 topics
 []
 
 Output: JSON array of strings, AT MOST the requested count. Fewer is correct, \`[]\` is correct. Never pad.`;
+
+/**
+ * THE DEFERRED COMBINATION PASS (ux2 F3). Topic generation per fact is
+ * isolated; the topics that exist only because two facts sit side by side
+ * come from this pass, which runs once per fact after a Profile chat that
+ * changed facts closes (cloud only), over the fact plus up to 25 supporting
+ * facts and with NO location line.
+ *
+ * DERIVED from the shipped combo prompt, which stays byte-identical so the
+ * topic eval's 'current' arm keeps measuring today's behaviour. The edits drop
+ * the "User location" input and every reference to a sibling fact-only call;
+ * where the user lives now arrives as one of the Other user facts. Each edit
+ * is exact text; `combo-pass-prompt.test.ts` fails if any stops matching.
+ */
+const COMBO_PASS_EDITS: readonly (readonly [string, string])[] = [
+  [
+    '2. **User location** (optional) — where the user CURRENTLY LIVES, as the raw statement of their residence fact. A PLACE ANCHOR only: read the place out of it and IGNORE anything else it mentions (origin, profession, family). Origin appearing there never makes a work/interest Fact a diaspora topic.\n3. **Other user facts**',
+    '2. **Other user facts**',
+  ],
+  [
+    'output `[]` — the sibling fact-only prompt will cover the user.',
+    'output `[]`: the Fact already has its own topics.',
+  ],
+  [' Ignore User location.', ''],
+  [
+    '- **(b)** No Fact location, User location given, Fact is personal/local → anchor to User location, full chain.',
+    '- **(b)** No Fact location, an Other fact says where the user lives, Fact is personal/local → anchor to that place, full chain.',
+  ],
+  [
+    '- **(c)** Fact is global/professional → unanchored. Never use User location.',
+    '- **(c)** Fact is global/professional → unanchored. Never anchor it to where the user lives.',
+  ],
+  [
+    '- No duplicates within this output OR with the sibling fact-only output (assume the sibling already covered plain Fact-only anchors).',
+    '- No duplicates within this output, and nothing that restates the Fact alone: the Fact already has its own topics.',
+  ],
+  ['User location: Amsterdam, Netherlands\nOther user facts: ', 'Other user facts: Lives in Amsterdam, Netherlands; '],
+  [
+    'Empty is correct —\nthe sibling fact-only prompt still covers this fact.)',
+    'Empty is correct:\nthe Fact already has its own topics.)',
+  ],
+];
+
+export const COMBO_PASS_TOPIC_SYSTEM_PROMPT = COMBO_PASS_EDITS.reduce(
+  (prompt, [from, to]) => prompt.split(from).join(to),
+  CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
+);
+
+/** Combination topics per fact: a ceiling, and most facts share no overlap. */
+export const COMBO_PASS_MAX_TOPICS = 4;
+
+/** The pass's user message: the fact, its supporting facts, the ceiling. No
+ *  location line: where the user lives is one of the supporting facts. */
+export function buildComboPassUserMessage(
+  fact: string,
+  supporting: readonly string[],
+  ceiling: number = COMBO_PASS_MAX_TOPICS,
+): string {
+  const clean = (t: string) => asUntrusted(t, t.length);
+  return [
+    `Fact: "${clean(fact)}"`,
+    `Other user facts: ${supporting.map(clean).join('; ')}`,
+    `Generate at most ${ceiling} topics`,
+  ].join('\n');
+}
 
 /**
  * The cloud topic-generation system prompt for one call half, honouring an
