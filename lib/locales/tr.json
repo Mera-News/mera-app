@@ -777,7 +777,8 @@
     "topicGenRetry": "Tekrar Dene",
     "aiUsageNoticeGeneral": "Mera hata yapabilir, önemli şeyleri kontrol et.",
     "trackChooseHint": "Neyi takip edeceğini seç",
-    "factDeletePendingTitle": "Profilinden kaldırılacak"
+    "factDeletePendingTitle": "Profilinden kaldırılacak",
+    "saveAsWritten": "Yazdığım gibi kaydet"
   },
   "articleFeedback": {
     "thumbsUp": "Beğendim",
@@ -870,7 +871,8 @@
     "formError": "Lütfen tüm zorunlu alanları doldurun.",
     "emailError": "Lütfen geçerli bir e-posta adresi girin.",
     "captureScreenshotError": "Ekran görüntüsü alınamadı.",
-    "genericError": "Beklenmeyen bir hata nedeniyle geri bildirim gönderilemedi."
+    "genericError": "Beklenmeyen bir hata nedeniyle geri bildirim gönderilemedi.",
+    "chatAttachmentNote": "Mera ile sohbetin bu rapora eklenecek."
   },
   "observability": {
     "title": "Gözlemlenebilirlik",
@@ -2733,37 +2735,36 @@
       "Sorun hazırlanıyor."
     ],
     "queued": [
-      "İsteğin sıraya alınıyor.",
-      "Aynı anda birkaç iş çalışıyor. Sıradaki sensin."
+      "İsteğin telefonunda sıradaki."
     ],
     "securing": [
-      "Mesajın yalnızca modelin açabileceği şekilde kilitleniyor.",
-      "Sözlerin telefonundan çıkmadan önce şifreleniyor."
+      "Mesajın, yalnızca güvenilir ortamındaki modelin okuyabileceği şekilde şifreleniyor.",
+      "Sözlerin telefonundan çıkmadan önce şifrelenir."
     ],
     "attesting": [
-      "Modele özel bir kanal kuruluyor.",
-      "Bunu seninle Mera arasında tutan anahtar alınıyor.",
-      "Özel bir görüşmenin kurulması bir an sürüyor."
+      "Seninle model arasında güvenilir bir ortamda güvenli bağlantı kuruluyor.",
+      "Anahtar, modelin güvenilir ortamından alınıyor; böylece bunu yalnızca model okuyabilir."
     ],
     "thinking": [
-      "Mera yazdıklarını okuyor.",
-      "En iyi cevap yolu aranıyor."
+      "Model mesajını okuyor.",
+      "En iyi yanıt hazırlanıyor."
     ],
     "retrying": [
-      "Bu her zamankinden uzun sürüyor. Mera başka bir yol deniyor.",
-      "Hâlâ devam ediyor. Beklediğin için teşekkürler."
+      "Bu her zamankinden uzun sürüyor. Başka bir güvenli yol deneniyor.",
+      "Hâlâ üzerinde çalışılıyor. Beklediğin için teşekkürler."
     ],
     "deviceLoading": [
-      "Telefonundaki model uyandırılıyor.",
-      "Yüklenirken ilk cevap biraz daha uzun sürüyor."
+      "Model telefonuna yükleniyor.",
+      "İlk yanıt, model yüklenirken biraz daha uzun sürer."
     ],
     "devicePreparing": [
-      "Mera senin hakkında bildiklerini topluyor.",
-      "Telefonun cevap vermeye hazırlanıyor."
+      "Telefonun yanıt vermeye hazırlanıyor."
     ],
     "deviceThinking": [
-      "Telefonunda düşünülüyor.",
-      "Bu, cihazında çalışıyor, bu yüzden hiçbir şey hiçbir yere gönderilmiyor."
+      "Telefonunda düşünülüyor. Hiçbir şey cihazından çıkmaz."
+    ],
+    "webSearch": [
+      "Cihazından web'de aranıyor…"
     ]
   },
   "headerNarration": {

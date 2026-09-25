@@ -789,7 +789,8 @@
     "topicGenRetry": "Ponów",
     "aiUsageNoticeGeneral": "Mera może się mylić, więc sprawdzaj ważne rzeczy.",
     "trackChooseHint": "Wybierz, co obserwować",
-    "factDeletePendingTitle": "Zostanie usunięte z Twojego profilu"
+    "factDeletePendingTitle": "Zostanie usunięte z Twojego profilu",
+    "saveAsWritten": "Zapisz tak, jak napisałem"
   },
   "articleFeedback": {
     "thumbsUp": "Podoba mi się",
@@ -882,7 +883,8 @@
     "formError": "Wypełnij wszystkie wymagane pola.",
     "emailError": "Podaj prawidłowy adres e-mail.",
     "captureScreenshotError": "Nie udało się zrobić zrzutu ekranu.",
-    "genericError": "Nie udało się wysłać opinii z powodu nieoczekiwanego błędu."
+    "genericError": "Nie udało się wysłać opinii z powodu nieoczekiwanego błędu.",
+    "chatAttachmentNote": "Twój czat z Merą zostanie dołączony do tego zgłoszenia."
   },
   "observability": {
     "title": "Obserwowalność",
@@ -2769,37 +2771,36 @@
       "Przygotowujemy twoje pytanie."
     ],
     "queued": [
-      "Ustawiamy twoje zapytanie w kolejce.",
-      "Kilka rzeczy dzieje się naraz. Twoja jest następna."
+      "Twoje zapytanie jest następne w kolejce na telefonie."
     ],
     "securing": [
-      "Zamykamy twoją wiadomość tak, by otworzyć mógł ją tylko model.",
-      "Twoje słowa są szyfrowane, zanim opuszczą telefon."
+      "Szyfrowanie wiadomości, aby tylko model w swoim zaufanym środowisku mógł ją przeczytać.",
+      "Twoje słowa są szyfrowane na telefonie, zanim go opuszczą."
     ],
     "attesting": [
-      "Przygotowujemy prywatny kanał do modelu.",
-      "Pobieramy klucz, dzięki któremu zostaje to między tobą a Merą.",
-      "Prywatna rozmowa potrzebuje chwili na przygotowanie."
+      "Nawiązywanie bezpiecznego połączenia między Tobą a modelem w zaufanym środowisku.",
+      "Pobieranie klucza z zaufanego środowiska modelu, aby tylko model mógł to przeczytać."
     ],
     "thinking": [
-      "Mera czyta to, co napisałeś.",
-      "Szukamy najlepszego sposobu na odpowiedź."
+      "Model czyta Twoją wiadomość.",
+      "Szukam najlepszej odpowiedzi."
     ],
     "retrying": [
-      "Trwa to dłużej niż zwykle. Mera próbuje inną drogą.",
-      "Wciąż pracujemy. Dziękujemy za cierpliwość."
+      "To trwa dłużej niż zwykle. Próbuję innej bezpiecznej drogi.",
+      "Wciąż nad tym pracuję. Dziękuję za cierpliwość."
     ],
     "deviceLoading": [
-      "Uruchamiamy model na twoim telefonie.",
-      "Pierwsza odpowiedź trwa nieco dłużej, dopóki się ładuje."
+      "Wczytywanie modelu na telefonie.",
+      "Pierwsza odpowiedź trwa nieco dłużej, gdy model się wczytuje."
     ],
     "devicePreparing": [
-      "Mera zbiera to, co już o tobie wie.",
-      "Przygotowujemy telefon do odpowiedzi."
+      "Przygotowuję telefon do odpowiedzi."
     ],
     "deviceThinking": [
-      "Myślimy nad tym na twoim telefonie.",
-      "Działa to na twoim urządzeniu, więc nic nigdzie nie jest wysyłane."
+      "Przemyślam to na Twoim telefonie. Nic nie opuszcza urządzenia."
+    ],
+    "webSearch": [
+      "Szukam w internecie z Twojego urządzenia…"
     ]
   },
   "headerNarration": {

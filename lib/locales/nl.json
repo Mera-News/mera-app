@@ -777,7 +777,8 @@
     "topicGenRetry": "Opnieuw",
     "aiUsageNoticeGeneral": "Mera kan fouten maken, dus controleer alles wat belangrijk is.",
     "trackChooseHint": "Kies wat je wilt volgen",
-    "factDeletePendingTitle": "Wordt verwijderd uit je profiel"
+    "factDeletePendingTitle": "Wordt verwijderd uit je profiel",
+    "saveAsWritten": "Opslaan zoals ik het schreef"
   },
   "articleFeedback": {
     "thumbsUp": "Ik vind het leuk",
@@ -870,7 +871,8 @@
     "formError": "Vul alle verplichte velden in.",
     "emailError": "Voer een geldig e-mailadres in.",
     "captureScreenshotError": "Screenshot maken is mislukt.",
-    "genericError": "Feedback versturen is mislukt door een onverwachte fout."
+    "genericError": "Feedback versturen is mislukt door een onverwachte fout.",
+    "chatAttachmentNote": "Je chat met Mera wordt bij dit rapport gevoegd."
   },
   "observability": {
     "title": "Observabiliteit",
@@ -2731,37 +2733,36 @@
       "Je vraag wordt klaargezet."
     ],
     "queued": [
-      "Je verzoek wordt in de rij gezet.",
-      "Er lopen een paar dingen tegelijk. Jij bent zo aan de beurt."
+      "Je verzoek is als volgende aan de beurt op je telefoon."
     ],
     "securing": [
-      "Je bericht wordt afgesloten zodat alleen het model het kan openen.",
-      "Je woorden worden versleuteld voordat ze je telefoon verlaten."
+      "Je bericht versleutelen zodat alleen het model in zijn vertrouwde omgeving het kan lezen.",
+      "Je woorden worden op je telefoon versleuteld voordat ze vertrekken."
     ],
     "attesting": [
-      "Er wordt een privékanaal naar het model opgezet.",
-      "De sleutel wordt opgehaald die dit tussen jou en Mera houdt.",
-      "Een privégesprek heeft even nodig om opgezet te worden."
+      "Een beveiligde verbinding tussen jou en het model in een vertrouwde omgeving opzetten.",
+      "De sleutel ophalen uit de vertrouwde omgeving van het model, zodat alleen het model dit kan lezen."
     ],
     "thinking": [
-      "Mera leest wat je hebt geschreven.",
-      "De beste manier om te antwoorden wordt gezocht."
+      "Het model leest je bericht.",
+      "Het beste antwoord uitwerken."
     ],
     "retrying": [
-      "Dit duurt langer dan normaal. Mera probeert een andere route.",
-      "Nog steeds bezig. Bedankt voor het wachten."
+      "Dit duurt langer dan normaal. Een andere beveiligde route proberen.",
+      "Nog bezig. Bedankt voor het wachten."
     ],
     "deviceLoading": [
-      "Het model op je telefoon wordt gestart.",
-      "Het eerste antwoord duurt wat langer terwijl het laadt."
+      "Het model wordt op je telefoon geladen.",
+      "Het eerste antwoord duurt iets langer tijdens het laden."
     ],
     "devicePreparing": [
-      "Mera verzamelt wat ze al over je weet.",
       "Je telefoon wordt klaargemaakt om te antwoorden."
     ],
     "deviceThinking": [
-      "Mera denkt erover na op je telefoon.",
-      "Dit draait op je apparaat, er wordt dus niets ergens naartoe gestuurd."
+      "Wordt op je telefoon overdacht. Niets verlaat je apparaat."
+    ],
+    "webSearch": [
+      "Op het web zoeken vanaf je apparaat…"
     ]
   },
   "headerNarration": {

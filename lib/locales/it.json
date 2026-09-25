@@ -777,7 +777,8 @@
     "topicGenRetry": "Riprova",
     "aiUsageNoticeGeneral": "Mera può sbagliare, quindi verifica le cose importanti.",
     "trackChooseHint": "Scegli cosa seguire",
-    "factDeletePendingTitle": "Verrà rimosso dal tuo profilo"
+    "factDeletePendingTitle": "Verrà rimosso dal tuo profilo",
+    "saveAsWritten": "Salva come l'ho scritto"
   },
   "articleFeedback": {
     "thumbsUp": "Mi piace",
@@ -870,7 +871,8 @@
     "formError": "Compila tutti i campi obbligatori.",
     "emailError": "Inserisci un indirizzo email valido.",
     "captureScreenshotError": "Impossibile acquisire lo screenshot.",
-    "genericError": "Impossibile inviare il feedback a causa di un errore imprevisto."
+    "genericError": "Impossibile inviare il feedback a causa di un errore imprevisto.",
+    "chatAttachmentNote": "La tua chat con Mera sarà allegata a questa segnalazione."
   },
   "observability": {
     "title": "Osservabilità",
@@ -2731,37 +2733,36 @@
       "Stiamo preparando la tua domanda."
     ],
     "queued": [
-      "La tua richiesta è in coda.",
-      "Ci sono un paio di cose in corso. La tua è la prossima."
+      "La tua richiesta è la prossima sul tuo telefono."
     ],
     "securing": [
-      "Il tuo messaggio viene chiuso in modo che solo il modello possa aprirlo.",
-      "Le tue parole vengono cifrate prima di lasciare il telefono."
+      "Cifratura del messaggio, così solo il modello nel suo ambiente attendibile può leggerlo.",
+      "Le tue parole vengono cifrate sul telefono prima di uscire."
     ],
     "attesting": [
-      "Stiamo preparando un canale privato verso il modello.",
-      "Recuperiamo la chiave che tiene tutto questo tra te e Mera.",
-      "Una conversazione privata richiede un momento per essere avviata."
+      "Stabilendo una connessione sicura tra te e il modello in un ambiente attendibile.",
+      "Recupero della chiave dall'ambiente attendibile del modello, così solo il modello può leggere questo."
     ],
     "thinking": [
-      "Mera sta leggendo quello che hai scritto.",
-      "Stiamo cercando il modo migliore di rispondere."
+      "Il modello sta leggendo il tuo messaggio.",
+      "Sto cercando la risposta migliore."
     ],
     "retrying": [
-      "Ci sta mettendo più del solito. Mera sta provando un'altra strada.",
-      "Ci stiamo ancora lavorando. Grazie per l'attesa."
+      "Ci vuole più del solito. Provo un altro percorso sicuro.",
+      "Ci sto ancora lavorando. Grazie per l'attesa."
     ],
     "deviceLoading": [
-      "Stiamo avviando il modello sul tuo telefono.",
-      "La prima risposta richiede un po' più di tempo mentre si carica."
+      "Caricamento del modello sul telefono.",
+      "La prima risposta richiede un po' di più mentre si carica."
     ],
     "devicePreparing": [
-      "Mera sta raccogliendo quello che sa già di te.",
-      "Stiamo preparando il telefono a rispondere."
+      "Preparo il telefono a rispondere."
     ],
     "deviceThinking": [
-      "Mera ci sta pensando sul tuo telefono.",
-      "Tutto avviene sul tuo dispositivo, quindi non viene inviato nulla da nessuna parte."
+      "Ci penso sul tuo telefono. Nulla lascia il dispositivo."
+    ],
+    "webSearch": [
+      "Ricerca sul web dal tuo dispositivo…"
     ]
   },
   "headerNarration": {

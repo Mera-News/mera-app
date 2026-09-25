@@ -777,7 +777,8 @@
     "topicGenRetry": "Thử lại",
     "aiUsageNoticeGeneral": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra những điều quan trọng.",
     "trackChooseHint": "Chọn nội dung để theo dõi",
-    "factDeletePendingTitle": "Sẽ bị xóa khỏi hồ sơ của bạn"
+    "factDeletePendingTitle": "Sẽ bị xóa khỏi hồ sơ của bạn",
+    "saveAsWritten": "Lưu đúng như tôi đã viết"
   },
   "articleFeedback": {
     "thumbsUp": "Tôi thích",
@@ -870,7 +871,8 @@
     "formError": "Vui lòng điền đầy đủ các trường bắt buộc.",
     "emailError": "Vui lòng nhập địa chỉ email hợp lệ.",
     "captureScreenshotError": "Không thể chụp ảnh màn hình.",
-    "genericError": "Không thể gửi phản hồi do lỗi không mong muốn."
+    "genericError": "Không thể gửi phản hồi do lỗi không mong muốn.",
+    "chatAttachmentNote": "Cuộc trò chuyện của bạn với Mera sẽ được đính kèm vào báo cáo này."
   },
   "observability": {
     "title": "Quan sát",
@@ -2731,37 +2733,36 @@
       "Đang sắp xếp câu hỏi của bạn."
     ],
     "queued": [
-      "Đang xếp yêu cầu của bạn vào hàng.",
-      "Có vài việc đang chạy cùng lúc. Bạn là người tiếp theo."
+      "Yêu cầu của bạn là yêu cầu tiếp theo trên điện thoại."
     ],
     "securing": [
-      "Đang khóa tin nhắn của bạn để chỉ mô hình mới mở được.",
-      "Lời của bạn được mã hóa trước khi rời khỏi điện thoại."
+      "Đang mã hóa tin nhắn để chỉ mô hình trong môi trường tin cậy của nó đọc được.",
+      "Lời bạn được mã hóa trên điện thoại trước khi gửi đi."
     ],
     "attesting": [
-      "Đang thiết lập một kênh riêng tới mô hình.",
-      "Đang lấy khóa giữ cho việc này chỉ nằm giữa bạn và Mera.",
-      "Một cuộc trò chuyện riêng tư cần một chút thời gian để thiết lập."
+      "Đang thiết lập kết nối an toàn giữa bạn và mô hình trong môi trường tin cậy.",
+      "Đang lấy khóa từ môi trường tin cậy của mô hình, để chỉ mô hình đọc được nội dung này."
     ],
     "thinking": [
-      "Mera đang đọc những gì bạn viết.",
-      "Đang tìm cách trả lời tốt nhất."
+      "Mô hình đang đọc tin nhắn của bạn.",
+      "Đang tìm câu trả lời tốt nhất."
     ],
     "retrying": [
-      "Việc này lâu hơn bình thường. Mera đang thử một hướng khác.",
-      "Vẫn đang chạy. Cảm ơn bạn đã chờ."
+      "Việc này lâu hơn bình thường. Đang thử một đường an toàn khác.",
+      "Vẫn đang xử lý. Cảm ơn bạn đã chờ."
     ],
     "deviceLoading": [
-      "Đang đánh thức mô hình trên điện thoại của bạn.",
-      "Câu trả lời đầu tiên lâu hơn một chút trong lúc tải."
+      "Đang tải mô hình trên điện thoại.",
+      "Câu trả lời đầu tiên lâu hơn một chút khi đang tải."
     ],
     "devicePreparing": [
-      "Đang tập hợp những gì Mera đã biết về bạn.",
-      "Đang chuẩn bị điện thoại của bạn để trả lời."
+      "Đang chuẩn bị điện thoại để trả lời."
     ],
     "deviceThinking": [
-      "Đang suy nghĩ ngay trên điện thoại của bạn.",
-      "Việc này chạy trên thiết bị của bạn nên không có gì được gửi đi đâu cả."
+      "Đang suy nghĩ trên điện thoại của bạn. Không gì rời khỏi thiết bị."
+    ],
+    "webSearch": [
+      "Đang tìm trên web từ thiết bị của bạn…"
     ]
   },
   "headerNarration": {

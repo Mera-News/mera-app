@@ -777,7 +777,8 @@
     "topicGenRetry": "Erneut versuchen",
     "aiUsageNoticeGeneral": "Mera kann Fehler machen. Prüf also alles Wichtige nach.",
     "trackChooseHint": "Wähle, was du verfolgen willst",
-    "factDeletePendingTitle": "Wird aus deinem Profil entfernt"
+    "factDeletePendingTitle": "Wird aus deinem Profil entfernt",
+    "saveAsWritten": "So speichern, wie ich es geschrieben habe"
   },
   "articleFeedback": {
     "thumbsUp": "Gefällt mir",
@@ -870,7 +871,8 @@
     "formError": "Bitte füllen Sie alle erforderlichen Felder aus.",
     "emailError": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
     "captureScreenshotError": "Screenshot konnte nicht aufgenommen werden.",
-    "genericError": "Feedback konnte aufgrund eines unerwarteten Fehlers nicht gesendet werden."
+    "genericError": "Feedback konnte aufgrund eines unerwarteten Fehlers nicht gesendet werden.",
+    "chatAttachmentNote": "Dein Chat mit Mera wird diesem Bericht beigefügt."
   },
   "observability": {
     "title": "Beobachtbarkeit",
@@ -2731,37 +2733,36 @@
       "Deine Frage wird vorbereitet."
     ],
     "queued": [
-      "Deine Anfrage wird eingereiht.",
-      "Gerade läuft noch etwas anderes. Du bist als Nächstes dran."
+      "Deine Anfrage ist auf deinem Handy als Nächstes an der Reihe."
     ],
     "securing": [
-      "Deine Nachricht wird so verschlossen, dass nur das Modell sie öffnen kann.",
-      "Deine Worte werden verschlüsselt, bevor sie dein Handy verlassen."
+      "Deine Nachricht wird verschlüsselt, damit nur das Modell in seiner vertrauenswürdigen Umgebung sie lesen kann.",
+      "Deine Worte werden auf deinem Handy verschlüsselt, bevor sie es verlassen."
     ],
     "attesting": [
-      "Ein privater Kanal zum Modell wird aufgebaut.",
-      "Der Schlüssel wird geholt, der das zwischen dir und Mera hält.",
-      "Ein privates Gespräch braucht einen Moment zum Einrichten."
+      "Sichere Verbindung zwischen dir und dem Modell in einer vertrauenswürdigen Umgebung wird aufgebaut.",
+      "Schlüssel aus der vertrauenswürdigen Umgebung des Modells wird geholt, damit nur das Modell dies lesen kann."
     ],
     "thinking": [
-      "Mera liest, was du geschrieben hast.",
-      "Der beste Weg zur Antwort wird gesucht."
+      "Das Modell liest deine Nachricht.",
+      "Die beste Antwort wird erarbeitet."
     ],
     "retrying": [
-      "Das dauert länger als sonst. Mera versucht einen anderen Weg.",
-      "Läuft noch. Danke fürs Warten."
+      "Das dauert länger als sonst. Ein anderer sicherer Weg wird versucht.",
+      "Wird noch bearbeitet. Danke fürs Warten."
     ],
     "deviceLoading": [
-      "Das Modell auf deinem Handy wird gestartet.",
-      "Die erste Antwort dauert etwas länger, solange es lädt."
+      "Das Modell wird auf deinem Handy geladen.",
+      "Die erste Antwort dauert etwas länger, während es lädt."
     ],
     "devicePreparing": [
-      "Mera trägt zusammen, was sie schon über dich weiß.",
       "Dein Handy wird für die Antwort vorbereitet."
     ],
     "deviceThinking": [
-      "Mera denkt auf deinem Handy nach.",
-      "Das läuft auf deinem Gerät, es wird nichts irgendwohin geschickt."
+      "Wird auf deinem Handy durchdacht. Nichts verlässt dein Gerät."
+    ],
+    "webSearch": [
+      "Suche im Web von deinem Gerät aus…"
     ]
   },
   "headerNarration": {

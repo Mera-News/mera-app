@@ -777,7 +777,8 @@
     "topicGenRetry": "Coba Lagi",
     "aiUsageNoticeGeneral": "Mera bisa keliru, jadi periksa hal yang penting.",
     "trackChooseHint": "Pilih yang ingin diikuti",
-    "factDeletePendingTitle": "Akan dihapus dari profil Anda"
+    "factDeletePendingTitle": "Akan dihapus dari profil Anda",
+    "saveAsWritten": "Simpan seperti yang saya tulis"
   },
   "articleFeedback": {
     "thumbsUp": "Saya suka",
@@ -870,7 +871,8 @@
     "formError": "Harap isi semua kolom yang wajib diisi.",
     "emailError": "Harap masukkan alamat email yang valid.",
     "captureScreenshotError": "Gagal mengambil tangkapan layar.",
-    "genericError": "Tidak dapat mengirim masukan karena terjadi kesalahan yang tidak terduga."
+    "genericError": "Tidak dapat mengirim masukan karena terjadi kesalahan yang tidak terduga.",
+    "chatAttachmentNote": "Chat Anda dengan Mera akan dilampirkan pada laporan ini."
   },
   "observability": {
     "title": "Keterlihatan",
@@ -2730,37 +2732,36 @@
       "Menyiapkan pertanyaanmu."
     ],
     "queued": [
-      "Mengantrekan permintaanmu.",
-      "Ada beberapa hal yang sedang berjalan. Punyamu berikutnya."
+      "Permintaan Anda berikutnya dalam antrean di ponsel Anda."
     ],
     "securing": [
-      "Mengunci pesanmu agar hanya model yang bisa membukanya.",
-      "Kata-katamu dienkripsi sebelum meninggalkan ponselmu."
+      "Mengenkripsi pesan Anda agar hanya model di lingkungan tepercayanya yang bisa membacanya.",
+      "Kata-kata Anda dienkripsi di ponsel sebelum dikirim."
     ],
     "attesting": [
-      "Menyiapkan jalur pribadi ke model.",
-      "Mengambil kunci yang menjaga ini tetap antara kamu dan Mera.",
-      "Percakapan pribadi butuh sesaat untuk disiapkan."
+      "Membuat koneksi aman antara Anda dan model di lingkungan tepercaya.",
+      "Mengambil kunci dari lingkungan tepercaya model, jadi hanya model yang bisa membaca ini."
     ],
     "thinking": [
-      "Mera sedang membaca yang kamu tulis.",
-      "Mencari cara terbaik untuk menjawab."
+      "Model sedang membaca pesan Anda.",
+      "Menyusun jawaban terbaik."
     ],
     "retrying": [
-      "Ini lebih lama dari biasanya. Mera mencoba jalur lain.",
-      "Masih berjalan. Terima kasih sudah menunggu."
+      "Ini lebih lama dari biasanya. Mencoba jalur aman lain.",
+      "Masih dikerjakan. Terima kasih sudah menunggu."
     ],
     "deviceLoading": [
-      "Membangunkan model di ponselmu.",
-      "Jawaban pertama butuh sedikit lebih lama selagi dimuat."
+      "Memuat model di ponsel Anda.",
+      "Jawaban pertama sedikit lebih lama saat model dimuat."
     ],
     "devicePreparing": [
-      "Mengumpulkan apa yang sudah Mera ketahui tentang kamu.",
-      "Menyiapkan ponselmu untuk menjawab."
+      "Menyiapkan ponsel Anda untuk menjawab."
     ],
     "deviceThinking": [
-      "Memikirkannya di ponselmu.",
-      "Ini berjalan di perangkatmu, jadi tidak ada yang dikirim ke mana pun."
+      "Memikirkannya di ponsel Anda. Tidak ada yang keluar dari perangkat."
+    ],
+    "webSearch": [
+      "Mencari di web dari perangkat Anda…"
     ]
   },
   "headerNarration": {
