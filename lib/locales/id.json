@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "Mera bisa keliru, jadi periksa hal yang penting.",
     "trackChooseHint": "Pilih yang ingin diikuti",
     "factDeletePendingTitle": "Akan dihapus dari profil Anda",
-    "saveAsWritten": "Simpan seperti yang saya tulis"
+    "saveAsWritten": "Simpan seperti yang saya tulis",
+    "factDeleteRemove": "Hapus",
+    "factDeleteKeep": "Simpan",
+    "factDeleteKept": "Tidak ada yang dihapus."
   },
   "articleFeedback": {
     "thumbsUp": "Saya suka",

@@ -806,7 +806,10 @@
     "aiUsageNoticeGeneral": "قد يخطئ Mera، لذا تحقّق من أي شيء مهم.",
     "trackChooseHint": "اختر ما تريد متابعته",
     "factDeletePendingTitle": "ستتم إزالته من ملفك الشخصي",
-    "saveAsWritten": "احفظ كما كتبته"
+    "saveAsWritten": "احفظ كما كتبته",
+    "factDeleteRemove": "إزالة",
+    "factDeleteKeep": "الإبقاء",
+    "factDeleteKept": "لم تتم إزالة أي شيء."
   },
   "articleFeedback": {
     "thumbsUp": "أعجبني",

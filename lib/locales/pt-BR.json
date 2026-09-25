@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "O Mera pode cometer erros, então confira o que for importante.",
     "trackChooseHint": "Escolha o que seguir",
     "factDeletePendingTitle": "Será removido do seu perfil",
-    "saveAsWritten": "Salvar como eu escrevi"
+    "saveAsWritten": "Salvar como eu escrevi",
+    "factDeleteRemove": "Remover",
+    "factDeleteKeep": "Manter",
+    "factDeleteKept": "Nada foi removido."
   },
   "articleFeedback": {
     "thumbsUp": "Gostei",

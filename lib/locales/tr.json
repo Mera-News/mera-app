@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "Mera hata yapabilir, önemli şeyleri kontrol et.",
     "trackChooseHint": "Neyi takip edeceğini seç",
     "factDeletePendingTitle": "Profilinden kaldırılacak",
-    "saveAsWritten": "Yazdığım gibi kaydet"
+    "saveAsWritten": "Yazdığım gibi kaydet",
+    "factDeleteRemove": "Kaldır",
+    "factDeleteKeep": "Tut",
+    "factDeleteKept": "Hiçbir şey kaldırılmadı."
   },
   "articleFeedback": {
     "thumbsUp": "Beğendim",

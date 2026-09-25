@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "Mera อาจผิดพลาดได้ จึงควรตรวจสอบเรื่องสำคัญ",
     "trackChooseHint": "เลือกสิ่งที่จะติดตาม",
     "factDeletePendingTitle": "จะถูกลบออกจากโปรไฟล์ของคุณ",
-    "saveAsWritten": "บันทึกตามที่ฉันเขียน"
+    "saveAsWritten": "บันทึกตามที่ฉันเขียน",
+    "factDeleteRemove": "ลบ",
+    "factDeleteKeep": "เก็บไว้",
+    "factDeleteKept": "ไม่มีสิ่งใดถูกลบ"
   },
   "articleFeedback": {
     "thumbsUp": "ถูกใจ",

@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "Mera kan fouten maken, dus controleer alles wat belangrijk is.",
     "trackChooseHint": "Kies wat je wilt volgen",
     "factDeletePendingTitle": "Wordt verwijderd uit je profiel",
-    "saveAsWritten": "Opslaan zoals ik het schreef"
+    "saveAsWritten": "Opslaan zoals ik het schreef",
+    "factDeleteRemove": "Verwijderen",
+    "factDeleteKeep": "Houden",
+    "factDeleteKept": "Er is niets verwijderd."
   },
   "articleFeedback": {
     "thumbsUp": "Ik vind het leuk",

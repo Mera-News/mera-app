@@ -783,7 +783,10 @@
     "aiUsageNoticeGeneral": "Mera peut se tromper, alors vérifie tout ce qui est important.",
     "trackChooseHint": "Choisis ce que tu veux suivre",
     "factDeletePendingTitle": "Sera supprimé de votre profil",
-    "saveAsWritten": "Enregistrer tel que je l'ai écrit"
+    "saveAsWritten": "Enregistrer tel que je l'ai écrit",
+    "factDeleteRemove": "Supprimer",
+    "factDeleteKeep": "Garder",
+    "factDeleteKept": "Rien n'a été supprimé."
   },
   "articleFeedback": {
     "thumbsUp": "J'aime",

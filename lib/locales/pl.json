@@ -790,7 +790,10 @@
     "aiUsageNoticeGeneral": "Mera może się mylić, więc sprawdzaj ważne rzeczy.",
     "trackChooseHint": "Wybierz, co obserwować",
     "factDeletePendingTitle": "Zostanie usunięte z Twojego profilu",
-    "saveAsWritten": "Zapisz tak, jak napisałem"
+    "saveAsWritten": "Zapisz tak, jak napisałem",
+    "factDeleteRemove": "Usuń",
+    "factDeleteKeep": "Zachowaj",
+    "factDeleteKept": "Nic nie zostało usunięte."
   },
   "articleFeedback": {
     "thumbsUp": "Podoba mi się",

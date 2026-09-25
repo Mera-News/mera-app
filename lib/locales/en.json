@@ -1204,7 +1204,10 @@
     "aiUsageNoticeGeneral": "Mera can make mistakes, so check anything important.",
     "trackChooseHint": "Choose what to follow",
     "factDeletePendingTitle": "Will be removed from your persona",
-    "saveAsWritten": "Save as I wrote it"
+    "saveAsWritten": "Save as I wrote it",
+    "factDeleteRemove": "Remove",
+    "factDeleteKeep": "Keep",
+    "factDeleteKept": "Nothing was removed."
   },
   "articleFeedback": {
     "thumbsUp": "I like it",

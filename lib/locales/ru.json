@@ -792,7 +792,10 @@
     "aiUsageNoticeGeneral": "Mera может ошибаться, поэтому проверяй всё важное.",
     "trackChooseHint": "Выбери, за чем следить",
     "factDeletePendingTitle": "Будет удалено из вашего профиля",
-    "saveAsWritten": "Сохранить так, как я написал"
+    "saveAsWritten": "Сохранить так, как я написал",
+    "factDeleteRemove": "Удалить",
+    "factDeleteKeep": "Оставить",
+    "factDeleteKept": "Ничего не удалено."
   },
   "articleFeedback": {
     "thumbsUp": "Нравится",

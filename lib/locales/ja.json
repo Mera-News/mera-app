@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "Mera は間違えることがあります。重要なことは確認してください。",
     "trackChooseHint": "フォローする対象を選んでください",
     "factDeletePendingTitle": "プロフィールから削除されます",
-    "saveAsWritten": "書いたとおりに保存"
+    "saveAsWritten": "書いたとおりに保存",
+    "factDeleteRemove": "削除",
+    "factDeleteKeep": "残す",
+    "factDeleteKept": "何も削除していません。"
   },
   "articleFeedback": {
     "thumbsUp": "いいね",

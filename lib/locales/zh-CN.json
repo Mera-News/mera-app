@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "Mera 可能会出错，重要内容请自行核实。",
     "trackChooseHint": "选择要关注的内容",
     "factDeletePendingTitle": "将从你的档案中移除",
-    "saveAsWritten": "按我写的保存"
+    "saveAsWritten": "按我写的保存",
+    "factDeleteRemove": "移除",
+    "factDeleteKeep": "保留",
+    "factDeleteKept": "没有移除任何内容。"
   },
   "articleFeedback": {
     "thumbsUp": "喜欢",

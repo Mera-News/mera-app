@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "Mera può sbagliare, quindi verifica le cose importanti.",
     "trackChooseHint": "Scegli cosa seguire",
     "factDeletePendingTitle": "Verrà rimosso dal tuo profilo",
-    "saveAsWritten": "Salva come l'ho scritto"
+    "saveAsWritten": "Salva come l'ho scritto",
+    "factDeleteRemove": "Rimuovi",
+    "factDeleteKeep": "Tieni",
+    "factDeleteKept": "Non è stato rimosso nulla."
   },
   "articleFeedback": {
     "thumbsUp": "Mi piace",

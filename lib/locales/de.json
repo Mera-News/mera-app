@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "Mera kann Fehler machen. Prüf also alles Wichtige nach.",
     "trackChooseHint": "Wähle, was du verfolgen willst",
     "factDeletePendingTitle": "Wird aus deinem Profil entfernt",
-    "saveAsWritten": "So speichern, wie ich es geschrieben habe"
+    "saveAsWritten": "So speichern, wie ich es geschrieben habe",
+    "factDeleteRemove": "Entfernen",
+    "factDeleteKeep": "Behalten",
+    "factDeleteKept": "Es wurde nichts entfernt."
   },
   "articleFeedback": {
     "thumbsUp": "Gefällt mir",

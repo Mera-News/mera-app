@@ -778,7 +778,10 @@
     "aiUsageNoticeGeneral": "Mera có thể mắc lỗi, vì vậy hãy kiểm tra những điều quan trọng.",
     "trackChooseHint": "Chọn nội dung để theo dõi",
     "factDeletePendingTitle": "Sẽ bị xóa khỏi hồ sơ của bạn",
-    "saveAsWritten": "Lưu đúng như tôi đã viết"
+    "saveAsWritten": "Lưu đúng như tôi đã viết",
+    "factDeleteRemove": "Xóa",
+    "factDeleteKeep": "Giữ lại",
+    "factDeleteKept": "Không có gì bị xóa."
   },
   "articleFeedback": {
     "thumbsUp": "Tôi thích",
