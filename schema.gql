@@ -537,6 +537,11 @@ enum ProcessingMode {
   ON_DEVICE
 }
 
+type PublicationDisplayName {
+  displayName: String!
+  name: String!
+}
+
 type PublicationSource {
   _id: ID!
   categories: [String!]
@@ -697,6 +702,7 @@ type Query {
   Typeahead place search (anchored prefix on the lowercase key, population desc). Returns [] for queries under 2 chars; limit capped at 15.
   """
   placeSearch(limit: Int! = 8, query: String!): [Place!]!
+  publicationDisplayNames(language: String!, names: [String!]!): [PublicationDisplayName!]!
   publicationSources(
     """Cursor to fetch items after"""
     after: String

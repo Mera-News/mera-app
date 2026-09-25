@@ -525,6 +525,12 @@ export enum ProcessingMode {
   OnDevice = 'ON_DEVICE'
 }
 
+export type PublicationDisplayName = {
+  __typename?: 'PublicationDisplayName';
+  displayName: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+};
+
 export type PublicationSource = {
   __typename?: 'PublicationSource';
   _id: Scalars['ID']['output'];
@@ -614,6 +620,7 @@ export type Query = {
   placeCoordinates?: Maybe<Place>;
   /** Typeahead place search (anchored prefix on the lowercase key, population desc). Returns [] for queries under 2 chars; limit capped at 15. */
   placeSearch: Array<Place>;
+  publicationDisplayNames: Array<PublicationDisplayName>;
   /** @deprecated Use newsPublishers and publicationSourcesForNewsPublisher queries instead */
   publicationSources: PublicationSourcesResponse;
   publicationSourcesForNewsPublisher: PublicationSourcesForPublisherResponse;
@@ -747,6 +754,12 @@ export type QueryPlaceCoordinatesArgs = {
 export type QueryPlaceSearchArgs = {
   limit?: Scalars['Int']['input'];
   query: Scalars['String']['input'];
+};
+
+
+export type QueryPublicationDisplayNamesArgs = {
+  language: Scalars['String']['input'];
+  names: Array<Scalars['String']['input']>;
 };
 
 
