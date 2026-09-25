@@ -7,7 +7,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, type ListRenderItem } from 'react-native';
+import { FlatList, StyleSheet, View, type ListRenderItem } from 'react-native';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
@@ -22,6 +22,39 @@ const ADD_PLACES_ID = 'add-places';
  *  active/selected chip stays a solid accent fill (its own selection signal,
  *  not chrome) and is never wrapped in glass. */
 const CHIP_FALLBACK_CLASS = 'border border-gray-700 bg-transparent';
+
+// Every chip's visual (label, icon, flag) is hidden and a CHILDLESS labelled
+// button is laid over it: a glyph inside a button surfaces on iOS as its own
+// StaticText (captured class, ux2).
+const HIDDEN = {
+    accessible: false,
+    accessibilityElementsHidden: true,
+    importantForAccessibility: 'no-hide-descendants',
+} as const;
+
+// The revealed "x": a numeric 44pt frame, top-aligned with the list's own 4pt
+// padding (no higher, or the list clips it) and right-aligned with the chip's
+// mr-2 gap. The 17.5pt circle (w-5 at 14pt rem) keeps its old place: 5.25pt
+// above the chip and 3.5pt past its right edge (-top-1.5, -right-1).
+const REMOVE_TARGET = 44;
+const REMOVE_FRAME_TOP = -4;
+const REMOVE_FRAME_RIGHT = -7;
+const REMOVE_CIRCLE = 17.5;
+const REMOVE_FRAME_STYLE = {
+    position: 'absolute',
+    top: REMOVE_FRAME_TOP,
+    right: REMOVE_FRAME_RIGHT,
+    width: REMOVE_TARGET,
+    height: REMOVE_TARGET,
+    zIndex: 10,
+} as const;
+const REMOVE_CIRCLE_STYLE = {
+    position: 'absolute',
+    top: -5.25 - REMOVE_FRAME_TOP,
+    right: -3.5 - REMOVE_FRAME_RIGHT,
+    width: REMOVE_CIRCLE,
+    height: REMOVE_CIRCLE,
+} as const;
 
 type ChipItem = ExploreScope | { readonly id: typeof ADD_PLACES_ID };
 
@@ -106,14 +139,17 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
                 // flat fallback), never the solid accent fill.
                 return (
                     <GlassPanel radius={999} className="mr-2" fallbackClassName={CHIP_FALLBACK_CLASS}>
-                        <Pressable
-                            onPress={() => router.push('/logged-in/sources')}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('explore.addSources')}
-                            className="flex-row items-center justify-center px-4 py-2"
-                        >
-                            <MaterialIcons name="add" size={16} color={ACCENT} />
-                        </Pressable>
+                        <View>
+                            <View pointerEvents="none" {...HIDDEN} className="flex-row items-center justify-center px-4 py-2">
+                                <MaterialIcons name="add" size={16} color={ACCENT} {...HIDDEN} />
+                            </View>
+                            <Pressable
+                                onPress={() => router.push('/logged-in/sources')}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('explore.addSources')}
+                                style={StyleSheet.absoluteFill}
+                            />
+                        </View>
                     </GlassPanel>
                 );
             }
@@ -135,6 +171,7 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
                             size={16}
                             color={active ? '#000000' : ACCENT}
                             style={{ marginRight: 6 }}
+                            {...HIDDEN}
                         />
                     )}
                     <Text
@@ -148,15 +185,22 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
             );
 
             const removeOverlay = revealed ? (
-                <Pressable
-                    onPress={() => handleRemove(scope)}
-                    hitSlop={10}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('explore.removeScope', { name: label })}
-                    className="absolute -top-1.5 -right-1 z-10 items-center justify-center w-5 h-5 rounded-full bg-gray-900 border border-gray-600"
-                >
-                    <MaterialIcons name="close" size={12} color="#ffffff" />
-                </Pressable>
+                <View testID="explore-scope-remove-frame" style={REMOVE_FRAME_STYLE}>
+                    <View
+                        pointerEvents="none"
+                        {...HIDDEN}
+                        className="items-center justify-center rounded-full bg-gray-900 border border-gray-600"
+                        style={REMOVE_CIRCLE_STYLE}
+                    >
+                        <MaterialIcons name="close" size={12} color="#ffffff" {...HIDDEN} />
+                    </View>
+                    <Pressable
+                        onPress={() => handleRemove(scope)}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('explore.removeScope', { name: label })}
+                        style={StyleSheet.absoluteFill}
+                    />
+                </View>
             ) : null;
 
             // Active chip keeps its solid accent fill — that fill IS the
@@ -166,16 +210,19 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
             if (active) {
                 return (
                     <Box className="mr-2" style={{ position: 'relative' }}>
-                        <Pressable
-                            onPress={() => handleSelect(scope)}
-                            onLongPress={canHide ? () => setRevealedId(scope.id) : undefined}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected: active }}
-                            accessibilityLabel={label}
-                            className="flex-row items-center rounded-full border px-4 py-2 bg-primary-400 border-primary-400"
-                        >
-                            {chipInner}
-                        </Pressable>
+                        <View>
+                            <View pointerEvents="none" {...HIDDEN} className="flex-row items-center rounded-full border px-4 py-2 bg-primary-400 border-primary-400">
+                                {chipInner}
+                            </View>
+                            <Pressable
+                                onPress={() => handleSelect(scope)}
+                                onLongPress={canHide ? () => setRevealedId(scope.id) : undefined}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
+                                accessibilityLabel={label}
+                                style={StyleSheet.absoluteFill}
+                            />
+                        </View>
                         {removeOverlay}
                     </Box>
                 );
@@ -184,16 +231,19 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
             return (
                 <Box className="mr-2" style={{ position: 'relative' }}>
                     <GlassPanel radius={999} fallbackClassName={CHIP_FALLBACK_CLASS}>
-                        <Pressable
-                            onPress={() => handleSelect(scope)}
-                            onLongPress={canHide ? () => setRevealedId(scope.id) : undefined}
-                            accessibilityRole="button"
-                            accessibilityState={{ selected: active }}
-                            accessibilityLabel={label}
-                            className="flex-row items-center px-4 py-2"
-                        >
-                            {chipInner}
-                        </Pressable>
+                        <View>
+                            <View pointerEvents="none" {...HIDDEN} className="flex-row items-center px-4 py-2">
+                                {chipInner}
+                            </View>
+                            <Pressable
+                                onPress={() => handleSelect(scope)}
+                                onLongPress={canHide ? () => setRevealedId(scope.id) : undefined}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
+                                accessibilityLabel={label}
+                                style={StyleSheet.absoluteFill}
+                            />
+                        </View>
                     </GlassPanel>
                     {removeOverlay}
                 </Box>
