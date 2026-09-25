@@ -76,9 +76,10 @@ jest.mock('@sentry/react-native', () => {
 });
 jest.mock('@/lib/sentry-init', () => ({ SENTRY_ENABLED: true }));
 
+const mockNote: { current: string | null } = { current: null };
 jest.mock('@/lib/stores/feedback-store', () => ({
     useFeedbackVisible: () => true,
-    useFeedbackStore: (sel: any) => sel({ hide: jest.fn() }),
+    useFeedbackStore: (sel: any) => sel({ hide: jest.fn(), attachmentNote: mockNote.current }),
 }));
 jest.mock('@/lib/stores/app-language-store', () => ({
     useAppLanguageStore: { getState: () => ({ appLanguage: 'en' }) },
@@ -165,5 +166,23 @@ describe('FeedbackWidgetModal support id (S5)', () => {
         render(<FeedbackWidgetModal />);
 
         expect(mockWidgetProps.current.useSentryUser.email).toBe('');
+    });
+});
+
+
+describe('ux2 H: the chat attachment disclosure', () => {
+    afterEach(() => { mockNote.current = null; });
+
+    it('shows the line above the form when the report carries the chat', () => {
+        mockNote.current = 'Your chat with Mera will be attached to this report.';
+        const { getByTestId } = render(<FeedbackWidgetModal />);
+        expect(getByTestId('feedback-attachment-note').props.children).toBe(
+            'Your chat with Mera will be attached to this report.',
+        );
+    });
+
+    it('shows nothing for an ordinary report', () => {
+        const { queryByTestId } = render(<FeedbackWidgetModal />);
+        expect(queryByTestId('feedback-attachment-note')).toBeNull();
     });
 });

@@ -15,14 +15,14 @@ import * as Sentry from '@sentry/react-native';
 import { useFeedbackStore } from './stores/feedback-store';
 import { SENTRY_ENABLED } from './sentry-init';
 
-export function showFeedback(): void {
+export function showFeedback(opts?: { attachmentNote?: string }): void {
   if (!SENTRY_ENABLED) {
     console.warn(
       '[feedback] Sentry is disabled; set EXPO_PUBLIC_SENTRY_IN_DEV=true to test the feedback widget in a dev build.',
     );
     return;
   }
-  useFeedbackStore.getState().show();
+  useFeedbackStore.getState().show(opts);
 }
 
 const FEATURE_REQUEST_PREFIX = '[Feature Request] ';

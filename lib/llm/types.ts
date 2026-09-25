@@ -37,6 +37,9 @@ export interface ConversationMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  /** Epoch ms, when known: persisted messages and each typed user turn. The
+   *  chat bug report's transcript reads it; a reply carries its turn's time. */
+  createdAt?: number;
   toolCalls?: ToolCallRecord[];
   /**
    * A turn the MODEL must read but the user must never see.

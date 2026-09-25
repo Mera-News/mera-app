@@ -477,7 +477,7 @@ const AppPreferencesTab: React.FC = () => {
                         <Pressable
                             testID="settings-row-report-bug"
                             className="flex-row items-center justify-center py-3 px-2"
-                            onPress={showFeedback}
+                            onPress={() => showFeedback()}
                             accessibilityRole="button"
                             // Explicit, or the icon font's glyph leaks into it.
                             accessibilityLabel={t('preferences.reportBug')}

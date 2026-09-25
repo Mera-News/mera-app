@@ -662,6 +662,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
         id: `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         role: 'user',
         content: trimmed,
+        createdAt: Date.now(),
         ...(hidden ? { hidden: true } : {}),
       };
       const newMessages = [...messagesRef.current, userMsg];

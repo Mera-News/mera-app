@@ -5,6 +5,7 @@
 // is mounted fresh on every open (unmount on close guarantees a fresh session).
 
 import MeraLogo from '@/components/custom/MeraLogo';
+import ChatBugReportButton from './ChatBugReportButton';
 import { Button } from '@/components/ui/button';
 import { hapticLight } from '@/lib/haptics';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
@@ -254,6 +255,9 @@ const ChatPopover: React.FC<ChatPopoverProps> = ({ children }) => {
                         the function form gets dropped, which erased these buttons'
                         background fills at runtime (item-13 bug). Dark-mode tokens:
                         primary-400 = rgb(231,138,83) (ACCENT); the close button is neutral. */}
+                    {/* Left of New chat (ux2 H): the whole chat, attached to a
+                        report the user chooses to send. */}
+                    <ChatBugReportButton />
                     <Button
                         onPress={onNewChatPress}
                         accessibilityLabel={t('floatingChat.newChat')}

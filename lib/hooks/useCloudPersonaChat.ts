@@ -1083,6 +1083,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           id: `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
           role: 'user',
           content: trimmed,
+          createdAt: Date.now(),
         };
         store.setMessages((prev) => [...prev, userMsg]);
       }

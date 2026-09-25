@@ -30,6 +30,7 @@ import ChatThread from './ChatThread';
 import RequestUnblockModal from './RequestUnblockModal';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { deriveThreadItems } from './deriveThreadItems';
+import { registerChatTranscriptSource } from './chat-bug-report';
 import { decideTopicPlanTurn } from './topic-plan-turn';
 import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
 import { getAiAccess } from '@/lib/stores/subscription-store';
@@ -258,6 +259,12 @@ export default function ChatSessionView({
       agentTerminal,
     ],
   );
+
+  // The header's bug button (ux2 H) builds its transcript from what this
+  // thread shows, read at tap time through a ref so it is never stale.
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  useEffect(() => registerChatTranscriptSource(() => itemsRef.current), []);
 
   // r14 — topic-plan gate. Every unresolved "Topics I'll track" card in the
   // thread blocks the chat input, so the user can't walk away from a plan they

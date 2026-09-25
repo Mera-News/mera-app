@@ -1234,6 +1234,7 @@ function toConversationMessage(m: PersistedMessage): ConversationMessage {
     role: m.role,
     content: m.content,
     toolCalls: m.toolCalls ?? undefined,
+    createdAt: m.createdAt,
   };
 }
 
