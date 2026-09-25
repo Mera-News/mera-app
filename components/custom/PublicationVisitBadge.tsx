@@ -66,6 +66,10 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
             offset={6}
             crossOffset={0}
             size="sm"
+            // VoiceOver could not reach the bubble: gluestack portals popover
+            // content to the app root, outside the native screen. A native
+            // modal is on top, and VoiceOver moves into it.
+            useRNModal
             trigger={(triggerProps) => (
                 <Pressable
                     {...triggerProps}
@@ -91,18 +95,27 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
                 plate rather than replacing it. */}
             <PopoverContent style={{ maxWidth: screenWidth - 32 }}>
                 <PopoverArrow className="bg-background-0 border border-white/10" />
-                <PopoverBody>
-                    <Text size="xs" className="text-white">
-                        {t('publicationVisits.tooltipIntro')}{' '}
-                        <Text
-                            size="xs"
-                            bold
-                            className="text-white underline"
-                            onPress={openHistory}
-                        >
-                            {t('publicationVisits.tooltipLink')}
+                <PopoverBody
+                    testID="publication-visit-bubble"
+                    // VoiceOver's escape (two-finger scrub) closes the bubble.
+                    onAccessibilityEscape={closeTooltip}
+                >
+                    {/* ONE link element. The link used to be a nested Text with
+                        onPress, which iOS does not expose on its own, so
+                        VoiceOver could not activate it. The whole sentence is
+                        the tap target now, and reads intro, then the link. */}
+                    <Pressable
+                        accessibilityRole="link"
+                        accessibilityLabel={`${t('publicationVisits.tooltipIntro')} ${t('publicationVisits.tooltipLink')}`}
+                        onPress={openHistory}
+                    >
+                        <Text size="xs" className="text-white">
+                            {t('publicationVisits.tooltipIntro')}{' '}
+                            <Text size="xs" bold className="text-white underline">
+                                {t('publicationVisits.tooltipLink')}
+                            </Text>
                         </Text>
-                    </Text>
+                    </Pressable>
                 </PopoverBody>
             </PopoverContent>
         </Popover>
