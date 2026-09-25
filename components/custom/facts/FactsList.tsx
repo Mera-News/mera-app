@@ -15,9 +15,11 @@ import { useFloatingChatFactMutationVersion, useFloatingChatIsExpanded } from '@
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import { subscribeScrollTick } from '@/lib/visibility-tick';
 import { router, useFocusEffect } from 'expo-router';
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import AddTopicModal from './AddTopicModal';
 import DeleteFactModal from './DeleteFactModal';
 import FactAccordion, { type ArticleCountState } from './FactAccordion';
@@ -93,6 +95,39 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
     const wasChatExpandedRef = useRef(false);
     const onFactsChangeRef = useRef(onFactsChange);
     onFactsChangeRef.current = onFactsChange;
+
+    // B7: only one row's swipe-revealed delete icon is open at a time.
+    // Refs, not state — closing a row is an imperative call on the row's own
+    // Swipeable, never a re-render of the list.
+    const swipeRefsRef = useRef<Map<string, SwipeableMethods>>(new Map());
+    const openSwipeFactIdRef = useRef<string | null>(null);
+    const registerSwipeRef = useCallback((factId: string, methods: SwipeableMethods | null) => {
+        if (methods) swipeRefsRef.current.set(factId, methods);
+        else swipeRefsRef.current.delete(factId);
+    }, []);
+    const closeOpenSwipe = useCallback(() => {
+        const openId = openSwipeFactIdRef.current;
+        if (openId) {
+            swipeRefsRef.current.get(openId)?.close();
+            openSwipeFactIdRef.current = null;
+        }
+    }, []);
+    const handleSwipeOpen = useCallback((factId: string) => {
+        if (openSwipeFactIdRef.current && openSwipeFactIdRef.current !== factId) {
+            swipeRefsRef.current.get(openSwipeFactIdRef.current)?.close();
+        }
+        openSwipeFactIdRef.current = factId;
+    }, []);
+    // Close on scroll — ProfileScreen and FactsScreen both already call
+    // notifyScrollTick() from their own ScrollView, so this needs no prop
+    // and no change to either host screen.
+    useEffect(() => subscribeScrollTick(closeOpenSwipe), [closeOpenSwipe]);
+    // Edit mode already puts its own delete control at the same left edge
+    // the swipe reveals — close whatever was open the moment it turns on,
+    // on top of `enabled={!editing}` disabling the gesture itself per row.
+    useEffect(() => {
+        if (editing) closeOpenSwipe();
+    }, [editing, closeOpenSwipe]);
 
     // Facts are live (observeFacts). Article counts are not (no observable
     // exists for them), so they are re-read: on mount, on focus (the Profile
@@ -423,6 +458,8 @@ await createTopics([{ factId: addTopicFact.id, text: trimmed , weight: DEFAULT_H
                     onDeleteTopic={handleDeleteTopic}
                     onAddTopic={handleAddTopicPress}
                     onGenerateMore={handleGenerateMorePress}
+                    onSwipeOpen={handleSwipeOpen}
+                    swipeableRef={registerSwipeRef}
                 />
             ))}
 

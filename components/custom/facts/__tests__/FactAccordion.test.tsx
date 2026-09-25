@@ -67,6 +67,38 @@ jest.mock('@/components/ui/spinner', () => {
     return { Spinner: (p: any) => <View {...p} /> };
 });
 
+// B7: the first ReanimatedSwipeable in the repo, no house mock exists yet.
+// Renders renderLeftActions' output ahead of children (so the trash is
+// queryable/pressable), forwards `enabled` onto the host node (so a test can
+// read it back), and exposes a `-trigger-open` Pressable that stands in for
+// a real swipe gesture, which jest cannot simulate — pressing it fires
+// onSwipeableWillOpen exactly as a real swipe-open would. The ref resolves
+// to a fresh `{ close, openLeft, openRight, reset }` jest.fn() bag per
+// mounted instance, not shared module state, so two rows in the same test
+// don't observe each other's calls.
+jest.mock('react-native-gesture-handler/ReanimatedSwipeable', () => {
+    const R = require('react');
+    const { View, Pressable } = require('react-native');
+    const MockSwipeable = R.forwardRef((props: any, ref: any) => {
+        const methods = R.useRef({ close: jest.fn(), openLeft: jest.fn(), openRight: jest.fn(), reset: jest.fn() });
+        R.useImperativeHandle(ref, () => methods.current);
+        const left = props.renderLeftActions
+            ? props.renderLeftActions({ value: 0 }, { value: 0 }, methods.current)
+            : null;
+        return (
+            <View testID={props.testID} enabled={props.enabled}>
+                {left}
+                <Pressable
+                    testID={`${props.testID}-trigger-open`}
+                    onPress={() => props.onSwipeableWillOpen?.('left')}
+                />
+                {props.children}
+            </View>
+        );
+    });
+    return { __esModule: true, default: MockSwipeable };
+});
+
 const mockNudgeFactWeight = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/lib/database/services/mutation-rails-service', () => ({
     nudgeFactWeight: (...a: unknown[]) => mockNudgeFactWeight(...a),
@@ -440,6 +472,57 @@ describe('F46: delete lives in edit mode', () => {
         expect(row.props.accessibilityActions).toEqual([{ name: 'delete', label: 'common.delete' }]);
         act(() => row.props.onAccessibilityAction({ nativeEvent: { actionName: 'delete' } }));
         expect(onDeletePress).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('B7: swipe right to reveal a delete icon', () => {
+    it('the swipe-revealed trash is labelled and calls onDeletePress, same as edit mode', () => {
+        const onDeletePress = jest.fn();
+        const fact = baseFact();
+        const r = render(<FactAccordion {...baseProps} isExpanded={false} onDeletePress={onDeletePress} fact={fact} />);
+        const trash = r.getByTestId('fact-swipe-delete-f1');
+        expect(trash.props.accessibilityLabel).toBe('facts.deleteFactA11y');
+        expect(trash.props.accessibilityRole).toBe('button');
+        fireEvent.press(trash);
+        expect(onDeletePress).toHaveBeenCalledTimes(1);
+        expect(onDeletePress).toHaveBeenCalledWith(fact);
+    });
+
+    it('the trash target is at least 44pt', () => {
+        const r = render(<FactAccordion {...baseProps} isExpanded={false} fact={baseFact()} />);
+        const style = r.getByTestId('fact-swipe-delete-f1').props.style;
+        const flat = Array.isArray(style) ? Object.assign({}, ...style) : style;
+        expect(flat.minHeight).toBeGreaterThanOrEqual(44);
+        expect(flat.width).toBeGreaterThanOrEqual(44);
+    });
+
+    it('the swipe is disabled while editing — edit mode already has its own delete control', () => {
+        const r = render(<FactAccordion {...baseProps} isExpanded editing fact={baseFact()} />);
+        expect(r.getByTestId('fact-swipeable-f1').props.enabled).toBe(false);
+    });
+
+    it('the swipe is enabled at rest (not editing)', () => {
+        const r = render(<FactAccordion {...baseProps} isExpanded={false} fact={baseFact()} />);
+        expect(r.getByTestId('fact-swipeable-f1').props.enabled).toBe(true);
+    });
+
+    it('opening the swipe reports the fact id so a list can close every other open row', () => {
+        const onSwipeOpen = jest.fn();
+        const r = render(
+            <FactAccordion {...baseProps} isExpanded={false} onSwipeOpen={onSwipeOpen} fact={baseFact()} />,
+        );
+        fireEvent.press(r.getByTestId('fact-swipeable-f1-trigger-open'));
+        expect(onSwipeOpen).toHaveBeenCalledWith('f1');
+    });
+
+    it('hands the list a close()-able ref, and releases it on unmount', () => {
+        const swipeableRef = jest.fn();
+        const r = render(
+            <FactAccordion {...baseProps} isExpanded={false} swipeableRef={swipeableRef} fact={baseFact()} />,
+        );
+        expect(swipeableRef).toHaveBeenCalledWith('f1', expect.objectContaining({ close: expect.any(Function) }));
+        r.unmount();
+        expect(swipeableRef).toHaveBeenLastCalledWith('f1', null);
     });
 });
 

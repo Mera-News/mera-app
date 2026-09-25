@@ -16,8 +16,9 @@ import logger from '@/lib/logger';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import ReanimatedSwipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { sentenceCase } from './sentence-case';
 
 /** Per-tap influence nudge and the clamped UI range (a fact's weight dampens
@@ -61,6 +62,18 @@ interface FactAccordionProps {
     readonly onDeleteTopic: (fact: Fact, topicRow: { id: string; text: string }) => void;
     readonly onAddTopic: (fact: Fact) => void;
     readonly onGenerateMore: (fact: Fact) => void;
+    /**
+     * B7: fired when this row's swipe starts opening, so a parent list can
+     * close every other open row (only one open at a time).
+     */
+    readonly onSwipeOpen?: (factId: string) => void;
+    /**
+     * B7: hands the parent list this row's imperative handle (`.close()`),
+     * so it can close this row from outside — on scroll, on another row
+     * opening, or when edit mode turns on. Called with `null` on unmount,
+     * matching a ref-callback's own contract.
+     */
+    readonly swipeableRef?: (factId: string, ref: SwipeableMethods | null) => void;
 }
 
 /**
@@ -86,6 +99,8 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     onDeleteTopic,
     onAddTopic,
     onGenerateMore,
+    onSwipeOpen,
+    swipeableRef,
 }) => {
     const { t } = useTranslation();
     const isExpanded = isExpandedProp && !editing;
@@ -100,6 +115,18 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     }, [fact.id, fact.weight]);
 
     const influenceMinReached = influence <= INFLUENCE_MIN + 1e-6;
+
+    // B7: ReanimatedSwipeableProps types `ref` as a plain `RefObject`, not
+    // the usual callback-accepting `Ref<T>` union RN components take — so a
+    // callback ref cannot go on the element directly. Take an object ref
+    // instead, and forward it to the list's own callback once React has
+    // attached it. `swipeableRef` is fine as an effect dependency here: the
+    // list passes a `useCallback`-stable function.
+    const localSwipeableRef = useRef<SwipeableMethods>(null);
+    useEffect(() => {
+        swipeableRef?.(fact.id, localSwipeableRef.current);
+        return () => swipeableRef?.(fact.id, null);
+    }, [fact.id, swipeableRef]);
     const influenceMaxReached = influence >= INFLUENCE_MAX - 1e-6;
 
     const handleInfluence = useCallback(
@@ -179,7 +206,39 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     }, [isRetrying, fact.id, fact.statement]);
 
     return (
-        <GlassPanel className="mx-4 mb-3" fallbackClassName="bg-transparent">
+        <ReanimatedSwipeable
+            ref={localSwipeableRef}
+            testID={`fact-swipeable-${fact.id}`}
+            // Edit mode already puts a persistent red delete control at the
+            // same left edge (above) — the swipe reveal would sit exactly on
+            // top of it, so it's off for the whole time that control is on.
+            enabled={!editing}
+            friction={2}
+            leftThreshold={40}
+            overshootLeft={false}
+            containerStyle={{ marginHorizontal: 16, marginBottom: 12 }}
+            onSwipeableWillOpen={() => onSwipeOpen?.(fact.id)}
+            renderLeftActions={() => (
+                <Pressable
+                    testID={`fact-swipe-delete-${fact.id}`}
+                    onPress={() => onDeletePress(fact)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('facts.deleteFactA11y', { fact: displayStatement })}
+                    style={{
+                        width: 72,
+                        minHeight: 44,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#ef4444',
+                        borderTopLeftRadius: 12,
+                        borderBottomLeftRadius: 12,
+                    }}
+                >
+                    <MaterialIcons name="delete" size={24} color="#ffffff" />
+                </Pressable>
+            )}
+        >
+        <GlassPanel fallbackClassName="bg-transparent">
             {/* Accordion header */}
             <HStack className="px-4 py-3 items-center">
                 {editing && (
@@ -419,6 +478,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                 </Box>
             )}
         </GlassPanel>
+        </ReanimatedSwipeable>
     );
 };
 

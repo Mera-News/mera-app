@@ -37,26 +37,60 @@ jest.mock('@/components/ui/toast', () => ({
 }));
 
 // --- child components → light stubs, wired to the same handler props FactsList passes. ---
+// B7: each mounted row registers a stub SwipeableMethods bag (keyed by fact
+// id, "mock"-prefixed so babel-plugin-jest-hoist lets this factory close
+// over it) so a test can assert `.close` was called on the RIGHT row, and
+// exposes a Pressable standing in for "this row's swipe started opening".
+const mockSwipeCloseFns = new Map<string, jest.Mock>();
 jest.mock('../FactAccordion', () => {
     const { View, Text, Pressable } = require('react-native');
+    const ReactLib = require('react');
     return {
         __esModule: true,
-        default: ({ fact, onDeletePress, onToggle, onDeleteTopic, onAddTopic, onGenerateMore, countState, editing, articleCountByTopic }: any) => (
-            <View>
-                <Text>{fact.statement}</Text>
-                <Text testID={`count-state-${fact.id}`}>{`${countState}:${editing ? 'editing' : 'rest'}:${articleCountByTopic?.get?.('hiking') ?? 0}`}</Text>
-                <Pressable accessibilityLabel={`delete-${fact.id}`} onPress={() => onDeletePress(fact)} />
-                <Pressable accessibilityLabel={`toggle-${fact.id}`} onPress={() => onToggle(fact.id)} />
-                <Pressable
-                    accessibilityLabel={`delete-topic-${fact.id}`}
-                    onPress={() => onDeleteTopic(fact, { id: 'topic-1', text: 'Mountain trail running' })}
-                />
-                <Pressable accessibilityLabel={`add-topic-${fact.id}`} onPress={() => onAddTopic(fact)} />
-                <Pressable accessibilityLabel={`generate-more-${fact.id}`} onPress={() => onGenerateMore(fact)} />
-            </View>
-        ),
+        default: ({ fact, onDeletePress, onToggle, onDeleteTopic, onAddTopic, onGenerateMore, countState, editing, articleCountByTopic, onSwipeOpen, swipeableRef }: any) => {
+            ReactLib.useEffect(() => {
+                const close = jest.fn();
+                mockSwipeCloseFns.set(fact.id, close);
+                swipeableRef?.(fact.id, { close, openLeft: jest.fn(), openRight: jest.fn(), reset: jest.fn() });
+                return () => {
+                    swipeableRef?.(fact.id, null);
+                    mockSwipeCloseFns.delete(fact.id);
+                };
+                // eslint-disable-next-line react-hooks/exhaustive-deps
+            }, [fact.id]);
+            return (
+                <View>
+                    <Text>{fact.statement}</Text>
+                    <Text testID={`count-state-${fact.id}`}>{`${countState}:${editing ? 'editing' : 'rest'}:${articleCountByTopic?.get?.('hiking') ?? 0}`}</Text>
+                    <Pressable accessibilityLabel={`delete-${fact.id}`} onPress={() => onDeletePress(fact)} />
+                    <Pressable accessibilityLabel={`toggle-${fact.id}`} onPress={() => onToggle(fact.id)} />
+                    <Pressable
+                        accessibilityLabel={`delete-topic-${fact.id}`}
+                        onPress={() => onDeleteTopic(fact, { id: 'topic-1', text: 'Mountain trail running' })}
+                    />
+                    <Pressable accessibilityLabel={`add-topic-${fact.id}`} onPress={() => onAddTopic(fact)} />
+                    <Pressable accessibilityLabel={`generate-more-${fact.id}`} onPress={() => onGenerateMore(fact)} />
+                    <Pressable accessibilityLabel={`swipe-open-${fact.id}`} onPress={() => onSwipeOpen?.(fact.id)} />
+                </View>
+            );
+        },
     };
 });
+
+// B7: real pub/sub has no native deps, but throttling/leading-edge timing
+// makes a real notifyScrollTick() call non-deterministic across tests in one
+// file. Mock it to capture the listener directly, same "mock"-prefix
+// hoisting rule as mockSwipeCloseFns above.
+let mockScrollTickListeners: (() => void)[] = [];
+jest.mock('@/lib/visibility-tick', () => ({
+    subscribeScrollTick: (fn: () => void) => {
+        mockScrollTickListeners.push(fn);
+        return () => {
+            mockScrollTickListeners = mockScrollTickListeners.filter((l) => l !== fn);
+        };
+    },
+    notifyScrollTick: jest.fn(),
+}));
 jest.mock('../DeleteFactModal', () => {
     const { View, Text, Pressable } = require('react-native');
     return {
@@ -220,6 +254,8 @@ beforeEach(() => {
     mockFocusCallbacks.length = 0;
     mockLastRunFinishedAt = null;
     mockRenderableCounts.mockImplementation(() => Promise.resolve(new Map()));
+    mockScrollTickListeners = [];
+    mockSwipeCloseFns.clear();
 });
 
 describe('FactsList', () => {
@@ -390,5 +426,52 @@ describe('FactsList article counts (F45, Q13)', () => {
         mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
         const r = render(<FactsList editing />);
         await waitFor(() => expect(r.getByTestId('count-state-f1').props.children).toMatch(/:editing:/));
+    });
+});
+
+describe('FactsList — B7: only one swipe row open at a time', () => {
+    it('opening a second row closes the first, and does not close itself', async () => {
+        mockFacts = [
+            { id: 'f1', statement: 'Lives in Pune' },
+            { id: 'f2', statement: 'Works at Acme' },
+        ];
+        const r = render(<FactsList />);
+        await waitFor(() => expect(r.getByText('Lives in Pune')).toBeTruthy());
+
+        act(() => { fireEvent.press(r.getByLabelText('swipe-open-f1')); });
+        expect(mockSwipeCloseFns.get('f1')).not.toHaveBeenCalled();
+
+        act(() => { fireEvent.press(r.getByLabelText('swipe-open-f2')); });
+        expect(mockSwipeCloseFns.get('f1')).toHaveBeenCalledTimes(1);
+        expect(mockSwipeCloseFns.get('f2')).not.toHaveBeenCalled();
+    });
+
+    it('a scroll tick closes the open row', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        const r = render(<FactsList />);
+        await waitFor(() => expect(r.getByText('Lives in Pune')).toBeTruthy());
+
+        act(() => { fireEvent.press(r.getByLabelText('swipe-open-f1')); });
+        expect(mockSwipeCloseFns.get('f1')).not.toHaveBeenCalled();
+
+        act(() => { mockScrollTickListeners.forEach((fn) => fn()); });
+        expect(mockSwipeCloseFns.get('f1')).toHaveBeenCalledTimes(1);
+
+        // Idempotent: a second tick with nothing open must not throw or
+        // re-call close on a row that isn't open.
+        act(() => { mockScrollTickListeners.forEach((fn) => fn()); });
+        expect(mockSwipeCloseFns.get('f1')).toHaveBeenCalledTimes(1);
+    });
+
+    it('turning edit mode on closes the open row', async () => {
+        mockFacts = [{ id: 'f1', statement: 'Lives in Pune' }];
+        const r = render(<FactsList />);
+        await waitFor(() => expect(r.getByText('Lives in Pune')).toBeTruthy());
+
+        act(() => { fireEvent.press(r.getByLabelText('swipe-open-f1')); });
+        expect(mockSwipeCloseFns.get('f1')).not.toHaveBeenCalled();
+
+        r.rerender(<FactsList editing />);
+        expect(mockSwipeCloseFns.get('f1')).toHaveBeenCalledTimes(1);
     });
 });
