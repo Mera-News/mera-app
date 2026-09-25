@@ -255,28 +255,35 @@ describe('TranslatableDynamic mount-time visibility ladder', () => {
             measuredAt(W() + 16);
             render(<TranslatableDynamic text="Next panel headline" />);
             settle();
-            expect(requestTranslation).not.toHaveBeenCalled();
+            expect(translateTextDetailed).not.toHaveBeenCalled();
         });
 
         it('a node one width to the left (the cached previous panel) is not on screen', () => {
             measuredAt(-W() + 16);
             render(<TranslatableDynamic text="Previous panel headline" />);
             settle();
-            expect(requestTranslation).not.toHaveBeenCalled();
+            expect(translateTextDetailed).not.toHaveBeenCalled();
         });
 
         it('a horizontal strip card partly on screen still counts', () => {
             measuredAt(W() - 50, 300);
             render(<TranslatableDynamic text="Strip card headline" />);
             settle();
-            expect(requestTranslation).toHaveBeenCalledWith('Strip card headline', 'de', { rank: { visible: true, y: 100 } });
+            expect(translateTextDetailed).toHaveBeenCalledWith('Strip card headline', 'de', { priority: 100 });
+        });
+
+        it('a zero-width measure keeps the vertical-only answer', () => {
+            measuredAt(0, 0);
+            render(<TranslatableDynamic text="Zero width headline" />);
+            settle();
+            expect(translateTextDetailed).toHaveBeenCalledWith('Zero width headline', 'de', { priority: 100 });
         });
 
         it('a vertical list node at the usual inset still counts', () => {
             measuredAt(16);
             render(<TranslatableDynamic text="Feed headline" />);
             settle();
-            expect(requestTranslation).toHaveBeenCalledWith('Feed headline', 'de', { rank: { visible: true, y: 100 } });
+            expect(translateTextDetailed).toHaveBeenCalledWith('Feed headline', 'de', { priority: 100 });
         });
     });
 
