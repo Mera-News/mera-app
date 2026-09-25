@@ -99,7 +99,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
                 className="items-center justify-center py-16 p-6"
                 space="md"
             >
-                <MaterialIcons name="error-outline" size={40} color="#666666" />
+                <MaterialIcons name="error-outline" size={40} color="#666666" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
                 <Text size="md" className="text-gray-400 text-center">
                     {isNotSubscribed ? t('explore.searchNotSubscribed') : t('explore.searchError')}
                 </Text>
@@ -119,7 +119,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
     if (hits.length === 0) {
         return (
             <VStack testID="explore-search-empty" className="items-center justify-center py-16 p-6" space="md">
-                <MaterialIcons name="search-off" size={40} color="#666666" />
+                <MaterialIcons name="search-off" size={40} color="#666666" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
                 <Text size="md" className="text-gray-400 text-center">
                     {t('explore.searchEmpty')}
                 </Text>

@@ -68,10 +68,7 @@ jest.mock('@/components/ui/button', () => {
         ButtonText: (p: any) => <Text {...p} />,
     };
 });
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (p: any) => <View {...p} /> };
-});
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 jest.mock('@/components/custom/cards/ArticleCompactCardBase', () => {
     const { Pressable, Text } = require('react-native');
@@ -184,4 +181,37 @@ describe('ExploreSearchResults', () => {
         expect(mockPresentFreeTierPaywall).toHaveBeenCalledWith('explore-search');
         expect(onRetry).not.toHaveBeenCalled();
     });
+});
+
+// Every icon-font glyph must be hidden itself and sit under no accessible
+// element: iOS surfaces any other as its own StaticText (captured, ux2).
+const glyphProblems = (root: any): string[] => {
+    const glyphs = root.findAll(
+        (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+    );
+    if (glyphs.length === 0) return ['no glyph rendered'];
+    const out: string[] = [];
+    for (const g of glyphs) {
+        if (
+            g.props.accessible !== false ||
+            g.props.accessibilityElementsHidden !== true ||
+            g.props.importantForAccessibility !== 'no-hide-descendants'
+        ) {
+            out.push(`glyph ${JSON.stringify(g.props.children)} not hidden`);
+        }
+        for (let p: any = g.parent; p; p = p.parent) {
+            if (p.props?.accessible === true) {
+                out.push(`glyph under accessible ${p.props.testID ?? p.type}`);
+                break;
+            }
+        }
+    }
+    return out;
+};
+
+it.each(['success', 'error'] as const)('%s state: exposes no icon glyph as its own StaticText', (status) => {
+    const r = render(
+        <ExploreSearchResults status={status} hits={[]} errorKind={status === 'error' ? 'unknown' : null} onPressHit={noop} onRetry={noop} />,
+    );
+    expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
 });

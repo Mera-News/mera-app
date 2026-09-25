@@ -6,6 +6,8 @@
 // layer up and covered by `fact-rows-selector.test` — this file guards the two
 // things a future edit to this component could quietly undo.
 
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
+
 import { render } from '@testing-library/react-native';
 import React from 'react';
 import type { BreakingCardData } from '@/lib/stores/fact-rows-selector';
@@ -67,18 +69,21 @@ describe('BreakingStrip', () => {
     const { getByText } = render(
       <BreakingStrip items={[item('a', 'Dam breach forces evacuation')]} onPressItem={jest.fn()} />,
     );
-    expect(getByText('relevance.emergency'.toUpperCase())).toBeTruthy();
-    expect(() => getByText('forYou.breaking'.toUpperCase())).toThrow();
+    // The card's text is a hidden visual under its labelled button.
+    const HIDDEN = { includeHiddenElements: true } as const;
+    expect(getByText('relevance.emergency'.toUpperCase(), HIDDEN)).toBeTruthy();
+    expect(() => getByText('forYou.breaking'.toUpperCase(), HIDDEN)).toThrow();
   });
 
   it('gives the card enough width to show a real headline', () => {
     // Widened from 280/200. Asserted as a floor rather than an exact pair: the
     // requirement is "wide enough to read", and pinning exact points would make
     // any future tuning look like a regression.
-    const { getByRole } = render(
+    const { getByTestId } = render(
       <BreakingStrip items={[item('a', 'Dam breach forces evacuation')]} onPressItem={jest.fn()} />,
     );
-    const style = getByRole('button').props.style;
+    // The card is the frame; the button inside it is childless (glyph rule).
+    const style = getByTestId('breaking-card-a').props.style;
     const flat = Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style;
     expect(flat.maxWidth).toBeGreaterThanOrEqual(320);
     expect(flat.minWidth).toBeGreaterThanOrEqual(260);
@@ -94,4 +99,37 @@ describe('BreakingStrip', () => {
     expect(scroll.props.horizontal).toBe(true);
     expect(mockBlocker.current).not.toBeNull();
   });
+});
+
+// Every icon-font glyph must be hidden itself and sit under no accessible
+// element: iOS surfaces any other as its own StaticText (captured, ux2).
+const glyphProblems = (root: any): string[] => {
+    const glyphs = root.findAll(
+        (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+    );
+    if (glyphs.length === 0) return ['no glyph rendered'];
+    const out: string[] = [];
+    for (const g of glyphs) {
+        if (
+            g.props.accessible !== false ||
+            g.props.accessibilityElementsHidden !== true ||
+            g.props.importantForAccessibility !== 'no-hide-descendants'
+        ) {
+            out.push(`glyph ${JSON.stringify(g.props.children)} not hidden`);
+        }
+        for (let p: any = g.parent; p; p = p.parent) {
+            if (p.props?.accessible === true) {
+                out.push(`glyph under accessible ${p.props.testID ?? p.type}`);
+                break;
+            }
+        }
+    }
+    return out;
+};
+
+it('keeps the warning glyph out of the card button, which is childless', () => {
+    const r = render(<BreakingStrip items={[item('g1', 'Quake')]} onPressItem={jest.fn()} />);
+    expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
+    const b = r.getByRole('button');
+    expect(b.findAll((n: any) => n !== b && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
 });

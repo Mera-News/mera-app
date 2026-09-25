@@ -107,7 +107,7 @@ jest.mock('@/components/ui/box', () => { const { View } = require('react-native'
 jest.mock('@/components/ui/vstack', () => { const { View } = require('react-native'); return { VStack: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text }; });
 jest.mock('@/components/ui/spinner', () => { const { View } = require('react-native'); return { Spinner: (p: any) => <View {...p} /> }; });
-jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 jest.mock('@/components/custom/cards/ArticleStandaloneCompactCard', () => {
     const { View } = require('react-native');
@@ -387,4 +387,37 @@ describe('ScopeArticleList: failure is not emptiness', () => {
 
         expect(getByText('explore.noArticles')).toBeTruthy();
     });
+});
+
+// Every icon-font glyph must be hidden itself and sit under no accessible
+// element: iOS surfaces any other as its own StaticText (captured, ux2).
+const glyphProblems = (root: any): string[] => {
+    const glyphs = root.findAll(
+        (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+    );
+    if (glyphs.length === 0) return ['no glyph rendered'];
+    const out: string[] = [];
+    for (const g of glyphs) {
+        if (
+            g.props.accessible !== false ||
+            g.props.accessibilityElementsHidden !== true ||
+            g.props.importantForAccessibility !== 'no-hide-descendants'
+        ) {
+            out.push(`glyph ${JSON.stringify(g.props.children)} not hidden`);
+        }
+        for (let p: any = g.parent; p; p = p.parent) {
+            if (p.props?.accessible === true) {
+                out.push(`glyph under accessible ${p.props.testID ?? p.type}`);
+                break;
+            }
+        }
+    }
+    return out;
+};
+
+it('empty state: exposes no icon glyph as its own StaticText', async () => {
+    mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+    const r = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />);
+    await waitFor(() => expect(r.queryByTestId('explore-empty')).toBeTruthy());
+    expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
 });

@@ -345,7 +345,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         }
         return (
             <VStack className="items-center justify-center py-20 p-6" space="md" testID="explore-empty">
-                <MaterialIcons name="article" size={48} color="#666666" />
+                <MaterialIcons name="article" size={48} color="#666666" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
                 <Text size="md" className="text-gray-400 text-center">
                     {/* Explore is server-paginated with no local cache, so an
                         offline OR Mera-unreachable visit produces an empty list

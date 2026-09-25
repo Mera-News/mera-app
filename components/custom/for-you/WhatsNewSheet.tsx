@@ -124,7 +124,7 @@ const WhatsNewSheet: React.FC = () => {
                   className="rounded-full p-2"
                   style={{ backgroundColor: 'rgba(231,138,83,0.15)' }}
                 >
-                  <MaterialIcons name={row.icon} size={20} color={ACCENT} />
+                  <MaterialIcons name={row.icon} size={20} color={ACCENT} accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
                 </Box>
                 <VStack className="flex-1 min-w-0">
                   <Text size="sm" bold className="text-white">

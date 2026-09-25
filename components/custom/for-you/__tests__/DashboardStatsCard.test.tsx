@@ -37,10 +37,7 @@ jest.mock('react-native', () => {
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key }),
 }));
-jest.mock('@expo/vector-icons', () => {
-    const { View } = require('react-native');
-    return { MaterialIcons: (p: any) => <View testID={`icon-${p.name}`} /> };
-});
+jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 jest.mock('@/components/ui/text', () => {
     const { Text } = require('react-native');
     return { Text: (p: any) => <Text {...p} /> };
@@ -145,7 +142,7 @@ const cardIds = (r: ReturnType<typeof render>) =>
 describe('DashboardStatsCard', () => {
     it('shows the article-count sentence, collapsed', () => {
         const r = render(<DashboardStatsCard />);
-        expect(r.getByTestId('stats-sentence')).toBeTruthy();
+        expect(r.getByTestId('stats-sentence', HIDDEN)).toBeTruthy();
         expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
 
@@ -181,7 +178,7 @@ describe('DashboardStatsCard', () => {
         mockMode = 'limited';
         const r = render(<DashboardStatsCard />);
         expect(r.queryByTestId('stats-sentence')).toBeNull();
-        expect(r.getByTestId('dashboard-stats-card-state').props.children).toBe('feedStatus.modeLimited');
+        expect(r.getByTestId('dashboard-stats-card-state', HIDDEN).props.children).toBe('feedStatus.modeLimited');
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
         expect(r.getByTestId('status-panel-limited', HIDDEN)).toBeTruthy();
     });
@@ -292,4 +289,37 @@ describe('DashboardStatsCard', () => {
         r.rerender(<DashboardStatsCard />);
         expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
+});
+
+// Every icon-font glyph must be hidden itself and sit under no accessible
+// element: iOS surfaces any other as its own StaticText (captured, ux2).
+const glyphProblems = (root: any): string[] => {
+    const glyphs = root.findAll(
+        (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+    );
+    if (glyphs.length === 0) return ['no glyph rendered'];
+    const out: string[] = [];
+    for (const g of glyphs) {
+        if (
+            g.props.accessible !== false ||
+            g.props.accessibilityElementsHidden !== true ||
+            g.props.importantForAccessibility !== 'no-hide-descendants'
+        ) {
+            out.push(`glyph ${JSON.stringify(g.props.children)} not hidden`);
+        }
+        for (let p: any = g.parent; p; p = p.parent) {
+            if (p.props?.accessible === true) {
+                out.push(`glyph under accessible ${p.props.testID ?? p.type}`);
+                break;
+            }
+        }
+    }
+    return out;
+};
+
+it('keeps the chevron glyph out of the toggle, which is childless', () => {
+    const r = render(<DashboardStatsCard />);
+    expect(glyphProblems(r.UNSAFE_root)).toEqual([]);
+    const b = r.getByTestId('dashboard-stats-card-toggle');
+    expect(b.findAll((n: any) => n !== b && typeof n.props?.testID === 'string' && n.props.testID !== 'dashboard-stats-card-toggle')).toHaveLength(0);
 });
