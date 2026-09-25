@@ -47,6 +47,24 @@ export interface PublicationDisplayPorts {
   save(language: string, entry: PublicationDisplayCache): Promise<void>;
 }
 
+/**
+ * The server does not have the query at all (GRAPHQL_VALIDATION_FAILED: an app
+ * ahead of its server). It will not grow it mid-session, so the store stops
+ * asking until the next launch and every name stays raw. The fetch port
+ * rejects with this; any other rejection is an ordinary, retried failure.
+ */
+export class PublicationDisplayUnsupportedError extends Error {
+  readonly unsupported = true as const;
+  constructor() {
+    super('publicationDisplayNames is not supported by this server');
+    this.name = 'PublicationDisplayUnsupportedError';
+  }
+}
+
+function isUnsupported(err: unknown): boolean {
+  return !!err && typeof err === 'object' && (err as { unsupported?: unknown }).unsupported === true;
+}
+
 /** Names per call; the server caps a call at 200. */
 export const PUBLICATION_DISPLAY_BATCH_MAX = 200;
 /** Coalesce window: a screen of cards mounting at once is one call. */
@@ -94,10 +112,12 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
   let timer: ReturnType<typeof setTimeout> | null = null;
   let inFlight = false;
   let failures = 0;
+  /** Set for the rest of the session by a PublicationDisplayUnsupportedError. */
+  let unsupported = false;
 
   const store = create<PublicationDisplayState>((set, get) => {
     const schedule = (delay = PUBLICATION_DISPLAY_DEBOUNCE_MS) => {
-      if (!ports || get().language === null || timer || inFlight || pending.size === 0) return;
+      if (unsupported || !ports || get().language === null || timer || inFlight || pending.size === 0) return;
       timer = setTimeout(() => {
         timer = null;
         void flush();
@@ -116,8 +136,14 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
         const raw: unknown = await activePorts.fetch(language, batch);
         // No data (or not a map) means "no display names": keep the raw ones.
         answer = raw && typeof raw === 'object' ? (raw as Record<string, string>) : {};
-      } catch {
+      } catch (err) {
         inFlight = false;
+        if (isUnsupported(err)) {
+          // Never again this session: raw names, no calls, no logs.
+          unsupported = true;
+          pending.clear();
+          return;
+        }
         // A switch mid-call already rebuilt `pending` for the new language.
         if (get().language !== language) {
           schedule();
@@ -147,7 +173,7 @@ export function createPublicationDisplayStore(): PublicationDisplayStore {
       names: {},
 
       request: (name) => {
-        if (typeof name !== 'string' || !name || pending.has(name)) return;
+        if (unsupported || typeof name !== 'string' || !name || pending.has(name)) return;
         if (get().names[name] !== undefined) {
           if (!stale.has(name)) return;
           stale.delete(name);

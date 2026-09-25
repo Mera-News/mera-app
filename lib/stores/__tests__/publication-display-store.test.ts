@@ -256,6 +256,46 @@ describe('publication-display-store', () => {
     expect(store.getState().names['人民日报']).toBe('Renmin Ribao');
   });
 
+  // A server without the query (GRAPHQL_VALIDATION_FAILED) will not grow it
+  // mid-session: every further call would only be another logged error.
+  it('an "unsupported" failure stops every further request until the next launch', async () => {
+    const { PublicationDisplayUnsupportedError } = require('../publication-display-store');
+    const store = createPublicationDisplayStore();
+    const f = fakePorts(TABLE);
+    f.fetch.mockRejectedValueOnce(new PublicationDisplayUnsupportedError());
+    store.getState().configure(f.ports);
+    await act(async () => {
+      await store.getState().setLanguage('en');
+    });
+    store.getState().request('人民日报');
+    await settle();
+    expect(f.fetch).toHaveBeenCalledTimes(1);
+    store.getState().request('Der Spiegel');
+    await settle(10 * 60_000);
+    await act(async () => {
+      await store.getState().setLanguage('ja');
+    });
+    await settle(10 * 60_000);
+    expect(f.fetch).toHaveBeenCalledTimes(1);
+    // Raw names throughout.
+    expect(store.getState().names['人民日报']).toBeUndefined();
+  });
+
+  it('any other failure keeps the backoff retry', async () => {
+    const store = createPublicationDisplayStore();
+    const f = fakePorts(TABLE);
+    f.fetch.mockRejectedValueOnce(new Error('Network request failed'));
+    store.getState().configure(f.ports);
+    await act(async () => {
+      await store.getState().setLanguage('en');
+    });
+    store.getState().request('人民日报');
+    await settle();
+    await settle(60_000);
+    await settle();
+    expect(f.fetch).toHaveBeenCalledTimes(2);
+  });
+
   it('names asked for before the store is wired are fetched once it is', async () => {
     const store = createPublicationDisplayStore();
     const f = fakePorts(TABLE);

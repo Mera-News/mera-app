@@ -214,6 +214,23 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
                 }
             }
 
+            // An error the operation EXPECTS and handles itself (opt-in,
+            // `context.expectedErrorCodes`, listed codes only): a breadcrumb,
+            // not a Sentry event, and no banner. The one user today is
+            // publicationDisplayNames on a server that has not deployed it
+            // (GRAPHQL_VALIDATION_FAILED): the app keeps raw names and stops
+            // asking for the session, so capturing it is noise per launch.
+            const expectedCodes = operation.getContext().expectedErrorCodes as readonly string[] | undefined;
+            if (errorCode && Array.isArray(expectedCodes) && expectedCodes.includes(errorCode)) {
+                logger.addBreadcrumb(
+                    'GraphQL expected error',
+                    'apollo-error-link',
+                    { operationName: operation.operationName, errorCode },
+                    'info',
+                );
+                continue;
+            }
+
             // Log other GraphQL errors to Sentry
             logger.captureException(new Error(`GraphQL Error: ${JSON.stringify(graphQLError)}`), {
                 tags: { source: 'apollo-error-link', type: 'graphql' },

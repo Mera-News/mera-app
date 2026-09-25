@@ -69,8 +69,11 @@ describe('publication-display-service', () => {
       expect(call.variables).toEqual({ language: 'zh-CN', names: ['人民日报'] });
       expect(call.fetchPolicy).toBe('no-cache');
       // Not part of the feed sync: a failure (a server without the query yet)
-      // must never paint the feed-wide "sync failed" banner.
-      expect(call.context).toEqual(expect.objectContaining({ noSyncStatus: true }));
+      // must never paint the feed-wide "sync failed" banner, and that one
+      // failure is handled here, so it is a breadcrumb, not a Sentry event.
+      expect(call.context).toEqual(
+        expect.objectContaining({ noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] }),
+      );
     });
 
     it('splits more than 200 names into several calls', async () => {
@@ -87,6 +90,26 @@ describe('publication-display-service', () => {
     it('ignores an empty display name rather than showing a blank', async () => {
       mockQuery.mockResolvedValue(answer([['Le Monde', '']]));
       expect(await fetchPublicationDisplayNames('ru', ['Le Monde'])).toEqual({});
+    });
+
+    it('a server without the query (GRAPHQL_VALIDATION_FAILED) is "unsupported", logged once at info', async () => {
+      const logger = require('@/lib/logger').default;
+      const validation = Object.assign(new Error('Cannot query field "publicationDisplayNames"'), {
+        errors: [{ message: 'Cannot query field', extensions: { code: 'GRAPHQL_VALIDATION_FAILED' } }],
+      });
+      mockQuery.mockRejectedValue(validation);
+      const first = await fetchPublicationDisplayNames('en', ['x']).catch((e) => e);
+      const second = await fetchPublicationDisplayNames('en', ['y']).catch((e) => e);
+      expect(first.unsupported).toBe(true);
+      expect(second.unsupported).toBe(true);
+      expect(logger.info).toHaveBeenCalledTimes(1);
+      expect(logger.captureException).not.toHaveBeenCalled();
+    });
+
+    it('any other failure is an ordinary rejection (the store backs off and retries)', async () => {
+      mockQuery.mockRejectedValue(new Error('Network request failed'));
+      const err = await fetchPublicationDisplayNames('en', ['x']).catch((e) => e);
+      expect(err.unsupported).toBeUndefined();
     });
 
     it('rejects when the call fails, so the store can retry', async () => {

@@ -22,6 +22,7 @@ import type {
 } from '@/lib/generated/graphql-types';
 import {
   PUBLICATION_DISPLAY_BATCH_MAX,
+  PublicationDisplayUnsupportedError,
   usePublicationDisplayStore,
   type PublicationDisplayCache,
   type PublicationDisplayPorts,
@@ -53,7 +54,25 @@ export function serverLocaleFor(appLanguage: string): string {
   return SERVER_LOCALE[appLanguage] ?? appLanguage;
 }
 
-/** raw name -> display name, in the app language given. Rejects on failure. */
+/** GraphQL error codes on a rejection (Apollo 4 `errors`, Apollo 3 `graphQLErrors`). */
+function graphQLErrorCodes(err: unknown): string[] {
+  if (!err || typeof err !== 'object') return [];
+  const list = (err as { errors?: unknown }).errors ?? (err as { graphQLErrors?: unknown }).graphQLErrors;
+  if (!Array.isArray(list)) return [];
+  return list
+    .map((e) => (e as { extensions?: { code?: unknown } })?.extensions?.code)
+    .filter((c): c is string => typeof c === 'string');
+}
+
+let unsupportedLogged = false;
+
+/**
+ * raw name -> display name, in the app language given. Rejects on failure;
+ * with {@link PublicationDisplayUnsupportedError} when the server has no such
+ * query (GRAPHQL_VALIDATION_FAILED), which the store treats as "stop asking
+ * until the next launch". Logged once, at info: an app ahead of its server is
+ * a deploy order, not an error.
+ */
 export async function fetchPublicationDisplayNames(
   appLanguage: string,
   names: readonly string[],
@@ -65,16 +84,31 @@ export async function fetchPublicationDisplayNames(
       language,
       names: names.slice(i, i + PUBLICATION_DISPLAY_BATCH_MAX),
     };
-    const { data } = await client.query<{ publicationDisplayNames: PublicationDisplayName[] }>({
-      query: PUBLICATION_DISPLAY_NAMES,
-      variables,
-      // The store and its settings row are the cache; Apollo's would only be
-      // a second, unbounded copy.
-      fetchPolicy: 'no-cache',
-      // Not part of the feed sync. A failure here (a server that has not
-      // deployed the query yet) must never paint "sync failed" on the feed.
-      context: { noSyncStatus: true },
-    });
+    let data: { publicationDisplayNames?: PublicationDisplayName[] | null } | undefined;
+    try {
+      ({ data } = await client.query<{ publicationDisplayNames: PublicationDisplayName[] }>({
+        query: PUBLICATION_DISPLAY_NAMES,
+        variables,
+        // The store and its settings row are the cache; Apollo's would only be
+        // a second, unbounded copy.
+        fetchPolicy: 'no-cache',
+        // Not part of the feed sync. A failure here (a server that has not
+        // deployed the query yet) must never paint "sync failed" on the feed.
+        // A server without the query answers GRAPHQL_VALIDATION_FAILED, which
+        // this function handles (unsupported for the session): a breadcrumb,
+        // not a Sentry event (lib/apollo-client's expectedErrorCodes).
+        context: { noSyncStatus: true, expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+      }));
+    } catch (err) {
+      if (graphQLErrorCodes(err).includes('GRAPHQL_VALIDATION_FAILED')) {
+        if (!unsupportedLogged) {
+          unsupportedLogged = true;
+          logger.info('[publication-display] server has no publicationDisplayNames; raw names this session');
+        }
+        throw new PublicationDisplayUnsupportedError();
+      }
+      throw err;
+    }
     for (const row of data?.publicationDisplayNames ?? []) {
       if (row?.name && row.displayName) out[row.name] = row.displayName;
     }
