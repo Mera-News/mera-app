@@ -20,7 +20,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const ACCENT = '#EDA77E';
+/** Every icon and label in the sheet, the title included (owner, ux2 B6:
+ *  uniformity). Only a destructive row differs. */
+const SHEET_WHITE = '#FFFFFF';
 const DESTRUCTIVE = '#F87171';
 /** One slide between levels, both ways. */
 export const SHEET_SLIDE_MS = 220;
@@ -111,7 +113,7 @@ export const ActionSheetRow: React.FC<ActionSheetRowProps> = ({
     destructive,
     description,
 }) => {
-    const color = destructive ? DESTRUCTIVE : ACCENT;
+    const color = destructive ? DESTRUCTIVE : SHEET_WHITE;
     const row = (
         <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={label} onPress={onPress}>
             {/* Layout on an inner View with a STATIC style: a function `style` on
@@ -129,7 +131,7 @@ export const ActionSheetRow: React.FC<ActionSheetRowProps> = ({
                     >
                         {label}
                     </Text>
-                    {opensLevel ? <MaterialIcons name="chevron-right" size={22} color="rgb(163,163,163)" /> : null}
+                    {opensLevel ? <MaterialIcons name="chevron-right" size={22} color={SHEET_WHITE} /> : null}
                 </HStack>
             </View>
         </Pressable>
@@ -416,13 +418,13 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                                         originalLanguage={titleLanguage}
                                         size="sm"
                                         numberOfLines={1}
-                                        style={{ color: 'rgb(212,212,212)', fontWeight: '600' }}
+                                        style={{ color: SHEET_WHITE, fontWeight: '600' }}
                                     />
                                 ) : (
                                     <Text
                                         size="sm"
                                         numberOfLines={1}
-                                        style={{ color: 'rgb(212,212,212)', fontWeight: '600' }}
+                                        style={{ color: SHEET_WHITE, fontWeight: '600' }}
                                     >
                                         {t('articleMenu.title')}
                                     </Text>

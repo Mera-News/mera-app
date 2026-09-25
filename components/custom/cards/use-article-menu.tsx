@@ -96,7 +96,7 @@ export interface UseArticleMenuInput {
  *  in the sheet's muted text, above its rows. */
 const SheetNote: React.FC<{ title: string; body?: string }> = ({ title, body }) => (
     <VStack space="xs" className="px-4 pb-2" testID="sheet-note">
-        <Text style={{ color: 'rgb(230,230,230)', fontSize: 15, fontWeight: '700' }}>{title}</Text>
+        <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '700' }}>{title}</Text>
         {body ? (
             <Text size="sm" style={{ color: 'rgb(163,163,163)' }}>
                 {body}
