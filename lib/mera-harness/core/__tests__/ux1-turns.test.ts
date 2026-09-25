@@ -709,3 +709,59 @@ describe('ux2 D: districts, typos and the place the user named', () => {
     ]);
   });
 });
+
+describe('ux2 owner: two cards for the SAME old fact become one', () => {
+  const WORK = 'profession: job role and industry';
+  const FOUNDER: AgentPersona = {
+    surface: 'CONFIG',
+    languageName: 'English',
+    facts: [
+      { id: 'w1', statement: 'Entrepreneur building a tech startup', attribute: WORK },
+      { id: 'w2', statement: 'Founder starting a new business', attribute: WORK },
+    ],
+  };
+  const save = (entries: unknown[]) => res({ toolCalls: [tc('saveExtractedFacts', { extracted_user_information: entries })] });
+
+  it('merges two proposals for the same target into one, options de-duplicated', async () => {
+    const h = harness([
+      res({ content: 'An AI news app.', toolCalls: [tc('load_skill', { id: 'facts/profession' })] }),
+      save([
+        { statement: 'Founder of an AI news app', questionnaire_attribute: WORK, replaces: 'w2', alternatives: ['Developer building an AI news app'] },
+        { statement: 'Developer building an AI news app', questionnaire_attribute: WORK, replaces: 'w2', alternatives: ['Building an AI curated news app'] },
+      ]),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(FOUNDER), userMessage: "I'm building an ai news app", deps: h.deps });
+    const entries = h.saves.flat();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      statement: 'Founder of an AI news app',
+      replaces: 'w2',
+      alternatives: ['Developer building an AI news app', 'Building an AI curated news app'],
+    });
+  });
+
+  it('keeps one card per DIFFERENT overlapped fact', async () => {
+    const h = harness([
+      res({ content: 'An AI news app.', toolCalls: [tc('load_skill', { id: 'facts/profession' })] }),
+      save([
+        { statement: 'Building an AI news app', questionnaire_attribute: WORK, replaces: 'w1' },
+        { statement: 'Founder of an AI curated news app', questionnaire_attribute: WORK, replaces: 'w2' },
+      ]),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(FOUNDER), userMessage: "I'm building an ai news app", deps: h.deps });
+    expect(h.saves.flat().map((e) => e.replaces)).toEqual(['w1', 'w2']);
+  });
+
+  it('a later leg never offers a second card for a fact already targeted this turn', async () => {
+    const h = harness([
+      res({ content: 'An AI news app.', toolCalls: [tc('load_skill', { id: 'facts/profession' })] }),
+      save([{ statement: 'Founder of an AI news app', questionnaire_attribute: WORK, replaces: 'w2' }]),
+      save([{ statement: 'Building an AI curated news app', questionnaire_attribute: WORK, replaces: 'w2' }]),
+      res({ content: 'Offered.' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(FOUNDER), userMessage: "I'm building an ai news app", deps: h.deps });
+    expect(h.saves.flat()).toHaveLength(1);
+  });
+});

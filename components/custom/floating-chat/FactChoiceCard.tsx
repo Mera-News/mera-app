@@ -196,6 +196,16 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     && attributeKey(questionnaireAttribute) !== ''
     && !contradicts(replaces.attribute, questionnaireAttribute);
 
+  /**
+   * KEEP BOTH IS ALWAYS OFFERED on a replace card (owner ruling ux2: "there
+   * should always be an option to keep both"): it adds the chosen reading and
+   * leaves the old fact and its topics untouched. `canKeepBoth` above now only
+   * picks the wording and the disclosure: a non-contradicting pair gets the
+   * neutral "Also add this?", a contradiction keeps "Replace this fact?" and
+   * its red block. Offered once the card can name the fact it would keep.
+   */
+  const keepBothOffered = isReplace && replaces !== null;
+
   // `dismissed` and the derived pending/saved split come from the DERIVER, which
   // reads this group's own slot. This component deliberately no longer decides
   // "am I answered" from the presence of a value at `resultKey`: that check was
@@ -212,7 +222,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
 
   const handleAdd = (mode: 'replace-or-add' | 'keep-both' = 'replace-or-add') => async () => {
     if (busy || stale || dismissed || acceptBlocked) return;
-    if (mode === 'keep-both' && !canKeepBoth) return;
+    if (mode === 'keep-both' && !keepBothOffered) return;
     setBusy(true);
     void hapticLight();
     try {
@@ -430,21 +440,10 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           {t('factChoice.expired')}
         </Text>
       ) : isReplace ? (
-        // STACKED, so German-length labels never squeeze. The one filled
-        // (accent) button is the safe choice when it exists: Keep both.
-        // Replace is outlined in the destructive tint; Skip is plain text.
+        // STACKED, so German-length labels never squeeze. Owner order (ux2):
+        // Replace (outlined, destructive tint), Keep both (the one filled,
+        // safe choice), Skip as plain text.
         <View style={styles.buttonStack}>
-          {canKeepBoth && (
-            <Button
-              testID={`fact-choice-keep-both-${groupIndex}`}
-              onPress={handleAdd('keep-both')}
-              isDisabled={busy}
-              className="rounded-full bg-primary-400"
-              size="sm"
-            >
-              <ButtonText className="text-white text-sm">{t('factChoice.keepBoth')}</ButtonText>
-            </Button>
-          )}
           <Button
             testID={`fact-choice-add-${groupIndex}`}
             onPress={handleAdd('replace-or-add')}
@@ -456,6 +455,17 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
               {t('factChoice.replace')}
             </ButtonText>
           </Button>
+          {keepBothOffered && (
+            <Button
+              testID={`fact-choice-keep-both-${groupIndex}`}
+              onPress={handleAdd('keep-both')}
+              isDisabled={busy}
+              className="rounded-full bg-primary-400"
+              size="sm"
+            >
+              <ButtonText className="text-white text-sm">{t('factChoice.keepBoth')}</ButtonText>
+            </Button>
+          )}
           <Pressable
             testID={`fact-choice-dismiss-${groupIndex}`}
             onPress={handleDismiss}

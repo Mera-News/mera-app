@@ -750,6 +750,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   const offeredThisTurn: string[] = [];
   /** A home fact was already offered this turn (see the save handler). */
   let homeOfferedThisTurn = false;
+  /** Facts a card already offers to replace this turn. A second offer for the
+   *  same old fact is merged into the first card (same call) or dropped (later
+   *  leg): the owner saw two "Replace this fact?" cards for one old fact. */
+  const replaceTargetsThisTurn = new Set<string>();
   let existingFacts: { factId: string; statement: string }[] = [];
   /** A retired combined origin-and-home fact still on file, if any. */
   const combinedFactOnFile = state.persona.facts.find((f) => isCombinedOriginFact(f.attribute)) ?? null;
@@ -1329,6 +1333,31 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
             const home = currentHomeFact(state.persona.facts, statement);
             if (home) replaces = home.id;
           }
+          if (replaces !== null && replaceTargetsThisTurn.has(replaces)) {
+            // ONE CARD PER OLD FACT (owner, ux2). In the same call the readings
+            // join the first card as alternatives; a later leg's is dropped,
+            // since its card is already on screen.
+            const into = sanitised.find((e) => e.replaces === replaces);
+            if (into) {
+              const seen = new Set([comparableStatement(String(into.statement))]);
+              const merged: string[] = [];
+              for (const alt of [
+                ...(Array.isArray(into.alternatives) ? into.alternatives : []),
+                statement,
+                ...(Array.isArray(entry.alternatives) ? entry.alternatives : []),
+              ]) {
+                if (typeof alt !== 'string' || !alt.trim()) continue;
+                const key = comparableStatement(alt);
+                if (seen.has(key)) continue;
+                seen.add(key);
+                merged.push(alt.trim());
+              }
+              into.alternatives = merged.slice(0, 3);
+            }
+            reProposals++;
+            continue;
+          }
+          if (replaces !== null) replaceTargetsThisTurn.add(replaces);
           if (isHomeEntry(entry)) homeOfferedThisTurn = true;
           proposals.push({ statement, kind: routeKind, place, replaces });
           offeredThisTurn.push(statement.toLowerCase());

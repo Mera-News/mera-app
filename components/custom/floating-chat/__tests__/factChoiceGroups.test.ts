@@ -293,10 +293,10 @@ describe('replacement groups and the bulk row', () => {
   // `THREE` above is scoped to its own describe; this block needs its own.
   const TRIO = [['Lives in Hoorn'], ['Works as a farmer'], ['Parents in Malaga']];
 
-  it('EXCLUDES a replacement from "Add all", and from the count that shows it', () => {
-    // "Add all" performing an irreversible destroy on facts the user never
-    // looked at individually is consent fabricated in bulk. Two plain groups
-    // plus one replacement must offer the row over the two plain ones only.
+  // OWNER RULING (ux2): replacements join the bulk row, which then says
+  // "Replace all" / "Keep all" / "Skip all" (FactChoiceBulkRow). Each group
+  // carries its own target so the row can replace only where a card would.
+  it('INCLUDES a replacement in the bulk row, carrying its target', () => {
     const base = stagedResult(TRIO);
     const groups = base.pendingFacts as { replaces?: string }[];
     groups[2].replaces = 'old-1';
@@ -306,9 +306,11 @@ describe('replacement groups and the bulk row', () => {
       | Extract<ChatThreadItem, { kind: 'fact-choice-bulk-row' }>
       | undefined;
 
-    expect(bulk).toBeDefined();
-    expect(bulk?.groups).toHaveLength(2);
-    expect(bulk?.groups.map((g) => g.groupIndex)).toEqual([0, 1]);
+    expect(bulk?.groups.map((g) => [g.groupIndex, g.replaces])).toEqual([
+      [0, null],
+      [1, null],
+      [2, 'old-1'],
+    ]);
 
     // The replacement still gets its own card, carrying what it would destroy.
     const cards = items.filter(
@@ -320,13 +322,12 @@ describe('replacement groups and the bulk row', () => {
     expect(cards[0].replacesFactId).toBeNull();
   });
 
-  it('emits NO bulk row when only one plain group is left beside replacements', () => {
-    // Below two bulkable groups the row is not worth its own risk surface.
+  it('emits a bulk row for two pending replacement cards', () => {
     const base = stagedResult(TRIO);
     const groups = base.pendingFacts as { replaces?: string }[];
     groups[1].replaces = 'old-1';
     groups[2].replaces = 'old-2';
 
-    expect(kinds(itemsFor(base))).not.toContain('fact-choice-bulk-row');
+    expect(kinds(itemsFor(base))).toContain('fact-choice-bulk-row');
   });
 });

@@ -205,6 +205,8 @@ export type ChatThreadItem =
         options: string[];
         questionnaireAttribute: string | null;
         topicSkillId: string | null;
+        /** The fact this group would replace, or null for a plain add. */
+        replaces: string | null;
       }[];
     }
   /**

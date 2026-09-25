@@ -131,3 +131,26 @@ describe('ux2 D5: "didn\'t find anything" never sits beside a card', () => {
     expect(box && box.kind === 'agent-steps' && box.terminal).toBe('no-proposal');
   });
 });
+
+describe('ux2 owner: the bulk row includes replace cards', () => {
+  it('emits a bulk row carrying each group\'s replace target', () => {
+    const gid0 = factChoiceGroupId(0, ['Founder of an AI news app']);
+    const gid1 = factChoiceGroupId(1, ['Building an AI news app']);
+    const tc: ToolCallRecord = {
+      id: 's0', name: 'saveExtractedFacts', input: {}, status: 'done',
+      result: {
+        success: true, staged: true, factsSaved: 0, savedFacts: [], conflicts: [], groupResolutions: {},
+        pendingFacts: [
+          { index: 0, groupId: gid0, options: ['Founder of an AI news app'], questionnaireAttribute: null, replaces: 'w1' },
+          { index: 1, groupId: gid1, options: ['Building an AI news app'], questionnaireAttribute: null, replaces: 'w2' },
+        ],
+      },
+    };
+    const items = derive([
+      { id: 'u1', role: 'user', content: 'I am building an ai news app' },
+      { id: 'a1', role: 'assistant', content: '', toolCalls: [tc] },
+    ]);
+    const row = items.find((i) => i.kind === 'fact-choice-bulk-row');
+    expect(row && row.kind === 'fact-choice-bulk-row' && row.groups.map((g) => g.replaces)).toEqual(['w1', 'w2']);
+  });
+});

@@ -670,15 +670,11 @@ function emitFactChoiceGroups(
   // only while 2+ remain pending. Spliced rather than appended so it cannot end
   // up below an already-resolved group's cards.
   //
-  // A REPLACEMENT GROUP IS EXCLUDED, from the row and from the count that
-  // decides whether the row renders at all. "Add all" performing an
-  // irreversible destroy on facts the user never looked at individually is
-  // consent fabricated in bulk — the same shape as forcing a tool call the
-  // user never asked for. A replacement has to be tapped on its own card,
-  // where what it destroys is named.
-  const bulkable = groups.filter(
-    (g) => resolutions[groupIdOf(g)] === undefined && !g.replaces,
-  );
+  // REPLACEMENT GROUPS ARE INCLUDED (owner ruling ux2). The row then says
+  // what it does: "Replace all" / "Keep all" / "Skip all", never a plain
+  // "Add all" that would destroy facts under an add label, and each replace
+  // card above it still names what it removes. Every pending group counts.
+  const bulkable = groups.filter((g) => resolutions[groupIdOf(g)] === undefined);
   if (bulkable.length >= 2 && !stale && lastPendingAt >= 0) {
     cards.splice(lastPendingAt + 1, 0, {
       kind: 'fact-choice-bulk-row',
@@ -691,6 +687,7 @@ function emitFactChoiceGroups(
         options: g.options,
         questionnaireAttribute: g.questionnaireAttribute,
         topicSkillId: g.topicSkillId ?? null,
+        replaces: g.replaces ?? null,
       })),
     });
   }
