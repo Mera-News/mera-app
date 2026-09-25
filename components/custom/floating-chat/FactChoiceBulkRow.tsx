@@ -165,11 +165,10 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
             className="rounded-full bg-primary-400"
             size="sm"
             style={styles.tapTarget}
-            // TODO(ux2 splice): drop the casts once `_ux2-chat-bulk-fragments.json` lands.
-            accessibilityLabel={t('factChoice.keepAllA11y' as 'factChoice.addAllA11y', { count: groups.length })}
+            accessibilityLabel={t('factChoice.keepAllA11y', { count: groups.length })}
           >
             <ButtonText className="text-white text-sm">
-              {t('factChoice.keepAll' as 'factChoice.skipAll')}
+              {t('factChoice.keepAll')}
             </ButtonText>
           </Button>
           <Button
@@ -179,10 +178,10 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
             className="rounded-full bg-transparent border border-error-400"
             size="sm"
             style={styles.tapTarget}
-            accessibilityLabel={t('factChoice.replaceAllA11y' as 'factChoice.addAllA11y', { count: groups.length })}
+            accessibilityLabel={t('factChoice.replaceAllA11y', { count: groups.length })}
           >
             <ButtonText className="text-sm" style={styles.replaceText}>
-              {t('factChoice.replaceAll' as 'factChoice.skipAll')}
+              {t('factChoice.replaceAll')}
             </ButtonText>
           </Button>
         </>

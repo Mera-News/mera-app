@@ -49,8 +49,7 @@ const ICON_BY_ACTION: Record<FactCardAction, keyof typeof MaterialIcons.glyphMap
 const TITLE_KEY_BY_ACTION = {
   saved: 'floatingChat.factSavedTitle',
   deleted: 'floatingChat.factDeletedTitle',
-  // TODO(ux2 splice): drop the cast once `_ux2-chat-c4-fragments.json` lands.
-  deletePending: 'floatingChat.factDeletePendingTitle' as 'floatingChat.factDeletedTitle',
+  deletePending: 'floatingChat.factDeletePendingTitle',
   updated: 'floatingChat.factUpdatedTitle',
 } as const satisfies Record<FactCardAction, string>;
 
