@@ -65,13 +65,10 @@
 // share); Ask-Mera lives on the card's rationale block. Tapping a thumb records
 // a verdict and opens the shared ••• sheet at that verdict's feedback tree.
 // Every one of those interactions — plus opening the card — marks it `viewed`.
-// The header is the "Feed" heading, a small pipeline-status glyph, and the
-// importance-filter chip — and nothing else. It used to also carry the
-// notification bell, a full-width indeterminate progress bar and the 24h counts
-// sentence; all three were removed because they made this screen a place you
-// check for arrivals rather than a place you read. The bell lives on the
-// Dashboard, and so do the counts. The status glyph opens the same detail panel
-// the bar used to expand into, and closes itself after 3s.
+// The header row itself is FeedHeaderTitleRow. This screen is a place you
+// read, not one you check for arrivals: nothing on it counts or announces new
+// stories (no progress bar, no counts sentence, no "New stories" pill). New
+// stories are inserted live below the pinned prefix, never above the reader.
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
@@ -108,9 +105,7 @@ import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import FeedHeaderTitleRow, { feedMarkMode } from '@/components/custom/feed/FeedHeaderTitleRow';
-import NewStoriesPill from '@/components/custom/feed/NewStoriesPill';
 import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
-import { pressNewStoriesPill } from '@/components/custom/feed/new-stories-pill';
 import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
@@ -635,30 +630,6 @@ const FeedScreen: React.FC = () => {
     return () => clearTimeout(timer);
   }, [listData]);
 
-  // ── "New stories" pill (N1) ──
-  // Arrivals that landed while the reader was scrolled down. They land below
-  // the pinned prefix, i.e. below what the reader has read. Tapping the pill
-  // refreshes exactly like a pull at the top (re-sort, re-pin, back to top).
-  const [awayArrivals, setAwayArrivals] = useState<ReadonlySet<string>>(() => new Set());
-  const hasAwayArrivalsShared = useSharedValue(false);
-  useEffect(() => {
-    const arriving = arrivingIdsRef.current;
-    if (arriving.size === 0) return;
-    if (!userDraggedShared.value || lastOffsetShared.value <= SCROLL_THRESHOLD) return;
-    setAwayArrivals((prev) => {
-      const next = new Set(prev);
-      arriving.forEach((id) => next.add(id));
-      return next;
-    });
-    hasAwayArrivalsShared.value = true;
-    // Reads refs and shared values on purpose: this reacts to a NEW list only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listData]);
-  const clearAwayArrivals = useCallback(() => {
-    hasAwayArrivalsShared.value = false;
-    setAwayArrivals((prev) => (prev.size === 0 ? prev : new Set()));
-  }, [hasAwayArrivalsShared]);
-
   // Seed the pin the first time the list is non-empty. This is NOT redundant
   // with the extend inside the ingest effect: on a cold launch the first ingest
   // fires while `listData` is still empty (order empty, candidates just landed),
@@ -794,12 +765,6 @@ const FeedScreen: React.FC = () => {
     onRefreshSync();
   }, [flushSkips, resetSession, onRefreshSync]);
 
-  // The "New stories" pill IS a pull-to-refresh (see new-stories-pill.ts).
-  const showNewStories = useCallback(
-    () => pressNewStoriesPill(clearAwayArrivals, onRefresh),
-    [clearAwayArrivals, onRefresh],
-  );
-
   // Re-tap the Feed tab icon → scroll to top; tap again at the top → refresh.
   // Deliberately the SAME `onRefresh` the RefreshControl below calls, not
   // `onRefreshSync` and not the scheduler: routing around it would skip
@@ -865,11 +830,6 @@ const FeedScreen: React.FC = () => {
       // the list can sit past the threshold for one frame while it lays out,
       // which flashed the FAB with nothing having been scrolled (F3).
       const next = userDraggedShared.value && e.contentOffset.y > SCROLL_THRESHOLD;
-      // Back at the top: the pill has nothing left to point at.
-      if (hasAwayArrivalsShared.value && e.contentOffset.y < 50) {
-        hasAwayArrivalsShared.value = false;
-        runOnJS(clearAwayArrivals)();
-      }
       if (next !== showFabShared.value) {
         showFabShared.value = next;
         runOnJS(setShowScrollToTop)(next);
@@ -1084,14 +1044,6 @@ const FeedScreen: React.FC = () => {
         // `onScroll` worklet above, which only owns the scroll event itself.
         // Landing buffered dwell marks here keeps the debounce from being the
         // only thing standing between a skip and app termination.
-        // scrollToIndex (the new-stories pill) can target a row that is not
-        // measured yet; land on the estimate, the list settles from there.
-        onScrollToIndexFailed={(info) => {
-          listRef.current?.scrollToOffset({
-            offset: info.averageItemLength * info.index,
-            animated: true,
-          });
-        }}
         onScrollBeginDrag={() => {
           userDraggedShared.value = true;
         }}
@@ -1246,12 +1198,6 @@ const FeedScreen: React.FC = () => {
           <View pointerEvents="none" testID="feed-header-bottom-spacer" />
         </VStack>
       </Animated.View>
-
-      <NewStoriesPill
-        visible={awayArrivals.size > 0}
-        onPress={showNewStories}
-        bottom={tabClearance + 20}
-      />
 
       <ScrollToTopFab
         visible={showScrollToTop}
