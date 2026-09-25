@@ -189,8 +189,7 @@
       },
       "downloadProgress": "ดาวน์โหลดแล้ว {{done}} จาก {{total}} บทความ",
       "chunks": {
-        "ready": "เสร็จแล้ว {{ready}} จาก {{total}} ชุดการวิเคราะห์",
-        "a11y": "ชุดการวิเคราะห์: เสร็จแล้ว {{ready}} จาก {{total}}"
+        "ready": "เสร็จแล้ว {{ready}} จาก {{total}} ชุดการวิเคราะห์"
       },
       "stageA11y": "ขั้นที่ {{index}} จาก {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}} ดูเกี่ยวข้องกับคุณ,",
     "reasonUnavailable": "Mera เขียนบันทึกสำหรับบทความนี้ไม่ได้",
     "loadingA11y": "กำลังโหลดฟีดของคุณ",
-    "newStoriesPill": "ข่าวใหม่",
     "translatingCaption": "กำลังแปล…",
     "updatedJustNow": "อัปเดตเมื่อสักครู่"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "เพิ่มไป Explore",
     "addedToExplore": "เพิ่มไป Explore แล้ว",
     "badgeGovernment": "แหล่งข่าวรัฐบาล",
-    "badgeRegulator": "หน่วยงานอย่างเป็นทางการ"
+    "badgeRegulator": "หน่วยงานอย่างเป็นทางการ",
+    "sectionCountries": "ประเทศ",
+    "sectionPublications": "สื่อ"
   },
   "clusterDetail": {
     "translatable": "บทความนี้เป็นภาษา {{language}}: อุปกรณ์ของคุณสามารถแปลได้ขณะที่คุณอ่าน หากการแปลไม่ทำงาน คุณสามารถเปิดเว็บไซต์ใน Google Translate ได้ เพียงแต่ควรทราบว่าคุณจะกำลังเข้าชมผ่าน Google",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "หัวข้อและข่าวที่พบจะถูกลบไปด้วย และ Mera จะหยุดค้นหาข่าวเกี่ยวกับเรื่องนี้",
     "deletingFact": "กำลังลบ...",
     "yesDelete": "ใช่ ลบ",
-    "refreshSuggestions": "รีเฟรชคำแนะนำ",
-    "refreshingSuggestions": "กำลังรีเฟรช...",
-    "refreshSuggestionsSuccessTitle": "รีเฟรชคำแนะนำแล้ว",
-    "refreshSuggestionsSuccessDescription": "กำลังสร้างคำแนะนำส่วนบุคคลใหม่",
-    "refreshSuggestionsFailedTitle": "รีเฟรชล้มเหลว",
-    "refreshSuggestionsFailedDescription": "ไม่สามารถรีเฟรชคำแนะนำได้ กรุณาลองอีกครั้ง",
-    "personaUpdatedRefreshHint": "ฉันเห็นว่าคุณอัปเดตโปรไฟล์แล้ว ต้องการให้ฉันสร้างฟีดใหม่ให้คุณไหม?",
     "articleCount_one": "{{count}} บทความ",
     "articleCount_other": "{{count}} บทความ",
     "addTopic": "เพิ่มหัวข้อ",
@@ -2801,12 +2794,16 @@
       ]
     },
     "nudges": [
-      "บันทึกไว้อ่านทีหลัง",
-      "ข่าวที่บันทึกรออยู่",
-      "อ่านข่าวเดียวให้จบ",
-      "ดูพาดหัวข่าวเด่น",
-      "ใหม่ไม่ได้ดีกว่า",
-      "ไม่ต้องรอดู"
+      "อ่านบทความฉบับเต็ม",
+      "ไม่มีเวลา? บันทึกไว้",
+      "ดูข่าวโลกแล้วหรือยัง",
+      "ดูประเทศคุณแล้วยัง",
+      "ติดตามข่าว",
+      "ดูข่าวที่ติดตาม",
+      "โปรไฟล์เป็นปัจจุบันไหม",
+      "ไม่ใช่ที่ชอบ? บอก Mera",
+      "กดถูกใจเพื่อดูเพิ่ม",
+      "แชร์ให้คนที่คุณรัก"
     ],
     "a11y": "Mera กำลังอัปเดตข่าวของคุณบนเครื่องนี้"
   },

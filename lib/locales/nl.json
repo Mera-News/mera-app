@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{done}} van {{total}} artikelen gedownload",
       "chunks": {
-        "ready": "{{ready}} van {{total}} analyserondes klaar",
-        "a11y": "Analyserondes: {{ready}} van {{total}} klaar"
+        "ready": "{{ready}} van {{total}} analyserondes klaar"
       },
       "stageA11y": "Stap {{index}} van {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRead_other": "en je hebt {{formatted}} gelezen.",
     "reasonUnavailable": "Mera kon hier geen notitie bij schrijven.",
     "loadingA11y": "Je feed wordt geladen",
-    "newStoriesPill": "Nieuwe berichten",
     "translatingCaption": "Vertalen…",
     "updatedJustNow": "Zojuist bijgewerkt"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "Toevoegen aan Verkennen",
     "addedToExplore": "Toegevoegd aan Verkennen",
     "badgeGovernment": "Overheidsbron",
-    "badgeRegulator": "Officiële instelling"
+    "badgeRegulator": "Officiële instelling",
+    "sectionCountries": "Landen",
+    "sectionPublications": "Publicaties"
   },
   "clusterDetail": {
     "translatable": "Dit artikel is in {{language}}: je toestel kan het vertalen terwijl je leest. Werkt vertalen niet, dan kun je de site openen in Google Translate; let op dat je dan via Google surft.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "De onderwerpen en de gevonden artikelen verdwijnen ook, en Mera zoekt er geen nieuws meer over.",
     "deletingFact": "Verwijderen...",
     "yesDelete": "Ja, verwijderen",
-    "refreshSuggestions": "Suggesties vernieuwen",
-    "refreshingSuggestions": "Vernieuwen...",
-    "refreshSuggestionsSuccessTitle": "Suggesties vernieuwd",
-    "refreshSuggestionsSuccessDescription": "Nieuwe gepersonaliseerde suggesties worden gegenereerd.",
-    "refreshSuggestionsFailedTitle": "Vernieuwen mislukt",
-    "refreshSuggestionsFailedDescription": "Kan suggesties niet vernieuwen. Probeer het opnieuw.",
-    "personaUpdatedRefreshHint": "Ik zie dat je je persona hebt bijgewerkt, wil je dat ik je feed opnieuw genereer?",
     "articleCount_one": "{{count}} artikel",
     "articleCount_other": "{{count}} artikelen",
     "addTopic": "Onderwerp toevoegen",
@@ -2802,12 +2795,16 @@
       ]
     },
     "nudges": [
-      "Bewaar voor later",
-      "Je opgeslagen items",
-      "Lees één verhaal goed",
-      "Bekijk de topkoppen",
-      "Nieuwer is niet beter",
-      "Kijken helpt niet"
+      "Lees het hele artikel",
+      "Weinig tijd? Bewaar het",
+      "Wereldnieuws gezien?",
+      "Je landen gezien?",
+      "Volg een verhaal",
+      "Bekijk je verhalen",
+      "Is je profiel actueel?",
+      "Niets voor jou? Zeg het",
+      "Like voor meer zoals dit",
+      "Deel met je dierbaren"
     ],
     "a11y": "Mera werkt je nieuws bij op deze telefoon."
   },

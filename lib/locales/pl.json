@@ -189,8 +189,7 @@
       },
       "downloadProgress": "Pobrano {{done}} z {{total}} artykułów",
       "chunks": {
-        "ready": "Ukończono {{ready}} z {{total}} partii analizy",
-        "a11y": "Partie analizy: ukończono {{ready}} z {{total}}"
+        "ready": "Ukończono {{ready}} z {{total}} partii analizy"
       },
       "stageA11y": "Krok {{index}} z {{total}}: {{name}}"
     },
@@ -243,7 +242,6 @@
     "statsRead_other": "i przeczytałeś {{formatted}}.",
     "reasonUnavailable": "Mera nie mogła napisać notatki do tego artykułu.",
     "loadingA11y": "Wczytywanie Twojego kanału",
-    "newStoriesPill": "Nowe wiadomości",
     "translatingCaption": "Tłumaczenie…",
     "updatedJustNow": "Zaktualizowano przed chwilą"
   },
@@ -306,7 +304,9 @@
     "addToExplore": "Dodaj do Odkrywania",
     "addedToExplore": "Dodano do Odkrywania",
     "badgeGovernment": "Źródło rządowe",
-    "badgeRegulator": "Agencja oficjalna"
+    "badgeRegulator": "Agencja oficjalna",
+    "sectionCountries": "Kraje",
+    "sectionPublications": "Publikacje"
   },
   "clusterDetail": {
     "translatable": "Język tego artykułu to {{language}}: twoje urządzenie może go przetłumaczyć podczas czytania. Jeśli tłumaczenie nie zadziała, możesz otworzyć stronę w Google Translate; pamiętaj, że wtedy przeglądasz ją za pośrednictwem Google.",
@@ -644,13 +644,6 @@
     "deleteFactWarning": "Usunięte zostaną też jego tematy i znalezione artykuły, a Mera przestanie szukać o tym wiadomości.",
     "deletingFact": "Usuwanie...",
     "yesDelete": "Tak, usuń",
-    "refreshSuggestions": "Odśwież sugestie",
-    "refreshingSuggestions": "Odświeżanie...",
-    "refreshSuggestionsSuccessTitle": "Sugestie odświeżone",
-    "refreshSuggestionsSuccessDescription": "Nowe spersonalizowane sugestie są generowane.",
-    "refreshSuggestionsFailedTitle": "Odświeżanie nieudane",
-    "refreshSuggestionsFailedDescription": "Nie udało się odświeżyć sugestii. Spróbuj ponownie.",
-    "personaUpdatedRefreshHint": "Widzę, że zaktualizowałeś swoją personę. Czy chcesz, żebym wygenerował ponownie Twój kanał?",
     "articleCount_one": "{{count}} artykuł",
     "articleCount_other": "{{count}} artykuły",
     "addTopic": "Dodaj temat",
@@ -2840,12 +2833,16 @@
       ]
     },
     "nudges": [
-      "Zapisz na później",
-      "Zapisane czekają",
-      "Przeczytaj jeden temat",
-      "Zobacz nagłówki",
-      "Nowsze to nie lepsze",
-      "Nie trzeba patrzeć"
+      "Przeczytaj cały artykuł",
+      "Brak czasu? Zapisz",
+      "Świat już sprawdzony?",
+      "Twoje kraje sprawdzone?",
+      "Obserwuj temat",
+      "Sprawdź obserwowane",
+      "Profil jest aktualny?",
+      "Nie dla ciebie? Powiedz",
+      "Polub, by było więcej",
+      "Udostępnij bliskim"
     ],
     "a11y": "Mera aktualizuje twoje wiadomości na tym telefonie."
   },

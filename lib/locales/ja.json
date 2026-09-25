@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{total}}件中{{done}}件の記事をダウンロード済み",
       "chunks": {
-        "ready": "{{total}}件中{{ready}}件の分析バッチが完了",
-        "a11y": "分析バッチ: {{total}}件中{{ready}}件が完了"
+        "ready": "{{total}}件中{{ready}}件の分析バッチが完了"
       },
       "stageA11y": "ステップ {{index}}/{{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}}件があなたに関連性があります、",
     "reasonUnavailable": "この記事のメモを作成できませんでした。",
     "loadingA11y": "フィードを読み込んでいます",
-    "newStoriesPill": "新着記事",
     "translatingCaption": "翻訳中…",
     "updatedJustNow": "たった今更新"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "探索に追加",
     "addedToExplore": "探索に追加しました",
     "badgeGovernment": "政府ソース",
-    "badgeRegulator": "公式機関"
+    "badgeRegulator": "公式機関",
+    "sectionCountries": "国・地域",
+    "sectionPublications": "メディア"
   },
   "clusterDetail": {
     "translatable": "この記事は{{language}}で書かれています。読んでいる間、端末が翻訳できます。翻訳がうまくいかない場合は、Google 翻訳でサイトを開くこともできますが、その場合はGoogle経由での閲覧になる点にご注意ください。",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "このファクトのトピックと見つかった記事も削除され、Meraはこの件のニュースを探さなくなります。",
     "deletingFact": "削除中...",
     "yesDelete": "はい、削除します",
-    "refreshSuggestions": "候補を更新",
-    "refreshingSuggestions": "更新中...",
-    "refreshSuggestionsSuccessTitle": "候補を更新しました",
-    "refreshSuggestionsSuccessDescription": "新しいパーソナライズされた候補が生成されています。",
-    "refreshSuggestionsFailedTitle": "更新に失敗しました",
-    "refreshSuggestionsFailedDescription": "候補を更新できませんでした。もう一度お試しください。",
-    "personaUpdatedRefreshHint": "ペルソナが更新されたようです。フィードを再生成しますか？",
     "articleCount_one": "{{count}}件の記事",
     "articleCount_other": "{{count}}件の記事",
     "addTopic": "トピックを追加",
@@ -2801,12 +2794,16 @@
       ]
     },
     "nudges": [
-      "あとで読むに保存",
-      "保存した記事があります",
-      "1本をじっくり読む",
-      "主要ニュースを見る",
-      "新しい＝良いではない",
-      "見ていなくて大丈夫"
+      "記事を全文読む",
+      "時間がない？保存しよう",
+      "世界のニュースは見た？",
+      "あなたの国は見た？",
+      "ニュースをフォローする",
+      "フォロー中を確認",
+      "プロフィールは最新？",
+      "違う？Mera に伝えよう",
+      "いいねで似た記事を",
+      "大切な人にシェア"
     ],
     "a11y": "Meraがこの端末でニュースを更新しています。"
   },

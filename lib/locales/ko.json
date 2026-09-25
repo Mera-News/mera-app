@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{total}}개 중 {{done}}개 기사를 내려받았습니다",
       "chunks": {
-        "ready": "{{total}}개 분석 배치 중 {{ready}}개 완료",
-        "a11y": "분석 배치: {{total}}개 중 {{ready}}개 완료"
+        "ready": "{{total}}개 분석 배치 중 {{ready}}개 완료"
       },
       "stageA11y": "{{total}}단계 중 {{index}}단계: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,",
     "reasonUnavailable": "Mera가 이 기사에 대한 메모를 작성하지 못했어요.",
     "loadingA11y": "피드를 불러오는 중",
-    "newStoriesPill": "새 소식",
     "translatingCaption": "번역 중…",
     "updatedJustNow": "방금 업데이트됨"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "탐색에 추가",
     "addedToExplore": "탐색에 추가됨",
     "badgeGovernment": "정부 출처",
-    "badgeRegulator": "공식 기관"
+    "badgeRegulator": "공식 기관",
+    "sectionCountries": "국가",
+    "sectionPublications": "매체"
   },
   "clusterDetail": {
     "translatable": "이 기사는 {{language}}(으)로 작성되었어요. 읽는 동안 기기가 번역해 줄 수 있어요. 번역이 안 되면 구글 번역으로 사이트를 열 수 있어요. 이 경우 구글을 통해 열람하게 된다는 점만 참고하세요.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "관련 주제와 찾은 기사도 함께 삭제되고, Mera는 이에 대한 뉴스를 더 이상 찾지 않습니다.",
     "deletingFact": "삭제 중...",
     "yesDelete": "예, 삭제합니다",
-    "refreshSuggestions": "추천 새로고침",
-    "refreshingSuggestions": "새로고침 중...",
-    "refreshSuggestionsSuccessTitle": "추천 새로고침 완료",
-    "refreshSuggestionsSuccessDescription": "새로운 맞춤 추천이 생성되고 있습니다.",
-    "refreshSuggestionsFailedTitle": "새로고침 실패",
-    "refreshSuggestionsFailedDescription": "추천을 새로고침할 수 없습니다. 다시 시도해 주세요.",
-    "personaUpdatedRefreshHint": "페르소나를 업데이트하셨군요. 피드를 다시 생성해 드릴까요?",
     "articleCount_one": "기사 {{count}}개",
     "articleCount_other": "기사 {{count}}개",
     "addTopic": "토픽 추가",
@@ -2801,12 +2794,16 @@
       ]
     },
     "nudges": [
-      "나중에 읽게 저장",
-      "저장한 기사가 있어요",
-      "한 기사를 제대로",
-      "주요 헤드라인 보기",
-      "최신이 최선은 아니에요",
-      "지켜볼 필요 없어요"
+      "기사 전체 읽기",
+      "시간이 없나요? 저장하기",
+      "세계 뉴스 확인했나요?",
+      "내 나라 확인했나요?",
+      "뉴스 팔로우하기",
+      "팔로우한 뉴스 확인",
+      "프로필이 최신인가요?",
+      "관심 없나요? 알려주세요",
+      "좋아요로 더 보기",
+      "소중한 사람과 공유"
     ],
     "a11y": "Mera가 이 기기에서 뉴스를 업데이트하고 있어요."
   },

@@ -189,8 +189,7 @@
       },
       "downloadProgress": "已下载 {{total}} 篇中的 {{done}} 篇",
       "chunks": {
-        "ready": "已完成 {{total}} 个分析批次中的 {{ready}} 个",
-        "a11y": "分析批次：已完成 {{total}} 个中的 {{ready}} 个"
+        "ready": "已完成 {{total}} 个分析批次中的 {{ready}} 个"
       },
       "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}}篇与您相关,",
     "reasonUnavailable": "Mera 未能为这篇文章写说明。",
     "loadingA11y": "正在加载你的动态",
-    "newStoriesPill": "新文章",
     "translatingCaption": "正在翻译…",
     "updatedJustNow": "刚刚更新"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "添加到探索",
     "addedToExplore": "已添加到探索",
     "badgeGovernment": "政府来源",
-    "badgeRegulator": "官方机构"
+    "badgeRegulator": "官方机构",
+    "sectionCountries": "国家和地区",
+    "sectionPublications": "媒体"
   },
   "clusterDetail": {
     "translatable": "这篇文章是{{language}}内容:你的设备可以在阅读时进行翻译。如果翻译无法使用,你可以用谷歌翻译打开该网站;请注意届时你将通过谷歌浏览内容。",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "它的主题和找到的新闻也会一并删除，Mera 将不再为此寻找新闻。",
     "deletingFact": "正在删除...",
     "yesDelete": "是的，删除",
-    "refreshSuggestions": "刷新推荐",
-    "refreshingSuggestions": "刷新中...",
-    "refreshSuggestionsSuccessTitle": "推荐已刷新",
-    "refreshSuggestionsSuccessDescription": "正在生成新的个性化推荐。",
-    "refreshSuggestionsFailedTitle": "刷新失败",
-    "refreshSuggestionsFailedDescription": "无法刷新推荐。请重试。",
-    "personaUpdatedRefreshHint": "我注意到您已更新了个人资料，您是否希望我重新生成您的资讯？",
     "articleCount_one": "{{count}} 篇文章",
     "articleCount_other": "{{count}} 篇文章",
     "addTopic": "添加话题",
@@ -2802,12 +2795,16 @@
       ]
     },
     "nudges": [
-      "留着稍后读",
-      "收藏在等你",
-      "认真读一条",
-      "看看头条",
-      "新的不一定好",
-      "不必盯着看"
+      "阅读全文",
+      "没时间？先保存",
+      "看过世界新闻了吗？",
+      "看过你的国家了吗？",
+      "关注一个新闻",
+      "看看关注的新闻",
+      "资料是最新的吗？",
+      "不感兴趣？告诉 Mera",
+      "点赞看到更多",
+      "分享给亲友"
     ],
     "a11y": "Mera 正在这台手机上更新你的新闻。"
   },

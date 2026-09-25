@@ -189,8 +189,7 @@
       },
       "downloadProgress": "Завантажено {{done}} із {{total}} статей",
       "chunks": {
-        "ready": "Готово {{ready}} із {{total}} партій аналізу",
-        "a11y": "Партії аналізу: готово {{ready}} із {{total}}"
+        "ready": "Готово {{ready}} із {{total}} партій аналізу"
       },
       "stageA11y": "Крок {{index}} із {{total}}: {{name}}"
     },
@@ -243,7 +242,6 @@
     "statsRead_other": "і ви прочитали {{formatted}}.",
     "reasonUnavailable": "Mera не змогла написати нотатку до цієї статті.",
     "loadingA11y": "Завантажуємо вашу стрічку",
-    "newStoriesPill": "Нові статті",
     "translatingCaption": "Переклад…",
     "updatedJustNow": "Оновлено щойно"
   },
@@ -306,7 +304,9 @@
     "addToExplore": "Додати до Огляду",
     "addedToExplore": "Додано до Огляду",
     "badgeGovernment": "Урядове джерело",
-    "badgeRegulator": "Офіційна агенція"
+    "badgeRegulator": "Офіційна агенція",
+    "sectionCountries": "Країни",
+    "sectionPublications": "Видання"
   },
   "clusterDetail": {
     "translatable": "Мова цієї статті — {{language}}: ваш пристрій може перекладати її просто під час читання. Якщо переклад не спрацює, можна відкрити сайт у Google Translate; лише майте на увазі, що тоді ви переглядатимете його через Google.",
@@ -644,13 +644,6 @@
     "deleteFactWarning": "Його теми та знайдені за ними статті теж зникнуть, і Mera більше не шукатиме про це новин.",
     "deletingFact": "Видалення...",
     "yesDelete": "Так, видалити",
-    "refreshSuggestions": "Оновити пропозиції",
-    "refreshingSuggestions": "Оновлення...",
-    "refreshSuggestionsSuccessTitle": "Пропозиції оновлено",
-    "refreshSuggestionsSuccessDescription": "Створюються нові персоналізовані пропозиції.",
-    "refreshSuggestionsFailedTitle": "Помилка оновлення",
-    "refreshSuggestionsFailedDescription": "Не вдалося оновити пропозиції. Будь ласка, спробуйте ще раз.",
-    "personaUpdatedRefreshHint": "Я бачу, що ви оновили свій профіль. Хочете, щоб я перегенерував вашу стрічку?",
     "articleCount_one": "{{count}} стаття",
     "articleCount_few": "{{count}} статті",
     "articleCount_many": "{{count}} статей",
@@ -2846,12 +2839,16 @@
       ]
     },
     "nudges": [
-      "Збережіть на потім",
-      "Збережене чекає",
-      "Один сюжет целиком",
-      "Головні заголовки",
-      "Новіше не краще",
-      "Дивитися не треба"
+      "Прочитайте статтю",
+      "Нема часу? Збережіть",
+      "Світ уже бачили?",
+      "Ваші країни бачили?",
+      "Стежте за сюжетом",
+      "Ваші сюжети",
+      "Профіль актуальний?",
+      "Не ваше? Скажіть",
+      "Лайк, щоб бачити ще",
+      "Поділіться з рідними"
     ],
     "a11y": "Mera оновлює ваші новини на цьому телефоні."
   },

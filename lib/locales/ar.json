@@ -189,8 +189,7 @@
       },
       "downloadProgress": "تم تنزيل {{done}} من {{total}} مقالا",
       "chunks": {
-        "ready": "اكتملت {{ready}} من {{total}} دفعة",
-        "a11y": "دفعات التحليل: اكتملت {{ready}} من {{total}}"
+        "ready": "اكتملت {{ready}} من {{total}} دفعة"
       },
       "stageA11y": "الخطوة {{index}} من {{total}}: {{name}}"
     },
@@ -255,7 +254,6 @@
     "statsRead_other": "وقرأت {{formatted}}.",
     "reasonUnavailable": "لم تتمكن ميرا من كتابة ملاحظة لهذا المقال.",
     "loadingA11y": "جارٍ تحميل موجزك",
-    "newStoriesPill": "أخبار جديدة",
     "translatingCaption": "جارٍ الترجمة…",
     "updatedJustNow": "تم التحديث الآن"
   },
@@ -318,7 +316,9 @@
     "addToExplore": "أضف إلى الاستكشاف",
     "addedToExplore": "أُضيف إلى الاستكشاف",
     "badgeGovernment": "مصدر حكومي",
-    "badgeRegulator": "جهة رسمية"
+    "badgeRegulator": "جهة رسمية",
+    "sectionCountries": "الدول",
+    "sectionPublications": "المنشورات"
   },
   "clusterDetail": {
     "translatable": "هذا المقال مكتوب بلغة {{language}}: يمكن لجهازك ترجمته أثناء القراءة. إذا لم تعمل الترجمة، يمكنك فتح الموقع عبر Google Translate؛ فقط لاحظ أنك ستتصفحه عندئذٍ عبر Google.",
@@ -656,13 +656,6 @@
     "deleteFactWarning": "ستُحذف معه موضوعاته والقصص التي وجدتها، ويتوقف Mera عن البحث عن أخبار عنه.",
     "deletingFact": "جارٍ الحذف...",
     "yesDelete": "نعم، احذف",
-    "refreshSuggestions": "تحديث الاقتراحات",
-    "refreshingSuggestions": "جارٍ التحديث...",
-    "refreshSuggestionsSuccessTitle": "تم تحديث الاقتراحات",
-    "refreshSuggestionsSuccessDescription": "يتم إنشاء اقتراحات مخصصة جديدة.",
-    "refreshSuggestionsFailedTitle": "فشل التحديث",
-    "refreshSuggestionsFailedDescription": "تعذر تحديث الاقتراحات. يرجى المحاولة مرة أخرى.",
-    "personaUpdatedRefreshHint": "يبدو أنك قمت بتحديث ملفك الشخصي، هل تريد مني إعادة توليد موجز أخبارك؟",
     "articleCount_zero": "{{count}} مقال",
     "articleCount_one": "{{count}} مقال",
     "articleCount_two": "{{count}} مقالان",
@@ -2888,12 +2881,16 @@
       ]
     },
     "nudges": [
-      "احفظه لوقت لاحق",
-      "محفوظاتك بانتظارك",
-      "اقرأ قصة واحدة جيدًا",
-      "جرّب أهم العناوين",
-      "الأحدث ليس الأفضل",
-      "لا داعي للانتظار"
+      "اقرأ المقال كاملًا",
+      "لا وقت لديك؟ احفظه",
+      "هل رأيت أخبار العالم؟",
+      "هل رأيت أخبار بلدانك؟",
+      "تابع قصة",
+      "راجع القصص المتابَعة",
+      "هل ملفك محدَّث؟",
+      "ليس لك؟ أخبر Mera",
+      "أعجبك؟ لترى المزيد",
+      "شارك من تحب"
     ],
     "a11y": "ميرا تحدّث أخبارك على هذا الهاتف."
   },

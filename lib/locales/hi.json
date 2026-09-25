@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{total}} में से {{done}} लेख डाउनलोड हुए",
       "chunks": {
-        "ready": "{{total}} में से {{ready}} विश्लेषण बैच पूरे हुए",
-        "a11y": "विश्लेषण बैच: {{total}} में से {{ready}} पूरे"
+        "ready": "{{total}} में से {{ready}} विश्लेषण बैच पूरे हुए"
       },
       "stageA11y": "चरण {{index}} / {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRead_other": "और आपने {{formatted}} पढ़े हैं।",
     "reasonUnavailable": "Mera इसके लिए नोट नहीं लिख सका।",
     "loadingA11y": "आपकी फ़ीड लोड हो रही है",
-    "newStoriesPill": "नई खबरें",
     "translatingCaption": "अनुवाद हो रहा है…",
     "updatedJustNow": "अभी अपडेट हुआ"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "एक्सप्लोर में जोड़ें",
     "addedToExplore": "एक्सप्लोर में जोड़ा गया",
     "badgeGovernment": "सरकारी स्रोत",
-    "badgeRegulator": "आधिकारिक एजेंसी"
+    "badgeRegulator": "आधिकारिक एजेंसी",
+    "sectionCountries": "देश",
+    "sectionPublications": "प्रकाशन"
   },
   "clusterDetail": {
     "translatable": "यह लेख {{language}} में है: आपका डिवाइस पढ़ते समय इसका अनुवाद कर सकता है। अगर अनुवाद काम न करे, तो आप साइट को Google Translate में खोल सकते हैं; बस ध्यान रखें कि तब आप उसे Google के ज़रिए ब्राउज़ कर रहे होंगे।",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "इसके विषय और उनसे मिली खबरें भी हट जाएँगी, और Mera इसके बारे में खबरें खोजना बंद कर देगा।",
     "deletingFact": "हटाया जा रहा है...",
     "yesDelete": "हाँ, हटाएं",
-    "refreshSuggestions": "सुझाव रीफ्रेश करें",
-    "refreshingSuggestions": "रीफ्रेश हो रहा है...",
-    "refreshSuggestionsSuccessTitle": "सुझाव रीफ्रेश हो गए",
-    "refreshSuggestionsSuccessDescription": "नए व्यक्तिगत सुझाव तैयार किए जा रहे हैं।",
-    "refreshSuggestionsFailedTitle": "रीफ्रेश विफल",
-    "refreshSuggestionsFailedDescription": "सुझाव रीफ्रेश नहीं हो सके। कृपया पुनः प्रयास करें।",
-    "personaUpdatedRefreshHint": "मैंने देखा कि आपने अपना व्यक्तित्व अपडेट किया है, क्या आप चाहते हैं कि मैं आपकी फ़ीड दोबारा बनाऊं?",
     "articleCount_one": "{{count}} लेख",
     "articleCount_other": "{{count}} लेख",
     "addTopic": "विषय जोड़ें",
@@ -2804,12 +2797,16 @@
       ]
     },
     "nudges": [
-      "बाद के लिए सहेजें",
-      "सहेजा हुआ इंतज़ार में",
-      "एक ख़बर ठीक से पढ़ें",
-      "मुख्य सुर्ख़ियाँ देखें",
-      "नया हमेशा बेहतर नहीं",
-      "देखते रहना ज़रूरी नहीं"
+      "पूरा लेख पढ़ें",
+      "समय कम है? सेव करें",
+      "दुनिया की ख़बरें देखीं?",
+      "अपने देश देखे?",
+      "कोई ख़बर फ़ॉलो करें",
+      "फ़ॉलो की ख़बरें देखें",
+      "प्रोफ़ाइल अपडेट है?",
+      "पसंद नहीं? Mera को बताएँ",
+      "और देखने को लाइक करें",
+      "अपनों से शेयर करें"
     ],
     "a11y": "मेरा इस फ़ोन पर आपकी खबरें अपडेट कर रहा है।"
   },

@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{total}} makalenin {{done}} tanesi indirildi",
       "chunks": {
-        "ready": "{{total}} analiz turundan {{ready}} tanesi tamamlandı",
-        "a11y": "Analiz turları: {{total}} turdan {{ready}} tanesi tamamlandı"
+        "ready": "{{total}} analiz turundan {{ready}} tanesi tamamlandı"
       },
       "stageA11y": "Adım {{index}} / {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRead_other": "ve {{formatted}} okumuşsun.",
     "reasonUnavailable": "Mera bu haber için not yazamadı.",
     "loadingA11y": "Akışın yükleniyor",
-    "newStoriesPill": "Yeni haberler",
     "translatingCaption": "Çevriliyor…",
     "updatedJustNow": "Az önce güncellendi"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "Keşfete ekle",
     "addedToExplore": "Keşfete eklendi",
     "badgeGovernment": "Hükümet kaynağı",
-    "badgeRegulator": "Resmi kurum"
+    "badgeRegulator": "Resmi kurum",
+    "sectionCountries": "Ülkeler",
+    "sectionPublications": "Yayınlar"
   },
   "clusterDetail": {
     "translatable": "Bu makale {{language}} dilinde: okurken cihazın onu çevirebilir. Çeviri çalışmazsa siteyi Google Translate'de açabilirsin; ama o zaman siteyi Google üzerinden görüntülediğini unutma.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Konuları ve bulunan haberler de silinir, Mera bununla ilgili haber aramayı bırakır.",
     "deletingFact": "Siliniyor...",
     "yesDelete": "Evet, sil",
-    "refreshSuggestions": "Önerileri yenile",
-    "refreshingSuggestions": "Yenileniyor...",
-    "refreshSuggestionsSuccessTitle": "Öneriler yenilendi",
-    "refreshSuggestionsSuccessDescription": "Yeni kişiselleştirilmiş öneriler oluşturuluyor.",
-    "refreshSuggestionsFailedTitle": "Yenileme başarısız",
-    "refreshSuggestionsFailedDescription": "Öneriler yenilenemedi. Lütfen tekrar dene.",
-    "personaUpdatedRefreshHint": "Profilini güncellediğini gördüm, haber akışını yeniden oluşturmamı ister misin?",
     "articleCount_one": "{{count}} makale",
     "articleCount_other": "{{count}} makale",
     "addTopic": "Konu ekle",
@@ -2804,12 +2797,16 @@
       ]
     },
     "nudges": [
-      "Sonra oku",
-      "Kaydettiklerin bekliyor",
-      "Bir haberi iyi oku",
-      "Manşetlere bak",
-      "Yeni her zaman iyi değil",
-      "İzlemene gerek yok"
+      "Haberin tamamını oku",
+      "Vaktin yok mu? Kaydet",
+      "Dünyaya baktın mı?",
+      "Ülkelerin tamam mı?",
+      "Bir haberi takip et",
+      "Takip ettiklerine bak",
+      "Profilin güncel mi?",
+      "Beğenmedin mi? Söyle",
+      "Daha fazlası için beğen",
+      "Sevdiklerinle paylaş"
     ],
     "a11y": "Mera bu telefonda haberlerini güncelliyor."
   },

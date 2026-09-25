@@ -189,8 +189,7 @@
       },
       "downloadProgress": "Đã tải {{done}} trong {{total}} bài viết",
       "chunks": {
-        "ready": "Đã xong {{ready}} trong {{total}} đợt phân tích",
-        "a11y": "Đợt phân tích: đã xong {{ready}} trong {{total}}"
+        "ready": "Đã xong {{ready}} trong {{total}} đợt phân tích"
       },
       "stageA11y": "Bước {{index}} trên {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}} có vẻ phù hợp,",
     "reasonUnavailable": "Mera không thể viết ghi chú cho bài này.",
     "loadingA11y": "Đang tải bảng tin của bạn",
-    "newStoriesPill": "Tin mới",
     "translatingCaption": "Đang dịch…",
     "updatedJustNow": "Vừa cập nhật"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "Thêm vào Khám phá",
     "addedToExplore": "Đã thêm vào Khám phá",
     "badgeGovernment": "Nguồn chính phủ",
-    "badgeRegulator": "Cơ quan chính thức"
+    "badgeRegulator": "Cơ quan chính thức",
+    "sectionCountries": "Quốc gia",
+    "sectionPublications": "Ấn phẩm"
   },
   "clusterDetail": {
     "translatable": "Bài viết này bằng {{language}}: thiết bị của bạn có thể dịch trong khi bạn đọc. Nếu tính năng dịch không hoạt động, bạn có thể mở trang web bằng Google Dịch; chỉ cần lưu ý rằng bạn sẽ xem qua Google.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Các chủ đề và tin bài đã tìm được cũng bị xóa, và Mera sẽ ngừng tìm tin về điều này.",
     "deletingFact": "Đang xóa...",
     "yesDelete": "Có, xóa",
-    "refreshSuggestions": "Làm mới gợi ý",
-    "refreshingSuggestions": "Đang làm mới...",
-    "refreshSuggestionsSuccessTitle": "Đã làm mới gợi ý",
-    "refreshSuggestionsSuccessDescription": "Đang tạo gợi ý cá nhân hóa mới.",
-    "refreshSuggestionsFailedTitle": "Làm mới thất bại",
-    "refreshSuggestionsFailedDescription": "Không thể làm mới gợi ý. Vui lòng thử lại.",
-    "personaUpdatedRefreshHint": "Tôi thấy bạn đã cập nhật hồ sơ, bạn có muốn tôi tạo lại bản tin không?",
     "articleCount_one": "{{count}} bài viết",
     "articleCount_other": "{{count}} bài viết",
     "addTopic": "Thêm chủ đề",
@@ -2802,12 +2795,16 @@
       ]
     },
     "nudges": [
-      "Lưu để đọc sau",
-      "Tin đã lưu đang chờ",
-      "Đọc kỹ một tin",
-      "Xem tin nổi bật",
-      "Mới hơn chưa chắc tốt",
-      "Không cần ngồi chờ"
+      "Đọc toàn bộ bài viết",
+      "Bận? Lưu lại đã",
+      "Đã xem tin thế giới?",
+      "Đã xem nước của bạn?",
+      "Theo dõi một tin",
+      "Xem tin đang theo dõi",
+      "Hồ sơ còn đúng chứ?",
+      "Không hợp? Báo Mera",
+      "Thích để xem thêm",
+      "Chia sẻ với người thân"
     ],
     "a11y": "Mera đang cập nhật tin của bạn trên máy này."
   },

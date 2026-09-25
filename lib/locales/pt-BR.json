@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{done}} de {{total}} artigos baixados",
       "chunks": {
-        "ready": "{{ready}} de {{total}} lotes de análise concluídos",
-        "a11y": "Lotes de análise: {{ready}} de {{total}} concluídos"
+        "ready": "{{ready}} de {{total}} lotes de análise concluídos"
       },
       "stageA11y": "Etapa {{index}} de {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRead_other": "e você leu {{formatted}}.",
     "reasonUnavailable": "A Mera não conseguiu escrever uma nota para este artigo.",
     "loadingA11y": "Carregando seu feed",
-    "newStoriesPill": "Novas notícias",
     "translatingCaption": "Traduzindo…",
     "updatedJustNow": "Atualizado agora mesmo"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "Adicionar à Explorar",
     "addedToExplore": "Adicionado à Explorar",
     "badgeGovernment": "Fonte governamental",
-    "badgeRegulator": "Agência oficial"
+    "badgeRegulator": "Agência oficial",
+    "sectionCountries": "Países",
+    "sectionPublications": "Publicações"
   },
   "clusterDetail": {
     "translatable": "Este artigo está em {{language}}: seu dispositivo pode traduzi-lo enquanto você lê. Se a tradução não funcionar, você pode abrir o site no Google Translate; só lembre que você estará navegando por meio do Google.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Os tópicos e as notícias encontradas também são removidos, e o Mera para de buscar notícias sobre isso.",
     "deletingFact": "Excluindo...",
     "yesDelete": "Sim, Excluir",
-    "refreshSuggestions": "Atualizar Sugestões",
-    "refreshingSuggestions": "Atualizando...",
-    "refreshSuggestionsSuccessTitle": "Sugestões atualizadas",
-    "refreshSuggestionsSuccessDescription": "Novas sugestões personalizadas estão sendo geradas.",
-    "refreshSuggestionsFailedTitle": "Falha na Atualização",
-    "refreshSuggestionsFailedDescription": "Não foi possível atualizar as sugestões. Por favor, tente novamente.",
-    "personaUpdatedRefreshHint": "Vejo que você atualizou seu perfil, gostaria que eu regenerasse seu feed?",
     "articleCount_one": "{{count}} artigo",
     "articleCount_other": "{{count}} artigos",
     "addTopic": "Adicionar tópico",
@@ -2802,12 +2795,16 @@
       ]
     },
     "nudges": [
-      "Salve para depois",
-      "Seus salvos esperam",
-      "Leia uma notícia a fundo",
-      "Veja as manchetes",
-      "Novo não é melhor",
-      "Não precisa olhar"
+      "Leia o artigo completo",
+      "Sem tempo? Salve",
+      "Viu as notícias globais?",
+      "Viu os seus países?",
+      "Siga uma notícia",
+      "Veja as que você segue",
+      "Seu perfil está em dia?",
+      "Não é para você? Diga",
+      "Curta para ver mais",
+      "Mande para quem ama"
     ],
     "a11y": "A Mera está atualizando suas notícias neste celular."
   },

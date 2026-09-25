@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{done}} dari {{total}} artikel terunduh",
       "chunks": {
-        "ready": "{{ready}} dari {{total}} putaran analisis selesai",
-        "a11y": "Putaran analisis: {{ready}} dari {{total}} selesai"
+        "ready": "{{ready}} dari {{total}} putaran analisis selesai"
       },
       "stageA11y": "Langkah {{index}} dari {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}} terlihat relevan,",
     "reasonUnavailable": "Mera tidak bisa menulis catatan untuk artikel ini.",
     "loadingA11y": "Memuat feed kamu",
-    "newStoriesPill": "Berita baru",
     "translatingCaption": "Menerjemahkan…",
     "updatedJustNow": "Baru saja diperbarui"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "Tambahkan ke Jelajahi",
     "addedToExplore": "Ditambahkan ke Jelajahi",
     "badgeGovernment": "Sumber pemerintah",
-    "badgeRegulator": "Lembaga resmi"
+    "badgeRegulator": "Lembaga resmi",
+    "sectionCountries": "Negara",
+    "sectionPublications": "Publikasi"
   },
   "clusterDetail": {
     "translatable": "Artikel ini dalam bahasa {{language}}: perangkatmu bisa menerjemahkannya saat kamu membaca. Jika terjemahan tidak berfungsi, kamu bisa membuka situsnya di Google Translate; perlu diketahui, kamu akan menjelajahinya melalui Google.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Topik dan berita yang ditemukannya ikut terhapus, dan Mera berhenti mencari berita tentang hal ini.",
     "deletingFact": "Menghapus...",
     "yesDelete": "Ya, Hapus",
-    "refreshSuggestions": "Segarkan Saran",
-    "refreshingSuggestions": "Menyegarkan...",
-    "refreshSuggestionsSuccessTitle": "Saran disegarkan",
-    "refreshSuggestionsSuccessDescription": "Saran personalisasi baru sedang dibuat.",
-    "refreshSuggestionsFailedTitle": "Penyegaran Gagal",
-    "refreshSuggestionsFailedDescription": "Tidak dapat menyegarkan saran. Silakan coba lagi.",
-    "personaUpdatedRefreshHint": "Saya melihat Anda telah memperbarui persona Anda, apakah Anda ingin saya membuat ulang feed Anda?",
     "articleCount_one": "{{count}} artikel",
     "articleCount_other": "{{count}} artikel",
     "addTopic": "Tambah topik",
@@ -2801,12 +2794,16 @@
       ]
     },
     "nudges": [
-      "Simpan untuk nanti",
-      "Simpananmu menunggu",
-      "Baca satu berita utuh",
-      "Lihat berita utama",
-      "Terbaru bukan terbaik",
-      "Tak perlu ditunggu"
+      "Baca artikel lengkapnya",
+      "Sibuk? Simpan saja",
+      "Cek berita dunia?",
+      "Sudah cek negaramu?",
+      "Ikuti sebuah berita",
+      "Cek berita yang diikuti",
+      "Profil sudah terbaru?",
+      "Tidak cocok? Beri tahu",
+      "Sukai untuk lihat lagi",
+      "Bagikan ke orang dekat"
     ],
     "a11y": "Mera memperbarui beritamu di ponsel ini."
   },

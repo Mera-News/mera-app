@@ -251,8 +251,7 @@
       },
       "downloadProgress": "{{done}} of {{total}} articles downloaded",
       "chunks": {
-        "ready": "{{ready}} of {{total}} analysis batches finished",
-        "a11y": "Analysis batches: {{ready}} of {{total}} finished"
+        "ready": "{{ready}} of {{total}} analysis batches finished"
       },
       "stageA11y": "Step {{index}} of {{total}}: {{name}}"
     },
@@ -286,7 +285,6 @@
     "statsRead_other": "and you've read {{formatted}}.",
     "reasonUnavailable": "Mera couldn't write a note for this one.",
     "loadingA11y": "Loading your feed",
-    "newStoriesPill": "New stories",
     "translatingCaption": "Translating…",
     "updatedJustNow": "Updated just now"
   },
@@ -461,7 +459,9 @@
     "addToExplore": "Add to Explore",
     "addedToExplore": "Added to Explore",
     "badgeGovernment": "Government source",
-    "badgeRegulator": "Official agency"
+    "badgeRegulator": "Official agency",
+    "sectionCountries": "Countries",
+    "sectionPublications": "Publications"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioritise this source",
@@ -1058,13 +1058,6 @@
     "deleteFactWarning": "Its topics and the stories they found go too, and Mera stops looking for news about it.",
     "deletingFact": "Deleting...",
     "yesDelete": "Yes, Delete",
-    "refreshSuggestions": "Refresh Suggestions",
-    "refreshingSuggestions": "Refreshing...",
-    "refreshSuggestionsSuccessTitle": "Suggestions refreshed",
-    "refreshSuggestionsSuccessDescription": "New personalized suggestions are being generated.",
-    "refreshSuggestionsFailedTitle": "Refresh Failed",
-    "refreshSuggestionsFailedDescription": "Could not refresh suggestions. Please try again.",
-    "personaUpdatedRefreshHint": "I see you've updated your persona, would you like me to regenerate your feed?",
     "articleCount_one": "{{count}} article",
     "articleCount_other": "{{count}} articles",
     "addTopic": "Add topic",
@@ -2802,12 +2795,16 @@
       ]
     },
     "nudges": [
-      "Save it for later",
-      "Your saved list is waiting",
-      "Read one story properly",
-      "See the top headlines",
-      "Newer is not better",
-      "No need to watch"
+      "Read the full article",
+      "Short on time? Save it",
+      "Checked world news?",
+      "Checked your countries?",
+      "Follow a story",
+      "Check followed stories",
+      "Is your profile current?",
+      "Not for you? Tell Mera",
+      "Like it to see more",
+      "Share with loved ones"
     ],
     "a11y": "Mera is updating your news on this phone."
   },

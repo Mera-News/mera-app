@@ -189,8 +189,7 @@
       },
       "downloadProgress": "已下載 {{total}} 篇中的 {{done}} 篇",
       "chunks": {
-        "ready": "已完成 {{total}} 個分析批次中的 {{ready}} 個",
-        "a11y": "分析批次：已完成 {{total}} 個中的 {{ready}} 個"
+        "ready": "已完成 {{total}} 個分析批次中的 {{ready}} 個"
       },
       "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRelevant_one": "{{formatted}}篇與您相關,",
     "reasonUnavailable": "Mera 無法為這篇文章撰寫說明。",
     "loadingA11y": "正在載入你的動態",
-    "newStoriesPill": "新文章",
     "translatingCaption": "正在翻譯…",
     "updatedJustNow": "剛剛更新"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "新增至探索",
     "addedToExplore": "已新增至探索",
     "badgeGovernment": "政府來源",
-    "badgeRegulator": "官方機構"
+    "badgeRegulator": "官方機構",
+    "sectionCountries": "國家和地區",
+    "sectionPublications": "媒體"
   },
   "clusterDetail": {
     "translatable": "這篇文章是{{language}}內容:你的裝置可以在你閱讀時進行翻譯。如果翻譯無法使用,你可以用 Google 翻譯開啟該網站;請注意屆時你會透過 Google 瀏覽內容。",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "它的主題和找到的新聞也會一併刪除，Mera 將不再為此尋找新聞。",
     "deletingFact": "正在刪除...",
     "yesDelete": "是的，刪除",
-    "refreshSuggestions": "重新整理建議",
-    "refreshingSuggestions": "重新整理中...",
-    "refreshSuggestionsSuccessTitle": "建議已重新整理",
-    "refreshSuggestionsSuccessDescription": "正在產生新的個人化建議。",
-    "refreshSuggestionsFailedTitle": "重新整理失敗",
-    "refreshSuggestionsFailedDescription": "無法重新整理建議。請再試一次。",
-    "personaUpdatedRefreshHint": "我看到您已更新個人資料，您希望我重新產生您的動態嗎？",
     "articleCount_one": "{{count}} 篇文章",
     "articleCount_other": "{{count}} 篇文章",
     "addTopic": "新增主題",
@@ -2802,12 +2795,16 @@
       ]
     },
     "nudges": [
-      "留著稍後讀",
-      "收藏在等你",
-      "認真讀一則",
-      "看看頭條",
-      "新的不一定好",
-      "不必盯著看"
+      "閱讀全文",
+      "沒時間？先儲存",
+      "看過世界新聞了嗎？",
+      "看過你的國家了嗎？",
+      "關注一則新聞",
+      "看看關注的新聞",
+      "個人檔案是最新的嗎？",
+      "不感興趣？告訴 Mera",
+      "按讚看到更多",
+      "分享給親友"
     ],
     "a11y": "Mera 正在這支手機上更新你的新聞。"
   },

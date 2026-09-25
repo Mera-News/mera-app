@@ -189,8 +189,7 @@
       },
       "downloadProgress": "{{done}} von {{total}} Artikeln geladen",
       "chunks": {
-        "ready": "{{ready}} von {{total}} Analyserunden fertig",
-        "a11y": "Analyserunden: {{ready}} von {{total}} fertig"
+        "ready": "{{ready}} von {{total}} Analyserunden fertig"
       },
       "stageA11y": "Schritt {{index}} von {{total}}: {{name}}"
     },
@@ -231,7 +230,6 @@
     "statsRead_other": "und Sie haben {{formatted}} gelesen.",
     "reasonUnavailable": "Mera konnte hierzu keine Notiz schreiben.",
     "loadingA11y": "Dein Feed wird geladen",
-    "newStoriesPill": "Neue Meldungen",
     "translatingCaption": "Wird übersetzt…",
     "updatedJustNow": "Gerade aktualisiert"
   },
@@ -294,7 +292,9 @@
     "addToExplore": "Zu Explore hinzufügen",
     "addedToExplore": "Zu Explore hinzugefügt",
     "badgeGovernment": "Regierungsquelle",
-    "badgeRegulator": "Offizielle Behörde"
+    "badgeRegulator": "Offizielle Behörde",
+    "sectionCountries": "Länder",
+    "sectionPublications": "Publikationen"
   },
   "clusterDetail": {
     "translatable": "Dieser Artikel ist auf {{language}} verfasst: Dein Gerät kann ihn beim Lesen übersetzen. Falls die Übersetzung nicht funktioniert, kannst du die Seite in Google Translate öffnen; beachte dabei, dass du sie dann über Google aufrufst.",
@@ -632,13 +632,6 @@
     "deleteFactWarning": "Seine Themen und die dazu gefundenen Artikel werden ebenfalls entfernt, und Mera sucht dazu keine Nachrichten mehr.",
     "deletingFact": "Wird gelöscht...",
     "yesDelete": "Ja, löschen",
-    "refreshSuggestions": "Vorschläge aktualisieren",
-    "refreshingSuggestions": "Wird aktualisiert...",
-    "refreshSuggestionsSuccessTitle": "Vorschläge aktualisiert",
-    "refreshSuggestionsSuccessDescription": "Neue personalisierte Vorschläge werden generiert.",
-    "refreshSuggestionsFailedTitle": "Aktualisierung fehlgeschlagen",
-    "refreshSuggestionsFailedDescription": "Vorschläge konnten nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
-    "personaUpdatedRefreshHint": "Ich sehe, Sie haben Ihre Persona aktualisiert. Möchten Sie, dass ich Ihren Feed neu generiere?",
     "articleCount_one": "{{count}} Artikel",
     "articleCount_other": "{{count}} Artikel",
     "addTopic": "Thema hinzufügen",
@@ -2802,12 +2795,16 @@
       ]
     },
     "nudges": [
-      "Für später speichern",
-      "Gespeichertes wartet",
-      "Lies eine Meldung ganz",
-      "Schlagzeilen ansehen",
-      "Neuer ist nicht besser",
-      "Zuschauen hilft nicht"
+      "Lies den ganzen Artikel",
+      "Keine Zeit? Speichern",
+      "Welt schon gesehen?",
+      "Deine Länder gesehen?",
+      "Folge einer Meldung",
+      "Gefolgtes prüfen",
+      "Ist dein Profil aktuell?",
+      "Nichts für dich? Sag es",
+      "Gefällt? Mehr davon",
+      "Mit Liebsten teilen"
     ],
     "a11y": "Mera aktualisiert deine News auf diesem Handy."
   },
