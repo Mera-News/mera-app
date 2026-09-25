@@ -258,14 +258,23 @@ describe('DashboardStatsCard', () => {
     it('closes on a tap anywhere on the open panel', () => {
         const r = render(<DashboardStatsCard />);
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
-        fireEvent.press(r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN));
+        fireEvent(r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN), 'touchEnd');
         expect(r.queryByTestId('status-panel-idle', HIDDEN)).toBeNull();
     });
 
-    it('does not let the panel-wide close swallow VoiceOver: it is not an accessibility element', () => {
+    // Captured (sim batch 24): the panel-wide close was a Pressable, and iOS
+    // exposed it as ONE element labelled with the stage icon's private-use
+    // glyph, accessible={false} and all. The close is now a plain View's touch
+    // end: no press handlers, no accessibility element, the rows stay readable.
+    it('closes through a plain View, never a Pressable, so it is no accessibility element', () => {
         const r = render(<DashboardStatsCard />);
         fireEvent.press(r.getByTestId('dashboard-stats-card-toggle'));
-        expect(r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN).props.accessible).toBe(false);
+        const w = r.getByTestId('dashboard-stats-dropdown-panel', HIDDEN);
+        expect(w.props.onResponderRelease).toBeUndefined();
+        expect(w.props.onClick).toBeUndefined();
+        expect(w.props.accessibilityRole).toBeUndefined();
+        expect(w.props.accessible).not.toBe(true);
+        expect(typeof w.props.onTouchEnd).toBe('function');
     });
 
     it('closes before "Manage plan" navigates, so no backdrop is stranded', () => {

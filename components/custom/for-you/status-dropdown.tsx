@@ -47,6 +47,9 @@ interface StatusDropdownInternals extends StatusDropdownState {
 
 const Ctx = createContext<StatusDropdownInternals | null>(null);
 
+/** A touch that travels further than this is a scroll, not a tap. */
+const TAP_SLOP = 10;
+
 const NOOP: StatusDropdownState = { expanded: false, open: () => {}, collapse: () => {} };
 
 /** For the trigger. Outside a provider it is inert rather than a crash. */
@@ -104,6 +107,7 @@ export const StatusDropdownLayer: React.FC<{
     // in-tab inset, which contains the bar; Android content ends at the bar
     // and this is 0. See lib/navigation/tab-bar.ts.
     const tabClearance = useTabBarClearance();
+    const touchStart = useRef<{ pageX: number; pageY: number } | null>(null);
     if (!ctx) return null;
     const { expanded, collapse, layerRef, anchor, layerHeight } = ctx;
     const frame = anchor ? dropdownFrame(anchor, layerHeight, insets.top, tabClearance) : null;
@@ -149,18 +153,32 @@ export const StatusDropdownLayer: React.FC<{
                         >
                             {/* A tap anywhere on the open panel closes it too:
                                 from the Dashboard mark the panel covers the
-                                stats card, its other trigger (captured). The
-                                panel's own controls (Manage plan) are deeper
-                                responders, so they still take their own taps.
-                                Not an accessibility element, so VoiceOver still
-                                reaches the rows inside. */}
-                            <Pressable
-                                onPress={collapse}
-                                accessible={false}
+                                stats card, its other trigger (captured). A
+                                PLAIN View's touch end, never a Pressable: iOS
+                                exposed a Pressable wrapper as ONE element
+                                labelled with the stage icon's glyph, even with
+                                accessible={false} (captured). A plain View is no
+                                element, takes no responder, and the panel's own
+                                controls (Manage plan) still take their taps; a
+                                touch ending on one closes the panel too, which
+                                Manage plan does anyway (onBeforeNavigate). */}
+                            <View
+                                onTouchStart={(e) => {
+                                    touchStart.current = e?.nativeEvent ?? null;
+                                }}
+                                onTouchEnd={(e) => {
+                                    // A tap, not the end of a scroll through a
+                                    // tall panel.
+                                    const a = touchStart.current;
+                                    const b = e?.nativeEvent;
+                                    touchStart.current = null;
+                                    if (a && b && Math.hypot(b.pageX - a.pageX, b.pageY - a.pageY) > TAP_SLOP) return;
+                                    collapse();
+                                }}
                                 testID={`${testIDPrefix}-dropdown-panel`}
                             >
                                 <FeedStatusPanel expanded mode={mode} onBeforeNavigate={collapse} />
-                            </Pressable>
+                            </View>
                         </ScrollView>
                     </View>
                 </>

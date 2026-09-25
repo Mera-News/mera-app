@@ -39,11 +39,18 @@ jest.mock('@/components/custom/for-you/FeedStatusIndicator', () => {
     };
 });
 jest.mock('@/components/custom/for-you/FeedStatusPanel', () => {
-    const { View } = require('react-native');
+    const { View, Text } = require('react-native');
+    // The real panel's stage row starts with an icon-font glyph ("sync").
     return {
         __esModule: true,
         STATUS_PANEL_AUTO_COLLAPSE_MS: 3000,
-        default: (p: any) => (p.expanded ? <View testID="status-panel" /> : null),
+        default: (p: any) =>
+            p.expanded ? (
+                <View testID="status-panel">
+                    <Text>{String.fromCodePoint(0xe627)}</Text>
+                    <Text>Up to date</Text>
+                </View>
+            ) : null,
     };
 });
 const ROW = { x: 20, y: 78, width: 335, height: 45 };
@@ -163,5 +170,19 @@ describe('the closed dropdown layer is out of the accessibility tree', () => {
         expect(layer().props.accessibilityElementsHidden).toBe(false);
         expect(layer().props.importantForAccessibility).toBe('auto');
         expect(layer().props.pointerEvents).toBe('auto');
+    });
+});
+
+// Captured (sim batch 24): the open panel read as one element labelled with
+// the stage icon's private-use glyph. Nothing in the open dropdown may.
+describe('the open dropdown and icon glyphs', () => {
+    it('exposes no label carrying an icon-font glyph', () => {
+        const { privateUseLabelLeaks } = require('@/lib/__test-helpers__/icon-glyph-a11y');
+        const r = render(<Harness />);
+        fireEvent.press(r.getByTestId('feed-status-indicator'));
+        expect(privateUseLabelLeaks(r.UNSAFE_root)).toEqual([]);
+        const w = r.getByTestId('feed-status-dropdown-panel', HIDDEN);
+        expect(w.props.onResponderRelease).toBeUndefined();
+        expect(w.props.accessible).not.toBe(true);
     });
 });
