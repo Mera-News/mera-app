@@ -101,6 +101,7 @@ import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
 import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
+import { useReasonWriting } from '@/components/custom/cards/use-reason-in-flight';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
@@ -219,6 +220,7 @@ const EMPTY_SET: Set<string> = new Set();
  *  resolve the suggestion → list-item verdict key via the screen's adapter. */
 const FeedRow = React.memo(function FeedRow({
   item,
+  live,
   onPress,
   onVerdict,
   onAskMera,
@@ -228,6 +230,12 @@ const FeedRow = React.memo(function FeedRow({
   registerRow,
 }: {
   item: FeedListItem;
+  /** The representative's LIVE store row, when the store still holds it. A
+   *  row that leaves the candidate pool (its note was declined, or a rescore
+   *  dropped it below the gate) keeps a stale copy in `itemsById` until the
+   *  next hydrate, because the feed is insert-only; the card must still show
+   *  where its note actually stands. */
+  live: ForYouSuggestion | undefined;
   onPress: (suggestion: ForYouSuggestion) => void;
   onVerdict: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   onAskMera: (suggestion: ForYouSuggestion) => void;
@@ -253,6 +261,11 @@ const FeedRow = React.memo(function FeedRow({
   });
   const hasCardState = useFeedOrderStore((s) => !!s.cardStates[item.id]);
   const seen = openedExactly || hasCardState;
+  const suggestion = live ?? item.suggestion;
+  // Whether "Writing a note" is true right now (reasons in flight, within the
+  // backstop). Read here, not in the card: the store must stay out of the card
+  // graph.
+  const reasonWriting = useReasonWriting(suggestion._id);
   return (
     // The wrapper is UNCONDITIONAL and only `entering` varies, so the tree
     // shape never changes between renders of the same row.
@@ -265,7 +278,8 @@ const FeedRow = React.memo(function FeedRow({
       }
     >
     <ArticleSuggestionCard
-      suggestion={item.suggestion}
+      suggestion={suggestion}
+      reasonWriting={reasonWriting}
       onPress={onPress}
       // No age label and no NEW badge on this screen. "2h ago" and a green NEW
       // pill are both answers to "has something arrived?", which is the
@@ -363,10 +377,19 @@ const FeedScreen: React.FC = () => {
 
   // Candidates keep opened items in (they back frozen rows + survive hydrate) —
   // no exclusion here; opened-filtering happens only for NEW ids in ingest.
+  //
+  // The Feed also admits scored rows whose note is still being written
+  // (`includeReasonPending`): articles whose relevance arrived in the
+  // background are readable at once, and the card says "Writing a note".
   const candidates = useMemo(
-    () => buildFeedList(suggestions, EMPTY_SET, Date.now(), userGeoLanguageCtx),
+    () =>
+      buildFeedList(suggestions, EMPTY_SET, Date.now(), userGeoLanguageCtx, {
+        includeReasonPending: true,
+      }),
     [suggestions, userGeoLanguageCtx],
   );
+  // Live rows by suggestion id, for FeedRow's `live` (see there).
+  const liveById = useMemo(() => new Map(suggestions.map((s) => [s._id, s])), [suggestions]);
   const candidatesRef = useRef(candidates);
   candidatesRef.current = candidates;
 
@@ -856,6 +879,7 @@ const FeedScreen: React.FC = () => {
     ({ item, index }: { item: FeedEntry; index: number }) => (
       <FeedRow
         item={item}
+        live={liveById.get(item.suggestion._id)}
         onPress={openSuggestion}
         onVerdict={onVerdict}
         onAskMera={onAskMera}
@@ -869,7 +893,7 @@ const FeedScreen: React.FC = () => {
         registerRow={registerRow}
       />
     ),
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);

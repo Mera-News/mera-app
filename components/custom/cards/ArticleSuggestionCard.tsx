@@ -80,9 +80,19 @@ interface ArticleCardProps {
   /** Pass-through to `ArticleCardBase` — space kept clear at the meta row for a
    *  host-owned control floating over the card's top-right (Saved list). */
   metaRowRightReserve?: number;
+  /** The Feed only: whether this row's note is being written right now (its
+   *  reasons are in flight, within the backstop; see `useReasonWriting`). When
+   *  set, a `reason_pending` row shows "Writing a note" or, when false, "No
+   *  note for this article yet.", and the note area reserves two lines in every
+   *  state. Omitted (every other surface): the legacy pending placeholder. */
+  reasonWriting?: boolean;
 }
 
 export type { ArticleCardProps };
+
+/** Lines the Feed card's note area always reserves, so a note landing under
+ *  the reader does not change the card's height (up to two lines of note). */
+export const FEED_NOTE_RESERVED_LINES = 2;
 
 /**
  * The suggestion (personalized) full-size card. Owns the suggestion-specific
@@ -107,6 +117,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   flat = false,
   onSaveToggled,
   metaRowRightReserve,
+  reasonWriting,
 }) => {
   const { t } = useTranslation();
   const [facts, setFacts] = useState<Fact[]>([]);
@@ -304,6 +315,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
 
   // The note as displayed (it may be translated), for the card's spoken label.
   const [shownReason, setShownReason] = useState<string | null>(null);
+  // The Feed passes `reasonWriting`; every other surface keeps the legacy
+  // placeholder (and its 90s cap) untouched.
+  const feedMode = reasonWriting !== undefined;
+  const pendingMode = feedMode && reasonLoading ? (reasonWriting ? 'writing' : 'not-yet') : undefined;
   const reasonBoxEl = relevanceReady && (reason || reasonLoading) ? (
     <ReasonNote
       relevance={relevance}
@@ -311,6 +326,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       pendingSinceMs={pendingSinceMs(suggestion)}
       testID="card-reason"
       onNoteDisplayChange={setShownReason}
+      pendingMode={pendingMode}
+      reserveNoteLines={feedMode ? FEED_NOTE_RESERVED_LINES : undefined}
     />
   ) : null;
   // What the card root reads after the meta strings: the chip's priority
@@ -321,6 +338,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     hardFilterLabelEl && hardFilterLabel ? t('notInterested.cardExemptLabel', { filter: hardFilterLabel }) : null,
     reason ? t('aiDisclosure.caption') : null,
     reason ? shownReason ?? reason : null,
+    // The indicator is hidden from screen readers; the root says it instead.
+    // No live region: the label simply reads the note once it has landed.
+    pendingMode === 'writing' ? t('feed.reasonWritingA11y') : null,
+    pendingMode === 'not-yet' ? t('feed.reasonNotYet') : null,
   ];
 
   const metaAccessory = __DEV__ && relevanceReady ? (

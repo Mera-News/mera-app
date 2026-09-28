@@ -82,6 +82,12 @@ function subscribeCaption(listener: () => void): () => void {
     };
 }
 
+/** A fixed-label indicator never reads the rotating caption, so it does not
+ *  subscribe to it (no re-render every cycle for a text that cannot change). */
+function subscribeNothing(): () => void {
+    return () => {};
+}
+
 function getCaptionIndex(): number {
     return captionIndex;
 }
@@ -138,6 +144,9 @@ interface StreamingIndicatorProps {
     pendingSinceMs?: number | null;
     /** What to show once the cap has passed. Required for the cap to apply. */
     terminalText?: string;
+    /** One fixed caption instead of the rotating chat captions. The dots still
+     *  move (subject to the same gates); the words never change. */
+    label?: string;
 }
 
 const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
@@ -145,6 +154,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     color,
     pendingSinceMs,
     terminalText,
+    label,
 }) => {
     const { t } = useTranslation();
     const labelColor = color ?? DEFAULT_LABEL_COLOR;
@@ -187,12 +197,16 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
 
     // The shared caption index, crossfaded per instance. The text swaps at the
     // fade trough so exactly one caption is ever painted.
-    const sharedIndex = useSyncExternalStore(subscribeCaption, getCaptionIndex, getCaptionIndex);
+    const sharedIndex = useSyncExternalStore(
+        label ? subscribeNothing : subscribeCaption,
+        getCaptionIndex,
+        getCaptionIndex,
+    );
     const [shownIndex, setShownIndex] = useState(sharedIndex);
     const labelOpacity = useSharedValue(1);
     const swapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => {
-        if (sharedIndex === shownIndex) return;
+        if (label || sharedIndex === shownIndex) return;
         if (!moving) {
             setShownIndex(sharedIndex);
             return;
@@ -237,7 +251,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
                         size="sm"
                         style={[streamingIndicatorStyles.label, { color: labelColor }]}
                     >
-                        {t(STREAMING_LABEL_KEYS[shownIndex % STREAMING_LABEL_KEYS.length])}
+                        {label ?? t(STREAMING_LABEL_KEYS[shownIndex % STREAMING_LABEL_KEYS.length])}
                     </Text>
                 </Animated.View>
                 <View style={streamingIndicatorStyles.dotsRow}>

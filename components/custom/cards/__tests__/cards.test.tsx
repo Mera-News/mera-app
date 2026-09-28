@@ -924,6 +924,82 @@ describe('ArticleSuggestionCard note block', () => {
   });
 });
 
+// bgsubmit: the Feed shows a scored row while its note is still being written.
+// The Feed passes `reasonWriting`; the note area then keeps ONE height (two
+// lines of the note's token) in every state, the disclosure appears only once a
+// real note exists, and the root speaks the state because the indicator is
+// hidden from screen readers.
+describe('ArticleSuggestionCard Feed note-writing states', () => {
+  const pending = () =>
+    makeSuggestion({ status: ArticleSuggestionStatus.ReasonPending, reason: '' });
+  // Two lines of the `sm` token (21pt) at the OS font scale jest reports.
+  const twoLines = () => 2 * 21 * (require('react-native').Dimensions.get('window').fontScale || 1);
+  const minHeightOf = (node: any) => {
+    const st = node.props.style;
+    const flat = Array.isArray(st) ? Object.assign({}, ...st) : st;
+    return flat?.minHeight;
+  };
+
+  it('writing: chip, "Writing a note" indicator hidden from a11y, no disclosure, two lines reserved', () => {
+    const { getByTestId, queryByText, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting />,
+    );
+    expect(getByTestId('relevance-chip')).toBeTruthy();
+    const writing = getByTestId('card-reason-writing', { includeHiddenElements: true });
+    expect(writing.props.accessibilityElementsHidden).toBe(true);
+    expect(writing.props.importantForAccessibility).toBe('no-hide-descendants');
+    expect(queryByTestId('card-reason-not-yet')).toBeNull();
+    expect(queryByText('aiDisclosure.caption')).toBeNull();
+    expect(minHeightOf(getByTestId('card-reason-pending'))).toBe(twoLines());
+  });
+
+  it('writing: the root reads the priority, then "note being written"', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting />,
+    );
+    const label: string = getByTestId('card-sugg-1').props.accessibilityLabel;
+    const pri = label.indexOf('relevance.a11y');
+    const writing = label.indexOf('feed.reasonWritingA11y');
+    expect(pri).toBeGreaterThan(-1);
+    expect(writing).toBeGreaterThan(pri);
+    expect(label).not.toContain('aiDisclosure.caption');
+  });
+
+  it('not in flight: a static "No note for this article yet." line in the same reserved box, never empty', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={false} />,
+    );
+    expect(queryByTestId('card-reason-writing', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('streaming', { includeHiddenElements: true })).toBeNull();
+    expect(getByTestId('card-reason-not-yet').props.children).toBe('feed.reasonNotYet');
+    expect(minHeightOf(getByTestId('card-reason-pending'))).toBe(twoLines());
+    expect(getByTestId('card-sugg-1').props.accessibilityLabel).toContain('feed.reasonNotYet');
+  });
+
+  it('resolved: the note area keeps the same reserved height, and the disclosure appears', () => {
+    const { getByTestId, getAllByText } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={false} />,
+    );
+    expect(minHeightOf(getByTestId('card-reason-text'))).toBe(twoLines());
+    expect(getAllByText('aiDisclosure.caption')).toHaveLength(1);
+    expect(getByTestId('card-sugg-1').props.accessibilityLabel).not.toContain('feed.reasonWritingA11y');
+  });
+
+  it('other surfaces (no reasonWriting) keep the legacy placeholder beside the badge and no reserved height', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} flat />,
+    );
+    const row = getByTestId('card-reason-badge-row');
+    const streaming = getByTestId('streaming');
+    let inRow = false;
+    for (let p: any = streaming; p; p = p.parent) if (p === row) inRow = true;
+    expect(inRow).toBe(true);
+    expect(queryByTestId('card-reason-pending')).toBeNull();
+    const { getByTestId: get2 } = render(<ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} flat />);
+    expect(minHeightOf(get2('card-reason-text'))).toBeUndefined();
+  });
+});
+
 // Owner: the Feed card's thumbs open the SAME ••• sheet as the menu, straight
 // at the tree root with no Back row. One behaviour throughout the app; the
 // inline floating panel is gone.

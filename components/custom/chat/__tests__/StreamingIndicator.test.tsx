@@ -88,6 +88,39 @@ describe('StreamingIndicator', () => {
     expect(style.color).toBe('rgb(1, 2, 3)');
   });
 
+  it('a fixed label is the only caption and never rotates', () => {
+    mockReduceMotion = false;
+    mockAnimationsActive = true;
+    const { getAllByTestId, unmount } = render(
+      <View>
+        {/* A rotating sibling keeps the shared clock running. */}
+        <StreamingIndicator compact />
+        <StreamingIndicator compact label="Writing a note" />
+      </View>,
+    );
+    const fixed = () => getAllByTestId('streaming-caption')[1];
+    expect(fixed().props.children).toBe('Writing a note');
+    act(() => {
+      jest.advanceTimersByTime(2000 * 3 + 220 * 3);
+    });
+    expect(getAllByTestId('streaming-caption')).toHaveLength(2);
+    expect(fixed().props.children).toBe('Writing a note');
+    // The rotating sibling did move, so the clock really ran.
+    expect(getAllByTestId('streaming-caption')[0].props.children).not.toBe('Writing a note');
+    unmount();
+  });
+
+  it('a fixed label under Reduce Motion is static text, no clock', () => {
+    mockReduceMotion = true;
+    const spy = jest.spyOn(global, 'setInterval');
+    const { getByTestId, unmount } = render(<StreamingIndicator compact label="Writing a note" />);
+    expect(spy).not.toHaveBeenCalled();
+    expect(getByTestId('streaming-caption').props.children).toBe('Writing a note');
+    unmount();
+    spy.mockRestore();
+    mockReduceMotion = false;
+  });
+
   it('renders the logo in the default (non-compact) variant', () => {
     const { queryByTestId } = render(<StreamingIndicator />);
     expect(queryByTestId('mera-logo')).not.toBeNull();
