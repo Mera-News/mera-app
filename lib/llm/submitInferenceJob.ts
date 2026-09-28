@@ -12,6 +12,7 @@ import { withRetry } from '@/lib/utils/retry';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
 import type { ExecutionContext } from './execution-context';
+import { linkedAbort, raceSignal } from './abort-race';
 import {
   type CloudCallBundle,
 } from '@/lib/mera-protocol/scoring-service';
@@ -48,13 +49,20 @@ function reportSubmitFailure(err: unknown, status: string): void {
   });
 }
 
-/** Outcome of a single `sendInferenceRequest` call. `throttled` means the
- *  gateway returned 429 — the caller should treat this as a transient,
- *  non-terminal condition (the gateway-rate-limiter has already been told to
- *  back off via `pauseFor`); it is not a permanent failure. */
+/** Outcome of a single `sendInferenceRequest` call.
+ *  - `throttled`: the gateway returned 429 — transient, non-terminal (the
+ *    rate limiter was already told to back off via `pauseFor`).
+ *  - `in-progress`: 409, the gateway still holds this `Idempotency-Key`'s
+ *    reservation from an earlier attempt whose outcome is unknown. Treat like
+ *    `throttled`: requeue WITHOUT a new key, and the next attempt replays.
+ *  - `no-auth`: `task` context only — no JWT could be minted, or the gateway
+ *    refused it. Quiet by design (no Sentry, no auth-breaker report).
+ *  - `failed`: a definite failure; the caller may mint a new key. */
 export type SendInferenceOutcome =
   | { status: 'ok'; requestId: string; capabilityToken: string }
   | { status: 'throttled' }
+  | { status: 'in-progress' }
+  | { status: 'no-auth' }
   | { status: 'failed' };
 
 /**
@@ -97,6 +105,17 @@ export async function sendInferenceRequest(args: {
    *  Defaults FALSE so every other caller keeps the FIFO queue. Never remove
    *  the `acquire()` itself — this only decides WHO paid, not whether. */
   grantAlreadyHeld?: boolean;
+  /** Sent as the `Idempotency-Key` header. The gateway dedupes on it per user
+   *  for 24h, so a submit whose 202 was lost (process killed before the
+   *  caller persisted the requestId) replays to the SAME job instead of
+   *  billing a second one. The caller owns the key's lifecycle: the same key
+   *  is only ever sent for the same set of articles. */
+  idempotencyKey?: string;
+  /** One POST, no `withRetry` loop. The background task's deadline cannot
+   *  afford four attempts. */
+  singleAttempt?: boolean;
+  /** Aborts the JWT mint wait, the limiter wait and the POST. */
+  signal?: AbortSignal;
 }): Promise<SendInferenceOutcome> {
   const {
     bundle,
@@ -106,6 +125,9 @@ export async function sendInferenceRequest(args: {
     context,
     capabilityToken,
     grantAlreadyHeld = false,
+    idempotencyKey,
+    singleAttempt = false,
+    signal,
   } = args;
 
   if (DUMP_QUERIES_ENABLED) {
@@ -186,7 +208,18 @@ export async function sendInferenceRequest(args: {
   //     SecureStore items pinned to AfterFirstUnlock would throw
   //     `keychain-unavailable`.
   let authHeader: string;
-  if (context === 'foreground') {
+  if (context === 'task') {
+    // JWT only, quiet on absence. A locked-since-reboot keychain or a dead
+    // session is not an error the user can act on from a background run.
+    let jwt: string | null = null;
+    try {
+      jwt = await raceSignal(getJwtToken(), signal);
+    } catch {
+      jwt = null;
+    }
+    if (!jwt) return { status: 'no-auth' };
+    authHeader = `Bearer ${jwt}`;
+  } else if (context === 'foreground') {
     let jwt: string | null = null;
     try {
       jwt = await getJwtToken();
@@ -221,7 +254,14 @@ export async function sendInferenceRequest(args: {
   //
   // SKIPPED when the caller already holds a grant — the slot is paid either
   // way, so charging twice only delays the POST (see `grantAlreadyHeld`).
-  if (!grantAlreadyHeld) await gatewayRateLimiter.acquire('background');
+  if (!grantAlreadyHeld) {
+    try {
+      await raceSignal(gatewayRateLimiter.acquire('background'), signal);
+    } catch {
+      // The deadline passed while waiting for a slot: nothing was sent.
+      return { status: 'failed' };
+    }
+  }
 
   // Last thing before the bytes leave the device — one site covering every
   // submit path.
@@ -232,28 +272,28 @@ export async function sendInferenceRequest(args: {
   // 'running' and blocking all future feed-sync fetches. On timeout the abort
   // throws, so withRetry retries; exhausting retries returns { status: 'failed' }.
   const SUBMIT_TIMEOUT_MS = 30_000;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Content-Encoding': 'gzip',
+  };
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
   const doSubmitPost = (bearer: string): Promise<Response> =>
     withRetry(
       async () => {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
+        const attempt = linkedAbort(signal, SUBMIT_TIMEOUT_MS);
         let r: Response;
         try {
           r = await (expoFetch as unknown as typeof globalThis.fetch)(
             JOBS_API,
             {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Content-Encoding': 'gzip',
-                Authorization: bearer,
-              },
+              headers: { ...headers, Authorization: bearer },
               body: gzipped as unknown as BodyInit,
-              signal: controller.signal,
+              signal: attempt.signal,
             },
           );
         } finally {
-          clearTimeout(timer);
+          attempt.dispose();
         }
         if (r.status >= 500) {
           const text = await r.text().catch(() => '');
@@ -261,8 +301,8 @@ export async function sendInferenceRequest(args: {
         }
         return r;
       },
-      undefined,
-      4,
+      signal,
+      singleAttempt ? 0 : 4,
       TAG,
     );
 
@@ -286,6 +326,13 @@ export async function sendInferenceRequest(args: {
   // token there is left alone: it says nothing about the Better Auth session,
   // so recordAuthFailure() would be a false signal. Both cases fall through to
   // the standard non-202 handling below, which captures + returns failed.
+  // Task context: a refused JWT means the session is gone or not readable. Exit
+  // quietly — never a re-mint loop, never recordAuthFailure (which can pause
+  // feed-sync), never a logout. The next foreground owns the recovery.
+  if ((res.status === 401 || res.status === 403) && context === 'task') {
+    return { status: 'no-auth' };
+  }
+
   if ((res.status === 401 || res.status === 403) && context === 'foreground') {
     logger.warn(`${TAG} ${res.status} on submit — invalidating JWT cache and re-minting once`);
     invalidateJwtCache();
@@ -321,6 +368,14 @@ export async function sendInferenceRequest(args: {
       `${TAG} throttled (429) — pausing gateway calls for ${retryAfterMs}ms`,
     );
     return { status: 'throttled' };
+  }
+
+  if (res.status === 409) {
+    // The gateway still holds this key's reservation (an earlier attempt with
+    // the same key is mid-create). Not a failure and not a new job: the caller
+    // keeps the key and retries later, when it replays to the original job.
+    logger.debug(`${TAG} 409 — idempotency key still reserved, treating as in progress`);
+    return { status: 'in-progress' };
   }
 
   if (res.status !== 202) {
@@ -362,9 +417,10 @@ export async function sendInferenceRequest(args: {
   }
 
   // The gateway-issued capability token is bound to (userId, requestId,
-  // exp=24h, scopes={results:read, jobs:submit-followup}); it covers both
-  // the /results GET and the phase-2 follow-up POST so neither ever needs
-  // the keychain JWT. Storing it is the caller's responsibility.
+  // scopes={results:read, jobs:submit-followup}) with a 2h TTL, kept short on
+  // purpose to cap subscription bypass. It covers the /results GET and the
+  // phase-2 follow-up POST inside that window; past it, only the JWT works.
+  // Storing it is the caller's responsibility.
   if (!issuedCapabilityToken) {
     logger.warn(
       `${TAG} gateway returned no capabilityToken — falling back to JWT auth on subsequent calls`,

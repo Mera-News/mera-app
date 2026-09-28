@@ -493,3 +493,78 @@ describe('sendInferenceRequest', () => {
     });
   });
 });
+
+describe('sendInferenceRequest — background task options (bgsubmit)', () => {
+  const base = () => ({
+    bundle: makeBundle(),
+    ctx: makeE2EEContext(),
+    token: null,
+    model: 'test-model',
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetJwtToken.mockResolvedValue('jwt-token');
+    mockRateLimiterAcquire.mockResolvedValue(undefined);
+    mockWithRetry.mockImplementation(async (op: () => Promise<unknown>) => op());
+  });
+
+  it('sends the Idempotency-Key header when a key is given', async () => {
+    mockExpoFetch.mockResolvedValue(makeResponse(202, { requestId: 'r', capabilityToken: 'c' }));
+    await sendInferenceRequest({ ...base(), context: 'foreground', idempotencyKey: 'run-a:3:rel:0' });
+    expect(mockExpoFetch.mock.calls[0][1].headers['Idempotency-Key']).toBe('run-a:3:rel:0');
+  });
+
+  it('omits the header when no key is given', async () => {
+    mockExpoFetch.mockResolvedValue(makeResponse(202, { requestId: 'r', capabilityToken: 'c' }));
+    await sendInferenceRequest({ ...base(), context: 'foreground' });
+    expect(mockExpoFetch.mock.calls[0][1].headers['Idempotency-Key']).toBeUndefined();
+  });
+
+  it('maps 409 to in-progress (key still reserved), not failed', async () => {
+    mockExpoFetch.mockResolvedValue(makeResponse(409, { error: 'reserved' }));
+    const out = await sendInferenceRequest({ ...base(), context: 'foreground', idempotencyKey: 'k' });
+    expect(out).toEqual({ status: 'in-progress' });
+  });
+
+  it('task context authenticates with the JWT and never the capability token', async () => {
+    mockExpoFetch.mockResolvedValue(makeResponse(202, { requestId: 'r', capabilityToken: 'c' }));
+    await sendInferenceRequest({ ...base(), context: 'task', capabilityToken: 'cap' });
+    expect(mockExpoFetch.mock.calls[0][1].headers.Authorization).toBe('Bearer jwt-token');
+  });
+
+  it('task context with no JWT returns no-auth without a request', async () => {
+    mockGetJwtToken.mockResolvedValue(null);
+    const out = await sendInferenceRequest({ ...base(), context: 'task', capabilityToken: 'cap' });
+    expect(out).toEqual({ status: 'no-auth' });
+    expect(mockExpoFetch).not.toHaveBeenCalled();
+  });
+
+  it('task context 401 returns no-auth: no re-mint, no auth-breaker report', async () => {
+    mockExpoFetch.mockResolvedValue(makeResponse(401, { error: 'unauthorized' }));
+    const out = await sendInferenceRequest({ ...base(), context: 'task' });
+    expect(out).toEqual({ status: 'no-auth' });
+    expect(mockInvalidateJwtCache).not.toHaveBeenCalled();
+    expect(mockRecordAuthFailure).not.toHaveBeenCalled();
+    expect(mockExpoFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('singleAttempt asks withRetry for zero retries and passes the signal', async () => {
+    mockExpoFetch.mockResolvedValue(makeResponse(202, { requestId: 'r', capabilityToken: 'c' }));
+    const controller = new AbortController();
+    await sendInferenceRequest({
+      ...base(),
+      context: 'task',
+      singleAttempt: true,
+      signal: controller.signal,
+    });
+    expect(mockWithRetry.mock.calls[0][1]).toBe(controller.signal);
+    expect(mockWithRetry.mock.calls[0][2]).toBe(0);
+  });
+
+  it('keeps the four-retry default for existing callers', async () => {
+    mockExpoFetch.mockResolvedValue(makeResponse(202, { requestId: 'r', capabilityToken: 'c' }));
+    await sendInferenceRequest({ ...base(), context: 'foreground' });
+    expect(mockWithRetry.mock.calls[0][2]).toBe(4);
+  });
+});

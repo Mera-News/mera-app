@@ -1,12 +1,25 @@
-// ExecutionContext — explicit foreground/background marker passed through
-// every inference-gateway call. The auth-selection rule is strict:
-//   - foreground → user JWT only (read from keychain)
-//   - background → capability token only (read from AsyncStorage)
-// No silent fallback in either direction. A foreground call with no JWT or
-// a background call with no capability token throws — the cycle stays put,
-// the next tick retries with the right credential available.
+// ExecutionContext — explicit marker passed PER CALL through every
+// inference-gateway call. Never stored in module state: a background run and a
+// foreground poll can interleave in one JS runtime, so a global would hand one
+// caller the other's auth rules. The auth-selection rule is strict:
+//   - foreground → user JWT first (read from keychain), the per-batch
+//     capability token as a fallback while it is still inside its 2h TTL.
+//   - background → capability token only. Used by the silent-push wake, which
+//     may run before the keychain is readable and must never mint.
+//   - task       → user JWT only (cookie → JWT mint), for the OS background
+//     task (expo-background-task). No capability-token fallback, no 401
+//     re-mint, no auth-breaker report: a dead or unreadable session exits the
+//     run quietly and the next foreground deals with it. The keychain is
+//     AFTER_FIRST_UNLOCK, so a task run after the first unlock can read it.
+// A call with no usable credential for its context throws or reports
+// `no-auth` — the batch stays put and the next tick retries.
 
-export type ExecutionContext = 'foreground' | 'background';
+export type ExecutionContext = 'foreground' | 'background' | 'task';
+
+/** True for the contexts that authenticate with the user's JWT. */
+export function usesJwt(context: ExecutionContext): boolean {
+  return context === 'foreground' || context === 'task';
+}
 
 /** Map a runBackgroundCycle reason to the execution context that produced
  *  it. Background reasons are the silent-push wakes delivered to the
@@ -19,7 +32,7 @@ export function contextForCycleReason(
     | 'silent-push'
     | 'app-resume'
     | 'scoring-pass',
-): ExecutionContext {
+): Exclude<ExecutionContext, 'task'> {
   switch (reason) {
     case 'phase1-done':
     case 'phase2-done':

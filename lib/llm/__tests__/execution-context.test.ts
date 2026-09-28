@@ -2,6 +2,7 @@
 
 import {
   contextForCycleReason,
+  usesJwt,
   type ExecutionContext,
 } from '../execution-context';
 
@@ -55,5 +56,13 @@ describe('contextForCycleReason', () => {
       expect(backgroundCount).toBe(3);
       expect(foregroundCount).toBe(2);
     });
+  });
+});
+
+describe('usesJwt', () => {
+  it('is true for foreground and task, false for background', () => {
+    expect(usesJwt('foreground')).toBe(true);
+    expect(usesJwt('task')).toBe(true);
+    expect(usesJwt('background')).toBe(false);
   });
 });

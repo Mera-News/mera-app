@@ -25,6 +25,7 @@ import { getJwtToken } from '../auth-client';
 import logger from '../logger';
 import { withRetry } from '../utils/retry';
 import * as gatewayRateLimiter from '../llm/gateway-rate-limiter';
+import { linkedAbort, raceSignal } from '../llm/abort-race';
 import { getCachedAttestation, setCachedAttestation } from './e2ee-cache';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 import {
@@ -153,12 +154,20 @@ function fetchWithTimeout(
   // shorter client abort would give up while the gateway is still fetching the
   // report, wasting the round trip and forcing a retry.
   ms = 30_000,
+  outer?: AbortSignal,
 ): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  return fetch(url, { ...opts, signal: controller.signal }).finally(() =>
-    clearTimeout(timer),
+  const attempt = linkedAbort(outer, ms);
+  return fetch(url, { ...opts, signal: attempt.signal }).finally(() =>
+    attempt.dispose(),
   );
+}
+
+/** Deadline options for the OS background task (bgsubmit). `signal` aborts the
+ *  JWT wait, the limiter wait and the request; `singleAttempt` drops the
+ *  retries. Both default off, so every existing caller is unchanged. */
+export interface AttestationFetchOptions {
+  signal?: AbortSignal;
+  singleAttempt?: boolean;
 }
 
 /** Structured detail attached to a {@link ModelKeyValidationError}. The key is
@@ -203,14 +212,17 @@ const pendingAttestations = new Map<string, Promise<ModelAttestation>>();
 export async function fetchModelPublicKey(
   model: string,
   lane: gatewayRateLimiter.GatewayLane = 'background',
+  opts: AttestationFetchOptions = {},
 ): Promise<ModelAttestation> {
   const cached = getCachedAttestation(model);
   if (cached) return cached;
 
+  // A joiner with a deadline races the shared fetch; the fetch itself runs on
+  // with the first caller's options.
   const inFlight = pendingAttestations.get(model);
-  if (inFlight) return inFlight;
+  if (inFlight) return raceSignal(inFlight, opts.signal);
 
-  const run = fetchModelPublicKeyUncached(model, lane).finally(() => {
+  const run = fetchModelPublicKeyUncached(model, lane, opts).finally(() => {
     pendingAttestations.delete(model);
   });
   pendingAttestations.set(model, run);
@@ -220,11 +232,13 @@ export async function fetchModelPublicKey(
 async function fetchModelPublicKeyUncached(
   model: string,
   lane: gatewayRateLimiter.GatewayLane,
+  opts: AttestationFetchOptions = {},
 ): Promise<ModelAttestation> {
+  const { signal, singleAttempt = false } = opts;
   // Dev-only timing: this is the uncached NEAR pass-through — the dominant
   // first-chat-latency hop we prewarm against. Cache hits above never reach here.
   const attestStartMs = Date.now();
-  const token = await getJwtToken();
+  const token = await raceSignal(getJwtToken(), signal);
   // Fail BEFORE the network call. The route is guarded, so a tokenless request
   // cannot succeed; sending it anyway bought a guaranteed 401 on every
   // pre-session background sweep (MERA-APP-16). See NoCredentialError.
@@ -242,23 +256,23 @@ async function fetchModelPublicKeyUncached(
   // it would charge the background lane's 3s spacing per attempt on a path that
   // already fans out on cold start; the retries below stay unmetered, which is
   // the deliberate (and bounded) exception.
-  await gatewayRateLimiter.acquire(lane);
+  await raceSignal(gatewayRateLimiter.acquire(lane), signal);
 
   const res = await withRetry(
     async () => {
-      const r = await fetchWithTimeout(url, { headers });
+      const r = await fetchWithTimeout(url, { headers }, undefined, signal);
       if (r.status >= 500) {
         const body = await r.text().catch(() => '');
         throw new NearAttestationError(r.status, body);
       }
       return r;
     },
-    undefined,
+    signal,
     // 2 retries, not 5. This endpoint is a NEAR pass-through with a 30s client
     // timeout, so six attempts is three minutes of a cold start held open, and
     // every attempt is unmetered budget. Past the third the gateway is down,
     // not busy.
-    2,
+    singleAttempt ? 0 : 2,
     TAG,
   );
   if (!res.ok) {
@@ -428,8 +442,9 @@ export function generateAttestationNonce(): string {
 export async function prepareE2EEContext(
   model: string,
   lane: gatewayRateLimiter.GatewayLane = 'background',
+  opts: AttestationFetchOptions = {},
 ): Promise<E2EEContext> {
-  const attestation = await fetchModelPublicKey(model, lane);
+  const attestation = await fetchModelPublicKey(model, lane, opts);
   const { algo } = attestation;
 
   // Generate the client keypair on the algo's own curve. The server sees the
@@ -497,8 +512,9 @@ export async function rebuildE2EEContext(
   privKeyHex: string,
   algo: SigningAlgo,
   lane: gatewayRateLimiter.GatewayLane = 'background',
+  opts: AttestationFetchOptions = {},
 ): Promise<E2EEContext> {
-  const attestation = await fetchModelPublicKey(model, lane);
+  const attestation = await fetchModelPublicKey(model, lane, opts);
   if (attestation.algo !== algo) {
     throw new ModelKeyAlgoMismatchError(
       `${TAG} rebuildE2EEContext: attested algo ${attestation.algo} != stored ${algo} (model=${model}); cannot pair a ${algo} keypair with a ${attestation.algo} model key`,
