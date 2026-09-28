@@ -976,6 +976,21 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
     expect(getByTestId('card-sugg-1').props.accessibilityLabel).toContain('feed.reasonNotYet');
   });
 
+  it('a declined note (reason_skipped) keeps the box: chip and the not-yet line, never a bare card', () => {
+    const skipped = makeSuggestion({ status: ArticleSuggestionStatus.ReasonSkipped, reason: '' });
+    for (const writing of [false, true]) {
+      const { getByTestId, queryByTestId, unmount } = render(
+        <ArticleSuggestionCard suggestion={skipped} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={writing} />,
+      );
+      expect(getByTestId('relevance-chip')).toBeTruthy();
+      // Nothing is being written for a declined note, whatever the set says.
+      expect(queryByTestId('card-reason-writing', { includeHiddenElements: true })).toBeNull();
+      expect(getByTestId('card-reason-not-yet')).toBeTruthy();
+      expect(minHeightOf(getByTestId('card-reason-pending'))).toBe(twoLines());
+      unmount();
+    }
+  });
+
   it('resolved: the note area keeps the same reserved height, and the disclosure appears', () => {
     const { getByTestId, getAllByText } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={false} />,

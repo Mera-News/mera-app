@@ -317,9 +317,21 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const [shownReason, setShownReason] = useState<string | null>(null);
   // The Feed passes `reasonWriting`; every other surface keeps the legacy
   // placeholder (and its 90s cap) untouched.
+  //
+  // On the Feed a scored row with no note is never a bare card: "Writing a
+  // note" only while its reasons are in flight, otherwise the static not-yet
+  // line. That covers a note the gate declined (`reason_skipped`) and a row
+  // whose status left the pool while it sat on screen: the live row reaches
+  // this card, and dropping the box would shrink the card under the reader.
+  // `complete` without a note keeps its fact chips, as it always has.
   const feedMode = reasonWriting !== undefined;
-  const pendingMode = feedMode && reasonLoading ? (reasonWriting ? 'writing' : 'not-yet') : undefined;
-  const reasonBoxEl = relevanceReady && (reason || reasonLoading) ? (
+  const feedNoteMissing = feedMode && relevanceReady && !reason && status !== ArticleSuggestionStatus.Complete;
+  const pendingMode = feedNoteMissing
+    ? reasonLoading && reasonWriting
+      ? 'writing'
+      : 'not-yet'
+    : undefined;
+  const reasonBoxEl = relevanceReady && (reason || reasonLoading || feedNoteMissing) ? (
     <ReasonNote
       relevance={relevance}
       reason={reason}
