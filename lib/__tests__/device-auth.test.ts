@@ -84,13 +84,16 @@ import {
     APP_ATTEST_KEY_ID_STORE_KEY,
     APP_ATTEST_KEY_PROVEN_STORE_KEY,
     DEVICE_ID_STORE_KEY,
-    DEVICE_REF_STORE_KEY,
+    bindIntegrityNonce,
     clearDeviceAuthCredentials,
     deviceSignInAvailability,
+    deviceSignInPath,
     signInWithDevice,
 } from '../device-auth';
 
 const KEY_SLOT = APP_ATTEST_KEY_ID_STORE_KEY;
+/** The RETIRED device-reference slot. Nothing may read, send or write it. */
+const RETIRED_REF_SLOT = 'mera_device_ref';
 
 /** Route the $fetch mock: a nonce counter plus per-path handlers. */
 function installServer(overrides: Record<string, (body: any) => any> = {}) {
@@ -263,7 +266,7 @@ describe('iOS invalid-key recovery', () => {
 });
 
 describe('Android', () => {
-    it('sends ANDROID_ID as the deviceId (the S10 trial-memory anchor)', async () => {
+    it('sends ANDROID_ID as the deviceId and binds it into the Play Integrity nonce', async () => {
         (Platform as { OS: string }).OS = 'android';
         process.env.EXPO_PUBLIC_PLAY_INTEGRITY_PROJECT = '123456';
         installServer();
@@ -273,7 +276,13 @@ describe('Android', () => {
 
         expect(result).toMatchObject({ status: 'success', userId: 'user-1' });
         expect(callsTo('/device/nonce')[0][1].body).toEqual({ purpose: 'integrity' });
-        expect(mockRequestIntegrityToken).toHaveBeenCalledWith('nonce-1', '123456');
+        // The token is requested over the BOUND value; the body keeps the raw
+        // server nonce and the same deviceId (the mock hash is `sha256(x)`,
+        // which the base64url step leaves unchanged).
+        expect(mockRequestIntegrityToken).toHaveBeenCalledWith(
+            'sha256(nonce-1|android-hw-1)',
+            '123456',
+        );
         expect(callsTo('/device/sign-in/android')[0][1].body).toEqual({
             integrityToken: 'integrity-token',
             nonce: 'nonce-1',
@@ -294,6 +303,11 @@ describe('Android', () => {
         expect(callsTo('/device/sign-in/android')[0][1].body).toMatchObject({
             deviceId: 'dev-uuid-1',
         });
+        // The fallback id is the one bound into the token.
+        expect(mockRequestIntegrityToken).toHaveBeenCalledWith(
+            'sha256(nonce-1|dev-uuid-1)',
+            null,
+        );
         expect(mockSetItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY, 'dev-uuid-1');
     });
 
@@ -304,14 +318,102 @@ describe('Android', () => {
 
         await signInWithDevice();
 
-        expect(mockRequestIntegrityToken).toHaveBeenCalledWith('nonce-1', null);
+        expect(mockRequestIntegrityToken).toHaveBeenCalledWith(
+            'sha256(nonce-1|android-hw-1)',
+            null,
+        );
+    });
+
+    it('resolves the deviceId BEFORE requesting the token', async () => {
+        (Platform as { OS: string }).OS = 'android';
+        installServer();
+        const order: string[] = [];
+        mockGetAndroidId.mockImplementation(() => {
+            order.push('deviceId');
+            return 'android-hw-1';
+        });
+        mockRequestIntegrityToken.mockImplementation(async () => {
+            order.push('token');
+            return 'integrity-token';
+        });
+
+        await signInWithDevice();
+
+        expect(order).toEqual(['deviceId', 'token']);
+    });
+
+    it('a 403 on an ANDROID_ID device never retries: severing cannot change its record key', async () => {
+        (Platform as { OS: string }).OS = 'android';
+        let signInCalls = 0;
+        installServer({
+            '/device/sign-in/android': () => {
+                signInCalls += 1;
+                return { data: null, error: { status: 403, code: 'ACCOUNT_DELETED' } };
+            },
+        });
+        mockRequestIntegrityToken.mockResolvedValue('integrity-token');
+
+        const result = await signInWithDevice();
+
+        expect(result).toEqual({ status: 'failed', reason: 'unknown' });
+        expect(signInCalls).toBe(1);
+        expect(mockDeleteItemAsync).not.toHaveBeenCalled();
     });
 });
 
-describe('deviceRef anchor (S10)', () => {
-    it('presents the stored deviceRef on sign-in and stores a returned one', async () => {
+describe('bindIntegrityNonce (contract shared with the server)', () => {
+    it('matches the shared test vector with a REAL SHA-256', async () => {
+        const Crypto = require('expo-crypto') as { digestStringAsync: jest.Mock };
+        const { createHash } = jest.requireActual('crypto') as typeof import('crypto');
+        Crypto.digestStringAsync.mockImplementationOnce(async (_alg: string, input: string) =>
+            createHash('sha256').update(Buffer.from(input, 'utf8')).digest('base64'),
+        );
+
+        const bound = await bindIntegrityNonce(
+            'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8',
+            '9774d56d682e549c',
+        );
+
+        expect(bound).toBe('5E2pe4wGK3Y4kgsLKC7K_V4VgNADSzrL2Z2XA7p6iNY');
+        // Play Integrity: web-safe, no-wrap base64, 16..500 bytes.
+        expect(bound).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    });
+
+    it('turns standard base64 into web-safe base64 with no padding', async () => {
+        const Crypto = require('expo-crypto') as { digestStringAsync: jest.Mock };
+        Crypto.digestStringAsync.mockResolvedValueOnce('ab+c/d==');
+        await expect(bindIntegrityNonce('n', 'd')).resolves.toBe('ab-c_d');
+    });
+});
+
+describe('deviceSignInPath', () => {
+    it('iOS with native support is app-attest', async () => {
+        await expect(deviceSignInPath()).resolves.toBe('app-attest');
+    });
+
+    it('Android with a readable ANDROID_ID is play-integrity', async () => {
+        (Platform as { OS: string }).OS = 'android';
+        await expect(deviceSignInPath()).resolves.toBe('play-integrity');
+    });
+
+    it('Android without ANDROID_ID is the uuid fallback', async () => {
+        (Platform as { OS: string }).OS = 'android';
+        mockGetAndroidId.mockReturnValue('');
+        await expect(deviceSignInPath()).resolves.toBe('play-integrity-uuid');
+    });
+
+    it('unsupported with a dev token is dev-bypass, without one unavailable', async () => {
+        mockIsSupported.mockResolvedValue(false);
+        await expect(deviceSignInPath()).resolves.toBe('unavailable');
+        process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
+        await expect(deviceSignInPath()).resolves.toBe('dev-bypass');
+    });
+});
+
+describe('retired deviceRef', () => {
+    it('never reads, sends or stores it, even when a leftover is stored and an old server returns one', async () => {
         mockGetItemAsync.mockImplementation(async (k: string) =>
-            k === KEY_SLOT ? 'stored-key' : k === DEVICE_REF_STORE_KEY ? 'ref-stored' : null,
+            k === KEY_SLOT ? 'stored-key' : k === RETIRED_REF_SLOT ? 'ref-stored' : null,
         );
         installServer({
             '/device/sign-in/ios': () => ({
@@ -323,42 +425,25 @@ describe('deviceRef anchor (S10)', () => {
 
         const result = await signInWithDevice();
 
-        expect(callsTo('/device/sign-in/ios')[0][1].body).toMatchObject({ deviceRef: 'ref-stored' });
-        expect(mockSetItemAsync).toHaveBeenCalledWith(DEVICE_REF_STORE_KEY, 'ref-fresh');
-        expect(result).toMatchObject({ status: 'success', trialAvailable: true });
-    });
-
-    it('omits deviceRef entirely when none is stored (first mint), then stores the minted one', async () => {
-        installServer({
-            '/device/sign-in/ios': () => ({
-                data: { user: { id: 'user-1' }, deviceRef: 'ref-minted' },
-                error: null,
-            }),
-        });
-        mockGenerateKey.mockResolvedValue('key-1');
-        mockAttestKey.mockResolvedValue('attestation-b64');
-        mockGenerateAssertion.mockResolvedValue('assertion-b64');
-
-        await signInWithDevice();
-
+        expect(result).toMatchObject({ status: 'success', userId: 'user-1', trialAvailable: true });
         expect(callsTo('/device/sign-in/ios')[0][1].body).not.toHaveProperty('deviceRef');
-        expect(mockSetItemAsync).toHaveBeenCalledWith(DEVICE_REF_STORE_KEY, 'ref-minted');
+        expect(mockGetItemAsync).not.toHaveBeenCalledWith(RETIRED_REF_SLOT);
+        expect(mockSetItemAsync).not.toHaveBeenCalledWith(RETIRED_REF_SLOT, expect.anything());
     });
 
-    it('the dev bypass keeps its stored UUID deviceId and presents the deviceRef too', async () => {
+    it('the Android and dev bodies carry no deviceRef', async () => {
+        (Platform as { OS: string }).OS = 'android';
+        installServer();
+        mockRequestIntegrityToken.mockResolvedValue('integrity-token');
+        await signInWithDevice();
+        expect(callsTo('/device/sign-in/android')[0][1].body).not.toHaveProperty('deviceRef');
+
         mockIsSupported.mockResolvedValue(false);
         process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
-        mockGetItemAsync.mockImplementation(async (k: string) =>
-            k === DEVICE_REF_STORE_KEY ? 'ref-stored' : null,
-        );
-        installServer();
-
         await signInWithDevice();
-
         expect(callsTo('/device/sign-in/dev')[0][1].body).toEqual({
             token: 'dev-token',
             deviceId: 'dev-uuid-1',
-            deviceRef: 'ref-stored',
         });
     });
 });
@@ -393,16 +478,46 @@ describe('refusal recovery (S10)', () => {
             const result = await signInWithDevice();
 
             expect(result).toMatchObject({ status: 'success', userId: 'user-2' });
-            // Severed: the ACCOUNT slots cleared before the retry; the
-            // deviceRef survives (trial history, never cleared by any flow).
+            // Severed: the account slots cleared before the retry.
             expect(mockDeleteItemAsync).toHaveBeenCalledWith(KEY_SLOT);
             expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY);
-            expect(mockDeleteItemAsync).not.toHaveBeenCalledWith(DEVICE_REF_STORE_KEY);
             // Fresh enrollment happened exactly once.
             expect(mockGenerateKey).toHaveBeenCalledTimes(1);
             expect(signInCalls).toBe(2);
         },
     );
+
+    it('a PROVEN key the server no longer has a record for (403 after deletion) re-enrolls', async () => {
+        const store: Record<string, string> = {
+            [KEY_SLOT]: 'stored-key',
+            [APP_ATTEST_KEY_PROVEN_STORE_KEY]: 'stored-key',
+        };
+        mockGetItemAsync.mockImplementation(async (k: string) => store[k] ?? null);
+        mockSetItemAsync.mockImplementation(async (k: string, v: string) => {
+            store[k] = v;
+        });
+        mockDeleteItemAsync.mockImplementation(async (k: string) => {
+            delete store[k];
+        });
+        let signInCalls = 0;
+        installServer({
+            '/device/sign-in/ios': () => {
+                signInCalls += 1;
+                return signInCalls === 1
+                    ? refusal('DEVICE_ATTESTATION_FAILED')
+                    : { data: { user: { id: 'user-new' } }, error: null };
+            },
+        });
+        mockGenerateKey.mockResolvedValue('key-2');
+        mockAttestKey.mockResolvedValue('attestation-b64');
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+
+        const result = await signInWithDevice();
+
+        expect(result).toMatchObject({ status: 'success', userId: 'user-new' });
+        expect(mockGenerateKey).toHaveBeenCalledTimes(1);
+        expect(store[KEY_SLOT]).toBe('key-2');
+    });
 
     it('recovers once and ONLY once: a second 403 surfaces as failure', async () => {
         const store: Record<string, string> = { [KEY_SLOT]: 'stored-key' };
@@ -425,7 +540,7 @@ describe('refusal recovery (S10)', () => {
 
     it('a 400 DEVICE_ATTESTATION_FAILED on a proven key never clears anything', async () => {
         // Proven key: the virgin-key recovery (its own describe) must not
-        // fire, and a 400 must never touch deviceId/deviceRef either way.
+        // fire, and a 400 must never touch the deviceId either way.
         mockGetItemAsync.mockImplementation(async (k: string) =>
             k === KEY_SLOT
                 ? 'stored-key'
@@ -614,50 +729,24 @@ describe('server error handling', () => {
 });
 
 describe('clearDeviceAuthCredentials (S10: deletion severs, logout preserves)', () => {
-    it('deletes the ACCOUNT credentials only; the deviceRef is trial history and survives', async () => {
+    it('deletes the account credentials and any retired deviceRef leftover', async () => {
         await clearDeviceAuthCredentials();
         expect(mockDeleteItemAsync).toHaveBeenCalledWith(APP_ATTEST_KEY_ID_STORE_KEY);
         expect(mockDeleteItemAsync).toHaveBeenCalledWith(APP_ATTEST_KEY_PROVEN_STORE_KEY);
         expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY);
-        // The e2e proved the old behavior minted a FRESH trial after every
-        // deletion: severing must never touch the trial-memory anchor.
-        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith(DEVICE_REF_STORE_KEY);
+        expect(mockDeleteItemAsync).toHaveBeenCalledWith(RETIRED_REF_SLOT);
     });
 
-    it('deletion keeps the deviceRef, so the NEXT mint presents it and gets no trial', async () => {
-        // Post-deletion state: account creds severed, trial anchor kept.
-        const store: Record<string, string> = {
-            [APP_ATTEST_KEY_ID_STORE_KEY]: 'key-1',
-            [DEVICE_ID_STORE_KEY]: 'uuid-1',
-            [DEVICE_REF_STORE_KEY]: 'ref-kept',
-        };
-        mockGetItemAsync.mockImplementation(async (k: string) => store[k] ?? null);
-        mockDeleteItemAsync.mockImplementation(async (k: string) => {
-            delete store[k];
-        });
-        await clearDeviceAuthCredentials();
-        expect(store[DEVICE_REF_STORE_KEY]).toBe('ref-kept');
-
-        installServer({
-            '/device/sign-in/ios': () => ({
-                data: { user: { id: 'user-3' }, trialAvailable: false },
-                error: null,
-            }),
-        });
-        mockGenerateKey.mockResolvedValue('key-2');
-        mockAttestKey.mockResolvedValue('attestation-b64');
-        mockGenerateAssertion.mockResolvedValue('assertion-b64');
-
-        const result = await signInWithDevice();
-
-        expect(callsTo('/device/sign-in/ios')[0][1].body).toMatchObject({ deviceRef: 'ref-kept' });
-        expect(result).toMatchObject({ status: 'success', trialAvailable: false });
-    });
-
-    it('is total: one failing delete does not stop the others', async () => {
+    it('is total: one failing delete does not stop the others, and it is logged by slot only', async () => {
+        const logger = (require('@/lib/logger') as { default: { warn: jest.Mock } }).default;
         mockDeleteItemAsync.mockRejectedValueOnce(new Error('keychain locked'));
         await expect(clearDeviceAuthCredentials()).resolves.toBeUndefined();
-        expect(mockDeleteItemAsync).toHaveBeenCalledTimes(3);
+        expect(mockDeleteItemAsync).toHaveBeenCalledTimes(4);
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+        expect(logger.warn).toHaveBeenCalledWith('[device-auth] could not clear a device credential', {
+            slot: 'appattest_key_id',
+            errorName: 'Error',
+        });
     });
 });
 

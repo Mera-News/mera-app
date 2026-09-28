@@ -131,7 +131,11 @@ export async function generateAssertion(
   return native.generateAssertion(keyId, clientDataHashBase64);
 }
 
-/** Android: request a Play Integrity classic token bound to `nonce`. */
+/** Android: request a Play Integrity classic token bound to `nonce`. The
+ *  CALLER passes the value to bind (lib/device-auth.ts `bindIntegrityNonce`:
+ *  the server nonce hashed together with the deviceId); this module passes it
+ *  to `setNonce` unchanged. Play Integrity wants web-safe, no-wrap base64 of
+ *  16 to 500 bytes (codes -10 / -11 / -13 otherwise). */
 export async function requestIntegrityToken(
   nonce: string,
   cloudProjectNumber: string | null,
