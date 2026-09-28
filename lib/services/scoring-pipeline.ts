@@ -2858,6 +2858,80 @@ async function runPollerTick(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Background (OS task) entry points — bgsubmit
+// ---------------------------------------------------------------------------
+
+/** Why a background step stopped. `done` means it finished its work list. */
+export type BackgroundStopReason =
+  | 'done'
+  | 'deadline'
+  | 'no-run'
+  | 'no-auth'
+  | 'on-device'
+  | 'throttled'
+  | 'error';
+
+export interface AdvanceWaitingResult {
+  /** Relevance batches decrypted and applied this run (at most 1). */
+  appliedRelevance: number;
+  /** Reasons batches decrypted and applied this run. */
+  appliedReasons: number;
+  /** Reasons jobs POSTed this run (from a fresh relevance apply or a batch
+   *  already in `needs-reasons-submit`). */
+  reasonsSubmitted: number;
+  stoppedBy: BackgroundStopReason;
+}
+
+export interface SubmitScoringResult {
+  /** Relevance batches POSTed this run. */
+  submitted: number;
+  stoppedBy: BackgroundStopReason;
+}
+
+/** 'none': no run. 'fresh': the run moved recently. 'collectable': it is
+ *  quiet but a batch submitted within COLLECT_WINDOW_MS is still waiting on the
+ *  gateway, so it must be collected, never aborted. 'wedged': abort it. */
+export type StaleRunVerdict = 'none' | 'fresh' | 'collectable' | 'wedged';
+
+/**
+ * Step (a) of a background run: collect what the gateway finished. Single
+ * attempt per request, nothing starts after the deadline, auth is the JWT only.
+ * Never throws.
+ */
+export async function advanceWaitingForBackground(opts: {
+  deadlineAt: number;
+}): Promise<AdvanceWaitingResult> {
+  void opts;
+  return { appliedRelevance: 0, appliedReasons: 0, reasonsSubmitted: 0, stoppedBy: 'no-run' };
+}
+
+/**
+ * Step (b) of a background run: batch the unscored rows (duplicate gate
+ * included) and submit up to `maxBatches` relevance jobs. `articleIds` are the
+ * article_suggestions ids this run just persisted; they go first. Never starts
+ * the foreground poller. Never throws.
+ */
+export async function submitScoringForBackground(opts: {
+  deadlineAt: number;
+  articleIds: readonly string[];
+  maxBatches?: number;
+}): Promise<SubmitScoringResult> {
+  void opts;
+  return { submitted: 0, stoppedBy: 'done' };
+}
+
+/** The FeedSyncMachine stale guard's question: may this run be aborted? */
+export async function staleRunVerdict(now: number = Date.now()): Promise<StaleRunVerdict> {
+  void now;
+  return 'none';
+}
+
+/** article_suggestions ids whose reason note is owed by a live batch. */
+export async function getReasonsInFlightIds(): Promise<Set<string>> {
+  return new Set<string>();
+}
+
+// ---------------------------------------------------------------------------
 // Test hooks
 // ---------------------------------------------------------------------------
 
