@@ -99,6 +99,13 @@ class _AppScheduler {
   // init finishes. Previously such an event was simply dropped — and on a cold
   // resume that is exactly when it arrives.
   private pendingForegroundKick = false;
+  // The cold-start kick, held back because hydration finished while the app
+  // was in the BACKGROUND (an OS wake: backup, refresh, silent push, iOS
+  // prewarm). Replayed with its cold-start floor on the first real activation.
+  private deferredColdKick: { coldStart: boolean } | null = null;
+  // The keychain accessibility migration runs once per process, on the first
+  // real foreground.
+  private keychainMigrationStarted = false;
   // Last FAILED run per task, stamped by scheduler-runner. The counterpart to
   // `lastRun` (which only a successful, non-no-op run stamps) and the thing
   // that stops a failing task re-firing on every 5s tick. Cleared on success.
@@ -167,13 +174,14 @@ class _AppScheduler {
     // user with no sync until the next 5s tick happened to find the task due.
     this.appStateSubscription = AppState.addEventListener('change', (state) => {
       if (state !== 'active') return;
+      this._onRealActivation();
       // Last-run times aren't loaded yet, so _onForeground can't judge dueness
       // correctly. Remember the event and replay it below.
       if (useSchedulerStore.getState().status === 'initializing') {
         this.pendingForegroundKick = true;
         return;
       }
-      this._onForeground();
+      this._runForegroundKick();
     });
 
     this.networkUnsubscribe = useNetworkStore.subscribe((state, prev) => {
@@ -195,7 +203,43 @@ class _AppScheduler {
 
     if (this.pendingForegroundKick) {
       this.pendingForegroundKick = false;
-      this._onForeground();
+      this._runForegroundKick();
+    }
+  }
+
+  /** A foreground kick, carrying a held-back cold start's floor if there is one. */
+  private _runForegroundKick(): void {
+    const deferred = this.deferredColdKick;
+    this.deferredColdKick = null;
+    this._onForeground(deferred ? { coldStart: deferred.coldStart } : undefined);
+  }
+
+  /**
+   * Bookkeeping for a REAL activation (AppState 'active'), which a background
+   * wake can read back later: the refresh skips its fetch for a reader who has
+   * not opened the app in 24h. Plus the once-per-process keychain migration,
+   * which re-saves auth items readable after first unlock, so the next locked
+   * wake can read the cookie. Both lazy and fire-and-forget.
+   */
+  private _onRealActivation(): void {
+    try {
+      const { recordForeground } =
+        require('@/lib/background/bg-refresh-settings') as typeof import('@/lib/background/bg-refresh-settings');
+      recordForeground(Date.now()).catch(() => {
+        // The next activation writes it again.
+      });
+    } catch {
+      // best-effort
+    }
+    if (!this.keychainMigrationStarted) {
+      this.keychainMigrationStarted = true;
+      try {
+        const { runKeychainAccessibilityMigration } =
+          require('@/lib/utils/keychain-accessibility-migration') as typeof import('@/lib/utils/keychain-accessibility-migration');
+        void runKeychainAccessibilityMigration();
+      } catch {
+        // best-effort; it retries in the next process.
+      }
     }
   }
 
@@ -301,6 +345,22 @@ class _AppScheduler {
     // awaits `initRestartContext()` before `AppScheduler.init()` precisely so
     // this read can be a synchronous cache hit.
     const coldStart = !wasJsRestartSync();
+
+    // NOT IN A BACKGROUND WAKE. The OS starts the whole app for a BGTask, a
+    // silent push or an iOS prewarm, and this boot path runs exactly as for a
+    // launch: without this gate the foreground burst (feed-sync, entitlement,
+    // push token, ...) ran inside every background wake, on sockets iOS
+    // deprioritises. Only 'background' holds the kick: 'unknown' and
+    // 'inactive' are launches in progress and run now.
+    //
+    // No lost activation: `init()` attached the AppState listener before this
+    // runs, so an activation from here on replays the held kick, and one that
+    // happened before already shows in `currentState`.
+    if (AppState.currentState === 'background') {
+      this.deferredColdKick = { coldStart };
+      return;
+    }
+    this._onRealActivation();
 
     // A6: let hydration + first paint win the JS thread on cold start. Defer the
     // initial foreground task kick past pending interactions AND a short settle
@@ -436,6 +496,9 @@ class _AppScheduler {
   }
 
   private _onNetworkReconnect(): void {
+    // Same rule as the cold-start kick: a reconnect inside a background wake is
+    // not a reader coming back.
+    if (AppState.currentState === 'background') return;
     // Give the auth-failure breaker a chance to recover BEFORE the loop below.
     // The loop's first check skips paused tasks, so a breaker-paused feed-sync
     // can never be revived by the reconnect trigger itself — it needs the

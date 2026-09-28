@@ -5,7 +5,16 @@ import { repairUnweightedTopics } from '@/lib/database/services/topic-service';
 import { runPendingComboPass } from '@/lib/database/services/combo-pass-service';
 import { recoverOpenFactsDraft } from '@/lib/services/facts-draft-service';
 import logger from '@/lib/logger';
+import { waitForBackgroundCollect } from '@/lib/background/collect-gate';
 import { AppScheduler } from '../AppScheduler';
+
+/**
+ * How long recovery waits for a background collect (the `mera-background` OS
+ * task's step (a)) that is still running when the reader opens the app. The
+ * pipeline's per-batch claim already stops both from applying one batch twice;
+ * waiting lets recovery start from what the collect wrote instead of racing it.
+ */
+export const BACKGROUND_COLLECT_WAIT_MS = 20_000;
 
 /**
  * First run in THIS JS context. A kill, a crash and a JS reload all start a new
@@ -61,6 +70,7 @@ AppScheduler.register({
   maxAttempts: 1,
   exclusive: true,
   handler: async (_input, ctx) => {
+    await waitForBackgroundCollect(BACKGROUND_COLLECT_WAIT_MS);
     ctx.log('recovering cycle');
     await recoverCycle();
 

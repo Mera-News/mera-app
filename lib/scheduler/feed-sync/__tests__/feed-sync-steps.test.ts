@@ -1749,6 +1749,8 @@ describe('stepHydratePersistEnqueue', () => {
       enqueuedCount: 0,
       dailyLimitReached: false,
       resetAt: undefined,
+      meteredDelivered: 0,
+      eligibleIds: [],
     });
   });
 

@@ -22,6 +22,7 @@ const mockLogAddBreadcrumb = jest.fn();
 const mockGetPipelineStatus = jest.fn();
 const mockGetRunStartedAt = jest.fn();
 const mockAbortRun = jest.fn();
+const mockStaleRunVerdict = jest.fn();
 
 // Mirrors the STALE_RUN_GUARD_MS the scoring-pipeline mock below exports. Kept
 // as a local constant rather than imported so the machine's stale-guard
@@ -106,6 +107,7 @@ jest.mock('@/lib/services/scoring-pipeline', () => ({
   getPipelineStatus: (...args: any[]) => mockGetPipelineStatus(...args),
   getRunStartedAt: (...args: any[]) => mockGetRunStartedAt(...args),
   abortRun: (...args: any[]) => mockAbortRun(...args),
+  staleRunVerdict: (...args: any[]) => mockStaleRunVerdict(...args),
   STALE_RUN_GUARD_MS: 30 * 60_000,
 }));
 
@@ -211,12 +213,15 @@ beforeEach(() => {
   mockGetPipelineStatus.mockResolvedValue('idle');
   mockGetRunStartedAt.mockResolvedValue(null);
   mockAbortRun.mockResolvedValue(undefined);
+  mockStaleRunVerdict.mockResolvedValue('fresh');
 
   // The machine is a module singleton: a test that deliberately leaves a run
   // hung (the stale-_inFlight case) would otherwise poison every test after it.
   // `private` is a compile-time fiction, so reach in directly.
   (feedSyncMachine as any)._inFlight = null;
   (feedSyncMachine as any)._inFlightStartedAt = 0;
+  (feedSyncMachine as any)._inFlightBackground = false;
+  (feedSyncMachine as any)._inFlightSignal = null;
   // The abandoned-run tests below deliberately strand zombie runs. A zombie's
   // teardown is runId-guarded, so it never releases any of these — without the
   // reset they leak into every later test. `_keepAwakeHeld` in particular makes
@@ -362,10 +367,9 @@ describe('FeedSyncMachine — scoring-pipeline gate (FETCH_WHILE_SCORING)', () =
 });
 
 describe('FeedSyncMachine — scoring-pipeline stale-guard', () => {
-  it('aborts a stale running run and proceeds with the sync', async () => {
+  it('aborts a WEDGED running run and proceeds with the sync', async () => {
     mockGetPipelineStatus.mockResolvedValue('running');
-    // Run started > STALE_RUN_GUARD_MS ago → wedged; must be aborted, not skipped.
-    mockGetRunStartedAt.mockResolvedValue(Date.now() - (STALE_RUN_GUARD_MS + 60_000));
+    mockStaleRunVerdict.mockResolvedValue('wedged');
 
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
@@ -379,10 +383,26 @@ describe('FeedSyncMachine — scoring-pipeline stale-guard', () => {
     expect(feedSyncMachine.state).toBe('done');
   });
 
+  it('never aborts a COLLECTABLE run, however old: its results are still at the gateway', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+    // Hours old, submitted by the OS task overnight. Age alone used to abort
+    // this, before inference-recover (registered after feed-sync) could collect.
+    mockGetRunStartedAt.mockResolvedValue(Date.now() - (STALE_RUN_GUARD_MS * 20));
+    mockStaleRunVerdict.mockResolvedValue('collectable');
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockAbortRun).not.toHaveBeenCalled();
+    expect(mockStepFetchTopicIds).toHaveBeenCalled();
+    expect(mockStepScore).not.toHaveBeenCalled();
+  });
+
   it('leaves a fresh running run alone (no abort) and syncs without scoring', async () => {
     mockGetPipelineStatus.mockResolvedValue('running');
-    // Run started well within STALE_RUN_GUARD_MS → healthy, let it finish.
-    mockGetRunStartedAt.mockResolvedValue(Date.now() - 60_000);
+    mockStaleRunVerdict.mockResolvedValue('fresh');
 
     const ctx = makeCtx();
     const startPromise = feedSyncMachine.start('persona-1', ctx);
@@ -1702,3 +1722,145 @@ describe('FeedSyncMachine — wake lock is scoped to fetch/hydrate (B1.4)', () =
 });
 
 export {};
+
+// ── Background mode (the `mera-background` OS task) ─────────────────────────
+//
+// A background run has nobody watching: no toast, no status publish, no wake
+// lock, no offline pause, no foreground enqueue or poll. Every one of those is
+// asserted by name, because each is a way to show a reader something about a
+// run they never asked for, or to hold a JS context the OS is about to take.
+describe('FeedSyncMachine — background mode', () => {
+  const { toastManager } = require('@/lib/toast-manager');
+
+  function makeHooks(overrides: Partial<Record<string, unknown>> = {}) {
+    return {
+      shapeDiff: jest.fn((d: any) => d),
+      submit: jest.fn(async () => {}),
+      onHydrated: jest.fn(async () => {}),
+      refreshStore: jest.fn(async () => {}),
+      ...overrides,
+    } as any;
+  }
+
+  beforeEach(() => {
+    mockStepHydratePersistEnqueue.mockResolvedValue({
+      insertedCount: 2,
+      enqueuedCount: 0,
+      dailyLimitReached: false,
+      meteredDelivered: 2,
+      eligibleIds: ['art-1', 'art-2'],
+    });
+  });
+
+  it('submits through the hook instead of stepScore, with the eligible ids', async () => {
+    const hooks = makeHooks();
+    await feedSyncMachine.start('', makeCtx(), { background: hooks });
+
+    expect(mockStepScore).not.toHaveBeenCalled();
+    expect(hooks.submit).toHaveBeenCalledWith(['art-1', 'art-2']);
+    expect(hooks.onHydrated).toHaveBeenCalledWith({ meteredDelivered: 2, dailyLimitReached: false });
+  });
+
+  it('never enqueues through the foreground path and skips the tail flush', async () => {
+    await feedSyncMachine.start('', makeCtx(), { background: makeHooks() });
+    const opts = mockStepHydratePersistEnqueue.mock.calls[0][2];
+    expect(opts.suppressEnqueue).toBe(true);
+    expect(opts.background).toBe(true);
+  });
+
+  it('shapes the diff before hydrate', async () => {
+    const shaped = { ...defaultDiffResult, missingIds: ['art-2'], personaIds: ['art-2'], storyIds: [] };
+    const hooks = makeHooks({ shapeDiff: jest.fn(() => shaped) });
+    await feedSyncMachine.start('', makeCtx(), { background: hooks });
+    expect(mockStepHydratePersistEnqueue.mock.calls[0][0]).toBe(shaped);
+  });
+
+  it('takes no wake lock, publishes nothing, flushes no refresh, subscribes to no network events', async () => {
+    const { useNetworkStore } = require('@/lib/stores/network-store');
+    (useNetworkStore.subscribe as jest.Mock).mockClear();
+    await feedSyncMachine.start('', makeCtx(), { background: makeHooks() });
+
+    expect(mockActivateKeepAwakeAsync).not.toHaveBeenCalled();
+    expect(mockPublishSyncStatus).not.toHaveBeenCalled();
+    expect(mockPublishSyncError).not.toHaveBeenCalled();
+    expect(mockFlushSuggestionsRefresh).not.toHaveBeenCalled();
+    expect(useNetworkStore.subscribe).not.toHaveBeenCalled();
+  });
+
+  it('never aborts a running pipeline run, even a wedged one', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+    mockStaleRunVerdict.mockResolvedValue('wedged');
+    const hooks = makeHooks();
+    await feedSyncMachine.start('', makeCtx(), { background: hooks });
+    expect(mockAbortRun).not.toHaveBeenCalled();
+    // And it does not suppress its own submit: the pipeline decides capacity.
+    expect(hooks.submit).toHaveBeenCalled();
+  });
+
+  it('fetches and persists only when there is no submit hook (on-device mode)', async () => {
+    const hooks = makeHooks({ submit: null });
+    await feedSyncMachine.start('', makeCtx(), { background: hooks });
+    expect(mockStepScore).not.toHaveBeenCalled();
+    expect(mockStepHydratePersistEnqueue).toHaveBeenCalled();
+  });
+
+  it('fails silently: no toast, no status, and the error reaches the caller', async () => {
+    mockStepFetchTopicIds.mockRejectedValueOnce(new Error('network down'));
+    mockClassifyError.mockReturnValue('offline');
+    await expect(
+      feedSyncMachine.start('', makeCtx(), { background: makeHooks() }),
+    ).rejects.toThrow('network down');
+    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
+    expect(mockPublishSyncError).not.toHaveBeenCalled();
+    expect(mockSaveMachineSnapshot).not.toHaveBeenCalledWith(expect.objectContaining({ state: 'failed' }));
+  });
+
+  it('on a daily-limit throw: records it for the allowance, but no toast and no notice stamp', async () => {
+    mockStepHydratePersistEnqueue.mockRejectedValueOnce(
+      Object.assign(new Error('daily-limit'), { code: 'daily-limit' }),
+    );
+    mockClassifyError.mockReturnValue('daily-limit');
+    const hooks = makeHooks();
+    await feedSyncMachine.start('', makeCtx(), { background: hooks });
+
+    expect(hooks.onHydrated).toHaveBeenCalledWith({ meteredDelivered: 0, dailyLimitReached: true });
+    expect(toastManager.showNotifiedToast).not.toHaveBeenCalled();
+    expect(mockForYouStoreState.setDailyLimitNoticeDay).not.toHaveBeenCalled();
+    expect(mockPublishSyncError).not.toHaveBeenCalled();
+  });
+
+  it('routes the per-chunk store refresh through the hook', async () => {
+    const hooks = makeHooks();
+    await feedSyncMachine.start('', makeCtx(), { background: hooks });
+    const opts = mockStepHydratePersistEnqueue.mock.calls[0][2];
+    await opts.refreshStore();
+    expect(hooks.refreshStore).toHaveBeenCalled();
+    expect(mockRequestSuggestionsRefresh).not.toHaveBeenCalled();
+  });
+
+  it('a foreground start does NOT join a background run whose deadline already aborted it', async () => {
+    mockStepFetchTopicIds.mockImplementationOnce(() => new Promise(() => { /* hangs */ }));
+    const controller = new AbortController();
+    const bgCtx = { ...makeCtx(), signal: controller.signal };
+    void feedSyncMachine.start('', bgCtx, { background: makeHooks() });
+    await jest.advanceTimersByTimeAsync(0);
+    controller.abort();
+
+    const fg = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    await fg;
+
+    expect(mockStepFetchTopicIds).toHaveBeenCalledTimes(2);
+    expect(mockStepScore).toHaveBeenCalled();
+  });
+
+  it('a foreground start DOES join a live background run', async () => {
+    mockStepFetchTopicIds.mockImplementationOnce(() => new Promise(() => { /* hangs */ }));
+    void feedSyncMachine.start('', makeCtx(), { background: makeHooks() });
+    await jest.advanceTimersByTimeAsync(0);
+
+    void feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    expect(mockStepFetchTopicIds).toHaveBeenCalledTimes(1);
+  });
+});

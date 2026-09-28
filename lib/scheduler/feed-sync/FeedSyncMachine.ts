@@ -12,7 +12,7 @@ import type { TaskContext } from '../scheduler-types';
 import * as feedPersistence from './feed-sync-persistence';
 import * as steps from './feed-sync-steps';
 import { classifyError, publishSyncError, publishSyncStatus } from './feed-sync-status';
-import type { FeedSyncState } from './feed-sync-types';
+import type { BackgroundSyncHooks, FeedSyncState } from './feed-sync-types';
 import { InvalidTransitionError, NETWORK_DEPENDENT_STATES } from './feed-sync-types';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 
@@ -123,6 +123,16 @@ class FeedSyncMachine {
    * exclusive.
    */
   private _keepAwakeHeld = false;
+  /**
+   * Whether the in-flight run is a BACKGROUND run (the OS task), and its
+   * signal. A foreground `start()` joins a live background run like any other,
+   * but never one whose signal already aborted: the OS task's 60s deadline
+   * fired, possibly while the process was suspended, and that run is unwinding
+   * with no store refreshes. Joining it would hand the reader a sync that
+   * shows nothing.
+   */
+  private _inFlightBackground = false;
+  private _inFlightSignal: AbortSignal | null = null;
 
   get state(): FeedSyncState {
     return this._state;
@@ -136,7 +146,11 @@ class FeedSyncMachine {
     );
   }
 
-  async start(personaId: string, ctx: TaskContext): Promise<void> {
+  async start(
+    personaId: string,
+    ctx: TaskContext,
+    opts?: { background?: BackgroundSyncHooks },
+  ): Promise<void> {
     // Re-entrancy guard. If a run is already in flight, join it rather than
     // starting a second run that would reset `_state` to 'idle' mid-flight and
     // race the existing run's transitions. Covers the scheduler's
@@ -144,7 +158,9 @@ class FeedSyncMachine {
     // guard (AppScheduler.trigger).
     if (this._inFlight) {
       const age = Date.now() - this._inFlightStartedAt;
-      if (age <= INFLIGHT_STALE_MS) {
+      const abortedBackground =
+        this._inFlightBackground && this._inFlightSignal?.aborted === true;
+      if (age <= INFLIGHT_STALE_MS && !abortedBackground) {
         logger.debug('[FeedSyncMachine] start() called while a run is in flight — joining existing run');
         return this._inFlight;
       }
@@ -164,17 +180,23 @@ class FeedSyncMachine {
       this._inFlight = null;
     }
     this._inFlightStartedAt = Date.now();
+    this._inFlightBackground = opts?.background !== undefined;
+    this._inFlightSignal = ctx.signal;
     // Identity guard: only the run that OWNS the current `_inFlight` slot may
     // clear it. Without this, an abandoned run settling later would null out
     // the reference to the live run and reopen the re-entrancy window.
-    const thisRun: Promise<void> = this._start(personaId, ctx).finally(() => {
+    const thisRun: Promise<void> = this._start(personaId, ctx, opts?.background).finally(() => {
       if (this._inFlight === thisRun) this._inFlight = null;
     });
     this._inFlight = thisRun;
     return thisRun;
   }
 
-  private async _start(personaId: string, ctx: TaskContext): Promise<void> {
+  private async _start(
+    personaId: string,
+    ctx: TaskContext,
+    bg?: BackgroundSyncHooks,
+  ): Promise<void> {
     const runId = ++this._runSeq;
     const snap = await feedPersistence.loadValidSnapshot();
     if (snap && snap.state !== 'idle' && snap.state !== 'done' && snap.state !== 'failed') {
@@ -204,7 +226,10 @@ class FeedSyncMachine {
     this._networkUnsubscribe?.();
     this._networkUnsubscribe = null;
 
-    this._networkUnsubscribe = useNetworkStore.subscribe((state, prev) => {
+    // Background mode never pauses offline: there is nobody to resume for, and
+    // a parked run would hold `_inFlight` for the next foreground to join. A
+    // lost link fails the request and the run ends.
+    if (!bg) this._networkUnsubscribe = useNetworkStore.subscribe((state, prev) => {
       // Inert once this run no longer owns the machine — and inert ENTIRELY,
       // not just for the transition. The two branches below also write
       // `_paused` and fire the resume waiters, neither of which routes through
@@ -223,14 +248,17 @@ class FeedSyncMachine {
       }
     });
 
-    await this._acquireKeepAwake(runId);
+    // No wake lock in the background: the screen is off and the OS owns the
+    // process's lifetime.
+    if (!bg) await this._acquireKeepAwake(runId);
     try {
-      await this._run(personaId, ctx, runId);
+      await this._run(personaId, ctx, runId, bg);
     } finally {
       // Terminal exactness across EVERY exit path (completion, mid-run abort
       // return, error throw): flush any pending coalesced refresh so the store
-      // reflects the final DB state before teardown.
-      await flushSuggestionsRefresh();
+      // reflects the final DB state before teardown. A background run leaves
+      // the refresh to its caller, which knows whether anyone is looking.
+      if (!bg) await flushSuggestionsRefresh();
       // Only the newest run owns the shared resources below. An abandoned run
       // (see the INFLIGHT_STALE_MS branch in start()) can settle long after a
       // replacement started; releasing the keep-awake tag and the network
@@ -270,13 +298,23 @@ class FeedSyncMachine {
     deactivateKeepAwake(KEEP_AWAKE_TAG);
   }
 
-  private async _run(personaId: string, ctx: TaskContext, runId: number): Promise<void> {
-    logger.debug('[FeedSyncMachine] run start');
-    coldstartTimeline.mark('feed-sync-start');
+  private async _run(
+    personaId: string,
+    ctx: TaskContext,
+    runId: number,
+    bg?: BackgroundSyncHooks,
+  ): Promise<void> {
+    logger.debug(`[FeedSyncMachine] run start${bg ? ' (background)' : ''}`);
+    coldstartTimeline.mark(bg ? 'bg-feed-sync-start' : 'feed-sync-start');
+    // Status publishes paint the feed header; a background run has no header
+    // to paint, and a reader opening mid-run must not see a stale phase.
+    const publish: typeof publishSyncStatus = (...args) => {
+      if (!bg) publishSyncStatus(...args);
+    };
     // Clear any prior scoring-pipeline error at the start of a fresh cycle — the
     // header status reflects this cycle's outcome. It re-appears if scoring fails
     // again, and resolves on its own if scoring succeeds.
-    useForYouStore.getState().setScoringError(null);
+    if (!bg) useForYouStore.getState().setScoringError(null);
     // Set when a scoring run is already in flight: this cycle fetches and
     // hydrates as usual but does NOT dispatch anything to the pipeline.
     let suppressScoring = false;
@@ -298,16 +336,24 @@ class FeedSyncMachine {
       const pipelineStatus = await scoringPipeline.getPipelineStatus();
       if (pipelineStatus === 'running') {
         // Defense in depth against a wedged run (a batch stuck waiting-* on a
-        // throwing /results, or a run orphaned by a cache-clear): if the run has
-        // been alive longer than STALE_RUN_GUARD_MS it cannot be trusted to
-        // finish on its own, and even the suppressed path below would never
-        // score again. Abort it (force-fail + finalize) and sync in full.
-        const startedAt = await scoringPipeline.getRunStartedAt();
-        const ageMs = startedAt !== null ? Date.now() - startedAt : 0;
-        if (startedAt !== null && ageMs > scoringPipeline.STALE_RUN_GUARD_MS) {
-          logger.warn(
-            `[FeedSyncMachine] scoring pipeline running but run is stale (${Math.round(ageMs / 60_000)}min) — aborting and proceeding`,
-          );
+        // throwing /results, or a run orphaned by a cache-clear): abort it
+        // (force-fail + finalize) and sync in full.
+        //
+        // WEDGED, NOT OLD. The pipeline decides (`staleRunVerdict`). A run the
+        // OS task submitted overnight is hours old by the first open and its
+        // results are still inside the gateway's 24h TTL: that is
+        // `collectable`, and aborting it here would throw away scoring the
+        // device already paid for, before inference-recover (registered after
+        // feed-sync) ever got to collect it.
+        //
+        // A background run never aborts anything: it has no reader to rescue,
+        // and the pipeline's own submit decides whether a live run has room
+        // for more batches, so it does not suppress either.
+        const verdict = await scoringPipeline.staleRunVerdict(Date.now());
+        if (bg) {
+          logger.debug(`[FeedSyncMachine] background run: pipeline running (${verdict}), fetching anyway`);
+        } else if (verdict === 'wedged') {
+          logger.warn('[FeedSyncMachine] scoring pipeline run is wedged — aborting and proceeding');
           await scoringPipeline.abortRun('stale-guard');
         } else if (FETCH_WHILE_SCORING) {
           suppressScoring = true;
@@ -360,7 +406,10 @@ class FeedSyncMachine {
       await feedPersistence.updateMachineState('diffing');
 
       if (ctx.signal.aborted) { ctx.markNoOp(); return; }
-      const diffResult = await steps.stepDiff(topicResult, ctx);
+      const rawDiff = await steps.stepDiff(topicResult, ctx);
+      // Background: the 6h prefilter and the metered budget, BEFORE hydrate, so
+      // nothing outside them is ever charged.
+      const diffResult = bg ? bg.shapeDiff(rawDiff) : rawDiff;
 
       if (diffResult.missingIds.length === 0) {
         // No new articles and nothing deleted — but still run scoring in case
@@ -384,9 +433,11 @@ class FeedSyncMachine {
         // Suppressed: a live scoring run already owns the unscored backlog and
         // will re-derive it on finalize. Everything else about this branch is
         // bookkeeping, so we still walk it to `done`.
-        if (!suppressScoring) await steps.stepScore(ctx);
+        // Background: rows an earlier run left unscored are the foreground's to
+        // pick up; this run submits only what it fetched.
+        if (!suppressScoring && !bg) await steps.stepScore(ctx);
 
-        await flushSuggestionsRefresh();
+        if (!bg) await flushSuggestionsRefresh();
         this._transitionTo('done', runId);
         // Ownership-gated from here to the end of the branch. This is the branch
         // a RELEASED ZOMBIE almost always lands in: the live run has already
@@ -425,7 +476,7 @@ class FeedSyncMachine {
 
       // Step 3: hydrate + persist + enqueue (merged, batched, pipelined)
       this._transitionTo('hydrating', runId);
-      publishSyncStatus('hydrating');
+      publish('hydrating');
       await feedPersistence.updateMachineState('hydrating');
 
       await this._awaitResumeIfPaused(runId);
@@ -435,16 +486,25 @@ class FeedSyncMachine {
       const hydrateResult = await steps.stepHydratePersistEnqueue(diffResult, ctx, {
         onProgress: (completed) => {
           ctx.reportProgress({ step: 'hydrating', current: completed, total });
-          publishSyncStatus('hydrating', { progress: { current: completed, total } });
+          publish('hydrating', { progress: { current: completed, total } });
         },
         awaitResumeIfPaused: () => this._awaitResumeIfPaused(runId),
         // A1: coalesce the per-chunk store refreshes into a leading+trailing
         // throttle instead of a full reload after every 25-item chunk.
-        refreshStore: () => requestSuggestionsRefresh(),
+        refreshStore: bg ? bg.refreshStore : () => requestSuggestionsRefresh(),
         // Hydrate, propagate scores from donors, but don't hand anything to the
         // live pipeline run — rows stay `Unscored` for its post-finalize kick.
-        suppressEnqueue: suppressScoring,
+        // A background run never enqueues here either: the foreground enqueue
+        // drains with a foreground context. Its own submit follows below.
+        suppressEnqueue: suppressScoring || bg !== undefined,
+        background: bg !== undefined,
       });
+      if (bg) {
+        await bg.onHydrated({
+          meteredDelivered: hydrateResult.meteredDelivered,
+          dailyLimitReached: hydrateResult.dailyLimitReached,
+        });
+      }
       useForYouStore.getState().resetHydrationProgress();
       // "Updated just now" means NEW ARTICLES arrived, not "a sync ran". The
       // 5-minute poll finishes a run (and must keep stamping
@@ -468,11 +528,11 @@ class FeedSyncMachine {
       );
       // Final refresh after all chunks (each chunk already requested a
       // throttled refresh) — flush guarantees the last chunk landed exactly.
-      await flushSuggestionsRefresh();
+      if (!bg) await flushSuggestionsRefresh();
 
       // Step 4: score
       this._transitionTo('scoring', runId);
-      publishSyncStatus('scoring');
+      publish('scoring');
       await feedPersistence.updateMachineState('scoring');
 
       if (ctx.signal.aborted) { ctx.markNoOp(); return; }
@@ -481,12 +541,20 @@ class FeedSyncMachine {
       // See the no-op branch above: the `scoring` transition and its published
       // status still happen (hydrating → done is not a legal transition), only
       // the dispatch is suppressed.
-      if (!suppressScoring) await steps.stepScore(ctx);
+      if (bg) {
+        // The bounded background submit, never `stepScore`: that path polls for
+        // results, which a background run must not download.
+        if (bg.submit && hydrateResult.eligibleIds.length > 0) {
+          await bg.submit(hydrateResult.eligibleIds);
+        }
+      } else if (!suppressScoring) {
+        await steps.stepScore(ctx);
+      }
 
       // Done
-      await flushSuggestionsRefresh();
+      if (!bg) await flushSuggestionsRefresh();
       this._transitionTo('done', runId);
-      publishSyncStatus('done');
+      publish('done');
       useForYouStore.getState().setLastSyncAt(Date.now());
       try {
         await feedPersistence.clearMachineSnapshot();
@@ -507,7 +575,7 @@ class FeedSyncMachine {
         if (!this._isCurrentRun(runId)) return;
         if (this._state === 'done') {
           this._transitionTo('idle', runId);
-          publishSyncStatus('idle');
+          publish('idle');
         }
       }, 2_000);
 
@@ -523,7 +591,7 @@ class FeedSyncMachine {
         // Gated, and the `this._state` argument is why it matters twice over: it
         // is read as `failedAtState`, so an abandoned run would both paint its
         // own error on the live header AND attribute it to the LIVE run's state.
-        if (this._isCurrentRun(runId)) {
+        if (this._isCurrentRun(runId) && !bg) {
           publishSyncError('no-topics-configured', undefined, this._state);
         }
         this._forceIdle(runId); // bypasses the transition guard — valid from any state
@@ -554,6 +622,19 @@ class FeedSyncMachine {
         // gated, because it reads `this._state` as `failedAtState` and would
         // otherwise describe the LIVE run's position.
         store.setDailyLimitResetAt(resetAt ?? nextUtcMidnightMs());
+        if (bg) {
+          // Nothing was delivered. Close background for the rest of the UTC
+          // day; the notice and its once-a-day stamp are the foreground's, so
+          // the reader still sees it the next time they open the app.
+          await bg.onHydrated({ meteredDelivered: 0, dailyLimitReached: true });
+          this._forceIdle(runId);
+          try {
+            await feedPersistence.clearMachineSnapshot();
+          } catch {
+            // The next run overwrites it.
+          }
+          return;
+        }
         if (this._isCurrentRun(runId)) {
           publishSyncError('daily-limit', resetAt, this._state);
         }
@@ -602,6 +683,12 @@ class FeedSyncMachine {
       // worse outcome than the InvalidTransitionError it sometimes threw
       // instead. `throw err` stays outside: the zombie's own job must still
       // fail and report.
+      if (bg) {
+        // Silent: no status, no toast. The run is a best effort the reader
+        // never asked for; the caller breadcrumbs and the next open syncs.
+        if (this._isCurrentRun(runId)) this._forceIdle(runId);
+        throw err;
+      }
       if (this._isCurrentRun(runId) && this._state !== 'failed' && this._state !== 'done') {
         // FORCE-ASSIGNED, not transitioned. `VALID_TRANSITIONS.idle` is
         // ['fetching-topic-ids'] only, so `_transitionTo('failed')` THREW

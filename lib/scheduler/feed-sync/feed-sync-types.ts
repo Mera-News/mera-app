@@ -60,3 +60,26 @@ export interface FeedSyncMachineSnapshot {
 
 export const FEED_SYNC_MACHINE_KEY = 'feed_sync_machine_state';
 export const STALE_MACHINE_AGE_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * What a BACKGROUND run (the `mera-background` OS task, no UI, 60s budget)
+ * does differently, injected by `lib/background/background-feed-sync.ts`.
+ *
+ * Passing this puts the machine in background mode: no keep-awake, no toasts,
+ * no status publishes, no daily-limit notice stamp, no offline pause (a lost
+ * link fails the run instead of parking it), no foreground drain, and the
+ * scoring step is the bounded background submit instead of `stepScore`.
+ */
+export interface BackgroundSyncHooks {
+  /** Trim the new-to-device ids before anything is hydrated: the 6h ObjectId
+   *  prefilter and the metered budget. Nothing outside the result is charged. */
+  shapeDiff: (diff: import('./feed-sync-steps').DiffResult) => import('./feed-sync-steps').DiffResult;
+  /** Submit the persisted, scorable ids. Null in on-device mode, where a
+   *  background run fetches and persists only. */
+  submit: ((articleIds: string[]) => Promise<void>) | null;
+  /** What the metered hydrate was granted, for the allowance ledger. Called on
+   *  the daily-limit throw too, with nothing delivered. */
+  onHydrated: (outcome: { meteredDelivered: number; dailyLimitReached: boolean }) => Promise<void>;
+  /** The store refresh, which the caller runs only when a reader can see it. */
+  refreshStore: () => Promise<void>;
+}

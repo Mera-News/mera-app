@@ -95,6 +95,18 @@ jest.mock('@/lib/app-restart', () => ({
   wasJsRestartSync: () => mockWasJsRestart,
 }));
 
+// The activation bookkeeping: the `last_foreground_at` write the background
+// refresh reads back, and the once-per-process keychain migration. Both are
+// settings/keychain I/O, mocked so this suite never opens SQLite.
+const mockRecordForeground = jest.fn(async (_at: number) => {});
+jest.mock('@/lib/background/bg-refresh-settings', () => ({
+  recordForeground: (at: number) => mockRecordForeground(at),
+}));
+const mockRunKeychainMigration = jest.fn(async () => 'already-done');
+jest.mock('@/lib/utils/keychain-accessibility-migration', () => ({
+  runKeychainAccessibilityMigration: () => mockRunKeychainMigration(),
+}));
+
 jest.mock('@/lib/scheduler/scheduler-store', () => ({
   useSchedulerStore: {
     getState: () => mockSchedulerStore,
@@ -203,6 +215,8 @@ beforeEach(() => {
   // property, so it is accessible at runtime via the `any` cast).
   (AppScheduler as any).tasks.clear();
   (AppScheduler as any).lastFailureAt.clear();
+  (AppScheduler as any).deferredColdKick = null;
+  (AppScheduler as any).keychainMigrationStarted = false;
 });
 
 afterEach(() => {
@@ -646,6 +660,95 @@ describe('AppScheduler — onStoresHydrated cold vs restart boot', () => {
     await jest.advanceTimersByTimeAsync(1_100);
 
     expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+});
+
+// ── The background-wake gate ────────────────────────────────────────────────
+//
+// The OS starts the whole app for a BGTask, a silent push or an iOS prewarm,
+// and the boot path cannot tell. Without the gate, the foreground burst ran
+// inside every background wake.
+describe('AppScheduler — no foreground burst inside a background wake', () => {
+  const makeFgTask = () =>
+    makeTask({ name: 'burst-task', frequency: 5 * 60_000, triggers: ['app-foreground'] });
+
+  it("holds the cold-start kick while AppState is 'background'", async () => {
+    AppScheduler.register(makeFgTask());
+    mockSchedulerStore.getLastRun.mockReturnValue(null);
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    mockAppStateCurrent = 'background';
+
+    AppScheduler.onStoresHydrated();
+    await jest.advanceTimersByTimeAsync(1_100);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+    expect(mockRecordForeground).not.toHaveBeenCalled();
+  });
+
+  it('replays the held kick on the first activation, WITH the cold-start floor', async () => {
+    let handler: ((s: string) => void) | null = null;
+    mockAppStateAddEventListener.mockImplementation((_e: string, h: (s: string) => void) => {
+      handler = h;
+      return { remove: jest.fn() };
+    });
+    AppScheduler.register(makeFgTask());
+    // 30s old: due under the 5s cold floor, NOT under the 60s warm one. So a
+    // replay that lost the cold flag would not run it.
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 30_000);
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'burst-task' }));
+    mockAppStateCurrent = 'background';
+
+    AppScheduler.onStoresHydrated();
+    await jest.advanceTimersByTimeAsync(1_100);
+    expect(mockCreateJob).not.toHaveBeenCalled();
+
+    mockAppStateCurrent = 'active';
+    handler!('active');
+    await jest.advanceTimersByTimeAsync(1_100);
+    expect(mockCreateJob).toHaveBeenCalled();
+    expect(mockRecordForeground).toHaveBeenCalledWith(expect.any(Number));
+  });
+
+  it.each(['unknown', 'inactive'])("runs the kick now when AppState is '%s' (a launch in progress)", async (state) => {
+    AppScheduler.register(makeFgTask());
+    mockSchedulerStore.getLastRun.mockReturnValue(null);
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'burst-task' }));
+    mockAppStateCurrent = state;
+
+    AppScheduler.onStoresHydrated();
+    await jest.advanceTimersByTimeAsync(1_100);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('ignores a network reconnect inside a background wake', async () => {
+    const task = makeTask({ name: 'net-task', frequency: 0, triggers: ['network-reconnect'] });
+    AppScheduler.register(task);
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'net-task' }));
+    mockAppStateCurrent = 'background';
+
+    expect(networkSubscribeFn).not.toBeNull();
+    mockNetworkState.isConnected = true;
+    networkSubscribeFn!({ isConnected: true }, { isConnected: false });
+    await jest.advanceTimersByTimeAsync(100);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('records the foreground and starts the keychain migration once per process', async () => {
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    AppScheduler.onStoresHydrated();
+    AppScheduler.onStoresHydrated();
+    expect(mockRecordForeground).toHaveBeenCalledTimes(2);
+    expect(mockRunKeychainMigration).toHaveBeenCalledTimes(1);
   });
 });
 

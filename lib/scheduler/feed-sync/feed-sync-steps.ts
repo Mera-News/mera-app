@@ -251,6 +251,13 @@ export interface HydratePersistEnqueueResult {
   dailyLimitReached: boolean;
   /** ISO reset timestamp, set only when `dailyLimitReached`. */
   resetAt?: string;
+  /** Articles the METERED query delivered (granted) this run. Followed-story
+   *  chunks are quota-free and not counted. Feeds the background allowance
+   *  ledger, which must record what the server granted, not what was asked. */
+  meteredDelivered: number;
+  /** Persisted ids this run found scorable, in chunk order. A background run
+   *  hands these to its bounded submit in place of the foreground enqueue. */
+  eligibleIds: string[];
 }
 
 export interface HydratePersistEnqueueOptions {
@@ -269,6 +276,10 @@ export interface HydratePersistEnqueueOptions {
    *  everything it elects (only propagated rows are written), so the pipeline's
    *  post-finalize kick re-derives and enqueues them with nothing lost. */
   suppressEnqueue?: boolean;
+  /** Background mode (the OS task): also skip the tail flush's foreground
+   *  `enqueueUnscoredEligible`, which would drain with a foreground context. The
+   *  run's own submit takes `eligibleIds` instead. */
+  background?: boolean;
 }
 
 export async function stepFetchTopicIds(
@@ -757,6 +768,8 @@ export async function stepHydratePersistEnqueue(
   let dailyLimitReached = false;
   let resetAt: string | undefined;
   let enqueuedCount = 0;
+  let meteredDelivered = 0;
+  const collectedEligibleIds: string[] = [];
   // Set once a chunk hits the cap dry (0 articles) or a mid-run abort/pause
   // ends — stops the pool from launching further chunks.
   let stopLaunching = false;
@@ -923,6 +936,7 @@ export async function stepHydratePersistEnqueue(
       if (chunkArticles.length > 0) {
         deliveredAny = true;
       }
+      if (!free) meteredDelivered += chunkArticles.length;
 
       if (toPersist.length > 0) {
         const { insertedCount: chunkInserted } =
@@ -947,6 +961,7 @@ export async function stepHydratePersistEnqueue(
           readSkippedTotal += alreadyReadCount;
           ctx.log(`marked ${alreadyReadCount} already-synced rows as already read`);
         }
+        collectedEligibleIds.push(...eligibleIds);
 
         // Progressive rendering: newly-persisted (unscored) articles appear now.
         await opts.refreshStore();
@@ -1012,6 +1027,7 @@ export async function stepHydratePersistEnqueue(
         await enqueueCandidates(pendingDeferred, true, pendingCoveredIdsByRep);
       } else if (
         opts.suppressEnqueue &&
+        !opts.background &&
         (await scoringPipeline.getPipelineStatus()) === 'idle'
       ) {
         // Suppressed cycle: we hydrated rows but never enqueued them, because a
@@ -1084,6 +1100,8 @@ export async function stepHydratePersistEnqueue(
     enqueuedCount,
     dailyLimitReached,
     resetAt,
+    meteredDelivered,
+    eligibleIds: collectedEligibleIds,
   };
 }
 

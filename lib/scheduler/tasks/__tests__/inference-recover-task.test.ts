@@ -214,3 +214,46 @@ describe('inference-recover-task: the combination pass', () => {
 });
 
 export {};
+
+// ── A background collect still running when the reader opens the app ──────
+describe('inference-recover waits for a running background collect', () => {
+  const { trackBackgroundCollect } = require('@/lib/background/collect-gate');
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  it('starts recovery only after the collect settles', async () => {
+    const order: string[] = [];
+    let finishCollect: () => void = () => {};
+    trackBackgroundCollect(
+      new Promise<void>((resolve) => {
+        finishCollect = () => {
+          order.push('collect');
+          resolve();
+        };
+      }),
+    );
+    mockRecoverCycle.mockImplementation(async () => {
+      order.push('recover');
+    });
+
+    const run = registeredDef.handler(undefined, makeCtx());
+    await Promise.resolve();
+    expect(order).toEqual([]);
+    finishCollect();
+    await run;
+    expect(order).toEqual(['collect', 'recover']);
+  });
+
+  it('gives up waiting after the cap rather than holding recovery hostage', async () => {
+    jest.useFakeTimers();
+    trackBackgroundCollect(new Promise<void>(() => { /* never settles */ }));
+    mockRecoverCycle.mockResolvedValue('idle');
+
+    const run = registeredDef.handler(undefined, makeCtx());
+    await jest.advanceTimersByTimeAsync(20_000);
+    await run;
+    expect(mockRecoverCycle).toHaveBeenCalled();
+  });
+});
