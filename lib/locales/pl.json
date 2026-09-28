@@ -251,7 +251,10 @@
     "reasonUnavailable": "Mera nie mogła napisać notatki do tego artykułu.",
     "loadingA11y": "Wczytywanie Twojego kanału",
     "translatingCaption": "Tłumaczenie…",
-    "updatedJustNow": "Zaktualizowano przed chwilą"
+    "updatedJustNow": "Zaktualizowano przed chwilą",
+    "reasonWriting": "Pisanie notatki",
+    "reasonWritingA11y": "notatka jest pisana",
+    "reasonNotYet": "Do tego artykułu nie ma jeszcze notatki."
   },
   "relevance": {
     "emergency": "Pilne",
@@ -553,7 +556,11 @@
     "speedGeneration": "Szybkość pisania: {{tokPerSec}} tokenów/s",
     "speedRelevance": "Trafność: {{ms}} ms na artykuł",
     "speedReason": "Uzasadnienia: {{ms}} ms na artykuł",
-    "speedResetNote": "Zmierzono podczas ostatniej synchronizacji. Czyszczone po ponownym uruchomieniu aplikacji."
+    "speedResetNote": "Zmierzono podczas ostatniej synchronizacji. Czyszczone po ponownym uruchomieniu aplikacji.",
+    "bgRefreshTitle": "Odświeżanie w tle",
+    "bgRefreshCloudIos": "Mera pobiera nowe artykuły, gdy aplikacja jest zamknięta, i zaczyna je dla ciebie porządkować. Telefon decyduje, kiedy to się dzieje. Może nie działać, gdy włączony jest tryb niskiego zużycia energii lub gdy Odświeżanie w tle jest wyłączone. Zużywa trochę baterii i danych oraz do połowy twojego dziennego limitu artykułów. To nie zmienia kopii zapasowej. Nic nie jest udostępniane poza tym, czego Mera już używa, gdy aplikacja jest otwarta.",
+    "bgRefreshCloudAndroid": "Mera pobiera nowe artykuły, gdy aplikacja jest zamknięta, i zaczyna je dla ciebie porządkować. Telefon decyduje, kiedy to się dzieje. Może nie działać, gdy włączone jest Oszczędzanie baterii. Zużywa trochę baterii i danych oraz do połowy twojego dziennego limitu artykułów. To nie zmienia kopii zapasowej. Nic nie jest udostępniane poza tym, czego Mera już używa, gdy aplikacja jest otwarta.",
+    "bgRefreshOnDevice": "Mera pobiera nowe artykuły, gdy aplikacja jest zamknięta. Telefon porządkuje je, gdy otworzysz aplikację. Zużywa trochę baterii i danych oraz do połowy twojego dziennego limitu artykułów. To nie zmienia kopii zapasowej."
   },
   "manageData": {
     "deleting": "Usuwanie...",

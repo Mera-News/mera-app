@@ -239,7 +239,10 @@
     "reasonUnavailable": "Mera kon hier geen notitie bij schrijven.",
     "loadingA11y": "Je feed wordt geladen",
     "translatingCaption": "Vertalen…",
-    "updatedJustNow": "Zojuist bijgewerkt"
+    "updatedJustNow": "Zojuist bijgewerkt",
+    "reasonWriting": "Notitie schrijven",
+    "reasonWritingA11y": "notitie schrijven",
+    "reasonNotYet": "Nog geen notitie voor dit artikel."
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -541,7 +544,11 @@
     "speedGeneration": "Schrijfsnelheid: {{tokPerSec}} tokens/s",
     "speedRelevance": "Relevantie: {{ms}} ms per artikel",
     "speedReason": "Redenen: {{ms}} ms per artikel",
-    "speedResetNote": "Gemeten tijdens je laatste synchronisatie. Wordt gewist wanneer de app opnieuw start."
+    "speedResetNote": "Gemeten tijdens je laatste synchronisatie. Wordt gewist wanneer de app opnieuw start.",
+    "bgRefreshTitle": "Achtergrondverversing",
+    "bgRefreshCloudIos": "Mera haalt nieuwe artikelen op terwijl de app is gesloten en begint ze voor je in te delen. Je telefoon bepaalt wanneer dit gebeurt. Het werkt mogelijk niet in de energiebesparingsmodus of wanneer Achtergrondverversing uit staat. Gebruikt wat batterij en data, en tot de helft van je dagelijkse artikellimiet. Dit verandert niets aan de back-up. Niets wordt gedeeld behalve wat Mera al gebruikt als de app open is.",
+    "bgRefreshCloudAndroid": "Mera haalt nieuwe artikelen op terwijl de app is gesloten en begint ze voor je in te delen. Je telefoon bepaalt wanneer dit gebeurt. Het werkt mogelijk niet wanneer Batterijbesparing aan staat. Gebruikt wat batterij en data, en tot de helft van je dagelijkse artikellimiet. Dit verandert niets aan de back-up. Niets wordt gedeeld behalve wat Mera al gebruikt als de app open is.",
+    "bgRefreshOnDevice": "Mera haalt nieuwe artikelen op terwijl de app is gesloten. Je telefoon deelt ze in als je de app opent. Gebruikt wat batterij en data, en tot de helft van je dagelijkse artikellimiet. Dit verandert niets aan de back-up."
   },
   "manageData": {
     "deleting": "Verwijderen...",

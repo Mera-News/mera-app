@@ -239,7 +239,10 @@
     "reasonUnavailable": "A Mera não conseguiu escrever uma nota para este artigo.",
     "loadingA11y": "Carregando seu feed",
     "translatingCaption": "Traduzindo…",
-    "updatedJustNow": "Atualizado agora mesmo"
+    "updatedJustNow": "Atualizado agora mesmo",
+    "reasonWriting": "Escrevendo uma nota",
+    "reasonWritingA11y": "nota sendo escrita",
+    "reasonNotYet": "Ainda não há nota para este artigo."
   },
   "relevance": {
     "emergency": "Emergência",
@@ -541,7 +544,11 @@
     "speedGeneration": "Velocidade de escrita: {{tokPerSec}} tokens/s",
     "speedRelevance": "Relevância: {{ms}} ms por artigo",
     "speedReason": "Motivos: {{ms}} ms por artigo",
-    "speedResetNote": "Medido na sua última sincronização. É apagado quando o app reinicia."
+    "speedResetNote": "Medido na sua última sincronização. É apagado quando o app reinicia.",
+    "bgRefreshTitle": "Atualização em segundo plano",
+    "bgRefreshCloudIos": "O Mera obtém novos artigos enquanto o app está fechado e começa a classificá-los para você. Seu celular decide quando isso acontece. Pode não funcionar no Modo Pouca Energia ou quando a Atualização em Segundo Plano estiver desligada. Consome um pouco de bateria e dados, além de até metade de seu limite diário de artigos. Isso não muda o backup. Nada é compartilhado além do que o Mera já usa quando o app está aberto.",
+    "bgRefreshCloudAndroid": "O Mera obtém novos artigos enquanto o app está fechado e começa a classificá-los para você. Seu celular decide quando isso acontece. Pode não funcionar quando a Economia de bateria estiver ativada. Consome um pouco de bateria e dados, além de até metade de seu limite diário de artigos. Isso não muda o backup. Nada é compartilhado além do que o Mera já usa quando o app está aberto.",
+    "bgRefreshOnDevice": "O Mera obtém novos artigos enquanto o app está fechado. Seu celular os classifica quando você abre o app. Consome um pouco de bateria e dados, além de até metade de seu limite diário de artigos. Isso não muda o backup."
   },
   "manageData": {
     "deleting": "Excluindo...",

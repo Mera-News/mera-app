@@ -239,7 +239,10 @@
     "reasonUnavailable": "Mera 未能为这篇文章写说明。",
     "loadingA11y": "正在加载你的动态",
     "translatingCaption": "正在翻译…",
-    "updatedJustNow": "刚刚更新"
+    "updatedJustNow": "刚刚更新",
+    "reasonWriting": "正在撰写笔记",
+    "reasonWritingA11y": "正在撰写笔记",
+    "reasonNotYet": "暂无此文章的笔记。"
   },
   "relevance": {
     "emergency": "紧急",
@@ -541,7 +544,11 @@
     "speedGeneration": "生成速度：{{tokPerSec}} 个 token/秒",
     "speedRelevance": "相关性：每篇文章 {{ms}} 毫秒",
     "speedReason": "理由：每篇文章 {{ms}} 毫秒",
-    "speedResetNote": "在您上次同步时测得。应用重启后清除。"
+    "speedResetNote": "在您上次同步时测得。应用重启后清除。",
+    "bgRefreshTitle": "后台刷新",
+    "bgRefreshCloudIos": "当应用关闭时，Mera 会获取新文章并开始为您排序。您的手机决定何时执行此操作。在低电量模式下或关闭后台 App 刷新时可能无法运行。消耗少量电量和流量，以及最多您每日文章限额的一半。这不会改变备份。除了 Mera 在应用打开时已使用的内容外，不会分享任何内容。",
+    "bgRefreshCloudAndroid": "当应用关闭时，Mera 会获取新文章并开始为您排序。您的手机决定何时执行此操作。启用省电模式时可能无法运行。消耗少量电量和流量，以及最多您每日文章限额的一半。这不会改变备份。除了 Mera 在应用打开时已使用的内容外，不会分享任何内容。",
+    "bgRefreshOnDevice": "当应用关闭时，Mera 会获取新文章。打开应用时，您的手机会为您排序。消耗少量电量和流量，以及最多您每日文章限额的一半。这不会改变备份。"
   },
   "manageData": {
     "deleting": "删除中...",

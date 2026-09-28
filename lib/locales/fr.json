@@ -244,7 +244,10 @@
     "reasonUnavailable": "Mera n'a pas pu rédiger de note pour cet article.",
     "loadingA11y": "Chargement de votre fil",
     "translatingCaption": "Traduction…",
-    "updatedJustNow": "Mis à jour à l'instant"
+    "updatedJustNow": "Mis à jour à l'instant",
+    "reasonWriting": "Rédaction d'une note",
+    "reasonWritingA11y": "rédaction d'une note",
+    "reasonNotYet": "Pas encore de note pour cet article."
   },
   "relevance": {
     "emergency": "Urgence",
@@ -546,7 +549,11 @@
     "speedGeneration": "Vitesse d'écriture : {{tokPerSec}} jetons/s",
     "speedRelevance": "Pertinence : {{ms}} ms par article",
     "speedReason": "Raisons : {{ms}} ms par article",
-    "speedResetNote": "Mesuré lors de votre dernière synchronisation. Effacé au redémarrage de l'app."
+    "speedResetNote": "Mesuré lors de votre dernière synchronisation. Effacé au redémarrage de l'app.",
+    "bgRefreshTitle": "Actualisation en arrière-plan",
+    "bgRefreshCloudIos": "Mera récupère les nouveaux articles lorsque l'application est fermée et commence à les classer pour vous. Votre téléphone décide quand cela se produit. Cela peut ne pas fonctionner en Mode Économie d'énergie ou lorsque l'actualisation en arrière-plan est désactivée. Utilise de la batterie et des données, et jusqu'à la moitié de votre limite quotidienne d'articles. Cela ne change pas la sauvegarde. Rien n'est partagé au-delà de ce que Mera utilise déjà lorsque l'application est ouverte.",
+    "bgRefreshCloudAndroid": "Mera récupère les nouveaux articles lorsque l'application est fermée et commence à les classer pour vous. Votre téléphone décide quand cela se produit. Cela peut ne pas fonctionner quand l'Économiseur de batterie est activé. Utilise de la batterie et des données, et jusqu'à la moitié de votre limite quotidienne d'articles. Cela ne change pas la sauvegarde. Rien n'est partagé au-delà de ce que Mera utilise déjà lorsque l'application est ouverte.",
+    "bgRefreshOnDevice": "Mera récupère les nouveaux articles lorsque l'application est fermée. Votre téléphone les classe lorsque vous ouvrez l'application. Utilise de la batterie et des données, et jusqu'à la moitié de votre limite quotidienne d'articles. Cela ne change pas la sauvegarde."
   },
   "manageData": {
     "deleting": "Suppression...",

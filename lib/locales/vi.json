@@ -239,7 +239,10 @@
     "reasonUnavailable": "Mera không thể viết ghi chú cho bài này.",
     "loadingA11y": "Đang tải bảng tin của bạn",
     "translatingCaption": "Đang dịch…",
-    "updatedJustNow": "Vừa cập nhật"
+    "updatedJustNow": "Vừa cập nhật",
+    "reasonWriting": "Đang viết ghi chú",
+    "reasonWritingA11y": "đang viết ghi chú",
+    "reasonNotYet": "Chưa có ghi chú cho bài viết này."
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -541,7 +544,11 @@
     "speedGeneration": "Tốc độ viết: {{tokPerSec}} token/giây",
     "speedRelevance": "Mức liên quan: {{ms}} ms mỗi bài",
     "speedReason": "Lý do: {{ms}} ms mỗi bài",
-    "speedResetNote": "Đo trong lần đồng bộ gần nhất. Sẽ bị xóa khi khởi động lại ứng dụng."
+    "speedResetNote": "Đo trong lần đồng bộ gần nhất. Sẽ bị xóa khi khởi động lại ứng dụng.",
+    "bgRefreshTitle": "Làm mới trong nền",
+    "bgRefreshCloudIos": "Mera tải các bài viết mới khi ứng dụng đóng và bắt đầu xếp hạng chúng cho bạn. Điện thoại của bạn quyết định khi nào điều này xảy ra. Có thể không chạy ở Chế độ nguồn điện thấp hoặc khi Làm mới ứng dụng trong nền bị tắt. Tiêu tốn một ít pin và dữ liệu, cũng như tối đa một nửa giới hạn bài viết hàng ngày của bạn. Điều này không thay đổi việc sao lưu. Không có gì được chia sẻ ngoài những gì Mera đã sử dụng khi ứng dụng đang mở.",
+    "bgRefreshCloudAndroid": "Mera tải các bài viết mới khi ứng dụng đóng và bắt đầu xếp hạng chúng cho bạn. Điện thoại của bạn quyết định khi nào điều này xảy ra. Có thể không chạy khi Trình tiết kiệm pin được bật. Tiêu tốn một ít pin và dữ liệu, cũng như tối đa một nửa giới hạn bài viết hàng ngày của bạn. Điều này không thay đổi việc sao lưu. Không có gì được chia sẻ ngoài những gì Mera đã sử dụng khi ứng dụng đang mở.",
+    "bgRefreshOnDevice": "Mera tải các bài viết mới khi ứng dụng đóng. Điện thoại của bạn xếp hạng chúng khi bạn mở ứng dụng. Tiêu tốn một ít pin và dữ liệu, cũng như tối đa một nửa giới hạn bài viết hàng ngày của bạn. Điều này không thay đổi việc sao lưu."
   },
   "manageData": {
     "deleting": "Đang xóa...",

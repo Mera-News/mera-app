@@ -45,8 +45,8 @@ describe('the toggle', () => {
 });
 
 describe('the English copy', () => {
-  const frag = require('../../locales/_bgsubmit-data-fragments.json');
-  const strings: string[] = Object.values(frag.en.meraProtocol);
+  const frag = require('../../locales/en.json');
+  const strings: string[] = ['bgRefreshTitle', 'bgRefreshCloudIos', 'bgRefreshCloudAndroid', 'bgRefreshOnDevice'].map((k) => frag.meraProtocol[k]);
 
   it('has no em or en dashes', () => {
     for (const s of strings) expect(s).not.toMatch(/[–—]/);
@@ -54,7 +54,7 @@ describe('the English copy', () => {
 
   it('covers every key the row can ask for', () => {
     for (const key of ['bgRefreshTitle', 'bgRefreshCloudIos', 'bgRefreshCloudAndroid', 'bgRefreshOnDevice']) {
-      expect(frag.en.meraProtocol[key]).toEqual(expect.any(String));
+      expect(frag.meraProtocol[key]).toEqual(expect.any(String));
     }
   });
 });

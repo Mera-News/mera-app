@@ -239,7 +239,10 @@
     "reasonUnavailable": "Mera bu haber için not yazamadı.",
     "loadingA11y": "Akışın yükleniyor",
     "translatingCaption": "Çevriliyor…",
-    "updatedJustNow": "Az önce güncellendi"
+    "updatedJustNow": "Az önce güncellendi",
+    "reasonWriting": "Not yazılıyor",
+    "reasonWritingA11y": "not yazılıyor",
+    "reasonNotYet": "Bu makale için henüz not yok."
   },
   "relevance": {
     "emergency": "Acil",
@@ -541,7 +544,11 @@
     "speedGeneration": "Yazma hızı: {{tokPerSec}} token/sn",
     "speedRelevance": "Alaka düzeyi: makale başına {{ms}} ms",
     "speedReason": "Gerekçeler: makale başına {{ms}} ms",
-    "speedResetNote": "Son eşitlemen sırasında ölçüldü. Uygulama yeniden başladığında silinir."
+    "speedResetNote": "Son eşitlemen sırasında ölçüldü. Uygulama yeniden başladığında silinir.",
+    "bgRefreshTitle": "Arka Planda Yenileme",
+    "bgRefreshCloudIos": "Mera uygulama kapalıyken yeni makaleler alır ve bunları senin için sıralamaya başlar. Telefonun bunun ne zaman olacağına karar verir. Düşük Güç Modu açıkken veya Arka Planda Yenileme kapalıyken çalışmayabilir. Biraz pil ve veri tüketir ve günlük makale sınırının yarısına kadar kullanabilir. Bu, yedeklemeyi değiştirmez. Uygulama açıkken Mera'nın zaten kullandığı şeyden başka hiçbir şey paylaşılmaz.",
+    "bgRefreshCloudAndroid": "Mera uygulama kapalıyken yeni makaleler alır ve bunları senin için sıralamaya başlar. Telefonun bunun ne zaman olacağına karar verir. Pil Tasarrufu açıkken çalışmayabilir. Biraz pil ve veri tüketir ve günlük makale sınırının yarısına kadar kullanabilir. Bu, yedeklemeyi değiştirmez. Uygulama açıkken Mera'nın zaten kullandığı şeyden başka hiçbir şey paylaşılmaz.",
+    "bgRefreshOnDevice": "Mera uygulama kapalıyken yeni makaleler alır. Telefonun, uygulamayı açtığında bunları sıralar. Biraz pil ve veri tüketir ve günlük makale sınırının yarısına kadar kullanabilir. Bu, yedeklemeyi değiştirmez."
   },
   "manageData": {
     "deleting": "Siliniyor...",

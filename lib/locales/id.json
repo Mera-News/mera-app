@@ -239,7 +239,10 @@
     "reasonUnavailable": "Mera tidak bisa menulis catatan untuk artikel ini.",
     "loadingA11y": "Memuat feed kamu",
     "translatingCaption": "Menerjemahkan…",
-    "updatedJustNow": "Baru saja diperbarui"
+    "updatedJustNow": "Baru saja diperbarui",
+    "reasonWriting": "Menulis catatan",
+    "reasonWritingA11y": "menulis catatan",
+    "reasonNotYet": "Belum ada catatan untuk artikel ini."
   },
   "relevance": {
     "emergency": "Darurat",
@@ -541,7 +544,11 @@
     "speedGeneration": "Kecepatan menulis: {{tokPerSec}} token/dtk",
     "speedRelevance": "Relevansi: {{ms}} md per artikel",
     "speedReason": "Alasan: {{ms}} md per artikel",
-    "speedResetNote": "Diukur saat sinkronisasi terakhir Anda. Dihapus saat aplikasi dimulai ulang."
+    "speedResetNote": "Diukur saat sinkronisasi terakhir Anda. Dihapus saat aplikasi dimulai ulang.",
+    "bgRefreshTitle": "Penyegaran Latar Belakang",
+    "bgRefreshCloudIos": "Mera mendapatkan artikel baru saat aplikasi ditutup dan mulai mengurutkannya untuk Anda. Ponsel Anda memutuskan kapan ini terjadi. Mungkin tidak berjalan dalam Mode Daya Rendah atau saat Penyegaran App Latar Belakang dimatikan. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan. Tidak ada yang dibagikan di luar apa yang sudah digunakan Mera saat aplikasi terbuka.",
+    "bgRefreshCloudAndroid": "Mera mendapatkan artikel baru saat aplikasi ditutup dan mulai mengurutkannya untuk Anda. Ponsel Anda memutuskan kapan ini terjadi. Mungkin tidak berjalan saat Penghemat Baterai aktif. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan. Tidak ada yang dibagikan di luar apa yang sudah digunakan Mera saat aplikasi terbuka.",
+    "bgRefreshOnDevice": "Mera mendapatkan artikel baru saat aplikasi ditutup. Ponsel Anda mengurutkannya saat Anda membuka aplikasi. Menggunakan sedikit baterai dan data, serta hingga setengah batas artikel harian Anda. Ini tidak mengubah pencadangan."
   },
   "manageData": {
     "deleting": "Menghapus...",

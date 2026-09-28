@@ -239,7 +239,10 @@
     "reasonUnavailable": "Mera가 이 기사에 대한 메모를 작성하지 못했어요.",
     "loadingA11y": "피드를 불러오는 중",
     "translatingCaption": "번역 중…",
-    "updatedJustNow": "방금 업데이트됨"
+    "updatedJustNow": "방금 업데이트됨",
+    "reasonWriting": "메모 작성 중",
+    "reasonWritingA11y": "메모 작성 중",
+    "reasonNotYet": "이 기사에 대한 메모가 아직 없습니다."
   },
   "relevance": {
     "emergency": "긴급",
@@ -541,7 +544,11 @@
     "speedGeneration": "생성 속도: {{tokPerSec}}토큰/초",
     "speedRelevance": "관련성: 기사당 {{ms}}ms",
     "speedReason": "이유: 기사당 {{ms}}ms",
-    "speedResetNote": "마지막 동기화 중에 측정되었습니다. 앱을 다시 시작하면 초기화됩니다."
+    "speedResetNote": "마지막 동기화 중에 측정되었습니다. 앱을 다시 시작하면 초기화됩니다.",
+    "bgRefreshTitle": "백그라운드 새로 고침",
+    "bgRefreshCloudIos": "Mera는 앱이 닫혀 있는 동안 새 기사를 가져와 순위를 매기기 시작합니다. 휴대폰이 이 작업을 언제 할지 결정합니다. 저전력 모드일 때나 백그라운드 앱 새로 고침이 꺼져 있을 때는 실행되지 않을 수 있습니다. 배터리와 데이터를 약간 사용하며, 일일 기사 한도의 최대 절반까지 사용합니다. 백업에는 영향을 주지 않습니다. 앱이 열려 있을 때 Mera가 이미 사용하는 것 이상은 공유되지 않습니다.",
+    "bgRefreshCloudAndroid": "Mera는 앱이 닫혀 있는 동안 새 기사를 가져와 순위를 매기기 시작합니다. 휴대폰이 이 작업을 언제 할지 결정합니다. 절전 모드가 켜져 있을 때는 실행되지 않을 수 있습니다. 배터리와 데이터를 약간 사용하며, 일일 기사 한도의 최대 절반까지 사용합니다. 백업에는 영향을 주지 않습니다. 앱이 열려 있을 때 Mera가 이미 사용하는 것 이상은 공유되지 않습니다.",
+    "bgRefreshOnDevice": "Mera는 앱이 닫혀 있는 동안 새 기사를 가져옵니다. 앱을 열면 휴대폰이 순위를 매깁니다. 배터리와 데이터를 약간 사용하며, 일일 기사 한도의 최대 절반까지 사용합니다. 백업에는 영향을 주지 않습니다."
   },
   "manageData": {
     "deleting": "삭제 중...",

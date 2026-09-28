@@ -239,7 +239,10 @@
     "reasonUnavailable": "Mera no pudo escribir una nota para este artículo.",
     "loadingA11y": "Cargando tu feed",
     "translatingCaption": "Traduciendo…",
-    "updatedJustNow": "Actualizado ahora mismo"
+    "updatedJustNow": "Actualizado ahora mismo",
+    "reasonWriting": "Escribiendo una nota",
+    "reasonWritingA11y": "escribiendo una nota",
+    "reasonNotYet": "Todavía no hay ninguna nota para este artículo."
   },
   "relevance": {
     "emergency": "Emergencia",
@@ -541,7 +544,11 @@
     "speedGeneration": "Velocidad de escritura: {{tokPerSec}} tokens/s",
     "speedRelevance": "Relevancia: {{ms}} ms por artículo",
     "speedReason": "Motivos: {{ms}} ms por artículo",
-    "speedResetNote": "Medido en tu última sincronización. Se borra al reiniciar la app."
+    "speedResetNote": "Medido en tu última sincronización. Se borra al reiniciar la app.",
+    "bgRefreshTitle": "Actualización en segundo plano",
+    "bgRefreshCloudIos": "Mera obtiene nuevos artículos cuando la aplicación está cerrada y comienza a clasificarlos para ti. Tu teléfono decide cuándo ocurre esto. Es posible que no funcione en Modo de Bajo Consumo o cuando la actualización en segundo plano está desactivada. Usa algo de batería y datos, y hasta la mitad de tu límite diario de artículos. Esto no cambia la copia de seguridad. Nada se comparte más allá de lo que Mera ya usa cuando la aplicación está abierta.",
+    "bgRefreshCloudAndroid": "Mera obtiene nuevos artículos cuando la aplicación está cerrada y comienza a clasificarlos para ti. Tu teléfono decide cuándo ocurre esto. Es posible que no funcione cuando el Ahorro de batería está activado. Usa algo de batería y datos, y hasta la mitad de tu límite diario de artículos. Esto no cambia la copia de seguridad. Nada se comparte más allá de lo que Mera ya usa cuando la aplicación está abierta.",
+    "bgRefreshOnDevice": "Mera obtiene nuevos artículos cuando la aplicación está cerrada. Tu teléfono los clasifica cuando abres la aplicación. Usa algo de batería y datos, y hasta la mitad de tu límite diario de artículos. Esto no cambia la copia de seguridad."
   },
   "manageData": {
     "deleting": "Eliminando...",

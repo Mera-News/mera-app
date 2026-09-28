@@ -239,7 +239,10 @@
     "reasonUnavailable": "Mera non è riuscita a scrivere una nota per questo articolo.",
     "loadingA11y": "Caricamento del tuo feed",
     "translatingCaption": "Traduzione in corso…",
-    "updatedJustNow": "Aggiornato ora"
+    "updatedJustNow": "Aggiornato ora",
+    "reasonWriting": "Scrittura di una nota",
+    "reasonWritingA11y": "scrittura di una nota",
+    "reasonNotYet": "Ancora nessuna nota per questo articolo."
   },
   "relevance": {
     "emergency": "Emergenza",
@@ -541,7 +544,11 @@
     "speedGeneration": "Velocità di scrittura: {{tokPerSec}} token/s",
     "speedRelevance": "Pertinenza: {{ms}} ms per articolo",
     "speedReason": "Motivazioni: {{ms}} ms per articolo",
-    "speedResetNote": "Misurato durante l'ultima sincronizzazione. Si azzera al riavvio dell'app."
+    "speedResetNote": "Misurato durante l'ultima sincronizzazione. Si azzera al riavvio dell'app.",
+    "bgRefreshTitle": "Aggiornamento in background",
+    "bgRefreshCloudIos": "Mera ottiene nuovi articoli quando l'app è chiusa e inizia a classificarli per te. Il tuo telefono decide quando questo accade. Potrebbe non funzionare con Risparmio energetico attivo o quando l'aggiornamento in background è disattivato. Utilizza un po' di batteria e dati, e fino a metà del limite giornaliero di articoli. Questo non cambia il backup. Nulla viene condiviso oltre a ciò che Mera utilizza già quando l'app è aperta.",
+    "bgRefreshCloudAndroid": "Mera ottiene nuovi articoli quando l'app è chiusa e inizia a classificarli per te. Il tuo telefono decide quando questo accade. Potrebbe non funzionare con Risparmio energetico attivo. Utilizza un po' di batteria e dati, e fino a metà del limite giornaliero di articoli. Questo non cambia il backup. Nulla viene condiviso oltre a ciò che Mera utilizza già quando l'app è aperta.",
+    "bgRefreshOnDevice": "Mera ottiene nuovi articoli quando l'app è chiusa. Il tuo telefono li classifica quando apri l'app. Utilizza un po' di batteria e dati, e fino a metà del limite giornaliero di articoli. Questo non cambia il backup."
   },
   "manageData": {
     "deleting": "Eliminazione...",

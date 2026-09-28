@@ -239,7 +239,10 @@
     "reasonUnavailable": "Mera konnte hierzu keine Notiz schreiben.",
     "loadingA11y": "Dein Feed wird geladen",
     "translatingCaption": "Wird übersetzt…",
-    "updatedJustNow": "Gerade aktualisiert"
+    "updatedJustNow": "Gerade aktualisiert",
+    "reasonWriting": "Notiz wird geschrieben",
+    "reasonWritingA11y": "Notiz wird geschrieben",
+    "reasonNotYet": "Noch keine Notiz zu diesem Artikel."
   },
   "relevance": {
     "emergency": "Notfall",
@@ -541,7 +544,11 @@
     "speedGeneration": "Schreibgeschwindigkeit: {{tokPerSec}} Tokens/s",
     "speedRelevance": "Relevanz: {{ms}} ms pro Artikel",
     "speedReason": "Begründungen: {{ms}} ms pro Artikel",
-    "speedResetNote": "Bei der letzten Synchronisierung gemessen. Wird beim Neustart der App gelöscht."
+    "speedResetNote": "Bei der letzten Synchronisierung gemessen. Wird beim Neustart der App gelöscht.",
+    "bgRefreshTitle": "Hintergrundaktualisierung",
+    "bgRefreshCloudIos": "Mera lädt neue Artikel, wenn die App geschlossen ist, und beginnt sie für dich zu bewerten. Dein Telefon entscheidet, wann dies geschieht. Es funktioniert möglicherweise nicht im Stromsparmodus oder wenn die Hintergrundaktualisierung aus ist. Nutzt etwas Akku und Daten und bis zur Hälfte deines täglichen Artikellimits. Das ändert nichts am Backup. Nichts wird über das hinaus geteilt, was Mera bereits nutzt, wenn die App offen ist.",
+    "bgRefreshCloudAndroid": "Mera lädt neue Artikel, wenn die App geschlossen ist, und beginnt sie für dich zu bewerten. Dein Telefon entscheidet, wann dies geschieht. Es funktioniert möglicherweise nicht, wenn der Energiesparmodus an ist. Nutzt etwas Akku und Daten und bis zur Hälfte deines täglichen Artikellimits. Das ändert nichts am Backup. Nichts wird über das hinaus geteilt, was Mera bereits nutzt, wenn die App offen ist.",
+    "bgRefreshOnDevice": "Mera lädt neue Artikel, wenn die App geschlossen ist. Dein Telefon bewertet sie, wenn du die App öffnest. Nutzt etwas Akku und Daten und bis zur Hälfte deines täglichen Artikellimits. Das ändert nichts am Backup."
   },
   "manageData": {
     "deleting": "Wird gelöscht...",
