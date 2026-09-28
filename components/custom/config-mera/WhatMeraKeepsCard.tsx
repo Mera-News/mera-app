@@ -9,7 +9,7 @@ import { hapticLight } from '@/lib/haptics';
 import { useUserStore } from '@/lib/stores/user-store';
 import { emailLooksAnonymous } from '@/lib/subscription/email-capture';
 import { readSupportIdFromUser } from '@/lib/support-id';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
+import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import React, { useEffect, useRef, useState } from 'react';
@@ -188,13 +188,9 @@ const WhatMeraKeepsCard: React.FC = () => {
                         </HStack>
                     ) : null}
 
-                    {/* Unprefixed on purpose: the site's proxy picks the
-                        reader's locale, while withAppLanguage inserts the APP's
-                        code, which the site does not route for pt-BR, zh-CN
-                        and zh-TW. */}
                     <Pressable
                         testID="manage-data-keeps-privacy"
-                        onPress={() => openInAppBrowser(PRIVACY_URL)}
+                        onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}
                         accessible
                         accessibilityRole="link"
                         accessibilityLabel={t('manageData.keeps.privacyLink')}

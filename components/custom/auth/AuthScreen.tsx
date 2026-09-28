@@ -9,7 +9,7 @@ import PreviousUserView from '@/components/custom/auth/PreviousUserView';
 import {
     consentNoticeKey,
     deviceSignInCaptionKey,
-    NO_EMAIL_FAQ_URL,
+    noEmailFaqUrl,
 } from '@/components/custom/auth/device-sign-in-copy';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
@@ -615,7 +615,7 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({
             </Text>
             <Pressable
                 testID="auth-consent-what-mera-keeps"
-                onPress={() => openInAppBrowser(NO_EMAIL_FAQ_URL)}
+                onPress={() => openInAppBrowser(noEmailFaqUrl())}
                 accessible
                 accessibilityRole="link"
                 accessibilityLabel={t('consent.whatMeraKeeps')}

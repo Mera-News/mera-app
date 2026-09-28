@@ -47,7 +47,10 @@ jest.mock('@/lib/stores/user-store', () => ({
 }));
 jest.mock('@/lib/config/branding', () => ({ PRIVACY_URL: 'https://mera.news/privacy' }));
 const mockOpen = jest.fn();
-jest.mock('@/lib/web-browser-utils', () => ({ openInAppBrowser: (...a: unknown[]) => mockOpen(...a) }));
+jest.mock('@/lib/web-browser-utils', () => ({
+    openInAppBrowser: (...a: unknown[]) => mockOpen(...a),
+    withAppLanguage: (u: string) => u.replace('mera.news/', 'mera.news/pt/'),
+}));
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn(async () => {}) }));
 const mockSetString = jest.fn(async (_s: string) => {});
 jest.mock('expo-clipboard', () => ({ setStringAsync: (s: string) => mockSetString(s) }));
@@ -165,10 +168,10 @@ describe('WhatMeraKeepsCard', () => {
         expect(r.getByTestId('manage-data-keeps-support-id-copy').props.accessibilityLabel).toBe('support.copied');
     });
 
-    it('the privacy link opens the unprefixed privacy policy', () => {
+    it('the privacy link opens the privacy policy in the app language', () => {
         const r = render(<WhatMeraKeepsCard />);
         expand(r);
         fireEvent.press(r.getByTestId('manage-data-keeps-privacy'));
-        expect(mockOpen).toHaveBeenCalledWith('https://mera.news/privacy');
+        expect(mockOpen).toHaveBeenCalledWith('https://mera.news/pt/privacy');
     });
 });

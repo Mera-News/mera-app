@@ -12,6 +12,21 @@ const WEB_LOCALES = new Set([
     'ja', 'ko', 'pl', 'pt', 'ru', 'es', 'th', 'tr', 'uk', 'vi',
 ]);
 
+// The three app locale codes the website spells differently. Inserting the
+// app code verbatim sent those readers to /pt-BR/..., /zh-CN/... and
+// /zh-TW/..., which the site does not route (404). Every other app code is
+// already a website code.
+const APP_TO_WEB_LOCALE: Record<string, string> = {
+    'pt-BR': 'pt',
+    'zh-CN': 'zh-Hans',
+    'zh-TW': 'zh-Hant',
+};
+
+/** The website locale segment for an app language code. */
+export function webLocaleFor(appLanguage: string): string {
+    return APP_TO_WEB_LOCALE[appLanguage] ?? appLanguage;
+}
+
 /**
  * Injects the user's current app language as the first path segment of a
  * first-party website URL (privacy, terms, content policy) so the page opens
@@ -24,7 +39,7 @@ const WEB_LOCALES = new Set([
 export function withAppLanguage(url: string): string {
     if (!url) return url;
 
-    const lang = useAppLanguageStore.getState().appLanguage || 'en';
+    const lang = webLocaleFor(useAppLanguageStore.getState().appLanguage || 'en');
 
     const match = url.match(/^(https?:\/\/[^/]+)(\/[^?#]*)?([?#].*)?$/i);
     if (!match) return url;

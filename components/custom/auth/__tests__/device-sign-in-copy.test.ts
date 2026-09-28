@@ -4,11 +4,16 @@
 // no platform check, and only ANDROID_ID survives an uninstall.
 
 jest.mock('@/lib/config/branding', () => ({ FAQ_URL: 'https://mera.news/faq' }));
+// Stands in for the real locale insertion; its mapping is covered in
+// lib/__tests__/web-browser-utils.test.ts.
+jest.mock('@/lib/web-browser-utils', () => ({
+    withAppLanguage: (u: string) => u.replace('mera.news/', 'mera.news/zh-Hant/'),
+}));
 
 import {
-    NO_EMAIL_FAQ_URL,
     consentNoticeKey,
     deviceSignInCaptionKey,
+    noEmailFaqUrl,
 } from '../device-sign-in-copy';
 
 describe('consentNoticeKey', () => {
@@ -35,10 +40,8 @@ describe('deviceSignInCaptionKey', () => {
     });
 });
 
-it('the FAQ link is unprefixed and carries the no-email anchor', () => {
-    // withAppLanguage would insert the app locale (pt-BR, zh-CN, zh-TW), which
-    // the site does not route; its proxy picks the locale and keeps the anchor.
-    expect(NO_EMAIL_FAQ_URL).toBe('https://mera.news/faq#no-email');
+it('the FAQ link is localized and keeps the no-email anchor after the path', () => {
+    expect(noEmailFaqUrl()).toBe('https://mera.news/zh-Hant/faq#no-email');
 });
 
 it('every key it can return exists in en.json', () => {
