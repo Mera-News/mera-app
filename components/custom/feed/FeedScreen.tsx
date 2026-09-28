@@ -102,6 +102,11 @@ import { useProcessingSnapshot } from '@/components/custom/processing/use-proces
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useReasonWriting } from '@/components/custom/cards/use-reason-in-flight';
+import {
+  newFeedRowSession,
+  resolveFeedRowDisplay,
+  type FeedRowSession,
+} from '@/components/custom/feed/feed-row-display';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
@@ -220,7 +225,8 @@ const EMPTY_SET: Set<string> = new Set();
  *  resolve the suggestion → list-item verdict key via the screen's adapter. */
 const FeedRow = React.memo(function FeedRow({
   item,
-  live,
+  suggestion,
+  reserveNoteSpace,
   onPress,
   onVerdict,
   onAskMera,
@@ -230,12 +236,13 @@ const FeedRow = React.memo(function FeedRow({
   registerRow,
 }: {
   item: FeedListItem;
-  /** The representative's LIVE store row, when the store still holds it. A
-   *  row that leaves the candidate pool (its note was declined, or a rescore
-   *  dropped it below the gate) keeps a stale copy in `itemsById` until the
-   *  next hydrate, because the feed is insert-only; the card must still show
-   *  where its note actually stands. */
-  live: ForYouSuggestion | undefined;
+  /** What the card renders: the session-frozen representative's LIVE row
+   *  (`resolveFeedRowDisplay`). Never `item.suggestion` directly: the store
+   *  re-elects representatives and keeps a stale copy of a row that left the
+   *  pool, and neither may show up under the reader. */
+  suggestion: ForYouSuggestion;
+  /** Reserve the note area's height: this row was pending this session. */
+  reserveNoteSpace: boolean;
   onPress: (suggestion: ForYouSuggestion) => void;
   onVerdict: (suggestion: ForYouSuggestion, verdict: Verdict) => void;
   onAskMera: (suggestion: ForYouSuggestion) => void;
@@ -261,7 +268,6 @@ const FeedRow = React.memo(function FeedRow({
   });
   const hasCardState = useFeedOrderStore((s) => !!s.cardStates[item.id]);
   const seen = openedExactly || hasCardState;
-  const suggestion = live ?? item.suggestion;
   // Whether "Writing a note" is true right now (reasons in flight, within the
   // backstop). Read here, not in the card: the store must stay out of the card
   // graph.
@@ -280,6 +286,7 @@ const FeedRow = React.memo(function FeedRow({
     <ArticleSuggestionCard
       suggestion={suggestion}
       reasonWriting={reasonWriting}
+      reserveNoteSpace={reserveNoteSpace}
       onPress={onPress}
       // No age label and no NEW badge on this screen. "2h ago" and a green NEW
       // pill are both answers to "has something arrived?", which is the
@@ -388,8 +395,12 @@ const FeedScreen: React.FC = () => {
       }),
     [suggestions, userGeoLanguageCtx],
   );
-  // Live rows by suggestion id, for FeedRow's `live` (see there).
+  // Live rows by suggestion id, for `resolveFeedRowDisplay` (see FeedRow).
   const liveById = useMemo(() => new Map(suggestions.map((s) => [s._id, s])), [suggestions]);
+  // Per-session row display state: each row's frozen representative and
+  // whether it has been pending (feed-row-display.ts). Replaced wholesale in
+  // `resetSession`.
+  const rowSessionRef = useRef<FeedRowSession>(newFeedRowSession());
   const candidatesRef = useRef(candidates);
   candidatesRef.current = candidates;
 
@@ -496,6 +507,9 @@ const FeedScreen: React.FC = () => {
    * reason. One function, so the two can never drift apart.
    */
   const resetSession = useCallback(() => {
+    // Re-elect representatives and forget "was pending": the list returns to
+    // the top on every reset, so nothing changes under a reader.
+    rowSessionRef.current = newFeedRowSession();
     setSessionEpoch((e) => e + 1);
     refreshPartitionSnapshot();
     setPinnedIds([]);
@@ -723,7 +737,7 @@ const FeedScreen: React.FC = () => {
 
   /** Stamp a card `viewed` from a suggestion, via the rep-switch-safe key. */
   const markViewedFor = useCallback((s: ForYouSuggestion) => {
-    const key = suggestionToItemIdRef.current.get(s._id);
+    const key = rowSessionRef.current.rowBySuggestion.get(s._id) ?? suggestionToItemIdRef.current.get(s._id);
     if (key) useFeedOrderStore.getState().markViewed(key);
   }, []);
 
@@ -738,7 +752,9 @@ const FeedScreen: React.FC = () => {
   );
 
   const feedAdapter: VerdictStoreAdapter = {
-    keyFor: (s) => suggestionToItemIdRef.current.get(s._id) ?? null,
+    // The frozen representative first: it is what the card shows, and the
+    // store's own representative may have moved on (feed-row-display.ts).
+    keyFor: (s) => rowSessionRef.current.rowBySuggestion.get(s._id) ?? suggestionToItemIdRef.current.get(s._id) ?? null,
     getVerdict: (key) => useFeedOrderStore.getState().verdicts[key]?.verdict ?? null,
     setVerdict: (key, v) => {
       const store = useFeedOrderStore.getState();
@@ -876,10 +892,13 @@ const FeedScreen: React.FC = () => {
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
 
   const renderItem = useCallback(
-    ({ item, index }: { item: FeedEntry; index: number }) => (
+    ({ item, index }: { item: FeedEntry; index: number }) => {
+      const display = resolveFeedRowDisplay(item, liveById, rowSessionRef.current);
+      return (
       <FeedRow
         item={item}
-        live={liveById.get(item.suggestion._id)}
+        suggestion={display.suggestion}
+        reserveNoteSpace={display.reserveNoteSpace}
         onPress={openSuggestion}
         onVerdict={onVerdict}
         onAskMera={onAskMera}
@@ -892,7 +911,8 @@ const FeedScreen: React.FC = () => {
         }
         registerRow={registerRow}
       />
-    ),
+      );
+    },
     [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion, registerRow, liveById],
   );
 

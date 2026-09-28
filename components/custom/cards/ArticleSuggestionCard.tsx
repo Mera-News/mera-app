@@ -83,15 +83,21 @@ interface ArticleCardProps {
   /** The Feed only: whether this row's note is being written right now (its
    *  reasons are in flight, within the backstop; see `useReasonWriting`). When
    *  set, a `reason_pending` row shows "Writing a note" or, when false, "No
-   *  note for this article yet.", and the note area reserves two lines in every
-   *  state. Omitted (every other surface): the legacy pending placeholder. */
+   *  note for this article yet." Omitted (every other surface): the legacy
+   *  pending placeholder. */
   reasonWriting?: boolean;
+  /** The Feed only: reserve two lines for the note in every state, because
+   *  this card was pending at some point this session and its note can still
+   *  land under the reader. A card complete at first render keeps its natural
+   *  height. */
+  reserveNoteSpace?: boolean;
 }
 
 export type { ArticleCardProps };
 
-/** Lines the Feed card's note area always reserves, so a note landing under
- *  the reader does not change the card's height (up to two lines of note). */
+/** Lines a Feed card's note area reserves once it has been pending, so a note
+ *  landing under the reader does not change the card's height (up to two
+ *  lines of note). */
 export const FEED_NOTE_RESERVED_LINES = 2;
 
 /**
@@ -118,6 +124,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   onSaveToggled,
   metaRowRightReserve,
   reasonWriting,
+  reserveNoteSpace = false,
 }) => {
   const { t } = useTranslation();
   const [facts, setFacts] = useState<Fact[]>([]);
@@ -339,7 +346,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       testID="card-reason"
       onNoteDisplayChange={setShownReason}
       pendingMode={pendingMode}
-      reserveNoteLines={feedMode ? FEED_NOTE_RESERVED_LINES : undefined}
+      reserveNoteLines={feedMode && reserveNoteSpace ? FEED_NOTE_RESERVED_LINES : undefined}
     />
   ) : null;
   // What the card root reads after the meta strings: the chip's priority

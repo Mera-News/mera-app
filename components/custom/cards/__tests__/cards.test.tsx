@@ -942,7 +942,7 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
 
   it('writing: chip, "Writing a note" indicator hidden from a11y, no disclosure, two lines reserved', () => {
     const { getByTestId, queryByText, queryByTestId } = render(
-      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting />,
+      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting reserveNoteSpace />,
     );
     expect(getByTestId('relevance-chip')).toBeTruthy();
     const writing = getByTestId('card-reason-writing', { includeHiddenElements: true });
@@ -955,7 +955,7 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
 
   it('writing: the root reads the priority, then "note being written"', () => {
     const { getByTestId } = render(
-      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting />,
+      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting reserveNoteSpace />,
     );
     const label: string = getByTestId('card-sugg-1').props.accessibilityLabel;
     const pri = label.indexOf('relevance.a11y');
@@ -967,7 +967,7 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
 
   it('not in flight: a static "No note for this article yet." line in the same reserved box, never empty', () => {
     const { getByTestId, queryByTestId } = render(
-      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={false} />,
+      <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={false} reserveNoteSpace />,
     );
     expect(queryByTestId('card-reason-writing', { includeHiddenElements: true })).toBeNull();
     expect(queryByTestId('streaming', { includeHiddenElements: true })).toBeNull();
@@ -980,7 +980,7 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
     const skipped = makeSuggestion({ status: ArticleSuggestionStatus.ReasonSkipped, reason: '' });
     for (const writing of [false, true]) {
       const { getByTestId, queryByTestId, unmount } = render(
-        <ArticleSuggestionCard suggestion={skipped} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={writing} />,
+        <ArticleSuggestionCard suggestion={skipped} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={writing} reserveNoteSpace />,
       );
       expect(getByTestId('relevance-chip')).toBeTruthy();
       // Nothing is being written for a declined note, whatever the set says.
@@ -991,13 +991,20 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
     }
   });
 
-  it('resolved: the note area keeps the same reserved height, and the disclosure appears', () => {
+  it('resolved after pending: the note area keeps the same reserved height, and the disclosure appears', () => {
     const { getByTestId, getAllByText } = render(
-      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={false} />,
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={false} reserveNoteSpace />,
     );
     expect(minHeightOf(getByTestId('card-reason-text'))).toBe(twoLines());
     expect(getAllByText('aiDisclosure.caption')).toHaveLength(1);
     expect(getByTestId('card-sugg-1').props.accessibilityLabel).not.toContain('feed.reasonWritingA11y');
+  });
+
+  it('complete at first render: natural height, no reserved second line', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} onVerdict={jest.fn()} reasonWriting={false} />,
+    );
+    expect(minHeightOf(getByTestId('card-reason-text'))).toBeUndefined();
   });
 
   it('other surfaces (no reasonWriting) keep the legacy placeholder beside the badge and no reserved height', () => {
