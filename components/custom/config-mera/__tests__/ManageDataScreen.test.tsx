@@ -139,7 +139,20 @@ jest.mock('@/components/ui/toast', () => {
 // Unmocked it would drag all of that into a suite about deleting an account,
 // and every future backup import would break this file for reasons unrelated
 // to it.
-jest.mock('@/components/custom/backup/BackupSection', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/components/custom/backup/BackupSection', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="stub-backup-section" /> };
+});
+// Same reason: the card reaches auth-client's session hook, the clipboard and
+// the user store. It has its own suite; here only its placement matters.
+jest.mock('@/components/custom/config-mera/WhatMeraKeepsCard', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="stub-what-mera-keeps" /> };
+});
+jest.mock('@/lib/logger', () => ({
+    __esModule: true,
+    default: { captureException: jest.fn(), warn: jest.fn(), debug: jest.fn(), info: jest.fn() },
+}));
 
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
@@ -201,6 +214,21 @@ describe('ManageDataScreen — delete account (grace-period flow)', () => {
         expect(mockReplace).not.toHaveBeenCalled();
     });
 
+    it('a throwing sign-out still severs the device credentials and clears the stores, and is reported', async () => {
+        mockFetch.mockResolvedValue({ data: { success: true }, error: null });
+        mockClearAuthStorage.mockRejectedValueOnce(new Error('keychain locked'));
+        const logger = (require('@/lib/logger') as { default: { captureException: jest.Mock } }).default;
+        const { getByText } = render(<ManageDataScreen />);
+        fireEvent.press(getByText('preferences.yesDeleteAccount'));
+
+        await waitFor(() => expect(mockClearAllStores).toHaveBeenCalled());
+        expect(mockClearDeviceAuthCredentials).toHaveBeenCalled();
+        expect(mockReplace).toHaveBeenCalledWith({ pathname: '/login', params: { signedOut: '1' } });
+        expect(logger.captureException).toHaveBeenCalledWith(expect.any(Error), {
+            tags: { component: 'ManageDataScreen', method: 'deleteAccount', step: 'sign-out' },
+        });
+    });
+
     it('a genuine throw from $fetch is also treated as failure', async () => {
         mockFetch.mockRejectedValue(new Error('offline'));
         const { getByText } = render(<ManageDataScreen />);
@@ -208,5 +236,19 @@ describe('ManageDataScreen — delete account (grace-period flow)', () => {
 
         await waitFor(() => expect(mockSetModalProcessing).toHaveBeenCalledWith('deleteAccount', false));
         expect(mockSignOut).not.toHaveBeenCalled();
+    });
+});
+
+describe('ManageDataScreen — What Mera keeps card', () => {
+    it('renders below the backup section and above the destructive list', () => {
+        const r = render(<ManageDataScreen />);
+        const ids = r
+            .UNSAFE_root.findAll((n: any) => typeof n.props?.testID === 'string')
+            .map((n: any) => n.props.testID);
+        expect(ids).toContain('stub-what-mera-keeps');
+        // Below backup: `?restore=1` opens the recovery step inside it, and
+        // that must stay at the top of the page.
+        expect(ids.indexOf('stub-backup-section')).toBeLessThan(ids.indexOf('stub-what-mera-keeps'));
+        expect(ids.indexOf('stub-what-mera-keeps')).toBeLessThan(ids.indexOf('manage-data-observability'));
     });
 });
