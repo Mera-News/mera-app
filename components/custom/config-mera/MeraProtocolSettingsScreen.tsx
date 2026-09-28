@@ -57,6 +57,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import ProcessingModePill from './ProcessingModePill';
+import {
+    BG_REFRESH_TITLE_KEY,
+    bgRefreshDescriptionKey,
+    loadBgRefreshToggle,
+    saveBgRefreshToggle,
+} from '@/lib/background/bg-refresh-ui';
 
 interface MeraProtocolSettingsScreenProps {
     onBack?: () => void;
@@ -147,6 +153,28 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
         // intentionally to avoid re-running the mutation on every render.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onDeviceIntent, deviceSupported, modelDownloaded, processingMode]);
+
+    // Background refresh (the `mera-background` OS task). Default ON; read from
+    // settings, not a store, because the OS task reads the same row.
+    const [bgRefreshEnabled, setBgRefreshEnabled] = useState(true);
+    useEffect(() => {
+        if (isOnboarding) return;
+        let alive = true;
+        void loadBgRefreshToggle().then((enabled) => {
+            if (alive) setBgRefreshEnabled(enabled);
+        });
+        return () => {
+            alive = false;
+        };
+    }, [isOnboarding]);
+    const toggleBgRefresh = useCallback(() => {
+        const next = !bgRefreshEnabled;
+        setBgRefreshEnabled(next);
+        saveBgRefreshToggle(next).catch(() => {
+            // The save failed, so the switch goes back to what is stored.
+            setBgRefreshEnabled(!next);
+        });
+    }, [bgRefreshEnabled]);
 
     useEffect(() => {
         if (isOnboarding) {
@@ -706,6 +734,37 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         )}
                     </Box>
                 </>
+            )}
+
+            {/* Background refresh. Hidden during onboarding, which reuses this
+                screen: it only means something once the reader is set up. The
+                copy follows the mode the run will actually use. */}
+            {!isOnboarding && (
+                <Box className="px-5 mb-6" testID="mera-protocol-bg-refresh">
+                    <HStack space="md" className="items-center justify-between">
+                        <HStack space="md" className="items-center flex-1">
+                            <MaterialIcons
+                                name="sync"
+                                size={24}
+                                color={bgRefreshEnabled ? "#10b981" : "#9ca3af"}
+                            />
+                            <VStack className="flex-1">
+                                <Text className="text-white text-base font-semibold">
+                                    {t(BG_REFRESH_TITLE_KEY)}
+                                </Text>
+                                <Text className="text-typography-500 text-sm mt-0.5">
+                                    {t(bgRefreshDescriptionKey(processingMode === ProcessingMode.OnDevice, Platform.OS))}
+                                </Text>
+                            </VStack>
+                        </HStack>
+                        <Switch
+                            value={bgRefreshEnabled}
+                            onToggle={toggleBgRefresh}
+                            size="md"
+                            testID="mera-protocol-bg-refresh-switch"
+                        />
+                    </HStack>
+                </Box>
             )}
 
             {/* Relevance scoring v4 toggle — one switch, two measured features
