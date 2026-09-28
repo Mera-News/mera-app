@@ -36,6 +36,8 @@ import {
 } from './fact-rows-selector';
 import { type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import { makeRepCompare } from '@/lib/feed-grouping/representative-compare';
+import { isReasonPendingVisible } from '@/lib/feed-ordering/pending-visibility';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { ForYouSuggestion } from './for-you-store';
 
 /** Exponential-decay half-life (hours) for the recency term of `feedScore`. */
@@ -173,6 +175,16 @@ export function feedCompare(a: FeedListItem, b: FeedListItem): number {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
+export interface BuildFeedListOptions {
+  /** The Feed only: also admit `reason_pending` rows that clear the render
+   *  gate and the window (`isReasonPendingVisible`), so an article whose
+   *  relevance is known shows while its note is still being written. Inside a
+   *  story, a member WITH its note still fronts the card when one exists.
+   *  Default false: output is byte-identical for every other caller (the
+   *  diagnostics and the funnel log). */
+  includeReasonPending?: boolean;
+}
+
 /**
  * Build the ordered composite-score feed list from the live suggestion pool
  * + the excluded-id set.
@@ -193,14 +205,28 @@ export function buildFeedList(
   excludedIds: Set<string>,
   nowMs: number = Date.now(),
   userCtx: UserGeoLanguageContext | null = null,
+  opts: BuildFeedListOptions = {},
 ): FeedListItem[] {
   const cutoffMs = nowMs - FEED_WINDOW_MS;
-  const repCompareForGroups = makeRepCompare(userCtx);
+  const includePending = opts.includeReasonPending === true;
+  const baseRepCompare = makeRepCompare(userCtx);
+  // With pending rows in the pool, a member whose note exists fronts the
+  // story ahead of one still being written; the shared rule decides the rest.
+  // Without them every member is complete and this is the shared rule exactly.
+  const repCompareForGroups: (a: GroupItem, b: GroupItem) => number = includePending
+    ? (a, b) => {
+        const pa = a.s.status === ArticleSuggestionStatus.Complete ? 0 : 1;
+        const pb = b.s.status === ArticleSuggestionStatus.Complete ? 0 : 1;
+        return pa !== pb ? pa - pb : baseRepCompare(a, b);
+      }
+    : baseRepCompare;
 
   // 1. Visible pool (note-gated + render gate + FEED_WINDOW_MS). Same gate the
   //    swipe deck / fact-rows feeds use, so every surface agrees on what is
-  //    showable.
-  const visible = suggestions.filter((s) => isVisible(s, cutoffMs));
+  //    showable. The Feed widens it to scored rows still awaiting their note.
+  const visible = suggestions.filter(
+    (s) => isVisible(s, cutoffMs) || (includePending && isReasonPendingVisible(s, cutoffMs)),
+  );
   if (visible.length === 0) return [];
 
   // 2. Story-group the visible pool (display thresholds incl. the weighted edge).

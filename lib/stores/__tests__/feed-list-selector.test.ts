@@ -145,6 +145,67 @@ describe('buildFeedList — visibility gate', () => {
   });
 });
 
+describe('buildFeedList — includeReasonPending (the Feed only)', () => {
+  const pendingOk = () => sugg({ _id: 'p', status: ArticleSuggestionStatus.ReasonPending, reason: '', relevance: 0.6 });
+
+  it('admits a scored reason_pending row that clears the gate and the window', () => {
+    const list = buildFeedList([pendingOk()], new Set(), NOW, null, { includeReasonPending: true });
+    expect(list.map((c) => c.suggestion._id)).toEqual(['p']);
+  });
+
+  it('still drops unscored, sub-gate pending and out-of-window pending rows', () => {
+    const unscored = sugg({ _id: 'u', status: ArticleSuggestionStatus.Unscored });
+    const subGate = sugg({ _id: 'g', status: ArticleSuggestionStatus.ReasonPending, relevance: 0.3 });
+    const stale = sugg({
+      _id: 'old',
+      status: ArticleSuggestionStatus.ReasonPending,
+      firstPubDate: new Date(NOW - FEED_WINDOW_MS - H).toISOString(),
+    });
+    const list = buildFeedList([unscored, subGate, stale], new Set(), NOW, null, { includeReasonPending: true });
+    expect(list).toEqual([]);
+  });
+
+  it('is off by default: the same pool without the option drops the pending row', () => {
+    expect(buildFeedList([pendingOk()], new Set(), NOW)).toEqual([]);
+    expect(buildFeedList([pendingOk()], new Set(), NOW, null, {})).toEqual([]);
+  });
+
+  it('a member WITH its note fronts the story over an older one still being written', () => {
+    // Without the option the OLDEST member fronts (see grouping below); here
+    // the older member is still pending, so the complete one must win.
+    const older = sugg({
+      _id: 'older',
+      status: ArticleSuggestionStatus.ReasonPending,
+      reason: '',
+      clusters: [cluster('story-p')],
+      firstPubDate: new Date(NOW - 3 * H).toISOString(),
+    });
+    const done = sugg({ _id: 'done', clusters: [cluster('story-p')], firstPubDate: new Date(NOW - H).toISOString() });
+    const list = buildFeedList([older, done], new Set(), NOW, null, { includeReasonPending: true });
+    expect(list).toHaveLength(1);
+    expect(list[0].memberCount).toBe(2);
+    expect(list[0].suggestion._id).toBe('done');
+  });
+
+  it('an all-pending story is fronted by the usual rule (oldest member)', () => {
+    const a = sugg({
+      _id: 'a',
+      status: ArticleSuggestionStatus.ReasonPending,
+      clusters: [cluster('story-q')],
+      firstPubDate: new Date(NOW - 2 * H).toISOString(),
+    });
+    const b = sugg({
+      _id: 'b',
+      status: ArticleSuggestionStatus.ReasonPending,
+      clusters: [cluster('story-q')],
+      firstPubDate: new Date(NOW - H).toISOString(),
+    });
+    const list = buildFeedList([a, b], new Set(), NOW, null, { includeReasonPending: true });
+    expect(list).toHaveLength(1);
+    expect(list[0].suggestion._id).toBe('a');
+  });
+});
+
 describe('buildFeedList — grouping + exclusion', () => {
   it('collapses a shared-stable-cluster story to one item with memberCount', () => {
     const a = sugg({ _id: 'a', clusters: [cluster('story-1')], firstPubDate: new Date(NOW - 2 * H).toISOString() });
