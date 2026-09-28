@@ -85,18 +85,23 @@ export type ArticleWithClusters = {
   article_url?: Maybe<Scalars['String']['output']>;
   category?: Maybe<Scalars['String']['output']>;
   clusters: Array<ClusterMembership>;
+  content_categories?: Maybe<Array<Scalars['String']['output']>>;
   country_code?: Maybe<Scalars['String']['output']>;
   description_en?: Maybe<Scalars['String']['output']>;
   entities?: Maybe<Array<Scalars['String']['output']>>;
   event_type?: Maybe<Scalars['String']['output']>;
+  genre?: Maybe<Scalars['String']['output']>;
+  geo_scope?: Maybe<Scalars['String']['output']>;
   geo_tags?: Maybe<Array<GeoTagDto>>;
   image_url?: Maybe<Scalars['String']['output']>;
   language_code?: Maybe<Scalars['String']['output']>;
   maxClusterSize?: Maybe<Scalars['Int']['output']>;
   pubDate: Scalars['DateTime']['output'];
   publication_name?: Maybe<Scalars['String']['output']>;
+  significance?: Maybe<Scalars['Int']['output']>;
   title?: Maybe<Scalars['String']['output']>;
   title_en: Scalars['String']['output'];
+  tone?: Maybe<Scalars['String']['output']>;
   vector_sidecar_packed?: Maybe<Scalars['String']['output']>;
 };
 
@@ -230,6 +235,7 @@ export type GeoTagDto = {
   __typename?: 'GeoTagDto';
   city?: Maybe<Scalars['String']['output']>;
   countryCode: Scalars['String']['output'];
+  geonameId?: Maybe<Scalars['Int']['output']>;
   region?: Maybe<Scalars['String']['output']>;
 };
 
@@ -342,6 +348,7 @@ export type NewsArticle = {
   article_url: Scalars['String']['output'];
   category?: Maybe<Scalars['String']['output']>;
   clusterConfidence?: Maybe<Scalars['Float']['output']>;
+  content_categories?: Maybe<Array<Scalars['String']['output']>>;
   content_category?: Maybe<Scalars['String']['output']>;
   country?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
@@ -358,6 +365,8 @@ export type NewsArticle = {
   factCheck?: Maybe<FactCheck>;
   /** @deprecated v1-only link to the fetch state machine; unused by the v3 pipeline. */
   fetchPublicationId?: Maybe<Scalars['ID']['output']>;
+  genre?: Maybe<Scalars['String']['output']>;
+  geo_scope?: Maybe<Scalars['String']['output']>;
   geo_tags?: Maybe<Array<GeoTagDto>>;
   image_url?: Maybe<Scalars['String']['output']>;
   original_language_code?: Maybe<Scalars['String']['output']>;
@@ -366,11 +375,13 @@ export type NewsArticle = {
   pubDate: Scalars['DateTime']['output'];
   publicationSource?: Maybe<PublicationSource>;
   publicationSourceId: Scalars['ID']['output'];
+  significance?: Maybe<Scalars['Int']['output']>;
   source_uri: Scalars['String']['output'];
   title: Scalars['String']['output'];
   title_en?: Maybe<Scalars['String']['output']>;
   /** @deprecated Use title_en instead. Superseded by the v3 pipeline. */
   title_en_internal_only?: Maybe<Scalars['String']['output']>;
+  tone?: Maybe<Scalars['String']['output']>;
   translation_attempts?: Maybe<Scalars['Int']['output']>;
   translation_skip_reason?: Maybe<Scalars['String']['output']>;
   translation_skipped?: Maybe<Scalars['Boolean']['output']>;
