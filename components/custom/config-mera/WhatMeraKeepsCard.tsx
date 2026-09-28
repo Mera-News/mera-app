@@ -45,9 +45,19 @@ export function keepsAccountKind(
     return 'unknown';
 }
 
+export type KeepsLineKey =
+    | 'manageData.keeps.emailAndPlan'
+    | 'manageData.keeps.plan'
+    | 'manageData.keeps.emailIfAdded'
+    | 'manageData.keeps.signInRecordIos'
+    | 'manageData.keeps.signInRecordAndroid'
+    | 'manageData.keeps.signInRecordGeneric'
+    | 'manageData.keeps.usage'
+    | 'manageData.keeps.topics';
+
 /** The lines the card lists for an account kind, in order. At most four. */
-export function keepsLineKeys(kind: KeepsAccountKind, platform: string): string[] {
-    const signInRecord =
+export function keepsLineKeys(kind: KeepsAccountKind, platform: string): KeepsLineKey[] {
+    const signInRecord: KeepsLineKey =
         platform === 'ios'
             ? 'manageData.keeps.signInRecordIos'
             : 'manageData.keeps.signInRecordAndroid';
