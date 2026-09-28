@@ -596,15 +596,24 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             // Rehydrate the header's scoring phase/progress from the persisted
             // multi-batch pipeline run (replaces the legacy single-slot
             // getPendingAsyncJob read). idle when no run / all batches terminal.
-            const { getPipelineUiState, getPipelineBatchProgress, getPipelineChunkStates } =
-                await import('@/lib/services/scoring-pipeline');
+            const {
+                getPipelineUiState,
+                getPipelineBatchProgress,
+                getPipelineChunkStates,
+                getReasonsInFlightIds,
+            } = await import('@/lib/services/scoring-pipeline');
 
-            const [meta, pipelineUi, batchProgress, chunkStates] = await Promise.all([
-                loadFeedMetadata(),
-                getPipelineUiState(),
-                getPipelineBatchProgress(),
-                getPipelineChunkStates(),
-            ]);
+            const [meta, pipelineUi, batchProgress, chunkStates, reasonsInFlightIds] =
+                await Promise.all([
+                    loadFeedMetadata(),
+                    getPipelineUiState(),
+                    getPipelineBatchProgress(),
+                    getPipelineChunkStates(),
+                    // Seeded at boot like the progress fields, so a cold open after
+                    // a background run shows its pending notes as being written on
+                    // first paint rather than waiting for the first pipeline push.
+                    getReasonsInFlightIds(),
+                ]);
 
             const current = get().suggestions;
             const impactfulCount = current.filter(
@@ -625,6 +634,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                     pipelineUi.phase === 'idle' ? 0 : pipelineUi.totalCount,
                 batchProgress: pipelineUi.phase === 'idle' ? null : batchProgress,
                 chunkStates: pipelineUi.phase === 'idle' ? null : chunkStates,
+                reasonsInFlightIds,
             });
         } catch (err) {
             // Metadata hydration failed — leave defaults in place, but surface the error.

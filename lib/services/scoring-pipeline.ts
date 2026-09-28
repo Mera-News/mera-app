@@ -195,6 +195,8 @@ export const TASK_REASONS_APPLY_MIN_MS = 20_000;
 /** How long a foreground recover() waits for a background task step already
  *  running in this JS runtime before it proceeds on its own. */
 const RECOVER_WAITS_FOR_TASK_MS = 20_000;
+/** Limiter pause after a 409 (idempotency key still reserved on the gateway). */
+const IN_PROGRESS_PAUSE_MS = 10_000;
 /** Poller tick cadence while a run is active.
  *
  *  Derived from the gateway rate limiter rather than hard-coded: that limiter
@@ -1313,6 +1315,9 @@ function forgetIdempotencyKey(b: PipelineBatch): void {
 /** A submit outcome that leaves the batch where it can simply be retried with
  *  the SAME key: a 429, a 409 (key still reserved), or a task with no JWT. */
 function isRetryLater(status: SendInferenceOutcome['status']): boolean {
+  // A held reservation lasts up to a minute on the gateway; back the whole
+  // device off briefly rather than re-driving the same key every tick.
+  if (status === 'in-progress') gatewayRateLimiter.pauseFor(IN_PROGRESS_PAUSE_MS);
   return status === 'throttled' || status === 'in-progress' || status === 'no-auth';
 }
 
@@ -1381,8 +1386,13 @@ async function doSubmitRelevance(
   io?: TaskIo,
 ): Promise<SubmitStep> {
   const all = await getUnscoredSuggestionsWithFacts();
-  const idSet = new Set(batch.candidateIds);
-  const subset = all.filter((c) => idSet.has(c.id));
+  // In the batch's OWN order, not the query's (which has no sort): a retry
+  // after a lost 202 must rebuild the same ids in the same order to resend the
+  // same idempotency key, and relevance results decode by position.
+  const byId = new Map(all.map((c) => [c.id, c]));
+  const subset = batch.candidateIds
+    .map((id) => byId.get(id))
+    .filter((c): c is ScoringCandidate => c !== undefined);
 
   // Run the deterministic math on-device NOW (no LLM). This partitions the
   // batch into math-mode (tagged metadata → judge job) vs backstop (untagged →
@@ -1566,8 +1576,11 @@ async function doSubmitReasonsOnly(
   io?: TaskIo,
 ): Promise<SubmitStep> {
   const scored = await getScoredSuggestionsWithoutReasons();
-  const idSet = new Set(batch.candidateIds);
-  const subset = scored.filter((c) => idSet.has(c.id));
+  // Batch order, for a stable idempotency key across retries.
+  const scoredById = new Map(scored.map((c) => [c.id, c]));
+  const subset = batch.candidateIds
+    .map((id) => scoredById.get(id))
+    .filter((c): c is ScoringCandidate => c !== undefined);
   const rawMap: Record<string, number> = {};
   for (const c of subset) {
     if (typeof c.relevance === 'number') rawMap[c.id] = c.relevance;
@@ -2481,8 +2494,11 @@ async function submitNeedsReasonsHeld(
   if (!batch || batch.phase !== 'needs-reasons-submit') return 'lost';
 
   const scored = await getScoredSuggestionsWithoutReasons();
-  const idSet = new Set(batch.reasonCandidateIds ?? []);
-  const subset: ScoringCandidate[] = scored.filter((c) => idSet.has(c.id));
+  // Batch order, for a stable idempotency key across retries.
+  const scoredById = new Map(scored.map((c) => [c.id, c]));
+  const subset: ScoringCandidate[] = (batch.reasonCandidateIds ?? [])
+    .map((id) => scoredById.get(id))
+    .filter((c): c is ScoringCandidate => c !== undefined);
   const bundle = await buildReasonCallsForSubset(
     subset,
     batch.rawRelevanceMap ?? {},

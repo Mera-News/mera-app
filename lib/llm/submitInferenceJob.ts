@@ -310,6 +310,14 @@ export async function sendInferenceRequest(args: {
   try {
     res = await doSubmitPost(authHeader);
   } catch (err) {
+    // The CALLER's deadline fired mid-POST. The gateway may already have
+    // accepted it, so this is not a failure: report it like a 409 so the
+    // caller keeps the idempotency key and the attempt count, and the next
+    // attempt replays to the same job instead of billing a second one.
+    if (signal?.aborted) {
+      logger.debug(`${TAG} submit aborted by the caller's deadline — outcome unknown`);
+      return { status: 'in-progress' };
+    }
     // Exhausting retries on a benign timeout/abort is expected on flaky mobile
     // links, and the outcome ({ status: 'failed' } → the batch retries) is the
     // same either way — so it doesn't warrant a Sentry exception. Our own 30s

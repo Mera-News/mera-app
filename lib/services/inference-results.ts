@@ -108,7 +108,9 @@ export async function pickResultsAuthHeader(
     let jwt: string | null = null;
     try {
       jwt = await raceSignal(getJwtToken(), opts.signal);
-    } catch {
+    } catch (err) {
+      // The deadline, not a missing session: let the cancellation through.
+      if (opts.signal?.aborted) throw err;
       jwt = null;
     }
     if (!jwt) throw new TaskNoAuthError();
@@ -117,7 +119,10 @@ export async function pickResultsAuthHeader(
   // A capability token past its TTL cannot authenticate; offering it would buy
   // a 401 that reads as `unauthorized` and requeues a job whose results are
   // still waiting on the gateway.
+  // Foreground only: the silent-push wake keeps its existing behaviour (the
+  // token or a quiet 'unauthorized').
   if (
+    context === 'foreground' &&
     capabilityToken &&
     opts.submittedAt !== undefined &&
     Date.now() - opts.submittedAt > CAPABILITY_TOKEN_TTL_MS

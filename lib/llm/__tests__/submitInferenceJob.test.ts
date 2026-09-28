@@ -568,3 +568,30 @@ describe('sendInferenceRequest — background task options (bgsubmit)', () => {
     expect(mockWithRetry.mock.calls[0][2]).toBe(4);
   });
 });
+
+describe('sendInferenceRequest — deadline abort mid-POST (bgsubmit)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetJwtToken.mockResolvedValue('jwt-token');
+    mockRateLimiterAcquire.mockResolvedValue(undefined);
+  });
+
+  it('reports in-progress, not failed, when the caller aborts after the POST started', async () => {
+    const controller = new AbortController();
+    mockWithRetry.mockImplementation(async () => {
+      controller.abort(); // the deadline fires while the POST is in flight
+      throw Object.assign(new Error('aborted'), { name: 'AbortError' });
+    });
+    const out = await sendInferenceRequest({
+      bundle: makeBundle(),
+      ctx: makeE2EEContext(),
+      token: null,
+      model: 'test-model',
+      context: 'task',
+      idempotencyKey: 'k',
+      singleAttempt: true,
+      signal: controller.signal,
+    });
+    expect(out).toEqual({ status: 'in-progress' });
+  });
+});
