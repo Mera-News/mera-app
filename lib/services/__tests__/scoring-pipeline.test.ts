@@ -3314,3 +3314,62 @@ describe('submitScoringForBackground (step b)', () => {
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
   });
 });
+
+describe('task context skips UI work while the app is not active', () => {
+  it('step (a) in background applies results without refreshing the store or pushing progress', async () => {
+    await enqueueCandidates(['a0']);
+    const b0 = currentRun().batches[0];
+    mockAppStateCurrent = 'background';
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.8]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([{ ...candidate('a0'), relevance: 0.8 }]);
+    mockFetchResults.mockResolvedValue(relevanceReady(b0.requestId));
+    mockRefresh.mockClear();
+    mockSetReasonsInFlightIds.mockClear();
+    mockSetAsyncJobPhase.mockClear();
+
+    const out = await advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
+
+    expect(out.appliedRelevance).toBe(1);
+    expect(mockSaveScoringResult).toHaveBeenCalled();
+    expect(mockRefresh).not.toHaveBeenCalled();
+    expect(mockSetReasonsInFlightIds).not.toHaveBeenCalled();
+    expect(mockSetAsyncJobPhase).not.toHaveBeenCalled();
+  });
+
+  it('step (b) in background submits without refreshing the store or pushing progress', async () => {
+    mockAppStateCurrent = 'background';
+    mockGetUnscored.mockImplementation(async () => [candidate('n0')]);
+    mockRefresh.mockClear();
+    mockSetReasonsInFlightIds.mockClear();
+    mockSetAsyncJobPhase.mockClear();
+
+    const out = await submitScoringForBackground({ deadlineAt: NOW + DEADLINE_MS, articleIds: ['n0'] });
+
+    expect(out.submitted).toBe(1);
+    expect(mockRefresh).not.toHaveBeenCalled();
+    expect(mockSetReasonsInFlightIds).not.toHaveBeenCalled();
+    expect(mockSetAsyncJobPhase).not.toHaveBeenCalled();
+  });
+
+  it('the silent-push wake (background context) still refreshes as before', async () => {
+    await enqueueCandidates(['a0']);
+    const b0 = currentRun().batches[0];
+    mockAppStateCurrent = 'background';
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['a0', 0.8]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([{ ...candidate('a0'), relevance: 0.8 }]);
+    mockFetchResults.mockResolvedValue(relevanceReady(b0.requestId));
+    mockRefresh.mockClear();
+
+    await handlePush(b0.requestId, 'background');
+
+    expect(mockRefresh).toHaveBeenCalled();
+  });
+});

@@ -553,7 +553,19 @@ const reconcileHardFilters = async (ids: string[]): Promise<void> => {
   await sweep.purgeHardFilteredByIds(ids);
 };
 
-async function refreshUi(): Promise<void> {
+/**
+ * A background-task caller while the app is not on screen: skip the store
+ * refresh and the header push. The OS task's own run marks the feed dirty and
+ * refreshes once the app is active again, and `reasonsInFlightIds` is recomputed
+ * at boot and on foreground, so nothing a user can see goes stale. Per call on
+ * purpose: the silent-push wake ('background') keeps refreshing as before.
+ */
+function skipUiForTask(context?: ExecutionContext): boolean {
+  return context === 'task' && AppState.currentState !== 'active';
+}
+
+async function refreshUi(context?: ExecutionContext): Promise<void> {
+  if (skipUiForTask(context)) return;
   // Lazy require (not a static import) breaks the load-time cycle
   // scoring-pipeline → SuggestionSyncService → run-inference-handler →
   // (wave 3) scoring-pipeline. Same pattern as lib/database/hydrate-stores.ts.
@@ -823,7 +835,8 @@ export function deriveReasonsInFlightIds(run: PipelineRun): Set<string> {
 
 /** Best-effort push of the derived phase + progress into the For-You header
  *  store. Lazily-required (like refreshUi) to avoid a load-time import cycle. */
-async function pushUiProgress(): Promise<void> {
+async function pushUiProgress(context?: ExecutionContext): Promise<void> {
+  if (skipUiForTask(context)) return;
   try {
     const snap = await getPipeline();
     const ui = snap
@@ -1225,11 +1238,13 @@ async function doDrain(context: ExecutionContext): Promise<void> {
  * other terminal transition. Never calls drain, so it is safe to invoke from
  * inside doDrain without re-entering the single-flight guard.
  */
-async function maybeFinalize(opts: { kick?: boolean } = {}): Promise<void> {
+async function maybeFinalize(
+  opts: { kick?: boolean; context?: ExecutionContext } = {},
+): Promise<void> {
   const snap = await getPipeline();
   if (!snap) return;
   if (snap.run.batches.every((b) => isTerminal(b.phase))) {
-    await finalize(snap.run, opts.kick ?? true);
+    await finalize(snap.run, opts.kick ?? true, opts.context);
   }
 }
 
@@ -1414,7 +1429,7 @@ async function doSubmitRelevance(
         .join(', ')}`,
     );
     await batchMarkExcluded([...excludedIds]);
-    await refreshUi();
+    await refreshUi(context);
     active = subset.filter((c) => !excludedIds.has(c.id));
   }
 
@@ -2145,7 +2160,7 @@ async function handleRelevanceResults(
       });
     }
   }
-  await refreshUi();
+  await refreshUi(context);
 
   // The rows just scored are fresh donors — copy their scores onto any unscored
   // siblings (held-back same-sync duplicates from the feed-sync gate, or rows
@@ -2154,7 +2169,7 @@ async function handleRelevanceResults(
   try {
     const inFlight = await getNonTerminalCandidateIds();
     const propagated = await propagateToUnscoredSiblings(inFlight, reconcileHardFilters);
-    if (propagated > 0) await refreshUi();
+    if (propagated > 0) await refreshUi(context);
   } catch (err) {
     logger.captureException(err, {
       tags: { service: 'scoring-pipeline', step: 'propagate-siblings' },
@@ -2185,7 +2200,7 @@ async function handleRelevanceResults(
       batch.candidateIds,
       relevanceMap,
     );
-    if (discarded > 0) await refreshUi();
+    if (discarded > 0) await refreshUi(context);
     await afterTerminal(context);
     return 'empty';
   }
@@ -2201,7 +2216,7 @@ async function handleRelevanceResults(
   });
 
   // The ids just moved into the reasons phase: publish them as in flight.
-  await pushUiProgress();
+  await pushUiProgress(context);
 
   // Immediately try the reasons submit this cycle. The caller (checkBatch)
   // already holds this batch, so this is the unclaimed inner call.
@@ -2441,7 +2456,7 @@ async function handleReasonResults(
     batch.candidateIds,
     reasonRelevanceMap,
   );
-  await refreshUi();
+  await refreshUi(context);
   if (discarded > 0) {
     logger.debug(
       `${TAG} batch ${batch.batchId} discarded ${discarded} low-relevance rows`,
@@ -2527,7 +2542,7 @@ async function submitNeedsReasonsHeld(
       batch.candidateIds,
       batch.relevanceMap ?? {},
     );
-    await refreshUi();
+    await refreshUi(context);
     if (discarded > 0) {
       logger.debug(
         `${TAG} batch ${batchId} discarded ${discarded} low-relevance rows`,
@@ -2597,7 +2612,7 @@ async function submitNeedsReasonsHeld(
       batch.candidateIds,
       batch.relevanceMap ?? {},
     );
-    await refreshUi();
+    await refreshUi(context);
     if (discarded > 0) {
       logger.debug(
         `${TAG} batch ${batchId} discarded ${discarded} low-relevance rows`,
@@ -2635,7 +2650,7 @@ async function submitNeedsReasonsHeld(
     logger.debug(
       `${TAG} batch ${batchId} → waiting-reasons requestId=${outcome.requestId}`,
     );
-    await pushUiProgress();
+    await pushUiProgress(context);
     return 'ok';
   } else if (isRetryLater(outcome.status)) {
     // Stay in needs-reasons-submit — retried by the poller or the next task
@@ -2654,7 +2669,7 @@ async function submitNeedsReasonsHeld(
       batch.candidateIds,
       batch.relevanceMap ?? {},
     );
-    await refreshUi();
+    await refreshUi(context);
     if (discarded > 0) {
       logger.debug(
         `${TAG} batch ${batchId} discarded ${discarded} low-relevance rows`,
@@ -2719,7 +2734,7 @@ async function requeueWaitingOrFail(
         b.candidateIds,
         b.relevanceMap ?? {},
       );
-      await refreshUi();
+      await refreshUi(context);
       if (discarded > 0) {
         logger.debug(
           `${TAG} batch ${batch.batchId} discarded ${discarded} low-relevance rows`,
@@ -2732,7 +2747,7 @@ async function requeueWaitingOrFail(
   } else if (context === 'task') {
     // The background task never drains (a drain would admit foreground work
     // under the task's context) and never starts the poller.
-    await pushUiProgress();
+    await pushUiProgress(context);
   } else {
     // Requeued (not terminal): keep the pipeline moving.
     await drain(context);
@@ -2756,22 +2771,30 @@ async function afterTerminal(context: ExecutionContext): Promise<void> {
     // No drain from the background task; finalize if this was the last batch,
     // without the post-finalize kick (that kick enqueues through the
     // foreground drain).
-    await pushUiProgress();
-    await maybeFinalize({ kick: false });
+    await pushUiProgress(context);
+    await maybeFinalize({ kick: false, context });
     return;
   }
   await drain(context);
 }
 
-async function finalize(run: PipelineRun, kick = true): Promise<void> {
+async function finalize(
+  run: PipelineRun,
+  kick = true,
+  context?: ExecutionContext,
+): Promise<void> {
   if (finalizeInFlight) return finalizeInFlight;
-  finalizeInFlight = doFinalize(run, kick).finally(() => {
+  finalizeInFlight = doFinalize(run, kick, context).finally(() => {
     finalizeInFlight = null;
   });
   return finalizeInFlight;
 }
 
-async function doFinalize(run: PipelineRun, kick = true): Promise<void> {
+async function doFinalize(
+  run: PipelineRun,
+  kick = true,
+  context?: ExecutionContext,
+): Promise<void> {
   // Re-read to guard exactly-once under concurrency: if the run is already
   // gone, another finalize won.
   const snap = await getPipeline();
@@ -2780,7 +2803,7 @@ async function doFinalize(run: PipelineRun, kick = true): Promise<void> {
 
   logger.info(`${TAG} finalize run ${run.runId} (${run.batches.length} batches)`);
 
-  await refreshUi();
+  await refreshUi(context);
   await clearPipeline();
   stopPoller();
 
@@ -2907,7 +2930,7 @@ async function loadGateUserContext(): Promise<
  * propagates over ALL unscored rows, not just this call's ids. Never throws:
  * the propagation is already committed. Shared by every gate caller.
  */
-async function reconcileAfterGatePropagation(): Promise<void> {
+async function reconcileAfterGatePropagation(context?: ExecutionContext): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
@@ -2917,7 +2940,7 @@ async function reconcileAfterGatePropagation(): Promise<void> {
       tags: { service: 'scoring-pipeline', step: 'reconcile-hard-filters' },
     });
   }
-  await refreshUi();
+  await refreshUi(context);
 }
 
 export async function enqueueUnscoredEligible(
@@ -3500,7 +3523,7 @@ export async function submitScoringForBackground(opts: {
       if (eligible.size > 0) {
         const inFlight = await getNonTerminalCandidateIds();
         const gate = await gateUnscoredForScoring(inFlight, await loadGateUserContext());
-        if (gate.propagatedCount > 0) await reconcileAfterGatePropagation();
+        if (gate.propagatedCount > 0) await reconcileAfterGatePropagation('task');
         const elected = gate.enqueueIds.filter((id) => eligible.has(id));
         const firstIds = new Set(opts.articleIds);
         const ordered = [
@@ -3571,8 +3594,8 @@ export async function submitScoringForBackground(opts: {
         // 'empty' / 'lost' / 'failed': move on to the next queued batch.
       }
 
-      await pushUiProgress();
-      await maybeFinalize({ kick: false });
+      await pushUiProgress('task');
+      await maybeFinalize({ kick: false, context: 'task' });
       return result;
     } catch (err) {
       return { ...result, stoppedBy: reportTaskError(err, 'bg-submit') };
