@@ -1,5 +1,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import BackupSection from '@/components/custom/backup/BackupSection';
+import WhatMeraKeepsCard from '@/components/custom/config-mera/WhatMeraKeepsCard';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
@@ -11,6 +12,7 @@ import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import { clearDeviceAuthCredentials } from '@/lib/device-auth';
 import database from '@/lib/database';
+import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
@@ -190,17 +192,28 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack, autoOpenRec
             if (error) throw error;
             serverDeleteSucceeded = true;
 
-            try {
-                // clearAuthStorage() owns the (guarded, bounded) server
-                // sign-out — see its header. A direct signOut here once let a
-                // network failure skip the whole local cleanup silently.
-                await clearAuthStorage();
-                // DELETION SEVERS the device binding (S10). Logout preserves
-                // it so login resumes the account; deletion must not — a
-                // preserved key would silently REACTIVATE the account during
-                // its grace period on the next sign-in.
-                await clearDeviceAuthCredentials();
-
+            // Local cleanup after the server accepted the deletion. Each step
+            // runs on its own, so one failing (a keychain hiccup, a sign-out
+            // that throws) cannot skip the steps after it, and each failure is
+            // reported by name rather than swallowed.
+            const cleanupStep = async (step: string, run: () => Promise<void> | void) => {
+                try {
+                    await run();
+                } catch (error) {
+                    logger.captureException(error, {
+                        tags: { component: 'ManageDataScreen', method: 'deleteAccount', step },
+                    });
+                }
+            };
+            // clearAuthStorage() owns the (guarded, bounded) server sign-out,
+            // see its header. A direct signOut here once let a network failure
+            // skip the whole local cleanup silently.
+            await cleanupStep('sign-out', () => clearAuthStorage());
+            // DELETION SEVERS the device binding (S10). Logout preserves it so
+            // login resumes the account; deletion must not. The server deletes
+            // the device record too, so this is the client half.
+            await cleanupStep('device-credentials', () => clearDeviceAuthCredentials());
+            await cleanupStep('route', () => {
                 router.dismissAll();
                 // The LOGOUT route, not '/': the launch gate counts the
                 // still-stale better-auth session atom as identity and
@@ -208,12 +221,9 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack, autoOpenRec
                 // suppresses login.tsx's mirror-image shortcut until the atom
                 // actually clears.
                 router.replace({ pathname: '/login', params: { signedOut: '1' } });
-
-                await new Promise((resolve) => setTimeout(resolve, 0));
-                await clearAllStores();
-            } catch (postDeleteError) {
-                console.warn('[DeleteAccount] local cleanup failed after server delete', postDeleteError);
-            }
+            });
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            await cleanupStep('stores', () => clearAllStores());
 
             toast.show({
                 placement: 'top',
@@ -381,6 +391,12 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack, autoOpenRec
                         ManageDataScreen.test.tsx, breaking a passing suite for
                         reasons that have nothing to do with backup. */}
                     <BackupSection autoOpenRecover={autoOpenRecover} />
+
+                    {/* What the server keeps for this account, collapsed to one
+                        row. Below backup on purpose: `?restore=1` opens the
+                        recovery step inline in the section above, and that
+                        must stay at the top. Neutral, like observability. */}
+                    <WhatMeraKeepsCard />
 
                     {/* Observability lives here since 2026-08-19 (user call):
                         a diagnostics surface belongs with the data tools, not

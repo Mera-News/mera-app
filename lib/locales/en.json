@@ -91,6 +91,11 @@
       "body": "Signing in without email opens this phone's own account, not the one you were using. Everything saved on this phone for that account will be erased. You can't undo this. Your other account and its plan stay safe, and you can sign in to it again later.",
       "continue": "Continue without email",
       "useEmail": "Go back"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Your account is tied to this phone. If you delete Mera or lose the phone, you'll start a new account. Backup and restore in Settings can keep your data.",
+      "reset": "Your account is tied to this phone. If you reset or lose the phone, you'll start a new account. Backup and restore in Settings can keep your data.",
+      "previousUser": "Opens this phone's own account, separate from {{email}}."
     }
   },
   "account": {
@@ -895,11 +900,23 @@
     "viewingHistoryModalDescription": "Clears the local log of articles you've opened. The Sources tab's \"Publications you've been reading\" card and the per-publication history will reset to empty. Nothing else is affected, and no server data is touched (this data never left your device).",
     "wipeAllTitle": "Wipe all on-device data",
     "wipeAllDescription": "Reset everything on this device except your account",
-    "wipeAllModalDescription": "Clears every piece of data stored on this device: feed cache, facts, topics, app settings, and reading history. You stay signed in and your account is kept; nothing is deleted from our servers.",
+    "wipeAllModalDescription": "Clears every piece of data stored on this device: feed cache, facts, topics, app settings, and reading history. You stay signed in and your account is kept. This phone can still sign you in without email. Nothing is deleted from our servers.",
     "deletedTitle": "Data Deleted",
     "deletedDescription": "Selected data has been cleared successfully.",
     "errorTitle": "Error",
-    "errorDescription": "Failed to delete data. Please try again."
+    "errorDescription": "Failed to delete data. Please try again.",
+    "keeps": {
+      "title": "What Mera keeps about you",
+      "emailAndPlan": "Your email and your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
+      "plan": "Your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
+      "emailIfAdded": "Your email if you added one, and your plan. Billing records from the App Store or Google Play are kept as long as the law requires.",
+      "signInRecordIos": "A sign-in record for this phone, deleted with your account. Apple's check that this is the real app is not kept.",
+      "signInRecordAndroid": "A sign-in record for this phone, not your phone's ID, deleted with your account. Google's check that this is the real app is not kept.",
+      "signInRecordGeneric": "Without an email, a sign-in record for this phone, deleted with your account. The Apple or Google check that this is the real app is not kept.",
+      "usage": "A daily count of analysed articles, to apply your plan's limit. Sign-ins keep no IP address or browser details.",
+      "topics": "Topic phrases, stored by their text alone with nothing linking them to you, and deleted after 14 days unused.",
+      "privacyLink": "Read the privacy policy"
+    }
   },
   "backup": {
     "title": "Backup",
@@ -1018,11 +1035,11 @@
     "accountDeletedDescription": "Your account has been permanently deleted.",
     "deletionFailedTitle": "Deletion Failed",
     "deletionFailedDescription": "There was an issue deleting your account. Please try again.",
-    "deleteAccountConfirmGrace": "Your account will be scheduled for deletion, with a 30-day grace period. Sign in again within those 30 days and the deletion is automatically canceled.",
+    "deleteAccountConfirmGrace": "Your account will be scheduled for deletion, with a 30-day grace period. If your account has an email, sign in with it within those 30 days to cancel. An account without email can't be signed in to again, so its deletion can't be canceled.",
     "deleteAccountWarningGrace": "⚠️ After 30 days, all your data is permanently removed. You can't undo this.",
     "finalConfirmationBodyGrace": "This schedules your account for permanent deletion in 30 days.",
     "accountDeletionScheduledTitle": "Deletion Scheduled",
-    "accountDeletionScheduledDescription": "Your account will be permanently deleted in 30 days. Sign in again before then to cancel the deletion.",
+    "accountDeletionScheduledDescription": "Your account will be permanently deleted in 30 days. If it has an email, sign in with it before then to cancel.",
     "signedOutTitle": "Signed Out",
     "signedOutDescription": "You have been successfully signed out.",
     "logoutFailedTitle": "Logout Failed",
@@ -1045,8 +1062,8 @@
     "tabPersona": "Persona",
     "tabSources": "Sources",
     "tabPreferences": "Preferences",
-    "privacyOnDevice": "Your topics and facts are stored on this device. On-device processing is on, so the AI that reads and ranks your articles runs here, not on our servers. Articles are translated and summarised on our servers before anyone asks for them. When you fetch news, only your topic phrases leave the device. They carry no user ID. We cache them keyed by the text alone and drop them after 14 days unused. About you we keep your login email, your subscription status, and a daily count of analysed articles, used to enforce your plan. Chats are not saved. The one exception is a transcript you attach to an unblock request. Unless you turn on backup, logging out or switching devices starts your persona again from scratch.",
-    "privacyCloud": "Your topics and facts are stored on this device. Cloud processing is on by default. You can switch to on-device here. Your data is encrypted to the enclave that processes it and decrypted only here. You can check its attestation here, though that does not yet block processing. When you fetch news, only your topic phrases leave the device. They carry no user ID. We cache them keyed by the text alone and drop them after 14 days unused. About you we keep your login email, subscription status, and a daily count of analysed articles, used to enforce your plan. Chats are not saved. The one exception is a transcript you attach to an unblock request. Unless you turn on backup, logging out or switching devices restarts your persona.",
+    "privacyOnDevice": "Your topics and facts are stored on this device. On-device processing is on, so the AI that reads and ranks your articles runs here, not on our servers. Articles are translated and summarised on our servers before anyone asks for them. When you fetch news, only your topic phrases leave the device. They carry no user ID. We cache them keyed by the text alone and drop them after 14 days unused. About you we keep your login email if you added one, your subscription status, and a daily count of analysed articles, used to enforce your plan. If you use Mera without an email, we also keep a sign-in record for this phone until you delete your account. Chats are not saved. The one exception is a transcript you attach to an unblock request. Unless you turn on backup, logging out or switching devices starts your persona again from scratch.",
+    "privacyCloud": "Your topics and facts are stored on this device. Cloud processing is on by default. You can switch to on-device here. Your data is encrypted to the enclave that processes it and decrypted only here. You can check its attestation here, though that does not yet block processing. When you fetch news, only your topic phrases leave the device. They carry no user ID. We cache them keyed by the text alone and drop them after 14 days unused. About you we keep your login email if you added one, subscription status, and a daily count of analysed articles, used to enforce your plan. If you use Mera without an email, we also keep a sign-in record for this phone until you delete your account. Chats are not saved. The one exception is a transcript you attach to an unblock request. Unless you turn on backup, logging out or switching devices restarts your persona.",
     "privacyPolicy": "Privacy Policy",
     "privacyNoticeTitle": "Your privacy",
     "updatingTopics": "Updating topics... {{completed}}/{{total}}",
@@ -1917,7 +1934,13 @@
     "errorDescription": "Please check your connection and try again.",
     "retry": "Try again",
     "welcomeTitle": "Welcome to Mera",
-    "welcomeBody": "Tap \"Agree and continue\" to accept our Terms of Service and Privacy Policy."
+    "welcomeBody": "Tap \"Agree and continue\" to accept our Terms of Service and Privacy Policy.",
+    "deviceNotice": {
+      "appAttest": "No email needed. Mera signs you in with this phone. Apple confirms it's the real Mera app on a real iPhone, to stop fake accounts. We keep a sign-in record while you have an account.",
+      "playIntegrity": "No email needed. Mera signs you in with this phone. Google confirms it's the real Mera app on a real Android phone, to stop fake accounts. We keep a sign-in record, not your phone's ID.",
+      "generic": "No email needed. Mera signs you in with this phone. We keep a sign-in record for this phone while you have an account."
+    },
+    "whatMeraKeeps": "What Mera keeps"
   },
   "tutorials": {
     "entryRow": "How Mera works",
@@ -2183,7 +2206,7 @@
             "body": "Three things, and that is the list.",
             "steps": {
               "0": "Short topic phrases, so there is something to match stories against.",
-              "1": "Your email address and which plan you are on.",
+              "1": "How you sign in, by email or by this phone, and which plan you are on.",
               "2": "A count of how many stories were analysed today, to keep that plan honest."
             },
             "ask": "What does the app send to your servers?"
@@ -2198,11 +2221,11 @@
           },
           "on-device-option": {
             "headline": "On-device, if you want it",
-            "body": "In Settings → Mera Protocol you can move the processing onto this phone, and then nothing about you leaves at all. It downloads a model first, wants a fairly recent phone, and is noticeably slower, which is exactly why it is not the default."
+            "body": "In Settings → Mera Protocol you can move the processing onto this phone. Then the AI that reads your news runs here instead of in the cloud. Your topic phrases still go out to fetch news, and signing in still needs your email or this phone. It downloads a model first, wants a fairly recent phone, and is noticeably slower, which is exactly why it is not the default."
           },
           "what-we-keep": {
             "headline": "What we do keep",
-            "body": "Your login email. Which plan you are on. A per-day count of stories analysed. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused.",
+            "body": "Your login email, if you added one. Which plan you are on. A per-day count of stories analysed. If you use Mera without an email, a sign-in record for this phone, deleted with your account. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused.",
             "ask": "What does Mera store about me on its servers?"
           }
         }

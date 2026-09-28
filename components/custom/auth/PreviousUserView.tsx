@@ -165,16 +165,30 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
                             )}
                         </Button>
                         {onSignInWithoutEmail ? (
-                            <Button
-                                testID="previous-user-device-sign-in"
-                                variant="outline"
-                                action="secondary"
-                                onPress={onSignInWithoutEmail}
-                                disabled={isBusy}
-                                className="w-full"
-                            >
-                                <ButtonText>{t('auth.signInWithoutEmail')}</ButtonText>
-                            </Button>
+                            // Everyone on this view has an email account, so
+                            // the caption says which account the phone opens:
+                            // its own, not this one.
+                            <VStack space="xs">
+                                <Button
+                                    testID="previous-user-device-sign-in"
+                                    variant="outline"
+                                    action="secondary"
+                                    onPress={onSignInWithoutEmail}
+                                    disabled={isBusy}
+                                    accessibilityLabel={t('auth.signInWithoutEmail')}
+                                    accessibilityHint={t('auth.deviceSignInCaption.previousUser', { email })}
+                                    className="w-full"
+                                >
+                                    <ButtonText>{t('auth.signInWithoutEmail')}</ButtonText>
+                                </Button>
+                                <Text
+                                    testID="previous-user-device-sign-in-caption"
+                                    accessible={false}
+                                    className="text-gray-300 text-sm text-center"
+                                >
+                                    {t('auth.deviceSignInCaption.previousUser', { email })}
+                                </Text>
+                            </VStack>
                         ) : null}
                         <Button
                             variant="outline"

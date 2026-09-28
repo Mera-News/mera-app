@@ -45,8 +45,8 @@ const APP_SLUG = Constants.expoConfig?.slug || 'app';
  *   device can no longer read, and typing the code back in is the way home.
  *
  * DELIBERATELY ABSENT (S10): the device sign-in credentials
- * (`_appattest_key_id`, `_device_attest_device_id`, `_device_ref`). They
- * SURVIVE every sign-out flavor so that logging in again resumes the SAME
+ * (`_appattest_key_id`, `_appattest_key_proven`, `_device_attest_device_id`).
+ * They SURVIVE every sign-out flavor so that logging in again resumes the SAME
  * account — the device is the account's credential by design. Only account
  * DELETION and the refusal recovery sever them, via
  * `clearDeviceAuthCredentials()` (lib/device-auth.ts). Logout still wipes all

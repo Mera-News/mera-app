@@ -77,6 +77,8 @@ jest.mock('@expo/vector-icons', () => {
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
+// The real ScrollView pulls an untransformed native spec into jest.
+jest.mock('@/components/ui/scroll-view', () => { const { View } = require('react-native'); return { ScrollView: (p: any) => <View {...p} /> }; });
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 const mockRouterReplace = jest.fn();
@@ -94,9 +96,11 @@ jest.mock('@/lib/database/services/setting-service', () => ({
 }));
 
 const mockAvailability = jest.fn();
+const mockPath = jest.fn();
 const mockSignIn = jest.fn();
 jest.mock('@/lib/device-auth', () => ({
     deviceSignInAvailability: (...a: any[]) => mockAvailability(...a),
+    deviceSignInPath: (...a: any[]) => mockPath(...a),
     signInWithDevice: (...a: any[]) => mockSignIn(...a),
 }));
 
@@ -163,6 +167,7 @@ beforeEach(() => {
         k === 'app_language' ? 'en' : null,
     );
     mockAvailability.mockResolvedValue('native');
+    mockPath.mockResolvedValue('app-attest');
     mockFetchLegalVersions.mockResolvedValue(CURRENT);
     mockAcceptLegal.mockResolvedValue({ ok: true });
 });
@@ -602,5 +607,50 @@ describe('email path consent', () => {
         capturedOnSuccess?.('email-user-1');
         expect(mockSilentlyAcceptLegal).toHaveBeenCalledWith('email-user-1');
         expect(onLoginSuccess).toHaveBeenCalledWith('email-user-1');
+    });
+});
+
+describe('device sign-in notice (what signing in with this phone keeps)', () => {
+    it('shows the App Attest notice ABOVE the agree button, with a What Mera keeps link to the FAQ', async () => {
+        const r = render(<AuthScreen />);
+        await advanceToConsent(r);
+
+        expect(r.getByTestId('auth-consent-device-notice').props.children).toBe(
+            'consent.deviceNotice.appAttest',
+        );
+        fireEvent.press(r.getByTestId('auth-consent-what-mera-keeps'));
+        const { openInAppBrowser } = require('@/lib/web-browser-utils');
+        expect(openInAppBrowser).toHaveBeenCalledWith('https://mera.news/faq#no-email');
+
+        // Order: notice, then the legal buttons, then the commit.
+        const ids = r
+            .UNSAFE_root.findAll((n: any) => typeof n.props?.testID === 'string')
+            .map((n: any) => n.props.testID);
+        const at = (id: string) => ids.indexOf(id);
+        expect(at('auth-consent-device-notice')).toBeGreaterThan(-1);
+        expect(at('auth-consent-device-notice')).toBeLessThan(at('auth-consent-terms'));
+        expect(at('auth-consent-terms')).toBeLessThan(at('auth-consent-agree'));
+    });
+
+    it('names Google on the Play Integrity path, the UUID fallback included', async () => {
+        for (const path of ['play-integrity', 'play-integrity-uuid']) {
+            mockPath.mockResolvedValue(path);
+            const r = render(<AuthScreen />);
+            await advanceToConsent(r);
+            expect(r.getByTestId('auth-consent-device-notice').props.children).toBe(
+                'consent.deviceNotice.playIntegrity',
+            );
+            r.unmount();
+        }
+    });
+
+    it('claims no platform check on the staging dev bypass', async () => {
+        mockAvailability.mockResolvedValue('dev-bypass');
+        mockPath.mockResolvedValue('dev-bypass');
+        const r = render(<AuthScreen />);
+        await advanceToConsent(r);
+        expect(r.getByTestId('auth-consent-device-notice').props.children).toBe(
+            'consent.deviceNotice.generic',
+        );
     });
 });

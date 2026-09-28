@@ -91,6 +91,11 @@
       "body": "Ao entrar sem e-mail, você abre a conta própria deste celular, não a que estava usando. Tudo o que está salvo neste celular para aquela conta será apagado. Isso não pode ser desfeito. Sua outra conta e o plano dela continuam seguros, e você pode entrar nela de novo depois.",
       "continue": "Continuar sem e-mail",
       "useEmail": "Voltar"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Sua conta está ligada a este celular. Se você apagar o Mera ou perder o celular, vai começar uma conta nova. Backup e restauração, em Configurações, pode guardar seus dados.",
+      "reset": "Sua conta está ligada a este celular. Se você redefinir ou perder o celular, vai começar uma conta nova. Backup e restauração, em Configurações, pode guardar seus dados.",
+      "previousUser": "Abre a conta própria deste celular, separada de {{email}}."
     }
   },
   "account": {
@@ -556,7 +561,7 @@
     "viewingHistoryModalDescription": "Limpa o registro local dos artigos que você abriu. O card \"Publicações que você tem lido\" na aba Fontes e o histórico por publicação serão redefinidos para vazio. Nada mais é afetado, e nenhum dado do servidor é tocado (esses dados nunca saíram do seu dispositivo).",
     "wipeAllTitle": "Apagar todos os dados",
     "wipeAllDescription": "Redefinir tudo, exceto sua conta",
-    "wipeAllModalDescription": "Limpa todos os seus dados: cache do feed, fatos, tópicos, sugestões, configurações do app, histórico de leitura. Você permanece conectado; sua conta em si é mantida.",
+    "wipeAllModalDescription": "Apaga todos os dados guardados neste aparelho: cache do feed, fatos, tópicos, configurações do app e histórico de leitura. Você continua conectado e sua conta é mantida. Este celular ainda pode fazer seu login sem e-mail. Nada é apagado dos nossos servidores.",
     "deletedTitle": "Dados Excluídos",
     "deletedDescription": "Os dados selecionados foram limpos com sucesso.",
     "errorTitle": "Erro",
@@ -570,7 +575,19 @@
     "exportHistorySubject": "Meu histórico de leitura do Mera (JSON)",
     "exporting": "Exportando…",
     "exportHistoryEmptyTitle": "Nada para exportar ainda",
-    "exportHistoryEmptyDescription": "Você não leu nenhum artigo nos últimos 30 dias."
+    "exportHistoryEmptyDescription": "Você não leu nenhum artigo nos últimos 30 dias.",
+    "keeps": {
+      "title": "O que o Mera guarda sobre você",
+      "emailAndPlan": "Seu e-mail e seu plano. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
+      "plan": "Seu plano. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
+      "emailIfAdded": "Seu e-mail, se você adicionou um, e seu plano. Registros de cobrança da App Store ou do Google Play são guardados pelo tempo que a lei exige.",
+      "signInRecordIos": "Um registro de acesso deste celular, apagado junto com sua conta. A verificação da Apple de que este é o app de verdade não é guardada.",
+      "signInRecordAndroid": "Um registro de acesso deste celular, não o ID do seu celular, apagado junto com sua conta. A verificação do Google de que este é o app de verdade não é guardada.",
+      "signInRecordGeneric": "Sem e-mail, um registro de acesso deste celular, apagado junto com sua conta. A verificação da Apple ou do Google de que este é o app de verdade não é guardada.",
+      "usage": "Uma contagem diária de artigos analisados, para aplicar o limite do seu plano. Os acessos não guardam endereço IP nem dados do navegador.",
+      "topics": "Frases de tópicos, guardadas só pelo texto, sem nada que as ligue a você, e apagadas após 14 dias sem uso.",
+      "privacyLink": "Ler a política de privacidade"
+    }
   },
   "preferences": {
     "manageSettings": "Gerencie as configurações do app e da conta",
@@ -609,18 +626,18 @@
     "contentPolicy": "Política de conteúdo",
     "faq": "Perguntas frequentes",
     "reportBug": "Relatar um bug",
-    "deleteAccountConfirmGrace": "Sua conta será agendada para exclusão, com um período de graça de 30 dias. Entre novamente nos próximos 30 dias e a exclusão é automaticamente cancelada.",
+    "deleteAccountConfirmGrace": "Sua conta será agendada para exclusão, com um período de carência de 30 dias. Se sua conta tem e-mail, entre com ele nesses 30 dias para cancelar. Uma conta sem e-mail não pode mais ser acessada, então a exclusão dela não pode ser cancelada.",
     "deleteAccountWarningGrace": "⚠️ Após 30 dias, todos os seus dados são removidos permanentemente. Isso não pode ser desfeito.",
     "finalConfirmationBodyGrace": "Isto agenda sua conta para exclusão permanente em 30 dias.",
     "accountDeletionScheduledTitle": "Exclusão Agendada",
-    "accountDeletionScheduledDescription": "Sua conta será permanentemente excluída em 30 dias. Entre novamente antes disso para cancelar a exclusão."
+    "accountDeletionScheduledDescription": "Sua conta será excluída permanentemente em 30 dias. Se ela tem e-mail, entre com ele antes disso para cancelar."
   },
   "configPanel": {
     "tabPersona": "Perfil",
     "tabSources": "Fontes",
     "tabPreferences": "Preferências",
-    "privacyOnDevice": "Seus tópicos e fatos ficam armazenados neste dispositivo. O processamento no dispositivo está ativado, então a IA que lê e classifica seus artigos roda aqui, não em nossos servidores. Os artigos são traduzidos e resumidos em nossos servidores antes de alguém pedir. Quando você busca notícias, apenas suas frases de tópico saem do dispositivo. Elas não levam nenhum ID de usuário. Nós as guardamos em cache, indexadas apenas pelo texto, e as apagamos após 14 dias sem uso. Sobre você, guardamos seu e-mail de acesso, seu status de assinatura e uma contagem diária de artigos analisados, usada para aplicar seu plano. Os chats não são salvos. A única exceção é uma transcrição que você anexa a um pedido de desbloqueio. Se você não ativar o backup, sair da conta ou trocar de dispositivo recomeça sua persona do zero.",
-    "privacyCloud": "Seus tópicos e fatos ficam armazenados neste dispositivo. O processamento na nuvem está ativado por padrão. Você pode mudar aqui para o processamento no dispositivo. Seus dados são criptografados para o enclave que os processa e descriptografados apenas aqui. Você pode verificar a atestação dele aqui, embora isso ainda não bloqueie o processamento. Quando você busca notícias, apenas suas frases de tópico saem do dispositivo. Elas não levam nenhum ID de usuário. Nós as guardamos em cache, indexadas apenas pelo texto, e as apagamos após 14 dias sem uso. Sobre você, guardamos seu e-mail de acesso, seu status de assinatura e uma contagem diária de artigos analisados, usada para aplicar seu plano. Os chats não são salvos. A única exceção é uma transcrição que você anexa a um pedido de desbloqueio. Se você não ativar o backup, sua persona recomeça do zero.",
+    "privacyOnDevice": "Seus tópicos e fatos ficam armazenados neste dispositivo. O processamento no dispositivo está ativado, então a IA que lê e classifica seus artigos roda aqui, não em nossos servidores. Os artigos são traduzidos e resumidos em nossos servidores antes de alguém pedir. Quando você busca notícias, apenas suas frases de tópico saem do dispositivo. Elas não levam nenhum ID de usuário. Nós as guardamos em cache, indexadas apenas pelo texto, e as apagamos após 14 dias sem uso. Sobre você, guardamos seu e-mail de acesso, se você adicionou um, seu status de assinatura e uma contagem diária de artigos analisados, usada para aplicar seu plano. Se você usa o Mera sem e-mail, também guardamos um registro de acesso deste celular até você excluir sua conta. Os chats não são salvos. A única exceção é uma transcrição que você anexa a um pedido de desbloqueio. Se você não ativar o backup, sair da conta ou trocar de dispositivo recomeça sua persona do zero.",
+    "privacyCloud": "Seus tópicos e fatos ficam armazenados neste dispositivo. O processamento na nuvem está ativado por padrão. Você pode mudar aqui para o processamento no dispositivo. Seus dados são criptografados para o enclave que os processa e descriptografados apenas aqui. Você pode verificar a atestação dele aqui, embora isso ainda não bloqueie o processamento. Quando você busca notícias, apenas suas frases de tópico saem do dispositivo. Elas não levam nenhum ID de usuário. Nós as guardamos em cache, indexadas apenas pelo texto, e as apagamos após 14 dias sem uso. Sobre você, guardamos seu e-mail de acesso, se você adicionou um, seu status de assinatura e uma contagem diária de artigos analisados, usada para aplicar seu plano. Se você usa o Mera sem e-mail, também guardamos um registro de acesso deste celular até você excluir sua conta. Os chats não são salvos. A única exceção é uma transcrição que você anexa a um pedido de desbloqueio. Se você não ativar o backup, sua persona recomeça do zero.",
     "privacyPolicy": "Política de Privacidade",
     "privacyNoticeTitle": "Sua privacidade",
     "updatingTopics": "Atualizando tópicos... {{completed}}/{{total}}",
@@ -1799,7 +1816,13 @@
     "errorDescription": "Por favor, verifique sua conexão e tente novamente.",
     "retry": "Tentar novamente",
     "welcomeTitle": "Boas-vindas ao Mera",
-    "welcomeBody": "Toque em \"Concordar e continuar\" para aceitar nossos Termos de Serviço e nossa Política de Privacidade."
+    "welcomeBody": "Toque em \"Concordar e continuar\" para aceitar nossos Termos de Serviço e nossa Política de Privacidade.",
+    "deviceNotice": {
+      "appAttest": "Sem precisar de e-mail. O Mera faz seu login com este celular. A Apple confirma que é o app Mera de verdade em um iPhone de verdade, para barrar contas falsas. Guardamos um registro de acesso enquanto você tiver uma conta.",
+      "playIntegrity": "Sem precisar de e-mail. O Mera faz seu login com este celular. O Google confirma que é o app Mera de verdade em um celular Android de verdade, para barrar contas falsas. Guardamos um registro de acesso, não o ID do seu celular.",
+      "generic": "Sem precisar de e-mail. O Mera faz seu login com este celular. Guardamos um registro de acesso deste celular enquanto você tiver uma conta."
+    },
+    "whatMeraKeeps": "O que o Mera guarda"
   },
   "tutorials": {
     "entryRow": "Como o Mera funciona",
@@ -2065,7 +2088,7 @@
             "body": "Três coisas, e essa é a lista.",
             "steps": {
               "0": "Frases de tópico curtas, para ter algo para combinar com histórias.",
-              "1": "Seu endereço de e-mail e qual plano você está.",
+              "1": "Como você faz login, por e-mail ou com este celular, e qual plano você tem.",
               "2": "Uma contagem de quantas histórias foram analisadas hoje, para manter esse plano honesto."
             },
             "ask": "O que o app envia aos seus servidores?"
@@ -2080,11 +2103,11 @@
           },
           "on-device-option": {
             "headline": "No dispositivo, se quiser",
-            "body": "Em Configurações → Mera Protocol você pode mover o processamento para este celular, e então nada sobre você sai. Ele baixa um modelo primeiro, quer um celular bem recente, e é notavelmente mais lento, o que é exatamente por que não é o padrão."
+            "body": "Em Configurações → Mera Protocol você pode passar o processamento para este celular. Aí a IA que lê suas notícias roda aqui em vez de na nuvem. Suas frases de tópicos ainda saem para buscar notícias, e o login ainda precisa do seu e-mail ou deste celular. Primeiro ele baixa um modelo, precisa de um celular razoavelmente recente e é bem mais lento, e é exatamente por isso que não é o padrão."
           },
           "what-we-keep": {
             "headline": "O que mantemos",
-            "body": "Seu e-mail de login. Qual plano você está. Uma contagem por dia de histórias analisadas. As frases de tópico são armazenadas em cache apenas por seu texto, sem nada registrando quem pediu, e apagadas após quatorze dias sem uso.",
+            "body": "Seu e-mail de acesso, se você adicionou um. Qual plano você tem. Uma contagem diária de artigos analisados. Se você usa o Mera sem e-mail, um registro de acesso deste celular, apagado junto com sua conta. As frases de tópicos ficam em cache só pelo texto, sem nada que registre quem pediu, e são apagadas após catorze dias sem uso.",
             "ask": "O que Mera armazena sobre mim em seus servidores?"
           }
         }

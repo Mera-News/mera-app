@@ -91,6 +91,11 @@
       "body": "Wenn Sie sich ohne E-Mail anmelden, wird das eigene Konto dieses Telefons geöffnet, nicht das Konto, das Sie bisher verwendet haben. Alles, was für dieses Konto auf diesem Telefon gespeichert ist, wird gelöscht. Das lässt sich nicht rückgängig machen. Ihr anderes Konto und sein Tarif bleiben erhalten, und Sie können sich später wieder dort anmelden.",
       "continue": "Ohne E-Mail fortfahren",
       "useEmail": "Zurück"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Dein Konto ist an dieses Telefon gebunden. Wenn du Mera löschst oder das Telefon verlierst, beginnst du mit einem neuen Konto. Backup und Wiederherstellung in den Einstellungen kann deine Daten sichern.",
+      "reset": "Dein Konto ist an dieses Telefon gebunden. Wenn du das Telefon zurücksetzt oder verlierst, beginnst du mit einem neuen Konto. Backup und Wiederherstellung in den Einstellungen kann deine Daten sichern.",
+      "previousUser": "Öffnet das eigene Konto dieses Telefons, getrennt von {{email}}."
     }
   },
   "account": {
@@ -556,7 +561,7 @@
     "viewingHistoryModalDescription": "Löscht das lokale Protokoll der von Ihnen geöffneten Artikel. Die Karte \"Zuletzt gelesene Publikationen\" im Tab \"Quellen\" sowie der Verlauf pro Publikation werden zurückgesetzt. Nichts anderes ist betroffen, und es werden keine Serverdaten berührt (diese Daten haben Ihr Gerät nie verlassen).",
     "wipeAllTitle": "Alle Daten löschen",
     "wipeAllDescription": "Alles außer Ihrem Konto zurücksetzen",
-    "wipeAllModalDescription": "Löscht alle Ihre Daten: Feed-Cache, Fakten, Themen, Vorschläge, App-Einstellungen, Leseverlauf. Sie bleiben angemeldet; Ihr Konto selbst bleibt erhalten.",
+    "wipeAllModalDescription": "Löscht alle auf diesem Gerät gespeicherten Daten: Feed-Cache, Fakten, Themen, App-Einstellungen und Leseverlauf. Sie bleiben angemeldet und Ihr Konto bleibt erhalten. Dieses Telefon kann Sie weiterhin ohne E-Mail anmelden. Auf unseren Servern wird nichts gelöscht.",
     "deletedTitle": "Daten gelöscht",
     "deletedDescription": "Die ausgewählten Daten wurden erfolgreich gelöscht.",
     "errorTitle": "Fehler",
@@ -570,7 +575,19 @@
     "exportHistorySubject": "Mein Mera-Leseverlauf (JSON)",
     "exporting": "Wird exportiert...",
     "exportHistoryEmptyTitle": "Noch nichts zum Exportieren",
-    "exportHistoryEmptyDescription": "Du hast in den letzten 30 Tagen keine Artikel gelesen."
+    "exportHistoryEmptyDescription": "Du hast in den letzten 30 Tagen keine Artikel gelesen.",
+    "keeps": {
+      "title": "Was Mera über dich speichert",
+      "emailAndPlan": "Deine E-Mail und dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
+      "plan": "Dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
+      "emailIfAdded": "Deine E-Mail, falls du eine hinzugefügt hast, und dein Tarif. Abrechnungsdaten aus dem App Store oder Google Play bewahren wir auf, solange das Gesetz es verlangt.",
+      "signInRecordIos": "Ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Apples Prüfung, ob dies die echte App ist, wird nicht gespeichert.",
+      "signInRecordAndroid": "Ein Anmeldeeintrag für dieses Telefon, nicht die ID deines Telefons, der mit deinem Konto gelöscht wird. Googles Prüfung, ob dies die echte App ist, wird nicht gespeichert.",
+      "signInRecordGeneric": "Ohne E-Mail ein Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Prüfung von Apple oder Google, ob dies die echte App ist, wird nicht gespeichert.",
+      "usage": "Eine tägliche Zahl analysierter Artikel, um das Limit deines Tarifs anzuwenden. Anmeldungen speichern keine IP-Adresse und keine Browserdaten.",
+      "topics": "Themenbegriffe, nur nach ihrem Text gespeichert, ohne Verbindung zu dir, und nach 14 Tagen ohne Nutzung gelöscht.",
+      "privacyLink": "Datenschutzerklärung lesen"
+    }
   },
   "preferences": {
     "manageSettings": "App-Einstellungen und Konto verwalten",
@@ -609,18 +626,18 @@
     "contentPolicy": "Inhaltsrichtlinie",
     "faq": "FAQ",
     "reportBug": "Fehler melden",
-    "deleteAccountConfirmGrace": "Dein Konto wird zum Löschen eingeplant, mit einer 30-Tage-Kulanzfrist. Melde dich innerhalb dieser 30 Tage erneut an und das Löschen wird automatisch abgebrochen.",
+    "deleteAccountConfirmGrace": "Dein Konto wird zum Löschen vorgemerkt, mit einer Frist von 30 Tagen. Wenn dein Konto eine E-Mail hat, melde dich innerhalb dieser 30 Tage damit an, um das Löschen abzubrechen. Ein Konto ohne E-Mail kann nicht mehr angemeldet werden, daher lässt sich sein Löschen nicht abbrechen.",
     "deleteAccountWarningGrace": "⚠️ Nach 30 Tagen werden alle deine Daten endgültig entfernt. Das lässt sich nicht rückgängig machen.",
     "finalConfirmationBodyGrace": "Dies plant dein Konto zur permanenten Löschung in 30 Tagen.",
     "accountDeletionScheduledTitle": "Löschung geplant",
-    "accountDeletionScheduledDescription": "Dein Konto wird in 30 Tagen permanent gelöscht. Melde dich vorher erneut an, um die Löschung abzubrechen."
+    "accountDeletionScheduledDescription": "Dein Konto wird in 30 Tagen endgültig gelöscht. Wenn es eine E-Mail hat, melde dich vorher damit an, um das Löschen abzubrechen."
   },
   "configPanel": {
     "tabPersona": "Persona",
     "tabSources": "Quellen",
     "tabPreferences": "Einstellungen",
-    "privacyOnDevice": "Ihre Themen und Fakten werden auf diesem Gerät gespeichert. Die Verarbeitung auf dem Gerät ist aktiviert, daher läuft die KI, die Ihre Artikel liest und bewertet, hier und nicht auf unseren Servern. Artikel werden auf unseren Servern übersetzt und zusammengefasst, bevor jemand danach fragt. Wenn Sie Nachrichten abrufen, verlassen nur Ihre Themenbegriffe das Gerät. Sie enthalten keine Nutzer-ID. Wir speichern sie zwischen, allein nach dem Text indexiert, und löschen sie nach 14 Tagen ohne Nutzung. Über Sie speichern wir Ihre Anmelde-E-Mail, Ihren Abostatus und eine tägliche Zahl analysierter Artikel, die zur Durchsetzung Ihres Tarifs dient. Chats werden nicht gespeichert. Die einzige Ausnahme ist ein Transkript, das Sie einer Entsperranfrage beifügen. Wenn Sie die Sicherung nicht aktivieren, beginnt Ihre Persona nach dem Abmelden oder einem Gerätewechsel von vorn.",
-    "privacyCloud": "Ihre Themen und Fakten werden auf diesem Gerät gespeichert. Die Cloud-Verarbeitung ist standardmäßig aktiviert. Sie können hier zur Verarbeitung auf dem Gerät wechseln. Ihre Daten werden für die Enklave verschlüsselt, die sie verarbeitet, und nur hier entschlüsselt. Sie können deren Attestierung hier prüfen, auch wenn das die Verarbeitung noch nicht blockiert. Wenn Sie Nachrichten abrufen, verlassen nur Ihre Themenbegriffe das Gerät. Sie enthalten keine Nutzer-ID. Wir speichern sie zwischen, allein nach dem Text indexiert, und löschen sie nach 14 Tagen ohne Nutzung. Über Sie speichern wir Ihre Anmelde-E-Mail, Ihren Abostatus und eine tägliche Zahl analysierter Artikel, die zur Durchsetzung Ihres Tarifs dient. Chats werden nicht gespeichert. Die einzige Ausnahme ist ein Transkript, das Sie einer Entsperranfrage beifügen. Wenn Sie die Sicherung nicht aktivieren, beginnt Ihre Persona von vorn.",
+    "privacyOnDevice": "Ihre Themen und Fakten werden auf diesem Gerät gespeichert. Die Verarbeitung auf dem Gerät ist aktiviert, daher läuft die KI, die Ihre Artikel liest und bewertet, hier und nicht auf unseren Servern. Artikel werden auf unseren Servern übersetzt und zusammengefasst, bevor jemand danach fragt. Wenn Sie Nachrichten abrufen, verlassen nur Ihre Themenbegriffe das Gerät. Sie enthalten keine Nutzer-ID. Wir speichern sie zwischen, allein nach dem Text indexiert, und löschen sie nach 14 Tagen ohne Nutzung. Über Sie speichern wir Ihre Anmelde-E-Mail, falls Sie eine hinzugefügt haben, Ihren Abostatus und eine tägliche Zahl analysierter Artikel, die zur Durchsetzung Ihres Tarifs dient. Wenn Sie Mera ohne E-Mail nutzen, speichern wir außerdem einen Anmeldeeintrag für dieses Telefon, bis Sie Ihr Konto löschen. Chats werden nicht gespeichert. Die einzige Ausnahme ist ein Transkript, das Sie einer Entsperranfrage beifügen. Wenn Sie die Sicherung nicht aktivieren, beginnt Ihre Persona nach dem Abmelden oder einem Gerätewechsel von vorn.",
+    "privacyCloud": "Ihre Themen und Fakten werden auf diesem Gerät gespeichert. Die Cloud-Verarbeitung ist standardmäßig aktiviert. Sie können hier zur Verarbeitung auf dem Gerät wechseln. Ihre Daten werden für die Enklave verschlüsselt, die sie verarbeitet, und nur hier entschlüsselt. Sie können deren Attestierung hier prüfen, auch wenn das die Verarbeitung noch nicht blockiert. Wenn Sie Nachrichten abrufen, verlassen nur Ihre Themenbegriffe das Gerät. Sie enthalten keine Nutzer-ID. Wir speichern sie zwischen, allein nach dem Text indexiert, und löschen sie nach 14 Tagen ohne Nutzung. Über Sie speichern wir Ihre Anmelde-E-Mail, falls Sie eine hinzugefügt haben, Ihren Abostatus und eine tägliche Zahl analysierter Artikel, die zur Durchsetzung Ihres Tarifs dient. Wenn Sie Mera ohne E-Mail nutzen, speichern wir außerdem einen Anmeldeeintrag für dieses Telefon, bis Sie Ihr Konto löschen. Chats werden nicht gespeichert. Die einzige Ausnahme ist ein Transkript, das Sie einer Entsperranfrage beifügen. Wenn Sie die Sicherung nicht aktivieren, beginnt Ihre Persona von vorn.",
     "privacyPolicy": "Datenschutzrichtlinie",
     "privacyNoticeTitle": "Deine Privatsphäre",
     "updatingTopics": "Themen werden aktualisiert... {{completed}}/{{total}}",
@@ -1799,7 +1816,13 @@
     "errorDescription": "Bitte überprüfe deine Verbindung und versuche es erneut.",
     "retry": "Erneut versuchen",
     "welcomeTitle": "Willkommen bei Mera",
-    "welcomeBody": "Tippe auf \"Zustimmen und weiter\", um unsere Nutzungsbedingungen und Datenschutzerklärung zu akzeptieren."
+    "welcomeBody": "Tippe auf \"Zustimmen und weiter\", um unsere Nutzungsbedingungen und Datenschutzerklärung zu akzeptieren.",
+    "deviceNotice": {
+      "appAttest": "Keine E-Mail nötig. Mera meldet dich mit diesem Telefon an. Apple bestätigt, dass dies die echte Mera App auf einem echten iPhone ist, gegen Fake-Konten. Solange du ein Konto hast, speichern wir einen Anmeldeeintrag.",
+      "playIntegrity": "Keine E-Mail nötig. Mera meldet dich mit diesem Telefon an. Google bestätigt, dass dies die echte Mera App auf einem echten Android-Telefon ist, gegen Fake-Konten. Wir speichern einen Anmeldeeintrag, nicht die ID deines Telefons.",
+      "generic": "Keine E-Mail nötig. Mera meldet dich mit diesem Telefon an. Solange du ein Konto hast, speichern wir einen Anmeldeeintrag für dieses Telefon."
+    },
+    "whatMeraKeeps": "Was Mera speichert"
   },
   "tutorials": {
     "entryRow": "So funktioniert Mera",
@@ -2065,7 +2088,7 @@
             "body": "Drei Dinge, und das ist die Liste.",
             "steps": {
               "0": "Kurze Topicsätze, damit es etwas zum Abgleichen von Geschichten gegen gibt.",
-              "1": "Deine E-Mail-Adresse und welchen Plan du hast.",
+              "1": "Wie du dich anmeldest, per E-Mail oder mit diesem Telefon, und welchen Tarif du hast.",
               "2": "Eine Zahl von wie viele Geschichten heute analysiert wurden, um diesen Plan ehrlich zu halten."
             },
             "ask": "Was sendet die App an deine Server?"
@@ -2080,11 +2103,11 @@
           },
           "on-device-option": {
             "headline": "Auf dem Gerät, wenn du es möchtest",
-            "body": "In den Einstellungen → Mera Protocol kannst du die Verarbeitung auf dieses Telefon verschieben, und dann verlässt nichts über dich überhaupt. Es lädt ein Modell zuerst, will ein ziemlich neues Telefon und ist merklich langsamer, was genau ist, warum es nicht die Standard ist."
+            "body": "In Einstellungen → Mera Protocol kannst du die Verarbeitung auf dieses Telefon verlegen. Dann läuft die KI, die deine Nachrichten liest, hier statt in der Cloud. Deine Themenbegriffe gehen weiterhin raus, um Nachrichten abzurufen, und für die Anmeldung braucht es weiterhin deine E-Mail oder dieses Telefon. Zuerst wird ein Modell heruntergeladen, es braucht ein recht neues Telefon und ist spürbar langsamer, genau deshalb ist es nicht die Standardeinstellung."
           },
           "what-we-keep": {
             "headline": "Was wir behalten",
-            "body": "Deine Login-E-Mail. Welchen Plan du hast. Eine pro-Tag Anzahl von Geschichten analysiert. Die Topicsätze werden nur von ihrem Text gecacht, mit nichts, das aufzeichnet, wer sie fragte, und nach vierzehn Tagen ungenutzter fallen gelassen.",
+            "body": "Deine Anmelde-E-Mail, falls du eine hinzugefügt hast. Welchen Tarif du hast. Eine tägliche Zahl analysierter Artikel. Wenn du Mera ohne E-Mail nutzt, einen Anmeldeeintrag für dieses Telefon, der mit deinem Konto gelöscht wird. Die Themenbegriffe werden nur nach ihrem Text zwischengespeichert, ohne festzuhalten, wer sie angefragt hat, und nach vierzehn Tagen ohne Nutzung gelöscht.",
             "ask": "Was speichert Mera über mich auf seinen Servern?"
           }
         }

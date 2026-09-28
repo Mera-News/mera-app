@@ -91,6 +91,11 @@
       "body": "Al iniciar sesión sin correo se abre la cuenta propia de este teléfono, no la que estabas usando. Se borrará todo lo guardado en este teléfono para esa cuenta. No se puede deshacer. Tu otra cuenta y su plan siguen a salvo, y puedes volver a iniciar sesión en ella más tarde.",
       "continue": "Continuar sin correo",
       "useEmail": "Volver"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Tu cuenta está vinculada a este teléfono. Si eliminas Mera o pierdes el teléfono, empezarás con una cuenta nueva. Copia de seguridad y restauración, en Ajustes, puede conservar tus datos.",
+      "reset": "Tu cuenta está vinculada a este teléfono. Si restableces o pierdes el teléfono, empezarás con una cuenta nueva. Copia de seguridad y restauración, en Ajustes, puede conservar tus datos.",
+      "previousUser": "Abre la cuenta propia de este teléfono, distinta de {{email}}."
     }
   },
   "account": {
@@ -556,7 +561,7 @@
     "viewingHistoryModalDescription": "Borra el registro local de artículos que has abierto. La tarjeta \"Publicaciones que has estado leyendo\" de la pestaña Fuentes y el historial por publicación se restablecerán a vacío. No se afecta nada más y no se tocan datos del servidor (estos datos nunca salieron de tu dispositivo).",
     "wipeAllTitle": "Borrar todos los datos",
     "wipeAllDescription": "Restablecer todo excepto tu cuenta",
-    "wipeAllModalDescription": "Borra todos tus datos: caché del feed, hechos, temas, sugerencias, ajustes de la aplicación, historial de lectura. Permaneces con la sesión iniciada; tu cuenta se conserva.",
+    "wipeAllModalDescription": "Borra todos los datos guardados en este dispositivo: caché del feed, hechos, temas, ajustes de la app e historial de lectura. Sigues con la sesión iniciada y tu cuenta se conserva. Este teléfono puede seguir iniciando tu sesión sin correo. No se borra nada de nuestros servidores.",
     "deletedTitle": "Datos eliminados",
     "deletedDescription": "Los datos seleccionados se han limpiado exitosamente.",
     "errorTitle": "Error",
@@ -570,7 +575,19 @@
     "exportHistorySubject": "Mi historial de lectura de Mera (JSON)",
     "exporting": "Exportando...",
     "exportHistoryEmptyTitle": "Nada que exportar aún",
-    "exportHistoryEmptyDescription": "No has leído ningún artículo en los últimos 30 días."
+    "exportHistoryEmptyDescription": "No has leído ningún artículo en los últimos 30 días.",
+    "keeps": {
+      "title": "Qué guarda Mera sobre ti",
+      "emailAndPlan": "Tu correo y tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
+      "plan": "Tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
+      "emailIfAdded": "Tu correo si añadiste uno, y tu plan. Los registros de facturación de App Store o Google Play se guardan el tiempo que exige la ley.",
+      "signInRecordIos": "Un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. La comprobación de Apple de que es la app real no se guarda.",
+      "signInRecordAndroid": "Un registro de inicio de sesión de este teléfono, no el ID de tu teléfono, que se borra con tu cuenta. La comprobación de Google de que es la app real no se guarda.",
+      "signInRecordGeneric": "Sin correo, un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. La comprobación de Apple o Google de que es la app real no se guarda.",
+      "usage": "Un recuento diario de artículos analizados, para aplicar el límite de tu plan. Los inicios de sesión no guardan dirección IP ni datos del navegador.",
+      "topics": "Frases de temas, guardadas solo por su texto sin nada que las vincule contigo, y borradas tras 14 días sin uso.",
+      "privacyLink": "Leer la política de privacidad"
+    }
   },
   "preferences": {
     "manageSettings": "Gestiona los ajustes de tu aplicación y cuenta",
@@ -609,18 +626,18 @@
     "contentPolicy": "Política de contenido",
     "faq": "Preguntas frecuentes",
     "reportBug": "Informar de un error",
-    "deleteAccountConfirmGrace": "Tu cuenta se programará para eliminación, con un período de gracia de 30 días. Inicia sesión de nuevo en esos 30 días y la eliminación se cancela automáticamente.",
+    "deleteAccountConfirmGrace": "Tu cuenta quedará programada para eliminarse, con un periodo de gracia de 30 días. Si tu cuenta tiene correo, inicia sesión con él en esos 30 días para cancelar. Una cuenta sin correo no puede volver a iniciar sesión, así que su eliminación no se puede cancelar.",
     "deleteAccountWarningGrace": "⚠️ Después de 30 días, todos tus datos se eliminan permanentemente. No se puede deshacer.",
     "finalConfirmationBodyGrace": "Esto programa tu cuenta para eliminación permanente en 30 días.",
     "accountDeletionScheduledTitle": "Eliminación programada",
-    "accountDeletionScheduledDescription": "Tu cuenta se eliminará permanentemente en 30 días. Inicia sesión de nuevo antes de entonces para cancelar la eliminación."
+    "accountDeletionScheduledDescription": "Tu cuenta se eliminará de forma permanente en 30 días. Si tiene correo, inicia sesión con él antes para cancelar."
   },
   "configPanel": {
     "tabPersona": "Perfil",
     "tabSources": "Fuentes",
     "tabPreferences": "Preferencias",
-    "privacyOnDevice": "Tus temas y hechos se almacenan en este dispositivo. El procesamiento en el dispositivo está activado, así que la IA que lee y ordena tus artículos se ejecuta aquí, no en nuestros servidores. Los artículos se traducen y resumen en nuestros servidores antes de que nadie los pida. Cuando obtienes noticias, solo tus frases de tema salen del dispositivo. No llevan ningún ID de usuario. Las guardamos en caché, indexadas solo por el texto, y las borramos tras 14 días sin uso. Sobre ti guardamos tu correo de acceso, tu estado de suscripción y un recuento diario de artículos analizados, usado para aplicar tu plan. Los chats no se guardan. La única excepción es una transcripción que adjuntas a una solicitud de desbloqueo. Si no activas la copia de seguridad, cerrar sesión o cambiar de dispositivo reinicia tu persona desde cero.",
-    "privacyCloud": "Tus temas y hechos se almacenan en este dispositivo. El procesamiento en la nube está activado de forma predeterminada. Aquí puedes cambiar al procesamiento en el dispositivo. Tus datos se cifran para el enclave que los procesa y solo se descifran aquí. Aquí puedes comprobar su atestación, aunque eso todavía no bloquea el procesamiento. Cuando obtienes noticias, solo tus frases de tema salen del dispositivo. No llevan ningún ID de usuario. Las guardamos en caché, indexadas solo por el texto, y las borramos tras 14 días sin uso. Sobre ti guardamos tu correo de acceso, tu estado de suscripción y un recuento diario de artículos analizados, usado para aplicar tu plan. Los chats no se guardan. La única excepción es una transcripción que adjuntas a una solicitud de desbloqueo. Si no activas la copia de seguridad, tu persona se reinicia desde cero.",
+    "privacyOnDevice": "Tus temas y hechos se almacenan en este dispositivo. El procesamiento en el dispositivo está activado, así que la IA que lee y ordena tus artículos se ejecuta aquí, no en nuestros servidores. Los artículos se traducen y resumen en nuestros servidores antes de que nadie los pida. Cuando obtienes noticias, solo tus frases de tema salen del dispositivo. No llevan ningún ID de usuario. Las guardamos en caché, indexadas solo por el texto, y las borramos tras 14 días sin uso. Sobre ti guardamos tu correo de acceso si añadiste uno, tu estado de suscripción y un recuento diario de artículos analizados, usado para aplicar tu plan. Si usas Mera sin correo, también guardamos un registro de inicio de sesión de este teléfono hasta que borres tu cuenta. Los chats no se guardan. La única excepción es una transcripción que adjuntas a una solicitud de desbloqueo. Si no activas la copia de seguridad, cerrar sesión o cambiar de dispositivo reinicia tu persona desde cero.",
+    "privacyCloud": "Tus temas y hechos se almacenan en este dispositivo. El procesamiento en la nube está activado de forma predeterminada. Aquí puedes cambiar al procesamiento en el dispositivo. Tus datos se cifran para el enclave que los procesa y solo se descifran aquí. Aquí puedes comprobar su atestación, aunque eso todavía no bloquea el procesamiento. Cuando obtienes noticias, solo tus frases de tema salen del dispositivo. No llevan ningún ID de usuario. Las guardamos en caché, indexadas solo por el texto, y las borramos tras 14 días sin uso. Sobre ti guardamos tu correo de acceso si añadiste uno, tu estado de suscripción y un recuento diario de artículos analizados, usado para aplicar tu plan. Si usas Mera sin correo, también guardamos un registro de inicio de sesión de este teléfono hasta que borres tu cuenta. Los chats no se guardan. La única excepción es una transcripción que adjuntas a una solicitud de desbloqueo. Si no activas la copia de seguridad, tu persona se reinicia desde cero.",
     "privacyPolicy": "Política de privacidad",
     "privacyNoticeTitle": "Tu privacidad",
     "updatingTopics": "Actualizando temas... {{completed}}/{{total}}",
@@ -1799,7 +1816,13 @@
     "errorDescription": "Por favor, comprueba tu conexión e intenta de nuevo.",
     "retry": "Intentar de nuevo",
     "welcomeTitle": "Te damos la bienvenida a Mera",
-    "welcomeBody": "Toca \"Aceptar y continuar\" para aceptar nuestros Términos del Servicio y la Política de Privacidad."
+    "welcomeBody": "Toca \"Aceptar y continuar\" para aceptar nuestros Términos del Servicio y la Política de Privacidad.",
+    "deviceNotice": {
+      "appAttest": "No necesitas correo. Mera inicia tu sesión con este teléfono. Apple confirma que es la app real de Mera en un iPhone real, para frenar las cuentas falsas. Guardamos un registro de inicio de sesión mientras tengas una cuenta.",
+      "playIntegrity": "No necesitas correo. Mera inicia tu sesión con este teléfono. Google confirma que es la app real de Mera en un teléfono Android real, para frenar las cuentas falsas. Guardamos un registro de inicio de sesión, no el ID de tu teléfono.",
+      "generic": "No necesitas correo. Mera inicia tu sesión con este teléfono. Guardamos un registro de inicio de sesión de este teléfono mientras tengas una cuenta."
+    },
+    "whatMeraKeeps": "Qué guarda Mera"
   },
   "tutorials": {
     "entryRow": "Cómo funciona Mera",
@@ -2065,7 +2088,7 @@
             "body": "Tres cosas, y esa es la lista.",
             "steps": {
               "0": "Frases de temas cortos, así hay algo que comparar historias contra.",
-              "1": "Tu dirección de correo y en qué plan estás.",
+              "1": "Cómo inicias sesión, con correo o con este teléfono, y qué plan tienes.",
               "2": "Un recuento de cuántas historias se analizaron hoy, para mantener ese plan honesto."
             },
             "ask": "¿Qué envía la aplicación a tus servidores?"
@@ -2080,11 +2103,11 @@
           },
           "on-device-option": {
             "headline": "En el dispositivo, si lo quieres",
-            "body": "En Ajustes → Mera Protocol puedes mover el procesamiento a este teléfono, y entonces nada sobre ti se va. Primero descarga un modelo, quiere un teléfono bastante reciente, y es notablemente más lento, que es exactamente por qué no es el predeterminado."
+            "body": "En Ajustes → Mera Protocol puedes pasar el procesamiento a este teléfono. Así la IA que lee tus noticias funciona aquí en lugar de en la nube. Tus frases de temas siguen saliendo para buscar noticias, y para iniciar sesión sigues necesitando tu correo o este teléfono. Primero descarga un modelo, necesita un teléfono bastante reciente y es bastante más lento, justo por eso no es la opción predeterminada."
           },
           "what-we-keep": {
             "headline": "Lo que sí guardamos",
-            "body": "Tu correo de inicio de sesión. En qué plan estás. Un recuento diario de historias analizadas. Las frases de temas se almacenan en caché solo por su texto, sin nada que registre quién preguntó, y se descartan después de catorce días sin usar.",
+            "body": "Tu correo de acceso, si añadiste uno. Qué plan tienes. Un recuento diario de artículos analizados. Si usas Mera sin correo, un registro de inicio de sesión de este teléfono, que se borra con tu cuenta. Las frases de temas se guardan en caché solo por su texto, sin nada que registre quién las pidió, y se borran tras catorce días sin uso.",
             "ask": "¿Qué almacena Mera sobre mí en sus servidores?"
           }
         }

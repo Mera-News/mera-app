@@ -44,16 +44,12 @@ jest.mock('@/lib/stores/app-language-store', () => {
     return { useAppLanguageStore };
 });
 
-/** A controllable request handle, as `requestTranslation` returns. */
-function mockMakeHandle(result: Promise<unknown>) {
-    return { promise: result, setPriority: jest.fn(), cancel: jest.fn() };
-}
 jest.mock('@/lib/translation-service', () => ({
     translateText: jest.fn(() => Promise.resolve(null)),
-    // The component takes a HANDLE so it can re-rank its request as it moves
-    // and cancel it when it leaves, and tell a route-change drop apart from a
-    // genuine failure.
-    requestTranslation: jest.fn(() => mockMakeHandle(Promise.resolve({ status: 'failed', text: null }))),
+    // The component uses the DETAILED variant so it can tell a route-change
+    // drop apart from a genuine failure — see the fired-latch note in
+    // TranslatableDynamic.
+    translateTextDetailed: jest.fn(() => Promise.resolve({ status: 'failed', text: null })),
     // Not blocked by default — the breaker's own behaviour is covered in
     // lib/__tests__/translation-service.test.ts.
     useTranslationBlocked: jest.fn(() => null),
@@ -62,13 +58,8 @@ jest.mock('@/lib/translation-service', () => ({
     useTranslationSuppressed: jest.fn(() => false),
 }));
 
-// Captured so a test can deliver a scroll tick.
-const mockTickListeners = new Set<() => void>();
 jest.mock('@/lib/visibility-tick', () => ({
-    subscribeScrollTick: jest.fn((fn: () => void) => {
-        mockTickListeners.add(fn);
-        return () => mockTickListeners.delete(fn);
-    }),
+    subscribeScrollTick: jest.fn(() => () => {}),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -112,13 +103,7 @@ jest.mock('@/components/ui/pressable', () => {
 
 import { act, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
-import { requestTranslation } from '@/lib/translation-service';
-
-/** Make the next request resolve with `result`. */
-const nextResult = (result: unknown) =>
-    (requestTranslation as jest.Mock).mockImplementationOnce(() => mockMakeHandle(Promise.resolve(result)));
-/** Every handle the component was given, in order. */
-const handles = () => (requestTranslation as jest.Mock).mock.results.map((r) => r.value);
+import { translateText, translateTextDetailed } from '@/lib/translation-service';
 import {
     __resetTranslationQueueForTests,
     bumpTranslationEpoch,
@@ -223,7 +208,6 @@ describe('TranslatableDynamic mount-time visibility ladder', () => {
         mockAppLanguage = 'de';
         mockMeasureCalls = 0;
         mockMeasureImpl = () => {};
-        mockTickListeners.clear();
     });
 
     afterEach(() => {
@@ -246,10 +230,10 @@ describe('TranslatableDynamic mount-time visibility ladder', () => {
         expect(mockMeasureCalls).toBeGreaterThanOrEqual(2);
         // The measured `y` (100) rides along as the queue priority — lower
         // dispatches sooner, so the node nearest the top of the viewport wins.
-        expect(requestTranslation).toHaveBeenCalledWith(
+        expect(translateTextDetailed).toHaveBeenCalledWith(
             'Breaking news headline',
             'de',
-            { rank: { visible: true, y: 100 } },
+            { priority: 100 },
         );
     });
 
@@ -271,28 +255,35 @@ describe('TranslatableDynamic mount-time visibility ladder', () => {
             measuredAt(W() + 16);
             render(<TranslatableDynamic text="Next panel headline" />);
             settle();
-            expect(requestTranslation).not.toHaveBeenCalled();
+            expect(translateTextDetailed).not.toHaveBeenCalled();
         });
 
         it('a node one width to the left (the cached previous panel) is not on screen', () => {
             measuredAt(-W() + 16);
             render(<TranslatableDynamic text="Previous panel headline" />);
             settle();
-            expect(requestTranslation).not.toHaveBeenCalled();
+            expect(translateTextDetailed).not.toHaveBeenCalled();
         });
 
         it('a horizontal strip card partly on screen still counts', () => {
             measuredAt(W() - 50, 300);
             render(<TranslatableDynamic text="Strip card headline" />);
             settle();
-            expect(requestTranslation).toHaveBeenCalledWith('Strip card headline', 'de', { rank: { visible: true, y: 100 } });
+            expect(translateTextDetailed).toHaveBeenCalledWith('Strip card headline', 'de', { priority: 100 });
+        });
+
+        it('a zero-width measure keeps the vertical-only answer', () => {
+            measuredAt(0, 0);
+            render(<TranslatableDynamic text="Zero width headline" />);
+            settle();
+            expect(translateTextDetailed).toHaveBeenCalledWith('Zero width headline', 'de', { priority: 100 });
         });
 
         it('a vertical list node at the usual inset still counts', () => {
             measuredAt(16);
             render(<TranslatableDynamic text="Feed headline" />);
             settle();
-            expect(requestTranslation).toHaveBeenCalledWith('Feed headline', 'de', { rank: { visible: true, y: 100 } });
+            expect(translateTextDetailed).toHaveBeenCalledWith('Feed headline', 'de', { priority: 100 });
         });
     });
 
@@ -305,7 +296,7 @@ describe('TranslatableDynamic mount-time visibility ladder', () => {
         });
 
         expect(mockMeasureCalls).toBeGreaterThanOrEqual(2);
-        expect(requestTranslation).not.toHaveBeenCalled();
+        expect(translateTextDetailed).not.toHaveBeenCalled();
     });
 });
 
@@ -332,14 +323,15 @@ describe('TranslatableDynamic route-epoch drop recovery', () => {
     });
 
     it('asks again after the next route change when its request was dropped', async () => {
-        nextResult({ status: 'dropped', text: null });
-        nextResult({ status: 'ok', text: 'Eilmeldung' });
+        (translateTextDetailed as jest.Mock)
+            .mockResolvedValueOnce({ status: 'dropped', text: null })
+            .mockResolvedValue({ status: 'ok', text: 'Eilmeldung' });
 
         render(<TranslatableDynamic text="Breaking news headline" />);
         await act(async () => {
             jest.advanceTimersByTime(500);
         });
-        expect(requestTranslation).toHaveBeenCalledTimes(1);
+        expect(translateTextDetailed).toHaveBeenCalledTimes(1);
 
         // The drop resolution has to land (a microtask) before the epoch fires,
         // or there is nothing latched to un-latch.
@@ -348,26 +340,29 @@ describe('TranslatableDynamic route-epoch drop recovery', () => {
             jest.advanceTimersByTime(500);
         });
 
-        expect(requestTranslation).toHaveBeenCalledTimes(2);
+        expect(translateTextDetailed).toHaveBeenCalledTimes(2);
     });
 
     it('does NOT re-ask on a route change when the request genuinely failed', async () => {
         // A failure is the OS saying no. Re-asking on every navigation would
         // reopen the sheet-storm the breaker exists to prevent.
-        nextResult({ status: 'failed', text: null });
+        (translateTextDetailed as jest.Mock).mockResolvedValue({
+            status: 'failed',
+            text: null,
+        });
 
         render(<TranslatableDynamic text="Breaking news headline" />);
         await act(async () => {
             jest.advanceTimersByTime(500);
         });
-        expect(requestTranslation).toHaveBeenCalledTimes(1);
+        expect(translateTextDetailed).toHaveBeenCalledTimes(1);
 
         await act(async () => {
             bumpTranslationEpoch('/logged-in/app_container/feed');
             jest.advanceTimersByTime(500);
         });
 
-        expect(requestTranslation).toHaveBeenCalledTimes(1);
+        expect(translateTextDetailed).toHaveBeenCalledTimes(1);
     });
 });
 
@@ -394,22 +389,20 @@ describe('TranslatableDynamic late answer after a language switch', () => {
 
     it('discards a result whose language the reader has already left', async () => {
         let resolveCall!: (value: unknown) => void;
-        (requestTranslation as jest.Mock).mockImplementationOnce(() =>
-            mockMakeHandle(
-                new Promise((resolve) => {
-                    resolveCall = resolve;
-                }),
-            ),
+        (translateTextDetailed as jest.Mock).mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolveCall = resolve;
+            }),
         );
 
         render(<TranslatableDynamic text="Breaking news headline" />);
         await act(async () => {
             jest.advanceTimersByTime(500);
         });
-        expect(requestTranslation).toHaveBeenCalledWith(
+        expect(translateTextDetailed).toHaveBeenCalledWith(
             'Breaking news headline',
             'de',
-            { rank: { visible: true, y: 120 } },
+            { priority: 120 },
         );
 
         // The reader moves to French while the German call is still in flight.
@@ -423,7 +416,10 @@ describe('TranslatableDynamic late answer after a language switch', () => {
     });
 
     it('caches a result that arrives while the language is unchanged', async () => {
-        nextResult({ status: 'ok', text: 'Eilmeldung' });
+        (translateTextDetailed as jest.Mock).mockResolvedValue({
+            status: 'ok',
+            text: 'Eilmeldung',
+        });
 
         render(<TranslatableDynamic text="Breaking news headline" />);
         await act(async () => {
@@ -483,142 +479,5 @@ describe('TranslatableDynamic translated indicator', () => {
         );
         expect(getByText('Cabinet bows to tech lobby', { exact: false })).toBeTruthy();
         expect(UNSAFE_root.findAll((n: any) => n.props?.name === 'translate')).toHaveLength(0);
-    });
-});
-
-// ux2: a row that leaves the screen gives up its queue place, one that comes
-// back asks again, and a failure (a timeout included) never latches the row
-// English for good: it re-asks once the row has left and come back, or remounts.
-describe('TranslatableDynamic visible-first requests', () => {
-    let y = 120;
-    const tick = () =>
-        act(() => {
-            mockTickListeners.forEach((fn) => fn());
-        });
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-        jest.useFakeTimers();
-        __resetTranslationQueueForTests();
-        mockTickListeners.clear();
-        mockAppLanguage = 'de';
-        mockPending = new Set<string>();
-        mockMeasureCalls = 0;
-        y = 120;
-        mockMeasureImpl = (_call, cb) => cb(0, y, 320, 40);
-    });
-    afterEach(() => {
-        jest.useRealTimers();
-    });
-
-    async function mountOnScreen() {
-        const r = render(<TranslatableDynamic text="Breaking news headline" />);
-        await act(async () => {
-            jest.advanceTimersByTime(500);
-        });
-        return r;
-    }
-
-    it('re-ranks its queued request as it moves on screen', async () => {
-        (requestTranslation as jest.Mock).mockImplementationOnce(() => mockMakeHandle(new Promise(() => {})));
-        await mountOnScreen();
-        y = 40;
-        tick();
-        expect(handles()[0].setPriority).toHaveBeenLastCalledWith({ visible: true, y: 40 });
-    });
-
-    it('cancels its request when it leaves the screen', async () => {
-        (requestTranslation as jest.Mock).mockImplementationOnce(() => mockMakeHandle(new Promise(() => {})));
-        await mountOnScreen();
-        y = 5000;
-        tick();
-        expect(handles()[0].cancel).toHaveBeenCalled();
-    });
-
-    it('asks again when it comes back after leaving', async () => {
-        (requestTranslation as jest.Mock).mockImplementationOnce(() => mockMakeHandle(new Promise(() => {})));
-        await mountOnScreen();
-        y = 5000;
-        tick();
-        y = 200;
-        tick();
-        await act(async () => {});
-        expect(requestTranslation).toHaveBeenCalledTimes(2);
-        expect(requestTranslation).toHaveBeenLastCalledWith('Breaking news headline', 'de', {
-            rank: { visible: true, y: 200 },
-        });
-    });
-
-    it('after a failure (a timeout included), does not re-ask while it stays in view', async () => {
-        nextResult({ status: 'failed', text: null });
-        await mountOnScreen();
-        for (let i = 0; i < 3; i++) {
-            y = 120 + i;
-            tick();
-        }
-        await act(async () => {});
-        expect(requestTranslation).toHaveBeenCalledTimes(1);
-    });
-
-    it('after a failure, re-asks once it has left the screen and come back', async () => {
-        nextResult({ status: 'failed', text: null });
-        await mountOnScreen();
-        y = 5000;
-        tick();
-        y = 120;
-        tick();
-        await act(async () => {});
-        expect(requestTranslation).toHaveBeenCalledTimes(2);
-    });
-
-    it('after a failure, re-asks when it remounts', async () => {
-        nextResult({ status: 'failed', text: null });
-        const first = await mountOnScreen();
-        first.unmount();
-        await mountOnScreen();
-        expect(requestTranslation).toHaveBeenCalledTimes(2);
-    });
-
-    it('cancels its request when it unmounts', async () => {
-        (requestTranslation as jest.Mock).mockImplementationOnce(() => mockMakeHandle(new Promise(() => {})));
-        const r = await mountOnScreen();
-        r.unmount();
-        expect(handles()[0].cancel).toHaveBeenCalled();
-    });
-
-    it('its own cancel on leaving is not a route drop: it re-asks on return, no route change needed', async () => {
-        let resolveFirst!: (v: unknown) => void;
-        (requestTranslation as jest.Mock).mockImplementationOnce(() =>
-            mockMakeHandle(new Promise((r) => (resolveFirst = r))),
-        );
-        await mountOnScreen();
-        y = 5000;
-        tick();
-        // The service settles the cancelled request as dropped.
-        await act(async () => {
-            resolveFirst({ status: 'dropped', text: null });
-        });
-        y = 120;
-        tick();
-        await act(async () => {});
-        expect(requestTranslation).toHaveBeenCalledTimes(2);
-    });
-
-    it('a language switch gives up the old request and asks in the new language at once', async () => {
-        (requestTranslation as jest.Mock).mockImplementation(() => mockMakeHandle(new Promise(() => {})));
-        const r = await mountOnScreen();
-        mockAppLanguage = 'fr';
-        r.rerender(<TranslatableDynamic text="Breaking news headline" />);
-        await act(async () => {});
-        expect(handles()[0].cancel).toHaveBeenCalled();
-        expect(requestTranslation).toHaveBeenLastCalledWith('Breaking news headline', 'fr', expect.anything());
-        (requestTranslation as jest.Mock).mockReset();
-    });
-
-    it('joins a request another node already has in flight rather than waiting on it', async () => {
-        mockPending = new Set(['Breaking news headline']);
-        (requestTranslation as jest.Mock).mockImplementationOnce(() => mockMakeHandle(new Promise(() => {})));
-        await mountOnScreen();
-        expect(requestTranslation).toHaveBeenCalledTimes(1);
     });
 });

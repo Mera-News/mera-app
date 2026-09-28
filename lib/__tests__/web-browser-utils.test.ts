@@ -38,7 +38,14 @@ jest.mock('../stores/app-language-store', () => ({
 }));
 
 import * as WebBrowser from 'expo-web-browser';
-import { appendReferrer, openArticleInAppBrowser, openInAppBrowser } from '../web-browser-utils';
+import {
+  appendReferrer,
+  openArticleInAppBrowser,
+  openInAppBrowser,
+  webLocaleFor,
+  withAppLanguage,
+} from '../web-browser-utils';
+import { useAppLanguageStore } from '../stores/app-language-store';
 
 // REFERRER_SOURCE is derived from WEBSITE_URL's host (default: mera.news).
 const REFERRER = 'utm_source=mera.news&utm_medium=referral';
@@ -163,5 +170,39 @@ describe('openArticleInAppBrowser', () => {
       'itms-apps://itunes.apple.com/app/id1',
       BASE_OPTIONS
     );
+  });
+});
+
+describe('withAppLanguage', () => {
+  const setLang = (appLanguage: string) =>
+    (useAppLanguageStore.getState as jest.Mock).mockReturnValue({ appLanguage });
+
+  afterEach(() => setLang('en'));
+
+  it.each([
+    ['pt-BR', 'pt'],
+    ['zh-CN', 'zh-Hans'],
+    ['zh-TW', 'zh-Hant'],
+  ])('maps the app code %s to the website code %s (the app code 404s there)', (app, web) => {
+    setLang(app);
+    expect(withAppLanguage('https://mera.news/privacy')).toBe(`https://mera.news/${web}/privacy`);
+  });
+
+  it('passes every other app code through unchanged', () => {
+    for (const code of ['en', 'ar', 'de', 'es', 'fr', 'hi', 'id', 'it', 'ja', 'ko', 'nl', 'pl', 'ru', 'th', 'tr', 'uk', 'vi']) {
+      expect(webLocaleFor(code)).toBe(code);
+    }
+    setLang('de');
+    expect(withAppLanguage('https://mera.news/terms')).toBe('https://mera.news/de/terms');
+  });
+
+  it('keeps a #fragment after the path', () => {
+    setLang('zh-TW');
+    expect(withAppLanguage('https://mera.news/faq#no-email')).toBe('https://mera.news/zh-Hant/faq#no-email');
+  });
+
+  it('leaves a URL that already carries a website locale alone', () => {
+    setLang('pt-BR');
+    expect(withAppLanguage('https://mera.news/pt/privacy')).toBe('https://mera.news/pt/privacy');
   });
 });

@@ -1,7 +1,6 @@
 // Install-boundary reset (S10).
 //
-// The iOS keychain is an artifact that SURVIVES app uninstall — the same
-// mechanism the deviceRef trial anchor deliberately relies on. That means the
+// The iOS keychain is an artifact that SURVIVES app uninstall. That means the
 // better-auth cookie also survives, and after a reinstall the app silently
 // resumed the old session, skipping the welcome view entirely (and resuming
 // into onboarding with a POP_TO_TOP warning).
@@ -12,9 +11,7 @@
 // keychain credentials are leftovers from a previous install.
 //
 // What happens at the boundary: the session cookie keys and the ACCOUNT
-// credentials (attest keyId, device UUID) are cleared; `_device_ref` is
-// PRESERVED — it is the device's trial history, and no flow may clear it.
-// Consequence, deliberate and product-consistent: any user (email users
+// credentials (attest keyId, device UUID) are cleared. Consequence, deliberate and product-consistent: any user (email users
 // included) who uninstalls and reinstalls lands signed out on the welcome
 // view and signs back in. This is an install-boundary reset, not a silent
 // logout — the never-silent-logout invariant guards MID-SESSION state, and
@@ -38,8 +35,7 @@ const APP_SLUG = Constants.expoConfig?.slug || 'app';
  *  fresh install. Never in SecureStore — it must die with the uninstall. */
 export const HAS_LAUNCHED_SETTING_KEY = 'has_launched';
 
-// Cleared at the boundary. NEVER `${APP_SLUG}_device_ref` — trial history
-// survives the boundary by design (it is what denies a second free trial).
+// Cleared at the boundary.
 const BOUNDARY_CLEARED_KEYS = [
   `${APP_SLUG}_cookie`,
   `${APP_SLUG}_session_data`,
@@ -47,6 +43,13 @@ const BOUNDARY_CLEARED_KEYS = [
   `${APP_SLUG}_appattest_key_proven`,
   `${APP_SLUG}_device_attest_device_id`,
 ];
+
+// The RETIRED device reference (lib/device-auth.ts no longer sends, reads or
+// stores it). Deleted on EVERY launch, ahead of the has-launched early
+// return, so installs that already carry the marker lose it too. Idempotent,
+// so no marker of its own; inlined rather than imported so this launch-path
+// module does not pull lib/device-auth (and auth-client) into its graph.
+const RETIRED_DEVICE_REF_KEY = `${APP_SLUG}_device_ref`;
 
 let enforcedThisProcess = false;
 let resetThisProcess = false;
@@ -66,6 +69,13 @@ export async function enforceInstallBoundary(): Promise<void> {
   if (enforcedThisProcess) return;
   enforcedThisProcess = true;
   try {
+    // Never counts as a boundary reset and never blocks the launch.
+    try {
+      await secureStore.deleteItemAsync(RETIRED_DEVICE_REF_KEY);
+    } catch {
+      // Locked keychain: the next launch retries.
+    }
+
     const { getSetting, setSetting } =
       require('@/lib/database/services/setting-service') as typeof import('@/lib/database/services/setting-service');
 

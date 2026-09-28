@@ -29,6 +29,13 @@
 // and the assertion clientDataHash. Per the final S2 contract the nonce IS the
 // client data; the HTTP bodies carry the raw nonce string and the hashing
 // happens only on the way into the native calls.
+//
+// Android binds the deviceId into the Play Integrity nonce (see
+// `bindIntegrityNonce`): the token is requested over
+// base64url_nopad(SHA-256(utf8(serverNonce + "|" + deviceId))), while the
+// body still carries the RAW server nonce and the same deviceId, so the
+// server can recompute the value and reject a token lifted onto another
+// deviceId.
 
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
@@ -66,33 +73,38 @@ export const APP_ATTEST_KEY_PROVEN_STORE_KEY = `${APP_SLUG}_appattest_key_proven
  *  resume key) and by the staging dev bypass. */
 export const DEVICE_ID_STORE_KEY = `${APP_SLUG}_device_attest_device_id`;
 
-/** Keychain slot for the server-minted device reference (S10 trial-memory
- *  anchor). Returned raw once at first mint, presented on every sign-in
- *  thereafter; on iOS the keychain survives reinstall, which is the point. */
-export const DEVICE_REF_STORE_KEY = `${APP_SLUG}_device_ref`;
+/** RETIRED keychain slot: the old server-minted device reference. The app
+ *  no longer sends, reads or stores it; `enforceInstallBoundary` deletes it
+ *  on launch (lib/security/install-boundary.ts inlines the same string so it
+ *  does not import this module). Kept here only so severing also clears a
+ *  leftover. */
+const RETIRED_DEVICE_REF_STORE_KEY = `${APP_SLUG}_device_ref`;
 
 /**
  * Sever this device's ACCOUNT binding. Called on account DELETION
  * (ManageDataScreen) and by the refusal recovery below — never on logout:
  * since S10, sign-out PRESERVES the credentials so logging in resumes the
- * same account.
+ * same account. The server also deletes the device record when deletion is
+ * requested, so this is the client half of the same severing.
  *
- * DELIBERATELY EXCLUDES the deviceRef: it is the device's TRIAL HISTORY, not
- * an account credential, and NO flow may clear it — the e2e proved that
- * clearing it here handed out a fresh 14-day trial on every account
- * deletion. Total: a failed delete only means the next attempt repeats the
- * severing.
+ * Total: a failed delete only means the next attempt repeats the severing.
+ * Each failure logs one warn line naming the slot, never its value.
  */
 export async function clearDeviceAuthCredentials(): Promise<void> {
   for (const key of [
     APP_ATTEST_KEY_ID_STORE_KEY,
     APP_ATTEST_KEY_PROVEN_STORE_KEY,
     DEVICE_ID_STORE_KEY,
+    RETIRED_DEVICE_REF_STORE_KEY,
   ]) {
     try {
       await secureStore.deleteItemAsync(key);
-    } catch {
+    } catch (error) {
       // Keychain hiccup — severing is retried by whatever triggered it next.
+      logger.warn('[device-auth] could not clear a device credential', {
+        slot: key.slice(APP_SLUG.length + 1),
+        errorName: error instanceof Error ? error.name : typeof error,
+      });
     }
   }
 }
@@ -146,6 +158,32 @@ export async function deviceSignInAvailability(): Promise<DeviceSignInAvailabili
   return 'unavailable';
 }
 
+/**
+ * Which attestation path `signInWithDevice` would take on this device. The
+ * sign-in copy is keyed on it, because what is TRUE differs per path: only
+ * App Attest has Apple checking, only Play Integrity has Google checking,
+ * the dev bypass has neither, and the Android UUID fallback (no readable
+ * ANDROID_ID) dies with an uninstall where ANDROID_ID survives one.
+ * Same decision order as `signInWithDevice`. Never rejects.
+ */
+export type DeviceSignInPath =
+  | 'app-attest'
+  | 'play-integrity'
+  | 'play-integrity-uuid'
+  | 'dev-bypass'
+  | 'unavailable';
+
+export async function deviceSignInPath(): Promise<DeviceSignInPath> {
+  if (!(await isSupported())) {
+    return readDevBypassToken() ? 'dev-bypass' : 'unavailable';
+  }
+  if (Platform.OS === 'ios') return 'app-attest';
+  if (Platform.OS === 'android') {
+    return readAndroidHardwareId() ? 'play-integrity' : 'play-integrity-uuid';
+  }
+  return 'unavailable';
+}
+
 // ─── Server transport ────────────────────────────────────────────────────────
 
 /** A non-2xx response from the auth service, with the body's `code` when the
@@ -191,16 +229,16 @@ async function fetchNonce(purpose: NoncePurpose): Promise<string> {
   return data.nonce;
 }
 
+/** Fields read off a sign-in response. Anything else is ignored, which is
+ *  what keeps an older server that still returns `deviceRef` harmless. */
 interface SessionResponseLike {
   user?: { id?: string };
-  deviceRef?: unknown;
   trialAvailable?: unknown;
   minted?: unknown;
 }
 
 interface ParsedSignIn {
   userId: string;
-  deviceRef: string | null;
   trialAvailable: boolean | null;
   /** True only when this call CREATED the user (server commit b13da0d);
    *  false on every resume, including the bind-race loser, and when the
@@ -217,39 +255,19 @@ function requireUserId(path: string, data: SessionResponseLike): string {
   return userId;
 }
 
-/** Parse the sign-in response, tolerating servers that carry neither S10
- *  field. */
+/** Parse the sign-in response, tolerating servers that omit the optional
+ *  fields. */
 function parseSignIn(path: string, data: SessionResponseLike): ParsedSignIn {
   return {
     userId: requireUserId(path, data),
-    deviceRef:
-      typeof data?.deviceRef === 'string' && data.deviceRef.length > 0 ? data.deviceRef : null,
     trialAvailable: typeof data?.trialAvailable === 'boolean' ? data.trialAvailable : null,
     minted: data?.minted === true,
   };
 }
 
-/** The stored trial-memory anchor. Best-effort: an unreadable keychain reads
- *  as absent HERE (the strict read rule applies to the App Attest keyId, whose
- *  false-absence would mint a second account; a missing anchor only costs the
- *  server one unanchored mint). */
-function readStoredDeviceRef(): Promise<string | null> {
-  return secureStore.getItemAsync(DEVICE_REF_STORE_KEY).catch(() => null);
-}
-
-/** Persist the server-minted anchor (returned raw exactly once, at mint). */
-async function storeDeviceRef(parsed: ParsedSignIn): Promise<void> {
-  if (!parsed.deviceRef) return;
-  try {
-    await secureStore.setItemAsync(DEVICE_REF_STORE_KEY, parsed.deviceRef);
-  } catch {
-    // Anchor persistence is best-effort; the next mint re-issues one.
-  }
-}
-
-/** ANDROID_ID — the Android trial-memory anchor (survives reinstall, resets
- *  on factory reset). Null on failure or an empty value → stored-UUID
- *  fallback. */
+/** ANDROID_ID — the Android deviceId (survives reinstall, resets on factory
+ *  reset; the server keeps only a keyed hash of it). Null on failure or an
+ *  empty value → stored-UUID fallback. */
 function readAndroidHardwareId(): string | null {
   try {
     const id = Application.getAndroidId();
@@ -265,6 +283,22 @@ function sha256Base64(input: string): Promise<string> {
   return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, input, {
     encoding: Crypto.CryptoEncoding.BASE64,
   });
+}
+
+/**
+ * The value handed to Play Integrity as its nonce: the server nonce bound to
+ * the deviceId this attempt sends, so a token cannot be replayed under a
+ * different deviceId. Contract shared VERBATIM with the server:
+ *   base64url_nopad(SHA-256(utf8(serverNonce + "|" + deviceId)))
+ * Play Integrity requires a web-safe, no-wrap base64 nonce of 16 to 500
+ * bytes; a SHA-256 is 32 bytes, 43 characters here, the same shape as the
+ * server's own nonce. Test vector (asserted on both sides):
+ *   serverNonce AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8, deviceId
+ *   9774d56d682e549c -> 5E2pe4wGK3Y4kgsLKC7K_V4VgNADSzrL2Z2XA7p6iNY
+ */
+export async function bindIntegrityNonce(serverNonce: string, deviceId: string): Promise<string> {
+  const standard = await sha256Base64(`${serverNonce}|${deviceId}`);
+  return standard.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 // ─── Keychain-backed state ───────────────────────────────────────────────────
@@ -322,15 +356,12 @@ async function assertAndSignInIos(keyId: string): Promise<ParsedSignIn> {
   const nonce = await fetchNonce('assert');
   const clientDataHash = await sha256Base64(nonce);
   const assertion = await generateAssertion(keyId, clientDataHash);
-  const deviceRef = await readStoredDeviceRef();
   const data = await post<SessionResponseLike>('/device/sign-in/ios', {
     keyId,
     assertion,
     nonce,
-    ...(deviceRef ? { deviceRef } : {}),
   });
   const parsed = parseSignIn('/device/sign-in/ios', data);
-  await storeDeviceRef(parsed);
   // The key has now completed a full assert + sign-in round trip: PROVEN.
   // Best-effort — an unproven marker only means one extra recovery is armed.
   try {
@@ -383,37 +414,31 @@ async function signInIos(): Promise<ParsedSignIn> {
 
 async function signInAndroid(): Promise<ParsedSignIn> {
   const nonce = await fetchNonce('integrity');
-  const integrityToken = await requestIntegrityToken(nonce, readPlayIntegrityProject());
-  // ANDROID_ID doubles as the trial-memory anchor (S10): it survives
-  // reinstall, which the stored UUID cannot. Fallback keeps sign-in alive on
-  // the rare device where the read fails.
+  // Resolved BEFORE the token request: it is an input to the bound nonce.
+  // ANDROID_ID survives reinstall, which the stored UUID cannot; the fallback
+  // keeps sign-in alive on the rare device where the read fails.
   const deviceId = readAndroidHardwareId() ?? (await readOrCreateDeviceId());
-  const deviceRef = await readStoredDeviceRef();
+  const bound = await bindIntegrityNonce(nonce, deviceId);
+  const integrityToken = await requestIntegrityToken(bound, readPlayIntegrityProject());
+  // The body is unchanged: the RAW server nonce and the same deviceId.
   const data = await post<SessionResponseLike>('/device/sign-in/android', {
     integrityToken,
     nonce,
     deviceId,
-    ...(deviceRef ? { deviceRef } : {}),
   });
-  const parsed = parseSignIn('/device/sign-in/android', data);
-  await storeDeviceRef(parsed);
-  return parsed;
+  return parseSignIn('/device/sign-in/android', data);
 }
 
 /** Staging-only bypass: the route exists only where the server has
  *  DEVICE_ATTESTATION_DEV_BYPASS_TOKEN set (404 elsewhere). Keeps the stored
- *  UUID deviceId — the simulator exercises the anchor flow through deviceRef. */
+ *  UUID deviceId. */
 async function signInDev(token: string): Promise<ParsedSignIn> {
   const deviceId = await readOrCreateDeviceId();
-  const deviceRef = await readStoredDeviceRef();
   const data = await post<SessionResponseLike>('/device/sign-in/dev', {
     token,
     deviceId,
-    ...(deviceRef ? { deviceRef } : {}),
   });
-  const parsed = parseSignIn('/device/sign-in/dev', data);
-  await storeDeviceRef(parsed);
-  return parsed;
+  return parseSignIn('/device/sign-in/dev', data);
 }
 
 /** 403 refusal of a STORED credential: the server no longer honors this
@@ -519,20 +544,23 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
     // Snapshot BEFORE the attempt. Best-effort reads: this drives the
     // refusal-recovery gate, not the strict
     // keychain rule (signInIos keeps its own strict read).
-    const [storedKey, storedDeviceId, storedRef] = await Promise.all([
+    // An Android device on ANDROID_ID stores nothing here, so it never
+    // retries: its record key is derived from ANDROID_ID, which severing
+    // cannot change, so a retry could only earn the same 403.
+    const [storedKey, storedDeviceId] = await Promise.all([
       secureStore.getItemAsync(APP_ATTEST_KEY_ID_STORE_KEY).catch(() => null),
       secureStore.getItemAsync(DEVICE_ID_STORE_KEY).catch(() => null),
-      secureStore.getItemAsync(DEVICE_REF_STORE_KEY).catch(() => null),
     ]);
-    const hadStoredCredentials = Boolean(storedKey || storedDeviceId || storedRef);
+    const hadStoredCredentials = Boolean(storedKey || storedDeviceId);
 
     let parsed: ParsedSignIn;
     try {
       parsed = await runFlow();
     } catch (error) {
       // REFUSAL RECOVERY (S10): a stored credential the server refuses with a
-      // 403 is dead (bound user gone, or account deleted) — sever everything
-      // and re-enroll fresh, ONCE. Mirrors the ERR_ATTEST_INVALID_KEY shape.
+      // 403 is dead (bound user gone, account deleted, or a key the server no
+      // longer has a record for, which is what an account deletion leaves) —
+      // sever everything and re-enroll fresh, ONCE. Mirrors the ERR_ATTEST_INVALID_KEY shape.
       // 400/503/network never clear credentials, and a fresh install has
       // nothing to recover.
       if (!hadStoredCredentials || !isServerRefusal(error)) throw error;
