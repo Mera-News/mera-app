@@ -2,12 +2,8 @@ import { Heading } from '@/components/ui/heading';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { canonicalizeLanguageCode } from '@/lib/language-codes';
-import {
-    requestTranslation,
-    useTranslationSuppressed,
-    type TranslationRequest,
-} from '@/lib/translation-service';
-import { subscribeTranslationEpoch } from '@/lib/translation-queue';
+import { translateTextDetailed, useTranslationSuppressed } from '@/lib/translation-service';
+import { subscribeTranslationEpoch, visibilityPriority } from '@/lib/translation-queue';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
@@ -132,12 +128,8 @@ function stripUnkTokens(value: string): string {
  * Translation behavior:
  * 1. If the per-card "Show original" toggle is on → render `originalText ?? text`, no translation.
  * 2. Else if `appLanguage === 'en'` → render `text` as-is.
- * 3. Else → translate `text` → `appLanguage` via the OS translator, cached globally.
- *    Asked for only while the node is within (or near) the viewport: its
- *    request is re-ranked as it moves, cancelled when it leaves, and made
- *    again when it comes back. A failure (a timeout included) is never a
- *    latch: the node asks again once it has left the screen and come back, or
- *    remounts. Only the language breaker stops a language.
+ * 3. Else → translate `text` → `appLanguage` via the iOS translator, cached globally.
+ *    Translation is deferred until the view is within (or near) the viewport.
  */
 const TranslatableDynamic: React.FC<TranslatableProps> = ({
     text,
@@ -214,41 +206,31 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const setNodeRef = useCallback((node: unknown) => {
         nodeRef.current = node as MeasurableNode | null;
     }, []);
-    /** Live, both ways: a node that scrolls away goes false again. */
     const [isOnScreen, setIsOnScreen] = useState(false);
+    // Avoid firing multiple translation requests for the same (text, language) pair.
+    const firedRef = useRef<string | null>(null);
     /**
-     * Last measured window-space `y`: the node's place in the queue among the
-     * rows on screen (top first). Per TEXT NODE rather than per card, so a
-     * card's title and its reason rank separately, and it works on every list
-     * with no viewability plumbing.
+     * Last measured window-space `y`. This IS the node's visible rank, and it is
+     * what orders the translation queue — the text nearest the top of the
+     * viewport is translated first, the text scrolled past waits.
+     *
+     * Deliberately measured-y rather than the Feed's `viewabilityConfigCallback
+     * Pairs`: it is per-TEXT-NODE rather than per-card, it needs no plumbing
+     * through the card components, and it works identically on the Dashboard
+     * and Explore lists, which have no viewability config at all. We already
+     * measure this value on every visibility check and were throwing it away.
      */
     const lastYRef = useRef(0);
-    /** This node's current request, if any. Cleared when it settles, when the
-     *  node cancels it (left the screen, text change, unmount). */
-    const requestRef = useRef<TranslationRequest | null>(null);
     /**
-     * The last request FAILED (a timeout included) while the node stayed in
-     * view. Not a latch: cleared when the node leaves the screen, when
-     * suppression lifts, and by a remount. It only stops the node re-asking
-     * on every tick while it sits there, which would burn the breaker.
-     */
-    const failedInViewRef = useRef(false);
-    /**
-     * True when the last request was DROPPED by the route-epoch sweep (not by
-     * this node's own cancel). See the epoch-subscription effect below.
+     * True when the last request was DROPPED by the route-epoch sweep rather
+     * than failing. See the epoch-subscription effect below for why the
+     * distinction is load-bearing.
      */
     const wasDroppedRef = useRef(false);
-    /** Bumped to re-run the request effect after a ref-only change. */
+    /** Bumped to re-run the fire-effect after a drop. */
     const [retryToken, setRetryToken] = useState(0);
 
-    /** Give up this node's request (it left, its text changed, it unmounted). */
-    const cancelRequest = useCallback(() => {
-        const request = requestRef.current;
-        requestRef.current = null;
-        request?.cancel();
-    }, []);
-
-    // Measure the node's window-space position and track whether it is on screen.
+    // Measure the node's window-space position and flip `isOnScreen` if visible.
     const checkVisibility = useCallback(() => {
         const node = nodeRef.current;
         if (!node || typeof node.measureInWindow !== 'function') return;
@@ -262,140 +244,140 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                 const visible =
                     y + h > -VISIBILITY_BUFFER_PX &&
                     y < screenH + VISIBILITY_BUFFER_PX &&
-                    x + w > 0 &&
-                    x < screenW;
-                lastYRef.current = y;
-                setIsOnScreen(visible);
-                if (visible) requestRef.current?.setPriority({ visible: true, y });
+                    // A zero-width measure says nothing about x: vertical only.
+                    (w === 0 || (x + w > 0 && x < screenW));
+                if (visible) {
+                    lastYRef.current = y;
+                    setIsOnScreen(true);
+                }
             });
         } catch {
             // measureInWindow can throw if the node is detached mid-layout; ignore.
         }
     }, []);
 
-    // Reset (and cancel) when the text prop changes (e.g. FlatList recycling),
-    // then re-measure so recycled cells re-check at their new position.
+    // Reset visibility (and local toggle) when the text prop changes (e.g. FlatList
+    // recycling), then re-measure on the next tick so recycled cells re-check at
+    // their new position.
     useEffect(() => {
         setIsOnScreen(false);
         setLocalShowOriginal(false);
-        failedInViewRef.current = false;
+        firedRef.current = null;
         wasDroppedRef.current = false;
         // RETRY LADDER, not a single shot. Under Fabric, `measureInWindow` on a
         // freshly-mounted (or freshly-recycled) FlatList cell can return without
         // ever invoking its callback — the node has no committed shadow-tree
-        // position yet — and there is no error to catch and no second chance.
+        // position yet — and there is no error to catch and no second chance:
+        // `isOnScreen` simply stays false. That left the first scroll as the
+        // only thing that resolved the check, so titles swapped from the
+        // original to the translation mid-scroll and re-wrapped (2↔3 lines).
         // Re-asking a few times costs one cheap measure each and self-heals as
         // soon as layout commits. A callback that never fires is NOT treated as
         // visible — an unresolved measure must not translate an off-screen node.
         const ids = [0, 150, 450].map((ms) => setTimeout(checkVisibility, ms));
-        return () => {
-            ids.forEach(clearTimeout);
-            cancelRequest();
-        };
-    }, [text, checkVisibility, cancelRequest]);
+        return () => ids.forEach(clearTimeout);
+    }, [text, checkVisibility]);
 
-    // A language switch: the old request is for a language the reader left.
-    // Give it up so the request effect asks in the new one straight away.
-    useEffect(() => {
-        failedInViewRef.current = false;
-        wasDroppedRef.current = false;
-        return cancelRequest;
-    }, [appLanguage, cancelRequest]);
-
-    // Leaving the screen: give up the queue place, and forget a failure so the
-    // node asks again when it comes back.
-    useEffect(() => {
-        if (isOnScreen) return;
-        failedInViewRef.current = false;
-        cancelRequest();
-    }, [isOnScreen, cancelRequest]);
-
-    // Listen to scroll ticks until the translation is cached, on screen or
-    // off: the node has to notice leaving (to cancel) and coming back (to ask).
+    // Subscribe to scroll ticks until we know the node is on screen. Once visible
+    // we drop the subscription — no work after that.
     useEffect(() => {
         if (!needsTranslation) return;
-        if (cachedTranslation != null) return;
-        return subscribeScrollTick(checkVisibility);
-    }, [needsTranslation, cachedTranslation, checkVisibility]);
+        if (isOnScreen) return;
+        const unsubscribe = subscribeScrollTick(checkVisibility);
+        return unsubscribe;
+    }, [needsTranslation, isOnScreen, checkVisibility]);
 
     // When suppression lifts — the gate opens because the language was just
-    // verified, or a retry cleared the breaker — let a node that had failed
-    // try once more. That matters most right after a successful language
-    // switch: the feed behind the picker is exactly the set of nodes that were
-    // gated.
+    // verified, or a retry cleared the breaker — let a node that had already
+    // fired-and-failed (or never fired at all) try once more. `firedRef` is
+    // keyed on (text, language), neither of which changed, so without this
+    // every node already on screen would stay English until the list recycled
+    // it. That matters most right after a successful language switch: the feed
+    // behind the picker is exactly the set of nodes that were gated.
     const wasSuppressedRef = useRef(translationSuppressed);
     useEffect(() => {
-        if (wasSuppressedRef.current && !translationSuppressed) {
-            failedInViewRef.current = false;
-            setRetryToken((n) => n + 1);
-        }
+        if (wasSuppressedRef.current && !translationSuppressed) firedRef.current = null;
         wasSuppressedRef.current = translationSuppressed;
     }, [translationSuppressed]);
 
-    // RECOVERY FROM A ROUTE-EPOCH DROP. The retry is keyed to the NEXT epoch
-    // change rather than fired the instant the drop lands: the dropped screen
-    // is still mounted underneath the pushed one and still measures at its
-    // real coordinates, so an immediate retry would compete with the screen
-    // the user is actually looking at. The natural "go back" re-arms it.
+    // RECOVERY FROM A ROUTE-EPOCH DROP — this is not optional bookkeeping.
+    //
+    // `firedRef` latches on (text, language) and is cleared only when the text
+    // changes or suppression lifts. Neither happens on a drop. Tabs stay mounted
+    // in this navigator, so without this effect: scroll the Feed, tap a card
+    // (the epoch bump drops the queued titles), come back — and those titles
+    // render English for the rest of the session. That is a worse bug than the
+    // latency the drop was fixing.
+    //
+    // The retry is deliberately keyed to the NEXT epoch change rather than fired
+    // the instant the drop lands. The screen that was dropped is still mounted
+    // and still measures at its real coordinates underneath the pushed screen,
+    // so an immediate retry would re-enqueue it to compete with the screen the
+    // user is actually looking at. Waiting for the next route change means the
+    // natural "go back" gesture is what re-arms it.
     useEffect(() => {
         if (!needsTranslation) return;
         return subscribeTranslationEpoch(() => {
             if (!wasDroppedRef.current) return;
             wasDroppedRef.current = false;
+            firedRef.current = null;
             setRetryToken((n) => n + 1);
         });
     }, [needsTranslation]);
 
-    // Ask for the translation while on screen and still needed. Requests for
-    // the same text join (lib/translation-service), so a node whose text is
-    // already in flight elsewhere shares that call and its outcome.
+    // Fire the translation request once we're on screen and still need one.
     useEffect(() => {
         if (!needsTranslation) return;
         if (!isOnScreen) return;
         if (cachedTranslation != null) return;
         if (!text) return;
-        if (requestRef.current) return;
-        if (failedInViewRef.current || wasDroppedRef.current) return;
 
         const store = useAppLanguageStore.getState();
+        if (store.pending.has(text)) return;
+
+        const requestKey = `${text}::${appLanguage}`;
+        if (firedRef.current === requestKey) return;
+        firedRef.current = requestKey;
+
         store.addPending(text);
         logger.debug('[TranslatableDynamic] Requesting translation', {
             textPreview: text.slice(0, 20),
             originalLanguage,
             appLanguage,
         });
-        // The language this call is FOR. Checked on completion: a language
-        // switch cannot stop a call already in flight, so a German result can
-        // land after the user moved to French, and `cacheTranslation` keys the
-        // persisted row by whatever the store says NOW. Caching it would be a
-        // permanent wrong-language row.
+        // The language this call is FOR. Captured here, checked on completion:
+        // the store's `appLanguage` at completion time is not necessarily the
+        // one we asked for. A language switch does not (and cannot) stop a call
+        // already in flight, so a German result can land after the user has
+        // moved to French — and `cacheTranslation` keys the persisted row by
+        // whatever the store says NOW. In memory that was self-healing (the Map
+        // is replaced on every switch); on disk it would be a permanent
+        // wrong-language row that every later launch faithfully reloads.
         const requestedLanguage = appLanguage;
-        const request = requestTranslation(text, appLanguage, {
-            rank: { visible: true, y: lastYRef.current },
-        });
-        requestRef.current = request;
-        void request.promise.then((result) => {
-            // Still this node's live request, or one it gave up (left, text
-            // change, unmount)? A given-up request still caches a success.
-            const mine = requestRef.current === request;
-            if (mine) requestRef.current = null;
-            const state = useAppLanguageStore.getState();
-            if (state.appLanguage !== requestedLanguage) {
-                state.removePending(text);
+
+        // Priority = where this node sits on screen right now. Lower is sooner,
+        // so the headline at the top of the viewport beats the one the user has
+        // already scrolled past, and both beat anything above the fold.
+        translateTextDetailed(text, appLanguage, {
+            priority: visibilityPriority(lastYRef.current),
+        }).then((result) => {
+            if (useAppLanguageStore.getState().appLanguage !== requestedLanguage) {
+                // Answer for a language the reader has left. Drop it entirely —
+                // caching it would mislabel it (see above), and the node has
+                // already re-fired for the new language.
+                useAppLanguageStore.getState().removePending(text);
                 return;
             }
             if (result.status === 'ok' && result.text) {
-                // Joined nodes all land here; write the cache (and disk) once.
-                if (state.cache.get(text) == null) state.cacheTranslation(text, result.text);
-                else state.removePending(text);
+                useAppLanguageStore.getState().cacheTranslation(text, result.text);
                 return;
             }
-            state.removePending(text);
-            if (!mine) return;
             if (result.status === 'dropped') {
-                // NOT a failure: the route moved on before we asked the OS.
-                // Wait for the next route change, then ask again.
+                // NOT a failure — the route moved on before we ever asked the
+                // OS. Un-latch so the next epoch change can ask again, and say
+                // nothing: this is the queue working, not translation breaking.
                 wasDroppedRef.current = true;
+                useAppLanguageStore.getState().removePending(text);
                 return;
             }
             logger.warn('[TranslatableDynamic] Translation unavailable, falling back to original text', {
@@ -403,7 +385,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                 originalLanguage,
                 appLanguage,
             });
-            failedInViewRef.current = true;
+            useAppLanguageStore.getState().removePending(text);
         });
     }, [
         needsTranslation,
@@ -411,7 +393,6 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         appLanguage,
         text,
         cachedTranslation,
-        translationPending,
         originalLanguage,
         retryToken,
     ]);

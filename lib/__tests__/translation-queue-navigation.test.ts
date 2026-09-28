@@ -17,6 +17,7 @@ import {
     enqueueTranslationTask,
     getTranslationQueueStats,
     isDropped,
+    visibilityPriority,
 } from '@/lib/translation-queue';
 
 jest.mock('@/lib/logger', () => ({
@@ -48,7 +49,7 @@ describe('leaving a screen mid-queue', () => {
         const gates = Array.from({ length: 10 }, () => deferred());
         const results = gates.map((g, i) =>
             enqueueTranslationTask(() => g.promise as Promise<unknown>, {
-                rank: { visible: true, y: i * 100 },
+                priority: visibilityPriority(i * 100),
                 label: `feed-title-${i}`,
             }),
         );
@@ -90,7 +91,7 @@ describe('leaving a screen mid-queue', () => {
         const feed = Array.from({ length: 10 }, () => deferred());
         feed.forEach((g, i) =>
             enqueueTranslationTask(() => g.promise as Promise<unknown>, {
-                rank: { visible: true, y: i * 100 },
+                priority: visibilityPriority(i * 100),
                 label: `feed-title-${i}`,
             }),
         );
@@ -107,7 +108,7 @@ describe('leaving a screen mid-queue', () => {
                 dispatched.push('story-title');
                 return story.promise as Promise<unknown>;
             },
-            { rank: { visible: true, y: 0 }, label: 'story-title' },
+            { priority: visibilityPriority(0), label: 'story-title' },
         );
         await flush();
 
