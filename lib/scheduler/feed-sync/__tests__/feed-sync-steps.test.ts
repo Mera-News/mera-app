@@ -113,9 +113,13 @@ jest.mock('@/lib/stores/mera-protocol-store', () => ({
   useMeraProtocolStore: { getState: () => ({ processingMode: mockProcessingMode }) },
 }));
 
+const mockGetPipelineStatus = jest.fn(async () => 'running');
+const mockEnqueueUnscoredEligible = jest.fn(async () => {});
 jest.mock('@/lib/services/scoring-pipeline', () => ({
   enqueueCandidates: (...args: any[]) => mockEnqueueCandidates(...args),
   getNonTerminalCandidateIds: (...args: any[]) => mockGetNonTerminalCandidateIds(...args),
+  getPipelineStatus: () => mockGetPipelineStatus(),
+  enqueueUnscoredEligible: (...args: any[]) => mockEnqueueUnscoredEligible(...(args as [])),
 }));
 
 jest.mock('@/lib/feed-grouping/score-propagation', () => ({
@@ -1157,6 +1161,73 @@ describe('stepHydratePersistEnqueue', () => {
     await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts({ suppressEnqueue: true }));
 
     expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+  });
+
+  describe('background mode (the OS task)', () => {
+    function setUpOneEligible() {
+      mockGetArticlesForTopicsByIds.mockResolvedValue({
+        articles: [{ _id: 'art-1' }, { _id: 'art-2' }],
+        dailyLimitReached: false,
+      });
+      mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 2, linkedCount: 2 });
+      mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+        { id: 'art-1', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+      ]);
+      mockGateUnscoredForScoring.mockResolvedValue({
+        enqueueIds: ['art-1'],
+        propagatedCount: 0,
+        heldBackCount: 0,
+        coveredIdsByRep: { 'art-1': ['art-1'] },
+      });
+      mockGetPipelineStatus.mockResolvedValue('idle');
+    }
+    const diffResult = (): DiffResult => ({
+      serverArticleIds: ['art-1', 'art-2'],
+      articleToTopicTexts: new Map([['art-1', ['topic-a']], ['art-2', ['topic-a']]]),
+      missingIds: ['art-1', 'art-2'],
+    });
+
+    it('never runs the foreground tail flush, which would drain with a foreground context', async () => {
+      setUpOneEligible();
+      await stepHydratePersistEnqueue(
+        diffResult(),
+        makeCtx(),
+        makeOpts({ suppressEnqueue: true, background: true }),
+      );
+      expect(mockEnqueueUnscoredEligible).not.toHaveBeenCalled();
+      expect(mockEnqueueCandidates).not.toHaveBeenCalled();
+    });
+
+    it('(control) a suppressed FOREGROUND run with an idle pipeline does flush', async () => {
+      setUpOneEligible();
+      await stepHydratePersistEnqueue(diffResult(), makeCtx(), makeOpts({ suppressEnqueue: true }));
+      expect(mockEnqueueUnscoredEligible).toHaveBeenCalled();
+    });
+
+    it('reports the eligible ids and what the metered query delivered', async () => {
+      setUpOneEligible();
+      const result = await stepHydratePersistEnqueue(
+        diffResult(),
+        makeCtx(),
+        makeOpts({ suppressEnqueue: true, background: true }),
+      );
+      expect(result.eligibleIds).toEqual(['art-1']);
+      expect(result.meteredDelivered).toBe(2);
+    });
+
+    it('does not count quota-free followed-story chunks as metered', async () => {
+      setUpOneEligible();
+      mockGetArticlesForStories.mockResolvedValue({
+        articles: [{ _id: 'art-1' }, { _id: 'art-2' }],
+        dailyLimitReached: false,
+      });
+      const result = await stepHydratePersistEnqueue(
+        { ...diffResult(), storyIds: ['art-1', 'art-2'], personaIds: [] },
+        makeCtx(),
+        makeOpts({ suppressEnqueue: true, background: true }),
+      );
+      expect(result.meteredDelivered).toBe(0);
+    });
   });
 
   it('on-device mode: hydrates and propagates, but enqueues nothing to the cloud pipeline', async () => {

@@ -33,6 +33,12 @@ jest.mock('@/lib/subscription/last-known-tier', () => ({
     rememberLastKnownTier: (...a: any[]) => mockRememberLastKnownTier(...(a as [])),
 }));
 
+// The background refresh's allowance input. Mocked for the same reason.
+const mockRememberDailyArticleLimit = jest.fn(async () => {});
+jest.mock('@/lib/background/bg-refresh-settings', () => ({
+    rememberDailyArticleLimit: (...a: any[]) => mockRememberDailyArticleLimit(...(a as [])),
+}));
+
 import { syncEntitlement, resetEntitlementSyncState } from '../entitlement-sync';
 
 const billing = (subscriptionTier: string) => ({
@@ -75,6 +81,17 @@ describe('syncEntitlement', () => {
     it('records the resolved tier on the device', async () => {
         await syncEntitlement();
         expect(mockRememberLastKnownTier).toHaveBeenCalledWith('individual');
+    });
+
+    it('records the daily article limit for the background refresh allowance', async () => {
+        await syncEntitlement();
+        expect(mockRememberDailyArticleLimit).toHaveBeenCalledWith(100);
+    });
+
+    it('records no limit when the fetch failed', async () => {
+        mockFetchUserBilling.mockResolvedValue(null);
+        await syncEntitlement();
+        expect(mockRememberDailyArticleLimit).not.toHaveBeenCalled();
     });
 
     it("records 'none' when the server answers with no tier — that IS a resolution", async () => {

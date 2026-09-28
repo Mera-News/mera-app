@@ -61,11 +61,7 @@ import {
   addCustomerInfoUpdateListener,
   getCustomerInfoSafe,
 } from '@/lib/revenuecat';
-import {
-  defineInferenceTask,
-  ensureSilentPushTaskRegistered,
-} from '@/lib/background/inference-task';
-import { defineBackupTask, syncBackupTaskRegistration } from '@/lib/background/backup-task';
+import { ensureSilentPushTaskRegistered } from '@/lib/background/inference-task';
 import * as Sentry from '@sentry/react-native';
 import { DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
 import { initRestartContext } from '@/lib/app-restart';
@@ -84,17 +80,10 @@ import '@/lib/scheduler/tasks/feedback-cycle-task';
 import '@/lib/scheduler/tasks/entitlement-sync-task';
 import '@/lib/scheduler/tasks/fact-check-reconcile-task';
 
-// Register the inference TaskManager task at module load so the
-// expo-notifications silent-push wake (phase-1-done / phase-2-done from the
-// inference gateway) can resolve the task name on cold start. The task is
-// response-unpacking only; fresh cycles are kicked off in the foreground.
-defineInferenceTask();
-
-// Same reason, different trigger: the OS resolves the JS entry point on a
-// BGTask wake and looks the task up by name, so it has to be DEFINED at module
-// load or the wake finds nothing. Registration is separate and happens after
-// settings hydrate, since it depends on the cadence.
-defineBackupTask();
+// The OS-woken tasks (the silent-push unpack and `mera-background`) are
+// defined in `index.js`, not here: under expo-router this module is evaluated
+// only when a route renders, and a killed app woken headless renders nothing.
+// See lib/background/define-tasks.ts.
 
 // Everything below the mandatory-update gate. Kept as its own component so the
 // gate can mount/unmount it as a unit: when an update is required (or while the

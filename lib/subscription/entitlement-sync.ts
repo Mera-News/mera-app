@@ -63,6 +63,17 @@ export async function syncEntitlement(
                 // Fire-and-forget: a settings write must never delay or fail an
                 // entitlement sync.
                 void rememberLastKnownTier(billing.subscriptionTier ?? 'none');
+                // The background refresh may spend at most half of this per
+                // UTC day, and a background wake cannot ask the server. Same
+                // fire-and-forget contract; lazy so this module does not open
+                // SQLite at import.
+                try {
+                    // eslint-disable-next-line @typescript-eslint/no-require-imports
+                    const { rememberDailyArticleLimit } = require('@/lib/background/bg-refresh-settings') as typeof import('@/lib/background/bg-refresh-settings');
+                    void rememberDailyArticleLimit(billing.dailyArticleLimit);
+                } catch {
+                    // Background falls back to the Starter limit.
+                }
                 // Only a successful read counts towards the debounce. A failed
                 // fetch that started the clock would leave a device that was
                 // briefly offline stuck on stale entitlement for a full minute

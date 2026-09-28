@@ -1,3 +1,5 @@
+import { AppState } from 'react-native';
+
 import logger from './logger';
 
 // Circuit breaker for the app's soft-fail auth handling.
@@ -265,6 +267,13 @@ async function readRecheckBasis(
  * the re-check after RECHECK_COOLDOWN_MS.
  */
 export function recordAuthFailure(): void {
+  // The OS background task (lib/background/background-task.ts) is a best
+  // effort nobody is watching. A 401 there means an expired session or a
+  // keychain the wake could not read, and the run exits quietly: it must never
+  // trip the breaker, pause feed-sync or set needs_reauth for the reader's next
+  // open. Only while the app is NOT active: a reader who opened mid-run is
+  // making real requests, and those still count.
+  if (taskAuthScopeDepth > 0 && AppState.currentState !== 'active') return;
   consecutiveFailures += 1;
 
   if (!breakerOpen) {
@@ -655,6 +664,21 @@ function triggerRecheck(): Promise<RecheckOutcome> {
 
   pendingRecheck = run;
   return run;
+}
+
+let taskAuthScopeDepth = 0;
+
+/**
+ * Run `fn` as the OS background task: auth failures it causes do not feed the
+ * breaker while the app is not active. See `recordAuthFailure`.
+ */
+export async function withTaskAuthScope<T>(fn: () => Promise<T>): Promise<T> {
+  taskAuthScopeDepth += 1;
+  try {
+    return await fn();
+  } finally {
+    taskAuthScopeDepth -= 1;
+  }
 }
 
 /** Test-only: reset all module-level breaker state. */

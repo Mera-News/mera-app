@@ -82,6 +82,7 @@ import {
   onNetworkReconnect,
   _resetForTests,
   _getBreakerState,
+  withTaskAuthScope,
 } from '../auth-failure-breaker';
 
 // Flush the microtask queue so the fire-and-forget re-check promise settles.
@@ -815,5 +816,56 @@ describe('recordAuthSuccess does not retract a verdict it cannot have earned', (
     mockGetCookie.mockReturnValue('');
     recordAuthSuccess();
     expect(mockSetNeedsReauth).not.toHaveBeenCalled();
+  });
+});
+
+
+// ── The OS background task ──────────────────────────────────────────────────
+//
+// A 401 inside the background run means an expired session or an unreadable
+// keychain in a wake nobody is watching. It must never trip the breaker (which
+// pauses feed-sync and can set needs_reauth for the reader's next open). A
+// reader who opened mid-run is making real requests, and those still count.
+describe('withTaskAuthScope', () => {
+  const { AppState } = require('react-native');
+  const original = AppState.currentState;
+  const setAppState = (s: string) => {
+    AppState.currentState = s;
+  };
+
+  afterEach(() => {
+    AppState.currentState = original;
+  });
+
+  it('ignores auth failures inside the task while the app is in the background', async () => {
+    setAppState('background');
+    await withTaskAuthScope(async () => {
+      recordAuthFailure();
+      recordAuthFailure();
+      recordAuthFailure();
+    });
+    expect(_getBreakerState()).toEqual({ consecutiveFailures: 0, breakerOpen: false, recheckInFlight: false });
+  });
+
+  it('still counts them when the reader has the app open', async () => {
+    setAppState('active');
+    await withTaskAuthScope(async () => {
+      recordAuthFailure();
+    });
+    expect(_getBreakerState().consecutiveFailures).toBe(1);
+  });
+
+  it('counts again once the task scope has ended', async () => {
+    setAppState('background');
+    await withTaskAuthScope(async () => {});
+    recordAuthFailure();
+    expect(_getBreakerState().consecutiveFailures).toBe(1);
+  });
+
+  it('ends the scope even when the task throws', async () => {
+    setAppState('background');
+    await expect(withTaskAuthScope(async () => { throw new Error('x'); })).rejects.toThrow('x');
+    recordAuthFailure();
+    expect(_getBreakerState().consecutiveFailures).toBe(1);
   });
 });
