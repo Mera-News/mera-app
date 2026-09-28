@@ -294,7 +294,10 @@
     "reasonUnavailable": "Mera couldn't write a note for this one.",
     "loadingA11y": "Loading your feed",
     "translatingCaption": "Translating…",
-    "updatedJustNow": "Updated just now"
+    "updatedJustNow": "Updated just now",
+    "reasonWriting": "Writing a note",
+    "reasonWritingA11y": "note being written",
+    "reasonNotYet": "No note for this article yet."
   },
   "relevance": {
     "emergency": "Emergency",
