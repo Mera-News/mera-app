@@ -220,6 +220,13 @@ interface ForYouState {
     // all terminal.
     chunkStates: PipelineChunkStates | null;
 
+    // article_suggestions ids (the batch candidate namespace, == ForYouSuggestion
+    // ._id, NOT articleId) whose reason note is owed by a live cloud batch. Same
+    // writer as `chunkStates` (pushUiProgress), which always writes a NEW Set so
+    // selectors re-render. Empty when nothing is in flight. A `reason_pending`
+    // row absent from this set is not being worked on.
+    reasonsInFlightIds: ReadonlySet<string>;
+
     // Sync status — set by FeedSyncMachine, read by UI
     syncStatusMessage: SyncStatusMessage | null;
     lastSyncAt: number | null;
@@ -291,6 +298,7 @@ interface ForYouState {
     setAsyncJobProgress: (processedCount: number, totalCount: number) => void;
     setBatchProgress: (progress: PipelineBatchProgress | null) => void;
     setChunkStates: (states: PipelineChunkStates | null) => void;
+    setReasonsInFlightIds: (ids: ReadonlySet<string>) => void;
     clearData: () => Promise<void>;
     pruneOrphanedData: () => Promise<void>;
     hydrateSuggestionsFromDb: () => Promise<void>;
@@ -327,6 +335,7 @@ const initialState = {
     asyncJobTotalCount: 0,
     batchProgress: null as PipelineBatchProgress | null,
     chunkStates: null as PipelineChunkStates | null,
+    reasonsInFlightIds: new Set<string>() as ReadonlySet<string>,
     syncStatusMessage: null as SyncStatusMessage | null,
     lastSyncAt: null as number | null,
     scoringError: null as ScoringErrorKind | null,
@@ -468,6 +477,8 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
     setBatchProgress: (progress) => set({ batchProgress: progress }),
 
     setChunkStates: (states) => set({ chunkStates: states }),
+
+    setReasonsInFlightIds: (ids) => set({ reasonsInFlightIds: ids }),
 
     setSyncStatusMessage: (msg) => set({ syncStatusMessage: msg }),
 
