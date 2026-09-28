@@ -178,6 +178,14 @@ describe('ConsentGate', () => {
         expect(getByTestId('consent-accept')).toBeTruthy();
     });
 
+    it('never shows the device sign-in notice: re-consent signs nobody in', async () => {
+        const { getByTestId, queryByTestId } = render(<ConsentGate />);
+        await flush();
+        expect(getByTestId('consent-accept')).toBeTruthy();
+        expect(queryByTestId('auth-consent-device-notice')).toBeNull();
+        expect(queryByTestId('auth-consent-what-mera-keeps')).toBeNull();
+    });
+
     // REGRESSION. This gate is an absolute overlay on top of a LIVE logged-in
     // tree, and AbstractGradientBackdrop is translucent everywhere and opaque
     // nowhere — so without an opaque fill of its own the screen behind it (the

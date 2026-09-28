@@ -111,6 +111,21 @@ describe('Login with a different user', () => {
 });
 
 describe('Sign in without email', () => {
+    it('says the phone opens its OWN account, separate from this email, visibly and as the hint', () => {
+        const r = render(<PreviousUserView {...baseProps} onSignInWithoutEmail={jest.fn()} />);
+        expect(r.getByTestId('previous-user-device-sign-in-caption').props.children).toBe(
+            'auth.deviceSignInCaption.previousUser',
+        );
+        expect(r.getByTestId('previous-user-device-sign-in').props.accessibilityHint).toBe(
+            'auth.deviceSignInCaption.previousUser',
+        );
+    });
+
+    it('shows no caption when the button is not offered', () => {
+        const r = render(<PreviousUserView {...baseProps} />);
+        expect(r.queryByTestId('previous-user-device-sign-in-caption')).toBeNull();
+    });
+
     it('renders and fires when the parent offers it', () => {
         const onSignInWithoutEmail = jest.fn();
         const r = render(<PreviousUserView {...baseProps} onSignInWithoutEmail={onSignInWithoutEmail} />);

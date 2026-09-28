@@ -6,21 +6,29 @@ import LegalFooter from '@/components/custom/auth/LegalFooter';
 import TutorialLaunchButton from '@/components/custom/tutorials/TutorialLaunchButton';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import PreviousUserView from '@/components/custom/auth/PreviousUserView';
+import {
+    consentNoticeKey,
+    deviceSignInCaptionKey,
+    NO_EMAIL_FAQ_URL,
+} from '@/components/custom/auth/device-sign-in-copy';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
 import { Input, InputField } from '@/components/ui/input';
 import { Pressable } from '@/components/ui/pressable';
+import { ScrollView } from '@/components/ui/scroll-view';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { clearAuthStorage, sendOTP } from '@/lib/auth-client';
 import {
     deviceSignInAvailability,
+    deviceSignInPath,
     signInWithDevice,
     type DeviceSignInAvailability,
     type DeviceSignInFailureReason,
+    type DeviceSignInPath,
     type DeviceSignInResult,
 } from '@/lib/device-auth';
 
@@ -37,10 +45,12 @@ import {
 } from '@/lib/security/identity-gate';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+
 import validator from 'validator';
 import {
     acceptLegal,
@@ -138,17 +148,23 @@ interface EmailInputViewProps {
     /** Device sign-in, the phone's own account. Absent when the device cannot
      *  attest, and on Forgot PIN. */
     onSignInWithoutEmail?: () => void;
+    /** The attestation path in use: picks the caption saying what is lost
+     *  without an email, shown under the button and read as its hint. */
+    signInPath?: DeviceSignInPath;
 }
 
 const EmailInputView: React.FC<EmailInputViewProps> = ({
     onOTPSent,
     initialEmail,
     onSignInWithoutEmail,
+    signInPath = 'unavailable',
 }) => {
     const [email, setEmail] = useState(initialEmail ?? '');
     const [loading, setLoading] = useState(false);
     const toast = useToast();
     const { t } = useTranslation();
+    const captionKey = deviceSignInCaptionKey(signInPath);
+    const signInCaption = captionKey ? t(captionKey) : null;
 
     const handleSendOTP = async () => {
         if (!email || !validator.isEmail(email)) {
@@ -265,22 +281,38 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({
                 in, never the only one. Outline pill, so the email row above
                 stays the primary action of this view. */}
             {onSignInWithoutEmail ? (
-                <Pressable
-                    testID="auth-email-device-sign-in"
-                    onPress={() => {
-                        void hapticLight();
-                        onSignInWithoutEmail();
-                    }}
-                    disabled={loading}
-                    accessible
-                    accessibilityRole="button"
-                    accessibilityLabel={t('auth.signInWithoutEmail')}
-                    className="mt-4 self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
-                >
-                    <Text size="sm" className="text-primary-500 font-semibold text-center">
-                        {t('auth.signInWithoutEmail')}
-                    </Text>
-                </Pressable>
+                <VStack accessible={false} space="sm" className="mt-4 items-center">
+                    <Pressable
+                        testID="auth-email-device-sign-in"
+                        onPress={() => {
+                            void hapticLight();
+                            onSignInWithoutEmail();
+                        }}
+                        disabled={loading}
+                        accessible
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.signInWithoutEmail')}
+                        accessibilityHint={signInCaption ?? undefined}
+                        className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
+                    >
+                        <Text size="sm" className="text-primary-500 font-semibold text-center">
+                            {t('auth.signInWithoutEmail')}
+                        </Text>
+                    </Pressable>
+                    {/* The consequence, in plain sight before the tap. sm and
+                        gray-300 (never xs or a dimmer gray), no font-size cap.
+                        Screen readers get it as the button's hint instead. */}
+                    {signInCaption ? (
+                        <Text
+                            testID="auth-email-device-sign-in-caption"
+                            accessible={false}
+                            size="sm"
+                            className="text-gray-300 text-center"
+                        >
+                            {signInCaption}
+                        </Text>
+                    ) : null}
+                </VStack>
             ) : null}
 
             {/* Lower band — the gap between the input and the cluster. */}
@@ -508,6 +540,8 @@ interface ConsentStepViewProps {
     /** The phone opened a DIFFERENT account than `expectedUserId`. Called with
      *  NO bookkeeping done, so the caller can ask before switching. */
     onDifferentAccount?: (result: DeviceSignInSuccess) => void;
+    /** The attestation path the sign-in will take; picks the notice. */
+    signInPath: DeviceSignInPath;
 }
 
 /**
@@ -526,6 +560,7 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({
     onSuccess,
     expectedUserId,
     onDifferentAccount,
+    signInPath,
 }) => {
     const { t } = useTranslation();
     const [working, setWorking] = useState(false);
@@ -569,13 +604,52 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({
                 ? t('auth.deviceSignInUnavailable')
                 : t('auth.deviceSignInFailed');
 
+    // What signing in with this phone keeps, on screen before the tap. It is
+    // also the notice for reading the device ID, so it may never hide behind
+    // the link below it.
+    const noticeKey = consentNoticeKey(signInPath);
+    const notice = noticeKey ? (
+        <VStack accessible={false} space="xs" className="items-center">
+            <Text testID="auth-consent-device-notice" size="sm" className="text-gray-300 text-center">
+                {t(noticeKey)}
+            </Text>
+            <Pressable
+                testID="auth-consent-what-mera-keeps"
+                onPress={() => openInAppBrowser(NO_EMAIL_FAQ_URL)}
+                accessible
+                accessibilityRole="link"
+                accessibilityLabel={t('consent.whatMeraKeeps')}
+                className="items-center justify-center px-3"
+                style={{ minHeight: 44 }}
+            >
+                <Text size="sm" className="text-primary-500 font-semibold text-center">
+                    {t('consent.whatMeraKeeps')}
+                </Text>
+            </Pressable>
+        </VStack>
+    ) : null;
+
     return (
-        // Same three-band skeleton and F2 scoping as the sibling views.
+        // Scrolls rather than clips: the notice, a long locale, large Dynamic
+        // Type or the failure cluster can outgrow a small screen, and "Agree
+        // and continue" must stay reachable. flexGrow keeps the three bands
+        // splitting the spare space whenever everything fits.
+        <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+        >
+        {/* Same three-band skeleton and F2 scoping as the sibling views. */}
         <Box testID="auth-consent-root" accessible={false} className="flex-1 px-5">
-            {/* Upper band — smaller logo: this page is about the sentence,
-                not the mark. */}
-            <Box accessible={false} className="items-center justify-center" style={{ flex: 5 }}>
-                <MeraLogo size={120} animated />
+            {/* Upper band, smaller logo: this page is about the sentences, not
+                the mark. The floor keeps the band from collapsing under the
+                logo once the content scrolls. */}
+            <Box
+                accessible={false}
+                className="items-center justify-center"
+                style={{ flex: 5, minHeight: 120 }}
+            >
+                <MeraLogo size={96} animated />
             </Box>
 
             <ConsentContent
@@ -586,6 +660,7 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({
                 busyLabel={t('auth.deviceSignInWorking')}
                 busy={working}
                 onAccept={handleAgree}
+                notice={notice}
             >
                 {failure !== null && (
                     <VStack space="sm" className="items-center">
@@ -632,10 +707,11 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({
             </ConsentContent>
 
             {/* Lower band — the gap between the action and the footer. */}
-            <Box style={{ flex: 1 }} />
+            <Box style={{ flex: 1, minHeight: 16 }} />
 
             <LegalFooter />
         </Box>
+        </ScrollView>
     );
 };
 
@@ -750,6 +826,9 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
     // compares a device sign-in against it.
     const [cachedUserId, setCachedUserId] = useState<string | null>(null);
     const [availability, setAvailability] = useState<DeviceSignInAvailability>('unavailable');
+    // Which attestation path a device sign-in would take. Only the copy reads
+    // it (notice, caption); routing keeps reading `availability`.
+    const [signInPath, setSignInPath] = useState<DeviceSignInPath>('unavailable');
     // Where the consent step was entered from, so its email fallback and the
     // different-account back-out return the user to the view they left.
     const [consentReturnView, setConsentReturnView] = useState<ViewMode>('welcome');
@@ -771,14 +850,16 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
         let cancelled = false;
         (async () => {
             try {
-                const [email, userId, appLanguageRow, availability] = await Promise.all([
+                const [email, userId, appLanguageRow, availability, path] = await Promise.all([
                     getSetting('cached_user_email'),
                     getSetting('cached_user_id'),
                     getSetting('app_language'),
                     deviceSignInAvailability(),
+                    deviceSignInPath(),
                 ]);
                 if (cancelled) return;
                 setAvailability(availability);
+                setSignInPath(path);
                 setCachedUserId(userId ?? null);
                 if (email && userId) {
                     setCachedEmail(email);
@@ -976,6 +1057,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                     onSuccess={handleDeviceSignInSuccess}
                     expectedUserId={cachedUserId}
                     onDifferentAccount={handleDifferentAccount}
+                    signInPath={signInPath}
                 />
             </Box>
         );
@@ -1027,6 +1109,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                 onSignInWithoutEmail={
                     canSignInWithoutEmail ? signInWithoutEmailFrom('email') : undefined
                 }
+                signInPath={signInPath}
             />
         </Box>
     );
