@@ -22,6 +22,7 @@ import { CLOUD_SCORE_CHUNK_SIZE } from '@/lib/mera-protocol/scoring-service';
 import type { ExecutionContext } from '@/lib/llm/execution-context';
 import type { BatchCompletionResult } from '@/lib/llm/cloudComplete';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
+import { linkedAbort, raceSignal } from '@/lib/llm/abort-race';
 
 const TAG = '[inference-results]';
 
@@ -31,6 +32,22 @@ const TAG = '[inference-results]';
 // true, kills the 7s poller, and leaves the pipeline stuck 'running' — so
 // feed-sync (which skips while scoring is in flight) never fetches again.
 const RESULTS_FETCH_TIMEOUT_MS = 30_000;
+
+/** The gateway's capability-token TTL (2h, deliberately short to cap
+ *  subscription bypass). A token minted at submit is useless once the batch's
+ *  `submittedAt` is older than this, so the foreground fallback skips it rather
+ *  than spending a request on a guaranteed 401 that would requeue the batch. */
+export const CAPABILITY_TOKEN_TTL_MS = 2 * 3600_000;
+
+/** Thrown by {@link pickResultsAuthHeader} in `task` context when no JWT can be
+ *  minted. The caller exits quietly; it is not an error to report. */
+export class TaskNoAuthError extends Error {
+  readonly name = 'TaskNoAuthError';
+  constructor() {
+    super('task /results: no JWT');
+    Object.setPrototypeOf(this, TaskNoAuthError.prototype);
+  }
+}
 
 // Bucketed-relevance floor that gates phase-2 LLM reason generation. Replaces
 // the old per-user notificationSensitivity knob — kept at the same value the
@@ -85,7 +102,28 @@ export async function pickResultsAuthHeader(
   context: ExecutionContext,
   requestId: string,
   capabilityToken?: string,
+  opts: { submittedAt?: number; signal?: AbortSignal } = {},
 ): Promise<string> {
+  if (context === 'task') {
+    let jwt: string | null = null;
+    try {
+      jwt = await raceSignal(getJwtToken(), opts.signal);
+    } catch {
+      jwt = null;
+    }
+    if (!jwt) throw new TaskNoAuthError();
+    return `Bearer ${jwt}`;
+  }
+  // A capability token past its TTL cannot authenticate; offering it would buy
+  // a 401 that reads as `unauthorized` and requeues a job whose results are
+  // still waiting on the gateway.
+  if (
+    capabilityToken &&
+    opts.submittedAt !== undefined &&
+    Date.now() - opts.submittedAt > CAPABILITY_TOKEN_TTL_MS
+  ) {
+    capabilityToken = undefined;
+  }
   if (context === 'foreground') {
     let jwt: string | null = null;
     try {
@@ -126,18 +164,21 @@ export async function fetchResults(
   requestId: string,
   context: ExecutionContext,
   capabilityToken?: string,
+  /** `submittedAt` drops an expired capability-token fallback; `signal` is the
+   *  background task's deadline (aborting reads as 'pending'). */
+  opts: { submittedAt?: number; signal?: AbortSignal } = {},
 ): Promise<ServerResults | 'pending' | 'not-found' | 'unauthorized'> {
   // Per-context auth.
   //   Foreground: prefer the keychain JWT; fall back to the per-batch
   //     capability token if the keychain is transiently unavailable.
   //   Background: per-batch capability token only — never touch the keychain
   //     on a silent-push wake (locked-device → SecureStore throws).
-  const authHeader = await pickResultsAuthHeader(context, requestId, capabilityToken);
+  const authHeader = await pickResultsAuthHeader(context, requestId, capabilityToken, opts);
 
   coldstartTimeline.mark('first-GET-results');
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), RESULTS_FETCH_TIMEOUT_MS);
+  const attempt = linkedAbort(opts.signal, RESULTS_FETCH_TIMEOUT_MS);
+  const controller = { signal: attempt.signal };
   let res: Awaited<ReturnType<typeof globalThis.fetch>>;
   try {
     res = await (expoFetch as unknown as typeof globalThis.fetch)(
@@ -145,7 +186,7 @@ export async function fetchResults(
       {
         method: 'GET',
         headers: { Authorization: authHeader },
-        signal: controller.signal,
+        signal: attempt.signal,
       },
     );
   } catch (err) {
@@ -167,7 +208,7 @@ export async function fetchResults(
     }
     throw err;
   } finally {
-    clearTimeout(timer);
+    attempt.dispose();
   }
 
   if (res.status === 404) return 'not-found';

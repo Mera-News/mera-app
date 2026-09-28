@@ -24,12 +24,17 @@ import * as gatewayRateLimiter from '@/lib/llm/gateway-rate-limiter';
 import {
   bytesToHex,
   sendInferenceRequest,
+  type SendInferenceOutcome,
 } from '@/lib/llm/submitInferenceJob';
+import { raceSignal } from '@/lib/llm/abort-race';
 import {
   ModelKeyValidationError,
+  NoCredentialError,
+  type AttestationFetchOptions,
   prepareE2EEContext,
   rebuildE2EEContext,
 } from '@/lib/e2ee/e2ee-service';
+import { isCancellationError } from '@/lib/utils/retry';
 import {
   getOldestUnscoredCreatedAt,
   getScoredDonorRows,
@@ -41,8 +46,11 @@ import {
   batchMarkGateSkipped,
   batchMarkReasonSkipped,
   getStageRowsByIds,
+  getGroupingRowsByIds,
+  batchPropagateScores,
   type ScoringCandidate,
 } from '@/lib/database/services/article-suggestion-service';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 // Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
 // the one definition of "headline-sourced", shared with the prompt/chunk-size
 // selection the shim's builders run.
@@ -79,6 +87,7 @@ import {
   reconstructLookups,
   toBatchResult,
   REASON_RELEVANCE_THRESHOLD,
+  TaskNoAuthError,
   type ServerResults,
 } from './inference-results';
 import {
@@ -173,6 +182,19 @@ const MAX_BATCH_ATTEMPTS = 2;
  *  it if it turns out to abandon runs that would have recovered. */
 export const POLLER_FAILURE_ABORT_THRESHOLD = 3;
 const RUN_ABANDON_MS = 24 * 3600_000;
+/** A quiet run whose batch was submitted within this window still has results
+ *  waiting on the gateway (job + results TTL 24h; one hour of margin), so the
+ *  stale guard must collect it rather than abort it. See staleRunVerdict. */
+export const COLLECT_WINDOW_MS = 23 * 3600_000;
+/** Background task: no new POST starts with less than this left before the
+ *  deadline (one POST's worth of time: limiter slot, attestation, upload). */
+export const TASK_NO_NEW_POST_MS = 15_000;
+/** Background task: a ready reasons batch is only downloaded and applied while
+ *  at least this much time remains (decrypt is pure JS and slow on Hermes). */
+export const TASK_REASONS_APPLY_MIN_MS = 20_000;
+/** How long a foreground recover() waits for a background task step already
+ *  running in this JS runtime before it proceeds on its own. */
+const RECOVER_WAITS_FOR_TASK_MS = 20_000;
 /** Poller tick cadence while a run is active.
  *
  *  Derived from the gateway rate limiter rather than hard-coded: that limiter
@@ -300,6 +322,21 @@ let postFinalizeKickTimer: ReturnType<typeof setTimeout> | null = null;
 // Last poll timestamp per batchId — enforces PER_BATCH_POLL_SPACING_MS. Kept in
 // memory (not persisted) so a fresh process simply re-polls.
 const lastPolledAt = new Map<number, number>();
+/** First time THIS PROCESS checked a batch outside the background task. The
+ *  per-batch staleness bound counts from here rather than from `submittedAt`,
+ *  so a batch submitted hours ago by the OS task gets a full BATCH_STALE_MS of
+ *  polling on the next open instead of being requeued (and billed again) on the
+ *  first slow GET. In memory on purpose: a fresh process starts the clock again,
+ *  which errs towards collecting. */
+const firstCheckedAt = new Map<number, number>();
+/** Batches some caller is working on right now (a results GET + apply, or a
+ *  reasons submit). Shared by the foreground poller, the silent-push wake and
+ *  the background task so the same batch is never downloaded, applied or
+ *  submitted twice at once within this JS runtime. */
+const batchesInHand = new Set<number>();
+/** The background task step running in this runtime, if any. recover() waits
+ *  for it (bounded) rather than racing it. */
+let taskStepInFlight: Promise<unknown> | null = null;
 
 let pollerTimer: ReturnType<typeof setInterval> | null = null;
 /** One-shot timer for the FIRST poller tick, aligned to the rate limiter's next
@@ -459,11 +496,17 @@ function makeQueuedBatch(
   reasonsOnly = false,
   coveredIdsByRep?: Readonly<Record<string, string[]>>,
 ): PipelineBatch {
+  const coveredByRep: Record<string, string[]> = {};
+  for (const id of candidateIds) {
+    const members = (coveredIdsByRep?.[id] ?? []).filter((m) => m !== id);
+    if (members.length > 0) coveredByRep[id] = members;
+  }
   return {
     batchId,
     phase: 'queued',
     candidateIds,
     coveredIds: coveredIdsFor(candidateIds, coveredIdsByRep),
+    ...(Object.keys(coveredByRep).length > 0 ? { coveredByRep } : {}),
     attempt: 0,
     ...(reasonsOnly ? { reasonsOnly: true } : {}),
   };
@@ -742,6 +785,40 @@ export async function getPipelineBatchProgress(): Promise<PipelineBatchProgress 
   return progress.total === 0 ? null : progress;
 }
 
+/**
+ * article_suggestions ids whose reason note is still owed by a live batch: the
+ * reason candidates of a relevance batch between its relevance apply and its
+ * terminal state, and the candidates of a non-terminal reasons-only batch.
+ * Covered same-story siblings of a reason candidate are included: the batch
+ * copies the candidate's note onto them when it applies. A `reason_pending` row
+ * NOT in this set is not being worked on (a failed or abandoned batch, a note
+ * that failed the grounding check, or one the orphaned-reasons sweep has not
+ * picked up yet).
+ */
+export function deriveReasonsInFlightIds(run: PipelineRun): Set<string> {
+  const ids = new Set<string>();
+  for (const b of run.batches) {
+    if (isTerminal(b.phase)) continue;
+    if (b.reasonsOnly) {
+      for (const id of b.reasonCandidateIds ?? b.candidateIds) ids.add(id);
+      continue;
+    }
+    if (
+      b.phase === 'needs-reasons-submit' ||
+      b.phase === 'submitting-reasons' ||
+      b.phase === 'waiting-reasons'
+    ) {
+      for (const id of b.reasonCandidateIds ?? []) {
+        ids.add(id);
+        // Siblings get this rep's note when the batch applies
+        // (propagateNotesToCoveredSiblings), so theirs is in flight too.
+        for (const sibling of b.coveredByRep?.[id] ?? []) ids.add(sibling);
+      }
+    }
+  }
+  return ids;
+}
+
 /** Best-effort push of the derived phase + progress into the For-You header
  *  store. Lazily-required (like refreshUi) to avoid a load-time import cycle. */
 async function pushUiProgress(): Promise<void> {
@@ -755,6 +832,10 @@ async function pushUiProgress(): Promise<void> {
     const store = useForYouStore.getState();
     // `!snap` first: it implies `ui.phase === 'idle'` anyway, and it is what
     // narrows `snap` for the else branch.
+    // Always a NEW Set, so a zustand selector on it re-renders.
+    store.setReasonsInFlightIds(
+      snap ? deriveReasonsInFlightIds(snap.run) : new Set<string>(),
+    );
     if (!snap || ui.phase === 'idle') {
       store.setAsyncJobPhase('idle');
       store.setBatchProgress(null);
@@ -825,16 +906,34 @@ export async function enqueueCandidates(
   // here, including this module's own post-finalize kick, so this one guard
   // closes the race. Batches already in flight still drain via recover/poll.
   if (isOnDeviceProcessing()) return { deferred: [] };
+  const out = await persistCandidateBatches(ids, flushPartial, coveredIdsByRep);
+  if (out.hadRun || out.dispatched > 0) {
+    await drain('foreground');
+    ensurePoller();
+  }
+  return { deferred: out.deferred };
+}
+
+/**
+ * The persistence half of {@link enqueueCandidates}: dedupe, partition, chunk
+ * and write the batches (minting the run if needed). No drain, no poller, so
+ * the background task can call it without handing its work to the foreground
+ * admission loop. `e2ee` carries the task's deadline into the run-keypair
+ * attestation fetch.
+ */
+async function persistCandidateBatches(
+  ids: string[],
+  flushPartial: boolean,
+  coveredIdsByRep?: Readonly<Record<string, string[]>>,
+  e2ee: AttestationFetchOptions = {},
+): Promise<{ deferred: string[]; hadRun: boolean; dispatched: number }> {
   const snap = await getPipeline();
+  const hadRun = snap !== null;
 
   const existing = snap ? nonTerminalCandidateIds(snap.run) : new Set<string>();
   const fresh = ids.filter((id) => !existing.has(id));
   if (fresh.length === 0) {
-    if (snap) {
-      await drain('foreground');
-      ensurePoller();
-    }
-    return { deferred: [] };
+    return { deferred: [], hadRun, dispatched: 0 };
   }
 
   // P4b: split first, so no batch can ever hold both a headline and a standard
@@ -908,11 +1007,7 @@ export async function enqueueCandidates(
   }
 
   if (dispatch.length === 0) {
-    if (snap) {
-      await drain('foreground');
-      ensurePoller();
-    }
-    return { deferred: deferredIds };
+    return { deferred: deferredIds, hadRun, dispatched: 0 };
   }
 
   logger.debug(
@@ -923,14 +1018,12 @@ export async function enqueueCandidates(
     dispatch.map((c, i) => makeQueuedBatch(base + i, c, false, coveredIdsByRep));
 
   if (!snap) {
-    await createRunWithBatches(build);
+    await createRunWithBatches(build, e2ee);
   } else {
     await appendBatches(build);
   }
 
-  await drain('foreground');
-  ensurePoller();
-  return { deferred: deferredIds };
+  return { deferred: deferredIds, hadRun, dispatched: dispatch.length };
 }
 
 /**
@@ -1001,8 +1094,9 @@ export async function enqueueOrphanedReasons(): Promise<void> {
 /** Mint the run keypair and create the run with the batches from `build`. */
 async function createRunWithBatches(
   build: (base: number) => PipelineBatch[],
+  e2ee: AttestationFetchOptions = {},
 ): Promise<void> {
-  const ctx = await prepareE2EEContext(SMALL_MODEL);
+  const ctx = await prepareE2EEContext(SMALL_MODEL, 'background', e2ee);
   const run: Omit<PipelineRun, 'version' | 'schema'> = {
     runId: makeRunId(),
     startedAt: Date.now(),
@@ -1129,11 +1223,11 @@ async function doDrain(context: ExecutionContext): Promise<void> {
  * other terminal transition. Never calls drain, so it is safe to invoke from
  * inside doDrain without re-entering the single-flight guard.
  */
-async function maybeFinalize(): Promise<void> {
+async function maybeFinalize(opts: { kick?: boolean } = {}): Promise<void> {
   const snap = await getPipeline();
   if (!snap) return;
   if (snap.run.batches.every((b) => isTerminal(b.phase))) {
-    await finalize(snap.run);
+    await finalize(snap.run, opts.kick ?? true);
   }
 }
 
@@ -1141,30 +1235,111 @@ async function maybeFinalize(): Promise<void> {
 // Submit — build bundle + POST + transition
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Idempotency + background-task I/O
+// ---------------------------------------------------------------------------
+
+/** What one submit attempt came to. The foreground drain ignores it; the
+ *  background task reads it to decide whether to keep going. `empty`: nothing
+ *  left to send, batch marked done. `lost`: another caller moved the batch. */
+type SubmitStep = SendInferenceOutcome['status'] | 'empty' | 'lost' | 'deadline';
+
+/** Per-call options of the background task path. Absent for every foreground
+ *  and silent-push caller, which therefore behave exactly as before. */
+interface TaskIo {
+  signal?: AbortSignal;
+  deadlineAt?: number;
+}
+
+function attestationOpts(
+  context: ExecutionContext,
+  io?: TaskIo,
+): AttestationFetchOptions {
+  return context === 'task' ? { signal: io?.signal, singleAttempt: true } : {};
+}
+
+function sendOpts(
+  context: ExecutionContext,
+  io?: TaskIo,
+): { singleAttempt?: boolean; signal?: AbortSignal } {
+  return context === 'task' ? { singleAttempt: true, signal: io?.signal } : {};
+}
+
+function sameIds(a: readonly string[] | undefined, b: readonly string[]): boolean {
+  if (!a || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
+/**
+ * Persist the `Idempotency-Key` for the request about to be sent, in one CAS,
+ * BEFORE the POST. The stored key is reused verbatim when this attempt carries
+ * exactly `sentIds` for the same phase; otherwise `keyGen` is bumped and a new
+ * key minted, because the gateway would replay the old key to a job that
+ * scored DIFFERENT articles. Returns null when the batch left `fromPhase`.
+ */
+async function reserveIdempotencyKey(
+  batchId: number,
+  fromPhase: BatchPhase,
+  phase: 'rel' | 'r',
+  ids: readonly string[],
+): Promise<string | null> {
+  const out = await mutatePipeline((run) => {
+    const b = run.batches.find((x) => x.batchId === batchId);
+    if (!b || b.phase !== fromPhase) return null;
+    if (b.idemKey && b.idemPhase === phase && sameIds(b.sentIds, ids)) {
+      return b.idemKey;
+    }
+    const gen = (b.keyGen ?? -1) + 1;
+    b.keyGen = gen;
+    b.idemPhase = phase;
+    b.sentIds = [...ids];
+    b.idemKey = `${run.runId}:${b.batchId}:${phase}:${gen}`;
+    return b.idemKey;
+  });
+  return out === 'aborted' || out === 'no-run' ? null : out.result;
+}
+
+/** Clear the key once its job is known to be gone or unusable (a 404, stale,
+ *  refused or retired-scorer requeue of a WAITING batch). Resending that key
+ *  would replay the dead job's requestId forever, so the next submit must mint
+ *  a new generation. Called inside the caller's own mutator. */
+function forgetIdempotencyKey(b: PipelineBatch): void {
+  b.idemKey = undefined;
+  b.idemPhase = undefined;
+  b.sentIds = undefined;
+}
+
+/** A submit outcome that leaves the batch where it can simply be retried with
+ *  the SAME key: a 429, a 409 (key still reserved), or a task with no JWT. */
+function isRetryLater(status: SendInferenceOutcome['status']): boolean {
+  return status === 'throttled' || status === 'in-progress' || status === 'no-auth';
+}
+
 async function doSubmit(
   batchId: number,
   context: ExecutionContext,
   grantAlreadyHeld = false,
-): Promise<void> {
+  io?: TaskIo,
+): Promise<SubmitStep> {
   const snap = await getPipeline();
-  if (!snap) return;
+  if (!snap) return 'lost';
   const { run, privKeyHex } = snap;
   const batch = run.batches.find((b) => b.batchId === batchId);
-  if (!batch) return;
+  if (!batch) return 'lost';
   if (
     batch.phase !== 'submitting-relevance' &&
     batch.phase !== 'submitting-reasons'
   ) {
-    return;
+    return 'lost';
   }
   const fromPhase = batch.phase;
 
   try {
     if (batch.reasonsOnly) {
-      await doSubmitReasonsOnly(run, batch, privKeyHex, context, grantAlreadyHeld);
-      return;
+      return await doSubmitReasonsOnly(run, batch, privKeyHex, context, grantAlreadyHeld, io);
     }
-    await doSubmitRelevance(run, batch, privKeyHex, context, grantAlreadyHeld);
+    return await doSubmitRelevance(run, batch, privKeyHex, context, grantAlreadyHeld, io);
   } catch (err) {
     // The E2EE context (re)build validates the model attestation key up front;
     // an off-curve ecdsa key throws ModelKeyValidationError here BEFORE any POST
@@ -1176,7 +1351,7 @@ async function doSubmit(
         `${TAG} batch ${batchId} submit aborted — model key invalid (${err.message}); failing batch (non-retryable this run)`,
       );
       await failSubmitModelKeyInvalid(batchId, fromPhase);
-      return;
+      return 'failed';
     }
     throw err;
   }
@@ -1203,7 +1378,8 @@ async function doSubmitRelevance(
   privKeyHex: string,
   context: ExecutionContext,
   grantAlreadyHeld = false,
-): Promise<void> {
+  io?: TaskIo,
+): Promise<SubmitStep> {
   const all = await getUnscoredSuggestionsWithFacts();
   const idSet = new Set(batch.candidateIds);
   const subset = all.filter((c) => idSet.has(c.id));
@@ -1241,7 +1417,7 @@ async function doSubmitRelevance(
       `${TAG} batch ${batch.batchId} fully hard-filtered — marking done`,
     );
     await markBatchDone(batch.batchId);
-    return;
+    return 'empty';
   }
 
   // The calibration-overrides-aware config. It carries the v4 article-tag flags
@@ -1287,7 +1463,7 @@ async function doSubmitRelevance(
       // handles the run finalize (calling afterTerminal here would re-enter
       // drain).
       await markBatchDone(batch.batchId);
-      return;
+      return 'empty';
     }
     const eligibleIds = bundle.eligibleCandidates.map((c) => c.id);
 
@@ -1321,7 +1497,20 @@ async function doSubmitRelevance(
     // to the wrong articles. Absent (older builder) ⇒ the standard size.
     const scoreChunkSize = bundle.scoreChunkSize ?? CLOUD_SCORE_CHUNK_SIZE;
 
-    const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
+    const ctx = await rebuildE2EEContext(
+      SMALL_MODEL,
+      privKeyHex,
+      run.algo,
+      'background',
+      attestationOpts(context, io),
+    );
+    const idemKey = await reserveIdempotencyKey(
+      batch.batchId,
+      'submitting-relevance',
+      'rel',
+      eligibleIds,
+    );
+    if (!idemKey) return 'lost';
     logger.debug(
       `${TAG} batch ${batch.batchId} submit relevance (backstop): ${eligibleIds.length} ids in ${bundle.calls.length} calls, chunk=${scoreChunkSize} (token=${token ? 'yes' : 'no'})`,
     );
@@ -1332,6 +1521,8 @@ async function doSubmitRelevance(
       model: SMALL_MODEL,
       context,
       grantAlreadyHeld,
+      idempotencyKey: idemKey,
+      ...sendOpts(context, io),
     });
 
     if (outcome.status === 'ok') {
@@ -1355,13 +1546,13 @@ async function doSubmitRelevance(
       logger.debug(
         `${TAG} batch ${batch.batchId} → waiting-relevance requestId=${outcome.requestId}`,
       );
-    } else if (outcome.status === 'throttled') {
+    } else if (isRetryLater(outcome.status)) {
       await requeueThrottled(batch.batchId, 'submitting-relevance');
     } else {
       // Inside the drain loop — doDrain's maybeFinalize covers the terminal case.
       await failOrRetrySubmit(batch.batchId, 'submitting-relevance');
     }
-    return;
+    return outcome.status;
   }
 
 }
@@ -1372,7 +1563,8 @@ async function doSubmitReasonsOnly(
   privKeyHex: string,
   context: ExecutionContext,
   grantAlreadyHeld = false,
-): Promise<void> {
+  io?: TaskIo,
+): Promise<SubmitStep> {
   const scored = await getScoredSuggestionsWithoutReasons();
   const idSet = new Set(batch.candidateIds);
   const subset = scored.filter((c) => idSet.has(c.id));
@@ -1414,13 +1606,26 @@ async function doSubmitReasonsOnly(
     );
     // Terminal inside the drain loop; doDrain's maybeFinalize handles finalize.
     await markBatchDone(batch.batchId);
-    return;
+    return 'empty';
   }
 
   const token =
     AppState.currentState !== 'active' ? run.expoPushToken : null;
-  const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
+  const ctx = await rebuildE2EEContext(
+    SMALL_MODEL,
+    privKeyHex,
+    run.algo,
+    'background',
+    attestationOpts(context, io),
+  );
   const reasonIds = bundle.eligibleCandidates.map((c) => c.id);
+  const idemKey = await reserveIdempotencyKey(
+    batch.batchId,
+    'submitting-reasons',
+    'r',
+    reasonIds,
+  );
+  if (!idemKey) return 'lost';
   logger.debug(
     `${TAG} batch ${batch.batchId} submit reasonsOnly: ${reasonIds.length} ids in ${bundle.calls.length} calls`,
   );
@@ -1431,6 +1636,8 @@ async function doSubmitReasonsOnly(
     model: SMALL_MODEL,
     context,
     grantAlreadyHeld,
+    idempotencyKey: idemKey,
+    ...sendOpts(context, io),
   });
 
   if (outcome.status === 'ok') {
@@ -1444,12 +1651,13 @@ async function doSubmitReasonsOnly(
     logger.debug(
       `${TAG} batch ${batch.batchId} → waiting-reasons requestId=${outcome.requestId}`,
     );
-  } else if (outcome.status === 'throttled') {
+  } else if (isRetryLater(outcome.status)) {
     await requeueThrottled(batch.batchId, 'submitting-reasons');
   } else {
     // Inside the drain loop — doDrain's maybeFinalize covers the terminal case.
     await failOrRetrySubmit(batch.batchId, 'submitting-reasons');
   }
+  return outcome.status;
 }
 
 // ---------------------------------------------------------------------------
@@ -1573,6 +1781,10 @@ async function failOrRetrySubmit(
     const b = run.batches.find((x) => x.batchId === batchId);
     if (!b || b.phase !== fromPhase) return null;
     b.attempt = b.attempt + 1;
+    // The key is KEPT. A failed submit is either definite (the gateway stores a
+    // key only once the job exists, so resending it creates the job) or
+    // ambiguous (a timeout after the gateway accepted), and only the same key
+    // turns the ambiguous case into a replay instead of a second bill.
     if (b.attempt >= MAX_BATCH_ATTEMPTS) {
       b.phase = 'failed';
       b.failureReason = 'submit-failed';
@@ -1622,19 +1834,72 @@ async function markBatchDone(batchId: number): Promise<void> {
 // Poll a single batch's job + apply results
 // ---------------------------------------------------------------------------
 
+/** What one results check came to. The foreground poller ignores it; the
+ *  background task reads it. */
+type CheckOutcome =
+  | { kind: 'busy' | 'no-request' | 'pending' | 'error' | 'no-auth' | 'requeued' }
+  | { kind: 'applied-relevance'; reasons: SubmitStep }
+  | { kind: 'applied-reasons' };
+
+/** Run `fn` while holding `batchId`; if another caller already holds it, return
+ *  `busy` without running. See {@link batchesInHand}. */
+async function withBatchInHand<T>(
+  batchId: number,
+  busy: T,
+  fn: () => Promise<T>,
+): Promise<T> {
+  if (batchesInHand.has(batchId)) return busy;
+  batchesInHand.add(batchId);
+  try {
+    return await fn();
+  } finally {
+    batchesInHand.delete(batchId);
+  }
+}
+
 async function checkBatch(
   batch: PipelineBatch,
   context: ExecutionContext,
-): Promise<void> {
-  if (!batch.requestId) return;
+  io?: TaskIo,
+): Promise<CheckOutcome> {
+  return withBatchInHand<CheckOutcome>(batch.batchId, { kind: 'busy' }, () =>
+    checkBatchHeld(batch, context, io),
+  );
+}
+
+async function checkBatchHeld(
+  batch: PipelineBatch,
+  context: ExecutionContext,
+  io?: TaskIo,
+): Promise<CheckOutcome> {
+  if (!batch.requestId) return { kind: 'no-request' };
+  const task = context === 'task';
+
+  // Staleness counts from the later of submit and this process's first check,
+  // never from `submittedAt` alone: a batch the OS task submitted six hours ago
+  // would otherwise be requeued (a second bill, results thrown away) on the
+  // first slow GET after opening. The task itself never requeues on staleness.
+  if (!task && !firstCheckedAt.has(batch.batchId)) {
+    firstCheckedAt.set(batch.batchId, Date.now());
+  }
+  const staleAge = (): number =>
+    Date.now() -
+    Math.max(batch.submittedAt ?? 0, firstCheckedAt.get(batch.batchId) ?? 0);
+
   let res: ServerResults | 'pending' | 'not-found' | 'unauthorized';
   try {
     res = await fetchResults(
       batch.requestId,
       context,
       batch.capabilityToken || undefined,
+      { submittedAt: batch.submittedAt, signal: io?.signal },
     );
   } catch (err) {
+    // Task: a missing JWT or a network error ends this check quietly. The batch
+    // stays waiting for the next run or the next open; nothing is requeued.
+    if (task) {
+      return err instanceof TaskNoAuthError ? { kind: 'no-auth' } : { kind: 'error' };
+    }
     logger.captureException(err, {
       tags: { service: 'scoring-pipeline', step: 'fetch', batchId: String(batch.batchId) },
     });
@@ -1644,38 +1909,47 @@ async function checkBatch(
     // RUN_ABANDON ever freed it (this wedged a production device). Apply the
     // SAME staleness bound the pending case uses: once the batch has been
     // waiting past BATCH_STALE_MS, requeue-or-fail it so the run can progress.
-    const age = Date.now() - (batch.submittedAt ?? 0);
+    const age = staleAge();
     if (age > BATCH_STALE_MS) {
       logger.warn(
         `${TAG} batch ${batch.batchId} fetch threw + waiting ${Math.round(age / 1000)}s — stale, requeue/fail`,
       );
       await requeueWaitingOrFail(batch, 'stale', context);
+      return { kind: 'requeued' };
     }
-    return;
+    return { kind: 'error' };
   }
 
   if (res === 'pending') {
-    const age = Date.now() - (batch.submittedAt ?? 0);
+    if (task) return { kind: 'pending' };
+    const age = staleAge();
     if (age > BATCH_STALE_MS) {
       logger.warn(
         `${TAG} batch ${batch.batchId} pending ${Math.round(age / 1000)}s — stale, requeue/fail`,
       );
       await requeueWaitingOrFail(batch, 'stale', context);
+      return { kind: 'requeued' };
     }
-    return;
+    return { kind: 'pending' };
   }
+  // Task: a refused JWT says the session is gone, not that the job is. Only a
+  // definite 404 requeues from the background.
+  if (res === 'unauthorized' && task) return { kind: 'no-auth' };
   if (res === 'not-found' || res === 'unauthorized') {
     logger.warn(`${TAG} batch ${batch.batchId} fetch → ${res}`);
     await requeueWaitingOrFail(batch, res, context);
-    return;
+    return { kind: 'requeued' };
   }
 
   try {
     if (batch.phase === 'waiting-relevance') {
-      await handleRelevanceResults(batch, res, context);
+      const reasons = await handleRelevanceResults(batch, res, context, io);
+      return { kind: 'applied-relevance', reasons };
     } else if (batch.phase === 'waiting-reasons') {
       await handleReasonResults(batch, res, context);
+      return { kind: 'applied-reasons' };
     }
+    return { kind: 'error' };
   } catch (err) {
     logger.captureException(err, {
       tags: { service: 'scoring-pipeline', step: 'apply', batchId: String(batch.batchId) },
@@ -1692,6 +1966,7 @@ async function checkBatch(
     // already advanced the batch past `batch.phase` before throwing (progress was
     // made), requeueWaitingOrFail's guarded CAS no-ops and nothing is double-failed.
     await requeueWaitingOrFail(batch, 'attempts-exhausted', context);
+    return { kind: 'requeued' };
   }
 }
 
@@ -1722,7 +1997,8 @@ async function handleRelevanceResults(
   batch: PipelineBatch,
   server: ServerResults,
   context: ExecutionContext,
-): Promise<void> {
+  io?: TaskIo,
+): Promise<SubmitStep> {
   // BATCH FROM A RETIRED SCORER. Both v3 (the merged two-axis call) and the
   // judge (the combined {"j","s"?,"r"?} call) are deleted, but a persisted batch
   // outlives the code that wrote it: a device can still be holding one submitted
@@ -1747,7 +2023,7 @@ async function handleRelevanceResults(
       `${TAG} batch ${batch.batchId} was submitted by a retired scorer — requeueing for a legacy re-score`,
     );
     await requeueWaitingOrFail(batch, 'stale-scorer', context);
-    return;
+    return 'lost';
   }
 
   const { batchResults } = await decodeBatch(batch, server);
@@ -1898,7 +2174,7 @@ async function handleRelevanceResults(
     );
     if (discarded > 0) await refreshUi();
     await afterTerminal(context);
-    return;
+    return 'empty';
   }
 
   await mutatePipeline((run) => {
@@ -1911,8 +2187,12 @@ async function handleRelevanceResults(
     return true;
   });
 
-  // Immediately try the reasons submit this cycle.
-  await submitNeedsReasons(batch.batchId, context);
+  // The ids just moved into the reasons phase: publish them as in flight.
+  await pushUiProgress();
+
+  // Immediately try the reasons submit this cycle. The caller (checkBatch)
+  // already holds this batch, so this is the unclaimed inner call.
+  return submitNeedsReasonsHeld(batch.batchId, context, io);
 }
 
 /**
@@ -2022,6 +2302,48 @@ async function applyV3NoteResults(
   );
 }
 
+/**
+ * Give a rep's fresh note to the same-story siblings the gate held back behind
+ * it. Those siblings inherited the rep's SCORE at relevance time, when the rep
+ * had no note yet, so they sit in `reason_pending` and no batch would ever
+ * write theirs (only the orphaned-reasons sweep, on a later foreground). Each
+ * sibling keeps its own relevance and scorer vintage; `batchPropagateScores`
+ * checks the note against the sibling's OWN article and leaves a mismatch in
+ * `reason_pending`, owed its own call, exactly as score propagation does.
+ * Reps that were rescored in pass 2 are skipped: their note may explain a
+ * score the sibling does not carry. Never throws.
+ */
+async function propagateNotesToCoveredSiblings(
+  batch: PipelineBatch,
+  notesByRep: ReadonlyMap<string, string>,
+): Promise<void> {
+  const byRep = batch.coveredByRep;
+  if (!byRep || notesByRep.size === 0) return;
+  const noteFor = new Map<string, string>();
+  for (const [rep, note] of notesByRep) {
+    for (const sibling of byRep[rep] ?? []) {
+      if (sibling !== rep && !noteFor.has(sibling)) noteFor.set(sibling, note);
+    }
+  }
+  if (noteFor.size === 0) return;
+  try {
+    const rows = await getGroupingRowsByIds([...noteFor.keys()]);
+    const entries = rows
+      .filter((r) => r.status === ArticleSuggestionStatus.ReasonPending)
+      .map((r) => ({
+        id: r.id,
+        relevance: r.relevance,
+        reason: noteFor.get(r.id) ?? '',
+        scoredWithV3: r.scoredWithV3 ?? null,
+      }));
+    if (entries.length > 0) await batchPropagateScores(entries);
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'propagate-sibling-notes' },
+    });
+  }
+}
+
 async function handleReasonResults(
   batch: PipelineBatch,
   server: ServerResults,
@@ -2057,8 +2379,11 @@ async function handleReasonResults(
       chunkIdToCandidates: new Map(),
     });
 
+    // Notes that landed on a rep unchanged, for its covered siblings below.
+    const siblingNotes = new Map<string, string>();
     for (const [id, reason] of reasonMap) {
       if (failedIds.has(id)) continue;
+      if (reason.trim().length > 0 && !rescoreMap.has(id)) siblingNotes.set(id, reason);
       try {
         // A pass-2 score, when there is one, REPLACES pass 1's — so the reason
         // and the score it explains are written in ONE update rather than a
@@ -2092,6 +2417,7 @@ async function handleReasonResults(
         `${TAG} batch ${batch.batchId} pass-2 rescored ${rescoreMap.size}/${reasonMap.size} rows`,
       );
     }
+    await propagateNotesToCoveredSiblings(batch, siblingNotes);
   }
 
   // Rescored rows are handed to `discardLowRelevance` at their NEW score, not
@@ -2118,15 +2444,41 @@ async function handleReasonResults(
 // needs-reasons-submit → submit the impactful subset's reasons
 // ---------------------------------------------------------------------------
 
+/** Wait for a limiter slot on behalf of the background task, but only if one
+ *  frees with at least `reserveMs` left before the deadline. False = stop. */
+async function takeTaskGrant(io: TaskIo | undefined, reserveMs: number): Promise<boolean> {
+  const deadlineAt = io?.deadlineAt ?? Number.POSITIVE_INFINITY;
+  if (Date.now() + gatewayRateLimiter.msUntilNextGrant() > deadlineAt - reserveMs) {
+    return false;
+  }
+  try {
+    await raceSignal(gatewayRateLimiter.acquire('background'), io?.signal);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function submitNeedsReasons(
   batchId: number,
   context: ExecutionContext,
-): Promise<void> {
+  io?: TaskIo,
+): Promise<SubmitStep> {
+  return withBatchInHand<SubmitStep>(batchId, 'lost', () =>
+    submitNeedsReasonsHeld(batchId, context, io),
+  );
+}
+
+async function submitNeedsReasonsHeld(
+  batchId: number,
+  context: ExecutionContext,
+  io?: TaskIo,
+): Promise<SubmitStep> {
   const snap = await getPipeline();
-  if (!snap) return;
+  if (!snap) return 'lost';
   const { run, privKeyHex } = snap;
   const batch = run.batches.find((b) => b.batchId === batchId);
-  if (!batch || batch.phase !== 'needs-reasons-submit') return;
+  if (!batch || batch.phase !== 'needs-reasons-submit') return 'lost';
 
   const scored = await getScoredSuggestionsWithoutReasons();
   const idSet = new Set(batch.reasonCandidateIds ?? []);
@@ -2166,13 +2518,16 @@ async function submitNeedsReasons(
       );
     }
     await afterTerminal(context);
-    return;
+    return 'empty';
   }
 
-  // Rate-limiter admission for the follow-up POST.
-  if (!gatewayRateLimiter.tryTakeImmediate()) {
-    // No budget right now — leave it in needs-reasons-submit; the poller retries.
-    return;
+  // Rate-limiter admission for the follow-up POST. The background task waits
+  // for a slot while its deadline allows; everyone else takes one now or
+  // leaves it in needs-reasons-submit for the poller.
+  if (context === 'task') {
+    if (!(await takeTaskGrant(io, TASK_NO_NEW_POST_MS))) return 'deadline';
+  } else if (!gatewayRateLimiter.tryTakeImmediate()) {
+    return 'throttled';
   }
 
   const claim = await mutatePipeline((r) => {
@@ -2182,13 +2537,36 @@ async function submitNeedsReasons(
     b.submittedAt = Date.now();
     return true;
   });
-  if (claim === 'aborted' || claim === 'no-run') return;
+  if (claim === 'aborted' || claim === 'no-run') return 'lost';
+
+  /** Back to needs-reasons-submit with nothing spent: the attempt counter and
+   *  the idempotency key are both left alone. */
+  const releaseClaim = async (): Promise<void> => {
+    await mutatePipeline((r) => {
+      const b = r.batches.find((x) => x.batchId === batchId);
+      if (!b || b.phase !== 'submitting-reasons') return null;
+      b.phase = 'needs-reasons-submit';
+      return true;
+    });
+  };
 
   const token = AppState.currentState !== 'active' ? run.expoPushToken : null;
   let ctx;
   try {
-    ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
+    ctx = await rebuildE2EEContext(
+      SMALL_MODEL,
+      privKeyHex,
+      run.algo,
+      'background',
+      attestationOpts(context, io),
+    );
   } catch (err) {
+    // Task: no JWT for the attestation fetch, or the deadline fired. Nothing
+    // was sent; hand the batch back untouched.
+    if (context === 'task' && !(err instanceof ModelKeyValidationError)) {
+      await releaseClaim();
+      return err instanceof NoCredentialError ? 'no-auth' : 'deadline';
+    }
     // Off-curve model attestation key (MERA-APP-39). The relevance scores are
     // already persisted, so mirror the reasons-submit hard-failure path: mark
     // the batch done (scores kept — orphaned-reasons recovery re-submits the
@@ -2210,9 +2588,11 @@ async function submitNeedsReasons(
       );
     }
     await afterTerminal(context);
-    return;
+    return 'failed';
   }
   const reasonIds = bundle.eligibleCandidates.map((c) => c.id);
+  const idemKey = await reserveIdempotencyKey(batchId, 'submitting-reasons', 'r', reasonIds);
+  if (!idemKey) return 'lost';
   logger.debug(
     `${TAG} batch ${batchId} submit reasons: ${reasonIds.length} ids in ${bundle.calls.length} calls (token=${token ? 'yes' : 'no'})`,
   );
@@ -2230,6 +2610,8 @@ async function submitNeedsReasons(
     // The admission check above (`tryTakeImmediate` before the CAS claim)
     // already spent this request's limiter slot.
     grantAlreadyHeld: true,
+    idempotencyKey: idemKey,
+    ...sendOpts(context, io),
   });
 
   if (outcome.status === 'ok') {
@@ -2237,14 +2619,13 @@ async function submitNeedsReasons(
     logger.debug(
       `${TAG} batch ${batchId} → waiting-reasons requestId=${outcome.requestId}`,
     );
-  } else if (outcome.status === 'throttled') {
-    // Stay in needs-reasons-submit — retried by the poller.
-    await mutatePipeline((r) => {
-      const b = r.batches.find((x) => x.batchId === batchId);
-      if (!b || b.phase !== 'submitting-reasons') return null;
-      b.phase = 'needs-reasons-submit';
-      return true;
-    });
+    await pushUiProgress();
+    return 'ok';
+  } else if (isRetryLater(outcome.status)) {
+    // Stay in needs-reasons-submit — retried by the poller or the next task
+    // run, with the SAME key (a 409 means the gateway still holds it).
+    await releaseClaim();
+    return outcome.status;
   } else {
     // Reasons submit hard-failed — the scores are already saved, so mark the
     // batch done (NOT failed). Orphaned-reasons recovery picks the rows up next
@@ -2264,6 +2645,7 @@ async function submitNeedsReasons(
       );
     }
     await afterTerminal(context);
+    return 'failed';
   }
 }
 
@@ -2281,6 +2663,7 @@ async function requeueWaitingOrFail(
     const b = run.batches.find((x) => x.batchId === batch.batchId);
     if (!b || b.phase !== batch.phase) return null;
     b.attempt = b.attempt + 1;
+    forgetIdempotencyKey(b);
     if (b.attempt >= MAX_BATCH_ATTEMPTS) {
       b.phase = 'failed';
       // `stale-scorer` is an in-code reason only — it narrows a log line, and the
@@ -2330,6 +2713,10 @@ async function requeueWaitingOrFail(
     // Relevance batch failure persists NOTHING — rows stay relevance NULL and
     // re-enter the next run.
     await afterTerminal(context);
+  } else if (context === 'task') {
+    // The background task never drains (a drain would admit foreground work
+    // under the task's context) and never starts the poller.
+    await pushUiProgress();
   } else {
     // Requeued (not terminal): keep the pipeline moving.
     await drain(context);
@@ -2349,18 +2736,26 @@ async function requeueWaitingOrFail(
  * are on doDrain's stack.
  */
 async function afterTerminal(context: ExecutionContext): Promise<void> {
+  if (context === 'task') {
+    // No drain from the background task; finalize if this was the last batch,
+    // without the post-finalize kick (that kick enqueues through the
+    // foreground drain).
+    await pushUiProgress();
+    await maybeFinalize({ kick: false });
+    return;
+  }
   await drain(context);
 }
 
-async function finalize(run: PipelineRun): Promise<void> {
+async function finalize(run: PipelineRun, kick = true): Promise<void> {
   if (finalizeInFlight) return finalizeInFlight;
-  finalizeInFlight = doFinalize(run).finally(() => {
+  finalizeInFlight = doFinalize(run, kick).finally(() => {
     finalizeInFlight = null;
   });
   return finalizeInFlight;
 }
 
-async function doFinalize(run: PipelineRun): Promise<void> {
+async function doFinalize(run: PipelineRun, kick = true): Promise<void> {
   // Re-read to guard exactly-once under concurrency: if the run is already
   // gone, another finalize won.
   const snap = await getPipeline();
@@ -2390,8 +2785,9 @@ async function doFinalize(run: PipelineRun): Promise<void> {
   // Post-finalize kick: if a full quantum of unscored rows still remains (or the
   // staleness escape applies), start the next run right away instead of waiting
   // for the next discovery tick. Scheduled as a macrotask so it runs after this
-  // finalize (and any outer drain) has settled.
-  schedulePostFinalizeKick();
+  // finalize (and any outer drain) has settled. Skipped for the background
+  // task, whose own step (b) decides what to submit.
+  if (kick) schedulePostFinalizeKick();
 }
 
 /** Schedule a one-shot post-finalize kick (idempotent while pending). Runs on a
@@ -2488,6 +2884,26 @@ async function loadGateUserContext(): Promise<
  * representatives that are also scorable. The gate is imported, never
  * reimplemented, so there is exactly one election/propagation rule.
  */
+/**
+ * P9: propagated rows are written terminal `complete` WITHOUT ever meeting the
+ * scoring stage's hard screen (score-propagation's HARD FILTERS note). The gate
+ * reports only a COUNT, so the reconcile is the FULL sweep — the gate
+ * propagates over ALL unscored rows, not just this call's ids. Never throws:
+ * the propagation is already committed. Shared by every gate caller.
+ */
+async function reconcileAfterGatePropagation(): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
+    await sweep.purgeHardFilteredSuggestions();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'reconcile-hard-filters' },
+    });
+  }
+  await refreshUi();
+}
+
 export async function enqueueUnscoredEligible(
   opts: { flushRemainder?: boolean } = {},
 ): Promise<{ enqueued: number }> {
@@ -2506,23 +2922,7 @@ export async function enqueueUnscoredEligible(
   const inFlight = await getNonTerminalCandidateIds();
   const gate = await gateUnscoredForScoring(inFlight, await loadGateUserContext());
 
-  if (gate.propagatedCount > 0) {
-    // P9: propagated rows are written terminal `complete` WITHOUT ever meeting
-    // the scoring stage's hard screen (score-propagation's HARD FILTERS note).
-    // The gate reports only a COUNT, so the reconcile is the FULL sweep — the
-    // gate propagates over ALL unscored rows, not just this call's ids. Never
-    // fails the enqueue: the propagation is already committed.
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
-      await sweep.purgeHardFilteredSuggestions();
-    } catch (err) {
-      logger.captureException(err, {
-        tags: { service: 'scoring-pipeline', step: 'reconcile-hard-filters' },
-      });
-    }
-    await refreshUi();
-  }
+  if (gate.propagatedCount > 0) await reconcileAfterGatePropagation();
 
   // Only elected representatives, and only the ones this path is allowed to
   // score. `flushRemainder` semantics are unchanged — it is still the caller's
@@ -2716,13 +3116,24 @@ export async function abortRun(reason: string): Promise<void> {
 }
 
 export async function recover(): Promise<'idle' | 'running'> {
+  // A background task step still running in this runtime (the OS woke the app
+  // and then the user opened it) finishes first, bounded, so the two never
+  // work the same batches side by side.
+  if (taskStepInFlight) {
+    await Promise.race([
+      taskStepInFlight.catch(() => undefined),
+      new Promise((resolve) => setTimeout(resolve, RECOVER_WAITS_FOR_TASK_MS)),
+    ]);
+  }
   const snap = await getPipeline();
   if (!snap) return 'idle';
   const { run } = snap;
 
-  if (Date.now() - run.startedAt > RUN_ABANDON_MS) {
+  // Measured from the run's LAST activity, not its start: a run the OS task
+  // kept submitting to overnight is not 24h old just because it began then.
+  if (Date.now() - latestActivityAt(run) > RUN_ABANDON_MS) {
     logger.warn(
-      `${TAG} run ${run.runId} older than ${RUN_ABANDON_MS}ms — abandoning`,
+      `${TAG} run ${run.runId} idle for over ${RUN_ABANDON_MS}ms — abandoning`,
     );
     await forceFailNonTerminalAndFinalize();
     return 'idle';
@@ -2893,42 +3304,281 @@ export interface SubmitScoringResult {
  *  gateway, so it must be collected, never aborted. 'wedged': abort it. */
 export type StaleRunVerdict = 'none' | 'fresh' | 'collectable' | 'wedged';
 
+/** The run's last activity: its start or its latest submit, whichever is
+ *  later. */
+export function latestActivityAt(run: PipelineRun): number {
+  let latest = run.startedAt;
+  for (const b of run.batches) {
+    if (b.submittedAt !== undefined && b.submittedAt > latest) latest = b.submittedAt;
+  }
+  return latest;
+}
+
+/**
+ * Pure verdict for the FeedSyncMachine stale guard.
+ * - fresh: the run moved within STALE_RUN_GUARD_MS.
+ * - collectable: quiet, but a batch submitted within COLLECT_WINDOW_MS still
+ *   has results (or a reasons submit) owed to it. Collect it; aborting would
+ *   discard paid results AND wipe the run key that decrypts them.
+ * - wedged: nothing collectable left; abort it.
+ */
+export function deriveStaleRunVerdict(
+  run: PipelineRun,
+  now: number,
+): 'fresh' | 'collectable' | 'wedged' {
+  if (now - latestActivityAt(run) <= STALE_RUN_GUARD_MS) return 'fresh';
+  const collectable = run.batches.some(
+    (b) =>
+      (isWaiting(b.phase) || b.phase === 'needs-reasons-submit') &&
+      b.submittedAt !== undefined &&
+      now - b.submittedAt <= COLLECT_WINDOW_MS,
+  );
+  return collectable ? 'collectable' : 'wedged';
+}
+
+/** One AbortController for a whole background step, fired at `deadlineAt`. */
+function deadlineController(deadlineAt: number): {
+  io: TaskIo;
+  dispose: () => void;
+} {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), Math.max(0, deadlineAt - Date.now()));
+  return {
+    io: { signal: controller.signal, deadlineAt },
+    dispose: () => clearTimeout(timer),
+  };
+}
+
+function timeLeft(deadlineAt: number): number {
+  return deadlineAt - Date.now();
+}
+
+/** Register a background step so a foreground recover() in the same runtime
+ *  waits for it; never lets two steps overlap. */
+async function asTaskStep<T>(busy: T, fn: () => Promise<T>): Promise<T> {
+  if (taskStepInFlight) return busy;
+  const run = fn();
+  taskStepInFlight = run;
+  try {
+    return await run;
+  } finally {
+    taskStepInFlight = null;
+  }
+}
+
+/** Quiet classification of a throw inside a background step: cancellations
+ *  (our deadline) and a missing credential are expected, not defects. */
+function reportTaskError(err: unknown, step: string): BackgroundStopReason {
+  if (isCancellationError(err)) return 'deadline';
+  if (err instanceof NoCredentialError || err instanceof TaskNoAuthError) return 'no-auth';
+  logger.captureException(err, { tags: { service: 'scoring-pipeline', step } });
+  return 'error';
+}
+
 /**
  * Step (a) of a background run: collect what the gateway finished. Single
  * attempt per request, nothing starts after the deadline, auth is the JWT only.
+ *
+ * Order: first every batch already in `needs-reasons-submit` (its relevance is
+ * applied; only the reasons POST is owed), then the waiting batches oldest
+ * first. At most ONE relevance batch is downloaded, decrypted and applied per
+ * run (its reasons are submitted in the same step); ready reasons batches are
+ * applied only while TASK_REASONS_APPLY_MIN_MS remain. Pending, a timeout or a
+ * network error leave a batch waiting; only a definite 404 requeues it.
  * Never throws.
  */
 export async function advanceWaitingForBackground(opts: {
   deadlineAt: number;
 }): Promise<AdvanceWaitingResult> {
-  void opts;
-  return { appliedRelevance: 0, appliedReasons: 0, reasonsSubmitted: 0, stoppedBy: 'no-run' };
+  const result: AdvanceWaitingResult = {
+    appliedRelevance: 0,
+    appliedReasons: 0,
+    reasonsSubmitted: 0,
+    stoppedBy: 'done',
+  };
+  return asTaskStep<AdvanceWaitingResult>({ ...result, stoppedBy: 'error' }, async () => {
+    const { io, dispose } = deadlineController(opts.deadlineAt);
+    try {
+      const snap = await getPipeline();
+      if (!snap) return { ...result, stoppedBy: 'no-run' };
+
+      // 1. Reasons owed by batches whose relevance is already applied.
+      for (const b of snap.run.batches) {
+        if (b.phase !== 'needs-reasons-submit') continue;
+        if (timeLeft(opts.deadlineAt) < TASK_NO_NEW_POST_MS) {
+          return { ...result, stoppedBy: 'deadline' };
+        }
+        const step = await submitNeedsReasons(b.batchId, 'task', io);
+        if (step === 'ok') result.reasonsSubmitted += 1;
+        else if (step === 'no-auth') return { ...result, stoppedBy: 'no-auth' };
+        else if (step === 'deadline') return { ...result, stoppedBy: 'deadline' };
+        else if (step === 'throttled' || step === 'in-progress') {
+          return { ...result, stoppedBy: 'throttled' };
+        }
+      }
+
+      // 2. Waiting batches, oldest submit first.
+      const fresh = await getPipeline();
+      if (!fresh) return result;
+      const waiting = fresh.run.batches
+        .filter((b) => isWaiting(b.phase))
+        .sort((a, b) => (a.submittedAt ?? 0) - (b.submittedAt ?? 0));
+      for (const b of waiting) {
+        const left = timeLeft(opts.deadlineAt);
+        if (b.phase === 'waiting-relevance') {
+          if (result.appliedRelevance >= 1) continue;
+          // A ready relevance batch ends in a reasons POST, so it needs the
+          // POST reserve on top of the GET.
+          if (left < TASK_NO_NEW_POST_MS) return { ...result, stoppedBy: 'deadline' };
+        } else if (left < TASK_REASONS_APPLY_MIN_MS) {
+          continue;
+        }
+        if (!(await takeTaskGrant(io, TASK_NO_NEW_POST_MS / 3))) {
+          return { ...result, stoppedBy: 'deadline' };
+        }
+        const out = await checkBatch(b, 'task', io);
+        if (out.kind === 'applied-relevance') {
+          result.appliedRelevance += 1;
+          if (out.reasons === 'ok') result.reasonsSubmitted += 1;
+          if (out.reasons === 'no-auth') return { ...result, stoppedBy: 'no-auth' };
+        } else if (out.kind === 'applied-reasons') {
+          result.appliedReasons += 1;
+        } else if (out.kind === 'no-auth') {
+          return { ...result, stoppedBy: 'no-auth' };
+        }
+      }
+      return result;
+    } catch (err) {
+      return { ...result, stoppedBy: reportTaskError(err, 'bg-advance') };
+    } finally {
+      dispose();
+    }
+  });
 }
 
 /**
  * Step (b) of a background run: batch the unscored rows (duplicate gate
  * included) and submit up to `maxBatches` relevance jobs. `articleIds` are the
  * article_suggestions ids this run just persisted; they go first. Never starts
- * the foreground poller. Never throws.
+ * the foreground poller and never drains. Never throws.
  */
 export async function submitScoringForBackground(opts: {
   deadlineAt: number;
   articleIds: readonly string[];
   maxBatches?: number;
 }): Promise<SubmitScoringResult> {
-  void opts;
-  return { submitted: 0, stoppedBy: 'done' };
+  if (isOnDeviceProcessing()) return { submitted: 0, stoppedBy: 'on-device' };
+  const maxBatches = opts.maxBatches ?? MAX_IN_FLIGHT;
+  const result: SubmitScoringResult = { submitted: 0, stoppedBy: 'done' };
+  return asTaskStep<SubmitScoringResult>({ ...result, stoppedBy: 'error' }, async () => {
+    const { io, dispose } = deadlineController(opts.deadlineAt);
+    try {
+      if (timeLeft(opts.deadlineAt) < TASK_NO_NEW_POST_MS) {
+        return { ...result, stoppedBy: 'deadline' };
+      }
+
+      // Elect: the same gate every other enqueue path uses (propagation onto
+      // already-scored siblings, one representative per duplicate group).
+      const candidates = await getUnscoredSuggestionsWithFacts();
+      const eligible = new Set(candidates.filter(isScorableCandidate).map((c) => c.id));
+      if (eligible.size > 0) {
+        const inFlight = await getNonTerminalCandidateIds();
+        const gate = await gateUnscoredForScoring(inFlight, await loadGateUserContext());
+        if (gate.propagatedCount > 0) await reconcileAfterGatePropagation();
+        const elected = gate.enqueueIds.filter((id) => eligible.has(id));
+        const firstIds = new Set(opts.articleIds);
+        const ordered = [
+          ...elected.filter((id) => firstIds.has(id)),
+          ...elected.filter((id) => !firstIds.has(id)),
+        ];
+        if (ordered.length > 0) {
+          // flushPartial: nothing else is coming this run, so a sub-floor
+          // remainder goes out now rather than waiting for a foreground.
+          await persistCandidateBatches(ordered, true, gate.coveredIdsByRep, {
+            signal: io.signal,
+            singleAttempt: true,
+          });
+        }
+      }
+
+      // Admit queued batches, oldest first, within the in-flight cap.
+      while (result.submitted < maxBatches) {
+        if (timeLeft(opts.deadlineAt) < TASK_NO_NEW_POST_MS) {
+          result.stoppedBy = 'deadline';
+          break;
+        }
+        const snap = await getPipeline();
+        if (!snap) break;
+        const inFlightCount = snap.run.batches.filter((b) => isInFlight(b.phase)).length;
+        if (inFlightCount >= MAX_IN_FLIGHT) break;
+        const queued = snap.run.batches.find((b) => b.phase === 'queued');
+        if (!queued) break;
+
+        if (!(await takeTaskGrant(io, TASK_NO_NEW_POST_MS))) {
+          result.stoppedBy = 'deadline';
+          break;
+        }
+        const claim = await mutatePipeline((r) => {
+          const b = r.batches.find((x) => x.batchId === queued.batchId);
+          if (!b || b.phase !== 'queued') return null;
+          b.phase = b.reasonsOnly ? 'submitting-reasons' : 'submitting-relevance';
+          b.submittedAt = Date.now();
+          return true;
+        });
+        if (claim === 'aborted' || claim === 'no-run') continue;
+
+        let step: SubmitStep;
+        try {
+          step = await doSubmit(queued.batchId, 'task', true, io);
+        } catch (err) {
+          // Nothing definite happened (no JWT for the attestation, the deadline,
+          // a network throw before the POST): hand the batch back untouched.
+          await requeueThrottled(
+            queued.batchId,
+            queued.reasonsOnly ? 'submitting-reasons' : 'submitting-relevance',
+          );
+          result.stoppedBy = reportTaskError(err, 'bg-submit');
+          break;
+        }
+        if (step === 'ok') {
+          result.submitted += 1;
+          continue;
+        }
+        if (step === 'no-auth') {
+          result.stoppedBy = 'no-auth';
+          break;
+        }
+        if (step === 'throttled' || step === 'in-progress') {
+          result.stoppedBy = 'throttled';
+          break;
+        }
+        // 'empty' / 'lost' / 'failed': move on to the next queued batch.
+      }
+
+      await pushUiProgress();
+      await maybeFinalize({ kick: false });
+      return result;
+    } catch (err) {
+      return { ...result, stoppedBy: reportTaskError(err, 'bg-submit') };
+    } finally {
+      dispose();
+    }
+  });
 }
 
-/** The FeedSyncMachine stale guard's question: may this run be aborted? */
+/** The FeedSyncMachine stale guard's question: may this run be aborted?
+ *  See {@link deriveStaleRunVerdict}. */
 export async function staleRunVerdict(now: number = Date.now()): Promise<StaleRunVerdict> {
-  void now;
-  return 'none';
+  const snap = await getPipeline();
+  if (!snap) return 'none';
+  return deriveStaleRunVerdict(snap.run, now);
 }
 
-/** article_suggestions ids whose reason note is owed by a live batch. */
+/** article_suggestions ids whose reason note is owed by a live batch. See
+ *  {@link deriveReasonsInFlightIds}. */
 export async function getReasonsInFlightIds(): Promise<Set<string>> {
-  return new Set<string>();
+  const snap = await getPipeline();
+  return snap ? deriveReasonsInFlightIds(snap.run) : new Set<string>();
 }
 
 // ---------------------------------------------------------------------------
@@ -2937,6 +3587,9 @@ export async function getReasonsInFlightIds(): Promise<Set<string>> {
 
 export function _resetForTests(): void {
   drainInFlight = null;
+  firstCheckedAt.clear();
+  batchesInHand.clear();
+  taskStepInFlight = null;
   finalizeInFlight = null;
   lastPolledAt.clear();
   pollTickRunning = false;

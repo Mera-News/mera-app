@@ -82,6 +82,9 @@ const mockGetExpoPushToken = jest.fn(() => 'ExponentPushToken[test]');
 const mockSetAsyncJobPhase = jest.fn();
 const mockSetBatchProgress = jest.fn();
 const mockMarkProcessingRunFinished = jest.fn();
+const mockSetReasonsInFlightIds = jest.fn();
+const mockGetGroupingRowsByIds = jest.fn(async (..._args: any[]) => [] as any[]);
+const mockBatchPropagateScores = jest.fn(async (..._args: any[]) => undefined);
 
 // ---- AppState (react-native) ----
 let mockAppStateCurrent: string = 'active';
@@ -146,8 +149,16 @@ jest.mock('@/lib/e2ee/e2ee-service', () => {
       Object.setPrototypeOf(this, ModelKeyValidationError.prototype);
     }
   }
+  class NoCredentialError extends Error {
+    constructor(message = 'no credential') {
+      super(message);
+      this.name = 'NoCredentialError';
+      Object.setPrototypeOf(this, NoCredentialError.prototype);
+    }
+  }
   return {
     ModelKeyValidationError,
+    NoCredentialError,
     prepareE2EEContext: (...args: any[]) => mockPrepareE2EEContext(...args),
     rebuildE2EEContext: (...args: any[]) => mockRebuildE2EEContext(...args),
   };
@@ -166,6 +177,8 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   batchSaveMathScores: (...args: any[]) => mockBatchSaveMathScores(...args),
   getComputedComponentsByIds: (...args: any[]) => mockGetComputedComponentsByIds(...args),
   getStageRowsByIds: (...args: any[]) => mockGetStageRowsByIds(...args),
+  getGroupingRowsByIds: (...args: any[]) => mockGetGroupingRowsByIds(...args),
+  batchPropagateScores: (...args: any[]) => mockBatchPropagateScores(...args),
 }));
 
 // Round-3: fact-grouping snapshot loader (lazy-required in planFactBatches).
@@ -244,6 +257,8 @@ jest.mock('@/lib/stores/for-you-store', () => ({
     getState: () => ({
       setAsyncJobPhase: mockSetAsyncJobPhase,
       setBatchProgress: mockSetBatchProgress,
+      setChunkStates: jest.fn(),
+      setReasonsInFlightIds: mockSetReasonsInFlightIds,
       markProcessingRunFinished: mockMarkProcessingRunFinished,
     }),
   },
@@ -262,6 +277,7 @@ jest.mock('@/lib/services/inference-results', () => ({
   // RENDER_GATE). Keep the two in sync: a stale value here silently tests a
   // reason/discard boundary the app no longer has.
   REASON_RELEVANCE_THRESHOLD: 0.4,
+  TaskNoAuthError: class TaskNoAuthError extends Error {},
 }));
 
 // ---- in-memory scoring-pipeline-store ----
@@ -315,6 +331,13 @@ import {
   MAX_BATCH_ARTICLES,
   MIN_DISPATCH_HEADLINE,
   MAX_BATCH_ARTICLES_HEADLINE,
+  advanceWaitingForBackground,
+  submitScoringForBackground,
+  staleRunVerdict,
+  deriveStaleRunVerdict,
+  deriveReasonsInFlightIds,
+  getReasonsInFlightIds,
+  COLLECT_WINDOW_MS,
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -1549,6 +1572,8 @@ describe('stale pending', () => {
   it('requeues a waiting batch whose job has been pending past BATCH_STALE_MS', async () => {
     await enqueueCandidates(['a0']);
     mockFetchResults.mockResolvedValue('pending');
+    // The staleness clock starts at this process's first check.
+    await pollTick('foreground');
 
     // Advance beyond BATCH_STALE_MS (15 min) so the pending job is stale.
     jest.setSystemTime(NOW + 16 * 60_000);
@@ -1569,6 +1594,8 @@ describe('throwing /results fetch (catch-path staleness)', () => {
     // A THROWING /results fetch (5xx / network) — previously left the batch in
     // waiting-* untouched forever; the catch path now applies BATCH_STALE_MS.
     mockFetchResults.mockRejectedValue(new Error('network 5xx'));
+    // The staleness clock starts at this process's first check.
+    await pollTick('foreground');
 
     // Advance beyond BATCH_STALE_MS (15 min) so the waiting batch is over-age.
     jest.setSystemTime(NOW + 16 * 60_000);
@@ -1641,14 +1668,26 @@ describe('recover', () => {
     expect(b.phase).not.toBe('submitting-relevance');
   });
 
-  it('abandons a run older than RUN_ABANDON_MS and finalizes', async () => {
+  it('abandons a run idle for longer than RUN_ABANDON_MS and finalizes', async () => {
     await enqueueCandidates(['a0']);
     mockRun.startedAt = NOW - 25 * 3600_000; // > 24h
+    for (const b of mockRun.batches) b.submittedAt = NOW - 25 * 3600_000;
 
     const result = await recover();
 
     expect(result).toBe('idle');
     expect(currentRun()).toBeNull(); // finalized + cleared
+  });
+
+  it('keeps a run that STARTED over 24h ago but submitted recently (measured from last activity)', async () => {
+    await enqueueCandidates(['a0']);
+    mockRun.startedAt = NOW - 25 * 3600_000;
+    mockFetchResults.mockResolvedValue('pending');
+
+    const result = await recover();
+
+    expect(result).toBe('running');
+    expect(currentRun()).not.toBeNull();
   });
 });
 
@@ -1665,6 +1704,7 @@ describe('handlePush', () => {
     expect(mockFetchResults).toHaveBeenCalledWith(
       target.requestId,
       'foreground',
+      expect.anything(),
       expect.anything(),
     );
   });
@@ -1684,6 +1724,7 @@ describe('handlePush', () => {
     expect(mockFetchResults).toHaveBeenCalledWith(
       target.requestId,
       'foreground',
+      expect.anything(),
       expect.anything(),
     );
   });
@@ -2917,5 +2958,359 @@ describe('derivePipelineChunkStates', () => {
       ready: 0,
       total: 0,
     });
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// bgsubmit: idempotency keys, staleness, and the background task entry points
+// ---------------------------------------------------------------------------
+
+const DEADLINE_MS = 60_000;
+const relevanceReady = (requestId: string) => ({
+  requestId,
+  results: [{ id: 'score:0', ok: true }],
+});
+
+describe('idempotency key', () => {
+  it('sends a key minted at submit: runId, batchId, phase, generation 0', async () => {
+    await enqueueCandidates(['a0']);
+    const run = currentRun();
+    const call = mockSendInferenceRequest.mock.calls[0][0];
+    expect(call.idempotencyKey).toBe(`${run.runId}:0:rel:0`);
+    expect(run.batches[0].idemKey).toBe(`${run.runId}:0:rel:0`);
+    expect(run.batches[0].sentIds).toEqual(['a0']);
+  });
+
+  it('resends the SAME key after a failed POST for the same ids', async () => {
+    // The drain re-admits the requeued batch at once (the limiter mock always
+    // grants), so the retry is the second call.
+    mockSendInferenceRequest.mockResolvedValueOnce({ status: 'failed' });
+    await enqueueCandidates(['a0']);
+    const first = mockSendInferenceRequest.mock.calls[0][0].idempotencyKey;
+    const second = mockSendInferenceRequest.mock.calls[1][0].idempotencyKey;
+    expect(second).toBe(first);
+    expect(currentRun().batches[0].attempt).toBe(1);
+  });
+
+  it('mints a new generation when the ids to send changed', async () => {
+    let calls = 0;
+    mockSendInferenceRequest.mockImplementation(async () => {
+      calls += 1;
+      // a1 got scored elsewhere after the first attempt: the rebuilt bundle
+      // for the retry carries only a0.
+      if (calls === 1) {
+        mockGetUnscored.mockImplementation(async () => [candidate('a0')]);
+        return { status: 'failed' };
+      }
+      return { status: 'ok', requestId: 'req-x', capabilityToken: 'cap-x' };
+    });
+    await enqueueCandidates(['a0', 'a1']);
+    const first = mockSendInferenceRequest.mock.calls[0][0].idempotencyKey as string;
+    const second = mockSendInferenceRequest.mock.calls[1][0].idempotencyKey as string;
+    expect(second).not.toBe(first);
+    expect(second.endsWith(':rel:1')).toBe(true);
+    expect(currentRun().batches[0].sentIds).toEqual(['a0']);
+  });
+
+  it('forgets the key when a waiting batch is requeued off a 404', async () => {
+    await enqueueCandidates(['a0']);
+    const first = mockSendInferenceRequest.mock.calls[0][0].idempotencyKey as string;
+    mockFetchResults.mockResolvedValueOnce('not-found');
+
+    await pollTick('foreground');
+
+    const resent = mockSendInferenceRequest.mock.calls[1][0].idempotencyKey as string;
+    expect(resent).not.toBe(first);
+    expect(resent.endsWith(':rel:1')).toBe(true);
+  });
+
+  it('treats 409 as in progress: requeued with attempt and key unchanged', async () => {
+    mockSendInferenceRequest.mockResolvedValueOnce({ status: 'in-progress' });
+    await enqueueCandidates(['a0']);
+    const b = currentRun().batches[0];
+    expect(b.attempt).toBe(0);
+    const keys = mockSendInferenceRequest.mock.calls.map((c) => c[0].idempotencyKey);
+    expect(keys[1]).toBe(keys[0]);
+    expect(b.idemKey).toBe(keys[0]);
+  });
+});
+
+describe('staleness counts from the first check, not the submit', () => {
+  it('a batch submitted 6h ago is not requeued on its first slow poll after open', async () => {
+    await enqueueCandidates(['a0']);
+    mockRun.batches[0].submittedAt = NOW - 6 * 3600_000;
+    mockFetchResults.mockResolvedValue('pending');
+    mockSendInferenceRequest.mockClear();
+
+    await pollTick('foreground');
+
+    const b = currentRun().batches[0];
+    expect(b.phase).toBe('waiting-relevance');
+    expect(b.attempt).toBe(0);
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+  });
+
+  it('passes submittedAt so an expired capability token is not offered', async () => {
+    await enqueueCandidates(['a0']);
+    mockFetchResults.mockResolvedValue('pending');
+    await pollTick('foreground');
+    const opts = mockFetchResults.mock.calls[0][3];
+    expect(opts.submittedAt).toBe(currentRun().batches[0].submittedAt);
+  });
+});
+
+describe('staleRunVerdict', () => {
+  const run = (over: Partial<PipelineRun>, batches: any[]): PipelineRun =>
+    ({ schema: 3, runId: 'r', startedAt: NOW, algo: 'ed25519', expoPushToken: null, version: 1, batches, ...over }) as PipelineRun;
+
+  it('is none with no run', async () => {
+    expect(await staleRunVerdict(NOW)).toBe('none');
+  });
+
+  it('is fresh while the run moved within the guard window', () => {
+    const r = run({ startedAt: NOW - 3600_000 }, [
+      { batchId: 0, phase: 'waiting-relevance', candidateIds: ['a'], attempt: 0, submittedAt: NOW - 60_000 },
+    ]);
+    expect(deriveStaleRunVerdict(r, NOW)).toBe('fresh');
+  });
+
+  it('is collectable when quiet but a batch was submitted within the collect window', () => {
+    const r = run({ startedAt: NOW - 8 * 3600_000 }, [
+      { batchId: 0, phase: 'waiting-relevance', candidateIds: ['a'], attempt: 0, submittedAt: NOW - 6 * 3600_000 },
+    ]);
+    expect(deriveStaleRunVerdict(r, NOW)).toBe('collectable');
+  });
+
+  it('counts a needs-reasons-submit batch as collectable too', () => {
+    const r = run({ startedAt: NOW - 8 * 3600_000 }, [
+      { batchId: 0, phase: 'needs-reasons-submit', candidateIds: ['a'], attempt: 0, submittedAt: NOW - 6 * 3600_000 },
+    ]);
+    expect(deriveStaleRunVerdict(r, NOW)).toBe('collectable');
+  });
+
+  it('is wedged past the collect window, or with nothing waiting', () => {
+    const old = run({ startedAt: NOW - COLLECT_WINDOW_MS - 7200_000 }, [
+      { batchId: 0, phase: 'waiting-relevance', candidateIds: ['a'], attempt: 0, submittedAt: NOW - COLLECT_WINDOW_MS - 3600_000 },
+    ]);
+    expect(deriveStaleRunVerdict(old, NOW)).toBe('wedged');
+    const stuck = run({ startedAt: NOW - 3600_000 }, [
+      { batchId: 0, phase: 'queued', candidateIds: ['a'], attempt: 0 },
+    ]);
+    expect(deriveStaleRunVerdict(stuck, NOW)).toBe('wedged');
+  });
+});
+
+describe('reasons in flight', () => {
+  it('covers reason candidates, their covered siblings and reasons-only batches; nothing terminal', () => {
+    const r = {
+      schema: 3, runId: 'r', startedAt: NOW, algo: 'ed25519', expoPushToken: null, version: 1,
+      batches: [
+        { batchId: 0, phase: 'waiting-reasons', candidateIds: ['a', 'b'], reasonCandidateIds: ['a'], coveredByRep: { a: ['a2'] }, attempt: 0 },
+        { batchId: 1, phase: 'waiting-relevance', candidateIds: ['c'], attempt: 0 },
+        { batchId: 2, phase: 'queued', reasonsOnly: true, candidateIds: ['d'], attempt: 0 },
+        { batchId: 3, phase: 'done', candidateIds: ['e'], reasonCandidateIds: ['e'], attempt: 0 },
+      ],
+    } as unknown as PipelineRun;
+    expect([...deriveReasonsInFlightIds(r)].sort()).toEqual(['a', 'a2', 'd']);
+  });
+
+  it('publishes a NEW Set on every UI push', async () => {
+    await enqueueCandidates(['a0']);
+    const sets = mockSetReasonsInFlightIds.mock.calls.map((c) => c[0]);
+    expect(sets.length).toBeGreaterThan(0);
+    expect(sets[0]).toBeInstanceOf(Set);
+    expect(await getReasonsInFlightIds()).toBeInstanceOf(Set);
+  });
+
+  it('copies a rep note onto its reason_pending covered sibling when reasons apply', async () => {
+    mockGateUnscoredForScoring.mockImplementationOnce(async () => ({
+      propagatedCount: 0,
+      heldBackCount: 1,
+      enqueueIds: ['a0'],
+      coveredIdsByRep: { a0: ['a0', 'a0-dup'] },
+      readCount: 2,
+    }));
+    mockGetUnscored.mockImplementation(async () => [candidate('a0')]);
+    await enqueueUnscoredEligible({ flushRemainder: true });
+    const batch = currentRun().batches[0];
+    expect(batch.coveredByRep).toEqual({ a0: ['a0-dup'] });
+
+    // relevance lands → reasons submitted
+    mockDecodeResults.mockReturnValueOnce({
+      scoreMap: new Map([['a0', 0.8]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([{ ...candidate('a0'), relevance: 0.8 }]);
+    mockFetchResults.mockResolvedValueOnce(relevanceReady(batch.requestId));
+    await pollTick('foreground');
+    expect(currentRun().batches[0].phase).toBe('waiting-reasons');
+    expect(await getReasonsInFlightIds()).toEqual(new Set(['a0', 'a0-dup']));
+
+    // reasons land → sibling gets the note
+    mockDecodeResults.mockReturnValueOnce({
+      scoreMap: new Map(),
+      reasonMap: new Map([['a0', 'Why it matters.']]),
+      failedIds: new Set(),
+    });
+    mockGetGroupingRowsByIds.mockResolvedValueOnce([
+      { id: 'a0-dup', status: 'reason_pending', relevance: 0.8, scoredWithV3: null },
+    ]);
+    mockFetchResults.mockResolvedValueOnce({ requestId: 'x', results: [{ id: 'reason:a0', ok: true }] });
+    jest.setSystemTime(NOW + 10_000);
+    await pollTick('foreground');
+
+    expect(mockBatchPropagateScores).toHaveBeenCalledWith([
+      { id: 'a0-dup', relevance: 0.8, reason: 'Why it matters.', scoredWithV3: null },
+    ]);
+  });
+});
+
+describe('advanceWaitingForBackground (step a)', () => {
+  it('reports no-run when there is nothing to collect', async () => {
+    const out = await advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
+    expect(out.stoppedBy).toBe('no-run');
+  });
+
+  it('applies at most ONE relevance batch and submits its reasons, in task context', async () => {
+    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // two waiting-relevance batches
+    const [b0, b1] = currentRun().batches;
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map(b0.candidateIds.map((id: string) => [id, 0.8])),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue(
+      b0.candidateIds.map((id: string) => ({ ...candidate(id), relevance: 0.8 })),
+    );
+    mockFetchResults.mockImplementation(async (requestId: string) => relevanceReady(requestId));
+    mockSendInferenceRequest.mockClear();
+
+    const out = await advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
+
+    expect(out).toEqual(expect.objectContaining({ appliedRelevance: 1, reasonsSubmitted: 1, stoppedBy: 'done' }));
+    expect(mockFetchResults).toHaveBeenCalledTimes(1);
+    expect(mockFetchResults.mock.calls[0][1]).toBe('task');
+    const run = currentRun();
+    expect(run.batches[0].phase).toBe('waiting-reasons');
+    expect(run.batches[1].phase).toBe('waiting-relevance');
+    expect(run.batches[1].requestId).toBe(b1.requestId);
+    const send = mockSendInferenceRequest.mock.calls[0][0];
+    expect(send).toEqual(expect.objectContaining({ context: 'task', singleAttempt: true }));
+    expect(send.idempotencyKey).toMatch(/:0:r:\d+$/);
+  });
+
+  it('never requeues on pending, even hours after submit', async () => {
+    await enqueueCandidates(['a0']);
+    mockRun.batches[0].submittedAt = NOW - 6 * 3600_000;
+    mockFetchResults.mockResolvedValue('pending');
+    mockSendInferenceRequest.mockClear();
+
+    await advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
+
+    expect(currentRun().batches[0].phase).toBe('waiting-relevance');
+    expect(currentRun().batches[0].attempt).toBe(0);
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+  });
+
+  it('requeues on a definite 404 but does not resubmit or drain from the task', async () => {
+    await enqueueCandidates(['a0']);
+    mockFetchResults.mockResolvedValue('not-found');
+    mockSendInferenceRequest.mockClear();
+
+    await advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
+
+    expect(currentRun().batches[0].phase).toBe('queued');
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+  });
+
+  it('stops quietly on no-auth and leaves the batch waiting', async () => {
+    await enqueueCandidates(['a0']);
+    mockFetchResults.mockResolvedValue('unauthorized');
+    const out = await advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
+    expect(out.stoppedBy).toBe('no-auth');
+    expect(currentRun().batches[0].phase).toBe('waiting-relevance');
+  });
+
+  it('starts nothing when the deadline is inside the POST reserve', async () => {
+    await enqueueCandidates(['a0']);
+    mockFetchResults.mockClear();
+    const out = await advanceWaitingForBackground({ deadlineAt: NOW + 5_000 });
+    expect(out.stoppedBy).toBe('deadline');
+    expect(mockFetchResults).not.toHaveBeenCalled();
+  });
+
+  it('task context does not leak into a concurrent foreground recover()', async () => {
+    await enqueueCandidates(['a0']);
+    let release!: () => void;
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    mockFetchResults.mockImplementationOnce(async () => {
+      await gate;
+      return 'pending';
+    });
+    mockFetchResults.mockResolvedValue('pending');
+
+    const task = advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
+    await Promise.resolve();
+    const fg = recover();
+    release();
+    await task;
+    await fg;
+
+    const contexts = mockFetchResults.mock.calls.map((c) => c[1]);
+    expect(contexts[0]).toBe('task');
+    expect(contexts.slice(1).every((c) => c === 'foreground')).toBe(true);
+  });
+});
+
+describe('submitScoringForBackground (step b)', () => {
+  it('does nothing in on-device mode', async () => {
+    mockProcessingMode = 'ON_DEVICE';
+    try {
+      const out = await submitScoringForBackground({ deadlineAt: NOW + DEADLINE_MS, articleIds: ['a0'] });
+      expect(out).toEqual({ submitted: 0, stoppedBy: 'on-device' });
+    } finally {
+      mockProcessingMode = 'CLOUD';
+    }
+  });
+
+  it('batches the new rows and submits in task context, single attempt, keyed', async () => {
+    mockGetUnscored.mockImplementation(async () => [candidate('n0'), candidate('n1')]);
+    const out = await submitScoringForBackground({ deadlineAt: NOW + DEADLINE_MS, articleIds: ['n0', 'n1'] });
+
+    expect(out).toEqual({ submitted: 1, stoppedBy: 'done' });
+    const send = mockSendInferenceRequest.mock.calls[0][0];
+    expect(send).toEqual(expect.objectContaining({ context: 'task', singleAttempt: true, grantAlreadyHeld: true }));
+    expect(send.idempotencyKey).toMatch(/:0:rel:0$/);
+    expect(currentRun().batches[0].phase).toBe('waiting-relevance');
+  });
+
+  it('respects maxBatches and leaves the rest queued for the foreground', async () => {
+    const many = ids(3 * MAX_BATCH_ARTICLES, 'm');
+    mockGetUnscored.mockImplementation(async () => many.map(candidate));
+    const out = await submitScoringForBackground({ deadlineAt: NOW + DEADLINE_MS, articleIds: many, maxBatches: 1 });
+    expect(out.submitted).toBe(1);
+    const phases = currentRun().batches.map((b: any) => b.phase);
+    expect(phases.filter((p: string) => p === 'queued')).toHaveLength(2);
+  });
+
+  it('stops at the first no-auth and hands the batch back untouched', async () => {
+    mockGetUnscored.mockImplementation(async () => [candidate('n0')]);
+    mockSendInferenceRequest.mockResolvedValueOnce({ status: 'no-auth' });
+    const out = await submitScoringForBackground({ deadlineAt: NOW + DEADLINE_MS, articleIds: ['n0'] });
+    expect(out.stoppedBy).toBe('no-auth');
+    const b = currentRun().batches[0];
+    expect(b.phase).toBe('queued');
+    expect(b.attempt).toBe(0);
+  });
+
+  it('submits nothing inside the POST reserve', async () => {
+    mockGetUnscored.mockImplementation(async () => [candidate('n0')]);
+    const out = await submitScoringForBackground({ deadlineAt: NOW + 10_000, articleIds: ['n0'] });
+    expect(out.stoppedBy).toBe('deadline');
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
   });
 });

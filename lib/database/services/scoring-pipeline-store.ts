@@ -76,6 +76,13 @@ export interface PipelineBatch {
    * `candidateIds`.
    */
   coveredIds?: string[];
+  /** Candidate id -> the duplicate siblings the gate held back behind it
+   *  (`coveredIdsByRep` minus the candidate itself), only for candidates that
+   *  have any. When the candidate's note lands, the pipeline copies it onto
+   *  those siblings, which would otherwise wait in `reason_pending` for the
+   *  orphaned-reasons sweep. Absent on older runs and on batches with no held
+   *  back siblings. */
+  coveredByRep?: Record<string, string[]>;
   /** LEGACY (Round-3 B1): the primary fact this batch's candidates were grouped
    *  under. Round-4 B removed per-fact grouping — batches are FIFO 25-article
    *  quanta, so this is always null on new batches. Kept optional only so a run
@@ -128,6 +135,29 @@ export interface PipelineBatch {
   suppressPenaltyMap?: Record<string, number>;
   /** Reset at each phase submit. */
   submittedAt?: number;
+  /** bgsubmit idempotency. The literal `Idempotency-Key` last sent for this
+   *  batch (`${runId}:${batchId}:{rel|r}:${keyGen}`), resent VERBATIM on a
+   *  retry, never rebuilt. Written in a CAS immediately BEFORE the POST, so a
+   *  process killed after the gateway's 202 but before the requestId was saved
+   *  replays to the same job instead of billing a second one. Absent on runs
+   *  persisted before this shipped: the next submit mints generation 0. */
+  idemKey?: string;
+  /** Which request `idemKey` was minted for: relevance or reasons. A key is
+   *  never reused across phases. */
+  idemPhase?: 'rel' | 'r';
+  /** Monotonic key generation. Bumped when the ids to send differ from
+   *  `sentIds`, or when the job under the key is known gone (a WAITING batch
+   *  requeued off a 404, stale, unauthorized or apply failure), since resending
+   *  that key would replay the dead job. Never bumped by a failed POST, a
+   *  stuck-submit revert, a 429 or a 409: the gateway stores a key only once
+   *  its job exists, so resending it is always safe, and the ambiguous cases
+   *  are exactly what the key is for. */
+  keyGen?: number;
+  /** The exact candidate ids the request under `idemKey` carried, in order. A
+   *  key may only ever be resent for this same set; a replay returns the
+   *  original job, whose results are decoded against these ids. Device-local,
+   *  never sent to the gateway. */
+  sentIds?: string[];
   attempt: number;
   failureReason?:
     | 'stale'

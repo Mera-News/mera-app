@@ -61,6 +61,8 @@ import {
   reconstructLookups,
   toBatchResult,
   REASON_RELEVANCE_THRESHOLD,
+  CAPABILITY_TOKEN_TTL_MS,
+  TaskNoAuthError,
   type ServerResults,
 } from '../inference-results';
 
@@ -482,5 +484,49 @@ describe('finalizeStrandedBelowReasonThreshold', () => {
     const n = await finalizeStrandedBelowReasonThreshold([{ id: 'x', relevance: 0.7 }], new Set());
     expect(n).toBe(0);
     expect(mockBatchMarkReasonSkipped).not.toHaveBeenCalled();
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// bgsubmit: task context and the capability-token TTL
+// ---------------------------------------------------------------------------
+
+describe('fetchResults — task context and token TTL', () => {
+  it('task context uses the JWT and never the capability token', async () => {
+    mockExpoFetch.mockResolvedValue(makeFetchResponse({ pending: true }));
+    await fetchResults('req-1', 'task', 'batch-cap');
+    expect(mockExpoFetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ headers: { Authorization: 'Bearer jwt-token' } }),
+    );
+  });
+
+  it('task context with no JWT throws TaskNoAuthError before any request', async () => {
+    mockGetJwtToken.mockResolvedValue(null);
+    await expect(fetchResults('req-1', 'task', 'batch-cap')).rejects.toBeInstanceOf(
+      TaskNoAuthError,
+    );
+    expect(mockExpoFetch).not.toHaveBeenCalled();
+  });
+
+  it('foreground skips a capability-token fallback past its 2h TTL', async () => {
+    mockGetJwtToken.mockResolvedValue(null);
+    await expect(
+      fetchResults('req-1', 'foreground', 'batch-cap', {
+        submittedAt: Date.now() - CAPABILITY_TOKEN_TTL_MS - 1_000,
+      }),
+    ).rejects.toThrow('no auth available (foreground)');
+    expect(mockExpoFetch).not.toHaveBeenCalled();
+  });
+
+  it('foreground still uses a capability token inside its TTL', async () => {
+    mockGetJwtToken.mockResolvedValue(null);
+    mockExpoFetch.mockResolvedValue(makeFetchResponse({ pending: true }));
+    await fetchResults('req-1', 'foreground', 'batch-cap', { submittedAt: Date.now() - 60_000 });
+    expect(mockExpoFetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ headers: { Authorization: 'Bearer batch-cap' } }),
+    );
   });
 });
