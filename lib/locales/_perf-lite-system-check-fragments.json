@@ -1,0 +1,583 @@
+{
+  "_comment": "perf P3/P4 (2026-09-29): Lite mode (display.liteModeTitle/Description, an On/Off switch replacing Static background) and the first-launch system check (systemCheck.*). Placeholders {{details}} {{gb}} {{language}} must survive. No em dashes.",
+  "en": {
+    "display": {
+      "liteModeTitle": "Lite mode",
+      "liteModeDescription": "Turns off moving backgrounds and decorative animations. Smoother on older phones and easier on battery."
+    },
+    "systemCheck": {
+      "title": "Getting Mera ready",
+      "subtitle": "A quick check of how Mera will run on this phone.",
+      "phoneTitle": "Your phone",
+      "phoneSupported": "Supported: {{details}}",
+      "memory": "{{gb}} GB memory",
+      "modeTitle": "How Mera will run",
+      "modeFull": "Full mode",
+      "modeFullDetail": "All animations and effects are on.",
+      "modeLite": "Lite mode",
+      "modeLiteDetail": "Moving backgrounds and decorative animations are off so Mera stays smooth. You can change this in Settings.",
+      "aiTitle": "On-device AI",
+      "aiNotYet": "Not available yet. On-device AI is still in beta.",
+      "languageTitle": "Language: {{language}}",
+      "languageEnglish": "Ready.",
+      "languageReady": "Ready. Articles can be translated on this phone.",
+      "languageChecking": "Checking the language pack. If your phone asks, tap Download.",
+      "languageMissing": "This phone can't translate into {{language}} right now. Try again, or continue in English.",
+      "retry": "Try again",
+      "useEnglish": "Use English",
+      "settingsTitle": "System check",
+      "settingsDescription": "See how Mera runs on this phone and check your language pack."
+    }
+  },
+  "ar": {
+    "display": {
+      "liteModeTitle": "الوضع الخفيف",
+      "liteModeDescription": "يوقف الخلفيات المتحركة والرسوم المتحركة الزخرفية. أكثر سلاسة على الهواتف القديمة وأخف على البطارية."
+    },
+    "systemCheck": {
+      "title": "جارٍ تجهيز Mera",
+      "subtitle": "فحص سريع لمعرفة كيف سيعمل Mera على هذا الهاتف.",
+      "phoneTitle": "هاتفك",
+      "phoneSupported": "مدعوم: {{details}}",
+      "memory": "{{gb}} جيجابايت ذاكرة",
+      "modeTitle": "كيف سيعمل Mera",
+      "modeFull": "الوضع الكامل",
+      "modeFullDetail": "جميع الرسوم المتحركة والتأثيرات مفعّلة.",
+      "modeLite": "الوضع الخفيف",
+      "modeLiteDetail": "الخلفيات المتحركة والرسوم المتحركة الزخرفية متوقفة ليبقى Mera سلسًا. يمكنك تغيير ذلك من الإعدادات.",
+      "aiTitle": "الذكاء الاصطناعي على الجهاز",
+      "aiNotYet": "غير متاح بعد. الذكاء الاصطناعي على الجهاز لا يزال في مرحلة تجريبية.",
+      "languageTitle": "اللغة: {{language}}",
+      "languageEnglish": "جاهز.",
+      "languageReady": "جاهز. يمكن ترجمة المقالات على هذا الهاتف.",
+      "languageChecking": "جارٍ التحقق من حزمة اللغة. إذا طلب هاتفك ذلك، اضغط على تنزيل.",
+      "languageMissing": "لا يمكن لهذا الهاتف الترجمة إلى {{language}} الآن. أعد المحاولة، أو تابع باللغة الإنجليزية.",
+      "retry": "إعادة المحاولة",
+      "useEnglish": "استخدام الإنجليزية",
+      "settingsTitle": "فحص النظام",
+      "settingsDescription": "تعرّف على كيفية عمل Mera على هذا الهاتف وتحقق من حزمة اللغة."
+    }
+  },
+  "de": {
+    "display": {
+      "liteModeTitle": "Lite-Modus",
+      "liteModeDescription": "Schaltet bewegte Hintergründe und dekorative Animationen aus. Läuft flüssiger auf älteren Handys und schont den Akku."
+    },
+    "systemCheck": {
+      "title": "Mera wird vorbereitet",
+      "subtitle": "Ein kurzer Check, wie Mera auf diesem Handy läuft.",
+      "phoneTitle": "Dein Handy",
+      "phoneSupported": "Unterstützt: {{details}}",
+      "memory": "{{gb}} GB Speicher",
+      "modeTitle": "Wie Mera laufen wird",
+      "modeFull": "Voller Modus",
+      "modeFullDetail": "Alle Animationen und Effekte sind an.",
+      "modeLite": "Lite-Modus",
+      "modeLiteDetail": "Bewegte Hintergründe und dekorative Animationen sind aus, damit Mera flüssig bleibt. Du kannst das in den Einstellungen ändern.",
+      "aiTitle": "KI auf dem Gerät",
+      "aiNotYet": "Noch nicht verfügbar. KI auf dem Gerät ist noch in der Betaphase.",
+      "languageTitle": "Sprache: {{language}}",
+      "languageEnglish": "Bereit.",
+      "languageReady": "Bereit. Artikel können auf diesem Handy übersetzt werden.",
+      "languageChecking": "Sprachpaket wird geprüft. Falls dein Handy fragt, tippe auf Laden.",
+      "languageMissing": "Dieses Handy kann gerade nicht in {{language}} übersetzen. Versuche es erneut oder mach auf Englisch weiter.",
+      "retry": "Erneut versuchen",
+      "useEnglish": "Englisch verwenden",
+      "settingsTitle": "Systemcheck",
+      "settingsDescription": "Sieh, wie Mera auf diesem Handy läuft, und prüfe dein Sprachpaket."
+    }
+  },
+  "es": {
+    "display": {
+      "liteModeTitle": "Modo Lite",
+      "liteModeDescription": "Desactiva los fondos en movimiento y las animaciones decorativas. Va más fluido en teléfonos antiguos y gasta menos batería."
+    },
+    "systemCheck": {
+      "title": "Preparando Mera",
+      "subtitle": "Una comprobación rápida de cómo funcionará Mera en este teléfono.",
+      "phoneTitle": "Tu teléfono",
+      "phoneSupported": "Compatible: {{details}}",
+      "memory": "{{gb}} GB de memoria",
+      "modeTitle": "Cómo funcionará Mera",
+      "modeFull": "Modo completo",
+      "modeFullDetail": "Todas las animaciones y efectos están activados.",
+      "modeLite": "Modo Lite",
+      "modeLiteDetail": "Los fondos en movimiento y las animaciones decorativas están desactivados para que Mera vaya fluido. Puedes cambiar esto en Ajustes.",
+      "aiTitle": "IA en el dispositivo",
+      "aiNotYet": "Aún no disponible. La IA en el dispositivo todavía está en beta.",
+      "languageTitle": "Idioma: {{language}}",
+      "languageEnglish": "Listo.",
+      "languageReady": "Listo. Los artículos se pueden traducir en este teléfono.",
+      "languageChecking": "Comprobando el paquete de idioma. Si tu teléfono lo pide, toca Descargar.",
+      "languageMissing": "Este teléfono no puede traducir al {{language}} por ahora. Inténtalo de nuevo o continúa en inglés.",
+      "retry": "Reintentar",
+      "useEnglish": "Usar inglés",
+      "settingsTitle": "Comprobación del sistema",
+      "settingsDescription": "Mira cómo funciona Mera en este teléfono y comprueba tu paquete de idioma."
+    }
+  },
+  "fr": {
+    "display": {
+      "liteModeTitle": "Mode Lite",
+      "liteModeDescription": "Désactive les fonds animés et les animations décoratives. Plus fluide sur les téléphones anciens et plus économe en batterie."
+    },
+    "systemCheck": {
+      "title": "Préparation de Mera",
+      "subtitle": "Une vérification rapide de la façon dont Mera va fonctionner sur ce téléphone.",
+      "phoneTitle": "Votre téléphone",
+      "phoneSupported": "Pris en charge : {{details}}",
+      "memory": "{{gb}} Go de mémoire",
+      "modeTitle": "Comment Mera va fonctionner",
+      "modeFull": "Mode complet",
+      "modeFullDetail": "Toutes les animations et tous les effets sont activés.",
+      "modeLite": "Mode Lite",
+      "modeLiteDetail": "Les fonds animés et les animations décoratives sont désactivés pour que Mera reste fluide. Vous pouvez changer cela dans les Paramètres.",
+      "aiTitle": "IA sur l'appareil",
+      "aiNotYet": "Pas encore disponible. L'IA sur l'appareil est encore en version bêta.",
+      "languageTitle": "Langue : {{language}}",
+      "languageEnglish": "Prêt.",
+      "languageReady": "Prêt. Les articles peuvent être traduits sur ce téléphone.",
+      "languageChecking": "Vérification du pack de langue. Si votre téléphone le demande, appuyez sur Télécharger.",
+      "languageMissing": "Ce téléphone ne peut pas traduire en {{language}} pour le moment. Réessayez, ou continuez en anglais.",
+      "retry": "Réessayer",
+      "useEnglish": "Utiliser l'anglais",
+      "settingsTitle": "Vérification du système",
+      "settingsDescription": "Découvrez comment Mera fonctionne sur ce téléphone et vérifiez votre pack de langue."
+    }
+  },
+  "hi": {
+    "display": {
+      "liteModeTitle": "Lite मोड",
+      "liteModeDescription": "चलती हुई पृष्ठभूमि और सजावटी एनिमेशन बंद कर देता है। पुराने फ़ोन पर ज़्यादा स्मूद चलता है और बैटरी भी बचाता है।"
+    },
+    "systemCheck": {
+      "title": "Mera तैयार हो रहा है",
+      "subtitle": "यह फ़ोन पर Mera कैसे चलेगा, इसकी एक जल्दी जांच।",
+      "phoneTitle": "आपका फ़ोन",
+      "phoneSupported": "समर्थित: {{details}}",
+      "memory": "{{gb}} GB मेमोरी",
+      "modeTitle": "Mera कैसे चलेगा",
+      "modeFull": "फुल मोड",
+      "modeFullDetail": "सभी एनिमेशन और इफ़ेक्ट चालू हैं।",
+      "modeLite": "Lite मोड",
+      "modeLiteDetail": "चलती हुई पृष्ठभूमि और सजावटी एनिमेशन बंद हैं, ताकि Mera स्मूद रहे। आप इसे सेटिंग्स में बदल सकते हैं।",
+      "aiTitle": "फ़ोन पर AI",
+      "aiNotYet": "अभी उपलब्ध नहीं है। फ़ोन पर AI अभी बीटा में है।",
+      "languageTitle": "भाषा: {{language}}",
+      "languageEnglish": "तैयार है।",
+      "languageReady": "तैयार है। इस फ़ोन पर लेखों का अनुवाद किया जा सकता है।",
+      "languageChecking": "भाषा पैक जांचा जा रहा है। अगर आपका फ़ोन पूछे, तो डाउनलोड करें पर टैप करें।",
+      "languageMissing": "यह फ़ोन अभी {{language}} में अनुवाद नहीं कर सकता। फिर से कोशिश करें, या अंग्रेज़ी में जारी रखें।",
+      "retry": "पुनः प्रयास करें",
+      "useEnglish": "अंग्रेज़ी का उपयोग करें",
+      "settingsTitle": "सिस्टम जांच",
+      "settingsDescription": "देखें कि Mera इस फ़ोन पर कैसे चलता है और अपना भाषा पैक जांचें।"
+    }
+  },
+  "id": {
+    "display": {
+      "liteModeTitle": "Mode Lite",
+      "liteModeDescription": "Menonaktifkan latar belakang bergerak dan animasi dekoratif. Lebih lancar di ponsel lama dan lebih hemat baterai."
+    },
+    "systemCheck": {
+      "title": "Menyiapkan Mera",
+      "subtitle": "Pemeriksaan cepat tentang bagaimana Mera akan berjalan di ponsel ini.",
+      "phoneTitle": "Ponsel Anda",
+      "phoneSupported": "Didukung: {{details}}",
+      "memory": "Memori {{gb}} GB",
+      "modeTitle": "Bagaimana Mera akan berjalan",
+      "modeFull": "Mode penuh",
+      "modeFullDetail": "Semua animasi dan efek aktif.",
+      "modeLite": "Mode Lite",
+      "modeLiteDetail": "Latar belakang bergerak dan animasi dekoratif dinonaktifkan agar Mera tetap lancar. Anda bisa mengubah ini di Pengaturan.",
+      "aiTitle": "AI di perangkat",
+      "aiNotYet": "Belum tersedia. AI di perangkat masih dalam versi beta.",
+      "languageTitle": "Bahasa: {{language}}",
+      "languageEnglish": "Siap.",
+      "languageReady": "Siap. Artikel dapat diterjemahkan di ponsel ini.",
+      "languageChecking": "Memeriksa paket bahasa. Jika ponsel Anda meminta, ketuk Unduh.",
+      "languageMissing": "Ponsel ini belum bisa menerjemahkan ke {{language}} saat ini. Coba lagi, atau lanjutkan dalam bahasa Inggris.",
+      "retry": "Coba Lagi",
+      "useEnglish": "Gunakan Bahasa Inggris",
+      "settingsTitle": "Pemeriksaan sistem",
+      "settingsDescription": "Lihat bagaimana Mera berjalan di ponsel ini dan periksa paket bahasa Anda."
+    }
+  },
+  "it": {
+    "display": {
+      "liteModeTitle": "Modalità Lite",
+      "liteModeDescription": "Disattiva gli sfondi in movimento e le animazioni decorative. Più fluido sui telefoni meno recenti e risparmia batteria."
+    },
+    "systemCheck": {
+      "title": "Preparazione di Mera",
+      "subtitle": "Un controllo rapido di come funzionerà Mera su questo telefono.",
+      "phoneTitle": "Il tuo telefono",
+      "phoneSupported": "Supportato: {{details}}",
+      "memory": "{{gb}} GB di memoria",
+      "modeTitle": "Come funzionerà Mera",
+      "modeFull": "Modalità completa",
+      "modeFullDetail": "Tutte le animazioni e gli effetti sono attivi.",
+      "modeLite": "Modalità Lite",
+      "modeLiteDetail": "Gli sfondi in movimento e le animazioni decorative sono disattivati, così Mera resta fluido. Puoi cambiarlo nelle Impostazioni.",
+      "aiTitle": "IA sul dispositivo",
+      "aiNotYet": "Non ancora disponibile. L'IA sul dispositivo è ancora in beta.",
+      "languageTitle": "Lingua: {{language}}",
+      "languageEnglish": "Pronto.",
+      "languageReady": "Pronto. Gli articoli possono essere tradotti su questo telefono.",
+      "languageChecking": "Verifica del pacchetto lingua in corso. Se il telefono lo chiede, tocca Scarica.",
+      "languageMissing": "Questo telefono non può ancora tradurre in {{language}}. Riprova, oppure continua in inglese.",
+      "retry": "Riprova",
+      "useEnglish": "Usa l'inglese",
+      "settingsTitle": "Controllo di sistema",
+      "settingsDescription": "Scopri come funziona Mera su questo telefono e controlla il tuo pacchetto lingua."
+    }
+  },
+  "ja": {
+    "display": {
+      "liteModeTitle": "Liteモード",
+      "liteModeDescription": "動く背景と装飾アニメーションをオフにします。古いスマホでも滑らかに動き、バッテリーにもやさしくなります。"
+    },
+    "systemCheck": {
+      "title": "Meraを準備しています",
+      "subtitle": "この端末でMeraがどう動くか、簡単にチェックします。",
+      "phoneTitle": "お使いの端末",
+      "phoneSupported": "対応: {{details}}",
+      "memory": "メモリ{{gb}}GB",
+      "modeTitle": "Meraの動作モード",
+      "modeFull": "フルモード",
+      "modeFullDetail": "すべてのアニメーションとエフェクトがオンになっています。",
+      "modeLite": "Liteモード",
+      "modeLiteDetail": "動く背景と装飾アニメーションがオフになり、Meraが滑らかに動きます。設定でいつでも変更できます。",
+      "aiTitle": "デバイス上のAI",
+      "aiNotYet": "まだ利用できません。デバイス上のAIはベータ版です。",
+      "languageTitle": "言語: {{language}}",
+      "languageEnglish": "準備完了です。",
+      "languageReady": "準備完了です。この端末で記事を翻訳できます。",
+      "languageChecking": "言語パックを確認しています。端末から確認画面が出たら、ダウンロードをタップしてください。",
+      "languageMissing": "この端末は今のところ{{language}}に翻訳できません。もう一度お試しいただくか、英語のまま続けてください。",
+      "retry": "再試行",
+      "useEnglish": "英語を使う",
+      "settingsTitle": "システムチェック",
+      "settingsDescription": "この端末でのMeraの動作と、言語パックの状態を確認できます。"
+    }
+  },
+  "ko": {
+    "display": {
+      "liteModeTitle": "라이트 모드",
+      "liteModeDescription": "움직이는 배경과 장식 애니메이션을 끕니다. 오래된 휴대폰에서 더 부드럽게 작동하고 배터리도 절약됩니다."
+    },
+    "systemCheck": {
+      "title": "Mera 준비 중",
+      "subtitle": "이 휴대폰에서 Mera가 어떻게 작동할지 빠르게 확인합니다.",
+      "phoneTitle": "내 휴대폰",
+      "phoneSupported": "지원됨: {{details}}",
+      "memory": "메모리 {{gb}}GB",
+      "modeTitle": "Mera 작동 방식",
+      "modeFull": "풀 모드",
+      "modeFullDetail": "모든 애니메이션과 효과가 켜져 있습니다.",
+      "modeLite": "라이트 모드",
+      "modeLiteDetail": "움직이는 배경과 장식 애니메이션이 꺼져서 Mera가 부드럽게 작동합니다. 설정에서 언제든지 바꿀 수 있습니다.",
+      "aiTitle": "기기 내 AI",
+      "aiNotYet": "아직 사용할 수 없습니다. 기기 내 AI는 아직 베타 버전입니다.",
+      "languageTitle": "언어: {{language}}",
+      "languageEnglish": "준비 완료.",
+      "languageReady": "준비 완료. 이 휴대폰에서 기사를 번역할 수 있습니다.",
+      "languageChecking": "언어 팩을 확인하고 있습니다. 휴대폰에서 물어보면 다운로드를 탭하세요.",
+      "languageMissing": "이 휴대폰은 지금 {{language}}로 번역할 수 없습니다. 다시 시도하거나 영어로 계속하세요.",
+      "retry": "재시도",
+      "useEnglish": "영어 사용",
+      "settingsTitle": "시스템 확인",
+      "settingsDescription": "이 휴대폰에서 Mera가 어떻게 작동하는지 보고 언어 팩을 확인하세요."
+    }
+  },
+  "nl": {
+    "display": {
+      "liteModeTitle": "Lite-modus",
+      "liteModeDescription": "Zet bewegende achtergronden en decoratieve animaties uit. Draait soepeler op oudere telefoons en is beter voor de batterij."
+    },
+    "systemCheck": {
+      "title": "Mera wordt klaargemaakt",
+      "subtitle": "Een snelle check van hoe Mera op deze telefoon draait.",
+      "phoneTitle": "Jouw telefoon",
+      "phoneSupported": "Ondersteund: {{details}}",
+      "memory": "{{gb}} GB geheugen",
+      "modeTitle": "Hoe Mera zal draaien",
+      "modeFull": "Volledige modus",
+      "modeFullDetail": "Alle animaties en effecten staan aan.",
+      "modeLite": "Lite-modus",
+      "modeLiteDetail": "Bewegende achtergronden en decoratieve animaties staan uit, zodat Mera soepel blijft. Je kunt dit wijzigen in Instellingen.",
+      "aiTitle": "On-device AI",
+      "aiNotYet": "Nog niet beschikbaar. On-device AI zit nog in bèta.",
+      "languageTitle": "Taal: {{language}}",
+      "languageEnglish": "Klaar.",
+      "languageReady": "Klaar. Artikelen kunnen op deze telefoon worden vertaald.",
+      "languageChecking": "Taalpakket wordt gecontroleerd. Als je telefoon het vraagt, tik dan op Downloaden.",
+      "languageMissing": "Deze telefoon kan nu niet naar het {{language}} vertalen. Probeer het opnieuw, of ga verder in het Engels.",
+      "retry": "Opnieuw proberen",
+      "useEnglish": "Engels gebruiken",
+      "settingsTitle": "Systeemcheck",
+      "settingsDescription": "Bekijk hoe Mera op deze telefoon draait en controleer je taalpakket."
+    }
+  },
+  "pl": {
+    "display": {
+      "liteModeTitle": "Tryb Lite",
+      "liteModeDescription": "Wyłącza ruchome tła i dekoracyjne animacje. Działa płynniej na starszych telefonach i oszczędza baterię."
+    },
+    "systemCheck": {
+      "title": "Przygotowywanie Mera",
+      "subtitle": "Szybkie sprawdzenie, jak Mera będzie działać na tym telefonie.",
+      "phoneTitle": "Twój telefon",
+      "phoneSupported": "Obsługiwane: {{details}}",
+      "memory": "{{gb}} GB pamięci",
+      "modeTitle": "Jak będzie działać Mera",
+      "modeFull": "Tryb pełny",
+      "modeFullDetail": "Wszystkie animacje i efekty są włączone.",
+      "modeLite": "Tryb Lite",
+      "modeLiteDetail": "Ruchome tła i dekoracyjne animacje są wyłączone, dzięki czemu Mera działa płynnie. Możesz to zmienić w Ustawieniach.",
+      "aiTitle": "Lokalna AI",
+      "aiNotYet": "Jeszcze niedostępne. Lokalna AI jest wciąż w wersji beta.",
+      "languageTitle": "Język: {{language}}",
+      "languageEnglish": "Gotowe.",
+      "languageReady": "Gotowe. Artykuły można tłumaczyć na tym telefonie.",
+      "languageChecking": "Sprawdzanie pakietu językowego. Jeśli telefon o to poprosi, dotknij Pobierz.",
+      "languageMissing": "Ten telefon nie może teraz tłumaczyć na język {{language}}. Spróbuj ponownie albo kontynuuj po angielsku.",
+      "retry": "Ponów",
+      "useEnglish": "Użyj angielskiego",
+      "settingsTitle": "Sprawdzenie systemu",
+      "settingsDescription": "Sprawdź, jak Mera działa na tym telefonie, i zweryfikuj swój pakiet językowy."
+    }
+  },
+  "pt-BR": {
+    "display": {
+      "liteModeTitle": "Modo Lite",
+      "liteModeDescription": "Desativa fundos em movimento e animações decorativas. Fica mais fluido em celulares mais antigos e economiza bateria."
+    },
+    "systemCheck": {
+      "title": "Preparando o Mera",
+      "subtitle": "Uma verificação rápida de como o Mera vai funcionar neste celular.",
+      "phoneTitle": "Seu celular",
+      "phoneSupported": "Compatível: {{details}}",
+      "memory": "{{gb}} GB de memória",
+      "modeTitle": "Como o Mera vai funcionar",
+      "modeFull": "Modo completo",
+      "modeFullDetail": "Todas as animações e efeitos estão ativados.",
+      "modeLite": "Modo Lite",
+      "modeLiteDetail": "Fundos em movimento e animações decorativas estão desativados para o Mera continuar fluido. Você pode mudar isso em Configurações.",
+      "aiTitle": "IA local",
+      "aiNotYet": "Ainda não disponível. A IA local ainda está em beta.",
+      "languageTitle": "Idioma: {{language}}",
+      "languageEnglish": "Pronto.",
+      "languageReady": "Pronto. Os artigos podem ser traduzidos neste celular.",
+      "languageChecking": "Verificando o pacote de idioma. Se o celular pedir, toque em Baixar.",
+      "languageMissing": "Este celular não consegue traduzir para {{language}} agora. Tente novamente ou continue em inglês.",
+      "retry": "Tentar novamente",
+      "useEnglish": "Usar inglês",
+      "settingsTitle": "Verificação do sistema",
+      "settingsDescription": "Veja como o Mera funciona neste celular e confira seu pacote de idioma."
+    }
+  },
+  "ru": {
+    "display": {
+      "liteModeTitle": "Облегчённый режим",
+      "liteModeDescription": "Отключает движущиеся фоны и декоративную анимацию. Работает плавнее на старых телефонах и меньше расходует батарею."
+    },
+    "systemCheck": {
+      "title": "Подготовка Mera",
+      "subtitle": "Быстрая проверка того, как Mera будет работать на этом телефоне.",
+      "phoneTitle": "Ваш телефон",
+      "phoneSupported": "Поддерживается: {{details}}",
+      "memory": "Память {{gb}} ГБ",
+      "modeTitle": "Как будет работать Mera",
+      "modeFull": "Полный режим",
+      "modeFullDetail": "Все анимации и эффекты включены.",
+      "modeLite": "Облегчённый режим",
+      "modeLiteDetail": "Движущиеся фоны и декоративная анимация отключены, чтобы Mera работал плавно. Вы можете изменить это в настройках.",
+      "aiTitle": "Локальный ИИ",
+      "aiNotYet": "Пока недоступно. Локальный ИИ всё ещё в бета-версии.",
+      "languageTitle": "Язык: {{language}}",
+      "languageEnglish": "Готово.",
+      "languageReady": "Готово. Статьи можно переводить на этом телефоне.",
+      "languageChecking": "Проверка языкового пакета. Если телефон попросит, нажмите Загрузить.",
+      "languageMissing": "Этот телефон пока не может переводить на {{language}}. Повторите попытку или продолжите на английском.",
+      "retry": "Повторить",
+      "useEnglish": "Использовать английский",
+      "settingsTitle": "Проверка системы",
+      "settingsDescription": "Посмотрите, как Mera работает на этом телефоне, и проверьте свой языковой пакет."
+    }
+  },
+  "th": {
+    "display": {
+      "liteModeTitle": "โหมด Lite",
+      "liteModeDescription": "ปิดพื้นหลังเคลื่อนไหวและแอนิเมชันตกแต่ง ทำให้เครื่องรุ่นเก่าทำงานลื่นขึ้นและประหยัดแบตเตอรี่มากขึ้น"
+    },
+    "systemCheck": {
+      "title": "กำลังเตรียม Mera",
+      "subtitle": "ตรวจสอบอย่างรวดเร็วว่า Mera จะทำงานบนโทรศัพท์เครื่องนี้อย่างไร",
+      "phoneTitle": "โทรศัพท์ของคุณ",
+      "phoneSupported": "รองรับ: {{details}}",
+      "memory": "หน่วยความจำ {{gb}} GB",
+      "modeTitle": "Mera จะทำงานอย่างไร",
+      "modeFull": "โหมดเต็ม",
+      "modeFullDetail": "แอนิเมชันและเอฟเฟกต์ทั้งหมดเปิดอยู่",
+      "modeLite": "โหมด Lite",
+      "modeLiteDetail": "พื้นหลังเคลื่อนไหวและแอนิเมชันตกแต่งถูกปิดไว้ เพื่อให้ Mera ทำงานลื่นไหล คุณสามารถเปลี่ยนได้ในการตั้งค่า",
+      "aiTitle": "AI ในเครื่อง",
+      "aiNotYet": "ยังใช้งานไม่ได้ AI ในเครื่องยังอยู่ในเวอร์ชันเบต้า",
+      "languageTitle": "ภาษา: {{language}}",
+      "languageEnglish": "พร้อมแล้ว",
+      "languageReady": "พร้อมแล้ว บทความสามารถแปลได้บนโทรศัพท์เครื่องนี้",
+      "languageChecking": "กำลังตรวจสอบแพ็กภาษา หากโทรศัพท์ของคุณถาม ให้แตะดาวน์โหลด",
+      "languageMissing": "โทรศัพท์เครื่องนี้ยังแปลเป็น{{language}}ไม่ได้ในตอนนี้ ลองใหม่อีกครั้ง หรือใช้ภาษาอังกฤษต่อไป",
+      "retry": "ลองใหม่",
+      "useEnglish": "ใช้ภาษาอังกฤษ",
+      "settingsTitle": "ตรวจสอบระบบ",
+      "settingsDescription": "ดูว่า Mera ทำงานบนโทรศัพท์เครื่องนี้อย่างไร และตรวจสอบแพ็กภาษาของคุณ"
+    }
+  },
+  "tr": {
+    "display": {
+      "liteModeTitle": "Lite modu",
+      "liteModeDescription": "Hareketli arka planları ve dekoratif animasyonları kapatır. Eski telefonlarda daha akıcı çalışır ve bataryayı daha az yorar."
+    },
+    "systemCheck": {
+      "title": "Mera hazırlanıyor",
+      "subtitle": "Mera'nın bu telefonda nasıl çalışacağına dair hızlı bir kontrol.",
+      "phoneTitle": "Telefonun",
+      "phoneSupported": "Destekleniyor: {{details}}",
+      "memory": "{{gb}} GB bellek",
+      "modeTitle": "Mera nasıl çalışacak",
+      "modeFull": "Tam mod",
+      "modeFullDetail": "Tüm animasyonlar ve efektler açık.",
+      "modeLite": "Lite modu",
+      "modeLiteDetail": "Hareketli arka planlar ve dekoratif animasyonlar kapalı, böylece Mera akıcı kalır. Bunu Ayarlar'dan değiştirebilirsin.",
+      "aiTitle": "Cihazda yapay zeka",
+      "aiNotYet": "Henüz kullanılamıyor. Cihazdaki yapay zeka hâlâ beta aşamasında.",
+      "languageTitle": "Dil: {{language}}",
+      "languageEnglish": "Hazır.",
+      "languageReady": "Hazır. Bu telefonda makaleler çevrilebilir.",
+      "languageChecking": "Dil paketi kontrol ediliyor. Telefonun sorarsa İndir'e dokun.",
+      "languageMissing": "Bu telefon şu anda {{language}} diline çeviri yapamıyor. Tekrar dene veya İngilizce olarak devam et.",
+      "retry": "Tekrar Dene",
+      "useEnglish": "İngilizce kullan",
+      "settingsTitle": "Sistem kontrolü",
+      "settingsDescription": "Mera'nın bu telefonda nasıl çalıştığını gör ve dil paketini kontrol et."
+    }
+  },
+  "uk": {
+    "display": {
+      "liteModeTitle": "Полегшений режим",
+      "liteModeDescription": "Вимикає рухомі фони та декоративну анімацію. Працює плавніше на старіших телефонах і менше витрачає заряд батареї."
+    },
+    "systemCheck": {
+      "title": "Підготовка Mera",
+      "subtitle": "Швидка перевірка того, як Mera працюватиме на цьому телефоні.",
+      "phoneTitle": "Ваш телефон",
+      "phoneSupported": "Підтримується: {{details}}",
+      "memory": "Пам'ять {{gb}} ГБ",
+      "modeTitle": "Як працюватиме Mera",
+      "modeFull": "Повний режим",
+      "modeFullDetail": "Усі анімації та ефекти увімкнено.",
+      "modeLite": "Полегшений режим",
+      "modeLiteDetail": "Рухомі фони та декоративну анімацію вимкнено, щоб Mera працював плавно. Ви можете змінити це в налаштуваннях.",
+      "aiTitle": "ШІ на пристрої",
+      "aiNotYet": "Поки що недоступно. ШІ на пристрої ще в бета-версії.",
+      "languageTitle": "Мова: {{language}}",
+      "languageEnglish": "Готово.",
+      "languageReady": "Готово. Статті можна перекладати на цьому телефоні.",
+      "languageChecking": "Перевірка мовного пакета. Якщо телефон запитає, натисніть Завантажити.",
+      "languageMissing": "Цей телефон поки не може перекладати на {{language}}. Спробуйте ще раз або продовжте англійською.",
+      "retry": "Повторити",
+      "useEnglish": "Використати англійську",
+      "settingsTitle": "Перевірка системи",
+      "settingsDescription": "Подивіться, як Mera працює на цьому телефоні, і перевірте свій мовний пакет."
+    }
+  },
+  "vi": {
+    "display": {
+      "liteModeTitle": "Chế độ Lite",
+      "liteModeDescription": "Tắt hình nền chuyển động và hiệu ứng trang trí. Chạy mượt hơn trên điện thoại đời cũ và tiết kiệm pin hơn."
+    },
+    "systemCheck": {
+      "title": "Đang chuẩn bị Mera",
+      "subtitle": "Kiểm tra nhanh cách Mera sẽ chạy trên điện thoại này.",
+      "phoneTitle": "Điện thoại của bạn",
+      "phoneSupported": "Được hỗ trợ: {{details}}",
+      "memory": "{{gb}} GB bộ nhớ",
+      "modeTitle": "Mera sẽ chạy như thế nào",
+      "modeFull": "Chế độ đầy đủ",
+      "modeFullDetail": "Tất cả hiệu ứng và hoạt ảnh đều bật.",
+      "modeLite": "Chế độ Lite",
+      "modeLiteDetail": "Hình nền chuyển động và hiệu ứng trang trí đã tắt để Mera chạy mượt. Bạn có thể đổi điều này trong Cài đặt.",
+      "aiTitle": "AI trên thiết bị",
+      "aiNotYet": "Chưa khả dụng. AI trên thiết bị vẫn đang trong giai đoạn beta.",
+      "languageTitle": "Ngôn ngữ: {{language}}",
+      "languageEnglish": "Đã sẵn sàng.",
+      "languageReady": "Đã sẵn sàng. Bài viết có thể được dịch trên điện thoại này.",
+      "languageChecking": "Đang kiểm tra gói ngôn ngữ. Nếu điện thoại hỏi, hãy nhấn Tải xuống.",
+      "languageMissing": "Điện thoại này hiện chưa thể dịch sang {{language}}. Hãy thử lại, hoặc tiếp tục bằng tiếng Anh.",
+      "retry": "Thử lại",
+      "useEnglish": "Dùng tiếng Anh",
+      "settingsTitle": "Kiểm tra hệ thống",
+      "settingsDescription": "Xem cách Mera chạy trên điện thoại này và kiểm tra gói ngôn ngữ của bạn."
+    }
+  },
+  "zh-CN": {
+    "display": {
+      "liteModeTitle": "轻量模式",
+      "liteModeDescription": "关闭动态背景和装饰性动画，旧手机运行更流畅，也更省电。"
+    },
+    "systemCheck": {
+      "title": "正在准备 Mera",
+      "subtitle": "快速检查一下 Mera 在这台手机上的运行情况。",
+      "phoneTitle": "你的手机",
+      "phoneSupported": "支持：{{details}}",
+      "memory": "内存 {{gb}} GB",
+      "modeTitle": "Mera 的运行方式",
+      "modeFull": "完整模式",
+      "modeFullDetail": "所有动画和效果均已开启。",
+      "modeLite": "轻量模式",
+      "modeLiteDetail": "动态背景和装饰性动画已关闭，让 Mera 保持流畅。你可以在设置中更改。",
+      "aiTitle": "本地 AI",
+      "aiNotYet": "暂不可用。本地 AI 目前仍处于测试阶段。",
+      "languageTitle": "语言：{{language}}",
+      "languageEnglish": "已就绪。",
+      "languageReady": "已就绪。这台手机可以翻译文章。",
+      "languageChecking": "正在检查语言包，如果手机提示，请点击下载。",
+      "languageMissing": "这台手机目前无法翻译成{{language}}，请重试，或继续使用英语。",
+      "retry": "重试",
+      "useEnglish": "使用英语",
+      "settingsTitle": "系统检查",
+      "settingsDescription": "查看 Mera 在这台手机上的运行情况，并检查你的语言包。"
+    }
+  },
+  "zh-TW": {
+    "display": {
+      "liteModeTitle": "精簡模式",
+      "liteModeDescription": "關閉動態背景和裝飾動畫，讓舊手機運行更順暢，也更省電。"
+    },
+    "systemCheck": {
+      "title": "正在準備 Mera",
+      "subtitle": "快速檢查 Mera 在這支手機上的運作方式。",
+      "phoneTitle": "你的手機",
+      "phoneSupported": "支援：{{details}}",
+      "memory": "記憶體 {{gb}} GB",
+      "modeTitle": "Mera 的運作方式",
+      "modeFull": "完整模式",
+      "modeFullDetail": "所有動畫和效果都已開啟。",
+      "modeLite": "精簡模式",
+      "modeLiteDetail": "動態背景和裝飾動畫已關閉，讓 Mera 保持順暢。你可以在設定中變更。",
+      "aiTitle": "裝置端 AI",
+      "aiNotYet": "目前尚無法使用。裝置端 AI 仍在測試階段。",
+      "languageTitle": "語言：{{language}}",
+      "languageEnglish": "已就緒。",
+      "languageReady": "已就緒。這支手機可以翻譯文章。",
+      "languageChecking": "正在檢查語言套件。如果手機詢問，請點選下載。",
+      "languageMissing": "這支手機目前無法翻譯成{{language}}。請重試，或繼續使用英文。",
+      "retry": "重試",
+      "useEnglish": "使用英文",
+      "settingsTitle": "系統檢查",
+      "settingsDescription": "查看 Mera 在這支手機上的運作方式，並檢查你的語言套件。"
+    }
+  }
+}

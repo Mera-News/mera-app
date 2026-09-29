@@ -160,17 +160,17 @@ describe('DisplaySettingsScreen', () => {
         expect(getByText('display.liteModeDescription')).toBeTruthy();
     });
 
-    it('marks the stored Lite mode choice as selected', () => {
+    it('reflects Lite mode on the switch', () => {
         mockPerformanceOverride = 'lite';
         const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        expect(getByTestId('lite-mode-lite').props.accessibilityState.checked).toBe(true);
-        expect(getByTestId('lite-mode-auto').props.accessibilityState.checked).toBe(false);
+        expect(getByTestId('lite-mode-switch').props.accessibilityState.checked).toBe(true);
     });
 
-    it('stores the choice the reader taps', () => {
-        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        fireEvent.press(getByTestId('lite-mode-full'));
-        expect(mockSetPerformanceOverride).toHaveBeenCalledWith('full');
+    it('turning the switch on stores Lite; there is no Automatic choice', () => {
+        const { getByTestId, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        fireEvent.press(getByTestId('lite-mode-switch'));
+        expect(mockSetPerformanceOverride).toHaveBeenCalledWith('lite');
+        expect(queryByTestId('lite-mode-auto')).toBeNull();
     });
 
     it('calls onBack from the header back button', () => {

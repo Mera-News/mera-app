@@ -8,7 +8,6 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { type StartupTab } from '@/lib/navigation/startup-tab';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import type { PerformanceOverride } from '@/lib/performance/performance-mode';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { useStartupTabStore } from '@/lib/stores/startup-tab-store';
 import { useTextScaleStore } from '@/lib/stores/text-scale-store';
@@ -25,14 +24,6 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 
-/** The Lite mode choices, in order. `auto` follows the phone
- *  (lib/performance/performance-mode.ts). Shown on every platform: unlike the
- *  old backdrop-only switch it governs more than the Android-static backdrop. */
-const LITE_MODE_OPTIONS = [
-  { value: 'auto', labelKey: 'display.liteModeAuto' },
-  { value: 'lite', labelKey: 'display.liteModeOn' },
-  { value: 'full', labelKey: 'display.liteModeOff' },
-] as const satisfies readonly { value: PerformanceOverride; labelKey: string }[];
 
 /** Index-aligned with `TEXT_SCALE_STEPS` / `TEXT_SCALE_LABEL_KEYS`. Written out
  *  in full rather than assembled from the step name so the keys are greppable
@@ -85,7 +76,6 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
   const insets = useSafeAreaInsets();
 
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
-  const performanceOverride = useDisplayPrefsStore((s) => s.performanceOverride);
   const setPerformanceOverride = useDisplayPrefsStore((s) => s.setPerformanceOverride);
   const textScale = useTextScaleStore((s) => s.scale);
   const setTextScale = useTextScaleStore((s) => s.setScale);
@@ -239,8 +229,12 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
               <Switch testID="blur-images-switch" value={blurImages} onToggle={setBlurImages} size="md" />
             </HStack>
 
-            <VStack className="py-3 px-4 mb-3 border border-gray-700 rounded-lg" space="sm">
-              <HStack space="md" className="items-center">
+            {/* Lite mode: On or Off, nothing else (owner: an "Automatic" choice
+                was hard to understand). Until the reader flips it, the phone's
+                own default applies (lib/performance/performance-mode.ts);
+                after that their choice sticks. */}
+            <HStack className="items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg">
+              <HStack space="md" className="items-center flex-1 pr-3">
                 <MaterialIcons name="speed" size={24} color={liteMode ? '#10b981' : '#9ca3af'} />
                 <VStack className="flex-1">
                   <Text className="text-base text-white">{t('display.liteModeTitle')}</Text>
@@ -250,36 +244,13 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                 </VStack>
               </HStack>
 
-              <HStack className="mt-1" space="xs" accessibilityRole="radiogroup" testID="lite-mode-options">
-                {LITE_MODE_OPTIONS.map(({ value, labelKey }) => {
-                  const active = value === performanceOverride;
-                  const label = t(labelKey);
-                  return (
-                    <Pressable
-                      key={value}
-                      testID={`lite-mode-${value}`}
-                      onPress={() => setPerformanceOverride(value)}
-                      accessibilityRole="radio"
-                      accessibilityState={{ selected: active, checked: active }}
-                      accessibilityLabel={t('display.liteModeA11y', { label })}
-                      className={`flex-1 items-center justify-center rounded-md border px-1 py-2 ${
-                        active ? 'bg-primary-400 border-primary-400' : 'bg-transparent border-gray-700'
-                      }`}
-                      style={{ minHeight: 44 }}
-                    >
-                      <Text
-                        size="xs"
-                        scaleTier="chrome"
-                        numberOfLines={1}
-                        className={active ? 'text-black' : 'text-gray-400'}
-                      >
-                        {label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </HStack>
-            </VStack>
+              <Switch
+                testID="lite-mode-switch"
+                value={liteMode}
+                onToggle={(on: boolean) => setPerformanceOverride(on ? 'lite' : 'full')}
+                size="md"
+              />
+            </HStack>
 
             <Pressable
               testID="system-check-open"

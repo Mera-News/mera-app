@@ -72,8 +72,6 @@
     "learnAboutMera": "認識 Mera",
     "startReading": "開始閱讀",
     "alreadyHaveAccount": "使用電子郵件登入",
-    "chooseLanguageTitle": "選擇您的語言",
-    "chooseLanguageHint": "您可以隨時在設定中更改。",
     "continue": "繼續",
     "firstTimeHint": "第一次使用 Mera？先來快速導覽一下吧。",
     "readyHint": "準備好開始使用 Mera 了嗎？",
@@ -1634,8 +1632,6 @@
     "blurImagesDescription": "在整個應用程式中柔化文章圖像,使圖形或令人不安的視覺效果不會顯示清晰。"
   },
   "display": {
-    "staticGradientTitle": "靜態背景",
-    "staticGradientDescription": "使用固定漸變代替動畫背景 — 對電池和舊設備更友善",
     "screenTitle": "顯示",
     "screenSubtitle": "文字、視覺效果以及 Mera 在此裝置上的開啟方式",
     "sectionText": "文字",
@@ -1654,7 +1650,9 @@
     "sectionStartup": "啟動分頁",
     "startupTabA11y": "啟動分頁，{{label}}",
     "startupTabDescription": "選擇應用程式啟動時要開啟的分頁。",
-    "startupTabTitle": "啟動時開啟"
+    "startupTabTitle": "啟動時開啟",
+    "liteModeTitle": "精簡模式",
+    "liteModeDescription": "關閉動態背景和裝飾動畫，讓舊手機運行更順暢，也更省電。"
   },
   "freeTier": {
     "cardBody": "Mera 的 AI 部分現已關閉。您已儲存、追蹤或閱讀的任何內容都保留在此裝置上，「探索」仍有今日頭條。沒有訂閱方案時，Mera 無法為您建立動態、回答問題或追蹤新報導。訂閱方案後，一切都會恢復。",
@@ -2932,5 +2930,28 @@
     "shareA11y": "匯出這篇報導",
     "shareDialogTitle": "匯出報導",
     "includeReasonHint": "說明每篇文章為何出現在你的資訊流中的一句話。部分文章可能沒有這句話。"
+  },
+  "systemCheck": {
+    "title": "正在準備 Mera",
+    "subtitle": "快速檢查 Mera 在這支手機上的運作方式。",
+    "phoneTitle": "你的手機",
+    "phoneSupported": "支援：{{details}}",
+    "memory": "記憶體 {{gb}} GB",
+    "modeTitle": "Mera 的運作方式",
+    "modeFull": "完整模式",
+    "modeFullDetail": "所有動畫和效果都已開啟。",
+    "modeLite": "精簡模式",
+    "modeLiteDetail": "動態背景和裝飾動畫已關閉，讓 Mera 保持順暢。你可以在設定中變更。",
+    "aiTitle": "裝置端 AI",
+    "aiNotYet": "目前尚無法使用。裝置端 AI 仍在測試階段。",
+    "languageTitle": "語言：{{language}}",
+    "languageEnglish": "已就緒。",
+    "languageReady": "已就緒。這支手機可以翻譯文章。",
+    "languageChecking": "正在檢查語言套件。如果手機詢問，請點選下載。",
+    "languageMissing": "這支手機目前無法翻譯成{{language}}。請重試，或繼續使用英文。",
+    "retry": "重試",
+    "useEnglish": "使用英文",
+    "settingsTitle": "系統檢查",
+    "settingsDescription": "查看 Mera 在這支手機上的運作方式，並檢查你的語言套件。"
   }
 }

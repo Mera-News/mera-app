@@ -72,8 +72,6 @@
     "learnAboutMera": "Tìm hiểu về Mera",
     "startReading": "Bắt đầu đọc",
     "alreadyHaveAccount": "Đăng nhập bằng email",
-    "chooseLanguageTitle": "Chọn ngôn ngữ của bạn",
-    "chooseLanguageHint": "Bạn có thể thay đổi bất cứ lúc nào trong Cài đặt.",
     "continue": "Tiếp tục",
     "firstTimeHint": "Mới dùng Mera? Hãy bắt đầu với chuyến tham quan nhanh.",
     "readyHint": "Sẵn sàng biến Mera thành của bạn?",
@@ -1634,8 +1632,6 @@
     "blurImagesDescription": "Làm mềm hình ảnh bài viết trên toàn bộ ứng dụng để các hình ảnh đồ họa hoặc gây phiền nhiễu không được hiển thị rõ."
   },
   "display": {
-    "staticGradientTitle": "Nền tĩnh",
-    "staticGradientDescription": "Sử dụng gradient cố định thay vì nền động — tiết kiệm pin và dễ hơn trên các thiết bị cũ",
     "screenTitle": "Hiển thị",
     "screenSubtitle": "Văn bản, hình ảnh và cách Mera mở trên thiết bị này",
     "sectionText": "Văn bản",
@@ -1654,7 +1650,9 @@
     "sectionStartup": "Tab khởi động",
     "startupTabA11y": "Tab khởi động, {{label}}",
     "startupTabDescription": "Chọn tab nào Mera sẽ mở khi bạn khởi chạy ứng dụng.",
-    "startupTabTitle": "Mở khi khởi chạy"
+    "startupTabTitle": "Mở khi khởi chạy",
+    "liteModeTitle": "Chế độ Lite",
+    "liteModeDescription": "Tắt hình nền chuyển động và hiệu ứng trang trí. Chạy mượt hơn trên điện thoại đời cũ và tiết kiệm pin hơn."
   },
   "freeTier": {
     "cardBody": "Phần AI của Mera đã bị tắt tạm thời. Mọi thứ bạn đã lưu, theo dõi hoặc đọc vẫn ở trên thiết bị này, và Khám phá vẫn có tin tức hôm nay. Nếu không có gói, Mera sẽ không tạo bảng tin, trả lời câu hỏi hoặc theo dõi câu chuyện mới. Hãy bắt đầu một gói và mọi thứ sẽ quay trở lại.",
@@ -2932,5 +2930,28 @@
     "shareA11y": "Xuất câu chuyện này",
     "shareDialogTitle": "Xuất câu chuyện",
     "includeReasonHint": "Ghi chú một dòng giải thích vì sao mỗi bài viết đến với bảng tin của bạn. Một số bài có thể không có ghi chú này."
+  },
+  "systemCheck": {
+    "title": "Đang chuẩn bị Mera",
+    "subtitle": "Kiểm tra nhanh cách Mera sẽ chạy trên điện thoại này.",
+    "phoneTitle": "Điện thoại của bạn",
+    "phoneSupported": "Được hỗ trợ: {{details}}",
+    "memory": "{{gb}} GB bộ nhớ",
+    "modeTitle": "Mera sẽ chạy như thế nào",
+    "modeFull": "Chế độ đầy đủ",
+    "modeFullDetail": "Tất cả hiệu ứng và hoạt ảnh đều bật.",
+    "modeLite": "Chế độ Lite",
+    "modeLiteDetail": "Hình nền chuyển động và hiệu ứng trang trí đã tắt để Mera chạy mượt. Bạn có thể đổi điều này trong Cài đặt.",
+    "aiTitle": "AI trên thiết bị",
+    "aiNotYet": "Chưa khả dụng. AI trên thiết bị vẫn đang trong giai đoạn beta.",
+    "languageTitle": "Ngôn ngữ: {{language}}",
+    "languageEnglish": "Đã sẵn sàng.",
+    "languageReady": "Đã sẵn sàng. Bài viết có thể được dịch trên điện thoại này.",
+    "languageChecking": "Đang kiểm tra gói ngôn ngữ. Nếu điện thoại hỏi, hãy nhấn Tải xuống.",
+    "languageMissing": "Điện thoại này hiện chưa thể dịch sang {{language}}. Hãy thử lại, hoặc tiếp tục bằng tiếng Anh.",
+    "retry": "Thử lại",
+    "useEnglish": "Dùng tiếng Anh",
+    "settingsTitle": "Kiểm tra hệ thống",
+    "settingsDescription": "Xem cách Mera chạy trên điện thoại này và kiểm tra gói ngôn ngữ của bạn."
   }
 }

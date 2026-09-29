@@ -72,8 +72,6 @@
     "learnAboutMera": "Maak kennis met Mera",
     "startReading": "Beginnen met lezen",
     "alreadyHaveAccount": "Inloggen met e-mail",
-    "chooseLanguageTitle": "Kies je taal",
-    "chooseLanguageHint": "Je kunt dit altijd wijzigen in Instellingen.",
     "continue": "Doorgaan",
     "firstTimeHint": "Nieuw bij Mera? Begin met een korte rondleiding.",
     "readyHint": "Klaar om Mera van jou te maken?",
@@ -1633,8 +1631,6 @@
     "blurImagesDescription": "Verzwak artikelafbeeldingen in de app zodat grafische of verstorende beelden niet scherp worden weergegeven."
   },
   "display": {
-    "staticGradientTitle": "Statische achtergrond",
-    "staticGradientDescription": "Gebruik een vaste kleurverloping in plaats van de geanimeerde achtergrond — beter voor de batterij en oudere apparaten",
     "screenTitle": "Weergave",
     "screenSubtitle": "Tekst, afbeeldingen en hoe Mera op dit apparaat opent",
     "sectionText": "Tekst",
@@ -1653,7 +1649,9 @@
     "sectionStartup": "Starttabblad",
     "startupTabA11y": "Starttabblad, {{label}}",
     "startupTabDescription": "Kies welk tabblad Mera opent wanneer je de app start.",
-    "startupTabTitle": "Open bij opstarten"
+    "startupTabTitle": "Open bij opstarten",
+    "liteModeTitle": "Lite-modus",
+    "liteModeDescription": "Zet bewegende achtergronden en decoratieve animaties uit. Draait soepeler op oudere telefoons en is beter voor de batterij."
   },
   "freeTier": {
     "cardBody": "Het AI-deel van Mera is voor nu uitgeschakeld. Alles wat je hebt opgeslagen, gevolgd of gelezen blijft op dit apparaat, en Verkennen toont nog steeds vandaags nieuws. Zonder een plan zal Mera je feed niet opbouwen, je vragen niet beantwoorden en geen nieuwe verhalen niet volgen. Start een plan en alles komt terug.",
@@ -2932,5 +2930,28 @@
     "shareA11y": "Dit verhaal exporteren",
     "shareDialogTitle": "Verhaal exporteren",
     "includeReasonHint": "De korte notitie die uitlegt waarom elk artikel in je feed terechtkwam. Sommige artikelen hebben die niet."
+  },
+  "systemCheck": {
+    "title": "Mera wordt klaargemaakt",
+    "subtitle": "Een snelle check van hoe Mera op deze telefoon draait.",
+    "phoneTitle": "Jouw telefoon",
+    "phoneSupported": "Ondersteund: {{details}}",
+    "memory": "{{gb}} GB geheugen",
+    "modeTitle": "Hoe Mera zal draaien",
+    "modeFull": "Volledige modus",
+    "modeFullDetail": "Alle animaties en effecten staan aan.",
+    "modeLite": "Lite-modus",
+    "modeLiteDetail": "Bewegende achtergronden en decoratieve animaties staan uit, zodat Mera soepel blijft. Je kunt dit wijzigen in Instellingen.",
+    "aiTitle": "On-device AI",
+    "aiNotYet": "Nog niet beschikbaar. On-device AI zit nog in bèta.",
+    "languageTitle": "Taal: {{language}}",
+    "languageEnglish": "Klaar.",
+    "languageReady": "Klaar. Artikelen kunnen op deze telefoon worden vertaald.",
+    "languageChecking": "Taalpakket wordt gecontroleerd. Als je telefoon het vraagt, tik dan op Downloaden.",
+    "languageMissing": "Deze telefoon kan nu niet naar het {{language}} vertalen. Probeer het opnieuw, of ga verder in het Engels.",
+    "retry": "Opnieuw proberen",
+    "useEnglish": "Engels gebruiken",
+    "settingsTitle": "Systeemcheck",
+    "settingsDescription": "Bekijk hoe Mera op deze telefoon draait en controleer je taalpakket."
   }
 }

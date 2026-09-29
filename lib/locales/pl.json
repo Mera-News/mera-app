@@ -72,8 +72,6 @@
     "learnAboutMera": "Poznaj aplikację Mera",
     "startReading": "Zacznij czytać",
     "alreadyHaveAccount": "Zaloguj się e-mailem",
-    "chooseLanguageTitle": "Wybierz swój język",
-    "chooseLanguageHint": "Możesz to zmienić w każdej chwili w Ustawieniach.",
     "continue": "Kontynuuj",
     "firstTimeHint": "Nowy w Mera? Zacznij od krótkiego przewodnika.",
     "readyHint": "Gotowy, aby Mera stała się Twoja?",
@@ -1663,8 +1661,6 @@
     "blurImagesDescription": "Wymiękczaj obrazy artykułów w aplikacji, aby drastyczne lub niepokojące wizualizacje nie były wyświetlane ostro."
   },
   "display": {
-    "staticGradientTitle": "Statyczne tło",
-    "staticGradientDescription": "Używaj stałego gradientu zamiast animowanego tła — łatwiej dla baterii i starszych urządzeń",
     "screenTitle": "Wyświetlacz",
     "screenSubtitle": "Tekst, wizualizacje i sposób, w jaki Mera otwiera się na tym urządzeniu",
     "sectionText": "Tekst",
@@ -1683,7 +1679,9 @@
     "sectionStartup": "Karta startowa",
     "startupTabA11y": "Karta startowa, {{label}}",
     "startupTabDescription": "Wybierz kartę, którą Mera otwiera podczas uruchomienia aplikacji.",
-    "startupTabTitle": "Otwórz przy uruchomieniu"
+    "startupTabTitle": "Otwórz przy uruchomieniu",
+    "liteModeTitle": "Tryb Lite",
+    "liteModeDescription": "Wyłącza ruchome tła i dekoracyjne animacje. Działa płynniej na starszych telefonach i oszczędza baterię."
   },
   "freeTier": {
     "cardBody": "Część AI w Mera jest teraz wyłączona. Wszystko, co zapisałeś, śledziłeś lub czytałeś, zostaje na tym urządzeniu, a zakładka Odkrywaj wciąż zawiera dzisiejsze nagłówki. Bez planu Mera nie będzie budować Twojego kanału, odpowiadać na Twoje pytania ani śledzić nowych historii. Zacznij plan, a wszystko wróci do normy.",
@@ -2970,5 +2968,28 @@
     "shareA11y": "Eksportuj tę historię",
     "shareDialogTitle": "Eksportuj historię",
     "includeReasonHint": "Jednolinijkowa notatka wyjaśniająca, dlaczego każdy artykuł trafił do Twojego kanału. Niektóre artykuły mogą jej nie mieć."
+  },
+  "systemCheck": {
+    "title": "Przygotowywanie Mera",
+    "subtitle": "Szybkie sprawdzenie, jak Mera będzie działać na tym telefonie.",
+    "phoneTitle": "Twój telefon",
+    "phoneSupported": "Obsługiwane: {{details}}",
+    "memory": "{{gb}} GB pamięci",
+    "modeTitle": "Jak będzie działać Mera",
+    "modeFull": "Tryb pełny",
+    "modeFullDetail": "Wszystkie animacje i efekty są włączone.",
+    "modeLite": "Tryb Lite",
+    "modeLiteDetail": "Ruchome tła i dekoracyjne animacje są wyłączone, dzięki czemu Mera działa płynnie. Możesz to zmienić w Ustawieniach.",
+    "aiTitle": "Lokalna AI",
+    "aiNotYet": "Jeszcze niedostępne. Lokalna AI jest wciąż w wersji beta.",
+    "languageTitle": "Język: {{language}}",
+    "languageEnglish": "Gotowe.",
+    "languageReady": "Gotowe. Artykuły można tłumaczyć na tym telefonie.",
+    "languageChecking": "Sprawdzanie pakietu językowego. Jeśli telefon o to poprosi, dotknij Pobierz.",
+    "languageMissing": "Ten telefon nie może teraz tłumaczyć na język {{language}}. Spróbuj ponownie albo kontynuuj po angielsku.",
+    "retry": "Ponów",
+    "useEnglish": "Użyj angielskiego",
+    "settingsTitle": "Sprawdzenie systemu",
+    "settingsDescription": "Sprawdź, jak Mera działa na tym telefonie, i zweryfikuj swój pakiet językowy."
   }
 }

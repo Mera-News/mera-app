@@ -18,6 +18,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type PerformanceMode = 'full' | 'lite';
+/** What is stored. `auto` is internal only: "the reader never flipped the
+ *  switch, follow the phone". The UI is a plain On/Off switch; the owner
+ *  ruled an "Automatic" choice too hard to understand. */
 export type PerformanceOverride = 'auto' | PerformanceMode;
 
 export const PERFORMANCE_OVERRIDE_KEY = 'performance_mode_override';

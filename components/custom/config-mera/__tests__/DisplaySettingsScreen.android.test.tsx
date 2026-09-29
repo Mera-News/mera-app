@@ -109,6 +109,6 @@ describe('DisplaySettingsScreen on Android', () => {
     it('shows the Lite mode row and keeps blur images', () => {
         const { getByTestId, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
         expect(getByTestId('blur-images-switch')).toBeTruthy();
-        expect(queryByTestId('lite-mode-options')).not.toBeNull();
+        expect(queryByTestId('lite-mode-switch')).not.toBeNull();
     });
 });

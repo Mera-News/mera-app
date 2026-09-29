@@ -72,8 +72,6 @@
     "learnAboutMera": "Mera 알아보기",
     "startReading": "읽기 시작",
     "alreadyHaveAccount": "이메일로 로그인",
-    "chooseLanguageTitle": "언어를 선택하세요",
-    "chooseLanguageHint": "설정에서 언제든지 변경할 수 있습니다.",
     "continue": "계속",
     "firstTimeHint": "Mera가 처음이신가요? 빠른 둘러보기로 시작하세요.",
     "readyHint": "Mera를 시작할 준비가 되셨나요?",
@@ -1633,8 +1631,6 @@
     "blurImagesDescription": "앱 전체의 기사 이미지를 부드럽게 하여 그래픽 또는 불쾌한 시각 자료가 선명하게 표시되지 않도록 합니다."
   },
   "display": {
-    "staticGradientTitle": "정적 배경",
-    "staticGradientDescription": "애니메이션 배경 대신 고정 그래디언트를 사용합니다 — 배터리와 오래된 장치에 더 친절합니다",
     "screenTitle": "디스플레이",
     "screenSubtitle": "텍스트, 시각 효과 및 메라가 이 기기에서 열리는 방식",
     "sectionText": "텍스트",
@@ -1653,7 +1649,9 @@
     "sectionStartup": "시작 탭",
     "startupTabA11y": "시작 탭, {{label}}",
     "startupTabDescription": "앱을 시작할 때 메라가 열 탭을 선택하세요.",
-    "startupTabTitle": "시작할 때 열 탭"
+    "startupTabTitle": "시작할 때 열 탭",
+    "liteModeTitle": "라이트 모드",
+    "liteModeDescription": "움직이는 배경과 장식 애니메이션을 끕니다. 오래된 휴대폰에서 더 부드럽게 작동하고 배터리도 절약됩니다."
   },
   "freeTier": {
     "cardBody": "Mera의 AI 기능이 지금 꺼져 있습니다. 저장했거나 팔로우한 기사, 읽은 기사는 이 기기에 그대로 남아 있으며 탐색에서 오늘의 헤드라인을 확인할 수 있습니다. 플랜이 없으면 Mera가 피드를 만들거나 질문에 답하거나 새로운 기사를 팔로우하지 않습니다. 플랜을 시작하면 모든 기능이 다시 작동합니다.",
@@ -2931,5 +2929,28 @@
     "shareA11y": "이 스토리 내보내기",
     "shareDialogTitle": "스토리 내보내기",
     "includeReasonHint": "각 기사가 피드에 도착한 이유를 설명하는 한 줄 메모입니다. 메모가 없는 기사도 있을 수 있습니다."
+  },
+  "systemCheck": {
+    "title": "Mera 준비 중",
+    "subtitle": "이 휴대폰에서 Mera가 어떻게 작동할지 빠르게 확인합니다.",
+    "phoneTitle": "내 휴대폰",
+    "phoneSupported": "지원됨: {{details}}",
+    "memory": "메모리 {{gb}}GB",
+    "modeTitle": "Mera 작동 방식",
+    "modeFull": "풀 모드",
+    "modeFullDetail": "모든 애니메이션과 효과가 켜져 있습니다.",
+    "modeLite": "라이트 모드",
+    "modeLiteDetail": "움직이는 배경과 장식 애니메이션이 꺼져서 Mera가 부드럽게 작동합니다. 설정에서 언제든지 바꿀 수 있습니다.",
+    "aiTitle": "기기 내 AI",
+    "aiNotYet": "아직 사용할 수 없습니다. 기기 내 AI는 아직 베타 버전입니다.",
+    "languageTitle": "언어: {{language}}",
+    "languageEnglish": "준비 완료.",
+    "languageReady": "준비 완료. 이 휴대폰에서 기사를 번역할 수 있습니다.",
+    "languageChecking": "언어 팩을 확인하고 있습니다. 휴대폰에서 물어보면 다운로드를 탭하세요.",
+    "languageMissing": "이 휴대폰은 지금 {{language}}로 번역할 수 없습니다. 다시 시도하거나 영어로 계속하세요.",
+    "retry": "재시도",
+    "useEnglish": "영어 사용",
+    "settingsTitle": "시스템 확인",
+    "settingsDescription": "이 휴대폰에서 Mera가 어떻게 작동하는지 보고 언어 팩을 확인하세요."
   }
 }
