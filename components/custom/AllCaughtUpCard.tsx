@@ -5,6 +5,7 @@ import {
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -51,14 +52,18 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ compact = false }) =>
     const [currentIndex, setCurrentIndex] = useState(0);
     const messages = t('feed.mindfulness', { returnObjects: true }) as string[];
 
-    // Cycle through messages every second
+    // Cycle through messages every 3s, only while someone is looking: tabs
+    // stay mounted, and a hidden Feed footer re-rendering forever costs a
+    // render and a native mount every tick on every other tab.
+    const animationsActive = useAnimationsActive();
     useEffect(() => {
+        if (!animationsActive) return;
         const interval = setInterval(() => {
             setCurrentIndex((prevIndex) => (prevIndex + 1) % messages.length);
         }, 3000);
 
         return () => clearInterval(interval);
-    }, [messages.length]);
+    }, [messages.length, animationsActive]);
 
     // `px-4` in compact mirrors ArticleCardBase's own content padding, so the
     // text column starts on the same vertical line as every neighbouring card's.
