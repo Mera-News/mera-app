@@ -46,6 +46,12 @@ import {
     isAuthReadQuarantined,
 } from '../install-boundary-latch';
 
+/** "Clears nothing" means no CREDENTIAL: the retired deviceRef is deleted on
+ *  every launch, whatever the boundary decides. */
+function expectOnlyRetiredRefDeleted() {
+    expect(mockDeleteItemAsync.mock.calls).toEqual([['mera_device_ref']]);
+}
+
 beforeEach(() => {
     jest.clearAllMocks();
     __resetInstallBoundaryForTests();
@@ -56,7 +62,7 @@ beforeEach(() => {
     mockDeleteItemAsync.mockResolvedValue(undefined);
 });
 
-it('fresh install with a surviving session: clears cookie + account creds, PRESERVES the deviceRef, stamps the marker', async () => {
+it('fresh install with a surviving session: clears cookie + account creds and the retired deviceRef, stamps the marker', async () => {
     const store: Record<string, string> = {
         mera_cookie: 'c',
         mera_session_data: 's',
@@ -77,20 +83,21 @@ it('fresh install with a surviving session: clears cookie + account creds, PRESE
     expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_appattest_key_id');
     expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_appattest_key_proven');
     expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_device_attest_device_id');
-    expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_device_ref');
-    expect(store.mera_device_ref).toBe('ref');
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_device_ref');
+    expect(store.mera_device_ref).toBeUndefined();
     expect(mockSetSetting).toHaveBeenCalledWith(HAS_LAUNCHED_SETTING_KEY, '1');
     expect(wasInstallBoundaryReset()).toBe(true);
 });
 
-it('normal relaunch (marker present): touches nothing', async () => {
+it('normal relaunch (marker present): deletes only the retired deviceRef', async () => {
     mockGetSetting.mockImplementation(async (k: string) =>
         k === HAS_LAUNCHED_SETTING_KEY ? '1' : null,
     );
 
     await enforceInstallBoundary();
 
-    expect(mockDeleteItemAsync).not.toHaveBeenCalled();
+    expect(mockDeleteItemAsync).toHaveBeenCalledTimes(1);
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_device_ref');
     expect(mockSetSetting).not.toHaveBeenCalled();
     expect(wasInstallBoundaryReset()).toBe(false);
 });
@@ -103,7 +110,7 @@ it('app UPDATE (no marker yet, but cached_user_id survived): clears nothing, sta
 
     await enforceInstallBoundary();
 
-    expect(mockDeleteItemAsync).not.toHaveBeenCalled();
+    expectOnlyRetiredRefDeleted();
     expect(mockSetSetting).toHaveBeenCalledWith(HAS_LAUNCHED_SETTING_KEY, '1');
     expect(wasInstallBoundaryReset()).toBe(false);
 });
@@ -111,7 +118,7 @@ it('app UPDATE (no marker yet, but cached_user_id survived): clears nothing, sta
 it('true first install (nothing anywhere): no clearing, marker stamped, no reset flag', async () => {
     await enforceInstallBoundary();
 
-    expect(mockDeleteItemAsync).not.toHaveBeenCalled();
+    expectOnlyRetiredRefDeleted();
     expect(mockSetSetting).toHaveBeenCalledWith(HAS_LAUNCHED_SETTING_KEY, '1');
     expect(wasInstallBoundaryReset()).toBe(false);
 });
@@ -122,7 +129,7 @@ it('fail-safe: a throwing settings read clears nothing and leaves the marker unw
 
     await expect(enforceInstallBoundary()).resolves.toBeUndefined();
 
-    expect(mockDeleteItemAsync).not.toHaveBeenCalled();
+    expectOnlyRetiredRefDeleted();
     expect(mockSetSetting).not.toHaveBeenCalled();
 });
 
@@ -161,4 +168,16 @@ describe('auth-read quarantine (S12: the get-session race)', () => {
         expect(isAuthReadQuarantined('mera_cookie')).toBe(false);
         expect(mockNotify).toHaveBeenCalledWith('$sessionSignal');
     });
+});
+
+it('a failing retired-deviceRef delete blocks nothing and is not a boundary reset', async () => {
+    mockGetSetting.mockImplementation(async (k: string) =>
+        k === HAS_LAUNCHED_SETTING_KEY ? '1' : null,
+    );
+    mockDeleteItemAsync.mockRejectedValueOnce(new Error('keychain locked'));
+
+    await expect(enforceInstallBoundary()).resolves.toBeUndefined();
+
+    expect(wasInstallBoundaryReset()).toBe(false);
+    expect(isAuthReadQuarantined('mera_cookie')).toBe(false);
 });

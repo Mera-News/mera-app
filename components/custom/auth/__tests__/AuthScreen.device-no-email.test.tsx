@@ -85,6 +85,8 @@ jest.mock('@expo/vector-icons', () => {
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
+// The real ScrollView pulls an untransformed native spec into jest.
+jest.mock('@/components/ui/scroll-view', () => { const { View } = require('react-native'); return { ScrollView: (p: any) => <View {...p} /> }; });
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 const mockRouterReplace = jest.fn();
@@ -102,9 +104,11 @@ jest.mock('@/lib/database/services/setting-service', () => ({
 }));
 
 const mockAvailability = jest.fn();
+const mockPath = jest.fn();
 const mockSignIn = jest.fn();
 jest.mock('@/lib/device-auth', () => ({
     deviceSignInAvailability: (...a: any[]) => mockAvailability(...a),
+    deviceSignInPath: (...a: any[]) => mockPath(...a),
     signInWithDevice: (...a: any[]) => mockSignIn(...a),
 }));
 
@@ -182,6 +186,7 @@ beforeEach(() => {
     calls.length = 0;
     rememberEmailUser();
     mockAvailability.mockResolvedValue('native');
+    mockPath.mockResolvedValue('app-attest');
     mockFetchLegalVersions.mockResolvedValue(CURRENT);
     mockAcceptLegal.mockResolvedValue({ ok: true });
 });
@@ -223,6 +228,24 @@ describe('where "Sign in without email" is offered', () => {
         fireEvent.press(await r.findByTestId('auth-use-email'));
         fireEvent.press(await r.findByTestId('auth-email-device-sign-in'));
         expect(await r.findByTestId('auth-consent-agree')).toBeTruthy();
+    });
+
+    it('the email view says what is lost, visibly and as the button hint, per path', async () => {
+        mockGetSetting.mockImplementation(async (k: string) => (k === 'app_language' ? 'en' : null));
+        const cases: Array<[string, string]> = [
+            ['app-attest', 'auth.deviceSignInCaption.uninstall'],
+            ['play-integrity', 'auth.deviceSignInCaption.reset'],
+            ['play-integrity-uuid', 'auth.deviceSignInCaption.uninstall'],
+        ];
+        for (const [path, key] of cases) {
+            mockPath.mockResolvedValue(path);
+            const r = render(<AuthScreen />);
+            fireEvent.press(await r.findByTestId('auth-use-email'));
+            const button = await r.findByTestId('auth-email-device-sign-in');
+            expect(r.getByTestId('auth-email-device-sign-in-caption').props.children).toBe(key);
+            expect(button.props.accessibilityHint).toBe(key);
+            r.unmount();
+        }
     });
 
     it('the email view hides it on Forgot PIN', async () => {

@@ -79,18 +79,23 @@ type ArticleWithClusters {
   article_url: String
   category: String
   clusters: [ClusterMembership!]!
+  content_categories: [String!]
   country_code: String
   description_en: String
   entities: [String!]
   event_type: String
+  genre: String
+  geo_scope: String
   geo_tags: [GeoTagDto!]
   image_url: String
   language_code: String
   maxClusterSize: Int
   pubDate: DateTime!
   publication_name: String
+  significance: Int
   title: String
   title_en: String!
+  tone: String
   vector_sidecar_packed: String
 }
 
@@ -258,6 +263,7 @@ A geo tag on an article (written by the tagging pipeline). city/region are optio
 type GeoTagDto {
   city: String
   countryCode: String!
+  geonameId: Int
   region: String
 }
 
@@ -327,6 +333,7 @@ type NewsArticle {
   article_url: String!
   category: String
   clusterConfidence: Float
+  content_categories: [String!]
   content_category: String
   country: String
   createdAt: DateTime!
@@ -344,6 +351,8 @@ type NewsArticle {
   """
   factCheck: FactCheck
   fetchPublicationId: ID @deprecated(reason: "v1-only link to the fetch state machine; unused by the v3 pipeline.")
+  genre: String
+  geo_scope: String
   geo_tags: [GeoTagDto!]
   image_url: String
   original_language_code: String
@@ -351,10 +360,12 @@ type NewsArticle {
   pubDate: DateTime!
   publicationSource: PublicationSource
   publicationSourceId: ID!
+  significance: Int
   source_uri: String!
   title: String!
   title_en: String
   title_en_internal_only: String @deprecated(reason: "Use title_en instead. Superseded by the v3 pipeline.")
+  tone: String
   translation_attempts: Int
   translation_skip_reason: String
   translation_skipped: Boolean

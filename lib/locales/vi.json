@@ -91,6 +91,11 @@
       "body": "Đăng nhập không cần email sẽ mở tài khoản riêng của điện thoại này, không phải tài khoản bạn đang dùng. Mọi dữ liệu đã lưu trên điện thoại này cho tài khoản đó sẽ bị xóa. Không thể hoàn tác. Tài khoản còn lại của bạn và gói của tài khoản đó vẫn an toàn, và bạn có thể đăng nhập lại vào tài khoản đó sau.",
       "continue": "Tiếp tục không cần email",
       "useEmail": "Quay lại"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Tài khoản của bạn gắn với điện thoại này. Nếu bạn xóa Mera hoặc mất điện thoại, bạn sẽ bắt đầu một tài khoản mới. Sao lưu và khôi phục trong Cài đặt có thể giữ dữ liệu của bạn.",
+      "reset": "Tài khoản của bạn gắn với điện thoại này. Nếu bạn đặt lại hoặc mất điện thoại, bạn sẽ bắt đầu một tài khoản mới. Sao lưu và khôi phục trong Cài đặt có thể giữ dữ liệu của bạn.",
+      "previousUser": "Mở tài khoản riêng của điện thoại này, tách biệt với {{email}}."
     }
   },
   "account": {
@@ -563,7 +568,7 @@
     "viewingHistoryModalDescription": "Xóa nhật ký cục bộ các bài viết bạn đã mở. Thẻ \"Ấn phẩm bạn đang đọc\" trong tab Nguồn và lịch sử theo từng ấn phẩm sẽ trở về trạng thái trống. Không có dữ liệu nào khác bị ảnh hưởng, và không có dữ liệu máy chủ nào bị chạm đến (dữ liệu này chưa bao giờ rời thiết bị của bạn).",
     "wipeAllTitle": "Xóa toàn bộ dữ liệu",
     "wipeAllDescription": "Đặt lại mọi thứ ngoại trừ tài khoản của bạn",
-    "wipeAllModalDescription": "Xóa toàn bộ dữ liệu của bạn: bộ nhớ đệm bản tin, thông tin, chủ đề, gợi ý, cài đặt ứng dụng, lịch sử đọc. Bạn vẫn đăng nhập; tài khoản của bạn được giữ nguyên.",
+    "wipeAllModalDescription": "Xóa mọi dữ liệu lưu trên thiết bị này: bộ nhớ đệm bản tin, thông tin, chủ đề, cài đặt ứng dụng và lịch sử đọc. Bạn vẫn đăng nhập và tài khoản được giữ nguyên. Điện thoại này vẫn có thể đăng nhập cho bạn mà không cần email. Không có gì bị xóa khỏi máy chủ của chúng tôi.",
     "deletedTitle": "Đã xóa dữ liệu",
     "deletedDescription": "Dữ liệu đã chọn đã được xóa thành công.",
     "errorTitle": "Lỗi",
@@ -577,7 +582,19 @@
     "exportHistorySubject": "Lịch sử đọc Mera của tôi (JSON)",
     "exporting": "Đang xuất...",
     "exportHistoryEmptyTitle": "Không có gì để xuất cho đến nay",
-    "exportHistoryEmptyDescription": "Bạn chưa đọc bất kỳ bài viết nào trong 30 ngày qua."
+    "exportHistoryEmptyDescription": "Bạn chưa đọc bất kỳ bài viết nào trong 30 ngày qua.",
+    "keeps": {
+      "title": "Mera giữ gì về bạn",
+      "emailAndPlan": "Email và gói của bạn. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
+      "plan": "Gói của bạn. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
+      "emailIfAdded": "Email của bạn nếu bạn đã thêm, và gói của bạn. Hồ sơ thanh toán từ App Store hoặc Google Play được giữ trong thời gian luật yêu cầu.",
+      "signInRecordIos": "Một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple rằng đây là ứng dụng thật không được giữ lại.",
+      "signInRecordAndroid": "Một bản ghi đăng nhập cho điện thoại này, không phải ID điện thoại của bạn, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Google rằng đây là ứng dụng thật không được giữ lại.",
+      "signInRecordGeneric": "Nếu không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Kết quả kiểm tra của Apple hoặc Google rằng đây là ứng dụng thật không được giữ lại.",
+      "usage": "Số bài viết được phân tích mỗi ngày, để áp dụng giới hạn gói của bạn. Các lần đăng nhập không lưu địa chỉ IP hay thông tin trình duyệt.",
+      "topics": "Cụm từ chủ đề, chỉ lưu theo văn bản, không có gì liên kết chúng với bạn, và bị xóa sau 14 ngày không dùng.",
+      "privacyLink": "Đọc chính sách quyền riêng tư"
+    }
   },
   "preferences": {
     "manageSettings": "Quản lý cài đặt ứng dụng và tài khoản",
@@ -616,18 +633,18 @@
     "contentPolicy": "Chính sách nội dung",
     "faq": "Câu hỏi thường gặp",
     "reportBug": "Báo lỗi",
-    "deleteAccountConfirmGrace": "Tài khoản của bạn sẽ được lên lịch xóa, với thời gian ân hạn 30 ngày. Đăng nhập lại trong 30 ngày đó và việc xóa được tự động hủy.",
+    "deleteAccountConfirmGrace": "Tài khoản của bạn sẽ được lên lịch xóa, với thời gian ân hạn 30 ngày. Nếu tài khoản có email, hãy đăng nhập bằng email đó trong 30 ngày này để hủy. Tài khoản không có email không thể đăng nhập lại, nên không thể hủy việc xóa.",
     "deleteAccountWarningGrace": "⚠️ Sau 30 ngày, toàn bộ dữ liệu của bạn sẽ bị xóa vĩnh viễn. Không thể hoàn tác.",
     "finalConfirmationBodyGrace": "Điều này lên lịch tài khoản của bạn để xóa vĩnh viễn trong 30 ngày.",
     "accountDeletionScheduledTitle": "Xóa đã được lên lịch",
-    "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn trong 30 ngày. Đăng nhập lại trước đó để hủy việc xóa."
+    "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn sau 30 ngày. Nếu tài khoản có email, hãy đăng nhập bằng email đó trước thời điểm đó để hủy."
   },
   "configPanel": {
     "tabPersona": "Hồ sơ",
     "tabSources": "Nguồn tin",
     "tabPreferences": "Tùy chọn",
-    "privacyOnDevice": "Chủ đề và dữ kiện của bạn được lưu trên thiết bị này. Xử lý trên thiết bị đang bật, nên AI đọc và xếp hạng bài viết của bạn chạy ở đây, không phải trên máy chủ của chúng tôi. Bài viết được dịch và tóm tắt trên máy chủ của chúng tôi trước khi có ai yêu cầu. Khi bạn tải tin tức, chỉ các cụm từ chủ đề của bạn rời khỏi thiết bị. Chúng không mang ID người dùng nào. Chúng tôi lưu chúng trong bộ nhớ đệm, chỉ lập chỉ mục theo văn bản, và xóa sau 14 ngày không dùng. Về bạn, chúng tôi giữ email đăng nhập, trạng thái đăng ký và số bài viết được phân tích mỗi ngày, dùng để áp dụng gói của bạn. Trò chuyện không được lưu. Ngoại lệ duy nhất là bản ghi bạn đính kèm vào yêu cầu bỏ chặn. Nếu bạn không bật sao lưu, đăng xuất hoặc đổi thiết bị sẽ bắt đầu lại persona của bạn từ đầu.",
-    "privacyCloud": "Chủ đề và dữ kiện của bạn được lưu trên thiết bị này. Xử lý trên đám mây bật theo mặc định. Bạn có thể chuyển sang xử lý trên thiết bị tại đây. Dữ liệu của bạn được mã hóa cho enclave xử lý nó và chỉ được giải mã tại đây. Bạn có thể kiểm tra chứng thực của nó tại đây, dù điều đó chưa chặn việc xử lý. Khi bạn tải tin tức, chỉ các cụm từ chủ đề của bạn rời khỏi thiết bị. Chúng không mang ID người dùng nào. Chúng tôi lưu chúng trong bộ nhớ đệm, chỉ lập chỉ mục theo văn bản, và xóa sau 14 ngày không dùng. Về bạn, chúng tôi giữ email đăng nhập, trạng thái đăng ký và số bài viết được phân tích mỗi ngày, dùng để áp dụng gói của bạn. Trò chuyện không được lưu. Ngoại lệ duy nhất là bản ghi bạn đính kèm vào yêu cầu bỏ chặn. Nếu bạn không bật sao lưu, persona của bạn sẽ bắt đầu lại từ đầu.",
+    "privacyOnDevice": "Chủ đề và dữ kiện của bạn được lưu trên thiết bị này. Xử lý trên thiết bị đang bật, nên AI đọc và xếp hạng bài viết của bạn chạy ở đây, không phải trên máy chủ của chúng tôi. Bài viết được dịch và tóm tắt trên máy chủ của chúng tôi trước khi có ai yêu cầu. Khi bạn tải tin tức, chỉ các cụm từ chủ đề của bạn rời khỏi thiết bị. Chúng không mang ID người dùng nào. Chúng tôi lưu chúng trong bộ nhớ đệm, chỉ lập chỉ mục theo văn bản, và xóa sau 14 ngày không dùng. Về bạn, chúng tôi giữ email đăng nhập nếu bạn đã thêm, trạng thái đăng ký và số bài viết được phân tích mỗi ngày, dùng để áp dụng gói của bạn. Nếu bạn dùng Mera không có email, chúng tôi cũng giữ một bản ghi đăng nhập cho điện thoại này cho đến khi bạn xóa tài khoản. Trò chuyện không được lưu. Ngoại lệ duy nhất là bản ghi bạn đính kèm vào yêu cầu bỏ chặn. Nếu bạn không bật sao lưu, đăng xuất hoặc đổi thiết bị sẽ bắt đầu lại persona của bạn từ đầu.",
+    "privacyCloud": "Chủ đề và dữ kiện của bạn được lưu trên thiết bị này. Xử lý trên đám mây bật theo mặc định. Bạn có thể chuyển sang xử lý trên thiết bị tại đây. Dữ liệu của bạn được mã hóa cho enclave xử lý nó và chỉ được giải mã tại đây. Bạn có thể kiểm tra chứng thực của nó tại đây, dù điều đó chưa chặn việc xử lý. Khi bạn tải tin tức, chỉ các cụm từ chủ đề của bạn rời khỏi thiết bị. Chúng không mang ID người dùng nào. Chúng tôi lưu chúng trong bộ nhớ đệm, chỉ lập chỉ mục theo văn bản, và xóa sau 14 ngày không dùng. Về bạn, chúng tôi giữ email đăng nhập nếu bạn đã thêm, trạng thái đăng ký và số bài viết được phân tích mỗi ngày, dùng để áp dụng gói của bạn. Nếu bạn dùng Mera không có email, chúng tôi cũng giữ một bản ghi đăng nhập cho điện thoại này cho đến khi bạn xóa tài khoản. Trò chuyện không được lưu. Ngoại lệ duy nhất là bản ghi bạn đính kèm vào yêu cầu bỏ chặn. Nếu bạn không bật sao lưu, persona của bạn sẽ bắt đầu lại từ đầu.",
     "privacyPolicy": "Chính sách bảo mật",
     "privacyNoticeTitle": "Quyền riêng tư của bạn",
     "updatingTopics": "Đang cập nhật chủ đề... {{completed}}/{{total}}",
@@ -1807,7 +1824,13 @@
     "errorDescription": "Vui lòng kiểm tra kết nối của bạn và thử lại.",
     "retry": "Thử lại",
     "welcomeTitle": "Chào mừng bạn đến với Mera",
-    "welcomeBody": "Nhấn \"Đồng ý và tiếp tục\" để chấp nhận Điều khoản dịch vụ và Chính sách quyền riêng tư của chúng tôi."
+    "welcomeBody": "Nhấn \"Đồng ý và tiếp tục\" để chấp nhận Điều khoản dịch vụ và Chính sách quyền riêng tư của chúng tôi.",
+    "deviceNotice": {
+      "appAttest": "Không cần email. Mera đăng nhập cho bạn bằng điện thoại này. Apple xác nhận đây là ứng dụng Mera thật trên iPhone thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập khi bạn còn tài khoản.",
+      "playIntegrity": "Không cần email. Mera đăng nhập cho bạn bằng điện thoại này. Google xác nhận đây là ứng dụng Mera thật trên điện thoại Android thật, để chặn tài khoản giả. Chúng tôi giữ một bản ghi đăng nhập, không phải ID điện thoại của bạn.",
+      "generic": "Không cần email. Mera đăng nhập cho bạn bằng điện thoại này. Chúng tôi giữ một bản ghi đăng nhập cho điện thoại này khi bạn còn tài khoản."
+    },
+    "whatMeraKeeps": "Mera giữ những gì"
   },
   "tutorials": {
     "entryRow": "Cách Mera hoạt động",
@@ -2073,7 +2096,7 @@
             "body": "Ba điều, và đó là danh sách.",
             "steps": {
               "0": "Các cụm chủ đề ngắn, vì vậy có cái gì đó để đối sánh những câu chuyện với.",
-              "1": "Địa chỉ email của bạn và gói nào bạn đang bật.",
+              "1": "Cách bạn đăng nhập, bằng email hoặc bằng điện thoại này, và bạn đang dùng gói nào.",
               "2": "Số lượng câu chuyện được phân tích hôm nay, để giữ gói đó trung thực."
             },
             "ask": "Ứng dụng gửi những gì cho máy chủ của bạn?"
@@ -2088,11 +2111,11 @@
           },
           "on-device-option": {
             "headline": "Trên thiết bị, nếu bạn muốn",
-            "body": "Trong Cài đặt, Mera Protocol bạn có thể di chuyển xử lý vào điện thoại này, và sau đó không có gì về bạn rời đi. Nó tải xuống một mô hình trước, muốn một điện thoại khá gần đây, và đáng chú ý chậm hơn, đó chính xác là lý do tại sao nó không phải là mặc định."
+            "body": "Trong Cài đặt → Mera Protocol bạn có thể chuyển việc xử lý sang điện thoại này. Khi đó AI đọc tin tức cho bạn chạy tại đây thay vì trên đám mây. Các cụm từ chủ đề vẫn được gửi đi để lấy tin, và việc đăng nhập vẫn cần email của bạn hoặc điện thoại này. Trước tiên nó tải một mô hình, cần điện thoại khá mới và chậm hơn rõ rệt, chính vì vậy nó không phải là mặc định."
           },
           "what-we-keep": {
             "headline": "Những gì chúng tôi giữ lại",
-            "body": "Email đăng nhập của bạn. Gói nào bạn đang bật. Số lượng câu chuyện được phân tích mỗi ngày. Các cụm chủ đề được lưu đệm bằng văn bản của chúng, với không có gì ghi lại ai đã hỏi, và bị loại bỏ sau mười bốn ngày không sử dụng.",
+            "body": "Email đăng nhập của bạn, nếu bạn đã thêm. Bạn đang dùng gói nào. Số tin được phân tích mỗi ngày. Nếu bạn dùng Mera không có email, một bản ghi đăng nhập cho điện thoại này, bị xóa cùng tài khoản của bạn. Các cụm từ chủ đề được lưu đệm chỉ theo văn bản, không ghi lại ai đã yêu cầu, và bị xóa sau mười bốn ngày không dùng.",
             "ask": "Mera lưu trữ những gì về tôi trên máy chủ của nó?"
           }
         }

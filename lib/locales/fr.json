@@ -91,6 +91,11 @@
       "body": "Se connecter sans e-mail ouvre le compte propre à ce téléphone, et non celui que vous utilisiez. Tout ce qui est enregistré sur ce téléphone pour ce compte sera effacé. Cette action est irréversible. Votre autre compte et son abonnement restent intacts, et vous pourrez vous y reconnecter plus tard.",
       "continue": "Continuer sans e-mail",
       "useEmail": "Retour"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Votre compte est lié à ce téléphone. Si vous supprimez Mera ou perdez le téléphone, vous repartirez avec un nouveau compte. Sauvegarde et restauration, dans Paramètres, peut conserver vos données.",
+      "reset": "Votre compte est lié à ce téléphone. Si vous réinitialisez ou perdez le téléphone, vous repartirez avec un nouveau compte. Sauvegarde et restauration, dans Paramètres, peut conserver vos données.",
+      "previousUser": "Ouvre le compte propre à ce téléphone, distinct de {{email}}."
     }
   },
   "account": {
@@ -568,7 +573,7 @@
     "viewingHistoryModalDescription": "Efface le journal local des articles que vous avez ouverts. La carte « Publications que vous lisez » dans l'onglet Sources et l'historique par publication seront réinitialisés. Rien d'autre n'est affecté et aucune donnée serveur n'est touchée (ces données n'ont jamais quitté votre appareil).",
     "wipeAllTitle": "Effacer toutes les données",
     "wipeAllDescription": "Réinitialiser tout sauf votre compte",
-    "wipeAllModalDescription": "Efface toutes vos données : cache du fil, faits, sujets, suggestions, paramètres de l'application, historique de lecture. Vous restez connecté ; votre compte est conservé.",
+    "wipeAllModalDescription": "Efface toutes les données stockées sur cet appareil : cache du fil, faits, sujets, paramètres de l'application et historique de lecture. Vous restez connecté et votre compte est conservé. Ce téléphone peut toujours vous connecter sans e-mail. Rien n'est supprimé de nos serveurs.",
     "deletedTitle": "Données supprimées",
     "deletedDescription": "Les données sélectionnées ont été effacées avec succès.",
     "errorTitle": "Erreur",
@@ -582,7 +587,19 @@
     "exportHistorySubject": "Mon historique de lecture Mera (JSON)",
     "exporting": "Export en cours...",
     "exportHistoryEmptyTitle": "Rien à exporter pour l'instant",
-    "exportHistoryEmptyDescription": "Vous n'avez lu aucun article au cours des 30 derniers jours."
+    "exportHistoryEmptyDescription": "Vous n'avez lu aucun article au cours des 30 derniers jours.",
+    "keeps": {
+      "title": "Ce que Mera conserve sur vous",
+      "emailAndPlan": "Votre e-mail et votre forfait. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
+      "plan": "Votre forfait. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
+      "emailIfAdded": "Votre e-mail si vous en avez ajouté un, et votre forfait. Les données de facturation de l'App Store ou de Google Play sont conservées aussi longtemps que la loi l'exige.",
+      "signInRecordIos": "Une trace de connexion pour ce téléphone, supprimée avec votre compte. La vérification d'Apple indiquant qu'il s'agit de la vraie app n'est pas conservée.",
+      "signInRecordAndroid": "Une trace de connexion pour ce téléphone, pas l'identifiant de votre téléphone, supprimée avec votre compte. La vérification de Google indiquant qu'il s'agit de la vraie app n'est pas conservée.",
+      "signInRecordGeneric": "Sans e-mail, une trace de connexion pour ce téléphone, supprimée avec votre compte. La vérification d'Apple ou de Google indiquant qu'il s'agit de la vraie app n'est pas conservée.",
+      "usage": "Un décompte quotidien d'articles analysés, pour appliquer la limite de votre forfait. Les connexions ne gardent ni adresse IP ni détails du navigateur.",
+      "topics": "Les expressions de sujet, stockées par leur seul texte sans rien qui les relie à vous, et supprimées après 14 jours sans utilisation.",
+      "privacyLink": "Lire la politique de confidentialité"
+    }
   },
   "preferences": {
     "manageSettings": "Gérez les paramètres de votre application et votre compte",
@@ -621,18 +638,18 @@
     "contentPolicy": "Politique de contenu",
     "faq": "FAQ",
     "reportBug": "Signaler un bug",
-    "deleteAccountConfirmGrace": "Votre compte sera programmé pour la suppression, avec une période de grâce de 30 jours. Connectez-vous à nouveau dans ces 30 jours et la suppression est automatiquement annulée.",
+    "deleteAccountConfirmGrace": "Votre compte sera programmé pour suppression, avec un délai de grâce de 30 jours. Si votre compte a un e-mail, connectez-vous avec dans ces 30 jours pour annuler. Un compte sans e-mail ne peut plus être connecté, sa suppression ne peut donc pas être annulée.",
     "deleteAccountWarningGrace": "⚠️ Après 30 jours, toutes vos données sont définitivement supprimées. Cette action est irréversible.",
     "finalConfirmationBodyGrace": "Cela programme la suppression permanente de votre compte dans 30 jours.",
     "accountDeletionScheduledTitle": "Suppression programmée",
-    "accountDeletionScheduledDescription": "Votre compte sera définitivement supprimé dans 30 jours. Connectez-vous à nouveau avant cela pour annuler la suppression."
+    "accountDeletionScheduledDescription": "Votre compte sera définitivement supprimé dans 30 jours. S'il a un e-mail, connectez-vous avec avant cette date pour annuler."
   },
   "configPanel": {
     "tabPersona": "Persona",
     "tabSources": "Sources",
     "tabPreferences": "Préférences",
-    "privacyOnDevice": "Vos sujets et faits sont stockés sur cet appareil. Le traitement sur l'appareil est activé, donc l'IA qui lit et classe vos articles s'exécute ici, pas sur nos serveurs. Les articles sont traduits et résumés sur nos serveurs avant que quiconque les demande. Quand vous récupérez des actualités, seules vos expressions de sujet quittent l'appareil. Elles ne portent aucun identifiant utilisateur. Nous les mettons en cache, indexées par le texte seul, et les supprimons après 14 jours sans usage. À votre sujet, nous conservons votre e-mail de connexion, votre statut d'abonnement et un décompte quotidien d'articles analysés, utilisé pour appliquer votre forfait. Les conversations ne sont pas enregistrées. La seule exception est une transcription que vous joignez à une demande de déblocage. Sans sauvegarde activée, la déconnexion ou un changement d'appareil fait repartir votre persona de zéro.",
-    "privacyCloud": "Vos sujets et faits sont stockés sur cet appareil. Le traitement cloud est activé par défaut. Vous pouvez passer ici au traitement sur l'appareil. Vos données sont chiffrées pour l'enclave qui les traite et déchiffrées ici seulement. Vous pouvez vérifier son attestation ici, même si cela ne bloque pas encore le traitement. Quand vous récupérez des actualités, seules vos expressions de sujet quittent l'appareil. Elles ne portent aucun identifiant utilisateur. Nous les mettons en cache, indexées par le texte seul, et les supprimons après 14 jours sans usage. À votre sujet, nous conservons votre e-mail de connexion, votre statut d'abonnement et un décompte quotidien d'articles analysés, utilisé pour appliquer votre forfait. Les conversations ne sont pas enregistrées. La seule exception est une transcription que vous joignez à une demande de déblocage. Sans sauvegarde activée, votre persona repart de zéro.",
+    "privacyOnDevice": "Vos sujets et faits sont stockés sur cet appareil. Le traitement sur l'appareil est activé, donc l'IA qui lit et classe vos articles s'exécute ici, pas sur nos serveurs. Les articles sont traduits et résumés sur nos serveurs avant que quiconque les demande. Quand vous récupérez des actualités, seules vos expressions de sujet quittent l'appareil. Elles ne portent aucun identifiant utilisateur. Nous les mettons en cache, indexées par le texte seul, et les supprimons après 14 jours sans usage. À votre sujet, nous conservons votre e-mail de connexion si vous en avez ajouté un, votre statut d'abonnement et un décompte quotidien d'articles analysés, utilisé pour appliquer votre forfait. Si vous utilisez Mera sans e-mail, nous conservons aussi une trace de connexion pour ce téléphone jusqu'à la suppression de votre compte. Les conversations ne sont pas enregistrées. La seule exception est une transcription que vous joignez à une demande de déblocage. Sans sauvegarde activée, la déconnexion ou un changement d'appareil fait repartir votre persona de zéro.",
+    "privacyCloud": "Vos sujets et faits sont stockés sur cet appareil. Le traitement cloud est activé par défaut. Vous pouvez passer ici au traitement sur l'appareil. Vos données sont chiffrées pour l'enclave qui les traite et déchiffrées ici seulement. Vous pouvez vérifier son attestation ici, même si cela ne bloque pas encore le traitement. Quand vous récupérez des actualités, seules vos expressions de sujet quittent l'appareil. Elles ne portent aucun identifiant utilisateur. Nous les mettons en cache, indexées par le texte seul, et les supprimons après 14 jours sans usage. À votre sujet, nous conservons votre e-mail de connexion si vous en avez ajouté un, votre statut d'abonnement et un décompte quotidien d'articles analysés, utilisé pour appliquer votre forfait. Si vous utilisez Mera sans e-mail, nous conservons aussi une trace de connexion pour ce téléphone jusqu'à la suppression de votre compte. Les conversations ne sont pas enregistrées. La seule exception est une transcription que vous joignez à une demande de déblocage. Sans sauvegarde activée, votre persona repart de zéro.",
     "privacyPolicy": "Politique de confidentialité",
     "privacyNoticeTitle": "Votre confidentialité",
     "updatingTopics": "Mise à jour des sujets... {{completed}}/{{total}}",
@@ -1813,7 +1830,13 @@
     "errorDescription": "Veuillez vérifier votre connexion et réessayer.",
     "retry": "Réessayer",
     "welcomeTitle": "Bienvenue sur Mera",
-    "welcomeBody": "Touchez \"Accepter et continuer\" pour accepter nos Conditions d'utilisation et notre Politique de confidentialité."
+    "welcomeBody": "Touchez \"Accepter et continuer\" pour accepter nos Conditions d'utilisation et notre Politique de confidentialité.",
+    "deviceNotice": {
+      "appAttest": "Aucun e-mail nécessaire. Mera vous connecte avec ce téléphone. Apple confirme qu'il s'agit de la vraie app Mera sur un vrai iPhone, pour bloquer les faux comptes. Nous gardons une trace de connexion tant que vous avez un compte.",
+      "playIntegrity": "Aucun e-mail nécessaire. Mera vous connecte avec ce téléphone. Google confirme qu'il s'agit de la vraie app Mera sur un vrai téléphone Android, pour bloquer les faux comptes. Nous gardons une trace de connexion, pas l'identifiant de votre téléphone.",
+      "generic": "Aucun e-mail nécessaire. Mera vous connecte avec ce téléphone. Nous gardons une trace de connexion pour ce téléphone tant que vous avez un compte."
+    },
+    "whatMeraKeeps": "Ce que Mera conserve"
   },
   "tutorials": {
     "entryRow": "Comment fonctionne Mera",
@@ -2079,7 +2102,7 @@
             "body": "Trois choses, et c'est la liste.",
             "steps": {
               "0": "De courtes phrases de sujet, donc il y a quelque chose pour correspondre aux histoires.",
-              "1": "Votre adresse e-mail et le forfait que vous utiliser.",
+              "1": "Votre façon de vous connecter, par e-mail ou avec ce téléphone, et le forfait que vous avez.",
               "2": "Un compte de combien d'histoires ont été analysées aujourd'hui, pour garder ce plan honnête."
             },
             "ask": "Qu'est-ce que l'application envoie à vos serveurs ?"
@@ -2094,11 +2117,11 @@
           },
           "on-device-option": {
             "headline": "Sur l'appareil, si vous le souhaitez",
-            "body": "Dans Paramètres, Mera Protocol, vous pouvez déplacer le traitement sur ce téléphone, et alors rien de vous ne quitte du tout. Il télécharge d'abord un modèle, veut un téléphone assez récent, et est sensiblement plus lent, ce qui est exactement pourquoi ce n'est pas la valeur par défaut."
+            "body": "Dans Paramètres → Mera Protocol, vous pouvez déplacer le traitement sur ce téléphone. L'IA qui lit vos actualités tourne alors ici plutôt que dans le cloud. Vos expressions de sujet partent toujours pour récupérer les actualités, et la connexion demande toujours votre e-mail ou ce téléphone. Un modèle est d'abord téléchargé, il faut un téléphone assez récent et c'est nettement plus lent, c'est justement pour cela que ce n'est pas le réglage par défaut."
           },
           "what-we-keep": {
             "headline": "Ce que nous gardons",
-            "body": "Votre e-mail de connexion. Le forfait que vous utiliser. Un compte par jour des histoires analysées. Les phrases de sujet sont mises en cache par leur texte seul, sans rien enregistrant qui les a demandées, et supprimées après quatorze jours sans utilisation.",
+            "body": "Votre e-mail de connexion, si vous en avez ajouté un. Le forfait que vous avez. Un décompte quotidien des articles analysés. Si vous utilisez Mera sans e-mail, une trace de connexion pour ce téléphone, supprimée avec votre compte. Les expressions de sujet sont mises en cache par leur seul texte, sans rien qui indique qui les a demandées, et supprimées après quatorze jours sans utilisation.",
             "ask": "Qu'est-ce que Mera stocke de moi sur ses serveurs ?"
           }
         }

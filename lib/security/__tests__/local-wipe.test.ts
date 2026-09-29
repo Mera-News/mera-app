@@ -106,7 +106,7 @@ describe('wipeAllLocalUserData — the complete list', () => {
         // recovery sever them, via clearDeviceAuthCredentials().
         expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_appattest_key_id');
         expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_device_attest_device_id');
-        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_device_ref');
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_appattest_key_proven');
 
         expect(mockAsyncRemove).toHaveBeenCalledWith('mera.cycle.capabilityToken');
         expect(mockLogoutRevenueCat).toHaveBeenCalled();

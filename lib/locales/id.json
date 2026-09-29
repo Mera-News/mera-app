@@ -91,6 +91,11 @@
       "body": "Masuk tanpa email akan membuka akun milik ponsel ini, bukan akun yang sedang Anda gunakan. Semua yang tersimpan di ponsel ini untuk akun tersebut akan dihapus. Tindakan ini tidak dapat dibatalkan. Akun Anda yang lain dan paketnya tetap aman, dan Anda dapat masuk kembali ke akun itu nanti.",
       "continue": "Lanjutkan tanpa email",
       "useEmail": "Kembali"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Akun Anda terikat ke ponsel ini. Jika Anda menghapus Mera atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda.",
+      "reset": "Akun Anda terikat ke ponsel ini. Jika Anda mereset atau kehilangan ponsel, Anda akan memulai akun baru. Cadangkan dan pulihkan di Pengaturan bisa menyimpan data Anda.",
+      "previousUser": "Membuka akun milik ponsel ini, terpisah dari {{email}}."
     }
   },
   "account": {
@@ -563,7 +568,7 @@
     "viewingHistoryModalDescription": "Menghapus log lokal artikel yang pernah Anda buka. Kartu \"Publikasi yang Anda baca\" di tab Sumber dan riwayat per-publikasi akan direset menjadi kosong. Tidak ada hal lain yang terpengaruh, dan tidak ada data server yang disentuh (data ini tidak pernah meninggalkan perangkat Anda).",
     "wipeAllTitle": "Hapus semua data",
     "wipeAllDescription": "Reset segalanya kecuali akun Anda",
-    "wipeAllModalDescription": "Menghapus setiap data Anda: cache feed, fakta, topik, saran, pengaturan aplikasi, riwayat bacaan. Anda tetap masuk; akun Anda sendiri tetap disimpan.",
+    "wipeAllModalDescription": "Menghapus semua data yang tersimpan di perangkat ini: cache feed, fakta, topik, pengaturan aplikasi, dan riwayat bacaan. Anda tetap masuk dan akun Anda tetap disimpan. Ponsel ini masih bisa membuat Anda masuk tanpa email. Tidak ada yang dihapus dari server kami.",
     "deletedTitle": "Data Dihapus",
     "deletedDescription": "Data yang dipilih telah berhasil dihapus.",
     "errorTitle": "Kesalahan",
@@ -577,7 +582,19 @@
     "exportHistorySubject": "Riwayat bacaan Mera saya (JSON)",
     "exporting": "Mengekspor…",
     "exportHistoryEmptyTitle": "Belum ada yang akan diekspor",
-    "exportHistoryEmptyDescription": "Anda belum membaca artikel apa pun dalam 30 hari terakhir."
+    "exportHistoryEmptyDescription": "Anda belum membaca artikel apa pun dalam 30 hari terakhir.",
+    "keeps": {
+      "title": "Yang disimpan Mera tentang Anda",
+      "emailAndPlan": "Email dan paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
+      "plan": "Paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
+      "emailIfAdded": "Email Anda jika Anda menambahkannya, dan paket Anda. Catatan tagihan dari App Store atau Google Play disimpan selama diwajibkan hukum.",
+      "signInRecordIos": "Catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple bahwa ini aplikasi asli tidak disimpan.",
+      "signInRecordAndroid": "Catatan masuk untuk ponsel ini, bukan ID ponsel Anda, dihapus bersama akun Anda. Pemeriksaan Google bahwa ini aplikasi asli tidak disimpan.",
+      "signInRecordGeneric": "Tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Pemeriksaan Apple atau Google bahwa ini aplikasi asli tidak disimpan.",
+      "usage": "Hitungan harian artikel yang dianalisis, untuk menerapkan batas paket Anda. Proses masuk tidak menyimpan alamat IP atau detail browser.",
+      "topics": "Frasa topik, disimpan hanya berdasarkan teksnya tanpa apa pun yang mengaitkannya dengan Anda, dan dihapus setelah 14 hari tidak dipakai.",
+      "privacyLink": "Baca kebijakan privasi"
+    }
   },
   "preferences": {
     "manageSettings": "Kelola pengaturan aplikasi dan akun Anda",
@@ -616,18 +633,18 @@
     "contentPolicy": "Kebijakan Konten",
     "faq": "FAQ",
     "reportBug": "Laporkan bug",
-    "deleteAccountConfirmGrace": "Akun Anda akan dijadwalkan untuk penghapusan, dengan masa tenggang 30 hari. Masuk kembali dalam 30 hari tersebut dan penghapusan akan otomatis dibatalkan.",
+    "deleteAccountConfirmGrace": "Akun Anda akan dijadwalkan untuk dihapus, dengan masa tenggang 30 hari. Jika akun Anda punya email, masuklah dengan email itu dalam 30 hari tersebut untuk membatalkan. Akun tanpa email tidak bisa dimasuki lagi, jadi penghapusannya tidak bisa dibatalkan.",
     "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, semua data Anda dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.",
     "finalConfirmationBodyGrace": "Ini menjadwalkan akun Anda untuk penghapusan permanen dalam 30 hari.",
     "accountDeletionScheduledTitle": "Penghapusan Dijadwalkan",
-    "accountDeletionScheduledDescription": "Akun Anda akan dihapus secara permanen dalam 30 hari. Masuk kembali sebelum saat itu untuk membatalkan penghapusan."
+    "accountDeletionScheduledDescription": "Akun Anda akan dihapus permanen dalam 30 hari. Jika akun punya email, masuklah dengan email itu sebelumnya untuk membatalkan."
   },
   "configPanel": {
     "tabPersona": "Persona",
     "tabSources": "Sumber",
     "tabPreferences": "Preferensi",
-    "privacyOnDevice": "Topik dan fakta Anda disimpan di perangkat ini. Pemrosesan di perangkat aktif, jadi AI yang membaca dan memeringkat artikel Anda berjalan di sini, bukan di server kami. Artikel diterjemahkan dan diringkas di server kami sebelum ada yang memintanya. Saat Anda mengambil berita, hanya frasa topik Anda yang keluar dari perangkat. Frasa itu tidak membawa ID pengguna. Kami menyimpannya dalam cache, diindeks hanya berdasarkan teks, dan menghapusnya setelah 14 hari tidak digunakan. Tentang Anda, kami menyimpan email masuk, status langganan, dan hitungan harian artikel yang dianalisis, yang dipakai untuk menerapkan paket Anda. Obrolan tidak disimpan. Satu-satunya pengecualian adalah transkrip yang Anda lampirkan pada permintaan pembukaan blokir. Jika Anda tidak mengaktifkan cadangan, keluar akun atau berganti perangkat memulai persona Anda dari awal.",
-    "privacyCloud": "Topik dan fakta Anda disimpan di perangkat ini. Pemrosesan cloud aktif secara bawaan. Anda dapat beralih ke pemrosesan di perangkat di sini. Data Anda dienkripsi untuk enklave yang memprosesnya dan hanya didekripsi di sini. Anda dapat memeriksa atestasinya di sini, meskipun hal itu belum memblokir pemrosesan. Saat Anda mengambil berita, hanya frasa topik Anda yang keluar dari perangkat. Frasa itu tidak membawa ID pengguna. Kami menyimpannya dalam cache, diindeks hanya berdasarkan teks, dan menghapusnya setelah 14 hari tidak digunakan. Tentang Anda, kami menyimpan email masuk, status langganan, dan hitungan harian artikel yang dianalisis, yang dipakai untuk menerapkan paket Anda. Obrolan tidak disimpan. Satu-satunya pengecualian adalah transkrip yang Anda lampirkan pada permintaan pembukaan blokir. Jika Anda tidak mengaktifkan cadangan, persona Anda dimulai ulang dari awal.",
+    "privacyOnDevice": "Topik dan fakta Anda disimpan di perangkat ini. Pemrosesan di perangkat aktif, jadi AI yang membaca dan memeringkat artikel Anda berjalan di sini, bukan di server kami. Artikel diterjemahkan dan diringkas di server kami sebelum ada yang memintanya. Saat Anda mengambil berita, hanya frasa topik Anda yang keluar dari perangkat. Frasa itu tidak membawa ID pengguna. Kami menyimpannya dalam cache, diindeks hanya berdasarkan teks, dan menghapusnya setelah 14 hari tidak digunakan. Tentang Anda, kami menyimpan email masuk jika Anda menambahkannya, status langganan, dan hitungan harian artikel yang dianalisis, yang dipakai untuk menerapkan paket Anda. Jika Anda memakai Mera tanpa email, kami juga menyimpan catatan masuk untuk ponsel ini sampai Anda menghapus akun. Obrolan tidak disimpan. Satu-satunya pengecualian adalah transkrip yang Anda lampirkan pada permintaan pembukaan blokir. Jika Anda tidak mengaktifkan cadangan, keluar akun atau berganti perangkat memulai persona Anda dari awal.",
+    "privacyCloud": "Topik dan fakta Anda disimpan di perangkat ini. Pemrosesan cloud aktif secara bawaan. Anda dapat beralih ke pemrosesan di perangkat di sini. Data Anda dienkripsi untuk enklave yang memprosesnya dan hanya didekripsi di sini. Anda dapat memeriksa atestasinya di sini, meskipun hal itu belum memblokir pemrosesan. Saat Anda mengambil berita, hanya frasa topik Anda yang keluar dari perangkat. Frasa itu tidak membawa ID pengguna. Kami menyimpannya dalam cache, diindeks hanya berdasarkan teks, dan menghapusnya setelah 14 hari tidak digunakan. Tentang Anda, kami menyimpan email masuk jika Anda menambahkannya, status langganan, dan hitungan harian artikel yang dianalisis, yang dipakai untuk menerapkan paket Anda. Jika Anda memakai Mera tanpa email, kami juga menyimpan catatan masuk untuk ponsel ini sampai Anda menghapus akun. Obrolan tidak disimpan. Satu-satunya pengecualian adalah transkrip yang Anda lampirkan pada permintaan pembukaan blokir. Jika Anda tidak mengaktifkan cadangan, persona Anda dimulai ulang dari awal.",
     "privacyPolicy": "Kebijakan Privasi",
     "privacyNoticeTitle": "Privasi Anda",
     "updatingTopics": "Memperbarui topik... {{completed}}/{{total}}",
@@ -1806,7 +1823,13 @@
     "errorDescription": "Silakan periksa koneksi Anda dan coba lagi.",
     "retry": "Coba lagi",
     "welcomeTitle": "Selamat datang di Mera",
-    "welcomeBody": "Ketuk \"Setuju dan lanjutkan\" untuk menerima Ketentuan Layanan dan Kebijakan Privasi kami."
+    "welcomeBody": "Ketuk \"Setuju dan lanjutkan\" untuk menerima Ketentuan Layanan dan Kebijakan Privasi kami.",
+    "deviceNotice": {
+      "appAttest": "Tanpa email. Mera membuat Anda masuk dengan ponsel ini. Apple memastikan ini aplikasi Mera asli di iPhone asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk selama Anda punya akun.",
+      "playIntegrity": "Tanpa email. Mera membuat Anda masuk dengan ponsel ini. Google memastikan ini aplikasi Mera asli di ponsel Android asli, untuk menghentikan akun palsu. Kami menyimpan catatan masuk, bukan ID ponsel Anda.",
+      "generic": "Tanpa email. Mera membuat Anda masuk dengan ponsel ini. Kami menyimpan catatan masuk untuk ponsel ini selama Anda punya akun."
+    },
+    "whatMeraKeeps": "Yang disimpan Mera"
   },
   "tutorials": {
     "entryRow": "Cara kerja Mera",
@@ -2072,7 +2095,7 @@
             "body": "Tiga hal, dan itulah daftarnya.",
             "steps": {
               "0": "Frasa topik pendek, jadi ada sesuatu untuk mencocokkan cerita.",
-              "1": "Alamat email Anda dan paket mana yang Anda ikuti.",
+              "1": "Cara Anda masuk, lewat email atau ponsel ini, dan paket yang Anda pakai.",
               "2": "Hitungan berapa banyak cerita yang dianalisis hari ini, untuk menjaga paket itu jujur."
             },
             "ask": "Apa yang dikirim aplikasi ke server Anda?"
@@ -2087,11 +2110,11 @@
           },
           "on-device-option": {
             "headline": "Di perangkat, jika Anda menginginkannya",
-            "body": "Di Pengaturan → Mera Protocol Anda dapat memindahkan pemrosesan ke ponsel ini, dan kemudian tidak ada apa pun tentang Anda yang pergi. Itu mengunduh model terlebih dahulu, menginginkan ponsel yang cukup baru, dan terlihat lebih lambat secara nyata, yang persis mengapa itu bukan default."
+            "body": "Di Pengaturan → Mera Protocol Anda bisa memindahkan pemrosesan ke ponsel ini. Lalu AI yang membaca berita Anda berjalan di sini, bukan di cloud. Frasa topik Anda tetap dikirim untuk mengambil berita, dan untuk masuk tetap perlu email Anda atau ponsel ini. Model diunduh lebih dulu, butuh ponsel yang cukup baru, dan terasa lebih lambat, justru karena itu ini bukan pilihan default."
           },
           "what-we-keep": {
             "headline": "Apa yang kami simpan",
-            "body": "Email login Anda. Paket mana yang Anda ikuti. Hitungan per hari cerita yang dianalisis. Frasa topik disimpan dalam cache oleh teks mereka saja, tanpa apa pun mencatat siapa yang memintanya, dan dijatuhkan setelah empat belas hari tidak digunakan.",
+            "body": "Email masuk Anda, jika Anda menambahkannya. Paket yang Anda pakai. Hitungan harian cerita yang dianalisis. Jika Anda memakai Mera tanpa email, catatan masuk untuk ponsel ini, dihapus bersama akun Anda. Frasa topik disimpan di cache hanya berdasarkan teksnya, tanpa catatan siapa yang memintanya, dan dihapus setelah empat belas hari tidak dipakai.",
             "ask": "Apa yang disimpan Mera tentang saya di servernya?"
           }
         }

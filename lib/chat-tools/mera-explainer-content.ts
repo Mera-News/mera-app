@@ -84,7 +84,9 @@ The gap between a fact and a topic is the whole point. "Lives in Jordaan, Amster
 Two honest caveats. First, chat with Mera is a separate thing from the topic payload: on the cloud path your messages ARE sent for the AI to process, encrypted, and discarded afterwards. Ask about encryption for how that works. Second, switching devices or logging out means rebuilding your profile from scratch, precisely because there is no server-side copy to restore.`,
 
   // ---------------------------------------------------------------------------
-  privacy_what_we_store: `Tied to your account, Mera's servers hold a deliberately short list: the email address you sign in with, your sign-in session records, your subscription status and entitlement, a per-day count of how many articles were analysed for your account (this is how a plan's daily limit is enforced), and the billing records the app stores send when your subscription changes. Billing records are kept for 7 years where Dutch law requires it; the rest lives until you delete your account.
+  privacy_what_we_store: `Tied to your account, Mera's servers hold a deliberately short list: the email address you sign in with, if you added one, your sign-in session records (no IP address or browser details are kept on them), your subscription status and entitlement, a per-day count of how many articles were analysed for your account (this is how a plan's daily limit is enforced), and the billing records the app stores send when your subscription changes. Billing records are kept for 7 years where Dutch law requires it. The rest lives until you delete your account, apart from the time limits listed at the end.
+
+If you use Mera without an email, the phone itself is how you sign in, so Mera keeps a sign-in record for it: on iPhone, the App Attest key Apple creates for this app install; on Android, a keyed one-way hash of the Android ID, never the ID itself. The Apple or Google check that this is the genuine app on a real device is verified at sign-in and not kept. The record exists to let you sign in without email, to confirm the real app on a real device, and to limit how fast accounts can be created. When the account is deleted, the device record goes with it, so nothing about the phone remains. It also means an account without email lives on that phone: lose the phone, or reinstall on iPhone, and the account cannot be reached unless an email was added.
 
 One exception, stated explicitly: if the in-app assistant's safety guardrail blocks you and you choose to submit a request to be unblocked, the transcript you elect to attach is sent and stored so a person can review the appeal. It happens only on your own action, never during ordinary use.
 
@@ -92,7 +94,7 @@ The topic phrases you send ARE stored, and it matters exactly how. They go into 
 
 Not stored on Mera's servers at all: your personal facts (beyond the sign-in email), interest profiles, reading history, article-open or dismissal history, which articles became notifications, the reasoning behind them, AI inputs and outputs, location data, contacts, or any browsing outside Mera.
 
-Two retention windows are still unbounded and are being worked on: submitted unblock transcripts, and per-day analysis counts. Request timestamps are kept 90 days, crash logs 30.`,
+One retention window is still unbounded and is being worked on: submitted unblock transcripts. Per-day analysis counts are kept 90 days, and an account without email that stays inactive for 12 months is deleted unless it is on a paid plan. Request timestamps are kept 90 days, crash logs 30.`,
 
   // ---------------------------------------------------------------------------
   encryption_and_inference: `Relevance scoring is real AI work, and it runs in one of two places, your choice, subject to what your phone supports.

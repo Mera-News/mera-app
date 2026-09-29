@@ -91,6 +91,11 @@
       "body": "Logowanie bez e-maila otwiera własne konto tego telefonu, a nie dotychczasowe konto. Wszystko, co zapisano na tym telefonie dla tamtego konta, zostanie usunięte. Nie można tego cofnąć. Twoje drugie konto i jego plan pozostają bezpieczne, a później możesz się na nie ponownie zalogować.",
       "continue": "Kontynuuj bez e-maila",
       "useEmail": "Wróć"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Twoje konto jest powiązane z tym telefonem. Jeśli usuniesz Mera lub zgubisz telefon, zaczniesz od nowego konta. Kopia zapasowa i przywracanie w Ustawieniach może zachować Twoje dane.",
+      "reset": "Twoje konto jest powiązane z tym telefonem. Jeśli zresetujesz lub zgubisz telefon, zaczniesz od nowego konta. Kopia zapasowa i przywracanie w Ustawieniach może zachować Twoje dane.",
+      "previousUser": "Otwiera własne konto tego telefonu, oddzielne od {{email}}."
     }
   },
   "account": {
@@ -575,7 +580,7 @@
     "viewingHistoryModalDescription": "Czyści lokalny dziennik artykułów, które otworzyłeś. Karta \"Publikacje, które czytasz\" w zakładce Źródła oraz historia poszczególnych publikacji zostaną zresetowane do zera. Nic innego nie jest dotknięte, a żadne dane serwera nie są zmieniane (te dane nigdy nie opuściły Twojego urządzenia).",
     "wipeAllTitle": "Wyczyść wszystkie dane",
     "wipeAllDescription": "Zresetuj wszystko oprócz swojego konta",
-    "wipeAllModalDescription": "Czyści wszystkie Twoje dane: pamięć podręczną kanału, fakty, tematy, sugestie, ustawienia aplikacji, historię czytania. Pozostajesz zalogowany; samo konto jest zachowane.",
+    "wipeAllModalDescription": "Usuwa wszystkie dane zapisane na tym urządzeniu: pamięć podręczną kanału, fakty, tematy, ustawienia aplikacji i historię czytania. Pozostajesz zalogowany, a Twoje konto zostaje. Ten telefon nadal może Cię zalogować bez e-maila. Nic nie jest usuwane z naszych serwerów.",
     "deletedTitle": "Dane usunięte",
     "deletedDescription": "Wybrane dane zostały pomyślnie wyczyszczone.",
     "errorTitle": "Błąd",
@@ -589,7 +594,19 @@
     "exportHistorySubject": "Moja historia czytania Mera (JSON)",
     "exporting": "Eksportowanie…",
     "exportHistoryEmptyTitle": "Nic do eksportowania",
-    "exportHistoryEmptyDescription": "Nie przeczytałeś żadnych artykułów w ciągu ostatnich 30 dni."
+    "exportHistoryEmptyDescription": "Nie przeczytałeś żadnych artykułów w ciągu ostatnich 30 dni.",
+    "keeps": {
+      "title": "Co Mera przechowuje o Tobie",
+      "emailAndPlan": "Twój e-mail i Twój plan. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
+      "plan": "Twój plan. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
+      "emailIfAdded": "Twój e-mail, jeśli go dodałeś, i Twój plan. Dane rozliczeniowe z App Store lub Google Play przechowujemy tak długo, jak wymaga prawo.",
+      "signInRecordIos": "Zapis logowania dla tego telefonu, usuwany razem z kontem. Nie przechowujemy sprawdzenia Apple, że to prawdziwa aplikacja.",
+      "signInRecordAndroid": "Zapis logowania dla tego telefonu, a nie identyfikator telefonu, usuwany razem z kontem. Nie przechowujemy sprawdzenia Google, że to prawdziwa aplikacja.",
+      "signInRecordGeneric": "Bez e-maila zapis logowania dla tego telefonu, usuwany razem z kontem. Nie przechowujemy sprawdzenia Apple lub Google, że to prawdziwa aplikacja.",
+      "usage": "Dzienna liczba przeanalizowanych artykułów, aby stosować limit Twojego planu. Logowania nie zapisują adresu IP ani danych przeglądarki.",
+      "topics": "Frazy tematów, zapisywane tylko jako tekst, bez niczego, co łączy je z Tobą, i usuwane po 14 dniach nieużywania.",
+      "privacyLink": "Przeczytaj politykę prywatności"
+    }
   },
   "preferences": {
     "manageSettings": "Zarządzaj ustawieniami aplikacji i kontem",
@@ -628,18 +645,18 @@
     "contentPolicy": "Zasady dotyczące treści",
     "faq": "FAQ",
     "reportBug": "Zgłoś błąd",
-    "deleteAccountConfirmGrace": "Twoje konto będzie zaplanowane do usunięcia z 30-dniowym okresem karencji. Zaloguj się ponownie w ciągu tych 30 dni i usunięcie zostanie automatycznie anulowane.",
+    "deleteAccountConfirmGrace": "Twoje konto zostanie zaplanowane do usunięcia z 30-dniowym okresem karencji. Jeśli Twoje konto ma e-mail, zaloguj się nim w ciągu tych 30 dni, aby anulować. Do konta bez e-maila nie można się już zalogować, więc jego usunięcia nie da się anulować.",
     "deleteAccountWarningGrace": "⚠️ Po upływie 30 dni wszystkie Twoje dane zostaną trwale usunięte. Nie można tego cofnąć.",
     "finalConfirmationBodyGrace": "To zaplanuje trwałe usunięcie Twojego konta za 30 dni.",
     "accountDeletionScheduledTitle": "Usuwanie zaplanowane",
-    "accountDeletionScheduledDescription": "Twoje konto będzie trwale usunięte za 30 dni. Zaloguj się ponownie przed tym terminem, aby anulować usuwanie."
+    "accountDeletionScheduledDescription": "Twoje konto zostanie trwale usunięte za 30 dni. Jeśli ma e-mail, zaloguj się nim wcześniej, aby anulować."
   },
   "configPanel": {
     "tabPersona": "Persona",
     "tabSources": "Źródła",
     "tabPreferences": "Preferencje",
-    "privacyOnDevice": "Twoje tematy i fakty są przechowywane na tym urządzeniu. Przetwarzanie na urządzeniu jest włączone, więc sztuczna inteligencja, która czyta i porządkuje Twoje artykuły, działa tutaj, a nie na naszych serwerach. Artykuły są tłumaczone i streszczane na naszych serwerach, zanim ktokolwiek o nie poprosi. Gdy pobierasz wiadomości, urządzenie opuszczają tylko Twoje frazy tematyczne. Nie zawierają żadnego identyfikatora użytkownika. Przechowujemy je w pamięci podręcznej, indeksowane wyłącznie według tekstu, i usuwamy po 14 dniach bez użycia. O Tobie przechowujemy adres e-mail do logowania, status subskrypcji oraz dzienną liczbę przeanalizowanych artykułów, używaną do egzekwowania Twojego planu. Czaty nie są zapisywane. Jedynym wyjątkiem jest transkrypcja, którą dołączasz do prośby o odblokowanie. Jeśli nie włączysz kopii zapasowej, wylogowanie lub zmiana urządzenia zaczyna Twoją personę od nowa.",
-    "privacyCloud": "Twoje tematy i fakty są przechowywane na tym urządzeniu. Przetwarzanie w chmurze jest domyślnie włączone. Możesz tutaj przełączyć się na przetwarzanie na urządzeniu. Twoje dane są szyfrowane dla enklawy, która je przetwarza, i odszyfrowywane tylko tutaj. Możesz tutaj sprawdzić jej poświadczenie, choć nie blokuje to jeszcze przetwarzania. Gdy pobierasz wiadomości, urządzenie opuszczają tylko Twoje frazy tematyczne. Nie zawierają żadnego identyfikatora użytkownika. Przechowujemy je w pamięci podręcznej, indeksowane wyłącznie według tekstu, i usuwamy po 14 dniach bez użycia. O Tobie przechowujemy adres e-mail do logowania, status subskrypcji oraz dzienną liczbę przeanalizowanych artykułów, używaną do egzekwowania Twojego planu. Czaty nie są zapisywane. Jedynym wyjątkiem jest transkrypcja, którą dołączasz do prośby o odblokowanie. Jeśli nie włączysz kopii zapasowej, Twoja persona zaczyna się od nowa.",
+    "privacyOnDevice": "Twoje tematy i fakty są przechowywane na tym urządzeniu. Przetwarzanie na urządzeniu jest włączone, więc sztuczna inteligencja, która czyta i porządkuje Twoje artykuły, działa tutaj, a nie na naszych serwerach. Artykuły są tłumaczone i streszczane na naszych serwerach, zanim ktokolwiek o nie poprosi. Gdy pobierasz wiadomości, urządzenie opuszczają tylko Twoje frazy tematyczne. Nie zawierają żadnego identyfikatora użytkownika. Przechowujemy je w pamięci podręcznej, indeksowane wyłącznie według tekstu, i usuwamy po 14 dniach bez użycia. O Tobie przechowujemy adres e-mail do logowania, jeśli go dodałeś, status subskrypcji oraz dzienną liczbę przeanalizowanych artykułów, używaną do egzekwowania Twojego planu. Jeśli korzystasz z Mera bez e-maila, przechowujemy też zapis logowania dla tego telefonu, dopóki nie usuniesz konta. Czaty nie są zapisywane. Jedynym wyjątkiem jest transkrypcja, którą dołączasz do prośby o odblokowanie. Jeśli nie włączysz kopii zapasowej, wylogowanie lub zmiana urządzenia zaczyna Twoją personę od nowa.",
+    "privacyCloud": "Twoje tematy i fakty są przechowywane na tym urządzeniu. Przetwarzanie w chmurze jest domyślnie włączone. Możesz tutaj przełączyć się na przetwarzanie na urządzeniu. Twoje dane są szyfrowane dla enklawy, która je przetwarza, i odszyfrowywane tylko tutaj. Możesz tutaj sprawdzić jej poświadczenie, choć nie blokuje to jeszcze przetwarzania. Gdy pobierasz wiadomości, urządzenie opuszczają tylko Twoje frazy tematyczne. Nie zawierają żadnego identyfikatora użytkownika. Przechowujemy je w pamięci podręcznej, indeksowane wyłącznie według tekstu, i usuwamy po 14 dniach bez użycia. O Tobie przechowujemy adres e-mail do logowania, jeśli go dodałeś, status subskrypcji oraz dzienną liczbę przeanalizowanych artykułów, używaną do egzekwowania Twojego planu. Jeśli korzystasz z Mera bez e-maila, przechowujemy też zapis logowania dla tego telefonu, dopóki nie usuniesz konta. Czaty nie są zapisywane. Jedynym wyjątkiem jest transkrypcja, którą dołączasz do prośby o odblokowanie. Jeśli nie włączysz kopii zapasowej, Twoja persona zaczyna się od nowa.",
     "privacyPolicy": "Polityka prywatności",
     "privacyNoticeTitle": "Twoja prywatność",
     "updatingTopics": "Aktualizowanie tematów... {{completed}}/{{total}}",
@@ -1838,7 +1855,13 @@
     "errorDescription": "Sprawdź połączenie i spróbuj ponownie.",
     "retry": "Spróbuj ponownie",
     "welcomeTitle": "Witamy w Mera",
-    "welcomeBody": "Dotknij \"Zgadzam się i kontynuuję\", aby zaakceptować nasz Regulamin i Politykę prywatności."
+    "welcomeBody": "Dotknij \"Zgadzam się i kontynuuję\", aby zaakceptować nasz Regulamin i Politykę prywatności.",
+    "deviceNotice": {
+      "appAttest": "Bez e-maila. Mera loguje Cię tym telefonem. Apple potwierdza, że to prawdziwa aplikacja Mera na prawdziwym iPhonie, aby blokować fałszywe konta. Przechowujemy zapis logowania, dopóki masz konto.",
+      "playIntegrity": "Bez e-maila. Mera loguje Cię tym telefonem. Google potwierdza, że to prawdziwa aplikacja Mera na prawdziwym telefonie z Androidem, aby blokować fałszywe konta. Przechowujemy zapis logowania, a nie identyfikator Twojego telefonu.",
+      "generic": "Bez e-maila. Mera loguje Cię tym telefonem. Przechowujemy zapis logowania dla tego telefonu, dopóki masz konto."
+    },
+    "whatMeraKeeps": "Co przechowuje Mera"
   },
   "tutorials": {
     "entryRow": "Jak działa Mera",
@@ -2104,7 +2127,7 @@
             "body": "Trzy rzeczy, i to cała lista.",
             "steps": {
               "0": "Krótkie frazy tematyczne, aby było coś do dopasowania historii.",
-              "1": "Twój adres e-mail i jaki plan masz.",
+              "1": "Jak się logujesz, e-mailem lub tym telefonem, i jaki masz plan.",
               "2": "Liczba przeanalizowanych historii dzisiaj, aby utrzymać ten plan uczciwym."
             },
             "ask": "Co aplikacja wysyła na Twoje serwery?"
@@ -2119,11 +2142,11 @@
           },
           "on-device-option": {
             "headline": "Na urządzeniu, jeśli chcesz",
-            "body": "W Ustawieniach → Mera Protocol możesz przenieść przetwarzanie na ten telefon, a następnie nic o Tobie nie wychodzi wcale. Najpierw pobiera model, chce dość nowy telefon i jest zauważalnie wolniejszy, co jest dokładnie dlatego, dlaczego to nie jest domyślne."
+            "body": "W Ustawieniach → Mera Protocol możesz przenieść przetwarzanie na ten telefon. Wtedy AI, które czyta Twoje wiadomości, działa tutaj zamiast w chmurze. Twoje frazy tematów nadal wychodzą, żeby pobrać wiadomości, a do logowania nadal potrzebny jest Twój e-mail lub ten telefon. Najpierw pobiera się model, potrzebny jest dość nowy telefon i działa to wyraźnie wolniej, i właśnie dlatego nie jest to ustawienie domyślne."
           },
           "what-we-keep": {
             "headline": "Co przechowujemy",
-            "body": "Twój e-mail logowania. Jaki plan masz. Liczba historii przeanalizowanych dziennie. Frazy tematyczne są buforowane tylko do ich tekstu, nic nie zapisuje, kto je zapytał, i upuszczone po czternastu dniach nieużycia.",
+            "body": "Twój e-mail do logowania, jeśli go dodałeś. Jaki masz plan. Dzienną liczbę przeanalizowanych artykułów. Jeśli korzystasz z Mera bez e-maila, zapis logowania dla tego telefonu, usuwany razem z kontem. Frazy tematów są przechowywane w pamięci podręcznej tylko jako tekst, bez zapisu, kto o nie prosił, i usuwane po czternastu dniach nieużywania.",
             "ask": "Co Mera przechowuje o mnie na swoich serwerach?"
           }
         }

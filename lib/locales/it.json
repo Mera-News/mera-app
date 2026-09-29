@@ -91,6 +91,11 @@
       "body": "Accedendo senza email si apre l'account di questo telefono, non quello che stavi usando. Tutto ciò che è salvato su questo telefono per quell'account verrà cancellato. Non si può annullare. L'altro account e il suo piano restano al sicuro, e potrai accedervi di nuovo più tardi.",
       "continue": "Continua senza email",
       "useEmail": "Indietro"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Il tuo account è legato a questo telefono. Se elimini Mera o perdi il telefono, ripartirai con un nuovo account. Backup e ripristino, in Impostazioni, può conservare i tuoi dati.",
+      "reset": "Il tuo account è legato a questo telefono. Se resetti o perdi il telefono, ripartirai con un nuovo account. Backup e ripristino, in Impostazioni, può conservare i tuoi dati.",
+      "previousUser": "Apre l'account di questo telefono, separato da {{email}}."
     }
   },
   "account": {
@@ -563,7 +568,7 @@
     "viewingHistoryModalDescription": "Elimina il registro locale degli articoli che hai aperto. La scheda Fonti con la sezione \"Pubblicazioni che stai leggendo\" e la cronologia per pubblicazione verranno azzerate. Nient'altro viene modificato e nessun dato del server viene toccato (questi dati non hanno mai lasciato il dispositivo).",
     "wipeAllTitle": "Cancella tutti i dati",
     "wipeAllDescription": "Ripristina tutto tranne il tuo account",
-    "wipeAllModalDescription": "Cancella tutti i tuoi dati: cache del feed, fatti, topic, suggerimenti, impostazioni dell'app, cronologia di lettura. Resti connesso; il tuo account viene mantenuto.",
+    "wipeAllModalDescription": "Cancella tutti i dati salvati su questo dispositivo: cache del feed, fatti, argomenti, impostazioni dell'app e cronologia di lettura. Resti connesso e il tuo account viene mantenuto. Questo telefono può ancora farti accedere senza email. Nulla viene eliminato dai nostri server.",
     "deletedTitle": "Dati eliminati",
     "deletedDescription": "I dati selezionati sono stati cancellati con successo.",
     "errorTitle": "Errore",
@@ -577,7 +582,19 @@
     "exportHistorySubject": "La mia cronologia di lettura Mera (JSON)",
     "exporting": "Esportazione in corso…",
     "exportHistoryEmptyTitle": "Niente da esportare ancora",
-    "exportHistoryEmptyDescription": "Non hai letto alcun articolo negli ultimi 30 giorni."
+    "exportHistoryEmptyDescription": "Non hai letto alcun articolo negli ultimi 30 giorni.",
+    "keeps": {
+      "title": "Cosa conserva Mera su di te",
+      "emailAndPlan": "La tua email e il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
+      "plan": "Il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
+      "emailIfAdded": "La tua email se ne hai aggiunta una, e il tuo piano. I dati di fatturazione di App Store o Google Play sono conservati per il tempo richiesto dalla legge.",
+      "signInRecordIos": "Un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple che si tratta della vera app non viene conservato.",
+      "signInRecordAndroid": "Un record di accesso per questo telefono, non l'ID del tuo telefono, eliminato con il tuo account. Il controllo di Google che si tratta della vera app non viene conservato.",
+      "signInRecordGeneric": "Senza email, un record di accesso per questo telefono, eliminato con il tuo account. Il controllo di Apple o Google che si tratta della vera app non viene conservato.",
+      "usage": "Un conteggio giornaliero di articoli analizzati, per applicare il limite del tuo piano. Gli accessi non conservano indirizzo IP né dati del browser.",
+      "topics": "Frasi di argomento, salvate solo in base al testo senza nulla che le colleghi a te, ed eliminate dopo 14 giorni di inutilizzo.",
+      "privacyLink": "Leggi l'informativa sulla privacy"
+    }
   },
   "preferences": {
     "manageSettings": "Gestisci le impostazioni dell'app e il tuo account",
@@ -616,18 +633,18 @@
     "contentPolicy": "Norme sui contenuti",
     "faq": "FAQ",
     "reportBug": "Segnala un bug",
-    "deleteAccountConfirmGrace": "Il tuo account sarà programmato per l'eliminazione, con un periodo di grazia di 30 giorni. Accedi di nuovo entro quei 30 giorni e l'eliminazione viene automaticamente annullata.",
+    "deleteAccountConfirmGrace": "Il tuo account sarà programmato per l'eliminazione, con un periodo di tolleranza di 30 giorni. Se il tuo account ha un'email, accedi con quella entro questi 30 giorni per annullare. Un account senza email non può più accedere, quindi la sua eliminazione non si può annullare.",
     "deleteAccountWarningGrace": "⚠️ Dopo 30 giorni, tutti i tuoi dati vengono rimossi in modo permanente. Non si può annullare.",
     "finalConfirmationBodyGrace": "Questo programma il tuo account per l'eliminazione permanente tra 30 giorni.",
     "accountDeletionScheduledTitle": "Eliminazione programmata",
-    "accountDeletionScheduledDescription": "Il tuo account sarà eliminato in modo permanente tra 30 giorni. Accedi di nuovo prima di allora per annullare l'eliminazione."
+    "accountDeletionScheduledDescription": "Il tuo account sarà eliminato definitivamente tra 30 giorni. Se ha un'email, accedi con quella prima di allora per annullare."
   },
   "configPanel": {
     "tabPersona": "Profilo",
     "tabSources": "Fonti",
     "tabPreferences": "Preferenze",
-    "privacyOnDevice": "I tuoi argomenti e fatti sono memorizzati su questo dispositivo. L'elaborazione sul dispositivo è attiva, quindi l'IA che legge e ordina i tuoi articoli funziona qui, non sui nostri server. Gli articoli vengono tradotti e riassunti sui nostri server prima che qualcuno li richieda. Quando recuperi le notizie, solo le tue frasi di argomento lasciano il dispositivo. Non contengono alcun ID utente. Le mettiamo in cache, indicizzate solo per testo, e le eliminiamo dopo 14 giorni di inutilizzo. Di te conserviamo la tua email di accesso, il tuo stato di abbonamento e un conteggio giornaliero di articoli analizzati, usato per applicare il tuo piano. Le chat non vengono salvate. L'unica eccezione è una trascrizione che alleghi a una richiesta di sblocco. Se non attivi il backup, disconnettersi o cambiare dispositivo riavvia la tua persona da zero.",
-    "privacyCloud": "I tuoi argomenti e fatti sono memorizzati su questo dispositivo. L'elaborazione nel cloud è attiva per impostazione predefinita. Qui puoi passare all'elaborazione sul dispositivo. I tuoi dati sono cifrati per l'enclave che li elabora e decifrati solo qui. Qui puoi verificarne l'attestazione, anche se questo non blocca ancora l'elaborazione. Quando recuperi le notizie, solo le tue frasi di argomento lasciano il dispositivo. Non contengono alcun ID utente. Le mettiamo in cache, indicizzate solo per testo, e le eliminiamo dopo 14 giorni di inutilizzo. Di te conserviamo la tua email di accesso, il tuo stato di abbonamento e un conteggio giornaliero di articoli analizzati, usato per applicare il tuo piano. Le chat non vengono salvate. L'unica eccezione è una trascrizione che alleghi a una richiesta di sblocco. Se non attivi il backup, la tua persona riparte da zero.",
+    "privacyOnDevice": "I tuoi argomenti e fatti sono memorizzati su questo dispositivo. L'elaborazione sul dispositivo è attiva, quindi l'IA che legge e ordina i tuoi articoli funziona qui, non sui nostri server. Gli articoli vengono tradotti e riassunti sui nostri server prima che qualcuno li richieda. Quando recuperi le notizie, solo le tue frasi di argomento lasciano il dispositivo. Non contengono alcun ID utente. Le mettiamo in cache, indicizzate solo per testo, e le eliminiamo dopo 14 giorni di inutilizzo. Di te conserviamo la tua email di accesso se ne hai aggiunta una, il tuo stato di abbonamento e un conteggio giornaliero di articoli analizzati, usato per applicare il tuo piano. Se usi Mera senza email, conserviamo anche un record di accesso per questo telefono finché non elimini il tuo account. Le chat non vengono salvate. L'unica eccezione è una trascrizione che alleghi a una richiesta di sblocco. Se non attivi il backup, disconnettersi o cambiare dispositivo riavvia la tua persona da zero.",
+    "privacyCloud": "I tuoi argomenti e fatti sono memorizzati su questo dispositivo. L'elaborazione nel cloud è attiva per impostazione predefinita. Qui puoi passare all'elaborazione sul dispositivo. I tuoi dati sono cifrati per l'enclave che li elabora e decifrati solo qui. Qui puoi verificarne l'attestazione, anche se questo non blocca ancora l'elaborazione. Quando recuperi le notizie, solo le tue frasi di argomento lasciano il dispositivo. Non contengono alcun ID utente. Le mettiamo in cache, indicizzate solo per testo, e le eliminiamo dopo 14 giorni di inutilizzo. Di te conserviamo la tua email di accesso se ne hai aggiunta una, il tuo stato di abbonamento e un conteggio giornaliero di articoli analizzati, usato per applicare il tuo piano. Se usi Mera senza email, conserviamo anche un record di accesso per questo telefono finché non elimini il tuo account. Le chat non vengono salvate. L'unica eccezione è una trascrizione che alleghi a una richiesta di sblocco. Se non attivi il backup, la tua persona riparte da zero.",
     "privacyPolicy": "Informativa sulla privacy",
     "privacyNoticeTitle": "La tua privacy",
     "updatingTopics": "Aggiornamento argomenti... {{completed}}/{{total}}",
@@ -1806,7 +1823,13 @@
     "errorDescription": "Controlla la connessione e riprova.",
     "retry": "Riprova",
     "welcomeTitle": "Ti diamo il benvenuto su Mera",
-    "welcomeBody": "Tocca \"Accetta e continua\" per accettare i nostri Termini di servizio e l'Informativa sulla privacy."
+    "welcomeBody": "Tocca \"Accetta e continua\" per accettare i nostri Termini di servizio e l'Informativa sulla privacy.",
+    "deviceNotice": {
+      "appAttest": "Nessuna email necessaria. Mera ti fa accedere con questo telefono. Apple conferma che è la vera app Mera su un vero iPhone, per fermare gli account falsi. Conserviamo un record di accesso finché hai un account.",
+      "playIntegrity": "Nessuna email necessaria. Mera ti fa accedere con questo telefono. Google conferma che è la vera app Mera su un vero telefono Android, per fermare gli account falsi. Conserviamo un record di accesso, non l'ID del tuo telefono.",
+      "generic": "Nessuna email necessaria. Mera ti fa accedere con questo telefono. Conserviamo un record di accesso per questo telefono finché hai un account."
+    },
+    "whatMeraKeeps": "Cosa conserva Mera"
   },
   "tutorials": {
     "entryRow": "Come funziona Mera",
@@ -2072,7 +2095,7 @@
             "body": "Tre cose, e quella è la lista.",
             "steps": {
               "0": "Brevi frasi di argomenti, così c'è qualcosa di cui abbinare le storie.",
-              "1": "Il tuo indirizzo email e quale piano sei.",
+              "1": "Come accedi, con l'email o con questo telefono, e quale piano hai.",
               "2": "Un conteggio di quante storie sono state analizzate oggi, per mantenere quel piano onesto."
             },
             "ask": "Cosa invia l'app ai tuoi server?"
@@ -2087,11 +2110,11 @@
           },
           "on-device-option": {
             "headline": "On-device, se lo vuoi",
-            "body": "In Impostazioni; Mera Protocol puoi spostare l'elaborazione su questo telefono, e allora niente su di te se ne va affatto. Scarica prima un modello, vuole un telefono piuttosto recente, e è notevolmente più lento, il quale è esattamente il motivo per cui non è l'impostazione predefinita."
+            "body": "In Impostazioni → Mera Protocol puoi spostare l'elaborazione su questo telefono. Così l'IA che legge le tue notizie funziona qui invece che nel cloud. Le tue frasi di argomento escono comunque per cercare le notizie, e per accedere servono comunque la tua email o questo telefono. Prima scarica un modello, serve un telefono abbastanza recente ed è decisamente più lento, proprio per questo non è l'impostazione predefinita."
           },
           "what-we-keep": {
             "headline": "Cosa conserviamo",
-            "body": "La tua email di accesso. Quale piano sei. Un conteggio per giorno di storie analizzate. Le frasi di argomenti sono messe in cache solo dal loro testo, senza niente che registri chi le ha chieste, e cadute dopo quattordici giorni senza usi.",
+            "body": "La tua email di accesso, se ne hai aggiunta una. Quale piano hai. Un conteggio giornaliero degli articoli analizzati. Se usi Mera senza email, un record di accesso per questo telefono, eliminato con il tuo account. Le frasi di argomento sono in cache solo in base al testo, senza nulla che registri chi le ha chieste, ed eliminate dopo quattordici giorni di inutilizzo.",
             "ask": "Cosa conserva Mera su di me sui suoi server?"
           }
         }

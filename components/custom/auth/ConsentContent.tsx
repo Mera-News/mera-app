@@ -32,6 +32,12 @@ interface ConsentContentProps {
      *  `consent-accept`, which harness/README-android.md documents as a
      *  driving target. */
     acceptTestID?: string;
+    /** Rendered between the body and the legal buttons, so it is on screen
+     *  BEFORE the commit tap. Only the pre-auth step passes one: the device
+     *  sign-in notice (what signing in with this phone keeps), which is also
+     *  the notice for reading the device ID. The re-consent gate never does,
+     *  because it signs nobody in. */
+    notice?: React.ReactNode;
     /** Host-specific extras rendered below the CTA: the device sign-in failure
      *  cluster on the pre-auth step, the save-failed line on the gate. */
     children?: React.ReactNode;
@@ -64,6 +70,7 @@ const ConsentContent: React.FC<ConsentContentProps> = ({
     onAccept,
     testIDPrefix,
     acceptTestID,
+    notice,
     children,
 }) => {
     // Both hosts label the legal destinations with the SAME two keys; only
@@ -84,6 +91,8 @@ const ConsentContent: React.FC<ConsentContentProps> = ({
                     {body}
                 </Text>
             </VStack>
+
+            {notice}
 
             {/* Two outline buttons, half and half — the same primary outline the
                 welcome view's secondary actions wear, so the legal links read as

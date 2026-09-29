@@ -91,6 +91,11 @@
       "body": "Als je inlogt zonder e-mail, wordt het eigen account van deze telefoon geopend, niet het account dat je gebruikte. Alles wat op deze telefoon voor dat account is opgeslagen, wordt gewist. Dit kan niet ongedaan worden gemaakt. Je andere account en het abonnement daarvan blijven veilig, en je kunt er later weer op inloggen.",
       "continue": "Doorgaan zonder e-mail",
       "useEmail": "Terug"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Je account is gekoppeld aan deze telefoon. Als je Mera verwijdert of de telefoon kwijtraakt, begin je met een nieuw account. Back-up en herstel in Instellingen kan je gegevens bewaren.",
+      "reset": "Je account is gekoppeld aan deze telefoon. Als je de telefoon reset of kwijtraakt, begin je met een nieuw account. Back-up en herstel in Instellingen kan je gegevens bewaren.",
+      "previousUser": "Opent het eigen account van deze telefoon, los van {{email}}."
     }
   },
   "account": {
@@ -563,7 +568,7 @@
     "viewingHistoryModalDescription": "Wist het lokale logboek van artikelen die je hebt geopend. De kaart 'Publicaties die je leest' op het tabblad Bronnen en de per-publicatiegeschiedenis worden gereset naar leeg. Niets anders wordt beïnvloed en er worden geen servergegevens aangeraakt (deze gegevens hebben je apparaat nooit verlaten).",
     "wipeAllTitle": "Alle gegevens wissen",
     "wipeAllDescription": "Alles resetten behalve je account",
-    "wipeAllModalDescription": "Wist al je gegevens: feedcache, feiten, onderwerpen, suggesties, app-instellingen en leesgeschiedenis. Je blijft ingelogd; je account zelf blijft behouden.",
+    "wipeAllModalDescription": "Wist alle gegevens die op dit apparaat staan: feedcache, feiten, onderwerpen, app-instellingen en leesgeschiedenis. Je blijft ingelogd en je account blijft behouden. Deze telefoon kan je nog steeds zonder e-mail inloggen. Er wordt niets van onze servers verwijderd.",
     "deletedTitle": "Gegevens verwijderd",
     "deletedDescription": "Geselecteerde gegevens zijn succesvol gewist.",
     "errorTitle": "Fout",
@@ -577,7 +582,19 @@
     "exportHistorySubject": "Mijn Mera-leesgeschiedenis (JSON)",
     "exporting": "Exporteren...",
     "exportHistoryEmptyTitle": "Nog niets te exporteren",
-    "exportHistoryEmptyDescription": "Je hebt de afgelopen 30 dagen geen artikelen gelezen."
+    "exportHistoryEmptyDescription": "Je hebt de afgelopen 30 dagen geen artikelen gelezen.",
+    "keeps": {
+      "title": "Wat Mera over je bewaart",
+      "emailAndPlan": "Je e-mailadres en je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
+      "plan": "Je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
+      "emailIfAdded": "Je e-mailadres als je er een hebt toegevoegd, en je abonnement. Factuurgegevens van de App Store of Google Play bewaren we zo lang als de wet vereist.",
+      "signInRecordIos": "Een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple dat dit de echte app is, bewaren we niet.",
+      "signInRecordAndroid": "Een inlogregistratie voor deze telefoon, niet de ID van je telefoon, die met je account wordt verwijderd. De controle van Google dat dit de echte app is, bewaren we niet.",
+      "signInRecordGeneric": "Zonder e-mail een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De controle van Apple of Google dat dit de echte app is, bewaren we niet.",
+      "usage": "Een dagelijkse telling van geanalyseerde artikelen, om de limiet van je abonnement toe te passen. Bij inloggen bewaren we geen IP-adres of browsergegevens.",
+      "topics": "Onderwerpzinnen, alleen op hun tekst opgeslagen zonder iets dat ze aan jou koppelt, en verwijderd na 14 dagen zonder gebruik.",
+      "privacyLink": "Lees het privacybeleid"
+    }
   },
   "preferences": {
     "manageSettings": "Beheer je app-instellingen en account",
@@ -616,18 +633,18 @@
     "contentPolicy": "Inhoudsbeleid",
     "faq": "FAQ",
     "reportBug": "Een bug melden",
-    "deleteAccountConfirmGrace": "Je account wordt voor verwijdering ingepland met een karenstermijn van 30 dagen. Meld je binnen deze 30 dagen opnieuw aan en de verwijdering wordt automatisch geannuleerd.",
+    "deleteAccountConfirmGrace": "Je account wordt ingepland voor verwijdering, met een bedenktijd van 30 dagen. Heeft je account een e-mailadres, log daar dan binnen deze 30 dagen mee in om te annuleren. Een account zonder e-mail kan niet meer inloggen, dus de verwijdering ervan kan niet worden geannuleerd.",
     "deleteAccountWarningGrace": "⚠️ Na 30 dagen worden al je gegevens permanent verwijderd. Dit kan niet ongedaan worden gemaakt.",
     "finalConfirmationBodyGrace": "Dit plant je account voor permanente verwijdering over 30 dagen in.",
     "accountDeletionScheduledTitle": "Verwijdering gepland",
-    "accountDeletionScheduledDescription": "Je account wordt permanent verwijderd over 30 dagen. Meld je aan voordat dat gebeurt om de verwijdering te annuleren."
+    "accountDeletionScheduledDescription": "Je account wordt over 30 dagen definitief verwijderd. Heeft het een e-mailadres, log daar dan eerder mee in om te annuleren."
   },
   "configPanel": {
     "tabPersona": "Persona",
     "tabSources": "Bronnen",
     "tabPreferences": "Voorkeuren",
-    "privacyOnDevice": "Uw onderwerpen en feiten worden op dit apparaat opgeslagen. Verwerking op het apparaat staat aan, dus de AI die uw artikelen leest en rangschikt draait hier, niet op onze servers. Artikelen worden op onze servers vertaald en samengevat voordat iemand erom vraagt. Wanneer u nieuws ophaalt, verlaten alleen uw onderwerpzinnen het apparaat. Ze bevatten geen gebruikers-ID. We bewaren ze in de cache, alleen op de tekst gesleuteld, en verwijderen ze na 14 dagen zonder gebruik. Over u bewaren we uw inlog-e-mailadres, uw abonnementsstatus en een dagelijkse telling van geanalyseerde artikelen, gebruikt om uw abonnement te handhaven. Chats worden niet bewaard. De enige uitzondering is een transcript dat u aan een deblokkeerverzoek toevoegt. Als u back-up niet inschakelt, begint uw persona na uitloggen of een apparaatwissel opnieuw.",
-    "privacyCloud": "Uw onderwerpen en feiten worden op dit apparaat opgeslagen. Cloudverwerking staat standaard aan. U kunt hier overschakelen naar verwerking op het apparaat. Uw gegevens worden versleuteld voor de enclave die ze verwerkt en alleen hier ontsleuteld. U kunt hier de attestatie ervan controleren, al blokkeert dat de verwerking nog niet. Wanneer u nieuws ophaalt, verlaten alleen uw onderwerpzinnen het apparaat. Ze bevatten geen gebruikers-ID. We bewaren ze in de cache, alleen op de tekst gesleuteld, en verwijderen ze na 14 dagen zonder gebruik. Over u bewaren we uw inlog-e-mailadres, uw abonnementsstatus en een dagelijkse telling van geanalyseerde artikelen, gebruikt om uw abonnement te handhaven. Chats worden niet bewaard. De enige uitzondering is een transcript dat u aan een deblokkeerverzoek toevoegt. Als u back-up niet inschakelt, begint uw persona opnieuw.",
+    "privacyOnDevice": "Uw onderwerpen en feiten worden op dit apparaat opgeslagen. Verwerking op het apparaat staat aan, dus de AI die uw artikelen leest en rangschikt draait hier, niet op onze servers. Artikelen worden op onze servers vertaald en samengevat voordat iemand erom vraagt. Wanneer u nieuws ophaalt, verlaten alleen uw onderwerpzinnen het apparaat. Ze bevatten geen gebruikers-ID. We bewaren ze in de cache, alleen op de tekst gesleuteld, en verwijderen ze na 14 dagen zonder gebruik. Over u bewaren we uw inlog-e-mailadres als u er een hebt toegevoegd, uw abonnementsstatus en een dagelijkse telling van geanalyseerde artikelen, gebruikt om uw abonnement te handhaven. Als u Mera zonder e-mail gebruikt, bewaren we ook een inlogregistratie voor deze telefoon tot u uw account verwijdert. Chats worden niet bewaard. De enige uitzondering is een transcript dat u aan een deblokkeerverzoek toevoegt. Als u back-up niet inschakelt, begint uw persona na uitloggen of een apparaatwissel opnieuw.",
+    "privacyCloud": "Uw onderwerpen en feiten worden op dit apparaat opgeslagen. Cloudverwerking staat standaard aan. U kunt hier overschakelen naar verwerking op het apparaat. Uw gegevens worden versleuteld voor de enclave die ze verwerkt en alleen hier ontsleuteld. U kunt hier de attestatie ervan controleren, al blokkeert dat de verwerking nog niet. Wanneer u nieuws ophaalt, verlaten alleen uw onderwerpzinnen het apparaat. Ze bevatten geen gebruikers-ID. We bewaren ze in de cache, alleen op de tekst gesleuteld, en verwijderen ze na 14 dagen zonder gebruik. Over u bewaren we uw inlog-e-mailadres als u er een hebt toegevoegd, uw abonnementsstatus en een dagelijkse telling van geanalyseerde artikelen, gebruikt om uw abonnement te handhaven. Als u Mera zonder e-mail gebruikt, bewaren we ook een inlogregistratie voor deze telefoon tot u uw account verwijdert. Chats worden niet bewaard. De enige uitzondering is een transcript dat u aan een deblokkeerverzoek toevoegt. Als u back-up niet inschakelt, begint uw persona opnieuw.",
     "privacyPolicy": "Privacybeleid",
     "privacyNoticeTitle": "Jouw privacy",
     "updatingTopics": "Onderwerpen bijwerken... {{completed}}/{{total}}",
@@ -1806,7 +1823,13 @@
     "errorDescription": "Controleer je verbinding en probeer het opnieuw.",
     "retry": "Opnieuw proberen",
     "welcomeTitle": "Welkom bij Mera",
-    "welcomeBody": "Tik op \"Akkoord en doorgaan\" om onze Servicevoorwaarden en ons Privacybeleid te accepteren."
+    "welcomeBody": "Tik op \"Akkoord en doorgaan\" om onze Servicevoorwaarden en ons Privacybeleid te accepteren.",
+    "deviceNotice": {
+      "appAttest": "Geen e-mail nodig. Mera logt je in met deze telefoon. Apple bevestigt dat dit de echte Mera app is op een echte iPhone, om nepaccounts tegen te houden. We bewaren een inlogregistratie zolang je een account hebt.",
+      "playIntegrity": "Geen e-mail nodig. Mera logt je in met deze telefoon. Google bevestigt dat dit de echte Mera app is op een echte Android-telefoon, om nepaccounts tegen te houden. We bewaren een inlogregistratie, niet de ID van je telefoon.",
+      "generic": "Geen e-mail nodig. Mera logt je in met deze telefoon. We bewaren een inlogregistratie voor deze telefoon zolang je een account hebt."
+    },
+    "whatMeraKeeps": "Wat Mera bewaart"
   },
   "tutorials": {
     "entryRow": "Hoe Mera werkt",
@@ -2072,7 +2095,7 @@
             "body": "Drie dingen en dat is de lijst.",
             "steps": {
               "0": "Korte onderwerpsfrasen, dus er is iets om verhalen tegenaan te passen.",
-              "1": "Je e-mailadres en welk abonnement je hebt.",
+              "1": "Hoe je inlogt, met e-mail of met deze telefoon, en welk abonnement je hebt.",
               "2": "Een telling van hoeveel verhalen vandaag zijn geanalyseerd, om dat abonnement eerlijk te houden."
             },
             "ask": "Wat stuurt de app naar jullie servers?"
@@ -2087,11 +2110,11 @@
           },
           "on-device-option": {
             "headline": "Apparaat, als je wilt",
-            "body": "In Instellingen → Mera Protocol kun je de verwerking naar deze telefoon verplaatsen en dan verlaat niets over jou het apparaat helemaal. Het downloadt eerst een model, wil een vrij recent apparaat en is merkbaar langzamer, wat precies waarom het niet het standaard is."
+            "body": "In Instellingen → Mera Protocol kun je de verwerking naar deze telefoon verplaatsen. Dan draait de AI die je nieuws leest hier in plaats van in de cloud. Je onderwerpzinnen gaan nog steeds naar buiten om nieuws op te halen, en voor inloggen is nog steeds je e-mail of deze telefoon nodig. Eerst wordt een model gedownload, het vraagt een vrij recente telefoon en het is merkbaar trager, en precies daarom is het niet de standaard."
           },
           "what-we-keep": {
             "headline": "Wat we houden",
-            "body": "Je inlog-e-mail. Welk abonnement je hebt. Een dagelijks aantal geanalyseerde verhalen. De onderwerpsfrasen worden alleen per tekst gecachet, met niets dat opneemt wie ernaar vroeg en drops na veertien dagen ongebruikt.",
+            "body": "Je inlog-e-mailadres, als je er een hebt toegevoegd. Welk abonnement je hebt. Een dagelijkse telling van geanalyseerde artikelen. Als je Mera zonder e-mail gebruikt, een inlogregistratie voor deze telefoon, die met je account wordt verwijderd. De onderwerpzinnen worden alleen op hun tekst gecachet, zonder iets dat vastlegt wie erom vroeg, en na veertien dagen zonder gebruik verwijderd.",
             "ask": "Wat slaat Mera op haar servers over mij op?"
           }
         }

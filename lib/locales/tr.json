@@ -91,6 +91,11 @@
       "body": "E-posta olmadan giriş yapmak, kullandığın hesabı değil, bu telefonun kendi hesabını açar. Bu telefonda o hesap için kayıtlı her şey silinir. Bu geri alınamaz. Diğer hesabın ve planı güvende kalır, daha sonra o hesaba yeniden giriş yapabilirsin.",
       "continue": "E-posta olmadan devam et",
       "useEmail": "Geri dön"
+    },
+    "deviceSignInCaption": {
+      "uninstall": "Hesabınız bu telefona bağlıdır. Mera'yı silerseniz veya telefonu kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir.",
+      "reset": "Hesabınız bu telefona bağlıdır. Telefonu sıfırlarsanız veya kaybederseniz yeni bir hesapla başlarsınız. Ayarlar'daki Yedekleme ve geri yükleme verilerinizi koruyabilir.",
+      "previousUser": "Bu telefonun kendi hesabını açar, {{email}} hesabından ayrıdır."
     }
   },
   "account": {
@@ -563,7 +568,7 @@
     "viewingHistoryModalDescription": "Açtığın makalelerin yerel kaydını temizler. Kaynaklar sekmesindeki \"Okuduğun yayınlar\" kartı ve yayın bazlı geçmiş sıfırlanır. Başka hiçbir şey etkilenmez ve sunucu verisi değiştirilmez (bu veri hiç cihazından çıkmadı).",
     "wipeAllTitle": "Tüm verileri sil",
     "wipeAllDescription": "Hesabın dışındaki her şeyi sıfırla",
-    "wipeAllModalDescription": "Tüm verilerini temizler: akış önbelleği, gerçekler, konular, öneriler, uygulama ayarları, okuma geçmişi. Oturum açık kalır; hesabın korunur.",
+    "wipeAllModalDescription": "Bu cihazda saklanan tüm verileri temizler: akış önbelleği, bilgiler, konular, uygulama ayarları ve okuma geçmişi. Oturumunuz açık kalır ve hesabınız korunur. Bu telefon sizi hâlâ e-posta olmadan giriş yaptırabilir. Sunucularımızdan hiçbir şey silinmez.",
     "deletedTitle": "Veriler Silindi",
     "deletedDescription": "Seçilen veriler başarıyla temizlendi.",
     "errorTitle": "Hata",
@@ -577,7 +582,19 @@
     "exportHistorySubject": "Mera okuma geçmişim (JSON)",
     "exporting": "Dışa aktarılıyor...",
     "exportHistoryEmptyTitle": "Dışa aktarılacak hiçbir şey yok henüz",
-    "exportHistoryEmptyDescription": "Son 30 gün içinde hiçbir makale okumadınız."
+    "exportHistoryEmptyDescription": "Son 30 gün içinde hiçbir makale okumadınız.",
+    "keeps": {
+      "title": "Mera sizinle ilgili neleri saklar",
+      "emailAndPlan": "E-postanız ve planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
+      "plan": "Planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
+      "emailIfAdded": "Eklediyseniz e-postanız ve planınız. App Store veya Google Play'den gelen fatura kayıtları yasanın gerektirdiği süre boyunca saklanır.",
+      "signInRecordIos": "Bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
+      "signInRecordAndroid": "Bu telefon için telefonunuzun kimliği olmayan, hesabınızla birlikte silinen bir giriş kaydı. Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
+      "signInRecordGeneric": "E-posta yoksa, bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Apple veya Google'ın bunun gerçek uygulama olduğuna dair kontrolü saklanmaz.",
+      "usage": "Planınızın sınırını uygulamak için günlük analiz edilen makale sayısı. Girişlerde IP adresi veya tarayıcı bilgisi saklanmaz.",
+      "topics": "Konu ifadeleri, yalnızca metinleriyle ve sizinle hiçbir bağlantı olmadan saklanır, 14 gün kullanılmazsa silinir.",
+      "privacyLink": "Gizlilik politikasını okuyun"
+    }
   },
   "preferences": {
     "manageSettings": "Uygulama ayarlarını ve hesabını yönet",
@@ -616,18 +633,18 @@
     "contentPolicy": "İçerik Politikası",
     "faq": "SSS",
     "reportBug": "Hata bildir",
-    "deleteAccountConfirmGrace": "Hesabınız silme için planlanacak ve 30 günlük ödemeli dönem vardır. Bu 30 gün içinde tekrar giriş yapın ve silme otomatik olarak iptal edilir.",
+    "deleteAccountConfirmGrace": "Hesabınız 30 günlük bir bekleme süresiyle silinmek üzere planlanır. Hesabınızın e-postası varsa, iptal etmek için bu 30 gün içinde onunla giriş yapın. E-postası olmayan bir hesaba tekrar giriş yapılamaz, bu yüzden silinmesi iptal edilemez.",
     "deleteAccountWarningGrace": "⚠️ 30 gün sonra tüm verilerin kalıcı olarak kaldırılır. Bu geri alınamaz.",
     "finalConfirmationBodyGrace": "Bu, hesabınızı 30 gün içinde kalıcı silme için planlar.",
     "accountDeletionScheduledTitle": "Silme Planlandı",
-    "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek. Silmeyi iptal etmek için o zamandan önce tekrar giriş yapın."
+    "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek. E-postası varsa, iptal etmek için daha önce onunla giriş yapın."
   },
   "configPanel": {
     "tabPersona": "Profil",
     "tabSources": "Kaynaklar",
     "tabPreferences": "Tercihler",
-    "privacyOnDevice": "Konularınız ve bilgileriniz bu cihazda saklanır. Cihaz üzerinde işleme açık, bu yüzden makalelerinizi okuyup sıralayan yapay zeka sunucularımızda değil burada çalışır. Makaleler, kimse istemeden önce sunucularımızda çevrilir ve özetlenir. Haber aldığınızda cihazdan yalnızca konu ifadeleriniz çıkar. Bunlar hiçbir kullanıcı kimliği taşımaz. Bunları yalnızca metne göre dizinlenmiş olarak önbellekte tutar ve 14 gün kullanılmazsa sileriz. Sizin hakkınızda giriş e-postanızı, abonelik durumunuzu ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısını saklarız. Sohbetler kaydedilmez. Tek istisna, engel kaldırma talebine eklediğiniz bir dökümdür. Yedeklemeyi açmazsanız oturumu kapatmak veya cihaz değiştirmek personanızı sıfırdan başlatır.",
-    "privacyCloud": "Konularınız ve bilgileriniz bu cihazda saklanır. Bulut işleme varsayılan olarak açıktır. Buradan cihaz üzerinde işlemeye geçebilirsiniz. Verileriniz onları işleyen enklav için şifrelenir ve yalnızca burada çözülür. Onun doğrulamasını buradan kontrol edebilirsiniz, ancak bu henüz işlemeyi engellemez. Haber aldığınızda cihazdan yalnızca konu ifadeleriniz çıkar. Bunlar hiçbir kullanıcı kimliği taşımaz. Bunları yalnızca metne göre dizinlenmiş olarak önbellekte tutar ve 14 gün kullanılmazsa sileriz. Sizin hakkınızda giriş e-postanızı, abonelik durumunuzu ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısını saklarız. Sohbetler kaydedilmez. Tek istisna, engel kaldırma talebine eklediğiniz bir dökümdür. Yedeklemeyi açmazsanız personanız sıfırdan başlar.",
+    "privacyOnDevice": "Konularınız ve bilgileriniz bu cihazda saklanır. Cihaz üzerinde işleme açık, bu yüzden makalelerinizi okuyup sıralayan yapay zeka sunucularımızda değil burada çalışır. Makaleler, kimse istemeden önce sunucularımızda çevrilir ve özetlenir. Haber aldığınızda cihazdan yalnızca konu ifadeleriniz çıkar. Bunlar hiçbir kullanıcı kimliği taşımaz. Bunları yalnızca metne göre dizinlenmiş olarak önbellekte tutar ve 14 gün kullanılmazsa sileriz. Sizin hakkınızda, eklediyseniz giriş e-postanızı, abonelik durumunuzu ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısını saklarız. Mera'yı e-posta olmadan kullanıyorsanız, hesabınızı silene kadar bu telefon için bir giriş kaydı da saklarız. Sohbetler kaydedilmez. Tek istisna, engel kaldırma talebine eklediğiniz bir dökümdür. Yedeklemeyi açmazsanız oturumu kapatmak veya cihaz değiştirmek personanızı sıfırdan başlatır.",
+    "privacyCloud": "Konularınız ve bilgileriniz bu cihazda saklanır. Bulut işleme varsayılan olarak açıktır. Buradan cihaz üzerinde işlemeye geçebilirsiniz. Verileriniz onları işleyen enklav için şifrelenir ve yalnızca burada çözülür. Onun doğrulamasını buradan kontrol edebilirsiniz, ancak bu henüz işlemeyi engellemez. Haber aldığınızda cihazdan yalnızca konu ifadeleriniz çıkar. Bunlar hiçbir kullanıcı kimliği taşımaz. Bunları yalnızca metne göre dizinlenmiş olarak önbellekte tutar ve 14 gün kullanılmazsa sileriz. Sizin hakkınızda, eklediyseniz giriş e-postanızı, abonelik durumunuzu ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısını saklarız. Mera'yı e-posta olmadan kullanıyorsanız, hesabınızı silene kadar bu telefon için bir giriş kaydı da saklarız. Sohbetler kaydedilmez. Tek istisna, engel kaldırma talebine eklediğiniz bir dökümdür. Yedeklemeyi açmazsanız personanız sıfırdan başlar.",
     "privacyPolicy": "Gizlilik Politikası",
     "privacyNoticeTitle": "Gizliliğiniz",
     "updatingTopics": "Konular güncelleniyor... {{completed}}/{{total}}",
@@ -1808,7 +1825,13 @@
     "errorDescription": "Lütfen bağlantını kontrol et ve tekrar dene.",
     "retry": "Tekrar Dene",
     "welcomeTitle": "Mera'ya hoş geldiniz",
-    "welcomeBody": "Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmek için \"Kabul et ve devam et\"e dokunun."
+    "welcomeBody": "Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmek için \"Kabul et ve devam et\"e dokunun.",
+    "deviceNotice": {
+      "appAttest": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Apple, bunun gerçek bir iPhone'daki gerçek Mera uygulaması olduğunu onaylar. Hesabınız olduğu sürece bir giriş kaydı saklarız.",
+      "playIntegrity": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Sahte hesapları durdurmak için Google, bunun gerçek bir Android telefondaki gerçek Mera uygulaması olduğunu onaylar. Telefonunuzun kimliğini değil, bir giriş kaydı saklarız.",
+      "generic": "E-posta gerekmez. Mera bu telefonla oturumunuzu açar. Hesabınız olduğu sürece bu telefon için bir giriş kaydı saklarız."
+    },
+    "whatMeraKeeps": "Mera neleri saklar"
   },
   "tutorials": {
     "entryRow": "Mera nasıl çalışır",
@@ -2074,7 +2097,7 @@
             "body": "Üç şey ve bu liste.",
             "steps": {
               "0": "Kısa konu ifadeleri, böylece hikayelerle eşleşecek bir şey var.",
-              "1": "Elektron adresiniz ve hangi planda olduğunuz.",
+              "1": "Nasıl giriş yaptığınız, e-postayla veya bu telefonla, ve hangi planda olduğunuz.",
               "2": "Bugün kaç hikaye analiz edildiğinin sayısı, bunu yapılan planı dürüst tutmak."
             },
             "ask": "Uygulama sunucularınıza ne gönderiyor?"
@@ -2089,11 +2112,11 @@
           },
           "on-device-option": {
             "headline": "İsterseniz cihaz üzerinde",
-            "body": "Ayarlar → Mera Protokolü'nde bu telefonda işlemeyi hareket ettirebilir ve sonra senin hakkında hiçbir şey ayrılmaz. İlk model indiriyor, açık çekiyor bir oldukça yeni telefon ve belirgin yavaş, bu tam olarak neden varsayılan değil."
+            "body": "Ayarlar → Mera Protocol bölümünden işlemeyi bu telefona taşıyabilirsiniz. O zaman haberlerinizi okuyan yapay zeka bulut yerine burada çalışır. Konu ifadeleriniz haber getirmek için yine dışarı çıkar ve giriş için yine e-postanız ya da bu telefon gerekir. Önce bir model indirir, oldukça yeni bir telefon ister ve belirgin şekilde daha yavaştır, varsayılan olmamasının nedeni de tam olarak budur."
           },
           "what-we-keep": {
             "headline": "Ne tuttuğumuz",
-            "body": "Oturum açma e-postanız. Hangi plandan olduğunuz. Her gün analiz edilen hikaye sayısı. Konu ifadeleri yalnızca metne göre önbelleğe alınıyor, onu kimin istediğini hiçbir şey kaydedilmiyor ve on dört gün istenmeyen kullanım sonra bırakılıyor.",
+            "body": "Eklediyseniz giriş e-postanız. Hangi planda olduğunuz. Günlük analiz edilen haber sayısı. Mera'yı e-posta olmadan kullanıyorsanız, bu telefon için hesabınızla birlikte silinen bir giriş kaydı. Konu ifadeleri yalnızca metinleriyle önbelleğe alınır, kimin istediğine dair hiçbir kayıt tutulmaz ve on dört gün kullanılmazsa silinir.",
             "ask": "Mera beni sunuculara ne saklar?"
           }
         }
