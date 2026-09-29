@@ -189,6 +189,11 @@ export const COLLECT_WINDOW_MS = 23 * 3600_000;
 /** Background task: no new POST starts with less than this left before the
  *  deadline (one POST's worth of time: limiter slot, attestation, upload). */
 export const TASK_NO_NEW_POST_MS = 15_000;
+/** Background task: a ready RELEVANCE batch is only collected (GET, decrypt,
+ *  apply, submit its reasons) while more than this remains. It is the whole
+ *  collect step's budget: the reasons POST it ends in still needs the
+ *  TASK_NO_NEW_POST_MS reserve after the decrypt and the writes. */
+export const TASK_COLLECT_MIN_MS = 30_000;
 /** Background task: a ready reasons batch is only downloaded and applied while
  *  at least this much time remains (decrypt is pure JS and slow on Hermes). */
 export const TASK_REASONS_APPLY_MIN_MS = 20_000;
@@ -3322,7 +3327,7 @@ export type BackgroundStopReason =
   | 'error';
 
 export interface AdvanceWaitingResult {
-  /** Relevance batches decrypted and applied this run (at most 1). */
+  /** Relevance batches decrypted and applied this run. */
   appliedRelevance: number;
   /** Reasons batches decrypted and applied this run. */
   appliedReasons: number;
@@ -3420,9 +3425,10 @@ function reportTaskError(err: unknown, step: string): BackgroundStopReason {
  *
  * Order: first every batch already in `needs-reasons-submit` (its relevance is
  * applied; only the reasons POST is owed), then the waiting batches oldest
- * first. At most ONE relevance batch is downloaded, decrypted and applied per
- * run (its reasons are submitted in the same step); ready reasons batches are
- * applied only while TASK_REASONS_APPLY_MIN_MS remain. Pending, a timeout or a
+ * first. Every ready relevance batch is downloaded, decrypted and applied (its
+ * reasons submitted in the same step) while more than TASK_COLLECT_MIN_MS
+ * remain; ready reasons batches are applied while more than
+ * TASK_REASONS_APPLY_MIN_MS remain. Pending, a timeout or a
  * network error leave a batch waiting; only a definite 404 requeues it.
  * Never throws.
  */
@@ -3462,14 +3468,20 @@ export async function advanceWaitingForBackground(opts: {
       const waiting = fresh.run.batches
         .filter((b) => isWaiting(b.phase))
         .sort((a, b) => (a.submittedAt ?? 0) - (b.submittedAt ?? 0));
+      // Every ready batch is collected while time allows: a batch left behind
+      // keeps its MAX_IN_FLIGHT slot, and step (b) then has nowhere to put the
+      // articles it fetches. Each apply persists before the next GET, so a
+      // window that dies mid-loop loses nothing already collected.
+      let skippedForTime = false;
       for (const b of waiting) {
         const left = timeLeft(opts.deadlineAt);
         if (b.phase === 'waiting-relevance') {
-          if (result.appliedRelevance >= 1) continue;
-          // A ready relevance batch ends in a reasons POST, so it needs the
-          // POST reserve on top of the GET.
-          if (left < TASK_NO_NEW_POST_MS) return { ...result, stoppedBy: 'deadline' };
-        } else if (left < TASK_REASONS_APPLY_MIN_MS) {
+          if (left <= TASK_COLLECT_MIN_MS) {
+            skippedForTime = true;
+            continue;
+          }
+        } else if (left <= TASK_REASONS_APPLY_MIN_MS) {
+          skippedForTime = true;
           continue;
         }
         if (!(await takeTaskGrant(io, TASK_NO_NEW_POST_MS / 3))) {
@@ -3486,7 +3498,7 @@ export async function advanceWaitingForBackground(opts: {
           return { ...result, stoppedBy: 'no-auth' };
         }
       }
-      return result;
+      return skippedForTime ? { ...result, stoppedBy: 'deadline' } : result;
     } catch (err) {
       return { ...result, stoppedBy: reportTaskError(err, 'bg-advance') };
     } finally {

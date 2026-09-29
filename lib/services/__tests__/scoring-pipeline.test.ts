@@ -3173,32 +3173,79 @@ describe('advanceWaitingForBackground (step a)', () => {
     expect(out.stoppedBy).toBe('no-run');
   });
 
-  it('applies at most ONE relevance batch and submits its reasons, in task context', async () => {
-    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // two waiting-relevance batches
-    const [b0, b1] = currentRun().batches;
-    mockDecodeResults.mockReturnValue({
-      scoreMap: new Map(b0.candidateIds.map((id: string) => [id, 0.8])),
-      reasonMap: new Map(),
-      failedIds: new Set(),
+  /** Three waiting-relevance batches, every one ready on the gateway, every
+   *  candidate impactful. `decodeDelayMs` advances the clock inside each
+   *  decrypt, standing in for slow pure-JS decryption. */
+  async function threeReadyBatches(decodeDelayMs = 0): Promise<any[]> {
+    await enqueueCandidates(ids(3 * MAX_BATCH_ARTICLES));
+    const batches = currentRun().batches.map((b: any) => ({ ...b }));
+    expect(batches.map((b: any) => b.phase)).toEqual([
+      'waiting-relevance',
+      'waiting-relevance',
+      'waiting-relevance',
+    ]);
+    const all: string[] = batches.flatMap((b: any) => b.candidateIds);
+    mockDecodeResults.mockImplementation(() => {
+      if (decodeDelayMs > 0) jest.setSystemTime(Date.now() + decodeDelayMs);
+      return { scoreMap: new Map(all.map((id) => [id, 0.8])), reasonMap: new Map(), failedIds: new Set() };
     });
-    mockGetScoredWithoutReasons.mockResolvedValue(
-      b0.candidateIds.map((id: string) => ({ ...candidate(id), relevance: 0.8 })),
-    );
+    mockGetScoredWithoutReasons.mockResolvedValue(all.map((id) => ({ ...candidate(id), relevance: 0.8 })));
     mockFetchResults.mockImplementation(async (requestId: string) => relevanceReady(requestId));
     mockSendInferenceRequest.mockClear();
+    return batches;
+  }
+
+  it('collects every ready relevance batch and submits each one\'s reasons, in task context', async () => {
+    await threeReadyBatches();
 
     const out = await advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
 
-    expect(out).toEqual(expect.objectContaining({ appliedRelevance: 1, reasonsSubmitted: 1, stoppedBy: 'done' }));
-    expect(mockFetchResults).toHaveBeenCalledTimes(1);
-    expect(mockFetchResults.mock.calls[0][1]).toBe('task');
-    const run = currentRun();
-    expect(run.batches[0].phase).toBe('waiting-reasons');
-    expect(run.batches[1].phase).toBe('waiting-relevance');
-    expect(run.batches[1].requestId).toBe(b1.requestId);
+    expect(out).toEqual(
+      expect.objectContaining({ appliedRelevance: 3, reasonsSubmitted: 3, stoppedBy: 'done' }),
+    );
+    expect(mockFetchResults).toHaveBeenCalledTimes(3);
+    expect(mockFetchResults.mock.calls.every((c) => c[1] === 'task')).toBe(true);
+    expect(currentRun().batches.map((b: any) => b.phase)).toEqual([
+      'waiting-reasons',
+      'waiting-reasons',
+      'waiting-reasons',
+    ]);
     const send = mockSendInferenceRequest.mock.calls[0][0];
     expect(send).toEqual(expect.objectContaining({ context: 'task', singleAttempt: true }));
     expect(send.idempotencyKey).toMatch(/:0:r:\d+$/);
+  });
+
+  it('stops cleanly once the collect floor is reached; later batches stay exactly as they were', async () => {
+    // The first decrypt eats 35s of a 60s window: 25s left is under the 30s floor.
+    const before = await threeReadyBatches(35_000);
+
+    const out = await advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
+
+    expect(out).toEqual(
+      expect.objectContaining({ appliedRelevance: 1, reasonsSubmitted: 1, stoppedBy: 'deadline' }),
+    );
+    expect(mockFetchResults).toHaveBeenCalledTimes(1);
+    const run = currentRun();
+    expect(run.batches[0].phase).toBe('waiting-reasons');
+    for (const i of [1, 2]) {
+      expect(run.batches[i]).toEqual(before[i]);
+    }
+  });
+
+  it('respects the 30s floor when decryption is slow', async () => {
+    // 20s per decrypt: 60s left → apply (40s left) → apply (20s left) → stop.
+    await threeReadyBatches(20_000);
+
+    const out = await advanceWaitingForBackground({ deadlineAt: NOW + DEADLINE_MS });
+
+    expect(out.appliedRelevance).toBe(2);
+    expect(out.reasonsSubmitted).toBe(2);
+    expect(out.stoppedBy).toBe('deadline');
+    expect(currentRun().batches.map((b: any) => b.phase)).toEqual([
+      'waiting-reasons',
+      'waiting-reasons',
+      'waiting-relevance',
+    ]);
   });
 
   it('never requeues on pending, even hours after submit', async () => {
