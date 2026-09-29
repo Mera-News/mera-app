@@ -54,6 +54,7 @@ jest.mock('@/lib/hooks/use-is-focused-safe', () => ({
 import { render } from '@testing-library/react-native';
 import React from 'react';
 import MeraLogo from '../MeraLogo';
+import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 
 describe('MeraLogo', () => {
   beforeEach(() => {
@@ -215,5 +216,35 @@ describe('MeraLogo scrollCards', () => {
       (n: any) => n.props?.testID === 'svg-G' && n.props?.animatedProps !== undefined && typeof n.type === 'string',
     );
     expect(sweeping).toHaveLength(1);
+  });
+});
+
+describe('MeraLogo in Lite mode', () => {
+  const animatedGroups = (r: ReturnType<typeof render>) =>
+    r.queryAllByTestId('svg-G').filter((g) => g.props.animatedProps !== undefined);
+
+  beforeEach(() => {
+    mockAnimationsActive = true;
+  });
+  afterEach(() => {
+    useDisplayPrefsStore.setState({ liteMode: false });
+  });
+
+  it('freezes a decorative loop', () => {
+    useDisplayPrefsStore.setState({ liteMode: true });
+    const r = render(<MeraLogo size={56} animated />);
+    expect(animatedGroups(r)).toHaveLength(0);
+  });
+
+  it('keeps a loop that shows work in progress moving', () => {
+    useDisplayPrefsStore.setState({ liteMode: true });
+    const r = render(<MeraLogo size={56} animated showsProgress />);
+    expect(animatedGroups(r).length).toBeGreaterThan(0);
+  });
+
+  it('animates a decorative loop in Full mode (positive control)', () => {
+    useDisplayPrefsStore.setState({ liteMode: false });
+    const r = render(<MeraLogo size={56} animated />);
+    expect(animatedGroups(r).length).toBeGreaterThan(0);
   });
 });

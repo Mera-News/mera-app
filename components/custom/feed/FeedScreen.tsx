@@ -301,8 +301,8 @@ const FeedScreen: React.FC = () => {
   // area and the tutorial heroes read, and the same one-liner
   // `AbstractGradientBackdrop` established.
   const reduceMotion = useReducedMotion();
-  const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
-  const arrivalMotion = !reduceMotion && !staticGradient;
+  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+  const arrivalMotion = !reduceMotion && !liteMode;
 
   // Collapsing header (hides on scroll-down, reveals on scroll-up) — shared
   // with the Dashboard tab.

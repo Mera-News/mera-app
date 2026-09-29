@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 
 // Create animated version of G component for SVG transforms
 const AnimatedG = Animated.createAnimatedComponent(G);
@@ -185,6 +186,13 @@ interface MeraLogoProps {
      * MeraLogo.test.tsx). The highlighted card and the focus dot stay put.
      */
     scrollCards?: boolean;
+    /**
+     * The loop tells the reader work is in progress (a launch gate, a chat
+     * reply streaming), so it keeps moving in Lite mode. Everything else is
+     * decoration and freezes there: RNSVG re-rasterises the glyph on the CPU
+     * every frame, which a weak phone pays for on its UI thread.
+     */
+    showsProgress?: boolean;
 }
 
 // Mera Logo Component. Static by default; opt into the animated spotlight.
@@ -196,7 +204,12 @@ const MeraLogo: React.FC<MeraLogoProps> = ({
     animated = false,
     color = '#fff',
     scrollCards = false,
+    showsProgress = false,
 }) => {
+    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+    const loops = showsProgress || !liteMode;
+    const moves = animated && loops;
+    const cardsMove = scrollCards && loops;
     return (
         <Svg width={size} height={size} viewBox="255 146 514 732">
             {/* Hexagon outline */}
@@ -206,7 +219,7 @@ const MeraLogo: React.FC<MeraLogoProps> = ({
             </ClipPath>
             <G clipPath="url(#hexB)">
                 {/* Grid cards: still, or scrolling right to left under the torch. */}
-                {scrollCards ? (
+                {cardsMove ? (
                     <ScrollingCards color={color} />
                 ) : (
                     <G fill="none" stroke={color} strokeOpacity="0.18" strokeWidth="10">
@@ -222,7 +235,7 @@ const MeraLogo: React.FC<MeraLogoProps> = ({
                     </G>
                 )}
                 {/* Spotlight cone — animated sweep or a frozen −15° frame. */}
-                {animated ? (
+                {moves ? (
                     <AnimatedSpotlight color={color} />
                 ) : (
                     <StaticSpotlight color={color} />

@@ -18,7 +18,7 @@ const flags = {
   hydrationCompleted: 0,
   hydrationTotal: 0,
   reduceMotion: false,
-  staticGradient: false,
+  liteMode: false,
   animationsActive: true,
   lastRunFinishedAt: null as number | null,
 };
@@ -37,8 +37,8 @@ jest.mock('react-native-reanimated', () => ({
 }));
 
 jest.mock('@/lib/stores/display-prefs-store', () => ({
-  useDisplayPrefsStore: (sel: (s: { staticGradient: boolean }) => unknown) =>
-    sel({ staticGradient: flags.staticGradient }),
+  useDisplayPrefsStore: (sel: (s: { liteMode: boolean }) => unknown) =>
+    sel({ liteMode: flags.liteMode }),
 }));
 
 jest.mock('@/lib/stores/selectors', () => ({
@@ -74,7 +74,7 @@ const reset = () =>
     hydrationCompleted: 0,
     hydrationTotal: 0,
     reduceMotion: false,
-    staticGradient: false,
+    liteMode: false,
     animationsActive: true,
     lastRunFinishedAt: null,
   });
@@ -243,7 +243,7 @@ describe('useProcessingSnapshot — the two motion gates are separate', () => {
 
   it("reports isStatic for the app's own Static background setting", () => {
     flags.schedulerRunning = true;
-    flags.staticGradient = true;
+    flags.liteMode = true;
     const { result } = renderHook(() => useProcessingSnapshot());
     expect(result.current.isStatic).toBe(true);
   });

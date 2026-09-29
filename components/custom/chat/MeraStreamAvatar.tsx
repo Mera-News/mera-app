@@ -57,7 +57,7 @@ export const MeraStreamAvatar: React.FC<MeraStreamAvatarProps> = ({
       <Animated.View style={style}>
         {/* Decorative: the bubble beside it already carries the live region,
             and two announcements for one wait is worse than none. */}
-        <MeraLogo size={AVATAR_SIZE} animated={animationsActive} color="rgb(231, 138, 83)" />
+        <MeraLogo size={AVATAR_SIZE} animated={animationsActive} showsProgress color="rgb(231, 138, 83)" />
       </Animated.View>
     </View>
   );

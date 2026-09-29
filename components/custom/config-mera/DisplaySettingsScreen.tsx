@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { type StartupTab } from '@/lib/navigation/startup-tab';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
+import type { PerformanceOverride } from '@/lib/performance/performance-mode';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { useStartupTabStore } from '@/lib/stores/startup-tab-store';
 import { useTextScaleStore } from '@/lib/stores/text-scale-store';
@@ -20,25 +21,17 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 
-/**
- * The "Static background" switch is HIDDEN on Android.
- *
- * `AbstractGradientBackdrop` folds Android into the same static path this
- * switch selects (see `isStatic` there), so on Android the switch is already
- * on and cannot be turned off. A visible control that does nothing is worse
- * than an absent one — it invites the user to conclude the setting is broken.
- * The setting itself is untouched: the row is what is hidden, not the store.
- *
- * This gates only the static-gradient ROW, not the whole Visuals section —
- * blur images (folded in from the deleted Security screen) must stay visible
- * on Android, which is the platform the row-level (not section-level) gate
- * exists to protect.
- */
-const SHOWS_STATIC_GRADIENT_ROW = Platform.OS !== 'android';
+/** The Lite mode choices, in order. `auto` follows the phone
+ *  (lib/performance/performance-mode.ts). Shown on every platform: unlike the
+ *  old backdrop-only switch it governs more than the Android-static backdrop. */
+const LITE_MODE_OPTIONS = [
+  { value: 'auto', labelKey: 'display.liteModeAuto' },
+  { value: 'lite', labelKey: 'display.liteModeOn' },
+  { value: 'full', labelKey: 'display.liteModeOff' },
+] as const satisfies readonly { value: PerformanceOverride; labelKey: string }[];
 
 /** Index-aligned with `TEXT_SCALE_STEPS` / `TEXT_SCALE_LABEL_KEYS`. Written out
  *  in full rather than assembled from the step name so the keys are greppable
@@ -90,8 +83,9 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
-  const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
-  const setStaticGradient = useDisplayPrefsStore((s) => s.setStaticGradient);
+  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+  const performanceOverride = useDisplayPrefsStore((s) => s.performanceOverride);
+  const setPerformanceOverride = useDisplayPrefsStore((s) => s.setPerformanceOverride);
   const textScale = useTextScaleStore((s) => s.scale);
   const setTextScale = useTextScaleStore((s) => s.setScale);
   const blurImages = useBlurImagesStore((s) => s.blurImages);
@@ -221,10 +215,6 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
           </VStack>
 
           {/* ── Visuals ──────────────────────────────────────────────────── */}
-          {/* Unlike before, this section is NOT gated as a whole: blur images
-              (folded in from Security) must survive on Android, which only
-              hides the static-gradient row below (see
-              SHOWS_STATIC_GRADIENT_ROW's doc). */}
           <VStack className="px-5">
             <Text size="xs" className="text-gray-500 font-semibold mb-2 uppercase">
               {t('display.sectionVisuals')}
@@ -248,30 +238,47 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
               <Switch testID="blur-images-switch" value={blurImages} onToggle={setBlurImages} size="md" />
             </HStack>
 
-            {SHOWS_STATIC_GRADIENT_ROW ? (
-              <HStack className="items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg">
-                <HStack space="md" className="items-center flex-1 pr-3">
-                  <MaterialIcons
-                    name="gradient"
-                    size={24}
-                    color={staticGradient ? '#10b981' : '#9ca3af'}
-                  />
-                  <VStack className="flex-1">
-                    <Text className="text-base text-white">{t('display.staticGradientTitle')}</Text>
-                    <Text size="sm" className="text-gray-400 mt-0.5">
-                      {t('display.staticGradientDescription')}
-                    </Text>
-                  </VStack>
-                </HStack>
-
-                <Switch
-                  testID="static-gradient-switch"
-                  value={staticGradient}
-                  onToggle={setStaticGradient}
-                  size="md"
-                />
+            <VStack className="py-3 px-4 mb-3 border border-gray-700 rounded-lg" space="sm">
+              <HStack space="md" className="items-center">
+                <MaterialIcons name="speed" size={24} color={liteMode ? '#10b981' : '#9ca3af'} />
+                <VStack className="flex-1">
+                  <Text className="text-base text-white">{t('display.liteModeTitle')}</Text>
+                  <Text size="sm" className="text-gray-400 mt-0.5">
+                    {t('display.liteModeDescription')}
+                  </Text>
+                </VStack>
               </HStack>
-            ) : null}
+
+              <HStack className="mt-1" space="xs" accessibilityRole="radiogroup" testID="lite-mode-options">
+                {LITE_MODE_OPTIONS.map(({ value, labelKey }) => {
+                  const active = value === performanceOverride;
+                  const label = t(labelKey);
+                  return (
+                    <Pressable
+                      key={value}
+                      testID={`lite-mode-${value}`}
+                      onPress={() => setPerformanceOverride(value)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: active, checked: active }}
+                      accessibilityLabel={t('display.liteModeA11y', { label })}
+                      className={`flex-1 items-center justify-center rounded-md border px-1 py-2 ${
+                        active ? 'bg-primary-400 border-primary-400' : 'bg-transparent border-gray-700'
+                      }`}
+                      style={{ minHeight: 44 }}
+                    >
+                      <Text
+                        size="xs"
+                        scaleTier="chrome"
+                        numberOfLines={1}
+                        className={active ? 'text-black' : 'text-gray-400'}
+                      >
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </HStack>
+            </VStack>
           </VStack>
 
           {/* ── Startup tab ──────────────────────────────────────────────── */}

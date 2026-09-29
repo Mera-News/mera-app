@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Tests for Settings → Display.
 //
-// Text size, static background, blur images and the startup-tab picker. The
+// Text size, Lite mode, blur images and the startup-tab picker. The
 // PIN lock moved to Settings > Security (SecuritySettingsSection.test.tsx).
 //
 // Copy is asserted by KEY, never by English text — `t` is mocked to echo the
@@ -88,12 +88,16 @@ jest.mock('@/lib/logger', () => ({
     default: { info: jest.fn(), captureException: jest.fn() },
 }));
 
-const mockSetStaticGradient = jest.fn();
-let mockStaticGradient = false;
+const mockSetPerformanceOverride = jest.fn();
+let mockPerformanceOverride: 'auto' | 'full' | 'lite' = 'auto';
 
 jest.mock('@/lib/stores/display-prefs-store', () => ({
     useDisplayPrefsStore: (selector: any) =>
-        selector({ staticGradient: mockStaticGradient, setStaticGradient: mockSetStaticGradient }),
+        selector({
+            liteMode: mockPerformanceOverride === 'lite',
+            performanceOverride: mockPerformanceOverride,
+            setPerformanceOverride: mockSetPerformanceOverride,
+        }),
 }));
 
 const mockSetTextScale = jest.fn();
@@ -138,7 +142,7 @@ import { TEXT_SCALE_STEPS } from '@/lib/typography/scale';
 
 beforeEach(() => {
     jest.clearAllMocks();
-    mockStaticGradient = false;
+    mockPerformanceOverride = 'auto';
     mockTextScale = 1;
     mockLockEnabled = false;
     mockBlurImages = false;
@@ -152,20 +156,21 @@ describe('DisplaySettingsScreen', () => {
         expect(getByText('display.screenSubtitle')).toBeTruthy();
         expect(getByText('display.sectionText')).toBeTruthy();
         expect(getByText('display.sectionVisuals')).toBeTruthy();
-        expect(getByText('display.staticGradientTitle')).toBeTruthy();
-        expect(getByText('display.staticGradientDescription')).toBeTruthy();
+        expect(getByText('display.liteModeTitle')).toBeTruthy();
+        expect(getByText('display.liteModeDescription')).toBeTruthy();
     });
 
-    it('reflects the stored preference on the switch', () => {
-        mockStaticGradient = true;
+    it('marks the stored Lite mode choice as selected', () => {
+        mockPerformanceOverride = 'lite';
         const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        expect(getByTestId('static-gradient-switch').props.accessibilityState.checked).toBe(true);
+        expect(getByTestId('lite-mode-lite').props.accessibilityState.checked).toBe(true);
+        expect(getByTestId('lite-mode-auto').props.accessibilityState.checked).toBe(false);
     });
 
-    it('fires setStaticGradient with the flipped value on toggle', () => {
+    it('stores the choice the reader taps', () => {
         const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        fireEvent.press(getByTestId('static-gradient-switch'));
-        expect(mockSetStaticGradient).toHaveBeenCalledWith(true);
+        fireEvent.press(getByTestId('lite-mode-full'));
+        expect(mockSetPerformanceOverride).toHaveBeenCalledWith('full');
     });
 
     it('calls onBack from the header back button', () => {
@@ -250,12 +255,9 @@ describe('DisplaySettingsScreen — blur-images toggle', () => {
         expect(mockSetBlurImages).toHaveBeenCalledWith(true);
     });
 
-    // The Android-hides-static-gradient-but-not-blur behavior (why blur moved
-    // OUTSIDE the SHOWS_STATIC_GRADIENT_ROW gate, per that constant's doc
-    // comment in DisplaySettingsScreen.tsx) is a module-load-time Platform.OS
-    // read, not reachable from this file without re-importing the module
-    // under a mocked react-native — see DisplaySettingsScreen.android.test.tsx
-    // (this same directory) for that coverage.
+    // The Android render of the Visuals section lives in
+    // DisplaySettingsScreen.android.test.tsx, which mocks Platform.OS before
+    // the module loads.
 });
 
 // ── Startup tab (new) ───────────────────────────────────────────────────

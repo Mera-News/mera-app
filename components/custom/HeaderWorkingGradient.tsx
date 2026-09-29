@@ -167,7 +167,7 @@ export const HeaderWorkingGradient: React.FC<HeaderWorkingGradientProps> = ({
   testID = 'header-working-gradient',
 }) => {
   const reduceMotion = useReducedMotion();
-  const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
+  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
   // `focused && foregrounded`. `ProcessingStageAnimation.tsx:27-49` argues this
   // out for the closest sibling: the `use-is-focused-safe` warning against
   // gating a LIVENESS signal applies to something narrower than "anyone is
@@ -179,7 +179,7 @@ export const HeaderWorkingGradient: React.FC<HeaderWorkingGradientProps> = ({
   const blend = useSharedValue(0);
   // Both preferences stop the MOTION. The state is still carried by the mark,
   // the narration line and the status panel, none of which are animations.
-  const animates = active && animationsActive && !reduceMotion && !staticGradient;
+  const animates = active && animationsActive && !reduceMotion && !liteMode;
 
   React.useEffect(() => {
     if (!animates) {
@@ -200,7 +200,7 @@ export const HeaderWorkingGradient: React.FC<HeaderWorkingGradientProps> = ({
   // STRUCTURAL, not `opacity: 0`. "At rest the header is exactly what it is
   // today" is then a property of the tree rather than a claim about a number,
   // and it is asserted as `toJSON() === null`.
-  if (!active || reduceMotion || staticGradient) return null;
+  if (!active || reduceMotion || liteMode) return null;
 
   return (
     <View

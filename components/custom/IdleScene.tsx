@@ -40,7 +40,7 @@ interface IdleSceneProps {
  *
  * ## Not playing is a held frame, never an empty box
  *
- * `staticGradient` defaults ON below 6 GB of RAM, so the frozen frame is the
+ * `liteMode` defaults ON below 6 GB of RAM, so the frozen frame is the
  * NORMAL rendering on a large share of the fleet rather than a rare
  * accessibility path. `game-hud-idle` is authored with both its layers lit at
  * frame 0 for exactly this reason, and the asset gate enforces that.
@@ -55,9 +55,9 @@ interface IdleSceneProps {
  */
 const IdleScene: React.FC<IdleSceneProps> = ({ testID, size = PROCESSING_SCENE_SIZE }) => {
     const reduceMotion = useReducedMotion();
-    const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
+    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
     const animationsActive = useAnimationsActive();
-    const playing = animationsActive && !(reduceMotion || staticGradient);
+    const playing = animationsActive && !(reduceMotion || liteMode);
 
     return (
         <Box testID={testID} style={{ width: size, height: size }}>

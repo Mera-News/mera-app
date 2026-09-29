@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // Android-only coverage for DisplaySettingsScreen's Visuals section.
 //
-// `SHOWS_STATIC_GRADIENT_ROW` (Platform.OS !== 'android') is read at MODULE
-// LOAD time, so exercising the Android branch needs Platform.OS mocked
-// BEFORE the component module is imported — a separate file, not a
-// runtime toggle inside DisplaySettingsScreen.test.tsx. This is the whole
-// reason blur images moved OUTSIDE that gate when Security was folded in:
-// blur must survive on Android (the platform the user was reporting from),
-// unlike the static-gradient row.
+// The old "Static background" row was hidden on Android, because the backdrop
+// is always static there. Lite mode governs more than the backdrop, so its row
+// shows on Android too, beside blur images. Platform.OS is mocked BEFORE the
+// component module is imported so the Android path is the one rendered.
 // A Proxy over the actual module, NOT an object spread — spreading would
 // enumerate (and eagerly evaluate) every lazy getter on react-native's
 // export object, including deprecated NativeComponent specs that Jest's
@@ -89,7 +86,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 jest.mock('@/lib/stores/display-prefs-store', () => ({
-    useDisplayPrefsStore: (selector: any) => selector({ staticGradient: false, setStaticGradient: jest.fn() }),
+    useDisplayPrefsStore: (selector: any) => selector({ liteMode: true, performanceOverride: 'auto', setPerformanceOverride: jest.fn() }),
 }));
 jest.mock('@/lib/stores/text-scale-store', () => ({
     useTextScaleStore: (selector: any) => selector({ scale: 1, setScale: jest.fn() }),
@@ -109,9 +106,9 @@ import React from 'react';
 import DisplaySettingsScreen from '../DisplaySettingsScreen';
 
 describe('DisplaySettingsScreen on Android', () => {
-    it('hides the static-gradient row but keeps blur images', () => {
+    it('shows the Lite mode row and keeps blur images', () => {
         const { getByTestId, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
         expect(getByTestId('blur-images-switch')).toBeTruthy();
-        expect(queryByTestId('static-gradient-switch')).toBeNull();
+        expect(queryByTestId('lite-mode-options')).not.toBeNull();
     });
 });
