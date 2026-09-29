@@ -7,11 +7,22 @@
 // write and hydrate over the async bridge. iOS gets JSI from the pod.
 // See plans/ready_to_implement/native_build_plans/ANDROID_WATERMELONDB_JSI_PLAN.md.
 //
-// Three edits, each idempotent and each throwing if its anchor moved, the same
+// Four edits, each idempotent and each throwing if its anchor moved, the same
 // contract as withMlKit16kb.js: a silently skipped edit would ship a binary
 // that still falls back, which is the bug this exists to fix.
+//
+// The fourth is 16 KB page alignment. The first 1.3.3 dev build shipped
+// libwatermelondb-jsi.so with 0x1000 LOAD alignment, which Google Play rejects
+// for new native code. The module's own build.gradle takes no page-size
+// setting, so the linker flag is passed to its CMake build from the root
+// build.gradle. A plain lld flag works on any NDK the build resolves.
 
-const { withAppBuildGradle, withMainApplication, withSettingsGradle } = require('@expo/config-plugins');
+const {
+  withAppBuildGradle,
+  withMainApplication,
+  withProjectBuildGradle,
+  withSettingsGradle,
+} = require('@expo/config-plugins');
 
 const PROJECT = ':watermelondb-jsi';
 const SETTINGS_SNIPPET = `
@@ -20,6 +31,19 @@ project('${PROJECT}').projectDir = new File(rootProject.projectDir, '../node_mod
 `;
 const DEPENDENCY = `    implementation project('${PROJECT}')`;
 const PACKAGE = 'add(com.nozbe.watermelondb.jsi.WatermelonDBJSIPackage())';
+const PAGE_SIZE_MARKER = '// withWatermelonJsi: 16 KB pages';
+const PAGE_SIZE_SNIPPET = `
+${PAGE_SIZE_MARKER}
+subprojects { sub ->
+  if (sub.path == '${PROJECT}') {
+    sub.plugins.withId('com.android.library') {
+      sub.android.defaultConfig.externalNativeBuild.cmake.arguments(
+        '-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384'
+      )
+    }
+  }
+}
+`;
 
 function withJsiSettings(config) {
   return withSettingsGradle(config, (cfg) => {
@@ -61,6 +85,17 @@ function withJsiPackage(config) {
   });
 }
 
+function withJsiPageSize(config) {
+  return withProjectBuildGradle(config, (cfg) => {
+    if (cfg.modResults.language !== 'groovy') {
+      throw new Error('withWatermelonJsi only supports a Groovy root build.gradle');
+    }
+    if (cfg.modResults.contents.includes(PAGE_SIZE_MARKER)) return cfg;
+    cfg.modResults.contents = `${cfg.modResults.contents.trimEnd()}\n${PAGE_SIZE_SNIPPET}`;
+    return cfg;
+  });
+}
+
 module.exports = function withWatermelonJsi(config) {
-  return withJsiPackage(withJsiDependency(withJsiSettings(config)));
+  return withJsiPageSize(withJsiPackage(withJsiDependency(withJsiSettings(config))));
 };
