@@ -40,6 +40,18 @@ import ScopeArticleList from './ScopeArticleList';
 import ScopeChipRow from './ScopeChipRow';
 import SwipeTabs from '@/components/custom/for-you/SwipeTabs';
 
+/**
+ * Keep the previous state when a focus-time re-read found nothing new. Every
+ * focus re-subscribes the locations observable and re-reads browse and hidden
+ * scopes; storing fresh-but-equal arrays rebuilt every scope object and
+ * re-rendered every card in all three mounted scope panels on each switch to
+ * this tab (measured on a Snapdragon 732G: the bulk of Explore's switch cost).
+ * The inputs are a handful of short rows, so a string compare is cheap.
+ */
+function keepIfEqual<T>(prev: T, next: T): T {
+    return JSON.stringify(prev) === JSON.stringify(next) ? prev : next;
+}
+
 /** Persisted last-selected scope id (setting-service KV — same store as other flags). */
 const LAST_SCOPE_KEY = 'explore_last_scope';
 
@@ -182,15 +194,14 @@ const ExploreScreen: React.FC = () => {
     useFocusEffect(
         useCallback(() => {
             const sub = observeAllLocations().subscribe((rows) => {
-                setLocations(
-                    rows.map((l) => ({
-                        city: l.city,
-                        region: l.region,
-                        countryCode: l.countryCode,
-                        role: l.role,
-                        weight: l.weight,
-                    })),
-                );
+                const next = rows.map((l) => ({
+                    city: l.city,
+                    region: l.region,
+                    countryCode: l.countryCode,
+                    role: l.role,
+                    weight: l.weight,
+                }));
+                setLocations((prev) => keepIfEqual(prev, next));
                 setLocationsLoaded(true);
             });
             return () => sub.unsubscribe();
@@ -209,8 +220,12 @@ const ExploreScreen: React.FC = () => {
             Promise.all([getBrowseCountries(), getSuppressedScopeIds()])
                 .then(([browse, suppressed]) => {
                     if (cancelled) return;
-                    setBrowseCountries(browse);
-                    setSuppressedIds(new Set(suppressed));
+                    setBrowseCountries((prev) => keepIfEqual(prev, browse));
+                    setSuppressedIds((prev) => {
+                        const next = new Set(suppressed);
+                        const same = prev.size === next.size && [...next].every((id) => prev.has(id));
+                        return same ? prev : next;
+                    });
                 })
                 .catch((err: unknown) => {
                     logger.captureException(err, {

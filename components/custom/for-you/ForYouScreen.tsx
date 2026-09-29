@@ -147,11 +147,21 @@ const MeraNewsScreen: React.FC = () => {
         const nowMs = Date.now();
         if (!shouldResort({ lastAppliedMs: lastResortAtRef.current, nowMs, trigger })) return;
         lastResortAtRef.current = nowMs;
-        setSortSnapshot({
+        const next = {
             cardStates: useFeedOrderStore.getState().cardStates,
             openedArticleIds: useOpenedStoriesStore.getState().articleIds,
             openedIds: useOpenedStoriesStore.getState().ids,
-        });
+        };
+        // Same store objects means nothing was viewed since the last resort:
+        // keep the snapshot, or every blur (every switch AWAY from this tab)
+        // rebuilds all Dashboard rows for an identical order.
+        setSortSnapshot((prev) =>
+            prev.cardStates === next.cardStates &&
+            prev.openedArticleIds === next.openedArticleIds &&
+            prev.openedIds === next.openedIds
+                ? prev
+                : next,
+        );
     }, []);
 
     // Seed once both stores have hydrated (an empty snapshot would rank every

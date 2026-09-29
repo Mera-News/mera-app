@@ -30,6 +30,21 @@ import { skip } from 'rxjs/operators';
 
 export const SNAPSHOT_RELOAD_DEBOUNCE_MS = 300;
 
+/** Every focus reloads the snapshots; an identical reload must not hand the
+ *  Dashboard a new object, or every section re-renders on each switch to the
+ *  tab. Maps compare by entries; the inputs are a few dozen short rows. */
+export function snapshotsEqual(a: SectionSnapshots, b: SectionSnapshots): boolean {
+  const key = (s: SectionSnapshots) =>
+    JSON.stringify([
+      [...s.topics.entries()],
+      [...s.facts.entries()],
+      [...s.locations.entries()],
+      [...s.factStatements.entries()],
+      s.hasTopics,
+    ]);
+  return key(a) === key(b);
+}
+
 export function useSectionSnapshots(
   screen: string,
   deps: readonly unknown[] = [],
@@ -67,7 +82,7 @@ export function useSectionSnapshots(
     let cancelled = false;
     loadSectionSnapshots()
       .then((s) => {
-        if (!cancelled) setSnapshots(s);
+        if (!cancelled) setSnapshots((prev) => (prev && snapshotsEqual(prev, s) ? prev : s));
       })
       .catch((err: unknown) => {
         logger.captureException(err, { tags: { screen, method: 'loadSectionSnapshots' } });

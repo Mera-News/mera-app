@@ -23,7 +23,15 @@ beforeEach(() => {
   jest.useFakeTimers();
   mockFocused = true;
   mockLoad.mockReset();
-  mockLoad.mockResolvedValue({ topics: new Map() });
+  // A full snapshot shape: the hook compares a reload with the last one
+  // (snapshotsEqual) and keeps the old object when nothing changed.
+  mockLoad.mockResolvedValue({
+    topics: new Map(),
+    facts: new Map(),
+    locations: new Map(),
+    factStatements: new Map(),
+    hasTopics: false,
+  });
 });
 afterEach(() => jest.useRealTimers());
 
