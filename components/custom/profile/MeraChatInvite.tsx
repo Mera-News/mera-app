@@ -86,9 +86,12 @@ const MeraChatInvite: React.FC<MeraChatInviteProps> = ({ returning = false }) =>
                 <View style={styles.tail} />
             </View>
 
-            {/* Mera logo (right). */}
+            {/* Mera logo (right). STILL on purpose: this row sits on a resting
+                screen, and the animated sweep re-rasterises the SVG on the CPU
+                every frame. Measured on a Snapdragon 732G: 8.3s of UI-thread
+                CPU per 10s idle on Profile against 1.8s on the other tabs. */}
             <View ref={iconRef} onLayout={publishCenter} style={styles.icon}>
-                <MeraLogo size={LOGO_SIZE} animated />
+                <MeraLogo size={LOGO_SIZE} />
             </View>
         </HStack>
     );

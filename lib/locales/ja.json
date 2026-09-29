@@ -72,8 +72,6 @@
     "learnAboutMera": "Mera について知る",
     "startReading": "読み始める",
     "alreadyHaveAccount": "メールでログイン",
-    "chooseLanguageTitle": "言語を選択してください",
-    "chooseLanguageHint": "設定でいつでも変更できます。",
     "continue": "続行",
     "firstTimeHint": "Meraは初めてですか？まずはクイックツアーをどうぞ。",
     "readyHint": "Meraを自分のものにする準備はできましたか？",
@@ -1640,8 +1638,6 @@
     "blurImagesDescription": "アプリ全体の記事画像をソフト化して、グラフィックまたは不穏なビジュアルが鮮明に表示されないようにします。"
   },
   "display": {
-    "staticGradientTitle": "静的背景",
-    "staticGradientDescription": "アニメーション背景の代わりに固定グラデーションを使用します — バッテリーと古いデバイスに優しい",
     "screenTitle": "表示",
     "screenSubtitle": "テキスト、ビジュアル、およびこのデバイスでMeraを開く方法",
     "sectionText": "テキスト",
@@ -1660,7 +1656,9 @@
     "sectionStartup": "スタートアップタブ",
     "startupTabA11y": "スタートアップタブ、{{label}}",
     "startupTabDescription": "アプリを起動したときにMeraが開くタブを選択します。",
-    "startupTabTitle": "起動時に開く"
+    "startupTabTitle": "起動時に開く",
+    "liteModeTitle": "Liteモード",
+    "liteModeDescription": "動く背景と装飾アニメーションをオフにします。古いスマホでも滑らかに動き、バッテリーにもやさしくなります。"
   },
   "freeTier": {
     "cardBody": "Meraが持つAI機能は現在オフになっています。保存した記事、フォローした記事、読んだ記事はすべてこのデバイスに残ります。探索タブには今日のニュースが引き続き表示されます。プランなしでは、Meraはフィードを作成したり、質問に答えたり、新しいストーリーをフォローできません。プランを開始すれば、すべてが戻ります。",
@@ -2938,5 +2936,28 @@
     "shareA11y": "このストーリーを書き出す",
     "shareDialogTitle": "ストーリーを書き出す",
     "includeReasonHint": "各記事がフィードに届いた理由を説明する 1 行のメモです。メモがない記事もあります。"
+  },
+  "systemCheck": {
+    "title": "Meraを準備しています",
+    "subtitle": "この端末でMeraがどう動くか、簡単にチェックします。",
+    "phoneTitle": "お使いの端末",
+    "phoneSupported": "対応: {{details}}",
+    "memory": "メモリ{{gb}}GB",
+    "modeTitle": "Meraの動作モード",
+    "modeFull": "フルモード",
+    "modeFullDetail": "すべてのアニメーションとエフェクトがオンになっています。",
+    "modeLite": "Liteモード",
+    "modeLiteDetail": "動く背景と装飾アニメーションがオフになり、Meraが滑らかに動きます。設定でいつでも変更できます。",
+    "aiTitle": "デバイス上のAI",
+    "aiNotYet": "まだ利用できません。デバイス上のAIはベータ版です。",
+    "languageTitle": "言語: {{language}}",
+    "languageEnglish": "準備完了です。",
+    "languageReady": "準備完了です。この端末で記事を翻訳できます。",
+    "languageChecking": "言語パックを確認しています。端末から確認画面が出たら、ダウンロードをタップしてください。",
+    "languageMissing": "この端末は今のところ{{language}}に翻訳できません。もう一度お試しいただくか、英語のまま続けてください。",
+    "retry": "再試行",
+    "useEnglish": "英語を使う",
+    "settingsTitle": "システムチェック",
+    "settingsDescription": "この端末でのMeraの動作と、言語パックの状態を確認できます。"
   }
 }

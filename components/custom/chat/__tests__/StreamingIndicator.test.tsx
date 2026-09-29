@@ -40,7 +40,7 @@ jest.mock('@/lib/hooks/use-is-focused-safe', () => ({
   useAnimationsActive: () => mockAnimationsActive,
 }));
 jest.mock('@/lib/stores/display-prefs-store', () => ({
-  useDisplayPrefsStore: (sel: (s: { staticGradient: boolean }) => unknown) => sel({ staticGradient: false }),
+  useDisplayPrefsStore: (sel: (s: { liteMode: boolean }) => unknown) => sel({ liteMode: false }),
 }));
 
 import StreamingIndicator from '../StreamingIndicator';

@@ -1,6 +1,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
+import SystemCheckStage from '@/components/custom/system-check/SystemCheckStage';
 import ConsentContent from '@/components/custom/auth/ConsentContent';
 import LegalFooter from '@/components/custom/auth/LegalFooter';
 import TutorialLaunchButton from '@/components/custom/tutorials/TutorialLaunchButton';
@@ -43,7 +44,6 @@ import {
     recordAuthenticatedUser,
     releaseAccountSwitch,
 } from '@/lib/security/identity-gate';
-import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -319,93 +319,6 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({
             <Box style={{ flex: 1 }} />
 
             <PreAuthFooter />
-        </Box>
-    );
-};
-
-interface LanguageStageViewProps {
-    /** The chosen (or confirmed default) language is persisted; move on. */
-    onContinue: () => void;
-}
-
-/**
- * The true first-launch stage: nothing but the logo and the language choice.
- * The device locale arrives preselected (app-language-store hydrates it in
- * memory), so most people confirm with one tap on Continue; anyone else picks
- * from the selector first. Continue persists the choice to the `app_language`
- * settings ROW — whose absence is the "never explicitly picked" signal the
- * mount effect keys on — so this stage shows exactly once per install.
- */
-const LanguageStageView: React.FC<LanguageStageViewProps> = ({ onContinue }) => {
-    const { t } = useTranslation();
-    const [saving, setSaving] = useState(false);
-
-    const handleContinue = async () => {
-        if (saving) return;
-        setSaving(true);
-        void hapticLight();
-        try {
-            // Idempotent when a picker choice already wrote the row; for the
-            // one-tap confirm this is the write that makes the default stick.
-            await useAppLanguageStore
-                .getState()
-                .setAppLanguage(useAppLanguageStore.getState().appLanguage);
-        } catch {
-            // The store logs its own failures. A missed persist only means
-            // this stage shows once more next launch — never strand the user.
-        }
-        onContinue();
-    };
-
-    return (
-        // Same three-band skeleton as the sibling views (see EmailInputView's
-        // layout note), same F2 accessibility scoping: wrappers are
-        // accessible={false}, only the pressables carry labels.
-        <Box testID="auth-language-root" accessible={false} className="flex-1 px-5">
-            {/* Upper band — the logo owns it and is centred in it. */}
-            <Box accessible={false} className="items-center justify-center" style={{ flex: 5 }}>
-                <MeraLogo size={150} animated />
-            </Box>
-
-            <VStack testID="auth-language-cluster" accessible={false} space="md">
-                <VStack accessible={false} space="xs">
-                    {/* Same greeting key the consent step uses — one string,
-                        one translation, and the two stages read as one flow. */}
-                    <Text size="2xl" className="text-white font-semibold text-center">
-                        {t('consent.welcomeTitle')}
-                    </Text>
-                    <Text size="lg" className="text-gray-300 text-center">
-                        {t('auth.chooseLanguageTitle')}
-                    </Text>
-                    <Text size="xs" className="text-gray-500 text-center">
-                        {t('auth.chooseLanguageHint')}
-                    </Text>
-                </VStack>
-
-                <LanguageSelector />
-
-                <Pressable
-                    testID="auth-language-continue"
-                    onPress={handleContinue}
-                    disabled={saving}
-                    accessible
-                    accessibilityRole="button"
-                    accessibilityLabel={t('auth.continue')}
-                    accessibilityState={saving ? { busy: true, disabled: true } : undefined}
-                    className={`h-14 rounded-full items-center justify-center ${saving ? 'bg-gray-700' : 'bg-primary-500'}`}
-                >
-                    {saving ? (
-                        <Spinner size="small" color="white" />
-                    ) : (
-                        <Text className="text-black text-base font-semibold">
-                            {t('auth.continue')}
-                        </Text>
-                    )}
-                </Pressable>
-            </VStack>
-
-            {/* Lower band — keeps the cluster off the home indicator. */}
-            <Box style={{ flex: 1 }} />
         </Box>
     );
 };
@@ -1022,7 +935,10 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, allowDeviceSign
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                <LanguageStageView onContinue={handleLanguageChosen} />
+                {/* The system check replaced the bare language stage: same slot,
+                    same once-per-install signal (the `app_language` row), plus
+                    the phone, Full or Lite, on-device AI and the language pack. */}
+                <SystemCheckStage onContinue={handleLanguageChosen} testID="auth-language" />
             </Box>
         );
     }

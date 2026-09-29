@@ -394,7 +394,7 @@ function LoggedInGate() {
     return (
         <Box className="flex-1 justify-center items-center bg-black">
             <AbstractGradientBackdrop />
-            <MeraLogo size={96} animated />
+            <MeraLogo size={96} animated showsProgress />
         </Box>
     );
 }

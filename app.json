@@ -158,6 +158,7 @@
         }
       ],
       "./plugins/withMlKit16kb",
+      "./plugins/withWatermelonJsi",
       [
         "@intercom/intercom-react-native",
         {

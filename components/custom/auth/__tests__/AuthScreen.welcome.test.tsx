@@ -32,6 +32,15 @@ jest.mock('@/components/custom/auth/LanguageSelector', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: () => <View testID="stub-language-selector" /> };
 });
+jest.mock('@/components/custom/system-check/SystemCheckStage', () => {
+    const { Pressable } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ onContinue, testID }: { onContinue: () => void; testID: string }) => (
+            <Pressable testID={`${testID}-continue`} onPress={onContinue} />
+        ),
+    };
+});
 jest.mock('@/components/custom/auth/LegalFooter', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: () => <View testID="stub-legal-footer" /> };
@@ -184,7 +193,6 @@ describe('entry view selection', () => {
         const { findByTestId, queryByTestId } = render(<AuthScreen />);
         expect(await findByTestId('auth-language-continue')).toBeTruthy();
         expect(queryByTestId('auth-get-started')).toBeNull();
-        expect(queryByTestId('stub-language-selector')).toBeTruthy();
     });
 
     it('with the app_language row present, welcome renders directly (no language stage)', async () => {
@@ -212,19 +220,11 @@ describe('entry view selection', () => {
 });
 
 describe('language stage (S13)', () => {
-    it('Continue persists the preselected language through setAppLanguage, then advances to welcome', async () => {
+    // Persisting the language is the system check stage's job now; its own
+    // suite (components/custom/system-check) covers the write and the
+    // advance-even-if-the-write-fails case. Here: the stage hands off to welcome.
+    it('Continue on the system check advances to welcome', async () => {
         mockGetSetting.mockResolvedValue(null);
-        const { findByTestId } = render(<AuthScreen />);
-
-        fireEvent.press(await findByTestId('auth-language-continue'));
-
-        expect(await findByTestId('auth-get-started')).toBeTruthy();
-        expect(mockSetAppLanguage).toHaveBeenCalledWith('en');
-    });
-
-    it('still advances (once, next launch re-asks) when the persist throws', async () => {
-        mockGetSetting.mockResolvedValue(null);
-        mockSetAppLanguage.mockRejectedValueOnce(new Error('db closed'));
         const { findByTestId } = render(<AuthScreen />);
 
         fireEvent.press(await findByTestId('auth-language-continue'));

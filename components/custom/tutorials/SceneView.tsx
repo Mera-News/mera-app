@@ -63,9 +63,9 @@ interface SceneViewProps {
 const SceneView: React.FC<SceneViewProps> = ({ visual, animationId, stepLabels }) => {
     const source = animationSourceFor(visual.animation ?? animationId);
     const reduceMotion = useReducedMotion();
-    const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
+    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
     const active = useAnimationsActive();
-    const isStatic = reduceMotion || staticGradient;
+    const isStatic = reduceMotion || liteMode;
 
     if (source) {
         return (

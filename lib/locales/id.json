@@ -72,8 +72,6 @@
     "learnAboutMera": "Pelajari Mera",
     "startReading": "Mulai membaca",
     "alreadyHaveAccount": "Masuk dengan email",
-    "chooseLanguageTitle": "Pilih bahasa Anda",
-    "chooseLanguageHint": "Anda dapat mengubahnya kapan saja di Pengaturan.",
     "continue": "Lanjutkan",
     "firstTimeHint": "Baru mengenal Mera? Mulai dengan tur singkat.",
     "readyHint": "Siap menjadikan Mera milik Anda?",
@@ -1640,8 +1638,6 @@
     "blurImagesDescription": "Melembapkan gambar artikel di seluruh aplikasi sehingga visual grafis atau mengganggu tidak ditampilkan dengan tajam."
   },
   "display": {
-    "staticGradientTitle": "Latar belakang statis",
-    "staticGradientDescription": "Gunakan gradien tetap alih-alih latar belakang animasi — lebih mudah di baterai dan perangkat lama",
     "screenTitle": "Tampilan",
     "screenSubtitle": "Teks, visual, dan cara Mera membuka di perangkat ini",
     "sectionText": "Teks",
@@ -1660,7 +1656,9 @@
     "sectionStartup": "Tab Startup",
     "startupTabA11y": "Tab Startup, {{label}}",
     "startupTabDescription": "Pilih tab mana yang dibuka Mera saat Anda meluncurkan aplikasi.",
-    "startupTabTitle": "Buka saat diluncurkan"
+    "startupTabTitle": "Buka saat diluncurkan",
+    "liteModeTitle": "Mode Lite",
+    "liteModeDescription": "Menonaktifkan latar belakang bergerak dan animasi dekoratif. Lebih lancar di ponsel lama dan lebih hemat baterai."
   },
   "freeTier": {
     "cardBody": "Bagian AI dari Mera saat ini dimatikan. Apa pun yang telah Anda simpan, ikuti, atau baca tetap tersimpan di perangkat ini, dan Eksplorasi masih menampilkan berita utama hari ini. Tanpa paket, Mera tidak akan membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru. Mulai paket dan semuanya kembali.",
@@ -2938,5 +2936,28 @@
     "shareA11y": "Ekspor cerita ini",
     "shareDialogTitle": "Ekspor cerita",
     "includeReasonHint": "Catatan satu baris yang menjelaskan mengapa setiap artikel sampai ke feed Anda. Beberapa artikel mungkin tidak memilikinya."
+  },
+  "systemCheck": {
+    "title": "Menyiapkan Mera",
+    "subtitle": "Pemeriksaan cepat tentang bagaimana Mera akan berjalan di ponsel ini.",
+    "phoneTitle": "Ponsel Anda",
+    "phoneSupported": "Didukung: {{details}}",
+    "memory": "Memori {{gb}} GB",
+    "modeTitle": "Bagaimana Mera akan berjalan",
+    "modeFull": "Mode penuh",
+    "modeFullDetail": "Semua animasi dan efek aktif.",
+    "modeLite": "Mode Lite",
+    "modeLiteDetail": "Latar belakang bergerak dan animasi dekoratif dinonaktifkan agar Mera tetap lancar. Anda bisa mengubah ini di Pengaturan.",
+    "aiTitle": "AI di perangkat",
+    "aiNotYet": "Belum tersedia. AI di perangkat masih dalam versi beta.",
+    "languageTitle": "Bahasa: {{language}}",
+    "languageEnglish": "Siap.",
+    "languageReady": "Siap. Artikel dapat diterjemahkan di ponsel ini.",
+    "languageChecking": "Memeriksa paket bahasa. Jika ponsel Anda meminta, ketuk Unduh.",
+    "languageMissing": "Ponsel ini belum bisa menerjemahkan ke {{language}} saat ini. Coba lagi, atau lanjutkan dalam bahasa Inggris.",
+    "retry": "Coba Lagi",
+    "useEnglish": "Gunakan Bahasa Inggris",
+    "settingsTitle": "Pemeriksaan sistem",
+    "settingsDescription": "Lihat bagaimana Mera berjalan di ponsel ini dan periksa paket bahasa Anda."
   }
 }

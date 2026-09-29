@@ -1,15 +1,18 @@
-// Mock DB services and logger BEFORE any import
+// Lite mode in the display-prefs store: the device default, the reader's
+// override (AsyncStorage, device-level), and the one-time carry-over of the
+// old "Static background" row.
+
 const mockGetSetting = jest.fn((_key: string): Promise<string | null> => Promise.resolve(null));
-const mockSetSetting = jest.fn((_key: string, _value: string) => Promise.resolve());
+const mockDeleteSetting = jest.fn((_key: string) => Promise.resolve());
 
 jest.mock('@/lib/database/services/setting-service', () => ({
     getSetting: (key: string) => mockGetSetting(key),
-    setSetting: (key: string, value: string) => mockSetSetting(key, value),
-    deleteSetting: jest.fn(() => Promise.resolve()),
+    setSetting: jest.fn(() => Promise.resolve()),
+    deleteSetting: (key: string) => mockDeleteSetting(key),
 }));
 
 // Mutable so each case can pose as a different device. `null` is expo-device's
-// "couldn't determine" and must NOT be read as low-memory.
+// "couldn't determine" and must NOT be read as a weak phone.
 let mockTotalMemory: number | null = null;
 jest.mock('expo-device', () => ({
     get totalMemory() {
@@ -17,10 +20,7 @@ jest.mock('expo-device', () => ({
     },
 }));
 
-const GB = 1024 * 1024 * 1024;
-
 const mockCaptureException = jest.fn();
-
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
     default: {
@@ -32,132 +32,121 @@ jest.mock('@/lib/logger', () => ({
     },
 }));
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PERFORMANCE_OVERRIDE_KEY } from '@/lib/performance/performance-mode';
 import { useDisplayPrefsStore } from '../display-prefs-store';
 
-describe('useDisplayPrefsStore', () => {
+const GB = 1024 * 1024 * 1024;
+const storage = AsyncStorage as unknown as { getItem: jest.Mock; setItem: jest.Mock };
+
+describe('useDisplayPrefsStore (Lite mode)', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockTotalMemory = null;
-        useDisplayPrefsStore.setState({ staticGradient: false, hydrated: false });
-    });
-
-    // ── initial state ──────────────────────────────────────────────────────
-    it('starts with staticGradient: false and hydrated: false', () => {
-        const state = useDisplayPrefsStore.getState();
-        expect(state.staticGradient).toBe(false);
-        expect(state.hydrated).toBe(false);
-    });
-
-    // ── hydrate — happy path ───────────────────────────────────────────────
-    it('hydrate sets staticGradient to true when DB returns "1"', async () => {
-        mockGetSetting.mockResolvedValueOnce('1');
-        await useDisplayPrefsStore.getState().hydrate();
-        const state = useDisplayPrefsStore.getState();
-        expect(state.staticGradient).toBe(true);
-        expect(state.hydrated).toBe(true);
-    });
-
-    it('hydrate sets staticGradient to false when DB returns "0"', async () => {
-        mockGetSetting.mockResolvedValueOnce('0');
-        await useDisplayPrefsStore.getState().hydrate();
-        expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
-        expect(useDisplayPrefsStore.getState().hydrated).toBe(true);
-    });
-
-    // ── device-derived default when the user has never chosen (B1.8) ───────
-    // `null` from getSetting means "no row", which is NOT the same as '0'. Only
-    // the null case consults the device.
-    describe('unset preference falls back to the device default', () => {
-        it('stays animated when total memory is unknown (null)', async () => {
-            mockTotalMemory = null;
-            mockGetSetting.mockResolvedValueOnce(null);
-            await useDisplayPrefsStore.getState().hydrate();
-            expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
-            expect(useDisplayPrefsStore.getState().hydrated).toBe(true);
+        storage.getItem.mockResolvedValue(null);
+        storage.setItem.mockResolvedValue(undefined);
+        useDisplayPrefsStore.setState({
+            liteMode: false,
+            deviceMode: 'full',
+            performanceOverride: 'auto',
+            hydrated: false,
         });
+    });
 
-        it('stays animated on an 8 GB device', async () => {
-            mockTotalMemory = 8 * GB;
-            mockGetSetting.mockResolvedValueOnce(null);
-            await useDisplayPrefsStore.getState().hydrate();
-            expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
-        });
-
-        it('defaults to the static backdrop on a 4 GB device', async () => {
+    describe('device default when the reader never chose', () => {
+        it('runs Lite on a 4 GB phone', async () => {
             mockTotalMemory = 4 * GB;
-            mockGetSetting.mockResolvedValueOnce(null);
             await useDisplayPrefsStore.getState().hydrate();
-            expect(useDisplayPrefsStore.getState().staticGradient).toBe(true);
+            const s = useDisplayPrefsStore.getState();
+            expect(s.deviceMode).toBe('lite');
+            expect(s.liteMode).toBe(true);
+            expect(s.hydrated).toBe(true);
         });
 
-        it('treats exactly 6 GB as not-low', async () => {
+        it('treats exactly 6 GB as Full', async () => {
             mockTotalMemory = 6 * GB;
-            mockGetSetting.mockResolvedValueOnce(null);
             await useDisplayPrefsStore.getState().hydrate();
-            expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
+            expect(useDisplayPrefsStore.getState().liteMode).toBe(false);
         });
 
-        it('never overrides an explicit "0" on a low-memory device', async () => {
+        it('keeps Full when memory is unknown', async () => {
+            mockTotalMemory = null;
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(useDisplayPrefsStore.getState().liteMode).toBe(false);
+        });
+    });
+
+    describe('the reader override wins over the device', () => {
+        it('an explicit "full" keeps a 4 GB phone animated', async () => {
             mockTotalMemory = 4 * GB;
-            mockGetSetting.mockResolvedValueOnce('0');
+            storage.getItem.mockResolvedValue('full');
             await useDisplayPrefsStore.getState().hydrate();
-            expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
+            expect(useDisplayPrefsStore.getState().liteMode).toBe(false);
+            expect(useDisplayPrefsStore.getState().performanceOverride).toBe('full');
         });
 
-        it('honours an explicit "1" on a high-memory device', async () => {
+        it('an explicit "lite" applies on an 8 GB phone', async () => {
+            mockTotalMemory = 8 * GB;
+            storage.getItem.mockResolvedValue('lite');
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(useDisplayPrefsStore.getState().liteMode).toBe(true);
+        });
+
+        it('does not touch the legacy row once an override exists', async () => {
+            storage.getItem.mockResolvedValue('auto');
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(mockGetSetting).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('carrying the old "Static background" choice over', () => {
+        it('maps "1" to Lite, stores it, and deletes the old row', async () => {
             mockTotalMemory = 8 * GB;
             mockGetSetting.mockResolvedValueOnce('1');
             await useDisplayPrefsStore.getState().hydrate();
-            expect(useDisplayPrefsStore.getState().staticGradient).toBe(true);
+            expect(mockGetSetting).toHaveBeenCalledWith('static_gradient');
+            expect(storage.setItem).toHaveBeenCalledWith(PERFORMANCE_OVERRIDE_KEY, 'lite');
+            expect(mockDeleteSetting).toHaveBeenCalledWith('static_gradient');
+            expect(useDisplayPrefsStore.getState().liteMode).toBe(true);
+        });
+
+        it('maps "0" to Full on a 4 GB phone', async () => {
+            mockTotalMemory = 4 * GB;
+            mockGetSetting.mockResolvedValueOnce('0');
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(storage.setItem).toHaveBeenCalledWith(PERFORMANCE_OVERRIDE_KEY, 'full');
+            expect(useDisplayPrefsStore.getState().liteMode).toBe(false);
+        });
+
+        it('no old row means auto, and nothing is deleted', async () => {
+            await useDisplayPrefsStore.getState().hydrate();
+            expect(storage.setItem).toHaveBeenCalledWith(PERFORMANCE_OVERRIDE_KEY, 'auto');
+            expect(mockDeleteSetting).not.toHaveBeenCalled();
         });
     });
 
-    it('hydrate reads the correct setting key', async () => {
-        await useDisplayPrefsStore.getState().hydrate();
-        expect(mockGetSetting).toHaveBeenCalledWith('static_gradient');
-    });
-
-    // ── hydrate — error path ───────────────────────────────────────────────
-    it('hydrate sets hydrated: true even when getSetting throws', async () => {
-        mockGetSetting.mockRejectedValueOnce(new Error('db crash'));
-        await useDisplayPrefsStore.getState().hydrate();
-        expect(useDisplayPrefsStore.getState().hydrated).toBe(true);
-    });
-
-    it('hydrate calls captureException on error and does not throw', async () => {
-        const err = new Error('db crash');
-        mockGetSetting.mockRejectedValueOnce(err);
+    it('still hydrates and reports when storage throws', async () => {
+        mockTotalMemory = 4 * GB;
+        storage.getItem.mockRejectedValueOnce(new Error('disk'));
         await expect(useDisplayPrefsStore.getState().hydrate()).resolves.toBeUndefined();
-        expect(mockCaptureException).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({ tags: { store: 'display-prefs-store' } }),
-        );
+        const s = useDisplayPrefsStore.getState();
+        expect(s.hydrated).toBe(true);
+        expect(s.liteMode).toBe(true);
+        expect(mockCaptureException).toHaveBeenCalled();
     });
 
-    // ── setStaticGradient ──────────────────────────────────────────────────
-    it('setStaticGradient(true) updates state and persists "1"', async () => {
-        useDisplayPrefsStore.getState().setStaticGradient(true);
-        expect(useDisplayPrefsStore.getState().staticGradient).toBe(true);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('static_gradient', '1');
-    });
+    describe('setPerformanceOverride', () => {
+        it('updates liteMode at once and persists the choice', () => {
+            useDisplayPrefsStore.setState({ deviceMode: 'full' });
+            useDisplayPrefsStore.getState().setPerformanceOverride('lite');
+            expect(useDisplayPrefsStore.getState().liteMode).toBe(true);
+            expect(storage.setItem).toHaveBeenCalledWith(PERFORMANCE_OVERRIDE_KEY, 'lite');
+        });
 
-    it('setStaticGradient(false) updates state and persists "0"', async () => {
-        useDisplayPrefsStore.setState({ staticGradient: true });
-        useDisplayPrefsStore.getState().setStaticGradient(false);
-        expect(useDisplayPrefsStore.getState().staticGradient).toBe(false);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('static_gradient', '0');
-    });
-
-    it('setStaticGradient calls captureException when setSetting rejects', async () => {
-        const err = new Error('persist fail');
-        mockSetSetting.mockRejectedValueOnce(err);
-        useDisplayPrefsStore.getState().setStaticGradient(true);
-        await new Promise((r) => setTimeout(r, 0));
-        expect(mockCaptureException).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({ tags: { store: 'display-prefs-store' } }),
-        );
+        it('"auto" follows the device', () => {
+            useDisplayPrefsStore.setState({ deviceMode: 'lite' });
+            useDisplayPrefsStore.getState().setPerformanceOverride('auto');
+            expect(useDisplayPrefsStore.getState().liteMode).toBe(true);
+        });
     });
 });

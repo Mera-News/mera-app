@@ -92,7 +92,7 @@ export function useProcessingSnapshot(): ProcessingSnapshot {
   const lastRunFinishedAt = useForYouLastProcessingRunFinishedAt();
 
   const reduceMotion = useReducedMotion();
-  const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
+  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
   const animationsActive = useAnimationsActive();
 
   if (mark.runToken !== lastRunFinishedAt) {
@@ -136,7 +136,7 @@ export function useProcessingSnapshot(): ProcessingSnapshot {
     hydrationTotal,
     analysedDone: batchProgress?.done ?? 0,
     analysedTotal: batchProgress?.total ?? 0,
-    isStatic: reduceMotion || staticGradient,
+    isStatic: reduceMotion || liteMode,
     animationsActive,
   };
 }

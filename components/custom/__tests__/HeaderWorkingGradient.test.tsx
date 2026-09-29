@@ -60,8 +60,8 @@ jest.mock('react-native-svg', () => {
 
 const mockStaticGradient = { value: false };
 jest.mock('@/lib/stores/display-prefs-store', () => ({
-  useDisplayPrefsStore: (sel: (s: { staticGradient: boolean }) => unknown) =>
-    sel({ staticGradient: mockStaticGradient.value }),
+  useDisplayPrefsStore: (sel: (s: { liteMode: boolean }) => unknown) =>
+    sel({ liteMode: mockStaticGradient.value }),
 }));
 
 import AbstractGradientBackdrop, {

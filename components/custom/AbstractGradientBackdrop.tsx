@@ -699,7 +699,7 @@ const BASE_HIDDEN = { opacity: 0 } as const;
 
 const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed, frame }) => {
   const reduceMotion = useReducedMotion();
-  const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
+  const liteMode = useDisplayPrefsStore((s) => s.liteMode);
 
   // OS Reduce Motion, the app's own "Static background" setting
   // (Settings → Display) and Android are the SAME mode: a single static frame,
@@ -715,7 +715,7 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   // consequence is that Settings → Display's "Static background" switch is a
   // no-op on Android, which is why `DisplaySettingsScreen` hides that row
   // there.
-  const isStatic = reduceMotion || staticGradient || ANDROID_STATIC_CSS;
+  const isStatic = reduceMotion || liteMode || ANDROID_STATIC_CSS;
 
   /* ──────────────────────────────────────────────────────────────────────────
    * ONLY THE FOCUSED INSTANCE CROSS-FADES

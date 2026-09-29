@@ -15,7 +15,7 @@ jest.mock('react-native-reanimated', () => ({
 
 let mockStaticGradient = false;
 jest.mock('@/lib/stores/display-prefs-store', () => ({
-    useDisplayPrefsStore: (sel: any) => sel({ staticGradient: mockStaticGradient }),
+    useDisplayPrefsStore: (sel: any) => sel({ liteMode: mockStaticGradient }),
 }));
 
 let mockAnimationsActive = true;
@@ -69,7 +69,7 @@ describe('IdleScene', () => {
         ['the static-background preference', () => { mockStaticGradient = true; }],
         ['nobody looking at the screen', () => { mockAnimationsActive = false; }],
     ])('holds frame 0 rather than an empty box under %s', (_label, set) => {
-        // staticGradient defaults ON below 6 GB of RAM, so the frozen frame is
+        // liteMode defaults ON below 6 GB of RAM, so the frozen frame is
         // the NORMAL rendering on a large share of the fleet, not a rare
         // degradation. game-hud-idle is authored with both layers lit at frame 0
         // for exactly this reason.

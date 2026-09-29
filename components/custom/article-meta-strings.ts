@@ -3,7 +3,7 @@
 // explicit accessibility label, so the two can never say different things.
 
 import { getLocalizedLanguageName } from '@/lib/language-names';
-import { useTimeTick } from '@/lib/time-tick';
+import { useTimeTickValue } from '@/lib/time-tick';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useTranslation } from 'react-i18next';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
@@ -30,13 +30,17 @@ export function useArticleMetaStrings(
     // into every card's import graph, and a card suite dies on initializeJSI.
     const appLanguage = i18n?.language ?? 'en';
     // The shared 60s clock (lib/time-tick.ts): `formatTimeAgo` is pure, so the
-    // age is only as fresh as the render that produced it. Subscribing here
-    // keeps every consumer (the row, the card's label) ticking together.
-    const now = useTimeTick();
+    // age is only as fresh as the render that produced it. Subscribing to the
+    // LABEL rather than the raw clock keeps every consumer (the row, the card's
+    // label) ticking together while re-rendering only when the string changes.
+    const emptyLabel = t('feed.justNow');
+    const age = useTimeTickValue((now) =>
+        formatTimeAgo(t, pubDate ?? '', { now, emptyLabel, absoluteAfterDays: 7 }),
+    );
     const publication = useDisplayPublication((publicationName ?? '').trim());
     return {
         publication,
-        age: formatTimeAgo(t, pubDate ?? '', { now, emptyLabel: t('feed.justNow'), absoluteAfterDays: 7 }),
+        age,
         language: getLocalizedLanguageName(languageCode, appLanguage) ?? '',
     };
 }

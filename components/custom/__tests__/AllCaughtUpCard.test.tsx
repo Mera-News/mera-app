@@ -43,8 +43,8 @@ jest.mock('react-native-reanimated', () => ({
 
 let mockStaticGradient = false;
 jest.mock('@/lib/stores/display-prefs-store', () => ({
-  useDisplayPrefsStore: (sel: (s: { staticGradient: boolean }) => unknown) =>
-    sel({ staticGradient: mockStaticGradient }),
+  useDisplayPrefsStore: (sel: (s: { liteMode: boolean }) => unknown) =>
+    sel({ liteMode: mockStaticGradient }),
 }));
 
 let mockAnimationsActive = true;
@@ -185,7 +185,7 @@ describe('AllCaughtUpCard', () => {
       });
     });
 
-    // Never an empty box. `staticGradient` defaults ON below 6 GB of RAM, so a
+    // Never an empty box. `liteMode` defaults ON below 6 GB of RAM, so a
     // held frame 0 is the normal rendering on a large share of the fleet, not a
     // rare degradation - and `game-hud-idle` is authored so frame 0 is the
     // whole composition at rest.

@@ -141,6 +141,22 @@ export function useTimeTick(): number {
     return useSyncExternalStore(subscribeTimeTick, getTimeTick, getTimeTick);
 }
 
+/**
+ * Subscribe to the shared clock through a value DERIVED from it, e.g. the age
+ * label itself. React compares snapshots with `Object.is`, so the component
+ * re-renders only when the derived value changes, not on every tick: a
+ * "5h ago" label stays put for an hour. `derive` must return a primitive.
+ *
+ * Why this exists: every route change fires the clock (lib/nav-state.ts), and
+ * with `useTimeTick` every subscribed card on every mounted tab re-rendered on
+ * each tab switch. Measured on a Snapdragon 732G, that was most of the ~0.4s
+ * of JS a tab switch cost.
+ */
+export function useTimeTickValue<T extends string | number | boolean | null>(derive: (now: number) => T): T {
+    const getSnapshot = (): T => derive(tickNow);
+    return useSyncExternalStore(subscribeTimeTick, getSnapshot, getSnapshot);
+}
+
 /** Test-only: drop every subscriber + timer so each spec starts dormant. */
 export function __resetTimeTickForTests(): void {
     listeners.clear();

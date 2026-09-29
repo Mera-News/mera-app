@@ -72,8 +72,6 @@
     "learnAboutMera": "Mera'yı tanıyın",
     "startReading": "Okumaya başla",
     "alreadyHaveAccount": "E-posta ile giriş yap",
-    "chooseLanguageTitle": "Dilinizi seçin",
-    "chooseLanguageHint": "Bunu istediğiniz zaman Ayarlar'dan değiştirebilirsiniz.",
     "continue": "Devam et",
     "firstTimeHint": "Mera'da yeni misiniz? Kısa bir turla başlayın.",
     "readyHint": "Mera'yı kendinize göre yapmaya hazır mısınız?",
@@ -1642,8 +1640,6 @@
     "blurImagesDescription": "Uygulama genelinde makale görüntülerini yumuşat; böylece grafik veya rahatsız edici görseller keskinlikle gösterilmez."
   },
   "display": {
-    "staticGradientTitle": "Sabit arka plan",
-    "staticGradientDescription": "Hareketli arka plan yerine sabit bir gradyan kullanın — pil ve eski cihazlar için daha kolay",
     "screenTitle": "Görünüm",
     "screenSubtitle": "Metin, görseller ve Mera'nın bu cihazda nasıl açıldığı",
     "sectionText": "Metin",
@@ -1662,7 +1658,9 @@
     "sectionStartup": "Başlangıç sekmesi",
     "startupTabA11y": "Başlangıç sekmesi, {{label}}",
     "startupTabDescription": "Mera uygulamasını açtığınızda hangi sekmede başlamasını istediğinizi seçin.",
-    "startupTabTitle": "Başlangıçta açılacak sekme"
+    "startupTabTitle": "Başlangıçta açılacak sekme",
+    "liteModeTitle": "Lite modu",
+    "liteModeDescription": "Hareketli arka planları ve dekoratif animasyonları kapatır. Eski telefonlarda daha akıcı çalışır ve bataryayı daha az yorar."
   },
   "freeTier": {
     "cardBody": "Mera'nın yapay zeka kısmı şu an kapalı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey bu cihazda kalıyor ve Keşfet sekmesinde hâlâ bugünün haberlerine erişebilirsiniz. Bir plan olmadan Mera sizin akışınızı oluşturamaz, sorularınızı cevaplayamaz ya da yeni haberleri takip edemez. Bir plan başlatın ve her şey geri gelir.",
@@ -2941,5 +2939,28 @@
     "shareA11y": "Bu haberi dışa aktar",
     "shareDialogTitle": "Haberi dışa aktar",
     "includeReasonHint": "Her makalenin akışınıza neden geldiğini açıklayan tek satırlık not. Bazı makalelerde bu not bulunmayabilir."
+  },
+  "systemCheck": {
+    "title": "Mera hazırlanıyor",
+    "subtitle": "Mera'nın bu telefonda nasıl çalışacağına dair hızlı bir kontrol.",
+    "phoneTitle": "Telefonun",
+    "phoneSupported": "Destekleniyor: {{details}}",
+    "memory": "{{gb}} GB bellek",
+    "modeTitle": "Mera nasıl çalışacak",
+    "modeFull": "Tam mod",
+    "modeFullDetail": "Tüm animasyonlar ve efektler açık.",
+    "modeLite": "Lite modu",
+    "modeLiteDetail": "Hareketli arka planlar ve dekoratif animasyonlar kapalı, böylece Mera akıcı kalır. Bunu Ayarlar'dan değiştirebilirsin.",
+    "aiTitle": "Cihazda yapay zeka",
+    "aiNotYet": "Henüz kullanılamıyor. Cihazdaki yapay zeka hâlâ beta aşamasında.",
+    "languageTitle": "Dil: {{language}}",
+    "languageEnglish": "Hazır.",
+    "languageReady": "Hazır. Bu telefonda makaleler çevrilebilir.",
+    "languageChecking": "Dil paketi kontrol ediliyor. Telefonun sorarsa İndir'e dokun.",
+    "languageMissing": "Bu telefon şu anda {{language}} diline çeviri yapamıyor. Tekrar dene veya İngilizce olarak devam et.",
+    "retry": "Tekrar Dene",
+    "useEnglish": "İngilizce kullan",
+    "settingsTitle": "Sistem kontrolü",
+    "settingsDescription": "Mera'nın bu telefonda nasıl çalıştığını gör ve dil paketini kontrol et."
   }
 }

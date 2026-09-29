@@ -186,8 +186,8 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     // that; pausing while nobody can see it creates no "hung" impression.
     const animationsActive = useAnimationsActive();
     const reduceMotion = useReducedMotion();
-    const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
-    const moving = animationsActive && !reduceMotion && !staticGradient && !expired;
+    const liteMode = useDisplayPrefsStore((s) => s.liteMode);
+    const moving = animationsActive && !reduceMotion && !liteMode && !expired;
 
     useEffect(() => {
         if (!moving) return;
@@ -269,7 +269,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
 
     return (
         <View style={streamingIndicatorStyles.container}>
-            <MeraLogo size={48} animated />
+            <MeraLogo size={48} animated showsProgress />
             {labelRow}
         </View>
     );

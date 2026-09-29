@@ -39,8 +39,8 @@ jest.mock('react-native-svg', () => ({
 }));
 
 jest.mock('@/lib/stores/display-prefs-store', () => ({
-  useDisplayPrefsStore: (sel: (s: { staticGradient: boolean }) => unknown) =>
-    sel({ staticGradient: false }),
+  useDisplayPrefsStore: (sel: (s: { liteMode: boolean }) => unknown) =>
+    sel({ liteMode: false }),
 }));
 
 import { cssBlobLayers } from '@/components/custom/AbstractGradientBackdrop';

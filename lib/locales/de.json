@@ -72,8 +72,6 @@
     "learnAboutMera": "Mera kennenlernen",
     "startReading": "Jetzt lesen",
     "alreadyHaveAccount": "Mit E-Mail anmelden",
-    "chooseLanguageTitle": "Wähle deine Sprache",
-    "chooseLanguageHint": "Du kannst das jederzeit in den Einstellungen ändern.",
     "continue": "Weiter",
     "firstTimeHint": "Neu bei Mera? Starte mit einer kurzen Tour.",
     "readyHint": "Bereit, Mera zu deinem zu machen?",
@@ -1640,8 +1638,6 @@
     "blurImagesDescription": "Glätten Sie Artikelbilder in der gesamten App, damit grafische oder verstörende Bilder nicht scharf angezeigt werden."
   },
   "display": {
-    "staticGradientTitle": "Statischer Hintergrund",
-    "staticGradientDescription": "Verwenden Sie einen festen Farbverlauf statt des animierten Hintergrunds — schont den Akku und ältere Geräte",
     "screenTitle": "Anzeige",
     "screenSubtitle": "Text, Optik und wie Mera auf diesem Gerät öffnet",
     "sectionText": "Text",
@@ -1660,7 +1656,9 @@
     "sectionStartup": "Starttab",
     "startupTabA11y": "Starttab, {{label}}",
     "startupTabDescription": "Wähle den Tab, den Mera beim Start öffnet.",
-    "startupTabTitle": "Beim Start öffnen"
+    "startupTabTitle": "Beim Start öffnen",
+    "liteModeTitle": "Lite-Modus",
+    "liteModeDescription": "Schaltet bewegte Hintergründe und dekorative Animationen aus. Läuft flüssiger auf älteren Handys und schont den Akku."
   },
   "freeTier": {
     "cardBody": "Der KI-Teil von Mera ist momentan ausgeschaltet. Alles, das du gespeichert, verfolgt oder gelesen hast, bleibt auf diesem Gerät, und der Tab \"Entdecken\" zeigt weiterhin die heutigen Schlagzeilen. Ohne einen Plan wird Mera deinen Feed nicht zusammenstellen, deine Fragen nicht beantworten oder neue Geschichten nicht verfolgen. Starte einen Plan und alles kommt zurück.",
@@ -2939,5 +2937,28 @@
     "shareA11y": "Diese Story exportieren",
     "shareDialogTitle": "Story exportieren",
     "includeReasonHint": "Der kurze Hinweis, warum jeder Artikel in deinen Feed gelangt ist. Manche Artikel haben keinen."
+  },
+  "systemCheck": {
+    "title": "Mera wird vorbereitet",
+    "subtitle": "Ein kurzer Check, wie Mera auf diesem Handy läuft.",
+    "phoneTitle": "Dein Handy",
+    "phoneSupported": "Unterstützt: {{details}}",
+    "memory": "{{gb}} GB Speicher",
+    "modeTitle": "Wie Mera laufen wird",
+    "modeFull": "Voller Modus",
+    "modeFullDetail": "Alle Animationen und Effekte sind an.",
+    "modeLite": "Lite-Modus",
+    "modeLiteDetail": "Bewegte Hintergründe und dekorative Animationen sind aus, damit Mera flüssig bleibt. Du kannst das in den Einstellungen ändern.",
+    "aiTitle": "KI auf dem Gerät",
+    "aiNotYet": "Noch nicht verfügbar. KI auf dem Gerät ist noch in der Betaphase.",
+    "languageTitle": "Sprache: {{language}}",
+    "languageEnglish": "Bereit.",
+    "languageReady": "Bereit. Artikel können auf diesem Handy übersetzt werden.",
+    "languageChecking": "Sprachpaket wird geprüft. Falls dein Handy fragt, tippe auf Laden.",
+    "languageMissing": "Dieses Handy kann gerade nicht in {{language}} übersetzen. Versuche es erneut oder mach auf Englisch weiter.",
+    "retry": "Erneut versuchen",
+    "useEnglish": "Englisch verwenden",
+    "settingsTitle": "Systemcheck",
+    "settingsDescription": "Sieh, wie Mera auf diesem Handy läuft, und prüfe dein Sprachpaket."
   }
 }
