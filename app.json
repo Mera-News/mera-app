@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mera",
     "slug": "meraapp",
-    "version": "1.3.2",
+    "version": "1.3.3",
     "orientation": "portrait",
     "runtimeVersion": {
       "policy": "appVersion"
