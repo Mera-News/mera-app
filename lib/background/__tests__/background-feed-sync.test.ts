@@ -27,11 +27,13 @@ jest.mock('../bg-refresh-settings', () => ({
 }));
 
 let mockPerRun = 50;
-const mockRecordCharged = jest.fn(async () => {});
+const mockReserve = jest.fn(async () => {});
+const mockSettle = jest.fn(async () => {});
 const mockMarkExhausted = jest.fn(async () => {});
 jest.mock('../background-allowance', () => ({
   readAllowance: jest.fn(async () => ({ perRun: mockPerRun, dayCap: 125, chargedToday: 0, exhausted: false })),
-  recordCharged: (...a: unknown[]) => mockRecordCharged(...(a as [])),
+  reserveCharged: (...a: unknown[]) => mockReserve(...(a as [])),
+  settleCharged: (...a: unknown[]) => mockSettle(...(a as [])),
   markQuotaExhausted: (...a: unknown[]) => mockMarkExhausted(...(a as [])),
 }));
 
@@ -165,11 +167,26 @@ describe('the run', () => {
     expect(mockCapturedHooks.submit).toBeNull();
   });
 
-  it('records what the server granted, and closes the day on a daily-limit', async () => {
+  it('reserves and corrects the ledger on the day the run started', async () => {
+    await run();
+    await mockCapturedHooks.reserveMetered(25);
+    await mockCapturedHooks.settleMetered(25, 10);
+    expect(mockReserve).toHaveBeenCalledWith(NOW, 25);
+    expect(mockSettle).toHaveBeenCalledWith(NOW, 25, 10);
+  });
+
+  it('lets a failed reservation stop the request, so nothing is charged unrecorded', async () => {
+    await run();
+    mockReserve.mockRejectedValueOnce(new Error('db'));
+    await expect(mockCapturedHooks.reserveMetered(25)).rejects.toThrow('db');
+  });
+
+  it('closes the day on a daily-limit, and writes nothing more to the ledger there', async () => {
     await run();
     await mockCapturedHooks.onHydrated({ meteredDelivered: 12, dailyLimitReached: true });
-    expect(mockRecordCharged).toHaveBeenCalledWith(NOW, 12);
     expect(mockMarkExhausted).toHaveBeenCalledWith(NOW);
+    expect(mockReserve).not.toHaveBeenCalled();
+    expect(mockSettle).not.toHaveBeenCalled();
   });
 
   it("reports a failed machine run as 'error', never throws", async () => {

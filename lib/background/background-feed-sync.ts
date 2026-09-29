@@ -28,7 +28,8 @@ import type { TaskContext } from '@/lib/scheduler/scheduler-types';
 import {
   markQuotaExhausted,
   readAllowance,
-  recordCharged,
+  reserveCharged,
+  settleCharged,
 } from './background-allowance';
 import { readLastForegroundAt } from './bg-refresh-settings';
 import {
@@ -196,10 +197,24 @@ export async function runBackgroundFeedSync(opts: {
             maxBatches: BG_MAX_BATCHES,
           });
         },
-    onHydrated: async ({ meteredDelivered, dailyLimitReached }) => {
+    // Reserve before, correct after: see background-allowance.ts. The
+    // reservation is awaited and NOT caught: a ledger that cannot be written
+    // must not let a charge through unrecorded, so the request is not sent.
+    reserveMetered: (requested) => reserveCharged(now, requested),
+    settleMetered: async (requested, granted) => {
       try {
-        await recordCharged(now, meteredDelivered);
-        if (dailyLimitReached) await markQuotaExhausted(now);
+        await settleCharged(now, requested, granted);
+      } catch (err) {
+        // A failed correction leaves the ledger high, the safe direction.
+        logger.addBreadcrumb('bg-feed-sync: allowance correction failed', 'background', {
+          error: String(err),
+        }, 'warning');
+      }
+    },
+    onHydrated: async ({ dailyLimitReached }) => {
+      if (!dailyLimitReached) return;
+      try {
+        await markQuotaExhausted(now);
       } catch (err) {
         logger.addBreadcrumb('bg-feed-sync: allowance ledger write failed', 'background', {
           error: String(err),

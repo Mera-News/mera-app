@@ -1737,6 +1737,8 @@ describe('FeedSyncMachine — background mode', () => {
       shapeDiff: jest.fn((d: any) => d),
       submit: jest.fn(async () => {}),
       onHydrated: jest.fn(async () => {}),
+      reserveMetered: jest.fn(async () => {}),
+      settleMetered: jest.fn(async () => {}),
       refreshStore: jest.fn(async () => {}),
       ...overrides,
     } as any;
@@ -1766,6 +1768,14 @@ describe('FeedSyncMachine — background mode', () => {
     const opts = mockStepHydratePersistEnqueue.mock.calls[0][2];
     expect(opts.suppressEnqueue).toBe(true);
     expect(opts.background).toBe(true);
+  });
+
+  it('hands the allowance reserve and settle hooks to the hydrate step', async () => {
+    const hooks = makeHooks();
+    await feedSyncMachine.start('', makeCtx(), { background: hooks });
+    const opts = mockStepHydratePersistEnqueue.mock.calls[0][2];
+    expect(opts.reserveMetered).toBe(hooks.reserveMetered);
+    expect(opts.settleMetered).toBe(hooks.settleMetered);
   });
 
   it('shapes the diff before hydrate', async () => {

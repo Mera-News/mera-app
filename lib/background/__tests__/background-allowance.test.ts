@@ -18,7 +18,8 @@ import {
   BG_RUN_METERED_CAP,
   markQuotaExhausted,
   readAllowance,
-  recordCharged,
+  reserveCharged,
+  settleCharged,
   utcDayKey,
 } from '../background-allowance';
 
@@ -44,14 +45,14 @@ describe('the per-run and per-day caps', () => {
   });
 
   it('shrinks the run to what is left of the day', async () => {
-    await recordCharged(NOON, 100);
+    await reserveCharged(NOON, 100);
     const a = await readAllowance(NOON);
     expect(a.chargedToday).toBe(100);
     expect(a.perRun).toBe(25);
   });
 
   it('is zero once the day cap is spent', async () => {
-    await recordCharged(NOON, 125);
+    await reserveCharged(NOON, 125);
     expect((await readAllowance(NOON)).perRun).toBe(0);
   });
 
@@ -65,7 +66,7 @@ describe('the per-run and per-day caps', () => {
 
 describe('the UTC day rollover', () => {
   it('starts a fresh day at 00:00 UTC, for both the ledger and the exhausted flag', async () => {
-    await recordCharged(NOON, 125);
+    await reserveCharged(NOON, 125);
     await markQuotaExhausted(NOON);
     const nextDay = Date.UTC(2026, 8, 29, 0, 0, 1);
     const a = await readAllowance(nextDay);
@@ -75,15 +76,48 @@ describe('the UTC day rollover', () => {
   });
 
   it('keeps one ledger row: a new day deletes the old ones', async () => {
-    await recordCharged(NOON, 10);
-    await recordCharged(Date.UTC(2026, 8, 29, 1), 5);
+    await reserveCharged(NOON, 10);
+    await reserveCharged(Date.UTC(2026, 8, 29, 1), 5);
     const keys = [...mockSettings.keys()].filter((k) => k.startsWith('bg_articles_charged:'));
     expect(keys).toEqual([`bg_articles_charged:${utcDayKey(Date.UTC(2026, 8, 29, 1))}`]);
   });
 
-  it('adds what the server granted, not what was asked for', async () => {
-    await recordCharged(NOON, 20);
-    await recordCharged(NOON, 7);
+});
+
+describe('reserve before, correct after', () => {
+  it('a kill after the reservation, before any answer, leaves the reservation in the ledger', async () => {
+    await reserveCharged(NOON, 25);
+    // No settle: the process died with the request in flight.
+    expect((await readAllowance(NOON)).chargedToday).toBe(25);
+  });
+
+  it('a partial grant corrects the ledger down to the grant', async () => {
+    await reserveCharged(NOON, 25);
+    await settleCharged(NOON, 25, 10);
+    expect((await readAllowance(NOON)).chargedToday).toBe(10);
+  });
+
+  it('a full grant keeps the whole reservation', async () => {
+    await reserveCharged(NOON, 25);
+    await settleCharged(NOON, 25, 25);
+    expect((await readAllowance(NOON)).chargedToday).toBe(25);
+  });
+
+  it('sums reservations across requests and runs', async () => {
+    await reserveCharged(NOON, 20);
+    await settleCharged(NOON, 20, 20);
+    await reserveCharged(NOON, 7);
     expect((await readAllowance(NOON)).chargedToday).toBe(27);
+  });
+
+  it('never goes below zero', async () => {
+    await settleCharged(NOON, 25, 0);
+    expect((await readAllowance(NOON)).chargedToday).toBe(0);
+  });
+
+  it('a run that crosses midnight corrects the row it reserved (the run keeps one day key)', async () => {
+    await reserveCharged(NOON, 25);
+    await settleCharged(NOON, 25, 5);
+    expect(mockSettings.get(`bg_articles_charged:${utcDayKey(NOON)}`)).toBe('5');
   });
 });

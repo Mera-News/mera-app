@@ -1215,6 +1215,109 @@ describe('stepHydratePersistEnqueue', () => {
       expect(result.meteredDelivered).toBe(2);
     });
 
+    describe('the allowance ledger: reserve before, correct after', () => {
+      const ledger = () => {
+        const events: string[] = [];
+        return {
+          events,
+          reserveMetered: jest.fn(async (n: number) => { events.push(`reserve:${n}`); }),
+          settleMetered: jest.fn(async (r: number, g: number) => { events.push(`settle:${r}:${g}`); }),
+        };
+      };
+
+      it('reserves BEFORE the metered request goes out', async () => {
+        setUpOneEligible();
+        const l = ledger();
+        mockGetArticlesForTopicsByIds.mockImplementationOnce(async () => {
+          l.events.push('request');
+          return { articles: [{ _id: 'art-1' }, { _id: 'art-2' }], dailyLimitReached: false };
+        });
+        await stepHydratePersistEnqueue(
+          diffResult(),
+          makeCtx(),
+          makeOpts({ suppressEnqueue: true, background: true, ...l }),
+        );
+        expect(l.events).toEqual(['reserve:2', 'request', 'settle:2:2']);
+      });
+
+      it('a kill between the reservation and the response leaves the reservation standing', async () => {
+        setUpOneEligible();
+        const l = ledger();
+        // The request never answers: the OS took the process.
+        mockGetArticlesForTopicsByIds.mockImplementationOnce(() => new Promise(() => {}));
+        void stepHydratePersistEnqueue(
+          diffResult(),
+          makeCtx(),
+          makeOpts({ suppressEnqueue: true, background: true, ...l }),
+        );
+        await new Promise((r) => setImmediate(r));
+        expect(l.events).toEqual(['reserve:2']);
+        expect(l.settleMetered).not.toHaveBeenCalled();
+      });
+
+      it('a partial grant under the daily cap corrects down to what was granted', async () => {
+        setUpOneEligible();
+        const l = ledger();
+        mockGetArticlesForTopicsByIds.mockResolvedValueOnce({
+          articles: [{ _id: 'art-1' }],
+          dailyLimitReached: true,
+          resetAt: '2026-09-30T00:00:00.000Z',
+        });
+        await stepHydratePersistEnqueue(
+          diffResult(),
+          makeCtx(),
+          makeOpts({ suppressEnqueue: true, background: true, ...l }),
+        );
+        expect(l.settleMetered).toHaveBeenCalledWith(2, 1);
+      });
+
+      it('without the cap the reservation stands even if an article was not delivered (it was charged)', async () => {
+        setUpOneEligible();
+        const l = ledger();
+        mockGetArticlesForTopicsByIds.mockResolvedValueOnce({
+          articles: [{ _id: 'art-1' }],
+          dailyLimitReached: false,
+        });
+        await stepHydratePersistEnqueue(
+          diffResult(),
+          makeCtx(),
+          makeOpts({ suppressEnqueue: true, background: true, ...l }),
+        );
+        expect(l.settleMetered).toHaveBeenCalledWith(2, 2);
+      });
+
+      it('an aborted or failed request keeps its reservation', async () => {
+        setUpOneEligible();
+        const l = ledger();
+        mockGetArticlesForTopicsByIds.mockRejectedValue(new Error('Network request failed'));
+        await expect(
+          stepHydratePersistEnqueue(
+            diffResult(),
+            makeCtx(),
+            makeOpts({ suppressEnqueue: true, background: true, ...l }),
+          ),
+        ).rejects.toThrow();
+        expect(l.reserveMetered).toHaveBeenCalled();
+        expect(l.settleMetered).not.toHaveBeenCalled();
+        mockGetArticlesForTopicsByIds.mockReset();
+      });
+
+      it('reserves nothing for quota-free followed-story chunks', async () => {
+        setUpOneEligible();
+        const l = ledger();
+        mockGetArticlesForStories.mockResolvedValueOnce({
+          articles: [{ _id: 'art-1' }, { _id: 'art-2' }],
+          dailyLimitReached: false,
+        });
+        await stepHydratePersistEnqueue(
+          { ...diffResult(), storyIds: ['art-1', 'art-2'], personaIds: [] },
+          makeCtx(),
+          makeOpts({ suppressEnqueue: true, background: true, ...l }),
+        );
+        expect(l.events).toEqual([]);
+      });
+    });
+
     it('does not count quota-free followed-story chunks as metered', async () => {
       setUpOneEligible();
       mockGetArticlesForStories.mockResolvedValue({

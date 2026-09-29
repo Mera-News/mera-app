@@ -7,8 +7,14 @@
 // twice, both locally and with no extra round trip:
 //
 //   - at most BG_RUN_METERED_CAP per run;
-//   - at most HALF of the user's daily limit per UTC day, summed in a ledger of
-//     what the server actually GRANTED to background runs.
+//   - at most HALF of the user's daily limit per UTC day, summed in a ledger.
+//
+// The ledger is RESERVED BEFORE each metered request and corrected down after
+// it answers. The server charges inside the request, so a ledger written only
+// afterwards undercounts whenever the OS kills the process in between, and
+// background could then exceed its half. A request that never answers keeps its
+// reservation: over-counting only makes background more conservative, and the
+// ledger starts again at 00:00 UTC.
 //
 // A server `dailyLimitReached` during a background run closes background for
 // the rest of that UTC day, whatever the ledger says: the foreground spent the
@@ -65,18 +71,31 @@ export async function readAllowance(now: number): Promise<BackgroundAllowance> {
 }
 
 /**
- * Add what the server granted to today's ledger, and drop every other day's
- * row so the ledger never grows past one row.
+ * Move today's ledger by `delta` (a reservation is positive, a correction
+ * negative, never below zero), and drop every other day's row so the ledger
+ * never grows past one row. `now` is the RUN's start, so a run that crosses
+ * midnight reserves and corrects the same day's row.
  */
-export async function recordCharged(now: number, granted: number): Promise<void> {
+export async function adjustCharged(now: number, delta: number): Promise<void> {
   const day = utcDayKey(now);
   const key = BG_ARTICLES_CHARGED_PREFIX + day;
   const rows = await getSettingsByPrefix(BG_ARTICLES_CHARGED_PREFIX);
   const current = Math.max(0, parseFiniteNumber(rows[key] ?? null) ?? 0);
-  if (granted > 0) await setSetting(key, String(current + Math.floor(granted)));
+  const next = Math.max(0, current + Math.trunc(delta));
+  if (next !== current) await setSetting(key, String(next));
   for (const staleKey of Object.keys(rows)) {
     if (staleKey !== key) await deleteSetting(staleKey);
   }
+}
+
+/** Reserve `requested` metered articles, persisted, before the request goes out. */
+export function reserveCharged(now: number, requested: number): Promise<void> {
+  return adjustCharged(now, Math.max(0, requested));
+}
+
+/** After the request answered: give back what was reserved but not granted. */
+export function settleCharged(now: number, requested: number, granted: number): Promise<void> {
+  return adjustCharged(now, -Math.max(0, requested - Math.max(0, granted)));
 }
 
 export async function markQuotaExhausted(now: number): Promise<void> {

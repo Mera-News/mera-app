@@ -77,8 +77,12 @@ export interface BackgroundSyncHooks {
   /** Submit the persisted, scorable ids. Null in on-device mode, where a
    *  background run fetches and persists only. */
   submit: ((articleIds: string[]) => Promise<void>) | null;
-  /** What the metered hydrate was granted, for the allowance ledger. Called on
-   *  the daily-limit throw too, with nothing delivered. */
+  /** The allowance ledger, reserved before each metered request and corrected
+   *  down after it answers. See `HydratePersistEnqueueOptions.reserveMetered`. */
+  reserveMetered: (requested: number) => Promise<void>;
+  settleMetered: (requested: number, granted: number) => Promise<void>;
+  /** How the metered hydrate ended. Called on the daily-limit throw too, with
+   *  nothing delivered. */
   onHydrated: (outcome: { meteredDelivered: number; dailyLimitReached: boolean }) => Promise<void>;
   /** The store refresh, which the caller runs only when a reader can see it. */
   refreshStore: () => Promise<void>;

@@ -498,6 +498,8 @@ class FeedSyncMachine {
         // drains with a foreground context. Its own submit follows below.
         suppressEnqueue: suppressScoring || bg !== undefined,
         background: bg !== undefined,
+        reserveMetered: bg?.reserveMetered,
+        settleMetered: bg?.settleMetered,
       });
       if (bg) {
         await bg.onHydrated({

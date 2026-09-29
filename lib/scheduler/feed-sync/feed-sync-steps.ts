@@ -280,6 +280,15 @@ export interface HydratePersistEnqueueOptions {
    *  `enqueueUnscoredEligible`, which would drain with a foreground context. The
    *  run's own submit takes `eligibleIds` instead. */
   background?: boolean;
+  /** Called before EVERY metered request attempt with the ids it asks for.
+   *  The server charges the daily allowance inside that request, so a ledger
+   *  that must never undercount reserves here, before anything can be charged.
+   *  A retry is a second request and reserves again. */
+  reserveMetered?: (requested: number) => Promise<void>;
+  /** Called after a metered request answered, with what it cost. `granted` is
+   *  the server's charge: every requested id unless the response reports the
+   *  daily cap, in which case it is what was delivered. */
+  settleMetered?: (requested: number, granted: number) => Promise<void>;
 }
 
 export async function stepFetchTopicIds(
@@ -905,10 +914,14 @@ export async function stepHydratePersistEnqueue(
         dailyLimitReached?: boolean;
         resetAt?: string;
       } = await withRetry(
-        () =>
-          free
-            ? ArticleService.getArticlesForStories(chunk, onChunkProgress)
-            : ArticleService.getArticlesForTopicsByIds(chunk, onChunkProgress),
+        async () => {
+          if (free) return ArticleService.getArticlesForStories(chunk, onChunkProgress);
+          // Reserve BEFORE the request: a process killed after the server
+          // charged and before any write would otherwise leave the ledger
+          // short. A request that never answers keeps its reservation.
+          await opts.reserveMetered?.(chunk.length);
+          return ArticleService.getArticlesForTopicsByIds(chunk, onChunkProgress);
+        },
         ctx.signal,
         RESOLVER_ERROR_RETRIES,
       );
@@ -916,6 +929,15 @@ export async function stepHydratePersistEnqueue(
       if (response.dailyLimitReached) {
         dailyLimitReached = true;
         resetAt = resetAt ?? response.resetAt;
+      }
+      if (!free) {
+        // Without the cap the server granted (and charged) every id, even one
+        // whose document is gone and was not delivered, so the reservation
+        // stands. With the cap it granted a prefix, which is what arrived.
+        const granted = response.dailyLimitReached
+          ? Math.min(chunk.length, chunkArticles.length)
+          : chunk.length;
+        await opts.settleMetered?.(chunk.length, granted);
       }
 
       // ALREADY-READ SCREEN. Deliberately NOT folded into the `deliveredAny` /
