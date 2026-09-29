@@ -16,10 +16,12 @@ export function setCurrentPathname(pathname: string): void {
   // this on every pathname change, so one call here covers every screen, and no
   // screen needs its own focus effect.
   //
-  // Ages ONLY. `notifyTimeTick` publishes to `lib/time-tick` subscribers, and
-  // the only subscriber is the leaf that renders an age (ArticleMetaRow) — it
-  // sits below every card's React.memo boundary, so this cannot re-render a list
-  // screen and cannot touch the Dashboard's 30-minute sort snapshot.
+  // Ages ONLY. `notifyTimeTick` publishes to `lib/time-tick` subscribers:
+  // every card that shows an age, on every mounted tab. They subscribe to the
+  // age LABEL (`useTimeTickValue`), so only a card whose string actually
+  // changed re-renders; subscribing to the raw clock re-rendered all of them
+  // on every tab switch. It cannot touch the Dashboard's 30-minute sort
+  // snapshot, which no subscriber derives.
   if (changed) notifyTimeTick();
 
   // Same signal, second consumer: a route change retires every translation
