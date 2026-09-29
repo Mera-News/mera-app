@@ -19,6 +19,7 @@ import {
 } from '@/lib/typography/scale';
 
 import { MaterialIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -279,6 +280,24 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                 })}
               </HStack>
             </VStack>
+
+            <Pressable
+              testID="system-check-open"
+              onPress={() => router.push('/logged-in/system-check' as any)}
+              accessibilityRole="button"
+              className="py-3 px-4 mb-3 border border-gray-700 rounded-lg"
+            >
+              <HStack space="md" className="items-center">
+                <MaterialIcons name="fact-check" size={24} color="#9ca3af" />
+                <VStack className="flex-1">
+                  <Text className="text-base text-white">{t('systemCheck.settingsTitle')}</Text>
+                  <Text size="sm" className="text-gray-400 mt-0.5">
+                    {t('systemCheck.settingsDescription')}
+                  </Text>
+                </VStack>
+                <MaterialIcons name="chevron-right" size={24} color="#6b7280" />
+              </HStack>
+            </Pressable>
           </VStack>
 
           {/* ── Startup tab ──────────────────────────────────────────────── */}

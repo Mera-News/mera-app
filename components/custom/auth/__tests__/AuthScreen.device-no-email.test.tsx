@@ -40,6 +40,15 @@ jest.mock('@/components/custom/auth/LanguageSelector', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: () => <View testID="stub-language-selector" /> };
 });
+jest.mock('@/components/custom/system-check/SystemCheckStage', () => {
+    const { Pressable } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ onContinue, testID }: { onContinue: () => void; testID: string }) => (
+            <Pressable testID={`${testID}-continue`} onPress={onContinue} />
+        ),
+    };
+});
 jest.mock('@/components/custom/auth/LegalFooter', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: () => <View testID="stub-legal-footer" /> };
