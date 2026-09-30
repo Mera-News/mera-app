@@ -156,30 +156,21 @@ jest.mock('@/lib/source-service', () => ({
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 
-// `use-subscribe-flow` opens a WatermelonDB observation and an AppState
-// listener; `SubscribeConfirmDialog` pulls `@/components/ui/modal` and
-// through it `@legendapp/motion`, which this suite's RN mock cannot load.
-// The real `SubscribeAction` is deliberately left unmocked so these suites
-// still render the affordance itself.
-const mockSubscribeBegin = jest.fn();
-const mockConfirmDirectly = jest.fn();
-let mockIsSubscribed = (_id: string) => false;
-jest.mock('@/components/custom/publication-preferences/use-subscribe-flow', () => ({
-    useSubscribeFlow: () => ({
-        subscriptions: { items: [], isLoading: false, busyId: null },
-        begin: mockSubscribeBegin,
-        confirmDirectly: mockConfirmDirectly,
-        confirming: null,
-        onYes: jest.fn(),
-        onNo: jest.fn(),
-        isSubscribed: (id: string) => mockIsSubscribed(id),
+let mockObservedPrefRows: any[] = [];
+jest.mock('@/lib/database/services/publication-preference-service', () => ({
+    observeActive: () => ({
+        subscribe: (cb: (rows: any[]) => void) => {
+            cb(mockObservedPrefRows);
+            return { unsubscribe: jest.fn() };
+        },
     }),
 }));
-jest.mock('@/components/custom/publication-preferences/SubscribeConfirmDialog', () => ({
-    __esModule: true,
-    default: () => null,
-}));
+jest.mock('@/lib/stores/publication-display-store', () => ({ useDisplayPublication: (n: string) => n }));
+jest.mock('@/lib/nav-state', () => ({ getCurrentPathname: () => '/logged-in/sources' }));
 
+// A search hit row's visual is hidden from accessibility (a childless labelled
+// button sits over it), so text queries on it must include hidden elements.
+const HIDDEN = { includeHiddenElements: true } as const;
 
 import SourcesL1CountryList from '../SourcesL1CountryList';
 
@@ -326,7 +317,7 @@ describe('SourcesL1CountryList — publisher search (Item 8)', () => {
         expect(mockSearchPublishers).toHaveBeenCalledWith(
             expect.objectContaining({ query: 'Times of India' }),
         );
-        expect(getByText('Times of India')).toBeTruthy();
+        expect(getByText('Times of India', HIDDEN)).toBeTruthy();
     });
 
     it('filters out non-matching country rows once a publisher search is active', async () => {
@@ -352,7 +343,7 @@ describe('SourcesL1CountryList — publisher search (Item 8)', () => {
 
         await flushDebounceAndSearch();
 
-        expect(getByText('Some Publisher')).toBeTruthy();
+        expect(getByText('Some Publisher', HIDDEN)).toBeTruthy();
         // Neither country name matches "zzzznomatch" — both are filtered out,
         // only the publisher hit shows.
         expect(queryByText('USA')).toBeNull();
@@ -400,12 +391,12 @@ describe('SourcesL1CountryList — publisher search (Item 8)', () => {
     });
 });
 
-describe('SourcesL1CountryList — subscribe from a publisher search hit', () => {
+describe('SourcesL1CountryList — a publisher search hit is a plain row', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         browseStore = [];
+        mockObservedPrefRows = [];
         focusEffectCallbacks.length = 0;
-        mockIsSubscribed = () => false;
         jest.useFakeTimers();
     });
 
@@ -447,31 +438,30 @@ describe('SourcesL1CountryList — subscribe from a publisher search hit', () =>
         return utils;
     };
 
-    it('renders NOTHING for a hit with no subscribe page', async () => {
-        const { queryByTestId } = await searchFor({ subscription_uri: null });
-        expect(queryByTestId('sources-search-subscribe-pub-1')).toBeNull();
+    it('shows the name with its country and host, and no feed rows even when sources match', async () => {
+        const { getByText, queryByText, getByTestId } = await searchFor({
+            matchingSources: [{ _id: 'feed-1', category: 'sports', publication_name: 'TOI Sports' }],
+        });
+        expect(getByTestId('sources-search-publisher-pub-1')).toBeTruthy();
+        expect(getByText('Times of India', HIDDEN)).toBeTruthy();
+        expect(getByText('India · timesofindia.indiatimes.com', HIDDEN)).toBeTruthy();
+        expect(queryByText('Sports', HIDDEN)).toBeNull();
+        expect(queryByText('sources.viewTopHeadlines', HIDDEN)).toBeNull();
+        expect(queryByText('subscriptions.subscribeAt', HIDDEN)).toBeNull();
     });
 
-    it('renders NOTHING when the reader already subscribes to that publisher', async () => {
-        mockIsSubscribed = (id: string) => id === 'pub-1';
-        const { queryByTestId } = await searchFor({
-            subscription_uri: 'https://timesofindia.indiatimes.com/subscribe',
+    it('opens the publication page by publisher id', async () => {
+        const { getByTestId } = await searchFor({});
+        fireEvent.press(getByTestId('sources-search-publisher-pub-1'));
+        expect(mockRouterPush).toHaveBeenCalledWith({
+            pathname: '/logged-in/publication',
+            params: { publisherId: 'pub-1', name: 'Times of India', country: 'IND' },
         });
-        expect(queryByTestId('sources-search-subscribe-pub-1')).toBeNull();
     });
 
-    it('offers the publisher OWN page when the hit carries one', async () => {
-        const { getByTestId } = await searchFor({
-            subscription_uri: 'https://timesofindia.indiatimes.com/subscribe',
-        });
-
-        fireEvent.press(getByTestId('sources-search-subscribe-pub-1'));
-
-        expect(mockSubscribeBegin).toHaveBeenCalledWith({
-            publisherId: 'pub-1',
-            publisherName: 'Times of India',
-            countryCode: 'IND',
-            subscriptionUri: 'https://timesofindia.indiatimes.com/subscribe',
-        });
+    it('shows the fewer glyph for a downranked publisher', async () => {
+        mockObservedPrefRows = [{ publicationName: 'Times of India', weight: -0.5, scopeKind: null }];
+        const { getByTestId } = await searchFor({});
+        expect(getByTestId('sources-search-publisher-pub-1-pref-deprioritised', HIDDEN)).toBeTruthy();
     });
 });

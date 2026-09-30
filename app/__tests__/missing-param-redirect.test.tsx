@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Eight routes that need a param. A malformed deep link reaches them with it
+// Nine routes that need a param. A malformed deep link reaches them with it
 // missing, often with no history behind it. They used to call router.back()
 // DURING RENDER (a side effect in render, and a no-op with no history, which
 // left a blank screen). They now render a Redirect to the Dashboard.
@@ -16,13 +16,20 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 });
 
 const mockBack = jest.fn();
+let mockParams: Record<string, string> = {};
+let mockLastHref: unknown = null;
 jest.mock('expo-router', () => {
     const ReactLib = require('react');
     return {
         router: { back: (...a: unknown[]) => mockBack(...a), canGoBack: () => false, replace: jest.fn() },
-        useLocalSearchParams: () => ({}),
-        Redirect: ({ href }: { href: string }) =>
-            ReactLib.createElement('View', { testID: 'redirect', accessibilityLabel: href }),
+        useLocalSearchParams: () => mockParams,
+        Redirect: ({ href }: { href: unknown }) => {
+            mockLastHref = href;
+            return ReactLib.createElement('View', {
+                testID: 'redirect',
+                accessibilityLabel: typeof href === 'string' ? href : JSON.stringify(href),
+            });
+        },
     };
 });
 
@@ -39,9 +46,8 @@ jest.mock('react-native-safe-area-context', () => {
 jest.mock('@/components/custom/news-detail/ArticleDetailScreen', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/news-detail/ArticleSuggestionScreen', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/tracked-stories/StoryTimelineScreen', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/config-panel/SourcesArticleList', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/config-panel/SourcesL2PublicationList', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/config-panel/PublisherArticleList', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/components/custom/publication-page/PublicationPage', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/config-panel/PublicationArticleHistoryList', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/config-panel/CountryArticleList', () => ({ __esModule: true, default: () => null }));
 
@@ -54,9 +60,14 @@ const ROUTES: [string, () => React.ComponentType][] = [
     ['publisher-articles', () => require('../logged-in/publisher-articles').default],
     ['publication-history', () => require('../logged-in/publication-history').default],
     ['country-articles', () => require('../logged-in/country-articles').default],
+    ['publication', () => require('../logged-in/publication').default],
 ];
 
-beforeEach(() => mockBack.mockClear());
+beforeEach(() => {
+    mockBack.mockClear();
+    mockParams = {};
+    mockLastHref = null;
+});
 
 describe.each(ROUTES)('%s with its required param missing', (_name, load) => {
     it('redirects to the Dashboard and never navigates during render', () => {
@@ -65,5 +76,29 @@ describe.each(ROUTES)('%s with its required param missing', (_name, load) => {
         const redirect = screen.getByTestId('redirect');
         expect(redirect.props.accessibilityLabel).toBe('/logged-in/app_container/for_you');
         expect(mockBack).not.toHaveBeenCalled();
+    });
+});
+
+// The two feed-era routes are redirect STUBS to the publication page now, so
+// a restored navigation state or an old deep link still lands somewhere.
+describe('feed-era route stubs', () => {
+    it('publisher-articles opens the page on its Top headlines tab', () => {
+        mockParams = { publisherId: 'pub-1', publisherName: 'Times of India' };
+        const Route = require('../logged-in/publisher-articles').default;
+        render(<Route />);
+        expect(mockLastHref).toEqual({
+            pathname: '/logged-in/publication',
+            params: { publisherId: 'pub-1', name: 'Times of India', order: 'TOP_HEADLINES' },
+        });
+    });
+
+    it('sources-articles opens the page by publisher name and country, ignoring the feed id', () => {
+        mockParams = { publisherName: 'The Hindu', countryCode: 'IND', publicationSourceId: 'feed-9' };
+        const Route = require('../logged-in/sources-articles').default;
+        render(<Route />);
+        expect(mockLastHref).toEqual({
+            pathname: '/logged-in/publication',
+            params: { name: 'The Hindu', country: 'IND' },
+        });
     });
 });

@@ -7,9 +7,11 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import TopVisitedPublicationsCard from '@/components/custom/config-panel/TopVisitedPublicationsCard';
-import SubscribeAction from '@/components/custom/publication-preferences/SubscribeAction';
-import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
-import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
+import PublicationListRow from '@/components/custom/publication-page/PublicationListRow';
+import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
+import { hostOf } from '@/components/custom/publication-page/publication-format';
+import { usePublicationPrefLevels } from '@/components/custom/publication-page/use-publication-pref-levels';
+import type { SourcePrefUiLevel } from '@/lib/database/services/publication-pref-ui-actions';
 import { alpha3ToAlpha2 } from '@/components/custom/locations/location-display';
 import { AccountService } from '@/lib/account-service';
 import { getCountryName, getFlagEmoji } from '@/lib/country-utils';
@@ -29,8 +31,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
-import { sentenceCase } from '@/components/custom/facts/sentence-case';
+import { FlatList, I18nManager, ListRenderItem, RefreshControl } from 'react-native';
 
 interface CountryItem {
     code: string;
@@ -55,103 +56,27 @@ type L1Row =
     | { readonly kind: 'header'; readonly section: 'countries' | 'publications' };
 
 /**
- * One publisher search hit — name, the country it belongs to, and its
- * matching feeds.
- *
- * `onSubscribe` is passed DOWN rather than derived here. The flow it belongs
- * to registers an AppState listener and a WatermelonDB observation, so a row
- * that opened its own would give every visible hit a copy of both and race N
- * confirm prompts off one return. Absent means no affordance: the parent has
- * already decided there is no usable URI, or that the reader subscribes.
+ * One publisher search hit: flag, name, its country and website host, the
+ * more/fewer state as a glyph. A tap opens the publication page. No feeds
+ * are listed: the app shows publications, never the feeds behind them.
  */
 const PublisherSearchRow: React.FC<{
     hit: PublisherSearchHit;
-    onSubscribe?: () => void;
-}> = ({ hit, onSubscribe }) => {
-    const { t } = useTranslation();
-
-    const handlePublisherPress = useCallback(() => {
-        router.push({
-            pathname: '/logged-in/publisher-articles',
-            params: { publisherId: hit._id, publisherName: hit.name },
-        });
-    }, [hit._id, hit.name]);
-
-    const handleFeedPress = useCallback(
-        (feedId: string, category: string) => {
-            router.push({
-                pathname: '/logged-in/sources-articles',
-                params: {
-                    title: category,
-                    countryCode: hit.country_code,
-                    publisherName: hit.name,
-                    publicationSourceId: feedId,
-                },
-            });
-        },
-        [hit.country_code, hit.name],
-    );
-
+    prefLevel: SourcePrefUiLevel;
+}> = ({ hit, prefLevel }) => {
+    const country = hit.country_name ?? getCountryName(hit.country_code);
+    const host = hostOf(hit.website_url);
     return (
-        <Box className="mx-4 mb-3 rounded-lg border border-gray-700 overflow-hidden">
-            <Pressable onPress={handlePublisherPress} className="px-4 py-3">
-                <HStack className="items-center justify-between w-full" space="sm">
-                    <HStack className="items-center flex-1 mr-3" space="md">
-                        <Text className="text-2xl">{getFlagEmoji(hit.country_code)}</Text>
-                        <VStack className="flex-1" space="xs">
-                            <Text className="text-base text-white">{hit.name}</Text>
-                            <Text size="xs" className="text-gray-500" numberOfLines={1}>
-                                {hit.country_name ?? getCountryName(hit.country_code)}
-                                {hit.website_url
-                                    ? ` · ${hit.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}`
-                                    : ''}
-                            </Text>
-                        </VStack>
-                    </HStack>
-                    <Button
-                        variant="outline"
-                        size="xs"
-                        onPress={handlePublisherPress}
-                        className="rounded-full"
-                    >
-                        <ButtonText>{t('sources.viewTopHeadlines')}</ButtonText>
-                    </Button>
-                </HStack>
-            </Pressable>
-            {/* Sits OUTSIDE the header Pressable above, which navigates to
-                this publisher's headlines. A nested target inside it would be
-                the same tap collision the visited-publication rows avoid.
-                This is the publisher's own paid product on their own site,
-                never Mera's plan. */}
-            {onSubscribe && (
-                <Box className="px-4 py-2 border-t border-gray-800">
-                    <SubscribeAction
-                        publisherName={hit.name}
-                        variant="inline"
-                        testID={`sources-search-subscribe-${hit._id}`}
-                        onOpen={onSubscribe}
-                    />
-                </Box>
-            )}
-            {hit.matchingSources.length > 0 && (
-                <VStack className="border-t border-gray-800">
-                    {hit.matchingSources.map((feed) => (
-                        <Pressable
-                            key={feed._id}
-                            onPress={() => handleFeedPress(feed._id, feed.category)}
-                            className="px-4 py-2 border-t border-gray-800"
-                        >
-                            <HStack className="items-center justify-between">
-                                <Text className="text-gray-300 text-sm">
-                                    {feed.category === 'general_news' ? 'All' : sentenceCase(feed.category)}
-                                </Text>
-                                <MaterialIcons name="chevron-right" size={16} color="#999999" />
-                            </HStack>
-                        </Pressable>
-                    ))}
-                </VStack>
-            )}
-        </Box>
+        <PublicationListRow
+            rawName={hit.name}
+            flag={getFlagEmoji(hit.country_code)}
+            subtitle={[country, host].filter(Boolean).join(' · ')}
+            prefLevel={prefLevel}
+            onPress={() =>
+                openPublicationPage({ publisherId: hit._id, rawName: hit.name, countryCode: hit.country_code })
+            }
+            testID={`sources-search-publisher-${hit._id}`}
+        />
     );
 };
 
@@ -171,8 +96,7 @@ const SourcesL1CountryList: React.FC = () => {
     const [publisherHits, setPublisherHits] = useState<PublisherSearchHit[]>([]);
     const [isSearchingPublishers, setIsSearchingPublishers] = useState(false);
     const hasFetched = useRef(false);
-    /** ONE flow for the whole list. See `PublisherSearchRow` for why. */
-    const subscribeFlow = useSubscribeFlow();
+    const prefLevelFor = usePublicationPrefLevels();
     const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Guards against a slow, now-stale search response clobbering a faster
     // later one (classic out-of-order-resolution race on debounced typing).
@@ -407,7 +331,7 @@ const SourcesL1CountryList: React.FC = () => {
                                 <ButtonText>{t('sources.viewTopHeadlines')}</ButtonText>
                             </Button>
                             <MaterialIcons
-                                name="chevron-right"
+                                name={I18nManager.isRTL ? 'chevron-left' : 'chevron-right'}
                                 size={20}
                                 color="#999999"
                             />
@@ -417,28 +341,6 @@ const SourcesL1CountryList: React.FC = () => {
             );
         },
         [handleCountryPress, handleTopHeadlinesPress, handleToggleCountry, browseAlpha2, t]
-    );
-
-    /**
-     * Eligibility is decided HERE, so a row is never handed a callback it
-     * cannot honour. Both conditions are required: no `subscription_uri`
-     * means the publisher has no consumer subscription product and there is
-     * nowhere honest to send anybody, and an active subscription means the
-     * reader has already answered this.
-     */
-    const subscribeHandlerFor = useCallback(
-        (hit: PublisherSearchHit): (() => void) | undefined => {
-            if (!hit.subscription_uri) return undefined;
-            if (subscribeFlow.isSubscribed(hit._id)) return undefined;
-            return () =>
-                void subscribeFlow.begin({
-                    publisherId: hit._id,
-                    publisherName: hit.name,
-                    countryCode: hit.country_code,
-                    subscriptionUri: hit.subscription_uri ?? null,
-                });
-        },
-        [subscribeFlow]
     );
 
     const renderItem: ListRenderItem<L1Row> = useCallback(
@@ -453,14 +355,11 @@ const SourcesL1CountryList: React.FC = () => {
                     {item.section === 'countries' ? t('sources.sectionCountries') : t('sources.sectionPublications')}
                 </Text>
             ) : item.kind === 'publisher' ? (
-                <PublisherSearchRow
-                    hit={item.item}
-                    onSubscribe={subscribeHandlerFor(item.item)}
-                />
+                <PublisherSearchRow hit={item.item} prefLevel={prefLevelFor(item.item.name)} />
             ) : (
                 renderCountryRow(item.item)
             ),
-        [renderCountryRow, subscribeHandlerFor, t]
+        [renderCountryRow, prefLevelFor, t]
     );
 
     const keyExtractor = useCallback(
@@ -535,15 +434,6 @@ const SourcesL1CountryList: React.FC = () => {
                 />
             )}
 
-            {/* One dialog for the whole list, outside both branches: a confirm
-                armed before a search that emptied the list still has somewhere
-                to appear. */}
-            <SubscribeConfirmDialog
-                publisherName={subscribeFlow.confirming?.publisherName ?? null}
-                onYes={subscribeFlow.onYes}
-                onNo={subscribeFlow.onNo}
-                onDismiss={subscribeFlow.onDismiss}
-            />
         </Box>
     );
 };

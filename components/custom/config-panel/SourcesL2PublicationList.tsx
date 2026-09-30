@@ -1,118 +1,29 @@
-import {
-    Accordion,
-    AccordionContent,
-    AccordionHeader,
-    AccordionIcon,
-    AccordionItem,
-    AccordionTitleText,
-    AccordionTrigger,
-} from '@/components/ui/accordion';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
-import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import SubscribeAction from '@/components/custom/publication-preferences/SubscribeAction';
-import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
-import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
-import { normPublicationName } from '@/lib/feed-grouping/geo-language-priority';
-import { observeActive as observeActivePublicationPreferences } from '@/lib/database/services/publication-preference-service';
-import {
-    setSourcePrefFromUi,
-    type SourcePrefUiLevel,
-} from '@/lib/database/services/publication-pref-ui-actions';
+import PublicationListRow from '@/components/custom/publication-page/PublicationListRow';
+import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
+import { hostOf } from '@/components/custom/publication-page/publication-format';
+import { usePublicationPrefLevels } from '@/components/custom/publication-page/use-publication-pref-levels';
 import logger from '@/lib/logger';
-import type { NewsPublisher, PublicationSource } from '@/lib/source-service';
+import type { NewsPublisher } from '@/lib/source-service';
 import { SourceService } from '@/lib/source-service';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { ChevronDownIcon } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, ListRenderItem, View } from 'react-native';
+import { FlatList, ListRenderItem } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
-import SourcePrefControl from './SourcePrefControl';
-import { sentenceCase } from '@/components/custom/facts/sentence-case';
-
-// Sentence case, never the `capitalize` class: on iOS that lowercases every
-// letter after the first, so a slug holding an acronym came out mangled.
-const formatCategory = (category: string): string =>
-    category === 'general_news' ? 'All' : sentenceCase(category);
-
-// Humanizes the structured taxonomy slugs (`categories`) for display.
-// Deliberately not translated: like `category` above, these are raw
-// server-side data values rendered as-is, not UI copy. `publication_type` used
-// to be folded into this same line too — it now gets its own rule-based badge
-// (see `sourceKindOf`/`SourceKindBadge` below) instead, so it is deliberately
-// NOT repeated here (a government source would otherwise read "Government
-// source" twice on one row).
-const humanizeSlug = (slug: string): string =>
-    slug.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
-
-const formatCategories = (categories?: readonly string[] | null): string | null => {
-    const parts = (categories ?? []).map(humanizeSlug);
-    return parts.length > 0 ? parts.join(' · ') : null;
-};
-
-// -----------------------------------------------------------------------
-// Item 6 — source-kind badges. A measured, deliberately narrow rule: ONLY
-// `publication_type === 'government'` or `'regulator'` renders anything.
-// Every other value, INCLUDING null ("not classified yet" — currently every
-// prod row), renders nothing. A keyword derivation from the free-text
-// `category` field was built, measured, and deleted (it badged "Android
-// Authority"/"Android Police" as authorities while missing real government
-// outlets) — do not reintroduce one here.
-// -----------------------------------------------------------------------
-
-type SourceKind = 'government' | 'regulator';
-
-const SOURCE_KIND_META: Record<SourceKind, { key: string; default: string; color: string }> = {
-    government: { key: 'sources.badgeGovernment', default: 'Government source', color: '#60a5fa' },
-    regulator: { key: 'sources.badgeRegulator', default: 'Official agency', color: '#34d399' },
-};
-
-const sourceKindOf = (publicationType?: string | null): SourceKind | null =>
-    publicationType === 'government' || publicationType === 'regulator' ? publicationType : null;
 
 /**
- * A publisher accordion header only badges when EVERY one of its sources
- * agrees on the same recognized kind — an empty list, a null/unrecognized
- * type, or any disagreement all resolve to `null` (no badge). `sources` comes
- * from `GET_NEWS_PUBLISHERS`'s nested `publicationSources` selection, which
- * takes no `first:` (assumed complete); if the server ever paginates it this
- * would need to re-derive from a full source list instead of trusting the
- * publisher payload.
+ * Sources > one country: its publications, one plain row each (name, website
+ * host, the current more/fewer state as a glyph, a chevron). A tap opens the
+ * publication page, which holds more/fewer, Top headlines and Subscribe.
+ *
+ * There are NO feeds on this screen, by design: the app shows publications
+ * and news, never the RSS feeds behind them. The page is PUSHED over this
+ * list, so Back returns to the same country and scroll position.
  */
-const commonSourceKind = (sources: readonly PublicationSource[]): SourceKind | null => {
-    if (sources.length === 0) return null;
-    const first = sourceKindOf(sources[0].publication_type);
-    if (!first) return null;
-    return sources.every((s) => sourceKindOf(s.publication_type) === first) ? first : null;
-};
-
-const SourceKindBadge: React.FC<{ kind: SourceKind }> = ({ kind }) => {
-    const { t } = useTranslation();
-    const meta = SOURCE_KIND_META[kind];
-    return (
-        <View
-            style={{
-                alignSelf: 'flex-start',
-                borderRadius: 6,
-                borderWidth: 1,
-                borderColor: `${meta.color}80`,
-                paddingHorizontal: 6,
-                paddingVertical: 1,
-            }}
-        >
-            <Text size="xs" style={{ color: meta.color, letterSpacing: 0.3 }}>
-                {t(meta.key, { defaultValue: meta.default })}
-            </Text>
-        </View>
-    );
-};
-
 interface SourcesL2PublisherListProps {
     readonly countryCode: string;
     readonly countryName: string;
@@ -122,30 +33,12 @@ interface SourcesL2PublisherListProps {
 const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ countryCode, countryName, onBack }) => {
     const { t } = useTranslation();
     const [publishers, setPublishers] = useState<NewsPublisher[]>([]);
-    /**
-     * ONE flow for the whole list, never one per row.
-     *
-     * `useSubscribeFlow` registers an AppState listener and opens a
-     * WatermelonDB observation, so calling it inside `renderPublisher` would
-     * give every visible publisher its own copy of both, and a single return
-     * from a subscribe page would then race N identical confirm prompts.
-     */
-    const subscribeFlow = useSubscribeFlow();
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
-    // publication-name (normalized) → current level, from the SAME
-    // `publication_preferences` table the dedicated Source-preferences screen
-    // reads — item 9's L2 control reflects (and writes) the live state, it
-    // does not keep a parallel copy of it.
-    const [pubPrefLevels, setPubPrefLevels] = useState<Map<string, SourcePrefUiLevel>>(new Map());
-    // Keyed by publisher._id, not name — mirrors the busy-id keying rationale
-    // in PublicationPreferencesScreen (two publishers could theoretically
-    // share a display name; the id never collides).
-    const [busyPublisherId, setBusyPublisherId] = useState<string | null>(null);
-
+    const prefLevelFor = usePublicationPrefLevels();
     useEffect(() => {
         if (countryCode && !hasFetched.current) {
             hasFetched.current = true;
@@ -155,43 +48,6 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
         // is defined below and intentionally excluded to avoid re-fetch loops.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [countryCode]);
-
-    useEffect(() => {
-        const sub = observeActivePublicationPreferences().subscribe((rows) => {
-            const next = new Map<string, SourcePrefUiLevel>();
-            for (const p of rows) {
-                if (p.scopeKind != null) continue; // a scope row's label is never a publication name
-                const name = normPublicationName(p.publicationName);
-                if (!name) continue;
-                // Mute (weight ≤ -0.9) collapses into 'deprioritised' for THIS
-                // control's 3-state display — L2 has no unmute affordance by
-                // design (item 9: mute stays exclusive to the dedicated
-                // Source-preferences screen). Pressing ↑ here still lifts a
-                // mute (a boost overwrites any prior weight), and pressing ↓
-                // clears it to 'none' rather than reinstating the mute.
-                next.set(name, p.weight > 0 ? 'prioritised' : p.weight < 0 ? 'deprioritised' : 'none');
-            }
-            setPubPrefLevels(next);
-        });
-        return () => sub.unsubscribe();
-    }, []);
-
-    const handleChangePublisherPref = useCallback(
-        async (publisher: NewsPublisher, next: SourcePrefUiLevel) => {
-            setBusyPublisherId(publisher._id);
-            try {
-                await setSourcePrefFromUi({ kind: 'publication', publicationName: publisher.name }, next);
-            } catch (error) {
-                logger.captureException(error, {
-                    tags: { screen: 'SourcesL2PublisherList', method: 'setPublisherPref' },
-                    extra: { publisherId: publisher._id, next },
-                });
-            } finally {
-                setBusyPublisherId(null);
-            }
-        },
-        [],
-    );
 
     const loadPublishers = async () => {
         try {
@@ -236,137 +92,22 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
         }
     }, [hasNextPage, isLoadingMore, endCursor, countryCode]);
 
-    const handleFeedPress = useCallback(
-        (feed: PublicationSource, publisherName: string) => {
-            router.push({
-                pathname: '/logged-in/sources-articles',
-                params: { title: formatCategory(feed.category), countryCode, publisherName, publicationSourceId: feed._id },
-            });
-        },
-        [countryCode]
-    );
-
-    const handleTopHeadlinesPress = useCallback(
-        (publisher: NewsPublisher) => {
-            router.push({
-                pathname: '/logged-in/publisher-articles',
-                params: { publisherId: publisher._id, publisherName: publisher.name },
-            });
-        },
-        []
-    );
-
     const renderPublisher: ListRenderItem<NewsPublisher> = useCallback(
         ({ item }) => {
-            const headerBadgeKind = commonSourceKind(item.publicationSources);
-            const prefLevel = pubPrefLevels.get(normPublicationName(item.name) ?? '') ?? 'none';
-            const prefBusy = busyPublisherId === item._id;
+            const host = hostOf(item.website_url);
             return (
-            <Box className="mx-4 mb-3">
-                <Accordion type="single" isCollapsible variant="unfilled" className="border border-gray-700 rounded-lg">
-                    <AccordionItem value={item._id}>
-                        <AccordionHeader>
-                            <AccordionTrigger className="px-4 py-3">
-                                <VStack className="flex-1 mr-3" space="xs">
-                                    <AccordionTitleText className="text-white text-base">
-                                        {item.name}
-                                    </AccordionTitleText>
-                                    {item.website_url && (
-                                        <Text size="xs" className="text-gray-500">
-                                            {item.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-                                        </Text>
-                                    )}
-                                    {headerBadgeKind && <SourceKindBadge kind={headerBadgeKind} />}
-                                </VStack>
-                                <SourcePrefControl
-                                    testIDPrefix={`source-pref-publisher-${item._id}`}
-                                    current={prefLevel}
-                                    busy={prefBusy}
-                                    onChange={(next) => handleChangePublisherPref(item, next)}
-                                />
-                                <Button
-                                    variant="outline"
-                                    size="xs"
-                                    onPress={() => handleTopHeadlinesPress(item)}
-                                    className="rounded-full mx-2"
-                                >
-                                    <ButtonText>{t('sources.viewTopHeadlines')}</ButtonText>
-                                </Button>
-                                <AccordionIcon
-                                    as={ChevronDownIcon}
-                                    className="text-gray-400"
-                                />
-                            </AccordionTrigger>
-                        </AccordionHeader>
-                        <AccordionContent className="px-0 pb-2 pt-0">
-                            {/* The publisher's own subscribe page, when the
-                                catalogue knows one and the reader has not
-                                already said they subscribe. Deliberately in
-                                the expanded BODY and not in the trigger row
-                                above: that row is already a pressable holding
-                                the pref control, the headlines button and the
-                                chevron, and a fourth target inside a gesture
-                                that also toggles the accordion is the exact
-                                collision the visited-publication rows avoid.
-                                This is a publisher's own paid product on
-                                their own site, not Mera's plan. */}
-                            {item.subscription_uri &&
-                            !subscribeFlow.isSubscribed(item._id) ? (
-                                <Box className="px-4 py-2.5 border-t border-gray-800">
-                                    <SubscribeAction
-                                        publisherName={item.name}
-                                        variant="inline"
-                                        testID={`sources-publisher-subscribe-${item._id}`}
-                                        onOpen={() =>
-                                            void subscribeFlow.begin({
-                                                publisherId: item._id,
-                                                publisherName: item.name,
-                                                countryCode: item.country_code,
-                                                subscriptionUri: item.subscription_uri ?? null,
-                                            })
-                                        }
-                                    />
-                                </Box>
-                            ) : null}
-                            {item.publicationSources.length === 0 ? (
-                                <Text size="sm" className="text-gray-500 px-4 py-2">
-                                    {t('sources.noFeedsAvailable')}
-                                </Text>
-                            ) : (
-                                item.publicationSources.map((feed) => {
-                                    const feedBadgeKind = sourceKindOf(feed.publication_type);
-                                    const categoriesLabel = formatCategories(feed.categories);
-                                    return (
-                                    <Pressable
-                                        key={feed._id}
-                                        onPress={() => handleFeedPress(feed, item.name)}
-                                        className="px-4 py-2.5 border-t border-gray-800"
-                                    >
-                                        <HStack className="items-center justify-between">
-                                            <VStack className="flex-1 mr-3" space="xs">
-                                                <Text className="text-white text-sm">
-                                                    {formatCategory(feed.category)}
-                                                </Text>
-                                                {feedBadgeKind && <SourceKindBadge kind={feedBadgeKind} />}
-                                                {categoriesLabel && (
-                                                    <Text size="xs" className="text-gray-500">
-                                                        {categoriesLabel}
-                                                    </Text>
-                                                )}
-                                            </VStack>
-                                            <MaterialIcons name="chevron-right" size={18} color="#999999" />
-                                        </HStack>
-                                    </Pressable>
-                                    );
-                                })
-                            )}
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
-            </Box>
+                <PublicationListRow
+                    rawName={item.name}
+                    subtitle={host}
+                    prefLevel={prefLevelFor(item.name)}
+                    onPress={() =>
+                        openPublicationPage({ publisherId: item._id, rawName: item.name, countryCode: item.country_code })
+                    }
+                    testID={`sources-publisher-${item._id}`}
+                />
             );
         },
-        [handleFeedPress, handleTopHeadlinesPress, handleChangePublisherPref, pubPrefLevels, busyPublisherId, subscribeFlow, t]
+        [prefLevelFor],
     );
 
     const keyExtractor = useCallback(
@@ -412,16 +153,6 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                     ListFooterComponent={ListFooterComponent}
                 />
             )}
-
-            {/* One dialog for the whole list, outside both branches: a
-                confirm armed before a reload that emptied the list still has
-                somewhere to appear. */}
-            <SubscribeConfirmDialog
-                publisherName={subscribeFlow.confirming?.publisherName ?? null}
-                onYes={subscribeFlow.onYes}
-                onNo={subscribeFlow.onNo}
-                onDismiss={subscribeFlow.onDismiss}
-            />
         </Box>
     );
 };

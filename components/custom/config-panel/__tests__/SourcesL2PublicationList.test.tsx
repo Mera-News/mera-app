@@ -1,7 +1,7 @@
-// SourcesL2PublicationList — item 6 (source-kind badges) + item 9 (L2
-// publisher-level ↑/↓ preference control), Wave B.
+// SourcesL2PublicationList: plain publication rows (name, host, more/fewer
+// glyph, chevron) that open the publication page. No feeds, no accordion.
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
 jest.mock('react-native-css-interop/jsx-runtime', () => {
@@ -80,25 +80,8 @@ jest.mock('@/components/ui/vstack', () => { const { View } = require('react-nati
 jest.mock('@/components/ui/spinner', () => { const { View } = require('react-native'); return { Spinner: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text }; });
 jest.mock('@/components/ui/pressable', () => { const { Pressable } = require('react-native'); return { Pressable }; });
-jest.mock('@/components/ui/button', () => { const { View, Text } = require('react-native'); return { Button: (p: any) => <View {...p} />, ButtonText: (p: any) => <Text {...p} /> }; });
 jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
-jest.mock('lucide-react-native', () => ({ ChevronDownIcon: () => null }));
 
-// Accordion primitives collapse to plain Views that always render their
-// children — this suite only cares about what's IN the header/content, not
-// gluestack's real expand/collapse animation.
-jest.mock('@/components/ui/accordion', () => {
-    const { View, Text } = require('react-native');
-    return {
-        Accordion: (p: any) => <View {...p} />,
-        AccordionItem: (p: any) => <View {...p} />,
-        AccordionHeader: (p: any) => <View {...p} />,
-        AccordionTrigger: (p: any) => <View {...p} />,
-        AccordionTitleText: (p: any) => <Text {...p} />,
-        AccordionIcon: (p: any) => <View {...p} />,
-        AccordionContent: (p: any) => <View {...p} />,
-    };
-});
 
 jest.mock('@/components/custom/config-panel/DrillDownHeader', () => {
     const { View, Text, Pressable } = require('react-native');
@@ -130,42 +113,20 @@ jest.mock('@/lib/database/services/publication-preference-service', () => ({
     observeActive: () => mockObserveActivePrefs(),
 }));
 
-const mockSetSourcePrefFromUi = jest.fn(async (..._a: unknown[]) => ({ applied: true }));
-jest.mock('@/lib/database/services/publication-pref-ui-actions', () => ({
-    setSourcePrefFromUi: (...a: unknown[]) => mockSetSourcePrefFromUi(...a),
-}));
+jest.mock('@/lib/stores/publication-display-store', () => ({ useDisplayPublication: (n: string) => n }));
+jest.mock('@/lib/nav-state', () => ({ getCurrentPathname: () => '/logged-in/sources-publishers' }));
 
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
-
-// `use-subscribe-flow` opens a WatermelonDB observation and an AppState
-// listener; `SubscribeConfirmDialog` pulls `@/components/ui/modal` and
-// through it `@legendapp/motion`, which this suite's RN mock cannot load.
-// The real `SubscribeAction` is deliberately left unmocked so these suites
-// still render the affordance itself.
-const mockSubscribeBegin = jest.fn();
-const mockConfirmDirectly = jest.fn();
-let mockIsSubscribed = (_id: string) => false;
-jest.mock('@/components/custom/publication-preferences/use-subscribe-flow', () => ({
-    useSubscribeFlow: () => ({
-        subscriptions: { items: [], isLoading: false, busyId: null },
-        begin: mockSubscribeBegin,
-        confirmDirectly: mockConfirmDirectly,
-        confirming: null,
-        onYes: jest.fn(),
-        onNo: jest.fn(),
-        isSubscribed: (id: string) => mockIsSubscribed(id),
-    }),
-}));
-jest.mock('@/components/custom/publication-preferences/SubscribeConfirmDialog', () => ({
-    __esModule: true,
-    default: () => null,
-}));
-
 
 const mockRouterPush = jest.fn();
 jest.mock('expo-router', () => ({ router: { push: (...args: any[]) => mockRouterPush(...args) } }));
 
 import SourcesL2PublisherList from '../SourcesL2PublicationList';
+
+// The row's VISUAL is hidden from accessibility (a childless labelled button
+// sits over it), so text and glyph queries must include hidden elements or an
+// absence assertion passes for the wrong reason.
+const HIDDEN = { includeHiddenElements: true } as const;
 
 function makeSource(overrides: Record<string, unknown> = {}) {
     return {
@@ -201,190 +162,71 @@ beforeEach(() => {
     observedPrefRows = [];
 });
 
-describe('item 6 — source-kind badges', () => {
-    it('renders NOTHING for a null publication_type (the current prod state for all rows)', async () => {
-        mockPublishers([makePublisher({ publicationSources: [makeSource({ publication_type: null })] })]);
-        const { queryByText } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
-        );
-        await waitFor(() => expect(mockGetNewsPublishers).toHaveBeenCalled());
-        expect(queryByText('Government source')).toBeNull();
-        expect(queryByText('Official agency')).toBeNull();
-    });
-
-    it('renders NOTHING for an unrecognized publication_type (e.g. "newspaper")', async () => {
-        mockPublishers([makePublisher({ publicationSources: [makeSource({ publication_type: 'newspaper' })] })]);
-        const { queryByText } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
-        );
-        await waitFor(() => expect(mockGetNewsPublishers).toHaveBeenCalled());
-        expect(queryByText('Government source')).toBeNull();
-        expect(queryByText('Official agency')).toBeNull();
-    });
-
-    it('badges the feed row "Government source" for publication_type "government"', async () => {
-        // A single-source publisher trivially "agrees with itself", so the
-        // header badges too — 2 matches (header + the one feed row).
-        mockPublishers([makePublisher({ publicationSources: [makeSource({ publication_type: 'government' })] })]);
-        const { findAllByText } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
-        );
-        expect((await findAllByText('Government source')).length).toBe(2);
-    });
-
-    it('badges the feed row "Official agency" for publication_type "regulator"', async () => {
-        mockPublishers([makePublisher({ publicationSources: [makeSource({ publication_type: 'regulator' })] })]);
-        const { findAllByText } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
-        );
-        expect((await findAllByText('Official agency')).length).toBe(2);
-    });
-
-    it('badges the PUBLISHER HEADER too when every one of its sources agrees', async () => {
+describe('plain publication rows', () => {
+    it('shows the name and the website host, and no feed rows even when the publisher has several', async () => {
         mockPublishers([
             makePublisher({
+                website_url: 'https://www.thetimes.example/news/',
                 publicationSources: [
-                    makeSource({ _id: 's1', publication_type: 'government' }),
-                    makeSource({ _id: 's2', publication_type: 'government', category: 'politics' }),
+                    makeSource({ _id: 'src-1', category: 'general_news' }),
+                    makeSource({ _id: 'src-2', category: 'sports' }),
                 ],
             }),
         ]);
-        const { findAllByText } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
+        const { findByText, queryByText, getByTestId } = render(
+            <SourcesL2PublisherList countryCode="IN" countryName="India" onBack={jest.fn()} />,
         );
-        // One on the header, one per matching feed row (2 sources here) = 3.
-        const matches = await findAllByText('Government source');
-        expect(matches.length).toBe(3);
+        expect(await findByText('The Times', HIDDEN)).toBeTruthy();
+        expect(queryByText('thetimes.example', HIDDEN)).toBeTruthy();
+        // The feed rows the accordion used to list are gone.
+        expect(queryByText('All', HIDDEN)).toBeNull();
+        expect(queryByText('Sports', HIDDEN)).toBeNull();
+        // No up/down, Top headlines pill or Subscribe on the row any more.
+        expect(queryByText('sources.viewTopHeadlines', HIDDEN)).toBeNull();
+        expect(getByTestId('sources-publisher-pub-1')).toBeTruthy();
     });
 
-    it('does NOT badge the header when sources disagree, even though each row badges individually', async () => {
-        mockPublishers([
-            makePublisher({
-                publicationSources: [
-                    makeSource({ _id: 's1', publication_type: 'government' }),
-                    makeSource({ _id: 's2', publication_type: 'regulator', category: 'politics' }),
-                ],
-            }),
-        ]);
-        const { findByText, queryAllByText } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
-        );
-        // Both per-row badges still render...
-        expect(await findByText('Government source')).toBeTruthy();
-        expect(await findByText('Official agency')).toBeTruthy();
-        // ...but only ONE of each — none of the extra copy a header badge
-        // would add.
-        expect(queryAllByText('Government source').length).toBe(1);
-        expect(queryAllByText('Official agency').length).toBe(1);
-    });
-
-    it('the categories line no longer folds in publication_type (no merged "Government · Politics" text)', async () => {
-        mockPublishers([
-            makePublisher({
-                publicationSources: [makeSource({ publication_type: 'government', categories: ['politics'] })],
-            }),
-        ]);
-        const { findAllByText, findByText, queryByText } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
-        );
-        // The badge still renders (header + row, single agreeing source)...
-        expect((await findAllByText('Government source')).length).toBe(2);
-        // ...but `categories` renders on its own, un-merged with the badge text.
-        expect(await findByText('Politics')).toBeTruthy();
-        expect(queryByText('Government · Politics')).toBeNull();
-        expect(queryByText(/Government source.*Politics|Politics.*Government source/)).toBeNull();
-    });
-});
-
-describe('item 9 — L2 publisher-level ↑/↓ control', () => {
-    it('reflects the live publication_preferences state (boost → "prioritised")', async () => {
-        observedPrefRows = [{ publicationName: 'The Times', weight: 0.5, scopeKind: null }];
-        mockPublishers([makePublisher({ name: 'The Times' })]);
+    it('opens the publication page by publisher id, carrying the raw name and country', async () => {
+        mockPublishers([makePublisher()]);
         const { findByTestId } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
+            <SourcesL2PublisherList countryCode="IN" countryName="India" onBack={jest.fn()} />,
         );
-        const upButton = await findByTestId('source-pref-publisher-pub-1-up');
-        expect(upButton.props.accessibilityState).toEqual(expect.objectContaining({ selected: true }));
-    });
-
-    it('a scope row (scopeKind set) is never mistaken for a publication match', async () => {
-        observedPrefRows = [{ publicationName: 'The Times', weight: 0.5, scopeKind: 'country', scopeValue: 'IND' }];
-        mockPublishers([makePublisher({ name: 'The Times' })]);
-        const { findByTestId } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
-        );
-        const upButton = await findByTestId('source-pref-publisher-pub-1-up');
-        expect(upButton.props.accessibilityState).toEqual(expect.objectContaining({ selected: false }));
-    });
-
-    it('tapping ↑ calls setSourcePrefFromUi with a publication target keyed on the publisher name', async () => {
-        mockPublishers([makePublisher({ _id: 'pub-9', name: 'The Herald' })]);
-        const { findByTestId } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
-        );
-        const upButton = await findByTestId('source-pref-publisher-pub-9-up');
-        await act(async () => {
-            fireEvent.press(upButton);
-        });
-        expect(mockSetSourcePrefFromUi).toHaveBeenCalledWith(
-            { kind: 'publication', publicationName: 'The Herald' },
-            'prioritised',
-        );
-    });
-
-});
-
-describe('the publisher subscribe row', () => {
-    const renderL2 = () =>
-        render(<SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />);
-
-    beforeEach(() => {
-        mockIsSubscribed = () => false;
-    });
-
-    it('renders NOTHING for a publisher with no subscribe page', async () => {
-        // Every row in prod looks like this until the catalogue knows a URI,
-        // so this is the ordinary case, not an edge one.
-        mockPublishers([makePublisher({ subscription_uri: null })]);
-        const { queryByTestId } = renderL2();
-        await waitFor(() => expect(mockGetNewsPublishers).toHaveBeenCalled());
-        expect(queryByTestId('sources-publisher-subscribe-pub-1')).toBeNull();
-    });
-
-    it('renders NOTHING when the reader already subscribes to that publisher', async () => {
-        mockPublishers([makePublisher({ subscription_uri: 'https://thetimes.example/subscribe' })]);
-        mockIsSubscribed = (id: string) => id === 'pub-1';
-        const { queryByTestId } = renderL2();
-        await waitFor(() => expect(mockGetNewsPublishers).toHaveBeenCalled());
-        expect(queryByTestId('sources-publisher-subscribe-pub-1')).toBeNull();
-    });
-
-    it('offers the publisher OWN page when the catalogue carries one', async () => {
-        mockPublishers([makePublisher({ subscription_uri: 'https://thetimes.example/subscribe' })]);
-        const { findByTestId } = renderL2();
-
-        fireEvent.press(await findByTestId('sources-publisher-subscribe-pub-1'));
-
-        expect(mockSubscribeBegin).toHaveBeenCalledWith({
-            publisherId: 'pub-1',
-            publisherName: 'The Times',
-            countryCode: 'IN',
-            subscriptionUri: 'https://thetimes.example/subscribe',
+        fireEvent.press(await findByTestId('sources-publisher-pub-1'));
+        expect(mockRouterPush).toHaveBeenCalledWith({
+            pathname: '/logged-in/publication',
+            params: { publisherId: 'pub-1', name: 'The Times', country: 'IN' },
         });
     });
+});
 
-    it('gives each publisher its OWN testID, so an assertion cannot hit the wrong row', async () => {
-        mockPublishers([
-            makePublisher({ subscription_uri: 'https://a.example/sub' }),
-            makePublisher({ _id: 'pub-2', name: 'The Post', subscription_uri: 'https://b.example/sub' }),
-        ]);
-        const { findByTestId, getByTestId } = renderL2();
-
-        await findByTestId('sources-publisher-subscribe-pub-1');
-        fireEvent.press(getByTestId('sources-publisher-subscribe-pub-2'));
-
-        expect(mockSubscribeBegin).toHaveBeenCalledWith(
-            expect.objectContaining({ publisherId: 'pub-2', publisherName: 'The Post' }),
+describe('the more/fewer state glyph', () => {
+    it('shows "more" for a boosted publication and says so in the row label', async () => {
+        observedPrefRows = [{ publicationName: 'the times', weight: 1, scopeKind: null }];
+        mockPublishers([makePublisher()]);
+        const { findByTestId, getByTestId } = render(
+            <SourcePublishersUnderTest />,
         );
+        expect(await findByTestId('sources-publisher-pub-1-pref-prioritised', HIDDEN)).toBeTruthy();
+        expect(getByTestId('sources-publisher-pub-1').props.accessibilityLabel).toContain('publicationPage.prefMoreA11y');
+    });
+
+    it('shows "fewer" for a downranked one', async () => {
+        observedPrefRows = [{ publicationName: 'The Times', weight: -0.5, scopeKind: null }];
+        mockPublishers([makePublisher()]);
+        const { findByTestId } = render(<SourcePublishersUnderTest />);
+        expect(await findByTestId('sources-publisher-pub-1-pref-deprioritised', HIDDEN)).toBeTruthy();
+    });
+
+    it('shows no glyph with no preference, and a scope row never matches a publication', async () => {
+        observedPrefRows = [{ publicationName: 'The Times', weight: 1, scopeKind: 'country' }];
+        mockPublishers([makePublisher()]);
+        const { findByTestId, queryByTestId } = render(<SourcePublishersUnderTest />);
+        expect(await findByTestId('sources-publisher-pub-1')).toBeTruthy();
+        expect(queryByTestId('sources-publisher-pub-1-pref-prioritised', HIDDEN)).toBeNull();
+        expect(queryByTestId('sources-publisher-pub-1-pref-deprioritised', HIDDEN)).toBeNull();
     });
 });
+
+function SourcePublishersUnderTest() {
+    return <SourcesL2PublisherList countryCode="IN" countryName="India" onBack={jest.fn()} />;
+}
