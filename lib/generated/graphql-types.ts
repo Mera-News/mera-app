@@ -557,6 +557,30 @@ export type PublicationDisplayName = {
   name: Scalars['String']['output'];
 };
 
+/** A publication (a publisher, not a feed) as shown on the publication page. */
+export type PublicationProfile = {
+  __typename?: 'PublicationProfile';
+  categories: Array<Scalars['String']['output']>;
+  countryCode: Scalars['String']['output'];
+  countryName?: Maybe<Scalars['String']['output']>;
+  /** The main source name in the requested language, else its raw name. */
+  displayName: Scalars['String']['output'];
+  homepageUrl?: Maybe<Scalars['String']['output']>;
+  /** True for a government body or a regulator. */
+  isOfficial: Scalars['Boolean']['output'];
+  /** Language codes across all of its sources. */
+  languages: Array<Scalars['String']['output']>;
+  /** The publisher name. */
+  name: Scalars['String']['output'];
+  /** Page through its articles with articlesForPublisher. */
+  newsPublisherId: Scalars['ID']['output'];
+  publicationType?: Maybe<Scalars['String']['output']>;
+  /** Every source publication_name under this publisher. Key per-publication preferences on these. */
+  sourceNames: Array<Scalars['String']['output']>;
+  /** The publisher's subscribe page. Null means it sells no consumer subscription. */
+  subscriptionUri?: Maybe<Scalars['String']['output']>;
+};
+
 export type PublicationSource = {
   __typename?: 'PublicationSource';
   _id: Scalars['ID']['output'];
@@ -598,6 +622,14 @@ export type PublicationSourcesResponse = {
   publicationSources: Array<PublicationSource>;
 };
 
+/** Ordering for articlesForPublisher. */
+export enum PublisherArticleOrder {
+  /** Newest first across all feeds over 48h, deduped by canonical URL, at most 50 per page. */
+  Newest = 'NEWEST',
+  /** Last 24h ranked by largest cluster size (the original behaviour). */
+  TopHeadlines = 'TOP_HEADLINES'
+}
+
 export type PublisherSearchHit = {
   __typename?: 'PublisherSearchHit';
   _id: Scalars['ID']['output'];
@@ -623,7 +655,7 @@ export type Query = {
   /** A country's last-24h articles across all its sources, sorted by largest cluster size (top headlines). A null or "GLOBAL" countryCode spans all countries. */
   articlesForCountry: ArticlesForPublicationSourceResponse;
   articlesForPublicationSource: ArticlesForPublicationSourceResponse;
-  /** A publisher's last-24h articles aggregated across all its feeds, sorted by largest cluster size (top headlines). */
+  /** A publisher's articles across all its feeds. Default order TOP_HEADLINES: last 24h sorted by largest cluster size. order NEWEST: newest first over 48h. */
   articlesForPublisher: ArticlesForPublicationSourceResponse;
   /** Hydrate articles by id for followed ("tracked") stories. Identical payload to articlesForTopicsByIds, but deliberately NOT charged against the daily article cap — following a story must not consume the allowance. dailyLimitReached is always false and resetAt is always absent. Capped at 50 ids per request. */
   articlesForStories: ArticlesForTopicsByIdsResponse;
@@ -648,6 +680,7 @@ export type Query = {
   /** Typeahead place search (anchored prefix on the lowercase key, population desc). Returns [] for queries under 2 chars; limit capped at 15. */
   placeSearch: Array<Place>;
   publicationDisplayNames: Array<PublicationDisplayName>;
+  publicationProfile?: Maybe<PublicationProfile>;
   /** @deprecated Use newsPublishers and publicationSourcesForNewsPublisher queries instead */
   publicationSources: PublicationSourcesResponse;
   publicationSourcesForNewsPublisher: PublicationSourcesForPublisherResponse;
@@ -713,6 +746,7 @@ export type QueryArticlesForPublisherArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   newsPublisherId: Scalars['ID']['input'];
+  order?: InputMaybe<PublisherArticleOrder>;
 };
 
 
@@ -792,6 +826,14 @@ export type QueryPlaceSearchArgs = {
 export type QueryPublicationDisplayNamesArgs = {
   language: Scalars['String']['input'];
   names: Array<Scalars['String']['input']>;
+};
+
+
+export type QueryPublicationProfileArgs = {
+  countryCode?: InputMaybe<Scalars['String']['input']>;
+  language?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  newsPublisherId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 

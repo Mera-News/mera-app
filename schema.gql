@@ -562,6 +562,42 @@ type PublicationDisplayName {
   name: String!
 }
 
+"""
+A publication (a publisher, not a feed) as shown on the publication page.
+"""
+type PublicationProfile {
+  categories: [String!]!
+  countryCode: String!
+  countryName: String
+
+  """The main source name in the requested language, else its raw name."""
+  displayName: String!
+  homepageUrl: String
+
+  """True for a government body or a regulator."""
+  isOfficial: Boolean!
+
+  """Language codes across all of its sources."""
+  languages: [String!]!
+
+  """The publisher name."""
+  name: String!
+
+  """Page through its articles with articlesForPublisher."""
+  newsPublisherId: ID!
+  publicationType: String
+
+  """
+  Every source publication_name under this publisher. Key per-publication preferences on these.
+  """
+  sourceNames: [String!]!
+
+  """
+  The publisher's subscribe page. Null means it sells no consumer subscription.
+  """
+  subscriptionUri: String
+}
+
 type PublicationSource {
   _id: ID!
   categories: [String!]
@@ -598,6 +634,17 @@ type PublicationSourcesForPublisherResponse {
 type PublicationSourcesResponse {
   pageInfo: CursorPageInfo!
   publicationSources: [PublicationSource!]!
+}
+
+"""Ordering for articlesForPublisher."""
+enum PublisherArticleOrder {
+  """
+  Newest first across all feeds over 48h, deduped by canonical URL, at most 50 per page.
+  """
+  NEWEST
+
+  """Last 24h ranked by largest cluster size (the original behaviour)."""
+  TOP_HEADLINES
 }
 
 type PublisherSearchHit {
@@ -650,7 +697,7 @@ type Query {
   ): ArticlesForPublicationSourceResponse!
 
   """
-  A publisher's last-24h articles aggregated across all its feeds, sorted by largest cluster size (top headlines).
+  A publisher's articles across all its feeds. Default order TOP_HEADLINES: last 24h sorted by largest cluster size. order NEWEST: newest first over 48h.
   """
   articlesForPublisher(
     """Cursor to fetch items after"""
@@ -659,6 +706,11 @@ type Query {
     """Number of items to fetch"""
     first: Int = 20
     newsPublisherId: ID!
+
+    """
+    TOP_HEADLINES (default) keeps the original view. NEWEST is newest first across all feeds.
+    """
+    order: PublisherArticleOrder = TOP_HEADLINES
   ): ArticlesForPublicationSourceResponse!
 
   """
@@ -724,6 +776,7 @@ type Query {
   """
   placeSearch(limit: Int! = 8, query: String!): [Place!]!
   publicationDisplayNames(language: String!, names: [String!]!): [PublicationDisplayName!]!
+  publicationProfile(countryCode: String, language: String, name: String, newsPublisherId: ID): PublicationProfile
   publicationSources(
     """Cursor to fetch items after"""
     after: String
