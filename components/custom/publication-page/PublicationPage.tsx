@@ -57,21 +57,6 @@ function switchRoles(os: string): { row: 'tabbar' | 'tablist'; pill: 'button' | 
     return os === 'ios' ? { row: 'tabbar', pill: 'button' } : { row: 'tablist', pill: 'tab' };
 }
 
-function dedupeNames(...lists: (readonly (string | null | undefined)[])[]): string[] {
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const list of lists) {
-        for (const raw of list) {
-            const name = (raw ?? '').trim();
-            const norm = name.toLowerCase().replace(/\s+/g, ' ');
-            if (!name || seen.has(norm)) continue;
-            seen.add(norm);
-            out.push(name);
-        }
-    }
-    return out;
-}
-
 /**
  * The publication page: identity, more/fewer, what we know about the
  * publication, Subscribe, then its news (Latest or Top headlines). One
@@ -87,25 +72,37 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
 
     const key = useMemo<PublicationProfileKey | null>(() => {
         if (publisherId) return { publisherId };
-        if (rawName) return { rawName, countryCode: countryCode ?? '' };
+        if (rawName) return { rawName, countryCode: countryCode ?? null };
         return null;
     }, [publisherId, rawName, countryCode]);
     const { state, profile, retry } = usePublicationProfile(key);
 
     const newsPublisherId = publisherId || profile?.newsPublisherId || null;
-    const newsAvailable = state !== 'unsupported' && state !== 'notFound' && state !== 'error';
-    const news = usePublicationArticles(newsAvailable ? newsPublisherId : null, order);
+
+    // More/fewer, keyed on every name the publication is known by. Resolved
+    // from what the device knows, so it works offline and when not found.
+    const pref = usePublicationPref({
+        publisherId: newsPublisherId,
+        rawName,
+        publisherName: profile?.name,
+        sourceNames: profile?.sourceNames,
+    });
+
+    // The news starts as soon as a publisher id is known and does not wait on
+    // the profile. An unsupported server and an unknown publication get none.
+    const newsAvailable = state !== 'unsupported' && state !== 'notFound';
+    const news = usePublicationArticles(newsAvailable ? newsPublisherId : null, order, {
+        sourceNames: profile?.sourceNames ?? pref.names,
+    });
+    // An older server answers a Latest request with Top headlines. The switch
+    // must not claim Latest then.
+    const shownOrder: PublicationOrder = order === 'NEWEST' && !news.orderApplied ? 'TOP_HEADLINES' : order;
 
     // Display: the profile's name in the app language, else the display-store
     // name for the raw key. Every write and lookup keeps the RAW names.
     const shownFromStore = useDisplayPublication((profile?.name ?? rawName ?? '').trim());
     const displayName = profile?.displayName?.trim() || shownFromStore || profile?.name || rawName || '';
-
-    const prefNames = useMemo(
-        () => dedupeNames(profile?.sourceNames ?? [], [profile?.name, rawName]),
-        [profile?.sourceNames, profile?.name, rawName],
-    );
-    const pref = usePublicationPref(prefNames);
+    const showPref = pref.names.length > 0 || !!rawName?.trim();
 
     // Register this publication as the one on top while focused, so an entry
     // point inside the page (a card's source name in its own list) does not
@@ -163,7 +160,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
 
     const roles = switchRoles(Platform.OS);
     const pill = (value: PublicationOrder, label: string, testID: string) => {
-        const selected = order === value;
+        const selected = shownOrder === value;
         return (
             <Pressable
                 key={value}
@@ -195,12 +192,12 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
 
     const listHeader = (
         <VStack space="md" className="pt-3 pb-3" testID="publication-page-header">
-            {prefNames.length > 0 ? (
+            {showPref ? (
                 <HStack className="items-center" testID="publication-pref-row">
                     <SourcePrefControl
                         testIDPrefix="publication-pref"
                         current={pref.level}
-                        busy={pref.busy}
+                        busy={pref.busy || pref.names.length === 0}
                         onChange={pref.change}
                     />
                 </HStack>
@@ -307,7 +304,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                     accessibilityRole={roles.row}
                     testID="publication-order-switch"
                 >
-                    {pill('NEWEST', t('publicationPage.latest'), 'publication-order-latest')}
+                    {news.orderApplied ? pill('NEWEST', t('publicationPage.latest'), 'publication-order-latest') : null}
                     {pill('TOP_HEADLINES', t('sources.topHeadlines'), 'publication-order-top')}
                 </HStack>
             ) : null}
@@ -315,7 +312,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     );
 
     // ── News list ────────────────────────────────────────────────────────
-    const articles = newsAvailable ? news.articles : [];
+    const articles: NewsArticle[] = newsAvailable ? news.articles : [];
     const renderItem: ListRenderItem<NewsArticle> = useCallback(
         ({ item }) => (
             <ArticleStandaloneCompactCard
@@ -328,7 +325,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     );
 
     let listEmpty: React.ReactElement | null = null;
-    if (newsAvailable && newsPublisherId) {
+    if (newsAvailable && (newsPublisherId || news.state === 'offline')) {
         if (news.state === 'idle' || news.state === 'loading') {
             listEmpty = (
                 <Box className="items-center py-8" testID="publication-news-loading">
@@ -343,7 +340,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                     </Text>
                     <Pressable
                         testID="publication-news-retry"
-                        onPress={news.refresh}
+                        onPress={() => void news.refresh()}
                         accessibilityRole="button"
                         accessibilityLabel={t('common.retry')}
                         style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 12 }}
@@ -358,7 +355,9 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
             listEmpty = (
                 <Box className="items-center py-8 px-6" testID="publication-news-empty">
                     <Text size="sm" className="text-gray-400 text-center">
-                        {order === 'TOP_HEADLINES' ? t('publicationPage.noTopHeadlines') : t('publicationPage.noLatest')}
+                        {shownOrder === 'TOP_HEADLINES'
+                            ? t('publicationPage.noTopHeadlines')
+                            : t('publicationPage.noLatest')}
                     </Text>
                 </Box>
             );
@@ -366,13 +365,13 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     }
 
     let listFooter: React.ReactElement | null = null;
-    if (articles.length > 0 && news.state === 'loadingMore') {
+    if (articles.length > 0 && news.loadMoreState === 'loading') {
         listFooter = (
             <Box className="items-center py-4" testID="publication-news-loading-more">
                 <Spinner size="small" />
             </Box>
         );
-    } else if (articles.length > 0 && news.state === 'loadMoreError') {
+    } else if (articles.length > 0 && news.loadMoreState === 'error') {
         listFooter = (
             <Box className="items-center py-2" testID="publication-news-more-error">
                 <Pressable
@@ -391,13 +390,13 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     }
 
     const onEndReached = useCallback(() => {
-        if (news.hasMore && news.state === 'ready') news.loadMore();
+        if (news.hasMore && news.state === 'ready' && news.loadMoreState === 'idle') news.loadMore();
     }, [news]);
 
     const onRefresh = useCallback(() => {
-        if (state === 'error') retry();
-        if (newsAvailable && newsPublisherId) news.refresh();
-    }, [state, retry, newsAvailable, newsPublisherId, news]);
+        if (state === 'error' || state === 'offline') retry();
+        if (newsAvailable) void news.refresh();
+    }, [state, retry, newsAvailable, news]);
 
     return (
         <Box className="flex-1" testID="publication-page">
@@ -409,7 +408,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
             />
             <FlatList
                 ref={listRef}
-                data={articles as NewsArticle[]}
+                data={articles}
                 renderItem={renderItem}
                 keyExtractor={(item, index) => item._id || `article-${index}`}
                 ListHeaderComponent={listHeader}
@@ -424,7 +423,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 onEndReachedThreshold={0.5}
                 refreshControl={
                     <RefreshControl
-                        refreshing={news.state === 'refreshing'}
+                        refreshing={news.refreshing}
                         onRefresh={onRefresh}
                         tintColor="#FFFFFF"
                     />

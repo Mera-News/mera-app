@@ -133,8 +133,9 @@ jest.mock('@/lib/database/services/publication-visit-service', () => ({ recordPu
 
 // The one seam to the data layer.
 let mockProfile: any = { state: 'loading', profile: null, retry: jest.fn() };
-let mockNews: any = { articles: [], state: 'idle', loadMore: jest.fn(), hasMore: false, refresh: jest.fn() };
-let mockPref: any = { level: 'none', busy: false, change: jest.fn() };
+const NEWS_BASE = { articles: [], state: 'idle', loadMoreState: 'idle', hasMore: false, orderApplied: true, isLocal: false, refreshing: false };
+let mockNews: any = { ...NEWS_BASE, loadMore: jest.fn(), refresh: jest.fn() };
+let mockPref: any = { level: 'none', busy: false, names: ['The Hindu'], change: jest.fn() };
 const mockProfileKeys: unknown[] = [];
 const mockNewsArgs: unknown[][] = [];
 const mockPrefNames: unknown[] = [];
@@ -147,8 +148,8 @@ jest.mock('../publication-data', () => ({
         mockNewsArgs.push(a);
         return mockNews;
     },
-    usePublicationPref: (names: unknown) => {
-        mockPrefNames.push(names);
+    usePublicationPref: (hints: unknown) => {
+        mockPrefNames.push(hints);
         return mockPref;
     },
 }));
@@ -193,8 +194,8 @@ beforeEach(() => {
     jest.clearAllMocks();
     mockSubscribed = false;
     mockProfile = { state: 'loading', profile: null, retry: jest.fn() };
-    mockNews = { articles: [], state: 'idle', loadMore: jest.fn(), hasMore: false, refresh: jest.fn() };
-    mockPref = { level: 'none', busy: false, change: jest.fn() };
+    mockNews = { ...NEWS_BASE, loadMore: jest.fn(), refresh: jest.fn() };
+    mockPref = { level: 'none', busy: false, names: ['The Hindu'], change: jest.fn() };
     mockProfileKeys.length = 0;
     mockNewsArgs.length = 0;
     mockPrefNames.length = 0;
@@ -214,13 +215,13 @@ describe('keying', () => {
 
     it('starts the news request as soon as the id is known, before the profile lands', () => {
         renderPage();
-        expect(mockNewsArgs[0]).toEqual(['pub-1', 'NEWEST']);
+        expect(mockNewsArgs[0].slice(0, 2)).toEqual(['pub-1', 'NEWEST']);
     });
 
     it('uses the profile id for the news when the page was opened by name', () => {
         mockProfile = { state: 'ready', profile: PROFILE, retry: jest.fn() };
         renderPage({ publisherId: null });
-        expect(mockNewsArgs[0]).toEqual(['pub-1', 'NEWEST']);
+        expect(mockNewsArgs[0].slice(0, 2)).toEqual(['pub-1', 'NEWEST']);
     });
 });
 
@@ -264,15 +265,14 @@ describe('profile states', () => {
         expect(getByTestId('row-a1')).toBeTruthy();
     });
 
-    it('error: "Couldn\'t load details" with a working Try again, and no news', () => {
+    it('error: "Couldn\'t load details" with a working Try again, and the news still loads by id', () => {
         const retry = jest.fn();
         mockProfile = { state: 'error', profile: null, retry };
-        const { getByText, getByTestId, queryByTestId } = renderPage();
+        const { getByText, getByTestId } = renderPage();
         expect(getByText('publicationPage.loadError')).toBeTruthy();
         fireEvent.press(getByTestId('publication-error-retry'));
         expect(retry).toHaveBeenCalled();
-        expect(queryByTestId('publication-order-switch')).toBeNull();
-        expect(mockNewsArgs[0]).toEqual([null, 'NEWEST']);
+        expect(mockNewsArgs[0].slice(0, 2)).toEqual(['pub-1', 'NEWEST']);
     });
 
     it('unsupported server: the entry point name and country only, no news', () => {
@@ -282,7 +282,7 @@ describe('profile states', () => {
         expect(getByText('Country(IND)')).toBeTruthy();
         expect(queryByTestId('publication-order-switch')).toBeNull();
         expect(queryByTestId('publication-news-empty')).toBeNull();
-        expect(mockNewsArgs[0]).toEqual([null, 'NEWEST']);
+        expect(mockNewsArgs[0].slice(0, 2)).toEqual([null, 'NEWEST']);
     });
 
     it('not found: the not-found line, and more/fewer still works by name', () => {
@@ -290,7 +290,7 @@ describe('profile states', () => {
         const { getByText, getByTestId, queryByTestId } = renderPage({ publisherId: null });
         expect(getByText('publicationPage.notFound')).toBeTruthy();
         expect(getByTestId('publication-pref-up')).toBeTruthy();
-        expect(mockPrefNames[0]).toEqual(['The Hindu']);
+        expect(mockPrefNames[0]).toEqual({ publisherId: null, rawName: 'The Hindu', publisherName: undefined, sourceNames: undefined });
         expect(queryByTestId('publication-order-switch')).toBeNull();
     });
 });
@@ -301,12 +301,18 @@ describe('more/fewer', () => {
         const { getByTestId } = renderPage();
         const header = getByTestId('publication-page-header');
         expect(header.props.children[0].props.testID).toBe('publication-pref-row');
-        expect(mockPrefNames[0]).toEqual(['The Hindu', 'The Hindu Business Line']);
+        expect(mockPrefNames[0]).toEqual({
+            publisherId: 'pub-1',
+            rawName: 'The Hindu',
+            publisherName: 'The Hindu',
+            sourceNames: ['The Hindu', 'The Hindu Business Line'],
+        });
+        expect(mockNewsArgs[0][2]).toEqual({ sourceNames: ['The Hindu', 'The Hindu Business Line'] });
     });
 
     it('a tap asks for the next level', () => {
         const change = jest.fn();
-        mockPref = { level: 'none', busy: false, change };
+        mockPref = { level: 'none', busy: false, names: ['The Hindu'], change };
         mockProfile = { state: 'ready', profile: PROFILE, retry: jest.fn() };
         const { getByTestId } = renderPage();
         fireEvent.press(getByTestId('publication-pref-down'));
@@ -359,9 +365,17 @@ describe('the Latest | Top headlines switch', () => {
 
     it('switching back to Latest clears the param', () => {
         const { getByTestId } = renderPage({ order: 'TOP_HEADLINES' });
-        expect(mockNewsArgs[0]).toEqual(['pub-1', 'TOP_HEADLINES']);
+        expect(mockNewsArgs[0].slice(0, 2)).toEqual(['pub-1', 'TOP_HEADLINES']);
         fireEvent.press(getByTestId('publication-order-latest'));
         expect(mockSetParams).toHaveBeenCalledWith({ order: undefined });
+    });
+
+    it('never claims Latest when an older server answered with Top headlines', () => {
+        mockNews = { ...mockNews, state: 'ready', orderApplied: false };
+        const { getByTestId, queryByTestId, getByText } = renderPage();
+        expect(getByTestId('publication-order-top').props.accessibilityState).toEqual({ selected: true });
+        expect(queryByTestId('publication-order-latest')).toBeNull();
+        expect(getByText('publicationPage.noTopHeadlines')).toBeTruthy();
     });
 
     it('a tap on the selected tab does nothing', () => {
@@ -390,7 +404,7 @@ describe('the news list', () => {
     });
 
     it('error on the first load: text plus a Try again that refreshes', () => {
-        const refresh = jest.fn();
+        const refresh = jest.fn(async () => {});
         mockNews = { ...mockNews, state: 'error', refresh };
         const { getByText, getByTestId } = renderPage();
         expect(getByText('publicationPage.newsLoadError')).toBeTruthy();
@@ -406,7 +420,7 @@ describe('the news list', () => {
 
     it('a failed load-more gets a Try again footer', () => {
         const loadMore = jest.fn();
-        mockNews = { ...mockNews, state: 'loadMoreError', articles: [article('a1')], loadMore };
+        mockNews = { ...mockNews, state: 'ready', loadMoreState: 'error', articles: [article('a1')], loadMore };
         const { getByTestId } = renderPage();
         fireEvent.press(getByTestId('publication-news-more-retry'));
         expect(loadMore).toHaveBeenCalled();
@@ -420,14 +434,14 @@ describe('the news list', () => {
         expect(loadMore).toHaveBeenCalledTimes(1);
 
         loadMore.mockClear();
-        mockNews = { ...mockNews, state: 'loadingMore' };
+        mockNews = { ...mockNews, loadMoreState: 'loading' };
         renderPage();
         mockLastList.onEndReached();
         expect(loadMore).not.toHaveBeenCalled();
     });
 
     it('pull to refresh refreshes the news', () => {
-        const refresh = jest.fn();
+        const refresh = jest.fn(async () => {});
         mockNews = { ...mockNews, state: 'ready', articles: [article('a1')], refresh };
         renderPage();
         mockLastList.refreshControl.props.onRefresh();
