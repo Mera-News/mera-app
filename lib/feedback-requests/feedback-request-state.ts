@@ -7,8 +7,10 @@
 // shown and nothing answered, and the next sync rebuilds it from the server.
 //
 // DEVICE-ONLY BY DESIGN. Whether a question was shown, opened or skipped never
-// leaves the device (no behavioural instrumentation, ever). The server learns
-// one thing only: an answer, when the reader sends one.
+// leaves the device (no behavioural instrumentation, ever). The server gets
+// one thing: an answer, when the reader sends one, which it stores with the
+// account id and the billing tier at that moment (the modal says so above
+// its submit button).
 //
 // SERIALIZED WRITES. The sync task, the auto-show host, the modal and the
 // drawer all read-modify-write the same row. Every write goes through one
@@ -111,18 +113,19 @@ export async function readFeedbackRequestsState(): Promise<FeedbackRequestsState
  * Read-modify-write the row, serialized with every other write. The mutator
  * edits a fresh copy in place. Entries that ended more than
  * {@link FEEDBACK_REQUEST_STATE_RETENTION_MS} ago are pruned. Listeners hear
- * about every successful write. Never throws: a failed write is reported and
- * resolves with the state as it was.
+ * about every successful write. A mutator that returns `false` changed
+ * nothing: no write, no listeners. Never throws: a failed write is reported
+ * and resolves with the state as it was.
  */
 export function updateFeedbackRequestsState(
-  mutate: (state: FeedbackRequestsState) => void,
+  mutate: (state: FeedbackRequestsState) => void | boolean,
   now: number = Date.now(),
 ): Promise<FeedbackRequestsState> {
   const run = chain.catch(() => undefined).then(async () => {
     const before = await readRow();
     const next: FeedbackRequestsState = {};
     for (const [id, e] of Object.entries(before)) next[id] = { ...e };
-    mutate(next);
+    if (mutate(next) === false) return before;
     for (const [id, e] of Object.entries(next)) {
       if (e.endsAt < now - FEEDBACK_REQUEST_STATE_RETENTION_MS) delete next[id];
     }

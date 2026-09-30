@@ -8,6 +8,11 @@
 //     (the pop-up is the loud path);
 //   - the server says answered (another device, or a reinstall): stamp
 //     answeredAt and mark the drawer row actioned.
+// And for each local entry still open that the list no longer carries: the
+// server closed it before its end date (the list holds live requests only),
+// so its endsAt is clamped to now. The drawer then reads Closed and the
+// auto-show host stops offering it. A later list that carries it again
+// restores its endsAt through the upsert.
 // The state write lands BEFORE the drawer row, so a failure between the two
 // can lose a row but never duplicate one.
 //
@@ -47,13 +52,24 @@ export async function ingestFeedbackRequests(
   requests: readonly ActiveFeedbackRequest[],
   now: number = Date.now(),
 ): Promise<{ newRows: number; answered: number }> {
-  if (requests.length === 0) return { newRows: 0, answered: 0 };
   const fresh: ActiveFeedbackRequest[] = [];
   const answeredNow: string[] = [];
+
+  const live = new Set(requests.map((r) => r.id));
 
   await updateFeedbackRequestsState((s) => {
     fresh.length = 0;
     answeredNow.length = 0;
+    let clamped = false;
+    for (const [id, e] of Object.entries(s)) {
+      if (!live.has(id) && e.endsAt > now) {
+        e.endsAt = now;
+        clamped = true;
+      }
+    }
+    // The normal state (nothing live, nothing to close) writes nothing, so
+    // an hourly empty sync never rewrites the row or wakes a listener.
+    if (requests.length === 0 && !clamped) return false;
     for (const r of requests) {
       const existing = s[r.id];
       const entry = existing ?? { question: r.question, endsAt: r.endsAt };

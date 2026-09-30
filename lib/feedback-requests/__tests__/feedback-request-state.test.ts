@@ -114,6 +114,16 @@ describe('updateFeedbackRequestsState', () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
+  it('a mutator returning false writes nothing and notifies nobody', async () => {
+    const { setSetting } = jest.requireMock('@/lib/database/services/setting-service') as { setSetting: jest.Mock };
+    setSetting.mockClear();
+    const listener = jest.fn();
+    subscribeFeedbackRequestsState(listener);
+    await updateFeedbackRequestsState(() => false, NOW);
+    expect(setSetting).not.toHaveBeenCalled();
+    expect(listener).not.toHaveBeenCalled();
+  });
+
   it('a throwing listener does not stop the others', async () => {
     const good = jest.fn();
     subscribeFeedbackRequestsState(() => {

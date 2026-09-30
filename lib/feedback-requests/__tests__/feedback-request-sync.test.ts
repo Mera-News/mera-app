@@ -29,6 +29,7 @@ import {
   FEEDBACK_REQUESTS_STATE_KEY,
   __resetFeedbackRequestStateForTests,
   markFeedbackRequestShown,
+  pickAutoShowCandidate,
   subscribeFeedbackRequestsState,
 } from '../feedback-request-state';
 import {
@@ -141,8 +142,46 @@ describe('syncFeedbackRequests', () => {
 });
 
 describe('ingestFeedbackRequests', () => {
-  it('an empty list writes nothing', async () => {
+  const { setSetting } = jest.requireMock('@/lib/database/services/setting-service') as { setSetting: jest.Mock };
+
+  it('an empty list with nothing open locally writes nothing and wakes nobody', async () => {
+    const listener = jest.fn();
+    subscribeFeedbackRequestsState(listener);
+    setSetting.mockClear();
     await expect(ingestFeedbackRequests([], NOW)).resolves.toEqual({ newRows: 0, answered: 0 });
+    expect(setSetting).not.toHaveBeenCalled();
+    expect(listener).not.toHaveBeenCalled();
     expect(mockRows.size).toBe(0);
+  });
+
+  it('an empty list with only ended entries locally still writes nothing', async () => {
+    mockRows.set(FEEDBACK_REQUESTS_STATE_KEY, JSON.stringify({ [A]: { question: 'Q', endsAt: NOW - 1 } }));
+    setSetting.mockClear();
+    await ingestFeedbackRequests([], NOW);
+    expect(setSetting).not.toHaveBeenCalled();
+  });
+
+  // The list carries LIVE requests only: one the server closed before its
+  // end date simply disappears from it.
+  it('closes an open local entry the list no longer carries, and it stops being a candidate', async () => {
+    await ingestFeedbackRequests([{ id: A, question: 'Q', endsAt: NOW + 1000, answered: false }], NOW);
+    await ingestFeedbackRequests([{ id: B, question: 'R', endsAt: NOW + 1000, answered: false }], NOW + 10);
+    expect(state()[A].endsAt).toBe(NOW + 10);
+    expect(pickAutoShowCandidate(state(), NOW + 11)).toBe(B);
+  });
+
+  it('an empty list closes every open local entry', async () => {
+    await ingestFeedbackRequests([{ id: A, question: 'Q', endsAt: NOW + 1000, answered: false }], NOW);
+    await ingestFeedbackRequests([], NOW + 5);
+    expect(state()[A].endsAt).toBe(NOW + 5);
+    expect(pickAutoShowCandidate(state(), NOW + 6)).toBeNull();
+  });
+
+  it('a request that comes back gets its endsAt back', async () => {
+    await ingestFeedbackRequests([{ id: A, question: 'Q', endsAt: NOW + 1000, answered: false }], NOW);
+    await ingestFeedbackRequests([], NOW + 5);
+    await ingestFeedbackRequests([{ id: A, question: 'Q', endsAt: NOW + 1000, answered: false }], NOW + 6);
+    expect(state()[A].endsAt).toBe(NOW + 1000);
+    expect(mockNotify).toHaveBeenCalledTimes(1);
   });
 });
