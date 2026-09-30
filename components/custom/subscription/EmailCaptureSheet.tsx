@@ -550,6 +550,13 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
     );
 }
 
+/** Whether the host is presenting the sheet right now. Read by the
+ *  feedback-request auto-show host so it never stacks a modal on this one. */
+let emailCaptureVisible = false;
+export function isEmailCaptureVisible(): boolean {
+  return emailCaptureVisible;
+}
+
 /**
  * Mounted once for the whole logged-in tree (app/logged-in/_layout.tsx).
  * Renders nothing until a capture request arrives from the registry; the
@@ -561,13 +568,21 @@ export default function EmailCaptureHost() {
     const [source, setSource] = useState<EmailCaptureSource>('purchase');
 
     useEffect(() => {
-        return subscribeEmailCapture((requestSource) => {
+        const unsubscribe = subscribeEmailCapture((requestSource) => {
             setSource(requestSource);
+            emailCaptureVisible = true;
             setIsOpen(true);
         });
+        return () => {
+            unsubscribe();
+            emailCaptureVisible = false;
+        };
     }, []);
 
-    const handleClose = useCallback(() => setIsOpen(false), []);
+    const handleClose = useCallback(() => {
+        emailCaptureVisible = false;
+        setIsOpen(false);
+    }, []);
 
     return (
         <EmailCaptureSheet

@@ -8,7 +8,7 @@
 // Only the data layer is mocked. The sheet's chrome is ordinary gluestack and
 // renders fine under jest.
 
-import { render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 const mockGetSetting = jest.fn<Promise<string | null>, [string]>();
@@ -58,7 +58,7 @@ jest.mock('@/components/ui/text', () => ({ Text: require('react-native').Text })
 jest.mock('@/components/ui/heading', () => ({ Heading: require('react-native').Text }));
 jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
-import WhatsNewSheet from '../WhatsNewSheet';
+import WhatsNewSheet, { isWhatsNewSheetActive } from '../WhatsNewSheet';
 
 /** The key this release must use. `whats_new_v3_seen` is already set for
  *  everyone who saw the v3 sheet, so reusing it would show this to nobody —
@@ -105,6 +105,32 @@ describe('WhatsNewSheet gate', () => {
 
         await waitFor(() => expect(mockSetSetting).toHaveBeenCalledWith(KEY, '1'));
         expect(queryByText('whatsNew.starterTitle')).toBeNull();
+    });
+
+    // Read by the feedback-request auto-show host so it never stacks on this
+    // sheet: true while deciding and while shown, false once decided not to
+    // show, dismissed or unmounted.
+    it('isWhatsNewSheetActive: true while shown, false after Got it and on unmount', async () => {
+        mockGetSetting.mockResolvedValue(null);
+        mockLoadFeedMetadata.mockResolvedValue({ lastRunAt: 1 });
+        const r = render(<WhatsNewSheet />);
+        expect(isWhatsNewSheetActive()).toBe(true);
+        fireEvent.press(await r.findByText('whatsNew.gotIt'));
+        expect(isWhatsNewSheetActive()).toBe(false);
+        r.unmount();
+        expect(isWhatsNewSheetActive()).toBe(false);
+    });
+
+    it('isWhatsNewSheetActive: false once it decides not to show', async () => {
+        mockGetSetting.mockResolvedValue('1');
+        render(<WhatsNewSheet />);
+        await waitFor(() => expect(isWhatsNewSheetActive()).toBe(false));
+        mockGetSetting.mockResolvedValue(null);
+        mockLoadFeedMetadata.mockResolvedValue(null);
+        const r = render(<WhatsNewSheet />);
+        await waitFor(() => expect(mockSetSetting).toHaveBeenCalledWith(KEY, '1'));
+        expect(isWhatsNewSheetActive()).toBe(false);
+        r.unmount();
     });
 
     it('stays shut once the flag is set, without reading feed metadata', async () => {

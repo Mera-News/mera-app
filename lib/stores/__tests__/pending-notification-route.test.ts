@@ -29,6 +29,7 @@ import {
   PENDING_NOTIFICATION_ROUTE_KEY,
   PENDING_ROUTE_MAX_AGE_MS,
   isFeedbackRequestId,
+  isFeedbackRequestRoutePending,
   type NotificationHref,
 } from '../pending-notification-route';
 
@@ -142,6 +143,41 @@ describe('feedback-request route', () => {
     await stashPendingNotificationRoute(FEEDBACK, 'u1', 1000);
     __resetPendingNotificationRouteForTests();
     await expect(consumePendingNotificationRoute('u1', 2000)).resolves.toEqual(FEEDBACK);
+  });
+
+  describe('isFeedbackRequestRoutePending (read without consuming)', () => {
+    it('false with nothing stashed, or with another route stashed', async () => {
+      await expect(isFeedbackRequestRoutePending(1000)).resolves.toBe(false);
+      await stashPendingNotificationRoute(DETAIL, 'u1', 1000);
+      await expect(isFeedbackRequestRoutePending(1000)).resolves.toBe(false);
+    });
+
+    it('true while waiting for the startup gate, and it does not consume', async () => {
+      await stashPendingNotificationRoute(FEEDBACK, 'u1', 1000);
+      await expect(isFeedbackRequestRoutePending(2000)).resolves.toBe(true);
+      await expect(consumePendingNotificationRoute('u1', 2000)).resolves.toEqual(FEEDBACK);
+      await expect(isFeedbackRequestRoutePending(2000)).resolves.toBe(false);
+    });
+
+    it('survives a reload (reads the row)', async () => {
+      await stashPendingNotificationRoute(FEEDBACK, 'u1', 1000);
+      __resetPendingNotificationRouteForTests();
+      await expect(isFeedbackRequestRoutePending(2000)).resolves.toBe(true);
+    });
+
+    it('false once too old to open', async () => {
+      await stashPendingNotificationRoute(FEEDBACK, 'u1', 1000);
+      await expect(isFeedbackRequestRoutePending(1000 + PENDING_ROUTE_MAX_AGE_MS + 1)).resolves.toBe(false);
+    });
+
+    it('navigated here: false; after a reload, true only inside the reopen window', async () => {
+      await stashPendingNotificationRoute(FEEDBACK, 'u1', 1000);
+      await takePendingNotificationRouteForNavigation('u1', 1000);
+      await expect(isFeedbackRequestRoutePending(1001)).resolves.toBe(false);
+      __resetPendingNotificationRouteForTests();
+      await expect(isFeedbackRequestRoutePending(1001)).resolves.toBe(true);
+      await expect(isFeedbackRequestRoutePending(1000 + NAVIGATED_ROUTE_REOPEN_MS + 1)).resolves.toBe(false);
+    });
   });
 
   it('a persisted row with a malformed id reads as no row', async () => {

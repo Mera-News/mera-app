@@ -43,6 +43,20 @@ jest.mock('@/lib/stores/app-language-store', () => ({
   useAppLanguageStore: { getState: () => ({ appLanguage: 'zh-Hans' }) },
 }));
 
+let mockSession: any = { data: { user: { id: 'u1' } }, isPending: false };
+jest.mock('@/lib/auth-client', () => ({ authClient: { useSession: () => mockSession } }));
+let mockLocalUserId: string | null = 'u1';
+jest.mock('@/lib/stores/user-store', () => ({
+  useUserStore: (sel: (s: { userId: string | null }) => unknown) => sel({ userId: mockLocalUserId }),
+}));
+let mockConsentBlocks: boolean | Error = false;
+jest.mock('../feedback-request-consent', () => ({
+  consentBlocksFeedbackRequest: jest.fn(async () => {
+    if (mockConsentBlocks instanceof Error) throw mockConsentBlocks;
+    return mockConsentBlocks;
+  }),
+}));
+
 const mockMarkActionedBySource = jest.fn(async (_s: string) => 1);
 jest.mock('@/lib/database/services/notification-service', () => ({
   markActionedBySource: (s: string) => mockMarkActionedBySource(s),
@@ -85,6 +99,9 @@ async function mount(id: string | undefined = ID) {
 
 beforeEach(() => {
   mockState = {};
+  mockSession = { data: { user: { id: 'u1' } }, isPending: false };
+  mockLocalUserId = 'u1';
+  mockConsentBlocks = false;
   jest.clearAllMocks();
 });
 
@@ -216,4 +233,49 @@ it('shows a counter only near the limit', async () => {
   expect(r.queryByTestId('feedback-request-counter')).toBeNull();
   fireEvent.changeText(r.getByTestId('feedback-request-input'), 'a'.repeat(1800));
   expect(r.getByTestId('feedback-request-counter')).toBeTruthy();
+});
+
+describe('consent guard (every entry point)', () => {
+  it('consent not accepted: no card, closes itself, stamps nothing', async () => {
+    mockState = { [ID]: LIVE() };
+    mockConsentBlocks = true;
+    const r = await mount();
+    expect(r.queryByTestId('feedback-request-card')).toBeNull();
+    expect(r.onClose).toHaveBeenCalledTimes(1);
+    r.unmount();
+    expect(mockShown).not.toHaveBeenCalled();
+    expect(mockDismissed).not.toHaveBeenCalled();
+  });
+
+  it('while the session is unresolved: no card, no close yet', async () => {
+    mockState = { [ID]: LIVE() };
+    mockSession = { data: null, isPending: true };
+    const r = await mount();
+    expect(r.queryByTestId('feedback-request-card')).toBeNull();
+    expect(r.getByTestId('feedback-request-consent-wait')).toBeTruthy();
+    expect(r.onClose).not.toHaveBeenCalled();
+    expect(mockShown).not.toHaveBeenCalled();
+  });
+
+  it('no signed-in account at all: closes without a card', async () => {
+    mockSession = { data: null, isPending: false };
+    mockLocalUserId = null;
+    const r = await mount();
+    expect(r.queryByTestId('feedback-request-card')).toBeNull();
+    expect(r.onClose).toHaveBeenCalled();
+  });
+
+  it('offline (no session, local account): the check decides, the card shows', async () => {
+    mockState = { [ID]: LIVE() };
+    mockSession = { data: null, isPending: false };
+    const r = await mount();
+    expect(r.getByTestId('feedback-request-card')).toBeTruthy();
+  });
+
+  it('a failing check fails open, like ConsentGate', async () => {
+    mockState = { [ID]: LIVE() };
+    mockConsentBlocks = new Error('boom');
+    const r = await mount();
+    expect(r.getByTestId('feedback-request-card')).toBeTruthy();
+  });
 });

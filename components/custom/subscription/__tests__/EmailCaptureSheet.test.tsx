@@ -85,7 +85,9 @@ jest.mock('@/lib/subscription/email-capture', () => ({
     completeEmailCapture: jest.fn(),
 }));
 
-import { EmailCaptureSheet } from '../EmailCaptureSheet';
+import EmailCaptureHost, { EmailCaptureSheet, isEmailCaptureVisible } from '../EmailCaptureSheet';
+import { act } from '@testing-library/react-native';
+import { subscribeEmailCapture } from '@/lib/subscription/email-capture';
 
 /**
  * Renders the sheet the way EmailCaptureHost does: onClose flips isOpen false,
@@ -219,4 +221,19 @@ it('hardware back (onRequestClose) from the consequence step still reports DISMI
     await waitFor(() => expect(onOutcome).toHaveBeenCalledWith('dismissed'));
     expect(onOutcome).not.toHaveBeenCalledWith('skipped');
     expect(onClose).toHaveBeenCalled();
+});
+
+// Read by the feedback-request auto-show host so it never stacks on this sheet.
+it('isEmailCaptureVisible follows the host: true on a request, false on close and unmount', async () => {
+    const r = render(<EmailCaptureHost />);
+    expect(isEmailCaptureVisible()).toBe(false);
+    const listener = (subscribeEmailCapture as jest.Mock).mock.calls.at(-1)[0];
+    act(() => listener('purchase'));
+    expect(isEmailCaptureVisible()).toBe(true);
+    fireEvent.press(await r.findByTestId('email-capture-not-now'));
+    await waitFor(() => expect(isEmailCaptureVisible()).toBe(false));
+    act(() => listener('settings'));
+    expect(isEmailCaptureVisible()).toBe(true);
+    r.unmount();
+    expect(isEmailCaptureVisible()).toBe(false);
 });

@@ -215,6 +215,25 @@ export async function takePendingNotificationRouteForNavigation(
 }
 
 /**
+ * Is a feedback-request route stashed that something is still going to open?
+ * Read WITHOUT consuming, by the feedback-request auto-show host, so it never
+ * pushes the modal while the startup gate or the tap handler is about to push
+ * it too. True under exactly the rules the two takers would open it by: not
+ * yet navigated and younger than {@link PENDING_ROUTE_MAX_AGE_MS}, or
+ * navigated in an EARLIER context within {@link NAVIGATED_ROUTE_REOPEN_MS}.
+ * Never throws.
+ */
+export async function isFeedbackRequestRoutePending(now: number = Date.now()): Promise<boolean> {
+  const pending = await readPending();
+  if (!pending) return false;
+  const href = pending.href;
+  if (typeof href !== 'object' || href.pathname !== '/logged-in/feedback-request') return false;
+  if (pending.navigatedAt === null) return now - pending.at <= PENDING_ROUTE_MAX_AGE_MS;
+  if (pending.navigatedAt === navigatedHereAt) return false;
+  return now - pending.navigatedAt <= NAVIGATED_ROUTE_REOPEN_MS;
+}
+
+/**
  * Called by the startup gate (app/logged-in/index.tsx) once it has sent the
  * user to their startup tab. From then on a tap in this JS context may
  * navigate immediately (PIN permitting). Memory only, on purpose: a reload

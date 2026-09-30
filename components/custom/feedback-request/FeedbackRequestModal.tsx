@@ -12,6 +12,15 @@
 // question opened from a push or the drawer never pops up again later. Every
 // close without an answer stamps dismissedAt. Both stay on the device.
 //
+// CONSENT FIRST. The answer goes to the server with the account id and tier,
+// and on iOS this transparentModal presents natively ABOVE the in-tree
+// ConsentGate. So the route checks consent itself (the same guard the
+// auto-show host uses, feedback-request-consent.ts) before the card mounts:
+// while it is unresolved or not accepted there is no card, and a "not
+// accepted" answer closes the route. Nothing is stamped on that path (the card
+// never mounted), so the question is offered again once consent is accepted
+// and the drawer row still opens it.
+//
 // Closed is decided twice: locally from endsAt, and from the server's
 // FEEDBACK_REQUEST_CLOSED on submit. An id this device has never synced (a
 // push tap before the first sync) is fetched once; absent from the active
@@ -53,10 +62,14 @@ import {
     feedbackRequestNotificationSource,
     ingestFeedbackRequests,
 } from '@/lib/feedback-requests/feedback-request-sync';
+import type { ConsentSessionUser } from '@/components/custom/auth/legal-consent';
+import { authClient } from '@/lib/auth-client';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { isFeedbackRequestId } from '@/lib/stores/pending-notification-route';
+import { useUserStore } from '@/lib/stores/user-store';
+import { consentBlocksFeedbackRequest } from './feedback-request-consent';
 
 const ACCENT = '#EDA77E';
 const CLOSE_RED = '#ef4444'; // same close affordance as FeedbackWidgetModal
@@ -80,7 +93,54 @@ export interface FeedbackRequestModalProps {
     readonly onClose: () => void;
 }
 
+type ConsentPhase = 'checking' | 'clear' | 'blocked';
+
 const FeedbackRequestModal: React.FC<FeedbackRequestModalProps> = ({ id, onClose }) => {
+    const { data: session, isPending } = authClient.useSession();
+    // Local first, session as fallback: offline the session may not resolve,
+    // and the persisted id is still the signed-in account.
+    const localUserId = useUserStore((s) => s.userId);
+    const userId = session?.user?.id ?? localUserId ?? null;
+    const sessionUser = session?.user as ConsentSessionUser | undefined;
+    const [consent, setConsent] = useState<ConsentPhase>('checking');
+
+    useEffect(() => {
+        if (isPending) return;
+        if (!userId) {
+            setConsent('blocked');
+            return;
+        }
+        let cancelled = false;
+        consentBlocksFeedbackRequest(userId, sessionUser)
+            .then((blocked) => {
+                if (!cancelled) setConsent(blocked ? 'blocked' : 'clear');
+            })
+            // Fails open, like ConsentGate: an unanswerable check never blocks.
+            .catch(() => {
+                if (!cancelled) setConsent('clear');
+            });
+        return () => {
+            cancelled = true;
+        };
+        // sessionUser is read at check time; the id is what identifies it.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isPending, userId]);
+
+    const closedForConsent = useRef(false);
+    useEffect(() => {
+        if (consent !== 'blocked' || closedForConsent.current) return;
+        closedForConsent.current = true;
+        onClose();
+    }, [consent, onClose]);
+
+    if (consent !== 'clear') {
+        // No card: the dim backdrop alone, for the moment the check takes.
+        return <View testID="feedback-request-consent-wait" style={styles.root} />;
+    }
+    return <FeedbackRequestCard id={id} onClose={onClose} />;
+};
+
+const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
     const { height: screenHeight } = useWindowDimensions();

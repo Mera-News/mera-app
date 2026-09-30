@@ -15,15 +15,21 @@ jest.mock('expo-router', () => ({
 let mockSession: any = { data: { user: { id: 'u1', termsVersion: '1', privacyVersion: '1' } }, isPending: false };
 jest.mock('@/lib/auth-client', () => ({ authClient: { useSession: () => mockSession } }));
 
-let mockVersions: any = { termsVersion: '1', privacyVersion: '1' };
-jest.mock('@/components/custom/auth/legal-consent', () => ({
-  fetchLegalVersions: jest.fn(async () => mockVersions),
-  needsConsent: (u: any, v: any) => !!v && (u?.termsVersion !== v.termsVersion || u?.privacyVersion !== v.privacyVersion),
-  wasLegalAcceptedThisProcess: () => false,
+let mockConsentBlocks = false;
+jest.mock('../feedback-request-consent', () => ({
+  consentBlocksFeedbackRequest: jest.fn(async () => mockConsentBlocks),
 }));
+let mockEmailCapture = false;
+jest.mock('@/components/custom/subscription/EmailCaptureSheet', () => ({ isEmailCaptureVisible: () => mockEmailCapture }));
+let mockWhatsNew = false;
+jest.mock('@/components/custom/for-you/WhatsNewSheet', () => ({ isWhatsNewSheetActive: () => mockWhatsNew }));
 
 let mockGatePassed = true;
-jest.mock('@/lib/stores/pending-notification-route', () => ({ isStartupGatePassed: () => mockGatePassed }));
+let mockRoutePending = false;
+jest.mock('@/lib/stores/pending-notification-route', () => ({
+  isStartupGatePassed: () => mockGatePassed,
+  isFeedbackRequestRoutePending: jest.fn(async () => mockRoutePending),
+}));
 
 function mockStore<T extends object>(initial: T) {
   const { create } = jest.requireActual('zustand');
@@ -64,7 +70,10 @@ beforeEach(() => {
   mockPathname = '/logged-in/app_container/feed';
   mockGatePassed = true;
   mockCandidate = ID;
-  mockVersions = { termsVersion: '1', privacyVersion: '1' };
+  mockConsentBlocks = false;
+  mockEmailCapture = false;
+  mockWhatsNew = false;
+  mockRoutePending = false;
   mockSession = { data: { user: { id: 'u1', termsVersion: '1', privacyVersion: '1' } }, isPending: false };
   (usePinStore as any).setState({ locked: false });
   (useFloatingChatStore as any).setState({ isExpanded: false });
@@ -98,7 +107,10 @@ it.each([
   ['an open chat', () => { (useFloatingChatStore as any).setState({ isExpanded: true }); }],
   ['a pending session', () => { mockSession = { data: null, isPending: true }; }],
   ['a startup gate not yet passed', () => { mockGatePassed = false; }],
-  ['ConsentGate showing', () => { mockVersions = { termsVersion: '2', privacyVersion: '1' }; }],
+  ['ConsentGate showing', () => { mockConsentBlocks = true; }],
+  ['the email-capture sheet', () => { mockEmailCapture = true; }],
+  ["the What's new sheet", () => { mockWhatsNew = true; }],
+  ['a stashed feedback-request tap about to open', () => { mockRoutePending = true; }],
 ])('defers on %s', async (_name, arrange) => {
   arrange();
   render(<FeedbackRequestAutoShowHost />);

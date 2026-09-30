@@ -13,25 +13,21 @@
 //
 // NEVER OVER SOMETHING ELSE. It waits while the PIN lock is up, before the
 // startup gate has passed, on the onboarding, verify-otp and PIN routes and
-// the modal itself, while the bug-report modal or the floating chat is open,
-// and while ConsentGate is showing. Each check runs after a settle delay, so a
-// notification tap the startup gate is about to open (the same modal) lands
-// first and this defers to it. A deferred show simply retries on the next
-// trigger.
-//
-// KNOWN GAP: EmailCaptureHost and WhatsNewSheet keep their visibility in
-// component state with no exported read, so this host cannot see them.
+// the modal itself, while the bug-report modal, the email-capture sheet, the
+// What's new sheet or the floating chat is open, while ConsentGate is showing,
+// and while a notification tap for a feedback request is stashed and about to
+// be opened by the startup gate or the tap handler (it would push the same
+// modal). Each check runs after a settle delay. A deferred show simply retries
+// on the next trigger; the two sheets expose a synchronous read only, so their
+// closing is picked up on the next route change, foreground or state write.
 
 import { router, usePathname } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
-import {
-    needsConsent,
-    fetchLegalVersions,
-    wasLegalAcceptedThisProcess,
-    type ConsentSessionUser,
-} from '@/components/custom/auth/legal-consent';
+import type { ConsentSessionUser } from '@/components/custom/auth/legal-consent';
+import { isWhatsNewSheetActive } from '@/components/custom/for-you/WhatsNewSheet';
+import { isEmailCaptureVisible } from '@/components/custom/subscription/EmailCaptureSheet';
 import { authClient } from '@/lib/auth-client';
 import {
     markFeedbackRequestShown,
@@ -42,8 +38,12 @@ import {
 import logger from '@/lib/logger';
 import { useFeedbackStore } from '@/lib/stores/feedback-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
-import { isStartupGatePassed } from '@/lib/stores/pending-notification-route';
+import {
+    isFeedbackRequestRoutePending,
+    isStartupGatePassed,
+} from '@/lib/stores/pending-notification-route';
 import { usePinStore } from '@/lib/stores/pin-store';
+import { consentBlocksFeedbackRequest } from './feedback-request-consent';
 
 /** Long enough for the startup gate to open a stashed notification route and
  *  for a just-mounted screen's own sheet to decide; short enough to feel like
@@ -65,6 +65,8 @@ function storesBlock(): boolean {
     if (usePinStore.getState().locked) return true;
     if (useFeedbackStore.getState().visible) return true;
     if (useFloatingChatStore.getState().isExpanded) return true;
+    if (isEmailCaptureVisible()) return true;
+    if (isWhatsNewSheetActive()) return true;
     return false;
 }
 
@@ -82,9 +84,6 @@ export default function FeedbackRequestAutoShowHost() {
 
     const [tick, setTick] = useState(0);
     const inFlight = useRef(false);
-    /** ConsentGate's own answer, per user. Only a "no consent needed" answer
-     *  is kept: a needed one is re-checked, and a failed fetch is not cached. */
-    const consentClearFor = useRef<string | null>(null);
 
     useEffect(() => subscribeFeedbackRequestsState(() => setTick((n) => n + 1)), []);
     useEffect(() => {
@@ -106,7 +105,8 @@ export default function FeedbackRequestAutoShowHost() {
                     const state = await readFeedbackRequestsState();
                     const id = pickAutoShowCandidate(state);
                     if (!id) return;
-                    if (await consentShowing(userId)) return;
+                    if (await isFeedbackRequestRoutePending()) return;
+                    if (await consentBlocksFeedbackRequest(userId, sessionUserRef.current)) return;
                     // Everything may have moved during the awaits: re-check.
                     if (storesBlock() || routeBlocks(pathnameRef.current)) return;
                     // Stamp FIRST: once stamped, navigate unconditionally, so
@@ -123,19 +123,6 @@ export default function FeedbackRequestAutoShowHost() {
             })();
         }, SETTLE_MS);
         return () => clearTimeout(timer);
-
-        // ConsentGate shows when the session user's accepted versions are
-        // missing or stale, unless this process already recorded acceptance.
-        // Same predicate, same exported helpers; fails open like the gate.
-        async function consentShowing(uid: string): Promise<boolean> {
-            if (wasLegalAcceptedThisProcess(uid)) return false;
-            if (consentClearFor.current === uid) return false;
-            const versions = await fetchLegalVersions();
-            if (!versions) return false;
-            if (needsConsent(sessionUserRef.current, versions)) return true;
-            consentClearFor.current = uid;
-            return false;
-        }
     }, [tick, pathname, isPending, userId, pinLocked, feedbackVisible, chatOpen]);
 
     return null;

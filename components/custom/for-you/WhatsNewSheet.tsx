@@ -60,16 +60,28 @@ const ROWS: { key: RowKey; icon: keyof typeof MaterialIcons.glyphMap; titleKey: 
  * is a stronger signal than `cached_user_id`, which is set at login and so
  * cannot distinguish a fresh install by the time this mounts.
  */
+/** True from the moment the sheet starts deciding whether to show until it
+ *  decides not to, is dismissed, or unmounts. Read by the feedback-request
+ *  auto-show host so it never stacks a modal on this one. */
+let whatsNewSheetActive = false;
+export function isWhatsNewSheetActive(): boolean {
+  return whatsNewSheetActive;
+}
+
 const WhatsNewSheet: React.FC = () => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    whatsNewSheetActive = true;
     (async () => {
       try {
         const seen = await getSetting(WHATS_NEW_SEEN_KEY);
-        if (seen) return; // already shown / set once
+        if (seen) {
+          whatsNewSheetActive = false;
+          return; // already shown / set once
+        }
         const meta = await loadFeedMetadata();
         const isExistingUser = meta != null;
         if (cancelled) return;
@@ -80,9 +92,11 @@ const WhatsNewSheet: React.FC = () => {
           // announcement to contrast with, and a modal ahead of the product is
           // a worse first run than the product. Set the flag anyway so it
           // cannot appear later, once this user does have a feed.
+          whatsNewSheetActive = false;
           await setSetting(WHATS_NEW_SEEN_KEY, '1');
         }
       } catch (err) {
+        whatsNewSheetActive = false;
         logger.captureException(err, {
           tags: { component: 'WhatsNewSheet', method: 'gate' },
         });
@@ -90,10 +104,12 @@ const WhatsNewSheet: React.FC = () => {
     })();
     return () => {
       cancelled = true;
+      whatsNewSheetActive = false;
     };
   }, []);
 
   const dismiss = () => {
+    whatsNewSheetActive = false;
     setOpen(false);
     setSetting(WHATS_NEW_SEEN_KEY, '1').catch((err: unknown) => {
       logger.captureException(err, {
