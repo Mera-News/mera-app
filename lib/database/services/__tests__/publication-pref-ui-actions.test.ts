@@ -295,6 +295,26 @@ describe('publisher target: a write reaches every name', () => {
     mockAppend.mockImplementation(async () => ({ id: 'log1' }));
   });
 
+  it('clear runs the sweep policy for EACH cleared name: a muted name gets its un-exclude sweep', async () => {
+    mockGetPreferenceKind.mockImplementation(async (name: unknown) =>
+      name === 'TOI Business' ? 'mute' : name === 'Times Now' ? 'none' : 'boost',
+    );
+    mockSweepForMutation.mockImplementation((input: unknown) =>
+      (input as { prefBefore: string }).prefBefore === 'mute' ? 'unexclude' : null,
+    );
+    await setSourcePrefFromUi({ kind: 'publisher', names: NAMES }, 'none');
+    // One sweep decision per cleared name, never for the name with no row.
+    expect(mockSweepForMutation.mock.calls.map((c) => c[0])).toEqual([
+      { actionType: 'set_publication_pref', prefBefore: 'boost', prefAfter: 'none' },
+      { actionType: 'set_publication_pref', prefBefore: 'mute', prefAfter: 'none' },
+    ]);
+    // Each verdict is run: the mute's casualties are released.
+    expect(mockRunSweepFor.mock.calls).toEqual([
+      [null, 'set_publication_pref'],
+      ['unexclude', 'set_publication_pref'],
+    ]);
+  });
+
   it('stops at a refused write and still returns what it wrote, for undo', async () => {
     mockApplyPersonaAction
       .mockResolvedValueOnce({ applied: true, summary: 'ok', changeLogId: 'c1' } as never)
