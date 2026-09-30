@@ -1,4 +1,4 @@
-import { formatCategories, homepageUrlOf, hostOf, monogramOf, sourceKindOf } from '../publication-format';
+import { formatCategories, homepageUrlOf, hostOf, monogramHueOf, monogramOf, sourceKindOf } from '../publication-format';
 
 describe('hostOf', () => {
     it.each([
@@ -69,5 +69,25 @@ describe('homepageUrlOf', () => {
         expect(homepageUrlOf('ftp://x.cz/')).toBeNull();
         expect(homepageUrlOf('')).toBeNull();
         expect(homepageUrlOf(null)).toBeNull();
+    });
+});
+
+describe('monogramHueOf', () => {
+    it('is stable for a name, ignoring case and outer spaces', () => {
+        expect(monogramHueOf('The Hindu')).toBe(monogramHueOf('  the hindu '));
+    });
+
+    it('is a whole degree in 0..359, for every script and for nothing', () => {
+        for (const name of ['The Hindu', 'Ведомости', '人民日报', 'الجزيرة', '', null]) {
+            const hue = monogramHueOf(name);
+            expect(Number.isInteger(hue)).toBe(true);
+            expect(hue).toBeGreaterThanOrEqual(0);
+            expect(hue).toBeLessThan(360);
+        }
+    });
+
+    it('tells apart outlets that share a first letter', () => {
+        const hues = new Set(['The Hindu', 'The Guardian', 'The Times of Bengal', 'The Print'].map(monogramHueOf));
+        expect(hues.size).toBeGreaterThan(1);
     });
 });

@@ -100,7 +100,7 @@ jest.mock('@/components/ui/button', () => {
   };
 });
 
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 import FeedProcessingCard from '../processing/FeedProcessingCard';
 import NoGeneratedInterestsCard from '../NoGeneratedInterestsCard';
@@ -197,6 +197,17 @@ describe('FeedProcessingCard is flush with the page, not a card on it', () => {
     render(<FeedProcessingCard />);
     expect(screen.getByTestId('feed-preparing-card')).toBeTruthy();
     expect(screen.getByTestId('feed-preparing-explore-cta')).toBeTruthy();
+  });
+});
+
+describe('OnboardingWaitingCard', () => {
+  it('offers Explore while the personalised feed is getting ready', () => {
+    const { router } = require('expo-router');
+    render(<OnboardingWaitingCard />);
+    const cta = screen.getByTestId('onboarding-waiting-explore-cta');
+    expect(screen.getByText(require('@/lib/locales/en.json').feed.exploreCta)).toBeTruthy();
+    fireEvent.press(cta);
+    expect(router.navigate).toHaveBeenCalledWith('/logged-in/app_container/around');
   });
 });
 

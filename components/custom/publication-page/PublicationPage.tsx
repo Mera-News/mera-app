@@ -1,5 +1,4 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-import SourcePrefControl from '@/components/custom/config-panel/SourcePrefControl';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import SubscribeAction from '@/components/custom/publication-preferences/SubscribeAction';
 import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
@@ -20,8 +19,9 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, type ListRenderItem, Platform, RefreshControl, View } from 'react-native';
+import { FlatList, type ListRenderItem, Platform, RefreshControl, StyleSheet, View } from 'react-native';
 
+import PublicationFeedControl from './PublicationFeedControl';
 import PublicationHeader from './PublicationHeader';
 import { publicationKeysFor, setPublicationOnTop, type PublicationOrder } from './open-publication-page';
 import {
@@ -32,12 +32,25 @@ import {
 } from './publication-data';
 import { formatCategories, SOURCE_KIND_META, sourceKindOf } from './publication-format';
 
-/** The header block's floor while the profile loads, so the switch and the
- *  first card do not jump when the details land. */
-export const PROFILE_SKELETON_MIN_HEIGHT = 96;
-
-const SKELETON_FILL = 'rgba(255,255,255,0.08)';
 const MUTED = 'rgb(156,163,175)';
+const DIVIDER = 'rgba(255,255,255,0.10)';
+
+/** The page body's vertical rhythm, in points (NativeWind space tokens are
+ *  rem-scaled at 14pt, so plain numbers keep this exact). Identity, then the
+ *  reader's controls, then a hairline and the news. */
+export const PAGE_SPACING = {
+    top: 20,
+    blockGap: 24,
+    sectionGap: 28,
+    switchTop: 16,
+    bottom: 12,
+} as const;
+
+const PAGE_HEADER_STYLE = {
+    paddingTop: PAGE_SPACING.top,
+    paddingBottom: PAGE_SPACING.bottom,
+    gap: PAGE_SPACING.blockGap,
+} as const;
 const PILL_ACTIVE_FILL = 'rgb(96,165,250)';
 const PILL_FRAME_PAD = 5;
 
@@ -197,54 +210,22 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     };
 
     const listHeader = (
-        <VStack space="md" className="pt-3 pb-3" testID="publication-page-header">
+        <View style={PAGE_HEADER_STYLE} testID="publication-page-header">
+            <PublicationHeader
+                displayName={displayName}
+                homepageUrl={profile?.homepageUrl}
+                details={dataLine || null}
+                badge={kind ? { label: t(SOURCE_KIND_META[kind].key), color: SOURCE_KIND_META[kind].color } : null}
+                detailsLoading={state === 'loading'}
+            />
+
             {showPref ? (
-                <HStack className="items-center" testID="publication-pref-row">
-                    <SourcePrefControl
-                        testIDPrefix="publication-pref"
-                        current={pref.level}
-                        busy={pref.busy || pref.names.length === 0}
-                        onChange={pref.change}
-                    />
-                </HStack>
-            ) : null}
-
-            {state === 'loading' ? (
-                <View
-                    testID="publication-profile-skeleton"
-                    accessible={false}
-                    accessibilityElementsHidden
-                    importantForAccessibility="no-hide-descendants"
-                    style={{ minHeight: PROFILE_SKELETON_MIN_HEIGHT, gap: 10 }}
-                >
-                    <View style={{ height: 14, width: '70%', borderRadius: 7, backgroundColor: SKELETON_FILL }} />
-                    <View style={{ height: 14, width: '45%', borderRadius: 7, backgroundColor: SKELETON_FILL }} />
-                    <View style={{ height: 28, width: '55%', borderRadius: 14, backgroundColor: SKELETON_FILL }} />
-                </View>
-            ) : null}
-
-            {state !== 'loading' && dataLine ? (
-                <Text size="sm" style={{ color: MUTED }} testID="publication-data-line">
-                    {dataLine}
-                </Text>
-            ) : null}
-
-            {kind ? (
-                <View
-                    testID="publication-official-badge"
-                    style={{
-                        alignSelf: 'flex-start',
-                        borderRadius: 6,
-                        borderWidth: 1,
-                        borderColor: `${SOURCE_KIND_META[kind].color}80`,
-                        paddingHorizontal: 6,
-                        paddingVertical: 1,
-                    }}
-                >
-                    <Text size="xs" style={{ color: SOURCE_KIND_META[kind].color, letterSpacing: 0.3 }}>
-                        {t(SOURCE_KIND_META[kind].key)}
-                    </Text>
-                </View>
+                <PublicationFeedControl
+                    testID="publication-pref-row"
+                    current={pref.level}
+                    busy={pref.busy || pref.names.length === 0}
+                    onChange={pref.change}
+                />
             ) : null}
 
             {state === 'offline' ? (
@@ -304,17 +285,25 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
             ) : null}
 
             {newsAvailable ? (
+                // A hairline above the switch: what the reader can do with the
+                // outlet ends here, and its news begins.
                 <HStack
                     space="sm"
                     className="items-center"
                     accessibilityRole={roles.row}
                     testID="publication-order-switch"
+                    style={{
+                        borderTopWidth: StyleSheet.hairlineWidth,
+                        borderTopColor: DIVIDER,
+                        paddingTop: PAGE_SPACING.switchTop,
+                        marginTop: PAGE_SPACING.sectionGap - PAGE_SPACING.blockGap,
+                    }}
                 >
                     {news.orderApplied ? pill('NEWEST', t('publicationPage.latest'), 'publication-order-latest') : null}
                     {pill('TOP_HEADLINES', t('sources.topHeadlines'), 'publication-order-top')}
                 </HStack>
             ) : null}
-        </VStack>
+        </View>
     );
 
     // ── News list ────────────────────────────────────────────────────────
@@ -359,13 +348,28 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
             );
         } else {
             listEmpty = (
-                <Box className="items-center py-8 px-6" testID="publication-news-empty">
-                    <Text size="sm" className="text-gray-400 text-center">
+                <VStack space="md" className="items-center py-12 px-8" testID="publication-news-empty">
+                    <View
+                        accessible={false}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                        style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 24,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(255,255,255,0.06)',
+                        }}
+                    >
+                        <MaterialIcons name="article" size={22} color={MUTED} />
+                    </View>
+                    <Text size="sm" className="text-center" style={{ color: MUTED, lineHeight: 20 }}>
                         {shownOrder === 'TOP_HEADLINES'
                             ? t('publicationPage.noTopHeadlines')
                             : t('publicationPage.noLatest')}
                     </Text>
-                </Box>
+                </VStack>
             );
         }
     }
@@ -408,7 +412,10 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
         <Box className="flex-1" testID="publication-page">
             <DrillDownHeader
                 title={displayName}
-                titleContent={<PublicationHeader displayName={displayName} homepageUrl={profile?.homepageUrl} />}
+                // Back only: the identity lives in the page body, where it has
+                // room (it overflowed the bar). An empty View rather than no
+                // titleContent, which would draw the name a second time.
+                titleContent={<View />}
                 onBack={onBack}
                 backTestID="publication-back"
             />

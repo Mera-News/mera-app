@@ -4,7 +4,9 @@ import {
 } from '@/components/custom/cards/CardGlassPlate';
 import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
 import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { router } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -20,6 +22,18 @@ const OnboardingWaitingCard: React.FC = () => {
             >
                 {t('onboarding.completionMessage')}
             </Text>
+            {/* Same onward move as FeedProcessingCard and AllCaughtUpCard:
+                Explore works before the personalised feed exists. */}
+            <Button
+                testID="onboarding-waiting-explore-cta"
+                variant="outline"
+                action="secondary"
+                size="sm"
+                className="mt-6"
+                onPress={() => router.navigate('/logged-in/app_container/around')}
+            >
+                <ButtonText>{t('feed.exploreCta')}</ButtonText>
+            </Button>
         </Box>
     );
 

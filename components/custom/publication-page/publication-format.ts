@@ -43,6 +43,22 @@ export function monogramOf(name: string | null | undefined): string {
     return first ? first.toLocaleUpperCase() : '?';
 }
 
+/**
+ * A stable hue (0-359) for a publication's monogram tile, from its name, so
+ * each outlet keeps one recognisable colour everywhere it appears and two
+ * outlets sharing a first letter still look different. FNV-1a over the
+ * trimmed, lower-cased code points: deterministic across launches and
+ * devices, no randomness, no lookup table.
+ */
+export function monogramHueOf(name: string | null | undefined): number {
+    let hash = 0x811c9dc5;
+    for (const ch of Array.from((name ?? '').trim().toLowerCase())) {
+        hash ^= ch.codePointAt(0) ?? 0;
+        hash = Math.imul(hash, 0x01000193);
+    }
+    return (hash >>> 0) % 360;
+}
+
 // Official-source badge. A measured, deliberately narrow rule: ONLY
 // `publication_type === 'government'` or `'regulator'` renders anything.
 // Every other value, including null ("not classified yet"), renders nothing.

@@ -331,7 +331,9 @@ describe('more/fewer', () => {
         mockProfile = { state: 'ready', profile: PROFILE, retry: jest.fn() };
         const { getByTestId } = renderPage();
         const header = getByTestId('publication-page-header');
-        expect(header.props.children[0].props.testID).toBe('publication-pref-row');
+        // Identity first, then the reader's control: the first thing under the name.
+        expect(header.props.children[0].type).toBe(require('../PublicationHeader').default);
+        expect(header.props.children[1].props.testID).toBe('publication-pref-row');
         expect(mockPrefNames[0]).toEqual({
             publisherId: 'pub-1',
             rawName: 'The Hindu',
@@ -339,6 +341,34 @@ describe('more/fewer', () => {
             sourceNames: ['The Hindu', 'The Hindu Business Line'],
         });
         expect(mockNewsArgs[0][2]).toEqual({ sourceNames: ['The Hindu', 'The Hindu Business Line'] });
+    });
+
+    it('names itself in words: "In your feed", Boost and Downrank, with spoken labels', () => {
+        mockProfile = { state: 'ready', profile: PROFILE, retry: jest.fn() };
+        const { getByText, getByTestId } = renderPage();
+        expect(getByText('freeTier.factsInFeedHeader')).toBeTruthy();
+        expect(getByText('publicationPrefs.kindBoost', HIDDEN)).toBeTruthy();
+        expect(getByText('publicationPrefs.kindDeprioritize', HIDDEN)).toBeTruthy();
+        expect(getByTestId('publication-pref-up').props.accessibilityLabel).toBe('publicationPage.prefMoreA11y');
+        expect(getByTestId('publication-pref-down').props.accessibilityLabel).toBe('publicationPage.prefFewerA11y');
+    });
+
+    it('marks the active choice selected, and a second tap on it clears it', () => {
+        const change = jest.fn();
+        mockPref = { level: 'prioritised', busy: false, names: ['The Hindu'], change };
+        mockProfile = { state: 'ready', profile: PROFILE, retry: jest.fn() };
+        const { getByTestId } = renderPage();
+        expect(getByTestId('publication-pref-up').props.accessibilityState).toEqual({ selected: true, disabled: false });
+        expect(getByTestId('publication-pref-down').props.accessibilityState).toEqual({ selected: false, disabled: false });
+        fireEvent.press(getByTestId('publication-pref-up'));
+        expect(change).toHaveBeenCalledWith('none');
+    });
+
+    it('holds still while there is no name to write under', () => {
+        mockPref = { level: 'none', busy: false, names: [], change: jest.fn() };
+        mockProfile = { state: 'ready', profile: PROFILE, retry: jest.fn() };
+        const { getByTestId } = renderPage();
+        expect(getByTestId('publication-pref-up').props.accessibilityState).toEqual({ selected: false, disabled: true });
     });
 
     it('a tap asks for the next level', () => {
