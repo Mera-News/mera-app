@@ -239,3 +239,45 @@ describe('ArticleMetaRow layout (owner spec)', () => {
     expect(queryByTestId('meta-language-slot')).toBeTruthy();
   });
 });
+
+// The tappable publication name (publication page entry point).
+describe('ArticleMetaRow publication name', () => {
+  const { fireEvent } = require('@testing-library/react-native');
+  const { exposedGlyphTexts } = require('@/lib/__test-helpers__/icon-glyph-a11y');
+  const { StyleSheet } = require('react-native');
+
+  it('stays plain text without a handler', () => {
+    const { queryByTestId, getByText } = render(<ArticleMetaRow {...base} variant="card" showRecency={false} />);
+    expect(getByText('Der Spiegel')).toBeTruthy();
+    expect(queryByTestId('meta-publication-button', { includeHiddenElements: true })).toBeNull();
+  });
+
+  it('card: the name opens the page, is hidden from screen readers and its target is clamped', () => {
+    const onPress = jest.fn();
+    const { getByTestId, queryByTestId } = render(
+      <ArticleMetaRow {...base} variant="card" showRecency={false} onPublicationPress={onPress} />,
+    );
+    expect(queryByTestId('meta-publication-button')).toBeNull();
+    const button = getByTestId('meta-publication-button', { includeHiddenElements: true });
+    fireEvent.press(button);
+    expect(onPress).toHaveBeenCalledTimes(1);
+    const style = StyleSheet.flatten(button.props.style);
+    // Never down into the title (the card VStack's 7pt gap), never above the
+    // card's 14pt top padding.
+    expect(style.paddingBottom).toBeLessThanOrEqual(7);
+    expect(style.paddingTop).toBeLessThan(14);
+  });
+
+  it('screen: "Name ⓘ" is its own button, read "About {source}", with the glyph hidden', () => {
+    const onPress = jest.fn();
+    const { getByTestId, UNSAFE_root } = render(
+      <ArticleMetaRow {...base} variant="screen" onPublicationPress={onPress} />,
+    );
+    const button = getByTestId('meta-publication-button');
+    expect(button.props.accessibilityRole).toBe('button');
+    expect(button.props.accessibilityLabel).toBe('publicationPage.aboutSourceA11y');
+    fireEvent.press(button);
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(exposedGlyphTexts(UNSAFE_root)).toEqual([]);
+  });
+});

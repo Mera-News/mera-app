@@ -100,6 +100,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
     languageCode: article.original_language_code,
     titleOriginal: article.title,
     visit,
+    publisherId: article.publicationSource?.newsPublisherId ?? null,
     // Answered on the detail screen, so the row opens it after asking.
     onCheckFacts: () => {
       // Required at call time: the fact-check client pulls in Apollo.
@@ -139,6 +140,7 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
         metaAccessory={metaAccessory}
         testID={testID}
         onOverflow={menu.open}
+        onPublicationPress={subject.publicationName ? menu.openPublication : undefined}
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}
       />

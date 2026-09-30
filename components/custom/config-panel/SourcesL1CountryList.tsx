@@ -11,7 +11,8 @@ import PublicationListRow from '@/components/custom/publication-page/Publication
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { hostOf } from '@/components/custom/publication-page/publication-format';
 import { usePublicationPrefLevels } from '@/components/custom/publication-page/use-publication-pref-levels';
-import type { SourcePrefUiLevel } from '@/lib/database/services/publication-pref-ui-actions';
+import { publisherPrefNames, type SourcePrefUiLevel } from '@/lib/database/services/publication-pref-level';
+import { knownSourceNamesForPublisher } from '@/lib/database/services/publisher-source-names';
 import { alpha3ToAlpha2 } from '@/components/custom/locations/location-display';
 import { AccountService } from '@/lib/account-service';
 import { getCountryName, getFlagEmoji } from '@/lib/country-utils';
@@ -355,7 +356,12 @@ const SourcesL1CountryList: React.FC = () => {
                     {item.section === 'countries' ? t('sources.sectionCountries') : t('sources.sectionPublications')}
                 </Text>
             ) : item.kind === 'publisher' ? (
-                <PublisherSearchRow hit={item.item} prefLevel={prefLevelFor(item.item.name)} />
+                <PublisherSearchRow
+                    hit={item.item}
+                    prefLevel={prefLevelFor(
+                        publisherPrefNames(item.item.name, knownSourceNamesForPublisher(item.item._id) ?? []),
+                    )}
+                />
             ) : (
                 renderCountryRow(item.item)
             ),

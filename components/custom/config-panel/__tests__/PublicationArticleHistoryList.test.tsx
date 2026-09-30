@@ -5,7 +5,7 @@
 // from the article's landed on an untranslated page with no way back to the
 // translate options. History rows now navigate to the detail screen like every
 // other surface, and the screen owns opening the URL.
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 jest.mock('react-native-css-interop/jsx-runtime', () => {
@@ -61,7 +61,16 @@ jest.mock('@/components/ui/vstack', () => { const { View } = require('react-nati
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text }; });
 jest.mock('@/components/ui/spinner', () => { const { View } = require('react-native'); return { Spinner: (p: any) => <View {...p} /> }; });
 jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
-jest.mock('../DrillDownHeader', () => { const { View } = require('react-native'); return { __esModule: true, default: (p: any) => <View {...p} /> }; });
+// Renders `titleContent`: the title is the "Name ⓘ" entry to the publication
+// page, and a mock that drops the slot would hide it from every assertion.
+jest.mock('../DrillDownHeader', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: ({ titleContent, ...p }: any) => <View {...p}>{titleContent}</View> };
+});
+const mockOpenPublicationPage = jest.fn((..._a: any[]) => true);
+jest.mock('@/components/custom/publication-page/open-publication-page', () => ({
+    openPublicationPage: (...a: any[]) => mockOpenPublicationPage(...a),
+}));
 
 // The row is stubbed down to a pressable proxy: this file is about WHERE a tap
 // goes, not how the card looks.
@@ -243,5 +252,36 @@ describe('PublicationArticleHistoryList — the publisher subscribe card', () =>
         await waitFor(() =>
             expect(mockResolvePublisher).toHaveBeenCalledWith('Die Zeit', 'DEU'),
         );
+    });
+});
+
+describe('PublicationArticleHistoryList — the title opens the publication page', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockGetVisitsForPublication.mockResolvedValue([makeVisit()]);
+    });
+
+    it('opens it by name plus country while no publisher is resolved', async () => {
+        mockResolvePublisher.mockResolvedValue(null);
+        const { getByTestId } = renderList();
+        await waitFor(() => expect(mockResolvePublisher).toHaveBeenCalled());
+        const title = getByTestId('publication-history-title');
+        expect(title.props.accessibilityRole).toBe('button');
+        fireEvent.press(title);
+        expect(mockOpenPublicationPage).toHaveBeenCalledWith({ publisherId: null, rawName: 'Die Zeit', countryCode: 'DEU' });
+    });
+
+    it('opens it by publisher id once the local lookup resolves one', async () => {
+        mockResolvePublisher.mockResolvedValue({
+            publisherId: 'pub-zeit',
+            publisherName: 'Die Zeit',
+            countryCode: 'DEU',
+            subscriptionUri: null,
+        });
+        const { getByTestId } = renderList();
+        await waitFor(() => expect(mockResolvePublisher).toHaveBeenCalled());
+        await act(async () => {});
+        fireEvent.press(getByTestId('publication-history-title'));
+        expect(mockOpenPublicationPage).toHaveBeenCalledWith({ publisherId: 'pub-zeit', rawName: 'Die Zeit', countryCode: 'DEU' });
     });
 });

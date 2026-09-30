@@ -18,9 +18,13 @@ export const PUBLICATION_ROUTE = '/logged-in/publication';
 
 export type PublicationOrder = 'NEWEST' | 'TOP_HEADLINES';
 
-export type PublicationTarget =
-    | { readonly publisherId: string; readonly rawName?: string | null; readonly countryCode?: string | null }
-    | { readonly publisherId?: null; readonly rawName: string; readonly countryCode?: string | null };
+/** What an entry point knows. At least one of `publisherId` and `rawName`
+ *  must be non-empty, or nothing opens (`buildPublicationParams` -> null). */
+export interface PublicationTarget {
+    readonly publisherId?: string | null;
+    readonly rawName?: string | null;
+    readonly countryCode?: string | null;
+}
 
 export interface PublicationRouteParams {
     publisherId?: string;

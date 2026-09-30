@@ -231,6 +231,8 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     onBrowseRelated: feedbackHandlers ? () => feedbackHandlers.onBrowseRelated(suggestion) : undefined,
   });
   menuRef.current = menu;
+  const aboutSourceActions = menu.accessibilityActions.filter((a) => a.name === 'about-source');
+  const aboutSourceAction = aboutSourceActions.length > 0 ? aboutSourceActions : undefined;
 
 
   const status = suggestion.status;
@@ -392,8 +394,10 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     <>
     <ArticleCardBase
       testID={`card-${suggestion._id}`}
-      accessibilityActions={onVerdict ? menu.accessibilityActions : undefined}
-      onAccessibilityAction={onVerdict ? menu.onAccessibilityAction : undefined}
+      // Without an action row the card still offers "About {source}": the
+      // tappable name is hidden from VoiceOver and TalkBack.
+      accessibilityActions={onVerdict ? menu.accessibilityActions : aboutSourceAction}
+      onAccessibilityAction={onVerdict || aboutSourceAction ? menu.onAccessibilityAction : undefined}
       imageUrl={suggestion.image_url}
       titleEnglish={suggestion.title_en}
       titleOriginal={suggestion.title_original ?? undefined}
@@ -402,6 +406,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       languageCode={suggestion.language_code}
       publicationName={suggestion.publication_name}
       countryCode={suggestion.country_code}
+      onPublicationPress={suggestion.publication_name ? menu.openPublication : undefined}
       isNew={isNew}
       recyclingKey={suggestion._id}
       dimmed={dimmed}

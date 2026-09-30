@@ -6,6 +6,7 @@ import PublicationListRow from '@/components/custom/publication-page/Publication
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { hostOf } from '@/components/custom/publication-page/publication-format';
 import { usePublicationPrefLevels } from '@/components/custom/publication-page/use-publication-pref-levels';
+import { publisherPrefNames } from '@/lib/database/services/publication-pref-level';
 import logger from '@/lib/logger';
 import type { NewsPublisher } from '@/lib/source-service';
 import { SourceService } from '@/lib/source-service';
@@ -99,7 +100,9 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 <PublicationListRow
                     rawName={item.name}
                     subtitle={host}
-                    prefLevel={prefLevelFor(item.name)}
+                    prefLevel={prefLevelFor(
+                        publisherPrefNames(item.name, (item.publicationSources ?? []).map((src) => src.publication_name)),
+                    )}
                     onPress={() =>
                         openPublicationPage({ publisherId: item._id, rawName: item.name, countryCode: item.country_code })
                     }

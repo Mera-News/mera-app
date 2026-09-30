@@ -14,6 +14,7 @@ import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject
 import type { InlineAccessibilityAction } from '@/components/custom/cards/use-article-actions';
 import { askMeraAbout } from '@/components/custom/floating-chat/ask-mera';
 import MeraLogo from '@/components/custom/MeraLogo';
+import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -48,6 +49,9 @@ export interface UseArticleMenuInput {
     titleOriginal?: string | null;
     /** What a publisher visit records ("Open on source" backs History). */
     visit?: VisitInput;
+    /** The publisher id when the surface has one (GraphQL articles). Without
+     *  it the publication page is opened by name plus `subject.countryCode`. */
+    publisherId?: string | null;
     /** Starts a fact check. Omitted: the item is not offered. */
     onCheckFacts?: () => void | boolean | Promise<void | boolean>;
     /** Surface-specific items (e.g. "Not part of this story"), listed before
@@ -130,6 +134,10 @@ export interface UseArticleMenu {
     openFollow: () => void;
     /** Whether a story already covers this subject. */
     tracked: boolean;
+    /** Open the publication page directly (a card's publication name). The
+     *  ••• "About this source" item opens the same page after the sheet has
+     *  closed. A no-op when the article names no publication. */
+    openPublication: () => void;
     /** Mount once near the surface root: the sheet. */
     element: React.ReactNode;
     /** The same actions as VoiceOver custom actions, for the card root. */
@@ -174,6 +182,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         articleUrl,
         languageCode,
         visit,
+        publisherId,
         onCheckFacts,
         extraItems,
         inlineActions,
@@ -192,6 +201,11 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     // what the rows and the toast SAY.
     const publication = (subject.publicationName ?? visit?.publicationName ?? '').trim();
     const publicationShown = useDisplayPublication(publication);
+    const publicationCountry = subject.countryCode ?? visit?.countryCode ?? null;
+    const openPublication = useCallback(() => {
+        if (!publication && !publisherId) return;
+        openPublicationPage({ publisherId: publisherId ?? null, rawName: publication, countryCode: publicationCountry });
+    }, [publication, publisherId, publicationCountry]);
 
     // ── The sheet and its navigation stack ─────────────────────────────────
     // A sub-menu (the feedback tree, its confirm, the follow levels) is a LEVEL
@@ -320,8 +334,14 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
             // Resolved at call time: the preference writer pulls in the persona
             // executor and the database, and this hook sits under every card.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const { setSourcePrefFromUi } = require('@/lib/database/services/publication-pref-ui-actions') as typeof import('@/lib/database/services/publication-pref-ui-actions');
-            const res = await setSourcePrefFromUi({ kind: 'publication', publicationName }, 'deprioritised');
+            const { setSourcePrefFromUi, revertSourcePrefChange } = require('@/lib/database/services/publication-pref-ui-actions') as typeof import('@/lib/database/services/publication-pref-ui-actions');
+            // eslint-disable-next-line @typescript-eslint/no-require-imports
+            const { resolvePublicationPrefNames } = require('@/lib/database/services/publisher-source-names') as typeof import('@/lib/database/services/publisher-source-names');
+            // EVERY name the publication is known by: scoring matches a
+            // preference by source name, and a publication's sources are not
+            // all named alike. One press can therefore write several rows.
+            const names = await resolvePublicationPrefNames({ publisherId, rawName: publicationName });
+            const res = await setSourcePrefFromUi({ kind: 'publisher', names }, 'deprioritised');
             if (!res.applied) return false;
             // The app's one undo toast. Required at call time, like the writer.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -333,20 +353,15 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 // The same "Change undone" the leaf's undo shows; the manager
                 // skips it when the revert was refused (onUndo → false).
                 undoneTitle: t('feedbackTree.undoneTitle'),
-                // Reverts THIS change (compare-and-set): if a newer change owns
-                // the publication's value, nothing is written and the toast
-                // claims nothing. A fresh 'none' write clobbered a later boost
-                // and logged as a new action (batch 16).
-                onUndo: async () => {
-                    if (!res.changeLogId) return false;
-                    // eslint-disable-next-line @typescript-eslint/no-require-imports
-                    const { revertChange } = require('@/lib/database/services/persona-change-log-service') as typeof import('@/lib/database/services/persona-change-log-service');
-                    return revertChange(res.changeLogId);
-                },
+                // Reverts EVERY row this press wrote, each compare-and-set: if a
+                // newer change owns a name's value, that row is left alone and
+                // the toast claims nothing for it. A fresh 'none' write
+                // clobbered a later boost and logged as a new action (batch 16).
+                onUndo: () => revertSourcePrefChange(res),
             });
             return true;
         },
-        [t],
+        [t, publisherId],
     );
 
     const items = useMemo<ArticleMenuItem[]>(() => {
@@ -454,6 +469,18 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
                 run: () => openInGoogleTranslate(articleUrl, appLanguage),
             });
         }
+        if (publication || publisherId) {
+            list.push({
+                key: 'about-source',
+                label: t('articleMenu.aboutSource'),
+                // The card's VoiceOver/TalkBack action names the source.
+                a11yLabel: t('publicationPage.aboutSourceA11y', { source: publicationShown || publication }),
+                icon: 'info-outline',
+                testID: 'menu-about-source',
+                // Runs after the sheet has gone, like every closing item.
+                run: openPublication,
+            });
+        }
         if (publication) {
             list.push({
                 key: 'fewer-from',
@@ -491,6 +518,8 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         languageCode,
         appLanguage,
         fewerFromSource,
+        openPublication,
+        publisherId,
         extraItems,
         rowActions,
     ]);
@@ -578,7 +607,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
     const accessibilityActions = useMemo(
         () => [
             ...(inlineActions ?? []).map((i) => ({ name: `inline-${i.key}`, label: i.label })),
-            ...items.map((i) => ({ name: i.key, label: i.label })),
+            ...items.map((i) => ({ name: i.key, label: i.a11yLabel ?? i.label })),
         ],
         [items, inlineActions],
     );
@@ -771,6 +800,7 @@ export function useArticleMenu(input: UseArticleMenuInput): UseArticleMenu {
         openFeedback: enterTree,
         openFollow,
         tracked,
+        openPublication,
         element,
         accessibilityActions,
         onAccessibilityAction,

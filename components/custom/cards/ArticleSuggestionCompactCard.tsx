@@ -132,6 +132,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         priorityAccessory={priorityAccessory}
         spokenPriority={relevanceReady ? relevanceSpokenLabel(t, relevance) : null}
         onOverflow={menu.open}
+        onPublicationPress={suggestion.publication_name ? menu.openPublication : undefined}
         accessibilityActions={menu.accessibilityActions}
         onAccessibilityAction={menu.onAccessibilityAction}
       />

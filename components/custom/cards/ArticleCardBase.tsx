@@ -53,6 +53,10 @@ export interface ArticleCardBaseProps {
   languageCode?: string | null;
   publicationName?: string | null;
   countryCode?: string | null;
+  /** Opens the publication page from the meta row's publication name. Absent:
+   *  plain text. The name is hidden from VoiceOver; the card's "About
+   *  {source}" accessibility action reaches the same page. */
+  onPublicationPress?: () => void;
   isNew?: boolean;
   recyclingKey?: string;
   /** Dims the whole card (~0.55 opacity) — used to fade already-opened rows in
@@ -130,6 +134,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   languageCode,
   publicationName,
   countryCode,
+  onPublicationPress,
   isNew = false,
   recyclingKey,
   dimmed = false,
@@ -249,6 +254,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               isNew={isNew}
               read={read}
               showRecency={showRecency}
+              onPublicationPress={onPublicationPress}
             />
             {metaAccessory ? (
               <HStack className="self-end mt-1">{metaAccessory}</HStack>

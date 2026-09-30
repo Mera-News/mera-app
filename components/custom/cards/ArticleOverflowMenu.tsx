@@ -56,6 +56,10 @@ export interface ArticleMenuItem {
     /** Stable key; also the VoiceOver custom action name. */
     key: string;
     label: string;
+    /** The VoiceOver / TalkBack custom-action name, when the visible label
+     *  leans on context the card root does not have ("About this source" on
+     *  the sheet reads "About The Hindu" as a card action). */
+    a11yLabel?: string;
     /** A MaterialIcons glyph, or a custom node (the Mera mark for Ask). */
     icon: keyof typeof MaterialIcons.glyphMap | React.ReactNode;
     testID: string;

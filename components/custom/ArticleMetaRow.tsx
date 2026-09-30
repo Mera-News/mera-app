@@ -1,5 +1,6 @@
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
+import PublicationNameButton from '@/components/custom/cards/PublicationNameButton';
 import { SourceCountryFlag } from '@/components/custom/SourceCountryFlag';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Text } from '@/components/ui/text';
@@ -16,6 +17,13 @@ export type ArticleMetaRowVariant = 'card' | 'screen';
 const LANGUAGE_MAX_WIDTH = 120;
 /** Breathing room between the centred time and each side column. */
 const SIDE_GAP = 8;
+/**
+ * How far the tappable publication name's target reaches above and below its
+ * line. Clamped to the gaps around this row so it never reaches the title
+ * below: the card VStack's `p-4` top padding (14pt) above and its `space="sm"`
+ * gap (7pt) below.
+ */
+export const PUBLICATION_HIT = { above: 13, below: 7 } as const;
 
 interface ArticleMetaRowProps {
     pubDate?: string | null;
@@ -51,6 +59,13 @@ interface ArticleMetaRowProps {
      * unchanged.
      */
     centerAccessory?: React.ReactNode;
+    /**
+     * Makes the publication name open the publication page. On a CARD the name
+     * is hidden from VoiceOver (the card root is one element and carries an
+     * "About {source}" action instead); on the detail SCREEN it is its own
+     * button, read "About {source}", with a trailing ⓘ.
+     */
+    onPublicationPress?: () => void;
 }
 
 export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
@@ -64,6 +79,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     showFlag = true,
     showRecency = true,
     centerAccessory,
+    onPublicationPress,
 }) => {
     const { t } = useTranslation();
     // The shared 60s clock (lib/time-tick.ts). THIS is what keeps the age
@@ -164,6 +180,24 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
         );
     }
 
+    // The publication name, tappable when the host passes a handler.
+    const publicationNameEl = (text: React.ReactElement) =>
+        onPublicationPress ? (
+            <PublicationNameButton
+                testID="meta-publication-button"
+                variant={isCard ? 'card' : 'screen'}
+                a11yLabel={isCard ? undefined : t('publicationPage.aboutSourceA11y', { source: publication })}
+                infoColor={iconColor}
+                onPress={onPublicationPress}
+                hitAbove={PUBLICATION_HIT.above}
+                hitBelow={PUBLICATION_HIT.below}
+            >
+                {text}
+            </PublicationNameButton>
+        ) : (
+            text
+        );
+
     // CARD and DETAIL rows with a publication (owner spec):
     //
     //   |📰 De Telegraaf        🕒 22h        🇳🇱 Dutch|
@@ -206,16 +240,18 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     testID="meta-publication-slot"
                 >
                     <MaterialIcons name="newspaper" size={12} color={iconColor} {...DECORATIVE_ICON_A11Y} />
-                    <Text
-                        size="xs"
-                        bold
-                        className={secondaryColor}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                        style={{ flexShrink: 1, textAlign: 'left' }}
-                    >
-                        {publication}
-                    </Text>
+                    {publicationNameEl(
+                        <Text
+                            size="xs"
+                            bold
+                            className={secondaryColor}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            style={{ flexShrink: 1, textAlign: 'left' }}
+                        >
+                            {publication}
+                        </Text>,
+                    )}
                 </HStack>
                 {flagAndLanguage}
             </HStack>
@@ -232,16 +268,18 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                     testID="meta-publication-slot"
                 >
                     <MaterialIcons name="newspaper" size={12} color={iconColor} {...DECORATIVE_ICON_A11Y} />
-                    <Text
-                        size="xs"
-                        bold
-                        className={secondaryColor}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                        style={{ flexShrink: 1 }}
-                    >
-                        {publication}
-                    </Text>
+                    {publicationNameEl(
+                        <Text
+                            size="xs"
+                            bold
+                            className={secondaryColor}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            style={{ flexShrink: 1 }}
+                        >
+                            {publication}
+                        </Text>,
+                    )}
                 </HStack>
             </HStack>
 

@@ -9,6 +9,7 @@
 // the Ask-Mera affordance; it was removed again — the action row's Mera button
 // (ArticleFeedbackPrompt / CardActionBar) is the single entry point.
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import ExtractedMetadataPanel from '@/components/custom/news-detail/ExtractedMetadataPanel';
 import {
     DETAIL_BACK_SIZE,
@@ -169,6 +170,18 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const metaCountryCode = suggestion?.country_code
         ?? article?.publicationSource?.country_code
         ?? null;
+    // The detail screen's "Name ⓘ": opens the publication page, by publisher
+    // id when the article carries one, else by the raw name plus country.
+    // Never a feed id. The card variant has no live consumers.
+    const metaPublisherId = article?.publicationSource?.newsPublisherId ?? null;
+    const openPublication = variant === 'screen' && (metaPublicationName || metaPublisherId)
+        ? () =>
+            openPublicationPage({
+                publisherId: metaPublisherId,
+                rawName: metaPublicationName,
+                countryCode: metaCountryCode,
+            })
+        : undefined;
 
     // Extraction metadata for the transparency panel (screen variant only —
     // see ExtractedMetadataPanel). `entities`/`eventType` are reachable from
@@ -243,6 +256,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 variant={variant}
                 isNew={isNew}
                 read={read}
+                onPublicationPress={openPublication}
             />
             {isCard && __DEV__ && relevanceReady ? (
                 <Box className="self-end mt-1 px-2 py-0.5 rounded bg-background-50">

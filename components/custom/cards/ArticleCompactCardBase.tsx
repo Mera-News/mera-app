@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import PressableCard from '@/components/custom/cards/PressableCard';
+import PublicationNameButton from '@/components/custom/cards/PublicationNameButton';
 import { composeSpokenLabel, useArticleMetaStrings } from '@/components/custom/article-meta-strings';
 import { Text } from '@/components/ui/text';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
@@ -85,6 +86,9 @@ const HEADLINE_LINE_BOX = 24;
  *  in the footer; the publisher name is `text-xs` at 18. */
 const FOOTER_LINE_BOX = 21;
 const FOOTER_GAP = 12;
+/** How far the publisher name's touch target reaches below its line: short of
+ *  the `sm` Card's 10.5pt bottom padding, so it stays inside the card. */
+const PUBLICATION_HIT_BELOW = 10;
 
 /** The ••• button: a 44pt frame around a 16pt glyph, pulled back into the
  *  21pt footer line by negative margins so the line (and the image arithmetic)
@@ -142,6 +146,10 @@ export interface ArticleCompactCardBaseProps {
   /** Opens the row's ••• menu; the button sits at the right end of the
    *  publisher line. Absent: no button. */
   onOverflow?: () => void;
+  /** Opens the publication page from the publisher name. Absent: the name is
+   *  plain text. The card's "About {source}" accessibility action (from the
+   *  menu) reaches the same page, so the name itself is hidden from VoiceOver. */
+  onPublicationPress?: () => void;
   /** VoiceOver custom actions on the row root (see `useArticleMenu`). The root
    *  Pressable is ONE accessibility element, so the ••• button is only
    *  reachable with VoiceOver through these. */
@@ -171,6 +179,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   priorityAccessory,
   testID,
   onOverflow,
+  onPublicationPress,
   accessibilityActions,
   onAccessibilityAction,
   spokenPriority,
@@ -302,7 +311,30 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 style={{ marginTop: FOOTER_GAP, minWidth: 0, height: FOOTER_LINE_BOX }}
                 testID="compact-card-footer"
               >
-                {meta.publication ? (
+                {meta.publication && onPublicationPress ? (
+                  // The target reaches up through the FOOTER_GAP (never into
+                  // the headline's line box) and down short of the card's
+                  // bottom padding, and is only as wide as the name, so it
+                  // cannot cover the ••• button. A long press still opens the
+                  // card menu.
+                  <PublicationNameButton
+                    testID="compact-card-publication"
+                    variant="card"
+                    onPress={onPublicationPress}
+                    onLongPress={onLongPress}
+                    hitAbove={FOOTER_GAP}
+                    hitBelow={PUBLICATION_HIT_BELOW}
+                  >
+                    <Text
+                      size="xs"
+                      className="text-typography-500"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {meta.publication}
+                    </Text>
+                  </PublicationNameButton>
+                ) : meta.publication ? (
                   <Text
                     size="xs"
                     className="text-typography-500"

@@ -131,8 +131,19 @@ const mockRevertChange = jest.fn(async (..._a: any[]) => true);
 jest.mock('@/lib/database/services/persona-change-log-service', () => ({
     revertChange: (...a: any[]) => mockRevertChange(...a),
 }));
+const mockRevertPref = jest.fn(async (..._a: any[]) => true);
 jest.mock('@/lib/database/services/publication-pref-ui-actions', () => ({
     setSourcePrefFromUi: (...a: any[]) => mockSetPref(...a),
+    revertSourcePrefChange: (...a: any[]) => mockRevertPref(...a),
+}));
+// Every name the publication is known by (its source names). Local-only.
+const mockResolveNames = jest.fn(async (hints: any) => [hints.rawName, 'NOS Sport']);
+jest.mock('@/lib/database/services/publisher-source-names', () => ({
+    resolvePublicationPrefNames: (...a: any[]) => (mockResolveNames as any)(...a),
+}));
+const mockOpenPublicationPage = jest.fn((..._a: any[]) => true);
+jest.mock('@/components/custom/publication-page/open-publication-page', () => ({
+    openPublicationPage: (...a: any[]) => mockOpenPublicationPage(...a),
 }));
 const mockShowUndoToast = jest.fn();
 jest.mock('@/lib/toast-manager', () => ({
@@ -239,9 +250,17 @@ function Host(props: Partial<UseArticleMenuInput>) {
         languageCode: 'nl',
         ...props,
     });
-    const { Pressable, Text } = require('react-native');
+    const { Pressable, Text, View } = require('react-native');
     return (
         <>
+            <View
+                testID="card-root"
+                accessibilityActions={menu.accessibilityActions}
+                onAccessibilityAction={menu.onAccessibilityAction}
+            />
+            <Pressable testID="open-publication" onPress={menu.openPublication}>
+                <Text>publication</Text>
+            </Pressable>
             <Pressable testID="open" onPress={menu.open}>
                 <Text>open</Text>
             </Pressable>
@@ -708,7 +727,10 @@ describe('useArticleMenu running items', () => {
         dismiss();
         await flushAsync();
         await flushAsync();
-        expect(mockSetPref).toHaveBeenCalledWith({ kind: 'publication', publicationName: 'NOS' }, 'deprioritised');
+        // EVERY name the publication is known by, in one publisher target:
+        // scoring matches a preference by source name.
+        expect(mockResolveNames).toHaveBeenCalledWith({ publisherId: undefined, rawName: 'NOS' });
+        expect(mockSetPref).toHaveBeenCalledWith({ kind: 'publisher', names: ['NOS', 'NOS Sport'] }, 'deprioritised');
         // The app's one undo toast (toast-manager), not a hand-built one.
         expect(mockToastShow).not.toHaveBeenCalled();
         expect(mockShowUndoToast).toHaveBeenCalledTimes(1);
@@ -722,11 +744,13 @@ describe('useArticleMenu running items', () => {
                 undoneTitle: 'feedbackTree.undoneTitle',
             }),
         );
-        // Undo REVERTS this exact change (compare-and-set in revertChange), never
-        // a fresh 'none' write, which clobbered a newer change (batch 16).
-        mockRevertChange.mockResolvedValueOnce(false);
+        // Undo REVERTS every row this press wrote (compare-and-set, in
+        // revertSourcePrefChange), never a fresh 'none' write, which clobbered
+        // a newer change (batch 16).
+        mockRevertPref.mockResolvedValueOnce(false);
         await expect(opts.onUndo()).resolves.toBe(false); // refused: a newer change owns it
-        expect(mockRevertChange).toHaveBeenCalledWith('cl-fewer');
+        expect(mockRevertPref).toHaveBeenCalledWith({ applied: true, changeLogId: 'cl-fewer' });
+        expect(mockRevertChange).not.toHaveBeenCalled();
         await expect(opts.onUndo()).resolves.toBe(true);
         expect(mockSetPref).toHaveBeenCalledTimes(1);
     });
@@ -751,7 +775,9 @@ describe('useArticleMenu running items', () => {
             dismiss();
             await flushAsync();
             await flushAsync();
-            expect(mockSetPref).toHaveBeenCalledWith({ kind: 'publication', publicationName: 'NOS' }, 'deprioritised');
+            expect(mockResolveNames).toHaveBeenCalledWith({ publisherId: undefined, rawName: 'NOS' });
+            expect(mockSetPref.mock.calls[0][0].names).toContain('NOS');
+            expect(mockSetPref.mock.calls[0][0].names).not.toContain('НОС');
             expect(mockShowUndoToast.mock.calls[0][0].title).toBe('articleMenu.fewerFromDone:НОС');
         });
     });
@@ -1092,3 +1118,35 @@ describe('the sheet is all white', () => {
     });
 });
 
+describe('About this source', () => {
+    it('is a menu item that opens the publication page only after the sheet has gone', async () => {
+        const r = openMenu(<Host subject={{ ...subject, countryCode: 'NLD' }} />);
+        expect(r.getByText('articleMenu.aboutSource')).toBeTruthy();
+        fireEvent.press(r.getByTestId('menu-about-source'));
+        expect(mockOpenPublicationPage).not.toHaveBeenCalled();
+        dismiss();
+        await flushAsync();
+        expect(mockOpenPublicationPage).toHaveBeenCalledWith({ publisherId: null, rawName: 'NOS', countryCode: 'NLD' });
+    });
+
+    it('passes the publisher id when the surface has one', () => {
+        const r = render(<Host publisherId="pub-9" />);
+        fireEvent.press(r.getByTestId('open-publication'));
+        expect(mockOpenPublicationPage).toHaveBeenCalledWith({ publisherId: 'pub-9', rawName: 'NOS', countryCode: null });
+    });
+
+    it('is ALSO a card accessibility action, named for the source, beside the existing ones', () => {
+        const r = render(<Host />);
+        const actions = r.getByTestId('card-root').props.accessibilityActions as { name: string; label: string }[];
+        expect(actions).toContainEqual({ name: 'about-source', label: 'publicationPage.aboutSourceA11y:NOS' });
+        // Added, never in place of the others.
+        expect(actions.map((a) => a.name)).toEqual(expect.arrayContaining(['ask', 'follow', 'fewer-from']));
+    });
+
+    it('is absent when the article names no publication', () => {
+        const r = render(<Host subject={{ ...subject, publicationName: null }} />);
+        const actions = r.getByTestId('card-root').props.accessibilityActions as { name: string }[];
+        expect(actions.map((a) => a.name)).not.toContain('about-source');
+        expect(actions.map((a) => a.name)).toContain('ask');
+    });
+});

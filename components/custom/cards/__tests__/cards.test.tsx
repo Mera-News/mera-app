@@ -22,6 +22,10 @@ jest.mock('react-native', () => {
 // ── UI primitives → plain RN views ──
 const mockRouterPush = jest.fn();
 jest.mock('expo-router', () => ({ router: { push: (...a: any[]) => mockRouterPush(...a) } }));
+const mockOpenPublicationPage = jest.fn((..._a: any[]) => true);
+jest.mock('@/components/custom/publication-page/open-publication-page', () => ({
+    openPublicationPage: (...a: any[]) => mockOpenPublicationPage(...a),
+}));
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 34, left: 0, right: 0 }),
 }));
@@ -116,10 +120,15 @@ jest.mock('@/components/custom/ArticleMetaRow', () => {
   // `centerAccessory` is rendered, not dropped. The compact card's priority
   // chip lives in this slot, and a mock that swallows it would make "the chip
   // is in the meta row, not the footer" untestable — while still passing.
+  // `onPublicationPress` is rendered too (the Feed card's tappable name), so
+  // "the card passes it" is testable here; the row's own rendering of it is
+  // ArticleMetaRow.test.tsx's job.
+  const { Pressable } = require('react-native');
   return {
-    ArticleMetaRow: ({ publicationName, read, centerAccessory, showFlag, countryCode }: any) => (
+    ArticleMetaRow: ({ publicationName, read, centerAccessory, showFlag, countryCode, onPublicationPress }: any) => (
       <View testID="meta-row" showFlag={showFlag} countryCode={countryCode}>
         <Text>{publicationName ?? ''}</Text>
+        {onPublicationPress ? <Pressable testID="meta-publication-button" onPress={onPublicationPress} /> : null}
         {read ? <View testID="read-eye-icon" /> : null}
         {centerAccessory ?? null}
       </View>
@@ -556,14 +565,113 @@ describe('ArticleStandaloneCard', () => {
   });
 });
 
+// The publication name opens the publication page (review fix 5): the tap
+// never reaches the card, a long press still opens the card menu, the target
+// is clamped away from the title and the •••, the pressed look is delayed, the
+// name is hidden from screen readers, and "About {source}" joins the card's
+// existing custom actions rather than replacing them.
+describe('publication name entry point', () => {
+  beforeEach(() => mockOpenPublicationPage.mockClear());
+  const HIDDEN = { includeHiddenElements: true } as const;
+
+  it('compact GraphQL card: the name opens the page by publisher id, not the article', () => {
+    const onPress = jest.fn();
+    const { getByTestId } = render(
+      <ArticleStandaloneCompactCard
+        article={makeArticle({
+          publicationSource: { _id: 'feed-1', publication_name: 'Die Zeit', country_code: 'DEU', newsPublisherId: 'pub-7' } as any,
+        })}
+        onPress={onPress}
+      />,
+    );
+    fireEvent.press(getByTestId('compact-card-publication', HIDDEN));
+    expect(mockOpenPublicationPage).toHaveBeenCalledWith({ publisherId: 'pub-7', rawName: 'Die Zeit', countryCode: 'DEU' });
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
+  it('compact suggestion row: the name opens the page by raw name plus country', () => {
+    const onPress = jest.fn();
+    const { getByTestId } = render(<ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={onPress} />);
+    fireEvent.press(getByTestId('compact-card-publication', HIDDEN));
+    expect(mockOpenPublicationPage).toHaveBeenCalledWith({ publisherId: null, rawName: 'Der Spiegel', countryCode: 'DE' });
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
+  it('a tap elsewhere on the card still opens the article', () => {
+    const onPress = jest.fn();
+    const { getByTestId } = render(<ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={onPress} />);
+    fireEvent.press(getByTestId('card-sugg-1'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(mockOpenPublicationPage).not.toHaveBeenCalled();
+  });
+
+  it('a long press on the name opens the card menu, and the pressed look is delayed', () => {
+    const r = render(<ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={jest.fn()} />);
+    const { getByTestId, queryByTestId } = r;
+    const name = getByTestId('compact-card-publication', HIDDEN);
+    const withDelay = r.UNSAFE_getAllByProps({ testID: 'compact-card-publication' }).filter(
+      (n: any) => typeof n.props.unstable_pressDelay === 'number',
+    );
+    expect(withDelay[0].props.unstable_pressDelay).toBeGreaterThan(0);
+    expect(queryByTestId('menu-like')).toBeNull();
+    fireEvent(name, 'longPress');
+    expect(getByTestId('menu-like')).toBeTruthy();
+    expect(mockOpenPublicationPage).not.toHaveBeenCalled();
+  });
+
+  it('the name is hidden from screen readers; the card offers "About {source}" beside its other actions', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
+    );
+    expect(queryByTestId('compact-card-publication')).toBeNull(); // default queries skip hidden nodes
+    const name = getByTestId('compact-card-publication', HIDDEN);
+    expect(name.props.accessibilityElementsHidden).toBe(true);
+    expect(name.props.importantForAccessibility).toBe('no-hide-descendants');
+    const actions = getByTestId('card-sugg-1').props.accessibilityActions as { name: string; label: string }[];
+    expect(actions).toContainEqual({ name: 'about-source', label: 'publicationPage.aboutSourceA11y' });
+    expect(actions.map((a) => a.name)).toEqual(expect.arrayContaining(['like', 'dislike', 'save', 'ask']));
+  });
+
+  it('the compact target is clamped: up through the footer gap only, down inside the card', () => {
+    const { getByTestId } = render(<ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={jest.fn()} />);
+    const style = StyleSheet.flatten(getByTestId('compact-card-publication', HIDDEN).props.style);
+    expect(style.paddingTop).toBe(12); // FOOTER_GAP: never into the headline's line box
+    expect(style.marginTop).toBe(-12);
+    expect(style.paddingBottom).toBeLessThan(10.5); // the sm Card's bottom padding
+    expect(style.marginBottom).toBe(-style.paddingBottom);
+  });
+
+  it('Feed card: the meta-row name opens the page and the card keeps "About {source}" without an action row', () => {
+    const onPress = jest.fn();
+    const { getByTestId } = render(<ArticleSuggestionCard suggestion={makeSuggestion()} onPress={onPress} />);
+    fireEvent.press(getByTestId('meta-publication-button', HIDDEN));
+    expect(mockOpenPublicationPage).toHaveBeenCalledWith({ publisherId: null, rawName: 'Der Spiegel', countryCode: 'DE' });
+    expect(onPress).not.toHaveBeenCalled();
+    const actions = getByTestId('card-sugg-1').props.accessibilityActions as { name: string }[];
+    expect(actions.map((a) => a.name)).toEqual(['about-source']);
+  });
+
+  it('a card with no publication name has a plain footer and no About action', () => {
+    const { queryByTestId, getByTestId } = render(
+      <ArticleSuggestionCompactCard suggestion={makeSuggestion({ publication_name: null })} onPress={jest.fn()} />,
+    );
+    expect(getByTestId('compact-card-footer', HIDDEN)).toBeTruthy();
+    expect(queryByTestId('compact-card-publication', HIDDEN)).toBeNull();
+    const actions = getByTestId('card-sugg-1').props.accessibilityActions as { name: string }[];
+    expect(actions.map((a) => a.name)).not.toContain('about-source');
+  });
+});
+
 describe('ArticleStandaloneCompactCard', () => {
   it('renders the publication name in the compact footer', () => {
     const { queryByText } = render(
       <ArticleStandaloneCompactCard article={makeArticle()} onPress={jest.fn()} />,
     );
     // The redesigned compact card surfaces the source publication in its footer
-    // (flag + publisher name), so the name is now expected to render.
-    expect(queryByText('Die Zeit')).toBeTruthy();
+    // (flag + publisher name), so the name is now expected to render. It is
+    // hidden from VoiceOver (the card root carries "About {source}"), so the
+    // query must include hidden elements.
+    expect(queryByText('Die Zeit', { includeHiddenElements: true })).toBeTruthy();
   });
 
   // Owner review: compact rows carry NO inline action row. One small ••• at the
@@ -586,7 +694,7 @@ describe('ArticleStandaloneCompactCard', () => {
       return false;
     };
     expect(inLine(more)).toBe(true);
-    expect(inLine(getByText('Die Zeit'))).toBe(true);
+    expect(inLine(getByText('Die Zeit', { includeHiddenElements: true }))).toBe(true);
   });
 
   it('the compact menu leads with Like, Not for me, Save and Share', () => {

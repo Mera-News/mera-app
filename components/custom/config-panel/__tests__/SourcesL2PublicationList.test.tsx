@@ -210,6 +210,17 @@ describe('the more/fewer state glyph', () => {
         expect(getByTestId('sources-publisher-pub-1').props.accessibilityLabel).toContain('publicationPage.prefMoreA11y');
     });
 
+    it('reads the preference under ANY of the publication\'s source names, not just its own name', async () => {
+        observedPrefRows = [{ publicationName: 'Times Business', weight: -0.5, scopeKind: null }];
+        mockPublishers([
+            makePublisher({
+                publicationSources: [makeSource(), makeSource({ _id: 'src-2', publication_name: 'Times Business' })],
+            }),
+        ]);
+        const { findByTestId } = render(<SourcePublishersUnderTest />);
+        expect(await findByTestId('sources-publisher-pub-1-pref-deprioritised', HIDDEN)).toBeTruthy();
+    });
+
     it('shows "fewer" for a downranked one', async () => {
         observedPrefRows = [{ publicationName: 'The Times', weight: -0.5, scopeKind: null }];
         mockPublishers([makePublisher()]);

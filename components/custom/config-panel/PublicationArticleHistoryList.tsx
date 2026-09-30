@@ -1,4 +1,6 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
+import PublicationNameButton from '@/components/custom/cards/PublicationNameButton';
+import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
 import SubscribeAction from '@/components/custom/publication-preferences/SubscribeAction';
 import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
 import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
@@ -22,6 +24,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
+
+/** The title's touch target reaches into the header row's own py-3 padding. */
+const HEADER_TITLE_HIT = 10;
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
@@ -200,6 +205,31 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
                 title={publicationShown}
                 subtitle={t('publicationVisits.articlesRead')}
                 onBack={onBack}
+                // "Name ⓘ": the title opens the publication page, by publisher
+                // id once the local lookup resolves one, else by name plus
+                // country. The Visited row still lands HERE, so this reading
+                // history stays reachable.
+                titleContent={
+                    <PublicationNameButton
+                        testID="publication-history-title"
+                        variant="screen"
+                        a11yLabel={t('publicationPage.aboutSourceA11y', { source: publicationShown })}
+                        onPress={() =>
+                            openPublicationPage({
+                                publisherId: publisher?.publisherId ?? null,
+                                rawName: publicationName,
+                                countryCode,
+                            })
+                        }
+                        hitAbove={HEADER_TITLE_HIT}
+                        hitBelow={HEADER_TITLE_HIT}
+                        style={{ alignSelf: 'flex-start' }}
+                    >
+                        <Text size="lg" className="text-white font-semibold" numberOfLines={1}>
+                            {publicationShown}
+                        </Text>
+                    </PublicationNameButton>
+                }
             />
             {isLoading ? (
                 <Box className="flex-1 items-center justify-center">
