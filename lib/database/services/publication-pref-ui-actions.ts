@@ -39,12 +39,18 @@ import { ACTION_NAMES } from '../../news-harness/persona-management/action-names
 // Import-only: this module does not own lib/explore/**. Pure/RN-free (see its
 // own header), so pulling it in here adds no native/DB coupling.
 import { alpha2ToAlpha3 } from '../../explore/scopes';
+import {
+  publisherPrefNames,
+  resolvePrefLevel,
+  type SourcePrefUiLevel,
+} from './publication-pref-level';
 
 /**
  * The L1/L2 vocabulary: three levels, no mute. `'none'` clears whatever is
- * currently set (a no-op write if nothing was set).
+ * currently set (a no-op write if nothing was set). Defined in the pure
+ * `publication-pref-level` module so list rows can read it without the DB.
  */
-export type SourcePrefUiLevel = 'none' | 'prioritised' | 'deprioritised';
+export type { SourcePrefUiLevel };
 
 /**
  * What the control is acting on.
@@ -65,6 +71,15 @@ export type SourcePrefUiLevel = 'none' | 'prioritised' | 'deprioritised';
  */
 export type SourcePrefUiTarget =
   | { readonly kind: 'publication'; readonly publicationName: string }
+  /**
+   * ONE publication under every name it is known by (its source names, the
+   * publisher name, the name the entry point showed). Build `names` with
+   * `resolvePublicationPrefNames` (publisher-source-names.ts). A set writes
+   * one row per name whose level differs, and a clear retires every one of
+   * them. The publication page, the Sources rows and "Fewer from" all use
+   * this, so a preference reaches every source the publication publishes as.
+   */
+  | { readonly kind: 'publisher'; readonly names: readonly string[] }
   | { readonly kind: 'country'; readonly countryAlpha2: string; readonly label: string };
 
 export interface SetSourcePrefResult {
@@ -74,6 +89,10 @@ export interface SetSourcePrefResult {
    *  (`revertChange`, compare-and-set) instead of writing a fresh 'none',
    *  which clobbered any newer change and logged as a new user action. */
   readonly changeLogId?: string;
+  /** Every change-log row the write produced: one per name for a
+   *  `publisher` target. Undo with `revertSourcePrefChange`, which reverts
+   *  all of them. `changeLogId` is the first, for single-name callers. */
+  readonly changeLogIds?: readonly string[];
 }
 
 const LEVEL_TO_PREF_KIND: Record<'prioritised' | 'deprioritised', 'boost' | 'deprioritize'> = {
@@ -127,7 +146,7 @@ async function setCountryScopeLevel(
 async function clearNamedPublicationLevel(publicationName: string): Promise<SetSourcePrefResult> {
   const before = await publicationPreferenceService.getPreferenceKind(publicationName);
   await publicationPreferenceService.setPreferenceKind(publicationName, 'none', 'user');
-  await changeLogService.append({
+  const row = await changeLogService.append({
     actionType: ACTION_NAMES.SET_PUBLICATION_PREF,
     action: { targetId: publicationName, before, after: 'none' },
     source: 'user',
@@ -141,7 +160,7 @@ async function clearNamedPublicationLevel(publicationName: string): Promise<SetS
     }),
     ACTION_NAMES.SET_PUBLICATION_PREF,
   );
-  return { applied: true };
+  return { applied: true, changeLogId: row?.id };
 }
 
 /**
@@ -170,6 +189,70 @@ async function clearCountryScopeLevel(
   return { applied: true };
 }
 
+const LEVEL_OF_KIND = {
+  boost: 'prioritised',
+  deprioritize: 'deprioritised',
+  mute: 'deprioritised',
+} as const;
+
+/**
+ * Set or clear one publication across all its names. Only names whose level
+ * differs are written, so pressing the level already shown logs nothing, and
+ * an undo reverts exactly what this press changed.
+ */
+async function setPublisherLevel(
+  rawNames: readonly string[],
+  level: SourcePrefUiLevel,
+): Promise<SetSourcePrefResult> {
+  const names = publisherPrefNames(rawNames);
+  if (names.length === 0) return { applied: false };
+  const ids: string[] = [];
+  for (const name of names) {
+    const kind = await publicationPreferenceService.getPreferenceKind(name);
+    const current: SourcePrefUiLevel = kind === 'none' ? 'none' : LEVEL_OF_KIND[kind];
+    if (level === 'none') {
+      if (kind === 'none') continue;
+    } else if (current === level) {
+      // Includes a mute under 'deprioritised': never soften a mute here.
+      continue;
+    }
+    const res =
+      level === 'none'
+        ? await clearNamedPublicationLevel(name)
+        : await setNamedPublicationLevel(name, LEVEL_TO_PREF_KIND[level]);
+    if (res.changeLogId) ids.push(res.changeLogId);
+    // A refused write stops the run; what was written stays undoable.
+    if (!res.applied) return { applied: false, changeLogId: ids[0], changeLogIds: ids };
+  }
+  // Nothing differed: the state already is `level`, which is a success.
+  return { applied: true, changeLogId: ids[0], changeLogIds: ids };
+}
+
+/**
+ * The current level of one publication across all its names (fewer wins over
+ * more). The async twin of `resolvePrefLevel`, for a caller without an
+ * observed row set.
+ */
+export async function getPublisherPrefLevel(names: readonly string[]): Promise<SourcePrefUiLevel> {
+  if (names.length === 0) return 'none';
+  const rows = await publicationPreferenceService.getActiveNamedPublications();
+  return resolvePrefLevel(rows, names);
+}
+
+/**
+ * Undo a `setSourcePrefFromUi` result: reverts every change-log row it wrote,
+ * newest first, each compare-and-set (a newer change to that name wins and
+ * is left alone). True when at least one row was reverted.
+ */
+export async function revertSourcePrefChange(result: SetSourcePrefResult): Promise<boolean> {
+  const ids = result.changeLogIds ?? (result.changeLogId ? [result.changeLogId] : []);
+  let reverted = false;
+  for (const id of [...ids].reverse()) {
+    if (await changeLogService.revertChange(id)) reverted = true;
+  }
+  return reverted;
+}
+
 /**
  * Set (or clear) the source-preference level for a publication or a country
  * scope, from any ↑/↓ control in the app. The single entry point item 9
@@ -180,6 +263,7 @@ export async function setSourcePrefFromUi(
   target: SourcePrefUiTarget,
   level: SourcePrefUiLevel,
 ): Promise<SetSourcePrefResult> {
+  if (target.kind === 'publisher') return setPublisherLevel(target.names, level);
   if (level === 'none') {
     return target.kind === 'publication'
       ? clearNamedPublicationLevel(target.publicationName)

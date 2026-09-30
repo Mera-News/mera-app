@@ -10,11 +10,9 @@ import type {
   SourceScopeKind,
 } from '../models/PublicationPreference';
 
-const prefsCollection = database.get<PublicationPreferenceModel>('publication_preferences');
+import { normalizePrefName as normalizePublicationName } from './publication-pref-level';
 
-function normalizePublicationName(s: string): string {
-  return s.toLowerCase().trim().replace(/\s+/g, ' ');
-}
+const prefsCollection = database.get<PublicationPreferenceModel>('publication_preferences');
 
 /**
  * source-pref v47 (D6). A row is a NAMED-PUBLICATION preference only while it

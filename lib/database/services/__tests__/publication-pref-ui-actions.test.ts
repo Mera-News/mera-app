@@ -33,17 +33,21 @@ jest.mock('../persona-action-executor', () => ({
 const mockGetPreferenceKind = jest.fn(async (..._a: unknown[]) => 'none');
 const mockSetPreferenceKind = jest.fn(async (..._a: unknown[]) => {});
 const mockGetScopePreferenceKind = jest.fn(async (..._a: unknown[]) => 'none');
+const mockGetActiveNamedPublications = jest.fn(async (..._a: unknown[]) => [] as unknown[]);
 const mockSetScopePreferenceKind = jest.fn(async (..._a: unknown[]) => {});
 jest.mock('../publication-preference-service', () => ({
   getPreferenceKind: (...a: unknown[]) => mockGetPreferenceKind(...a),
   setPreferenceKind: (...a: unknown[]) => mockSetPreferenceKind(...a),
   getScopePreferenceKind: (...a: unknown[]) => mockGetScopePreferenceKind(...a),
   setScopePreferenceKind: (...a: unknown[]) => mockSetScopePreferenceKind(...a),
+  getActiveNamedPublications: (...a: unknown[]) => mockGetActiveNamedPublications(...a),
 }));
 
 const mockAppend = jest.fn(async (..._a: unknown[]) => ({ id: 'log1' }));
+const mockRevertChange = jest.fn(async (..._a: unknown[]) => true);
 jest.mock('../persona-change-log-service', () => ({
   append: (...a: unknown[]) => mockAppend(...a),
+  revertChange: (...a: unknown[]) => mockRevertChange(...a),
 }));
 
 const mockRunSweepFor = jest.fn(async (..._a: unknown[]) => false);
@@ -53,7 +57,11 @@ jest.mock('../persona-mutation-sweeps', () => ({
   sweepForMutation: (...a: unknown[]) => mockSweepForMutation(...a),
 }));
 
-import { setSourcePrefFromUi } from '../publication-pref-ui-actions';
+import {
+  getPublisherPrefLevel,
+  revertSourcePrefChange,
+  setSourcePrefFromUi,
+} from '../publication-pref-ui-actions';
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -155,7 +163,8 @@ describe('publication target — clear / "none" (the remaining 3 of the 9 transi
         prefAfter: 'none',
       });
       expect(mockRunSweepFor).toHaveBeenCalledWith(sweep, 'set_publication_pref');
-      expect(result).toEqual({ applied: true });
+      // The clear's own change-log row, so an undo can revert it.
+      expect(result).toEqual({ applied: true, changeLogId: 'log1' });
     },
   );
 });
@@ -234,5 +243,98 @@ describe('country-scope target', () => {
     expect(result).toEqual({ applied: false });
     expect(mockSetScopePreferenceKind).not.toHaveBeenCalled();
     expect(mockAppend).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Publisher target: ONE publication under every name it is known by. Scoring
+// matches a preference by the SOURCE name, so a write under the publisher name
+// alone misses every source named differently.
+// ---------------------------------------------------------------------------
+
+describe('publisher target: a write reaches every name', () => {
+  const NAMES = ['Times of India', 'TOI Business', 'times of india ', 'Times Now'];
+
+  it('prioritised writes one boost per DISTINCT normalized name, in order', async () => {
+    let n = 0;
+    mockApplyPersonaAction.mockImplementation(async () => ({ applied: true, summary: 'ok', changeLogId: `c${++n}` }));
+    const result = await setSourcePrefFromUi({ kind: 'publisher', names: NAMES }, 'prioritised');
+    const written = mockApplyPersonaAction.mock.calls.map((c) => (c[0] as { publicationId: string }).publicationId);
+    expect(written).toEqual(['Times of India', 'TOI Business', 'Times Now']);
+    for (const c of mockApplyPersonaAction.mock.calls) {
+      expect(c[0]).toEqual(expect.objectContaining({ action_type: 'set_publication_pref', publicationPref: 'boost' }));
+    }
+    expect(result).toEqual({ applied: true, changeLogId: 'c1', changeLogIds: ['c1', 'c2', 'c3'] });
+  });
+
+  it('skips a name already at the requested level, so an undo reverts only what changed', async () => {
+    mockGetPreferenceKind.mockImplementation(async (name: unknown) => (name === 'TOI Business' ? 'deprioritize' : 'none'));
+    mockApplyPersonaAction.mockResolvedValue({ applied: true, summary: 'ok', changeLogId: 'c' } as never);
+    await setSourcePrefFromUi({ kind: 'publisher', names: ['Times of India', 'TOI Business'] }, 'deprioritised');
+    const written = mockApplyPersonaAction.mock.calls.map((c) => (c[0] as { publicationId: string }).publicationId);
+    expect(written).toEqual(['Times of India']);
+  });
+
+  it('never softens a mute when asked for fewer', async () => {
+    mockGetPreferenceKind.mockResolvedValue('mute');
+    const result = await setSourcePrefFromUi({ kind: 'publisher', names: ['Times of India'] }, 'deprioritised');
+    expect(mockApplyPersonaAction).not.toHaveBeenCalled();
+    expect(result).toEqual({ applied: true, changeLogId: undefined, changeLogIds: [] });
+  });
+
+  it('clear retires EVERY name that has an active row, and only those', async () => {
+    mockGetPreferenceKind.mockImplementation(async (name: unknown) =>
+      name === 'Times Now' ? 'none' : name === 'TOI Business' ? 'mute' : 'boost',
+    );
+    let n = 0;
+    mockAppend.mockImplementation(async () => ({ id: `log${++n}` }));
+    const result = await setSourcePrefFromUi({ kind: 'publisher', names: NAMES }, 'none');
+    expect(mockSetPreferenceKind.mock.calls.map((c) => c[0])).toEqual(['Times of India', 'TOI Business']);
+    expect(mockSetPreferenceKind.mock.calls.every((c) => c[1] === 'none')).toBe(true);
+    expect(result).toEqual({ applied: true, changeLogId: 'log1', changeLogIds: ['log1', 'log2'] });
+    mockAppend.mockImplementation(async () => ({ id: 'log1' }));
+  });
+
+  it('stops at a refused write and still returns what it wrote, for undo', async () => {
+    mockApplyPersonaAction
+      .mockResolvedValueOnce({ applied: true, summary: 'ok', changeLogId: 'c1' } as never)
+      .mockResolvedValueOnce({ applied: false, summary: 'no' } as never);
+    const result = await setSourcePrefFromUi({ kind: 'publisher', names: ['A', 'B', 'C'] }, 'prioritised');
+    expect(mockApplyPersonaAction).toHaveBeenCalledTimes(2);
+    expect(result).toEqual({ applied: false, changeLogId: 'c1', changeLogIds: ['c1'] });
+  });
+
+  it('an empty name set writes nothing and reports applied:false', async () => {
+    const result = await setSourcePrefFromUi({ kind: 'publisher', names: ['  ', ''] }, 'prioritised');
+    expect(result).toEqual({ applied: false });
+    expect(mockApplyPersonaAction).not.toHaveBeenCalled();
+  });
+});
+
+describe('getPublisherPrefLevel', () => {
+  it('reads across every name, fewer winning over more', async () => {
+    mockGetActiveNamedPublications.mockResolvedValue([
+      { publicationName: 'Times of India', weight: 0.5, scopeKind: null, status: 'active' },
+      { publicationName: 'TOI Business', weight: -0.5, scopeKind: null, status: 'active' },
+    ]);
+    await expect(getPublisherPrefLevel(['Times of India', 'TOI Business'])).resolves.toBe('deprioritised');
+    await expect(getPublisherPrefLevel(['times of india'])).resolves.toBe('prioritised');
+    await expect(getPublisherPrefLevel([])).resolves.toBe('none');
+  });
+});
+
+describe('revertSourcePrefChange', () => {
+  it('reverts every row newest first and reports whether any reverted', async () => {
+    mockRevertChange.mockResolvedValueOnce(false).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    await expect(revertSourcePrefChange({ applied: true, changeLogIds: ['a', 'b', 'c'] })).resolves.toBe(true);
+    expect(mockRevertChange.mock.calls.map((c) => c[0])).toEqual(['c', 'b', 'a']);
+  });
+
+  it('falls back to the single changeLogId and returns false with nothing to revert', async () => {
+    await expect(revertSourcePrefChange({ applied: true, changeLogId: 'x' })).resolves.toBe(true);
+    expect(mockRevertChange).toHaveBeenCalledWith('x');
+    mockRevertChange.mockClear();
+    await expect(revertSourcePrefChange({ applied: false })).resolves.toBe(false);
+    expect(mockRevertChange).not.toHaveBeenCalled();
   });
 });
