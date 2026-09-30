@@ -57,6 +57,11 @@ export function hydrateAllStores(): Promise<void> {
       require('../publication-display-service').installPublicationDisplayNames().catch(() => undefined);
     }),
     useAppStateStore.getState().hydrateFromDb(),
+    // Not a Zustand store: the publisher -> source-names map behind more/fewer
+    // grouping and the publication page's offline list. Loaded before
+    // database-store.ready so the Source preferences screen groups on a cold
+    // start. Never rejects.
+    require('./services/publisher-source-names').hydratePublisherSourceNames(),
     useForYouPrefsStore.getState().hydrate(),
     useBlurImagesStore.getState().hydrate(),
     useDisplayPrefsStore.getState().hydrate(),

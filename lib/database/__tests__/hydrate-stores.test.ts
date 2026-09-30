@@ -154,6 +154,13 @@ jest.mock('@/lib/logger', () => ({
   default: { captureException: jest.fn() },
 }));
 
+// Not a Zustand store either: the publisher -> source-names map. Unmocked it
+// reaches the real setting-service (SQLite at import).
+const mockHydratePublisherSourceNames = jest.fn(() => Promise.resolve());
+jest.mock('../services/publisher-source-names', () => ({
+  hydratePublisherSourceNames: () => mockHydratePublisherSourceNames(),
+}));
+
 const mockInstallPublicationDisplayNames = jest.fn(() => Promise.resolve());
 jest.mock('../../publication-display-service', () => ({
   installPublicationDisplayNames: () => mockInstallPublicationDisplayNames(),
@@ -168,6 +175,20 @@ beforeEach(() => {
 });
 
 describe('hydrateAllStores', () => {
+  it('loads the publisher source-name map BEFORE database-store.ready flips', async () => {
+    let loaded = false;
+    mockHydratePublisherSourceNames.mockImplementationOnce(async () => {
+      await Promise.resolve();
+      loaded = true;
+    });
+    mockSetReady.mockImplementationOnce(() => {
+      expect(loaded).toBe(true);
+    });
+    await hydrateAllStores();
+    expect(mockHydratePublisherSourceNames).toHaveBeenCalledTimes(1);
+    expect(mockSetReady).toHaveBeenCalledWith(true);
+  });
+
   it('fires paint-critical hydration without awaiting (fire-and-forget)', async () => {
     await hydrateAllStores();
     expect(mockHydrateSuggestionsFromDb).toHaveBeenCalledTimes(1);
