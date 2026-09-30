@@ -581,6 +581,23 @@ describe('resolveNotificationRoute', () => {
     );
   });
 
+  it('opens a feedback_request push on the feedback-request modal', async () => {
+    const id = '0123456789abcdef01234567';
+    await expect(
+      resolveNotificationRoute({ type: 'feedback_request', feedbackRequestId: id }),
+    ).resolves.toEqual({ pathname: '/logged-in/feedback-request', params: { id } });
+  });
+
+  // The id reaches a route param and the stash; anything but an ObjectId is
+  // dropped to the Dashboard rather than opening a modal for nothing.
+  it('sends a feedback_request with a missing or malformed id to the Dashboard', async () => {
+    for (const feedbackRequestId of [undefined, '', 'abc', '0123456789abcdef0123456z', 42]) {
+      await expect(
+        resolveNotificationRoute({ type: 'feedback_request', feedbackRequestId }),
+      ).resolves.toBe('/logged-in/app_container/for_you');
+    }
+  });
+
   it('sends unknown and model-download types to the Dashboard', async () => {
     for (const type of ['model-download-complete', 'model-download-error', 'whatever']) {
       await expect(resolveNotificationRoute({ type })).resolves.toBe(
@@ -651,6 +668,22 @@ describe('notification taps go through the startup/PIN gate', () => {
     mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor(FACT_CHECK, 'warm-open-1'));
     await handleInitialNotification(); // skipped: already handled
     await expect(consumePendingNotificationRoute('user-123')).resolves.toEqual(ARTICLE);
+  });
+
+  // The push path end to end: the stash holds the feedback-request route and
+  // it survives the reload (isHref also gates the row parse).
+  it('a feedback_request tap before the gate is stashed and survives a reload', async () => {
+    const id = 'abcdef0123456789abcdef01';
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce(
+      responseFor({ type: 'feedback_request', feedbackRequestId: id }),
+    );
+    await handleInitialNotification();
+    expect(mockRouterPush).not.toHaveBeenCalled();
+    __resetPendingNotificationRouteForTests(); // the reload
+    await expect(consumePendingNotificationRoute('user-123')).resolves.toEqual({
+      pathname: '/logged-in/feedback-request',
+      params: { id },
+    });
   });
 
   // Every background -> active return reloads JS, so a warm tap's navigation
@@ -1364,6 +1397,16 @@ describe('Notifications.setNotificationHandler (module-level side effect)', () =
       request: { content: { data: { type: 'phase2-done' } } },
     });
     expect(result.shouldShowBanner).toBe(false);
+  });
+
+  // A feedback request push is a visible notification, foreground included.
+  it('handleNotification shows UI for a feedback_request push', async () => {
+    const { handleNotification } = (global as any).__capturedNotifHandler;
+    const result = await handleNotification({
+      request: { content: { data: { type: 'feedback_request', feedbackRequestId: '0123456789abcdef01234567' } } },
+    });
+    expect(result.shouldShowBanner).toBe(true);
+    expect(result.shouldShowList).toBe(true);
   });
 
   it('handleNotification shows UI for all other notification types', async () => {

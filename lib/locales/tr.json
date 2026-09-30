@@ -2962,5 +2962,23 @@
     "useEnglish": "İngilizce kullan",
     "settingsTitle": "Sistem kontrolü",
     "settingsDescription": "Mera'nın bu telefonda nasıl çalıştığını gör ve dil paketini kontrol et."
+  },
+  "feedbackRequest": {
+    "title": "Mera'dan bir soru",
+    "placeholder": "Yanıtınızı yazın",
+    "answerLabel": "Yanıtınız",
+    "submit": "Kabul et ve gönder",
+    "disclaimer": "Yanıtınız, kullanıcı kimliğiniz ve abonelik bilgilerinizle birlikte Mera'ya gönderilir.",
+    "counter": "{{current}} / {{max}} karakter",
+    "thanks": "Yanıtınız için teşekkürler",
+    "alreadyAnswered": "Bu soruyu zaten yanıtladınız",
+    "closed": "Bu soru kapandı",
+    "error": "Yanıtınız gönderilemedi. Tekrar deneyin.",
+    "offline": "Çevrimdışısınız. İnternete bağlanıp tekrar deneyin.",
+    "loadError": "Bu soru yüklenemedi. Tekrar deneyin.",
+    "retry": "Tekrar dene",
+    "close": "Kapat",
+    "drawerAnswered": "Yanıtlandı",
+    "drawerClosed": "Kapandı"
   }
 }

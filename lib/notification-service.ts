@@ -10,6 +10,7 @@ import { useNetworkStore } from './stores/network-store';
 import { getSetting, setSetting } from './database/services/setting-service';
 import { ArticleSuggestionStatus } from './database/article-suggestion-status';
 import {
+    isFeedbackRequestId,
     isStartupGatePassed,
     stashPendingNotificationRoute,
     takePendingNotificationRouteForNavigation,
@@ -257,14 +258,16 @@ function nonBlank(v: unknown): string | null {
  * Where a notification opens. Shared by an OS tap and an in-app notification
  * row (NotificationsScreen), so the two can never disagree. Never throws.
  *
- * ONE typed destination: `fact_check_done`, which is an ON-DEVICE type (the
+ * TWO typed destinations. `feedback_request` (a server push carrying only
+ * the request id, nothing about the user) opens the feedback-request modal.
+ * `fact_check_done` is an ON-DEVICE type (the
  * payload never came from a server that knows who asked about what). It opens
  * the suggestion while its row exists, else the standalone article: suggestions
  * prune at 48h while notification rows live 90 days, and the retention row that
  * keeps a fact-checked article openable is keyed by ARTICLE id, so a pruned
  * suggestion id would dead-end on "story unavailable".
  *
- * Everything else, including every server payload, opens the Dashboard. In
+ * Everything else, including every other server payload, opens the Dashboard. In
  * particular the server `type === 'fact-check'` push must NEVER deep-link: it
  * was removed because delivering it required the server to store which user
  * asked about which article, and since fact-check rows dedupe by article
@@ -278,6 +281,14 @@ export async function resolveNotificationRoute(
     data: NotificationDeepLinkData | null | undefined,
 ): Promise<NotificationHref> {
     try {
+        // A server push (`data.feedbackRequestId`, 24 hex). The modal decides
+        // open vs closed itself, so this needs no lookup.
+        if (data?.type === 'feedback_request') {
+            const id = nonBlank(data.feedbackRequestId);
+            if (id && isFeedbackRequestId(id)) {
+                return { pathname: '/logged-in/feedback-request', params: { id } };
+            }
+        }
         if (data?.type === 'fact_check_done') {
             const suggestionId = nonBlank(data.suggestionId);
             const articleId = nonBlank(data.articleId);

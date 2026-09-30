@@ -2960,5 +2960,23 @@
     "useEnglish": "Engels gebruiken",
     "settingsTitle": "Systeemcheck",
     "settingsDescription": "Bekijk hoe Mera op deze telefoon draait en controleer je taalpakket."
+  },
+  "feedbackRequest": {
+    "title": "Een vraag van Mera",
+    "placeholder": "Typ je antwoord",
+    "answerLabel": "Je antwoord",
+    "submit": "Akkoord en versturen",
+    "disclaimer": "Je antwoord wordt naar Mera gestuurd samen met je gebruikers-ID en je abonnementsgegevens.",
+    "counter": "{{current}} van {{max}} tekens",
+    "thanks": "Bedankt voor je antwoord",
+    "alreadyAnswered": "Je hebt deze vraag al beantwoord",
+    "closed": "Deze vraag is gesloten",
+    "error": "Je antwoord is niet verstuurd. Probeer het opnieuw.",
+    "offline": "Je bent offline. Maak verbinding met internet en probeer het opnieuw.",
+    "loadError": "Deze vraag kon niet worden geladen. Probeer het opnieuw.",
+    "retry": "Opnieuw proberen",
+    "close": "Sluiten",
+    "drawerAnswered": "Beantwoord",
+    "drawerClosed": "Gesloten"
   }
 }

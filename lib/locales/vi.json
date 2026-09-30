@@ -2960,5 +2960,23 @@
     "useEnglish": "Dùng tiếng Anh",
     "settingsTitle": "Kiểm tra hệ thống",
     "settingsDescription": "Xem cách Mera chạy trên điện thoại này và kiểm tra gói ngôn ngữ của bạn."
+  },
+  "feedbackRequest": {
+    "title": "Một câu hỏi từ Mera",
+    "placeholder": "Nhập câu trả lời của bạn",
+    "answerLabel": "Câu trả lời của bạn",
+    "submit": "Đồng ý và gửi",
+    "disclaimer": "Câu trả lời của bạn được gửi đến Mera cùng với ID người dùng và thông tin gói đăng ký của bạn.",
+    "counter": "{{current}}/{{max}} ký tự",
+    "thanks": "Cảm ơn câu trả lời của bạn",
+    "alreadyAnswered": "Bạn đã trả lời câu hỏi này rồi",
+    "closed": "Câu hỏi này đã đóng",
+    "error": "Chưa gửi được câu trả lời. Hãy thử lại.",
+    "offline": "Bạn đang ngoại tuyến. Hãy kết nối internet rồi thử lại.",
+    "loadError": "Không tải được câu hỏi này. Hãy thử lại.",
+    "retry": "Thử lại",
+    "close": "Đóng",
+    "drawerAnswered": "Đã trả lời",
+    "drawerClosed": "Đã đóng"
   }
 }

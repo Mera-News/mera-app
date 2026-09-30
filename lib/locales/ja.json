@@ -2959,5 +2959,23 @@
     "useEnglish": "英語を使う",
     "settingsTitle": "システムチェック",
     "settingsDescription": "この端末でのMeraの動作と、言語パックの状態を確認できます。"
+  },
+  "feedbackRequest": {
+    "title": "Meraからの質問",
+    "placeholder": "回答を入力",
+    "answerLabel": "あなたの回答",
+    "submit": "同意して送信",
+    "disclaimer": "回答は、ユーザーIDとサブスクリプション情報とともにMeraに送信されます。",
+    "counter": "{{current}}/{{max}}文字",
+    "thanks": "ご回答ありがとうございます",
+    "alreadyAnswered": "この質問にはすでに回答済みです",
+    "closed": "この質問は終了しました",
+    "error": "回答を送信できませんでした。もう一度お試しください。",
+    "offline": "オフラインです。インターネットに接続して、もう一度お試しください。",
+    "loadError": "この質問を読み込めませんでした。もう一度お試しください。",
+    "retry": "もう一度試す",
+    "close": "閉じる",
+    "drawerAnswered": "回答済み",
+    "drawerClosed": "終了"
   }
 }

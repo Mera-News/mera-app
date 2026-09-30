@@ -28,6 +28,7 @@ import {
   __resetPendingNotificationRouteForTests,
   PENDING_NOTIFICATION_ROUTE_KEY,
   PENDING_ROUTE_MAX_AGE_MS,
+  isFeedbackRequestId,
   type NotificationHref,
 } from '../pending-notification-route';
 
@@ -120,5 +121,39 @@ describe('pending-notification-route', () => {
     expect(isStartupGatePassed()).toBe(true);
     __resetPendingNotificationRouteForTests();
     expect(isStartupGatePassed()).toBe(false);
+  });
+});
+
+describe('feedback-request route', () => {
+  const ID = '0123456789abcdef01234567';
+  const FEEDBACK: NotificationHref = { pathname: '/logged-in/feedback-request', params: { id: ID } };
+
+  it('isFeedbackRequestId accepts 24 hex characters only', () => {
+    expect(isFeedbackRequestId(ID)).toBe(true);
+    expect(isFeedbackRequestId(ID.toUpperCase())).toBe(true);
+    for (const bad of ['', 'abc', `${ID}0`, '0123456789abcdef0123456g', null, 7, undefined]) {
+      expect(isFeedbackRequestId(bad)).toBe(false);
+    }
+  });
+
+  // The row parse runs isHref: an unrecognised shape would be dropped after
+  // the reload, which is exactly the push-tap path.
+  it('survives a reload', async () => {
+    await stashPendingNotificationRoute(FEEDBACK, 'u1', 1000);
+    __resetPendingNotificationRouteForTests();
+    await expect(consumePendingNotificationRoute('u1', 2000)).resolves.toEqual(FEEDBACK);
+  });
+
+  it('a persisted row with a malformed id reads as no row', async () => {
+    mockRows.set(
+      PENDING_NOTIFICATION_ROUTE_KEY,
+      JSON.stringify({
+        href: { pathname: '/logged-in/feedback-request', params: { id: 'nope' } },
+        userId: 'u1',
+        at: 1000,
+        navigatedAt: null,
+      }),
+    );
+    await expect(consumePendingNotificationRoute('u1', 2000)).resolves.toBeNull();
   });
 });

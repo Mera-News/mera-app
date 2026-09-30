@@ -2998,5 +2998,23 @@
     "useEnglish": "Użyj angielskiego",
     "settingsTitle": "Sprawdzenie systemu",
     "settingsDescription": "Sprawdź, jak Mera działa na tym telefonie, i zweryfikuj swój pakiet językowy."
+  },
+  "feedbackRequest": {
+    "title": "Pytanie od Mera",
+    "placeholder": "Wpisz odpowiedź",
+    "answerLabel": "Twoja odpowiedź",
+    "submit": "Zgadzam się i wysyłam",
+    "disclaimer": "Twoja odpowiedź jest wysyłana do Mera razem z Twoim identyfikatorem użytkownika i danymi subskrypcji.",
+    "counter": "{{current}} z {{max}} znaków",
+    "thanks": "Dziękujemy za odpowiedź",
+    "alreadyAnswered": "Na to pytanie już odpowiedziano",
+    "closed": "To pytanie jest już zamknięte",
+    "error": "Nie udało się wysłać odpowiedzi. Spróbuj ponownie.",
+    "offline": "Jesteś offline. Połącz się z internetem i spróbuj ponownie.",
+    "loadError": "Nie udało się wczytać pytania. Spróbuj ponownie.",
+    "retry": "Spróbuj ponownie",
+    "close": "Zamknij",
+    "drawerAnswered": "Odpowiedziano",
+    "drawerClosed": "Zamknięte"
   }
 }

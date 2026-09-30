@@ -2960,5 +2960,23 @@
     "useEnglish": "使用英语",
     "settingsTitle": "系统检查",
     "settingsDescription": "查看 Mera 在这台手机上的运行情况，并检查你的语言包。"
+  },
+  "feedbackRequest": {
+    "title": "来自 Mera 的问题",
+    "placeholder": "输入你的回答",
+    "answerLabel": "你的回答",
+    "submit": "同意并提交",
+    "disclaimer": "你的回答将与你的用户 ID 和订阅信息一起发送给 Mera。",
+    "counter": "{{current}}/{{max}} 个字符",
+    "thanks": "感谢你的回答",
+    "alreadyAnswered": "你已经回答过这个问题了",
+    "closed": "这个问题已关闭",
+    "error": "回答未能发送，请重试。",
+    "offline": "你当前处于离线状态。请连接互联网后重试。",
+    "loadError": "无法加载这个问题，请重试。",
+    "retry": "重试",
+    "close": "关闭",
+    "drawerAnswered": "已回答",
+    "drawerClosed": "已关闭"
   }
 }

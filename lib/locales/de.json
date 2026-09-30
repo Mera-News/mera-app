@@ -2960,5 +2960,23 @@
     "useEnglish": "Englisch verwenden",
     "settingsTitle": "Systemcheck",
     "settingsDescription": "Sieh, wie Mera auf diesem Handy läuft, und prüfe dein Sprachpaket."
+  },
+  "feedbackRequest": {
+    "title": "Eine Frage von Mera",
+    "placeholder": "Antwort eingeben",
+    "answerLabel": "Deine Antwort",
+    "submit": "Zustimmen und senden",
+    "disclaimer": "Deine Antwort wird zusammen mit deiner Nutzer-ID und deinen Abodaten an Mera gesendet.",
+    "counter": "{{current}} von {{max}} Zeichen",
+    "thanks": "Danke für deine Antwort",
+    "alreadyAnswered": "Du hast diese Frage schon beantwortet",
+    "closed": "Diese Frage ist beendet",
+    "error": "Deine Antwort wurde nicht gesendet. Versuch es noch einmal.",
+    "offline": "Du bist offline. Verbinde dich mit dem Internet und versuch es noch einmal.",
+    "loadError": "Diese Frage konnte nicht geladen werden. Versuch es noch einmal.",
+    "retry": "Noch einmal versuchen",
+    "close": "Schließen",
+    "drawerAnswered": "Beantwortet",
+    "drawerClosed": "Beendet"
   }
 }

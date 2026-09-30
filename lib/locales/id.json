@@ -2959,5 +2959,23 @@
     "useEnglish": "Gunakan Bahasa Inggris",
     "settingsTitle": "Pemeriksaan sistem",
     "settingsDescription": "Lihat bagaimana Mera berjalan di ponsel ini dan periksa paket bahasa Anda."
+  },
+  "feedbackRequest": {
+    "title": "Pertanyaan dari Mera",
+    "placeholder": "Ketik jawaban Anda",
+    "answerLabel": "Jawaban Anda",
+    "submit": "Setuju dan kirim",
+    "disclaimer": "Jawaban Anda dikirim ke Mera bersama ID pengguna dan detail langganan Anda.",
+    "counter": "{{current}} dari {{max}} karakter",
+    "thanks": "Terima kasih atas jawaban Anda",
+    "alreadyAnswered": "Anda sudah menjawab pertanyaan ini",
+    "closed": "Pertanyaan ini sudah ditutup",
+    "error": "Jawaban Anda tidak terkirim. Coba lagi.",
+    "offline": "Anda sedang offline. Sambungkan ke internet lalu coba lagi.",
+    "loadError": "Pertanyaan ini gagal dimuat. Coba lagi.",
+    "retry": "Coba lagi",
+    "close": "Tutup",
+    "drawerAnswered": "Sudah dijawab",
+    "drawerClosed": "Ditutup"
   }
 }

@@ -1,0 +1,403 @@
+{
+ "_comment": "fbreq wave: feedback-request modal and drawer row (feedbackRequest.*). Input to _splice-fragments.mjs.",
+ "en": {
+  "feedbackRequest": {
+   "title": "A question from Mera",
+   "placeholder": "Type your answer",
+   "answerLabel": "Your answer",
+   "submit": "Agree and submit",
+   "disclaimer": "Your answer is sent to Mera with your user ID and subscription details.",
+   "counter": "{{current}} of {{max}} characters",
+   "thanks": "Thanks for your answer",
+   "alreadyAnswered": "You already answered this one",
+   "closed": "This question has closed",
+   "error": "Your answer didn't send. Try again.",
+   "offline": "You're offline. Connect to the internet and try again.",
+   "loadError": "This question didn't load. Try again.",
+   "retry": "Try again",
+   "close": "Close",
+   "drawerAnswered": "Answered",
+   "drawerClosed": "Closed"
+  }
+ },
+ "de": {
+  "feedbackRequest": {
+   "title": "Eine Frage von Mera",
+   "placeholder": "Antwort eingeben",
+   "answerLabel": "Deine Antwort",
+   "submit": "Zustimmen und senden",
+   "disclaimer": "Deine Antwort wird zusammen mit deiner Nutzer-ID und deinen Abodaten an Mera gesendet.",
+   "counter": "{{current}} von {{max}} Zeichen",
+   "thanks": "Danke für deine Antwort",
+   "alreadyAnswered": "Du hast diese Frage schon beantwortet",
+   "closed": "Diese Frage ist beendet",
+   "error": "Deine Antwort wurde nicht gesendet. Versuch es noch einmal.",
+   "offline": "Du bist offline. Verbinde dich mit dem Internet und versuch es noch einmal.",
+   "loadError": "Diese Frage konnte nicht geladen werden. Versuch es noch einmal.",
+   "retry": "Noch einmal versuchen",
+   "close": "Schließen",
+   "drawerAnswered": "Beantwortet",
+   "drawerClosed": "Beendet"
+  }
+ },
+ "fr": {
+  "feedbackRequest": {
+   "title": "Une question de Mera",
+   "placeholder": "Saisissez votre réponse",
+   "answerLabel": "Votre réponse",
+   "submit": "Accepter et envoyer",
+   "disclaimer": "Votre réponse est envoyée à Mera avec votre identifiant utilisateur et les informations de votre abonnement.",
+   "counter": "{{current}} sur {{max}} caractères",
+   "thanks": "Merci pour votre réponse",
+   "alreadyAnswered": "Vous avez déjà répondu à cette question",
+   "closed": "Cette question est terminée",
+   "error": "Votre réponse n'a pas été envoyée. Réessayez.",
+   "offline": "Vous êtes hors ligne. Connectez-vous à Internet et réessayez.",
+   "loadError": "Cette question n'a pas pu être chargée. Réessayez.",
+   "retry": "Réessayer",
+   "close": "Fermer",
+   "drawerAnswered": "Répondu",
+   "drawerClosed": "Terminée"
+  }
+ },
+ "es": {
+  "feedbackRequest": {
+   "title": "Una pregunta de Mera",
+   "placeholder": "Escribe tu respuesta",
+   "answerLabel": "Tu respuesta",
+   "submit": "Aceptar y enviar",
+   "disclaimer": "Tu respuesta se envía a Mera junto con tu ID de usuario y los datos de tu suscripción.",
+   "counter": "{{current}} de {{max}} caracteres",
+   "thanks": "Gracias por tu respuesta",
+   "alreadyAnswered": "Ya respondiste a esta pregunta",
+   "closed": "Esta pregunta ya se cerró",
+   "error": "Tu respuesta no se envió. Inténtalo de nuevo.",
+   "offline": "No tienes conexión. Conéctate a internet e inténtalo de nuevo.",
+   "loadError": "Esta pregunta no se cargó. Inténtalo de nuevo.",
+   "retry": "Intentar de nuevo",
+   "close": "Cerrar",
+   "drawerAnswered": "Respondida",
+   "drawerClosed": "Cerrada"
+  }
+ },
+ "it": {
+  "feedbackRequest": {
+   "title": "Una domanda da Mera",
+   "placeholder": "Scrivi la tua risposta",
+   "answerLabel": "La tua risposta",
+   "submit": "Accetta e invia",
+   "disclaimer": "La tua risposta viene inviata a Mera insieme al tuo ID utente e ai dati del tuo abbonamento.",
+   "counter": "{{current}} di {{max}} caratteri",
+   "thanks": "Grazie per la tua risposta",
+   "alreadyAnswered": "Hai già risposto a questa domanda",
+   "closed": "Questa domanda è chiusa",
+   "error": "La risposta non è stata inviata. Riprova.",
+   "offline": "Sei offline. Connettiti a Internet e riprova.",
+   "loadError": "Impossibile caricare questa domanda. Riprova.",
+   "retry": "Riprova",
+   "close": "Chiudi",
+   "drawerAnswered": "Risposta inviata",
+   "drawerClosed": "Chiusa"
+  }
+ },
+ "nl": {
+  "feedbackRequest": {
+   "title": "Een vraag van Mera",
+   "placeholder": "Typ je antwoord",
+   "answerLabel": "Je antwoord",
+   "submit": "Akkoord en versturen",
+   "disclaimer": "Je antwoord wordt naar Mera gestuurd samen met je gebruikers-ID en je abonnementsgegevens.",
+   "counter": "{{current}} van {{max}} tekens",
+   "thanks": "Bedankt voor je antwoord",
+   "alreadyAnswered": "Je hebt deze vraag al beantwoord",
+   "closed": "Deze vraag is gesloten",
+   "error": "Je antwoord is niet verstuurd. Probeer het opnieuw.",
+   "offline": "Je bent offline. Maak verbinding met internet en probeer het opnieuw.",
+   "loadError": "Deze vraag kon niet worden geladen. Probeer het opnieuw.",
+   "retry": "Opnieuw proberen",
+   "close": "Sluiten",
+   "drawerAnswered": "Beantwoord",
+   "drawerClosed": "Gesloten"
+  }
+ },
+ "pt-BR": {
+  "feedbackRequest": {
+   "title": "Uma pergunta da Mera",
+   "placeholder": "Digite sua resposta",
+   "answerLabel": "Sua resposta",
+   "submit": "Concordar e enviar",
+   "disclaimer": "Sua resposta é enviada para a Mera com seu ID de usuário e os dados da sua assinatura.",
+   "counter": "{{current}} de {{max}} caracteres",
+   "thanks": "Obrigado pela sua resposta",
+   "alreadyAnswered": "Você já respondeu a esta pergunta",
+   "closed": "Esta pergunta foi encerrada",
+   "error": "Sua resposta não foi enviada. Tente de novo.",
+   "offline": "Você está off-line. Conecte-se à internet e tente de novo.",
+   "loadError": "Não foi possível carregar esta pergunta. Tente de novo.",
+   "retry": "Tentar de novo",
+   "close": "Fechar",
+   "drawerAnswered": "Respondida",
+   "drawerClosed": "Encerrada"
+  }
+ },
+ "pl": {
+  "feedbackRequest": {
+   "title": "Pytanie od Mera",
+   "placeholder": "Wpisz odpowiedź",
+   "answerLabel": "Twoja odpowiedź",
+   "submit": "Zgadzam się i wysyłam",
+   "disclaimer": "Twoja odpowiedź jest wysyłana do Mera razem z Twoim identyfikatorem użytkownika i danymi subskrypcji.",
+   "counter": "{{current}} z {{max}} znaków",
+   "thanks": "Dziękujemy za odpowiedź",
+   "alreadyAnswered": "Na to pytanie już odpowiedziano",
+   "closed": "To pytanie jest już zamknięte",
+   "error": "Nie udało się wysłać odpowiedzi. Spróbuj ponownie.",
+   "offline": "Jesteś offline. Połącz się z internetem i spróbuj ponownie.",
+   "loadError": "Nie udało się wczytać pytania. Spróbuj ponownie.",
+   "retry": "Spróbuj ponownie",
+   "close": "Zamknij",
+   "drawerAnswered": "Odpowiedziano",
+   "drawerClosed": "Zamknięte"
+  }
+ },
+ "tr": {
+  "feedbackRequest": {
+   "title": "Mera'dan bir soru",
+   "placeholder": "Yanıtınızı yazın",
+   "answerLabel": "Yanıtınız",
+   "submit": "Kabul et ve gönder",
+   "disclaimer": "Yanıtınız, kullanıcı kimliğiniz ve abonelik bilgilerinizle birlikte Mera'ya gönderilir.",
+   "counter": "{{current}} / {{max}} karakter",
+   "thanks": "Yanıtınız için teşekkürler",
+   "alreadyAnswered": "Bu soruyu zaten yanıtladınız",
+   "closed": "Bu soru kapandı",
+   "error": "Yanıtınız gönderilemedi. Tekrar deneyin.",
+   "offline": "Çevrimdışısınız. İnternete bağlanıp tekrar deneyin.",
+   "loadError": "Bu soru yüklenemedi. Tekrar deneyin.",
+   "retry": "Tekrar dene",
+   "close": "Kapat",
+   "drawerAnswered": "Yanıtlandı",
+   "drawerClosed": "Kapandı"
+  }
+ },
+ "id": {
+  "feedbackRequest": {
+   "title": "Pertanyaan dari Mera",
+   "placeholder": "Ketik jawaban Anda",
+   "answerLabel": "Jawaban Anda",
+   "submit": "Setuju dan kirim",
+   "disclaimer": "Jawaban Anda dikirim ke Mera bersama ID pengguna dan detail langganan Anda.",
+   "counter": "{{current}} dari {{max}} karakter",
+   "thanks": "Terima kasih atas jawaban Anda",
+   "alreadyAnswered": "Anda sudah menjawab pertanyaan ini",
+   "closed": "Pertanyaan ini sudah ditutup",
+   "error": "Jawaban Anda tidak terkirim. Coba lagi.",
+   "offline": "Anda sedang offline. Sambungkan ke internet lalu coba lagi.",
+   "loadError": "Pertanyaan ini gagal dimuat. Coba lagi.",
+   "retry": "Coba lagi",
+   "close": "Tutup",
+   "drawerAnswered": "Sudah dijawab",
+   "drawerClosed": "Ditutup"
+  }
+ },
+ "vi": {
+  "feedbackRequest": {
+   "title": "Một câu hỏi từ Mera",
+   "placeholder": "Nhập câu trả lời của bạn",
+   "answerLabel": "Câu trả lời của bạn",
+   "submit": "Đồng ý và gửi",
+   "disclaimer": "Câu trả lời của bạn được gửi đến Mera cùng với ID người dùng và thông tin gói đăng ký của bạn.",
+   "counter": "{{current}}/{{max}} ký tự",
+   "thanks": "Cảm ơn câu trả lời của bạn",
+   "alreadyAnswered": "Bạn đã trả lời câu hỏi này rồi",
+   "closed": "Câu hỏi này đã đóng",
+   "error": "Chưa gửi được câu trả lời. Hãy thử lại.",
+   "offline": "Bạn đang ngoại tuyến. Hãy kết nối internet rồi thử lại.",
+   "loadError": "Không tải được câu hỏi này. Hãy thử lại.",
+   "retry": "Thử lại",
+   "close": "Đóng",
+   "drawerAnswered": "Đã trả lời",
+   "drawerClosed": "Đã đóng"
+  }
+ },
+ "ru": {
+  "feedbackRequest": {
+   "title": "Вопрос от Mera",
+   "placeholder": "Введите ответ",
+   "answerLabel": "Ваш ответ",
+   "submit": "Согласиться и отправить",
+   "disclaimer": "Ваш ответ отправляется в Mera вместе с вашим ID пользователя и данными о подписке.",
+   "counter": "{{current}} из {{max}} символов",
+   "thanks": "Спасибо за ответ",
+   "alreadyAnswered": "Вы уже ответили на этот вопрос",
+   "closed": "Этот вопрос закрыт",
+   "error": "Не удалось отправить ответ. Попробуйте ещё раз.",
+   "offline": "Нет подключения к интернету. Подключитесь и попробуйте ещё раз.",
+   "loadError": "Не удалось загрузить вопрос. Попробуйте ещё раз.",
+   "retry": "Попробовать ещё раз",
+   "close": "Закрыть",
+   "drawerAnswered": "Отвечено",
+   "drawerClosed": "Закрыт"
+  }
+ },
+ "uk": {
+  "feedbackRequest": {
+   "title": "Запитання від Mera",
+   "placeholder": "Введіть відповідь",
+   "answerLabel": "Ваша відповідь",
+   "submit": "Погодитися й надіслати",
+   "disclaimer": "Вашу відповідь буде надіслано до Mera разом з вашим ID користувача та даними про підписку.",
+   "counter": "{{current}} з {{max}} символів",
+   "thanks": "Дякуємо за відповідь",
+   "alreadyAnswered": "Ви вже відповіли на це запитання",
+   "closed": "Це запитання закрито",
+   "error": "Не вдалося надіслати відповідь. Спробуйте ще раз.",
+   "offline": "Немає підключення до інтернету. Підключіться й спробуйте ще раз.",
+   "loadError": "Не вдалося завантажити запитання. Спробуйте ще раз.",
+   "retry": "Спробувати ще раз",
+   "close": "Закрити",
+   "drawerAnswered": "Відповідь надіслано",
+   "drawerClosed": "Закрито"
+  }
+ },
+ "ar": {
+  "feedbackRequest": {
+   "title": "سؤال من Mera",
+   "placeholder": "اكتب إجابتك",
+   "answerLabel": "إجابتك",
+   "submit": "موافقة وإرسال",
+   "disclaimer": "تُرسل إجابتك إلى Mera مع معرّف المستخدم وتفاصيل اشتراكك.",
+   "counter": "{{current}} من {{max}} حرف",
+   "thanks": "شكرًا على إجابتك",
+   "alreadyAnswered": "لقد أجبت عن هذا السؤال من قبل",
+   "closed": "انتهى هذا السؤال",
+   "error": "لم تُرسل إجابتك. حاول مرة أخرى.",
+   "offline": "أنت غير متصل بالإنترنت. اتصل بالإنترنت وحاول مرة أخرى.",
+   "loadError": "تعذّر تحميل هذا السؤال. حاول مرة أخرى.",
+   "retry": "حاول مرة أخرى",
+   "close": "إغلاق",
+   "drawerAnswered": "تمت الإجابة",
+   "drawerClosed": "مغلق"
+  }
+ },
+ "hi": {
+  "feedbackRequest": {
+   "title": "Mera की ओर से एक सवाल",
+   "placeholder": "अपना जवाब लिखें",
+   "answerLabel": "आपका जवाब",
+   "submit": "सहमत हूं और भेजें",
+   "disclaimer": "आपका जवाब आपकी यूज़र आईडी और सदस्यता की जानकारी के साथ Mera को भेजा जाता है।",
+   "counter": "{{max}} में से {{current}} वर्ण",
+   "thanks": "आपके जवाब के लिए धन्यवाद",
+   "alreadyAnswered": "आप इस सवाल का जवाब पहले ही दे चुके हैं",
+   "closed": "यह सवाल बंद हो गया है",
+   "error": "आपका जवाब नहीं भेजा जा सका। फिर से कोशिश करें।",
+   "offline": "आप ऑफ़लाइन हैं। इंटरनेट से कनेक्ट करके फिर से कोशिश करें।",
+   "loadError": "यह सवाल लोड नहीं हो सका। फिर से कोशिश करें।",
+   "retry": "फिर से कोशिश करें",
+   "close": "बंद करें",
+   "drawerAnswered": "जवाब दिया गया",
+   "drawerClosed": "बंद"
+  }
+ },
+ "th": {
+  "feedbackRequest": {
+   "title": "คำถามจาก Mera",
+   "placeholder": "พิมพ์คำตอบของคุณ",
+   "answerLabel": "คำตอบของคุณ",
+   "submit": "ยอมรับและส่ง",
+   "disclaimer": "คำตอบของคุณจะถูกส่งไปยัง Mera พร้อมกับ ID ผู้ใช้และรายละเอียดการสมัครสมาชิกของคุณ",
+   "counter": "{{current}}/{{max}} ตัวอักษร",
+   "thanks": "ขอบคุณสำหรับคำตอบ",
+   "alreadyAnswered": "คุณตอบคำถามนี้ไปแล้ว",
+   "closed": "คำถามนี้ปิดแล้ว",
+   "error": "ส่งคำตอบไม่สำเร็จ ลองอีกครั้ง",
+   "offline": "คุณออฟไลน์อยู่ เชื่อมต่ออินเทอร์เน็ตแล้วลองอีกครั้ง",
+   "loadError": "โหลดคำถามนี้ไม่สำเร็จ ลองอีกครั้ง",
+   "retry": "ลองอีกครั้ง",
+   "close": "ปิด",
+   "drawerAnswered": "ตอบแล้ว",
+   "drawerClosed": "ปิดแล้ว"
+  }
+ },
+ "ja": {
+  "feedbackRequest": {
+   "title": "Meraからの質問",
+   "placeholder": "回答を入力",
+   "answerLabel": "あなたの回答",
+   "submit": "同意して送信",
+   "disclaimer": "回答は、ユーザーIDとサブスクリプション情報とともにMeraに送信されます。",
+   "counter": "{{current}}/{{max}}文字",
+   "thanks": "ご回答ありがとうございます",
+   "alreadyAnswered": "この質問にはすでに回答済みです",
+   "closed": "この質問は終了しました",
+   "error": "回答を送信できませんでした。もう一度お試しください。",
+   "offline": "オフラインです。インターネットに接続して、もう一度お試しください。",
+   "loadError": "この質問を読み込めませんでした。もう一度お試しください。",
+   "retry": "もう一度試す",
+   "close": "閉じる",
+   "drawerAnswered": "回答済み",
+   "drawerClosed": "終了"
+  }
+ },
+ "ko": {
+  "feedbackRequest": {
+   "title": "Mera의 질문",
+   "placeholder": "답변을 입력하세요",
+   "answerLabel": "내 답변",
+   "submit": "동의하고 제출",
+   "disclaimer": "답변은 사용자 ID 및 구독 정보와 함께 Mera로 전송됩니다.",
+   "counter": "{{current}}/{{max}}자",
+   "thanks": "답변해 주셔서 감사합니다",
+   "alreadyAnswered": "이미 답변한 질문입니다",
+   "closed": "이 질문은 마감되었습니다",
+   "error": "답변을 보내지 못했습니다. 다시 시도해 주세요.",
+   "offline": "오프라인 상태입니다. 인터넷에 연결한 후 다시 시도해 주세요.",
+   "loadError": "질문을 불러오지 못했습니다. 다시 시도해 주세요.",
+   "retry": "다시 시도",
+   "close": "닫기",
+   "drawerAnswered": "답변 완료",
+   "drawerClosed": "마감됨"
+  }
+ },
+ "zh-CN": {
+  "feedbackRequest": {
+   "title": "来自 Mera 的问题",
+   "placeholder": "输入你的回答",
+   "answerLabel": "你的回答",
+   "submit": "同意并提交",
+   "disclaimer": "你的回答将与你的用户 ID 和订阅信息一起发送给 Mera。",
+   "counter": "{{current}}/{{max}} 个字符",
+   "thanks": "感谢你的回答",
+   "alreadyAnswered": "你已经回答过这个问题了",
+   "closed": "这个问题已关闭",
+   "error": "回答未能发送，请重试。",
+   "offline": "你当前处于离线状态。请连接互联网后重试。",
+   "loadError": "无法加载这个问题，请重试。",
+   "retry": "重试",
+   "close": "关闭",
+   "drawerAnswered": "已回答",
+   "drawerClosed": "已关闭"
+  }
+ },
+ "zh-TW": {
+  "feedbackRequest": {
+   "title": "來自 Mera 的問題",
+   "placeholder": "輸入你的回答",
+   "answerLabel": "你的回答",
+   "submit": "同意並提交",
+   "disclaimer": "你的回答會連同你的使用者 ID 和訂閱資訊一起傳送給 Mera。",
+   "counter": "{{current}}/{{max}} 個字元",
+   "thanks": "感謝你的回答",
+   "alreadyAnswered": "你已經回答過這個問題了",
+   "closed": "這個問題已關閉",
+   "error": "回答未能送出，請再試一次。",
+   "offline": "你目前處於離線狀態。請連上網路後再試一次。",
+   "loadError": "無法載入這個問題，請再試一次。",
+   "retry": "再試一次",
+   "close": "關閉",
+   "drawerAnswered": "已回答",
+   "drawerClosed": "已關閉"
+  }
+ }
+}

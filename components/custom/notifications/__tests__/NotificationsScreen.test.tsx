@@ -57,6 +57,13 @@ jest.mock('@/lib/notification-service', () => ({
   resolveNotificationRoute: (d: unknown) => mockResolve(d),
 }));
 
+let mockFeedbackState: Record<string, any> = {};
+jest.mock('@/lib/feedback-requests/feedback-request-state', () => ({
+  readFeedbackRequestsState: jest.fn(async () => mockFeedbackState),
+  subscribeFeedbackRequestsState: () => () => {},
+  isFeedbackRequestEnded: (e: { endsAt: number }) => e.endsAt <= Date.now(),
+}));
+
 import NotificationsScreen from '../NotificationsScreen';
 
 const row = (over: Record<string, unknown>) => ({
@@ -73,6 +80,7 @@ const row = (over: Record<string, unknown>) => ({
 });
 
 beforeEach(() => {
+  mockFeedbackState = {};
   mockPush.mockClear();
   mockResolve.mockClear();
   mockPending = 0;
@@ -176,5 +184,64 @@ describe('row action chips for VoiceOver', () => {
     mockPush.mockClear();
     await act(async () => { fireEvent.press(r.getByText('hygiene.reviewChip')); });
     expect(mockPush).toHaveBeenCalledWith('/logged-in/hygiene-review');
+  });
+});
+
+describe('feedback-request rows', () => {
+  const ID = '0123456789abcdef01234567';
+  const fbRow = (over: Record<string, unknown> = {}) => row({
+    type: 'feedback_request',
+    title: 'feedbackRequest.title',
+    // Free text with i18next separators: must never go through t().
+    body: 'Stored: what do you think?',
+    contextJson: JSON.stringify({ feedbackRequestId: ID, endsAt: Date.now() + 60_000 }),
+    source: `feedback_request:${ID}`,
+    ...over,
+  });
+
+  // Without its own branch the row has context, so it would open chat.
+  it('opens the feedback-request modal, not chat', async () => {
+    mockRows = [fbRow()];
+    const { getByText } = render(<NotificationsScreen onBack={jest.fn()} />);
+    await act(async () => { fireEvent.press(getByText('feedbackRequest.title')); });
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/logged-in/feedback-request', params: { id: ID } });
+  });
+
+  it('a row with a malformed id opens nothing', async () => {
+    mockRows = [fbRow({ contextJson: JSON.stringify({ feedbackRequestId: 'nope' }) })];
+    const { getByText } = render(<NotificationsScreen onBack={jest.fn()} />);
+    await act(async () => { fireEvent.press(getByText('feedbackRequest.title')); });
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('shows the latest question from device state, raw', async () => {
+    mockFeedbackState = { [ID]: { question: 'Quelle: votre avis?', endsAt: Date.now() + 60_000 } };
+    mockRows = [fbRow()];
+    const r = render(<NotificationsScreen onBack={jest.fn()} />);
+    await act(async () => {});
+    expect(r.getByText('Quelle: votre avis?')).toBeTruthy();
+    expect(r.queryByTestId('notification-status-n1')).toBeNull();
+  });
+
+  it('falls back to the stored question when the device has no entry', async () => {
+    mockRows = [fbRow()];
+    const r = render(<NotificationsScreen onBack={jest.fn()} />);
+    await act(async () => {});
+    expect(r.getByText('Stored: what do you think?')).toBeTruthy();
+  });
+
+  it('labels an answered request Answered', async () => {
+    mockFeedbackState = { [ID]: { question: 'Q', endsAt: Date.now() + 60_000, answeredAt: 1 } };
+    mockRows = [fbRow()];
+    const r = render(<NotificationsScreen onBack={jest.fn()} />);
+    await act(async () => {});
+    expect(r.getByTestId('notification-status-n1').props.children).toBe('feedbackRequest.drawerAnswered');
+  });
+
+  it('labels an ended request Closed, from the row context when state is gone', async () => {
+    mockRows = [fbRow({ contextJson: JSON.stringify({ feedbackRequestId: ID, endsAt: Date.now() - 1 }) })];
+    const r = render(<NotificationsScreen onBack={jest.fn()} />);
+    await act(async () => {});
+    expect(r.getByTestId('notification-status-n1').props.children).toBe('feedbackRequest.drawerClosed');
   });
 });

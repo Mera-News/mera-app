@@ -38,7 +38,13 @@ import logger from '@/lib/logger';
 export type NotificationHref =
   | '/logged-in/app_container/for_you'
   | { pathname: '/logged-in/suggestion-detail'; params: { articleSuggestionId: string } }
-  | { pathname: '/logged-in/article-detail'; params: { articleId: string } };
+  | { pathname: '/logged-in/article-detail'; params: { articleId: string } }
+  | { pathname: '/logged-in/feedback-request'; params: { id: string } };
+
+/** A feedback request id is a Mongo ObjectId: 24 hex characters. */
+export function isFeedbackRequestId(v: unknown): v is string {
+  return typeof v === 'string' && /^[0-9a-f]{24}$/i.test(v);
+}
 
 interface PendingRoute {
   href: NotificationHref;
@@ -83,6 +89,9 @@ function isHref(v: unknown): v is NotificationHref {
   }
   if (o.pathname === '/logged-in/article-detail') {
     return typeof o.params?.articleId === 'string' && o.params.articleId !== '';
+  }
+  if (o.pathname === '/logged-in/feedback-request') {
+    return isFeedbackRequestId(o.params?.id);
   }
   return false;
 }

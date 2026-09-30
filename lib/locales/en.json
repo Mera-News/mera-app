@@ -2960,5 +2960,23 @@
     "useEnglish": "Use English",
     "settingsTitle": "System check",
     "settingsDescription": "See how Mera runs on this phone and check your language pack."
+  },
+  "feedbackRequest": {
+    "title": "A question from Mera",
+    "placeholder": "Type your answer",
+    "answerLabel": "Your answer",
+    "submit": "Agree and submit",
+    "disclaimer": "Your answer is sent to Mera with your user ID and subscription details.",
+    "counter": "{{current}} of {{max}} characters",
+    "thanks": "Thanks for your answer",
+    "alreadyAnswered": "You already answered this one",
+    "closed": "This question has closed",
+    "error": "Your answer didn't send. Try again.",
+    "offline": "You're offline. Connect to the internet and try again.",
+    "loadError": "This question didn't load. Try again.",
+    "retry": "Try again",
+    "close": "Close",
+    "drawerAnswered": "Answered",
+    "drawerClosed": "Closed"
   }
 }

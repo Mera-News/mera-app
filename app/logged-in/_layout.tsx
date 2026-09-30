@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
+import FeedbackRequestAutoShowHost from '@/components/custom/feedback-request/FeedbackRequestAutoShowHost';
 import ReauthBanner from '@/components/custom/ReauthBanner';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 import EmailCaptureHost from '@/components/custom/subscription/EmailCaptureSheet';
@@ -174,6 +175,21 @@ export default function LoggedInLayout() {
             animation: 'slide_from_right'
           }}
         />
+        {/* The app's first modal presentation. A route, not an in-tree Modal,
+            because a push tap can only open a route (NotificationHref and the
+            stash/PIN/startup-gate machinery are route-based), so one route
+            serves the push, the drawer row and the auto-show host. The
+            transparent content style overrides the black page fill above, or
+            the card would sit on a black page instead of over the app. */}
+        <Stack.Screen
+          name="feedback-request"
+          options={{
+            headerShown: false,
+            presentation: 'transparentModal',
+            animation: 'fade',
+            contentStyle: { backgroundColor: 'transparent' },
+          }}
+        />
       </Stack>
       {/* Mounted once for the whole logged-in tree rather than per-screen. The
           auth breaker no longer auto-resumes feed-sync while `needsReauth` is
@@ -196,6 +212,9 @@ export default function LoggedInLayout() {
       </View>
       <FloatingChatHost />
       <FeedbackWidgetModal />
+      {/* Renders nothing. Pops a live feedback request up once per request
+          when nothing else is on screen; see its header for what it waits on. */}
+      <FeedbackRequestAutoShowHost />
       {/* Renders nothing — a mounted effect, and the catch-all for an account
           switch that got past the gates. It has to live HERE rather than on a
           screen: the gates unmount as soon as they route, and the case this

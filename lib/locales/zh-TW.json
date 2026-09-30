@@ -2960,5 +2960,23 @@
     "useEnglish": "使用英文",
     "settingsTitle": "系統檢查",
     "settingsDescription": "查看 Mera 在這支手機上的運作方式，並檢查你的語言套件。"
+  },
+  "feedbackRequest": {
+    "title": "來自 Mera 的問題",
+    "placeholder": "輸入你的回答",
+    "answerLabel": "你的回答",
+    "submit": "同意並提交",
+    "disclaimer": "你的回答會連同你的使用者 ID 和訂閱資訊一起傳送給 Mera。",
+    "counter": "{{current}}/{{max}} 個字元",
+    "thanks": "感謝你的回答",
+    "alreadyAnswered": "你已經回答過這個問題了",
+    "closed": "這個問題已關閉",
+    "error": "回答未能送出，請再試一次。",
+    "offline": "你目前處於離線狀態。請連上網路後再試一次。",
+    "loadError": "無法載入這個問題，請再試一次。",
+    "retry": "再試一次",
+    "close": "關閉",
+    "drawerAnswered": "已回答",
+    "drawerClosed": "已關閉"
   }
 }

@@ -14,9 +14,16 @@ import {
     observeAll,
 } from '@/lib/database/services/notification-service';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
+import {
+    isFeedbackRequestEnded,
+    readFeedbackRequestsState,
+    subscribeFeedbackRequestsState,
+    type FeedbackRequestsState,
+} from '@/lib/feedback-requests/feedback-request-state';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { isFeedbackRequestId } from '@/lib/stores/pending-notification-route';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -29,6 +36,11 @@ type NotificationAction = { id: string; labelKey?: string; label?: string };
 
 /** Written by lib/fact-check/fact-check-settled for a check this device asked for. */
 const FACT_CHECK_DONE = 'fact_check_done';
+
+/** Written by lib/feedback-requests/feedback-request-sync, one per request. Its
+ *  body is the question itself (free text, never an i18n key), and the row
+ *  shows the latest localized question from the device state row. */
+const FEEDBACK_REQUEST = 'feedback_request';
 
 /** Default leading icon per notification type when the row has no explicit icon. */
 const ROW_ICON = 22;
@@ -66,6 +78,8 @@ function iconForType(type: string): keyof typeof MaterialIcons.glyphMap {
             return 'info';
         case FACT_CHECK_DONE:
             return 'fact-check';
+        case FEEDBACK_REQUEST:
+            return 'question-answer';
         default:
             return 'notifications';
     }
@@ -123,6 +137,24 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
         };
         refresh();
         const unsubscribe = subscribeHygieneChange(refresh);
+        return () => {
+            cancelled = true;
+            unsubscribe();
+        };
+    }, []);
+
+    // Feedback-request rows read their question and their Answered / Closed
+    // label from the device state row, kept live so a submit shows at once.
+    const [feedbackRequests, setFeedbackRequests] = useState<FeedbackRequestsState>({});
+    useEffect(() => {
+        let cancelled = false;
+        const refresh = () => {
+            readFeedbackRequestsState()
+                .then((s) => { if (!cancelled) setFeedbackRequests(s); })
+                .catch(() => {});
+        };
+        refresh();
+        const unsubscribe = subscribeFeedbackRequestsState(refresh);
         return () => {
             cancelled = true;
             unsubscribe();
@@ -194,6 +226,16 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
             await openFactCheck(n);
             return;
         }
+        // Before the chat fallback below, which would open chat for this row
+        // (it carries context). The modal shows the closed or answered state
+        // itself, so every row opens it.
+        if (n.type === FEEDBACK_REQUEST) {
+            const id = parseJson<Record<string, unknown>>(n.contextJson)?.feedbackRequestId;
+            if (isFeedbackRequestId(id)) {
+                router.push({ pathname: '/logged-in/feedback-request', params: { id } });
+            }
+            return;
+        }
         const hasFollowUp = Boolean(n.contextJson) || Boolean(n.actionsJson);
         if (!hasFollowUp) return; // informational → mark read only
         const params =
@@ -250,7 +292,23 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                 ? { ...stored, count: hygienePending }
                 : stored;
         const title = resolveText(n.title, params);
-        const body = resolveText(n.body, params);
+        // A feedback request's body is free text: never through t(), whose
+        // key and namespace separators would mangle a question.
+        let body: string;
+        let statusLabel: string | null = null;
+        if (n.type === FEEDBACK_REQUEST) {
+            const id = stored?.feedbackRequestId;
+            const entry = typeof id === 'string' ? feedbackRequests[id] : undefined;
+            body = entry?.question ?? n.body;
+            const endsAt = entry?.endsAt ?? (typeof stored?.endsAt === 'number' ? stored.endsAt : null);
+            if (entry?.answeredAt !== undefined || n.status === 'actioned') {
+                statusLabel = t('feedbackRequest.drawerAnswered');
+            } else if (endsAt !== null && isFeedbackRequestEnded({ endsAt })) {
+                statusLabel = t('feedbackRequest.drawerClosed');
+            }
+        } else {
+            body = resolveText(n.body, params);
+        }
         const icon = (n.icon as keyof typeof MaterialIcons.glyphMap) || iconForType(n.type);
         const actions = parseJson<NotificationAction[]>(n.actionsJson) ?? [];
         const chipLabel = (a: NotificationAction) => (a.labelKey ? resolveText(a.labelKey) : a.label ?? a.id);
@@ -269,7 +327,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                 // The chips are nested buttons inside this accessible row, so
                 // VoiceOver cannot land on them: each is a named action on the
                 // row instead, running the chip's own handler. Touch is unchanged.
-                accessibilityLabel={[title, body, time].filter(Boolean).join(', ')}
+                accessibilityLabel={[title, body, statusLabel, time].filter(Boolean).join(', ')}
                 accessibilityActions={actions.map((a) => ({ name: `chip:${a.id}`, label: chipLabel(a) }))}
                 onAccessibilityAction={(e) => {
                     const a = actions.find((x) => `chip:${x.id}` === e.nativeEvent.actionName);
@@ -311,9 +369,20 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                             ))}
                         </HStack>
                     ) : null}
-                    <Text className="text-xs" style={{ color: 'rgb(115,115,115)' }}>
-                        {time}
-                    </Text>
+                    <HStack className="items-center" space="sm">
+                        {statusLabel ? (
+                            <Text
+                                testID={`notification-status-${n.id}`}
+                                className="text-xs font-semibold"
+                                style={{ color: ACCENT }}
+                            >
+                                {statusLabel}
+                            </Text>
+                        ) : null}
+                        <Text className="text-xs" style={{ color: 'rgb(115,115,115)' }}>
+                            {time}
+                        </Text>
+                    </HStack>
                 </VStack>
             </Pressable>
             <View pointerEvents="none" {...GLYPH_HIDDEN} className="absolute left-4 top-3">
@@ -321,7 +390,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
             </View>
             </View>
         );
-    }, [onRowPress, onChipPress, resolveText, hygienePending]);
+    }, [onRowPress, onChipPress, resolveText, hygienePending, feedbackRequests, t]);
 
     const keyExtractor = useCallback((item: NotificationModel) => item.id, []);
 

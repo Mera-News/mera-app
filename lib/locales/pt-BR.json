@@ -2960,5 +2960,23 @@
     "useEnglish": "Usar inglês",
     "settingsTitle": "Verificação do sistema",
     "settingsDescription": "Veja como o Mera funciona neste celular e confira seu pacote de idioma."
+  },
+  "feedbackRequest": {
+    "title": "Uma pergunta da Mera",
+    "placeholder": "Digite sua resposta",
+    "answerLabel": "Sua resposta",
+    "submit": "Concordar e enviar",
+    "disclaimer": "Sua resposta é enviada para a Mera com seu ID de usuário e os dados da sua assinatura.",
+    "counter": "{{current}} de {{max}} caracteres",
+    "thanks": "Obrigado pela sua resposta",
+    "alreadyAnswered": "Você já respondeu a esta pergunta",
+    "closed": "Esta pergunta foi encerrada",
+    "error": "Sua resposta não foi enviada. Tente de novo.",
+    "offline": "Você está off-line. Conecte-se à internet e tente de novo.",
+    "loadError": "Não foi possível carregar esta pergunta. Tente de novo.",
+    "retry": "Tentar de novo",
+    "close": "Fechar",
+    "drawerAnswered": "Respondida",
+    "drawerClosed": "Encerrada"
   }
 }

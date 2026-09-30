@@ -2960,5 +2960,23 @@
     "useEnglish": "Usa l'inglese",
     "settingsTitle": "Controllo di sistema",
     "settingsDescription": "Scopri come funziona Mera su questo telefono e controlla il tuo pacchetto lingua."
+  },
+  "feedbackRequest": {
+    "title": "Una domanda da Mera",
+    "placeholder": "Scrivi la tua risposta",
+    "answerLabel": "La tua risposta",
+    "submit": "Accetta e invia",
+    "disclaimer": "La tua risposta viene inviata a Mera insieme al tuo ID utente e ai dati del tuo abbonamento.",
+    "counter": "{{current}} di {{max}} caratteri",
+    "thanks": "Grazie per la tua risposta",
+    "alreadyAnswered": "Hai già risposto a questa domanda",
+    "closed": "Questa domanda è chiusa",
+    "error": "La risposta non è stata inviata. Riprova.",
+    "offline": "Sei offline. Connettiti a Internet e riprova.",
+    "loadError": "Impossibile caricare questa domanda. Riprova.",
+    "retry": "Riprova",
+    "close": "Chiudi",
+    "drawerAnswered": "Risposta inviata",
+    "drawerClosed": "Chiusa"
   }
 }
