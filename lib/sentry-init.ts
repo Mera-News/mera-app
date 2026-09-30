@@ -95,6 +95,93 @@ function scrubEventValues(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Publication page: which publications a reader opens is reading history, and
+// never leaves the device. Three carriers, each stripped by EXACT key or exact
+// route, never by a substring of a key name (`name` as a substring would take
+// `operationName` with it):
+//  - the `PublicationProfile` query's variables (the name, country and id);
+//  - the page route's query string (`/logged-in/publication?name=…&country=…`)
+//    wherever it appears in a breadcrumb message or data string;
+//  - the page's website link (`homepageUrl`, and the `url` of a crumb that
+//    names the page route).
+// Applied at RECORD time (beforeBreadcrumb, so a crumb later attached to a
+// native crash is already clean) and again at SEND time (beforeSend).
+// ---------------------------------------------------------------------------
+
+const PUBLICATION_PROFILE_OPERATION = 'PublicationProfile';
+const PUBLICATION_ROUTE = /(\/?logged-in\/publication)(?:\?[^\s"'<>]*)/g;
+const PUBLICATION_ROUTE_MENTION = /logged-in\/publication(?![-\w])/;
+/** Keys dropped from a crumb that concerns the profile query or the page. */
+const PUBLICATION_PAGE_KEYS = [
+  'variables',
+  'params',
+  'name',
+  'rawName',
+  'country',
+  'countryCode',
+  'publisherId',
+  'newsPublisherId',
+  'homepageUrl',
+  'url',
+] as const;
+
+function stripPublicationRoute(value: string): string {
+  return value.replace(PUBLICATION_ROUTE, '$1');
+}
+
+function mentionsPublicationPage(value: unknown, depth = 0): boolean {
+  if (typeof value === 'string') return PUBLICATION_ROUTE_MENTION.test(value);
+  if (depth > 4 || value === null || typeof value !== 'object') return false;
+  const values = Array.isArray(value) ? value : Object.values(value as Record<string, unknown>);
+  return values.some((v) => mentionsPublicationPage(v, depth + 1));
+}
+
+function stripRouteStrings(container: Record<string, unknown> | unknown[], depth = 0): void {
+  if (depth > 4) return;
+  const entries: [string | number, unknown][] = Array.isArray(container)
+    ? container.map((v, i) => [i, v])
+    : Object.entries(container);
+  for (const [k, v] of entries) {
+    if (typeof v === 'string') {
+      (container as Record<string | number, unknown>)[k] = stripPublicationRoute(v);
+    } else if (v !== null && typeof v === 'object') {
+      stripRouteStrings(v as Record<string, unknown> | unknown[], depth + 1);
+    }
+  }
+}
+
+/** A breadcrumb-shaped object: the fields this scrub reads and writes. */
+export interface ScrubbableCrumb {
+  message?: string;
+  category?: string;
+  data?: Record<string, unknown>;
+}
+
+/**
+ * Remove every trace of WHICH publication a reader opened from one crumb, in
+ * place. Returns the crumb (for beforeBreadcrumb). Exported for tests.
+ */
+export function scrubPublicationPageCrumb<T extends ScrubbableCrumb>(crumb: T): T {
+  if (!crumb) return crumb;
+  const data = crumb.data;
+  const concernsPage =
+    data?.operationName === PUBLICATION_PROFILE_OPERATION ||
+    (typeof crumb.message === 'string' &&
+      (crumb.message.includes(PUBLICATION_PROFILE_OPERATION) ||
+        PUBLICATION_ROUTE_MENTION.test(crumb.message))) ||
+    mentionsPublicationPage(data);
+  if (typeof crumb.message === 'string') crumb.message = stripPublicationRoute(crumb.message);
+  if (!data) return crumb;
+  if (concernsPage) {
+    for (const key of PUBLICATION_PAGE_KEYS) delete data[key];
+  } else if ('homepageUrl' in data) {
+    delete data.homepageUrl;
+  }
+  stripRouteStrings(data);
+  return crumb;
+}
+
 // Sentry is production-only by default. Set EXPO_PUBLIC_SENTRY_IN_DEV=true in a
 // local .env to force-initialise it in a dev build — needed to exercise the
 // User Feedback widget (showFeedbackWidget) and other Sentry UI from `expo start`.
@@ -145,6 +232,11 @@ if (SENTRY_ENABLED) {
     ],
     // Defensive scrubber: strip residual PII and cap free-form payloads
     // regardless of the flag above, so a future regression can't leak content.
+    // Record-time scrub: a crumb is clean before it can ride on anything,
+    // including a native crash that never passes through beforeSend.
+    beforeBreadcrumb(breadcrumb) {
+      return scrubPublicationPageCrumb(breadcrumb);
+    },
     beforeSend(event) {
       // Keep `user.id` (the join key — see the sendDefaultPii note above) and
       // discard every other user field, whether the SDK attached it or a future
@@ -161,10 +253,12 @@ if (SENTRY_ENABLED) {
         delete event.request.headers;
       }
       // Scrub free-form extra payloads (response bodies, prompt metadata, etc.).
+      if (event.extra) scrubPublicationPageCrumb({ data: event.extra });
       scrubEventValues(event.extra);
       // Scrub breadcrumb data values (logger.info/warn/debug push free-form data).
       if (event.breadcrumbs) {
         for (const crumb of event.breadcrumbs) {
+          scrubPublicationPageCrumb(crumb);
           scrubEventValues(crumb.data);
         }
       }
