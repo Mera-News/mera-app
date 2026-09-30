@@ -74,6 +74,7 @@ export const clearAllStores = async () => {
     const { useTutorialsStore } = require('./tutorials-store');
     const { useStartupTabStore } = require('./startup-tab-store');
     const { clearAttestationCache } = require('../e2ee/e2ee-cache');
+    const { resetPublisherSourceNames } = require('../database/services/publisher-source-names');
     const { clearLastKnownTier } = require('../subscription/last-known-tier');
 
     // Wipe all WatermelonDB data (drops and recreates all tables)
@@ -101,6 +102,10 @@ export const clearAllStores = async () => {
     useTutorialsStore.getState().reset();
     useStartupTabStore.getState().reset();
     clearAttestationCache();
+    // Its settings row went with the reset above; the memory must go too, or
+    // the next record writes the previous account's publishers into the new
+    // account's row.
+    resetPublisherSourceNames();
 
     // LAST, and deliberately so. The device's memory of its last resolved
     // subscription tier (lib/subscription/last-known-tier.ts). Without this,

@@ -21,7 +21,9 @@
 // from hydrateAllStores, saved (debounced) after that on every change. It is
 // public catalogue data and holds nothing about the reader beyond which
 // publishers were loaded; the settings backup is an allowlist, so the row is
-// never backed up, and the account-switch settings wipe clears it. Capped,
+// never backed up. A logout or account switch clears the row with the
+// database and the memory with `resetPublisherSourceNames` (clearAllStores).
+// Capped,
 // least recently recorded publisher dropped first.
 //
 // Nothing here touches the database at import time: the settings service and
@@ -282,8 +284,14 @@ export function groupPrefRowsByPublication<T extends PrefRowLike>(rows: readonly
   return Array.from(groups.values());
 }
 
-/** Test seam: empties memory and stops persisting until the next hydrate. */
-export function __clearPublisherSourceNames(): void {
+/**
+ * Forget everything and stop saving until the next hydrate. Called by
+ * `clearAllStores` (logout and account switch): the settings row goes with the
+ * database reset, but this memory would outlive it, and the next record would
+ * write the previous account's publishers (in effect, the publication pages
+ * it opened) into the new account's row.
+ */
+export function resetPublisherSourceNames(): void {
   namesByPublisher.clear();
   publishersByName.clear();
   persistEnabled = false;
@@ -291,3 +299,6 @@ export function __clearPublisherSourceNames(): void {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = null;
 }
+
+/** Test seam. */
+export const __clearPublisherSourceNames = resetPublisherSourceNames;

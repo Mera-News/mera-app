@@ -30,6 +30,7 @@ import {
   persistPublisherSourceNames,
   PUBLISHER_SOURCE_NAMES_MAX,
   PUBLISHER_SOURCE_NAMES_SETTING,
+  resetPublisherSourceNames,
   __clearPublisherSourceNames,
   knownSourceNamesForName,
   knownSourceNamesForPublisher,
@@ -154,6 +155,25 @@ describe('persistence (cold start)', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('a reset (account switch) forgets the previous account and saves nothing until the next hydrate', async () => {
+    await hydratePublisherSourceNames();
+    rememberPublisherSourceNames('p1', ['Previous Reader Paper']);
+    await persistPublisherSourceNames();
+    mockSettings.clear(); // the database reset takes the row
+    mockSetSetting.mockClear();
+
+    resetPublisherSourceNames();
+    rememberPublisherSourceNames('p2', ['Next Reader Paper']);
+    await persistPublisherSourceNames();
+    expect(mockSetSetting).not.toHaveBeenCalled();
+    expect(knownSourceNamesForPublisher('p1')).toBeNull();
+
+    await hydratePublisherSourceNames();
+    await persistPublisherSourceNames();
+    const saved = JSON.parse(mockSettings.get(PUBLISHER_SOURCE_NAMES_SETTING) ?? '{}');
+    expect(saved.publishers).toEqual([['p2', ['Next Reader Paper']]]);
   });
 
   it('a corrupt row loads as empty and never throws', async () => {

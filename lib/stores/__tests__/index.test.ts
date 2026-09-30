@@ -45,6 +45,11 @@ jest.mock('@/lib/e2ee/e2ee-cache', () => ({
     clearAttestationCache: jest.fn(),
 }));
 
+const mockResetPublisherSourceNames = jest.fn();
+jest.mock('@/lib/database/services/publisher-source-names', () => ({
+    resetPublisherSourceNames: () => mockResetPublisherSourceNames(),
+}));
+
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
     default: {
@@ -190,6 +195,12 @@ describe('lib/stores/index — exports smoke test', () => {
 describe('clearAllStores', () => {
     it('resolves without throwing', async () => {
         await expect(storeIndex.clearAllStores()).resolves.toBeUndefined();
+    });
+
+    it('forgets the publisher source-name map, so the next account never inherits it', async () => {
+        mockResetPublisherSourceNames.mockClear();
+        await storeIndex.clearAllStores();
+        expect(mockResetPublisherSourceNames).toHaveBeenCalledTimes(1);
     });
 
     it('resets UI store logout modal after clearAllStores', async () => {
