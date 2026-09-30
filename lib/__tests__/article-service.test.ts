@@ -828,69 +828,6 @@ expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// getArticlesForPublicationSource
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('ArticleService.getArticlesForPublicationSource', () => {
-    beforeEach(() => jest.clearAllMocks());
-
-    it('returns data on success', async () => {
-        const serverResp = {
-            articles: [makeArticle()],
-            pageInfo: { endCursor: 'cursor-1', hasNextPage: true, pageSize: 20 },
-        };
-        mockQuery.mockResolvedValueOnce({ data: { articlesForPublicationSource: serverResp } });
-
-        const result = await ArticleService.getArticlesForPublicationSource('pub-1');
-        expect(result).toEqual(serverResp);
-    });
-
-    it('returns default empty structure on null data', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { articlesForPublicationSource: null } });
-        const result = await ArticleService.getArticlesForPublicationSource('pub-1');
-        expect(result.articles).toEqual([]);
-        expect(result.pageInfo.hasNextPage).toBe(false);
-    });
-
-    it('passes default first=20', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { articlesForPublicationSource: null } });
-        await ArticleService.getArticlesForPublicationSource('pub-1');
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({ variables: expect.objectContaining({ first: 20 }) }),
-        );
-    });
-
-    it('respects custom first and after options', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { articlesForPublicationSource: null } });
-        await ArticleService.getArticlesForPublicationSource('pub-1', { first: 10, after: 'cur' });
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                variables: expect.objectContaining({ first: 10, after: 'cur' }),
-            }),
-        );
-    });
-
-    it('default pageSize in fallback matches options.first', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { articlesForPublicationSource: null } });
-        const result = await ArticleService.getArticlesForPublicationSource('pub-1', { first: 5 });
-        expect(result.pageInfo.pageSize).toBe(5);
-    });
-
-    it('re-throws on error', async () => {
-        const err = new Error('pub source error');
-        mockQuery.mockRejectedValueOnce(err);
-        await expect(ArticleService.getArticlesForPublicationSource('pub-1')).rejects.toThrow('pub source error');
-        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
-        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
-            expect.stringContaining('getArticlesForPublicationSource failed'),
-            'article-service',
-            expect.objectContaining({ method: 'getArticlesForPublicationSource' }),
-            'warning',
-        );
-    });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 // getArticlesForPublisher: `order`, and the one-shot fallback for a server that
 // predates it (an OTA ahead of its server)
 // ─────────────────────────────────────────────────────────────────────────────

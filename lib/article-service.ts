@@ -93,37 +93,6 @@ const GET_ARTICLE_BY_ID = gql`
   }
 `;
 
-// GraphQL Query for fetching articles for a publication source
-const GET_ARTICLES_FOR_PUBLICATION_SOURCE = gql`
-  query GetArticlesForPublicationSource($publicationSourceId: ID!, $first: Int, $after: String) {
-    articlesForPublicationSource(publicationSourceId: $publicationSourceId, first: $first, after: $after) {
-      articles {
-        _id
-        title
-        title_en_internal_only
-        description
-        description_en_internal_only
-        pubDate
-        article_url
-        image_url
-        creator
-        source_uri
-        original_language_code
-        publicationSource {
-          _id
-          publication_name
-          country_code
-        }
-      }
-      pageInfo {
-        endCursor
-        hasNextPage
-        pageSize
-      }
-    }
-  }
-`;
-
 // GraphQL Query for a country's "top headlines": last-24h articles across all
 // the country's sources, sorted by largest cluster size (server-side global
 // sort). A null/"GLOBAL" countryCode spans all countries.
@@ -1202,34 +1171,6 @@ export class ArticleService {
     /**
      * Get articles for a cluster, optionally excluding specific article IDs
      */
-    /**
-     * Get articles for a publication source with pagination
-     */
-    static async getArticlesForPublicationSource(
-        publicationSourceId: string,
-        options?: { first?: number; after?: string }
-    ): Promise<ArticlesForPublicationSourceResponse> {
-        try {
-            const { data } = await client.query<{ articlesForPublicationSource: ArticlesForPublicationSourceResponse }>({
-                query: GET_ARTICLES_FOR_PUBLICATION_SOURCE,
-                variables: {
-                    publicationSourceId,
-                    first: options?.first ?? 20,
-                    after: options?.after,
-                },
-                fetchPolicy: 'no-cache',
-            });
-
-            return data?.articlesForPublicationSource || {
-                articles: [],
-                pageInfo: { endCursor: null, hasNextPage: false, pageSize: options?.first ?? 20 },
-            };
-        } catch (error) {
-            this.reportQueryError('getArticlesForPublicationSource', error, { publicationSourceId });
-            throw error;
-        }
-    }
-
     /**
      * Get a country's "top headlines" with pagination — last-24h articles
      * across all the country's sources, sorted by largest cluster size on the
