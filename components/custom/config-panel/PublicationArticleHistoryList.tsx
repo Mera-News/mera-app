@@ -24,11 +24,11 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
+import { useDisplayPublication } from '@/lib/stores/publication-display-store';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** The title's touch target reaches into the header row's own py-3 padding. */
 const HEADER_TITLE_HIT = 10;
-import { useDisplayPublication } from '@/lib/stores/publication-display-store';
-import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface Props {
     readonly publicationName: string;

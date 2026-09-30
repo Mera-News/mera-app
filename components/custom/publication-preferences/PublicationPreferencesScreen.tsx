@@ -14,6 +14,11 @@ import {
     setSourcePrefFromUi,
     type SourcePrefUiLevel,
 } from '@/lib/database/services/publication-pref-ui-actions';
+import { resolvePrefLevel } from '@/lib/database/services/publication-pref-level';
+import {
+    groupPrefRowsByPublication,
+    type PrefRowGroup,
+} from '@/lib/database/services/publisher-source-names';
 import logger from '@/lib/logger';
 import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -35,6 +40,21 @@ interface PublicationPreferencesScreenProps {
 /** boost/deprioritize/none (item 9's shared vocabulary) — mute stays out of it. */
 function levelForKind(kind: Exclude<PublicationPrefKind, 'mute'>): SourcePrefUiLevel {
     return kind === 'boost' ? 'prioritised' : 'deprioritised';
+}
+
+/**
+ * The row that stands for a group: its strongest setting, so the row's chip
+ * shows what the publication's preference IS. Mute and "fewer" win over
+ * "more", the same rule the Sources glyph and the publication page read by.
+ */
+function representativeOf(group: PrefRowGroup<PublicationPreferenceModel>): PublicationPreferenceModel {
+    const rows = group.rows;
+    if (group.names.length === 0 || rows.length === 1) return rows[0];
+    const level = resolvePrefLevel(rows, group.names);
+    const pick = level === 'deprioritised'
+        ? rows.reduce((a, b) => (b.weight < a.weight ? b : a))
+        : rows.reduce((a, b) => (b.weight > a.weight ? b : a));
+    return pick;
 }
 
 /**
@@ -115,12 +135,33 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
         [items, subscribedSourceNames],
     );
 
+    // ONE row per publication. A publication's sources are often named
+    // differently and more/fewer is written under every one of those names, so
+    // the raw rows would list one publication several times. Country scopes
+    // stay their own rows. Names a device cannot tie to one publisher never
+    // join a group.
+    const groups = useMemo(() => groupPrefRowsByPublication(otherSources), [otherSources]);
+    const groupByRowId = useMemo(() => {
+        const map = new Map<string, PrefRowGroup<PublicationPreferenceModel>>();
+        for (const group of groups) for (const row of group.rows) map.set(row.id, group);
+        return map;
+    }, [groups]);
+    const groupByRowIdRef = React.useRef(groupByRowId);
+    groupByRowIdRef.current = groupByRowId;
+    const listRows = useMemo(() => groups.map((group) => ({ group, pref: representativeOf(group) })), [groups]);
+
     useEffect(() => {
         const sub = observeActive().subscribe((rows) => {
             setItems(rows);
             setIsLoading(false);
         });
         return () => sub.unsubscribe();
+    }, []);
+
+    /** Every name the row's publication is written under (its group). */
+    const namesOf = useCallback((pref: PublicationPreferenceModel): string[] => {
+        const group = groupByRowIdRef.current.get(pref.id);
+        return group && group.names.length > 0 ? group.names : [pref.publicationName];
     }, []);
 
     const handleSetKind = useCallback(async (pref: PublicationPreferenceModel, kind: PublicationPrefKind) => {
@@ -149,14 +190,18 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                     );
                     return;
                 }
-                await applyPersonaAction(
-                    {
-                        action_type: ACTION_NAMES.SET_PUBLICATION_PREF,
-                        publicationId: pref.publicationName,
-                        publicationPref: 'mute',
-                    },
-                    'user',
-                );
+                // Every name of the publication, so the mute reaches every
+                // source it publishes as.
+                for (const name of namesOf(pref)) {
+                    await applyPersonaAction(
+                        {
+                            action_type: ACTION_NAMES.SET_PUBLICATION_PREF,
+                            publicationId: name,
+                            publicationPref: 'mute',
+                        },
+                        'user',
+                    );
+                }
                 return;
             }
             // boost / deprioritize — shared with every L1/L2 ↑/↓ control now
@@ -182,7 +227,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                 );
                 return;
             }
-            await setSourcePrefFromUi({ kind: 'publication', publicationName: pref.publicationName }, level);
+            await setSourcePrefFromUi({ kind: 'publisher', names: namesOf(pref) }, level);
         } catch (error) {
             logger.captureException(error, {
                 tags: { component: 'PublicationPreferencesScreen', method: 'setKind' },
@@ -191,7 +236,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
         } finally {
             setBusyId(null);
         }
-    }, []);
+    }, [namesOf]);
 
     const handleClear = useCallback(async (pref: PublicationPreferenceModel) => {
         setBusyId(pref.id);
@@ -214,7 +259,8 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                 );
                 return;
             }
-            await setSourcePrefFromUi({ kind: 'publication', publicationName: pref.publicationName }, 'none');
+            // Clearing a publication clears EVERY name in its group.
+            await setSourcePrefFromUi({ kind: 'publisher', names: namesOf(pref) }, 'none');
         } catch (error) {
             logger.captureException(error, {
                 tags: { component: 'PublicationPreferencesScreen', method: 'clear' },
@@ -223,17 +269,17 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
         } finally {
             setBusyId(null);
         }
-    }, []);
+    }, [namesOf]);
 
     const renderItem = useCallback(
-        ({ item }: { item: PublicationPreferenceModel }) => (
+        ({ item }: { item: { pref: PublicationPreferenceModel } }) => (
             <PublicationPrefRow
-                pref={item}
+                pref={item.pref}
                 // `busy` is PublicationPrefRow's only disable input (drives
                 // `disabled=` on the clear/kind Pressables), so folding
                 // free-tier read-only into it disables the row without
                 // threading a new prop into that child.
-                busy={busyId === item.id}
+                busy={busyId === item.pref.id}
                 onSetKind={handleSetKind}
                 onClear={handleClear}
             />
@@ -256,8 +302,8 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                 </Box>
             ) : (
                 <FlatList
-                    data={otherSources}
-                    keyExtractor={(item) => item.id}
+                    data={listRows}
+                    keyExtractor={(item) => item.group.key}
                     renderItem={renderItem}
                     contentContainerStyle={{ paddingBottom: 48 }}
                     showsVerticalScrollIndicator={false}

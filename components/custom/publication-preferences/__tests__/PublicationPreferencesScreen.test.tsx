@@ -102,6 +102,7 @@ jest.mock('../PublicationPrefRow', () => {
                 <Text>{pref.publicationName}</Text>
                 <Text testID={`row-${pref.id}-busy`}>{String(busy)}</Text>
                 <Pressable testID={`row-${pref.id}-boost`} onPress={() => onSetKind(pref, 'boost')} />
+                <Pressable testID={`row-${pref.id}-mute`} onPress={() => onSetKind(pref, 'mute')} />
                 <Pressable testID={`row-${pref.id}-clear`} onPress={() => onClear(pref)} />
             </View>
         ),
@@ -147,6 +148,15 @@ jest.mock('@/lib/database/services/persona-mutation-sweeps', () => ({
 
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 
+// The shared ↑/↓ writer has its own suite; here we assert WHAT the screen
+// asks it for: a publisher target naming every source of the publication, or
+// a country target for a scope row.
+const mockSetSourcePrefFromUi = jest.fn(async (..._a: unknown[]) => ({ applied: true }));
+jest.mock('@/lib/database/services/publication-pref-ui-actions', () => ({
+    setSourcePrefFromUi: (...a: unknown[]) => mockSetSourcePrefFromUi(...a),
+}));
+
+import { __clearPublisherSourceNames, rememberPublisherSourceNames } from '@/lib/database/services/publisher-source-names';
 import PublicationPreferencesScreen from '../PublicationPreferencesScreen';
 
 function makeNamedPref(overrides: Record<string, unknown> = {}) {
@@ -173,6 +183,7 @@ function makeScopePref(overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
     jest.clearAllMocks();
+    __clearPublisherSourceNames();
     mockObservedRows = [];
     mockGetPreferenceKind.mockResolvedValue('mute' as any);
     mockGetScopePreferenceKind.mockResolvedValue('none' as any);
@@ -188,91 +199,90 @@ describe('PublicationPreferencesScreen', () => {
         expect(getByTestId('row-scope1')).toBeTruthy();
     });
 
-    it('named-publication set-kind routes through applyPersonaAction with SET_PUBLICATION_PREF', async () => {
+    it('named-publication boost writes the publisher target with its name', async () => {
         mockObservedRows = [makeNamedPref()];
         const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
         fireEvent.press(getByTestId('row-pref1-boost'));
-        await waitFor(() => expect(mockApplyPersonaAction).toHaveBeenCalledTimes(1));
-        expect(mockApplyPersonaAction).toHaveBeenCalledWith(
-            expect.objectContaining({
-                action_type: 'set_publication_pref',
-                publicationId: 'The Times',
-                publicationPref: 'boost',
-            }),
-            'user',
+        await waitFor(() =>
+            expect(mockSetSourcePrefFromUi).toHaveBeenCalledWith({ kind: 'publisher', names: ['The Times'] }, 'prioritised'),
         );
-        expect(mockSetScopePreferenceKind).not.toHaveBeenCalled();
     });
 
-    it('scope set-kind routes through applyPersonaAction, exactly like a confirmed chat proposal', async () => {
-        // source-pref P5: this branch used to hand-append its own change-log row
-        // because no executor action existed yet. Now that it does, a chip tap
-        // here and a confirmed chat proposal MUST travel the same path — that is
-        // what keeps Activity undo reading from one inverse implementation
-        // rather than two that can drift.
+    it('scope boost keeps the country target, converted to alpha-2 once', async () => {
         mockObservedRows = [makeScopePref()];
         const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
         fireEvent.press(getByTestId('row-scope1-boost'));
-        await waitFor(() => expect(mockApplyPersonaAction).toHaveBeenCalledTimes(1));
-        expect(mockApplyPersonaAction).toHaveBeenCalledWith(
-            expect.objectContaining({
-                action_type: 'set_source_scope_pref',
-                scopeKind: 'country',
-                scopeValue: 'IND',
-                scopeLabel: 'India',
-                publicationPref: 'boost',
-            }),
-            'user',
+        await waitFor(() =>
+            expect(mockSetSourcePrefFromUi).toHaveBeenCalledWith(
+                { kind: 'country', countryAlpha2: 'IN', label: 'India' },
+                'prioritised',
+            ),
         );
-        // The executor owns the write, the change-log row and the sweep now.
-        expect(mockSetScopePreferenceKind).not.toHaveBeenCalled();
-        expect(mockAppend).not.toHaveBeenCalled();
-        expect(mockRunSweepFor).not.toHaveBeenCalled();
+        expect(mockApplyPersonaAction).not.toHaveBeenCalled();
     });
 
-    it('named-publication clear hand-appends the change-log row AND runs the un-exclude sweep (the P4 asymmetry fix)', async () => {
-        mockObservedRows = [makeNamedPref()];
-        mockGetPreferenceKind.mockResolvedValue('mute' as any);
-        mockSweepForMutation.mockReturnValue('unexclude' as any);
-        mockRunSweepFor.mockResolvedValue(false as any); // unexclude never reports "purged"
-        const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
-        fireEvent.press(getByTestId('row-pref1-clear'));
-        await waitFor(() => expect(mockSetPreferenceKind).toHaveBeenCalledWith('The Times', 'none', 'user'));
-        expect(mockAppend).toHaveBeenCalledWith(
-            expect.objectContaining({
-                actionType: 'set_publication_pref',
-                action: { targetId: 'The Times', before: 'mute', after: 'none' },
-            }),
-        );
-        expect(mockSweepForMutation).toHaveBeenCalledWith({
-            actionType: 'set_publication_pref',
-            prefBefore: 'mute',
-            prefAfter: 'none',
-        });
-        expect(mockRunSweepFor).toHaveBeenCalledWith('unexclude', 'set_publication_pref');
-    });
-
-    it('runs the sweep exactly once when it reports a successful purge', async () => {
-        mockObservedRows = [makeNamedPref()];
-        mockRunSweepFor.mockResolvedValue(true as any);
-        const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
-        fireEvent.press(getByTestId('row-pref1-clear'));
-        await waitFor(() => expect(mockRunSweepFor).toHaveBeenCalledTimes(1));
-    });
-
-    it('scope clear calls setScopePreferenceKind with "none" and hand-appends, without touching the named-publication service calls', async () => {
+    it('scope clear writes "none" through the country target', async () => {
         mockObservedRows = [makeScopePref()];
         const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
         fireEvent.press(getByTestId('row-scope1-clear'));
         await waitFor(() =>
-            expect(mockSetScopePreferenceKind).toHaveBeenCalledWith(
-                { scopeKind: 'country', scopeValue: 'IND' },
+            expect(mockSetSourcePrefFromUi).toHaveBeenCalledWith(
+                { kind: 'country', countryAlpha2: 'IN', label: 'India' },
                 'none',
-                'India',
-                'user',
             ),
         );
-        expect(mockSetPreferenceKind).not.toHaveBeenCalled();
+    });
+
+    describe('one row per publication', () => {
+        const rows = () => [
+            makeNamedPref({ id: 'p-main', publicationName: 'The Hindu', weight: 1 }),
+            makeNamedPref({ id: 'p-biz', publicationName: 'The Hindu BusinessLine', weight: -0.5 }),
+            makeNamedPref({ id: 'p-other', publicationName: 'Deccan Herald', weight: 1 }),
+        ];
+
+        beforeEach(() => {
+            rememberPublisherSourceNames('pub-hindu', ['The Hindu', 'The Hindu BusinessLine']);
+        });
+
+        it('collapses a publication whose sources are named differently into one row', () => {
+            mockObservedRows = rows();
+            const { queryAllByTestId, getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
+            expect(queryAllByTestId(/^row-p-(main|biz)$/)).toHaveLength(1);
+            // The row shows the strongest setting: fewer wins over more.
+            expect(getByTestId('row-p-biz')).toBeTruthy();
+            // An unrelated publication keeps its own row.
+            expect(getByTestId('row-p-other')).toBeTruthy();
+        });
+
+        it('clearing the row clears every name in the group', async () => {
+            mockObservedRows = rows();
+            const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
+            fireEvent.press(getByTestId('row-p-biz-clear'));
+            await waitFor(() => expect(mockSetSourcePrefFromUi).toHaveBeenCalledTimes(1));
+            const [target, level] = mockSetSourcePrefFromUi.mock.calls[0] as any[];
+            expect(level).toBe('none');
+            expect(target.kind).toBe('publisher');
+            expect([...target.names].sort()).toEqual(['The Hindu', 'The Hindu BusinessLine']);
+        });
+
+        it('mute reaches every name in the group', async () => {
+            mockObservedRows = rows();
+            const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
+            fireEvent.press(getByTestId('row-p-biz-mute'));
+            await waitFor(() => expect(mockApplyPersonaAction).toHaveBeenCalledTimes(2));
+            const muted = mockApplyPersonaAction.mock.calls.map((c: any[]) => c[0].publicationId).sort();
+            expect(muted).toEqual(['The Hindu', 'The Hindu BusinessLine']);
+            for (const c of mockApplyPersonaAction.mock.calls as any[]) {
+                expect(c[0]).toEqual(expect.objectContaining({ action_type: 'set_publication_pref', publicationPref: 'mute' }));
+            }
+        });
+
+        it('a name the device cannot tie to one publisher stays its own row', () => {
+            mockObservedRows = [...rows(), makeNamedPref({ id: 'p-unknown', publicationName: 'Hindu Tamil', weight: 1 })];
+            const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
+            expect(getByTestId('row-p-unknown')).toBeTruthy();
+            expect(getByTestId('row-p-biz')).toBeTruthy();
+        });
     });
 
     it('keys busy state on pref.id, so a scope row and a same-named publication row never share a busy lock', async () => {
@@ -280,7 +290,7 @@ describe('PublicationPreferencesScreen', () => {
         // state, pressing one would mark BOTH busy. Leave applyPersonaAction
         // (the named-publication path) unresolved so the busy flag stays set
         // long enough to observe.
-        mockApplyPersonaAction.mockReturnValue(new Promise(() => {}));
+        mockSetSourcePrefFromUi.mockReturnValue(new Promise(() => {}));
         mockObservedRows = [
             makeScopePref({ id: 'scope1', publicationName: 'India' }),
             makeNamedPref({ id: 'pubIndia', publicationName: 'India' }),
