@@ -220,6 +220,15 @@ export type FactCheckOrganisation = {
   verdict?: Maybe<Scalars['String']['output']>;
 };
 
+export type FeedbackRequestView = {
+  __typename?: 'FeedbackRequestView';
+  answered: Scalars['Boolean']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  endsAt: Scalars['DateTime']['output'];
+  id: Scalars['ID']['output'];
+  question: Scalars['String']['output'];
+};
+
 /** Versioned feedback-tree config. When the client already holds the current version, treeJson is "" (not-modified) and only the version metadata is sent. */
 export type FeedbackTreeResponse = {
   __typename?: 'FeedbackTreeResponse';
@@ -284,6 +293,7 @@ export type Mutation = {
   /** Create or find the cached fact check for an article. Idempotent — an existing check is returned as-is and costs nothing. Poll `factCheck` until status leaves pending/running. New clients need only `factCheck`, which creates on a miss by itself. */
   requestFactCheck: FactCheck;
   requestUnblock: UnblockRequest;
+  submitFeedbackResponse: SubmitFeedbackResponseResult;
   updateExpoPushToken: UserPersona;
   updateNotificationWindow: UserPersona;
   updateNotificationsEnabled: UserPersona;
@@ -315,6 +325,11 @@ export type MutationRequestFactCheckArgs = {
 
 export type MutationRequestUnblockArgs = {
   input: RequestUnblockInput;
+};
+
+
+export type MutationSubmitFeedbackResponseArgs = {
+  input: SubmitFeedbackResponseInput;
 };
 
 
@@ -596,6 +611,7 @@ export type PublisherSearchHit = {
 
 export type Query = {
   __typename?: 'Query';
+  activeFeedbackRequests: Array<FeedbackRequestView>;
   allCountries: Array<Scalars['String']['output']>;
   /** Static client config: the version stamps of the currently published Terms of Service and Privacy Policy. Unguarded — fetched pre-paywall. */
   appConfig: AppConfig;
@@ -650,6 +666,11 @@ export type Query = {
   userBilling: UserBillingInfo;
   userPersonaByUserId?: Maybe<UserPersona>;
   weatherAuthToken: WeatherAuthToken;
+};
+
+
+export type QueryActiveFeedbackRequestsArgs = {
+  locale: Scalars['String']['input'];
 };
 
 
@@ -910,6 +931,17 @@ export type SearchPublishersResponse = {
   __typename?: 'SearchPublishersResponse';
   pageInfo: CursorPageInfo;
   publishers: Array<PublisherSearchHit>;
+};
+
+export type SubmitFeedbackResponseInput = {
+  feedbackRequestId: Scalars['ID']['input'];
+  text: Scalars['String']['input'];
+};
+
+export type SubmitFeedbackResponseResult = {
+  __typename?: 'SubmitFeedbackResponseResult';
+  alreadyAnswered: Scalars['Boolean']['output'];
+  ok: Scalars['Boolean']['output'];
 };
 
 /** One top-headline slot: the representative article plus its cluster metadata (stableClusterId, clusterSize). Both are null/0 for an unclustered singleton. */

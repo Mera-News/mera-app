@@ -243,6 +243,14 @@ type FactCheckOrganisation {
   verdict: String
 }
 
+type FeedbackRequestView {
+  answered: Boolean!
+  createdAt: DateTime!
+  endsAt: DateTime!
+  id: ID!
+  question: String!
+}
+
 """
 Versioned feedback-tree config. When the client already holds the current version, treeJson is "" (not-modified) and only the version metadata is sent.
 """
@@ -321,6 +329,7 @@ type Mutation {
   """
   requestFactCheck(articleId: ID!): FactCheck!
   requestUnblock(input: RequestUnblockInput!): UnblockRequest!
+  submitFeedbackResponse(input: SubmitFeedbackResponseInput!): SubmitFeedbackResponseResult!
   updateExpoPushToken(input: UpdateExpoPushTokenInput!): UserPersona!
   updateNotificationWindow(input: UpdateNotificationWindowInput!): UserPersona!
   updateNotificationsEnabled(input: UpdateNotificationsEnabledInput!): UserPersona!
@@ -602,6 +611,7 @@ type PublisherSearchHit {
 }
 
 type Query {
+  activeFeedbackRequests(locale: String!): [FeedbackRequestView!]!
   allCountries: [String!]!
 
   """
@@ -885,6 +895,16 @@ input RequestUnblockInput {
 type SearchPublishersResponse {
   pageInfo: CursorPageInfo!
   publishers: [PublisherSearchHit!]!
+}
+
+input SubmitFeedbackResponseInput {
+  feedbackRequestId: ID!
+  text: String!
+}
+
+type SubmitFeedbackResponseResult {
+  alreadyAnswered: Boolean!
+  ok: Boolean!
 }
 
 """

@@ -22,25 +22,12 @@ import client from '@/lib/apollo-client';
 import logger from '@/lib/logger';
 import { serverLocaleFor } from '@/lib/publication-display-service';
 import { useNetworkStore } from '@/lib/stores/network-store';
-
-// Mirrors of the wave contract, until codegen carries the server's SDL.
-interface FeedbackRequestView {
-  id: string;
-  question: string;
-  endsAt: unknown;
-  createdAt: unknown;
-  answered: boolean;
-}
-interface QueryActiveFeedbackRequestsArgs {
-  locale: string;
-}
-interface MutationSubmitFeedbackResponseArgs {
-  input: { feedbackRequestId: string; text: string };
-}
-interface SubmitFeedbackResponseResult {
-  ok: boolean;
-  alreadyAnswered: boolean;
-}
+import type {
+  FeedbackRequestView,
+  MutationSubmitFeedbackResponseArgs,
+  QueryActiveFeedbackRequestsArgs,
+  SubmitFeedbackResponseResult,
+} from '@/lib/generated/graphql-types';
 
 export const FEEDBACK_REQUEST_CLOSED = 'FEEDBACK_REQUEST_CLOSED';
 
