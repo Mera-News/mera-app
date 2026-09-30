@@ -26,29 +26,15 @@ jest.mock('@/lib/logger', () => ({
 
 import SourceService from '../source-service';
 import logger from '@/lib/logger';
+import { print } from 'graphql';
+import {
+    __clearPublisherSourceNames,
+    knownSourceNamesForPublisher,
+} from '@/lib/database/services/publisher-source-names';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-function makePublicationSource(overrides: Record<string, unknown> = {}) {
-    return {
-        _id: 'src-1',
-        publication_name: 'Test Publication',
-        publication_url: 'https://example.com',
-        feed_url: 'https://example.com/rss',
-        type: 'rss',
-        feed_language_code: 'en',
-        detected_language_code: 'en',
-        country_code: 'USA',
-        country_name: 'United States',
-        category: 'news',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
-        is_active: true,
-        ...overrides,
-    };
-}
 
 function makeNewsPublisher(overrides: Record<string, unknown> = {}) {
     return {
@@ -64,113 +50,6 @@ function makeNewsPublisher(overrides: Record<string, unknown> = {}) {
         ...overrides,
     };
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// getPublicationSources
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('SourceService.getPublicationSources', () => {
-    beforeEach(() => jest.clearAllMocks());
-
-    it('returns publication sources on success', async () => {
-        const sources = [makePublicationSource(), makePublicationSource({ _id: 'src-2' })];
-        const serverResp = {
-            publicationSources: sources,
-            pageInfo: { endCursor: 'cursor-1', hasNextPage: true, pageSize: 20 },
-        };
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: serverResp } });
-
-        const result = await SourceService.getPublicationSources();
-        expect(result).toEqual(serverResp);
-    });
-
-    it('returns empty structure when data is null', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: null } });
-        const result = await SourceService.getPublicationSources();
-        expect(result.publicationSources).toEqual([]);
-        expect(result.pageInfo.hasNextPage).toBe(false);
-        expect(result.pageInfo.pageSize).toBe(20);
-    });
-
-    it('uses no-cache fetchPolicy', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: null } });
-        await SourceService.getPublicationSources();
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({ fetchPolicy: 'no-cache' }),
-        );
-    });
-
-    it('passes default first=20 when no options provided', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: null } });
-        await SourceService.getPublicationSources();
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({ variables: expect.objectContaining({ first: 20 }) }),
-        );
-    });
-
-    it('passes languageCode filter', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: null } });
-        await SourceService.getPublicationSources({ languageCode: 'fr' });
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({ variables: expect.objectContaining({ languageCode: 'fr' }) }),
-        );
-    });
-
-    it('passes countryCode filter', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: null } });
-        await SourceService.getPublicationSources({ countryCode: 'FRA' });
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({ variables: expect.objectContaining({ countryCode: 'FRA' }) }),
-        );
-    });
-
-    it('passes category filter', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: null } });
-        await SourceService.getPublicationSources({ category: 'technology' });
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({ variables: expect.objectContaining({ category: 'technology' }) }),
-        );
-    });
-
-    it('passes custom first and after', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: null } });
-        await SourceService.getPublicationSources({ first: 10, after: 'cursor-x' });
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                variables: expect.objectContaining({ first: 10, after: 'cursor-x' }),
-            }),
-        );
-    });
-
-    it('fallback pageSize matches options.first', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: null } });
-        const result = await SourceService.getPublicationSources({ first: 5 });
-        expect(result.pageInfo.pageSize).toBe(5);
-    });
-
-    it('re-throws on error and logs captureException', async () => {
-        const err = new Error('sources query failed');
-        mockQuery.mockRejectedValueOnce(err);
-
-        await expect(SourceService.getPublicationSources()).rejects.toThrow('sources query failed');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'source-service', method: 'getPublicationSources' },
-            }),
-        );
-    });
-
-    it('returns publicationSources on success even without pageInfo issues', async () => {
-        const serverResp = {
-            publicationSources: [makePublicationSource()],
-            pageInfo: { endCursor: null, hasNextPage: false, pageSize: 20 },
-        };
-        mockQuery.mockResolvedValueOnce({ data: { publicationSources: serverResp } });
-        const result = await SourceService.getPublicationSources({ countryCode: 'USA', languageCode: 'en' });
-        expect(result.publicationSources).toHaveLength(1);
-    });
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // getNewsPublishers
@@ -350,5 +229,60 @@ describe('SourceService.searchPublishers', () => {
                 tags: { service: 'source-service', method: 'searchPublishers' },
             }),
         );
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// No feeds in the app: the publisher list carries source NAMES (they key
+// more/fewer) and no feed URL; search results carry no feed URL either.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('SourceService: publication shape, no feeds', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockQuery.mockReset();
+        __clearPublisherSourceNames();
+    });
+
+    it('getNewsPublishers selects source names, never feed_url, and records the names', async () => {
+        mockQuery.mockResolvedValueOnce({
+            data: {
+                newsPublishers: {
+                    newsPublishers: [
+                        makeNewsPublisher({
+                            _id: 'p1',
+                            publicationSources: [
+                                { _id: 's1', publication_name: 'Times of India' },
+                                { _id: 's2', publication_name: 'TOI Business' },
+                            ],
+                        }),
+                    ],
+                    pageInfo: { endCursor: null, hasNextPage: false, pageSize: 20 },
+                },
+            },
+        });
+        await SourceService.getNewsPublishers({ countryCode: 'IND' });
+        const doc = print(mockQuery.mock.calls[0][0].query);
+        expect(doc).toMatch(/publicationSources\s*\{[^}]*publication_name/);
+        expect(doc).not.toContain('feed_url');
+        expect(knownSourceNamesForPublisher('p1')).toEqual(['Times of India', 'TOI Business']);
+    });
+
+    it('searchPublishers selects no feed_url and records nothing (matchingSources is a filtered subset)', async () => {
+        mockQuery.mockResolvedValueOnce({
+            data: {
+                searchPublishers: {
+                    publishers: [{ _id: 'p2', name: 'X', matchingSources: [{ _id: 's', publication_name: 'X' }] }],
+                    pageInfo: { endCursor: null, hasNextPage: false, pageSize: 20 },
+                },
+            },
+        });
+        await SourceService.searchPublishers({ query: 'xx' });
+        expect(print(mockQuery.mock.calls[0][0].query)).not.toContain('feed_url');
+        expect(knownSourceNamesForPublisher('p2')).toBeNull();
+    });
+
+    it('has no feed-list method any more', () => {
+        expect((SourceService as unknown as Record<string, unknown>).getPublicationSources).toBeUndefined();
     });
 });

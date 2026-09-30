@@ -4,51 +4,11 @@ import {
     NewsPublisher,
     NewsPublishersResponse,
     PublicationSource,
-    PublicationSourcesResponse,
     PublisherSearchHit,
     SearchPublishersResponse,
 } from './generated/graphql-types';
 import logger from './logger';
-
-const GET_PUBLICATION_SOURCES = gql`
-  query GetPublicationSources(
-    $languageCode: String
-    $countryCode: String
-    $category: String
-    $first: Int
-    $after: String
-  ) {
-    publicationSources(
-      languageCode: $languageCode
-      countryCode: $countryCode
-      category: $category
-      first: $first
-      after: $after
-    ) {
-      publicationSources {
-        _id
-        publication_name
-        publication_url
-        feed_url
-        type
-        feed_language_code
-        detected_language_code
-        country_code
-        country_name
-        category
-        publication_type
-        categories
-        createdAt
-        updatedAt
-      }
-      pageInfo {
-        endCursor
-        hasNextPage
-        pageSize
-      }
-    }
-  }
-`;
+import { rememberPublisherSourceNames } from './database/services/publisher-source-names';
 
 const GET_NEWS_PUBLISHERS = gql`
   query GetNewsPublishers(
@@ -72,9 +32,13 @@ const GET_NEWS_PUBLISHERS = gql`
         # second request. Null is a first-class value meaning the publisher
         # has no consumer subscription product.
         subscription_uri
+        # Every source of the publisher. Its NAMES key more/fewer (a
+        # preference is written under each source name, which is what the
+        # scorer matches), so they are recorded on arrival. No feed URL: the
+        # app shows no feeds.
         publicationSources {
           _id
-          feed_url
+          publication_name
           category
           publication_type
           categories
@@ -107,7 +71,6 @@ const SEARCH_PUBLISHERS = gql`
         matchingSources {
           _id
           publication_name
-          feed_url
           category
           publication_type
           categories
@@ -125,7 +88,6 @@ const SEARCH_PUBLISHERS = gql`
 
 export type {
     PublicationSource,
-    PublicationSourcesResponse,
     NewsPublisher,
     NewsPublishersResponse,
     PublisherSearchHit,
@@ -133,43 +95,6 @@ export type {
 };
 
 export class SourceService {
-    static async getPublicationSources(options?: {
-        countryCode?: string;
-        languageCode?: string;
-        category?: string;
-        first?: number;
-        after?: string;
-    }): Promise<PublicationSourcesResponse> {
-        try {
-            const { data } = await client.query<{ publicationSources: PublicationSourcesResponse }>({
-                query: GET_PUBLICATION_SOURCES,
-                variables: {
-                    countryCode: options?.countryCode,
-                    languageCode: options?.languageCode,
-                    category: options?.category,
-                    first: options?.first ?? 20,
-                    after: options?.after,
-                },
-                fetchPolicy: 'no-cache',
-            });
-
-            return data?.publicationSources || {
-                publicationSources: [],
-                pageInfo: {
-                    endCursor: null,
-                    hasNextPage: false,
-                    pageSize: options?.first ?? 20,
-                },
-            };
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { service: 'source-service', method: 'getPublicationSources' },
-                extra: { options },
-            });
-            throw error;
-        }
-    }
-
     static async getNewsPublishers(options?: {
         countryCode?: string;
         first?: number;
@@ -186,6 +111,12 @@ export class SourceService {
                 fetchPolicy: 'no-cache',
             });
 
+            for (const publisher of data?.newsPublishers?.newsPublishers ?? []) {
+                rememberPublisherSourceNames(
+                    publisher._id,
+                    (publisher.publicationSources ?? []).map((s) => s.publication_name),
+                );
+            }
             return data?.newsPublishers || {
                 newsPublishers: [],
                 pageInfo: {
@@ -204,7 +135,10 @@ export class SourceService {
     }
 
     /**
-     * Publisher/website + matching-feed search (Item 8, Sources L1). The
+     * Publisher/website search (Item 8, Sources L1). `matchingSources` is the
+     * FILTERED subset whose name matched the query: good for resolving a name
+     * to its publisher (publisher-lookup.ts), never a publisher's full source
+     * set, so it is not recorded in publisher-source-names. The
      * server rejects queries shorter than 2 characters — callers must not
      * fire below that length (SourcesL1CountryList debounces and gates on it).
      */

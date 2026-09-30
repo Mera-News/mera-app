@@ -10,6 +10,7 @@ import {
     NewsClustersResponse,
     PersonaQueryInput,
     PersonaQueryResult,
+    PublisherArticleOrder as GeneratedPublisherArticleOrder,
     RelatedArticleFacets,
     RelatedArticlesContextInput,
     RelatedArticlesPage,
@@ -209,11 +210,9 @@ const GET_TOP_HEADLINES_FOR_COUNTRY = gql`
   }
 `;
 
-// GraphQL Query for a publisher's "top headlines": last-24h articles
-// aggregated across all the publisher's feeds, sorted by largest cluster size.
-const GET_ARTICLES_FOR_PUBLISHER = gql`
-  query GetArticlesForPublisher($newsPublisherId: ID!, $first: Int, $after: String) {
-    articlesForPublisher(newsPublisherId: $newsPublisherId, first: $first, after: $after) {
+// A publisher's articles across all its feeds, one page. The selection is
+// shared by the two documents below; `check:schema` inlines it.
+const PUBLISHER_ARTICLE_FIELDS = `
       articles {
         _id
         title
@@ -237,6 +236,31 @@ const GET_ARTICLES_FOR_PUBLISHER = gql`
         hasNextPage
         pageSize
       }
+`;
+
+// With `order`: NEWEST (the full 48h, newest first) or TOP_HEADLINES (last
+// 24h ranked by cluster size, the server default).
+const GET_ARTICLES_FOR_PUBLISHER = gql`
+  query GetArticlesForPublisher(
+    $newsPublisherId: ID!
+    $first: Int
+    $after: String
+    $order: PublisherArticleOrder
+  ) {
+    articlesForPublisher(newsPublisherId: $newsPublisherId, first: $first, after: $after, order: $order) {
+      ${PUBLISHER_ARTICLE_FIELDS}
+    }
+  }
+`;
+
+// The same query WITHOUT `order`, for a server that predates the argument (an
+// OTA ahead of its server). GraphQL validates the whole document before any
+// directive applies, so `@include` cannot hide an unknown argument: a second
+// document is the only way. It always answers top headlines.
+const GET_ARTICLES_FOR_PUBLISHER_NO_ORDER = gql`
+  query GetArticlesForPublisherNoOrder($newsPublisherId: ID!, $first: Int, $after: String) {
+    articlesForPublisher(newsPublisherId: $newsPublisherId, first: $first, after: $after) {
+      ${PUBLISHER_ARTICLE_FIELDS}
     }
   }
 `;
@@ -680,6 +704,35 @@ export type {
 // cap (with headroom) and run the batches SEQUENTIALLY — each cold topic costs
 // the server a Jina embed + vector search, so parallel batches would spike load.
 const MAX_TOPICS_PER_BATCH = 150;
+
+/** How a publisher's articles are ordered (`articlesForPublisher(order:)`),
+ *  as the string values of the generated enum. */
+export type PublisherArticleOrder = `${GeneratedPublisherArticleOrder}`;
+
+/** One page of a publisher's articles, and whether `order` was honoured. */
+export type PublisherArticlesPage = ArticlesForPublicationSourceResponse & {
+    /** False when this server predates `order` and answered top headlines
+     *  to a NEWEST request. */
+    orderApplied: boolean;
+};
+
+/** Session flag: the server rejected `order` once. Never persisted. */
+let publisherOrderUnsupported = false;
+
+/** Test seam. */
+export function __resetPublisherOrderSupport(): void {
+    publisherOrderUnsupported = false;
+}
+
+/** GraphQL error codes on a rejection (Apollo 4 `errors`, Apollo 3 `graphQLErrors`). */
+function graphQLErrorCodes(err: unknown): string[] {
+    if (!err || typeof err !== 'object') return [];
+    const list = (err as { errors?: unknown }).errors ?? (err as { graphQLErrors?: unknown }).graphQLErrors;
+    if (!Array.isArray(list)) return [];
+    return list
+        .map((e) => (e as { extensions?: { code?: unknown } })?.extensions?.code)
+        .filter((c): c is string => typeof c === 'string');
+}
 
 // `isUnauthenticatedError` used to be defined here, then moved to
 // `lib/utils/retry.ts`. This module no longer applies it at all: every read
@@ -1241,31 +1294,59 @@ export class ArticleService {
     }
 
     /**
-     * Get a publisher's "top headlines" with pagination — last-24h articles
-     * aggregated across all the publisher's feeds, sorted by largest cluster
-     * size on the server.
+     * One page of a publisher's articles across all its feeds.
+     *
+     * `order` NEWEST is the full 48h newest first; TOP_HEADLINES (the server
+     * default) is the last 24h ranked by cluster size. Without `order` the
+     * server default applies.
+     *
+     * A server that predates `order` rejects the whole document
+     * (GRAPHQL_VALIDATION_FAILED, before any resolver runs, so nothing is
+     * charged). The first such answer marks the argument unsupported for the
+     * session and the same page is asked for once without it;
+     * `orderApplied: false` then tells the caller it got top headlines.
      */
     static async getArticlesForPublisher(
         newsPublisherId: string,
-        options?: { first?: number; after?: string }
-    ): Promise<ArticlesForPublicationSourceResponse> {
+        options?: { first?: number; after?: string; order?: PublisherArticleOrder }
+    ): Promise<PublisherArticlesPage> {
+        const first = options?.first ?? 20;
+        const empty: ArticlesForPublicationSourceResponse = {
+            articles: [],
+            pageInfo: { endCursor: null, hasNextPage: false, pageSize: first },
+        };
+        const base = { newsPublisherId, first, after: options?.after };
+        const withOrder = options?.order !== undefined && !publisherOrderUnsupported;
         try {
+            if (withOrder) {
+                try {
+                    const { data } = await client.query<{ articlesForPublisher: ArticlesForPublicationSourceResponse }>({
+                        query: GET_ARTICLES_FOR_PUBLISHER,
+                        variables: { ...base, order: options?.order },
+                        fetchPolicy: 'no-cache',
+                        context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+                    });
+                    return { ...(data?.articlesForPublisher || empty), orderApplied: true };
+                } catch (error) {
+                    if (!graphQLErrorCodes(error).includes('GRAPHQL_VALIDATION_FAILED')) throw error;
+                    publisherOrderUnsupported = true;
+                    logger.info('[ArticleService] server has no articlesForPublisher order; top headlines this session');
+                }
+            }
             const { data } = await client.query<{ articlesForPublisher: ArticlesForPublicationSourceResponse }>({
-                query: GET_ARTICLES_FOR_PUBLISHER,
-                variables: {
-                    newsPublisherId,
-                    first: options?.first ?? 20,
-                    after: options?.after,
-                },
+                query: GET_ARTICLES_FOR_PUBLISHER_NO_ORDER,
+                variables: base,
                 fetchPolicy: 'no-cache',
             });
-
-            return data?.articlesForPublisher || {
-                articles: [],
-                pageInfo: { endCursor: null, hasNextPage: false, pageSize: options?.first ?? 20 },
+            return {
+                ...(data?.articlesForPublisher || empty),
+                // Without `order` the server answers top headlines.
+                orderApplied: options?.order === undefined || options.order === 'TOP_HEADLINES',
             };
         } catch (error) {
-            this.reportQueryError('getArticlesForPublisher', error, { newsPublisherId });
+            // No publisher id in the crumb: which publication a reader opens
+            // is reading history.
+            this.reportQueryError('getArticlesForPublisher', error);
             throw error;
         }
     }

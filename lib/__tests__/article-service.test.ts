@@ -35,7 +35,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
-import ArticleService, { RELATED_FILTERS_LIVE } from '../article-service';
+import ArticleService, { RELATED_FILTERS_LIVE, __resetPublisherOrderSupport } from '../article-service';
 import { print } from 'graphql';
 import logger from '@/lib/logger';
 
@@ -887,6 +887,79 @@ describe('ArticleService.getArticlesForPublicationSource', () => {
             expect.objectContaining({ method: 'getArticlesForPublicationSource' }),
             'warning',
         );
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// getArticlesForPublisher: `order`, and the one-shot fallback for a server that
+// predates it (an OTA ahead of its server)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('ArticleService.getArticlesForPublisher', () => {
+    const page = {
+        articles: [makeArticle()],
+        pageInfo: { endCursor: 'c1', hasNextPage: true, pageSize: 20 },
+    };
+    const validationFailed = () =>
+        new CombinedGraphQLErrors({
+            data: null,
+            errors: [{ message: 'Unknown argument "order"', extensions: { code: 'GRAPHQL_VALIDATION_FAILED' } }],
+        });
+    const opName = (call: any[]) => (print(call[0].query).match(/query (\w+)/) ?? [])[1];
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockQuery.mockReset();
+        __resetPublisherOrderSupport();
+    });
+
+    it('sends order with the ordered document, tolerating a validation failure quietly', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { articlesForPublisher: page } });
+        const result = await ArticleService.getArticlesForPublisher('pub-1', { order: 'NEWEST', first: 20, after: 'x' });
+        expect(result).toEqual({ ...page, orderApplied: true });
+        const call = mockQuery.mock.calls[0];
+        expect(opName(call)).toBe('GetArticlesForPublisher');
+        expect(call[0].variables).toEqual({ newsPublisherId: 'pub-1', first: 20, after: 'x', order: 'NEWEST' });
+        expect(call[0].fetchPolicy).toBe('no-cache');
+        expect(call[0].context.expectedErrorCodes).toEqual(['GRAPHQL_VALIDATION_FAILED']);
+    });
+
+    it('without order uses the document without the argument', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { articlesForPublisher: null } });
+        const result = await ArticleService.getArticlesForPublisher('pub-1');
+        expect(opName(mockQuery.mock.calls[0])).toBe('GetArticlesForPublisherNoOrder');
+        expect(mockQuery.mock.calls[0][0].variables).not.toHaveProperty('order');
+        expect(result.articles).toEqual([]);
+        expect(result.orderApplied).toBe(true);
+    });
+
+    it('on GRAPHQL_VALIDATION_FAILED asks once without order, and remembers for the session', async () => {
+        mockQuery.mockRejectedValueOnce(validationFailed()).mockResolvedValueOnce({ data: { articlesForPublisher: page } });
+        const first = await ArticleService.getArticlesForPublisher('pub-1', { order: 'NEWEST' });
+        expect(mockQuery.mock.calls.map(opName)).toEqual(['GetArticlesForPublisher', 'GetArticlesForPublisherNoOrder']);
+        expect(first).toEqual({ ...page, orderApplied: false });
+
+        mockQuery.mockResolvedValueOnce({ data: { articlesForPublisher: page } });
+        const second = await ArticleService.getArticlesForPublisher('pub-1', { order: 'TOP_HEADLINES' });
+        expect(opName(mockQuery.mock.calls[2])).toBe('GetArticlesForPublisherNoOrder');
+        // Top headlines IS what the server answers without order.
+        expect(second.orderApplied).toBe(true);
+    });
+
+    it('any other error propagates without the fallback, and the crumb carries no publisher id', async () => {
+        const err = new Error('boom');
+        mockQuery.mockRejectedValueOnce(err);
+        await expect(ArticleService.getArticlesForPublisher('pub-1', { order: 'NEWEST' })).rejects.toThrow('boom');
+        expect(mockQuery).toHaveBeenCalledTimes(1);
+        const crumb = (logger.addBreadcrumb as jest.Mock).mock.calls[0];
+        expect(crumb[0]).toContain('getArticlesForPublisher failed');
+        expect(JSON.stringify(crumb)).not.toContain('pub-1');
+    });
+
+    it('a failing fallback rejects instead of looping', async () => {
+        mockQuery.mockRejectedValueOnce(validationFailed()).mockRejectedValueOnce(validationFailed());
+        await expect(ArticleService.getArticlesForPublisher('pub-1', { order: 'NEWEST' })).rejects.toBeTruthy();
+        expect(mockQuery).toHaveBeenCalledTimes(2);
     });
 });
 
