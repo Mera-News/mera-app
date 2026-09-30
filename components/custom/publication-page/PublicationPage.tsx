@@ -129,7 +129,10 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
             if (next === order) return;
             // setParams, never push: Back must leave the page, not step
             // through the reader's tab switches.
-            router.setParams({ order: next === 'TOP_HEADLINES' ? 'TOP_HEADLINES' : undefined });
+            // An explicit NEWEST rather than clearing the param: the route maps
+            // anything but TOP_HEADLINES to Latest, and this does not depend on
+            // how the router treats an undefined param.
+            router.setParams({ order: next });
             listRef.current?.scrollToOffset({ offset: 0, animated: false });
         },
         [order],

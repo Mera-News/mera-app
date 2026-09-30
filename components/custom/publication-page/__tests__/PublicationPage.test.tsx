@@ -363,11 +363,11 @@ describe('the Latest | Top headlines switch', () => {
         expect(mockSetParams).toHaveBeenCalledWith({ order: 'TOP_HEADLINES' });
     });
 
-    it('switching back to Latest clears the param', () => {
+    it('switching back to Latest sets it explicitly', () => {
         const { getByTestId } = renderPage({ order: 'TOP_HEADLINES' });
         expect(mockNewsArgs[0].slice(0, 2)).toEqual(['pub-1', 'TOP_HEADLINES']);
         fireEvent.press(getByTestId('publication-order-latest'));
-        expect(mockSetParams).toHaveBeenCalledWith({ order: undefined });
+        expect(mockSetParams).toHaveBeenCalledWith({ order: 'NEWEST' });
     });
 
     it('never claims Latest when an older server answered with Top headlines', () => {
