@@ -2926,7 +2926,8 @@
     "reportBug": "回報問題",
     "actionFailed": "操作未成功。請再試一次。",
     "removeLike": "取消喜歡",
-    "removeDislike": "取消「不適合我」"
+    "removeDislike": "取消「不適合我」",
+    "aboutSource": "關於此來源"
   },
   "related": {
     "allCountries": "所有國家",
@@ -2978,5 +2979,19 @@
     "close": "關閉",
     "drawerAnswered": "已回答",
     "drawerClosed": "已關閉"
+  },
+  "publicationPage": {
+    "latest": "最新",
+    "noLatest": "此來源暫無新文章。",
+    "noTopHeadlines": "此來源目前沒有頭條新聞。試試「最新」標籤頁。",
+    "notFound": "我們還沒有關於此來源的更多詳情。",
+    "offlineHint": "連線以查看完整詳情",
+    "loadError": "無法載入詳情",
+    "newsLoadError": "無法載入文章",
+    "websiteA11y": "開啟 {{host}}",
+    "aboutSourceA11y": "關於 {{source}}",
+    "subscribed": "您訂閱了 {{publisher}}",
+    "prefMoreA11y": "顯示此來源的更多內容",
+    "prefFewerA11y": "顯示此來源的更少內容"
   }
 }

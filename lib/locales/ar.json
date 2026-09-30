@@ -3012,7 +3012,8 @@
     "reportBug": "الإبلاغ عن خطأ",
     "actionFailed": "لم ينجح ذلك. حاول مرة أخرى.",
     "removeLike": "إزالة الإعجاب",
-    "removeDislike": "إزالة «ليس لي»"
+    "removeDislike": "إزالة «ليس لي»",
+    "aboutSource": "حول هذا المصدر"
   },
   "related": {
     "allCountries": "كل البلدان",
@@ -3064,5 +3065,19 @@
     "close": "إغلاق",
     "drawerAnswered": "تمت الإجابة",
     "drawerClosed": "مغلق"
+  },
+  "publicationPage": {
+    "latest": "الأحدث",
+    "noLatest": "لا توجد مقالات حديثة من هذا المصدر.",
+    "noTopHeadlines": "لا توجد عناوين رئيسية من هذا المصدر الآن. جرّب الأحدث.",
+    "notFound": "لا توجد تفاصيل أكثر حول هذا المصدر حتى الآن.",
+    "offlineHint": "اتصل بالإنترنت لرؤية التفاصيل الكاملة",
+    "loadError": "تعذر تحميل التفاصيل",
+    "newsLoadError": "تعذر تحميل المقالات",
+    "websiteA11y": "فتح {{host}}",
+    "aboutSourceA11y": "حول {{source}}",
+    "subscribed": "أنت مشترك في {{publisher}}",
+    "prefMoreA11y": "المزيد من هذا المصدر",
+    "prefFewerA11y": "أقل من هذا المصدر"
   }
 }

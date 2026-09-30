@@ -2926,7 +2926,8 @@
     "reportBug": "Informar de un error",
     "actionFailed": "No funcionó. Inténtalo de nuevo.",
     "removeLike": "Quitar me gusta",
-    "removeDislike": "Quitar «No es para mí»"
+    "removeDislike": "Quitar «No es para mí»",
+    "aboutSource": "Acerca de esta fuente"
   },
   "related": {
     "allCountries": "Todos los países",
@@ -2978,5 +2979,19 @@
     "close": "Cerrar",
     "drawerAnswered": "Respondida",
     "drawerClosed": "Cerrada"
+  },
+  "publicationPage": {
+    "latest": "Reciente",
+    "noLatest": "Sin artículos recientes de esta fuente.",
+    "noTopHeadlines": "Sin titulares principales de esta fuente en este momento. Prueba Reciente.",
+    "notFound": "Aún no tenemos más detalles sobre esta fuente.",
+    "offlineHint": "Conéctate para ver todos los detalles",
+    "loadError": "No se pudieron cargar los detalles",
+    "newsLoadError": "No se pudieron cargar los artículos",
+    "websiteA11y": "Abrir {{host}}",
+    "aboutSourceA11y": "Acerca de {{source}}",
+    "subscribed": "Estás suscrito a {{publisher}}",
+    "prefMoreA11y": "Más de esta fuente",
+    "prefFewerA11y": "Menos de esta fuente"
   }
 }

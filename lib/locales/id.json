@@ -2925,7 +2925,8 @@
     "reportBug": "Laporkan bug",
     "actionFailed": "Itu tidak berhasil. Coba lagi.",
     "removeLike": "Hapus suka",
-    "removeDislike": "Hapus \"Bukan untuk saya\""
+    "removeDislike": "Hapus \"Bukan untuk saya\"",
+    "aboutSource": "Tentang sumber ini"
   },
   "related": {
     "allCountries": "Semua negara",
@@ -2977,5 +2978,19 @@
     "close": "Tutup",
     "drawerAnswered": "Sudah dijawab",
     "drawerClosed": "Ditutup"
+  },
+  "publicationPage": {
+    "latest": "Terbaru",
+    "noLatest": "Tidak ada artikel terbaru dari sumber ini.",
+    "noTopHeadlines": "Tidak ada berita utama dari sumber ini saat ini. Coba Terbaru.",
+    "notFound": "Kami belum memiliki detail lebih lanjut tentang sumber ini.",
+    "offlineHint": "Sambungkan untuk melihat detail lengkap",
+    "loadError": "Tidak dapat memuat detail",
+    "newsLoadError": "Tidak dapat memuat artikel",
+    "websiteA11y": "Buka {{host}}",
+    "aboutSourceA11y": "Tentang {{source}}",
+    "subscribed": "Anda berlangganan {{publisher}}",
+    "prefMoreA11y": "Lebih banyak dari sumber ini",
+    "prefFewerA11y": "Lebih sedikit dari sumber ini"
   }
 }

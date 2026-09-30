@@ -2926,7 +2926,8 @@
     "reportBug": "Fehler melden",
     "actionFailed": "Das hat nicht geklappt. Versuch es noch einmal.",
     "removeLike": "Gefällt mir entfernen",
-    "removeDislike": "„Nichts für mich“ entfernen"
+    "removeDislike": "„Nichts für mich“ entfernen",
+    "aboutSource": "Über diese Quelle"
   },
   "related": {
     "allCountries": "Alle Länder",
@@ -2978,5 +2979,19 @@
     "close": "Schließen",
     "drawerAnswered": "Beantwortet",
     "drawerClosed": "Beendet"
+  },
+  "publicationPage": {
+    "latest": "Aktuell",
+    "noLatest": "Keine neuen Artikel von dieser Quelle.",
+    "noTopHeadlines": "Derzeit keine Top-Schlagzeilen von dieser Quelle. Versuchen Sie Aktuell.",
+    "notFound": "Wir haben noch nicht mehr Informationen über diese Quelle.",
+    "offlineHint": "Verbinden Sie sich, um alle Details zu sehen",
+    "loadError": "Details konnten nicht geladen werden",
+    "newsLoadError": "Artikel konnten nicht geladen werden",
+    "websiteA11y": "{{host}} öffnen",
+    "aboutSourceA11y": "Über {{source}}",
+    "subscribed": "Sie abonnieren {{publisher}}",
+    "prefMoreA11y": "Mehr von dieser Quelle",
+    "prefFewerA11y": "Weniger von dieser Quelle"
   }
 }

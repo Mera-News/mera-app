@@ -2964,7 +2964,8 @@
     "reportBug": "Zgłoś błąd",
     "actionFailed": "Nie udało się. Spróbuj ponownie.",
     "removeLike": "Usuń polubienie",
-    "removeDislike": "Usuń „To nie dla mnie”"
+    "removeDislike": "Usuń „To nie dla mnie”",
+    "aboutSource": "O tym źródle"
   },
   "related": {
     "allCountries": "Wszystkie kraje",
@@ -3016,5 +3017,19 @@
     "close": "Zamknij",
     "drawerAnswered": "Odpowiedziano",
     "drawerClosed": "Zamknięte"
+  },
+  "publicationPage": {
+    "latest": "Najnowsze",
+    "noLatest": "Brak najnowszych artykułów z tego źródła.",
+    "noTopHeadlines": "Brak najważniejszych nagłówków z tego źródła w tej chwili. Spróbuj Najnowsze.",
+    "notFound": "Nie mamy jeszcze więcej informacji o tym źródle.",
+    "offlineHint": "Połącz się, aby zobaczyć pełne szczegóły",
+    "loadError": "Nie można załadować szczegółów",
+    "newsLoadError": "Nie można załadować artykułów",
+    "websiteA11y": "Otwórz {{host}}",
+    "aboutSourceA11y": "O {{source}}",
+    "subscribed": "Subskrybujesz {{publisher}}",
+    "prefMoreA11y": "Więcej z tego źródła",
+    "prefFewerA11y": "Mniej z tego źródła"
   }
 }

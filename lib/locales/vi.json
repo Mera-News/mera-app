@@ -2926,7 +2926,8 @@
     "reportBug": "Báo lỗi",
     "actionFailed": "Không thực hiện được. Hãy thử lại.",
     "removeLike": "Bỏ thích",
-    "removeDislike": "Bỏ \"Không dành cho tôi\""
+    "removeDislike": "Bỏ \"Không dành cho tôi\"",
+    "aboutSource": "Về nguồn này"
   },
   "related": {
     "allCountries": "Tất cả quốc gia",
@@ -2978,5 +2979,19 @@
     "close": "Đóng",
     "drawerAnswered": "Đã trả lời",
     "drawerClosed": "Đã đóng"
+  },
+  "publicationPage": {
+    "latest": "Mới nhất",
+    "noLatest": "Không có bài viết gần đây từ nguồn này.",
+    "noTopHeadlines": "Không có tin nổi bật từ nguồn này. Hãy thử tab Mới nhất.",
+    "notFound": "Chúng tôi chưa có thêm thông tin về nguồn này.",
+    "offlineHint": "Kết nối để xem toàn bộ chi tiết",
+    "loadError": "Không thể tải chi tiết",
+    "newsLoadError": "Không thể tải bài viết",
+    "websiteA11y": "Mở {{host}}",
+    "aboutSourceA11y": "Về {{source}}",
+    "subscribed": "Bạn đã đăng ký {{publisher}}",
+    "prefMoreA11y": "Xem thêm từ nguồn này",
+    "prefFewerA11y": "Xem ít hơn từ nguồn này"
   }
 }

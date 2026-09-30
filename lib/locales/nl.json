@@ -2926,7 +2926,8 @@
     "reportBug": "Bug melden",
     "actionFailed": "Dat lukte niet. Probeer het opnieuw.",
     "removeLike": "Like verwijderen",
-    "removeDislike": "\"Niets voor mij\" verwijderen"
+    "removeDislike": "\"Niets voor mij\" verwijderen",
+    "aboutSource": "Over deze bron"
   },
   "related": {
     "allCountries": "Alle landen",
@@ -2978,5 +2979,19 @@
     "close": "Sluiten",
     "drawerAnswered": "Beantwoord",
     "drawerClosed": "Gesloten"
+  },
+  "publicationPage": {
+    "latest": "Nieuwste",
+    "noLatest": "Geen recente artikelen van deze bron.",
+    "noTopHeadlines": "Geen topnieuws van deze bron op dit moment. Probeer Nieuwste.",
+    "notFound": "We hebben nog geen verdere details over deze bron.",
+    "offlineHint": "Verbind om volledige details te zien",
+    "loadError": "Details konden niet worden geladen",
+    "newsLoadError": "Artikelen konden niet worden geladen",
+    "websiteA11y": "Open {{host}}",
+    "aboutSourceA11y": "Over {{source}}",
+    "subscribed": "Je bent abonnee op {{publisher}}",
+    "prefMoreA11y": "Meer van deze bron",
+    "prefFewerA11y": "Minder van deze bron"
   }
 }

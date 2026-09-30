@@ -2925,7 +2925,8 @@
     "reportBug": "不具合を報告",
     "actionFailed": "うまくいきませんでした。もう一度お試しください。",
     "removeLike": "「いいね」を取り消す",
-    "removeDislike": "「興味なし」を取り消す"
+    "removeDislike": "「興味なし」を取り消す",
+    "aboutSource": "この媒体について"
   },
   "related": {
     "allCountries": "すべての国",
@@ -2977,5 +2978,19 @@
     "close": "閉じる",
     "drawerAnswered": "回答済み",
     "drawerClosed": "終了"
+  },
+  "publicationPage": {
+    "latest": "最新",
+    "noLatest": "この媒体から最近の記事はありません。",
+    "noTopHeadlines": "この媒体からのトップニュースは今のところありません。最新をお試しください。",
+    "notFound": "この媒体についての詳細はまだお持ちではありません。",
+    "offlineHint": "接続して詳細を確認",
+    "loadError": "詳細を読み込めませんでした",
+    "newsLoadError": "記事を読み込めませんでした",
+    "websiteA11y": "{{host}}を開く",
+    "aboutSourceA11y": "{{source}}について",
+    "subscribed": "{{publisher}}をフォローしています",
+    "prefMoreA11y": "この媒体からもっと表示",
+    "prefFewerA11y": "この媒体から少なく表示"
   }
 }

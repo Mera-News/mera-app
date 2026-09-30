@@ -2925,7 +2925,8 @@
     "reportBug": "버그 신고",
     "actionFailed": "실패했어요. 다시 시도하세요.",
     "removeLike": "좋아요 취소",
-    "removeDislike": "\"관심 없어요\" 취소"
+    "removeDislike": "\"관심 없어요\" 취소",
+    "aboutSource": "이 매체 정보"
   },
   "related": {
     "allCountries": "모든 국가",
@@ -2977,5 +2978,19 @@
     "close": "닫기",
     "drawerAnswered": "답변 완료",
     "drawerClosed": "마감됨"
+  },
+  "publicationPage": {
+    "latest": "최신",
+    "noLatest": "이 매체의 최근 기사가 없습니다.",
+    "noTopHeadlines": "지금 이 매체의 주요 뉴스가 없습니다. 최신을 시도해 보세요.",
+    "notFound": "이 매체에 대한 더 많은 세부 정보가 아직 없습니다.",
+    "offlineHint": "연결하여 전체 세부 정보 확인",
+    "loadError": "세부 정보를 불러올 수 없습니다",
+    "newsLoadError": "기사를 불러올 수 없습니다",
+    "websiteA11y": "{{host}} 열기",
+    "aboutSourceA11y": "{{source}} 정보",
+    "subscribed": "{{publisher}}를 구독하고 있습니다",
+    "prefMoreA11y": "이 매체에서 더 보기",
+    "prefFewerA11y": "이 매체에서 덜 보기"
   }
 }

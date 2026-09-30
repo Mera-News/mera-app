@@ -2926,7 +2926,8 @@
     "reportBug": "报告问题",
     "actionFailed": "操作未成功。请重试。",
     "removeLike": "取消喜欢",
-    "removeDislike": "取消“不适合我”"
+    "removeDislike": "取消“不适合我”",
+    "aboutSource": "关于此来源"
   },
   "related": {
     "allCountries": "所有国家",
@@ -2978,5 +2979,19 @@
     "close": "关闭",
     "drawerAnswered": "已回答",
     "drawerClosed": "已关闭"
+  },
+  "publicationPage": {
+    "latest": "最新",
+    "noLatest": "此来源暂无新文章。",
+    "noTopHeadlines": "此来源目前没有头条新闻。试试「最新」标签页。",
+    "notFound": "我们还没有关于此来源的更多详情。",
+    "offlineHint": "连接以查看完整详情",
+    "loadError": "无法加载详情",
+    "newsLoadError": "无法加载文章",
+    "websiteA11y": "打开 {{host}}",
+    "aboutSourceA11y": "关于 {{source}}",
+    "subscribed": "您订阅了 {{publisher}}",
+    "prefMoreA11y": "显示此来源的更多内容",
+    "prefFewerA11y": "显示此来源的更少内容"
   }
 }

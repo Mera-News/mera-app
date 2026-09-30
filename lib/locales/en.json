@@ -2926,7 +2926,8 @@
     "reportBug": "Report a bug",
     "actionFailed": "That didn't work. Try again.",
     "removeLike": "Remove like",
-    "removeDislike": "Remove not for me"
+    "removeDislike": "Remove not for me",
+    "aboutSource": "About this source"
   },
   "related": {
     "allCountries": "All countries",
@@ -2978,5 +2979,19 @@
     "close": "Close",
     "drawerAnswered": "Answered",
     "drawerClosed": "Closed"
+  },
+  "publicationPage": {
+    "latest": "Latest",
+    "noLatest": "No recent articles from this source.",
+    "noTopHeadlines": "No top headlines from this source right now. Try Latest.",
+    "notFound": "We don't have more details about this source yet.",
+    "offlineHint": "Connect to see full details",
+    "loadError": "Couldn't load details",
+    "newsLoadError": "Couldn't load articles",
+    "websiteA11y": "Open {{host}}",
+    "aboutSourceA11y": "About {{source}}",
+    "subscribed": "You subscribe to {{publisher}}",
+    "prefMoreA11y": "More from this source",
+    "prefFewerA11y": "Fewer from this source"
   }
 }

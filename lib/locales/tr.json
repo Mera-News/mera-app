@@ -2928,7 +2928,8 @@
     "reportBug": "Hata bildir",
     "actionFailed": "Olmadı. Tekrar dene.",
     "removeLike": "Beğeniyi kaldır",
-    "removeDislike": "\"Bana göre değil\" işaretini kaldır"
+    "removeDislike": "\"Bana göre değil\" işaretini kaldır",
+    "aboutSource": "Bu kaynak hakkında"
   },
   "related": {
     "allCountries": "Tüm ülkeler",
@@ -2980,5 +2981,19 @@
     "close": "Kapat",
     "drawerAnswered": "Yanıtlandı",
     "drawerClosed": "Kapandı"
+  },
+  "publicationPage": {
+    "latest": "Güncel",
+    "noLatest": "Bu kaynaktan son makaleler yok.",
+    "noTopHeadlines": "Şu anda bu kaynaktan öne çıkan başlık yok. Güncel'i deneyin.",
+    "notFound": "Bu kaynak hakkında henüz daha fazla ayrıntımız yok.",
+    "offlineHint": "Tam ayrıntıları görmek için bağlan",
+    "loadError": "Ayrıntılar yüklenemedi",
+    "newsLoadError": "Makaleler yüklenemedi",
+    "websiteA11y": "Aç {{host}}",
+    "aboutSourceA11y": "{{source}} hakkında",
+    "subscribed": "{{publisher}}'e abone oldunuz",
+    "prefMoreA11y": "Bu kaynaktan daha fazlası",
+    "prefFewerA11y": "Bu kaynaktan daha azı"
   }
 }

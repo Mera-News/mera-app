@@ -2925,7 +2925,8 @@
     "reportBug": "รายงานข้อบกพร่อง",
     "actionFailed": "ทำไม่สำเร็จ ลองอีกครั้ง",
     "removeLike": "เลิกถูกใจ",
-    "removeDislike": "เลิก \"ไม่ใช่สำหรับฉัน\""
+    "removeDislike": "เลิก \"ไม่ใช่สำหรับฉัน\"",
+    "aboutSource": "เกี่ยวกับแหล่งนี้"
   },
   "related": {
     "allCountries": "ทุกประเทศ",
@@ -2977,5 +2978,19 @@
     "close": "ปิด",
     "drawerAnswered": "ตอบแล้ว",
     "drawerClosed": "ปิดแล้ว"
+  },
+  "publicationPage": {
+    "latest": "ล่าสุด",
+    "noLatest": "ไม่มีบทความใหม่ล่าสุดจากแหล่งนี้",
+    "noTopHeadlines": "ไม่มีข่าวเด่นจากแหล่งนี้ตอนนี้ ลองดู ล่าสุด",
+    "notFound": "เรายังไม่มีรายละเอียดเพิ่มเติมเกี่ยวกับแหล่งนี้",
+    "offlineHint": "เชื่อมต่อเพื่อดูรายละเอียดฉบับเต็ม",
+    "loadError": "ไม่สามารถโหลดรายละเอียดได้",
+    "newsLoadError": "ไม่สามารถโหลดบทความได้",
+    "websiteA11y": "เปิด {{host}}",
+    "aboutSourceA11y": "เกี่ยวกับ {{source}}",
+    "subscribed": "คุณสมัครสมาชิก {{publisher}}",
+    "prefMoreA11y": "เพิ่มเติมจากแหล่งนี้",
+    "prefFewerA11y": "ลดจากแหล่งนี้"
   }
 }

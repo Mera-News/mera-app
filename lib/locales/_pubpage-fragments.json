@@ -1,0 +1,383 @@
+{
+  "_comment": "Input to _splice-fragments.mjs. Wave pubpage: the publication page (Latest tab, empty/error/offline/not-found copy, website and About-source a11y labels, subscribed state, Sources row more/fewer glyph labels) and the ••• \"About this source\" item. Merged from lib/locales/_pubpage/<locale>.json; the merge refuses unless all 20 exist with exactly en's key set.",
+  "ar": {
+    "publicationPage": {
+      "latest": "الأحدث",
+      "noLatest": "لا توجد مقالات حديثة من هذا المصدر.",
+      "noTopHeadlines": "لا توجد عناوين رئيسية من هذا المصدر الآن. جرّب الأحدث.",
+      "notFound": "لا توجد تفاصيل أكثر حول هذا المصدر حتى الآن.",
+      "offlineHint": "اتصل بالإنترنت لرؤية التفاصيل الكاملة",
+      "loadError": "تعذر تحميل التفاصيل",
+      "newsLoadError": "تعذر تحميل المقالات",
+      "websiteA11y": "فتح {{host}}",
+      "aboutSourceA11y": "حول {{source}}",
+      "subscribed": "أنت مشترك في {{publisher}}",
+      "prefMoreA11y": "المزيد من هذا المصدر",
+      "prefFewerA11y": "أقل من هذا المصدر"
+    },
+    "articleMenu": {
+      "aboutSource": "حول هذا المصدر"
+    }
+  },
+  "de": {
+    "publicationPage": {
+      "latest": "Aktuell",
+      "noLatest": "Keine neuen Artikel von dieser Quelle.",
+      "noTopHeadlines": "Derzeit keine Top-Schlagzeilen von dieser Quelle. Versuchen Sie Aktuell.",
+      "notFound": "Wir haben noch nicht mehr Informationen über diese Quelle.",
+      "offlineHint": "Verbinden Sie sich, um alle Details zu sehen",
+      "loadError": "Details konnten nicht geladen werden",
+      "newsLoadError": "Artikel konnten nicht geladen werden",
+      "websiteA11y": "{{host}} öffnen",
+      "aboutSourceA11y": "Über {{source}}",
+      "subscribed": "Sie abonnieren {{publisher}}",
+      "prefMoreA11y": "Mehr von dieser Quelle",
+      "prefFewerA11y": "Weniger von dieser Quelle"
+    },
+    "articleMenu": {
+      "aboutSource": "Über diese Quelle"
+    }
+  },
+  "en": {
+    "publicationPage": {
+      "latest": "Latest",
+      "noLatest": "No recent articles from this source.",
+      "noTopHeadlines": "No top headlines from this source right now. Try Latest.",
+      "notFound": "We don't have more details about this source yet.",
+      "offlineHint": "Connect to see full details",
+      "loadError": "Couldn't load details",
+      "newsLoadError": "Couldn't load articles",
+      "websiteA11y": "Open {{host}}",
+      "aboutSourceA11y": "About {{source}}",
+      "subscribed": "You subscribe to {{publisher}}",
+      "prefMoreA11y": "More from this source",
+      "prefFewerA11y": "Fewer from this source"
+    },
+    "articleMenu": {
+      "aboutSource": "About this source"
+    }
+  },
+  "es": {
+    "publicationPage": {
+      "latest": "Reciente",
+      "noLatest": "Sin artículos recientes de esta fuente.",
+      "noTopHeadlines": "Sin titulares principales de esta fuente en este momento. Prueba Reciente.",
+      "notFound": "Aún no tenemos más detalles sobre esta fuente.",
+      "offlineHint": "Conéctate para ver todos los detalles",
+      "loadError": "No se pudieron cargar los detalles",
+      "newsLoadError": "No se pudieron cargar los artículos",
+      "websiteA11y": "Abrir {{host}}",
+      "aboutSourceA11y": "Acerca de {{source}}",
+      "subscribed": "Estás suscrito a {{publisher}}",
+      "prefMoreA11y": "Más de esta fuente",
+      "prefFewerA11y": "Menos de esta fuente"
+    },
+    "articleMenu": {
+      "aboutSource": "Acerca de esta fuente"
+    }
+  },
+  "fr": {
+    "publicationPage": {
+      "latest": "Récent",
+      "noLatest": "Pas d'articles récents de cette source.",
+      "noTopHeadlines": "Aucun titre à la une de cette source pour le moment. Essayez Récent.",
+      "notFound": "Nous n'avons pas encore plus de détails sur cette source.",
+      "offlineHint": "Connectez-vous à Internet pour voir tous les détails",
+      "loadError": "Impossible de charger les détails",
+      "newsLoadError": "Impossible de charger les articles",
+      "websiteA11y": "Ouvrir {{host}}",
+      "aboutSourceA11y": "À propos de {{source}}",
+      "subscribed": "Vous êtes abonné à {{publisher}}",
+      "prefMoreA11y": "Plus de cette source",
+      "prefFewerA11y": "Moins de cette source"
+    },
+    "articleMenu": {
+      "aboutSource": "À propos de cette source"
+    }
+  },
+  "hi": {
+    "publicationPage": {
+      "latest": "ताज़ा",
+      "noLatest": "इस स्रोत से कोई हाल के लेख नहीं।",
+      "noTopHeadlines": "इस स्रोत से अभी कोई मुख्य सुर्खियाँ नहीं। ताज़ा को आजमाएँ।",
+      "notFound": "हमारे पास अभी इस स्रोत के बारे में अधिक जानकारी नहीं है।",
+      "offlineHint": "सभी विवरण देखने के लिए कनेक्ट करें",
+      "loadError": "विवरण लोड नहीं हो सके",
+      "newsLoadError": "लेख लोड नहीं हो सके",
+      "websiteA11y": "{{host}} खोलें",
+      "aboutSourceA11y": "{{source}} के बारे में",
+      "subscribed": "आप {{publisher}} की सदस्यता लेते हैं",
+      "prefMoreA11y": "इस स्रोत से अधिक",
+      "prefFewerA11y": "इस स्रोत से कम"
+    },
+    "articleMenu": {
+      "aboutSource": "इस स्रोत के बारे में"
+    }
+  },
+  "id": {
+    "publicationPage": {
+      "latest": "Terbaru",
+      "noLatest": "Tidak ada artikel terbaru dari sumber ini.",
+      "noTopHeadlines": "Tidak ada berita utama dari sumber ini saat ini. Coba Terbaru.",
+      "notFound": "Kami belum memiliki detail lebih lanjut tentang sumber ini.",
+      "offlineHint": "Sambungkan untuk melihat detail lengkap",
+      "loadError": "Tidak dapat memuat detail",
+      "newsLoadError": "Tidak dapat memuat artikel",
+      "websiteA11y": "Buka {{host}}",
+      "aboutSourceA11y": "Tentang {{source}}",
+      "subscribed": "Anda berlangganan {{publisher}}",
+      "prefMoreA11y": "Lebih banyak dari sumber ini",
+      "prefFewerA11y": "Lebih sedikit dari sumber ini"
+    },
+    "articleMenu": {
+      "aboutSource": "Tentang sumber ini"
+    }
+  },
+  "it": {
+    "publicationPage": {
+      "latest": "Ultimi",
+      "noLatest": "Nessun articolo recente da questa fonte.",
+      "noTopHeadlines": "Nessun titolo principale da questa fonte in questo momento. Prova Ultimi.",
+      "notFound": "Non abbiamo ancora maggiori dettagli su questa fonte.",
+      "offlineHint": "Connettiti per vedere i dettagli completi",
+      "loadError": "Impossibile caricare i dettagli",
+      "newsLoadError": "Impossibile caricare gli articoli",
+      "websiteA11y": "Apri {{host}}",
+      "aboutSourceA11y": "Su {{source}}",
+      "subscribed": "Sei abbonato a {{publisher}}",
+      "prefMoreA11y": "Di più da questa fonte",
+      "prefFewerA11y": "Di meno da questa fonte"
+    },
+    "articleMenu": {
+      "aboutSource": "Su questa fonte"
+    }
+  },
+  "ja": {
+    "publicationPage": {
+      "latest": "最新",
+      "noLatest": "この媒体から最近の記事はありません。",
+      "noTopHeadlines": "この媒体からのトップニュースは今のところありません。最新をお試しください。",
+      "notFound": "この媒体についての詳細はまだお持ちではありません。",
+      "offlineHint": "接続して詳細を確認",
+      "loadError": "詳細を読み込めませんでした",
+      "newsLoadError": "記事を読み込めませんでした",
+      "websiteA11y": "{{host}}を開く",
+      "aboutSourceA11y": "{{source}}について",
+      "subscribed": "{{publisher}}をフォローしています",
+      "prefMoreA11y": "この媒体からもっと表示",
+      "prefFewerA11y": "この媒体から少なく表示"
+    },
+    "articleMenu": {
+      "aboutSource": "この媒体について"
+    }
+  },
+  "ko": {
+    "publicationPage": {
+      "latest": "최신",
+      "noLatest": "이 매체의 최근 기사가 없습니다.",
+      "noTopHeadlines": "지금 이 매체의 주요 뉴스가 없습니다. 최신을 시도해 보세요.",
+      "notFound": "이 매체에 대한 더 많은 세부 정보가 아직 없습니다.",
+      "offlineHint": "연결하여 전체 세부 정보 확인",
+      "loadError": "세부 정보를 불러올 수 없습니다",
+      "newsLoadError": "기사를 불러올 수 없습니다",
+      "websiteA11y": "{{host}} 열기",
+      "aboutSourceA11y": "{{source}} 정보",
+      "subscribed": "{{publisher}}를 구독하고 있습니다",
+      "prefMoreA11y": "이 매체에서 더 보기",
+      "prefFewerA11y": "이 매체에서 덜 보기"
+    },
+    "articleMenu": {
+      "aboutSource": "이 매체 정보"
+    }
+  },
+  "nl": {
+    "publicationPage": {
+      "latest": "Nieuwste",
+      "noLatest": "Geen recente artikelen van deze bron.",
+      "noTopHeadlines": "Geen topnieuws van deze bron op dit moment. Probeer Nieuwste.",
+      "notFound": "We hebben nog geen verdere details over deze bron.",
+      "offlineHint": "Verbind om volledige details te zien",
+      "loadError": "Details konden niet worden geladen",
+      "newsLoadError": "Artikelen konden niet worden geladen",
+      "websiteA11y": "Open {{host}}",
+      "aboutSourceA11y": "Over {{source}}",
+      "subscribed": "Je bent abonnee op {{publisher}}",
+      "prefMoreA11y": "Meer van deze bron",
+      "prefFewerA11y": "Minder van deze bron"
+    },
+    "articleMenu": {
+      "aboutSource": "Over deze bron"
+    }
+  },
+  "pl": {
+    "publicationPage": {
+      "latest": "Najnowsze",
+      "noLatest": "Brak najnowszych artykułów z tego źródła.",
+      "noTopHeadlines": "Brak najważniejszych nagłówków z tego źródła w tej chwili. Spróbuj Najnowsze.",
+      "notFound": "Nie mamy jeszcze więcej informacji o tym źródle.",
+      "offlineHint": "Połącz się, aby zobaczyć pełne szczegóły",
+      "loadError": "Nie można załadować szczegółów",
+      "newsLoadError": "Nie można załadować artykułów",
+      "websiteA11y": "Otwórz {{host}}",
+      "aboutSourceA11y": "O {{source}}",
+      "subscribed": "Subskrybujesz {{publisher}}",
+      "prefMoreA11y": "Więcej z tego źródła",
+      "prefFewerA11y": "Mniej z tego źródła"
+    },
+    "articleMenu": {
+      "aboutSource": "O tym źródle"
+    }
+  },
+  "pt-BR": {
+    "publicationPage": {
+      "latest": "Recentes",
+      "noLatest": "Nenhum artigo recente desta fonte.",
+      "noTopHeadlines": "Nenhuma manchete em destaque desta fonte agora. Tente Recentes.",
+      "notFound": "Ainda não temos mais detalhes sobre esta fonte.",
+      "offlineHint": "Conecte-se para ver detalhes completos",
+      "loadError": "Não foi possível carregar detalhes",
+      "newsLoadError": "Não foi possível carregar artigos",
+      "websiteA11y": "Abrir {{host}}",
+      "aboutSourceA11y": "Sobre {{source}}",
+      "subscribed": "Você se inscreve em {{publisher}}",
+      "prefMoreA11y": "Mais desta fonte",
+      "prefFewerA11y": "Menos desta fonte"
+    },
+    "articleMenu": {
+      "aboutSource": "Sobre esta fonte"
+    }
+  },
+  "ru": {
+    "publicationPage": {
+      "latest": "Новое",
+      "noLatest": "Нет новых статей от этого источника.",
+      "noTopHeadlines": "Нет главных новостей от этого источника сейчас. Попробуйте Новое.",
+      "notFound": "Мы ещё не имеем больше информации об этом источнике.",
+      "offlineHint": "Подключитесь для полных сведений",
+      "loadError": "Не удалось загрузить сведения",
+      "newsLoadError": "Не удалось загрузить статьи",
+      "websiteA11y": "Открыть {{host}}",
+      "aboutSourceA11y": "О {{source}}",
+      "subscribed": "Вы подписаны на {{publisher}}",
+      "prefMoreA11y": "Больше от этого источника",
+      "prefFewerA11y": "Меньше от этого источника"
+    },
+    "articleMenu": {
+      "aboutSource": "Об этом источнике"
+    }
+  },
+  "th": {
+    "publicationPage": {
+      "latest": "ล่าสุด",
+      "noLatest": "ไม่มีบทความใหม่ล่าสุดจากแหล่งนี้",
+      "noTopHeadlines": "ไม่มีข่าวเด่นจากแหล่งนี้ตอนนี้ ลองดู ล่าสุด",
+      "notFound": "เรายังไม่มีรายละเอียดเพิ่มเติมเกี่ยวกับแหล่งนี้",
+      "offlineHint": "เชื่อมต่อเพื่อดูรายละเอียดฉบับเต็ม",
+      "loadError": "ไม่สามารถโหลดรายละเอียดได้",
+      "newsLoadError": "ไม่สามารถโหลดบทความได้",
+      "websiteA11y": "เปิด {{host}}",
+      "aboutSourceA11y": "เกี่ยวกับ {{source}}",
+      "subscribed": "คุณสมัครสมาชิก {{publisher}}",
+      "prefMoreA11y": "เพิ่มเติมจากแหล่งนี้",
+      "prefFewerA11y": "ลดจากแหล่งนี้"
+    },
+    "articleMenu": {
+      "aboutSource": "เกี่ยวกับแหล่งนี้"
+    }
+  },
+  "tr": {
+    "publicationPage": {
+      "latest": "Güncel",
+      "noLatest": "Bu kaynaktan son makaleler yok.",
+      "noTopHeadlines": "Şu anda bu kaynaktan öne çıkan başlık yok. Güncel'i deneyin.",
+      "notFound": "Bu kaynak hakkında henüz daha fazla ayrıntımız yok.",
+      "offlineHint": "Tam ayrıntıları görmek için bağlan",
+      "loadError": "Ayrıntılar yüklenemedi",
+      "newsLoadError": "Makaleler yüklenemedi",
+      "websiteA11y": "Aç {{host}}",
+      "aboutSourceA11y": "{{source}} hakkında",
+      "subscribed": "{{publisher}}'e abone oldunuz",
+      "prefMoreA11y": "Bu kaynaktan daha fazlası",
+      "prefFewerA11y": "Bu kaynaktan daha azı"
+    },
+    "articleMenu": {
+      "aboutSource": "Bu kaynak hakkında"
+    }
+  },
+  "uk": {
+    "publicationPage": {
+      "latest": "Останні",
+      "noLatest": "Немає нових статей з цього джерела.",
+      "noTopHeadlines": "Немає головних новин з цього джерела. Перейдіть на вкладку «Останні».",
+      "notFound": "У нас поки немає подробиць про це джерело.",
+      "offlineHint": "Підключіться, щоб переглянути повні деталі",
+      "loadError": "Не вдалося завантажити деталі",
+      "newsLoadError": "Не вдалося завантажити статті",
+      "websiteA11y": "Відкрити {{host}}",
+      "aboutSourceA11y": "Про {{source}}",
+      "subscribed": "Ви підписані на {{publisher}}",
+      "prefMoreA11y": "Більше статей з цього джерела",
+      "prefFewerA11y": "Менше статей з цього джерела"
+    },
+    "articleMenu": {
+      "aboutSource": "Про це джерело"
+    }
+  },
+  "vi": {
+    "publicationPage": {
+      "latest": "Mới nhất",
+      "noLatest": "Không có bài viết gần đây từ nguồn này.",
+      "noTopHeadlines": "Không có tin nổi bật từ nguồn này. Hãy thử tab Mới nhất.",
+      "notFound": "Chúng tôi chưa có thêm thông tin về nguồn này.",
+      "offlineHint": "Kết nối để xem toàn bộ chi tiết",
+      "loadError": "Không thể tải chi tiết",
+      "newsLoadError": "Không thể tải bài viết",
+      "websiteA11y": "Mở {{host}}",
+      "aboutSourceA11y": "Về {{source}}",
+      "subscribed": "Bạn đã đăng ký {{publisher}}",
+      "prefMoreA11y": "Xem thêm từ nguồn này",
+      "prefFewerA11y": "Xem ít hơn từ nguồn này"
+    },
+    "articleMenu": {
+      "aboutSource": "Về nguồn này"
+    }
+  },
+  "zh-CN": {
+    "publicationPage": {
+      "latest": "最新",
+      "noLatest": "此来源暂无新文章。",
+      "noTopHeadlines": "此来源目前没有头条新闻。试试「最新」标签页。",
+      "notFound": "我们还没有关于此来源的更多详情。",
+      "offlineHint": "连接以查看完整详情",
+      "loadError": "无法加载详情",
+      "newsLoadError": "无法加载文章",
+      "websiteA11y": "打开 {{host}}",
+      "aboutSourceA11y": "关于 {{source}}",
+      "subscribed": "您订阅了 {{publisher}}",
+      "prefMoreA11y": "显示此来源的更多内容",
+      "prefFewerA11y": "显示此来源的更少内容"
+    },
+    "articleMenu": {
+      "aboutSource": "关于此来源"
+    }
+  },
+  "zh-TW": {
+    "publicationPage": {
+      "latest": "最新",
+      "noLatest": "此來源暫無新文章。",
+      "noTopHeadlines": "此來源目前沒有頭條新聞。試試「最新」標籤頁。",
+      "notFound": "我們還沒有關於此來源的更多詳情。",
+      "offlineHint": "連線以查看完整詳情",
+      "loadError": "無法載入詳情",
+      "newsLoadError": "無法載入文章",
+      "websiteA11y": "開啟 {{host}}",
+      "aboutSourceA11y": "關於 {{source}}",
+      "subscribed": "您訂閱了 {{publisher}}",
+      "prefMoreA11y": "顯示此來源的更多內容",
+      "prefFewerA11y": "顯示此來源的更少內容"
+    },
+    "articleMenu": {
+      "aboutSource": "關於此來源"
+    }
+  }
+}

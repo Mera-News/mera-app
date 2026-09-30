@@ -2926,7 +2926,8 @@
     "reportBug": "Relatar um bug",
     "actionFailed": "Não funcionou. Tente de novo.",
     "removeLike": "Remover curtida",
-    "removeDislike": "Remover \"Não é para mim\""
+    "removeDislike": "Remover \"Não é para mim\"",
+    "aboutSource": "Sobre esta fonte"
   },
   "related": {
     "allCountries": "Todos os países",
@@ -2978,5 +2979,19 @@
     "close": "Fechar",
     "drawerAnswered": "Respondida",
     "drawerClosed": "Encerrada"
+  },
+  "publicationPage": {
+    "latest": "Recentes",
+    "noLatest": "Nenhum artigo recente desta fonte.",
+    "noTopHeadlines": "Nenhuma manchete em destaque desta fonte agora. Tente Recentes.",
+    "notFound": "Ainda não temos mais detalhes sobre esta fonte.",
+    "offlineHint": "Conecte-se para ver detalhes completos",
+    "loadError": "Não foi possível carregar detalhes",
+    "newsLoadError": "Não foi possível carregar artigos",
+    "websiteA11y": "Abrir {{host}}",
+    "aboutSourceA11y": "Sobre {{source}}",
+    "subscribed": "Você se inscreve em {{publisher}}",
+    "prefMoreA11y": "Mais desta fonte",
+    "prefFewerA11y": "Menos desta fonte"
   }
 }

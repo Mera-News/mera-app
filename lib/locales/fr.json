@@ -2933,7 +2933,8 @@
     "reportBug": "Signaler un bug",
     "actionFailed": "Cela n'a pas fonctionné. Réessayez.",
     "removeLike": "Retirer le j’aime",
-    "removeDislike": "Retirer « Pas pour moi »"
+    "removeDislike": "Retirer « Pas pour moi »",
+    "aboutSource": "À propos de cette source"
   },
   "related": {
     "allCountries": "Tous les pays",
@@ -2985,5 +2986,19 @@
     "close": "Fermer",
     "drawerAnswered": "Répondu",
     "drawerClosed": "Terminée"
+  },
+  "publicationPage": {
+    "latest": "Récent",
+    "noLatest": "Pas d'articles récents de cette source.",
+    "noTopHeadlines": "Aucun titre à la une de cette source pour le moment. Essayez Récent.",
+    "notFound": "Nous n'avons pas encore plus de détails sur cette source.",
+    "offlineHint": "Connectez-vous à Internet pour voir tous les détails",
+    "loadError": "Impossible de charger les détails",
+    "newsLoadError": "Impossible de charger les articles",
+    "websiteA11y": "Ouvrir {{host}}",
+    "aboutSourceA11y": "À propos de {{source}}",
+    "subscribed": "Vous êtes abonné à {{publisher}}",
+    "prefMoreA11y": "Plus de cette source",
+    "prefFewerA11y": "Moins de cette source"
   }
 }
