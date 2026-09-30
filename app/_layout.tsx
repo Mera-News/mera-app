@@ -68,6 +68,7 @@ import { initRestartContext } from '@/lib/app-restart';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 // Task registrations — each file calls AppScheduler.register() at module load
 import '@/lib/scheduler/tasks/feed-sync-task';
+import '@/lib/scheduler/tasks/feedback-request-sync-task';
 import '@/lib/scheduler/tasks/inference-recover-task';
 import '@/lib/scheduler/tasks/apollo-cache-evict-task';
 import '@/lib/scheduler/tasks/push-token-check-task';

@@ -127,6 +127,27 @@ export async function dismiss(notificationId: string): Promise<void> {
   await setStatus(notificationId, 'dismissed');
 }
 
+/**
+ * Marks every row with this exact `source` actioned (feedback requests key a
+ * row per request as `feedback_request:<id>`). Rows already actioned are left
+ * alone. Returns the number updated.
+ */
+export async function markActionedBySource(source: string): Promise<number> {
+  const rows = await notificationsCollection.query(Q.where('source', source)).fetch();
+  const pending = rows.filter((r) => r.source === source && r.status !== 'actioned');
+  if (pending.length === 0) return 0;
+  await database.write(async () => {
+    await database.batch(
+      pending.map((r) =>
+        r.prepareUpdate((n) => {
+          n.status = 'actioned';
+        }),
+      ),
+    );
+  });
+  return pending.length;
+}
+
 /** Reactive unread count — drives the bell badge. */
 export function observeUnreadCount() {
   return notificationsCollection

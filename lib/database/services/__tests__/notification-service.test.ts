@@ -36,7 +36,9 @@ jest.mock('@/lib/database/index', () => ({
   },
 }));
 
-import { clearAll, markAllRead, notify, observeUnreadCount } from '../notification-service';
+import { Q } from '@nozbe/watermelondb';
+import database from '@/lib/database/index';
+import { clearAll, markActionedBySource, markAllRead, notify, observeUnreadCount } from '../notification-service';
 
 beforeEach(() => {
   mockRows = [];
@@ -234,5 +236,40 @@ describe('clearAll', () => {
     expect(removed).toBe(0);
     expect(mockWrite).not.toHaveBeenCalled();
     expect(mockBatch).not.toHaveBeenCalled();
+  });
+});
+
+describe('markActionedBySource', () => {
+  const SOURCE = 'feedback_request:aaaaaaaaaaaaaaaaaaaaaaaa';
+
+  // The collection handle is captured at module load: its query mock holds
+  // every call's predicate. The DB mock ignores Q.where, so the predicate is
+  // pinned here directly.
+  function lastQueryArgs(): unknown[] {
+    const collection = (database.get as jest.Mock).mock.results[0].value;
+    return collection.query.mock.calls.at(-1);
+  }
+
+  it('queries by exact source and marks only the non-actioned matches', async () => {
+    const unread = makeRecord({ id: 'n1', source: SOURCE, status: 'unread' });
+    const read = makeRecord({ id: 'n2', source: SOURCE, status: 'read' });
+    const done = makeRecord({ id: 'n3', source: SOURCE, status: 'actioned' });
+    const other = makeRecord({ id: 'n4', source: 'feedback_request:b', status: 'unread' });
+    mockRows = [unread, read, done, other];
+
+    await expect(markActionedBySource(SOURCE)).resolves.toBe(2);
+
+    expect(lastQueryArgs()).toEqual([Q.where('source', SOURCE)]);
+    expect(unread.status).toBe('actioned');
+    expect(read.status).toBe('actioned');
+    expect(done.prepareUpdate).not.toHaveBeenCalled();
+    expect(other.prepareUpdate).not.toHaveBeenCalled();
+    expect(mockWrite).toHaveBeenCalledTimes(1);
+  });
+
+  it('writes nothing when there is nothing to mark', async () => {
+    mockRows = [makeRecord({ id: 'n1', source: SOURCE, status: 'actioned' })];
+    await expect(markActionedBySource(SOURCE)).resolves.toBe(0);
+    expect(mockWrite).not.toHaveBeenCalled();
   });
 });
