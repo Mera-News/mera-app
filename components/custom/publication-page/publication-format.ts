@@ -2,6 +2,23 @@
 // rows so a host, a badge or a monogram reads the same everywhere. No React,
 // no i18n, no database.
 
+import { secureUrlOrNull } from '@/lib/secure-url';
+
+/**
+ * The publication's HOMEPAGE link, upgraded to https. The catalogue stores
+ * some homepages as `http://` (Denik.cz: `http://denik.cz/`), and the app
+ * never opens a plaintext URL, so the header used to drop the link. For the
+ * homepage ONLY, `http://` is rewritten to `https://` and the result still has
+ * to pass `secureUrlOrNull`; a site that cannot serve https simply fails in
+ * the in-app browser. Article links are NOT upgraded: this is a homepage rule,
+ * kept here rather than in the shared `lib/secure-url.ts`.
+ */
+export function homepageUrlOf(url: string | null | undefined): string | null {
+    const raw = (url ?? '').trim();
+    const upgraded = /^http:\/\//i.test(raw) ? `https://${raw.slice('http://'.length)}` : raw;
+    return secureUrlOrNull(upgraded);
+}
+
 /** `https://www.example.com/news/` -> `example.com`. Null when there is no
  *  usable host. Only the host is shown, never a path: a path is noise on a
  *  one-line row and can carry tracking segments. */

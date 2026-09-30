@@ -3,14 +3,13 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import logger from '@/lib/logger';
-import { secureUrlOrNull } from '@/lib/secure-url';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { hostOf, monogramOf } from './publication-format';
+import { homepageUrlOf, hostOf, monogramOf } from './publication-format';
 
 /** The monogram tile. Every size is here, and the letter carries an explicit
  *  lineHeight: an inline fontSize on the ui Text without one keeps the size
@@ -54,7 +53,7 @@ interface PublicationHeaderProps {
  */
 const PublicationHeader: React.FC<PublicationHeaderProps> = ({ displayName, homepageUrl }) => {
     const { t } = useTranslation();
-    const url = secureUrlOrNull(homepageUrl);
+    const url = homepageUrlOf(homepageUrl);
     const host = url ? hostOf(url) : null;
 
     const openWebsite = useCallback(() => {

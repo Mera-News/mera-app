@@ -256,6 +256,26 @@ describe('profile states', () => {
         expect(mockRecordVisit).not.toHaveBeenCalled();
     });
 
+    it('an http homepage still gets its link, shown without a scheme and opened over https', async () => {
+        mockProfile = { state: 'ready', profile: { ...PROFILE, homepageUrl: 'http://x.cz/' }, retry: jest.fn() };
+        const { getByText, getByTestId } = renderPage();
+        expect(getByText('x.cz', HIDDEN)).toBeTruthy();
+        await act(async () => {
+            fireEvent.press(getByTestId('publication-website'));
+        });
+        expect(mockOpenInAppBrowser).toHaveBeenCalledWith('https://x.cz/');
+    });
+
+    it('a javascript: or garbage homepage shows no link', () => {
+        for (const homepageUrl of ['javascript:alert(1)', 'not a url']) {
+            mockProfile = { state: 'ready', profile: { ...PROFILE, homepageUrl }, retry: jest.fn() };
+            const { queryByTestId, getByTestId, unmount } = renderPage();
+            expect(getByTestId('publication-header')).toBeTruthy();
+            expect(queryByTestId('publication-website')).toBeNull();
+            unmount();
+        }
+    });
+
     it('offline: the entry point data plus the connect hint, and the news still shows', () => {
         mockProfile = { state: 'offline', profile: null, retry: jest.fn() };
         mockNews = { ...mockNews, state: 'offline', articles: [article('a1')] };

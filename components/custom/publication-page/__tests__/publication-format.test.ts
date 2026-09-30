@@ -1,4 +1,4 @@
-import { formatCategories, hostOf, monogramOf, sourceKindOf } from '../publication-format';
+import { formatCategories, homepageUrlOf, hostOf, monogramOf, sourceKindOf } from '../publication-format';
 
 describe('hostOf', () => {
     it.each([
@@ -50,5 +50,24 @@ describe('formatCategories', () => {
         expect(formatCategories(['general_news', 'politics'])).toBe('General news, Politics');
         expect(formatCategories([])).toBeNull();
         expect(formatCategories(null)).toBeNull();
+    });
+});
+
+describe('homepageUrlOf', () => {
+    it('upgrades an http homepage to https', () => {
+        expect(homepageUrlOf('http://x.cz/')).toBe('https://x.cz/');
+        expect(homepageUrlOf('  HTTP://denik.cz/  ')).toBe('https://denik.cz/');
+    });
+
+    it('keeps an https homepage as it is', () => {
+        expect(homepageUrlOf('https://www.thehindu.com/')).toBe('https://www.thehindu.com/');
+    });
+
+    it('hides anything that is not a web link', () => {
+        expect(homepageUrlOf('javascript:alert(1)')).toBeNull();
+        expect(homepageUrlOf('not a url')).toBeNull();
+        expect(homepageUrlOf('ftp://x.cz/')).toBeNull();
+        expect(homepageUrlOf('')).toBeNull();
+        expect(homepageUrlOf(null)).toBeNull();
     });
 });
