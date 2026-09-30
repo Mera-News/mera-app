@@ -275,9 +275,20 @@ describe('profile states', () => {
         expect(mockNewsArgs[0].slice(0, 2)).toEqual(['pub-1', 'NEWEST']);
     });
 
-    it('unsupported server: the entry point name and country only, no news', () => {
+    it('unsupported server opened by id: name, country, and the news by id (Top headlines on an old server)', () => {
         mockProfile = { state: 'unsupported', profile: null, retry: jest.fn() };
-        const { getByText, queryByTestId } = renderPage();
+        mockNews = { ...mockNews, state: 'ready', orderApplied: false, articles: [article('a1')] };
+        const { getByText, getByTestId, queryByTestId } = renderPage();
+        expect(getByText('Country(IND)')).toBeTruthy();
+        expect(mockNewsArgs[0].slice(0, 2)).toEqual(['pub-1', 'NEWEST']);
+        expect(getByTestId('row-a1')).toBeTruthy();
+        expect(getByTestId('publication-order-top').props.accessibilityState).toEqual({ selected: true });
+        expect(queryByTestId('publication-order-latest')).toBeNull();
+    });
+
+    it('unsupported server opened by name: the entry point name and country only, no news', () => {
+        mockProfile = { state: 'unsupported', profile: null, retry: jest.fn() };
+        const { getByText, queryByTestId } = renderPage({ publisherId: null });
         expect(getByText('The Hindu', HIDDEN)).toBeTruthy();
         expect(getByText('Country(IND)')).toBeTruthy();
         expect(queryByTestId('publication-order-switch')).toBeNull();

@@ -89,8 +89,11 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     });
 
     // The news starts as soon as a publisher id is known and does not wait on
-    // the profile. An unsupported server and an unknown publication get none.
-    const newsAvailable = state !== 'unsupported' && state !== 'notFound';
+    // the profile. An unknown publication gets none. So does a server too old
+    // for the profile query, UNLESS the page was opened by publisher id: that
+    // server still answers `articlesForPublisher` (as Top headlines; the
+    // switch then shows only that tab, see `shownOrder`).
+    const newsAvailable = state !== 'notFound' && !(state === 'unsupported' && !newsPublisherId);
     const news = usePublicationArticles(newsAvailable ? newsPublisherId : null, order, {
         sourceNames: profile?.sourceNames ?? pref.names,
     });
