@@ -201,6 +201,71 @@ const SUPPRESSION_BREADCRUMB: Record<SuppressionClass, string> = {
   'no-credential': 'Suppressed missing-credential error — device has no keypair yet',
 };
 
+const NON_ERROR_MESSAGE_CAP = 500;
+
+function safeStringify(value: object): string {
+  try {
+    const seen = new WeakSet<object>();
+    const json = JSON.stringify(value, (_k, v) => {
+      if (typeof v === 'bigint') return String(v);
+      if (v !== null && typeof v === 'object') {
+        if (seen.has(v)) return '[Circular]';
+        seen.add(v);
+      }
+      return v;
+    });
+    return json ?? String(value);
+  } catch {
+    try {
+      return Object.prototype.toString.call(value);
+    } catch {
+      return '[unserializable]';
+    }
+  }
+}
+
+/** Build a readable Error from a non-Error throw so Sentry shows the real
+ *  cause instead of "Error: [object Object]". `info` carries type, own keys
+ *  and code only, never values (no PII). Never throws. */
+function normaliseNonError(value: unknown): {
+  error: Error;
+  info: { type: string; keys?: string[]; code?: string | number };
+} {
+  const type = value === null ? 'null' : typeof value;
+  if (value === null || typeof value !== 'object') {
+    return { error: new Error(String(value)), info: { type } };
+  }
+  let keys: string[] = [];
+  let message: unknown;
+  let name: unknown;
+  let code: unknown;
+  try {
+    const o = value as Record<string, unknown>;
+    keys = Object.keys(o);
+    message = o.message;
+    name = o.name;
+    code = o.code;
+  } catch {
+    // hostile getter or proxy: fall through to the JSON path
+  }
+  const codeOk = typeof code === 'string' || typeof code === 'number';
+  let text: string;
+  if (typeof message === 'string' && message) {
+    const prefix = [typeof name === 'string' ? name : '', codeOk ? `[${code}]` : '']
+      .filter(Boolean)
+      .join(' ');
+    text = prefix ? `${prefix}: ${message}` : message;
+  } else {
+    text = safeStringify(value);
+  }
+  const error = new Error(text.slice(0, NON_ERROR_MESSAGE_CAP));
+  if (typeof name === 'string' && name) error.name = name;
+  return {
+    error,
+    info: { type, keys, ...(codeOk ? { code: code as string | number } : {}) },
+  };
+}
+
 const logger = {
   /**
    * Capture an exception and send it to Sentry
@@ -212,8 +277,15 @@ const logger = {
     const { level = 'error', tags, extra, fingerprint } = options;
 
     // Ensure we have an Error object
-    const errorObject =
-      error instanceof Error ? error : new Error(String(error));
+    let errorObject: Error;
+    let finalExtra = extra;
+    if (error instanceof Error) {
+      errorObject = error;
+    } else {
+      const normalised = normaliseNonError(error);
+      errorObject = normalised.error;
+      finalExtra = { ...extra, nonErrorThrow: normalised.info };
+    }
 
     // See the block comment above classifySuppression. Runs BEFORE the __DEV__
     // console log so a suppressed event is quiet in development too — otherwise
@@ -224,7 +296,7 @@ const logger = {
       logger.addBreadcrumb(
         `${SUPPRESSION_BREADCRUMB[suppression]}: ${errorObject.message}`,
         tags?.service ?? 'logger',
-        { ...tags, ...extra, suppressed: suppression },
+        { ...tags, ...finalExtra, suppressed: suppression },
         suppression === 'auth' ? 'warning' : 'info',
       );
       // ONLY the 401 class feeds the breaker. A no-credential error means the
@@ -241,14 +313,14 @@ const logger = {
       console.error(
         '[Logger]',
         errorObject.message,
-        JSON.stringify({ tags, extra }, null, 2),
+        JSON.stringify({ tags, extra: finalExtra }, null, 2),
       );
     }
 
     return Sentry.captureException(errorObject, {
       level: level as Sentry.SeverityLevel,
       tags,
-      extra,
+      extra: finalExtra,
       fingerprint,
     });
   },

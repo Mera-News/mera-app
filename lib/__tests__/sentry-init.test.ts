@@ -324,3 +324,20 @@ describe('sentry-init (dev path: __DEV__ = true)', () => {
     expect(mockSentryInit).not.toHaveBeenCalled();
   });
 });
+
+describe('environmentForChannel', () => {
+  const { environmentForChannel } = require('../sentry-init');
+  it.each([
+    [true, 'production', 'development'],
+    [false, 'production', 'production'],
+    [false, 'development', 'development'],
+    [false, 'staging', 'staging'],
+    [false, 'preview', 'preview'],
+    [false, '', 'production'],
+    [false, null, 'production'],
+    [false, undefined, 'production'],
+    [false, 'embedded', 'production'],
+  ])('dev=%s channel=%s -> %s', (dev, channel, expected) => {
+    expect(environmentForChannel(dev, channel)).toBe(expected);
+  });
+});

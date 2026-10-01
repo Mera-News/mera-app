@@ -187,6 +187,25 @@ export function scrubPublicationPageCrumb<T extends ScrubbableCrumb>(crumb: T): 
 // User Feedback widget (showFeedbackWidget) and other Sentry UI from `expo start`.
 // The feedback helper (lib/feedback.ts) reads this same flag so both gates lift
 // together.
+/** Pure mapping, exported for tests. `__DEV__` is development; otherwise the
+ *  expo-updates channel names the environment (a dev-client release build runs
+ *  on the `development` channel and must not report as production). An empty
+ *  or unknown channel, and app-context's `'embedded'` fallback for a store
+ *  binary with no channel, stay `production`. */
+export function environmentForChannel(dev: boolean, channel: string | null | undefined): string {
+  if (dev) return 'development';
+  const c = typeof channel === 'string' ? channel.trim() : '';
+  return c && c !== 'embedded' && c !== 'unknown' ? c : 'production';
+}
+
+function sentryEnvironment(): string {
+  try {
+    return environmentForChannel(__DEV__, getStaticAppContext().ota_channel);
+  } catch {
+    return environmentForChannel(__DEV__, null);
+  }
+}
+
 export const SENTRY_ENABLED =
   !__DEV__ || process.env.EXPO_PUBLIC_SENTRY_IN_DEV === 'true';
 
@@ -196,7 +215,7 @@ if (SENTRY_ENABLED) {
     // Separates dev-machine events (opted in via EXPO_PUBLIC_SENTRY_IN_DEV) from
     // real production traffic in the Sentry issue stream. Without this, a local
     // dev run with the flag set pollutes prod issues with local file paths.
-    environment: __DEV__ ? 'development' : 'production',
+    environment: sentryEnvironment(),
     // Do NOT auto-attach IP address, request headers, or OS-user identifiers to
     // events. This is a privacy/E2EE product; nothing relies on server-side PII
     // inference.
