@@ -2856,7 +2856,7 @@
     "fabA11y": "Ekspor artikel tersimpan",
     "title": "Ekspor tersimpan",
     "step1Heading": "Pilih artikel",
-    "step2Heading": "Sertakan alasan Mera?",
+    "step2Heading": "Apa yang disertakan",
     "step3Heading": "Pilih format",
     "selectAll": "Pilih semua",
     "selectedCount": "{{count}} dipilih",
@@ -2871,7 +2871,9 @@
     "failedMessage": "Tidak ada yang diekspor. Silakan coba lagi.",
     "docTitle": "Artikel tersimpan",
     "docExported": "Diekspor {{date}}",
-    "docReasonLabel": "Mengapa Mera memilihnya"
+    "docReasonLabel": "Mengapa Mera memilihnya",
+    "includeImage": "Sertakan tautan gambar",
+    "includeImageHint": "Tautan ke gambar setiap artikel, jika ada."
   },
   "tabExplainer": {
     "openA11y": "Cara kerja tab ini",

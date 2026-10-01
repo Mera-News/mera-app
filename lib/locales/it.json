@@ -2857,7 +2857,7 @@
     "fabA11y": "Esporta gli articoli salvati",
     "title": "Esporta i salvati",
     "step1Heading": "Scegli gli articoli",
-    "step2Heading": "Includere il motivo di Mera?",
+    "step2Heading": "Cosa includere",
     "step3Heading": "Scegli un formato",
     "selectAll": "Seleziona tutto",
     "selectedCount": "{{count}} selezionati",
@@ -2872,7 +2872,9 @@
     "failedMessage": "Non è stato esportato nulla. Riprova.",
     "docTitle": "Articoli salvati",
     "docExported": "Esportato il {{date}}",
-    "docReasonLabel": "Perché Mera l'ha scelto"
+    "docReasonLabel": "Perché Mera l'ha scelto",
+    "includeImage": "Includi il link all'immagine",
+    "includeImageHint": "Un link all'immagine di ogni articolo, se presente."
   },
   "tabExplainer": {
     "openA11y": "Come funziona questa scheda",

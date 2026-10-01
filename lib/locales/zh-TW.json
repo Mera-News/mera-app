@@ -2857,7 +2857,7 @@
     "fabA11y": "匯出已儲存的文章",
     "title": "匯出已儲存",
     "step1Heading": "選擇文章",
-    "step2Heading": "是否包含 Mera 的選擇理由？",
+    "step2Heading": "要包含哪些內容",
     "step3Heading": "選擇格式",
     "selectAll": "全選",
     "selectedCount": "已選擇 {{count}} 篇",
@@ -2872,7 +2872,9 @@
     "failedMessage": "沒有匯出任何內容。請再試一次。",
     "docTitle": "已儲存的文章",
     "docExported": "匯出於 {{date}}",
-    "docReasonLabel": "Mera 選擇它的理由"
+    "docReasonLabel": "Mera 選擇它的理由",
+    "includeImage": "包含圖片連結",
+    "includeImageHint": "每篇文章圖片的連結（如有）。"
   },
   "tabExplainer": {
     "openA11y": "此分頁如何運作",

@@ -2895,7 +2895,7 @@
     "fabA11y": "Eksportuj zapisane artykuły",
     "title": "Eksportuj zapisane",
     "step1Heading": "Wybierz artykuły",
-    "step2Heading": "Dołączyć uzasadnienie Mery?",
+    "step2Heading": "Co dołączyć",
     "step3Heading": "Wybierz format",
     "selectAll": "Zaznacz wszystko",
     "selectedCount": "Zaznaczono: {{count}}",
@@ -2910,7 +2910,9 @@
     "failedMessage": "Nic nie zostało wyeksportowane. Spróbuj ponownie.",
     "docTitle": "Zapisane artykuły",
     "docExported": "Wyeksportowano {{date}}",
-    "docReasonLabel": "Dlaczego Mera to wybrała"
+    "docReasonLabel": "Dlaczego Mera to wybrała",
+    "includeImage": "Dołącz link do obrazu",
+    "includeImageHint": "Link do obrazu każdego artykułu, jeśli go ma."
   },
   "tabExplainer": {
     "openA11y": "Jak działa ta karta",

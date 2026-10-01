@@ -165,7 +165,9 @@ const suggestion = (id: string, title: string, reason: string) => ({
         title_original: `${title} (nl)`,
         description_en: null,
         article_url: `https://example.com/${id}`,
-        image_url: null,
+        // Only the first row has a picture, so the image toggle has a row to
+        // export and rows to leave alone.
+        image_url: id === 'sv-1' ? 'https://img.example.com/sv-1.jpg' : null,
         userTopicIds: [],
         createdAt: '2026-09-19T06:00:00.000Z',
         firstPubDate: '2026-09-20T06:00:00.000Z',
@@ -304,6 +306,21 @@ describe('step 2 — the reason toggle', () => {
         expect(queryByTestId('saved-export-row-sv-1')).toBeNull();
     });
 
+    it('offers the image link beside the reason, unticked by default', () => {
+        const { getByTestId } = advanceToStep2();
+
+        const image = getByTestId('saved-export-include-image');
+        expect(image.props.accessibilityState.checked).toBe(false);
+        fireEvent.press(image);
+        expect(
+            getByTestId('saved-export-include-image').props.accessibilityState.checked,
+        ).toBe(true);
+        // Independent of the reason toggle.
+        expect(
+            getByTestId('saved-export-include-reason').props.accessibilityState.checked,
+        ).toBe(true);
+    });
+
     it('toggles off, and Back returns to step 1 with the selection intact', () => {
         const { getByTestId } = advanceToStep2();
 
@@ -321,12 +338,15 @@ describe('step 2 — the reason toggle', () => {
 });
 
 describe('step 3 — format and hand-off', () => {
-    function advanceToStep3(opts: { reason?: boolean } = {}) {
+    function advanceToStep3(opts: { reason?: boolean; image?: boolean } = {}) {
         const utils = renderModal();
         fireEvent.press(utils.getByTestId('saved-export-select-all'));
         fireEvent.press(utils.getByTestId('saved-export-next'));
         if (opts.reason === false) {
             fireEvent.press(utils.getByTestId('saved-export-include-reason'));
+        }
+        if (opts.image) {
+            fireEvent.press(utils.getByTestId('saved-export-include-image'));
         }
         fireEvent.press(utils.getByTestId('saved-export-next'));
         return utils;
@@ -367,6 +387,33 @@ describe('step 3 — format and hand-off', () => {
         expect(payload.count).toBe(3);
         expect(payload.includesReason).toBe(false);
         expect(payload.articles.every((a: { reason: null }) => a.reason === null)).toBe(true);
+    });
+
+    it('carries image links only when ticked, and the language always', async () => {
+        const { getByTestId, onClose } = advanceToStep3({ image: true });
+
+        fireEvent.press(getByTestId('saved-export-format-json'));
+
+        await waitFor(() => expect(onClose).toHaveBeenCalled());
+        const payload = JSON.parse(mockExportAndShare.mock.calls[0][0].content);
+        expect(payload.includesImage).toBe(true);
+        expect(payload.articles.map((a: { imageUrl: string | null }) => a.imageUrl)).toEqual([
+            'https://img.example.com/sv-1.jpg',
+            null,
+            null,
+        ]);
+        expect(payload.articles[0].language).toBe('nl');
+    });
+
+    it('leaves images out of the Markdown by default but names the language', async () => {
+        const { getByTestId } = advanceToStep3();
+
+        fireEvent.press(getByTestId('saved-export-format-markdown'));
+
+        await waitFor(() => expect(mockExportAndShare).toHaveBeenCalled());
+        const { content } = mockExportAndShare.mock.calls[0][0];
+        expect(content).toContain('## First headline\nThe Guardian · 2026-09-20 · 2026-09-21 · Dutch\n');
+        expect(content).not.toContain('img.example.com');
     });
 
     it('exports only the selected rows, not the whole list', async () => {

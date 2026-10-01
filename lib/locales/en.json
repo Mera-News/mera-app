@@ -2857,7 +2857,7 @@
     "fabA11y": "Export saved articles",
     "title": "Export saved",
     "step1Heading": "Choose articles",
-    "step2Heading": "Include why Mera picked it?",
+    "step2Heading": "What to include",
     "step3Heading": "Choose a format",
     "selectAll": "Select all",
     "selectedCount": "{{count}} selected",
@@ -2872,7 +2872,9 @@
     "failedMessage": "Nothing was exported. Please try again.",
     "docTitle": "Saved articles",
     "docExported": "Exported {{date}}",
-    "docReasonLabel": "Why Mera picked it"
+    "docReasonLabel": "Why Mera picked it",
+    "includeImage": "Include image link",
+    "includeImageHint": "A link to each article's picture, where it has one."
   },
   "tabExplainer": {
     "openA11y": "How this tab works",

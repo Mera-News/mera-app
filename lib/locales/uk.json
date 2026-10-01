@@ -2901,7 +2901,7 @@
     "fabA11y": "Експортувати збережені статті",
     "title": "Експорт збережених",
     "step1Heading": "Виберіть статті",
-    "step2Heading": "Додати пояснення Mera?",
+    "step2Heading": "Що додати",
     "step3Heading": "Виберіть формат",
     "selectAll": "Вибрати все",
     "selectedCount": "Вибрано: {{count}}",
@@ -2916,7 +2916,9 @@
     "failedMessage": "Нічого не експортовано. Спробуйте ще раз.",
     "docTitle": "Збережені статті",
     "docExported": "Експортовано {{date}}",
-    "docReasonLabel": "Чому Mera обрала цю статтю"
+    "docReasonLabel": "Чому Mera обрала цю статтю",
+    "includeImage": "Додати посилання на зображення",
+    "includeImageHint": "Посилання на зображення кожної статті, якщо воно є."
   },
   "tabExplainer": {
     "openA11y": "Як працює ця вкладка",

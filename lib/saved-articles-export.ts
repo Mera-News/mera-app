@@ -33,6 +33,12 @@
 //    so `includeReason` yields null for those rows rather than an empty quote
 //    block. The toggle governs Markdown and JSON identically.
 //
+// 4. THE LANGUAGE IS ALWAYS EXPORTED, THE IMAGE ONLY ON REQUEST. Every row
+//    carries the article's original language code; Markdown prints it as a
+//    name through the caller's injected `languageName`, JSON keeps the code.
+//    The image link is opt-in (`includeImage`) and, like the reason, is null on
+//    a row that has none rather than an empty line.
+//
 // No counter, tally or record of what was exported is kept anywhere. Exporting
 // is not an event this app measures.
 
@@ -56,6 +62,11 @@ export interface SavedExportRow {
   /** Null on a standalone article save, and null whenever the reader turned
    *  the reason off in step 2. */
   reason: string | null;
+  /** The article's original language code, or null when unknown. Always
+   *  exported, not a step-2 choice. */
+  language: string | null;
+  /** Null when the row has no image, or when the reader left it off. */
+  imageUrl: string | null;
 }
 
 /** The three Markdown labels, resolved by the caller's `t()`. Injected rather
@@ -67,10 +78,23 @@ export interface SavedExportLabels {
   docExported: string;
   /** `savedExport.docReasonLabel` */
   reasonLabel: string;
+  /** Names a language code in the reader's app language, or null when the
+   *  code is unknown (the code is then printed as is). */
+  languageName: (code: string) => string | null;
 }
 
 export interface ToExportRowsOptions {
   includeReason: boolean;
+  includeImage: boolean;
+}
+
+/** `languageName(code)`, falling back to the code itself. Shared with
+ *  `story-export.ts`. */
+export function displayLanguage(
+  code: string | null,
+  languageName: (code: string) => string | null,
+): string | null {
+  return code ? languageName(code) || code : null;
 }
 
 /** `Date` -> `YYYY-MM-DD`, in UTC.
@@ -133,6 +157,8 @@ export function toExportRows(
         // A standalone save was never scored, so there is no reason to include
         // even when the reader asked for reasons.
         reason: null,
+        language: a.original_language_code || null,
+        imageUrl: (opts.includeImage && a.image_url) || null,
       };
     }
     const s = item.suggestion;
@@ -144,14 +170,16 @@ export function toExportRows(
       publishedAt: toIso(s.firstPubDate ?? s.createdAt),
       savedAt: toIso(item.savedAt),
       reason: opts.includeReason && reason ? reason : null,
+      language: s.language_code || null,
+      imageUrl: (opts.includeImage && s.image_url) || null,
     };
   });
 }
 
 /**
  * The Markdown document: a level-1 title, the export date, then one level-2
- * section per article carrying its meta line, its link and, when included, its
- * reason as a block quote.
+ * section per article carrying its meta line (ending in its language), its
+ * link, its image when included, and its reason as a block quote when included.
  */
 export function buildSavedMarkdown(
   rows: SavedExportRow[],
@@ -174,10 +202,13 @@ export function buildSavedMarkdown(
       row.publication,
       row.publishedAt ? isoDay(row.publishedAt) : null,
       row.savedAt ? isoDay(row.savedAt) : null,
+      displayLanguage(row.language, labels.languageName),
     ].filter((part): part is string => !!part);
     if (meta.length > 0) out.push(meta.join(' · '));
 
     if (row.url) out.push(row.url);
+    // Image syntax, so it reads as the picture and not a second article link.
+    if (row.imageUrl) out.push(`![](${row.imageUrl})`);
 
     if (row.reason) {
       out.push('');
@@ -193,7 +224,7 @@ export function buildSavedMarkdown(
  * The JSON document. Keys are English in every locale: this is a machine
  * format, and a reader who picked JSON picked it to feed something else.
  *
- * `includesReason` is the reader's ANSWER in step 2, passed in, not something
+ * `includesReason` and `includesImage` are the reader's ANSWERS in step 2, passed in, not something
  * derived from the rows. Deriving it (`rows.some(r => r.reason !== null)`)
  * looks equivalent and is not: an export taken with reasons ON, of a selection
  * that happens to be all standalone saves, would report `false` and claim the
@@ -209,6 +240,7 @@ export function buildSavedJson(
       exportedAt: now.toISOString(),
       count: rows.length,
       includesReason: opts.includeReason,
+      includesImage: opts.includeImage,
       articles: rows,
     },
     null,

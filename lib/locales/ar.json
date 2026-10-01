@@ -2943,7 +2943,7 @@
     "fabA11y": "تصدير المقالات المحفوظة",
     "title": "تصدير المحفوظات",
     "step1Heading": "اختر المقالات",
-    "step2Heading": "هل تريد تضمين سبب اختيار Mera لها؟",
+    "step2Heading": "ما الذي تريد تضمينه؟",
     "step3Heading": "اختر الصيغة",
     "selectAll": "تحديد الكل",
     "selectedCount": "{{count}} محدد",
@@ -2958,7 +2958,9 @@
     "failedMessage": "لم يتم تصدير أي شيء. يرجى المحاولة مرة أخرى.",
     "docTitle": "المقالات المحفوظة",
     "docExported": "تم التصدير في {{date}}",
-    "docReasonLabel": "سبب اختيار Mera لها"
+    "docReasonLabel": "سبب اختيار Mera لها",
+    "includeImage": "تضمين رابط الصورة",
+    "includeImageHint": "رابط لصورة كل مقال، إن وُجدت."
   },
   "tabExplainer": {
     "openA11y": "كيف يعمل هذا القسم",

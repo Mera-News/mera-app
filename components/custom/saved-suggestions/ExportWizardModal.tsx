@@ -48,6 +48,13 @@ export interface ExportWizardRow {
     language?: string;
 }
 
+/** The reader's step-2 answers. The article's language is not a choice: every
+ *  export carries it. */
+export interface ExportContentOptions {
+    includeReason: boolean;
+    includeImage: boolean;
+}
+
 interface ExportWizardModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -56,7 +63,7 @@ interface ExportWizardModalProps {
     /** Serialises the chosen rows, in `rows` order. May read local data first. */
     buildContent: (
         chosenIds: string[],
-        includeReason: boolean,
+        options: ExportContentOptions,
         format: ExportFormat,
     ) => string | Promise<string>;
     /** Raised when the export could not be handed off at all. The host owns
@@ -87,8 +94,8 @@ const CheckGlyph: React.FC<{ checked: boolean }> = ({ checked }) => (
 );
 
 /**
- * The three-step export wizard: choose articles, include Mera's reason, pick a
- * format, then the OS share sheet. Shared by the Saved tab (`SavedExportModal`)
+ * The three-step export wizard: choose articles, include Mera's reason and/or
+ * the image link, pick a format, then the OS share sheet. Shared by the Saved tab (`SavedExportModal`)
  * and a followed story's timeline, which differ only in their rows, their
  * serialiser and their copy.
  */
@@ -110,6 +117,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
     const [step, setStep] = useState(1);
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [includeReason, setIncludeReason] = useState(true);
+    const [includeImage, setIncludeImage] = useState(false);
     const [sharingFormat, setSharingFormat] = useState<ExportFormat | null>(null);
 
     // Read through a ref so the reset below stays keyed on `isOpen` alone. With
@@ -128,6 +136,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
             initiallyAllSelected ? new Set(rowsRef.current.map((r) => r.id)) : new Set(),
         );
         setIncludeReason(true);
+        setIncludeImage(false);
         setSharingFormat(null);
     }, [isOpen, initiallyAllSelected]);
 
@@ -158,7 +167,11 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
             if (sharingFormat) return;
             setSharingFormat(format);
             try {
-                const content = await buildContent(chosenIds, includeReason, format);
+                const content = await buildContent(
+                    chosenIds,
+                    { includeReason, includeImage },
+                    format,
+                );
 
                 const result = await exportAndShare({
                     content,
@@ -199,6 +212,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
             chosenIds,
             dialogTitle,
             fileBaseName,
+            includeImage,
             includeReason,
             onClose,
             onFailed,
@@ -378,6 +392,7 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                     <ModalBody className="py-2">
                         <Box testID={`${testIDPrefix}-modal`}>
                             {step === 2 ? (
+                                <>
                                 <Pressable
                                     testID={`${testIDPrefix}-include-reason`}
                                     onPress={() => setIncludeReason((v) => !v)}
@@ -395,6 +410,24 @@ const ExportWizardModal: React.FC<ExportWizardModalProps> = ({
                                     </VStack>
                                     <CheckGlyph checked={includeReason} />
                                 </Pressable>
+                                <Pressable
+                                    testID={`${testIDPrefix}-include-image`}
+                                    onPress={() => setIncludeImage((v) => !v)}
+                                    accessibilityRole="checkbox"
+                                    accessibilityState={{ checked: includeImage }}
+                                    className="flex-row items-center py-3 px-1"
+                                >
+                                    <VStack className="flex-1 pr-3">
+                                        <Text size="sm" className="text-white">
+                                            {t('savedExport.includeImage')}
+                                        </Text>
+                                        <Text size="xs" className="text-gray-500 mt-0.5">
+                                            {t('savedExport.includeImageHint')}
+                                        </Text>
+                                    </VStack>
+                                    <CheckGlyph checked={includeImage} />
+                                </Pressable>
+                                </>
                             ) : null}
 
                             {step === 3 ? (

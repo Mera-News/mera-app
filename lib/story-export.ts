@@ -24,7 +24,7 @@
 // No counter, tally or record of what was exported is kept anywhere.
 
 import type { ForYouSuggestion } from './stores/for-you-store';
-import { isoDay, oneLine, toIso } from './saved-articles-export';
+import { displayLanguage, isoDay, oneLine, toIso } from './saved-articles-export';
 
 /** A timeline card, as the story screen holds it. `TimelineCard` satisfies
  *  this structurally; declared here so `lib/` does not import `components/`. */
@@ -35,10 +35,14 @@ export interface StoryExportMember {
   publicationName?: string;
   languageCode?: string;
   countryCode?: string;
+  imageUrl?: string;
 }
 
 /** The fields read off a member's retention row. */
-export type StoryRetainedRow = Pick<ForYouSuggestion, 'article_url' | 'reason' | 'title_en'>;
+export type StoryRetainedRow = Pick<
+  ForYouSuggestion,
+  'article_url' | 'reason' | 'title_en' | 'image_url'
+>;
 
 /** One article as it appears in a story export, in either format. */
 export interface StoryExportRow {
@@ -53,10 +57,13 @@ export interface StoryExportRow {
   publishedAt: string | null;
   /** Null when there is none, or when the reader turned reasons off. */
   reason: string | null;
+  /** Null when there is none, or when the reader left images off. */
+  imageUrl: string | null;
 }
 
 export interface StoryExportOptions {
   includeReason: boolean;
+  includeImage: boolean;
 }
 
 /** Labels resolved by the caller's `t()`, injected to keep this module pure. */
@@ -69,6 +76,8 @@ export interface StoryExportLabels {
   docExported: string;
   /** `savedExport.docReasonLabel` */
   reasonLabel: string;
+  /** See `SavedExportLabels.languageName`. */
+  languageName: (code: string) => string | null;
 }
 
 /** Members in the order given (the timeline's newest-first), joined with
@@ -89,6 +98,7 @@ export function toStoryExportRows(
       url: kept?.article_url || null,
       publishedAt: m.pubDateMs > 0 ? toIso(m.pubDateMs) : null,
       reason: opts.includeReason && reason ? reason : null,
+      imageUrl: (opts.includeImage && (m.imageUrl || kept?.image_url)) || null,
     };
   });
 }
@@ -96,7 +106,8 @@ export function toStoryExportRows(
 /**
  * The Markdown document: the story headline as a level-1 title, the AI label
  * when the headline is Mera-written, the export date, then one level-2 section
- * per article with its meta line, its link and, when included, its reason.
+ * per article with its meta line (ending in its language), its link, and its
+ * image and reason when included.
  */
 export function buildStoryMarkdown(
   rows: StoryExportRow[],
@@ -114,10 +125,12 @@ export function buildStoryMarkdown(
     const meta = [
       row.publication,
       row.publishedAt ? isoDay(row.publishedAt) : null,
+      displayLanguage(row.language, labels.languageName),
     ].filter((part): part is string => !!part);
     if (meta.length > 0) out.push(meta.join(' · '));
 
     if (row.url) out.push(row.url);
+    if (row.imageUrl) out.push(`![](${row.imageUrl})`);
 
     if (row.reason) {
       out.push('');
@@ -149,6 +162,7 @@ export function buildStoryJson(
       },
       count: rows.length,
       includesReason: opts.includeReason,
+      includesImage: opts.includeImage,
       articles: rows,
     },
     null,

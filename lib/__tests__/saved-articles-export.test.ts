@@ -20,6 +20,8 @@ const LABELS: SavedExportLabels = {
   docTitle: 'Saved articles',
   docExported: 'Exported 2026-09-22',
   reasonLabel: 'Why Mera picked it',
+  // 'nl' resolves; any other code is unknown, so the export prints the code.
+  languageName: (code) => (code === 'nl' ? 'Dutch' : null),
 };
 
 /** A 'suggestion' row. Only the fields the export reads are meaningful; the
@@ -33,6 +35,7 @@ function suggestionItem(
     firstPubDate: string;
     reason: string;
     savedAt: number;
+    image_url: string | null;
   }> = {},
 ): SavedItem {
   return {
@@ -55,7 +58,7 @@ function suggestionItem(
       description_en: null,
       article_url:
         'article_url' in over ? over.article_url! : 'https://example.com/story',
-      image_url: null,
+      image_url: over.image_url ?? null,
       userTopicIds: [],
       createdAt: '2026-09-19T06:00:00.000Z',
       firstPubDate: over.firstPubDate ?? '2026-09-20T06:00:00.000Z',
@@ -68,7 +71,9 @@ function suggestionItem(
 }
 
 /** An 'article' row — a standalone save, which never carried a reason. */
-function articleItem(over: Partial<{ savedAt: number }> = {}): SavedItem {
+function articleItem(
+  over: Partial<{ savedAt: number; image_url: string; original_language_code: string }> = {},
+): SavedItem {
   return {
     origin: 'article',
     savedId: 'saved-2',
@@ -82,6 +87,8 @@ function articleItem(over: Partial<{ savedAt: number }> = {}): SavedItem {
       description: '',
       pubDate: '2026-09-18T12:00:00.000Z',
       publicationSource: { publication_name: 'NOS', country_code: 'NLD' },
+      image_url: over.image_url,
+      original_language_code: over.original_language_code ?? 'fy',
     } as never,
   };
 }
@@ -89,7 +96,7 @@ function articleItem(over: Partial<{ savedAt: number }> = {}): SavedItem {
 describe('toExportRows', () => {
   it('flattens both origins and stamps savedAt as ISO', () => {
     const rows = toExportRows([suggestionItem(), articleItem()], {
-      includeReason: true,
+      includeReason: true, includeImage: false,
     });
 
     expect(rows).toHaveLength(2);
@@ -100,32 +107,35 @@ describe('toExportRows', () => {
       publishedAt: '2026-09-20T06:00:00.000Z',
       savedAt: '2026-09-21T18:22:11.000Z',
       reason: 'Flooding in North Holland reaches the area you live in.',
+      language: 'nl',
+      imageUrl: null,
     });
     expect(rows[1].savedAt).toBe('2026-09-20T09:00:00.000Z');
+    expect(rows[1].language).toBe('fy');
   });
 
   it('falls back to the original headline when there is no English one', () => {
     const [row] = toExportRows([suggestionItem({ title_en: null })], {
-      includeReason: false,
+      includeReason: false, includeImage: false,
     });
     expect(row.title).toBe('Stormwaarschuwingen verlengd');
   });
 
   it('never exports a reason for a standalone save, even with reasons on', () => {
-    const [row] = toExportRows([articleItem()], { includeReason: true });
+    const [row] = toExportRows([articleItem()], { includeReason: true, includeImage: false });
     expect(row.reason).toBeNull();
   });
 
   it('drops every reason when the reader turned them off', () => {
     const rows = toExportRows([suggestionItem(), articleItem()], {
-      includeReason: false,
+      includeReason: false, includeImage: false,
     });
     expect(rows.map((r) => r.reason)).toEqual([null, null]);
   });
 
   it('treats an empty reason as absent rather than exporting a blank quote', () => {
     const [row] = toExportRows([suggestionItem({ reason: '   ' })], {
-      includeReason: true,
+      includeReason: true, includeImage: false,
     });
     expect(row.reason).toBeNull();
   });
@@ -133,7 +143,7 @@ describe('toExportRows', () => {
   it('collapses an embedded newline in a reason to one line', () => {
     const [row] = toExportRows(
       [suggestionItem({ reason: 'First half.\n\nSecond half.' })],
-      { includeReason: true },
+      { includeReason: true, includeImage: false },
     );
     expect(row.reason).toBe('First half. Second half.');
   });
@@ -141,20 +151,20 @@ describe('toExportRows', () => {
   it('nulls a missing url and a missing publication rather than emitting ""', () => {
     const [row] = toExportRows(
       [suggestionItem({ article_url: null, publication_name: null })],
-      { includeReason: true },
+      { includeReason: true, includeImage: false },
     );
     expect(row.url).toBeNull();
     expect(row.publication).toBeNull();
   });
 
   it('falls back to source_uri when the article url is empty', () => {
-    const [row] = toExportRows([articleItem()], { includeReason: false });
+    const [row] = toExportRows([articleItem()], { includeReason: false, includeImage: false });
     expect(row.url).toBe('https://example.org/other');
   });
 
   it('nulls an unparseable publish date instead of emitting "Invalid Date"', () => {
     const [row] = toExportRows([suggestionItem({ firstPubDate: 'not a date' })], {
-      includeReason: false,
+      includeReason: false, includeImage: false,
     });
     expect(row.publishedAt).toBeNull();
   });
@@ -163,29 +173,47 @@ describe('toExportRows', () => {
     // `new Date(NaN).toISOString()` throws a RangeError, and one bad row must
     // never cost the other rows their export.
     const [row] = toExportRows([suggestionItem({ savedAt: Number.NaN })], {
-      includeReason: false,
+      includeReason: false, includeImage: false,
     });
     expect(row.savedAt).toBeNull();
   });
 
   it('still renders a Markdown meta line for a row with no saved date', () => {
     const rows = toExportRows([suggestionItem({ savedAt: Number.NaN })], {
-      includeReason: false,
+      includeReason: false, includeImage: false,
     });
     const md = buildSavedMarkdown(rows, LABELS);
     expect(md).toContain('The Guardian · 2026-09-20');
     expect(md).not.toContain('null');
   });
 
+  it('exports image links only when the reader asked, and only where one exists', () => {
+    const items = [
+      suggestionItem({ image_url: 'https://img.example.com/a.jpg' }),
+      articleItem({ image_url: 'https://img.example.org/b.jpg' }),
+      suggestionItem(),
+    ];
+    const on = toExportRows(items, { includeReason: false, includeImage: true });
+    expect(on.map((r) => r.imageUrl)).toEqual([
+      'https://img.example.com/a.jpg',
+      'https://img.example.org/b.jpg',
+      null,
+    ]);
+    const off = toExportRows(items, { includeReason: false, includeImage: false });
+    expect(off.every((r) => r.imageUrl === null)).toBe(true);
+    // Language is not a choice: it survives both answers.
+    expect(off.map((r) => r.language)).toEqual(['nl', 'fy', 'nl']);
+  });
+
   it('returns an empty array for an empty selection', () => {
-    expect(toExportRows([], { includeReason: true })).toEqual([]);
+    expect(toExportRows([], { includeReason: true, includeImage: false })).toEqual([]);
   });
 });
 
 describe('buildSavedMarkdown', () => {
   it('writes a title, the export line, and one section per article', () => {
     const rows = toExportRows([suggestionItem(), articleItem()], {
-      includeReason: true,
+      includeReason: true, includeImage: false,
     });
     const md = buildSavedMarkdown(rows, LABELS);
 
@@ -196,13 +224,13 @@ describe('buildSavedMarkdown', () => {
         'Exported 2026-09-22',
         '',
         '## Storm warnings extended',
-        'The Guardian · 2026-09-20 · 2026-09-21',
+        'The Guardian · 2026-09-20 · 2026-09-21 · Dutch',
         'https://example.com/story',
         '',
         '> Why Mera picked it: Flooding in North Holland reaches the area you live in.',
         '',
         '## A standalone save',
-        'NOS · 2026-09-18 · 2026-09-20',
+        'NOS · 2026-09-18 · 2026-09-20 · fy',
         'https://example.org/other',
         '',
       ].join('\n'),
@@ -210,7 +238,7 @@ describe('buildSavedMarkdown', () => {
   });
 
   it('omits the quote block entirely when reasons are off', () => {
-    const rows = toExportRows([suggestionItem()], { includeReason: false });
+    const rows = toExportRows([suggestionItem()], { includeReason: false, includeImage: false });
     const md = buildSavedMarkdown(rows, LABELS);
     expect(md).not.toContain('>');
     expect(md).toContain('## Storm warnings extended');
@@ -219,7 +247,7 @@ describe('buildSavedMarkdown', () => {
   it('puts a Markdown-significant headline in a heading, not a bullet', () => {
     const rows = toExportRows(
       [suggestionItem({ title_en: '1. *Costs* rise #again _fast_' })],
-      { includeReason: false },
+      { includeReason: false, includeImage: false },
     );
     const md = buildSavedMarkdown(rows, LABELS);
     // Verbatim on its own heading line: nothing re-numbers or re-nests around it.
@@ -228,16 +256,28 @@ describe('buildSavedMarkdown', () => {
 
   it('drops the meta separator for a row with no publication', () => {
     const rows = toExportRows([suggestionItem({ publication_name: null })], {
-      includeReason: false,
+      includeReason: false, includeImage: false,
     });
     const md = buildSavedMarkdown(rows, LABELS);
-    expect(md).toContain('\n2026-09-20 · 2026-09-21\n');
-    expect(md).not.toContain('· 2026-09-20 · 2026-09-21');
+    expect(md).toContain('\n2026-09-20 · 2026-09-21 · Dutch\n');
+    expect(md).not.toContain('· 2026-09-20 · 2026-09-21 ·');
+  });
+
+  it('writes an image line after the link only for rows that carry one', () => {
+    const rows = toExportRows(
+      [suggestionItem({ image_url: 'https://img.example.com/a.jpg' }), articleItem()],
+      { includeReason: false, includeImage: true },
+    );
+    const md = buildSavedMarkdown(rows, LABELS);
+    expect(md).toContain(
+      'https://example.com/story\n![](https://img.example.com/a.jpg)\n',
+    );
+    expect(md.match(/!\[\]/g)).toHaveLength(1);
   });
 
   it('omits the link line for a row with no url', () => {
     const rows = toExportRows([suggestionItem({ article_url: null })], {
-      includeReason: false,
+      includeReason: false, includeImage: false,
     });
     expect(buildSavedMarkdown(rows, LABELS)).not.toContain('http');
   });
@@ -254,9 +294,9 @@ describe('buildSavedJson', () => {
 
   it('carries the export stamp, the count and every row', () => {
     const rows = toExportRows([suggestionItem(), articleItem()], {
-      includeReason: true,
+      includeReason: true, includeImage: false,
     });
-    const parsed = JSON.parse(buildSavedJson(rows, { includeReason: true }, NOW));
+    const parsed = JSON.parse(buildSavedJson(rows, { includeReason: true, includeImage: false }, NOW));
 
     expect(parsed.exportedAt).toBe('2026-09-22T10:14:00.000Z');
     expect(parsed.count).toBe(2);
@@ -271,25 +311,37 @@ describe('buildSavedJson', () => {
   it('reports includesReason from the reader\'s answer, not from the rows', () => {
     // Reasons ON over a selection that is all standalone saves: no row carries
     // a reason, and the export must still say the reader asked for them.
-    const rows = toExportRows([articleItem()], { includeReason: true });
+    const rows = toExportRows([articleItem()], { includeReason: true, includeImage: false });
     expect(rows.every((r) => r.reason === null)).toBe(true);
 
-    const parsed = JSON.parse(buildSavedJson(rows, { includeReason: true }, NOW));
+    const parsed = JSON.parse(buildSavedJson(rows, { includeReason: true, includeImage: false }, NOW));
     expect(parsed.includesReason).toBe(true);
   });
 
+  it('reports includesImage from the reader\'s answer, not from the rows', () => {
+    const rows = toExportRows([suggestionItem()], { includeReason: false, includeImage: true });
+    expect(rows[0].imageUrl).toBeNull();
+    const parsed = JSON.parse(
+      buildSavedJson(rows, { includeReason: false, includeImage: true }, NOW),
+    );
+    expect(parsed.includesImage).toBe(true);
+    // JSON keeps the language CODE; only Markdown names it.
+    expect(parsed.articles[0].language).toBe('nl');
+  });
+
   it('reports includesReason false when the reader declined', () => {
-    const rows = toExportRows([suggestionItem()], { includeReason: false });
-    const parsed = JSON.parse(buildSavedJson(rows, { includeReason: false }, NOW));
+    const rows = toExportRows([suggestionItem()], { includeReason: false, includeImage: false });
+    const parsed = JSON.parse(buildSavedJson(rows, { includeReason: false, includeImage: false }, NOW));
     expect(parsed.includesReason).toBe(false);
   });
 
   it('emits valid JSON for an empty selection', () => {
-    const parsed = JSON.parse(buildSavedJson([], { includeReason: false }, NOW));
+    const parsed = JSON.parse(buildSavedJson([], { includeReason: false, includeImage: false }, NOW));
     expect(parsed).toEqual({
       exportedAt: '2026-09-22T10:14:00.000Z',
       count: 0,
       includesReason: false,
+      includesImage: false,
       articles: [],
     });
   });

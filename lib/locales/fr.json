@@ -2864,7 +2864,7 @@
     "fabA11y": "Exporter les articles enregistrés",
     "title": "Exporter les enregistrés",
     "step1Heading": "Choisissez les articles",
-    "step2Heading": "Inclure la raison de Mera ?",
+    "step2Heading": "Que faut-il inclure ?",
     "step3Heading": "Choisissez un format",
     "selectAll": "Tout sélectionner",
     "selectedCount": "{{count}} sélectionnés",
@@ -2879,7 +2879,9 @@
     "failedMessage": "Rien n'a été exporté. Veuillez réessayer.",
     "docTitle": "Articles enregistrés",
     "docExported": "Exporté le {{date}}",
-    "docReasonLabel": "Pourquoi Mera l'a choisi"
+    "docReasonLabel": "Pourquoi Mera l'a choisi",
+    "includeImage": "Inclure le lien de l'image",
+    "includeImageHint": "Un lien vers l'image de chaque article, s'il en a une."
   },
   "tabExplainer": {
     "openA11y": "Comment fonctionne cet onglet",

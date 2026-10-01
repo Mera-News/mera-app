@@ -5,10 +5,14 @@ import {
     exportDay,
     toExportRows,
 } from '@/lib/saved-articles-export';
+import { getLocalizedLanguageName } from '@/lib/language-names';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ExportFormat } from './export-and-share';
-import ExportWizardModal, { type ExportWizardRow } from './ExportWizardModal';
+import ExportWizardModal, {
+    type ExportContentOptions,
+    type ExportWizardRow,
+} from './ExportWizardModal';
 import { savedItemId } from './saved-item-id';
 
 interface SavedExportModalProps {
@@ -30,7 +34,8 @@ const SavedExportModal: React.FC<SavedExportModalProps> = ({
     items,
     onFailed,
 }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const appLanguage = i18n?.language ?? 'en';
 
     // Rendered through TranslatableDynamic with the props the CARD passes, so a
     // row here reads the same as the row behind the modal. The exported file
@@ -61,21 +66,22 @@ const SavedExportModal: React.FC<SavedExportModalProps> = ({
     );
 
     const buildContent = useCallback(
-        (chosenIds: string[], includeReason: boolean, format: ExportFormat) => {
+        (chosenIds: string[], options: ExportContentOptions, format: ExportFormat) => {
             const chosen = new Set(chosenIds);
             const exportRows = toExportRows(
                 items.filter((item) => chosen.has(savedItemId(item))),
-                { includeReason },
+                options,
             );
             return format === 'markdown'
                 ? buildSavedMarkdown(exportRows, {
                       docTitle: t('savedExport.docTitle'),
                       docExported: t('savedExport.docExported', { date: exportDay() }),
                       reasonLabel: t('savedExport.docReasonLabel'),
+                      languageName: (code) => getLocalizedLanguageName(code, appLanguage),
                   })
-                : buildSavedJson(exportRows, { includeReason });
+                : buildSavedJson(exportRows, options);
         },
-        [items, t],
+        [items, t, appLanguage],
     );
 
     return (

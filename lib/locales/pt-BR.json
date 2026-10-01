@@ -2857,7 +2857,7 @@
     "fabA11y": "Exportar artigos salvos",
     "title": "Exportar salvos",
     "step1Heading": "Escolha os artigos",
-    "step2Heading": "Incluir o motivo de Mera?",
+    "step2Heading": "O que incluir",
     "step3Heading": "Escolha um formato",
     "selectAll": "Selecionar tudo",
     "selectedCount": "{{count}} selecionados",
@@ -2872,7 +2872,9 @@
     "failedMessage": "Nada foi exportado. Tente novamente.",
     "docTitle": "Artigos salvos",
     "docExported": "Exportado em {{date}}",
-    "docReasonLabel": "Por que Mera escolheu"
+    "docReasonLabel": "Por que Mera escolheu",
+    "includeImage": "Incluir link da imagem",
+    "includeImageHint": "Um link para a imagem de cada artigo, quando houver."
   },
   "tabExplainer": {
     "openA11y": "Como esta aba funciona",

@@ -2859,7 +2859,7 @@
     "fabA11y": "सहेजे गए लेख निर्यात करें",
     "title": "सहेजे गए निर्यात करें",
     "step1Heading": "लेख चुनें",
-    "step2Heading": "Mera ने इसे क्यों चुना, यह शामिल करें?",
+    "step2Heading": "क्या शामिल करें",
     "step3Heading": "प्रारूप चुनें",
     "selectAll": "सभी चुनें",
     "selectedCount": "{{count}} चुने गए",
@@ -2874,7 +2874,9 @@
     "failedMessage": "कुछ भी निर्यात नहीं हुआ। कृपया फिर से कोशिश करें।",
     "docTitle": "सहेजे गए लेख",
     "docExported": "{{date}} को निर्यात किया गया",
-    "docReasonLabel": "Mera ने इसे क्यों चुना"
+    "docReasonLabel": "Mera ने इसे क्यों चुना",
+    "includeImage": "इमेज लिंक शामिल करें",
+    "includeImageHint": "हर लेख की तस्वीर का लिंक, अगर उसमें तस्वीर हो।"
   },
   "tabExplainer": {
     "openA11y": "यह टैब कैसे काम करता है",

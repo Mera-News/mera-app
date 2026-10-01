@@ -2857,7 +2857,7 @@
     "fabA11y": "Bewaarde artikelen exporteren",
     "title": "Bewaarde exporteren",
     "step1Heading": "Kies artikelen",
-    "step2Heading": "Reden van Mera meenemen?",
+    "step2Heading": "Wat meenemen",
     "step3Heading": "Kies een formaat",
     "selectAll": "Alles selecteren",
     "selectedCount": "{{count}} geselecteerd",
@@ -2872,7 +2872,9 @@
     "failedMessage": "Er is niets geëxporteerd. Probeer het opnieuw.",
     "docTitle": "Bewaarde artikelen",
     "docExported": "Geëxporteerd op {{date}}",
-    "docReasonLabel": "Waarom Mera dit koos"
+    "docReasonLabel": "Waarom Mera dit koos",
+    "includeImage": "Afbeeldingslink meenemen",
+    "includeImageHint": "Een link naar de afbeelding van elk artikel, als die er is."
   },
   "tabExplainer": {
     "openA11y": "Hoe dit tabblad werkt",

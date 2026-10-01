@@ -2856,7 +2856,7 @@
     "fabA11y": "保存した記事を書き出す",
     "title": "保存記事の書き出し",
     "step1Heading": "記事を選択",
-    "step2Heading": "Mera が選んだ理由を含めますか？",
+    "step2Heading": "含める内容",
     "step3Heading": "形式を選択",
     "selectAll": "すべて選択",
     "selectedCount": "{{count}} 件選択中",
@@ -2871,7 +2871,9 @@
     "failedMessage": "何も書き出されませんでした。もう一度お試しください。",
     "docTitle": "保存した記事",
     "docExported": "{{date}} に書き出し",
-    "docReasonLabel": "Mera が選んだ理由"
+    "docReasonLabel": "Mera が選んだ理由",
+    "includeImage": "画像リンクを含める",
+    "includeImageHint": "各記事の画像へのリンクです（画像がある場合）。"
   },
   "tabExplainer": {
     "openA11y": "このタブのしくみ",

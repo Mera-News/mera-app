@@ -2856,7 +2856,7 @@
     "fabA11y": "저장한 기사 내보내기",
     "title": "저장한 기사 내보내기",
     "step1Heading": "기사 선택",
-    "step2Heading": "Mera가 선택한 이유를 포함할까요?",
+    "step2Heading": "포함할 항목",
     "step3Heading": "형식 선택",
     "selectAll": "전체 선택",
     "selectedCount": "{{count}}개 선택됨",
@@ -2871,7 +2871,9 @@
     "failedMessage": "아무것도 내보내지 않았습니다. 다시 시도해 주세요.",
     "docTitle": "저장한 기사",
     "docExported": "{{date}}에 내보냄",
-    "docReasonLabel": "Mera가 선택한 이유"
+    "docReasonLabel": "Mera가 선택한 이유",
+    "includeImage": "이미지 링크 포함",
+    "includeImageHint": "각 기사의 이미지 링크입니다(이미지가 있는 경우)."
   },
   "tabExplainer": {
     "openA11y": "이 탭의 작동 방식",

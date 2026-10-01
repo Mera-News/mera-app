@@ -2857,7 +2857,7 @@
     "fabA11y": "Exportar artículos guardados",
     "title": "Exportar guardados",
     "step1Heading": "Elige los artículos",
-    "step2Heading": "¿Incluir por qué lo eligió Mera?",
+    "step2Heading": "Qué incluir",
     "step3Heading": "Elige un formato",
     "selectAll": "Seleccionar todo",
     "selectedCount": "{{count}} seleccionados",
@@ -2872,7 +2872,9 @@
     "failedMessage": "No se exportó nada. Inténtalo de nuevo.",
     "docTitle": "Artículos guardados",
     "docExported": "Exportado el {{date}}",
-    "docReasonLabel": "Por qué lo eligió Mera"
+    "docReasonLabel": "Por qué lo eligió Mera",
+    "includeImage": "Incluir enlace de la imagen",
+    "includeImageHint": "Un enlace a la imagen de cada artículo, si la tiene."
   },
   "tabExplainer": {
     "openA11y": "Cómo funciona esta pestaña",

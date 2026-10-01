@@ -2856,7 +2856,7 @@
     "fabA11y": "ส่งออกบทความที่บันทึกไว้",
     "title": "ส่งออกรายการที่บันทึก",
     "step1Heading": "เลือกบทความ",
-    "step2Heading": "รวมเหตุผลของ Mera ไหม",
+    "step2Heading": "สิ่งที่จะรวม",
     "step3Heading": "เลือกรูปแบบ",
     "selectAll": "เลือกทั้งหมด",
     "selectedCount": "เลือกแล้ว {{count}} รายการ",
@@ -2871,7 +2871,9 @@
     "failedMessage": "ไม่มีการส่งออกข้อมูล โปรดลองอีกครั้ง",
     "docTitle": "บทความที่บันทึกไว้",
     "docExported": "ส่งออกเมื่อ {{date}}",
-    "docReasonLabel": "ทำไม Mera จึงเลือกบทความนี้"
+    "docReasonLabel": "ทำไม Mera จึงเลือกบทความนี้",
+    "includeImage": "รวมลิงก์รูปภาพ",
+    "includeImageHint": "ลิงก์ไปยังรูปภาพของบทความแต่ละชิ้น หากมี"
   },
   "tabExplainer": {
     "openA11y": "แท็บนี้ทำงานอย่างไร",

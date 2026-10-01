@@ -2857,7 +2857,7 @@
     "fabA11y": "导出已保存的文章",
     "title": "导出已保存",
     "step1Heading": "选择文章",
-    "step2Heading": "是否包含 Mera 的选择理由？",
+    "step2Heading": "包含哪些内容",
     "step3Heading": "选择格式",
     "selectAll": "全选",
     "selectedCount": "已选择 {{count}} 篇",
@@ -2872,7 +2872,9 @@
     "failedMessage": "没有导出任何内容。请重试。",
     "docTitle": "已保存的文章",
     "docExported": "导出于 {{date}}",
-    "docReasonLabel": "Mera 选择它的理由"
+    "docReasonLabel": "Mera 选择它的理由",
+    "includeImage": "包含图片链接",
+    "includeImageHint": "每篇文章图片的链接（如有）。"
   },
   "tabExplainer": {
     "openA11y": "此标签页如何运作",

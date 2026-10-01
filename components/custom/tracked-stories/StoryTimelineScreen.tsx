@@ -3,8 +3,10 @@ import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import type { ExportFormat } from '@/components/custom/saved-suggestions/export-and-share';
 import ExportWizardModal, {
+    type ExportContentOptions,
     type ExportWizardRow,
 } from '@/components/custom/saved-suggestions/ExportWizardModal';
+import { getLocalizedLanguageName } from '@/lib/language-names';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -134,7 +136,8 @@ async function hydrateSource(
  * longer inflate the count.
  */
 const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryId, onBack }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const appLanguage = i18n?.language ?? 'en';
     const insets = useSafeAreaInsets();
     const [headline, setHeadline] = useState<string>('');
     // EU AI Act Art. 50 transparency label (Group C1) — tracked separately from
@@ -347,7 +350,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     );
 
     const buildExport = useCallback(
-        async (chosenIds: string[], includeReason: boolean, format: ExportFormat) => {
+        async (chosenIds: string[], options: ExportContentOptions, format: ExportFormat) => {
             const chosen = new Set(chosenIds);
             const members = cards.filter((c) => chosen.has(c.articleId));
             // Links and notes live on the story's retention rows, not its
@@ -360,7 +363,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
             kept.forEach((row, i) => {
                 if (row) retainedById.set(members[i].articleId, row);
             });
-            const rows = toStoryExportRows(members, retainedById, { includeReason });
+            const rows = toStoryExportRows(members, retainedById, options);
             // A story with neither headline falls back to its newest article.
             const docHeadline = headline || rows[0]?.title || t('trackedStories.title');
             return format === 'markdown'
@@ -369,14 +372,15 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                       headlineAiLabel: isLlmHeadline ? t('aiDisclosure.short') : undefined,
                       docExported: t('savedExport.docExported', { date: exportDay() }),
                       reasonLabel: t('savedExport.docReasonLabel'),
+                      languageName: (code) => getLocalizedLanguageName(code, appLanguage),
                   })
                 : buildStoryJson(
                       rows,
                       { headline: docHeadline, headlineAiGenerated: isLlmHeadline },
-                      { includeReason },
+                      options,
                   );
         },
-        [cards, headline, isLlmHeadline, t],
+        [cards, headline, isLlmHeadline, t, appLanguage],
     );
 
     const handleExportFailed = useCallback(() => {
