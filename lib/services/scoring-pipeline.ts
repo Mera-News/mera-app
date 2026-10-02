@@ -1,10 +1,13 @@
 // scoring-pipeline — orchestrator for the pipelined multi-batch cloud scoring
-// flow. Replaces the single giant async job (all unscored articles → one
-// relevance job → one reasons job) with ~19 independent 25-article batches.
+// flow. A run is a sequence of independent batches that RAMP in size (1, 2, 5,
+// then 10 LLM calls), so the first cards arrive after one call, not ten.
 //
 // Each batch flows: submit relevance → poll → decode+save scores+refresh UI →
 // submit reasons (impactful subset) → poll → save reasons+refresh UI → done.
-// At most MAX_IN_FLIGHT batches hold an outstanding gateway job at once.
+// At most MAX_IN_FLIGHT batches hold an outstanding RELEVANCE job at once, and
+// MAX_IN_FLIGHT_TOTAL any job. Every gateway action (submit, reasons submit,
+// poll) is picked by `pickNextGatewayAction` in batch order, lowest batchId
+// first: batch 1's notes always beat batch 5's relevance to the next slot.
 //
 // Persistence lives in scoring-pipeline-store (settings row + keychain privkey,
 // CAS-guarded via mutatePipeline). E2EE uses ONE keypair per run, minted at run
@@ -121,11 +124,16 @@ const TAG = '[scoring-pipeline]';
 // batches) only so a run persisted by an older build still parses.
 //
 // Sizing rule (supersedes the Round-4 B "strict 25-article quanta"): dispatch as
-// soon as MIN_DISPATCH articles are ready, and let the batch absorb everything
-// else that is ready, up to MAX_BATCH_ARTICLES. The old rule dispatched only
-// FULL 25-quanta, which meant a user with a handful of fresh articles waited out
-// the 30-minute staleness escape to see anything — the common case on a quiet
-// feed, and the one the "4 articles were analysed for you" report came from.
+// soon as MIN_DISPATCH articles are ready. The old rule dispatched only FULL
+// 25-quanta, which meant a user with a handful of fresh articles waited out the
+// 30-minute staleness escape to see anything — the common case on a quiet feed,
+// and the one the "4 articles were analysed for you" report came from.
+//
+// A batch's ceiling RAMPS with its position in the run (`rampedBatchCap`): 1,
+// 2, 5, then 10 calls. A job is read only once ALL its calls finish, so a
+// 4-call first batch made the first card wait for the slowest of four; one call
+// is the fastest first paint there is. Measured before the ramp on prod
+// (2026-10-02, cache clear): first card 11.4s, first note 33.5s.
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -141,24 +149,23 @@ export const MIN_DISPATCH = CLOUD_SCORE_CHUNK_SIZE;
  *  job that risks the gateway's 120s upstream timeout. Overflow spills into
  *  further batches, which drain MAX_IN_FLIGHT at a time. */
 export const MAX_BATCH_ARTICLES = 10 * CLOUD_SCORE_CHUNK_SIZE;
-/** P4b — TOP-HEADLINE relevance chunk size (3). Read off the harness config
- *  rather than the mera-protocol shim so it can't come back undefined and turn
- *  the two constants below into NaN. */
-const HEADLINE_SCORE_CHUNK_SIZE =
-  DEFAULT_HARNESS_CONFIG.articlePipeline.headlineArticlesPerScorePrompt;
-/** Dispatch floor for an all-headline batch. Same rule as MIN_DISPATCH — one
- *  LLM call's worth — at the headline chunk size, so a handful of headlines
- *  isn't held back below a floor sized for the longer standard chunk. */
-export const MIN_DISPATCH_HEADLINE = HEADLINE_SCORE_CHUNK_SIZE;
-/** Ceiling for an all-headline batch. Same rule as MAX_BATCH_ARTICLES — at most
- *  10 LLM calls in one request — at the headline chunk size. Reusing the
- *  standard 50 here would put 17 calls in one job and break the invariant that
- *  constant exists to hold. */
-export const MAX_BATCH_ARTICLES_HEADLINE = 10 * HEADLINE_SCORE_CHUNK_SIZE;
 /** Legacy alias, kept exported for back-compat with older persisted-run readers
  *  and tests. Points at the dispatch floor, which is what now gates a run. */
 export const BATCH_SIZE = MIN_DISPATCH;
+/** Relevance jobs outstanding at once. A batch writing its NOTES does not hold
+ *  one of these: before, it did, so batch 4's relevance waited out batch 1's
+ *  notes. */
 export const MAX_IN_FLIGHT = 3;
+/** Any job outstanding at once (relevance + notes). Every waiting job needs
+ *  polls from the one 3s limiter lane, so this bounds how thin they spread. */
+export const MAX_IN_FLIGHT_TOTAL = 6;
+/** LLM calls per batch by its position in the run; the last entry repeats. */
+export const RAMP_CALLS: readonly number[] = [1, 2, 5, 10];
+
+/** Article ceiling for the batch at 0-based position `rank` in its run. */
+export function rampedBatchCap(rank: number, chunkSize: number, maxArticles: number): number {
+  return Math.min(maxArticles, RAMP_CALLS[Math.min(rank, RAMP_CALLS.length - 1)] * chunkSize);
+}
 /** @deprecated Legacy alias for the dispatch floor. Use MIN_DISPATCH. */
 export const MIN_RUN_CANDIDATES = MIN_DISPATCH;
 /** Escape hatch: if the oldest unscored row has been waiting this long, dispatch
@@ -298,9 +305,14 @@ function isTerminal(phase: BatchPhase): boolean {
   return phase === 'done' || phase === 'failed';
 }
 
-/** Batches that currently hold an outstanding gateway job (count against
- *  MAX_IN_FLIGHT). `needs-reasons-submit` and `queued` are between/before jobs
- *  and do NOT count. */
+/** Batches holding an outstanding RELEVANCE job (count against MAX_IN_FLIGHT). */
+function holdsRelevanceSlot(phase: BatchPhase): boolean {
+  return phase === 'submitting-relevance' || phase === 'waiting-relevance';
+}
+
+/** Batches that currently hold any outstanding gateway job (count against
+ *  MAX_IN_FLIGHT_TOTAL). `needs-reasons-submit` and `queued` are between/before
+ *  jobs and do NOT count. */
 function isInFlight(phase: BatchPhase): boolean {
   return (
     phase === 'submitting-relevance' ||
@@ -312,6 +324,75 @@ function isInFlight(phase: BatchPhase): boolean {
 
 function isWaiting(phase: BatchPhase): boolean {
   return phase === 'waiting-relevance' || phase === 'waiting-reasons';
+}
+
+export type GatewayAction =
+  | { kind: 'submit'; batchId: number }
+  | { kind: 'submit-reasons'; batchId: number }
+  | { kind: 'poll'; batchId: number };
+
+/**
+ * The ONE ordering rule for spending a gateway slot: the lowest batchId with
+ * anything to do wins, whatever that is. batchId is the batch's position in its
+ * run, so it IS the rank: batch 0's notes submit (or poll) beats batch 4's
+ * relevance submit, and a fresh submit never jumps a waiting poll of an earlier
+ * batch. The three FIFO loops this replaced each picked oldest-first within
+ * their own kind, so a later batch's submit could take the slot an earlier
+ * batch's results were waiting on (measured: first poll 8s after first submit,
+ * slots spent submitting batches 1 and 2).
+ *
+ * The in-flight caps gate only FRESH submits; notes submits and polls are never
+ * held back by them. A job that answered "pending" backs off (spacing x2, x4),
+ * or strict rank order would poll batch 0 on every slot until it finished and
+ * no later batch would ever submit: one batch at a time, no pipelining.
+ * Pure: the caller performs the action and passes `skip` so one sweep never
+ * acts on a batch twice.
+ */
+export function pickNextGatewayAction(
+  batches: readonly PipelineBatch[],
+  opts: {
+    now: number;
+    lastPolledAt: ReadonlyMap<number, number>;
+    allowFreshSubmit: boolean;
+    skip?: ReadonlySet<number>;
+    /** Consecutive "pending" answers per job, keyed by `pendingPollKey`. */
+    pendingPolls?: ReadonlyMap<string, number>;
+  },
+): GatewayAction | null {
+  const relevanceSlots = batches.filter((b) => holdsRelevanceSlot(b.phase)).length;
+  const total = batches.filter((b) => isInFlight(b.phase)).length;
+  const byRank = [...batches].sort((a, b) => a.batchId - b.batchId);
+  // Backoff only lets OTHER work go first; it must never leave a slot idle.
+  // Measured: with nothing else to do, a backed-off batch 0 waited 5.5s for
+  // its second poll and the first card with it.
+  return pass(true) ?? pass(false);
+
+  function pass(backoff: boolean): GatewayAction | null {
+    for (const b of byRank) {
+      if (opts.skip?.has(b.batchId)) continue;
+      if (b.phase === 'queued') {
+        if (!opts.allowFreshSubmit || total >= MAX_IN_FLIGHT_TOTAL) continue;
+        if (!b.reasonsOnly && relevanceSlots >= MAX_IN_FLIGHT) continue;
+        return { kind: 'submit', batchId: b.batchId };
+      }
+      if (b.phase === 'needs-reasons-submit') {
+        return { kind: 'submit-reasons', batchId: b.batchId };
+      }
+      if (isWaiting(b.phase)) {
+        if (opts.now - (b.submittedAt ?? 0) < MIN_POLL_AGE_MS) continue;
+        const pending = backoff ? (opts.pendingPolls?.get(pendingPollKey(b)) ?? 0) : 0;
+        const spacing = PER_BATCH_POLL_SPACING_MS * 2 ** Math.min(pending, 2);
+        if (opts.now - (opts.lastPolledAt.get(b.batchId) ?? 0) < spacing) continue;
+        return { kind: 'poll', batchId: b.batchId };
+      }
+    }
+    return null;
+  }
+}
+
+/** One key per JOB, so a batch's notes job starts with no backoff. */
+export function pendingPollKey(b: Pick<PipelineBatch, 'batchId' | 'requestId'>): string {
+  return `${b.batchId}:${b.requestId ?? ''}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -329,6 +410,11 @@ let postFinalizeKickTimer: ReturnType<typeof setTimeout> | null = null;
 // Last poll timestamp per batchId — enforces PER_BATCH_POLL_SPACING_MS. Kept in
 // memory (not persisted) so a fresh process simply re-polls.
 const lastPolledAt = new Map<number, number>();
+// Consecutive "pending" answers per job (pendingPollKey), for the poll backoff
+// in pickNextGatewayAction. In memory: a fresh process starts un-backed-off.
+const pendingPolls = new Map<string, number>();
+// A pending kickPollTick (see doDrain).
+let pollKickTimer: ReturnType<typeof setTimeout> | null = null;
 /** First time THIS PROCESS checked a batch outside the background task. The
  *  per-batch staleness bound counts from here rather than from `submittedAt`,
  *  so a batch submitted hours ago by the OS task gets a full BATCH_STALE_MS of
@@ -406,48 +492,11 @@ function chunkIds(ids: string[], size: number): string[][] {
   return out;
 }
 
-// ---------------------------------------------------------------------------
-// P4b — headline/standard batch partitioning
-//
-// TOP-HEADLINE candidates are scored with a different system prompt AND a
-// different chunk size (3 vs 5). A batch becomes ONE inference request whose
-// `score:N` calls the decoder re-derives by re-chunking `candidateIds`, so a
-// batch that mixed the two would have to mix chunk sizes — and the decoder,
-// which can only apply one size, would attribute scores to the WRONG articles
-// with no error anywhere. Batches are therefore homogeneous BY CONSTRUCTION:
-// fresh ids are split here, before any batch exists, and each partition is
-// chunked with its own ceiling and dispatch floor.
-//
-// (The submit path independently derives the variant from the candidates it
-// actually sends and persists the chunk size it actually used, so even a
-// mixed batch could only ever be under-routed to the standard prompt — never
-// mis-decoded. This partition is what makes the headline route reachable.)
-// ---------------------------------------------------------------------------
-
-/** One homogeneous group of fresh ids, in delivery order. */
-export interface EnqueuePartition {
-  ids: string[];
-  headline: boolean;
-}
-
-/** Split fresh ids into the standard group then the headline group, preserving
- *  delivery order within each. Empty groups are omitted, so a feed with no
- *  headlines yields exactly one partition and the pre-P4b batch layout. */
-export function partitionFreshIds(
-  fresh: string[],
-  headlineIds: ReadonlySet<string>,
-): EnqueuePartition[] {
-  const headline: string[] = [];
-  const standard: string[] = [];
-  for (const id of fresh) {
-    if (headlineIds.has(id)) headline.push(id);
-    else standard.push(id);
-  }
-  const out: EnqueuePartition[] = [];
-  if (standard.length > 0) out.push({ ids: standard, headline: false });
-  if (headline.length > 0) out.push({ ids: headline, headline: true });
-  return out;
-}
+// Headlines are queued like any other article: one queue, delivery order,
+// chunked at CLOUD_SCORE_CHUNK_SIZE. The relevance PROMPT is still chosen per
+// call (a call of headlines only takes the headline rubric; see
+// `buildRelevanceCalls`), and the decoder re-chunks by the batch's persisted
+// `scoreChunkSize`, so a mixed batch decodes exactly like any other.
 
 /**
  * Which of `ids` are headline-sourced, read off the persisted stage metadata.
@@ -956,73 +1005,55 @@ async function persistCandidateBatches(
     return { deferred: [], hadRun, dispatched: 0 };
   }
 
-  // P4b: split first, so no batch can ever hold both a headline and a standard
-  // candidate. Each partition is then chunked with its OWN ceiling and floor —
-  // a headline batch is 10 calls of 3, a standard batch 10 calls of 5.
-  const partitions = partitionFreshIds(fresh, await lookupHeadlineIds(fresh));
-
   const dispatch: string[][] = [];
-  let deferred = 0;
-  // The trailing partials' ids when they're held back — returned to the caller
-  // so feed-sync can flush them once the whole lot is hydrated (flushPartial).
+  // The trailing partial's ids when held back — returned to the caller so
+  // feed-sync can flush them once the whole lot is hydrated (flushPartial).
   const deferredIds: string[] = [];
-  // The staleness escape reads the oldest unscored row's age; memoised so two
-  // partitions with a remainder each still cost at most ONE DB read.
-  let oldestAgeMs: number | null = null;
-  const readOldestAgeMs = async (): Promise<number | null> => {
-    if (oldestAgeMs === null) {
-      const oldestCreatedAt = await getOldestUnscoredCreatedAt();
-      oldestAgeMs = oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : -1;
-    }
-    return oldestAgeMs < 0 ? null : oldestAgeMs;
-  };
 
-  for (const partition of partitions) {
-    const maxArticles = partition.headline
-      ? MAX_BATCH_ARTICLES_HEADLINE
-      : MAX_BATCH_ARTICLES;
-    const minDispatch = partition.headline
-      ? MIN_DISPATCH_HEADLINE
-      : MIN_DISPATCH;
-    // FIFO batches capped at the partition's ceiling. chunkIds yields at most
-    // one trailing short chunk (the last one); dispatch anything that reaches
-    // the floor, defer only a sub-floor remainder.
-    for (const chunk of chunkIds(partition.ids, maxArticles)) {
-      if (chunk.length >= minDispatch) {
-        dispatch.push(chunk);
-        continue;
-      }
-      // Sub-floor remainder — not yet worth its own LLM call. chunkIds only
-      // ever yields one such chunk per partition, as the last, so the DB read
-      // below runs at most once per enqueue (memoised above).
-      //
-      // Flush: the caller (feed-sync, after a fully-hydrated lot) asked to score
-      // everything now. We don't refetch until the whole lot is scored, so a
-      // deferred remainder would sit idle for up to MAX_UNSCORED_WAIT_MS with no
-      // next fetch coming to top it up — dispatch it immediately.
-      if (flushPartial) {
-        logger.debug(
-          `${TAG} enqueueCandidates: flush — dispatching remainder of ${chunk.length} (lot fully hydrated)`,
-        );
-        dispatch.push(chunk);
-        continue;
-      }
-      // (The P7d cold-start knob that dispatched a >=10-row partial on a cold
-      // feed is gone: MIN_DISPATCH is 5, so every chunk it would have caught now
-      // dispatches on the fast path above regardless of feed warmth.)
-      const age = await readOldestAgeMs();
-      if (age !== null && age >= MAX_UNSCORED_WAIT_MS) {
-        logger.debug(
-          `${TAG} enqueueCandidates: staleness escape — dispatching remainder of ${chunk.length} (oldest unscored waited ${Math.round(age / 60_000)}min)`,
-        );
-        dispatch.push(chunk);
-      } else {
-        deferred += chunk.length;
-        deferredIds.push(...chunk);
-        logger.debug(
-          `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${minDispatch} dispatch floor, oldest ${Math.round((age ?? 0) / 60_000)}min)`,
-        );
-      }
+  // Ramped batches in delivery order, starting at the next batch's position in
+  // the run. Read off the snapshot, so a racing append can shift it by a batch:
+  // harmless, the ramp is a latency heuristic, not a contract.
+  const firstRank = snap
+    ? snap.run.batches.reduce((m, b) => Math.max(m, b.batchId), -1) + 1
+    : 0;
+  const chunks: string[][] = [];
+  for (let i = 0, rank = firstRank; i < fresh.length; rank++) {
+    const n = rampedBatchCap(rank, MIN_DISPATCH, MAX_BATCH_ARTICLES);
+    chunks.push(fresh.slice(i, i + n));
+    i += n;
+  }
+  // Dispatch anything that reaches the floor (one LLM call's worth). Only the
+  // LAST chunk can be short.
+  for (const chunk of chunks) {
+    if (chunk.length >= MIN_DISPATCH) {
+      dispatch.push(chunk);
+      continue;
+    }
+    // Sub-floor remainder — not yet worth its own LLM call.
+    //
+    // Flush: the caller (feed-sync, after a fully-hydrated lot) asked to score
+    // everything now. We don't refetch until the whole lot is scored, so a
+    // deferred remainder would sit idle for up to MAX_UNSCORED_WAIT_MS with no
+    // next fetch coming to top it up — dispatch it immediately.
+    if (flushPartial) {
+      logger.debug(
+        `${TAG} enqueueCandidates: flush — dispatching remainder of ${chunk.length} (lot fully hydrated)`,
+      );
+      dispatch.push(chunk);
+      continue;
+    }
+    const oldestCreatedAt = await getOldestUnscoredCreatedAt();
+    const age = oldestCreatedAt !== null ? Date.now() - oldestCreatedAt : null;
+    if (age !== null && age >= MAX_UNSCORED_WAIT_MS) {
+      logger.debug(
+        `${TAG} enqueueCandidates: staleness escape — dispatching remainder of ${chunk.length} (oldest unscored waited ${Math.round(age / 60_000)}min)`,
+      );
+      dispatch.push(chunk);
+    } else {
+      deferredIds.push(...chunk);
+      logger.debug(
+        `${TAG} enqueueCandidates: deferred ${chunk.length} unscored (<${MIN_DISPATCH} dispatch floor, oldest ${Math.round((age ?? 0) / 60_000)}min)`,
+      );
     }
   }
 
@@ -1031,7 +1062,7 @@ async function persistCandidateBatches(
   }
 
   logger.debug(
-    `${TAG} enqueueCandidates: ${fresh.length} fresh ids → ${dispatch.length} batch(es) dispatched, ${deferred} deferred (run ${snap ? 'exists' : 'new'})`,
+    `${TAG} enqueueCandidates: ${fresh.length} fresh ids → ${dispatch.length} batch(es) dispatched, ${deferredIds.length} deferred (run ${snap ? 'exists' : 'new'})`,
   );
 
   const build = (base: number): PipelineBatch[] =>
@@ -1163,67 +1194,26 @@ async function drain(context: ExecutionContext): Promise<void> {
 }
 
 async function doDrain(context: ExecutionContext): Promise<void> {
-  for (;;) {
-    const snap = await getPipeline();
-    if (!snap) break;
-    const { run } = snap;
-
-    const inFlightCount = run.batches.filter((b) => isInFlight(b.phase)).length;
-    if (inFlightCount >= MAX_IN_FLIGHT) break;
-
-    const queued = run.batches.find((b) => b.phase === 'queued');
-    if (!queued) break;
-
-    // Background wakes never admit fresh 'queued' batches: a fresh
-    // relevance/reasonsOnly job has no prior capability token, and background
-    // submits authenticate ONLY with the token of a completed job (the
-    // keychain JWT is off-limits while the device may be locked). Queued
-    // batches wait for the next foreground recover/poller tick — a background
-    // wake stays within its "≤1 GET + ≤1 POST per batch" budget via the
-    // needs-reasons-submit path, which does carry a token.
-    if (context === 'background') {
-      logger.debug(
-        `${TAG} drain(background): ${run.batches.filter((b) => b.phase === 'queued').length} queued batch(es) deferred to foreground (no capability token for fresh submits)`,
-      );
-      break;
-    }
-
-    // Rate-limiter admission budget. If none is available right now, stop —
-    // the poller/next enqueue will retry.
-    if (!gatewayRateLimiter.tryTakeImmediate()) break;
-
-    // Claim the batch (CAS queued → submitting-*). Result carries reasonsOnly.
-    const claim = await mutatePipeline((r) => {
-      const b = r.batches.find((x) => x.batchId === queued.batchId);
-      if (!b || b.phase !== 'queued') return null;
-      b.phase = b.reasonsOnly ? 'submitting-reasons' : 'submitting-relevance';
-      b.submittedAt = Date.now();
-      return true;
+  // Background wakes never admit fresh 'queued' batches: a fresh
+  // relevance/reasonsOnly job has no prior capability token, and background
+  // submits authenticate ONLY with the token of a completed job (the keychain
+  // JWT is off-limits while the device may be locked). Queued batches wait for
+  // the next foreground recover/poller tick — a background wake stays within
+  // its "≤1 GET + ≤1 POST per batch" budget via the needs-reasons-submit path,
+  // which does carry a token.
+  //
+  // Submits ONLY. A poll or a notes submit can end in afterTerminal → drain(),
+  // which inside this single-flight drain would await itself forever; those
+  // belong to pollTick, which never runs inside a drain. When one of them is
+  // the top-ranked action, kick a poll tick on the next turn instead of leaving
+  // the slot for the interval timer (up to 2.75s later).
+  if (context !== 'background') {
+    const outcome = await runGatewayActions(context, {
+      allowFreshSubmit: true,
+      submitsOnly: true,
+      pollCap: 0,
     });
-    if (claim === 'aborted' || claim === 'no-run') {
-      // Someone else took it — try the next queued batch.
-      continue;
-    }
-
-    // doSubmit rethrows anything that isn't a ModelKeyValidationError. Before
-    // this catch that throw escaped doDrain → drain() → runPollerTick, leaving
-    // the batch stranded in submitting-* forever while revertStuckSubmitters
-    // requeued it every 60s — the MERA-APP-39 wedge. A throwing submit must
-    // never abort the admission loop or strand a batch, whatever the cause.
-    try {
-      // The admission check above already spent this request's limiter slot.
-      await doSubmit(queued.batchId, context, true);
-    } catch (err) {
-      logger.captureException(err, {
-        tags: { service: 'scoring-pipeline', step: 'submit' },
-        extra: { batchId: queued.batchId, context },
-      });
-      await failOrRetrySubmit(
-        queued.batchId,
-        queued.reasonsOnly ? 'submitting-reasons' : 'submitting-relevance',
-      );
-      continue;
-    }
+    if (outcome === 'yielded') kickPollTick();
   }
 
   // Submits this drain may have moved idle→relevance or admitted fresh batches
@@ -1234,6 +1224,108 @@ async function doDrain(context: ExecutionContext): Promise<void> {
   // A submit inside the loop may have flipped the last batch terminal (empty
   // bundle / submit failure). Never calls drain, so no re-entrancy.
   await maybeFinalize();
+}
+
+/**
+ * Spend free gateway slots on `pickNextGatewayAction`'s choice, one action per
+ * batch per sweep, until the limiter refuses or nothing is left to do. Both the
+ * drain (after an enqueue or a terminal batch) and the poll tick go through
+ * here, so neither can pick out of rank order. `submitsOnly` (the drain) stops
+ * with 'yielded' when an earlier batch's poll or notes submit is the top-ranked
+ * action, so its caller can hand that slot to the poll tick.
+ *
+ * Measured why the drain must not just skip those: hydration enqueues every few
+ * hundred ms and each enqueue drains, so a submits-only drain took every free
+ * slot for batches 1-3 while batch 0's one-call job sat finished but unpolled:
+ * first poll 11s after its submit, first card LATER than before the ramp.
+ */
+async function runGatewayActions(
+  context: ExecutionContext,
+  opts: { allowFreshSubmit: boolean; submitsOnly?: boolean; pollCap: number },
+): Promise<'idle' | 'yielded' | 'throttled'> {
+  const skip = new Set<number>();
+  let polled = 0;
+  for (;;) {
+    const snap = await getPipeline();
+    if (!snap) return 'idle';
+    const action = pickNextGatewayAction(snap.run.batches, {
+      now: Date.now(),
+      lastPolledAt,
+      allowFreshSubmit: opts.allowFreshSubmit,
+      skip,
+      pendingPolls,
+    });
+    if (!action) return 'idle';
+    // The drain cannot poll or submit notes (see doDrain): when one of those
+    // is the top-ranked action, stop rather than spend the slot out of order.
+    // Except a poll of a job submitted less than a tick ago: it cannot be
+    // useful yet, and yielding to it would stall the next batch's submit
+    // straight after this one's.
+    if (opts.submitsOnly && action.kind !== 'submit') {
+      const b = snap.run.batches.find((x) => x.batchId === action.batchId);
+      if (action.kind === 'poll' && Date.now() - (b?.submittedAt ?? 0) < POLL_INTERVAL_MS) {
+        skip.add(action.batchId);
+        continue;
+      }
+      return 'yielded';
+    }
+    // A fresh submit is NOT skipped: a failed one is requeued and retried at
+    // once, as the old admission loop did; success moves it out of `queued`.
+    if (action.kind !== 'submit') skip.add(action.batchId);
+    const batch = snap.run.batches.find((b) => b.batchId === action.batchId);
+    if (!batch) continue;
+
+    if (action.kind === 'submit-reasons') {
+      // Takes its own limiter slot after building the bundle, and spends none
+      // when the bundle is empty.
+      const step = await submitNeedsReasons(action.batchId, context);
+      if (step === 'throttled') return 'throttled';
+      continue;
+    }
+
+    if (action.kind === 'poll') {
+      if (polled >= opts.pollCap) continue;
+      if (!gatewayRateLimiter.tryTakeImmediate()) return 'throttled';
+      lastPolledAt.set(action.batchId, Date.now());
+      const key = pendingPollKey(batch);
+      const outcome = await checkBatch(batch, context);
+      if (outcome.kind === 'pending') pendingPolls.set(key, (pendingPolls.get(key) ?? 0) + 1);
+      else pendingPolls.delete(key);
+      polled += 1;
+      continue;
+    }
+
+    if (!gatewayRateLimiter.tryTakeImmediate()) return 'throttled';
+    // Claim the batch (CAS queued → submitting-*).
+    const claim = await mutatePipeline((r) => {
+      const b = r.batches.find((x) => x.batchId === action.batchId);
+      if (!b || b.phase !== 'queued') return null;
+      b.phase = b.reasonsOnly ? 'submitting-reasons' : 'submitting-relevance';
+      b.submittedAt = Date.now();
+      return true;
+    });
+    // Someone else took it — move on.
+    if (claim === 'aborted' || claim === 'no-run') continue;
+
+    // doSubmit rethrows anything that isn't a ModelKeyValidationError. Before
+    // this catch that throw escaped doDrain → drain() → runPollerTick, leaving
+    // the batch stranded in submitting-* forever while revertStuckSubmitters
+    // requeued it every 60s — the MERA-APP-39 wedge. A throwing submit must
+    // never abort the loop or strand a batch, whatever the cause.
+    try {
+      // The admission check above already spent this request's limiter slot.
+      await doSubmit(action.batchId, context, true);
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'submit' },
+        extra: { batchId: action.batchId, context },
+      });
+      await failOrRetrySubmit(
+        action.batchId,
+        batch.reasonsOnly ? 'submitting-reasons' : 'submitting-relevance',
+      );
+    }
+  }
 }
 
 /**
@@ -1459,15 +1551,19 @@ async function doSubmitRelevance(
   // with the judge deleted there is one path and every candidate takes it.)
   const cfg = await scoringHarnessConfig();
 
-  // Push-token policy (a): attach the run's token only when this is the LAST
+  // Push-token policy (a): attach the run's token to the FIRST relevance batch
+  // (its push wakes the first cards without waiting out a poll) and to the LAST
   // relevance-needing batch — no other relevance batch is queued or submitting.
+  const isFirstRelevance = !run.batches.some(
+    (b) => b.batchId < batch.batchId && !b.reasonsOnly,
+  );
   const otherRelevancePending = run.batches.some(
     (b) =>
       b.batchId !== batch.batchId &&
       !b.reasonsOnly &&
       (b.phase === 'queued' || b.phase === 'submitting-relevance'),
   );
-  const token = otherRelevancePending ? null : run.expoPushToken;
+  const token = isFirstRelevance || !otherRelevancePending ? run.expoPushToken : null;
 
   // (The RELEVANCE_V3 branch that used to sit here — ONE merged
   // score+impact+conditional-reason call for every candidate — is deleted with
@@ -2383,6 +2479,7 @@ async function handleReasonResults(
   context: ExecutionContext,
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
+  coldstartTimeline.mark('first-reason-decode', `decoded=${batchResults.length}`);
 
   // A working copy of the batch's stored relevance, so a pass-2 rescore can
   // reach `discardLowRelevance` below. The stored map is left alone: it is the
@@ -2998,43 +3095,16 @@ export async function pollTick(context: ExecutionContext): Promise<void> {
   //    submit) back to queued (attempt+1).
   await revertStuckSubmitters(run, now);
 
-  // 2. Attempt any needs-reasons-submit batches' follow-up submit.
-  for (const b of run.batches) {
-    if (b.phase === 'needs-reasons-submit') {
-      await submitNeedsReasons(b.batchId, context);
-    }
-  }
-
-  // 3. Poll waiting-* batches, oldest submittedAt first, honoring poll-age and
-  //    per-batch spacing and the rate-limiter budget.
-  const fresh = await getPipeline();
-  if (!fresh) return;
-  const waiting = fresh.run.batches
-    .filter((b) => isWaiting(b.phase))
-    .sort((a, b) => (a.submittedAt ?? 0) - (b.submittedAt ?? 0));
-
-  // The old P7d "knob 2" relaxed a 15s min-age / 20s spacing down to the tick
-  // cadence on a cold feed only. Both gates are now at/below the tick for EVERY
-  // feed (MIN_POLL_AGE_MS = 0, spacing = the tick), so the cold branch computed
-  // the same numbers as the warm one while paying an `isFeedCold()` DB read on
-  // every tick. Dropped.
+  // 2. Spend free slots in rank order: notes submits, polls and (foreground
+  //    only) fresh submits, lowest batchId first.
   //
   // Cadence is governed by the gateway rate limiter (MIN_GATEWAY_INTERVAL_MS,
-  // 3s, shared with submits), not by these gates — `tryTakeImmediate()` below is
+  // 3s, shared with submits), not by the poll gates — `tryTakeImmediate()` is
   // what actually paces us, and a tick that can't take a slot costs nothing.
-  const cap = context === 'background' ? 3 : Infinity;
-  let polled = 0;
-  for (const b of waiting) {
-    if (polled >= cap) break;
-    const nowTick = Date.now();
-    if (nowTick - (b.submittedAt ?? 0) < MIN_POLL_AGE_MS) continue;
-    if (nowTick - (lastPolledAt.get(b.batchId) ?? 0) < PER_BATCH_POLL_SPACING_MS)
-      continue;
-    if (!gatewayRateLimiter.tryTakeImmediate()) break;
-    lastPolledAt.set(b.batchId, nowTick);
-    await checkBatch(b, context);
-    polled += 1;
-  }
+  await runGatewayActions(context, {
+    allowFreshSubmit: context === 'foreground',
+    pollCap: context === 'background' ? 3 : Infinity,
+  });
 }
 
 async function revertStuckSubmitters(
@@ -3269,6 +3339,17 @@ function stopPoller(): void {
     appStateSub.remove();
     appStateSub = null;
   }
+}
+
+/** Run one poller tick on the next turn, for a drain that yielded its slot to
+ *  a higher-ranked poll or notes submit. Never inline: a tick awaits drain(),
+ *  and the drain that asks is still in flight. */
+function kickPollTick(): void {
+  if (pollKickTimer || AppState.currentState !== 'active') return;
+  pollKickTimer = setTimeout(() => {
+    pollKickTimer = null;
+    void runPollerTick();
+  }, 0);
 }
 
 async function runPollerTick(): Promise<void> {
@@ -3643,6 +3724,9 @@ export function _resetForTests(): void {
   taskStepInFlight = null;
   finalizeInFlight = null;
   lastPolledAt.clear();
+  pendingPolls.clear();
+  if (pollKickTimer) clearTimeout(pollKickTimer);
+  pollKickTimer = null;
   pollTickRunning = false;
   consecutivePollerFailures = 0;
   feedWarmCached = false;

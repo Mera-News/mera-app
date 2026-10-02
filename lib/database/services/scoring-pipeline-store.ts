@@ -97,8 +97,8 @@ export interface PipelineBatch {
    *  path. */
   judgeMode?: boolean;
   /** P4b: the chunk size the `score:N` relevance calls were ACTUALLY built with
-   *  at submit — 5 for a standard batch, `headlineArticlesPerScorePrompt` (3)
-   *  for an all-TOP-HEADLINE one. The decoder rebuilds the `score:N` →
+   *  at submit — 5 for every batch now; 3 on an all-TOP-HEADLINE batch persisted
+   *  by a build before headlines joined the ordinary queue. The decoder rebuilds the `score:N` →
    *  candidate join by re-chunking `candidateIds`, so it must use this size and
    *  not a global constant; a wrong size silently attributes scores to the
    *  WRONG articles. Absent ⇒ CLOUD_SCORE_CHUNK_SIZE, which is what every batch

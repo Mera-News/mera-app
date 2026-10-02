@@ -257,18 +257,13 @@ export interface ArticlePipelineConfig {
   /** System prompt for the second-pass FEED verifier. */
   feedVerifierSystemPrompt: string;
   // --- HEADLINE variants (P4b — AUTHORED AND ROUTED) ------------------------
-  // These were authored in P4a and were genuinely dead for one wave, which is
-  // what the old comment here described. P4b wired them: `resolveScoringVariant`
-  // returns 'headline' when every candidate in a bundle is headline-sourced,
-  // `relevanceSystemPromptFor` / `reasonSystemPromptFor` select on it, and
-  // `golden-prompts.test.ts` pins the shim and the harness routing to each
-  // other. They are live production prompts and belong in any quality
-  // measurement of the scorer.
-  /** Top-headline articles bundled into one batched relevance prompt. Smaller
-   *  than articlesPerScorePrompt because the headline rubric is longer and adds
-   *  a second per-article procedure — see the literal's comment for the
-   *  measured arithmetic. */
-  headlineArticlesPerScorePrompt: number;
+  // `resolveScoringVariant` returns 'headline' for a score CALL whose articles
+  // are all headline-sourced, `relevanceSystemPromptFor` /
+  // `reasonSystemPromptFor` select on it, and `golden-prompts.test.ts` pins the
+  // shim and the harness routing to each other. They are live production
+  // prompts and belong in any quality measurement of the scorer. Headlines are
+  // chunked at `articlesPerScorePrompt` like every other article: they join the
+  // ordinary scoring queue, and only the prompt is chosen per call.
   /** System prompt for the cloud relevance pass over TOP-HEADLINE articles.
    *  Same base, same tiers, same `{"k","s"}` contract as
    *  relevanceSystemPrompt, plus the indirect-impact (event → channel →
@@ -556,34 +551,13 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     feedVerifierDemoteScore: 0.28,
     feedVerifierMaxTokens: 260, // 15*12 + 80
     feedVerifierSystemPrompt: CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
-    // Combined judge+reason pass (math-mode candidates).
-    // HEADLINE batch size — measured, not guessed (estimateTokens, lib/llm/tokens.ts):
-    //   live relevance prompt      4454 est tokens, batched 5/call
-    //   headline relevance prompt  7105 est tokens  (+59.5%)
-    //   per-article payload        ~370 est tokens worst case (title 500 chars
-    //                              + description 500 + country 60 + "why" 200 +
-    //                              framing + the two nonce fence markers)
-    // Live call today:   4454 + 5×370 = 6304 in, 1261 per article.
-    // Headline at N=3:   7105 + 3×370 = 8215 in, 2738 per article.
-    // (N=4 → 8585 / 2146; N=5 → 8955 / 1791.)
-    //
-    // 3 = 5 × (4454 / 7105) = 3.13 → 3: hold per-article ATTENTION on the
-    // rubric, not per-article cost. The binding constraint here is not tokens —
-    // it is that the headline rubric adds a SECOND per-article procedure (the
-    // four impact gates + the magnitude test) on top of the base's Steps 1–4,
-    // and its failure mode is hedged over-inclusion, which is exactly what a
-    // long batch produces when the article payloads crowd the rubric. The live
-    // 5 was tuned against a rubric with one procedure; scaling inversely with
-    // rubric length keeps the same rubric-per-article budget.
-    // Cost is affordable at 2.07× per article because headlines are a bounded
-    // slice (per-scope headline depth, order tens per sync) rather than the
-    // whole retrieved pool.
-    // NOT a hard gate: lib/llm/cloudComplete.ts only LOGS estimated input
-    // tokens (no ceiling check, no truncation), so this is a cost/reliability
-    // judgement, revisable from measured output quality. Output side is
-    // unchanged — {"k","s"} objects — so scoreBatchMaxTokens (320) stays ample
-    // at N=3.
-    headlineArticlesPerScorePrompt: 3,
+    // Headline calls carry articlesPerScorePrompt (5) articles, like every
+    // call. They used to carry 3 (5 x 4454/7105, holding the longer rubric's
+    // per-article attention; its failure mode is hedged over-inclusion), which
+    // forced a separate headline queue. Dropped 2026-10-02 by owner decision to
+    // queue headlines like any topic; the quality effect of 5 is unmeasured, so
+    // a hedged-over-inclusion report on headlines points here first.
+    // N=5 headline call: 7105 + 5x370 = 8955 est tokens in (no ceiling; logged).
     headlineRelevanceSystemPrompt: CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
     headlineReasonSystemPrompt: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   },

@@ -320,7 +320,6 @@
   "onboarding": {
     "stepOf": "Adım {{current}} / {{total}}",
     "allSet": "Her şey hazır!",
-    "completionMessage": "Kişiselleştirilmiş haber akışın hazırlanıyor.",
     "connectionIssue": "Bağlantı Sorunu",
     "connectionDescription": "Sunucuya bağlanırken bazı sorunlar yaşıyoruz. Uygulamayı kapatıp daha sonra tekrar deneyebilirsin. Sorun devam ederse, çıkış yapıp tekrar giriş yapmanı öneririz.",
     "logout": "Çıkış Yap",

@@ -115,7 +115,7 @@ jest.mock('@/lib/llm/gateway-rate-limiter', () => ({
   // Must mirror the real module's constant: scoring-pipeline derives its poll
   // cadence from it at import time, so omitting it makes POLL_INTERVAL_MS NaN
   // and silently disables the per-batch spacing gate.
-  MIN_GATEWAY_INTERVAL_MS: 3000,
+  MIN_GATEWAY_INTERVAL_MS: 1000,
   tryTakeImmediate: (...args: any[]) => mockTryTakeImmediate(...args),
   pauseFor: (...args: any[]) => mockPauseFor(...args),
   acquire: (...args: any[]) => mockAcquire(...args),
@@ -329,8 +329,6 @@ import {
   MAX_UNSCORED_WAIT_MS,
   MIN_DISPATCH,
   MAX_BATCH_ARTICLES,
-  MIN_DISPATCH_HEADLINE,
-  MAX_BATCH_ARTICLES_HEADLINE,
   advanceWaitingForBackground,
   submitScoringForBackground,
   staleRunVerdict,
@@ -338,6 +336,11 @@ import {
   deriveReasonsInFlightIds,
   getReasonsInFlightIds,
   COLLECT_WINDOW_MS,
+  rampedBatchCap,
+  pickNextGatewayAction,
+  pendingPollKey,
+  MAX_IN_FLIGHT,
+  MAX_IN_FLIGHT_TOTAL,
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -617,7 +620,7 @@ describe('model-key validation fail-fast (MERA-APP-39)', () => {
 
 describe('enqueueCandidates', () => {
   it('creates a run and submits up to MAX_IN_FLIGHT batches', async () => {
-    await enqueueCandidates(ids(4 * MAX_BATCH_ARTICLES)); // 4 batches of 25
+    await enqueueCandidates(ids(5 + 10 + 25 + 50)); // 4 ramped batches
 
     const run = currentRun();
     expect(run).not.toBeNull();
@@ -645,16 +648,15 @@ describe('enqueueCandidates', () => {
     expect(mockSendInferenceRequest).not.toHaveBeenCalled();
   });
 
-  it('attaches the push token only to the last relevance submit', async () => {
-    // 2 batches, both admitted (MAX_IN_FLIGHT >= 2).
-    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES));
+  it('attaches the push token to the first and the last relevance submit only', async () => {
+    // 3 ramped batches (5, 10, 25), all admitted (MAX_IN_FLIGHT >= 3).
+    await enqueueCandidates(ids(5 + 10 + 25));
 
-    // batch 0 submitted while batch 1 still queued → no token.
-    // batch 1 submitted last → token attached.
-    const call0 = mockSendInferenceRequest.mock.calls[0][0];
-    const call1 = mockSendInferenceRequest.mock.calls[1][0];
-    expect(call0.token).toBeNull();
-    expect(call1.token).toBe('ExponentPushToken[test]');
+    // batch 0 is the run's first → token (its push wakes the first cards).
+    // batch 1 submitted while batch 2 still queued → no token.
+    // batch 2 submitted last → token.
+    const tokens = mockSendInferenceRequest.mock.calls.map((c: any[]) => c[0].token);
+    expect(tokens).toEqual(['ExponentPushToken[test]', null, 'ExponentPushToken[test]']);
   });
 
   it('requeues without burning an attempt when a submit is throttled', async () => {
@@ -675,7 +677,7 @@ describe('enqueueCandidates', () => {
       .mockResolvedValueOnce({ status: 'failed' })
       .mockResolvedValue({ status: 'ok', requestId: 'req-b1', capabilityToken: 'cap' });
 
-    await enqueueCandidates(ids(2 * MAX_BATCH_ARTICLES)); // 2 batches
+    await enqueueCandidates(ids(5 + 10)); // 2 ramped batches
 
     const run = currentRun();
     const b0 = run.batches[0];
@@ -781,28 +783,20 @@ describe('enqueueCandidates: MIN_DISPATCH floor / MAX_BATCH_ARTICLES ceiling', (
     expect(run.batches[0].candidateIds).toHaveLength(2);
   });
 
-  it('lets ONE batch absorb everything ready rather than splitting into MIN_DISPATCH pieces', async () => {
+  it('ramps batch sizes 1, 2, 5, then 10 calls so the first cards wait on ONE call', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
 
-    // 40 ready → a single batch (8 LLM calls inside one request), NOT 8 batches.
-    await enqueueCandidates(ids(40));
+    await enqueueCandidates(ids(5 + 10 + 25 + 50 + 50 + MIN_DISPATCH));
 
-    const run = currentRun();
-    expect(run).not.toBeNull();
-    expect(run.batches).toHaveLength(1);
-    expect(run.batches[0].candidateIds).toHaveLength(40);
+    const sizes = currentRun().batches.map((b: any) => b.candidateIds.length);
+    expect(sizes).toEqual([5, 10, 25, 50, 50, MIN_DISPATCH]);
+    expect(sizes[3]).toBe(MAX_BATCH_ARTICLES);
   });
 
-  it('caps a batch at MAX_BATCH_ARTICLES and spills the rest into further batches', async () => {
-    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
-
-    // One full ceiling batch + a second holding the overflow (still >= the floor).
-    await enqueueCandidates(ids(MAX_BATCH_ARTICLES + MIN_DISPATCH));
-
-    const run = currentRun();
-    expect(run.batches).toHaveLength(2);
-    expect(run.batches[0].candidateIds).toHaveLength(MAX_BATCH_ARTICLES);
-    expect(run.batches[1].candidateIds).toHaveLength(MIN_DISPATCH);
+  it('rampedBatchCap repeats the last step and never exceeds the ceiling', () => {
+    expect([0, 1, 2, 3, 4, 9].map((r) => rampedBatchCap(r, 5, MAX_BATCH_ARTICLES))).toEqual([
+      5, 10, 25, 50, 50, 50,
+    ]);
   });
 
   it('dispatches a sub-MIN_DISPATCH remainder once the oldest row exceeds MAX_UNSCORED_WAIT_MS (escape)', async () => {
@@ -825,15 +819,11 @@ describe('enqueueCandidates: MIN_DISPATCH floor / MAX_BATCH_ARTICLES ceiling', (
     // Fresh oldest → a sub-floor remainder must still defer on an append.
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW);
 
-    const res = await enqueueCandidates(
-      ids(MAX_BATCH_ARTICLES + MIN_DISPATCH - 1, 'more'),
-    );
+    // The append continues the run's ramp at position 1 (10), then 2 (25).
+    const res = await enqueueCandidates(ids(10 + 25 + MIN_DISPATCH - 1, 'more'));
 
     const run = currentRun();
-    expect(run.batches).toHaveLength(before + 1);
-    expect(run.batches[run.batches.length - 1].candidateIds).toHaveLength(
-      MAX_BATCH_ARTICLES,
-    );
+    expect(run.batches.map((b: any) => b.candidateIds.length)).toEqual([MIN_DISPATCH, 10, 25]);
     expect(res.deferred).toHaveLength(MIN_DISPATCH - 1);
   });
 
@@ -1989,10 +1979,10 @@ describe('finalize side-effects', () => {
     // Fire the scheduled setTimeout(0) kick + flush its async body.
     await jest.advanceTimersByTimeAsync(0);
 
+    // A fresh run, so the ramp starts over: 5, 10, then the remaining 10.
     const run = currentRun();
     expect(run).not.toBeNull();
-    expect(run.batches).toHaveLength(1);
-    expect(run.batches[0].candidateIds).toHaveLength(25);
+    expect(run.batches.map((b: any) => b.candidateIds.length)).toEqual([5, 10, 10]);
   });
 
   it('post-finalize kick does nothing when no unscored rows remain', async () => {
@@ -2340,179 +2330,67 @@ describe('apply-step throw → attempt cap (MERA-APP-53/55)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// P4b — headline/standard batch homogeneity + the persisted chunk size.
+// Headlines share the ordinary queue + the persisted chunk size.
 //
 // A batch becomes ONE inference request whose `score:N` calls the decoder
-// rebuilds by re-chunking `candidateIds`. Headline candidates chunk at 3 and
-// standard ones at 5, so a MIXED batch would need two sizes and the decoder,
-// applying one, would attribute scores to the WRONG articles — silently. These
-// tests pin (a) a mixed enqueue never produces a mixed batch, and (b) the size
-// the submit actually used is persisted and is what decode re-chunks with.
+// rebuilds by re-chunking `candidateIds` with the batch's persisted size. Every
+// call is now 5 articles, headlines included (the PROMPT is still picked per
+// call in buildRelevanceCalls), so headlines queue like any topic's articles.
+// Batches persisted by an older build at the headline size of 3 must still
+// decode with 3.
 // ---------------------------------------------------------------------------
 
-describe('P4b — headline batch partitioning + chunk-size round trip', () => {
-  const HEADLINE_CHUNK = 3;
-
-  /** Stage rows as getStageRowsByIds returns them (only the field we read). */
-  function stageRows(headlineIds: string[], standardIds: string[] = []) {
-    return [
-      ...headlineIds.map((id) => ({ id, headlineScope: 'GLOBAL' })),
-      ...standardIds.map((id) => ({ id, headlineScope: null })),
-    ];
-  }
-
-  /** Mirror of the real builder: variant (and therefore chunk size) derived
-   *  from the candidates, reported back on the bundle. */
-  function realisticRelevanceBuilder() {
-    return jest.fn(async (subset: any[]) => {
-      const allHeadline =
-        subset.length > 0 &&
-        subset.every((c) => c.meta?.headlineScope === 'GLOBAL');
-      const size = allHeadline ? HEADLINE_CHUNK : 5;
-      return {
-        calls: Array.from(
-          { length: Math.max(1, Math.ceil(subset.length / size)) },
-          (_, i) => ({ id: `score:${i}`, system: 's', prompt: 'p' }),
-        ),
-        eligibleCandidates: subset,
-        promptsById: new Map(),
-        chunkIdToCandidates: new Map(),
-        scoreChunkSize: size,
-      };
-    });
-  }
-
-  /** getUnscored, with meta attached for the ids the stage lookup called out. */
-  function unscoredWithMeta(headlineIds: Set<string>) {
-    return async () => {
-      const all = new Set<string>();
-      if (mockRun) {
-        for (const b of mockRun.batches) for (const id of b.candidateIds) all.add(id);
-      }
-      return Array.from(all).map((id) => ({
-        ...candidate(id),
-        meta: { id, headlineScope: headlineIds.has(id) ? 'GLOBAL' : null },
-      }));
-    };
-  }
-
-  it('never puts a headline and a standard candidate in the same batch', async () => {
-    const headlineIds = ['h0', 'h1', 'h2', 'h3'];
-    const standardIds = ['s0', 's1', 's2', 's3', 's4', 's5'];
-    // Interleaved arrival order — the partition must survive it.
-    const arrival = ['s0', 'h0', 's1', 'h1', 's2', 'h2', 's3', 'h3', 's4', 's5'];
-    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds, standardIds));
+describe('headlines in the ordinary queue + chunk-size round trip', () => {
+  it('queues headlines with topic articles, in delivery order', async () => {
+    const arrival = ['s0', 'h0', 's1', 'h1', 's2', 'h2', 's3', 'h3', 's4', 's5', 'h4', 'h5', 'h6', 'h7', 'h8'];
 
     await enqueueCandidates(arrival);
 
     const run = currentRun();
-    expect(run.batches.length).toBeGreaterThanOrEqual(2);
-    const hs = new Set(headlineIds);
-    for (const b of run.batches) {
-      const flags = new Set(b.candidateIds.map((id: string) => hs.has(id)));
-      expect(flags.size).toBe(1); // all-headline OR all-standard, never both
-    }
-    // Nothing lost, nothing duplicated.
-    expect(run.batches.flatMap((b: any) => b.candidateIds).sort()).toEqual(
-      [...arrival].sort(),
-    );
+    expect(run.batches.map((b: any) => b.candidateIds)).toEqual([
+      arrival.slice(0, 5),
+      arrival.slice(5, 15),
+    ]);
+    expect(mockGetStageRowsByIds).not.toHaveBeenCalled();
   });
 
-  it('keeps delivery order within each partition', async () => {
-    const arrival = ['s0', 'h0', 's1', 'h1', 's2', 'h2', 's3', 'h3', 's4'];
-    mockGetStageRowsByIds.mockResolvedValue(
-      stageRows(['h0', 'h1', 'h2', 'h3'], ['s0', 's1', 's2', 's3', 's4']),
-    );
-
-    await enqueueCandidates(arrival);
-
-    const run = currentRun();
-    const flat = run.batches.flatMap((b: any) => b.candidateIds);
-    expect(flat.filter((id: string) => id.startsWith('s'))).toEqual([
-      's0', 's1', 's2', 's3', 's4',
-    ]);
-    expect(flat.filter((id: string) => id.startsWith('h'))).toEqual([
-      'h0', 'h1', 'h2', 'h3',
-    ]);
-  });
-
-  it('dispatches a headline partition at its own (smaller) floor — one LLM call', async () => {
+  it('holds a few headlines back at the ordinary floor, like any articles', async () => {
     mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW); // fresh → no escape
-    mockGetStageRowsByIds.mockResolvedValue(stageRows(['h0', 'h1', 'h2']));
 
-    // 3 < MIN_DISPATCH (5) but == MIN_DISPATCH_HEADLINE, so it goes out now.
     const res = await enqueueCandidates(['h0', 'h1', 'h2']);
 
-    expect(res.deferred).toEqual([]);
-    expect(currentRun().batches[0].candidateIds).toEqual(['h0', 'h1', 'h2']);
+    expect(res.deferred).toEqual(['h0', 'h1', 'h2']);
+    expect(currentRun()).toBeNull();
   });
 
-  it('caps a headline batch at MAX_BATCH_ARTICLES_HEADLINE (10 calls, not 17)', async () => {
-    const headlineIds = ids(MAX_BATCH_ARTICLES_HEADLINE + MIN_DISPATCH_HEADLINE, 'h');
-    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds));
-
-    await enqueueCandidates(headlineIds);
-
-    const run = currentRun();
-    expect(run.batches[0].candidateIds).toHaveLength(MAX_BATCH_ARTICLES_HEADLINE);
-    expect(run.batches[1].candidateIds).toHaveLength(MIN_DISPATCH_HEADLINE);
-  });
-
-  it('persists the chunk size the submit ACTUALLY used, per variant', async () => {
-    const headlineIds = ['h0', 'h1', 'h2', 'h3', 'h4', 'h5'];
-    const standardIds = ['s0', 's1', 's2', 's3', 's4'];
-    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds, standardIds));
-    mockGetUnscored.mockImplementation(unscoredWithMeta(new Set(headlineIds)));
-    mockBuildRelevanceCalls.mockImplementation(realisticRelevanceBuilder());
-
-    await enqueueCandidates([...standardIds, ...headlineIds]);
-
-    const run = currentRun();
-    const byKind = new Map<boolean, any>();
-    for (const b of run.batches) {
-      byKind.set(b.candidateIds[0].startsWith('h'), b);
-    }
-    expect(byKind.get(false).scoreChunkSize).toBe(5);
-    expect(byKind.get(true).scoreChunkSize).toBe(HEADLINE_CHUNK);
-  });
-
-  it('decodes a headline batch with the PERSISTED size, not the standard one', async () => {
-    const headlineIds = ['h0', 'h1', 'h2', 'h3', 'h4', 'h5'];
-    mockGetStageRowsByIds.mockResolvedValue(stageRows(headlineIds));
-    mockGetUnscored.mockImplementation(unscoredWithMeta(new Set(headlineIds)));
-    mockBuildRelevanceCalls.mockImplementation(realisticRelevanceBuilder());
-
-    await enqueueCandidates(headlineIds);
-    const batch = currentRun().batches[0];
-    expect(batch.phase).toBe('waiting-relevance');
-    expect(batch.scoreChunkSize).toBe(HEADLINE_CHUNK);
+  it('decodes a batch persisted at the old headline size (3) with that size', async () => {
+    // Batch 1 holds 10 ids; pretend an older build submitted it at 3 per call.
+    await enqueueCandidates(ids(15, 'h'));
+    mockRun.batches[1].scoreChunkSize = 3;
+    const batch = currentRun().batches[1];
 
     mockFetchResults.mockResolvedValue({
       requestId: batch.requestId,
-      results: [
-        { id: 'score:0', ok: true },
-        { id: 'score:1', ok: true },
-      ],
+      results: [0, 1, 2, 3].map((i) => ({ id: `score:${i}`, ok: true })),
     });
     mockReconstructLookups.mockClear();
 
     await handlePush(batch.requestId, 'foreground');
 
-    // 6 ids / 3 = 2 chunks (a 5-chunking would have produced 2 chunks too, but
-    // with the WRONG boundaries) — assert the size that was actually passed.
     expect(mockReconstructLookups).toHaveBeenCalledWith(
-      ['score:0', 'score:1'],
-      headlineIds,
-      HEADLINE_CHUNK,
+      ['score:0', 'score:1', 'score:2', 'score:3'],
+      ids(15, 'h').slice(5),
+      3,
     );
   });
 
   it('decodes a pre-P4b batch (no persisted size) with the standard size', async () => {
-    await enqueueCandidates(['a0', 'a1', 'a2', 'a3', 'a4', 'a5']);
+    // Batch 1 (10 ids, two chunks of 5) — batch 0 is a single chunk.
+    await enqueueCandidates(ids(15, 'a'));
     // Strip the field from the persisted record — exactly the shape a batch
     // submitted by a PRE-P4b build rehydrates with while still in flight.
-    delete mockRun.batches[0].scoreChunkSize;
-    const batch = currentRun().batches[0];
+    delete mockRun.batches[1].scoreChunkSize;
+    const batch = currentRun().batches[1];
     expect(batch.scoreChunkSize).toBeUndefined();
 
     mockFetchResults.mockResolvedValue({
@@ -2525,19 +2403,9 @@ describe('P4b — headline batch partitioning + chunk-size round trip', () => {
 
     expect(mockReconstructLookups).toHaveBeenCalledWith(
       expect.any(Array),
-      ['a0', 'a1', 'a2', 'a3', 'a4', 'a5'],
+      ids(15, 'a').slice(5),
       5,
     );
-  });
-
-  it('falls back to one standard partition when the stage lookup throws', async () => {
-    mockGetStageRowsByIds.mockRejectedValue(new Error('db gone'));
-
-    await enqueueCandidates(ids(MIN_DISPATCH, 'x'));
-
-    const run = currentRun();
-    expect(run.batches).toHaveLength(1);
-    expect(run.batches[0].candidateIds).toHaveLength(MIN_DISPATCH);
   });
 });
 
@@ -3177,7 +3045,7 @@ describe('advanceWaitingForBackground (step a)', () => {
    *  candidate impactful. `decodeDelayMs` advances the clock inside each
    *  decrypt, standing in for slow pure-JS decryption. */
   async function threeReadyBatches(decodeDelayMs = 0): Promise<any[]> {
-    await enqueueCandidates(ids(3 * MAX_BATCH_ARTICLES));
+    await enqueueCandidates(ids(5 + 10 + 25)); // three ramped batches
     const batches = currentRun().batches.map((b: any) => ({ ...b }));
     expect(batches.map((b: any) => b.phase)).toEqual([
       'waiting-relevance',
@@ -3336,7 +3204,7 @@ describe('submitScoringForBackground (step b)', () => {
   });
 
   it('respects maxBatches and leaves the rest queued for the foreground', async () => {
-    const many = ids(3 * MAX_BATCH_ARTICLES, 'm');
+    const many = ids(5 + 10 + 25, 'm'); // three ramped batches
     mockGetUnscored.mockImplementation(async () => many.map(candidate));
     const out = await submitScoringForBackground({ deadlineAt: NOW + DEADLINE_MS, articleIds: many, maxBatches: 1 });
     expect(out.submitted).toBe(1);
@@ -3418,5 +3286,170 @@ describe('task context skips UI work while the app is not active', () => {
     await handlePush(b0.requestId, 'background');
 
     expect(mockRefresh).toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Rank-ordered gateway scheduling: every slot goes to the lowest batchId with
+// something to do, whatever kind of action that is.
+// ---------------------------------------------------------------------------
+
+describe('pickNextGatewayAction', () => {
+  const b = (batchId: number, phase: string, extra: Record<string, unknown> = {}): any => ({
+    batchId,
+    phase,
+    candidateIds: [],
+    attempt: 0,
+    requestId: `req-${batchId}`,
+    submittedAt: NOW - 60_000,
+    ...extra,
+  });
+  const pick = (batches: any[], opts: Record<string, unknown> = {}) =>
+    pickNextGatewayAction(batches, {
+      now: NOW,
+      lastPolledAt: new Map(),
+      allowFreshSubmit: true,
+      ...opts,
+    });
+
+  it('an earlier batch\'s notes submit beats a later batch\'s relevance submit', () => {
+    expect(pick([b(4, 'queued'), b(1, 'needs-reasons-submit')])).toEqual({
+      kind: 'submit-reasons',
+      batchId: 1,
+    });
+  });
+
+  it('polls by rank, not by submit time: batch 1 before batch 3 even when submitted later', () => {
+    const batches = [
+      b(3, 'waiting-relevance', { submittedAt: NOW - 30_000 }),
+      b(1, 'waiting-reasons', { submittedAt: NOW - 5_000 }),
+    ];
+    expect(pick(batches)).toEqual({ kind: 'poll', batchId: 1 });
+  });
+
+  it('notes jobs do not hold a relevance slot; the total cap still binds', () => {
+    const relevanceFull = [
+      b(0, 'waiting-reasons'),
+      b(1, 'waiting-relevance'),
+      b(2, 'waiting-relevance'),
+      b(3, 'queued'),
+    ];
+    // Three outstanding jobs, but only two are relevance: batch 3 may submit
+    // once the polls are out of the way.
+    const spaced = new Map([0, 1, 2].map((id) => [id, NOW]));
+    expect(pick(relevanceFull, { lastPolledAt: spaced })).toEqual({ kind: 'submit', batchId: 3 });
+
+    const threeRelevance = [...relevanceFull.slice(1), b(4, 'waiting-relevance'), b(5, 'queued')];
+    const spaced2 = new Map([1, 2, 4].map((id) => [id, NOW]));
+    expect(pick(threeRelevance, { lastPolledAt: spaced2 })).toBeNull();
+    expect(MAX_IN_FLIGHT).toBe(3);
+
+    const totalFull = Array.from({ length: MAX_IN_FLIGHT_TOTAL }, (_, i) => b(i, 'waiting-reasons'));
+    const spaced3 = new Map(totalFull.map((x: any) => [x.batchId, NOW]));
+    expect(pick([...totalFull, b(9, 'queued', { reasonsOnly: true })], { lastPolledAt: spaced3 })).toBeNull();
+  });
+
+  it('caps never hold back a notes submit or a poll', () => {
+    const full = Array.from({ length: MAX_IN_FLIGHT_TOTAL }, (_, i) => b(i + 1, 'waiting-relevance'));
+    expect(pick([...full, b(0, 'needs-reasons-submit')])).toEqual({ kind: 'submit-reasons', batchId: 0 });
+    expect(pick(full)).toEqual({ kind: 'poll', batchId: 1 });
+  });
+
+  it('returns nothing while every poll is inside its spacing', () => {
+    const batches = [b(0, 'waiting-relevance'), b(1, 'waiting-reasons')];
+    expect(pick(batches, { lastPolledAt: new Map([[0, NOW], [1, NOW]]) })).toBeNull();
+  });
+
+  it('backs a pending job off (x2, x4) so later batches still get submitted', () => {
+    const batches = [b(0, 'waiting-relevance'), b(1, 'queued')];
+    // Poll spacing is the mocked 1000ms limiter interval less the 250ms lead.
+    const polled = new Map([[0, NOW - 1_000]]); // past one spacing (750), inside two (1500)
+    const once = new Map([[pendingPollKey(batches[0]), 1]]);
+    expect(pick(batches, { lastPolledAt: polled })).toEqual({ kind: 'poll', batchId: 0 });
+    expect(pick(batches, { lastPolledAt: polled, pendingPolls: once })).toEqual({
+      kind: 'submit',
+      batchId: 1,
+    });
+  });
+
+  it('backoff never leaves a slot idle: with nothing else to do, the backed-off job is polled', () => {
+    const only = [b(0, 'waiting-relevance')];
+    const polled = new Map([[0, NOW - 1_000]]); // past plain spacing, inside x4
+    const twice = new Map([[pendingPollKey(only[0]), 2]]);
+    expect(pick(only, { lastPolledAt: polled, pendingPolls: twice })).toEqual({ kind: 'poll', batchId: 0 });
+  });
+
+  it('a background wake never admits a fresh submit', () => {
+    expect(pick([b(0, 'queued')], { allowFreshSubmit: false })).toBeNull();
+  });
+
+
+});
+
+describe('notes do not hold a relevance slot (end to end)', () => {
+  it('a fourth relevance batch submits while batch 0 is writing its notes', async () => {
+    await enqueueCandidates(ids(5 + 10 + 25 + 50)); // 4 ramped batches
+    expect(currentRun().batches.map((x: any) => x.phase)).toEqual([
+      'waiting-relevance',
+      'waiting-relevance',
+      'waiting-relevance',
+      'queued',
+    ]);
+
+    const batch0 = currentRun().batches[0];
+    mockDecodeResults.mockReturnValueOnce({
+      scoreMap: new Map(batch0.candidateIds.map((id: string) => [id, 0.8])),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue(
+      batch0.candidateIds.map((id: string) => ({ ...candidate(id), relevance: 0.8 })),
+    );
+    mockFetchResults.mockImplementation(async (requestId: string) =>
+      requestId === batch0.requestId ? relevanceReady(requestId) : 'pending',
+    );
+
+    jest.setSystemTime(NOW + 5_000);
+    await pollTick('foreground');
+
+    const phases = currentRun().batches.map((x: any) => x.phase);
+    expect(phases[0]).toBe('waiting-reasons');
+    expect(phases[3]).toBe('waiting-relevance');
+  });
+});
+
+describe('the drain yields to an earlier batch (measured regression)', () => {
+  // Hydration enqueues every few hundred ms and each enqueue drains. A drain
+  // that only looked at fresh submits spent every slot on batches 1-3 while
+  // batch 0's finished one-call job went unpolled for 11s.
+  it('an enqueue still submits the next batch right after batch 0 (a 0s-old job is not worth a poll)', async () => {
+    await enqueueCandidates(ids(5 + 10)); // batches 0 and 1 in one enqueue
+    expect(currentRun().batches.map((x: any) => x.phase)).toEqual([
+      'waiting-relevance',
+      'waiting-relevance',
+    ]);
+  });
+
+  it('an enqueue does not submit a later batch while batch 0 is due a poll', async () => {
+    await enqueueCandidates(ids(5, 'a')); // batch 0
+    const batch0 = currentRun().batches[0];
+    expect(batch0.phase).toBe('waiting-relevance');
+    mockFetchResults.mockResolvedValue('pending');
+    mockSendInferenceRequest.mockClear();
+
+    jest.setSystemTime(NOW + 3_000);
+    await enqueueCandidates(ids(10, 'b')); // batch 1, enqueued once batch 0 is pollable
+
+    expect(currentRun().batches[1].phase).toBe('queued');
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+    expect(mockFetchResults).not.toHaveBeenCalled();
+
+    // The drain kicked a poll tick: batch 0 is polled FIRST, then batch 1 goes.
+    await jest.advanceTimersByTimeAsync(0);
+    expect(mockFetchResults).toHaveBeenCalledWith(batch0.requestId, 'foreground', expect.anything(), expect.anything());
+    expect(currentRun().batches[1].phase).toBe('waiting-relevance');
+    expect(mockFetchResults.mock.invocationCallOrder[0]).toBeLessThan(
+      mockSendInferenceRequest.mock.invocationCallOrder[0],
+    );
   });
 });

@@ -332,7 +332,6 @@
   "onboarding": {
     "stepOf": "Krok {{current}} z {{total}}",
     "allSet": "Wszystko gotowe!",
-    "completionMessage": "Twój spersonalizowany kanał wiadomości jest w przygotowaniu.",
     "connectionIssue": "Problem z połączeniem",
     "connectionDescription": "Mamy problemy z połączeniem z serwerem. Możesz zamknąć aplikację i spróbować ponownie później. Jeśli problem będzie się powtarzał, zalecamy wylogowanie i ponowne logowanie.",
     "logout": "Wyloguj",

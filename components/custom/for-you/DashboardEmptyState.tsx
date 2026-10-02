@@ -10,7 +10,6 @@ import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import DailyLimitCard from '@/components/custom/DailyLimitCard';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
-import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import { Box } from '@/components/ui/box';
 import { AlertCircleIcon, Icon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
@@ -20,7 +19,6 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 export interface DashboardEmptyStateProps {
-  readonly showOnboardingWait: boolean;
   readonly isLoading: boolean;
   readonly stuckOnEmpty: boolean;
   readonly errorMessage: string | null | undefined;
@@ -31,7 +29,6 @@ export interface DashboardEmptyStateProps {
 }
 
 const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = ({
-  showOnboardingWait,
   isLoading,
   stuckOnEmpty,
   errorMessage,
@@ -42,9 +39,6 @@ const DashboardEmptyState: React.FC<DashboardEmptyStateProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  if (showOnboardingWait) {
-    return <OnboardingWaitingCard />;
-  }
   if (isLoading && !stuckOnEmpty) {
     return (
       <Box className="items-center justify-center py-20" testID="dashboard-loading">

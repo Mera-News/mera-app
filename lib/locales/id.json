@@ -320,7 +320,6 @@
   "onboarding": {
     "stepOf": "Langkah {{current}} dari {{total}}",
     "allSet": "Anda sudah siap!",
-    "completionMessage": "Feed berita personal Anda sedang disiapkan.",
     "connectionIssue": "Masalah Koneksi",
     "connectionDescription": "Kami mengalami masalah koneksi ke server. Anda dapat menutup aplikasi dan mencoba lagi nanti. Jika masalah berlanjut, kami sarankan Anda keluar dan masuk kembali.",
     "logout": "Keluar",

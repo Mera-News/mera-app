@@ -187,11 +187,9 @@ describe('harness buildScoreCallForChunk', () => {
 });
 
 describe('golden — measured prompt sizes', () => {
-  // These four numbers are the INPUTS to the batch-size arithmetic in
-  // core/config.ts (headlineArticlesPerScorePrompt = 5 × 4454/7105 → 3). They
-  // are pinned here so editing a prompt fails loudly instead of silently
-  // invalidating that derivation — re-measure, redo the arithmetic, then update
-  // both the comment and these pins together.
+  // These four numbers are pinned so editing a prompt fails loudly. They once
+  // fed a separate headline call size (5 x 4454/7105 -> 3); headlines now take
+  // the ordinary 5 per call, so they only guard prompt growth.
   //
   // The first two ALSO guard the CLOUD_REASON_VOICE_RULE extraction (P4a): the
   // voice paragraph was lifted out of CLOUD_REASON_SYSTEM_PROMPT into a shared
@@ -202,11 +200,7 @@ describe('golden — measured prompt sizes', () => {
   it('pins the estimated token size of each cloud scoring prompt', () => {
     // RE-PINNED when the article-scope rule was promoted into the shared base:
     // one section in ONE const, so every prompt built on it moved by the same
-    // +130 tokens, and the derivation below is intact:
-    //   5 * (4584 / 7234) = 3.1685 -> 3   (was 5 * (4454 / 7105) = 3.1344 -> 3)
-    // `headlineArticlesPerScorePrompt` therefore stays 3 and no
-    // DEFAULT_HARNESS_CONFIG literal changed. Only the two RELEVANCE numbers
-    // feed that arithmetic.
+    // +130 tokens.
     //
     // RE-PINNED AGAIN when the headline reason prompt dropped the anchor table
     // to fit the gateway wire cap: 8256 -> 6958, a 1298-token cut that no other
@@ -409,15 +403,15 @@ function headlineCandidate(id: string): ScoringCandidate {
 }
 
 describe('golden — headline variant (P4b routing)', () => {
-  it('shim and harness produce byte-identical HEADLINE score calls (incl. chunking at 3)', async () => {
+  it('shim and harness produce byte-identical HEADLINE score calls (one chunk size, 5)', async () => {
     const candidates = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(headlineCandidate);
     const shim = await shimBuildRelevanceCalls(candidates);
     const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
 
-    // 7 headline candidates at 3 per call = 3 calls (not 2, as 5-chunking gives).
-    expect(shim.calls).toHaveLength(3);
-    expect(shim.scoreChunkSize).toBe(3);
-    expect(harness.scoreChunkSize).toBe(3);
+    // 7 headline candidates at 5 per call = 2 calls: headlines take no size of their own.
+    expect(shim.calls).toHaveLength(2);
+    expect(shim.scoreChunkSize).toBe(5);
+    expect(harness.scoreChunkSize).toBe(5);
     expect(shim.calls.map((c) => c.id)).toEqual(harness.calls.map((c) => c.id));
     expect(shim.calls.map((c) => c.system)).toEqual(harness.calls.map((c) => c.system));
     expect(stripNonces(shim.calls.map((c) => c.prompt))).toEqual(
@@ -431,6 +425,23 @@ describe('golden — headline variant (P4b routing)', () => {
   it('the SHIM routes headline candidates to the headline relevance prompt', async () => {
     const shim = await shimBuildRelevanceCalls([headlineCandidate('a')]);
     expect(shim.calls[0].system).toBe(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT);
+  });
+
+  it('shim and harness pick the prompt PER CALL in a mixed bundle, identically', async () => {
+    const candidates = [
+      ...['s0', 's1', 's2', 's3', 's4'].map(candidate),
+      ...['h0', 'h1', 'h2', 'h3', 'h4'].map(headlineCandidate),
+    ];
+    const shim = await shimBuildRelevanceCalls(candidates);
+    const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
+    expect(shim.calls.map((c) => c.system)).toEqual([
+      CLOUD_RELEVANCE_SYSTEM_PROMPT,
+      CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
+    ]);
+    expect(harness.calls.map((c) => c.system)).toEqual(shim.calls.map((c) => c.system));
+    expect(stripNonces(shim.calls.map((c) => c.prompt))).toEqual(
+      stripNonces(harness.calls.map((c) => c.prompt)),
+    );
   });
 
   it('the SHIM keeps standard candidates on the standard prompt at chunk 5', async () => {

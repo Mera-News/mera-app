@@ -101,12 +101,6 @@ export function resolveCountryName(
 /** Chunk size used when fanning score prompts into BatchCalls. */
 export const CLOUD_SCORE_CHUNK_SIZE = ARTICLE_CFG.articlesPerScorePrompt;
 
-/** Chunk size for the TOP-HEADLINE relevance variant. Smaller than
- *  CLOUD_SCORE_CHUNK_SIZE because the headline rubric is ~1.5× longer (see the
- *  derivation in core/config.ts). */
-export const CLOUD_HEADLINE_SCORE_CHUNK_SIZE =
-  ARTICLE_CFG.headlineArticlesPerScorePrompt;
-
 /** Raw-score floor for phase-2 reason generation in the async reconciler. */
 export const REASON_MIN_RAW_SCORE = 0;
 
@@ -194,15 +188,6 @@ export function reasonSystemPromptFor(
     shipped,
     resolvePromptVariant(promptVariant),
   );
-}
-
-export function scoreChunkSizeFor(
-  config: ArticlePipelineConfig,
-  variant: ScoringVariant,
-): number {
-  return variant === 'headline'
-    ? config.headlineArticlesPerScorePrompt
-    : config.articlesPerScorePrompt;
 }
 
 // --- Helpers ---
@@ -374,13 +359,12 @@ export function buildScoreCallForChunk(
  * Each chunk produces one BatchCall with id `score:N`. Pure — fact statements
  * are supplied by the caller (previously loaded from WatermelonDB inside).
  *
- * The system prompt AND the chunk size both come from the resolved variant
- * (P4b): TOP-HEADLINE candidates get the indirect-impact prompt at
- * `headlineArticlesPerScorePrompt`, everything else the standard pair. Pass
- * `variant` to force one; omit it and it is derived from the candidates, which
- * yields 'headline' only for an all-headline set. The size actually used is
- * returned as `scoreChunkSize` so an async caller persists the real value
- * rather than re-deriving it at decode time.
+ * Every chunk holds `articlesPerScorePrompt` candidates, headlines included, so
+ * a batch can mix them freely. The system prompt is chosen PER CHUNK (P4b):
+ * a chunk of TOP-HEADLINE candidates only gets the indirect-impact prompt,
+ * any other chunk the standard one. Pass `variant` to force one prompt for every
+ * chunk. The size used is returned as `scoreChunkSize` so an async caller
+ * persists the real value rather than re-deriving it at decode time.
  */
 export function buildRelevanceCalls(
   candidates: ScoringCandidate[],
@@ -393,9 +377,7 @@ export function buildRelevanceCalls(
   // design and would otherwise be silently dropped from the bundle here even
   // after surviving the feed-sync tombstone.
   const eligible = candidates.filter(isScorableCandidate);
-  const resolved = variant ?? resolveScoringVariant(eligible);
-  const scoreChunkSize = scoreChunkSizeFor(config, resolved);
-  const systemPrompt = relevanceSystemPromptFor(config, resolved);
+  const scoreChunkSize = config.articlesPerScorePrompt;
   const chunks = chunk(eligible, scoreChunkSize);
 
   const calls: BatchCall[] = [];
@@ -406,7 +388,7 @@ export function buildRelevanceCalls(
     const { prompt, system } = buildScoreCallForChunk(
       chunkCandidates,
       factStatements,
-      systemPrompt,
+      relevanceSystemPromptFor(config, variant ?? resolveScoringVariant(chunkCandidates)),
       config,
     );
     const scoreId = `score:${idx}`;

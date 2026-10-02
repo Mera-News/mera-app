@@ -38,6 +38,10 @@ jest.mock('@/lib/auth-client', () => ({ authClient: { useSession: () => ({ data:
 // a dead/slow session can no longer eject the user. Mock the settings read (and
 // with it the WatermelonDB singleton the real module instantiates at import).
 let mockCachedUserId: string | null = 'cached-u1';
+const mockTrigger = jest.fn(async (..._a: any[]) => 'started');
+jest.mock('@/lib/scheduler/AppScheduler', () => ({
+    AppScheduler: { trigger: (...a: any[]) => mockTrigger(...a) },
+}));
 jest.mock('@/lib/database/services/setting-service', () => ({
     getSetting: jest.fn(async () => mockCachedUserId),
 }));
@@ -78,30 +82,28 @@ describe('onboarding route', () => {
         });
     });
 
-    // Post-onboarding ALWAYS lands on the Dashboard with fromOnboarding:'1' —
-    // deliberately NOT the startup-tab preference (lib/navigation/startup-tab.ts),
-    // which is applied only on the returning-user path
-    // (app/__tests__/logged-in-index.test.tsx). The wizard just finished and
-    // the app has no content yet; the Dashboard's "waiting for your feed"
-    // card (ForYouScreen, gated on this exact param) is the correct and only
-    // first-run affordance, regardless of where the user likes to start on
-    // an ordinary launch.
-    it('onComplete always navigates to the dashboard with fromOnboarding', async () => {
+    // Post-onboarding ALWAYS lands on the Feed — deliberately NOT the
+    // startup-tab preference (lib/navigation/startup-tab.ts), which is applied
+    // only on the returning-user path (app/__tests__/logged-in-index.test.tsx).
+    // Only the Feed renders a card as soon as its relevance lands; the
+    // Dashboard waits for finished notes.
+    it('onComplete navigates to the feed and starts the first sync at once', async () => {
         mockInvoke = 'complete';
         render(<Onboarding />);
 
         await waitFor(() => expect(mockReplace).toHaveBeenCalled());
-        expect(mockReplace).toHaveBeenCalledWith({
-            pathname: '/logged-in/app_container/for_you',
-            params: { fromOnboarding: '1' },
-        });
+        expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed');
+        expect(mockTrigger).toHaveBeenCalledWith('feed-sync', { bypassDebounce: true });
     });
 
-    it('has ONE landing: onboarding never routes to the feed (A15)', async () => {
+    it('has ONE landing: onboarding navigates exactly once (A15)', async () => {
         mockInvoke = 'complete';
         render(<Onboarding />);
         await waitFor(() => expect(mockReplace).toHaveBeenCalled());
-        expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/app_container/feed');
+        expect(mockReplace).toHaveBeenCalledTimes(1);
+        expect(mockReplace).not.toHaveBeenCalledWith(
+            expect.objectContaining({ pathname: '/logged-in/app_container/for_you' }),
+        );
     });
 
     // ── local-first identity ─────────────────────────────────────────────

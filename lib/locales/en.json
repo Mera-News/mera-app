@@ -649,7 +649,6 @@
   "onboarding": {
     "stepOf": "Step {{current}} of {{total}}",
     "allSet": "You're all set!",
-    "completionMessage": "Your personalised news feed is getting ready.",
     "connectionIssue": "Connection Issue",
     "connectionDescription": "We're having some issues connecting to the server. You can close the app and try again later. If the issue persists, we recommend you logout and login again.",
     "logout": "Logout",

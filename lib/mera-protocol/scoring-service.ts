@@ -56,9 +56,7 @@ import {
   resolveScoringVariant,
   relevanceSystemPromptFor,
   reasonSystemPromptFor,
-  scoreChunkSizeFor,
   CLOUD_SCORE_CHUNK_SIZE,
-  CLOUD_HEADLINE_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 } from '@/lib/news-harness/article-pipeline/scoring';
 import {
@@ -85,7 +83,6 @@ export {
   bucketScore,
   bucketScores,
   CLOUD_SCORE_CHUNK_SIZE,
-  CLOUD_HEADLINE_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 };
 export type { CloudCallBundle, DecodedResults, ScoringResult };
@@ -519,12 +516,12 @@ function buildReasonCallsForSurvivors(
  * Phase-1 of the two-phase async flow: score-only calls, no reason prompts.
  * Loads the user's fact bank internally so callers keep the original signature.
  *
- * P4b: the system prompt and the chunk size are chosen by the variant the
- * candidates resolve to — TOP-HEADLINE sets take the indirect-impact prompt at
- * CLOUD_HEADLINE_SCORE_CHUNK_SIZE, everything else the standard pair at
- * ARTICLES_PER_SCORE_PROMPT. The selection helpers are imported from the
- * harness (never re-derived here) so the two paths cannot drift; the size
- * actually used comes back on the bundle for the async decoder to persist.
+ * Every chunk holds `articlesPerScorePrompt` candidates, headlines included.
+ * P4b: the system prompt is chosen PER CHUNK — a chunk of TOP-HEADLINE
+ * candidates only takes the indirect-impact prompt, any other the standard
+ * one. The selection helpers are imported from the harness (never re-derived
+ * here) so the two paths cannot drift; the size used comes back on the bundle
+ * for the async decoder to persist.
  */
 export async function buildRelevanceCalls(
   candidates: ScoringCandidate[],
@@ -549,9 +546,7 @@ export async function buildRelevanceCalls(
   // returns), so every later gate pass would re-elect them: an unbounded churn
   // loop rather than a visible headline.
   const eligible = candidates.filter(isScorableCandidate);
-  const variant = resolveScoringVariant(eligible);
-  const scoreChunkSize = scoreChunkSizeFor(config, variant);
-  const systemPrompt = relevanceSystemPromptFor(config, variant);
+  const scoreChunkSize = config.articlesPerScorePrompt;
   const chunks = chunk(eligible, scoreChunkSize);
   const allFactStatements = await loadAllFactStatements();
 
@@ -563,7 +558,7 @@ export async function buildRelevanceCalls(
     const { prompt, system } = buildScoreCallForChunk(
       chunkCandidates,
       allFactStatements,
-      systemPrompt,
+      relevanceSystemPromptFor(config, resolveScoringVariant(chunkCandidates)),
       // ADD 1 seam — now fed the EFFECTIVE config (see the `config` param),
       // which is what makes the v4 toggle reach the calls the app really sends.
       // Nothing about the OUTPUT CONTRACT changes with the flag (the tag block

@@ -320,7 +320,6 @@
   "onboarding": {
     "stepOf": "Passaggio {{current}} di {{total}}",
     "allSet": "Tutto pronto!",
-    "completionMessage": "Il tuo feed di notizie personalizzato è in preparazione.",
     "connectionIssue": "Problema di connessione",
     "connectionDescription": "Stiamo riscontrando problemi di connessione al server. Puoi chiudere l'app e riprovare più tardi. Se il problema persiste, ti consigliamo di disconnetterti e accedere di nuovo.",
     "logout": "Esci",

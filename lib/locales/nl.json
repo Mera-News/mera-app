@@ -320,7 +320,6 @@
   "onboarding": {
     "stepOf": "Stap {{current}} van {{total}}",
     "allSet": "Je bent helemaal klaar!",
-    "completionMessage": "Je gepersonaliseerde nieuwsfeed wordt voorbereid.",
     "connectionIssue": "Verbindingsprobleem",
     "connectionDescription": "We hebben problemen met de verbinding naar de server. Je kunt de app sluiten en het later opnieuw proberen. Als het probleem aanhoudt, raden we aan om uit te loggen en opnieuw in te loggen.",
     "logout": "Uitloggen",

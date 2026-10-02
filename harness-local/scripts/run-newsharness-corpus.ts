@@ -64,7 +64,6 @@ import {
   relevanceSystemPromptFor,
   reasonSystemPromptFor,
   resolveScoringVariant,
-  scoreChunkSizeFor,
   type BatchCall,
   type RelevanceDecodeStats,
   type ScoringCandidate,
@@ -316,7 +315,7 @@ async function main(): Promise<number> {
   // take the articlePipeline slice of it.
   const config = DEFAULT_HARNESS_CONFIG.articlePipeline;
   const scoringVariant = resolveScoringVariant(candidates);
-  const chunks = chunk(candidates, scoreChunkSizeFor(config, scoringVariant));
+  const chunks = chunk(candidates, config.articlesPerScorePrompt);
   // One system prompt PER PROMPT VARIANT. Unknown ids throw here, before any
   // call is made, rather than partway through a paid run.
   const systemByVariant = new Map(

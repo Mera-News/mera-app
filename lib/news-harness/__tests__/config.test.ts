@@ -121,10 +121,10 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.feedVerifierSystemPrompt).toBe(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT);
   });
 
-  it('pins the headline variant config (P4a — authored, not yet routed)', () => {
-    // 3 = 5 × (4386 / 7036), the measured inverse-rubric-length scaling — see
-    // the arithmetic comment in config.ts. Changing it is a product change.
-    expect(a.headlineArticlesPerScorePrompt).toBe(3);
+  it('pins the headline variant config', () => {
+    // No headline chunk size: headline calls carry articlesPerScorePrompt like
+    // every call (owner decision 2026-10-02). Reintroducing one is a product change.
+    expect('headlineArticlesPerScorePrompt' in a).toBe(false);
     expect(a.headlineRelevanceSystemPrompt).toBe(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT);
     expect(a.headlineReasonSystemPrompt).toBe(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT);
     // The headline variants must stay VARIANTS: same base prompt, so tiers,

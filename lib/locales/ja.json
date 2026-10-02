@@ -320,7 +320,6 @@
   "onboarding": {
     "stepOf": "ステップ {{current}} / {{total}}",
     "allSet": "準備完了です！",
-    "completionMessage": "パーソナライズされたニュースフィードを準備しています。",
     "connectionIssue": "接続の問題",
     "connectionDescription": "サーバーへの接続に問題が発生しています。アプリを閉じて後でもう一度お試しください。問題が解決しない場合は、ログアウトして再度ログインすることをお勧めします。",
     "logout": "ログアウト",

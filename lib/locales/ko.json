@@ -320,7 +320,6 @@
   "onboarding": {
     "stepOf": "{{total}}단계 중 {{current}}단계",
     "allSet": "모두 준비되었습니다!",
-    "completionMessage": "맞춤 뉴스 피드를 준비하고 있습니다.",
     "connectionIssue": "연결 문제",
     "connectionDescription": "서버 연결에 문제가 발생했습니다. 앱을 닫고 나중에 다시 시도해 주세요. 문제가 지속되면 로그아웃 후 다시 로그인하시기를 권장합니다.",
     "logout": "로그아웃",

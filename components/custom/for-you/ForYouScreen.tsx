@@ -43,7 +43,6 @@ import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
 import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
-import { getFacts } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
@@ -70,7 +69,7 @@ import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useIsConnected } from '@/lib/stores/network-store';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -108,8 +107,6 @@ const MeraNewsScreen: React.FC = () => {
     // NEW badge. Section ORDER comes from the throttled `sortSnapshot`, not from
     // this live set.)
     const openedIds = useOpenedStoriesStore((s) => s.ids);
-    const { fromOnboarding } = useLocalSearchParams<{ fromOnboarding?: string }>();
-    const [showOnboardingWait, setShowOnboardingWait] = useState(false);
     const [stuckOnEmpty, setStuckOnEmpty] = useState(false);
     const dbReady = useDatabaseStore((s) => s.ready);
     // Real navigator focus — used to pause the 30s timers (nowTick + empty-feed
@@ -370,29 +367,6 @@ const MeraNewsScreen: React.FC = () => {
         }
     }, [hasRenderableContent, feed.rows.length, feed.breaking.length]);
 
-    // First arrival from onboarding: show waiting card if user has any facts.
-    useEffect(() => {
-        if (fromOnboarding !== '1') return;
-        let cancelled = false;
-        getFacts()
-            .then((facts) => {
-                if (!cancelled && facts.length > 0) setShowOnboardingWait(true);
-            })
-            .catch((err: unknown) => {
-                logger.captureException(err, {
-                    tags: { screen: 'ForYouScreen', step: 'get-facts-onboarding' },
-                });
-            });
-        return () => { cancelled = true; };
-    }, [fromOnboarding]);
-
-    // Hide the onboarding waiting card once the first card is ready.
-    useEffect(() => {
-        if (showOnboardingWait && hasRenderableContent) {
-            setShowOnboardingWait(false);
-        }
-    }, [showOnboardingWait, hasRenderableContent]);
-
     // Clear the watchdog error when a new sync cycle / cloud scoring starts.
     useEffect(() => {
         if (!syncStatusMessage) return;
@@ -473,7 +447,6 @@ const MeraNewsScreen: React.FC = () => {
     // An ELEMENT, not a component type: see DashboardEmptyState (S11).
     const emptyState = (
         <DashboardEmptyState
-            showOnboardingWait={showOnboardingWait}
             isLoading={isLoading}
             stuckOnEmpty={stuckOnEmpty}
             errorMessage={errorMessage}

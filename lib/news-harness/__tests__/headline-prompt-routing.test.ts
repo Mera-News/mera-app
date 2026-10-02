@@ -1,12 +1,11 @@
 // P4b — TOP-HEADLINE prompt routing.
 //
-// P4a authored CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT / _REASON_ and the three
-// config fields; nothing routed to them. These tests pin the routing itself:
-// which system prompt a call carries, which chunk size the relevance bundle was
-// built with, and that a single relevance bundle can never mix the two — the
-// last one because the async decoder rebuilds the `score:N` → candidate join by
-// re-chunking a flat id list with ONE size, so a mixed bundle would attribute
-// scores to the wrong articles with no error anywhere.
+// These tests pin the routing itself: which system prompt each call carries,
+// chosen PER CALL (a call of headlines only takes the headline rubric), and
+// that every call is chunked at ONE size, headlines included — the async
+// decoder rebuilds the `score:N` → candidate join by re-chunking a flat id list
+// with one size, so a second size would attribute scores to the wrong articles
+// with no error anywhere.
 
 import {
   buildRelevanceCalls,
@@ -16,9 +15,7 @@ import {
   resolveScoringVariant,
   relevanceSystemPromptFor,
   reasonSystemPromptFor,
-  scoreChunkSizeFor,
   CLOUD_SCORE_CHUNK_SIZE,
-  CLOUD_HEADLINE_SCORE_CHUNK_SIZE,
 } from '../article-pipeline/scoring';
 import { DEFAULT_HARNESS_CONFIG } from '../core/config';
 import {
@@ -143,13 +140,10 @@ describe('prompt/chunk selection helpers', () => {
     expect(reasonSystemPromptFor(CFG, 'standard')).toBe(
       CLOUD_REASON_SYSTEM_PROMPT,
     );
-    expect(scoreChunkSizeFor(CFG, 'headline')).toBe(3);
-    expect(scoreChunkSizeFor(CFG, 'standard')).toBe(5);
   });
 
-  it('exports the two chunk sizes off the same config fields', () => {
+  it('exports ONE chunk size, headlines included', () => {
     expect(CLOUD_SCORE_CHUNK_SIZE).toBe(5);
-    expect(CLOUD_HEADLINE_SCORE_CHUNK_SIZE).toBe(3);
   });
 });
 
@@ -158,25 +152,22 @@ describe('prompt/chunk selection helpers', () => {
 // ---------------------------------------------------------------------------
 
 describe('buildRelevanceCalls — headline routing', () => {
-  it('carries the HEADLINE system prompt and chunks at 3 for headline candidates', () => {
+  it('carries the HEADLINE system prompt and chunks at 5 for headline candidates', () => {
     const candidates = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) =>
       headlineCandidate(id),
     );
     const bundle = buildRelevanceCalls(candidates, FACTS);
 
-    expect(bundle.scoreChunkSize).toBe(3);
-    // 6 candidates at 3 per call = 2 calls, each holding exactly 3.
+    expect(bundle.scoreChunkSize).toBe(5);
     expect(bundle.calls.map((c) => c.id)).toEqual(['score:0', 'score:1']);
     expect(bundle.chunkIdToCandidates.get('score:0')?.map((c) => c.id)).toEqual([
       'a',
       'b',
       'c',
-    ]);
-    expect(bundle.chunkIdToCandidates.get('score:1')?.map((c) => c.id)).toEqual([
       'd',
       'e',
-      'f',
     ]);
+    expect(bundle.chunkIdToCandidates.get('score:1')?.map((c) => c.id)).toEqual(['f']);
     for (const call of bundle.calls) {
       expect(call.system).toBe(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT);
     }
@@ -204,26 +195,25 @@ describe('buildRelevanceCalls — headline routing', () => {
       expect(bundle.calls[0].system).toBe(
         CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
       );
-      expect(bundle.scoreChunkSize).toBe(3);
+      expect(bundle.scoreChunkSize).toBe(5);
     }
   });
 
-  it('a bundle NEVER mixes the two: a mixed set falls back wholly to standard', () => {
+  it('a mixed bundle picks the prompt PER CALL at one chunk size', () => {
+    // Topic articles first, headlines after: the delivery order of a real sync.
     const candidates = [
-      headlineCandidate('h0'),
-      standardCandidate('s0'),
-      headlineCandidate('h1'),
-      standardCandidate('s1'),
-      headlineCandidate('h2'),
-      standardCandidate('s2'),
+      ...['s0', 's1', 's2', 's3', 's4', 's5', 's6'].map(standardCandidate),
+      ...['h0', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7'].map((id) => headlineCandidate(id)),
     ];
     const bundle = buildRelevanceCalls(candidates, FACTS);
 
     // ONE chunk size for the whole bundle — the decoder can only apply one.
     expect(bundle.scoreChunkSize).toBe(5);
-    const systems = new Set(bundle.calls.map((c) => c.system));
-    expect(systems.size).toBe(1);
-    expect([...systems][0]).toBe(CLOUD_RELEVANCE_SYSTEM_PROMPT);
+    expect(bundle.calls.map((c) => c.system)).toEqual([
+      CLOUD_RELEVANCE_SYSTEM_PROMPT, // s0-s4
+      CLOUD_RELEVANCE_SYSTEM_PROMPT, // s5, s6, h0-h2: mixed falls back to standard
+      CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT, // h3-h7
+    ]);
   });
 
   it('the reported scoreChunkSize always equals the size the chunks were built with', () => {
@@ -339,13 +329,13 @@ describe('P8 — factless top-headline admission to the bundles', () => {
     expect(bundle.calls.length).toBe(1);
   });
 
-  it('a factless headline bundle still routes to the HEADLINE prompt + chunk size', () => {
+  it('a factless headline bundle still routes to the HEADLINE prompt', () => {
     const bundle = buildRelevanceCalls(
       [pureHeadlineCandidate('h1'), pureHeadlineCandidate('h2')],
       FACTS,
     );
 
-    expect(bundle.scoreChunkSize).toBe(CLOUD_HEADLINE_SCORE_CHUNK_SIZE);
+    expect(bundle.scoreChunkSize).toBe(CLOUD_SCORE_CHUNK_SIZE);
     expect(bundle.calls[0].system).toBe(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT);
   });
 

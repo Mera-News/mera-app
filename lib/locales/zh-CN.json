@@ -320,7 +320,6 @@
   "onboarding": {
     "stepOf": "第 {{current}} 步，共 {{total}} 步",
     "allSet": "一切就绪！",
-    "completionMessage": "您的个性化新闻资讯正在准备中。",
     "connectionIssue": "连接问题",
     "connectionDescription": "我们在连接服务器时遇到了一些问题。您可以关闭应用稍后重试。如果问题持续存在，建议您退出登录后重新登录。",
     "logout": "退出登录",

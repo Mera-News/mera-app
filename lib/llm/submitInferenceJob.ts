@@ -99,8 +99,8 @@ export async function sendInferenceRequest(args: {
    *  whether it may ADMIT another batch — and that call MUTATES `nextGrantAt`
    *  to `now + MIN_GATEWAY_INTERVAL_MS`. The `acquire()` below would then wait
    *  out the very slot the admission check just consumed: one HTTP request,
-   *  two grants, ~3s of dead time before the first POST leaves the device
-   *  (measured 3116ms on prod).
+   *  two grants, one full interval of dead time before the first POST leaves
+   *  the device (measured 3116ms on prod at the old 3s interval).
    *
    *  Defaults FALSE so every other caller keeps the FIFO queue. Never remove
    *  the `acquire()` itself — this only decides WHO paid, not whether. */

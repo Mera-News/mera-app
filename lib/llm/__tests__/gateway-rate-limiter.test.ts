@@ -268,9 +268,11 @@ describe('lanes', () => {
         MIN_INTERACTIVE_INTERVAL_MS,
       );
     }
-    // 60 grants/minute is the implied device ceiling.
+    // 60 grants/minute is the implied device ceiling. n grants span n - 1
+    // intervals; counting n over that span overstated the rate, which only
+    // passed while background grants were 3s apart.
     const span = grantTimes[grantTimes.length - 1] - grantTimes[0];
-    expect(grantTimes.length / Math.max(span, 1) * 60_000).toBeLessThanOrEqual(60);
+    expect((grantTimes.length - 1) / Math.max(span, 1) * 60_000).toBeLessThanOrEqual(60);
   });
 });
 

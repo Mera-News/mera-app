@@ -325,7 +325,6 @@
   "onboarding": {
     "stepOf": "Étape {{current}} sur {{total}}",
     "allSet": "Vous êtes prêt !",
-    "completionMessage": "Votre fil d'actualités personnalisé est en cours de préparation.",
     "connectionIssue": "Problème de connexion",
     "connectionDescription": "Nous rencontrons des problèmes de connexion au serveur. Vous pouvez fermer l'application et réessayer plus tard. Si le problème persiste, nous vous recommandons de vous déconnecter puis de vous reconnecter.",
     "logout": "Déconnexion",

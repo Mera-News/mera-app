@@ -6,6 +6,7 @@ import { Box } from "@/components/ui/box";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth-client";
 import { getSetting } from "@/lib/database/services/setting-service";
+import { AppScheduler } from "@/lib/scheduler/AppScheduler";
 import { effectiveSessionUserId, readPendingAuthUserId } from "@/lib/security/identity-gate";
 import { Redirect, router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -89,21 +90,20 @@ export default function Onboarding() {
         router.replace({ pathname: "/login", params: { reauth: "1" } });
     }, []);
 
-    // ALWAYS the Dashboard with fromOnboarding:'1' — the startup-tab
-    // preference (lib/navigation/startup-tab.ts) is deliberately NOT
-    // consulted here. That preference answers "where do I like to start when
-    // I open the app" — a habit. This moment isn't that: the app has no
-    // content yet, and the Dashboard's "waiting for your feed" card
-    // (ForYouScreen, gated on this exact param) is the correct and only
-    // first-run affordance. Honouring a preference the user set thirty
-    // seconds into onboarding buys nothing and costs that card. The
-    // preference IS applied on the returning-user path in
-    // app/logged-in/index.tsx — do not "fix" this back to match that.
+    // ALWAYS the Feed tab, and start the first sync NOW. The startup-tab
+    // preference (lib/navigation/startup-tab.ts) is deliberately NOT consulted:
+    // it answers "where do I like to start when I open the app", a habit, and
+    // the preference IS applied on the returning-user path in
+    // app/logged-in/index.tsx. This moment is the first feed, and only the
+    // Feed renders a card the moment its relevance lands ("Writing a note"
+    // while the note is written); the Dashboard shows finished notes only.
+    // Topics already exist here: the wizard's Next stays disabled until every
+    // topic card is resolved. Without the trigger, a sync that ran mid-
+    // onboarding with no topics failed and the retry waited out the 60s
+    // failure backoff.
     const handleComplete = useCallback(() => {
-        router.replace({
-            pathname: "/logged-in/app_container/for_you",
-            params: { fromOnboarding: "1" },
-        });
+        void AppScheduler.trigger("feed-sync", { bypassDebounce: true });
+        router.replace("/logged-in/app_container/feed");
     }, []);
 
     if (!resolved) {

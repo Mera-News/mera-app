@@ -17,8 +17,8 @@
 // closer than 1s — at most 60 requests/minute, whatever the mix.
 //
 // Interactive deliberately anchors on `lastGrantAt`, NOT on the
-// background-advanced `nextGrantAt`: a chat turn arriving just after a scoring
-// submit should wait out 1s of spacing, not the background lane's 3s cadence.
+// background-advanced `nextGrantAt`, so the lanes stay independent if the
+// background cadence is ever set apart from the interactive one again.
 //
 // `acquire()` queues (FIFO within a lane, interactive lane first) and takes an
 // optional AbortSignal so an abandoned caller is spliced out instead of holding
@@ -29,7 +29,13 @@
 
 export type GatewayLane = 'interactive' | 'background';
 
-export const MIN_GATEWAY_INTERVAL_MS = 3000;
+/** Background spacing. It was 3s, which the scoring pipeline shares across
+ *  every submit and /results poll, so it was the floor under the feed's first
+ *  card and first note (owner, 2026-10-02: "unnecessary"). Lowered to the
+ *  interactive spacing, which keeps the proven 60/min device ceiling; it cannot
+ *  go below that without raising the gateway's THROTTLE_LIMIT (90/min per user
+ *  per route) first, or a run polling six jobs earns 429s. */
+export const MIN_GATEWAY_INTERVAL_MS = 1000;
 
 /** Interactive spacing. 60 req/min is the device ceiling this implies, which is
  *  the number that has to stay under the gateway's per-user limit. */

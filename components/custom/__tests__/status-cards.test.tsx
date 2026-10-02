@@ -1,6 +1,6 @@
-// Status cards — surface coverage for the three non-article cards that render
-// as ROWS in the Feed / Dashboard lists: NoGeneratedInterestsCard,
-// FeedProcessingCard and OnboardingWaitingCard.
+// Status cards — surface coverage for the two non-article cards that render
+// as ROWS in the Feed / Dashboard lists: NoGeneratedInterestsCard and
+// FeedProcessingCard.
 //
 // FeedProcessingCard replaced FeedPreparingCard and deliberately KEPT its
 // `feed-preparing-card` testID. That is not leftover debt: the simulator
@@ -100,17 +100,15 @@ jest.mock('@/components/ui/button', () => {
   };
 });
 
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 import FeedProcessingCard from '../processing/FeedProcessingCard';
 import NoGeneratedInterestsCard from '../NoGeneratedInterestsCard';
-import OnboardingWaitingCard from '../for-you/OnboardingWaitingCard';
 
 // FeedProcessingCard is deliberately NOT in this table any more. It no longer
 // carries card chrome at all: see its own describe at the bottom of this file.
 const CARDS: [string, React.FC, string][] = [
   ['NoGeneratedInterestsCard', NoGeneratedInterestsCard, 'no-interests-card'],
-  ['OnboardingWaitingCard', OnboardingWaitingCard, 'onboarding-waiting-card'],
 ];
 
 describe.each(CARDS)('%s surface', (_name, Component, testID) => {
@@ -197,17 +195,6 @@ describe('FeedProcessingCard is flush with the page, not a card on it', () => {
     render(<FeedProcessingCard />);
     expect(screen.getByTestId('feed-preparing-card')).toBeTruthy();
     expect(screen.getByTestId('feed-preparing-explore-cta')).toBeTruthy();
-  });
-});
-
-describe('OnboardingWaitingCard', () => {
-  it('offers Explore while the personalised feed is getting ready', () => {
-    const { router } = require('expo-router');
-    render(<OnboardingWaitingCard />);
-    const cta = screen.getByTestId('onboarding-waiting-explore-cta');
-    expect(screen.getByText(require('@/lib/locales/en.json').feed.exploreCta)).toBeTruthy();
-    fireEvent.press(cta);
-    expect(router.navigate).toHaveBeenCalledWith('/logged-in/app_container/around');
   });
 });
 

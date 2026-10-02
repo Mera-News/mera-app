@@ -320,7 +320,6 @@
   "onboarding": {
     "stepOf": "步驟 {{current}} / {{total}}",
     "allSet": "一切準備就緒！",
-    "completionMessage": "您的個人化新聞動態正在準備中。",
     "connectionIssue": "連線問題",
     "connectionDescription": "我們在連接伺服器時遇到了一些問題。您可以關閉應用程式，稍後再試。如果問題持續存在，建議您登出後重新登入。",
     "logout": "登出",

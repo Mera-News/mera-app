@@ -320,7 +320,6 @@
   "onboarding": {
     "stepOf": "Bước {{current}} / {{total}}",
     "allSet": "Bạn đã sẵn sàng!",
-    "completionMessage": "Bản tin cá nhân hóa của bạn đang được chuẩn bị.",
     "connectionIssue": "Sự cố kết nối",
     "connectionDescription": "Chúng tôi gặp một số sự cố khi kết nối đến máy chủ. Bạn có thể đóng ứng dụng và thử lại sau. Nếu sự cố vẫn tiếp diễn, chúng tôi khuyên bạn nên đăng xuất và đăng nhập lại.",
     "logout": "Đăng xuất",

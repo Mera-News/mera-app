@@ -31,10 +31,6 @@ jest.mock('@/components/custom/NoGeneratedInterestsCard', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: () => <View testID="no-interests" /> };
 });
-jest.mock('@/components/custom/for-you/OnboardingWaitingCard', () => {
-  const { View } = require('react-native');
-  return { __esModule: true, default: () => <View testID="onboarding-wait" /> };
-});
 jest.mock('@/components/ui/spinner', () => ({ Spinner: () => null }));
 jest.mock('@/components/ui/icon', () => ({ Icon: () => null, AlertCircleIcon: () => null }));
 jest.mock('@/components/ui/text', () => {
@@ -52,7 +48,6 @@ import { View } from 'react-native';
 import DashboardEmptyState, { type DashboardEmptyStateProps } from '../DashboardEmptyState';
 
 const base: DashboardEmptyStateProps = {
-  showOnboardingWait: false,
   isLoading: false,
   stuckOnEmpty: false,
   errorMessage: null,
