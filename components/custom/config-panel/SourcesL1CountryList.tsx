@@ -21,6 +21,7 @@ import {
     getBrowseCountries,
     removeBrowseCountry,
 } from '@/lib/explore/browse-countries';
+import { removeSuppressedScopeId } from '@/lib/explore/suppressed-scopes';
 import {
     getTopVisitedPublications,
     type VisitedPublication,
@@ -136,7 +137,11 @@ const SourcesL1CountryList: React.FC = () => {
                 else next.add(code);
                 return next;
             });
-            const action = isAdded ? removeBrowseCountry(code) : addBrowseCountry(code);
+            // Adding also un-hides the chip: a location-derived country hidden
+            // on Explore would otherwise stay hidden behind its green check.
+            const action = isAdded
+                ? removeBrowseCountry(code)
+                : Promise.all([addBrowseCountry(code), removeSuppressedScopeId(`country:${item.code}`)]);
             action.catch((error) => {
                 logger.captureException(error, {
                     tags: { screen: 'SourcesL1CountryList', method: 'handleToggleCountry' },

@@ -11,8 +11,8 @@
 // leads with them.
 //
 // Order is `[World, primary country?, ...remaining countries weight-desc]`:
-// World is ALWAYS present and ALWAYS FIRST, so the cap is applied to the
-// country list only. The primary country is elected by
+// World is ALWAYS present and ALWAYS FIRST, and no country is ever dropped.
+// The primary country is elected by
 // {@link electPrimaryCountry} (highest-weight `role: 'home'` row, else
 // highest-weight row overall, else the device country) and de-duped out of
 // the tail so it never appears twice. Cold-mount lands on the first chip,
@@ -83,9 +83,6 @@ export interface ScopeLocationInput {
     readonly role: ScopeLocationRole;
     readonly weight: number;
 }
-
-/** Hard cap on visible scope chips (up to 5 countries + World, which is exempt). */
-export const MAX_SCOPES = 6;
 
 /** ISO alpha-2 → alpha-3, or null when unmappable. */
 export function alpha2ToAlpha3(alpha2: string | null | undefined): string | null {
@@ -212,9 +209,9 @@ export function electPrimaryCountry(
  *      {@link electPrimaryCountry} — a browse country can never become the
  *      primary chip.
  *
- * De-duped by scope id. The cap applies to the COUNTRY list only
- * ({@link MAX_SCOPES} - 1 countries); World is prepended afterwards so it
- * always survives.
+ * De-duped by scope id. There is NO cap (owner): a capped list cut browse
+ * countries first, so Sources showed a country as added while Explore had no
+ * chip for it. The row scrolls, and a scope only fetches when selected.
  */
 export function deriveExploreScopes(
     locations: readonly ScopeLocationInput[],
@@ -242,5 +239,5 @@ export function deriveExploreScopes(
         countryScopes.push(countryScope((alpha2 ?? '').trim().toUpperCase(), alpha3));
     }
 
-    return [worldScope(), ...countryScopes.slice(0, MAX_SCOPES - 1)];
+    return [worldScope(), ...countryScopes];
 }

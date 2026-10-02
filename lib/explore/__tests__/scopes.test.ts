@@ -2,7 +2,6 @@ import {
     alpha2ToAlpha3,
     deriveExploreScopes,
     electPrimaryCountry,
-    MAX_SCOPES,
     type ScopeLocationInput,
 } from '../scopes';
 
@@ -156,7 +155,7 @@ describe('deriveExploreScopes', () => {
         ]);
     });
 
-    it('fits exactly MAX_SCOPES - 1 countries plus World without dropping anything', () => {
+    it('keeps five location countries plus World without dropping anything', () => {
         const scopes = deriveExploreScopes(
             [
                 loc({ city: 'a', countryCode: 'GB', role: 'home', weight: 0.9 }),
@@ -167,7 +166,6 @@ describe('deriveExploreScopes', () => {
             ],
             'US', // device country is irrelevant once a location resolves
         );
-        expect(scopes).toHaveLength(MAX_SCOPES);
         expect(scopes.map((s) => s.id)).toEqual([
             'world',
             'country:GBR',
@@ -178,7 +176,7 @@ describe('deriveExploreScopes', () => {
         ]);
     });
 
-    it('keeps World first even when the country count exceeds MAX_SCOPES', () => {
+    it('keeps World first and drops no country however many there are', () => {
         const scopes = deriveExploreScopes(
             [
                 loc({ countryCode: 'GB', role: 'home', weight: 0.9 }),
@@ -192,8 +190,6 @@ describe('deriveExploreScopes', () => {
             ],
             'US',
         );
-        expect(scopes).toHaveLength(MAX_SCOPES);
-        // World survives the cap because the slice applies to countries only.
         expect(scopes[0]).toMatchObject({ id: 'world', kind: 'world' });
         expect(scopes.map((s) => s.id)).toEqual([
             'world',
@@ -202,8 +198,10 @@ describe('deriveExploreScopes', () => {
             'country:DEU',
             'country:ITA',
             'country:ESP',
+            'country:NLD',
+            'country:PRT',
+            'country:SWE',
         ]);
-        expect(scopes.some((s) => s.id === 'country:NLD')).toBe(false);
     });
 
     it('skips locations with an unmappable country code', () => {
@@ -244,7 +242,7 @@ describe('deriveExploreScopes — browse countries (3rd argument)', () => {
         expect(electPrimaryCountry([], 'US')).toMatchObject({ id: 'country:USA' });
     });
 
-    it('is subject to the same MAX_SCOPES cap as location-derived countries', () => {
+    it('is never dropped, however many location countries come before it', () => {
         const scopes = deriveExploreScopes(
             [
                 loc({ countryCode: 'GB', role: 'home', weight: 0.9 }),
@@ -254,10 +252,12 @@ describe('deriveExploreScopes — browse countries (3rd argument)', () => {
                 loc({ countryCode: 'ES', weight: 0.5 }),
             ],
             'US',
-            ['NL'],
+            ['NL', 'GB'],
         );
-        expect(scopes).toHaveLength(MAX_SCOPES);
-        expect(scopes.some((s) => s.id === 'country:NLD')).toBe(false);
+        const ids = scopes.map((s) => s.id);
+        expect(ids[ids.length - 1]).toBe('country:NLD');
+        expect(ids.filter((id) => id === 'country:GBR')).toHaveLength(1);
+        expect(ids).toHaveLength(7);
     });
 
     it('defaults to [] when omitted (back-compat with the 2-arg call sites)', () => {

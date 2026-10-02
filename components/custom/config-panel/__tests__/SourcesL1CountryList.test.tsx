@@ -139,6 +139,10 @@ jest.mock('@/lib/explore/browse-countries', () => ({
     addBrowseCountry: (code: string) => mockAddBrowseCountry(code),
     removeBrowseCountry: (code: string) => mockRemoveBrowseCountry(code),
 }));
+const mockRemoveSuppressedScopeId = jest.fn((_id: string) => Promise.resolve([] as string[]));
+jest.mock('@/lib/explore/suppressed-scopes', () => ({
+    removeSuppressedScopeId: (id: string) => mockRemoveSuppressedScopeId(id),
+}));
 
 const mockSearchPublishers = jest.fn(
     (
@@ -197,6 +201,13 @@ describe('SourcesL1CountryList — browse-country toggle (Item 7)', () => {
         await waitFor(() => expect(mockAddBrowseCountry).toHaveBeenCalledWith('IN'));
     });
 
+    it('un-hides the Explore chip when adding, so a hidden country cannot sit behind a check', async () => {
+        const { findAllByLabelText } = render(<SourcesL1CountryList />);
+        const adds = await findAllByLabelText('sources.addToExplore');
+        fireEvent.press(adds[0]);
+        await waitFor(() => expect(mockRemoveSuppressedScopeId).toHaveBeenCalledWith('country:IND'));
+    });
+
     it('shows a check instead of the add icon for an already-browsed country', async () => {
         browseStore = ['IN'];
         const { findAllByLabelText, queryAllByLabelText } = render(<SourcesL1CountryList />);
@@ -213,6 +224,7 @@ describe('SourcesL1CountryList — browse-country toggle (Item 7)', () => {
         fireEvent.press(checks[0]);
         await waitFor(() => expect(mockRemoveBrowseCountry).toHaveBeenCalledWith('IN'));
         expect(mockAddBrowseCountry).not.toHaveBeenCalled();
+        expect(mockRemoveSuppressedScopeId).not.toHaveBeenCalled();
     });
 
     it('re-reads the browse set on every focus', async () => {
