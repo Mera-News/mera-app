@@ -239,7 +239,6 @@
     "statsPublished_one": "{{formatted}}件の記事が過去24時間に公開されました、",
     "statsRead_one": "そしてあなたは{{formatted}}件を読みました。",
     "statsRelevant_one": "{{formatted}}件があなたに関連性があります、",
-    "reasonUnavailable": "この記事のメモを作成できませんでした。",
     "loadingA11y": "フィードを読み込んでいます",
     "translatingCaption": "翻訳中…",
     "updatedJustNow": "たった今更新",

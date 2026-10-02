@@ -51,12 +51,6 @@ const LABEL_FADE_MS = 220;
 const DEFAULT_LABEL_COLOR = 'rgb(156, 163, 175)';
 const DEFAULT_DOT_COLOR = 'rgb(231, 138, 83)';
 
-/** How long a card's note may stay pending before the placeholder gives up and
- *  says so. A scoring bundle that dies whole leaves its rows in
- *  `reason_pending` for good, and a caption cycling forever is a false claim
- *  that work is happening. A reason that lands later still replaces the line. */
-export const REASON_PENDING_CAP_MS = 90_000;
-
 // ── ONE shared clock for every mounted indicator ─────────────────────────────
 //
 // This renders on EVERY Feed card whose note is still pending, so a busy feed
@@ -138,12 +132,6 @@ interface StreamingIndicatorProps {
     compact?: boolean;
     /** Overrides both label and dot color (defaults: gray label, orange dots). */
     color?: string;
-    /** When the thing being waited on started (epoch ms). With it, the
-     *  indicator stops after {@link REASON_PENDING_CAP_MS} and shows
-     *  `terminalText` instead of cycling forever. */
-    pendingSinceMs?: number | null;
-    /** What to show once the cap has passed. Required for the cap to apply. */
-    terminalText?: string;
     /** One fixed caption instead of the rotating chat captions. The dots still
      *  move (subject to the same gates); the words never change. */
     label?: string;
@@ -152,33 +140,11 @@ interface StreamingIndicatorProps {
 const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     compact = false,
     color,
-    pendingSinceMs,
-    terminalText,
     label,
 }) => {
     const { t } = useTranslation();
     const labelColor = color ?? DEFAULT_LABEL_COLOR;
     const dotColor = color ?? DEFAULT_DOT_COLOR;
-
-    // Past the cap: a one-shot timer flips this once, no polling.
-    const capApplies = typeof pendingSinceMs === 'number' && !!terminalText;
-    const [expired, setExpired] = useState(
-        () => capApplies && Date.now() - (pendingSinceMs as number) >= REASON_PENDING_CAP_MS,
-    );
-    useEffect(() => {
-        if (!capApplies) {
-            setExpired(false);
-            return;
-        }
-        const remaining = (pendingSinceMs as number) + REASON_PENDING_CAP_MS - Date.now();
-        if (remaining <= 0) {
-            setExpired(true);
-            return;
-        }
-        setExpired(false);
-        const timer = setTimeout(() => setExpired(true), remaining);
-        return () => clearTimeout(timer);
-    }, [capApplies, pendingSinceMs]);
 
     // `useAnimationsActive` is false only when this screen is blurred or the
     // app is backgrounded, i.e. when nobody is looking. Its own header warns
@@ -187,7 +153,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     const animationsActive = useAnimationsActive();
     const reduceMotion = useReducedMotion();
     const liteMode = useDisplayPrefsStore((s) => s.liteMode);
-    const moving = animationsActive && !reduceMotion && !liteMode && !expired;
+    const moving = animationsActive && !reduceMotion && !liteMode;
 
     useEffect(() => {
         if (!moving) return;
@@ -226,18 +192,6 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     const dot1Style = useAnimatedStyle(() => ({ transform: [{ scale: moving ? dotScale(dotPhase.value, 0) : 1 }] }));
     const dot2Style = useAnimatedStyle(() => ({ transform: [{ scale: moving ? dotScale(dotPhase.value, 1) : 1 }] }));
     const dot3Style = useAnimatedStyle(() => ({ transform: [{ scale: moving ? dotScale(dotPhase.value, 2) : 1 }] }));
-
-    if (expired && terminalText) {
-        return (
-            <Text
-                testID="card-reason-unavailable"
-                size="sm"
-                style={[streamingIndicatorStyles.label, { color: labelColor }]}
-            >
-                {terminalText}
-            </Text>
-        );
-    }
 
     const labelRow = (
         <View style={streamingIndicatorStyles.labelRow}>

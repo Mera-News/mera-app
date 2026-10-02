@@ -239,7 +239,6 @@
     "statsPublished_one": "过去24小时内发布了{{formatted}}篇文章,",
     "statsRead_one": "且您已阅读{{formatted}}篇。",
     "statsRelevant_one": "{{formatted}}篇与您相关,",
-    "reasonUnavailable": "Mera 未能为这篇文章写说明。",
     "loadingA11y": "正在加载你的动态",
     "translatingCaption": "正在翻译…",
     "updatedJustNow": "刚刚更新",

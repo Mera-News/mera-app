@@ -241,7 +241,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 // eslint-disable-next-line import/first
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor, within } from '@testing-library/react-native';
 // eslint-disable-next-line import/first
 import { StyleSheet } from 'react-native';
 // eslint-disable-next-line import/first
@@ -1059,6 +1059,11 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
     expect(queryByTestId('card-reason-not-yet')).toBeNull();
     expect(queryByText('aiDisclosure.caption')).toBeNull();
     expect(minHeightOf(getByTestId('card-reason-pending'))).toBe(twoLines());
+    // Right-aligned in the badge row, where the disclosure goes.
+    let inRow = false;
+    for (let p: any = writing; p; p = p.parent) if (p.props?.testID === 'card-reason-badge-row') inRow = true;
+    expect(inRow).toBe(true);
+    expect(writing.props.style).toMatchObject({ alignItems: 'flex-end' });
   });
 
   it('writing: the root reads the priority, then "note being written"', () => {
@@ -1079,7 +1084,9 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
     );
     expect(queryByTestId('card-reason-writing', { includeHiddenElements: true })).toBeNull();
     expect(queryByTestId('streaming', { includeHiddenElements: true })).toBeNull();
-    expect(getByTestId('card-reason-not-yet').props.children).toBe('feed.reasonNotYet');
+    const notYet = getByTestId('card-reason-not-yet', { includeHiddenElements: true });
+    expect(within(notYet).getByText('feed.reasonNotYet', { includeHiddenElements: true })).toBeTruthy();
+    expect(notYet.props.style).toMatchObject({ alignItems: 'flex-end' });
     expect(minHeightOf(getByTestId('card-reason-pending'))).toBe(twoLines());
     expect(getByTestId('card-sugg-1').props.accessibilityLabel).toContain('feed.reasonNotYet');
   });
@@ -1093,7 +1100,7 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
       expect(getByTestId('relevance-chip')).toBeTruthy();
       // Nothing is being written for a declined note, whatever the set says.
       expect(queryByTestId('card-reason-writing', { includeHiddenElements: true })).toBeNull();
-      expect(getByTestId('card-reason-not-yet')).toBeTruthy();
+      expect(getByTestId('card-reason-not-yet', { includeHiddenElements: true })).toBeTruthy();
       expect(minHeightOf(getByTestId('card-reason-pending'))).toBe(twoLines());
       unmount();
     }
@@ -1115,18 +1122,34 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
     expect(minHeightOf(getByTestId('card-reason-text'))).toBeUndefined();
   });
 
-  it('other surfaces (no reasonWriting) keep the legacy placeholder beside the badge and no reserved height', () => {
+  it('other surfaces (no reasonWriting) show the not-yet line in the badge row and no reserved height', () => {
     const { getByTestId, queryByTestId } = render(
       <ArticleSuggestionCard suggestion={pending()} onPress={jest.fn()} flat />,
     );
-    const row = getByTestId('card-reason-badge-row');
-    const streaming = getByTestId('streaming');
+    const notYet = getByTestId('card-reason-not-yet', { includeHiddenElements: true });
     let inRow = false;
-    for (let p: any = streaming; p; p = p.parent) if (p === row) inRow = true;
+    for (let p: any = notYet; p; p = p.parent) if (p.props?.testID === 'card-reason-badge-row') inRow = true;
     expect(inRow).toBe(true);
+    expect(queryByTestId('streaming', { includeHiddenElements: true })).toBeNull();
     expect(queryByTestId('card-reason-pending')).toBeNull();
     const { getByTestId: get2 } = render(<ArticleSuggestionCard suggestion={makeSuggestion()} onPress={jest.fn()} flat />);
     expect(minHeightOf(get2('card-reason-text'))).toBeUndefined();
+  });
+});
+
+describe('notePendingMode (one rule for the Feed card and the detail screen)', () => {
+  const { notePendingMode } = require('@/components/custom/cards/ReasonNote');
+  const S = ArticleSuggestionStatus;
+  it.each([
+    [S.Unscored, '', true, undefined],
+    [S.ReasonPending, '', true, 'writing'],
+    [S.ReasonPending, '', false, 'not-yet'],
+    [S.ReasonSkipped, '', true, 'not-yet'],
+    [S.Complete, '', true, undefined],
+    [S.Complete, 'a note', false, undefined],
+    [S.ReasonPending, 'a note', true, undefined],
+  ])('%s, reason %p, writing %p -> %p', (status, reason, writing, expected) => {
+    expect(notePendingMode({ status, reason }, writing)).toBe(expected);
   });
 });
 

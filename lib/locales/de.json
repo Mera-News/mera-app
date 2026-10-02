@@ -239,7 +239,6 @@
     "statsRelevant_other": "{{formatted}} sind relevant,",
     "statsRead_one": "und Sie haben {{formatted}} gelesen.",
     "statsRead_other": "und Sie haben {{formatted}} gelesen.",
-    "reasonUnavailable": "Mera konnte hierzu keine Notiz schreiben.",
     "loadingA11y": "Dein Feed wird geladen",
     "translatingCaption": "Wird übersetzt…",
     "updatedJustNow": "Gerade aktualisiert",

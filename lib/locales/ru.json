@@ -251,7 +251,6 @@
     "statsRead_few": "и вы прочитали {{formatted}}.",
     "statsRead_many": "и вы прочитали {{formatted}}.",
     "statsRead_other": "и вы прочитали {{formatted}}.",
-    "reasonUnavailable": "Mera не смогла написать заметку к этой статье.",
     "loadingA11y": "Загружаем вашу ленту",
     "translatingCaption": "Перевод…",
     "updatedJustNow": "Обновлено только что",

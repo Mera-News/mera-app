@@ -263,7 +263,6 @@
     "statsRead_few": "وقرأت {{formatted}}.",
     "statsRead_many": "وقرأت {{formatted}}.",
     "statsRead_other": "وقرأت {{formatted}}.",
-    "reasonUnavailable": "لم تتمكن ميرا من كتابة ملاحظة لهذا المقال.",
     "loadingA11y": "جارٍ تحميل موجزك",
     "translatingCaption": "جارٍ الترجمة…",
     "updatedJustNow": "تم التحديث الآن",

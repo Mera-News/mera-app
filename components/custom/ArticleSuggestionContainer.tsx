@@ -21,21 +21,19 @@ import SmoothScrollView, { SmoothScrollViewRef } from '@/components/custom/Smoot
 import TranslatableDynamic, { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Card } from '@/components/ui/card';
-import { HStack } from '@/components/ui/hstack';
 import { Image } from '@/components/ui/image';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
-import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { reasonBoxColors } from '@/lib/relevance-utils';
+import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
+import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import ReasonNote from '@/components/custom/cards/ReasonNote';
-import { pendingSinceMs } from '@/components/custom/cards/pending-since';
+import FactChips from '@/components/custom/cards/FactChips';
+import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 export type ArticleSuggestionContainerVariant = 'card' | 'screen';
@@ -69,6 +67,10 @@ interface BaseProps {
      *  instance) — fires whenever the displayed title variant changes so the
      *  detail screen can share whichever title the reader currently sees. */
     onTitleDisplayChange?: (state: TranslatableDisplayState) => void;
+    /** Whether this suggestion's note is being written right now
+     *  (`useReasonWriting`). Same input, same rule (`notePendingMode`) as the
+     *  Feed card, so the two always show the same pending state. */
+    reasonWriting?: boolean;
 }
 
 type SuggestionProps = BaseProps & { suggestion: ForYouSuggestion; article?: never };
@@ -95,32 +97,6 @@ const META_BAND_TINT = 'rgba(0,0,0,0.30)';
 const NO_IMAGE_META_CLEARANCE =
     BACK_BUTTON_TOP_OFFSET + BACK_BUTTON_SIZE + NO_IMAGE_BREATHING_ROOM; // 72
 
-// Module-level LRU cache (insertion-order eviction, cap 100) for topic→facts
-// lookups. Cards that share the same topic set (common within a fact section)
-// resolve from here instead of re-querying WatermelonDB on mount (perf A5).
-// Keyed by the SORTED, joined topic ids so ordering doesn't matter.
-const FACTS_CACHE_MAX = 100;
-const factsCache = new Map<string, Fact[]>();
-
-function getCachedFacts(key: string): Fact[] | undefined {
-    const hit = factsCache.get(key);
-    if (hit !== undefined) {
-        // Refresh recency: re-insert so it becomes most-recently-used.
-        factsCache.delete(key);
-        factsCache.set(key, hit);
-    }
-    return hit;
-}
-
-function setCachedFacts(key: string, value: Fact[]): void {
-    if (factsCache.has(key)) factsCache.delete(key);
-    factsCache.set(key, value);
-    if (factsCache.size > FACTS_CACHE_MAX) {
-        const oldest = factsCache.keys().next().value;
-        if (oldest !== undefined) factsCache.delete(oldest);
-    }
-}
-
 const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> = (props) => {
     const {
         variant,
@@ -136,6 +112,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         aboveReason,
         read = false,
         onTitleDisplayChange,
+        reasonWriting = false,
     } = props;
 
     const suggestion = 'suggestion' in props ? props.suggestion : undefined;
@@ -143,8 +120,6 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const isSuggestion = !!suggestion;
 
     const { t } = useTranslation();
-
-    const [facts, setFacts] = useState<Fact[]>([]);
 
     // Common view model derived from whichever source was provided.
     const imageUrl = suggestion?.image_url ?? article?.image_url ?? null;
@@ -193,9 +168,11 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const metaEntities = suggestion?.entities ?? article?.entities ?? null;
     const metaGeoTags = article?.geo_tags ?? null;
 
-    const [imageFailed, setImageFailed] = useState(false);
     const blurImages = useBlurImagesStore((s) => s.blurImages);
-    const showImage = !!imageUrl && !imageFailed;
+    // The Feed card's image machine (rewritten -> original -> fail), so the
+    // detail hero shows the same rendition the card did. Skipped under blur.
+    const heroImage = useUpgradedImageSource(imageUrl, HERO_TARGET_PX, { enabled: !blurImages });
+    const showImage = !!imageUrl && !heroImage.failed;
 
     // Relevance/reason only apply to the suggestion path. Driven by the
     // article-suggestion status state machine.
@@ -204,47 +181,10 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const reasonReady = status === ArticleSuggestionStatus.Complete;
     const relevance = suggestion?.relevance ?? 0;
     const reason = relevanceReady ? suggestion?.reason ?? '' : '';
-    const reasonLoading =
-        status === ArticleSuggestionStatus.ReasonPending && !reason;
-
-    // Facts are queried only where a chip can appear: the card variant's chips
-    // on a complete, reason-less row (`factChipsEl` below). Fetching for any
-    // other row is wasted DB work on every mount. The module-level LRU cache
-    // lets rows sharing a topic set skip the query entirely (perf A5).
-    const canRenderFactChips = isSuggestion && reasonReady && !reason && variant === 'card';
-    // Primitive dep — `suggestion.userTopicIds` is a fresh array each render, so
-    // key the effect on its joined contents instead of the unstable ref.
-    const topicIdsKey = (suggestion?.userTopicIds ?? []).join(' ');
-    useEffect(() => {
-        const topicIds = suggestion?.userTopicIds ?? [];
-        if (!canRenderFactChips || topicIds.length === 0) {
-            setFacts([]);
-            return;
-        }
-        const cacheKey = [...topicIds].sort().join(' ');
-        const cached = getCachedFacts(cacheKey);
-        if (cached) {
-            setFacts(cached);
-            return;
-        }
-        let cancelled = false;
-        getFactsForTopicTexts(topicIds)
-            .then((f) => {
-                if (cancelled) return;
-                setCachedFacts(cacheKey, f);
-                setFacts(f);
-            })
-            .catch(() => {
-                if (!cancelled) setFacts([]);
-            });
-        return () => {
-            cancelled = true;
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [canRenderFactChips, topicIdsKey]);
+    const pendingMode = suggestion ? notePendingMode(suggestion, reasonWriting) : undefined;
 
     const isCard = variant === 'card';
-    const displayTitle = titleEnglish || (isCard ? t('feed.newsCluster') : 'Article');
+    const displayTitle = titleEnglish || t('feed.newsCluster');
 
     const metaRow = (
         <Box>
@@ -282,33 +222,13 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
         />
     );
 
-    const factChipsEl = isSuggestion && reasonReady && !reason && facts.length > 0 ? (
-        <HStack className="flex-wrap justify-end" space="xs">
-            {facts.map((fact) => (
-                <Box
-                    key={fact.id}
-                    className="px-2.5 py-1 rounded-full mb-1"
-                    style={{ backgroundColor: reasonBoxColors.backgroundColor }}
-                >
-                    <Text
-                        size="xs"
-                        style={{ color: reasonBoxColors.textColor, fontWeight: '600', fontSize: 11 }}
-                        numberOfLines={1}
-                    >
-                        {fact.statement}
-                    </Text>
-                </Box>
-            ))}
-        </HStack>
+    // Same chips as the Feed card for a complete, note-less row.
+    const factChipsEl = isSuggestion && reasonReady && !reason ? (
+        <FactChips topicIds={suggestion?.userTopicIds} />
     ) : null;
 
-    const reasonBoxEl = isSuggestion && relevanceReady && (reason || reasonLoading) ? (
-        <ReasonNote
-            relevance={relevance}
-            reason={reason}
-            pendingSinceMs={pendingSinceMs(suggestion)}
-            testID="detail-reason"
-        />
+    const reasonBoxEl = isSuggestion && relevanceReady && (reason || pendingMode) ? (
+        <ReasonNote relevance={relevance} reason={reason} pendingMode={pendingMode} testID="detail-reason" />
     ) : null;
 
     if (isCard) {
@@ -318,13 +238,13 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                     {showImage && (
                         <Box className="w-full h-48 overflow-hidden rounded-t-lg">
                             <Image
-                                source={{ uri: imageUrl! }}
+                                source={{ uri: heroImage.uri! }}
                                 alt={displayTitle}
                                 className="w-full h-full"
                                 resizeMode="cover"
                                 recyclingKey={suggestion?._id ?? article?._id}
                                 blurRadius={blurImages ? 24 : undefined}
-                                onError={() => setImageFailed(true)}
+                                onError={heroImage.onError}
                             />
                         </Box>
                     )}
@@ -353,7 +273,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 showImage ? (
                     <Box className="w-full h-full">
                         <Image
-                            source={{ uri: imageUrl! }}
+                            source={{ uri: heroImage.uri! }}
                             alt={displayTitle}
                             className="w-full h-full"
                             resizeMode="cover"
@@ -361,7 +281,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                             // only the cards that led here.
                             blurRadius={blurImages ? 24 : undefined}
                             testID="detail-hero-image"
-                            onError={() => setImageFailed(true)}
+                            onError={heroImage.onError}
                         />
                     </Box>
                 ) : undefined
@@ -393,6 +313,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 )}
                 {titleEl}
                 {aboveReason}
+                {factChipsEl}
                 {reasonBoxEl}
                 <ExtractedMetadataPanel
                     eventType={metaEventType}

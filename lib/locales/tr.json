@@ -239,7 +239,6 @@
     "statsRelevant_other": "{{formatted}} uygun görünüyor,",
     "statsRead_one": "ve {{formatted}} okumuşsun.",
     "statsRead_other": "ve {{formatted}} okumuşsun.",
-    "reasonUnavailable": "Mera bu haber için not yazamadı.",
     "loadingA11y": "Akışın yükleniyor",
     "translatingCaption": "Çevriliyor…",
     "updatedJustNow": "Az önce güncellendi",

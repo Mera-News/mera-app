@@ -1,19 +1,16 @@
 import ArticleCardBase from '@/components/custom/cards/ArticleCardBase';
 import CardActionBar from '@/components/custom/cards/CardActionBar';
 import type { CardFeedbackHandlers } from '@/components/custom/feed/use-feedback-sheet';
-import { getCachedFacts, setCachedFacts } from '@/components/custom/cards/facts-cache';
-import { pendingSinceMs } from '@/components/custom/cards/pending-since';
-import ReasonNote from '@/components/custom/cards/ReasonNote';
+import FactChips from '@/components/custom/cards/FactChips';
+import ReasonNote, { notePendingMode } from '@/components/custom/cards/ReasonNote';
 import { relevanceSpokenLabel } from '@/components/custom/relevance-spoken-label';
 import { useArticleMenu } from '@/components/custom/cards/use-article-menu';
 import { inlineAccessibilityActions } from '@/components/custom/cards/use-article-actions';
 import { visitFromSuggestion } from '@/components/custom/cards/article-actions';
 import { feedbackSubjectFromSuggestion } from '@/components/custom/cards/feedback-subject';
 import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import { getFactsForTopicTexts } from '@/lib/database/services/fact-service';
 import {
   saveSuggestion,
   deleteSavedSuggestion,
@@ -21,8 +18,6 @@ import {
 } from '@/lib/database/services/saved-article-suggestion-service';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle } from '@/lib/hooks/useShareArticle';
-import type { Fact } from '@/lib/mera-protocol-toolkit/types';
-import { reasonBoxColors } from '@/lib/relevance-utils';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useHardFilterLabel } from '@/lib/stores/hard-filter-label-store';
@@ -80,11 +75,10 @@ interface ArticleCardProps {
   /** Pass-through to `ArticleCardBase` — space kept clear at the meta row for a
    *  host-owned control floating over the card's top-right (Saved list). */
   metaRowRightReserve?: number;
-  /** The Feed only: whether this row's note is being written right now (its
-   *  reasons are in flight, within the backstop; see `useReasonWriting`). When
-   *  set, a `reason_pending` row shows "Writing a note" or, when false, "No
-   *  note for this article yet." Omitted (every other surface): the legacy
-   *  pending placeholder. */
+  /** Whether this row's note is being written right now (its reasons are in
+   *  flight, within the backstop; see `useReasonWriting`). A `reason_pending`
+   *  row shows "Writing a note" when true, else "No note for this article
+   *  yet." Omitted: false. */
   reasonWriting?: boolean;
   /** The Feed only: reserve two lines for the note in every state, because
    *  this card was pending at some point this session and its note can still
@@ -127,7 +121,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   reserveNoteSpace = false,
 }) => {
   const { t } = useTranslation();
-  const [facts, setFacts] = useState<Fact[]>([]);
 
   // Card-local saved state — restored across remounts (ported verbatim from
   // FeedArticleCard, which mirrored ArticleActionsRow). Only wired when the
@@ -240,40 +233,6 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   const reasonReady = status === ArticleSuggestionStatus.Complete;
   const relevance = suggestion.relevance ?? 0;
   const reason = relevanceReady ? suggestion.reason ?? '' : '';
-  const reasonLoading = status === ArticleSuggestionStatus.ReasonPending && !reason;
-
-  // Fact chips only render on a complete, reason-less suggestion; mirror that
-  // exact gate here so facts are only queried when the chips can appear. The
-  // module-level LRU cache lets cards sharing a topic set skip the query (A5).
-  const canRenderFactChips = reasonReady && !reason;
-  const topicIdsKey = (suggestion.userTopicIds ?? []).join(' ');
-  useEffect(() => {
-    const topicIds = suggestion.userTopicIds ?? [];
-    if (!canRenderFactChips || topicIds.length === 0) {
-      setFacts([]);
-      return;
-    }
-    const cacheKey = [...topicIds].sort().join(' ');
-    const cached = getCachedFacts(cacheKey);
-    if (cached) {
-      setFacts(cached);
-      return;
-    }
-    let cancelled = false;
-    getFactsForTopicTexts(topicIds)
-      .then((f) => {
-        if (cancelled) return;
-        setCachedFacts(cacheKey, f);
-        setFacts(f);
-      })
-      .catch(() => {
-        if (!cancelled) setFacts([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canRenderFactChips, topicIdsKey]);
 
   // P6 — the filtered-but-shown label. A hard "not interested" filter no longer
   // removes a TOP HEADLINE; the story is demoted instead, so it can legitimately
@@ -299,56 +258,27 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
     </Box>
   ) : null;
 
-  const factChipsEl = reasonReady && !reason && facts.length > 0 ? (
-    <HStack className="flex-wrap justify-end" space="xs">
-      {facts.map((fact) => (
-        <Box
-          key={fact.id}
-          className="px-2.5 py-1 rounded-full mb-1"
-          style={{ backgroundColor: reasonBoxColors.backgroundColor }}
-        >
-          {/* `size="2xs"` is 11px — same pixels, but the `size="xs"` class and
-              the inline `fontSize: 11` are no longer contradicting each other,
-              and it is on the scale. */}
-          <Text
-            size="2xs"
-            style={{ color: reasonBoxColors.textColor, fontWeight: '600' }}
-            numberOfLines={1}
-          >
-            {fact.statement}
-          </Text>
-        </Box>
-      ))}
-    </HStack>
-  ) : null;
+  const factChipsEl = reasonReady && !reason ? <FactChips topicIds={suggestion.userTopicIds} /> : null;
 
   // The note as displayed (it may be translated), for the card's spoken label.
   const [shownReason, setShownReason] = useState<string | null>(null);
-  // The Feed passes `reasonWriting`; every other surface keeps the legacy
-  // placeholder (and its 90s cap) untouched.
-  //
-  // On the Feed a scored row with no note is never a bare card: "Writing a
-  // note" only while its reasons are in flight, otherwise the static not-yet
-  // line. That covers a note the gate declined (`reason_skipped`) and a row
-  // whose status left the pool while it sat on screen: the live row reaches
-  // this card, and dropping the box would shrink the card under the reader.
-  // `complete` without a note keeps its fact chips, as it always has.
-  const feedMode = reasonWriting !== undefined;
-  const feedNoteMissing = feedMode && relevanceReady && !reason && status !== ArticleSuggestionStatus.Complete;
-  const pendingMode = feedNoteMissing
-    ? reasonLoading && reasonWriting
-      ? 'writing'
-      : 'not-yet'
-    : undefined;
-  const reasonBoxEl = relevanceReady && (reason || reasonLoading || feedNoteMissing) ? (
+  // One rule with the detail screen (`notePendingMode`): "Writing a note"
+  // only while its reasons are in flight, otherwise the static not-yet line.
+  // That covers a note the gate declined (`reason_skipped`) and a row whose
+  // status left the pool while it sat on screen: the live row reaches this
+  // card, and dropping the box would shrink the card under the reader.
+  // `complete` without a note keeps its fact chips. Surfaces that pass no
+  // `reasonWriting` (Saved, the fact feed) never see a live batch.
+  const pendingMode = notePendingMode(suggestion, reasonWriting ?? false);
+  const reasonBoxEl = relevanceReady && (reason || pendingMode) ? (
     <ReasonNote
       relevance={relevance}
       reason={reason}
-      pendingSinceMs={pendingSinceMs(suggestion)}
       testID="card-reason"
       onNoteDisplayChange={setShownReason}
       pendingMode={pendingMode}
-      reserveNoteLines={feedMode && reserveNoteSpace ? FEED_NOTE_RESERVED_LINES : undefined}
+      pendingSpokenByHost
+      reserveNoteLines={reserveNoteSpace ? FEED_NOTE_RESERVED_LINES : undefined}
     />
   ) : null;
   // What the card root reads after the meta strings: the chip's priority

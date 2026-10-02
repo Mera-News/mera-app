@@ -239,7 +239,6 @@
     "statsPublished_one": "{{formatted}} บทความได้รับการเผยแพร่ใน 24 ชั่วโมงที่ผ่านมา,",
     "statsRead_one": "และคุณได้อ่าน {{formatted}}.",
     "statsRelevant_one": "{{formatted}} ดูเกี่ยวข้องกับคุณ,",
-    "reasonUnavailable": "Mera เขียนบันทึกสำหรับบทความนี้ไม่ได้",
     "loadingA11y": "กำลังโหลดฟีดของคุณ",
     "translatingCaption": "กำลังแปล…",
     "updatedJustNow": "อัปเดตเมื่อสักครู่",

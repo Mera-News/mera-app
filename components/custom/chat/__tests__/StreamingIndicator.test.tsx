@@ -164,31 +164,5 @@ describe('StreamingIndicator', () => {
       unmount();
       spy.mockRestore();
     });
-
-    it('stops cycling and says so once the pending cap has passed', () => {
-      const { getByText, queryByTestId, unmount } = render(
-        <StreamingIndicator
-          compact
-          pendingSinceMs={Date.now() - 91_000}
-          terminalText="Mera couldn't write a note for this one."
-        />,
-      );
-      expect(getByText("Mera couldn't write a note for this one.")).toBeTruthy();
-      expect(queryByTestId('streaming-caption')).toBeNull();
-      unmount();
-    });
-
-    it('flips to the terminal line when the cap passes while mounted', () => {
-      const { getByTestId, queryByTestId, unmount } = render(
-        <StreamingIndicator compact pendingSinceMs={Date.now()} terminalText="gave up" />,
-      );
-      expect(getByTestId('streaming-caption')).toBeTruthy();
-      act(() => {
-        jest.advanceTimersByTime(90_001);
-      });
-      expect(queryByTestId('streaming-caption')).toBeNull();
-      expect(getByTestId('card-reason-unavailable')).toBeTruthy();
-      unmount();
-    });
   });
 });

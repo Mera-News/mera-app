@@ -239,7 +239,6 @@
     "statsPublished_one": "過去24小時內發佈了{{formatted}}篇文章,",
     "statsRead_one": "且您已閱讀{{formatted}}篇。",
     "statsRelevant_one": "{{formatted}}篇與您相關,",
-    "reasonUnavailable": "Mera 無法為這篇文章撰寫說明。",
     "loadingA11y": "正在載入你的動態",
     "translatingCaption": "正在翻譯…",
     "updatedJustNow": "剛剛更新",

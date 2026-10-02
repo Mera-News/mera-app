@@ -294,7 +294,6 @@
     "statsRelevant_other": "{{formatted}} look relevant,",
     "statsRead_one": "and you've read {{formatted}}.",
     "statsRead_other": "and you've read {{formatted}}.",
-    "reasonUnavailable": "Mera couldn't write a note for this one.",
     "loadingA11y": "Loading your feed",
     "translatingCaption": "Translating…",
     "updatedJustNow": "Updated just now",

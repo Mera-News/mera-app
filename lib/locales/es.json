@@ -239,7 +239,6 @@
     "statsRelevant_other": "{{formatted}} parecen relevantes,",
     "statsRead_one": "y has leído {{formatted}}.",
     "statsRead_other": "y has leído {{formatted}}.",
-    "reasonUnavailable": "Mera no pudo escribir una nota para este artículo.",
     "loadingA11y": "Cargando tu feed",
     "translatingCaption": "Traduciendo…",
     "updatedJustNow": "Actualizado ahora mismo",

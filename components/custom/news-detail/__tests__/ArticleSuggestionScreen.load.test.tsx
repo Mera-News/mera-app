@@ -94,7 +94,7 @@ jest.mock('@/lib/saved-state', () => ({ useSavedOverride: () => null }));
 
 const mockRemoveSuggestion = jest.fn();
 jest.mock('@/lib/stores/for-you-store', () => {
-    const state = { suggestions: [] as unknown[], removeSuggestion: (...a: unknown[]) => mockRemoveSuggestion(...a) };
+    const state = { suggestions: [] as unknown[], reasonsInFlightIds: new Set<string>(), removeSuggestion: (...a: unknown[]) => mockRemoveSuggestion(...a) };
     const useForYouStore = (sel: (s: typeof state) => unknown) => sel(state);
     useForYouStore.getState = () => state;
     return { useForYouStore };
