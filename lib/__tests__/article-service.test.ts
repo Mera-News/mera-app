@@ -35,7 +35,11 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 import { CombinedGraphQLErrors } from '@apollo/client/errors';
-import ArticleService, { RELATED_FILTERS_LIVE, __resetPublisherOrderSupport } from '../article-service';
+import ArticleService, {
+    RELATED_FILTERS_LIVE,
+    __resetExploreWindowSupport,
+    __resetPublisherOrderSupport,
+} from '../article-service';
 import { print } from 'graphql';
 import logger from '@/lib/logger';
 
@@ -903,6 +907,65 @@ describe('ArticleService.getArticlesForPublisher', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // getNewsClusters
 // ─────────────────────────────────────────────────────────────────────────────
+
+describe('ArticleService.getTopHeadlinesForCountry — 24h/48h window', () => {
+    const response = {
+        headlines: [],
+        articles: [],
+        pageInfo: { endCursor: null, hasNextPage: false, pageSize: 10 },
+        editionBuiltAt: null,
+    };
+    const validationFailed = () =>
+        new CombinedGraphQLErrors({
+            data: null,
+            errors: [{ message: 'Unknown argument "windowHours"', extensions: { code: 'GRAPHQL_VALIDATION_FAILED' } }],
+        });
+    const opName = (call: any[]) => (print(call[0].query).match(/query (\w+)/) ?? [])[1];
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockQuery.mockReset();
+        __resetExploreWindowSupport();
+    });
+
+    it('sends windowHours with the windowed document, tolerating a validation failure quietly', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: response } });
+        await ArticleService.getTopHeadlinesForCountry('NLD', { first: 10, windowHours: 48 });
+        const call = mockQuery.mock.calls[0];
+        expect(opName(call)).toBe('GetTopHeadlinesForCountryWindowed');
+        expect(call[0].variables).toEqual({ countryCode: 'NLD', first: 10, after: undefined, windowHours: 48 });
+        expect(call[0].context.expectedErrorCodes).toEqual(['GRAPHQL_VALIDATION_FAILED']);
+    });
+
+    it('without windowHours keeps the plain document, unchanged', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: response } });
+        await ArticleService.getTopHeadlinesForCountry('GLOBAL', { first: 10 });
+        expect(opName(mockQuery.mock.calls[0])).toBe('GetTopHeadlinesForCountry');
+        expect(mockQuery.mock.calls[0][0].variables).toEqual({ countryCode: null, first: 10, after: undefined });
+    });
+
+    it('on GRAPHQL_VALIDATION_FAILED (server older than the app) asks the plain document, and remembers', async () => {
+        mockQuery
+            .mockRejectedValueOnce(validationFailed())
+            .mockResolvedValueOnce({ data: { topHeadlinesForCountry: response } });
+        const first = await ArticleService.getTopHeadlinesForCountry('NLD', { windowHours: 24 });
+        expect(first).toBe(response);
+        expect(mockQuery.mock.calls.map(opName)).toEqual([
+            'GetTopHeadlinesForCountryWindowed',
+            'GetTopHeadlinesForCountry',
+        ]);
+
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: response } });
+        await ArticleService.getTopHeadlinesForCountry('NLD', { windowHours: 48 });
+        expect(opName(mockQuery.mock.calls[2])).toBe('GetTopHeadlinesForCountry');
+    });
+
+    it('any other error propagates without the fallback', async () => {
+        mockQuery.mockRejectedValueOnce(new Error('boom'));
+        await expect(ArticleService.getTopHeadlinesForCountry('NLD', { windowHours: 24 })).rejects.toThrow('boom');
+        expect(mockQuery).toHaveBeenCalledTimes(1);
+    });
+});
 
 describe('ArticleService.getNewsClusters', () => {
     beforeEach(() => jest.clearAllMocks());

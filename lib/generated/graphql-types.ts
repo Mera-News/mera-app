@@ -693,7 +693,7 @@ export type Query = {
   /** Hybrid text + semantic search over the last 48h of articles. Headline-only results — hydrate ids via articlesForTopicsByIds. Capped at 25 results. */
   searchNews: Array<NewsSearchHit>;
   searchPublishers: SearchPublishersResponse;
-  /** A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. Falls back to the live path (editionBuiltAt: null) when no edition exists yet. */
+  /** A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. windowHours keeps the stories first seen in the last 24 (default) or 48 hours. Falls back to the live path (editionBuiltAt: null) when no edition exists yet. */
   topHeadlinesForCountry: TopHeadlinesForCountryResponse;
   unblockRequestStatus?: Maybe<UnblockRequest>;
   userBilling: UserBillingInfo;
@@ -901,6 +901,7 @@ export type QueryTopHeadlinesForCountryArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   countryCode?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  windowHours?: InputMaybe<Scalars['Int']['input']>;
 };
 
 

@@ -86,6 +86,10 @@ interface ScopeArticleListProps {
      *  shows it at once, but it paginates and takes the tab-press refresh only
      *  when active. Default true. */
     readonly active?: boolean;
+    /** Keep the stories first seen in the last 24 or 48 hours (the header
+     *  toggle). The parent keys this list by it, so a change is a fresh mount
+     *  and a fresh first page. Absent: the server default (24). */
+    readonly windowHours?: number;
 }
 
 /**
@@ -123,6 +127,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     headerHeight = 0,
     scrollHandler,
     active = true,
+    windowHours,
 }) => {
     const { t } = useTranslation();
     const isOnline = useIsOnline();
@@ -161,6 +166,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             const page = await ArticleService.getTopHeadlinesForCountry(fetchArg, {
                 first: PAGE_SIZE,
                 after,
+                windowHours,
             });
             return {
                 rows: page.headlines,
@@ -168,7 +174,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 more: page.pageInfo.hasNextPage,
             };
         },
-        [scope],
+        [scope, windowHours],
     );
 
     useEffect(() => {

@@ -1066,7 +1066,15 @@
     "searchError": "Konnte gerade nicht suchen",
     "searchEmpty": "Keine Treffer in den letzten 48 Stunden. Die Suche umfasst aktuelle Schlagzeilen, nicht das vollständige Archiv.",
     "openSearch": "Suchen",
-    "closeSearch": "Suche schließen"
+    "closeSearch": "Suche schließen",
+    "window": {
+      "label24": "24 Std.",
+      "label48": "48 Std.",
+      "a11y24": "Nachrichten der letzten 24 Stunden",
+      "a11y48": "Nachrichten der letzten 48 Stunden",
+      "hint24": "Wechselt zu den letzten 48 Stunden",
+      "hint48": "Wechselt zu den letzten 24 Stunden"
+    }
   },
   "forYou": {
     "sectionPrefix": "Nachrichten zu:",
@@ -2894,7 +2902,7 @@
     },
     "explore": {
       "title": "So funktioniert Entdecken",
-      "what": "Entdecken zeigt die Schlagzeilen der letzten 24 Stunden für die Welt und für jedes Land, das du auswählst. Sie sind für alle gleich und nicht für dich ausgewählt.",
+      "what": "Entdecken zeigt die größten Nachrichten, die in den letzten 24 Stunden zum ersten Mal erschienen sind, für die Welt und für jedes Land, das du auswählst. Tippe oben auf 24 Std., um die letzten 48 Stunden zu sehen. Sie sind für alle gleich und nicht für dich ausgewählt.",
       "how1": "Welt-Schlagzeilen werden danach geordnet, wie breit eine Meldung über Ländergrenzen hinweg berichtet wird, nicht nach der Zahl der Artikel.",
       "how2": "Länder-Schlagzeilen stammen von Nachrichtenquellen mit Sitz in diesem Land."
     },

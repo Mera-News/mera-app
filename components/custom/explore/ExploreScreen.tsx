@@ -36,6 +36,7 @@ import HeaderIconButton, { HEADER_ACTIONS_GAP } from '@/components/custom/for-yo
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
 import ExploreSearchResults from './ExploreSearchResults';
+import ExploreWindowToggle, { type ExploreWindowHours } from './ExploreWindowToggle';
 import ScopeArticleList from './ScopeArticleList';
 import ScopeChipRow from './ScopeChipRow';
 import SwipeTabs from '@/components/custom/for-you/SwipeTabs';
@@ -127,6 +128,9 @@ const ExploreScreen: React.FC = () => {
     // across a remount) cares, and persisting it would reopen the tab in a
     // filtered-looking state.
     const [searchOpen, setSearchOpen] = useState(false);
+    // The 24h/48h first-seen view (header toggle). Session-only on purpose:
+    // every launch starts at 24h, the default the owner asked for.
+    const [windowHours, setWindowHours] = useState<ExploreWindowHours>(24);
     const handleOpenSearch = useCallback(() => setSearchOpen(true), []);
     // Dismiss ALWAYS clears. Collapsing while a query survived would hide the
     // only visible explanation for a filtered tab (the results overlay keys off
@@ -390,6 +394,10 @@ const ExploreScreen: React.FC = () => {
                     if (!scope) return null;
                     return (
                         <ScopeArticleList
+                            // A window change is a fresh list: new first page,
+                            // cursor and generation, with nothing to reconcile.
+                            key={windowHours}
+                            windowHours={windowHours}
                             scope={scope}
                             // Off-screen neighbours fetch their first page once
                             // (so arriving shows it at once) but start no tab-press
@@ -537,6 +545,7 @@ const ExploreScreen: React.FC = () => {
                                     style={{ gap: HEADER_ACTIONS_GAP }}
                                     testID="explore-header-actions"
                                 >
+                                    <ExploreWindowToggle value={windowHours} onChange={setWindowHours} />
                                     <HeaderIconButton
                                         icon="search"
                                         onPress={handleOpenSearch}

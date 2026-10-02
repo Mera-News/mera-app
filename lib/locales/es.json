@@ -1066,7 +1066,15 @@
     "searchError": "No se pudo buscar ahora",
     "searchEmpty": "Sin coincidencias en las últimas 48 horas. La búsqueda cubre titulares recientes, no el archivo completo.",
     "openSearch": "Buscar",
-    "closeSearch": "Cerrar búsqueda"
+    "closeSearch": "Cerrar búsqueda",
+    "window": {
+      "label24": "24 h",
+      "label48": "48 h",
+      "a11y24": "Noticias de las últimas 24 horas",
+      "a11y48": "Noticias de las últimas 48 horas",
+      "hint24": "Cambia a las últimas 48 horas",
+      "hint48": "Cambia a las últimas 24 horas"
+    }
   },
   "forYou": {
     "sectionPrefix": "Noticias sobre:",
@@ -2894,7 +2902,7 @@
     },
     "explore": {
       "title": "Cómo funciona Explorar",
-      "what": "Explorar muestra los titulares de las últimas 24 horas del mundo y de cada país que elijas. Son los mismos para todos, no están elegidos para ti.",
+      "what": "Explorar muestra las noticias más importantes que aparecieron por primera vez en las últimas 24 horas, del mundo y de cada país que elijas. Toca 24 h arriba para ver las últimas 48 horas. Son las mismas para todos, no están elegidas para ti.",
       "how1": "Los titulares del mundo se ordenan según lo ampliamente que se cubre una noticia en distintos países, no por el número de artículos.",
       "how2": "Los titulares de un país vienen de fuentes de noticias con sede en ese país."
     },

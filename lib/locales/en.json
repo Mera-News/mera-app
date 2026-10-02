@@ -517,7 +517,15 @@
     "searchMinLength": "Keep typing to search",
     "searchNotSubscribed": "Search needs an active plan",
     "searchError": "Couldn't search right now",
-    "searchEmpty": "No matches in the last 48 hours. Search covers recent headlines, not the full archive."
+    "searchEmpty": "No matches in the last 48 hours. Search covers recent headlines, not the full archive.",
+    "window": {
+      "label24": "24h",
+      "label48": "48h",
+      "a11y24": "Stories from the last 24 hours",
+      "a11y48": "Stories from the last 48 hours",
+      "hint24": "Switches to the last 48 hours",
+      "hint48": "Switches to the last 24 hours"
+    }
   },
   "forYou": {
     "sectionPrefix": "News about:",
@@ -2894,7 +2902,7 @@
     },
     "explore": {
       "title": "How Explore works",
-      "what": "Explore shows the headlines from the last 24 hours for the world and for each country you pick. They are the same for everyone, not picked for you.",
+      "what": "Explore shows the biggest stories that first appeared in the last 24 hours, for the world and for each country you pick. Tap 24h at the top to see the last 48 hours. They are the same for everyone, not picked for you.",
       "how1": "World headlines are ranked by how widely a story is covered across countries, not by how many articles there are.",
       "how2": "Country headlines come from news sources based in that country."
     },

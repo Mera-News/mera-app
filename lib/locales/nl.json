@@ -1066,7 +1066,15 @@
     "searchError": "Kon nu niet zoeken",
     "searchEmpty": "Geen overeenkomsten in de afgelopen 48 uur. Zoeken bestrijkt recent nieuws, niet het volledige archief.",
     "openSearch": "Zoeken",
-    "closeSearch": "Zoekopdracht sluiten"
+    "closeSearch": "Zoekopdracht sluiten",
+    "window": {
+      "label24": "24 u",
+      "label48": "48 u",
+      "a11y24": "Nieuws van de afgelopen 24 uur",
+      "a11y48": "Nieuws van de afgelopen 48 uur",
+      "hint24": "Schakelt naar de afgelopen 48 uur",
+      "hint48": "Schakelt naar de afgelopen 24 uur"
+    }
   },
   "forYou": {
     "sectionPrefix": "Nieuws over:",
@@ -2894,7 +2902,7 @@
     },
     "explore": {
       "title": "Hoe Verkennen werkt",
-      "what": "Verkennen toont de koppen van de afgelopen 24 uur voor de wereld en voor elk land dat je kiest. Ze zijn voor iedereen hetzelfde en niet voor jou gekozen.",
+      "what": "Verkennen toont de grootste verhalen die in de afgelopen 24 uur voor het eerst verschenen, voor de wereld en voor elk land dat je kiest. Tik bovenaan op 24 u om de afgelopen 48 uur te zien. Ze zijn voor iedereen hetzelfde en niet voor jou gekozen.",
       "how1": "Wereldkoppen worden gerangschikt naar hoe breed een verhaal in verschillende landen wordt gebracht, niet naar het aantal artikelen.",
       "how2": "Landkoppen komen van nieuwsbronnen die in dat land gevestigd zijn."
     },

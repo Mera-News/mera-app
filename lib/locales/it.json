@@ -1066,7 +1066,15 @@
     "searchError": "Impossibile cercare al momento",
     "searchEmpty": "Nessuna corrispondenza negli ultimi 48 ore. La ricerca copre i titoli recenti, non l'archivio completo.",
     "openSearch": "Cerca",
-    "closeSearch": "Chiudi ricerca"
+    "closeSearch": "Chiudi ricerca",
+    "window": {
+      "label24": "24 h",
+      "label48": "48 h",
+      "a11y24": "Notizie delle ultime 24 ore",
+      "a11y48": "Notizie delle ultime 48 ore",
+      "hint24": "Passa alle ultime 48 ore",
+      "hint48": "Passa alle ultime 24 ore"
+    }
   },
   "forYou": {
     "sectionPrefix": "Notizie su:",
@@ -2894,7 +2902,7 @@
     },
     "explore": {
       "title": "Come funziona Esplora",
-      "what": "Esplora mostra i titoli delle ultime 24 ore per il mondo e per ogni paese che scegli. Sono gli stessi per tutti, non scelti per te.",
+      "what": "Esplora mostra le notizie più importanti apparse per la prima volta nelle ultime 24 ore, per il mondo e per ogni paese che scegli. Tocca 24 h in alto per vedere le ultime 48 ore. Sono le stesse per tutti, non scelte per te.",
       "how1": "I titoli dal mondo sono ordinati in base a quanto ampiamente una notizia è coperta nei diversi paesi, non al numero di articoli.",
       "how2": "I titoli di un paese provengono da fonti di notizie con sede in quel paese."
     },

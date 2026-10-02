@@ -1066,7 +1066,15 @@
     "searchError": "Không thể tìm kiếm ngay bây giờ",
     "searchEmpty": "Không có kết quả khớp trong 48 giờ qua. Tìm kiếm bao gồm tin tức gần đây, không phải toàn bộ lưu trữ.",
     "openSearch": "Tìm kiếm",
-    "closeSearch": "Đóng tìm kiếm"
+    "closeSearch": "Đóng tìm kiếm",
+    "window": {
+      "label24": "24 giờ",
+      "label48": "48 giờ",
+      "a11y24": "Tin trong 24 giờ qua",
+      "a11y48": "Tin trong 48 giờ qua",
+      "hint24": "Chuyển sang 48 giờ qua",
+      "hint48": "Chuyển sang 24 giờ qua"
+    }
   },
   "forYou": {
     "sectionPrefix": "Tin tức về:",
@@ -2894,7 +2902,7 @@
     },
     "explore": {
       "title": "Khám phá hoạt động thế nào",
-      "what": "Khám phá hiện các tiêu đề trong 24 giờ qua của thế giới và của từng quốc gia bạn chọn. Mọi người đều thấy giống nhau, không chọn riêng cho bạn.",
+      "what": "Khám phá hiện những tin lớn nhất xuất hiện lần đầu trong 24 giờ qua, của thế giới và của từng quốc gia bạn chọn. Chạm 24 giờ ở trên cùng để xem 48 giờ qua. Mọi người đều thấy giống nhau, không chọn riêng cho bạn.",
       "how1": "Tiêu đề thế giới được xếp theo mức độ một tin được đưa rộng rãi ở nhiều quốc gia, không theo số lượng bài viết.",
       "how2": "Tiêu đề của một quốc gia đến từ các nguồn tin đặt tại quốc gia đó."
     },

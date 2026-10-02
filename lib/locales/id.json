@@ -1066,7 +1066,15 @@
     "searchError": "Tidak dapat mencari sekarang",
     "searchEmpty": "Tidak ada kecocokan dalam 48 jam terakhir. Pencarian mencakup berita terbaru, bukan arsip lengkap.",
     "openSearch": "Cari",
-    "closeSearch": "Tutup pencarian"
+    "closeSearch": "Tutup pencarian",
+    "window": {
+      "label24": "24 jam",
+      "label48": "48 jam",
+      "a11y24": "Berita 24 jam terakhir",
+      "a11y48": "Berita 48 jam terakhir",
+      "hint24": "Beralih ke 48 jam terakhir",
+      "hint48": "Beralih ke 24 jam terakhir"
+    }
   },
   "forYou": {
     "sectionPrefix": "Berita tentang:",
@@ -2893,7 +2901,7 @@
     },
     "explore": {
       "title": "Cara kerja Eksplor",
-      "what": "Eksplor menampilkan berita utama 24 jam terakhir untuk dunia dan setiap negara yang kamu pilih. Isinya sama untuk semua orang, bukan dipilih untukmu.",
+      "what": "Eksplor menampilkan berita terbesar yang pertama kali muncul dalam 24 jam terakhir, untuk dunia dan setiap negara yang kamu pilih. Ketuk 24 jam di atas untuk melihat 48 jam terakhir. Isinya sama untuk semua orang, bukan dipilih untukmu.",
       "how1": "Berita utama dunia diurutkan menurut seberapa luas sebuah berita diliput di berbagai negara, bukan menurut jumlah artikelnya.",
       "how2": "Berita utama suatu negara berasal dari sumber berita yang berbasis di negara tersebut."
     },

@@ -138,9 +138,7 @@ const GET_ARTICLES_FOR_COUNTRY = gql`
 // edition. A null/"GLOBAL" countryCode spans all countries. Falls back to the
 // live path (editionBuiltAt: null) when no edition exists yet. Mirrors
 // GET_ARTICLES_FOR_COUNTRY's article field set inside each headline slot.
-const GET_TOP_HEADLINES_FOR_COUNTRY = gql`
-  query GetTopHeadlinesForCountry($countryCode: String, $first: Int, $after: String) {
-    topHeadlinesForCountry(countryCode: $countryCode, first: $first, after: $after) {
+const TOP_HEADLINES_SELECTION = `
       headlines {
         stableClusterId
         clusterSize
@@ -175,7 +173,22 @@ const GET_TOP_HEADLINES_FOR_COUNTRY = gql`
         endCursor
       }
       editionBuiltAt
-    }
+`;
+
+const GET_TOP_HEADLINES_FOR_COUNTRY = gql`
+  query GetTopHeadlinesForCountry($countryCode: String, $first: Int, $after: String) {
+    topHeadlinesForCountry(countryCode: $countryCode, first: $first, after: $after) {
+${TOP_HEADLINES_SELECTION}    }
+  }
+`;
+
+// The same page, with Explore's 24h/48h first-seen window. A SEPARATE
+// document: a server that predates `windowHours` rejects the whole request,
+// so the plain one above stays valid against it (see exploreWindowUnsupported).
+const GET_TOP_HEADLINES_FOR_COUNTRY_WINDOWED = gql`
+  query GetTopHeadlinesForCountryWindowed($countryCode: String, $first: Int, $after: String, $windowHours: Int) {
+    topHeadlinesForCountry(countryCode: $countryCode, first: $first, after: $after, windowHours: $windowHours) {
+${TOP_HEADLINES_SELECTION}    }
   }
 `;
 
@@ -418,6 +431,7 @@ const GET_RELATED_ARTICLES_PAGE = gql`
     }
   }
 `;
+
 
 /**
  * N10 related-coverage filters: THE switch. Flip to true only once the server's
@@ -691,6 +705,19 @@ let publisherOrderUnsupported = false;
 /** Test seam. */
 export function __resetPublisherOrderSupport(): void {
     publisherOrderUnsupported = false;
+}
+
+/**
+ * True once the server rejected Explore's `windowHours` argument as unknown:
+ * this bundle is ahead of its server, so ask the plain document for the rest
+ * of the session. Without it an OTA landing before the server would blank
+ * every Explore list.
+ */
+let exploreWindowUnsupported = false;
+
+/** Test seam. */
+export function __resetExploreWindowSupport(): void {
+    exploreWindowUnsupported = false;
 }
 
 /** GraphQL error codes on a rejection (Apollo 4 `errors`, Apollo 3 `graphQLErrors`). */
@@ -1209,16 +1236,32 @@ export class ArticleService {
      */
     static async getTopHeadlinesForCountry(
         countryCode: string | null | undefined,
-        options: { first?: number; after?: string }
+        options: { first?: number; after?: string; windowHours?: number }
     ): Promise<TopHeadlinesForCountryResponse> {
         try {
+            const variables = {
+                countryCode: countryCode === 'GLOBAL' ? null : countryCode,
+                first: options?.first ?? 20,
+                after: options?.after,
+            };
+            if (options?.windowHours !== undefined && !exploreWindowUnsupported) {
+                try {
+                    const { data } = await client.query<{ topHeadlinesForCountry: TopHeadlinesForCountryResponse }>({
+                        query: GET_TOP_HEADLINES_FOR_COUNTRY_WINDOWED,
+                        variables: { ...variables, windowHours: options.windowHours },
+                        fetchPolicy: 'no-cache',
+                        context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+                    });
+                    if (data?.topHeadlinesForCountry) return data.topHeadlinesForCountry;
+                } catch (error) {
+                    if (!graphQLErrorCodes(error).includes('GRAPHQL_VALIDATION_FAILED')) throw error;
+                    exploreWindowUnsupported = true;
+                    logger.info('[ArticleService] server has no topHeadlinesForCountry windowHours; plain document this session');
+                }
+            }
             const { data } = await client.query<{ topHeadlinesForCountry: TopHeadlinesForCountryResponse }>({
                 query: GET_TOP_HEADLINES_FOR_COUNTRY,
-                variables: {
-                    countryCode: countryCode === 'GLOBAL' ? null : countryCode,
-                    first: options?.first ?? 20,
-                    after: options?.after,
-                },
+                variables,
                 fetchPolicy: 'no-cache',
             });
 

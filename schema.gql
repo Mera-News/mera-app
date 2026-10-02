@@ -846,7 +846,7 @@ type Query {
   ): SearchPublishersResponse!
 
   """
-  A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. Falls back to the live path (editionBuiltAt: null) when no edition exists yet.
+  A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. windowHours keeps the stories first seen in the last 24 (default) or 48 hours. Falls back to the live path (editionBuiltAt: null) when no edition exists yet.
   """
   topHeadlinesForCountry(
     """Cursor to fetch items after"""
@@ -857,6 +857,11 @@ type Query {
 
     """Number of items to fetch"""
     first: Int = 20
+
+    """
+    Keep stories first seen in the last 24 or 48 hours. Any other value is BAD_WINDOW.
+    """
+    windowHours: Int = 24
   ): TopHeadlinesForCountryResponse!
   unblockRequestStatus(userId: ID!): UnblockRequest
   userBilling: UserBillingInfo!
