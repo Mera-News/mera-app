@@ -17,8 +17,10 @@ import {
   effectiveBand,
   STALE_ONE_BAND_HOURS,
   STALE_TWO_BAND_HOURS,
+  isAwaitingNote,
   type SortedFeed,
 } from '../feed-entries';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { FEED_HALF_LIFE_HOURS } from '@/lib/stores/feed-list-selector';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 import type { FeedListItem } from '@/lib/stores/feed-list-selector';
@@ -464,5 +466,73 @@ describe('countUnviewed', () => {
     expect(countUnviewed(data, { c: skipped() }, new Set(['art-a']))).toBe(1);
     expect(countUnviewed(data, noStates, new Set())).toBe(3);
     expect(countUnviewed([], noStates, new Set())).toBe(0);
+  });
+});
+
+describe('pending-note sink (tier 0 only)', () => {
+  /** A row scored but still waiting for its note. */
+  const pending = (id: string, relevance: number): FeedListItem => {
+    const it = item(id, relevance);
+    return {
+      ...it,
+      suggestion: { ...it.suggestion, status: ArticleSuggestionStatus.ReasonPending, reason: '' },
+    };
+  };
+  const withNote = (it: FeedListItem): FeedListItem => ({
+    ...it,
+    suggestion: { ...it.suggestion, status: ArticleSuggestionStatus.Complete, reason: 'Why it matters.' },
+  });
+
+  it('isAwaitingNote mirrors notePendingMode: scored, not complete, no reason', () => {
+    const S = ArticleSuggestionStatus;
+    expect(isAwaitingNote({ status: S.ReasonPending, reason: '' })).toBe(true);
+    expect(isAwaitingNote({ status: S.ReasonSkipped, reason: '' })).toBe(true);
+    expect(isAwaitingNote({ status: S.ReasonPending, reason: 'Done.' })).toBe(false);
+    expect(isAwaitingNote({ status: S.Complete, reason: '' })).toBe(false);
+    expect(isAwaitingNote({ status: S.Unscored, reason: '' })).toBe(false);
+    expect(isAwaitingNote({ status: undefined, reason: '' } as never)).toBe(false);
+  });
+
+  it('an unseen High card with no note sorts below unseen Low and above the seen tier', () => {
+    const data = [pending('p-high', 0.9), item('low', 0.45), item('med', 0.7), item('seen', 0.9)];
+    const out = sortFeedEntries(data, { seen: skipped() }, new Set());
+    expect(ids(out)).toEqual(['med', 'low', 'p-high', 'seen']);
+  });
+
+  it('once its note lands the same card sorts into its own band', () => {
+    const data = [withNote(pending('p-high', 0.9)), item('low', 0.45), item('med', 0.7)];
+    expect(ids(sortFeedEntries(data, noStates, new Set()))).toEqual(['p-high', 'med', 'low']);
+  });
+
+  it('pending cards keep relevance order among themselves', () => {
+    const data = [pending('p-low', 0.45), pending('p-high', 0.9), item('med', 0.7)];
+    expect(ids(sortFeedEntries(data, noStates, new Set()))).toEqual(['med', 'p-high', 'p-low']);
+  });
+
+  it('a pinned pending card keeps its pinned position', () => {
+    const data = [pending('p-high', 0.9), item('med', 0.7), item('low', 0.45)];
+    const out = sortFeedEntries(data, noStates, new Set(), ['p-high']);
+    expect(ids(out)).toEqual(['p-high', 'med', 'low']);
+    expect(out.pinnedCount).toBe(1);
+  });
+
+  it('a seen pending card keeps its band inside the seen tier', () => {
+    const data = [item('s-med', 0.7), pending('s-p-high', 0.9)];
+    const states = { 's-med': skipped(), 's-p-high': skipped() };
+    expect(ids(sortFeedEntries(data, states, new Set()))).toEqual(['s-p-high', 's-med']);
+  });
+
+  it('the screen predicate wins over the representative: complete rep, pending displayed card, still sinks', () => {
+    // The store fronts a story with a member that has its note, while the card
+    // keeps showing its first (still pending) article.
+    const story = withNote(item('story', 0.9));
+    const data = [story, item('low', 0.45)];
+    const displayedPending = (it: FeedListItem) => it.id === 'story';
+    expect(ids(sortFeedEntries(data, noStates, new Set(), [], Date.now(), displayedPending))).toEqual([
+      'low',
+      'story',
+    ]);
+    // Default predicate reads the representative, which has its note.
+    expect(ids(sortFeedEntries(data, noStates, new Set()))).toEqual(['story', 'low']);
   });
 });

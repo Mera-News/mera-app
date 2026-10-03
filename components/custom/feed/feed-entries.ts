@@ -24,9 +24,10 @@
 // article would be pre-sunk merely because the user read a DIFFERENT article in
 // the same story up to 30 days ago.
 //
-// Within tier 0 a stale story is DEMOTED a band or two by age — see the
-// staleness block below, the one place this module knowingly departs from the
-// shared banding rule.
+// Within tier 0 a stale story is DEMOTED a band or two by age, and a story whose
+// card is still waiting for its note sinks below every band — see the staleness
+// and pending-note blocks below, the two places this module knowingly departs
+// from the shared banding rule.
 //
 // STABILITY: the screen feeds this a SNAPSHOT of card state (and the clock the
 // staleness reads) refreshed at exactly two moments — pull-to-refresh and a
@@ -44,8 +45,10 @@ import {
   type PriorityFacts,
   type SeenTier,
 } from '@/lib/feed-ordering/priority-order';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { CardStateRecord } from '@/lib/stores/feed-order-store';
 import { FEED_HALF_LIFE_HOURS, type FeedListItem } from '@/lib/stores/feed-list-selector';
+import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 // The banding + ordering RULE lives in lib/feed-ordering/priority-order — the
 // Dashboard applies the identical rule to its section content, and encoding it
@@ -231,22 +234,52 @@ export function effectiveBand(
   return Math.min(4, base + penalty);
 }
 
+// ── Pending-note sink (Feed only) ──────────────────────────────────────────
+//
+// The Feed shows scored rows whose note is still being written. An UNSEEN card
+// with no note sorts below every band (owner): its band plus
+// `PENDING_BAND_OFFSET`, so it lands after the Low cards but above the seen
+// tiers, and pending cards keep relevance order among themselves. Once the note
+// lands the list re-sorts and the card rises to its own band, below the pinned
+// prefix like any other move. Tier 0 only, same reason as staleness.
+
+/** Added to an unseen pending row's band; one past the bottom band (4). */
+export const PENDING_BAND_OFFSET = 5;
+
+/**
+ * True when a row has a score but no note to show. The twin of
+ * `notePendingMode` (cards/ReasonNote.tsx), which decides "Writing a note" /
+ * "No note yet" on the card from the same fields; inlined because that module
+ * imports react-native. Keep the two in step.
+ */
+export function isAwaitingNote(s: Pick<ForYouSuggestion, 'status' | 'reason'>): boolean {
+  const status = s.status;
+  if (!status || status === ArticleSuggestionStatus.Unscored) return false;
+  return !s.reason && status !== ArticleSuggestionStatus.Complete;
+}
+
 /** Project a Feed row onto the shared ordering facts. */
 function feedPriorityFacts(
   item: FeedListItem,
   cardStates: Record<string, CardStateRecord>,
   openedArticleIds: Set<string>,
   nowMs: number,
+  awaitingNote: (it: FeedListItem) => boolean,
 ): PriorityFacts {
   const tier = seenTierOfEntry(item, cardStates, openedArticleIds);
+  const band = effectiveBand(item, tier, nowMs);
   return {
     relevance: item.suggestion.relevance ?? 0,
     // Both are supplied and cannot disagree — `isViewedEntry` IS `tier > 0`.
     viewed: tier > 0,
     tier,
-    band: effectiveBand(item, tier, nowMs),
+    band: tier === 0 && awaitingNote(item) ? PENDING_BAND_OFFSET + band : band,
   };
 }
+
+/** Whether the row's own representative is awaiting its note. The screen
+ *  passes a predicate over the article the card actually SHOWS instead. */
+const representativeAwaitingNote = (it: FeedListItem): boolean => isAwaitingNote(it.suggestion);
 
 /**
  * Order the feed: a STATIC PINNED PREFIX (everything the user has already read
@@ -264,6 +297,10 @@ function feedPriorityFacts(
  * filtered out of `data`, because filtering would silently re-derive the order
  * from `data` and lose the reading order, which is the entire point.
  *
+ * `awaitingNote` says whether a row's card has no note yet (see the pending-note
+ * sink). It defaults to the row's representative; FeedScreen passes one over
+ * the session-frozen article the card shows (`displayedSuggestionOf`).
+ *
  * Pure and total: returns NEW arrays, never mutates `data`, and returns an empty
  * result for an empty feed so the screen's empty-state chain renders. Omitting
  * `pinnedIds` reproduces the pre-pin ordering exactly.
@@ -274,9 +311,11 @@ export function sortFeedEntries(
   openedArticleIds: Set<string>,
   pinnedIds: readonly string[] = [],
   nowMs: number = Date.now(),
+  awaitingNote: (it: FeedListItem) => boolean = representativeAwaitingNote,
 ): SortedFeed {
   if (data.length === 0) return { rows: [], pinnedCount: 0 };
-  const facts = (it: FeedListItem) => feedPriorityFacts(it, cardStates, openedArticleIds, nowMs);
+  const facts = (it: FeedListItem) =>
+    feedPriorityFacts(it, cardStates, openedArticleIds, nowMs, awaitingNote);
   if (pinnedIds.length === 0) {
     return { rows: sortByPriority(data, facts), pinnedCount: 0 };
   }
@@ -302,5 +341,7 @@ export function countUnviewed(
 ): number {
   // Staleness never changes the TIER, only the band, so the clock is irrelevant
   // to this count — pass a fixed value rather than letting it drift.
-  return countUnviewedBy(data, (it) => feedPriorityFacts(it, cardStates, openedArticleIds, 0));
+  return countUnviewedBy(data, (it) =>
+    feedPriorityFacts(it, cardStates, openedArticleIds, 0, representativeAwaitingNote),
+  );
 }

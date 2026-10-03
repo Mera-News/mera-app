@@ -50,6 +50,27 @@ export interface FeedRowDisplay {
 }
 
 /**
+ * The row a card SHOWS, without recording anything: the frozen article's live
+ * row, so its note state is current. When the store no longer holds it (a data
+ * clear, the TTL sweep), the row as it was at first render, never the newer
+ * representative. A row not frozen yet falls back to `item.suggestion`, which
+ * is exactly what it freezes to on first render.
+ *
+ * The Feed's sort reads this, not `item.suggestion`, to decide whether a card
+ * is still waiting for its note: the store fronts a story with a member that
+ * HAS a note, so the representative can be complete while the card still
+ * reads "Writing a note".
+ */
+export function displayedSuggestionOf(
+  item: FeedListItem,
+  liveById: ReadonlyMap<string, ForYouSuggestion>,
+  session: FeedRowSession,
+): ForYouSuggestion {
+  const frozen = session.frozenRep.get(item.id) ?? item.suggestion;
+  return liveById.get(frozen._id) ?? frozen;
+}
+
+/**
  * Resolve a row for rendering, recording its first representative and whether
  * it has been pending. Idempotent for a given session, so calling it on every
  * render (and twice under StrictMode) is safe.
@@ -59,16 +80,11 @@ export function resolveFeedRowDisplay(
   liveById: ReadonlyMap<string, ForYouSuggestion>,
   session: FeedRowSession,
 ): FeedRowDisplay {
-  let frozen = session.frozenRep.get(item.id);
-  if (frozen === undefined) {
-    frozen = item.suggestion;
-    session.frozenRep.set(item.id, frozen);
-    session.rowBySuggestion.set(frozen._id, item.id);
+  if (!session.frozenRep.has(item.id)) {
+    session.frozenRep.set(item.id, item.suggestion);
+    session.rowBySuggestion.set(item.suggestion._id, item.id);
   }
-  // The frozen article's live row, so its note state is current. When the
-  // store no longer holds it (a data clear, the TTL sweep), the row as it was
-  // at first render, never the newer representative.
-  const suggestion = liveById.get(frozen._id) ?? frozen;
+  const suggestion = displayedSuggestionOf(item, liveById, session);
   if (suggestion.status !== ArticleSuggestionStatus.Complete) session.wasPending.add(item.id);
   return { suggestion, reserveNoteSpace: session.wasPending.has(item.id) };
 }

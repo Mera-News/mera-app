@@ -1063,7 +1063,24 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
     let inRow = false;
     for (let p: any = writing; p; p = p.parent) if (p.props?.testID === 'card-reason-badge-row') inRow = true;
     expect(inRow).toBe(true);
-    expect(writing.props.style).toMatchObject({ alignItems: 'flex-end' });
+    expect(writing.props.style).toMatchObject({ alignItems: 'flex-end', justifyContent: 'center' });
+    // Centred in the WHOLE reserved box: the reserve sits in the chip's column,
+    // beside the pending line, not under the row. A spacer below the row would
+    // pin the line to the top of an empty box.
+    const spacer = getByTestId('card-reason-pending');
+    let spacerInRow = false;
+    for (let p: any = spacer; p; p = p.parent) if (p.props?.testID === 'card-reason-badge-row') spacerInRow = true;
+    expect(spacerInRow).toBe(true);
+    // Some ancestor of the spacer, below the row, holds the chip but not the
+    // pending line: the spacer shares the chip's column.
+    let chipColumn = false;
+    for (let p: any = spacer.parent; p && p.props?.testID !== 'card-reason-badge-row'; p = p.parent) {
+      if (
+        within(p).queryByTestId('relevance-chip') &&
+        !within(p).queryByTestId('card-reason-writing', { includeHiddenElements: true })
+      ) chipColumn = true;
+    }
+    expect(chipColumn).toBe(true);
   });
 
   it('writing: the root reads the priority, then "note being written"', () => {
@@ -1086,7 +1103,7 @@ describe('ArticleSuggestionCard Feed note-writing states', () => {
     expect(queryByTestId('streaming', { includeHiddenElements: true })).toBeNull();
     const notYet = getByTestId('card-reason-not-yet', { includeHiddenElements: true });
     expect(within(notYet).getByText('feed.reasonNotYet', { includeHiddenElements: true })).toBeTruthy();
-    expect(notYet.props.style).toMatchObject({ alignItems: 'flex-end' });
+    expect(notYet.props.style).toMatchObject({ alignItems: 'flex-end', justifyContent: 'center' });
     expect(minHeightOf(getByTestId('card-reason-pending'))).toBe(twoLines());
     expect(getByTestId('card-sugg-1').props.accessibilityLabel).toContain('feed.reasonNotYet');
   });

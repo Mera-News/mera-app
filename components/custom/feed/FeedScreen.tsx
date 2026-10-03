@@ -103,6 +103,7 @@ import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useReasonWriting } from '@/components/custom/cards/use-reason-in-flight';
 import {
+  displayedSuggestionOf,
   newFeedRowSession,
   resolveFeedRowDisplay,
   type FeedRowSession,
@@ -121,6 +122,7 @@ import {
   sortFeedEntries,
   countUnviewed,
   extendPinnedIds,
+  isAwaitingNote,
   type FeedEntry,
 } from './feed-entries';
 import {
@@ -627,6 +629,12 @@ const FeedScreen: React.FC = () => {
   // ended so it could splice a divider just past it; that splicing is gone
   // (see the header comment), and the pinned rows are already in their final
   // rendered position within `listData` itself.
+  //
+  // A card still waiting for its note sinks to the end of the unseen cards,
+  // judged on the article the card SHOWS (its session-frozen representative),
+  // not the store's: the store fronts a story with a member that has a note,
+  // while the card keeps its first article. `liveById` is a dep so a note
+  // landing re-sorts the row up into its band.
   const { rows: listData } = useMemo(
     () =>
       sortFeedEntries(
@@ -635,8 +643,9 @@ const FeedScreen: React.FC = () => {
         partitionSnapshot.openedArticleIds,
         pinnedIds,
         partitionSnapshot.at,
+        (it) => isAwaitingNote(displayedSuggestionOf(it, liveById, rowSessionRef.current)),
       ),
-    [data, partitionSnapshot, pinnedIds],
+    [data, partitionSnapshot, pinnedIds, liveById],
   );
   listDataRef.current = listData;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);

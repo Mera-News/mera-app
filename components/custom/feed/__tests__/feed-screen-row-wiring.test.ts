@@ -35,6 +35,16 @@ describe('FeedScreen pending-note wiring', () => {
     expect(src).not.toMatch(/suggestion=\{item\.suggestion\}/);
   });
 
+  it('sorts a card awaiting its note by the article it SHOWS, and re-sorts when a note lands', () => {
+    expect(src).toMatch(
+      /sortFeedEntries\([^;]*?\(it\) => isAwaitingNote\(displayedSuggestionOf\(it,\s*liveById,\s*rowSessionRef\.current\)\),?\s*\)/,
+    );
+    // `liveById` changes when a note lands; without it the row never rises.
+    expect(src).toMatch(/\[data,\s*partitionSnapshot,\s*pinnedIds,\s*liveById\]/);
+    // Never the store's representative, which fronts a member that has its note.
+    expect(src).not.toMatch(/isAwaitingNote\(it\.suggestion\)/);
+  });
+
   it('resetSession starts a fresh row session, and taps resolve the frozen representative first', () => {
     expect(src).toMatch(/const resetSession = useCallback\(\(\) => \{\s*rowSessionRef\.current = newFeedRowSession\(\);/);
     expect(src).toMatch(/keyFor: \(s\) => rowSessionRef\.current\.rowBySuggestion\.get\(s\._id\)/);

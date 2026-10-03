@@ -2,6 +2,7 @@
 // reader, and only a card that has been pending reserves note height.
 
 import {
+  displayedSuggestionOf,
   newFeedRowSession,
   resolveFeedRowDisplay,
 } from '../feed-row-display';
@@ -107,5 +108,35 @@ describe('resolveFeedRowDisplay: note height is reserved only where it can chang
     const session = newFeedRowSession();
     const skipped = sugg({ _id: 'a', status: ArticleSuggestionStatus.ReasonSkipped, reason: '' });
     expect(resolveFeedRowDisplay(row('art-a', skipped), live(skipped), session).reserveNoteSpace).toBe(true);
+  });
+});
+
+describe('displayedSuggestionOf: the article the card shows, for the sort', () => {
+  it('a row not frozen yet reads its representative, and records nothing', () => {
+    const session = newFeedRowSession();
+    const a = sugg({ _id: 'a' });
+    expect(displayedSuggestionOf(row('art-a', a), live(a), session)).toBe(a);
+    expect(session.frozenRep.size).toBe(0);
+    expect(session.rowBySuggestion.size).toBe(0);
+    expect(session.wasPending.size).toBe(0);
+  });
+
+  it('a frozen row reads the FROZEN article live, not the newer representative', () => {
+    const session = newFeedRowSession();
+    const pending = sugg({ _id: 'a', status: ArticleSuggestionStatus.ReasonPending, reason: '' });
+    const sibling = sugg({ _id: 'b' });
+    resolveFeedRowDisplay(row('art-a', pending), live(pending, sibling), session);
+    // The store re-elected the sibling (it has its note); the card still shows `a`.
+    expect(displayedSuggestionOf(row('art-a', sibling), live(pending, sibling), session)._id).toBe('a');
+    const done = sugg({ _id: 'a', reason: 'Now written' });
+    expect(displayedSuggestionOf(row('art-a', sibling), live(done, sibling), session)).toBe(done);
+  });
+
+  it('a frozen article swept from the store falls back to the row as first rendered', () => {
+    const session = newFeedRowSession();
+    const a = sugg({ _id: 'a' });
+    const b = sugg({ _id: 'b' });
+    resolveFeedRowDisplay(row('art-a', a), live(a), session);
+    expect(displayedSuggestionOf(row('art-a', b), live(b), session)).toBe(a);
   });
 });

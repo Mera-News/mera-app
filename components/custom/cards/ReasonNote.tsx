@@ -110,6 +110,48 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
             {t('feed.reasonNotYet')}
         </Text>
     ) : null;
+    const pendingSlot = pendingEl ? (
+        <View
+            style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'center' }}
+            testID={testID ? `${testID}-${pending}` : undefined}
+            {...(pendingSpokenByHost
+                ? {
+                    accessible: false,
+                    accessibilityElementsHidden: true,
+                    importantForAccessibility: 'no-hide-descendants' as const,
+                }
+                : null)}
+        >
+            {pendingEl}
+        </View>
+    ) : null;
+    // Pending inside a reserved height (the Feed): the reserve sits in the
+    // chip's column, so the pending line's column spans the whole reserved box
+    // and centres in it. A spacer UNDER the row could only centre the line in
+    // the chip's row, leaving it pinned to the top of an empty box. Same total
+    // height as the note state, and the chip stays where that state draws it.
+    if (!reason && noteMinHeight) {
+        return (
+            <Box
+                testID={testID}
+                className="rounded-lg px-3 pb-3"
+                style={{ backgroundColor: reasonBoxColors.backgroundColor, paddingTop: 12 - BADGE_ROW_PADDING }}
+            >
+                <HStack
+                    className="justify-between"
+                    space="md"
+                    style={{ paddingVertical: BADGE_ROW_PADDING, alignItems: 'stretch' }}
+                    testID={testID ? `${testID}-badge-row` : undefined}
+                >
+                    <View style={{ alignItems: 'flex-start' }}>
+                        <RelevanceChip relevance={relevance} />
+                        <Box className="mt-1" style={{ minHeight: noteMinHeight }} testID={testID ? `${testID}-pending` : undefined} />
+                    </View>
+                    {pendingSlot}
+                </HStack>
+            </Box>
+        );
+    }
     return (
         <Box
             testID={testID}
@@ -123,23 +165,7 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                 testID={testID ? `${testID}-badge-row` : undefined}
             >
                 <RelevanceChip relevance={relevance} />
-                {reason ? (
-                    <AiDisclosureCaption color={aiDisclosureColor} align="right" />
-                ) : pendingEl ? (
-                    <View
-                        style={{ flex: 1, alignItems: 'flex-end' }}
-                        testID={testID ? `${testID}-${pending}` : undefined}
-                        {...(pendingSpokenByHost
-                            ? {
-                                accessible: false,
-                                accessibilityElementsHidden: true,
-                                importantForAccessibility: 'no-hide-descendants' as const,
-                            }
-                            : null)}
-                    >
-                        {pendingEl}
-                    </View>
-                ) : null}
+                {reason ? <AiDisclosureCaption color={aiDisclosureColor} align="right" /> : pendingSlot}
             </HStack>
             {reason ? (
                 <Box
@@ -156,10 +182,6 @@ const ReasonNote: React.FC<ReasonNoteProps> = ({
                         onDisplayChange={onNoteDisplayChange ? (d) => onNoteDisplayChange(d.displayedText) : undefined}
                     />
                 </Box>
-            ) : noteMinHeight ? (
-                // Holds the note's height while it is pending, so the card does
-                // not grow when it lands.
-                <Box className="mt-1" style={{ minHeight: noteMinHeight }} testID={testID ? `${testID}-pending` : undefined} />
             ) : null}
         </Box>
     );
