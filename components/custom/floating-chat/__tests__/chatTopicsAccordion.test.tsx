@@ -165,6 +165,36 @@ describe('the COLLAPSED card while generating', () => {
     );
   });
 
+  it('an ERROR with no topics never also says "Saved. No topics to add right now."', () => {
+    mockStatus = 'error';
+    const saved = mockRows;
+    mockRows = [];
+    try {
+      const { getByTestId, queryByTestId } = draw();
+      act(() => {
+        fireEvent.press(getByTestId('chat-topics-header-f1'));
+      });
+      expect(queryByTestId('chat-topics-empty')).toBeNull();
+    } finally {
+      mockRows = saved;
+    }
+  });
+
+  it('a DONE card with no topics still says so', () => {
+    mockStatus = 'done';
+    const saved = mockRows;
+    mockRows = [];
+    try {
+      const { getByTestId } = draw();
+      act(() => {
+        fireEvent.press(getByTestId('chat-topics-header-f1'));
+      });
+      expect(getByTestId('chat-topics-empty')).toBeTruthy();
+    } finally {
+      mockRows = saved;
+    }
+  });
+
   it('renders a one-line tombstone when the fact is gone, never a blank card', () => {
     mockStatus = 'gone';
     const { getByTestId, queryByTestId } = draw();

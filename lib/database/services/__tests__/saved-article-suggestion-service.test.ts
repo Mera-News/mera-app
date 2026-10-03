@@ -601,6 +601,24 @@ describe('keepArticleForFactCheck', () => {
     expect(existing.savedAt).toBe(staleSavedAt);
   });
 
+  it('reads the row INSIDE the write, so a release queued ahead of it cannot leave a deleted record to update (MERA-APP-81)', async () => {
+    const existing = makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'fact_check' });
+    db._setRows(TABLE, [existing]);
+    const col = db._collections[TABLE] ?? db.get(TABLE);
+    const captured = captureCreate(col);
+    // The release's write runs first and destroys the row.
+    db.write.mockImplementationOnce(async (fn: () => unknown) => {
+      db._setRows(TABLE, []);
+      return fn();
+    });
+
+    await keepArticleForFactCheck({ articleId: 'art-9', article: makeArticle() });
+
+    expect(existing.update).not.toHaveBeenCalled();
+    expect(captured.rec._raw.id).toBe('art-9');
+    expect(captured.rec.origin).toBe('fact_check');
+  });
+
   it('does nothing for a blank articleId', async () => {
     await keepArticleForFactCheck({ articleId: '  ', title: 'x' });
     expect(database.write).not.toHaveBeenCalled();

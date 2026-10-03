@@ -115,7 +115,7 @@ async function runSkillGuided(
   fact: Fact,
   ownTopics: string[],
   declined: Set<string>,
-): Promise<string[]> {
+): Promise<{ topics: string[]; dropped: { veto: number; filter: number } }> {
   const out = await generateViaSkill({
     fact: { statement: fact.statement, questionnaireAttribute: fact.questionnaireAttribute ?? null },
     skillId: payload.skillId ?? topicSkillForAttribute(fact.questionnaireAttribute),
@@ -161,7 +161,17 @@ async function runSkillGuided(
       kept: out.topics.length,
     });
   }
-  return out.topics;
+  return { topics: out.topics, dropped: out.dropped };
+}
+
+/** What a failed first run reports. Never the statement or a topic text: both
+ *  are persona content. `logger.warn` is breadcrumb-only, so without this a
+ *  failed run left nothing in Sentry to tell a throw from an empty answer. */
+function topicGenFailureContext(payload: TopicGenPayload, fact: Fact): Record<string, unknown> {
+  return {
+    skillId: payload.skillId ?? topicSkillForAttribute(fact.questionnaireAttribute),
+    attribute: fact.questionnaireAttribute ?? null,
+  };
 }
 
 export async function handleTopicGenJob(
@@ -176,16 +186,29 @@ export async function handleTopicGenJob(
 
   if (payload.useCloud) {
     try {
-      const topics = freshTopics(
-        await runSkillGuided(payload, fact, ownTopics, declined),
-        ownTopics,
-        declined,
-      );
+      const run = await runSkillGuided(payload, fact, ownTopics, declined);
+      const topics = freshTopics(run.topics, ownTopics, declined);
       if (topics.length === 0) {
         // "Generate more" that found nothing new leaves the fact as it was;
         // a first run with nothing usable is a failure the card can retry.
-        if (append) await markTopicGenerationSettled([payload.factId]);
-        else await failTopicGeneration(payload.factId, 'Topic generation returned no usable topics');
+        if (append) {
+          await markTopicGenerationSettled([payload.factId]);
+        } else {
+          // coreReturned vs afterFresh tells "the model said nothing" from
+          // "a filter ate everything".
+          logger.captureMessage('Topic generation returned no usable topics', {
+            level: 'warning',
+            fingerprint: ['topic-gen-failed', 'empty'],
+            extra: {
+              ...topicGenFailureContext(payload, fact),
+              coreReturned: run.topics.length,
+              afterFresh: topics.length,
+              veto: run.dropped.veto,
+              filter: run.dropped.filter,
+            },
+          });
+          await failTopicGeneration(payload.factId, 'Topic generation returned no usable topics');
+        }
         return { topics: [] };
       }
       await completeTopicGeneration(payload.factId, topics);
@@ -194,6 +217,16 @@ export async function handleTopicGenJob(
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       logger.warn('[topic-gen] skill-guided run failed', { factId: payload.factId, message });
+      // captureException, not captureMessage: its classifier keeps a dead
+      // session, offline or a missing credential out of Sentry.
+      if (!append) {
+        logger.captureException(err, {
+          level: 'warning',
+          fingerprint: ['topic-gen-failed', 'threw'],
+          tags: { service: 'topic-gen' },
+          extra: topicGenFailureContext(payload, fact),
+        });
+      }
       await failTopicGeneration(payload.factId, message);
       return { topics: [] };
     }
@@ -214,8 +247,16 @@ export async function handleTopicGenJob(
   const realTopics = freshTopics(generated, ownTopics, declined);
 
   if (realTopics.length === 0) {
-    if (append) await markTopicGenerationSettled([payload.factId]);
-    else await failTopicGeneration(payload.factId, 'Topic generation returned no usable topics');
+    if (append) {
+      await markTopicGenerationSettled([payload.factId]);
+    } else {
+      logger.captureMessage('Topic generation returned no usable topics', {
+        level: 'warning',
+        fingerprint: ['topic-gen-failed', 'empty', 'on-device'],
+        extra: { attribute: fact.questionnaireAttribute ?? null, coreReturned: generated.length },
+      });
+      await failTopicGeneration(payload.factId, 'Topic generation returned no usable topics');
+    }
     return { topics: [] };
   }
 

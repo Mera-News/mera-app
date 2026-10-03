@@ -427,7 +427,9 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement, 
           )}
 
           {empty ? (
-            status !== 'pending' && (
+            // Not on error: the header already says it failed, and "Saved. No
+            // topics to add right now." beside it read as a contradiction.
+            status !== 'pending' && status !== 'error' && (
               <Text size="xs" style={styles.statusText} testID="chat-topics-empty">
                 {t('chatTopics.none')}
               </Text>

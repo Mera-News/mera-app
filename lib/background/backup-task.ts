@@ -128,7 +128,13 @@ export async function runScheduledBackup(): Promise<void> {
   } catch (err) {
     // `backup_last_run_at` is deliberately untouched, so the next window
     // tries again and the staleness line keeps counting up.
-    logger.captureException(err, { tags: { service: 'backup-task' } });
+    if (isNotSetUp(err)) {
+      // Needs the user, not a fix: Manage data shows backup off and offers
+      // setup. Captured, it filed an event on every overnight wake (MERA-APP-7Z).
+      logger.addBreadcrumb('backup: not set up on this device', 'backup-task', { reason: err.reason }, 'warning');
+    } else {
+      logger.captureException(err, { tags: { service: 'backup-task' } });
+    }
     // The failure IS stamped, so Settings says "Last backup failed on
     // <date>" rather than going quiet about a schedule that is not working.
     // Best effort: a failed write here must not change the outcome.
@@ -138,6 +144,13 @@ export async function runScheduledBackup(): Promise<void> {
       // The staleness line still counts up without it.
     }
   }
+}
+
+/** `no-key` / `code-unconfirmed`. Duck-typed so this module never imports the
+ *  backup stack at load (see the lazy require above). */
+function isNotSetUp(err: unknown): err is { reason: string } {
+  const e = err as { name?: unknown; reason?: unknown } | null;
+  return e?.name === 'BackupServiceError' && (e.reason === 'no-key' || e.reason === 'code-unconfirmed');
 }
 
 /**

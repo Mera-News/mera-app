@@ -6,7 +6,12 @@
  * negative integer in the exception message.
  */
 
-import { isIntegrityUnavailableError } from '../index';
+import {
+    isIntegrityTransientError,
+    isIntegrityUnavailableError,
+    PERMANENT_INTEGRITY_ERROR_CODES,
+    TRANSIENT_INTEGRITY_ERROR_CODES,
+} from '../index';
 
 const integrityError = (message: string) =>
     Object.assign(new Error(message), { code: 'ERR_ATTEST_INTEGRITY_FAILED' });
@@ -49,5 +54,24 @@ describe('isIntegrityUnavailableError', () => {
         ).toBe(false);
         expect(isIntegrityUnavailableError(integrityError('no code in here'))).toBe(false);
         expect(isIntegrityUnavailableError(null)).toBe(false);
+    });
+});
+
+describe('isIntegrityTransientError', () => {
+    const at = (code: number) =>
+        integrityError(`Play Integrity token request failed: Integrity API error (${code}): details.`);
+
+    it.each([-8, -12, -17, -100])('retry-with-backoff code %i -> true', (code) => {
+        expect(isIntegrityTransientError(at(code))).toBe(true);
+    });
+
+    it.each([-1, -3, -10, -16])('code %i -> false', (code) => {
+        expect(isIntegrityTransientError(at(code))).toBe(false);
+    });
+
+    it('never overlaps the permanent set', () => {
+        for (const c of TRANSIENT_INTEGRITY_ERROR_CODES) {
+            expect(PERMANENT_INTEGRITY_ERROR_CODES.has(c)).toBe(false);
+        }
     });
 });

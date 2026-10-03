@@ -51,9 +51,18 @@ jest.mock('../../llm/cloudComplete', () => ({
   cloudComplete: (req: { systemPrompt: string; prompt: string }) => mockCloudComplete(req),
 }));
 jest.mock('../../llm/constants', () => ({ SMALL_MODEL: 'test-small' }));
+const mockCaptureMessage = jest.fn();
+const mockCaptureException = jest.fn();
 jest.mock('../../logger', () => ({
   __esModule: true,
-  default: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+  default: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    captureMessage: (...a: unknown[]) => mockCaptureMessage(...a),
+    captureException: (...a: unknown[]) => mockCaptureException(...a),
+  },
 }));
 
 import { handleTopicGenJob } from '../handlers/topic-gen-handler';
@@ -121,10 +130,37 @@ describe('cloud: the skill core, isolated', () => {
     expect(mockFailTopicGeneration).toHaveBeenCalledWith('f2', expect.any(String));
   });
 
+  it('an empty first run reaches Sentry, fingerprinted, with no persona text', async () => {
+    mockCloudComplete.mockResolvedValue('[]');
+    await handleTopicGenJob({ factId: 'f2', factStatement: 'Works as a paediatric nurse', useCloud: true });
+    expect(mockCaptureMessage).toHaveBeenCalledTimes(1);
+    const [, opts] = mockCaptureMessage.mock.calls[0];
+    expect(opts.fingerprint).toEqual(['topic-gen-failed', 'empty']);
+    expect(opts.extra).toMatchObject({ coreReturned: 0, afterFresh: 0, skillId: 'topics/profession' });
+    expect(JSON.stringify(mockCaptureMessage.mock.calls)).not.toMatch(/nurse/i);
+  });
+
+  it('a filter that eats everything is told apart from an empty answer', async () => {
+    mockDeclined = new Set(['alkmaar news', 'alkmaar street safety']);
+    await handleTopicGenJob({ factId: 'f1', factStatement: FACTS[0].statement, useCloud: true });
+    expect(mockCaptureMessage.mock.calls[0][1].extra).toMatchObject({ afterFresh: 0 });
+    expect(JSON.stringify(mockCaptureMessage.mock.calls)).not.toMatch(/alkmaar/i);
+  });
+
+  it('an empty APPEND run is not reported', async () => {
+    mockCloudComplete.mockResolvedValue('[]');
+    await handleTopicGenJob({ factId: 'f2', factStatement: 'x', useCloud: true, mode: 'append' });
+    expect(mockCaptureMessage).not.toHaveBeenCalled();
+  });
+
   it('a throw records a failure rather than leaving pending forever', async () => {
     mockCloudComplete.mockRejectedValue(new Error('boom'));
     await handleTopicGenJob({ factId: 'f2', factStatement: 'Works as a paediatric nurse', useCloud: true });
     expect(mockFailTopicGeneration).toHaveBeenCalledWith('f2', 'boom');
+    expect(mockCaptureException).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ fingerprint: ['topic-gen-failed', 'threw'], level: 'warning' }),
+    );
   });
 
   it('a fact deleted before its job ran is a no-op', async () => {

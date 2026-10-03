@@ -362,18 +362,12 @@ export async function keepArticleForRetention(
   const articleId = (input?.articleId ?? '').trim();
   if (!articleId) return;
   try {
-    const existing = await findRow(articleId);
-    // Only a USER save blocks the keep. A sibling retention origin does not.
-    if (existing && !isRetentionOrigin(existing.origin)) return;
-
     const full = 'article' in input || 'suggestion' in input;
-    if (existing && !full) return;
-
-    // Captured BEFORE the update: `apply` runs against the existing record, and
-    // the two snapshot helpers stamp their own origin ('article'/'suggestion')
-    // on the way through — so reading `existing.origin` inside `apply` reads the
-    // value the helper just wrote, not the one the row had.
-    const priorOrigin = existing?.origin ?? null;
+    // Set inside the write, before `apply` runs: the two snapshot helpers stamp
+    // their own origin ('article'/'suggestion') on the way through, so reading
+    // `existing.origin` inside `apply` would read the value the helper just
+    // wrote, not the one the row had.
+    let priorOrigin: string | null = null;
 
     const apply = (r: SavedArticleSuggestionModel) => {
       if ('article' in input) {
@@ -404,7 +398,15 @@ export async function keepArticleForRetention(
       r.origin = priorOrigin && isRetentionOrigin(priorOrigin) ? priorOrigin : origin;
     };
 
+    // The read is INSIDE the write (MERA-APP-81): read outside it, a release
+    // queued ahead of this write destroyed the row in between and the update
+    // threw "Not allowed to change deleted record".
     await database.write(async () => {
+      const existing = await findRow(articleId);
+      // Only a USER save blocks the keep. A sibling retention origin does not.
+      if (existing && !isRetentionOrigin(existing.origin)) return;
+      if (existing && !full) return;
+      priorOrigin = existing?.origin ?? null;
       if (existing) {
         await existing.update(apply);
         return;

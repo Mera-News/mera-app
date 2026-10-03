@@ -212,7 +212,13 @@ const BackupSection: React.FC<BackupSectionProps> = ({ autoOpenRecover = false }
         setIcloudReady(ic);
         setDriveReady(gd);
         setBgAvailable(bg);
-        const configured = backupProviderId() !== null && (await isRecoveryCodeConfirmed());
+        // The KEY too, not just the confirmation row: with a provider set and the
+        // key gone, every scheduled run fails `no-key` while this read "on"
+        // (MERA-APP-7Z). Off offers both setup and "I already have a backup".
+        const configured =
+          backupProviderId() !== null &&
+          (await isRecoveryCodeConfirmed()) &&
+          (await getRecoveryCode()) !== null;
         if (cancelled) return;
         setStage(configured ? 'on' : 'off');
         // Only when this device has no stamp of its own, and never blocking the

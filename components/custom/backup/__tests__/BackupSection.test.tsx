@@ -22,11 +22,12 @@ const calls: string[] = [];
 const mockEnsureBackupKey = jest.fn(async () => { calls.push('ensureBackupKey'); return 'ABCDE-FGHJK'; });
 const mockMarkConfirmed = jest.fn(async () => { calls.push('markRecoveryCodeConfirmed'); });
 const mockIsConfirmed = jest.fn(async () => false);
+const mockGetRecoveryCode = jest.fn(async (): Promise<string | null> => 'ABCDE-FGHJK');
 jest.mock('@/lib/backup/key-store', () => ({
     ensureBackupKey: () => mockEnsureBackupKey(),
     markRecoveryCodeConfirmed: () => mockMarkConfirmed(),
     isRecoveryCodeConfirmed: () => mockIsConfirmed(),
-    getRecoveryCode: jest.fn(async () => 'ABCDE-FGHJK'),
+    getRecoveryCode: () => mockGetRecoveryCode(),
     clearBackupKey: jest.fn(async () => { calls.push('clearBackupKey'); }),
 }));
 
@@ -184,6 +185,7 @@ beforeEach(() => {
     mockConnectResult = { ok: true };
     mockBgAvailable = true;
     mockIsConfirmed.mockResolvedValue(false);
+    mockGetRecoveryCode.mockResolvedValue('ABCDE-FGHJK');
 });
 
 /** Walks setup as far as the "where to keep it" step. */
@@ -340,6 +342,16 @@ describe('the new-phone path', () => {
         await waitFor(() => r.getByTestId('backup-already-have-on'));
         fireEvent.press(r.getByTestId('backup-already-have-on'));
         await waitFor(() => r.getByTestId('recovery-flow'));
+    });
+
+    it('reads OFF when a provider is set but the key is gone (MERA-APP-7Z)', async () => {
+        // Every scheduled run fails `no-key` in that state; reading "on" hid it.
+        mockProviderId = 'icloud';
+        mockIsConfirmed.mockResolvedValue(true);
+        mockGetRecoveryCode.mockResolvedValue(null);
+        const r = render(<BackupSection />);
+        await waitFor(() => r.getByTestId('backup-set-up'));
+        expect(r.queryByTestId('backup-already-have-on')).toBeNull();
     });
 
     it('opens straight into the flow when deep-linked from Settings', async () => {

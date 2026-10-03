@@ -85,10 +85,30 @@ const PERMANENT_INTEGRITY_ERROR_CODES = new Set([-1, -2, -6, -9, -14, -15]);
  *  the exception message ("Integrity API error (-1): ..."), which the Kotlin
  *  module passes through in its rejection message. */
 export function isIntegrityUnavailableError(error: unknown): boolean {
+  return integrityErrorCodeIn(error, PERMANENT_INTEGRITY_ERROR_CODES);
+}
+
+/**
+ * The codes the IntegrityErrorCode reference says to retry with backoff:
+ *  -8 TOO_MANY_REQUESTS        -12 GOOGLE_SERVER_UNAVAILABLE
+ * -17 CLIENT_TRANSIENT_ERROR  -100 INTERNAL_ERROR
+ * Google's side or the device's, never ours, so they take the same outcome as
+ * iOS's ERR_ATTEST_SERVER_UNAVAILABLE (MERA-APP-6P).
+ */
+export const TRANSIENT_INTEGRITY_ERROR_CODES = new Set([-8, -12, -17, -100]);
+
+export function isIntegrityTransientError(error: unknown): boolean {
+  return integrityErrorCodeIn(error, TRANSIENT_INTEGRITY_ERROR_CODES);
+}
+
+/** Exported for the disjointness test only. */
+export { PERMANENT_INTEGRITY_ERROR_CODES };
+
+function integrityErrorCodeIn(error: unknown, codes: Set<number>): boolean {
   if (deviceAttestErrorCode(error) !== 'ERR_ATTEST_INTEGRITY_FAILED') return false;
   const message = error instanceof Error ? error.message : String(error ?? '');
   const match = message.match(/-\d+/);
-  return match !== null && PERMANENT_INTEGRITY_ERROR_CODES.has(Number(match[0]));
+  return match !== null && codes.has(Number(match[0]));
 }
 
 /** False on simulators/emulators, in jest, in Expo Go, and on unsupported

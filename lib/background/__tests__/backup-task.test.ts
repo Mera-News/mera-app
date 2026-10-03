@@ -123,6 +123,25 @@ describe('when it goes wrong', () => {
     expect(mockRecordFailure).toHaveBeenCalledTimes(1);
   });
 
+  it('a device with no backup key stamps the failure but files no Sentry event (MERA-APP-7Z)', async () => {
+    const logger = jest.requireMock('@/lib/logger').default;
+    const err = Object.assign(new Error('Backup is not set up on this device'), {
+      name: 'BackupServiceError',
+      reason: 'no-key',
+    });
+    mockRunBackup.mockRejectedValueOnce(err);
+    await runScheduledBackup();
+    expect(logger.captureException).not.toHaveBeenCalled();
+    expect(mockRecordFailure).toHaveBeenCalledTimes(1);
+  });
+
+  it('any other failure is still captured', async () => {
+    const logger = jest.requireMock('@/lib/logger').default;
+    mockRunBackup.mockRejectedValueOnce(new Error('upload died'));
+    await runScheduledBackup();
+    expect(logger.captureException).toHaveBeenCalledTimes(1);
+  });
+
   it('never throws even when the failure stamp fails too', async () => {
     mockRunBackup.mockRejectedValueOnce(new Error('upload died'));
     mockRecordFailure.mockRejectedValueOnce(new Error('db gone'));

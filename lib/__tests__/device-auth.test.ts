@@ -26,6 +26,12 @@ jest.mock('@/modules/mera-device-attest', () => ({
                 isIntegrityUnavailableError: (err: unknown) => boolean;
             }
         ).isIntegrityUnavailableError(e),
+    isIntegrityTransientError: (e: unknown) =>
+        (
+            jest.requireActual('../../modules/mera-device-attest/index') as {
+                isIntegrityTransientError: (err: unknown) => boolean;
+            }
+        ).isIntegrityTransientError(e),
 }));
 
 const mockFetch = jest.fn();
@@ -775,10 +781,21 @@ describe('Play Integrity structural unavailability (MERA-APP-6P)', () => {
         expect(logger.warn.mock.calls.length).toBeLessThanOrEqual(1);
     });
 
-    it('a transient code (NETWORK_ERROR) keeps the retryable failure state', async () => {
+    it('NETWORK_ERROR keeps the retryable failure state', async () => {
         mockRequestIntegrityToken.mockRejectedValue(integrityRejection(-3));
         const result = await signInWithDevice();
         expect(result).toEqual({ status: 'failed', reason: 'unknown' });
+    });
+
+    it('GOOGLE_SERVER_UNAVAILABLE (-12) is retryable attestation-unavailable, captured as a warning', async () => {
+        const logger = (require('@/lib/logger') as { default: Record<string, jest.Mock> }).default;
+        mockRequestIntegrityToken.mockRejectedValue(integrityRejection(-12));
+        const result = await signInWithDevice();
+        expect(result).toEqual({ status: 'failed', reason: 'attestation-unavailable' });
+        expect(logger.captureException).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({ level: 'warning', fingerprint: ['play-integrity-transient'] }),
+        );
     });
 
     it('the existing isSupported=false path is unchanged', async () => {

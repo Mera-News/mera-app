@@ -46,6 +46,7 @@ import {
   attestKey,
   generateAssertion,
   generateKey,
+  isIntegrityTransientError,
   isIntegrityUnavailableError,
   isInvalidKeyError,
   isSupported,
@@ -504,6 +505,17 @@ function classify(error: unknown): DeviceSignInResult {
   // Transient integrity codes fall through and stay retryable.
   if (isIntegrityUnavailableError(error)) {
     return { status: 'unsupported' };
+  }
+  // Google's server or the device failed for now (-8/-12/-17/-100): retryable,
+  // same as iOS's server-unavailable. A warning, so a sustained outage still
+  // shows; the one 6P event was a Play pre-launch lab device.
+  if (isIntegrityTransientError(error)) {
+    logger.captureException(error, {
+      level: 'warning',
+      fingerprint: ['play-integrity-transient'],
+      tags: { service: 'device-auth' },
+    });
+    return { status: 'failed', reason: 'attestation-unavailable' };
   }
   if (error instanceof TypeError) {
     // fetch rejects with TypeError on transport failure (offline, DNS).
