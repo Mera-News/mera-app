@@ -22,12 +22,13 @@ const calls: string[] = [];
 const mockEnsureBackupKey = jest.fn(async () => { calls.push('ensureBackupKey'); return 'ABCDE-FGHJK'; });
 const mockMarkConfirmed = jest.fn(async () => { calls.push('markRecoveryCodeConfirmed'); });
 const mockIsConfirmed = jest.fn(async () => false);
-const mockGetRecoveryCode = jest.fn(async (): Promise<string | null> => 'ABCDE-FGHJK');
+const mockGetBackupKey = jest.fn(async (): Promise<Uint8Array | null> => new Uint8Array(32));
 jest.mock('@/lib/backup/key-store', () => ({
     ensureBackupKey: () => mockEnsureBackupKey(),
     markRecoveryCodeConfirmed: () => mockMarkConfirmed(),
     isRecoveryCodeConfirmed: () => mockIsConfirmed(),
-    getRecoveryCode: () => mockGetRecoveryCode(),
+    getRecoveryCode: jest.fn(async () => 'ABCDE-FGHJK'),
+    getBackupKey: () => mockGetBackupKey(),
     clearBackupKey: jest.fn(async () => { calls.push('clearBackupKey'); }),
 }));
 
@@ -185,7 +186,7 @@ beforeEach(() => {
     mockConnectResult = { ok: true };
     mockBgAvailable = true;
     mockIsConfirmed.mockResolvedValue(false);
-    mockGetRecoveryCode.mockResolvedValue('ABCDE-FGHJK');
+    mockGetBackupKey.mockResolvedValue(new Uint8Array(32));
 });
 
 /** Walks setup as far as the "where to keep it" step. */
@@ -348,7 +349,7 @@ describe('the new-phone path', () => {
         // Every scheduled run fails `no-key` in that state; reading "on" hid it.
         mockProviderId = 'icloud';
         mockIsConfirmed.mockResolvedValue(true);
-        mockGetRecoveryCode.mockResolvedValue(null);
+        mockGetBackupKey.mockResolvedValue(null);
         const r = render(<BackupSection />);
         await waitFor(() => r.getByTestId('backup-set-up'));
         expect(r.queryByTestId('backup-already-have-on')).toBeNull();
