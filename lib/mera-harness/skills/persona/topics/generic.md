@@ -61,10 +61,11 @@ types when hiring help or filing paperwork.
   against hiring.
 
 ## Banned shapes
-The words "industry trends", "career development", "awards" and "festivals" are banned in any topic
-with any prefix, as are a bare "press freedom news" and "media ethics". They name a field with no
-news hook. Carry a concrete bridge instead: a place, a named organisation, a policy or law, or a
-specific event or action.
+The words "industry trends", "career development" and "awards" are banned in any topic with any
+prefix, as are a bare "press freedom news" and "media ethics". They name a field with no news hook.
+"Festivals" too, UNLESS the fact is about festivals or events: then name the place or the festival,
+as in "Amsterdam festival permits", never a field's festivals. Carry a concrete bridge instead: a
+place, a named organisation, a policy or law, or a specific event or action.
 
 - Bad: "AI industry trends", "Dutch journalism awards", "European journalism festivals".
 - Good: "EU media freedom act", "newsroom AI adoption", "AI copyright ruling".
