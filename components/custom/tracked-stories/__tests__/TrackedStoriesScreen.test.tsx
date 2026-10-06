@@ -164,12 +164,7 @@ jest.mock('@/lib/tracking/track-actions', () => ({
     deleteTrackedStoryById: (...a: any[]) => mockUntrack(...a),
 }));
 
-// Starting a follow (FAB + empty-state CTA) is one lib/ call; what it does with
-// the floating-chat store is asserted in lib/tracking/__tests__/follow-story-chat.
-const mockStartFollowStoryChat = jest.fn();
-jest.mock('@/lib/tracking/follow-story-chat', () => ({
-    startFollowStoryChat: (...a: any[]) => mockStartFollowStoryChat(...a),
-}));
+jest.mock('@/components/custom/nav/HowThisPageWorks', () => ({ __esModule: true, default: () => null }));
 
 jest.mock('lucide-react-native', () => {
     const { View } = require('react-native');
@@ -245,59 +240,21 @@ describe('TrackedStoriesScreen', () => {
         jest.clearAllMocks();
     });
 
-    it('shows the empty state when no stories are followed', () => {
+    it('shows the empty state when no stories are followed, pointing at the Mera button', () => {
         const { getByText } = render(<TrackedStoriesScreen embedded />);
         expect(getByText('trackedStories.emptyTitle')).toBeTruthy();
-        expect(getByText('trackedStories.emptyBody')).toBeTruthy();
+        expect(getByText('trackedStories.emptyBodyMera')).toBeTruthy();
     });
 
-    it('gives the empty state a CTA that starts a follow here', () => {
-        const { getByText } = render(<TrackedStoriesScreen embedded />);
-        // It used to route to the Feed tab because that was the only place a
-        // follow could START. This screen now starts one itself.
-        fireEvent.press(getByText('trackedStories.emptyCtaFollow'));
-        expect(router.push).not.toHaveBeenCalled();
-        expect(mockStartFollowStoryChat).toHaveBeenCalledWith('trackedStories.followChatSeed');
-    });
-
-    // The whole point of the FAB: one tap opens Mera already carrying the
-    // "I want to follow a story" turn, so the user lands mid-conversation
-    // rather than on an empty prompt.
-    describe('follow-a-story FAB', () => {
-        it('opens the chat seeded with the follow intent when tapped', () => {
-            mockRows = [story({ id: 'f1', llmHeadline: 'Existing' })];
-            const { getByTestId } = render(<TrackedStoriesScreen embedded />);
-
-            fireEvent.press(getByTestId('tracked-stories-track-fab'));
-
-            expect(mockStartFollowStoryChat).toHaveBeenCalledTimes(1);
-            expect(mockStartFollowStoryChat).toHaveBeenCalledWith('trackedStories.followChatSeed');
-        });
-
-        it('carries the track crosshair', () => {
-            mockRows = [story({ id: 'f1', llmHeadline: 'Existing' })];
-            const { getByTestId } = render(<TrackedStoriesScreen embedded />);
-
-            const fab = getByTestId('tracked-stories-track-fab');
-            expect(fab.props.accessibilityLabel).toBe('trackedStories.followFabLabel');
-            expect(getByTestId('icon-crosshair')).toBeTruthy();
-        });
-
-        it('hides on an empty list, where the empty state CTA is the one entry point', () => {
-            const { queryByTestId, getByTestId } = render(<TrackedStoriesScreen embedded />);
-            expect(queryByTestId('tracked-stories-track-fab')).toBeNull();
-            expect(getByTestId('tracked-stories-empty-cta')).toBeTruthy();
-        });
-
-        it('does not follow anything by itself — only opens the chat', () => {
-            mockRows = [story({ id: 'f1', llmHeadline: 'Existing' })];
-            const { getByTestId } = render(<TrackedStoriesScreen embedded />);
-
-            fireEvent.press(getByTestId('tracked-stories-track-fab'));
-
-            expect(mockUntrack).not.toHaveBeenCalled();
-            expect(router.push).not.toHaveBeenCalled();
-        });
+    // Following starts from the Mera button now (navx): no FAB, no empty CTA.
+    it('draws no follow button of its own, empty or not', () => {
+        const empty = render(<TrackedStoriesScreen embedded />);
+        expect(empty.queryByTestId('tracked-stories-empty-cta')).toBeNull();
+        expect(empty.queryByTestId('tracked-stories-track-fab')).toBeNull();
+        empty.unmount();
+        mockRows = [story({ id: 'f1', llmHeadline: 'Existing' })];
+        const full = render(<TrackedStoriesScreen embedded />);
+        expect(full.queryByTestId('tracked-stories-track-fab')).toBeNull();
     });
 
     it('drops the 4xl title when embedded, keeps it standalone', () => {

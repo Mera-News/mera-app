@@ -11,7 +11,9 @@ import {
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import NextSectionFooter from '@/components/custom/for-you/NextSectionFooter';
-import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
+import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -43,15 +45,14 @@ import {
   findNodeHandle,
   StyleSheet,
   View,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
 } from 'react-native';
 import Animated, { FadeIn, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 /** Show the scroll-to-top FAB once the list is scrolled past this many px. */
-const SCROLL_THRESHOLD = 300;
+/** How long "Mera is finding stories" may promise before the honest line. */
+const FINDING_STORIES_MS = 15_000;
 /** The Back button's tap frame: 44pt, pulled back to the 24pt glyph. */
 const BACK_FRAME = {
   width: 44,
@@ -181,10 +182,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
     });
   }, [nextFact, nextFactTitle]);
 
-  const backToDashboard = useCallback(() => {
-    if (router.canGoBack()) router.back();
-    else router.replace('/logged-in/app_container/feed');
-  }, []);
+  // Back to the Interests page: pops the Feed stack (this screen) and selects
+  // the page, however the reader got here.
+  const backToInterests = useCallback(() => navigateToPage('interests'), []);
 
   // Screen-reader focus moves to the new section's title after a "Next" hop,
   // so VoiceOver does not stay on a footer that no longer exists.
@@ -199,20 +199,19 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   const reduceMotion = useReducedMotion();
   const entering = arrivedFromNext && !reduceMotion ? FadeIn.duration(220) : undefined;
 
-  // ── Scroll-to-top FAB ──
+  // No scroll-to-top button: the Mera button sits exactly there, and
+  // re-tapping the Feed tab pops back to the pages.
   const listRef = useRef<FlatList<FactRowGroup>>(null);
-  const [showScrollToTop, setShowScrollToTop] = useState(false);
-  const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    // Rows below the first screen ask for their translation only when a tick
-    // finds them on screen (lib/visibility-tick).
-    notifyScrollTick();
-    const next = e.nativeEvent.contentOffset.y > SCROLL_THRESHOLD;
-    // Functional update → only re-render when the boolean actually flips.
-    setShowScrollToTop((prev) => (prev === next ? prev : next));
-  }, []);
-  const scrollToTop = useCallback(() => {
-    listRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, []);
+  const listEndClearance = useListEndClearance();
+
+  // "A few seconds" must not promise forever: an interest still waiting for
+  // its first stories says so for 15s, then the honest empty line.
+  const [findingExpired, setFindingExpired] = useState(false);
+  useEffect(() => {
+    setFindingExpired(false);
+    const timer = setTimeout(() => setFindingExpired(true), FINDING_STORIES_MS);
+    return () => clearTimeout(timer);
+  }, [factId]);
 
   // ── Feedback sheet ──
   // Unlike the For You feed (which persists its order + verdicts), this screen
@@ -289,7 +288,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
         onPress={goToNextFact}
       />
     ) : isLastSection ? (
-      <NextSectionFooter kind="back" onPress={backToDashboard} />
+      <NextSectionFooter kind="back" onPress={backToInterests} />
     ) : null;
 
   // An interest with no stories yet (reached directly: the Dashboard and "Next"
@@ -303,7 +302,9 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
       icon={thisRow.emptyReason === 'awaiting-first-run' ? 'hourglass-empty' : 'search'}
       body={
         thisRow.emptyReason === 'awaiting-first-run'
-          ? t('forYou.emptySection.awaiting')
+          ? findingExpired
+            ? t('forYou.emptySection.awaiting')
+            : t('interests.findingStories')
           : t('forYou.emptySection.none')
       }
       testID="fact-feed-empty-section"
@@ -373,7 +374,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
               testID="fact-feed-back"
               onPress={() => router.back()}
               accessibilityRole="button"
-              accessibilityLabel={t('common.back')}
+              accessibilityLabel={t('interests.backToInterests')}
               style={StyleSheet.absoluteFill}
             />
           </View>
@@ -407,6 +408,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
               />
             )}
           </View>
+          <NotificationBellButton />
         </HStack>
       </Box>
       <FlatList
@@ -414,9 +416,12 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
         data={groups}
         keyExtractor={(g) => g.data._id}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 16, paddingBottom: 100 }}
+        // Clear of the Mera button (derived; see tab-bar.ts).
+        contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 16, paddingBottom: listEndClearance }}
         showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
+        // Rows below the first screen ask for their translation only when a
+        // tick finds them on screen (lib/visibility-tick).
+        onScroll={notifyScrollTick}
         onContentSizeChange={notifyScrollTick}
         scrollEventThrottle={16}
         ListEmptyComponent={listEmpty}
@@ -424,8 +429,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
       />
 
       </Animated.View>
-
-      <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />
     </Box>
   );
 };

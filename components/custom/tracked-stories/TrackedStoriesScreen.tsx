@@ -26,14 +26,12 @@ import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import { toastManager } from '@/lib/toast-manager';
 import PressableCard from '@/components/custom/cards/PressableCard';
 import FlatCardSurface from '@/components/custom/cards/FlatCardSurface';
-import { startFollowStoryChat } from '@/lib/tracking/follow-story-chat';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
-import { useTabBarClearance } from '@/lib/navigation/tab-bar';
-import { useAiAccess } from '@/lib/stores/subscription-store';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
+import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Crosshair } from 'lucide-react-native';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,8 +41,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface TrackedStoriesScreenProps {
-    /** Embedded inside the For-You "Stories" sub-tab — hides the back button and
-     *  tightens the header (the host owns the top chrome). Route usage omits it. */
+    /** Embedded as the Feed tab's Stories page: hides the back button and
+     *  tightens the header (the tab owns the top chrome). Route usage omits it. */
     embedded?: boolean;
     /** Back handler for the non-embedded (route/deep-link) variant. */
     onBack?: () => void;
@@ -59,6 +57,9 @@ interface TrackedStoriesScreenProps {
      *  host padding a wrapper View (which would leave a dead gap once the header
      *  translates away). Defaults to 0 — standalone route is unchanged. */
     headerHeight?: number;
+    /** False while this is not the visible page of the focused Feed tab: no
+     *  scroll ticks from it. Default true (the standalone route). */
+    active?: boolean;
 }
 
 /**
@@ -74,16 +75,13 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
     onBack,
     scrollHandler,
     headerHeight = 0,
+    active = true,
 }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
-    const tabClearance = useTabBarClearance();
+    const listEndClearance = useListEndClearance();
     const [stories, setStories] = useState<TrackedStoryModel[]>([]);
     const [confirmTarget, setConfirmTarget] = useState<TrackedStoryModel | null>(null);
-    // 'unknown' (cold start, no server/RC answer yet) must NOT read as locked —
-    // this screen stays fully functional either way, so the only thing this
-    // gates is which empty-state copy renders below.
-    const locked = useAiAccess() === 'locked';
 
     useEffect(() => {
         const sub = observeActive().subscribe({
@@ -297,42 +295,20 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
         </Box>
     ) : null;
 
-    // The FAB (and the empty state's CTA) both start the same conversation:
-    // Mera opens on the follow-story context with the seed turn already sent,
-    // asks what to follow, and stages the scope card the user taps to confirm.
-    // The whole behaviour lives in lib/ — this is just the tap.
-    const startFollowStory = useCallback(() => {
-        startFollowStoryChat(t('trackedStories.followChatSeed'));
-    }, [t]);
-
-    // M3/F22: the shared empty-state component, so this tab's zero state
-    // reads like the other For You tabs. The follow CTA is the ONE entry point
-    // on an empty list; the FAB below hides there, since two buttons that do
-    // the same thing on an empty screen is one too many.
-    //
-    // Locked: starting a new follow needs a plan, so there is no CTA (it would
-    // be a broken instruction) and the free-tier body explains why. Stories
-    // already followed are unaffected; this is only the zero state.
+    // Following a story starts from the Mera button (its Stories hint opens
+    // the follow-story chat), so neither the list nor its empty state carries
+    // a follow button of its own.
     const ListEmpty = (
         <ForYouEmptyState
             icon="auto-awesome"
             title={t('trackedStories.emptyTitle')}
-            body={locked ? t('freeTier.trackedStoriesEmptyBody') : t('trackedStories.emptyBody')}
-            action={
-                locked
-                    ? undefined
-                    : {
-                          label: t('trackedStories.emptyCtaFollow'),
-                          onPress: startFollowStory,
-                          testID: 'tracked-stories-empty-cta',
-                      }
-            }
+            body={t('trackedStories.emptyBodyMera')}
             testID="tracked-stories-empty"
         />
     );
 
     return (
-        // No `bg-black`: embedded, this sits inside ForYouScreen and a flat fill
+        // No `bg-black`: embedded, this sits inside the Feed tab and a flat fill
         // here would punch a hole in that page's backdrop; standalone, the
         // backdrop below is the page background.
         <Box className="flex-1">
@@ -412,11 +388,12 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     </>
                 }
                 ListEmptyComponent={ListEmpty}
+                ListFooterComponent={embedded ? <HowThisPageWorks pageId="stories" /> : null}
                 contentContainerStyle={{
                     paddingTop: headerHeight,
-                    // Embedded in a tab: the bar once plus a tail (see
-                    // useTabBarClearance). Standalone: the home indicator.
-                    paddingBottom: embedded ? tabClearance + 24 : insets.bottom + 40,
+                    // Embedded in the Feed tab: clear of the Mera button (see
+                    // useListEndClearance). Standalone: the home indicator.
+                    paddingBottom: embedded ? listEndClearance : insets.bottom + 40,
                     // Retained: this is what lets ListEmpty's `flex-1` fill and
                     // centre. Do not drop it when touching the padding above.
                     flexGrow: 1,
@@ -425,36 +402,10 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 // Embedded, the collapsible header's handler ticks; standalone,
                 // tick directly. At rest, a content change re-measures.
                 onScroll={scrollHandler ?? notifyScrollTick}
-                onContentSizeChange={notifyScrollTick}
+                onContentSizeChange={active ? notifyScrollTick : undefined}
                 scrollEventThrottle={16}
             />
 
-            {/* Start-a-follow FAB — bottom right, carrying the same crosshair
-                the card/detail track buttons use (CardActionBar), so the
-                affordance reads as "follow" rather than as a generic "+".
-
-                Hidden while locked, deliberately and on the same axis as the
-                empty-state CTA above: `openArticleFeedback` silently no-ops for
-                a free-tier user, so a visible FAB here would be a button that
-                does nothing at all. Hidden on an empty list too, where the
-                empty state's CTA is the one entry point.
-
-                Bottom offset clears the native tab bar when this screen is
-                EMBEDDED in the Dashboard's Stories sub-tab; standalone (its own
-                route, no tab shell) it only clears the home indicator. Same
-                convention as ScrollToTopFab's `extraBottomOffset`. */}
-            {!locked && stories.length > 0 && (
-                <Pressable
-                    testID="tracked-stories-track-fab"
-                    onPress={startFollowStory}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('trackedStories.followFabLabel')}
-                    className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-primary-500 shadow-hard-3"
-                    style={{ bottom: 20 + (embedded ? tabClearance : insets.bottom) }}
-                >
-                    <Crosshair size={26} strokeWidth={2} color="#000000" fill="none" />
-                </Pressable>
-            )}
 
             <Modal isOpen={!!confirmTarget} onClose={() => setConfirmTarget(null)}>
                 <ModalBackdrop />

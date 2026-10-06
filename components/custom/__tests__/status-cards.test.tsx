@@ -191,10 +191,12 @@ describe('FeedProcessingCard is flush with the page, not a card on it', () => {
     expect(rootClass()).toContain('mb-4');
   });
 
-  it('keeps the testIDs the harness and the feed screens address it by', () => {
+  it('keeps the testID the harness and the feed screens address it by, and no button', () => {
     render(<FeedProcessingCard />);
     expect(screen.getByTestId('feed-preparing-card')).toBeTruthy();
-    expect(screen.getByTestId('feed-preparing-explore-cta')).toBeTruthy();
+    // The Explore button went: the shortcuts under the card (FeedShortcuts)
+    // are the way on while Mera reads.
+    expect(screen.queryByTestId('feed-preparing-explore-cta')).toBeNull();
   });
 });
 

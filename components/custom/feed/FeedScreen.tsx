@@ -38,10 +38,8 @@
 // feed by exactly one route: `hydrate` dropping a persisted id whose story aged
 // out of the publication window between sessions (FEED_WINDOW_MS).
 //
-// The end card's CTA is always "Browse Explore". It used to fork on a minimum
-// importance threshold the header carried as a High/Med/Low chip; that dial is
-// gone, so every scored story down to the LOW band renders and there is nothing
-// left for a "lower the priority" CTA to reveal.
+// The end card carries no button: the tabs and the Mera button are the way
+// on. The empty states add the "While Mera reads" shortcuts (FeedShortcuts).
 //
 // The unviewed/viewed input to that sort is a SNAPSHOT, so a card never sinks
 // under the reader mid-session. Together with the pinned prefix it refreshes at
@@ -65,19 +63,21 @@
 // share); Ask-Mera lives on the card's rationale block. Tapping a thumb records
 // a verdict and opens the shared ••• sheet at that verdict's feedback tree.
 // Every one of those interactions — plus opening the card — marks it `viewed`.
-// The header row itself is FeedHeaderTitleRow. This screen is a place you
-// read, not one you check for arrivals: nothing on it counts or announces new
-// stories (no progress bar, no counts sentence, no "New stories" pill). New
-// stories are inserted live below the pinned prefix, never above the reader.
+// This screen is a place you read, not one you check for arrivals: nothing on
+// it counts or announces new stories (no progress bar, no counts sentence, no
+// "New stories" pill). New stories are inserted live below the pinned prefix,
+// never above the reader.
+//
+// navx: the Feed is a PAGE of the Feed tab (FeedPages over TabPages). The tab
+// owns the header (the page strip), the backdrop and the collapsing-header
+// binding; this screen is the list. It is KEEP-MOUNTED in the pager, so its
+// reading session (pinned prefix, partition snapshot, row session) survives
+// any swipe or reorder, and everything that used to hang off "the tab is
+// focused" hangs off `active` (the visible page of the focused tab) instead:
+// ingest, the skip flush on leaving, seen marking, the re-tap. The seen band
+// is bounded sideways too, so a warm Feed beside Interests marks nothing.
 
-import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
-import {
-  GLASS_HEADER_SCRIM,
-  GLASS_HEADER_TINT,
-  GlassHeaderAndroidBackdrop,
-  GlassPlate,
-} from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import DailyLimitCard from '@/components/custom/DailyLimitCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
@@ -85,20 +85,12 @@ import {
   useFeedSyncRefresh,
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
-import { useIsFeedMarkActive } from '@/components/custom/for-you/use-mark-active';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import FeedStatusMark from '@/components/custom/feed/FeedStatusMark';
-import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
-import { StatusDropdownLayer, StatusDropdownProvider } from '@/components/custom/for-you/status-dropdown';
 import { useFeedModeAnnouncement } from '@/components/custom/for-you/use-feed-mode-announcement';
+import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
+import type { PageHeaderBinding } from '@/components/custom/nav/types';
+import FeedShortcuts from '@/components/custom/feed/FeedShortcuts';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
-import {
-  headerTitleLineHeight,
-  headerTitleSize,
-  HEADER_TITLE_MIN_SCALE,
-} from '@/lib/typography/header-title-size';
-import HeaderWorkingGradient from '@/components/custom/HeaderWorkingGradient';
-import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useReasonWriting } from '@/components/custom/cards/use-reason-in-flight';
@@ -108,14 +100,9 @@ import {
   resolveFeedRowDisplay,
   type FeedRowSession,
 } from '@/components/custom/feed/feed-row-display';
-import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import FeedSkeleton from '@/components/custom/feed/FeedSkeleton';
-import TabExplainerButton from '@/components/custom/for-you/TabExplainerButton';
-import FeedHeaderTitleRow, { feedMarkMode } from '@/components/custom/feed/FeedHeaderTitleRow';
 import { useSessionGeoLanguageContext } from '@/components/custom/feed/use-session-geo-context';
 import { useFeedWarmup } from '@/components/custom/feed/use-feed-warmup';
-import StatusBarScrim from '@/components/custom/StatusBarScrim';
-import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
 import {
@@ -131,17 +118,13 @@ import {
   type VerdictStoreAdapter,
 } from './use-feedback-sheet';
 import { Box } from '@/components/ui/box';
-import { Heading } from '@/components/ui/heading';
-import { HStack } from '@/components/ui/hstack';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
-import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refresh';
-import { useTabBarClearance } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import {
   buildFeedList,
   type FeedListItem,
@@ -156,7 +139,6 @@ import { useDatabaseReady } from '@/lib/stores/database-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import {
-  useForYouDeviceProcessing,
   useForYouHasGeneratedTopics,
   useForYouLastProcessingRunFinishedAt,
   useForYouSuggestions,
@@ -164,7 +146,7 @@ import {
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { AccessibilityInfo, AppState, RefreshControl, useWindowDimensions } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   FadeIn,
@@ -175,7 +157,6 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const REFRESH_TINT = '#EDA77E';
 
@@ -204,9 +185,6 @@ const ARRIVAL_STAGGER_CAP = 5;
  *  staggered start, and short enough that scrolling back to a row minutes later
  *  never re-animates it. */
 const ARRIVAL_ELIGIBLE_MS = 600;
-
-/** Show the scroll-to-top FAB once the feed is scrolled past this many px. */
-const SCROLL_THRESHOLD = 300;
 
 /** How long the app must be BACKGROUNDED before coming back counts as a new
  *  reading session (re-freeze the partition, drop the pinned prefix, return to
@@ -310,11 +288,20 @@ const FeedRow = React.memo(function FeedRow({
   );
 });
 
-const FeedScreen: React.FC = () => {
+export interface FeedScreenProps {
+  /** The visible page of the focused Feed tab (TabPages). */
+  readonly active: boolean;
+  /** The tab's one collapsing header. */
+  readonly header: PageHeaderBinding;
+}
+
+const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
-  const tabClearance = useTabBarClearance();
-  const isFocused = useIsFocused();
+  const listEndClearance = useListEndClearance();
+  // "Focused" for everything this screen used to gate on the tab: the visible
+  // page of the focused tab. Leaving the page is a blur (skips flush, ingest
+  // pauses), exactly as switching away from the old Feed tab was.
+  const isFocused = useIsFocused() && active;
 
   const { isLoading, errorMessage } = useFeedBootstrap();
 
@@ -327,10 +314,8 @@ const FeedScreen: React.FC = () => {
   const liteMode = useDisplayPrefsStore((s) => s.liteMode);
   const arrivalMotion = !reduceMotion && !liteMode;
 
-  // Collapsing header (hides on scroll-down, reveals on scroll-up) — shared
-  // with the Dashboard tab.
-  const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal, hidden: headerHidden } =
-    useCollapsibleHeader();
+  // The tab's collapsing header (TabPages): this list drives it while active.
+  const { scrollHandler, headerHeight, reveal, hidden: headerHidden } = header;
 
   // ── Live inputs ──
   const suggestions = useForYouSuggestions();
@@ -345,44 +330,22 @@ const FeedScreen: React.FC = () => {
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const userGeoLanguageCtx = useSessionGeoLanguageContext(useUserGeoLanguageContext(), sessionEpoch);
 
-  // Status mark + its panel. The mark (FeedStatusMark) drops the panel down
-  // under the title row through the screen's StatusDropdownProvider, and it
-  // closes itself after STATUS_PANEL_AUTO_COLLAPSE_MS, exactly as the
-  // Dashboard's stats card does (owner: "make them similar"). A DROPDOWN, never
-  // an inline panel: the inline one grew the header, re-padded the list, and
-  // left it ~99pt down after closing (captured).
-  //
-  // The mark is on screen in every state (owner): small and still at rest,
-  // bigger with its strokes drawing on while a sync narrates.
-  // Title ceiling from the window width; see header-title-size for why this is
-  // two steps and not a ramp.
-  const { width: windowWidth } = useWindowDimensions();
-  const titleSize = headerTitleSize(windowWidth);
-  // Pinned, in BOTH states — see `headerTitleLineHeight`. Without it the row
-  // shrinks when the title steps aside for the narration line and the whole
-  // list moves under the reader, twice per sync.
-  const titleRowHeight = headerTitleLineHeight(windowWidth);
-
-
-  // ONE value drives the hidden title, the narration line and the strip.
-  // `isFeedProcessing`, NEVER `statusMode === 'processing'` — that one is
-  // `schedulerRunning || isFeedProcessing`, and `feed-sync` polls every five
-  // minutes plus foreground and reconnect, so it would hand this header over
-  // roughly twelve times an hour to announce a poll that found nothing. This
-  // is the reading surface; that would be the billboard `7e96aa4` deleted.
+  // ONE subscription for "a run is really downloading, grouping and scoring"
+  // (`isFeedProcessing`, NEVER `statusMode === 'processing'`, which also goes
+  // true for every five-minute poll that finds nothing).
   const narrating = useIsFeedProcessing();
   const statusMode = useFeedStatusMode();
-  // The mark moves while the phone works OR the server scores the reader's
-  // articles (owner); a batch with no progress for 15 min goes still
-  // (use-mark-active.ts).
-  const markMode = feedMarkMode(useIsFeedMarkActive(), statusMode);
   // The screen announces entering the capped or error state (see the hook).
   useFeedModeAnnouncement(statusMode);
-  const titleRowRef = useRef<View>(null);
-  // The STAGE only. On-device is its own store read, the same one the
-  // snapshot itself makes, so no parameter is added to the snapshot.
-  const { stage: narrationStage } = useProcessingSnapshot();
-  const { isDeviceProcessing: narrationOnDevice } = useForYouDeviceProcessing();
+  // The end of a sync is said once, never as a live region (the header
+  // narration that used to carry it is gone with the header).
+  const wasNarrating = useRef(narrating);
+  useEffect(() => {
+    if (wasNarrating.current && !narrating && isFocused) {
+      AccessibilityInfo.announceForAccessibility(t('feedStatus.syncDoneA11y'));
+    }
+    wasNarrating.current = narrating;
+  }, [narrating, isFocused, t]);
 
   // Candidates keep opened items in (they back frozen rows + survive hydrate) —
   // no exclusion here; opened-filtering happens only for NEW ids in ingest.
@@ -437,32 +400,23 @@ const FeedScreen: React.FC = () => {
   // ux2 B2: a card is SEEN only while its bottom edge sits in this band (the
   // header's bottom edge .. the window height minus the tab bar clearance).
   // Read at tick time, so the collapsing header's live position counts.
-  const { height: windowHeight } = useWindowDimensions();
-  const seenBandRef = useRef(() => ({ top: 0, bottom: 0 }));
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const seenBandRef = useRef(() => ({ top: 0, bottom: 0, left: 0, right: 0 }));
   seenBandRef.current = () => ({
-    top: Math.max(insets.top, headerHeight * (1 - headerHidden.value)),
-    bottom: windowHeight - tabClearance,
+    top: headerHeight * (1 - headerHidden.value),
+    // The list ends above the Mera button; a card under it is not read.
+    bottom: windowHeight - listEndClearance,
+    left: 0,
+    right: windowWidth,
   });
   const { viewabilityConfigCallbackPairs, flushSkips, deepestSeenIdRef, resetDeepestSeen, registerRow } =
     useVisibleIndex(renderedIdsRef, seenBandRef);
 
-  // ── Scroll-to-top FAB ── The list ref forwards to the underlying FlatList
-  // (Animated.createAnimatedComponent), so scrollToOffset is available. The
-  // visibility boolean is driven from the scroll worklet (below) but only
-  // crosses the JS bridge when it actually flips (showFabShared guard).
+  // The list ref forwards to the underlying FlatList, so the re-tap's
+  // scroll-to-top and the refresh reset can reach it. The raw offset mirror
+  // lets the re-tap tell "scrolled" from "at the top" without a re-render.
   const listRef = useRef<Animated.FlatList<FeedEntry>>(null);
-  const [showScrollToTop, setShowScrollToTop] = useState(false);
-  const showFabShared = useSharedValue(false);
-  // Set by the first real drag. See the FAB toggle in `tickHandler`.
-  const userDraggedShared = useSharedValue(false);
-  // Raw offset mirror, updated on every scroll frame (see tickHandler below) —
-  // UI-thread only, no bridge crossing, no re-render. This exists solely so
-  // `scrollToTop` can tell "the call landed" from "it didn't" (see below);
-  // `showFabShared` only tracks the threshold boolean, not the offset itself.
   const lastOffsetShared = useSharedValue(0);
-  const scrollToTop = useCallback(() => {
-    scrollToTopWithRetry(listRef, () => lastOffsetShared.value);
-  }, []);
 
   // Hydrate the persisted order ONCE, when the DB is ready. Evicts persisted ids
   // with no live backing item; restores survivors in their persisted order.
@@ -837,6 +791,7 @@ const FeedScreen: React.FC = () => {
     getOffset: () => lastOffsetShared.value,
     onRefresh,
     isRefreshing: refreshing,
+    enabled: active,
   });
 
   // Reset to the top AFTER the re-sorted list has committed. Scrolling inside
@@ -883,19 +838,9 @@ const FeedScreen: React.FC = () => {
   const tickHandler = useAnimatedScrollHandler({
     onScroll: (e) => {
       runOnJS(notifyScrollTick)();
-      // Mirror the raw offset every frame — cheap (UI thread, no bridge
-      // crossing, no re-render) and lets `scrollToTop` verify its own call.
+      // Mirror the raw offset every frame (UI thread, no bridge crossing, no
+      // re-render) for the re-tap's "am I at the top" read.
       lastOffsetShared.value = e.contentOffset.y;
-      // Toggle the scroll-to-top FAB — cross the JS bridge only when the
-      // threshold boolean actually flips, not on every scroll frame.
-      // Only after the reader has dragged the list themselves: on a cold launch
-      // the list can sit past the threshold for one frame while it lays out,
-      // which flashed the FAB with nothing having been scrolled (F3).
-      const next = userDraggedShared.value && e.contentOffset.y > SCROLL_THRESHOLD;
-      if (next !== showFabShared.value) {
-        showFabShared.value = next;
-        runOnJS(setShowScrollToTop)(next);
-      }
     },
   });
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
@@ -935,12 +880,16 @@ const FeedScreen: React.FC = () => {
   // AllCaughtUpCard twice (the empty-state chain in `renderEmpty` already owns
   // that case, and still does).
   const listFooter = useMemo(
-    () =>
-      listData.length > 0 ? (
-        <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-          <AllCaughtUpCard compact />
-        </Box>
-      ) : null,
+    () => (
+      <>
+        {listData.length > 0 ? (
+          <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
+            <AllCaughtUpCard compact />
+          </Box>
+        ) : null}
+        <HowThisPageWorks pageId="feed" />
+      </>
+    ),
     [listData.length],
   );
 
@@ -1028,46 +977,27 @@ const FeedScreen: React.FC = () => {
     if (statusMode === 'limited') {
       return <DailyLimitCard />;
     }
+    // The rare empty open: the shortcuts to the reader's other pages fill the
+    // wait, below the card (the card's fixed height is never touched).
     if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
-      return <FeedProcessingCard />;
+      return (
+        <>
+          <FeedProcessingCard />
+          <FeedShortcuts />
+        </>
+      );
     }
-    return <AllCaughtUpCard />;
+    return (
+      <>
+        <AllCaughtUpCard />
+        <FeedShortcuts />
+      </>
+    );
   };
 
-  // ── The title row: title, explainer, narration, status mark ─────────────
-  //
-  // Nothing here reorders or swaps out, so the mark never remounts and its
-  // draw-on never restarts mid-sync.
-  const feedStatusMark = <FeedStatusMark mode={markMode} anchorRef={titleRowRef} />;
-  const feedTitleSlot = (
-    <View pointerEvents="none" className="flex-shrink min-w-0">
-      {/* A bare 1-line clamp truncated the screen's own name at large Dynamic
-          Type sizes, so this deliberately had none and wrapped instead — but
-          wrapping a single long word breaks it MID-WORD ("Dashboar" / "d" was
-          the reported case on the sibling header). Clamping AND scaling avoids
-          both: one line, shrunk to fit, which is Apple's own behaviour for a
-          title sharing its row with a control. */}
-      <Heading
-        size={titleSize}
-        className="text-white"
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={HEADER_TITLE_MIN_SCALE}
-      >
-        {t('swipeFeed.yourDeck')}
-      </Heading>
-    </View>
-  );
   return (
-    // No `bg-black`: the AbstractGradientBackdrop below is the page background.
-    // The provider is context only, no view, so the tab's first subview (the
-    // one react-native-screens walks to) is unchanged.
-    <StatusDropdownProvider>
+    // No backdrop and no header: the tab (TabPages) draws both.
     <Box className="flex-1" testID="feed-screen">
-            {/* App-wide tab background. Must be the FIRST child so it paints behind
-                everything else on the page. */}
-            <AbstractGradientBackdrop />
-
       <Animated.FlatList
         ref={listRef}
         testID="feed-list"
@@ -1112,9 +1042,6 @@ const FeedScreen: React.FC = () => {
         // `onScroll` worklet above, which only owns the scroll event itself.
         // Landing buffered dwell marks here keeps the debounce from being the
         // only thing standing between a skip and app termination.
-        onScrollBeginDrag={() => {
-          userDraggedShared.value = true;
-        }}
         onMomentumScrollEnd={flushSkips}
         onScrollEndDrag={flushSkips}
         // Initial visibility tick. TranslatableDynamic only resolves its
@@ -1125,7 +1052,7 @@ const FeedScreen: React.FC = () => {
         // height) at that moment. Content-size changes fire on mount and on
         // every prepend; `notifyScrollTick`'s 150ms trailing throttle coalesces
         // the burst. Plain JS prop — independent of the reanimated `onScroll`.
-        onContentSizeChange={notifyScrollTick}
+        onContentSizeChange={active ? notifyScrollTick : undefined}
         refreshControl={
           <RefreshControl
             testID="feed-refresh"
@@ -1146,7 +1073,8 @@ const FeedScreen: React.FC = () => {
           // identical at the top.
           paddingTop: headerHeight + CONTENT_TOP_GAP,
           paddingHorizontal: 12,
-          paddingBottom: tabClearance + 24,
+          // Clear of the Mera button (derived; see tab-bar.ts).
+          paddingBottom: listEndClearance,
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmpty()}
@@ -1169,118 +1097,9 @@ const FeedScreen: React.FC = () => {
         removeClippedSubviews={false}
       />
 
-      {/* Status-bar scrim — covers the Dynamic Island/clock/battery region so
-          content is never visible behind it once the collapsing header below
-          translates away on scroll-down. Sits above the list, below the
-          header (zIndex 10). */}
-      <StatusBarScrim coverProgress={headerHidden} />
-
-      {/* Collapsing header — "For you" heading (top-left) + notification bell
-          (top-right), with the 24h stats sentence beneath. Absolute overlay,
-          translates up on scroll-down and back on scroll-up / reveal(). */}
-      <Animated.View
-        testID="feed-header"
-        onLayout={onHeaderLayout}
-        // box-none: the header overlay must not swallow the top-of-list
-        // pull-to-refresh gesture — touches pass through its empty area to the
-        // FlatList beneath, while its interactive children (the bell) still
-        // receive taps. Without this the absolute header intercepted the pull
-        // and pull-to-refresh appeared "gone".
-        pointerEvents="box-none"
-        style={[
-          { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
-          // The scrim paints BEHIND the plate, so on iOS 26 it is what the glass
-          // samples — that is what actually cuts the see-through. A translucent
-          // dark layer, NOT an opaque fill: an opaque fill here would cancel the
-          // glass entirely (see GlassSurface). There is no longer a flat-black
-          // branch for other platforms: `GlassPlate` degrades to a flat
-          // translucent fill at the same tint, so this scrim is correct
-          // everywhere and the header reads as one material across platforms.
-          {
-            backgroundColor: GLASS_HEADER_SCRIM,
-            borderBottomWidth: StyleSheet.hairlineWidth,
-            borderBottomColor: 'rgba(255,255,255,0.10)',
-          },
-          headerStyle,
-        ]}
-      >
-        {/* Android-only opaque-ish gradient — must render BEFORE GlassPlate so
-            the tint below still lifts it to a readable surface tone (see
-            GlassSurface.tsx's GlassHeaderAndroidBackdrop doc comment). No-op
-            on iOS. */}
-        <GlassHeaderAndroidBackdrop />
-        {/* Absolute-fill glass. This Animated.View is unpadded (all padding
-            lives on the VStack below), which is exactly what GlassPlate's
-            parent must be — see GlassSurface. No corner radius here, so no
-            `overflow: 'hidden'`: the header is full-bleed and clipping would
-            only risk cutting off the bell's badge. */}
-        <GlassPlate tint={GLASS_HEADER_TINT} />
-        {/* ABOVE the plate, never below: a `GlassView` re-samples its backdrop
-            every frame that backdrop changes, and below the plate this would
-            run the backdrop's single most expensive term at 100% duty for the
-            length of every sync. See HeaderWorkingGradient's own header. */}
-        <HeaderWorkingGradient active={narrating} />
-        {/* PULL-TO-REFRESH PASSTHROUGH — see the matching note in ForYouScreen.
-            `box-none` on the header wrapper leaves its CHILDREN touchable, and
-            each row here is a full-width plain View, so every row is an opaque
-            band that can swallow a downward pan before it reaches the list. This
-            header is short enough that a pull usually starts below it — which is
-            why the bug surfaced on the Dashboard first — but the defect is the
-            same, so the same rule applies: non-interactive rows are
-            `pointerEvents="none"`, rows merely CONTAINING a control are
-            `box-none`, only real controls are `auto`. */}
-        <VStack
-          className="px-5 pb-2"
-          space="xs"
-          pointerEvents="box-none"
-          style={{ paddingTop: insets.top + 16 }}
-        >
-          {/* Title, "?", the inline sync narration and the status mark. The
-              notification bell and the priority chip that once sat here are
-              gone: this is the reading surface, and every extra affordance
-              competes with the story you are trying to read. */}
-          <FeedHeaderTitleRow
-            height={titleRowHeight}
-            title={feedTitleSlot}
-            mark={feedStatusMark}
-            // The same bell as every other tab header (owner).
-            bell={<NotificationBellButton />}
-            narrating={narrating}
-            stage={narrationStage}
-            onDevice={narrationOnDevice}
-            rowRef={titleRowRef}
-            // N4: what this tab is and how it orders stories.
-            explainer={<TabExplainerButton tab="feed" testID="feed-explainer-open" />}
-          />
-
-          {/* The 24h counts sentence that used to sit here is gone — it lives
-              on the Dashboard, which is the screen for looking at numbers. It
-              is still one tap away: the mark's dropdown carries the same counts. */}
-
-          {/* Holds the header at the height every capture was measured
-              against (143pt at 402pt wide): the inline status panel's
-              always-mounted wrapper used to be this VStack's last child, and
-              the `space="xs"` gap before it was part of the header. Removing
-              the wrapper shrank the header to 139.3pt and moved every card up.
-              Empty and `none`: it draws nothing and takes no touch. */}
-          <View pointerEvents="none" testID="feed-header-bottom-spacer" />
-        </VStack>
-      </Animated.View>
-
-      <ScrollToTopFab
-        visible={showScrollToTop}
-        onPress={scrollToTop}
-        bottomInset={tabClearance}
-      />
-
-      {/* One-time "What's new" sheet (carried over from the old feed screen). */}
-      <WhatsNewSheet />
-
-      {/* The mark's status dropdown, over the list AND the header, LAST. In
-          the screen, not a Modal, so the tab bar stays live. */}
-      <StatusDropdownLayer testIDPrefix="feed-status" />
+      {/* One-time "What's new" sheet, only on the visible page. */}
+      {active ? <WhatsNewSheet /> : null}
     </Box>
-    </StatusDropdownProvider>
   );
 };
 

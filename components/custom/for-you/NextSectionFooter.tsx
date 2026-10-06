@@ -60,14 +60,14 @@ const NextSectionFooter: React.FC<NextSectionFooterProps> = (props) => {
         <HStack className="items-center" space="xs" pointerEvents="none" {...HIDDEN}>
           <MaterialIcons name="arrow-back" size={18} color={NEXT_FOOTER_INK} {...HIDDEN} />
           <Text size="md" className="font-semibold" style={{ color: NEXT_FOOTER_INK }}>
-            {t('forYou.backToDashboard')}
+            {t('interests.backToInterests')}
           </Text>
         </HStack>
         <Pressable
-          testID="fact-feed-back-to-dashboard"
+          testID="fact-feed-back-to-interests"
           onPress={props.onPress}
           accessibilityRole="button"
-          accessibilityLabel={t('forYou.backToDashboard')}
+          accessibilityLabel={t('interests.backToInterests')}
           style={StyleSheet.absoluteFill}
         />
       </View>

@@ -3,10 +3,8 @@ import {
     CardGlassPlate,
 } from '@/components/custom/cards/CardGlassPlate';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import IdleScene from './IdleScene';
@@ -110,22 +108,6 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ compact = false }) =>
                 {messages[currentIndex]}
             </Text>
 
-            {/* CTA — always Explore. This used to fork on the Feed's minimum
-                importance threshold, offering "lower the feed priority" when
-                stories were being hidden by that dial. The dial is gone: every
-                scored suggestion down to the LOW band now renders, so an empty
-                list means there is genuinely nothing left rather than something
-                filtered out, and Explore is the only honest onward move. */}
-            <Button
-                testID="all-caught-up-explore-cta"
-                variant="outline"
-                action="secondary"
-                size="sm"
-                className={compact ? 'mt-4' : 'mt-6'}
-                onPress={() => navigateToPage('world')}
-            >
-                <ButtonText>{t('feed.exploreCta')}</ButtonText>
-            </Button>
         </Box>
     );
 

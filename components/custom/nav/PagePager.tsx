@@ -61,6 +61,10 @@ export interface PagePagerProps {
   readonly enabled: boolean;
   /** Fractional page index, for readers outside the tree (Mera button). */
   readonly progress: SharedValue<number>;
+  /** Opacity of the page row (the cross-tab arrival fade). Applied on the
+   *  row itself, so the pager adds no wrapper view: the native scroll-view
+   *  walks (`subviews[0]`) see the same depth the old SwipeTabs had. */
+  readonly contentOpacity?: SharedValue<number>;
   readonly testID?: string;
 }
 
@@ -76,6 +80,7 @@ const PagePager: React.FC<PagePagerProps> = ({
   nextTabLabel,
   enabled,
   progress,
+  contentOpacity,
   testID,
 }) => {
   const [width, setWidth] = useState(0);
@@ -240,7 +245,10 @@ const PagePager: React.FC<PagePagerProps> = ({
     [enabled, scrollerGesture, startX, startY, decided, inScroller, atStart, atEnd, rtl, progress, index, width, reduceMotion, offset, base, finish],
   );
 
-  const rowStyle = useAnimatedStyle(() => ({ transform: [{ translateX: offset.value }] }));
+  const rowStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: offset.value }],
+    opacity: contentOpacity ? contentOpacity.value : 1,
+  }));
 
   // Until the width is known a neighbour would land on top of the active
   // panel, so only the active one (and kept pages) is drawn.

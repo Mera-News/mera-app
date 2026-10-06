@@ -25,10 +25,6 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));
-const mockNavigateToPage = jest.fn();
-jest.mock('@/components/custom/nav/navigate-to-page', () => ({
-  navigateToPage: (...a: unknown[]) => mockNavigateToPage(...a),
-}));
 
 // The roomy branch draws a Lottie idle scene, which brings in two gates that
 // the compact branch never needed.
@@ -84,9 +80,8 @@ jest.mock('@/components/ui/button', () => {
   };
 });
 
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 import React from 'react';
-import { router } from 'expo-router';
 import AllCaughtUpCard from '../AllCaughtUpCard';
 import { PROCESSING_SCENE_SIZE } from '@/components/custom/processing/types';
 import en from '@/lib/locales/en.json';
@@ -94,20 +89,16 @@ import en from '@/lib/locales/en.json';
 const rootClass = () => screen.getByTestId('all-caught-up-card').props.className as string;
 
 describe('AllCaughtUpCard', () => {
-  it('renders the headline and the Explore CTA by default, in both scales', () => {
+  // navx: no button. The tabs and the Mera button are the way on; the Feed's
+  // empty state draws the "While Mera reads" shortcuts under the card.
+  it('renders the headline and no button, in both scales', () => {
     for (const compact of [false, true]) {
       const { unmount } = render(<AllCaughtUpCard compact={compact} />);
       expect(screen.getByText(en.feed.allCaughtUp)).toBeTruthy();
-      expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
+      expect(screen.queryByTestId('all-caught-up-explore-cta')).toBeNull();
       expect(screen.queryByTestId('all-caught-up-lower-priority-cta')).toBeNull();
       unmount();
     }
-  });
-
-  it('tapping the CTA opens the World page', () => {
-    render(<AllCaughtUpCard />);
-    fireEvent.press(screen.getByTestId('all-caught-up-explore-cta'));
-    expect(mockNavigateToPage).toHaveBeenCalledWith('world');
   });
 
   // The user's explicit ask: "its corners should be rounded like the suggestion
@@ -220,25 +211,6 @@ describe('AllCaughtUpCard', () => {
   // dial is gone — every scored story down to the LOW band renders — so the
   // Explore CTA is unconditional at every call site. These tests exist to keep
   // it that way: a reappearing fork would mean a control came back with it.
-  describe('the CTA', () => {
-    it('shows the Explore CTA, compact', () => {
-      render(<AllCaughtUpCard compact />);
-      expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
-      expect(screen.getByText(en.feed.exploreCta)).toBeTruthy();
-    });
-
-    it('shows the Explore CTA, roomy', () => {
-      render(<AllCaughtUpCard />);
-      expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
-    });
-
-    it('renders the Explore CTA once and no second CTA beside it', () => {
-      render(<AllCaughtUpCard compact />);
-      expect(screen.getAllByTestId('all-caught-up-explore-cta')).toHaveLength(1);
-      expect(screen.queryByTestId('all-caught-up-lower-priority-cta')).toBeNull();
-    });
-  });
-
   // Long translations must WRAP, not clip — nothing here sets numberOfLines, and
   // the card is content-sized, so the worst-case strings simply make it taller.
   it('does not constrain any text to a fixed line count', () => {

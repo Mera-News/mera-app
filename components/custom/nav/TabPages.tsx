@@ -30,7 +30,7 @@ import { useIsFocused } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useReducedMotion, useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import Animated, { useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ArrangeOverlay from './ArrangeOverlay';
@@ -141,7 +141,6 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
     [renderPage, ids, focused, arranging, header, arrival],
   );
 
-  const fadeStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
   const tabLabel = t(TAB_LABEL_KEYS[tab]);
   const quickSettings = activeId ? pageMeta(activeId).quickSettings : null;
 
@@ -152,8 +151,7 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
       {/* The page background: FIRST, so it paints behind everything. */}
       <AbstractGradientBackdrop />
 
-      <Animated.View style={[styles.fill, fadeStyle]}>
-        <PagePager
+      <PagePager
           index={index}
           count={ids.length}
           keyOf={(i) => ids[i]}
@@ -165,9 +163,9 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
           nextTabLabel={nextTab ? t(TAB_LABEL_KEYS[nextTab]) : undefined}
           enabled={!arranging}
           progress={tabSwipeProgress(tab)}
+          contentOpacity={opacity}
           testID={testID ? `${testID}-pager` : undefined}
         />
-      </Animated.View>
 
       {/* Covers the status bar once the header slides away. */}
       <StatusBarScrim coverProgress={hidden} />

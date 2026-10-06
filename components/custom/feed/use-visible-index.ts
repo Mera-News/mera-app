@@ -32,10 +32,27 @@ import type { ViewToken } from 'react-native';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 
-/** The visible band a card's bottom edge must sit in, in window coordinates. */
+/** The visible band a card's bottom edge must sit in, in window coordinates.
+ *  `left`/`right` bound it sideways: the Feed is a page in a pager, and a warm
+ *  Feed one screen-width to the side (the reader on Interests) must never mark
+ *  a card seen. */
 export interface SeenBand {
   top: number;
   bottom: number;
+  left?: number;
+  right?: number;
+}
+
+/** Whether a measured row's bottom edge sits in the band. A zero-width
+ *  measure (a node not in the tree measures all zeros) keeps the
+ *  vertical-only answer, as TranslatableDynamic's on-screen check does. */
+export function inSeenBand(band: SeenBand, x: number, y: number, w: number, h: number): boolean {
+  const bottom = y + h;
+  if (!(bottom >= band.top && bottom <= band.bottom)) return false;
+  if (w > 0 && band.left !== undefined && band.right !== undefined) {
+    return x + w > band.left && x < band.right;
+  }
+  return true;
 }
 
 /** A row view that can say where it is on screen. */
@@ -189,11 +206,10 @@ export function useVisibleIndex(
       const node = rowNodesRef.current.get(id);
       if (!node || typeof node.measureInWindow !== 'function') continue;
       try {
-        node.measureInWindow((_x, y, _w, h) => {
+        node.measureInWindow((x, y, w, h) => {
           // Not laid out yet: retried (ladder, then ticks), never timed.
           if (!(h > 0)) return;
-          const bottom = y + h;
-          const inBand = bottom >= band.top && bottom <= band.bottom;
+          const inBand = inSeenBand(band, x, y, w, h);
           const now = Date.now();
           if (inBand) {
             if (!enterAtRef.current.has(id)) enterAtRef.current.set(id, now);

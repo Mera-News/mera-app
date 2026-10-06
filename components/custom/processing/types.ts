@@ -80,9 +80,6 @@ export const PROCESSING_METRICS = {
   /** `components/ui/progress` at `size="xs"` is `h-1`. */
   barHeight: 4,
   progressLineHeight: 17,
-  ctaGap: 16,
-  /** `components/ui/button` at `size="sm"` is `h-9`. */
-  ctaHeight: 36,
 } as const;
 
 /** What the card actually asks its fixed-height box to draw. */
@@ -94,9 +91,7 @@ export const PROCESSING_CONTENT_HEIGHT =
   PROCESSING_METRICS.headlineLineHeight * PROCESSING_METRICS.headlineLines +
   PROCESSING_METRICS.barGap +
   PROCESSING_METRICS.barHeight +
-  PROCESSING_METRICS.progressLineHeight +
-  PROCESSING_METRICS.ctaGap +
-  PROCESSING_METRICS.ctaHeight;
+  PROCESSING_METRICS.progressLineHeight;
 
 /** The square animation block inside the card, in points. */
 export const PROCESSING_SCENE_SIZE = PROCESSING_METRICS.sceneSize;

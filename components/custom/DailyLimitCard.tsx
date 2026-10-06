@@ -90,14 +90,14 @@ const DailyLimitCard: React.FC = () => {
             </Text>
 
             <Button
-                testID="daily-limit-explore-cta"
+                testID="daily-limit-world-cta"
                 variant="outline"
                 action="secondary"
                 size="sm"
                 className="mt-6"
                 onPress={() => navigateToPage('world')}
             >
-                <ButtonText>{t('feed.exploreCta')}</ButtonText>
+                <ButtonText>{t('feed.worldCta')}</ButtonText>
             </Button>
         </Box>
     );

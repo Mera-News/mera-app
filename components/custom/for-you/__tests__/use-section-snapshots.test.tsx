@@ -101,8 +101,7 @@ describe('both section screens read the fresh snapshots', () => {
   it('neither screen loads the snapshots itself any more', () => {
     const fs = require('fs');
     const path = require('path');
-    // The Interests page joins this list when it lands (navx P4).
-    for (const file of ['FactFeedScreen.tsx']) {
+    for (const file of ['InterestsPage.tsx', 'FactFeedScreen.tsx']) {
       const src = fs.readFileSync(path.resolve(__dirname, '..', file), 'utf8');
       expect({ file, direct: /loadSectionSnapshots\(/.test(src), hook: /useSectionSnapshots\(/.test(src) }).toEqual({
         file,

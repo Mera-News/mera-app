@@ -19,11 +19,7 @@ const TRANSLATABLE =
   /TranslatableDynamic'|ArticleCardBase|ArticleCompactCardBase|ArticleStandalone|ArticleSuggestion(Compact)?Card|ArticleContextCard|FactCheckCard|FactCheckPanel|ReasonNote|FactAccordion|ProposalCard|NegativeTopicRow|SuppressionRow|TopicPlanCard|ChatTopicsCard|NextSectionFooter/;
 
 /** Lists that need no tick of their own, and why. */
-const EXEMPT: Record<string, string> = {
-  // Horizontal: visibility is measured on y only, so every chip already counts
-  // as on screen.
-  'for-you/BreakingStrip.tsx': 'horizontal strip',
-};
+const EXEMPT: Record<string, string> = {};
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

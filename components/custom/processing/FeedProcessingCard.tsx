@@ -1,16 +1,15 @@
-import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useForYouDeviceProcessing } from '@/lib/stores/selectors';
+import { useIsConnected } from '@/lib/stores/network-store';
 
 import IdleScene from '@/components/custom/IdleScene';
 import ProcessingArea from './ProcessingArea';
-import { PROCESSING_CARD_HEIGHT, PROCESSING_METRICS } from './types';
+import { PROCESSING_CARD_HEIGHT } from './types';
 import { useProcessingSnapshot } from './use-processing-snapshot';
 
 /**
@@ -37,8 +36,7 @@ import { useProcessingSnapshot } from './use-processing-snapshot';
  *
  * ## What it keeps
  *
- * It keeps the `feed-preparing-card` and `feed-preparing-explore-cta`
- * testIDs. Those are not legacy debt: the simulator harness and
+ * It keeps the `feed-preparing-card` testID. Those are not legacy debt: the simulator harness and
  * `components/custom/__tests__/status-cards.test.tsx` both address this surface
  * by them, and renaming them would break a harness runbook for no gain.
  *
@@ -49,6 +47,8 @@ const FeedProcessingCard: React.FC = () => {
     const { t } = useTranslation();
     const snapshot = useProcessingSnapshot();
     const { isDeviceProcessing } = useForYouDeviceProcessing();
+    // Offline, "as soon as they're ready" would promise forever: say why.
+    const isConnected = useIsConnected();
 
     const inner = (
         <Box
@@ -77,25 +77,15 @@ const FeedProcessingCard: React.FC = () => {
                     <Box className="mb-6">
                         <IdleScene testID="feed-preparing-idle-scene" />
                     </Box>
-                    <Text size="md" numberOfLines={2} className="text-gray-400 text-center">
-                        {t('feed.preparingFeed')}
+                    <Text size="md" numberOfLines={2} className="text-gray-300 text-center" testID="feed-preparing-title">
+                        {t('feed.findingStories')}
                     </Text>
-                    <Text size="sm" numberOfLines={2} className="text-gray-500 text-center mt-2">
-                        {t('feed.preparingFeedExploreHint')}
+                    <Text size="sm" numberOfLines={2} className="text-gray-500 text-center mt-2" testID="feed-preparing-body">
+                        {isConnected ? t('feed.findingStoriesBody') : t('feed.processingOffline')}
                     </Text>
                 </View>
             )}
 
-            <Button
-                testID="feed-preparing-explore-cta"
-                variant="outline"
-                action="secondary"
-                size="sm"
-                style={{ marginTop: PROCESSING_METRICS.ctaGap, height: PROCESSING_METRICS.ctaHeight }}
-                onPress={() => navigateToPage('world')}
-            >
-                <ButtonText>{t('feed.exploreCta')}</ButtonText>
-            </Button>
         </Box>
     );
 

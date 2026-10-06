@@ -1,5 +1,3 @@
-import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
-import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
 import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
@@ -7,14 +5,14 @@ import SectionDenominatorLine from '@/components/custom/for-you/SectionDenominat
 import { sectionTitle } from '@/components/custom/for-you/section-title';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
-import { useTabBarClearance } from '@/lib/navigation/tab-bar';
+import { useListEndClearance } from '@/lib/navigation/tab-bar';
+import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
 import {
   isHeadlineRow,
   isSuggestionOpened,
-  type BreakingCardData,
   type FactRow,
   type FactRowGroup,
 } from '@/lib/stores/fact-rows-selector';
@@ -65,21 +63,20 @@ interface SectionItem {
 }
 
 interface DashboardSectionsFeedProps {
-  breaking: BreakingCardData[];
   rows: FactRow[];
   /** Live opened set — drives the per-card read/dimmed treatment (visual only;
    *  ORDER comes from the throttled snapshot below). */
   openedIds: Set<string>;
   /** THROTTLED viewed-state snapshot that decides section ORDER. Frozen between
    *  re-sorts so sections never reshuffle under the reader — see
-   *  lib/feed-ordering/dashboard-resort and ForYouScreen. */
+   *  lib/feed-ordering/dashboard-resort and InterestsPage. */
   sortSnapshot: { cardStates: Record<string, unknown>; openedArticleIds: Set<string> };
   onPressSuggestion: (s: ForYouSuggestion) => void;
   /** The collapsible-header scroll handler (worklet). */
   scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
-  /** Dashboard header height — content top padding. */
+  /** The Feed tab's header height: content top padding. */
   headerHeight: number;
-  /** The Overview's nothing-yet state: shown when no section has a story (the
+  /** The Interests page's nothing-yet state: shown when no section has a story (the
    *  empty sections themselves are never drawn). */
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
   /** Pull-to-refresh spinner state. Driven by the scheduler's feed-sync flag
@@ -88,14 +85,15 @@ interface DashboardSectionsFeedProps {
   refreshing?: boolean;
   /** Pull-to-refresh handler. Omit both props to render no refresh control. */
   onRefresh?: () => void;
-  /** False while this is a warmed or cached neighbour in the Dashboard swipe
-   *  window (ux2 B3): no scroll ticks, and the tab re-tap neither scrolls nor
-   *  refreshes (a feed sync) through it. Default true. */
+  /** False while this is not the visible page of the focused Feed tab: no
+   *  scroll ticks, and the tab re-tap neither scrolls nor refreshes through
+   *  it. Default true. */
   active?: boolean;
 }
 
 /**
- * Dashboard sections feed (r5 redesign — supersedes FactSectionsFeed). Each
+ * The Interests page's list (it was the Dashboard's Overview). Only FACT
+ * sections reach it; World covers the headline scopes. Each
  * persona section becomes a pastel-gradient header (its stable fact color) over
  * up to 3 compact preview cards, with a "View all N stories" footer when the
  * section holds more than the preview count. The FAB / section-jump machinery
@@ -103,7 +101,6 @@ interface DashboardSectionsFeedProps {
  * only navigation into a section's full fact feed.
  */
 const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
-  breaking,
   rows,
   openedIds,
   sortSnapshot,
@@ -117,13 +114,12 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
 }) => {
   // Inside a tab on iOS the inset already includes the tab bar; measured on
   // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
-  const tabClearance = useTabBarClearance();
+  const listEndClearance = useListEndClearance();
   const { t } = useTranslation();
 
-  // Re-tap the Dashboard tab icon → scroll to top; tap again at the top →
-  // refresh. Wired HERE rather than in ForYouScreen because this is where the
-  // list ref lives — mirrors how `scrollHandler` is already threaded down.
-  // `onRefresh` is the prop ForYouScreen already passes to the RefreshControl
+  // Re-tap the Feed tab icon while this page shows: scroll to top, tap again
+  // at the top: refresh. Wired HERE because this is where the list ref lives.
+  // `onRefresh` is the prop the Interests page passes to the RefreshControl
   // (useFeedSyncRefresh), so the two paths are literally the same function.
   const listRef = useRef<Animated.FlatList<SectionItem>>(null);
   const lastOffsetShared = useSharedValue(0);
@@ -134,6 +130,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     getOffset: () => (active ? lastOffsetShared.value : 0),
     onRefresh: active ? onRefresh : undefined,
     isRefreshing: !!refreshing,
+    enabled: active,
   });
   // Section content order: the SAME rule the Feed tab uses
   // (lib/feed-ordering/priority-order) — unviewed high→med→low, then viewed
@@ -255,20 +252,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     [onPressSuggestion, openedIds, openFactFeed],
   );
 
-  // The stats card is ALWAYS the first card (owner: the count sentence left
-  // the header so the header is identical on every pill). It sits in the list
-  // header, not in `data`: as a data item it would drop below the breaking
-  // strip and hide the empty state.
-  const ListHeader = useMemo(
-    () => (
-      <>
-        <DashboardStatsCard />
-        {breaking.length > 0 ? <BreakingStrip items={breaking} onPressItem={onPressSuggestion} /> : null}
-      </>
-    ),
-    [breaking, onPressSuggestion],
-  );
-
   return (
     <Box className="flex-1" testID="dashboard-sections-feed-root">
       <Animated.FlatList
@@ -277,7 +260,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         data={sectionData}
         keyExtractor={(it) => it.key}
         renderItem={renderItem}
-        ListHeaderComponent={ListHeader}
+        ListFooterComponent={<HowThisPageWorks pageId="interests" />}
         ListEmptyComponent={ListEmptyComponent}
         refreshControl={
           onRefresh ? (
@@ -297,7 +280,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
           paddingHorizontal: 12,
           // Bottom clearance for the tab bar plus a breathing-room tail. The
           // helper, never insets.bottom + TAB_BAR_HEIGHT (see tab-bar.ts).
-          paddingBottom: tabClearance + 24,
+          paddingBottom: listEndClearance,
         }}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
@@ -326,8 +309,8 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         // sections live-resort), so such an update is likely mid-gesture.
         //
         // The other suspect — the tall collapsing header swallowing the drag —
-        // was fixed at the same time (ForYouScreen's header VStack is now
-        // `box-none`). If the pull works now, THIS change may have been
+        // was fixed at the same time (the tab header is `box-none` now too,
+        // TabPages). If the pull works now, THIS change may have been
         // unnecessary: restoring `autoscrollToTopThreshold: 10` is a one-line
         // revert. The cost of removing it is the auto-scroll-to-new-top when
         // sections re-sort while parked at the top — behaviour FeedScreen

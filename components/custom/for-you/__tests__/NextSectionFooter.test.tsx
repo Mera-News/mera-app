@@ -77,7 +77,7 @@ describe('NextSectionFooter', () => {
       expect(g.props.importantForAccessibility).toBe('no-hide-descendants');
       for (let p: any = g.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
     }
-    const button = r.getByTestId(kind === 'next' ? 'fact-feed-next' : 'fact-feed-back-to-dashboard');
+    const button = r.getByTestId(kind === 'next' ? 'fact-feed-next' : 'fact-feed-back-to-interests');
     expect(button.findAll((n: any) => n !== button && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
     expect(button.props.accessibilityRole).toBe('button');
   });
@@ -102,7 +102,7 @@ describe('NextSectionFooter', () => {
   it('offers the way back on the last section', () => {
     const onPress = jest.fn();
     render(<NextSectionFooter kind="back" onPress={onPress} />);
-    fireEvent.press(screen.getByTestId('fact-feed-back-to-dashboard'));
+    fireEvent.press(screen.getByTestId('fact-feed-back-to-interests'));
     expect(onPress).toHaveBeenCalled();
   });
 

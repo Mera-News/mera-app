@@ -49,22 +49,22 @@ function getOnScreen(pairs: ReturnType<typeof useVisibleIndex>['viewabilityConfi
   return pairs[1] as unknown as Pair;
 }
 
-/** Band: header bottom at 100, tab bar top at 700. */
-const BAND = { top: 100, bottom: 700 };
+/** Band: header bottom at 100, tab bar top at 700, the screen 390 wide. */
+const BAND = { top: 100, bottom: 700, left: 0, right: 390 };
 
 function setupBand() {
   const bandRef = { current: () => BAND };
   const { result, unmount } = renderHook(() => useVisibleIndex(undefined, bandRef));
   const onScreen = getOnScreen(result.current.viewabilityConfigCallbackPairs);
   /** Where each row is in the window: y and height (measureInWindow). */
-  const geometry = new Map<string, { y: number; h: number }>();
-  const place = (id: string, y: number, h: number) => {
-    geometry.set(id, { y, h });
+  const geometry = new Map<string, { y: number; h: number; x?: number }>();
+  const place = (id: string, y: number, h: number, x = 0) => {
+    geometry.set(id, { y, h, x });
     act(() => {
       result.current.registerRow(id)({
         measureInWindow: (cb: (x: number, y: number, w: number, h: number) => void) => {
           const g = geometry.get(id)!;
-          cb(0, g.y, 390, g.h);
+          cb(g.x ?? 0, g.y, 390, g.h);
         },
       } as never);
     });
@@ -113,6 +113,18 @@ describe('useVisibleIndex', () => {
   });
 
   describe('seen = bottom edge in the band for the dwell', () => {
+    it('a warm Feed panel one screen-width to the side marks nothing seen', () => {
+      const t = setupBand();
+      t.place('a', 200, 300, 390); // the pager's next panel: x = one width
+      t.show('a');
+      t.tick();
+      t.wait(SKIP_DWELL_MS + 100);
+      t.geometry.set('a', { y: -400, h: 300, x: 390 });
+      t.tick();
+      t.wait(1300);
+      expect(mockMarkSkipped).not.toHaveBeenCalled();
+    });
+
     it('bottom edge in the band for the full dwell, then it leaves: marked seen once', () => {
       const t = setupBand();
       t.place('a', 200, 300); // bottom 500: in band

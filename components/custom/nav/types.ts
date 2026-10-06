@@ -88,8 +88,11 @@ export interface TabPagesProps {
   readonly testID?: string;
 }
 
-/** For a horizontal RNGH scroller inside a page (the Stats pager): wrap the
- *  scroller in `<GestureDetector gesture={blocker.gesture}>` and report its
+/** For a horizontal scroller inside a page (the Stats pager): wrap a PLAIN
+ *  react-native ScrollView (NOT react-native-gesture-handler's, which already
+ *  carries its own native handler: with it, the detector's gesture never
+ *  began on device (spike 4), so the swipe never knew the touch was inside)
+ *  in `<GestureDetector gesture={blocker.gesture}>` and report its
  *  edges with `setEdge` (on scroll and once on layout), so the page swipe
  *  stays out of the scroller except at its edge in the swipe direction (one
  *  continuous swipe from Stats into the next tab and back). */

@@ -133,8 +133,6 @@ describe('the card is a fixed-height box, so the STACK has to fit it', () => {
       [
         'barGap',
         'barHeight',
-        'ctaGap',
-        'ctaHeight',
         'headlineGap',
         'headlineLineHeight',
         'headlineLines',

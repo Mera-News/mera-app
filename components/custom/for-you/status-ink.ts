@@ -1,39 +1,24 @@
-// Ink and surface for the feed-status panel and sheet, in ONE place.
-//
-// Colours live in `style`, never in a NativeWind class. The dark ramp here is an
-// inversion (`typography-300` is rgb 115, darker than `-400`), and a component
-// test asserting a class name cannot see the colour it resolves to. The labels
-// on the old panel were `typography-400` (rgb 140) on a 7% white tint over
-// scrolling content: 1.9:1 measured on a device screenshot.
-//
-// The panel drops down over list content, so it is a surface over content and
-// takes an OPAQUE dark base (`STATUS_PANEL_OPAQUE_BASE`; the 0.90
-// `GLASS_OVER_CONTENT_FILL` let section text through). `GlassPanel` IGNORES its
-// `fallbackClassName`, so the base has to be passed as a style.
-
 import type { FeedStatusMode } from '@/lib/feed-status-mode';
 
-/** Pure text colours. `secondary` is the floor: rgb 163 only reaches 4.6:1
- *  over the worst modelled panel and rgb 140 reaches 3.5:1. */
-export const STATUS_INK = {
-  primary: '#FFFFFF',
-  secondary: 'rgb(212, 212, 212)',
-  divider: 'rgba(255, 255, 255, 0.12)',
-} as const;
-
 /**
- * The panel's effective colour in its WORST case, for the contrast test: white
- * content under the 0.90 dark base, then the 7% white lift of
- * `TranslucentPlate`. Brighter content behind cannot make it lighter than this.
+ * The feed's status, as an i18n key, for the screen's announcement of the
+ * capped and error states (use-feed-mode-announcement). `deferred` folds onto
+ * `idle`: it is a pipeline count the reader cannot act on.
  */
-/**
- * `GLASS_OVER_CONTENT_FILL` (rgba 18,17,19 at 0.90) at full opacity: the
- * status panel floats over list content, and at 0.90 the text behind it read
- * through.
- */
-export const STATUS_PANEL_OPAQUE_BASE = 'rgb(18, 17, 19)';
-
-export const STATUS_PANEL_WORST_BG: readonly [number, number, number] = [57, 56, 57];
+export function a11yStateKey(mode: FeedStatusMode): string {
+  // A plain string, read through `tAny`: the key is genuinely COMPUTED from
+  // `mode`, so there is no literal for a typed `t()` to check.
+  switch (mode) {
+    case 'processing':
+      return 'feedStatus.modeProcessing';
+    case 'error':
+      return 'feedStatus.modeError';
+    case 'limited':
+      return 'feedStatus.modeLimited';
+    default:
+      return 'feedStatus.idle';
+  }
+}
 
 function channel(v: number): number {
   const c = v / 255;
@@ -45,7 +30,7 @@ export function luminance([r, g, b]: readonly [number, number, number]): number 
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
-/** WCAG contrast ratio between two sRGB triples. */
+/** WCAG contrast ratio between two sRGB triples (the section footer's ink test). */
 export function contrastRatio(
   a: readonly [number, number, number],
   b: readonly [number, number, number],
@@ -63,52 +48,4 @@ export function parseRgb(color: string): [number, number, number] {
   const rgb = /^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)\s*\)$/.exec(color);
   if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
   throw new Error(`unparseable colour: ${color}`);
-}
-
-/**
- * ONE scoring progress figure. The panel used to show the cloud sweep's
- * synced-id counter ("Cloud scoring 30 / 36") beside the batch article
- * progress ("Analysing 30 of 39 articles"): two totals for one job, side by
- * side. Both now read this, so they cannot disagree. The batch progress is
- * preferred: it counts ARTICLES in the current run, the unit the sentence
- * names.
- */
-export function pickScoringProgress(
-  batch: { done: number; total: number } | null | undefined,
-  asyncDone: number,
-  asyncTotal: number,
-): { done: number; total: number } | null {
-  if (batch && batch.total > 0) return { done: batch.done, total: batch.total };
-  if (asyncTotal > 0) return { done: asyncDone, total: asyncTotal };
-  return null;
-}
-
-/**
- * The state half of the accessibility label.
- *
- * Ink is the ONLY thing that separated these states, which made the capped
- * state (amber) and the error state (red) identical to a screen reader: the
- * label was a constant "Open feed status" in every mode. `deferred` folds onto
- * `idle` here for the same reason it shares the resting colour — it is a
- * pipeline count the reader cannot act on.
- *
- * Also the Dashboard stats card's visible status line at zero articles, and
- * its toggle's label: one table for both tabs.
- */
-export function a11yStateKey(mode: FeedStatusMode): string {
-  // Returns a plain string, read by its callers through `tAny`. All four keys exist in
-  // all 20 dictionaries, so this is NOT a missing-key workaround: the key is
-  // genuinely COMPUTED from `mode`, which is what `tAny` exists for in this
-  // file family. Do not "fix" it to a typed `t()` — there is no literal here
-  // to type.
-  switch (mode) {
-    case 'processing':
-      return 'feedStatus.modeProcessing';
-    case 'error':
-      return 'feedStatus.modeError';
-    case 'limited':
-      return 'feedStatus.modeLimited';
-    default:
-      return 'feedStatus.idle';
-  }
 }

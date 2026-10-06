@@ -156,15 +156,9 @@ jest.mock('@/components/custom/cards/ArticleSuggestionCompactCard', () => {
         ),
     };
 });
-jest.mock('@/components/custom/for-you/BreakingStrip', () => {
+jest.mock('@/components/custom/nav/HowThisPageWorks', () => {
     const { View } = require('react-native');
-    return { __esModule: true, default: () => <View testID="breaking-strip" /> };
-});
-// The card has its own suite (auto-hide, zero-count line); here only its
-// POSITION in the list matters.
-jest.mock('@/components/custom/for-you/DashboardStatsCard', () => {
-    const { View } = require('react-native');
-    return { __esModule: true, default: () => <View testID="dashboard-stats-card" /> };
+    return { __esModule: true, default: () => <View testID="how-this-page-works-row" /> };
 });
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
@@ -214,7 +208,6 @@ const EMPTY_SNAPSHOT = { cardStates: {}, openedArticleIds: new Set<string>() };
 function renderFeed(rows: FactRow[], overrides: Record<string, any> = {}) {
     return render(
         <DashboardSectionsFeed
-            breaking={[]}
             rows={rows}
             openedIds={new Set()}
             sortSnapshot={EMPTY_SNAPSHOT}
@@ -489,7 +482,6 @@ describe('DashboardSectionsFeed: empty sections are hidden', () => {
         });
         expect(r.getAllByTestId('nothing-yet')).toHaveLength(1);
         expect(r.queryByLabelText(/^header:/)).toBeNull();
-        expect(r.getByTestId('dashboard-stats-card')).toBeTruthy();
     });
 
     it('draws a section as soon as a refresh gives it a story', () => {
@@ -497,8 +489,7 @@ describe('DashboardSectionsFeed: empty sections are hidden', () => {
         expect(r.queryByLabelText('header:Statement f-new')).toBeNull();
         r.rerender(
             <DashboardSectionsFeed
-                breaking={[]}
-                rows={[makeRow('f-new', [makeGroup('g1', 1, 1)])]}
+                    rows={[makeRow('f-new', [makeGroup('g1', 1, 1)])]}
                 openedIds={new Set()}
                 sortSnapshot={EMPTY_SNAPSHOT}
                 onPressSuggestion={jest.fn()}
@@ -511,42 +502,21 @@ describe('DashboardSectionsFeed: empty sections are hidden', () => {
 });
 
 describe('DashboardSectionsFeed: list end padding', () => {
-    it('counts the tab bar once (the in-tab inset already includes it on iOS)', () => {
+    it('ends clear of the Mera button, counting the tab bar once', () => {
+        const { LIST_END_RESERVE } = jest.requireActual('@/lib/navigation/tab-bar');
         const { getByTestId } = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)])]);
         const style = getByTestId('dashboard-feed-list').props.contentContainerStyle;
-        expect(style.paddingBottom).toBe(24);
+        // The suite's inset is 0, so the clearance is the button reserve alone.
+        expect(style.paddingBottom).toBe(LIST_END_RESERVE);
     });
 });
 
-describe('DashboardSectionsFeed: the Overview stats card', () => {
-    const ids = (r: ReturnType<typeof renderFeed>) =>
-        r.UNSAFE_root.findAll((n: any) => typeof n.props?.testID === 'string' && typeof n.type === 'string').map(
-            (n: any) => n.props.testID as string,
-        );
-
-    it('is the first card, ahead of the breaking strip and every section', () => {
-        const r = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)])], {
-            breaking: [{ id: 'b1' } as any],
-        });
-        const order = ids(r);
-        expect(order.indexOf('dashboard-stats-card')).toBeGreaterThanOrEqual(0);
-        expect(order.indexOf('dashboard-stats-card')).toBeLessThan(order.indexOf('breaking-strip'));
-    });
-
-    it('still leads the nothing-yet state when every section is empty', () => {
-        const { Text } = require('react-native');
-        const empty = { ...makeRow('f-new', []), emptyReason: 'awaiting-first-run' } as FactRow;
-        const r = renderFeed([empty], {
-            ListEmptyComponent: <Text testID="nothing-yet">nothing yet</Text>,
-        });
-        const order = ids(r);
-        expect(order.indexOf('dashboard-stats-card')).toBeGreaterThanOrEqual(0);
-        expect(order.indexOf('dashboard-stats-card')).toBeLessThan(order.indexOf('nothing-yet'));
-    });
-
-    it('renders even with no sections at all', () => {
-        const r = renderFeed([]);
-        expect(r.getByTestId('dashboard-stats-card')).toBeTruthy();
+describe('DashboardSectionsFeed: the Interests list', () => {
+    it('has no stats card and no breaking strip; it ends with How this page works', () => {
+        const r = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)])]);
+        expect(r.queryByTestId('dashboard-stats-card')).toBeNull();
+        expect(r.queryByTestId('breaking-strip')).toBeNull();
+        expect(r.getByTestId('how-this-page-works-row')).toBeTruthy();
     });
 });
 

@@ -5,6 +5,8 @@
 // 14, so w-11 is 38.5pt) holding the hidden glyph, with a childless labelled
 // Pressable laid over it.
 const mockBuildFactRows = jest.fn((..._a: any[]) => ({ rows: [] }));
+// The bell reaches the notification service (SQLite at import).
+jest.mock('@/components/custom/notifications/NotificationBellButton', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/lib/stores/fact-rows-selector', () => ({
     buildFactRows: (...a: any[]) => mockBuildFactRows(...a),
     isHeadlineSectionId: () => false,
@@ -86,7 +88,7 @@ describe('FactFeedScreen Back button', () => {
         const FactFeedScreen = require('../FactFeedScreen').default;
         const r = render(<FactFeedScreen factId="f1" title="Fact" />);
         const back = r.getByTestId('fact-feed-back');
-        expect(back.props.accessibilityLabel).toBe('common.back');
+        expect(back.props.accessibilityLabel).toBe('interests.backToInterests');
         expect(back.props.accessibilityRole).toBe('button');
         const glyphs = r.UNSAFE_root.findAll(
             (n: any) => typeof n.type === 'string' && PUA.test(String(n.props?.children ?? '')),
