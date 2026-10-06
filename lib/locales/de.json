@@ -2889,7 +2889,8 @@
       "emptyTitle": "Noch keine Prüfungen",
       "emptyBody": "Bitte Mera, eine Behauptung zu prüfen, oder lass Mera Geschichten automatisch prüfen.",
       "autoLink": "Automatische Prüfungen aktivieren",
-      "autoOnBody": "Mera prüft Geschichten automatisch. Prüfungen erscheinen hier, sobald eine Behauptung bewertet wurde."
+      "autoOnBody": "Mera prüft Geschichten automatisch. Prüfungen erscheinen hier, sobald eine Behauptung bewertet wurde.",
+      "emptyBodyAsk": "Tippe bei einem Artikel auf das Häkchen oder bitte Mera, eine Behauptung zu prüfen. Prüfungen, die du anforderst, erscheinen hier."
     },
     "visited": {
       "intro": "Die Medien, die du in den letzten 30 Tagen am häufigsten direkt bei der Quelle geöffnet hast. Guter Journalismus bleibt, wenn Leser ihn unterstützen.",

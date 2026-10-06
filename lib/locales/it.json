@@ -2889,7 +2889,8 @@
       "emptyTitle": "Ancora nessuna verifica",
       "emptyBody": "Chiedi a Mera di verificare un'affermazione, oppure lascia che verifichi le storie in automatico.",
       "autoLink": "Attiva le verifiche automatiche",
-      "autoOnBody": "Mera verifica le storie in automatico. Le verifiche compaiono qui quando un'affermazione riceve una valutazione."
+      "autoOnBody": "Mera verifica le storie in automatico. Le verifiche compaiono qui quando un'affermazione riceve una valutazione.",
+      "emptyBodyAsk": "Tocca il segno di spunta su un articolo oppure chiedi a Mera di verificare un'affermazione. Le verifiche che richiedi compaiono qui."
     },
     "visited": {
       "intro": "Le testate che hai aperto di più alla fonte negli ultimi 30 giorni. Il buon giornalismo dura quando i lettori lo sostengono.",

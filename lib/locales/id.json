@@ -2886,7 +2886,8 @@
       "emptyTitle": "Belum ada pengecekan",
       "emptyBody": "Minta Mera memeriksa sebuah klaim, atau biarkan Mera memeriksa cerita secara otomatis.",
       "autoLink": "Aktifkan pengecekan otomatis",
-      "autoOnBody": "Mera memeriksa cerita secara otomatis. Hasil pengecekan muncul di sini saat sebuah klaim dinilai."
+      "autoOnBody": "Mera memeriksa cerita secara otomatis. Hasil pengecekan muncul di sini saat sebuah klaim dinilai.",
+      "emptyBodyAsk": "Ketuk tanda centang pada artikel, atau minta Mera memeriksa sebuah klaim. Pengecekan yang kamu minta akan muncul di sini."
     },
     "visited": {
       "intro": "Publikasi yang paling sering Anda buka di sumbernya dalam 30 hari terakhir. Jurnalisme yang baik bertahan jika pembacanya mendukung.",

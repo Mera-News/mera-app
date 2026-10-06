@@ -2889,7 +2889,8 @@
       "emptyTitle": "No checks yet",
       "emptyBody": "Ask Mera to check a claim, or let Mera check stories automatically.",
       "autoLink": "Turn on automatic checks",
-      "autoOnBody": "Mera checks stories automatically. Checks show up here when a claim is rated."
+      "autoOnBody": "Mera checks stories automatically. Checks show up here when a claim is rated.",
+      "emptyBodyAsk": "Tap the check mark on an article, or ask Mera to check a claim. Checks you ask for show up here."
     },
     "visited": {
       "intro": "The publications you opened most at the source in the last 30 days. Good reporting lasts when readers support it.",

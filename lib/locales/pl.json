@@ -2925,7 +2925,8 @@
       "emptyTitle": "Brak sprawdzeń",
       "emptyBody": "Poproś Merę o sprawdzenie twierdzenia albo pozwól jej sprawdzać historie automatycznie.",
       "autoLink": "Włącz automatyczne sprawdzanie",
-      "autoOnBody": "Mera sprawdza historie automatycznie. Sprawdzenia pojawią się tutaj, gdy twierdzenie zostanie ocenione."
+      "autoOnBody": "Mera sprawdza historie automatycznie. Sprawdzenia pojawią się tutaj, gdy twierdzenie zostanie ocenione.",
+      "emptyBodyAsk": "Dotknij znaczka potwierdzenia przy artykule albo poproś Merę o sprawdzenie twierdzenia. Sprawdzenia, o które poprosisz, pojawią się tutaj."
     },
     "visited": {
       "intro": "Wydawcy, które w ciągu ostatnich 30 dni otwierałeś najczęściej u źródła. Dobre dziennikarstwo trwa, gdy czytelnicy je wspierają.",

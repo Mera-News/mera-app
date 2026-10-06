@@ -2889,7 +2889,8 @@
       "emptyTitle": "Aún no hay verificaciones",
       "emptyBody": "Pídele a Mera que verifique una afirmación, o deja que verifique las historias automáticamente.",
       "autoLink": "Activar las verificaciones automáticas",
-      "autoOnBody": "Mera verifica las historias automáticamente. Las verificaciones aparecen aquí cuando una afirmación recibe una valoración."
+      "autoOnBody": "Mera verifica las historias automáticamente. Las verificaciones aparecen aquí cuando una afirmación recibe una valoración.",
+      "emptyBodyAsk": "Toca la marca de verificación en un artículo o pídele a Mera que verifique una afirmación. Las verificaciones que pidas aparecerán aquí."
     },
     "visited": {
       "intro": "Las publicaciones que más abriste en su fuente en los últimos 30 días. El buen periodismo dura cuando los lectores lo apoyan.",

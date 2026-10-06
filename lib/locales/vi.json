@@ -2887,7 +2887,8 @@
       "emptyTitle": "Chưa có kiểm chứng nào",
       "emptyBody": "Nhờ Mera kiểm chứng một nhận định, hoặc để Mera tự động kiểm chứng các câu chuyện.",
       "autoLink": "Bật kiểm chứng tự động",
-      "autoOnBody": "Mera tự động kiểm chứng các câu chuyện. Kết quả sẽ hiện ở đây khi một nhận định được đánh giá."
+      "autoOnBody": "Mera tự động kiểm chứng các câu chuyện. Kết quả sẽ hiện ở đây khi một nhận định được đánh giá.",
+      "emptyBodyAsk": "Chạm vào dấu tích trên một bài viết, hoặc nhờ Mera kiểm chứng một nhận định. Các kiểm chứng bạn yêu cầu sẽ hiện ở đây."
     },
     "visited": {
       "intro": "Những ấn phẩm bạn mở nhiều nhất tại nguồn trong 30 ngày qua. Báo chí tốt chỉ bền vững khi độc giả ủng hộ.",

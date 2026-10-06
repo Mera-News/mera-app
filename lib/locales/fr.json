@@ -2896,7 +2896,8 @@
       "emptyTitle": "Aucune vérification pour l'instant",
       "emptyBody": "Demandez à Mera de vérifier une affirmation, ou laissez Mera vérifier les actualités automatiquement.",
       "autoLink": "Activer les vérifications automatiques",
-      "autoOnBody": "Mera vérifie les actualités automatiquement. Les vérifications s'affichent ici quand une affirmation est évaluée."
+      "autoOnBody": "Mera vérifie les actualités automatiquement. Les vérifications s'affichent ici quand une affirmation est évaluée.",
+      "emptyBodyAsk": "Appuyez sur la coche d'un article ou demandez à Mera de vérifier une affirmation. Les vérifications que vous demandez s'affichent ici."
     },
     "visited": {
       "intro": "Les publications que vous avez le plus ouvertes à la source ces 30 derniers jours. Un bon journalisme dure quand ses lecteurs le soutiennent.",

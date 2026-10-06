@@ -2891,7 +2891,8 @@
       "emptyTitle": "Henüz kontrol yok",
       "emptyBody": "Mera'dan bir iddiayı kontrol etmesini isteyin veya Mera hikayeleri otomatik kontrol etsin.",
       "autoLink": "Otomatik kontrolleri aç",
-      "autoOnBody": "Mera hikayeleri otomatik olarak kontrol eder. Bir iddia derecelendirildiğinde kontroller burada görünür."
+      "autoOnBody": "Mera hikayeleri otomatik olarak kontrol eder. Bir iddia derecelendirildiğinde kontroller burada görünür.",
+      "emptyBodyAsk": "Bir makaledeki onay işaretine dokunun veya Mera'dan bir iddiayı kontrol etmesini isteyin. İstediğiniz kontroller burada görünür."
     },
     "visited": {
       "intro": "Son 30 günde kaynağında en çok açtığınız yayınlar. İyi habercilik, okurlar destek olduğunda yaşar.",
