@@ -1,7 +1,7 @@
 import type { ExploreWindowHours } from '@/components/custom/explore/ExploreWindowToggle';
 import ScopeArticleList from '@/components/custom/explore/ScopeArticleList';
 import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
-import { alpha2OfPage } from '@/components/custom/nav/page-registry';
+import { PAGE_META, alpha2OfPage } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type {
     ArrangeConfig,
@@ -56,7 +56,7 @@ export function WorldPages() {
         () =>
             pages.map((p) =>
                 p.id === 'world'
-                    ? { id: p.id, label: t('tabs.world') }
+                    ? { id: p.id, label: t(PAGE_META.world.labelKey) }
                     : { id: p.id, label: p.scope.label, flagAlpha2: alpha2OfPage(p.id) ?? undefined },
             ),
         [pages, t],
