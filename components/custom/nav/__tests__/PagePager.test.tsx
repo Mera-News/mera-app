@@ -16,6 +16,7 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 
 const mockPan: Record<string, any> = {};
 const mockScroller: Record<string, any> = {};
+let mockPanBuilds = 0;
 jest.mock('react-native-gesture-handler', () => {
   const chainFor = (store: Record<string, any>) => {
     const chain: any = new Proxy(
@@ -30,7 +31,13 @@ jest.mock('react-native-gesture-handler', () => {
     return chain;
   };
   return {
-    Gesture: { Pan: () => chainFor(mockPan), Manual: () => chainFor(mockScroller) },
+    Gesture: {
+      Pan: () => {
+        mockPanBuilds += 1;
+        return chainFor(mockPan);
+      },
+      Manual: () => chainFor(mockScroller),
+    },
     GestureDetector: ({ children }: any) => children,
   };
 });
@@ -282,6 +289,57 @@ describe('PagePager', () => {
       // Half a width (damped) to the left of the CURRENT page reads 2.5.
       act(() => stale.onUpdate({ translationX: -200 / 0.6 }));
       expect(props.progress.value).toBeCloseTo(2.5);
+    });
+  });
+
+  // R1, captured: RNGH resolves the pan's relation to the scroller into the
+  // scroller's numeric tag ONCE, when the pan is attached. A scroller that
+  // attaches later (the Stats pager mounting with its page, or once its cards
+  // load) got a tag the pan never learned, so a swipe starting inside the
+  // pager could not move the page. Every new scroller tag rebuilds the pan.
+  describe('the pan is rebuilt when the scroller attaches (R1)', () => {
+    it('names the scroller gesture as simultaneous', () => {
+      setup();
+      expect(mockPan.simultaneousWithExternalGesture).toBeDefined();
+      expect(mockScroller.withRef).toBeDefined();
+    });
+
+    it('a new scroller tag builds a new pan; the same tag again does not', () => {
+      setup();
+      const before = mockPanBuilds;
+      act(() => {
+        mockScroller.withRef.current = { handlerTag: 41 };
+      });
+      expect(mockPanBuilds).toBe(before + 1);
+      act(() => {
+        mockScroller.withRef.current = { handlerTag: 41 };
+      });
+      expect(mockPanBuilds).toBe(before + 1);
+      // The pager remounts (another page and back): a fresh tag, a fresh pan.
+      act(() => {
+        mockScroller.withRef.current = { handlerTag: 57 };
+      });
+      expect(mockPanBuilds).toBe(before + 2);
+    });
+
+    it('the rebuilt pan still hands off from the first card (L3: layout reports start, not end)', () => {
+      let blocker: any;
+      const Probe = () => {
+        blocker = useSwipeTabsBlocker();
+        return null;
+      };
+      const { onIndexChange } = setup({ index: 1, count: 3, renderPanel: () => <Probe /> });
+      act(() => {
+        mockScroller.withRef.current = { handlerTag: 41 };
+      });
+      act(() => blocker.setEdge({ start: true, end: false }));
+      const s = stateMgr();
+      mockScroller.onTouchesDown();
+      mockPan.onTouchesDown(touches(200));
+      mockPan.onTouchesMove(touches(220), s);
+      expect(s.activate).toHaveBeenCalled();
+      act(() => mockPan.onEnd({ translationX: 90, velocityX: 900 }));
+      expect(onIndexChange).toHaveBeenCalledWith(0);
     });
   });
 

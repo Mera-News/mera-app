@@ -134,9 +134,33 @@ const PagePager: React.FC<PagePagerProps> = ({
   const atStart = useSharedValue(true);
   const atEnd = useSharedValue(true);
   const blockerRef = useRef<unknown>(null);
+  // RNGH resolves a cross-detector relation ONCE, when the pan is attached
+  // or updated, into the scroller's NUMERIC handler tag, and writes the
+  // numbers back into the pan's config. A scroller attached LATER (the Stats
+  // pager mounts with its page, or once its cards load) gets a fresh tag the
+  // pan never learns, so the two stop being simultaneous and a swipe that
+  // starts inside the pager cannot move the page (R1, captured: a right fling
+  // on the first card never reached Visited). So the scroller reports its
+  // attachment through a ref setter (RNGH assigns `ref.current` on attach),
+  // and every new tag rebuilds the pan against the live gesture object.
+  const [scrollerTag, setScrollerTag] = useState(-1);
+  const scrollerRef = useMemo(
+    () =>
+      ({
+        set current(g: { handlerTag?: number } | undefined) {
+          const tag = g?.handlerTag ?? -1;
+          if (tag > 0) setScrollerTag((prev) => (prev === tag ? prev : tag));
+        },
+        get current() {
+          return undefined;
+        },
+      }) as unknown as React.MutableRefObject<undefined>,
+    [],
+  );
   const scrollerGesture = useMemo(
     () =>
       Gesture.Manual()
+        .withRef(scrollerRef as never)
         .onTouchesDown(() => {
           inScroller.value = true;
         })
@@ -149,7 +173,7 @@ const PagePager: React.FC<PagePagerProps> = ({
         .onFinalize(() => {
           inScroller.value = false;
         }),
-    [inScroller],
+    [inScroller, scrollerRef],
   );
   const blocker = useMemo<SwipeBlocker>(
     () => ({
@@ -276,7 +300,11 @@ const PagePager: React.FC<PagePagerProps> = ({
         .onEnd((e) => {
           runOnJS(onDragEnd)(e.translationX, e.velocityX);
         }),
-    [enabled, scrollerGesture, startX, startY, decided, inScroller, atStart, atEnd, rtl, dir, progress, indexSV, widthSV, reduceMotionSV, offset, onDragEnd],
+    // `scrollerTag`: rebuilt whenever the scroller attaches with a new tag, so
+    // RNGH resolves the relation again (see above). Everything else the
+    // worklets read is a shared value or the latest `finish` through a ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [enabled, scrollerGesture, scrollerTag, startX, startY, decided, inScroller, atStart, atEnd, rtl, dir, progress, indexSV, widthSV, reduceMotionSV, offset, onDragEnd],
   );
 
   const rowStyle = useAnimatedStyle(() => ({
