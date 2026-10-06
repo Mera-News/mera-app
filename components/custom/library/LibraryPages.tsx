@@ -6,13 +6,10 @@ import TabPages from '@/components/custom/nav/TabPages';
 import type { ArrangeConfig, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import StatsPager from '@/components/custom/share-stats/StatsPager';
-import { navigateToSetting } from '@/lib/navigation/focus-target';
 import { setPageOrder, usePageOrder } from '@/lib/navigation/page-order';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-
-const turnOnAutoChecks = () => navigateToSetting('meraProtocol.automaticFactCheck');
 
 const ARRANGE: ArrangeConfig = {
     onSave: (draft) => setPageOrder('library', draft.order),
@@ -60,7 +57,6 @@ export function LibraryPages() {
                             headerHeight={header.headerHeight}
                             listEndPadding={listEnd}
                             footer={footer}
-                            onTurnOnAutoChecks={turnOnAutoChecks}
                         />
                     );
                 case 'visited':

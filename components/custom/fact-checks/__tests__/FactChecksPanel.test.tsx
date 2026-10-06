@@ -8,13 +8,12 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
   };
 });
 
-// FactChecksPanel — the Dashboard "Fact checks" chip. Pivot P8d's addition:
-// `reconcileStoredFactChecks()` runs BEFORE `refresh()`, on both activation
-// and pull-to-refresh, so a row nobody is actively watching (the reader left
-// the article, or `useFactCheck`'s poll gave up at its ceiling) still has a
-// path back to a terminal answer here. Without it this list recreates r14
-// P2b's bug ("a completed check was stuck forever") now that the check is
-// server-side again.
+// FactChecksPanel, the Library's Checks page. `reconcileAskedFactChecks()`
+// runs BEFORE the read, on both activation and pull-to-refresh, so an asked
+// check nobody is actively watching (the reader left the article, or the
+// in-session poller passed its ceiling) still has a path back to a terminal
+// answer here. Without it this list recreates r14 P2b's bug ("a completed
+// check was stuck forever").
 
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key }),
@@ -26,7 +25,7 @@ const mockReconcile = jest.fn((..._args: unknown[]) => {
     return Promise.resolve();
 });
 jest.mock('@/lib/fact-check/fact-check-graphql-client', () => ({
-    reconcileStoredFactChecks: (...a: unknown[]) => mockReconcile(...a),
+    reconcileAskedFactChecks: (...a: unknown[]) => mockReconcile(...a),
 }));
 
 const mockRefresh = jest.fn((..._args: unknown[]) => {
@@ -58,8 +57,6 @@ jest.mock('@/lib/haptics', () => ({
 
 jest.mock('@/lib/navigation/tab-bar', () => ({ TAB_BAR_HEIGHT: 0, useTabBarClearance: () => 0 }));
 
-let mockAutoChecks = false;
-jest.mock('@/lib/stores/mera-protocol-store', () => ({ useAutoCommunityFactCheck: () => mockAutoChecks }));
 
 jest.mock('@/components/custom/for-you/ForYouEmptyState', () => {
     const { Pressable, Text, View } = require('react-native');
@@ -251,34 +248,19 @@ describe('FactChecksPanel: header and states', () => {
         expect(sc.queryByTestId('fact-checks-checking-row')).toBeNull();
     });
 
-    describe('empty state', () => {
-        beforeEach(() => {
-            mockItems = [];
-            mockAutoChecks = false;
-        });
+    it('empty: names how to ask for a check, with no link to any setting', () => {
+        mockItems = [];
+        const sc = r(<Panel active={false} />);
+        expect(sc.getByText('library.checks.emptyTitle|library.checks.emptyBodyAsk')).toBeTruthy();
+        expect(sc.queryByTestId('fact-checks-auto-link')).toBeNull();
+        expect(sc.queryByRole('button')).toBeNull();
+    });
 
-        it('names both ways a check starts and links to the automatic checks setting', () => {
-            const onTurnOn = jest.fn();
-            const sc = r(<Panel active={false} onTurnOnAutoChecks={onTurnOn} />);
-            expect(sc.getByText('library.checks.emptyTitle|library.checks.emptyBody')).toBeTruthy();
-            const { fireEvent } = require('@testing-library/react-native');
-            fireEvent.press(sc.getByTestId('fact-checks-auto-link'));
-            expect(onTurnOn).toHaveBeenCalledTimes(1);
-            expect(sc.getByTestId('fact-checks-auto-link').props.accessibilityLabel).toBe('library.checks.autoLink');
-        });
-
-        it('says checks are automatic, with no link, while automatic checks are on', () => {
-            mockAutoChecks = true;
-            const sc = r(<Panel active={false} onTurnOnAutoChecks={jest.fn()} />);
-            expect(sc.getByText('library.checks.emptyTitle|library.checks.autoOnBody')).toBeTruthy();
-            expect(sc.queryByTestId('fact-checks-auto-link')).toBeNull();
-        });
-
-        it('has no link when the host gives no way to the setting', () => {
-            const sc = r(<Panel active={false} />);
-            expect(sc.getByTestId('fact-checks-empty')).toBeTruthy();
-            expect(sc.queryByTestId('fact-checks-auto-link')).toBeNull();
-        });
+    it('shows every stored check as it is, unfiltered', () => {
+        // Checks stored before automatic checks were removed stay listed.
+        mockItems = [{ id: 'asked', status: 'complete' }, { id: 'older-auto', status: 'complete' }];
+        r(<Panel active={false} />);
+        expect(capturedListProps.data.map((i: { id: string }) => i.id)).toEqual(['asked', 'older-auto']);
     });
 
     it("takes the host's list-end clearance and footer", () => {

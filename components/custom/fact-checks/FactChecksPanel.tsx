@@ -8,7 +8,6 @@ import { VStack } from '@/components/ui/vstack';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { hapticLight } from '@/lib/haptics';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
-import { useAutoCommunityFactCheck } from '@/lib/stores/mera-protocol-store';
 import {
     useFactCheckItems,
     useFactChecksHydrated,
@@ -16,7 +15,7 @@ import {
     useFactChecksStore,
 } from '@/lib/stores/fact-checks-store';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
-import { reconcileStoredFactChecks } from '@/lib/fact-check/fact-check-graphql-client';
+import { reconcileAskedFactChecks } from '@/lib/fact-check/fact-check-graphql-client';
 import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native';
@@ -46,9 +45,6 @@ interface FactChecksPanelProps {
     readonly listEndPadding?: number;
     /** Drawn after the last row (the host's "How this page works" row). */
     readonly footer?: React.ReactElement | null;
-    /** The empty state's "Turn on automatic checks" link: jumps to the
-     *  setting. No link without it, and none while automatic checks are on. */
-    readonly onTurnOnAutoChecks?: () => void;
 }
 
 /**
@@ -62,19 +58,17 @@ interface FactChecksPanelProps {
  * Rows come from the on-device `fact_checks` table, which the article panel
  * (and, pivot P8d, this panel itself) writes to.
  *
- * `reconcileStoredFactChecks()` runs FIRST, and is what makes `refresh()`
- * trustworthy for a row nobody is actively watching: `useFactCheck`'s poll
- * only ever covers the ONE article open at a time, so a request lodged via
- * chat and then left — the reader closed the article, or the poll itself gave
- * up at its ceiling (`POLL_CEILING_MS`) — has no path back to this list
- * without it. Without this call, a local-only read renders whatever the table
- * happens to hold, which is exactly how a server-side COMPLETE check kept
- * showing "Still searching" indefinitely once already (r14 P2b, "a completed
- * check was stuck forever" — the bug this file's own copy now promises won't
- * happen: `factCheck.queuedHint` and `factCheck.stillChecking` both tell the
- * reader to look here). It costs one bounded server read per UNRESOLVED row
- * (capped, see `RECONCILE_CAP`) and zero once everything is terminal — there
- * is no poll, no interval, just a bounded sweep.
+ * A fact check exists here only because the reader asked for it (there are no
+ * automatic or community checks). Rows already stored stay as they are: the
+ * list is the table, unfiltered.
+ *
+ * `reconcileAskedFactChecks()` runs FIRST, and is what makes the read
+ * trustworthy for an asked check nobody is actively watching: a request lodged
+ * via chat and then left (the reader closed the article, or the in-session
+ * poller passed its ceiling) has no path back to this list without it, which
+ * is exactly how a server-side COMPLETE check once kept showing "Still
+ * searching" (r14 P2b). It re-reads only checks this device asked for that
+ * have not settled, bounded, and costs nothing once everything is terminal.
  *
  * Delete is local-only and genuinely cheap: the server keeps its own cross-user
  * cache, so a deleted row can be re-fetched by opening the article and asking
@@ -86,10 +80,8 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     headerHeight = 0,
     listEndPadding,
     footer,
-    onTurnOnAutoChecks,
 }) => {
     const { t } = useTranslation();
-    const autoChecksOn = useAutoCommunityFactCheck();
     // Inside a tab on iOS the inset already includes the tab bar; measured on
     // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
     const tabClearance = useTabBarClearance();
@@ -106,7 +98,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     // `refresh()` reads it — reading first would show the stale row and need a
     // SECOND trigger to notice the sweep's own write.
     const reconcileAndRefresh = useCallback(async () => {
-        await reconcileStoredFactChecks();
+        await reconcileAskedFactChecks();
         await refresh();
     }, [refresh]);
 
@@ -118,7 +110,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     useEffect(() => {
         if (!active) return;
         void (async () => {
-            await reconcileStoredFactChecks();
+            await reconcileAskedFactChecks();
             await load();
         })();
     }, [active, load]);
@@ -197,10 +189,9 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                     </VStack>
                 }
                 // The manual path: a reader who suspects the list is stale can
-                // always ask directly rather than waiting for the next arrival. Same reconcile-then-refresh sequence as above, so
-                // a pull here can ALSO advance a row the activation sweep
-                // hasn't gotten to yet (e.g. the panel has been sitting active
-                // since before a request was even lodged).
+                // always ask directly rather than waiting for the next arrival.
+                // Same reconcile-then-refresh sequence as above, so a pull can
+                // also advance a check the activation sweep has not reached.
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -230,23 +221,12 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 ListEmptyComponent={
                     // Only once a read has completed, or the empty state
                     // flashes for a frame on every open before the rows land.
-                    // Both ways a check starts are named; with automatic checks
-                    // already on, the link would be a false offer, so the body
-                    // says they are on instead.
+                    // Names the two ways a reader asks for a check.
                     hydrated ? (
                         <ForYouEmptyState
                             icon="fact-check"
                             title={t('library.checks.emptyTitle')}
-                            body={autoChecksOn ? t('library.checks.autoOnBody') : t('library.checks.emptyBody')}
-                            action={
-                                !autoChecksOn && onTurnOnAutoChecks
-                                    ? {
-                                          label: t('library.checks.autoLink'),
-                                          onPress: onTurnOnAutoChecks,
-                                          testID: 'fact-checks-auto-link',
-                                      }
-                                    : undefined
-                            }
+                            body={t('library.checks.emptyBodyAsk')}
                             testID="fact-checks-empty"
                         />
                     ) : null

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 // LibraryPages wires the four Library pages into the tab shell: pills in the
 // reader's order, each page handed the shared header, the list-end clearance
-// and its "How this page works" footer, Stats its arrival card, Checks the
-// jump to the automatic checks setting, and ✓ saving the order.
+// and its "How this page works" footer, Stats its arrival card, and ✓ saving
+// the order.
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 let mockOrder = ['saved', 'checks', 'visited', 'stats'];
 const mockSetPageOrder = jest.fn();
@@ -11,10 +11,6 @@ jest.mock('@/lib/navigation/page-order', () => ({
   setPageOrder: (...a: unknown[]) => mockSetPageOrder(...a),
 }));
 jest.mock('@/lib/navigation/tab-bar', () => ({ useListEndClearance: () => 172 }));
-const mockNavigateToSetting = jest.fn();
-jest.mock('@/lib/navigation/focus-target', () => ({
-  navigateToSetting: (...a: unknown[]) => mockNavigateToSetting(...a),
-}));
 jest.mock('@/components/custom/nav/page-registry', () => ({
   pageMeta: (id: string) => ({ labelKey: `nav.page.${id}` }),
 }));
@@ -64,7 +60,6 @@ import LibraryPages from '../LibraryPages';
 beforeEach(() => {
   mockOrder = ['saved', 'checks', 'visited', 'stats'];
   mockSetPageOrder.mockClear();
-  mockNavigateToSetting.mockClear();
 });
 
 describe('LibraryPages', () => {
@@ -99,10 +94,9 @@ describe('LibraryPages', () => {
     expect(mockProps.stats.requestedCard).toBe('keep');
   });
 
-  it('Checks jumps to the automatic checks setting', () => {
+  it('Checks gets no link to a fact-check setting', () => {
     render(<LibraryPages />);
-    mockProps.checks.onTurnOnAutoChecks();
-    expect(mockNavigateToSetting).toHaveBeenCalledWith('meraProtocol.automaticFactCheck');
+    expect(mockProps.checks.onTurnOnAutoChecks).toBeUndefined();
   });
 
   it('saving the arrangement stores the Library order', () => {
