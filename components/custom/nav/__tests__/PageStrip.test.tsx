@@ -126,6 +126,21 @@ describe('PageStrip', () => {
     expect(frame.props.style.paddingVertical * 2 + 34).toBe(44);
   });
 
+  it('draws the pen and the quick-settings glyph and badge white; only the active pill is orange', () => {
+    const { HEADER_ICON_COLOR } = require('@/components/custom/for-you/HeaderIconButton');
+    renderStrip();
+    expect(screen.getByTestId('page-strip-rearrange-glyph').props.color).toBe(HEADER_ICON_COLOR);
+    expect(screen.getByTestId('icon-tune').props.color).toBe(HEADER_ICON_COLOR);
+    const badge = screen.getByTestId('quick-settings-bolt');
+    const flat = Object.assign({}, ...[badge.props.style].flat());
+    expect(flat.backgroundColor).toBe(HEADER_ICON_COLOR);
+    // The bolt and the ring keep the header ink.
+    expect(screen.getByTestId('icon-bolt').props.color).toBe('#121113');
+    expect(flat.borderColor).toBe('#121113');
+    const active = Object.assign({}, ...[screen.getByTestId('page-pill-interests-chip').props.style].flat());
+    expect(active.backgroundColor).toBe('#E78A53');
+  });
+
   it('leaks no icon glyph into a label', () => {
     renderStrip();
     const { privateUseLabelLeaks } = require('@/lib/__test-helpers__/icon-glyph-a11y');

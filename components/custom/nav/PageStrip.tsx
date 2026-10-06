@@ -21,6 +21,7 @@ import React, { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform, ScrollView, StyleSheet, View } from 'react-native';
 
+import { HEADER_ICON_COLOR } from '@/components/custom/for-you/HeaderIconButton';
 import QuickSettingsButton, { NAV_ACCENT } from './QuickSettingsButton';
 import type { PageId, QuickSettingsFocusId } from './page-registry';
 import type { PageDot, PagePill, TabTrailing } from './types';
@@ -184,7 +185,7 @@ const PageStrip: React.FC<PageStripProps> = ({
 
       <View style={styles.penFrame} testID="page-strip-rearrange-frame">
         <View pointerEvents="none" {...GLYPH_HIDDEN}>
-          <MaterialIcons name="edit" size={18} color={NAV_ACCENT} />
+          <MaterialIcons name="edit" size={18} color={HEADER_ICON_COLOR} testID="page-strip-rearrange-glyph" />
         </View>
         <Pressable
           onPress={onRearrange}
@@ -204,7 +205,7 @@ const PageStrip: React.FC<PageStripProps> = ({
       ) : (
         <View style={styles.trailingFrame} testID="page-strip-search-frame">
           <View pointerEvents="none" {...GLYPH_HIDDEN}>
-            <MaterialIcons name="search" size={24} color="#FFFFFF" />
+            <MaterialIcons name="search" size={24} color={HEADER_ICON_COLOR} />
           </View>
           <Pressable
             onPress={trailing.onPress}

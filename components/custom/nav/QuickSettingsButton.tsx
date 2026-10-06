@@ -1,12 +1,14 @@
 // The bolt-badged sliders button on Feed, Interests and Checks: it jumps to
 // the setting where it already lives on the You tab, highlighted
 // (navigateToSetting, lib/navigation/focus-target.ts). The bolt says
-// "shortcut", not "settings screen".
+// "shortcut", not "settings screen". All white, like the other header glyphs;
+// only the active page pill is orange.
 //
 // A childless labelled button over a hidden visual: a glyph inside a button
 // surfaces on iOS as its own StaticText.
 
 import { Pressable } from '@/components/ui/pressable';
+import { HEADER_ICON_COLOR } from '@/components/custom/for-you/HeaderIconButton';
 import { navigateToSetting } from '@/lib/navigation/focus-target';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
@@ -36,7 +38,7 @@ const QuickSettingsButton: React.FC<QuickSettingsButtonProps> = ({ targets, page
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
       >
-        <MaterialIcons name="tune" size={22} color="#FFFFFF" />
+        <MaterialIcons name="tune" size={22} color={HEADER_ICON_COLOR} />
         <View style={styles.badge} testID="quick-settings-bolt">
           <MaterialIcons name="bolt" size={9} color={HEADER_INK} />
         </View>
@@ -63,7 +65,8 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: NAV_ACCENT,
+    // White, like every header glyph (owner); the bolt keeps the header ink.
+    backgroundColor: HEADER_ICON_COLOR,
     borderWidth: 2,
     borderColor: HEADER_INK,
     alignItems: 'center',
