@@ -202,9 +202,6 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     bottomClearance,
 }) => {
     const { t } = useTranslation();
-    // TEMPORARY: the world.* keys land with the navx locale splice; convert
-    // to typed t() in the same wave once they are in en.json.
-    const tAny = useMemo(() => t as unknown as (key: string, opts?: object) => string, [t]);
     const hours: ExploreWindowHours = (windowHours as ExploreWindowHours | undefined) ?? 24;
     const countryName = scope.kind === 'world' ? null : scope.label;
     const isOnline = useIsOnline();
@@ -441,14 +438,14 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 {onWindowChange ? (
                     <HStack className="items-center justify-between" testID="explore-window-row">
                         <Text size="sm" className="text-gray-300 flex-shrink mr-3">
-                            {tAny('world.windowRowLabel')}
+                            {t('world.windowRowLabel')}
                         </Text>
                         <ExploreWindowToggle value={hours} onChange={onWindowChange} />
                     </HStack>
                 ) : null}
             </VStack>
         );
-    }, [onWindowChange, listHeaderExtra, hours, tAny]);
+    }, [onWindowChange, listHeaderExtra, hours, t]);
 
     // Skeleton-or-empty-state, decided INSIDE the list. Previously these were two
     // early returns that replaced the list entirely — see the component note.
@@ -458,7 +455,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 <VStack testID="explore-loading" space="md">
                     {countryName ? (
                         <Text size="md" className="text-gray-300" testID="explore-gathering">
-                            {tAny('world.gathering', { country: countryName })}
+                            {t('world.gathering', { country: countryName })}
                         </Text>
                     ) : null}
                     <SkeletonRows />
@@ -485,21 +482,21 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                         connectivity band — it belongs here, on the emptiness it
                         explains. */}
                     {!isConnected
-                        ? tAny('world.offline')
+                        ? t('world.offline')
                         : !answeredEmpty
                             ? t('explore.serverUnavailable')
                             : countryName
-                                ? tAny('world.emptyWindow', { country: countryName, hours })
-                                : tAny('world.emptyWindowWorld', { hours })}
+                                ? t('world.emptyWindow', { country: countryName, hours })
+                                : t('world.emptyWindowWorld', { hours })}
                 </Text>
                 {answeredEmpty && onWindowChange && hours < 48 ? (
                     <Button variant="outline" size="sm" testID="explore-show-48" onPress={() => onWindowChange(48)}>
-                        <ButtonText>{tAny('world.showWider')}</ButtonText>
+                        <ButtonText>{t('world.showWider')}</ButtonText>
                     </Button>
                 ) : null}
             </VStack>
         );
-    }, [isLoading, enabled, loadHung, isOnline, isConnected, loadFailed, t, tAny, countryName, hours, onWindowChange]);
+    }, [isLoading, enabled, loadHung, isOnline, isConnected, loadFailed, t, countryName, hours, onWindowChange]);
 
     // Compose the collapsible-header handler (from ExploreScreen) with a
     // scroll-tick notifier (drives deferred TranslatableDynamic translation as

@@ -28,8 +28,6 @@ const CANCEL_STYLE = { minHeight: 44, justifyContent: 'center', paddingLeft: 12 
  */
 const SearchScreen: React.FC = () => {
     const { t } = useTranslation();
-    // TEMPORARY until the navx locale splice; then typed t().
-    const tAny = t as unknown as (key: string) => string;
     const insets = useSafeAreaInsets();
     const search = useNewsSearch();
     const openArticle = useOpenArticle();
@@ -51,7 +49,7 @@ const SearchScreen: React.FC = () => {
                 <ExploreSearchBar
                     query={search.query}
                     onChangeQuery={search.setQuery}
-                    placeholder={tAny('world.search.placeholder')}
+                    placeholder={t('world.search.placeholder')}
                 />
                 <Pressable
                     testID="search-cancel"

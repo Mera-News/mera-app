@@ -53,9 +53,6 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
     offline = false,
 }) => {
     const { t } = useTranslation();
-    // TEMPORARY: the world.* keys land with the navx locale splice; convert
-    // these to typed t() in the same wave once they are in en.json.
-    const tAny = t as unknown as (key: string, opts?: object) => string;
 
     const handleSeePlans = useCallback(() => {
         void presentFreeTierPaywall('explore-search');
@@ -90,7 +87,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
                     importantForAccessibility="no-hide-descendants"
                 />
                 <Text size="md" className="text-gray-400 text-center">
-                    {offline ? tAny('world.offline') : tAny('world.search.empty')}
+                    {offline ? t('world.offline') : t('world.search.empty')}
                 </Text>
             </VStack>
         );
@@ -117,8 +114,8 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
                     {isNotSubscribed
                         ? t('explore.searchNotSubscribed')
                         : offline
-                          ? tAny('world.offline')
-                          : tAny('world.search.errorRetry')}
+                          ? t('world.offline')
+                          : t('world.search.errorRetry')}
                 </Text>
                 <Button
                     testID="explore-search-error-action"
@@ -157,7 +154,7 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
             keyExtractor={keyExtractor}
             ListHeaderComponent={
                 <Text size="sm" className="text-gray-400 font-semibold mb-2" testID="explore-search-count">
-                    {tAny('world.search.count', { count: hits.length })}
+                    {t('world.search.count', { count: hits.length })}
                 </Text>
             }
             contentContainerStyle={{ padding: 16 }}

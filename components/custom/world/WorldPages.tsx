@@ -1,7 +1,7 @@
 import type { ExploreWindowHours } from '@/components/custom/explore/ExploreWindowToggle';
 import ScopeArticleList from '@/components/custom/explore/ScopeArticleList';
 import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
-import { PAGE_META, alpha2OfPage } from '@/components/custom/nav/page-registry';
+import { alpha2OfPage } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type {
     ArrangeConfig,
@@ -42,9 +42,6 @@ const DEFAULT_WINDOW: ExploreWindowHours = 24;
  */
 export function WorldPages() {
     const { t } = useTranslation();
-    // Registry label keys are computed (PAGE_META), so they go through an
-    // untyped t; the literal world.* keys are typed once spliced.
-    const tAny = useMemo(() => t as unknown as (key: string, opts?: object) => string, [t]);
     const { pages, loaded } = useWorldPages();
     const introDone = useWorldIntroDone();
     const listEndClearance = useListEndClearance();
@@ -59,10 +56,10 @@ export function WorldPages() {
         () =>
             pages.map((p) =>
                 p.id === 'world'
-                    ? { id: p.id, label: tAny(PAGE_META.world.labelKey) }
+                    ? { id: p.id, label: t('tabs.world') }
                     : { id: p.id, label: p.scope.label, flagAlpha2: alpha2OfPage(p.id) ?? undefined },
             ),
-        [pages, tAny],
+        [pages, t],
     );
 
     // The add field's country list, fetched once the pen first opens (it is a
@@ -99,13 +96,13 @@ export function WorldPages() {
                 footnoteFor: (id) => {
                     const page = byId.get(id);
                     return page?.origin === 'place'
-                        ? tAny('world.arrange.placesNote', { country: page.scope.label })
+                        ? t('world.arrange.placesNote', { country: page.scope.label })
                         : null;
                 },
                 removable: (id) => id !== 'world',
             },
         };
-    }, [pages, countryOptions, loadCountries, tAny]);
+    }, [pages, countryOptions, loadCountries, t]);
 
     const trailing = useMemo(
         () => ({ kind: 'search' as const, onPress: () => router.push('/logged-in/search') }),
@@ -132,7 +129,7 @@ export function WorldPages() {
                     listHeaderExtra={
                         page.id === 'world' && showIntro ? (
                             <Text size="md" className="text-gray-300" testID="world-intro">
-                                {tAny('world.newStateLine')}
+                                {t('world.newStateLine')}
                             </Text>
                         ) : undefined
                     }
@@ -148,7 +145,7 @@ export function WorldPages() {
                 />
             );
         },
-        [pages, windows, setWindowFor, showIntro, loaded, listEndClearance, tAny],
+        [pages, windows, setWindowFor, showIntro, loaded, listEndClearance, t],
     );
 
     return (
