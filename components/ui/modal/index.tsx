@@ -16,11 +16,8 @@ import { Pressable, ScrollView, View, ViewStyle } from 'react-native';
 // alternative — copying the rgba into every primitive — is the drift the
 // MENU_PANEL_FILL note in components/ui/toast/index.tsx already warns about.
 // No cycle: GlassSurface imports only components/ui/box.
-import {
-  GLASS_EDGE,
-  GLASS_OVER_CONTENT_FILL,
-  TranslucentPlate,
-} from '@/components/custom/GlassSurface';
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import { GLASS_EDGE, TranslucentPlate } from '@/components/custom/GlassSurface';
 
 type IAnimatedPressableProps = React.ComponentProps<typeof Pressable> &
   MotionComponentProps<typeof Pressable, ViewStyle, unknown, unknown, unknown>;
@@ -82,10 +79,14 @@ const modalBackdropStyle = tva({
  * animates to 0.78, not gluestack's 0.5 — and the plate is then translucent
  * against an already-darkened field rather than against raw page text.
  *
- * If body text ever reads through again, raise the backdrop before thinning the
- * plate: the plate's tint is the whole reason this surface is the same material
- * as the cards, and the check to run is a modal over the FEED, not over a
- * settings screen.
+ * ## The gradient (owner: modals did not look like the rest of the app)
+ *
+ * The surface is the app's own material, not a grey slab: an OPAQUE dark base,
+ * the gradient backdrop on it, then the translucent plate, the same stack as
+ * EmailCaptureSheet. Opaque because nothing behind a modal may read through its
+ * copy; the gradient gives back what the old 0.90 fill took away. The backdrop
+ * is seeded and pinned to one frame, so every modal shows the same colours and
+ * none of them runs the shared cross-fade.
  *
  * ## The three-layer split, which is load-bearing
  *
@@ -118,6 +119,8 @@ const modalContentStyle = tva({
 // ModalContent in jest.
 /** Layer 2: the clipping, radius-owning, UNPADDED host for the plate. */
 const MODAL_SURFACE_CLASS = `rounded-2xl overflow-hidden ${GLASS_EDGE}`;
+/** The opaque base under the gradient (gluestack dark `--color-background-0`). */
+const MODAL_BASE = 'rgb(18, 17, 19)';
 /** Layer 3: the padding gluestack had on Content. */
 const MODAL_INNER_CLASS = 'p-6';
 
@@ -246,7 +249,8 @@ const ModalContent = React.forwardRef<
       pointerEvents="auto"
     >
       {/* Three layers, and the order matters — see modalContentStyle. */}
-      <View className={MODAL_SURFACE_CLASS} style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}>
+      <View className={MODAL_SURFACE_CLASS} style={{ backgroundColor: MODAL_BASE }}>
+        <AbstractGradientBackdrop seed="mera-modal" frame={0} />
         <TranslucentPlate />
         <View className={MODAL_INNER_CLASS}>{children}</View>
       </View>

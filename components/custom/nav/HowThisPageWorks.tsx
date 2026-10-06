@@ -94,12 +94,11 @@ const HowThisPageWorks: React.FC<HowThisPageWorksProps> = ({ pageId }) => {
           </ModalBody>
           <ModalFooter>
             <Button
-              variant="outline"
-              className="flex-1 border-white/30"
+              className="flex-1"
               onPress={() => setOpen(false)}
               testID="how-this-page-works-close"
             >
-              <ButtonText className="text-white">{t('tabExplainer.close')}</ButtonText>
+              <ButtonText>{t('tabExplainer.close')}</ButtonText>
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -1,4 +1,5 @@
-import { GLASS_OVER_CONTENT_FILL, TranslucentPlate } from '@/components/custom/GlassSurface';
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import { TranslucentPlate } from '@/components/custom/GlassSurface';
 import { FeedbackWidget } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -128,6 +129,8 @@ const FeedbackWidgetModal: React.FC = () => {
                 />
 
                 <View style={[styles.card, { maxHeight: maxCardHeight }]}>
+                    {/* The modal material (components/ui/modal): opaque base, the app's gradient, the plate. */}
+                    <AbstractGradientBackdrop seed="mera-modal" frame={0} />
                     <TranslucentPlate />
                     {/* Mera-branded header: logo left, close X top-right (chat-bubble
                         pattern) — replaces the Sentry logo + bottom Cancel button. */}
@@ -213,9 +216,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         backgroundColor: 'rgba(0, 0, 0, 0.78)',
     },
-    // Already the right shape for the plate: unpadded (the padding lives on
-    // `header` and `widgetContainer`), clipping, and radius-owning. So it only
-    // had to give up its opaque fill.
+    // Unpadded (the padding lives on `header` and `widgetContainer`), clipping
+    // and radius-owning, so the gradient and the plate fill it edge to edge.
     card: {
         width: '100%',
         maxWidth: 480,
@@ -223,7 +225,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
-        backgroundColor: GLASS_OVER_CONTENT_FILL,
+        backgroundColor: 'rgb(18, 17, 19)',
     },
     header: {
         flexDirection: 'row',
