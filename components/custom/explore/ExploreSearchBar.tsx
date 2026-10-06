@@ -66,12 +66,15 @@ interface ExploreSearchBarProps {
     readonly query: string;
     readonly onChangeQuery: (next: string) => void;
     /**
-     * Dismiss search: clears the query AND collapses the row back to the
+     * Dismiss search (Explore only; absent on the full-screen Search route,
+     * whose Cancel sits outside the bar). Clears the query AND collapses the row back to the
      * "Explore" heading. One control, not two — a bare "clear" that left the
      * input open would be a second way out of a state that already has one,
      * and leaving the row expanded-but-empty is not a state the user asked for.
      */
-    readonly onClose: () => void;
+    readonly onClose?: () => void;
+    /** Field placeholder and accessibility label. Default: Explore's. */
+    readonly placeholder?: string;
     /** The input lost focus (keyboard dismissed, list scrolled). The screen
      *  collapses the row when the query is empty (F40): an open, empty bar
      *  sat where the "Explore" title belongs. */
@@ -95,8 +98,9 @@ interface ExploreSearchBarProps {
  * InputField is an accessibility container and swallows a testID prop placed
  * directly on it (see AddPhraseModal for the same workaround).
  */
-const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuery, onClose, onBlur }) => {
+const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuery, onClose, onBlur, placeholder }) => {
     const { t } = useTranslation();
+    const label = placeholder ?? t('explore.searchPlaceholder');
 
     return (
         // flex-1, no padding/margin of its own: it is a CHILD of the title
@@ -111,8 +115,8 @@ const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuer
                 <InputField
                     // The placeholder is the field's name; gluestack's default
                     // label was the literal "Input Field".
-                    aria-label={t('explore.searchPlaceholder')}
-                    placeholder={t('explore.searchPlaceholder')}
+                    aria-label={label}
+                    placeholder={label}
                     placeholderTextColor="#666666"
                     value={query}
                     onChangeText={onChangeQuery}
@@ -122,27 +126,34 @@ const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuer
                     autoCapitalize="none"
                     returnKeyType="search"
                     autoFocus
+                    // Without our ✕ (the Search route) the field still needs a
+                    // way to empty it: the native clear button (iOS only).
+                    clearButtonMode={onClose ? 'never' : 'while-editing'}
                 />
                 {/* ALWAYS rendered, unlike the old clear button, which appeared
                     only once there was text. With a query typed it is the only
                     way back to the heading (blur collapses an EMPTY bar only),
                     so it cannot be conditional on the query. The tap target is
                     the button below, outside the Input. */}
-                <View style={{ width: GLYPH + SLOT_PAD }} />
+                {onClose ? <View style={{ width: GLYPH + SLOT_PAD }} /> : null}
             </Input>
             <View pointerEvents="none" {...HIDDEN} style={SEARCH_GLYPH_STYLE}>
                 <MaterialIcons name="search" size={GLYPH} color="#999999" {...HIDDEN} />
             </View>
-            <View pointerEvents="none" {...HIDDEN} style={CLOSE_GLYPH_STYLE}>
-                <MaterialIcons name="close" size={GLYPH} color="#999999" {...HIDDEN} />
-            </View>
-            <Pressable
-                testID="explore-search-close"
-                onPress={onClose}
-                accessibilityRole="button"
-                accessibilityLabel={t('explore.closeSearch')}
-                style={CLOSE_TARGET_STYLE}
-            />
+            {onClose ? (
+                <>
+                    <View pointerEvents="none" {...HIDDEN} style={CLOSE_GLYPH_STYLE}>
+                        <MaterialIcons name="close" size={GLYPH} color="#999999" {...HIDDEN} />
+                    </View>
+                    <Pressable
+                        testID="explore-search-close"
+                        onPress={onClose}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('explore.closeSearch')}
+                        style={CLOSE_TARGET_STYLE}
+                    />
+                </>
+            ) : null}
         </Box>
     );
 };

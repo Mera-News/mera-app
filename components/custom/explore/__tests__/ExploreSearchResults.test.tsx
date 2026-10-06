@@ -11,7 +11,9 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 });
 
 jest.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key: string) => key }),
+    useTranslation: () => ({
+        t: (key: string, opts?: { count?: number }) => (opts?.count !== undefined ? `${key}:${opts.count}` : key),
+    }),
 }));
 
 // jest-expo mis-transforms RN's ScrollView native component and FlatList's
@@ -23,10 +25,13 @@ jest.mock('react-native', () => {
     return new Proxy(actual, {
         get(target, prop) {
             if (prop === 'FlatList') {
-                return ({ data, renderItem, keyExtractor, testID }: any) =>
+                // Renders ListHeaderComponent too: a mock that drops it makes
+                // every assertion about the count line vacuous.
+                return ({ data, renderItem, keyExtractor, testID, ListHeaderComponent }: any) =>
                     ReactLib.createElement(
                         actual.View,
                         { testID },
+                        ListHeaderComponent ?? null,
                         (data ?? []).map((item: any, index: number) =>
                             ReactLib.createElement(
                                 ReactLib.Fragment,
@@ -107,11 +112,12 @@ beforeEach(() => {
 });
 
 describe('ExploreSearchResults', () => {
-    it('idle (below the 2-char floor) shows the min-length hint, nothing else', () => {
-        const { getByTestId, queryByTestId } = render(
+    it('idle shows what search covers, nothing else', () => {
+        const { getByTestId, getByText, queryByTestId } = render(
             <ExploreSearchResults status="idle" hits={[]} errorKind={null} onPressHit={noop} onRetry={noop} />,
         );
-        expect(getByTestId('explore-search-min-length')).toBeTruthy();
+        expect(getByTestId('explore-search-idle')).toBeTruthy();
+        expect(getByText('world.search.empty')).toBeTruthy();
         expect(queryByTestId('explore-search-loading')).toBeNull();
         expect(queryByTestId('explore-search-results')).toBeNull();
     });
@@ -129,6 +135,29 @@ describe('ExploreSearchResults', () => {
         );
         expect(getByTestId('explore-search-empty')).toBeTruthy();
         expect(getByText('explore.searchEmpty')).toBeTruthy();
+    });
+
+    it('idle while offline says search needs a connection', () => {
+        const { getByText, queryByText } = render(
+            <ExploreSearchResults status="idle" hits={[]} errorKind={null} onPressHit={noop} onRetry={noop} offline />,
+        );
+        expect(getByText('world.offline')).toBeTruthy();
+        expect(queryByText('world.search.empty')).toBeNull();
+    });
+
+    it('success with hits leads with the count of rows shown', () => {
+        const hits = [makeHit('h1'), makeHit('h2')];
+        const { getByTestId } = render(
+            <ExploreSearchResults status="success" hits={hits} errorKind={null} onPressHit={noop} onRetry={noop} />,
+        );
+        expect(getByTestId('explore-search-count').props.children).toBe('world.search.count:2');
+    });
+
+    it('success with zero hits draws no count line', () => {
+        const { queryByTestId } = render(
+            <ExploreSearchResults status="success" hits={[]} errorKind={null} onPressHit={noop} onRetry={noop} />,
+        );
+        expect(queryByTestId('explore-search-count')).toBeNull();
     });
 
     it('success with hits renders one row per hit, keyed and testID-tagged by _id', () => {
@@ -158,10 +187,20 @@ describe('ExploreSearchResults', () => {
             <ExploreSearchResults status="error" hits={[]} errorKind="unknown" onPressHit={noop} onRetry={onRetry} />,
         );
         expect(getByTestId('explore-search-error')).toBeTruthy();
-        expect(getByText('explore.searchError')).toBeTruthy();
+        expect(getByText('world.search.errorRetry')).toBeTruthy();
         fireEvent.press(getByTestId('explore-search-error-action'));
         expect(onRetry).toHaveBeenCalledTimes(1);
         expect(mockPresentFreeTierPaywall).not.toHaveBeenCalled();
+    });
+
+    it('an error while offline says so and still offers retry', () => {
+        const onRetry = jest.fn();
+        const { getByTestId, getByText } = render(
+            <ExploreSearchResults status="error" hits={[]} errorKind="unknown" onPressHit={noop} onRetry={onRetry} offline />,
+        );
+        expect(getByText('world.offline')).toBeTruthy();
+        fireEvent.press(getByTestId('explore-search-error-action'));
+        expect(onRetry).toHaveBeenCalledTimes(1);
     });
 
     it('a not-subscribed error shows the paywall message and opens the paywall instead of retrying', () => {
@@ -209,7 +248,7 @@ const glyphProblems = (root: any): string[] => {
     return out;
 };
 
-it.each(['success', 'error'] as const)('%s state: exposes no icon glyph as its own StaticText', (status) => {
+it.each(['idle', 'success', 'error'] as const)('%s state: exposes no icon glyph as its own StaticText', (status) => {
     const r = render(
         <ExploreSearchResults status={status} hits={[]} errorKind={status === 'error' ? 'unknown' : null} onPressHit={noop} onRetry={noop} />,
     );

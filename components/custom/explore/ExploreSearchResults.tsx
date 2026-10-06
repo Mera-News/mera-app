@@ -21,6 +21,8 @@ interface ExploreSearchResultsProps {
     readonly errorKind: NewsSearchErrorKind | null;
     readonly onPressHit: (hit: NewsSearchHit) => void;
     readonly onRetry: () => void;
+    /** No device link: the idle and error states say so instead. */
+    readonly offline?: boolean;
 }
 
 /**
@@ -30,14 +32,17 @@ interface ExploreSearchResultsProps {
  * never disturbed and reappear exactly as they were once the query clears.
  *
  * Rendered purely off `useNewsSearch`'s status:
- *   - 'idle'    → the query hasn't reached the server's 2-char floor yet.
+ *   - 'idle'    → nothing typed yet, or below the server's 2-char floor:
+ *                 what search covers (or, offline, that it needs a link).
  *   - 'loading' → debounce settled, fetch in flight.
  *   - 'error'   → 402 (`not-subscribed`) gets its own "needs a plan" message
  *                 + a paywall entry point; anything else is a generic retry.
  *   - 'success' with zero hits → a gentle empty state — `searchNews` covers the
  *     last 48h, not the full archive, so "no articles found" would overstate
  *     what was actually searched.
- *   - 'success' with hits → the results themselves, one compact row each.
+ *   - 'success' with hits → a count line, then one compact row each. The
+ *     count is the rows shown: the server caps a search at
+ *     SEARCH_NEWS_MAX_RESULTS (25), so "25 stories" can understate.
  */
 const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
     status,
@@ -45,8 +50,12 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
     errorKind,
     onPressHit,
     onRetry,
+    offline = false,
 }) => {
     const { t } = useTranslation();
+    // TEMPORARY: the world.* keys land with the navx locale splice; convert
+    // these to typed t() in the same wave once they are in en.json.
+    const tAny = t as unknown as (key: string, opts?: object) => string;
 
     const handleSeePlans = useCallback(() => {
         void presentFreeTierPaywall('explore-search');
@@ -71,13 +80,17 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
 
     if (status === 'idle') {
         return (
-            <VStack
-                testID="explore-search-min-length"
-                className="items-center justify-center py-16 p-6"
-                space="sm"
-            >
-                <Text size="sm" className="text-gray-400 text-center">
-                    {t('explore.searchMinLength')}
+            <VStack testID="explore-search-idle" className="items-center justify-center py-16 p-6" space="md">
+                <MaterialIcons
+                    name={offline ? 'cloud-off' : 'search'}
+                    size={40}
+                    color="#666666"
+                    accessible={false}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no-hide-descendants"
+                />
+                <Text size="md" className="text-gray-400 text-center">
+                    {offline ? tAny('world.offline') : tAny('world.search.empty')}
                 </Text>
             </VStack>
         );
@@ -101,7 +114,11 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
             >
                 <MaterialIcons name="error-outline" size={40} color="#666666" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
                 <Text size="md" className="text-gray-400 text-center">
-                    {isNotSubscribed ? t('explore.searchNotSubscribed') : t('explore.searchError')}
+                    {isNotSubscribed
+                        ? t('explore.searchNotSubscribed')
+                        : offline
+                          ? tAny('world.offline')
+                          : tAny('world.search.errorRetry')}
                 </Text>
                 <Button
                     testID="explore-search-error-action"
@@ -138,6 +155,11 @@ const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({
             data={hits}
             renderItem={renderItem}
             keyExtractor={keyExtractor}
+            ListHeaderComponent={
+                <Text size="sm" className="text-gray-400 font-semibold mb-2" testID="explore-search-count">
+                    {tAny('world.search.count', { count: hits.length })}
+                </Text>
+            }
             contentContainerStyle={{ padding: 16 }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}

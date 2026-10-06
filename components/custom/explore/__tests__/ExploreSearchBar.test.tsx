@@ -128,6 +128,25 @@ describe('ExploreSearchBar', () => {
         expect(input.props.accessibilityLabel).toBe('explore.searchPlaceholder');
     });
 
+    // The full-screen Search route passes no onClose: its Cancel sits outside
+    // the bar, so the bar draws no ✕ and the native clear button empties it.
+    it('without onClose: no ✕ control or glyph, native clear button, caller placeholder', () => {
+        const r = render(<ExploreSearchBar query="x" onChangeQuery={jest.fn()} placeholder="world.search.placeholder" />);
+        expect(r.queryByTestId('explore-search-close')).toBeNull();
+        const input = r.getByPlaceholderText('world.search.placeholder');
+        expect(input.props.accessibilityLabel).toBe('world.search.placeholder');
+        expect(input.props.clearButtonMode).toBe('while-editing');
+        const glyphs = r.UNSAFE_root.findAll(
+            (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
+        );
+        expect(glyphs.length).toBe(1);
+    });
+
+    it('with onClose: the native clear button stays off (the ✕ does that job)', () => {
+        const { getByPlaceholderText } = render(<ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
+        expect(getByPlaceholderText('explore.searchPlaceholder').props.clearButtonMode).toBe('never');
+    });
+
     // Captured (ux2 batch 28): with the glyphs hidden, the bar's containers
     // still read "<glyph>, Search recent news, <glyph>": exactly the children
     // of the gluestack Input root (Close search, outside the Input, was not in
