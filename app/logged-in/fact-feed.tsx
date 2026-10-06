@@ -1,7 +1,6 @@
-// Routing only — the full feed for a single fact (Round-3 C2).
-import ErrorBoundary from '@/components/custom/ErrorBoundary';
-import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
-import FactFeedScreen from '@/components/custom/for-you/FactFeedScreen';
+// Old route: One interest lives inside the Feed tab's stack now
+// (app_container/feed/interest). Kept so old links and restored screens open it.
+import { TabScreenRedirect } from '@/components/custom/nav/LegacyRedirect';
 import { useLocalSearchParams } from 'expo-router';
 
 export default function FactFeedRoute() {
@@ -10,15 +9,9 @@ export default function FactFeedRoute() {
     statement?: string;
     via?: string;
   }>();
-  return (
-    // S7: a crash here stays on this page instead of reaching the root
-    // boundary, which swaps the whole app for a fallback.
-    <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-      <FactFeedScreen
-        factId={factId ?? ''}
-        statement={statement ?? ''}
-        arrivedFromNext={via === 'next'}
-      />
-    </ErrorBoundary>
-  );
+  const params: Record<string, string> = {};
+  if (factId) params.factId = factId;
+  if (statement) params.statement = statement;
+  if (via) params.via = via;
+  return <TabScreenRedirect tab="feed" screen="interest" params={params} />;
 }

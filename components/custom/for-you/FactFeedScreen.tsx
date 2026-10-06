@@ -176,14 +176,14 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   const goToNextFact = useCallback(() => {
     if (!nextFact || !nextFactTitle) return;
     router.replace({
-      pathname: '/logged-in/fact-feed',
+      pathname: '/logged-in/app_container/feed/interest',
       params: { factId: nextFact.factId, statement: nextFactTitle, via: 'next' },
     });
   }, [nextFact, nextFactTitle]);
 
   const backToDashboard = useCallback(() => {
     if (router.canGoBack()) router.back();
-    else router.replace('/logged-in/app_container/for_you');
+    else router.replace('/logged-in/app_container/feed');
   }, []);
 
   // Screen-reader focus moves to the new section's title after a "Next" hop,

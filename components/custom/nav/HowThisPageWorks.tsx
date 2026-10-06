@@ -44,8 +44,6 @@ export interface HowThisPageWorksProps {
 
 const HowThisPageWorks: React.FC<HowThisPageWorksProps> = ({ pageId }) => {
   const { t } = useTranslation();
-  // Keys come from the registry table: a computed lookup, not a literal.
-  const tKey = t as unknown as (key: string) => string;
   const [open, setOpen] = useState(false);
   const focused = useIsFocusedSafe();
   useEffect(() => {
@@ -54,8 +52,7 @@ const HowThisPageWorks: React.FC<HowThisPageWorksProps> = ({ pageId }) => {
 
   const explainer = pageMeta(pageId).explainer;
   if (!explainer) return null;
-  // Typed t() once the navx P1 copy is spliced.
-  const label = tKey('nav.howThisPageWorks');
+  const label = t('nav.howThisPageWorks');
 
   return (
     <>
@@ -82,7 +79,7 @@ const HowThisPageWorks: React.FC<HowThisPageWorksProps> = ({ pageId }) => {
         <ModalContent testID={`how-this-page-works-${pageId}`}>
           <ModalHeader>
             <Heading size="lg" className="text-white" accessibilityRole="header">
-              {tKey(explainer.titleKey)}
+              {t(explainer.titleKey)}
             </Heading>
           </ModalHeader>
           {/* Text only, so ModalBody's ScrollView holds no list. */}
@@ -90,7 +87,7 @@ const HowThisPageWorks: React.FC<HowThisPageWorksProps> = ({ pageId }) => {
             <VStack space="md">
               {explainer.paragraphKeys.map((key) => (
                 <Text key={key} size="sm" style={{ color: MUTED }}>
-                  {tKey(key)}
+                  {t(key)}
                 </Text>
               ))}
             </VStack>

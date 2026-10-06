@@ -216,7 +216,7 @@ async function navigateToPersonaAfterPurchase(): Promise<void> {
             require('@/lib/database/services/fact-service') as typeof import('@/lib/database/services/fact-service');
         const { router } = require('expo-router') as typeof import('expo-router');
         const hasFacts = await hasAnyFacts().catch(() => false);
-        router.replace(hasFacts ? '/logged-in/app_container/for_you' : '/logged-in');
+        router.replace(hasFacts ? '/logged-in/app_container/feed' : '/logged-in');
     } catch {
         // Navigation unavailable (tests, headless) — the purchase already
         // succeeded; staying put is acceptable.

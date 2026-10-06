@@ -16,13 +16,33 @@ jest.mock('@/components/custom/feed/scroll-to-top-with-retry', () => ({
 let mockIsFocused = true;
 const mockAddListener = jest.fn();
 const mockUnsubscribe = jest.fn();
+const mockOwnAddListener = jest.fn();
 jest.mock('@react-navigation/native', () => {
   // STABLE identities, like the real hooks — a fresh object per render would
   // re-run the subscription effect and mask the "no re-subscribe" assertion.
-  const navigation = {
+  // The navx shape: the page is the root of a Stack inside a tab, so only
+  // the TAB navigator (its parent) emits `tabPress`.
+  const tabs = {
+    getState: () => ({
+      type: 'tab',
+      routes: [
+        { key: 'feed-tab', state: { type: 'stack', routes: [{ key: 'feed-key' }] } },
+        { key: 'around-tab' },
+      ],
+    }),
+    getParent: () => undefined,
     addListener: (type: string, cb: (e: unknown) => void) => {
       mockAddListener(type, cb);
       return mockUnsubscribe;
+    },
+    isFocused: () => true,
+  };
+  const navigation = {
+    getState: () => ({ type: 'stack', routes: [{ key: 'feed-key' }] }),
+    getParent: () => tabs,
+    addListener: (type: string) => {
+      mockOwnAddListener(type);
+      return () => undefined;
     },
     isFocused: () => mockIsFocused,
   };
@@ -33,6 +53,7 @@ jest.mock('@react-navigation/native', () => {
 import { renderHook } from '@testing-library/react-native';
 import {
   decideTabPressAction,
+  tabRouteKeyContaining,
   useTabPressScrollRefresh,
   TAB_PRESS_TOP_EPSILON,
 } from '../use-tab-press-scroll-refresh';
@@ -108,7 +129,7 @@ describe('useTabPressScrollRefresh', () => {
     mockIsFocused = true;
   });
 
-  const fire = (target: string | undefined = 'feed-key') => {
+  const fire = (target: string | undefined = 'feed-tab') => {
     const cb = mockAddListener.mock.calls[0][1] as (e: { target?: string }) => void;
     cb({ target });
   };
@@ -140,7 +161,7 @@ describe('useTabPressScrollRefresh', () => {
     const onRefresh = jest.fn();
     renderHook(() => useTabPressScrollRefresh({ listRef, getOffset: () => 0, onRefresh }));
 
-    fire('around-key');
+    fire('around-tab');
     expect(onRefresh).not.toHaveBeenCalled();
     expect(mockScrollToTopWithRetry).not.toHaveBeenCalled();
   });
@@ -170,11 +191,47 @@ describe('useTabPressScrollRefresh', () => {
     expect(onRefresh).not.toHaveBeenCalled();
   });
 
+  it('listens on the TAB navigator, never on its own stack navigation', () => {
+    renderHook(() => useTabPressScrollRefresh({ listRef, getOffset: () => 500 }));
+    expect(mockAddListener).toHaveBeenCalledWith('tabPress', expect.any(Function));
+    expect(mockOwnAddListener).not.toHaveBeenCalled();
+  });
+
+  it('does nothing for a page that is not the active one', () => {
+    const onRefresh = jest.fn();
+    renderHook(() => useTabPressScrollRefresh({ listRef, getOffset: () => 500, onRefresh, enabled: false }));
+    fire();
+    expect(mockScrollToTopWithRetry).not.toHaveBeenCalled();
+    expect(onRefresh).not.toHaveBeenCalled();
+  });
+
   it('unsubscribes on unmount', () => {
     const { unmount } = renderHook(() =>
       useTabPressScrollRefresh({ listRef, getOffset: () => 0 }),
     );
     unmount();
     expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('tabRouteKeyContaining', () => {
+  const state = {
+    type: 'tab',
+    routes: [
+      { key: 'feed-tab', state: { routes: [{ key: 'feed-index' }, { key: 'interest-1' }] } },
+      { key: 'you-tab' },
+    ],
+  };
+
+  it('finds the tab route holding a nested screen', () => {
+    expect(tabRouteKeyContaining(state, 'interest-1')).toBe('feed-tab');
+  });
+
+  it('finds a direct tab screen by its own key', () => {
+    expect(tabRouteKeyContaining(state, 'you-tab')).toBe('you-tab');
+  });
+
+  it('returns null for a screen outside the tabs', () => {
+    expect(tabRouteKeyContaining(state, 'article-detail')).toBeNull();
   });
 });

@@ -70,11 +70,11 @@ beforeEach(() => {
 });
 
 describe.each(ROUTES)('%s with its required param missing', (_name, load) => {
-    it('redirects to the Dashboard and never navigates during render', () => {
+    it('redirects to the Feed and never navigates during render', () => {
         const Route = load();
         const screen = render(<Route />);
         const redirect = screen.getByTestId('redirect');
-        expect(redirect.props.accessibilityLabel).toBe('/logged-in/app_container/for_you');
+        expect(redirect.props.accessibilityLabel).toBe('/logged-in/app_container/feed');
         expect(mockBack).not.toHaveBeenCalled();
     });
 });

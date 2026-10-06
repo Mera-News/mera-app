@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -92,7 +92,7 @@ const FeedProcessingCard: React.FC = () => {
                 action="secondary"
                 size="sm"
                 style={{ marginTop: PROCESSING_METRICS.ctaGap, height: PROCESSING_METRICS.ctaHeight }}
-                onPress={() => router.navigate('/logged-in/app_container/around')}
+                onPress={() => navigateToPage('world')}
             >
                 <ButtonText>{t('feed.exploreCta')}</ButtonText>
             </Button>

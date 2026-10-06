@@ -2,6 +2,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import PublicationPage from '@/components/custom/publication-page/PublicationPage';
+import { parsePublicationOrder } from '@/components/custom/publication-page/open-publication-page';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -22,7 +23,7 @@ export default function Publication() {
     // back to. A Redirect is the declarative way out and always has a
     // destination.
     if (!params.publisherId && !params.name) {
-        return <Redirect href="/logged-in/app_container/for_you" />;
+        return <Redirect href="/logged-in/app_container/feed" />;
     }
 
     return (
@@ -35,7 +36,7 @@ export default function Publication() {
                             publisherId={params.publisherId ?? null}
                             rawName={params.name ?? null}
                             countryCode={params.country ?? null}
-                            order={params.order === 'TOP_HEADLINES' ? 'TOP_HEADLINES' : 'NEWEST'}
+                            order={parsePublicationOrder(params.order)}
                             onBack={() => router.back()}
                         />
                     </ErrorBoundary>

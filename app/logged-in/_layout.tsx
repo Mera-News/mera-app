@@ -129,10 +129,8 @@ export default function LoggedInLayout() {
         />
         <Stack.Screen
           name="saved-suggestions"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right'
-          }}
+          // Redirect stub (navx): nothing to slide in.
+          options={{ headerShown: false, animation: 'none' }}
         />
         <Stack.Screen
           name="story-timeline"
@@ -143,37 +141,24 @@ export default function LoggedInLayout() {
         />
         <Stack.Screen
           name="fact-feed"
-          // A hop from one section's "Next" row (via: 'next') replaces this
-          // screen with the next section; it crossfades rather than sliding a
-          // second screen in. Every other arrival slides as before.
-          options={({ route }) => ({
-            headerShown: false,
-            animation:
-              (route.params as { via?: string } | undefined)?.via === 'next'
-                ? 'fade'
-                : 'slide_from_right',
-          })}
+          // A redirect stub now (One interest lives in the Feed tab's stack):
+          // no slide-in for a screen that is never drawn.
+          options={{ headerShown: false, animation: 'none' }}
         />
         <Stack.Screen
           name="facts"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right'
-          }}
+          // Redirect stub (navx): nothing to slide in.
+          options={{ headerShown: false, animation: 'none' }}
         />
         <Stack.Screen
           name="publication-preferences"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right'
-          }}
+          // Redirect stub (navx): nothing to slide in.
+          options={{ headerShown: false, animation: 'none' }}
         />
         <Stack.Screen
           name="visited-publications"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right'
-          }}
+          // Redirect stub (navx): nothing to slide in.
+          options={{ headerShown: false, animation: 'none' }}
         />
         <Stack.Screen
           name="publication-history"

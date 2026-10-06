@@ -38,6 +38,10 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
 }));
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({ router: { push: (...a: unknown[]) => mockPush(...a) } }));
+const mockNavigateToTabScreen = jest.fn();
+jest.mock('@/components/custom/nav/navigate-to-page', () => ({
+  navigateToTabScreen: (...a: unknown[]) => mockNavigateToTabScreen(...a),
+}));
 
 let mockRows: any[] = [];
 jest.mock('@/lib/database/services/notification-service', () => ({
@@ -180,10 +184,10 @@ describe('row action chips for VoiceOver', () => {
     await act(async () => {
       fireEvent(r.getByTestId('notification-row-h1'), 'accessibilityAction', { nativeEvent: { actionName: 'chip:review-hygiene' } });
     });
-    expect(mockPush).toHaveBeenCalledWith('/logged-in/hygiene-review');
-    mockPush.mockClear();
+    expect(mockNavigateToTabScreen).toHaveBeenCalledWith('you', 'hygiene-review');
+    mockNavigateToTabScreen.mockClear();
     await act(async () => { fireEvent.press(r.getByText('hygiene.reviewChip')); });
-    expect(mockPush).toHaveBeenCalledWith('/logged-in/hygiene-review');
+    expect(mockNavigateToTabScreen).toHaveBeenCalledWith('you', 'hygiene-review');
   });
 });
 

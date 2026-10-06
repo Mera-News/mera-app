@@ -35,9 +35,9 @@ function tabA11y(label: string) {
 export default function AppLayout() {
     const { t } = useTranslation();
 
-    // Trigger order defines both the tab order AND the initial route — the first
-    // trigger (`feed`) is the one selected on first mount (the landing tab), with
-    // `for_you` (now the "Dashboard") second.
+    // Trigger order defines both the tab order AND the initial route: the first
+    // trigger (`feed`) is selected on first mount, and Android Back on another
+    // tab returns to it (backBehavior 'initialRoute').
     return (
         <View style={{ flex: 1, backgroundColor: '#000' }}>
             <ErrorBoundary
@@ -49,31 +49,15 @@ export default function AppLayout() {
                     visible caption. `hidden` on NativeTabsTriggerLabelProps is the
                     supported cross-platform mechanism (iOS + Android). */}
                 <NativeTabs tintColor={ACCENT} minimizeBehavior="onScrollDown">
-                    {/* Feed (route `feed`) — the scrolling story feed, landing tab.
-                        The glyph is a list-of-stories, not a house: this tab is no
-                        longer a "home", and the house read as one. `.fill` matches
-                        the other four triggers (none of them use a separate
-                        selected/unselected pair). MaterialIcons `view-agenda` is
-                        the Android counterpart — stacked cards, deliberately NOT
-                        `dynamic-feed`, which the Dashboard's "Overview" sub-tab
-                        already uses, and not `article`, which reads as a single
-                        document rather than a stream. */}
-                    {/* `disableScrollToTop` / `disablePopToTop`: the first three
-                        tabs implement repeated-tab-selection themselves in JS
-                        (lib/hooks/use-tab-press-scroll-refresh) — re-tap scrolls
-                        to top, tapping again at the top pulls to refresh. These
-                        two props are how expo-router exposes
-                        `specialEffects.repeatedTabSelection`
-                        (NativeTabTrigger.convertTabPropsToOptions builds
-                        `{ popToRoot: !disablePopToTop, scrollToTop:
-                        !disableScrollToTop }`); there is no `specialEffects`
-                        prop on Trigger itself. Without them UIKit's own
-                        scroll-to-top special effect races the JS handler and the
-                        second tap can never reach the refresh branch. */}
+                    {/* navx: four tabs, Feed, World, Library, You, each a folder
+                        with its own Stack. `disableScrollToTop` because each
+                        page handles a re-tap in JS (use-tab-press-scroll-refresh:
+                        scroll up, then refresh); popToRoot stays ON, so a re-tap
+                        with a screen pushed in the tab's stack (One interest,
+                        a View-all) pops back to the pages. */}
                     <NativeTabs.Trigger
                         name="feed"
                         disableScrollToTop
-                        disablePopToTop
                         unstable_nativeProps={tabA11y(t('tabs.deck'))}
                     >
                         <Label hidden>{t('tabs.deck')}</Label>
@@ -82,6 +66,31 @@ export default function AppLayout() {
                             src={<VectorIcon family={MaterialIcons} name="view-agenda" />}
                         />
                     </NativeTabs.Trigger>
+                    <NativeTabs.Trigger
+                        name="world"
+                        disableScrollToTop
+                        unstable_nativeProps={tabA11y(t('tabs.world'))}
+                    >
+                        <Label hidden>{t('tabs.world')}</Label>
+                        <Icon sf="globe" src={<VectorIcon family={MaterialIcons} name="public" />} />
+                    </NativeTabs.Trigger>
+                    <NativeTabs.Trigger
+                        name="library"
+                        disableScrollToTop
+                        unstable_nativeProps={tabA11y(t('tabs.library'))}
+                    >
+                        <Label hidden>{t('tabs.library')}</Label>
+                        <Icon sf="bookmark.fill" src={<VectorIcon family={MaterialIcons} name="bookmark" />} />
+                    </NativeTabs.Trigger>
+                    <NativeTabs.Trigger
+                        name="you"
+                        disableScrollToTop
+                        unstable_nativeProps={tabA11y(t('tabs.you'))}
+                    >
+                        <Label hidden>{t('tabs.you')}</Label>
+                        <Icon sf="person.fill" src={<VectorIcon family={MaterialIcons} name="person" />} />
+                    </NativeTabs.Trigger>
+                    {/* OLD TABS, deleted in navx P3b once every caller moved. */}
                     {/* Dashboard (route `for_you`). */}
                     <NativeTabs.Trigger
                         name="for_you"

@@ -26,6 +26,7 @@ import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { isFeedbackRequestId } from '@/lib/stores/pending-notification-route';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, View } from 'react-native';
@@ -271,7 +272,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
         if (action.id === 'review-hygiene') {
             // Deterministic review sheet (no chat, no LLM) — push the dedicated
             // hygiene-review route.
-            router.push('/logged-in/hygiene-review');
+            navigateToTabScreen('you', 'hygiene-review');
             return;
         }
         if (action.id === 'review-plan') {

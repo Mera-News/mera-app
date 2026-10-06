@@ -7,7 +7,7 @@ import React from 'react';
 export default function PublisherArticles() {
     const params = useLocalSearchParams<{ publisherId?: string; publisherName?: string }>();
     if (!params.publisherId) {
-        return <Redirect href="/logged-in/app_container/for_you" />;
+        return <Redirect href="/logged-in/app_container/feed" />;
     }
     return (
         <Redirect

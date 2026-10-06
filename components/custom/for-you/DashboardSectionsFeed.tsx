@@ -182,7 +182,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
 
   const openFactFeed = useCallback((row: FactRow, title: string) => {
     router.push({
-      pathname: '/logged-in/fact-feed',
+      pathname: '/logged-in/app_container/feed/interest',
       params: {
         factId: row.factId,
         statement: title,

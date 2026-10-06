@@ -15,11 +15,14 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 jest.mock('expo-router', () => ({
+    router: { back: jest.fn() },
     useRouter: () => ({ back: jest.fn() }),
     useLocalSearchParams: () => ({}),
+    useFocusEffect: () => undefined,
     Stack: { Screen: () => null },
 }));
 jest.mock('@expo/vector-icons', () => ({ MaterialIcons: () => null }));
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/ui/button', () => {
     const { Pressable, Text } = require('react-native');
     return { Button: ({ children }: any) => <Pressable>{children}</Pressable>, ButtonText: ({ children }: any) => <Text>{children}</Text> };
@@ -38,12 +41,14 @@ jest.mock('@/components/custom/config-mera/NotificationSettingsScreen', () => ({
 jest.mock('@/components/custom/config-mera/ObservabilityScreen', () => ({ __esModule: true, default: () => mockBoom() }));
 
 const ROUTES: [string, () => React.ComponentType][] = [
-    ['display', () => require('../logged-in/preferences/display').default],
+    // Display, Mera Protocol and Notifications live in the You tab's stack
+    // (navx); their old paths are redirect stubs.
+    ['display', () => require('../logged-in/app_container/you/display').default],
     ['language', () => require('../logged-in/preferences/language').default],
     ['manage-data', () => require('../logged-in/preferences/manage-data').default],
     ['manage-subscription', () => require('../logged-in/preferences/manage-subscription').default],
-    ['mera-protocol', () => require('../logged-in/preferences/mera-protocol').default],
-    ['notifications', () => require('../logged-in/preferences/notifications').default],
+    ['mera-protocol', () => require('../logged-in/app_container/you/mera-protocol').default],
+    ['notifications', () => require('../logged-in/app_container/you/notifications').default],
     ['observability', () => require('../logged-in/preferences/observability').default],
 ];
 

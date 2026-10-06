@@ -40,9 +40,25 @@ it('labels every tab item for VoiceOver', () => {
     );
     expect(labels).toEqual({
         feed: 'tabs.deck',
+        world: 'tabs.world',
+        library: 'tabs.library',
+        you: 'tabs.you',
         for_you: 'tabs.dashboard',
         around: 'tabs.around',
         profile: 'tabs.profile',
         settings: 'tabs.settings',
     });
+});
+
+it('orders the four tabs Feed, World, Library, You, ahead of the old ones', () => {
+    render(<AppLayout />);
+    expect(Object.keys(mockTriggers).slice(0, 4)).toEqual(['feed', 'world', 'library', 'you']);
+});
+
+it('leaves pop-to-root on for the four tabs, and scroll-to-top to JS', () => {
+    render(<AppLayout />);
+    for (const name of ['feed', 'world', 'library', 'you']) {
+        expect(mockTriggers[name].disablePopToTop).toBeFalsy();
+        expect(mockTriggers[name].disableScrollToTop).toBe(true);
+    }
 });

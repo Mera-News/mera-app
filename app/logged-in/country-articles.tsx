@@ -18,7 +18,7 @@ export default function CountryArticles() {
     // back to. Navigating during render is a side effect in render; a
     // Redirect is the declarative equivalent and always has a destination.
     if (!params.countryCode) {
-        return <Redirect href="/logged-in/app_container/for_you" />;
+        return <Redirect href="/logged-in/app_container/feed" />;
     }
 
     return (

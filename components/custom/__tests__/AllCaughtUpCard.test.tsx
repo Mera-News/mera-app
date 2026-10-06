@@ -25,6 +25,10 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));
+const mockNavigateToPage = jest.fn();
+jest.mock('@/components/custom/nav/navigate-to-page', () => ({
+  navigateToPage: (...a: unknown[]) => mockNavigateToPage(...a),
+}));
 
 // The roomy branch draws a Lottie idle scene, which brings in two gates that
 // the compact branch never needed.
@@ -100,10 +104,10 @@ describe('AllCaughtUpCard', () => {
     }
   });
 
-  it('tapping the Explore CTA navigates to Explore', () => {
+  it('tapping the CTA opens the World page', () => {
     render(<AllCaughtUpCard />);
     fireEvent.press(screen.getByTestId('all-caught-up-explore-cta'));
-    expect(router.navigate).toHaveBeenCalledWith('/logged-in/app_container/around');
+    expect(mockNavigateToPage).toHaveBeenCalledWith('world');
   });
 
   // The user's explicit ask: "its corners should be rounded like the suggestion

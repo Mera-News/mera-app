@@ -6,7 +6,7 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
-import { router } from 'expo-router';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import IdleScene from './IdleScene';
@@ -122,7 +122,7 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({ compact = false }) =>
                 action="secondary"
                 size="sm"
                 className={compact ? 'mt-4' : 'mt-6'}
-                onPress={() => router.navigate('/logged-in/app_container/around')}
+                onPress={() => navigateToPage('world')}
             >
                 <ButtonText>{t('feed.exploreCta')}</ButtonText>
             </Button>

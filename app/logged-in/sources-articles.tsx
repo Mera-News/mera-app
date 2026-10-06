@@ -8,7 +8,7 @@ import React from 'react';
 export default function SourcesArticles() {
     const params = useLocalSearchParams<{ publisherName?: string; countryCode?: string }>();
     if (!params.publisherName) {
-        return <Redirect href="/logged-in/app_container/for_you" />;
+        return <Redirect href="/logged-in/app_container/feed" />;
     }
     return (
         <Redirect

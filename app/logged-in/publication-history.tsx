@@ -1,45 +1,20 @@
-import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import ErrorBoundary from '@/components/custom/ErrorBoundary';
-import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
-import PublicationArticleHistoryList from '@/components/custom/config-panel/PublicationArticleHistoryList';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+// Old route: a publication's reading history is the History view of its
+// publication page now. Kept so old links and restored screens open there.
+// Both routes sit on the root stack, so a plain replace is safe here.
+import { Redirect, useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PublicationHistory() {
     const params = useLocalSearchParams<{
-        publicationName: string;
+        publicationName?: string;
         countryCode?: string;
     }>();
 
-    // A missing param means a malformed deep link, often with no history to go
-    // back to. Navigating during render is a side effect in render; a
-    // Redirect is the declarative equivalent and always has a destination.
     if (!params.publicationName) {
-        return <Redirect href="/logged-in/app_container/for_you" />;
+        return <Redirect href="/logged-in/app_container/feed" />;
     }
 
-    return (
-        <GluestackUIProvider mode="dark">
-            <View style={{ flex: 1 }}>
-                {/* Unpadded wrapper. The page backdrop is mounted HERE, not inside the
-                    SafeAreaView and not inside the screen component, so it spans the
-                    FULL screen including the safe areas — otherwise the insets leave
-                    black strips top and bottom. The content below keeps its insets. */}
-                <AbstractGradientBackdrop />
-
-                <SafeAreaView style={{ flex: 1 }}>
-                    <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                        <PublicationArticleHistoryList
-                            publicationName={params.publicationName}
-                            countryCode={params.countryCode ?? null}
-                            onBack={() => router.back()}
-                        />
-                    </ErrorBoundary>
-                </SafeAreaView>
-            </View>
-        </GluestackUIProvider>
-    );
+    const target: Record<string, string> = { name: params.publicationName, order: 'HISTORY' };
+    if (params.countryCode) target.country = params.countryCode;
+    return <Redirect href={{ pathname: '/logged-in/publication', params: target }} />;
 }

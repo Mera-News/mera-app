@@ -59,7 +59,10 @@ jest.mock('@/lib/services/feedback-tree-service', () => ({
 }));
 
 import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
-import { router } from 'expo-router';
+const mockNavigateToTabScreen = jest.fn();
+jest.mock('@/components/custom/nav/navigate-to-page', () => ({
+    navigateToTabScreen: (...a: unknown[]) => mockNavigateToTabScreen(...a),
+}));
 import React, { useState } from 'react';
 import type { FeedbackTree, FeedbackTreeNode, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import { ActionSheetRow, SHEET_ROW_LABEL_CLASS } from '@/components/custom/cards/ArticleOverflowMenu';
@@ -172,7 +175,7 @@ describe('the feedback tree as sheet levels (shipped v5 tree)', () => {
         const u = setup(TAGGED);
         fireEvent.press(await waitFor(() => u.getByText('Issue with this publication')));
         fireEvent.press(await waitFor(() => u.getByText('Manage publications')));
-        expect(router.push).toHaveBeenCalledWith('/logged-in/publication-preferences');
+        expect(mockNavigateToTabScreen).toHaveBeenCalledWith('you', 'sources');
         expect(mockApplyLeafActions).not.toHaveBeenCalled();
         expect(u.onLeafPicked).toHaveBeenCalledWith(['publication_issue', 'manage_publication'], 0, true);
         expect(u.onClose).toHaveBeenCalled();

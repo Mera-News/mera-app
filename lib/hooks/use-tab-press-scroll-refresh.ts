@@ -81,6 +81,45 @@ export interface UseTabPressScrollRefreshOptions {
   readonly onRefresh?: () => void;
   /** Live refresh-in-flight flag, so consecutive taps don't stack refreshes. */
   readonly isRefreshing?: boolean;
+  /** False for a page that is not the visible one (a warmed pager neighbour):
+   *  a re-tap then belongs to the active page, never to this one. */
+  readonly enabled?: boolean;
+}
+
+interface NavLike {
+  getParent?: () => NavLike | undefined;
+  getState?: () => NavStateLike | undefined;
+  addListener: (type: 'tabPress', callback: (event: { target?: string }) => void) => () => void;
+  isFocused: () => boolean;
+}
+
+interface NavStateLike {
+  type?: string;
+  key?: string;
+  routes?: readonly { key: string; state?: NavStateLike }[];
+}
+
+/** The nearest TAB navigator above this screen, or null. A screen inside a
+ *  tab's Stack (navx) does not see the tab's `tabPress` on its own
+ *  navigation object; only the tab navigator emits it. */
+export function findTabAncestor(navigation: NavLike): NavLike | null {
+  let n: NavLike | undefined = navigation;
+  while (n) {
+    if (n.getState?.()?.type === 'tab') return n;
+    n = n.getParent?.();
+  }
+  return null;
+}
+
+/** The key of the tab route whose subtree holds `routeKey` (the screen itself
+ *  when it IS the tab route), or null. `tabPress` targets that key. */
+export function tabRouteKeyContaining(tabState: NavStateLike | undefined, routeKey: string): string | null {
+  const holds = (state: NavStateLike | undefined): boolean =>
+    !!state?.routes?.some((r) => r.key === routeKey || holds(r.state));
+  for (const r of tabState?.routes ?? []) {
+    if (r.key === routeKey || holds(r.state)) return r.key;
+  }
+  return null;
 }
 
 /**
@@ -103,6 +142,7 @@ export function useTabPressScrollRefresh({
   getOffset,
   onRefresh,
   isRefreshing = false,
+  enabled = true,
 }: UseTabPressScrollRefreshOptions): void {
   const navigation = useNavigation();
   const route = useRoute();
@@ -110,27 +150,31 @@ export function useTabPressScrollRefresh({
   // Everything the handler reads goes through a ref so the subscription is
   // established once per tab and never torn down/re-added on a refresh-state
   // flip or a new inline closure.
-  const latest = useRef({ listRef, getOffset, onRefresh, isRefreshing });
-  latest.current = { listRef, getOffset, onRefresh, isRefreshing };
+  const latest = useRef({ listRef, getOffset, onRefresh, isRefreshing, enabled });
+  latest.current = { listRef, getOffset, onRefresh, isRefreshing, enabled };
 
   useEffect(() => {
-    // `tabPress` is not part of the default navigation event map, so the
-    // listener is registered through a narrowly-typed view of `addListener`
-    // rather than casting the whole navigation object to `any`.
-    const emitter = navigation as unknown as {
-      addListener: (
-        type: 'tabPress',
-        callback: (event: { target?: string }) => void,
-      ) => () => void;
-      isFocused: () => boolean;
-    };
+    // `tabPress` is emitted by the TAB navigator only. A page inside a tab's
+    // Stack listens there and matches the event against the tab route that
+    // holds it. `isFocused()` stays this SCREEN's: with a screen pushed on top
+    // (One interest) it is false, the re-tap is the native pop to root, and
+    // this handler stays out of it.
+    const own = navigation as unknown as NavLike;
+    const tabs = findTabAncestor(own);
+    if (!tabs) return undefined;
 
-    return emitter.addListener('tabPress', (event) => {
-      const { listRef: ref, getOffset: read, onRefresh: refresh, isRefreshing: busy } =
-        latest.current;
+    return tabs.addListener('tabPress', (event) => {
+      const {
+        listRef: ref,
+        getOffset: read,
+        onRefresh: refresh,
+        isRefreshing: busy,
+        enabled: on,
+      } = latest.current;
+      if (!on) return;
       const action = decideTabPressAction({
-        isForThisTab: event?.target === route.key,
-        isFocused: emitter.isFocused(),
+        isForThisTab: !!event?.target && event.target === tabRouteKeyContaining(tabs.getState?.(), route.key),
+        isFocused: own.isFocused(),
         offset: read(),
         canRefresh: !!refresh,
         isRefreshing: busy,

@@ -15,6 +15,8 @@
 // scope ids stay `country:<ALPHA3>` and only lib/explore/world-pages.ts
 // converts between the two.
 
+import type { ParseKeys } from 'i18next';
+
 import {
   DEFAULT_PAGE_ORDER,
   type CountryPageId,
@@ -29,6 +31,10 @@ export type { CountryPageId, PageId, StaticPageId, StaticTabId, TabId };
 
 /** Bottom-tab order. Also the cross-tab swipe order. */
 export const TAB_ORDER: readonly TabId[] = ['feed', 'world', 'library', 'you'];
+
+/** A key of the app's typed dictionary (typed off en.json), so pages can
+ *  `t(meta.labelKey)` with no cast. */
+export type I18nKey = ParseKeys;
 
 /** Every page id that is not a country page. */
 export type FixedPageId = StaticPageId | 'world';
@@ -47,14 +53,14 @@ export type QuickSettingsFocusId =
   | 'meraProtocol.automaticFactCheck';
 
 export interface PageExplainer {
-  readonly titleKey: string;
-  readonly paragraphKeys: readonly string[];
+  readonly titleKey: I18nKey;
+  readonly paragraphKeys: readonly I18nKey[];
 }
 
 export interface PageMeta {
   readonly tab: TabId;
   /** i18n key of the pill label. Country pages are labelled by country name. */
-  readonly labelKey: string;
+  readonly labelKey: I18nKey;
   /** Where the bolt-badged sliders button jumps. Null: no button on this page. */
   readonly quickSettings: readonly QuickSettingsFocusId[] | null;
   /** Never unmounted by the pager window. Feed only: its reading session
@@ -128,16 +134,46 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
       paragraphKeys: ['world.explainer.what', 'world.explainer.how1', 'world.explainer.how2'],
     },
   },
-  saved: { tab: 'library', labelKey: 'nav.page.saved', quickSettings: null, keepMounted: false, explainer: null },
+  saved: {
+    tab: 'library',
+    labelKey: 'nav.page.saved',
+    quickSettings: null,
+    keepMounted: false,
+    explainer: {
+      titleKey: 'library.explainer.saved.title',
+      paragraphKeys: ['library.explainer.saved.what', 'library.explainer.saved.how1', 'library.explainer.saved.how2'],
+    },
+  },
   checks: {
     tab: 'library',
     labelKey: 'nav.page.checks',
     quickSettings: ['meraProtocol.automaticFactCheck'],
     keepMounted: false,
-    explainer: null,
+    explainer: {
+      titleKey: 'library.explainer.checks.title',
+      paragraphKeys: ['library.explainer.checks.what', 'library.explainer.checks.how1', 'library.explainer.checks.how2'],
+    },
   },
-  visited: { tab: 'library', labelKey: 'nav.page.visited', quickSettings: null, keepMounted: false, explainer: null },
-  stats: { tab: 'library', labelKey: 'nav.page.stats', quickSettings: null, keepMounted: false, explainer: null },
+  visited: {
+    tab: 'library',
+    labelKey: 'nav.page.visited',
+    quickSettings: null,
+    keepMounted: false,
+    explainer: {
+      titleKey: 'library.explainer.visited.title',
+      paragraphKeys: ['library.explainer.visited.what', 'library.explainer.visited.how1', 'library.explainer.visited.how2', 'library.explainer.visited.privacy'],
+    },
+  },
+  stats: {
+    tab: 'library',
+    labelKey: 'nav.page.stats',
+    quickSettings: null,
+    keepMounted: false,
+    explainer: {
+      titleKey: 'library.explainer.stats.title',
+      paragraphKeys: ['library.explainer.stats.what', 'library.explainer.stats.how1', 'library.explainer.stats.how2'],
+    },
+  },
   profile: {
     tab: 'you',
     labelKey: 'tabs.profile',
@@ -152,7 +188,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
 };
 
 /** Tab-bar labels (also the cross-tab edge label). */
-export const TAB_LABEL_KEYS: Readonly<Record<TabId, string>> = {
+export const TAB_LABEL_KEYS: Readonly<Record<TabId, I18nKey>> = {
   feed: 'tabs.deck',
   world: 'tabs.world',
   library: 'tabs.library',

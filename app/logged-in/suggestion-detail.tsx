@@ -20,14 +20,14 @@ export default function SuggestionDetail() {
     // back to. Navigating during render is a side effect in render; a
     // Redirect is the declarative equivalent and always has a destination.
     if (!articleSuggestionId || typeof articleSuggestionId !== 'string') {
-        return <Redirect href="/logged-in/app_container/for_you" />;
+        return <Redirect href="/logged-in/app_container/feed" />;
     }
 
     const handleBack = () => {
         if (canGoBack) {
             router.back();
         } else {
-            router.replace('/logged-in/app_container/for_you');
+            router.replace('/logged-in/app_container/feed');
         }
     };
 

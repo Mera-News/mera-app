@@ -285,7 +285,7 @@ describe('DashboardSectionsFeed', () => {
         const { getByLabelText } = renderFeed([makeRow('f1', [makeGroup('g1', 1000, 1000)])]);
         fireEvent.press(getByLabelText('header:Statement f1'));
         expect(mockRouterPush).toHaveBeenCalledWith({
-            pathname: '/logged-in/fact-feed',
+            pathname: '/logged-in/app_container/feed/interest',
             params: { factId: 'f1', statement: 'Statement f1' },
         });
     });
@@ -296,7 +296,7 @@ describe('DashboardSectionsFeed', () => {
         ]);
         fireEvent.press(getByLabelText('viewall'));
         expect(mockRouterPush).toHaveBeenCalledWith({
-            pathname: '/logged-in/fact-feed',
+            pathname: '/logged-in/app_container/feed/interest',
             params: { factId: 'f1', statement: 'Statement f1' },
         });
     });
@@ -414,7 +414,7 @@ describe('DashboardSectionsFeed — headline sections', () => {
         ]);
         fireEvent.press(getByLabelText('viewall'));
         expect(mockRouterPush).toHaveBeenCalledWith({
-            pathname: '/logged-in/fact-feed',
+            pathname: '/logged-in/app_container/feed/interest',
             params: {
                 factId: 'headline-country-in',
                 statement: 'forYou.headlineSectionCountry',

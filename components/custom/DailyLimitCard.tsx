@@ -4,7 +4,7 @@ import { Text } from '@/components/ui/text';
 import { gameAnimationFor } from '@/components/custom/game-ui/animation-registry';
 import { PROCESSING_SCENE_SIZE } from '@/components/custom/processing/types';
 import { useForYouDailyLimitResetAt } from '@/lib/stores/selectors';
-import { router } from 'expo-router';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import LottieView from 'lottie-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -95,7 +95,7 @@ const DailyLimitCard: React.FC = () => {
                 action="secondary"
                 size="sm"
                 className="mt-6"
-                onPress={() => router.navigate('/logged-in/app_container/around')}
+                onPress={() => navigateToPage('world')}
             >
                 <ButtonText>{t('feed.exploreCta')}</ButtonText>
             </Button>

@@ -5,7 +5,7 @@ import {
 import { Box } from '@/components/ui/box';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import { router } from 'expo-router';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import MeraLogo from './MeraLogo';
@@ -20,7 +20,7 @@ const NoGeneratedInterestsCard: React.FC = () => {
     // tab the user can already reach from the bar (the same reason
     // FeedPreparingCard and AllCaughtUpCard navigate to Explore).
     const openProfile = useCallback(() => {
-        router.navigate('/logged-in/app_container/profile');
+        navigateToPage('profile');
     }, []);
 
     const innerContent = (
