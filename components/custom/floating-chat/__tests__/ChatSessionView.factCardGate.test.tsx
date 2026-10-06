@@ -40,7 +40,10 @@ jest.mock('@/lib/logger', () => ({
     addBreadcrumb: jest.fn(),
   },
 }));
-jest.mock('@/lib/stores/mera-protocol-store', () => ({ useIsOnDeviceProcessing: () => false }));
+jest.mock('@/lib/stores/mera-protocol-store', () => ({
+  useIsOnDeviceProcessing: () => false,
+  useWebSearchInChat: () => true,
+}));
 jest.mock('@/lib/stores/user-store', () => ({
   useUserStore: { getState: () => ({ userPersona: null, fetchUserPersona: jest.fn() }) },
 }));

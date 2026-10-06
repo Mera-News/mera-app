@@ -20,7 +20,8 @@ import {
   useFloatingChatStore,
   type ChatContext,
 } from '@/lib/stores/floating-chat-store';
-import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
+import { useIsOnDeviceProcessing, useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
+import { introKeyFor, pageStarters } from '@/components/custom/mera-button/mera-pages';
 import { useUserStore } from '@/lib/stores/user-store';
 import { holdRestart } from '@/lib/app-restart';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -159,10 +160,17 @@ export default function ChatSessionView({
   // Intro copy depends on the context: the article-feedback surfaces open with a
   // "what can I do for you" line (article vs. suggestion variant); everything
   // else keeps the persona intro.
+  const webSearch = useWebSearchInChat();
+  // Computed keys from the page table, so `t` takes them untyped (the
+  // en.json presence test in mera-button covers every one).
+  const tKey = t as unknown as (key: string, opts?: Record<string, string>) => string;
   const introText =
     context.kind === 'optimisation-plan'
       ? // The pinned plan card IS the content — no persona intro line beneath it.
         null
+      : (context.kind === 'persona' || context.kind === 'follow-story') && context.page
+        ? // Opened from the Mera button: the page's own first line.
+          tKey(introKeyFor(context.page, webSearch))
       : context.kind === 'follow-story'
         ? // The FAB seeds "I want to follow a story", so the persona intro
           // ("tell me about yourself…") would answer a question nobody asked.
@@ -363,6 +371,17 @@ export default function ChatSessionView({
   const starterChips: StarterChip[] = useMemo(() => {
     // The optimisation-plan thread is card-only — no persona/article chips.
     if (context.kind === 'optimisation-plan') return [];
+    // Opened from the Mera button: the page's hints as starters that fill the
+    // composer and never send (owner ruling, navx).
+    if ((context.kind === 'persona' || context.kind === 'follow-story') && context.page) {
+      const subject = context.kind === 'persona' ? context.subject : undefined;
+      return pageStarters(context.page, webSearch, subject).map((s) => ({
+        key: s.labelKey,
+        label: tKey(s.labelKey),
+        message: tKey(s.draftKey, s.draftOptions ? { ...s.draftOptions } : undefined),
+        draft: true,
+      }));
+    }
     // The follow-story thread opens with an auto-sent turn and expects the user
     // to describe what they want followed — persona chips ("add a place", "show
     // my facts") would derail it into a chat that has no tools for them.
@@ -433,7 +452,7 @@ export default function ChatSessionView({
         message: t('floatingChat.chipDataHandlingMessage'),
       },
     ];
-  }, [t, context, isOnDevice]);
+  }, [t, tKey, context, isOnDevice, webSearch]);
 
   // --- Server-authoritative block state ---------------------------------
   // The hook's `isBlocked` only flips mid-session (via an issueWarning side
