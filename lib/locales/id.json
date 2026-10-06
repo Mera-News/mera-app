@@ -1847,7 +1847,7 @@
             "steps": {
               "0": "Anda berbicara dengan Mera dan itu mendengarkan untuk bit yang tahan lama.",
               "1": "Anda memberitahunya dengan terang-terangan: 'Saya pindah ke Lisbon.'",
-              "2": "Anda menambahkan atau menghapusnya sendiri di tab Profil."
+              "2": "Anda menambah atau menghapusnya sendiri di tab Anda."
             }
           },
           "to-topics": {
@@ -1872,7 +1872,7 @@
           },
           "importance": {
             "headline": "Beberapa fakta lebih penting dari yang lain",
-            "body": "Di tab Profil, ketuk apa pun yang diketahui Mera tentang Anda untuk menaikkan atau menurunkan berapa banyak yang diperhitungkan, memformulasikan ulang, atau menghapusnya. Mematikan sesuatu lebih lembut daripada menghapusnya, dan biasanya gerakan pertama yang lebih baik.",
+            "body": "Di tab Anda, buka fakta Anda dan ketuk apa pun yang Mera ketahui tentang Anda untuk menaikkan atau menurunkan bobotnya, menulis ulang, atau menghapusnya. Menurunkan bobot lebih lembut daripada menghapus, dan biasanya langkah pertama yang lebih baik.",
             "ask": "Bagaimana cara saya mengubah seberapa penting salah satu fakta saya?"
           }
         }
@@ -1882,9 +1882,9 @@
         "subtitle": "Di mana cerita hari itu tinggal, dan bagaimana mereka bergerak.",
         "slides": {
           "two-lists": {
-            "headline": "Dua daftar, dua pekerjaan",
-            "body": "Tab pertama adalah Feed Anda: satu daftar panjang, yang paling relevan di dekat puncak. Yang kedua adalah hari yang sama diurutkan ke dalam bagian. Cerita yang sama, bentuk berbeda, jadi gunakan mana pun yang sesuai dengan suasana hati.",
-            "ask": "Apa perbedaan antara Feed dan Dashboard?"
+            "headline": "Tiga halaman, satu tab",
+            "body": "Tab Umpan punya tiga halaman. Umpan adalah satu daftar panjang dengan yang paling relevan di dekat atas. Minat mengurutkan berita yang sama sesuai yang Anda katakan kepada Mera. Cerita menyimpan berita berkembang yang Anda ikuti. Geser ke samping untuk berpindah.",
+            "ask": "Apa bedanya Umpan dan Minat?"
           },
           "nothing-removed": {
             "headline": "Tidak ada yang pernah dihapus",
@@ -1932,16 +1932,16 @@
           },
           "quiet-by-design": {
             "headline": "Umpan yang sengaja dibuat tenang",
-            "body": "Mera tidak menghitung di depan Anda saat Anda membaca. Ketuk keduanya untuk melihat apa yang ada di mana.",
+            "body": "Mera tidak menghitung di depan Anda saat Anda membaca. Ketuk keduanya untuk melihat bagaimana tiap halaman tetap tenang.",
             "ask": "Mengapa Umpan tidak menampilkan berapa banyak berita yang masuk?",
             "reveal": {
               "feed": {
                 "label": "Umpan",
-                "text": "Tidak ada total berjalan, tidak ada bilah kemajuan, tidak ada «2 jam lalu» di kartu. Tanda Mera di samping judul adalah satu-satunya petunjuk bahwa sesuatu sedang diambil: tanda itu menerang dan membesar selama sinkronisasi, dan tenang saja di waktu lainnya. Ketuk kapan pun Anda ingin melihat angkanya; angka itu tampil tiga detik lalu menyingkir."
+                "text": "Tombol Mera bergerak saat Mera membaca dan diam di waktu lainnya. Itu satu-satunya tanda bahwa sesuatu sedang diambil."
               },
               "dashboard": {
-                "label": "Dasbor",
-                "text": "Semua yang tidak ditampilkan Umpan. Berapa banyak berita yang diterbitkan, dianalisis, dan disimpan, kapan proses terakhir selesai, berapa usia setiap berita, dan notifikasi Anda."
+                "label": "Minat",
+                "text": "Hari yang sama diurutkan berdasarkan minat, dengan satu bagian untuk setiap hal yang Anda katakan kepada Mera dan berita yang belum dibaca di urutan pertama. Bagian diurutkan ulang saat Anda meninggalkan halaman, atau setiap 10 menit."
               }
             }
           }
@@ -2074,48 +2074,48 @@
         }
       },
       "explore": {
-        "title": "Jelajahi",
+        "title": "Dunia",
         "subtitle": "Berita utama yang sama yang didapat semua orang.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Sengaja bukan tentang Anda",
-            "body": "Jelajahi adalah satu tempat Mera tidak mempersonalisasi apa pun. Tidak ada penilaian, tidak ada alasan, tidak ada yang dipelajari dari apa yang Anda buka di sini. Hanya apa yang ruang berita negara memimpin, dalam pesanan mereka.",
-            "ask": "Mengapa tab Jelajahi tidak dipersonalisasi?"
+            "body": "Dunia adalah satu-satunya tempat Mera tidak mempersonalisasi apa pun. Tidak ada penilaian, tidak ada alasan, tidak ada yang dipelajari dari apa yang Anda buka di sini. Hanya apa yang diunggulkan ruang redaksi tiap negara, dengan urutan mereka.",
+            "ask": "Mengapa Dunia tidak dipersonalisasi?"
           },
           "the-chips": {
-            "headline": "Chip di seluruh bagian atas",
-            "body": "Mereka dibangun untuk Anda daripada dipilih oleh Anda.",
+            "headline": "Satu halaman per negara",
+            "body": "Mera membuat halamannya untuk Anda, dan Anda bisa mengubahnya.",
             "steps": {
-              "0": "Dunia datang pertama, selalu.",
-              "1": "Kemudian negara Anda sendiri dan tempat mana pun Mera tahu, dan setelah itu, negara mana pun yang Anda tambahkan sendiri."
+              "0": "Dunia selalu di urutan pertama kecuali Anda memindahkannya.",
+              "1": "Lalu negara Anda sendiri dan negara dari tempat Anda, dan setelah itu, negara mana pun yang Anda tambahkan sendiri."
             }
           },
           "the-plus-chip": {
-            "headline": "+ di akhir chip",
-            "body": "Ada chip + kecil setelah negara terakhir. Kemana ia membawamu?",
+            "headline": "Menambah negara",
+            "body": "Di mana Anda menambah negara ke Dunia?",
             "choose": {
               "places": {
                 "label": "Tempat Anda",
-                "feedback": "Dulu. Itu tidak lagi."
+                "feedback": "Tempat Anda menambahkan negaranya sendiri. Untuk negara lain, gunakan pena."
               },
               "sources": {
-                "label": "Layar Sumber",
-                "feedback": "Benar: negara, dan penerbit di balik mereka."
+                "label": "Pena di header Dunia",
+                "feedback": "Benar. Ketuk pena, lalu cari negaranya dan tambahkan."
               },
               "settings": {
                 "label": "Pengaturan",
-                "feedback": "Tidak. Pengaturan adalah tab terakhir di sepanjang bagian bawah."
+                "feedback": "Bukan. Pengaturan adalah halaman di tab Anda, dan negara tidak ada di sana."
               }
             }
           },
           "search": {
-            "headline": "Pencarian Jelajahi",
-            "body": "Batang pencarian di atas chip terlihat melalui berita terbaru, kira-kira dua hari terakhir, bukan arsip. Itu untuk 'apa yang terjadi dengan hal itu', bukan untuk penelitian."
+            "headline": "Mencari berita",
+            "body": "Ikon cari di header Dunia menelusuri berita terbaru, kira-kira dua hari terakhir, bukan arsip. Ini untuk \"apa yang terjadi dengan hal itu\", bukan untuk riset."
           },
           "hide-a-chip": {
-            "headline": "Terlalu banyak chip",
-            "body": "Tekan dan tahan chip yang tidak Anda inginkan dan itu akan hilang. Mera membangunnya dari tempat yang diketahuinya, jadi jika yang terus kembali, tempat di baliknya masih dalam profil Anda.",
-            "ask": "Bagaimana cara saya menyingkirkan chip negara di Jelajahi?"
+            "headline": "Terlalu banyak negara",
+            "body": "Ketuk pena, lalu tanda x pada sebuah negara, untuk menyembunyikan halamannya. Jika negara itu berasal dari salah satu tempat Anda, tempatnya tetap ada di profil dan hanya halamannya yang hilang.",
+            "ask": "Bagaimana cara menghapus halaman negara dari Dunia?"
           }
         }
       },
@@ -2125,10 +2125,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Di mana sumber tinggal",
-            "body": "Dua pintu, satu layar.",
+            "body": "Satu layar untuk semua penerbit yang Anda atur.",
             "steps": {
-              "0": "Chip + di akhir baris chip Jelajahi.",
-              "1": "Atau tab Profil, kemudian Lanjutan, kemudian Sumber."
+              "0": "Tab Anda, lalu Sumber.",
+              "1": "\"Lebih sedikit dari\" di menu ••• sebuah berita langsung berlaku, dengan Urungkan, lalu penerbitnya muncul di bawah Diatur."
             },
             "ask": "Di mana saya mengelola sumber mana yang saya lihat?"
           },
@@ -2250,8 +2250,8 @@
         "subtitle": "Cara tercepat untuk mengubah hampir apa pun.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera ada di tab Profil",
-            "body": "Gelembung ucapan di sebelah logo di tab Profil membuka obrolan. Mudah untuk berjalan melewati, dan itu adalah kontrol paling mampu di aplikasi.",
+            "headline": "Mera ada di setiap halaman",
+            "body": "Tombol Mera bulat di kanan bawah membuka obrolan, mulai dari halaman yang sedang Anda buka.",
             "ask": "Di mana saya menemukan obrolan dengan Mera?"
           },
           "ask-what-it-knows": {
@@ -2317,9 +2317,9 @@
         "slides": {
           "one-screen": {
             "headline": "Di mana saklar berada",
-            "body": "Dua ketukan dari mana saja di aplikasi.",
+            "body": "Beberapa ketukan dari mana saja di aplikasi.",
             "steps": {
-              "0": "Tab Pengaturan, yang terakhir di sepanjang bagian bawah.",
+              "0": "Tab Anda, lalu Pengaturan.",
               "1": "Mera Protocol."
             },
             "ask": "Di mana layar Mera Protocol?"

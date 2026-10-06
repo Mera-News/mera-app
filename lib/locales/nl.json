@@ -1847,7 +1847,7 @@
             "steps": {
               "0": "Je praat met Mera en het luistert naar de duurzame bits.",
               "1": "Je zegt het ronduit: 'Ik ben naar Lissabon verhuisd.'",
-              "2": "Je voegt ze toe of verwijdert ze op het tabblad Profiel."
+              "2": "Je voegt ze toe of verwijdert ze zelf op het tabblad Jij."
             }
           },
           "to-topics": {
@@ -1872,7 +1872,7 @@
           },
           "importance": {
             "headline": "Sommige feiten zijn belangrijker dan andere",
-            "body": "Tik op het tabblad Profiel op wat Mera over je weet om hoeveel het telt te verhogen of verlagen, het opnieuw in te stellen of te verwijderen. Iets uitschakelen is zachter dan het verwijderen en meestal het betere eerste zet.",
+            "body": "Open op het tabblad Jij je feiten en tik op alles wat Mera over je weet om te wijzigen hoeveel het meetelt, het anders te formuleren of het te verwijderen. Iets lager zetten is zachter dan verwijderen en meestal de betere eerste stap.",
             "ask": "Hoe wijzig ik hoe belangrijk één van mijn feiten is?"
           }
         }
@@ -1882,9 +1882,9 @@
         "subtitle": "Waar de verhalen van vandaag leven en hoe ze zich bewegen.",
         "slides": {
           "two-lists": {
-            "headline": "Twee lijsten, twee banen",
-            "body": "Het eerste tabblad is je Feed: één lange lijst, het meest relevant bovenaan. De tweede is dezelfde dag geordend in secties. Dezelfde verhalen, andere vorm, dus gebruik wat het best voor je stemming werkt.",
-            "ask": "Wat is het verschil tussen de Feed en het Dashboard?"
+            "headline": "Drie pagina's, één tabblad",
+            "body": "Het tabblad Feed heeft drie pagina's. Feed is één lange lijst, het meest relevante bovenaan. Interesses sorteert dezelfde verhalen op wat je aan Mera hebt verteld. Verhalen bewaart de lopende verhalen die je volgt. Veeg opzij om te wisselen.",
+            "ask": "Wat is het verschil tussen Feed en Interesses?"
           },
           "nothing-removed": {
             "headline": "Niets wordt ooit verwijderd",
@@ -1932,16 +1932,16 @@
           },
           "quiet-by-design": {
             "headline": "Een bewust rustige feed",
-            "body": "Mera telt niet mee terwijl je leest. Tik op beide om te zien wat waar staat.",
+            "body": "Mera telt niet mee terwijl je leest. Tik op beide om te zien hoe elke pagina rustig blijft.",
             "ask": "Waarom laat de Feed niet zien hoeveel verhalen er binnenkwamen?",
             "reveal": {
               "feed": {
                 "label": "Feed",
-                "text": "Geen lopende totalen, geen voortgangsbalk, geen „2 uur geleden” op de kaarten. Het Mera-teken naast de titel is het enige teken dat er iets wordt opgehaald: het wordt lichter en groter tijdens een synchronisatie en blijft de rest van de tijd rustig. Tik erop wanneer je de cijfers wilt zien; ze verschijnen drie seconden en verdwijnen dan weer."
+                "text": "De Mera-knop beweegt terwijl Mera leest en blijft verder stil. Het is het enige teken dat er iets wordt opgehaald."
               },
               "dashboard": {
-                "label": "Dashboard",
-                "text": "Alles wat de Feed weglaat. Hoeveel verhalen er zijn gepubliceerd, geanalyseerd en bewaard, wanneer de laatste run klaar was, hoe oud elk verhaal is, en je meldingen."
+                "label": "Interesses",
+                "text": "Dezelfde dag gesorteerd op interesse, met een sectie voor alles wat je aan Mera hebt verteld en ongelezen verhalen eerst. Secties worden opnieuw gesorteerd als je de pagina verlaat, of elke 10 minuten."
               }
             }
           }
@@ -2074,48 +2074,48 @@
         }
       },
       "explore": {
-        "title": "Verkennen",
+        "title": "Wereld",
         "subtitle": "Dezelfde koppen die iedereen anders krijgt.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Opzettelijk niet over jou",
-            "body": "Verkennen is de enige plaats Mera niets personaliseerd. Geen scoring, geen redenen, niets geleerd van wat je hier opent. Gewoon wat een land's nieuwskamers aanvoeren, in hun volgorde.",
-            "ask": "Waarom is het Verkennen tabblad niet gepersonaliseerd?"
+            "body": "Wereld is de enige plek waar Mera niets personaliseert. Geen scores, geen redenen, niets geleerd van wat je hier opent. Alleen waar de redacties van elk land mee openen, in hun volgorde.",
+            "ask": "Waarom is Wereld niet gepersonaliseerd?"
           },
           "the-chips": {
-            "headline": "De chips bovenaan",
-            "body": "Ze zijn gebouwd voor je in plaats van gekozen door jou.",
+            "headline": "Eén pagina per land",
+            "body": "Mera maakt de pagina's voor je, en je kunt ze aanpassen.",
             "steps": {
-              "0": "Wereld komt eerst, altijd.",
-              "1": "Dan je eigen land en plaatsen die Mera weet, en daarna elk land dat je zelf hebt toegevoegd."
+              "0": "Wereld staat vooraan, tenzij je het verplaatst.",
+              "1": "Daarna je eigen land en de landen van je plaatsen, en daarna alle landen die je zelf hebt toegevoegd."
             }
           },
           "the-plus-chip": {
-            "headline": "De + aan het einde van de chips",
-            "body": "Er is een kleine + chip na de laatste land. Waar voert het je?",
+            "headline": "Een land toevoegen",
+            "body": "Waar voeg je in Wereld een land toe?",
             "choose": {
               "places": {
                 "label": "Je plaatsen",
-                "feedback": "Het deed dat ooit. Het doet het niet meer."
+                "feedback": "Je plaatsen voegen hun landen vanzelf toe. Voor elk ander land gebruik je het potlood."
               },
               "sources": {
-                "label": "Het Bronnen-scherm",
-                "feedback": "Juist: landen en de uitgevers erachter."
+                "label": "Het potlood in de kop van Wereld",
+                "feedback": "Juist. Tik op het potlood, zoek dan het land en voeg het toe."
               },
               "settings": {
                 "label": "Instellingen",
-                "feedback": "Nee. Instellingen is het laatste tabblad onderaan."
+                "feedback": "Nee. Instellingen is een pagina van het tabblad Jij, en landen staan daar niet."
               }
             }
           },
           "search": {
-            "headline": "Verkennen zoeken",
-            "body": "De zoekbalk boven de chips kijkt door recente koppen, ruwweg de afgelopen twee dagen, geen archief. Het is voor 'wat gebeurde met dat ding', niet voor onderzoek."
+            "headline": "Het nieuws doorzoeken",
+            "body": "Het zoekicoon in de kop van Wereld doorzoekt recente koppen, ongeveer de afgelopen twee dagen, geen archief. Het is voor “wat is er gebeurd met die zaak”, niet voor onderzoek."
           },
           "hide-a-chip": {
-            "headline": "Te veel chips",
-            "body": "Druk en houd een chip die je niet wilt en deze gaat weg. Mera bouwt deze uit plaatsen die het kent, dus als er steeds één terugkomt, is de plaats erachter nog steeds in je profiel.",
-            "ask": "Hoe word ik een landchip in Verkennen kwijt?"
+            "headline": "Te veel landen",
+            "body": "Tik op het potlood en dan op het kruisje bij een land om de pagina te verbergen. Komt het land van een van je plaatsen, dan blijft de plaats in je profiel en verdwijnt alleen de pagina.",
+            "ask": "Hoe verwijder ik een landpagina uit Wereld?"
           }
         }
       },
@@ -2125,10 +2125,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Waar bronnen leven",
-            "body": "Twee deuren, één scherm.",
+            "body": "Eén scherm voor elke uitgever die je hebt aangepast.",
             "steps": {
-              "0": "De + chip aan het einde van de rij chips van Verkennen.",
-              "1": "Of het tabblad Profiel, dan Geavanceerd, dan Bronnen."
+              "0": "Het tabblad Jij, dan Bronnen.",
+              "1": "“Minder van” in het menu ••• van een artikel werkt meteen, met Ongedaan maken, en de uitgever staat dan onder Aangepast."
             },
             "ask": "Waar beheer ik welke bronnen ik zie?"
           },
@@ -2250,8 +2250,8 @@
         "subtitle": "De snelste manier om bijna alles te veranderen.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera is op het tabblad Profiel",
-            "body": "De spraakbel naast het logo op het tabblad Profiel opent de chat. Het is makkelijk voorbij te lopen, en het is de meest capabele controle in de app.",
+            "headline": "Mera is op elke pagina",
+            "body": "De ronde Mera-knop rechtsonder opent de chat, vanuit de pagina waarop je zit.",
             "ask": "Waar vind ik de chat met Mera?"
           },
           "ask-what-it-knows": {
@@ -2317,9 +2317,9 @@
         "slides": {
           "one-screen": {
             "headline": "Waar de schakelaars zijn",
-            "body": "Twee tikken van ergens in de app.",
+            "body": "Een paar tikken vanaf elke plek in de app.",
             "steps": {
-              "0": "Het tabblad Instellingen, de laatste onderaan.",
+              "0": "Het tabblad Jij, dan Instellingen.",
               "1": "Mera Protocol."
             },
             "ask": "Waar is het Mera Protocol-scherm?"

@@ -1848,7 +1848,7 @@
             "steps": {
               "0": "Bạn nói chuyện với Mera và nó nghe những phần bền vững.",
               "1": "Bạn nói rõ ràng: 'Tôi chuyển đến Lisbon.'",
-              "2": "Bạn thêm hoặc xóa chúng trên tab Hồ sơ."
+              "2": "Bạn tự thêm hoặc xóa chúng trong tab Bạn."
             }
           },
           "to-topics": {
@@ -1873,7 +1873,7 @@
           },
           "importance": {
             "headline": "Một số thông tin quan trọng hơn những thông tin khác",
-            "body": "Trên tab Hồ sơ, nhấn bất cứ gì Mera biết về bạn để nâng cao hoặc hạ thấp mức độ nó đếm, diễn đạt lại nó hoặc xóa nó. Giảm một cái gì đó là nhẹ nhàng hơn so với xóa nó, và thường là bước đầu tiên tốt hơn.",
+            "body": "Trong tab Bạn, mở các thông tin về bạn và chạm vào bất kỳ điều gì Mera biết để tăng hoặc giảm mức quan trọng, viết lại hoặc xóa nó. Giảm xuống nhẹ nhàng hơn xóa, và thường là cách thử đầu tiên tốt hơn.",
             "ask": "Làm thế nào để tôi thay đổi mức độ quan trọng của một trong những thông tin của tôi?"
           }
         }
@@ -1883,9 +1883,9 @@
         "subtitle": "Nơi câu chuyện của ngày sống, và cách chúng chuyển động.",
         "slides": {
           "two-lists": {
-            "headline": "Hai danh sách, hai công việc",
-            "body": "Tab đầu tiên là Bản tin của bạn: một danh sách dài, điều liên quan nhất gần đầu. Thứ hai giống như ngày được sắp xếp thành các phần. Những câu chuyện giống nhau, hình dạng khác nhau, vì vậy sử dụng cái nào phù hợp với tâm trạng.",
-            "ask": "Sự khác biệt giữa Bản tin và Bảng điều khiển là gì?"
+            "headline": "Ba trang trong một tab",
+            "body": "Tab Bảng tin có ba trang. Bảng tin là một danh sách dài, những tin liên quan nhất nằm gần đầu. Mối quan tâm sắp xếp cùng những câu chuyện đó theo những gì bạn đã nói với Mera. Câu chuyện giữ các diễn biến bạn theo dõi. Vuốt ngang để chuyển giữa các trang.",
+            "ask": "Bảng tin và Mối quan tâm khác nhau thế nào?"
           },
           "nothing-removed": {
             "headline": "Không bao giờ có gì bị xóa",
@@ -1933,16 +1933,16 @@
           },
           "quiet-by-design": {
             "headline": "Bảng tin yên tĩnh có chủ đích",
-            "body": "Mera không đếm trước mắt bạn khi bạn đọc. Chạm vào cả hai để xem cái gì nằm ở đâu.",
+            "body": "Mera không đếm gì bạn khi bạn đọc. Chạm vào cả hai để xem mỗi trang giữ yên lặng ra sao.",
             "ask": "Vì sao Bảng tin không hiển thị có bao nhiêu tin đã về?",
             "reveal": {
               "feed": {
                 "label": "Bảng tin",
-                "text": "Không có tổng số chạy, không thanh tiến trình, không có «2 giờ trước» trên thẻ. Dấu Mera bên cạnh tiêu đề là dấu hiệu duy nhất cho thấy có gì đó đang được tải: nó sáng lên và to ra khi đang đồng bộ, còn lại thì lặng lẽ nghỉ. Chạm vào bất cứ khi nào bạn muốn xem các con số, chúng hiện trong ba giây rồi nhường chỗ."
+                "text": "Nút Mera chỉ chuyển động khi Mera đang đọc và đứng yên suốt thời gian còn lại. Đó là dấu hiệu duy nhất cho thấy có gì đó đang được tải."
               },
               "dashboard": {
-                "label": "Bảng điều khiển",
-                "text": "Mọi thứ Bảng tin bỏ qua. Bao nhiêu tin đã được đăng, phân tích và giữ lại, lần chạy cuối kết thúc khi nào, mỗi tin cũ bao lâu, và thông báo của bạn."
+                "label": "Mối quan tâm",
+                "text": "Cùng một ngày nhưng sắp xếp theo mối quan tâm, mỗi điều bạn đã nói với Mera có một mục riêng và tin chưa đọc nằm trước. Các mục được sắp xếp lại khi bạn rời trang, hoặc sau mỗi 10 phút."
               }
             }
           }
@@ -2075,48 +2075,48 @@
         }
       },
       "explore": {
-        "title": "Khám phá",
+        "title": "Thế giới",
         "subtitle": "Cùng các tiêu đề hàng đầu mà mọi người khác nhận được.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Cố ý không về bạn",
-            "body": "Khám phá là nơi duy nhất Mera không cá nhân hóa bất cứ điều gì. Không có chấm điểm, không có lý do, không có gì học từ những gì bạn mở ở đây. Chỉ cần những gì phòng tin của một quốc gia dẫn đầu, trong thứ tự của họ.",
-            "ask": "Tại sao tab Khám phá không được cá nhân hóa?"
+            "body": "Thế giới là nơi duy nhất Mera không cá nhân hóa gì cả. Không chấm điểm, không đưa lý do, không học gì từ những gì bạn mở ở đây. Chỉ là những tin mà tòa soạn của mỗi quốc gia đang đặt lên hàng đầu, theo đúng thứ tự của họ.",
+            "ask": "Vì sao Thế giới không được cá nhân hóa?"
           },
           "the-chips": {
-            "headline": "Các chip trên cùng",
-            "body": "Chúng được xây dựng cho bạn thay vì được bạn chọn.",
+            "headline": "Mỗi quốc gia một trang",
+            "body": "Mera tạo các trang cho bạn, và bạn có thể thay đổi chúng.",
             "steps": {
-              "0": "Thế giới đến đầu tiên, luôn luôn.",
-              "1": "Sau đó đất nước của bạn và bất kỳ nơi nào Mera biết, và sau những cái đó, bất kỳ quốc gia nào bạn đã thêm."
+              "0": "Thế giới luôn đứng đầu trừ khi bạn di chuyển nó.",
+              "1": "Tiếp theo là quốc gia của bạn và các quốc gia của những địa điểm bạn đã thêm, rồi đến những quốc gia bạn tự thêm."
             }
           },
           "the-plus-chip": {
-            "headline": "Chip + ở cuối",
-            "body": "Có một chip + nhỏ sau quốc gia cuối cùng. Nó đưa bạn đến đâu?",
+            "headline": "Thêm một quốc gia",
+            "body": "Bạn thêm quốc gia vào Thế giới ở đâu?",
             "choose": {
               "places": {
                 "label": "Những nơi của bạn",
-                "feedback": "Đó từng là. Nó không còn nữa."
+                "feedback": "Các địa điểm của bạn tự thêm quốc gia tương ứng. Với quốc gia khác, hãy dùng biểu tượng cây bút."
               },
               "sources": {
-                "label": "Màn hình Nguồn",
-                "feedback": "Đúng: quốc gia và các nhà xuất bản đằng sau chúng."
+                "label": "Biểu tượng cây bút ở đầu trang Thế giới",
+                "feedback": "Đúng rồi. Chạm vào cây bút, rồi tìm quốc gia và thêm vào."
               },
               "settings": {
                 "label": "Cài đặt",
-                "feedback": "Không. Cài đặt là tab cuối cùng dọc theo dưới cùng."
+                "feedback": "Không phải. Cài đặt là một trang của tab Bạn và không có quốc gia ở đó."
               }
             }
           },
           "search": {
-            "headline": "Tìm kiếm Khám phá",
-            "body": "Thanh tìm kiếm ở trên các chip nhìn qua các tiêu đề gần đây, khoảng hai ngày qua, không phải lưu trữ. Nó là để 'điều gì xảy ra với điều đó', không phải cho nghiên cứu."
+            "headline": "Tìm kiếm tin tức",
+            "body": "Biểu tượng tìm kiếm ở đầu trang Thế giới tìm trong các tiêu đề gần đây, khoảng hai ngày qua, chứ không phải kho lưu trữ. Nó dùng để hỏi \"chuyện đó rồi ra sao\", không phải để nghiên cứu."
           },
           "hide-a-chip": {
-            "headline": "Quá nhiều chip",
-            "body": "Nhấn và giữ một chip bạn không muốn và nó đi đi. Mera xây dựng những cái này từ những nơi nó biết, vì vậy nếu cái không liên tục quay lại, nơi đó vẫn còn trong hồ sơ của bạn.",
-            "ask": "Làm cách nào để tôi loại bỏ một chip quốc gia ở Khám phá?"
+            "headline": "Quá nhiều quốc gia",
+            "body": "Chạm vào cây bút, rồi chạm dấu xóa trên một quốc gia để ẩn trang của quốc gia đó. Nếu quốc gia đó đến từ một địa điểm của bạn, địa điểm vẫn nằm trong hồ sơ và chỉ trang bị ẩn đi.",
+            "ask": "Làm sao để bỏ trang của một quốc gia khỏi Thế giới?"
           }
         }
       },
@@ -2126,10 +2126,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Nơi các nguồn sống",
-            "body": "Hai cửa, một màn hình.",
+            "body": "Một màn hình cho mọi nguồn báo bạn đã điều chỉnh.",
             "steps": {
-              "0": "Chip + ở cuối hàng chip của Khám phá.",
-              "1": "Hoặc tab Hồ sơ, sau đó Nâng cao, sau đó Nguồn."
+              "0": "Tab Bạn, rồi Nguồn.",
+              "1": "\"Ít hơn từ\" trong menu ••• của một bài viết có hiệu lực ngay, kèm Hoàn tác, và nguồn báo đó sẽ hiện trong mục Đã điều chỉnh."
             },
             "ask": "Tôi quản lý những nguồn nào tôi thấy ở đâu?"
           },
@@ -2251,8 +2251,8 @@
         "subtitle": "Cách nhanh nhất để thay đổi gần như bất cứ điều gì.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera ở trên tab Hồ sơ",
-            "body": "Bong bóng lời nói bên cạnh logo trên tab Hồ sơ mở trò chuyện. Thật dễ dàng để đi qua, và nó là điều khiển có năng lực nhất trong ứng dụng.",
+            "headline": "Mera có mặt ở mọi trang",
+            "body": "Nút Mera tròn ở góc dưới bên phải mở cuộc trò chuyện, bắt đầu từ trang bạn đang xem.",
             "ask": "Tôi tìm thấy cuộc trò chuyện với Mera ở đâu?"
           },
           "ask-what-it-knows": {
@@ -2318,9 +2318,9 @@
         "slides": {
           "one-screen": {
             "headline": "Nơi các công tắc",
-            "body": "Hai nhấn từ bất cứ nơi nào trong ứng dụng.",
+            "body": "Chỉ vài lần chạm từ bất kỳ đâu trong ứng dụng.",
             "steps": {
-              "0": "Tab Cài đặt, cái cuối cùng dọc theo dưới cùng.",
+              "0": "Tab Bạn, rồi Cài đặt.",
               "1": "Mera Protocol."
             },
             "ask": "Mera Protocol ở đâu?"

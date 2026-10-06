@@ -1,0 +1,2203 @@
+{
+ "_comment": "navx P11: tutorial copy rewritten for the four tabs (34 existing tutorials.chapters keys, overwritten with --allow-overwrite). Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+ "ar": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "ثلاث صفحات في تبويب واحد",
+       "body": "يضم تبويب الخلاصة ثلاث صفحات. الخلاصة قائمة طويلة واحدة، وأكثر القصص صلة في أعلاها. الاهتمامات ترتب القصص نفسها بحسب ما أخبرت به Mera. القصص تحفظ القصص المتطورة التي تتابعها. مرر لليمين أو اليسار للتنقل بينها.",
+       "ask": "ما الفرق بين الخلاصة والاهتمامات؟"
+      },
+      "quiet-by-design": {
+       "body": "لا تعدّ Mera عليك شيئًا أثناء القراءة. اضغط على الاثنين لترى كيف تبقى كل صفحة هادئة.",
+       "reveal": {
+        "feed": {
+         "text": "يتحرك زر Mera أثناء قراءة Mera ويبقى ثابتًا بقية الوقت. وهو العلامة الوحيدة على أن شيئًا ما يجري جلبه."
+        },
+        "dashboard": {
+         "label": "الاهتمامات",
+         "text": "اليوم نفسه مرتبًا بحسب الاهتمامات، مع قسم لكل ما أخبرت به Mera، وتأتي القصص غير المقروءة أولًا. تُعاد ترتيب الأقسام عند مغادرة الصفحة أو كل 10 دقائق."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "العالم",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "العالم هو المكان الوحيد الذي لا تخصص فيه Mera أي شيء. لا تقييم ولا أسباب ولا تعلّم من أي شيء تفتحه هنا. فقط ما تضعه غرف الأخبار في كل دولة في المقدمة، بترتيبها هي.",
+       "ask": "لماذا لا يُخصَّص العالم؟"
+      },
+      "the-chips": {
+       "headline": "صفحة لكل دولة",
+       "body": "تنشئ Mera الصفحات لك، ويمكنك تغييرها.",
+       "steps": {
+        "0": "العالم يأتي أولًا ما لم تنقله.",
+        "1": "ثم بلدك ودول أماكنك، وبعدها أي دولة أضفتها بنفسك."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "إضافة دولة",
+       "body": "أين تضيف دولة إلى العالم؟",
+       "choose": {
+        "places": {
+         "feedback": "تضيف أماكنك دولها تلقائيًا. أما أي دولة أخرى، فاستخدم أيقونة القلم."
+        },
+        "sources": {
+         "label": "أيقونة القلم في أعلى العالم",
+         "feedback": "صحيح. اضغط على القلم، ثم ابحث عن الدولة وأضفها."
+        },
+        "settings": {
+         "feedback": "لا. الإعدادات صفحة ضمن تبويب أنت، والدول ليست فيها."
+        }
+       }
+      },
+      "search": {
+       "headline": "البحث في الأخبار",
+       "body": "تبحث أيقونة البحث في أعلى العالم في العناوين الحديثة، أي آخر يومين تقريبًا، وليس في أرشيف. هي لسؤال \"ماذا حدث في كذا\"، وليست للأبحاث."
+      },
+      "hide-a-chip": {
+       "headline": "دول كثيرة جدًا",
+       "body": "اضغط على القلم، ثم على علامة الإزالة بجانب الدولة لإخفاء صفحتها. إذا كانت الدولة من أحد أماكنك، يبقى المكان في ملفك ولا تختفي إلا الصفحة.",
+       "ask": "كيف أزيل صفحة دولة من العالم؟"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "شاشة واحدة لكل ناشر عدّلته.",
+       "steps": {
+        "0": "تبويب أنت، ثم المصادر.",
+        "1": "\"أقل من\" في قائمة ••• الخاصة بأي مقال تُطبَّق فورًا مع خيار التراجع، ثم يظهر الناشر ضمن المعدَّلة."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "تضيفها أو تزيلها بنفسك في تبويب أنت."
+       }
+      },
+      "importance": {
+       "body": "في تبويب أنت، افتح معلوماتك واضغط على أي شيء تعرفه Mera عنك لترفع أهميته أو تخفضها، أو لتعيد صياغته، أو لتزيله. خفض الأهمية ألطف من الحذف، وغالبًا هو الخطوة الأولى الأفضل."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera في كل صفحة",
+       "body": "يفتح زر Mera الدائري في أسفل الشاشة المحادثة، بدءًا من الصفحة التي أنت عليها."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "بضع نقرات من أي مكان في التطبيق.",
+       "steps": {
+        "0": "تبويب أنت، ثم الإعدادات."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "de": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Drei Seiten, ein Tab",
+       "body": "Der Tab Nachrichten hat drei Seiten. Nachrichten ist eine lange Liste, das Wichtigste oben. Interessen sortiert dieselben Geschichten danach, was du Mera gesagt hast. Geschichten sammelt die laufenden Geschichten, denen du folgst. Wische zur Seite, um zwischen ihnen zu wechseln.",
+       "ask": "Was ist der Unterschied zwischen Nachrichten und Interessen?"
+      },
+      "quiet-by-design": {
+       "body": "Mera zählt dir beim Lesen nichts vor. Tippe auf beide, um zu sehen, wie jede Seite ruhig bleibt.",
+       "reveal": {
+        "feed": {
+         "text": "Der Mera-Button bewegt sich, während Mera liest, und bleibt sonst still. Er ist das einzige Zeichen dafür, dass gerade etwas abgerufen wird."
+        },
+        "dashboard": {
+         "label": "Interessen",
+         "text": "Derselbe Tag nach Interessen sortiert, mit einem Abschnitt für alles, was du Mera gesagt hast, und ungelesenen Geschichten zuerst. Die Abschnitte ordnen sich neu, wenn du die Seite verlässt, oder alle 10 Minuten."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Welt",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Welt ist der eine Ort, an dem Mera nichts personalisiert. Keine Bewertung, keine Begründungen, nichts wird aus dem gelernt, was du hier öffnest. Nur das, womit die Redaktionen jedes Landes aufmachen, in ihrer Reihenfolge.",
+       "ask": "Warum ist Welt nicht personalisiert?"
+      },
+      "the-chips": {
+       "headline": "Eine Seite pro Land",
+       "body": "Mera erstellt die Seiten für dich, und du kannst sie ändern.",
+       "steps": {
+        "0": "Welt steht zuerst, solange du es nicht verschiebst.",
+        "1": "Dann dein eigenes Land und die Länder deiner Orte, danach alle Länder, die du selbst hinzugefügt hast."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Ein Land hinzufügen",
+       "body": "Wo fügst du in Welt ein Land hinzu?",
+       "choose": {
+        "places": {
+         "feedback": "Deine Orte fügen ihre Länder von selbst hinzu. Für jedes andere Land nutzt du den Stift."
+        },
+        "sources": {
+         "label": "Der Stift im Kopfbereich von Welt",
+         "feedback": "Richtig. Tippe auf den Stift, suche dann nach dem Land und füge es hinzu."
+        },
+        "settings": {
+         "feedback": "Nein. Einstellungen ist eine Seite im Tab Du, und Länder findest du dort nicht."
+        }
+       }
+      },
+      "search": {
+       "headline": "Die Nachrichten durchsuchen",
+       "body": "Das Suchsymbol im Kopfbereich von Welt durchsucht aktuelle Schlagzeilen, grob die letzten zwei Tage, kein Archiv. Es ist für „Was ist mit dieser Sache passiert“, nicht für Recherche."
+      },
+      "hide-a-chip": {
+       "headline": "Zu viele Länder",
+       "body": "Tippe auf den Stift und dann auf das x bei einem Land, um seine Seite auszublenden. Kommt das Land von einem deiner Orte, bleibt der Ort in deinem Profil, und nur die Seite verschwindet.",
+       "ask": "Wie entferne ich eine Länderseite aus Welt?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Eine Übersicht für alle Quellen, die du angepasst hast.",
+       "steps": {
+        "0": "Der Tab Du, dann Quellen.",
+        "1": "„Weniger von“ im Menü ••• eines Artikels wirkt sofort, mit Rückgängig, und die Quelle erscheint dann unter Angepasst."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Du fügst sie im Tab Du selbst hinzu oder entfernst sie."
+       }
+      },
+      "importance": {
+       "body": "Öffne im Tab Du deine Fakten und tippe auf alles, was Mera über dich weiß, um zu ändern, wie stark es zählt, es umzuformulieren oder zu entfernen. Etwas herunterzustufen ist sanfter als Löschen und meist der bessere erste Schritt."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera ist auf jeder Seite",
+       "body": "Der runde Mera-Button unten rechts öffnet den Chat, ausgehend von der Seite, auf der du gerade bist."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "Ein paar Taps von überall in der App.",
+       "steps": {
+        "0": "Der Tab Du, dann Einstellungen."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "en": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Three pages, one tab",
+       "body": "The Feed tab has three pages. Feed is one long list, the most relevant near the top. Interests sorts the same stories by what you told Mera. Stories keeps the developing stories you follow. Swipe sideways to move between them.",
+       "ask": "What is the difference between Feed and Interests?"
+      },
+      "quiet-by-design": {
+       "body": "Mera does not count at you while you read. Tap both to see how each page stays quiet.",
+       "reveal": {
+        "feed": {
+         "text": "The Mera button moves while Mera reads and stays still the rest of the time. It is the only sign that anything is being fetched."
+        },
+        "dashboard": {
+         "label": "Interests",
+         "text": "The same day sorted by interest, with a section for each thing you told Mera and unread stories first. Sections reorder when you leave the page, or every 10 minutes."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "World",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "World is the one place Mera does not personalise anything. No scoring, no reasons, nothing learned from what you open here. Just what each country's newsrooms are leading with, in their order.",
+       "ask": "Why is World not personalised?"
+      },
+      "the-chips": {
+       "headline": "One page per country",
+       "body": "Mera builds the pages for you, and you can change them.",
+       "steps": {
+        "0": "World comes first unless you move it.",
+        "1": "Then your own country and the countries of your places, and after those, any country you added yourself."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Adding a country",
+       "body": "Where do you add a country to World?",
+       "choose": {
+        "places": {
+         "feedback": "Your places add their countries on their own. For any other country, use the pen."
+        },
+        "sources": {
+         "label": "The pen in the World header",
+         "feedback": "Right. Tap the pen, then search for the country and add it."
+        },
+        "settings": {
+         "feedback": "No. Settings is a page of the You tab, and countries are not there."
+        }
+       }
+      },
+      "search": {
+       "headline": "Searching the news",
+       "body": "The search icon in the World header looks through recent headlines, roughly the last two days, not an archive. It is for \"what happened with that thing\", not for research."
+      },
+      "hide-a-chip": {
+       "headline": "Too many countries",
+       "body": "Tap the pen, then the x on a country, to hide its page. If the country comes from one of your places, the place stays in your profile and only the page goes.",
+       "ask": "How do I remove a country page from World?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "One screen for every publication you adjusted.",
+       "steps": {
+        "0": "The You tab, then Sources.",
+        "1": "\"Fewer from\" in an article's ••• menu takes effect at once, with Undo, and the publication then shows under Adjusted."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "You add or remove them yourself on the You tab."
+       }
+      },
+      "importance": {
+       "body": "On the You tab, open your facts and tap anything Mera knows about you to raise or lower how much it counts, reword it, or remove it. Turning something down is gentler than deleting it, and usually the better first move."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera is on every page",
+       "body": "The round Mera button at the bottom right opens the chat, starting from the page you are on."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "A few taps from anywhere in the app.",
+       "steps": {
+        "0": "The You tab, then Settings."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "es": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Tres páginas, una pestaña",
+       "body": "La pestaña Noticias tiene tres páginas. Noticias es una lista larga, con lo más relevante arriba. Intereses ordena las mismas historias según lo que le contaste a Mera. Historias guarda las historias en desarrollo que sigues. Desliza hacia los lados para moverte entre ellas.",
+       "ask": "¿Cuál es la diferencia entre Noticias e Intereses?"
+      },
+      "quiet-by-design": {
+       "body": "Mera no te lleva la cuenta mientras lees. Toca ambas para ver cómo se mantiene tranquila cada página.",
+       "reveal": {
+        "feed": {
+         "text": "El botón de Mera se mueve mientras Mera lee y se queda quieto el resto del tiempo. Es la única señal de que se está descargando algo."
+        },
+        "dashboard": {
+         "label": "Intereses",
+         "text": "El mismo día ordenado por interés, con una sección por cada cosa que le contaste a Mera y las historias sin leer primero. Las secciones se reordenan cuando sales de la página, o cada 10 minutos."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Mundo",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Mundo es el único lugar donde Mera no personaliza nada. Sin puntuación, sin motivos, nada aprendido de lo que abres aquí. Solo lo que las redacciones de cada país destacan, en su orden.",
+       "ask": "¿Por qué Mundo no está personalizado?"
+      },
+      "the-chips": {
+       "headline": "Una página por país",
+       "body": "Mera arma las páginas por ti, y puedes cambiarlas.",
+       "steps": {
+        "0": "Mundo va primero, a menos que lo muevas.",
+        "1": "Después tu propio país y los países de tus lugares, y luego cualquier país que hayas agregado tú."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Agregar un país",
+       "body": "¿Dónde se agrega un país a Mundo?",
+       "choose": {
+        "places": {
+         "feedback": "Tus lugares agregan sus países solos. Para cualquier otro país, usa el lápiz."
+        },
+        "sources": {
+         "label": "El lápiz en el encabezado de Mundo",
+         "feedback": "Correcto. Toca el lápiz, busca el país y agrégalo."
+        },
+        "settings": {
+         "feedback": "No. Ajustes es una página de la pestaña Tú, y los países no están ahí."
+        }
+       }
+      },
+      "search": {
+       "headline": "Buscar en las noticias",
+       "body": "El ícono de búsqueda en el encabezado de Mundo recorre los titulares recientes, más o menos los últimos dos días, no un archivo. Sirve para «qué pasó con tal cosa», no para investigar."
+      },
+      "hide-a-chip": {
+       "headline": "Demasiados países",
+       "body": "Toca el lápiz y luego la x de un país para ocultar su página. Si el país viene de uno de tus lugares, el lugar sigue en tu perfil y solo se va la página.",
+       "ask": "¿Cómo quito la página de un país de Mundo?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Una sola pantalla para todas las publicaciones que ajustaste.",
+       "steps": {
+        "0": "La pestaña Tú, luego Fuentes.",
+        "1": "«Menos de» en el menú ••• de un artículo se aplica al instante, con Deshacer, y la publicación aparece después en Ajustadas."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Los agregas o los quitas tú mismo en la pestaña Tú."
+       }
+      },
+      "importance": {
+       "body": "En la pestaña Tú, abre tus datos y toca cualquier cosa que Mera sepa sobre ti para subir o bajar cuánto cuenta, reformularla o quitarla. Bajarla es más suave que borrarla, y suele ser mejor como primer paso."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera está en cada página",
+       "body": "El botón redondo de Mera, abajo a la derecha, abre el chat a partir de la página en la que estás."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "A unos pocos toques desde cualquier lugar de la app.",
+       "steps": {
+        "0": "La pestaña Tú, luego Ajustes."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "fr": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Trois pages, un onglet",
+       "body": "L'onglet Fil d'actu compte trois pages. Fil d'actu est une longue liste, avec le plus pertinent en haut. Centres d'intérêt classe les mêmes articles selon ce que vous avez dit à Mera. Actualités regroupe les sujets en cours que vous suivez. Balayez sur le côté pour passer de l'une à l'autre.",
+       "ask": "Quelle est la différence entre Fil d'actu et Centres d'intérêt ?"
+      },
+      "quiet-by-design": {
+       "body": "Mera ne vous compte rien pendant que vous lisez. Touchez les deux pages pour voir comment chacune reste discrète.",
+       "reveal": {
+        "feed": {
+         "text": "Le bouton Mera bouge pendant que Mera lit et reste immobile le reste du temps. C'est le seul signe qu'une récupération est en cours."
+        },
+        "dashboard": {
+         "label": "Centres d'intérêt",
+         "text": "La même journée classée par centre d'intérêt, avec une section pour chaque sujet que vous avez indiqué à Mera et les articles non lus en premier. Les sections se réorganisent quand vous quittez la page, ou toutes les 10 minutes."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Monde",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Monde est le seul endroit où Mera ne personnalise rien. Pas de notation, pas de raisons, rien n'est appris de ce que vous ouvrez ici. Seulement ce que les rédactions de chaque pays mettent en avant, dans leur ordre.",
+       "ask": "Pourquoi Monde n'est-il pas personnalisé ?"
+      },
+      "the-chips": {
+       "headline": "Une page par pays",
+       "body": "Mera crée les pages pour vous, et vous pouvez les modifier.",
+       "steps": {
+        "0": "Monde vient en premier, sauf si vous le déplacez.",
+        "1": "Ensuite votre propre pays et ceux de vos lieux, puis tous les pays que vous avez ajoutés vous-même."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Ajouter un pays",
+       "body": "Où ajoute-t-on un pays dans Monde ?",
+       "choose": {
+        "places": {
+         "feedback": "Vos lieux ajoutent leurs pays automatiquement. Pour tout autre pays, utilisez le crayon."
+        },
+        "sources": {
+         "label": "Le crayon dans l'en-tête de Monde",
+         "feedback": "Exact. Touchez le crayon, puis cherchez le pays et ajoutez-le."
+        },
+        "settings": {
+         "feedback": "Non. Paramètres est une page de l'onglet Vous, et les pays n'y sont pas."
+        }
+       }
+      },
+      "search": {
+       "headline": "Rechercher dans l'actualité",
+       "body": "L'icône de recherche dans l'en-tête de Monde parcourt les titres récents, environ les deux derniers jours, pas des archives. Elle sert à retrouver « ce qui s'est passé avec ce truc », pas à faire des recherches approfondies."
+      },
+      "hide-a-chip": {
+       "headline": "Trop de pays",
+       "body": "Touchez le crayon, puis la croix sur un pays, pour masquer sa page. Si le pays vient de l'un de vos lieux, le lieu reste dans votre profil et seule la page disparaît.",
+       "ask": "Comment retirer la page d'un pays dans Monde ?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Une seule page pour toutes les sources que vous avez ajustées.",
+       "steps": {
+        "0": "L'onglet Vous, puis Sources.",
+        "1": "« Moins de » dans le menu ••• d'un article s'applique tout de suite, avec Annuler, puis la source apparaît sous Ajustées."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Vous les ajoutez ou les supprimez vous-même dans l'onglet Vous."
+       }
+      },
+      "importance": {
+       "body": "Dans l'onglet Vous, ouvrez vos faits et touchez ce que Mera sait de vous pour augmenter ou réduire son poids, le reformuler ou le supprimer. Baisser son poids est plus doux que de le supprimer, et c'est souvent le meilleur premier réflexe."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera est sur chaque page",
+       "body": "Le bouton Mera rond en bas à droite ouvre la discussion, à partir de la page où vous êtes."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "Quelques touches depuis n'importe où dans l'application.",
+       "steps": {
+        "0": "L'onglet Vous, puis Paramètres."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "hi": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "तीन पेज, एक टैब",
+       "body": "फीड टैब में तीन पेज हैं। फीड एक लंबी सूची है, जिसमें सबसे प्रासंगिक खबरें ऊपर रहती हैं। रुचियाँ वही खबरें इस हिसाब से लगाती है कि आपने Mera को क्या बताया है। स्टोरीज़ में वे बढ़ती खबरें रहती हैं जिन्हें आप फ़ॉलो करते हैं। इनके बीच जाने के लिए बगल में स्वाइप करें।",
+       "ask": "फीड और रुचियाँ में क्या फ़र्क़ है?"
+      },
+      "quiet-by-design": {
+       "body": "पढ़ते समय Mera आपको गिनतियाँ नहीं दिखाता। दोनों पर टैप करके देखें कि हर पेज कैसे शांत रहता है।",
+       "reveal": {
+        "feed": {
+         "text": "Mera बटन तब हिलता है जब Mera पढ़ रहा होता है, बाकी समय स्थिर रहता है। कुछ लाया जा रहा है, इसका यही एकमात्र संकेत है।"
+        },
+        "dashboard": {
+         "label": "रुचियाँ",
+         "text": "वही दिन आपकी रुचियों के हिसाब से सजा हुआ, जिसमें आपने Mera को बताई हर बात का एक सेक्शन है और बिना पढ़ी खबरें पहले आती हैं। सेक्शन पेज छोड़ने पर या हर 10 मिनट में दोबारा लगते हैं।"
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "विश्व",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "विश्व अकेली जगह है जहाँ Mera कुछ भी आपके हिसाब से नहीं ढालता। न स्कोर, न कारण, और यहाँ आप जो खोलते हैं उससे कुछ सीखा नहीं जाता। बस वही जो हर देश के न्यूज़रूम अपने क्रम में सबसे ऊपर रखते हैं।",
+       "ask": "विश्व आपके हिसाब से क्यों नहीं ढलता?"
+      },
+      "the-chips": {
+       "headline": "हर देश का एक पेज",
+       "body": "Mera आपके लिए पेज बनाता है, और आप उन्हें बदल सकते हैं।",
+       "steps": {
+        "0": "विश्व सबसे पहले रहता है, जब तक आप उसे हटा न दें।",
+        "1": "फिर आपका अपना देश और आपकी जगहों के देश, और उनके बाद आपके जोड़े हुए देश।"
+       }
+      },
+      "the-plus-chip": {
+       "headline": "देश जोड़ना",
+       "body": "विश्व में देश कहाँ से जोड़ते हैं?",
+       "choose": {
+        "places": {
+         "feedback": "आपकी जगहें अपने देश खुद जोड़ देती हैं। किसी और देश के लिए पेन का इस्तेमाल करें।"
+        },
+        "sources": {
+         "label": "विश्व के हेडर में पेन",
+         "feedback": "सही। पेन पर टैप करें, फिर देश खोजें और जोड़ें।"
+        },
+        "settings": {
+         "feedback": "नहीं। सेटिंग्स आप टैब का एक पेज है, और देश वहाँ नहीं हैं।"
+        }
+       }
+      },
+      "search": {
+       "headline": "खबरें खोजना",
+       "body": "विश्व के हेडर में खोज आइकन हाल की सुर्ख़ियों में खोजता है, यानी लगभग पिछले दो दिन, पुराने संग्रह में नहीं। यह \"उस बात का क्या हुआ\" जानने के लिए है, रिसर्च के लिए नहीं।"
+      },
+      "hide-a-chip": {
+       "headline": "बहुत सारे देश",
+       "body": "पेन पर टैप करें, फिर किसी देश के हटाने के निशान पर, ताकि उसका पेज छिप जाए। अगर देश आपकी किसी जगह से आया है, तो वह जगह आपकी प्रोफ़ाइल में रहती है और सिर्फ़ पेज हटता है।",
+       "ask": "मैं विश्व से किसी देश का पेज कैसे हटाऊँ?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "आपके बदले हुए हर प्रकाशन के लिए एक स्क्रीन।",
+       "steps": {
+        "0": "आप टैब, फिर स्रोत।",
+        "1": "किसी लेख के ••• मेनू में \"से कम\" तुरंत लागू होता है, साथ में पूर्ववत करें का विकल्प मिलता है, और फिर वह प्रकाशन \"बदले गए\" में दिखता है।"
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "आप इन्हें आप टैब पर खुद जोड़ते या हटाते हैं।"
+       }
+      },
+      "importance": {
+       "body": "आप टैब पर अपने तथ्य खोलें और Mera आपके बारे में जो भी जानता है उस पर टैप करें, ताकि उसका महत्व बढ़ा या घटा सकें, उसे दोबारा लिख सकें, या हटा सकें। किसी बात को कम करना हटाने से नरम तरीका है, और अक्सर पहला बेहतर कदम यही होता है।"
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera हर पेज पर है",
+       "body": "नीचे दाईं ओर का गोल Mera बटन चैट खोलता है, उसी पेज से शुरू करके जिस पर आप हैं।"
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "ऐप में कहीं से भी बस कुछ टैप दूर।",
+       "steps": {
+        "0": "आप टैब, फिर सेटिंग्स।"
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "id": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Tiga halaman, satu tab",
+       "body": "Tab Umpan punya tiga halaman. Umpan adalah satu daftar panjang dengan yang paling relevan di dekat atas. Minat mengurutkan berita yang sama sesuai yang Anda katakan kepada Mera. Cerita menyimpan berita berkembang yang Anda ikuti. Geser ke samping untuk berpindah.",
+       "ask": "Apa bedanya Umpan dan Minat?"
+      },
+      "quiet-by-design": {
+       "body": "Mera tidak menghitung di depan Anda saat Anda membaca. Ketuk keduanya untuk melihat bagaimana tiap halaman tetap tenang.",
+       "reveal": {
+        "feed": {
+         "text": "Tombol Mera bergerak saat Mera membaca dan diam di waktu lainnya. Itu satu-satunya tanda bahwa sesuatu sedang diambil."
+        },
+        "dashboard": {
+         "label": "Minat",
+         "text": "Hari yang sama diurutkan berdasarkan minat, dengan satu bagian untuk setiap hal yang Anda katakan kepada Mera dan berita yang belum dibaca di urutan pertama. Bagian diurutkan ulang saat Anda meninggalkan halaman, atau setiap 10 menit."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Dunia",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Dunia adalah satu-satunya tempat Mera tidak mempersonalisasi apa pun. Tidak ada penilaian, tidak ada alasan, tidak ada yang dipelajari dari apa yang Anda buka di sini. Hanya apa yang diunggulkan ruang redaksi tiap negara, dengan urutan mereka.",
+       "ask": "Mengapa Dunia tidak dipersonalisasi?"
+      },
+      "the-chips": {
+       "headline": "Satu halaman per negara",
+       "body": "Mera membuat halamannya untuk Anda, dan Anda bisa mengubahnya.",
+       "steps": {
+        "0": "Dunia selalu di urutan pertama kecuali Anda memindahkannya.",
+        "1": "Lalu negara Anda sendiri dan negara dari tempat Anda, dan setelah itu, negara mana pun yang Anda tambahkan sendiri."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Menambah negara",
+       "body": "Di mana Anda menambah negara ke Dunia?",
+       "choose": {
+        "places": {
+         "feedback": "Tempat Anda menambahkan negaranya sendiri. Untuk negara lain, gunakan pena."
+        },
+        "sources": {
+         "label": "Pena di header Dunia",
+         "feedback": "Benar. Ketuk pena, lalu cari negaranya dan tambahkan."
+        },
+        "settings": {
+         "feedback": "Bukan. Pengaturan adalah halaman di tab Anda, dan negara tidak ada di sana."
+        }
+       }
+      },
+      "search": {
+       "headline": "Mencari berita",
+       "body": "Ikon cari di header Dunia menelusuri berita terbaru, kira-kira dua hari terakhir, bukan arsip. Ini untuk \"apa yang terjadi dengan hal itu\", bukan untuk riset."
+      },
+      "hide-a-chip": {
+       "headline": "Terlalu banyak negara",
+       "body": "Ketuk pena, lalu tanda x pada sebuah negara, untuk menyembunyikan halamannya. Jika negara itu berasal dari salah satu tempat Anda, tempatnya tetap ada di profil dan hanya halamannya yang hilang.",
+       "ask": "Bagaimana cara menghapus halaman negara dari Dunia?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Satu layar untuk semua penerbit yang Anda atur.",
+       "steps": {
+        "0": "Tab Anda, lalu Sumber.",
+        "1": "\"Lebih sedikit dari\" di menu ••• sebuah berita langsung berlaku, dengan Urungkan, lalu penerbitnya muncul di bawah Diatur."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Anda menambah atau menghapusnya sendiri di tab Anda."
+       }
+      },
+      "importance": {
+       "body": "Di tab Anda, buka fakta Anda dan ketuk apa pun yang Mera ketahui tentang Anda untuk menaikkan atau menurunkan bobotnya, menulis ulang, atau menghapusnya. Menurunkan bobot lebih lembut daripada menghapus, dan biasanya langkah pertama yang lebih baik."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera ada di setiap halaman",
+       "body": "Tombol Mera bulat di kanan bawah membuka obrolan, mulai dari halaman yang sedang Anda buka."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "Beberapa ketukan dari mana saja di aplikasi.",
+       "steps": {
+        "0": "Tab Anda, lalu Pengaturan."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "it": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Tre pagine, una scheda",
+       "body": "La scheda Notizie ha tre pagine. Notizie è un lungo elenco, con le più rilevanti in alto. Interessi ordina le stesse storie in base a ciò che hai detto a Mera. Storie raccoglie le storie in corso che segui. Scorri di lato per passare dall'una all'altra.",
+       "ask": "Qual è la differenza tra Notizie e Interessi?"
+      },
+      "quiet-by-design": {
+       "body": "Mera non ti tiene il conto mentre leggi. Tocca entrambe per vedere come ogni pagina resta discreta.",
+       "reveal": {
+        "feed": {
+         "text": "Il pulsante Mera si muove mentre Mera legge e resta fermo il resto del tempo. È l'unico segnale che qualcosa viene scaricato."
+        },
+        "dashboard": {
+         "label": "Interessi",
+         "text": "Lo stesso giorno ordinato per interesse, con una sezione per ogni cosa che hai detto a Mera e le storie non lette in cima. Le sezioni si riordinano quando esci dalla pagina, oppure ogni 10 minuti."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Mondo",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Mondo è l'unico posto in cui Mera non personalizza nulla. Nessun punteggio, nessun motivo, niente imparato da ciò che apri qui. Solo ciò che le redazioni di ogni paese mettono in primo piano, nel loro ordine.",
+       "ask": "Perché Mondo non è personalizzato?"
+      },
+      "the-chips": {
+       "headline": "Una pagina per paese",
+       "body": "Mera crea le pagine per te, e puoi cambiarle.",
+       "steps": {
+        "0": "Mondo viene per primo, a meno che tu non lo sposti.",
+        "1": "Poi il tuo paese e i paesi dei tuoi luoghi, e dopo questi, ogni paese che hai aggiunto tu."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Aggiungere un paese",
+       "body": "Dove si aggiunge un paese a Mondo?",
+       "choose": {
+        "places": {
+         "feedback": "I tuoi luoghi aggiungono i loro paesi da soli. Per qualsiasi altro paese, usa la matita."
+        },
+        "sources": {
+         "label": "La matita nell'intestazione di Mondo",
+         "feedback": "Giusto. Tocca la matita, cerca il paese e aggiungilo."
+        },
+        "settings": {
+         "feedback": "No. Impostazioni è una pagina della scheda Tu, e i paesi non sono lì."
+        }
+       }
+      },
+      "search": {
+       "headline": "Cercare nelle notizie",
+       "body": "L'icona di ricerca nell'intestazione di Mondo scorre i titoli recenti, più o meno degli ultimi due giorni, non un archivio. Serve per «cos'è successo con quella cosa», non per fare ricerche."
+      },
+      "hide-a-chip": {
+       "headline": "Troppi paesi",
+       "body": "Tocca la matita, poi la x su un paese per nascondere la sua pagina. Se il paese viene da uno dei tuoi luoghi, il luogo resta nel tuo profilo e sparisce solo la pagina.",
+       "ask": "Come tolgo la pagina di un paese da Mondo?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Una sola schermata per ogni testata che hai regolato.",
+       "steps": {
+        "0": "La scheda Tu, poi Fonti.",
+        "1": "«Meno da» nel menu ••• di un articolo ha effetto subito, con Annulla, e la testata compare poi in Modificate."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Li aggiungi o li rimuovi tu stesso nella scheda Tu."
+       }
+      },
+      "importance": {
+       "body": "Nella scheda Tu, apri i tuoi dati e tocca qualsiasi cosa Mera sappia di te per aumentare o diminuire quanto conta, riformularla o rimuoverla. Abbassarla è più delicato che eliminarla, e di solito è la prima mossa migliore."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera è in ogni pagina",
+       "body": "Il pulsante rotondo di Mera, in basso a destra, apre la chat partendo dalla pagina in cui ti trovi."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "A pochi tocchi da qualsiasi punto dell'app.",
+       "steps": {
+        "0": "La scheda Tu, poi Impostazioni."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "ja": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "1つのタブに3つのページ",
+       "body": "フィードタブには3つのページがあります。フィードは1本の長いリストで、関連性の高いものが上に来ます。関心は、同じストーリーをMeraに伝えた内容ごとに並べます。ストーリーは、フォローしている進行中のストーリーをまとめます。横にスワイプして切り替えます。",
+       "ask": "フィードと関心の違いは何ですか?"
+      },
+      "quiet-by-design": {
+       "body": "Meraは、読んでいるあいだ数字で急かすことはありません。両方をタップして、各ページがどう静かに保たれているか見てみましょう。",
+       "reveal": {
+        "feed": {
+         "text": "Meraのボタンは、Meraが読み込んでいるあいだだけ動き、それ以外は止まっています。何かを取得中であることを示す唯一の合図です。"
+        },
+        "dashboard": {
+         "label": "関心",
+         "text": "同じ1日を関心ごとに並べたページです。Meraに伝えた項目ごとにセクションがあり、未読のストーリーが先に来ます。セクションの順番は、ページを離れたとき、または10分ごとに入れ替わります。"
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "世界",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "世界は、Meraが唯一パーソナライズしない場所です。スコアも理由もなく、ここで開いたものから学ぶこともありません。各国の報道機関がトップに置いているものを、その順番のままお届けします。",
+       "ask": "世界はなぜパーソナライズされないのですか?"
+      },
+      "the-chips": {
+       "headline": "1か国につき1ページ",
+       "body": "Meraがあなたのためにページを作ります。変更もできます。",
+       "steps": {
+        "0": "動かさない限り、世界が最初に来ます。",
+        "1": "次に、あなたの国と、登録した場所の国、その後に自分で追加した国が続きます。"
+       }
+      },
+      "the-plus-chip": {
+       "headline": "国を追加する",
+       "body": "世界に国を追加するには、どこを使いますか?",
+       "choose": {
+        "places": {
+         "feedback": "登録した場所の国は自動で追加されます。それ以外の国は、ペンのマークを使います。"
+        },
+        "sources": {
+         "label": "世界のヘッダーにあるペン",
+         "feedback": "そのとおりです。ペンをタップして、国を検索して追加します。"
+        },
+        "settings": {
+         "feedback": "いいえ。設定は「あなた」タブのページで、国はそこにはありません。"
+        }
+       }
+      },
+      "search": {
+       "headline": "ニュースを検索する",
+       "body": "世界のヘッダーにある検索アイコンは、直近の見出し(おおよそ過去2日分)を検索します。アーカイブではありません。「あの件はどうなった?」と知りたいときに使うもので、調べものには向きません。"
+      },
+      "hide-a-chip": {
+       "headline": "国が多すぎるとき",
+       "body": "ペンをタップし、国の×をタップすると、そのページが非表示になります。国が登録した場所に由来する場合も、場所はプロフィールに残り、ページだけが消えます。",
+       "ask": "世界から国のページを削除するには?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "自分で調整したすべてのソースを1つの画面で確認できます。",
+       "steps": {
+        "0": "「あなた」タブから「ソース」を開きます。",
+        "1": "記事の •••メニューにある「…を減らす」はすぐに反映され、元に戻すこともできます。そのソースは「調整済み」に表示されます。"
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "追加や削除は、「あなた」タブでご自身で行います。"
+       }
+      },
+      "importance": {
+       "body": "「あなた」タブでファクトを開き、Meraが知っている内容をタップすると、重みを上げ下げしたり、言い換えたり、削除したりできます。重みを下げるのは削除よりおだやかで、たいていは最初に試すのに向いています。"
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Meraはすべてのページにいます",
+       "body": "右下の丸いMeraボタンでチャットが開きます。今見ているページからそのまま始まります。"
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "アプリのどこからでも数回のタップで開けます。",
+       "steps": {
+        "0": "「あなた」タブから「設定」を開きます。"
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "ko": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "한 탭에 세 페이지",
+       "body": "피드 탭에는 세 페이지가 있습니다. 피드는 가장 관련성 높은 스토리가 위에 오는 긴 목록 하나입니다. 관심사는 같은 스토리를 Mera에 알려 준 내용별로 나눕니다. 스토리는 팔로우 중인 진행 중인 스토리를 모아 둡니다. 옆으로 스와이프해서 오갈 수 있습니다.",
+       "ask": "피드와 관심사는 어떻게 다른가요?"
+      },
+      "quiet-by-design": {
+       "body": "Mera는 읽는 동안 숫자로 재촉하지 않습니다. 둘 다 눌러서 각 페이지가 어떻게 조용하게 유지되는지 확인해 보세요.",
+       "reveal": {
+        "feed": {
+         "text": "Mera 버튼은 Mera가 읽는 동안에만 움직이고 나머지 시간에는 멈춰 있습니다. 무언가를 가져오는 중이라는 유일한 표시입니다."
+        },
+        "dashboard": {
+         "label": "관심사",
+         "text": "같은 하루를 관심사별로 정리한 페이지입니다. Mera에 알려 준 항목마다 섹션이 있고, 읽지 않은 스토리가 먼저 나옵니다. 섹션 순서는 페이지를 떠날 때나 10분마다 바뀝니다."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "전 세계",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "전 세계는 Mera가 유일하게 맞춤 설정을 하지 않는 곳입니다. 점수도, 이유도 없고, 여기서 연 내용에서 아무것도 학습하지 않습니다. 각 나라의 언론사가 앞세우는 뉴스를 그 순서 그대로 보여 줍니다.",
+       "ask": "전 세계는 왜 맞춤 설정이 없나요?"
+      },
+      "the-chips": {
+       "headline": "나라별 페이지 하나씩",
+       "body": "Mera가 페이지를 만들어 주고, 직접 바꿀 수도 있습니다.",
+       "steps": {
+        "0": "옮기지 않으면 전 세계가 가장 먼저 옵니다.",
+        "1": "그다음에 내 나라와 내 장소의 나라들, 그 뒤에 직접 추가한 나라가 이어집니다."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "나라 추가하기",
+       "body": "전 세계에 나라를 추가하려면 어디를 사용하나요?",
+       "choose": {
+        "places": {
+         "feedback": "내 장소의 나라는 자동으로 추가됩니다. 그 밖의 나라는 연필 아이콘을 사용하세요."
+        },
+        "sources": {
+         "label": "전 세계 헤더의 연필 아이콘",
+         "feedback": "맞습니다. 연필 아이콘을 누르고 나라를 검색해서 추가하세요."
+        },
+        "settings": {
+         "feedback": "아니요. 설정은 내 정보 탭의 페이지이고, 나라는 그곳에 없습니다."
+        }
+       }
+      },
+      "search": {
+       "headline": "뉴스 검색하기",
+       "body": "전 세계 헤더의 검색 아이콘은 최근 헤드라인, 대략 최근 이틀 치를 검색합니다. 아카이브가 아닙니다. 「그 일은 어떻게 됐지?」를 확인할 때 쓰는 기능이고, 조사용은 아닙니다."
+      },
+      "hide-a-chip": {
+       "headline": "나라가 너무 많을 때",
+       "body": "연필 아이콘을 누르고 나라의 x를 누르면 그 페이지가 숨겨집니다. 나라가 내 장소에서 온 경우에도 장소는 프로필에 남고 페이지만 사라집니다.",
+       "ask": "전 세계에서 나라 페이지를 지우려면 어떻게 하나요?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "직접 조정한 모든 소스를 한 화면에서 볼 수 있습니다.",
+       "steps": {
+        "0": "내 정보 탭에서 소스를 엽니다.",
+        "1": "기사의 ••• 메뉴에서 「… 줄이기」를 누르면 바로 적용되고 실행 취소도 할 수 있습니다. 그 소스는 조정됨에 표시됩니다."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "추가와 삭제는 내 정보 탭에서 직접 합니다."
+       }
+      },
+      "importance": {
+       "body": "내 정보 탭에서 팩트를 열고 Mera가 알고 있는 내용을 눌러 보세요. 비중을 높이거나 낮추고, 문구를 고치고, 삭제할 수 있습니다. 비중을 낮추는 쪽이 삭제보다 부드럽고, 보통은 먼저 해 볼 만합니다."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera는 모든 페이지에 있습니다",
+       "body": "오른쪽 아래의 둥근 Mera 버튼을 누르면 지금 보고 있는 페이지에서 바로 채팅이 시작됩니다."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "앱 어디에서든 몇 번만 누르면 됩니다.",
+       "steps": {
+        "0": "내 정보 탭에서 설정을 엽니다."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "nl": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Drie pagina's, één tabblad",
+       "body": "Het tabblad Feed heeft drie pagina's. Feed is één lange lijst, het meest relevante bovenaan. Interesses sorteert dezelfde verhalen op wat je aan Mera hebt verteld. Verhalen bewaart de lopende verhalen die je volgt. Veeg opzij om te wisselen.",
+       "ask": "Wat is het verschil tussen Feed en Interesses?"
+      },
+      "quiet-by-design": {
+       "body": "Mera telt niet mee terwijl je leest. Tik op beide om te zien hoe elke pagina rustig blijft.",
+       "reveal": {
+        "feed": {
+         "text": "De Mera-knop beweegt terwijl Mera leest en blijft verder stil. Het is het enige teken dat er iets wordt opgehaald."
+        },
+        "dashboard": {
+         "label": "Interesses",
+         "text": "Dezelfde dag gesorteerd op interesse, met een sectie voor alles wat je aan Mera hebt verteld en ongelezen verhalen eerst. Secties worden opnieuw gesorteerd als je de pagina verlaat, of elke 10 minuten."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Wereld",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Wereld is de enige plek waar Mera niets personaliseert. Geen scores, geen redenen, niets geleerd van wat je hier opent. Alleen waar de redacties van elk land mee openen, in hun volgorde.",
+       "ask": "Waarom is Wereld niet gepersonaliseerd?"
+      },
+      "the-chips": {
+       "headline": "Eén pagina per land",
+       "body": "Mera maakt de pagina's voor je, en je kunt ze aanpassen.",
+       "steps": {
+        "0": "Wereld staat vooraan, tenzij je het verplaatst.",
+        "1": "Daarna je eigen land en de landen van je plaatsen, en daarna alle landen die je zelf hebt toegevoegd."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Een land toevoegen",
+       "body": "Waar voeg je in Wereld een land toe?",
+       "choose": {
+        "places": {
+         "feedback": "Je plaatsen voegen hun landen vanzelf toe. Voor elk ander land gebruik je het potlood."
+        },
+        "sources": {
+         "label": "Het potlood in de kop van Wereld",
+         "feedback": "Juist. Tik op het potlood, zoek dan het land en voeg het toe."
+        },
+        "settings": {
+         "feedback": "Nee. Instellingen is een pagina van het tabblad Jij, en landen staan daar niet."
+        }
+       }
+      },
+      "search": {
+       "headline": "Het nieuws doorzoeken",
+       "body": "Het zoekicoon in de kop van Wereld doorzoekt recente koppen, ongeveer de afgelopen twee dagen, geen archief. Het is voor “wat is er gebeurd met die zaak”, niet voor onderzoek."
+      },
+      "hide-a-chip": {
+       "headline": "Te veel landen",
+       "body": "Tik op het potlood en dan op het kruisje bij een land om de pagina te verbergen. Komt het land van een van je plaatsen, dan blijft de plaats in je profiel en verdwijnt alleen de pagina.",
+       "ask": "Hoe verwijder ik een landpagina uit Wereld?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Eén scherm voor elke uitgever die je hebt aangepast.",
+       "steps": {
+        "0": "Het tabblad Jij, dan Bronnen.",
+        "1": "“Minder van” in het menu ••• van een artikel werkt meteen, met Ongedaan maken, en de uitgever staat dan onder Aangepast."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Je voegt ze toe of verwijdert ze zelf op het tabblad Jij."
+       }
+      },
+      "importance": {
+       "body": "Open op het tabblad Jij je feiten en tik op alles wat Mera over je weet om te wijzigen hoeveel het meetelt, het anders te formuleren of het te verwijderen. Iets lager zetten is zachter dan verwijderen en meestal de betere eerste stap."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera is op elke pagina",
+       "body": "De ronde Mera-knop rechtsonder opent de chat, vanuit de pagina waarop je zit."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "Een paar tikken vanaf elke plek in de app.",
+       "steps": {
+        "0": "Het tabblad Jij, dan Instellingen."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "pl": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Trzy strony, jedna karta",
+       "body": "Karta Strumień ma trzy strony. Strumień to jedna długa lista, najtrafniejsze na górze. Zainteresowania sortują te same historie według tego, co powiedziałeś Mera. historie zbierają rozwijające się historie, które obserwujesz. Przesuń w bok, aby przechodzić między nimi.",
+       "ask": "Czym różni się Strumień od Zainteresowań?"
+      },
+      "quiet-by-design": {
+       "body": "Mera nie liczy niczego przy tobie podczas czytania. Dotknij obu, aby zobaczyć, jak każda strona zachowuje ciszę.",
+       "reveal": {
+        "feed": {
+         "text": "Przycisk Mera porusza się, gdy Mera czyta, a poza tym stoi w miejscu. To jedyny znak, że coś jest pobierane."
+        },
+        "dashboard": {
+         "label": "Zainteresowania",
+         "text": "Ten sam dzień posortowany według zainteresowań, z sekcją dla każdej rzeczy, o której powiedziałeś Mera, i nieprzeczytanymi historiami na początku. Sekcje zmieniają kolejność, gdy opuścisz stronę, albo co 10 minut."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Świat",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Świat to jedyne miejsce, w którym Mera niczego nie personalizuje. Bez punktacji, bez powodów, nic nie uczy się z tego, co tu otwierasz. Tylko to, od czego redakcje każdego kraju zaczynają, w ich kolejności.",
+       "ask": "Dlaczego Świat nie jest spersonalizowany?"
+      },
+      "the-chips": {
+       "headline": "Jedna strona na kraj",
+       "body": "Mera tworzy strony za ciebie, a ty możesz je zmieniać.",
+       "steps": {
+        "0": "Świat jest pierwszy, dopóki go nie przesuniesz.",
+        "1": "Potem twój kraj i kraje twoich miejsc, a po nich każdy kraj, który dodałeś sam."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Dodawanie kraju",
+       "body": "Gdzie dodajesz kraj do Świata?",
+       "choose": {
+        "places": {
+         "feedback": "Twoje miejsca same dodają swoje kraje. Dla każdego innego kraju użyj ołówka."
+        },
+        "sources": {
+         "label": "Ołówek w nagłówku Świata",
+         "feedback": "Zgadza się. Dotknij ołówka, potem wyszukaj kraj i dodaj go."
+        },
+        "settings": {
+         "feedback": "Nie. Ustawienia to strona karty Ty, a krajów tam nie ma."
+        }
+       }
+      },
+      "search": {
+       "headline": "Przeszukiwanie wiadomości",
+       "body": "Ikona wyszukiwania w nagłówku Świata przeszukuje ostatnie nagłówki, mniej więcej z dwóch ostatnich dni, a nie archiwum. Służy do pytania “co się stało z tą sprawą”, a nie do badań."
+      },
+      "hide-a-chip": {
+       "headline": "Za dużo krajów",
+       "body": "Dotknij ołówka, a potem x przy kraju, aby ukryć jego stronę. Jeśli kraj pochodzi z jednego z twoich miejsc, miejsce zostaje w twoim profilu i znika tylko strona.",
+       "ask": "Jak usunąć stronę kraju ze Świata?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Jeden ekran dla każdego wydawcy, którego zmieniłeś.",
+       "steps": {
+        "0": "Karta Ty, potem Źródła.",
+        "1": "“Mniej z” w menu ••• artykułu działa od razu, z opcją Cofnij, a wydawca pojawia się potem w sekcji Zmienione."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Dodajesz je lub usuwasz sam na karcie Ty."
+       }
+      },
+      "importance": {
+       "body": "Na karcie Ty otwórz swoje fakty i dotknij wszystkiego, co Mera o tobie wie, aby zmienić, jak bardzo się liczy, przeformułować to albo usunąć. Zmniejszenie wagi jest łagodniejsze niż usunięcie i zwykle to lepszy pierwszy krok."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera jest na każdej stronie",
+       "body": "Okrągły przycisk Mera w prawym dolnym rogu otwiera czat, zaczynając od strony, na której jesteś."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "Kilka dotknięć z dowolnego miejsca w aplikacji.",
+       "steps": {
+        "0": "Karta Ty, potem Ustawienia."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "pt-BR": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Três páginas, uma aba",
+       "body": "A aba Feed tem três páginas. Feed é uma lista longa, com o mais relevante perto do topo. Interesses ordena as mesmas histórias pelo que você contou ao Mera. Histórias guarda as histórias em andamento que você acompanha. Deslize para os lados para passar de uma para outra.",
+       "ask": "Qual é a diferença entre Feed e Interesses?"
+      },
+      "quiet-by-design": {
+       "body": "O Mera não fica contando para você enquanto lê. Toque nas duas para ver como cada página fica discreta.",
+       "reveal": {
+        "feed": {
+         "text": "O botão do Mera se mexe enquanto o Mera lê e fica parado o resto do tempo. É o único sinal de que algo está sendo buscado."
+        },
+        "dashboard": {
+         "label": "Interesses",
+         "text": "O mesmo dia ordenado por interesse, com uma seção para cada coisa que você contou ao Mera e as histórias não lidas primeiro. As seções se reordenam quando você sai da página, ou a cada 10 minutos."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Mundo",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Mundo é o único lugar onde o Mera não personaliza nada. Sem pontuação, sem motivos, nada aprendido com o que você abre aqui. Só o que as redações de cada país estão destacando, na ordem delas.",
+       "ask": "Por que Mundo não é personalizado?"
+      },
+      "the-chips": {
+       "headline": "Uma página por país",
+       "body": "O Mera monta as páginas para você, e você pode mudá-las.",
+       "steps": {
+        "0": "Mundo vem primeiro, a menos que você o mova.",
+        "1": "Depois o seu próprio país e os países dos seus lugares, e depois deles, qualquer país que você mesmo adicionou."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Adicionar um país",
+       "body": "Onde você adiciona um país em Mundo?",
+       "choose": {
+        "places": {
+         "feedback": "Seus lugares adicionam os países deles sozinhos. Para qualquer outro país, use o lápis."
+        },
+        "sources": {
+         "label": "O lápis no cabeçalho de Mundo",
+         "feedback": "Certo. Toque no lápis, busque o país e adicione."
+        },
+        "settings": {
+         "feedback": "Não. Configurações é uma página da aba Você, e os países não ficam lá."
+        }
+       }
+      },
+      "search": {
+       "headline": "Buscar nas notícias",
+       "body": "O ícone de busca no cabeçalho de Mundo procura nas manchetes recentes, mais ou menos os últimos dois dias, não em um arquivo. Serve para «o que aconteceu com tal coisa», não para pesquisa."
+      },
+      "hide-a-chip": {
+       "headline": "Países demais",
+       "body": "Toque no lápis e depois no x de um país para ocultar a página dele. Se o país vem de um dos seus lugares, o lugar continua no seu perfil e só a página some.",
+       "ask": "Como tiro a página de um país de Mundo?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Uma tela para todas as publicações que você ajustou.",
+       "steps": {
+        "0": "A aba Você, depois Fontes.",
+        "1": "«Menos de» no menu ••• de um artigo vale na hora, com Desfazer, e a publicação passa a aparecer em Ajustadas."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Você mesmo adiciona ou remove na aba Você."
+       }
+      },
+      "importance": {
+       "body": "Na aba Você, abra seus dados e toque em qualquer coisa que o Mera sabe sobre você para aumentar ou diminuir o peso dela, reescrever ou remover. Diminuir é mais suave que apagar, e geralmente é a melhor primeira opção."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "O Mera está em todas as páginas",
+       "body": "O botão redondo do Mera, no canto inferior direito, abre o chat a partir da página em que você está."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "A poucos toques de qualquer lugar do app.",
+       "steps": {
+        "0": "A aba Você, depois Configurações."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "ru": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Три страницы на одной вкладке",
+       "body": "На вкладке «Лента» три страницы. «Лента» это один длинный список, самое важное сверху. «Интересы» сортируют те же истории по тому, что вы рассказали Mera. «Истории» хранят развивающиеся события, за которыми вы следите. Проведите пальцем в сторону, чтобы переключаться.",
+       "ask": "Чем «Лента» отличается от «Интересов»?"
+      },
+      "quiet-by-design": {
+       "body": "Mera не отсчитывает ничего, пока вы читаете. Нажмите на оба варианта и посмотрите, как каждая страница остаётся спокойной.",
+       "reveal": {
+        "feed": {
+         "text": "Кнопка Mera двигается, пока Mera читает, и стоит на месте всё остальное время. Это единственный признак того, что что-то загружается."
+        },
+        "dashboard": {
+         "label": "Интересы",
+         "text": "Тот же день, отсортированный по интересам: отдельный раздел для каждой темы, о которой вы рассказали Mera, непрочитанные истории сверху. Разделы меняют порядок, когда вы уходите со страницы, или раз в 10 минут."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Мир",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "«Мир» это единственное место, где Mera ничего не персонализирует. Без оценок, без объяснений, ничего не запоминается из того, что вы здесь открываете. Только то, с чего начинают редакции каждой страны, в их порядке.",
+       "ask": "Почему «Мир» не персонализирован?"
+      },
+      "the-chips": {
+       "headline": "Одна страница на страну",
+       "body": "Mera собирает страницы за вас, а вы можете их менять.",
+       "steps": {
+        "0": "«Мир» стоит первым, пока вы его не переместите.",
+        "1": "Дальше ваша страна и страны ваших мест, а после них любые страны, которые вы добавили сами."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Как добавить страну",
+       "body": "Где в разделе «Мир» добавляется страна?",
+       "choose": {
+        "places": {
+         "feedback": "Страны ваших мест добавляются сами. Для любой другой страны нажмите на карандаш."
+        },
+        "sources": {
+         "label": "Карандаш в шапке раздела «Мир»",
+         "feedback": "Верно. Нажмите на карандаш, найдите страну и добавьте её."
+        },
+        "settings": {
+         "feedback": "Нет. «Настройки» это страница вкладки «Вы», и стран там нет."
+        }
+       }
+      },
+      "search": {
+       "headline": "Поиск по новостям",
+       "body": "Значок поиска в шапке раздела «Мир» ищет по свежим заголовкам, примерно за последние два дня, а не по архиву. Он нужен для вопроса «что случилось с тем-то», а не для исследований."
+      },
+      "hide-a-chip": {
+       "headline": "Слишком много стран",
+       "body": "Нажмите на карандаш, затем на крестик у страны, чтобы скрыть её страницу. Если страна появилась из одного из ваших мест, место остаётся в профиле, а исчезает только страница.",
+       "ask": "Как убрать страницу страны из раздела «Мир»?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Один экран для всех изданий, которые вы настроили.",
+       "steps": {
+        "0": "Вкладка «Вы», затем «Источники».",
+        "1": "«Меньше от» в меню ••• статьи действует сразу, с возможностью отмены, и после этого издание появляется в разделе «Изменено»."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Вы сами добавляете и удаляете их на вкладке «Вы»."
+       }
+      },
+      "importance": {
+       "body": "На вкладке «Вы» откройте свои факты и нажмите на любой из них, чтобы повысить или понизить его вес, изменить формулировку или удалить. Понизить вес мягче, чем удалить, и обычно это лучший первый шаг."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera на каждой странице",
+       "body": "Круглая кнопка Mera внизу справа открывает чат, который начинается с той страницы, где вы сейчас."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "Несколько нажатий из любого места приложения.",
+       "steps": {
+        "0": "Вкладка «Вы», затем «Настройки»."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "th": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "สามหน้า หนึ่งแท็บ",
+       "body": "แท็บฟีดมีสามหน้า ฟีดคือรายการยาวรายการเดียว เรื่องที่เกี่ยวข้องที่สุดอยู่ด้านบน ความสนใจจัดเรื่องเดิมตามสิ่งที่คุณบอก Mera เรื่องราวเก็บเรื่องที่กำลังคืบหน้าซึ่งคุณติดตามอยู่ ปัดไปด้านข้างเพื่อสลับระหว่างหน้าเหล่านี้",
+       "ask": "ฟีดกับความสนใจต่างกันอย่างไร"
+      },
+      "quiet-by-design": {
+       "body": "Mera ไม่นับตัวเลขใส่คุณระหว่างอ่าน แตะทั้งสองหน้าเพื่อดูว่าแต่ละหน้าเงียบอย่างไร",
+       "reveal": {
+        "feed": {
+         "text": "ปุ่ม Mera จะขยับตอน Mera กำลังอ่านและนิ่งในเวลาที่เหลือ นี่เป็นสัญญาณเดียวที่บอกว่ากำลังดึงข้อมูลอยู่"
+        },
+        "dashboard": {
+         "label": "ความสนใจ",
+         "text": "วันเดียวกันที่จัดตามความสนใจ มีหมวดสำหรับทุกสิ่งที่คุณบอก Mera และเรื่องที่ยังไม่ได้อ่านมาก่อน หมวดจะเรียงใหม่เมื่อคุณออกจากหน้า หรือทุก 10 นาที"
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "โลก",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "โลกเป็นที่เดียวที่ Mera ไม่ปรับแต่งอะไรให้คุณเลย ไม่มีคะแนน ไม่มีเหตุผล และไม่เรียนรู้จากสิ่งที่คุณเปิดตรงนี้ มีแค่สิ่งที่ห้องข่าวของแต่ละประเทศนำเสนอเป็นข่าวหลัก ตามลำดับของเขาเอง",
+       "ask": "ทำไมโลกจึงไม่ปรับแต่งให้ฉัน"
+      },
+      "the-chips": {
+       "headline": "หนึ่งหน้าต่อหนึ่งประเทศ",
+       "body": "Mera สร้างหน้าให้คุณ และคุณเปลี่ยนได้",
+       "steps": {
+        "0": "โลกอยู่หน้าแรกเสมอ เว้นแต่คุณย้ายมัน",
+        "1": "ต่อมาคือประเทศของคุณและประเทศของสถานที่ที่คุณเพิ่ม แล้วจึงเป็นประเทศที่คุณเพิ่มเอง"
+       }
+      },
+      "the-plus-chip": {
+       "headline": "การเพิ่มประเทศ",
+       "body": "เพิ่มประเทศลงในโลกได้ที่ไหน",
+       "choose": {
+        "places": {
+         "feedback": "สถานที่ของคุณจะเพิ่มประเทศของมันเอง ส่วนประเทศอื่น ให้ใช้ไอคอนปากกา"
+        },
+        "sources": {
+         "label": "ไอคอนปากกาที่ส่วนหัวของโลก",
+         "feedback": "ถูกต้อง แตะปากกา แล้วค้นหาประเทศและเพิ่มได้เลย"
+        },
+        "settings": {
+         "feedback": "ไม่ใช่ การตั้งค่าเป็นหน้าหนึ่งในแท็บคุณ และไม่มีประเทศอยู่ตรงนั้น"
+        }
+       }
+      },
+      "search": {
+       "headline": "การค้นหาข่าว",
+       "body": "ไอคอนค้นหาที่ส่วนหัวของโลกจะค้นพาดหัวข่าวล่าสุด ประมาณสองวันที่ผ่านมา ไม่ใช่คลังข่าวเก่า ใช้ถามว่า \"เรื่องนั้นเกิดอะไรขึ้น\" ไม่ได้มีไว้ทำวิจัย"
+      },
+      "hide-a-chip": {
+       "headline": "ประเทศเยอะเกินไป",
+       "body": "แตะปากกา แล้วแตะเครื่องหมายลบที่ประเทศ เพื่อซ่อนหน้าของประเทศนั้น ถ้าประเทศนั้นมาจากสถานที่ของคุณ สถานที่ยังอยู่ในโปรไฟล์ และจะหายไปแค่หน้า",
+       "ask": "ฉันจะลบหน้าประเทศออกจากโลกได้อย่างไร"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "หน้าจอเดียวสำหรับทุกสำนักข่าวที่คุณปรับ",
+       "steps": {
+        "0": "แท็บคุณ แล้วแหล่งข่าว",
+        "1": "\"ลด\" ในเมนู ••• ของบทความจะมีผลทันที พร้อมให้เลิกทำ แล้วสำนักข่าวนั้นจะแสดงใน \"ที่ปรับแล้ว\""
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "คุณเพิ่มหรือลบเองได้ในแท็บคุณ"
+       }
+      },
+      "importance": {
+       "body": "ในแท็บคุณ เปิดข้อมูลของคุณแล้วแตะสิ่งที่ Mera รู้เกี่ยวกับคุณ เพื่อเพิ่มหรือลดความสำคัญ เขียนใหม่ หรือลบออก การลดความสำคัญนุ่มนวลกว่าการลบ และมักเป็นก้าวแรกที่ดีกว่า"
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera อยู่ทุกหน้า",
+       "body": "ปุ่ม Mera ทรงกลมที่มุมขวาล่างเปิดแชต โดยเริ่มจากหน้าที่คุณอยู่"
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "แตะไม่กี่ครั้งจากทุกที่ในแอป",
+       "steps": {
+        "0": "แท็บคุณ แล้วการตั้งค่า"
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "tr": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Üç sayfa, tek sekme",
+       "body": "Akış sekmesinde üç sayfa var. Akış, en alakalı olanı en üstte olan tek bir uzun liste. İlgi alanları aynı haberleri Mera'ya söylediklerinize göre sıralar. Haberler takip ettiğiniz gelişen haberleri tutar. Aralarında geçmek için yana kaydırın.",
+       "ask": "Akış ile İlgi alanları arasındaki fark nedir?"
+      },
+      "quiet-by-design": {
+       "body": "Mera siz okurken size sayı saymaz. Her sayfanın nasıl sessiz kaldığını görmek için ikisine de dokunun.",
+       "reveal": {
+        "feed": {
+         "text": "Mera düğmesi, Mera okurken hareket eder ve geri kalan zamanda sabit durur. Bir şeyin getirildiğini gösteren tek işaret budur."
+        },
+        "dashboard": {
+         "label": "İlgi alanları",
+         "text": "Aynı gün, ilgi alanlarına göre sıralanır. Mera'ya söylediğiniz her şey için bir bölüm vardır ve okunmamış haberler en başta gelir. Bölümler sayfadan çıktığınızda ya da her 10 dakikada bir yeniden sıralanır."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Dünya",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Dünya, Mera'nın hiçbir şeyi kişiselleştirmediği tek yerdir. Puanlama yok, neden yok, burada açtıklarınızdan hiçbir şey öğrenilmez. Sadece her ülkenin haber merkezlerinin öne çıkardıkları, kendi sıralarıyla.",
+       "ask": "Dünya neden kişiselleştirilmiyor?"
+      },
+      "the-chips": {
+       "headline": "Her ülke için bir sayfa",
+       "body": "Sayfaları Mera sizin için oluşturur, siz de değiştirebilirsiniz.",
+       "steps": {
+        "0": "Siz taşımadıkça Dünya en başta gelir.",
+        "1": "Sonra kendi ülkeniz ve yerlerinizin ülkeleri, ardından kendiniz eklediğiniz ülkeler gelir."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Ülke ekleme",
+       "body": "Dünya'ya ülkeyi nereden eklersiniz?",
+       "choose": {
+        "places": {
+         "feedback": "Yerleriniz kendi ülkelerini otomatik ekler. Başka bir ülke için kalemi kullanın."
+        },
+        "sources": {
+         "label": "Dünya başlığındaki kalem",
+         "feedback": "Doğru. Kaleme dokunun, ülkeyi arayın ve ekleyin."
+        },
+        "settings": {
+         "feedback": "Hayır. Ayarlar Siz sekmesinin bir sayfasıdır ve ülkeler orada değil."
+        }
+       }
+      },
+      "search": {
+       "headline": "Haberlerde arama",
+       "body": "Dünya başlığındaki arama simgesi son başlıklara bakar, yaklaşık son iki güne, arşive değil. \"Şu konuyla ilgili ne oldu\" diye sormak için, araştırma için değil."
+      },
+      "hide-a-chip": {
+       "headline": "Çok fazla ülke",
+       "body": "Bir ülkenin sayfasını gizlemek için kaleme, sonra ülkedeki x işaretine dokunun. Ülke yerlerinizden birinden geliyorsa yer profilinizde kalır, yalnızca sayfa gider.",
+       "ask": "Dünya'dan bir ülke sayfasını nasıl kaldırırım?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Ayarladığınız tüm yayıncılar için tek bir ekran.",
+       "steps": {
+        "0": "Siz sekmesi, sonra Kaynaklar.",
+        "1": "Bir haberin ••• menüsündeki \"Daha az\" seçeneği hemen geçerli olur, Geri al ile birlikte, ardından yayıncı Ayarlananlar altında görünür."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Bunları Siz sekmesinden kendiniz eklersiniz veya kaldırırsınız."
+       }
+      },
+      "importance": {
+       "body": "Siz sekmesinde bilgilerinizi açın ve Mera'nın sizin hakkınızda bildiği herhangi bir şeye dokunarak ağırlığını artırın ya da azaltın, yeniden ifade edin veya kaldırın. Ağırlığı düşürmek silmekten daha yumuşaktır ve genelde daha iyi ilk adımdır."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera her sayfada",
+       "body": "Sağ alttaki yuvarlak Mera düğmesi, bulunduğunuz sayfadan başlayarak sohbeti açar."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "Uygulamanın her yerinden birkaç dokunuş.",
+       "steps": {
+        "0": "Siz sekmesi, sonra Ayarlar."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "uk": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Три сторінки на одній вкладці",
+       "body": "На вкладці «Стрічка» три сторінки. «Стрічка» це один довгий список, найважливіше вгорі. «Інтереси» сортують ті самі історії за тим, що ви розповіли Mera. «Історії» зберігають події, що розвиваються, за якими ви стежите. Проведіть пальцем убік, щоб перемикатися.",
+       "ask": "Чим «Стрічка» відрізняється від «Інтересів»?"
+      },
+      "quiet-by-design": {
+       "body": "Mera нічого не відлічує, поки ви читаєте. Натисніть на обидва варіанти й подивіться, як кожна сторінка залишається спокійною.",
+       "reveal": {
+        "feed": {
+         "text": "Кнопка Mera рухається, поки Mera читає, і стоїть на місці решту часу. Це єдина ознака того, що щось завантажується."
+        },
+        "dashboard": {
+         "label": "Інтереси",
+         "text": "Той самий день, відсортований за інтересами: окремий розділ для кожної теми, про яку ви розповіли Mera, непрочитані історії вгорі. Розділи змінюють порядок, коли ви залишаєте сторінку, або раз на 10 хвилин."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Світ",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "«Світ» це єдине місце, де Mera нічого не персоналізує. Без оцінок, без пояснень, нічого не запам'ятовується з того, що ви тут відкриваєте. Лише те, з чого починають редакції кожної країни, у їхньому порядку.",
+       "ask": "Чому «Світ» не персоналізований?"
+      },
+      "the-chips": {
+       "headline": "Одна сторінка на країну",
+       "body": "Mera збирає сторінки за вас, а ви можете їх змінювати.",
+       "steps": {
+        "0": "«Світ» стоїть першим, доки ви його не перемістите.",
+        "1": "Далі ваша країна та країни ваших місць, а після них будь-які країни, які ви додали самі."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Як додати країну",
+       "body": "Де в розділі «Світ» додається країна?",
+       "choose": {
+        "places": {
+         "feedback": "Країни ваших місць додаються самі. Для будь-якої іншої країни натисніть на олівець."
+        },
+        "sources": {
+         "label": "Олівець у шапці розділу «Світ»",
+         "feedback": "Так. Натисніть на олівець, знайдіть країну й додайте її."
+        },
+        "settings": {
+         "feedback": "Ні. «Налаштування» це сторінка вкладки «Ви», і країн там немає."
+        }
+       }
+      },
+      "search": {
+       "headline": "Пошук по новинах",
+       "body": "Значок пошуку в шапці розділу «Світ» шукає по свіжих заголовках, приблизно за останні два дні, а не по архіву. Він для запитання «що сталося з тим-то», а не для досліджень."
+      },
+      "hide-a-chip": {
+       "headline": "Забагато країн",
+       "body": "Натисніть на олівець, потім на хрестик біля країни, щоб приховати її сторінку. Якщо країна з'явилася з одного з ваших місць, місце лишається в профілі, а зникає тільки сторінка.",
+       "ask": "Як прибрати сторінку країни з розділу «Світ»?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Один екран для всіх видань, які ви налаштували.",
+       "steps": {
+        "0": "Вкладка «Ви», потім «Джерела».",
+        "1": "«Менше від» у меню ••• статті діє одразу, з можливістю скасування, і після цього видання з'являється в розділі «Змінено»."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Ви самі додаєте й видаляєте їх на вкладці «Ви»."
+       }
+      },
+      "importance": {
+       "body": "На вкладці «Ви» відкрийте свої факти й натисніть на будь-який із них, щоб підвищити або знизити його вагу, змінити формулювання чи видалити. Знизити вагу м'якше, ніж видалити, і зазвичай це кращий перший крок."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera на кожній сторінці",
+       "body": "Кругла кнопка Mera внизу праворуч відкриває чат, який починається зі сторінки, де ви зараз."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "Кілька натискань з будь-якого місця застосунку.",
+       "steps": {
+        "0": "Вкладка «Ви», потім «Налаштування»."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "vi": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "Ba trang trong một tab",
+       "body": "Tab Bảng tin có ba trang. Bảng tin là một danh sách dài, những tin liên quan nhất nằm gần đầu. Mối quan tâm sắp xếp cùng những câu chuyện đó theo những gì bạn đã nói với Mera. Câu chuyện giữ các diễn biến bạn theo dõi. Vuốt ngang để chuyển giữa các trang.",
+       "ask": "Bảng tin và Mối quan tâm khác nhau thế nào?"
+      },
+      "quiet-by-design": {
+       "body": "Mera không đếm gì bạn khi bạn đọc. Chạm vào cả hai để xem mỗi trang giữ yên lặng ra sao.",
+       "reveal": {
+        "feed": {
+         "text": "Nút Mera chỉ chuyển động khi Mera đang đọc và đứng yên suốt thời gian còn lại. Đó là dấu hiệu duy nhất cho thấy có gì đó đang được tải."
+        },
+        "dashboard": {
+         "label": "Mối quan tâm",
+         "text": "Cùng một ngày nhưng sắp xếp theo mối quan tâm, mỗi điều bạn đã nói với Mera có một mục riêng và tin chưa đọc nằm trước. Các mục được sắp xếp lại khi bạn rời trang, hoặc sau mỗi 10 phút."
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "Thế giới",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "Thế giới là nơi duy nhất Mera không cá nhân hóa gì cả. Không chấm điểm, không đưa lý do, không học gì từ những gì bạn mở ở đây. Chỉ là những tin mà tòa soạn của mỗi quốc gia đang đặt lên hàng đầu, theo đúng thứ tự của họ.",
+       "ask": "Vì sao Thế giới không được cá nhân hóa?"
+      },
+      "the-chips": {
+       "headline": "Mỗi quốc gia một trang",
+       "body": "Mera tạo các trang cho bạn, và bạn có thể thay đổi chúng.",
+       "steps": {
+        "0": "Thế giới luôn đứng đầu trừ khi bạn di chuyển nó.",
+        "1": "Tiếp theo là quốc gia của bạn và các quốc gia của những địa điểm bạn đã thêm, rồi đến những quốc gia bạn tự thêm."
+       }
+      },
+      "the-plus-chip": {
+       "headline": "Thêm một quốc gia",
+       "body": "Bạn thêm quốc gia vào Thế giới ở đâu?",
+       "choose": {
+        "places": {
+         "feedback": "Các địa điểm của bạn tự thêm quốc gia tương ứng. Với quốc gia khác, hãy dùng biểu tượng cây bút."
+        },
+        "sources": {
+         "label": "Biểu tượng cây bút ở đầu trang Thế giới",
+         "feedback": "Đúng rồi. Chạm vào cây bút, rồi tìm quốc gia và thêm vào."
+        },
+        "settings": {
+         "feedback": "Không phải. Cài đặt là một trang của tab Bạn và không có quốc gia ở đó."
+        }
+       }
+      },
+      "search": {
+       "headline": "Tìm kiếm tin tức",
+       "body": "Biểu tượng tìm kiếm ở đầu trang Thế giới tìm trong các tiêu đề gần đây, khoảng hai ngày qua, chứ không phải kho lưu trữ. Nó dùng để hỏi \"chuyện đó rồi ra sao\", không phải để nghiên cứu."
+      },
+      "hide-a-chip": {
+       "headline": "Quá nhiều quốc gia",
+       "body": "Chạm vào cây bút, rồi chạm dấu xóa trên một quốc gia để ẩn trang của quốc gia đó. Nếu quốc gia đó đến từ một địa điểm của bạn, địa điểm vẫn nằm trong hồ sơ và chỉ trang bị ẩn đi.",
+       "ask": "Làm sao để bỏ trang của một quốc gia khỏi Thế giới?"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "Một màn hình cho mọi nguồn báo bạn đã điều chỉnh.",
+       "steps": {
+        "0": "Tab Bạn, rồi Nguồn.",
+        "1": "\"Ít hơn từ\" trong menu ••• của một bài viết có hiệu lực ngay, kèm Hoàn tác, và nguồn báo đó sẽ hiện trong mục Đã điều chỉnh."
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "Bạn tự thêm hoặc xóa chúng trong tab Bạn."
+       }
+      },
+      "importance": {
+       "body": "Trong tab Bạn, mở các thông tin về bạn và chạm vào bất kỳ điều gì Mera biết để tăng hoặc giảm mức quan trọng, viết lại hoặc xóa nó. Giảm xuống nhẹ nhàng hơn xóa, và thường là cách thử đầu tiên tốt hơn."
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "Mera có mặt ở mọi trang",
+       "body": "Nút Mera tròn ở góc dưới bên phải mở cuộc trò chuyện, bắt đầu từ trang bạn đang xem."
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "Chỉ vài lần chạm từ bất kỳ đâu trong ứng dụng.",
+       "steps": {
+        "0": "Tab Bạn, rồi Cài đặt."
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "zh-CN": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "一个标签，三个页面",
+       "body": "“信息流”标签有三个页面。“信息流”是一长串列表，最相关的内容排在前面。“兴趣”按你告诉 Mera 的偏好整理同样的报道。“报道”收录你关注的持续发展的报道。左右滑动即可切换。",
+       "ask": "“信息流”和“兴趣”有什么区别？"
+      },
+      "quiet-by-design": {
+       "body": "Mera 在你阅读时不会对你计数。点按两个页面，看看它们如何保持安静。",
+       "reveal": {
+        "feed": {
+         "text": "Mera 按钮只在 Mera 读取内容时移动，其余时间保持静止。这是唯一表明有内容正在加载的提示。"
+        },
+        "dashboard": {
+         "label": "兴趣",
+         "text": "同一天的内容按兴趣整理，你告诉 Mera 的每件事各有一个分区，未读报道排在最前。离开页面时，或每隔 10 分钟，分区会重新排序。"
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "全球",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "“全球”是 Mera 唯一不做任何个性化的地方。没有评分，没有理由，也不会从你在这里打开的内容中学习。只按各国新闻编辑部自己的顺序，呈现他们当下的头条。",
+       "ask": "为什么“全球”不做个性化？"
+      },
+      "the-chips": {
+       "headline": "每个国家一个页面",
+       "body": "Mera 会为你建好这些页面，你也可以自行调整。",
+       "steps": {
+        "0": "除非你移动它，“全球”始终排在第一位。",
+        "1": "接着是你所在的国家和你的地点所属的国家，最后是你自己添加的国家。"
+       }
+      },
+      "the-plus-chip": {
+       "headline": "添加国家",
+       "body": "要在“全球”中添加国家，应该在哪里操作？",
+       "choose": {
+        "places": {
+         "feedback": "你的地点会自动加入所属国家。其他国家请使用铅笔图标。"
+        },
+        "sources": {
+         "label": "“全球”标题栏中的铅笔图标",
+         "feedback": "没错。点按铅笔图标，然后搜索国家并添加。"
+        },
+        "settings": {
+         "feedback": "不对。“设置”是“我的”标签中的一个页面，那里没有国家。"
+        }
+       }
+      },
+      "search": {
+       "headline": "搜索新闻",
+       "body": "“全球”标题栏中的搜索图标会查找最近的头条，大约是过去两天，而不是档案库。它适合查“那件事后来怎么样了”，不适合做研究。"
+      },
+      "hide-a-chip": {
+       "headline": "国家太多了",
+       "body": "点按铅笔图标，再点按国家上的移除标记，即可隐藏该国页面。如果该国来自你的某个地点，这个地点仍保留在你的个人资料中，只会移除页面。",
+       "ask": "如何从“全球”中移除某个国家的页面？"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "一个页面，管理你调整过的所有媒体。",
+       "steps": {
+        "0": "“我的”标签，然后是“来源”。",
+        "1": "文章 ••• 菜单中的“减少…的内容”会立即生效，并提供撤销，之后该媒体会显示在“已调整”下。"
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "你可以在“我的”标签中自行添加或移除。"
+       }
+      },
+      "importance": {
+       "body": "在“我的”标签中打开你的事实，点按 Mera 了解的任何关于你的内容，就可以调高或调低它的权重、修改措辞或将其移除。调低比删除更温和，通常是更好的第一步。"
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "每个页面都有 Mera",
+       "body": "右下角的圆形 Mera 按钮会打开聊天，并从你当前所在的页面开始。"
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "在应用内任何位置，点几下就能到。",
+       "steps": {
+        "0": "“我的”标签，然后是“设置”。"
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "zh-TW": {
+  "tutorials": {
+   "chapters": {
+    "feed": {
+     "slides": {
+      "two-lists": {
+       "headline": "一個標籤，三個頁面",
+       "body": "「資訊流」標籤有三個頁面。「資訊流」是一長串清單，最相關的內容排在前面。「興趣」依你告訴 Mera 的偏好整理同樣的報導。「報導」收錄你追蹤的持續發展的報導。左右滑動即可切換。",
+       "ask": "「資訊流」和「興趣」有什麼差別？"
+      },
+      "quiet-by-design": {
+       "body": "Mera 在你閱讀時不會對你計數。點按兩個頁面，看看它們如何保持安靜。",
+       "reveal": {
+        "feed": {
+         "text": "Mera 按鈕只在 Mera 讀取內容時移動，其餘時間保持靜止。這是唯一表示有內容正在載入的提示。"
+        },
+        "dashboard": {
+         "label": "興趣",
+         "text": "同一天的內容依興趣整理，你告訴 Mera 的每件事各有一個分區，未讀報導排在最前。離開頁面時，或每隔 10 分鐘，分區會重新排序。"
+        }
+       }
+      }
+     }
+    },
+    "explore": {
+     "title": "全球",
+     "slides": {
+      "unscored-on-purpose": {
+       "body": "「全球」是 Mera 唯一不做任何個人化的地方。沒有評分，沒有理由，也不會從你在這裡開啟的內容中學習。只依各國新聞編輯室自己的順序，呈現他們目前的頭條。",
+       "ask": "為什麼「全球」不做個人化？"
+      },
+      "the-chips": {
+       "headline": "每個國家一個頁面",
+       "body": "Mera 會為你建好這些頁面，你也可以自行調整。",
+       "steps": {
+        "0": "除非你移動它，「全球」一律排在第一位。",
+        "1": "接著是你所在的國家和你的地點所屬的國家，最後是你自己新增的國家。"
+       }
+      },
+      "the-plus-chip": {
+       "headline": "新增國家",
+       "body": "要在「全球」中新增國家，應該在哪裡操作？",
+       "choose": {
+        "places": {
+         "feedback": "你的地點會自動加入所屬國家。其他國家請使用鉛筆圖示。"
+        },
+        "sources": {
+         "label": "「全球」標題列中的鉛筆圖示",
+         "feedback": "沒錯。點按鉛筆圖示，然後搜尋國家並新增。"
+        },
+        "settings": {
+         "feedback": "不對。「設定」是「我的」標籤中的一個頁面，那裡沒有國家。"
+        }
+       }
+      },
+      "search": {
+       "headline": "搜尋新聞",
+       "body": "「全球」標題列中的搜尋圖示會查找最近的頭條，大約是過去兩天，而不是檔案庫。它適合查「那件事後來怎麼樣了」，不適合做研究。"
+      },
+      "hide-a-chip": {
+       "headline": "國家太多了",
+       "body": "點按鉛筆圖示，再點按國家上的移除標記，即可隱藏該國頁面。如果該國來自你的某個地點，這個地點仍保留在你的個人資料中，只會移除頁面。",
+       "ask": "如何從「全球」中移除某個國家的頁面？"
+      }
+     }
+    },
+    "sources": {
+     "slides": {
+      "where-it-lives": {
+       "body": "一個頁面，管理你調整過的所有媒體。",
+       "steps": {
+        "0": "「我的」標籤，然後是「來源」。",
+        "1": "文章 ••• 選單中的「減少…的內容」會立即生效，並提供復原，之後該媒體會顯示在「已調整」下。"
+       }
+      }
+     }
+    },
+    "facts": {
+     "slides": {
+      "where-from": {
+       "steps": {
+        "2": "你可以在「我的」標籤中自行新增或移除。"
+       }
+      },
+      "importance": {
+       "body": "在「我的」標籤中開啟你的事實，點按 Mera 了解的任何關於你的內容，就可以調高或調低它的權重、修改措辭或將其移除。調低比刪除更溫和，通常是更好的第一步。"
+      }
+     }
+    },
+    "chat": {
+     "slides": {
+      "where-mera-is": {
+       "headline": "每個頁面都有 Mera",
+       "body": "右下角的圓形 Mera 按鈕會開啟聊天，並從你目前所在的頁面開始。"
+      }
+     }
+    },
+    "protocol": {
+     "slides": {
+      "one-screen": {
+       "body": "在應用程式內任何位置，點幾下就能到。",
+       "steps": {
+        "0": "「我的」標籤，然後是「設定」。"
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

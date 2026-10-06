@@ -1847,7 +1847,7 @@
             "steps": {
               "0": "Du sprichst mit Mera und es hört auf die dauerhaften Bits.",
               "1": "Du sagst es offen: 'Ich bin nach Lissabon gezogen.'",
-              "2": "Du fügst sie selbst auf der Profilregisterkarte hinzu oder entfernst sie."
+              "2": "Du fügst sie im Tab Du selbst hinzu oder entfernst sie."
             }
           },
           "to-topics": {
@@ -1872,7 +1872,7 @@
           },
           "importance": {
             "headline": "Einige Fakten sind wichtiger als andere",
-            "body": "Auf der Profilregisterkarte tippst du auf alles, das Mera über dich weiß, um wie viel es zählt zu erhöhen oder zu senken, umzuformulieren oder zu entfernen. Etwas zu senken ist sanfter als es zu löschen und meist der bessere erste Schritt.",
+            "body": "Öffne im Tab Du deine Fakten und tippe auf alles, was Mera über dich weiß, um zu ändern, wie stark es zählt, es umzuformulieren oder zu entfernen. Etwas herunterzustufen ist sanfter als Löschen und meist der bessere erste Schritt.",
             "ask": "Wie ändere ich, wie wichtig einer meiner Fakten ist?"
           }
         }
@@ -1882,9 +1882,9 @@
         "subtitle": "Wo die heutigen Geschichten leben und wie sie sich bewegen.",
         "slides": {
           "two-lists": {
-            "headline": "Zwei Listen, zwei Jobs",
-            "body": "Die erste Registerkarte ist dein Feed: eine lange Liste, die relevanteste oben. Die zweite ist derselbe Tag in Abschnitte sortiert. Gleiche Geschichten, andere Form, also verwende was dem Stimmung passt.",
-            "ask": "Was ist der Unterschied zwischen dem Feed und dem Dashboard?"
+            "headline": "Drei Seiten, ein Tab",
+            "body": "Der Tab Nachrichten hat drei Seiten. Nachrichten ist eine lange Liste, das Wichtigste oben. Interessen sortiert dieselben Geschichten danach, was du Mera gesagt hast. Geschichten sammelt die laufenden Geschichten, denen du folgst. Wische zur Seite, um zwischen ihnen zu wechseln.",
+            "ask": "Was ist der Unterschied zwischen Nachrichten und Interessen?"
           },
           "nothing-removed": {
             "headline": "Nichts wird je entfernt",
@@ -1932,16 +1932,16 @@
           },
           "quiet-by-design": {
             "headline": "Ein bewusst ruhiger Feed",
-            "body": "Mera zählt dir beim Lesen nichts vor. Tippe auf beide, um zu sehen, was wo steht.",
+            "body": "Mera zählt dir beim Lesen nichts vor. Tippe auf beide, um zu sehen, wie jede Seite ruhig bleibt.",
             "ask": "Warum zeigt der Feed nicht, wie viele Meldungen hereingekommen sind?",
             "reveal": {
               "feed": {
                 "label": "Nachrichten",
-                "text": "Keine laufenden Summen, kein Fortschrittsbalken, kein „vor 2 Stunden“ auf den Karten. Das Mera-Zeichen neben dem Titel ist das einzige Anzeichen dafür, dass etwas abgerufen wird: Es leuchtet auf und wird größer, während eine Synchronisierung läuft, und ruht die übrige Zeit still. Tippe darauf, wann immer du die Zahlen sehen möchtest; sie erscheinen drei Sekunden lang und verschwinden dann wieder."
+                "text": "Der Mera-Button bewegt sich, während Mera liest, und bleibt sonst still. Er ist das einzige Zeichen dafür, dass gerade etwas abgerufen wird."
               },
               "dashboard": {
-                "label": "Dashboard",
-                "text": "Alles, was der Feed weglässt. Wie viele Meldungen veröffentlicht, ausgewertet und behalten wurden, wann der letzte Durchlauf endete, wie alt jede Meldung ist und deine Benachrichtigungen."
+                "label": "Interessen",
+                "text": "Derselbe Tag nach Interessen sortiert, mit einem Abschnitt für alles, was du Mera gesagt hast, und ungelesenen Geschichten zuerst. Die Abschnitte ordnen sich neu, wenn du die Seite verlässt, oder alle 10 Minuten."
               }
             }
           }
@@ -2074,48 +2074,48 @@
         }
       },
       "explore": {
-        "title": "Entdecken",
+        "title": "Welt",
         "subtitle": "Die gleichen Schlagzeilen, die alle bekommen.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Absichtlich nicht über dir",
-            "body": "Entdecken ist der eine Ort, den Mera nichts personalisiert. Keine Bewertung, keine Gründe, nichts gelernt von dem, das du öffnest. Nur was die Nachrichtenredaktionen eines Landes anführen, in ihrer Reihenfolge.",
-            "ask": "Warum ist die Entdecken-Registerkarte nicht personalisiert?"
+            "body": "Welt ist der eine Ort, an dem Mera nichts personalisiert. Keine Bewertung, keine Begründungen, nichts wird aus dem gelernt, was du hier öffnest. Nur das, womit die Redaktionen jedes Landes aufmachen, in ihrer Reihenfolge.",
+            "ask": "Warum ist Welt nicht personalisiert?"
           },
           "the-chips": {
-            "headline": "Die Chips über die Oberseite",
-            "body": "Sie sind für dich gebaut statt von dir gewählt.",
+            "headline": "Eine Seite pro Land",
+            "body": "Mera erstellt die Seiten für dich, und du kannst sie ändern.",
             "steps": {
-              "0": "Welt kommt zuerst, immer.",
-              "1": "Dann dein eigenes Land und alle Orte die Mera weiß, und danach, all Länder die du selbst hinzugefügt hast."
+              "0": "Welt steht zuerst, solange du es nicht verschiebst.",
+              "1": "Dann dein eigenes Land und die Länder deiner Orte, danach alle Länder, die du selbst hinzugefügt hast."
             }
           },
           "the-plus-chip": {
-            "headline": "Die + am Ende der Chips",
-            "body": "Es gibt ein kleines + Chip nach dem letzten Land. Wohin bringt es dich?",
+            "headline": "Ein Land hinzufügen",
+            "body": "Wo fügst du in Welt ein Land hinzu?",
             "choose": {
               "places": {
                 "label": "Deine Orte",
-                "feedback": "Es tät es. Es tut nicht mehr."
+                "feedback": "Deine Orte fügen ihre Länder von selbst hinzu. Für jedes andere Land nutzt du den Stift."
               },
               "sources": {
-                "label": "Der Quellen-Bildschirm",
-                "feedback": "Ja: Länder und die Herausgeber dahinter."
+                "label": "Der Stift im Kopfbereich von Welt",
+                "feedback": "Richtig. Tippe auf den Stift, suche dann nach dem Land und füge es hinzu."
               },
               "settings": {
                 "label": "Einstellungen",
-                "feedback": "Nein. Einstellungen ist die letzte Registerkarte entlang der Unterseite."
+                "feedback": "Nein. Einstellungen ist eine Seite im Tab Du, und Länder findest du dort nicht."
               }
             }
           },
           "search": {
-            "headline": "Entdecken durchsuchen",
-            "body": "Die Suchleiste über den Chips schaut durch aktuelle Schlagzeilen, grob die letzten zwei Tage, nicht ein Archiv. Es ist für 'was passierte mit der Sache', nicht für Forschung."
+            "headline": "Die Nachrichten durchsuchen",
+            "body": "Das Suchsymbol im Kopfbereich von Welt durchsucht aktuelle Schlagzeilen, grob die letzten zwei Tage, kein Archiv. Es ist für „Was ist mit dieser Sache passiert“, nicht für Recherche."
           },
           "hide-a-chip": {
-            "headline": "Zu viele Chips",
-            "body": "Drücke und halte einen Chip, den du nicht willst und er geht weg. Mera baut diese von den Orten, die es weiß, daher wenn einer immer wieder kommt, ist der Ort dahinter immer noch in deinem Profil.",
-            "ask": "Wie werde ich einen Land-Chip in Entdecken los?"
+            "headline": "Zu viele Länder",
+            "body": "Tippe auf den Stift und dann auf das x bei einem Land, um seine Seite auszublenden. Kommt das Land von einem deiner Orte, bleibt der Ort in deinem Profil, und nur die Seite verschwindet.",
+            "ask": "Wie entferne ich eine Länderseite aus Welt?"
           }
         }
       },
@@ -2125,10 +2125,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Wo Quellen leben",
-            "body": "Zwei Türen, ein Bildschirm.",
+            "body": "Eine Übersicht für alle Quellen, die du angepasst hast.",
             "steps": {
-              "0": "Das + Chip am Ende von Entdecken Reihe von Chips.",
-              "1": "Oder die Profilregisterkarte, dann Erweitert, dann Quellen."
+              "0": "Der Tab Du, dann Quellen.",
+              "1": "„Weniger von“ im Menü ••• eines Artikels wirkt sofort, mit Rückgängig, und die Quelle erscheint dann unter Angepasst."
             },
             "ask": "Wo verwalte ich, welche Quellen ich sehe?"
           },
@@ -2250,8 +2250,8 @@
         "subtitle": "Der schnellste Weg fast alles zu ändern.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera ist auf der Profilregisterkarte",
-            "body": "Die Sprechblase neben dem Logo auf der Profilregisterkarte öffnet den Chat. Es ist leicht zu gehen vorbei und es ist die fähigste Steuerung in der App.",
+            "headline": "Mera ist auf jeder Seite",
+            "body": "Der runde Mera-Button unten rechts öffnet den Chat, ausgehend von der Seite, auf der du gerade bist.",
             "ask": "Wo finde ich den Chat mit Mera?"
           },
           "ask-what-it-knows": {
@@ -2317,9 +2317,9 @@
         "slides": {
           "one-screen": {
             "headline": "Wo die Schalter sind",
-            "body": "Zwei Taps von überall in der App.",
+            "body": "Ein paar Taps von überall in der App.",
             "steps": {
-              "0": "Die Einstellungen-Registerkarte, die letzte entlang der Unterseite.",
+              "0": "Der Tab Du, dann Einstellungen.",
               "1": "Mera Protocol."
             },
             "ask": "Wo ist der Mera Protocol-Bildschirm?"

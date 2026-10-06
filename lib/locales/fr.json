@@ -1854,7 +1854,7 @@
             "steps": {
               "0": "Vous parlez à Mera et elle écoute les bits durables.",
               "1": "Vous le dites franchement : \"Je me suis installé à Lisbonne.\"",
-              "2": "Vous les ajoutez ou les supprimez vous-même sur l'onglet Profil."
+              "2": "Vous les ajoutez ou les supprimez vous-même dans l'onglet Vous."
             }
           },
           "to-topics": {
@@ -1879,7 +1879,7 @@
           },
           "importance": {
             "headline": "Certains faits comptent plus que d'autres",
-            "body": "Sur l'onglet Profil, appuyez sur n'importe quoi que Mera sait de vous pour augmenter ou diminuer combien cela compte, le reformuler ou le supprimer. Baisser quelque chose est plus doux que de l'effacer, et c'est généralement le meilleur premier pas.",
+            "body": "Dans l'onglet Vous, ouvrez vos faits et touchez ce que Mera sait de vous pour augmenter ou réduire son poids, le reformuler ou le supprimer. Baisser son poids est plus doux que de le supprimer, et c'est souvent le meilleur premier réflexe.",
             "ask": "Comment je change l'importance d'un de mes faits ?"
           }
         }
@@ -1889,9 +1889,9 @@
         "subtitle": "Où vivent les histoires du jour et comment elles se déplacent.",
         "slides": {
           "two-lists": {
-            "headline": "Deux listes, deux emplois",
-            "body": "Le premier onglet est votre fil : une longue liste, la plus pertinente près du haut. Le second est le même jour trié en sections. Mêmes histoires, forme différente, donc utilisez celui qui convient à votre humeur.",
-            "ask": "Quelle est la différence entre le fil et le tableau de bord ?"
+            "headline": "Trois pages, un onglet",
+            "body": "L'onglet Fil d'actu compte trois pages. Fil d'actu est une longue liste, avec le plus pertinent en haut. Centres d'intérêt classe les mêmes articles selon ce que vous avez dit à Mera. Actualités regroupe les sujets en cours que vous suivez. Balayez sur le côté pour passer de l'une à l'autre.",
+            "ask": "Quelle est la différence entre Fil d'actu et Centres d'intérêt ?"
           },
           "nothing-removed": {
             "headline": "Rien n'est jamais supprimé",
@@ -1939,16 +1939,16 @@
           },
           "quiet-by-design": {
             "headline": "Un fil volontairement silencieux",
-            "body": "Mera ne vous compte rien pendant que vous lisez. Touchez les deux pour voir ce qui se trouve où.",
+            "body": "Mera ne vous compte rien pendant que vous lisez. Touchez les deux pages pour voir comment chacune reste discrète.",
             "ask": "Pourquoi le fil n'affiche-t-il pas le nombre d'articles arrivés ?",
             "reveal": {
               "feed": {
                 "label": "Fil d'actu",
-                "text": "Aucun total en cours, aucune barre de progression, aucun « il y a 2 heures » sur les cartes. Le signe Mera à côté du titre est le seul indice qu'une récupération est en cours : il s'éclaircit et grandit pendant une synchronisation, et reste discret le reste du temps. Touchez-le quand vous voulez les chiffres, ils s'affichent trois secondes puis s'effacent."
+                "text": "Le bouton Mera bouge pendant que Mera lit et reste immobile le reste du temps. C'est le seul signe qu'une récupération est en cours."
               },
               "dashboard": {
-                "label": "Tableau de bord",
-                "text": "Tout ce que le fil laisse de côté. Combien d'articles ont été publiés, analysés et conservés, quand la dernière exécution s'est terminée, l'ancienneté de chaque article, et vos notifications."
+                "label": "Centres d'intérêt",
+                "text": "La même journée classée par centre d'intérêt, avec une section pour chaque sujet que vous avez indiqué à Mera et les articles non lus en premier. Les sections se réorganisent quand vous quittez la page, ou toutes les 10 minutes."
               }
             }
           }
@@ -2081,48 +2081,48 @@
         }
       },
       "explore": {
-        "title": "Explorer",
+        "title": "Monde",
         "subtitle": "Les mêmes titres que tout le monde d'autre reçoit.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Délibérément pas à votre sujet",
-            "body": "Explore est le seul endroit où Mera ne personnalise rien. Pas de notation, pas de raisons, rien d'appris de ce que vous ouvrez ici. Juste ce que les salles de rédaction d'une terre conduisent avec, dans leur ordre.",
-            "ask": "Pourquoi l'onglet Explorer n'est pas personnalisé ?"
+            "body": "Monde est le seul endroit où Mera ne personnalise rien. Pas de notation, pas de raisons, rien n'est appris de ce que vous ouvrez ici. Seulement ce que les rédactions de chaque pays mettent en avant, dans leur ordre.",
+            "ask": "Pourquoi Monde n'est-il pas personnalisé ?"
           },
           "the-chips": {
-            "headline": "Les jetons en haut",
-            "body": "Ils sont construits pour vous plutôt que choisis par vous.",
+            "headline": "Une page par pays",
+            "body": "Mera crée les pages pour vous, et vous pouvez les modifier.",
             "steps": {
-              "0": "World arrive toujours en premier.",
-              "1": "Ensuite votre propre pays et tout endroit où Mera sait, et après ceux-ci, tout pays que vous avez ajouté vous-même."
+              "0": "Monde vient en premier, sauf si vous le déplacez.",
+              "1": "Ensuite votre propre pays et ceux de vos lieux, puis tous les pays que vous avez ajoutés vous-même."
             }
           },
           "the-plus-chip": {
-            "headline": "Le plus à la fin des jetons",
-            "body": "Il y a un petit jeton plus après le dernier pays. Où te mène-t-il ?",
+            "headline": "Ajouter un pays",
+            "body": "Où ajoute-t-on un pays dans Monde ?",
             "choose": {
               "places": {
                 "label": "Vos lieux",
-                "feedback": "Il le faisait. Ce n'est pas le cas maintenant."
+                "feedback": "Vos lieux ajoutent leurs pays automatiquement. Pour tout autre pays, utilisez le crayon."
               },
               "sources": {
-                "label": "L'écran Sources",
-                "feedback": "Oui : pays et les éditeurs derrière eux."
+                "label": "Le crayon dans l'en-tête de Monde",
+                "feedback": "Exact. Touchez le crayon, puis cherchez le pays et ajoutez-le."
               },
               "settings": {
                 "label": "Paramètres",
-                "feedback": "Non. Les paramètres sont le dernier onglet en bas."
+                "feedback": "Non. Paramètres est une page de l'onglet Vous, et les pays n'y sont pas."
               }
             }
           },
           "search": {
-            "headline": "Rechercher Explore",
-            "body": "La barre de recherche au-dessus des jetons regarde dans les titres récents, à peu près les deux derniers jours, pas une archive. C'est pour \"qu'est-ce qui s'est passé avec cette chose\", pas pour la recherche."
+            "headline": "Rechercher dans l'actualité",
+            "body": "L'icône de recherche dans l'en-tête de Monde parcourt les titres récents, environ les deux derniers jours, pas des archives. Elle sert à retrouver « ce qui s'est passé avec ce truc », pas à faire des recherches approfondies."
           },
           "hide-a-chip": {
-            "headline": "Trop de jetons",
-            "body": "Appuyez et maintenez un jeton que vous ne voulez pas et il s'en va. Mera construit ceux-ci à partir des endroits où elle sait, donc si celui-ci revient constamment, l'endroit derrière lui est toujours dans votre profil.",
-            "ask": "Comment je me débarrasse d'un jeton de pays dans Explorer ?"
+            "headline": "Trop de pays",
+            "body": "Touchez le crayon, puis la croix sur un pays, pour masquer sa page. Si le pays vient de l'un de vos lieux, le lieu reste dans votre profil et seule la page disparaît.",
+            "ask": "Comment retirer la page d'un pays dans Monde ?"
           }
         }
       },
@@ -2132,10 +2132,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Où vivent les sources",
-            "body": "Deux portes, un écran.",
+            "body": "Une seule page pour toutes les sources que vous avez ajustées.",
             "steps": {
-              "0": "Le jeton plus à la fin de la ligne de jetons d'Explorer.",
-              "1": "Ou l'onglet Profil, puis Avancé, puis Sources."
+              "0": "L'onglet Vous, puis Sources.",
+              "1": "« Moins de » dans le menu ••• d'un article s'applique tout de suite, avec Annuler, puis la source apparaît sous Ajustées."
             },
             "ask": "Où je gère quelles sources je vois ?"
           },
@@ -2257,8 +2257,8 @@
         "subtitle": "La plus rapide façon de changer presque n'importe quoi.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera est sur l'onglet Profil",
-            "body": "La bulle de discours à côté du logo sur l'onglet Profil ouvre la discussion. Il est facile de passer à pied, et c'est le contrôle le plus capable dans l'application.",
+            "headline": "Mera est sur chaque page",
+            "body": "Le bouton Mera rond en bas à droite ouvre la discussion, à partir de la page où vous êtes.",
             "ask": "Où je trouve le chat avec Mera ?"
           },
           "ask-what-it-knows": {
@@ -2324,9 +2324,9 @@
         "slides": {
           "one-screen": {
             "headline": "Où les commutateurs sont",
-            "body": "Deux robinets de n'importe où dans l'application.",
+            "body": "Quelques touches depuis n'importe où dans l'application.",
             "steps": {
-              "0": "L'onglet Paramètres, le dernier en bas.",
+              "0": "L'onglet Vous, puis Paramètres.",
               "1": "Mera Protocol."
             },
             "ask": "Où est l'écran Mera Protocol ?"

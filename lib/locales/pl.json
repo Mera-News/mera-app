@@ -1873,7 +1873,7 @@
             "steps": {
               "0": "Rozmawiam z Mera i to słyszy trwałe bity.",
               "1": "Powiadomiasz bezpośrednio: 'Przeniosłem się do Lizbony.'",
-              "2": "Dodajesz lub usuwasz je sam na karcie Profilu."
+              "2": "Dodajesz je lub usuwasz sam na karcie Ty."
             }
           },
           "to-topics": {
@@ -1898,7 +1898,7 @@
           },
           "importance": {
             "headline": "Niektóre fakty są ważniejsze niż inne",
-            "body": "Na karcie Profilu dotknij cokolwiek, co Mera wie o Tobie, aby podnieść lub obniżyć, jak bardzo to się liczy, przeformułować to, czy je usunąć. Zmniejszenie czegoś jest łagodniejsze niż usunięcie, i zwykle jest to lepszy pierwszy krok.",
+            "body": "Na karcie Ty otwórz swoje fakty i dotknij wszystkiego, co Mera o tobie wie, aby zmienić, jak bardzo się liczy, przeformułować to albo usunąć. Zmniejszenie wagi jest łagodniejsze niż usunięcie i zwykle to lepszy pierwszy krok.",
             "ask": "Jak zmienić, jak ważny jest jeden z moich faktów?"
           }
         }
@@ -1908,9 +1908,9 @@
         "subtitle": "Gdzie żyją dzisiejsze historie i jak się poruszają.",
         "slides": {
           "two-lists": {
-            "headline": "Dwie listy, dwa zadania",
-            "body": "Pierwsza karta to Twój kanał: jedna długa lista, najbardziej trafna na szczycie. Druga to ten sam dzień posortowany na sekcje. Te same historie, inny kształt, więc użyj tej, która pasuje nastroju.",
-            "ask": "Jaka jest różnica między kanałem a pulpitem?"
+            "headline": "Trzy strony, jedna karta",
+            "body": "Karta Strumień ma trzy strony. Strumień to jedna długa lista, najtrafniejsze na górze. Zainteresowania sortują te same historie według tego, co powiedziałeś Mera. historie zbierają rozwijające się historie, które obserwujesz. Przesuń w bok, aby przechodzić między nimi.",
+            "ask": "Czym różni się Strumień od Zainteresowań?"
           },
           "nothing-removed": {
             "headline": "Nic nigdy nie zostaje usunięte",
@@ -1958,16 +1958,16 @@
           },
           "quiet-by-design": {
             "headline": "Celowo cichy strumień",
-            "body": "Mera nie liczy ci nic przed oczami podczas czytania. Dotknij obu, aby zobaczyć, co gdzie się znajduje.",
+            "body": "Mera nie liczy niczego przy tobie podczas czytania. Dotknij obu, aby zobaczyć, jak każda strona zachowuje ciszę.",
             "ask": "Dlaczego Strumień nie pokazuje, ile historii napłynęło?",
             "reveal": {
               "feed": {
                 "label": "Strumień",
-                "text": "Żadnych bieżących sum, paska postępu ani „2 godziny temu” na kartach. Znak Mera obok tytułu to jedyny sygnał, że coś jest pobierane: rozjaśnia się i powiększa podczas synchronizacji, a przez resztę czasu spokojnie odpoczywa. Dotknij go, kiedy chcesz zobaczyć liczby, a pokażą się na trzy sekundy i znikną."
+                "text": "Przycisk Mera porusza się, gdy Mera czyta, a poza tym stoi w miejscu. To jedyny znak, że coś jest pobierane."
               },
               "dashboard": {
-                "label": "Pulpit",
-                "text": "Wszystko, co Strumień pomija. Ile historii opublikowano, przeanalizowano i zachowano, kiedy zakończył się ostatni przebieg, ile lat ma każda historia oraz twoje powiadomienia."
+                "label": "Zainteresowania",
+                "text": "Ten sam dzień posortowany według zainteresowań, z sekcją dla każdej rzeczy, o której powiedziałeś Mera, i nieprzeczytanymi historiami na początku. Sekcje zmieniają kolejność, gdy opuścisz stronę, albo co 10 minut."
               }
             }
           }
@@ -2100,48 +2100,48 @@
         }
       },
       "explore": {
-        "title": "Odkrywaj",
+        "title": "Świat",
         "subtitle": "Te same nagłówki, które dostaje wszyscy.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Celowo nie o Tobie",
-            "body": "Odkrywaj to jedno miejsce Mera nie personalizuje nic. Bez punktowania, bez powodów, nic nauczonego z tego, co otwierasz tutaj. Po prostu to, co redakcje kraju prowadzą, w ich porządku.",
-            "ask": "Dlaczego karta Odkrywaj nie jest spersonalizowana?"
+            "body": "Świat to jedyne miejsce, w którym Mera niczego nie personalizuje. Bez punktacji, bez powodów, nic nie uczy się z tego, co tu otwierasz. Tylko to, od czego redakcje każdego kraju zaczynają, w ich kolejności.",
+            "ask": "Dlaczego Świat nie jest spersonalizowany?"
           },
           "the-chips": {
-            "headline": "Żetony na szczycie",
-            "body": "Są zbudowane dla Ciebie, a nie wybierane przez Ciebie.",
+            "headline": "Jedna strona na kraj",
+            "body": "Mera tworzy strony za ciebie, a ty możesz je zmieniać.",
             "steps": {
-              "0": "Świat przychodzi pierwszy, zawsze.",
-              "1": "Potem Twój własny kraj i wszystkie miejsca, które Mera zna, a potem każdy kraj, który sam dodałeś."
+              "0": "Świat jest pierwszy, dopóki go nie przesuniesz.",
+              "1": "Potem twój kraj i kraje twoich miejsc, a po nich każdy kraj, który dodałeś sam."
             }
           },
           "the-plus-chip": {
-            "headline": "Żeton + na końcu żetonów",
-            "body": "Jest mały żeton + po ostatnim kraju. Dokąd to Cię zabiera?",
+            "headline": "Dodawanie kraju",
+            "body": "Gdzie dodajesz kraj do Świata?",
             "choose": {
               "places": {
                 "label": "Twoje miejsca",
-                "feedback": "Kiedyś. Już nie."
+                "feedback": "Twoje miejsca same dodają swoje kraje. Dla każdego innego kraju użyj ołówka."
               },
               "sources": {
-                "label": "Ekran Źródeł",
-                "feedback": "Prawo: kraje i wydawcy za nimi."
+                "label": "Ołówek w nagłówku Świata",
+                "feedback": "Zgadza się. Dotknij ołówka, potem wyszukaj kraj i dodaj go."
               },
               "settings": {
                 "label": "Ustawienia",
-                "feedback": "Nie. Ustawienia to ostatnia karta na dnie."
+                "feedback": "Nie. Ustawienia to strona karty Ty, a krajów tam nie ma."
               }
             }
           },
           "search": {
-            "headline": "Wyszukiwanie w Odkrywają",
-            "body": "Pasek wyszukiwania powyżej żetonów przeszukuje ostatnie nagłówki, mniej więcej ostatnie dwa dni, nie archiwum. To dla 'co się stało z tą rzeczą', a nie do badań."
+            "headline": "Przeszukiwanie wiadomości",
+            "body": "Ikona wyszukiwania w nagłówku Świata przeszukuje ostatnie nagłówki, mniej więcej z dwóch ostatnich dni, a nie archiwum. Służy do pytania “co się stało z tą sprawą”, a nie do badań."
           },
           "hide-a-chip": {
-            "headline": "Za wiele żetonów",
-            "body": "Naciśnij i przytrzymaj żeton, którego nie chcesz, a znika. Mera buduje to z miejsc, które zna, więc jeśli jeden wciąż wraca, miejsce za nim jest wciąż w Twoim profilu.",
-            "ask": "Jak pozbyć się żetonu kraju w Odkrywaniu?"
+            "headline": "Za dużo krajów",
+            "body": "Dotknij ołówka, a potem x przy kraju, aby ukryć jego stronę. Jeśli kraj pochodzi z jednego z twoich miejsc, miejsce zostaje w twoim profilu i znika tylko strona.",
+            "ask": "Jak usunąć stronę kraju ze Świata?"
           }
         }
       },
@@ -2151,10 +2151,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Gdzie żyją źródła",
-            "body": "Dwie drzwi, jeden ekran.",
+            "body": "Jeden ekran dla każdego wydawcy, którego zmieniłeś.",
             "steps": {
-              "0": "Żeton + na końcu rzędu żetonów Odkrywania.",
-              "1": "Lub zakładka Profilu, potem Zaawansowane, potem Źródła."
+              "0": "Karta Ty, potem Źródła.",
+              "1": "“Mniej z” w menu ••• artykułu działa od razu, z opcją Cofnij, a wydawca pojawia się potem w sekcji Zmienione."
             },
             "ask": "Gdzie zarządzam, które źródła widzę?"
           },
@@ -2276,8 +2276,8 @@
         "subtitle": "Najszybszy sposób zmiany prawie wszystkiego.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera jest na karcie Profilu",
-            "body": "Bąbelek mowy obok logo na karcie Profilu otwiera czat. Łatwo przejść obok, i to jest najbardziej zdolna kontrolka w aplikacji.",
+            "headline": "Mera jest na każdej stronie",
+            "body": "Okrągły przycisk Mera w prawym dolnym rogu otwiera czat, zaczynając od strony, na której jesteś.",
             "ask": "Gdzie znaleźć czat z Mera?"
           },
           "ask-what-it-knows": {
@@ -2343,9 +2343,9 @@
         "slides": {
           "one-screen": {
             "headline": "Gdzie są przełączniki",
-            "body": "Dwa dotknięcia z gdziekolwiek w aplikacji.",
+            "body": "Kilka dotknięć z dowolnego miejsca w aplikacji.",
             "steps": {
-              "0": "Karta Ustawienia, ostatnia na dnie.",
+              "0": "Karta Ty, potem Ustawienia.",
               "1": "Mera Protocol."
             },
             "ask": "Gdzie jest ekran Mera Protocol?"

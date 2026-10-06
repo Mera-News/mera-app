@@ -1847,7 +1847,7 @@
             "steps": {
               "0": "Tu parli a Mera e ascolta le parti durevoli.",
               "1": "Tu lo dici esplicitamente: \"Mi sono trasferito a Lisbona.\"",
-              "2": "Li aggiungi o rimuovi tu stesso sulla scheda Profilo."
+              "2": "Li aggiungi o li rimuovi tu stesso nella scheda Tu."
             }
           },
           "to-topics": {
@@ -1872,7 +1872,7 @@
           },
           "importance": {
             "headline": "Alcuni fatti importano più di altri",
-            "body": "Sulla scheda Profilo, tocca qualsiasi cosa Mera sappia di te per aumentare o diminuire quanto conta, riformularlo, o rimuoverlo. Abbassare qualcosa è più gentile che eliminarlo, e di solito è il primo passo migliore.",
+            "body": "Nella scheda Tu, apri i tuoi dati e tocca qualsiasi cosa Mera sappia di te per aumentare o diminuire quanto conta, riformularla o rimuoverla. Abbassarla è più delicato che eliminarla, e di solito è la prima mossa migliore.",
             "ask": "Come cambio quanto importante è uno dei miei fatti?"
           }
         }
@@ -1882,9 +1882,9 @@
         "subtitle": "Dove vivono le storie del giorno, e come si muovono.",
         "slides": {
           "two-lists": {
-            "headline": "Due liste, due lavori",
-            "body": "La prima scheda è il tuo Feed: un lungo elenco, il più rilevante vicino al top. La seconda è lo stesso giorno ordinato in sezioni. Stesse storie, forma diversa, quindi usa quale le si adatta di più.",
-            "ask": "Quale è la differenza tra Feed e Dashboard?"
+            "headline": "Tre pagine, una scheda",
+            "body": "La scheda Notizie ha tre pagine. Notizie è un lungo elenco, con le più rilevanti in alto. Interessi ordina le stesse storie in base a ciò che hai detto a Mera. Storie raccoglie le storie in corso che segui. Scorri di lato per passare dall'una all'altra.",
+            "ask": "Qual è la differenza tra Notizie e Interessi?"
           },
           "nothing-removed": {
             "headline": "Niente è mai rimosso",
@@ -1932,16 +1932,16 @@
           },
           "quiet-by-design": {
             "headline": "Un feed silenzioso per scelta",
-            "body": "Mera non ti tiene il conto mentre leggi. Tocca entrambi per vedere cosa sta dove.",
+            "body": "Mera non ti tiene il conto mentre leggi. Tocca entrambe per vedere come ogni pagina resta discreta.",
             "ask": "Perché Notizie non mostra quante storie sono arrivate?",
             "reveal": {
               "feed": {
                 "label": "Notizie",
-                "text": "Nessun totale in corso, nessuna barra di avanzamento, nessun «2 ore fa» sulle schede. Il segno Mera accanto al titolo è l'unico indizio che qualcosa si sta scaricando: si schiarisce e si ingrandisce durante una sincronizzazione, e per il resto del tempo resta silenzioso. Toccalo quando vuoi i numeri: compaiono per tre secondi e poi si tolgono di mezzo."
+                "text": "Il pulsante Mera si muove mentre Mera legge e resta fermo il resto del tempo. È l'unico segnale che qualcosa viene scaricato."
               },
               "dashboard": {
-                "label": "Dashboard",
-                "text": "Tutto ciò che Notizie tralascia. Quante storie sono state pubblicate, analizzate e conservate, quando è terminata l'ultima esecuzione, quanto è vecchia ogni storia e le tue notifiche."
+                "label": "Interessi",
+                "text": "Lo stesso giorno ordinato per interesse, con una sezione per ogni cosa che hai detto a Mera e le storie non lette in cima. Le sezioni si riordinano quando esci dalla pagina, oppure ogni 10 minuti."
               }
             }
           }
@@ -2074,48 +2074,48 @@
         }
       },
       "explore": {
-        "title": "Esplora",
+        "title": "Mondo",
         "subtitle": "Gli stessi titoli che tutti gli altri ottengono.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Deliberatamente non su di te",
-            "body": "Esplora è l'unico luogo in cui Mera non personalizza niente. Nessun punteggio, nessuna ragione, nulla imparato da quello che apri qui. Solo cosa i giornali di un paese stanno conducendo con, nel loro ordine.",
-            "ask": "Perché la scheda Esplora non è personalizzata?"
+            "body": "Mondo è l'unico posto in cui Mera non personalizza nulla. Nessun punteggio, nessun motivo, niente imparato da ciò che apri qui. Solo ciò che le redazioni di ogni paese mettono in primo piano, nel loro ordine.",
+            "ask": "Perché Mondo non è personalizzato?"
           },
           "the-chips": {
-            "headline": "I chip attraverso il top",
-            "body": "Sono costruiti per te piuttosto che scelti da te.",
+            "headline": "Una pagina per paese",
+            "body": "Mera crea le pagine per te, e puoi cambiarle.",
             "steps": {
-              "0": "Il mondo viene per primo, sempre.",
-              "1": "Allora il tuo paese e qualsiasi luogo Mera sa di, e dopo quelli, qualsiasi paese tu hai aggiunto te stesso."
+              "0": "Mondo viene per primo, a meno che tu non lo sposti.",
+              "1": "Poi il tuo paese e i paesi dei tuoi luoghi, e dopo questi, ogni paese che hai aggiunto tu."
             }
           },
           "the-plus-chip": {
-            "headline": "Il + alla fine dei chip",
-            "body": "C'è un piccolo + chip dopo l'ultimo paese. Dove ti porta?",
+            "headline": "Aggiungere un paese",
+            "body": "Dove si aggiunge un paese a Mondo?",
             "choose": {
               "places": {
                 "label": "I tuoi posti",
-                "feedback": "Lo era. Non lo è più."
+                "feedback": "I tuoi luoghi aggiungono i loro paesi da soli. Per qualsiasi altro paese, usa la matita."
               },
               "sources": {
-                "label": "La schermata delle Fonti",
-                "feedback": "Giusto: paesi, e gli editori dietro di loro."
+                "label": "La matita nell'intestazione di Mondo",
+                "feedback": "Giusto. Tocca la matita, cerca il paese e aggiungilo."
               },
               "settings": {
                 "label": "Impostazioni",
-                "feedback": "No. Le impostazioni sono l'ultima scheda lungo il fondo."
+                "feedback": "No. Impostazioni è una pagina della scheda Tu, e i paesi non sono lì."
               }
             }
           },
           "search": {
-            "headline": "Ricerca di Esplora",
-            "body": "La barra di ricerca sopra i chip guarda attraverso i titoli recenti, più o meno gli ultimi due giorni, non un archivio. È per \"cosa è successo con quella cosa\", non per la ricerca."
+            "headline": "Cercare nelle notizie",
+            "body": "L'icona di ricerca nell'intestazione di Mondo scorre i titoli recenti, più o meno degli ultimi due giorni, non un archivio. Serve per «cos'è successo con quella cosa», non per fare ricerche."
           },
           "hide-a-chip": {
-            "headline": "Troppi chip",
-            "body": "Premi e tieni un chip che non vuoi e se ne va. Mera lo costruisce dai posti che sa, così se uno continua a tornare, il posto dietro di esso è ancora nel tuo profilo.",
-            "ask": "Come sbarazzo un chip di paese in Esplora?"
+            "headline": "Troppi paesi",
+            "body": "Tocca la matita, poi la x su un paese per nascondere la sua pagina. Se il paese viene da uno dei tuoi luoghi, il luogo resta nel tuo profilo e sparisce solo la pagina.",
+            "ask": "Come tolgo la pagina di un paese da Mondo?"
           }
         }
       },
@@ -2125,10 +2125,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Dove vivono le fonti",
-            "body": "Due porte, uno schermo.",
+            "body": "Una sola schermata per ogni testata che hai regolato.",
             "steps": {
-              "0": "Il + chip alla fine della riga di chip di Esplora.",
-              "1": "O la scheda Profilo, allora Avanzate, allora Fonti."
+              "0": "La scheda Tu, poi Fonti.",
+              "1": "«Meno da» nel menu ••• di un articolo ha effetto subito, con Annulla, e la testata compare poi in Modificate."
             },
             "ask": "Dove gestisco quali fonti vedo?"
           },
@@ -2250,8 +2250,8 @@
         "subtitle": "Il modo più veloce per cambiare quasi tutto.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera è sulla scheda Profilo",
-            "body": "La bolla di discorso accanto al logo sulla scheda Profilo apre la chat. È facile camminare oltre, ed è il controllo più capace nell'app.",
+            "headline": "Mera è in ogni pagina",
+            "body": "Il pulsante rotondo di Mera, in basso a destra, apre la chat partendo dalla pagina in cui ti trovi.",
             "ask": "Dove trovo la chat con Mera?"
           },
           "ask-what-it-knows": {
@@ -2317,9 +2317,9 @@
         "slides": {
           "one-screen": {
             "headline": "Dove sono gli interruttori",
-            "body": "Due tocchi da qualsiasi parte nell'app.",
+            "body": "A pochi tocchi da qualsiasi punto dell'app.",
             "steps": {
-              "0": "La scheda Impostazioni, l'ultimo lungo il fondo.",
+              "0": "La scheda Tu, poi Impostazioni.",
               "1": "Mera Protocol."
             },
             "ask": "Dove è la schermata di Mera Protocol?"

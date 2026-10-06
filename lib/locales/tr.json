@@ -1849,7 +1849,7 @@
             "steps": {
               "0": "Sen Mera'yla konuşuyorsun ve o dayanıklı bitleri dinliyor.",
               "1": "Bunu açık söylüyorsun: \"Lizbon'a taşındım.\"",
-              "2": "Profil sekmesinde kendin ekle veya kaldır."
+              "2": "Bunları Siz sekmesinden kendiniz eklersiniz veya kaldırırsınız."
             }
           },
           "to-topics": {
@@ -1874,7 +1874,7 @@
           },
           "importance": {
             "headline": "Bazı gerçekler diğerlerinden daha önemli",
-            "body": "Profil sekmesinde Mera'nın senin hakkında bildiği herhangi bir şeye dokun, ne kadar sayıldığını yükselt veya düşür, yeniden ifade et veya kaldır. Bir şeyi düşürmek silmekten daha yumuşaktır ve genellikle daha iyi ilk hamle.",
+            "body": "Siz sekmesinde bilgilerinizi açın ve Mera'nın sizin hakkınızda bildiği herhangi bir şeye dokunarak ağırlığını artırın ya da azaltın, yeniden ifade edin veya kaldırın. Ağırlığı düşürmek silmekten daha yumuşaktır ve genelde daha iyi ilk adımdır.",
             "ask": "Gerçeklerinden birinin ne kadar önemli olduğunu nasıl değiştirebilirim?"
           }
         }
@@ -1884,9 +1884,9 @@
         "subtitle": "Günün hikayelerinin yaşadığı ve nasıl hareket ettiği.",
         "slides": {
           "two-lists": {
-            "headline": "İki liste, iki iş",
-            "body": "İlk sekme senin akışın: bir uzun liste, en ilgili tepede. İkincisi aynı gün bölümlere ayrılmış. Aynı hikayeler, farklı şekil, bu yüzden bulduğun hangisini tercih et.",
-            "ask": "Akış ile Pano arasındaki fark nedir?"
+            "headline": "Üç sayfa, tek sekme",
+            "body": "Akış sekmesinde üç sayfa var. Akış, en alakalı olanı en üstte olan tek bir uzun liste. İlgi alanları aynı haberleri Mera'ya söylediklerinize göre sıralar. Haberler takip ettiğiniz gelişen haberleri tutar. Aralarında geçmek için yana kaydırın.",
+            "ask": "Akış ile İlgi alanları arasındaki fark nedir?"
           },
           "nothing-removed": {
             "headline": "Hiçbir şey hiçbir zaman kaldırılmaz",
@@ -1934,16 +1934,16 @@
           },
           "quiet-by-design": {
             "headline": "Bilerek sessiz bir akış",
-            "body": "Mera siz okurken size sayı saymaz. Neyin nerede durduğunu görmek için ikisine de dokunun.",
+            "body": "Mera siz okurken size sayı saymaz. Her sayfanın nasıl sessiz kaldığını görmek için ikisine de dokunun.",
             "ask": "Akış neden kaç haberin geldiğini göstermiyor?",
             "reveal": {
               "feed": {
                 "label": "Akış",
-                "text": "Kartlarda ilerleyen toplamlar, ilerleme çubuğu ya da «2 saat önce» yok. Başlığın yanındaki Mera işareti, bir şeyin getirildiğine dair tek belirtidir: eşitleme sürerken parlar ve büyür, geri kalan zamanda sessizce durur. Sayıları görmek istediğinizde ona dokunun; üç saniye görünür, sonra aradan çekilir."
+                "text": "Mera düğmesi, Mera okurken hareket eder ve geri kalan zamanda sabit durur. Bir şeyin getirildiğini gösteren tek işaret budur."
               },
               "dashboard": {
-                "label": "Panel",
-                "text": "Akışın dışarıda bıraktığı her şey. Kaç haberin yayımlandığı, çözümlendiği ve tutulduğu, son çalışmanın ne zaman bittiği, her haberin ne kadar eski olduğu ve bildirimleriniz."
+                "label": "İlgi alanları",
+                "text": "Aynı gün, ilgi alanlarına göre sıralanır. Mera'ya söylediğiniz her şey için bir bölüm vardır ve okunmamış haberler en başta gelir. Bölümler sayfadan çıktığınızda ya da her 10 dakikada bir yeniden sıralanır."
               }
             }
           }
@@ -2076,48 +2076,48 @@
         }
       },
       "explore": {
-        "title": "Keşfet",
+        "title": "Dünya",
         "subtitle": "Aynı başlıklar herkese aldığı.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Kasıtlı olarak seninle ilgili değil",
-            "body": "Keşfet, Mera kişiselleştirmediği tek yerdir. Puanlama, neden, ne açtığından kat. Sadece bir ülkenin haber odasının liderliği yaptığı, onların emrinde.",
-            "ask": "Keşfet sekmesi neden kişiselleştirilmemiş?"
+            "body": "Dünya, Mera'nın hiçbir şeyi kişiselleştirmediği tek yerdir. Puanlama yok, neden yok, burada açtıklarınızdan hiçbir şey öğrenilmez. Sadece her ülkenin haber merkezlerinin öne çıkardıkları, kendi sıralarıyla.",
+            "ask": "Dünya neden kişiselleştirilmiyor?"
           },
           "the-chips": {
-            "headline": "Tepedeki çipiler",
-            "body": "Seninle yapıldı, seninle seçilmedi.",
+            "headline": "Her ülke için bir sayfa",
+            "body": "Sayfaları Mera sizin için oluşturur, siz de değiştirebilirsiniz.",
             "steps": {
-              "0": "Dünya ilk gelir, her zaman.",
-              "1": "Sonra kendi ülkeniz ve Mera bilen herhangi yerleri ve sonra kendin eklediğin herhangi ülkeyi."
+              "0": "Siz taşımadıkça Dünya en başta gelir.",
+              "1": "Sonra kendi ülkeniz ve yerlerinizin ülkeleri, ardından kendiniz eklediğiniz ülkeler gelir."
             }
           },
           "the-plus-chip": {
-            "headline": "Çiplerin sonundaki +",
-            "body": "Son ülkeden sonra küçük bir + çip var. Seni nereye götürür?",
+            "headline": "Ülke ekleme",
+            "body": "Dünya'ya ülkeyi nereden eklersiniz?",
             "choose": {
               "places": {
                 "label": "Yerlerin",
-                "feedback": "Eskidendi. Artık değil."
+                "feedback": "Yerleriniz kendi ülkelerini otomatik ekler. Başka bir ülke için kalemi kullanın."
               },
               "sources": {
-                "label": "Kaynaklar ekranı",
-                "feedback": "Sağ: ülkeler ve onların arkasındaki yayıncılar."
+                "label": "Dünya başlığındaki kalem",
+                "feedback": "Doğru. Kaleme dokunun, ülkeyi arayın ve ekleyin."
               },
               "settings": {
                 "label": "Ayarlar",
-                "feedback": "Hayır. Ayarlar sonuncu sekme boyunca."
+                "feedback": "Hayır. Ayarlar Siz sekmesinin bir sayfasıdır ve ülkeler orada değil."
               }
             }
           },
           "search": {
-            "headline": "Keşfette arama",
-            "body": "Çiplerin üzerine arama çubuğu son başlıklar, kabaca son iki gün, arsiv değil. \"Bu şey ne oldu\" için."
+            "headline": "Haberlerde arama",
+            "body": "Dünya başlığındaki arama simgesi son başlıklara bakar, yaklaşık son iki güne, arşive değil. \"Şu konuyla ilgili ne oldu\" diye sormak için, araştırma için değil."
           },
           "hide-a-chip": {
-            "headline": "Çok fazla çip",
-            "body": "Istemediğiniz çip ve gider basılı tutun. Mera bunları bildiği yerlerden inşa eder, bu yüzden biri geri gelirse, oradaki yer hâlâ profilinizde.",
-            "ask": "Keşfette ülke çipini nasıl alıyorsunuz?"
+            "headline": "Çok fazla ülke",
+            "body": "Bir ülkenin sayfasını gizlemek için kaleme, sonra ülkedeki x işaretine dokunun. Ülke yerlerinizden birinden geliyorsa yer profilinizde kalır, yalnızca sayfa gider.",
+            "ask": "Dünya'dan bir ülke sayfasını nasıl kaldırırım?"
           }
         }
       },
@@ -2127,10 +2127,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Kaynaklar nerede yaşıyor",
-            "body": "İki kapı, bir ekran.",
+            "body": "Ayarladığınız tüm yayıncılar için tek bir ekran.",
             "steps": {
-              "0": "Keşfet'in çip satırının sonundaki + çip.",
-              "1": "Veya Profil sekmesi, sonra İleri, sonra Kaynaklar."
+              "0": "Siz sekmesi, sonra Kaynaklar.",
+              "1": "Bir haberin ••• menüsündeki \"Daha az\" seçeneği hemen geçerli olur, Geri al ile birlikte, ardından yayıncı Ayarlananlar altında görünür."
             },
             "ask": "Hangi kaynakları gördüğümü nereden yönetirim?"
           },
@@ -2252,8 +2252,8 @@
         "subtitle": "Neredeyse her şeyi değiştirmenin en hızlı yolu.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera Profil sekmesinde",
-            "body": "Logoların yanındaki konuşma balonu Profil sekmesi sohbeti açar. Yürümek kolay ve uygulamada en yetkin kontrol.",
+            "headline": "Mera her sayfada",
+            "body": "Sağ alttaki yuvarlak Mera düğmesi, bulunduğunuz sayfadan başlayarak sohbeti açar.",
             "ask": "Mera ile sohbeti nerede bulabilirim?"
           },
           "ask-what-it-knows": {
@@ -2319,9 +2319,9 @@
         "slides": {
           "one-screen": {
             "headline": "Anahtarlar nerede",
-            "body": "Uygulamada herhangi bir yerden iki dokumu.",
+            "body": "Uygulamanın her yerinden birkaç dokunuş.",
             "steps": {
-              "0": "Ayarlar sekmesi, sonuncu kuyu boyunca.",
+              "0": "Siz sekmesi, sonra Ayarlar.",
               "1": "Mera Protokolü."
             },
             "ask": "Mera Protokolü ekranı nerede?"

@@ -1847,7 +1847,7 @@
             "steps": {
               "0": "Hablas con Mera y ella escucha los trozos duraderos.",
               "1": "Le dices directamente: 'Me mudé a Lisboa.'",
-              "2": "Los agregas o los quitas tú mismo en la pestaña de Perfil."
+              "2": "Los agregas o los quitas tú mismo en la pestaña Tú."
             }
           },
           "to-topics": {
@@ -1872,7 +1872,7 @@
           },
           "importance": {
             "headline": "Algunos datos importan más que otros",
-            "body": "En la pestaña Perfil, toca cualquier cosa que Mera sepa sobre ti para subir o bajar cuánto cuenta, reformularlo, o eliminarlo. Bajar algo es más suave que eliminarlo, y generalmente el primer movimiento mejor.",
+            "body": "En la pestaña Tú, abre tus datos y toca cualquier cosa que Mera sepa sobre ti para subir o bajar cuánto cuenta, reformularla o quitarla. Bajarla es más suave que borrarla, y suele ser mejor como primer paso.",
             "ask": "¿Cómo cambio la importancia de uno de mis datos?"
           }
         }
@@ -1882,9 +1882,9 @@
         "subtitle": "Dónde viven las historias del día, y cómo se mueven.",
         "slides": {
           "two-lists": {
-            "headline": "Dos listas, dos trabajos",
-            "body": "La primera pestaña es tu Feed: una larga lista, la más relevante cerca de la parte superior. La segunda es el mismo día ordenado en secciones. Las mismas historias, forma diferente, así que usa la que se ajuste al humor.",
-            "ask": "¿Cuál es la diferencia entre el Feed y el Panel?"
+            "headline": "Tres páginas, una pestaña",
+            "body": "La pestaña Noticias tiene tres páginas. Noticias es una lista larga, con lo más relevante arriba. Intereses ordena las mismas historias según lo que le contaste a Mera. Historias guarda las historias en desarrollo que sigues. Desliza hacia los lados para moverte entre ellas.",
+            "ask": "¿Cuál es la diferencia entre Noticias e Intereses?"
           },
           "nothing-removed": {
             "headline": "Nada se elimina nunca",
@@ -1932,16 +1932,16 @@
           },
           "quiet-by-design": {
             "headline": "Un feed silencioso a propósito",
-            "body": "Mera no te lleva la cuenta mientras lees. Toca ambos para ver qué hay en cada sitio.",
+            "body": "Mera no te lleva la cuenta mientras lees. Toca ambas para ver cómo se mantiene tranquila cada página.",
             "ask": "¿Por qué Noticias no muestra cuántas historias han entrado?",
             "reveal": {
               "feed": {
                 "label": "Noticias",
-                "text": "Sin totales en marcha, sin barra de progreso, sin «hace 2 horas» en las tarjetas. La marca de Mera junto al título es la única señal de que algo se está descargando: se aclara y crece mientras hay una sincronización, y descansa en silencio el resto del tiempo. Tócala cuando quieras las cifras y se mostrarán durante tres segundos antes de apartarse."
+                "text": "El botón de Mera se mueve mientras Mera lee y se queda quieto el resto del tiempo. Es la única señal de que se está descargando algo."
               },
               "dashboard": {
-                "label": "Panel",
-                "text": "Todo lo que Noticias deja fuera. Cuántas historias se publicaron, se analizaron y se conservaron, cuándo terminó la última ejecución, qué antigüedad tiene cada historia y tus notificaciones."
+                "label": "Intereses",
+                "text": "El mismo día ordenado por interés, con una sección por cada cosa que le contaste a Mera y las historias sin leer primero. Las secciones se reordenan cuando sales de la página, o cada 10 minutos."
               }
             }
           }
@@ -2074,48 +2074,48 @@
         }
       },
       "explore": {
-        "title": "Explorar",
+        "title": "Mundo",
         "subtitle": "Los mismos titulares que todos demás obtienen.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Deliberadamente no sobre ti",
-            "body": "Explorar es el único lugar donde Mera no personaliza nada. Sin puntuación, sin razones, nada aprendido de lo que abres aquí. Solo lo que las salas de prensa de un país están encabezando, en su orden.",
-            "ask": "¿Por qué la pestaña Explorar no está personalizada?"
+            "body": "Mundo es el único lugar donde Mera no personaliza nada. Sin puntuación, sin motivos, nada aprendido de lo que abres aquí. Solo lo que las redacciones de cada país destacan, en su orden.",
+            "ask": "¿Por qué Mundo no está personalizado?"
           },
           "the-chips": {
-            "headline": "Los chips en la parte superior",
-            "body": "Se construyen para ti en lugar de ser elegidos por ti.",
+            "headline": "Una página por país",
+            "body": "Mera arma las páginas por ti, y puedes cambiarlas.",
             "steps": {
-              "0": "El mundo viene primero, siempre.",
-              "1": "Luego tu propio país y cualquier lugar que Mera sepa, y después de esos, cualquier país que hayas agregado tú mismo."
+              "0": "Mundo va primero, a menos que lo muevas.",
+              "1": "Después tu propio país y los países de tus lugares, y luego cualquier país que hayas agregado tú."
             }
           },
           "the-plus-chip": {
-            "headline": "El + al final de los chips",
-            "body": "Hay un pequeño chip + después del último país. ¿Adónde te lleva?",
+            "headline": "Agregar un país",
+            "body": "¿Dónde se agrega un país a Mundo?",
             "choose": {
               "places": {
                 "label": "Tus lugares",
-                "feedback": "Lo fue. No lo es más."
+                "feedback": "Tus lugares agregan sus países solos. Para cualquier otro país, usa el lápiz."
               },
               "sources": {
-                "label": "La pantalla de Fuentes",
-                "feedback": "Correcto: países y los publicadores detrás de ellos."
+                "label": "El lápiz en el encabezado de Mundo",
+                "feedback": "Correcto. Toca el lápiz, busca el país y agrégalo."
               },
               "settings": {
                 "label": "Ajustes",
-                "feedback": "No. Ajustes es la última pestaña en la parte inferior."
+                "feedback": "No. Ajustes es una página de la pestaña Tú, y los países no están ahí."
               }
             }
           },
           "search": {
-            "headline": "Buscando en Explorar",
-            "body": "La barra de búsqueda encima de los chips busca en titulares recientes, más o menos los últimos dos días, no un archivo. Es para 'qué pasó con esa cosa', no para investigación."
+            "headline": "Buscar en las noticias",
+            "body": "El ícono de búsqueda en el encabezado de Mundo recorre los titulares recientes, más o menos los últimos dos días, no un archivo. Sirve para «qué pasó con tal cosa», no para investigar."
           },
           "hide-a-chip": {
-            "headline": "Demasiados chips",
-            "body": "Presiona y mantén un chip que no quieras y se va. Mera construye estos a partir de lugares que sabe, así que si uno sigue volviendo, el lugar detrás de él todavía está en tu perfil.",
-            "ask": "¿Cómo me deshago de un chip de país en Explorar?"
+            "headline": "Demasiados países",
+            "body": "Toca el lápiz y luego la x de un país para ocultar su página. Si el país viene de uno de tus lugares, el lugar sigue en tu perfil y solo se va la página.",
+            "ask": "¿Cómo quito la página de un país de Mundo?"
           }
         }
       },
@@ -2125,10 +2125,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Dónde viven las fuentes",
-            "body": "Dos puertas, una pantalla.",
+            "body": "Una sola pantalla para todas las publicaciones que ajustaste.",
             "steps": {
-              "0": "El chip + al final de la fila de chips de Explorar.",
-              "1": "O la pestaña Perfil, luego Avanzado, luego Fuentes."
+              "0": "La pestaña Tú, luego Fuentes.",
+              "1": "«Menos de» en el menú ••• de un artículo se aplica al instante, con Deshacer, y la publicación aparece después en Ajustadas."
             },
             "ask": "¿Dónde gestiono qué fuentes veo?"
           },
@@ -2250,8 +2250,8 @@
         "subtitle": "La forma más rápida de cambiar casi cualquier cosa.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera está en la pestaña de Perfil",
-            "body": "La burbuja de speech junto al logo en la pestaña Perfil abre el chat. Es fácil de caminar, y es el control más capaz en la aplicación.",
+            "headline": "Mera está en cada página",
+            "body": "El botón redondo de Mera, abajo a la derecha, abre el chat a partir de la página en la que estás.",
             "ask": "¿Dónde encuentro el chat con Mera?"
           },
           "ask-what-it-knows": {
@@ -2317,9 +2317,9 @@
         "slides": {
           "one-screen": {
             "headline": "Dónde están los interruptores",
-            "body": "Dos toques desde cualquier lugar en la aplicación.",
+            "body": "A unos pocos toques desde cualquier lugar de la app.",
             "steps": {
-              "0": "La pestaña Ajustes, la última a lo largo de la parte inferior.",
+              "0": "La pestaña Tú, luego Ajustes.",
               "1": "Mera Protocol."
             },
             "ask": "¿Dónde está la pantalla de Mera Protocol?"

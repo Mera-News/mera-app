@@ -1965,7 +1965,7 @@
             "steps": {
               "0": "You talk to Mera and it listens for the durable bits.",
               "1": "You tell it outright: \"I moved to Lisbon.\"",
-              "2": "You add or remove them yourself on the Profile tab."
+              "2": "You add or remove them yourself on the You tab."
             }
           },
           "to-topics": {
@@ -1990,7 +1990,7 @@
           },
           "importance": {
             "headline": "Some facts matter more than others",
-            "body": "On the Profile tab, tap anything Mera knows about you to raise or lower how much it counts, reword it, or remove it. Turning something down is gentler than deleting it, and usually the better first move.",
+            "body": "On the You tab, open your facts and tap anything Mera knows about you to raise or lower how much it counts, reword it, or remove it. Turning something down is gentler than deleting it, and usually the better first move.",
             "ask": "How do I change how important one of my facts is?"
           }
         }
@@ -2000,9 +2000,9 @@
         "subtitle": "Where the day's stories live, and how they move.",
         "slides": {
           "two-lists": {
-            "headline": "Two lists, two jobs",
-            "body": "The first tab is your Feed: one long list, the most relevant near the top. The second is the same day sorted into sections. Same stories, different shape, so use whichever suits the mood.",
-            "ask": "What is the difference between the Feed and the Dashboard?"
+            "headline": "Three pages, one tab",
+            "body": "The Feed tab has three pages. Feed is one long list, the most relevant near the top. Interests sorts the same stories by what you told Mera. Stories keeps the developing stories you follow. Swipe sideways to move between them.",
+            "ask": "What is the difference between Feed and Interests?"
           },
           "nothing-removed": {
             "headline": "Nothing is ever removed",
@@ -2046,16 +2046,16 @@
           },
           "quiet-by-design": {
             "headline": "A quiet feed on purpose",
-            "body": "Mera does not count at you while you read. Tap both to see what sits where.",
+            "body": "Mera does not count at you while you read. Tap both to see how each page stays quiet.",
             "ask": "Why does the Feed not show how many stories came in?",
             "reveal": {
               "feed": {
                 "label": "The Feed",
-                "text": "No running totals, no progress bar, no \"2 hours ago\" on the cards. The Mera mark beside the title is the only sign that anything is fetching: it brightens and grows while a sync runs, and rests quietly the rest of the time. Tap it whenever you want the numbers, and they show for three seconds before getting out of the way."
+                "text": "The Mera button moves while Mera reads and stays still the rest of the time. It is the only sign that anything is being fetched."
               },
               "dashboard": {
-                "label": "The Dashboard",
-                "text": "Everything the Feed leaves out. How many stories were published, analysed and kept, when the last run finished, how old each story is, and your notifications."
+                "label": "Interests",
+                "text": "The same day sorted by interest, with a section for each thing you told Mera and unread stories first. Sections reorder when you leave the page, or every 10 minutes."
               }
             }
           },
@@ -2192,48 +2192,48 @@
         }
       },
       "explore": {
-        "title": "Explore",
+        "title": "World",
         "subtitle": "The same headlines everyone else gets.",
         "slides": {
           "unscored-on-purpose": {
             "headline": "Deliberately not about you",
-            "body": "Explore is the one place Mera does not personalise anything. No scoring, no reasons, nothing learned from what you open here. Just what a country's newsrooms are leading with, in their order.",
-            "ask": "Why is the Explore tab not personalised?"
+            "body": "World is the one place Mera does not personalise anything. No scoring, no reasons, nothing learned from what you open here. Just what each country's newsrooms are leading with, in their order.",
+            "ask": "Why is World not personalised?"
           },
           "the-chips": {
-            "headline": "The chips across the top",
-            "body": "They are built for you rather than chosen by you.",
+            "headline": "One page per country",
+            "body": "Mera builds the pages for you, and you can change them.",
             "steps": {
-              "0": "World comes first, always.",
-              "1": "Then your own country and any places Mera knows about, and after those, any country you have added yourself."
+              "0": "World comes first unless you move it.",
+              "1": "Then your own country and the countries of your places, and after those, any country you added yourself."
             }
           },
           "the-plus-chip": {
-            "headline": "The + at the end of the chips",
-            "body": "There is a small + chip after the last country. Where does it take you?",
+            "headline": "Adding a country",
+            "body": "Where do you add a country to World?",
             "choose": {
               "places": {
                 "label": "Your places",
-                "feedback": "It used to. It does not any more."
+                "feedback": "Your places add their countries on their own. For any other country, use the pen."
               },
               "sources": {
-                "label": "The Sources screen",
-                "feedback": "Right: countries, and the publishers behind them."
+                "label": "The pen in the World header",
+                "feedback": "Right. Tap the pen, then search for the country and add it."
               },
               "settings": {
                 "label": "Settings",
-                "feedback": "No. Settings is the last tab along the bottom."
+                "feedback": "No. Settings is a page of the You tab, and countries are not there."
               }
             }
           },
           "search": {
-            "headline": "Searching Explore",
-            "body": "The search bar above the chips looks through recent headlines, roughly the last two days, not an archive. It is for \"what happened with that thing\", not for research."
+            "headline": "Searching the news",
+            "body": "The search icon in the World header looks through recent headlines, roughly the last two days, not an archive. It is for \"what happened with that thing\", not for research."
           },
           "hide-a-chip": {
-            "headline": "Too many chips",
-            "body": "Press and hold a chip you do not want and it goes away. Mera builds these from the places it knows about, so if one keeps coming back, the place behind it is still in your profile.",
-            "ask": "How do I get rid of a country chip in Explore?"
+            "headline": "Too many countries",
+            "body": "Tap the pen, then the x on a country, to hide its page. If the country comes from one of your places, the place stays in your profile and only the page goes.",
+            "ask": "How do I remove a country page from World?"
           }
         }
       },
@@ -2243,10 +2243,10 @@
         "slides": {
           "where-it-lives": {
             "headline": "Where sources live",
-            "body": "Two doors, one screen.",
+            "body": "One screen for every publication you adjusted.",
             "steps": {
-              "0": "The + chip at the end of Explore's row of chips.",
-              "1": "Or the Profile tab, then Advanced, then Sources."
+              "0": "The You tab, then Sources.",
+              "1": "\"Fewer from\" in an article's ••• menu takes effect at once, with Undo, and the publication then shows under Adjusted."
             },
             "ask": "Where do I manage which sources I see?"
           },
@@ -2368,8 +2368,8 @@
         "subtitle": "The fastest way to change almost anything.",
         "slides": {
           "where-mera-is": {
-            "headline": "Mera is on the Profile tab",
-            "body": "The speech bubble next to the logo on the Profile tab opens the chat. It is easy to walk past, and it is the most capable control in the app.",
+            "headline": "Mera is on every page",
+            "body": "The round Mera button at the bottom right opens the chat, starting from the page you are on.",
             "ask": "Where do I find the chat with Mera?"
           },
           "ask-what-it-knows": {
@@ -2435,9 +2435,9 @@
         "slides": {
           "one-screen": {
             "headline": "Where the switches are",
-            "body": "Two taps from anywhere in the app.",
+            "body": "A few taps from anywhere in the app.",
             "steps": {
-              "0": "The Settings tab, the last one along the bottom.",
+              "0": "The You tab, then Settings.",
               "1": "Mera Protocol."
             },
             "ask": "Where is the Mera Protocol screen?"
