@@ -98,11 +98,9 @@ describe('no feed UI anywhere in the app', () => {
 
 describe('the guard fires (each rule proven on a mutated real file)', () => {
     const l2 = fs.readFileSync(path.join(ROOT, 'components/custom/config-panel/SourcesL2PublicationList.tsx'), 'utf8');
-    const l1 = fs.readFileSync(path.join(ROOT, 'components/custom/config-panel/SourcesL1CountryList.tsx'), 'utf8');
 
     it('starts clean', () => {
         expect(feedUiViolations(l2)).toEqual([]);
-        expect(feedUiViolations(l1)).toEqual([]);
     });
 
     it('catches feed rows rendered from publicationSources, arrow or block body', () => {
@@ -123,20 +121,20 @@ describe('the guard fires (each rule proven on a mutated real file)', () => {
     });
 
     it('catches matchingSources, a per-feed article query, a feed URL and the old routes', () => {
-        expect(feedUiViolations(`${l1}\nconst x = hit.matchingSources;`)).toContain('reads matchingSources');
-        expect(feedUiViolations(`${l1}\nArticleService.getArticlesForPublicationSource(id);`)).toContain(
+        expect(feedUiViolations(`${l2}\nconst x = hit.matchingSources;`)).toContain('reads matchingSources');
+        expect(feedUiViolations(`${l2}\nArticleService.getArticlesForPublicationSource(id);`)).toContain(
             'asks for one feed\'s articles',
         );
-        expect(feedUiViolations(`${l1}\n<Text>{src.feed_url}</Text>;`)).toContain('shows a feed URL');
-        expect(feedUiViolations(`${l1}\nrouter.push({ pathname: '/logged-in/sources-articles' });`)).toContain(
+        expect(feedUiViolations(`${l2}\n<Text>{src.feed_url}</Text>;`)).toContain('shows a feed URL');
+        expect(feedUiViolations(`${l2}\nrouter.push({ pathname: '/logged-in/sources-articles' });`)).toContain(
             'navigates to a feed-era route',
         );
-        expect(feedUiViolations(`${l1}\nrouter.push('/logged-in/publisher-articles');`)).toContain(
+        expect(feedUiViolations(`${l2}\nrouter.push('/logged-in/publisher-articles');`)).toContain(
             'navigates to a feed-era route',
         );
     });
 
     it('ignores a pattern that only appears in a comment', () => {
-        expect(feedUiViolations(`${l1}\n// matchingSources used to render feed rows here`)).toEqual([]);
+        expect(feedUiViolations(`${l2}\n// matchingSources used to render feed rows here`)).toEqual([]);
     });
 });

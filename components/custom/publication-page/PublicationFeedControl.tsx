@@ -29,8 +29,8 @@ interface PublicationFeedControlProps {
     readonly current: SourcePrefUiLevel;
     readonly busy?: boolean;
     /** Called with the NEXT level: tapping the active choice clears it back
-     *  to 'none', tapping the other switches directly (the SourcePrefControl
-     *  rule, so every surface behaves the same). */
+     *  to 'none', tapping the other switches directly (one rule, so every
+     *  surface behaves the same). */
     readonly onChange: (next: SourcePrefUiLevel) => void;
     readonly testID?: string;
 }

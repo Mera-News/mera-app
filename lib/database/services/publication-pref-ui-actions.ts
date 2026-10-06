@@ -1,7 +1,6 @@
 // Source-preference UI actions (item 9, Wave B). The ONE entry point every
-// ↑/↓ control in the app calls — the L2 publication list's `SourcePrefControl`
-// (this repo) and the L1 country list's own controls (owned by a concurrent
-// change; this module is the shared seam between the two).
+// More/Fewer control in the app calls — the publication page, the Sources
+// screen's rows and search, and "Fewer from" in an article's menu.
 //
 // The friction this removes: before this module, `PublicationPreferencesScreen`
 // carried its own hand-rolled apply/clear logic (see git history) and every new
