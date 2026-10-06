@@ -22,6 +22,7 @@ export interface RoleMeta {
 // REQUIRES icon+label since `diversity-1` reads ambiguously on its own.
 export const LOCATION_ROLES: readonly RoleMeta[] = [
   { role: 'home', icon: 'home', labelKey: 'home' },
+  { role: 'work', icon: 'work', labelKey: 'work' },
   { role: 'travel', icon: 'flight', labelKey: 'travel' },
   { role: 'family', icon: 'family-restroom', labelKey: 'family' },
   { role: 'partner_family', icon: 'diversity-1', labelKey: 'partnerFamily' },
