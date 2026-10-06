@@ -5,7 +5,6 @@ import { AccessibilityInfo, Text } from 'react-native';
 
 jest.mock('expo-router', () => ({
     router: { push: jest.fn(), navigate: jest.fn() },
-    useFocusEffect: (cb: () => void) => require('react').useEffect(cb, [cb]),
 }));
 jest.mock('@/components/custom/nav/navigate-to-page', () => ({ navigateToPage: jest.fn() }));
 

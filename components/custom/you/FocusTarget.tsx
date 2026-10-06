@@ -1,5 +1,5 @@
 import { armPendingFocus, takeFocus, usePendingFocusIds, type FocusId } from '@/lib/navigation/focus-target';
-import { useFocusEffect } from 'expo-router';
+import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Dimensions, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
@@ -18,11 +18,11 @@ export const FocusHostProvider: React.FC<{ readonly host: FocusHost; readonly ch
     host,
     children,
 }) => {
-    useFocusEffect(
-        useCallback(() => {
-            armPendingFocus();
-        }, []),
-    );
+    // Safe outside a navigator (a screen rendered by itself counts as focused).
+    const focused = useIsFocusedSafe();
+    useEffect(() => {
+        if (focused) armPendingFocus();
+    }, [focused]);
     return <FocusHostContext.Provider value={host}>{children}</FocusHostContext.Provider>;
 };
 

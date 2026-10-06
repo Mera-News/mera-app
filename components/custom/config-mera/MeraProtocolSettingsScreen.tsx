@@ -51,8 +51,9 @@ import { Switch } from '@/components/ui/switch';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
 import BetaBadge from '@/components/custom/BetaBadge';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Linking, Platform, ScrollView } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Linking, Platform, ScrollView, View } from 'react-native';
+import FocusTarget, { FocusHostProvider, type FocusHost } from '@/components/custom/you/FocusTarget';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
@@ -100,6 +101,13 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const deepInterview = useDeepInterview();
     const showExtractedMetadata = useShowExtractedMetadata();
     const autoCommunityFactCheck = useAutoCommunityFactCheck();
+    // Jump-to-setting host: targets measure against the content view.
+    const scrollRef = useRef<ScrollView>(null);
+    const contentRef = useRef<View>(null);
+    const focusHost = useMemo<FocusHost>(
+        () => ({ contentRef, scrollToY: (y, animated) => scrollRef.current?.scrollTo({ y, animated }) }),
+        [],
+    );
 
     const currentModel = catalogEntry(selectedModelId);
     const inferenceStats = useInferenceStats();
@@ -859,7 +867,14 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 answer on every article opened, or only when the reader taps the
                 button. Off, the lookup is a deliberate act on one article,
                 which is exactly how the privacy policy describes it. */}
-            <Box className="px-5 mb-6" testID="mera-protocol-auto-community-fact-check">
+            {/* The Checks page's quick-settings jump lands here. */}
+            <FocusTarget
+                id="meraProtocol.automaticFactCheck"
+                announce={t('meraProtocol.autoCommunityFactCheckTitle')}
+                radius={14}
+                style={{ marginHorizontal: 8, marginBottom: 16 }}
+            >
+            <Box className="px-3 py-2" testID="mera-protocol-auto-community-fact-check">
                     <HStack space="md" className="items-center justify-between">
                         <HStack space="md" className="items-center flex-1">
                             <MaterialIcons
@@ -891,6 +906,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     {t('meraProtocol.autoCommunityFactCheckDescription')}
                 </Text>
             </Box>
+            </FocusTarget>
 
             {/* Deeper questions (item 17) — OFF by default. The copy's job is to
                 say why Mera can ask questions this personal at all: the answers
@@ -1197,9 +1213,13 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     <DrillDownHeader title={t('meraProtocol.title')} onBack={onBack} />
                 </Box>
 
-                <ScrollView className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>
-                    {renderContent()}
-                </ScrollView>
+                <FocusHostProvider host={focusHost}>
+                    <ScrollView ref={scrollRef} className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>
+                        <View ref={contentRef} collapsable={false}>
+                            {renderContent()}
+                        </View>
+                    </ScrollView>
+                </FocusHostProvider>
 
             </Box>
         </GluestackUIProvider>
