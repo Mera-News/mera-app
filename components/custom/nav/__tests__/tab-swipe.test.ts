@@ -108,6 +108,12 @@ describe('swipeDecision', () => {
     const s = { ...free, inScroller: true, rtl: true };
     expect(swipeDecision({ ...s, dx: 12, atStart: false, atEnd: true })).toBe('activate');
   });
+
+  it('B4: at the end, a drag back toward the start belongs to the scroller, in LTR and RTL', () => {
+    const s = { ...free, inScroller: true, atStart: false, atEnd: true };
+    expect(swipeDecision({ ...s, dx: 20, rtl: false })).toBe('fail');
+    expect(swipeDecision({ ...s, dx: -20, rtl: true })).toBe('fail');
+  });
 });
 
 describe('fractionalIndex', () => {

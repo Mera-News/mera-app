@@ -10,8 +10,11 @@
 //  - Manual activation: a touch is decided on its FIRST movement
 //    (`swipeDecision`), before a fast fling ends. Inside a registered
 //    horizontal scroller (the Stats pager) the swipe takes over only at that
-//    scroller's edge in the drag direction; a bouncing ScrollView never fails,
-//    so waiting for it cannot work.
+//    scroller's edge in the drag's OWN direction (at the last card a drag
+//    toward the next page hands off, a drag back stays in the scroller); a
+//    bouncing ScrollView never fails, so waiting for it cannot work. The
+//    scroller is known at touch DOWN (a Manual gesture), never at its pan's
+//    begin, which comes after the decision.
 //  - 24pt edge insets leave the screen edges to the system back gesture.
 //  - Off-screen panels get no touches and are hidden from accessibility; a
 //    page gates its own work on `active`. While a drag or slide is in flight
@@ -109,15 +112,27 @@ const PagePager: React.FC<PagePagerProps> = ({
   }, [index]);
 
   // ── The registered horizontal scroller (Stats pager) ──
+  // "The touch started inside the scroller" must be known at TOUCH DOWN. A
+  // Native gesture's `onBegin` arrives only once the scroll view's own pan
+  // begins, after its slop, i.e. AFTER the page swipe has already decided:
+  // measured on device, a right fling on the last card read as "outside the
+  // scroller" and changed page instead of card. A Manual gesture reports its
+  // touches at once and never activates, so it never blocks the scroll view.
   const inScroller = useSharedValue(false);
   const atStart = useSharedValue(true);
   const atEnd = useSharedValue(true);
   const blockerRef = useRef<unknown>(null);
   const scrollerGesture = useMemo(
     () =>
-      Gesture.Native()
-        .onBegin(() => {
+      Gesture.Manual()
+        .onTouchesDown(() => {
           inScroller.value = true;
+        })
+        .onTouchesUp((e) => {
+          if (e.numberOfTouches === 0) inScroller.value = false;
+        })
+        .onTouchesCancelled(() => {
+          inScroller.value = false;
         })
         .onFinalize(() => {
           inScroller.value = false;

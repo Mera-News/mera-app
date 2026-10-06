@@ -15,7 +15,7 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 });
 
 const mockPan: Record<string, any> = {};
-const mockNative: Record<string, any> = {};
+const mockScroller: Record<string, any> = {};
 jest.mock('react-native-gesture-handler', () => {
   const chainFor = (store: Record<string, any>) => {
     const chain: any = new Proxy(
@@ -30,7 +30,7 @@ jest.mock('react-native-gesture-handler', () => {
     return chain;
   };
   return {
-    Gesture: { Pan: () => chainFor(mockPan), Native: () => chainFor(mockNative) },
+    Gesture: { Pan: () => chainFor(mockPan), Manual: () => chainFor(mockScroller) },
     GestureDetector: ({ children }: any) => children,
   };
 });
@@ -142,7 +142,7 @@ describe('PagePager', () => {
     setup({ renderPanel: () => <Probe /> });
     expect(blocker.gesture).toBeDefined();
     act(() => blocker.setEdge({ start: false, end: false }));
-    mockNative.onBegin();
+    mockScroller.onTouchesDown();
     const mid = stateMgr();
     mockPan.onTouchesDown(touches(200));
     mockPan.onTouchesMove(touches(180), mid);
@@ -153,7 +153,62 @@ describe('PagePager', () => {
     mockPan.onTouchesDown(touches(200));
     mockPan.onTouchesMove(touches(180), edge);
     expect(edge.activate).toHaveBeenCalled();
-    mockNative.onFinalize();
+    mockScroller.onFinalize();
+  });
+
+  // B4, captured on device: Stats with 2 cards, on card 2 (the last), a RIGHT
+  // fling (back toward card 1) changed the PAGE instead of the card. At the
+  // end only a drag toward the end (left in LTR) may hand off.
+  describe('edge release follows the drag\'s own direction (B4)', () => {
+    let blocker: any;
+    const Probe = () => {
+      blocker = useSwipeTabsBlocker();
+      return null;
+    };
+    const drag = (dx: number) => {
+      const s = stateMgr();
+      // Touch DOWN inside the scroller comes first; the decision follows on
+      // the first move, before the scroll view's own pan has begun.
+      mockScroller.onTouchesDown();
+      mockPan.onTouchesDown(touches(200));
+      mockPan.onTouchesMove(touches(200 + dx), s);
+      mockScroller.onTouchesUp({ numberOfTouches: 0 });
+      return s;
+    };
+
+    it('on the last card a right drag stays in the pager; a left drag hands off', () => {
+      setup({ renderPanel: () => <Probe /> });
+      act(() => blocker.setEdge({ start: false, end: true }));
+      const back = drag(20);
+      expect(back.fail).toHaveBeenCalled();
+      expect(back.activate).not.toHaveBeenCalled();
+      const on = drag(-20);
+      expect(on.activate).toHaveBeenCalled();
+    });
+
+    it('on the first card a left drag stays in the pager; a right drag hands off', () => {
+      setup({ renderPanel: () => <Probe /> });
+      act(() => blocker.setEdge({ start: true, end: false }));
+      expect(drag(-20).fail).toHaveBeenCalled();
+      expect(drag(20).activate).toHaveBeenCalled();
+    });
+
+    it('a one-card pager hands off both ways', () => {
+      setup({ renderPanel: () => <Probe /> });
+      act(() => blocker.setEdge({ start: true, end: true }));
+      expect(drag(20).activate).toHaveBeenCalled();
+      expect(drag(-20).activate).toHaveBeenCalled();
+    });
+
+    it('a touch outside the scroller is not taken for one inside it after a scroller touch ended', () => {
+      setup({ renderPanel: () => <Probe /> });
+      act(() => blocker.setEdge({ start: false, end: true }));
+      drag(-20);
+      const s = stateMgr();
+      mockPan.onTouchesDown(touches(200));
+      mockPan.onTouchesMove(touches(220), s);
+      expect(s.activate).toHaveBeenCalled();
+    });
   });
 
   it('commits a page past the threshold', () => {
