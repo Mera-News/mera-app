@@ -1,5 +1,6 @@
 import type { ExploreWindowHours } from '@/components/custom/explore/ExploreWindowToggle';
 import ScopeArticleList from '@/components/custom/explore/ScopeArticleList';
+import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
 import { PAGE_META, alpha2OfPage } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type {
@@ -142,6 +143,8 @@ export function WorldPages() {
                     headerHeight={header.headerHeight}
                     scrollHandler={header.scrollHandler}
                     bottomClearance={listEndClearance}
+                    // Country pages get World's copy (pageMeta).
+                    footer={<HowThisPageWorks pageId={pageId} />}
                 />
             );
         },

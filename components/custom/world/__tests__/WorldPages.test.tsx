@@ -29,6 +29,10 @@ jest.mock('@/components/custom/nav/TabPages', () => ({
         return null;
     },
 }));
+jest.mock('@/components/custom/nav/HowThisPageWorks', () => ({
+    __esModule: true,
+    default: () => null,
+}));
 jest.mock('@/components/custom/explore/ScopeArticleList', () => ({
     __esModule: true,
     default: () => null,
@@ -64,6 +68,7 @@ jest.mock('expo-router', () => ({
 }));
 
 import ScopeArticleList from '@/components/custom/explore/ScopeArticleList';
+import HowThisPageWorks from '@/components/custom/nav/HowThisPageWorks';
 import { WorldPages } from '../WorldPages';
 
 const header = { scrollHandler: {}, headerHeight: 120, hidden: { value: 0 }, reveal: jest.fn() } as any;
@@ -102,6 +107,9 @@ describe('WorldPages', () => {
         expect(el.props.headerHeight).toBe(120);
         expect(el.props.scrollHandler).toBe(header.scrollHandler);
         expect(el.props.bottomClearance).toBe(172);
+        expect(el.props.footer.type).toBe(HowThisPageWorks);
+        expect(el.props.footer.props.pageId).toBe('country:DE');
+        expect(pageEl('world').props.footer.props.pageId).toBe('world');
         expect(pageEl('country:XX')).toBeNull();
     });
 
