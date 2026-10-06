@@ -53,6 +53,7 @@ jest.mock('@/lib/auth-client', () => ({ authClient: { useSession: () => ({ data:
 const mockUserState = { userId: 'u1', userPersona: { blockedByLlm: false }, fetchUserPersona: jest.fn() };
 jest.mock('@/lib/stores/user-store', () => ({ useUserStore: (sel: any) => sel(mockUserState) }));
 jest.mock('@/lib/navigation/tab-bar', () => ({ useListEndClearance: () => 172 }));
+jest.mock('@/lib/visibility-tick', () => ({ notifyScrollTick: jest.fn() }));
 jest.mock('@/lib/database/services/suppression-service', () => ({ HARD_SUPPRESSION_STRENGTH: 1 }));
 jest.mock('@/components/custom/persona-audit/action-display', () => ({
     actionDisplay: () => ({ labelKey: 'unknown' }),
@@ -96,7 +97,7 @@ beforeEach(() => {
 
 describe('new profile', () => {
     it('shows the four jump targets with how each fills, and nothing else', () => {
-        const r = render(<ProfileHub header={header} />);
+        const r = render(<ProfileHub header={header} active />);
         expect(r.getByText('you.profile.factsEmpty')).toBeTruthy();
         expect(r.getByText('you.profile.placesEmpty')).toBeTruthy();
         expect(r.getByText('you.profile.sourcesEmpty')).toBeTruthy();
@@ -110,7 +111,7 @@ describe('new profile', () => {
     });
 
     it('Add a city opens Locations in the You stack', () => {
-        const r = render(<ProfileHub header={header} />);
+        const r = render(<ProfileHub header={header} active />);
         fireEvent.press(r.getByTestId('profile-places-add'));
         expect(mockPush).toHaveBeenCalledWith('/logged-in/app_container/you/locations');
     });
@@ -138,7 +139,7 @@ describe('returning profile', () => {
     });
 
     it('fills every card from its source', () => {
-        const r = render(<ProfileHub header={header} />);
+        const r = render(<ProfileHub header={header} active />);
         expect(r.getByText('Lives in Berlin')).toBeTruthy();
         expect(r.getAllByText('configPanel.articleCount:4')).toHaveLength(2);
         expect(r.getByText('locations.roles.work')).toBeTruthy();
@@ -152,7 +153,7 @@ describe('returning profile', () => {
     });
 
     it('View all and Review open their You-stack screens', () => {
-        const r = render(<ProfileHub header={header} />);
+        const r = render(<ProfileHub header={header} active />);
         fireEvent.press(r.getByTestId('profile-card-facts-view-all'));
         fireEvent.press(r.getByTestId('profile-card-pay-for-view-all'));
         fireEvent.press(r.getByTestId('profile-cleanup-review'));
@@ -164,7 +165,7 @@ describe('returning profile', () => {
     });
 
     it('a card "?" opens its hint box with a labelled button', () => {
-        const r = render(<ProfileHub header={header} />);
+        const r = render(<ProfileHub header={header} active />);
         const q = r.getByTestId('profile-card-places-hint');
         expect(q.props.accessibilityLabel).toBe('you.profile.aboutA11y');
         fireEvent.press(q);

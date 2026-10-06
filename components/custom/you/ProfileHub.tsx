@@ -16,6 +16,7 @@ import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
 import { useUserStore } from '@/lib/stores/user-store';
+import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -109,6 +110,8 @@ const RowLink: React.FC<{ readonly label: string; readonly onPress: () => void; 
 
 interface ProfileHubProps {
     readonly header: PageHeaderBinding;
+    /** The visible page of the focused tab: only it feeds the translation scheduler. */
+    readonly active: boolean;
 }
 
 /**
@@ -122,7 +125,7 @@ interface ProfileHubProps {
  * No name, monogram or greeting (Mera never knows the name). No chat invite:
  * the Mera button carries "Tell me about something new...".
  */
-const ProfileHub: React.FC<ProfileHubProps> = ({ header }) => {
+const ProfileHub: React.FC<ProfileHubProps> = ({ header, active }) => {
     const { t } = useTranslation();
     const endClearance = useListEndClearance();
 
@@ -181,7 +184,13 @@ const ProfileHub: React.FC<ProfileHubProps> = ({ header }) => {
             <Animated.ScrollView
                 ref={scrollRef}
                 testID="profile-hub"
+                // The header's handler sends a tick per scroll; rows that land
+                // with no scroll (data arriving) need one too, or they stay in
+                // English (TranslatableDynamic measures on ticks).
                 onScroll={header.scrollHandler}
+                onContentSizeChange={() => {
+                    if (active) notifyScrollTick();
+                }}
                 scrollEventThrottle={16}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingTop: header.headerHeight + 14, paddingHorizontal: 14, paddingBottom: endClearance }}
