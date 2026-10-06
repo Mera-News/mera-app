@@ -237,6 +237,54 @@ describe('PagePager', () => {
     expect(last.r.getByTestId('pp-edge-next', hidden)).toBeTruthy();
   });
 
+  // B4c, captured: a fling straight after arriving on a page (a pill tap or
+  // a tab switch) was ignored. RNGH applies a new gesture's callbacks
+  // asynchronously, so the touch ran the PREVIOUS pan, built over the old
+  // index (or a 0 width before the first layout).
+  describe('a gesture built before a change still acts on the current page (B4c)', () => {
+    it('after a pill tap moved the index, the old pan judges against the new page', () => {
+      const { r, props, onIndexChange } = setup({ index: 0, count: 4 });
+      const stale = { ...mockPan };
+      r.rerender(<PagePager {...props} index={3} />);
+      // A right fling on the 4th page goes back to the 3rd. Run by the OLD pan.
+      act(() => stale.onEnd({ translationX: 80, velocityX: 900 }));
+      expect(onIndexChange).toHaveBeenCalledWith(2);
+    });
+
+    it('a pan created before the first layout uses the measured width', () => {
+      const onIndexChange = jest.fn();
+      const r = render(
+        <PagePager
+          index={1}
+          count={3}
+          keyOf={(i: number) => KEYS[i]}
+          renderPanel={() => null}
+          keep={[]}
+          onIndexChange={onIndexChange}
+          onTabStep={jest.fn()}
+          enabled
+          progress={{ value: 0 } as any}
+          testID="pp"
+        />,
+      );
+      const beforeLayout = { ...mockPan };
+      act(() => {
+        r.getByTestId('pp').props.onLayout({ nativeEvent: { layout: { width: 400, height: 800 } } });
+      });
+      act(() => beforeLayout.onEnd({ translationX: 80, velocityX: 900 }));
+      expect(onIndexChange).toHaveBeenCalledWith(0);
+    });
+
+    it('the drag follows the current page while it moves', () => {
+      const { r, props } = setup({ index: 0, count: 4 });
+      const stale = { ...mockPan };
+      r.rerender(<PagePager {...props} index={2} />);
+      // Half a width (damped) to the left of the CURRENT page reads 2.5.
+      act(() => stale.onUpdate({ translationX: -200 / 0.6 }));
+      expect(props.progress.value).toBeCloseTo(2.5);
+    });
+  });
+
   it('turns the swipe off while Arrange is open', () => {
     setup({ enabled: false });
     expect(mockPan.enabled).toBe(false);

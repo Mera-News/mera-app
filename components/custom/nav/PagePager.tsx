@@ -94,10 +94,22 @@ const PagePager: React.FC<PagePagerProps> = ({
   const base = -dir * index * width;
   const offset = useSharedValue(base);
 
+  // What the UI thread reads mid-gesture. RNGH applies a NEW gesture's
+  // callbacks asynchronously, so a pan built over render values (index,
+  // width) ran STALE ones for a touch right after a page or tab change: a
+  // fling just after arriving on a page was judged against the previous page
+  // (or a 0 width before the first layout) and silently sprang back (B4c,
+  // captured). The pan is therefore built once and reads these.
+  const indexSV = useSharedValue(index);
+  const widthSV = useSharedValue(width);
+  const reduceMotionSV = useSharedValue(!!reduceMotion);
   useLayoutEffect(() => {
     offset.value = base;
     progress.value = index;
-  }, [base, offset, progress, index]);
+    indexSV.value = index;
+    widthSV.value = width;
+    reduceMotionSV.value = !!reduceMotion;
+  }, [base, offset, progress, index, width, indexSV, widthSV, reduceMotion, reduceMotionSV]);
 
   // The arriving panel's translated titles were measured a width away (off
   // screen), and nothing ticks on arrival until the reader scrolls.
@@ -212,6 +224,11 @@ const PagePager: React.FC<PagePagerProps> = ({
     [width, index, count, rtl, prevTabLabel, nextTabLabel, springBack, offset, base, progress, onTabStep, dir, reduceMotion, land],
   );
 
+  // The JS side of the end of a drag always runs the LATEST `finish`.
+  const finishRef = useRef(finish);
+  finishRef.current = finish;
+  const onDragEnd = useCallback((dx: number, vx: number) => finishRef.current(dx, vx), []);
+
   const startX = useSharedValue(0);
   const startY = useSharedValue(0);
   const decided = useSharedValue(false);
@@ -251,13 +268,15 @@ const PagePager: React.FC<PagePagerProps> = ({
           runOnJS(setMoving)(true);
         })
         .onUpdate((e) => {
-          progress.value = fractionalIndex(index, e.translationX, width, rtl);
-          if (!reduceMotion) offset.value = base + e.translationX * SWIPE_DAMPING;
+          progress.value = fractionalIndex(indexSV.value, e.translationX, widthSV.value, rtl);
+          if (!reduceMotionSV.value) {
+            offset.value = -dir * indexSV.value * widthSV.value + e.translationX * SWIPE_DAMPING;
+          }
         })
         .onEnd((e) => {
-          runOnJS(finish)(e.translationX, e.velocityX);
+          runOnJS(onDragEnd)(e.translationX, e.velocityX);
         }),
-    [enabled, scrollerGesture, startX, startY, decided, inScroller, atStart, atEnd, rtl, progress, index, width, reduceMotion, offset, base, finish],
+    [enabled, scrollerGesture, startX, startY, decided, inScroller, atStart, atEnd, rtl, dir, progress, indexSV, widthSV, reduceMotionSV, offset, onDragEnd],
   );
 
   const rowStyle = useAnimatedStyle(() => ({
