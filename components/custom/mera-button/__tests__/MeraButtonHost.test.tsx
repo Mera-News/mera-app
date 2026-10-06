@@ -58,6 +58,7 @@ jest.mock('@/components/custom/nav/current-surface', () => {
     useCurrentSurfaceStore: store,
     useCurrentSurface: () => store((s: { surface: string | null }) => s.surface),
     useArrangeOpen: () => store((s: { arrangeOpen: boolean }) => s.arrangeOpen),
+    useHeaderBottom: () => store((s: { headerBottom?: number | null }) => s.headerBottom ?? null),
   };
 });
 
@@ -127,6 +128,7 @@ beforeEach(() => {
   resetMeraButtonCorner();
   useFloatingChatStore.getState().reset();
   on(null);
+  useCurrentSurfaceStore.setState({ headerBottom: null } as never);
 });
 
 describe('visibility', () => {
@@ -213,6 +215,26 @@ describe('corners', () => {
     await mount('feed');
     expect(placed()).toEqual({ x: 14, y: TOP_Y });
     expect(mockButtonProps.tooltipSide).toBe('right');
+  });
+
+  it('top corners sit under the header the page reports, else the fallback', async () => {
+    mockSettings.set(MERA_BUTTON_CORNER_KEY, 'tr');
+    on('feed');
+    act(() => useCurrentSurfaceStore.setState({ headerBottom: 160 } as never));
+    const view = await mount('feed');
+    expect(placed()).toEqual({ x: BR.x, y: 160 + 12 });
+    act(() => useCurrentSurfaceStore.setState({ headerBottom: null } as never));
+    await flush();
+    // The move is a shared-value write (UI thread on device); re-render so
+    // the mocked animated style reads it.
+    // Same tree shape as mount(), so this updates rather than remounts.
+    view.rerender(
+      <>
+        {undefined}
+        <MeraButtonHost tab="feed" />
+      </>,
+    );
+    expect(placed()).toEqual({ x: BR.x, y: TOP_Y });
   });
 
   it('a drop snaps to the nearest corner, remembers it, and a haptic lands on the snap', async () => {

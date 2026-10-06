@@ -15,7 +15,11 @@
 // and outside every pager, so a touch that starts on the button never swipes a
 // page. The overlay is box-none: only the 62pt circle takes touches.
 
-import { useArrangeOpen, useCurrentSurface } from '@/components/custom/nav/current-surface';
+import {
+  useArrangeOpen,
+  useCurrentSurface,
+  useHeaderBottom,
+} from '@/components/custom/nav/current-surface';
 import { tabForSurface, type TabId } from '@/components/custom/nav/page-registry';
 import { tabSwipeProgress } from '@/components/custom/nav/swipe-progress';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
@@ -53,8 +57,8 @@ import { pageKeyFor } from './mera-pages';
 
 const EDGE = 14;
 const TOP_GAP = 12;
-/** Height of a page header below the safe area, until L1 publishes the
- *  measured header bottom. */
+/** Height of a page header below the safe area, for a surface that reports
+ *  no header bottom (the You-stack screens). */
 const HEADER_FALLBACK = 52;
 const SNAP_SPRING = { damping: 18, stiffness: 220 };
 
@@ -181,6 +185,9 @@ const MeraButtonHost: React.FC<{ tab: TabId }> = ({ tab }) => {
   const mode = useFeedStatusMode();
   const bottom = useMeraButtonBottom();
   const insets = useSafeAreaInsets();
+  // The SHOWN header's bottom: a top-corner button never follows a header
+  // that collapses on scroll (owner ruling: nothing jumps while reading).
+  const headerBottom = useHeaderBottom() ?? insets.top + HEADER_FALLBACK;
 
   // No flash on launch: nothing renders until the stored corner is known.
   // Idempotent, so hydrateAllStores reading it first only makes this instant.
@@ -195,12 +202,12 @@ const MeraButtonHost: React.FC<{ tab: TabId }> = ({ tab }) => {
       size && {
         width: size.width,
         height: size.height,
-        top: insets.top + HEADER_FALLBACK + TOP_GAP,
+        top: headerBottom + TOP_GAP,
         bottom,
         inset: EDGE,
         size: MERA_BUTTON_SIZE,
       },
-    [size, insets.top, bottom],
+    [size, headerBottom, bottom],
   );
 
   const progress = tabSwipeProgress(tab);
