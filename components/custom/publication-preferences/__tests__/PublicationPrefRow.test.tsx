@@ -63,7 +63,7 @@ describe('PublicationPrefRow', () => {
     it('renders a named-publication row with no kind chip', () => {
         const pref = makeNamedPref();
         const { getByTestId, queryByTestId } = render(
-            <PublicationPrefRow pref={pref} busy={false} onSetKind={jest.fn()} onClear={jest.fn()} />,
+            <PublicationPrefRow pref={pref} busy={false} isOpen={false} onToggle={jest.fn()} onSetKind={jest.fn()} onClear={jest.fn()} />,
         );
         expect(getByTestId('pub-pref-the-times')).toBeTruthy();
         expect(queryByTestId('pub-pref-the-times-kind-chip')).toBeNull();
@@ -72,7 +72,7 @@ describe('PublicationPrefRow', () => {
     it('renders a source-scope row with a "Country" kind chip so it never reads as a publication', () => {
         const pref = makeScopePref();
         const { getByTestId, getByText } = render(
-            <PublicationPrefRow pref={pref} busy={false} onSetKind={jest.fn()} onClear={jest.fn()} />,
+            <PublicationPrefRow pref={pref} busy={false} isOpen={false} onToggle={jest.fn()} onSetKind={jest.fn()} onClear={jest.fn()} />,
         );
         expect(getByTestId('pub-pref-scope-country-ind-kind-chip')).toBeTruthy();
         expect(getByText('Country')).toBeTruthy();
@@ -83,8 +83,8 @@ describe('PublicationPrefRow', () => {
         const namedPub = makeNamedPref({ publicationName: 'India' });
         const { getByTestId } = render(
             <>
-                <PublicationPrefRow pref={scope} busy={false} onSetKind={jest.fn()} onClear={jest.fn()} />
-                <PublicationPrefRow pref={namedPub} busy={false} onSetKind={jest.fn()} onClear={jest.fn()} />
+                <PublicationPrefRow pref={scope} busy={false} isOpen={false} onToggle={jest.fn()} onSetKind={jest.fn()} onClear={jest.fn()} />
+                <PublicationPrefRow pref={namedPub} busy={false} isOpen={false} onToggle={jest.fn()} onSetKind={jest.fn()} onClear={jest.fn()} />
             </>,
         );
         expect(getByTestId('pub-pref-scope-country-ind')).toBeTruthy();
@@ -92,11 +92,11 @@ describe('PublicationPrefRow', () => {
     });
 
     it('passes the whole pref object (not just the name) to onSetKind and onClear', () => {
-        const pref = makeScopePref();
+        const pref = makeScopePref({ weight: 1 });
         const onSetKind = jest.fn();
         const onClear = jest.fn();
         const { getByTestId } = render(
-            <PublicationPrefRow pref={pref} busy={false} onSetKind={onSetKind} onClear={onClear} />,
+            <PublicationPrefRow pref={pref} busy={false} isOpen onToggle={jest.fn()} onSetKind={onSetKind} onClear={onClear} />,
         );
         fireEvent.press(getByTestId('pub-pref-scope-country-ind-boost'));
         expect(onSetKind).toHaveBeenCalledWith(pref, 'boost');
@@ -105,15 +105,38 @@ describe('PublicationPrefRow', () => {
     });
 
     it('disables the kind + clear controls while busy (presses are no-ops)', () => {
-        const pref = makeNamedPref();
+        const pref = makeNamedPref({ weight: 1 });
         const onSetKind = jest.fn();
         const onClear = jest.fn();
         const { getByTestId } = render(
-            <PublicationPrefRow pref={pref} busy onSetKind={onSetKind} onClear={onClear} />,
+            <PublicationPrefRow pref={pref} busy isOpen onToggle={jest.fn()} onSetKind={onSetKind} onClear={onClear} />,
         );
         fireEvent.press(getByTestId('pub-pref-the-times-boost'));
         fireEvent.press(getByTestId('pub-pref-the-times-clear'));
         expect(onSetKind).not.toHaveBeenCalled();
         expect(onClear).not.toHaveBeenCalled();
+    });
+
+    it('shows only the name and its chip until opened', () => {
+        const pref = makeNamedPref({ weight: -1 });
+        const onToggle = jest.fn();
+        const { getByText, queryByTestId, getByTestId } = render(
+            <PublicationPrefRow pref={pref} busy={false} isOpen={false} onToggle={onToggle} onSetKind={jest.fn()} onClear={jest.fn()} />,
+        );
+        expect(getByText('you.sources.muted')).toBeTruthy();
+        expect(queryByTestId('pub-pref-the-times-boost')).toBeNull();
+        fireEvent.press(getByTestId('pub-pref-the-times-toggle'));
+        expect(onToggle).toHaveBeenCalledWith(pref);
+    });
+
+    it('explains a mute when open, and offers no Mute for a country scope', () => {
+        const muted = render(
+            <PublicationPrefRow pref={makeNamedPref({ weight: -1 })} busy={false} isOpen onToggle={jest.fn()} onSetKind={jest.fn()} onClear={jest.fn()} />,
+        );
+        expect(muted.getByText('notInterested.mutedPubHint')).toBeTruthy();
+        const scope = render(
+            <PublicationPrefRow pref={makeScopePref({ weight: 1 })} busy={false} isOpen onToggle={jest.fn()} onSetKind={jest.fn()} onClear={jest.fn()} />,
+        );
+        expect(scope.queryByTestId('pub-pref-scope-country-ind-mute')).toBeNull();
     });
 });

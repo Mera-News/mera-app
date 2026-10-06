@@ -37,6 +37,9 @@ jest.mock('../SubscriptionsSection', () => ({
     __esModule: true,
     default: () => null,
 }));
+// Search has its own suite.
+jest.mock('../SourceSearch', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/lib/navigation/tab-bar', () => ({ useTabBarClearance: () => 0 }));
 jest.mock('@/lib/database/services/user-publication-subscription-service', () => ({
     // No active subscriptions ⇒ nothing is suppressed, so every existing
     // assertion about the lower list still describes the same list it always
@@ -91,16 +94,18 @@ jest.mock('@/components/custom/config-panel/DrillDownHeader', () => {
 });
 
 // Row rendering/behavior is covered by PublicationPrefRow.test.tsx — stub it
-// here so this suite exercises only the screen's wiring (busy-key, which
-// branch each handler takes, what it calls).
+// here so this suite exercises only the screen's wiring (busy-key, open-key,
+// which branch each handler takes, what it calls).
 jest.mock('../PublicationPrefRow', () => {
     const { View, Text, Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ pref, busy, onSetKind, onClear }: any) => (
+        default: ({ pref, busy, isOpen, onToggle, onSetKind, onClear }: any) => (
             <View testID={`row-${pref.id}`}>
                 <Text>{pref.publicationName}</Text>
                 <Text testID={`row-${pref.id}-busy`}>{String(busy)}</Text>
+                <Text testID={`row-${pref.id}-open`}>{String(isOpen)}</Text>
+                <Pressable testID={`row-${pref.id}-toggle`} onPress={() => onToggle(pref)} />
                 <Pressable testID={`row-${pref.id}-boost`} onPress={() => onSetKind(pref, 'boost')} />
                 <Pressable testID={`row-${pref.id}-mute`} onPress={() => onSetKind(pref, 'mute')} />
                 <Pressable testID={`row-${pref.id}-clear`} onPress={() => onClear(pref)} />
@@ -123,6 +128,7 @@ const mockGetScopePreferenceKind = jest.fn(async (..._a: unknown[]) => 'none');
 const mockSetScopePreferenceKind = jest.fn(async (..._a: unknown[]) => {});
 jest.mock('@/lib/database/services/publication-preference-service', () => ({
     observeActive: () => mockObserveActive(),
+    weightToPrefKind: (w: number) => (w <= -0.9 ? 'mute' : w < 0 ? 'deprioritize' : w > 0 ? 'boost' : null),
     getPreferenceKind: (...a: unknown[]) => mockGetPreferenceKind(...a),
     setPreferenceKind: (...a: unknown[]) => mockSetPreferenceKind(...a),
     getScopePreferenceKind: (...a: unknown[]) => mockGetScopePreferenceKind(...a),
@@ -301,5 +307,22 @@ describe('PublicationPreferencesScreen', () => {
         // The id-keyed scope row must NOT be dragged into the named row's busy
         // lock just because they share a display label.
         expect(getByTestId('row-scope1-busy').props.children).toBe('false');
+    });
+
+    it('keeps one row open at a time', () => {
+        mockObservedRows = [makeNamedPref({ id: 'a', publicationName: 'A', weight: 1 }), makeNamedPref({ id: 'b', publicationName: 'B', weight: 1 })];
+        const { getByTestId } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
+        fireEvent.press(getByTestId('row-a-toggle'));
+        expect(getByTestId('row-a-open').props.children).toBe('true');
+        fireEvent.press(getByTestId('row-b-toggle'));
+        expect(getByTestId('row-a-open').props.children).toBe('false');
+        expect(getByTestId('row-b-open').props.children).toBe('true');
+    });
+
+    it('says how to adjust a source when nothing is adjusted', () => {
+        mockObservedRows = [];
+        const { getByTestId, queryByText } = render(<PublicationPreferencesScreen onBack={jest.fn()} />);
+        expect(getByTestId('sources-empty')).toBeTruthy();
+        expect(queryByText('you.sources.adjusted')).toBeNull();
     });
 });

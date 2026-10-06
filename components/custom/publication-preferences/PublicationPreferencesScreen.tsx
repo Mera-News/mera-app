@@ -6,228 +6,94 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import type PublicationPreferenceModel from '@/lib/database/models/PublicationPreference';
 import { applyPersonaAction } from '@/lib/database/services/persona-action-executor';
-import {
-    observeActive,
-    type PublicationPrefKind,
-} from '@/lib/database/services/publication-preference-service';
-import {
-    setSourcePrefFromUi,
-    type SourcePrefUiLevel,
-} from '@/lib/database/services/publication-pref-ui-actions';
-import { resolvePrefLevel } from '@/lib/database/services/publication-pref-level';
-import {
-    groupPrefRowsByPublication,
-    type PrefRowGroup,
-} from '@/lib/database/services/publisher-source-names';
+import type { PublicationPrefKind } from '@/lib/database/services/publication-preference-service';
+import { setSourcePrefFromUi } from '@/lib/database/services/publication-pref-ui-actions';
 import logger from '@/lib/logger';
 import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
-import { MaterialIcons } from '@expo/vector-icons';
-import {
-    normalizeSubscriptionName,
-    observeActive as observeActiveSubscriptions,
-    parseSourceNames,
-} from '@/lib/database/services/user-publication-subscription-service';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native';
 import PublicationPrefRow from './PublicationPrefRow';
+import { setPublisherKind } from './set-publisher-kind';
+import SourceSearch from './SourceSearch';
 import SubscriptionsSection from './SubscriptionsSection';
+import { useAdjustedSources } from './use-adjusted-sources';
 
 interface PublicationPreferencesScreenProps {
     readonly onBack: () => void;
 }
 
-/** boost/deprioritize/none (item 9's shared vocabulary) — mute stays out of it. */
-function levelForKind(kind: Exclude<PublicationPrefKind, 'mute'>): SourcePrefUiLevel {
-    return kind === 'boost' ? 'prioritised' : 'deprioritised';
-}
-
 /**
- * The row that stands for a group: its strongest setting, so the row's chip
- * shows what the publication's preference IS. Mute and "fewer" win over
- * "more", the same rule the Sources glyph and the publication page read by.
- */
-function representativeOf(group: PrefRowGroup<PublicationPreferenceModel>): PublicationPreferenceModel {
-    const rows = group.rows;
-    if (group.names.length === 0 || rows.length === 1) return rows[0];
-    const level = resolvePrefLevel(rows, group.names);
-    const pick = level === 'deprioritised'
-        ? rows.reduce((a, b) => (b.weight < a.weight ? b : a))
-        : rows.reduce((a, b) => (b.weight > a.weight ? b : a));
-    return pick;
-}
-
-/**
- * Source-preferences screen (Wave 12; scope rows added source-pref P4;
- * boost/downrank/clear now shared with the L1/L2 ↑/↓ controls via
- * `publication-pref-ui-actions` — item 9, Wave B). A reactive list of the
- * publications AND source scopes (e.g. "prefer sources from India") the user
- * has explicitly adjusted (boost / downrank / mute), with per-row kind
- * switching and a clear affordance.
+ * You > Profile > Sources: the one place for publication preferences. Search
+ * ("Find a publication"), the Adjusted list (More, Fewer, Muted), then the
+ * publications you pay for. Mute moved here from Not interested, and "Fewer
+ * from" in an article's menu lands here.
  *
- * `boost`/`deprioritize`/clear (named-publication AND scope) route through
- * `setSourcePrefFromUi` — the SAME module the L1 country list's and this
- * file's own L2 sibling's ↑/↓ controls call — so the 5-step dance
- * (guard → read `before` → apply → change-log → sweep) exists in exactly one
- * place instead of drifting between however many screens touch a preference.
- * `PublicationPreference.scopeValue` is stored ISO ALPHA-3; that module's
- * public boundary is alpha-2 (the convention every other caller already has
- * on hand), so a scope row's stored value is converted once, right here,
- * with `alpha3ToAlpha2` before the call — never inside the shared module and
- * never inside the store.
- *
- * `mute` is NOT part of that shared vocabulary (item 9: a downrank is not a
- * block, and muting is a hard exclusion that stays exclusive to this
- * dedicated screen's 3-way selector) — its branch below still calls
- * `applyPersonaAction` directly, unchanged from before this refactor.
+ * A country scope row ("prefer sources from India") converts its stored
+ * alpha-3 to alpha-2 exactly once, here, before the shared writer; it can
+ * never be muted, so its row offers no Mute.
  */
 const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const [items, setItems] = useState<PublicationPreferenceModel[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    // Keyed on `pref.id`, not the display name/label — a scope row's label
-    // ("India") can collide with a real publication called "India", which
-    // would otherwise busy-lock the wrong row's chips.
+    const { rows, isLoading } = useAdjustedSources();
+    const bottom = useTabBarClearance();
+    // Keyed on `pref.id`, never the label: a scope "India" and a publication
+    // called "India" must not lock each other.
     const [busyId, setBusyId] = useState<string | null>(null);
-    // Every SOURCE name covered by an active subscription, normalised. Used to
-    // keep a subscribed publication out of "Other sources" below.
-    const [subscribedSourceNames, setSubscribedSourceNames] = useState<Set<string>>(new Set());
+    const [openId, setOpenId] = useState<string | null>(null);
 
-    // OBSERVED, not fetched once per `items` change. Keying this off `items`
-    // (the publication_preferences list) looked fine because adding a
-    // subscription also writes a preference row, so the refetch happened to
-    // fire — but REMOVING one calls `cancelSubscription`, which touches only
-    // `user_publication_subscriptions`. The preference list never changed, the
-    // set stayed stale, and the publication stayed hidden from "Other sources"
-    // until the screen was remounted. Observing the table it actually depends
-    // on removes the coincidence.
-    useEffect(() => {
-        const sub = observeActiveSubscriptions().subscribe((rows) => {
-            const names = new Set<string>();
-            for (const row of rows) {
-                for (const name of parseSourceNames(row.sourceNamesJson)) names.add(name);
-            }
-            setSubscribedSourceNames(names);
-        });
-        return () => sub.unsubscribe();
-    }, []);
-
-    /**
-     * "Other sources" = every preference row NOT covered by a subscription.
-     *
-     * Matched against the subscription's SOURCE-name set, never against its
-     * publisher name. A `publication_preferences` row is keyed by the source's
-     * `publication_name`, and a source name is frequently not the publisher's
-     * name, so comparing to the publisher name would leave the boosted row
-     * visible in both sections. That is the same trap `source_names_json`
-     * exists to prevent, one layer up.
-     *
-     * Scope rows (country predicates) are never suppressed: they are not a
-     * publication and can never be a subscription.
-     */
-    const otherSources = useMemo(
-        () =>
-            items.filter(
-                (p) =>
-                    p.scopeKind != null ||
-                    !subscribedSourceNames.has(normalizeSubscriptionName(p.publicationName)),
-            ),
-        [items, subscribedSourceNames],
+    const namesById = useMemo(() => {
+        const map = new Map<string, string[]>();
+        for (const { group, pref } of rows) map.set(pref.id, group.names.length > 0 ? group.names : [pref.publicationName]);
+        return map;
+    }, [rows]);
+    const namesRef = useRef(namesById);
+    namesRef.current = namesById;
+    /** Every name the row's publication is written under (its group). */
+    const namesOf = useCallback(
+        (pref: PublicationPreferenceModel) => namesRef.current.get(pref.id) ?? [pref.publicationName],
+        [],
     );
 
-    // ONE row per publication. A publication's sources are often named
-    // differently and more/fewer is written under every one of those names, so
-    // the raw rows would list one publication several times. Country scopes
-    // stay their own rows. Names a device cannot tie to one publisher never
-    // join a group.
-    const groups = useMemo(() => groupPrefRowsByPublication(otherSources), [otherSources]);
-    const groupByRowId = useMemo(() => {
-        const map = new Map<string, PrefRowGroup<PublicationPreferenceModel>>();
-        for (const group of groups) for (const row of group.rows) map.set(row.id, group);
-        return map;
-    }, [groups]);
-    const groupByRowIdRef = React.useRef(groupByRowId);
-    groupByRowIdRef.current = groupByRowId;
-    const listRows = useMemo(() => groups.map((group) => ({ group, pref: representativeOf(group) })), [groups]);
-
-    useEffect(() => {
-        const sub = observeActive().subscribe((rows) => {
-            setItems(rows);
-            setIsLoading(false);
-        });
-        return () => sub.unsubscribe();
-    }, []);
-
-    /** Every name the row's publication is written under (its group). */
-    const namesOf = useCallback((pref: PublicationPreferenceModel): string[] => {
-        const group = groupByRowIdRef.current.get(pref.id);
-        return group && group.names.length > 0 ? group.names : [pref.publicationName];
-    }, []);
+    /** A scope row's country target, or null when its stored code is unusable. */
+    const countryTarget = (pref: PublicationPreferenceModel, method: string) => {
+        if (!pref.scopeValue) return null;
+        const countryAlpha2 = alpha3ToAlpha2(pref.scopeValue);
+        if (!countryAlpha2) {
+            logger.captureException(new Error('unmappable scope alpha-3 code'), {
+                tags: { component: 'PublicationPreferencesScreen', method },
+                extra: { prefId: pref.id, scopeValue: pref.scopeValue },
+            });
+            return null;
+        }
+        return { kind: 'country' as const, countryAlpha2, label: pref.publicationName };
+    };
 
     const handleSetKind = useCallback(async (pref: PublicationPreferenceModel, kind: PublicationPrefKind) => {
         setBusyId(pref.id);
         try {
-            const scopeKind = pref.scopeKind;
-            const scopeValue = pref.scopeValue;
-            if (kind === 'mute') {
-                // Mute stays OUTSIDE the shared L1/L2 ↑/↓ vocabulary (item 9) —
-                // it is a hard exclusion, not a downrank, and this screen's 3-way
-                // selector is its only surface. Unchanged from before this
-                // refactor: a direct executor call. A scope row's `mute` press
-                // reaches the executor too, which `skipped`s it (scopes can
-                // never be muted) — same as before.
-                if (scopeKind != null) {
-                    if (!scopeValue) return;
-                    await applyPersonaAction(
-                        {
-                            action_type: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
-                            scopeKind,
-                            scopeValue,
-                            scopeLabel: pref.publicationName,
-                            publicationPref: 'mute',
-                        },
-                        'user',
-                    );
-                    return;
-                }
-                // Every name of the publication, so the mute reaches every
-                // source it publishes as.
-                for (const name of namesOf(pref)) {
-                    await applyPersonaAction(
-                        {
-                            action_type: ACTION_NAMES.SET_PUBLICATION_PREF,
-                            publicationId: name,
-                            publicationPref: 'mute',
-                        },
-                        'user',
-                    );
-                }
+            if (pref.scopeKind == null) {
+                await setPublisherKind(namesOf(pref), kind);
                 return;
             }
-            // boost / deprioritize — shared with every L1/L2 ↑/↓ control now
-            // (item 9): one call into publication-pref-ui-actions instead of
-            // this screen's own copy of the apply dance.
-            const level = levelForKind(kind);
-            if (scopeKind != null) {
-                if (!scopeValue) return;
-                // Store is alpha-3; the shared module's boundary is alpha-2 —
-                // convert exactly once, here, never inside the module or the
-                // store (see the module's own header for why).
-                const countryAlpha2 = alpha3ToAlpha2(scopeValue);
-                if (!countryAlpha2) {
-                    logger.captureException(new Error('unmappable scope alpha-3 code'), {
-                        tags: { component: 'PublicationPreferencesScreen', method: 'setKind' },
-                        extra: { prefId: pref.id, scopeValue },
-                    });
-                    return;
-                }
-                await setSourcePrefFromUi(
-                    { kind: 'country', countryAlpha2, label: pref.publicationName },
-                    level,
+            if (kind === 'mute') {
+                // A scope can never be muted; the executor skips it (no UI offers it).
+                if (!pref.scopeValue) return;
+                await applyPersonaAction(
+                    {
+                        action_type: ACTION_NAMES.SET_SOURCE_SCOPE_PREF,
+                        scopeKind: pref.scopeKind,
+                        scopeValue: pref.scopeValue,
+                        scopeLabel: pref.publicationName,
+                        publicationPref: 'mute',
+                    },
+                    'user',
                 );
                 return;
             }
-            await setSourcePrefFromUi({ kind: 'publisher', names: namesOf(pref) }, level);
+            const target = countryTarget(pref, 'setKind');
+            if (target) await setSourcePrefFromUi(target, kind === 'boost' ? 'prioritised' : 'deprioritised');
         } catch (error) {
             logger.captureException(error, {
                 tags: { component: 'PublicationPreferencesScreen', method: 'setKind' },
@@ -236,31 +102,21 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
         } finally {
             setBusyId(null);
         }
+        // countryTarget is a plain helper with no state.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [namesOf]);
 
     const handleClear = useCallback(async (pref: PublicationPreferenceModel) => {
         setBusyId(pref.id);
         try {
-            const scopeKind = pref.scopeKind;
-            const scopeValue = pref.scopeValue;
-            if (scopeKind != null) {
-                if (!scopeValue) return;
-                const countryAlpha2 = alpha3ToAlpha2(scopeValue);
-                if (!countryAlpha2) {
-                    logger.captureException(new Error('unmappable scope alpha-3 code'), {
-                        tags: { component: 'PublicationPreferencesScreen', method: 'clear' },
-                        extra: { prefId: pref.id, scopeValue },
-                    });
-                    return;
-                }
-                await setSourcePrefFromUi(
-                    { kind: 'country', countryAlpha2, label: pref.publicationName },
-                    'none',
-                );
-                return;
+            if (pref.scopeKind == null) {
+                // Clearing a publication clears EVERY name in its group.
+                await setSourcePrefFromUi({ kind: 'publisher', names: namesOf(pref) }, 'none');
+            } else {
+                const target = countryTarget(pref, 'clear');
+                if (target) await setSourcePrefFromUi(target, 'none');
             }
-            // Clearing a publication clears EVERY name in its group.
-            await setSourcePrefFromUi({ kind: 'publisher', names: namesOf(pref) }, 'none');
+            setOpenId(null);
         } catch (error) {
             logger.captureException(error, {
                 tags: { component: 'PublicationPreferencesScreen', method: 'clear' },
@@ -269,73 +125,70 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
         } finally {
             setBusyId(null);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [namesOf]);
+
+    const handleToggle = useCallback((pref: PublicationPreferenceModel) => {
+        setOpenId((prev) => (prev === pref.id ? null : pref.id));
+    }, []);
 
     const renderItem = useCallback(
         ({ item }: { item: { pref: PublicationPreferenceModel } }) => (
             <PublicationPrefRow
                 pref={item.pref}
-                // `busy` is PublicationPrefRow's only disable input (drives
-                // `disabled=` on the clear/kind Pressables), so folding
-                // free-tier read-only into it disables the row without
-                // threading a new prop into that child.
                 busy={busyId === item.pref.id}
+                isOpen={openId === item.pref.id}
+                onToggle={handleToggle}
                 onSetKind={handleSetKind}
                 onClear={handleClear}
             />
         ),
-        [busyId, handleSetKind, handleClear],
+        [busyId, openId, handleToggle, handleSetKind, handleClear],
     );
 
     return (
-        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
-        // its SafeAreaView, so the page background spans the safe areas.
+        // No opaque fill: the route mounts the page backdrop.
         <Box className="flex-1">
-            <DrillDownHeader
-                title={t('publicationPrefs.title', { defaultValue: 'Source preferences' })}
-                subtitle={t('publicationPrefs.subtitle', { defaultValue: 'Boost, downrank or mute publications' })}
-                onBack={onBack}
-            />
+            <DrillDownHeader title={t('you.sources.title')} onBack={onBack} />
             {isLoading ? (
                 <Box className="flex-1 items-center justify-center">
                     <Spinner size="large" />
                 </Box>
             ) : (
                 <FlatList
-                    data={listRows}
+                    data={rows}
                     keyExtractor={(item) => item.group.key}
                     renderItem={renderItem}
-                    contentContainerStyle={{ paddingBottom: 48 }}
+                    keyboardShouldPersistTaps="handled"
+                    contentContainerStyle={{ paddingTop: 8, paddingBottom: bottom + 24 }}
                     showsVerticalScrollIndicator={false}
-                    // "Your subscriptions" is the list header rather than a
-                    // sibling above the FlatList so the whole screen scrolls as
-                    // one. It renders even when empty — the section is how the
-                    // feature is found, and one that appears only once you
-                    // already use it can never be discovered.
                     ListHeaderComponent={
-                        <VStack space="xs">
-                            <SubscriptionsSection />
-                            <Text size="sm" className="text-gray-400 uppercase px-4 pt-4 pb-1">
-                                {t('subscriptions.otherSources')}
-                            </Text>
+                        <VStack>
+                            <SourceSearch />
+                            {rows.length > 0 ? (
+                                <Text size="sm" className="text-gray-400 font-bold px-4 pt-3 pb-2" accessibilityRole="header">
+                                    {t('you.sources.adjusted')}
+                                </Text>
+                            ) : (
+                                <Text testID="sources-empty" size="sm" className="text-gray-300 px-4 py-3">
+                                    {t('you.sources.empty')}
+                                </Text>
+                            )}
                         </VStack>
                     }
-                    // Only the LOWER section's empty state. The screen as a
-                    // whole is never empty now, because the subscriptions
-                    // section always renders.
-                    ListEmptyComponent={
-                        <VStack className="items-center px-8 py-10" space="md">
-                            <MaterialIcons name="tune" size={56} color="#666666" />
-                            <Text size="md" className="text-gray-400 text-center">
-                                {t('publicationPrefs.empty', {
-                                    defaultValue: "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article to see it here.",
-                                })}
-                            </Text>
+                    ListFooterComponent={
+                        <VStack space="md">
+                            {rows.length > 0 ? (
+                                <Text size="xs" className="text-gray-400 px-4">
+                                    {t('you.sources.footnote')}
+                                </Text>
+                            ) : null}
+                            {/* Always shown: the section is how the feature is found. */}
+                            <SubscriptionsSection />
                         </VStack>
                     }
                 />
             )}
-
         </Box>
     );
 };

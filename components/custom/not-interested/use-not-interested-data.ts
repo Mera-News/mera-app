@@ -1,15 +1,14 @@
-// The three reactive lists behind "Not interested", in one place because two
-// surfaces read them: the Advanced-hub row (which only needs `total`) and the
-// NotInterestedScreen (which needs the rows). Keeping the expiry filter and the
-// hard-first ordering here means the hub count and the screen can never
-// disagree about what "hidden" means.
+// The two reactive lists behind "Not interested" (filters and turned-down
+// topics), in one place because two surfaces read them: the Profile hub's
+// "Topics you turned down" card and NotInterestedScreen. Keeping the expiry
+// filter and the hard-first ordering here means the card and the screen can
+// never disagree about what "hidden" means. Muted and downranked sources are
+// NOT here: they live on the Sources screen (use-adjusted-sources).
 
 import { useEffect, useState } from 'react';
 
 import type PersonaSuppressionModel from '@/lib/database/models/PersonaSuppression';
-import type PublicationPreferenceModel from '@/lib/database/models/PublicationPreference';
 import type TopicModel from '@/lib/database/models/Topic';
-import { observeActive as observeActivePrefs } from '@/lib/database/services/publication-preference-service';
 import {
     HARD_SUPPRESSION_STRENGTH,
     observeActive as observeActiveSuppressions,
@@ -21,8 +20,6 @@ export interface NotInterestedData {
     readonly filters: readonly PersonaSuppressionModel[];
     /** Negative-weight or suppressed topics, most negative first. */
     readonly topics: readonly TopicModel[];
-    /** Publication preferences the user pushed below zero (mute + downrank). */
-    readonly mutedSources: readonly PublicationPreferenceModel[];
     readonly total: number;
     readonly isLoading: boolean;
 }
@@ -49,7 +46,6 @@ function liveFilters(rows: PersonaSuppressionModel[]): PersonaSuppressionModel[]
 export function useNotInterestedData(): NotInterestedData {
     const [filters, setFilters] = useState<PersonaSuppressionModel[]>([]);
     const [topics, setTopics] = useState<TopicModel[]>([]);
-    const [mutedSources, setMutedSources] = useState<PublicationPreferenceModel[]>([]);
     const [settled, setSettled] = useState(0);
 
     useEffect(() => {
@@ -73,10 +69,6 @@ export function useNotInterestedData(): NotInterestedData {
                 setTopics(rows);
                 bumpOnce('topics');
             }),
-            observeActivePrefs().subscribe((rows) => {
-                setMutedSources(rows.filter((p) => p.weight < 0));
-                bumpOnce('sources');
-            }),
         ];
         return () => subs.forEach((s) => s.unsubscribe());
     }, []);
@@ -84,8 +76,7 @@ export function useNotInterestedData(): NotInterestedData {
     return {
         filters,
         topics,
-        mutedSources,
-        total: filters.length + topics.length + mutedSources.length,
-        isLoading: settled < 3,
+        total: filters.length + topics.length,
+        isLoading: settled < 2,
     };
 }

@@ -17,14 +17,12 @@ import { VStack } from '@/components/ui/vstack';
 import type PersonaSuppressionModel from '@/lib/database/models/PersonaSuppression';
 import type TopicModel from '@/lib/database/models/Topic';
 import { applyPersonaAction } from '@/lib/database/services/persona-action-executor';
-import { weightToPrefKind } from '@/lib/database/services/publication-preference-service';
 import { HARD_SUPPRESSION_STRENGTH } from '@/lib/database/services/suppression-service';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import { toastManager } from '@/lib/toast-manager';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
@@ -32,13 +30,12 @@ import AddPhraseModal from './AddPhraseModal';
 import NegativeTopicRow from './NegativeTopicRow';
 import SuppressionRow from './SuppressionRow';
 import { useNotInterestedData } from './use-not-interested-data';
-import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 const ACCENT = '#EDA77E';
 const SUBTLE = 'rgb(163,163,163)';
 
-type SectionSlug = 'filters' | 'topics' | 'sources';
+type SectionSlug = 'filters' | 'topics';
 
 /** What the confirm modal is about to remove. */
 type PendingRemoval =
@@ -99,15 +96,15 @@ interface NotInterestedScreenProps {
 }
 
 /**
- * Everything the user has asked Mera to keep out of the feed, in one place:
- * hand- and agent-made filters, topics pushed below zero, and muted/downranked
- * sources. Three collapsed sections with counts — nothing is a wall of pills
+ * Topics the user has asked Mera to keep out of the feed: hand- and
+ * agent-made filters, and topics pushed below zero. Muted and downranked
+ * publications live on the Sources screen. Two collapsed sections with counts — nothing is a wall of pills
  * until you ask for it. Removal routes through the persona-action executor, so
  * it is audited, revertible, and runs its own retroactive sweep.
  */
 const NotInterestedScreen: React.FC<NotInterestedScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const { filters, topics, mutedSources, total, isLoading } = useNotInterestedData();
+    const { filters, topics, total, isLoading } = useNotInterestedData();
 
     const [expandedSections, setExpandedSections] = useState<readonly SectionSlug[]>([]);
     const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
@@ -329,70 +326,6 @@ const NotInterestedScreen: React.FC<NotInterestedScreenProps> = ({ onBack }) => 
                                 />
                             ))
                         )}
-                    </AccordionSection>
-
-                    <AccordionSection
-                        slug="sources"
-                        title={t('notInterested.sectionSources')}
-                        count={mutedSources.length}
-                        isExpanded={expandedSections.includes('sources')}
-                        onToggle={toggleSection}
-                    >
-                        {mutedSources.length === 0 ? (
-                            <Text size="sm" className="text-gray-500 px-4 py-3">
-                                {t('notInterested.emptySources')}
-                            </Text>
-                        ) : (
-                            mutedSources.map(pref => {
-                                const isMuted = weightToPrefKind(pref.weight) === 'mute';
-                                return (
-                                    <View
-                                        key={pref.id}
-                                        testID={`not-interested-row-${pref.id}`}
-                                        className="px-4 py-3 border-b border-gray-800"
-                                    >
-                                        <HStack className="items-center">
-                                            <MaterialIcons
-                                                name={isMuted ? 'volume-off' : 'trending-down'}
-                                                size={18}
-                                                color={ACCENT}
-                                            />
-                                            <Text
-                                                size="md"
-                                                className="text-white flex-1 ml-3 mr-2"
-                                                numberOfLines={2}
-                                            >
-                                                <DisplayPublicationName name={pref.publicationName} />
-                                            </Text>
-                                            <View className="rounded-full px-2 py-0.5 bg-gray-700">
-                                                <Text size="xs" style={{ color: SUBTLE }}>
-                                                    {isMuted
-                                                        ? t('notInterested.badgeMutedPub')
-                                                        : t('notInterested.badgeDownranked')}
-                                                </Text>
-                                            </View>
-                                        </HStack>
-                                        {isMuted ? (
-                                            <Text size="xs" className="text-gray-500 mt-1 ml-8">
-                                                {t('notInterested.mutedPubHint')}
-                                            </Text>
-                                        ) : null}
-                                    </View>
-                                );
-                            })
-                        )}
-                        <Pressable
-                            testID="not-interested-manage-sources"
-                            onPress={() => router.push('/logged-in/publication-preferences')}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('notInterested.managePublications')}
-                            className="flex-row items-center px-4 py-3"
-                        >
-                            <MaterialIcons name="tune" size={16} color="#60a5fa" />
-                            <Text size="sm" className="text-blue-400 ml-2">
-                                {t('notInterested.managePublications')}
-                            </Text>
-                        </Pressable>
                     </AccordionSection>
 
                     {chatHint}
