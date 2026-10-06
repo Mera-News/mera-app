@@ -59,7 +59,10 @@ jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
   deleteSavedSuggestion: jest.fn(),
 }));
 jest.mock('../SavedExportModal', () => ({ __esModule: true, default: () => null }));
-jest.mock('../SavedExportFab', () => ({ __esModule: true, default: () => null, SAVED_EXPORT_FAB_RESERVE: 82 }));
+jest.mock('../SavedExportRow', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View testID="saved-export-row" {...p} />, SAVED_EXPORT_ROW_HEIGHT: 56 };
+});
 jest.mock('@/components/custom/for-you/ForYouEmptyState', () => ({ __esModule: true, default: () => null }));
 
 jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
@@ -71,9 +74,9 @@ import SavedSuggestionsScreen from '../SavedSuggestionsScreen';
 
 const row = (id: string) => ({ origin: 'article', savedId: id, article: { _id: id }, savedAt: 1 });
 
-it('exposes no icon glyph: the info note and every row\'s delete button', async () => {
+it('exposes no icon glyph: every row\'s delete button', async () => {
   mockRows = [row('a1'), row('a2'), row('a3')];
-  const r = render(<SavedSuggestionsScreen embedded onBack={jest.fn()} headerHeight={211} />);
+  const r = render(<SavedSuggestionsScreen headerHeight={211} />);
   await act(async () => {});
   expect(r.getAllByTestId('saved-delete')).toHaveLength(3);
   expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);

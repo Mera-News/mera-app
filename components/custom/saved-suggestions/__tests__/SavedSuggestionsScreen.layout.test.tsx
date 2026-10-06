@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Batch 11: on the Saved tab the info note sat inset from the screen edges
-// while the saved cards ran edge to edge. The cards take the note's inset.
+// The Library's Saved page layout: the export row pinned under the header
+// (only with rows), the list padded below header and row, cards inset like the
+// row, and the list end and footer handed over by the host.
 jest.mock('react-native-css-interop/jsx-runtime', () => {
   const R = require('react/jsx-runtime');
   return { jsx: R.jsx, jsxs: R.jsxs, Fragment: R.Fragment };
@@ -9,24 +10,26 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
   const R = require('react/jsx-dev-runtime');
   return { jsxDEV: R.jsxDEV, Fragment: R.Fragment };
 });
-const mockScrollToOffset = jest.fn();
 jest.mock('react-native-reanimated', () => {
   const ReactLib = require('react');
   const { View } = jest.requireActual('react-native');
-  // Renders the header and the rows, so the test can compare their insets.
+  // Renders every slot the screen uses, so presence and absence both count.
   const FlatList = ReactLib.forwardRef(
-    ({ data, renderItem, ListHeaderComponent, ...rest }: any, _ref: any) =>
+    ({ data, renderItem, ListEmptyComponent, ListFooterComponent, ...rest }: any, _ref: any) =>
       ReactLib.createElement(
         View,
         rest,
-        ListHeaderComponent,
-        (data ?? []).map((item: any, index: number) =>
-          ReactLib.createElement(ReactLib.Fragment, { key: index }, renderItem({ item, index })),
-        ),
+        (data ?? []).length
+          ? (data ?? []).map((item: any, index: number) =>
+              ReactLib.createElement(ReactLib.Fragment, { key: index }, renderItem({ item, index })),
+            )
+          : ListEmptyComponent,
+        ListFooterComponent,
       ),
   );
   return { __esModule: true, default: { FlatList, View } };
 });
+let mockRows: unknown[] = [];
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
@@ -55,29 +58,61 @@ jest.mock('@/components/ui/modal', () => ({
   ModalHeader: () => null,
 }));
 jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
-  loadSavedItems: () =>
-    Promise.resolve([{ origin: 'suggestion', suggestion: { _id: 's1', articleId: 'a1', title_en: 'West Nile' } }]),
+  loadSavedItems: () => Promise.resolve(mockRows),
   deleteSavedSuggestion: jest.fn(),
 }));
 jest.mock('../SavedExportModal', () => ({ __esModule: true, default: () => null }));
-jest.mock('../SavedExportFab', () => ({ __esModule: true, default: () => null, SAVED_EXPORT_FAB_RESERVE: 82 }));
+jest.mock('../SavedExportRow', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View testID="saved-export-row" {...p} />, SAVED_EXPORT_ROW_HEIGHT: 56 };
+});
 jest.mock('@/components/custom/for-you/ForYouEmptyState', () => ({ __esModule: true, default: () => null }));
 
-import { render, waitFor } from '@testing-library/react-native';
+import { act, render, screen } from '@testing-library/react-native';
 import React from 'react';
+import { Text } from 'react-native';
 import SavedSuggestionsScreen from '../SavedSuggestionsScreen';
 
-describe('SavedSuggestionsScreen inset', () => {
-  it('insets every saved card like the info note above it', async () => {
-    const r = render(<SavedSuggestionsScreen embedded onBack={jest.fn()} headerHeight={0} />);
-    await waitFor(() => r.getByTestId('saved-item-s1'));
-    // The composite Box nodes carry the className (the host View does not).
-    const withClass = (pred: (p: any) => boolean) =>
-      r.UNSAFE_root.findAll((n: any) => typeof n.props?.className === 'string' && pred(n.props))[0];
-    const row = withClass((p) => p.testID === 'saved-item-s1');
-    const note = withClass((p) => p.accessibilityRole === 'summary');
-    const inset = (cls: string) => (String(cls).match(/\bmx-\d+\b/) ?? [''])[0];
-    expect(inset(note.props.className)).toBe('mx-4');
-    expect(inset(row.props.className)).toBe(inset(note.props.className));
+const suggestion = (id: string) => ({ origin: 'suggestion', suggestion: { _id: id, articleId: `a-${id}`, title_en: id } });
+const listStyle = () => screen.getByTestId('saved-suggestions-list').props.contentContainerStyle;
+
+beforeEach(() => {
+  mockRows = [];
+});
+
+describe('SavedSuggestionsScreen layout', () => {
+  it('pins the export row under the header with the count, and pads the list below both', async () => {
+    mockRows = [suggestion('s1'), suggestion('s2')];
+    render(<SavedSuggestionsScreen headerHeight={120} />);
+    await act(async () => {});
+    const row = screen.getByTestId('saved-export-row');
+    expect(row.props.count).toBe(2);
+    expect(row.props.headerHeight).toBe(120);
+    expect(listStyle().paddingTop).toBe(120 + 56 + 12);
+  });
+
+  it('has no export row and no row padding when nothing is saved', async () => {
+    render(<SavedSuggestionsScreen headerHeight={120} />);
+    await act(async () => {});
+    expect(screen.queryByTestId('saved-export-row')).toBeNull();
+    expect(listStyle().paddingTop).toBe(120 + 12);
+  });
+
+  it('insets every card like the export row (mx-4 is 14pt, the row pads 14)', async () => {
+    mockRows = [suggestion('s1')];
+    const r = render(<SavedSuggestionsScreen headerHeight={0} />);
+    await act(async () => {});
+    const card = r.UNSAFE_root.findAll(
+      (n: any) => n.props?.testID === 'saved-item-s1' && typeof n.props?.className === 'string',
+    )[0];
+    expect(String(card.props.className)).toMatch(/\bmx-4\b/);
+  });
+
+  it("takes the host's list-end clearance and footer", async () => {
+    mockRows = [suggestion('s1')];
+    render(<SavedSuggestionsScreen headerHeight={0} listEndPadding={172} footer={<Text testID="how-row" />} />);
+    await act(async () => {});
+    expect(listStyle().paddingBottom).toBe(172);
+    expect(screen.getByTestId('how-row')).toBeTruthy();
   });
 });

@@ -3,7 +3,6 @@ import { ArticleStandaloneCard } from '@/components/custom/cards/ArticleStandalo
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
-import { HStack } from '@/components/ui/hstack';
 import {
     Modal,
     ModalBackdrop,
@@ -16,7 +15,6 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
-import { VStack } from '@/components/ui/vstack';
 import {
     deleteSavedSuggestion,
     loadSavedItems,
@@ -26,37 +24,39 @@ import logger from '@/lib/logger';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import SavedExportFab, { SAVED_EXPORT_FAB_RESERVE } from './SavedExportFab';
+import SavedExportRow, { SAVED_EXPORT_ROW_HEIGHT } from './SavedExportRow';
 import SavedExportModal from './SavedExportModal';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { savedItemId } from './saved-item-id';
 import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListRenderItem, StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { type SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface SavedSuggestionsScreenProps {
-    onBack: () => void;
-    /** When embedded inside another screen (e.g. the For-You "Saved" sub-tab),
-     *  the floating back button is hidden and the header padding is tightened —
-     *  the host already owns the top chrome. Route usage leaves this unset. */
+    /** @deprecated Ignored: Saved renders only inside a page host now. Removed
+     *  with the Dashboard (navx P11). */
+    onBack?: () => void;
+    /** @deprecated Ignored, see `onBack`. */
     embedded?: boolean;
-    /** The host's collapsing-header scroll handler (Dashboard sub-tab use). The
-     *  list MUST be an `Animated.FlatList` for this to do anything — a
-     *  `useAnimatedScrollHandler` worklet attached to a plain RN `FlatList` never
-     *  reaches the UI thread, which is why this panel's header stayed pinned
-     *  while Overview's collapsed. Omitted on the standalone route. */
+    /** The host's collapsing-header scroll handler. The list MUST be an
+     *  `Animated.FlatList` for this to do anything: a worklet attached to a
+     *  plain RN `FlatList` never reaches the UI thread. */
     scrollHandler?: ReturnType<typeof useAnimatedScrollHandler>;
-    /** Measured height of the host's collapsing header. Becomes the list's
-     *  content `paddingTop` so the rows scroll UNDER the header instead of the
-     *  host padding a wrapper View (which would leave a dead gap once the header
-     *  translates away). Defaults to 0 — standalone route is unchanged. */
+    /** Measured height of the host's collapsing header. The export row sits
+     *  directly under it and the list pads by both, so the rows scroll UNDER
+     *  the header and the row. */
     headerHeight?: number;
-    /** False while Saved is a warmed or cached neighbour in the Dashboard
-     *  swipe window (ux2 B3): no scroll ticks until it is the active panel.
-     *  Default true. */
+    /** The host header's 0..1 collapse value; the export row rides with it. */
+    hidden?: SharedValue<number>;
+    /** List-end padding (the host's clearance for the tab bar and the Mera
+     *  button). Defaults to the tab-bar clearance plus a gap. */
+    listEndPadding?: number;
+    /** Drawn after the last row (the host's "How this page works" row). */
+    footer?: React.ReactElement | null;
+    /** False while Saved is a warmed or cached neighbour in a swipe window:
+     *  no scroll ticks until it is the active panel. Default true. */
     active?: boolean;
 }
 
@@ -90,15 +90,15 @@ const DELETE_BUTTON_RESERVE =
     DELETE_BUTTON_EDGE + DELETE_BUTTON_SIZE + DELETE_BUTTON_GAP;
 
 const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
-    onBack,
-    embedded = false,
     scrollHandler,
     headerHeight = 0,
+    hidden,
+    listEndPadding,
+    footer,
     active = true,
 }) => {
     const { t } = useTranslation();
     const toast = useToast();
-    const insets = useSafeAreaInsets();
     // Inside a tab on iOS the inset already includes the tab bar; measured on
     // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
     const tabClearance = useTabBarClearance();
@@ -268,33 +268,8 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         [],
     );
 
-    const ListHeader = (
-        <Box
-            className="mx-4 mb-4 px-3 py-2 border border-primary-500 rounded-lg bg-gray-900"
-            accessibilityRole="summary"
-        >
-            <HStack className="items-start" space="sm">
-                <MaterialIcons
-                    name="info-outline"
-                    size={16}
-                    color="#9ca3af"
-                    style={{ marginTop: 2 }}
-                    // Decoration: hidden, or it surfaces as its own icon-font StaticText.
-                    accessible={false}
-                    accessibilityElementsHidden
-                    importantForAccessibility="no-hide-descendants"
-                />
-                <Text size="xs" className="text-gray-400 flex-1">
-                    {t('savedSuggestions.note')}
-                </Text>
-            </HStack>
-        </Box>
-    );
-
-    // No rows, nothing to export. Also keeps the FAB off the empty state,
-    // where it would float over an illustration explaining there is nothing
-    // here yet.
-    const showExportFab = saved.length > 0;
+    // No rows, nothing to export: the row is absent on the empty state.
+    const showExportRow = saved.length > 0;
 
     // After a delete leaves the list SHORTER than the screen, iOS keeps the old
     // scroll offset: the rows sat part-way up under the Dashboard header (a
@@ -321,33 +296,13 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
         <ForYouEmptyState
             icon="bookmark-border"
             title={t('savedSuggestions.emptyTitle')}
-            body={t('savedSuggestions.empty')}
+            body={t('library.saved.emptyBody')}
             testID="saved-empty"
         />
     );
 
     return (
         <Box className="flex-1">
-            {/* Floating Back Button — hidden when embedded (host owns navigation). */}
-            {!embedded && (
-                <Box style={{ position: 'absolute', left: 8, top: insets.top + 8, zIndex: 20 }}>
-                    <Pressable
-                        onPress={onBack}
-                        className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                    >
-                        <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                    </Pressable>
-                </Box>
-            )}
-
-            {/* The title moved INSIDE the list (below) so it scrolls away with
-                the rows under the host's collapsing header. Left as a sibling it
-                would sit pinned beneath an absolute header — jammed under the
-                status bar once the header hid, and eating the space the collapse
-                is supposed to reclaim. The 12px spacer reproduces the
-                `paddingTop: 12` this list used to carry, so the standalone route
-                (headerHeight 0) keeps its exact sequence: title, 12px, banner,
-                rows. */}
             <Animated.FlatList
                 ref={listRef}
                 testID="saved-suggestions-list"
@@ -358,72 +313,32 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 onContentSizeChange={settleIfShort}
                 renderItem={renderItem}
                 keyExtractor={keyExtractor}
-                ListHeaderComponent={
-                    <>
-                        {/* Standalone only. Embedded, the Dashboard header and
-                            the selected pill already name this list, and a
-                            second 34pt title under the 34pt "Dashboard" was the
-                            double heading (M3). */}
-                        {embedded ? (
-                            <View style={{ height: 12 }} />
-                        ) : (
-                        <VStack
-                            className="px-5 pb-2 mb-3"
-                            style={{ paddingTop: insets.top + 16 }}
-                        >
-                            <Heading size="4xl" className="text-white ml-14">
-                                {t('savedSuggestions.title')}
-                            </Heading>
-                        </VStack>
-                        )}
-                        {/* The banner explains how saving works on THIS device;
-                            over an empty list it explained a list that isn't
-                            there, stacked above the "you haven't saved anything"
-                            state. Only shown with rows. */}
-                        {saved.length > 0 ? ListHeader : null}
-                    </>
-                }
+                ListFooterComponent={footer ?? null}
                 ListEmptyComponent={ListEmpty}
                 contentContainerStyle={{
-                    paddingTop: headerHeight,
-                    // Embedded = rendered inside the Dashboard's "Saved" sub-tab,
-                    // which sits INSIDE the floating tab navigator — needs the
-                    // same tab-bar clearance as FeedScreen/DashboardSectionsFeed
-                    // (safe-area bottom + tab-bar height + a fixed breathing-room
-                    // tail). The standalone route (app/logged-in/saved-suggestions)
-                    // is a Stack screen pushed OUTSIDE the tab navigator, so no
-                    // tab bar renders behind it — just the safe-area clearance.
-                    // SAVED_EXPORT_FAB_RESERVE is added whenever the FAB is
-                    // showing. Every card carries its delete button at its own
-                    // TOP-right, so the last card's button lands inside the
-                    // FAB's footprint without it and cannot be pressed — the
-                    // same control an overlay has already killed on this screen
-                    // once. The History list needs no equivalent because its
-                    // rows have no corner control.
-                    paddingBottom:
-                        (embedded
-                            ? tabClearance + 24
-                            : insets.bottom + 40) +
-                        (showExportFab ? SAVED_EXPORT_FAB_RESERVE : 0),
+                    // 12pt below the export row (or the header, with no row).
+                    paddingTop: headerHeight + (showExportRow ? SAVED_EXPORT_ROW_HEIGHT : 0) + 12,
+                    // Clear of the tab bar and the Mera button, which sits
+                    // bottom right: without it the last card's top-right
+                    // delete button lands under the button.
+                    paddingBottom: listEndPadding ?? tabClearance + 24,
                 }}
                 showsVerticalScrollIndicator={false}
-                // Embedded, the collapsible header's handler ticks; standalone,
-                // tick directly. At rest, a content change re-measures (see
+                // The host's collapsible-header handler ticks; with none, tick
+                // directly. At rest, a content change re-measures (see
                 // settleIfShort).
                 onScroll={scrollHandler ?? notifyScrollTick}
                 scrollEventThrottle={16}
             />
 
-            {/* Export entry point. Mounted HERE rather than in ForYouScreen,
-                which is where the History tab's share FAB lives: that
-                component suppresses its own DrillDownHeader when embedded on
-                the stated grounds that the host owns the top chrome, so the
-                host is where its affordance belongs. This screen renders no
-                DrillDownHeader in either mode, so there is no such division to
-                honour, and mounting it here gives the standalone route the
-                same button under one testID. */}
-            {showExportFab && (
-                <SavedExportFab embedded={embedded} onPress={() => setExportOpen(true)} />
+            {/* Pinned under the page header; the list scrolls beneath it. */}
+            {showExportRow && (
+                <SavedExportRow
+                    count={saved.length}
+                    headerHeight={headerHeight}
+                    hidden={hidden}
+                    onExport={() => setExportOpen(true)}
+                />
             )}
 
             <SavedExportModal

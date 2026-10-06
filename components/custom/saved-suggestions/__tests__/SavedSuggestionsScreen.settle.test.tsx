@@ -55,7 +55,10 @@ jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
   deleteSavedSuggestion: jest.fn(),
 }));
 jest.mock('../SavedExportModal', () => ({ __esModule: true, default: () => null }));
-jest.mock('../SavedExportFab', () => ({ __esModule: true, default: () => null, SAVED_EXPORT_FAB_RESERVE: 82 }));
+jest.mock('../SavedExportRow', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View testID="saved-export-row" {...p} />, SAVED_EXPORT_ROW_HEIGHT: 56 };
+});
 jest.mock('@/components/custom/for-you/ForYouEmptyState', () => ({ __esModule: true, default: () => null }));
 const mockNotifyScrollTick = jest.fn();
 jest.mock('@/lib/visibility-tick', () => ({ notifyScrollTick: () => mockNotifyScrollTick() }));
@@ -71,7 +74,7 @@ beforeEach(() => {
 
 describe('SavedSuggestionsScreen scroll settle', () => {
   it('scrolls back to the top when the content now fits the viewport', () => {
-    render(<SavedSuggestionsScreen embedded onBack={jest.fn()} headerHeight={211} />);
+    render(<SavedSuggestionsScreen headerHeight={211} />);
     const list = screen.getByTestId('saved-suggestions-list');
     fireEvent(list, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 402, height: 790 } } });
     fireEvent(list, 'contentSizeChange', 402, 620);
@@ -79,7 +82,7 @@ describe('SavedSuggestionsScreen scroll settle', () => {
   });
 
   it('leaves a long list where the reader is', () => {
-    render(<SavedSuggestionsScreen embedded onBack={jest.fn()} headerHeight={211} />);
+    render(<SavedSuggestionsScreen headerHeight={211} />);
     const list = screen.getByTestId('saved-suggestions-list');
     fireEvent(list, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: 402, height: 790 } } });
     fireEvent(list, 'contentSizeChange', 402, 2400);
@@ -92,13 +95,13 @@ describe('SavedSuggestionsScreen scroll settle', () => {
 // the active panel.
 describe('SavedSuggestionsScreen off-screen (active=false)', () => {
   it('sends no scroll tick on a content-size change', () => {
-    render(<SavedSuggestionsScreen embedded active={false} onBack={jest.fn()} headerHeight={211} />);
+    render(<SavedSuggestionsScreen active={false} headerHeight={211} />);
     fireEvent(screen.getByTestId('saved-suggestions-list'), 'contentSizeChange', 402, 620);
     expect(mockNotifyScrollTick).not.toHaveBeenCalled();
   });
 
   it('sends one when active (the default)', () => {
-    render(<SavedSuggestionsScreen embedded onBack={jest.fn()} headerHeight={211} />);
+    render(<SavedSuggestionsScreen headerHeight={211} />);
     fireEvent(screen.getByTestId('saved-suggestions-list'), 'contentSizeChange', 402, 620);
     expect(mockNotifyScrollTick).toHaveBeenCalledTimes(1);
   });
