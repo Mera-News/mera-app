@@ -3,14 +3,15 @@
 // The server check finishes asynchronously, usually within 30s, and nothing
 // pushes the result: the old server push was removed because sending it needed
 // a user-to-article link (see resolveNotificationRoute in lib/notification-service).
-// So the device notices the result itself, in three places that can each see the
-// same row change: the article panel's poll, a mirror from an article response,
-// and the re-read below. All three store through `storeServerFactCheck`, which
-// is the ONE place a settled check is detected.
+// So the device notices the result itself, in places that can each see the
+// same row change: the ask, the article panel's poll, and the re-read below.
+// All store through `storeServerFactCheck`, which is the ONE place a settled
+// check is detected.
 //
-// SCOPE: only checks this device asked for. `fact_checks` also holds checks
-// mirrored from articles other readers had checked; notifying for those would
-// announce a result nobody here requested. The asked list is persisted, so it
+// SCOPE: only checks this device asked for. The asked list is also the gate on
+// every fetch after the ask (the panel poll, the re-read): a row this device
+// did not ask for (one stored before the community lookup was removed) is
+// shown as it is and never fetched or announced. The asked list is persisted, so it
 // survives the JS reload every return to the foreground causes, and the
 // re-read rebuilds its work from it after each reload.
 //
@@ -74,12 +75,24 @@ function serial<T>(fn: () => Promise<T>): Promise<T> {
   return next;
 }
 
-/** Records an explicit ask. Called from the fact-check tick only. */
+// Told when an ask is recorded, so an open article panel starts polling a row
+// it had been showing as stalled (a tap on an older unasked row). Memory only.
+const askListeners = new Set<(articleId: string) => void>();
+
+export function onFactCheckAsked(listener: (articleId: string) => void): () => void {
+  askListeners.add(listener);
+  return () => {
+    askListeners.delete(listener);
+  };
+}
+
+/** Records an explicit ask. Reached only through `requestFactCheck`. */
 export function recordFactCheckAsked(entry: Omit<AskedFactCheck, 'askedAt'>, now = Date.now()): Promise<void> {
   return serial(async () => {
     const map = await readAsked();
     map[entry.articleId] = { ...entry, askedAt: now };
     await writeAsked(map);
+    for (const listener of askListeners) listener(entry.articleId);
   });
 }
 

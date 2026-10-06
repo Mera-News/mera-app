@@ -70,7 +70,6 @@ jest.mock('react-native-safe-area-context', () => ({
 
 jest.mock('@/lib/fact-check/request-article-fact-check', () => ({ requestArticleFactCheck: jest.fn() }));
 jest.mock('@/lib/fact-check/use-fact-check', () => ({ useFactCheck: () => ({ phase: 'absent' }) }));
-jest.mock('@/lib/fact-check/fact-check-graphql-client', () => ({ fetchCachedFactCheck: jest.fn() }));
 
 const mockGetSuggestion = jest.fn();
 const mockDeleteSuggestion = jest.fn();

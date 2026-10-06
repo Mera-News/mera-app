@@ -11,7 +11,7 @@
 // The tick now asks the SERVER for a check on this article, directly. No chat
 // opens, the panel goes to `processing` in place, and the answer lands in the
 // same panel. `requestFactCheck` (fact-check-graphql-client) already does the
-// ask-and-mirror in one call and is documented never to throw, so this module
+// ask-and-store in one call and is documented never to throw, so this module
 // is the gate layer plus the tap feedback, nothing more.
 //
 // THE AI-ASSISTED PATH IS NOT LOST AND MUST NOT BE REBUILT HERE. Mera AI's
@@ -95,6 +95,6 @@ export function requestArticleFactCheck(article: FactCheckArticle): boolean {
     // Not awaited: the tap's job is to lodge the ask. Everything after it is
     // the panel's, driven by the local row this writes and by `useFactCheck`'s
     // live subscription to it.
-    void requestFactCheck(article.articleId, article.title, keep);
+    void requestFactCheck(article.articleId, article.title, keep, true);
     return true;
 }

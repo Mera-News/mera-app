@@ -25,11 +25,10 @@
  * `use-fact-check.ts`'s own guard: it only polls the server once a LOCAL,
  * non-terminal row already exists, i.e. once something has already asked.
  *
- * `mirrorArticleFactCheck` (bottom of this file) is the EXCEPTION THAT PROVES
- * THE RULE, and it is exempt because it makes NO request at all: it lands a
- * check that already came back attached to `articleById`. That is what lets a
- * reader see a check somebody else paid for without either of them being
- * asked, or recorded, for it.
+ * A CHECK IS VISIBLE ONLY IF THIS DEVICE ASKED FOR IT (owner decision, navx).
+ * Nothing here lands a check another reader asked for, and every re-read goes
+ * through the asked list (`fact-check-settled.ts`). Rows already stored on a
+ * phone before that decision are left exactly as they are.
  */
 
 import { gql } from '@apollo/client';
@@ -37,15 +36,12 @@ import client from '../apollo-client';
 import logger from '../logger';
 import {
     getFactCheckForClaim,
-    listFactChecksByStatus,
     upsertFactCheck,
 } from '../database/services/fact-check-record-service';
 import {
     keepArticleForFactCheck,
     type FactCheckKeepInput,
 } from '../database/services/saved-article-suggestion-service';
-import { useMeraProtocolStore } from '../stores/mera-protocol-store';
-import type { FactCheck as GeneratedFactCheck } from '../generated/graphql-types';
 import { FACT_CHECK_FIELDS } from './fact-check-fields';
 import { isTerminalStatus } from './fact-check-state';
 import type { FactCheckRow } from './fact-check-types';
@@ -98,8 +94,8 @@ async function keepCheckedArticle(
  * THE ONE STORE for a server check, and so the one place a check that has just
  * settled is noticed. Reads the local row's status first, writes, then hands
  * both to `noteFactCheckStored`, which notifies only for a check this device
- * asked for that went from waiting to settled. The panel poll, the mirror and
- * both re-reads all come through here, so the same change seen by two of them
+ * asked for that went from waiting to settled. The ask, the panel poll and
+ * the asked re-read all come through here, so the same change seen by two of them
  * still notifies once (the ask is consumed by the first).
  */
 async function storeServerFactCheck(
@@ -148,7 +144,7 @@ export async function fetchFactCheck(articleId: string): Promise<FactCheckQueryO
 }
 
 /**
- * `fetchFactCheck` PLUS the mirror write into the on-device `fact_checks`
+ * `fetchFactCheck` PLUS the write into the on-device `fact_checks`
  * table (v52, `claimKey` omitted — the table's "legacy whole-article" slot,
  * which is exactly what a server (whole-article) check is). This is the ONE
  * function that should ever be used to ASK the server for a check, whether
@@ -173,13 +169,18 @@ export async function requestFactCheck(
     articleId: string,
     articleTitle?: string | null,
     keep?: FactCheckKeepInput,
+    /** True only from a user's own tap (the tick, the chat pill). The panel
+     *  poll passes nothing, so a poll can never make a check "asked". */
+    explicit = false,
 ): Promise<FactCheckQueryOutcome> {
     try {
-        // THE FIRST ASK FROM THIS DEVICE is the one that counts as "asked":
-        // every later call (the panel poll, a re-read) finds a local row
-        // already there. Recorded before the network call, so an answer that
-        // lands while this is in flight is not missed.
-        if ((await getFactCheckForClaim(articleId)) === null) {
+        // THE ASK is recorded before the network call, so an answer that lands
+        // while this is in flight is not missed: the first call for an article
+        // with no local row, or an explicit tap on one whose local row has not
+        // settled (an older row nobody on this device asked for). A tap on a
+        // settled row records nothing: there is nothing left to wait for.
+        const local = await getFactCheckForClaim(articleId);
+        if (local === null || (explicit && !isTerminalStatus(local.status))) {
             await recordFactCheckAsked({
                 articleId,
                 suggestionId: keep && 'suggestion' in keep ? keep.suggestion._id : null,
@@ -216,56 +217,6 @@ export async function requestFactCheck(
     }
 }
 
-/**
- * Mirror a fact check that arrived ON AN ARTICLE into the local `fact_checks`
- * table. NO NETWORK CALL — the row was already in the `articleById` response.
- *
- * THIS IS WHAT MAKES A CACHED CHECK VISIBLE TO SOMEBODY WHO DID NOT ASK FOR
- * IT. Checks are cached server-side and keyed on the article, deliberately
- * holding no user identity, so the cache was always cross-user — but only the
- * device that asked ever had a local row, and `useFactCheck` reports `absent`
- * (and `FactCheckPanel` renders nothing) when the LOCAL table is empty. User A
- * paid for the check; user B opened the same article and saw nothing. Writing
- * the row here is the whole fix: from that point the existing live
- * WatermelonDB subscription and the existing panel render it, with no new
- * render path.
- *
- * NO SETTING IS CONSULTED HERE. There used to be a `factCheckEnabled` gate in
- * this function; fact checking is part of the product now, so the only question
- * left is whether the server was ASKED, which is decided upstream — by the
- * `@include` on `articleById`, by `fetchCachedFactCheck`'s own gate, or by a
- * deliberate tap. A row only reaches this function because one of those already
- * happened.
- *
- * Never throws, for the same reason `requestFactCheck` doesn't — a failed
- * mirror must cost the reader a missing panel, never a failed article open.
- */
-export async function mirrorArticleFactCheck(
-    articleId: string,
-    // The codegen'd `NewsArticle.factCheck` and the hand-written `FactCheckRow`
-    // describe the same payload and differ only in how tightly a couple of
-    // string fields are typed (see fact-check-types.ts's header). Accept either
-    // and narrow ONCE, here, rather than making every screen cast.
-    factCheck: FactCheckRow | GeneratedFactCheck | null | undefined,
-    articleTitle?: string | null,
-    keep?: FactCheckKeepInput,
-): Promise<boolean> {
-    if (!factCheck || !articleId) return false;
-
-    const row = factCheck as FactCheckRow;
-    try {
-        await storeServerFactCheck(articleId, row, articleTitle);
-        await keepCheckedArticle(articleId, keep, row, articleTitle);
-        return true;
-    } catch (err) {
-        logger.captureException(err, {
-            tags: { service: 'fact-check-graphql-client', method: 'mirrorArticleFactCheck' },
-            extra: { articleId },
-        });
-        return false;
-    }
-}
-
 const GET_CACHED_FACT_CHECK = gql`
   query GetCachedFactCheck($articleId: ID!) {
     cachedFactCheck(articleId: $articleId) {
@@ -273,133 +224,6 @@ const GET_CACHED_FACT_CHECK = gql`
     }
   }
 `;
-
-/**
- * Read the CACHED check for an article and mirror it locally. Never creates one.
- *
- * ── WHY THIS EXISTS ALONGSIDE THE `articleById` FIELD ─────────────────────
- * There are two article detail screens and only one of them fetches the
- * article. `ArticleDetailScreen` calls `getArticleById`, so it gets
- * `NewsArticle.factCheck` for free. `ArticleSuggestionScreen` — where every
- * FEED card lands — renders from a local `article_suggestions` row and only
- * asks the server for `relatedArticles`. Without this, a check requested by one
- * reader stayed invisible to everyone else on the surface they actually use.
- *
- * ── THE CALLER'S OBLIGATION ──────────────────────────────────────────────
- * Only call this from a screen that ALREADY identifies the article to the
- * server. On the suggestion screen `relatedArticles(articleId)` fires on mount
- * with the same id, so this adds a round trip and not a disclosure. Calling it
- * from a list, or speculatively across articles the reader has not opened, is
- * exactly the reading-history signal the design refused — see the resolver.
- *
- * Gated on `autoCommunityFactCheck` (default OFF) for the same reason the
- * `articleById` selection is gated: without it the reader has not agreed to a
- * lookup on every article they open. Enforced HERE as well as at the call site,
- * so a future caller cannot bypass the setting by forgetting it.
- *
- * Never throws — a failed lookup costs the reader a missing panel, never a
- * failed article open.
- */
-export async function fetchCachedFactCheck(
-    articleId: string,
-    keep?: FactCheckKeepInput,
-): Promise<boolean> {
-    if (!articleId) return false;
-    if (!useMeraProtocolStore.getState().autoCommunityFactCheck) return false;
-
-    try {
-        const { data } = await client.query<{ cachedFactCheck: FactCheckRow | null }>({
-            query: GET_CACHED_FACT_CHECK,
-            variables: { articleId },
-            fetchPolicy: 'no-cache',
-        });
-        const row = data?.cachedFactCheck ?? null;
-        // A miss is the common case and is NOT a failure: most articles have
-        // never been checked by anybody. Nothing is written, and the panel
-        // renders nothing, which is the correct answer.
-        if (!row) return false;
-        return await mirrorArticleFactCheck(articleId, row, null, keep);
-    } catch (err) {
-        logger.captureException(err, {
-            tags: { service: 'fact-check-graphql-client', method: 'fetchCachedFactCheck' },
-            extra: { articleId },
-        });
-        return false;
-    }
-}
-
-/** Statuses `requestFactCheck` treats as "not yet confirmed" — see
- *  `isTerminalStatus`. `failed` is included: the server's own recovery cron
- *  re-drives it, so from a device that only ever reads, a `failed` row is
- *  indistinguishable from one still in flight.
- *
- *  ⚠️ A TERMINAL ROW IS NEVER RE-READ, AND THAT IS A DECISION, NOT AN
- *  OVERSIGHT. Nothing in this app re-asks the server about a `complete` or
- *  `blocked` row: this sweep skips them by construction, and `useFactCheck`
- *  polls only while a non-terminal row exists. So a row whose stored payload
- *  was written BEFORE a server-side change stays on the device, unchanged,
- *  until retention drops it — up to 90 days for a row with a populated
- *  `checkedBy` (see `deleteExpiredFactChecks`).
- *
- *  This was raised as a heal/re-read proposal (re-ask terminal rows once so a
- *  server-side correction reaches devices that already cached the old answer)
- *  and DECLINED. Re-asking every terminal row costs a billable server read per
- *  row with no way to tell a stale row from a current one — the payload
- *  carries no marker of which server revision produced it — so the sweep would
- *  re-bill the whole table to correct the rare row. If a future change makes
- *  stored payloads systematically wrong, the honest fix is a payload version
- *  marker the server sets and this sweep filters on, not an unconditional
- *  re-read. */
-const NON_TERMINAL_STATUSES = ['pending', 'running', 'failed'] as const;
-
-/** Combined cap across every non-terminal status this sweeps — r14 P2b's own
- *  bound for the same shape of problem ("costs one bounded server read per
- *  UNRESOLVED row"), carried forward rather than re-derived. */
-const RECONCILE_CAP = 20;
-
-/**
- * Re-asks the server for every LOCALLY non-terminal row, bounded, and lets
- * `requestFactCheck`'s own upsert land any newly-terminal answer.
- *
- * WHY THIS EXISTS. `useFactCheck`'s poll only covers the ONE article currently
- * open. Without this, a check requested via chat and then left (the reader
- * closed the article, or the poll itself gave up at its ceiling — see
- * `POLL_CEILING_MS`) has no path back to the reader except reopening that
- * SAME article. That is the exact bug r14 P2b found and fixed once already
- * ("a completed check was stuck forever" — "The Dashboard block and the
- * fact-checks list did ZERO server reads, ever"), recreated here because this
- * wave moved the check server-side again. This wave's own copy makes the same
- * promise the Dashboard has to honour: `factCheck.queuedHint` and
- * `factCheck.stillChecking` both tell the reader to look there.
- *
- * Structural bound, not a poll: no interval, called once per Dashboard "Fact
- * checks" chip selection (see `FactChecksPanel`'s `active` effect) — a settled
- * table costs zero requests, since `listFactChecksByStatus` only ever returns
- * non-terminal rows.
- *
- * Never throws: `requestFactCheck` already swallows its own failures, so one
- * bad row degrades to "still pending" rather than aborting the sweep for
- * every row after it.
- */
-export async function reconcileStoredFactChecks(): Promise<void> {
-    let budget = RECONCILE_CAP;
-    for (const status of NON_TERMINAL_STATUSES) {
-        if (budget <= 0) return;
-        // eslint-disable-next-line no-await-in-loop -- bounded (RECONCILE_CAP),
-        // and each round trip's own upsert must land before the next read
-        // decides how much budget remains.
-        const rows = await listFactChecksByStatus(status, budget);
-        for (const row of rows) {
-            if (budget <= 0) return;
-            budget -= 1;
-            // READ-ONLY: `cachedFactCheck` never creates a server row, so a row
-            // the server has since dropped cannot start a new billed job the
-            // way `factCheck` would on a miss.
-            // eslint-disable-next-line no-await-in-loop -- see above.
-            await rereadFactCheck(row.articleId, row.articleTitle);
-        }
-    }
-}
 
 /** One read-only re-read through `cachedFactCheck`, stored through the one
  *  store. Never throws; returns the settled-or-not state it saw, or null
@@ -435,8 +259,8 @@ const ASKED_REREAD_CAP = 20;
  * one store notify for any that have. The foreground task (data scout's
  * `fact-check-reconcile`) calls it on every return to the app, which, since a
  * return reloads JS, is also how the work survives a reload. The asked list is
- * the filter: `fact_checks` also holds checks mirrored from other readers'
- * articles, and those are never re-read here.
+ * the filter: a row this device did not ask for (one stored before the
+ * community lookup was removed) is never re-read, here or anywhere.
  *
  * Read-only (`cachedFactCheck`), bounded, never throws. Returns how many asks
  * are still waiting.

@@ -5,7 +5,6 @@ import { type TranslatableDisplayState } from '@/components/custom/TranslatableD
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
 import { requestArticleFactCheck } from '@/lib/fact-check/request-article-fact-check';
-import { mirrorArticleFactCheck } from '@/lib/fact-check/fact-check-graphql-client';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
@@ -49,7 +48,6 @@ import { useRelatedPagination } from './use-related-pagination';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { useAutoCommunityFactCheck } from '@/lib/stores/mera-protocol-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -187,10 +185,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // read, so there is nothing wrong with two components each watching it.
     const factCheckPhase = useFactCheck(article?._id ?? articleId).phase;
     const aiAccess = useAiAccess();
-    // The only fact-check switch left. Fact checking itself is part of the
-    // product; this is consent to LOOK ONE UP on every article opened, rather
-    // than only when the reader asks. Off by default.
-    const withFactCheck = useAutoCommunityFactCheck();
     // Only read once the article is KNOWN to be unavailable — a normal open
     // costs no extra query (FactCheckPanel runs its own observer on the happy
     // path).
@@ -357,7 +351,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             };
         }
 
-        ArticleService.getArticleById(articleId, withFactCheck)
+        ArticleService.getArticleById(articleId)
             .then((row) => {
                 if (cancelled) return;
                 if (!row) {
@@ -365,22 +359,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 } else {
                     setArticle(row);
                     setIsLoading(false);
-                    // A fact check somebody ELSE already paid for arrives
-                    // attached to the article. Land it in the local table so
-                    // the panel below renders it — without this the check is
-                    // invisible to everyone except the device that asked, even
-                    // though the server-side cache is cross-user. No request of
-                    // its own: the row is already in this response. `void` and
-                    // not awaited, and it never throws — a missing panel must
-                    // never cost the reader the article.
-                    void mirrorArticleFactCheck(
-                        row._id ?? articleId,
-                        row.factCheck,
-                        row.title_en_internal_only ?? row.title,
-                        // Full article in hand: retain it so the check stays
-                        // openable after the 48h prune.
-                        { articleId: row._id ?? articleId, article: row },
-                    );
                 }
             })
             .catch((err) => {
@@ -406,14 +384,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         // article is already loaded shouldn't wipe it. Reconnecting after the
         // offlineUnavailable empty state DOES retry, via the effect below
         // bumping retryNonce.
-        //
-        // `withFactCheck` is deliberately NOT a dep either. The effect closes
-        // over the value from the render in which it last ran, and since this
-        // screen mounts fresh per article, that is the setting as it stood when
-        // the reader opened THIS article. Toggling the switch while an article
-        // is already open therefore does not re-fetch it underneath them; the
-        // new value applies to the next article. That is a deliberately stale
-        // closure, not an oversight.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [articleId, t, retryNonce]);
 

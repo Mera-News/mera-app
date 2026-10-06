@@ -10,9 +10,10 @@
  *   1. LIVE-OBSERVE the on-device `fact_checks` table — unchanged mechanism
  *      from the on-device era, see the `observeWithColumns` note below.
  *   2. POLL THE SERVER, bounded, but ONLY while a local non-terminal row
- *      already exists — i.e. only once something has already asked. An
- *      article nobody has asked about triggers zero network calls, same
- *      invariant the pure-observer version had.
+ *      exists AND this device asked for the check (the asked list in
+ *      fact-check-settled). An article nobody here asked about triggers zero
+ *      network calls; an older unasked row still shows, as `stalled`, and is
+ *      never fetched (owner decision, navx).
  *
  *   absent ── something writes a non-terminal row ──► processing ──┬─► terminal
  *                                                                   └─► stalled (poll gave up)
@@ -53,6 +54,7 @@ import database from '../database/index';
 import FactCheckRecord from '../database/models/FactCheckRecord';
 import type { StoredFactCheck } from '../database/services/fact-check-record-service';
 import { requestFactCheck } from './fact-check-graphql-client';
+import { listAskedFactChecks, onFactCheckAsked } from './fact-check-settled';
 import type { FactCheckRow } from './fact-check-types';
 import {
     isTerminalStatus,
@@ -163,6 +165,16 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
     // job is only to track whether the CEILING was reached first.
     const [pollGaveUp, setPollGaveUp] = useState(false);
 
+    // Bumped when this article is asked for while open, so a row shown as
+    // stalled (not asked here) starts polling on the reader's own tap.
+    const [askVersion, setAskVersion] = useState(0);
+    useEffect(() => {
+        if (!articleId) return;
+        return onFactCheckAsked((id) => {
+            if (id === articleId) setAskVersion((v) => v + 1);
+        });
+    }, [articleId]);
+
     useEffect(() => {
         // Any re-entry into (or out of) 'processing' — a fresh mount, a new
         // article, or a fresh ask after a prior session stalled — starts a
@@ -203,13 +215,24 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
                 });
         };
 
-        poll();
+        // Only a check this device asked for is fetched. An unasked row (stored
+        // before the community lookup went) is not polled, so it reads as
+        // `stalled` rather than spinning forever; it is never hidden.
+        void listAskedFactChecks()
+            .then((asked) => {
+                if (cancelled) return;
+                if (asked.some((a) => a.articleId === articleId)) poll();
+                else setPollGaveUp(true);
+            })
+            .catch(() => {
+                if (!cancelled) setPollGaveUp(true);
+            });
 
         return () => {
             cancelled = true;
             if (timerId) clearTimeout(timerId);
         };
-    }, [articleId, localPhase]);
+    }, [articleId, localPhase, askVersion]);
 
     // 'stalled' is the ONLY state a caller can't get by reading `localPhase`
     // alone — it must never collapse into 'absent' (nothing rendered) or into

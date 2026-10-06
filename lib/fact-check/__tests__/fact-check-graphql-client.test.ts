@@ -17,11 +17,9 @@ jest.mock('../../apollo-client', () => ({
 // parameter — the wrapper below spreads a variable-length args array into it,
 // which a fixed-arity mock (e.g. `jest.fn(() => ...)`) can't accept.
 const mockUpsertFactCheck = jest.fn();
-const mockListFactChecksByStatus = jest.fn();
 const mockGetFactCheckForClaim = jest.fn();
 jest.mock('../../database/services/fact-check-record-service', () => ({
     upsertFactCheck: (...a: any[]) => mockUpsertFactCheck(...a),
-    listFactChecksByStatus: (...a: any[]) => mockListFactChecksByStatus(...a),
     getFactCheckForClaim: (...a: any[]) => mockGetFactCheckForClaim(...a),
 }));
 
@@ -48,22 +46,9 @@ jest.mock('../../logger', () => ({
     default: { captureException: jest.fn() },
 }));
 
-// `mirrorArticleFactCheck` reads the Mera Protocol switch. Mocked rather than
-// hydrated: the real store pulls in the settings table, and the only thing
-// under test here is that the switch is OBEYED.
-let mockAutoCommunity = true;
-jest.mock('../../stores/mera-protocol-store', () => ({
-    useMeraProtocolStore: {
-        getState: () => ({ autoCommunityFactCheck: mockAutoCommunity }),
-    },
-}));
-
 import {
     fetchFactCheck,
-    fetchCachedFactCheck,
-    mirrorArticleFactCheck,
     reconcileAskedFactChecks,
-    reconcileStoredFactChecks,
     requestFactCheck,
     stopAskedFactCheckPollerForTest,
 } from '../fact-check-graphql-client';
@@ -253,236 +238,6 @@ describe('requestFactCheck', () => {
 // in useFactCheck gave up at its ceiling) still has a path back to a terminal
 // answer. Without it, r14 P2b's bug ("a completed check was stuck forever")
 // recreates itself now that the check is server-side again.
-describe('reconcileStoredFactChecks', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-        mockListFactChecksByStatus.mockResolvedValue([]);
-    });
-
-    it('reads pending, running and failed rows, and re-reads each READ-ONLY', async () => {
-        mockListFactChecksByStatus.mockImplementation((status: string) => {
-            if (status === 'pending') return Promise.resolve([{ articleId: 'a1', articleTitle: 'A' }]);
-            if (status === 'running') return Promise.resolve([{ articleId: 'a2', articleTitle: 'B' }]);
-            if (status === 'failed') return Promise.resolve([{ articleId: 'a3', articleTitle: 'C' }]);
-            return Promise.resolve([]);
-        });
-        mockQuery.mockResolvedValue({ data: { cachedFactCheck: PENDING_ROW } });
-
-        await reconcileStoredFactChecks();
-
-        expect(mockListFactChecksByStatus).toHaveBeenCalledWith('pending', expect.any(Number));
-        expect(mockListFactChecksByStatus).toHaveBeenCalledWith('running', expect.any(Number));
-        expect(mockListFactChecksByStatus).toHaveBeenCalledWith('failed', expect.any(Number));
-        // One re-read per row, through `cachedFactCheck`, which never creates
-        // a server row: a row the server dropped cannot start a billed job.
-        expect(mockQuery).toHaveBeenCalledTimes(3);
-        for (const [req] of mockQuery.mock.calls) {
-            expect(req.query.definitions[0].name.value).toBe('GetCachedFactCheck');
-        }
-        expect(mockUpsertFactCheck).toHaveBeenCalledTimes(3);
-    });
-
-    it('never reads a terminal status — a settled table costs zero requests', async () => {
-        await reconcileStoredFactChecks();
-        expect(mockListFactChecksByStatus).not.toHaveBeenCalledWith('complete', expect.anything());
-        expect(mockListFactChecksByStatus).not.toHaveBeenCalledWith('blocked', expect.anything());
-    });
-
-    it('is bounded across ALL statuses combined, not per status — the same cap r14 P2b used for this shape of problem', async () => {
-        const many = (n: number, articleId: string) =>
-            Array.from({ length: n }, (_, i) => ({ articleId: `${articleId}${i}`, articleTitle: 't' }));
-        mockListFactChecksByStatus.mockImplementation((status: string, limit: number) => {
-            if (status === 'pending') return Promise.resolve(many(Math.min(limit, 15), 'p'));
-            if (status === 'running') return Promise.resolve(many(Math.min(limit, 15), 'r'));
-            return Promise.resolve(many(Math.min(limit, 15), 'f'));
-        });
-        mockQuery.mockResolvedValue({ data: { factCheck: PENDING_ROW } });
-
-        await reconcileStoredFactChecks();
-
-        // 15 from 'pending' exhausts most of the 20-row cap; 'running' gets
-        // whatever is left, 'failed' gets none — total re-asks never exceed 20.
-        expect(mockQuery.mock.calls.length).toBeLessThanOrEqual(20);
-    });
-
-    it('one bad row does not stop the sweep for the rows after it', async () => {
-        mockListFactChecksByStatus.mockImplementation((status: string) => {
-            if (status === 'pending') {
-                return Promise.resolve([
-                    { articleId: 'bad', articleTitle: 'Bad' },
-                    { articleId: 'good', articleTitle: 'Good' },
-                ]);
-            }
-            return Promise.resolve([]);
-        });
-        // requestFactCheck itself never throws (it catches internally) — this
-        // pins that the sweep survives even if that contract were ever broken.
-        mockQuery
-            .mockRejectedValueOnce(new Error('boom'))
-            .mockResolvedValueOnce({ data: { cachedFactCheck: TERMINAL_ROW } });
-
-        await expect(reconcileStoredFactChecks()).resolves.toBeUndefined();
-        expect(mockQuery).toHaveBeenCalledTimes(2);
-    });
-});
-
-// ===========================================================================
-// mirrorArticleFactCheck — the cross-user visibility fix.
-//
-// Checks are cached server-side and keyed on the ARTICLE, holding no user
-// identity, so the cache was always cross-user — but `useFactCheck` reports
-// `absent` (and the panel renders nothing) when the LOCAL table has no row, so
-// only the device that ASKED ever saw the answer. User A paid for the check,
-// user B opened the same article and saw nothing. This lands the row that
-// arrived attached to `articleById`, WITHOUT a request of its own.
-// ===========================================================================
-describe('mirrorArticleFactCheck', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-        mockAutoCommunity = true;
-    });
-
-    it('writes the local row so the existing panel can render it', async () => {
-        await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(true);
-
-        expect(mockUpsertFactCheck).toHaveBeenCalledTimes(1);
-        expect(mockUpsertFactCheck).toHaveBeenCalledWith({
-            articleId: 'a1',
-            factCheckId: 'fc1',
-            articleTitle: 'A headline',
-            status: 'complete',
-            verdict: 'supported',
-            payload: TERMINAL_ROW,
-        });
-    });
-
-    // The reason this is safe to run on every article open.
-    it('makes NO network request', async () => {
-        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never);
-
-        expect(mockQuery).not.toHaveBeenCalled();
-    });
-
-    it('writes nothing when the article carries no check', async () => {
-        await expect(mirrorArticleFactCheck('a1', null)).resolves.toBe(false);
-        await expect(mirrorArticleFactCheck('a1', undefined)).resolves.toBe(false);
-
-        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
-    });
-
-    it('writes nothing without an article id', async () => {
-        await expect(mirrorArticleFactCheck('', TERMINAL_ROW as never)).resolves.toBe(false);
-
-        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
-    });
-
-    // The `factCheckEnabled` switch that used to gate this is gone — fact
-    // checking is part of the product. A row only reaches this function when
-    // the server actually returned one, and the server is only ASKED when the
-    // reader opted into `autoCommunityFactCheck` (the @include on articleById)
-    // or tapped the button. The gate moved up the call chain; it did not vanish.
-    it('mirrors regardless of any Mera Protocol setting', async () => {
-        await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(true);
-        expect(mockUpsertFactCheck).toHaveBeenCalledTimes(1);
-    });
-
-    it('falls back to the caller title only when the row has none', async () => {
-        await mirrorArticleFactCheck('a1', PENDING_ROW as never, 'From the article');
-
-        expect(mockUpsertFactCheck).toHaveBeenCalledWith(
-            expect.objectContaining({ articleTitle: 'From the article' }),
-        );
-    });
-
-    // A missing panel must never cost the reader the article.
-    it('never throws when the local write fails', async () => {
-        mockUpsertFactCheck.mockRejectedValueOnce(new Error('db closed'));
-
-        await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(false);
-    });
-
-    it('retains the article: passes the keep input through, or degrades to row fields', async () => {
-        const keep = { articleId: 'a1', article: { _id: 'a1' } as never };
-        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never, null, keep);
-        expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith(keep);
-
-        mockKeepArticleForFactCheck.mockClear();
-        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never);
-        expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith({
-            articleId: 'a1',
-            title: 'A headline',
-            articleUrl: null,
-            publicationName: null,
-        });
-    });
-
-    it('does not keep anything when the mirror write failed', async () => {
-        mockUpsertFactCheck.mockRejectedValueOnce(new Error('db closed'));
-        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never);
-        expect(mockKeepArticleForFactCheck).not.toHaveBeenCalled();
-    });
-});
-
-
-// ── fetchCachedFactCheck ────────────────────────────────────────────────────
-// The FEED's way in. ArticleSuggestionScreen never fetches the article, so it
-// never gets `NewsArticle.factCheck`; this is its equivalent, and it must never
-// create a check — it runs on an article OPEN, not on a deliberate ask.
-describe('fetchCachedFactCheck', () => {
-    beforeEach(() => {
-        mockAutoCommunity = true;
-        jest.clearAllMocks();
-    });
-
-    it('mirrors a cached row so the panel can render it', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { cachedFactCheck: TERMINAL_ROW } });
-
-        await expect(fetchCachedFactCheck('a1')).resolves.toBe(true);
-        expect(mockUpsertFactCheck).toHaveBeenCalledTimes(1);
-    });
-
-    // THE GATE. Off by default; without it the reader has not agreed to a
-    // lookup on every article they open. Enforced here as well as at the call
-    // site, so a future caller cannot bypass it by forgetting.
-    it('does not even ASK when auto community fact check is off', async () => {
-        mockAutoCommunity = false;
-
-        await expect(fetchCachedFactCheck('a1')).resolves.toBe(false);
-        expect(mockQuery).not.toHaveBeenCalled();
-        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
-    });
-
-    it('treats a miss as the normal answer, not a failure', async () => {
-        // Most articles have never been checked by anybody. Nothing is written
-        // and the panel renders nothing, which is correct.
-        mockQuery.mockResolvedValueOnce({ data: { cachedFactCheck: null } });
-
-        await expect(fetchCachedFactCheck('a1')).resolves.toBe(false);
-        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
-    });
-
-    it('never throws — a failed lookup costs a panel, not the article open', async () => {
-        mockQuery.mockRejectedValueOnce(new Error('network'));
-
-        await expect(fetchCachedFactCheck('a1')).resolves.toBe(false);
-    });
-
-    it('ignores an empty article id', async () => {
-        await expect(fetchCachedFactCheck('')).resolves.toBe(false);
-        expect(mockQuery).not.toHaveBeenCalled();
-    });
-
-    it('threads the keep input through to the mirror retention write', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { cachedFactCheck: TERMINAL_ROW } });
-        const keep = { articleId: 'a1', suggestion: { _id: 's1' } as never };
-
-        await expect(fetchCachedFactCheck('a1', keep)).resolves.toBe(true);
-        expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith(keep);
-    });
-});
-
-// ===========================================================================
-// ux1 N2: "your fact check is ready", for checks THIS device asked for.
 // ===========================================================================
 describe('the asked list and the one store', () => {
     beforeEach(() => {
@@ -506,10 +261,25 @@ describe('the asked list and the one store', () => {
         expect(mockNoteStored).toHaveBeenCalledWith('a1', 'pending', TERMINAL_ROW);
     });
 
-    it('a mirrored row goes through the detector too', async () => {
-        mockGetFactCheckForClaim.mockResolvedValue({ status: 'running' });
-        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never);
-        expect(mockNoteStored).toHaveBeenCalledWith('a1', 'running', TERMINAL_ROW);
+    it('an explicit tap on an unfinished row nobody here asked for records the ask', async () => {
+        mockGetFactCheckForClaim.mockResolvedValue({ status: 'pending' });
+        mockQuery.mockResolvedValue({ data: { factCheck: PENDING_ROW } });
+        await requestFactCheck('a1', 'T', undefined, true);
+        expect(mockRecordAsked).toHaveBeenCalledWith({ articleId: 'a1', suggestionId: null, title: 'T' });
+    });
+
+    it('the poll alone (no explicit flag) never records an ask on an unfinished row', async () => {
+        mockGetFactCheckForClaim.mockResolvedValue({ status: 'pending' });
+        mockQuery.mockResolvedValue({ data: { factCheck: PENDING_ROW } });
+        await requestFactCheck('a1');
+        expect(mockRecordAsked).not.toHaveBeenCalled();
+    });
+
+    it('an explicit tap on a settled row records nothing: there is nothing to wait for', async () => {
+        mockGetFactCheckForClaim.mockResolvedValue({ status: 'complete' });
+        mockQuery.mockResolvedValue({ data: { factCheck: TERMINAL_ROW } });
+        await requestFactCheck('a1', 'T', undefined, true);
+        expect(mockRecordAsked).not.toHaveBeenCalled();
     });
 
     it('re-reads ONLY asked checks, read-only, and counts the ones still waiting', async () => {

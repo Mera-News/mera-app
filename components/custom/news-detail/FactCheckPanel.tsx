@@ -48,8 +48,8 @@ interface FactCheckPanelProps {
  * stored rows plus `useFactCheck`'s server poll. There is nothing to tap
  * here: starting a check is `requestArticleFactCheck` (the action-row tick),
  * which asks the server directly. This component only ever renders what that
- * produced — plus, since the `NewsArticle.factCheck` field landed, whatever
- * `mirrorArticleFactCheck` lands from a check SOMEBODY ELSE asked for.
+ * produced. A check is shown only to the device that asked for it (navx);
+ * an older row stored before that rule is shown as it is.
  *
  *   absent     → render nothing. Most articles are never asked about, and most
  *                of THOSE are never fact-checked at all (~4% of the corpus is

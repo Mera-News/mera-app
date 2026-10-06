@@ -373,6 +373,8 @@ export function startFactCheckFromAction(action: ProposalAction): void {
         const outcome = await requestFactCheck(
           action.subject.articleId,
           action.subject.articleTitle,
+          undefined,
+          true, // the user tapped the pill: an explicit ask
         );
         // A ROW BACK IS THE ONLY PROOF. `requestFactCheck` never throws: it
         // swallows a transport failure into `{ terminal: false, row: null }`,

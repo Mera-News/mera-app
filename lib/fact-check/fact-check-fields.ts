@@ -1,17 +1,11 @@
 /**
  * The GraphQL field list every fact-check selection uses, and nothing else.
  *
- * A LEAF MODULE ON PURPOSE — no imports at all. Two very different callers need
- * this string: `fact-check-graphql-client.ts` (the `factCheck(articleId)`
- * query, which drags in the WatermelonDB record service for its mirror write)
- * and `article-service.ts` (the `articleById` → `factCheck` selection). Exporting
- * it from the client would have pulled the whole local database layer into
- * `article-service.ts`, which is imported by nearly every list surface in the
- * app — a real cost for a string constant.
- *
- * ONE list, not two, because the panel renders one shape: a field added for the
- * poll path has to reach the article-attached path as well, or a check
- * mirrored from an article would render with less than one fetched by a poll.
+ * A LEAF MODULE ON PURPOSE — no imports at all. Both selections in
+ * `fact-check-graphql-client.ts` (`factCheck`, the ask, and `cachedFactCheck`,
+ * the asked re-read) render through one panel, so they share one field list.
+ * `articleById` no longer selects a check: a check is shown only to the device
+ * that asked for it (navx).
  *
  * `checkedByStatus` is the field that must never be dropped silently — an empty
  * `checkedBy` means "nobody has published" or "we could not look", and those

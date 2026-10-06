@@ -68,7 +68,7 @@ describe('requestArticleFactCheck', () => {
         expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
         // No full shape supplied ⇒ no keep input; the client degrades to the
         // server row's own fields for the retention snapshot.
-        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', undefined);
+        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', undefined, true);
     });
 
     // ── Retention pass-through ─────────────────────────────────────────────
@@ -81,7 +81,7 @@ describe('requestArticleFactCheck', () => {
         expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', {
             articleId: 'a1',
             article: fullArticle,
-        });
+        }, true);
     });
 
     it('passes the full suggestion through as the retention keep input', () => {
@@ -91,7 +91,7 @@ describe('requestArticleFactCheck', () => {
         expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', {
             articleId: 'a1',
             suggestion,
-        });
+        }, true);
     });
 
     // The whole point of the rewire.
@@ -127,10 +127,9 @@ describe('requestArticleFactCheck', () => {
 
     // ── NO FEATURE SWITCH ──────────────────────────────────────────────────
     // There was a `factCheckEnabled` toggle in Mera Protocol settings and it is
-    // gone: fact checking is part of the product. The only remaining switch,
-    // `autoCommunityFactCheck`, governs whether Mera LOOKS UP an existing check
-    // on every article open — it has no say over a deliberate tap, which is
-    // what this function is.
+    // gone: fact checking is part of the product, and a deliberate tap (what
+    // this function is) is the only way a check starts. It always asks as an
+    // EXPLICIT ask (the last argument), so the panel polls it.
     it('asks regardless of any Mera Protocol setting', () => {
         expect(requestArticleFactCheck(article)).toBe(true);
         expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
@@ -147,6 +146,6 @@ describe('requestArticleFactCheck', () => {
         mockProcessingMode = 'ON_DEVICE';
 
         expect(requestArticleFactCheck(article)).toBe(true);
-        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', undefined);
+        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', undefined, true);
     });
 });

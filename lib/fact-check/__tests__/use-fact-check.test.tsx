@@ -65,6 +65,19 @@ jest.mock('../fact-check-graphql-client', () => ({
     requestFactCheck: (...a: unknown[]) => mockRequestFactCheck(...a),
 }));
 
+// The asked list: only a check this device asked for is polled (navx).
+// Default: 'a1' was asked. `mockAskListeners` lets a test fire a tap's ask.
+let mockAsked: string[] = ['a1'];
+const mockAskListeners = new Set<(id: string) => void>();
+jest.mock('../fact-check-settled', () => ({
+    listAskedFactChecks: () =>
+        Promise.resolve(mockAsked.map((articleId) => ({ articleId, askedAt: 1 }))),
+    onFactCheckAsked: (fn: (id: string) => void) => {
+        mockAskListeners.add(fn);
+        return () => mockAskListeners.delete(fn);
+    },
+}));
+
 /** Simulate the runner landing an update — SAME row identity, new field
  *  values, mirroring an in-place WatermelonDB write rather than a fresh insert. */
 function emitRows(rows: any[]) {
@@ -114,6 +127,8 @@ describe('useFactCheck', () => {
         // Full reset (not just clear) so a test that overrode the
         // implementation can never leak it into the next one.
         mockRequestFactCheck.mockReset();
+        mockAsked = ['a1'];
+        mockAskListeners.clear();
         mockRequestFactCheck.mockImplementation(() => Promise.resolve({ terminal: false, row: null }));
         jest.useFakeTimers();
     });
@@ -305,6 +320,42 @@ describe('useFactCheck', () => {
             renderHook(() => useFactCheck('a1'));
             await flush();
             await tick(POLL_INTERVAL_MS * 3);
+            expect(mockRequestFactCheck).not.toHaveBeenCalled();
+        });
+
+        it('never fetches an unfinished row this device did not ask for, and shows it as stalled', async () => {
+            mockAsked = [];
+            emitRows([fakeRow({ status: 'pending', payload: null })]);
+            const { result } = renderHook(() => useFactCheck('a1'));
+            await flush();
+            await tick(POLL_INTERVAL_MS * 3);
+            expect(mockRequestFactCheck).not.toHaveBeenCalled();
+            // Still shown, never hidden: 'stalled', not 'absent'.
+            expect(result.current.phase).toBe('stalled');
+            expect(result.current.rows).toHaveLength(1);
+        });
+
+        it('a tap that asks while the panel is open starts the poll', async () => {
+            mockAsked = [];
+            emitRows([fakeRow({ status: 'pending', payload: null })]);
+            const { result } = renderHook(() => useFactCheck('a1'));
+            await flush();
+            expect(mockRequestFactCheck).not.toHaveBeenCalled();
+
+            mockAsked = ['a1'];
+            act(() => mockAskListeners.forEach((fn) => fn('a1')));
+            await flush();
+            expect(mockRequestFactCheck).toHaveBeenCalledWith('a1');
+            expect(result.current.phase).toBe('processing');
+        });
+
+        it('an ask for another article does not start this poll', async () => {
+            mockAsked = [];
+            emitRows([fakeRow({ status: 'pending', payload: null })]);
+            renderHook(() => useFactCheck('a1'));
+            await flush();
+            act(() => mockAskListeners.forEach((fn) => fn('other')));
+            await flush();
             expect(mockRequestFactCheck).not.toHaveBeenCalled();
         });
 

@@ -772,48 +772,19 @@ describe('ArticleService.getArticleById', () => {
         await ArticleService.getArticleById('specific-id');
         expect(mockQuery).toHaveBeenCalledWith(
             expect.objectContaining({
-                // `withFactCheck` DEFAULTS TO FALSE. A caller that forgets the
-                // flag gets the private behaviour, not the chatty one — the
-                // reader has to opt in to a lookup on every article they open.
-                variables: { id: 'specific-id', withFactCheck: false },
+                variables: { id: 'specific-id' },
                 fetchPolicy: 'no-cache',
             }),
         );
     });
 
-    it('only asks for the fact check when the reader has opted in', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { articleById: null } });
-        await ArticleService.getArticleById('a1', true);
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                variables: { id: 'a1', withFactCheck: true },
-            }),
-        );
-    });
-
-    // ── The cross-user fact-check fix ─────────────────────────────────────
-    // A check is cached server-side and keyed on the ARTICLE, holding no user
-    // identity, so the cache was always cross-user — but only the device that
-    // ASKED ever had a local row, so user B opened the same article and saw
-    // nothing. `NewsArticle.factCheck` is read-only server-side and rides on
-    // this query precisely BECAUSE it already runs on every open through this
-    // route: no extra request, and no new signal about what anyone reads.
-    it('selects the article-attached fact check, with the fields the panel reads', async () => {
+    // A check is shown only to the device that asked for it (navx): the
+    // article query must never carry one another reader asked for.
+    it('never selects a fact check on the article', async () => {
         mockQuery.mockResolvedValueOnce({ data: { articleById: null } });
         await ArticleService.getArticleById('art-1');
-
-        const doc = mockQuery.mock.calls[0][0].query;
-        const text = doc?.loc?.source?.body ?? '';
-        // @include, not a client-side discard: with the setting off the
-        // resolver must never run at all. Fetching it and ignoring it would
-        // still have performed the lookup, making the switch decoration.
-        expect(text).toContain('factCheck @include(if: $withFactCheck) {');
-        expect(text).toContain('$withFactCheck: Boolean!');
-        // The same field list `factCheck(articleId)` selects — one shape, so a
-        // field added for one path reaches both.
-        for (const field of ['checkedByStatus', 'checkedBy', 'citations', 'claims', 'verdict', 'summary']) {
-            expect(text).toContain(field);
-        }
+        const text = mockQuery.mock.calls[0][0].query?.loc?.source?.body ?? '';
+        expect(text).not.toContain('factCheck');
     });
 
     it('re-throws on error and breadcrumbs with articleId', async () => {
