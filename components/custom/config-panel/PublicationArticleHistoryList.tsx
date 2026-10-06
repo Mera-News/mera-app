@@ -1,6 +1,7 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import PublicationNameButton from '@/components/custom/cards/PublicationNameButton';
 import { openPublicationPage } from '@/components/custom/publication-page/open-publication-page';
+import { visitedToNewsArticle } from '@/components/custom/publication-page/visited-article';
 import SubscribeAction from '@/components/custom/publication-preferences/SubscribeAction';
 import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
 import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
@@ -12,7 +13,6 @@ import {
     getVisitsForPublication,
     type VisitedArticle,
 } from '@/lib/database/services/publication-visit-service';
-import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
 import {
@@ -35,25 +35,6 @@ interface Props {
     readonly countryCode: string | null;
     readonly onBack: () => void;
 }
-
-const visitedToNewsArticle = (v: VisitedArticle): NewsArticle =>
-    ({
-        _id: v.articleId ?? v.articleUrl ?? '',
-        title: v.titleOriginal ?? v.titleEn ?? '',
-        title_en_internal_only: v.titleEn ?? undefined,
-        pubDate: v.pubDate != null ? new Date(v.pubDate).toISOString() : '',
-        image_url: v.imageUrl ?? undefined,
-        article_url: v.articleUrl ?? undefined,
-        original_language_code: v.languageCode ?? undefined,
-        publicationSource:
-            v.publicationName || v.countryCode
-                ? ({
-                      _id: v.articleId ?? v.articleUrl ?? '',
-                      publication_name: v.publicationName,
-                      country_code: v.countryCode,
-                  } as NewsArticle['publicationSource'])
-                : undefined,
-    }) as NewsArticle;
 
 const PublicationArticleHistoryList: React.FC<Props> = ({
     publicationName,

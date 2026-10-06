@@ -136,6 +136,9 @@ let mockProfile: any = { state: 'loading', profile: null, retry: jest.fn() };
 const NEWS_BASE = { articles: [], state: 'idle', loadMoreState: 'idle', hasMore: false, orderApplied: true, isLocal: false, refreshing: false };
 let mockNews: any = { ...NEWS_BASE, loadMore: jest.fn(), refresh: jest.fn() };
 let mockPref: any = { level: 'none', busy: false, names: ['The Hindu'], change: jest.fn() };
+const mockReloadHistory = jest.fn();
+let mockHistory: any = { state: 'ready', visits: [], reload: mockReloadHistory };
+const mockHistoryArgs: unknown[][] = [];
 const mockProfileKeys: unknown[] = [];
 const mockNewsArgs: unknown[][] = [];
 const mockPrefNames: unknown[] = [];
@@ -152,7 +155,13 @@ jest.mock('../publication-data', () => ({
         mockPrefNames.push(hints);
         return mockPref;
     },
+    usePublicationHistory: (...a: unknown[]) => {
+        mockHistoryArgs.push(a);
+        return mockHistory;
+    },
 }));
+let mockFocused = true;
+jest.mock('@/lib/hooks/use-is-focused-safe', () => ({ useIsFocusedSafe: () => mockFocused }));
 
 import PublicationPage from '../PublicationPage';
 import { isPublicationOnTop } from '../open-publication-page';
@@ -197,6 +206,9 @@ beforeEach(() => {
     mockNews = { ...NEWS_BASE, loadMore: jest.fn(), refresh: jest.fn() };
     mockPref = { level: 'none', busy: false, names: ['The Hindu'], change: jest.fn() };
     mockProfileKeys.length = 0;
+    mockHistoryArgs.length = 0;
+    mockHistory = { state: 'ready', visits: [], reload: mockReloadHistory };
+    mockFocused = true;
     mockNewsArgs.length = 0;
     mockPrefNames.length = 0;
     mockFocusCallbacks.length = 0;
@@ -311,7 +323,10 @@ describe('profile states', () => {
         const { getByText, queryByTestId } = renderPage({ publisherId: null });
         expect(getByText('The Hindu', HIDDEN)).toBeTruthy();
         expect(getByText('Country(IND)')).toBeTruthy();
-        expect(queryByTestId('publication-order-switch')).toBeNull();
+        // No news pills; History alone stays (the reader's own visits need no server).
+        expect(queryByTestId('publication-order-top')).toBeNull();
+        expect(queryByTestId('publication-order-latest')).toBeNull();
+        expect(queryByTestId('publication-order-history')).toBeTruthy();
         expect(queryByTestId('publication-news-empty')).toBeNull();
         expect(mockNewsArgs[0].slice(0, 2)).toEqual([null, 'NEWEST']);
     });
@@ -322,7 +337,8 @@ describe('profile states', () => {
         expect(getByText('publicationPage.notFound')).toBeTruthy();
         expect(getByTestId('publication-pref-up')).toBeTruthy();
         expect(mockPrefNames[0]).toEqual({ publisherId: null, rawName: 'The Hindu', publisherName: undefined, sourceNames: undefined });
-        expect(queryByTestId('publication-order-switch')).toBeNull();
+        expect(queryByTestId('publication-order-top')).toBeNull();
+        expect(queryByTestId('publication-order-history')).toBeTruthy();
     });
 });
 
@@ -526,5 +542,93 @@ describe('already on top', () => {
         expect(isPublicationOnTop({ publisherId: 'pub-2' })).toBe(false);
         unmount();
         expect(isPublicationOnTop({ publisherId: 'pub-1' })).toBe(false);
+    });
+});
+
+describe('the History sub-tab', () => {
+    const visit = (articleId: string | null, title: string) => ({
+        articleId,
+        articleSuggestionId: null,
+        articleUrl: articleId ? null : `https://example.com/${title}`,
+        publicationName: 'The Hindu',
+        countryCode: 'IND',
+        titleEn: title,
+        titleOriginal: null,
+        languageCode: 'en',
+        imageUrl: null,
+        pubDate: null,
+        visitedAt: 1,
+        visitCount: 1,
+    });
+
+    beforeEach(() => {
+        mockProfile = { state: 'ready', profile: PROFILE, retry: jest.fn() };
+    });
+
+    it('sits beside Latest and Top headlines and switches with setParams', () => {
+        const { getByTestId } = renderPage();
+        expect(getByTestId('publication-order-history').props.accessibilityState).toEqual({ selected: false });
+        fireEvent.press(getByTestId('publication-order-history'));
+        expect(mockSetParams).toHaveBeenCalledWith({ order: 'HISTORY' });
+    });
+
+    it('selected: only History is marked, the news stays requested as Latest', () => {
+        const { getByTestId } = renderPage({ order: 'HISTORY' });
+        expect(getByTestId('publication-order-history').props.accessibilityState).toEqual({ selected: true });
+        expect(getByTestId('publication-order-latest').props.accessibilityState).toEqual({ selected: false });
+        expect(getByTestId('publication-order-top').props.accessibilityState).toEqual({ selected: false });
+        expect(mockNewsArgs[0].slice(0, 2)).toEqual(['pub-1', 'NEWEST']);
+    });
+
+    it('reads the history only while History is shown on a focused page, by every known name', () => {
+        renderPage();
+        expect(mockHistoryArgs[mockHistoryArgs.length - 1][1]).toBe(false);
+        renderPage({ order: 'HISTORY' });
+        const [names, enabled] = mockHistoryArgs[mockHistoryArgs.length - 1] as [string[], boolean];
+        expect(enabled).toBe(true);
+        expect(names).toEqual(expect.arrayContaining(['The Hindu', 'The Hindu Business Line']));
+        mockFocused = false;
+        renderPage({ order: 'HISTORY' });
+        expect(mockHistoryArgs[mockHistoryArgs.length - 1][1]).toBe(false);
+    });
+
+    it('lists the visits, and a row opens its article; one with no article id does nothing', () => {
+        mockNews = { ...mockNews, state: 'ready', articles: [article('n1')] };
+        mockHistory = { ...mockHistory, visits: [visit('a1', 'Seen'), visit(null, 'Old')] };
+        const { getByTestId, queryByTestId, getByText } = renderPage({ order: 'HISTORY' });
+        expect(queryByTestId('row-n1')).toBeNull();
+        expect(getByText('Seen')).toBeTruthy();
+        fireEvent.press(getByTestId('row-a1'));
+        expect(mockOpenArticle).toHaveBeenCalledWith({ articleId: 'a1' });
+        mockOpenArticle.mockClear();
+        fireEvent.press(getByTestId('row-https://example.com/Old'));
+        expect(mockOpenArticle).not.toHaveBeenCalled();
+    });
+
+    it('empty: an honest title and body; loading: a spinner', () => {
+        const empty = renderPage({ order: 'HISTORY' });
+        expect(empty.getByText('publicationPage.historyEmptyTitle')).toBeTruthy();
+        expect(empty.getByText('publicationPage.historyEmptyBody')).toBeTruthy();
+        mockHistory = { ...mockHistory, state: 'loading' };
+        expect(renderPage({ order: 'HISTORY' }).getByTestId('publication-history-loading')).toBeTruthy();
+    });
+
+    it('is offered even when the news is not (unknown publication)', () => {
+        mockProfile = { state: 'notFound', profile: null, retry: jest.fn() };
+        const { getByTestId, queryByTestId } = renderPage({ publisherId: null });
+        expect(getByTestId('publication-order-history')).toBeTruthy();
+        expect(queryByTestId('publication-order-top')).toBeNull();
+    });
+
+    it('pull to refresh re-reads the history, and the end of the list loads no news', () => {
+        const loadMore = jest.fn();
+        mockNews = { ...mockNews, state: 'ready', articles: [article('a1')], hasMore: true, loadMore };
+        mockHistory = { ...mockHistory, visits: [visit('a1', 'Seen')] };
+        renderPage({ order: 'HISTORY' });
+        mockLastList.onEndReached();
+        expect(loadMore).not.toHaveBeenCalled();
+        mockLastList.refreshControl.props.onRefresh();
+        expect(mockReloadHistory).toHaveBeenCalled();
+        expect(mockNews.refresh).not.toHaveBeenCalled();
     });
 });

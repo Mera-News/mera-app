@@ -11,6 +11,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getCountryName } from '@/lib/country-utils';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
+import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { getLocalizedLanguageName } from '@/lib/language-names';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
@@ -31,10 +32,12 @@ import {
 } from './open-publication-page';
 import {
     usePublicationArticles,
+    usePublicationHistory,
     usePublicationPref,
     usePublicationProfile,
     type PublicationProfileKey,
 } from './publication-data';
+import { visitedToNewsArticle } from './visited-article';
 import { formatCategories, SOURCE_KIND_META, sourceKindOf } from './publication-format';
 
 const MUTED = 'rgb(156,163,175)';
@@ -77,8 +80,9 @@ function switchRoles(os: string): { row: 'tabbar' | 'tablist'; pill: 'button' | 
 
 /**
  * The publication page: identity, more/fewer, what we know about the
- * publication, Subscribe, then its news (Latest or Top headlines). One
- * FlatList; everything above the news is its header.
+ * publication, Subscribe, then three sub-tabs: its news (Latest or Top
+ * headlines) and History, the reader's own visits to it in the last 30 days.
+ * One FlatList; everything above the list is its header.
  *
  * Opened by a publisher id or by a raw name plus country, never by a feed id.
  * The news request starts as soon as a publisher id is known and does not
@@ -148,6 +152,26 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     const subscribeFlow = useSubscribeFlow();
     const openArticle = useOpenArticle();
 
+    // History: the reader's visits to this publication, matched on every
+    // name it is known by. Read when History is shown on a focused page, so
+    // a visit recorded while away shows on return.
+    const isHistory = order === 'HISTORY';
+    const focused = useIsFocusedSafe();
+    const historyNames = useMemo(
+        () =>
+            [rawName, profile?.name, ...(profile?.sourceNames ?? []), ...pref.names].filter(
+                (n): n is string => typeof n === 'string' && n.trim() !== '',
+            ),
+        [rawName, profile?.name, profile?.sourceNames, pref.names],
+    );
+    const history = usePublicationHistory(historyNames, isHistory && focused);
+    // A visit row without an article id cannot open the detail screen (its
+    // URL is not an id), so it renders but its tap does nothing.
+    const openableHistoryIds = useMemo(
+        () => new Set(history.visits.map((v) => v.articleId).filter((id): id is string => !!id)),
+        [history.visits],
+    );
+
     const selectOrder = useCallback(
         (next: PublicationView) => {
             if (next === order) return;
@@ -186,8 +210,8 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     const subscribed = subscribeTarget ? subscribeFlow.isSubscribed(subscribeTarget.publisherId) : false;
 
     const roles = switchRoles(Platform.OS);
-    const pill = (value: PublicationOrder, label: string, testID: string) => {
-        const selected = shownOrder === value;
+    const pill = (value: PublicationView, label: string, testID: string) => {
+        const selected = isHistory ? value === 'HISTORY' : shownOrder === value;
         return (
             <Pressable
                 key={value}
@@ -292,43 +316,83 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 )
             ) : null}
 
-            {newsAvailable ? (
-                // A hairline above the switch: what the reader can do with the
-                // outlet ends here, and its news begins.
-                <HStack
-                    space="sm"
-                    className="items-center"
-                    accessibilityRole={roles.row}
-                    testID="publication-order-switch"
-                    style={{
-                        borderTopWidth: StyleSheet.hairlineWidth,
-                        borderTopColor: DIVIDER,
-                        paddingTop: PAGE_SPACING.switchTop,
-                        marginTop: PAGE_SPACING.sectionGap - PAGE_SPACING.blockGap,
-                    }}
-                >
-                    {news.orderApplied ? pill('NEWEST', t('publicationPage.latest'), 'publication-order-latest') : null}
-                    {pill('TOP_HEADLINES', t('sources.topHeadlines'), 'publication-order-top')}
-                </HStack>
-            ) : null}
+            {/* A hairline above the switch: what the reader can do with the
+                outlet ends here, and its lists begin. History is always
+                offered: the reader's own visits need no server. */}
+            <HStack
+                space="sm"
+                className="items-center"
+                accessibilityRole={roles.row}
+                testID="publication-order-switch"
+                // Wraps rather than clips if a locale's three labels outgrow
+                // the row.
+                style={{
+                    flexWrap: 'wrap',
+                    borderTopWidth: StyleSheet.hairlineWidth,
+                    borderTopColor: DIVIDER,
+                    paddingTop: PAGE_SPACING.switchTop,
+                    marginTop: PAGE_SPACING.sectionGap - PAGE_SPACING.blockGap,
+                }}
+            >
+                {newsAvailable && news.orderApplied
+                    ? pill('NEWEST', t('publicationPage.latest'), 'publication-order-latest')
+                    : null}
+                {newsAvailable ? pill('TOP_HEADLINES', t('sources.topHeadlines'), 'publication-order-top') : null}
+                {pill('HISTORY', t('publicationPage.history'), 'publication-order-history')}
+            </HStack>
         </View>
     );
 
-    // ── News list ────────────────────────────────────────────────────────
-    const articles: NewsArticle[] = newsAvailable ? news.articles : [];
+    // ── The list: news, or History ───────────────────────────────────────
+    const historyArticles = useMemo(() => history.visits.map(visitedToNewsArticle), [history.visits]);
+    const articles: NewsArticle[] = isHistory ? historyArticles : newsAvailable ? news.articles : [];
     const renderItem: ListRenderItem<NewsArticle> = useCallback(
         ({ item }) => (
             <ArticleStandaloneCompactCard
                 article={item}
-                onPress={() => openArticle({ articleId: item._id })}
+                onPress={() => {
+                    if (isHistory && !openableHistoryIds.has(item._id)) return;
+                    openArticle({ articleId: item._id });
+                }}
                 subjectExtras={{ surface: 'detail' }}
             />
         ),
-        [openArticle],
+        [openArticle, isHistory, openableHistoryIds],
     );
 
     let listEmpty: React.ReactElement | null = null;
-    if (newsAvailable && (newsPublisherId || news.state === 'offline')) {
+    if (isHistory) {
+        listEmpty =
+            history.state === 'loading' ? (
+                <Box className="items-center py-8" testID="publication-history-loading">
+                    <Spinner size="small" />
+                </Box>
+            ) : (
+                <VStack space="sm" className="items-center py-12 px-8" testID="publication-history-empty">
+                    <View
+                        accessible={false}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no-hide-descendants"
+                        style={{
+                            width: 48,
+                            height: 48,
+                            borderRadius: 24,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: 'rgba(255,255,255,0.06)',
+                        }}
+                    >
+                        <MaterialIcons name="history" size={22} color={MUTED} />
+                    </View>
+                    <Text size="md" className="text-center text-white font-semibold">
+                        {t('publicationPage.historyEmptyTitle')}
+                    </Text>
+                    <Text size="sm" className="text-center" style={{ color: MUTED, lineHeight: 20 }}>
+                        {t('publicationPage.historyEmptyBody')}
+                    </Text>
+                </VStack>
+            );
+    } else if (newsAvailable && (newsPublisherId || news.state === 'offline')) {
         if (news.state === 'idle' || news.state === 'loading') {
             listEmpty = (
                 <Box className="items-center py-8" testID="publication-news-loading">
@@ -383,7 +447,9 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     }
 
     let listFooter: React.ReactElement | null = null;
-    if (articles.length > 0 && news.loadMoreState === 'loading') {
+    if (isHistory) {
+        listFooter = null;
+    } else if (articles.length > 0 && news.loadMoreState === 'loading') {
         listFooter = (
             <Box className="items-center py-4" testID="publication-news-loading-more">
                 <Spinner size="small" />
@@ -408,13 +474,15 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     }
 
     const onEndReached = useCallback(() => {
+        if (isHistory) return;
         if (news.hasMore && news.state === 'ready' && news.loadMoreState === 'idle') news.loadMore();
-    }, [news]);
+    }, [news, isHistory]);
 
     const onRefresh = useCallback(() => {
         if (state === 'error' || state === 'offline') retry();
-        if (newsAvailable) void news.refresh();
-    }, [state, retry, newsAvailable, news]);
+        if (isHistory) history.reload();
+        else if (newsAvailable) void news.refresh();
+    }, [state, retry, isHistory, history, newsAvailable, news]);
 
     return (
         <Box className="flex-1" testID="publication-page">
@@ -444,7 +512,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
                 onEndReachedThreshold={0.5}
                 refreshControl={
                     <RefreshControl
-                        refreshing={news.refreshing}
+                        refreshing={isHistory ? false : news.refreshing}
                         onRefresh={onRefresh}
                         tintColor="#FFFFFF"
                     />

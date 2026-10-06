@@ -13,7 +13,12 @@ import {
     resolvePublicationPrefNames,
     type PublicationNameHints,
 } from '@/lib/database/services/publisher-source-names';
+import {
+    getAllVisitedArticles,
+    type VisitedArticle,
+} from '@/lib/database/services/publication-visit-service';
 import logger from '@/lib/logger';
+import { visitsForNames } from '@/lib/stats/visited-publications';
 import { useCallback, useEffect, useState } from 'react';
 
 export {
@@ -88,4 +93,51 @@ export function usePublicationPref(hints: PublicationNameHints): PublicationPref
     );
 
     return { level: resolvePrefLevel(rows, names), busy, names, change };
+}
+
+export type { VisitedArticle };
+
+export interface PublicationHistoryResult {
+    readonly state: 'loading' | 'ready';
+    /** The reader's visits to this publication in the last 30 days, newest
+     *  first, matched on every name it is known by. */
+    readonly visits: readonly VisitedArticle[];
+    readonly reload: () => void;
+}
+
+/**
+ * The History sub-tab: the reader's own visits to this publication, from
+ * `publication_visits` (the table that already runs Visited; nothing new is
+ * recorded). Matched on every known name, normalised and in any country, so a
+ * page opened by publisher id shows the same history as one opened by name.
+ *
+ * Reads when `enabled` turns true (History selected while the page is
+ * focused), so a visit recorded while away shows on return.
+ */
+export function usePublicationHistory(names: readonly string[], enabled: boolean): PublicationHistoryResult {
+    const [state, setState] = useState<'loading' | 'ready'>('loading');
+    const [visits, setVisits] = useState<readonly VisitedArticle[]>([]);
+    const [epoch, setEpoch] = useState(0);
+    const namesKey = JSON.stringify(names);
+
+    useEffect(() => {
+        if (!enabled) return;
+        let cancelled = false;
+        getAllVisitedArticles()
+            .then((all) => {
+                if (!cancelled) setVisits(visitsForNames(all, JSON.parse(namesKey) as string[]));
+            })
+            .catch((error) => {
+                logger.captureException(error, { tags: { screen: 'PublicationPage', method: 'history' } });
+            })
+            .finally(() => {
+                if (!cancelled) setState('ready');
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [enabled, namesKey, epoch]);
+
+    const reload = useCallback(() => setEpoch((n) => n + 1), []);
+    return { state, visits, reload };
 }
