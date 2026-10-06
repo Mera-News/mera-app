@@ -43,16 +43,12 @@ it('labels every tab item for VoiceOver', () => {
         world: 'tabs.world',
         library: 'tabs.library',
         you: 'tabs.you',
-        for_you: 'tabs.dashboard',
-        around: 'tabs.around',
-        profile: 'tabs.profile',
-        settings: 'tabs.settings',
     });
 });
 
-it('orders the four tabs Feed, World, Library, You, ahead of the old ones', () => {
+it('has exactly four tabs: Feed, World, Library, You', () => {
     render(<AppLayout />);
-    expect(Object.keys(mockTriggers).slice(0, 4)).toEqual(['feed', 'world', 'library', 'you']);
+    expect(Object.keys(mockTriggers)).toEqual(['feed', 'world', 'library', 'you']);
 });
 
 it('leaves pop-to-root on for the four tabs, and scroll-to-top to JS', () => {

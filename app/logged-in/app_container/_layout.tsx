@@ -90,58 +90,10 @@ export default function AppLayout() {
                         <Label hidden>{t('tabs.you')}</Label>
                         <Icon sf="person.fill" src={<VectorIcon family={MaterialIcons} name="person" />} />
                     </NativeTabs.Trigger>
-                    {/* OLD TABS, deleted in navx P3b once every caller moved. */}
-                    {/* Dashboard (route `for_you`). */}
-                    <NativeTabs.Trigger
-                        name="for_you"
-                        disableScrollToTop
-                        disablePopToTop
-                        unstable_nativeProps={tabA11y(t('tabs.dashboard'))}
-                    >
-                        <Label hidden>{t('tabs.dashboard')}</Label>
-                        <Icon
-                            sf="square.grid.2x2.fill"
-                            src={<VectorIcon family={MaterialIcons} name="dashboard" />}
-                        />
-                    </NativeTabs.Trigger>
-                    {/* Explore (route `around`). */}
-                    <NativeTabs.Trigger
-                        name="around"
-                        disableScrollToTop
-                        disablePopToTop
-                        unstable_nativeProps={tabA11y(t('tabs.around'))}
-                    >
-                        <Label hidden>{t('tabs.around')}</Label>
-                        <Icon
-                            sf="safari.fill"
-                            src={<VectorIcon family={MaterialIcons} name="explore" />}
-                        />
-                    </NativeTabs.Trigger>
-                    <NativeTabs.Trigger
-                        name="profile"
-                        unstable_nativeProps={tabA11y(t('tabs.profile'))}
-                    >
-                        <Label hidden>{t('tabs.profile')}</Label>
-                        <Icon
-                            sf="person.fill"
-                            src={<VectorIcon family={MaterialIcons} name="person" />}
-                        />
-                    </NativeTabs.Trigger>
-                    <NativeTabs.Trigger
-                        name="settings"
-                        unstable_nativeProps={tabA11y(t('tabs.settings'))}
-                    >
-                        <Label hidden>{t('tabs.settings')}</Label>
-                        <Icon
-                            sf="gearshape.fill"
-                            src={<VectorIcon family={MaterialIcons} name="settings" />}
-                        />
-                    </NativeTabs.Trigger>
                 </NativeTabs>
             </ErrorBoundary>
-            {/* The shared notification bell overlay is gone (app-rethink wave) —
-                For You and Explore each render an inline NotificationBellButton
-                in their own header row; Profile and Settings have none. */}
+            {/* The bell lives in each tab's page strip (Feed, Library, You);
+                World has search there instead. */}
             <ModelDownloadBanner />
         </View>
     );
