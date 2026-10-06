@@ -18,10 +18,11 @@
 //
 // ## Inside the page swipe
 //
-// The pager is RNGH's ScrollView with the tab swipe's blocker ref, so the page
-// swipe waits for it, and it reports its edges: at the first or last card the
-// page swipe takes over in that direction (one continuous swipe from Visited
-// through Stats to You).
+// The pager is RNGH's ScrollView inside a GestureDetector carrying the tab
+// swipe's blocker gesture, so the page swipe waits for it, and it reports its
+// edges (on layout, before the first touch, and on every scroll): at the first
+// or last card the page swipe takes over in that direction (one continuous
+// swipe from Visited through Stats to You).
 //
 // ## Height
 //
@@ -61,7 +62,7 @@ import { loadReadingStats } from '@/lib/stats/reading-stats-source';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PixelRatio, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
-import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
+import { GestureDetector, ScrollView as GestureScrollView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 
 type ShareMessage = 'unavailable' | 'failed' | null;
@@ -109,6 +110,8 @@ const StatsPager: React.FC<Props> = ({
 
   const captureHostRef = useRef<View>(null);
   const pagerRef = useRef<any>(null);
+  /** The pager's last known x offset, for edge reports outside a scroll. */
+  const offsetRef = useRef(0);
   const frames = useRef<number | null>(null);
   const pixelRatio = PixelRatio.get();
   const host = hostSizeForScale(pixelRatio);
@@ -142,6 +145,7 @@ const StatsPager: React.FC<Props> = ({
     const index = Math.max(0, cards.indexOf(landing));
     setPage(index);
     pagerRef.current?.scrollTo?.({ x: index * pageWidth, animated: false });
+    offsetRef.current = index * pageWidth;
     // A new request, or the cards it names becoming available, re-lands.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestedCard, landing, pageWidth, cards.length]);
@@ -160,11 +164,18 @@ const StatsPager: React.FC<Props> = ({
   }, [reportEdges, page, pageWidth]);
 
   const onPagerScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => reportEdges(event.nativeEvent.contentOffset.x),
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      offsetRef.current = event.nativeEvent.contentOffset.x;
+      reportEdges(offsetRef.current);
+    },
     [reportEdges],
   );
+  // The edges must be right before the first touch, or a swipe at the first
+  // card would be held by the pager instead of moving the page.
+  const onPagerLayout = useCallback(() => reportEdges(offsetRef.current), [reportEdges]);
   const onMomentumEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      offsetRef.current = event.nativeEvent.contentOffset.x;
       const next = Math.round(event.nativeEvent.contentOffset.x / Math.max(pageWidth, 1));
       setPage(Math.min(Math.max(next, 0), Math.max(cards.length - 1, 0)));
       reportEdges(event.nativeEvent.contentOffset.x);
@@ -217,6 +228,10 @@ const StatsPager: React.FC<Props> = ({
 
   const cardSize = fitCardToPage(statsCardBox(box, headerHeight, tabClearance));
 
+  // Outside a TabPages there is no page swipe to hold off.
+  const wrapInBlocker = (pager: React.ReactElement) =>
+    blocker ? <GestureDetector gesture={blocker.gesture}>{pager}</GestureDetector> : pager;
+
   let body: React.ReactNode;
   if (isLoading) {
     body = (
@@ -240,11 +255,9 @@ const StatsPager: React.FC<Props> = ({
   } else {
     body = (
       <>
+        {wrapInBlocker(
         <GestureScrollView
-          ref={(node: unknown) => {
-            pagerRef.current = node;
-            if (blocker) (blocker.ref as React.MutableRefObject<unknown>).current = node;
-          }}
+          ref={pagerRef}
           testID="stats-pager"
           horizontal
           pagingEnabled
@@ -252,6 +265,7 @@ const StatsPager: React.FC<Props> = ({
           overScrollMode="never"
           showsHorizontalScrollIndicator={false}
           onScroll={onPagerScroll}
+          onLayout={onPagerLayout}
           onMomentumScrollEnd={onMomentumEnd}
           scrollEventThrottle={32}
           style={{ flexGrow: 0 }}
@@ -275,7 +289,8 @@ const StatsPager: React.FC<Props> = ({
               </View>
             </View>
           ))}
-        </GestureScrollView>
+        </GestureScrollView>,
+        )}
 
         {/* An indicator, not a control: hidden from the screen reader, which
             already hears the pager. */}

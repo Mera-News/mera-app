@@ -29,13 +29,22 @@ jest.mock('@/components/custom/analytics/ShareCardPill', () => {
   return { __esModule: true, default: (p: any) => <Pressable testID={p.testID} onPress={p.onPress} accessibilityLabel={p.label} /> };
 });
 const mockSetEdge = jest.fn();
-const mockBlockerRef = { current: null as unknown };
-let mockBlocker: unknown = { ref: mockBlockerRef, setEdge: (e: unknown) => mockSetEdge(e) };
+const mockGesture = { kind: 'blocker-native-gesture' };
+const makeBlocker = () => ({ gesture: mockGesture, ref: { current: null }, setEdge: (e: unknown) => mockSetEdge(e) });
+let mockBlocker: unknown = makeBlocker();
 jest.mock('@/components/custom/nav/swipe-blocker', () => ({ useSwipeTabsBlocker: () => mockBlocker }));
 jest.mock('react-native-gesture-handler', () => {
   const ReactLib = require('react');
   const { View } = require('react-native');
-  return { ScrollView: ReactLib.forwardRef((p: any, ref: any) => <View ref={ref} {...p} />) };
+  return {
+    ScrollView: ReactLib.forwardRef((p: any, ref: any) => <View ref={ref} {...p} />),
+    // Records the gesture it was handed, so the test can see what wraps what.
+    GestureDetector: ({ gesture, children }: any) => (
+      <View testID="stats-pager-detector" accessibilityHint={gesture.kind}>
+        {children}
+      </View>
+    ),
+  };
 });
 jest.mock('@/lib/navigation/tab-bar', () => ({ useTabBarClearance: () => 85 }));
 jest.mock('react-native-reanimated', () => {
@@ -60,7 +69,7 @@ jest.mock('@/components/ui/switch', () => {
   return { Switch: (p: any) => <Pressable testID={p.testID} onPress={() => p.onToggle(!p.value)} /> };
 });
 
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { emptyReadingStats } from '@/lib/stats/reading-stats';
@@ -86,8 +95,7 @@ async function mount(el: React.ReactElement) {
 beforeEach(() => {
   mockStats = emptyReadingStats();
   mockSetEdge.mockClear();
-  mockBlockerRef.current = null;
-  mockBlocker = { ref: mockBlockerRef, setEdge: (e: unknown) => mockSetEdge(e) };
+  mockBlocker = makeBlocker();
 });
 
 describe('pagerEdges', () => {
@@ -118,21 +126,36 @@ describe('StatsPager', () => {
     expect(screen.getByTestId('stats-names-switch')).toBeTruthy();
   });
 
-  it('hands the pager to the page swipe and reports its edges as it scrolls', async () => {
+  it("wraps the pager in a detector carrying the page swipe's blocker gesture", async () => {
+    mockStats = withCards();
+    await mount(<StatsPager active />);
+    const detector = screen.getByTestId('stats-pager-detector');
+    expect(detector.props.accessibilityHint).toBe('blocker-native-gesture');
+    // The pager is inside the detector, not beside it.
+    expect(within(detector).getByTestId('stats-pager')).toBeTruthy();
+  });
+
+  it('reports its edges on layout, before any touch, and again as it scrolls', async () => {
     mockStats = withCards();
     await mount(<StatsPager active />);
     const pager = screen.getByTestId('stats-pager');
-    expect(mockBlockerRef.current).not.toBeNull();
+    mockSetEdge.mockClear();
+    fireEvent(pager, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: W, height: 500 } } });
+    expect(mockSetEdge).toHaveBeenCalledTimes(1);
     expect(mockSetEdge).toHaveBeenLastCalledWith({ start: true, end: false });
     fireEvent(pager, 'scroll', { nativeEvent: { contentOffset: { x: W, y: 0 } } });
     expect(mockSetEdge).toHaveBeenLastCalledWith({ start: false, end: true });
+    // A relayout after scrolling reports where the pager now stands.
+    fireEvent(pager, 'layout', { nativeEvent: { layout: { x: 0, y: 0, width: W, height: 500 } } });
+    expect(mockSetEdge).toHaveBeenLastCalledWith({ start: false, end: true });
   });
 
-  it('works outside a page swipe (no blocker)', async () => {
+  it('works outside a page swipe (no blocker, no detector)', async () => {
     mockBlocker = null;
     mockStats = withCards();
     await mount(<StatsPager active />);
     expect(screen.getByTestId('stats-pager')).toBeTruthy();
+    expect(screen.queryByTestId('stats-pager-detector')).toBeNull();
   });
 
   it('lays out the capture host only while the page is active', async () => {
