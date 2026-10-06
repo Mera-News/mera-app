@@ -18,8 +18,11 @@
 //
 // ## Inside the page swipe
 //
-// The pager is RNGH's ScrollView inside a GestureDetector carrying the tab
-// swipe's blocker gesture, so the page swipe waits for it, and it reports its
+// The pager is React Native's PLAIN ScrollView inside a GestureDetector
+// carrying the tab swipe's blocker gesture, so the page swipe waits for it.
+// Never RNGH's ScrollView here: it brings its own native handler, the
+// detector's Native gesture then never begins on it, and the page swipe never
+// takes over at an edge (spike 4). The pager reports its
 // edges (on layout, before the first touch, and on every scroll): at the first
 // or last card the page swipe takes over in that direction (one continuous
 // swipe from Visited through Stats to You).
@@ -61,8 +64,15 @@ import {
 import { loadReadingStats } from '@/lib/stats/reading-stats-source';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PixelRatio, View, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
-import { GestureDetector, ScrollView as GestureScrollView } from 'react-native-gesture-handler';
+import {
+  PixelRatio,
+  ScrollView,
+  View,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
+import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 
 type ShareMessage = 'unavailable' | 'failed' | null;
@@ -256,7 +266,7 @@ const StatsPager: React.FC<Props> = ({
     body = (
       <>
         {wrapInBlocker(
-        <GestureScrollView
+        <ScrollView
           ref={pagerRef}
           testID="stats-pager"
           horizontal
@@ -289,7 +299,7 @@ const StatsPager: React.FC<Props> = ({
               </View>
             </View>
           ))}
-        </GestureScrollView>,
+        </ScrollView>,
         )}
 
         {/* An indicator, not a control: hidden from the screen reader, which

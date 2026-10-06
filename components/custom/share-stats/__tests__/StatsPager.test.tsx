@@ -33,11 +33,28 @@ const mockGesture = { kind: 'blocker-native-gesture' };
 const makeBlocker = () => ({ gesture: mockGesture, ref: { current: null }, setEdge: (e: unknown) => mockSetEdge(e) });
 let mockBlocker: unknown = makeBlocker();
 jest.mock('@/components/custom/nav/swipe-blocker', () => ({ useSwipeTabsBlocker: () => mockBlocker }));
+// React Native's real ScrollView cannot load under jest (its Android native
+// component spec is untranspiled ESM), so it is replaced with a View that says
+// which ScrollView it is. RNGH's gets a different marker: the pager inside the
+// detector must be RN's PLAIN one, or the blocker gesture never begins on it.
+jest.mock('react-native', () => {
+  const actual = jest.requireActual('react-native');
+  const ReactLib = require('react');
+  const RNScrollView = ReactLib.forwardRef((p: any, ref: any) =>
+    ReactLib.createElement(actual.View, { ref, ...p, accessibilityLabel: 'rn-scrollview' }),
+  );
+  return new Proxy(actual, {
+    get(target, prop) {
+      if (prop === 'ScrollView') return RNScrollView;
+      return (target as any)[prop];
+    },
+  });
+});
 jest.mock('react-native-gesture-handler', () => {
   const ReactLib = require('react');
   const { View } = require('react-native');
   return {
-    ScrollView: ReactLib.forwardRef((p: any, ref: any) => <View ref={ref} {...p} />),
+    ScrollView: ReactLib.forwardRef((p: any, ref: any) => <View ref={ref} {...p} accessibilityLabel="rngh-scrollview" />),
     // Records the gesture it was handed, so the test can see what wraps what.
     GestureDetector: ({ gesture, children }: any) => (
       <View testID="stats-pager-detector" accessibilityHint={gesture.kind}>
@@ -131,8 +148,10 @@ describe('StatsPager', () => {
     await mount(<StatsPager active />);
     const detector = screen.getByTestId('stats-pager-detector');
     expect(detector.props.accessibilityHint).toBe('blocker-native-gesture');
-    // The pager is inside the detector, not beside it.
-    expect(within(detector).getByTestId('stats-pager')).toBeTruthy();
+    // The pager is inside the detector, not beside it, and it is React
+    // Native's plain ScrollView, never RNGH's (whose own handler starves the
+    // detector's Native gesture).
+    expect(within(detector).getByTestId('stats-pager').props.accessibilityLabel).toBe('rn-scrollview');
   });
 
   it('reports its edges on layout, before any touch, and again as it scrolls', async () => {
