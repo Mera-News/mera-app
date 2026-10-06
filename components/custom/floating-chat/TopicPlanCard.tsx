@@ -98,7 +98,8 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
   // reads to stop its spinner. Without it this card shows "generating" purely
   // because no rows exist, so a failed generation spins forever. Facts aren't
   // observable through a WatermelonDB query here, so this reuses the app's
-  // existing fact-refresh seam (FactsList / ProfileScreen do the same):
+  // existing fact-refresh seam (FactsList and the Profile hub's
+  // you/use-hub-data do the same):
   // notifyFactMutation bumps factMutationVersion, which fires on both the
   // success and the failure path of topic generation.
   const factMutationVersion = useFloatingChatFactMutationVersion();
