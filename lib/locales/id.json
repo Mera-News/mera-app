@@ -244,7 +244,11 @@
     "updatedJustNow": "Baru saja diperbarui",
     "reasonWriting": "Menulis catatan",
     "reasonWritingA11y": "menulis catatan",
-    "reasonNotYet": "Belum ada catatan untuk artikel ini."
+    "reasonNotYet": "Belum ada catatan untuk artikel ini.",
+    "findingStories": "Mencari cerita untuk Anda",
+    "findingStoriesBody": "Cerita akan muncul di sini begitu siap",
+    "processingOffline": "Anda sedang offline. Cerita Anda akan datang setelah Anda online lagi.",
+    "worldCta": "Lihat berita utama di Dunia"
   },
   "relevance": {
     "emergency": "Darurat",
@@ -1034,7 +1038,10 @@
     "around": "Eksplor",
     "profile": "Profil",
     "settings": "Pengaturan",
-    "gotIt": "Mengerti"
+    "gotIt": "Mengerti",
+    "world": "Dunia",
+    "library": "Pustaka",
+    "you": "Anda"
   },
   "swipeFeed": {
     "yourDeck": "Umpan",
@@ -1163,7 +1170,8 @@
     "removeMemberConfirmBody": "Artikel ini dihapus dari linimasa cerita. Mera tetap mengikuti ceritanya.",
     "timelineLoadFailed": "Tidak dapat memuat berita ini. Tarik ke bawah untuk mencoba lagi.",
     "deleteFailed": "Tidak dapat berhenti mengikuti berita ini. Coba lagi.",
-    "removeFailed": "Tidak dapat menghapus artikel ini dari berita. Coba lagi."
+    "removeFailed": "Tidak dapat menghapus artikel ini dari berita. Coba lagi.",
+    "emptyBodyMera": "Ikuti cerita yang sedang berkembang dan Mera akan terus memperbaruinya di sini. Ketuk tombol Mera untuk mengikuti satu cerita."
   },
   "whatsNew": {
     "title": "Yang baru",
@@ -1423,7 +1431,8 @@
       "travel": "Perjalanan",
       "family": "Keluarga",
       "partnerFamily": "Keluarga pasangan",
-      "interest": "Minat"
+      "interest": "Minat",
+      "work": "Kerja"
     },
     "weight": {
       "low": "Rendah",
@@ -2923,6 +2932,18 @@
       "what": "Pilih cara Mera berjalan di ponsel ini dan kelola akun Anda. Paket dan penggunaan hari ini ada di bagian atas.",
       "how1": "Mera Protocol menentukan di mana AI membaca berita Anda: di cloud atau di ponsel ini. Privasi dan data menyimpan cadangan terenkripsi Anda dan memungkinkan Anda menghapus data.",
       "how2": "Keamanan menambahkan PIN. Bantuan berisi panduan dan FAQ. Di Akun Anda bisa keluar."
+    },
+    "interests": {
+      "title": "Cara kerja Minat",
+      "what": "Minat mengelompokkan berita Anda berdasarkan yang Anda beri tahu ke Mera. Setiap hal yang Anda sebutkan punya bagian sendiri.",
+      "how2": "Minat yang Anda beri bobot lebih muncul lebih dulu. Sebuah minat muncul di sini setelah Mera menemukan cerita untuknya.",
+      "how3": "Di dalam bagian, cerita yang belum dibaca muncul lebih dulu, yang terpenting di atas. Urutan bagian berubah saat Anda meninggalkan halaman ini, atau setiap 10 menit."
+    },
+    "stories": {
+      "title": "Cara kerja Cerita",
+      "what": "Cerita menyimpan kisah berkembang yang Anda ikuti. Mera menambahkan artikel baru ke setiap cerita saat artikelnya muncul.",
+      "how1": "Setiap cerita menunjukkan berapa artikel baru sejak terakhir kali Anda membukanya.",
+      "privacy": "Cerita yang Anda ikuti disimpan di ponsel ini."
     }
   },
   "articleMenu": {
@@ -3005,6 +3026,300 @@
     "aboutSourceA11y": "Tentang {{source}}",
     "subscribed": "Anda berlangganan {{publisher}}",
     "prefMoreA11y": "Lebih banyak dari sumber ini",
-    "prefFewerA11y": "Lebih sedikit dari sumber ini"
+    "prefFewerA11y": "Lebih sedikit dari sumber ini",
+    "history": "Riwayat",
+    "historyEmptyTitle": "Belum ada apa-apa di sini",
+    "historyEmptyBody": "Saat Anda membuka salah satu artikelnya di situs penerbit, artikel itu muncul di sini selama 30 hari."
+  },
+  "nav": {
+    "page": {
+      "interests": "Minat",
+      "stories": "Cerita",
+      "saved": "Tersimpan",
+      "checks": "Pengecekan",
+      "visited": "Dikunjungi",
+      "stats": "Statistik"
+    },
+    "rearrangeA11y": "Atur ulang halaman {{tab}}",
+    "quickSettingsA11y": "Pengaturan cepat untuk {{page}}",
+    "pillA11y": "{{label}}, {{index}} dari {{count}}",
+    "pillNewA11y": "{{label}}, ada pembaruan, {{index}} dari {{count}}",
+    "howThisPageWorks": "Cara kerja halaman ini",
+    "arrange": {
+      "hint": "Seret untuk mengurutkan. Halaman pertama adalah yang terbuka saat {{tab}} dibuka.",
+      "moveEarlier": "Pindah lebih awal",
+      "moveLater": "Pindah lebih akhir",
+      "saved": "Urutan disimpan",
+      "removeA11y": "Hapus {{name}}",
+      "addPlaceholder": "Tambah negara",
+      "add": "Tambah",
+      "addA11y": "Tambah {{name}}",
+      "noMatch": "Tidak ada negara untuk {{query}}"
+    }
+  },
+  "feedShortcuts": {
+    "header": "Selagi Mera membaca",
+    "world1": "Lihat apa yang sedang terjadi di dunia saat ini",
+    "world2": "Berita terbesar saat ini, sama untuk semua orang",
+    "country1": "Berita utama di {{country}} hari ini",
+    "country2": "Berita terbesar di {{country}} saat ini",
+    "saved1": "Lanjutkan artikel yang Anda simpan untuk nanti",
+    "saved2": "Baca yang Anda simpan untuk nanti",
+    "stories1": "Lihat yang terbaru dari cerita yang Anda ikuti",
+    "stories2": "Kejar perkembangan cerita yang Anda ikuti"
+  },
+  "interests": {
+    "emptyTitle": "Mera belum tahu minat Anda",
+    "emptyBody": "Beri tahu Mera satu hal yang Anda ikuti dan hal itu akan punya bagian sendiri di sini.",
+    "chipHome": "Tempat tinggal Anda",
+    "chipWork": "Pekerjaan Anda",
+    "chipTeam": "Tim yang Anda dukung",
+    "draftHome": "Tempat tinggal saya:",
+    "draftWork": "Pekerjaan saya:",
+    "draftTeam": "Tim yang saya dukung:",
+    "findingStories": "Mera sedang mencari cerita untuk minat ini. Cerita pertama akan muncul di sini dalam beberapa detik.",
+    "backToInterests": "Kembali ke Minat"
+  },
+  "world": {
+    "windowRowLabel": "Berita utama dari",
+    "newStateLine": "Berita utama yang sama untuk semua orang. Tambahkan negara yang Anda pedulikan dengan ikon pena. Setiap negara punya halaman sendiri.",
+    "gathering": "Mengumpulkan berita hari ini dari {{country}}. Cerita pertama akan muncul dalam beberapa detik.",
+    "emptyWindow": "Tidak ada berita utama dari {{country}} dalam {{hours}} jam terakhir.",
+    "emptyWindowWorld": "Tidak ada berita utama dalam {{hours}} jam terakhir.",
+    "showWider": "Tampilkan 48 jam",
+    "offline": "Anda sedang offline. Halaman Dunia dan pencarian memerlukan koneksi.",
+    "arrange": {
+      "placesNote": "{{country}} berasal dari tempat Anda. Menghapusnya menyembunyikan halamannya. Tempat Anda tetap ada."
+    },
+    "search": {
+      "placeholder": "Cari semua berita",
+      "empty": "Cari berita yang ditemukan Mera dalam 48 jam terakhir.",
+      "count_other": "{{count}} cerita",
+      "errorRetry": "Tidak bisa mencari saat ini."
+    },
+    "explainer": {
+      "title": "Cara kerja Dunia",
+      "what": "Dunia menampilkan cerita yang paling banyak diliput dalam 24 jam terakhir, untuk dunia dan untuk setiap negara yang Anda tambahkan. Pilih 6, 12, atau 48 jam di bagian atas halaman. Isinya sama untuk semua orang, bukan dipilih khusus untuk Anda.",
+      "how1": "Berita utama Dunia mengurutkan cerita berdasarkan seberapa luas liputannya di berbagai negara.",
+      "how2": "Berita utama suatu negara berasal dari sumber berita yang berbasis di negara tersebut."
+    }
+  },
+  "library": {
+    "saved": {
+      "exportRow_other": "{{count}} tersimpan · disimpan di ponsel ini sampai Anda menghapusnya",
+      "export": "Ekspor",
+      "emptyBody": "Ketuk penanda di artikel mana pun untuk menyimpannya di sini. Artikel tersimpan tetap ada di ponsel ini sampai Anda menghapusnya."
+    },
+    "checks": {
+      "emptyTitle": "Belum ada pengecekan",
+      "emptyBody": "Minta Mera memeriksa sebuah klaim, atau biarkan Mera memeriksa cerita secara otomatis.",
+      "autoLink": "Aktifkan pengecekan otomatis",
+      "autoOnBody": "Mera memeriksa cerita secara otomatis. Hasil pengecekan muncul di sini saat sebuah klaim dinilai."
+    },
+    "visited": {
+      "intro": "Publikasi yang paling sering Anda buka di sumbernya dalam 30 hari terakhir. Jurnalisme yang baik bertahan jika pembacanya mendukung.",
+      "topLine": "Anda membukanya lebih sering dari yang lain",
+      "subscribe": "Berlangganan",
+      "alreadyPay": "Saya sudah berlangganan",
+      "alreadyPayA11y": "Saya sudah membayar untuk {{publisher}}",
+      "support": "Dukung",
+      "supportA11y": "Dukung {{publisher}}",
+      "youPay": "Anda membayar",
+      "subscribed": "Berlangganan",
+      "lastOpened": "Terakhir dibuka {{date}}",
+      "footnote": "Berlangganan dan Dukung membuka halaman milik publikasi itu sendiri. Disimpan di ponsel ini selama 30 hari.",
+      "emptyTitle": "Belum ada publikasi",
+      "emptyBody": "Saat Anda membuka artikel di sumbernya, publikasinya muncul di sini, lengkap dengan cara mendukung yang paling sering Anda baca."
+    },
+    "stats": {
+      "emptyTitle": "Belum ada kartu",
+      "emptyBody": "Buka artikel di situs penerbit dan Mera membuat kartu pertama Anda.",
+      "share": "Bagikan kartu ini"
+    },
+    "explainer": {
+      "saved": {
+        "title": "Cara kerja Tersimpan",
+        "what": "Tersimpan menyimpan artikel yang Anda tandai, yang terbaru di atas.",
+        "how1": "Artikel tersimpan tetap ada di ponsel ini sampai Anda menghapusnya, bahkan setelah hilang dari Feed Anda.",
+        "how2": "Ekspor mengirimnya sebagai daftar yang bisa dibaca atau sebagai data ke aplikasi apa pun yang Anda pilih."
+      },
+      "checks": {
+        "title": "Cara kerja Pengecekan",
+        "what": "Pengecekan mencantumkan cerita yang Anda minta Mera cari pemeriksaan faktanya.",
+        "how1": "Setiap penilaian berasal dari organisasi pemeriksa fakta itu sendiri, ditampilkan seperti yang mereka terbitkan.",
+        "how2": "Pengecekan tetap ada di ponsel ini. Menghapus satu hanya menghapusnya di sini."
+      },
+      "visited": {
+        "title": "Cara kerja Dikunjungi",
+        "what": "Dikunjungi mencantumkan publikasi yang situsnya Anda buka dari Mera dalam 30 hari terakhir, yang paling sering dibuka di atas.",
+        "how1": "Hanya artikel yang Anda buka di situs penerbit yang dihitung. Membaca di dalam Mera tidak dicantumkan.",
+        "how2": "Saya sudah berlangganan memberi tahu Mera bahwa Anda berlangganan, sehingga publikasi itu mendapat bobot lebih di feed Anda.",
+        "privacy": "Daftar ini tetap ada di ponsel ini. Setiap kunjungan dihapus setelah 30 hari."
+      },
+      "stats": {
+        "title": "Cara kerja Statistik",
+        "what": "Statistik mengubah bacaan 30 hari terakhir Anda menjadi kartu yang bisa dibagikan.",
+        "how1": "Kartu memakai yang sudah disimpan ponsel ini untuk menjalankan Mera: situs yang Anda buka serta yang Anda simpan atau ikuti. Tidak ada yang dicatat tambahan.",
+        "how2": "Sebelum berbagi, Anda memilih apakah nama publikasi muncul. Judul artikel tidak pernah muncul."
+      }
+    }
+  },
+  "you": {
+    "profile": {
+      "facts": "Fakta",
+      "places": "Tempat",
+      "sources": "Sumber",
+      "cleanup": "Rapikan profil",
+      "topicsDeclined": "Topik yang Anda tolak",
+      "payFor": "Publikasi yang Anda bayar",
+      "activity": "Aktivitas",
+      "viewAll": "Lihat semua {{count}}",
+      "viewAllNoCount": "Lihat semua",
+      "review": "Tinjau",
+      "subscribed": "Berlangganan",
+      "hidden": "Disembunyikan",
+      "less": "Lebih sedikit",
+      "aboutA11y": "Tentang {{card}}",
+      "factsEmpty": "Belum ada. Beri tahu Mera apa yang Anda ikuti dan hasilnya muncul di sini.",
+      "placesEmpty": "Belum ada tempat",
+      "addCity": "Tambah kota",
+      "sourcesEmpty": "Tidak ada yang diatur. Mera memperlakukan semua sumber sama.",
+      "topicsDeclinedEmpty": "Belum ada topik yang ditolak."
+    },
+    "hints": {
+      "facts": {
+        "title": "Cara kerja Fakta",
+        "body": "Setiap fakta menjadi pencarian yang dijalankan Mera untuk Anda. Ubah atau hapus satu fakta dan cerita yang berasal darinya ikut berubah."
+      },
+      "places": {
+        "title": "Cara kerja Tempat",
+        "body": "Mera mencari berita lokal dari tempat Anda dan menaruhnya di Feed dan Minat Anda. Negara dari setiap tempat juga mendapat halaman di Dunia.",
+        "body2": "Rumah paling diutamakan. Ketuk sebuah tempat untuk mengubah labelnya atau menghapusnya."
+      },
+      "sources": {
+        "title": "Cara kerja Sumber",
+        "body": "Lebih banyak dan Lebih sedikit mengubah seberapa sering sebuah publikasi muncul. Senyap menyingkirkannya, kecuali untuk berita besar."
+      },
+      "cleanup": {
+        "title": "Cara kerja Rapikan profil",
+        "body": "Mera menemukan fakta yang berulang atau sudah tidak cocok. Tidak ada yang berubah sampai Anda meninjaunya."
+      },
+      "topicsDeclined": {
+        "title": "Cara kerja topik yang ditolak",
+        "body": "Topik yang Anda minta Mera tampilkan lebih sedikit, atau sembunyikan. Izinkan lagi dan topik itu bisa kembali."
+      },
+      "payFor": {
+        "title": "Cara kerja langganan",
+        "body": "Publikasi yang Anda bayar mendapat bobot lebih di feed Anda."
+      },
+      "activity": {
+        "title": "Cara kerja Aktivitas",
+        "body": "Setiap perubahan pada profil Anda, yang terbaru di atas. Sebagian besar bisa dibatalkan."
+      }
+    },
+    "explainer": {
+      "title": "Cara kerja Profil",
+      "what": "Profil berisi yang dipakai Mera untuk memilih berita Anda: fakta Anda, tempat Anda, sumber yang Anda atur, dan topik yang Anda tolak.",
+      "how1": "Setiap fakta menjadi pencarian yang dijalankan Mera untuk Anda. Ubah sesuatu di sini dan halaman Feed, Minat, dan Dunia Anda ikut berubah.",
+      "privacy": "Pencarian yang dibuat dari fakta Anda tidak pernah dikaitkan dengan akun Anda. Server hanya menyimpan teks pencariannya, dibagikan secara anonim ke semua pengguna, dan menghapusnya setelah 14 hari tanpa dipakai."
+    },
+    "sources": {
+      "title": "Sumber",
+      "find": "Cari publikasi",
+      "adjusted": "Diatur",
+      "more": "Lebih banyak",
+      "fewer": "Lebih sedikit",
+      "muted": "Senyap",
+      "mute": "Bisukan",
+      "clear": "Hapus",
+      "footnote": "Ketuk satu untuk mengubahnya. \"Lebih sedikit dari\" di menu artikel juga berakhir di sini.",
+      "empty": "Anda belum mengatur sumber apa pun. Cari publikasi untuk melihat lebih banyak, lebih sedikit, atau tidak sama sekali. \"Lebih sedikit dari\" di menu artikel juga berakhir di sini."
+    },
+    "settings": {
+      "groupApp": "Aplikasi",
+      "yourPlan": "Paket Anda",
+      "usage_other": "{{count}} dari {{limit}} artikel hari ini",
+      "usageNoLimit_other": "{{count}} artikel hari ini",
+      "usageOffline": "Penggunaan tampil saat Anda online",
+      "resetsAt": "diatur ulang pukul {{time}}",
+      "displayValue": "Teks, mode Lite",
+      "backupAndData": "Cadangan dan data"
+    },
+    "notifications": {
+      "push": "Notifikasi push",
+      "when": "Kapan Mera boleh memberi notifikasi",
+      "yourTimes": "Waktu Anda",
+      "noneYet": "Belum ada yang dipilih",
+      "zeroTimes": "Pilih satu waktu, atau Mera tidak akan mengirim pemberitahuan apa pun.",
+      "add": "Tambah waktu",
+      "addHour": "Tambah {{time}}",
+      "alreadyPicked": "{{time}} sudah dipilih",
+      "remove": "Hapus {{time}}",
+      "wheel": "Waktu yang ditambahkan",
+      "footnote": "Putar untuk memindahkan waktu yang diberi garis tepi. Mera hanya mengirim pemberitahuan pada waktu ini, sesuai zona waktu Anda."
+    }
+  },
+  "meraHints": {
+    "feed": {
+      "moreNews": "Beri tahu Mera berita apa yang ingin Anda lihat lebih banyak",
+      "addHome": "Tambah tempat tinggal Anda"
+    },
+    "askNews": "Tanyakan apa saja tentang berita",
+    "interests": {
+      "add": "Tambah minat",
+      "change": "Ubah minat",
+      "remove": "Hapus minat"
+    },
+    "interest": {
+      "change": "Ubah minat ini",
+      "remove": "Hapus minat ini"
+    },
+    "stories": {
+      "follow": "Ikuti cerita",
+      "name": "Sebutkan cerita yang ingin diikuti"
+    },
+    "world": {
+      "countryFeed": "Dapatkan berita dari sebuah negara di feed Anda",
+      "family": "Beri tahu Mera di mana keluarga Anda tinggal",
+      "behind": "Tanyakan apa di balik sebuah berita"
+    },
+    "checks": {
+      "claim": "Periksa klaim",
+      "quote": "Tanyakan apakah kutipan itu asli"
+    },
+    "library": {
+      "likeToRead": "Beri tahu Mera apa yang suka Anda baca"
+    },
+    "profile": {
+      "fixFact": "Perbaiki fakta yang salah dari Mera",
+      "whatKnows": "Tanyakan apa yang Mera tahu tentang Anda"
+    },
+    "facts": {
+      "change": "Ubah fakta Anda",
+      "remove": "Hapus fakta"
+    },
+    "sources": {
+      "whoBehind": "Tanyakan siapa di balik sebuah publikasi",
+      "whatFollow": "Beri tahu Mera apa yang Anda ikuti"
+    }
+  },
+  "meraButton": {
+    "a11yLabel": "Mera. {{hint}}"
+  },
+  "meraIntro": {
+    "feed": "Ini Feed Anda. Beri tahu saya berita apa yang ingin Anda lihat lebih banyak, atau tanyakan apa saja tentang berita.",
+    "interests": "Ini minat Anda. Beri tahu saya yang baru, atau yang ingin Anda ubah atau hapus.",
+    "interest": "Halaman ini mengikuti salah satu minat Anda. Anda bisa mengubah atau menghapusnya di sini.",
+    "world": "Tanyakan tentang sebuah berita utama, atau sebutkan negara yang ingin Anda ikuti beritanya.",
+    "checks": "Sebutkan klaim yang pernah Anda lihat dan saya akan mencarinya di web.",
+    "checksNoWeb": "Pencarian web di chat sedang nonaktif, jadi saya tidak bisa mencari klaim saat ini. Anda bisa mengaktifkannya di Pengaturan.",
+    "library": "Tanyakan apa saja tentang berita, atau beri tahu saya apa yang suka Anda baca.",
+    "profile": "Ini yang Mera ketahui tentang Anda. Beri tahu saya hal baru, atau perbaiki yang salah.",
+    "facts": "Anda sedang melihat fakta Anda. Apa yang ingin Anda ubah?",
+    "sources": "Tanyakan tentang sebuah publikasi, atau beri tahu saya apa yang Anda ikuti."
+  },
+  "meraDraft": {
+    "changeInterest": "Ubah minat saya \"{{statement}}\" menjadi ",
+    "removeInterest": "Hapus minat saya \"{{statement}}\""
   }
 }

@@ -244,7 +244,11 @@
     "updatedJustNow": "刚刚更新",
     "reasonWriting": "正在撰写笔记",
     "reasonWritingA11y": "正在撰写笔记",
-    "reasonNotYet": "暂无此文章的笔记。"
+    "reasonNotYet": "暂无此文章的笔记。",
+    "findingStories": "正在为你寻找报道",
+    "findingStoriesBody": "准备好后会立即显示在这里",
+    "processingOffline": "你已离线。恢复联网后，你的报道就会送达。",
+    "worldCta": "查看全球头条"
   },
   "relevance": {
     "emergency": "紧急",
@@ -1034,7 +1038,10 @@
     "around": "探索",
     "profile": "我的",
     "settings": "设置",
-    "gotIt": "知道了"
+    "gotIt": "知道了",
+    "world": "全球",
+    "library": "资料库",
+    "you": "我的"
   },
   "swipeFeed": {
     "yourDeck": "信息流",
@@ -1163,7 +1170,8 @@
     "removeMemberConfirmBody": "这篇文章将从报道的时间线中移除。Mera 会继续关注报道本身。",
     "timelineLoadFailed": "无法加载此报道。下拉即可重试。",
     "deleteFailed": "无法取消关注此报道。请重试。",
-    "removeFailed": "无法将此文章从报道中移除。请重试。"
+    "removeFailed": "无法将此文章从报道中移除。请重试。",
+    "emptyBodyMera": "关注一个正在发展的报道，Mera 会在这里持续更新。点按 Mera 按钮即可关注。"
   },
   "whatsNew": {
     "title": "更新内容",
@@ -1424,7 +1432,8 @@
       "travel": "旅行",
       "family": "家人",
       "partnerFamily": "伴侣家人",
-      "interest": "关注"
+      "interest": "关注",
+      "work": "工作"
     },
     "weight": {
       "low": "低",
@@ -2924,6 +2933,18 @@
       "what": "选择 Mera 在这部手机上的运行方式，并管理你的账户。你的套餐和今日用量显示在最上方。",
       "how1": "Mera Protocol 决定 AI 在哪里阅读你的新闻：在云端还是在这部手机上。“隐私和数据”保存你的加密备份，还能让你删除数据。",
       "how2": "“安全”可添加 PIN 码。“帮助”里有指南和常见问题。在“账户”中退出登录。"
+    },
+    "interests": {
+      "title": "“兴趣”如何运作",
+      "what": "“兴趣”会按你告诉 Mera 的内容整理新闻。你告诉 Mera 的每件事都有自己的板块。",
+      "how2": "你更看重的兴趣排在前面。Mera 找到相关报道后，该兴趣才会显示在这里。",
+      "how3": "在每个板块里，未读报道排在前面，最重要的最先显示。离开此页面时，或每隔 10 分钟，板块会重新排序。"
+    },
+    "stories": {
+      "title": "“报道”如何运作",
+      "what": "“报道”会保存你关注的、正在发展的报道。有新文章出现时，Mera 会把它们添加到对应的报道中。",
+      "how1": "每个报道都会显示自你上次打开以来有多少篇新文章。",
+      "privacy": "你关注的报道只保存在这部手机上。"
     }
   },
   "articleMenu": {
@@ -3006,6 +3027,300 @@
     "aboutSourceA11y": "关于 {{source}}",
     "subscribed": "您订阅了 {{publisher}}",
     "prefMoreA11y": "显示此来源的更多内容",
-    "prefFewerA11y": "显示此来源的更少内容"
+    "prefFewerA11y": "显示此来源的更少内容",
+    "history": "历史记录",
+    "historyEmptyTitle": "这里还没有内容",
+    "historyEmptyBody": "当你在出版商网站上打开它的文章后，就会在这里显示 30 天。"
+  },
+  "nav": {
+    "page": {
+      "interests": "兴趣",
+      "stories": "报道",
+      "saved": "已保存",
+      "checks": "核查",
+      "visited": "访问过",
+      "stats": "统计"
+    },
+    "rearrangeA11y": "重新排列{{tab}}的页面",
+    "quickSettingsA11y": "{{page}}的快捷设置",
+    "pillA11y": "{{label}}，第 {{index}} 个，共 {{count}} 个",
+    "pillNewA11y": "{{label}}，有新内容，第 {{index}} 个，共 {{count}} 个",
+    "howThisPageWorks": "此页面如何运作",
+    "arrange": {
+      "hint": "拖动即可调整顺序。{{tab}}会从第一个页面打开。",
+      "moveEarlier": "前移",
+      "moveLater": "后移",
+      "saved": "顺序已保存",
+      "removeA11y": "移除{{name}}",
+      "addPlaceholder": "添加国家或地区",
+      "add": "添加",
+      "addA11y": "添加{{name}}",
+      "noMatch": "找不到与{{query}}相关的国家或地区"
+    }
+  },
+  "feedShortcuts": {
+    "header": "Mera 阅读期间",
+    "world1": "看看世界此刻正在发生什么",
+    "world2": "此刻最重大的报道，每个人看到的都一样",
+    "country1": "{{country}}今日头条",
+    "country2": "{{country}}此刻最重大的报道",
+    "saved1": "接着读你保存起来的文章",
+    "saved2": "读读你留到以后看的内容",
+    "stories1": "看看你关注的报道有什么新动态",
+    "stories2": "跟进你关注的报道"
+  },
+  "interests": {
+    "emptyTitle": "Mera 还不了解你的兴趣",
+    "emptyBody": "告诉 Mera 一件你关注的事，它就会在这里拥有自己的板块。",
+    "chipHome": "你居住的地方",
+    "chipWork": "你的工作",
+    "chipTeam": "你支持的球队",
+    "draftHome": "我住在：",
+    "draftWork": "我的工作：",
+    "draftTeam": "我支持的球队：",
+    "findingStories": "Mera 正在为这个兴趣寻找报道。几秒钟后，第一批报道就会出现在这里。",
+    "backToInterests": "返回兴趣"
+  },
+  "world": {
+    "windowRowLabel": "最近的热门报道",
+    "newStateLine": "每个人看到的热门报道都一样。点按笔图标，添加你关心的国家或地区，每个都会有自己的页面。",
+    "gathering": "正在汇集{{country}}今天的新闻。几秒钟后，第一批报道就会出现。",
+    "emptyWindow": "最近 {{hours}} 小时内，{{country}}没有热门报道。",
+    "emptyWindowWorld": "最近 {{hours}} 小时内没有热门报道。",
+    "showWider": "显示 48 小时",
+    "offline": "你已离线。查看全球页面和搜索需要联网。",
+    "arrange": {
+      "placesNote": "{{country}}来自你的地点。移除它只会隐藏它的页面，你的地点不会变。"
+    },
+    "search": {
+      "placeholder": "搜索所有新闻",
+      "empty": "搜索 Mera 在最近 48 小时内找到的新闻。",
+      "count_other": "{{count}} 篇报道",
+      "errorRetry": "暂时无法搜索。"
+    },
+    "explainer": {
+      "title": "“全球”如何运作",
+      "what": "“全球”显示过去 24 小时内被报道最多的故事，涵盖全世界以及你添加的每个国家或地区。你也可以在页面顶部改选 6、12 或 48 小时。内容对每个人都一样，不是专门为你挑选的。",
+      "how1": "全球头条会按各国报道的广泛程度给报道排名。",
+      "how2": "国家头条来自总部位于该国的新闻来源。"
+    }
+  },
+  "library": {
+    "saved": {
+      "exportRow_other": "已保存 {{count}} 篇 · 在你移除之前一直保存在这部手机上",
+      "export": "导出",
+      "emptyBody": "点按任意文章上的书签，即可把它保存在这里。已保存的文章会一直留在这部手机上，直到你移除。"
+    },
+    "checks": {
+      "emptyTitle": "还没有核查",
+      "emptyBody": "让 Mera 核查某个说法，或让 Mera 自动核查报道。",
+      "autoLink": "开启自动核查",
+      "autoOnBody": "Mera 会自动核查报道。某个说法有了评级后，核查结果就会显示在这里。"
+    },
+    "visited": {
+      "intro": "过去 30 天里，你在原站打开次数最多的出版物。读者的支持能让优质报道长久延续。",
+      "topLine": "你打开它的次数比其他任何出版物都多",
+      "subscribe": "订阅",
+      "alreadyPay": "我已付费",
+      "alreadyPayA11y": "我已为{{publisher}}付费",
+      "support": "支持",
+      "supportA11y": "支持{{publisher}}",
+      "youPay": "你已付费",
+      "subscribed": "已订阅",
+      "lastOpened": "上次打开：{{date}}",
+      "footnote": "“订阅”和“支持”会打开该出版物自己的页面。记录会在这部手机上保留 30 天。",
+      "emptyTitle": "还没有出版物",
+      "emptyBody": "当你在原站打开一篇文章后，它的出版物就会显示在这里，你还可以支持自己读得最多的那些。"
+    },
+    "stats": {
+      "emptyTitle": "还没有卡片",
+      "emptyBody": "在出版商的网站上打开一篇文章，Mera 就会为你制作第一张卡片。",
+      "share": "分享这张卡片"
+    },
+    "explainer": {
+      "saved": {
+        "title": "“已保存”如何运作",
+        "what": "“已保存”会保留你加了书签的文章，最新的排在前面。",
+        "how1": "已保存的文章会一直留在这部手机上，直到你移除，即使它们已从你的动态中消失。",
+        "how2": "导出可以把它们以易读的列表或数据形式发送到你选择的任何应用。"
+      },
+      "checks": {
+        "title": "“核查”如何运作",
+        "what": "“核查”会列出你请 Mera 查找事实核查的报道。",
+        "how1": "每个评级都出自事实核查机构本身，并按其发布的方式显示。",
+        "how2": "核查记录只保存在这部手机上。删除某一条只会把它从这里移除。"
+      },
+      "visited": {
+        "title": "“访问过”如何运作",
+        "what": "“访问过”会列出过去 30 天里你从 Mera 打开过网站的出版物，打开最多的排在最前面。",
+        "how1": "只有你在出版商网站上打开的文章才会计入。在 Mera 内阅读的不会列出。",
+        "how2": "“我已付费”会告诉 Mera 你已订阅，这样该出版物在你的动态中会更受重视。",
+        "privacy": "此列表只保存在这部手机上。每次访问记录会在 30 天后删除。"
+      },
+      "stats": {
+        "title": "“统计”如何运作",
+        "what": "“统计”会把你过去 30 天的阅读变成可以分享的卡片。",
+        "how1": "这些卡片只使用这部手机为运行 Mera 已经保存的内容：你打开过的网站，以及你保存或关注的内容。不会额外记录任何信息。",
+        "how2": "分享之前，你可以选择是否显示出版物名称。文章标题永远不会显示。"
+      }
+    }
+  },
+  "you": {
+    "profile": {
+      "facts": "事实",
+      "places": "地点",
+      "sources": "来源",
+      "cleanup": "整理个人资料",
+      "topicsDeclined": "你拒绝的话题",
+      "payFor": "你付费订阅的出版物",
+      "activity": "活动",
+      "viewAll": "查看全部 {{count}} 项",
+      "viewAllNoCount": "查看全部",
+      "review": "查看",
+      "subscribed": "已订阅",
+      "hidden": "已隐藏",
+      "less": "更少",
+      "aboutA11y": "关于{{card}}",
+      "factsEmpty": "暂时没有。告诉 Mera 你关注什么，它就会显示在这里。",
+      "placesEmpty": "还没有地点",
+      "addCity": "添加城市",
+      "sourcesEmpty": "没有调整过。Mera 对所有来源一视同仁。",
+      "topicsDeclinedEmpty": "还没有拒绝过任何话题。"
+    },
+    "hints": {
+      "facts": {
+        "title": "“事实”如何运作",
+        "body": "每条事实都会变成 Mera 为你进行的搜索。修改或删除一条事实，由它产生的报道也会随之改变。"
+      },
+      "places": {
+        "title": "“地点”如何运作",
+        "body": "Mera 会根据你的地点查找本地新闻，并放入你的动态和兴趣中。每个地点所在的国家或地区在“全球”中也有一个页面。",
+        "body2": "“家”的权重最高。点按某个地点，即可修改它的标签或将其移除。"
+      },
+      "sources": {
+        "title": "“来源”如何运作",
+        "body": "“更多”和“更少”会改变某个出版物出现的频率。“已屏蔽”会将其挡在外面，重大新闻除外。"
+      },
+      "cleanup": {
+        "title": "“整理个人资料”如何运作",
+        "body": "Mera 会找出重复或已不再适用的事实。在你查看之前，不会有任何改动。"
+      },
+      "topicsDeclined": {
+        "title": "“拒绝的话题”如何运作",
+        "body": "你让 Mera 少显示或隐藏的话题。再次允许某个话题后，它就可以重新出现。"
+      },
+      "payFor": {
+        "title": "“订阅”如何运作",
+        "body": "你付费订阅的出版物在你的动态中会更受重视。"
+      },
+      "activity": {
+        "title": "“活动”如何运作",
+        "body": "你个人资料的每一次更改，最新的排在前面。大多数都可以撤销。"
+      }
+    },
+    "explainer": {
+      "title": "“我的”如何运作",
+      "what": "“我的”保存着 Mera 用来挑选新闻的内容：你的事实、你的地点、你调整过的来源，以及你拒绝的话题。",
+      "how1": "每条事实都会变成 Mera 为你进行的搜索。在这里更改内容后，你的动态、兴趣和全球页面也会随之变化。",
+      "privacy": "根据你的事实进行的搜索永远不会与你的账号关联。服务器只保留搜索文字，并在所有用户之间匿名共享，闲置 14 天后就会删除。"
+    },
+    "sources": {
+      "title": "来源",
+      "find": "查找出版物",
+      "adjusted": "已调整",
+      "more": "更多",
+      "fewer": "更少",
+      "muted": "已屏蔽",
+      "mute": "屏蔽",
+      "clear": "清除",
+      "footnote": "点按某一项即可更改。文章菜单里的“减少…的内容”也会出现在这里。",
+      "empty": "你还没有调整过任何来源。搜索一个出版物，即可选择多看、少看或不看它。文章菜单里的“减少…的内容”也会出现在这里。"
+    },
+    "settings": {
+      "groupApp": "应用",
+      "yourPlan": "你的方案",
+      "usage_other": "今天已读 {{count}} 篇，上限 {{limit}} 篇",
+      "usageNoLimit_other": "今天已读 {{count}} 篇",
+      "usageOffline": "联网后才会显示用量",
+      "resetsAt": "将于 {{time}} 重置",
+      "displayValue": "文字、精简模式",
+      "backupAndData": "备份和数据"
+    },
+    "notifications": {
+      "push": "推送通知",
+      "when": "Mera 何时可以通知你",
+      "yourTimes": "你的时间",
+      "noneYet": "还没有选择",
+      "zeroTimes": "请选择一个时间，否则 Mera 不会发送任何通知。",
+      "add": "添加时间",
+      "addHour": "添加 {{time}}",
+      "alreadyPicked": "已选择 {{time}}",
+      "remove": "移除 {{time}}",
+      "wheel": "要添加的时间",
+      "footnote": "滚动即可移动带框的时间。Mera 只会在这些时间发送通知，并按你所在的时区计算。"
+    }
+  },
+  "meraHints": {
+    "feed": {
+      "moreNews": "告诉 Mera 你想多看哪方面的新闻",
+      "addHome": "添加你居住的地方"
+    },
+    "askNews": "询问任何新闻相关的问题",
+    "interests": {
+      "add": "添加兴趣",
+      "change": "更改兴趣",
+      "remove": "移除兴趣"
+    },
+    "interest": {
+      "change": "更改这个兴趣",
+      "remove": "移除这个兴趣"
+    },
+    "stories": {
+      "follow": "关注报道",
+      "name": "说出一个想持续关注的报道"
+    },
+    "world": {
+      "countryFeed": "在动态中查看某个国家或地区的新闻",
+      "family": "告诉 Mera 你的家人住在哪里",
+      "behind": "问问这条头条背后的原因"
+    },
+    "checks": {
+      "claim": "核查一个说法",
+      "quote": "问问某句引述是否真实"
+    },
+    "library": {
+      "likeToRead": "告诉 Mera 你喜欢读什么"
+    },
+    "profile": {
+      "fixFact": "纠正 Mera 弄错的事实",
+      "whatKnows": "问问 Mera 对你了解多少"
+    },
+    "facts": {
+      "change": "更改你的事实",
+      "remove": "移除一条事实"
+    },
+    "sources": {
+      "whoBehind": "问问某个出版物背后是谁",
+      "whatFollow": "告诉 Mera 你关注什么"
+    }
+  },
+  "meraButton": {
+    "a11yLabel": "Mera。{{hint}}"
+  },
+  "meraIntro": {
+    "feed": "这是你的动态。告诉我你想多看哪方面的新闻，或者问我任何新闻相关的问题。",
+    "interests": "这些是你的兴趣。告诉我一个新的，或者你想更改或移除的。",
+    "interest": "这个页面跟随你的某个兴趣。你可以在这里更改或移除它。",
+    "world": "问我某条头条，或者告诉我你想看哪个国家或地区的新闻。",
+    "checks": "告诉我你看到的某个说法，我会在网上查一查。",
+    "checksNoWeb": "聊天中的网页搜索已关闭，所以我现在无法查证说法。你可以在设置中开启它。",
+    "library": "问我任何新闻相关的问题，或者告诉我你喜欢读什么。",
+    "profile": "这是 Mera 对你的了解。告诉我新的内容，或纠正不对的地方。",
+    "facts": "你正在查看你的事实。你想更改什么？",
+    "sources": "问我某个出版物的情况，或者告诉我你关注什么。"
+  },
+  "meraDraft": {
+    "changeInterest": "将我的兴趣“{{statement}}”改为 ",
+    "removeInterest": "移除我的兴趣“{{statement}}”"
   }
 }

@@ -244,7 +244,11 @@
     "updatedJustNow": "Zojuist bijgewerkt",
     "reasonWriting": "Notitie schrijven",
     "reasonWritingA11y": "notitie schrijven",
-    "reasonNotYet": "Nog geen notitie voor dit artikel."
+    "reasonNotYet": "Nog geen notitie voor dit artikel.",
+    "findingStories": "Je verhalen worden gezocht",
+    "findingStoriesBody": "Ze verschijnen hier zodra ze klaar zijn",
+    "processingOffline": "Je bent offline. Je verhalen komen zodra je weer online bent.",
+    "worldCta": "Bekijk het topnieuws in Wereld"
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -1034,7 +1038,10 @@
     "around": "Verkennen",
     "profile": "Profiel",
     "settings": "Instellingen",
-    "gotIt": "Begrepen"
+    "gotIt": "Begrepen",
+    "world": "Wereld",
+    "library": "Bibliotheek",
+    "you": "Jij"
   },
   "swipeFeed": {
     "yourDeck": "Feed",
@@ -1163,7 +1170,8 @@
     "removeMemberConfirmBody": "Dit artikel wordt uit de tijdlijn van het verhaal verwijderd. Mera blijft het verhaal zelf volgen.",
     "timelineLoadFailed": "Dit verhaal kon niet worden geladen. Trek omlaag om het opnieuw te proberen.",
     "deleteFailed": "Ontvolgen is niet gelukt. Probeer het opnieuw.",
-    "removeFailed": "Dit artikel kon niet uit het verhaal worden verwijderd. Probeer het opnieuw."
+    "removeFailed": "Dit artikel kon niet uit het verhaal worden verwijderd. Probeer het opnieuw.",
+    "emptyBodyMera": "Volg een zich ontwikkelend verhaal en Mera houdt het hier bij. Tik op de Mera-knop om er een te volgen."
   },
   "whatsNew": {
     "title": "Wat is er nieuw",
@@ -1423,7 +1431,8 @@
       "travel": "Reizen",
       "family": "Familie",
       "partnerFamily": "Familie van partner",
-      "interest": "Interesse"
+      "interest": "Interesse",
+      "work": "Werk"
     },
     "weight": {
       "low": "Laag",
@@ -2924,6 +2933,18 @@
       "what": "Kies hoe Mera op deze telefoon werkt en beheer je account. Je abonnement en het gebruik van vandaag staan bovenaan.",
       "how1": "Mera Protocol bepaalt waar de AI je nieuws leest: in de cloud of op deze telefoon. Privacy en gegevens bevat je versleutelde back-up en laat je gegevens verwijderen.",
       "how2": "Beveiliging voegt een pincode toe. Hulp heeft handleidingen en de veelgestelde vragen. Bij Account log je uit."
+    },
+    "interests": {
+      "title": "Hoe Interesses werkt",
+      "what": "Interesses groepeert je nieuws op wat je aan Mera hebt verteld. Elk ding dat je hebt verteld krijgt een eigen sectie.",
+      "how2": "Interesses waaraan je meer gewicht gaf komen eerst. Een interesse verschijnt hier zodra Mera er een verhaal voor vindt.",
+      "how3": "In een sectie komen ongelezen verhalen eerst, de belangrijkste bovenaan. Secties worden opnieuw geordend als je deze pagina verlaat, of elke 10 minuten."
+    },
+    "stories": {
+      "title": "Hoe Verhalen werkt",
+      "what": "Verhalen bewaart de zich ontwikkelende verhalen die je volgt. Mera voegt nieuwe artikelen aan elk verhaal toe zodra ze verschijnen.",
+      "how1": "Elk verhaal laat zien hoeveel artikelen er nieuw zijn sinds je het voor het laatst opende.",
+      "privacy": "De verhalen die je volgt blijven op deze telefoon."
     }
   },
   "articleMenu": {
@@ -3006,6 +3027,304 @@
     "aboutSourceA11y": "Over {{source}}",
     "subscribed": "Je bent abonnee op {{publisher}}",
     "prefMoreA11y": "Meer van deze bron",
-    "prefFewerA11y": "Minder van deze bron"
+    "prefFewerA11y": "Minder van deze bron",
+    "history": "Geschiedenis",
+    "historyEmptyTitle": "Hier is nog niets",
+    "historyEmptyBody": "Als je een van de artikelen op de site van de uitgever opent, verschijnt het hier 30 dagen lang."
+  },
+  "nav": {
+    "page": {
+      "interests": "Interesses",
+      "stories": "Verhalen",
+      "saved": "Opgeslagen",
+      "checks": "Controles",
+      "visited": "Bezocht",
+      "stats": "Statistieken"
+    },
+    "rearrangeA11y": "Pagina's van {{tab}} herschikken",
+    "quickSettingsA11y": "Snelle instellingen voor {{page}}",
+    "pillA11y": "{{label}}, {{index}} van {{count}}",
+    "pillNewA11y": "{{label}}, nieuwe updates, {{index}} van {{count}}",
+    "howThisPageWorks": "Hoe deze pagina werkt",
+    "arrange": {
+      "hint": "Sleep om de volgorde te wijzigen. De eerste pagina is waar {{tab}} opent.",
+      "moveEarlier": "Eerder zetten",
+      "moveLater": "Later zetten",
+      "saved": "Volgorde opgeslagen",
+      "removeA11y": "{{name}} verwijderen",
+      "addPlaceholder": "Voeg een land toe",
+      "add": "Toevoegen",
+      "addA11y": "{{name}} toevoegen",
+      "noMatch": "Geen land gevonden voor {{query}}"
+    }
+  },
+  "feedShortcuts": {
+    "header": "Terwijl Mera leest",
+    "world1": "Bekijk wat er nu in de wereld gebeurt",
+    "world2": "De grootste verhalen van dit moment, voor iedereen hetzelfde",
+    "country1": "Topkoppen in {{country}} vandaag",
+    "country2": "De grootste verhalen in {{country}} op dit moment",
+    "saved1": "Lees verder in een artikel dat je hebt bewaard",
+    "saved2": "Lees wat je voor later hebt bewaard",
+    "stories1": "Bekijk wat er nieuw is in de verhalen die je volgt",
+    "stories2": "Haal de verhalen in die je volgt"
+  },
+  "interests": {
+    "emptyTitle": "Mera kent je interesses nog niet",
+    "emptyBody": "Vertel Mera wat je volgt en het krijgt hier een eigen sectie.",
+    "chipHome": "Waar je woont",
+    "chipWork": "Je werk",
+    "chipTeam": "Een team dat je steunt",
+    "draftHome": "Waar ik woon:",
+    "draftWork": "Mijn werk:",
+    "draftTeam": "Een team dat ik steun:",
+    "findingStories": "Mera zoekt verhalen voor deze interesse. De eerste verschijnen hier over een paar seconden.",
+    "backToInterests": "Terug naar Interesses"
+  },
+  "world": {
+    "windowRowLabel": "Topverhalen van de afgelopen",
+    "newStateLine": "Hetzelfde topnieuws voor iedereen. Voeg met de pen de landen toe die je belangrijk vindt. Elk land krijgt een eigen pagina.",
+    "gathering": "Het nieuws van vandaag uit {{country}} wordt verzameld. De eerste verhalen verschijnen over een paar seconden.",
+    "emptyWindow": "Geen topverhalen uit {{country}} in de afgelopen {{hours}} uur.",
+    "emptyWindowWorld": "Geen topverhalen in de afgelopen {{hours}} uur.",
+    "showWider": "Toon 48 uur",
+    "offline": "Je bent offline. Wereldpagina's en zoeken hebben een verbinding nodig.",
+    "arrange": {
+      "placesNote": "{{country}} komt uit je plaatsen. Als je het verwijdert, wordt de pagina verborgen. Je plaatsen blijven."
+    },
+    "search": {
+      "placeholder": "Zoek in al het nieuws",
+      "empty": "Zoek in nieuws dat Mera in de afgelopen 48 uur heeft gevonden.",
+      "count_one": "{{count}} verhaal",
+      "count_other": "{{count}} verhalen",
+      "errorRetry": "Zoeken lukt nu niet."
+    },
+    "explainer": {
+      "title": "Hoe Wereld werkt",
+      "what": "Wereld toont de verhalen met de meeste berichtgeving in de afgelopen 24 uur, voor de wereld en voor elk land dat je toevoegt. Kies bovenaan een pagina in plaats daarvan 6, 12 of 48 uur. Ze zijn voor iedereen hetzelfde en niet voor jou geselecteerd.",
+      "how1": "Wereldkoppen rangschikken verhalen op hoe breed erover wordt bericht in verschillende landen.",
+      "how2": "Landkoppen komen van nieuwsbronnen die in dat land gevestigd zijn."
+    }
+  },
+  "library": {
+    "saved": {
+      "exportRow_one": "{{count}} opgeslagen · blijft op deze telefoon tot je het verwijdert",
+      "exportRow_other": "{{count}} opgeslagen · blijven op deze telefoon tot je ze verwijdert",
+      "export": "Exporteren",
+      "emptyBody": "Tik op het bladwijzer bij een artikel om het hier te bewaren. Opgeslagen artikelen blijven op deze telefoon tot je ze verwijdert."
+    },
+    "checks": {
+      "emptyTitle": "Nog geen controles",
+      "emptyBody": "Vraag Mera een bewering te controleren, of laat Mera verhalen automatisch controleren.",
+      "autoLink": "Automatische controles aanzetten",
+      "autoOnBody": "Mera controleert verhalen automatisch. Controles verschijnen hier zodra een bewering is beoordeeld."
+    },
+    "visited": {
+      "intro": "De uitgevers die je de afgelopen 30 dagen het vaakst bij de bron hebt geopend. Goede journalistiek blijft bestaan als lezers die steunen.",
+      "topLine": "Je opent deze vaker dan welke andere ook",
+      "subscribe": "Abonneren",
+      "alreadyPay": "Ik betaal al",
+      "alreadyPayA11y": "Ik betaal al voor {{publisher}}",
+      "support": "Steunen",
+      "supportA11y": "{{publisher}} steunen",
+      "youPay": "Jij betaalt",
+      "subscribed": "Geabonneerd",
+      "lastOpened": "Laatst geopend {{date}}",
+      "footnote": "Abonneren en Steunen openen de eigen pagina van de uitgever. Wordt 30 dagen op deze telefoon bewaard.",
+      "emptyTitle": "Nog geen uitgevers",
+      "emptyBody": "Als je een artikel bij de bron opent, verschijnt de uitgever hier, met een manier om degenen te steunen die je het meest leest."
+    },
+    "stats": {
+      "emptyTitle": "Nog geen kaarten",
+      "emptyBody": "Open een artikel op de site van de uitgever en Mera maakt je eerste kaart.",
+      "share": "Deze kaart delen"
+    },
+    "explainer": {
+      "saved": {
+        "title": "Hoe Opgeslagen werkt",
+        "what": "Opgeslagen bewaart de artikelen waar je een bladwijzer bij hebt gezet, de nieuwste eerst.",
+        "how1": "Opgeslagen artikelen blijven op deze telefoon tot je ze verwijdert, ook als ze uit je Feed verdwijnen.",
+        "how2": "Exporteren stuurt ze als leesbare lijst of als gegevens naar een app naar keuze."
+      },
+      "checks": {
+        "title": "Hoe Controles werkt",
+        "what": "Controles toont de verhalen waarvoor je Mera om factchecks hebt gevraagd.",
+        "how1": "Elke beoordeling is van de factcheckorganisatie zelf, getoond zoals zij die publiceerde.",
+        "how2": "Controles blijven op deze telefoon. Een controle verwijderen haalt hem alleen hier weg."
+      },
+      "visited": {
+        "title": "Hoe Bezocht werkt",
+        "what": "Bezocht toont de uitgevers wier sites je de afgelopen 30 dagen via Mera hebt geopend, de meestgeopende eerst.",
+        "how1": "Alleen artikelen die je op de site van de uitgever opent tellen mee. Lezen in Mera staat er niet bij.",
+        "how2": "Met Ik betaal al laat je Mera weten dat je geabonneerd bent, zodat die uitgever meer gewicht krijgt in je feed.",
+        "privacy": "Deze lijst blijft op deze telefoon. Elk bezoek wordt na 30 dagen verwijderd."
+      },
+      "stats": {
+        "title": "Hoe Statistieken werkt",
+        "what": "Statistieken maakt van je laatste 30 dagen lezen kaarten die je kunt delen.",
+        "how1": "De kaarten gebruiken wat deze telefoon al bewaart om Mera te laten werken: de sites die je opende en wat je opsloeg of volgt. Er wordt niets extra vastgelegd.",
+        "how2": "Voordat je deelt, kies je of namen van uitgevers verschijnen. Artikeltitels nooit."
+      }
+    }
+  },
+  "you": {
+    "profile": {
+      "facts": "Feiten",
+      "places": "Plaatsen",
+      "sources": "Bronnen",
+      "cleanup": "Profiel opschonen",
+      "topicsDeclined": "Onderwerpen die je hebt afgewezen",
+      "payFor": "Uitgevers waarvoor je betaalt",
+      "activity": "Activiteit",
+      "viewAll": "Bekijk alle {{count}}",
+      "viewAllNoCount": "Bekijk alles",
+      "review": "Bekijken",
+      "subscribed": "Geabonneerd",
+      "hidden": "Verborgen",
+      "less": "Minder",
+      "aboutA11y": "Over {{card}}",
+      "factsEmpty": "Nog niets. Vertel Mera wat je volgt en het verschijnt hier.",
+      "placesEmpty": "Nog geen plaatsen",
+      "addCity": "Voeg een stad toe",
+      "sourcesEmpty": "Niets aangepast. Mera behandelt elke bron gelijk.",
+      "topicsDeclinedEmpty": "Nog niets afgewezen."
+    },
+    "hints": {
+      "facts": {
+        "title": "Hoe Feiten werken",
+        "body": "Elk feit wordt een zoekopdracht die Mera voor je uitvoert. Wijzig of verwijder er een en de verhalen die ervan kwamen veranderen ook."
+      },
+      "places": {
+        "title": "Hoe Plaatsen werken",
+        "body": "Mera zoekt lokaal nieuws uit je plaatsen en zet het in je Feed en Interesses. Het land van elke plaats krijgt ook een pagina in Wereld.",
+        "body2": "Thuis telt het zwaarst. Tik op een plaats om het label te wijzigen of de plaats te verwijderen."
+      },
+      "sources": {
+        "title": "Hoe Bronnen werken",
+        "body": "Meer en Minder veranderen hoe vaak een uitgever verschijnt. Gedempt houdt hem buiten, behalve bij groot nieuws."
+      },
+      "cleanup": {
+        "title": "Hoe Profiel opschonen werkt",
+        "body": "Mera spoort feiten op die zich herhalen of niet meer kloppen. Er verandert niets tot je ze bekijkt."
+      },
+      "topicsDeclined": {
+        "title": "Hoe afgewezen onderwerpen werken",
+        "body": "Onderwerpen waarvan je Mera hebt gezegd er minder van te tonen, of ze te verbergen. Sta er een weer toe en het kan terugkomen."
+      },
+      "payFor": {
+        "title": "Hoe abonnementen werken",
+        "body": "Uitgevers waarvoor je betaalt krijgen meer gewicht in je feed."
+      },
+      "activity": {
+        "title": "Hoe Activiteit werkt",
+        "body": "Elke wijziging in je profiel, de nieuwste eerst. De meeste kun je ongedaan maken."
+      }
+    },
+    "explainer": {
+      "title": "Hoe het Profiel werkt",
+      "what": "Profiel bevat wat Mera gebruikt om je nieuws te kiezen: je feiten, je plaatsen, de bronnen die je hebt aangepast en de onderwerpen die je hebt afgewezen.",
+      "how1": "Elk feit wordt een zoekopdracht die Mera voor je uitvoert. Wijzig hier iets en je Feed, Interesses en Wereldpagina's volgen.",
+      "privacy": "De zoekopdrachten die uit je feiten voortkomen worden nooit aan je account gekoppeld. De server bewaart alleen de zoektekst, anoniem gedeeld door alle gebruikers, en verwijdert die na 14 dagen zonder gebruik."
+    },
+    "sources": {
+      "title": "Bronnen",
+      "find": "Zoek een uitgever",
+      "adjusted": "Aangepast",
+      "more": "Meer",
+      "fewer": "Minder",
+      "muted": "Gedempt",
+      "mute": "Dempen",
+      "clear": "Wissen",
+      "footnote": "Tik op een bron om hem te wijzigen. “Minder van” in het menu van een artikel komt hier ook terecht.",
+      "empty": "Je hebt nog geen bronnen aangepast. Zoek een uitgever om meer, minder of niets van hem te zien. “Minder van” in het menu van een artikel komt hier ook terecht."
+    },
+    "settings": {
+      "groupApp": "App",
+      "yourPlan": "Jouw abonnement",
+      "usage_one": "{{count}} van {{limit}} artikelen vandaag",
+      "usage_other": "{{count}} van {{limit}} artikelen vandaag",
+      "usageNoLimit_one": "{{count}} artikel vandaag",
+      "usageNoLimit_other": "{{count}} artikelen vandaag",
+      "usageOffline": "Gebruik wordt getoond als je online bent",
+      "resetsAt": "wordt om {{time}} gereset",
+      "displayValue": "Tekst, Lite-modus",
+      "backupAndData": "Back-up en gegevens"
+    },
+    "notifications": {
+      "push": "Pushmeldingen",
+      "when": "Wanneer Mera je mag melden",
+      "yourTimes": "Jouw tijden",
+      "noneYet": "Nog niets gekozen",
+      "zeroTimes": "Kies een tijd, anders stuurt Mera geen meldingen.",
+      "add": "Voeg een tijd toe",
+      "addHour": "{{time}} toevoegen",
+      "alreadyPicked": "{{time}} is al gekozen",
+      "remove": "{{time}} verwijderen",
+      "wheel": "Tijd om toe te voegen",
+      "footnote": "Draai om de omlijnde tijd te verplaatsen. Mera stuurt alleen op deze tijden een melding, in jouw tijdzone."
+    }
+  },
+  "meraHints": {
+    "feed": {
+      "moreNews": "Vertel Mera waarover je meer nieuws wilt",
+      "addHome": "Voeg toe waar je woont"
+    },
+    "askNews": "Vraag naar alles in het nieuws",
+    "interests": {
+      "add": "Voeg een interesse toe",
+      "change": "Wijzig een interesse",
+      "remove": "Verwijder een interesse"
+    },
+    "interest": {
+      "change": "Wijzig deze interesse",
+      "remove": "Verwijder deze interesse"
+    },
+    "stories": {
+      "follow": "Een verhaal volgen",
+      "name": "Noem een verhaal om bij te blijven"
+    },
+    "world": {
+      "countryFeed": "Krijg nieuws uit een land in je feed",
+      "family": "Vertel Mera waar je familie woont",
+      "behind": "Vraag wat er achter een kop zit"
+    },
+    "checks": {
+      "claim": "Controleer een bewering",
+      "quote": "Vraag of een citaat echt is"
+    },
+    "library": {
+      "likeToRead": "Vertel Mera wat je graag leest"
+    },
+    "profile": {
+      "fixFact": "Herstel een feit dat Mera fout had",
+      "whatKnows": "Vraag wat Mera over je weet"
+    },
+    "facts": {
+      "change": "Wijzig je feiten",
+      "remove": "Verwijder een feit"
+    },
+    "sources": {
+      "whoBehind": "Vraag wie achter een uitgever zit",
+      "whatFollow": "Vertel Mera wat je volgt"
+    }
+  },
+  "meraButton": {
+    "a11yLabel": "Mera. {{hint}}"
+  },
+  "meraIntro": {
+    "feed": "Dit is je Feed. Vertel me waarover je meer nieuws wilt, of vraag me naar alles in het nieuws.",
+    "interests": "Dit zijn je interesses. Vertel me een nieuwe, of een die je wilt wijzigen of verwijderen.",
+    "interest": "Deze pagina volgt een van je interesses. Je kunt hem hier wijzigen of verwijderen.",
+    "world": "Vraag me naar een kop, of vertel me uit welk land je nieuws wilt.",
+    "checks": "Vertel me een bewering die je hebt gezien en ik zoek hem op het web op.",
+    "checksNoWeb": "Zoeken op het web in de chat staat uit, dus ik kan nu geen beweringen opzoeken. Je kunt het aanzetten in Instellingen.",
+    "library": "Vraag me naar alles in het nieuws, of vertel me wat je graag leest.",
+    "profile": "Dit weet Mera over je. Vertel me iets nieuws, of herstel wat niet klopt.",
+    "facts": "Je bekijkt je feiten. Wat wil je wijzigen?",
+    "sources": "Vraag me naar een uitgever, of vertel me wat je volgt."
+  },
+  "meraDraft": {
+    "changeInterest": "Wijzig mijn interesse “{{statement}}” in ",
+    "removeInterest": "Verwijder mijn interesse “{{statement}}”"
   }
 }

@@ -256,7 +256,11 @@
     "updatedJustNow": "Zaktualizowano przed chwilą",
     "reasonWriting": "Pisanie notatki",
     "reasonWritingA11y": "notatka jest pisana",
-    "reasonNotYet": "Do tego artykułu nie ma jeszcze notatki."
+    "reasonNotYet": "Do tego artykułu nie ma jeszcze notatki.",
+    "findingStories": "Szukamy Twoich historii",
+    "findingStoriesBody": "Pojawią się tutaj, gdy tylko będą gotowe",
+    "processingOffline": "Jesteś offline. Twoje historie pojawią się, gdy wrócisz do sieci.",
+    "worldCta": "Zobacz najważniejsze wiadomości w Świecie"
   },
   "relevance": {
     "emergency": "Pilne",
@@ -1048,7 +1052,10 @@
     "around": "Odkrywaj",
     "profile": "Profil",
     "settings": "Ustawienia",
-    "gotIt": "Rozumiem"
+    "gotIt": "Rozumiem",
+    "world": "Świat",
+    "library": "Biblioteka",
+    "you": "Ty"
   },
   "swipeFeed": {
     "yourDeck": "Strumień",
@@ -1181,7 +1188,8 @@
     "removeMemberConfirmBody": "Ten artykuł zostanie usunięty z osi czasu historii. Mera nadal śledzi samą historię.",
     "timelineLoadFailed": "Nie udało się wczytać tej historii. Pociągnij w dół, aby spróbować ponownie.",
     "deleteFailed": "Nie udało się przestać obserwować tej historii. Spróbuj ponownie.",
-    "removeFailed": "Nie udało się usunąć tego artykułu z historii. Spróbuj ponownie."
+    "removeFailed": "Nie udało się usunąć tego artykułu z historii. Spróbuj ponownie.",
+    "emptyBodyMera": "Śledź rozwijającą się historię, a Mera będzie ją tutaj aktualizować. Stuknij przycisk Mera, aby jakąś śledzić."
   },
   "whatsNew": {
     "title": "Co nowego",
@@ -1447,7 +1455,8 @@
       "travel": "Podróże",
       "family": "Rodzina",
       "partnerFamily": "Rodzina partnera",
-      "interest": "Zainteresowanie"
+      "interest": "Zainteresowanie",
+      "work": "Praca"
     },
     "weight": {
       "low": "Niska",
@@ -2962,6 +2971,18 @@
       "what": "Wybierz, jak Mera działa na tym telefonie, i zarządzaj kontem. Twój plan i dzisiejsze wykorzystanie są na górze.",
       "how1": "Mera Protocol określa, gdzie AI czyta Twoje wiadomości: w chmurze czy na tym telefonie. W sekcji Prywatność i dane jest Twoja zaszyfrowana kopia zapasowa i możesz tam usuwać dane.",
       "how2": "Bezpieczeństwo dodaje PIN. Pomoc zawiera poradniki i FAQ. W sekcji Konto możesz się wylogować."
+    },
+    "interests": {
+      "title": "Jak działają Zainteresowania",
+      "what": "Zainteresowania grupują Twoje wiadomości według tego, co powiedziałeś Merze. Każda rzecz, o której powiedziałeś, dostaje własną sekcję.",
+      "how2": "Zainteresowania, którym nadałeś większą wagę, są na początku. Zainteresowanie pojawia się tutaj, gdy Mera znajdzie dla niego historię.",
+      "how3": "W sekcji najpierw są nieprzeczytane historie, od najważniejszych. Sekcje zmieniają kolejność, gdy opuścisz tę stronę, albo co 10 minut."
+    },
+    "stories": {
+      "title": "Jak działają historie",
+      "what": "Historie zachowują rozwijające się historie, które śledzisz. Mera dodaje nowe artykuły do każdej z nich, gdy tylko się pojawią.",
+      "how1": "Każda historia pokazuje, ile artykułów jest nowych od Twojego ostatniego otwarcia.",
+      "privacy": "Historie, które śledzisz, są przechowywane na tym telefonie."
     }
   },
   "articleMenu": {
@@ -3044,6 +3065,312 @@
     "aboutSourceA11y": "O {{source}}",
     "subscribed": "Subskrybujesz {{publisher}}",
     "prefMoreA11y": "Więcej z tego źródła",
-    "prefFewerA11y": "Mniej z tego źródła"
+    "prefFewerA11y": "Mniej z tego źródła",
+    "history": "Historia",
+    "historyEmptyTitle": "Na razie nic tu nie ma",
+    "historyEmptyBody": "Gdy otworzysz jeden z jego artykułów na stronie wydawcy, pojawi się tutaj na 30 dni."
+  },
+  "nav": {
+    "page": {
+      "interests": "Zainteresowania",
+      "stories": "historie",
+      "saved": "Zapisane",
+      "checks": "Sprawdzenia",
+      "visited": "Odwiedzone",
+      "stats": "Statystyki"
+    },
+    "rearrangeA11y": "Zmień kolejność stron w {{tab}}",
+    "quickSettingsA11y": "Szybkie ustawienia dla {{page}}",
+    "pillA11y": "{{label}}, {{index}} z {{count}}",
+    "pillNewA11y": "{{label}}, nowe aktualizacje, {{index}} z {{count}}",
+    "howThisPageWorks": "Jak działa ta strona",
+    "arrange": {
+      "hint": "Przeciągnij, aby zmienić kolejność. Pierwsza strona to ta, od której zaczyna się {{tab}}.",
+      "moveEarlier": "Przesuń wcześniej",
+      "moveLater": "Przesuń później",
+      "saved": "Zapisano kolejność",
+      "removeA11y": "Usuń {{name}}",
+      "addPlaceholder": "Dodaj kraj",
+      "add": "Dodaj",
+      "addA11y": "Dodaj {{name}}",
+      "noMatch": "Nie znaleziono kraju dla {{query}}"
+    }
+  },
+  "feedShortcuts": {
+    "header": "Gdy Mera czyta",
+    "world1": "Zobacz, co się teraz dzieje na świecie",
+    "world2": "Najważniejsze wiadomości w tej chwili, takie same dla wszystkich",
+    "country1": "Najważniejsze nagłówki z kraju: {{country}} dzisiaj",
+    "country2": "Największe wiadomości z kraju: {{country}} w tej chwili",
+    "saved1": "Wróć do artykułu zapisanego na później",
+    "saved2": "Przeczytaj to, co zachowałeś na później",
+    "stories1": "Zobacz, co nowego w historiach, które śledzisz",
+    "stories2": "Nadrób historie, które śledzisz"
+  },
+  "interests": {
+    "emptyTitle": "Mera jeszcze nie zna Twoich zainteresowań",
+    "emptyBody": "Powiedz Merze, co śledzisz, a dostanie tutaj własną sekcję.",
+    "chipHome": "Gdzie mieszkasz",
+    "chipWork": "Twoja praca",
+    "chipTeam": "Drużyna, której kibicujesz",
+    "draftHome": "Gdzie mieszkam:",
+    "draftWork": "Moja praca:",
+    "draftTeam": "Drużyna, której kibicuję:",
+    "findingStories": "Mera szuka historii dla tego zainteresowania. Pierwsze pojawią się tutaj za kilka sekund.",
+    "backToInterests": "Wróć do Zainteresowań"
+  },
+  "world": {
+    "windowRowLabel": "Najważniejsze wiadomości z ostatnich",
+    "newStateLine": "Te same najważniejsze wiadomości dla wszystkich. Dodaj ołówkiem kraje, które Cię interesują. Każdy dostaje własną stronę.",
+    "gathering": "Zbieramy dzisiejsze wiadomości z kraju: {{country}}. Pierwsze pojawią się za kilka sekund.",
+    "emptyWindow": "Brak najważniejszych wiadomości z kraju: {{country}} w ciągu ostatnich godzin: {{hours}}.",
+    "emptyWindowWorld": "Brak najważniejszych wiadomości w ciągu ostatnich godzin: {{hours}}.",
+    "showWider": "Pokaż 48 godzin",
+    "offline": "Jesteś offline. Strony Świata i wyszukiwanie wymagają połączenia.",
+    "arrange": {
+      "placesNote": "{{country}} pochodzi z Twoich miejsc. Usunięcie go ukrywa jego stronę. Twoje miejsca zostają."
+    },
+    "search": {
+      "placeholder": "Szukaj we wszystkich wiadomościach",
+      "empty": "Szukaj wiadomości, które Mera znalazła w ciągu ostatnich 48 godzin.",
+      "count_one": "{{count}} historia",
+      "count_few": "{{count}} historie",
+      "count_many": "{{count}} historii",
+      "count_other": "{{count}} historii",
+      "errorRetry": "Nie można teraz wyszukać."
+    },
+    "explainer": {
+      "title": "Jak działa Świat",
+      "what": "Świat pokazuje historie, o których pisano najwięcej w ciągu ostatnich 24 godzin, dla świata i dla każdego dodanego kraju. U góry strony możesz zamiast tego wybrać 6, 12 lub 48 godzin. Są takie same dla wszystkich i nie są dobrane dla Ciebie.",
+      "how1": "Nagłówki Świata układają historie według tego, jak szeroko opisują je media w różnych krajach.",
+      "how2": "Nagłówki z kraju pochodzą ze źródeł wiadomości z siedzibą w tym kraju."
+    }
+  },
+  "library": {
+    "saved": {
+      "exportRow_one": "{{count}} zapisany artykuł · przechowywany na tym telefonie, dopóki go nie usuniesz",
+      "exportRow_few": "{{count}} zapisane artykuły · przechowywane na tym telefonie, dopóki ich nie usuniesz",
+      "exportRow_many": "{{count}} zapisanych artykułów · przechowywane na tym telefonie, dopóki ich nie usuniesz",
+      "exportRow_other": "{{count}} zapisanych artykułów · przechowywane na tym telefonie, dopóki ich nie usuniesz",
+      "export": "Eksportuj",
+      "emptyBody": "Stuknij zakładkę przy dowolnym artykule, aby zachować go tutaj. Zapisane artykuły zostają na tym telefonie, dopóki ich nie usuniesz."
+    },
+    "checks": {
+      "emptyTitle": "Brak sprawdzeń",
+      "emptyBody": "Poproś Merę o sprawdzenie twierdzenia albo pozwól jej sprawdzać historie automatycznie.",
+      "autoLink": "Włącz automatyczne sprawdzanie",
+      "autoOnBody": "Mera sprawdza historie automatycznie. Sprawdzenia pojawią się tutaj, gdy twierdzenie zostanie ocenione."
+    },
+    "visited": {
+      "intro": "Wydawcy, które w ciągu ostatnich 30 dni otwierałeś najczęściej u źródła. Dobre dziennikarstwo trwa, gdy czytelnicy je wspierają.",
+      "topLine": "Otwierasz go częściej niż jakikolwiek inny",
+      "subscribe": "Subskrybuj",
+      "alreadyPay": "Już płacę",
+      "alreadyPayA11y": "Już płacę za {{publisher}}",
+      "support": "Wesprzyj",
+      "supportA11y": "Wesprzyj {{publisher}}",
+      "youPay": "Płacisz",
+      "subscribed": "Subskrybujesz",
+      "lastOpened": "Ostatnio otwarto {{date}}",
+      "footnote": "Subskrybuj i Wesprzyj otwierają własną stronę wydawcy. Przechowywane na tym telefonie przez 30 dni.",
+      "emptyTitle": "Brak wydawców",
+      "emptyBody": "Gdy otworzysz artykuł u źródła, jego wydawca pojawi się tutaj, z możliwością wsparcia tych, które czytasz najczęściej."
+    },
+    "stats": {
+      "emptyTitle": "Brak kart",
+      "emptyBody": "Otwórz artykuł na stronie wydawcy, a Mera zrobi Twoją pierwszą kartę.",
+      "share": "Udostępnij tę kartę"
+    },
+    "explainer": {
+      "saved": {
+        "title": "Jak działa Zapisane",
+        "what": "Zapisane zachowuje artykuły, które dodałeś do zakładek, od najnowszych.",
+        "how1": "Zapisane artykuły zostają na tym telefonie, dopóki ich nie usuniesz, nawet gdy znikną z Twojego Feedu.",
+        "how2": "Eksport wysyła je jako czytelną listę lub jako dane do wybranej aplikacji."
+      },
+      "checks": {
+        "title": "Jak działają Sprawdzenia",
+        "what": "Sprawdzenia to lista historii, dla których poprosiłeś Merę o weryfikacje faktów.",
+        "how1": "Każda ocena pochodzi od samej organizacji weryfikującej fakty i jest pokazana tak, jak ją opublikowała.",
+        "how2": "Sprawdzenia zostają na tym telefonie. Usunięcie jednego usuwa je tylko tutaj."
+      },
+      "visited": {
+        "title": "Jak działa Odwiedzone",
+        "what": "Odwiedzone to lista wydawców, których strony otworzyłeś z Mery w ciągu ostatnich 30 dni, od najczęściej otwieranego.",
+        "how1": "Liczą się tylko artykuły otwarte na stronie wydawcy. Czytanie w Merze nie jest wliczane.",
+        "how2": "Już płacę mówi Merze, że subskrybujesz, więc ten wydawca ma większą wagę w Twoim feedzie.",
+        "privacy": "Ta lista zostaje na tym telefonie. Każda wizyta jest usuwana po 30 dniach."
+      },
+      "stats": {
+        "title": "Jak działają Statystyki",
+        "what": "Statystyki zamieniają Twoje ostatnie 30 dni czytania w karty, które możesz udostępnić.",
+        "how1": "Karty korzystają z tego, co ten telefon już przechowuje, aby Mera działała: otwartych stron oraz tego, co zapisałeś lub śledzisz. Nic dodatkowego nie jest zapisywane.",
+        "how2": "Przed udostępnieniem wybierasz, czy nazwy wydawców mają się pojawić. Tytuły artykułów nigdy."
+      }
+    }
+  },
+  "you": {
+    "profile": {
+      "facts": "Fakty",
+      "places": "Miejsca",
+      "sources": "Źródła",
+      "cleanup": "Porządki w profilu",
+      "topicsDeclined": "Tematy, które odrzuciłeś",
+      "payFor": "Wydawcy, za których płacisz",
+      "activity": "Aktywność",
+      "viewAll": "Zobacz wszystkie: {{count}}",
+      "viewAllNoCount": "Zobacz wszystko",
+      "review": "Przejrzyj",
+      "subscribed": "Subskrybujesz",
+      "hidden": "Ukryte",
+      "less": "Mniej",
+      "aboutA11y": "O: {{card}}",
+      "factsEmpty": "Na razie nic. Powiedz Merze, co śledzisz, a pojawi się tutaj.",
+      "placesEmpty": "Brak miejsc",
+      "addCity": "Dodaj miasto",
+      "sourcesEmpty": "Nic nie zmieniono. Mera traktuje każde źródło tak samo.",
+      "topicsDeclinedEmpty": "Na razie nic nie odrzucono."
+    },
+    "hints": {
+      "facts": {
+        "title": "Jak działają Fakty",
+        "body": "Każdy fakt zamienia się w wyszukiwania, które Mera wykonuje dla Ciebie. Zmień lub usuń jeden, a zmienią się też historie, które z niego wynikły."
+      },
+      "places": {
+        "title": "Jak działają Miejsca",
+        "body": "Mera szuka lokalnych wiadomości z Twoich miejsc i umieszcza je w Feedzie i Zainteresowaniach. Kraj każdego miejsca dostaje też stronę w Świecie.",
+        "body2": "Dom liczy się najbardziej. Stuknij miejsce, aby zmienić jego etykietę lub je usunąć."
+      },
+      "sources": {
+        "title": "Jak działają Źródła",
+        "body": "Więcej i Mniej zmieniają, jak często pojawia się dany wydawca. Wyciszono zostawia go poza feedem, oprócz ważnych wiadomości."
+      },
+      "cleanup": {
+        "title": "Jak działają Porządki w profilu",
+        "body": "Mera wykrywa fakty, które się powtarzają lub już nie pasują. Nic się nie zmieni, dopóki tego nie przejrzysz."
+      },
+      "topicsDeclined": {
+        "title": "Jak działają odrzucone tematy",
+        "body": "Tematy, których kazałeś Merze pokazywać mniej albo ukryć. Zezwól na któryś ponownie, a może wrócić."
+      },
+      "payFor": {
+        "title": "Jak działają subskrypcje",
+        "body": "Wydawcy, za których płacisz, mają większą wagę w Twoim feedzie."
+      },
+      "activity": {
+        "title": "Jak działa Aktywność",
+        "body": "Każda zmiana w Twoim profilu, od najnowszej. Większość można cofnąć."
+      }
+    },
+    "explainer": {
+      "title": "Jak działa Profil",
+      "what": "Profil zawiera to, czego Mera używa do wyboru Twoich wiadomości: Twoje fakty, miejsca, źródła, które zmieniłeś, i tematy, które odrzuciłeś.",
+      "how1": "Każdy fakt zamienia się w wyszukiwania, które Mera wykonuje dla Ciebie. Zmień coś tutaj, a Twój Feed, Zainteresowania i strony Świata pójdą za tym.",
+      "privacy": "Wyszukiwania tworzone z Twoich faktów nigdy nie są powiązane z Twoim kontem. Serwer przechowuje tylko tekst wyszukiwania, anonimowo współdzielony przez wszystkich użytkowników, i usuwa go po 14 dniach bez użycia."
+    },
+    "sources": {
+      "title": "Źródła",
+      "find": "Znajdź wydawcę",
+      "adjusted": "Zmienione",
+      "more": "Więcej",
+      "fewer": "Mniej",
+      "muted": "Wyciszono",
+      "mute": "Wycisz",
+      "clear": "Wyczyść",
+      "footnote": "Stuknij jedno, aby je zmienić. „Mniej z” w menu artykułu też trafia tutaj.",
+      "empty": "Nie zmieniłeś jeszcze żadnych źródeł. Wyszukaj wydawcę, aby zobaczyć więcej, mniej lub wcale jego treści. „Mniej z” w menu artykułu też trafia tutaj."
+    },
+    "settings": {
+      "groupApp": "Aplikacja",
+      "yourPlan": "Twój plan",
+      "usage_one": "{{count}} z {{limit}} artykułów dzisiaj",
+      "usage_few": "{{count}} z {{limit}} artykułów dzisiaj",
+      "usage_many": "{{count}} z {{limit}} artykułów dzisiaj",
+      "usage_other": "{{count}} z {{limit}} artykułów dzisiaj",
+      "usageNoLimit_one": "{{count}} artykuł dzisiaj",
+      "usageNoLimit_few": "{{count}} artykuły dzisiaj",
+      "usageNoLimit_many": "{{count}} artykułów dzisiaj",
+      "usageNoLimit_other": "{{count}} artykułu dzisiaj",
+      "usageOffline": "Zużycie pokaże się, gdy będziesz online",
+      "resetsAt": "zeruje się o {{time}}",
+      "displayValue": "Tekst, tryb Lite",
+      "backupAndData": "Kopia zapasowa i dane"
+    },
+    "notifications": {
+      "push": "Powiadomienia push",
+      "when": "Kiedy Mera może Ci powiadamiać",
+      "yourTimes": "Twoje godziny",
+      "noneYet": "Nic jeszcze nie wybrano",
+      "zeroTimes": "Wybierz godzinę, inaczej Mera nie wyśle żadnych powiadomień.",
+      "add": "Dodaj godzinę",
+      "addHour": "Dodaj {{time}}",
+      "alreadyPicked": "{{time}} jest już wybrana",
+      "remove": "Usuń {{time}}",
+      "wheel": "Godzina do dodania",
+      "footnote": "Obracaj, aby przesunąć zaznaczoną godzinę. Mera wysyła powiadomienie tylko o tych godzinach, w Twojej strefie czasowej."
+    }
+  },
+  "meraHints": {
+    "feed": {
+      "moreNews": "Powiedz Merze, o czym chcesz więcej wiadomości",
+      "addHome": "Dodaj, gdzie mieszkasz"
+    },
+    "askNews": "Zapytaj o cokolwiek z wiadomości",
+    "interests": {
+      "add": "Dodaj zainteresowanie",
+      "change": "Zmień zainteresowanie",
+      "remove": "Usuń zainteresowanie"
+    },
+    "interest": {
+      "change": "Zmień to zainteresowanie",
+      "remove": "Usuń to zainteresowanie"
+    },
+    "stories": {
+      "follow": "Śledź historię",
+      "name": "Podaj historię, którą chcesz śledzić"
+    },
+    "world": {
+      "countryFeed": "Dodaj do feedu wiadomości z jakiegoś kraju",
+      "family": "Powiedz Merze, gdzie mieszka Twoja rodzina",
+      "behind": "Zapytaj, co stoi za nagłówkiem"
+    },
+    "checks": {
+      "claim": "Sprawdź twierdzenie",
+      "quote": "Zapytaj, czy cytat jest prawdziwy"
+    },
+    "library": {
+      "likeToRead": "Powiedz Merze, co lubisz czytać"
+    },
+    "profile": {
+      "fixFact": "Popraw fakt, który Mera źle zapisała",
+      "whatKnows": "Zapytaj, co Mera o Tobie wie"
+    },
+    "facts": {
+      "change": "Zmień swoje fakty",
+      "remove": "Usuń fakt"
+    },
+    "sources": {
+      "whoBehind": "Zapytaj, kto stoi za wydawcą",
+      "whatFollow": "Powiedz Merze, co śledzisz"
+    }
+  },
+  "meraButton": {
+    "a11yLabel": "Mera. {{hint}}"
+  },
+  "meraIntro": {
+    "feed": "To Twój Feed. Powiedz mi, o czym chcesz więcej wiadomości, albo zapytaj mnie o cokolwiek z wiadomości.",
+    "interests": "To Twoje zainteresowania. Powiedz mi o nowym albo o takim, które chcesz zmienić lub usunąć.",
+    "interest": "Ta strona śledzi jedno z Twoich zainteresowań. Możesz je tutaj zmienić lub usunąć.",
+    "world": "Zapytaj mnie o nagłówek albo powiedz, z jakiego kraju chcesz wiadomości.",
+    "checks": "Powiedz mi, jakie twierdzenie widziałeś, a poszukam go w sieci.",
+    "checksNoWeb": "Wyszukiwanie w sieci w czacie jest wyłączone, więc teraz nie mogę sprawdzać twierdzeń. Możesz je włączyć w Ustawieniach.",
+    "library": "Zapytaj mnie o cokolwiek z wiadomości albo powiedz, co lubisz czytać.",
+    "profile": "Oto, co Mera o Tobie wie. Powiedz mi coś nowego albo popraw to, co jest błędne.",
+    "facts": "Oglądasz swoje fakty. Co chcesz zmienić?",
+    "sources": "Zapytaj mnie o wydawcę albo powiedz, co śledzisz."
+  },
+  "meraDraft": {
+    "changeInterest": "Zmień moje zainteresowanie „{{statement}}” na ",
+    "removeInterest": "Usuń moje zainteresowanie „{{statement}}”"
   }
 }

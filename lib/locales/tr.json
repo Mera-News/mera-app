@@ -244,7 +244,11 @@
     "updatedJustNow": "Az önce güncellendi",
     "reasonWriting": "Not yazılıyor",
     "reasonWritingA11y": "not yazılıyor",
-    "reasonNotYet": "Bu makale için henüz not yok."
+    "reasonNotYet": "Bu makale için henüz not yok.",
+    "findingStories": "Hikayeleriniz aranıyor",
+    "findingStoriesBody": "Hazır olur olmaz burada görünürler",
+    "processingOffline": "Çevrimdışısınız. Hikayeleriniz tekrar çevrimiçi olduğunuzda gelir.",
+    "worldCta": "Dünya'daki öne çıkan haberleri gör"
   },
   "relevance": {
     "emergency": "Acil",
@@ -1034,7 +1038,10 @@
     "around": "Keşfet",
     "profile": "Profil",
     "settings": "Ayarlar",
-    "gotIt": "Anladım"
+    "gotIt": "Anladım",
+    "world": "Dünya",
+    "library": "Kitaplık",
+    "you": "Siz"
   },
   "swipeFeed": {
     "yourDeck": "Akış",
@@ -1165,7 +1172,8 @@
     "removeMemberConfirmBody": "Bu makale haberin zaman çizelgesinden kaldırılır. Mera haberi takip etmeye devam eder.",
     "timelineLoadFailed": "Bu haber yüklenemedi. Tekrar denemek için aşağı çekin.",
     "deleteFailed": "Bu haberin takibi bırakılamadı. Tekrar dene.",
-    "removeFailed": "Bu makale haberden kaldırılamadı. Tekrar dene."
+    "removeFailed": "Bu makale haberden kaldırılamadı. Tekrar dene.",
+    "emptyBodyMera": "Gelişen bir hikayeyi takip edin, Mera onu burada güncel tutsun. Birini takip etmek için Mera düğmesine dokunun."
   },
   "whatsNew": {
     "title": "Yenilikler",
@@ -1425,7 +1433,8 @@
       "travel": "Seyahat",
       "family": "Aile",
       "partnerFamily": "Eşinin ailesi",
-      "interest": "İlgi alanı"
+      "interest": "İlgi alanı",
+      "work": "İş"
     },
     "weight": {
       "low": "Düşük",
@@ -2926,6 +2935,18 @@
       "what": "Mera'nın bu telefonda nasıl çalışacağını seçin ve hesabınızı yönetin. Planınız ve bugünkü kullanımınız en üstte.",
       "how1": "Mera Protocol, yapay zekânın haberlerinizi nerede okuyacağını belirler: bulutta ya da bu telefonda. Gizlilik ve veriler şifreli yedeğinizi tutar ve veri silmenizi sağlar.",
       "how2": "Güvenlik bir PIN ekler. Yardım'da kılavuzlar ve SSS var. Hesap'tan çıkış yaparsınız."
+    },
+    "interests": {
+      "title": "İlgi alanları nasıl çalışır",
+      "what": "İlgi alanları, haberlerinizi Mera'ya söylediklerinize göre gruplar. Söylediğiniz her şeyin kendi bölümü olur.",
+      "how2": "Daha fazla ağırlık verdiğiniz ilgi alanları öne çıkar. Bir ilgi alanı, Mera onun için bir hikaye bulunca burada görünür.",
+      "how3": "Bir bölümün içinde okunmamış hikayeler önce gelir, en önemlisi en başta. Bölümler bu sayfadan ayrıldığınızda veya her 10 dakikada bir yeniden sıralanır."
+    },
+    "stories": {
+      "title": "Haberler nasıl çalışır",
+      "what": "Haberler, takip ettiğiniz gelişen hikayeleri tutar. Mera her birine yeni makaleler çıktıkça ekler.",
+      "how1": "Her hikaye, en son açtığınızdan beri kaç makalenin yeni olduğunu gösterir.",
+      "privacy": "Takip ettiğiniz hikayeler bu telefonda tutulur."
     }
   },
   "articleMenu": {
@@ -3008,6 +3029,304 @@
     "aboutSourceA11y": "{{source}} hakkında",
     "subscribed": "{{publisher}}'e abone oldunuz",
     "prefMoreA11y": "Bu kaynaktan daha fazlası",
-    "prefFewerA11y": "Bu kaynaktan daha azı"
+    "prefFewerA11y": "Bu kaynaktan daha azı",
+    "history": "Geçmiş",
+    "historyEmptyTitle": "Henüz burada bir şey yok",
+    "historyEmptyBody": "Makalelerinden birini yayıncının sitesinde açtığınızda burada 30 gün görünür."
+  },
+  "nav": {
+    "page": {
+      "interests": "İlgi alanları",
+      "stories": "Haberler",
+      "saved": "Kaydedilenler",
+      "checks": "Kontroller",
+      "visited": "Ziyaret edilenler",
+      "stats": "İstatistikler"
+    },
+    "rearrangeA11y": "{{tab}} sayfalarını yeniden düzenle",
+    "quickSettingsA11y": "{{page}} için hızlı ayarlar",
+    "pillA11y": "{{label}}, {{count}} içinde {{index}}",
+    "pillNewA11y": "{{label}}, yeni güncellemeler, {{count}} içinde {{index}}",
+    "howThisPageWorks": "Bu sayfa nasıl çalışır",
+    "arrange": {
+      "hint": "Sıralamak için sürükleyin. İlk sayfa, {{tab}} açıldığında görünen sayfadır.",
+      "moveEarlier": "Öne taşı",
+      "moveLater": "Arkaya taşı",
+      "saved": "Sıra kaydedildi",
+      "removeA11y": "{{name}} kaldır",
+      "addPlaceholder": "Ülke ekle",
+      "add": "Ekle",
+      "addA11y": "{{name}} ekle",
+      "noMatch": "{{query}} için ülke bulunamadı"
+    }
+  },
+  "feedShortcuts": {
+    "header": "Mera okurken",
+    "world1": "Dünyada şu an neler olduğunu gör",
+    "world2": "Şu anın en büyük haberleri, herkes için aynı",
+    "country1": "{{country}} için bugünün manşetleri",
+    "country2": "{{country}} ülkesinde şu anın en büyük haberleri",
+    "saved1": "Sonra için kaydettiğiniz bir makaleyi okumaya devam edin",
+    "saved2": "Sonra için sakladıklarınızı okuyun",
+    "stories1": "Takip ettiğiniz hikayelerdeki yenilikleri gör",
+    "stories2": "Takip ettiğiniz hikayelere yetişin"
+  },
+  "interests": {
+    "emptyTitle": "Mera ilgi alanlarınızı henüz bilmiyor",
+    "emptyBody": "Mera'ya takip ettiğiniz bir şeyi söyleyin, burada kendi bölümü olsun.",
+    "chipHome": "Yaşadığınız yer",
+    "chipWork": "İşiniz",
+    "chipTeam": "Tuttuğunuz bir takım",
+    "draftHome": "Yaşadığım yer:",
+    "draftWork": "İşim:",
+    "draftTeam": "Tuttuğum bir takım:",
+    "findingStories": "Mera bu ilgi alanı için hikayeler arıyor. İlkleri birkaç saniye içinde burada görünür.",
+    "backToInterests": "İlgi alanlarına dön"
+  },
+  "world": {
+    "windowRowLabel": "Son saatlerin öne çıkan haberleri",
+    "newStateLine": "Herkes için aynı öne çıkan haberler. Önemsediğiniz ülkeleri kalemle ekleyin. Her birinin kendi sayfası olur.",
+    "gathering": "{{country}} ülkesinin bugünkü haberleri toplanıyor. İlk hikayeler birkaç saniye içinde görünür.",
+    "emptyWindow": "Son {{hours}} saatte {{country}} ülkesinden öne çıkan haber yok.",
+    "emptyWindowWorld": "Son {{hours}} saatte öne çıkan haber yok.",
+    "showWider": "48 saati göster",
+    "offline": "Çevrimdışısınız. Dünya sayfaları ve arama için bağlantı gerekir.",
+    "arrange": {
+      "placesNote": "{{country}} yerlerinizden geliyor. Kaldırırsanız sayfası gizlenir. Yerleriniz kalır."
+    },
+    "search": {
+      "placeholder": "Tüm haberlerde ara",
+      "empty": "Mera'nın son 48 saatte bulduğu haberlerde arayın.",
+      "count_one": "{{count}} hikaye",
+      "count_other": "{{count}} hikaye",
+      "errorRetry": "Şu an arama yapılamadı."
+    },
+    "explainer": {
+      "title": "Dünya nasıl çalışır",
+      "what": "Dünya, son 24 saatte en çok yer verilen hikayeleri dünya için ve eklediğiniz her ülke için gösterir. Bunun yerine bir sayfanın üstünden 6, 12 veya 48 saati seçin. Bunlar herkes için aynıdır, size özel seçilmez.",
+      "how1": "Dünya manşetleri, hikayeleri ülkeler genelinde ne kadar geniş yer bulduklarına göre sıralar.",
+      "how2": "Ülke manşetleri o ülkede bulunan haber kaynaklarından gelir."
+    }
+  },
+  "library": {
+    "saved": {
+      "exportRow_one": "{{count}} kayıtlı · siz kaldırana kadar bu telefonda tutulur",
+      "exportRow_other": "{{count}} kayıtlı · siz kaldırana kadar bu telefonda tutulur",
+      "export": "Dışa aktar",
+      "emptyBody": "Burada saklamak için herhangi bir makalenin yer imine dokunun. Kaydedilen makaleler siz kaldırana kadar bu telefonda kalır."
+    },
+    "checks": {
+      "emptyTitle": "Henüz kontrol yok",
+      "emptyBody": "Mera'dan bir iddiayı kontrol etmesini isteyin veya Mera hikayeleri otomatik kontrol etsin.",
+      "autoLink": "Otomatik kontrolleri aç",
+      "autoOnBody": "Mera hikayeleri otomatik olarak kontrol eder. Bir iddia derecelendirildiğinde kontroller burada görünür."
+    },
+    "visited": {
+      "intro": "Son 30 günde kaynağında en çok açtığınız yayınlar. İyi habercilik, okurlar destek olduğunda yaşar.",
+      "topLine": "Diğerlerinden daha çok bunu açıyorsunuz",
+      "subscribe": "Abone ol",
+      "alreadyPay": "Zaten ödüyorum",
+      "alreadyPayA11y": "{{publisher}} için zaten ödüyorum",
+      "support": "Destek ol",
+      "supportA11y": "{{publisher}} yayınına destek ol",
+      "youPay": "Ödüyorsunuz",
+      "subscribed": "Abone",
+      "lastOpened": "Son açılış: {{date}}",
+      "footnote": "Abone ol ve Destek ol, yayının kendi sayfasını açar. Bu telefonda 30 gün tutulur.",
+      "emptyTitle": "Henüz yayın yok",
+      "emptyBody": "Bir makaleyi kaynağında açtığınızda yayını burada görünür, en çok okuduklarınıza destek olmanın bir yoluyla birlikte."
+    },
+    "stats": {
+      "emptyTitle": "Henüz kart yok",
+      "emptyBody": "Bir makaleyi yayıncının sitesinde açın, Mera ilk kartınızı yapsın.",
+      "share": "Bu kartı paylaş"
+    },
+    "explainer": {
+      "saved": {
+        "title": "Kaydedilenler nasıl çalışır",
+        "what": "Kaydedilenler, yer imi koyduğunuz makaleleri en yenisi başta olacak şekilde tutar.",
+        "how1": "Kaydedilen makaleler, Akışınızdan çıksalar bile siz kaldırana kadar bu telefonda kalır.",
+        "how2": "Dışa aktar, onları okunabilir bir liste veya veri olarak seçtiğiniz herhangi bir uygulamaya gönderir."
+      },
+      "checks": {
+        "title": "Kontroller nasıl çalışır",
+        "what": "Kontroller, Mera'dan doğruluk kontrolü aramasını istediğiniz hikayeleri listeler.",
+        "how1": "Her derecelendirme, doğruluk kontrolü yapan kuruluşun kendisine aittir ve yayımladıkları şekilde gösterilir.",
+        "how2": "Kontroller bu telefonda kalır. Birini silmek onu yalnızca buradan kaldırır."
+      },
+      "visited": {
+        "title": "Ziyaret edilenler nasıl çalışır",
+        "what": "Ziyaret edilenler, son 30 günde Mera'dan sitelerini açtığınız yayınları listeler, en çok açtığınız en başta.",
+        "how1": "Yalnızca yayıncının sitesinde açtığınız makaleler sayılır. Mera içinde okumak listelenmez.",
+        "how2": "Zaten ödüyorum, Mera'ya abone olduğunuzu söyler, böylece o yayın akışınızda daha fazla ağırlık alır.",
+        "privacy": "Bu liste bu telefonda kalır. Her ziyaret 30 gün sonra silinir."
+      },
+      "stats": {
+        "title": "İstatistikler nasıl çalışır",
+        "what": "İstatistikler, son 30 günlük okumanızı paylaşabileceğiniz kartlara dönüştürür.",
+        "how1": "Kartlar, bu telefonun Mera'yı çalıştırmak için zaten tuttuklarını kullanır: açtığınız siteler ile kaydettikleriniz ve takip ettikleriniz. Fazladan hiçbir şey kaydedilmez.",
+        "how2": "Paylaşmadan önce yayın adlarının görünüp görünmeyeceğini siz seçersiniz. Makale başlıkları asla görünmez."
+      }
+    }
+  },
+  "you": {
+    "profile": {
+      "facts": "Gerçekler",
+      "places": "Yerler",
+      "sources": "Kaynaklar",
+      "cleanup": "Profil temizliği",
+      "topicsDeclined": "Reddettiğiniz konular",
+      "payFor": "Ödediğiniz yayınlar",
+      "activity": "Etkinlik",
+      "viewAll": "{{count}} öğenin tümünü gör",
+      "viewAllNoCount": "Tümünü gör",
+      "review": "İncele",
+      "subscribed": "Abone",
+      "hidden": "Gizli",
+      "less": "Daha az",
+      "aboutA11y": "{{card}} hakkında",
+      "factsEmpty": "Henüz yok. Mera'ya neyi takip ettiğinizi söyleyin, burada görünsün.",
+      "placesEmpty": "Henüz yer yok",
+      "addCity": "Şehir ekle",
+      "sourcesEmpty": "Hiçbiri ayarlanmadı. Mera tüm kaynaklara aynı davranır.",
+      "topicsDeclinedEmpty": "Henüz reddedilen bir şey yok."
+    },
+    "hints": {
+      "facts": {
+        "title": "Gerçekler nasıl çalışır",
+        "body": "Her gerçek, Mera'nın sizin için yaptığı aramalara dönüşür. Birini değiştirir veya silerseniz ondan gelen hikayeler de değişir."
+      },
+      "places": {
+        "title": "Yerler nasıl çalışır",
+        "body": "Mera yerlerinizden yerel haberler arar ve bunları Akışınıza ve İlgi alanlarınıza koyar. Her yerin ülkesi Dünya'da da bir sayfa alır.",
+        "body2": "Ev en çok sayılır. Etiketini değiştirmek veya kaldırmak için bir yere dokunun."
+      },
+      "sources": {
+        "title": "Kaynaklar nasıl çalışır",
+        "body": "Daha fazla ve Daha az, bir yayının ne sıklıkla göründüğünü değiştirir. Sessize alınan yayın, büyük haberler dışında görünmez."
+      },
+      "cleanup": {
+        "title": "Profil temizliği nasıl çalışır",
+        "body": "Mera tekrar eden veya artık uymayan gerçekleri bulur. Siz incelemeden hiçbir şey değişmez."
+      },
+      "topicsDeclined": {
+        "title": "Reddedilen konular nasıl çalışır",
+        "body": "Mera'ya daha az göstermesini veya gizlemesini söylediğiniz konular. Birine yeniden izin verirseniz geri gelebilir."
+      },
+      "payFor": {
+        "title": "Abonelikler nasıl çalışır",
+        "body": "Ödediğiniz yayınlar akışınızda daha fazla ağırlık alır."
+      },
+      "activity": {
+        "title": "Etkinlik nasıl çalışır",
+        "body": "Profilinizdeki her değişiklik, en yenisi başta. Çoğu geri alınabilir."
+      }
+    },
+    "explainer": {
+      "title": "Profil nasıl çalışır",
+      "what": "Profil, Mera'nın haberlerinizi seçmek için kullandıklarını tutar: gerçekleriniz, yerleriniz, ayarladığınız kaynaklar ve reddettiğiniz konular.",
+      "how1": "Her gerçek, Mera'nın sizin için yaptığı aramalara dönüşür. Burada bir şeyi değiştirirseniz Akışınız, İlgi alanlarınız ve Dünya sayfalarınız da buna uyar.",
+      "privacy": "Gerçeklerinizden yapılan aramalar hiçbir zaman hesabınıza bağlanmaz. Sunucu yalnızca arama metnini tutar, bunu tüm kullanıcılar arasında anonim olarak paylaşır ve 14 gün kullanılmazsa siler."
+    },
+    "sources": {
+      "title": "Kaynaklar",
+      "find": "Yayın bul",
+      "adjusted": "Ayarlananlar",
+      "more": "Daha fazla",
+      "fewer": "Daha az",
+      "muted": "Sessize alındı",
+      "mute": "Sustur",
+      "clear": "Temizle",
+      "footnote": "Değiştirmek için birine dokunun. Bir makalenin menüsündeki \"daha az\" seçeneği de buraya düşer.",
+      "empty": "Henüz hiçbir kaynağı ayarlamadınız. Bir yayından daha fazla, daha az veya hiç görmek için yayın arayın. Bir makalenin menüsündeki \"daha az\" seçeneği de buraya düşer."
+    },
+    "settings": {
+      "groupApp": "Uygulama",
+      "yourPlan": "Planınız",
+      "usage_one": "Bugün {{limit}} makaleden {{count}}",
+      "usage_other": "Bugün {{limit}} makaleden {{count}}",
+      "usageNoLimit_one": "Bugün {{count}} makale",
+      "usageNoLimit_other": "Bugün {{count}} makale",
+      "usageOffline": "Kullanım çevrimiçi olduğunuzda görünür",
+      "resetsAt": "saat {{time}} itibarıyla sıfırlanır",
+      "displayValue": "Metin, Lite modu",
+      "backupAndData": "Yedekleme ve veriler"
+    },
+    "notifications": {
+      "push": "Anlık bildirimler",
+      "when": "Mera size ne zaman bildirim gönderebilir",
+      "yourTimes": "Saatleriniz",
+      "noneYet": "Henüz seçilmedi",
+      "zeroTimes": "Bir saat seçin, yoksa Mera hiç bildirim göndermez.",
+      "add": "Saat ekle",
+      "addHour": "{{time}} ekle",
+      "alreadyPicked": "{{time}} zaten seçili",
+      "remove": "{{time}} kaldır",
+      "wheel": "Eklenecek saat",
+      "footnote": "Çerçeveli saati kaydırmak için çevirin. Mera yalnızca bu saatlerde, saat diliminize göre bildirim gönderir."
+    }
+  },
+  "meraHints": {
+    "feed": {
+      "moreNews": "Mera'ya hangi konuda daha fazla haber istediğinizi söyleyin",
+      "addHome": "Yaşadığınız yeri ekleyin"
+    },
+    "askNews": "Haberlerdeki herhangi bir şeyi sorun",
+    "interests": {
+      "add": "İlgi alanı ekle",
+      "change": "İlgi alanını değiştir",
+      "remove": "İlgi alanını kaldır"
+    },
+    "interest": {
+      "change": "Bu ilgi alanını değiştir",
+      "remove": "Bu ilgi alanını kaldır"
+    },
+    "stories": {
+      "follow": "Bir hikayeyi takip et",
+      "name": "Takip edilecek bir hikayenin adını söyleyin"
+    },
+    "world": {
+      "countryFeed": "Bir ülkenin haberlerini akışınıza alın",
+      "family": "Mera'ya ailenizin nerede yaşadığını söyleyin",
+      "behind": "Bir manşetin arkasında ne olduğunu sorun"
+    },
+    "checks": {
+      "claim": "Bir iddiayı kontrol et",
+      "quote": "Bir alıntının gerçek olup olmadığını sorun"
+    },
+    "library": {
+      "likeToRead": "Mera'ya ne okumayı sevdiğinizi söyleyin"
+    },
+    "profile": {
+      "fixFact": "Mera'nın yanlış bildiği bir gerçeği düzeltin",
+      "whatKnows": "Mera'nın sizin hakkınızda ne bildiğini sorun"
+    },
+    "facts": {
+      "change": "Gerçeklerinizi değiştirin",
+      "remove": "Bir gerçeği kaldırın"
+    },
+    "sources": {
+      "whoBehind": "Bir yayının arkasında kimin olduğunu sorun",
+      "whatFollow": "Mera'ya neyi takip ettiğinizi söyleyin"
+    }
+  },
+  "meraButton": {
+    "a11yLabel": "Mera. {{hint}}"
+  },
+  "meraIntro": {
+    "feed": "Bu sizin Akışınız. Bana hangi konuda daha fazla haber istediğinizi söyleyin veya haberlerdeki herhangi bir şeyi sorun.",
+    "interests": "Bunlar ilgi alanlarınız. Bana yeni bir tane söyleyin veya değiştirmek ya da kaldırmak istediğinizi.",
+    "interest": "Bu sayfa ilgi alanlarınızdan birini takip ediyor. Burada değiştirebilir veya kaldırabilirsiniz.",
+    "world": "Bana bir manşeti sorun veya haber istediğiniz bir ülkeyi söyleyin.",
+    "checks": "Gördüğünüz bir iddiayı söyleyin, ben de web'de arayayım.",
+    "checksNoWeb": "Sohbette web araması kapalı, bu yüzden şu an iddiaları arayamıyorum. Bunu Ayarlar'dan açabilirsiniz.",
+    "library": "Bana haberlerdeki herhangi bir şeyi sorun veya ne okumayı sevdiğinizi söyleyin.",
+    "profile": "Mera'nın sizin hakkınızda bildikleri bunlar. Bana yeni bir şey söyleyin veya yanlış olanı düzeltin.",
+    "facts": "Gerçeklerinize bakıyorsunuz. Neyi değiştirmek istersiniz?",
+    "sources": "Bana bir yayını sorun veya neyi takip ettiğinizi söyleyin."
+  },
+  "meraDraft": {
+    "changeInterest": "\"{{statement}}\" ilgi alanımı şuna değiştir: ",
+    "removeInterest": "\"{{statement}}\" ilgi alanımı kaldır"
   }
 }

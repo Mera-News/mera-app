@@ -244,7 +244,11 @@
     "updatedJustNow": "방금 업데이트됨",
     "reasonWriting": "메모 작성 중",
     "reasonWritingA11y": "메모 작성 중",
-    "reasonNotYet": "이 기사에 대한 메모가 아직 없습니다."
+    "reasonNotYet": "이 기사에 대한 메모가 아직 없습니다.",
+    "findingStories": "내 스토리를 찾는 중",
+    "findingStoriesBody": "준비되는 대로 여기에 나타나요",
+    "processingOffline": "오프라인 상태예요. 다시 온라인이 되면 스토리가 도착해요.",
+    "worldCta": "전 세계 주요 스토리 보기"
   },
   "relevance": {
     "emergency": "긴급",
@@ -1034,7 +1038,10 @@
     "around": "탐색",
     "profile": "프로필",
     "settings": "설정",
-    "gotIt": "확인"
+    "gotIt": "확인",
+    "world": "전 세계",
+    "library": "보관함",
+    "you": "내 정보"
   },
   "swipeFeed": {
     "yourDeck": "피드",
@@ -1163,7 +1170,8 @@
     "removeMemberConfirmBody": "이 기사는 스토리 타임라인에서 삭제됩니다. Mera는 스토리 자체를 계속 팔로우합니다.",
     "timelineLoadFailed": "이 스토리를 불러오지 못했어요. 아래로 당겨 다시 시도하세요.",
     "deleteFailed": "이 스토리의 팔로우를 해제하지 못했어요. 다시 시도하세요.",
-    "removeFailed": "이 기사를 스토리에서 제거하지 못했어요. 다시 시도하세요."
+    "removeFailed": "이 기사를 스토리에서 제거하지 못했어요. 다시 시도하세요.",
+    "emptyBodyMera": "진행 중인 스토리를 팔로우하면 Mera가 여기서 최신 상태로 유지해요. Mera 버튼을 눌러 팔로우해 보세요."
   },
   "whatsNew": {
     "title": "새로운 기능",
@@ -1423,7 +1431,8 @@
       "travel": "여행",
       "family": "가족",
       "partnerFamily": "배우자 가족",
-      "interest": "관심 지역"
+      "interest": "관심 지역",
+      "work": "직장"
     },
     "weight": {
       "low": "낮음",
@@ -2923,6 +2932,18 @@
       "what": "이 휴대폰에서 Mera가 작동하는 방식을 정하고 계정을 관리하세요. 요금제와 오늘의 사용량은 맨 위에 있습니다.",
       "how1": "Mera Protocol에서는 AI가 뉴스를 읽는 곳을 클라우드와 이 휴대폰 중에서 정합니다. 개인정보 및 데이터에는 암호화된 백업이 있고 데이터를 삭제할 수 있습니다.",
       "how2": "보안에서 PIN을 추가합니다. 도움말에는 가이드와 FAQ가 있습니다. 계정에서 로그아웃합니다."
+    },
+    "interests": {
+      "title": "관심사의 작동 방식",
+      "what": "관심사는 Mera에게 알려 준 내용별로 뉴스를 묶어요. 알려 준 것마다 전용 섹션이 생겨요.",
+      "how2": "비중을 높게 준 관심사가 먼저 나와요. Mera가 스토리를 찾으면 그 관심사가 여기에 나타나요.",
+      "how3": "섹션 안에서는 읽지 않은 스토리가 먼저, 중요한 순서대로 나와요. 섹션 순서는 이 페이지를 나갈 때나 10분마다 바뀌어요."
+    },
+    "stories": {
+      "title": "스토리의 작동 방식",
+      "what": "스토리에는 팔로우하는 진행 중인 스토리가 모여요. 새 기사가 나오면 Mera가 각 스토리에 추가해요.",
+      "how1": "각 스토리에는 마지막으로 연 뒤 새로 올라온 기사 수가 표시돼요.",
+      "privacy": "팔로우하는 스토리는 이 휴대전화에 저장돼요."
     }
   },
   "articleMenu": {
@@ -3005,6 +3026,300 @@
     "aboutSourceA11y": "{{source}} 정보",
     "subscribed": "{{publisher}}를 구독하고 있습니다",
     "prefMoreA11y": "이 매체에서 더 보기",
-    "prefFewerA11y": "이 매체에서 덜 보기"
+    "prefFewerA11y": "이 매체에서 덜 보기",
+    "history": "기록",
+    "historyEmptyTitle": "아직 아무것도 없어요",
+    "historyEmptyBody": "이 매체의 기사를 발행처 사이트에서 열면 30일 동안 여기에 나타나요."
+  },
+  "nav": {
+    "page": {
+      "interests": "관심사",
+      "stories": "스토리",
+      "saved": "저장됨",
+      "checks": "팩트체크",
+      "visited": "방문함",
+      "stats": "통계"
+    },
+    "rearrangeA11y": "{{tab}} 페이지 순서 바꾸기",
+    "quickSettingsA11y": "{{page}} 빠른 설정",
+    "pillA11y": "{{label}}, {{count}}개 중 {{index}}번째",
+    "pillNewA11y": "{{label}}, 새 소식 있음, {{count}}개 중 {{index}}번째",
+    "howThisPageWorks": "이 페이지의 작동 방식",
+    "arrange": {
+      "hint": "드래그해서 순서를 바꿔요. {{tab}}은 첫 번째 페이지에서 열려요.",
+      "moveEarlier": "앞으로 이동",
+      "moveLater": "뒤로 이동",
+      "saved": "순서를 저장했어요",
+      "removeA11y": "{{name}} 제거",
+      "addPlaceholder": "나라 추가",
+      "add": "추가",
+      "addA11y": "{{name}} 추가",
+      "noMatch": "{{query}}에 해당하는 나라를 찾지 못했어요"
+    }
+  },
+  "feedShortcuts": {
+    "header": "Mera가 읽는 동안",
+    "world1": "지금 세상에서 무슨 일이 일어나는지 보기",
+    "world2": "지금 가장 큰 스토리, 모두에게 같아요",
+    "country1": "오늘 {{country}}의 주요 헤드라인",
+    "country2": "지금 {{country}}에서 가장 큰 스토리",
+    "saved1": "나중을 위해 저장한 기사 이어 읽기",
+    "saved2": "나중에 읽으려고 모아 둔 글 읽기",
+    "stories1": "팔로우하는 스토리의 새 소식 보기",
+    "stories2": "팔로우하는 스토리 따라잡기"
+  },
+  "interests": {
+    "emptyTitle": "Mera가 아직 내 관심사를 몰라요",
+    "emptyBody": "팔로우하는 것을 Mera에게 하나 알려 주면 여기에 전용 섹션이 생겨요.",
+    "chipHome": "사는 곳",
+    "chipWork": "내 일",
+    "chipTeam": "응원하는 팀",
+    "draftHome": "내가 사는 곳:",
+    "draftWork": "내 일:",
+    "draftTeam": "내가 응원하는 팀:",
+    "findingStories": "Mera가 이 관심사의 스토리를 찾고 있어요. 첫 스토리가 몇 초 안에 여기에 나타나요.",
+    "backToInterests": "관심사로 돌아가기"
+  },
+  "world": {
+    "windowRowLabel": "최근 주요 스토리",
+    "newStateLine": "주요 스토리는 모두에게 같아요. 연필 버튼으로 관심 있는 나라를 추가해 보세요. 나라마다 전용 페이지가 생겨요.",
+    "gathering": "{{country}}의 오늘 뉴스를 모으는 중이에요. 첫 스토리가 몇 초 안에 나타나요.",
+    "emptyWindow": "최근 {{hours}}시간 동안 {{country}}의 주요 스토리가 없어요.",
+    "emptyWindowWorld": "최근 {{hours}}시간 동안 주요 스토리가 없어요.",
+    "showWider": "48시간 보기",
+    "offline": "오프라인 상태예요. 전 세계 페이지와 검색은 연결이 필요해요.",
+    "arrange": {
+      "placesNote": "{{country}}은 내 장소에서 왔어요. 제거하면 그 페이지만 숨겨져요. 내 장소는 그대로 남아요."
+    },
+    "search": {
+      "placeholder": "모든 뉴스 검색",
+      "empty": "Mera가 최근 48시간 동안 찾은 뉴스를 검색해요.",
+      "count_other": "스토리 {{count}}개",
+      "errorRetry": "지금은 검색할 수 없어요."
+    },
+    "explainer": {
+      "title": "전 세계의 작동 방식",
+      "what": "전 세계에는 최근 24시간 동안 가장 많이 다뤄진 스토리가 세계 전체와 추가한 나라별로 나와요. 페이지 위쪽에서 6시간, 12시간, 48시간으로 바꿀 수도 있어요. 모두에게 같은 내용이고, 나에게 맞춰 고른 것은 아니에요.",
+      "how1": "전 세계 헤드라인은 여러 나라에서 얼마나 널리 다뤄졌는지에 따라 스토리 순위를 매겨요.",
+      "how2": "나라별 헤드라인은 그 나라에 기반을 둔 뉴스 출처에서 옵니다."
+    }
+  },
+  "library": {
+    "saved": {
+      "exportRow_other": "{{count}}개 저장됨 · 제거하기 전까지 이 휴대전화에 보관돼요",
+      "export": "내보내기",
+      "emptyBody": "기사의 북마크를 누르면 여기에 보관돼요. 저장한 기사는 제거하기 전까지 이 휴대전화에 남아요."
+    },
+    "checks": {
+      "emptyTitle": "아직 팩트체크가 없어요",
+      "emptyBody": "Mera에게 주장을 확인해 달라고 하거나, Mera가 스토리를 자동으로 확인하게 해 보세요.",
+      "autoLink": "자동 확인 켜기",
+      "autoOnBody": "Mera가 스토리를 자동으로 확인해요. 주장에 평가가 내려지면 여기에 나타나요."
+    },
+    "visited": {
+      "intro": "최근 30일 동안 원문 사이트에서 가장 많이 연 매체예요. 좋은 보도는 독자가 지원할 때 이어져요.",
+      "topLine": "다른 어떤 곳보다 자주 열어요",
+      "subscribe": "구독하기",
+      "alreadyPay": "이미 구독 중이에요",
+      "alreadyPayA11y": "{{publisher}}을(를) 이미 구독 중이에요",
+      "support": "후원",
+      "supportA11y": "{{publisher}} 후원",
+      "youPay": "구독 중",
+      "subscribed": "구독함",
+      "lastOpened": "마지막으로 연 날: {{date}}",
+      "footnote": "구독하기와 후원은 해당 매체의 페이지를 열어요. 이 휴대전화에 30일 동안 보관돼요.",
+      "emptyTitle": "아직 매체가 없어요",
+      "emptyBody": "원문 사이트에서 기사를 열면 그 매체가 여기에 나타나요. 자주 읽는 매체를 후원할 방법도 함께 보여 드려요."
+    },
+    "stats": {
+      "emptyTitle": "아직 카드가 없어요",
+      "emptyBody": "발행처 사이트에서 기사를 열면 Mera가 첫 카드를 만들어요.",
+      "share": "이 카드 공유"
+    },
+    "explainer": {
+      "saved": {
+        "title": "저장됨의 작동 방식",
+        "what": "저장됨에는 북마크한 기사가 최신순으로 모여요.",
+        "how1": "저장한 기사는 피드에서 사라진 뒤에도 제거하기 전까지 이 휴대전화에 남아요.",
+        "how2": "내보내기를 누르면 읽기 쉬운 목록이나 데이터로 원하는 앱에 보낼 수 있어요."
+      },
+      "checks": {
+        "title": "팩트체크의 작동 방식",
+        "what": "팩트체크에는 Mera에게 확인해 달라고 요청한 스토리의 팩트체크가 모여요.",
+        "how1": "각 평가는 팩트체크 기관이 발표한 그대로 보여 드려요.",
+        "how2": "팩트체크는 이 휴대전화에 보관돼요. 삭제해도 여기서만 사라져요."
+      },
+      "visited": {
+        "title": "방문함의 작동 방식",
+        "what": "방문함에는 최근 30일 동안 Mera에서 사이트를 연 매체가 가장 자주 연 순서로 나와요.",
+        "how1": "발행처 사이트에서 연 기사만 집계돼요. Mera 안에서 읽은 기사는 나오지 않아요.",
+        "how2": "이미 구독 중이에요를 누르면 Mera가 구독 중임을 알고, 그 매체를 피드에서 더 비중 있게 다뤄요.",
+        "privacy": "이 목록은 이 휴대전화에만 있어요. 방문 기록은 30일 뒤에 삭제돼요."
+      },
+      "stats": {
+        "title": "통계의 작동 방식",
+        "what": "통계는 최근 30일 동안의 읽기 기록을 공유할 수 있는 카드로 만들어요.",
+        "how1": "카드에는 이 휴대전화가 Mera를 운영하려고 이미 보관하는 정보를 써요. 연 사이트와 저장하거나 팔로우하는 것이에요. 따로 기록하는 것은 없어요.",
+        "how2": "공유하기 전에 매체 이름을 보여 줄지 직접 고를 수 있어요. 기사 제목은 절대 나오지 않아요."
+      }
+    }
+  },
+  "you": {
+    "profile": {
+      "facts": "사실",
+      "places": "장소",
+      "sources": "소스",
+      "cleanup": "프로필 정리",
+      "topicsDeclined": "거절한 주제",
+      "payFor": "구독 중인 매체",
+      "activity": "활동",
+      "viewAll": "{{count}}개 모두 보기",
+      "viewAllNoCount": "모두 보기",
+      "review": "검토",
+      "subscribed": "구독함",
+      "hidden": "숨김",
+      "less": "줄이기",
+      "aboutA11y": "{{card}}에 대해",
+      "factsEmpty": "아직 없어요. 팔로우하는 것을 Mera에게 알려 주면 여기에 나타나요.",
+      "placesEmpty": "아직 장소가 없어요",
+      "addCity": "도시 추가",
+      "sourcesEmpty": "조정한 것이 없어요. Mera는 모든 소스를 똑같이 다뤄요.",
+      "topicsDeclinedEmpty": "아직 거절한 것이 없어요."
+    },
+    "hints": {
+      "facts": {
+        "title": "사실의 작동 방식",
+        "body": "사실은 하나하나가 Mera가 대신 실행하는 검색이 돼요. 사실을 바꾸거나 삭제하면 그 사실에서 나온 스토리도 바뀌어요."
+      },
+      "places": {
+        "title": "장소의 작동 방식",
+        "body": "Mera는 내 장소의 지역 뉴스를 찾아 피드와 관심사에 넣어요. 각 장소의 나라는 전 세계에도 페이지가 생겨요.",
+        "body2": "집이 가장 중요하게 반영돼요. 장소를 누르면 이름표를 바꾸거나 제거할 수 있어요."
+      },
+      "sources": {
+        "title": "소스의 작동 방식",
+        "body": "늘리기와 줄이기는 매체가 나오는 빈도를 바꿔요. 음소거하면 큰 뉴스를 빼고는 나오지 않아요."
+      },
+      "cleanup": {
+        "title": "프로필 정리의 작동 방식",
+        "body": "Mera가 겹치거나 더는 맞지 않는 사실을 찾아내요. 직접 검토하기 전에는 아무것도 바뀌지 않아요."
+      },
+      "topicsDeclined": {
+        "title": "거절한 주제의 작동 방식",
+        "body": "더 적게 보거나 숨기라고 Mera에게 알려 준 주제예요. 다시 허용하면 돌아올 수 있어요."
+      },
+      "payFor": {
+        "title": "구독의 작동 방식",
+        "body": "구독 중인 매체는 피드에서 더 비중 있게 다뤄요."
+      },
+      "activity": {
+        "title": "활동의 작동 방식",
+        "body": "프로필의 모든 변경 사항이 최신순으로 나와요. 대부분 되돌릴 수 있어요."
+      }
+    },
+    "explainer": {
+      "title": "프로필의 작동 방식",
+      "what": "프로필에는 Mera가 뉴스를 고르는 데 쓰는 정보가 담겨 있어요. 내 사실, 내 장소, 조정한 소스, 거절한 주제예요.",
+      "how1": "사실은 하나하나가 Mera가 대신 실행하는 검색이 돼요. 여기서 무언가를 바꾸면 피드, 관심사, 전 세계 페이지도 따라 바뀌어요.",
+      "privacy": "내 사실로 만든 검색은 내 계정과 연결되지 않아요. 서버에는 검색 문구만 남고, 모든 사용자 사이에서 익명으로 공유되며, 14일 동안 쓰이지 않으면 삭제돼요."
+    },
+    "sources": {
+      "title": "소스",
+      "find": "매체 찾기",
+      "adjusted": "조정됨",
+      "more": "늘리기",
+      "fewer": "줄이기",
+      "muted": "음소거됨",
+      "mute": "음소거",
+      "clear": "지우기",
+      "footnote": "누르면 바꿀 수 있어요. 기사 메뉴의 \"줄이기\"도 여기에 들어와요.",
+      "empty": "조정한 소스가 없어요. 매체를 검색해서 더 보거나, 덜 보거나, 안 볼 수 있어요. 기사 메뉴의 \"줄이기\"도 여기에 들어와요."
+    },
+    "settings": {
+      "groupApp": "앱",
+      "yourPlan": "내 요금제",
+      "usage_other": "오늘 기사 {{limit}}개 중 {{count}}개",
+      "usageNoLimit_other": "오늘 기사 {{count}}개",
+      "usageOffline": "사용량은 온라인일 때 표시돼요",
+      "resetsAt": "{{time}}에 초기화",
+      "displayValue": "텍스트, 라이트 모드",
+      "backupAndData": "백업 및 데이터"
+    },
+    "notifications": {
+      "push": "푸시 알림",
+      "when": "Mera가 알림을 보낼 수 있는 때",
+      "yourTimes": "내 시간",
+      "noneYet": "아직 고른 시간이 없어요",
+      "zeroTimes": "시간을 고르세요. 고르지 않으면 Mera가 알림을 보내지 않아요.",
+      "add": "시간 추가",
+      "addHour": "{{time}} 추가",
+      "alreadyPicked": "{{time}}은 이미 골랐어요",
+      "remove": "{{time}} 제거",
+      "wheel": "추가할 시간",
+      "footnote": "돌려서 윤곽선이 있는 시간을 옮겨요. Mera는 내 시간대 기준으로 이 시간에만 알림을 보내요."
+    }
+  },
+  "meraHints": {
+    "feed": {
+      "moreNews": "더 보고 싶은 뉴스를 Mera에게 알려 주기",
+      "addHome": "사는 곳 추가하기"
+    },
+    "askNews": "뉴스에 대해 무엇이든 물어보기",
+    "interests": {
+      "add": "관심사 추가하기",
+      "change": "관심사 바꾸기",
+      "remove": "관심사 제거하기"
+    },
+    "interest": {
+      "change": "이 관심사 바꾸기",
+      "remove": "이 관심사 제거하기"
+    },
+    "stories": {
+      "follow": "스토리 팔로우",
+      "name": "계속 따라갈 스토리 알려 주기"
+    },
+    "world": {
+      "countryFeed": "한 나라의 뉴스를 피드에서 받기",
+      "family": "가족이 사는 곳을 Mera에게 알려 주기",
+      "behind": "헤드라인의 배경 물어보기"
+    },
+    "checks": {
+      "claim": "주장 확인하기",
+      "quote": "인용문이 진짜인지 물어보기"
+    },
+    "library": {
+      "likeToRead": "읽고 싶은 글을 Mera에게 알려 주기"
+    },
+    "profile": {
+      "fixFact": "Mera가 잘못 안 사실 고치기",
+      "whatKnows": "Mera가 나에 대해 아는 것 물어보기"
+    },
+    "facts": {
+      "change": "내 사실 바꾸기",
+      "remove": "사실 제거하기"
+    },
+    "sources": {
+      "whoBehind": "매체의 운영 주체 물어보기",
+      "whatFollow": "팔로우하는 것을 Mera에게 알려 주기"
+    }
+  },
+  "meraButton": {
+    "a11yLabel": "Mera. {{hint}}"
+  },
+  "meraIntro": {
+    "feed": "여기는 내 피드예요. 더 보고 싶은 뉴스를 알려 주세요. 뉴스에 대해 무엇이든 물어보세요.",
+    "interests": "여기는 내 관심사예요. 새 관심사를 알려 주세요. 바꾸거나 제거하고 싶은 것도 알려 주세요.",
+    "interest": "이 페이지는 내 관심사 중 하나를 따라가요. 여기서 바꾸거나 제거할 수 있어요.",
+    "world": "헤드라인에 대해 물어보세요. 뉴스를 받고 싶은 나라를 알려 주세요.",
+    "checks": "본 적 있는 주장을 알려 주세요. 웹에서 찾아볼게요.",
+    "checksNoWeb": "채팅의 웹 검색이 꺼져 있어서 지금은 주장을 찾아볼 수 없어요. 설정에서 켤 수 있어요.",
+    "library": "뉴스에 대해 무엇이든 물어보세요. 읽고 싶은 글도 알려 주세요.",
+    "profile": "이게 Mera가 아는 내 정보예요. 새로운 것을 알려 주세요. 틀린 것은 고쳐 주세요.",
+    "facts": "내 사실을 보고 있어요. 무엇을 바꾸고 싶으세요?",
+    "sources": "매체에 대해 물어보세요. 팔로우하는 것을 알려 주세요."
+  },
+  "meraDraft": {
+    "changeInterest": "내 관심사 \"{{statement}}\"을(를) 다음으로 바꿀래요: ",
+    "removeInterest": "내 관심사 \"{{statement}}\" 제거"
   }
 }

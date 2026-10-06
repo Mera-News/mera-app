@@ -244,7 +244,11 @@
     "updatedJustNow": "Vừa cập nhật",
     "reasonWriting": "Đang viết ghi chú",
     "reasonWritingA11y": "đang viết ghi chú",
-    "reasonNotYet": "Chưa có ghi chú cho bài viết này."
+    "reasonNotYet": "Chưa có ghi chú cho bài viết này.",
+    "findingStories": "Đang tìm câu chuyện cho bạn",
+    "findingStoriesBody": "Chúng sẽ hiện ở đây ngay khi sẵn sàng",
+    "processingOffline": "Bạn đang ngoại tuyến. Các câu chuyện của bạn sẽ đến khi bạn có mạng trở lại.",
+    "worldCta": "Xem tin hàng đầu trong Thế giới"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -1034,7 +1038,10 @@
     "around": "Khám phá",
     "profile": "Hồ sơ",
     "settings": "Cài đặt",
-    "gotIt": "Đã hiểu"
+    "gotIt": "Đã hiểu",
+    "world": "Thế giới",
+    "library": "Thư viện",
+    "you": "Bạn"
   },
   "swipeFeed": {
     "yourDeck": "Bảng tin",
@@ -1163,7 +1170,8 @@
     "removeMemberConfirmBody": "Bài viết này bị xóa khỏi dòng thời gian của câu chuyện. Mera vẫn tiếp tục theo dõi câu chuyện.",
     "timelineLoadFailed": "Không tải được câu chuyện này. Kéo xuống để thử lại.",
     "deleteFailed": "Không thể bỏ theo dõi câu chuyện này. Hãy thử lại.",
-    "removeFailed": "Không thể xóa bài này khỏi câu chuyện. Hãy thử lại."
+    "removeFailed": "Không thể xóa bài này khỏi câu chuyện. Hãy thử lại.",
+    "emptyBodyMera": "Hãy theo dõi một câu chuyện đang diễn biến và Mera sẽ cập nhật nó ở đây. Chạm vào nút Mera để theo dõi."
   },
   "whatsNew": {
     "title": "Có gì mới",
@@ -1424,7 +1432,8 @@
       "travel": "Du lịch",
       "family": "Gia đình",
       "partnerFamily": "Gia đình bạn đời",
-      "interest": "Quan tâm"
+      "interest": "Quan tâm",
+      "work": "Cơ quan"
     },
     "weight": {
       "low": "Thấp",
@@ -2924,6 +2933,18 @@
       "what": "Chọn cách Mera chạy trên điện thoại này và quản lý tài khoản của bạn. Gói và mức dùng hôm nay nằm ở trên cùng.",
       "how1": "Mera Protocol quyết định nơi AI đọc tin tức của bạn: trên đám mây hay trên điện thoại này. Quyền riêng tư và dữ liệu giữ bản sao lưu đã mã hóa của bạn và cho phép bạn xóa dữ liệu.",
       "how2": "Bảo mật thêm mã PIN. Trợ giúp có hướng dẫn và câu hỏi thường gặp. Bạn đăng xuất trong Tài khoản."
+    },
+    "interests": {
+      "title": "Mối quan tâm hoạt động thế nào",
+      "what": "Mối quan tâm sắp xếp tin tức theo những gì bạn đã nói với Mera. Mỗi điều bạn nói với Mera có một mục riêng.",
+      "how2": "Những mối quan tâm bạn coi trọng hơn sẽ lên đầu. Một mối quan tâm chỉ hiện ở đây khi Mera tìm được câu chuyện cho nó.",
+      "how3": "Trong mỗi mục, câu chuyện chưa đọc lên trước, quan trọng nhất lên đầu. Các mục được sắp xếp lại khi bạn rời trang này, hoặc sau mỗi 10 phút."
+    },
+    "stories": {
+      "title": "Câu chuyện hoạt động thế nào",
+      "what": "Câu chuyện lưu các sự kiện đang diễn biến mà bạn theo dõi. Mera thêm bài mới vào từng câu chuyện khi có bài xuất hiện.",
+      "how1": "Mỗi câu chuyện cho biết có bao nhiêu bài mới kể từ lần bạn mở gần nhất.",
+      "privacy": "Các câu chuyện bạn theo dõi được lưu trên điện thoại này."
     }
   },
   "articleMenu": {
@@ -3006,6 +3027,300 @@
     "aboutSourceA11y": "Về {{source}}",
     "subscribed": "Bạn đã đăng ký {{publisher}}",
     "prefMoreA11y": "Xem thêm từ nguồn này",
-    "prefFewerA11y": "Xem ít hơn từ nguồn này"
+    "prefFewerA11y": "Xem ít hơn từ nguồn này",
+    "history": "Lịch sử",
+    "historyEmptyTitle": "Chưa có gì ở đây",
+    "historyEmptyBody": "Khi bạn mở một bài của ấn phẩm này trên trang của nhà xuất bản, nó sẽ hiện ở đây trong 30 ngày."
+  },
+  "nav": {
+    "page": {
+      "interests": "Mối quan tâm",
+      "stories": "Câu chuyện",
+      "saved": "Đã lưu",
+      "checks": "Kiểm chứng",
+      "visited": "Đã ghé",
+      "stats": "Thống kê"
+    },
+    "rearrangeA11y": "Sắp xếp lại các trang của {{tab}}",
+    "quickSettingsA11y": "Cài đặt nhanh cho {{page}}",
+    "pillA11y": "{{label}}, {{index}} trên {{count}}",
+    "pillNewA11y": "{{label}}, có nội dung mới, {{index}} trên {{count}}",
+    "howThisPageWorks": "Trang này hoạt động thế nào",
+    "arrange": {
+      "hint": "Kéo để sắp xếp lại. Trang đầu tiên là trang {{tab}} mở ra.",
+      "moveEarlier": "Chuyển lên trước",
+      "moveLater": "Chuyển ra sau",
+      "saved": "Đã lưu thứ tự",
+      "removeA11y": "Xóa {{name}}",
+      "addPlaceholder": "Thêm một quốc gia",
+      "add": "Thêm",
+      "addA11y": "Thêm {{name}}",
+      "noMatch": "Không tìm thấy quốc gia nào cho {{query}}"
+    }
+  },
+  "feedShortcuts": {
+    "header": "Trong lúc Mera đọc",
+    "world1": "Xem thế giới đang có chuyện gì ngay lúc này",
+    "world2": "Những tin lớn nhất hiện nay, ai cũng thấy giống nhau",
+    "country1": "Tin hàng đầu ở {{country}} hôm nay",
+    "country2": "Những tin lớn nhất ở {{country}} hiện nay",
+    "saved1": "Đọc tiếp bài báo bạn đã lưu để đọc sau",
+    "saved2": "Đọc những gì bạn đã giữ lại để đọc sau",
+    "stories1": "Xem có gì mới trong các câu chuyện bạn theo dõi",
+    "stories2": "Cập nhật các câu chuyện bạn theo dõi"
+  },
+  "interests": {
+    "emptyTitle": "Mera chưa biết bạn quan tâm đến điều gì",
+    "emptyBody": "Hãy cho Mera biết một điều bạn theo dõi, và nó sẽ có một mục riêng ở đây.",
+    "chipHome": "Nơi bạn sống",
+    "chipWork": "Công việc của bạn",
+    "chipTeam": "Đội bạn ủng hộ",
+    "draftHome": "Nơi tôi sống:",
+    "draftWork": "Công việc của tôi:",
+    "draftTeam": "Đội tôi ủng hộ:",
+    "findingStories": "Mera đang tìm câu chuyện cho mối quan tâm này. Những câu chuyện đầu tiên sẽ hiện ở đây sau vài giây.",
+    "backToInterests": "Quay lại Mối quan tâm"
+  },
+  "world": {
+    "windowRowLabel": "Tin hàng đầu trong",
+    "newStateLine": "Tin hàng đầu giống nhau với mọi người. Thêm các quốc gia bạn quan tâm bằng biểu tượng cây bút. Mỗi nơi có một trang riêng.",
+    "gathering": "Đang thu thập tin hôm nay từ {{country}}. Những câu chuyện đầu tiên sẽ hiện sau vài giây.",
+    "emptyWindow": "Không có tin hàng đầu nào từ {{country}} trong {{hours}} giờ qua.",
+    "emptyWindowWorld": "Không có tin hàng đầu nào trong {{hours}} giờ qua.",
+    "showWider": "Hiện 48 giờ",
+    "offline": "Bạn đang ngoại tuyến. Các trang Thế giới và tìm kiếm cần có kết nối mạng.",
+    "arrange": {
+      "placesNote": "{{country}} đến từ các địa điểm của bạn. Xóa nó chỉ ẩn trang của nó. Các địa điểm của bạn vẫn còn."
+    },
+    "search": {
+      "placeholder": "Tìm trong mọi tin tức",
+      "empty": "Tìm tin tức Mera đã thấy trong 48 giờ qua.",
+      "count_other": "{{count}} câu chuyện",
+      "errorRetry": "Hiện chưa thể tìm kiếm."
+    },
+    "explainer": {
+      "title": "Thế giới hoạt động thế nào",
+      "what": "Thế giới hiển thị những câu chuyện được đưa tin nhiều nhất trong 24 giờ qua, cho cả thế giới và từng quốc gia bạn thêm. Bạn có thể chọn 6, 12 hoặc 48 giờ ở đầu trang. Nội dung giống nhau với mọi người, không chọn riêng cho bạn.",
+      "how1": "Tin hàng đầu thế giới được xếp hạng theo mức độ được đưa tin rộng rãi giữa các quốc gia.",
+      "how2": "Tiêu đề của một quốc gia đến từ các nguồn tin đặt tại quốc gia đó."
+    }
+  },
+  "library": {
+    "saved": {
+      "exportRow_other": "Đã lưu {{count}} · giữ trên điện thoại này cho đến khi bạn xóa",
+      "export": "Xuất",
+      "emptyBody": "Chạm vào dấu trang trên bất kỳ bài báo nào để giữ nó ở đây. Bài đã lưu ở lại trên điện thoại này cho đến khi bạn xóa."
+    },
+    "checks": {
+      "emptyTitle": "Chưa có kiểm chứng nào",
+      "emptyBody": "Nhờ Mera kiểm chứng một nhận định, hoặc để Mera tự động kiểm chứng các câu chuyện.",
+      "autoLink": "Bật kiểm chứng tự động",
+      "autoOnBody": "Mera tự động kiểm chứng các câu chuyện. Kết quả sẽ hiện ở đây khi một nhận định được đánh giá."
+    },
+    "visited": {
+      "intro": "Những ấn phẩm bạn mở nhiều nhất tại nguồn trong 30 ngày qua. Báo chí tốt chỉ bền vững khi độc giả ủng hộ.",
+      "topLine": "Bạn mở ấn phẩm này nhiều hơn mọi ấn phẩm khác",
+      "subscribe": "Đăng ký",
+      "alreadyPay": "Tôi đã trả phí",
+      "alreadyPayA11y": "Tôi đã trả phí cho {{publisher}}",
+      "support": "Ủng hộ",
+      "supportA11y": "Ủng hộ {{publisher}}",
+      "youPay": "Bạn đã trả phí",
+      "subscribed": "Đã đăng ký",
+      "lastOpened": "Mở lần cuối {{date}}",
+      "footnote": "Đăng ký và Ủng hộ sẽ mở trang riêng của ấn phẩm. Lưu trên điện thoại này trong 30 ngày.",
+      "emptyTitle": "Chưa có ấn phẩm nào",
+      "emptyBody": "Khi bạn mở một bài báo tại nguồn, ấn phẩm của bài sẽ hiện ở đây, kèm cách ủng hộ những ấn phẩm bạn đọc nhiều nhất."
+    },
+    "stats": {
+      "emptyTitle": "Chưa có thẻ nào",
+      "emptyBody": "Mở một bài báo trên trang của nhà xuất bản và Mera sẽ tạo thẻ đầu tiên cho bạn.",
+      "share": "Chia sẻ thẻ này"
+    },
+    "explainer": {
+      "saved": {
+        "title": "Đã lưu hoạt động thế nào",
+        "what": "Đã lưu giữ các bài báo bạn đã đánh dấu, mới nhất lên đầu.",
+        "how1": "Bài đã lưu ở lại trên điện thoại này cho đến khi bạn xóa, kể cả khi chúng không còn trong Bảng tin của bạn.",
+        "how2": "Xuất sẽ gửi chúng dưới dạng danh sách dễ đọc hoặc dữ liệu đến bất kỳ ứng dụng nào bạn chọn."
+      },
+      "checks": {
+        "title": "Kiểm chứng hoạt động thế nào",
+        "what": "Kiểm chứng liệt kê các câu chuyện bạn đã nhờ Mera tìm kết quả kiểm chứng thông tin.",
+        "how1": "Mỗi đánh giá là của chính tổ chức kiểm chứng thông tin, hiển thị đúng như họ đã công bố.",
+        "how2": "Kiểm chứng được lưu trên điện thoại này. Xóa một mục chỉ xóa nó ở đây."
+      },
+      "visited": {
+        "title": "Đã ghé hoạt động thế nào",
+        "what": "Đã ghé liệt kê các ấn phẩm mà bạn đã mở trang web từ Mera trong 30 ngày qua, ấn phẩm bạn mở nhiều nhất ở đầu.",
+        "how1": "Chỉ những bài bạn mở trên trang của nhà xuất bản mới được tính. Đọc trong Mera thì không được liệt kê.",
+        "how2": "Tôi đã trả phí cho Mera biết bạn đã đăng ký, nên ấn phẩm đó được ưu tiên hơn trong bảng tin của bạn.",
+        "privacy": "Danh sách này ở lại trên điện thoại này. Mỗi lượt ghé bị xóa sau 30 ngày."
+      },
+      "stats": {
+        "title": "Thống kê hoạt động thế nào",
+        "what": "Thống kê biến 30 ngày đọc gần nhất của bạn thành những thẻ có thể chia sẻ.",
+        "how1": "Các thẻ chỉ dùng những gì điện thoại này vốn đã lưu để chạy Mera: các trang bạn đã mở, và những gì bạn đã lưu hoặc theo dõi. Không ghi lại thêm gì cả.",
+        "how2": "Trước khi chia sẻ, bạn chọn có hiện tên ấn phẩm hay không. Tiêu đề bài báo thì không bao giờ hiện."
+      }
+    }
+  },
+  "you": {
+    "profile": {
+      "facts": "Thông tin",
+      "places": "Địa điểm",
+      "sources": "Nguồn",
+      "cleanup": "Dọn dẹp hồ sơ",
+      "topicsDeclined": "Chủ đề bạn đã từ chối",
+      "payFor": "Ấn phẩm bạn trả phí",
+      "activity": "Hoạt động",
+      "viewAll": "Xem tất cả {{count}}",
+      "viewAllNoCount": "Xem tất cả",
+      "review": "Xem xét",
+      "subscribed": "Đã đăng ký",
+      "hidden": "Đã ẩn",
+      "less": "Ít hơn",
+      "aboutA11y": "Giới thiệu về {{card}}",
+      "factsEmpty": "Chưa có gì. Hãy cho Mera biết bạn theo dõi điều gì và nó sẽ hiện ở đây.",
+      "placesEmpty": "Chưa có địa điểm nào",
+      "addCity": "Thêm một thành phố",
+      "sourcesEmpty": "Chưa điều chỉnh nguồn nào. Mera đối xử với mọi nguồn như nhau.",
+      "topicsDeclinedEmpty": "Chưa từ chối chủ đề nào."
+    },
+    "hints": {
+      "facts": {
+        "title": "Thông tin hoạt động thế nào",
+        "body": "Mỗi thông tin trở thành các lượt tìm kiếm Mera chạy cho bạn. Đổi hoặc xóa một thông tin thì các câu chuyện từ nó cũng thay đổi theo."
+      },
+      "places": {
+        "title": "Địa điểm hoạt động thế nào",
+        "body": "Mera tìm tin địa phương từ các địa điểm của bạn và đưa vào Bảng tin và Mối quan tâm. Quốc gia của mỗi địa điểm cũng có một trang trong Thế giới.",
+        "body2": "Nhà được ưu tiên nhất. Chạm vào một địa điểm để đổi nhãn hoặc xóa nó."
+      },
+      "sources": {
+        "title": "Nguồn hoạt động thế nào",
+        "body": "Nhiều hơn và Ít hơn thay đổi tần suất một ấn phẩm xuất hiện. Tắt tiếng sẽ chặn ấn phẩm đó, trừ tin lớn."
+      },
+      "cleanup": {
+        "title": "Dọn dẹp hồ sơ hoạt động thế nào",
+        "body": "Mera phát hiện những thông tin trùng lặp hoặc không còn phù hợp. Không có gì thay đổi cho đến khi bạn xem xét."
+      },
+      "topicsDeclined": {
+        "title": "Chủ đề đã từ chối hoạt động thế nào",
+        "body": "Những chủ đề bạn bảo Mera hiện ít hơn hoặc ẩn đi. Cho phép lại một chủ đề thì nó có thể quay lại."
+      },
+      "payFor": {
+        "title": "Đăng ký hoạt động thế nào",
+        "body": "Những ấn phẩm bạn trả phí được ưu tiên hơn trong bảng tin của bạn."
+      },
+      "activity": {
+        "title": "Hoạt động hoạt động thế nào",
+        "body": "Mọi thay đổi đối với hồ sơ của bạn, mới nhất lên đầu. Hầu hết đều có thể hoàn tác."
+      }
+    },
+    "explainer": {
+      "title": "Hồ sơ hoạt động thế nào",
+      "what": "Hồ sơ chứa những gì Mera dùng để chọn tin cho bạn: thông tin của bạn, các địa điểm, những nguồn bạn đã điều chỉnh và các chủ đề bạn đã từ chối.",
+      "how1": "Mỗi thông tin trở thành các lượt tìm kiếm Mera chạy cho bạn. Đổi gì ở đây thì Bảng tin, Mối quan tâm và các trang Thế giới của bạn cũng đổi theo.",
+      "privacy": "Các lượt tìm kiếm tạo từ thông tin của bạn không bao giờ gắn với tài khoản của bạn. Máy chủ chỉ giữ nội dung tìm kiếm, chia sẻ ẩn danh giữa mọi người dùng, và xóa nó sau 14 ngày không dùng."
+    },
+    "sources": {
+      "title": "Nguồn",
+      "find": "Tìm một ấn phẩm",
+      "adjusted": "Đã điều chỉnh",
+      "more": "Nhiều hơn",
+      "fewer": "Ít hơn",
+      "muted": "Tắt tiếng",
+      "mute": "Tắt tiếng",
+      "clear": "Xóa",
+      "footnote": "Chạm vào một mục để thay đổi. Mục \"Ít hơn từ\" trong menu của bài báo cũng nằm ở đây.",
+      "empty": "Bạn chưa điều chỉnh nguồn nào. Hãy tìm một ấn phẩm để xem nhiều hơn, ít hơn hoặc không xem nữa. Mục \"Ít hơn từ\" trong menu của bài báo cũng nằm ở đây."
+    },
+    "settings": {
+      "groupApp": "Ứng dụng",
+      "yourPlan": "Gói của bạn",
+      "usage_other": "{{count}} trên {{limit}} bài hôm nay",
+      "usageNoLimit_other": "{{count}} bài hôm nay",
+      "usageOffline": "Mức sử dụng hiện khi bạn trực tuyến",
+      "resetsAt": "đặt lại lúc {{time}}",
+      "displayValue": "Văn bản, chế độ Lite",
+      "backupAndData": "Sao lưu và dữ liệu"
+    },
+    "notifications": {
+      "push": "Thông báo đẩy",
+      "when": "Khi nào Mera có thể thông báo cho bạn",
+      "yourTimes": "Giờ của bạn",
+      "noneYet": "Chưa chọn giờ nào",
+      "zeroTimes": "Hãy chọn một giờ, nếu không Mera sẽ không gửi thông báo nào.",
+      "add": "Thêm một giờ",
+      "addHour": "Thêm {{time}}",
+      "alreadyPicked": "Đã chọn {{time}}",
+      "remove": "Xóa {{time}}",
+      "wheel": "Giờ cần thêm",
+      "footnote": "Cuộn để di chuyển giờ được viền. Mera chỉ gửi thông báo vào những giờ này, theo múi giờ của bạn."
+    }
+  },
+  "meraHints": {
+    "feed": {
+      "moreNews": "Cho Mera biết bạn muốn xem thêm tin về gì",
+      "addHome": "Thêm nơi bạn sống"
+    },
+    "askNews": "Hỏi về bất cứ điều gì trong tin tức",
+    "interests": {
+      "add": "Thêm một mối quan tâm",
+      "change": "Đổi một mối quan tâm",
+      "remove": "Xóa một mối quan tâm"
+    },
+    "interest": {
+      "change": "Đổi mối quan tâm này",
+      "remove": "Xóa mối quan tâm này"
+    },
+    "stories": {
+      "follow": "Theo dõi một câu chuyện",
+      "name": "Nêu tên một câu chuyện để theo dõi"
+    },
+    "world": {
+      "countryFeed": "Xem tin từ một quốc gia trong bảng tin của bạn",
+      "family": "Cho Mera biết gia đình bạn sống ở đâu",
+      "behind": "Hỏi điều gì đứng sau một tiêu đề"
+    },
+    "checks": {
+      "claim": "Kiểm chứng một nhận định",
+      "quote": "Hỏi một câu trích dẫn có thật không"
+    },
+    "library": {
+      "likeToRead": "Cho Mera biết bạn thích đọc gì"
+    },
+    "profile": {
+      "fixFact": "Sửa thông tin Mera hiểu sai",
+      "whatKnows": "Hỏi Mera biết gì về bạn"
+    },
+    "facts": {
+      "change": "Đổi thông tin của bạn",
+      "remove": "Xóa một thông tin"
+    },
+    "sources": {
+      "whoBehind": "Hỏi ai đứng sau một ấn phẩm",
+      "whatFollow": "Cho Mera biết bạn theo dõi gì"
+    }
+  },
+  "meraButton": {
+    "a11yLabel": "Mera. {{hint}}"
+  },
+  "meraIntro": {
+    "feed": "Đây là Bảng tin của bạn. Hãy nói với tôi bạn muốn xem thêm tin về gì, hoặc hỏi tôi về bất cứ điều gì trong tin tức.",
+    "interests": "Đây là những mối quan tâm của bạn. Hãy nói với tôi một mối quan tâm mới, hoặc một mối bạn muốn đổi hay xóa.",
+    "interest": "Trang này theo dõi một mối quan tâm của bạn. Bạn có thể đổi hoặc xóa nó tại đây.",
+    "world": "Hãy hỏi tôi về một tiêu đề, hoặc cho tôi biết quốc gia bạn muốn xem tin.",
+    "checks": "Hãy nói với tôi một nhận định bạn đã thấy và tôi sẽ tra cứu trên web.",
+    "checksNoWeb": "Tìm kiếm web trong trò chuyện đang tắt, nên tôi chưa thể tra cứu nhận định lúc này. Bạn có thể bật nó trong Cài đặt.",
+    "library": "Hãy hỏi tôi về bất cứ điều gì trong tin tức, hoặc cho tôi biết bạn thích đọc gì.",
+    "profile": "Đây là những gì Mera biết về bạn. Hãy cho tôi biết điều mới, hoặc sửa điều chưa đúng.",
+    "facts": "Bạn đang xem thông tin của mình. Bạn muốn đổi gì?",
+    "sources": "Hãy hỏi tôi về một ấn phẩm, hoặc cho tôi biết bạn theo dõi gì."
+  },
+  "meraDraft": {
+    "changeInterest": "Đổi mối quan tâm \"{{statement}}\" của tôi thành ",
+    "removeInterest": "Xóa mối quan tâm \"{{statement}}\" của tôi"
   }
 }
