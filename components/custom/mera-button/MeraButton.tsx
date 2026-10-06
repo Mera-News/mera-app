@@ -1,4 +1,4 @@
-// The one Mera button: a 62pt orange circle bottom right, above the tab bar,
+// The one Mera button: a 62pt white circle bottom right, above the tab bar,
 // with a hint tooltip beside it. Tapping opens the Mera chat on this page.
 //
 // Presentational over its inputs: MeraButtonHost decides WHETHER it shows and
@@ -26,8 +26,14 @@ import { chatContextFor, hintKeys, interestFactId, statusKey } from './mera-page
 import { openMeraChat } from './open-mera-chat';
 import { tooltipRemainingMs } from './tooltip-visit';
 
-const ORANGE = '#E78A53';
+// White circle, dark mark (owner restyle). INK is the app's dark surface
+// (gluestack dark `--color-background-0`, rgb 18 17 19; also HEADER_INK in
+// nav/QuickSettingsButton), so the mark reads as a cut-out of the page.
+const FILL = '#FFFFFF';
 const INK = '#121113';
+// Only the Reduce Motion "reading" ring: orange reads on the white circle and
+// against the dark page, where a dark ring would vanish.
+const ORANGE = '#E78A53';
 const LOGO_SIZE = 34;
 const TOOLTIP_BG = 'rgba(52,50,55,0.97)';
 const TOOLTIP_BORDER = 'rgba(255,255,255,0.12)';
@@ -170,11 +176,11 @@ const styles = StyleSheet.create({
     width: MERA_BUTTON_SIZE,
     height: MERA_BUTTON_SIZE,
     borderRadius: MERA_BUTTON_SIZE / 2,
-    backgroundColor: ORANGE,
+    backgroundColor: FILL,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.35,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,

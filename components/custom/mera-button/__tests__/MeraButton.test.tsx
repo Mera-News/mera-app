@@ -46,7 +46,7 @@ jest.mock('react-i18next', () => ({
 
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, StyleSheet } from 'react-native';
 import { useCurrentSurfaceStore } from '@/components/custom/nav/current-surface';
 import type { SurfaceId } from '@/components/custom/nav/page-registry';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
@@ -120,11 +120,22 @@ it('carries the feed status as its accessibility value', async () => {
   });
 });
 
+it('rests as a white circle with the dark mark, still, and no ring', async () => {
+  render(<MeraButton surface="feed" page="feed" mode="idle" />);
+  await flush();
+  const style = StyleSheet.flatten(screen.getByTestId('mera-button').props.style);
+  expect(style.backgroundColor).toBe('#FFFFFF');
+  expect(mockLogo).toHaveBeenLastCalledWith(
+    expect.objectContaining({ color: '#121113', animated: false, scrollCards: false }),
+  );
+  expect(screen.queryByTestId('mera-button-ring')).toBeNull();
+});
+
 it('moves while Mera reads', async () => {
   render(<MeraButton surface="feed" page="feed" mode="processing" />);
   await flush();
   expect(mockLogo).toHaveBeenLastCalledWith(
-    expect.objectContaining({ animated: true, scrollCards: true }),
+    expect.objectContaining({ color: '#121113', animated: true, scrollCards: true }),
   );
   expect(screen.queryByTestId('mera-button-ring')).toBeNull();
 });
@@ -136,7 +147,8 @@ it('Reduce Motion: a still ring instead of the motion', async () => {
   expect(mockLogo).toHaveBeenLastCalledWith(
     expect.objectContaining({ animated: false, scrollCards: false }),
   );
-  expect(screen.getByTestId('mera-button-ring')).toBeTruthy();
+  const ring = screen.getByTestId('mera-button-ring');
+  expect(StyleSheet.flatten(ring.props.style).borderColor).toBe('#E78A53');
 });
 
 it('announces updating and up to date, and nothing for the capped state', async () => {
