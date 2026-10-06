@@ -24,9 +24,9 @@ describe('page-registry', () => {
     expect(kept).toEqual(['feed']);
   });
 
-  it('gives quick settings to Feed, Interests and Checks only', () => {
+  it('gives quick settings to Feed and Interests only (no fact-check setting)', () => {
     const withButton = (Object.keys(PAGE_META) as FixedPageId[]).filter((id) => PAGE_META[id].quickSettings);
-    expect(withButton.sort()).toEqual(['checks', 'feed', 'interests']);
+    expect(withButton.sort()).toEqual(['feed', 'interests']);
   });
 
   it('has no explainer row on Settings', () => {

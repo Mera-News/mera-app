@@ -49,8 +49,7 @@ export type QuickSettingsFocusId =
   | 'profile.facts'
   | 'profile.places'
   | 'profile.sources'
-  | 'profile.topicsDeclined'
-  | 'meraProtocol.automaticFactCheck';
+  | 'profile.topicsDeclined';
 
 export interface PageExplainer {
   readonly titleKey: I18nKey;
@@ -147,7 +146,7 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
   checks: {
     tab: 'library',
     labelKey: 'nav.page.checks',
-    quickSettings: ['meraProtocol.automaticFactCheck'],
+    quickSettings: null,
     keepMounted: false,
     explainer: {
       titleKey: 'library.explainer.checks.title',
