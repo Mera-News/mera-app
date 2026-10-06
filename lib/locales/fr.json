@@ -108,10 +108,8 @@
     "updatedAt": "Mis à jour {{time}}",
     "allCaughtUp": "Vous êtes à jour avec ce qui vous concerne.",
     "preparingFeed": "Mera prépare votre fil.",
-    "preparingFeedExploreHint": "En attendant, consultez l'onglet Explorer pour découvrir les principales actualités.",
     "noInterests": "Mera ne peut pas analyser les actualités pour vous",
     "noInterestsDescription": "Veuillez créer votre profil utilisateur pour que Mera commence à générer des actualités pour vous.",
-    "dashboardTitle": "Tableau de bord",
     "readArticleToast": "Vous avez lu cet article",
     "pullDownToRetry": "Tirez vers le bas pour réessayer",
     "stuckTitle": "Impossible de charger votre fil",
@@ -228,7 +226,6 @@
     "analysingProgress": "Analyse de {{done}} sur {{total}} articles",
     "waitingForNextBatch_one": "{{count}} nouvel article en attente du prochain lot d'analyse",
     "waitingForNextBatch_other": "{{count}} nouveaux articles en attente du prochain lot d'analyse",
-    "exploreCta": "Parcourir Explorez",
     "statsPublishedPending_one": "{{formatted}} article a été publié au cours des 24 dernières heures.",
     "statsPublishedPending_many": "{{formatted}} articles ont été publiés au cours des 24 dernières heures.",
     "statsPublishedPending_other": "{{formatted}} articles ont été publiés au cours des 24 dernières heures.",
@@ -346,15 +343,10 @@
   "notifications": {
     "title": "Notifications",
     "enableDescription": "Activez les notifications pour rester informé avec des actualités personnalisées",
-    "pushNotifications": "Notifications push",
-    "receivingUpdates": "Réception des mises à jour",
-    "disabled": "Désactivées",
     "permissionDenied": "Si vous avez précédemment refusé les autorisations de notification, vous devrez les activer dans les paramètres de votre appareil.",
     "openDeviceSettings": "Ouvrir les paramètres de l'appareil",
-    "timeTitle": "Horaire des notifications",
     "format24h": "24h",
     "formatAmPm": "AM/PM",
-    "timeDescription": "Choisissez quand vous souhaitez recevoir des notifications pour le traitement de vos actualités",
     "timeDescriptionOnboarding": "Choisissez quand vous aimeriez faire le point sur vos actualités",
     "savePreferences": "Enregistrer les préférences",
     "loadFailedTitle": "Échec du chargement",
@@ -376,12 +368,7 @@
     "saveFailedTitle": "Échec de l'enregistrement",
     "saveFailedDescription": "Impossible d'enregistrer vos préférences. Veuillez réessayer.",
     "timeNudge": "Choisissez une heure où vous pourrez lire, réfléchir et planifier — une ou deux fois par jour, c'est amplement suffisant.",
-    "maxHoursReachedDescription": "Vous pouvez sélectionner jusqu'à {{count}} heures",
-    "maxHoursReachedTitle": "Maximum atteint",
-    "selectedCount": "Sélection : {{selected}}/{{max}}",
-    "savedInline": "Enregistré",
-    "pickAtLeastOneHour": "Choisissez au moins une heure",
-    "selectedLabel": "Sélectionnées"
+    "savedInline": "Enregistré"
   },
   "language": {
     "title": "Langue",
@@ -601,14 +588,12 @@
     }
   },
   "preferences": {
-    "manageSettings": "Gérez les paramètres de votre application et votre compte",
     "notifications": "Notifications",
     "language": "Langue et traduction",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Politique de confidentialité",
     "termsOfService": "Conditions d'utilisation",
     "support": "Contacter l'assistance",
-    "manageData": "Gérer les données",
     "deleteAccount": "Supprimer le compte",
     "logout": "Déconnexion",
     "signOutModalTitle": "Déconnexion",
@@ -681,10 +666,7 @@
     "generateMoreTopicsConfirm": "Générer",
     "generateMoreTopicsFailedTitle": "Échec de la génération des sujets",
     "generateMoreTopicsFailedDescription": "Impossible de générer de nouveaux sujets. Veuillez réessayer.",
-    "articleAnalysisTitle": "À propos de l'analyse des articles",
-    "articleAnalysisDescription": "Vous devriez optimiser votre Mera en réduisant le nombre total d'articles analysés, car plus il y a d'articles analysés, plus vous consommez votre quota d'utilisation.",
     "gotIt": "Compris",
-    "articlesAnalyzedLast24h": "Articles analysés dernières 24h",
     "maxForDailyAnalysis": "Max pour l'analyse quotidienne",
     "promoPlan": "Promo",
     "promoTooltip": "Vous pouvez tester gratuitement la formule Individual à l'occasion du lancement de l'application. Offre à durée limitée.",
@@ -695,7 +677,6 @@
     "gotItPromo": "Super ! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Offre de lancement 🎊",
-    "resetsOn": "Réinitialisation",
     "retryTopicGeneration": "Réessayer",
     "topicGenFailedGeneric": "Impossible de générer les sujets.",
     "articleCountPending": "Comptage",
@@ -771,7 +752,6 @@
     "introMessage": "Bonjour ! Je suis Mera, votre assistante d'actualités personnelle.\n\nPour trouver des actualités qui vous intéressent vraiment, j'ai besoin de connaître quelques détails vous concernant. Où vous vivez, ce que vous faites, les loisirs que vous aimez, les actions que vous suivez, où vit votre famille. Partagez ce que vous voulez, un peu ou beaucoup.\n\nSi cela vous fait hésiter, c'est un bon instinct. Il n'est pas judicieux de confier des données personnelles à une société d'applications. Mera est construite différemment : tout ce que vous me dites est enregistré sur votre appareil, pas sur nos serveurs. Demandez-moi comment cela fonctionne, ou dites « Aidez-moi à configurer » et nous commencerons."
   },
   "floatingChat": {
-    "bubbleHint": "Discuter avec Mera",
     "close": "Fermer",
     "title": "Mera",
     "aboutThisStory": "À PROPOS DE CETTE HISTOIRE",
@@ -876,15 +856,7 @@
     "countShort_other": "{{count}} visites",
     "tooltipA11y": "À propos de l'historique de lecture",
     "tooltipIntro": "Mera suit vos habitudes de lecture pour vous, et ces données restent uniquement sur votre appareil.",
-    "tooltipLink": "Consultez tout votre historique de lecture ici.",
-    "screenIntro": "Les médias dont tu as ouvert le site depuis Mera ces 30 derniers jours. Cette liste reste sur cet appareil.",
-    "visitedListTitle": "Publications que vous avez visitées",
-    "last30Days": "30 derniers jours",
-    "lastRead": "Dernière lecture {{time}}",
-    "noArticlesYet": "Les médias que tu ouvres depuis Mera apparaissent ici. La lecture dans Mera n'est pas listée.",
-    "articlesRead": "Articles lus",
-    "noArticlesLast30Days": "Aucun article de cette publication ces 30 derniers jours.",
-    "emptyTitle": "Aucun média pour l'instant"
+    "tooltipLink": "Consultez tout votre historique de lecture ici."
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Mise à jour requise",
@@ -971,15 +943,12 @@
     "deleteConfirmCta": "Supprimer",
     "deleteConfirmMessage": "Cela supprimera l'article de votre liste enregistrée sur cet appareil.",
     "deleteConfirmTitle": "Retirer l'article enregistré ?",
-    "empty": "Vous n'avez encore enregistré aucun article. Touchez le signet d'un article pour l'enregistrer pour plus tard.",
-    "note": "Ces articles sont enregistrés uniquement sur votre appareil. Ajoutez-les ou retirez-les à tout moment. Ils restent ici jusqu'à ce que vous les supprimiez.",
     "removedToastMessage": "Retiré des enregistrés",
     "removedToastTitle": "Retiré",
     "saveAction": "Enregistrer",
     "removeAction": "Retirer des enregistrés",
     "savedToastMessage": "Article enregistré pour plus tard",
     "savedToastTitle": "Enregistré",
-    "title": "Enregistrés",
     "emptyTitle": "Rien d'enregistré pour l'instant"
   },
   "subscription": {
@@ -1040,8 +1009,6 @@
   },
   "tabs": {
     "deck": "Fil d'actu",
-    "dashboard": "Tableau de bord",
-    "around": "Explorer",
     "profile": "Profil",
     "settings": "Paramètres",
     "gotIt": "Compris",
@@ -1050,7 +1017,6 @@
     "you": "Vous"
   },
   "swipeFeed": {
-    "yourDeck": "Fil d'actu",
     "moreLikeThis": "Plus comme ceci",
     "lessLikeThis": "Moins comme ceci",
     "askMera": "Demander à Mera",
@@ -1064,22 +1030,11 @@
     "chatHandoffDislikeNoPath": "Je n'ai pas aimé cette histoire. Aidez-moi à en voir moins comme ceci."
   },
   "explore": {
-    "title": "Explorer",
-    "scopeWorld": "Monde",
-    "noArticles": "Aucun article trouvé",
     "addPlaces": "Ajouter des lieux",
-    "offlineUnavailable": "Vous êtes hors ligne — Explorer a besoin d'une connexion internet",
     "serverUnavailable": "Mera ne peut pas être atteint en ce moment : réessayez dans un instant.",
-    "addSources": "Ajouter des sources",
-    "removeScope": "Supprimer {{name}}",
-    "searchPlaceholder": "Rechercher les actualités récentes",
     "clearSearch": "Effacer la recherche",
-    "searchMinLength": "Continuez à taper pour rechercher",
     "searchNotSubscribed": "La recherche nécessite un forfait actif",
-    "searchError": "Impossible de rechercher en ce moment",
     "searchEmpty": "Aucune correspondance dans les 48 dernières heures. La recherche couvre les titres récents, pas l'archive complète.",
-    "openSearch": "Recherche",
-    "closeSearch": "Fermer recherche",
     "window": {
       "label24": "24 h",
       "label48": "48 h",
@@ -1108,10 +1063,6 @@
     "headlineDenominator_other": "Mera a lu {{count}} titres · {{shown}} valent votre temps.",
     "headlineDenominatorNone_one": "Mera a lu {{count}} titre · aucun ne semblait pertinent aujourd'hui.",
     "headlineDenominatorNone_other": "Mera a lu {{count}} titres · aucun ne semblait pertinent aujourd'hui.",
-    "subTabFeed": "Aperçu",
-    "subTabStories": "Actualités",
-    "subTabSaved": "Enregistrés",
-    "subTabHistory": "Visités",
     "nextFactPrefix": "Suivant",
     "subTabAnalytics": "Analyses",
     "emptySection": {
@@ -1119,24 +1070,15 @@
       "none": "Aucun article ne correspond encore assez à ce sujet pour être affiché."
     },
     "newInterest": "Nouvel intérêt",
-    "nextSection": "Suivant : {{title}}",
-    "backToDashboard": "Retour au Tableau de bord"
+    "nextSection": "Suivant : {{title}}"
   },
   "feedStatus": {
     "title": "État du fil",
     "idle": "À jour",
     "stage": "Étape",
     "cloudProgress": "Évaluation dans le cloud",
-    "deviceProgress": "Évaluation sur l'appareil",
-    "published": "Publié",
-    "analysed": "Analysés",
-    "relevant": "Pertinents pour vous",
-    "lastProcessed": "Dernier traitement",
-    "errorTitle": "Problème d'évaluation",
-    "openA11y": "Ouvrir l'état du fil",
     "close": "Fermer",
     "expandA11y": "Afficher les détails de l'état du fil",
-    "collapseA11y": "Masquer les détails de l'état du fil",
     "modeProcessing": "Mise à jour de votre fil",
     "modeError": "Problème de fil",
     "modeLimited": "Limite quotidienne d'articles atteinte",
@@ -1144,7 +1086,6 @@
   },
   "trackedStories": {
     "emptyTitle": "Aucune actualité suivie pour l'instant",
-    "emptyBody": "Suivez une actualité pour voir ici chaque nouveau développement au fur et à mesure.",
     "title": "Actualités suivies",
     "trackAction": "Suivre l'actualité",
     "untrackAction": "Ne plus suivre",
@@ -1167,10 +1108,7 @@
     "deleteStoryConfirmBody": "La suppression supprime tout ce qui a été enregistré pour cette actualité.",
     "emptyCta": "Aller au Fil d'actu",
     "untrackConfirmCta": "Arrêter de suivre",
-    "followFabLabel": "Suivre une nouvelle histoire",
-    "followChatSeed": "Je veux suivre une histoire.",
     "followChatIntro": "Dites-moi ce que vous voulez suivre et je le mettrai en place.",
-    "emptyCtaFollow": "Suivre une histoire",
     "removeMemberAction": "Ne fait pas partie de cette actualité",
     "removeMemberConfirmTitle": "Retirer cet article ?",
     "removeMemberConfirmBody": "Cet article est retiré de la chronologie de l'actualité. Mera continue de suivre l'actualité elle-même.",
@@ -1217,12 +1155,10 @@
   },
   "settings": {
     "sources": "Sources",
-    "groupGeneral": "Général",
     "groupPrivacy": "Confidentialité et données",
     "groupHelp": "Aide",
     "groupAccount": "Compte",
     "languageRow": "Langue",
-    "backupRow": "Sauvegarde et restauration",
     "backupRowNever": "Pas encore sauvegardé"
   },
   "personaAudit": {
@@ -1460,8 +1396,6 @@
     "subtitle": "Ce que vous avez demandé à Mera de tenir hors de votre fil",
     "sectionFilters": "Mots et choses que vous avez cachés",
     "sectionTopics": "Sujets que vous voyez moins",
-    "sectionSources": "Sources que vous avez mises en sourdine ou réduites",
-    "managePublications": "Gérer les préférences de source",
     "chatHint": "Vous ne devez pas venir ici. Dites simplement à Mera ce que vous préférez ne pas voir — « moins sur les potins des célébrités » — et il s'en chargera.",
     "kinds": {
       "keyword": "Mots",
@@ -1483,8 +1417,6 @@
     "badgeBlocked": "Tenu dehors",
     "badgeShownLess": "Affiché moins",
     "badgeMutedTopic": "Affiché moins",
-    "badgeDownranked": "Rétrogradé",
-    "badgeMutedPub": "Mis en sourdine",
     "mutedPubHint": "Tenu dehors, sauf pour les grandes actualités",
     "cardExemptLabel": "Vous avez filtré « {{filter}} » — l'affichage parce que c'est une grande actualité",
     "expiresOn": "Jusqu'au {{date}}",
@@ -1512,8 +1444,7 @@
     "emptyTitle": "Rien de caché pour l'instant",
     "emptyBody": "Quand vous dites à Mera que vous n'êtes pas intéressé par quelque chose, il s'affiche ici pour que vous puissiez l'annuler.",
     "emptyFilters": "Vous n'avez pas caché de mots pour l'instant.",
-    "emptyTopics": "Aucun sujet rétrogradé pour l'instant.",
-    "emptySources": "Vous n'avez pas mis en sourdine ou réduit de sources pour l'instant."
+    "emptyTopics": "Aucun sujet rétrogradé pour l'instant."
   },
   "headlineDepth": {
     "title": "À la une",
@@ -1526,39 +1457,6 @@
     "saveFailedTitle": "Impossible d'enregistrer cela",
     "saveFailedBody": "Votre modification n'a pas été enregistrée. Réessayez."
   },
-  "profileHub": {
-    "facts": "Faits",
-    "factsCount_one": "{{count}} fait façonne votre fil",
-    "factsCount_other": "{{count}} faits façonnent votre fil",
-    "factsEmpty": "Appuyez pour ajouter ce que Mera devrait savoir",
-    "locations": "Lieux",
-    "locationsSubtitle": "Lieux qui façonnent votre fil",
-    "sources": "Sources",
-    "sourcesSubtitle": "Parcourez et suivez des sources d'actualités",
-    "saved": "Enregistrés",
-    "savedSubtitle": "Articles que vous avez enregistrés pour plus tard",
-    "preferences": "Préférences de sources",
-    "prefsCount_one": "{{count}} source ajustée",
-    "prefsCount_other": "{{count}} sources ajustées",
-    "prefsEmpty": "Boostez, rétrogradez ou masquez des sources",
-    "visitedSubtitle": "Publications que vous avez ouvertes récemment",
-    "activity": "Activité",
-    "activitySubtitle": "Historique des modifications de votre profil",
-    "personaHealth": "Nettoyage du profil",
-    "healthPending_one": "{{count}} suggestion de nettoyage",
-    "healthPending_other": "{{count}} suggestions de nettoyage",
-    "healthAllHealthy": "Tout va bien",
-    "groupKnows": "Mera vous connaît",
-    "groupFeed": "Votre fil",
-    "groupLibrary": "Sources et bibliothèque",
-    "groupInternals": "Sous le capot",
-    "notInterested": "Pas intéressé",
-    "notInterestedSubtitle_one": "{{count}} chose que vous avez cachée",
-    "notInterestedSubtitle_other": "{{count}} choses que vous avez cachées",
-    "notInterestedEmpty": "Rien de caché pour l'instant",
-    "headlineDepth": "À la une",
-    "headlineDepthSubtitle": "Combien Mera lit par section"
-  },
   "profile": {
     "talkToMera": "Parler à Mera",
     "talkToMeraSubtitle": "Voici comment je vous vois. Appuyez pour poursuivre la conversation.",
@@ -1566,8 +1464,6 @@
     "emptyTitle": "Je ne vous connais pas encore",
     "emptyBody": "Parlez-moi de vous pour que je puisse trouver des actualités qui comptent pour vous.",
     "startTalking": "Commencer à discuter",
-    "meraInvite": "Salut ! Dites-moi ce qui vous intéresse et j'ajusterai votre fil d'actualité pour vous.",
-    "aboutYou": "À propos de vous",
     "gettingToKnowYou": "J'apprends encore à vous connaître. Revenez dans un instant.",
     "updating": "Mise à jour…",
     "advanced": "Avancé",
@@ -1600,14 +1496,10 @@
     "deleteFactA11y": "Supprimer {{fact}}"
   },
   "publicationPrefs": {
-    "title": "Préférences de sources",
-    "subtitle": "Boostez, rétrogradez ou masquez des publications",
     "kindBoost": "Booster",
     "kindDeprioritize": "Rétrograder",
     "kindMute": "Masquer",
-    "clear": "Effacer",
     "clearA11y": "Effacer la préférence",
-    "empty": "Vous n'avez encore ajusté aucune source. Boostez, rétrogradez ou masquez une publication depuis n'importe quel article pour la voir ici.",
     "scopeKindCountry": "Pays"
   },
   "optimisationPlan": {
@@ -1702,7 +1594,6 @@
     "trackBody": "Les histoires que vous suivez déjà conservent toutes leurs données. Suivre une nouvelle histoire nécessite un plan actif.",
     "trackDismiss": "Pas maintenant",
     "trackTitle": "Le suivi des histoires nécessite un plan",
-    "trackedStoriesEmptyBody": "Rien de suivi pour l'instant. Suivre une histoire nécessite un plan, et tout ce que vous suivrez plus tard restera sur cet appareil, à vous de conserver.",
     "factsInFeedHeader": "Dans votre fil",
     "factsPausedHeader": "En pause",
     "factsPausedSubtitle": "Ils restent enregistrés. Un plan les active tous.",
@@ -1774,11 +1665,9 @@
     "checkedByHeading": "Vérifications de faits trouvées par la recherche",
     "dashboard": {
       "deleteA11y": "Supprimer cette vérification de fait",
-      "empty": "Vous n'avez pas encore vérifié d'affirmations. Appuyez sur la coche sous une histoire pour demander à Mera, le résultat s'affiche ici une fois prêt.",
       "listSubtitle": "Les histoires pour lesquelles vous avez demandé à Mera de rechercher des vérifications de faits. Conservées uniquement sur cet appareil.",
       "listTitle": "Vérifications de faits",
       "pending": "Recherche en cours",
-      "title": "Vérifications de faits",
       "untitled": "Histoire sans titre",
       "openA11y": "Ouvrir cet article",
       "articleGone": "L'article a expiré, il ne peut donc pas être ouvert. La vérification des faits que nous avons trouvée est conservée ici.",
@@ -2642,7 +2531,6 @@
   },
   "subscriptions": {
     "sectionTitle": "Vos abonnements",
-    "otherSources": "Autres sources",
     "empty": "Indiquez à Mera les publications auxquelles vous êtes abonné. Nous leur donnerons plus de poids dans votre fil et afficherons leur couverture des sujets qu'elles traitent.",
     "add": "Ajouter un abonnement",
     "close": "Fermer",
@@ -2665,15 +2553,10 @@
     "opensPublisherSite": "Ouvre le site de {{publisher}}"
   },
   "shareStats": {
-    "entryA11y": "Partager vos statistiques de lecture",
-    "screenTitle": "Partagez vos lectures",
     "screenSubtitle": "30 derniers jours",
     "preparing": "Préparation de votre carte",
-    "emptyTitle": "Rien à afficher pour l'instant",
-    "emptyBody": "Lisez quelques articles et votre carte se remplira. Mera conserve 30 jours d'historique de lecture sur cet appareil.",
     "nameToggleLabel": "Afficher mes principales sources",
     "nameTogglePrivacy": "Inclus par défaut. Les noms des publications en disent long sur vous, vous pouvez donc les désactiver avant de partager. Les titres d'articles ne sont jamais inclus.",
-    "shareAction": "Partager",
     "shareDialogTitle": "Mes statistiques de lecture Mera",
     "sharingUnavailable": "Le partage n'est pas disponible sur cet appareil.",
     "shareFailed": "Ça n'a pas marché. Réessayez.",
@@ -2833,55 +2716,6 @@
       "Recherche sur le web depuis votre appareil…"
     ]
   },
-  "headerNarration": {
-    "stages": {
-      "starting": [
-        "Actualisation lancée",
-        "Sur ce téléphone"
-      ],
-      "fetching": [
-        "Recherche du neuf",
-        "Quoi de neuf ?"
-      ],
-      "downloading": [
-        "Téléchargement",
-        "Depuis le serveur"
-      ],
-      "grouping": [
-        "Regroupement",
-        "Fusion des doublons"
-      ],
-      "analysing": [
-        "Tri par pertinence",
-        "Lecture des articles"
-      ],
-      "onDevice": [
-        "Lecture sur ton tél.",
-        "Rien ne quitte ton tél."
-      ],
-      "summarising": [
-        "Rédaction des notes",
-        "Une note par sujet"
-      ],
-      "preparing": [
-        "Mise en ordre",
-        "Presque fini"
-      ]
-    },
-    "nudges": [
-      "Lisez l'article en entier",
-      "Pressé ? Enregistrez-le",
-      "Vu l'actu du monde ?",
-      "Vu vos pays ?",
-      "Suivez une histoire",
-      "Vos histoires suivies",
-      "Profil à jour ?",
-      "Pas pour vous ? Dites-le",
-      "Aimez pour en voir plus",
-      "Partagez à vos proches"
-    ],
-    "a11y": "Mera met à jour vos infos sur ce téléphone."
-  },
   "savedExport": {
     "fabA11y": "Exporter les articles enregistrés",
     "title": "Exporter les enregistrés",
@@ -2906,7 +2740,6 @@
     "includeImageHint": "Un lien vers l'image de chaque article, s'il en a une."
   },
   "tabExplainer": {
-    "openA11y": "Comment fonctionne cet onglet",
     "close": "Compris",
     "feed": {
       "title": "Comment fonctionne le Fil d'actu",
@@ -2917,29 +2750,7 @@
       "privacy": "L'ordre est calculé sur ce téléphone. La liste des sujets que tu ouvres reste sur ce téléphone."
     },
     "forYou": {
-      "title": "Comment fonctionne le Tableau de bord",
-      "what": "Le Tableau de bord regroupe tes actualités par intérêt. Chaque chose que tu as dite à Mera a sa section, plus les titres de tes pays et du monde.",
-      "how1": "Chaque sujet va à l'intérêt qui lui correspond le mieux, il n'apparaît donc qu'une fois. Si deux correspondent autant, celui ajouté en premier le garde.",
-      "how2": "Les intérêts auxquels tu as donné plus de poids passent en premier. Un nouvel intérêt a sa section avant même l'arrivée de ses premiers sujets.",
-      "how3": "Dans une section, les sujets non lus passent en premier, les plus importants devant. Les sections se réordonnent quand tu quittes l'onglet, ou toutes les 10 minutes."
-    },
-    "explore": {
-      "title": "Comment fonctionne Explorer",
-      "what": "Explorer montre les actualités les plus couvertes au cours des dernières 24 heures, pour le monde et pour chaque pays que tu choisis. Touche 24 h en haut pour choisir plutôt 6, 12 ou 48 heures. Elles sont les mêmes pour tout le monde, pas choisies pour toi.",
-      "how1": "Les titres du monde sont classés selon l'ampleur de la couverture d'un sujet dans différents pays, pas selon le nombre d'articles.",
-      "how2": "Les titres d'un pays viennent de sources d'information basées dans ce pays."
-    },
-    "profile": {
-      "title": "Comment fonctionne le Profil",
-      "what": "Le Profil contient ce que tu as dit à Mera sur toi. Ton Fil d'actu et ton Tableau de bord sont construits à partir de ces informations.",
-      "how1": "Chaque information devient des recherches que Mera fait pour toi. Modifie ou supprime une information et les sujets qui en venaient changent aussi.",
-      "privacy": "Les recherches qui en découlent ne sont jamais liées à ton compte. Le serveur ne garde que le texte de recherche, partagé anonymement entre tous les utilisateurs, et le supprime après 14 jours sans utilisation."
-    },
-    "settings": {
-      "title": "Comment fonctionnent les Paramètres",
-      "what": "Choisissez comment Mera fonctionne sur ce téléphone et gérez votre compte. Votre forfait et votre utilisation du jour sont en haut.",
-      "how1": "Mera Protocol définit où l'IA lit vos actualités : dans le cloud ou sur ce téléphone. Confidentialité et données contient votre sauvegarde chiffrée et vous permet de supprimer des données.",
-      "how2": "Sécurité ajoute un code PIN. Aide propose des guides et la FAQ. Compte permet de vous déconnecter."
+      "how1": "Chaque sujet va à l'intérêt qui lui correspond le mieux, il n'apparaît donc qu'une fois. Si deux correspondent autant, celui ajouté en premier le garde."
     },
     "interests": {
       "title": "Comment fonctionnent les centres d'intérêt",

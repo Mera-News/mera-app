@@ -108,10 +108,8 @@
     "updatedAt": "Diperbarui {{time}}",
     "allCaughtUp": "Anda sudah membaca semua berita yang relevan untuk Anda.",
     "preparingFeed": "Mera sedang menyiapkan feed Anda.",
-    "preparingFeedExploreHint": "Sementara itu, lihat tab Eksplor untuk berita utama.",
     "noInterests": "Mera tidak dapat menganalisis berita untuk Anda",
     "noInterestsDescription": "Silakan buat persona pengguna Anda agar Mera dapat mulai menghasilkan berita untuk Anda.",
-    "dashboardTitle": "Dasbor",
     "pullDownToRetry": "Tarik ke bawah untuk mencoba lagi",
     "readArticleToast": "Anda telah membaca artikel ini",
     "stuckTitle": "Tidak dapat memuat feed Anda",
@@ -228,7 +226,6 @@
     "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
     "waitingForNextBatch_one": "{{count}} artikel baru menunggu batch analisis berikutnya",
     "waitingForNextBatch_other": "{{count}} artikel baru menunggu batch analisis berikutnya",
-    "exploreCta": "Jelajahi Eksplorasi",
     "statsPublishedPending_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
     "statsPublished_other": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir,",
     "statsAnalysed_other": "{{formatted}} dianalisis untuk Anda,",
@@ -341,15 +338,10 @@
   "notifications": {
     "title": "Notifikasi",
     "enableDescription": "Aktifkan notifikasi untuk tetap mendapat berita terkini yang dipersonalisasi",
-    "pushNotifications": "Notifikasi Push",
-    "receivingUpdates": "Menerima pembaruan",
-    "disabled": "Nonaktif",
     "permissionDenied": "Jika Anda sebelumnya menolak izin notifikasi, Anda perlu mengaktifkannya di pengaturan perangkat.",
     "openDeviceSettings": "Buka Pengaturan Perangkat",
-    "timeTitle": "Waktu Notifikasi",
     "format24h": "24 jam",
     "formatAmPm": "AM/PM",
-    "timeDescription": "Pilih kapan Anda ingin menerima notifikasi untuk memproses berita Anda",
     "savePreferences": "Simpan Preferensi",
     "loadFailedTitle": "Gagal Memuat",
     "loadFailedDescription": "Gagal memuat pengaturan notifikasi.",
@@ -371,12 +363,7 @@
     "saveFailedDescription": "Gagal menyimpan preferensi Anda. Silakan coba lagi.",
     "timeDescriptionOnboarding": "Pilih kapan Anda ingin mengejar ketinggalan berita Anda",
     "timeNudge": "Pilih waktu ketika Anda dapat membaca, berpikir, dan merencanakan — sekali atau dua kali sehari sudah cukup.",
-    "maxHoursReachedDescription": "Anda dapat memilih hingga {{count}} jam",
-    "maxHoursReachedTitle": "Maksimum Tercapai",
-    "selectedCount": "Dipilih: {{selected}}/{{max}}",
-    "savedInline": "Tersimpan",
-    "pickAtLeastOneHour": "Pilih setidaknya satu jam",
-    "selectedLabel": "Dipilih"
+    "savedInline": "Tersimpan"
   },
   "language": {
     "title": "Bahasa",
@@ -596,14 +583,12 @@
     }
   },
   "preferences": {
-    "manageSettings": "Kelola pengaturan aplikasi dan akun Anda",
     "notifications": "Notifikasi",
     "language": "Bahasa & Terjemahan",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Kebijakan Privasi",
     "termsOfService": "Ketentuan Layanan",
     "support": "Hubungi dukungan",
-    "manageData": "Kelola data",
     "deleteAccount": "Hapus Akun",
     "logout": "Keluar",
     "signOutModalTitle": "Keluar",
@@ -676,10 +661,7 @@
     "generateMoreTopicsConfirm": "Buat",
     "generateMoreTopicsFailedTitle": "Gagal membuat topik",
     "generateMoreTopicsFailedDescription": "Tidak dapat membuat topik baru. Silakan coba lagi.",
-    "articleAnalysisTitle": "Tentang analisis artikel",
-    "articleAnalysisDescription": "Anda sebaiknya mengoptimalkan Mera dengan mengurangi jumlah total artikel yang dianalisis karena semakin banyak artikel yang dianalisis, semakin banyak kuota penggunaan yang terpakai.",
     "gotIt": "Mengerti",
-    "articlesAnalyzedLast24h": "Artikel dianalisis 24 jam terakhir",
     "maxForDailyAnalysis": "Maks untuk analisis harian",
     "promoPlan": "Promo",
     "promoTooltip": "Anda dapat mencoba paket Individual secara gratis sebagai bagian dari peluncuran aplikasi. Penawaran ini berlaku terbatas.",
@@ -690,7 +672,6 @@
     "gotItPromo": "Keren! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Penawaran peluncuran 🎊",
-    "resetsOn": "Direset",
     "retryTopicGeneration": "Coba Lagi",
     "topicGenFailedGeneric": "Tidak dapat membuat topik untuk ini.",
     "articleCountPending": "Menghitung",
@@ -766,7 +747,6 @@
     "introMessage": "Hai! Aku Mera, asisten berita pribadimu.\n\nUntuk mencari berita yang benar-benar penting bagi kamu, aku perlu tahu sedikit tentang dirimu. Di mana kamu tinggal, apa pekerjaan kamu, hobi yang kamu ikuti, saham yang kamu pantau, di mana keluargamu tinggal. Ceritakan sebanyak atau sesedikit yang kamu mau.\n\nJika ini membuatmu ragu-ragu, itu adalah naluri yang baik. Tidak bijak memberikan data pribadi kepada perusahaan pengembang aplikasi. Mera dibangun berbeda: semua yang kamu ceritakan kepada aku disimpan di perangkatmu, bukan di server kami. Tanya padaku cara kerjanya, atau bilang 'bantu aku menyiapkannya' dan kita akan mulai."
   },
   "floatingChat": {
-    "bubbleHint": "Ngobrol dengan Mera",
     "close": "Tutup",
     "title": "Mera",
     "aboutThisStory": "TENTANG CERITA INI",
@@ -871,15 +851,7 @@
     "countShort_other": "{{count}} kunjungan",
     "tooltipA11y": "Tentang riwayat bacaan",
     "tooltipIntro": "Mera melacak pola bacaan Anda, dan data ini hanya ada di perangkat Anda.",
-    "tooltipLink": "Lihat semua riwayat bacaan Anda di sini.",
-    "screenIntro": "Penerbit yang situsnya kamu buka dari Mera dalam 30 hari terakhir. Daftar ini tetap di perangkat ini.",
-    "visitedListTitle": "Publikasi yang Anda kunjungi",
-    "last30Days": "30 hari terakhir",
-    "lastRead": "Terakhir dibaca {{time}}",
-    "noArticlesYet": "Penerbit yang kamu buka dari Mera muncul di sini. Bacaan di dalam Mera tidak dicantumkan.",
-    "articlesRead": "Artikel yang Anda baca",
-    "noArticlesLast30Days": "Tidak ada artikel dari publikasi ini dalam 30 hari terakhir.",
-    "emptyTitle": "Belum ada penerbit"
+    "tooltipLink": "Lihat semua riwayat bacaan Anda di sini."
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Pembaruan diperlukan",
@@ -966,15 +938,12 @@
     "deleteConfirmCta": "Hapus",
     "deleteConfirmMessage": "Ini akan menghapus artikel dari daftar tersimpan Anda di perangkat ini.",
     "deleteConfirmTitle": "Hapus artikel tersimpan?",
-    "empty": "Anda belum menyimpan artikel apa pun. Ketuk ikon penanda pada artikel untuk menyimpannya nanti.",
-    "note": "Artikel ini hanya disimpan di perangkat Anda. Tambah atau hapus kapan saja. Artikel tetap di sini sampai Anda menghapusnya.",
     "removedToastTitle": "Dihapus",
     "removedToastMessage": "Dihapus dari tersimpan",
     "saveAction": "Simpan",
     "removeAction": "Hapus dari tersimpan",
     "savedToastMessage": "Artikel disimpan untuk nanti",
     "savedToastTitle": "Tersimpan",
-    "title": "Tersimpan",
     "emptyTitle": "Belum ada yang disimpan"
   },
   "subscription": {
@@ -1034,8 +1003,6 @@
   },
   "tabs": {
     "deck": "Umpan",
-    "dashboard": "Dasbor",
-    "around": "Eksplor",
     "profile": "Profil",
     "settings": "Pengaturan",
     "gotIt": "Mengerti",
@@ -1044,7 +1011,6 @@
     "you": "Anda"
   },
   "swipeFeed": {
-    "yourDeck": "Umpan",
     "moreLikeThis": "Lebih banyak seperti ini",
     "lessLikeThis": "Lebih sedikit seperti ini",
     "askMera": "Tanya Mera",
@@ -1058,22 +1024,11 @@
     "chatHandoffDislikeNoPath": "Saya tidak suka cerita ini. Bantu saya agar mendapat lebih sedikit yang seperti ini."
   },
   "explore": {
-    "title": "Eksplor",
-    "scopeWorld": "Dunia",
-    "noArticles": "Tidak ada artikel yang ditemukan",
     "addPlaces": "Tambah tempat",
-    "offlineUnavailable": "Anda sedang offline — Jelajahi memerlukan koneksi internet",
     "serverUnavailable": "Mera tidak dapat dijangkau sekarang: coba lagi dalam sebentar.",
-    "addSources": "Tambahkan sumber",
-    "removeScope": "Hapus {{name}}",
-    "searchPlaceholder": "Cari berita terbaru",
     "clearSearch": "Hapus pencarian",
-    "searchMinLength": "Terus ketik untuk mencari",
     "searchNotSubscribed": "Pencarian memerlukan paket aktif",
-    "searchError": "Tidak dapat mencari sekarang",
     "searchEmpty": "Tidak ada kecocokan dalam 48 jam terakhir. Pencarian mencakup berita terbaru, bukan arsip lengkap.",
-    "openSearch": "Cari",
-    "closeSearch": "Tutup pencarian",
     "window": {
       "label24": "24 jam",
       "label48": "48 jam",
@@ -1102,10 +1057,6 @@
     "headlineDenominator_other": "Mera membaca {{count}} berita utama · {{shown}} layak waktu Anda.",
     "headlineDenominatorNone_one": "Mera membaca {{count}} berita utama · tidak ada yang terlihat relevan hari ini.",
     "headlineDenominatorNone_other": "Mera membaca {{count}} berita utama · tidak ada yang terlihat relevan hari ini.",
-    "subTabFeed": "Tinjauan",
-    "subTabStories": "Cerita",
-    "subTabSaved": "Tersimpan",
-    "subTabHistory": "Dikunjungi",
     "nextFactPrefix": "Berikutnya",
     "subTabAnalytics": "Analitik",
     "emptySection": {
@@ -1113,24 +1064,15 @@
       "none": "Belum ada berita yang cukup cocok untuk ditampilkan di sini."
     },
     "newInterest": "Minat baru",
-    "nextSection": "Berikutnya: {{title}}",
-    "backToDashboard": "Kembali ke Dasbor"
+    "nextSection": "Berikutnya: {{title}}"
   },
   "feedStatus": {
     "title": "Status feed",
     "idle": "Terkini",
     "stage": "Tahap",
     "cloudProgress": "Penilaian cloud",
-    "deviceProgress": "Penilaian di perangkat",
-    "published": "Dipublikasikan",
-    "analysed": "Dianalisis",
-    "relevant": "Relevan untuk Anda",
-    "lastProcessed": "Terakhir diproses",
-    "errorTitle": "Masalah penilaian",
-    "openA11y": "Buka status feed",
     "close": "Tutup",
     "expandA11y": "Tampilkan detail status feed",
-    "collapseA11y": "Sembunyikan detail status feed",
     "modeProcessing": "Memperbarui feed Anda",
     "modeError": "Masalah pada feed",
     "modeLimited": "Batas artikel harian tercapai",
@@ -1138,7 +1080,6 @@
   },
   "trackedStories": {
     "emptyTitle": "Belum ada cerita yang diikuti",
-    "emptyBody": "Ikuti sebuah cerita untuk melihat setiap perkembangan baru yang terkumpul di sini seiring berjalannya.",
     "title": "Cerita yang diikuti",
     "trackAction": "Ikuti cerita",
     "untrackAction": "Berhenti mengikuti cerita",
@@ -1161,10 +1102,7 @@
     "deleteStoryAction": "Hapus cerita",
     "deleteStoryConfirmTitle": "Hapus cerita ini?",
     "deleteStoryConfirmBody": "Menghapus menghapus semua yang tersimpan untuk cerita ini.",
-    "followFabLabel": "Ikuti cerita baru",
-    "followChatSeed": "Saya ingin mengikuti cerita.",
     "followChatIntro": "Beri tahu saya apa yang ingin Anda ikuti dan saya akan mengaturnya.",
-    "emptyCtaFollow": "Ikuti cerita",
     "removeMemberAction": "Bukan bagian dari cerita ini",
     "removeMemberConfirmTitle": "Hapus artikel ini?",
     "removeMemberConfirmBody": "Artikel ini dihapus dari linimasa cerita. Mera tetap mengikuti ceritanya.",
@@ -1211,12 +1149,10 @@
   },
   "settings": {
     "sources": "Sumber",
-    "groupGeneral": "Umum",
     "groupPrivacy": "Privasi dan data",
     "groupHelp": "Bantuan",
     "groupAccount": "Akun",
     "languageRow": "Bahasa",
-    "backupRow": "Cadangkan dan pulihkan",
     "backupRowNever": "Belum dicadangkan"
   },
   "personaAudit": {
@@ -1453,8 +1389,6 @@
     "subtitle": "Apa yang telah Anda minta Mera untuk dijauhkan dari feed Anda",
     "sectionFilters": "Kata dan hal yang telah Anda sembunyikan",
     "sectionTopics": "Topik yang Anda lihat lebih sedikit",
-    "sectionSources": "Sumber yang telah Anda senyapkan atau kurangi",
-    "managePublications": "Kelola preferensi sumber",
     "chatHint": "Anda tidak perlu datang ke sini. Cukup katakan kepada Mera apa yang tidak ingin Anda lihat — \"lebih sedikit tentang gosip selebriti\" — dan Mera akan mengurusnya.",
     "kinds": {
       "keyword": "Kata",
@@ -1476,8 +1410,6 @@
     "badgeBlocked": "Dijauhkan",
     "badgeShownLess": "Ditampilkan lebih sedikit",
     "badgeMutedTopic": "Ditampilkan lebih sedikit",
-    "badgeDownranked": "Diturunkan",
-    "badgeMutedPub": "Senyap",
     "mutedPubHint": "Dijauhkan, kecuali berita penting",
     "cardExemptLabel": "Anda menyaring \"{{filter}}\" — menampilkannya karena berita penting",
     "expiresOn": "Hingga {{date}}",
@@ -1505,8 +1437,7 @@
     "emptyTitle": "Belum ada yang disembunyikan",
     "emptyBody": "Ketika Anda memberi tahu Mera Anda tidak tertarik pada sesuatu, itu muncul di sini sehingga Anda bisa membatalkannya.",
     "emptyFilters": "Anda belum menyembunyikan kata apa pun.",
-    "emptyTopics": "Belum ada topik yang diturunkan.",
-    "emptySources": "Anda belum menyenyapkan atau menurunkan sumber apa pun."
+    "emptyTopics": "Belum ada topik yang diturunkan."
   },
   "headlineDepth": {
     "title": "Berita utama",
@@ -1519,39 +1450,6 @@
     "saveFailedTitle": "Tidak bisa menyimpan itu",
     "saveFailedBody": "Perubahan Anda tidak disimpan. Coba lagi."
   },
-  "profileHub": {
-    "facts": "Fakta",
-    "factsCount_one": "{{count}} fakta membentuk feed Anda",
-    "factsCount_other": "{{count}} fakta membentuk feed Anda",
-    "factsEmpty": "Ketuk untuk menambahkan apa yang harus diketahui Mera",
-    "locations": "Lokasi",
-    "locationsSubtitle": "Tempat yang membentuk feed Anda",
-    "sources": "Sumber",
-    "sourcesSubtitle": "Jelajahi dan ikuti sumber berita",
-    "saved": "Tersimpan",
-    "savedSubtitle": "Artikel yang Anda simpan untuk nanti",
-    "preferences": "Preferensi sumber",
-    "prefsCount_one": "{{count}} sumber disesuaikan",
-    "prefsCount_other": "{{count}} sumber disesuaikan",
-    "prefsEmpty": "Naikkan, turunkan, atau bisukan sumber",
-    "visitedSubtitle": "Publikasi yang baru-baru ini Anda buka",
-    "activity": "Aktivitas",
-    "activitySubtitle": "Riwayat perubahan profil Anda",
-    "personaHealth": "Rapikan profil",
-    "healthPending_one": "{{count}} saran pembersihan",
-    "healthPending_other": "{{count}} saran perapian",
-    "healthAllHealthy": "Semua sehat",
-    "groupKnows": "Mera tahu Anda",
-    "groupFeed": "Feed Anda",
-    "groupLibrary": "Sumber & perpustakaan",
-    "groupInternals": "Di balik layar",
-    "notInterested": "Tidak tertarik",
-    "notInterestedSubtitle_one": "{{count}} hal yang telah Anda sembunyikan",
-    "notInterestedSubtitle_other": "{{count}} hal yang telah Anda sembunyikan",
-    "notInterestedEmpty": "Belum ada yang disembunyikan",
-    "headlineDepth": "Berita utama",
-    "headlineDepthSubtitle": "Berapa banyak Mera membaca per bagian"
-  },
   "profile": {
     "talkToMera": "Bicara dengan Mera",
     "talkToMeraSubtitle": "Begini cara saya melihat Anda. Ketuk untuk melanjutkan percakapan.",
@@ -1559,8 +1457,6 @@
     "emptyTitle": "Saya belum mengenal Anda",
     "emptyBody": "Ceritakan tentang diri Anda agar saya bisa menemukan berita yang penting bagi Anda.",
     "startTalking": "Mulai bicara",
-    "meraInvite": "Hai! Ceritakan apa yang Anda sukai, dan saya akan menyesuaikan feed Anda.",
-    "aboutYou": "Tentang Anda",
     "gettingToKnowYou": "Saya masih dalam proses mengenal Anda. Coba lagi sebentar lagi.",
     "updating": "Memperbarui…",
     "advanced": "Lanjutan",
@@ -1593,14 +1489,10 @@
     "deleteFactA11y": "Hapus {{fact}}"
   },
   "publicationPrefs": {
-    "title": "Preferensi sumber",
-    "subtitle": "Naikkan, turunkan, atau bisukan publikasi",
     "kindBoost": "Naikkan",
     "kindDeprioritize": "Turunkan",
     "kindMute": "Bisukan",
-    "clear": "Hapus",
     "clearA11y": "Hapus preferensi",
-    "empty": "Anda belum menyesuaikan sumber apa pun. Naikkan, turunkan, atau bisukan publikasi dari artikel mana pun untuk melihatnya di sini.",
     "scopeKindCountry": "Negara"
   },
   "optimisationPlan": {
@@ -1695,7 +1587,6 @@
     "trackBody": "Cerita yang sudah Anda ikuti tetap menyimpan semua yang telah dikumpulkan. Mengikuti cerita baru memerlukan paket aktif.",
     "trackDismiss": "Nanti saja",
     "trackTitle": "Pelacakan cerita memerlukan paket",
-    "trackedStoriesEmptyBody": "Belum ada cerita yang diikuti. Mengikuti cerita memerlukan paket, dan apa pun yang Anda ikuti kemudian tetap di perangkat ini untuk Anda simpan.",
     "factsInFeedHeader": "Di feed Anda",
     "factsPausedHeader": "Dijeda",
     "factsPausedSubtitle": "Ini tetap tersimpan. Paket mengaktifkan semuanya.",
@@ -1767,11 +1658,9 @@
     "checkedByHeading": "Pemeriksaan fakta yang ditemukan pencarian",
     "dashboard": {
       "deleteA11y": "Hapus pemeriksaan fakta ini",
-      "empty": "Anda belum memeriksa klaim apa pun. Ketuk centang di bawah cerita untuk bertanya kepada Mera tentangnya, hasil muncul di sini setelah siap.",
       "listSubtitle": "Cerita yang Anda minta Mera untuk memeriksa faktanya. Disimpan hanya di perangkat ini.",
       "listTitle": "Pemeriksaan fakta",
       "pending": "Masih mencari",
-      "title": "Pemeriksaan fakta",
       "untitled": "Cerita tanpa judul",
       "openA11y": "Buka artikel ini",
       "articleGone": "Artikel telah kadaluarsa, sehingga tidak dapat dibuka. Pemeriksaan fakta yang kami temukan disimpan di sini.",
@@ -2635,7 +2524,6 @@
   },
   "subscriptions": {
     "sectionTitle": "Langganan Anda",
-    "otherSources": "Sumber lain",
     "empty": "Beri tahu Mera publikasi mana yang Anda bayar. Kami akan memberi bobot lebih pada publikasi itu di feed Anda dan menampilkan liputan mereka untuk berita yang mereka tulis.",
     "add": "Tambah langganan",
     "close": "Tutup",
@@ -2658,15 +2546,10 @@
     "opensPublisherSite": "Membuka situs {{publisher}} sendiri"
   },
   "shareStats": {
-    "entryA11y": "Bagikan statistik bacaan Anda",
-    "screenTitle": "Bagikan bacaan Anda",
     "screenSubtitle": "30 hari terakhir",
     "preparing": "Menyiapkan kartu Anda",
-    "emptyTitle": "Belum ada yang bisa ditampilkan",
-    "emptyBody": "Baca beberapa artikel dan kartu Anda akan terisi. Mera menyimpan riwayat bacaan 30 hari di perangkat ini.",
     "nameToggleLabel": "Tampilkan penerbit teratas saya",
     "nameTogglePrivacy": "Disertakan secara bawaan. Nama publikasi mengungkapkan banyak hal tentang Anda, jadi Anda bisa mematikannya sebelum berbagi. Judul artikel tidak pernah disertakan.",
-    "shareAction": "Bagikan",
     "shareDialogTitle": "Statistik bacaan saya di Mera",
     "sharingUnavailable": "Berbagi tidak tersedia di perangkat ini.",
     "shareFailed": "Gagal. Coba lagi.",
@@ -2825,55 +2708,6 @@
       "Mencari di web dari perangkat Anda…"
     ]
   },
-  "headerNarration": {
-    "stages": {
-      "starting": [
-        "Mulai menyegarkan",
-        "Di ponsel ini"
-      ],
-      "fetching": [
-        "Mencari yang baru",
-        "Apa yang baru?"
-      ],
-      "downloading": [
-        "Mengunduh artikel",
-        "Dari server"
-      ],
-      "grouping": [
-        "Mengelompokkan berita",
-        "Gabung duplikat"
-      ],
-      "analysing": [
-        "Menilai relevansi",
-        "Membaca tiap artikel"
-      ],
-      "onDevice": [
-        "Membaca di ponselmu",
-        "Tetap di ponselmu"
-      ],
-      "summarising": [
-        "Menulis catatan",
-        "Catatan per berita"
-      ],
-      "preparing": [
-        "Mengurutkan",
-        "Hampir selesai"
-      ]
-    },
-    "nudges": [
-      "Baca artikel lengkapnya",
-      "Sibuk? Simpan saja",
-      "Cek berita dunia?",
-      "Sudah cek negaramu?",
-      "Ikuti sebuah berita",
-      "Cek berita yang diikuti",
-      "Profil sudah terbaru?",
-      "Tidak cocok? Beri tahu",
-      "Sukai untuk lihat lagi",
-      "Bagikan ke orang dekat"
-    ],
-    "a11y": "Mera memperbarui beritamu di ponsel ini."
-  },
   "savedExport": {
     "fabA11y": "Ekspor artikel tersimpan",
     "title": "Ekspor tersimpan",
@@ -2898,7 +2732,6 @@
     "includeImageHint": "Tautan ke gambar setiap artikel, jika ada."
   },
   "tabExplainer": {
-    "openA11y": "Cara kerja tab ini",
     "close": "Mengerti",
     "feed": {
       "title": "Cara kerja Umpan",
@@ -2909,29 +2742,7 @@
       "privacy": "Urutan dihitung di ponsel ini. Catatan berita yang kamu buka tetap ada di ponsel ini."
     },
     "forYou": {
-      "title": "Cara kerja Dasbor",
-      "what": "Dasbor mengelompokkan beritamu berdasarkan minat. Setiap hal yang kamu ceritakan ke Mera punya bagian sendiri, ditambah berita utama dari negaramu dan dunia.",
-      "how1": "Setiap berita masuk ke satu minat yang paling cocok, jadi hanya muncul sekali. Jika dua minat sama cocoknya, minat yang kamu tambahkan lebih dulu yang menyimpannya.",
-      "how2": "Minat yang kamu beri bobot lebih tampil lebih dulu. Minat baru langsung mendapat bagiannya, bahkan sebelum berita pertamanya tiba.",
-      "how3": "Di dalam tiap bagian, berita yang belum dibaca tampil lebih dulu, yang paling penting di depan. Bagian diurutkan ulang saat kamu meninggalkan tab, atau setiap 10 menit."
-    },
-    "explore": {
-      "title": "Cara kerja Eksplor",
-      "what": "Eksplor menampilkan berita yang paling banyak diliput dalam 24 jam terakhir, untuk dunia dan setiap negara yang kamu pilih. Ketuk 24 jam di atas untuk memilih 6, 12, atau 48 jam. Isinya sama untuk semua orang, bukan dipilih untukmu.",
-      "how1": "Berita utama dunia diurutkan menurut seberapa luas sebuah berita diliput di berbagai negara, bukan menurut jumlah artikelnya.",
-      "how2": "Berita utama suatu negara berasal dari sumber berita yang berbasis di negara tersebut."
-    },
-    "profile": {
-      "title": "Cara kerja Profil",
-      "what": "Profil berisi apa yang kamu ceritakan ke Mera tentang dirimu. Umpan dan Dasbor kamu dibangun dari fakta-fakta ini.",
-      "how1": "Setiap fakta menjadi pencarian yang dijalankan Mera untukmu. Ubah atau hapus fakta, dan berita yang berasal darinya ikut berubah.",
-      "privacy": "Pencarian yang dibuat darinya tidak pernah dikaitkan dengan akunmu. Server hanya menyimpan teks pencarian, dibagikan secara anonim ke semua pengguna, dan menghapusnya setelah 14 hari tidak dipakai."
-    },
-    "settings": {
-      "title": "Cara kerja Pengaturan",
-      "what": "Pilih cara Mera berjalan di ponsel ini dan kelola akun Anda. Paket dan penggunaan hari ini ada di bagian atas.",
-      "how1": "Mera Protocol menentukan di mana AI membaca berita Anda: di cloud atau di ponsel ini. Privasi dan data menyimpan cadangan terenkripsi Anda dan memungkinkan Anda menghapus data.",
-      "how2": "Keamanan menambahkan PIN. Bantuan berisi panduan dan FAQ. Di Akun Anda bisa keluar."
+      "how1": "Setiap berita masuk ke satu minat yang paling cocok, jadi hanya muncul sekali. Jika dua minat sama cocoknya, minat yang kamu tambahkan lebih dulu yang menyimpannya."
     },
     "interests": {
       "title": "Cara kerja Minat",

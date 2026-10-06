@@ -108,10 +108,8 @@
     "updatedAt": "更新于 {{time}}",
     "allCaughtUp": "您已浏览完所有与您相关的新闻。",
     "preparingFeed": "Mera 正在为您准备资讯。",
-    "preparingFeedExploreHint": "与此同时，可前往「探索」标签页查看热门报道。",
     "noInterests": "Mera 无法为您分析新闻",
     "noInterestsDescription": "请创建您的用户画像，以便 Mera 开始为您生成新闻。",
-    "dashboardTitle": "概览",
     "pullDownToRetry": "下拉重试",
     "readArticleToast": "您已阅读过这篇文章",
     "stuckTitle": "无法加载您的资讯",
@@ -228,7 +226,6 @@
     "analysingProgress": "正在分析 {{done}}/{{total}} 篇文章",
     "waitingForNextBatch_one": "{{count}} 篇新文章等待下一批分析",
     "waitingForNextBatch_other": "{{count}} 篇新文章正在等待下一批分析",
-    "exploreCta": "浏览探索",
     "statsPublishedPending_other": "过去24小时内发布了{{formatted}}篇文章。",
     "statsPublished_other": "过去24小时内发布了{{formatted}}篇文章。",
     "statsAnalysed_other": "{{formatted}}篇文章经过分析。",
@@ -341,15 +338,10 @@
   "notifications": {
     "title": "通知",
     "enableDescription": "启用通知以获取个性化新闻更新",
-    "pushNotifications": "推送通知",
-    "receivingUpdates": "正在接收更新",
-    "disabled": "已禁用",
     "permissionDenied": "如果您之前拒绝了通知权限，需要在设备设置中手动启用。",
     "openDeviceSettings": "打开设备设置",
-    "timeTitle": "通知时间",
     "format24h": "24小时制",
     "formatAmPm": "AM/PM",
-    "timeDescription": "选择您希望接收新闻推送通知的时间",
     "timeDescriptionOnboarding": "选择您希望接收新闻更新的时间",
     "savePreferences": "保存偏好设置",
     "loadFailedTitle": "加载失败",
@@ -371,12 +363,7 @@
     "saveFailedTitle": "保存失败",
     "saveFailedDescription": "无法保存您的偏好设置，请重试。",
     "timeNudge": "选择一个您可以阅读、思考和规划的时间——每天一两次就足够了。",
-    "maxHoursReachedDescription": "最多可选择 {{count}} 个时间",
-    "maxHoursReachedTitle": "已达上限",
-    "selectedCount": "已选择：{{selected}}/{{max}}",
-    "savedInline": "已保存",
-    "pickAtLeastOneHour": "至少选择一个时间",
-    "selectedLabel": "已选"
+    "savedInline": "已保存"
   },
   "language": {
     "title": "语言",
@@ -596,14 +583,12 @@
     }
   },
   "preferences": {
-    "manageSettings": "管理您的应用设置和账户",
     "notifications": "通知",
     "language": "语言与翻译",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "隐私政策",
     "termsOfService": "服务条款",
     "support": "联系支持团队",
-    "manageData": "管理数据",
     "deleteAccount": "删除账户",
     "logout": "退出登录",
     "signOutModalTitle": "退出登录",
@@ -676,10 +661,7 @@
     "generateMoreTopicsConfirm": "生成",
     "generateMoreTopicsFailedTitle": "话题生成失败",
     "generateMoreTopicsFailedDescription": "无法生成新话题，请重试。",
-    "articleAnalysisTitle": "关于文章分析",
-    "articleAnalysisDescription": "您应该通过减少被分析的文章总数来优化您的 Mera，因为分析的文章越多，您的使用额度消耗就越快。",
     "gotIt": "知道了",
-    "articlesAnalyzedLast24h": "过去24小时分析文章数",
     "maxForDailyAnalysis": "每日最大分析数",
     "promoPlan": "Promo",
     "promoTooltip": "作为应用发布活动的一部分，您可以免费试用 Individual 套餐。此优惠限时有效。",
@@ -690,7 +672,6 @@
     "gotItPromo": "太棒了！🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 上线特惠 🎊",
-    "resetsOn": "重置",
     "retryTopicGeneration": "重试",
     "topicGenFailedGeneric": "无法为此生成主题。",
     "articleCountPending": "统计中",
@@ -766,7 +747,6 @@
     "introMessage": "你好！我是 Mera，你的个人新闻助手。\n\n为了找到真正对你重要的新闻，我需要了解一些关于你的情况。你住在哪里、做什么工作、关注的兴趣是什么、追踪哪些股票、家人住在哪里。随你愿意分享多少。\n\n如果这让你有些顾虑，那是很好的本能。把个人数据交给做应用的公司并不明智。Mera 的构建方式不同：你告诉我的一切都保存在你的设备上，而不是在我们的服务器上。问我它如何工作，或者说「帮我设置一下」，我们就开始吧。"
   },
   "floatingChat": {
-    "bubbleHint": "与 Mera 聊天",
     "close": "关闭",
     "title": "Mera",
     "aboutThisStory": "关于这篇报道",
@@ -871,15 +851,7 @@
     "countShort_other": "{{count}} 次访问",
     "tooltipA11y": "关于阅读历史",
     "tooltipIntro": "Mera 为您追踪阅读习惯——且数据仅保存在您的设备上。",
-    "tooltipLink": "在这里查看您的完整阅读历史。",
-    "screenIntro": "过去 30 天里你从 Mera 打开过网站的媒体。此列表只保存在这台设备上。",
-    "visitedListTitle": "您访问过的媒体",
-    "last30Days": "近30天",
-    "lastRead": "上次阅读 {{time}}",
-    "noArticlesYet": "你从 Mera 打开过的媒体会显示在这里。在 Mera 内阅读的内容不会列出。",
-    "articlesRead": "您阅读过的文章",
-    "noArticlesLast30Days": "过去30天内该媒体没有文章。",
-    "emptyTitle": "还没有媒体"
+    "tooltipLink": "在这里查看您的完整阅读历史。"
   },
   "nativeUpdate": {
     "updateRequiredTitle": "需要更新",
@@ -966,12 +938,9 @@
     "deleteConfirmCta": "删除",
     "deleteConfirmMessage": "此操作将从此设备的已保存列表中移除该文章。",
     "deleteConfirmTitle": "移除已保存的文章？",
-    "empty": "你还没有保存任何文章。点按文章上的书签即可保存以便稍后阅读。",
-    "note": "这些文章仅保存在你的设备上。你可以随时添加或移除——在你删除之前，它们会一直保留在这里。",
     "removedToastMessage": "已从收藏中移除",
     "savedToastMessage": "文章已保存以便稍后阅读",
     "savedToastTitle": "已保存",
-    "title": "已保存",
     "removedToastTitle": "已移除",
     "saveAction": "保存",
     "removeAction": "从已保存中移除",
@@ -1034,8 +1003,6 @@
   },
   "tabs": {
     "deck": "信息流",
-    "dashboard": "仪表盘",
-    "around": "探索",
     "profile": "我的",
     "settings": "设置",
     "gotIt": "知道了",
@@ -1044,7 +1011,6 @@
     "you": "我的"
   },
   "swipeFeed": {
-    "yourDeck": "信息流",
     "moreLikeThis": "多看这类",
     "lessLikeThis": "少看这类",
     "askMera": "问 Mera",
@@ -1058,22 +1024,11 @@
     "chatHandoffDislikeNoPath": "我不喜欢这篇报道。帮我减少这类内容。"
   },
   "explore": {
-    "title": "探索",
-    "scopeWorld": "全球",
-    "noArticles": "未找到文章",
     "addPlaces": "添加地点",
-    "offlineUnavailable": "您离线了——「探索」需要网络连接",
     "serverUnavailable": "Mera暂时无法到达：稍后再试。",
-    "addSources": "添加来源",
-    "removeScope": "移除{{name}}",
-    "searchPlaceholder": "搜索最近新闻",
     "clearSearch": "清除搜索",
-    "searchMinLength": "继续输入以搜索",
     "searchNotSubscribed": "搜索需要有效的方案",
-    "searchError": "现在无法搜索",
     "searchEmpty": "过去48小时内无匹配。搜索涵盖最近的头条，不是完整档案。",
-    "openSearch": "搜索",
-    "closeSearch": "关闭搜索",
     "window": {
       "label24": "24小时",
       "label48": "48小时",
@@ -1095,9 +1050,6 @@
     "breaking": "突发",
     "showMore": "显示更多 {{count}} 条",
     "viewAllArticles_one": "查看全部 {{count}} 篇文章",
-    "subTabFeed": "一览",
-    "subTabStories": "报道",
-    "subTabSaved": "已保存",
     "viewAllArticles_other": "查看全部 {{count}} 篇文章",
     "headlineSectionGlobal": "全球新闻",
     "headlineSectionCountry": "{{country}}新闻",
@@ -1105,7 +1057,6 @@
     "headlineDenominator_other": "Mera 阅读了 {{count}} 条头条 · {{shown}} 值得您关注。",
     "headlineDenominatorNone_one": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
     "headlineDenominatorNone_other": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
-    "subTabHistory": "访问过",
     "nextFactPrefix": "下一个",
     "subTabAnalytics": "分析",
     "emptySection": {
@@ -1113,24 +1064,15 @@
       "none": "暂时还没有与此足够贴近、可以显示的新闻。"
     },
     "newInterest": "新兴趣",
-    "nextSection": "下一个：{{title}}",
-    "backToDashboard": "返回概览"
+    "nextSection": "下一个：{{title}}"
   },
   "feedStatus": {
     "title": "资讯状态",
     "idle": "已是最新",
     "stage": "阶段",
     "cloudProgress": "云端评分",
-    "deviceProgress": "设备端评分",
-    "analysed": "已分析",
-    "relevant": "与你相关",
-    "lastProcessed": "上次处理",
-    "errorTitle": "评分出现问题",
-    "openA11y": "打开资讯状态",
     "expandA11y": "显示资讯状态详情",
-    "collapseA11y": "隐藏资讯状态详情",
     "close": "关闭",
-    "published": "已发布",
     "modeProcessing": "正在更新你的信息流",
     "modeError": "信息流出现问题",
     "modeLimited": "已达到每日文章上限",
@@ -1138,7 +1080,6 @@
   },
   "trackedStories": {
     "emptyTitle": "还没有关注任何报道",
-    "emptyBody": "关注一则报道，即可在这里看到它的每一次最新进展。",
     "title": "已关注的报道",
     "trackAction": "关注报道",
     "untrackAction": "取消关注",
@@ -1161,10 +1102,7 @@
     "deleteStoryAction": "删除报道",
     "deleteStoryConfirmTitle": "删除此报道？",
     "deleteStoryConfirmBody": "删除会移除为此报道保存的所有内容。",
-    "followFabLabel": "关注新报道",
-    "followChatSeed": "我想关注一则报道。",
     "followChatIntro": "告诉我您想关注什么，我会设置它。",
-    "emptyCtaFollow": "关注报道",
     "removeMemberAction": "不属于此报道",
     "removeMemberConfirmTitle": "移除这篇文章？",
     "removeMemberConfirmBody": "这篇文章将从报道的时间线中移除。Mera 会继续关注报道本身。",
@@ -1211,12 +1149,10 @@
   },
   "settings": {
     "sources": "来源",
-    "groupGeneral": "通用",
     "groupPrivacy": "隐私和数据",
     "groupHelp": "帮助",
     "groupAccount": "账户",
     "languageRow": "语言",
-    "backupRow": "备份与恢复",
     "backupRowNever": "尚未备份"
   },
   "personaAudit": {
@@ -1454,8 +1390,6 @@
     "subtitle": "您要求 Mera 从信息流中排除的内容",
     "sectionFilters": "您隐藏的词和内容",
     "sectionTopics": "您看得较少的话题",
-    "sectionSources": "您屏蔽或降权的来源",
-    "managePublications": "管理来源偏好",
     "chatHint": "您不一定要来这里。只需告诉 Mera 您不想看什么——「少看娱乐八卦」——它会为您处理。",
     "kinds": {
       "keyword": "词语",
@@ -1477,8 +1411,6 @@
     "badgeBlocked": "已排除",
     "badgeShownLess": "显示较少",
     "badgeMutedTopic": "显示较少",
-    "badgeDownranked": "已降权",
-    "badgeMutedPub": "已屏蔽",
     "mutedPubHint": "已排除，重大新闻除外",
     "cardExemptLabel": "您过滤了\"{{filter}}\"——因为这是重大新闻所以显示",
     "expiresOn": "至 {{date}}",
@@ -1506,8 +1438,7 @@
     "emptyTitle": "还未隐藏任何内容",
     "emptyBody": "当您告诉 Mera 不感兴趣的内容时，它会显示在这里，方便您撤销。",
     "emptyFilters": "您还未隐藏任何词语。",
-    "emptyTopics": "还未降权任何话题。",
-    "emptySources": "您还未屏蔽或降权任何来源。"
+    "emptyTopics": "还未降权任何话题。"
   },
   "headlineDepth": {
     "title": "头条新闻",
@@ -1520,39 +1451,6 @@
     "saveFailedTitle": "无法保存",
     "saveFailedBody": "您的更改未保存。请重试。"
   },
-  "profileHub": {
-    "facts": "事实",
-    "factsCount_one": "{{count}} 个事实影响您的信息流",
-    "factsCount_other": "{{count}} 条事实正在影响你的资讯",
-    "factsEmpty": "点按添加 Mera 应该了解的信息",
-    "locations": "地点",
-    "locationsSubtitle": "影响你资讯的地点",
-    "sources": "来源",
-    "sourcesSubtitle": "浏览并关注新闻来源",
-    "saved": "已保存",
-    "savedSubtitle": "你保存以便稍后阅读的文章",
-    "preferences": "来源偏好",
-    "prefsCount_one": "{{count}} 个来源已调整",
-    "prefsCount_other": "已调整 {{count}} 个来源",
-    "prefsEmpty": "提升、降权或屏蔽来源",
-    "visitedSubtitle": "您最近打开过的媒体",
-    "activity": "活动",
-    "activitySubtitle": "你的画像变更历史",
-    "personaHealth": "整理个人资料",
-    "healthPending_one": "{{count}} 项整理建议",
-    "healthPending_other": "{{count}} 项整理建议",
-    "healthAllHealthy": "一切正常",
-    "groupKnows": "Mera 了解您",
-    "groupFeed": "您的信息流",
-    "groupLibrary": "来源和库",
-    "groupInternals": "高级选项",
-    "notInterested": "不感兴趣",
-    "notInterestedSubtitle_one": "{{count}} 个您隐藏的内容",
-    "notInterestedSubtitle_other": "{{count}} 个您隐藏的内容",
-    "notInterestedEmpty": "还未隐藏任何内容",
-    "headlineDepth": "头条新闻",
-    "headlineDepthSubtitle": "Mera 每个板块阅读的新闻数量"
-  },
   "profile": {
     "talkToMera": "和 Mera 聊聊",
     "talkToMeraSubtitle": "这是我眼中的你。点按继续聊下去。",
@@ -1560,8 +1458,6 @@
     "emptyTitle": "我还不了解你",
     "emptyBody": "告诉我一些关于你的事，这样我就能为你找到重要的新闻。",
     "startTalking": "开始聊天",
-    "meraInvite": "嘿！告诉我你喜欢什么，我来帮你调整资讯。",
-    "aboutYou": "关于你",
     "gettingToKnowYou": "我还在慢慢了解你——稍后再来看看吧。",
     "updating": "更新中…",
     "advanced": "高级设置",
@@ -1594,14 +1490,10 @@
     "deleteFactA11y": "删除 {{fact}}"
   },
   "publicationPrefs": {
-    "title": "来源偏好",
-    "subtitle": "提升、降权或屏蔽媒体和国家",
     "kindBoost": "提升",
     "kindDeprioritize": "降权",
     "kindMute": "屏蔽",
-    "clear": "清除",
     "clearA11y": "清除偏好",
-    "empty": "您还未调整任何来源。从任何文章中提升、降权或屏蔽媒体，或要求 Mera 显示某个国家的更多内容，就能在这里看到。",
     "scopeKindCountry": "国家"
   },
   "optimisationPlan": {
@@ -1696,7 +1588,6 @@
     "trackBody": "你已关注的报道会保留它们收集的所有内容。开始关注新报道需要有效的订阅计划。",
     "trackDismiss": "稍后",
     "trackTitle": "报道追踪需要订阅计划",
-    "trackedStoriesEmptyBody": "还没有关注任何报道。关注报道需要有效的订阅计划。你之后关注的任何报道都会保留在此设备上，永远属于你。",
     "factsInFeedHeader": "在你的信息流中",
     "factsPausedHeader": "已暂停",
     "factsPausedSubtitle": "它们仍会保存。订阅计划会全部开启。",
@@ -1768,11 +1659,9 @@
     "checkedByHeading": "搜索发现的事实核查",
     "dashboard": {
       "deleteA11y": "删除此事实核查",
-      "empty": "您还没有核查过任何声明。在故事下方点击勾号以向 Mera 查询——一旦结果准备好，就会显示在这里。",
       "listSubtitle": "您要求 Mera 查找事实核查的故事。仅保存在此设备上。",
       "listTitle": "事实核查",
       "pending": "仍在搜索",
-      "title": "事实核查",
       "untitled": "无标题的故事",
       "openA11y": "打开此文章",
       "articleGone": "该文章已过期，因此无法打开。我们找到的事实核查保存在此处。",
@@ -2636,7 +2525,6 @@
   },
   "subscriptions": {
     "sectionTitle": "你的订阅",
-    "otherSources": "其他来源",
     "empty": "告诉 Mera 你订阅了哪些媒体。我们会在你的信息流中提高它们的权重，并在它们报道过的新闻中显示它们的报道。",
     "add": "添加订阅",
     "close": "关闭",
@@ -2659,15 +2547,10 @@
     "opensPublisherSite": "将打开 {{publisher}} 的官方网站"
   },
   "shareStats": {
-    "entryA11y": "分享你的阅读统计",
-    "screenTitle": "分享你的阅读",
     "screenSubtitle": "过去 30 天",
     "preparing": "正在准备你的卡片",
-    "emptyTitle": "暂时没有可显示的内容",
-    "emptyBody": "读几篇文章，你的卡片就会慢慢填满。Mera 在这台设备上保留 30 天的阅读记录。",
     "nameToggleLabel": "显示我常读的媒体",
     "nameTogglePrivacy": "默认包含。媒体名称能透露你很多信息，所以分享前你可以关掉。文章标题从不包含在内。",
-    "shareAction": "分享",
     "shareDialogTitle": "我在 Mera 的阅读统计",
     "sharingUnavailable": "此设备不支持分享。",
     "shareFailed": "没有成功，请再试一次。",
@@ -2826,55 +2709,6 @@
       "正在从你的设备搜索网页…"
     ]
   },
-  "headerNarration": {
-    "stages": {
-      "starting": [
-        "开始刷新",
-        "在本机处理"
-      ],
-      "fetching": [
-        "寻找新内容",
-        "有什么新的"
-      ],
-      "downloading": [
-        "下载文章",
-        "从服务器获取"
-      ],
-      "grouping": [
-        "归类新闻",
-        "合并重复"
-      ],
-      "analysing": [
-        "判断相关度",
-        "逐篇阅读"
-      ],
-      "onDevice": [
-        "在手机上阅读",
-        "不离开你的手机"
-      ],
-      "summarising": [
-        "撰写短评",
-        "每条一句短评"
-      ],
-      "preparing": [
-        "排序中",
-        "快好了"
-      ]
-    },
-    "nudges": [
-      "阅读全文",
-      "没时间？先保存",
-      "看过世界新闻了吗？",
-      "看过你的国家了吗？",
-      "关注一个新闻",
-      "看看关注的新闻",
-      "资料是最新的吗？",
-      "不感兴趣？告诉 Mera",
-      "点赞看到更多",
-      "分享给亲友"
-    ],
-    "a11y": "Mera 正在这台手机上更新你的新闻。"
-  },
   "savedExport": {
     "fabA11y": "导出已保存的文章",
     "title": "导出已保存",
@@ -2899,7 +2733,6 @@
     "includeImageHint": "每篇文章图片的链接（如有）。"
   },
   "tabExplainer": {
-    "openA11y": "此标签页如何运作",
     "close": "知道了",
     "feed": {
       "title": "信息流如何运作",
@@ -2910,29 +2743,7 @@
       "privacy": "排序在这部手机上完成。你打开了哪些新闻的记录，保留在这部手机上。"
     },
     "forYou": {
-      "title": "概览如何运作",
-      "what": "概览按兴趣整理你的新闻。你告诉 Mera 的每件事都有一个栏目，另外还有你所在国家和全球的头条。",
-      "how1": "每条新闻只归入最匹配的一个兴趣，所以只出现一次。如果两个兴趣同样匹配，就归先添加的那个。",
-      "how2": "你给了更高权重的兴趣排在前面。新兴趣在第一批新闻到来之前就会有自己的栏目。",
-      "how3": "栏目内未读新闻排在前面，越重要越靠前。离开此标签页时或每 10 分钟，栏目会重新排序。"
-    },
-    "explore": {
-      "title": "探索如何运作",
-      "what": "探索显示全球和你所选每个国家在过去 24 小时内报道最多的新闻。点按顶部的 24小时 可改选 6、12 或 48 小时。所有人看到的都一样，不是为你挑选的。",
-      "how1": "全球头条按一条新闻在多少国家被广泛报道来排序，而不是按文章数量。",
-      "how2": "国家头条来自总部位于该国的新闻来源。"
-    },
-    "profile": {
-      "title": "“我的”如何运作",
-      "what": "“我的”页面保存你告诉 Mera 的关于自己的信息。你的信息流和概览都由这些信息生成。",
-      "how1": "每条信息都会变成 Mera 为你运行的搜索。修改或删除一条信息，来自它的新闻也会随之变化。",
-      "privacy": "由它们生成的搜索从不与你的账户关联。服务器只保存搜索文字，在所有用户之间匿名共享，14 天未使用即删除。"
-    },
-    "settings": {
-      "title": "“设置”如何运作",
-      "what": "选择 Mera 在这部手机上的运行方式，并管理你的账户。你的套餐和今日用量显示在最上方。",
-      "how1": "Mera Protocol 决定 AI 在哪里阅读你的新闻：在云端还是在这部手机上。“隐私和数据”保存你的加密备份，还能让你删除数据。",
-      "how2": "“安全”可添加 PIN 码。“帮助”里有指南和常见问题。在“账户”中退出登录。"
+      "how1": "每条新闻只归入最匹配的一个兴趣，所以只出现一次。如果两个兴趣同样匹配，就归先添加的那个。"
     },
     "interests": {
       "title": "“兴趣”如何运作",

@@ -163,10 +163,8 @@
     "updatedAt": "Updated {{time}}",
     "allCaughtUp": "You're all caught up with what impacts you.",
     "preparingFeed": "Mera is preparing your feed.",
-    "preparingFeedExploreHint": "Meanwhile, check out the Explore tab for top stories.",
     "noInterests": "Mera cannot analyse news for you",
     "noInterestsDescription": "Please create your user persona for Mera to start generating news for you.",
-    "dashboardTitle": "Dashboard",
     "pullDownToRetry": "Pull down to retry",
     "readArticleToast": "You have read this article",
     "stuckTitle": "Couldn't load your feed",
@@ -283,7 +281,6 @@
     "analysingProgress": "Analysing {{done}} of {{total}} articles",
     "waitingForNextBatch_one": "{{count}} new article waiting for the next analysis batch",
     "waitingForNextBatch_other": "{{count}} new articles waiting for the next analysis batch",
-    "exploreCta": "Browse Explore",
     "statsPublishedPending_one": "{{formatted}} article was published in the last 24 hours.",
     "statsPublishedPending_other": "{{formatted}} articles were published in the last 24 hours.",
     "statsPublished_one": "{{formatted}} article was published in the last 24 hours,",
@@ -391,11 +388,9 @@
     "sourceFallback": "Source {{index}}",
     "disclaimer": "This is Mera's own reading of a web search, written by AI. It can be wrong or incomplete, so read the sources before relying on it.",
     "dashboard": {
-      "title": "Fact checks",
       "pending": "Still searching",
       "listTitle": "Fact checks",
       "listSubtitle": "Stories you asked Mera to look up fact checks for. Kept on this device only.",
-      "empty": "You haven't checked any stories yet. Tap the fact check button under a story, and the result lands here once it's ready.",
       "untitled": "Untitled story",
       "deleteA11y": "Delete this fact check",
       "openA11y": "Open this article",
@@ -485,8 +480,6 @@
   },
   "tabs": {
     "deck": "Feed",
-    "dashboard": "Dashboard",
-    "around": "Explore",
     "profile": "Profile",
     "settings": "Settings",
     "gotIt": "Got it",
@@ -495,7 +488,6 @@
     "you": "You"
   },
   "swipeFeed": {
-    "yourDeck": "Feed",
     "moreLikeThis": "More like this",
     "lessLikeThis": "Less like this",
     "askMera": "Ask Mera",
@@ -510,20 +502,9 @@
   },
   "explore": {
     "serverUnavailable": "Mera can't be reached right now: try again in a moment.",
-    "title": "Explore",
-    "scopeWorld": "World",
-    "noArticles": "No articles found",
     "addPlaces": "Add places",
-    "addSources": "Add sources",
-    "removeScope": "Remove {{name}}",
-    "offlineUnavailable": "You're offline: Explore needs an internet connection",
-    "searchPlaceholder": "Search recent news",
     "clearSearch": "Clear search",
-    "openSearch": "Search",
-    "closeSearch": "Close search",
-    "searchMinLength": "Keep typing to search",
     "searchNotSubscribed": "Search needs an active plan",
-    "searchError": "Couldn't search right now",
     "searchEmpty": "No matches in the last 48 hours. Search covers recent headlines, not the full archive.",
     "window": {
       "label24": "24h",
@@ -553,10 +534,6 @@
     "headlineDenominator_other": "Mera read {{count}} headlines · {{shown}} worth your time.",
     "headlineDenominatorNone_one": "Mera read {{count}} headline · none looked relevant today.",
     "headlineDenominatorNone_other": "Mera read {{count}} headlines · none looked relevant today.",
-    "subTabFeed": "Overview",
-    "subTabStories": "Stories",
-    "subTabSaved": "Saved",
-    "subTabHistory": "Visited",
     "nextFactPrefix": "Next",
     "subTabAnalytics": "Analytics",
     "emptySection": {
@@ -564,23 +541,14 @@
       "none": "No story here yet fits this closely enough to show."
     },
     "newInterest": "New interest",
-    "nextSection": "Next: {{title}}",
-    "backToDashboard": "Back to Dashboard"
+    "nextSection": "Next: {{title}}"
   },
   "feedStatus": {
     "title": "Feed status",
     "idle": "Up to date",
     "stage": "Stage",
     "cloudProgress": "Cloud scoring",
-    "deviceProgress": "On-device scoring",
-    "published": "Published",
-    "analysed": "Analysed",
-    "relevant": "Relevant to you",
-    "lastProcessed": "Last processed",
-    "errorTitle": "Scoring problem",
-    "openA11y": "Open feed status",
     "expandA11y": "Show feed status details",
-    "collapseA11y": "Hide feed status details",
     "close": "Close",
     "modeProcessing": "Updating your feed",
     "modeError": "Feed problem",
@@ -588,12 +556,8 @@
     "syncDoneA11y": "Your feed is up to date."
   },
   "trackedStories": {
-    "followFabLabel": "Follow a new story",
-    "followChatSeed": "I want to follow a story.",
     "followChatIntro": "Tell me what you'd like to follow and I'll set it up.",
-    "emptyCtaFollow": "Follow a story",
     "emptyTitle": "No stories followed yet",
-    "emptyBody": "Follow a story to see every new development gathered here as it unfolds.",
     "title": "Followed stories",
     "trackAction": "Follow story",
     "untrackAction": "Stop following",
@@ -689,15 +653,10 @@
   "notifications": {
     "title": "Notifications",
     "enableDescription": "Enable notifications to stay updated with personalized news",
-    "pushNotifications": "Push Notifications",
-    "receivingUpdates": "Receiving updates",
-    "disabled": "Disabled",
     "permissionDenied": "If you previously denied notification permissions, you'll need to enable them in your device settings.",
     "openDeviceSettings": "Open Device Settings",
-    "timeTitle": "Notification Time",
     "format24h": "24h",
     "formatAmPm": "AM/PM",
-    "timeDescription": "Choose when you'd like to receive notifications for processing your news",
     "timeDescriptionOnboarding": "Choose when you'd like to catch up on your news",
     "timeNudge": "Pick a time when you can read, think and plan. Once or twice a day is plenty.",
     "savePreferences": "Save Preferences",
@@ -719,12 +678,7 @@
     "savedDescription": "Your notification settings have been updated.",
     "saveFailedTitle": "Save Failed",
     "saveFailedDescription": "Failed to save your preferences. Please try again.",
-    "maxHoursReachedDescription": "You can select up to {{count}} hours",
-    "maxHoursReachedTitle": "Maximum Reached",
-    "selectedCount": "Selected: {{selected}}/{{max}}",
-    "savedInline": "Saved",
-    "pickAtLeastOneHour": "Pick at least one hour",
-    "selectedLabel": "Selected"
+    "savedInline": "Saved"
   },
   "language": {
     "title": "Language",
@@ -1031,7 +985,6 @@
     "statusFailed": "Last backup failed on {{when}}"
   },
   "preferences": {
-    "manageSettings": "Manage your app settings and account",
     "notifications": "Notifications",
     "language": "Language & Translation",
     "meraProtocol": "Mera Protocol",
@@ -1041,7 +994,6 @@
     "support": "Talk to support",
     "faq": "FAQ",
     "reportBug": "Report a bug",
-    "manageData": "Manage data",
     "deleteAccount": "Delete Account",
     "logout": "Log out",
     "signOutModalTitle": "Sign Out",
@@ -1075,12 +1027,10 @@
   },
   "settings": {
     "sources": "Sources",
-    "groupGeneral": "General",
     "groupPrivacy": "Privacy and data",
     "groupHelp": "Help",
     "groupAccount": "Account",
     "languageRow": "Language",
-    "backupRow": "Backup and restore",
     "backupRowNever": "Not backed up yet"
   },
   "configPanel": {
@@ -1121,12 +1071,8 @@
     "generateMoreTopicsConfirm": "Generate",
     "generateMoreTopicsFailedTitle": "Topic generation failed",
     "generateMoreTopicsFailedDescription": "Couldn't generate new topics. Please try again.",
-    "articleAnalysisTitle": "About article analysis",
-    "articleAnalysisDescription": "Every article Mera reads and ranks for you counts toward your daily plan. Fewer, sharper interests use less of it.",
     "gotIt": "Got it",
-    "articlesAnalyzedLast24h": "Articles analysed in the last 24h",
     "maxForDailyAnalysis": "Max for daily analysis",
-    "resetsOn": "Resets",
     "promoPlan": "🎉 Promo",
     "promoInfoTitle": "Launch offer",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
@@ -1211,7 +1157,6 @@
     "introMessage": "Hi, I'm Mera, your personal news assistant.\n\nTo find news that actually matters to you, I need to know a bit about you. Where you live, what you do, hobbies you follow, stocks you track, where your family lives. Share as much or as little as you like.\n\nIf that gives you pause, good instinct. It's not wise to hand personal data to an app company. Mera is built differently: everything you tell me is saved on your device, not on our servers. Ask me how that works, or say 'help me set up' and we'll get started."
   },
   "floatingChat": {
-    "bubbleHint": "Chat with Mera",
     "close": "Close",
     "title": "Mera",
     "aboutThisStory": "ABOUT THIS STORY",
@@ -1316,19 +1261,9 @@
     "countShort_other": "{{count}} visits",
     "tooltipA11y": "About reading history",
     "tooltipIntro": "Mera keeps track of your reading patterns for you; it lives only on your device.",
-    "tooltipLink": "See all your reading history here.",
-    "screenIntro": "Publishers whose sites you opened from Mera in the last 30 days. This list stays on this device.",
-    "visitedListTitle": "Publications you've visited",
-    "last30Days": "Last 30 days",
-    "lastRead": "Last read {{time}}",
-    "noArticlesYet": "Publishers you open from Mera show up here. Reading inside Mera isn't listed.",
-    "articlesRead": "Articles you've read",
-    "noArticlesLast30Days": "No articles from this publication in the last 30 days.",
-    "emptyTitle": "No publishers yet"
+    "tooltipLink": "See all your reading history here."
   },
   "savedSuggestions": {
-    "title": "Saved",
-    "note": "These articles are saved only on your device. Add or remove them anytime; they stay here until you delete them.",
     "savedToastTitle": "Saved",
     "removedToastTitle": "Removed",
     "saveAction": "Save",
@@ -1338,7 +1273,6 @@
     "deleteConfirmTitle": "Remove saved article?",
     "deleteConfirmMessage": "This will remove the article from your saved list on this device.",
     "deleteConfirmCta": "Delete",
-    "empty": "You haven't saved any articles yet. Tap the bookmark on an article to save it for later.",
     "emptyTitle": "Nothing saved yet"
   },
   "nativeUpdate": {
@@ -1687,8 +1621,6 @@
     "subtitle": "What you've asked Mera to keep out of your feed",
     "sectionFilters": "Words and things you've hidden",
     "sectionTopics": "Topics you see less of",
-    "sectionSources": "Sources you've muted or turned down",
-    "managePublications": "Manage source preferences",
     "chatHint": "You don't have to come here. Just tell Mera what you'd rather not see, like \"less about celebrity gossip\", and it'll take care of the rest.",
     "kinds": {
       "keyword": "Words",
@@ -1710,8 +1642,6 @@
     "badgeBlocked": "Kept out",
     "badgeShownLess": "Shown less",
     "badgeMutedTopic": "Shown less",
-    "badgeDownranked": "Turned down",
-    "badgeMutedPub": "Muted",
     "mutedPubHint": "Kept out, except for major news",
     "cardExemptLabel": "You filtered \"{{filter}}\". Showing it because it's major news",
     "expiresOn": "Until {{date}}",
@@ -1739,8 +1669,7 @@
     "emptyTitle": "Nothing hidden yet",
     "emptyBody": "When you tell Mera you're not interested in something, it shows up here so you can undo it.",
     "emptyFilters": "You haven't hidden any words yet.",
-    "emptyTopics": "No topics turned down yet.",
-    "emptySources": "You haven't muted or turned down any sources yet."
+    "emptyTopics": "No topics turned down yet."
   },
   "headlineDepth": {
     "title": "Top headlines",
@@ -1753,39 +1682,6 @@
     "saveFailedTitle": "Couldn't save that",
     "saveFailedBody": "Your change wasn't stored. Try again."
   },
-  "profileHub": {
-    "facts": "Facts",
-    "factsCount_one": "{{count}} fact shaping your feed",
-    "factsCount_other": "{{count}} facts shaping your feed",
-    "factsEmpty": "Tap to add what Mera should know",
-    "locations": "Locations",
-    "locationsSubtitle": "Places that shape your feed",
-    "sources": "Sources",
-    "sourcesSubtitle": "Browse and follow news sources",
-    "saved": "Saved",
-    "savedSubtitle": "Articles you saved for later",
-    "preferences": "Source preferences",
-    "prefsCount_one": "{{count}} source adjusted",
-    "prefsCount_other": "{{count}} sources adjusted",
-    "prefsEmpty": "Boost, downrank or mute sources",
-    "visitedSubtitle": "Publications you opened recently",
-    "activity": "Activity",
-    "activitySubtitle": "Your persona change history",
-    "personaHealth": "Profile cleanup",
-    "healthPending_one": "{{count}} cleanup suggestion",
-    "healthPending_other": "{{count}} cleanup suggestions",
-    "healthAllHealthy": "All healthy",
-    "groupKnows": "Mera knows you",
-    "groupFeed": "Your feed",
-    "groupLibrary": "Sources & library",
-    "groupInternals": "Under the hood",
-    "notInterested": "Not interested",
-    "notInterestedSubtitle_one": "{{count}} thing you've hidden",
-    "notInterestedSubtitle_other": "{{count}} things you've hidden",
-    "notInterestedEmpty": "Nothing hidden yet",
-    "headlineDepth": "Top headlines",
-    "headlineDepthSubtitle": "How many Mera reads per section"
-  },
   "profile": {
     "talkToMera": "Talk to Mera",
     "talkToMeraSubtitle": "This is how I see you. Tap to keep the conversation going.",
@@ -1793,8 +1689,6 @@
     "emptyTitle": "I don't know you yet",
     "emptyBody": "Tell me about yourself so I can find news that matters to you.",
     "startTalking": "Start talking",
-    "meraInvite": "Hey! Tell me what you're into and I'll tune your feed for you.",
-    "aboutYou": "About you",
     "gettingToKnowYou": "I'm still getting to know you: check back in a moment.",
     "updating": "Updating…",
     "advanced": "Advanced",
@@ -1827,14 +1721,10 @@
     "deleteFactA11y": "Delete {{fact}}"
   },
   "publicationPrefs": {
-    "title": "Source preferences",
-    "subtitle": "Boost, downrank or mute publications",
     "kindBoost": "Boost",
     "kindDeprioritize": "Downrank",
     "kindMute": "Mute",
-    "clear": "Clear",
     "clearA11y": "Clear preference",
-    "empty": "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article to see it here.",
     "scopeKindCountry": "Country"
   },
   "optimisationPlan": {
@@ -1926,7 +1816,6 @@
     "chatNotice": "Mera chat comes with a plan. Your persona and facts stay on this device either way.",
     "chatBubble": "Everything I know about you stays on this device. On the free plan I keep building your feed from two of your interests. Chat, fact checks and followed stories need a plan.",
     "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
-    "trackedStoriesEmptyBody": "Nothing followed yet. Following a story comes with a plan, and whatever you follow later stays on this device, yours to keep.",
     "lapseTitle": "Your Mera plan has ended",
     "lapseBody": "Nothing has been taken away. Anything you've saved, followed or read is yours, on this device, always. You're on Mera News Free from here. What pauses is the AI layer itself, so your personalized feed, dashboard, new story tracking and Mera chat stay off until you start a plan again.",
     "continueWithoutPlan": "Continue without a plan",
@@ -2635,7 +2524,6 @@
   },
   "subscriptions": {
     "sectionTitle": "Your subscriptions",
-    "otherSources": "Other sources",
     "empty": "Tell Mera which publications you pay for. We'll give them more weight in your feed and show their coverage on stories they report.",
     "add": "Add a subscription",
     "close": "Close",
@@ -2658,15 +2546,10 @@
     "opensPublisherSite": "Opens {{publisher}}'s own site"
   },
   "shareStats": {
-    "entryA11y": "Share your reading stats",
-    "screenTitle": "Share your reading",
     "screenSubtitle": "Last 30 days",
     "preparing": "Preparing your card",
-    "emptyTitle": "Nothing to show yet",
-    "emptyBody": "Read a few articles and your card will fill up. Mera keeps 30 days of reading history on this device.",
     "nameToggleLabel": "Show my top publications",
     "nameTogglePrivacy": "Included by default. Publication names say a lot about you, so you can turn them off before you share. Article titles are never included.",
-    "shareAction": "Share",
     "shareDialogTitle": "My Mera reading stats",
     "sharingUnavailable": "Sharing isn't available on this device.",
     "shareFailed": "That didn't work. Try again.",
@@ -2826,55 +2709,6 @@
       "Searching the web from your device…"
     ]
   },
-  "headerNarration": {
-    "stages": {
-      "starting": [
-        "Starting a refresh",
-        "Working on this phone"
-      ],
-      "fetching": [
-        "Looking for new stories",
-        "Checking what is new"
-      ],
-      "downloading": [
-        "Downloading articles",
-        "Fetching from the server"
-      ],
-      "grouping": [
-        "Grouping stories",
-        "Merging duplicates"
-      ],
-      "analysing": [
-        "Checking relevance",
-        "Reading each article"
-      ],
-      "onDevice": [
-        "Reading on your phone",
-        "It stays on your phone"
-      ],
-      "summarising": [
-        "Writing notes",
-        "A short note per story"
-      ],
-      "preparing": [
-        "Putting them in order",
-        "Almost there"
-      ]
-    },
-    "nudges": [
-      "Read the full article",
-      "Short on time? Save it",
-      "Checked world news?",
-      "Checked your countries?",
-      "Follow a story",
-      "Check followed stories",
-      "Is your profile current?",
-      "Not for you? Tell Mera",
-      "Like it to see more",
-      "Share with loved ones"
-    ],
-    "a11y": "Mera is updating your news on this phone."
-  },
   "savedExport": {
     "fabA11y": "Export saved articles",
     "title": "Export saved",
@@ -2899,7 +2733,6 @@
     "includeImageHint": "A link to each article's picture, where it has one."
   },
   "tabExplainer": {
-    "openA11y": "How this tab works",
     "close": "Got it",
     "feed": {
       "title": "How Feed works",
@@ -2910,29 +2743,7 @@
       "privacy": "The order is worked out on this phone. The record of which stories you open stays on this phone."
     },
     "forYou": {
-      "title": "How the Dashboard works",
-      "what": "The Dashboard groups your news by interest. Each thing you told Mera gets a section, plus headlines from your countries and the world.",
-      "how1": "Each story goes to the one interest it fits best, so it appears once. If two fit equally, the interest you added first keeps it.",
-      "how2": "Interests you gave more weight come first. A new interest gets its section even before its first stories arrive.",
-      "how3": "Inside a section, unread stories come first, most important first. Sections reorder when you leave the tab, or every 10 minutes."
-    },
-    "explore": {
-      "title": "How Explore works",
-      "what": "Explore shows the stories covered most in the last 24 hours, for the world and for each country you pick. Tap 24h at the top to choose 6, 12 or 48 hours instead. They are the same for everyone, not picked for you.",
-      "how1": "World headlines are ranked by how widely a story is covered across countries, not by how many articles there are.",
-      "how2": "Country headlines come from news sources based in that country."
-    },
-    "profile": {
-      "title": "How Profile works",
-      "what": "Profile holds what you told Mera about yourself. Your Feed and Dashboard are built from these facts.",
-      "how1": "Each fact becomes searches Mera runs for you. Change or delete a fact and the stories that came from it change too.",
-      "privacy": "The searches made from them are never linked to your account. The server keeps only the search text, shared anonymously across all users, and deletes it after 14 days without use."
-    },
-    "settings": {
-      "title": "How Settings works",
-      "what": "Choose how Mera runs on this phone and manage your account. Your plan and today's usage are at the top.",
-      "how1": "Mera Protocol sets where the AI reads your news: in the cloud or on this phone. Privacy and data holds your encrypted backup and lets you delete data.",
-      "how2": "Security adds a PIN. Help has guides and the FAQ. Account is where you sign out."
+      "how1": "Each story goes to the one interest it fits best, so it appears once. If two fit equally, the interest you added first keeps it."
     },
     "interests": {
       "title": "How Interests works",

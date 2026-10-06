@@ -1,16 +1,17 @@
-// Explore "hidden" scopes (Item 18) — long-pressing a LOCATION-DERIVED chip
-// in ScopeChipRow must hide it without deleting the underlying location (and
-// therefore without touching its geo-scoring signal). A browse-added chip
-// (lib/explore/browse-countries.ts) has no such signal to protect — hiding
-// one of those just calls `removeBrowseCountry` directly and never touches
-// this set.
+// Hidden World country pages. Removing a PLACE-DERIVED country in the World
+// arrange overlay must hide its page without deleting the underlying location
+// (and therefore without touching its geo-scoring signal). A browse-added
+// country (lib/explore/browse-countries.ts) has no such signal to protect, so
+// removing one of those deletes it from the browse set and never touches this
+// set. `removeWorldCountry` (lib/explore/world-pages.ts) decides which.
 //
-// Storage: a second setting-service KV row, JSON array of Explore scope ids
-// (e.g. `country:IND`) — NOT alpha-2 codes, since the caller (ExploreScreen)
-// filters the already-derived `ExploreScope[]` by id. Only `country:` ids are
-// kept, on every read and write: `world` can never be hidden, and the old
-// `city:`/`region:` entries (those scopes no longer exist) drop out on read,
-// including when an old backup brings them back. No migration, no flag.
+// Storage: a second setting-service KV row, JSON array of scope ids
+// (e.g. `country:IND`), NOT alpha-2 page ids: `deriveWorldPages` filters the
+// derived `ExploreScope[]` by scope id and converts to page ids after. Only
+// `country:` ids are kept, on every read and write: `world` can never be
+// hidden, and the old `city:`/`region:` entries (those scopes no longer exist)
+// drop out on read, including when an old backup brings them back. No
+// migration, no flag.
 
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 

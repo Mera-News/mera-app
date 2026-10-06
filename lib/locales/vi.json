@@ -108,10 +108,8 @@
     "updatedAt": "Cập nhật lúc {{time}}",
     "allCaughtUp": "Bạn đã cập nhật hết những tin tức liên quan đến bạn.",
     "preparingFeed": "Mera đang chuẩn bị bảng tin của bạn.",
-    "preparingFeedExploreHint": "Trong lúc chờ, hãy xem tab Khám phá để biết những tin tức hàng đầu.",
     "noInterests": "Mera không thể phân tích tin tức cho bạn",
     "noInterestsDescription": "Vui lòng tạo hồ sơ người dùng để Mera bắt đầu tạo tin tức cho bạn.",
-    "dashboardTitle": "Bảng điều khiển",
     "pullDownToRetry": "Kéo xuống để thử lại",
     "readArticleToast": "Bạn đã đọc bài viết này",
     "stuckTitle": "Không thể tải bản tin",
@@ -228,7 +226,6 @@
     "analysingProgress": "Đang phân tích {{done}}/{{total}} bài viết",
     "waitingForNextBatch_one": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
     "waitingForNextBatch_other": "{{count}} bài viết mới đang chờ đợt phân tích tiếp theo",
-    "exploreCta": "Khám phá",
     "statsPublishedPending_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
     "statsPublished_other": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,",
     "statsAnalysed_other": "phân tích {{formatted}} cho bạn,",
@@ -341,15 +338,10 @@
   "notifications": {
     "title": "Thông báo",
     "enableDescription": "Bật thông báo để cập nhật tin tức cá nhân hóa",
-    "pushNotifications": "Thông báo đẩy",
-    "receivingUpdates": "Đang nhận cập nhật",
-    "disabled": "Đã tắt",
     "permissionDenied": "Nếu bạn đã từ chối quyền thông báo trước đó, bạn cần bật lại trong cài đặt thiết bị.",
     "openDeviceSettings": "Mở cài đặt thiết bị",
-    "timeTitle": "Thời gian thông báo",
     "format24h": "24h",
     "formatAmPm": "SA/CH",
-    "timeDescription": "Chọn thời điểm bạn muốn nhận thông báo để xử lý tin tức",
     "timeDescriptionOnboarding": "Chọn thời điểm bạn muốn cập nhật tin tức",
     "savePreferences": "Lưu tùy chọn",
     "loadFailedTitle": "Tải thất bại",
@@ -371,12 +363,7 @@
     "saveFailedTitle": "Lưu thất bại",
     "saveFailedDescription": "Không thể lưu tùy chọn của bạn. Vui lòng thử lại.",
     "timeNudge": "Chọn một thời gian khi bạn có thể đọc, suy nghĩ và lên kế hoạch — một hoặc hai lần một ngày là đủ.",
-    "maxHoursReachedDescription": "Bạn có thể chọn tối đa {{count}} giờ",
-    "maxHoursReachedTitle": "Đã đạt mức tối đa",
-    "selectedCount": "Đã chọn: {{selected}}/{{max}}",
-    "savedInline": "Đã lưu",
-    "pickAtLeastOneHour": "Chọn ít nhất một giờ",
-    "selectedLabel": "Đã chọn"
+    "savedInline": "Đã lưu"
   },
   "language": {
     "title": "Ngôn ngữ",
@@ -596,14 +583,12 @@
     }
   },
   "preferences": {
-    "manageSettings": "Quản lý cài đặt ứng dụng và tài khoản",
     "notifications": "Thông báo",
     "language": "Ngôn ngữ & Dịch thuật",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Chính sách bảo mật",
     "termsOfService": "Điều khoản dịch vụ",
     "support": "Trò chuyện với bộ phận hỗ trợ",
-    "manageData": "Quản lý dữ liệu",
     "deleteAccount": "Xóa tài khoản",
     "logout": "Đăng xuất",
     "signOutModalTitle": "Đăng xuất",
@@ -676,10 +661,7 @@
     "generateMoreTopicsConfirm": "Tạo",
     "generateMoreTopicsFailedTitle": "Tạo chủ đề thất bại",
     "generateMoreTopicsFailedDescription": "Không thể tạo chủ đề mới. Vui lòng thử lại.",
-    "articleAnalysisTitle": "Về phân tích bài viết",
-    "articleAnalysisDescription": "Bạn nên tối ưu hóa Mera bằng cách giảm tổng số bài viết được phân tích vì càng nhiều bài được phân tích, bạn càng nhanh hết hạn mức sử dụng.",
     "gotIt": "Đã hiểu",
-    "articlesAnalyzedLast24h": "Bài viết được phân tích trong 24h",
     "maxForDailyAnalysis": "Tối đa cho phân tích hàng ngày",
     "promoPlan": "Promo",
     "promoTooltip": "Bạn có thể dùng thử miễn phí gói Individual nhân dịp ra mắt ứng dụng. Đây là ưu đãi có thời hạn.",
@@ -690,7 +672,6 @@
     "gotItPromo": "Tuyệt vời! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Ưu đãi ra mắt 🎊",
-    "resetsOn": "Đặt lại",
     "retryTopicGeneration": "Thử lại",
     "topicGenFailedGeneric": "Không thể tạo chủ đề cho điều này.",
     "articleCountPending": "Đang đếm",
@@ -766,7 +747,6 @@
     "introMessage": "Xin chào! Mình là Mera, trợ lý tin tức cá nhân của bạn.\n\nĐể tìm những tin tức thực sự quan trọng với bạn, mình cần biết một chút về bạn. Bạn sống ở đâu, làm nghề gì, những sở thích nào, theo dõi những cổ phiếu nào, gia đình sống ở đâu. Chia sẻ bao nhiêu hay bao ít tùy bạn.\n\nNếu điều này khiến bạn do dự, đó là bản năng tốt. Không nên trao dữ liệu cá nhân cho một công ty làm ứng dụng. Mera được xây dựng khác: mọi thứ bạn kể cho mình đều được lưu trên thiết bị của bạn, không phải trên máy chủ của chúng mình. Hỏi mình cách nó hoạt động, hoặc nói 'giúp mình thiết lập' và chúng ta sẽ bắt đầu."
   },
   "floatingChat": {
-    "bubbleHint": "Trò chuyện với Mera",
     "close": "Đóng",
     "title": "Mera",
     "aboutThisStory": "VỀ CÂU CHUYỆN NÀY",
@@ -871,15 +851,7 @@
     "countShort_other": "{{count}} lượt xem",
     "tooltipA11y": "Về lịch sử đọc",
     "tooltipIntro": "Mera theo dõi thói quen đọc của bạn và dữ liệu này chỉ lưu trên thiết bị của bạn.",
-    "tooltipLink": "Xem toàn bộ lịch sử đọc của bạn tại đây.",
-    "screenIntro": "Các nhà xuất bản có trang bạn đã mở từ Mera trong 30 ngày qua. Danh sách này ở lại trên thiết bị này.",
-    "visitedListTitle": "Ấn phẩm bạn đã ghé thăm",
-    "last30Days": "30 ngày qua",
-    "lastRead": "Đọc lần cuối lúc {{time}}",
-    "noArticlesYet": "Những nhà xuất bản bạn mở từ Mera sẽ xuất hiện ở đây. Những gì bạn đọc trong Mera không được liệt kê.",
-    "articlesRead": "Bài viết bạn đã đọc",
-    "noArticlesLast30Days": "Không có bài viết nào từ ấn phẩm này trong 30 ngày qua.",
-    "emptyTitle": "Chưa có nhà xuất bản nào"
+    "tooltipLink": "Xem toàn bộ lịch sử đọc của bạn tại đây."
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Cần cập nhật",
@@ -966,15 +938,12 @@
     "deleteConfirmCta": "Xóa",
     "deleteConfirmMessage": "Thao tác này sẽ xóa bài viết khỏi danh sách đã lưu trên thiết bị này.",
     "deleteConfirmTitle": "Xóa bài viết đã lưu?",
-    "empty": "Bạn chưa lưu bài viết nào. Chạm vào biểu tượng dấu trang trên một bài viết để lưu lại xem sau.",
-    "note": "Những bài viết này chỉ được lưu trên thiết bị của bạn. Thêm hoặc xóa bất cứ lúc nào: chúng sẽ ở đây cho đến khi bạn xóa.",
     "removedToastTitle": "Đã xóa",
     "removedToastMessage": "Đã xóa khỏi mục đã lưu",
     "saveAction": "Lưu",
     "removeAction": "Xóa khỏi mục đã lưu",
     "savedToastMessage": "Đã lưu bài viết để xem sau",
     "savedToastTitle": "Đã lưu",
-    "title": "Đã lưu",
     "emptyTitle": "Chưa lưu gì"
   },
   "subscription": {
@@ -1034,8 +1003,6 @@
   },
   "tabs": {
     "deck": "Bảng tin",
-    "dashboard": "Bảng điều khiển",
-    "around": "Khám phá",
     "profile": "Hồ sơ",
     "settings": "Cài đặt",
     "gotIt": "Đã hiểu",
@@ -1044,7 +1011,6 @@
     "you": "Bạn"
   },
   "swipeFeed": {
-    "yourDeck": "Bảng tin",
     "moreLikeThis": "Thêm như thế này",
     "lessLikeThis": "Bớt như thế này",
     "askMera": "Hỏi Mera",
@@ -1058,22 +1024,11 @@
     "chatHandoffDislikeNoPath": "Tôi không thích câu chuyện này. Hãy giúp tôi giảm bớt nội dung như thế này."
   },
   "explore": {
-    "title": "Khám phá",
-    "scopeWorld": "Thế giới",
-    "noArticles": "Không tìm thấy bài viết nào",
     "addPlaces": "Thêm địa điểm",
-    "offlineUnavailable": "Bạn đang ngoại tuyến — Khám phá cần kết nối internet",
     "serverUnavailable": "Mera không thể kết nối được ngay bây giờ: hãy thử lại trong chốc lát.",
-    "addSources": "Thêm nguồn",
-    "removeScope": "Xóa {{name}}",
-    "searchPlaceholder": "Tìm kiếm tin tức gần đây",
     "clearSearch": "Xóa tìm kiếm",
-    "searchMinLength": "Tiếp tục gõ để tìm kiếm",
     "searchNotSubscribed": "Tìm kiếm cần có gói hoạt động",
-    "searchError": "Không thể tìm kiếm ngay bây giờ",
     "searchEmpty": "Không có kết quả khớp trong 48 giờ qua. Tìm kiếm bao gồm tin tức gần đây, không phải toàn bộ lưu trữ.",
-    "openSearch": "Tìm kiếm",
-    "closeSearch": "Đóng tìm kiếm",
     "window": {
       "label24": "24 giờ",
       "label48": "48 giờ",
@@ -1102,10 +1057,6 @@
     "headlineDenominator_other": "Mera đã đọc {{count}} tiêu đề · {{shown}} đáng đến lần của bạn.",
     "headlineDenominatorNone_one": "Mera đã đọc {{count}} tiêu đề · không có cái nào trông liên quan hôm nay.",
     "headlineDenominatorNone_other": "Mera đã đọc {{count}} tiêu đề · không có cái nào trông liên quan hôm nay.",
-    "subTabFeed": "Tổng quan",
-    "subTabStories": "Câu chuyện",
-    "subTabSaved": "Đã lưu",
-    "subTabHistory": "Đã ghé",
     "nextFactPrefix": "Tiếp theo",
     "subTabAnalytics": "Phân tích",
     "emptySection": {
@@ -1113,24 +1064,15 @@
       "none": "Chưa có tin nào đủ khớp với chủ đề này để hiển thị."
     },
     "newInterest": "Mối quan tâm mới",
-    "nextSection": "Tiếp theo: {{title}}",
-    "backToDashboard": "Quay lại Bảng điều khiển"
+    "nextSection": "Tiếp theo: {{title}}"
   },
   "feedStatus": {
     "title": "Trạng thái bản tin",
     "idle": "Đã cập nhật",
     "stage": "Giai đoạn",
     "cloudProgress": "Chấm điểm trên đám mây",
-    "deviceProgress": "Chấm điểm trên thiết bị",
-    "published": "Đã xuất bản",
-    "analysed": "Đã phân tích",
-    "relevant": "Liên quan đến bạn",
-    "lastProcessed": "Xử lý lần cuối",
-    "errorTitle": "Sự cố chấm điểm",
-    "openA11y": "Mở trạng thái bản tin",
     "close": "Đóng",
     "expandA11y": "Hiển thị chi tiết trạng thái bản tin",
-    "collapseA11y": "Ẩn chi tiết trạng thái bản tin",
     "modeProcessing": "Đang cập nhật bảng tin của bạn",
     "modeError": "Sự cố bảng tin",
     "modeLimited": "Đã đạt giới hạn bài viết hằng ngày",
@@ -1138,7 +1080,6 @@
   },
   "trackedStories": {
     "emptyTitle": "Chưa theo dõi câu chuyện nào",
-    "emptyBody": "Theo dõi một câu chuyện để xem mọi diễn biến mới được tổng hợp tại đây khi nó xảy ra.",
     "title": "Câu chuyện đang theo dõi",
     "trackAction": "Theo dõi câu chuyện",
     "untrackAction": "Bỏ theo dõi câu chuyện",
@@ -1161,10 +1102,7 @@
     "deleteStoryAction": "Xóa câu chuyện",
     "deleteStoryConfirmTitle": "Xóa câu chuyện này?",
     "deleteStoryConfirmBody": "Xóa sẽ loại bỏ mọi thứ được lưu cho câu chuyện này.",
-    "followFabLabel": "Theo dõi một câu chuyện mới",
-    "followChatSeed": "Tôi muốn theo dõi một câu chuyện.",
     "followChatIntro": "Hãy cho tôi biết những gì bạn muốn theo dõi và tôi sẽ thiết lập nó.",
-    "emptyCtaFollow": "Theo dõi một câu chuyện",
     "removeMemberAction": "Không thuộc câu chuyện này",
     "removeMemberConfirmTitle": "Xóa bài viết này?",
     "removeMemberConfirmBody": "Bài viết này bị xóa khỏi dòng thời gian của câu chuyện. Mera vẫn tiếp tục theo dõi câu chuyện.",
@@ -1211,12 +1149,10 @@
   },
   "settings": {
     "sources": "Nguồn",
-    "groupGeneral": "Chung",
     "groupPrivacy": "Quyền riêng tư và dữ liệu",
     "groupHelp": "Trợ giúp",
     "groupAccount": "Tài khoản",
     "languageRow": "Ngôn ngữ",
-    "backupRow": "Sao lưu và khôi phục",
     "backupRowNever": "Chưa sao lưu"
   },
   "personaAudit": {
@@ -1454,8 +1390,6 @@
     "subtitle": "Những gì bạn đã yêu cầu Mera loại trừ khỏi bản tin của bạn",
     "sectionFilters": "Từ và những điều bạn đã ẩn",
     "sectionTopics": "Các chủ đề bạn xem ít hơn",
-    "sectionSources": "Các nguồn bạn đã tắt tiếng hoặc hạ cấp",
-    "managePublications": "Quản lý tùy chọn nguồn",
     "chatHint": "Bạn không cần phải đến đây. Chỉ cần nói với Mera những gì bạn không muốn thấy — \"ít tin tức về những người nổi tiếng\" — và nó sẽ xử lý.",
     "kinds": {
       "keyword": "Từ",
@@ -1477,8 +1411,6 @@
     "badgeBlocked": "Loại trừ",
     "badgeShownLess": "Hiện ít hơn",
     "badgeMutedTopic": "Hiện ít hơn",
-    "badgeDownranked": "Hạ cấp",
-    "badgeMutedPub": "Tắt tiếng",
     "mutedPubHint": "Loại trừ, trừ tin tức lớn",
     "cardExemptLabel": "Bạn đã lọc \"{{filter}}\" — hiển thị vì đó là tin tức lớn",
     "expiresOn": "Cho đến {{date}}",
@@ -1506,8 +1438,7 @@
     "emptyTitle": "Chưa ẩn gì cả",
     "emptyBody": "Khi bạn nói với Mera rằng bạn không quan tâm đến điều gì đó, nó xuất hiện ở đây để bạn có thể hoàn tác.",
     "emptyFilters": "Bạn chưa ẩn bất kỳ từ nào.",
-    "emptyTopics": "Chưa có chủ đề nào bị hạ cấp.",
-    "emptySources": "Bạn chưa tắt tiếng hoặc hạ cấp bất kỳ nguồn nào."
+    "emptyTopics": "Chưa có chủ đề nào bị hạ cấp."
   },
   "headlineDepth": {
     "title": "Tin nổi bật",
@@ -1520,39 +1451,6 @@
     "saveFailedTitle": "Không lưu được",
     "saveFailedBody": "Thay đổi của bạn chưa được lưu. Thử lại."
   },
-  "profileHub": {
-    "facts": "Thông tin",
-    "factsCount_one": "{{count}} sự kiện định hình bản tin của bạn",
-    "factsCount_other": "{{count}} thông tin đang định hình bản tin của bạn",
-    "factsEmpty": "Chạm để thêm điều Mera nên biết",
-    "locations": "Địa điểm",
-    "locationsSubtitle": "Địa điểm định hình bản tin của bạn",
-    "sources": "Nguồn",
-    "sourcesSubtitle": "Duyệt và theo dõi nguồn tin",
-    "saved": "Đã lưu",
-    "savedSubtitle": "Bài viết bạn đã lưu để xem sau",
-    "preferences": "Tùy chọn nguồn",
-    "prefsCount_one": "{{count}} nguồn được điều chỉnh",
-    "prefsCount_other": "{{count}} nguồn đã được điều chỉnh",
-    "prefsEmpty": "Tăng, giảm hoặc tắt tiếng nguồn tin",
-    "visitedSubtitle": "Các ấn phẩm bạn mở gần đây",
-    "activity": "Hoạt động",
-    "activitySubtitle": "Lịch sử thay đổi hồ sơ của bạn",
-    "personaHealth": "Dọn dẹp hồ sơ",
-    "healthPending_one": "{{count}} gợi ý dọn dẹp",
-    "healthPending_other": "{{count}} đề xuất dọn dẹp",
-    "healthAllHealthy": "Tất cả đều ổn",
-    "groupKnows": "Mera biết bạn",
-    "groupFeed": "Bản tin của bạn",
-    "groupLibrary": "Nguồn & thư viện",
-    "groupInternals": "Đằng sau hậu trường",
-    "notInterested": "Không quan tâm",
-    "notInterestedSubtitle_one": "{{count}} điều bạn đã ẩn",
-    "notInterestedSubtitle_other": "{{count}} điều bạn đã ẩn",
-    "notInterestedEmpty": "Chưa ẩn gì cả",
-    "headlineDepth": "Tin nổi bật",
-    "headlineDepthSubtitle": "Mera đọc bao nhiêu cho mỗi phần"
-  },
   "profile": {
     "talkToMera": "Trò chuyện với Mera",
     "talkToMeraSubtitle": "Đây là cách tôi nhìn nhận về bạn. Chạm để tiếp tục cuộc trò chuyện.",
@@ -1560,8 +1458,6 @@
     "emptyTitle": "Tôi chưa biết gì về bạn",
     "emptyBody": "Hãy kể cho tôi nghe về bạn để tôi có thể tìm tin tức phù hợp với bạn.",
     "startTalking": "Bắt đầu trò chuyện",
-    "meraInvite": "Này! Hãy cho tôi biết bạn quan tâm đến điều gì, tôi sẽ tinh chỉnh bản tin cho bạn.",
-    "aboutYou": "Về bạn",
     "gettingToKnowYou": "Tôi vẫn đang tìm hiểu về bạn, hãy quay lại sau một chút.",
     "updating": "Đang cập nhật…",
     "advanced": "Nâng cao",
@@ -1594,14 +1490,10 @@
     "deleteFactA11y": "Xóa {{fact}}"
   },
   "publicationPrefs": {
-    "title": "Tùy chọn nguồn",
-    "subtitle": "Tăng, giảm hoặc tắt tiếng các ấn phẩm",
     "kindBoost": "Tăng",
     "kindDeprioritize": "Giảm",
     "kindMute": "Tắt tiếng",
-    "clear": "Xóa",
     "clearA11y": "Xóa tùy chọn",
-    "empty": "Bạn chưa điều chỉnh nguồn tin nào. Tăng, giảm hoặc tắt tiếng một ấn phẩm từ bất kỳ bài viết nào để thấy nó ở đây.",
     "scopeKindCountry": "Quốc gia"
   },
   "optimisationPlan": {
@@ -1696,7 +1588,6 @@
     "trackBody": "Những câu chuyện bạn đã theo dõi sẽ giữ mọi thứ chúng đã thu thập. Để bắt đầu một câu chuyện mới, bạn cần có một gói hoạt động.",
     "trackDismiss": "Để sau",
     "trackTitle": "Theo dõi câu chuyện đi kèm với một gói",
-    "trackedStoriesEmptyBody": "Chưa theo dõi gì. Theo dõi một câu chuyện đi kèm với một gói, và bất cứ thứ gì bạn theo dõi sau này đều ở trên thiết bị này, của bạn để giữ.",
     "factsInFeedHeader": "Trong bảng tin của bạn",
     "factsPausedHeader": "Đã tạm dừng",
     "factsPausedSubtitle": "Chúng vẫn được lưu. Một gói sẽ bật tất cả.",
@@ -1768,11 +1659,9 @@
     "checkedByHeading": "Các kiểm chứng được tìm thấy",
     "dashboard": {
       "deleteA11y": "Xóa kiểm chứng sự kiện này",
-      "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera, kết quả sẽ xuất hiện ở đây khi sẵn sàng.",
       "listSubtitle": "Những câu chuyện bạn đã yêu cầu Mera tìm kiếm kiểm chứng sự kiện. Chỉ được lưu trên thiết bị này.",
       "listTitle": "Kiểm chứng sự kiện",
       "pending": "Đang tìm kiếm",
-      "title": "Kiểm chứng sự kiện",
       "untitled": "Câu chuyện không có tiêu đề",
       "openA11y": "Mở bài viết này",
       "articleGone": "Bài viết đã hết hạn, nên không thể mở được. Kiểm tra sự thật mà chúng tôi tìm thấy được giữ lại ở đây.",
@@ -2636,7 +2525,6 @@
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",
-    "otherSources": "Nguồn khác",
     "empty": "Hãy cho Mera biết bạn trả phí cho những báo nào. Chúng tôi sẽ dành nhiều trọng số hơn cho họ trong bảng tin của bạn và hiển thị bài của họ ở những tin mà họ đưa.",
     "add": "Thêm gói đăng ký",
     "close": "Đóng",
@@ -2659,15 +2547,10 @@
     "opensPublisherSite": "Mở trang web của chính {{publisher}}"
   },
   "shareStats": {
-    "entryA11y": "Chia sẻ thống kê đọc của bạn",
-    "screenTitle": "Chia sẻ việc đọc của bạn",
     "screenSubtitle": "30 ngày qua",
     "preparing": "Đang chuẩn bị thẻ của bạn",
-    "emptyTitle": "Chưa có gì để hiển thị",
-    "emptyBody": "Đọc vài bài viết và thẻ của bạn sẽ đầy dần. Mera lưu 30 ngày lịch sử đọc trên thiết bị này.",
     "nameToggleLabel": "Hiển thị các báo tôi đọc nhiều nhất",
     "nameTogglePrivacy": "Được đưa vào theo mặc định. Tên tòa soạn nói lên nhiều điều về bạn, nên bạn có thể tắt trước khi chia sẻ. Tiêu đề bài viết không bao giờ được đưa vào.",
-    "shareAction": "Chia sẻ",
     "shareDialogTitle": "Thống kê đọc của tôi trên Mera",
     "sharingUnavailable": "Thiết bị này không hỗ trợ chia sẻ.",
     "shareFailed": "Không thành công. Hãy thử lại.",
@@ -2826,55 +2709,6 @@
       "Đang tìm trên web từ thiết bị của bạn…"
     ]
   },
-  "headerNarration": {
-    "stages": {
-      "starting": [
-        "Bắt đầu làm mới",
-        "Trên máy này"
-      ],
-      "fetching": [
-        "Đang tìm tin mới",
-        "Có gì mới?"
-      ],
-      "downloading": [
-        "Đang tải bài",
-        "Từ máy chủ"
-      ],
-      "grouping": [
-        "Đang gộp tin",
-        "Gộp tin trùng"
-      ],
-      "analysing": [
-        "Đang xét độ liên quan",
-        "Đang đọc từng bài"
-      ],
-      "onDevice": [
-        "Đọc trên máy bạn",
-        "Ở lại trên máy bạn"
-      ],
-      "summarising": [
-        "Đang viết ghi chú",
-        "Ghi chú cho mỗi tin"
-      ],
-      "preparing": [
-        "Đang sắp xếp",
-        "Sắp xong"
-      ]
-    },
-    "nudges": [
-      "Đọc toàn bộ bài viết",
-      "Bận? Lưu lại đã",
-      "Đã xem tin thế giới?",
-      "Đã xem nước của bạn?",
-      "Theo dõi một tin",
-      "Xem tin đang theo dõi",
-      "Hồ sơ còn đúng chứ?",
-      "Không hợp? Báo Mera",
-      "Thích để xem thêm",
-      "Chia sẻ với người thân"
-    ],
-    "a11y": "Mera đang cập nhật tin của bạn trên máy này."
-  },
   "savedExport": {
     "fabA11y": "Xuất các bài đã lưu",
     "title": "Xuất bài đã lưu",
@@ -2899,7 +2733,6 @@
     "includeImageHint": "Liên kết đến hình ảnh của mỗi bài viết, nếu có."
   },
   "tabExplainer": {
-    "openA11y": "Cách thẻ này hoạt động",
     "close": "Đã hiểu",
     "feed": {
       "title": "Bảng tin hoạt động thế nào",
@@ -2910,29 +2743,7 @@
       "privacy": "Thứ tự được tính trên điện thoại này. Bản ghi những tin bạn mở vẫn nằm trên điện thoại này."
     },
     "forYou": {
-      "title": "Bảng điều khiển hoạt động thế nào",
-      "what": "Bảng điều khiển nhóm tin của bạn theo mối quan tâm. Mỗi điều bạn kể với Mera có một mục riêng, kèm tiêu đề từ các quốc gia của bạn và thế giới.",
-      "how1": "Mỗi tin đi vào mối quan tâm hợp nhất, nên chỉ xuất hiện một lần. Nếu hai mối quan tâm hợp như nhau, mối quan tâm thêm trước sẽ giữ tin đó.",
-      "how2": "Những mối quan tâm bạn cho trọng số cao hơn đứng trước. Mối quan tâm mới có mục riêng ngay cả trước khi có tin đầu tiên.",
-      "how3": "Trong mỗi mục, tin chưa đọc đứng trước, quan trọng nhất ở đầu. Các mục được sắp xếp lại khi bạn rời thẻ, hoặc mỗi 10 phút."
-    },
-    "explore": {
-      "title": "Khám phá hoạt động thế nào",
-      "what": "Khám phá hiện những tin được đưa nhiều nhất trong 24 giờ qua, của thế giới và của từng quốc gia bạn chọn. Chạm 24 giờ ở trên cùng để chọn 6, 12 hoặc 48 giờ. Mọi người đều thấy giống nhau, không chọn riêng cho bạn.",
-      "how1": "Tiêu đề thế giới được xếp theo mức độ một tin được đưa rộng rãi ở nhiều quốc gia, không theo số lượng bài viết.",
-      "how2": "Tiêu đề của một quốc gia đến từ các nguồn tin đặt tại quốc gia đó."
-    },
-    "profile": {
-      "title": "Hồ sơ hoạt động thế nào",
-      "what": "Hồ sơ lưu những gì bạn kể với Mera về bản thân. Bảng tin và Bảng điều khiển được tạo từ các thông tin này.",
-      "how1": "Mỗi thông tin trở thành các lượt tìm kiếm Mera chạy cho bạn. Sửa hoặc xóa một thông tin thì các tin đến từ nó cũng thay đổi.",
-      "privacy": "Các lượt tìm kiếm tạo từ chúng không bao giờ gắn với tài khoản của bạn. Máy chủ chỉ giữ văn bản tìm kiếm, dùng chung ẩn danh cho mọi người dùng, và xóa sau 14 ngày không dùng."
-    },
-    "settings": {
-      "title": "Cài đặt hoạt động thế nào",
-      "what": "Chọn cách Mera chạy trên điện thoại này và quản lý tài khoản của bạn. Gói và mức dùng hôm nay nằm ở trên cùng.",
-      "how1": "Mera Protocol quyết định nơi AI đọc tin tức của bạn: trên đám mây hay trên điện thoại này. Quyền riêng tư và dữ liệu giữ bản sao lưu đã mã hóa của bạn và cho phép bạn xóa dữ liệu.",
-      "how2": "Bảo mật thêm mã PIN. Trợ giúp có hướng dẫn và câu hỏi thường gặp. Bạn đăng xuất trong Tài khoản."
+      "how1": "Mỗi tin đi vào mối quan tâm hợp nhất, nên chỉ xuất hiện một lần. Nếu hai mối quan tâm hợp như nhau, mối quan tâm thêm trước sẽ giữ tin đó."
     },
     "interests": {
       "title": "Mối quan tâm hoạt động thế nào",

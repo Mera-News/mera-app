@@ -108,10 +108,8 @@
     "updatedAt": "تم التحديث {{time}}",
     "allCaughtUp": "لقد اطلعت على كل ما يهمك.",
     "preparingFeed": "Mera يُجهّز خلاصتك الآن.",
-    "preparingFeedExploreHint": "في هذه الأثناء، ألقِ نظرة على تبويب استكشاف لأهم الأخبار.",
     "noInterests": "لا يمكن لـ Mera تحليل الأخبار لك",
     "noInterestsDescription": "يرجى إنشاء ملفك الشخصي ليتمكن Mera من البدء في توليد الأخبار لك.",
-    "dashboardTitle": "لوحة التحكم",
     "pullDownToRetry": "اسحب للأسفل لإعادة المحاولة",
     "readArticleToast": "لقد قرأت هذا المقال بالفعل.",
     "stuckTitle": "تعذّر تحميل موجز أخبارك",
@@ -232,7 +230,6 @@
     "waitingForNextBatch_few": "{{count}} مقالات جديدة تنتظر الدفعة التالية من التحليل",
     "waitingForNextBatch_many": "{{count}} مقالًا جديدًا ينتظر الدفعة التالية من التحليل",
     "waitingForNextBatch_other": "{{count}} مقال جديد ينتظر الدفعة التالية من التحليل",
-    "exploreCta": "تصفح الاستكشاف",
     "statsPublishedPending_zero": "{{formatted}} مقالة نُشرت في آخر 24 ساعة.",
     "statsPublishedPending_one": "تم نشر {{formatted}} مقالة في آخر 24 ساعة.",
     "statsPublishedPending_two": "{{formatted}} مقالتان نُشرتا في آخر 24 ساعة.",
@@ -365,15 +362,10 @@
   "notifications": {
     "title": "الإشعارات",
     "enableDescription": "فعّل الإشعارات للبقاء على اطلاع بالأخبار المخصصة لك",
-    "pushNotifications": "الإشعارات الفورية",
-    "receivingUpdates": "يتم استقبال التحديثات",
-    "disabled": "معطّل",
     "permissionDenied": "إذا رفضت أذونات الإشعارات سابقًا، ستحتاج إلى تفعيلها من إعدادات جهازك.",
     "openDeviceSettings": "فتح إعدادات الجهاز",
-    "timeTitle": "وقت الإشعارات",
     "format24h": "24 ساعة",
     "formatAmPm": "ص/م",
-    "timeDescription": "اختر الوقت الذي تودّ فيه تلقي إشعارات لمعالجة أخبارك",
     "savePreferences": "حفظ التفضيلات",
     "loadFailedTitle": "فشل التحميل",
     "loadFailedDescription": "فشل تحميل إعدادات الإشعارات.",
@@ -395,12 +387,7 @@
     "saveFailedDescription": "فشل حفظ تفضيلاتك. يرجى المحاولة مرة أخرى.",
     "timeDescriptionOnboarding": "اختر الوقت الذي تودّ فيه متابعة أخبارك",
     "timeNudge": "اختر وقتًا تتمكن فيه من القراءة والتفكير والتخطيط — مرة أو مرتين في اليوم كافٍ.",
-    "maxHoursReachedDescription": "يمكنك اختيار {{count}} ساعات كحد أقصى",
-    "maxHoursReachedTitle": "تم بلوغ الحد الأقصى",
-    "selectedCount": "تم الاختيار: {{selected}}/{{max}}",
-    "savedInline": "تم الحفظ",
-    "pickAtLeastOneHour": "اختر ساعة واحدة على الأقل",
-    "selectedLabel": "المحدد"
+    "savedInline": "تم الحفظ"
   },
   "language": {
     "title": "اللغة",
@@ -620,14 +607,12 @@
     }
   },
   "preferences": {
-    "manageSettings": "إدارة إعدادات التطبيق والحساب",
     "notifications": "الإشعارات",
     "language": "اللغة والترجمة",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "سياسة الخصوصية",
     "termsOfService": "شروط الخدمة",
     "support": "تحدث إلى الدعم",
-    "manageData": "إدارة البيانات",
     "deleteAccount": "حذف الحساب",
     "logout": "تسجيل الخروج",
     "signOutModalTitle": "تسجيل الخروج",
@@ -704,10 +689,7 @@
     "generateMoreTopicsConfirm": "إنشاء",
     "generateMoreTopicsFailedTitle": "فشل إنشاء الموضوعات",
     "generateMoreTopicsFailedDescription": "تعذر إنشاء موضوعات جديدة. يرجى المحاولة مرة أخرى.",
-    "articleAnalysisTitle": "حول تحليل المقالات",
-    "articleAnalysisDescription": "يجب عليك تحسين استخدام Mera بتقليل إجمالي عدد المقالات التي يتم تحليلها، إذ كلما زاد عدد المقالات المُحللة كلما نفد رصيد استخدامك أسرع.",
     "gotIt": "فهمت",
-    "articlesAnalyzedLast24h": "المقالات المحللة خلال 24 ساعة",
     "maxForDailyAnalysis": "الحد الأقصى للتحليل اليومي",
     "promoPlan": "Promo",
     "promoTooltip": "يمكنك تجربة خطة Individual مجانًا بمناسبة إطلاق التطبيق. هذا عرض لفترة محدودة.",
@@ -718,7 +700,6 @@
     "gotItPromo": "رائع! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 عرض الإطلاق 🎊",
-    "resetsOn": "يُعاد الضبط في",
     "retryTopicGeneration": "إعادة المحاولة",
     "topicGenFailedGeneric": "تعذّر إنشاء الموضوعات لهذا.",
     "articleCountPending": "جارٍ العدّ",
@@ -794,7 +775,6 @@
     "introMessage": "مرحبا! أنا Mera، مساعدتك الشخصية للأخبار.\n\nلإيجاد أخبار تهمك فعلا، أحتاج إلى معرفة بعض الأشياء عنك. أين تعيش، ما الذي تعمله، الهوايات التي تتابعها، الأسهم التي تراقبها، أين تعيش عائلتك. شارك ما تشاء أو اترك بعضه.\n\nإذا ترددت، فهذا غريزة سليمة. ليس من الحكمة تسليم بيانات شخصية لشركة تطبيقات. Mera مبنية بطريقة مختلفة: كل ما تخبرني به يحفظ على جهازك، وليس على خوادمنا. اسأل كيف يعمل هذا، أو قل 'ساعدني في الإعداد' وسنبدأ."
   },
   "floatingChat": {
-    "bubbleHint": "الدردشة مع ميرا",
     "close": "إغلاق",
     "title": "Mera",
     "aboutThisStory": "حول هذه القصة",
@@ -899,15 +879,7 @@
     "countShort_other": "{{count}} زيارات",
     "tooltipA11y": "حول سجل القراءة",
     "tooltipIntro": "يتتبع Mera أنماط قراءتك لصالحك، ويبقى ذلك على جهازك فقط.",
-    "tooltipLink": "اطّلع على كامل سجل قراءتك هنا.",
-    "screenIntro": "جهات النشر التي فتحت مواقعها من Mera خلال آخر 30 يومًا. تبقى هذه القائمة على هذا الجهاز.",
-    "visitedListTitle": "المنشورات التي زرتها",
-    "last30Days": "آخر 30 يومًا",
-    "lastRead": "آخر قراءة {{time}}",
-    "noArticlesYet": "تظهر هنا جهات النشر التي تفتحها من Mera. القراءة داخل Mera لا تُدرج.",
-    "articlesRead": "المقالات التي قرأتها",
-    "noArticlesLast30Days": "لا توجد مقالات من هذا المنشور في آخر 30 يومًا.",
-    "emptyTitle": "لا توجد جهات نشر بعد"
+    "tooltipLink": "اطّلع على كامل سجل قراءتك هنا."
   },
   "nativeUpdate": {
     "updateRequiredTitle": "التحديث مطلوب",
@@ -994,15 +966,12 @@
     "deleteConfirmCta": "حذف",
     "deleteConfirmMessage": "سيؤدي هذا إلى إزالة المقال من قائمة المحفوظات على هذا الجهاز.",
     "deleteConfirmTitle": "إزالة المقال المحفوظ؟",
-    "empty": "لم تحفظ أي مقالات بعد. اضغط على علامة الحفظ في مقال لحفظه لوقتٍ لاحق.",
-    "note": "تُحفظ هذه المقالات على جهازك فقط. أضفها أو أزلها في أي وقت. تبقى هنا حتى تحذفها.",
     "removedToastMessage": "تمت الإزالة من المحفوظات",
     "removedToastTitle": "تمت الإزالة",
     "saveAction": "حفظ",
     "removeAction": "إزالة من المحفوظات",
     "savedToastMessage": "تم حفظ المقال لوقتٍ لاحق",
     "savedToastTitle": "محفوظ",
-    "title": "المحفوظات",
     "emptyTitle": "لا شيء محفوظ بعد"
   },
   "subscription": {
@@ -1066,8 +1035,6 @@
   },
   "tabs": {
     "deck": "الخلاصة",
-    "dashboard": "لوحة التحكم",
-    "around": "استكشاف",
     "profile": "الملف الشخصي",
     "settings": "الإعدادات",
     "gotIt": "فهمت",
@@ -1076,7 +1043,6 @@
     "you": "أنت"
   },
   "swipeFeed": {
-    "yourDeck": "الخلاصة",
     "moreLikeThis": "المزيد مثل هذا",
     "lessLikeThis": "أقل مثل هذا",
     "askMera": "اسأل Mera",
@@ -1090,22 +1056,11 @@
     "chatHandoffDislikeNoPath": "لم تعجبني هذه القصة. ساعدني في تقليل ما يشبهها."
   },
   "explore": {
-    "title": "استكشاف",
-    "scopeWorld": "العالم",
-    "noArticles": "لم يتم العثور على مقالات",
     "addPlaces": "إضافة أماكن",
-    "offlineUnavailable": "أنت غير متصل — الاستكشاف يتطلب اتصال إنترنت",
     "serverUnavailable": "لا يمكن الوصول إلى Mera حاليًا، حاول مجددًا بعد لحظة.",
-    "addSources": "أضف مصادر",
-    "removeScope": "إزالة {{name}}",
-    "searchPlaceholder": "ابحث عن أخبار حديثة",
     "clearSearch": "مسح البحث",
-    "searchMinLength": "استمر في الكتابة للبحث",
     "searchNotSubscribed": "البحث يحتاج لخطة نشطة",
-    "searchError": "تعذر البحث الآن",
     "searchEmpty": "لا توجد نتائج في آخر 48 ساعة. يغطي البحث الأخبار الحديثة، ليس الأرشيف الكامل.",
-    "openSearch": "بحث",
-    "closeSearch": "إغلاق البحث",
     "window": {
       "label24": "24 س",
       "label48": "48 س",
@@ -1138,10 +1093,6 @@
     "headlineDenominator_other": "قرأ Mera {{count}} عناوين · {{shown}} تستحق وقتك.",
     "headlineDenominatorNone_one": "قرأ Mera {{count}} عنوان · لا شيء بدا ذا صلة اليوم.",
     "headlineDenominatorNone_other": "قرأ Mera {{count}} عناوين · لا شيء بدا ذا صلة اليوم.",
-    "subTabFeed": "النظرة",
-    "subTabStories": "القصص",
-    "subTabSaved": "المحفوظات",
-    "subTabHistory": "المُزارة",
     "nextFactPrefix": "التالي",
     "subTabAnalytics": "تحليلات",
     "emptySection": {
@@ -1149,24 +1100,15 @@
       "none": "لا توجد قصة هنا بعد تطابق هذا بما يكفي لعرضها."
     },
     "newInterest": "اهتمام جديد",
-    "nextSection": "التالي: {{title}}",
-    "backToDashboard": "العودة إلى لوحة التحكم"
+    "nextSection": "التالي: {{title}}"
   },
   "feedStatus": {
     "title": "حالة الخلاصة",
     "idle": "على اطلاع",
     "stage": "المرحلة",
     "cloudProgress": "التقييم السحابي",
-    "deviceProgress": "التقييم على الجهاز",
-    "published": "نُشرت",
-    "analysed": "تم التحليل",
-    "relevant": "ذات صلة بك",
-    "lastProcessed": "آخر معالجة",
-    "errorTitle": "مشكلة في التقييم",
-    "openA11y": "فتح حالة الخلاصة",
     "close": "إغلاق",
     "expandA11y": "عرض تفاصيل حالة الخلاصة",
-    "collapseA11y": "إخفاء تفاصيل حالة الخلاصة",
     "modeProcessing": "جارٍ تحديث موجزك",
     "modeError": "مشكلة في الموجز",
     "modeLimited": "تم بلوغ حد المقالات اليومي",
@@ -1174,7 +1116,6 @@
   },
   "trackedStories": {
     "emptyTitle": "لا توجد قصص متابَعة بعد",
-    "emptyBody": "تابع قصة لترى كل تطور جديد يُجمع هنا أولًا بأول.",
     "title": "القصص المتابَعة",
     "trackAction": "متابعة القصة",
     "untrackAction": "إلغاء متابعة القصة",
@@ -1207,10 +1148,7 @@
     "deleteStoryAction": "حذف القصة",
     "deleteStoryConfirmTitle": "حذف هذه القصة؟",
     "deleteStoryConfirmBody": "الحذف سيزيل كل شيء محفوظ عن هذه القصة.",
-    "followFabLabel": "متابعة قصة جديدة",
-    "followChatSeed": "أريد متابعة قصة.",
     "followChatIntro": "أخبرني بما تريد متابعته وسأعده.",
-    "emptyCtaFollow": "متابعة قصة",
     "removeMemberAction": "ليست جزءًا من هذه القصة",
     "removeMemberConfirmTitle": "هل تريد إزالة هذه المقالة؟",
     "removeMemberConfirmBody": "تُزال هذه المقالة من الخط الزمني للقصة. يواصل Mera متابعة القصة نفسها.",
@@ -1257,12 +1195,10 @@
   },
   "settings": {
     "sources": "المصادر",
-    "groupGeneral": "عام",
     "groupPrivacy": "الخصوصية والبيانات",
     "groupHelp": "المساعدة",
     "groupAccount": "الحساب",
     "languageRow": "اللغة",
-    "backupRow": "النسخ الاحتياطي والاستعادة",
     "backupRowNever": "لم يُحفظ بعد"
   },
   "personaAudit": {
@@ -1511,8 +1447,6 @@
     "subtitle": "ما طلبت من Mera إبقاءه بعيدًا عن خلاصتك",
     "sectionFilters": "كلمات وأشياء أخفيتها",
     "sectionTopics": "مواضيع ترى أقل منها",
-    "sectionSources": "مصادر كتمتها أو خفضت ترتيبها",
-    "managePublications": "إدارة تفضيلات المصدر",
     "chatHint": "لا تحتاج للمجيء هنا. فقط أخبر Mera بما لا تريد رؤيته — \"أقل عن أخبار المشاهير\" — وسيتولى الباقي.",
     "kinds": {
       "keyword": "كلمات",
@@ -1534,8 +1468,6 @@
     "badgeBlocked": "مستبعد",
     "badgeShownLess": "عرض أقل",
     "badgeMutedTopic": "عرض أقل",
-    "badgeDownranked": "مخفّض",
-    "badgeMutedPub": "مكتوم",
     "mutedPubHint": "مستبعد، باستثناء الأخبار الرئيسية",
     "cardExemptLabel": "صفّيت \"{{filter}}\" — عرضه لأنه خبر رئيسي",
     "expiresOn": "حتى {{date}}",
@@ -1563,8 +1495,7 @@
     "emptyTitle": "لم تُخفِ شيئًا بعد",
     "emptyBody": "عندما تخبر Mera بعدم اهتمامك بشيء، يظهر هنا حتى تتمكن من التراجع عنه.",
     "emptyFilters": "لم تُخفِ كلمات بعد.",
-    "emptyTopics": "لم تخفّض موضوعات بعد.",
-    "emptySources": "لم تكتم أو تخفّض مصادر بعد."
+    "emptyTopics": "لم تخفّض موضوعات بعد."
   },
   "headlineDepth": {
     "title": "أبرز العناوين",
@@ -1577,51 +1508,6 @@
     "saveFailedTitle": "لم نتمكن من حفظ ذلك",
     "saveFailedBody": "لم يُحفظ تغييرك. حاول مرة أخرى."
   },
-  "profileHub": {
-    "facts": "الحقائق",
-    "factsCount_zero": "{{count}} حقيقة تُشكّل موجزك",
-    "factsCount_one": "{{count}} حقيقة تُشكّل موجزك",
-    "factsCount_two": "{{count}} حقيقتان تُشكّلان موجزك",
-    "factsCount_few": "{{count}} حقائق تُشكّل موجزك",
-    "factsCount_many": "{{count}} حقيقةً تُشكّل موجزك",
-    "factsCount_other": "{{count}} حقيقة تُشكّل موجزك",
-    "factsEmpty": "اضغط لإضافة ما يجب أن يعرفه Mera",
-    "locations": "الأماكن",
-    "locationsSubtitle": "الأماكن التي تُشكّل موجزك",
-    "sources": "المصادر",
-    "sourcesSubtitle": "تصفّح ومتابعة مصادر الأخبار",
-    "saved": "المحفوظات",
-    "savedSubtitle": "المقالات التي حفظتها لوقت لاحق",
-    "preferences": "تفضيلات المصادر",
-    "prefsCount_zero": "{{count}} مصدر مُعدَّل",
-    "prefsCount_one": "{{count}} مصدر مُعدَّل",
-    "prefsCount_two": "{{count}} مصدران مُعدَّلان",
-    "prefsCount_few": "{{count}} مصادر مُعدَّلة",
-    "prefsCount_many": "{{count}} مصدرًا مُعدَّلًا",
-    "prefsCount_other": "{{count}} مصدر مُعدَّل",
-    "prefsEmpty": "عزّز المصادر أو خفّض أولويتها أو اكتمها",
-    "visitedSubtitle": "المنشورات التي فتحتها مؤخرًا",
-    "activity": "النشاط",
-    "activitySubtitle": "سجل تغييرات شخصيتك",
-    "personaHealth": "تنظيف الملف الشخصي",
-    "healthPending_zero": "{{count}} اقتراح تنظيف",
-    "healthPending_one": "{{count}} اقتراح تنظيف",
-    "healthPending_two": "{{count}} اقتراحا تنظيف",
-    "healthPending_few": "{{count}} اقتراحات تنظيف",
-    "healthPending_many": "{{count}} اقتراح تنظيف",
-    "healthPending_other": "{{count}} اقتراح تنظيف",
-    "healthAllHealthy": "كل شيء بحالة جيدة",
-    "groupKnows": "Mera يعرفك",
-    "groupFeed": "خلاصتك",
-    "groupLibrary": "المصادر والمكتبة",
-    "groupInternals": "تحت الغطاء",
-    "notInterested": "غير مهتم",
-    "notInterestedSubtitle_one": "{{count}} شيء أخفيته",
-    "notInterestedSubtitle_other": "{{count}} أشياء أخفيتها",
-    "notInterestedEmpty": "لم تُخفِ شيئًا بعد",
-    "headlineDepth": "أبرز العناوين",
-    "headlineDepthSubtitle": "كم عنوانًا يقرأ Mera في كل قسم"
-  },
   "profile": {
     "talkToMera": "تحدّث مع Mera",
     "talkToMeraSubtitle": "هكذا أراك. اضغط لمواصلة المحادثة.",
@@ -1629,8 +1515,6 @@
     "emptyTitle": "لا أعرفك بعد",
     "emptyBody": "أخبرني عن نفسك حتى أتمكن من إيجاد الأخبار التي تهمك.",
     "startTalking": "ابدأ الحديث",
-    "meraInvite": "مرحبًا! أخبرني بما يثير اهتمامك وسأضبط خلاصتك الإخبارية لك.",
-    "aboutYou": "عنك",
     "gettingToKnowYou": "ما زلت أتعرّف عليك. تحقق مرة أخرى بعد قليل.",
     "updating": "جارٍ التحديث…",
     "advanced": "متقدّم",
@@ -1663,14 +1547,10 @@
     "deleteFactA11y": "حذف {{fact}}"
   },
   "publicationPrefs": {
-    "title": "تفضيلات المصادر",
-    "subtitle": "عزّز المنشورات أو خفّض أولويتها أو اكتمها",
     "kindBoost": "تعزيز",
     "kindDeprioritize": "خفض الأولوية",
     "kindMute": "كتم",
-    "clear": "مسح",
     "clearA11y": "مسح التفضيل",
-    "empty": "لم تُعدّل أي مصادر بعد. عزّز منشورًا أو خفّض أولويته أو اكتمه من أي مقالة لتراه هنا.",
     "scopeKindCountry": "دولة"
   },
   "optimisationPlan": {
@@ -1765,7 +1645,6 @@
     "trackBody": "القصص التي تتابعها بالفعل تحتفظ بكل ما جمعته. بدء قصة جديدة يحتاج إلى خطة نشطة.",
     "trackDismiss": "ليس الآن",
     "trackTitle": "تتبع القصة يأتي مع الخطة",
-    "trackedStoriesEmptyBody": "لم تتابع شيئًا حتى الآن. متابعة القصة تأتي مع خطة، وأي قصة تتابعها لاحقًا تبقى على هذا الجهاز لك.",
     "factsInFeedHeader": "في موجزك",
     "factsPausedHeader": "متوقفة مؤقتًا",
     "factsPausedSubtitle": "تبقى محفوظة. الخطة تُفعّلها كلها.",
@@ -1837,11 +1716,9 @@
     "checkedByHeading": "التحققات من الحقائق التي وجدتها البحث",
     "dashboard": {
       "deleteA11y": "حذف هذا التحقق من الحقائق",
-      "empty": "لم تتحقق من أي ادعاءات بعد. اضغط على العلامة أسفل القصة لسؤال Mera عنها، ستصل النتيجة هنا بمجرد أن تصبح جاهزة.",
       "listSubtitle": "القصص التي طلبت من Mera البحث عن التحققات من الحقائق فيها. محفوظة على هذا الجهاز فقط.",
       "listTitle": "التحققات من الحقائق",
       "pending": "جاري البحث",
-      "title": "التحققات من الحقائق",
       "untitled": "قصة بدون عنوان",
       "openA11y": "فتح هذه المقالة",
       "articleGone": "انتهت صلاحية المقالة، لذا لا يمكن فتحها. يتم الاحتفاظ بالتحقق من الحقائق الذي وجدناه هنا.",
@@ -2717,7 +2594,6 @@
   },
   "subscriptions": {
     "sectionTitle": "اشتراكاتك",
-    "otherSources": "مصادر أخرى",
     "empty": "أخبر ميرا بالمنشورات التي تدفع مقابلها. سنمنحها وزنًا أكبر في موجزك ونعرض تغطيتها للأخبار التي تنشرها.",
     "add": "إضافة اشتراك",
     "close": "إغلاق",
@@ -2740,15 +2616,10 @@
     "opensPublisherSite": "يفتح موقع {{publisher}} نفسه"
   },
   "shareStats": {
-    "entryA11y": "شارك إحصاءات قراءتك",
-    "screenTitle": "شارك قراءتك",
     "screenSubtitle": "آخر 30 يوما",
     "preparing": "جارٍ تجهيز بطاقتك",
-    "emptyTitle": "لا يوجد ما نعرضه بعد",
-    "emptyBody": "اقرأ بعض المقالات وستمتلئ بطاقتك. يحتفظ Mera بسجل قراءة لمدة 30 يوما على هذا الجهاز.",
     "nameToggleLabel": "إظهار أبرز المصادر التي أقرأها",
     "nameTogglePrivacy": "مُضمَّنة افتراضيا. أسماء المصادر تقول الكثير عنك، لذا يمكنك إيقافها قبل المشاركة. عناوين المقالات لا تُضمَّن أبدا.",
-    "shareAction": "مشاركة",
     "shareDialogTitle": "إحصاءات قراءتي على Mera",
     "sharingUnavailable": "المشاركة غير متاحة على هذا الجهاز.",
     "shareFailed": "لم ينجح ذلك. حاول مرة أخرى.",
@@ -2912,55 +2783,6 @@
       "جارٍ البحث في الويب من جهازك…"
     ]
   },
-  "headerNarration": {
-    "stages": {
-      "starting": [
-        "بدء التحديث",
-        "يعمل على هذا الهاتف"
-      ],
-      "fetching": [
-        "البحث عن الجديد",
-        "ما الجديد اليوم؟"
-      ],
-      "downloading": [
-        "تنزيل المقالات",
-        "جلبها من الخادم"
-      ],
-      "grouping": [
-        "تجميع القصص",
-        "دمج المكرر"
-      ],
-      "analysing": [
-        "فحص الصلة",
-        "قراءة كل مقال"
-      ],
-      "onDevice": [
-        "القراءة على هاتفك",
-        "تبقى على هاتفك"
-      ],
-      "summarising": [
-        "كتابة الملاحظات",
-        "ملاحظة قصيرة لكل قصة"
-      ],
-      "preparing": [
-        "ترتيبها لك",
-        "أوشكنا"
-      ]
-    },
-    "nudges": [
-      "اقرأ المقال كاملًا",
-      "لا وقت لديك؟ احفظه",
-      "هل رأيت أخبار العالم؟",
-      "هل رأيت أخبار بلدانك؟",
-      "تابع قصة",
-      "راجع القصص المتابَعة",
-      "هل ملفك محدَّث؟",
-      "ليس لك؟ أخبر Mera",
-      "أعجبك؟ لترى المزيد",
-      "شارك من تحب"
-    ],
-    "a11y": "ميرا تحدّث أخبارك على هذا الهاتف."
-  },
   "savedExport": {
     "fabA11y": "تصدير المقالات المحفوظة",
     "title": "تصدير المحفوظات",
@@ -2985,7 +2807,6 @@
     "includeImageHint": "رابط لصورة كل مقال، إن وُجدت."
   },
   "tabExplainer": {
-    "openA11y": "كيف يعمل هذا القسم",
     "close": "فهمت",
     "feed": {
       "title": "كيف يعمل الخلاصة",
@@ -2996,29 +2817,7 @@
       "privacy": "يُحسب الترتيب على هذا الهاتف. يبقى سجل القصص التي تفتحها على هذا الهاتف."
     },
     "forYou": {
-      "title": "كيف تعمل لوحة التحكم",
-      "what": "تجمع لوحة التحكم أخبارك حسب الاهتمام. لكل ما أخبرت به Mera قسم خاص، إضافة إلى عناوين من بلدانك ومن العالم.",
-      "how1": "تذهب كل قصة إلى الاهتمام الذي يناسبها أكثر، فتظهر مرة واحدة. إذا تساوى اهتمامان، يحتفظ بها الاهتمام الذي أضفته أولًا.",
-      "how2": "الاهتمامات التي منحتها وزنًا أكبر تأتي أولًا. يحصل الاهتمام الجديد على قسمه حتى قبل وصول قصصه الأولى.",
-      "how3": "داخل كل قسم، تأتي القصص غير المقروءة أولًا، الأهم فالأهم. يُعاد ترتيب الأقسام عند مغادرة القسم أو كل 10 دقائق."
-    },
-    "explore": {
-      "title": "كيف يعمل الاستكشاف",
-      "what": "يعرض الاستكشاف الأخبار الأكثر تغطية خلال آخر 24 ساعة، للعالم ولكل بلد تختاره. اضغط على 24 س في الأعلى لاختيار 6 أو 12 أو 48 ساعة بدلاً من ذلك. هي نفسها للجميع، وليست مختارة لك.",
-      "how1": "تُرتَّب عناوين العالم حسب مدى انتشار تغطية القصة عبر البلدان، لا حسب عدد المقالات.",
-      "how2": "تأتي عناوين البلد من مصادر أخبار مقرها في ذلك البلد."
-    },
-    "profile": {
-      "title": "كيف يعمل الملف الشخصي",
-      "what": "يحتوي الملف الشخصي على ما أخبرت به Mera عن نفسك. يُبنى خلاصتك ولوحة التحكم من هذه الحقائق.",
-      "how1": "تتحول كل حقيقة إلى عمليات بحث يجريها Mera لك. إذا غيّرت حقيقة أو حذفتها تتغير القصص التي جاءت منها أيضًا.",
-      "privacy": "عمليات البحث الناتجة عنها لا تُربط بحسابك أبدًا. يحتفظ الخادم بنص البحث فقط، مشتركًا بشكل مجهول بين جميع المستخدمين، ويحذفه بعد 14 يومًا دون استخدام."
-    },
-    "settings": {
-      "title": "كيف تعمل الإعدادات",
-      "what": "اختر كيف يعمل Mera على هذا الهاتف وأدِر حسابك. تجد خطتك واستخدام اليوم في الأعلى.",
-      "how1": "يحدد Mera Protocol أين يقرأ الذكاء الاصطناعي أخبارك: في السحابة أو على هذا الهاتف. يحتوي قسم الخصوصية والبيانات على نسختك الاحتياطية المشفّرة ويتيح لك حذف البيانات.",
-      "how2": "يضيف الأمان رقم PIN. تضم المساعدة أدلة وأسئلة شائعة. ومن الحساب تسجّل الخروج."
+      "how1": "تذهب كل قصة إلى الاهتمام الذي يناسبها أكثر، فتظهر مرة واحدة. إذا تساوى اهتمامان، يحتفظ بها الاهتمام الذي أضفته أولًا."
     },
     "interests": {
       "title": "كيف تعمل الاهتمامات",

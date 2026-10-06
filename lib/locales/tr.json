@@ -108,10 +108,8 @@
     "updatedAt": "{{time}} güncellendi",
     "allCaughtUp": "Seni etkileyen tüm haberleri okudun.",
     "preparingFeed": "Mera haber akışını hazırlıyor.",
-    "preparingFeedExploreHint": "Bu arada, öne çıkan haberler için Keşfet sekmesine göz at.",
     "noInterests": "Mera senin için haberleri analiz edemiyor",
     "noInterestsDescription": "Mera'nın sana haber üretmeye başlaması için lütfen kullanıcı profilini oluştur.",
-    "dashboardTitle": "Panel",
     "pullDownToRetry": "Tekrar denemek için aşağı çek",
     "readArticleToast": "Bu makaleyi okudun",
     "stuckTitle": "Haber akışın yüklenemedi",
@@ -228,7 +226,6 @@
     "analysingProgress": "{{total}} makaleden {{done}} tanesi analiz ediliyor",
     "waitingForNextBatch_one": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
     "waitingForNextBatch_other": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
-    "exploreCta": "Keşfet'i Tara",
     "statsPublishedPending_one": "{{formatted}} makale son 24 saatte yayınlandı.",
     "statsPublishedPending_other": "{{formatted}} makale son 24 saatte yayınlandı.",
     "statsPublished_one": "{{formatted}} makale son 24 saatte yayınlandı,",
@@ -341,15 +338,10 @@
   "notifications": {
     "title": "Bildirimler",
     "enableDescription": "Kişiselleştirilmiş haberlerden haberdar olmak için bildirimleri etkinleştir",
-    "pushNotifications": "Anlık Bildirimler",
-    "receivingUpdates": "Güncellemeler alınıyor",
-    "disabled": "Devre dışı",
     "permissionDenied": "Bildirim izinlerini daha önce reddettiysen, cihaz ayarlarından etkinleştirmen gerekecek.",
     "openDeviceSettings": "Cihaz Ayarlarını Aç",
-    "timeTitle": "Bildirim Zamanı",
     "format24h": "24 saat",
     "formatAmPm": "ÖÖ/ÖS",
-    "timeDescription": "Haberlerinin işlenmesi için bildirim almak istediğin saatleri seç",
     "savePreferences": "Tercihleri Kaydet",
     "loadFailedTitle": "Yükleme Başarısız",
     "loadFailedDescription": "Bildirim ayarları yüklenemedi.",
@@ -371,12 +363,7 @@
     "saveFailedDescription": "Tercihler kaydedilemedi. Lütfen tekrar dene.",
     "timeDescriptionOnboarding": "Haberlerine ne zaman göz atmak istediğini seç",
     "timeNudge": "Okuyabileceğiniz, düşünebileceğiniz ve planlayabileceğiniz bir zamanı seçin — günde bir veya iki kez yeterlidir.",
-    "maxHoursReachedDescription": "En fazla {{count}} saat seçebilirsin",
-    "maxHoursReachedTitle": "Üst sınıra ulaşıldı",
-    "selectedCount": "Seçilen: {{selected}}/{{max}}",
-    "savedInline": "Kaydedildi",
-    "pickAtLeastOneHour": "En az bir saat seç",
-    "selectedLabel": "Seçili"
+    "savedInline": "Kaydedildi"
   },
   "language": {
     "title": "Dil",
@@ -596,14 +583,12 @@
     }
   },
   "preferences": {
-    "manageSettings": "Uygulama ayarlarını ve hesabını yönet",
     "notifications": "Bildirimler",
     "language": "Dil ve Çeviri",
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Gizlilik Politikası",
     "termsOfService": "Hizmet Şartları",
     "support": "Destek ekibiyle görüşün",
-    "manageData": "Verileri yönet",
     "deleteAccount": "Hesabı Sil",
     "logout": "Çıkış yap",
     "signOutModalTitle": "Çıkış Yap",
@@ -676,10 +661,7 @@
     "generateMoreTopicsConfirm": "Oluştur",
     "generateMoreTopicsFailedTitle": "Konu oluşturma başarısız oldu",
     "generateMoreTopicsFailedDescription": "Yeni konular oluşturulamadı. Lütfen tekrar deneyin.",
-    "articleAnalysisTitle": "Makale analizi hakkında",
-    "articleAnalysisDescription": "Analiz edilen makale sayısını azaltarak Mera'nı optimize etmelisin; çünkü ne kadar çok makale analiz edilirse o kadar hızlı kullanım hakkın tükenir.",
     "gotIt": "Anladım",
-    "articlesAnalyzedLast24h": "Son 24s'de analiz edilen makaleler",
     "maxForDailyAnalysis": "Günlük analiz için maks",
     "promoPlan": "Promo",
     "promoTooltip": "Uygulama lansmanımız kapsamında Individual planını ücretsiz deneyebilirsiniz. Bu sınırlı süreli bir tekliftir.",
@@ -690,7 +672,6 @@
     "gotItPromo": "Harika! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Lansman teklifi 🎊",
-    "resetsOn": "Sıfırlanma",
     "retryTopicGeneration": "Tekrar Dene",
     "topicGenFailedGeneric": "Bu için konular oluşturulamadı.",
     "articleCountPending": "Sayılıyor",
@@ -766,7 +747,6 @@
     "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nEğer bu seni biraz şüpheye düşürürse, içgüdün doğru. Kişisel verileri bir uygulama şirketi vermeye akıllıca demek değil. Mera farklı şekilde inşa edildi: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana nasıl çalıştığını sorabilirsin, ya da 'kurulumda bana yardım et' de ve başlayalım."
   },
   "floatingChat": {
-    "bubbleHint": "Mera ile sohbet et",
     "close": "Kapat",
     "title": "Mera",
     "aboutThisStory": "BU HABER HAKKINDA",
@@ -871,15 +851,7 @@
     "countShort_other": "{{count}} ziyaret",
     "tooltipA11y": "Okuma geçmişi hakkında",
     "tooltipIntro": "Mera okuma alışkanlıklarını senin için takip eder ve bu bilgi yalnızca cihazında saklanır.",
-    "tooltipLink": "Tüm okuma geçmişini buradan gör.",
-    "screenIntro": "Son 30 günde Mera'dan sitelerini açtığın yayınlar. Bu liste bu cihazda kalır.",
-    "visitedListTitle": "Ziyaret ettiğin yayınlar",
-    "last30Days": "Son 30 gün",
-    "lastRead": "Son okunma {{time}}",
-    "noArticlesYet": "Mera'dan açtığın yayınlar burada görünür. Mera içinde okudukların listelenmez.",
-    "articlesRead": "Okuduğun makaleler",
-    "noArticlesLast30Days": "Son 30 günde bu yayından makale yok.",
-    "emptyTitle": "Henüz yayın yok"
+    "tooltipLink": "Tüm okuma geçmişini buradan gör."
   },
   "nativeUpdate": {
     "updateRequiredTitle": "Güncelleme gerekli",
@@ -966,15 +938,12 @@
     "deleteConfirmCta": "Sil",
     "deleteConfirmMessage": "Bu, makaleyi bu cihazdaki kayıtlı listenizden kaldırır.",
     "deleteConfirmTitle": "Kayıtlı makale kaldırılsın mı?",
-    "empty": "Henüz hiç makale kaydetmediniz. Bir makaleyi daha sonrası için kaydetmek üzere yer imine dokunun.",
-    "note": "Bu makaleler yalnızca cihazınızda kaydedilir. İstediğiniz zaman ekleyin veya kaldırın: siz silene kadar burada kalırlar.",
     "removedToastMessage": "Kayıtlılardan kaldırıldı",
     "removedToastTitle": "Kaldırıldı",
     "saveAction": "Kaydet",
     "removeAction": "Kaydedilenlerden kaldır",
     "savedToastMessage": "Makale daha sonrası için kaydedildi",
     "savedToastTitle": "Kaydedildi",
-    "title": "Kaydedilenler",
     "emptyTitle": "Henüz kaydedilen bir şey yok"
   },
   "subscription": {
@@ -1034,8 +1003,6 @@
   },
   "tabs": {
     "deck": "Akış",
-    "dashboard": "Panel",
-    "around": "Keşfet",
     "profile": "Profil",
     "settings": "Ayarlar",
     "gotIt": "Anladım",
@@ -1044,7 +1011,6 @@
     "you": "Siz"
   },
   "swipeFeed": {
-    "yourDeck": "Akış",
     "moreLikeThis": "Bunun gibi daha fazlası",
     "lessLikeThis": "Bunun gibi daha azı",
     "askMera": "Mera'ya Sor",
@@ -1058,22 +1024,11 @@
     "chatHandoffDislikeNoPath": "Bu haberi beğenmedim. Bunun gibi daha azını görmeme yardım et."
   },
   "explore": {
-    "title": "Keşfet",
-    "scopeWorld": "Dünya",
-    "noArticles": "Makale bulunamadı",
     "addPlaces": "Yerleri ekle",
-    "offlineUnavailable": "Çevrimdışısın — Keşfet için internet bağlantısı gerekli",
     "serverUnavailable": "Mera şu anda erişilemiyor: biraz sonra tekrar dene.",
-    "addSources": "Kaynak ekle",
-    "removeScope": "{{name}} kaldır",
-    "searchPlaceholder": "Son haberleri ara",
     "clearSearch": "Aramayı temizle",
-    "searchMinLength": "Aramak için yazmaya devam et",
     "searchNotSubscribed": "Arama aktif bir plan gereklidir",
-    "searchError": "Şu anda arama yapılamıyor",
     "searchEmpty": "Son 48 saatte hiçbir eşleşme yok. Arama son başlıkları kapsıyor, tam arşivi değil.",
-    "openSearch": "Ara",
-    "closeSearch": "Aramayı kapat",
     "window": {
       "label24": "24 sa",
       "label48": "48 sa",
@@ -1102,10 +1057,6 @@
     "headlineDenominator_other": "Mera {{count}} başlığı okudu · {{shown}} senin zamanına değer.",
     "headlineDenominatorNone_one": "Mera {{count}} başlığı okudu · bugün hiçbiri ilgili görünmedi.",
     "headlineDenominatorNone_other": "Mera {{count}} başlığı okudu · bugün hiçbiri ilgili görünmedi.",
-    "subTabFeed": "Bakış",
-    "subTabStories": "Haberler",
-    "subTabSaved": "Kaydedilenler",
-    "subTabHistory": "Ziyaret edilenler",
     "nextFactPrefix": "Sonraki",
     "subTabAnalytics": "Analiz",
     "emptySection": {
@@ -1113,24 +1064,15 @@
       "none": "Henüz buraya yeterince uyan bir haber yok."
     },
     "newInterest": "Yeni ilgi alanı",
-    "nextSection": "Sonraki: {{title}}",
-    "backToDashboard": "Panele dön"
+    "nextSection": "Sonraki: {{title}}"
   },
   "feedStatus": {
     "title": "Akış durumu",
     "idle": "Güncel",
     "stage": "Aşama",
     "cloudProgress": "Bulut puanlama",
-    "deviceProgress": "Cihaz üzerinde puanlama",
-    "published": "Yayınlandı",
-    "analysed": "Analiz edildi",
-    "relevant": "Senin için alakalı",
-    "lastProcessed": "Son işlenme",
-    "errorTitle": "Puanlama sorunu",
-    "openA11y": "Akış durumunu aç",
     "close": "Kapat",
     "expandA11y": "Akış durumu ayrıntılarını göster",
-    "collapseA11y": "Akış durumu ayrıntılarını gizle",
     "modeProcessing": "Akışınız güncelleniyor",
     "modeError": "Akış sorunu",
     "modeLimited": "Günlük makale sınırına ulaşıldı",
@@ -1138,7 +1080,6 @@
   },
   "trackedStories": {
     "emptyTitle": "Henüz takip edilen haber yok",
-    "emptyBody": "Ortaya çıkan her yeni gelişmeyi burada görmek için bir haberi takip et.",
     "title": "Takip edilen haberler",
     "trackAction": "Haberi takip et",
     "untrackAction": "Haberi takipten çık",
@@ -1163,10 +1104,7 @@
     "deleteStoryAction": "Haberi sil",
     "deleteStoryConfirmTitle": "Bu haberi silinsin mi?",
     "deleteStoryConfirmBody": "Silme, bu haber için kaydedilmiş her şeyi kaldırır.",
-    "followFabLabel": "Yeni bir hikayeyi takip et",
-    "followChatSeed": "Bir hikayeyi takip etmek istiyorum.",
     "followChatIntro": "Takip etmek istediğini söyle ve ben bunu kurtaracağım.",
-    "emptyCtaFollow": "Bir hikayeyi takip et",
     "removeMemberAction": "Bu haberin parçası değil",
     "removeMemberConfirmTitle": "Bu makale kaldırılsın mı?",
     "removeMemberConfirmBody": "Bu makale haberin zaman çizelgesinden kaldırılır. Mera haberi takip etmeye devam eder.",
@@ -1213,12 +1151,10 @@
   },
   "settings": {
     "sources": "Kaynaklar",
-    "groupGeneral": "Genel",
     "groupPrivacy": "Gizlilik ve veriler",
     "groupHelp": "Yardım",
     "groupAccount": "Hesap",
     "languageRow": "Dil",
-    "backupRow": "Yedekleme ve geri yükleme",
     "backupRowNever": "Henüz yedek yok"
   },
   "personaAudit": {
@@ -1455,8 +1391,6 @@
     "subtitle": "Mera'dan haber akışında tutmasını istediğin şeyler",
     "sectionFilters": "Gizlediğin kelimeler ve şeyler",
     "sectionTopics": "Daha az gördüğün konular",
-    "sectionSources": "Sessize aldığın veya düşük öncelik verdiğin kaynaklar",
-    "managePublications": "Kaynak tercihlerini yönet",
     "chatHint": "Buraya gelmen zorunlu değil. Mera'ya görmek istemediğin şeyi söyle — \"daha az ünlü haberleri\" — ve o da geri kalanını halleder.",
     "kinds": {
       "keyword": "Kelimeler",
@@ -1478,8 +1412,6 @@
     "badgeBlocked": "Gizlendi",
     "badgeShownLess": "Daha az göster",
     "badgeMutedTopic": "Daha az göster",
-    "badgeDownranked": "Düşürüldü",
-    "badgeMutedPub": "Sessize alındı",
     "mutedPubHint": "Gizlendi, önemli haberler hariç",
     "cardExemptLabel": "\"{{filter}}\" filtrelemişsin — önemli haber olduğu için gösteriyorum",
     "expiresOn": "{{date}} kadar",
@@ -1507,8 +1439,7 @@
     "emptyTitle": "Henüz hiçbir şey gizli değil",
     "emptyBody": "Mera'ya bir şey ilgilenmiyor dediğinde, buraya çıkıyor, böylece geri alabilirsin.",
     "emptyFilters": "Henüz hiçbir kelime gizlemedin.",
-    "emptyTopics": "Henüz düşürülen konu yok.",
-    "emptySources": "Henüz hiçbir kaynağı sessize almadın veya düşürmedin."
+    "emptyTopics": "Henüz düşürülen konu yok."
   },
   "headlineDepth": {
     "title": "Öne çıkan başlıklar",
@@ -1521,39 +1452,6 @@
     "saveFailedTitle": "Kaydedilemedi",
     "saveFailedBody": "Değişiklik kaydedilmedi. Tekrar dene."
   },
-  "profileHub": {
-    "facts": "Bilgiler",
-    "factsCount_one": "Akışını şekillendiren {{count}} bilgi",
-    "factsCount_other": "Akışını şekillendiren {{count}} bilgi",
-    "factsEmpty": "Mera'nın bilmesi gerekenleri eklemek için dokun",
-    "locations": "Konumlar",
-    "locationsSubtitle": "Akışını şekillendiren yerler",
-    "sources": "Kaynaklar",
-    "sourcesSubtitle": "Haber kaynaklarına göz at ve takip et",
-    "saved": "Kaydedilenler",
-    "savedSubtitle": "Daha sonrası için kaydettiğin makaleler",
-    "preferences": "Kaynak tercihleri",
-    "prefsCount_one": "{{count}} kaynak ayarlandı",
-    "prefsCount_other": "{{count}} kaynak ayarlandı",
-    "prefsEmpty": "Kaynakları öne çıkar, önceliğini düşür veya sustur",
-    "visitedSubtitle": "Yakın zamanda açtığın yayınlar",
-    "activity": "Etkinlik",
-    "activitySubtitle": "Profil değişiklik geçmişin",
-    "personaHealth": "Profil temizliği",
-    "healthPending_one": "{{count}} temizlik önerisi",
-    "healthPending_other": "{{count}} temizlik önerisi",
-    "healthAllHealthy": "Her şey sağlıklı",
-    "groupKnows": "Mera seni tanıyor",
-    "groupFeed": "Haber akışın",
-    "groupLibrary": "Kaynaklar & kütüphane",
-    "groupInternals": "Perde arkası",
-    "notInterested": "İlgilenmiyor",
-    "notInterestedSubtitle_one": "{{count}} gizlediğin şey",
-    "notInterestedSubtitle_other": "{{count}} gizlediğin şey",
-    "notInterestedEmpty": "Henüz hiçbir şey gizli değil",
-    "headlineDepth": "Öne çıkan başlıklar",
-    "headlineDepthSubtitle": "Mera bölüm başına kaç tane okuyor"
-  },
   "profile": {
     "talkToMera": "Mera ile konuş",
     "talkToMeraSubtitle": "Seni böyle görüyorum. Sohbete devam etmek için dokun.",
@@ -1561,8 +1459,6 @@
     "emptyTitle": "Seni henüz tanımıyorum",
     "emptyBody": "Senin için önemli olan haberleri bulabilmem için kendinden bahset.",
     "startTalking": "Konuşmaya başla",
-    "meraInvite": "Selam! Neyle ilgilendiğini anlat, haber akışını senin için ayarlayayım.",
-    "aboutYou": "Senin hakkında",
     "gettingToKnowYou": "Seni hâlâ tanıyorum, birazdan tekrar bak.",
     "updating": "Güncelleniyor…",
     "advanced": "Gelişmiş",
@@ -1595,14 +1491,10 @@
     "deleteFactA11y": "{{fact}} sil"
   },
   "publicationPrefs": {
-    "title": "Kaynak tercihleri",
-    "subtitle": "Yayınları öne çıkar, önceliğini düşür veya sustur",
     "kindBoost": "Öne çıkar",
     "kindDeprioritize": "Önceliği düşür",
     "kindMute": "Sustur",
-    "clear": "Temizle",
     "clearA11y": "Tercihi temizle",
-    "empty": "Henüz hiçbir kaynağı ayarlamadın. Herhangi bir makaleden bir yayını öne çıkar, önceliğini düşür veya sustur, burada görünsün.",
     "scopeKindCountry": "Ülke"
   },
   "optimisationPlan": {
@@ -1697,7 +1589,6 @@
     "trackBody": "Zaten takip ettiğiniz haberler, topladıkları her şeyi koruyor. Yenisini başlatmak aktif bir plan gerektirir.",
     "trackDismiss": "Şimdi değil",
     "trackTitle": "Haber takibi bir plan ile birlikte geliyor",
-    "trackedStoriesEmptyBody": "Henüz takip edilen haber yok. Bir haberi takip etmek bir plan gerektirir, takip ettiğiniz her şey bu cihazda kalıyor, sizindir.",
     "factsInFeedHeader": "Akışınızda",
     "factsPausedHeader": "Duraklatıldı",
     "factsPausedSubtitle": "Bunlar kayıtlı kalır. Bir plan hepsini açar.",
@@ -1769,11 +1660,9 @@
     "checkedByHeading": "Aramanın bulduğu gerçek kontrolleri",
     "dashboard": {
       "deleteA11y": "Bu doğruluk kontrolünü sil",
-      "empty": "Henüz herhangi bir iddia kontrol etmediniz. Bir hikayenin altındaki işareti dokunarak Mera'ya sorular sorun, sonuç hazır olduğunda buraya gelir.",
       "listSubtitle": "Mera'ya doğruluk kontrol araması yapmasını istediğiniz haberler. Sadece bu cihazda saklanır.",
       "listTitle": "Doğruluk kontroller",
       "pending": "Hala aranıyor",
-      "title": "Doğruluk kontroller",
       "untitled": "Başlıksız haber",
       "openA11y": "Bu makaleyi aç",
       "articleGone": "Makale süresi dolmuş, bu nedenle açılamıyor. Bulduğumuz gerçek kontrolü burada saklıyoruz.",
@@ -2637,7 +2526,6 @@
   },
   "subscriptions": {
     "sectionTitle": "Abonelikleriniz",
-    "otherSources": "Diğer kaynaklar",
     "empty": "Hangi yayınlara abone olduğunuzu Mera'ya söyleyin. Akışınızda onlara daha fazla ağırlık verir ve haberini yaptıkları konularda kendi haberlerini gösteririz.",
     "add": "Abonelik ekle",
     "close": "Kapat",
@@ -2660,15 +2548,10 @@
     "opensPublisherSite": "{{publisher}} yayınının kendi sitesini açar"
   },
   "shareStats": {
-    "entryA11y": "Okuma istatistiklerini paylaş",
-    "screenTitle": "Okumanı paylaş",
     "screenSubtitle": "Son 30 gün",
     "preparing": "Kartın hazırlanıyor",
-    "emptyTitle": "Henüz gösterilecek bir şey yok",
-    "emptyBody": "Birkaç haber oku, kartın dolmaya başlasın. Mera bu cihazda 30 günlük okuma geçmişi tutar.",
     "nameToggleLabel": "En çok okuduğum yayınları göster",
     "nameTogglePrivacy": "Varsayılan olarak dahil. Yayın adları senin hakkında çok şey söyler, bu yüzden paylaşmadan önce kapatabilirsin. Haber başlıkları hiçbir zaman dahil edilmez.",
-    "shareAction": "Paylaş",
     "shareDialogTitle": "Mera okuma istatistiklerim",
     "sharingUnavailable": "Bu cihazda paylaşım kullanılamıyor.",
     "shareFailed": "Olmadı. Tekrar dene.",
@@ -2828,55 +2711,6 @@
       "Cihazından web'de aranıyor…"
     ]
   },
-  "headerNarration": {
-    "stages": {
-      "starting": [
-        "Yenileme başladı",
-        "Bu telefonda"
-      ],
-      "fetching": [
-        "Yeni haberler aranıyor",
-        "Neler yeni?"
-      ],
-      "downloading": [
-        "Makaleler iniyor",
-        "Sunucudan alınıyor"
-      ],
-      "grouping": [
-        "Haberler gruplanıyor",
-        "Tekrarlar birleşiyor"
-      ],
-      "analysing": [
-        "Uygunluk ölçülüyor",
-        "Makaleler okunuyor"
-      ],
-      "onDevice": [
-        "Telefonunda okunuyor",
-        "Telefonunda kalır"
-      ],
-      "summarising": [
-        "Notlar yazılıyor",
-        "Habere kısa not"
-      ],
-      "preparing": [
-        "Sıraya konuyor",
-        "Az kaldı"
-      ]
-    },
-    "nudges": [
-      "Haberin tamamını oku",
-      "Vaktin yok mu? Kaydet",
-      "Dünyaya baktın mı?",
-      "Ülkelerin tamam mı?",
-      "Bir haberi takip et",
-      "Takip ettiklerine bak",
-      "Profilin güncel mi?",
-      "Beğenmedin mi? Söyle",
-      "Daha fazlası için beğen",
-      "Sevdiklerinle paylaş"
-    ],
-    "a11y": "Mera bu telefonda haberlerini güncelliyor."
-  },
   "savedExport": {
     "fabA11y": "Kaydedilen makaleleri dışa aktar",
     "title": "Kaydedilenleri dışa aktar",
@@ -2901,7 +2735,6 @@
     "includeImageHint": "Varsa her makalenin görseline bir bağlantı."
   },
   "tabExplainer": {
-    "openA11y": "Bu sekme nasıl çalışır",
     "close": "Anladım",
     "feed": {
       "title": "Akış nasıl çalışır",
@@ -2912,29 +2745,7 @@
       "privacy": "Sıralama bu telefonda hesaplanır. Hangi haberleri açtığının kaydı bu telefonda kalır."
     },
     "forYou": {
-      "title": "Panel nasıl çalışır",
-      "what": "Panel haberlerini ilgi alanlarına göre gruplar. Mera'ya anlattığın her şeyin bir bölümü olur, ayrıca ülkelerinden ve dünyadan manşetler de yer alır.",
-      "how1": "Her haber en iyi uyduğu tek ilgi alanına gider, böylece yalnızca bir kez görünür. İkisi eşit uyarsa önce eklediğin alan haberi alır.",
-      "how2": "Daha fazla ağırlık verdiğin ilgi alanları önce gelir. Yeni bir ilgi alanı, ilk haberleri gelmeden bile kendi bölümünü alır.",
-      "how3": "Bir bölümde okunmamış haberler önce gelir, en önemliler başta. Bölümler sekmeden ayrıldığında ya da her 10 dakikada bir yeniden sıralanır."
-    },
-    "explore": {
-      "title": "Keşfet nasıl çalışır",
-      "what": "Keşfet, dünya ve seçtiğin her ülke için son 24 saatte en çok haber yapılan konuları gösterir. Bunun yerine 6, 12 veya 48 saati seçmek için üstteki 24 sa düğmesine dokun. Herkes için aynıdır, senin için seçilmez.",
-      "how1": "Dünya manşetleri, makale sayısına göre değil, bir haberin farklı ülkelerde ne kadar geniş yer bulduğuna göre sıralanır.",
-      "how2": "Ülke manşetleri o ülkede bulunan haber kaynaklarından gelir."
-    },
-    "profile": {
-      "title": "Profil nasıl çalışır",
-      "what": "Profil, Mera'ya kendin hakkında anlattıklarını tutar. Akışın ve Panelin bu bilgilerden oluşturulur.",
-      "how1": "Her bilgi, Mera'nın senin için yaptığı aramalara dönüşür. Bir bilgiyi değiştirir ya da silersen ondan gelen haberler de değişir.",
-      "privacy": "Bunlardan oluşturulan aramalar hiçbir zaman hesabınla ilişkilendirilmez. Sunucu yalnızca arama metnini tutar, tüm kullanıcılar arasında anonim olarak paylaşılır ve 14 gün kullanılmazsa silinir."
-    },
-    "settings": {
-      "title": "Ayarlar nasıl çalışır",
-      "what": "Mera'nın bu telefonda nasıl çalışacağını seçin ve hesabınızı yönetin. Planınız ve bugünkü kullanımınız en üstte.",
-      "how1": "Mera Protocol, yapay zekânın haberlerinizi nerede okuyacağını belirler: bulutta ya da bu telefonda. Gizlilik ve veriler şifreli yedeğinizi tutar ve veri silmenizi sağlar.",
-      "how2": "Güvenlik bir PIN ekler. Yardım'da kılavuzlar ve SSS var. Hesap'tan çıkış yaparsınız."
+      "how1": "Her haber en iyi uyduğu tek ilgi alanına gider, böylece yalnızca bir kez görünür. İkisi eşit uyarsa önce eklediğin alan haberi alır."
     },
     "interests": {
       "title": "İlgi alanları nasıl çalışır",
