@@ -48,7 +48,6 @@ jest.mock('@/components/custom/news-detail/ArticleSuggestionScreen', () => ({ __
 jest.mock('@/components/custom/tracked-stories/StoryTimelineScreen', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/config-panel/SourcesL2PublicationList', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/publication-page/PublicationPage', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/config-panel/PublicationArticleHistoryList', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/config-panel/CountryArticleList', () => ({ __esModule: true, default: () => null }));
 
 const ROUTES: [string, () => React.ComponentType][] = [
