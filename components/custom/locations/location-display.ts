@@ -14,8 +14,8 @@ type GlyphName = keyof typeof MaterialIcons.glyphMap;
 export interface RoleMeta {
   readonly role: LocationRole;
   readonly icon: GlyphName;
-  /** i18n key under `locations.roles`. */
-  readonly labelKey: string;
+  /** i18n key under `locations.roles`. A union, so the key is type-checked. */
+  readonly labelKey: 'home' | 'work' | 'travel' | 'family' | 'partnerFamily' | 'interest';
 }
 
 // Locked-plan role icons (all valid MaterialIcons glyphs). partner_family

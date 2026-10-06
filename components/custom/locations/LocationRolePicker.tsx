@@ -27,7 +27,7 @@ const LocationRolePicker: React.FC<Props> = ({ value, onChange }) => {
             onPress={() => onChange(meta.role)}
             accessibilityRole="button"
             accessibilityState={{ selected }}
-            accessibilityLabel={t(`locations.roles.${meta.labelKey}` as never)}
+            accessibilityLabel={t(`locations.roles.${meta.labelKey}`)}
             className={`flex-row items-center rounded-full border px-3 py-2 mb-2 ${
               selected ? 'border-primary-500 bg-primary-500/10' : 'border-gray-700'
             }`}
@@ -36,7 +36,7 @@ const LocationRolePicker: React.FC<Props> = ({ value, onChange }) => {
             <Text
               className={`ml-2 text-sm ${selected ? 'text-white' : 'text-gray-300'}`}
             >
-              {t(`locations.roles.${meta.labelKey}` as never)}
+              {t(`locations.roles.${meta.labelKey}`)}
             </Text>
           </Pressable>
         );

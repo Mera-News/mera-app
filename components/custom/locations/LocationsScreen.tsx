@@ -155,7 +155,7 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
           <HStack className="items-center mt-2 ml-8" space="xs">
             <View className="flex-row items-center border border-gray-700 rounded-full px-2 py-0.5">
               <Text className="text-xs text-gray-300">
-                {t(`locations.roles.${meta.labelKey}` as never)}
+                {t(`locations.roles.${meta.labelKey}`)}
               </Text>
             </View>
             {showValidUntil ? (
