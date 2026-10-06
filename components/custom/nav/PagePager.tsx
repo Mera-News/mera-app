@@ -7,14 +7,12 @@
 //    `subviews[0]`). Each panel is keyed by its page id and positioned at
 //    dir*i*W in one row translated to -dir*index*W, so a reorder or the
 //    window moving never remounts a page that stays.
-//  - Manual activation: a touch is decided on its FIRST movement
-//    (`swipeDecision`), before a fast fling ends. Inside a registered
-//    horizontal scroller (the Stats pager) the swipe takes over only at that
-//    scroller's edge in the drag's OWN direction (at the last card a drag
-//    toward the next page hands off, a drag back stays in the scroller); a
-//    bouncing ScrollView never fails, so waiting for it cannot work. The
-//    scroller is known at touch DOWN (a Manual gesture), never at its pan's
-//    begin, which comes after the decision.
+//  - One RNGH pan: activates on a clear sideways move (activeOffsetX 25) and
+//    fails on a vertical one (failOffsetY 12), so lists still scroll. No page
+//    holds a horizontal scroller: nothing negotiates with this pan.
+//  - Built ONCE: its worklets read the page and width from shared values and
+//    the end of a drag calls the latest `finish` through a ref, because RNGH
+//    applies a rebuilt gesture's callbacks asynchronously (B4c).
 //  - 24pt edge insets leave the screen edges to the system back gesture.
 //  - Off-screen panels get no touches and are hidden from accessibility; a
 //    page gates its own work on `active`. While a drag or slide is in flight
@@ -38,9 +36,14 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
-import { SwipeBlockerContext } from './swipe-blocker';
-import { SWIPE_DAMPING, fractionalIndex, swipeDecision, swipeOutcome, swipeWindow } from './tab-swipe';
-import type { SwipeBlocker } from './types';
+import {
+  SWIPE_ACTIVATE_PX,
+  SWIPE_DAMPING,
+  SWIPE_VERTICAL_FAIL_PX,
+  fractionalIndex,
+  swipeOutcome,
+  swipeWindow,
+} from './tab-swipe';
 
 /** Leaves the screen edges to the system back gesture. */
 const EDGE_INSET = 24;
@@ -123,70 +126,6 @@ const PagePager: React.FC<PagePagerProps> = ({
     return () => clearTimeout(id);
   }, [index]);
 
-  // ── The registered horizontal scroller (Stats pager) ──
-  // "The touch started inside the scroller" must be known at TOUCH DOWN. A
-  // Native gesture's `onBegin` arrives only once the scroll view's own pan
-  // begins, after its slop, i.e. AFTER the page swipe has already decided:
-  // measured on device, a right fling on the last card read as "outside the
-  // scroller" and changed page instead of card. A Manual gesture reports its
-  // touches at once and never activates, so it never blocks the scroll view.
-  const inScroller = useSharedValue(false);
-  const atStart = useSharedValue(true);
-  const atEnd = useSharedValue(true);
-  const blockerRef = useRef<unknown>(null);
-  // RNGH resolves a cross-detector relation ONCE, when the pan is attached
-  // or updated, into the scroller's NUMERIC handler tag, and writes the
-  // numbers back into the pan's config. A scroller attached LATER (the Stats
-  // pager mounts with its page, or once its cards load) gets a fresh tag the
-  // pan never learns, so the two stop being simultaneous and a swipe that
-  // starts inside the pager cannot move the page (R1, captured: a right fling
-  // on the first card never reached Visited). So the scroller reports its
-  // attachment through a ref setter (RNGH assigns `ref.current` on attach),
-  // and every new tag rebuilds the pan against the live gesture object.
-  const [scrollerTag, setScrollerTag] = useState(-1);
-  const scrollerRef = useMemo(
-    () =>
-      ({
-        set current(g: { handlerTag?: number } | undefined) {
-          const tag = g?.handlerTag ?? -1;
-          if (tag > 0) setScrollerTag((prev) => (prev === tag ? prev : tag));
-        },
-        get current() {
-          return undefined;
-        },
-      }) as unknown as React.MutableRefObject<undefined>,
-    [],
-  );
-  const scrollerGesture = useMemo(
-    () =>
-      Gesture.Manual()
-        .withRef(scrollerRef as never)
-        .onTouchesDown(() => {
-          inScroller.value = true;
-        })
-        .onTouchesUp((e) => {
-          if (e.numberOfTouches === 0) inScroller.value = false;
-        })
-        .onTouchesCancelled(() => {
-          inScroller.value = false;
-        })
-        .onFinalize(() => {
-          inScroller.value = false;
-        }),
-    [inScroller, scrollerRef],
-  );
-  const blocker = useMemo<SwipeBlocker>(
-    () => ({
-      gesture: scrollerGesture,
-      ref: blockerRef,
-      setEdge: (e) => {
-        atStart.value = e.start;
-        atEnd.value = e.end;
-      },
-    }),
-    [scrollerGesture, atStart, atEnd],
-  );
-
   const onLayout = useCallback((e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width), []);
 
   const settle = useCallback(() => setMoving(false), []);
@@ -253,41 +192,13 @@ const PagePager: React.FC<PagePagerProps> = ({
   finishRef.current = finish;
   const onDragEnd = useCallback((dx: number, vx: number) => finishRef.current(dx, vx), []);
 
-  const startX = useSharedValue(0);
-  const startY = useSharedValue(0);
-  const decided = useSharedValue(false);
-
   const pan = useMemo(
     () =>
       Gesture.Pan()
         .enabled(enabled)
-        .manualActivation(true)
+        .activeOffsetX([-SWIPE_ACTIVATE_PX, SWIPE_ACTIVATE_PX])
+        .failOffsetY([-SWIPE_VERTICAL_FAIL_PX, SWIPE_VERTICAL_FAIL_PX])
         .hitSlop({ left: -EDGE_INSET, right: -EDGE_INSET })
-        .simultaneousWithExternalGesture(scrollerGesture)
-        .onTouchesDown((e) => {
-          const t = e.allTouches[0];
-          if (!t) return;
-          startX.value = t.absoluteX;
-          startY.value = t.absoluteY;
-          decided.value = false;
-        })
-        .onTouchesMove((e, state) => {
-          if (decided.value) return;
-          const t = e.allTouches[0];
-          if (!t) return;
-          const decision = swipeDecision({
-            dx: t.absoluteX - startX.value,
-            dy: t.absoluteY - startY.value,
-            inScroller: inScroller.value,
-            atStart: atStart.value,
-            atEnd: atEnd.value,
-            rtl,
-          });
-          if (decision === 'wait') return;
-          decided.value = true;
-          if (decision === 'fail') state.fail();
-          else state.activate();
-        })
         .onStart(() => {
           runOnJS(setMoving)(true);
         })
@@ -300,11 +211,7 @@ const PagePager: React.FC<PagePagerProps> = ({
         .onEnd((e) => {
           runOnJS(onDragEnd)(e.translationX, e.velocityX);
         }),
-    // `scrollerTag`: rebuilt whenever the scroller attaches with a new tag, so
-    // RNGH resolves the relation again (see above). Everything else the
-    // worklets read is a shared value or the latest `finish` through a ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [enabled, scrollerGesture, scrollerTag, startX, startY, decided, inScroller, atStart, atEnd, rtl, dir, progress, indexSV, widthSV, reduceMotionSV, offset, onDragEnd],
+    [enabled, rtl, dir, progress, indexSV, widthSV, reduceMotionSV, offset, onDragEnd],
   );
 
   const rowStyle = useAnimatedStyle(() => ({
@@ -346,7 +253,6 @@ const PagePager: React.FC<PagePagerProps> = ({
   );
 
   return (
-    <SwipeBlockerContext.Provider value={blocker}>
       <GestureDetector gesture={pan}>
         <View style={styles.viewport} onLayout={onLayout} testID={testID}>
           <Animated.View style={[StyleSheet.absoluteFill, rowStyle]} testID={testID ? `${testID}-row` : undefined}>
@@ -371,7 +277,6 @@ const PagePager: React.FC<PagePagerProps> = ({
           </Animated.View>
         </View>
       </GestureDetector>
-    </SwipeBlockerContext.Provider>
   );
 };
 

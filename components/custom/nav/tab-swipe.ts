@@ -1,8 +1,6 @@
 // The page swipe's pure decisions: where a finished drag lands (a page, the
-// next or previous TAB, or back where it was), which panels stay mounted, and
-// whether a fresh touch belongs to the page swipe at all. The gesture wiring
-// is PagePager.tsx. Worklet-safe: the activation decision runs on the UI
-// thread.
+// next or previous TAB, or back where it was) and which panels stay mounted.
+// The gesture wiring is PagePager.tsx.
 
 /** A page change commits once the (damped) row has moved this much of the width. */
 export const PAGE_COMMIT_FRACTION = 0.3;
@@ -14,9 +12,8 @@ export const SWIPE_DAMPING = 0.6;
  *  after this much damped travel, and NEVER on a flick: a fast swipe through
  *  the pages must not throw the reader into another tab. */
 export const TAB_HANDOFF_FRACTION = 0.35;
-/** Horizontal travel (pt) at which a touch is decided for or against the page
- *  swipe. Small, so a fast fling is decided before it ends. */
-export const SWIPE_DECIDE_PX = 10;
+/** Sideways travel (pt) before the page swipe takes the touch. */
+export const SWIPE_ACTIVATE_PX = 25;
 /** Vertical travel (pt) that hands the touch to the page's list instead. */
 export const SWIPE_VERTICAL_FAIL_PX = 12;
 
@@ -73,35 +70,6 @@ export function swipeWindow(index: number, count: number, keep: readonly number[
     if (i >= 0 && i < count && !out.includes(i)) out.push(i);
   }
   return out;
-}
-
-export type SwipeDecision = 'wait' | 'fail' | 'activate';
-
-export interface DecisionInput {
-  readonly dx: number;
-  readonly dy: number;
-  /** The touch started inside a registered horizontal scroller. */
-  readonly inScroller: boolean;
-  /** That scroller sits at its start / end edge. */
-  readonly atStart: boolean;
-  readonly atEnd: boolean;
-  readonly rtl: boolean;
-}
-
-/**
- * Decide a fresh touch for the page swipe on its first movement, before a
- * fast fling has ended (a bouncing ScrollView never FAILS, so waiting for it
- * cannot work). Inside a horizontal scroller the swipe takes over only at the
- * scroller's edge in the drag direction, so one continuous swipe runs from
- * its last card into the next page.
- */
-export function swipeDecision({ dx, dy, inScroller, atStart, atEnd, rtl }: DecisionInput): SwipeDecision {
-  'worklet';
-  if (Math.abs(dy) > SWIPE_VERTICAL_FAIL_PX && Math.abs(dy) > Math.abs(dx)) return 'fail';
-  if (Math.abs(dx) < SWIPE_DECIDE_PX) return 'wait';
-  if (!inScroller) return 'activate';
-  const towardEnd = dx < 0 !== rtl;
-  return (towardEnd ? atEnd : atStart) ? 'activate' : 'fail';
 }
 
 /** The pager's fractional page index for a drag in progress (Mera button fade). */

@@ -15,8 +15,7 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 });
 
 const mockPan: Record<string, any> = {};
-const mockScroller: Record<string, any> = {};
-let mockPanBuilds = 0;
+
 jest.mock('react-native-gesture-handler', () => {
   const chainFor = (store: Record<string, any>) => {
     const chain: any = new Proxy(
@@ -31,13 +30,7 @@ jest.mock('react-native-gesture-handler', () => {
     return chain;
   };
   return {
-    Gesture: {
-      Pan: () => {
-        mockPanBuilds += 1;
-        return chainFor(mockPan);
-      },
-      Manual: () => chainFor(mockScroller),
-    },
+    Gesture: { Pan: () => chainFor(mockPan) },
     GestureDetector: ({ children }: any) => children,
   };
 });
@@ -70,7 +63,6 @@ jest.mock('@/components/ui/text', () => {
 jest.mock('@/lib/visibility-tick', () => ({ notifyScrollTick: jest.fn() }));
 
 import PagePager from '../PagePager';
-import { useSwipeTabsBlocker } from '../swipe-blocker';
 
 const KEYS = ['feed', 'interests', 'stories', 'extra'];
 
@@ -106,8 +98,6 @@ function setup(over: Partial<React.ComponentProps<typeof PagePager>> = {}) {
   return { r, props, onIndexChange, onTabStep, mounts };
 }
 
-const touches = (x: number, y = 300) => ({ allTouches: [{ absoluteX: x, absoluteY: y }] });
-const stateMgr = () => ({ activate: jest.fn(), fail: jest.fn() });
 
 beforeEach(() => {
   for (const k of Object.keys(mockPan)) delete mockPan[k];
@@ -129,94 +119,8 @@ describe('PagePager', () => {
     expect(mounts.feed).toBe(1);
   });
 
-  it('decides a touch on its first horizontal movement (manual activation)', () => {
-    setup();
-    expect(mockPan.manualActivation).toBe(true);
-    const s = stateMgr();
-    mockPan.onTouchesDown(touches(200));
-    mockPan.onTouchesMove(touches(195), s);
-    expect(s.activate).not.toHaveBeenCalled();
-    mockPan.onTouchesMove(touches(185), s);
-    expect(s.activate).toHaveBeenCalledTimes(1);
-  });
 
-  it('inside a registered scroller, fails mid-scroller and activates at its edge', () => {
-    let blocker: any = null;
-    const Probe = () => {
-      blocker = useSwipeTabsBlocker();
-      return null;
-    };
-    setup({ renderPanel: () => <Probe /> });
-    expect(blocker.gesture).toBeDefined();
-    act(() => blocker.setEdge({ start: false, end: false }));
-    mockScroller.onTouchesDown();
-    const mid = stateMgr();
-    mockPan.onTouchesDown(touches(200));
-    mockPan.onTouchesMove(touches(180), mid);
-    expect(mid.fail).toHaveBeenCalled();
 
-    act(() => blocker.setEdge({ start: false, end: true }));
-    const edge = stateMgr();
-    mockPan.onTouchesDown(touches(200));
-    mockPan.onTouchesMove(touches(180), edge);
-    expect(edge.activate).toHaveBeenCalled();
-    mockScroller.onFinalize();
-  });
-
-  // B4, captured on device: Stats with 2 cards, on card 2 (the last), a RIGHT
-  // fling (back toward card 1) changed the PAGE instead of the card. At the
-  // end only a drag toward the end (left in LTR) may hand off.
-  describe('edge release follows the drag\'s own direction (B4)', () => {
-    let blocker: any;
-    const Probe = () => {
-      blocker = useSwipeTabsBlocker();
-      return null;
-    };
-    const drag = (dx: number) => {
-      const s = stateMgr();
-      // Touch DOWN inside the scroller comes first; the decision follows on
-      // the first move, before the scroll view's own pan has begun.
-      mockScroller.onTouchesDown();
-      mockPan.onTouchesDown(touches(200));
-      mockPan.onTouchesMove(touches(200 + dx), s);
-      mockScroller.onTouchesUp({ numberOfTouches: 0 });
-      return s;
-    };
-
-    it('on the last card a right drag stays in the pager; a left drag hands off', () => {
-      setup({ renderPanel: () => <Probe /> });
-      act(() => blocker.setEdge({ start: false, end: true }));
-      const back = drag(20);
-      expect(back.fail).toHaveBeenCalled();
-      expect(back.activate).not.toHaveBeenCalled();
-      const on = drag(-20);
-      expect(on.activate).toHaveBeenCalled();
-    });
-
-    it('on the first card a left drag stays in the pager; a right drag hands off', () => {
-      setup({ renderPanel: () => <Probe /> });
-      act(() => blocker.setEdge({ start: true, end: false }));
-      expect(drag(-20).fail).toHaveBeenCalled();
-      expect(drag(20).activate).toHaveBeenCalled();
-    });
-
-    it('a one-card pager hands off both ways', () => {
-      setup({ renderPanel: () => <Probe /> });
-      act(() => blocker.setEdge({ start: true, end: true }));
-      expect(drag(20).activate).toHaveBeenCalled();
-      expect(drag(-20).activate).toHaveBeenCalled();
-    });
-
-    it('a touch outside the scroller is not taken for one inside it after a scroller touch ended', () => {
-      setup({ renderPanel: () => <Probe /> });
-      act(() => blocker.setEdge({ start: false, end: true }));
-      drag(-20);
-      const s = stateMgr();
-      mockPan.onTouchesDown(touches(200));
-      mockPan.onTouchesMove(touches(220), s);
-      expect(s.activate).toHaveBeenCalled();
-    });
-  });
 
   it('commits a page past the threshold', () => {
     const { onIndexChange } = setup();
@@ -292,55 +196,26 @@ describe('PagePager', () => {
     });
   });
 
-  // R1, captured: RNGH resolves the pan's relation to the scroller into the
-  // scroller's numeric tag ONCE, when the pan is attached. A scroller that
-  // attaches later (the Stats pager mounting with its page, or once its cards
-  // load) got a tag the pan never learned, so a swipe starting inside the
-  // pager could not move the page. Every new scroller tag rebuilds the pan.
-  describe('the pan is rebuilt when the scroller attaches (R1)', () => {
-    it('names the scroller gesture as simultaneous', () => {
-      setup();
-      expect(mockPan.simultaneousWithExternalGesture).toBeDefined();
-      expect(mockScroller.withRef).toBeDefined();
-    });
 
-    it('a new scroller tag builds a new pan; the same tag again does not', () => {
-      setup();
-      const before = mockPanBuilds;
-      act(() => {
-        mockScroller.withRef.current = { handlerTag: 41 };
-      });
-      expect(mockPanBuilds).toBe(before + 1);
-      act(() => {
-        mockScroller.withRef.current = { handlerTag: 41 };
-      });
-      expect(mockPanBuilds).toBe(before + 1);
-      // The pager remounts (another page and back): a fresh tag, a fresh pan.
-      act(() => {
-        mockScroller.withRef.current = { handlerTag: 57 };
-      });
-      expect(mockPanBuilds).toBe(before + 2);
-    });
+  it('is one plain pan: a clear sideways move takes it, a vertical one leaves it to the list', () => {
+    setup();
+    expect(mockPan.activeOffsetX).toEqual([-25, 25]);
+    expect(mockPan.failOffsetY).toEqual([-12, 12]);
+    expect(mockPan.manualActivation).toBeUndefined();
+    expect(mockPan.simultaneousWithExternalGesture).toBeUndefined();
+  });
 
-    it('the rebuilt pan still hands off from the first card (L3: layout reports start, not end)', () => {
-      let blocker: any;
-      const Probe = () => {
-        blocker = useSwipeTabsBlocker();
-        return null;
-      };
-      const { onIndexChange } = setup({ index: 1, count: 3, renderPanel: () => <Probe /> });
-      act(() => {
-        mockScroller.withRef.current = { handlerTag: 41 };
-      });
-      act(() => blocker.setEdge({ start: true, end: false }));
-      const s = stateMgr();
-      mockScroller.onTouchesDown();
-      mockPan.onTouchesDown(touches(200));
-      mockPan.onTouchesMove(touches(220), s);
-      expect(s.activate).toHaveBeenCalled();
-      act(() => mockPan.onEnd({ translationX: 90, velocityX: 900 }));
-      expect(onIndexChange).toHaveBeenCalledWith(0);
-    });
+  it('mirrors in RTL: a rightward drag past the last page is the next tab', () => {
+    const { I18nManager } = require('react-native');
+    const was = I18nManager.isRTL;
+    I18nManager.isRTL = true;
+    try {
+      const { onTabStep } = setup({ index: 2 });
+      act(() => mockPan.onEnd({ translationX: 260, velocityX: 0 }));
+      expect(onTabStep).toHaveBeenCalledWith(1);
+    } finally {
+      I18nManager.isRTL = was;
+    }
   });
 
   it('turns the swipe off while Arrange is open', () => {

@@ -3,7 +3,6 @@
 // that renders <TabPages> with its pages and a `renderPage`.
 
 import type React from 'react';
-import type { GestureType } from 'react-native-gesture-handler';
 import type { SharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 
 import type { PageId, TabId } from './page-registry';
@@ -86,20 +85,4 @@ export interface TabPagesProps {
   readonly trailing: TabTrailing;
   readonly arrange: ArrangeConfig;
   readonly testID?: string;
-}
-
-/** For a horizontal scroller inside a page (the Stats pager): wrap a PLAIN
- *  react-native ScrollView (NOT react-native-gesture-handler's, which already
- *  carries its own native handler: with it, the detector's gesture never
- *  began on device (spike 4), so the swipe never knew the touch was inside)
- *  in `<GestureDetector gesture={blocker.gesture}>` and report its
- *  edges with `setEdge` (on scroll and once on layout), so the page swipe
- *  stays out of the scroller except at its edge in the swipe direction (one
- *  continuous swipe from Stats into the next tab and back). */
-export interface SwipeBlocker {
-  /** Reports the scroller's touches at touch-down; never activates. */
-  readonly gesture: GestureType;
-  /** @deprecated Superseded by `gesture`; the page swipe no longer reads it. */
-  readonly ref: React.RefObject<any>;
-  readonly setEdge: (edge: { readonly start: boolean; readonly end: boolean }) => void;
 }

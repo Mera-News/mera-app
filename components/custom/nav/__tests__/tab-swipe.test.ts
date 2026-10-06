@@ -3,7 +3,6 @@ import {
   SWIPE_DAMPING,
   TAB_HANDOFF_FRACTION,
   fractionalIndex,
-  swipeDecision,
   swipeOutcome,
   survivingPage,
   swipeWindow,
@@ -81,38 +80,6 @@ describe('swipeWindow', () => {
 
   it('is empty for an out-of-range index', () => {
     expect(swipeWindow(5, 3)).toEqual([]);
-  });
-});
-
-describe('swipeDecision', () => {
-  const free = { dy: 0, inScroller: false, atStart: true, atEnd: true, rtl: false };
-
-  it('waits until the touch has moved, then activates outside a scroller', () => {
-    expect(swipeDecision({ ...free, dx: 5 })).toBe('wait');
-    expect(swipeDecision({ ...free, dx: -12 })).toBe('activate');
-  });
-
-  it('leaves a vertical move to the list', () => {
-    expect(swipeDecision({ ...free, dx: 4, dy: 20 })).toBe('fail');
-  });
-
-  it('inside a scroller activates only at its edge in the drag direction', () => {
-    const s = { ...free, inScroller: true };
-    expect(swipeDecision({ ...s, dx: -12, atStart: false, atEnd: false })).toBe('fail');
-    expect(swipeDecision({ ...s, dx: -12, atStart: false, atEnd: true })).toBe('activate');
-    expect(swipeDecision({ ...s, dx: 12, atStart: false, atEnd: true })).toBe('fail');
-    expect(swipeDecision({ ...s, dx: 12, atStart: true, atEnd: false })).toBe('activate');
-  });
-
-  it('mirrors the edges in RTL', () => {
-    const s = { ...free, inScroller: true, rtl: true };
-    expect(swipeDecision({ ...s, dx: 12, atStart: false, atEnd: true })).toBe('activate');
-  });
-
-  it('B4: at the end, a drag back toward the start belongs to the scroller, in LTR and RTL', () => {
-    const s = { ...free, inScroller: true, atStart: false, atEnd: true };
-    expect(swipeDecision({ ...s, dx: 20, rtl: false })).toBe('fail');
-    expect(swipeDecision({ ...s, dx: -20, rtl: true })).toBe('fail');
   });
 });
 
