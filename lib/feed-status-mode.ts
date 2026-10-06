@@ -20,14 +20,12 @@
 export type FeedStatusMode = 'processing' | 'error' | 'limited' | 'deferred' | 'idle';
 
 // `isStatusVisible(mode)` used to live here, answering "does this mode draw
-// anything?" — true for processing/error/limited, false for idle/deferred. It is
+// anything?" (true for processing/error/limited, false for idle/deferred). It is
 // GONE ON PURPOSE, not merely unused.
 //
-// The status mark is now on screen in every mode, distinguished by ink and
-// scale, so nothing decides visibility any more. Leaving the predicate exported
-// would leave the obvious wiring for the two bugs the always-on mark was
-// introduced to fix: a header that changed shape whenever a sync started or
-// ended, and a detail panel only reachable during the seconds a sync happened to
-// be in flight. Its other former caller was `useStatusDisclosure`'s `available`
-// argument, which would have slammed that panel shut the moment the pipeline
-// settled.
+// The status now rides on the Mera button (components/custom/mera-button), which
+// is on screen in every mode: it moves while Mera reads, and every mode is its
+// accessibility value (`statusKey` in mera-pages.ts, read by MeraButtonHost's
+// button). Nothing decides visibility from the mode, and a predicate exported
+// here would invite exactly that wiring back: a status surface that appears and
+// vanishes with each sync.
