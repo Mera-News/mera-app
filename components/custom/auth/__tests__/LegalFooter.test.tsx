@@ -7,6 +7,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({ __esModule: true, default: () => null }));
 jest.mock('react-native-css-interop/jsx-runtime', () => {
     const R = require('react/jsx-runtime');
     return { jsx: R.jsx, jsxs: R.jsxs, Fragment: R.Fragment };

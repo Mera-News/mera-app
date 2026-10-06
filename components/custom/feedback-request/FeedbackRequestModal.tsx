@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 // FeedbackRequestModal: one question from the Mera team, a text area and a
 // submit button, on a centred glass card (the FeedbackWidgetModal look).
 //
@@ -41,7 +42,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { GLASS_OVER_CONTENT_FILL, TranslucentPlate } from '@/components/custom/GlassSurface';
+import { TranslucentPlate } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Input, InputField } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
@@ -269,6 +270,8 @@ const FeedbackRequestCard: React.FC<FeedbackRequestModalProps> = ({ id, onClose 
                 importantForAccessibility="no"
             />
             <View testID="feedback-request-card" style={[styles.card, { maxHeight: maxCardHeight }]}>
+                {/* The modal material (components/ui/modal). */}
+                <AbstractGradientBackdrop seed="mera-modal" frame={0} />
                 <TranslucentPlate />
                 <View style={styles.header}>
                     <View style={styles.headerTitle}>
@@ -427,7 +430,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.1)',
-        backgroundColor: GLASS_OVER_CONTENT_FILL,
+        backgroundColor: 'rgb(18, 17, 19)',
     },
     header: {
         flexDirection: 'row',

@@ -1,3 +1,4 @@
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -226,6 +227,8 @@ const LanguageSelector: React.FC = () => {
             >
                 <GluestackUIProvider mode="dark">
                     <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
+                        {/* The modal material (components/ui/modal). */}
+                        <AbstractGradientBackdrop seed="mera-modal" frame={0} />
                         <HStack className="items-center justify-between px-5 pb-4">
                             <Text className="text-white text-xl font-semibold">
                                 {t('language.appLanguage')}

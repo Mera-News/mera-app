@@ -7,6 +7,7 @@ import { act, fireEvent, render } from '@testing-library/react-native';
 
 // jest-expo mis-transforms RN's ScrollView and ActivityIndicator native
 // components: proxy both to a View.
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({ __esModule: true, default: () => null }));
 jest.mock('react-native', () => {
   const actual = jest.requireActual('react-native');
   const ReactLib = require('react');

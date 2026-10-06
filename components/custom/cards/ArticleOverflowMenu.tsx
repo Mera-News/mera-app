@@ -1,4 +1,5 @@
-import { GLASS_OVER_CONTENT_FILL, TranslucentPlate } from '@/components/custom/GlassSurface';
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import { TranslucentPlate } from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -22,6 +23,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Every icon and label in the sheet, the title included (owner, ux2 B6:
  *  uniformity). Only a destructive row differs. */
+/** Opaque, so nothing behind the sheet reads through (gluestack dark background-0). */
+const SHEET_BASE = 'rgb(18, 17, 19)';
 const SHEET_WHITE = '#FFFFFF';
 const DESTRUCTIVE = '#F87171';
 /** One slide between levels, both ways. */
@@ -395,11 +398,13 @@ const ActionSheetBody: React.FC<ActionSheetProps> = ({
                 <Pressable onPress={() => {}} style={{ width: '100%' }} accessible={false}>
                     <Box
                         className="rounded-t-3xl overflow-hidden border-t border-white/10"
-                        style={{ backgroundColor: GLASS_OVER_CONTENT_FILL }}
+                        style={{ backgroundColor: SHEET_BASE }}
                     >
-                        {/* Plate first on an UNPADDED box: the plate absolute-fills its
-                            parent's CONTENT box, so padding there leaves an
-                            unplated frame. */}
+                        {/* The modal material (components/ui/modal): opaque base, the
+                            app's gradient pinned to one frame, then the plate. Plate
+                            on an UNPADDED box: it absolute-fills its parent's CONTENT
+                            box, so padding there leaves an unplated frame. */}
+                        <AbstractGradientBackdrop seed="mera-modal" frame={0} />
                         <TranslucentPlate />
                         <Box
                             className="px-2 pt-3"

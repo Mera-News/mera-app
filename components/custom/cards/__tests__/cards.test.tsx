@@ -5,6 +5,7 @@
 
 // RN's native Modal host component is mis-transformed by jest-expo. Proxy the
 // module and stub Modal to a passthrough (renders children unless visible=false).
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({ __esModule: true, default: () => null }));
 jest.mock('react-native', () => {
   const actual = jest.requireActual('react-native');
   const ReactLib = require('react');

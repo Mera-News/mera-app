@@ -10,6 +10,7 @@ let mockModalImpl: any = null;
 let mockModalMounted = false;
 let mockModalMounts = 0;
 let mockOS = 'ios';
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({ __esModule: true, default: () => null }));
 jest.mock('react-native', () => {
     const actual = jest.requireActual('react-native');
     const ReactLib = require('react');

@@ -15,6 +15,7 @@
  */
 
 const mockRequestRestart = jest.fn();
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/lib/app-restart', () => ({
     requestRestart: (reason: string) => mockRequestRestart(reason),
 }));

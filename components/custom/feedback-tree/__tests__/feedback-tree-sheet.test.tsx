@@ -5,6 +5,7 @@
 // the ••• menu's own.
 /* eslint-disable @typescript-eslint/no-require-imports */
 
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({ __esModule: true, default: () => null }));
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({
         t: (key: string, opts?: Record<string, unknown>) => {
