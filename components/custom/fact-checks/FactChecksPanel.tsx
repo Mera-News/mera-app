@@ -29,16 +29,15 @@ const REFRESH_TINT = '#EDA77E';
 const TERMINAL_STATUSES: ReadonlySet<string> = new Set(['complete', 'blocked']);
 
 interface FactChecksPanelProps {
-    /** True while this is the selected Dashboard chip. Drives the re-read on
-     *  every (re)selection — the chip is mounted once and then only hidden, so
-     *  without this the list would go stale after its first visit. */
+    /** True while this is the visible Library page. Drives the re-read on
+     *  every arrival: the page stays mounted as a warmed neighbour, so without
+     *  this the list would go stale after its first visit. */
     readonly active?: boolean;
-    /** The Dashboard's collapsing-header scroll handler. The list MUST be an
-     *  `Animated.FlatList` for this to reach the UI thread — a worklet attached
-     *  to a plain RN `FlatList` silently does nothing, which is what left other
-     *  sub-tab panels' headers pinned. */
+    /** The tab's collapsing-header scroll handler. The list MUST be an
+     *  `Animated.FlatList` for this to reach the UI thread: a worklet attached
+     *  to a plain RN `FlatList` silently does nothing. */
     readonly scrollHandler?: ReturnType<typeof useAnimatedScrollHandler>;
-    /** Measured height of the Dashboard's collapsing header, used as the list's
+    /** Measured height of the tab's collapsing header, used as the list's
      *  content `paddingTop` so rows scroll UNDER it rather than the host padding
      *  a wrapper (which leaves a dead gap once the header translates away). */
     readonly headerHeight?: number;
@@ -54,15 +53,14 @@ interface FactChecksPanelProps {
 
 /**
  * Every fact check this device has asked for, newest first, with a per-row
- * delete — rendered inline as the Dashboard's "Fact checks" chip.
+ * delete: the Library's Checks page.
  *
  * This is the ONLY surface for the feature. There is no standalone route and no
- * "view all" hop: selecting the chip shows the whole list right here, the same
- * way Saved and History do.
+ * "view all" hop: the page shows the whole list, the same way Saved and
+ * Visited do.
  *
  * Rows come from the on-device `fact_checks` table, which the article panel
- * (and, pivot P8d, this panel itself) writes to. `refresh` (not `load`) is
- * what runs on mount and on every chip selection.
+ * (and, pivot P8d, this panel itself) writes to.
  *
  * `reconcileStoredFactChecks()` runs FIRST, and is what makes `refresh()`
  * trustworthy for a row nobody is actively watching: `useFactCheck`'s poll
@@ -112,8 +110,8 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
         await refresh();
     }, [refresh]);
 
-    // Re-read whenever the chip becomes active: the panel stays mounted as a
-    // neighbour in the Dashboard swipe window (ux2 B3), so a mount-only effect
+    // Re-read whenever the page becomes active: it stays mounted as a
+    // neighbour in the tab's swipe window, so a mount-only effect
     // would show a frozen list on every later visit. Bounded: terminal rows are
     // skipped, so a settled table costs no requests. SILENT (`load`, not
     // `refresh`): arriving must not flash the pull-to-refresh spinner.
@@ -180,7 +178,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 renderItem={renderItem as any}
                 testID="fact-checks-list"
                 ListHeaderComponent={
-                    // No second large title: the Dashboard header and the
+                    // No second large title: the tab header and the
                     // selected pill already name this list (M3).
                     <VStack className="pb-2 mb-1" style={{ paddingTop: 8 }} space="sm">
                         {items.length > 0 ? (
@@ -198,9 +196,8 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                         ) : null}
                     </VStack>
                 }
-                // The manual path — a user who suspects the list is stale can
-                // always ask directly rather than waiting for the next chip
-                // selection. Same reconcile-then-refresh sequence as above, so
+                // The manual path: a reader who suspects the list is stale can
+                // always ask directly rather than waiting for the next arrival. Same reconcile-then-refresh sequence as above, so
                 // a pull here can ALSO advance a row the activation sweep
                 // hasn't gotten to yet (e.g. the panel has been sitting active
                 // since before a request was even lodged).
@@ -212,7 +209,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                         colors={[REFRESH_TINT]}
                         // Push the spinner below the absolute collapsing header
                         // so it isn't hidden behind it (Android). Same as every
-                        // other Dashboard panel.
+                        // other Library page.
                         progressViewOffset={headerHeight}
                     />
                 }
