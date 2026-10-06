@@ -120,9 +120,9 @@ export interface StatsCardProps {
   /**
    * Whether the reach card names the reader's top publications.
    *
-   * DEFAULT ON, and the control that turns it off is on the Stats page, under
-   * the share button. Safe to default on because the setting is per-share
-   * SESSION state (`useState` in `StatsPager`, no setting row, no store), so no
+   * DEFAULT ON, and the control that turns it off is on the Stats page, above
+   * the cards. Safe to default on because the setting is per-share SESSION
+   * state (`useState` in `StatsPage`, no setting row, no store), so no
    * reader has ever stored a deliberate "off" that this could overwrite. If it
    * is ever persisted, a stored `false` must win over this default: a default
    * is for people who have not chosen.

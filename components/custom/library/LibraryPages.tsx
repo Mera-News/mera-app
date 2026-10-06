@@ -5,7 +5,7 @@ import { pageMeta } from '@/components/custom/nav/page-registry';
 import TabPages from '@/components/custom/nav/TabPages';
 import type { ArrangeConfig, PagePill, PageRenderProps } from '@/components/custom/nav/types';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
-import StatsPager from '@/components/custom/share-stats/StatsPager';
+import StatsPage from '@/components/custom/share-stats/StatsPage';
 import { setPageOrder, usePageOrder } from '@/lib/navigation/page-order';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import React, { useCallback, useMemo } from 'react';
@@ -71,7 +71,7 @@ export function LibraryPages() {
                     );
                 case 'stats':
                     return (
-                        <StatsPager
+                        <StatsPage
                             active={active}
                             scrollHandler={header.scrollHandler}
                             headerHeight={header.headerHeight}

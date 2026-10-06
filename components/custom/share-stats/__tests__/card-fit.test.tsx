@@ -8,9 +8,10 @@
 // against the export's 0.76 — it read as a landscape card with its heatmap
 // sliced mid-row. Nothing had been resized; it had been cropped.
 //
-// A full-screen route removed the cause; the card is now embedded again, in
-// the Library's Stats page, which is why its budget comes from statsCardBox
-// and the page scrolls rather than squeezing the card. This keeps the shape.
+// A full-screen route removed the cause. The cards now stack in the Library's
+// Stats page, a vertical list, each fitted by statsCardBox (content width, at
+// most one screen of height with its Share pill); the page scrolls rather than
+// squeezing a card. This keeps the shape.
 
 // card-shell imports AbstractGradientBackdrop and MeraLogo, and through them
 // reanimated, whose native side does not exist under jest: the suite dies on

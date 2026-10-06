@@ -93,12 +93,12 @@ describe('no native import sits at module scope anywhere in the share path', () 
     ...sourcesIn('components/custom/library'),
   ];
 
-  it('derives a non-empty list that includes the capture module and the pager', () => {
+  it('derives a non-empty list that includes the capture module and the Stats page', () => {
     // The one failure a derived list can have is coming back empty.
     expect(FILES).toEqual(
       expect.arrayContaining([
         'components/custom/share-stats/capture-and-share.ts',
-        'components/custom/share-stats/StatsPager.tsx',
+        'components/custom/share-stats/StatsPage.tsx',
       ]),
     );
   });

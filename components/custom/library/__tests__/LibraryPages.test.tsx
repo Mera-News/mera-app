@@ -28,7 +28,7 @@ const capture = (name: string) =>
 jest.mock('@/components/custom/saved-suggestions/SavedSuggestionsScreen', () => ({ __esModule: true, default: capture('saved') }));
 jest.mock('@/components/custom/fact-checks/FactChecksPanel', () => ({ __esModule: true, default: capture('checks') }));
 jest.mock('@/components/custom/config-panel/VisitedPublicationsList', () => ({ __esModule: true, default: capture('visited') }));
-jest.mock('@/components/custom/share-stats/StatsPager', () => ({ __esModule: true, default: capture('stats') }));
+jest.mock('@/components/custom/share-stats/StatsPage', () => ({ __esModule: true, default: capture('stats') }));
 let mockTabProps: any = null;
 const mockHeader = { scrollHandler: jest.fn(), headerHeight: 106, hidden: { value: 0 }, reveal: jest.fn() };
 jest.mock('@/components/custom/nav/TabPages', () => ({

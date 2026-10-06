@@ -1,4 +1,4 @@
-// Vertical space the chrome around the pager takes, in points.
+// Vertical space the chrome around each Stats card takes, in points.
 //
 // Its own module, with NO imports, for a mechanical reason: these numbers are
 // read by both the share screen and the layout test, and importing them from
@@ -24,20 +24,17 @@ export const STATS_TOP_GAP = 14;
 /** Space either side of the card. */
 export const STATS_SIDE_GAP = 16;
 
-/** The page-dot row. */
-export const DOTS_ALLOWANCE = 28;
-
-/** The share pill plus the privacy line and naming toggle under it. */
-export const PILL_ALLOWANCE = 96;
+/** One card's Share pill under it (PILL_METRICS: 18 top margin + 44 tall). */
+export const CARD_SHARE_ALLOWANCE = 62;
 
 /**
- * The box the card is fitted into on the Stats page.
+ * The box each card is fitted into on the Stats page: the content width, and
+ * a height that lets one card plus its Share pill sit between the tab's header
+ * and the tab bar, so no card is ever taller than the screen.
  *
  * `bottomReserve` is the TAB BAR clearance, not the full list-end clearance:
  * the page scrolls, so the "How this page works" row and the Mera button's
- * clearance live below the fold, while the share pill (centred) never sits
- * under the Mera button (bottom right). Reserving the full ~172pt list end
- * here would shrink the card on the floor device below legible.
+ * clearance live below the last card.
  */
 export function statsCardBox(
   page: { readonly width: number; readonly height: number },
@@ -46,9 +43,6 @@ export function statsCardBox(
 ): { width: number; height: number } {
   return {
     width: Math.max(0, page.width - 2 * STATS_SIDE_GAP),
-    height: Math.max(
-      0,
-      page.height - headerHeight - STATS_TOP_GAP - DOTS_ALLOWANCE - PILL_ALLOWANCE - bottomReserve,
-    ),
+    height: Math.max(0, page.height - headerHeight - STATS_TOP_GAP - CARD_SHARE_ALLOWANCE - bottomReserve),
   };
 }
