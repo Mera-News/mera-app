@@ -59,6 +59,7 @@ const PAGES: [string, string, string][] = [
     ['saved-suggestions', 'library', 'saved'],
     ['visited-publications', 'library', 'visited'],
     ['share-stats', 'library', 'stats'],
+    ['country-articles', 'world', 'world'],
 ];
 
 describe.each(PAGES)('/logged-in/%s', (route, tab, page) => {

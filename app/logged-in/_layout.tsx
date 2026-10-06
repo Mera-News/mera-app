@@ -73,10 +73,8 @@ export default function LoggedInLayout() {
         />
         <Stack.Screen
           name="country-articles"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right'
-          }}
+          // Redirect stub (navx): nothing to slide in.
+          options={{ headerShown: false, animation: 'none' }}
         />
         <Stack.Screen
           name="publisher-articles"

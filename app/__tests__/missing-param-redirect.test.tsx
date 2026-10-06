@@ -48,7 +48,6 @@ jest.mock('@/components/custom/news-detail/ArticleSuggestionScreen', () => ({ __
 jest.mock('@/components/custom/tracked-stories/StoryTimelineScreen', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/config-panel/SourcesL2PublicationList', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/custom/publication-page/PublicationPage', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/config-panel/CountryArticleList', () => ({ __esModule: true, default: () => null }));
 
 const ROUTES: [string, () => React.ComponentType][] = [
     ['article-detail', () => require('../logged-in/article-detail').default],
@@ -58,7 +57,6 @@ const ROUTES: [string, () => React.ComponentType][] = [
     ['sources-publishers', () => require('../logged-in/sources-publishers').default],
     ['publisher-articles', () => require('../logged-in/publisher-articles').default],
     ['publication-history', () => require('../logged-in/publication-history').default],
-    ['country-articles', () => require('../logged-in/country-articles').default],
     ['publication', () => require('../logged-in/publication').default],
 ];
 
