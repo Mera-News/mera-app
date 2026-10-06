@@ -39,11 +39,29 @@ export interface QuickFactCheckEntry {
     articleRequested?: boolean;
 }
 
+/**
+ * The page the Mera button was tapped on, as a chat-pool key (World and every
+ * country share `world`; Saved, Visited and Stats share `library`). Drives the
+ * client-side intro and starters only: it never reaches the model.
+ */
+export type MeraPageKey =
+    | 'feed'
+    | 'interests'
+    | 'interest'
+    | 'stories'
+    | 'world'
+    | 'checks'
+    | 'library'
+    | 'profile'
+    | 'facts'
+    | 'sources';
+
 export type ChatContext =
-    // `origin: 'profile'` marks the chat opened from the Profile invite. Only
-    // that chat is an editing session whose close may owe a combination pass
-    // (ux2 F2); the floating bubble never sets it.
-    | { kind: 'persona'; origin?: 'profile' }
+    // `origin: 'profile'` marks a fact-editing chat (the Mera button on Profile,
+    // All facts, Sources, Interests and One interest). Only that chat is an
+    // editing session whose close may owe a combination pass (ux2 F2).
+    // `subject` is the fact statement on One interest, for its starters.
+    | { kind: 'persona'; origin?: 'profile'; page?: MeraPageKey; subject?: string }
     // At least one of articleId / suggestionId must be set; the agent resolves
     // the other (and the suggestion row) from whichever id is provided.
     | {
@@ -71,16 +89,23 @@ export type ChatContext =
     // Deliberately id-less: there is no article here, only what the user types —
     // the FollowStoryAgent scopes the story from free text and stages the same
     // proposeTrack scope pills the article surface stages.
-    | { kind: 'follow-story' }
+    // `page: 'stories'` when the Mera button opened it: the thread then shows
+    // the page starters instead of waiting for an auto-sent seed.
+    | { kind: 'follow-story'; page?: 'stories' }
     | { kind: 'generic'; route: string };
 
 interface FloatingChatState {
     // State
     isExpanded: boolean;
     context: ChatContext;
-    bubbleSnapSide: 'left' | 'right';
-    bubbleY: number; // top-referenced px
+    // Where ChatPopover morphs from: the Mera button publishes its centre.
     bubbleCenter: { x: number; y: number };
+    // When the popover last closed. A reopen within KEEP_THREAD_MS keeps the
+    // thread even from another page (navx amendment).
+    closedAt: number | null;
+    // Text a starter put in the composer. Level-triggered: ChatThread consumes
+    // it once the composer exists, so a fresh conversation cannot swallow it.
+    pendingDraft: string | null;
     isGenerating: boolean;
     suppressed: boolean;
     factMutationVersion: number;
@@ -169,7 +194,8 @@ interface FloatingChatState {
     conversationId: string | null;
 
     // Actions
-    expand: (context?: ChatContext) => void;
+    expand: (context?: ChatContext, opts?: { draft?: string }) => void;
+    consumePendingDraft: () => string | null;
     openArticleFeedback: (context: ChatContext, initialMessage: string) => void;
     openOptimisationPlan: () => void;
     consumePendingInitialMessage: () => string | null;
@@ -192,7 +218,6 @@ interface FloatingChatState {
     resolveConflict: (conflictKey: string, resolution: ConflictResolution) => void;
     collapse: () => void;
     toggle: () => void;
-    setBubblePosition: (side: 'left' | 'right', y: number) => void;
     setBubbleCenter: (c: { x: number; y: number }) => void;
     setGenerating: (v: boolean) => void;
     setSuppressed: (v: boolean) => void;
@@ -203,16 +228,16 @@ interface FloatingChatState {
 }
 
 const DEFAULT_CONTEXT: ChatContext = { kind: 'persona' };
-// Sane bottom-ish default (top-referenced px); refined at runtime once the
-// bubble measures the actual screen height via setBubblePosition.
-const DEFAULT_BUBBLE_Y = 560;
+
+/** A reopen this soon after a close keeps the thread across a page change. */
+export const KEEP_THREAD_MS = 10 * 60 * 1000;
 
 const initialState = {
     isExpanded: false,
     context: DEFAULT_CONTEXT,
-    bubbleSnapSide: 'right' as const,
-    bubbleY: DEFAULT_BUBBLE_Y,
     bubbleCenter: { x: 0, y: 0 },
+    closedAt: null as number | null,
+    pendingDraft: null as string | null,
     isGenerating: false,
     suppressed: false,
     factMutationVersion: 0,
@@ -232,9 +257,10 @@ const initialState = {
     conversationId: null as string | null,
 };
 
-/** True if two article-suggestion/persona contexts differ in kind or target id. */
+/** True if two contexts differ in kind, target id or (persona) page. */
 function contextDiffers(a: ChatContext, b: ChatContext): boolean {
     if (a.kind !== b.kind) return true;
+    if (a.kind === 'persona' && b.kind === 'persona') return a.page !== b.page;
     if (a.kind === 'article-suggestion' && b.kind === 'article-suggestion') {
         return (
             a.articleId !== b.articleId ||
@@ -249,7 +275,7 @@ function contextDiffers(a: ChatContext, b: ChatContext): boolean {
 export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     ...initialState,
 
-    expand: (context) => {
+    expand: (context, opts) => {
         // Mera News Free USED to no-op here, so a locked user's tap did
         // nothing at all. It now OPENS: the popup is how the free tier is
         // explained, in Mera's own voice, on the surface the user actually
@@ -264,11 +290,23 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             // can't be swallowed by mount order. Also drop any pending auto-send
             // (a prior thumbs-down message must not leak into the new thread)
             // and any staged proposal (must not leak across articles).
+            //
+            // A PAGE change between two persona chats keeps the thread when the
+            // chat closed less than KEEP_THREAD_MS ago or a proposal card is
+            // still waiting (navx amendment); the new page's starters show
+            // under it. A change of kind or target always starts fresh.
+            const keepsThread =
+                context !== undefined &&
+                context.kind === 'persona' &&
+                state.context.kind === 'persona' &&
+                (state.proposal !== null ||
+                    (state.closedAt !== null && Date.now() - state.closedAt < KEEP_THREAD_MS));
             const switching =
-                context !== undefined && contextDiffers(context, state.context);
+                context !== undefined && contextDiffers(context, state.context) && !keepsThread;
             return {
                 isExpanded: true,
                 context: context ?? state.context,
+                pendingDraft: opts?.draft ?? null,
                 ...(switching
                     ? {
                           conversationId: null,
@@ -316,6 +354,12 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             topicPlanTurnRequest: null,
             conversationId: null,
         }));
+    },
+
+    consumePendingDraft: () => {
+        const draft = get().pendingDraft;
+        if (draft !== null) set({ pendingDraft: null });
+        return draft;
     },
 
     consumePendingInitialMessage: () => {
@@ -394,11 +438,13 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             resolvedConflicts: { ...state.resolvedConflicts, [conflictKey]: resolution },
         })),
 
-    collapse: () => set({ isExpanded: false }),
+    collapse: () =>
+        set((state) => (state.isExpanded ? { isExpanded: false, closedAt: Date.now() } : {})),
 
-    toggle: () => set((state) => ({ isExpanded: !state.isExpanded })),
-
-    setBubblePosition: (side, y) => set({ bubbleSnapSide: side, bubbleY: y }),
+    toggle: () =>
+        set((state) =>
+            state.isExpanded ? { isExpanded: false, closedAt: Date.now() } : { isExpanded: true },
+        ),
 
     setBubbleCenter: (c) => set({ bubbleCenter: c }),
 
@@ -460,6 +506,8 @@ export const useFloatingChatToolCallResults = () =>
     useFloatingChatStore((state) => state.toolCallResults);
 export const useFloatingChatResolvedConflicts = () =>
     useFloatingChatStore((state) => state.resolvedConflicts);
+export const useFloatingChatPendingDraft = () =>
+    useFloatingChatStore((state) => state.pendingDraft);
 export const useFloatingChatQuickFactChecks = () =>
     useFloatingChatStore((state) => state.quickFactChecks);
 
@@ -498,6 +546,9 @@ useFloatingChatStore.subscribe((state, prev) => {
     // A failed settle leaves the open marker, which the next launch recovers.
     void draft.settleProfileChatClose().catch(report);
     if (state.context.kind === 'persona' && state.context.origin) {
-        useFloatingChatStore.setState({ context: { kind: 'persona' } });
+        // Keep the page: dropping it would read as a page change on reopen.
+        const context = { ...state.context };
+        delete context.origin;
+        useFloatingChatStore.setState({ context });
     }
 });

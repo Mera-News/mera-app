@@ -8,10 +8,9 @@ import { StyleSheet, View } from 'react-native';
 /**
  * Absolute-fill overlay hosting ONLY the chat popover.
  *
- * The chat-head BUBBLE is now rendered per-screen (ScreenChatBubble) as the
- * last child of each surface's root, so it unmounts with its screen during the
- * native navigation transition and can never visibly linger on the outgoing
- * screen.
+ * The Mera button is NOT here: it mounts once per tab, after that tab's
+ * `<Stack>` (components/custom/mera-button), so it gets the tab's own insets
+ * and root pushes such as article detail cover it natively.
  *
  * The POPOVER stays app-level here so it remains the topmost popup (above every
  * card screen) and keeps a single conversation alive across navigations — both

@@ -18,10 +18,9 @@ describe('useFloatingChatStore', () => {
         const state = useFloatingChatStore.getState();
         expect(state.isExpanded).toBe(false);
         expect(state.context).toEqual({ kind: 'persona' });
-        expect(state.bubbleSnapSide).toBe('right');
-        expect(typeof state.bubbleY).toBe('number');
-        expect(state.bubbleY).toBeGreaterThan(0);
         expect(state.bubbleCenter).toEqual({ x: 0, y: 0 });
+        expect(state.closedAt).toBeNull();
+        expect(state.pendingDraft).toBeNull();
         expect(state.isGenerating).toBe(false);
         expect(state.suppressed).toBe(false);
         expect(state.factMutationVersion).toBe(0);
@@ -72,13 +71,7 @@ describe('useFloatingChatStore', () => {
         expect(useFloatingChatStore.getState().isExpanded).toBe(false);
     });
 
-    // ── bubble position ───────────────────────────────────────────────────
-    it('setBubblePosition updates side and y', () => {
-        useFloatingChatStore.getState().setBubblePosition('left', 123);
-        expect(useFloatingChatStore.getState().bubbleSnapSide).toBe('left');
-        expect(useFloatingChatStore.getState().bubbleY).toBe(123);
-    });
-
+    // ── morph origin ──────────────────────────────────────────────────────
     it('setBubbleCenter updates the center coordinates', () => {
         useFloatingChatStore.getState().setBubbleCenter({ x: 10, y: 20 });
         expect(useFloatingChatStore.getState().bubbleCenter).toEqual({ x: 10, y: 20 });
@@ -183,7 +176,6 @@ describe('useFloatingChatStore', () => {
     // ── reset ─────────────────────────────────────────────────────────────
     it('reset restores all defaults', () => {
         useFloatingChatStore.getState().expand({ kind: 'generic', route: '/foo' });
-        useFloatingChatStore.getState().setBubblePosition('left', 999);
         useFloatingChatStore.getState().setBubbleCenter({ x: 5, y: 5 });
         useFloatingChatStore.getState().setGenerating(true);
         useFloatingChatStore.getState().setSuppressed(true);
@@ -194,8 +186,8 @@ describe('useFloatingChatStore', () => {
         const state = useFloatingChatStore.getState();
         expect(state.isExpanded).toBe(false);
         expect(state.context).toEqual({ kind: 'persona' });
-        expect(state.bubbleSnapSide).toBe('right');
         expect(state.bubbleCenter).toEqual({ x: 0, y: 0 });
+        expect(state.closedAt).toBeNull();
         expect(state.isGenerating).toBe(false);
         expect(state.suppressed).toBe(false);
         expect(state.factMutationVersion).toBe(0);

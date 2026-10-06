@@ -313,6 +313,7 @@ export interface PromptInputHandle {
   focus: () => void;
   blur: () => void;
   clear: () => void;
+  setText: (text: string) => void;
 }
 
 export interface PromptInputProps {
@@ -333,6 +334,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
     focus: () => inputRef.current?.focus(),
     blur: () => inputRef.current?.blur(),
     clear: () => setText(''),
+    setText: (next: string) => setText(next),
   }));
 
   const isSendDisabled = disabled || text.trim().length === 0;

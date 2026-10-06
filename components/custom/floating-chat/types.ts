@@ -336,6 +336,9 @@ export interface StarterChip {
   key: string;
   label: string;
   message: string;
+  /** A page starter (Mera button): the tap puts `message` in the composer and
+   *  never sends it. Absent = the tap sends `message` as a turn. */
+  draft?: boolean;
 }
 
 // ---------------------------------------------------------------------------

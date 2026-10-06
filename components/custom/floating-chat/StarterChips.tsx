@@ -1,5 +1,5 @@
 // StarterChips — a wrap of outlined tappable chips shown at the start of an
-// empty thread. Presentational: fires onChipPress with the chip's message.
+// empty thread. Presentational: fires onChipPress with the chip.
 
 import { Text } from '@/components/ui/text';
 import { hapticLight } from '@/lib/haptics';
@@ -11,7 +11,7 @@ const ACCENT = 'rgb(231, 138, 83)';
 
 export interface StarterChipsProps {
   chips: StarterChip[];
-  onChipPress: (message: string) => void;
+  onChipPress: (chip: StarterChip) => void;
 }
 
 const StarterChips: React.FC<StarterChipsProps> = ({ chips, onChipPress }) => {
@@ -25,7 +25,7 @@ const StarterChips: React.FC<StarterChipsProps> = ({ chips, onChipPress }) => {
           style={styles.chip}
           onPress={() => {
             hapticLight();
-            onChipPress(chip.message);
+            onChipPress(chip);
           }}
         >
           <Text size="sm" style={styles.chipText}>

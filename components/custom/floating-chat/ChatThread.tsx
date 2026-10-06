@@ -20,10 +20,14 @@ import {
 } from '@/components/ui/chat-ai';
 import { hapticLight } from '@/lib/haptics';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
+import {
+  useFloatingChatPendingDraft,
+  useFloatingChatStore,
+} from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { GlyphSafeButton } from './glyph-safe';
 import { DECORATIVE_ICON_A11Y } from '@/components/custom/decorative-icon';
-import React, { useCallback, useContext, useEffect, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
@@ -43,7 +47,7 @@ import TopicPlanCard from './TopicPlanCard';
 import TopicPlanSaveAllRow from './TopicPlanSaveAllRow';
 import ConflictResolutionCard from './ConflictResolutionCard';
 import StarterChips from './StarterChips';
-import type { ChatThreadItem, ChatThreadProps } from './types';
+import type { ChatThreadItem, ChatThreadProps, StarterChip } from './types';
 
 // Short, snappy spring for freshly-arrived message bubbles. Applied ONLY to
 // live-session items (keys prefixed `live-`); prepended history pages (`hist-`)
@@ -93,12 +97,37 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     }
   }, [phase]);
 
+  // A starter or openMeraChat put text in the composer. Consumed here, once the
+  // composer exists, so it lands in whichever conversation this mount shows.
+  const pendingDraft = useFloatingChatPendingDraft();
+  useEffect(() => {
+    if (pendingDraft === null) return;
+    const draft = useFloatingChatStore.getState().consumePendingDraft();
+    if (draft) promptRef.current?.setText(draft);
+  }, [pendingDraft]);
+
   // Starter chips show only when the thread has no real user/assistant messages
-  // (the intro pseudo-message, id 'intro', does not count).
+  // (the intro pseudo-message, id 'intro', does not count). PAGE starters
+  // (draft chips) also show under a thread kept from another page, until the
+  // first send of this open (navx amendment).
   const hasRealMessage = items.some(
     (item) => item.kind === 'message' && item.message.id !== 'intro',
   );
-  const showChips = !hasRealMessage && starterChips.length > 0;
+  const [sentThisOpen, setSentThisOpen] = useState(false);
+  const draftChips = starterChips.some((c) => c.draft);
+  const showChips =
+    starterChips.length > 0 && (draftChips ? !sentThisOpen : !hasRealMessage);
+  const handleChip = useCallback(
+    (chip: StarterChip) => {
+      if (!chip.draft) {
+        onChipPress(chip.message);
+        return;
+      }
+      promptRef.current?.setText(chip.message);
+      promptRef.current?.focus();
+    },
+    [onChipPress],
+  );
 
   // A TYPED REPLY WHILE A CARD WAITS leaves the card pending, and the card is
   // brought back into view so the reader sees it is still open (owner ruling
@@ -110,6 +139,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const send = useCallback(
     (text: string) => {
       revealPendingRef.current = displayItems.some(isPendingCard);
+      setSentThisOpen(true);
       onSend(text);
     },
     [displayItems, onSend],
@@ -402,7 +432,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                   </View>
                 )}
                 {showChips && (
-                  <StarterChips chips={starterChips} onChipPress={onChipPress} />
+                  <StarterChips chips={starterChips} onChipPress={handleChip} />
                 )}
               </View>
             ) : null
