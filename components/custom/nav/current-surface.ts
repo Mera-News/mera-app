@@ -103,6 +103,13 @@ export function reportHeaderBottom(owner: string, y: number): void {
   useCurrentSurfaceStore.setState({ headerBottom: { owner, y: next } });
 }
 
+/** A header drawn at the top of a view whose window y is `rootY`: its
+ *  bottom edge in window points. `headerHeight` includes the status bar
+ *  inset when the header pads for it (TabPages). */
+export function headerBottomInWindow(rootY: number, headerHeight: number): number {
+  return rootY + headerHeight;
+}
+
 /** Clear the header bottom, but only if `owner` still holds it. */
 export function clearHeaderBottom(owner: string): void {
   if (useCurrentSurfaceStore.getState().headerBottom?.owner === owner) {

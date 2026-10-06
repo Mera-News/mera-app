@@ -34,7 +34,13 @@ import Animated, { useReducedMotion, useSharedValue, withTiming } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ArrangeOverlay from './ArrangeOverlay';
-import { clearHeaderBottom, clearSurface, reportHeaderBottom, reportSurface } from './current-surface';
+import {
+  clearHeaderBottom,
+  clearSurface,
+  headerBottomInWindow,
+  reportHeaderBottom,
+  reportSurface,
+} from './current-surface';
 import {
   consumePendingEdge,
   consumePendingPage,
@@ -111,13 +117,25 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
   }, [focused, activeId]);
 
   // ── Header bottom, for the Mera button's top corners (outside this tree) ──
-  // The EXPANDED header's bottom, whatever the collapse state: the Mera button
-  // never moves during a scroll (owner). Reported on layout; cleared on blur,
-  // so a pushed screen's own value wins.
+  // The EXPANDED header's bottom edge in WINDOW coordinates, whatever the
+  // collapse state: the Mera button never moves during a scroll (owner). The
+  // header is absolute at this view's top and includes the status bar inset,
+  // so its bottom is this view's window y plus the header's measured height.
+  // The root is measured, never the header, which translates when collapsed.
+  const rootRef = useRef<View>(null);
+  const [rootY, setRootY] = useState<number | null>(null);
+  const measureRoot = useCallback(() => {
+    rootRef.current?.measureInWindow((_x, y) => {
+      if (Number.isFinite(y)) setRootY((prev) => (prev === y ? prev : y));
+    });
+  }, []);
   useEffect(() => {
-    if (!focused || headerHeight <= 0) return;
-    reportHeaderBottom(`tab:${tab}`, headerHeight);
-  }, [focused, headerHeight, tab]);
+    if (focused) measureRoot();
+  }, [focused, measureRoot]);
+  useEffect(() => {
+    if (!focused || headerHeight <= 0 || rootY === null) return;
+    reportHeaderBottom(`tab:${tab}`, headerBottomInWindow(rootY, headerHeight));
+  }, [focused, headerHeight, rootY, tab]);
   // Cleared only on blur or unmount, so a re-report never flickers through null.
   useEffect(() => {
     if (!focused) return undefined;
@@ -161,7 +179,7 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
   if (!activeId) return <View style={styles.fill} testID={testID} />;
 
   return (
-    <View style={styles.fill} testID={testID}>
+    <View ref={rootRef} onLayout={measureRoot} style={styles.fill} testID={testID}>
       {/* The page background: FIRST, so it paints behind everything. */}
       <AbstractGradientBackdrop />
 

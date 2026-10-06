@@ -165,6 +165,13 @@ describe('header bottom', () => {
     expect(require('../current-surface').useCurrentSurfaceStore.getState().headerBottom).toBeNull();
   });
 
+  it('places the header bottom in window coordinates (iPhone 17 Pro: 0 + 62 + 6 + 44 + 6 = 118)', () => {
+    const { headerBottomInWindow } = require('../current-surface');
+    expect(headerBottomInWindow(0, 118)).toBe(118);
+    // A tab whose content starts lower in the window adds its own offset.
+    expect(headerBottomInWindow(20, 118)).toBe(138);
+  });
+
   it('TabPages reports the EXPANDED header bottom, never a collapse-dependent one', () => {
     const fs = require('fs');
     const path = require('path');
@@ -172,7 +179,9 @@ describe('header bottom', () => {
       .readFileSync(path.resolve(__dirname, '../TabPages.tsx'), 'utf8')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\/\/.*$/gm, '');
-    expect(src).toMatch(/reportHeaderBottom\(`tab:\$\{tab\}`, headerHeight\)/);
+    expect(src).toMatch(/reportHeaderBottom\(`tab:\$\{tab\}`, headerBottomInWindow\(rootY, headerHeight\)\)/);
+    // The ROOT is measured in the window, never the header, which translates.
+    expect(src).toMatch(/rootRef\.current\?\.measureInWindow/);
     expect(src).not.toMatch(/hidden\.value[^\n]*reportHeaderBottom|collapsed/);
   });
 });
