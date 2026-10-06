@@ -483,7 +483,7 @@ describe('cold-start fact gate', () => {
         mockStartupTabSetting = 'around';
         render(<LoggedInIndex />);
         await waitFor(() =>
-            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/around'),
+            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/world'),
         );
     });
 

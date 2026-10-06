@@ -35,15 +35,13 @@ describe('readStartupTab', () => {
         jest.clearAllMocks();
     });
 
-    // Until the new tab folders exist (navx P3a) the router can only open the
-    // old routes, so every stored value resolves to one of those.
     it.each([
         ['feed', 'feed'],
-        ['world', 'around'],
-        ['library', 'for_you'],
+        ['world', 'world'],
+        ['library', 'library'],
         ['for_you', 'feed'],
-        ['around', 'around'],
-    ])('stored %s opens the %s route', async (stored, route) => {
+        ['around', 'world'],
+    ])('stored %s opens the %s tab', async (stored, route) => {
         mockGetSetting.mockResolvedValue(stored);
         await expect(readStartupTab()).resolves.toBe(route);
         expect(mockGetSetting).toHaveBeenCalledWith(STARTUP_TAB_SETTING_KEY);

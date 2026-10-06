@@ -30,10 +30,14 @@ export type StartupTab =
   /** @deprecated Old Explore route; `parseStartupTab` maps it to `world`. Removed in navx P11. */
   | 'around';
 
+/** The current values only: what `parseStartupTab` and `readStartupTab`
+ *  return, each a route folder under app_container. */
+export type LaunchTab = 'feed' | 'world' | 'library';
+
 export const STARTUP_TAB_DEFAULT = 'feed' as const;
 
 const VALID_STARTUP_TABS: readonly string[] = ['feed', 'world', 'library'];
-const LEGACY_STARTUP_TABS: Readonly<Record<string, StartupTab>> = {
+const LEGACY_STARTUP_TABS: Readonly<Record<string, LaunchTab>> = {
   for_you: 'feed',
   around: 'world',
 };
@@ -41,30 +45,20 @@ const LEGACY_STARTUP_TABS: Readonly<Record<string, StartupTab>> = {
 /** Narrows a raw settings-table string to a current tab, translating the two
  *  old route names and falling back to the default on anything else (unset,
  *  corrupt, or a value from a newer build). Never returns a deprecated value. */
-export function parseStartupTab(raw: string | null | undefined): StartupTab {
+export function parseStartupTab(raw: string | null | undefined): LaunchTab {
   const v = raw ?? '';
-  if (VALID_STARTUP_TABS.includes(v)) return v as StartupTab;
+  if (VALID_STARTUP_TABS.includes(v)) return v as LaunchTab;
   return LEGACY_STARTUP_TABS[v] ?? STARTUP_TAB_DEFAULT;
 }
-
-/** The route that exists for each tab until the new tab folders land (navx
- *  P3a). Typed routes reject `app_container/world` before then, so
- *  readStartupTab keeps returning a current route name; navx P2b narrows it. */
-type StartupRoute = 'feed' | 'for_you' | 'around';
-const ROUTE_BEFORE_NEW_TABS: Readonly<Record<string, StartupRoute>> = {
-  feed: 'feed',
-  world: 'around',
-  library: 'for_you',
-};
 
 /**
  * Which tab route should open on launch. FAILS to the default ('feed') on an
  * unreadable setting: there is no wrong side to fail toward here, so it
  * collapses to "behave as if the user never set a preference."
  */
-export async function readStartupTab(): Promise<StartupRoute> {
+export async function readStartupTab(): Promise<LaunchTab> {
   try {
-    return ROUTE_BEFORE_NEW_TABS[parseStartupTab(await getSetting(STARTUP_TAB_SETTING_KEY))];
+    return parseStartupTab(await getSetting(STARTUP_TAB_SETTING_KEY));
   } catch {
     return STARTUP_TAB_DEFAULT;
   }
