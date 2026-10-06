@@ -3,8 +3,10 @@ import { router } from 'expo-router';
 import { clearSurface, reportSurface, resetCurrentSurface, useCurrentSurface } from '../current-surface';
 import {
   PENDING_PAGE_MAX_AGE_MS,
+  consumePendingEdge,
   consumePendingPage,
   navigateToPage,
+  navigateToTabEdge,
   navigateToTabScreen,
   registerTabStack,
   resetPendingPage,
@@ -127,5 +129,16 @@ describe('target stack pop', () => {
     navigateToPage('stories');
     expect(b).toHaveBeenCalledTimes(1);
     expect(a).not.toHaveBeenCalled();
+  });
+});
+
+describe('cross-tab edge landing', () => {
+  it('opens the neighbouring tab and leaves a one-shot edge for it', () => {
+    reportSurface('stories');
+    navigateToTabEdge('world', 'first');
+    expect(r.navigate).toHaveBeenCalledWith('/logged-in/app_container/world');
+    expect(consumePendingEdge('library')).toBeNull();
+    expect(consumePendingEdge('world')).toBe('first');
+    expect(consumePendingEdge('world')).toBeNull();
   });
 });

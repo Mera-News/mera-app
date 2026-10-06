@@ -46,11 +46,26 @@ export interface PageRequest {
  */
 export const PENDING_PAGE_MAX_AGE_MS = 30_000;
 
-interface PendingPageState {
-  request: PageRequest | null;
+/** Which end of a tab's page order a cross-tab swipe lands on. */
+export type TabEdge = 'first' | 'last';
+
+interface PendingEdge {
+  readonly tab: TabId;
+  readonly edge: TabEdge;
+  readonly at: number;
 }
 
-export const usePendingPageStore = create<PendingPageState>()(() => ({ request: null }));
+interface PendingPageState {
+  request: PageRequest | null;
+  edge: PendingEdge | null;
+}
+
+export const usePendingPageStore = create<PendingPageState>()(() => ({ request: null, edge: null }));
+
+/** The pending cross-tab landing, for TabPages to react to while focused. */
+export function usePendingEdge(): PendingEdge | null {
+  return usePendingPageStore((s) => s.edge);
+}
 
 /** The pending request, for TabPages to react to while its tab is focused. */
 export function usePendingPageRequest(): PageRequest | null {
@@ -136,6 +151,24 @@ export function navigateToTabScreen(
   router.push({ pathname: `${tabRoute(tab)}/${screen}`, params: opts.params ?? {} } as Href);
 }
 
+/**
+ * The page swipe ran past a tab's last (or before its first) page: open the
+ * neighbouring tab on its first (or last) page. The tab's own order decides
+ * which page that is, so the landing is an EDGE, not a page id.
+ */
+export function navigateToTabEdge(tab: TabId, edge: TabEdge): void {
+  usePendingPageStore.setState({ edge: { tab, edge, at: Date.now() } });
+  openTab(tab, useCurrentSurface.getState(), false);
+}
+
+/** Take the pending edge landing if it is for `tab` and still fresh. One-shot. */
+export function consumePendingEdge(tab: TabId, now: number = Date.now()): TabEdge | null {
+  const { edge } = usePendingPageStore.getState();
+  if (!edge || edge.tab !== tab) return null;
+  usePendingPageStore.setState({ edge: null });
+  return now - edge.at > PENDING_PAGE_MAX_AGE_MS ? null : edge.edge;
+}
+
 /** Take the pending request if it is for `tab` and still fresh. One-shot. */
 export function consumePendingPage(tab: TabId, now: number = Date.now()): PageRequest | null {
   const { request } = usePendingPageStore.getState();
@@ -151,5 +184,5 @@ export function consumePendingPage(tab: TabId, now: number = Date.now()): PageRe
 
 /** Account switch (wired in clearAllStores by L4). */
 export function resetPendingPage(): void {
-  usePendingPageStore.setState({ request: null });
+  usePendingPageStore.setState({ request: null, edge: null });
 }
