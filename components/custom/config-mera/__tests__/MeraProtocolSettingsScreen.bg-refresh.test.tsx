@@ -101,7 +101,7 @@ let mockMode = 'CLOUD';
 const mockStore = {
     setProcessingMode: jest.fn(), setModelState: jest.fn(), setRelevanceV4: jest.fn(),
     setWebSearchInChat: jest.fn(), setDeepInterview: jest.fn(), setShowExtractedMetadata: jest.fn(),
-    setAutoCommunityFactCheck: jest.fn(), setSelectedModelId: jest.fn(), setDownloadProgress: jest.fn(),
+    setSelectedModelId: jest.fn(), setDownloadProgress: jest.fn(),
 };
 jest.mock('@/lib/stores/mera-protocol-store', () => ({
     useMeraProtocolStore: Object.assign(() => mockStore, {
@@ -116,7 +116,6 @@ jest.mock('@/lib/stores/mera-protocol-store', () => ({
     useWebSearchInChat: () => true,
     useDeepInterview: () => false,
     useShowExtractedMetadata: () => false,
-    useAutoCommunityFactCheck: () => false,
 }));
 
 let mockStoredToggle = true;

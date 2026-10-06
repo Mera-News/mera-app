@@ -5,12 +5,8 @@ jest.mock('expo-router', () => ({
     useFocusEffect: jest.fn(),
 }));
 const mockNavigateToPage = jest.fn();
-const mockNavigateToTabScreen = jest.fn();
-const mockSetPendingPage = jest.fn();
 jest.mock('@/components/custom/nav/navigate-to-page', () => ({
     navigateToPage: (...a: unknown[]) => mockNavigateToPage(...a),
-    navigateToTabScreen: (...a: unknown[]) => mockNavigateToTabScreen(...a),
-    setPendingPage: (...a: unknown[]) => mockSetPendingPage(...a),
 }));
 const mockBackListeners: (() => boolean)[] = [];
 jest.mock('react-native', () => ({
@@ -42,22 +38,14 @@ beforeEach(() => {
     mockPush.mockClear();
     mockNavigate.mockClear();
     mockNavigateToPage.mockClear();
-    mockNavigateToTabScreen.mockClear();
-    mockSetPendingPage.mockClear();
 });
 
 describe('routing', () => {
-    it('opens Profile for its cards and pushes Mera Protocol for automatic checks', () => {
+    it('opens the Profile page for its cards, pushing nothing', () => {
         navigateToSetting(FEED_SHAPERS);
         expect(mockNavigateToPage).toHaveBeenCalledWith('profile');
         expect(mockPush).not.toHaveBeenCalled();
-
-        mockNavigateToPage.mockClear();
-        navigateToSetting('meraProtocol.automaticFactCheck');
-        expect(mockSetPendingPage).toHaveBeenCalledWith('settings');
-        expect(mockNavigateToTabScreen).toHaveBeenCalledWith('you', 'mera-protocol');
-        expect(mockNavigateToPage).not.toHaveBeenCalled();
-        expect(routeForFocus('meraProtocol.automaticFactCheck').surface).toBe('settings:mera-protocol');
+        expect(routeForFocus('profile.places').surface).toBe('profile');
     });
 
     it('does nothing for an empty list', () => {
@@ -113,12 +101,12 @@ describe('one-shot pending target', () => {
 
 describe('jump-origin Back', () => {
     it('returns to the page the jump started from', () => {
-        reportSurface('checks');
-        navigateToSetting('meraProtocol.automaticFactCheck');
+        reportSurface('interests');
+        navigateToSetting(FEED_SHAPERS);
         expect(mockBackListeners).toHaveLength(1);
-        reportSurface('settings:mera-protocol');
+        reportSurface('profile');
         expect(mockBackListeners[0]()).toBe(true);
-        expect(mockNavigateToPage).toHaveBeenLastCalledWith('checks');
+        expect(mockNavigateToPage).toHaveBeenLastCalledWith('interests');
         expect(mockBackListeners).toHaveLength(0);
     });
 

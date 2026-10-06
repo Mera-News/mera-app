@@ -18,7 +18,7 @@ import { router } from 'expo-router';
 import { create } from 'zustand';
 
 import { useCurrentSurface, useCurrentSurfaceStore } from '@/components/custom/nav/current-surface';
-import { navigateToPage, navigateToTabScreen, setPendingPage } from '@/components/custom/nav/navigate-to-page';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import {
     isCountryPage,
     PAGE_META,
@@ -29,16 +29,18 @@ import {
 } from '@/components/custom/nav/page-registry';
 
 /**
- * Everything a jump can land on this wave. More (notification hours, Lite
- * mode, text size...) arrive with the settings-proposals plan; add each one
- * here, to `FOCUS_ROUTES` and as a `FocusTarget` on its screen, together.
+ * Everything a jump can land on: the four Profile cards that shape Feed and
+ * Interests. A settings target (notification hours, Lite mode...) arrives with
+ * the settings-proposals plan: add the id here, its route to `FOCUS_ROUTES`
+ * (a settings sub-screen needs `setPendingPage('settings')` then
+ * `navigateToTabScreen('you', screen)`, so Back lands on Settings) and a
+ * `FocusTarget` plus `FocusHostProvider` on the screen, together.
  */
 export type FocusId =
     | 'profile.facts'
     | 'profile.places'
     | 'profile.sources'
-    | 'profile.topicsDeclined'
-    | 'meraProtocol.automaticFactCheck';
+    | 'profile.topicsDeclined';
 
 /** What shapes the Feed and Interests pages: their quick-settings jump. */
 export const FEED_SHAPERS: readonly FocusId[] = [
@@ -48,12 +50,8 @@ export const FEED_SHAPERS: readonly FocusId[] = [
     'profile.topicsDeclined',
 ];
 
-type YouSubScreen = 'mera-protocol';
-
 export interface FocusRoute {
     readonly page: 'profile' | 'settings';
-    /** A settings sub-screen pushed in the You stack, if the target is in one. */
-    readonly screen?: YouSubScreen;
     /** The surface the reader is on once the jump lands. */
     readonly surface: SurfaceId;
 }
@@ -63,7 +61,6 @@ const FOCUS_ROUTES: Readonly<Record<FocusId, FocusRoute>> = {
     'profile.places': { page: 'profile', surface: 'profile' },
     'profile.sources': { page: 'profile', surface: 'profile' },
     'profile.topicsDeclined': { page: 'profile', surface: 'profile' },
-    'meraProtocol.automaticFactCheck': { page: 'settings', screen: 'mera-protocol', surface: 'settings:mera-protocol' },
 };
 
 export function routeForFocus(id: FocusId): FocusRoute {
@@ -114,14 +111,8 @@ export function navigateToSetting(target: FocusId | readonly FocusId[], now: num
     });
     if (origin) listenForBack();
     // L1 owns the order: a root push is dismissed first (never the origin
-    // tab's own stack), then the You stack pops to its root, then a push.
-    if (route.screen) {
-        // The page under the sub-screen, so Back from it lands on Settings.
-        setPendingPage(route.page);
-        navigateToTabScreen('you', route.screen);
-    } else {
-        navigateToPage(route.page);
-    }
+    // tab's own stack), then the You stack pops to its root.
+    navigateToPage(route.page);
 }
 
 /** The destination gained focus: start the expiry clock (idempotent). */
