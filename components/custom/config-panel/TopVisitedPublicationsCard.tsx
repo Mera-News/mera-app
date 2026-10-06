@@ -7,7 +7,7 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import type { VisitedPublication } from '@/lib/database/services/publication-visit-service';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DisplayPublicationName } from '@/lib/stores/publication-display-store';
@@ -20,7 +20,7 @@ const TopVisitedPublicationsCard: React.FC<Props> = ({ topPublications }) => {
     const { t } = useTranslation();
 
     const handlePress = useCallback(() => {
-        router.push({ pathname: '/logged-in/visited-publications' });
+        navigateToPage('visited');
     }, []);
 
     if (topPublications.length === 0) return null;

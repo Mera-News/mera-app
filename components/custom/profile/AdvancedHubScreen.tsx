@@ -12,6 +12,7 @@ import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services
 import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
+import { navigateToPage, navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -152,14 +153,14 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                             icon="psychology"
                             label={t('profileHub.facts', { defaultValue: 'Facts' })}
                             subtitle={factsSubtitle}
-                            onPress={() => router.push('/logged-in/facts')}
+                            onPress={() => navigateToTabScreen('you', 'facts')}
                         />
                         <HubRow
                             testID="advanced-row-locations"
                             icon="place"
                             label={t('profileHub.locations', { defaultValue: 'Locations' })}
                             subtitle={t('profileHub.locationsSubtitle', { defaultValue: 'Places that shape your feed' })}
-                            onPress={() => router.push('/logged-in/locations')}
+                            onPress={() => navigateToTabScreen('you', 'locations')}
                         />
 
                         <SectionLabel slug="feed" text={t('profileHub.groupFeed', { defaultValue: 'Your feed' })} />
@@ -168,14 +169,14 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                             icon="visibility-off"
                             label={t('profileHub.notInterested', { defaultValue: 'Not interested' })}
                             subtitle={notInterestedSubtitle}
-                            onPress={() => router.push('/logged-in/not-interested')}
+                            onPress={() => navigateToTabScreen('you', 'not-interested')}
                         />
                         <HubRow
                             testID="advanced-row-preferences"
                             icon="tune"
                             label={t('profileHub.preferences', { defaultValue: 'Source preferences' })}
                             subtitle={prefsSubtitle}
-                            onPress={() => router.push('/logged-in/publication-preferences')}
+                            onPress={() => navigateToTabScreen('you', 'sources')}
                         />
                         {/* Gated OFF until mera-server 40d7824 reaches prod — see
                             lib/config/feature-gates.ts. The ENTRY POINT is what's
@@ -204,14 +205,14 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                             icon="history"
                             label={t('publicationVisits.visitedListTitle')}
                             subtitle={t('profileHub.visitedSubtitle', { defaultValue: 'Publications you opened recently' })}
-                            onPress={() => router.push('/logged-in/visited-publications')}
+                            onPress={() => navigateToPage('visited')}
                         />
                         <HubRow
                             testID="advanced-row-saved"
                             icon="bookmark"
                             label={t('profileHub.saved', { defaultValue: 'Saved' })}
                             subtitle={t('profileHub.savedSubtitle', { defaultValue: 'Articles you saved for later' })}
-                            onPress={() => router.push('/logged-in/saved-suggestions')}
+                            onPress={() => navigateToPage('saved')}
                         />
 
                         <SectionLabel slug="internals" text={t('profileHub.groupInternals', { defaultValue: 'Under the hood' })} />
@@ -220,7 +221,7 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                             icon="history"
                             label={t('profileHub.activity', { defaultValue: 'Activity' })}
                             subtitle={t('profileHub.activitySubtitle', { defaultValue: 'Your persona change history' })}
-                            onPress={() => router.push('/logged-in/persona-audit')}
+                            onPress={() => navigateToTabScreen('you', 'activity')}
                         />
                         <HubRow
                             testID="advanced-row-health"
@@ -228,7 +229,7 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
                             label={t('profileHub.personaHealth', { defaultValue: 'Persona health' })}
                             subtitle={hygieneSubtitle}
                             badgeCount={hygieneCount}
-                            onPress={() => router.push('/logged-in/hygiene-review')}
+                            onPress={() => navigateToTabScreen('you', 'hygiene-review')}
                         />
                     </Box>
                 </ScrollView>
