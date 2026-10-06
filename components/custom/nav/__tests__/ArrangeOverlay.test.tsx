@@ -12,19 +12,29 @@ jest.mock('react-native-gesture-handler', () => {
   const chain: any = new Proxy({}, { get: () => () => chain });
   return { Gesture: { Pan: () => chain }, GestureDetector: ({ children }: any) => children };
 });
+const mockShared: { value: unknown }[] = [];
+let mockReduceMotion = false;
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
   const R = require('react');
   return {
     __esModule: true,
     default: { View: (p: any) => R.createElement(View, p) },
-    useSharedValue: (v: unknown) => R.useRef({ value: v }).current,
+    useSharedValue: (v: unknown) => {
+      const ref = R.useRef(null);
+      if (!ref.current) {
+        ref.current = { value: v };
+        mockShared.push(ref.current);
+      }
+      return ref.current;
+    },
     useAnimatedStyle: (fn: () => Record<string, unknown>) => fn(),
-    useReducedMotion: () => false,
+    useReducedMotion: () => mockReduceMotion,
     withRepeat: (v: unknown) => v,
     withTiming: (v: unknown) => v,
     cancelAnimation: () => undefined,
-    interpolateColor: () => 'rgba(231,138,83,0.5)',
+    // Deterministic: names the end it is nearer to, so a test can see it move.
+    interpolateColor: (v: number, _in: number[], out: string[]) => (v >= 0.5 ? out[1] : out[0]),
     runOnJS: (fn: any) => fn,
   };
 });
@@ -161,6 +171,46 @@ describe('ArrangeOverlay', () => {
     it('shows the place note instead of the drag hint', () => {
       open(worldPages, { world });
       expect(screen.getByTestId('arrange-hint').props.children).toBe('Germany comes from your places.');
+    });
+  });
+
+  describe('the glow', () => {
+    const LAYOUT_KEYS = ['borderWidth', 'padding', 'paddingLeft', 'paddingRight', 'height', 'width', 'margin'];
+    const flat = (style: any) => Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
+
+    it('is the pill\'s own rounded border changing colour only; the frame draws no outline', () => {
+      mockShared.length = 0;
+      open(feedPages);
+      const pill = () => flat(screen.getByTestId('arrange-chip-feed-pill').props.style);
+      const frame = flat(screen.getByTestId('arrange-chip-feed-frame').props.style);
+      expect(frame.borderWidth).toBeUndefined();
+      expect(frame.borderColor).toBeUndefined();
+      expect(pill().borderRadius).toBe(999);
+      const before = pill();
+      // The glow clock is the first shared value created at 1 (the full accent).
+      const glow = mockShared.find((v) => v.value === 0 || v.value === 1);
+      expect(glow).toBeDefined();
+      act(() => {
+        glow!.value = glow!.value === 1 ? 0 : 1;
+      });
+      screen.rerender(<ArrangeOverlay tabLabel="Feed" pages={feedPages} arrange={{ onSave: jest.fn() }} onClose={jest.fn()} />);
+      const after = pill();
+      for (const k of LAYOUT_KEYS) expect(after[k]).toBe(before[k]);
+      expect(after.borderWidth).toBeGreaterThan(0);
+      expect(after.borderColor).not.toBe(before.borderColor);
+    });
+
+    it('holds a static orange border under Reduce Motion', () => {
+      mockReduceMotion = true;
+      open(feedPages);
+      expect(flat(screen.getByTestId('arrange-chip-feed-pill').props.style).borderColor).toBe('#E78A53');
+      mockReduceMotion = false;
+    });
+
+    it('at rest scales nothing: the frame transform is identity', () => {
+      open(feedPages);
+      const t = flat(screen.getByTestId('arrange-chip-feed-frame').props.style).transform;
+      expect(t).toEqual([{ translateX: 0 }, { translateY: 0 }, { scale: 1 }]);
     });
   });
 

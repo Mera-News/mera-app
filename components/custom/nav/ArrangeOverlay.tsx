@@ -10,8 +10,9 @@
 // with "Move earlier" / "Move later" (and "Remove" in World) actions; the ×
 // is also its own button for touch. ✓ announces "Order saved".
 //
-// The glow holds still under Reduce Motion and Lite mode (a still frame, not
-// an absent outline). Not a Modal: the overlay belongs to this tab and must
+// The glow is the pill's own rounded border changing COLOUR only (constant
+// width, no extra outline view), so nothing reflows while it breathes; under
+// Reduce Motion and Lite mode it holds a static orange border. Not a Modal: the overlay belongs to this tab and must
 // leave the tab bar where it is.
 
 import { GlassPanel } from '@/components/custom/GlassSurface';
@@ -64,6 +65,10 @@ import { flagEmoji } from './PageStrip';
 import type { ArrangeConfig, PagePill } from './types';
 
 const GLOW_PERIOD_MS = 1600;
+/** Constant: the glow animates colour only, never width. */
+export const PILL_BORDER_WIDTH = 1.5;
+const GLASS_BORDER = 'rgba(255,255,255,0.14)';
+const LIFTED_BORDER = 'rgba(255,255,255,0.32)';
 const LIFT_DELAY_MS = 220;
 const MAX_RESULTS = 6;
 const GLYPH_HIDDEN = {
@@ -134,17 +139,22 @@ const ArrangeChip: React.FC<ChipProps> = ({
     [index, onDrop, lifted, tx, ty],
   );
 
-  const chipStyle = useAnimatedStyle(() => ({
+  // The lift (drag only) moves and scales the whole chip. At rest nothing
+  // that affects layout animates.
+  const frameStyle = useAnimatedStyle(() => ({
     zIndex: lifted.value ? 10 : 0,
     transform: [
       { translateX: tx.value },
       { translateY: ty.value - 3 * lifted.value },
       { scale: 1 + 0.06 * lifted.value },
     ],
+  }));
+  // The glow is the pill's OWN rounded border, colour only: a constant
+  // width, so the row never reflows while it breathes.
+  const ringStyle = useAnimatedStyle(() => ({
     borderColor: lifted.value
-      ? 'rgba(255,255,255,0.32)'
-      : interpolateColor(glow.value, [0, 1], ['rgba(231,138,83,0.35)', 'rgba(231,138,83,0.75)']),
-    borderWidth: lifted.value ? 1 : 1 + glow.value,
+      ? LIFTED_BORDER
+      : interpolateColor(glow.value, [0, 1], [GLASS_BORDER, NAV_ACCENT]),
   }));
 
   const actions = [
@@ -160,7 +170,7 @@ const ArrangeChip: React.FC<ChipProps> = ({
 
   return (
     <Animated.View
-      style={chipStyle}
+      style={frameStyle}
       onLayout={(e) => onLayout(id, e.nativeEvent.layout)}
       testID={`arrange-chip-${id}-frame`}
     >
@@ -174,14 +184,14 @@ const ArrangeChip: React.FC<ChipProps> = ({
           testID={`arrange-chip-${id}`}
         >
           <GlassPanel radius={999}>
-            <View style={styles.chip}>
+            <Animated.View style={[styles.chip, ringStyle]} testID={`arrange-chip-${id}-pill`}>
               <MaterialIcons name="drag-indicator" size={16} color="rgba(255,255,255,0.6)" {...GLYPH_HIDDEN} />
               {flag ? <Text style={styles.flag}>{flag}</Text> : null}
               <Text size="sm" scaleTier="chrome" numberOfLines={1} className="text-white">
                 {label}
               </Text>
               {removable ? <View style={styles.xSpacer} /> : null}
-            </View>
+            </Animated.View>
           </GlassPanel>
         </View>
       </GestureDetector>
@@ -241,13 +251,13 @@ const ArrangeOverlay: React.FC<ArrangeOverlayProps> = ({ tabLabel, pages, arrang
     return () => sub.remove();
   }, [onClose]);
 
-  // One clock for every chip's glow; still (mid value) under Reduce Motion
-  // or Lite mode.
-  const glow = useSharedValue(0.5);
+  // One clock for every chip's glow; under Reduce Motion or Lite mode it
+  // holds still at the full accent (a static orange border).
+  const glow = useSharedValue(1);
   useEffect(() => {
     if (still) {
       cancelAnimation(glow);
-      glow.value = 0.5;
+      glow.value = 1;
       return;
     }
     glow.value = 0;
@@ -425,7 +435,16 @@ const styles = StyleSheet.create({
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chipFrame: { minHeight: 44, justifyContent: 'center', borderRadius: 999 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 38, paddingLeft: 8, paddingRight: 12 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 38,
+    paddingLeft: 8,
+    paddingRight: 12,
+    borderRadius: 999,
+    borderWidth: PILL_BORDER_WIDTH,
+  },
   flag: { fontSize: 13, lineHeight: 16 },
   xSpacer: { width: 18 },
   xFrame: { position: 'absolute', right: -8, top: 0, width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
