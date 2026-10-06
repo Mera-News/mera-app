@@ -6,12 +6,12 @@ import {
     PopoverBody,
     PopoverContent,
 } from '@/components/ui/popover';
+import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
 import { useDisplayPublication } from '@/lib/stores/publication-display-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useWindowDimensions } from 'react-native';
@@ -53,7 +53,8 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
 
     const openHistory = useCallback(() => {
         setTooltipOpen(false);
-        router.push({ pathname: '/logged-in/visited-publications' });
+        // The Library's Visited page, through the one way code opens a page.
+        navigateToPage('visited');
     }, []);
 
     if (!publicationName || !count) return null;

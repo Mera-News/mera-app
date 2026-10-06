@@ -38,7 +38,7 @@ jest.mock('@/lib/database/services/publication-visit-service', () => ({
     getVisitCountForPublication: jest.fn(async () => 3),
 }));
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({ router: { push: (...a: any[]) => mockPush(...a) } }));
+jest.mock('@/components/custom/nav/navigate-to-page', () => ({ navigateToPage: (...a: any[]) => mockPush(...a) }));
 
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
@@ -64,7 +64,7 @@ it('the history link is ONE accessible element, a link, that opens the history',
     const link = r.getByRole('link');
     expect(link.props.accessibilityLabel).toContain('publicationVisits.tooltipLink');
     fireEvent.press(link);
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/logged-in/visited-publications' });
+    expect(mockPush).toHaveBeenCalledWith('visited');
 });
 
 it('the VoiceOver escape gesture closes the bubble', async () => {
