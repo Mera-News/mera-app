@@ -172,8 +172,23 @@ describe('PersonaUpdateAgent', () => {
         includeToolFormat: false,
         languageName: 'English',
         mode: 'CLOUD', // ProcessingMode.Cloud → 'CLOUD'
+        deepMode: true, // "Deeper questions" is always on (navx)
       });
       expect(result).toBe('static-prompt');
+    });
+
+    it.each([
+      ['stored on', { deepInterview: true }],
+      ['stored off', { deepInterview: false }],
+      ['never stored', {}],
+    ])('always asks the deeper questions (%s)', async (_label, stored) => {
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'ON_DEVICE', ...stored });
+      const agent = makeAgent();
+      await agent.buildSystemPrompt(true);
+
+      expect(mockBuildPersonaUpdateStaticPrompt).toHaveBeenCalledWith(
+        expect.objectContaining({ deepMode: true }),
+      );
     });
 
     it('maps ON_DEVICE processingMode to LOCAL', async () => {

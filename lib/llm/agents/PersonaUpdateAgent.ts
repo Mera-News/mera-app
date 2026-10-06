@@ -68,7 +68,6 @@ export class PersonaUpdateAgent implements IAgent {
   /** Both toggles change the STATIC prompt, so both belong in its cache key —
    *  without them, flipping a toggle mid-session would keep serving the prompt
    *  built before the flip. */
-  private lastDeepMode: boolean | null = null;
   private lastWebSearch: boolean | null = null;
 
   /**
@@ -90,7 +89,6 @@ export class PersonaUpdateAgent implements IAgent {
     const protocol = useMeraProtocolStore.getState();
     const mode: PersonaMode =
       protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
-    const deepMode = protocol.deepInterview === true;
     // Prose about `webSearch` only makes sense where the tool is declared:
     // CLOUD, and only with the toggle on.
     const webSearch = mode === 'CLOUD' && protocol.webSearchInChat === true;
@@ -113,9 +111,9 @@ export class PersonaUpdateAgent implements IAgent {
           // ONBOARDING carries no filter tools at all, so leave the pre-P4a
           // call-args shape untouched there.
           ...(this.surface === 'CONFIG' ? { filterTools } : {}),
-          // Spread only when ON, so an untouched device's call args stay
-          // byte-identical to the pre-wave shape the seam tests assert.
-          ...(deepMode ? { deepMode: true } : {}),
+          // "Deeper questions" is always on (owner, navx): there is no
+          // switch, and whatever an older build stored is not read.
+          deepMode: true,
           ...(webSearch ? { webSearch: true } : {}),
         },
         buildPersonaUpdateStaticPrompt,
@@ -135,7 +133,6 @@ export class PersonaUpdateAgent implements IAgent {
       && this.lastLanguageName === languageName
       && this.lastMode === mode
       && this.lastFilterTools === this.turnPlan.filterTools
-      && this.lastDeepMode === deepMode
       && this.lastWebSearch === webSearch
     ) {
       return this.cachedSystemPrompt;
@@ -145,7 +142,6 @@ export class PersonaUpdateAgent implements IAgent {
     this.lastLanguageName = languageName;
     this.lastMode = mode;
     this.lastFilterTools = this.turnPlan.filterTools;
-    this.lastDeepMode = deepMode;
     this.lastWebSearch = webSearch;
     return this.cachedSystemPrompt;
   }
