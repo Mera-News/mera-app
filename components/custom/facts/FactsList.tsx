@@ -38,9 +38,7 @@ interface FactsListProps {
     /** Fired with `null` while the initial load is in flight, then with the
      *  current facts array on every load/reload — lets a host screen (e.g.
      *  FactsScreen) drive its own full-page loading/empty chrome without
-     *  duplicating the fact-loading logic. Purely optional — ProfileScreen
-     *  doesn't need it since it already gates visibility via its own
-     *  fact-count check. */
+     *  duplicating the fact-loading logic. Optional. */
     readonly onFactsChange?: (facts: Fact[] | null) => void;
     /** Edit mode: delete controls on, expansion off (F46). */
     readonly editing?: boolean;
@@ -49,9 +47,7 @@ interface FactsListProps {
 /**
  * The interactive facts list — one `FactAccordion` row per fact (delete,
  * N-articles pill, chevron expand → topics with per-topic delete/add/generate-
- * more). Extracted verbatim from `FactsScreen` (Wave r6b) so `ProfileScreen`
- * can render the same real facts list instead of the old persona-summary
- * strings. Fully self-contained — owns its own data loading, expansion,
+ * more). Extracted from `FactsScreen` (Wave r6b). Fully self-contained — owns its own data loading, expansion,
  * delete, and topic-management state/handlers; a host screen only needs to
  * mount it (optionally wiring `onFactsChange`/a ref for its own loading/empty
  * chrome and pull-to-refresh).
@@ -114,9 +110,8 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
         }
         openSwipeFactIdRef.current = factId;
     }, []);
-    // Close on scroll — ProfileScreen and FactsScreen both already call
-    // notifyScrollTick() from their own ScrollView, so this needs no prop
-    // and no change to either host screen.
+    // Close on scroll — FactsScreen already calls notifyScrollTick() from its
+    // own ScrollView, so this needs no prop and no change to the host screen.
     useEffect(() => subscribeScrollTick(closeOpenSwipe), [closeOpenSwipe]);
     // Edit mode already puts its own delete control at the same left edge
     // the swipe reveals — close whatever was open the moment it turns on,

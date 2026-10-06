@@ -33,7 +33,7 @@ interface AskMeraButtonProps {
  * ⚠️ The morph origin is also load-bearing. `bubbleCenter` defaults to
  * `{x:0, y:0}` and nothing else on this screen publishes it, so without the
  * `measureInWindow` below `ChatPopover` expands out of the top-left corner.
- * Precedent: `components/custom/profile/MeraChatInvite.tsx:38-49`.
+ * Precedent: `components/custom/mera-button/MeraButton.tsx` (its `measureInWindow`).
  *
  * ⚠️ NOT RENDERED WITHOUT A SESSION, and the check lives HERE rather than in the
  * host. The login-screen Modal passes `enableAskMera={false}`, but that prop

@@ -134,7 +134,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                     setBilling(later.billing);
                     useSubscriptionStore.getState().setServerBilling(later.billing);
                 }
-                // Same reasoning as ProfileScreen's late poll: gated on
+                // The late poll is gated on
                 // `confirmed`, never on `later.billing` — this branch commits
                 // unconfirmed snapshots on purpose.
                 if (later.confirmed) {
@@ -267,7 +267,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         }
     };
 
-    // ONE rule, shared with ProfileScreen — see plan-display.ts. The optimistic
+    // ONE rule, shared with the Settings plan card — see plan-display.ts. The optimistic
     // RevenueCat fallback is kept (a fresh purchase should show its plan name
     // immediately), but it is now MARKED pending rather than asserted as fact,
     // because the access gate has no such fallback and the two screens were

@@ -37,7 +37,7 @@ interface FactsScreenProps {
  * refresh-suggestions button) was left behind on the hub.
  *
  * Wave r6b: the row-rendering/delete/expansion/topic-management logic was
- * extracted into `FactsList` (also used standalone by `ProfileScreen`) — this
+ * extracted into `FactsList` — this
  * screen now owns only the header, initial-load/empty-state chrome, the
  * "Your facts" heading + privacy notice, and the pull-to-refresh wiring.
  */

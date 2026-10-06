@@ -3,7 +3,7 @@
 // a blurred or backgrounded screen.
 //
 // Extracted from two byte-identical 17-line `Animated.loop` blocks
-// (AdvancedHubScreen's refresh-suggestions glow and PersonaL1MeraProtocol's —
+// (the old Advanced hub's refresh-suggestions glow and PersonaL1MeraProtocol's —
 // both ring an affordance the user should notice) once a third call site
 // needed the exact same loop, the priority-filter chip pulse (r14). Three
 // copies was the named friction; see CLAUDE.md's Design Pattern Guidelines.

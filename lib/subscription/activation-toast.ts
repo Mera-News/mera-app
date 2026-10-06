@@ -1,8 +1,8 @@
 // The one place a completed subscription is announced to the user.
 //
 // Friction this removes (the repo rule: name it or don't add the pattern): the
-// purchase call sites — ProfileScreen, ManageSubscriptionScreen,
-// presentFreeTierPaywall and NotSubscribedScreen — share
+// purchase call sites — ManageSubscriptionScreen, presentFreeTierPaywall
+// and NotSubscribedScreen — share
 // one contract, `{ billing, confirmed }` from `refreshUserBillingAfterPurchase`,
 // and each already branches on `confirmed` the same way. The toast hangs off that
 // same branch everywhere, so it is one behaviour, not five copies.

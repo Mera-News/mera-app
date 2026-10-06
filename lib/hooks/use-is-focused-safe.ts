@@ -20,7 +20,7 @@
 //
 // Several looping animations need the same predicate — "run only while the
 // user can actually see me": components/ui/skeleton,
-// config-panel/PersonaL1MeraProtocol, profile/AdvancedHubScreen, and MeraLogo.
+// config-panel/PersonaL1MeraProtocol, you/FocusTarget, and MeraLogo.
 // (for-you/FeedStatusShimmer was the fifth until its indeterminate bar was
 // deleted; its replacement is an ActivityIndicator outside the glass, which
 // needs no gate.)

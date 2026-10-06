@@ -402,16 +402,15 @@ const AppPreferencesTab: React.FC = () => {
     };
 
     return (
-        // No `bg-black`: SettingsTabScreen mounts AbstractGradientBackdrop
+        // No `bg-black`: the You tab draws AbstractGradientBackdrop
         // behind this content — an opaque fill here would fully block it,
         // leaving the glass rows below with nothing to refract (a solid
         // background over glass cancels it).
         //
         // No `flex-1` here (or on the Box below): this screen is mounted
-        // inside SettingsTabScreen's ScrollView, which already stretches via
-        // `contentContainerStyle={{ flexGrow: 1 }}` and reserves
+        // inside SettingsPage's ScrollView (you/YouPages.tsx), which reserves
         // `useTabBarClearance() + 24` of bottom padding. A `flex-1`
-        // wrapper here fights that flexGrow chain and can consume the
+        // wrapper here can consume the
         // reserved padding, leaving the user/version/copyright footer behind
         // the floating tab bar — let content size to its natural height so
         // the ScrollView's own padding is what clears the tab bar.

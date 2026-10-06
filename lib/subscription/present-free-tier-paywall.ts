@@ -33,7 +33,8 @@ import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
  *               so the per-site diagnostics the four inlined copies had are not
  *               lost to the extraction.
  *
- * On PURCHASED/RESTORED this follows ProfileScreen's proven contract rather
+ * On PURCHASED/RESTORED this follows the late-poll contract (see
+ * ManageSubscriptionScreen's handleViewPlans) rather
  * than firing one `syncEntitlement`: at the instant `presentPaywall` resolves
  * the RevenueCat webhook has usually NOT reached our server, so a single read
  * would fetch back `subscriptionTier: 'none'` and re-pin the lock — green
