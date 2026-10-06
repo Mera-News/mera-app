@@ -3075,7 +3075,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "Nach links oben verschieben",
+    "moveTopRight": "Nach rechts oben verschieben",
+    "moveBottomLeft": "Nach links unten verschieben",
+    "moveBottomRight": "Nach rechts unten verschieben"
   },
   "meraIntro": {
     "feed": "Das ist dein Feed. Sag mir, zu welchem Thema du mehr Nachrichten willst, oder frag mich zu allem, was in den Nachrichten ist.",

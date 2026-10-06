@@ -3071,7 +3071,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "Chuyển đến góc trên bên trái",
+    "moveTopRight": "Chuyển đến góc trên bên phải",
+    "moveBottomLeft": "Chuyển đến góc dưới bên trái",
+    "moveBottomRight": "Chuyển đến góc dưới bên phải"
   },
   "meraIntro": {
     "feed": "Đây là Bảng tin của bạn. Hãy nói với tôi bạn muốn xem thêm tin về gì, hoặc hỏi tôi về bất cứ điều gì trong tin tức.",

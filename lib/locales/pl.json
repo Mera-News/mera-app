@@ -3115,7 +3115,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "Przesuń w lewy górny róg",
+    "moveTopRight": "Przesuń w prawy górny róg",
+    "moveBottomLeft": "Przesuń w lewy dolny róg",
+    "moveBottomRight": "Przesuń w prawy dolny róg"
   },
   "meraIntro": {
     "feed": "To Twój Feed. Powiedz mi, o czym chcesz więcej wiadomości, albo zapytaj mnie o cokolwiek z wiadomości.",

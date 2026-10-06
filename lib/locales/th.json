@@ -3070,7 +3070,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera {{hint}}"
+    "a11yLabel": "Mera {{hint}}",
+    "moveTopLeft": "ย้ายไปมุมซ้ายบน",
+    "moveTopRight": "ย้ายไปมุมขวาบน",
+    "moveBottomLeft": "ย้ายไปมุมซ้ายล่าง",
+    "moveBottomRight": "ย้ายไปมุมขวาล่าง"
   },
   "meraIntro": {
     "feed": "นี่คือฟีดของคุณ บอกฉันว่าคุณอยากได้ข่าวเรื่องอะไรเพิ่ม หรือถามเรื่องอะไรก็ได้ในข่าว",

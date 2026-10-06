@@ -3071,7 +3071,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera。{{hint}}"
+    "a11yLabel": "Mera。{{hint}}",
+    "moveTopLeft": "移至左上角",
+    "moveTopRight": "移至右上角",
+    "moveBottomLeft": "移至左下角",
+    "moveBottomRight": "移至右下角"
   },
   "meraIntro": {
     "feed": "这是你的动态。告诉我你想多看哪方面的新闻，或者问我任何新闻相关的问题。",

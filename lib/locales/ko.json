@@ -3070,7 +3070,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "왼쪽 위로 이동",
+    "moveTopRight": "오른쪽 위로 이동",
+    "moveBottomLeft": "왼쪽 아래로 이동",
+    "moveBottomRight": "오른쪽 아래로 이동"
   },
   "meraIntro": {
     "feed": "여기는 내 피드예요. 더 보고 싶은 뉴스를 알려 주세요. 뉴스에 대해 무엇이든 물어보세요.",

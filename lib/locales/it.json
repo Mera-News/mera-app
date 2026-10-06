@@ -3075,7 +3075,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "Sposta in alto a sinistra",
+    "moveTopRight": "Sposta in alto a destra",
+    "moveBottomLeft": "Sposta in basso a sinistra",
+    "moveBottomRight": "Sposta in basso a destra"
   },
   "meraIntro": {
     "feed": "Questo è il tuo Feed. Dimmi su cosa vuoi più notizie, oppure chiedimi qualsiasi cosa sulle notizie.",

@@ -3070,7 +3070,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "Pindahkan ke kiri atas",
+    "moveTopRight": "Pindahkan ke kanan atas",
+    "moveBottomLeft": "Pindahkan ke kiri bawah",
+    "moveBottomRight": "Pindahkan ke kanan bawah"
   },
   "meraIntro": {
     "feed": "Ini Feed Anda. Beri tahu saya berita apa yang ingin Anda lihat lebih banyak, atau tanyakan apa saja tentang berita.",

@@ -3165,7 +3165,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "نقل إلى أعلى اليسار",
+    "moveTopRight": "نقل إلى أعلى اليمين",
+    "moveBottomLeft": "نقل إلى أسفل اليسار",
+    "moveBottomRight": "نقل إلى أسفل اليمين"
   },
   "meraIntro": {
     "feed": "هذه خلاصتك. أخبرني بما تريد المزيد من الأخبار عنه، أو اسألني عن أي شيء في الأخبار.",

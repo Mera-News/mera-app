@@ -3082,7 +3082,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "Déplacer en haut à gauche",
+    "moveTopRight": "Déplacer en haut à droite",
+    "moveBottomLeft": "Déplacer en bas à gauche",
+    "moveBottomRight": "Déplacer en bas à droite"
   },
   "meraIntro": {
     "feed": "Voici votre Feed. Dites-moi sur quoi vous voulez plus d'actualités, ou posez-moi une question sur l'actualité.",

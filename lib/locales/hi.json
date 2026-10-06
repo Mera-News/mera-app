@@ -3077,7 +3077,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "ऊपर बाईं ओर ले जाएं",
+    "moveTopRight": "ऊपर दाईं ओर ले जाएं",
+    "moveBottomLeft": "नीचे बाईं ओर ले जाएं",
+    "moveBottomRight": "नीचे दाईं ओर ले जाएं"
   },
   "meraIntro": {
     "feed": "यह आपकी फ़ीड है। मुझे बताएं कि आप किस बारे में ज़्यादा खबरें चाहते हैं, या खबरों में किसी भी बारे में पूछें।",

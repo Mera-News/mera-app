@@ -3070,7 +3070,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera。{{hint}}"
+    "a11yLabel": "Mera。{{hint}}",
+    "moveTopLeft": "左上に移動",
+    "moveTopRight": "右上に移動",
+    "moveBottomLeft": "左下に移動",
+    "moveBottomRight": "右下に移動"
   },
   "meraIntro": {
     "feed": "ここはあなたのフィードです。もっと知りたいニュースを教えてください。ニュースについて何でも聞いてください。",

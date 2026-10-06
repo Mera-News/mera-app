@@ -3075,7 +3075,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "Naar linksboven verplaatsen",
+    "moveTopRight": "Naar rechtsboven verplaatsen",
+    "moveBottomLeft": "Naar linksonder verplaatsen",
+    "moveBottomRight": "Naar rechtsonder verplaatsen"
   },
   "meraIntro": {
     "feed": "Dit is je Feed. Vertel me waarover je meer nieuws wilt, of vraag me naar alles in het nieuws.",

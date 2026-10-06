@@ -3077,7 +3077,11 @@
     }
   },
   "meraButton": {
-    "a11yLabel": "Mera. {{hint}}"
+    "a11yLabel": "Mera. {{hint}}",
+    "moveTopLeft": "Sol üste taşı",
+    "moveTopRight": "Sağ üste taşı",
+    "moveBottomLeft": "Sol alta taşı",
+    "moveBottomRight": "Sağ alta taşı"
   },
   "meraIntro": {
     "feed": "Bu sizin Akışınız. Bana hangi konuda daha fazla haber istediğinizi söyleyin veya haberlerdeki herhangi bir şeyi sorun.",
