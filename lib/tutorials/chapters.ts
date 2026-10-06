@@ -18,9 +18,11 @@
 // ── Accuracy ────────────────────────────────────────────────────────────────
 // Every factual claim in the copy was verified against current source before it
 // was written. The load-bearing ones, with where they were checked:
-//   • Tabs are icon-only — teach glyphs and positions, never names. Route names
-//     are inverted vs the UI (`for_you` = Dashboard, `around` = Explore,
-//     `deck` = Feed).
+//   • Tabs are icon-only — teach glyphs and positions, never names. Four tabs
+//     since navx: Feed (Feed, Interests, Stories), World (World and one page
+//     per country), Library and You (Profile, Settings). The chapter id
+//     `explore` and its slide ids are kept: hero animation ids and stored
+//     progress derive from them; its copy teaches World.
 //   • The Feed has NO in-list dividers any more — nothing is ever removed, and a
 //     read card SINKS to the bottom of a single unbroken list instead of being
 //     cut off by a labelled boundary (`components/custom/feed/feed-entries.ts:1-34`).
@@ -29,9 +31,8 @@
 //     the three tiers (unseen → seen-not-opened → opened) still decide SORT
 //     ORDER, they just no longer mark a boundary on screen. The single
 //     "All caught up" card (`AllCaughtUpCard`, `feed.allCaughtUp`) survives as
-//     the end-of-list footer / empty state, and its CTA is always "Browse
-//     Explore" — it used to fork to "lower the feed priority" when a minimum
-//     importance band was hiding stories, and that control is gone.
+//     the end-of-list footer / empty state, with no button (navx); the empty
+//     states add "While Mera reads" shortcuts to the reader's other pages.
 //   • NOTHING filters stories by importance band any more. The High/Med/Low
 //     chip that sat in both headers is deleted, the per-screen defaults with
 //     it, and every scored story down to the LOW band renders on both tabs.
@@ -41,27 +42,22 @@
 //     the MEDIUM band is dropped at score-persist time
 //     (`lib/feed-ordering/importance-filter.ts`), and topic-matched stories
 //     are never dropped that way.
-//   • The Feed header is the title and a status glyph, and NOTHING else — no
-//     notification bell (it is Dashboard-only), no counts sentence, no
-//     progress bar, and its cards carry no timestamp and no NEW badge
-//     (`FeedScreen` passes `showRecency={false}`). The Dashboard keeps all
-//     of it. The status mark beside the title is the Mera logo and is ALWAYS on
-//     screen: it sweeps, grows to 1.3x and turns white while syncing, and rests
-//     small and off-white otherwise (red on an error, amber when rate-limited).
-//     Tapping it opens a panel that closes itself after 3s, and that tap works
-//     in every state, including idle. Chapter `feed` must not teach a bell, a
-//     counter or a bar on the Feed, and must not claim a story's age is visible
-//     there.
+//   • The Feed tab's header is the page strip (Feed, Interests, Stories), the
+//     pen, quick settings and the bell; no title, no counts, no progress bar,
+//     and Feed cards carry no timestamp and no NEW badge (`FeedScreen` passes
+//     `showRecency={false}`). There is no status panel anywhere: the Mera
+//     button moves while Mera reads and rests otherwise. Chapter `feed` must
+//     not teach a counter or a bar, and must not claim a story's age is
+//     visible on the Feed.
 //   • "Read" = opened, or ≥75% on screen for 1.5s
 //     (`components/custom/feed/use-visible-index.ts` DWELL_READ_SECONDS = 1.5).
-//   • Explore's trailing "+" chip opens `/logged-in/sources`, NOT Locations
-//     (`components/custom/explore/ExploreScreen.tsx:52-57`).
+//   • A country page is added with the pen in the World header (Arrange,
+//     `components/custom/nav/ArrangeOverlay.tsx`), and hidden with its x there.
 //   • Source badges come from `publication_type` and there are exactly two:
 //     `government` → "Government source", `regulator` → "Official agency"
 //     (`components/custom/config-panel/SourcesL2PublicationList.tsx:55-72`).
-//   • On a country, "+" and ↑/↓ are DIFFERENT things: "+" adds an Explore chip
-//     and is browse-only (`lib/explore/browse-countries`,
-//     `sources.addToExplore`); ↑/↓ change ranking (`SourcePrefControl`).
+//   • Sources (You › Sources) has no country rows: no country "+" and no
+//     country arrows, so no chapter may teach either.
 //   • Mute is a HARD exclusion (weight ≤ −0.9,
 //     `lib/mera-protocol/stage-scoring.ts:80`) and lives only on the
 //     source-preferences screen; ↓ is only a downrank
@@ -79,8 +75,8 @@
 //     slides were removed rather than reworded.
 //   • Chapter `teaching` must NOT teach the "Kind of story" / "Person or thing"
 //     leaves — article tagging shipped but those kinds match almost nothing.
-//   • Chapter `explore` must not borrow relevance phrasing: Explore is
-//     genuinely unscored (`ExploreScreen.tsx:47-50` — no suggestions, no
+//   • Chapter `explore` (World) must not borrow relevance phrasing: World is
+//     genuinely unscored (`explore/ScopeArticleList.tsx`: no suggestions, no
 //     scoring, no LLM, nothing persisted).
 //
 // ── `welcome` is special ────────────────────────────────────────────────────
@@ -414,23 +410,6 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
             { id: 'everything-else', icon: 'newspaper' },
           ],
         },
-      },
-      {
-        id: 'plus-is-not-a-rank',
-        visual: { placeholder: { kind: 'icon', name: 'add-circle-outline' } },
-        interaction: {
-          kind: 'choose',
-          options: [
-            { id: 'ranks-it-up' },
-            { id: 'adds-a-chip', correct: true },
-            { id: 'follows-it' },
-          ],
-          mustBeCorrect: true,
-        },
-      },
-      {
-        id: 'arrows-on-a-country',
-        visual: { placeholder: { kind: 'orbit', name: 'flag' } },
       },
       {
         id: 'arrows-on-a-publisher',
