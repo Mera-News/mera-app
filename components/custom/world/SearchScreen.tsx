@@ -1,5 +1,6 @@
 import ExploreSearchBar from '@/components/custom/explore/ExploreSearchBar';
 import ExploreSearchResults from '@/components/custom/explore/ExploreSearchResults';
+import { tabRoute } from '@/components/custom/nav/page-registry';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -37,7 +38,7 @@ const SearchScreen: React.FC = () => {
     const handleCancel = useCallback(() => {
         // A cold deep link has nothing under it: land on the Feed tab.
         if (router.canGoBack()) router.back();
-        else router.replace('/logged-in/app_container/feed');
+        else router.replace(tabRoute('feed'));
     }, []);
     const handlePressHit = useCallback(
         (hit: NewsSearchHit) => openArticle({ articleId: hit._id }),
