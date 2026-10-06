@@ -30,7 +30,7 @@ export interface RetrievalTopicInput {
 
 export interface RetrievalLocationInput {
   countryCode: string;
-  role: string; // 'home'|'travel'|'family'|'partner_family'|'interest'
+  role: string; // 'home'|'work'|'travel'|'family'|'partner_family'|'interest'
   weight: number;
   validUntilMs?: number | null;
 }
@@ -124,7 +124,7 @@ export const TOPIC_LIMIT_MAX = 40;
 
 const clamp = (x: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, x));
 
-const LOCATION_ROLES_ALWAYS = new Set(['home', 'family', 'partner_family']);
+const LOCATION_ROLES_ALWAYS = new Set(['home', 'work', 'family', 'partner_family']);
 
 /**
  * Build the privacy-lean retrieval profile sent to the server for feed sync.
@@ -145,7 +145,7 @@ const LOCATION_ROLES_ALWAYS = new Set(['home', 'family', 'partner_family']);
  * (loose wins), so a merged text carries the flag its members would have.
  *
  * Headline scopes: one COUNTRY scope per distinct qualifying country code,
- * derived from locations with role home/family/partner_family (always) or
+ * derived from locations with role home/work/family/partner_family (always) or
  * a non-expired role 'travel' (role 'interest' is excluded entirely). Capped
  * at 5 COUNTRY scopes, then a GLOBAL scope is always appended last.
  *

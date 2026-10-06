@@ -152,6 +152,22 @@ describe('parseGeoLlmResponse', () => {
     fact('f2', 'Sails out of Rotterdam'),
   ];
 
+  it('the prompt offers the work role', () => {
+    const { systemPrompt } = buildGeoLlmRequest([fact('f1', 'x')], new Set());
+    expect(systemPrompt).toContain('"work" (works there)');
+  });
+
+  it('decodes a work row with the work seed weight', () => {
+    const out = parseGeoLlmResponse(
+      '{"locations":[{"id":"f1","country":"IN","city":"Bangalore","role":"work"}]}',
+      unresolved,
+      ALLOWED,
+    );
+    expect(out).toEqual([
+      { countryCode: 'IN', city: 'Bangalore', region: null, role: 'work', weight: 0.8, sourceFactId: 'f1' },
+    ]);
+  });
+
   it('decodes valid rows and fills the role weight', () => {
     const out = parseGeoLlmResponse(
       'Sure!\n{"locations":[{"id":"f1","country":"in","city":"Bangalore","role":"home"}]}',
@@ -199,9 +215,9 @@ describe('parseGeoLlmResponse', () => {
       unresolved,
       ALLOWED,
     );
-    // "Works at a startup in Bangalore" → inferLocationRole → 'interest'.
-    expect(out[0].role).toBe('interest');
-    expect(out[0].weight).toBe(0.4);
+    // "Works at a startup in Bangalore" → inferLocationRole → 'work'.
+    expect(out[0].role).toBe('work');
+    expect(out[0].weight).toBe(0.8);
   });
 
   it('returns [] for prose, broken JSON or a missing array', () => {
@@ -245,6 +261,15 @@ describe('reconcileGeoPlan', () => {
     );
     expect(ops.every((o) => o.kind === 'add' || o.kind === 'setWeight')).toBe(true);
     expect(ops).toHaveLength(1);
+  });
+
+  // ROLE_PRIORITY: home 6, work 5, family 4, partner_family 3, travel 2, interest 1.
+  it('when two facts name one country, work beats family and loses to home', () => {
+    const work = candidate({ role: 'work', weight: 0.8, sourceFactId: 'w' });
+    const family = candidate({ role: 'family', weight: 0.9, sourceFactId: 'f' });
+    const home = candidate({ role: 'home', weight: 1.0, sourceFactId: 'h' });
+    expect(reconcileGeoPlan([], [family, work])).toEqual([{ kind: 'add', candidate: work }]);
+    expect(reconcileGeoPlan([], [work, home])).toEqual([{ kind: 'add', candidate: home }]);
   });
 
   it('emits ZERO ops against a provenance:user row', () => {

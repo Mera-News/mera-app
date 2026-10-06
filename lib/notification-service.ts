@@ -248,7 +248,7 @@ async function refreshForYouCacheFromDb(): Promise<void> {
  *  this device handled. See {@link handleInitialNotification}. */
 export const HANDLED_NOTIFICATION_ID_KEY = 'last_handled_notification_id';
 
-const DASHBOARD_ROUTE: NotificationHref = '/logged-in/app_container/for_you';
+const FEED_ROUTE: NotificationHref = '/logged-in/app_container/feed';
 
 function nonBlank(v: unknown): string | null {
     return typeof v === 'string' && v.trim() !== '' ? v.trim() : null;
@@ -267,14 +267,14 @@ function nonBlank(v: unknown): string | null {
  * keeps a fact-checked article openable is keyed by ARTICLE id, so a pruned
  * suggestion id would dead-end on "story unavailable".
  *
- * Everything else, including every other server payload, opens the Dashboard. In
+ * Everything else, including every other server payload, opens the Feed tab. In
  * particular the server `type === 'fact-check'` push must NEVER deep-link: it
  * was removed because delivering it required the server to store which user
  * asked about which article, and since fact-check rows dedupe by article
  * fingerprint that field also amounted to a list of the users who doubted the
  * same claim, a durable record of article-level behaviour our privacy policy
  * promises we do not keep. The linkage was dropped rather than the promise
- * amended, so the name `fact-check` stays a Dashboard route forever and the
+ * amended, so the name `fact-check` stays a Feed-tab route forever and the
  * on-device type is spelled differently on purpose.
  */
 export async function resolveNotificationRoute(
@@ -315,7 +315,7 @@ export async function resolveNotificationRoute(
             tags: { service: 'notification-service', method: 'resolveNotificationRoute' },
         });
     }
-    return DASHBOARD_ROUTE;
+    return FEED_ROUTE;
 }
 
 /** Past the startup gate, PIN unlocked: a tap may navigate in this JS context.
@@ -372,9 +372,10 @@ async function handleNotificationTap(
         // tap's own foreground reload usually wipes a moment later.
         const route = await takePendingNotificationRouteForNavigation(userId);
         if (!route) return;
-        // The Dashboard renders from the in-memory cache; refresh it from the DB
-        // first so it never paints against a half-cleared cache.
-        if (route === DASHBOARD_ROUTE) await refreshForYouCacheFromDb();
+        // The Feed tab can open on Interests (a reordered tab), which renders
+        // from the in-memory For You cache; refresh it from the DB first so it
+        // never paints against a half-cleared cache.
+        if (route === FEED_ROUTE) await refreshForYouCacheFromDb();
         router.push(route);
     } catch (error) {
         logger.captureException(error, {

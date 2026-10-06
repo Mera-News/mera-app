@@ -32,11 +32,12 @@
 // lib/app-restart.ts).
 
 import logger from '@/lib/logger';
+import { normalizeLegacyHref } from '@/lib/navigation/legacy-href';
 
 /** Every destination a notification tap may open. Route paths never change
  *  here: the harness drives the app by deep link. */
 export type NotificationHref =
-  | '/logged-in/app_container/for_you'
+  | '/logged-in/app_container/feed'
   | { pathname: '/logged-in/suggestion-detail'; params: { articleSuggestionId: string } }
   | { pathname: '/logged-in/article-detail'; params: { articleId: string } }
   | { pathname: '/logged-in/feedback-request'; params: { id: string } };
@@ -80,8 +81,13 @@ function settings(): typeof import('@/lib/database/services/setting-service') {
   return require('@/lib/database/services/setting-service');
 }
 
+/** The Dashboard route a stash written by a pre-navx bundle carries. Still
+ *  accepted for one release (the bundle that wrote it may be replaced by an
+ *  OTA reload between the tap and the consume) and read as the Feed route. */
+const LEGACY_DASHBOARD_HREF = '/logged-in/app_container/for_you';
+
 function isHref(v: unknown): v is NotificationHref {
-  if (v === '/logged-in/app_container/for_you') return true;
+  if (v === '/logged-in/app_container/feed') return true;
   if (!v || typeof v !== 'object') return false;
   const o = v as { pathname?: unknown; params?: Record<string, unknown> };
   if (o.pathname === '/logged-in/suggestion-detail') {
@@ -100,6 +106,7 @@ function parse(raw: string | null): PendingRoute | null {
   if (!raw) return null;
   try {
     const p = JSON.parse(raw);
+    if (p && p.href === LEGACY_DASHBOARD_HREF) p.href = normalizeLegacyHref(p.href)?.pathname;
     if (p && typeof p.userId === 'string' && typeof p.at === 'number' && isHref(p.href)) {
       const navigatedAt = typeof p.navigatedAt === 'number' ? p.navigatedAt : null;
       return { href: p.href, userId: p.userId, at: p.at, navigatedAt };

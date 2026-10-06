@@ -484,12 +484,12 @@ describe('handleInitialNotification', () => {
     expect(mockRouterPush).not.toHaveBeenCalled();
   });
 
-  it('navigates to for_you when a notification response exists', async () => {
+  it('navigates to the Feed tab when a notification response exists', async () => {
     mockGetLastNotificationResponseAsync.mockResolvedValueOnce(
       responseFor({ type: 'news-ready', userId: 'u1' }),
     );
     await handleInitialNotification();
-    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/for_you');
+    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/feed');
   });
 
   it('captures exception without throwing on error', async () => {
@@ -508,8 +508,8 @@ describe('handleInitialNotification', () => {
 // The only typed destination today is the ON-DEVICE `fact_check_done` type
 // (a different name on purpose). Every server payload, including the old
 // fact-check shape that may still exist in a queued push or a stale fixture,
-// still lands on the Dashboard.
-describe('server payloads (including the retired fact-check shape) go to the Dashboard', () => {
+// still lands on the Feed tab.
+describe('server payloads (including the retired fact-check shape) go to the Feed tab', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     resetRouting();
@@ -527,7 +527,7 @@ describe('server payloads (including the retired fact-check shape) go to the Das
 
     await handleInitialNotification();
 
-    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/for_you');
+    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/feed');
     expect(mockRouterPush).toHaveBeenCalledTimes(1);
   });
 
@@ -540,7 +540,7 @@ describe('server payloads (including the retired fact-check shape) go to the Das
 
     expect(mockRouterPush).not.toHaveBeenCalledWith('/logged-in/fact-checks');
     expect(mockRouterPush).not.toHaveBeenCalledWith(
-      '/logged-in/app_container/for_you?subTab=factChecks',
+      '/logged-in/app_container/feed?subTab=factChecks',
     );
   });
 });
@@ -575,9 +575,9 @@ describe('resolveNotificationRoute', () => {
     ).resolves.toEqual({ pathname: '/logged-in/article-detail', params: { articleId: 'a1' } });
   });
 
-  it('falls back to the Dashboard when a fact_check_done carries no usable id', async () => {
+  it('falls back to the Feed tab when a fact_check_done carries no usable id', async () => {
     await expect(resolveNotificationRoute({ type: 'fact_check_done', articleId: '  ' })).resolves.toBe(
-      '/logged-in/app_container/for_you',
+      '/logged-in/app_container/feed',
     );
   });
 
@@ -589,19 +589,19 @@ describe('resolveNotificationRoute', () => {
   });
 
   // The id reaches a route param and the stash; anything but an ObjectId is
-  // dropped to the Dashboard rather than opening a modal for nothing.
-  it('sends a feedback_request with a missing or malformed id to the Dashboard', async () => {
+  // dropped to the Feed tab rather than opening a modal for nothing.
+  it('sends a feedback_request with a missing or malformed id to the Feed tab', async () => {
     for (const feedbackRequestId of [undefined, '', 'abc', '0123456789abcdef0123456z', 42]) {
       await expect(
         resolveNotificationRoute({ type: 'feedback_request', feedbackRequestId }),
-      ).resolves.toBe('/logged-in/app_container/for_you');
+      ).resolves.toBe('/logged-in/app_container/feed');
     }
   });
 
-  it('sends unknown and model-download types to the Dashboard', async () => {
+  it('sends unknown and model-download types to the Feed tab', async () => {
     for (const type of ['model-download-complete', 'model-download-error', 'whatever']) {
       await expect(resolveNotificationRoute({ type })).resolves.toBe(
-        '/logged-in/app_container/for_you',
+        '/logged-in/app_container/feed',
       );
     }
   });
@@ -747,7 +747,7 @@ describe('handleInitialNotification dedupes on the persisted request identifier'
     mockSettingRows.set(HANDLED_NOTIFICATION_ID_KEY, 'n-old');
     mockGetLastNotificationResponseAsync.mockResolvedValueOnce(responseFor({ type: 'news-ready' }, 'n-new'));
     await handleInitialNotification();
-    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/for_you');
+    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/feed');
   });
 });
 
@@ -1060,7 +1060,7 @@ describe('refreshForYouCacheFromDb (via handleInitialNotification)', () => {
     await handleInitialNotification();
 
     // refreshForYouCacheFromDb's dynamic import throws → caught → handleNotificationNavigation proceeds
-    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/for_you');
+    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/feed');
     // import() error is captured by refreshForYouCacheFromDb's catch block
     expect(mockLoggerCaptureException).toHaveBeenCalled();
   });
@@ -1110,7 +1110,7 @@ describe('response listener callback (lines 244-245)', () => {
     await new Promise((r) => setImmediate(r));
     await Promise.resolve();
 
-    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/for_you');
+    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/feed');
   });
 
   it('handleNotificationNavigation catch block fires when router.push throws (line 225)', async () => {

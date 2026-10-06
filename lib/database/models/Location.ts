@@ -9,6 +9,7 @@ import { field, text, date } from '@nozbe/watermelondb/decorators';
  */
 export type LocationRole =
   | 'home'
+  | 'work'
   | 'travel'
   | 'family'
   | 'partner_family'

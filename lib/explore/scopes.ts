@@ -21,10 +21,8 @@
 // City/region derivation was removed in the app-rethink wave because geo-tags
 // are dormant in prod (all null), so those chips showed ~nothing. Each
 // location still contributes its country. The `'city'|'region'` scope-kind
-// members and their builder functions are kept — see the DEPRECATED markers
-// below — purely for type compatibility with any already-persisted
-// `explore_last_scope` id; ExploreScreen already falls back to the first scope
-// when a persisted id no longer resolves, so no data migration is needed here.
+// members survive only until navx P11 (an Explore test and geo-scope-filter.ts
+// still name them); nothing builds such a scope.
 //
 // Country-code formats (subtle — three different conventions collide here):
 //   • WatermelonDB `locations.countryCode` and `NewsArticle.geo_tags.countryCode`
@@ -72,7 +70,7 @@ export interface ExploreScope {
  * the model (see {@link ScopeLocationInput}) so it stays pure and testable.
  * Structurally identical to `LocationRole`, so model rows assign directly.
  */
-export type ScopeLocationRole = 'home' | 'travel' | 'family' | 'partner_family' | 'interest';
+export type ScopeLocationRole = 'home' | 'work' | 'travel' | 'family' | 'partner_family' | 'interest';
 
 /** Minimal shape the derivation needs (decoupled from the WatermelonDB model). */
 export interface ScopeLocationInput {
@@ -91,15 +89,6 @@ export function alpha2ToAlpha3(alpha2: string | null | undefined): string | null
     return countries.alpha2ToAlpha3(a2) ?? null;
 }
 
-/** Title-cases a place string for display (`new delhi` → `New Delhi`). */
-function titleCase(s: string): string {
-    return s
-        .trim()
-        .split(/\s+/)
-        .map((w) => (w ? w[0].toUpperCase() + w.slice(1) : w))
-        .join(' ');
-}
-
 function worldScope(): ExploreScope {
     return { id: 'world', kind: 'world', label: '', icon: 'public', countryCodeAlpha3: null };
 }
@@ -113,33 +102,6 @@ function countryScope(alpha2: string, alpha3: string): ExploreScope {
         flagEmoji: getFlagEmoji(alpha3),
         countryCodeAlpha3: alpha3,
         countryCodeAlpha2: alpha2,
-    };
-}
-
-// DEPRECATED(app-rethink wave): geo-tags dormant in prod; city/region chips removed from derivation.
-function cityScope(alpha2: string, alpha3: string, city: string, region?: string): ExploreScope {
-    return {
-        id: `city:${alpha3}:${city.toLowerCase()}`,
-        kind: 'city',
-        label: titleCase(city),
-        icon: 'location-city',
-        countryCodeAlpha3: alpha3,
-        countryCodeAlpha2: alpha2,
-        city,
-        region: region || undefined,
-    };
-}
-
-// DEPRECATED(app-rethink wave): geo-tags dormant in prod; city/region chips removed from derivation.
-function regionScope(alpha2: string, alpha3: string, region: string): ExploreScope {
-    return {
-        id: `region:${alpha3}:${region.toLowerCase()}`,
-        kind: 'region',
-        label: titleCase(region),
-        icon: 'map',
-        countryCodeAlpha3: alpha3,
-        countryCodeAlpha2: alpha2,
-        region,
     };
 }
 

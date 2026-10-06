@@ -69,6 +69,9 @@ export function hydrateAllStores(): Promise<void> {
     useTextScaleStore.getState().hydrate(),
     useTutorialsStore.getState().hydrate(),
     useStartupTabStore.getState().hydrate(),
+    // Not a Zustand hydrate method: the memoised page-order load, the same
+    // promise the startup gate awaits before routing. Never rejects.
+    require('../navigation/page-order').loadPageOrders(),
     // Not a Zustand store: a synchronous mirror of the backup preferences,
     // read by the settings section and by the background task's guards.
     require('../backup/backup-settings')

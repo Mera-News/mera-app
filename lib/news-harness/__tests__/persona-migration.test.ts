@@ -2,6 +2,7 @@
 
 import {
   MIGRATION_FACT_WEIGHT,
+  MIGRATION_ROLE_WEIGHTS,
   MIGRATION_TOPIC_SEED_WEIGHT,
   buildPersonaMigrationPlan,
   inferLocationRole,
@@ -92,6 +93,20 @@ describe('inferLocationRole', () => {
   it('detects travel', () => {
     expect(inferLocationRole('Planning a trip to Madeira, Portugal, Europe')).toBe('travel');
     expect(inferLocationRole('Visiting Tokyo, Japan, Asia next month')).toBe('travel');
+  });
+
+  it('detects work, after every other role', () => {
+    expect(inferLocationRole('Works in Rotterdam, Netherlands, Europe')).toBe('work');
+    expect(inferLocationRole('Job at a hospital in Lyon, France, Europe')).toBe('work');
+    expect(inferLocationRole('Lives in Utrecht and works in Rotterdam, Netherlands')).toBe('home');
+    expect(inferLocationRole('Works at a museum, visits Rome often')).toBe('travel');
+    expect(inferLocationRole('Network engineer in Oslo, Norway')).toBe('interest');
+  });
+
+  it('seeds work below home and above family', () => {
+    expect(MIGRATION_ROLE_WEIGHTS.work).toBe(0.8);
+    expect(MIGRATION_ROLE_WEIGHTS.home).toBeGreaterThan(MIGRATION_ROLE_WEIGHTS.work);
+    expect(MIGRATION_ROLE_WEIGHTS.work).toBeGreaterThan(MIGRATION_ROLE_WEIGHTS.family);
   });
 
   it('detects home', () => {

@@ -76,6 +76,9 @@ export const clearAllStores = async () => {
     const { clearAttestationCache } = require('../e2ee/e2ee-cache');
     const { resetPublisherSourceNames } = require('../database/services/publisher-source-names');
     const { clearLastKnownTier } = require('../subscription/last-known-tier');
+    const { resetPageOrders } = require('../navigation/page-order');
+    const { resetCurrentSurface } = require('../../components/custom/nav/current-surface');
+    const { resetPendingPage } = require('../../components/custom/nav/navigate-to-page');
 
     // Wipe all WatermelonDB data (drops and recreates all tables)
     await database.write(async () => {
@@ -101,6 +104,13 @@ export const clearAllStores = async () => {
     // go too or the next user on this phone inherits a finished tour.
     useTutorialsStore.getState().reset();
     useStartupTabStore.getState().reset();
+    // Page orders: the rows went with the database, so the memory copy and the
+    // memoised load go too, or the next account opens tabs in this one's order.
+    resetPageOrders();
+    // The nav shell's memory: which page is on screen, and a page jump still
+    // waiting for its tab. Neither may carry over to the next account.
+    resetCurrentSurface();
+    resetPendingPage();
     clearAttestationCache();
     // Its settings row went with the reset above; the memory must go too, or
     // the next record writes the previous account's publishers into the new

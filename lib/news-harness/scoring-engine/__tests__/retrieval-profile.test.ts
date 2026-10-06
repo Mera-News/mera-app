@@ -222,6 +222,16 @@ describe('buildRetrievalProfile — headline scopes from locations', () => {
     expect(codes).not.toContain('JP');
   });
 
+  // A work place always feeds retrieval, like home and family.
+  it('a work location always gets a COUNTRY scope', () => {
+    const { headlineScopes } = buildRetrievalProfile({
+      topics: [],
+      locations: [{ countryCode: 'nl', role: 'work', weight: 0.8 }],
+      nowMs,
+    });
+    expect(headlineScopes).toEqual([{ scope: 'COUNTRY', countryCode: 'NL' }, { scope: 'GLOBAL' }]);
+  });
+
   it('empty locations → exactly a single GLOBAL scope', () => {
     const { headlineScopes } = buildRetrievalProfile({ topics: [], locations: [], nowMs });
     expect(headlineScopes).toEqual([{ scope: 'GLOBAL' }]);

@@ -123,6 +123,10 @@ export const BACKUP_SETTING_KEYS: readonly string[] = [
   'explore_browse_countries',
   'explore_suppressed_scopes',
   'mera_selected_model_id',
+  'nav_order_feed',
+  'nav_order_world',
+  'nav_order_library',
+  'nav_order_you',
 ];
 
 /**
@@ -166,6 +170,9 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
     'Device schedule state. Restoring "daily to iCloud" onto a device with no key, or no iCloud, enables a schedule that can only fail.',
   backup_provider: 'Device schedule state, same reason.',
   backup_wifi_only: 'Device schedule state, same reason.',
+  nav_hint_cursor:
+    'Mera button hint rotation for THIS device. Local by design (invariant 9): it operates the rotation and is never carried anywhere.',
+  nav_world_intro_done: 'A one-time line on THIS device. A new device may show it once.',
   backup_last_run_at:
     'Records when THIS device last uploaded. Restored, it would make a new device believe it is already up to date and skip its first backup.',
   backup_last_failed_at: 'Records when THIS device last failed to upload; says nothing about another device.',

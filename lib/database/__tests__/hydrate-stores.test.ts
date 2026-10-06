@@ -166,6 +166,12 @@ jest.mock('../../publication-display-service', () => ({
   installPublicationDisplayNames: () => mockInstallPublicationDisplayNames(),
 }));
 
+// The memoised page-order load (the startup gate awaits the same promise).
+const mockLoadPageOrders = jest.fn(() => Promise.resolve());
+jest.mock('../../navigation/page-order', () => ({
+  loadPageOrders: () => mockLoadPageOrders(),
+}));
+
 import { hydrateAllStores } from '../hydrate-stores';
 import { pruneStaleVisits } from '../services/publication-visit-service';
 import logger from '@/lib/logger';
@@ -209,6 +215,20 @@ describe('hydrateAllStores', () => {
     expect(mockTextScaleHydrate).toHaveBeenCalledTimes(1);
     expect(mockTutorialsHydrate).toHaveBeenCalledTimes(1);
     expect(mockStartupTabHydrate).toHaveBeenCalledTimes(1);
+    expect(mockLoadPageOrders).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads page orders BEFORE database-store.ready flips', async () => {
+    let loaded = false;
+    mockLoadPageOrders.mockImplementationOnce(async () => {
+      await Promise.resolve();
+      loaded = true;
+    });
+    mockSetReady.mockImplementationOnce(() => {
+      expect(loaded).toBe(true);
+    });
+    await hydrateAllStores();
+    expect(mockSetReady).toHaveBeenCalledWith(true);
   });
 
   it('calls pruneStaleVisits after hydration', async () => {

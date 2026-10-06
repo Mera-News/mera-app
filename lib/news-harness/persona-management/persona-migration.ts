@@ -48,6 +48,7 @@ export interface MigrationTopicRow {
 
 export type MigrationLocationRole =
   | 'home'
+  | 'work'
   | 'travel'
   | 'family'
   | 'partner_family'
@@ -146,6 +147,7 @@ const COUNTRY_CODES: Record<string, string> = {
  *  later). Home anchors the persona; interest is weakest. */
 export const MIGRATION_ROLE_WEIGHTS: Record<MigrationLocationRole, number> = {
   home: 1.0,
+  work: 0.8,
   family: 0.7,
   partner_family: 0.6,
   travel: 0.6,
@@ -178,7 +180,9 @@ export function resolveCountryCode(segment: string): string | null {
 /**
  * Role inference from the fact statement. Order matters: partner-family
  * keywords ("girlfriend's parents") must win over plain family ("parents"),
- * and family ("parents live in") must win over home ("lives in").
+ * and family ("parents live in") must win over home ("lives in"). Work ("works
+ * in", "job at") is checked last, so a statement that also says where the
+ * person lives or travels keeps that stronger or more specific role.
  */
 export function inferLocationRole(statement: string): MigrationLocationRole {
   const s = statement.toLowerCase();
@@ -188,6 +192,7 @@ export function inferLocationRole(statement: string): MigrationLocationRole {
   if (/\blives?\s+(in|at|near)\b|\bliving\s+(in|at|near)\b|\bmoved\s+to\b|\bresides?\b|\bbased\s+in\b|\bhome\s+in\b/.test(s)) {
     return 'home';
   }
+  if (/\b(works?|working|worked|employed|job)\s+(in|at|for|near)\b/.test(s)) return 'work';
   return 'interest';
 }
 

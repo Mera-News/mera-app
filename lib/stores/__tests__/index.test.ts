@@ -203,6 +203,34 @@ describe('clearAllStores', () => {
         expect(mockResetPublisherSourceNames).toHaveBeenCalledTimes(1);
     });
 
+    // The page-order rows go with the database; the memory copy and the
+    // memoised load must go too, or the next account opens in this one's order.
+    it('forgets page orders and their memoised load', async () => {
+        const { usePageOrderStore, setPageOrder, loadPageOrders } = require('@/lib/navigation/page-order');
+        const { getSetting } = require('@/lib/database/services/setting-service');
+        await loadPageOrders();
+        setPageOrder('feed', ['stories', 'feed', 'interests']);
+        await storeIndex.clearAllStores();
+        expect(usePageOrderStore.getState()).toMatchObject({
+            stored: { feed: null, world: null, library: null, you: null },
+            hydrated: false,
+        });
+        (getSetting as jest.Mock).mockClear();
+        await loadPageOrders();
+        expect(getSetting).toHaveBeenCalledWith('nav_order_feed');
+    });
+
+    it('clears the nav shell surface and any pending page jump', async () => {
+        const { useCurrentSurfaceStore } = require('@/components/custom/nav/current-surface');
+        const { usePendingPageStore } = require('@/components/custom/nav/navigate-to-page');
+        const initialSurface = useCurrentSurfaceStore.getState();
+        useCurrentSurfaceStore.setState({ arrangeOpen: true });
+        usePendingPageStore.setState({ request: { page: 'stats', at: 1 } });
+        await storeIndex.clearAllStores();
+        expect(useCurrentSurfaceStore.getState()).toEqual(initialSurface);
+        expect(usePendingPageStore.getState().request).toBeNull();
+    });
+
     it('resets UI store logout modal after clearAllStores', async () => {
         storeIndex.useUIStore.getState().openModal('logout');
         await storeIndex.clearAllStores();

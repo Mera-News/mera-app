@@ -164,7 +164,8 @@ const MAX_NGRAM_WORDS = 4;
 
 /** Role → precedence when two facts name the same country differently. */
 const ROLE_PRIORITY: Record<GeoRole, number> = {
-  home: 5,
+  home: 6,
+  work: 5,
   family: 4,
   partner_family: 3,
   travel: 2,
@@ -325,8 +326,9 @@ const GEO_SYSTEM_PROMPT_LINES = [
   '    implies no specific country (e.g. "Enjoys hiking"). Skipping is correct.',
   '  • "country" MUST be an ISO 3166-1 alpha-2 code (two uppercase letters).',
   '  • "role" is how the place relates to the person: "home" (lives there),',
-  '    "family" (relatives there), "partner_family", "travel" (visits), or',
-  '    "interest" (follows it from afar). Use "interest" when unsure.',
+  '    "work" (works there), "family" (relatives there), "partner_family",',
+  '    "travel" (visits), or "interest" (follows it from afar). Use "interest"',
+  '    when unsure.',
   '  • "city" is a city named in the fact, otherwise null.',
   '  • Reuse the given ids EXACTLY. Never invent an id and never invent a fact.',
   '',
@@ -353,7 +355,7 @@ export function buildGeoLlmRequest(
 }
 
 const VALID_ROLES: ReadonlySet<string> = new Set<GeoRole>([
-  'home', 'travel', 'family', 'partner_family', 'interest',
+  'home', 'work', 'travel', 'family', 'partner_family', 'interest',
 ]);
 
 function asRecord(v: unknown): Record<string, unknown> | null {

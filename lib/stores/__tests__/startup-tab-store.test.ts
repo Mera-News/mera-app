@@ -42,18 +42,24 @@ describe('useStartupTabStore', () => {
 
     it('hydrate reads the setting and adopts a valid stored tab', async () => {
         mockGetSetting.mockImplementation((key: string) =>
-            Promise.resolve(key === 'startup_tab' ? 'around' : null),
+            Promise.resolve(key === 'startup_tab' ? 'library' : null),
         );
         await useStartupTabStore.getState().hydrate();
         const state = useStartupTabStore.getState();
         expect(mockGetSetting).toHaveBeenCalledWith('startup_tab');
-        expect(state.startupTab).toBe('around');
+        expect(state.startupTab).toBe('library');
         expect(state.hydrated).toBe(true);
+    });
+
+    it('hydrate translates an old stored route name', async () => {
+        mockGetSetting.mockImplementation((_key: string) => Promise.resolve('around'));
+        await useStartupTabStore.getState().hydrate();
+        expect(useStartupTabStore.getState().startupTab).toBe('world');
     });
 
     it('hydrate falls back to the default on null', async () => {
         mockGetSetting.mockImplementation((_key: string) => Promise.resolve(null));
-        useStartupTabStore.setState({ startupTab: 'around', hydrated: false });
+        useStartupTabStore.setState({ startupTab: 'world', hydrated: false });
         await useStartupTabStore.getState().hydrate();
         expect(useStartupTabStore.getState().startupTab).toBe('feed');
     });
@@ -78,18 +84,25 @@ describe('useStartupTabStore', () => {
     });
 
     it('setStartupTab updates state synchronously and persists', async () => {
-        useStartupTabStore.getState().setStartupTab('for_you');
-        expect(useStartupTabStore.getState().startupTab).toBe('for_you');
+        useStartupTabStore.getState().setStartupTab('library');
+        expect(useStartupTabStore.getState().startupTab).toBe('library');
         await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('startup_tab', 'for_you');
+        expect(mockSetSetting).toHaveBeenCalledWith('startup_tab', 'library');
+    });
+
+    it('setStartupTab stores a deprecated route name as its new tab', async () => {
+        useStartupTabStore.getState().setStartupTab('for_you');
+        expect(useStartupTabStore.getState().startupTab).toBe('feed');
+        await Promise.resolve();
+        expect(mockSetSetting).toHaveBeenCalledWith('startup_tab', 'feed');
     });
 
     it('setter captures a persist failure without reverting state', async () => {
         const err = new Error('persist fail');
         mockSetSetting.mockRejectedValueOnce(err);
-        useStartupTabStore.getState().setStartupTab('around');
+        useStartupTabStore.getState().setStartupTab('world');
         await new Promise((r) => setTimeout(r, 0));
-        expect(useStartupTabStore.getState().startupTab).toBe('around');
+        expect(useStartupTabStore.getState().startupTab).toBe('world');
         expect(mockCaptureException).toHaveBeenCalledWith(
             err,
             expect.objectContaining({ tags: { store: 'startup-tab-store' } }),
@@ -97,7 +110,7 @@ describe('useStartupTabStore', () => {
     });
 
     it('reset returns to the default, unhydrated — clearAllStores() relies on this', () => {
-        useStartupTabStore.setState({ startupTab: 'around', hydrated: true });
+        useStartupTabStore.setState({ startupTab: 'world', hydrated: true });
         useStartupTabStore.getState().reset();
         const state = useStartupTabStore.getState();
         expect(state.startupTab).toBe('feed');

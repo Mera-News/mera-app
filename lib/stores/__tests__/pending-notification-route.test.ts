@@ -125,6 +125,38 @@ describe('pending-notification-route', () => {
   });
 });
 
+describe('Feed route and the pre-navx Dashboard row', () => {
+  // isHref also gates parse(), so a route missing from it opens on a warm tap
+  // and is silently dropped after the reload.
+  it('the Feed route survives a reload', async () => {
+    await stashPendingNotificationRoute('/logged-in/app_container/feed', 'u1', 1000);
+    __resetPendingNotificationRouteForTests();
+    await expect(consumePendingNotificationRoute('u1', 2000)).resolves.toBe(
+      '/logged-in/app_container/feed',
+    );
+  });
+
+  // A tap stashed by the old bundle, consumed by the new one after the OTA
+  // reload: still opens, on the Feed tab.
+  it('reads a stashed Dashboard route as the Feed route', async () => {
+    mockRows.set(
+      PENDING_NOTIFICATION_ROUTE_KEY,
+      JSON.stringify({ href: '/logged-in/app_container/for_you', userId: 'u1', at: 1000, navigatedAt: null }),
+    );
+    await expect(consumePendingNotificationRoute('u1', 2000)).resolves.toBe(
+      '/logged-in/app_container/feed',
+    );
+  });
+
+  it('still drops any other unknown route', async () => {
+    mockRows.set(
+      PENDING_NOTIFICATION_ROUTE_KEY,
+      JSON.stringify({ href: '/logged-in/app_container/around', userId: 'u1', at: 1000, navigatedAt: null }),
+    );
+    await expect(consumePendingNotificationRoute('u1', 2000)).resolves.toBeNull();
+  });
+});
+
 describe('feedback-request route', () => {
   const ID = '0123456789abcdef01234567';
   const FEEDBACK: NotificationHref = { pathname: '/logged-in/feedback-request', params: { id: ID } };

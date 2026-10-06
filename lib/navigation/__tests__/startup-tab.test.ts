@@ -9,14 +9,23 @@ jest.mock('@/lib/database/services/setting-service', () => ({
 import { parseStartupTab, readStartupTab, STARTUP_TAB_SETTING_KEY } from '../startup-tab';
 
 describe('parseStartupTab', () => {
-    it.each(['feed', 'for_you', 'around'] as const)('accepts %s as-is', (tab) => {
+    it.each(['feed', 'world', 'library'] as const)('accepts %s as-is', (tab) => {
         expect(parseStartupTab(tab)).toBe(tab);
+    });
+
+    // Old builds stored the old route names. Translated on read, never rewritten.
+    it.each([
+        ['for_you', 'feed'],
+        ['around', 'world'],
+    ] as const)('maps the old route %s to %s', (stored, tab) => {
+        expect(parseStartupTab(stored)).toBe(tab);
     });
 
     it('falls back to feed on null, undefined, or garbage', () => {
         expect(parseStartupTab(null)).toBe('feed');
         expect(parseStartupTab(undefined)).toBe('feed');
         expect(parseStartupTab('dashboard')).toBe('feed'); // the user-facing label, not the route
+        expect(parseStartupTab('you')).toBe('feed'); // a tab that is not an open-on-launch option
         expect(parseStartupTab('')).toBe('feed');
     });
 });
@@ -26,9 +35,17 @@ describe('readStartupTab', () => {
         jest.clearAllMocks();
     });
 
-    it('reads the settings key and returns a valid stored tab', async () => {
-        mockGetSetting.mockResolvedValue('for_you');
-        await expect(readStartupTab()).resolves.toBe('for_you');
+    // Until the new tab folders exist (navx P3a) the router can only open the
+    // old routes, so every stored value resolves to one of those.
+    it.each([
+        ['feed', 'feed'],
+        ['world', 'around'],
+        ['library', 'for_you'],
+        ['for_you', 'feed'],
+        ['around', 'around'],
+    ])('stored %s opens the %s route', async (stored, route) => {
+        mockGetSetting.mockResolvedValue(stored);
+        await expect(readStartupTab()).resolves.toBe(route);
         expect(mockGetSetting).toHaveBeenCalledWith(STARTUP_TAB_SETTING_KEY);
     });
 

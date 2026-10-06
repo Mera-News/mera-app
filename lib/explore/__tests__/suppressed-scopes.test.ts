@@ -43,6 +43,15 @@ describe('getSuppressedScopeIds', () => {
     expect(await getSuppressedScopeIds()).toEqual(['country:IND', 'country:FRA']);
   });
 
+  // City and region pages are gone; their old entries drop out on read
+  // (including from a restored backup), with no migration.
+  it('drops old city and region entries', async () => {
+    store[KEY] = JSON.stringify(['city:IND:mumbai', 'country:IND', 'region:FRA:bretagne']);
+    expect(await getSuppressedScopeIds()).toEqual(['country:IND']);
+    expect(await addSuppressedScopeId('country:FRA')).toEqual(['country:IND', 'country:FRA']);
+    expect(JSON.parse(store[KEY])).toEqual(['country:IND', 'country:FRA']);
+  });
+
   it('never surfaces "world" even if it was somehow persisted', async () => {
     store[KEY] = JSON.stringify(['world', 'country:IND']);
     expect(await getSuppressedScopeIds()).toEqual(['country:IND']);

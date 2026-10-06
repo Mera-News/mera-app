@@ -56,8 +56,11 @@ export const useStartupTabStore = create<StartupTabState>()((set) => ({
     }
   },
 
+  // A deprecated route name (`for_you`, `around`) from a screen not yet
+  // migrated is stored as its new tab, so nothing new writes an old value.
   setStartupTab: (tab) => {
-    set({ startupTab: tab });
-    persist(tab);
+    const next = parseStartupTab(tab);
+    set({ startupTab: next });
+    persist(next);
   },
 }));
