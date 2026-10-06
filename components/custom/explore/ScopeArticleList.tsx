@@ -132,15 +132,15 @@ interface ScopeArticleListProps {
      * withholding the component.
      */
     readonly enabled?: boolean;
-    /** Measured height of ExploreScreen's pinned header overlay — the list
+    /** Measured height of the tab's pinned header (TabPages) — the list
      *  scrolls UNDER it, so its content starts below it. */
     readonly headerHeight?: number;
-    /** ExploreScreen's collapsible-header worklet scroll handler — composed
+    /** The tab's collapsible-header worklet scroll handler — composed
      *  here with this list's own scroll-tick handler via
      *  `useComposedEventHandler` (mirrors DashboardSectionsFeed). */
     readonly scrollHandler: ReturnType<typeof useAnimatedScrollHandler>;
-    /** False while this scope is a warmed or cached neighbour in the Explore
-     *  swipe window (ux2 B3): it still fetches its first page once, so arriving
+    /** False while this page is a warmed or cached neighbour in the World
+     *  pager window: it still fetches its first page once, so arriving
      *  shows it at once, but it paginates and takes the tab-press refresh only
      *  when active. Default true. */
     readonly active?: boolean;
@@ -161,18 +161,19 @@ interface ScopeArticleListProps {
 }
 
 /**
- * The Explore tab's article list for one scope. DIRECT server-paginated
+ * A World page's article list (World or one country). DIRECT server-paginated
  * `topHeadlinesForCountry` — no scoring, no suggestions, nothing persisted.
  * Every scope (World or country) fetches a single `topHeadlinesForCountry`
  * page per load, straight through — no client-side geo filtering (see
  * lib/explore/geo-scope-filter.ts, deprecated). Each row keeps its headline's
  * `stableClusterId`/`clusterSize` metadata so downstream feedback actions can
  * carry the story's cross-run identity (see `subjectExtras` in renderItem).
- * Pull-to-refresh — and the Explore tab-icon re-tap — refetch page 1 for the
- * active scope; see `onRefresh`.
+ * Pull-to-refresh — and the World tab-icon re-tap — refetch page 1 for the
+ * active page; see `onRefresh`.
  *
- * Keyed by `scope.id` in the parent's swipe window, so a different scope is a
- * fresh mount, and a scope kept in the window keeps its page.
+ * The pager keys each page by page id and WorldPages keys this list by its
+ * window, so a window change is a fresh mount and a page kept in the window
+ * keeps its page.
  *
  * ── WHY THE FlatList IS ALWAYS RENDERED ──
  * react-native-screens locates a tab's scroll view by walking `subviews[0]`
@@ -216,7 +217,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     // A load that FAILED, as opposed to one that returned nothing. Without it the
-    // empty state fell through to `explore.noArticles` ("no articles") whenever
+    // empty state fell through to "no articles" whenever
     // `isOnline` still read true, blaming the world for a request that never
     // landed. Cleared by any successful load or refresh.
     const [loadFailed, setLoadFailed] = useState(false);
@@ -498,7 +499,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         );
     }, [isLoading, enabled, loadHung, isOnline, isConnected, loadFailed, t, countryName, hours, onWindowChange]);
 
-    // Compose the collapsible-header handler (from ExploreScreen) with a
+    // Compose the collapsible-header handler (from TabPages) with a
     // scroll-tick notifier (drives deferred TranslatableDynamic translation as
     // items enter the viewport) and the tab-press-refresh offset — mirrors
     // DashboardSectionsFeed.tsx:172-186. UI thread only: no bridge crossing,
@@ -535,7 +536,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             contentInsetAdjustmentBehavior="never"
             contentContainerStyle={{
                 padding: 16,
-                // Clear the pinned header overlay (measured by ExploreScreen) —
+                // Clear the pinned header overlay (measured by TabPages) —
                 // the list scrolls underneath it.
                 paddingTop: headerHeight + 8,
                 // The tab bar once, then a tail (see useTabBarClearance).

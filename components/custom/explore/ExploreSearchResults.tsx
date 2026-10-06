@@ -26,10 +26,7 @@ interface ExploreSearchResultsProps {
 }
 
 /**
- * Explore's search results panel (Item 12a) — mounted by ExploreScreen only
- * while a search is active (query non-empty), overlaid on top of the normal
- * scope list rather than replacing it, so the scope chips/list underneath are
- * never disturbed and reappear exactly as they were once the query clears.
+ * The full-screen Search route's results (`components/custom/world/SearchScreen`).
  *
  * Rendered purely off `useNewsSearch`'s status:
  *   - 'idle'    → nothing typed yet, or below the server's 2-char floor:

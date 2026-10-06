@@ -1,23 +1,18 @@
 import { Box } from '@/components/ui/box';
 import { Input, InputField } from '@/components/ui/input';
-import { Pressable } from '@/components/ui/pressable';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { View } from 'react-native';
-import { useTranslation } from 'react-i18next';
 
-// Icons are drawn in plain hidden Views over the Input from its parent, never
-// inside it: in an InputSlot (a Pressable) a glyph surfaced as its own
-// StaticText, and even hidden inside the Input root it was still composed into
-// the containers' labels (both captured). The close tap target is a
-// childless 44pt button laid over the bar from OUTSIDE the Input, whose
-// overflow-hidden 35pt box would clip it; the bar's own box bleeds to hold it.
+// The search glyph is drawn in a plain hidden View over the Input from its
+// parent, never inside it: in an InputSlot (a Pressable) a glyph surfaced as
+// its own StaticText, and even hidden inside the Input root it was still
+// composed into the containers' labels (both captured).
 const GLYPH = 18;
-/** pl-3 / pr-3 at NativeWind's 14pt rem: the slots' old padding. */
+/** pl-3 at NativeWind's 14pt rem: the slot's old padding. */
 const SLOT_PAD = 10.5;
 /** The outline variant's 1pt border. */
 const INPUT_BORDER = 1;
-const CLOSE_TARGET = 44;
 const HIDDEN = {
     accessible: false,
     accessibilityElementsHidden: true,
@@ -25,137 +20,65 @@ const HIDDEN = {
 } as const;
 /** The md Input's h-10 at NativeWind's 14pt rem. */
 const INPUT_HEIGHT = 35;
-/** How far the bar's box bleeds past the Input so the 44pt target stays
- *  INSIDE its parent (a button overflowing its parent can miss taps on
- *  Android). Matching negative margins keep the layout footprint. */
-const BLEED_Y = (CLOSE_TARGET - INPUT_HEIGHT) / 2;
-/** Centres the target on the X glyph: its centre sits border + pad + half a
- *  glyph in from the Input's right edge. */
-const BLEED_RIGHT = CLOSE_TARGET / 2 - (INPUT_BORDER + SLOT_PAD + GLYPH / 2);
-const BOX_STYLE = {
-    paddingVertical: BLEED_Y,
-    marginVertical: -BLEED_Y,
-    paddingRight: BLEED_RIGHT,
-    marginRight: -BLEED_RIGHT,
-} as const;
-/** Each glyph over the Input, where its slot used to draw it: border + pad in
- *  from the Input's edge, centred in the Input's height. */
+/** The glyph where its slot used to draw it: border + pad in from the
+ *  Input's left edge, centred in the Input's height. */
 const SEARCH_GLYPH_STYLE = {
     position: 'absolute',
-    top: BLEED_Y,
+    top: 0,
     height: INPUT_HEIGHT,
     left: INPUT_BORDER + SLOT_PAD,
     justifyContent: 'center',
-} as const;
-const CLOSE_GLYPH_STYLE = {
-    position: 'absolute',
-    top: BLEED_Y,
-    height: INPUT_HEIGHT,
-    right: BLEED_RIGHT + INPUT_BORDER + SLOT_PAD,
-    justifyContent: 'center',
-} as const;
-const CLOSE_TARGET_STYLE = {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: CLOSE_TARGET,
-    height: CLOSE_TARGET,
 } as const;
 
 interface ExploreSearchBarProps {
     readonly query: string;
     readonly onChangeQuery: (next: string) => void;
-    /**
-     * Dismiss search (Explore only; absent on the full-screen Search route,
-     * whose Cancel sits outside the bar). Clears the query AND collapses the row back to the
-     * "Explore" heading. One control, not two — a bare "clear" that left the
-     * input open would be a second way out of a state that already has one,
-     * and leaving the row expanded-but-empty is not a state the user asked for.
-     */
-    readonly onClose?: () => void;
-    /** Field placeholder and accessibility label. Default: Explore's. */
-    readonly placeholder?: string;
-    /** The input lost focus (keyboard dismissed, list scrolled). The screen
-     *  collapses the row when the query is empty (F40): an open, empty bar
-     *  sat where the "Explore" title belongs. */
-    readonly onBlur?: () => void;
+    /** Field placeholder and accessibility label. */
+    readonly placeholder: string;
 }
 
 /**
- * Explore's search input — the EXPANDED half of the title row.
+ * The full-screen Search route's field (`components/custom/world/SearchScreen`).
+ * It mounts only as the result of a tap on the World header's search icon, so
+ * it `autoFocus`es: the keyboard comes up without a second tap. There is no ✕
+ * of ours: Cancel sits beside the bar, and the native clear button empties it.
  *
- * ExploreScreen renders this INSTEAD OF the "Explore" heading, on the same
- * line, once the magnifier is tapped; it is not mounted at all while search is
- * collapsed (mounting-and-hiding it would keep its 40pt of layout in the row).
- * That is why the input `autoFocus`es: it only ever mounts as the direct result
- * of a tap, so focusing on mount is what makes the keyboard come up without a
- * second tap.
- *
- * Purely presentational otherwise: all query state, debouncing and fetching
- * live in `lib/news-search/use-news-search.ts`.
+ * Purely presentational: all query state, debouncing and fetching live in
+ * `lib/news-search/use-news-search.ts`.
  *
  * testID lives on the wrapping Box, not the Input/InputField — gluestack's
  * InputField is an accessibility container and swallows a testID prop placed
  * directly on it (see AddPhraseModal for the same workaround).
  */
-const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuery, onClose, onBlur, placeholder }) => {
-    const { t } = useTranslation();
-    const label = placeholder ?? t('explore.searchPlaceholder');
-
-    return (
-        // flex-1, no padding/margin of its own: it is a CHILD of the title
-        // HStack now, which already owns the row's px-5 and its bottom margin.
-        <Box testID="explore-search-input" className="flex-1" style={BOX_STYLE}>
-            <Input variant="outline" size="md" className="border-gray-700" testID="explore-search-field">
-                {/* Spacers hold the glyphs' old width; the glyphs themselves
-                    are drawn over the Input below, from OUTSIDE it: inside,
-                    the bar's containers read "<glyph>, Search recent news,
-                    <glyph>" on device even with every hidden prop set. */}
-                <View style={{ width: SLOT_PAD + GLYPH }} />
-                <InputField
-                    // The placeholder is the field's name; gluestack's default
-                    // label was the literal "Input Field".
-                    aria-label={label}
-                    placeholder={label}
-                    placeholderTextColor="#666666"
-                    value={query}
-                    onChangeText={onChangeQuery}
-                    onBlur={onBlur}
-                    className="text-white"
-                    autoCorrect={false}
-                    autoCapitalize="none"
-                    returnKeyType="search"
-                    autoFocus
-                    // Without our ✕ (the Search route) the field still needs a
-                    // way to empty it: the native clear button (iOS only).
-                    clearButtonMode={onClose ? 'never' : 'while-editing'}
-                />
-                {/* ALWAYS rendered, unlike the old clear button, which appeared
-                    only once there was text. With a query typed it is the only
-                    way back to the heading (blur collapses an EMPTY bar only),
-                    so it cannot be conditional on the query. The tap target is
-                    the button below, outside the Input. */}
-                {onClose ? <View style={{ width: GLYPH + SLOT_PAD }} /> : null}
-            </Input>
-            <View pointerEvents="none" {...HIDDEN} style={SEARCH_GLYPH_STYLE}>
-                <MaterialIcons name="search" size={GLYPH} color="#999999" {...HIDDEN} />
-            </View>
-            {onClose ? (
-                <>
-                    <View pointerEvents="none" {...HIDDEN} style={CLOSE_GLYPH_STYLE}>
-                        <MaterialIcons name="close" size={GLYPH} color="#999999" {...HIDDEN} />
-                    </View>
-                    <Pressable
-                        testID="explore-search-close"
-                        onPress={onClose}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('explore.closeSearch')}
-                        style={CLOSE_TARGET_STYLE}
-                    />
-                </>
-            ) : null}
-        </Box>
-    );
-};
+const ExploreSearchBar: React.FC<ExploreSearchBarProps> = ({ query, onChangeQuery, placeholder }) => (
+    <Box testID="explore-search-input" className="flex-1">
+        <Input variant="outline" size="md" className="border-gray-700" testID="explore-search-field">
+            {/* A spacer holds the glyph's old width; the glyph itself is drawn
+                over the Input below, from OUTSIDE it: inside, the bar's
+                containers read "<glyph>, Search all news" on device even with
+                every hidden prop set. */}
+            <View style={{ width: SLOT_PAD + GLYPH }} />
+            <InputField
+                // The placeholder is the field's name; gluestack's default
+                // label was the literal "Input Field".
+                aria-label={placeholder}
+                placeholder={placeholder}
+                placeholderTextColor="#666666"
+                value={query}
+                onChangeText={onChangeQuery}
+                className="text-white"
+                autoCorrect={false}
+                autoCapitalize="none"
+                returnKeyType="search"
+                autoFocus
+                // Our only clear control (iOS; Android keyboards carry their own).
+                clearButtonMode="while-editing"
+            />
+        </Input>
+        <View pointerEvents="none" {...HIDDEN} style={SEARCH_GLYPH_STYLE}>
+            <MaterialIcons name="search" size={GLYPH} color="#999999" {...HIDDEN} />
+        </View>
+    </Box>
+);
 
 export default ExploreSearchBar;

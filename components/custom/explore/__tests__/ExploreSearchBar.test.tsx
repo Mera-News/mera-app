@@ -10,17 +10,9 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
     return { jsxDEV: R.jsxDEV, Fragment: R.Fragment };
 });
 
-jest.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (key: string) => key }),
-}));
-
 jest.mock('@/components/ui/box', () => {
     const { View } = require('react-native');
     return { Box: (p: any) => <View {...p} /> };
-});
-jest.mock('@/components/ui/pressable', () => {
-    const { Pressable } = require('react-native');
-    return { Pressable };
 });
 // As on device: InputSlot IS a Pressable (accessible), and InputField is an
 // accessible TextInput whose label defaults to "Input Field".
@@ -39,123 +31,57 @@ jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph
 
 import ExploreSearchBar from '../ExploreSearchBar';
 
+const P = 'world.search.placeholder';
+
 describe('ExploreSearchBar', () => {
     it('renders the wrapper testID (InputField swallows its own)', () => {
-        const { getByTestId } = render(
-            <ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />,
-        );
+        const { getByTestId } = render(<ExploreSearchBar query="" onChangeQuery={jest.fn()} placeholder={P} />);
         expect(getByTestId('explore-search-input')).toBeTruthy();
     });
 
     it('shows the placeholder and current query value', () => {
         const { getByPlaceholderText } = render(
-            <ExploreSearchBar query="modi india" onChangeQuery={jest.fn()} onClose={jest.fn()} />,
+            <ExploreSearchBar query="modi india" onChangeQuery={jest.fn()} placeholder={P} />,
         );
-        const input = getByPlaceholderText('explore.searchPlaceholder');
-        expect(input.props.value).toBe('modi india');
+        expect(getByPlaceholderText(P).props.value).toBe('modi india');
     });
 
     it('calls onChangeQuery as the user types', () => {
         const onChangeQuery = jest.fn();
-        const { getByPlaceholderText } = render(
-            <ExploreSearchBar query="" onChangeQuery={onChangeQuery} onClose={jest.fn()} />,
-        );
-        fireEvent.changeText(getByPlaceholderText('explore.searchPlaceholder'), 'india');
+        const { getByPlaceholderText } = render(<ExploreSearchBar query="" onChangeQuery={onChangeQuery} placeholder={P} />);
+        fireEvent.changeText(getByPlaceholderText(P), 'india');
         expect(onChangeQuery).toHaveBeenCalledWith('india');
     });
 
-    it('autofocuses, so the tap that revealed it also raises the keyboard', () => {
-        const { getByPlaceholderText } = render(
-            <ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />,
-        );
-        expect(getByPlaceholderText('explore.searchPlaceholder').props.autoFocus).toBe(true);
+    it('autofocuses, so the tap that opened Search also raises the keyboard', () => {
+        const { getByPlaceholderText } = render(<ExploreSearchBar query="" onChangeQuery={jest.fn()} placeholder={P} />);
+        expect(getByPlaceholderText(P).props.autoFocus).toBe(true);
     });
 
-    it('shows the close control even with an EMPTY query — it is the only way back', () => {
-        const { getByTestId } = render(
-            <ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />,
-        );
-        expect(getByTestId('explore-search-close')).toBeTruthy();
-    });
-
-    it('calls onClose when the ✕ is pressed', () => {
-        const onClose = jest.fn();
-        const { getByTestId } = render(
-            <ExploreSearchBar query="india" onChangeQuery={jest.fn()} onClose={onClose} />,
-        );
-        fireEvent.press(getByTestId('explore-search-close'));
-        expect(onClose).toHaveBeenCalledTimes(1);
-    });
-
-    // Captured (ux2 batch 27): with the bar open, the search glyph was its own
-    // StaticText and part of a container label (", Input Field, Close search"),
-    // and Close search measured 18x18.
-    it('exposes no private-use StaticText anywhere', () => {
-        const r = render(<ExploreSearchBar query="india" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
-        const glyphs = r.UNSAFE_root.findAll(
-            (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
-        );
-        expect(glyphs.length).toBe(2);
-        for (const g of glyphs) {
-            expect(g.props.accessible).toBe(false);
-            expect(g.props.accessibilityElementsHidden).toBe(true);
-            expect(g.props.importantForAccessibility).toBe('no-hide-descendants');
-            for (let p: any = g.parent; p; p = p.parent) expect(p.props?.accessible).not.toBe(true);
-        }
-    });
-
-    it('makes Close search a childless labelled 44x44 numeric frame', () => {
-        const { StyleSheet } = require('react-native');
-        const { getByTestId } = render(<ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
-        const close = getByTestId('explore-search-close');
-        expect(close.props.accessibilityLabel).toBe('explore.closeSearch');
-        expect(close.props.accessibilityRole).toBe('button');
-        const flat = StyleSheet.flatten(close.props.style);
-        expect(flat).toMatchObject({ position: 'absolute', top: 0, right: 0, width: 44, height: 44 });
-        // It sits INSIDE its parent: the bar's box bleeds to 44pt tall and 1.5pt
-        // right by padding, with matching negative margins so nothing reflows
-        // (a button overflowing its parent can miss taps on Android).
-        const box = StyleSheet.flatten(getByTestId('explore-search-input').props.style);
-        expect(box).toMatchObject({ paddingVertical: 4.5, marginVertical: -4.5, paddingRight: 1.5, marginRight: -1.5 });
-        expect(35 + 2 * box.paddingVertical).toBe(44);
-        expect(close.findAll((n: any) => n !== close && typeof n.type === 'string' && n.type !== 'View')).toHaveLength(0);
+    it('draws no ✕ of its own: the native clear button empties it', () => {
+        const r = render(<ExploreSearchBar query="x" onChangeQuery={jest.fn()} placeholder={P} />);
+        expect(r.queryByTestId('explore-search-close')).toBeNull();
+        expect(r.getByPlaceholderText(P).props.clearButtonMode).toBe('while-editing');
     });
 
     it('keeps the input focusable and labelled with its placeholder, not "Input Field"', () => {
-        const { getByPlaceholderText } = render(<ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
-        const input = getByPlaceholderText('explore.searchPlaceholder');
+        const { getByPlaceholderText } = render(<ExploreSearchBar query="" onChangeQuery={jest.fn()} placeholder={P} />);
+        const input = getByPlaceholderText(P);
         expect(input.props.accessible).toBe(true);
-        expect(input.props.accessibilityLabel).toBe('explore.searchPlaceholder');
+        expect(input.props.accessibilityLabel).toBe(P);
     });
 
-    // The full-screen Search route passes no onClose: its Cancel sits outside
-    // the bar, so the bar draws no ✕ and the native clear button empties it.
-    it('without onClose: no ✕ control or glyph, native clear button, caller placeholder', () => {
-        const r = render(<ExploreSearchBar query="x" onChangeQuery={jest.fn()} placeholder="world.search.placeholder" />);
-        expect(r.queryByTestId('explore-search-close')).toBeNull();
-        const input = r.getByPlaceholderText('world.search.placeholder');
-        expect(input.props.accessibilityLabel).toBe('world.search.placeholder');
-        expect(input.props.clearButtonMode).toBe('while-editing');
+    // Captured (ux2 batches 27-28): a glyph inside the Input root was composed
+    // into the bar's container labels even when hidden. It is drawn over the
+    // Input from its parent, with a spacer holding its width inside.
+    it('draws its one glyph hidden and outside the Input root', () => {
+        const { exposedGlyphTexts } = require('@/lib/__test-helpers__/icon-glyph-a11y');
+        const r = render(<ExploreSearchBar query="india" onChangeQuery={jest.fn()} placeholder={P} />);
+        expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);
         const glyphs = r.UNSAFE_root.findAll(
             (n: any) => typeof n.type === 'string' && /[\uE000-\uF8FF]/.test(String(n.props?.children ?? '')),
         );
-        expect(glyphs.length).toBe(1);
-    });
-
-    it('with onClose: the native clear button stays off (the ✕ does that job)', () => {
-        const { getByPlaceholderText } = render(<ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
-        expect(getByPlaceholderText('explore.searchPlaceholder').props.clearButtonMode).toBe('never');
-    });
-
-    // Captured (ux2 batch 28): with the glyphs hidden, the bar's containers
-    // still read "<glyph>, Search recent news, <glyph>": exactly the children
-    // of the gluestack Input root (Close search, outside the Input, was not in
-    // it). The glyphs are drawn over the Input from its parent instead, with
-    // spacers holding their old width inside it.
-    it('keeps both glyphs out of the Input root, so no container composes them', () => {
-        const { exposedGlyphTexts } = require('@/lib/__test-helpers__/icon-glyph-a11y');
-        const r = render(<ExploreSearchBar query="india" onChangeQuery={jest.fn()} onClose={jest.fn()} />);
-        expect(exposedGlyphTexts(r.UNSAFE_root)).toEqual([]);
+        expect(glyphs).toHaveLength(1);
         const field = r.getByTestId('explore-search-field');
         expect(field.findAll((n: any) => n.type === 'Text' && /[\uE000-\uF8FF]/.test(String(n.props.children)))).toHaveLength(0);
     });

@@ -1,8 +1,9 @@
-// useNewsSearch — debounced state machine for Explore's search bar (Item 12a).
+// useNewsSearch — debounced state machine for the full-screen Search route.
 //
 // Owns the query text, the debounced/min-length-gated fetch, and an
-// out-of-order-response guard, so ExploreScreen and its search UI can stay
-// presentational. Mirrors SourcesL1CountryList's publisher-search effect
+// out-of-order-response guard, so SearchScreen and its UI can stay
+// presentational. The query is React state only: nothing typed is stored
+// (a source scan in world/__tests__/SearchScreen.test.tsx pins it). Mirrors SourcesL1CountryList's publisher-search effect
 // (debounce + 2-char floor + monotonic request id) rather than the generic
 // `useDebouncedValue` hook: that hook debounces the VALUE, which would still
 // flash stale results while a user is mid-delete back below the minimum

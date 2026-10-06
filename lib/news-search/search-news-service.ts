@@ -1,5 +1,5 @@
 // search-news-service — thin GraphQL wrapper around the server's `searchNews`
-// query for Explore's search bar (Item 12a).
+// query for the full-screen Search route.
 //
 // `searchNews` is deliberately headline-only (no description, no article_url —
 // see the schema comment on `NewsSearchHit`): with no scraped article body in
