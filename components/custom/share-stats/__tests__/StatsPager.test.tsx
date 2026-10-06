@@ -37,6 +37,7 @@ jest.mock('react-native-gesture-handler', () => {
   const { View } = require('react-native');
   return { ScrollView: ReactLib.forwardRef((p: any, ref: any) => <View ref={ref} {...p} />) };
 });
+jest.mock('@/lib/navigation/tab-bar', () => ({ useTabBarClearance: () => 85 }));
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: { ScrollView: (p: any) => <View {...p} /> } };
@@ -158,13 +159,14 @@ describe('StatsPager', () => {
     expect(dot('reach').width).toBe(18);
   });
 
-  it('fits the card to the page box, less header, dots, share block and list end', async () => {
+  it('fits the card to the page box, less header, dots, share block and the tab bar', async () => {
     mockStats = withCards();
     await mount(<StatsPager active headerHeight={106} listEndPadding={172} />);
     const frame = screen.getByTestId('stats-page-reach').props.children;
     const size = StyleSheet.flatten(frame.props.style);
-    // 844 - 106 - 14 - 28 - 96 - 172 = 428 tall budget; width 400 - 32 = 368.
-    expect(size.height).toBeLessThanOrEqual(428);
+    // 844 - 106 - 14 - 28 - 96 - 85 (tab bar) = 515 tall budget; width 400 - 32 = 368.
+    expect(size.height).toBeLessThanOrEqual(515);
     expect(size.width).toBeLessThanOrEqual(368);
+    expect(Math.max(size.height, size.width / 0.76)).toBeGreaterThan(470);
   });
 });

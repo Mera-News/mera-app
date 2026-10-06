@@ -8,7 +8,9 @@
 // against the export's 0.76 — it read as a landscape card with its heatmap
 // sliced mid-row. Nothing had been resized; it had been cropped.
 //
-// A full-screen route removed the cause. This keeps it removed.
+// A full-screen route removed the cause; the card is now embedded again, in
+// the Library's Stats page, which is why its budget comes from statsCardBox
+// and the page scrolls rather than squeezing the card. This keeps the shape.
 
 // card-shell imports AbstractGradientBackdrop and MeraLogo, and through them
 // reanimated, whose native side does not exist under jest: the suite dies on
@@ -27,27 +29,24 @@ import {
   INK_BOX_HEIGHT_PX,
   fitCardToPage,
 } from '../card-shell';
-import {
-  DOTS_ALLOWANCE,
-  HEADER_ALLOWANCE,
-  PILL_ALLOWANCE,
-} from '../screen-metrics';
+import { statsCardBox } from '../screen-metrics';
 
 /** Real viewports in points, shortest first. The 3 GB floor device is the one
- *  that decides whether the ratio-fitted card is still readable. */
+ *  that decides whether the ratio-fitted card is still readable. The card now
+ *  lives in the Library's Stats page: below the tab's header (status bar plus
+ *  a ~56pt pill strip) and above the tab bar (49pt plus the home indicator on
+ *  iOS, the bar alone on Android). */
+const STRIP = 56;
 const VIEWPORTS = [
-  { name: 'iPhone SE (floor)', width: 320, height: 568, top: 20, bottom: 0 },
-  { name: 'iPhone 8', width: 375, height: 667, top: 20, bottom: 0 },
-  { name: 'iPhone 13 mini', width: 375, height: 812, top: 50, bottom: 34 },
-  { name: 'Pixel 5', width: 393, height: 851, top: 24, bottom: 24 },
-  { name: 'iPhone 16 Pro Max', width: 440, height: 956, top: 62, bottom: 34 },
+  { name: 'iPhone SE (floor)', width: 320, height: 568, top: 20, bar: 49 },
+  { name: 'iPhone 8', width: 375, height: 667, top: 20, bar: 49 },
+  { name: 'iPhone 13 mini', width: 375, height: 812, top: 50, bar: 49 + 34 },
+  { name: 'Pixel 5', width: 393, height: 851, top: 24, bar: 56 + 24 },
+  { name: 'iPhone 16 Pro Max', width: 440, height: 956, top: 62, bar: 49 + 34 },
 ];
 
 function pageBoxFor(v: (typeof VIEWPORTS)[number]) {
-  return {
-    width: v.width,
-    height: v.height - v.top - v.bottom - HEADER_ALLOWANCE - DOTS_ALLOWANCE - PILL_ALLOWANCE,
-  };
+  return statsCardBox({ width: v.width, height: v.height }, v.top + STRIP, v.bar);
 }
 
 describe('the on-screen card preserves the export ratio', () => {

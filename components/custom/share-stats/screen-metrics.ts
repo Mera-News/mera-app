@@ -12,16 +12,43 @@
 // which is the failure this wave has hit repeatedly. One object, rendered from
 // and modelled from.
 //
-// The card gets whatever is left after these and the safe-area insets, and its
-// width follows from the export's 1080/1420 ratio. So raising any of these
-// makes the card SMALLER on every device, and on the floor device that is the
-// number that decides whether it is still readable.
+// The card gets whatever the Library's Stats page has left after the tab's
+// header, these and the tab bar, and its width follows from the export's
+// 1080/1420 ratio. So raising any of these makes the card SMALLER on every
+// device, and on the floor device that is the number that decides whether it
+// is still readable.
 
-/** Title, subtitle and back affordance above the pager. */
-export const HEADER_ALLOWANCE = 72;
+/** Space between the tab's header and the card. */
+export const STATS_TOP_GAP = 14;
+
+/** Space either side of the card. */
+export const STATS_SIDE_GAP = 16;
 
 /** The page-dot row. */
 export const DOTS_ALLOWANCE = 28;
 
 /** The share pill plus the privacy line and naming toggle under it. */
 export const PILL_ALLOWANCE = 96;
+
+/**
+ * The box the card is fitted into on the Stats page.
+ *
+ * `bottomReserve` is the TAB BAR clearance, not the full list-end clearance:
+ * the page scrolls, so the "How this page works" row and the Mera button's
+ * clearance live below the fold, while the share pill (centred) never sits
+ * under the Mera button (bottom right). Reserving the full ~172pt list end
+ * here would shrink the card on the floor device below legible.
+ */
+export function statsCardBox(
+  page: { readonly width: number; readonly height: number },
+  headerHeight: number,
+  bottomReserve: number,
+): { width: number; height: number } {
+  return {
+    width: Math.max(0, page.width - 2 * STATS_SIDE_GAP),
+    height: Math.max(
+      0,
+      page.height - headerHeight - STATS_TOP_GAP - DOTS_ALLOWANCE - PILL_ALLOWANCE - bottomReserve,
+    ),
+  };
+}

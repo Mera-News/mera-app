@@ -26,15 +26,22 @@
 // ## Height
 //
 // The card is fitted to what the page measures (onLayout), less the header,
-// the dots, the share block and the list-end clearance, never to the window:
-// inside a tab the window is not the page. The page scrolls vertically, so the
-// "How this page works" row below stays reachable on a short phone.
+// the dots, the share block and the tab bar (`statsCardBox`), never to the
+// window: inside a tab the window is not the page. The page scrolls
+// vertically, so the "How this page works" row and the list-end clearance
+// live below the fold.
 
 import ShareCardPill from '@/components/custom/analytics/ShareCardPill';
 import ShareStatsCard, { fitCardToPage, hostSizeForScale } from '@/components/custom/share-stats/ShareStatsCard';
 import { CARD_ACCENT, ink } from '@/components/custom/share-stats/card-theme';
 import { captureAndShare } from '@/components/custom/share-stats/capture-and-share';
-import { DOTS_ALLOWANCE, PILL_ALLOWANCE } from '@/components/custom/share-stats/screen-metrics';
+import {
+  DOTS_ALLOWANCE,
+  PILL_ALLOWANCE,
+  STATS_SIDE_GAP,
+  STATS_TOP_GAP,
+  statsCardBox,
+} from '@/components/custom/share-stats/screen-metrics';
 import { useSwipeTabsBlocker } from '@/components/custom/nav/swipe-blocker';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import { HStack } from '@/components/ui/hstack';
@@ -42,6 +49,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import logger from '@/lib/logger';
+import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import {
   availableCards,
   emptyReadingStats,
@@ -57,10 +65,6 @@ import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 
 type ShareMessage = 'unavailable' | 'failed' | null;
-
-/** Space between the header and the card. */
-const TOP_GAP = 14;
-const SIDE_GAP = 16;
 
 /** Where the pager's scroll position sits against its two ends. */
 export function pagerEdges(offsetX: number, pageWidth: number, pages: number): { start: boolean; end: boolean } {
@@ -92,6 +96,7 @@ const StatsPager: React.FC<Props> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const blocker = useSwipeTabsBlocker();
+  const tabClearance = useTabBarClearance();
 
   const [stats, setStats] = useState<ReadingStats>(emptyReadingStats);
   const [isLoading, setIsLoading] = useState(true);
@@ -210,10 +215,7 @@ const StatsPager: React.FC<Props> = ({
     setBox((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
   }, []);
 
-  const cardSize = fitCardToPage({
-    width: Math.max(0, pageWidth - 2 * SIDE_GAP),
-    height: Math.max(0, box.height - headerHeight - TOP_GAP - DOTS_ALLOWANCE - PILL_ALLOWANCE - listEndPadding),
-  });
+  const cardSize = fitCardToPage(statsCardBox(box, headerHeight, tabClearance));
 
   let body: React.ReactNode;
   if (isLoading) {
@@ -347,10 +349,10 @@ const StatsPager: React.FC<Props> = ({
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: headerHeight + TOP_GAP, paddingBottom: listEndPadding }}
+        contentContainerStyle={{ paddingTop: headerHeight + STATS_TOP_GAP, paddingBottom: listEndPadding }}
       >
         {box.width > 0 ? body : null}
-        {footer ? <View style={{ paddingHorizontal: SIDE_GAP, marginTop: 16 }}>{footer}</View> : null}
+        {footer ? <View style={{ paddingHorizontal: STATS_SIDE_GAP, marginTop: 16 }}>{footer}</View> : null}
       </Animated.ScrollView>
     </View>
   );
