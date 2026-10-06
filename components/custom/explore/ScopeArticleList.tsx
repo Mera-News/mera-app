@@ -1,5 +1,8 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
+import ExploreWindowToggle, { type ExploreWindowHours } from '@/components/custom/explore/ExploreWindowToggle';
 import { Box } from '@/components/ui/box';
+import { Button, ButtonText } from '@/components/ui/button';
+import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -13,7 +16,7 @@ import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { useIsConnected, useIsOnline } from '@/lib/stores/network-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, type ListRenderItem } from 'react-native';
 import Animated, {
@@ -24,6 +27,61 @@ import Animated, {
 } from 'react-native-reanimated';
 
 const PAGE_SIZE = 10;
+
+/** A first load still running after this is treated as hung: the page says
+ *  Mera can't be reached instead of promising stories "in a few seconds".
+ *  The request stays in flight and still lands if it ever answers. */
+export const HUNG_LOAD_MS = 15_000;
+
+const SKELETON_ROWS = 3;
+const SKELETON_THUMB = 64;
+const skeletonBar = (width: `${number}%`, alpha: number, height = 12) => ({
+    height,
+    borderRadius: height / 2,
+    width,
+    backgroundColor: `rgba(255,255,255,${alpha})`,
+});
+const SKELETON_ROW_STYLE = {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 10,
+    marginBottom: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+} as const;
+
+/** Static placeholder rows for a first load (no pulse: nothing moves on a
+ *  World page unless the reader moves it, and Lite mode needs no branch). */
+function SkeletonRows() {
+    return (
+        <Box
+            testID="explore-skeleton"
+            accessible={false}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+        >
+            {Array.from({ length: SKELETON_ROWS }, (_, i) => (
+                <Box key={i} style={SKELETON_ROW_STYLE}>
+                    <Box
+                        style={{
+                            width: SKELETON_THUMB,
+                            height: SKELETON_THUMB,
+                            borderRadius: 10,
+                            backgroundColor: 'rgba(255,255,255,0.08)',
+                        }}
+                    />
+                    <VStack style={{ flex: 1, gap: 8, paddingTop: 4 }}>
+                        <Box style={skeletonBar('90%', 0.12)} />
+                        <Box style={skeletonBar('65%', 0.1)} />
+                        <Box style={skeletonBar('35%', 0.07, 10)} />
+                    </VStack>
+                </Box>
+            ))}
+        </Box>
+    );
+}
 
 // Matches FeedScreen / DashboardSectionsFeed / StoryTimelineScreen, which each
 // declare it locally. A fourth copy beats a shared constant for one hex value.
@@ -90,6 +148,16 @@ interface ScopeArticleListProps {
      *  header menu). The parent keys this list by it, so a change is a fresh mount
      *  and a fresh first page. Absent: the server default (24). */
     readonly windowHours?: number;
+    /** World pages: the reader picked a window here. When given, the list
+     *  leads with the "Top stories from the last" row, and an empty answer
+     *  under 48h offers a one-tap 48 hours. */
+    readonly onWindowChange?: (next: ExploreWindowHours) => void;
+    /** Drawn above the window row (World's one-time intro line). */
+    readonly listHeaderExtra?: React.ReactNode;
+    /** Drawn once the list has nothing more to page in ("How this page works"). */
+    readonly footer?: React.ReactNode;
+    /** List-end clear space from the host. Default: the tab bar plus a tail. */
+    readonly bottomClearance?: number;
 }
 
 /**
@@ -128,8 +196,17 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     scrollHandler,
     active = true,
     windowHours,
+    onWindowChange,
+    listHeaderExtra,
+    footer,
+    bottomClearance,
 }) => {
     const { t } = useTranslation();
+    // TEMPORARY: the world.* keys land with the navx locale splice; convert
+    // to typed t() in the same wave once they are in en.json.
+    const tAny = useMemo(() => t as unknown as (key: string, opts?: object) => string, [t]);
+    const hours: ExploreWindowHours = (windowHours as ExploreWindowHours | undefined) ?? 24;
+    const countryName = scope.kind === 'world' ? null : scope.label;
     const isOnline = useIsOnline();
     // `isOnline` (device link + Mera reachable) already gates the empty state
     // below, but it collapses two different reasons into one boolean — read
@@ -146,6 +223,13 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     // `isOnline` still read true, blaming the world for a request that never
     // landed. Cleared by any successful load or refresh.
     const [loadFailed, setLoadFailed] = useState(false);
+    // The first load has been running for HUNG_LOAD_MS (see the constant).
+    const [loadHung, setLoadHung] = useState(false);
+    useEffect(() => {
+        if (!isLoading || !enabled) return;
+        const id = setTimeout(() => setLoadHung(true), HUNG_LOAD_MS);
+        return () => clearTimeout(id);
+    }, [isLoading, enabled]);
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
@@ -344,19 +428,46 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 </Box>
             );
         }
+        // The page's end: nothing more to page in and nothing still loading.
+        if (footer && !isLoading && !hasNextPage) return <>{footer}</>;
         return null;
-    }, [isLoadingMore]);
+    }, [isLoadingMore, footer, isLoading, hasNextPage]);
 
-    // Spinner-or-empty-state, decided INSIDE the list. Previously these were two
+    const ListHeaderComponent = useMemo(() => {
+        if (!onWindowChange && !listHeaderExtra) return null;
+        return (
+            <VStack space="md" className="mb-3">
+                {listHeaderExtra}
+                {onWindowChange ? (
+                    <HStack className="items-center justify-between" testID="explore-window-row">
+                        <Text size="sm" className="text-gray-300 flex-shrink mr-3">
+                            {tAny('world.windowRowLabel')}
+                        </Text>
+                        <ExploreWindowToggle value={hours} onChange={onWindowChange} />
+                    </HStack>
+                ) : null}
+            </VStack>
+        );
+    }, [onWindowChange, listHeaderExtra, hours, tAny]);
+
+    // Skeleton-or-empty-state, decided INSIDE the list. Previously these were two
     // early returns that replaced the list entirely — see the component note.
     const ListEmptyComponent = useCallback(() => {
-        if (isLoading || !enabled) {
+        if (!enabled || (isLoading && !loadHung)) {
             return (
-                <Box className="items-center justify-center py-20" testID="explore-loading">
-                    <Spinner size="large" />
-                </Box>
+                <VStack testID="explore-loading" space="md">
+                    {countryName ? (
+                        <Text size="md" className="text-gray-300" testID="explore-gathering">
+                            {tAny('world.gathering', { country: countryName })}
+                        </Text>
+                    ) : null}
+                    <SkeletonRows />
+                </VStack>
             );
         }
+        // Answered, online, nothing in the window: say so in the window's
+        // terms, and offer the widest window when a narrower one is set.
+        const answeredEmpty = isConnected && isOnline && !loadFailed && !isLoading;
         return (
             <VStack className="items-center justify-center py-20 p-6" space="md" testID="explore-empty">
                 <MaterialIcons name="article" size={48} color="#666666" accessible={false} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
@@ -374,14 +485,21 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                         connectivity band — it belongs here, on the emptiness it
                         explains. */}
                     {!isConnected
-                        ? t('explore.offlineUnavailable')
-                        : loadFailed || !isOnline
+                        ? tAny('world.offline')
+                        : !answeredEmpty
                             ? t('explore.serverUnavailable')
-                            : t('explore.noArticles')}
+                            : countryName
+                                ? tAny('world.emptyWindow', { country: countryName, hours })
+                                : tAny('world.emptyWindowWorld', { hours })}
                 </Text>
+                {answeredEmpty && onWindowChange && hours < 48 ? (
+                    <Button variant="outline" size="sm" testID="explore-show-48" onPress={() => onWindowChange(48)}>
+                        <ButtonText>{tAny('world.showWider')}</ButtonText>
+                    </Button>
+                ) : null}
             </VStack>
         );
-    }, [isLoading, enabled, isOnline, isConnected, loadFailed, t]);
+    }, [isLoading, enabled, loadHung, isOnline, isConnected, loadFailed, t, tAny, countryName, hours, onWindowChange]);
 
     // Compose the collapsible-header handler (from ExploreScreen) with a
     // scroll-tick notifier (drives deferred TranslatableDynamic translation as
@@ -424,7 +542,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 // the list scrolls underneath it.
                 paddingTop: headerHeight + 8,
                 // The tab bar once, then a tail (see useTabBarClearance).
-                paddingBottom: tabClearance + 24,
+                paddingBottom: bottomClearance ?? tabClearance + 24,
                 flexGrow: 1,
             }}
             refreshControl={
@@ -445,6 +563,7 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             scrollEventThrottle={16}
             onEndReached={active ? loadMore : undefined}
             onEndReachedThreshold={0.5}
+            ListHeaderComponent={ListHeaderComponent}
             ListEmptyComponent={ListEmptyComponent}
             ListFooterComponent={ListFooterComponent}
         />

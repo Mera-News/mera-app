@@ -12,8 +12,10 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
     return { jsxDEV: ReactJSXRuntime.jsxDEV, Fragment: ReactJSXRuntime.Fragment };
 });
 
+const mockT = (k: string, o?: Record<string, unknown>) =>
+    o ? `${k}:${Object.keys(o).sort().map((x) => `${x}=${o[x]}`).join(',')}` : k;
 jest.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (k: string) => k }),
+    useTranslation: () => ({ t: mockT }),
 }));
 
 // Plain RN stubs — no FlatList here anymore: the component now renders
@@ -58,6 +60,7 @@ jest.mock('react-native-reanimated', () => {
                 keyExtractor,
                 ListEmptyComponent,
                 ListFooterComponent,
+                ListHeaderComponent,
                 refreshControl,
                 onEndReached,
                 contentContainerStyle,
@@ -71,6 +74,10 @@ jest.mock('react-native-reanimated', () => {
             const items = data ?? [];
             const kids: any[] = [];
             if (refreshControl) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'rc' }, refreshControl));
+            // Rendered, not dropped: a mock that ignores the header slot makes
+            // every "the window row is absent" assertion vacuous.
+            const header = asNode(ListHeaderComponent);
+            if (header) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'lh' }, header));
             if (items.length === 0) {
                 const empty = asNode(ListEmptyComponent);
                 if (empty) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'le' }, empty));
@@ -107,6 +114,24 @@ jest.mock('@/components/ui/box', () => { const { View } = require('react-native'
 jest.mock('@/components/ui/vstack', () => { const { View } = require('react-native'); return { VStack: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text }; });
 jest.mock('@/components/ui/spinner', () => { const { View } = require('react-native'); return { Spinner: (p: any) => <View {...p} /> }; });
+jest.mock('@/components/ui/hstack', () => { const { View } = require('react-native'); return { HStack: (p: any) => <View {...p} /> }; });
+jest.mock('@/components/ui/button', () => {
+    const { View, Text } = require('react-native');
+    return {
+        Button: ({ onPress, testID, children }: any) => <View testID={testID} onPress={onPress}>{children}</View>,
+        ButtonText: (p: any) => <Text {...p} />,
+    };
+});
+// The toggle has its own suite (and gluestack Menu is ESM jest cannot parse).
+jest.mock('@/components/custom/explore/ExploreWindowToggle', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: (p: any) => <View testID="window-toggle" value={p.value} onChange={p.onChange} /> };
+});
+let mockConnected = true;
+jest.mock('@/lib/stores/network-store', () => ({
+    useIsConnected: () => mockConnected,
+    useIsOnline: () => mockConnected,
+}));
 jest.mock('@expo/vector-icons', () => require('@/lib/__test-helpers__/icon-glyph-a11y').glyphIconModule());
 
 jest.mock('@/components/custom/cards/ArticleStandaloneCompactCard', () => {
@@ -158,6 +183,7 @@ beforeEach(() => {
     hookOptions = null;
     mockListOnEndReached = null;
     mockInsetBottom = 0;
+    mockConnected = true;
 });
 
 // Regression: "Encountered two children with the same key" on the Explore tab.
@@ -370,7 +396,7 @@ describe('ScopeArticleList: failure is not emptiness', () => {
         await waitFor(() => expect(queryByTestId('explore-loading')).toBeNull());
 
         expect(getByText('explore.serverUnavailable')).toBeTruthy();
-        expect(queryByText('explore.noArticles')).toBeNull();
+        expect(queryByText('world.emptyWindowWorld:hours=24')).toBeNull();
     });
 
     it('goes back to the honest empty copy once a refresh succeeds with nothing', async () => {
@@ -385,7 +411,125 @@ describe('ScopeArticleList: failure is not emptiness', () => {
             await hookOptions.onRefresh();
         });
 
-        expect(getByText('explore.noArticles')).toBeTruthy();
+        expect(getByText('world.emptyWindowWorld:hours=24')).toBeTruthy();
+    });
+});
+
+describe('ScopeArticleList: World page states', () => {
+    const germany = { id: 'country:DEU', kind: 'country', label: 'Germany', countryCodeAlpha3: 'DEU' } as any;
+
+    it('a first load shows skeleton rows, and on a country page the gathering line', () => {
+        mockGetTopHeadlines.mockReturnValueOnce(new Promise(() => {}));
+        const r = render(<ScopeArticleList scope={germany} scrollHandler={stubScrollHandler} />);
+        expect(r.getByTestId('explore-skeleton', { includeHiddenElements: true })).toBeTruthy();
+        expect(r.getByText('world.gathering:country=Germany')).toBeTruthy();
+    });
+
+    it('World loading draws the skeleton without a gathering line', () => {
+        mockGetTopHeadlines.mockReturnValueOnce(new Promise(() => {}));
+        const r = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />);
+        expect(r.getByTestId('explore-skeleton', { includeHiddenElements: true })).toBeTruthy();
+        expect(r.queryByTestId('explore-gathering')).toBeNull();
+    });
+
+    it('a load still running after 15 s stops promising and says Mera cannot be reached', () => {
+        jest.useFakeTimers();
+        try {
+            mockGetTopHeadlines.mockReturnValueOnce(new Promise(() => {}));
+            const r = render(<ScopeArticleList scope={germany} scrollHandler={stubScrollHandler} />);
+            act(() => {
+                jest.advanceTimersByTime(14_999);
+            });
+            expect(r.getByTestId('explore-gathering')).toBeTruthy();
+            act(() => {
+                jest.advanceTimersByTime(1);
+            });
+            expect(r.queryByTestId('explore-gathering')).toBeNull();
+            expect(r.getByText('explore.serverUnavailable')).toBeTruthy();
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('an empty answer says so at once, in the window, with a one-tap 48 hours', async () => {
+        mockGetTopHeadlines.mockResolvedValueOnce(page([], null, false));
+        const onWindowChange = jest.fn();
+        const r = render(
+            <ScopeArticleList scope={germany} scrollHandler={stubScrollHandler} windowHours={12} onWindowChange={onWindowChange} />,
+        );
+        await waitFor(() => expect(r.getByText('world.emptyWindow:country=Germany,hours=12')).toBeTruthy());
+        r.getByTestId('explore-show-48').props.onPress();
+        expect(onWindowChange).toHaveBeenCalledWith(48);
+    });
+
+    it('offers no wider window when already at 48 hours', async () => {
+        mockGetTopHeadlines.mockResolvedValueOnce(page([], null, false));
+        const r = render(
+            <ScopeArticleList scope={germany} scrollHandler={stubScrollHandler} windowHours={48} onWindowChange={jest.fn()} />,
+        );
+        await waitFor(() => expect(r.getByText('world.emptyWindow:country=Germany,hours=48')).toBeTruthy());
+        expect(r.queryByTestId('explore-show-48')).toBeNull();
+    });
+
+    it('offline says World needs a connection, with no 48-hour offer', async () => {
+        mockConnected = false;
+        mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+        const r = render(<ScopeArticleList scope={germany} scrollHandler={stubScrollHandler} onWindowChange={jest.fn()} />);
+        await waitFor(() => expect(r.getByText('world.offline')).toBeTruthy());
+        expect(r.queryByTestId('explore-show-48')).toBeNull();
+    });
+
+    it('leads with the window row only when the host takes window changes', async () => {
+        mockGetTopHeadlines.mockResolvedValue(page(['a'], null, false));
+        const onWindowChange = jest.fn();
+        const r = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} windowHours={6} onWindowChange={onWindowChange} />,
+        );
+        await waitFor(() => expect(r.getByTestId('card-a')).toBeTruthy());
+        expect(r.getByText('world.windowRowLabel')).toBeTruthy();
+        expect(r.getByTestId('window-toggle').props.value).toBe(6);
+        expect(r.getByTestId('window-toggle').props.onChange).toBe(onWindowChange);
+        r.unmount();
+        const bare = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />);
+        await waitFor(() => expect(bare.getByTestId('card-a')).toBeTruthy());
+        expect(bare.queryByTestId('explore-window-row')).toBeNull();
+    });
+
+    it('draws the header extra above the window row', async () => {
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['a'], null, false));
+        const { Text } = require('react-native');
+        const r = render(
+            <ScopeArticleList
+                scope={scope}
+                scrollHandler={stubScrollHandler}
+                onWindowChange={jest.fn()}
+                listHeaderExtra={<Text testID="intro">intro</Text>}
+            />,
+        );
+        await waitFor(() => expect(r.getByTestId('card-a')).toBeTruthy());
+        expect(r.getByTestId('intro')).toBeTruthy();
+    });
+
+    it('draws the footer only once there is nothing more to page in', async () => {
+        const { Text } = require('react-native');
+        const foot = <Text testID="how">how</Text>;
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['a'], 'c1', true));
+        const r = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} footer={foot} />);
+        await waitFor(() => expect(r.getByTestId('card-a')).toBeTruthy());
+        expect(r.queryByTestId('how')).toBeNull();
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['b'], null, false));
+        await act(async () => {
+            await mockListOnEndReached!();
+        });
+        expect(r.getByTestId('how')).toBeTruthy();
+    });
+
+    it('takes the host list-end clearance when given', async () => {
+        mockInsetBottom = 85;
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['a'], null, false));
+        const r = render(<ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} bottomClearance={172} />);
+        await waitFor(() => expect(r.getByTestId('card-a')).toBeTruthy());
+        expect(mockListContentStyle.paddingBottom).toBe(172);
     });
 });
 
