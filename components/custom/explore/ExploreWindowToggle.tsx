@@ -11,7 +11,11 @@
 // The menu is built like RelatedSortDropdown's: selection on each item's own
 // onPress (the aria selection layer never fires on native), controlled open
 // state for VoiceOver's escape gesture, and a native modal so VoiceOver can
-// reach the items.
+// reach the items. It still cannot: gluestack's PopoverContent hard-codes
+// `accessible={true}`, so VoiceOver reads the four items as ONE element (the
+// related-sort menu has the same flaw). The trigger is therefore also an
+// ADJUSTABLE control: VoiceOver users swipe up or down to change the window
+// without opening the menu.
 
 import { CheckIcon, Icon } from '@/components/ui/icon';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
@@ -46,11 +50,22 @@ export interface ExploreWindowToggleProps {
   readonly onChange: (next: ExploreWindowHours) => void;
 }
 
+const ADJUST_ACTIONS = [{ name: 'increment' }, { name: 'decrement' }] as const;
+
 export default function ExploreWindowToggle({ value, onChange }: ExploreWindowToggleProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const openMenu = useCallback(() => setOpen(true), []);
   const closeMenu = useCallback(() => setOpen(false), []);
+  const adjust = useCallback(
+    (event: { nativeEvent: { actionName: string } }) => {
+      const i = EXPLORE_WINDOWS_HOURS.indexOf(value);
+      const step = event.nativeEvent.actionName === 'increment' ? 1 : -1;
+      const next = EXPLORE_WINDOWS_HOURS[i + step];
+      if (next !== undefined) onChange(next);
+    },
+    [value, onChange],
+  );
 
   return (
     <Menu
@@ -78,9 +93,11 @@ export default function ExploreWindowToggle({ value, onChange }: ExploreWindowTo
           <Pressable
             {...triggerProps}
             style={StyleSheet.absoluteFill}
-            accessibilityRole="button"
+            accessibilityRole="adjustable"
             accessibilityLabel={t('explore.window.menuLabel')}
             accessibilityValue={{ text: t(`explore.window.a11y${value}` as any) }}
+            accessibilityActions={ADJUST_ACTIONS}
+            onAccessibilityAction={adjust}
             testID="explore-window-toggle"
           />
         </View>

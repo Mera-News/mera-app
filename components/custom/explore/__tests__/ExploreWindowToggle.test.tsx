@@ -73,6 +73,24 @@ describe('ExploreWindowToggle', () => {
     expect(r.queryByTestId('menu-content')).toBeNull();
   });
 
+  it('is adjustable for VoiceOver: swipe up/down steps through the windows, clamped', () => {
+    const onChange = jest.fn();
+    const r = render(<ExploreWindowToggle value={24} onChange={onChange} />);
+    const button = r.getByTestId('explore-window-toggle');
+    expect(button.props.accessibilityRole).toBe('adjustable');
+    fireEvent(button, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
+    expect(onChange).toHaveBeenLastCalledWith(48);
+    fireEvent(button, 'accessibilityAction', { nativeEvent: { actionName: 'decrement' } });
+    expect(onChange).toHaveBeenLastCalledWith(12);
+
+    onChange.mockClear();
+    const top = render(<ExploreWindowToggle value={48} onChange={onChange} />);
+    fireEvent(top.getByTestId('explore-window-toggle'), 'accessibilityAction', {
+      nativeEvent: { actionName: 'increment' },
+    });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it('is ONE accessible element: the pill text is hidden from the accessibility tree', () => {
     const { queryByText } = render(<ExploreWindowToggle value={24} onChange={jest.fn()} />);
     expect(queryByText('explore.window.label24')).toBeNull();
