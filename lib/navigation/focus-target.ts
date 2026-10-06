@@ -14,11 +14,11 @@
 // could expire before the screen exists.
 
 import { BackHandler } from 'react-native';
-import { router, type Href } from 'expo-router';
+import { router } from 'expo-router';
 import { create } from 'zustand';
 
 import { useCurrentSurface, useCurrentSurfaceStore } from '@/components/custom/nav/current-surface';
-import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
+import { navigateToPage, navigateToTabScreen, setPendingPage } from '@/components/custom/nav/navigate-to-page';
 import {
     isCountryPage,
     PAGE_META,
@@ -113,10 +113,15 @@ export function navigateToSetting(target: FocusId | readonly FocusId[], now: num
         jump: origin ? { origin, destination: route.surface } : null,
     });
     if (origin) listenForBack();
-    // navigateToPage owns the order: a root push is dismissed first (never the
-    // origin tab's own stack), then the You tab opens on the page.
-    navigateToPage(route.page);
-    if (route.screen) router.push(`/logged-in/app_container/you/${route.screen}` as Href);
+    // L1 owns the order: a root push is dismissed first (never the origin
+    // tab's own stack), then the You stack pops to its root, then a push.
+    if (route.screen) {
+        // The page under the sub-screen, so Back from it lands on Settings.
+        setPendingPage(route.page);
+        navigateToTabScreen('you', route.screen);
+    } else {
+        navigateToPage(route.page);
+    }
 }
 
 /** The destination gained focus: start the expiry clock (idempotent). */

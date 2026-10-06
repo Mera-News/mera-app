@@ -5,8 +5,12 @@ jest.mock('expo-router', () => ({
     useFocusEffect: jest.fn(),
 }));
 const mockNavigateToPage = jest.fn();
+const mockNavigateToTabScreen = jest.fn();
+const mockSetPendingPage = jest.fn();
 jest.mock('@/components/custom/nav/navigate-to-page', () => ({
     navigateToPage: (...a: unknown[]) => mockNavigateToPage(...a),
+    navigateToTabScreen: (...a: unknown[]) => mockNavigateToTabScreen(...a),
+    setPendingPage: (...a: unknown[]) => mockSetPendingPage(...a),
 }));
 const mockBackListeners: (() => boolean)[] = [];
 jest.mock('react-native', () => ({
@@ -38,6 +42,8 @@ beforeEach(() => {
     mockPush.mockClear();
     mockNavigate.mockClear();
     mockNavigateToPage.mockClear();
+    mockNavigateToTabScreen.mockClear();
+    mockSetPendingPage.mockClear();
 });
 
 describe('routing', () => {
@@ -46,9 +52,11 @@ describe('routing', () => {
         expect(mockNavigateToPage).toHaveBeenCalledWith('profile');
         expect(mockPush).not.toHaveBeenCalled();
 
+        mockNavigateToPage.mockClear();
         navigateToSetting('meraProtocol.automaticFactCheck');
-        expect(mockNavigateToPage).toHaveBeenLastCalledWith('settings');
-        expect(mockPush).toHaveBeenCalledWith('/logged-in/app_container/you/mera-protocol');
+        expect(mockSetPendingPage).toHaveBeenCalledWith('settings');
+        expect(mockNavigateToTabScreen).toHaveBeenCalledWith('you', 'mera-protocol');
+        expect(mockNavigateToPage).not.toHaveBeenCalled();
         expect(routeForFocus('meraProtocol.automaticFactCheck').surface).toBe('settings:mera-protocol');
     });
 
