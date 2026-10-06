@@ -1048,7 +1048,15 @@
     "modeProcessing": "正在更新你的信息流",
     "modeError": "信息流出现问题",
     "modeLimited": "已达到每日文章上限",
-    "syncDoneA11y": "你的动态已是最新。"
+    "syncDoneA11y": "你的动态已是最新。",
+    "openA11y": "打开资讯状态",
+    "collapseA11y": "隐藏资讯状态详情",
+    "deviceProgress": "设备端评分",
+    "published": "已发布",
+    "analysed": "已分析",
+    "relevant": "与你相关",
+    "lastProcessed": "上次处理",
+    "errorTitle": "评分出现问题"
   },
   "trackedStories": {
     "emptyTitle": "还没有关注任何报道",

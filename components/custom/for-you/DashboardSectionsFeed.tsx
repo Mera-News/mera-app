@@ -1,3 +1,4 @@
+import DashboardStatsCard from '@/components/custom/for-you/DashboardStatsCard';
 import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
@@ -260,6 +261,8 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         data={sectionData}
         keyExtractor={(it) => it.key}
         renderItem={renderItem}
+        // The status card is always the first card, above the empty state too.
+        ListHeaderComponent={DashboardStatsCard}
         ListFooterComponent={<HowThisPageWorks pageId="interests" />}
         ListEmptyComponent={ListEmptyComponent}
         refreshControl={

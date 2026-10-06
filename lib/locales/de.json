@@ -1048,7 +1048,15 @@
     "modeProcessing": "Dein Feed wird aktualisiert",
     "modeError": "Problem mit dem Feed",
     "modeLimited": "Tageslimit für Artikel erreicht",
-    "syncDoneA11y": "Dein Feed ist aktuell."
+    "syncDoneA11y": "Dein Feed ist aktuell.",
+    "openA11y": "Feed-Status öffnen",
+    "collapseA11y": "Feed-Status-Details verbergen",
+    "deviceProgress": "Bewertung auf dem Gerät",
+    "published": "Veröffentlicht",
+    "analysed": "Analysiert",
+    "relevant": "Relevant für Sie",
+    "lastProcessed": "Zuletzt verarbeitet",
+    "errorTitle": "Problem bei der Bewertung"
   },
   "trackedStories": {
     "emptyTitle": "Noch keine gefolgten Geschichten",

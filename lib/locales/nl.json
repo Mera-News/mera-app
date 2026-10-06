@@ -1048,7 +1048,15 @@
     "modeProcessing": "Je feed wordt bijgewerkt",
     "modeError": "Probleem met de feed",
     "modeLimited": "Daglimiet voor artikelen bereikt",
-    "syncDoneA11y": "Je feed is bijgewerkt."
+    "syncDoneA11y": "Je feed is bijgewerkt.",
+    "openA11y": "Feedstatus openen",
+    "collapseA11y": "Feedstatus-details verbergen",
+    "deviceProgress": "Scoren op apparaat",
+    "published": "Gepubliceerd",
+    "analysed": "Geanalyseerd",
+    "relevant": "Relevant voor jou",
+    "lastProcessed": "Laatst verwerkt",
+    "errorTitle": "Probleem bij scoren"
   },
   "trackedStories": {
     "emptyTitle": "Nog geen verhalen gevolgd",

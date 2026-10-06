@@ -27,6 +27,7 @@ import {
   type ResortTrigger,
 } from '@/lib/feed-ordering/dashboard-resort';
 import { useFeedBootstrap } from '@/lib/hooks/use-feed-bootstrap';
+import { StatusDropdownLayer, StatusDropdownProvider } from './status-dropdown';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useOpenSuggestion } from '@/lib/hooks/use-open-suggestion';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -164,6 +165,7 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
   }
 
   return (
+    <StatusDropdownProvider>
     <View style={{ flex: 1 }} testID="interests-page">
       <DashboardSectionsFeed
         rows={rows}
@@ -177,7 +179,9 @@ const InterestsPage: React.FC<InterestsPageProps> = ({ active, header }) => {
         onRefresh={onRefresh}
         active={active}
       />
+      <StatusDropdownLayer testIDPrefix="interests-stats" />
     </View>
+    </StatusDropdownProvider>
   );
 };
 

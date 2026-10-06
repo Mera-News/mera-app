@@ -1048,7 +1048,15 @@
     "modeProcessing": "フィードを更新しています",
     "modeError": "フィードの問題",
     "modeLimited": "1日の記事上限に達しました",
-    "syncDoneA11y": "フィードは最新の状態です。"
+    "syncDoneA11y": "フィードは最新の状態です。",
+    "openA11y": "フィードの状態を開く",
+    "collapseA11y": "フィード状態の詳細を隠す",
+    "deviceProgress": "端末でのスコアリング",
+    "published": "公開",
+    "analysed": "分析済み",
+    "relevant": "あなたに関連",
+    "lastProcessed": "最終処理",
+    "errorTitle": "スコアリングの問題"
   },
   "trackedStories": {
     "emptyTitle": "まだフォローしているストーリーはありません",

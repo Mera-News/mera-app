@@ -1048,7 +1048,15 @@
     "modeProcessing": "Atualizando seu feed",
     "modeError": "Problema no feed",
     "modeLimited": "Limite diário de artigos atingido",
-    "syncDoneA11y": "Seu feed está atualizado."
+    "syncDoneA11y": "Seu feed está atualizado.",
+    "openA11y": "Abrir status do feed",
+    "collapseA11y": "Ocultar detalhes do status do feed",
+    "deviceProgress": "Pontuação no dispositivo",
+    "published": "Publicado",
+    "analysed": "Analisados",
+    "relevant": "Relevantes para você",
+    "lastProcessed": "Última atualização",
+    "errorTitle": "Problema de pontuação"
   },
   "trackedStories": {
     "emptyTitle": "Nenhuma história seguida ainda",

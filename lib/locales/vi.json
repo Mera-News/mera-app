@@ -1048,7 +1048,15 @@
     "modeProcessing": "Đang cập nhật bảng tin của bạn",
     "modeError": "Sự cố bảng tin",
     "modeLimited": "Đã đạt giới hạn bài viết hằng ngày",
-    "syncDoneA11y": "Bảng tin của bạn đã được cập nhật."
+    "syncDoneA11y": "Bảng tin của bạn đã được cập nhật.",
+    "openA11y": "Mở trạng thái bản tin",
+    "collapseA11y": "Ẩn chi tiết trạng thái bản tin",
+    "deviceProgress": "Chấm điểm trên thiết bị",
+    "published": "Đã xuất bản",
+    "analysed": "Đã phân tích",
+    "relevant": "Liên quan đến bạn",
+    "lastProcessed": "Xử lý lần cuối",
+    "errorTitle": "Sự cố chấm điểm"
   },
   "trackedStories": {
     "emptyTitle": "Chưa theo dõi câu chuyện nào",

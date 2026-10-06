@@ -540,7 +540,15 @@
     "modeProcessing": "Updating your feed",
     "modeError": "Feed problem",
     "modeLimited": "Daily article limit reached",
-    "syncDoneA11y": "Your feed is up to date."
+    "syncDoneA11y": "Your feed is up to date.",
+    "openA11y": "Open feed status",
+    "collapseA11y": "Hide feed status details",
+    "deviceProgress": "On-device scoring",
+    "published": "Published",
+    "analysed": "Analysed",
+    "relevant": "Relevant to you",
+    "lastProcessed": "Last processed",
+    "errorTitle": "Scoring problem"
   },
   "trackedStories": {
     "followChatIntro": "Tell me what you'd like to follow and I'll set it up.",

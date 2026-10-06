@@ -1048,7 +1048,15 @@
     "modeProcessing": "Memperbarui feed Anda",
     "modeError": "Masalah pada feed",
     "modeLimited": "Batas artikel harian tercapai",
-    "syncDoneA11y": "Feed kamu sudah terkini."
+    "syncDoneA11y": "Feed kamu sudah terkini.",
+    "openA11y": "Buka status feed",
+    "collapseA11y": "Sembunyikan detail status feed",
+    "deviceProgress": "Penilaian di perangkat",
+    "published": "Dipublikasikan",
+    "analysed": "Dianalisis",
+    "relevant": "Relevan untuk Anda",
+    "lastProcessed": "Terakhir diproses",
+    "errorTitle": "Masalah penilaian"
   },
   "trackedStories": {
     "emptyTitle": "Belum ada cerita yang diikuti",

@@ -1084,7 +1084,15 @@
     "modeProcessing": "جارٍ تحديث موجزك",
     "modeError": "مشكلة في الموجز",
     "modeLimited": "تم بلوغ حد المقالات اليومي",
-    "syncDoneA11y": "موجزك محدَّث."
+    "syncDoneA11y": "موجزك محدَّث.",
+    "openA11y": "فتح حالة الخلاصة",
+    "collapseA11y": "إخفاء تفاصيل حالة الخلاصة",
+    "deviceProgress": "التقييم على الجهاز",
+    "published": "نُشرت",
+    "analysed": "تم التحليل",
+    "relevant": "ذات صلة بك",
+    "lastProcessed": "آخر معالجة",
+    "errorTitle": "مشكلة في التقييم"
   },
   "trackedStories": {
     "emptyTitle": "لا توجد قصص متابَعة بعد",

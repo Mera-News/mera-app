@@ -1048,7 +1048,15 @@
     "modeProcessing": "Akışınız güncelleniyor",
     "modeError": "Akış sorunu",
     "modeLimited": "Günlük makale sınırına ulaşıldı",
-    "syncDoneA11y": "Akışın güncel."
+    "syncDoneA11y": "Akışın güncel.",
+    "openA11y": "Akış durumunu aç",
+    "collapseA11y": "Akış durumu ayrıntılarını gizle",
+    "deviceProgress": "Cihaz üzerinde puanlama",
+    "published": "Yayınlandı",
+    "analysed": "Analiz edildi",
+    "relevant": "Senin için alakalı",
+    "lastProcessed": "Son işlenme",
+    "errorTitle": "Puanlama sorunu"
   },
   "trackedStories": {
     "emptyTitle": "Henüz takip edilen haber yok",

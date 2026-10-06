@@ -97,6 +97,10 @@ jest.mock('@/components/ui/box', () => {
 
 // Isolate the feed's own logic — mock the section pieces to render identifiable
 // nodes that expose the props DashboardSectionsFeed computes/passes.
+jest.mock('@/components/custom/for-you/DashboardStatsCard', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="dashboard-stats-card" /> };
+});
 jest.mock('@/components/custom/for-you/SectionGradientPanel', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: ({ children }: any) => <View>{children}</View> };
@@ -512,9 +516,9 @@ describe('DashboardSectionsFeed: list end padding', () => {
 });
 
 describe('DashboardSectionsFeed: the Interests list', () => {
-    it('has no stats card and no breaking strip; it ends with How this page works', () => {
+    it('starts with the status card, has no breaking strip, and ends with How this page works', () => {
         const r = renderFeed([makeRow('f1', [makeGroup('g1', 1, 1)])]);
-        expect(r.queryByTestId('dashboard-stats-card')).toBeNull();
+        expect(r.getByTestId('dashboard-stats-card')).toBeTruthy();
         expect(r.queryByTestId('breaking-strip')).toBeNull();
         expect(r.getByTestId('how-this-page-works-row')).toBeTruthy();
     });

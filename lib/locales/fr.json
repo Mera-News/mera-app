@@ -1054,7 +1054,15 @@
     "modeProcessing": "Mise à jour de votre fil",
     "modeError": "Problème de fil",
     "modeLimited": "Limite quotidienne d'articles atteinte",
-    "syncDoneA11y": "Ton fil est à jour."
+    "syncDoneA11y": "Ton fil est à jour.",
+    "openA11y": "Ouvrir l'état du fil",
+    "collapseA11y": "Masquer les détails de l'état du fil",
+    "deviceProgress": "Évaluation sur l'appareil",
+    "published": "Publié",
+    "analysed": "Analysés",
+    "relevant": "Pertinents pour vous",
+    "lastProcessed": "Dernier traitement",
+    "errorTitle": "Problème d'évaluation"
   },
   "trackedStories": {
     "emptyTitle": "Aucune actualité suivie pour l'instant",

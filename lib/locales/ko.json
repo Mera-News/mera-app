@@ -1048,7 +1048,15 @@
     "modeProcessing": "피드를 업데이트하는 중",
     "modeError": "피드 문제",
     "modeLimited": "일일 기사 한도에 도달함",
-    "syncDoneA11y": "피드가 최신 상태입니다."
+    "syncDoneA11y": "피드가 최신 상태입니다.",
+    "openA11y": "피드 상태 열기",
+    "collapseA11y": "피드 상태 세부 정보 숨기기",
+    "deviceProgress": "기기 내 점수 계산",
+    "published": "게시됨",
+    "analysed": "분석됨",
+    "relevant": "나와 관련됨",
+    "lastProcessed": "마지막 처리",
+    "errorTitle": "점수 계산 문제"
   },
   "trackedStories": {
     "emptyTitle": "아직 팔로우한 스토리가 없습니다",
