@@ -118,7 +118,16 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
       ],
     },
   },
-  world: { tab: 'world', labelKey: 'tabs.world', quickSettings: null, keepMounted: false, explainer: null },
+  world: {
+    tab: 'world',
+    labelKey: 'tabs.world',
+    quickSettings: null,
+    keepMounted: false,
+    explainer: {
+      titleKey: 'world.explainer.title',
+      paragraphKeys: ['world.explainer.what', 'world.explainer.how1', 'world.explainer.how2'],
+    },
+  },
   saved: { tab: 'library', labelKey: 'nav.page.saved', quickSettings: null, keepMounted: false, explainer: null },
   checks: {
     tab: 'library',
@@ -129,7 +138,16 @@ export const PAGE_META: Readonly<Record<FixedPageId, PageMeta>> = {
   },
   visited: { tab: 'library', labelKey: 'nav.page.visited', quickSettings: null, keepMounted: false, explainer: null },
   stats: { tab: 'library', labelKey: 'nav.page.stats', quickSettings: null, keepMounted: false, explainer: null },
-  profile: { tab: 'you', labelKey: 'tabs.profile', quickSettings: null, keepMounted: false, explainer: null },
+  profile: {
+    tab: 'you',
+    labelKey: 'tabs.profile',
+    quickSettings: null,
+    keepMounted: false,
+    explainer: {
+      titleKey: 'you.explainer.title',
+      paragraphKeys: ['you.explainer.what', 'you.explainer.how1', 'you.explainer.privacy'],
+    },
+  },
   settings: { tab: 'you', labelKey: 'tabs.settings', quickSettings: null, keepMounted: false, explainer: null },
 };
 

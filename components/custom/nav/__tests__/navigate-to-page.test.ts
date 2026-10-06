@@ -5,6 +5,8 @@ import {
   PENDING_PAGE_MAX_AGE_MS,
   consumePendingPage,
   navigateToPage,
+  navigateToTabScreen,
+  registerTabStack,
   resetPendingPage,
   usePendingPageStore,
 } from '../navigate-to-page';
@@ -75,5 +77,55 @@ describe('current surface', () => {
     expect(useCurrentSurface.getState()).toBe('interests');
     clearSurface('interests');
     expect(useCurrentSurface.getState()).toBeNull();
+  });
+});
+
+describe('target stack pop', () => {
+  it('pops the TARGET tab stack to root before navigating, after dismissing a root push', () => {
+    const calls: string[] = [];
+    r.canDismiss = jest.fn(() => true);
+    r.dismissAll = jest.fn(() => calls.push('dismissAll'));
+    r.navigate = jest.fn(() => calls.push('navigate'));
+    const popYou = jest.fn(() => calls.push('pop:you'));
+    const popFeed = jest.fn(() => calls.push('pop:feed'));
+    const offYou = registerTabStack('you', popYou);
+    const offFeed = registerTabStack('feed', popFeed);
+    navigateToPage('profile');
+    expect(calls).toEqual(['dismissAll', 'pop:you', 'navigate']);
+    expect(popFeed).not.toHaveBeenCalled();
+    offYou();
+    offFeed();
+  });
+
+  it('never dismisses from inside a tab, but still pops the target', () => {
+    reportSurface('interest:f1');
+    r.canDismiss = jest.fn(() => true);
+    const pop = jest.fn();
+    const off = registerTabStack('library', pop);
+    navigateToPage('saved');
+    expect(r.dismissAll).not.toHaveBeenCalled();
+    expect(pop).toHaveBeenCalledTimes(1);
+    off();
+  });
+
+  it('pushes a tab screen on top of the popped root', () => {
+    const calls: string[] = [];
+    r.push = jest.fn((h: { pathname: string }) => calls.push(`push:${h.pathname}`));
+    r.navigate = jest.fn(() => calls.push('navigate'));
+    const off = registerTabStack('you', () => calls.push('pop:you'));
+    navigateToTabScreen('you', 'sources');
+    expect(calls).toEqual(['pop:you', 'navigate', 'push:/logged-in/app_container/you/sources']);
+    off();
+  });
+
+  it('unregisters only its own popper', () => {
+    const a = jest.fn();
+    const b = jest.fn();
+    const offA = registerTabStack('feed', a);
+    registerTabStack('feed', b);
+    offA();
+    navigateToPage('stories');
+    expect(b).toHaveBeenCalledTimes(1);
+    expect(a).not.toHaveBeenCalled();
   });
 });

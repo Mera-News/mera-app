@@ -12,9 +12,17 @@
 //
 // Navigation order: a root push above app_container (article detail, Search,
 // a stub) is dismissed first, and only then, so the origin tab's own stack is
-// never popped. Then the target tab is navigated to.
+// never popped. Then the TARGET tab's stack is popped to its root explicitly
+// (a screen pushed there earlier, Facts in You, would otherwise stay on top of
+// the page the jump is for), and only then is the tab navigated to.
+//
+// The explicit pop goes through a per-tab popper registered by each tab's
+// root screen (`useRegisterTabStack`), because only a screen inside that stack
+// holds its navigation object; navigating to the tab's path alone does not
+// promise a pop.
 
-import { router } from 'expo-router';
+import { router, useNavigation, type Href } from 'expo-router';
+import { useEffect } from 'react';
 import { create } from 'zustand';
 
 import { useCurrentSurface } from './current-surface';
@@ -56,24 +64,76 @@ export interface NavigateToPageOptions {
   readonly replace?: boolean;
 }
 
+/** Pops a tab's stack to its root; registered by the tab's root screen. */
+type StackPopper = () => void;
+const stackPoppers = new Map<TabId, StackPopper>();
+
+/** Register `pop` as `tab`'s stack popper; returns the unregister. */
+export function registerTabStack(tab: TabId, pop: StackPopper): () => void {
+  stackPoppers.set(tab, pop);
+  return () => {
+    if (stackPoppers.get(tab) === pop) stackPoppers.delete(tab);
+  };
+}
+
+/** Call from each tab's ROOT screen (the stack's first route). */
+export function useRegisterTabStack(tab: TabId): void {
+  const navigation = useNavigation();
+  useEffect(
+    () =>
+      registerTabStack(tab, () => {
+        const nav = navigation as unknown as {
+          getState: () => { index: number } | undefined;
+          popToTop: () => void;
+        };
+        if ((nav.getState()?.index ?? 0) > 0) nav.popToTop();
+      }),
+    [tab, navigation],
+  );
+}
+
+/** Set the pending request without navigating (`+native-intent`, which
+ *  returns the path itself). */
+export function setPendingPage(page: PageId, params: Readonly<Record<string, string>> | null = null): void {
+  usePendingPageStore.setState({
+    request: { page, params, origin: useCurrentSurface.getState(), at: Date.now() },
+  });
+}
+
+/** Dismiss a root push, pop the target tab's stack, then open the tab. */
+function openTab(tab: TabId, origin: SurfaceId | null, replace: boolean | undefined): void {
+  // A surface inside a tab never dismisses: that would pop its own stack.
+  const fromRootPush = origin === null || tabForSurface(origin) === null;
+  const dismissed = fromRootPush && router.canDismiss();
+  if (dismissed) router.dismissAll();
+  stackPoppers.get(tab)?.();
+  const href = tabRoute(tab);
+  if (replace && !dismissed) router.replace(href);
+  else router.navigate(href);
+}
+
 export function navigateToPage(page: PageId, opts: NavigateToPageOptions = {}): void {
   const origin = useCurrentSurface.getState();
   usePendingPageStore.setState({
     request: { page, params: opts.params ?? null, origin, at: Date.now() },
   });
-  const href = tabRoute(tabOfPage(page));
-  // A surface inside a tab never dismisses: that would pop its own stack.
-  const fromRootPush = origin === null || tabForSurface(origin) === null;
-  if (fromRootPush && router.canDismiss()) {
-    router.dismissAll();
-    router.navigate(href);
-    return;
-  }
-  if (opts.replace) {
-    router.replace(href);
-    return;
-  }
-  router.navigate(href);
+  openTab(tabOfPage(page), origin, opts.replace);
+}
+
+/**
+ * Open a screen pushed inside a tab's stack (`you/sources`), on top of that
+ * tab's ROOT: same dismiss and pop order as `navigateToPage`, then a push.
+ * The tab keeps whatever page it was on.
+ */
+export function navigateToTabScreen(
+  tab: TabId,
+  screen: string,
+  opts: NavigateToPageOptions = {},
+): void {
+  openTab(tab, useCurrentSurface.getState(), opts.replace);
+  // Built at run time from a screen name, so typed routes cannot check it;
+  // the route-files test asserts every caller's screen exists.
+  router.push({ pathname: `${tabRoute(tab)}/${screen}`, params: opts.params ?? {} } as Href);
 }
 
 /** Take the pending request if it is for `tab` and still fresh. One-shot. */
