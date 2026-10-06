@@ -16,7 +16,19 @@ import { router } from 'expo-router';
 
 export const PUBLICATION_ROUTE = '/logged-in/publication';
 
+/** The order the page's NEWS is asked for. */
 export type PublicationOrder = 'NEWEST' | 'TOP_HEADLINES';
+
+/** What the page shows below its header: one of the two news orders, or the
+ *  reader's own History (their visits to this publication, last 30 days).
+ *  All three ride on the one `order` route param, so switching is
+ *  `router.setParams` and Back never steps through the sub-tabs. */
+export type PublicationView = PublicationOrder | 'HISTORY';
+
+/** The route's `order` param, untrusted: anything unknown is Latest. */
+export function parsePublicationOrder(raw: unknown): PublicationView {
+    return raw === 'TOP_HEADLINES' || raw === 'HISTORY' ? raw : 'NEWEST';
+}
 
 /** What an entry point knows. At least one of `publisherId` and `rawName`
  *  must be non-empty, or nothing opens (`buildPublicationParams` -> null). */
@@ -30,7 +42,7 @@ export interface PublicationRouteParams {
     publisherId?: string;
     name?: string;
     country?: string;
-    order?: 'TOP_HEADLINES';
+    order?: 'TOP_HEADLINES' | 'HISTORY';
 }
 
 /**
@@ -41,7 +53,7 @@ export interface PublicationRouteParams {
  */
 export function buildPublicationParams(
     target: PublicationTarget,
-    order: PublicationOrder = 'NEWEST',
+    order: PublicationView = 'NEWEST',
 ): PublicationRouteParams | null {
     const publisherId = target.publisherId?.trim() || undefined;
     const name = target.rawName?.trim() || undefined;
@@ -51,7 +63,7 @@ export function buildPublicationParams(
     if (publisherId) params.publisherId = publisherId;
     if (name) params.name = name;
     if (country) params.country = country;
-    if (order === 'TOP_HEADLINES') params.order = 'TOP_HEADLINES';
+    if (order !== 'NEWEST') params.order = order;
     return params;
 }
 
@@ -93,7 +105,7 @@ export function isPublicationOnTop(target: PublicationTarget): boolean {
  */
 export function openPublicationPage(
     target: PublicationTarget,
-    order: PublicationOrder = 'NEWEST',
+    order: PublicationView = 'NEWEST',
 ): boolean {
     const params = buildPublicationParams(target, order);
     if (!params) return false;

@@ -7,6 +7,7 @@ import {
     __resetPublicationOnTopForTests,
     buildPublicationParams,
     openPublicationPage,
+    parsePublicationOrder,
     publicationKeysFor,
     setPublicationOnTop,
 } from '../open-publication-page';
@@ -92,5 +93,24 @@ describe('openPublicationPage', () => {
         setPublicationOnTop(publicationKeysFor({ publisherId: 'p1' }));
         mockPathname = '/logged-in/article-detail';
         expect(openPublicationPage({ publisherId: 'p1' })).toBe(true);
+    });
+});
+
+describe('parsePublicationOrder', () => {
+    it('reads the three views and treats anything else as Latest', () => {
+        expect(parsePublicationOrder('TOP_HEADLINES')).toBe('TOP_HEADLINES');
+        expect(parsePublicationOrder('HISTORY')).toBe('HISTORY');
+        expect(parsePublicationOrder('NEWEST')).toBe('NEWEST');
+        expect(parsePublicationOrder(undefined)).toBe('NEWEST');
+        expect(parsePublicationOrder(['HISTORY'])).toBe('NEWEST');
+        expect(parsePublicationOrder('history')).toBe('NEWEST');
+    });
+
+    it('round-trips through buildPublicationParams', () => {
+        expect(buildPublicationParams({ rawName: 'NOS', countryCode: 'NLD' }, 'HISTORY')).toEqual({
+            name: 'NOS',
+            country: 'NLD',
+            order: 'HISTORY',
+        });
     });
 });

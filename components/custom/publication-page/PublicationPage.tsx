@@ -23,7 +23,12 @@ import { FlatList, type ListRenderItem, Platform, RefreshControl, StyleSheet, Vi
 
 import PublicationFeedControl from './PublicationFeedControl';
 import PublicationHeader from './PublicationHeader';
-import { publicationKeysFor, setPublicationOnTop, type PublicationOrder } from './open-publication-page';
+import {
+    publicationKeysFor,
+    setPublicationOnTop,
+    type PublicationOrder,
+    type PublicationView,
+} from './open-publication-page';
 import {
     usePublicationArticles,
     usePublicationPref,
@@ -59,7 +64,7 @@ export interface PublicationPageProps {
     /** The raw publication name the entry point had (never a display name). */
     readonly rawName?: string | null;
     readonly countryCode?: string | null;
-    readonly order: PublicationOrder;
+    readonly order: PublicationView;
     readonly onBack: () => void;
 }
 
@@ -107,12 +112,15 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     // server still answers `articlesForPublisher` (as Top headlines; the
     // switch then shows only that tab, see `shownOrder`).
     const newsAvailable = state !== 'notFound' && !(state === 'unsupported' && !newsPublisherId);
-    const news = usePublicationArticles(newsAvailable ? newsPublisherId : null, order, {
+    // History is not a news order: under it the news stays requested as Latest,
+    // so switching back to Latest is instant.
+    const newsOrder: PublicationOrder = order === 'HISTORY' ? 'NEWEST' : order;
+    const news = usePublicationArticles(newsAvailable ? newsPublisherId : null, newsOrder, {
         sourceNames: profile?.sourceNames ?? pref.names,
     });
     // An older server answers a Latest request with Top headlines. The switch
     // must not claim Latest then.
-    const shownOrder: PublicationOrder = order === 'NEWEST' && !news.orderApplied ? 'TOP_HEADLINES' : order;
+    const shownOrder: PublicationOrder = newsOrder === 'NEWEST' && !news.orderApplied ? 'TOP_HEADLINES' : newsOrder;
 
     // Display: the profile's name in the app language, else the display-store
     // name for the raw key. Every write and lookup keeps the RAW names.
@@ -141,7 +149,7 @@ const PublicationPage: React.FC<PublicationPageProps> = ({ publisherId, rawName,
     const openArticle = useOpenArticle();
 
     const selectOrder = useCallback(
-        (next: PublicationOrder) => {
+        (next: PublicationView) => {
             if (next === order) return;
             // setParams, never push: Back must leave the page, not step
             // through the reader's tab switches.
