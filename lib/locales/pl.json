@@ -1086,8 +1086,15 @@
       "label48": "48 godz.",
       "a11y24": "Wiadomości z ostatnich 24 godzin",
       "a11y48": "Wiadomości z ostatnich 48 godzin",
-      "hint24": "Przełącza na ostatnie 48 godzin",
-      "hint48": "Przełącza na ostatnie 24 godziny"
+      "label6": "6 godz.",
+      "label12": "12 godz.",
+      "a11y6": "Wiadomości z ostatnich 6 godzin",
+      "a11y12": "Wiadomości z ostatnich 12 godzin",
+      "menuLabel": "Okres",
+      "option6": "Ostatnie 6 godzin",
+      "option12": "Ostatnie 12 godzin",
+      "option24": "Ostatnie 24 godziny",
+      "option48": "Ostatnie 48 godzin"
     }
   },
   "forYou": {
@@ -2940,7 +2947,7 @@
     },
     "explore": {
       "title": "Jak działa Odkrywaj",
-      "what": "Odkrywaj pokazuje największe wiadomości, które po raz pierwszy pojawiły się w ostatnich 24 godzinach, ze świata i z każdego wybranego kraju. Stuknij 24 godz. u góry, aby zobaczyć ostatnie 48 godzin. Są takie same dla wszystkich, nie dobrane pod ciebie.",
+      "what": "Odkrywaj pokazuje wiadomości najczęściej opisywane w ostatnich 24 godzinach, ze świata i z każdego wybranego kraju. Stuknij 24 godz. u góry, aby wybrać 6, 12 lub 48 godzin. Są takie same dla wszystkich, nie dobrane pod ciebie.",
       "how1": "Nagłówki ze świata są uszeregowane według tego, jak szeroko temat jest opisywany w różnych krajach, a nie według liczby artykułów.",
       "how2": "Nagłówki z kraju pochodzą ze źródeł wiadomości z siedzibą w tym kraju."
     },

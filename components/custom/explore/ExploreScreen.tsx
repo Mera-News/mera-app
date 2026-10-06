@@ -128,7 +128,7 @@ const ExploreScreen: React.FC = () => {
     // across a remount) cares, and persisting it would reopen the tab in a
     // filtered-looking state.
     const [searchOpen, setSearchOpen] = useState(false);
-    // The 24h/48h first-seen view (header toggle). Session-only on purpose:
+    // The 6/12/24/48h window (header menu). Session-only on purpose:
     // every launch starts at 24h, the default the owner asked for.
     const [windowHours, setWindowHours] = useState<ExploreWindowHours>(24);
     const handleOpenSearch = useCallback(() => setSearchOpen(true), []);

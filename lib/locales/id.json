@@ -1072,8 +1072,15 @@
       "label48": "48 jam",
       "a11y24": "Berita 24 jam terakhir",
       "a11y48": "Berita 48 jam terakhir",
-      "hint24": "Beralih ke 48 jam terakhir",
-      "hint48": "Beralih ke 24 jam terakhir"
+      "label6": "6 jam",
+      "label12": "12 jam",
+      "a11y6": "Berita 6 jam terakhir",
+      "a11y12": "Berita 12 jam terakhir",
+      "menuLabel": "Rentang waktu",
+      "option6": "6 jam terakhir",
+      "option12": "12 jam terakhir",
+      "option24": "24 jam terakhir",
+      "option48": "48 jam terakhir"
     }
   },
   "forYou": {
@@ -2901,7 +2908,7 @@
     },
     "explore": {
       "title": "Cara kerja Eksplor",
-      "what": "Eksplor menampilkan berita terbesar yang pertama kali muncul dalam 24 jam terakhir, untuk dunia dan setiap negara yang kamu pilih. Ketuk 24 jam di atas untuk melihat 48 jam terakhir. Isinya sama untuk semua orang, bukan dipilih untukmu.",
+      "what": "Eksplor menampilkan berita yang paling banyak diliput dalam 24 jam terakhir, untuk dunia dan setiap negara yang kamu pilih. Ketuk 24 jam di atas untuk memilih 6, 12, atau 48 jam. Isinya sama untuk semua orang, bukan dipilih untukmu.",
       "how1": "Berita utama dunia diurutkan menurut seberapa luas sebuah berita diliput di berbagai negara, bukan menurut jumlah artikelnya.",
       "how2": "Berita utama suatu negara berasal dari sumber berita yang berbasis di negara tersebut."
     },

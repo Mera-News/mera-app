@@ -1072,8 +1072,15 @@
       "label48": "48 h",
       "a11y24": "Noticias de las últimas 24 horas",
       "a11y48": "Noticias de las últimas 48 horas",
-      "hint24": "Cambia a las últimas 48 horas",
-      "hint48": "Cambia a las últimas 24 horas"
+      "label6": "6 h",
+      "label12": "12 h",
+      "a11y6": "Noticias de las últimas 6 horas",
+      "a11y12": "Noticias de las últimas 12 horas",
+      "menuLabel": "Periodo",
+      "option6": "Últimas 6 horas",
+      "option12": "Últimas 12 horas",
+      "option24": "Últimas 24 horas",
+      "option48": "Últimas 48 horas"
     }
   },
   "forYou": {
@@ -2902,7 +2909,7 @@
     },
     "explore": {
       "title": "Cómo funciona Explorar",
-      "what": "Explorar muestra las noticias más importantes que aparecieron por primera vez en las últimas 24 horas, del mundo y de cada país que elijas. Toca 24 h arriba para ver las últimas 48 horas. Son las mismas para todos, no están elegidas para ti.",
+      "what": "Explorar muestra las noticias con más cobertura en las últimas 24 horas, del mundo y de cada país que elijas. Toca 24 h arriba para elegir 6, 12 o 48 horas. Son las mismas para todos, no están elegidas para ti.",
       "how1": "Los titulares del mundo se ordenan según lo ampliamente que se cubre una noticia en distintos países, no por el número de artículos.",
       "how2": "Los titulares de un país vienen de fuentes de noticias con sede en ese país."
     },

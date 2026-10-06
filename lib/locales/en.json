@@ -523,8 +523,15 @@
       "label48": "48h",
       "a11y24": "Stories from the last 24 hours",
       "a11y48": "Stories from the last 48 hours",
-      "hint24": "Switches to the last 48 hours",
-      "hint48": "Switches to the last 24 hours"
+      "label6": "6h",
+      "label12": "12h",
+      "a11y6": "Stories from the last 6 hours",
+      "a11y12": "Stories from the last 12 hours",
+      "menuLabel": "Time window",
+      "option6": "Last 6 hours",
+      "option12": "Last 12 hours",
+      "option24": "Last 24 hours",
+      "option48": "Last 48 hours"
     }
   },
   "forYou": {
@@ -2902,7 +2909,7 @@
     },
     "explore": {
       "title": "How Explore works",
-      "what": "Explore shows the biggest stories that first appeared in the last 24 hours, for the world and for each country you pick. Tap 24h at the top to see the last 48 hours. They are the same for everyone, not picked for you.",
+      "what": "Explore shows the stories covered most in the last 24 hours, for the world and for each country you pick. Tap 24h at the top to choose 6, 12 or 48 hours instead. They are the same for everyone, not picked for you.",
       "how1": "World headlines are ranked by how widely a story is covered across countries, not by how many articles there are.",
       "how2": "Country headlines come from news sources based in that country."
     },

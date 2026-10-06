@@ -1072,8 +1072,15 @@
       "label48": "48 sa",
       "a11y24": "Son 24 saatin haberleri",
       "a11y48": "Son 48 saatin haberleri",
-      "hint24": "Son 48 saate geçer",
-      "hint48": "Son 24 saate geçer"
+      "label6": "6 sa",
+      "label12": "12 sa",
+      "a11y6": "Son 6 saatin haberleri",
+      "a11y12": "Son 12 saatin haberleri",
+      "menuLabel": "Zaman aralığı",
+      "option6": "Son 6 saat",
+      "option12": "Son 12 saat",
+      "option24": "Son 24 saat",
+      "option48": "Son 48 saat"
     }
   },
   "forYou": {
@@ -2904,7 +2911,7 @@
     },
     "explore": {
       "title": "Keşfet nasıl çalışır",
-      "what": "Keşfet, dünya ve seçtiğin her ülke için son 24 saatte ilk kez çıkan en büyük haberleri gösterir. Son 48 saati görmek için üstteki 24 sa düğmesine dokun. Herkes için aynıdır, senin için seçilmez.",
+      "what": "Keşfet, dünya ve seçtiğin her ülke için son 24 saatte en çok haber yapılan konuları gösterir. Bunun yerine 6, 12 veya 48 saati seçmek için üstteki 24 sa düğmesine dokun. Herkes için aynıdır, senin için seçilmez.",
       "how1": "Dünya manşetleri, makale sayısına göre değil, bir haberin farklı ülkelerde ne kadar geniş yer bulduğuna göre sıralanır.",
       "how2": "Ülke manşetleri o ülkede bulunan haber kaynaklarından gelir."
     },

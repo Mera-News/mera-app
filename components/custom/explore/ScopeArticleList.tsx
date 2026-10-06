@@ -86,8 +86,8 @@ interface ScopeArticleListProps {
      *  shows it at once, but it paginates and takes the tab-press refresh only
      *  when active. Default true. */
     readonly active?: boolean;
-    /** Keep the stories first seen in the last 24 or 48 hours (the header
-     *  toggle). The parent keys this list by it, so a change is a fresh mount
+    /** Rank the stories most covered in the last 6, 12, 24 or 48 hours (the
+     *  header menu). The parent keys this list by it, so a change is a fresh mount
      *  and a fresh first page. Absent: the server default (24). */
     readonly windowHours?: number;
 }

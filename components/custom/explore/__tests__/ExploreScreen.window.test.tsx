@@ -96,6 +96,16 @@ jest.mock('@expo/vector-icons', () => { const { View } = require('react-native')
 // every re-render instead.
 const mockListMount = jest.fn();
 const mockListRender = jest.fn();
+// The window picker's gluestack Menu is ESM that jest cannot parse; its own
+// suite covers it.
+jest.mock('@/components/ui/menu', () => {
+    const { View } = require('react-native');
+    return {
+        Menu: ({ trigger }: any) => <View>{trigger({})}</View>,
+        MenuItem: () => null,
+        MenuItemLabel: () => null,
+    };
+});
 jest.mock('../ScopeArticleList', () => {
     const ReactLib = require('react');
     const { View } = require('react-native');

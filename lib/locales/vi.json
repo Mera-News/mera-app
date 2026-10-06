@@ -1072,8 +1072,15 @@
       "label48": "48 giờ",
       "a11y24": "Tin trong 24 giờ qua",
       "a11y48": "Tin trong 48 giờ qua",
-      "hint24": "Chuyển sang 48 giờ qua",
-      "hint48": "Chuyển sang 24 giờ qua"
+      "label6": "6 giờ",
+      "label12": "12 giờ",
+      "a11y6": "Tin trong 6 giờ qua",
+      "a11y12": "Tin trong 12 giờ qua",
+      "menuLabel": "Khoảng thời gian",
+      "option6": "6 giờ qua",
+      "option12": "12 giờ qua",
+      "option24": "24 giờ qua",
+      "option48": "48 giờ qua"
     }
   },
   "forYou": {
@@ -2902,7 +2909,7 @@
     },
     "explore": {
       "title": "Khám phá hoạt động thế nào",
-      "what": "Khám phá hiện những tin lớn nhất xuất hiện lần đầu trong 24 giờ qua, của thế giới và của từng quốc gia bạn chọn. Chạm 24 giờ ở trên cùng để xem 48 giờ qua. Mọi người đều thấy giống nhau, không chọn riêng cho bạn.",
+      "what": "Khám phá hiện những tin được đưa nhiều nhất trong 24 giờ qua, của thế giới và của từng quốc gia bạn chọn. Chạm 24 giờ ở trên cùng để chọn 6, 12 hoặc 48 giờ. Mọi người đều thấy giống nhau, không chọn riêng cho bạn.",
       "how1": "Tiêu đề thế giới được xếp theo mức độ một tin được đưa rộng rãi ở nhiều quốc gia, không theo số lượng bài viết.",
       "how2": "Tiêu đề của một quốc gia đến từ các nguồn tin đặt tại quốc gia đó."
     },

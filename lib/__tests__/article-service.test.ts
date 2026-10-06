@@ -908,7 +908,7 @@ describe('ArticleService.getArticlesForPublisher', () => {
 // getNewsClusters
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('ArticleService.getTopHeadlinesForCountry — 24h/48h window', () => {
+describe('ArticleService.getTopHeadlinesForCountry: Explore window', () => {
     const response = {
         headlines: [],
         articles: [],
@@ -934,7 +934,7 @@ describe('ArticleService.getTopHeadlinesForCountry — 24h/48h window', () => {
         const call = mockQuery.mock.calls[0];
         expect(opName(call)).toBe('GetTopHeadlinesForCountryWindowed');
         expect(call[0].variables).toEqual({ countryCode: 'NLD', first: 10, after: undefined, windowHours: 48 });
-        expect(call[0].context.expectedErrorCodes).toEqual(['GRAPHQL_VALIDATION_FAILED']);
+        expect(call[0].context.expectedErrorCodes).toEqual(['GRAPHQL_VALIDATION_FAILED', 'BAD_WINDOW']);
     });
 
     it('without windowHours keeps the plain document, unchanged', async () => {
@@ -958,6 +958,26 @@ describe('ArticleService.getTopHeadlinesForCountry — 24h/48h window', () => {
         mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: response } });
         await ArticleService.getTopHeadlinesForCountry('NLD', { windowHours: 48 });
         expect(opName(mockQuery.mock.calls[2])).toBe('GetTopHeadlinesForCountry');
+    });
+
+    it('on BAD_WINDOW (server without 6h/12h) serves that request plain, without latching', async () => {
+        mockQuery
+            .mockRejectedValueOnce(
+                new CombinedGraphQLErrors({
+                    data: null,
+                    errors: [{ message: 'windowHours must be 24 or 48', extensions: { code: 'BAD_WINDOW' } }],
+                }),
+            )
+            .mockResolvedValueOnce({ data: { topHeadlinesForCountry: response } });
+        expect(await ArticleService.getTopHeadlinesForCountry('NLD', { windowHours: 6 })).toBe(response);
+        expect(mockQuery.mock.calls.map(opName)).toEqual([
+            'GetTopHeadlinesForCountryWindowed',
+            'GetTopHeadlinesForCountry',
+        ]);
+
+        mockQuery.mockResolvedValueOnce({ data: { topHeadlinesForCountry: response } });
+        await ArticleService.getTopHeadlinesForCountry('NLD', { windowHours: 48 });
+        expect(opName(mockQuery.mock.calls[2])).toBe('GetTopHeadlinesForCountryWindowed');
     });
 
     it('any other error propagates without the fallback', async () => {

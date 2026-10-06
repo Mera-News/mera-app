@@ -693,7 +693,7 @@ export type Query = {
   /** Hybrid text + semantic search over the last 48h of articles. Headline-only results — hydrate ids via articlesForTopicsByIds. Capped at 25 results. */
   searchNews: Array<NewsSearchHit>;
   searchPublishers: SearchPublishersResponse;
-  /** A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. windowHours keeps the stories first seen in the last 24 (default) or 48 hours. Falls back to the live path (editionBuiltAt: null) when no edition exists yet. */
+  /** A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. windowHours ranks the stories most covered in the last 6, 12, 24 (default) or 48 hours. Falls back to the live path (editionBuiltAt: null) when no edition exists yet. */
   topHeadlinesForCountry: TopHeadlinesForCountryResponse;
   unblockRequestStatus?: Maybe<UnblockRequest>;
   userBilling: UserBillingInfo;

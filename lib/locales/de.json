@@ -1072,8 +1072,15 @@
       "label48": "48 Std.",
       "a11y24": "Nachrichten der letzten 24 Stunden",
       "a11y48": "Nachrichten der letzten 48 Stunden",
-      "hint24": "Wechselt zu den letzten 48 Stunden",
-      "hint48": "Wechselt zu den letzten 24 Stunden"
+      "label6": "6 Std.",
+      "label12": "12 Std.",
+      "a11y6": "Nachrichten der letzten 6 Stunden",
+      "a11y12": "Nachrichten der letzten 12 Stunden",
+      "menuLabel": "Zeitraum",
+      "option6": "Letzte 6 Stunden",
+      "option12": "Letzte 12 Stunden",
+      "option24": "Letzte 24 Stunden",
+      "option48": "Letzte 48 Stunden"
     }
   },
   "forYou": {
@@ -2902,7 +2909,7 @@
     },
     "explore": {
       "title": "So funktioniert Entdecken",
-      "what": "Entdecken zeigt die größten Nachrichten, die in den letzten 24 Stunden zum ersten Mal erschienen sind, für die Welt und für jedes Land, das du auswählst. Tippe oben auf 24 Std., um die letzten 48 Stunden zu sehen. Sie sind für alle gleich und nicht für dich ausgewählt.",
+      "what": "Entdecken zeigt die Nachrichten, über die in den letzten 24 Stunden am meisten berichtet wurde, für die Welt und für jedes Land, das du auswählst. Tippe oben auf 24 Std., um stattdessen 6, 12 oder 48 Stunden zu wählen. Sie sind für alle gleich und nicht für dich ausgewählt.",
       "how1": "Welt-Schlagzeilen werden danach geordnet, wie breit eine Meldung über Ländergrenzen hinweg berichtet wird, nicht nach der Zahl der Artikel.",
       "how2": "Länder-Schlagzeilen stammen von Nachrichtenquellen mit Sitz in diesem Land."
     },

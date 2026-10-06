@@ -182,7 +182,7 @@ ${TOP_HEADLINES_SELECTION}    }
   }
 `;
 
-// The same page, with Explore's 24h/48h first-seen window. A SEPARATE
+// The same page, with Explore's 6/12/24/48h window. A SEPARATE
 // document: a server that predates `windowHours` rejects the whole request,
 // so the plain one above stays valid against it (see exploreWindowUnsupported).
 const GET_TOP_HEADLINES_FOR_COUNTRY_WINDOWED = gql`
@@ -1250,13 +1250,21 @@ export class ArticleService {
                         query: GET_TOP_HEADLINES_FOR_COUNTRY_WINDOWED,
                         variables: { ...variables, windowHours: options.windowHours },
                         fetchPolicy: 'no-cache',
-                        context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED'] },
+                        context: { expectedErrorCodes: ['GRAPHQL_VALIDATION_FAILED', 'BAD_WINDOW'] },
                     });
                     if (data?.topHeadlinesForCountry) return data.topHeadlinesForCountry;
                 } catch (error) {
-                    if (!graphQLErrorCodes(error).includes('GRAPHQL_VALIDATION_FAILED')) throw error;
-                    exploreWindowUnsupported = true;
-                    logger.info('[ArticleService] server has no topHeadlinesForCountry windowHours; plain document this session');
+                    const codes = graphQLErrorCodes(error);
+                    // BAD_WINDOW: a server from before the 6h/12h views. That
+                    // one request gets the plain (24h) document; no latch, so
+                    // the other windows keep working.
+                    if (codes.includes('BAD_WINDOW')) {
+                        logger.info('[ArticleService] server refused this Explore window; plain document');
+                    } else {
+                        if (!codes.includes('GRAPHQL_VALIDATION_FAILED')) throw error;
+                        exploreWindowUnsupported = true;
+                        logger.info('[ArticleService] server has no topHeadlinesForCountry windowHours; plain document this session');
+                    }
                 }
             }
             const { data } = await client.query<{ topHeadlinesForCountry: TopHeadlinesForCountryResponse }>({

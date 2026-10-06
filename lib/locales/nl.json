@@ -1072,8 +1072,15 @@
       "label48": "48 u",
       "a11y24": "Nieuws van de afgelopen 24 uur",
       "a11y48": "Nieuws van de afgelopen 48 uur",
-      "hint24": "Schakelt naar de afgelopen 48 uur",
-      "hint48": "Schakelt naar de afgelopen 24 uur"
+      "label6": "6 u",
+      "label12": "12 u",
+      "a11y6": "Nieuws van de afgelopen 6 uur",
+      "a11y12": "Nieuws van de afgelopen 12 uur",
+      "menuLabel": "Periode",
+      "option6": "Afgelopen 6 uur",
+      "option12": "Afgelopen 12 uur",
+      "option24": "Afgelopen 24 uur",
+      "option48": "Afgelopen 48 uur"
     }
   },
   "forYou": {
@@ -2902,7 +2909,7 @@
     },
     "explore": {
       "title": "Hoe Verkennen werkt",
-      "what": "Verkennen toont de grootste verhalen die in de afgelopen 24 uur voor het eerst verschenen, voor de wereld en voor elk land dat je kiest. Tik bovenaan op 24 u om de afgelopen 48 uur te zien. Ze zijn voor iedereen hetzelfde en niet voor jou gekozen.",
+      "what": "Verkennen toont de verhalen waarover in de afgelopen 24 uur het meest is bericht, voor de wereld en voor elk land dat je kiest. Tik bovenaan op 24 u om in plaats daarvan 6, 12 of 48 uur te kiezen. Ze zijn voor iedereen hetzelfde en niet voor jou gekozen.",
       "how1": "Wereldkoppen worden gerangschikt naar hoe breed een verhaal in verschillende landen wordt gebracht, niet naar het aantal artikelen.",
       "how2": "Landkoppen komen van nieuwsbronnen die in dat land gevestigd zijn."
     },

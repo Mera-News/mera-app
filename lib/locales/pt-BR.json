@@ -1072,8 +1072,15 @@
       "label48": "48 h",
       "a11y24": "Notícias das últimas 24 horas",
       "a11y48": "Notícias das últimas 48 horas",
-      "hint24": "Muda para as últimas 48 horas",
-      "hint48": "Muda para as últimas 24 horas"
+      "label6": "6 h",
+      "label12": "12 h",
+      "a11y6": "Notícias das últimas 6 horas",
+      "a11y12": "Notícias das últimas 12 horas",
+      "menuLabel": "Período",
+      "option6": "Últimas 6 horas",
+      "option12": "Últimas 12 horas",
+      "option24": "Últimas 24 horas",
+      "option48": "Últimas 48 horas"
     }
   },
   "forYou": {
@@ -2902,7 +2909,7 @@
     },
     "explore": {
       "title": "Como o Explorar funciona",
-      "what": "O Explorar mostra as maiores notícias que surgiram pela primeira vez nas últimas 24 horas, do mundo e de cada país que você escolher. Toque em 24 h no topo para ver as últimas 48 horas. São as mesmas para todos, não escolhidas para você.",
+      "what": "O Explorar mostra as notícias com mais cobertura nas últimas 24 horas, do mundo e de cada país que você escolher. Toque em 24 h no topo para escolher 6, 12 ou 48 horas. São as mesmas para todos, não escolhidas para você.",
       "how1": "As manchetes do mundo são ordenadas pela amplitude com que uma notícia é coberta em diferentes países, não pelo número de artigos.",
       "how2": "As manchetes de um país vêm de fontes de notícias sediadas nesse país."
     },
