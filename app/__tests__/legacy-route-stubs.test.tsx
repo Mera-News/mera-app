@@ -54,6 +54,7 @@ describe.each(TAB_SCREENS)('/logged-in/%s', (route, tab, screen) => {
 
 const PAGES: [string, string, string][] = [
     ['config-panel', 'you', 'profile'],
+    ['profile-advanced', 'you', 'profile'],
     ['saved-suggestions', 'library', 'saved'],
     ['visited-publications', 'library', 'visited'],
     ['share-stats', 'library', 'stats'],
