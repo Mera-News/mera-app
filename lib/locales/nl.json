@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "Landen zoeken...",
-    "noCountriesMatch": "Geen landen komen overeen met je zoekopdracht",
-    "noSourcesAvailable": "Geen bronnen beschikbaar",
     "publishers": "Uitgevers",
     "noPublishers": "Geen uitgevers voor dit land",
     "noArticlesFound": "Geen artikelen gevonden",
     "topHeadlines": "Topnieuws",
-    "viewTopHeadlines": "Topnieuws",
     "addToLocations": "Toevoegen aan jouw plaatsen",
     "addedToLocations": "Toegevoegd aan jouw plaatsen",
-    "searchCountriesOrPublishers": "Landen of uitgevers zoeken...",
-    "noResultsMatch": "Niets komt overeen met je zoektocht",
-    "addToExplore": "Toevoegen aan Verkennen",
-    "addedToExplore": "Toegevoegd aan Verkennen",
     "badgeGovernment": "Overheidsbron",
-    "badgeRegulator": "Officiële instelling",
-    "sectionCountries": "Landen",
-    "sectionPublications": "Publicaties"
+    "badgeRegulator": "Officiële instelling"
   },
   "clusterDetail": {
     "translatable": "Dit artikel is in {{language}}: je toestel kan het vertalen terwijl je leest. Werkt vertalen niet, dan kun je de site openen in Google Translate; let op dat je dan via Google surft.",
@@ -844,11 +835,8 @@
     "chooseOneHint": "Kies één optie"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Publicaties die je leest",
     "badge_one": "Je hebt {{publication}} één keer bezocht in de afgelopen 30 dagen",
     "badge_other": "Je hebt {{publication}} {{count}} keer bezocht in de afgelopen 30 dagen",
-    "countShort_one": "{{count}} bezoek",
-    "countShort_other": "{{count}} bezoeken",
     "tooltipA11y": "Over leesgeschiedenis",
     "tooltipIntro": "Mera houdt je leesgedrag bij, en dit blijft alleen op je apparaat.",
     "tooltipLink": "Bekijk hier al je leesgeschiedenis."
@@ -1148,7 +1136,6 @@
     "dailyLimitBody": "Je hebt de daglimiet voor artikelen bereikt. Deze wordt binnenkort gereset."
   },
   "settings": {
-    "sources": "Bronnen",
     "groupPrivacy": "Privacy en gegevens",
     "groupHelp": "Hulp",
     "groupAccount": "Account",
@@ -1716,10 +1703,6 @@
       "bodyUnavailableUntitled": "Mera kon de controle van het artikel waarnaar je vroeg niet afronden."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Deze bron prioriteren",
-    "deprioritiseA11y": "Deze bron deprioriteren"
-  },
   "consent": {
     "title": "Voordat je doorgaat",
     "body": "We hebben onze Servicevoorwaarden en Privacybeleid bijgewerkt. Lees en accepteer deze om Mera te blijven gebruiken.",
@@ -2149,28 +2132,6 @@
                 "text": "Alles anders, wat bijna alles is. Het is geen kwaliteitsbeoordeling en de afwezigheid zegt niets slechts over een uitgever."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "De + naast een land",
-            "body": "Landen dragen een + en een paar pijlen en ze doen volledig verschillende banen. Wat doet de +?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Rankt het nieuws van dat land hoger",
-                "feedback": "Dat zijn de pijlen. De + is helemaal geen rankingcontrole."
-              },
-              "adds-a-chip": {
-                "label": "Voegt dat land toe als chip in Verkennen",
-                "feedback": "Precies. Bladeren alleen; het verandert niets aan je gepersonaliseerde feed."
-              },
-              "follows-it": {
-                "label": "Volgt het land als een verhaal",
-                "feedback": "Nee. Volgen is voor een enkel verhaal dat nog steeds ontvouwt."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "De pijlen naast een land",
-            "body": "Omhoog betekent dat je liever van dat land's nieuwskamers hoort; omlaag betekent minder vaak. Het geldt voor elke uitgever daar tegelijk en tippen op dezelfde pijl opnieuw wist het."
           },
           "arrows-on-a-publisher": {
             "headline": "Dezelfde pijlen, één uitgever tegelijk",

@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "Tìm kiếm quốc gia...",
-    "noCountriesMatch": "Không có quốc gia nào khớp với tìm kiếm",
-    "noSourcesAvailable": "Không có nguồn nào khả dụng",
     "publishers": "Nhà xuất bản",
     "noPublishers": "Không có nhà xuất bản nào cho quốc gia này",
     "noArticlesFound": "Không tìm thấy bài viết nào",
     "topHeadlines": "Tin nổi bật",
-    "viewTopHeadlines": "Tin nổi bật",
     "addToLocations": "Thêm vào địa điểm của bạn",
     "addedToLocations": "Đã thêm vào địa điểm của bạn",
-    "searchCountriesOrPublishers": "Tìm kiếm quốc gia hoặc nhà xuất bản...",
-    "noResultsMatch": "Không có gì khớp với tìm kiếm của bạn",
-    "addToExplore": "Thêm vào Khám phá",
-    "addedToExplore": "Đã thêm vào Khám phá",
     "badgeGovernment": "Nguồn chính phủ",
-    "badgeRegulator": "Cơ quan chính thức",
-    "sectionCountries": "Quốc gia",
-    "sectionPublications": "Ấn phẩm"
+    "badgeRegulator": "Cơ quan chính thức"
   },
   "clusterDetail": {
     "translatable": "Bài viết này bằng {{language}}: thiết bị của bạn có thể dịch trong khi bạn đọc. Nếu tính năng dịch không hoạt động, bạn có thể mở trang web bằng Google Dịch; chỉ cần lưu ý rằng bạn sẽ xem qua Google.",
@@ -844,11 +835,8 @@
     "chooseOneHint": "Chọn một tùy chọn"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Ấn phẩm bạn đang đọc",
     "badge_one": "Bạn đã ghé thăm {{publication}} một lần trong 30 ngày qua",
     "badge_other": "Bạn đã ghé thăm {{publication}} {{count}} lần trong 30 ngày qua",
-    "countShort_one": "{{count}} lượt xem",
-    "countShort_other": "{{count}} lượt xem",
     "tooltipA11y": "Về lịch sử đọc",
     "tooltipIntro": "Mera theo dõi thói quen đọc của bạn và dữ liệu này chỉ lưu trên thiết bị của bạn.",
     "tooltipLink": "Xem toàn bộ lịch sử đọc của bạn tại đây."
@@ -1148,7 +1136,6 @@
     "dailyLimitBody": "Bạn đã đạt giới hạn bài viết hôm nay. Giới hạn này sẽ sớm được đặt lại."
   },
   "settings": {
-    "sources": "Nguồn",
     "groupPrivacy": "Quyền riêng tư và dữ liệu",
     "groupHelp": "Trợ giúp",
     "groupAccount": "Tài khoản",
@@ -1717,10 +1704,6 @@
       "bodyUnavailableUntitled": "Mera không thể hoàn tất việc kiểm tra bài viết bạn hỏi."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Ưu tiên nguồn này",
-    "deprioritiseA11y": "Hạ thấp mức ưu tiên nguồn này"
-  },
   "consent": {
     "title": "Trước khi bạn tiếp tục",
     "body": "Chúng tôi đã cập nhật Điều khoản dịch vụ và Chính sách bảo mật. Vui lòng xem xét và chấp nhận chúng để tiếp tục sử dụng Mera.",
@@ -2150,28 +2133,6 @@
                 "text": "Mọi thứ khác, đó là gần như mọi thứ. Nó không phải là xếp hạng chất lượng, và sự vắng mặt của nó không nói gì xấu về nhà xuất bản."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "Cái + bên cạnh một quốc gia",
-            "body": "Các quốc gia mang một cái + và một cặp mũi tên, và chúng làm những công việc hoàn toàn khác nhau. Cái + làm gì?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Xếp hạng tin tức quốc gia đó cao hơn",
-                "feedback": "Đó là các mũi tên. Cái + không phải là một điều khiển xếp hạng nào cả."
-              },
-              "adds-a-chip": {
-                "label": "Thêm quốc gia đó như một chip ở Khám phá",
-                "feedback": "Chính xác. Chỉ duyệt, nó không thay đổi bất cứ điều gì về bản tin cá nhân hóa của bạn."
-              },
-              "follows-it": {
-                "label": "Theo câu chuyện quốc gia",
-                "feedback": "Không. Theo dõi là cho một câu chuyện duy nhất vẫn chưa kết thúc."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "Các mũi tên bên cạnh một quốc gia",
-            "body": "Lên có nghĩa là bạn sẽ lắng nghe nhiều hơn từ phòng tin quốc gia đó, xuống có nghĩa là ít hơn. Nó áp dụng cho mỗi nhà xuất bản có sẵn ngay lập tức, và nhấn mũi tên giống nhau lại xóa nó."
           },
           "arrows-on-a-publisher": {
             "headline": "Cùng các mũi tên, một nhà xuất bản tại một thời điểm",

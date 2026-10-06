@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "搜索国家/地区...",
-    "noCountriesMatch": "没有匹配您搜索的国家/地区",
-    "noSourcesAvailable": "暂无可用来源",
     "publishers": "出版商",
     "noPublishers": "该国家/地区暂无出版商",
     "noArticlesFound": "未找到文章",
     "topHeadlines": "头条新闻",
-    "viewTopHeadlines": "头条新闻",
     "addToLocations": "添加到你的地点",
     "addedToLocations": "已添加到你的地点",
-    "searchCountriesOrPublishers": "搜索国家或出版商...",
-    "noResultsMatch": "没有匹配您搜索的内容",
-    "addToExplore": "添加到探索",
-    "addedToExplore": "已添加到探索",
     "badgeGovernment": "政府来源",
-    "badgeRegulator": "官方机构",
-    "sectionCountries": "国家和地区",
-    "sectionPublications": "媒体"
+    "badgeRegulator": "官方机构"
   },
   "clusterDetail": {
     "translatable": "这篇文章是{{language}}内容:你的设备可以在阅读时进行翻译。如果翻译无法使用,你可以用谷歌翻译打开该网站;请注意届时你将通过谷歌浏览内容。",
@@ -844,11 +835,8 @@
     "chooseOneHint": "请选择一项"
   },
   "publicationVisits": {
-    "topVisitedTitle": "您正在阅读的媒体",
     "badge_one": "过去30天内您访问了 {{publication}} 1次",
     "badge_other": "过去30天内您访问了 {{publication}} {{count}} 次",
-    "countShort_one": "{{count}} 次访问",
-    "countShort_other": "{{count}} 次访问",
     "tooltipA11y": "关于阅读历史",
     "tooltipIntro": "Mera 为您追踪阅读习惯——且数据仅保存在您的设备上。",
     "tooltipLink": "在这里查看您的完整阅读历史。"
@@ -1148,7 +1136,6 @@
     "dailyLimitBody": "你已达到今日文章上限，即将重置。"
   },
   "settings": {
-    "sources": "来源",
     "groupPrivacy": "隐私和数据",
     "groupHelp": "帮助",
     "groupAccount": "账户",
@@ -1717,10 +1704,6 @@
       "bodyUnavailableUntitled": "Mera 无法完成对你询问的文章的核查。"
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "优先考虑此来源",
-    "deprioritiseA11y": "降低此来源的优先级"
-  },
   "consent": {
     "title": "继续之前",
     "body": "我们已更新服务条款和隐私政策。请审查并接受以继续使用Mera。",
@@ -2150,28 +2133,6 @@
                 "text": "一切其他，几乎一切。这不是质量评级，其不存在对出版商不说任何不好的事情。"
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "国家旁的+",
-            "body": "国家携带一个+和一对箭头，他们做完全不同的工作。+做什么？",
-            "choose": {
-              "ranks-it-up": {
-                "label": "排名该国新闻较高",
-                "feedback": "这是箭头。+根本不是排名控制。"
-              },
-              "adds-a-chip": {
-                "label": "将该国作为芯片添加到探索中",
-                "feedback": "确切。浏览仅；它改变了您的个性化资讯。"
-              },
-              "follows-it": {
-                "label": "将国家作为故事跟踪",
-                "feedback": "不。跟踪是为了一个仍然展开的单一故事。"
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "国家旁边的箭头",
-            "body": "向上意味着您希望更频繁地听到该国的新闻编辑部；向下意味着不太经常。它立即适用于那里的每个出版商，点击同一个箭头再次清除它。"
           },
           "arrows-on-a-publisher": {
             "headline": "相同的箭头，一次一个出版商",

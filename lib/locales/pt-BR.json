@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "Pesquisar países...",
-    "noCountriesMatch": "Nenhum país corresponde à sua pesquisa",
-    "noSourcesAvailable": "Nenhuma fonte disponível",
     "publishers": "Publicadores",
     "noPublishers": "Nenhum publicador para este país",
     "noArticlesFound": "Nenhum artigo encontrado",
     "topHeadlines": "Principais manchetes",
-    "viewTopHeadlines": "Principais manchetes",
     "addToLocations": "Adicionar aos seus lugares",
     "addedToLocations": "Adicionado aos seus lugares",
-    "searchCountriesOrPublishers": "Pesquisar países ou publicadores...",
-    "noResultsMatch": "Nada corresponde à sua pesquisa",
-    "addToExplore": "Adicionar à Explorar",
-    "addedToExplore": "Adicionado à Explorar",
     "badgeGovernment": "Fonte governamental",
-    "badgeRegulator": "Agência oficial",
-    "sectionCountries": "Países",
-    "sectionPublications": "Publicações"
+    "badgeRegulator": "Agência oficial"
   },
   "clusterDetail": {
     "translatable": "Este artigo está em {{language}}: seu dispositivo pode traduzi-lo enquanto você lê. Se a tradução não funcionar, você pode abrir o site no Google Translate; só lembre que você estará navegando por meio do Google.",
@@ -844,11 +835,8 @@
     "chooseOneHint": "Escolha uma opção"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Publicações que você tem lido",
     "badge_one": "Você visitou {{publication}} uma vez nos últimos 30 dias",
     "badge_other": "Você visitou {{publication}} {{count}} vezes nos últimos 30 dias",
-    "countShort_one": "{{count}} visita",
-    "countShort_other": "{{count}} visitas",
     "tooltipA11y": "Sobre o histórico de leitura",
     "tooltipIntro": "O Mera acompanha seus padrões de leitura para você, e fica apenas no seu dispositivo.",
     "tooltipLink": "Veja todo o seu histórico de leitura aqui."
@@ -1148,7 +1136,6 @@
     "dailyLimitBody": "Você atingiu o limite de artigos de hoje. Ele será reiniciado em breve."
   },
   "settings": {
-    "sources": "Fontes",
     "groupPrivacy": "Privacidade e dados",
     "groupHelp": "Ajuda",
     "groupAccount": "Conta",
@@ -1716,10 +1703,6 @@
       "bodyUnavailableUntitled": "A Mera não conseguiu concluir a checagem do artigo que você pediu."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Priorizar esta fonte",
-    "deprioritiseA11y": "Deprioritizar esta fonte"
-  },
   "consent": {
     "title": "Antes de continuar",
     "body": "Atualizamos nossos Termos de Serviço e Política de Privacidade. Por favor, revise e aceite para continuar usando Mera.",
@@ -2149,28 +2132,6 @@
                 "text": "Tudo mais, que é quase tudo. Não é uma classificação de qualidade, e sua ausência não diz nada ruim sobre um publicador."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "O + perto de um país",
-            "body": "Países trazem um + e um par de setas, e fazem completamente trabalhos diferentes. O que o + faz?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Classifica as notícias desse país mais alto",
-                "feedback": "Isso são as setas. O + não é um controle de classificação de todo."
-              },
-              "adds-a-chip": {
-                "label": "Adiciona esse país como chip em Explorar",
-                "feedback": "Exatamente. Só navegação; não muda nada sobre seu feed personalizado."
-              },
-              "follows-it": {
-                "label": "Acompanha o país como uma história",
-                "feedback": "Não. Acompanhar é para uma única história que ainda está se desenrolando."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "As setas perto de um país",
-            "body": "Para cima significa que você preferiria ouvir das redações daquele país; para baixo significa menos vezes. Se aplica a todo publicador lá de uma vez, e tocar a mesma seta novamente limpa."
           },
           "arrows-on-a-publisher": {
             "headline": "As mesmas setas, um publicador de cada vez",

@@ -456,27 +456,14 @@
   },
   "sources": {
     "searchCountries": "Search countries...",
-    "searchCountriesOrPublishers": "Search countries or publishers...",
-    "noCountriesMatch": "No countries match your search",
-    "noResultsMatch": "Nothing matches your search",
-    "noSourcesAvailable": "No sources available",
     "publishers": "Publishers",
     "noPublishers": "No publishers for this country",
     "noArticlesFound": "No articles found",
-    "viewTopHeadlines": "Top headlines",
     "topHeadlines": "Top headlines",
     "addToLocations": "Add to your places",
     "addedToLocations": "Added to your places",
-    "addToExplore": "Add to Explore",
-    "addedToExplore": "Added to Explore",
     "badgeGovernment": "Government source",
-    "badgeRegulator": "Official agency",
-    "sectionCountries": "Countries",
-    "sectionPublications": "Publications"
-  },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Prioritise this source",
-    "deprioritiseA11y": "Deprioritise this source"
+    "badgeRegulator": "Official agency"
   },
   "tabs": {
     "deck": "Feed",
@@ -1026,7 +1013,6 @@
     "appVersion": "App Version: {{version}}"
   },
   "settings": {
-    "sources": "Sources",
     "groupPrivacy": "Privacy and data",
     "groupHelp": "Help",
     "groupAccount": "Account",
@@ -1254,11 +1240,8 @@
     "chooseOneHint": "Pick one option"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Publications you've been reading",
     "badge_one": "You've visited {{publication}} once in the last 30 days",
     "badge_other": "You've visited {{publication}} {{count}} times in the last 30 days",
-    "countShort_one": "{{count}} visit",
-    "countShort_other": "{{count}} visits",
     "tooltipA11y": "About reading history",
     "tooltipIntro": "Mera keeps track of your reading patterns for you; it lives only on your device.",
     "tooltipLink": "See all your reading history here."
@@ -2267,28 +2250,6 @@
                 "text": "Everything else, which is nearly everything. It is not a quality rating, and its absence says nothing bad about a publisher."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "The + next to a country",
-            "body": "Countries carry a + and a pair of arrows, and they do completely different jobs. What does the + do?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Ranks that country's news higher",
-                "feedback": "That is the arrows. The + is not a ranking control at all."
-              },
-              "adds-a-chip": {
-                "label": "Adds that country as a chip in Explore",
-                "feedback": "Exactly. Browsing only; it changes nothing about your personalised feed."
-              },
-              "follows-it": {
-                "label": "Follows the country as a story",
-                "feedback": "No. Following is for a single story that is still unfolding."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "The arrows next to a country",
-            "body": "Up means you would rather hear from that country's newsrooms; down means less often. It applies to every publisher there at once, and tapping the same arrow again clears it."
           },
           "arrows-on-a-publisher": {
             "headline": "The same arrows, one publisher at a time",

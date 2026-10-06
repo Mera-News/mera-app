@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "国を検索...",
-    "noCountriesMatch": "検索に一致する国がありません",
-    "noSourcesAvailable": "利用可能なソースがありません",
     "publishers": "出版社",
     "noPublishers": "この国に出版社がありません",
     "noArticlesFound": "記事が見つかりません",
     "topHeadlines": "トップニュース",
-    "viewTopHeadlines": "トップニュース",
     "addToLocations": "自分の場所に追加",
     "addedToLocations": "自分の場所に追加しました",
-    "searchCountriesOrPublishers": "国または出版社を検索...",
-    "noResultsMatch": "検索に一致するものはありません",
-    "addToExplore": "探索に追加",
-    "addedToExplore": "探索に追加しました",
     "badgeGovernment": "政府ソース",
-    "badgeRegulator": "公式機関",
-    "sectionCountries": "国・地域",
-    "sectionPublications": "メディア"
+    "badgeRegulator": "公式機関"
   },
   "clusterDetail": {
     "translatable": "この記事は{{language}}で書かれています。読んでいる間、端末が翻訳できます。翻訳がうまくいかない場合は、Google 翻訳でサイトを開くこともできますが、その場合はGoogle経由での閲覧になる点にご注意ください。",
@@ -844,11 +835,8 @@
     "chooseOneHint": "1つ選んでください"
   },
   "publicationVisits": {
-    "topVisitedTitle": "読んでいた出版社",
     "badge_one": "過去30日間に{{publication}}を1回訪問しました",
     "badge_other": "過去30日間に{{publication}}を{{count}}回訪問しました",
-    "countShort_one": "{{count}}回の訪問",
-    "countShort_other": "{{count}}回の訪問",
     "tooltipA11y": "閲覧履歴について",
     "tooltipIntro": "Meraはあなたの閲覧パターンを追跡します — そしてそれはあなたのデバイス上にのみ存在します。",
     "tooltipLink": "すべての閲覧履歴はこちらで確認できます。"
@@ -1148,7 +1136,6 @@
     "dailyLimitBody": "本日の記事上限に達しました。まもなくリセットされます。"
   },
   "settings": {
-    "sources": "ソース",
     "groupPrivacy": "プライバシーとデータ",
     "groupHelp": "ヘルプ",
     "groupAccount": "アカウント",
@@ -1716,10 +1703,6 @@
       "bodyUnavailableUntitled": "Mera はお問い合わせの記事のチェックを完了できませんでした。"
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "このソースを優先順位付けする",
-    "deprioritiseA11y": "このソースの優先度を下げる"
-  },
   "consent": {
     "title": "続行する前に",
     "body": "利用規約とプライバシーポリシーを更新しました。Meraを使い続けるために確認して同意してください。",
@@ -2149,28 +2132,6 @@
                 "text": "他のすべてのもの。ほぼすべてです。品質評価ではなく、出版社について何の悪も言いません。"
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "国の隣の + は",
-            "body": "国々は + と矢のペアを運んでいます。そしてそれらは完全に異なるジョブをします。+ は何をしますか?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "その国のニュースをより高くランク付けします",
-                "feedback": "その矢です。+ はランク付けコントロールではありません。"
-              },
-              "adds-a-chip": {
-                "label": "探索でその国をチップとして追加します",
-                "feedback": "正確に。ブラウジングのみ。人格化されたフィードについて何も変更しません。"
-              },
-              "follows-it": {
-                "label": "国をストーリーとしてフォローします",
-                "feedback": "いいえ。フォローしている単一のストーリーです。"
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "国の隣にある矢",
-            "body": "アップは、その国のニュースルームから聞いてもらいたいということを意味します。ダウン低下し、より少ない。そこのすべての出版社に適用されます。そして同じ矢をタップすると再びそれをクリアします。"
           },
           "arrows-on-a-publisher": {
             "headline": "同じ矢、一度に1つの出版社",

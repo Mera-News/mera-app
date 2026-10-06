@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "Cerca paesi...",
-    "noCountriesMatch": "Nessun paese corrisponde alla tua ricerca",
-    "noSourcesAvailable": "Nessuna fonte disponibile",
     "publishers": "Editori",
     "noPublishers": "Nessun editore per questo paese",
     "noArticlesFound": "Nessun articolo trovato",
     "topHeadlines": "Notizie principali",
-    "viewTopHeadlines": "Notizie principali",
     "addToLocations": "Aggiungi ai tuoi luoghi",
     "addedToLocations": "Aggiunto ai tuoi luoghi",
-    "searchCountriesOrPublishers": "Cerca paesi o editori...",
-    "noResultsMatch": "Niente corrisponde alla tua ricerca",
-    "addToExplore": "Aggiungi a Esplora",
-    "addedToExplore": "Aggiunto a Esplora",
     "badgeGovernment": "Fonte governativa",
-    "badgeRegulator": "Agenzia ufficiale",
-    "sectionCountries": "Paesi",
-    "sectionPublications": "Testate"
+    "badgeRegulator": "Agenzia ufficiale"
   },
   "clusterDetail": {
     "translatable": "Questo articolo è in {{language}}: il tuo dispositivo può tradurlo mentre leggi. Se la traduzione non funziona, puoi aprire il sito in Google Translate; tieni presente che in quel caso lo visiterai tramite Google.",
@@ -844,11 +835,8 @@
     "chooseOneHint": "Scegli un'opzione"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Pubblicazioni che stai leggendo",
     "badge_one": "Hai visitato {{publication}} una volta negli ultimi 30 giorni",
     "badge_other": "Hai visitato {{publication}} {{count}} volte negli ultimi 30 giorni",
-    "countShort_one": "{{count}} visita",
-    "countShort_other": "{{count}} visite",
     "tooltipA11y": "Informazioni sulla cronologia di lettura",
     "tooltipIntro": "Mera tiene traccia dei tuoi schemi di lettura, e i dati restano solo sul tuo dispositivo.",
     "tooltipLink": "Vedi tutta la tua cronologia di lettura qui."
@@ -1148,7 +1136,6 @@
     "dailyLimitBody": "Hai raggiunto il limite di articoli di oggi. Si azzera a breve."
   },
   "settings": {
-    "sources": "Fonti",
     "groupPrivacy": "Privacy e dati",
     "groupHelp": "Aiuto",
     "groupAccount": "Account",
@@ -1716,10 +1703,6 @@
       "bodyUnavailableUntitled": "Mera non è riuscita a completare la verifica dell'articolo che hai chiesto."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Dai priorità a questa fonte",
-    "deprioritiseA11y": "Togli priorità a questa fonte"
-  },
   "consent": {
     "title": "Prima di continuare",
     "body": "Abbiamo aggiornato i nostri Termini di servizio e l'Informativa sulla privacy. Per favore leggili e accettali per continuare a usare Mera.",
@@ -2149,28 +2132,6 @@
                 "text": "Tutto il resto, il quale è quasi tutto. Non è una valutazione della qualità, e la sua assenza dice niente di male su un editore."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "Il + accanto a un paese",
-            "body": "I paesi portano a + e un paio di frecce, e fanno lavori completamente diversi. Cosa fa il +?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Classifica le notizie di quel paese più in alto",
-                "feedback": "Quello sono le frecce. Il + non è un controllo di ranking affatto."
-              },
-              "adds-a-chip": {
-                "label": "Aggiunge quel paese come chip in Esplora",
-                "feedback": "Esattamente. Solo sfogliare; non cambia niente del tuo feed personalizzato."
-              },
-              "follows-it": {
-                "label": "Segue il paese come una storia",
-                "feedback": "No. Seguire è per una singola storia che è ancora in fase di svolgimento."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "Le frecce accanto a un paese",
-            "body": "Su significa che preferiresti sentire dalle sale stampa di quel paese; giù significa meno spesso. Si applica a ogni editore lì contemporaneamente, e toccare la stessa freccia di nuovo la cancella."
           },
           "arrows-on-a-publisher": {
             "headline": "Le stesse frecce, un editore alla volta",

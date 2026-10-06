@@ -296,23 +296,14 @@
   },
   "sources": {
     "searchCountries": "Rechercher des pays...",
-    "noCountriesMatch": "Aucun pays ne correspond à votre recherche",
-    "noSourcesAvailable": "Aucune source disponible",
     "publishers": "Éditeurs",
     "noPublishers": "Aucun éditeur pour ce pays",
     "noArticlesFound": "Aucun article trouvé",
     "topHeadlines": "À la une",
-    "viewTopHeadlines": "À la une",
     "addToLocations": "Ajouter à vos lieux",
     "addedToLocations": "Ajouté à vos lieux",
-    "searchCountriesOrPublishers": "Rechercher des pays ou éditeurs...",
-    "noResultsMatch": "Rien ne correspond à votre recherche",
-    "addToExplore": "Ajouter à Explorer",
-    "addedToExplore": "Ajouté à Explorer",
     "badgeGovernment": "Source gouvernementale",
-    "badgeRegulator": "Agence officielle",
-    "sectionCountries": "Pays",
-    "sectionPublications": "Publications"
+    "badgeRegulator": "Agence officielle"
   },
   "clusterDetail": {
     "translatable": "Cet article est en {{language}} : ton appareil peut le traduire pendant que tu lis. Si la traduction ne fonctionne pas, tu peux ouvrir le site dans Google Translate ; note que tu le consulteras alors via Google.",
@@ -849,11 +840,8 @@
     "chooseOneHint": "Choisissez une option"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Publications que vous lisez",
     "badge_one": "Vous avez visité {{publication}} une fois ces 30 derniers jours",
     "badge_other": "Vous avez visité {{publication}} {{count}} fois ces 30 derniers jours",
-    "countShort_one": "{{count}} visite",
-    "countShort_other": "{{count}} visites",
     "tooltipA11y": "À propos de l'historique de lecture",
     "tooltipIntro": "Mera suit vos habitudes de lecture pour vous, et ces données restent uniquement sur votre appareil.",
     "tooltipLink": "Consultez tout votre historique de lecture ici."
@@ -1154,7 +1142,6 @@
     "dailyLimitBody": "Vous avez atteint la limite d'articles du jour. Elle se réinitialise bientôt."
   },
   "settings": {
-    "sources": "Sources",
     "groupPrivacy": "Confidentialité et données",
     "groupHelp": "Aide",
     "groupAccount": "Compte",
@@ -1723,10 +1710,6 @@
       "bodyUnavailableUntitled": "Mera n'a pas pu terminer la vérification de l'article que vous avez demandé."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Prioriser cette source",
-    "deprioritiseA11y": "Déprioritiser cette source"
-  },
   "consent": {
     "title": "Avant de continuer",
     "body": "Nous avons mis à jour nos Conditions d'utilisation et Politique de confidentialité. Veuillez les examiner et les accepter pour continuer à utiliser Mera.",
@@ -2156,28 +2139,6 @@
                 "text": "Tout le reste, qui est presque tout. Ce n'est pas une évaluation de la qualité, et son absence ne dit rien de mal sur un éditeur."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "Le plus à côté d'une terre",
-            "body": "Les pays portent un plus et une paire de flèches, et ils font des emplois complètement différents. Qu'est-ce que le plus fais?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Classe les actualités de ce pays plus haut",
-                "feedback": "C'est les flèches. Le plus n'est pas un contrôle de classement du tout."
-              },
-              "adds-a-chip": {
-                "label": "Ajoute ce pays en tant que jeton dans Explorer",
-                "feedback": "Exactement. Browsing seulement ; cela ne change rien à votre fil personnalisé."
-              },
-              "follows-it": {
-                "label": "Suit le pays en tant qu'histoire",
-                "feedback": "Non. Suivre est pour une seule histoire qui se déploie toujours."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "Les flèches à côté d'une terre",
-            "body": "Haut signifie que vous aimeriez plutôt entendre les salles de rédaction de ce pays ; bas signifie moins souvent. Il s'applique à chaque éditeur là tout à la fois, et appuyer sur la même flèche à nouveau l'efface."
           },
           "arrows-on-a-publisher": {
             "headline": "Les mêmes flèches, un éditeur à la fois",

@@ -315,23 +315,14 @@
   },
   "sources": {
     "searchCountries": "البحث عن الدول...",
-    "noCountriesMatch": "لا توجد دول تطابق بحثك",
-    "noSourcesAvailable": "لا توجد مصادر متاحة",
     "publishers": "الناشرون",
     "noPublishers": "لا يوجد ناشرون لهذا البلد",
     "noArticlesFound": "لم يتم العثور على مقالات",
     "topHeadlines": "أبرز العناوين",
-    "viewTopHeadlines": "أبرز العناوين",
     "addToLocations": "أضف إلى أماكنك",
     "addedToLocations": "أُضيف إلى أماكنك",
-    "searchCountriesOrPublishers": "ابحث عن دول أو ناشرين...",
-    "noResultsMatch": "لا يطابق أي شيء بحثك",
-    "addToExplore": "أضف إلى الاستكشاف",
-    "addedToExplore": "أُضيف إلى الاستكشاف",
     "badgeGovernment": "مصدر حكومي",
-    "badgeRegulator": "جهة رسمية",
-    "sectionCountries": "الدول",
-    "sectionPublications": "المنشورات"
+    "badgeRegulator": "جهة رسمية"
   },
   "clusterDetail": {
     "translatable": "هذا المقال مكتوب بلغة {{language}}: يمكن لجهازك ترجمته أثناء القراءة. إذا لم تعمل الترجمة، يمكنك فتح الموقع عبر Google Translate؛ فقط لاحظ أنك ستتصفحه عندئذٍ عبر Google.",
@@ -872,11 +863,8 @@
     "chooseOneHint": "اختر خيارًا واحدًا"
   },
   "publicationVisits": {
-    "topVisitedTitle": "المنشورات التي كنت تقرأها",
     "badge_one": "زرت {{publication}} مرة واحدة في آخر 30 يومًا",
     "badge_other": "زرت {{publication}} {{count}} مرات في آخر 30 يومًا",
-    "countShort_one": "{{count}} زيارة",
-    "countShort_other": "{{count}} زيارات",
     "tooltipA11y": "حول سجل القراءة",
     "tooltipIntro": "يتتبع Mera أنماط قراءتك لصالحك، ويبقى ذلك على جهازك فقط.",
     "tooltipLink": "اطّلع على كامل سجل قراءتك هنا."
@@ -1194,7 +1182,6 @@
     "dailyLimitBody": "بلغت حد المقالات لهذا اليوم. سيُعاد ضبطه قريبًا."
   },
   "settings": {
-    "sources": "المصادر",
     "groupPrivacy": "الخصوصية والبيانات",
     "groupHelp": "المساعدة",
     "groupAccount": "الحساب",
@@ -1778,10 +1765,6 @@
       "bodyUnavailableUntitled": "لم يتمكن Mera من إكمال التحقق من المقال الذي سألت عنه."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "أعطِ الأولوية لهذا المصدر",
-    "deprioritiseA11y": "أنزل أولوية هذا المصدر"
-  },
   "consent": {
     "title": "قبل المتابعة",
     "body": "قمنا بتحديث شروط الخدمة وسياسة الخصوصية. يرجى مراجعتها والموافقة عليها لمتابعة استخدام Mera.",
@@ -2211,28 +2194,6 @@
                 "text": "كل شيء آخر، وهو تقريبًا كل شيء. ليست تقييم جودة، وغيابها لا يقول شيئًا سيئًا عن ناشر."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "الـ + بجانب البلد",
-            "body": "الدول تحمل + وزوج أسهم، ويفعلان وظائف مختلفة تمامًا. ماذا يفعل الـ +؟",
-            "choose": {
-              "ranks-it-up": {
-                "label": "ترتيب أخبار ذلك البلد أعلى",
-                "feedback": "هذه الأسهم. الـ + ليست تحكم ترتيب على الإطلاق."
-              },
-              "adds-a-chip": {
-                "label": "يضيف ذلك البلد رقاقة في الاستكشاف",
-                "feedback": "بالضبط. تصفح فقط؛ هذا يغير لا شيء عن خلاصتك المخصصة."
-              },
-              "follows-it": {
-                "label": "تتابع البلد كقصة",
-                "feedback": "لا. المتابعة لقصة واحدة لا تزال تتطور."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "الأسهم بجانب البلد",
-            "body": "الأعلى تفضل سماع غرف أخبار ذلك البلد؛ الأسفل تعني أقل. ينطبق على كل ناشر هناك مرة واحدة، والنقر نفس السهم مرة أخرى يمسحه."
           },
           "arrows-on-a-publisher": {
             "headline": "نفس الأسهم، ناشر واحد مرة واحدة",

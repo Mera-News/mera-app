@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "Cari negara...",
-    "noCountriesMatch": "Tidak ada negara yang cocok dengan pencarian Anda",
-    "noSourcesAvailable": "Tidak ada sumber yang tersedia",
     "publishers": "Penerbit",
     "noPublishers": "Tidak ada penerbit untuk negara ini",
     "noArticlesFound": "Tidak ada artikel yang ditemukan",
     "topHeadlines": "Berita utama",
-    "viewTopHeadlines": "Berita utama",
     "addToLocations": "Tambahkan ke tempat Anda",
     "addedToLocations": "Ditambahkan ke tempat Anda",
-    "searchCountriesOrPublishers": "Cari negara atau penerbit...",
-    "noResultsMatch": "Tidak ada yang cocok dengan pencarian Anda",
-    "addToExplore": "Tambahkan ke Jelajahi",
-    "addedToExplore": "Ditambahkan ke Jelajahi",
     "badgeGovernment": "Sumber pemerintah",
-    "badgeRegulator": "Lembaga resmi",
-    "sectionCountries": "Negara",
-    "sectionPublications": "Publikasi"
+    "badgeRegulator": "Lembaga resmi"
   },
   "clusterDetail": {
     "translatable": "Artikel ini dalam bahasa {{language}}: perangkatmu bisa menerjemahkannya saat kamu membaca. Jika terjemahan tidak berfungsi, kamu bisa membuka situsnya di Google Translate; perlu diketahui, kamu akan menjelajahinya melalui Google.",
@@ -844,11 +835,8 @@
     "chooseOneHint": "Pilih salah satu opsi"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Publikasi yang Anda baca",
     "badge_one": "Anda mengunjungi {{publication}} sekali dalam 30 hari terakhir",
     "badge_other": "Anda mengunjungi {{publication}} {{count}} kali dalam 30 hari terakhir",
-    "countShort_one": "{{count}} kunjungan",
-    "countShort_other": "{{count}} kunjungan",
     "tooltipA11y": "Tentang riwayat bacaan",
     "tooltipIntro": "Mera melacak pola bacaan Anda, dan data ini hanya ada di perangkat Anda.",
     "tooltipLink": "Lihat semua riwayat bacaan Anda di sini."
@@ -1148,7 +1136,6 @@
     "dailyLimitBody": "Anda telah mencapai batas artikel hari ini. Akan direset sebentar lagi."
   },
   "settings": {
-    "sources": "Sumber",
     "groupPrivacy": "Privasi dan data",
     "groupHelp": "Bantuan",
     "groupAccount": "Akun",
@@ -1716,10 +1703,6 @@
       "bodyUnavailableUntitled": "Mera tidak dapat menyelesaikan pemeriksaan artikel yang Anda tanyakan."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Prioritaskan sumber ini",
-    "deprioritiseA11y": "Deprioritaskan sumber ini"
-  },
   "consent": {
     "title": "Sebelum Anda melanjutkan",
     "body": "Kami telah memperbarui Ketentuan Layanan dan Kebijakan Privasi kami. Silakan tinjau dan terima untuk terus menggunakan Mera.",
@@ -2149,28 +2132,6 @@
                 "text": "Segalanya yang lain, yang hampir semuanya. Ini bukan penilaian kualitas, dan ketiadaannya tidak mengatakan apa pun buruk tentang penerbit."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "+ di sebelah negara",
-            "body": "Negara membawa + dan sepasang panah, dan mereka melakukan pekerjaan yang sangat berbeda. Apa yang dilakukan +?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Menilai berita negara itu lebih tinggi",
-                "feedback": "Itulah panahnya. + bukan kontrol peringkat sama sekali."
-              },
-              "adds-a-chip": {
-                "label": "Menambahkan negara itu sebagai chip di Jelajahi",
-                "feedback": "Tepat. Browsing saja; itu tidak mengubah apa pun tentang feed yang dipersonalisasi."
-              },
-              "follows-it": {
-                "label": "Mengikuti negara sebagai cerita",
-                "feedback": "Tidak. Mengikuti adalah untuk cerita tunggal yang masih berkembang."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "Panah di sebelah negara",
-            "body": "Naik berarti Anda lebih suka mendengar dari ruang berita negara itu, turun berarti lebih jarang. Itu berlaku untuk setiap penerbit di sana sekaligus, dan mengetuk panah yang sama lagi menghapusnya."
           },
           "arrows-on-a-publisher": {
             "headline": "Panah yang sama, satu penerbit sekaligus",

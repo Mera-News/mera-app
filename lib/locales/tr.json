@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "Ülkeleri ara...",
-    "noCountriesMatch": "Aramanızla eşleşen ülke yok",
-    "noSourcesAvailable": "Mevcut kaynak yok",
     "publishers": "Yayıncılar",
     "noPublishers": "Bu ülke için yayıncı yok",
     "noArticlesFound": "Makale bulunamadı",
     "topHeadlines": "Öne çıkan başlıklar",
-    "viewTopHeadlines": "Öne çıkan başlıklar",
     "addToLocations": "Yerlerine ekle",
     "addedToLocations": "Yerlerine eklendi",
-    "searchCountriesOrPublishers": "Ülkeleri veya yayıncıları ara...",
-    "noResultsMatch": "Aramanızla eşleşen hiçbir şey yok",
-    "addToExplore": "Keşfete ekle",
-    "addedToExplore": "Keşfete eklendi",
     "badgeGovernment": "Hükümet kaynağı",
-    "badgeRegulator": "Resmi kurum",
-    "sectionCountries": "Ülkeler",
-    "sectionPublications": "Yayınlar"
+    "badgeRegulator": "Resmi kurum"
   },
   "clusterDetail": {
     "translatable": "Bu makale {{language}} dilinde: okurken cihazın onu çevirebilir. Çeviri çalışmazsa siteyi Google Translate'de açabilirsin; ama o zaman siteyi Google üzerinden görüntülediğini unutma.",
@@ -844,11 +835,8 @@
     "chooseOneHint": "Bir seçenek seç"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Okuduğun yayınlar",
     "badge_one": "Son 30 günde {{publication}} yayınını bir kez ziyaret ettin",
     "badge_other": "Son 30 günde {{publication}} yayınını {{count}} kez ziyaret ettin",
-    "countShort_one": "{{count}} ziyaret",
-    "countShort_other": "{{count}} ziyaret",
     "tooltipA11y": "Okuma geçmişi hakkında",
     "tooltipIntro": "Mera okuma alışkanlıklarını senin için takip eder ve bu bilgi yalnızca cihazında saklanır.",
     "tooltipLink": "Tüm okuma geçmişini buradan gör."
@@ -1150,7 +1138,6 @@
     "dailyLimitBody": "Bugünkü makale sınırına ulaştın. Yakında sıfırlanacak."
   },
   "settings": {
-    "sources": "Kaynaklar",
     "groupPrivacy": "Gizlilik ve veriler",
     "groupHelp": "Yardım",
     "groupAccount": "Hesap",
@@ -1718,10 +1705,6 @@
       "bodyUnavailableUntitled": "Mera sorduğun makalenin kontrolünü tamamlayamadı."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Bu kaynağı önceliklendır",
-    "deprioritiseA11y": "Bu kaynağının önceliğini düşür"
-  },
   "consent": {
     "title": "Devam etmeden önce",
     "body": "Hizmet Şartlarımız ve Gizlilik Politikamız güncelledik. Mera'yı kullanmaya devam etmek için lütfen bunları gözden geçir ve kabul et.",
@@ -2151,28 +2134,6 @@
                 "text": "Her şey başka, neredeyse her şey. Kalite derecelendirmesi değil ve bulunmayması yayıncı hakkında kötü hiçbir şey söylemiyor."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "Ülkenin yanındaki +",
-            "body": "Ülkeler + ve bir çift oklar taşıyor ve tamamen farklı işler yapıyorlar. + ne yapıyor?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "O ülkenin haberlerini daha yüksek sıralar",
-                "feedback": "Bu oklar. + hiç bir sıralama kontrolü değil."
-              },
-              "adds-a-chip": {
-                "label": "O ülkeyi Keşfette çip olarak ekler",
-                "feedback": "Tam tamına. Yalnızca tarama; bu kişiselleştirilmiş akışınız hakkında hiçbir şey değiştirir."
-              },
-              "follows-it": {
-                "label": "Ülkeyi hikaye olarak takip eder",
-                "feedback": "Hayır. Takip etmek hâlâ açılmış tek hikaye için."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "Ülkenin yanındaki oklar",
-            "body": "Yukarı kendi haber odasından daha sık duymak istemediğin anlamına gelir; aşağı daha az sık. Orada her yayıncısına tek seferde uygulanır ve aynı oka tekrar dokunmak temizler."
           },
           "arrows-on-a-publisher": {
             "headline": "Aynı oklar, bir yayıncı bir kez",

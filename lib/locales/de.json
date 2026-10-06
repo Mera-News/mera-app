@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "Länder suchen...",
-    "noCountriesMatch": "Keine Länder entsprechen Ihrer Suche",
-    "noSourcesAvailable": "Keine Quellen verfügbar",
     "publishers": "Herausgeber",
     "noPublishers": "Keine Herausgeber für dieses Land",
     "noArticlesFound": "Keine Artikel gefunden",
     "topHeadlines": "Top-Schlagzeilen",
-    "viewTopHeadlines": "Top-Schlagzeilen",
     "addToLocations": "Zu Ihren Orten hinzufügen",
     "addedToLocations": "Zu Ihren Orten hinzugefügt",
-    "searchCountriesOrPublishers": "Länder oder Herausgeber durchsuchen...",
-    "noResultsMatch": "Nichts passt zu deiner Suche",
-    "addToExplore": "Zu Explore hinzufügen",
-    "addedToExplore": "Zu Explore hinzugefügt",
     "badgeGovernment": "Regierungsquelle",
-    "badgeRegulator": "Offizielle Behörde",
-    "sectionCountries": "Länder",
-    "sectionPublications": "Publikationen"
+    "badgeRegulator": "Offizielle Behörde"
   },
   "clusterDetail": {
     "translatable": "Dieser Artikel ist auf {{language}} verfasst: Dein Gerät kann ihn beim Lesen übersetzen. Falls die Übersetzung nicht funktioniert, kannst du die Seite in Google Translate öffnen; beachte dabei, dass du sie dann über Google aufrufst.",
@@ -844,11 +835,8 @@
     "chooseOneHint": "Eine Option auswählen"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Zuletzt gelesene Publikationen",
     "badge_one": "Sie haben {{publication}} in den letzten 30 Tagen einmal besucht",
     "badge_other": "Sie haben {{publication}} in den letzten 30 Tagen {{count}} Mal besucht",
-    "countShort_one": "{{count}} Besuch",
-    "countShort_other": "{{count}} Besuche",
     "tooltipA11y": "Über den Leseverlauf",
     "tooltipIntro": "Mera verfolgt Ihre Lesemuster für Sie, und das nur auf Ihrem Gerät.",
     "tooltipLink": "Sehen Sie hier Ihren gesamten Leseverlauf."
@@ -1148,7 +1136,6 @@
     "dailyLimitBody": "Sie haben das heutige Artikellimit erreicht. Es wird bald zurückgesetzt."
   },
   "settings": {
-    "sources": "Quellen",
     "groupPrivacy": "Datenschutz und Daten",
     "groupHelp": "Hilfe",
     "groupAccount": "Konto",
@@ -1716,10 +1703,6 @@
       "bodyUnavailableUntitled": "Mera konnte die Prüfung des Artikels, nach dem du gefragt hast, nicht abschließen."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Diese Quelle priorisieren",
-    "deprioritiseA11y": "Diese Quelle deprioritisieren"
-  },
   "consent": {
     "title": "Bevor du weitermachst",
     "body": "Wir haben unsere Nutzungsbedingungen und Datenschutzrichtlinie aktualisiert. Bitte überprüfe und akzeptiere sie, um Mera weiterhin zu nutzen.",
@@ -2149,28 +2132,6 @@
                 "text": "Alles andere, das ist fast alles. Es ist keine Qualitätsbewertung und sein Fehlen sagt nichts Schlechtes über einen Herausgeber."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "Das + neben einem Land",
-            "body": "Länder tragen ein + und ein Paar Pfeile, und sie tun völlig verschiedene Arbeiten. Was macht das + ?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Rangiert dieses Länder-Nachrichten höher",
-                "feedback": "Das sind die Pfeile. Das + ist überhaupt keine Ranglisten-Steuerung."
-              },
-              "adds-a-chip": {
-                "label": "Fügt dieses Land als Chip in Entdecken hinzu",
-                "feedback": "Genau. Nur Durchsuchen; es ändert nichts über deinen personalisierten Feed."
-              },
-              "follows-it": {
-                "label": "Folgt dem Land als eine Geschichte",
-                "feedback": "Nein. Folgen ist für eine einzelne Geschichte, die immer noch entfaltet."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "Die Pfeile neben einem Land",
-            "body": "Auf bedeutet, du möchtest lieber von den Nachrichtenredaktionen dieses Landes hören; ab bedeutet weniger oft. Es gilt zu jedem Herausgeber dort auf einmal und tippe den gleichen Pfeil erneut löscht es."
           },
           "arrows-on-a-publisher": {
             "headline": "Die gleichen Pfeile, ein Herausgeber auf einmal",

@@ -291,23 +291,14 @@
   },
   "sources": {
     "searchCountries": "Buscar países...",
-    "noCountriesMatch": "Ningún país coincide con tu búsqueda",
-    "noSourcesAvailable": "No hay fuentes disponibles",
     "publishers": "Publicaciones",
     "noPublishers": "No hay publicaciones para este país",
     "noArticlesFound": "No se encontraron artículos",
     "topHeadlines": "Titulares principales",
-    "viewTopHeadlines": "Titulares principales",
     "addToLocations": "Añadir a tus lugares",
     "addedToLocations": "Añadido a tus lugares",
-    "searchCountriesOrPublishers": "Buscar países o publicadores...",
-    "noResultsMatch": "Nada coincide con tu búsqueda",
-    "addToExplore": "Agregar a Explorar",
-    "addedToExplore": "Agregado a Explorar",
     "badgeGovernment": "Fuente del gobierno",
-    "badgeRegulator": "Agencia oficial",
-    "sectionCountries": "Países",
-    "sectionPublications": "Publicaciones"
+    "badgeRegulator": "Agencia oficial"
   },
   "clusterDetail": {
     "translatable": "Este artículo está en {{language}}: tu dispositivo puede traducirlo mientras lees. Si la traducción no funciona, puedes abrir el sitio en Google Translate; solo ten en cuenta que lo navegarás a través de Google.",
@@ -844,11 +835,8 @@
     "chooseOneHint": "Elige una opción"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Publicaciones que has estado leyendo",
     "badge_one": "Has visitado {{publication}} una vez en los últimos 30 días",
     "badge_other": "Has visitado {{publication}} {{count}} veces en los últimos 30 días",
-    "countShort_one": "{{count}} visita",
-    "countShort_other": "{{count}} visitas",
     "tooltipA11y": "Acerca del historial de lectura",
     "tooltipIntro": "Mera lleva un seguimiento de tus patrones de lectura, y solo existe en tu dispositivo.",
     "tooltipLink": "Ver todo tu historial de lectura aquí."
@@ -1148,7 +1136,6 @@
     "dailyLimitBody": "Has alcanzado el límite de artículos de hoy. Se reinicia pronto."
   },
   "settings": {
-    "sources": "Fuentes",
     "groupPrivacy": "Privacidad y datos",
     "groupHelp": "Ayuda",
     "groupAccount": "Cuenta",
@@ -1716,10 +1703,6 @@
       "bodyUnavailableUntitled": "Mera no pudo terminar de verificar el artículo que consultaste."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Priorizar esta fuente",
-    "deprioritiseA11y": "Desprioritizar esta fuente"
-  },
   "consent": {
     "title": "Antes de continuar",
     "body": "Hemos actualizado nuestros Términos de servicio y Política de privacidad. Por favor, revísalos y acéptalos para seguir usando Mera.",
@@ -2149,28 +2132,6 @@
                 "text": "Todo lo demás, que es casi todo. No es una calificación de calidad, y su ausencia no dice nada malo sobre un publicador."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "El + junto a un país",
-            "body": "Los países llevan un + y un par de flechas, y hacen trabajos completamente diferentes. ¿Qué hace el +?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Clasifica las noticias de ese país más alto",
-                "feedback": "Eso es las flechas. El + no es un control de clasificación en absoluto."
-              },
-              "adds-a-chip": {
-                "label": "Agrega ese país como un chip en Explorar",
-                "feedback": "Exactamente. Solo navegación; cambia nada sobre tu feed personalizado."
-              },
-              "follows-it": {
-                "label": "Sigue el país como una historia",
-                "feedback": "No. Seguir es para una sola historia que aún se está desarrollando."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "Las flechas junto a un país",
-            "body": "Arriba significa que preferirías escuchar de las salas de prensa de ese país; abajo significa menos a menudo. Se aplica a cada publicador allí a la vez, y tocar la misma flecha de nuevo lo borra."
           },
           "arrows-on-a-publisher": {
             "headline": "Las mismas flechas, un publicador a la vez",

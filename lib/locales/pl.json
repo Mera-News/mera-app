@@ -303,23 +303,14 @@
   },
   "sources": {
     "searchCountries": "Szukaj krajów...",
-    "noCountriesMatch": "Żaden kraj nie pasuje do wyszukiwania",
-    "noSourcesAvailable": "Brak dostępnych źródeł",
     "publishers": "Wydawcy",
     "noPublishers": "Brak wydawców dla tego kraju",
     "noArticlesFound": "Nie znaleziono artykułów",
     "topHeadlines": "Najważniejsze nagłówki",
-    "viewTopHeadlines": "Najważniejsze nagłówki",
     "addToLocations": "Dodaj do swoich miejsc",
     "addedToLocations": "Dodano do Twoich miejsc",
-    "searchCountriesOrPublishers": "Szukaj krajów lub wydawców...",
-    "noResultsMatch": "Nic nie pasuje do Twojego wyszukiwania",
-    "addToExplore": "Dodaj do Odkrywania",
-    "addedToExplore": "Dodano do Odkrywania",
     "badgeGovernment": "Źródło rządowe",
-    "badgeRegulator": "Agencja oficjalna",
-    "sectionCountries": "Kraje",
-    "sectionPublications": "Publikacje"
+    "badgeRegulator": "Agencja oficjalna"
   },
   "clusterDetail": {
     "translatable": "Język tego artykułu to {{language}}: twoje urządzenie może go przetłumaczyć podczas czytania. Jeśli tłumaczenie nie zadziała, możesz otworzyć stronę w Google Translate; pamiętaj, że wtedy przeglądasz ją za pośrednictwem Google.",
@@ -856,11 +847,8 @@
     "chooseOneHint": "Wybierz jedną opcję"
   },
   "publicationVisits": {
-    "topVisitedTitle": "Publikacje, które czytasz",
     "badge_one": "Odwiedziłeś {{publication}} raz w ciągu ostatnich 30 dni",
     "badge_other": "Odwiedziłeś {{publication}} {{count}} razy w ciągu ostatnich 30 dni",
-    "countShort_one": "{{count}} wizyta",
-    "countShort_other": "{{count}} wizyty",
     "tooltipA11y": "Informacje o historii czytania",
     "tooltipIntro": "Mera śledzi Twoje nawyki czytelnicze, i przechowuje je tylko na Twoim urządzeniu.",
     "tooltipLink": "Zobacz całą historię czytania tutaj."
@@ -1166,7 +1154,6 @@
     "dailyLimitBody": "Osiągnięto dzisiejszy limit artykułów. Wkrótce zostanie zresetowany."
   },
   "settings": {
-    "sources": "Źródła",
     "groupPrivacy": "Prywatność i dane",
     "groupHelp": "Pomoc",
     "groupAccount": "Konto",
@@ -1742,10 +1729,6 @@
       "bodyUnavailableUntitled": "Mera nie mogła dokończyć sprawdzania artykułu, o który pytałeś."
     }
   },
-  "sourcePrefControl": {
-    "prioritiseA11y": "Uprioritetnij to źródło",
-    "deprioritiseA11y": "Zmniejsz priorytet tego źródła"
-  },
   "consent": {
     "title": "Zanim będziesz kontynuować",
     "body": "Zaktualizowaliśmy nasze Warunki Korzystania i Politykę Prywatności. Przejrzyj i zaakceptuj, aby nadal korzystać z Mera.",
@@ -2175,28 +2158,6 @@
                 "text": "Wszystko inne, które jest prawie wszystko. To nie jest ocena jakości, i jej brak nic złego nie mówi o wydawcy."
               }
             }
-          },
-          "plus-is-not-a-rank": {
-            "headline": "Szyk + obok kraju",
-            "body": "Kraje noszą + i parę strzałek i robią całkowicie różne prace. Co robi +?",
-            "choose": {
-              "ranks-it-up": {
-                "label": "Uszereguje wiadomości tego kraju wyżej",
-                "feedback": "To są strzałki. + to wcale nie jest kontrolka rankingowa."
-              },
-              "adds-a-chip": {
-                "label": "Dodaje ten kraj jako żeton w Odkrywaniu",
-                "feedback": "Dokładnie. Tylko przeglądanie; nic nie zmienia w spersonalizowanym kanale."
-              },
-              "follows-it": {
-                "label": "Śledzi kraj jako historię",
-                "feedback": "Nie. Śledzenie jest dla jednej historii, która wciąż się rozprzestrzenia."
-              }
-            }
-          },
-          "arrows-on-a-country": {
-            "headline": "Strzałki obok kraju",
-            "body": "Up oznacza, że wolisz słyczeć z redakcji tego kraju; w dół oznacza rzadziej. Dotyczy każdego wydawcy tam jednocześnie, a dotknięcie tej samej strzałki ponownie to czyści."
           },
           "arrows-on-a-publisher": {
             "headline": "Te same strzałki, jeden wydawca na raz",
