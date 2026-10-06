@@ -59,6 +59,19 @@ export function monogramHueOf(name: string | null | undefined): number {
     return (hash >>> 0) % 360;
 }
 
+/** The monogram tile's three inks from one hue: a deep tinted fill, a hairline
+ *  in the same hue and a pale letter. Saturation and lightness are fixed, so
+ *  every outlet sits at the same visual weight on a dark surface whatever its
+ *  hue. Here, not in PublicationHeader, so a list row can draw the same tile
+ *  without importing the header's browser module. */
+export function monogramInks(hue: number): { fill: string; border: string; letter: string } {
+    return {
+        fill: `hsl(${hue}, 32%, 20%)`,
+        border: `hsla(${hue}, 55%, 60%, 0.35)`,
+        letter: `hsl(${hue}, 75%, 84%)`,
+    };
+}
+
 // Official-source badge. A measured, deliberately narrow rule: ONLY
 // `publication_type === 'government'` or `'regulator'` renders anything.
 // Every other value, including null ("not classified yet"), renders nothing.

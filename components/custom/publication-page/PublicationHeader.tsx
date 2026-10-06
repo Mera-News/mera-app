@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
-import { homepageUrlOf, hostOf, monogramHueOf, monogramOf } from './publication-format';
+import { homepageUrlOf, hostOf, monogramHueOf, monogramInks, monogramOf } from './publication-format';
 
 /** Every header size is here. The letter and each text line carry an
  *  explicit lineHeight: an inline fontSize on the ui Text without one keeps
@@ -39,16 +39,6 @@ const LINK_FRAME = {
     alignSelf: 'flex-start',
 } as const;
 
-/** The tile's three inks from one hue: a deep tinted fill, a hairline in the
- *  same hue and a pale letter. Saturation and lightness are fixed, so every
- *  outlet sits at the same visual weight on the dark header whatever its hue. */
-export function monogramInks(hue: number): { fill: string; border: string; letter: string } {
-    return {
-        fill: `hsl(${hue}, 32%, 20%)`,
-        border: `hsla(${hue}, 55%, 60%, 0.35)`,
-        letter: `hsl(${hue}, 75%, 84%)`,
-    };
-}
 
 export interface PublicationHeaderBadge {
     readonly label: string;
