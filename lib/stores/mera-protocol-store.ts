@@ -24,40 +24,12 @@ interface MeraProtocolState {
   // discards clusters that only matched noisy topics at sync time.
   injectNoise: boolean;
 
-  // Relevance scoring v4 — when true, the classic two-pass cloud path ALSO
-  // (a) shows each article's server tag metadata to the pass-1 scoring prompt
-  // and (b) skips the pass-2 note call for low-value event types, demoting
-  // those rows. One switch drives both `articlePipeline.legacyTagPromptEnabled`
-  // and `legacyTagReasonGateEnabled`: they were measured together and ship
-  // together. Routing is unchanged either way — v4 is still the legacy path.
-  //
-  // This field is the SAME user preference the retired "relevance v3" beta
-  // switch drove (v3 was single-pass two-axis scoring, now deleted); only the
-  // symbol was renamed. See `SETTING_RELEVANCE_V4` for why the persisted key
-  // still reads `mera_relevance_v3`. Default false.
-  relevanceV4: boolean;
-
   // Web search in chat — when true, Mera may call the `webSearch` tool, which
   // sends the SEARCH WORDS (and nothing else) to our inference gateway and on
   // to a search provider. Default false, and the default is load-bearing: the
   // tool DECLARATION is omitted from the turn payload while this is false, so
   // an off toggle costs zero prompt tokens and can make zero network calls.
   webSearchInChat: boolean;
-
-  // Deep interview — when true, the persona interview draws from a deeper
-  // question bank (attention, anxiety, time sinks, decisions, why a place
-  // matters). The answers become richer LOCAL facts, exactly like every other
-  // fact: they never leave the device. Default false.
-  deepInterview: boolean;
-
-  // Show extracted metadata — when true, the article/suggestion detail
-  // screens show the server's machine-extracted tags for the open story
-  // (places, entities, event type). Transparency-only: no data path changes,
-  // no network calls added — the fields already ride the existing
-  // `articleById` query and the local suggestion row. Off by default because
-  // this metadata is measurably imperfect (audited well below 100% correct)
-  // and displaying it as fact would overclaim.
-  showExtractedMetadata: boolean;
 
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
@@ -74,10 +46,7 @@ interface MeraProtocolState {
   // Actions — protocol
   setProcessingMode: (mode: ProcessingMode) => void;
   setInjectNoise: (enabled: boolean) => void;
-  setRelevanceV4: (enabled: boolean) => void;
   setWebSearchInChat: (enabled: boolean) => void;
-  setDeepInterview: (enabled: boolean) => void;
-  setShowExtractedMetadata: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -99,24 +68,7 @@ const DEFAULT_PROCESSING_MODE: ProcessingMode = ProcessingMode.Cloud;
 
 const SETTING_PROCESSING_MODE = 'mera_processing_mode';
 const SETTING_INJECT_NOISE = 'mera_inject_noise';
-/**
- * THE STRING STILL SAYS v3 ON PURPOSE. This row is the *same* user preference
- * the "relevance v3" beta switch wrote; v3's scorer was retired and the switch
- * repurposed as v4 (the legacy path plus the two measured article-tag
- * features). Minting a fresh key would read as absent on every device that had
- * the beta on and silently switch those users OFF — a settings key is user
- * data, and renaming it is a migration, not a rename. Only the symbol changed.
- */
-const SETTING_RELEVANCE_V4 = 'mera_relevance_v3';
 const SETTING_WEB_SEARCH_IN_CHAT = 'mera_web_search_in_chat';
-const SETTING_DEEP_INTERVIEW = 'mera_deep_interview';
-const SETTING_SHOW_EXTRACTED_METADATA = 'mera_show_extracted_metadata';
-/**
- * Names the durable concept (fact-checking), not the current BETA status or
- * the off-by-default state — a settings key is user data, and renaming it
- * later would be a migration. See `SETTING_RELEVANCE_V4` above for the
- * cautionary precedent.
- */
 // RETIRED. Fact checking is part of the product now rather than an opt-in, so
 // this key is no longer READ — only swept, so a device that once stored 'false'
 // does not keep a row implying a preference the app no longer honours.
@@ -146,23 +98,18 @@ const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 /** Retired with the legacy questionnaire-level persona flow. Never read — kept
  *  only so `reset()` clears the orphaned row from devices that persisted it. */
 const RETIRED_SETTING_LEGACY_PERSONA_UPDATE = 'mera_legacy_persona_update';
-/** Retired with the relevance-v2 math-authoritative toggle (superseded first by
- *  v3, now by v4). Never read — the switch starts off regardless of what v2 was
- *  set to — kept only so
- *  `reset()`/`hydrateFromDb` clear the orphaned row from devices that
+/** Retired with the relevance-v2 math-authoritative toggle. Never read; kept
+ *  only so `reset()`/`hydrateFromDb` clear the orphaned row from devices that
  *  persisted it. */
 const RETIRED_SETTING_RELEVANCE_V2 = 'mera_relevance_v2';
 
 const initialState = {
   processingMode: DEFAULT_PROCESSING_MODE,
   injectNoise: false,
-  relevanceV4: false,
   // ON by default since the web-search wave. Its twin — the marker branch in
   // `hydrateFromDb` — must agree, or the hydrate overwrites this on every
   // existing device and the feature ships dark.
   webSearchInChat: true,
-  deepInterview: false,
-  showExtractedMetadata: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -186,24 +133,9 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     setSetting(SETTING_INJECT_NOISE, injectNoise ? 'true' : 'false').catch(() => { });
   },
 
-  setRelevanceV4: (relevanceV4) => {
-    set({ relevanceV4 });
-    setSetting(SETTING_RELEVANCE_V4, relevanceV4 ? 'true' : 'false').catch(() => { });
-  },
-
   setWebSearchInChat: (webSearchInChat) => {
     set({ webSearchInChat });
     setSetting(SETTING_WEB_SEARCH_IN_CHAT, webSearchInChat ? 'true' : 'false').catch(() => { });
-  },
-
-  setDeepInterview: (deepInterview) => {
-    set({ deepInterview });
-    setSetting(SETTING_DEEP_INTERVIEW, deepInterview ? 'true' : 'false').catch(() => { });
-  },
-
-  setShowExtractedMetadata: (showExtractedMetadata) => {
-    set({ showExtractedMetadata });
-    setSetting(SETTING_SHOW_EXTRACTED_METADATA, showExtractedMetadata ? 'true' : 'false').catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -246,7 +178,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(LEGACY_SETTING_PROTOCOL_ENABLED).catch(() => { });
     deleteSetting('mera_selected_model_id').catch(() => { });
     deleteSetting(SETTING_INJECT_NOISE).catch(() => { });
-    deleteSetting(SETTING_RELEVANCE_V4).catch(() => { });
     deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
     // The marker goes too. A reset device is a fresh device, and a fresh device
     // gets the current default — leaving the marker behind would make the next
@@ -254,8 +185,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     // value behind is how a reset silently preserves a preference it just
     // deleted.
     deleteSetting(SETTING_WEB_SEARCH_FORCED_ON).catch(() => { });
-    deleteSetting(SETTING_DEEP_INTERVIEW).catch(() => { });
-    deleteSetting(SETTING_SHOW_EXTRACTED_METADATA).catch(() => { });
     deleteSetting(RETIRED_SETTING_FACT_CHECK).catch(() => { });
     deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
     deleteSetting(RETIRED_SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
@@ -269,24 +198,18 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         legacyEnabledValue,
         modelIdValue,
         injectNoiseValue,
-        relevanceV4Value,
         webSearchValue,
-        deepInterviewValue,
-        showExtractedMetadataValue,
         webSearchForcedOnValue,
       ] = await Promise.all([
         getSetting(SETTING_PROCESSING_MODE),
         getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
         getSetting('mera_selected_model_id'),
         getSetting(SETTING_INJECT_NOISE),
-        getSetting(SETTING_RELEVANCE_V4),
         getSetting(SETTING_WEB_SEARCH_IN_CHAT),
-        getSetting(SETTING_DEEP_INTERVIEW),
-        getSetting(SETTING_SHOW_EXTRACTED_METADATA),
         getSetting(SETTING_WEB_SEARCH_FORCED_ON),
       ]);
-      // One-shot cleanup: the retired v2 key is never read — the switch starts
-      // off regardless of what v2 was set to — just swept so it doesn't linger.
+      // One-shot cleanup: the retired v2 key is never read, just swept so it
+      // doesn't linger.
       deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
       deleteSetting(RETIRED_SETTING_FACT_CHECK).catch(() => { });
       const updates: Partial<MeraProtocolState> = {};
@@ -318,11 +241,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (injectNoiseValue === 'false') {
         updates.injectNoise = false;
       }
-      if (relevanceV4Value === 'true') {
-        updates.relevanceV4 = true;
-      } else if (relevanceV4Value === 'false') {
-        updates.relevanceV4 = false;
-      }
       // WEB SEARCH: ABSENT ⇒ ON, and a one-shot sweep of whatever came before.
       //
       // This is the exact inverse of the rule that used to live here, and the
@@ -336,26 +254,12 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       // — is deleted and the setting comes up on. After it exists, an explicit
       // 'false' is honoured forever, because that one was chosen against the
       // current default by a user looking at the current switch.
-      //
-      // `deepInterview` below keeps the old absent ⇒ OFF rule. It is not the
-      // same kind of setting: it changes what Mera ASKS the user, and nothing
-      // about it became part of the product.
       if (webSearchForcedOnValue !== 'true') {
         updates.webSearchInChat = true;
         deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
         setSetting(SETTING_WEB_SEARCH_FORCED_ON, 'true').catch(() => { });
       } else {
         updates.webSearchInChat = webSearchValue !== 'false';
-      }
-      if (deepInterviewValue === 'true') {
-        updates.deepInterview = true;
-      } else if (deepInterviewValue === 'false') {
-        updates.deepInterview = false;
-      }
-      if (showExtractedMetadataValue === 'true') {
-        updates.showExtractedMetadata = true;
-      } else if (showExtractedMetadataValue === 'false') {
-        updates.showExtractedMetadata = false;
       }
       if (Object.keys(updates).length > 0) {
         set(updates);
@@ -376,18 +280,8 @@ export const useIsOnDeviceProcessing = () =>
 export const useInjectNoise = () =>
   useMeraProtocolStore((state) => state.injectNoise);
 
-export const useRelevanceV4 = () =>
-  useMeraProtocolStore((state) => state.relevanceV4);
-
 export const useWebSearchInChat = () =>
   useMeraProtocolStore((state) => state.webSearchInChat);
-
-export const useDeepInterview = () =>
-  useMeraProtocolStore((state) => state.deepInterview);
-
-export const useShowExtractedMetadata = () =>
-  useMeraProtocolStore((state) => state.showExtractedMetadata);
-
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

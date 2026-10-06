@@ -29,10 +29,7 @@ import {
     useProcessingMode,
     useIsOnDeviceProcessing,
     useInjectNoise,
-    useRelevanceV4,
     useWebSearchInChat,
-    useDeepInterview,
-    useShowExtractedMetadata,
     useSelectedModelId,
     useModelState,
     useDownloadProgress,
@@ -50,11 +47,8 @@ import logger from '@/lib/logger';
 const initialState = {
     processingMode: ProcessingMode.Cloud,
     injectNoise: false,
-    relevanceV4: false,
     // Mirrors the store's own initialState — ON by default since the flip.
     webSearchInChat: true,
-    deepInterview: false,
-    showExtractedMetadata: false,
     selectedModelId: 'mera-qwen3.5-2b',
     modelState: 'not_downloaded' as const,
     downloadProgress: 0,
@@ -78,7 +72,6 @@ describe('useMeraProtocolStore', () => {
         const state = useMeraProtocolStore.getState();
         expect(state.processingMode).toBe(ProcessingMode.Cloud);
         expect(state.injectNoise).toBe(false);
-        expect(state.relevanceV4).toBe(false);
         expect(state.selectedModelId).toBe('mera-qwen3.5-2b');
         expect(state.modelState).toBe('not_downloaded');
         expect(state.isProcessing).toBe(false);
@@ -127,56 +120,10 @@ describe('useMeraProtocolStore', () => {
         expect(useMeraProtocolStore.getState().injectNoise).toBe(true);
     });
 
-    // ── setRelevanceV4 ───────────────────────────────────────────────────────
+    // ── setWebSearchInChat ───────────────────────────────────────────────────
 
-    // The v3 scorer was retired and its user-facing switch repurposed as v4.
-    // The PERSISTED KEY deliberately did not move: it is the same preference,
-    // and minting `mera_relevance_v4` would read as absent on every device that
-    // had the beta on — silently switching those users off. This test exists so
-    // a future "tidy up the stale v3 name" cannot do that by accident.
-    it('keeps the v3-era persisted key — a renamed key would silently switch existing users off', async () => {
-        useMeraProtocolStore.getState().setRelevanceV4(true);
-        await Promise.resolve();
-
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_relevance_v3', 'true');
-        expect(mockSetSetting).not.toHaveBeenCalledWith(
-            'mera_relevance_v4',
-            expect.anything(),
-        );
-    });
-
-    it('setRelevanceV4 true persists "true" string', async () => {
-        useMeraProtocolStore.getState().setRelevanceV4(true);
-
-        expect(useMeraProtocolStore.getState().relevanceV4).toBe(true);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_relevance_v3', 'true');
-    });
-
-    it('setRelevanceV4 false persists "false" string', async () => {
-        useMeraProtocolStore.getState().setRelevanceV4(false);
-
-        expect(useMeraProtocolStore.getState().relevanceV4).toBe(false);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_relevance_v3', 'false');
-    });
-
-    it('setRelevanceV4 silently swallows DB errors', async () => {
-        mockSetSetting.mockRejectedValueOnce(new Error('db'));
-        useMeraProtocolStore.getState().setRelevanceV4(true);
-        await new Promise((r) => setImmediate(r));
-        expect(useMeraProtocolStore.getState().relevanceV4).toBe(true);
-    });
-
-    // ── setWebSearchInChat / setDeepInterview (items 13 + 17) ────────────────
-
-    // Web search is ON by default and deepInterview is not. They are different
-    // kinds of setting: web search is part of the product now, deepInterview
-    // changes what Mera ASKS the user and stayed opt-in.
-    it('web search starts ON, deep interview starts OFF', () => {
-        const state = useMeraProtocolStore.getState();
-        expect(state.webSearchInChat).toBe(true);
-        expect(state.deepInterview).toBe(false);
+    it('web search starts ON', () => {
+        expect(useMeraProtocolStore.getState().webSearchInChat).toBe(true);
     });
 
     it('setWebSearchInChat persists "true"/"false" like the other toggles', async () => {
@@ -191,50 +138,30 @@ describe('useMeraProtocolStore', () => {
         expect(mockSetSetting).toHaveBeenCalledWith('mera_web_search_in_chat', 'false');
     });
 
-    it('setDeepInterview persists "true"/"false" like the other toggles', async () => {
-        useMeraProtocolStore.getState().setDeepInterview(true);
-        expect(useMeraProtocolStore.getState().deepInterview).toBe(true);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_deep_interview', 'true');
-
-        useMeraProtocolStore.getState().setDeepInterview(false);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_deep_interview', 'false');
-    });
-
-    it('both toggles swallow DB errors rather than failing the switch', async () => {
+    it('setWebSearchInChat swallows DB errors rather than failing the switch', async () => {
         mockSetSetting.mockRejectedValueOnce(new Error('db'));
         useMeraProtocolStore.getState().setWebSearchInChat(true);
-        mockSetSetting.mockRejectedValueOnce(new Error('db'));
-        useMeraProtocolStore.getState().setDeepInterview(true);
         await new Promise((r) => setImmediate(r));
         expect(useMeraProtocolStore.getState().webSearchInChat).toBe(true);
-        expect(useMeraProtocolStore.getState().deepInterview).toBe(true);
     });
 
-    // ── setShowExtractedMetadata ─────────────────────────────────────────────
-
-    it('showExtractedMetadata starts OFF', () => {
-        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(false);
-    });
-
-    it('setShowExtractedMetadata persists "true"/"false" like the other toggles', async () => {
-        useMeraProtocolStore.getState().setShowExtractedMetadata(true);
-        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(true);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_show_extracted_metadata', 'true');
-
-        useMeraProtocolStore.getState().setShowExtractedMetadata(false);
-        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(false);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_show_extracted_metadata', 'false');
-    });
-
-    it('setShowExtractedMetadata swallows DB errors rather than failing the switch', async () => {
-        mockSetSetting.mockRejectedValueOnce(new Error('db'));
-        useMeraProtocolStore.getState().setShowExtractedMetadata(true);
+    // Relevance v4, Deeper questions and extracted metadata left the Mera
+    // Protocol screen (navx): v4 comes from DEFAULT_HARNESS_CONFIG, deeper
+    // questions are always on, metadata is a dev-only env flag. Their rows stay
+    // on devices untouched: nothing reads, writes or deletes them.
+    it('carries none of the removed toggles and never touches their rows', async () => {
+        await useMeraProtocolStore.getState().hydrateFromDb();
+        useMeraProtocolStore.getState().reset();
         await new Promise((r) => setImmediate(r));
-        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(true);
+        const state = useMeraProtocolStore.getState() as unknown as Record<string, unknown>;
+        for (const field of ['relevanceV4', 'deepInterview', 'showExtractedMetadata']) {
+            expect(state[field]).toBeUndefined();
+        }
+        for (const key of ['mera_relevance_v3', 'mera_deep_interview', 'mera_show_extracted_metadata']) {
+            expect(mockGetSetting).not.toHaveBeenCalledWith(key);
+            expect(mockSetSetting).not.toHaveBeenCalledWith(key, expect.anything());
+            expect(mockDeleteSetting).not.toHaveBeenCalledWith(key);
+        }
     });
 
     // ── setSelectedModelId ───────────────────────────────────────────────────
@@ -333,7 +260,6 @@ describe('useMeraProtocolStore', () => {
         useMeraProtocolStore.setState({
             processingMode: ProcessingMode.OnDevice,
             injectNoise: true,
-            relevanceV4: true,
             selectedModelId: 'custom',
             isProcessing: true,
         });
@@ -343,7 +269,6 @@ describe('useMeraProtocolStore', () => {
         const state = useMeraProtocolStore.getState();
         expect(state.processingMode).toBe(ProcessingMode.Cloud);
         expect(state.injectNoise).toBe(false);
-        expect(state.relevanceV4).toBe(false);
         expect(state.selectedModelId).toBe('mera-qwen3.5-2b');
         expect(state.isProcessing).toBe(false);
 
@@ -352,7 +277,6 @@ describe('useMeraProtocolStore', () => {
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_protocol_enabled');
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_selected_model_id');
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_inject_noise');
-        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_relevance_v3');
         // The retired v2 key is still swept so devices that persisted it
         // don't keep an orphaned row.
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_relevance_v2');
@@ -378,7 +302,7 @@ describe('useMeraProtocolStore', () => {
             .mockResolvedValueOnce(null) // mera_protocol_enabled (legacy)
             .mockResolvedValueOnce(null) // mera_selected_model_id
             .mockResolvedValueOnce(null) // mera_inject_noise
-            .mockResolvedValueOnce(null); // mera_relevance_v3
+            .mockResolvedValueOnce(null); // mera_web_search_in_chat
 
         await useMeraProtocolStore.getState().hydrateFromDb();
 
@@ -429,46 +353,16 @@ describe('useMeraProtocolStore', () => {
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_protocol_enabled');
     });
 
-    // Keyed by NAME rather than call order: the two new keys were appended to
-    // the Promise.all, and an order-indexed test would silently pass while
-    // asserting the wrong row.
-    it('hydrateFromDb restores both new toggles from their own keys', async () => {
+    // Keyed by NAME rather than call order: an order-indexed test would
+    // silently pass while asserting the wrong row.
+    it('hydrateFromDb restores web search from its own key', async () => {
         mockGetSetting.mockImplementation((k: string) =>
-            Promise.resolve(
-                k === 'mera_web_search_in_chat' ? 'true'
-                    : k === 'mera_deep_interview' ? 'true'
-                        : null,
-            ),
+            Promise.resolve(k === 'mera_web_search_in_chat' ? 'true' : null),
         );
 
         await useMeraProtocolStore.getState().hydrateFromDb();
 
         expect(useMeraProtocolStore.getState().webSearchInChat).toBe(true);
-        expect(useMeraProtocolStore.getState().deepInterview).toBe(true);
-    });
-
-    // ABSENT ⇒ OFF for deepInterview: a device that has never seen THAT toggle
-    // must not inherit an on state from a missing row.
-    it('hydrateFromDb leaves deepInterview OFF when its row is absent or junk', async () => {
-        for (const stored of [null, 'yes', '1', '']) {
-            useMeraProtocolStore.setState({ deepInterview: false });
-            mockGetSetting.mockImplementation(() => Promise.resolve(stored as string | null));
-
-            await useMeraProtocolStore.getState().hydrateFromDb();
-
-            expect(useMeraProtocolStore.getState().deepInterview).toBe(false);
-        }
-    });
-
-    it('hydrateFromDb turns deepInterview back OFF on an explicit "false"', async () => {
-        useMeraProtocolStore.setState({ deepInterview: true });
-        mockGetSetting.mockImplementation((k: string) =>
-            Promise.resolve(k === 'mera_deep_interview' ? 'false' : null),
-        );
-
-        await useMeraProtocolStore.getState().hydrateFromDb();
-
-        expect(useMeraProtocolStore.getState().deepInterview).toBe(false);
     });
 
     // ── the web-search default flip ─────────────────────────────────────────
@@ -519,52 +413,10 @@ describe('useMeraProtocolStore', () => {
         }
     });
 
-    it('reset() clears both new setting rows, and the flip marker with them', () => {
+    it('reset() clears the web-search row, and the flip marker with it', () => {
         useMeraProtocolStore.getState().reset();
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_web_search_in_chat');
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_web_search_forced_on_v1');
-        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_deep_interview');
-    });
-
-    // Keyed by NAME, same reasoning as the two toggles above — this key was
-    // appended even later in the Promise.all.
-    it('hydrateFromDb restores showExtractedMetadata from its own key', async () => {
-        mockGetSetting.mockImplementation((k: string) =>
-            Promise.resolve(k === 'mera_show_extracted_metadata' ? 'true' : null),
-        );
-
-        await useMeraProtocolStore.getState().hydrateFromDb();
-
-        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(true);
-    });
-
-    // ABSENT ⇒ OFF — this metadata is measurably imperfect, so a device that
-    // never saw the toggle must not silently start showing it.
-    it('hydrateFromDb leaves showExtractedMetadata OFF when the row is absent or junk', async () => {
-        for (const stored of [null, 'yes', '1', '']) {
-            useMeraProtocolStore.setState({ showExtractedMetadata: false });
-            mockGetSetting.mockImplementation(() => Promise.resolve(stored as string | null));
-
-            await useMeraProtocolStore.getState().hydrateFromDb();
-
-            expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(false);
-        }
-    });
-
-    it('hydrateFromDb turns showExtractedMetadata back OFF on an explicit "false"', async () => {
-        useMeraProtocolStore.setState({ showExtractedMetadata: true });
-        mockGetSetting.mockImplementation((k: string) =>
-            Promise.resolve(k === 'mera_show_extracted_metadata' ? 'false' : null),
-        );
-
-        await useMeraProtocolStore.getState().hydrateFromDb();
-
-        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(false);
-    });
-
-    it('reset() clears the extracted-metadata setting row', () => {
-        useMeraProtocolStore.getState().reset();
-        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_show_extracted_metadata');
     });
 
     // ── Auto community fact check ──────────────────────────────────────────
@@ -677,37 +529,7 @@ describe('useMeraProtocolStore', () => {
         expect(useMeraProtocolStore.getState().injectNoise).toBe(false);
     });
 
-    it('hydrateFromDb sets relevanceV4=true from DB', async () => {
-        mockGetSetting
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce('true'); // mera_relevance_v3
-
-        await useMeraProtocolStore.getState().hydrateFromDb();
-
-        expect(useMeraProtocolStore.getState().relevanceV4).toBe(true);
-    });
-
-    // The two-branch form matters: a one-branch `=== 'true'` hydrate would
-    // silently ignore a persisted 'false' if the default ever flipped to true.
-    it('hydrateFromDb sets relevanceV4=false from DB', async () => {
-        useMeraProtocolStore.setState({ relevanceV4: true });
-        mockGetSetting
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce('false'); // mera_relevance_v3
-
-        await useMeraProtocolStore.getState().hydrateFromDb();
-
-        expect(useMeraProtocolStore.getState().relevanceV4).toBe(false);
-    });
-
-    // v3 starts off regardless of what v2 was persisted at — the retired key
-    // is swept, not migrated/read.
+    // The retired v2 key is swept, never read.
     it('hydrateFromDb one-shot-deletes the retired mera_relevance_v2 key without reading it', async () => {
         mockGetSetting.mockResolvedValue(null);
 
@@ -718,8 +540,6 @@ describe('useMeraProtocolStore', () => {
         await new Promise((r) => setImmediate(r));
         // Always swept, even though nothing in the DB mentions it.
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_relevance_v2');
-        // v3 stays at its default (off) — v2's value, if any, is irrelevant.
-        expect(useMeraProtocolStore.getState().relevanceV4).toBe(false);
     });
 
     it('hydrateFromDb does not call set() when all values are null', async () => {
@@ -783,27 +603,9 @@ describe('useMeraProtocolStore', () => {
         expect(result.current).toBe(true);
     });
 
-    it('useRelevanceV4 returns current relevanceV4 value', () => {
-        useMeraProtocolStore.setState({ relevanceV4: true });
-        const { result } = renderHook(() => useRelevanceV4());
-        expect(result.current).toBe(true);
-    });
-
     it('useWebSearchInChat returns current webSearchInChat value', () => {
         useMeraProtocolStore.setState({ webSearchInChat: true });
         const { result } = renderHook(() => useWebSearchInChat());
-        expect(result.current).toBe(true);
-    });
-
-    it('useDeepInterview returns current deepInterview value', () => {
-        useMeraProtocolStore.setState({ deepInterview: true });
-        const { result } = renderHook(() => useDeepInterview());
-        expect(result.current).toBe(true);
-    });
-
-    it('useShowExtractedMetadata returns current showExtractedMetadata value', () => {
-        useMeraProtocolStore.setState({ showExtractedMetadata: true });
-        const { result } = renderHook(() => useShowExtractedMetadata());
         expect(result.current).toBe(true);
     });
 

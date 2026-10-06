@@ -421,10 +421,6 @@
     "cancelDownload": "Annulla download",
     "retryDownload": "Riprova download",
     "updateTo": "Aggiorna a {{modelName}}",
-    "relevanceV4Title": "Usa valutazione rilevanza v4",
-    "relevanceV4On": "Valutazione classica, guidata dai metadati dell'articolo",
-    "relevanceV4Off": "Valutazione cloud two-pass classica",
-    "relevanceV4Description": "Beta — mantiene la valutazione two-pass classica e aggiunge i luoghi, le persone e il tipo di evento di ogni articolo a ciò che il valutatore vede, quindi salta la nota per i tipi di storia che raramente contano per te. Suggerimenti leggermente migliori e circa un quinto di chiamate AI in meno. Disattivalo in qualsiasi momento per tornare indietro.",
     "privacyTitle": "I tuoi dati restano privati",
     "privacyDescription": "Mera Protocol è sempre attivo. La modalità dispositivo esegue l'inferenza completamente offline sul tuo telefono. La modalità cloud usa inferenza cifrata end-to-end: i tuoi dati vengono cifrati sul dispositivo e decifrati solo dentro un enclave sicuro in cui non possiamo guardare. I tuoi dati personali, il tuo profilo e la tua cronologia di lettura non lasciano mai questo dispositivo. Per recuperare le notizie inviamo solo frasi tematiche generiche, senza alcun identificativo utente.",
     "deviceSupported": "Dispositivo supportato",
@@ -495,14 +491,6 @@
     "webSearchOn": "Attiva; Mera può cercare il web per rispondere a una domanda",
     "webSearchOff": "Spegnere",
     "webSearchDescription": "Quando è attivo, Mera può cercare sul web per rispondere a una domanda. Mera scrive le parole di ricerca partendo dalla tua domanda e invia solo quelle parole al nostro server e poi a un motore di ricerca. Non parte nient'altro: nessun account, nessun dispositivo, niente che dica chi sei. Attivo di default. Disattivalo qui quando vuoi e Mera smette di cercare.",
-    "deepInterviewTitle": "Domande più profonde",
-    "deepInterviewOn": "Attiva; Mera chiede informazioni su attenzione, preoccupazioni e decisioni",
-    "deepInterviewOff": "Spegnere",
-    "deepInterviewDescription": "Mera fa domande meno, ma più profonde: cosa stai cercando di proteggere dalla tua attenzione, quali argomenti sono necessari ma ansiosi, quali sembrano utili ma spreca il tuo tempo, cosa stai decidendo questo mese, e perché ogni luogo ti importa. Le tue risposte sono archiviate su questo dispositivo e non lo lasciano mai; il quale è esattamente il motivo per cui Mera può chiedertelo. Rendono i punteggi di rilevanza e le ragioni mostrate su ogni storia più netti. Disattivato per impostazione predefinita.",
-    "extractedMetadataTitle": "Mostra metadati estratti",
-    "extractedMetadataOn": "Attivo: mostra i luoghi, le entità e il tipo di evento estratti da ogni storia",
-    "extractedMetadataOff": "Disattivo",
-    "extractedMetadataDescription": "Quando questo è attivo, lo schermo dell'articolo mostra ciò che il nostro sistema ha estratto automaticamente dalla storia: luoghi, entità e tipo di evento. Questo è una lettura meccanica della storia, non un fatto verificato, e può essere errato. Disattivo per impostazione predefinita.",
     "extractedMetadataPanelHeading": "Metadati Estratti",
     "extractedMetadataEventTypeLabel": "Tipo di evento",
     "extractedMetadataPlacesLabel": "Luoghi",
@@ -2294,10 +2282,6 @@
                 "text": "Tutto gira qui e niente su di te se ne va affatto. Scarica prima un modello, vuole un telefono piuttosto recente, ed è notevolmente più lento."
               }
             }
-          },
-          "deeper-questions": {
-            "headline": "Domande più profonde",
-            "body": "Questo cambia quello che Mera ti chiede, non cosa invia. Invece di cosa sei interessato, chiede cosa stai proteggendo la tua attenzione da e cosa stai decidendo questo mese. Le risposte sono fatti come qualsiasi altro e non lasciano mai questo telefono, il quale è precisamente il motivo per cui può chiedertelo."
           },
           "inject-noise": {
             "headline": "Iniezione di rumore, ancora in costruzione",

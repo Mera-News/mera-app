@@ -433,10 +433,6 @@
     "cancelDownload": "Anuluj pobieranie",
     "retryDownload": "Ponów pobieranie",
     "updateTo": "Zaktualizuj do {{modelName}}",
-    "relevanceV4Title": "Użyj oceny istotności v4",
-    "relevanceV4On": "Klasyczne punktowanie, prowadzone metadanymi artykułu",
-    "relevanceV4Off": "Klasyczne dwuetapowe punktowanie w chmurze",
-    "relevanceV4Description": "Beta — zachowuje klasyczne dwuetapowe punktowanie i dodaje do tego, co widzi system oceniający, miejsca, osoby i typ zdarzenia każdego artykułu, a następnie pomija streszczenie dla typów opowiadań, które rzadko Cię interesują. Nieco lepsze sugestie i około piątą mniej przetwarzania AI. Możesz je wyłączyć w dowolnym momencie, aby powrócić.",
     "privacyTitle": "Twoje dane pozostają prywatne",
     "privacyDescription": "Protokół Mera jest zawsze włączony. W trybie urządzenia wnioskowanie działa w pełni offline na Twoim telefonie. W trybie chmury używamy wnioskowania szyfrowanego end-to-end: Twoje dane są szyfrowane na urządzeniu i odszyfrowywane wyłącznie w bezpiecznej enklawie, do której nie mamy wglądu. Twoje dane osobowe, Twój profil i historia czytania nigdy nie opuszczają tego urządzenia. Aby pobrać wiadomości, wysyłamy jedynie ogólne frazy tematyczne, bez żadnego identyfikatora użytkownika.",
     "deviceSupported": "Urządzenie obsługiwane",
@@ -507,14 +503,6 @@
     "webSearchOn": "Włączone, Mera może przeszukiwać sieć, aby odpowiedzieć na pytanie",
     "webSearchOff": "Wyłączone",
     "webSearchDescription": "Gdy to jest włączone, Mera może szukać w sieci, aby odpowiedzieć na pytanie. Mera układa słowa wyszukiwania na podstawie twojego pytania i wysyła tylko te słowa na nasz serwer, a stamtąd do dostawcy wyszukiwania. Nic więcej z nimi nie idzie: żadnego konta, żadnego urządzenia, niczego, co mówi, kim jesteś. Domyślnie włączone. Wyłącz to tutaj w dowolnej chwili, a Mera przestanie szukać.",
-    "deepInterviewTitle": "Głębsze pytania",
-    "deepInterviewOn": "Włączone, Mera pyta o uwagę, obawy i decyzje",
-    "deepInterviewOff": "Wyłączone",
-    "deepInterviewDescription": "Mera zadaje mniej, głębszych pytań: co próbujesz chronić swoją uwagę przed, które tematy są konieczne, ale niepokojące, które wydają się przydatne, ale marnotrawią Twój czas, co decydujesz w tym miesiącu i dlaczego każde miejsce ma dla Ciebie znaczenie. Twoje odpowiedzi są przechowywane na tym urządzeniu i nigdy go nie opuszczają, co jest dokładnie dlatego, dlaczego Mera może je pytać. Sprawiają, że wyniki trafności i powody pokazane na każdej historii są bardziej wyraźne. Domyślnie wyłączone.",
-    "extractedMetadataTitle": "Pokaż wyekstrahowane metadane",
-    "extractedMetadataOn": "Włączone: pokazuje wyekstrahowane z każdej historii miejsca, jednostki i typ zdarzenia",
-    "extractedMetadataOff": "Wyłączone",
-    "extractedMetadataDescription": "Gdy ta opcja jest włączona, ekran artykułu pokazuje, co nasz system automatycznie wyekstrahował z artykułu: miejsca, jednostki i typ zdarzenia. To odczytanie maszynowe artykułu, a nie zweryfikowany fakt, i może być błędne. Domyślnie wyłączone.",
     "extractedMetadataPanelHeading": "Wyekstrahowane Metadane",
     "extractedMetadataEventTypeLabel": "Typ zdarzenia",
     "extractedMetadataPlacesLabel": "Miejsca",
@@ -2320,10 +2308,6 @@
                 "text": "Wszystko działa tutaj i nic o Tobie nie wychodzi wcale. Najpierw pobiera model, chce dość nowy telefon i jest zauważalnie wolniejszy."
               }
             }
-          },
-          "deeper-questions": {
-            "headline": "Głębsze pytania",
-            "body": "To zmienia to, co pyta Mera, nie to, co wysyła. Zamiast tego, co Ciebie interesuje, pyta, co chroniłeś swoją uwagę przed, i co decydujesz w tym miesiącu. Odpowiedzi to fakty jak każde inne i nigdy nie opuszczają tego telefonu, co jest dokładnie dlatego, dlaczego może je pytać."
           },
           "inject-noise": {
             "headline": "Wstrzykiwanie szumu, wciąż w budowie",

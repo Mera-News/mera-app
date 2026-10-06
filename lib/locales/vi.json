@@ -421,10 +421,6 @@
     "cancelDownload": "Hủy tải xuống",
     "retryDownload": "Thử tải lại",
     "updateTo": "Cập nhật lên {{modelName}}",
-    "relevanceV4Title": "Sử dụng tính liên quan v4",
-    "relevanceV4On": "Chấm điểm cổ điển, được hướng dẫn bởi siêu dữ liệu bài viết",
-    "relevanceV4Off": "Chấm điểm đám mây hai lần cổ điển",
-    "relevanceV4Description": "Beta — giữ chấm điểm đám mây hai lần cổ điển và thêm các địa điểm, người và loại sự kiện của mỗi bài viết vào những gì người chấm điểm nhìn thấy, sau đó bỏ qua bản viết cho các loại câu chuyện hiếm khi quan trọng với bạn. Lựa chọn tốt hơn một chút và khoảng một phần năm ít hơn các lệnh gọi AI. Tắt bất cứ lúc nào để quay lại.",
     "privacyTitle": "Dữ liệu của bạn luôn riêng tư",
     "privacyDescription": "Giao thức Mera luôn bật. Ở chế độ thiết bị, suy luận chạy hoàn toàn ngoại tuyến trên điện thoại của bạn. Ở chế độ đám mây, suy luận được mã hóa đầu cuối: dữ liệu của bạn được mã hóa trên thiết bị và chỉ được giải mã bên trong một vùng an toàn mà chúng tôi không thể nhìn vào. Dữ kiện cá nhân, hồ sơ và lịch sử đọc của bạn không bao giờ rời khỏi thiết bị này. Để lấy tin, chúng tôi chỉ gửi các cụm chủ đề rộng, không mang bất kỳ ID người dùng nào.",
     "deviceSupported": "Thiết bị được hỗ trợ",
@@ -495,14 +491,6 @@
     "webSearchOn": "Bật - Mera có thể tìm kiếm trên web để trả lời câu hỏi",
     "webSearchOff": "Tắt",
     "webSearchDescription": "Khi bật, Mera có thể tìm trên web để trả lời một câu hỏi. Mera tự soạn từ khoá tìm kiếm từ điều bạn hỏi và chỉ gửi những từ đó tới máy chủ của chúng tôi rồi tới nhà cung cấp tìm kiếm. Không có gì khác đi kèm: không tài khoản, không thiết bị, không gì cho biết bạn là ai. Bật sẵn theo mặc định. Tắt ở đây bất cứ lúc nào và Mera sẽ ngừng tìm.",
-    "deepInterviewTitle": "Các câu hỏi sâu hơn",
-    "deepInterviewOn": "Bật - Mera hỏi về sự chú ý, lo lắng và quyết định",
-    "deepInterviewOff": "Tắt",
-    "deepInterviewDescription": "Mera hỏi ít hơn nhưng sâu hơn: những gì bạn cố gắng bảo vệ sự chú ý của mình khỏi, những chủ đề nào là cần thiết nhưng lo lắng, cái nào có vẻ hữu ích nhưng lãng phí thời gian của bạn, bạn đang quyết định điều gì trong tháng này, và tại sao mỗi nơi quan trọng với bạn. Những câu trả lời của bạn được lưu trữ trên thiết bị này và không bao giờ rời khỏi nó, đó chính xác là lý do tại sao Mera có thể hỏi chúng. Chúng làm cho điểm mức độ liên quan và lý do được hiển thị trên mỗi câu chuyện sắc nét hơn. Tắt theo mặc định.",
-    "extractedMetadataTitle": "Hiển thị siêu dữ liệu được trích xuất",
-    "extractedMetadataOn": "Bật: hiển thị địa điểm, thực thể và loại sự kiện được trích xuất từ mỗi bài viết",
-    "extractedMetadataOff": "Tắt",
-    "extractedMetadataDescription": "Khi bật, màn hình bài viết sẽ hiển thị những gì hệ thống của chúng tôi tự động trích xuất từ bài viết: địa điểm, thực thể và loại sự kiện. Đây là máy đọc bài viết chứ không phải sự kiện đã được xác minh, và có thể sai. Tắt theo mặc định.",
     "extractedMetadataPanelHeading": "Siêu dữ liệu được trích xuất",
     "extractedMetadataEventTypeLabel": "Loại sự kiện",
     "extractedMetadataPlacesLabel": "Địa điểm",
@@ -2295,10 +2283,6 @@
                 "text": "Mọi thứ chạy ở đây và không có gì về bạn rời. Nó tải xuống một mô hình trước, muốn một điện thoại khá gần đây, và chậm hơn đáng chú ý."
               }
             }
-          },
-          "deeper-questions": {
-            "headline": "Các câu hỏi sâu hơn",
-            "body": "Điều này thay đổi những gì Mera hỏi bạn, không phải những gì nó gửi. Thay vì những gì bạn quan tâm, nó hỏi những gì bạn bảo vệ sự chú ý của mình khỏi và những gì bạn quyết định tháng này. Các câu trả lời là những sự thật như bất kỳ cách khác và không bao giờ rời khỏi điện thoại này, chính xác là tại sao nó có thể hỏi chúng."
           },
           "inject-noise": {
             "headline": "Chèn nhiễu, vẫn đang được xây dựng",

@@ -421,10 +421,6 @@
     "cancelDownload": "Batalkan Unduhan",
     "retryDownload": "Coba Unduh Ulang",
     "updateTo": "Perbarui ke {{modelName}}",
-    "relevanceV4Title": "Gunakan penilaian relevansi v4",
-    "relevanceV4On": "Penilaian klasik, dipandu oleh metadata artikel",
-    "relevanceV4Off": "Penilaian cloud dua-pass klasik",
-    "relevanceV4Description": "Beta — mempertahankan penilaian dua-pass klasik dan menambahkan tempat, orang, dan jenis acara setiap artikel ke apa yang dilihat penilai, lalu melewatkan catatan untuk jenis cerita yang jarang penting bagi Anda. Saran sedikit lebih baik dan sekitar seperlima lebih sedikit panggilan AI. Matikan kapan saja untuk kembali.",
     "privacyTitle": "Data Anda tetap pribadi",
     "privacyDescription": "Mera Protocol selalu aktif. Mode di perangkat menjalankan inferensi sepenuhnya offline di ponsel Anda. Mode cloud menggunakan inferensi terenkripsi ujung ke ujung: data Anda dienkripsi di perangkat dan hanya didekripsi di dalam enklave aman yang tidak bisa kami intip. Fakta Anda, profil, dan riwayat bacaan Anda tidak pernah meninggalkan perangkat ini. Untuk mengambil berita, kami hanya mengirim frasa topik yang luas, tanpa membawa ID pengguna apa pun.",
     "deviceSupported": "Perangkat Didukung",
@@ -495,14 +491,6 @@
     "webSearchOn": "Aktif - Mera dapat mencari web untuk menjawab pertanyaan",
     "webSearchOff": "Nonaktif",
     "webSearchDescription": "Saat ini aktif, Mera bisa mencari di web untuk menjawab pertanyaan. Mera menyusun kata pencarian dari apa yang kamu tanyakan, dan hanya mengirim kata-kata itu ke server kami lalu ke penyedia pencarian. Tidak ada yang lain ikut: tanpa akun, tanpa perangkat, tanpa apa pun yang menyebut siapa kamu. Aktif secara bawaan. Matikan di sini kapan saja dan Mera berhenti mencari.",
-    "deepInterviewTitle": "Pertanyaan lebih dalam",
-    "deepInterviewOn": "Aktif - Mera bertanya tentang perhatian, kekhawatiran, dan keputusan",
-    "deepInterviewOff": "Nonaktif",
-    "deepInterviewDescription": "Mera bertanya lebih sedikit, pertanyaan yang lebih dalam: apa yang Anda coba lindungi dari perhatian Anda, topik mana yang diperlukan tetapi cemas, mana yang terasa berguna tetapi membuang waktu Anda, apa yang Anda putuskan bulan ini, dan mengapa setiap tempat penting bagi Anda. Jawaban Anda disimpan di perangkat ini dan tidak pernah meninggalkannya, yang persis mengapa Mera dapat menanyakannya. Mereka membuat skor relevansi dan alasan yang ditampilkan di setiap cerita lebih tajam. Nonaktif secara default.",
-    "extractedMetadataTitle": "Tampilkan metadata yang diekstrak",
-    "extractedMetadataOn": "Aktif: menampilkan tempat, entitas, dan jenis peristiwa yang diekstrak dari setiap cerita",
-    "extractedMetadataOff": "Nonaktif",
-    "extractedMetadataDescription": "Ketika ini aktif, layar artikel menampilkan apa yang sistem kami ekstrak otomatis dari cerita: tempat, entitas, dan jenis peristiwa. Ini adalah pembacaan mesin dari cerita, bukan fakta terverifikasi, dan dapat salah. Nonaktif secara default.",
     "extractedMetadataPanelHeading": "Metadata yang Diekstrak",
     "extractedMetadataEventTypeLabel": "Jenis peristiwa",
     "extractedMetadataPlacesLabel": "Tempat",
@@ -2294,10 +2282,6 @@
                 "text": "Semuanya berjalan di sini dan tidak ada apa pun tentang Anda yang pergi. Itu mengunduh model terlebih dahulu, menginginkan ponsel yang cukup baru, dan terlihat lebih lambat secara nyata."
               }
             }
-          },
-          "deeper-questions": {
-            "headline": "Pertanyaan lebih dalam",
-            "body": "Ini mengubah apa yang Mera tanyakan kepada Anda, bukan apa yang dikirimnya. Alih-alih apa yang Anda minati, ia menanyakan apa yang Anda lindungi dari perhatian Anda dan apa yang Anda putuskan bulan ini. Jawaban adalah fakta seperti yang lain dan tidak pernah meninggalkan ponsel ini, yang persis mengapa ia dapat menanyakannya."
           },
           "inject-noise": {
             "headline": "Injeksi derau, masih dibangun",

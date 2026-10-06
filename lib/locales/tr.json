@@ -421,10 +421,6 @@
     "cancelDownload": "İndirmeyi İptal Et",
     "retryDownload": "İndirmeyi Tekrar Dene",
     "updateTo": "{{modelName}} sürümüne güncelle",
-    "relevanceV4Title": "v4 ilgi puanlama kullan",
-    "relevanceV4On": "Makale meta verilerine rehberlik edilen klasik puanlama",
-    "relevanceV4Off": "Klasik iki geçişli bulut puanlaması",
-    "relevanceV4Description": "Beta — klasik iki geçişli puanlamayı tutar ve her makalenin yerlerini, kişilerini ve olay türünü puanlayıcı tarafından görülenlere ekler, daha sonra size nadiren önemli olan hikaye türleri için yazı kısaltmasını atlar. Biraz daha iyi seçimler ve yaklaşık beşte bir daha az yapay zeka çağrısı. İstediğiniz zaman kapatarak geri dönün.",
     "privacyTitle": "Verileriniz gizli kalır",
     "privacyDescription": "Mera Protokolü her zaman açıktır. Cihaz modunda çıkarım telefonunuzda tamamen çevrimdışı çalışır. Bulut modunda uçtan uca şifreli çıkarım kullanılır: verileriniz cihazınızda şifrelenir ve yalnızca içine bakamadığımız güvenli bir kapsül içinde çözülür. Kişisel bilgileriniz, profiliniz ve okuma geçmişiniz bu cihazdan hiç ayrılmaz. Haber getirmek için yalnızca genel konu ifadeleri gönderiyoruz; hiçbir kullanıcı kimliği olmadan.",
     "deviceSupported": "Cihaz Destekleniyor",
@@ -495,14 +491,6 @@
     "webSearchOn": "Açık - Mera soruyu cevaplamak için web'i arayabilir",
     "webSearchOff": "Kapalı",
     "webSearchDescription": "Bu açıkken Mera bir soruyu yanıtlamak için web'de arama yapabilir. Mera arama kelimelerini sorduğun şeyden yazar ve sunucumuza, oradan da bir arama sağlayıcısına yalnızca o kelimeleri gönderir. Yanında başka hiçbir şey gitmez: hesap yok, cihaz yok, kim olduğunu söyleyen hiçbir şey yok. Varsayılan olarak açık. Buradan istediğin zaman kapat, Mera aramayı bırakır.",
-    "deepInterviewTitle": "Daha derin sorular",
-    "deepInterviewOn": "Açık - Mera dikkat, endişeler ve kararlar hakkında soruyor",
-    "deepInterviewOff": "Kapalı",
-    "deepInterviewDescription": "Mera daha az, daha derin sorular soruyor: dikkatini neye karşı korumaya çalıştığın, hangi konuların gerekli ama endişe verici olduğu, hangilerinin yararlı ama zamanı boşa harcadığı görünüyor, bu ay ne kararlaştırıyorsun ve her yer senin için neden önemli. Cevaplarınız bu cihazda saklanıyor ve hiçbir zaman oradan ayrılmıyor - bu, Mera'nın onları sorabilmesinin tam nedenidir. Alaka düzeyi puanlarını ve her hikayede gösterilen nedenleri keskinleştirir. Varsayılan olarak kapalı.",
-    "extractedMetadataTitle": "Çıkarılan meta verileri göster",
-    "extractedMetadataOn": "Açık: her hikayenin çıkarılan yerleri, varlıkları ve olay türünü gösterir",
-    "extractedMetadataOff": "Kapalı",
-    "extractedMetadataDescription": "Bu açık olduğunda, makale ekranı sistemimizin hikayeden otomatik olarak çıkardığı bilgileri gösterir: yerler, varlıklar ve olay türü. Bu hikayenin bir makine okuması olup doğrulanmış bir gerçek değildir ve yanılabilir. Varsayılan olarak kapalı.",
     "extractedMetadataPanelHeading": "Çıkarılan Meta Veriler",
     "extractedMetadataEventTypeLabel": "Olay türü",
     "extractedMetadataPlacesLabel": "Yerler",
@@ -2296,10 +2284,6 @@
                 "text": "Her şey burada çalışıyor ve senin hakkında hiçbir şey ayrılmaz. İlk model indirir, oldukça yeni bir telefon ister ve belirgin yavaştır."
               }
             }
-          },
-          "deeper-questions": {
-            "headline": "Daha derin sorular",
-            "body": "Bu Mera'nın ne gönderdiğini değer, sordu. İlgileriniz yerine, ne korumaya çalıştığın ve bu ay karar verdiğini soruyor. Cevaplar herhangi başka ve hiçbir zaman bu telefon, tam olarak neden sorabilir."
           },
           "inject-noise": {
             "headline": "Gürültü ekleme, hâlâ yapım aşamasında",

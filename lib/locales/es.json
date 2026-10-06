@@ -421,10 +421,6 @@
     "cancelDownload": "Cancelar descarga",
     "retryDownload": "Reintentar descarga",
     "updateTo": "Actualizar a {{modelName}}",
-    "relevanceV4Title": "Usar puntuación de relevancia v4",
-    "relevanceV4On": "Puntuación clásica, guiada por metadatos del artículo",
-    "relevanceV4Off": "Puntuación clásica en dos pasadas en la nube",
-    "relevanceV4Description": "Beta — mantiene la puntuación clásica en dos pasadas en la nube y añade lugares, personas y tipo de evento de cada artículo a lo que ve el calificador, luego omite la nota para tipos de historias que raramente te importan. Selecciones ligeramente mejores y aproximadamente un quinto menos de llamadas de IA. Puedes desactivarlo en cualquier momento para volver atrás.",
     "privacyTitle": "Tus datos se mantienen privados",
     "privacyDescription": "El Protocolo Mera está siempre activo. En modo dispositivo, la inferencia se ejecuta completamente sin conexión en tu teléfono. En modo nube se utiliza inferencia cifrada de extremo a extremo: tus datos se cifran en tu dispositivo y solo se descifran dentro de un enclave seguro en el que no podemos mirar. Tus hechos, tu perfil e historial de lectura nunca abandonan este dispositivo. Para obtener noticias enviamos solo frases de temas amplios, sin ningún ID de usuario.",
     "deviceSupported": "Dispositivo compatible",
@@ -495,14 +491,6 @@
     "webSearchOn": "Activado; Mera puede buscar en la web para responder una pregunta",
     "webSearchOff": "Desactivado",
     "webSearchDescription": "Cuando esto está activado, Mera puede buscar en la web para responder una pregunta. Mera redacta las palabras de búsqueda a partir de lo que preguntaste y envía solo esas palabras a nuestro servidor y de ahí a un proveedor de búsqueda. No va nada más: ninguna cuenta, ningún dispositivo, nada que diga quién eres. Activado de forma predeterminada. Desactívalo aquí cuando quieras y Mera dejará de buscar.",
-    "deepInterviewTitle": "Preguntas más profundas",
-    "deepInterviewOn": "Activado; Mera pregunta sobre atención, preocupaciones y decisiones",
-    "deepInterviewOff": "Desactivado",
-    "deepInterviewDescription": "Mera hace preguntas menos pero más profundas: de qué intentas proteger tu atención, qué temas son necesarios pero ansiosos, cuáles se sienten útiles pero pierden tu tiempo, qué estás decidiendo este mes, y por qué cada lugar te importa. Tus respuestas se guardan en este dispositivo y nunca salen de él; exactamente por eso Mera puede hacerlas. Hacen que las puntuaciones de relevancia y las razones mostradas en cada historia sean más claras. Desactivado por defecto.",
-    "extractedMetadataTitle": "Mostrar metadatos extraídos",
-    "extractedMetadataOn": "Activado: muestra los lugares, entidades y tipo de evento extraídos de cada historia",
-    "extractedMetadataOff": "Desactivado",
-    "extractedMetadataDescription": "Cuando está activado, la pantalla del artículo muestra lo que nuestro sistema extrajo automáticamente de la historia: lugares, entidades y tipo de evento. Esta es una lectura automatizada de la historia, no un hecho verificado, y puede ser incorrecta. Desactivado por defecto.",
     "extractedMetadataPanelHeading": "Metadatos extraídos",
     "extractedMetadataEventTypeLabel": "Tipo de evento",
     "extractedMetadataPlacesLabel": "Lugares",
@@ -2294,10 +2282,6 @@
                 "text": "Todo se ejecuta aquí y nada sobre ti se va. Primero descarga un modelo, quiere un teléfono bastante reciente, y es notablemente más lento."
               }
             }
-          },
-          "deeper-questions": {
-            "headline": "Preguntas más profundas",
-            "body": "Esto cambia lo que Mera te pregunta, no lo que envía. En lugar de lo que te interesa, pregunta qué estás protegiendo tu atención de y qué estás decidiendo este mes. Las respuestas son datos como cualquier otro y nunca salen de este teléfono, que es precisamente por qué puede hacerlas."
           },
           "inject-noise": {
             "headline": "Inyección de ruido, aún en construcción",

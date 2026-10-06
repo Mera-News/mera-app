@@ -421,10 +421,6 @@
     "cancelDownload": "取消下載",
     "retryDownload": "重試下載",
     "updateTo": "更新至 {{modelName}}",
-    "relevanceV4Title": "啟用相關性 v4",
-    "relevanceV4On": "經典評分，由文章元資料指導",
-    "relevanceV4Off": "經典雙次雲端評分",
-    "relevanceV4Description": "測試版 — 保留經典雙次雲端評分，並將每篇文章的地點、人物和事件類型新增到評分器所見的內容中，然後對您很少關心的故事類型跳過摘要。選擇略好，AI 呼叫減少約五分之一。隨時可關閉恢復。",
     "privacyTitle": "您的資料保持私密",
     "privacyDescription": "Mera 協定始終開啟。裝置模式下，推論完全離線在您的手機上執行。雲端模式使用端對端加密推論——您的資料在裝置上加密，只在我們無法窺看的安全隔離區內解密。您的個人事實、輪廓與閱讀紀錄從不離開這台裝置。取得新聞時，我們只傳送寬泛的主題詞，且不攜帶任何使用者 ID。",
     "deviceSupported": "裝置支援",
@@ -495,14 +491,6 @@
     "webSearchOn": "開啟，Mera可搜尋網路以回答問題",
     "webSearchOff": "關閉",
     "webSearchDescription": "開啟後，Mera 可以搜尋網路來回答問題。Mera 會根據你的提問寫出搜尋字詞，只把這些字詞送到我們的伺服器，再轉給搜尋服務商。不會一起送出其他東西：沒有帳號，沒有裝置，沒有任何說明你是誰的資訊。預設開啟。你可以隨時在這裡關閉，Mera 就不再搜尋。",
-    "deepInterviewTitle": "更深入的問題",
-    "deepInterviewOn": "開啟，Mera詢問關於注意力、擔憂和決策的問題",
-    "deepInterviewOff": "關閉",
-    "deepInterviewDescription": "Mera提出更少但更深入的問題：你試圖保護你的注意力免受什麼影響、哪些主題對你來說是必要但焦慮的、哪些感覺有用但浪費時間、你本月在決定什麼，以及每個地方為什麼對你很重要。你的答案儲存在此裝置上，從不離開，正是出於這個原因，Mera可以提出這些問題。它們使相關性評分和每則故事上顯示的理由更加明確。預設為關閉。",
-    "extractedMetadataTitle": "顯示提取的元數據",
-    "extractedMetadataOn": "開啟：顯示每則故事提取的地點、實體和事件類型",
-    "extractedMetadataOff": "關閉",
-    "extractedMetadataDescription": "啟用時，文章畫面會顯示我們的系統從故事中自動提取的內容：地點、實體和事件類型。這是對故事的機器解讀，並非經過驗證的事實，可能會出錯。預設為關閉。",
     "extractedMetadataPanelHeading": "提取的元數據",
     "extractedMetadataEventTypeLabel": "事件類型",
     "extractedMetadataPlacesLabel": "地點",
@@ -2295,10 +2283,6 @@
                 "text": "所有東西在這裡執行，你的任何東西根本不離開。它首先下載一個模型，想要一個相當新的手機，以及明顯更慢。"
               }
             }
-          },
-          "deeper-questions": {
-            "headline": "更深入的問題",
-            "body": "這改變Mera詢問你的內容，而不是它傳送的內容。它詢問關於什麼不是你感興趣的，而是你保護你的注意力免受什麼，以及你決定什麼本月。答案是像任何其他事實和永不離開此手機的事實。"
           },
           "inject-noise": {
             "headline": "注入雜訊，仍在開發中",

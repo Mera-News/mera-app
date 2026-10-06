@@ -759,22 +759,10 @@
     "cancelDownload": "Cancel Download",
     "retryDownload": "Retry Download",
     "updateTo": "Update to {{modelName}}",
-    "relevanceV4Title": "Use relevance scoring v4",
-    "relevanceV4On": "Classic scoring, guided by article metadata",
-    "relevanceV4Off": "Classic two-pass cloud scoring",
-    "relevanceV4Description": "Beta. Keeps the classic two-pass scoring and adds each article's places, people and event type to what the scorer sees, then skips the write-up for story types that rarely matter to you. Slightly better picks and about a fifth fewer AI calls. Turn it off at any time to go back.",
     "webSearchTitle": "Web search in chat",
     "webSearchOn": "On. Mera can search the web to answer a question",
     "webSearchOff": "Off",
     "webSearchDescription": "When this is on, Mera can search the web to answer a question. Mera writes the search words from what you asked, and sends only those words to our server and on to a search provider. Nothing else goes with them: no account, no device, nothing that says who you are. On by default. Turn it off here at any time and Mera stops searching.",
-    "deepInterviewTitle": "Deeper questions",
-    "deepInterviewOn": "On. Mera asks about attention, worries and decisions",
-    "deepInterviewOff": "Off",
-    "deepInterviewDescription": "Mera asks fewer, deeper questions: what you are trying to protect your attention from, which topics are necessary but anxious, which feel useful but waste your time, what you are deciding this month, and why each place matters to you. Your answers are stored on this device and never leave it, which is exactly why Mera can ask them. They make relevance scores and the reasons shown on each story sharper. Off by default.",
-    "extractedMetadataTitle": "Show extracted metadata",
-    "extractedMetadataOn": "On: shows each story's extracted places, entities and event type",
-    "extractedMetadataOff": "Off",
-    "extractedMetadataDescription": "When this is on, the article screen shows what our system automatically extracted from the story: places, entities and event type. This is a machine read of the story, not a verified fact, and it can be wrong. Off by default.",
     "extractedMetadataPanelHeading": "Extracted Metadata",
     "extractedMetadataEventTypeLabel": "Event type",
     "extractedMetadataPlacesLabel": "Places",
@@ -2412,10 +2400,6 @@
                 "text": "Everything runs here and nothing about you leaves at all. It downloads a model first, wants a fairly recent phone, and is noticeably slower."
               }
             }
-          },
-          "deeper-questions": {
-            "headline": "Deeper questions",
-            "body": "This changes what Mera asks you, not what it sends. Instead of what you are interested in, it asks what you are protecting your attention from and what you are deciding this month. The answers are facts like any other and never leave this phone, which is precisely why it can ask them."
           },
           "inject-noise": {
             "headline": "Noise injection, still being built",
