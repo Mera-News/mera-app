@@ -550,10 +550,6 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
           ],
         },
       },
-      {
-        id: 'deeper-questions',
-        visual: { placeholder: { kind: 'icon', name: 'psychology' } },
-      },
       // The noise-injection layer (Mera Protocol Rules 2/3/5) is being built and
       // does NOT ship today: nothing generates, sends or discards a decoy topic,
       // and there is no setting to switch one on. The slide stays because the
