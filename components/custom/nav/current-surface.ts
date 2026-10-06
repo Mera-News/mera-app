@@ -89,8 +89,8 @@ export function useReportSurface(id: SurfaceId, enabled: boolean = true): void {
  * Where the showing screen's top chrome ends, in window coordinates (pt), so
  * something mounted OUTSIDE that screen (the Mera button in its top corners)
  * can sit below it. Null when the showing screen reports none: callers fall
- * back to their own estimate. Never below the status bar: a collapsed header
- * reports the top inset.
+ * back to their own estimate. A collapsing header reports its EXPANDED bottom
+ * at all times, so a reader never moves during a scroll (owner).
  */
 export function useHeaderBottom(): number | null {
   return useCurrentSurfaceStore((s) => s.headerBottom?.y ?? null);
@@ -108,12 +108,6 @@ export function clearHeaderBottom(owner: string): void {
   if (useCurrentSurfaceStore.getState().headerBottom?.owner === owner) {
     useCurrentSurfaceStore.setState({ headerBottom: null });
   }
-}
-
-/** A collapsing header's bottom: its height while shown, the status bar's
- *  bottom once collapsed (it translates fully off-screen). */
-export function collapsingHeaderBottom(headerHeight: number, collapsed: boolean, insetTop: number): number {
-  return collapsed ? insetTop : Math.max(insetTop, headerHeight);
 }
 
 /** Account switch (wired in clearAllStores by L4). */

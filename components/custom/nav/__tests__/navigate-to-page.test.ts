@@ -145,12 +145,7 @@ describe('cross-tab edge landing', () => {
 
 describe('header bottom', () => {
   const { act, renderHook } = require('@testing-library/react-native');
-  const {
-    clearHeaderBottom,
-    collapsingHeaderBottom,
-    reportHeaderBottom,
-    useHeaderBottom,
-  } = require('../current-surface');
+  const { clearHeaderBottom, reportHeaderBottom, useHeaderBottom } = require('../current-surface');
 
   it('reads the reported bottom, and only its owner clears it', () => {
     const { result } = renderHook(() => useHeaderBottom());
@@ -170,9 +165,14 @@ describe('header bottom', () => {
     expect(require('../current-surface').useCurrentSurfaceStore.getState().headerBottom).toBeNull();
   });
 
-  it('a collapsed header reports the status bar bottom, never above it', () => {
-    expect(collapsingHeaderBottom(106, false, 54)).toBe(106);
-    expect(collapsingHeaderBottom(106, true, 54)).toBe(54);
-    expect(collapsingHeaderBottom(0, false, 54)).toBe(54);
+  it('TabPages reports the EXPANDED header bottom, never a collapse-dependent one', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const src = fs
+      .readFileSync(path.resolve(__dirname, '../TabPages.tsx'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '');
+    expect(src).toMatch(/reportHeaderBottom\(`tab:\$\{tab\}`, headerHeight\)/);
+    expect(src).not.toMatch(/hidden\.value[^\n]*reportHeaderBottom|collapsed/);
   });
 });
