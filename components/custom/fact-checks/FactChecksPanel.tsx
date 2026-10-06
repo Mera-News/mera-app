@@ -8,6 +8,7 @@ import { VStack } from '@/components/ui/vstack';
 import { useTabBarClearance } from '@/lib/navigation/tab-bar';
 import { hapticLight } from '@/lib/haptics';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
+import { useAutoCommunityFactCheck } from '@/lib/stores/mera-protocol-store';
 import {
     useFactCheckItems,
     useFactChecksHydrated,
@@ -41,6 +42,14 @@ interface FactChecksPanelProps {
      *  content `paddingTop` so rows scroll UNDER it rather than the host padding
      *  a wrapper (which leaves a dead gap once the header translates away). */
     readonly headerHeight?: number;
+    /** List-end padding (the host's clearance for the tab bar and the Mera
+     *  button). Defaults to the tab-bar clearance plus a gap. */
+    readonly listEndPadding?: number;
+    /** Drawn after the last row (the host's "How this page works" row). */
+    readonly footer?: React.ReactElement | null;
+    /** The empty state's "Turn on automatic checks" link: jumps to the
+     *  setting. No link without it, and none while automatic checks are on. */
+    readonly onTurnOnAutoChecks?: () => void;
 }
 
 /**
@@ -77,8 +86,12 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     active = true,
     scrollHandler,
     headerHeight = 0,
+    listEndPadding,
+    footer,
+    onTurnOnAutoChecks,
 }) => {
     const { t } = useTranslation();
+    const autoChecksOn = useAutoCommunityFactCheck();
     // Inside a tab on iOS the inset already includes the tab bar; measured on
     // device, adding TAB_BAR_HEIGHT left ~2x the bar of dead space at the end.
     const tabClearance = useTabBarClearance();
@@ -206,9 +219,8 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 contentContainerStyle={{
                     paddingTop: headerHeight,
                     paddingHorizontal: 16,
-                    // Rendered INSIDE the floating tab navigator, so it needs the
-                    // same tab-bar clearance as the other Dashboard panels.
-                    paddingBottom: tabClearance + 24,
+                    // Clear of the tab bar and the Mera button.
+                    paddingBottom: listEndPadding ?? tabClearance + 24,
                 }}
                 showsVerticalScrollIndicator={false}
                 // Embedded, the collapsible header's handler ticks; standalone,
@@ -217,13 +229,27 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 // Only the active panel feeds the translation scheduler.
                 onContentSizeChange={active ? notifyScrollTick : undefined}
                 scrollEventThrottle={16}
+                ListFooterComponent={footer ?? null}
                 ListEmptyComponent={
-                    // Only once a read has completed — otherwise the empty state
+                    // Only once a read has completed, or the empty state
                     // flashes for a frame on every open before the rows land.
+                    // Both ways a check starts are named; with automatic checks
+                    // already on, the link would be a false offer, so the body
+                    // says they are on instead.
                     hydrated ? (
                         <ForYouEmptyState
                             icon="fact-check"
-                            body={t('factCheck.dashboard.empty')}
+                            title={t('library.checks.emptyTitle')}
+                            body={autoChecksOn ? t('library.checks.autoOnBody') : t('library.checks.emptyBody')}
+                            action={
+                                !autoChecksOn && onTurnOnAutoChecks
+                                    ? {
+                                          label: t('library.checks.autoLink'),
+                                          onPress: onTurnOnAutoChecks,
+                                          testID: 'fact-checks-auto-link',
+                                      }
+                                    : undefined
+                            }
                             testID="fact-checks-empty"
                         />
                     ) : null

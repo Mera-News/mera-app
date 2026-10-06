@@ -58,9 +58,20 @@ jest.mock('@/lib/haptics', () => ({
 
 jest.mock('@/lib/navigation/tab-bar', () => ({ TAB_BAR_HEIGHT: 0, useTabBarClearance: () => 0 }));
 
+let mockAutoChecks = false;
+jest.mock('@/lib/stores/mera-protocol-store', () => ({ useAutoCommunityFactCheck: () => mockAutoChecks }));
+
 jest.mock('@/components/custom/for-you/ForYouEmptyState', () => {
-    const { Text } = require('react-native');
-    return { __esModule: true, default: (p: any) => <Text testID={p.testID}>{p.body}</Text> };
+    const { Pressable, Text, View } = require('react-native');
+    return {
+        __esModule: true,
+        default: (p: any) => (
+            <View testID={p.testID}>
+                <Text>{`${p.title}|${p.body}`}</Text>
+                {p.action ? <Pressable testID={p.action.testID} onPress={p.action.onPress} accessibilityLabel={p.action.label} /> : null}
+            </View>
+        ),
+    };
 });
 jest.mock('@/components/ui/spinner', () => ({ Spinner: () => null }));
 jest.mock('@/components/ui/hstack', () => {
@@ -97,6 +108,7 @@ jest.mock('react-native-reanimated', () => {
                     null,
                     resolve(props.ListHeaderComponent),
                     props.data?.length ? null : resolve(props.ListEmptyComponent),
+                    resolve(props.ListFooterComponent),
                 );
             },
         },
@@ -237,5 +249,43 @@ describe('FactChecksPanel: header and states', () => {
         mockItems = [{ id: 'a', status: 'COMPLETE' }, { id: 'b', status: 'blocked' }];
         const sc = r(<Panel active={false} />);
         expect(sc.queryByTestId('fact-checks-checking-row')).toBeNull();
+    });
+
+    describe('empty state', () => {
+        beforeEach(() => {
+            mockItems = [];
+            mockAutoChecks = false;
+        });
+
+        it('names both ways a check starts and links to the automatic checks setting', () => {
+            const onTurnOn = jest.fn();
+            const sc = r(<Panel active={false} onTurnOnAutoChecks={onTurnOn} />);
+            expect(sc.getByText('library.checks.emptyTitle|library.checks.emptyBody')).toBeTruthy();
+            const { fireEvent } = require('@testing-library/react-native');
+            fireEvent.press(sc.getByTestId('fact-checks-auto-link'));
+            expect(onTurnOn).toHaveBeenCalledTimes(1);
+            expect(sc.getByTestId('fact-checks-auto-link').props.accessibilityLabel).toBe('library.checks.autoLink');
+        });
+
+        it('says checks are automatic, with no link, while automatic checks are on', () => {
+            mockAutoChecks = true;
+            const sc = r(<Panel active={false} onTurnOnAutoChecks={jest.fn()} />);
+            expect(sc.getByText('library.checks.emptyTitle|library.checks.autoOnBody')).toBeTruthy();
+            expect(sc.queryByTestId('fact-checks-auto-link')).toBeNull();
+        });
+
+        it('has no link when the host gives no way to the setting', () => {
+            const sc = r(<Panel active={false} />);
+            expect(sc.getByTestId('fact-checks-empty')).toBeTruthy();
+            expect(sc.queryByTestId('fact-checks-auto-link')).toBeNull();
+        });
+    });
+
+    it("takes the host's list-end clearance and footer", () => {
+        const { Text } = require('react-native');
+        mockItems = [{ id: 'a', status: 'complete' }];
+        const sc = r(<Panel active={false} listEndPadding={172} footer={<Text testID="how-row" />} />);
+        expect(capturedListProps.contentContainerStyle.paddingBottom).toBe(172);
+        expect(sc.getByTestId('how-row')).toBeTruthy();
     });
 });
