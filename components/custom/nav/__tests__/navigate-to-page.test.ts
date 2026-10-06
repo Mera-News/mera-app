@@ -142,3 +142,37 @@ describe('cross-tab edge landing', () => {
     expect(consumePendingEdge('world')).toBeNull();
   });
 });
+
+describe('header bottom', () => {
+  const { act, renderHook } = require('@testing-library/react-native');
+  const {
+    clearHeaderBottom,
+    collapsingHeaderBottom,
+    reportHeaderBottom,
+    useHeaderBottom,
+  } = require('../current-surface');
+
+  it('reads the reported bottom, and only its owner clears it', () => {
+    const { result } = renderHook(() => useHeaderBottom());
+    expect(result.current).toBeNull();
+    act(() => reportHeaderBottom('tab:feed', 106.4));
+    expect(result.current).toBe(106);
+    act(() => reportHeaderBottom('interest:f1', 120));
+    act(() => clearHeaderBottom('tab:feed'));
+    expect(result.current).toBe(120);
+    act(() => clearHeaderBottom('interest:f1'));
+    expect(result.current).toBeNull();
+  });
+
+  it('is cleared by the account-switch reset', () => {
+    reportHeaderBottom('tab:you', 100);
+    resetCurrentSurface();
+    expect(require('../current-surface').useCurrentSurfaceStore.getState().headerBottom).toBeNull();
+  });
+
+  it('a collapsed header reports the status bar bottom, never above it', () => {
+    expect(collapsingHeaderBottom(106, false, 54)).toBe(106);
+    expect(collapsingHeaderBottom(106, true, 54)).toBe(54);
+    expect(collapsingHeaderBottom(0, false, 54)).toBe(54);
+  });
+});

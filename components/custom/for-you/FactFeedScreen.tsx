@@ -12,6 +12,8 @@ import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import NextSectionFooter from '@/components/custom/for-you/NextSectionFooter';
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
+import { clearHeaderBottom, reportHeaderBottom } from '@/components/custom/nav/current-surface';
+import { useIsFocusedSafe } from '@/lib/hooks/use-is-focused-safe';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -198,6 +200,19 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   const reduceMotion = useReducedMotion();
   const entering = arrivedFromNext && !reduceMotion ? FadeIn.duration(220) : undefined;
 
+  // The header's bottom, for the Mera button's top corners (mounted outside
+  // this screen). Reported while focused, cleared on blur.
+  const [headerBottom, setHeaderBottom] = useState(0);
+  const headerOwner = `interest:${factId}`;
+  const screenFocused = useIsFocusedSafe();
+  useEffect(() => {
+    if (screenFocused && headerBottom > 0) reportHeaderBottom(headerOwner, headerBottom);
+  }, [screenFocused, headerBottom, headerOwner]);
+  useEffect(() => {
+    if (!screenFocused) return undefined;
+    return () => clearHeaderBottom(headerOwner);
+  }, [screenFocused, headerOwner]);
+
   // No scroll-to-top button: the Mera button sits exactly there, and
   // re-tapping the Feed tab pops back to the pages.
   const listRef = useRef<FlatList<FactRowGroup>>(null);
@@ -339,7 +354,12 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
           No border here: the HStack below already owns the divider, and a
           second hairline on this wrapper would both double the line and add a
           pixel of height. */}
-      <Box testID="fact-feed-header" style={{ backgroundColor: GLASS_HEADER_SCRIM }}>
+      <Box
+        testID="fact-feed-header"
+        style={{ backgroundColor: GLASS_HEADER_SCRIM }}
+        // In normal flow at the top of the screen: its height IS its bottom.
+        onLayout={(e) => setHeaderBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}
+      >
         {/* Android-only opaque-ish gradient — must render BEFORE GlassPlate
             so the tint below still lifts it to a readable surface tone (see
             GlassSurface.tsx's GlassHeaderAndroidBackdrop doc comment). No-op

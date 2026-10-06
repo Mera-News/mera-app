@@ -30,11 +30,23 @@ import { useIsFocused } from '@react-navigation/native';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
+import Animated, {
+  runOnJS,
+  useAnimatedReaction,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ArrangeOverlay from './ArrangeOverlay';
-import { clearSurface, reportSurface } from './current-surface';
+import {
+  clearHeaderBottom,
+  clearSurface,
+  collapsingHeaderBottom,
+  reportHeaderBottom,
+  reportSurface,
+} from './current-surface';
 import {
   consumePendingEdge,
   consumePendingPage,
@@ -109,6 +121,27 @@ const TabPages: React.FC<TabPagesProps> = ({ tab, pages, renderPage, trailing, a
     reportSurface(activeId);
     return () => clearSurface(activeId);
   }, [focused, activeId]);
+
+  // ── Header bottom, for the Mera button's top corners (outside this tree) ──
+  // Reported on layout and when the header settles shown or collapsed (not
+  // per frame); cleared on blur, so a pushed screen's own value wins.
+  const [collapsed, setCollapsed] = useState(false);
+  useAnimatedReaction(
+    () => hidden.value > 0.5,
+    (now, before) => {
+      if (now !== before) runOnJS(setCollapsed)(now);
+    },
+    [hidden],
+  );
+  useEffect(() => {
+    if (!focused || headerHeight <= 0) return;
+    reportHeaderBottom(`tab:${tab}`, collapsingHeaderBottom(headerHeight, collapsed, insets.top));
+  }, [focused, headerHeight, collapsed, insets.top, tab]);
+  // Cleared only on blur or unmount, so a re-report never flickers through null.
+  useEffect(() => {
+    if (!focused) return undefined;
+    return () => clearHeaderBottom(`tab:${tab}`);
+  }, [focused, tab]);
 
   // ── Neighbouring tabs for the edge labels ──
   const tabIndex = TAB_ORDER.indexOf(tab);

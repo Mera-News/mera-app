@@ -19,12 +19,20 @@ import { create } from 'zustand';
 
 import type { SurfaceId } from './page-registry';
 
+interface HeaderBottom {
+  /** Who reported it (`tab:<tab>`, `interest:<factId>`, ...); only they clear it. */
+  readonly owner: string;
+  /** The top chrome's lowest point, window coordinates, pt. */
+  readonly y: number;
+}
+
 interface CurrentSurfaceState {
   surface: SurfaceId | null;
   arrangeOpen: boolean;
+  headerBottom: HeaderBottom | null;
 }
 
-const INITIAL: CurrentSurfaceState = { surface: null, arrangeOpen: false };
+const INITIAL: CurrentSurfaceState = { surface: null, arrangeOpen: false, headerBottom: null };
 
 export const useCurrentSurfaceStore = create<CurrentSurfaceState>()(() => INITIAL);
 
@@ -75,6 +83,37 @@ export function useReportSurface(id: SurfaceId, enabled: boolean = true): void {
       return () => clearSurface(id);
     }, [id, enabled]),
   );
+}
+
+/**
+ * Where the showing screen's top chrome ends, in window coordinates (pt), so
+ * something mounted OUTSIDE that screen (the Mera button in its top corners)
+ * can sit below it. Null when the showing screen reports none: callers fall
+ * back to their own estimate. Never below the status bar: a collapsed header
+ * reports the top inset.
+ */
+export function useHeaderBottom(): number | null {
+  return useCurrentSurfaceStore((s) => s.headerBottom?.y ?? null);
+}
+
+export function reportHeaderBottom(owner: string, y: number): void {
+  const prev = useCurrentSurfaceStore.getState().headerBottom;
+  const next = Math.round(y);
+  if (prev && prev.owner === owner && prev.y === next) return;
+  useCurrentSurfaceStore.setState({ headerBottom: { owner, y: next } });
+}
+
+/** Clear the header bottom, but only if `owner` still holds it. */
+export function clearHeaderBottom(owner: string): void {
+  if (useCurrentSurfaceStore.getState().headerBottom?.owner === owner) {
+    useCurrentSurfaceStore.setState({ headerBottom: null });
+  }
+}
+
+/** A collapsing header's bottom: its height while shown, the status bar's
+ *  bottom once collapsed (it translates fully off-screen). */
+export function collapsingHeaderBottom(headerHeight: number, collapsed: boolean, insetTop: number): number {
+  return collapsed ? insetTop : Math.max(insetTop, headerHeight);
 }
 
 /** Account switch (wired in clearAllStores by L4). */
