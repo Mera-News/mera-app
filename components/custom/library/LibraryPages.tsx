@@ -29,14 +29,12 @@ const ARRANGE: ArrangeConfig = {
  */
 export function LibraryPages() {
     const { t } = useTranslation();
-    // Registry label keys are computed, so they go through an untyped t.
-    const tAny = useMemo(() => t as unknown as (key: string) => string, [t]);
     const order = usePageOrder('library');
     const listEnd = useListEndClearance();
 
     const pills: PagePill[] = useMemo(
-        () => order.map((id) => ({ id, label: tAny(pageMeta(id).labelKey) })),
-        [order, tAny],
+        () => order.map((id) => ({ id, label: t(pageMeta(id).labelKey) })),
+        [order, t],
     );
 
     const renderPage = useCallback(
