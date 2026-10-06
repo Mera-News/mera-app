@@ -90,13 +90,6 @@ describe('useStartupTabStore', () => {
         expect(mockSetSetting).toHaveBeenCalledWith('startup_tab', 'library');
     });
 
-    it('setStartupTab stores a deprecated route name as its new tab', async () => {
-        useStartupTabStore.getState().setStartupTab('for_you');
-        expect(useStartupTabStore.getState().startupTab).toBe('feed');
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('startup_tab', 'feed');
-    });
-
     it('setter captures a persist failure without reverting state', async () => {
         const err = new Error('persist fail');
         mockSetSetting.mockRejectedValueOnce(err);

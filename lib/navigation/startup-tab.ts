@@ -20,34 +20,25 @@ import { getSetting } from '@/lib/database/services/setting-service';
 
 export const STARTUP_TAB_SETTING_KEY = 'startup_tab';
 
-/** Tab route names under app_container. */
-export type StartupTab =
-  | 'feed'
-  | 'world'
-  | 'library'
-  /** @deprecated Old Dashboard route; `parseStartupTab` maps it to `feed`. Removed in navx P11. */
-  | 'for_you'
-  /** @deprecated Old Explore route; `parseStartupTab` maps it to `world`. Removed in navx P11. */
-  | 'around';
-
-/** The current values only: what `parseStartupTab` and `readStartupTab`
- *  return, each a route folder under app_container. */
-export type LaunchTab = 'feed' | 'world' | 'library';
+/** A tab that can open on launch; each is a route folder under app_container. */
+export type StartupTab = 'feed' | 'world' | 'library';
+/** The same type under the name DisplaySettingsScreen imports. */
+export type LaunchTab = StartupTab;
 
 export const STARTUP_TAB_DEFAULT = 'feed' as const;
 
 const VALID_STARTUP_TABS: readonly string[] = ['feed', 'world', 'library'];
-const LEGACY_STARTUP_TABS: Readonly<Record<string, LaunchTab>> = {
+const LEGACY_STARTUP_TABS: Readonly<Record<string, StartupTab>> = {
   for_you: 'feed',
   around: 'world',
 };
 
 /** Narrows a raw settings-table string to a current tab, translating the two
  *  old route names and falling back to the default on anything else (unset,
- *  corrupt, or a value from a newer build). Never returns a deprecated value. */
-export function parseStartupTab(raw: string | null | undefined): LaunchTab {
+ *  corrupt, or a value from a newer build). Never returns an old route name. */
+export function parseStartupTab(raw: string | null | undefined): StartupTab {
   const v = raw ?? '';
-  if (VALID_STARTUP_TABS.includes(v)) return v as LaunchTab;
+  if (VALID_STARTUP_TABS.includes(v)) return v as StartupTab;
   return LEGACY_STARTUP_TABS[v] ?? STARTUP_TAB_DEFAULT;
 }
 
@@ -56,7 +47,7 @@ export function parseStartupTab(raw: string | null | undefined): LaunchTab {
  * unreadable setting: there is no wrong side to fail toward here, so it
  * collapses to "behave as if the user never set a preference."
  */
-export async function readStartupTab(): Promise<LaunchTab> {
+export async function readStartupTab(): Promise<StartupTab> {
   try {
     return parseStartupTab(await getSetting(STARTUP_TAB_SETTING_KEY));
   } catch {
