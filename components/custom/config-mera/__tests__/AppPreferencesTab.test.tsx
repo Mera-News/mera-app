@@ -307,7 +307,7 @@ describe('Settings → Add email address row (S11: removed)', () => {
     it('is NEVER rendered, even for an anonymous account (email attach lives at checkout + post-purchase only)', async () => {
         mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '1234567' } };
         const { queryByTestId, queryByText, findByText } = render(<AppPreferencesTab />);
-        await findByText('preferences.manageSettings');
+        await findByText('you.settings.groupApp');
 
         expect(queryByTestId('settings-row-add-email')).toBeNull();
         expect(queryByText('emailCapture.settingsRow')).toBeNull();
@@ -358,7 +358,7 @@ describe('Settings footer → Support ID copy button (S9)', () => {
     it('is absent when the account has no supportId', async () => {
         mockSessionData = { user: { id: 'u1', email: 'real@example.com' } };
         const { queryByTestId, findByText } = render(<AppPreferencesTab />);
-        await findByText('preferences.manageSettings');
+        await findByText('you.settings.groupApp');
         expect(queryByTestId('settings-support-id-copy')).toBeNull();
     });
 });
@@ -382,12 +382,12 @@ describe('Settings footer → Support ID', () => {
     it('hides the row when the account has no supportId or the session is unresolved', async () => {
         mockSessionData = { user: { id: 'u1', email: 'real@example.com' } };
         const { queryByTestId, findByText } = render(<AppPreferencesTab />);
-        await findByText('preferences.manageSettings');
+        await findByText('you.settings.groupApp');
         expect(queryByTestId('settings-support-id')).toBeNull();
 
         mockSessionData = null;
         const second = render(<AppPreferencesTab />);
-        await second.findByText('preferences.manageSettings');
+        await second.findByText('you.settings.groupApp');
         expect(second.queryByTestId('settings-support-id')).toBeNull();
     });
 });
@@ -404,6 +404,25 @@ describe('Settings → tutorials row', () => {
         fireEvent.press(getByTestId('settings-row-tutorials'));
 
         expect(mockPush).toHaveBeenCalledWith('/tutorials');
+    });
+
+    it('opens Display, Notifications and Mera Protocol inside the You stack', () => {
+        mockPush.mockClear();
+        const { getByTestId } = render(<AppPreferencesTab />);
+        fireEvent.press(getByTestId('settings-row-display'));
+        fireEvent.press(getByTestId('settings-row-notifications'));
+        fireEvent.press(getByTestId('settings-row-mera-protocol'));
+        expect(mockPush.mock.calls.map((c) => c[0])).toEqual([
+            '/logged-in/app_container/you/display',
+            '/logged-in/app_container/you/notifications',
+            '/logged-in/app_container/you/mera-protocol',
+        ]);
+    });
+
+    it('has one Backup and data row, not two rows to the same screen', () => {
+        const { getByTestId, queryByTestId } = render(<AppPreferencesTab />);
+        expect(getByTestId('settings-row-backup')).toBeTruthy();
+        expect(queryByTestId('settings-row-manage-data')).toBeNull();
     });
 });
 
@@ -427,7 +446,7 @@ describe('Settings groups (ux1)', () => {
         const ids = ['general', 'privacy', 'security', 'help', 'account'];
         const labels = ids.map((id) => r.getByTestId(`settings-group-${id}`));
         expect(labels.map((l) => l.props.children)).toEqual([
-            'settings.groupGeneral',
+            'you.settings.groupApp',
             'settings.groupPrivacy',
             'security.title',
             'settings.groupHelp',

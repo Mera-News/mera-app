@@ -19,7 +19,7 @@ import { useUserStore } from '@/lib/stores/user-store';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
-import { router, useFocusEffect, useRouter } from 'expo-router';
+import { router, useFocusEffect, useRouter, type Href } from 'expo-router';
 import React, { useCallback } from 'react';
 import { useSupportAction } from '@/lib/intercom';
 import { resolveAccountEmailView } from '@/lib/subscription/email-capture';
@@ -33,6 +33,13 @@ import { backupCadence, backupLastRunAt, backupProviderId } from '@/lib/backup/b
 import PolicyPill from '@/components/custom/PolicyPill';
 import SecuritySettingsSection from './SecuritySettingsSection';
 import SettingsUsageCard from './SettingsUsageCard';
+import { ForwardChevron } from '@/components/custom/you/HubCard';
+import { ProcessingMode } from '@/lib/generated/graphql-types';
+import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
+
+/** Settings sub-screens pushed inside the You stack, so the tab bar stays. */
+type YouSettingsScreen = 'display' | 'notifications' | 'mera-protocol';
+const youScreen = (screen: YouSettingsScreen) => `/logged-in/app_container/you/${screen}` as Href;
 
 interface PreferenceOption {
     id: string;
@@ -58,6 +65,7 @@ const AppPreferencesTab: React.FC = () => {
     // spinner in the chevron slot; every fallback decision lives in the hook.
     const { busy: supportBusy, openSupport } = useSupportAction();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
+    const processingMode = useMeraProtocolStore((s) => s.processingMode);
     const { data: session } = authClient.useSession();
     // LOCAL first. This used to be `session?.user?.email` alone, so any window
     // where better-auth could not produce a session — offline, a keychain-locked
@@ -188,7 +196,7 @@ const AppPreferencesTab: React.FC = () => {
             }
 
             // dismissAll() pops a stack back to its first screen. Logout is
-            // reached from the Settings TAB, which has nothing pushed above it,
+            // reached from the You tab's Settings page, with nothing pushed above it,
             // so there the call is a no-op whose only effect is the
             // "POP_TO_TOP was not handled by any navigator" warning. Guarded
             // rather than deleted: the same tab pushes preference screens, and
@@ -267,8 +275,8 @@ const AppPreferencesTab: React.FC = () => {
         void openInAppBrowser(withAppLanguage(FAQ_URL));
     };
 
-    // Five groups (ux1): General, Privacy and data, Security, Help, Account.
-    // Route paths are unchanged; the harness drives these rows by testID.
+    // Plan card, then App, Privacy and data, Security, Help, Account. The
+    // harness drives these rows by testID.
     const general: PreferenceOption[] = [
         {
             id: 'language',
@@ -285,13 +293,14 @@ const AppPreferencesTab: React.FC = () => {
             id: 'display',
             title: t('display.screenTitle'),
             icon: 'palette',
-            onPress: () => routerHook.push('/logged-in/preferences/display' as any),
+            value: t('you.settings.displayValue'),
+            onPress: () => routerHook.push(youScreen('display')),
         },
         {
             id: 'notifications',
             title: t('preferences.notifications'),
             icon: 'notifications',
-            onPress: () => routerHook.push('/logged-in/preferences/notifications' as any),
+            onPress: () => routerHook.push(youScreen('notifications')),
         },
     ];
 
@@ -300,23 +309,17 @@ const AppPreferencesTab: React.FC = () => {
             id: 'mera-protocol',
             title: t('preferences.meraProtocol'),
             icon: 'security',
-            onPress: () => routerHook.push('/logged-in/preferences/mera-protocol' as any),
+            value: t(processingMode === ProcessingMode.OnDevice ? 'meraProtocol.onDeviceMode' : 'meraProtocol.cloudMode'),
+            onPress: () => routerHook.push(youScreen('mera-protocol')),
         },
         {
-            // Backup and restore share one row. Manage data opens with the
-            // backup section first, so there is nothing to scroll past; the
-            // restore deep link (`manage-data?restore=1`) still works for the
-            // harness and old links.
+            // ONE row for backup and data: Manage data opens with the backup
+            // section first. The restore deep link (`manage-data?restore=1`)
+            // still works for the harness and old links.
             id: 'backup',
-            title: t('settings.backupRow'),
+            title: t('you.settings.backupAndData'),
             icon: 'settings-backup-restore',
             value: backupValue,
-            onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
-        },
-        {
-            id: 'manage-data',
-            title: t('preferences.manageData'),
-            icon: 'storage',
             onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
         },
     ];
@@ -345,8 +348,8 @@ const AppPreferencesTab: React.FC = () => {
     const sectionLabel = (id: string, text: string) => (
         <Text
             testID={`settings-group-${id}`}
-            size="xs"
-            className="text-gray-400 font-semibold uppercase mt-4 mb-2"
+            className="mt-4 mb-2"
+            style={{ color: '#A3A3A3', fontSize: 13, fontWeight: '700' }}
             accessibilityRole="header"
         >
             {text}
@@ -390,7 +393,7 @@ const AppPreferencesTab: React.FC = () => {
                         {option.busy ? (
                             <Spinner size="small" />
                         ) : (
-                            <MaterialIcons name="chevron-right" size={20} color="#999999" />
+                            <ForwardChevron size={20} color="#999999" />
                         )}
                     </Box>
                 </Pressable>
@@ -413,12 +416,6 @@ const AppPreferencesTab: React.FC = () => {
         // the floating tab bar — let content size to its natural height so
         // the ScrollView's own padding is what clears the tab bar.
         <Box>
-            <VStack className="px-5 pt-2 pb-3">
-                <Text size="sm" className="text-gray-400">
-                    {t('preferences.manageSettings')}
-                </Text>
-            </VStack>
-
             <Box className="px-5">
                 {/* The plan and today's usage, first (owner call). Its Manage
                     plan button is the only plan entry in Settings. */}
@@ -426,7 +423,7 @@ const AppPreferencesTab: React.FC = () => {
                     <SettingsUsageCard />
                 </Box>
 
-                {sectionLabel('general', t('settings.groupGeneral'))}
+                {sectionLabel('general', t('you.settings.groupApp'))}
                 <VStack>{general.map(renderOption)}</VStack>
 
                 {sectionLabel('privacy', t('settings.groupPrivacy'))}
