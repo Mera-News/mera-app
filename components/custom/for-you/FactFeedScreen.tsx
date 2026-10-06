@@ -11,7 +11,6 @@ import {
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import ForYouEmptyState from '@/components/custom/for-you/ForYouEmptyState';
 import NextSectionFooter from '@/components/custom/for-you/NextSectionFooter';
-import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import { navigateToPage } from '@/components/custom/nav/navigate-to-page';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
 import { Box } from '@/components/ui/box';
@@ -408,7 +407,6 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
               />
             )}
           </View>
-          <NotificationBellButton />
         </HStack>
       </Box>
       <FlatList

@@ -5,8 +5,6 @@
 // under the reader. The screen's rows must be built with the context the visit
 // started with.
 const mockBuildFactRows = jest.fn((..._a: any[]) => ({ rows: [] }));
-// The bell reaches the notification service (SQLite at import).
-jest.mock('@/components/custom/notifications/NotificationBellButton', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/lib/stores/fact-rows-selector', () => ({
     buildFactRows: (...a: any[]) => mockBuildFactRows(...a),
     isHeadlineSectionId: () => false,

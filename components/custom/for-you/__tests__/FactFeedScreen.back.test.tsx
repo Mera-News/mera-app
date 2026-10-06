@@ -5,8 +5,6 @@
 // 14, so w-11 is 38.5pt) holding the hidden glyph, with a childless labelled
 // Pressable laid over it.
 const mockBuildFactRows = jest.fn((..._a: any[]) => ({ rows: [] }));
-// The bell reaches the notification service (SQLite at import).
-jest.mock('@/components/custom/notifications/NotificationBellButton', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/lib/stores/fact-rows-selector', () => ({
     buildFactRows: (...a: any[]) => mockBuildFactRows(...a),
     isHeadlineSectionId: () => false,
