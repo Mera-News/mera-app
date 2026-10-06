@@ -73,28 +73,39 @@ describe('no native import sits at module scope anywhere in the share path', () 
 
   const NATIVE = ['expo-sharing', 'react-native-view-shot', 'expo-haptics', 'expo-file-system'];
 
-  // Every file in the share path, not a sample. A new file in this directory
-  // is reachable from the route the moment anything imports it, so the list has
-  // to grow with the directory or the guard quietly stops covering the feature
-  // it names.
+  // Every file in the share path, not a sample, DERIVED from the directories
+  // rather than kept by hand: a hand list silently stops covering the feature
+  // the moment someone adds a file. `share-stats/` is the feature; `library/`
+  // mounts it inside the Library tab, so it is reachable from every route that
+  // reaches the tab. The route file is listed explicitly.
+  const ROOT = path.join(__dirname, '..', '..', '..', '..');
+  const sourcesIn = (dir: string): string[] => {
+    const abs = path.join(ROOT, dir);
+    if (!fs.existsSync(abs)) return [];
+    return fs
+      .readdirSync(abs)
+      .filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
+      .map((f) => `${dir}/${f}`);
+  };
   const FILES = [
     'app/logged-in/share-stats.tsx',
-    'components/custom/share-stats/ShareStatsPreviewScreen.tsx',
-    'components/custom/share-stats/ShareStatsCard.tsx',
-    'components/custom/share-stats/capture-and-share.ts',
-    'components/custom/share-stats/card-charts.tsx',
-    'components/custom/share-stats/card-theme.ts',
-    'components/custom/share-stats/card-shell.tsx',
-    'components/custom/share-stats/stats-cards.tsx',
-    'components/custom/share-stats/screen-metrics.ts',
+    ...sourcesIn('components/custom/share-stats'),
+    ...sourcesIn('components/custom/library'),
   ];
+
+  it('derives a non-empty list that includes the capture module and the pager', () => {
+    // The one failure a derived list can have is coming back empty.
+    expect(FILES).toEqual(
+      expect.arrayContaining([
+        'components/custom/share-stats/capture-and-share.ts',
+        'components/custom/share-stats/StatsPager.tsx',
+      ]),
+    );
+  });
 
   for (const relative of FILES) {
     it(`${relative} has no top-level native import`, () => {
-      const source = fs.readFileSync(
-        path.join(__dirname, '..', '..', '..', '..', relative),
-        'utf8',
-      );
+      const source = fs.readFileSync(path.join(ROOT, relative), 'utf8');
 
       for (const moduleName of NATIVE) {
         // A static `import ... from 'x'` at the start of a line. `import type`
@@ -112,35 +123,4 @@ describe('no native import sits at module scope anywhere in the share path', () 
       }
     });
   }
-});
-
-
-describe('the file list covers the directory', () => {
-  // The guard above is only as good as its list, and a list maintained by hand
-  // silently stops covering the feature the moment someone adds a file. This
-  // fails when the directory grows and the list does not, which is the one
-  // failure the per-file tests cannot report on themselves.
-  const fs = require('node:fs') as typeof import('node:fs');
-  const path = require('node:path') as typeof import('node:path');
-
-  it('names every source file under share-stats', () => {
-    const dir = path.join(__dirname, '..');
-    const onDisk = fs
-      .readdirSync(dir)
-      .filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
-      .sort();
-
-    const listed = [
-      'ShareStatsPreviewScreen.tsx',
-      'ShareStatsCard.tsx',
-      'capture-and-share.ts',
-      'card-charts.tsx',
-      'card-theme.ts',
-      'card-shell.tsx',
-      'stats-cards.tsx',
-      'screen-metrics.ts',
-    ].sort();
-
-    expect(onDisk).toEqual(listed);
-  });
 });
