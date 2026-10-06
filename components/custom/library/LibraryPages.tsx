@@ -66,7 +66,6 @@ export function LibraryPages() {
                 case 'visited':
                     return (
                         <VisitedPublicationsList
-                            embedded
                             active={active}
                             scrollHandler={header.scrollHandler}
                             headerHeight={header.headerHeight}

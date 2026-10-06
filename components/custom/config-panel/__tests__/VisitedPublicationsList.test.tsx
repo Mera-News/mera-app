@@ -79,7 +79,6 @@ jest.mock('@/components/custom/for-you/ForYouEmptyState', () => {
   const { Text } = require('react-native');
   return { __esModule: true, default: (p: any) => <Text testID={p.testID}>{`${p.title}|${p.body}`}</Text> };
 });
-jest.mock('../DrillDownHeader', () => ({ __esModule: true, default: () => null }));
 jest.mock('@/components/ui/spinner', () => ({ Spinner: () => null }));
 jest.mock('@/components/ui/box', () => {
   const { View } = require('react-native');
@@ -130,26 +129,26 @@ beforeEach(() => {
 
 describe('VisitedPublicationsList: loading', () => {
   it('reloads when the tab regains focus with the page still selected', async () => {
-    const view = render(<VisitedPublicationsList embedded active />);
+    const view = render(<VisitedPublicationsList active />);
     await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(1));
     mockFocused = false;
-    view.rerender(<VisitedPublicationsList embedded active />);
+    view.rerender(<VisitedPublicationsList active />);
     mockFocused = true;
-    view.rerender(<VisitedPublicationsList embedded active />);
+    view.rerender(<VisitedPublicationsList active />);
     await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(2));
   });
 
   it('reads once while warm, and arriving shows the rows with no loading state', async () => {
     mockRows = [row('NOS', 2)];
-    const view = render(<VisitedPublicationsList embedded active={false} />);
+    const view = render(<VisitedPublicationsList active={false} />);
     await waitFor(() => expect(screen.getByText('NOS')).toBeTruthy());
-    view.rerender(<VisitedPublicationsList embedded active />);
+    view.rerender(<VisitedPublicationsList active />);
     expect(screen.getByText('NOS')).toBeTruthy();
     expect(screen.queryByTestId('visited-publications-empty')).toBeNull();
   });
 
   it('says what fills the page when empty, with no intro or footnote, and keeps pull-to-refresh', async () => {
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     await waitFor(() => expect(screen.getByTestId('visited-publications-empty')).toBeTruthy());
     expect(screen.getByTestId('visited-publications-empty').props.children).toBe(
       'library.visited.emptyTitle|library.visited.emptyBody',
@@ -163,7 +162,7 @@ describe('VisitedPublicationsList: loading', () => {
 describe('VisitedPublicationsList: ranking and the top card', () => {
   it('merges spellings before ranking, so the merged leader gets the top card', async () => {
     mockRows = [row('TechRadar', 4), row('Der Tagesspiegel', 3), row('DER TAGESSPIEGEL', 2, 'AUT')];
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     const card = await waitFor(() => screen.getByTestId('visited-top-card'));
     expect(screen.getByTestId('visited-intro')).toBeTruthy();
     expect(screen.getByTestId('visited-footnote')).toBeTruthy();
@@ -175,7 +174,7 @@ describe('VisitedPublicationsList: ranking and the top card', () => {
 
   it('shows no top card on a tie, and every row stays a row', async () => {
     mockRows = [row('A', 3), row('B', 3)];
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     await waitFor(() => expect(screen.getByTestId('visited-row-A')).toBeTruthy());
     expect(screen.getByTestId('visited-row-B')).toBeTruthy();
     expect(screen.queryByTestId('visited-top-card')).toBeNull();
@@ -184,7 +183,7 @@ describe('VisitedPublicationsList: ranking and the top card', () => {
   it('offers Subscribe and I already pay for a resolved leader with a subscribe page', async () => {
     mockRows = [row('DT', 3), row('NOS', 1)];
     mockResolved = { DT: withUri('DT') };
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     const subscribe = await waitFor(() => screen.getByTestId('visited-top-subscribe'));
     fireEvent.press(subscribe);
     expect(mockBegin).toHaveBeenCalledWith(mockResolved.DT);
@@ -195,14 +194,14 @@ describe('VisitedPublicationsList: ranking and the top card', () => {
   it('offers only I already pay when the publisher resolves with no subscribe page', async () => {
     mockRows = [row('DT', 3)];
     mockResolved = { DT: { ...withUri('DT'), subscriptionUri: null } };
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     await waitFor(() => expect(screen.getByTestId('visited-top-already')).toBeTruthy());
     expect(screen.queryByTestId('visited-top-subscribe')).toBeNull();
   });
 
   it('offers nothing when the publisher does not resolve', async () => {
     mockRows = [row('DT', 3)];
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     await waitFor(() => expect(screen.getByTestId('visited-top-card')).toBeTruthy());
     expect(screen.queryByTestId('visited-top-subscribe')).toBeNull();
     expect(screen.queryByTestId('visited-top-already')).toBeNull();
@@ -211,7 +210,7 @@ describe('VisitedPublicationsList: ranking and the top card', () => {
   it('says You pay when the leader is subscribed, matched by stored source name with no lookup', async () => {
     mockRows = [row('Handelsblatt', 3)];
     mockSubs = [{ publisherName: 'Handelsblatt Media', sourceNamesJson: '["handelsblatt"]', publisherId: 'hb' }];
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     await waitFor(() => expect(screen.getByTestId('visited-top-paid')).toBeTruthy());
     expect(screen.queryByTestId('visited-top-already')).toBeNull();
   });
@@ -221,7 +220,7 @@ describe('VisitedPublicationsList: rows', () => {
   it('shows Support only with a subscribe page, and starts the flow', async () => {
     mockRows = [row('A', 1), row('TechRadar', 1)];
     mockResolved = { TechRadar: withUri('TechRadar') };
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     const support = await waitFor(() => screen.getByTestId('visited-support-TechRadar'));
     expect(screen.queryByTestId('visited-support-A')).toBeNull();
     fireEvent.press(support);
@@ -232,7 +231,7 @@ describe('VisitedPublicationsList: rows', () => {
     mockRows = [row('A', 1), row('NRC', 1)];
     mockResolved = { NRC: withUri('NRC', 'nrc') };
     mockSubs = [{ publisherName: 'Other', sourceNamesJson: null, publisherId: 'nrc' }];
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     const nrc = await waitFor(() => screen.getByTestId('visited-row-NRC'));
     await waitFor(() => expect(nrc).toHaveTextContent(/library\.visited\.subscribed/));
     expect(nrc).toHaveTextContent(/library\.visited\.youPay/);
@@ -241,14 +240,14 @@ describe('VisitedPublicationsList: rows', () => {
 
   it('a row shows when it was last opened', async () => {
     mockRows = [row('A', 1), row('B', 1)];
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     const a = await waitFor(() => screen.getByTestId('visited-row-A'));
     expect(a).toHaveTextContent(/library\.visited\.lastOpened/);
   });
 
   it('a tap opens the publication page by name and country; a sideways drag does not', async () => {
     mockRows = [row('A', 1), row('NOS', 1, 'NLD')];
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     const open = await waitFor(() => screen.getByTestId('visited-row-open-NOS'));
     fireEvent(open, 'pressIn', { nativeEvent: { pageX: 40, pageY: 300 } });
     fireEvent(open, 'press', { nativeEvent: { pageX: 250, pageY: 304 } });
@@ -259,7 +258,7 @@ describe('VisitedPublicationsList: rows', () => {
 
   it('mounts one confirm dialog for the page', async () => {
     mockRows = [row('A', 1), row('B', 1)];
-    render(<VisitedPublicationsList embedded active />);
+    render(<VisitedPublicationsList active />);
     await waitFor(() => expect(screen.getByTestId('visited-row-A')).toBeTruthy());
     expect(screen.getAllByTestId('confirm-dialog')).toHaveLength(1);
   });

@@ -23,11 +23,12 @@ jest.mock('@/components/custom/nav/HowThisPageWorks', () => {
   return { __esModule: true, default: (p: any) => <View testID={`how-${p.pageId}`} /> };
 });
 const mockProps: Record<string, any> = {};
-const capture = (name: string) => (p: any) => {
-  mockProps[name] = p;
-  const { View } = require('react-native');
-  return <View testID={`page-${name}`}>{p.footer}</View>;
-};
+const capture = (name: string) =>
+  function CapturedPage(p: any) {
+    mockProps[name] = p;
+    const { View } = require('react-native');
+    return <View testID={`page-${name}`}>{p.footer}</View>;
+  };
 jest.mock('@/components/custom/saved-suggestions/SavedSuggestionsScreen', () => ({ __esModule: true, default: capture('saved') }));
 jest.mock('@/components/custom/fact-checks/FactChecksPanel', () => ({ __esModule: true, default: capture('checks') }));
 jest.mock('@/components/custom/config-panel/VisitedPublicationsList', () => ({ __esModule: true, default: capture('visited') }));
@@ -91,7 +92,6 @@ describe('LibraryPages', () => {
     expect(mockProps.saved.hidden).toBe(mockHeader.hidden);
     expect(mockProps.saved.active).toBe(true);
     expect(mockProps.checks.active).toBe(false);
-    expect(mockProps.visited.embedded).toBe(true);
   });
 
   it('hands Stats its arrival card', () => {

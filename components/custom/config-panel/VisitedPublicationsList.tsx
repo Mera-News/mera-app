@@ -27,7 +27,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { I18nManager, ListRenderItem, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
-import DrillDownHeader from './DrillDownHeader';
 
 // The Library's Visited page: the publications the reader opened at the source
 // in the last 30 days, most opened first, with a way to support them.
@@ -64,10 +63,6 @@ const PILL_H = 34;
 const PILL_FRAME = 44;
 
 interface Props {
-    /** Standalone route only (until it becomes a redirect). */
-    readonly onBack?: () => void;
-    /** Rendered inside a host that owns the top chrome: no DrillDownHeader. */
-    readonly embedded?: boolean;
     /** False while a warmed neighbour in a swipe window: reads once, then
      *  re-reads silently each time it becomes visible. Unset = always active. */
     readonly active?: boolean;
@@ -79,8 +74,6 @@ interface Props {
     readonly listEndPadding?: number;
     /** Drawn after the footnote (the host's "How this page works" row). */
     readonly footer?: React.ReactElement | null;
-    /** Told the row count after every load. */
-    readonly onCountChange?: (count: number) => void;
 }
 
 /** "24 Sep" in the reader's own locale; never throws on a thin ICU build. */
@@ -185,14 +178,11 @@ const Pill: React.FC<PillProps> = ({ label, a11yLabel, a11yHint, filled, onPress
 );
 
 const VisitedPublicationsList: React.FC<Props> = ({
-    onBack,
-    embedded = false,
     active = true,
     scrollHandler,
     headerHeight = 0,
     listEndPadding,
     footer,
-    onCountChange,
 }) => {
     const tabClearance = useTabBarClearance();
     const { t, i18n } = useTranslation();
@@ -209,13 +199,12 @@ const VisitedPublicationsList: React.FC<Props> = ({
         try {
             const rows = mergeVisitedByName(await getTopVisitedPublications());
             setItems(rows);
-            onCountChange?.(rows.length);
         } catch (error) {
             logger.captureException(error, {
                 tags: { screen: 'VisitedPublicationsList', method: 'load' },
             });
         }
-    }, [onCountChange]);
+    }, []);
 
     // Reload whenever the page becomes VISIBLE (selected AND its tab focused):
     // a visit recorded meanwhile (open an article at its source, come back)
@@ -296,9 +285,6 @@ const VisitedPublicationsList: React.FC<Props> = ({
 
     return (
         <Box className="flex-1">
-            {!embedded && onBack ? (
-                <DrillDownHeader title={t('publicationVisits.visitedListTitle')} onBack={onBack} />
-            ) : null}
             <Animated.FlatList
                 testID="visited-publications-list"
                 data={rows}

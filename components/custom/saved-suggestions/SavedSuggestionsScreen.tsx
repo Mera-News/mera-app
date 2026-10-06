@@ -35,11 +35,6 @@ import Animated, { type SharedValue, useAnimatedScrollHandler } from 'react-nati
 import { notifyScrollTick } from '@/lib/visibility-tick';
 
 interface SavedSuggestionsScreenProps {
-    /** @deprecated Ignored: Saved renders only inside a page host now. Removed
-     *  with the Dashboard (navx P11). */
-    onBack?: () => void;
-    /** @deprecated Ignored, see `onBack`. */
-    embedded?: boolean;
     /** The host's collapsing-header scroll handler. The list MUST be an
      *  `Animated.FlatList` for this to do anything: a worklet attached to a
      *  plain RN `FlatList` never reaches the UI thread. */
