@@ -6,7 +6,8 @@ import { ScrollView } from '@/components/ui/scroll-view';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { type StartupTab } from '@/lib/navigation/startup-tab';
+import { type LaunchTab } from '@/lib/navigation/startup-tab';
+import { TAB_LABEL_KEYS } from '@/components/custom/nav/page-registry';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { useStartupTabStore } from '@/lib/stores/startup-tab-store';
@@ -35,20 +36,16 @@ const TEXT_SIZE_LABEL_KEYS = [
   'display.textSizeStepLarger',
 ] as const;
 
-// Startup-tab options, in the order they're offered. Values are the REAL
-// route names under app_container (see lib/navigation/startup-tab.ts for why
-// they're inverted from what a user would call them) — labels below borrow
-// the shipped tab-bar copy (`tabs.*`) so the wording never drifts from the
-// tab bar itself, and the icons mirror app_container/_layout.tsx's Android
-// glyphs for the same reason.
+// Open on launch: Feed, World or Library (L4's LaunchTab). Labels are the tab
+// bar's own keys (TAB_LABEL_KEYS) so the wording never drifts from the bar,
+// and the icons are the tabs' Android glyphs for the same reason.
 const STARTUP_TAB_OPTIONS: {
-  tab: StartupTab;
-  labelKey: 'tabs.deck' | 'tabs.dashboard' | 'tabs.around';
+  tab: LaunchTab;
   icon: keyof typeof MaterialIcons.glyphMap;
 }[] = [
-  { tab: 'feed', labelKey: 'tabs.deck', icon: 'view-agenda' },
-  { tab: 'for_you', labelKey: 'tabs.dashboard', icon: 'dashboard' },
-  { tab: 'around', labelKey: 'tabs.around', icon: 'explore' },
+  { tab: 'feed', icon: 'view-agenda' },
+  { tab: 'world', icon: 'public' },
+  { tab: 'library', icon: 'bookmark' },
 ];
 
 interface DisplaySettingsScreenProps {
@@ -294,9 +291,9 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                 accessibilityRole="radiogroup"
                 testID="startup-tab-options"
               >
-                {STARTUP_TAB_OPTIONS.map(({ tab, labelKey, icon }) => {
+                {STARTUP_TAB_OPTIONS.map(({ tab, icon }) => {
                   const active = tab === startupTab;
-                  const label = t(labelKey);
+                  const label = t(TAB_LABEL_KEYS[tab]);
                   return (
                     <Pressable
                       key={tab}

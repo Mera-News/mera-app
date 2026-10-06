@@ -129,7 +129,7 @@ jest.mock('@/lib/stores/blur-images-store', () => ({
 }));
 
 const mockSetStartupTab = jest.fn();
-let mockStartupTab: 'feed' | 'for_you' | 'around' = 'feed';
+let mockStartupTab: 'feed' | 'world' | 'library' = 'feed';
 
 jest.mock('@/lib/stores/startup-tab-store', () => ({
     useStartupTabStore: (selector: any) =>
@@ -262,19 +262,20 @@ describe('DisplaySettingsScreen — blur-images toggle', () => {
 
 // ── Startup tab (new) ───────────────────────────────────────────────────
 describe('DisplaySettingsScreen — startup tab picker', () => {
-    it('renders one option per tab, plus the section chrome', () => {
-        const { getByTestId, getByText } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+    it('offers Feed, World and Library, plus the section chrome', () => {
+        const { getByTestId, getByText, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
         expect(getByText('display.sectionStartup')).toBeTruthy();
         expect(getByText('display.startupTabTitle')).toBeTruthy();
         expect(getByTestId('startup-tab-feed')).toBeTruthy();
-        expect(getByTestId('startup-tab-for_you')).toBeTruthy();
-        expect(getByTestId('startup-tab-around')).toBeTruthy();
+        expect(getByTestId('startup-tab-world')).toBeTruthy();
+        expect(getByTestId('startup-tab-library')).toBeTruthy();
+        expect(queryByTestId('startup-tab-for_you')).toBeNull();
     });
 
     it('marks the stored preference as selected', () => {
-        mockStartupTab = 'around';
+        mockStartupTab = 'world';
         const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        expect(getByTestId('startup-tab-around').props.accessibilityState.selected).toBe(true);
+        expect(getByTestId('startup-tab-world').props.accessibilityState.selected).toBe(true);
         expect(getByTestId('startup-tab-feed').props.accessibilityState.selected).toBe(false);
     });
 
@@ -285,7 +286,7 @@ describe('DisplaySettingsScreen — startup tab picker', () => {
 
     it('persists the tapped tab using its real route name, not its label', () => {
         const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        fireEvent.press(getByTestId('startup-tab-for_you'));
-        expect(mockSetStartupTab).toHaveBeenCalledWith('for_you');
+        fireEvent.press(getByTestId('startup-tab-library'));
+        expect(mockSetStartupTab).toHaveBeenCalledWith('library');
     });
 });
