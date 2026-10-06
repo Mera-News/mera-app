@@ -104,15 +104,14 @@ export interface ArticlePipelineConfig {
    * (`geo_tags` / `entities` / `event_type`) to the pass-1 batch scoring prompt,
    * as one compact `Article Metadata:` line per article block.
    *
-   * RELEVANCE v4 — this and {@link legacyTagReasonGateEnabled} ARE v4. One
-   * user-facing switch drives both (they were measured together and ship
-   * together): the Zustand store field `relevanceV4`, layered onto this object
-   * by `mera-protocol/stage-scoring::effectiveHarnessConfig`. The harness itself
-   * never reads the store or `process.env`. Because the toggle is a RUNTIME
-   * flag, the live app's call builders take the effective config as a parameter
+   * RELEVANCE v4 — this and {@link legacyTagReasonGateEnabled} ARE v4,
+   * controlled only by these harness defaults: flipped together (they were
+   * measured together) by an OTA, currently off. There is no user setting. The
+   * harness itself never reads the store or `process.env`. The live app's call
+   * builders take the effective config as a parameter
    * (`mera-protocol/scoring-service::buildRelevanceCalls`) rather than reading a
-   * module literal — without that the switch would move the offline harness twin
-   * and nothing the app actually sends.
+   * module literal, so the offline harness twin and what the app sends cannot
+   * drift apart.
    *
    * DOES NOT TOUCH THE ENGINE. This flag reads `ScoringCandidate.meta` inside
    * the PROMPT builder only — see the mechanism note at the top of
@@ -523,8 +522,8 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // same style and same reason as `legacyNoteDemote` above and the
     // scoringEngine routing switches: the harness default must always describe
     // SHIPPED behaviour. Each field's doc comment carries its own paired
-    // measurement. ONE user-facing switch (`relevanceV4`) turns both on; to
-    // default v4 ON, flip BOTH of these to `true` (and update config.test.ts).
+    // measurement. v4 is controlled only here, currently off: to turn it on,
+    // flip BOTH to `true` by an OTA (and update config.test.ts).
     legacyTagPromptEnabled: false,
     legacyTagReasonGateEnabled: false,
     // The measured set. Frozen as a literal so `config.test.ts` pins it and a

@@ -341,12 +341,11 @@ async function loadAllFactStatements(): Promise<string[]> {
  * SAME base reference, so we hand back DEFAULT_HARNESS_CONFIG untouched (no
  * allocation). Any read failure fail-opens to the base config.
  *
- * RELEVANCE v4 IS NOT A USER SETTING (owner decision). Its two article-tag
- * features (`legacyTagPromptEnabled`, `legacyTagReasonGateEnabled`) come only
- * from DEFAULT_HARNESS_CONFIG (lib/news-harness/core/config.ts), which the
- * owner flips, both together, by OTA. The store's `relevanceV4` field and its
- * `mera_relevance_v3` setting are read NOWHERE: a device that switched v4 on
- * before the row was removed must not keep it on with no way back.
+ * RELEVANCE v4 is controlled only by the harness defaults: its two
+ * article-tag features (`legacyTagPromptEnabled`, `legacyTagReasonGateEnabled`)
+ * in DEFAULT_HARNESS_CONFIG (lib/news-harness/core/config.ts), flipped
+ * together by an OTA, currently off. There is no user setting and nothing
+ * stored on the device can turn it on.
  */
 export async function effectiveHarnessConfig(): Promise<HarnessConfig> {
   try {
