@@ -1,5 +1,6 @@
-// The one Mera button: a 62pt white circle bottom right, above the tab bar,
-// with a hint tooltip beside it. Tapping opens the Mera chat on this page.
+// The one Mera button: a 62pt white circle in one of four corners (see
+// corner.ts; MeraButtonHost places and drags it), with a hint tooltip on the
+// side facing the screen's middle. Tapping opens the Mera chat on this page.
 //
 // Presentational over its inputs: MeraButtonHost decides WHETHER it shows and
 // passes the feed status in, because `useFeedStatusMode` loads the scheduler
@@ -20,8 +21,10 @@ import { useWebSearchInChat } from '@/lib/stores/mera-protocol-store';
 import { useFloatingChatStore, type MeraPageKey } from '@/lib/stores/floating-chat-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector, type PanGesture } from 'react-native-gesture-handler';
 import Animated, { FadeOut, useReducedMotion } from 'react-native-reanimated';
+import { DRAG_ACTIVATION } from './corner';
 import { chatContextFor, hintKeys, interestFactId, statusKey } from './mera-pages';
 import { openMeraChat } from './open-mera-chat';
 import { tooltipRemainingMs } from './tooltip-visit';
@@ -37,6 +40,8 @@ const ORANGE = '#E78A53';
 const LOGO_SIZE = 34;
 const TOOLTIP_BG = 'rgba(52,50,55,0.97)';
 const TOOLTIP_BORDER = 'rgba(255,255,255,0.12)';
+const TOOLTIP_MAX_WIDTH = 190;
+const TOOLTIP_GAP = 12;
 
 /** The statement of a One interest fact, read lazily: fact-service reaches
  *  WatermelonDB, which must stay out of every suite that renders the button. */
@@ -55,9 +60,24 @@ export interface MeraButtonProps {
   readonly surface: string;
   readonly page: MeraPageKey;
   readonly mode: FeedStatusMode;
+  /** Which side of the button the tooltip sits on (the side facing the
+   *  screen's middle). Physical: the host lays this subtree out LTR. */
+  readonly tooltipSide?: 'left' | 'right';
+  /** The host's drag. Composed with the tap so a drag never opens the chat
+   *  and a press or a small wobble never moves the button. */
+  readonly pan?: PanGesture;
+  /** True while the button is being dragged: the tooltip steps aside. */
+  readonly dragging?: boolean;
 }
 
-const MeraButton: React.FC<MeraButtonProps> = ({ surface, page, mode }) => {
+const MeraButton: React.FC<MeraButtonProps> = ({
+  surface,
+  page,
+  mode,
+  tooltipSide = 'left',
+  pan,
+  dragging = false,
+}) => {
   const { t } = useTranslation();
   // Computed keys (pools, status), so `t` takes them untyped; the en.json
   // presence test in mera-button covers every one.
@@ -122,56 +142,93 @@ const MeraButton: React.FC<MeraButtonProps> = ({ surface, page, mode }) => {
     openMeraChat(chatContextFor(page, subject));
   }, [page, surface, publishCenter]);
 
+  // Tap and drag on ONE detector: the drag activates past DRAG_ACTIVATION, the
+  // tap fails past it, so neither ever does the other's job. The tap runs on
+  // the JS thread: it only opens the chat.
+  const gesture = useMemo(() => {
+    const tap = Gesture.Tap()
+      .maxDistance(DRAG_ACTIVATION)
+      .runOnJS(true)
+      .onEnd((_e, success) => {
+        if (success) void onPress();
+      })
+      .withTestId('mera-button-tap');
+    return pan ? Gesture.Exclusive(pan, tap) : tap;
+  }, [pan, onPress]);
+
+  const pointsLeft = tooltipSide === 'right';
   return (
-    <View style={styles.row} pointerEvents="box-none">
-      {tooltipOn && hint !== null && (
-        <Animated.View
-          exiting={reduceMotion ? undefined : FadeOut.duration(400)}
+    <View style={styles.box} pointerEvents="box-none">
+      {tooltipOn && hint !== null && !dragging && (
+        <View
           pointerEvents="none"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          style={styles.tooltip}
-          testID="mera-button-tooltip"
+          style={[styles.tooltipLane, pointsLeft ? styles.laneRight : styles.laneLeft]}
+          testID="mera-button-tooltip-lane"
         >
-          <Text style={styles.tooltipText} maxFontSizeMultiplier={1.4}>
-            {hint}
-          </Text>
-          <View style={styles.pointer} />
-        </Animated.View>
+          <Animated.View
+            exiting={reduceMotion ? undefined : FadeOut.duration(400)}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={styles.tooltip}
+            testID="mera-button-tooltip"
+          >
+            <Text style={styles.tooltipText} maxFontSizeMultiplier={1.4}>
+              {hint}
+            </Text>
+            <View style={[styles.pointer, pointsLeft ? styles.pointerLeft : styles.pointerRight]} />
+          </Animated.View>
+        </View>
       )}
-      <Pressable
-        ref={circleRef}
-        onLayout={publishCenter}
-        onPress={() => void onPress()}
-        accessibilityRole="button"
-        accessibilityLabel={
-          hint !== null ? tKey('meraButton.a11yLabel', { hint }) : t('floatingChat.title')
-        }
-        accessibilityValue={{ text: tKey(statusKey(mode)) }}
-        hitSlop={4}
-        style={styles.circle}
-        testID="mera-button"
-      >
-        {/* Reduce Motion: a still ring says "reading" instead of the motion. */}
-        {reading && reduceMotion && <View style={styles.ring} testID="mera-button-ring" />}
-        <MeraLogo
-          size={LOGO_SIZE}
-          color={INK}
-          animated={reading && !reduceMotion}
-          scrollCards={reading && !reduceMotion}
-          showsProgress
-        />
-      </Pressable>
+      <GestureDetector gesture={gesture}>
+        <View
+          ref={circleRef}
+          collapsable={false}
+          onLayout={publishCenter}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={
+            hint !== null ? tKey('meraButton.a11yLabel', { hint }) : t('floatingChat.title')
+          }
+          accessibilityValue={{ text: tKey(statusKey(mode)) }}
+          accessibilityActions={[{ name: 'activate' }]}
+          onAccessibilityAction={(e) => {
+            if (e.nativeEvent.actionName === 'activate') void onPress();
+          }}
+          hitSlop={4}
+          style={styles.circle}
+          testID="mera-button"
+        >
+          {/* Reduce Motion: a still ring says "reading" instead of the motion. */}
+          {reading && reduceMotion && <View style={styles.ring} testID="mera-button-ring" />}
+          <MeraLogo
+            size={LOGO_SIZE}
+            color={INK}
+            animated={reading && !reduceMotion}
+            scrollCards={reading && !reduceMotion}
+            showsProgress
+          />
+        </View>
+      </GestureDetector>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  box: {
+    width: MERA_BUTTON_SIZE,
+    height: MERA_BUTTON_SIZE,
   },
+  // A fixed-width lane beside the button, so the bubble wraps at its own
+  // maxWidth and hugs the button's side; vertically centred on the button.
+  tooltipLane: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: TOOLTIP_MAX_WIDTH,
+    justifyContent: 'center',
+  },
+  laneLeft: { right: MERA_BUTTON_SIZE + TOOLTIP_GAP, alignItems: 'flex-end' },
+  laneRight: { left: MERA_BUTTON_SIZE + TOOLTIP_GAP, alignItems: 'flex-start' },
   circle: {
     width: MERA_BUTTON_SIZE,
     height: MERA_BUTTON_SIZE,
@@ -196,7 +253,7 @@ const styles = StyleSheet.create({
     borderColor: ORANGE,
   },
   tooltip: {
-    maxWidth: 190,
+    maxWidth: TOOLTIP_MAX_WIDTH,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 10,
@@ -213,22 +270,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
-  // A rotated square half-tucked under the bubble's edge nearest the button
-  // (`end`, so RTL mirrors it with the row).
+  // A rotated square half-tucked under the bubble's edge nearest the button.
   pointer: {
     position: 'absolute',
-    end: -6,
     top: '50%',
     marginTop: -5,
     width: 10,
     height: 10,
     backgroundColor: TOOLTIP_BG,
-    borderTopWidth: 1,
-    borderRightWidth: 1,
     borderColor: TOOLTIP_BORDER,
-    borderTopRightRadius: 2,
     transform: [{ rotate: '45deg' }],
   },
+  pointerRight: { right: -6, borderTopWidth: 1, borderRightWidth: 1, borderTopRightRadius: 2 },
+  pointerLeft: { left: -6, borderBottomWidth: 1, borderLeftWidth: 1, borderBottomLeftRadius: 2 },
 });
 
 export default MeraButton;

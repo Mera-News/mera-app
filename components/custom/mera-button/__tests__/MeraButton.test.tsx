@@ -2,6 +2,7 @@
 // of a visit, web hints skipped while web search is off, reading shown as
 // motion or (Reduce Motion) a still ring, and a tap opens the page's chat.
 
+jest.mock('react-native-gesture-handler', () => require('./gesture-recorder').mock);
 let mockReduce = false;
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
@@ -45,6 +46,7 @@ jest.mock('react-i18next', () => ({
 }));
 
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { tap } from './gesture-recorder';
 import React from 'react';
 import { AccessibilityInfo, StyleSheet } from 'react-native';
 import { useCurrentSurfaceStore } from '@/components/custom/nav/current-surface';
@@ -168,7 +170,7 @@ it('announces updating and up to date, and nothing for the capped state', async 
 it('a tap opens the page chat', async () => {
   render(<MeraButton surface="world" page="world" mode="idle" />);
   await flush();
-  fireEvent.press(screen.getByTestId('mera-button'));
+  act(() => tap('mera-button-tap'));
   await flush();
   const s = useFloatingChatStore.getState();
   expect(s.isExpanded).toBe(true);
@@ -178,7 +180,7 @@ it('a tap opens the page chat', async () => {
 it('on One interest the chat carries the fact', async () => {
   render(<MeraButton surface="interest:f1" page="interest" mode="idle" />);
   await flush();
-  fireEvent.press(screen.getByTestId('mera-button'));
+  act(() => tap('mera-button-tap'));
   await flush();
   expect(useFloatingChatStore.getState().context).toEqual({
     kind: 'persona',
@@ -186,4 +188,36 @@ it('on One interest the chat carries the fact', async () => {
     origin: 'profile',
     subject: 'Supports Bayer Leverkusen',
   });
+});
+
+it('a screen reader activates it the same way a tap does', async () => {
+  render(<MeraButton surface="feed" page="feed" mode="idle" />);
+  await flush();
+  fireEvent(screen.getByTestId('mera-button'), 'accessibilityAction', {
+    nativeEvent: { actionName: 'activate' },
+  });
+  await flush();
+  expect(useFloatingChatStore.getState().isExpanded).toBe(true);
+});
+
+it('the tooltip sits on the side facing the middle, its pointer at the button', async () => {
+  visit('feed');
+  const view = render(<MeraButton surface="feed" page="feed" mode="idle" tooltipSide="left" />);
+  await flush();
+  const lane = () =>
+    StyleSheet.flatten(
+      screen.getByTestId('mera-button-tooltip-lane', { includeHiddenElements: true }).props.style,
+    );
+  expect(lane().right).toBeDefined();
+  expect(lane().left).toBeUndefined();
+  view.rerender(<MeraButton surface="feed" page="feed" mode="idle" tooltipSide="right" />);
+  expect(lane().left).toBeDefined();
+  expect(lane().right).toBeUndefined();
+});
+
+it('the tooltip steps aside while the button is dragged', async () => {
+  visit('feed');
+  render(<MeraButton surface="feed" page="feed" mode="idle" dragging />);
+  await flush();
+  expect(screen.queryByTestId('mera-button-tooltip', { includeHiddenElements: true })).toBeNull();
 });
