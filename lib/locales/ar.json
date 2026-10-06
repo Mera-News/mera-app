@@ -532,10 +532,6 @@
     "extractedMetadataPlacesLabel": "الأماكن",
     "extractedMetadataEntitiesLabel": "الكيانات",
     "extractedMetadataCaption": "استخرج بواسطة الذكاء الاصطناعي، حقيقة غير موثوقة",
-    "autoCommunityFactCheckTitle": "تدقيق المجتمع التلقائي",
-    "autoCommunityFactCheckOn": "يُبحث عنه عند فتح كل مقال",
-    "autoCommunityFactCheckOff": "يُبحث عنه عند طلبك فقط",
-    "autoCommunityFactCheckDescription": "التدقيقات مشتركة. حين يطلب أحدهم تدقيق خبر، تُحفظ النتيجة مع ذلك الخبر ويستطيع الجميع رؤيتها. عند تفعيل هذا الخيار يبحث Mera عن تدقيق موجود في كل مرة تفتح فيها مقالًا. وإن تركته معطلًا فلن يبحث Mera إلا عند ضغطك زر التدقيق، فيبقى الطلب أمرًا تختاره أنت لخبر واحد في كل مرة.",
     "loadFailedDescription": "فشل تحميل إعدادات Mera Protocol.",
     "loadFailedTitle": "فشل التحميل",
     "chooseModel": "اختر نموذجًا واحدًا لتنزيله. يمكنك التبديل لاحقًا.",
@@ -2969,9 +2965,6 @@
     },
     "checks": {
       "emptyTitle": "لا توجد تحققات بعد",
-      "emptyBody": "اطلب من Mera التحقق من ادعاء، أو دعه يتحقق من القصص تلقائيًا.",
-      "autoLink": "تشغيل التحقق التلقائي",
-      "autoOnBody": "يتحقق Mera من القصص تلقائيًا. تظهر التحققات هنا عند تقييم ادعاء.",
       "emptyBodyAsk": "اضغط على علامة التحقق في أي مقال، أو اطلب من Mera التحقق من ادعاء. تظهر هنا التحققات التي تطلبها."
     },
     "visited": {

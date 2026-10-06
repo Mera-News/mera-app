@@ -508,10 +508,6 @@
     "extractedMetadataPlacesLabel": "地点",
     "extractedMetadataEntitiesLabel": "实体",
     "extractedMetadataCaption": "AI提取，未验证的事实",
-    "autoCommunityFactCheckTitle": "自动获取社区事实查核",
-    "autoCommunityFactCheckOn": "每次打开文章时都会查询",
-    "autoCommunityFactCheckOff": "仅在你点按时才查询",
-    "autoCommunityFactCheckDescription": "事实查核是共享的。当有人请求查核某条报道，结果会随该报道保存，任何人都能看到。开启后，Mera 会在你每次打开文章时寻找已有的查核。保持关闭，Mera 只在你点按事实查核按钮时才去寻找，这样请求查核仍是你针对单条报道做出的选择。",
     "loadFailedDescription": "无法加载 Mera Protocol 设置。",
     "loadFailedTitle": "加载失败",
     "chooseModel": "选择一个要下载的模型。之后可以切换。",
@@ -2885,9 +2881,6 @@
     },
     "checks": {
       "emptyTitle": "还没有核查",
-      "emptyBody": "让 Mera 核查某个说法，或让 Mera 自动核查报道。",
-      "autoLink": "开启自动核查",
-      "autoOnBody": "Mera 会自动核查报道。某个说法有了评级后，核查结果就会显示在这里。",
       "emptyBodyAsk": "点按文章上的对勾，或让 Mera 核查某个说法。你发起的核查会显示在这里。"
     },
     "visited": {

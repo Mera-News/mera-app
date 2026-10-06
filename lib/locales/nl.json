@@ -508,10 +508,6 @@
     "extractedMetadataPlacesLabel": "Plaatsen",
     "extractedMetadataEntitiesLabel": "Entiteiten",
     "extractedMetadataCaption": "AI-geëxtraheerd, geen geverifieerd feit",
-    "autoCommunityFactCheckTitle": "Automatische community-factcheck",
-    "autoCommunityFactCheckOn": "Opgezocht bij elk artikel dat je opent",
-    "autoCommunityFactCheckOff": "Alleen opgezocht als je erom vraagt",
-    "autoCommunityFactCheckDescription": "Factchecks worden gedeeld. Als iemand een verhaal laat checken, wordt het resultaat bij dat verhaal bewaard en kan iedereen het zien. Staat dit aan, dan zoekt Mera bij elk artikel dat je opent naar een bestaande check. Staat het uit, dan zoekt Mera alleen als je op de factcheck-knop tikt, zodat het vragen iets blijft wat je per verhaal zelf kiest.",
     "loadFailedDescription": "Kan de Mera Protocol-instellingen niet laden.",
     "loadFailedTitle": "Laden mislukt",
     "chooseModel": "Kies één model om te downloaden. Je kunt later wisselen.",
@@ -2887,9 +2883,6 @@
     },
     "checks": {
       "emptyTitle": "Nog geen controles",
-      "emptyBody": "Vraag Mera een bewering te controleren, of laat Mera verhalen automatisch controleren.",
-      "autoLink": "Automatische controles aanzetten",
-      "autoOnBody": "Mera controleert verhalen automatisch. Controles verschijnen hier zodra een bewering is beoordeeld.",
       "emptyBodyAsk": "Tik op het vinkje bij een artikel of vraag Mera een bewering te controleren. Controles die je aanvraagt, verschijnen hier."
     },
     "visited": {

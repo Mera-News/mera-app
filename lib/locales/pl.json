@@ -520,10 +520,6 @@
     "extractedMetadataPlacesLabel": "Miejsca",
     "extractedMetadataEntitiesLabel": "Jednostki",
     "extractedMetadataCaption": "Wyekstrahowane przez AI, nie zweryfikowany fakt",
-    "autoCommunityFactCheckTitle": "Automatyczne sprawdzenie społeczności",
-    "autoCommunityFactCheckOn": "Sprawdzane przy każdym otwartym artykule",
-    "autoCommunityFactCheckOff": "Sprawdzane tylko na żądanie",
-    "autoCommunityFactCheckDescription": "Sprawdzenia faktów są wspólne. Gdy ktoś poprosi o sprawdzenie materiału, wynik zostaje zapisany przy nim i każdy może go zobaczyć. Po włączeniu Mera szuka istniejącego sprawdzenia przy każdym otwartym artykule. Po wyłączeniu Mera szuka tylko wtedy, gdy dotkniesz przycisku sprawdzenia, więc pytanie pozostaje świadomym wyborem przy pojedynczym materiale.",
     "loadFailedDescription": "Nie udało się wczytać ustawień Mera Protocol.",
     "loadFailedTitle": "Nie udało się wczytać",
     "chooseModel": "Wybierz jeden model do pobrania. Możesz go później zmienić.",
@@ -2923,9 +2919,6 @@
     },
     "checks": {
       "emptyTitle": "Brak sprawdzeń",
-      "emptyBody": "Poproś Merę o sprawdzenie twierdzenia albo pozwól jej sprawdzać historie automatycznie.",
-      "autoLink": "Włącz automatyczne sprawdzanie",
-      "autoOnBody": "Mera sprawdza historie automatycznie. Sprawdzenia pojawią się tutaj, gdy twierdzenie zostanie ocenione.",
       "emptyBodyAsk": "Dotknij znaczka potwierdzenia przy artykule albo poproś Merę o sprawdzenie twierdzenia. Sprawdzenia, o które poprosisz, pojawią się tutaj."
     },
     "visited": {

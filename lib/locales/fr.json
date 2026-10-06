@@ -513,10 +513,6 @@
     "extractedMetadataPlacesLabel": "Lieux",
     "extractedMetadataEntitiesLabel": "Entités",
     "extractedMetadataCaption": "Extrait par IA, fait non vérifié",
-    "autoCommunityFactCheckTitle": "Vérification communautaire automatique",
-    "autoCommunityFactCheckOn": "Recherchée à chaque article ouvert",
-    "autoCommunityFactCheckOff": "Recherchée uniquement si vous la demandez",
-    "autoCommunityFactCheckDescription": "Les vérifications sont partagées. Quand une personne demande à faire vérifier un article, le résultat est conservé avec cet article et tout le monde peut le consulter. Activez cette option et Mera cherche une vérification existante à chaque article que vous ouvrez. Laissez-la désactivée et Mera ne cherche que lorsque vous touchez le bouton de vérification, de sorte que demander reste un geste choisi, article par article.",
     "loadFailedDescription": "Impossible de charger les paramètres de Mera Protocol.",
     "loadFailedTitle": "Échec du chargement",
     "chooseModel": "Choisissez un modèle à télécharger. Vous pourrez en changer plus tard.",
@@ -2894,9 +2890,6 @@
     },
     "checks": {
       "emptyTitle": "Aucune vérification pour l'instant",
-      "emptyBody": "Demandez à Mera de vérifier une affirmation, ou laissez Mera vérifier les actualités automatiquement.",
-      "autoLink": "Activer les vérifications automatiques",
-      "autoOnBody": "Mera vérifie les actualités automatiquement. Les vérifications s'affichent ici quand une affirmation est évaluée.",
       "emptyBodyAsk": "Appuyez sur la coche d'un article ou demandez à Mera de vérifier une affirmation. Les vérifications que vous demandez s'affichent ici."
     },
     "visited": {

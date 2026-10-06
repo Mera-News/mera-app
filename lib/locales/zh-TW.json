@@ -508,10 +508,6 @@
     "extractedMetadataPlacesLabel": "地點",
     "extractedMetadataEntitiesLabel": "實體",
     "extractedMetadataCaption": "AI提取，未經驗證的事實",
-    "autoCommunityFactCheckTitle": "自動取得社群事實查核",
-    "autoCommunityFactCheckOn": "每次開啟文章時都會查詢",
-    "autoCommunityFactCheckOff": "僅在你點按時才查詢",
-    "autoCommunityFactCheckDescription": "事實查核是共享的。當有人請求查核某則報導，結果會隨該報導保存，任何人都能看到。開啟後，Mera 會在你每次開啟文章時尋找已有的查核。保持關閉，Mera 只在你點按事實查核按鈕時才去尋找，這樣請求查核仍是你針對單則報導做出的選擇。",
     "loadFailedDescription": "無法載入 Mera Protocol 設定。",
     "loadFailedTitle": "載入失敗",
     "chooseModel": "選擇一個要下載的模型。之後可以切換。",
@@ -2885,9 +2881,6 @@
     },
     "checks": {
       "emptyTitle": "還沒有查核",
-      "emptyBody": "請 Mera 查核某個說法，或讓 Mera 自動查核報導。",
-      "autoLink": "開啟自動查核",
-      "autoOnBody": "Mera 會自動查核報導。某個說法有了評級後，查核結果就會顯示在這裡。",
       "emptyBodyAsk": "點按文章上的勾號，或請 Mera 查核某個說法。你發起的查核會顯示在這裡。"
     },
     "visited": {

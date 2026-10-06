@@ -508,10 +508,6 @@
     "extractedMetadataPlacesLabel": "Yerler",
     "extractedMetadataEntitiesLabel": "Varlıklar",
     "extractedMetadataCaption": "Yapay zeka tarafından çıkartıldı, doğrulanmamış gerçek",
-    "autoCommunityFactCheckTitle": "Otomatik topluluk doğrulaması",
-    "autoCommunityFactCheckOn": "Açtığınız her haberde aranır",
-    "autoCommunityFactCheckOff": "Yalnızca siz istediğinizde aranır",
-    "autoCommunityFactCheckDescription": "Doğrulamalar ortaktır. Biri bir haberin doğrulanmasını istediğinde sonuç o haberle birlikte saklanır ve herkes görebilir. Bunu açarsanız Mera, açtığınız her haberde mevcut bir doğrulama arar. Kapalı bırakırsanız Mera yalnızca doğrulama düğmesine dokunduğunuzda arar; böylece istemek, tek bir haber için bilerek yaptığınız bir şey olarak kalır.",
     "loadFailedDescription": "Mera Protocol ayarları yüklenemedi.",
     "loadFailedTitle": "Yükleme başarısız",
     "chooseModel": "İndirmek için bir model seç. Daha sonra değiştirebilirsin.",
@@ -2889,9 +2885,6 @@
     },
     "checks": {
       "emptyTitle": "Henüz kontrol yok",
-      "emptyBody": "Mera'dan bir iddiayı kontrol etmesini isteyin veya Mera hikayeleri otomatik kontrol etsin.",
-      "autoLink": "Otomatik kontrolleri aç",
-      "autoOnBody": "Mera hikayeleri otomatik olarak kontrol eder. Bir iddia derecelendirildiğinde kontroller burada görünür.",
       "emptyBodyAsk": "Bir makaledeki onay işaretine dokunun veya Mera'dan bir iddiayı kontrol etmesini isteyin. İstediğiniz kontroller burada görünür."
     },
     "visited": {

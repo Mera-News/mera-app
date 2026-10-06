@@ -508,10 +508,6 @@
     "extractedMetadataPlacesLabel": "Tempat",
     "extractedMetadataEntitiesLabel": "Entitas",
     "extractedMetadataCaption": "Diekstrak AI, bukan fakta terverifikasi",
-    "autoCommunityFactCheckTitle": "Cek fakta komunitas otomatis",
-    "autoCommunityFactCheckOn": "Dicari di setiap artikel yang Anda buka",
-    "autoCommunityFactCheckOff": "Dicari hanya saat Anda meminta",
-    "autoCommunityFactCheckDescription": "Cek fakta bersifat bersama. Saat seseorang meminta sebuah berita diperiksa, hasilnya disimpan bersama berita itu dan siapa pun bisa melihatnya. Jika dinyalakan, Mera mencari cek yang sudah ada setiap kali Anda membuka artikel. Jika dibiarkan mati, Mera hanya mencari ketika Anda mengetuk tombol cek fakta, sehingga meminta tetap menjadi pilihan Anda pada satu berita.",
     "loadFailedDescription": "Gagal memuat pengaturan Mera Protocol.",
     "loadFailedTitle": "Gagal Memuat",
     "chooseModel": "Pilih satu model untuk diunduh. Anda dapat menggantinya nanti.",
@@ -2884,9 +2880,6 @@
     },
     "checks": {
       "emptyTitle": "Belum ada pengecekan",
-      "emptyBody": "Minta Mera memeriksa sebuah klaim, atau biarkan Mera memeriksa cerita secara otomatis.",
-      "autoLink": "Aktifkan pengecekan otomatis",
-      "autoOnBody": "Mera memeriksa cerita secara otomatis. Hasil pengecekan muncul di sini saat sebuah klaim dinilai.",
       "emptyBodyAsk": "Ketuk tanda centang pada artikel, atau minta Mera memeriksa sebuah klaim. Pengecekan yang kamu minta akan muncul di sini."
     },
     "visited": {

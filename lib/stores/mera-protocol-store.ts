@@ -59,29 +59,6 @@ interface MeraProtocolState {
   // and displaying it as fact would overclaim.
   showExtractedMetadata: boolean;
 
-  // Auto community fact check — OFF by default, and the default is the point.
-  //
-  // A fact check is cached on our server against the ARTICLE, so one reader's
-  // request is an answer for everybody. Showing it automatically means asking
-  // the server "does this article have a check?" every time an article is
-  // OPENED, which on the suggestion screen is a round trip and on the detail
-  // screen is a field on a query already being made.
-  //
-  // That is a reasonable thing to want and a reasonable thing to decline, so it
-  // is a switch rather than a decision made for the reader. OFF means the
-  // lookup happens only when they tap the fact-check button — a deliberate act
-  // on one article, which is exactly how the privacy policy describes it.
-  //
-  // ABSENT ⇒ OFF, the normal rule. This setting is new and opt-in; nobody has
-  // consented to it yet, and a default that opted everyone in would be the
-  // whole point of the switch, missed.
-  //
-  // It is now the ONLY fact-check switch. The `factCheckEnabled` toggle that
-  // used to sit above it is gone: fact checking is part of the product, not
-  // something to turn on. What remains a choice is not WHETHER checks exist,
-  // but whether Mera goes looking for one on every article opened.
-  autoCommunityFactCheck: boolean;
-
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
   modelState: ModelStateLabel;
@@ -101,7 +78,6 @@ interface MeraProtocolState {
   setWebSearchInChat: (enabled: boolean) => void;
   setDeepInterview: (enabled: boolean) => void;
   setShowExtractedMetadata: (enabled: boolean) => void;
-  setAutoCommunityFactCheck: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -150,7 +126,6 @@ const SETTING_SHOW_EXTRACTED_METADATA = 'mera_show_extracted_metadata';
 // belonged to no longer exists. Anyone who had turned fact checks off now gets
 // them, which is what "part of the product" means.
 const RETIRED_SETTING_FACT_CHECK = 'mera_fact_check';
-const SETTING_AUTO_COMMUNITY_FACT_CHECK = 'mera_auto_community_fact_check';
 /**
  * One-shot marker for the web-search default flip.
  *
@@ -188,10 +163,6 @@ const initialState = {
   webSearchInChat: true,
   deepInterview: false,
   showExtractedMetadata: false,
-  // ON by default. Its twin — the absent branch in `hydrateFromDb` — must
-  // agree, or the hydrate immediately overwrites this on every existing
-  // device and the feature ships dark.
-  autoCommunityFactCheck: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -233,14 +204,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
   setShowExtractedMetadata: (showExtractedMetadata) => {
     set({ showExtractedMetadata });
     setSetting(SETTING_SHOW_EXTRACTED_METADATA, showExtractedMetadata ? 'true' : 'false').catch(() => { });
-  },
-
-  setAutoCommunityFactCheck: (autoCommunityFactCheck: boolean) => {
-    set({ autoCommunityFactCheck });
-    setSetting(
-      SETTING_AUTO_COMMUNITY_FACT_CHECK,
-      autoCommunityFactCheck ? 'true' : 'false',
-    ).catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -294,7 +257,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(SETTING_DEEP_INTERVIEW).catch(() => { });
     deleteSetting(SETTING_SHOW_EXTRACTED_METADATA).catch(() => { });
     deleteSetting(RETIRED_SETTING_FACT_CHECK).catch(() => { });
-    deleteSetting(SETTING_AUTO_COMMUNITY_FACT_CHECK).catch(() => { });
     deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
     deleteSetting(RETIRED_SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
     deleteSetting('e2ee_enabled').catch(() => { });
@@ -311,7 +273,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         webSearchValue,
         deepInterviewValue,
         showExtractedMetadataValue,
-        autoCommunityFactCheckValue,
         webSearchForcedOnValue,
       ] = await Promise.all([
         getSetting(SETTING_PROCESSING_MODE),
@@ -322,7 +283,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         getSetting(SETTING_WEB_SEARCH_IN_CHAT),
         getSetting(SETTING_DEEP_INTERVIEW),
         getSetting(SETTING_SHOW_EXTRACTED_METADATA),
-        getSetting(SETTING_AUTO_COMMUNITY_FACT_CHECK),
         getSetting(SETTING_WEB_SEARCH_FORCED_ON),
       ]);
       // One-shot cleanup: the retired v2 key is never read — the switch starts
@@ -397,11 +357,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (showExtractedMetadataValue === 'false') {
         updates.showExtractedMetadata = false;
       }
-      // Only an explicit 'true' opts in — see the field's comment for why this
-      // does NOT copy the absent ⇒ ON exception directly above it.
-      if (autoCommunityFactCheckValue === 'true') {
-        updates.autoCommunityFactCheck = true;
-      }
       if (Object.keys(updates).length > 0) {
         set(updates);
       }
@@ -433,11 +388,6 @@ export const useDeepInterview = () =>
 export const useShowExtractedMetadata = () =>
   useMeraProtocolStore((state) => state.showExtractedMetadata);
 
-
-/** Whether to look up a community fact check on every article open, rather than
- *  only when the reader taps the button. Opt-in; see the field's comment. */
-export const useAutoCommunityFactCheck = () =>
-  useMeraProtocolStore((state) => state.autoCommunityFactCheck);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

@@ -594,46 +594,14 @@ describe('useMeraProtocolStore', () => {
         ).toBeUndefined();
     });
 
-    it('autoCommunityFactCheck starts OFF', () => {
-        useMeraProtocolStore.getState().reset();
-        expect(useMeraProtocolStore.getState().autoCommunityFactCheck).toBe(false);
-    });
-
-    it('setAutoCommunityFactCheck persists like the other toggles', async () => {
-        useMeraProtocolStore.getState().setAutoCommunityFactCheck(true);
-        expect(useMeraProtocolStore.getState().autoCommunityFactCheck).toBe(true);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith(
-            'mera_auto_community_fact_check',
-            'true',
-        );
-
-        useMeraProtocolStore.getState().setAutoCommunityFactCheck(false);
-        expect(useMeraProtocolStore.getState().autoCommunityFactCheck).toBe(false);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith(
-            'mera_auto_community_fact_check',
-            'false',
-        );
-    });
-
-    it('hydrates OFF from an absent row, and only "true" opts in', async () => {
-        // THE ONE THAT MATTERS. If absent ever read as ON, every existing
-        // install would silently start looking up a fact check on every article
-        // open without anyone choosing it — which is the exact thing the switch
-        // exists to let people decline.
-        useMeraProtocolStore.getState().reset();
-        mockGetSetting.mockImplementation(async (key: string) =>
-            key === 'mera_auto_community_fact_check' ? null : null,
-        );
+    // The automatic fact-check switch is gone (navx fact-check removal). Its
+    // `mera_auto_community_fact_check` row is left on devices: nothing reads it.
+    it('carries no automatic fact-check field', async () => {
         await useMeraProtocolStore.getState().hydrateFromDb();
-        expect(useMeraProtocolStore.getState().autoCommunityFactCheck).toBe(false);
-
-        mockGetSetting.mockImplementation(async (key: string) =>
-            key === 'mera_auto_community_fact_check' ? 'true' : null,
-        );
-        await useMeraProtocolStore.getState().hydrateFromDb();
-        expect(useMeraProtocolStore.getState().autoCommunityFactCheck).toBe(true);
+        expect(
+            (useMeraProtocolStore.getState() as unknown as Record<string, unknown>).autoCommunityFactCheck,
+        ).toBeUndefined();
+        expect(mockGetSetting).not.toHaveBeenCalledWith('mera_auto_community_fact_check');
     });
 
     it('reset() clears the fact-check setting row', () => {

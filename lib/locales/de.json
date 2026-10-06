@@ -508,10 +508,6 @@
     "extractedMetadataPlacesLabel": "Orte",
     "extractedMetadataEntitiesLabel": "Entitäten",
     "extractedMetadataCaption": "Von KI extrahiert, nicht verifizierte Fakten",
-    "autoCommunityFactCheckTitle": "Automatischer Community-Faktencheck",
-    "autoCommunityFactCheckOn": "Wird bei jedem geöffneten Artikel abgefragt",
-    "autoCommunityFactCheckOff": "Wird nur auf Tippen abgefragt",
-    "autoCommunityFactCheckDescription": "Faktenchecks werden geteilt. Wenn eine Person einen Check für eine Meldung anfordert, wird das Ergebnis bei dieser Meldung gespeichert und alle können es sehen. Ist dies aktiviert, sucht Mera bei jedem geöffneten Artikel nach einem vorhandenen Check. Bleibt es aus, sucht Mera nur, wenn du auf die Faktencheck-Schaltfläche tippst, sodass das Nachfragen eine bewusste Entscheidung für eine einzelne Meldung bleibt.",
     "loadFailedDescription": "Die Mera Protocol-Einstellungen konnten nicht geladen werden.",
     "loadFailedTitle": "Laden fehlgeschlagen",
     "chooseModel": "Wählen Sie ein Modell zum Herunterladen. Sie können später wechseln.",
@@ -2887,9 +2883,6 @@
     },
     "checks": {
       "emptyTitle": "Noch keine Prüfungen",
-      "emptyBody": "Bitte Mera, eine Behauptung zu prüfen, oder lass Mera Geschichten automatisch prüfen.",
-      "autoLink": "Automatische Prüfungen aktivieren",
-      "autoOnBody": "Mera prüft Geschichten automatisch. Prüfungen erscheinen hier, sobald eine Behauptung bewertet wurde.",
       "emptyBodyAsk": "Tippe bei einem Artikel auf das Häkchen oder bitte Mera, eine Behauptung zu prüfen. Prüfungen, die du anforderst, erscheinen hier."
     },
     "visited": {

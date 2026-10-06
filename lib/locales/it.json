@@ -508,10 +508,6 @@
     "extractedMetadataPlacesLabel": "Luoghi",
     "extractedMetadataEntitiesLabel": "Entità",
     "extractedMetadataCaption": "Estratto da AI, non è un fatto verificato",
-    "autoCommunityFactCheckTitle": "Verifica della community automatica",
-    "autoCommunityFactCheckOn": "Cercata a ogni articolo aperto",
-    "autoCommunityFactCheckOff": "Cercata solo quando la chiedi",
-    "autoCommunityFactCheckDescription": "Le verifiche sono condivise. Quando qualcuno chiede di verificare una notizia, il risultato resta legato a quella notizia e chiunque può vederlo. Con questa opzione attiva, Mera cerca una verifica esistente ogni volta che apri un articolo. Lasciandola spenta, Mera cerca solo quando tocchi il pulsante di verifica, così chiedere resta una scelta che fai su una notizia alla volta.",
     "loadFailedDescription": "Impossibile caricare le impostazioni di Mera Protocol.",
     "loadFailedTitle": "Caricamento non riuscito",
     "chooseModel": "Scegli un modello da scaricare. Potrai cambiarlo in seguito.",
@@ -2887,9 +2883,6 @@
     },
     "checks": {
       "emptyTitle": "Ancora nessuna verifica",
-      "emptyBody": "Chiedi a Mera di verificare un'affermazione, oppure lascia che verifichi le storie in automatico.",
-      "autoLink": "Attiva le verifiche automatiche",
-      "autoOnBody": "Mera verifica le storie in automatico. Le verifiche compaiono qui quando un'affermazione riceve una valutazione.",
       "emptyBodyAsk": "Tocca il segno di spunta su un articolo oppure chiedi a Mera di verificare un'affermazione. Le verifiche che richiedi compaiono qui."
     },
     "visited": {

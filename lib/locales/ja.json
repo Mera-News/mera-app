@@ -508,10 +508,6 @@
     "extractedMetadataPlacesLabel": "場所",
     "extractedMetadataEntitiesLabel": "エンティティ",
     "extractedMetadataCaption": "AI抽出、検証済みの事実ではありません",
-    "autoCommunityFactCheckTitle": "コミュニティのファクトチェックを自動取得",
-    "autoCommunityFactCheckOn": "記事を開くたびに照会します",
-    "autoCommunityFactCheckOff": "求めたときだけ照会します",
-    "autoCommunityFactCheckDescription": "ファクトチェックは共有されます。誰かが記事の確認を依頼すると、その結果は記事に紐づいて保存され、誰でも見られます。オンにすると、記事を開くたびに Mera が既存のチェックを探します。オフのままなら、ファクトチェックのボタンを押したときだけ探すので、依頼はあくまで記事ごとにご自身で選ぶ行為のままです。",
     "loadFailedDescription": "Mera Protocol の設定を読み込めませんでした。",
     "loadFailedTitle": "読み込みに失敗しました",
     "chooseModel": "ダウンロードするモデルを1つ選んでください。後で切り替えられます。",
@@ -2884,9 +2880,6 @@
     },
     "checks": {
       "emptyTitle": "ファクトチェックはまだありません",
-      "emptyBody": "Meraに主張のチェックを頼むか、Meraにストーリーを自動でチェックしてもらいましょう。",
-      "autoLink": "自動チェックをオンにする",
-      "autoOnBody": "Meraはストーリーを自動でチェックします。主張に評価が付くと、ここに表示されます。",
       "emptyBodyAsk": "記事のチェックマークをタップするか、Meraに主張のチェックを頼んでみましょう。頼んだチェックはここに表示されます。"
     },
     "visited": {
