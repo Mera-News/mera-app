@@ -31,6 +31,7 @@ const TAB_SCREENS: [string, string, string][] = [
     ['facts', 'you', 'facts'],
     ['locations', 'you', 'locations'],
     ['publication-preferences', 'you', 'sources'],
+    ['sources', 'you', 'sources'],
     ['hygiene-review', 'you', 'hygiene-review'],
     ['not-interested', 'you', 'not-interested'],
     ['persona-audit', 'you', 'activity'],
