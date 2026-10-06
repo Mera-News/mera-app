@@ -3,6 +3,11 @@
 // motion or (Reduce Motion) a still ring, and a tap opens the page's chat.
 
 jest.mock('react-native-gesture-handler', () => require('./gesture-recorder').mock);
+// setMeraCorner persists through the setting-service; keep the database out.
+jest.mock('@/lib/database/services/setting-service', () => ({
+  getSetting: async () => null,
+  setSetting: async () => undefined,
+}));
 let mockReduce = false;
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
@@ -47,6 +52,7 @@ jest.mock('react-i18next', () => ({
 
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { tap } from './gesture-recorder';
+import { useMeraCornerStore } from '../corner';
 import React from 'react';
 import { AccessibilityInfo, StyleSheet } from 'react-native';
 import { useCurrentSurfaceStore } from '@/components/custom/nav/current-surface';
@@ -220,4 +226,34 @@ it('the tooltip steps aside while the button is dragged', async () => {
   render(<MeraButton surface="feed" page="feed" mode="idle" dragging />);
   await flush();
   expect(screen.queryByTestId('mera-button-tooltip', { includeHiddenElements: true })).toBeNull();
+});
+
+describe('moving it with a screen reader', () => {
+  beforeEach(() => useMeraCornerStore.setState({ corner: 'br' }));
+
+  it('offers the three other corners, named', async () => {
+    render(<MeraButton surface="feed" page="feed" mode="idle" />);
+    await flush();
+    const actions = screen.getByTestId('mera-button').props.accessibilityActions;
+    expect(actions).toEqual([
+      { name: 'activate' },
+      { name: 'move-tl', label: 'meraButton.moveTopLeft' },
+      { name: 'move-tr', label: 'meraButton.moveTopRight' },
+      { name: 'move-bl', label: 'meraButton.moveBottomLeft' },
+    ]);
+  });
+
+  it('an action moves it, and the list then leaves out the new corner', async () => {
+    render(<MeraButton surface="feed" page="feed" mode="idle" />);
+    await flush();
+    fireEvent(screen.getByTestId('mera-button'), 'accessibilityAction', {
+      nativeEvent: { actionName: 'move-tl' },
+    });
+    expect(useMeraCornerStore.getState().corner).toBe('tl');
+    const names = screen
+      .getByTestId('mera-button')
+      .props.accessibilityActions.map((a: { name: string }) => a.name);
+    expect(names).toEqual(['activate', 'move-tr', 'move-bl', 'move-br']);
+    expect(useFloatingChatStore.getState().isExpanded).toBe(false);
+  });
 });

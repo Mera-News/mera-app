@@ -24,7 +24,7 @@ import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector, type PanGesture } from 'react-native-gesture-handler';
 import Animated, { FadeOut, useReducedMotion } from 'react-native-reanimated';
-import { DRAG_ACTIVATION } from './corner';
+import { DRAG_ACTIVATION, MERA_CORNERS, setMeraCorner, useMeraCorner, type MeraCorner } from './corner';
 import { chatContextFor, hintKeys, interestFactId, statusKey } from './mera-pages';
 import { openMeraChat } from './open-mera-chat';
 import { tooltipRemainingMs } from './tooltip-visit';
@@ -156,6 +156,19 @@ const MeraButton: React.FC<MeraButtonProps> = ({
     return pan ? Gesture.Exclusive(pan, tap) : tap;
   }, [pan, onPress]);
 
+  // Screen readers move it with custom actions (the current corner left out).
+  const corner = useMeraCorner();
+  const moveLabels: Record<MeraCorner, string> = {
+    tl: t('meraButton.moveTopLeft'),
+    tr: t('meraButton.moveTopRight'),
+    bl: t('meraButton.moveBottomLeft'),
+    br: t('meraButton.moveBottomRight'),
+  };
+  const actions = [
+    { name: 'activate' },
+    ...MERA_CORNERS.filter((c) => c !== corner).map((c) => ({ name: `move-${c}`, label: moveLabels[c] })),
+  ];
+
   const pointsLeft = tooltipSide === 'right';
   return (
     <View style={styles.box} pointerEvents="box-none">
@@ -190,9 +203,11 @@ const MeraButton: React.FC<MeraButtonProps> = ({
             hint !== null ? tKey('meraButton.a11yLabel', { hint }) : t('floatingChat.title')
           }
           accessibilityValue={{ text: tKey(statusKey(mode)) }}
-          accessibilityActions={[{ name: 'activate' }]}
+          accessibilityActions={actions}
           onAccessibilityAction={(e) => {
-            if (e.nativeEvent.actionName === 'activate') void onPress();
+            const name = e.nativeEvent.actionName;
+            if (name === 'activate') void onPress();
+            else if (name.startsWith('move-')) setMeraCorner(name.slice(5) as MeraCorner);
           }}
           hitSlop={4}
           style={styles.circle}
