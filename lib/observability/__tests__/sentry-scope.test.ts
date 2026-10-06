@@ -128,7 +128,9 @@ describe('sentry-scope', () => {
         app_language: 'en',
         onboarding_stage: 'COMPLETE',
         processing_mode: 'CLOUD',
-        relevance_v4: 'true',
+        // The EFFECTIVE value (harness defaults, v4 OFF), not the store's stale
+        // `relevanceV4: true` above: the removed setting must not be reported.
+        relevance_v4: 'false',
         model_state: 'not_downloaded',
         network_connected: 'true',
         server_reachable: 'false',

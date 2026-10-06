@@ -99,73 +99,51 @@ describe('loadPersonaScoringContext — persona snapshot seam', () => {
   });
 });
 
-// effectiveHarnessConfig is the composition root for BOTH env-bound and runtime
-// config. `lib/news-harness/**` is RN-free and must never read the store, and
-// the calibration-overrides layer is a closed NUMERIC allowlist, so this is the
-// only place a boolean routing switch can enter the config.
-describe('effectiveHarnessConfig — the relevance-v4 runtime switch', () => {
+// Relevance v4 is owner-controlled: its two tag features come only from
+// DEFAULT_HARNESS_CONFIG. The store's `relevanceV4` field is stale per-device
+// state from the removed settings row and must change nothing.
+describe('effectiveHarnessConfig — relevance v4 comes from the harness defaults only', () => {
   beforeEach(() => {
     mockStoreState.relevanceV4 = false;
     (getScoringOverrides as jest.Mock).mockResolvedValue({});
   });
 
-  it('flag OFF: hands back the DEFAULT_HARNESS_CONFIG REFERENCE (no allocation)', async () => {
-    // Reference equality, not deep equality — the whole point of the fast path.
-    // A copy here would be behaviourally identical but silently allocate on
-    // every scoring batch, and it is what harness-config-base.test.ts pins.
+  it('hands back the DEFAULT_HARNESS_CONFIG REFERENCE when nothing overrides it (no allocation)', async () => {
+    // Reference equality, not deep equality: a copy would silently allocate
+    // on every scoring batch, and it is what harness-config-base.test.ts pins.
     const cfg = await effectiveHarnessConfig();
     expect(cfg).toBe(DEFAULT_HARNESS_CONFIG);
+  });
+
+  it('a stored ON from the removed settings row no longer turns v4 on', async () => {
+    mockStoreState.relevanceV4 = true;
+    const cfg = await effectiveHarnessConfig();
+    expect(cfg).toBe(DEFAULT_HARNESS_CONFIG);
+    expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(
+      DEFAULT_HARNESS_CONFIG.articlePipeline.legacyTagPromptEnabled,
+    );
+    expect(cfg.articlePipeline.legacyTagReasonGateEnabled).toBe(
+      DEFAULT_HARNESS_CONFIG.articlePipeline.legacyTagReasonGateEnabled,
+    );
+    // And today's defaults ship v4 OFF.
     expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(false);
     expect(cfg.articlePipeline.legacyTagReasonGateEnabled).toBe(false);
   });
 
-  it('flag ON: BOTH tag features on — one switch, two flags', async () => {
-    mockStoreState.relevanceV4 = true;
-    const cfg = await effectiveHarnessConfig();
-    // They were measured together and ship together. A build where the toggle
-    // moved only one of them would be a configuration nobody measured.
-    expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(true);
-    expect(cfg.articlePipeline.legacyTagReasonGateEnabled).toBe(true);
-  });
-
-  it('flag ON: the whole scoringEngine is UNTOUCHED', async () => {
-    mockStoreState.relevanceV4 = true;
-    const cfg = await effectiveHarnessConfig();
-    // v4 moves the PROMPT, never the engine. The scoringEngine slice must pass
-    // through BY REFERENCE so the calibration fast path below short-circuits —
-    // and so a future edit cannot couple the scoring-prompt toggle to what a
-    // user's suppression filters match.
-    expect(cfg.scoringEngine).toBe(DEFAULT_HARNESS_CONFIG.scoringEngine);
-    expect(cfg.topicGen).toBe(DEFAULT_HARNESS_CONFIG.topicGen);
-  });
-
-  it('flag ON: nothing in articlePipeline moved except the two v4 flags', async () => {
-    mockStoreState.relevanceV4 = true;
-    const cfg = await effectiveHarnessConfig();
-    expect({
-      ...cfg.articlePipeline,
-      legacyTagPromptEnabled: false,
-      legacyTagReasonGateEnabled: false,
-    }).toEqual(DEFAULT_HARNESS_CONFIG.articlePipeline);
-  });
-
-  it('flag ON still layers the calibration overrides on top', async () => {
-    mockStoreState.relevanceV4 = true;
+  it('layers the calibration overrides on the engine only', async () => {
     (getScoringOverrides as jest.Mock).mockResolvedValue({ W_TOPIC: 0.1 });
     const cfg = await effectiveHarnessConfig();
-    expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(true);
+    expect(cfg.articlePipeline).toBe(DEFAULT_HARNESS_CONFIG.articlePipeline);
     expect(cfg.scoringEngine.W_TOPIC).toBeCloseTo(
       DEFAULT_HARNESS_CONFIG.scoringEngine.W_TOPIC * 1.1,
       6,
     );
   });
 
-  it('FAILS OPEN to DEFAULT_HARNESS_CONFIG (v4 off) when the overrides read throws', async () => {
-    mockStoreState.relevanceV4 = true;
+  it('FAILS OPEN to DEFAULT_HARNESS_CONFIG when the overrides read throws', async () => {
     (getScoringOverrides as jest.Mock).mockRejectedValue(new Error('db down'));
     const cfg = await effectiveHarnessConfig();
     expect(cfg).toBe(DEFAULT_HARNESS_CONFIG);
-    expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(false);
   });
 });
 

@@ -1,8 +1,8 @@
 // ExtractedMetadataPanel — the transparency panel for the server's
 // machine-extracted tags (places, entities, event type). Three properties
 // pinned here because nothing else enforces them:
-//   • toggle OFF renders nothing, regardless of how much data is present
-//   • toggle ON but every field empty/absent renders nothing (absence is
+//   • flag OFF renders nothing, regardless of how much data is present
+//   • flag ON but every field empty/absent renders nothing (absence is
 //     normal, not an error state — never an empty box)
 //   • `event_type` is humanized from its raw token (no per-value lookup)
 /* eslint-disable @typescript-eslint/no-require-imports */
@@ -14,9 +14,12 @@ jest.mock('react-i18next', () => ({
     }),
 }));
 
-const mockUseShowExtractedMetadata = jest.fn();
-jest.mock('@/lib/stores/mera-protocol-store', () => ({
-    useShowExtractedMetadata: () => mockUseShowExtractedMetadata(),
+// The dev-only env flag (lib/config/endpoints.ts), read at render time.
+let mockShowExtractedMetadata = false;
+jest.mock('@/lib/config/endpoints', () => ({
+    get SHOW_EXTRACTED_METADATA() {
+        return mockShowExtractedMetadata;
+    },
 }));
 
 jest.mock('@/components/ui/box', () => {
@@ -50,7 +53,7 @@ describe('ExtractedMetadataPanel', () => {
     });
 
     it('renders nothing when the toggle is off, even with full data', () => {
-        mockUseShowExtractedMetadata.mockReturnValue(false);
+        mockShowExtractedMetadata = false;
         const { queryByTestId } = render(
             <ExtractedMetadataPanel
                 eventType="election"
@@ -62,7 +65,7 @@ describe('ExtractedMetadataPanel', () => {
     });
 
     it('renders nothing when the toggle is on but every field is empty', () => {
-        mockUseShowExtractedMetadata.mockReturnValue(true);
+        mockShowExtractedMetadata = true;
         const { queryByTestId } = render(
             <ExtractedMetadataPanel eventType={null} entities={null} geoTags={null} />,
         );
@@ -70,7 +73,7 @@ describe('ExtractedMetadataPanel', () => {
     });
 
     it('renders nothing when the toggle is on and fields are present but empty arrays/blank strings', () => {
-        mockUseShowExtractedMetadata.mockReturnValue(true);
+        mockShowExtractedMetadata = true;
         const { queryByTestId } = render(
             <ExtractedMetadataPanel
                 eventType={null}
@@ -82,7 +85,7 @@ describe('ExtractedMetadataPanel', () => {
     });
 
     it('renders the panel with a humanized event type when only event_type is present', () => {
-        mockUseShowExtractedMetadata.mockReturnValue(true);
+        mockShowExtractedMetadata = true;
         const { getByTestId, getByText } = render(
             <ExtractedMetadataPanel eventType="science_tech" entities={null} geoTags={null} />,
         );
@@ -91,7 +94,7 @@ describe('ExtractedMetadataPanel', () => {
     });
 
     it('renders places joined from geo tags, filtering blank fields', () => {
-        mockUseShowExtractedMetadata.mockReturnValue(true);
+        mockShowExtractedMetadata = true;
         const { getByText } = render(
             <ExtractedMetadataPanel
                 eventType={null}
@@ -106,7 +109,7 @@ describe('ExtractedMetadataPanel', () => {
     });
 
     it('renders a supranational-only geo tag as a human place name, not the raw token', () => {
-        mockUseShowExtractedMetadata.mockReturnValue(true);
+        mockShowExtractedMetadata = true;
         const { getByText, queryByText } = render(
             <ExtractedMetadataPanel
                 eventType={null}
@@ -121,7 +124,7 @@ describe('ExtractedMetadataPanel', () => {
     it('renders EU (two letters, not a country) as its human name, not the raw code', () => {
         // EU is exactly two characters, the same length as every real ISO
         // alpha-2 code — a length-based shortcut would leave it as raw "EU".
-        mockUseShowExtractedMetadata.mockReturnValue(true);
+        mockShowExtractedMetadata = true;
         const { getByText, queryByText } = render(
             <ExtractedMetadataPanel
                 eventType={null}
@@ -134,7 +137,7 @@ describe('ExtractedMetadataPanel', () => {
     });
 
     it('renders a mixed list — real country codes raw, supranational codes humanized', () => {
-        mockUseShowExtractedMetadata.mockReturnValue(true);
+        mockShowExtractedMetadata = true;
         const { getByText } = render(
             <ExtractedMetadataPanel
                 eventType={null}
@@ -149,7 +152,7 @@ describe('ExtractedMetadataPanel', () => {
     });
 
     it('renders entities joined and filters blank entries', () => {
-        mockUseShowExtractedMetadata.mockReturnValue(true);
+        mockShowExtractedMetadata = true;
         const { getByText } = render(
             <ExtractedMetadataPanel
                 eventType={null}
@@ -161,7 +164,7 @@ describe('ExtractedMetadataPanel', () => {
     });
 
     it('always renders the provenance caption when the panel renders', () => {
-        mockUseShowExtractedMetadata.mockReturnValue(true);
+        mockShowExtractedMetadata = true;
         const { getByText } = render(
             <ExtractedMetadataPanel eventType="weather" entities={null} geoTags={null} />,
         );

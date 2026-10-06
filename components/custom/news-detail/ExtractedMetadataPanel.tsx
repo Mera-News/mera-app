@@ -2,7 +2,7 @@ import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useShowExtractedMetadata } from '@/lib/stores/mera-protocol-store';
+import { SHOW_EXTRACTED_METADATA } from '@/lib/config/endpoints';
 import { supranationalName } from '@/lib/news-harness/scoring-engine';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
@@ -54,10 +54,12 @@ const formatPlace = (tag: ExtractedMetadataGeoTag): string | null => {
 
 /**
  * Transparency panel for the server's machine-extracted tags on the open
- * story — places, named entities, event type. Gated behind the Mera Protocol
- * "show extracted metadata" toggle (default OFF) via `useShowExtractedMetadata`.
+ * story — places, named entities, event type. Readers never see it (owner
+ * decision): it shows only in a dev bundle with
+ * EXPO_PUBLIC_SHOW_EXTRACTED_METADATA_IN_DEV=true (`SHOW_EXTRACTED_METADATA`,
+ * lib/config/endpoints.ts). There is no user setting.
  *
- * Renders `null` whenever the toggle is off OR every field is empty — absence
+ * Renders `null` whenever the flag is off OR every field is empty — absence
  * is the normal case here (measured coverage on real data: event_type ~100%,
  * entities ~77%, geo_tags ~71%), never an error state, so there is no empty
  * placeholder to fall back to.
@@ -72,9 +74,7 @@ const ExtractedMetadataPanel: React.FC<ExtractedMetadataPanelProps> = ({
     geoTags,
 }) => {
     const { t } = useTranslation();
-    const enabled = useShowExtractedMetadata();
-
-    if (!enabled) return null;
+    if (!SHOW_EXTRACTED_METADATA) return null;
 
     const places = (geoTags ?? [])
         .map(formatPlace)

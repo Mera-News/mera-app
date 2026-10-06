@@ -36,14 +36,11 @@ import {
 } from '@/lib/mera-protocol-toolkit/core/inference-stats';
 import type { SystemRequirementsResult } from '@/lib/mera-protocol-toolkit/types';
 import {
-    useDeepInterview,
     useDownloadProgress,
     useMeraProtocolStore,
     useModelState as useModelStateSelector,
     useProcessingMode,
-    useRelevanceV4,
     useSelectedModelId,
-    useShowExtractedMetadata,
     useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
 import { Switch } from '@/components/ui/switch';
@@ -94,10 +91,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const modelState = useModelStateSelector();
     const downloadProgress = useDownloadProgress();
     const store = useMeraProtocolStore();
-    const relevanceV4 = useRelevanceV4();
     const webSearchInChat = useWebSearchInChat();
-    const deepInterview = useDeepInterview();
-    const showExtractedMetadata = useShowExtractedMetadata();
 
     const currentModel = catalogEntry(selectedModelId);
     const inferenceStats = useInferenceStats();
@@ -765,41 +759,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </Box>
             )}
 
-            {/* Relevance scoring v4 toggle — one switch, two measured features
-                on the classic path (tag metadata in the scoring prompt + the
-                low-value-event reason gate). This is the same persisted setting
-                the retired v3 beta used; see SETTING_RELEVANCE_V4. */}
-            <Box className="px-5 mb-6" testID="mera-protocol-relevance-v4">
-                <HStack space="md" className="items-center justify-between">
-                    <HStack space="md" className="items-center flex-1">
-                        <MaterialIcons
-                            name="tune"
-                            size={24}
-                            color={relevanceV4 ? "#10b981" : "#9ca3af"}
-                        />
-                        <VStack className="flex-1">
-                            <Text className="text-white text-base font-semibold">
-                                {t('meraProtocol.relevanceV4Title')}
-                            </Text>
-                            <Text className="text-typography-500 text-sm mt-0.5">
-                                {relevanceV4
-                                    ? t('meraProtocol.relevanceV4On')
-                                    : t('meraProtocol.relevanceV4Off')}
-                            </Text>
-                        </VStack>
-                    </HStack>
-                    <Switch
-                        value={relevanceV4}
-                        onToggle={() => store.setRelevanceV4(!relevanceV4)}
-                        size="md"
-                        testID="mera-protocol-relevance-v4-switch"
-                    />
-                </HStack>
-                <Text className="text-typography-500 text-xs mt-2">
-                    {t('meraProtocol.relevanceV4Description')}
-                </Text>
-            </Box>
-
             {/* Web search in chat (item 13) — ON by default since the
                 web-search wave, and forced on once for every existing device
                 (see mera-protocol-store's SETTING_WEB_SEARCH_FORCED_ON). The
@@ -845,76 +804,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </HStack>
                 <Text className="text-typography-500 text-xs mt-2">
                     {t('meraProtocol.webSearchDescription')}
-                </Text>
-            </Box>
-
-            {/* Deeper questions (item 17) — OFF by default. The copy's job is to
-                say why Mera can ask questions this personal at all: the answers
-                are facts, and facts never leave the device. */}
-            <Box className="px-5 mb-6" testID="mera-protocol-deep-interview">
-                <HStack space="md" className="items-center justify-between">
-                    <HStack space="md" className="items-center flex-1">
-                        <MaterialIcons
-                            name="psychology"
-                            size={24}
-                            color={deepInterview ? "#10b981" : "#9ca3af"}
-                        />
-                        <VStack className="flex-1">
-                            <Text className="text-white text-base font-semibold">
-                                {t('meraProtocol.deepInterviewTitle')}
-                            </Text>
-                            <Text className="text-typography-500 text-sm mt-0.5">
-                                {deepInterview
-                                    ? t('meraProtocol.deepInterviewOn')
-                                    : t('meraProtocol.deepInterviewOff')}
-                            </Text>
-                        </VStack>
-                    </HStack>
-                    <Switch
-                        value={deepInterview}
-                        onToggle={() => store.setDeepInterview(!deepInterview)}
-                        size="md"
-                        testID="mera-protocol-deep-interview-switch"
-                    />
-                </HStack>
-                <Text className="text-typography-500 text-xs mt-2">
-                    {t('meraProtocol.deepInterviewDescription')}
-                </Text>
-            </Box>
-
-            {/* Show extracted metadata — OFF by default. This metadata is
-                machine-extracted and measurably imperfect, so the toggle's own
-                description says plainly what it shows and that it is an AI
-                read of the story, not a verified fact — the detail-screen
-                panel repeats that provenance caption next to the data itself. */}
-            <Box className="px-5 mb-6" testID="mera-protocol-extracted-metadata">
-                <HStack space="md" className="items-center justify-between">
-                    <HStack space="md" className="items-center flex-1">
-                        <MaterialIcons
-                            name="label-outline"
-                            size={24}
-                            color={showExtractedMetadata ? "#10b981" : "#9ca3af"}
-                        />
-                        <VStack className="flex-1">
-                            <Text className="text-white text-base font-semibold">
-                                {t('meraProtocol.extractedMetadataTitle')}
-                            </Text>
-                            <Text className="text-typography-500 text-sm mt-0.5">
-                                {showExtractedMetadata
-                                    ? t('meraProtocol.extractedMetadataOn')
-                                    : t('meraProtocol.extractedMetadataOff')}
-                            </Text>
-                        </VStack>
-                    </HStack>
-                    <Switch
-                        value={showExtractedMetadata}
-                        onToggle={() => store.setShowExtractedMetadata(!showExtractedMetadata)}
-                        size="md"
-                        testID="mera-protocol-extracted-metadata-switch"
-                    />
-                </HStack>
-                <Text className="text-typography-500 text-xs mt-2">
-                    {t('meraProtocol.extractedMetadataDescription')}
                 </Text>
             </Box>
 

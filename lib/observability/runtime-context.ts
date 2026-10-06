@@ -12,6 +12,7 @@
 // Every read is non-reactive `getState()` — these run at event time and on
 // store-change callbacks, never inside a React render.
 
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
@@ -48,7 +49,7 @@ export interface RuntimeContext {
 export function getRuntimeContext(): RuntimeContext {
   const { appLanguage } = useAppLanguageStore.getState();
   const { tier, serverTier } = useSubscriptionStore.getState();
-  const { processingMode, relevanceV4, modelState } =
+  const { processingMode, modelState } =
     useMeraProtocolStore.getState();
   const { isConnected, serverReachable } = useNetworkStore.getState();
   const { userPersona } = useUserStore.getState();
@@ -60,7 +61,11 @@ export function getRuntimeContext(): RuntimeContext {
     // Account progress, owned by the server — not a persona-derived value.
     onboarding_stage: userPersona?.onboardingStage ?? 'unknown',
     processing_mode: processingMode,
-    relevance_v4: relevanceV4,
+    // The EFFECTIVE value: v4 comes only from the harness defaults (owner
+    // controlled), never from the store's stale per-device field.
+    relevance_v4:
+      DEFAULT_HARNESS_CONFIG.articlePipeline.legacyTagPromptEnabled &&
+      DEFAULT_HARNESS_CONFIG.articlePipeline.legacyTagReasonGateEnabled,
     model_state: modelState,
     network_connected: isConnected,
     server_reachable: serverReachable,

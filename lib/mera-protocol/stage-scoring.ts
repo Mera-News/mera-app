@@ -341,50 +341,18 @@ async function loadAllFactStatements(): Promise<string[]> {
  * SAME base reference, so we hand back DEFAULT_HARNESS_CONFIG untouched (no
  * allocation). Any read failure fail-opens to the base config.
  *
-
- * It is ALSO where the RUNTIME `relevanceV4` switch is layered in (the settings
- * toggle), for the same reason: `lib/news-harness/**` is RN-free and must never
- * import the store, and the calibration-overrides layer cannot carry a boolean
- * (`applyScoringOverrides` filters on a closed numeric allowlist and applies
- * `base × (1 + delta)`).
- *
- * v4 IS THE LEGACY PATH PLUS TWO MEASURED ARTICLE-TAG FEATURES, and it is
- * layered onto `articlePipeline`, NOT `scoringEngine`:
- *   - `legacyTagPromptEnabled` — the tag block in the pass-1 batch prompt;
- *   - `legacyTagReasonGateEnabled` — skip (and demote) pass-2 reason calls for
- *     the low-value event types.
- * ONE switch drives both: they were measured together and ship together.
- *
- * v4 moves the PROMPT only; the engine is untouched, so `scoringMode` is
- * bit-for-bit identical with the toggle on or off.
- *
- * (Retired: the relevanceV2 math-authoritative branch; the relevanceV3
- * single-pass two-axis scorer this toggle used to select; and the
- * `USE_ARTICLE_TAGS` gate, which was never part of v4 and is now deleted —
- * the engine always sees the server's tags.)
- *
- * The store read is INSIDE the try: a hydration/store failure fail-opens to
- * DEFAULT_HARNESS_CONFIG (v4 off), which is today's behaviour.
+ * RELEVANCE v4 IS NOT A USER SETTING (owner decision). Its two article-tag
+ * features (`legacyTagPromptEnabled`, `legacyTagReasonGateEnabled`) come only
+ * from DEFAULT_HARNESS_CONFIG (lib/news-harness/core/config.ts), which the
+ * owner flips, both together, by OTA. The store's `relevanceV4` field and its
+ * `mera_relevance_v3` setting are read NOWHERE: a device that switched v4 on
+ * before the row was removed must not keep it on with no way back.
  */
 export async function effectiveHarnessConfig(): Promise<HarnessConfig> {
   try {
-    const relevanceV4 = useMeraProtocolStore.getState().relevanceV4 === true;
-    // Fast path preserved: with the flag off this is DEFAULT_HARNESS_CONFIG
-    // ITSELF, so a no-override read still returns that exact reference (identity
-    // is asserted by stage-scoring.test.ts and relied on below). Only
-    // `articlePipeline` is spread when it is on, so `base.scoringEngine` keeps
-    // its identity either way and the `eng === base.scoringEngine` tail below
-    // still short-circuits.
-    const base: HarnessConfig = relevanceV4
-      ? {
-          ...DEFAULT_HARNESS_CONFIG,
-          articlePipeline: {
-            ...DEFAULT_HARNESS_CONFIG.articlePipeline,
-            legacyTagPromptEnabled: true,
-            legacyTagReasonGateEnabled: true,
-          },
-        }
-      : DEFAULT_HARNESS_CONFIG;
+    // With no overrides this is DEFAULT_HARNESS_CONFIG ITSELF (identity is
+    // asserted by stage-scoring.test.ts): no allocation per scoring batch.
+    const base: HarnessConfig = DEFAULT_HARNESS_CONFIG;
     const overrides = await getScoringOverrides();
     const eng = applyScoringOverrides(base.scoringEngine, overrides);
     return eng === base.scoringEngine ? base : { ...base, scoringEngine: eng };

@@ -129,3 +129,11 @@ export const GOOGLE_IOS_CLIENT_ID: string =
 // release build runs the gate unconditionally regardless of this value.
 export const FORCE_UPDATE_CHECK_IN_DEV =
   __DEV__ && process.env.EXPO_PUBLIC_FORCE_UPDATE_IN_DEV === 'true';
+
+// Dev-only: show the article screen's extracted metadata panel (places,
+// entities, event type). Owner decision: readers never see it, so there is no
+// user setting; set EXPO_PUBLIC_SHOW_EXTRACTED_METADATA_IN_DEV=true to test it
+// locally. Same `__DEV__ &&` interlock: false in every release bundle (an EAS
+// build or an OTA), whatever the variable was at bundle time.
+export const SHOW_EXTRACTED_METADATA =
+  __DEV__ && process.env.EXPO_PUBLIC_SHOW_EXTRACTED_METADATA_IN_DEV === 'true';

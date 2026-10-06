@@ -99,8 +99,8 @@ jest.mock('@/lib/mera-protocol-toolkit/core/inference-stats', () => ({
 
 let mockMode = 'CLOUD';
 const mockStore = {
-    setProcessingMode: jest.fn(), setModelState: jest.fn(), setRelevanceV4: jest.fn(),
-    setWebSearchInChat: jest.fn(), setDeepInterview: jest.fn(), setShowExtractedMetadata: jest.fn(),
+    setProcessingMode: jest.fn(), setModelState: jest.fn(),
+    setWebSearchInChat: jest.fn(),
     setSelectedModelId: jest.fn(), setDownloadProgress: jest.fn(),
 };
 jest.mock('@/lib/stores/mera-protocol-store', () => ({
@@ -112,10 +112,7 @@ jest.mock('@/lib/stores/mera-protocol-store', () => ({
     useSelectedModelId: () => 'mera-qwen3.5-2b',
     useModelState: () => 'not_downloaded',
     useDownloadProgress: () => 0,
-    useRelevanceV4: () => false,
     useWebSearchInChat: () => true,
-    useDeepInterview: () => false,
-    useShowExtractedMetadata: () => false,
 }));
 
 let mockStoredToggle = true;
@@ -180,7 +177,19 @@ describe('Background refresh row', () => {
 
     it('is hidden during onboarding, which reuses this screen', async () => {
         const { queryByTestId } = render(<MeraProtocolSettingsScreen isOnboarding onBack={jest.fn()} />);
-        await waitFor(() => expect(queryByTestId('mera-protocol-relevance-v4')).toBeTruthy());
+        await waitFor(() => expect(queryByTestId('mera-protocol-web-search')).toBeTruthy());
         expect(queryByTestId('mera-protocol-bg-refresh')).toBeNull();
+    });
+});
+
+// Owner-controlled, never a user switch: v4 comes from the harness defaults,
+// deeper questions are always on, extracted metadata is a dev-only env flag.
+describe('rows the owner controls', () => {
+    it('shows no relevance v4, deeper questions or extracted metadata row', async () => {
+        const { queryByTestId } = await renderSettings();
+        expect(queryByTestId('mera-protocol-relevance-v4')).toBeNull();
+        expect(queryByTestId('mera-protocol-deep-interview')).toBeNull();
+        expect(queryByTestId('mera-protocol-extracted-metadata')).toBeNull();
+        expect(queryByTestId('mera-protocol-web-search')).toBeTruthy();
     });
 });
