@@ -49,3 +49,38 @@ export function useTabBarClearance(): number {
   const insets = useSafeAreaInsets();
   return tabBarClearance(Platform.OS, insets.bottom);
 }
+
+/** The Mera button's diameter (L6 mounts it once per tab, beside the Stack). */
+export const MERA_BUTTON_SIZE = 62;
+/** Gap between the tab bar's top edge and the button's bottom edge. 13 until
+ *  spike 3 measures it on iOS 26 and Android. */
+export const MERA_BUTTON_BAR_GAP = 13;
+/** Clear space between a list's last item and the button's top edge. */
+export const LIST_END_CONTENT_GAP = 12;
+/** What every list ends with ABOVE the tab bar, so nothing sits under the
+ *  button. Derived, never a literal: the 172pt in the design is this plus the
+ *  bar, measured from the screen bottom on iOS (inset 85 already includes the
+ *  bar there; on Android the content area ends at the bar). */
+export const LIST_END_RESERVE = MERA_BUTTON_BAR_GAP + MERA_BUTTON_SIZE + LIST_END_CONTENT_GAP;
+
+/** List-end padding for a page inside a tab. Pure, for both platforms. */
+export function listEndClearance(os: string, insetsBottom: number): number {
+  return tabBarClearance(os, insetsBottom) + LIST_END_RESERVE;
+}
+
+/** `listEndClearance` for the current platform and tab insets. */
+export function useListEndClearance(): number {
+  const insets = useSafeAreaInsets();
+  return listEndClearance(Platform.OS, insets.bottom);
+}
+
+/** The Mera button's bottom offset inside a tab (its parent ends where the
+ *  tab's content ends). */
+export function meraButtonBottom(os: string, insetsBottom: number): number {
+  return tabBarClearance(os, insetsBottom) + MERA_BUTTON_BAR_GAP;
+}
+
+export function useMeraButtonBottom(): number {
+  const insets = useSafeAreaInsets();
+  return meraButtonBottom(Platform.OS, insets.bottom);
+}
