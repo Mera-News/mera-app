@@ -1,6 +1,6 @@
 // The fact feed's closing row (N13): the way to the NEXT section, drawn in that
 // section's own gradient so it reads as the next section arriving, or "Back to
-// Dashboard" on the last one.
+// Interests" on the last one.
 //
 // ## Contrast is guaranteed by construction, not by luck of the hue
 //

@@ -18,7 +18,7 @@ interface SectionViewAllTextProps {
 }
 
 /**
- * The closing row of a Dashboard section: right-aligned "View all N articles" +
+ * The closing row of an Interests section: right-aligned "View all N articles" +
  * chevron. Lives INSIDE the section's gradient panel as its last row, and only
  * renders when the section holds more than its preview shows.
  *

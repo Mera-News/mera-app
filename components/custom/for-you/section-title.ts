@@ -1,4 +1,4 @@
-// Dashboard section TITLES. Pure (no React), so both the sections feed and its
+// Interests section TITLES. Pure (no React), so both the sections feed and its
 // tests can call it directly.
 //
 // A fact section's title is user data (the fact statement) and is rendered
@@ -16,7 +16,7 @@ import type { TFunction } from 'i18next';
 export type Translate = TFunction<'translation'>;
 
 /**
- * The display title for a Dashboard section.
+ * The display title for an Interests section.
  *
  * Titles are "Headlines from the world" / "Headlines from {{country}}".
  *

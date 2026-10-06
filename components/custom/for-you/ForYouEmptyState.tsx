@@ -1,5 +1,5 @@
-// ONE empty-state layout for the Dashboard's library tabs (Saved, Fact checks,
-// Visited, Stories) and for an empty interest section (F22). There were four
+// ONE empty-state layout for the Library pages (Saved, Checks, Visited, Stats),
+// Stories and an empty interest section (F22). There were four
 // layouts on one screen: different icon sizes and greys, a title on one and
 // not the others, and a stray button on another.
 //

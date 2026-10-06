@@ -5,10 +5,9 @@
 // moment the reader is somewhere else in the list. `announceForAccessibility`
 // is a no-op when no screen reader is running.
 //
-// Called by the SCREEN (FeedScreen, and DashboardStatsCard on the Dashboard),
-// never by the Mera mark: the Dashboard has no mark, and one owner per screen
-// keeps the announcement independent of whatever the mark's lifecycle becomes
-// (a mark mounting already capped would seed "previous" with the new state and
+// Called by the SCREEN (FeedScreen), never by the Mera button: one owner keeps
+// the announcement independent of whatever the button's lifecycle becomes (a
+// button mounting already capped would seed "previous" with the new state and
 // miss the very transition this exists for).
 //
 // Seeded from the screen's FIRST render, so a screen that mounts already capped

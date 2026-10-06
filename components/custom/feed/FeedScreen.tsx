@@ -161,7 +161,7 @@ import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 const REFRESH_TINT = '#EDA77E';
 
 /** Gap between the collapsing header's bottom edge and the first card.
- *  Matches the Dashboard's (`DashboardSectionsFeed`, +12). */
+ *  Matches the Interests page's (`DashboardSectionsFeed`, +12). */
 const CONTENT_TOP_GAP = 12;
 
 // ── Arrival transition ──────────────────────────────────────────────────────
@@ -270,8 +270,8 @@ const FeedRow = React.memo(function FeedRow({
       onPress={onPress}
       // No age label and no NEW badge on this screen. "2h ago" and a green NEW
       // pill are both answers to "has something arrived?", which is the
-      // question this feed is deliberately not asking. The Dashboard's cards
-      // keep both, and the article detail screen always shows the time.
+      // question this feed is deliberately not asking. Interests' compact
+      // cards keep both, and the article detail screen always shows the time.
       showRecency={false}
       verdict={verdict}
       onVerdict={onVerdict}
@@ -704,8 +704,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     if (key) useFeedOrderStore.getState().markViewed(key);
   }, []);
 
-  // Tap-open. Wrapped HERE rather than inside `useOpenSuggestion` — that hook is
-  // shared with the Dashboard, which has no card lifecycle.
+  // Tap-open. Wrapped HERE rather than inside `useOpenSuggestion`: that hook is
+  // shared with Interests, which has no card lifecycle.
   const openSuggestion = useCallback(
     (s: ForYouSuggestion) => {
       markViewedFor(s);
@@ -893,7 +893,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
     [listData.length],
   );
 
-  // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
+  // ── Empty-state chain (the same priority as the Interests page's) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
   const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
   // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
@@ -906,8 +906,7 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
 
   // Auto-reveal the header on an error state or while the list is empty
   // (preparing / no interests yet) so the header chrome is never hidden
-  // under a collapsed header when the user most needs it — mirrors
-  // ForYouScreen's auto-reveal rationale.
+  // under a collapsed header when the user most needs it.
   useEffect(() => {
     const isEmptyState =
       data.length === 0 &&
@@ -1068,8 +1067,8 @@ const FeedScreen: React.FC<FeedScreenProps> = ({ active, header }) => {
         contentContainerStyle={{
           // `headerHeight` alone puts the first card flush against the header's
           // bottom edge — on a fresh launch the top card reads as if it is part
-          // of the header. The Dashboard (+12) and Explore (+8) already carry
-          // this gap; matching the Dashboard keeps the two reading surfaces
+          // of the header. Interests (+12) and World (+8) carry the same
+          // kind of gap; matching Interests keeps the Feed tab's pages
           // identical at the top.
           paddingTop: headerHeight + CONTENT_TOP_GAP,
           paddingHorizontal: 12,

@@ -19,7 +19,7 @@ interface SectionOpenButtonProps {
 }
 
 /**
- * The Dashboard section header's open affordance: a round right-arrow that opens
+ * The Interests section header's open affordance: a round right-arrow that opens
  * the section's full fact feed.
  *
  * Replaced an "N Articles" pill. The count is NOT dropped, just moved — the

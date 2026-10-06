@@ -142,7 +142,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
     const found = allRows.find((r) => r.factId === factId)?.groups ?? [];
     // Order this screen by article publication freshness — newest PUBLISHED on
     // top (`pubDateMs`), not suggestion-creation time (the shared `cardCompare`
-    // the Dashboard uses). Copy before sorting so the selector's array is left
+    // Interests uses). Copy before sorting so the selector's array is left
     // untouched. Tiebreak on `_id` for a stable order.
     return [...found].sort(
       (a, b) =>
@@ -151,10 +151,10 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
     );
   }, [allRows, factId]);
 
-  // The NEXT fact, in Dashboard order, skipping sections with no stories (the
-  // Dashboard does not draw them, owner decision), so tapping the footer
+  // The NEXT fact, in Interests order, skipping sections with no stories
+  // (Interests does not draw them, owner decision), so tapping the footer
   // below always lands on a section the user could also have reached by
-  // scrolling the Dashboard. None left: the footer offers the way back.
+  // scrolling Interests. None left: the footer offers the way back.
   const nextFact = useMemo(() => {
     const idx = allRows.findIndex((r) => r.factId === factId);
     if (idx === -1) return null;
@@ -172,8 +172,8 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
   // must not build a back-stack five deep. Both the visit-tracking effect
   // (above) and the seeded palette (`AbstractGradientBackdrop seed={factId}`
   // below) are keyed on `factId`, so a replace re-runs them for free — no
-  // special-case needed for "arrived via the footer" vs. "arrived from the
-  // Dashboard".
+  // special-case needed for "arrived via the footer" vs. "arrived from
+  // Interests".
   const goToNextFact = useCallback(() => {
     if (!nextFact || !nextFactTitle) return;
     router.replace({
@@ -291,7 +291,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement, arri
       <NextSectionFooter kind="back" onPress={backToInterests} />
     ) : null;
 
-  // An interest with no stories yet (reached directly: the Dashboard and "Next"
+  // An interest with no stories yet (reached directly: Interests and "Next"
   // skip it) says which of the two it is; any other empty list is simply
   // caught up.
   // Nothing until this section's snapshot has loaded: during a "Next" hop the

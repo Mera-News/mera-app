@@ -25,8 +25,8 @@ agent-device close
 
 ## testID conventions
 
-`{surface}-{element}` kebab-case: screen roots `feed-screen` / `dashboard-screen`, tabs
-`tab-{route}`, list items `card-${id}` (stable id, not index, where available), actions
+`{surface}-{element}` kebab-case: tab shells `feed-pages` / `world-pages` / `library-pages` /
+`you-pages`, page roots such as `feed-screen` and `interests-page`, list items `card-${id}` (stable id, not index, where available), actions
 `card-action-{name}`. Action testIDs repeat per card by design — scope by card root first.
 
 **Tabs have no testIDs:** `NativeTabs.Trigger` (expo-router/unstable-native-tabs) does not accept
@@ -35,13 +35,23 @@ agent-device close
 | Tab | Route | `press 'id=…'` | Android glyph |
 |---|---|---|---|
 | Feed | `feed` | `list.bullet.rectangle.fill` | `view-agenda` |
-| Dashboard | `for_you` | `square.grid.2x2.fill` | `dashboard` |
-| Explore | `around` | `safari.fill` | `explore` |
-| Profile | `profile` | `person.fill` | `person` |
-| Settings | `settings` | `gearshape.fill` | `settings` |
+| World | `world` | `globe` | `public` |
+| Library | `library` | `bookmark.fill` | `bookmark` |
+| You | `you` | `person.fill` | `person` |
 
-The Feed tab was `house.fill` until the icon was changed to read as a feed rather than a home —
-update any saved script still pressing `id=house.fill`.
+Four tabs since navx. `for_you`, `around`, `profile` and `settings` are GONE as tab routes; an old
+deep link to one is rewritten by `app/+native-intent.tsx` (Settings lands on You's Settings page).
+Never navigate to a tab route that has no trigger: NativeTabs renders a trigger-less route under
+`app_container/` as an extra visible tab.
+
+**Pages inside a tab** are pills in the header strip: `press 'id=page-pill-<pageId>'` (`feed`,
+`interests`, `stories`, `world`, `country:DE`, `saved`, `checks`, `visited`, `stats`, `profile`,
+`settings`). A deep link cannot carry a page (no page state in URLs); open the tab, then press
+the pill. Pushed screens inside a tab's stack: `/logged-in/app_container/feed/interest?factId=…`
+(One interest) and `/logged-in/app_container/you/<facts|locations|sources|hygiene-review|
+not-interested|activity|display|mera-protocol|notifications>`. Other header controls:
+`page-strip-rearrange` (the pen), `quick-settings`, `page-strip-search`, and the Arrange overlay's
+`arrange-cancel` / `arrange-save` / `arrange-chip-<pageId>`.
 
 Prefer the symbol id over the accessibility label: labels come from `t('tabs.*')`, so they change
 with the app language while the symbol id does not. The labels themselves are correct — the Feed
@@ -135,18 +145,20 @@ These don't fail loudly — they hand you a confident wrong answer. Each cost re
   first.** A wedged Fast Refresh keeps *old module state* ticking while remounted components
   subscribe elsewhere: a counter froze and the screen went pixel-identical across step boundaries
   for 13 steps — a perfect "the gate is broken" signature. A cold launch cleared it entirely.
-- **`agent-device scroll down` can switch tabs.** Repeated scrolls silently landed on Explore, and
-  every subsequent snapshot showed `cards=0` on `explore-list` — read as "blank cells during fast
-  scrolling", i.e. a rendering regression that did not exist. Verify the surface by dumping
-  identifiers, and prefer coordinate swipes that stay inside the list.
+- **`agent-device scroll down` can switch tabs, and a sideways one switches PAGES.** Repeated scrolls
+  once silently landed on another tab, and every later snapshot read the wrong list. Since navx a
+  horizontal drag changes the page, and past a tab's last page it opens the NEXT TAB. Verify the
+  surface by dumping identifiers, and prefer vertical coordinate swipes inside the list.
+- **`agent-device pan` does not move the page pager; only `fling`/`swipe` do.** A slow over-pull
+  (the cross-tab edge label) cannot be driven by the agent; it needs a hand check.
 - **Judging collapse/scroll state at a list boundary always reads as a false negative.** A fling
   that runs to the end of the list triggers the iOS rubber-band bounce, which scrolls *up* and
   trips the collapsible header's `UP_THRESHOLD` — so the header reveals and looks like the fix
   failed. Use controlled mid-list swipes.
 - **Don't judge or sample any process whose dev menu you've opened.** One such process burnt a flat
   ~36% CPU indefinitely; a cold launch cleared it. It will contaminate any CPU measurement.
-- **`press 'id=gearshape.fill'` hits the dev-menu FAB, not the Settings tab** — the SF Symbol id
-  collides. Drive the tab bar by coordinates (`y=822`).
+- **`press 'id=gearshape.fill'` hits the dev-menu FAB.** There is no Settings tab any more (it is a
+  page of You), so the collision no longer matters for tabs.
 - **Relative `--output` paths silently produce no file.** Always pass absolute paths.
 - **Settings switches toggle with `press 'id=<switch testID>'`** (verified on `static-gradient-switch`
   and `lock-switch`, value confirmed in the `settings` table). Always confirm a toggle against the DB
@@ -156,16 +168,16 @@ These don't fail loudly — they hand you a confident wrong answer. Each cost re
   `windowSize={5}`. A fling carries ~1000px against a ~460px window, so an element can appear and
   disappear *between* probes — you cannot binary-search for it. Probe during the fling, or drive
   `scrollToOffset` directly.
-- **`all-caught-up-card` and `all-caught-up-explore-cta` are no longer unique** — up to three of
-  each render at once (both dividers plus the footer). Scope by the wrapper testIDs, which stay
-  unique: `feed-divider-caught-up`, `feed-divider-opened`, `feed-caught-up-footer`.
+- **`all-caught-up-card` can render twice** (the Feed footer and another page's empty state in the
+  warm pager). Scope by the wrapper: `feed-caught-up-footer`. The card has no button any more; the
+  empty states carry `feed-shortcuts` (rows `feed-shortcut-<pageId>`).
 - **Measuring CPU?** Cumulative CPU time going *backwards* means the PID was reused and the run is
   invalid — guard for it, or a 10-minute soak yields a negative percentage and looks like a bug in
   the sampler rather than a restarted app.
 - **A pull-to-refresh gesture that produces zero displacement** usually means an overlay view is
   consuming the pan: `pointerEvents="box-none"` on a container still leaves its CHILDREN touchable
   — full-width text rows in headers become invisible touch bands. Rows must be `none`, containers
-  `box-none`, controls `auto` (standing rule documented in the Feed/Dashboard header components).
+  `box-none`, controls `auto` (standing rule, documented on the TabPages header).
 - Don't run file-editing subagents while a human is typing in the simulator — every save triggers a
   Fast Refresh that stomps their input. (For agent-driving sessions, Fast Refresh can be disabled in
   the dev menu — saves then apply only on explicit reload via the dev-client URL.)
@@ -222,10 +234,6 @@ These don't fail loudly — they hand you a confident wrong answer. Each cost re
 - **Tab-bar presses are swallowed while a pushed stack screen is on top.** `press 'id=person.fill'`
   from e.g. the Persona-change-log screen silently does nothing (the tab bar isn't in that stack).
   Pop back to the tab root first — one header-arrow tap at ≈(25,88) per stack level — then switch tabs.
-- **The Profile list DOES scroll with `agent-device scroll bottom`** (updating the older note above).
-  Advanced is no longer a row at the bottom of that list — it's an icon-only button in the header,
-  `id=profile-advanced-open`, top-right beside the tab explainer. It's on screen from a fresh launch
-  with no scroll needed; press it directly.
 - **Whether a feed card exposes its children varies per card.** Some cards surface
   `card-action-*` (and, once a feedback panel is open, `feedback-tree-leaf-*`) as real ids in
   `snapshot --raw --json`; others merge the entire card — overlay panel included — into one

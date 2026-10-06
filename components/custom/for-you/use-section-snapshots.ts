@@ -1,7 +1,7 @@
-// The persona snapshots (topics, facts, locations) that the Dashboard's
-// section selector and the fact feed read, kept FRESH.
+// The persona snapshots (topics, facts, locations) that the Interests page's
+// section selector and One interest read, kept FRESH.
 //
-// Both screens used to load them once: the Dashboard only when
+// Both screens used to load them once: the sections list only when
 // `hasGeneratedInterests` or `suggestions.length` changed, the fact feed only
 // on mount. A fact added in chat changes neither, so its new topic ids were
 // unknown to the selector and its stories could not claim a section until the
@@ -13,7 +13,7 @@
 //   - any locations-table change (a residence move changes headline sections).
 //   - the screen gaining focus. Topic-only edits (review, retire) never touch
 //     the facts table, so focus is what catches those.
-//   - whatever extra `deps` the caller passes (the Dashboard keeps its
+//   - whatever extra `deps` the caller passes (Interests keeps its
 //     suggestion-count trigger).
 // Emissions are debounced: a fact commit writes several rows in a burst.
 //
@@ -31,8 +31,8 @@ import { skip } from 'rxjs/operators';
 export const SNAPSHOT_RELOAD_DEBOUNCE_MS = 300;
 
 /** Every focus reloads the snapshots; an identical reload must not hand the
- *  Dashboard a new object, or every section re-renders on each switch to the
- *  tab. Maps compare by entries; the inputs are a few dozen short rows. */
+ *  sections list a new object, or every section re-renders on each return
+ *  to the page. Maps compare by entries; the inputs are a few dozen short rows. */
 export function snapshotsEqual(a: SectionSnapshots, b: SectionSnapshots): boolean {
   const key = (s: SectionSnapshots) =>
     JSON.stringify([

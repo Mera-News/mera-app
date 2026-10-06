@@ -276,19 +276,20 @@ content-description at all** — so `label=`, `text=` and the speculative "Andro
 ids are **repeated once per tab**, so they cannot disambiguate either. Delete the "Android glyph"
 column from [README.md](README.md)'s tab table from your mental model; it was never real.
 
-The bar is five equal 216px columns at `y = 2126`, height 211. Tap the centres:
+The bar is equal columns at `y = 2126`, height 211. Since navx there are FOUR tabs, so the
+columns are 270px wide (measured as five 216px columns before navx; the four-column centres below
+are derived from that rule, so confirm them on the first capture):
 
 | Tab | Route | Tap |
 |---|---|---|
-| Feed | `feed` | `adb shell input tap 108 2232` |
-| Dashboard | `for_you` | `adb shell input tap 324 2232` |
-| Explore | `around` | `adb shell input tap 540 2232` |
-| Profile | `profile` | `adb shell input tap 756 2232` |
-| Settings | `settings` | `adb shell input tap 972 2232` |
+| Feed | `feed` | `adb shell input tap 135 2232` |
+| World | `world` | `adb shell input tap 405 2232` |
+| Library | `library` | `adb shell input tap 675 2232` |
+| You | `you` | `adb shell input tap 945 2232` |
 
 **Which tab is selected IS readable**, so you never have to guess: exactly one column contains a
 `com.mera.news:id/navigation_bar_item_active_indicator_view` node. Find it in
-`snapshot --raw --json` and its `rect.x` (0 / 216 / 432 / 648 / 864) names the tab.
+`snapshot --raw --json` and its `rect.x` (0 / 270 / 540 / 810) names the tab.
 
 **The LogBox toast sits on top of the tab bar and swallows every one of these taps.** It occupies
 `y = 2146–2271`, i.e. the entire nav bar, and it comes back on each new error (RevenueCat's
@@ -328,13 +329,13 @@ that ignores taps. Wrap any loop that relies on word splitting in `bash -c '…'
 - **Everything behind login.** All pre-login results above are unchanged. There is no resident Android account:
   `expo-secure-store` is SharedPreferences + Keystore and app data is wiped on uninstall, so prefer
   `adb install -r` over uninstall, and snapshot the emulator once logged in.
-- **The logged-in Android account has NO PERSONA**, so Feed and Dashboard are permanently empty
-  ("Mera cannot analyze news for you") and nothing that needs feed content or fact sections can be
-  seen there. Explore works — it is a direct server query with no scoring — so use Explore, and
-  article detail reached from it, for anything that needs real content. Creating a persona means
+- **The logged-in Android account has NO PERSONA**, so Feed and Interests are permanently empty
+  and nothing that needs feed content or fact sections can be seen there. World works: it is a
+  direct server query with no scoring, so use World, and article detail reached from it, for
+  anything that needs real content. Creating a persona means
   driving the onboarding chat, which needs the cloud LLM.
 - Gestures and scrolling now work: `adb shell input swipe 540 1800 540 900 400` scrolls a list
-  reliably, and repeated swipes on Explore reveal the collapsing header and the scroll-to-top FAB.
+  reliably, and repeated swipes on World reveal the collapsing header.
   Alerts/permission dialogs and offline behaviour are still untested.
 
 ## Evidence
