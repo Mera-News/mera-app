@@ -234,6 +234,13 @@ describe('clearAllStores', () => {
         expect(useFocusTargetStore.getState()).toMatchObject({ pending: null, jump: null });
     });
 
+    it('puts the Mera button back in the default corner', async () => {
+        const { useMeraCornerStore, DEFAULT_CORNER } = require('@/components/custom/mera-button/corner');
+        useMeraCornerStore.setState({ corner: DEFAULT_CORNER === 'tl' ? 'br' : 'tl', hydrated: true });
+        await storeIndex.clearAllStores();
+        expect(useMeraCornerStore.getState()).toMatchObject({ corner: DEFAULT_CORNER, hydrated: false });
+    });
+
     it('resets UI store logout modal after clearAllStores', async () => {
         storeIndex.useUIStore.getState().openModal('logout');
         await storeIndex.clearAllStores();

@@ -80,6 +80,7 @@ export const clearAllStores = async () => {
     const { resetCurrentSurface } = require('../../components/custom/nav/current-surface');
     const { resetPendingPage } = require('../../components/custom/nav/navigate-to-page');
     const { resetPendingFocus } = require('../navigation/focus-target');
+    const { resetMeraButtonCorner } = require('@/components/custom/mera-button/corner');
 
     // Wipe all WatermelonDB data (drops and recreates all tables)
     await database.write(async () => {
@@ -114,6 +115,9 @@ export const clearAllStores = async () => {
     resetCurrentSurface();
     resetPendingPage();
     resetPendingFocus();
+    // The Mera button's corner: its row went with the database, so the next
+    // account starts in the default corner.
+    resetMeraButtonCorner();
     clearAttestationCache();
     // Its settings row went with the reset above; the memory must go too, or
     // the next record writes the previous account's publishers into the new

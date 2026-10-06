@@ -172,6 +172,12 @@ jest.mock('../../navigation/page-order', () => ({
   loadPageOrders: () => mockLoadPageOrders(),
 }));
 
+// The Mera button's saved corner (lazy settings read; mocked like the others).
+const mockHydrateMeraButtonCorner = jest.fn(() => Promise.resolve());
+jest.mock('@/components/custom/mera-button/corner', () => ({
+  hydrateMeraButtonCorner: () => mockHydrateMeraButtonCorner(),
+}));
+
 import { hydrateAllStores } from '../hydrate-stores';
 import { pruneStaleVisits } from '../services/publication-visit-service';
 import logger from '@/lib/logger';
@@ -216,6 +222,7 @@ describe('hydrateAllStores', () => {
     expect(mockTutorialsHydrate).toHaveBeenCalledTimes(1);
     expect(mockStartupTabHydrate).toHaveBeenCalledTimes(1);
     expect(mockLoadPageOrders).toHaveBeenCalledTimes(1);
+    expect(mockHydrateMeraButtonCorner).toHaveBeenCalledTimes(1);
   });
 
   it('loads page orders BEFORE database-store.ready flips', async () => {

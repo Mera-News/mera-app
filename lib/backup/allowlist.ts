@@ -173,6 +173,7 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
   nav_hint_cursor:
     'Mera button hint rotation for THIS device. Local by design (invariant 9): it operates the rotation and is never carried anywhere.',
   nav_world_intro_done: 'A one-time line on THIS device. A new device may show it once.',
+  mera_button_corner: 'Where the Mera button sits on THIS screen. Local only: another device has its own screen and hands.',
   backup_last_run_at:
     'Records when THIS device last uploaded. Restored, it would make a new device believe it is already up to date and skip its first backup.',
   backup_last_failed_at: 'Records when THIS device last failed to upload; says nothing about another device.',
