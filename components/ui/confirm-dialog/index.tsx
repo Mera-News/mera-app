@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, ButtonSpinner, ButtonText } from '@/components/ui/button';
 import { Modal, ModalBackdrop, ModalBody, ModalContent } from '@/components/ui/modal';
 import { Text } from '@/components/ui/text';
+import { settleDialog, useDialogQueue } from '@/lib/dialog';
 import { useColors } from '@/lib/theme/tokens';
 
 export interface ConfirmDialogProps {
@@ -15,8 +16,10 @@ export interface ConfirmDialogProps {
     warning?: string;
     confirmLabel: string;
     onConfirm: () => void;
-    /** Cancel, a scrim tap or hardware back. The parent closes the dialog. */
-    onCancel: () => void;
+    /** Cancel, a scrim tap or hardware back. The parent closes the dialog.
+     *  Omit it for a one-button notice (OK, Got it): the scrim and Back then
+     *  call onConfirm. */
+    onCancel?: () => void;
     cancelLabel?: string;
     /** A destructive confirm is red; otherwise it is the primary orange. */
     destructive?: boolean;
@@ -26,10 +29,11 @@ export interface ConfirmDialogProps {
 }
 
 /**
- * The ONE confirm (Modals board "A choice"): a centred dialog on the modal
+ * The ONE dialog (Modals board "A choice"): a centred dialog on the modal
  * material, title, body, an optional red consequence line, then the confirm
- * over an outlined Cancel. Replaces `Alert.alert` confirms, which cannot wear
- * the material or follow the theme.
+ * over an outlined Cancel, or one button for a notice. Replaces every
+ * `Alert.alert` (owner rule: no native alerts); from plain code use
+ * `showDialog` (lib/dialog.ts), which `DialogHost` below renders.
  */
 export function ConfirmDialog({
     open,
@@ -47,7 +51,7 @@ export function ConfirmDialog({
     const { t } = useTranslation();
     const colors = useColors();
     return (
-        <Modal isOpen={open} onClose={busy ? undefined : onCancel} size="md">
+        <Modal isOpen={open} onClose={busy ? undefined : (onCancel ?? onConfirm)} size="md">
             <ModalBackdrop />
             <ModalContent testID={testID}>
                 <Text accessibilityRole="header" style={{ color: colors.ink, fontSize: 20, fontWeight: '700' }}>
@@ -71,17 +75,40 @@ export function ConfirmDialog({
                         {busy ? <ButtonSpinner /> : null}
                         <ButtonText>{confirmLabel}</ButtonText>
                     </Button>
-                    <Button
-                        variant="outline"
-                        action="secondary"
-                        onPress={onCancel}
-                        isDisabled={busy}
-                        testID={testID ? `${testID}-cancel` : undefined}
-                    >
-                        <ButtonText>{cancelLabel ?? t('common.cancel')}</ButtonText>
-                    </Button>
+                    {onCancel ? (
+                        <Button
+                            variant="outline"
+                            action="secondary"
+                            onPress={onCancel}
+                            isDisabled={busy}
+                            testID={testID ? `${testID}-cancel` : undefined}
+                        >
+                            <ButtonText>{cancelLabel ?? t('common.cancel')}</ButtonText>
+                        </Button>
+                    ) : null}
                 </View>
             </ModalContent>
         </Modal>
+    );
+}
+
+/** Renders `showDialog` requests, one at a time. Mounted once in app/_layout.tsx. */
+export function DialogHost() {
+    const front = useDialogQueue((s) => s.queue[0]);
+    if (!front) return null;
+    return (
+        <ConfirmDialog
+            key={front.id}
+            open
+            title={front.title}
+            body={front.body}
+            warning={front.warning}
+            confirmLabel={front.confirmLabel}
+            cancelLabel={front.cancelLabel}
+            destructive={front.destructive}
+            onConfirm={() => settleDialog(front.id, true)}
+            onCancel={front.cancelLabel === undefined ? undefined : () => settleDialog(front.id, false)}
+            testID="app-dialog"
+        />
     );
 }

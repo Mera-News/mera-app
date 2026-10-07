@@ -59,7 +59,7 @@
 // change, and update the App Store privacy answers. See INTERCOM_PLAN.md.
 
 import { useCallback, useRef, useState } from 'react';
-import { Alert, Linking, Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import Intercom from '@intercom/intercom-react-native';
 import { gql } from '@apollo/client';
 import {
@@ -370,18 +370,19 @@ export async function sendIntercomPushToken(token: string): Promise<void> {
  */
 function showMailFallback(): void {
   const i18n = (require('@/lib/i18n') as typeof import('@/lib/i18n')).default;
-  Alert.alert(i18n.t('support.mailFailedTitle'), i18n.t('support.mailFailedBody'), [
-    {
-      text: i18n.t('support.copyAddress'),
-      onPress: () => {
-        const { SUPPORT_EMAIL } = require('@/lib/config/branding');
-        void (require('expo-clipboard') as typeof import('expo-clipboard'))
-          .setStringAsync(SUPPORT_EMAIL)
-          .catch(() => {});
-      },
-    },
-    { text: i18n.t('common.ok'), style: 'cancel' },
-  ]);
+  const { showDialog } = require('@/lib/dialog') as typeof import('@/lib/dialog');
+  void showDialog({
+    title: i18n.t('support.mailFailedTitle'),
+    body: i18n.t('support.mailFailedBody'),
+    confirmLabel: i18n.t('support.copyAddress'),
+    cancelLabel: i18n.t('common.ok'),
+  }).then((copy) => {
+    if (!copy) return;
+    const { SUPPORT_EMAIL } = require('@/lib/config/branding');
+    void (require('expo-clipboard') as typeof import('expo-clipboard'))
+      .setStringAsync(SUPPORT_EMAIL)
+      .catch(() => {});
+  });
 }
 
 /**

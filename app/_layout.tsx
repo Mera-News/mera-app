@@ -30,6 +30,7 @@ import ToastInitializer from '@/components/custom/ToastInitializer';
 import FactsComboToast from '@/components/custom/toast/FactsComboToast';
 import ToastDeck from '@/components/custom/toast/ToastDeck';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import { DialogHost } from '@/components/ui/confirm-dialog';
 import { TextScaleProvider } from '@/lib/typography/TextScaleProvider';
 import '@/global.css';
 import database from '@/lib/database';
@@ -444,6 +445,8 @@ export default Sentry.wrap(function RootLayout() {
                   is decided by sibling order. Inside TextScaleProvider so they
                   still scale, and inside SafeAreaProvider for the insets. */}
               <ToastDeck />
+              {/* The app's dialogs from plain code (lib/dialog.ts); no native alerts. */}
+              <DialogHost />
             </NativeUpdateGate>
             </TextScaleProvider>
           </GluestackUIProvider>
