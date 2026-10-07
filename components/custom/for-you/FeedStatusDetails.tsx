@@ -1,7 +1,21 @@
-import { Box } from '@/components/ui/box';
+// The feed status card's two bodies (DashboardStatsCard):
+//
+// - `FeedStatusDetails`, level 2 under the chevron: Stage, scoring progress
+//   with its bar, Published / Analysed / Relevant so far, Last processed.
+//   Values roll to a new number (FinalFeedStatus #2); Reduce Motion swaps.
+// - `FeedStatusNotice`, the whole card at the daily limit or on a problem
+//   (FinalFeedStatus #4, #5): what happened, when it clears, one action, and
+//   Last processed. No count sentence and no stage rows there.
+//
+// The counts come from the shared minute-clock `useFeedCounts`, so they match
+// the sentence on level 1.
+
 import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { useFeedSyncRefresh } from '@/components/custom/FeedSyncIndicator';
+import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { SCORING_ERROR_I18N_KEYS } from '@/lib/services/scoring-error';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
@@ -16,69 +30,50 @@ import {
     useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import { formatCount } from '@/lib/utils/format-count';
-import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { Pressable } from '@/components/ui/pressable';
+import Animated, { FadeInDown, FadeOutUp, useReducedMotion } from 'react-native-reanimated';
+import { COLORS, useColors } from '@/lib/theme/tokens';
 import { pickScoringProgress, STATUS_INK } from './status-ink';
 import { useLastProcessedLabel } from './use-last-processed-label';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+/** Explicit size AND line height: an inline fontSize on the ui Text keeps the
+ *  token's smaller line box and clips (see the mera-app-feed fontSize trap). */
+const ROW_TYPE = { fontSize: 14, lineHeight: 20 } as const;
 
-export interface FeedStatusDetailsProps {
-    /**
-     * Called right before the daily-limit "Manage" pill navigates. A host that
-     * renders this body inside an RN Modal passes its close here: a
-     * `router.push` out of an open modal leaves the pushed screen stranded
-     * behind the backdrop. The inline status panel is not a modal and passes
-     * nothing.
-     */
-    readonly onBeforeNavigate?: () => void;
-}
-
-function StatRow({ label, value }: { label: string; value: string | number }) {
+function StatRow({ label, value, testID }: { label: string; value: string; testID?: string }) {
+    const reduceMotion = useReducedMotion();
     return (
-        <HStack className="items-center justify-between py-1">
-            <Text size="sm" style={{ color: STATUS_INK.secondary }}>
-                {label}
-            </Text>
-            <Text size="sm" className="font-semibold" style={{ color: STATUS_INK.primary }}>
+        <HStack className="items-center justify-between py-1" testID={testID}>
+            <Text style={[ROW_TYPE, { color: STATUS_INK.secondary }]}>{label}</Text>
+            {/* Keyed by value, so a change mounts a new node that rolls in. */}
+            <Animated.Text
+                key={value}
+                entering={reduceMotion ? undefined : FadeInDown.duration(220)}
+                exiting={reduceMotion ? undefined : FadeOutUp.duration(160)}
+                style={[ROW_TYPE, { color: STATUS_INK.primary, fontWeight: '600' }]}
+            >
                 {value}
-            </Text>
+            </Animated.Text>
         </HStack>
     );
 }
 
-/**
- * The shared feed-status detail body. This is the single source of truth for the
- * copy + selectors the four legacy header banners used to show — current pipeline
- * stage, cloud/device progress, the processed/analysed/relevant counts,
- * last-processed time, the daily-limit notice, and any scoring error. It is
- * rendered in ONE place, `FeedStatusBody`, which the Feed's header panel and
- * the Dashboard's Overview stats card both mount, so the two cannot differ.
- */
-const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({ onBeforeNavigate }) => {
+/** Level 2: the details inside the card. */
+const FeedStatusDetails: React.FC = () => {
     const { t } = useTranslation();
-    const tAny = t as any;
+    const tAny = t as unknown as (key: string) => string;
     const appLanguage = useAppLanguage();
-    const router = useRouter();
-    // Read here rather than passed in, from the shared minute-clock hook, so the
-    // body and the stats sentence cannot show different numbers.
-    const { articleCount: processedCount, analysedCount, relevantCount } = useFeedCounts();
+    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const batchProgress = useForYouBatchProgress();
-    // Read here, never passed in: a prop only one screen passed is how the
-    // Feed's panel came to lack this row.
     const lastProcessedLabel = useLastProcessedLabel();
-
     const syncStatusMessage = useForYouSyncStatusMessage();
     const asyncJobPhase = useForYouAsyncJobPhase();
-    const asyncJobProcessedCount = useForYouAsyncJobProcessedCount();
-    const asyncJobTotalCount = useForYouAsyncJobTotalCount();
+    const asyncDone = useForYouAsyncJobProcessedCount();
+    const asyncTotal = useForYouAsyncJobTotalCount();
     const { isDeviceProcessing, deviceProcessedCount, deviceTotalCount } = useForYouDeviceProcessing();
-    const scoringError = useForYouScoringError();
-    const dailyLimitResetAt = useForYouDailyLimitResetAt();
 
     const isSyncActive =
         syncStatusMessage !== null &&
@@ -87,170 +82,162 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({ onBeforeNavigate 
         syncStatusMessage.state !== 'failed' &&
         syncStatusMessage.state !== 'paused-offline';
 
-    // Current stage headline — cloud/device phases take precedence over the raw
-    // sync-machine state, mirroring the old SyncProgressForYouBanner labelling.
-    // (Round-4 B removed the per-fact narration — batches are generic quanta.)
+    // Cloud/device phases take precedence over the raw sync-machine state.
+    // `headlineKey` is computed, hence `tAny`.
     const stageMessage =
         asyncJobPhase === 'relevance'
-            ? tAny('feed.syncToast.relevanceTitle')
+            ? t('feed.syncToast.relevanceTitle')
             : asyncJobPhase === 'reasons'
-                ? tAny('feed.syncToast.reasonsTitle')
-                : isDeviceProcessing
-                    ? tAny('feed.syncToast.onDeviceTitle')
-                    : isSyncActive && syncStatusMessage?.headlineKey
-                        ? tAny(syncStatusMessage.headlineKey)
-                        : t('feedStatus.idle');
+              ? t('feed.syncToast.reasonsTitle')
+              : isDeviceProcessing
+                ? t('feed.syncToast.onDeviceTitle')
+                : isSyncActive && syncStatusMessage?.headlineKey
+                  ? tAny(syncStatusMessage.headlineKey)
+                  : t('feedStatus.idle');
 
-    const isDailyLimited = dailyLimitResetAt != null && Date.now() < dailyLimitResetAt;
-    // Formatted in the DEVICE's timezone from an absolute instant, which is what
-    // keeps this correct west of UTC. The cap resets at 00:00 UTC, which is 5pm
-    // the SAME DAY in Los Angeles, so any copy saying "tomorrow" would be false
-    // for a large share of users. There is deliberately no untimed branch:
-    // `FeedSyncMachine` falls back to `nextUtcMidnightMs()` whenever the server
-    // omits `resetAt`, so a reset instant always exists. The untimed
-    // `feed.dailyLimit.body` string still exists in all 20 dictionaries and has
-    // NO consumer — do not wire it up.
-    const dailyResetTime = dailyLimitResetAt
-        ? new Date(dailyLimitResetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-        : '';
-
-    // ONE figure for scoring progress, shared with the panel's "Analysing X of
-    // Y" line; the cloud sweep's synced-id counter used to sit beside it with a
-    // different total.
-    const cloudProgress = pickScoringProgress(batchProgress, asyncJobProcessedCount, asyncJobTotalCount);
-    const showCloudProgress = cloudProgress !== null;
-    const showDeviceProgress = deviceTotalCount > 0;
-
-    const errorKeys = scoringError ? SCORING_ERROR_I18N_KEYS[scoringError] : null;
+    // ONE scoring figure, shared with the "Analysing X of Y" line.
+    const cloud = pickScoringProgress(batchProgress, asyncDone, asyncTotal);
+    const fmt = (n: number) => formatCount(n, appLanguage);
 
     return (
-        <VStack space="md" className="py-1">
-            {/* Current stage. The WORDS are the one accessible element; the
-                icon sits beside them, outside it. An icon is a Text holding a
-                private-use glyph: inside a container it became that
-                container's label, and even inside a labelled row iOS still
-                surfaced it as its own StaticText (both captured). */}
-            <HStack className="items-center" space="sm">
-                <MaterialIcons
-                    name="sync"
-                    size={18}
-                    color={ACCENT}
-                    accessible={false}
-                    accessibilityElementsHidden
-                    importantForAccessibility="no-hide-descendants"
+        <VStack className="pt-2" testID="feed-status-details">
+            <StatRow label={t('feedStatus.stage')} value={stageMessage} testID="feed-status-stage-row" />
+            {cloud ? (
+                <>
+                    <StatRow label={t('feedStatus.cloudProgress')} value={`${fmt(cloud.done)} / ${fmt(cloud.total)}`} />
+                    <View style={styles.track}>
+                        <View
+                            style={[styles.bar, { width: `${Math.min(100, (cloud.done / cloud.total) * 100)}%` }]}
+                        />
+                    </View>
+                </>
+            ) : null}
+            {deviceTotalCount > 0 ? (
+                <StatRow
+                    label={t('feedStatus.deviceProgress')}
+                    value={`${fmt(deviceProcessedCount)} / ${fmt(deviceTotalCount)}`}
                 />
-                <Text
-                    size="sm"
-                    className="font-semibold flex-1"
-                    style={{ color: STATUS_INK.primary }}
-                    accessible
-                    accessibilityLabel={stageMessage}
-                    testID="feed-status-stage-row"
-                >
-                    {stageMessage}
-                </Text>
-            </HStack>
-
-            {(showCloudProgress || showDeviceProgress) && (
-                <VStack space="xs">
-                    {cloudProgress && (
-                        <StatRow
-                            label={t('feedStatus.cloudProgress')}
-                            value={`${formatCount(cloudProgress.done, appLanguage)} / ${formatCount(cloudProgress.total, appLanguage)}`}
-                        />
-                    )}
-                    {showDeviceProgress && (
-                        <StatRow
-                            label={t('feedStatus.deviceProgress')}
-                            value={`${formatCount(deviceProcessedCount, appLanguage)} / ${formatCount(deviceTotalCount, appLanguage)}`}
-                        />
-                    )}
-                </VStack>
-            )}
-
-            <Box style={{ height: 1, backgroundColor: STATUS_INK.divider }} />
-
-            {/* Counts */}
-            <VStack>
-                <StatRow label={t('feedStatus.published')} value={formatCount(processedCount, appLanguage)} />
-                <StatRow label={t('feedStatus.analysed')} value={formatCount(analysedCount, appLanguage)} />
-                <StatRow label={t('feedStatus.relevant')} value={formatCount(relevantCount, appLanguage)} />
-            </VStack>
-
-            {lastProcessedLabel && (
-                <StatRow label={t('feedStatus.lastProcessed')} value={lastProcessedLabel} />
-            )}
-
-            {/* Daily limit. The cap is PER-TIER: 250 Starter, which is what every
-                unpaid account now gets, then 1000 Individual and 10000
-                Professional. There is no separate free number because free and
-                Starter are the same thing. Every plan can reach this. */}
-            {isDailyLimited && (
-                <Box testID="feed-status-daily-limit" className="bg-warning-900 rounded-lg px-3 py-2">
-                    <Text size="sm" className="text-warning-400 font-semibold">
-                        {t('feed.dailyLimit.title')}
-                    </Text>
-                    <Text size="xs" className="mt-1" style={{ color: STATUS_INK.secondary }}>
-                        {t('feed.dailyLimit.bodyWithTime', { time: dailyResetTime })}
-                    </Text>
-                    {/* Same pill as the Profile usage card, and the same
-                        destination — the cap is a plan limit, so management (which
-                        is where Upgrade lives) is the one useful action here. */}
-                    <HStack className="justify-end mt-2">
-                        {/* Childless labelled button laid over the visual
-                            pill: a glyph inside a button still surfaces as its
-                            own StaticText on iOS, hidden props or not. */}
-                        <View>
-                            <Box
-                                pointerEvents="none"
-                                accessible={false}
-                                accessibilityElementsHidden
-                                importantForAccessibility="no-hide-descendants"
-                                className="bg-primary-500 rounded-full px-2.5 py-1"
-                            >
-                                <HStack className="items-center" space="xs">
-                                    <MaterialIcons
-                                        name="credit-card"
-                                        size={12}
-                                        color="#ffffff"
-                                        accessible={false}
-                                        accessibilityElementsHidden
-                                        importantForAccessibility="no-hide-descendants"
-                                    />
-                                    <Text size="xs" className="text-white font-semibold">
-                                        {t('subscription.managePlan')}
-                                    </Text>
-                                </HStack>
-                            </Box>
-                            <Pressable
-                                onPress={() => {
-                                    onBeforeNavigate?.();
-                                    router.push('/logged-in/preferences/manage-subscription' as any);
-                                }}
-                                hitSlop={8}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('subscription.managePlan')}
-                                testID="feed-status-manage-subscription"
-                                style={StyleSheet.absoluteFill}
-                            />
-                        </View>
-                    </HStack>
-                </Box>
-            )}
-
-            {/* Scoring error */}
-            {errorKeys && (
-                <Box className="bg-error-950 border border-error-900 rounded-lg px-3 py-2">
-                    <Text size="sm" className="text-red-400 font-semibold">
-                        {t('feedStatus.errorTitle')}
-                    </Text>
-                    <Text size="xs" className="mt-1" style={{ color: STATUS_INK.secondary }}>
-                        {t(errorKeys.message)}
-                    </Text>
-                </Box>
-            )}
+            ) : null}
+            <StatRow label={t('feedStatus.published')} value={fmt(articleCount)} />
+            <StatRow label={t('feedStatus.analysed')} value={fmt(analysedCount)} />
+            <StatRow label={t('feedStatus.relevant')} value={fmt(relevantCount)} />
+            {lastProcessedLabel ? <StatRow label={t('feedStatus.lastProcessed')} value={lastProcessedLabel} /> : null}
         </VStack>
     );
 };
+
+/** "Analysing X of Y articles", from the same figure as the scoring row, so
+ *  the two can never name different totals. Nothing until a total is known. */
+export function AnalysingProgress() {
+    const { t } = useTranslation();
+    const batchProgress = useForYouBatchProgress();
+    const asyncDone = useForYouAsyncJobProcessedCount();
+    const asyncTotal = useForYouAsyncJobTotalCount();
+    const progress = pickScoringProgress(batchProgress, asyncDone, asyncTotal);
+    if (!batchProgress || batchProgress.total <= 0 || !progress) return null;
+    return (
+        <Text style={{ fontSize: 12, lineHeight: 17, color: STATUS_INK.secondary, marginTop: 4 }}>
+            {t('feed.analysingProgress', { done: progress.done, total: progress.total })}
+        </Text>
+    );
+}
+
+/** The daily-limit and problem cards. Renders nothing in any other mode. */
+export const FeedStatusNotice: React.FC<{
+    readonly mode: FeedStatusMode;
+    /** Called before "Manage plan" or the upgrade link navigates. */
+    readonly onBeforeNavigate?: () => void;
+}> = ({ mode, onBeforeNavigate }) => {
+    const { t } = useTranslation();
+    const router = useRouter();
+    const lastProcessedLabel = useLastProcessedLabel();
+    const dailyLimitResetAt = useForYouDailyLimitResetAt();
+    const scoringError = useForYouScoringError();
+    const { onRefresh } = useFeedSyncRefresh();
+    const colors = useColors();
+    if (mode !== 'limited' && mode !== 'error') return null;
+
+    const managePlan = () => {
+        onBeforeNavigate?.();
+        router.push('/logged-in/preferences/manage-subscription' as never);
+    };
+    const lastRow = lastProcessedLabel ? (
+        <StatRow label={t('feedStatus.lastProcessed')} value={lastProcessedLabel} />
+    ) : null;
+
+    if (mode === 'limited') {
+        // Device timezone from an absolute instant: the cap resets at 00:00
+        // UTC, so "tomorrow" would be false west of UTC. The sync machine always
+        // supplies a reset instant; the gallery's injected mode may not.
+        const time = dailyLimitResetAt
+            ? new Date(dailyLimitResetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+            : '';
+        return (
+            <VStack testID="feed-status-daily-limit">
+                <Text style={[ROW_TYPE, { color: colors.accentText, fontWeight: '600' }]}>
+                    {t('feed.dailyLimit.title')}
+                </Text>
+                <Text style={[ROW_TYPE, { color: STATUS_INK.secondary, marginTop: 4 }]}>
+                    {t('feed.dailyLimit.bodyWithTime', { time })}{' '}
+                    <Trans
+                        i18nKey="feedStatus.limitUpgrade"
+                        components={[
+                            <Text
+                                key="upgrade"
+                                onPress={managePlan}
+                                accessibilityRole="link"
+                                style={[ROW_TYPE, { color: colors.accentText }]}
+                            />,
+                        ]}
+                    />
+                </Text>
+                <HStack className="justify-end mt-2">
+                    <Pressable
+                        onPress={managePlan}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('subscription.managePlan')}
+                        testID="feed-status-manage-subscription"
+                        style={styles.pillFrame}
+                    >
+                        <View style={styles.pill}>
+                            <Text style={[ROW_TYPE, { color: colors.onAccent, fontWeight: '600' }]}>
+                                {t('subscription.managePlan')}
+                            </Text>
+                        </View>
+                    </Pressable>
+                </HStack>
+                {lastRow}
+            </VStack>
+        );
+    }
+
+    const keys = SCORING_ERROR_I18N_KEYS[scoringError ?? 'generic'];
+    return (
+        <VStack testID="feed-status-error">
+            <Text style={[ROW_TYPE, { color: colors.negative, fontWeight: '600' }]}>{t(keys.title)}</Text>
+            <Text style={[ROW_TYPE, { color: STATUS_INK.secondary, marginTop: 4 }]}>
+                {t(keys.message)}{' '}
+                <Text
+                    onPress={() => onRefresh()}
+                    accessibilityRole="button"
+                    testID="feed-status-try-now"
+                    style={[ROW_TYPE, { color: colors.accentText }]}
+                >
+                    {t('feedStatus.tryNow')}
+                </Text>
+            </Text>
+            <View style={{ marginTop: 6 }}>{lastRow}</View>
+        </VStack>
+    );
+};
+
+const styles = StyleSheet.create({
+    track: { height: 4, borderRadius: 2, backgroundColor: STATUS_INK.divider, marginBottom: 4 },
+    bar: { height: 4, borderRadius: 2, backgroundColor: COLORS.dark.accent },
+    // A 44pt frame around a 30pt pill, margins given back so the row keeps its
+    // height (never hitSlop: QA measures a hitSlop target as its glyph box).
+    pillFrame: { minHeight: 44, justifyContent: 'center', marginVertical: -7 },
+    pill: { backgroundColor: COLORS.dark.accent, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+});
 
 export default FeedStatusDetails;

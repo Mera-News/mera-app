@@ -21,6 +21,9 @@ import { useTranslation } from 'react-i18next';
 
 interface FeedStatsSentenceProps {
   className?: string;
+  /** While a run is in flight: "N articles are being analysed for you, from M
+   *  published in the last 24 hours. K look relevant so far." */
+  syncing?: boolean;
 }
 
 /** The five clause keys, spelled out as literals so the typed `t()` still
@@ -31,13 +34,17 @@ type StatsClauseKey =
   | 'feed.statsPublishedPending'
   | 'feed.statsAnalysed'
   | 'feed.statsRelevant'
-  | 'feed.statsRead';
+  | 'feed.statsRead'
+  | 'feed.statsSyncAnalysing'
+  | 'feed.statsSyncFrom'
+  | 'feed.statsSyncRelevant';
 
 const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   // No `leading-6`: 21px on 16px type (1.31) is a Latin-sized line box. This
   // sentence is translated into 20 languages, and Devanagari/Thai marks sit
   // above it. The `md` token's own 24px line box applies instead.
   className = 'text-typography-400',
+  syncing = false,
 }) => {
   const { t } = useTranslation();
   const appLanguage = useAppLanguage();
@@ -68,6 +75,12 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   const sentence =
     analysedCount === 0
       ? clause('feed.statsPublishedPending', articleCount)
+      : syncing
+      ? [
+          clause('feed.statsSyncAnalysing', analysedCount),
+          clause('feed.statsSyncFrom', articleCount),
+          clause('feed.statsSyncRelevant', relevantCount),
+        ].join(' ')
       : [
           clause('feed.statsPublished', articleCount),
           clause('feed.statsAnalysed', analysedCount),

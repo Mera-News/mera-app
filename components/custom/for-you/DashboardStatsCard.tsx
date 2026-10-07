@@ -1,124 +1,191 @@
-// The feed status card: the first card of the Feed and Interests pages (it was
-// the Dashboard Overview's, removed by navx and restored at the owner's ask).
+// The feed's counts card (FinalFeed #1, FinalFeedStatus #1-5). One card, three
+// homes: open at the top of an empty Feed (`initiallyExpanded`), slid in over
+// the list from the status icon (StatusCardSlideIn), and, until the status
+// icon replaces it, at the head of the Feed and Interests lists.
 //
-// Owner: the article-count sentence lives in the page content, not the header,
-// "so the header will stay the same even when the user taps on some other
-// pill". Tap the card and the status panel (`FeedStatusPanel`) drops down
-// under it and closes itself after STATUS_PANEL_AUTO_COLLAPSE_MS.
+// Level 1: the status line (a light sweeps across it while a sync runs) and a
+// chevron, then the count sentence ("being analysed" while syncing, with the
+// 20pt processing scene beside it). The sentence says nothing at zero
+// articles, the normal state of a capped account. Level 2, under the chevron
+// and INSIDE the same card: FeedStatusDetails. At the daily limit or on a
+// problem the whole card is FeedStatusNotice instead: no chevron, no counts.
 //
-// A DROPDOWN, never an in-place expansion, drawn by the `StatusDropdownLayer`
-// each page mounts last (see status-dropdown.tsx for why a screen layer and
-// not a Modal). This card only measures itself and asks the provider to open.
+// `mode` is injectable so the kit gallery can show the limit and problem
+// states, which no simulator reaches.
 //
-// Two rows. The status line is ALWAYS there and always one line, with a
-// spinner while Mera syncs: the owner wanted the sync visible, and a row that
-// came and went would change the card's height at the head of the list (the
-// Interests list has no autoscroll-to-top, so the card grew upward under the
-// header there). Under it, the count sentence, which says nothing at zero
-// articles (the normal state of a capped account).
-//
-// No announcement here: FeedScreen and the Mera button already announce the
-// status changes, and a third would repeat them.
-//
-// The card is a surface over the BACKDROP, so no dark base.
+// No announcement here: FeedScreen announces the capped and error states.
 
 import { GlassPanel } from '@/components/custom/GlassSurface';
+import LoopScene from '@/components/custom/for-you/LoopScene';
+import { processingAnimationFor } from '@/components/custom/processing/animation-registry';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
-import { Spinner } from '@/components/ui/spinner';
-import { Text } from '@/components/ui/text';
+import { type FeedStatusMode } from '@/lib/feed-status-mode';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
+import { ShimmerText } from '@/components/ui/shimmer';
+import { Text } from '@/components/ui/text';
+import { MOTION } from '@/lib/motion';
+import { useColors } from '@/lib/theme/tokens';
+import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
 import FeedStatsSentence from './FeedStatsSentence';
+import FeedStatusDetails, { AnalysingProgress, FeedStatusNotice } from './FeedStatusDetails';
 import { measureAnchor } from './stats-card-dropdown';
 import { useStatusDropdown } from './status-dropdown';
 import { a11yStateKey, STATUS_INK } from './status-ink';
 
-export const DashboardStatsCard: React.FC = () => {
+const HIDDEN = {
+    accessible: false,
+    accessibilityElementsHidden: true,
+    importantForAccessibility: 'no-hide-descendants',
+} as const;
+
+const SCENE_SIZE = 20;
+
+export interface DashboardStatsCardProps {
+    /** Injected by the kit gallery; the live mode otherwise. */
+    readonly mode?: FeedStatusMode;
+    /** The chevron opens the details inside this card (the slide-in and the
+     *  empty Feed). Without it, the legacy dropdown opens. */
+    readonly expandInPlace?: boolean;
+    /** Details open from the first frame (the empty Feed, FinalFeed #1). */
+    readonly initiallyExpanded?: boolean;
+    /** Drawn over list content: an opaque base, or the cards read through. */
+    readonly overContent?: boolean;
+    /** Called before "Manage plan" or the upgrade link navigates. */
+    readonly onBeforeNavigate?: () => void;
+    readonly testID?: string;
+}
+
+/** The status line. While a sync runs a soft light sweeps across it
+ *  (ShimmerText owns Reduce Motion and Lite). */
+function StatusLine({ label, syncing }: { label: string; syncing: boolean }) {
+    const colors = useColors();
+    const style = [styles.line, { color: colors.ink }];
+    return syncing ? (
+        <ShimmerText style={styles.line} numberOfLines={1} testID="dashboard-stats-card-state">
+            {label}
+        </ShimmerText>
+    ) : (
+        <Text numberOfLines={1} style={style} testID="dashboard-stats-card-state">
+            {label}
+        </Text>
+    );
+}
+
+export const DashboardStatsCard: React.FC<DashboardStatsCardProps> = ({
+    mode: modeOverride,
+    expandInPlace = false,
+    initiallyExpanded = false,
+    overContent = false,
+    onBeforeNavigate,
+    testID = 'dashboard-stats-card',
+}) => {
     const { t } = useTranslation();
     // `a11yStateKey` is computed from the mode; see its own note on `tAny`.
     const tAny = t as unknown as (key: string) => string;
-    const mode = useFeedStatusMode();
+    const liveMode = useFeedStatusMode();
+    const mode = modeOverride ?? liveMode;
     const { articleCount } = useFeedCounts();
-    const { expanded, open: openDropdown, collapse } = useStatusDropdown();
+    const dropdown = useStatusDropdown();
+    const [ownExpanded, setOwnExpanded] = useState(initiallyExpanded);
+    const expanded = expandInPlace ? ownExpanded : dropdown.expanded;
     const stateLabel = tAny(a11yStateKey(mode));
+    const processing = mode === 'processing';
+
+    const reduceMotion = useReducedMotion();
+    const colors = useColors();
 
     const anchorRef = useRef<View>(null);
-    const open = useCallback(() => measureAnchor(anchorRef.current, openDropdown), [openDropdown]);
+    const toggle = useCallback(() => {
+        if (expandInPlace) setOwnExpanded((v) => !v);
+        else if (dropdown.expanded) dropdown.collapse();
+        else measureAnchor(anchorRef.current, dropdown.open);
+    }, [expandInPlace, dropdown]);
+
+    const notice = mode === 'limited' || mode === 'error';
 
     return (
         // `collapsable={false}`: a flattened view has nothing native to measure.
-        <View ref={anchorRef} collapsable={false} className="mb-2" testID="dashboard-stats-card-anchor">
-        <GlassPanel radius={12} contentClassName="px-4 py-3" testID="dashboard-stats-card">
-            {/* The row is a hidden visual with a CHILDLESS labelled button laid
-                over it: the chevron glyph inside the button surfaced on iOS as
-                its own StaticText (captured class, ux2). */}
-            <View>
-                <HStack
-                    className="items-start"
-                    space="sm"
-                    pointerEvents="none"
-                    accessible={false}
-                    accessibilityElementsHidden
-                    importantForAccessibility="no-hide-descendants"
-                >
-                    <View style={{ flex: 1, minWidth: 0 }}>
-                        <HStack className="items-center" space="xs">
-                            {mode === 'processing' ? (
-                                <Spinner
-                                    size="small"
-                                    color={STATUS_INK.secondary}
-                                    style={styles.spinner}
-                                    testID="dashboard-stats-card-syncing"
-                                />
-                            ) : null}
-                            <Text
-                                size="sm"
-                                className="font-medium"
-                                numberOfLines={1}
-                                style={{ color: STATUS_INK.primary, flexShrink: 1 }}
-                                testID="dashboard-stats-card-state"
+        <View ref={anchorRef} collapsable={false} className="mb-2" testID={`${testID}-anchor`}>
+            <GlassPanel
+                radius={12}
+                contentClassName="px-4 py-3"
+                style={overContent ? { backgroundColor: colors.modalBase } : undefined}
+                testID={testID}
+            >
+                {notice ? (
+                    <FeedStatusNotice mode={mode} onBeforeNavigate={onBeforeNavigate} />
+                ) : (
+                    <>
+                        {/* A hidden visual under a CHILDLESS labelled button: a
+                            glyph inside a button surfaces on iOS as its own
+                            StaticText (captured class, ux2). */}
+                        <View>
+                            <View pointerEvents="none" {...HIDDEN}>
+                                <HStack className="items-center" space="sm">
+                                    <View style={{ flex: 1, minWidth: 0 }}>
+                                        <StatusLine label={stateLabel} syncing={processing} />
+                                    </View>
+                                    <MaterialIcons
+                                        name={expanded ? 'expand-less' : 'expand-more'}
+                                        size={20}
+                                        color={STATUS_INK.secondary}
+                                        {...HIDDEN}
+                                    />
+                                </HStack>
+                                {articleCount > 0 ? (
+                                    <HStack className="items-start mt-1" space="sm">
+                                        {processing ? (
+                                            <LoopScene
+                                                source={processingAnimationFor('analysing')}
+                                                size={SCENE_SIZE}
+                                                testID={`${testID}-scene`}
+                                            />
+                                        ) : null}
+                                        <View style={{ flex: 1, minWidth: 0 }}>
+                                            <FeedStatsSentence
+                                                syncing={processing}
+                                                className="text-typography-700 font-medium"
+                                            />
+                                        </View>
+                                    </HStack>
+                                ) : null}
+                            </View>
+                            <Pressable
+                                onPress={toggle}
+                                accessibilityRole="button"
+                                accessibilityState={{ expanded }}
+                                accessibilityLabel={`${stateLabel}. ${t(
+                                    expanded ? 'feedStatus.collapseA11y' : 'feedStatus.expandA11y',
+                                )}`}
+                                testID={`${testID}-toggle`}
+                                style={StyleSheet.absoluteFill}
+                            />
+                        </View>
+                        {expandInPlace && expanded ? (
+                            <Animated.View
+                                entering={reduceMotion ? undefined : FadeIn.duration(MOTION.status.open)}
+                                exiting={reduceMotion ? undefined : FadeOut.duration(MOTION.status.close)}
                             >
-                                {stateLabel}
-                            </Text>
-                        </HStack>
-                        {articleCount > 0 ? (
-                            <FeedStatsSentence className="text-typography-700 font-medium mt-1" />
+                                <FeedStatusDetails />
+                                {processing ? <AnalysingProgress /> : null}
+                            </Animated.View>
                         ) : null}
-                    </View>
-                    <MaterialIcons
-                        name={expanded ? 'expand-less' : 'expand-more'}
-                        size={20}
-                        color={STATUS_INK.secondary}
-                        accessible={false}
-                        accessibilityElementsHidden
-                        importantForAccessibility="no-hide-descendants"
-                    />
-                </HStack>
-                <Pressable
-                    onPress={expanded ? collapse : open}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded }}
-                    accessibilityLabel={`${stateLabel}. ${t(
-                        expanded ? 'feedStatus.collapseA11y' : 'feedStatus.openA11y',
-                    )}`}
-                    testID="dashboard-stats-card-toggle"
-                    style={StyleSheet.absoluteFill}
-                />
-            </View>
-        </GlassPanel>
+                    </>
+                )}
+            </GlassPanel>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    // A small spinner is 20pt; scaled to sit inside the sm line box so the
-    // status row is the same height syncing or not.
-    spinner: { transform: [{ scale: 0.8 }], width: 16, height: 16 },
+    // fontSize with its own lineHeight (the ui Text clipping trap).
+    line: { fontSize: 14, lineHeight: 20, fontWeight: '600' },
 });
 
 export default DashboardStatsCard;

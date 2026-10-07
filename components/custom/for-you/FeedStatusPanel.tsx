@@ -17,29 +17,8 @@ import {
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
-import FeedStatusDetails from './FeedStatusDetails';
+import FeedStatusDetails, { AnalysingProgress, FeedStatusNotice } from './FeedStatusDetails';
 import { pickScoringProgress, STATUS_INK, STATUS_PANEL_OPAQUE_BASE } from './status-ink';
-
-/** Honest per-run progress line while processing — "Analysing X of Y articles",
- *  read from the live batch progress. Renders nothing until a total is known. */
-function AnalysingProgress() {
-    const { t } = useTranslation();
-    const batchProgress = useForYouBatchProgress();
-    const asyncDone = useForYouAsyncJobProcessedCount();
-    const asyncTotal = useForYouAsyncJobTotalCount();
-    // The same figure FeedStatusDetails' scoring row shows, from the same
-    // helper, so the two lines can never name two different totals.
-    const progress = pickScoringProgress(batchProgress, asyncDone, asyncTotal);
-    if (!batchProgress || batchProgress.total <= 0 || !progress) return null;
-    return (
-        <Text size="xs" className="mt-1" style={{ color: STATUS_INK.secondary }}>
-            {t('feed.analysingProgress', {
-                done: progress.done,
-                total: progress.total,
-            })}
-        </Text>
-    );
-}
 
 /**
  * How long an opened status panel stays open before it closes itself. ONE
@@ -63,7 +42,8 @@ export interface FeedStatusBodyProps {
  */
 export const FeedStatusBody: React.FC<FeedStatusBodyProps> = ({ mode, onBeforeNavigate }) => (
     <>
-        <FeedStatusDetails onBeforeNavigate={onBeforeNavigate} />
+        <FeedStatusNotice mode={mode} onBeforeNavigate={onBeforeNavigate} />
+        {mode === 'limited' || mode === 'error' ? null : <FeedStatusDetails />}
         {mode === 'processing' && <AnalysingProgress />}
     </>
 );
