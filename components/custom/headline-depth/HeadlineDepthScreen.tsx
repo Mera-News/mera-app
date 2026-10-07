@@ -15,6 +15,7 @@ import { toastManager } from '@/lib/toast-manager';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useColors } from '@/lib/theme/tokens';
 import { ScrollView, View } from 'react-native';
 import { countryNameForAlpha2, flagForAlpha2 } from '../locations/location-display';
 import {
@@ -25,8 +26,6 @@ import {
     type HeadlineScopeRow,
 } from './headline-depth-model';
 
-const ACCENT = '#EDA77E';
-const SUBTLE = 'rgb(163,163,163)';
 
 const OPTIONS = headlineDepthOptions();
 
@@ -51,6 +50,7 @@ interface HeadlineDepthScreenProps {
  */
 const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
+    const colors = useColors();
 
     const [isLoading, setIsLoading] = useState(true);
     const [scopes, setScopes] = useState<readonly HeadlineScopeRow[]>([]);
@@ -160,10 +160,10 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
                         <MaterialIcons
                             name="auto-awesome"
                             size={14}
-                            color="#93c5fd"
+                            color={colors.info}
                             style={{ marginTop: 2 }}
                         />
-                        <Text size="xs" className="text-gray-400 flex-1 leading-relaxed">
+                        <Text size="xs" className="text-ink-3 flex-1 leading-relaxed">
                             {t('headlineDepth.intro')}
                         </Text>
                     </HStack>
@@ -183,24 +183,24 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
                                     accessibilityRole="button"
                                     accessibilityLabel={label}
                                     accessibilityState={{ expanded: isExpanded }}
-                                    className="flex-row items-center px-4 py-3 border-b border-gray-800"
+                                    className="flex-row items-center px-4 py-3 border-b border-line"
                                 >
                                     {glyph ? <Text className="text-xl mr-2">{glyph}</Text> : null}
-                                    <Text size="md" className="text-white flex-1 mr-2" numberOfLines={1}>
+                                    <Text size="md" className="text-ink flex-1 mr-2" numberOfLines={1}>
                                         {label}
                                     </Text>
                                     <View
                                         testID={`headline-depth-scope-${scope.key}-value`}
-                                        className="rounded-full px-2 py-0.5 mr-1 bg-gray-700"
+                                        className="rounded-full px-2 py-0.5 mr-1 bg-surface-raised"
                                     >
-                                        <Text size="xs" style={{ color: SUBTLE }}>
+                                        <Text size="xs" style={{ color: colors.ink2 }}>
                                             {current}
                                         </Text>
                                     </View>
                                     <MaterialIcons
                                         name={isExpanded ? 'expand-less' : 'expand-more'}
                                         size={20}
-                                        color="#9ca3af"
+                                        color={colors.ink3}
                                     />
                                 </Pressable>
 
@@ -218,15 +218,15 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
                                                         accessibilityRole="radio"
                                                         accessibilityState={{ selected }}
                                                         accessibilityLabel={t('headlineDepth.optionLabel', { n: option })}
-                                                        className={`rounded-full px-3 py-1.5 mb-2 border ${selected ? 'border-transparent' : 'border-gray-700'
+                                                        className={`rounded-full px-3 py-1.5 mb-2 border ${selected ? 'border-transparent' : 'border-line'
                                                             }`}
                                                         style={
-                                                            selected ? { backgroundColor: ACCENT } : undefined
+                                                            selected ? { backgroundColor: colors.accent } : undefined
                                                         }
                                                     >
                                                         <Text
                                                             size="sm"
-                                                            className={selected ? 'text-black' : 'text-gray-300'}
+                                                            className={selected ? 'text-on-accent' : 'text-ink'}
                                                         >
                                                             {t('headlineDepth.optionLabel', { n: option })}
                                                         </Text>
@@ -234,7 +234,7 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
                                                 );
                                             })}
                                         </HStack>
-                                        <Text size="xs" className="text-gray-500 leading-relaxed">
+                                        <Text size="xs" className="text-ink-3 leading-relaxed">
                                             {current === DEFAULT_HEADLINE_LIMIT_PER_SCOPE
                                                 ? t('headlineDepth.usingDefault', { n: DEFAULT_HEADLINE_LIMIT_PER_SCOPE })
                                                 : t('headlineDepth.customised', { n: DEFAULT_HEADLINE_LIMIT_PER_SCOPE })}
