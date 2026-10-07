@@ -1,18 +1,8 @@
-import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-import MeraLogo from '@/components/custom/MeraLogo';
-import { Box } from '@/components/ui/box';
-import { HStack } from '@/components/ui/hstack';
+import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
 import type NotificationModel from '@/lib/database/models/Notification';
-import {
-    clearAll,
-    markActioned,
-    markAllRead,
-    markRead,
-    observeAll,
-} from '@/lib/database/services/notification-service';
+import { markAllRead, observeAll } from '@/lib/database/services/notification-service';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import {
     isFeedbackRequestEnded,
@@ -21,125 +11,56 @@ import {
     type FeedbackRequestsState,
 } from '@/lib/feedback-requests/feedback-request-state';
 import { hapticLight } from '@/lib/haptics';
-import logger from '@/lib/logger';
-import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
-import { isFeedbackRequestId } from '@/lib/stores/pending-notification-route';
-import { MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { navigateToTabScreen } from '@/components/custom/nav/navigate-to-page';
-import type { PageHeaderBinding } from '@/components/custom/nav/types';
 import { useListEndClearance } from '@/lib/navigation/tab-bar';
+import { useColors } from '@/lib/theme/tokens';
 import { NOT_KEPT_NOTICE_TYPES } from '@/lib/toast-manager';
 import { notifyScrollTick } from '@/lib/visibility-tick';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { router, type Href } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import {
+    actionLabel,
+    FEEDBACK_REQUEST,
+    openNotification,
+    parseJson,
+    resolveText,
+    runNotificationAction,
+    type NotificationAction,
+} from './notification-actions';
 
-const ACCENT = '#EDA77E';
-
-type NotificationAction = { id: string; labelKey?: string; label?: string };
-
-/** Written by lib/fact-check/fact-check-settled for a check this device asked for. */
-const FACT_CHECK_DONE = 'fact_check_done';
-
-/** Written by lib/feedback-requests/feedback-request-sync, one per request. Its
- *  body is the question itself (free text, never an i18n key), and the row
- *  shows the latest localized question from the device state row. */
-const FEEDBACK_REQUEST = 'feedback_request';
-
-/** Default leading icon per notification type when the row has no explicit icon. */
-const ROW_ICON = 22;
-const GLYPH_HIDDEN = {
-    accessible: false,
-    accessibilityElementsHidden: true,
-    importantForAccessibility: 'no-hide-descendants',
-} as const;
-/** p-2 at NativeWind's 14pt rem, numeric so the ring size is known here. */
-const CLEAR_PAD = 7;
-const CLEAR_GLYPH = 20;
-const CLEAR_RING = CLEAR_GLYPH + 2 * CLEAR_PAD + 2;
-const CLEAR_TARGET = 44;
-const CLEAR_FRAME = {
-    width: CLEAR_TARGET,
-    height: CLEAR_TARGET,
-    margin: -(CLEAR_TARGET - CLEAR_RING) / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-} as const;
-
-function iconForType(type: string): keyof typeof MaterialIcons.glyphMap {
-    switch (type) {
-        case 'calibration':
-            return 'tune';
-        case 'hygiene':
-            return 'cleaning-services';
-        case 'optimisation_plan':
-            return 'auto-fix-high';
-        case 'migration_done':
-            return 'auto-awesome';
-        case 'sync_event':
-            return 'sync-problem';
-        case 'feed_info':
-            return 'info';
-        case FACT_CHECK_DONE:
-            return 'fact-check';
-        case FEEDBACK_REQUEST:
-            return 'question-answer';
-        default:
-            return 'notifications';
-    }
-}
-
-/** "just now" / "Nm" / "Nh" / "Nd" from a Date. English inline is acceptable. */
+/** "now" / "5m" / "2h" / "3d", as the board draws it. */
 function relativeTime(date: Date): string {
-    const diffMs = Date.now() - date.getTime();
-    const mins = Math.floor(diffMs / 60_000);
-    if (mins < 1) return 'just now';
+    const mins = Math.floor((Date.now() - date.getTime()) / 60_000);
+    if (mins < 1) return 'now';
     if (mins < 60) return `${mins}m`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}h`;
-    const days = Math.floor(hours / 24);
-    return `${days}d`;
-}
-
-/** Safe JSON.parse → object; null on failure/empty. */
-function parseJson<T>(raw: string | null): T | null {
-    if (!raw) return null;
-    try {
-        return JSON.parse(raw) as T;
-    } catch {
-        return null;
-    }
+    return `${Math.floor(hours / 24)}d`;
 }
 
 interface NotificationsScreenProps {
-    /** Standalone route only: the header's back button. */
-    readonly onBack?: () => void;
-    /** Embedded as the You tab's Notifications page: the shell draws the
-     *  title row, so there is no header or back button here. */
-    readonly header?: PageHeaderBinding;
-    /** The visible page of the focused tab. Standalone: always seen. */
-    readonly active?: boolean;
+    /** The You tab's shell header (title row, scroll handler). */
+    readonly header: PageHeaderBinding;
+    /** The visible page of the focused tab. */
+    readonly active: boolean;
 }
 
 /**
- * Pushed notifications screen (app-rethink wave). Replaces the
- * NotificationPanel slide-over modal — same WatermelonDB observable data
- * source + Q.take(100) cap (see notification-service.observeAll) and the same
- * row rendering/interaction logic (mark-read, chip actions, chat hand-off),
- * ported here as a virtualized FlatList instead of a ScrollView + .map.
+ * You > Notifications (FinalInbox #4, #5): only things that need you, each
+ * with its age and ONE button. Seeing the page clears both dots (the You tab
+ * and this pill), and the seen state never leaves this phone. Empty: one
+ * line on what lands here, and the way to its settings.
  */
-const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack, header, active = true }) => {
+const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ header, active }) => {
     const { t } = useTranslation();
+    const colors = useColors();
     const endClearance = useListEndClearance();
     const [items, setItems] = useState<NotificationModel[]>([]);
-    /**
-     * The cleanups waiting RIGHT NOW. A hygiene row stamps its count when it is
-     * written, and later sweeps add to the same review list, so the row said
-     * "1 cleanup" over a list of 2 (audit F47). The live count wins whenever
-     * there is anything left to review.
-     */
+
+    // A hygiene row stamps its count when written, and later sweeps add to the
+    // same review list: the live count wins while there is anything left.
     const [hygienePending, setHygienePending] = useState<number | null>(null);
     useEffect(() => {
         let cancelled = false;
@@ -156,8 +77,8 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack, heade
         };
     }, []);
 
-    // Feedback-request rows read their question and their Answered / Closed
-    // label from the device state row, kept live so a submit shows at once.
+    // Feedback-request rows read their question and Answered / Closed state
+    // from the device state row, kept live so a submit shows at once.
     const [feedbackRequests, setFeedbackRequests] = useState<FeedbackRequestsState>({});
     useEffect(() => {
         let cancelled = false;
@@ -174,310 +95,131 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack, heade
         };
     }, []);
 
-    // i18n-key-or-raw resolver: tries t(key, params) and falls back to the raw
-    // string when the key is unknown (i18next returns the key itself on a miss,
-    // which for freeform agent text IS the display text).
-    const resolveText = useMemo(
-        () =>
-            (key: string, params?: Record<string, unknown>): string => {
-                if (!key) return '';
-                // Cast: `t` is strongly typed to known keys, but notification
-                // title/body may be dynamic keys OR freeform text (agent rows).
-                const resolved = (
-                    t as unknown as (k: string, o?: Record<string, unknown>) => string
-                )(key, params ?? {});
-                return typeof resolved === 'string' ? resolved : key;
-            },
-        [t],
-    );
-
-    // Reactive newest-first list: drives the screen body. Rows of types no
-    // longer kept (written before Y11, alive for 90 days) stay hidden.
+    // Newest first. Rows of types no longer kept (written before Y11, alive
+    // for 90 days) stay hidden.
     useEffect(() => {
         const sub = observeAll().subscribe((rows) => setItems(rows.filter((n) => !NOT_KEPT_NOTICE_TYPES.has(n.type))));
         return () => sub.unsubscribe();
     }, []);
 
-    // Seeing the page clears the dots (the You tab's and the pill's, both
-    // from observeUnreadCount): mark read while the page is the one on screen,
-    // and again when a row lands while it is. Never on unmount: a warmed
-    // neighbour page that was never shown must not clear anything. Keyed on
+    // Seeing the page clears the dots: mark read while the page is the one on
+    // screen, and again when a row lands while it is. Never on unmount: a
+    // warmed neighbour that was never shown must not clear anything. Keyed on
     // "any unread", so the write's own re-emit cannot loop.
     const hasUnread = items.some((n) => n.status === 'unread');
     useEffect(() => {
         if (active && hasUnread) void markAllRead();
     }, [active, hasUnread]);
 
-    /** Opens the floating Mera chat pre-staged with a synthesized message. */
-    const openChatWith = useCallback((message: string) => {
-        useFloatingChatStore
-            .getState()
-            .openArticleFeedback({ kind: 'persona' }, message);
-    }, []);
-
-    /**
-     * A finished fact check opens its article, never the chat. The destination
-     * is the data layer's `resolveNotificationRoute`, the same one an OS tap
-     * uses, so the two can never disagree. Lazy: notification-service pulls in
-     * expo-notifications at module scope.
-     */
-    const openFactCheck = useCallback(async (n: NotificationModel) => {
-        const context = parseJson<Record<string, unknown>>(n.contextJson) ?? {};
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { resolveNotificationRoute } = require('@/lib/notification-service') as typeof import('@/lib/notification-service');
-        const href = await resolveNotificationRoute({ ...context, type: FACT_CHECK_DONE });
-        router.push(href);
-    }, []);
-
-    const onRowPress = useCallback(async (n: NotificationModel) => {
-        void hapticLight();
-        try {
-            await markRead(n.id);
-        } catch (err) {
-            logger.captureException(err, {
-                tags: { component: 'NotificationsScreen', method: 'markRead' },
-            });
-        }
-        if (n.type === FACT_CHECK_DONE) {
-            await openFactCheck(n);
-            return;
-        }
-        // Before the chat fallback below, which would open chat for this row
-        // (it carries context). The modal shows the closed or answered state
-        // itself, so every row opens it.
-        if (n.type === FEEDBACK_REQUEST) {
-            const id = parseJson<Record<string, unknown>>(n.contextJson)?.feedbackRequestId;
-            if (isFeedbackRequestId(id)) {
-                router.push({ pathname: '/logged-in/feedback-request', params: { id } });
+    const renderItem = useCallback(
+        ({ item: n }: { item: NotificationModel }) => {
+            const stored = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
+            const params =
+                n.type === 'hygiene' && hygienePending !== null && hygienePending > 0 ? { ...stored, count: hygienePending } : stored;
+            const title = resolveText(n.title, params);
+            // A feedback request's body is free text: never through t(), whose
+            // key and namespace separators would mangle a question.
+            let body: string;
+            let status: string | null = null;
+            if (n.type === FEEDBACK_REQUEST) {
+                const id = stored?.feedbackRequestId;
+                const entry = typeof id === 'string' ? feedbackRequests[id] : undefined;
+                body = entry?.question ?? n.body;
+                const endsAt = entry?.endsAt ?? (typeof stored?.endsAt === 'number' ? stored.endsAt : null);
+                if (entry?.answeredAt !== undefined || n.status === 'actioned') status = t('feedbackRequest.drawerAnswered');
+                else if (endsAt !== null && isFeedbackRequestEnded({ endsAt })) status = t('feedbackRequest.drawerClosed');
+            } else {
+                body = resolveText(n.body, params);
             }
-            return;
-        }
-        const hasFollowUp = Boolean(n.contextJson) || Boolean(n.actionsJson);
-        if (!hasFollowUp) return; // informational → mark read only
-        const params =
-            parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
-        openChatWith(resolveText(n.body, params));
-    }, [openChatWith, openFactCheck, resolveText]);
-
-    // wave 9 wires real deterministic executors keyed on action.id; here we
-    // mark the notification actioned and pre-stage the chat with the right
-    // context. The `recalibrate` chip (calibration notifications, M-P5c) opens
-    // the floating Mera chat pre-staged with the calibration invitation so the
-    // in-chat "Recalibrate now" affordance can call
-    // calibrationService.runCalibration() on explicit confirm.
-    const onChipPress = useCallback(async (n: NotificationModel, action: NotificationAction) => {
-        void hapticLight();
-        try {
-            await markActioned(n.id);
-        } catch (err) {
-            logger.captureException(err, {
-                tags: { component: 'NotificationsScreen', method: 'markActioned' },
-            });
-        }
-        if (action.id === 'open-fact-check') {
-            await openFactCheck(n);
-            return;
-        }
-        if (action.id === 'recalibrate') {
-            // Stage the calibration context (not the raw chip label) into chat.
-            const params = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
-            openChatWith(resolveText('calibration.chatIntro', params));
-            return;
-        }
-        if (action.id === 'review-hygiene') {
-            // Deterministic review sheet (no chat, no LLM) — push the dedicated
-            // hygiene-review route.
-            navigateToTabScreen('you', 'hygiene-review');
-            return;
-        }
-        if (action.id === 'review-plan') {
-            // Round-4 C5 — open Mera chat showing the pending daily tune-up plan.
-            useFloatingChatStore.getState().openOptimisationPlan();
-            return;
-        }
-        const chipLabel = action.labelKey
-            ? resolveText(action.labelKey)
-            : action.label ?? action.id;
-        openChatWith(chipLabel);
-    }, [openChatWith, openFactCheck, resolveText]);
-
-    const renderItem = useCallback(({ item: n }: { item: NotificationModel }) => {
-        const stored = parseJson<Record<string, unknown>>(n.contextJson) ?? undefined;
-        const params =
-            n.type === 'hygiene' && hygienePending !== null && hygienePending > 0
-                ? { ...stored, count: hygienePending }
-                : stored;
-        const title = resolveText(n.title, params);
-        // A feedback request's body is free text: never through t(), whose
-        // key and namespace separators would mangle a question.
-        let body: string;
-        let statusLabel: string | null = null;
-        if (n.type === FEEDBACK_REQUEST) {
-            const id = stored?.feedbackRequestId;
-            const entry = typeof id === 'string' ? feedbackRequests[id] : undefined;
-            body = entry?.question ?? n.body;
-            const endsAt = entry?.endsAt ?? (typeof stored?.endsAt === 'number' ? stored.endsAt : null);
-            if (entry?.answeredAt !== undefined || n.status === 'actioned') {
-                statusLabel = t('feedbackRequest.drawerAnswered');
-            } else if (endsAt !== null && isFeedbackRequestEnded({ endsAt })) {
-                statusLabel = t('feedbackRequest.drawerClosed');
-            }
-        } else {
-            body = resolveText(n.body, params);
-        }
-        const icon = (n.icon as keyof typeof MaterialIcons.glyphMap) || iconForType(n.type);
-        const actions = parseJson<NotificationAction[]>(n.actionsJson) ?? [];
-        const chipLabel = (a: NotificationAction) => (a.labelKey ? resolveText(a.labelKey) : a.label ?? a.id);
-        const time = relativeTime(n.createdAt);
-
-        // The icon is drawn OVER the row, not inside it: a glyph inside the
-        // accessible row led its label ("<glyph>, Fact check ready", captured).
-        // A 22pt spacer holds its column; pointerEvents none lets a tap on the
-        // icon fall through to the row beneath.
-        return (
-            <View>
-            <Pressable
-                testID={`notification-row-${n.id}`}
-                onPress={() => onRowPress(n)}
-                accessibilityRole="button"
-                // The chips are nested buttons inside this accessible row, so
-                // VoiceOver cannot land on them: each is a named action on the
-                // row instead, running the chip's own handler. Touch is unchanged.
-                accessibilityLabel={[title, body, statusLabel, time].filter(Boolean).join(', ')}
-                accessibilityActions={actions.map((a) => ({ name: `chip:${a.id}`, label: chipLabel(a) }))}
-                onAccessibilityAction={(e) => {
-                    const a = actions.find((x) => `chip:${x.id}` === e.nativeEvent.actionName);
-                    if (a) void onChipPress(n, a);
-                }}
-                className="flex-row px-4 py-3 border-b border-gray-800"
-            >
-                <View style={{ width: ROW_ICON }} />
-                <VStack className="flex-1 ml-3" space="xs">
-                    <HStack className="items-start justify-between">
-                        <Text className="text-white font-semibold flex-1" numberOfLines={2}>
-                            {title}
-                        </Text>
-                        {n.status === 'unread' ? (
-                            <View
-                                className="bg-primary-500 ml-2 mt-1"
-                                style={{ width: 8, height: 8, borderRadius: 4 }}
-                            />
-                        ) : null}
-                    </HStack>
-                    {body ? (
-                        <Text className="text-sm" style={{ color: 'rgb(163,163,163)' }} numberOfLines={3}>
-                            {body}
-                        </Text>
-                    ) : null}
-                    {actions.length > 0 ? (
-                        <HStack className="flex-wrap mt-1">
-                            {actions.map((a) => (
-                                <Pressable
-                                    key={a.id}
-                                    onPress={() => onChipPress(n, a)}
-                                    accessibilityRole="button"
-                                    className="border border-primary-500 rounded-full px-3 py-1 mr-2 mb-1"
-                                >
-                                    <Text className="text-xs" style={{ color: ACCENT }}>
-                                        {chipLabel(a)}
-                                    </Text>
-                                </Pressable>
-                            ))}
-                        </HStack>
-                    ) : null}
-                    <HStack className="items-center" space="sm">
-                        {statusLabel ? (
-                            <Text
-                                testID={`notification-status-${n.id}`}
-                                className="text-xs font-semibold"
-                                style={{ color: ACCENT }}
-                            >
-                                {statusLabel}
+            const action = (parseJson<NotificationAction[]>(n.actionsJson) ?? [])[0];
+            const age = relativeTime(n.createdAt);
+            return (
+                <View
+                    style={{ marginHorizontal: 14, marginBottom: 10, borderRadius: 16, borderWidth: 1, borderColor: colors.line, backgroundColor: colors.surface, padding: 16, gap: 10 }}
+                >
+                    <Pressable
+                        testID={`notification-row-${n.id}`}
+                        onPress={() => {
+                            void hapticLight();
+                            void openNotification(n);
+                        }}
+                        accessibilityRole="button"
+                        // The button is a separate stop on its own; the row reads once.
+                        accessibilityLabel={[title, body, status, age].filter(Boolean).join(', ')}
+                        style={{ gap: 6 }}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+                            <Text style={{ flex: 1, color: colors.ink, fontSize: 16, fontWeight: '600' }} numberOfLines={2}>
+                                {title}
+                            </Text>
+                            <Text style={{ color: colors.ink3, fontSize: 13 }}>{age}</Text>
+                        </View>
+                        {body ? (
+                            <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }} numberOfLines={3}>
+                                {body}
                             </Text>
                         ) : null}
-                        <Text className="text-xs" style={{ color: 'rgb(115,115,115)' }}>
-                            {time}
-                        </Text>
-                    </HStack>
-                </VStack>
-            </Pressable>
-            <View pointerEvents="none" {...GLYPH_HIDDEN} className="absolute left-4 top-3">
-                <MaterialIcons name={icon} size={ROW_ICON} color={ACCENT} style={{ marginTop: 2 }} {...GLYPH_HIDDEN} />
-            </View>
-            </View>
-        );
-    }, [onRowPress, onChipPress, resolveText, hygienePending, feedbackRequests, t]);
+                        {status ? (
+                            <Text testID={`notification-status-${n.id}`} style={{ color: colors.accentText, fontSize: 13, fontWeight: '600' }}>
+                                {status}
+                            </Text>
+                        ) : null}
+                    </Pressable>
+                    {action ? (
+                        <Pressable
+                            testID={`notification-action-${n.id}`}
+                            onPress={() => {
+                                void hapticLight();
+                                void runNotificationAction(n, action);
+                            }}
+                            accessibilityRole="button"
+                            accessibilityLabel={actionLabel(action)}
+                            style={{ alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' }}
+                        >
+                            <View style={{ borderRadius: 999, borderWidth: 1, borderColor: colors.accent, paddingHorizontal: 14, paddingVertical: 7 }}>
+                                <Text style={{ color: colors.accentText, fontSize: 14, fontWeight: '600' }}>{actionLabel(action)}</Text>
+                            </View>
+                        </Pressable>
+                    ) : null}
+                </View>
+            );
+        },
+        [hygienePending, feedbackRequests, colors, t],
+    );
 
-    const keyExtractor = useCallback((item: NotificationModel) => item.id, []);
+    const empty = (
+        <View testID="notifications-empty" style={{ marginHorizontal: 18, gap: 6 }}>
+            <Text style={{ color: colors.ink, fontSize: 16, fontWeight: '600' }}>{t('notificationCenter.empty')}</Text>
+            <Text style={{ color: colors.ink2, fontSize: 14, lineHeight: 20 }}>{t('notificationCenter.emptyBody')}</Text>
+            <Pressable
+                testID="notifications-settings-link"
+                onPress={() => router.push('/logged-in/app_container/you/notifications' as Href)}
+                accessibilityRole="link"
+                style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }}
+            >
+                <Text style={{ color: colors.accentText, fontSize: 15, fontWeight: '600' }}>{t('notificationCenter.settingsLink')}</Text>
+            </Pressable>
+        </View>
+    );
 
     return (
-        // No opaque fill: the route mounts AbstractGradientBackdrop OUTSIDE
-        // its SafeAreaView, so the page background spans the safe areas.
-        <Box className="flex-1">
-            {header ? null : (
-            <DrillDownHeader
-                title={t('notificationCenter.title')}
-                onBack={onBack}
-                rightAction={
-                    items.length > 0 ? (
-                        // A numeric 44pt frame pulled back to the 36pt ring by
-                        // negative margins holds the ring, with a childless
-                        // labelled button filling the frame (glyph rule; a
-                        // hitSlop target measured as the ring on device).
-                        <View testID="notifications-clear-all-frame" style={CLEAR_FRAME}>
-                            <View
-                                pointerEvents="none"
-                                {...GLYPH_HIDDEN}
-                                className="rounded-full border-primary-500"
-                                style={{ padding: CLEAR_PAD, borderWidth: 1 }}
-                            >
-                                <MaterialIcons name="delete-sweep" size={CLEAR_GLYPH} color={ACCENT} {...GLYPH_HIDDEN} />
-                            </View>
-                            <Pressable
-                                testID="notifications-clear-all"
-                                onPress={() => void clearAll()}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('notificationCenter.clearAll')}
-                                style={StyleSheet.absoluteFill}
-                            />
-                        </View>
-                    ) : undefined
-                }
-            />
-            )}
-            {items.length === 0 ? (
-                <VStack
-                    className="flex-1 items-center justify-center px-6"
-                    space="md"
-                    style={header ? { paddingTop: header.headerHeight } : undefined}
-                >
-                    <MeraLogo size={72} />
-                    <Text className="text-center" style={{ color: 'rgb(163,163,163)' }}>
-                        {t('notificationCenter.empty')}
-                    </Text>
-                </VStack>
-            ) : (
-                <Animated.FlatList
-                    data={items}
-                    keyExtractor={keyExtractor}
-                    renderItem={renderItem}
-                    initialNumToRender={12}
-                    showsVerticalScrollIndicator={false}
-                    onScroll={header?.scrollHandler}
-                    scrollEventThrottle={16}
-                    // Rows that land with no scroll still need a tick to be
-                    // measured (scroll-tick-coverage guard).
-                    onContentSizeChange={() => {
-                        if (active) notifyScrollTick();
-                    }}
-                    contentContainerStyle={
-                        header
-                            ? { paddingTop: header.headerHeight + 8, paddingBottom: endClearance }
-                            : { paddingBottom: 48 }
-                    }
-                />
-            )}
-        </Box>
+        <Animated.FlatList
+            testID="notifications-list"
+            data={items}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            ListEmptyComponent={empty}
+            initialNumToRender={12}
+            showsVerticalScrollIndicator={false}
+            onScroll={header.scrollHandler}
+            scrollEventThrottle={16}
+            // Rows that land with no scroll still need a tick to be measured
+            // (scroll-tick-coverage guard).
+            onContentSizeChange={() => {
+                if (active) notifyScrollTick();
+            }}
+            contentContainerStyle={{ paddingTop: header.headerHeight + 8, paddingBottom: endClearance }}
+        />
     );
 };
 
