@@ -11,7 +11,6 @@ const mockAppStateHydrateFromDb = jest.fn(() => Promise.resolve());
 const mockForYouPrefsHydrate = jest.fn(() => Promise.resolve());
 const mockBlurImagesHydrate = jest.fn(() => Promise.resolve());
 const mockDisplayPrefsHydrate = jest.fn(() => Promise.resolve());
-const mockRelatedSortHydrate = jest.fn(() => Promise.resolve());
 const mockTextScaleHydrate = jest.fn(() => Promise.resolve());
 const mockTutorialsHydrate = jest.fn(() => Promise.resolve());
 const mockStartupTabHydrate = jest.fn(() => Promise.resolve());
@@ -86,14 +85,6 @@ jest.mock('@/lib/stores/display-prefs-store', () => ({
   useDisplayPrefsStore: {
     getState: jest.fn(() => ({
       hydrate: mockDisplayPrefsHydrate,
-    })),
-  },
-}));
-
-jest.mock('@/lib/stores/related-sort-store', () => ({
-  useRelatedSortStore: {
-    getState: jest.fn(() => ({
-      hydrate: mockRelatedSortHydrate,
     })),
   },
 }));
@@ -221,7 +212,6 @@ describe('hydrateAllStores', () => {
     expect(mockForYouPrefsHydrate).toHaveBeenCalledTimes(1);
     expect(mockBlurImagesHydrate).toHaveBeenCalledTimes(1);
     expect(mockDisplayPrefsHydrate).toHaveBeenCalledTimes(1);
-    expect(mockRelatedSortHydrate).toHaveBeenCalledTimes(1);
     expect(mockTextScaleHydrate).toHaveBeenCalledTimes(1);
     expect(mockTutorialsHydrate).toHaveBeenCalledTimes(1);
     expect(mockStartupTabHydrate).toHaveBeenCalledTimes(1);
